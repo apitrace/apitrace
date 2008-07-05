@@ -1,5 +1,7 @@
+.*.sw?
+.scons*
 *.obj
 *.dll
 *.lib
 *.exp
-.scons*
+*.xml

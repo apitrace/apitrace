@@ -1,6 +1,8 @@
 // TraceDirect3DDevice8.h
 #pragma once
 
+class Log;
+
 class TraceDirect3DDevice8: public IDirect3DDevice8 {
 public:
 
@@ -110,6 +112,7 @@ public:
 private:
 
     IDirect3DDevice8 *m_pIDirect3DDevice8;
+    Log *log;
 
     // This is our test function
     void ShowWeAreHere(void);

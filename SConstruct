@@ -49,20 +49,20 @@ else:
 #env['PDB'] = '${TARGET.base}.pdb'
 
 cflags = [
-        '/W3', # warning level
+    '/W3', # warning level
 ]
 if env['debug']:
-        cflags += [
-          '/Od', # disable optimizations
-          '/Oi', # enable intrinsic functions
-          '/Oy-', # disable frame pointer omission
-        ]
+    cflags += [
+      '/Od', # disable optimizations
+      '/Oi', # enable intrinsic functions
+      '/Oy-', # disable frame pointer omission
+    ]
 else:
-        cflags += [
-          '/Ox', # maximum optimizations
-          '/Oi', # enable intrinsic functions
-          '/Os', # favor code space
-        ]
+    cflags += [
+      '/Ox', # maximum optimizations
+      '/Oi', # enable intrinsic functions
+      '/Os', # favor code space
+    ]
 env.Append(CFLAGS = cflags)
 env.Append(CXXFLAGS = cflags)
 
@@ -70,22 +70,20 @@ env.Prepend(LIBS = [
     'kernel32',
     'user32',
     'gdi32',
-    'winspool',
     'comdlg32',
     'advapi32',
     'shell32',
-    'ole32',
-    'oleaut32',
-    'uuid',
-    'odbc32',
-    'odbccp32',
 ])
 
 env.Append(CPPPATH = [
     os.path.join(env['dxsdk'], 'Include'),
+    '#common',
 ])
 
 Export('env')
 
-SConscript('d3d8/SConscript')
-SConscript('d3d9/SConscript')
+SConscript([
+    'common/SConscript',
+    'd3d8/SConscript',
+    'd3d9/SConscript',
+])

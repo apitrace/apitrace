@@ -1,12 +1,14 @@
 // TraceDirect3DDevice8.cpp
 #include "stdafx.h"
+#include "log.hpp"
 
 TraceDirect3DDevice8::TraceDirect3DDevice8(IDirect3DDevice8* pOriginal) {
     m_pIDirect3DDevice8 = pOriginal; // store the pointer to original object
+    log = new Log("d3d8trace.xml"); 
 }
 
 TraceDirect3DDevice8::~TraceDirect3DDevice8() {
-
+    delete log;
 }
 
 HRESULT __stdcall TraceDirect3DDevice8::QueryInterface(REFIID riid, void** ppvObj) {
@@ -120,7 +122,17 @@ void __stdcall TraceDirect3DDevice8::GetGammaRamp(D3DGAMMARAMP* pRamp) {
 }
 
 HRESULT __stdcall TraceDirect3DDevice8::CreateTexture(UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture8** ppTexture) {
-    return (m_pIDirect3DDevice8->CreateTexture(Width, Height, Levels, Usage, Format, Pool, ppTexture));
+    HRESULT hr;
+    log->call_begin("IDirect3DDevice9::CreateTexture");
+    log->param_uint("Width", Width);
+    log->param_uint("Height", Height);
+    log->param_uint("Levels", Levels);
+    log->param_dword("Usage", Usage);
+    log->param_dword("Format", Format);
+    log->param_dword("Pool", Pool);
+    hr = m_pIDirect3DDevice8->CreateTexture(Width, Height, Levels, Usage, Format, Pool, ppTexture);
+    log->call_end();
+    return hr;
 }
 
 HRESULT __stdcall TraceDirect3DDevice8::CreateVolumeTexture(UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture8** ppVolumeTexture) {
@@ -404,10 +416,10 @@ HRESULT __stdcall TraceDirect3DDevice8::GetPixelShaderFunction(DWORD Handle, voi
     return (m_pIDirect3DDevice8->GetPixelShaderFunction(Handle, pData, pSizeOfData));
 }
 
-HRESULT __stdcall TraceDirect3DDevice8::DrawRectPatch( UINT Handle,CONST float* pNumSegs,CONST D3DRECTPATCH_INFO* pRectPatchInfo)
+HRESULT __stdcall TraceDirect3DDevice8::DrawRectPatch( UINT Handle, CONST float* pNumSegs,CONST D3DRECTPATCH_INFO* pRectPatchInfo)
 {   return (m_pIDirect3DDevice8->DrawRectPatch(Handle, pNumSegs, pRectPatchInfo) );}
 
-HRESULT __stdcall TraceDirect3DDevice8::DrawTriPatch( UINT Handle,CONST float* pNumSegs,CONST D3DTRIPATCH_INFO* pTriPatchInfo)
+HRESULT __stdcall TraceDirect3DDevice8::DrawTriPatch( UINT Handle, CONST float* pNumSegs,CONST D3DTRIPATCH_INFO* pTriPatchInfo)
 {   return (m_pIDirect3DDevice8->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo) );}
 
 HRESULT __stdcall TraceDirect3DDevice8::DeletePatch(UINT Handle) {
