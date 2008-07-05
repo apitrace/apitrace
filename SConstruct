@@ -39,6 +39,7 @@ env.Append(CPPDEFINES = [
     'UNICODE',
     '_CRT_SECURE_NO_DEPRECATE',
     '_CRT_NON_CONFORMING_SWPRINTFS',
+    'WIN32_LEAN_AND_MEAN',
 ])
 
 if env['debug']:
