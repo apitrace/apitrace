@@ -1,0 +1,12 @@
+Wrapper DLLs to trace D3D8 and D3D9 APIs calls.
+
+Base on the idea and code (public domain) from Michael Koch. 
+
+See also:
+- http://www.mikoweb.eu/index.php?node=21
+- http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/
+- http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm
+
+
+-- 
+Jose Fonseca <jrfonseca@tungstengraphics.com>

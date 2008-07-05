@@ -1,0 +1,11 @@
+Import('env')
+
+env.SharedLibrary(
+    target = 'd3d8.dll',
+    source = [
+        'd3d8.def',
+        'dllmain.cpp',
+        'idirect3d8.cpp',
+        'idirect3d_device8.cpp',
+    ]
+)
