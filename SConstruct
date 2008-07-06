@@ -46,7 +46,7 @@ if env['debug']:
     env.Append(CPPDEFINES = ['_DEBUG'])
 else:
     env.Append(CPPDEFINES = ['NDEBUG'])
-#env['PDB'] = '${TARGET.base}.pdb'
+env['PDB'] = '${TARGET.base}.pdb'
 
 cflags = [
     '/W3', # warning level
@@ -82,8 +82,23 @@ env.Append(CPPPATH = [
 
 Export('env')
 
+
+
+env.Command(
+    target = 'd3d8.cpp', 
+    source = ['d3d8.py', 'd3d8types.py', 'd3d8caps.py', 'windows.py', 'base.py'],
+    action = 'python $SOURCE > $TARGET',
+)
+    
+
+env.SharedLibrary(
+    target = 'd3d8.dll',
+    source = [
+        'd3d8.def',
+        'd3d8.cpp',
+    ]
+)
+
 SConscript([
-    'common/SConscript',
-    'd3d8/SConscript',
     'd3d9/SConscript',
 ])

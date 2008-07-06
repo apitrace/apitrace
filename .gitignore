@@ -1,7 +1,12 @@
 .*.sw?
 .scons*
-*.obj
 *.dll
-*.lib
 *.exp
+*.ilk
+*.lib
+*.obj
+*.pdb
+*.pyc
+*.pyo
 *.xml
+d3d8.cpp

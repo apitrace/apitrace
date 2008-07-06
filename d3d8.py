@@ -1,0 +1,239 @@
+"""d3d8.h"""
+
+from windows import *
+from d3d8types import *
+from d3d8caps import *
+
+IDirect3D8 = Interface("IDirect3D8", IUnknown)
+IDirect3DDevice8 = Interface("IDirect3DDevice8", IUnknown)
+IDirect3DSwapChain8 = Interface("IDirect3DSwapChain8", IUnknown)
+IDirect3DResource8 = Interface("IDirect3DResource8", IUnknown)
+IDirect3DBaseTexture8 = Interface("IDirect3DBaseTexture8", IDirect3DResource8)
+IDirect3DTexture8 = Interface("IDirect3DTexture8", IDirect3DBaseTexture8)
+IDirect3DVolumeTexture8 = Interface("IDirect3DVolumeTexture8", IDirect3DBaseTexture8)
+IDirect3DCubeTexture8 = Interface("IDirect3DCubeTexture8", IDirect3DBaseTexture8)
+IDirect3DVertexBuffer8 = Interface("IDirect3DVertexBuffer8", IDirect3DResource8)
+IDirect3DIndexBuffer8 = Interface("IDirect3DIndexBuffer8", IDirect3DResource8)
+IDirect3DSurface8 = Interface("IDirect3DSurface8", IUnknown)
+IDirect3DVolume8 = Interface("IDirect3DVolume8", IUnknown)
+
+PDIRECT3D8 = LPDIRECT3D8 = Pointer(IDirect3D8)
+PDIRECT3DDEVICE8 = LPDIRECT3DDEVICE8 = Pointer(IDirect3DDevice8)
+PDIRECT3DSWAPCHAIN8 = LPDIRECT3DSWAPCHAIN8 = Pointer(IDirect3DSwapChain8)
+PDIRECT3DRESOURCE8 = LPDIRECT3DRESOURCE8 = Pointer(IDirect3DResource8)
+PDIRECT3DBASETEXTURE8 = LPDIRECT3DBASETEXTURE8 = Pointer(IDirect3DBaseTexture8)
+PDIRECT3DTEXTURE8 = LPDIRECT3DTEXTURE8 = Pointer(IDirect3DTexture8)
+PDIRECT3DVOLUMETEXTURE8 = LPDIRECT3DVOLUMETEXTURE8 = Pointer(IDirect3DVolumeTexture8)
+PDIRECT3DCUBETEXTURE8 = LPDIRECT3DCUBETEXTURE8 = Pointer(IDirect3DCubeTexture8)
+PDIRECT3DVERTEXBUFFER8 = LPDIRECT3DVERTEXBUFFER8 = Pointer(IDirect3DVertexBuffer8)
+PDIRECT3DINDEXBUFFER8 = LPDIRECT3DINDEXBUFFER8 = Pointer(IDirect3DIndexBuffer8)
+PDIRECT3DSURFACE8 = LPDIRECT3DSURFACE8 = Pointer(IDirect3DSurface8)
+PDIRECT3DVOLUME8 = LPDIRECT3DVOLUME8 = Pointer(IDirect3DVolume8)
+
+IDirect3D8.methods += [
+	Method(HRESULT, "RegisterSoftwareDevice", [(Pointer(Void), "pInitializeFunction")]),
+	Method(UINT, "GetAdapterCount", []),
+	Method(HRESULT, "GetAdapterIdentifier", [(UINT, "Adapter"), (DWORD, "Flags"), (Pointer(D3DADAPTER_IDENTIFIER8), "pIdentifier")]),
+	Method(UINT, "GetAdapterModeCount", [(UINT, "Adapter")]),
+	Method(HRESULT, "EnumAdapterModes", [(UINT, "Adapter"), (UINT, "Mode"), (Pointer(D3DDISPLAYMODE), "pMode")]),
+	Method(HRESULT, "GetAdapterDisplayMode", [(UINT, "Adapter"), (Pointer(D3DDISPLAYMODE), "pMode")]),
+	Method(HRESULT, "CheckDeviceType", [(UINT, "Adapter"), (D3DDEVTYPE, "CheckType"), (D3DFORMAT, "DisplayFormat"), (D3DFORMAT, "BackBufferFormat"), (BOOL, "Windowed")]),
+	Method(HRESULT, "CheckDeviceFormat", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (DWORD, "Usage"), (D3DRESOURCETYPE, "RType"), (D3DFORMAT, "CheckFormat")]),
+	Method(HRESULT, "CheckDeviceMultiSampleType", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "SurfaceFormat"), (BOOL, "Windowed"), (D3DMULTISAMPLE_TYPE, "MultiSampleType")]),
+	Method(HRESULT, "CheckDepthStencilMatch", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "RenderTargetFormat"), (D3DFORMAT, "DepthStencilFormat")]),
+	Method(HRESULT, "GetDeviceCaps", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (Pointer(D3DCAPS8), "pCaps")]),
+	Method(HMONITOR, "GetAdapterMonitor", [(UINT, "Adapter")]),
+	Method(HRESULT, "CreateDevice", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (DWORD, "BehaviorFlags"), (Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), (Output(Pointer(WrapPointer(IDirect3DDevice8))), "ppReturnedDeviceInterface")]),
+]
+
+IDirect3DDevice8.methods += [
+	Method(HRESULT, "TestCooperativeLevel", []),
+	Method(UINT, "GetAvailableTextureMem", []),
+	Method(HRESULT, "ResourceManagerDiscardBytes", [(DWORD, "Bytes")]),
+	Method(HRESULT, "GetDirect3D", [(Pointer(Pointer(IDirect3D8)), "ppD3D8")]),
+	Method(HRESULT, "GetDeviceCaps", [(Pointer(D3DCAPS8), "pCaps")]),
+	Method(HRESULT, "GetDisplayMode", [(Pointer(D3DDISPLAYMODE), "pMode")]),
+	Method(HRESULT, "GetCreationParameters", [(Pointer(D3DDEVICE_CREATION_PARAMETERS), "pParameters")]),
+	Method(HRESULT, "SetCursorProperties", [(UINT, "XHotSpot"), (UINT, "YHotSpot"), (Pointer(IDirect3DSurface8), "pCursorBitmap")]),
+	Method(Void, "SetCursorPosition", [(Int, "X"), (Int, "Y"), (DWORD, "Flags")]),
+	Method(BOOL, "ShowCursor", [(BOOL, "bShow")]),
+	Method(HRESULT, "CreateAdditionalSwapChain", [(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), (Pointer(Pointer(IDirect3DSwapChain8)), "pSwapChain")]),
+	Method(HRESULT, "Reset", [(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters")]),
+	Method(HRESULT, "Present", [(Pointer(Const(RECT)), "pSourceRect"), (Pointer(Const(RECT)), "pDestRect"), (HWND, "hDestWindowOverride"), (Const(Pointer(RGNDATA)), "pDirtyRegion")]),
+	Method(HRESULT, "GetBackBuffer", [(UINT, "BackBuffer"), (D3DBACKBUFFER_TYPE, "Type"), (Pointer(Pointer(IDirect3DSurface8)), "ppBackBuffer")]),
+	Method(HRESULT, "GetRasterStatus", [(Pointer(D3DRASTER_STATUS), "pRasterStatus")]),
+	Method(Void, "SetGammaRamp", [(DWORD, "Flags"), (Pointer(Const(D3DGAMMARAMP)), "pRamp")]),
+	Method(Void, "GetGammaRamp", [(Pointer(D3DGAMMARAMP), "pRamp")]),
+	Method(HRESULT, "CreateTexture", [(UINT, "Width"), (UINT, "Height"), (UINT, "Levels"), (DWORD, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (Pointer(WrapPointer(IDirect3DTexture8)), "ppTexture")]),
+	Method(HRESULT, "CreateVolumeTexture", [(UINT, "Width"), (UINT, "Height"), (UINT, "Depth"), (UINT, "Levels"), (DWORD, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (Pointer(WrapPointer(IDirect3DVolumeTexture8)), "ppVolumeTexture")]),
+	Method(HRESULT, "CreateCubeTexture", [(UINT, "EdgeLength"), (UINT, "Levels"), (DWORD, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (Pointer(Pointer(IDirect3DCubeTexture8)), "ppCubeTexture")]),
+	Method(HRESULT, "CreateVertexBuffer", [(UINT, "Length"), (DWORD, "Usage"), (DWORD, "FVF"), (D3DPOOL, "Pool"), (Pointer(WrapPointer(IDirect3DVertexBuffer8)), "ppVertexBuffer")]),
+	Method(HRESULT, "CreateIndexBuffer", [(UINT, "Length"), (DWORD, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (Pointer(WrapPointer(IDirect3DIndexBuffer8)), "ppIndexBuffer")]),
+	Method(HRESULT, "CreateRenderTarget", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (BOOL, "Lockable"), (Pointer(WrapPointer(IDirect3DSurface8)), "ppSurface")]),
+	Method(HRESULT, "CreateDepthStencilSurface", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (Pointer(WrapPointer(IDirect3DSurface8)), "ppSurface")]),
+	Method(HRESULT, "CreateImageSurface", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (Pointer(WrapPointer(IDirect3DSurface8)), "ppSurface")]),
+	Method(HRESULT, "CopyRects", [(Pointer(IDirect3DSurface8), "pSourceSurface"), (Pointer(Const(RECT)), "pSourceRectsArray"), (UINT, "cRects"), (Pointer(IDirect3DSurface8), "pDestinationSurface"), (Pointer(Const(POINT)), "pDestPointsArray")]),
+	Method(HRESULT, "UpdateTexture", [(Pointer(IDirect3DBaseTexture8), "pSourceTexture"), (Pointer(IDirect3DBaseTexture8), "pDestinationTexture")]),
+	Method(HRESULT, "GetFrontBuffer", [(Pointer(IDirect3DSurface8), "pDestSurface")]),
+	Method(HRESULT, "SetRenderTarget", [(Pointer(IDirect3DSurface8), "pRenderTarget"), (Pointer(IDirect3DSurface8), "pNewZStencil")]),
+	Method(HRESULT, "GetRenderTarget", [(Pointer(Pointer(IDirect3DSurface8)), "ppRenderTarget")]),
+	Method(HRESULT, "GetDepthStencilSurface", [(Pointer(Pointer(IDirect3DSurface8)), "ppZStencilSurface")]),
+	Method(HRESULT, "BeginScene", []),
+	Method(HRESULT, "EndScene", []),
+	Method(HRESULT, "Clear", [(DWORD, "Count"), (Pointer(Const(D3DRECT)), "pRects"), (DWORD, "Flags"), (D3DCOLOR, "Color"), (Float, "Z"), (DWORD, "Stencil")]),
+	Method(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "State"), (Pointer(Const(D3DMATRIX)), "pMatrix")]),
+	Method(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "State"), (Pointer(D3DMATRIX), "pMatrix")]),
+	Method(HRESULT, "MultiplyTransform", [(D3DTRANSFORMSTATETYPE, "State"), (Pointer(Const(D3DMATRIX)), "pMatrix")]),
+	Method(HRESULT, "SetViewport", [(Pointer(Const(D3DVIEWPORT8)), "pViewport")]),
+	Method(HRESULT, "GetViewport", [(Pointer(D3DVIEWPORT8), "pViewport")]),
+	Method(HRESULT, "SetMaterial", [(Pointer(Const(D3DMATERIAL8)), "pMaterial")]),
+	Method(HRESULT, "GetMaterial", [(Pointer(D3DMATERIAL8), "pMaterial")]),
+	Method(HRESULT, "SetLight", [(DWORD, "Index"), (Pointer(Const(D3DLIGHT8)), "pLight")]),
+	Method(HRESULT, "GetLight", [(DWORD, "Index"), (Pointer(D3DLIGHT8), "pLight")]),
+	Method(HRESULT, "LightEnable", [(DWORD, "Index"), (BOOL, "Enable")]),
+	Method(HRESULT, "GetLightEnable", [(DWORD, "Index"), (Pointer(BOOL), "pEnable")]),
+	Method(HRESULT, "SetClipPlane", [(DWORD, "Index"), (Pointer(Const(Float)), "pPlane")]),
+	Method(HRESULT, "GetClipPlane", [(DWORD, "Index"), (Pointer(Float), "pPlane")]),
+	Method(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "State"), (DWORD, "Value")]),
+	Method(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "State"), (Pointer(DWORD), "pValue")]),
+	Method(HRESULT, "BeginStateBlock", []),
+	Method(HRESULT, "EndStateBlock", [(Pointer(DWORD), "pToken")]),
+	Method(HRESULT, "ApplyStateBlock", [(DWORD, "Token")]),
+	Method(HRESULT, "CaptureStateBlock", [(DWORD, "Token")]),
+	Method(HRESULT, "DeleteStateBlock", [(DWORD, "Token")]),
+	Method(HRESULT, "CreateStateBlock", [(D3DSTATEBLOCKTYPE, "Type"), (Pointer(DWORD), "pToken")]),
+	Method(HRESULT, "SetClipStatus", [(Pointer(Const(D3DCLIPSTATUS8)), "pClipStatus")]),
+	Method(HRESULT, "GetClipStatus", [(Pointer(D3DCLIPSTATUS8), "pClipStatus")]),
+	Method(HRESULT, "GetTexture", [(DWORD, "Stage"), (Pointer(Pointer(IDirect3DBaseTexture8)), "ppTexture")]),
+	Method(HRESULT, "SetTexture", [(DWORD, "Stage"), (Pointer(IDirect3DBaseTexture8), "pTexture")]),
+	Method(HRESULT, "GetTextureStageState", [(DWORD, "Stage"), (D3DTEXTURESTAGESTATETYPE, "Type"), (Pointer(DWORD), "pValue")]),
+	Method(HRESULT, "SetTextureStageState", [(DWORD, "Stage"), (D3DTEXTURESTAGESTATETYPE, "Type"), (DWORD, "Value")]),
+	Method(HRESULT, "ValidateDevice", [(Pointer(DWORD), "pNumPasses")]),
+	Method(HRESULT, "GetInfo", [(DWORD, "DevInfoID"), (Pointer(Void), "pDevInfoStruct"), (DWORD, "DevInfoStructSize")]),
+	Method(HRESULT, "SetPaletteEntries", [(UINT, "PaletteNumber"), (Pointer(Const(PALETTEENTRY)), "pEntries")]),
+	Method(HRESULT, "GetPaletteEntries", [(UINT, "PaletteNumber"), (Pointer(PALETTEENTRY), "pEntries")]),
+	Method(HRESULT, "SetCurrentTexturePalette", [(UINT, "PaletteNumber")]),
+	Method(HRESULT, "GetCurrentTexturePalette", [(Pointer(UINT), "PaletteNumber")]),
+	Method(HRESULT, "DrawPrimitive", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "StartVertex"), (UINT, "PrimitiveCount")]),
+	Method(HRESULT, "DrawIndexedPrimitive", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "minIndex"), (UINT, "NumVertices"), (UINT, "startIndex"), (UINT, "primCount")]),
+	Method(HRESULT, "DrawPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "PrimitiveCount"), (Const(Pointer(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
+	Method(HRESULT, "DrawIndexedPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "MinVertexIndex"), (UINT, "NumVertexIndices"), (UINT, "PrimitiveCount"), (Const(Pointer(Void)), "pIndexData"), (D3DFORMAT, "IndexDataFormat"), (Const(Pointer(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
+	Method(HRESULT, "ProcessVertices", [(UINT, "SrcStartIndex"), (UINT, "DestIndex"), (UINT, "VertexCount"), (Pointer(IDirect3DVertexBuffer8), "pDestBuffer"), (DWORD, "Flags")]),
+	Method(HRESULT, "CreateVertexShader", [(Pointer(Const(DWORD)), "pDeclaration"), (Pointer(Const(DWORD)), "pFunction"), (Pointer(DWORD), "pHandle"), (DWORD, "Usage")]),
+	Method(HRESULT, "SetVertexShader", [(DWORD, "Handle")]),
+	Method(HRESULT, "GetVertexShader", [(Pointer(DWORD), "pHandle")]),
+	Method(HRESULT, "DeleteVertexShader", [(DWORD, "Handle")]),
+	Method(HRESULT, "SetVertexShaderConstant", [(DWORD, "Register"), (Const(Pointer(Void)), "pConstantData"), (DWORD, "ConstantCount")]),
+	Method(HRESULT, "GetVertexShaderConstant", [(DWORD, "Register"), (Pointer(Void), "pConstantData"), (DWORD, "ConstantCount")]),
+	Method(HRESULT, "GetVertexShaderDeclaration", [(DWORD, "Handle"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
+	Method(HRESULT, "GetVertexShaderFunction", [(DWORD, "Handle"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
+	Method(HRESULT, "SetStreamSource", [(UINT, "StreamNumber"), (Pointer(IDirect3DVertexBuffer8), "pStreamData"), (UINT, "Stride")]),
+	Method(HRESULT, "GetStreamSource", [(UINT, "StreamNumber"), (Pointer(Pointer(IDirect3DVertexBuffer8)), "ppStreamData"), (Pointer(UINT), "pStride")]),
+	Method(HRESULT, "SetIndices", [(Pointer(IDirect3DIndexBuffer8), "pIndexData"), (UINT, "BaseVertexIndex")]),
+	Method(HRESULT, "GetIndices", [(Pointer(Pointer(IDirect3DIndexBuffer8)), "ppIndexData"), (Pointer(UINT), "pBaseVertexIndex")]),
+	Method(HRESULT, "CreatePixelShader", [(Pointer(Const(DWORD)), "pFunction"), (Pointer(DWORD), "pHandle")]),
+	Method(HRESULT, "SetPixelShader", [(DWORD, "Handle")]),
+	Method(HRESULT, "GetPixelShader", [(Pointer(DWORD), "pHandle")]),
+	Method(HRESULT, "DeletePixelShader", [(DWORD, "Handle")]),
+	Method(HRESULT, "SetPixelShaderConstant", [(DWORD, "Register"), (Const(Pointer(Void)), "pConstantData"), (DWORD, "ConstantCount")]),
+	Method(HRESULT, "GetPixelShaderConstant", [(DWORD, "Register"), (Pointer(Void), "pConstantData"), (DWORD, "ConstantCount")]),
+	Method(HRESULT, "GetPixelShaderFunction", [(DWORD, "Handle"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
+	Method(HRESULT, "DrawRectPatch", [(UINT, "Handle"), (Pointer(Const(Float)), "pNumSegs"), (Pointer(Const(D3DRECTPATCH_INFO)), "pRectPatchInfo")]),
+	Method(HRESULT, "DrawTriPatch", [(UINT, "Handle"), (Pointer(Const(Float)), "pNumSegs"), (Pointer(Const(D3DTRIPATCH_INFO)), "pTriPatchInfo")]),
+	Method(HRESULT, "DeletePatch", [(UINT, "Handle")]),
+]
+
+IDirect3DSwapChain8.methods += [
+	Method(HRESULT, "Present", [(Pointer(Const(RECT)), "pSourceRect"), (Pointer(Const(RECT)), "pDestRect"), (HWND, "hDestWindowOverride"), (Const(Pointer(RGNDATA)), "pDirtyRegion")]),
+	Method(HRESULT, "GetBackBuffer", [(UINT, "BackBuffer"), (D3DBACKBUFFER_TYPE, "Type"), (Pointer(Pointer(IDirect3DSurface8)), "ppBackBuffer")]),
+]
+
+IDirect3DResource8.methods += [
+	Method(HRESULT, "GetDevice", [(Pointer(Pointer(IDirect3DDevice8)), "ppDevice")]),
+	Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (Const(Pointer(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
+	Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
+	Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
+	Method(DWORD, "SetPriority", [(DWORD, "PriorityNew")]),
+	Method(DWORD, "GetPriority", []),
+	Method(Void, "PreLoad", []),
+	Method(D3DRESOURCETYPE, "GetType", []),
+]
+
+IDirect3DBaseTexture8.methods += [
+	Method(DWORD, "SetLOD", [(DWORD, "LODNew")]),
+	Method(DWORD, "GetLOD", []),
+	Method(DWORD, "GetLevelCount", []),
+]
+
+IDirect3DTexture8.methods += [
+	Method(HRESULT, "GetLevelDesc", [(UINT, "Level"), (Pointer(D3DSURFACE_DESC), "pDesc")]),
+	Method(HRESULT, "GetSurfaceLevel", [(UINT, "Level"), (Pointer(Pointer(IDirect3DSurface8)), "ppSurfaceLevel")]),
+	Method(HRESULT, "LockRect", [(UINT, "Level"), (Pointer(D3DLOCKED_RECT), "pLockedRect"), (Pointer(Const(RECT)), "pRect"), (DWORD, "Flags")]),
+	Method(HRESULT, "UnlockRect", [(UINT, "Level")]),
+	Method(HRESULT, "AddDirtyRect", [(Pointer(Const(RECT)), "pDirtyRect")]),
+]
+
+IDirect3DVolumeTexture8.methods += [
+	Method(HRESULT, "GetLevelDesc", [(UINT, "Level"), (Pointer(D3DVOLUME_DESC), "pDesc")]),
+	Method(HRESULT, "GetVolumeLevel", [(UINT, "Level"), (Pointer(Pointer(IDirect3DVolume8)), "ppVolumeLevel")]),
+	Method(HRESULT, "LockBox", [(UINT, "Level"), (Pointer(D3DLOCKED_BOX), "pLockedVolume"), (Pointer(Const(D3DBOX)), "pBox"), (DWORD, "Flags")]),
+	Method(HRESULT, "UnlockBox", [(UINT, "Level")]),
+	Method(HRESULT, "AddDirtyBox", [(Pointer(Const(D3DBOX)), "pDirtyBox")]),
+]
+
+IDirect3DCubeTexture8.methods += [
+	Method(HRESULT, "GetLevelDesc", [(UINT, "Level"), (Pointer(D3DSURFACE_DESC), "pDesc")]),
+	Method(HRESULT, "GetCubeMapSurface", [(D3DCUBEMAP_FACES, "FaceType"), (UINT, "Level"), (Pointer(Pointer(IDirect3DSurface8)), "ppCubeMapSurface")]),
+	Method(HRESULT, "LockRect", [(D3DCUBEMAP_FACES, "FaceType"), (UINT, "Level"), (Pointer(D3DLOCKED_RECT), "pLockedRect"), (Pointer(Const(RECT)), "pRect"), (DWORD, "Flags")]),
+	Method(HRESULT, "UnlockRect", [(D3DCUBEMAP_FACES, "FaceType"), (UINT, "Level")]),
+	Method(HRESULT, "AddDirtyRect", [(D3DCUBEMAP_FACES, "FaceType"), (Pointer(Const(RECT)), "pDirtyRect")]),
+]
+
+IDirect3DVertexBuffer8.methods += [
+	Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), (Pointer(Pointer(BYTE)), "ppbData"), (DWORD, "Flags")]),
+	Method(HRESULT, "Unlock", []),
+	Method(HRESULT, "GetDesc", [(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")]),
+]
+
+IDirect3DIndexBuffer8.methods += [
+	Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), (Pointer(Pointer(BYTE)), "ppbData"), (DWORD, "Flags")]),
+	Method(HRESULT, "Unlock", []),
+	Method(HRESULT, "GetDesc", [(Pointer(D3DINDEXBUFFER_DESC), "pDesc")]),
+]
+
+IDirect3DSurface8.methods += [
+	Method(HRESULT, "GetDevice", [(Pointer(Pointer(IDirect3DDevice8)), "ppDevice")]),
+	Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (Const(Pointer(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
+	Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
+	Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
+	Method(HRESULT, "GetContainer", [(REFIID, "riid"), (Pointer(Pointer(Void)), "ppContainer")]),
+	Method(HRESULT, "GetDesc", [(Pointer(D3DSURFACE_DESC), "pDesc")]),
+	Method(HRESULT, "LockRect", [(Pointer(D3DLOCKED_RECT), "pLockedRect"), (Pointer(Const(RECT)), "pRect"), (DWORD, "Flags")]),
+	Method(HRESULT, "UnlockRect", []),
+]
+
+IDirect3DVolume8.methods += [
+	Method(HRESULT, "GetDevice", [(Pointer(Pointer(IDirect3DDevice8)), "ppDevice")]),
+	Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (Const(Pointer(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
+	Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
+	Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
+	Method(HRESULT, "GetContainer", [(REFIID, "riid"), (Pointer(Pointer(Void)), "ppContainer")]),
+	Method(HRESULT, "GetDesc", [(Pointer(D3DVOLUME_DESC), "pDesc")]),
+	Method(HRESULT, "LockBox", [(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (Pointer(Const(D3DBOX)), "pBox"), (DWORD, "Flags")]),
+	Method(HRESULT, "UnlockBox", []),
+]
+
+d3d8 = Dll("d3d8")
+d3d8.functions += [
+    Function(WrapPointer(IDirect3D8), "Direct3DCreate8", [(UINT, "SDKVersion")]),
+]
+
+if __name__ == '__main__':
+    print '#include <windows.h>'
+    print '#include <tchar.h>'
+    print '#include <d3d8.h>'
+    print
+    print '#include "log.hpp"'
+    print
+    wrap()
+
