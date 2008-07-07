@@ -13,7 +13,7 @@ DWORD = Intrinsic("DWORD", "0x%08lu")
 
 BOOL = Intrinsic("BOOL", "%i")
 
-LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%x")
+LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%llx")
 
 HRESULT = Alias("HRESULT", Int)
 

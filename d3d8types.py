@@ -983,8 +983,6 @@ D3DADAPTER_IDENTIFIER8 = Struct("D3DADAPTER_IDENTIFIER8", (
     (String, "Driver"),
     (String, "Description"),
     (LARGE_INTEGER, "DriverVersion"),
-    (DWORD, "DriverVersionLowPart"),
-    (DWORD, "DriverVersionHighPart"),
     (DWORD, "VendorId"),
     (DWORD, "DeviceId"),
     (DWORD, "SubSysId"),

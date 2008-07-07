@@ -62,10 +62,14 @@ class Pointer(Type):
         return str(self.type) + " *"
     
     def dump(self, instance):
+        print '    if(%s) {' % instance
         try:
-            print '    g_pLog->TextF("%%p", %s);' % instance
-        except NotImplementedError:
             self.type.dump("*" + instance)
+        except NotImplementedError:
+            print '        g_pLog->TextF("%%p", %s);' % instance
+        print '    }'
+        print '    else'
+        print '        g_pLog->Text("NULL");'
 
     def wrap_instance(self, instance):
         self.type.wrap_instance("*" + instance)
@@ -213,6 +217,9 @@ class Interface(Type):
                 print '    %s result;' % method.type
                 result = 'result = '
             print '    g_pLog->BeginCall("%s");' % (self.name + '::' + method.name)
+            print '    g_pLog->BeginParam("this", "%s *");' % self.name
+            print '    g_pLog->TextF("%p", m_pInstance);'
+            print '    g_pLog->EndParam();'
             for type, name in method.args:
                 if not type.isoutput():
                     type.unwrap_instance(name)
@@ -228,7 +235,7 @@ class Interface(Type):
                     type.wrap_instance(name)
             if method.type is not Void:
                 print '    g_pLog->BeginReturn("%s");' % method.type
-                type.dump("result")
+                method.type.dump("result")
                 print '    g_pLog->EndReturn();'
                 method.type.wrap_instance('result')
             print '    g_pLog->EndCall();'

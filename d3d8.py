@@ -190,13 +190,13 @@ IDirect3DCubeTexture8.methods += [
 ]
 
 IDirect3DVertexBuffer8.methods += [
-	Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), (Pointer(Pointer(BYTE)), "ppbData"), (DWORD, "Flags")]),
+	Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), (OutPointer(Pointer(BYTE)), "ppbData"), (DWORD, "Flags")]),
 	Method(HRESULT, "Unlock", []),
 	Method(HRESULT, "GetDesc", [(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")]),
 ]
 
 IDirect3DIndexBuffer8.methods += [
-	Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), (Pointer(Pointer(BYTE)), "ppbData"), (DWORD, "Flags")]),
+	Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), (OutPointer(Pointer(BYTE)), "ppbData"), (DWORD, "Flags")]),
 	Method(HRESULT, "Unlock", []),
 	Method(HRESULT, "GetDesc", [(Pointer(D3DINDEXBUFFER_DESC), "pDesc")]),
 ]
@@ -206,7 +206,7 @@ IDirect3DSurface8.methods += [
 	Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (Const(Pointer(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
 	Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
 	Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
-	Method(HRESULT, "GetContainer", [(REFIID, "riid"), (Pointer(Pointer(Void)), "ppContainer")]),
+	Method(HRESULT, "GetContainer", [(REFIID, "riid"), (OutPointer(Pointer(Void)), "ppContainer")]),
 	Method(HRESULT, "GetDesc", [(Pointer(D3DSURFACE_DESC), "pDesc")]),
 	Method(HRESULT, "LockRect", [(Pointer(D3DLOCKED_RECT), "pLockedRect"), (Pointer(Const(RECT)), "pRect"), (DWORD, "Flags")]),
 	Method(HRESULT, "UnlockRect", []),
@@ -217,7 +217,7 @@ IDirect3DVolume8.methods += [
 	Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (Const(Pointer(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
 	Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), (Pointer(Void), "pData"), (Pointer(DWORD), "pSizeOfData")]),
 	Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
-	Method(HRESULT, "GetContainer", [(REFIID, "riid"), (Pointer(Pointer(Void)), "ppContainer")]),
+	Method(HRESULT, "GetContainer", [(REFIID, "riid"), (OutPointer(Pointer(Void)), "ppContainer")]),
 	Method(HRESULT, "GetDesc", [(Pointer(D3DVOLUME_DESC), "pDesc")]),
 	Method(HRESULT, "LockBox", [(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (Pointer(Const(D3DBOX)), "pBox"), (DWORD, "Flags")]),
 	Method(HRESULT, "UnlockBox", []),
