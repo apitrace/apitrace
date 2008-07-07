@@ -24,8 +24,9 @@
 				<xsl:value-of select="@name"/>
 			</span>
 			<xsl:text>(</xsl:text>
-			<xsl:apply-templates/>
+			<xsl:apply-templates select="param"/>
 			<xsl:text>)</xsl:text>
+			<xsl:apply-templates select="return"/>
 		</li>
 	</xsl:template>
 
@@ -44,6 +45,13 @@
 		<xsl:if test="position() != last()">
 			<xsl:text>, </xsl:text>
 		</xsl:if>
+	</xsl:template>
+
+	<xsl:template match="return">
+		<xsl:text> = </xsl:text>
+		<span class="lit">
+			<xsl:value-of select="."/>
+		</span>
 	</xsl:template>
 
 </xsl:transform>

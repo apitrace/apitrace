@@ -220,12 +220,18 @@ class Interface(Type):
                     type.dump(name)
                     print '    g_pLog->EndParam();'
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
-            print '    g_pLog->EndCall();'
             for type, name in method.args:
                 if type.isoutput():
+                    print '    g_pLog->BeginParam("%s", "%s");' % (name, type)
+                    type.dump(name)
+                    print '    g_pLog->EndParam();'
                     type.wrap_instance(name)
             if method.type is not Void:
+                print '    g_pLog->BeginReturn("%s");' % method.type
+                type.dump("result")
+                print '    g_pLog->EndReturn();'
                 method.type.wrap_instance('result')
+            print '    g_pLog->EndCall();'
             if method.name == 'QueryInterface':
                 print '    if(*ppvObj == m_pInstance)'
                 print '        *ppvObj = this;'
