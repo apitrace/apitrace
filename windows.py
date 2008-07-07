@@ -72,7 +72,7 @@ class Dll:
 
     def wrap_decl(self):
         print 'static HINSTANCE g_hDll = NULL;'
-        print 'static Log * g_pLog = NULL;'
+        print 'Log * g_pLog = NULL;'
         print 'static TCHAR g_szDll[MAX_PATH] = {0};'
         print
         print 'BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);'
@@ -134,11 +134,11 @@ class Dll:
             else:
                 print '    %s result;' % function.type
                 result = 'result = '
-            print '        if(!g_hDll) {'
-            print '            g_hDll = LoadLibrary(g_szDll);'
-            print '            if(!g_hDll)'
-            print '                ExitProcess(0);'
-            print '        }'
+            print '    if(!g_hDll) {'
+            print '        g_hDll = LoadLibrary(g_szDll);'
+            print '        if(!g_hDll)'
+            print '            ExitProcess(0);'
+            print '    }'
             print '    pFunction = (%s)GetProcAddress( g_hDll, "%s");' % (type, function.name)
             print '    if(!pFunction)'
             print '        ExitProcess(0);'

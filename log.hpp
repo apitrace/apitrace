@@ -183,9 +183,9 @@ public:
         NewLine();
     }
     
-    void BeginParam(const char *type, const char *name) {
+    void BeginParam(const char *name, const char *type) {
         Write("\t\t");
-        BeginTag("param", "type", type, "name", name);
+        BeginTag("param", "name", name, "type", type);
     }
     
     void EndParam(void) {
@@ -209,6 +209,9 @@ protected:
         Write(s);
     }
 };
+
+
+extern Log * g_pLog;
 
 
 #endif /* _LOG_HPP_ */

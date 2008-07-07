@@ -50,7 +50,7 @@ IDirect3DDevice8.methods += [
 	Method(HRESULT, "TestCooperativeLevel", []),
 	Method(UINT, "GetAvailableTextureMem", []),
 	Method(HRESULT, "ResourceManagerDiscardBytes", [(DWORD, "Bytes")]),
-	Method(HRESULT, "GetDirect3D", [(Pointer(PDIRECT3D8), "ppD3D8")]),
+	Method(HRESULT, "GetDirect3D", [(OutPointer(PDIRECT3D8), "ppD3D8")]),
 	Method(HRESULT, "GetDeviceCaps", [(Pointer(D3DCAPS8), "pCaps")]),
 	Method(HRESULT, "GetDisplayMode", [(Pointer(D3DDISPLAYMODE), "pMode")]),
 	Method(HRESULT, "GetCreationParameters", [(Pointer(D3DDEVICE_CREATION_PARAMETERS), "pParameters")]),

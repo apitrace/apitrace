@@ -11,6 +11,9 @@ class Type:
     def isoutput(self):
         return False
 
+    def dump(self, instance):
+        raise NotImplementedError
+    
     def wrap_instance(self, instance):
         pass
 
@@ -32,12 +35,18 @@ class Intrinsic(Type):
         Type.__init__(self, name)
         self.format = format
 
+    def dump(self, instance):
+        print '    g_pLog->TextF("%s", %s);' % (self.format, instance)
+
 
 class Const(Type):
 
     def __init__(self, type):
         Type.__init__(self, 'C' + type.name)
         self.type = type
+
+    def dump(self, instance):
+        self.type.dump(instance)
 
     def __str__(self):
         return "const " + str(self.type)
@@ -51,6 +60,12 @@ class Pointer(Type):
 
     def __str__(self):
         return str(self.type) + " *"
+    
+    def dump(self, instance):
+        try:
+            print '    g_pLog->TextF("%%p", %s);' % instance
+        except NotImplementedError:
+            self.type.dump("*" + instance)
 
     def wrap_instance(self, instance):
         self.type.wrap_instance("*" + instance)
@@ -59,26 +74,10 @@ class Pointer(Type):
         self.type.wrap_instance("*" + instance)
 
 
-class Output(Type):
-
-    def __init__(self, type):
-        Type.__init__(self, type.name)
-        self.type = type
-
-    def __str__(self):
-        return str(self.type)
+class OutPointer(Pointer):
 
     def isoutput(self):
         return True
-
-    def wrap_instance(self, instance):
-        self.type.wrap_instance(instance)
-
-    def unwrap_instance(self, instance):
-        self.type.wrap_instance(instance)
-
-def OutPointer(type):
-    return Output(Pointer(type))
 
 
 class Enum(Type):
@@ -86,6 +85,17 @@ class Enum(Type):
     def __init__(self, name, values):
         Type.__init__(self, name)
         self.values = values
+    
+    def dump(self, instance):
+        print '    switch(%s) {' % instance
+        for value in self.values:
+            print '    case %s:' % value
+            print '        g_pLog->Text("%s");' % value
+            print '        break;'
+        print '    default:'
+        print '        g_pLog->TextF("%%i", %s);' % instance
+        print '        break;'
+        print '    }'
 
 
 class Flags(Type):
@@ -101,12 +111,26 @@ class Struct(Type):
         Type.__init__(self, name)
         self.members = members
 
+    def dump(self, instance):
+        print '    g_pLog->Text("{");'
+        first = True
+        for type, name in self.members:
+            if first:
+                first = False
+            else:
+                print '    g_pLog->Text(", ");'
+            type.dump('(%s).%s' % (instance, name))
+        print '    g_pLog->Text("}");'
+
 
 class Alias(Type):
 
     def __init__(self, name, type):
         Type.__init__(self, name)
         self.type = type
+
+    def dump(self, instance):
+        self.type.dump(instance)
 
 
 class Function:
@@ -192,6 +216,9 @@ class Interface(Type):
             for type, name in method.args:
                 if not type.isoutput():
                     type.unwrap_instance(name)
+                    print '    g_pLog->BeginParam("%s", "%s");' % (name, type)
+                    type.dump(name)
+                    print '    g_pLog->EndParam();'
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
             print '    g_pLog->EndCall();'
             for type, name in method.args:
