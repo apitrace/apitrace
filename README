@@ -1,11 +1,36 @@
+				   D3D Trace
+
+
+= About =
+
 Wrapper DLLs to trace D3D8 and D3D9 APIs calls.
 
-Base on the idea and code (public domain) from Michael Koch. 
+Based on the idea and code (public domain) from Michael Koch. 
 
 See also:
-- http://www.mikoweb.eu/index.php?node=21
-- http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/
-- http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm
+* http://www.mikoweb.eu/index.php?node=21
+* http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/
+* http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm
+
+
+= Status =
+
+* Only Direct3D 8 supported at the moment.
+
+
+= Build =
+
+* Install SCons and DirectX SDK.
+* Run:
+  scons
+
+
+= Usage =
+
+* Copy d3d8.dll, d3dtrace.xsl, d3dtrace.css to the directory with the application you want to trace.
+* Run the application.
+* Open the output XML file with Firefox or Internet Explorer.
+* For long XML files is better to use the d3dtrace-txt.xsl stylesheet together with a dedicated XSL processor like xsltproc, or msxsl.
 
 
 -- 
