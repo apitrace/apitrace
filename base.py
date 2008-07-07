@@ -14,6 +14,9 @@ class Type:
     def wrap_instance(self, instance):
         pass
 
+    def unwrap_instance(self, instance):
+        pass
+
 
 class Void(Type):
 
@@ -52,6 +55,9 @@ class Pointer(Type):
     def wrap_instance(self, instance):
         self.type.wrap_instance("*" + instance)
 
+    def unwrap_instance(self, instance):
+        self.type.wrap_instance("*" + instance)
+
 
 class Output(Type):
 
@@ -67,6 +73,12 @@ class Output(Type):
 
     def wrap_instance(self, instance):
         self.type.wrap_instance(instance)
+
+    def unwrap_instance(self, instance):
+        self.type.wrap_instance(instance)
+
+def OutPointer(type):
+    return Output(Pointer(type))
 
 
 class Enum(Type):
@@ -156,8 +168,7 @@ class Interface(Type):
         for method in self.itermethods():
             print "    " + method.prototype() + ";"
         print
-        print "private:"
-        print "    Log *m_pLog;"
+        #print "private:"
         print "    %s * m_pInstance;" % (self.name,)
         print "};"
         print
@@ -178,6 +189,9 @@ class Interface(Type):
                 print '    %s result;' % method.type
                 result = 'result = '
             print '    g_pLog->BeginCall("%s");' % (self.name + '::' + method.name)
+            for type, name in method.args:
+                if not type.isoutput():
+                    type.unwrap_instance(name)
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
             print '    g_pLog->EndCall();'
             for type, name in method.args:
@@ -217,6 +231,10 @@ class WrapPointer(Pointer):
     def wrap_instance(self, instance):
         print "    if(%s)" % instance
         print "        %s = new %s(%s);" % (instance, self.type.wrap_name(), instance)
+
+    def unwrap_instance(self, instance):
+        print "    if(%s)" % instance
+        print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, self.type.wrap_name(), instance)
 
 String = Intrinsic("char *", "%s")
 Int = Intrinsic("int", "%i")
