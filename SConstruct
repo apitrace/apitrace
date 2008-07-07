@@ -40,6 +40,7 @@ env.Append(CPPDEFINES = [
     '_CRT_SECURE_NO_DEPRECATE',
     '_CRT_NON_CONFORMING_SWPRINTFS',
     'WIN32_LEAN_AND_MEAN',
+    '_USRDLL',
 ])
 
 if env['debug']:
@@ -49,7 +50,7 @@ else:
 env['PDB'] = '${TARGET.base}.pdb'
 
 cflags = [
-    '/W3', # warning level
+    '/W4', # warning level
 ]
 if env['debug']:
     cflags += [
@@ -63,6 +64,7 @@ else:
       '/Oi', # enable intrinsic functions
       '/Os', # favor code space
     ]
+cflags += ['/MT']
 env.Append(CFLAGS = cflags)
 env.Append(CXXFLAGS = cflags)
 

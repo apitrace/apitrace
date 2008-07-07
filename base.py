@@ -164,12 +164,10 @@ class Interface(Type):
 
     def wrap_impl(self):
         print '%s::%s(%s * pInstance) {' % (self.wrap_name(), self.wrap_name(), self.name)
-        print '    m_pLog = new Log("d3d8trace");'
         print '    m_pInstance = pInstance;'
         print '}'
         print
         print '%s::~%s() {' % (self.wrap_name(), self.wrap_name())
-        print "    delete m_pLog;"
         print '}'
         print
         for method in self.itermethods():
@@ -179,14 +177,14 @@ class Interface(Type):
             else:
                 print '    %s result;' % method.type
                 result = 'result = '
-            print '    m_pLog->BeginCall("%s");' % (self.name + '::' + method.name)
+            print '    g_pLog->BeginCall("%s");' % (self.name + '::' + method.name)
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
+            print '    g_pLog->EndCall();'
             for type, name in method.args:
                 if type.isoutput():
                     type.wrap_instance(name)
             if method.type is not Void:
                 method.type.wrap_instance('result')
-            print '    m_pLog->EndCall();'
             if method.name == 'QueryInterface':
                 print '    if(*ppvObj == m_pInstance)'
                 print '        *ppvObj = this;'
