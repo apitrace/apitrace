@@ -7,9 +7,9 @@ UINT = Intrinsic("UINT", "%u")
 LONG = Intrinsic("LONG", "%li")
 ULONG = Intrinsic("ULONG", "%lu")
 
-BYTE = Intrinsic("BYTE", "0x%02lu")
-WORD = Intrinsic("WORD", "0x%04lu")
-DWORD = Intrinsic("DWORD", "0x%08lu")
+BYTE = Intrinsic("BYTE", "0x%02lx")
+WORD = Intrinsic("WORD", "0x%04lx")
+DWORD = Intrinsic("DWORD", "0x%08lx")
 
 BOOL = Intrinsic("BOOL", "%i")
 
