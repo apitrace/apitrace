@@ -100,7 +100,6 @@ class Dll:
 
     def wrap_decl(self):
         print 'static HINSTANCE g_hDll = NULL;'
-        print 'Log * g_pLog = NULL;'
         print 'static TCHAR g_szDll[MAX_PATH] = {0};'
         print
         print 'BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);'

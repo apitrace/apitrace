@@ -94,6 +94,7 @@ d3d8 = env.SharedLibrary(
     source = [
         'd3d8.def',
         'd3d8.cpp',
+        'log.cpp',
     ]
 )
 
@@ -110,6 +111,7 @@ d3d9 = env.SharedLibrary(
     source = [
         'd3d9.def',
         'd3d9.cpp',
+        'log.cpp',
     ]
 )
 
