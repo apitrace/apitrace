@@ -97,6 +97,10 @@ class Pointer(Type):
         self.type.wrap_instance("*" + instance)
 
 
+def ConstPointer(type):
+    return Pointer(Const(type))
+
+
 class OutPointer(Pointer):
 
     def isoutput(self):
