@@ -125,7 +125,19 @@ class Flags(Type):
 
     def __init__(self, type, values):
         Type.__init__(self, type.name)
+        self.type = type
         self.values = values
+
+    def dump(self, instance):
+        print '    {'
+        print '        %s l_Value = %s;' % (self.type, instance)
+        for value in self.values:
+            print '        if((l_Value & %s) == %s) {' % (value, value)
+            print '            g_pLog->Text("%s | ");' % value
+            print '            l_Value &= ~%s;' % value
+            print '        }'
+        self.type.dump("l_Value");
+        print '    }'
 
 
 class Struct(Type):
@@ -296,6 +308,7 @@ class WrapPointer(Pointer):
         print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, self.type.wrap_name(), instance)
 
 String = Intrinsic("char *", "%s")
+Short = Intrinsic("short", "%i")
 Int = Intrinsic("int", "%i")
 Long = Intrinsic("long", "%li")
 Float = Intrinsic("float", "%f")
