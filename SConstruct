@@ -55,16 +55,18 @@ cflags = [
 if env['debug']:
     cflags += [
       '/Od', # disable optimizations
-      '/Oi', # enable intrinsic functions
       '/Oy-', # disable frame pointer omission
     ]
 else:
     cflags += [
       '/Ox', # maximum optimizations
-      '/Oi', # enable intrinsic functions
       '/Os', # favor code space
     ]
-cflags += ['/MT']
+cflags += [
+    '/Oi', # enable intrinsic functions
+    '/GF', # enable read-only string pooling
+    '/MT',
+]
 env.Append(CFLAGS = cflags)
 env.Append(CXXFLAGS = cflags)
 
@@ -81,16 +83,12 @@ env.Append(CPPPATH = [
     os.path.join(env['dxsdk'], 'Include'),
 ])
 
-Export('env')
-
-
 env.Command(
     target = 'd3d8.cpp', 
     source = ['d3d8.py', 'd3d8types.py', 'd3d8caps.py', 'windows.py', 'base.py'],
     action = 'python $SOURCE > $TARGET',
 )
     
-
 d3d8 = env.SharedLibrary(
     target = 'd3d8',
     source = [
@@ -99,12 +97,23 @@ d3d8 = env.SharedLibrary(
     ]
 )
 
-SConscript([
-    'd3d9/SConscript',
-])
-
-
 env.Default(d3d8)
+
+env.Command(
+    target = 'd3d9.cpp', 
+    source = ['d3d9.py', 'd3d9types.py', 'd3d9caps.py', 'windows.py', 'base.py'],
+    action = 'python $SOURCE > $TARGET',
+)
+    
+d3d9 = env.SharedLibrary(
+    target = 'd3d9',
+    source = [
+        'd3d9.def',
+        'd3d9.cpp',
+    ]
+)
+
+env.Default(d3d9)
 
 env.Tool('packaging')
 

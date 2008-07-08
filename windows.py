@@ -21,10 +21,16 @@
 
 from base import *
 
-INT = Intrinsic("INT", "%u")
+SHORT = Intrinsic("SHORT", "%i")
+USHORT = Intrinsic("USHORT", "%u")
+INT = Intrinsic("INT", "%i")
 UINT = Intrinsic("UINT", "%u")
 LONG = Intrinsic("LONG", "%li")
 ULONG = Intrinsic("ULONG", "%lu")
+FLOAT = Intrinsic("FLOAT", "%f")
+
+INT32 = Intrinsic("INT32", "%i")
+UINT32 = Intrinsic("UINT32", "%i")
 
 BYTE = Intrinsic("BYTE", "0x%02lx")
 WORD = Intrinsic("WORD", "0x%04lx")
@@ -37,11 +43,14 @@ LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%llx")
 HRESULT = Alias("HRESULT", Int)
 
 PVOID = Intrinsic("PVOID", "%p")
+HANDLE = Intrinsic("HANDLE", "%p")
 HWND = Intrinsic("HWND", "%p")
+HDC = Intrinsic("HDC", "%p")
 HMONITOR = Intrinsic("HMONITOR", "%p")
 
 REFIID = Alias("REFIID", PVOID)
 GUID = Alias("GUID", PVOID)
+LUID = Alias("LUID", PVOID)
 
 POINT = Struct("POINT", (
   (LONG, "x"),

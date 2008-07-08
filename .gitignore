@@ -11,3 +11,4 @@
 *.xml
 *.zip
 d3d8.cpp
+d3d9.cpp
