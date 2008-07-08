@@ -79,11 +79,9 @@ env.Prepend(LIBS = [
 
 env.Append(CPPPATH = [
     os.path.join(env['dxsdk'], 'Include'),
-    '#common',
 ])
 
 Export('env')
-
 
 
 env.Command(
@@ -93,8 +91,8 @@ env.Command(
 )
     
 
-env.SharedLibrary(
-    target = 'd3d8.dll',
+d3d8 = env.SharedLibrary(
+    target = 'd3d8',
     source = [
         'd3d8.def',
         'd3d8.cpp',
@@ -104,3 +102,29 @@ env.SharedLibrary(
 SConscript([
     'd3d9/SConscript',
 ])
+
+
+env.Default(d3d8)
+
+env.Tool('packaging')
+
+zip = env.Package(
+    NAME           = 'd3dtrace',
+    VERSION        = '0.1',
+    PACKAGEVERSION = 0,
+    PACKAGETYPE    = 'zip',
+    LICENSE        = 'lgpl',
+    SUMMARY        = 'Tool to trace Direct3D API calls from applications.',
+    SOURCE_URL     = 'http://cgit.freedesktop.org/~jrfonseca/d3dtrace/',
+    source = [
+        'README',
+        'COPYING',
+        'COPYING.LESSER',
+        'd3d8.dll',
+        'd3dtrace.xsl',
+        'd3dtrace.css',
+        'd3dtrace-txt.xsl',
+    ],
+)
+
+env.Alias('zip', zip)

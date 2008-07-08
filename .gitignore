@@ -9,4 +9,5 @@
 *.pyc
 *.pyo
 *.xml
+*.zip
 d3d8.cpp
