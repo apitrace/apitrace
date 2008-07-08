@@ -5,6 +5,12 @@ body {
 	text-align : left;
 }
 
+ul {
+	list-style: none;
+	margin-left: 0px;
+	padding-left: 0px;
+}
+
 .fun {
 	font-weight: bold;
 }
