@@ -22,31 +22,13 @@
 
 #include <windows.h>
 #include <tchar.h>
-#include <stdio.h>
 
 
-class File
-{
-public:
-    File(const TCHAR *szName, const TCHAR *szExtension);
-    ~File();
+namespace Log {
 
-    void Open(const TCHAR *szName, const TCHAR *szExtension);
+    void Open(const TCHAR *szName);
     void ReOpen(void);
     void Close(void);
-    void Write(const char *szText);
-    
-private:
-    HANDLE m_hFile;
-    TCHAR szFileName[MAX_PATH];
-};
-
-
-class Log : public File
-{
-public:
-    Log(const TCHAR *szName);
-    ~Log();
     
     void NewLine(void);
     void Tag(const char *name);
@@ -65,13 +47,6 @@ public:
     void EndParam(void);
     void BeginReturn(const char *type);
     void EndReturn(void);
-    
-protected:
-    void Escape(const char *s);
-};
-
-
-extern Log * g_pLog;
-
+}
 
 #endif /* _LOG_HPP_ */

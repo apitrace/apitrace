@@ -55,7 +55,7 @@ class Intrinsic(Type):
         self.format = format
 
     def dump(self, instance):
-        print '    g_pLog->TextF("%s", %s);' % (self.format, instance)
+        print '    Log::TextF("%s", %s);' % (self.format, instance)
 
 
 class Const(Type):
@@ -85,10 +85,10 @@ class Pointer(Type):
         try:
             self.type.dump("*" + instance)
         except NotImplementedError:
-            print '        g_pLog->TextF("%%p", %s);' % instance
+            print '        Log::TextF("%%p", %s);' % instance
         print '    }'
         print '    else'
-        print '        g_pLog->Text("NULL");'
+        print '        Log::Text("NULL");'
 
     def wrap_instance(self, instance):
         self.type.wrap_instance("*" + instance)
@@ -117,10 +117,10 @@ class Enum(Type):
         print '    switch(%s) {' % instance
         for value in self.values:
             print '    case %s:' % value
-            print '        g_pLog->Text("%s");' % value
+            print '        Log::Text("%s");' % value
             print '        break;'
         print '    default:'
-        print '        g_pLog->TextF("%%i", %s);' % instance
+        print '        Log::TextF("%%i", %s);' % instance
         print '        break;'
         print '    }'
 
@@ -137,7 +137,7 @@ class Flags(Type):
         print '        %s l_Value = %s;' % (self.type, instance)
         for value in self.values:
             print '        if((l_Value & %s) == %s) {' % (value, value)
-            print '            g_pLog->Text("%s | ");' % value
+            print '            Log::Text("%s | ");' % value
             print '            l_Value &= ~%s;' % value
             print '        }'
         self.type.dump("l_Value");
@@ -151,15 +151,15 @@ class Struct(Type):
         self.members = members
 
     def dump(self, instance):
-        print '    g_pLog->Text("{");'
+        print '    Log::Text("{");'
         first = True
         for type, name in self.members:
             if first:
                 first = False
             else:
-                print '    g_pLog->Text(", ");'
+                print '    Log::Text(", ");'
             type.dump('(%s).%s' % (instance, name))
-        print '    g_pLog->Text("}");'
+        print '    Log::Text("}");'
 
 
 class Alias(Type):
@@ -251,29 +251,29 @@ class Interface(Type):
             else:
                 print '    %s result;' % method.type
                 result = 'result = '
-            print '    g_pLog->BeginCall("%s");' % (self.name + '::' + method.name)
-            print '    g_pLog->BeginParam("this", "%s *");' % self.name
-            print '    g_pLog->TextF("%p", m_pInstance);'
-            print '    g_pLog->EndParam();'
+            print '    Log::BeginCall("%s");' % (self.name + '::' + method.name)
+            print '    Log::BeginParam("this", "%s *");' % self.name
+            print '    Log::TextF("%p", m_pInstance);'
+            print '    Log::EndParam();'
             for type, name in method.args:
                 if not type.isoutput():
                     type.unwrap_instance(name)
-                    print '    g_pLog->BeginParam("%s", "%s");' % (name, type)
+                    print '    Log::BeginParam("%s", "%s");' % (name, type)
                     type.dump(name)
-                    print '    g_pLog->EndParam();'
+                    print '    Log::EndParam();'
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
             for type, name in method.args:
                 if type.isoutput():
-                    print '    g_pLog->BeginParam("%s", "%s");' % (name, type)
+                    print '    Log::BeginParam("%s", "%s");' % (name, type)
                     type.dump(name)
-                    print '    g_pLog->EndParam();'
+                    print '    Log::EndParam();'
                     type.wrap_instance(name)
             if method.type is not Void:
-                print '    g_pLog->BeginReturn("%s");' % method.type
+                print '    Log::BeginReturn("%s");' % method.type
                 method.type.dump("result")
-                print '    g_pLog->EndReturn();'
+                print '    Log::EndReturn();'
                 method.type.wrap_instance('result')
-            print '    g_pLog->EndCall();'
+            print '    Log::EndCall();'
             if method.name == 'QueryInterface':
                 print '    if(*ppvObj == m_pInstance)'
                 print '        *ppvObj = this;'

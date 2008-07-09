@@ -18,29 +18,35 @@
  ****************************************************************************/
 
 
+#include <stdio.h>
+
 #include "log.hpp"
 
 
-File::File(const TCHAR *szName, const TCHAR *szExtension) {
-    m_hFile = INVALID_HANDLE_VALUE;
-    Open(szName, szExtension);
+namespace Log {
+
+
+static HANDLE g_hFile = INVALID_HANDLE_VALUE;
+static TCHAR g_szFileName[MAX_PATH];
+
+static void _Close(void) {
+    if(g_hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(g_hFile);
+        g_hFile = INVALID_HANDLE_VALUE;
+    }
 }
 
-File::~File() {
-    Close();
-}
-
-void File::Open(const TCHAR *szName, const TCHAR *szExtension) {
-    Close();
+static void _Open(const TCHAR *szName, const TCHAR *szExtension) {
+    _Close();
     
     DWORD dwCounter = 0;
     do {
         if(dwCounter)
-            _sntprintf(szFileName, MAX_PATH, TEXT("%s.%u.%s"), szName, dwCounter, szExtension);
+            _sntprintf(g_szFileName, MAX_PATH, TEXT("%s.%u.%s"), szName, dwCounter, szExtension);
         else
-            _sntprintf(szFileName, MAX_PATH, TEXT("%s.%s"), szName, szExtension);
+            _sntprintf(g_szFileName, MAX_PATH, TEXT("%s.%s"), szName, szExtension);
 
-        m_hFile = CreateFile(szFileName,
+        g_hFile = CreateFile(g_szFileName,
                              GENERIC_WRITE,
                              FILE_SHARE_WRITE,
                              NULL,
@@ -48,30 +54,23 @@ void File::Open(const TCHAR *szName, const TCHAR *szExtension) {
                              FILE_ATTRIBUTE_NORMAL,
                              NULL);
         ++dwCounter;
-    } while(m_hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_EXISTS);
+    } while(g_hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_EXISTS);
 }
 
-void File::ReOpen(void) {
-    Close();
+static void _ReOpen(void) {
+    _Close();
     
-    m_hFile = CreateFile(szFileName,
+    g_hFile = CreateFile(g_szFileName,
                          GENERIC_WRITE,
-                         0,
+                         FILE_SHARE_WRITE,
                          NULL,
                          OPEN_EXISTING,
                          FILE_ATTRIBUTE_NORMAL,
                          NULL);
 }
 
-void File::Close(void) {
-    if(m_hFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(m_hFile);
-        m_hFile = INVALID_HANDLE_VALUE;
-    }
-}
-
-void File::Write(const char *szText) {
-    if(m_hFile == INVALID_HANDLE_VALUE)
+static void Write(const char *szText) {
+    if(g_hFile == INVALID_HANDLE_VALUE)
         return;
     
     DWORD dwBytesToWrite = (DWORD)strlen(szText);
@@ -85,20 +84,21 @@ void File::Write(const char *szText) {
         overlapped.Offset = 0xffffffff;
         overlapped.OffsetHigh = 0xffffffff;
         
-        if(WriteFile(m_hFile,
+        if(WriteFile(g_hFile,
                      szText + dwBytesWritten,
                      dwBytesToWrite - dwBytesWritten,
                      &dwBytesWritten,
                      &overlapped) == FALSE) {
-            Close();
-            Open(TEXT("extra"), TEXT("xml"));
+            _Close();
+            _Open(TEXT("extra"), TEXT("xml"));
             return;
         }
     }
 }
 
 
-Log::Log(const TCHAR *szName) : File(szName, TEXT("xml")) {
+void Open(const TCHAR *szName) {
+    _Open(szName, TEXT("xml"));
     Write("<?xml version='1.0' encoding='UTF-8'?>");
     NewLine();
     Write("<?xml-stylesheet type='text/xsl' href='d3dtrace.xsl'?>");
@@ -107,28 +107,38 @@ Log::Log(const TCHAR *szName) : File(szName, TEXT("xml")) {
     NewLine();
 }
 
-Log::~Log() {
-    Write("</trace>");
-    NewLine();
+void ReOpen(void) {
+    _ReOpen();
 }
 
-void Log::NewLine(void) {
+void Close(void) {
+    Write("</trace>");
+    NewLine();
+    _Close();
+}
+
+static void Escape(const char *s) {
+    /* FIXME */
+    Write(s);
+}
+
+void NewLine(void) {
     Write("\r\n");
 }
 
-void Log::Tag(const char *name) {
+void Tag(const char *name) {
     Write("<");
     Write(name);
     Write("/>");
 }
 
-void Log::BeginTag(const char *name) {
+void BeginTag(const char *name) {
     Write("<");
     Write(name);
     Write(">");
 }
 
-void Log::BeginTag(const char *name, 
+void BeginTag(const char *name, 
               const char *attr1, const char *value1) {
     Write("<");
     Write(name);
@@ -139,7 +149,7 @@ void Log::BeginTag(const char *name,
     Write("\">");
 }
 
-void Log::BeginTag(const char *name, 
+void BeginTag(const char *name, 
               const char *attr1, const char *value1,
               const char *attr2, const char *value2) {
     Write("<");
@@ -155,17 +165,17 @@ void Log::BeginTag(const char *name,
     Write("\">");
 }
 
-void Log::EndTag(const char *name) {
+void EndTag(const char *name) {
     Write("</");
     Write(name);
     Write(">");
 }
 
-void Log::Text(const char *text) {
+void Text(const char *text) {
     Escape(text);
 }
 
-void Log::TextF(const char *format, ...) {
+void TextF(const char *format, ...) {
     char szBuffer[4196];
     va_list ap;
     va_start(ap, format);
@@ -174,42 +184,37 @@ void Log::TextF(const char *format, ...) {
     Escape(szBuffer);
 }
 
-void Log::BeginCall(const char *function) {
+void BeginCall(const char *function) {
     Write("\t");
     BeginTag("call", "name", function);
     NewLine();
 }
 
-void Log::EndCall(void) {
+void EndCall(void) {
     Write("\t");
     EndTag("call");
     NewLine();
 }
 
-void Log::BeginParam(const char *name, const char *type) {
+void BeginParam(const char *name, const char *type) {
     Write("\t\t");
     BeginTag("param", "name", name, "type", type);
 }
 
-void Log::EndParam(void) {
+void EndParam(void) {
     EndTag("param");
     NewLine();
 }
 
-void Log::BeginReturn(const char *type) {
+void BeginReturn(const char *type) {
     Write("\t\t");
     BeginTag("return", "type", type);
 }
 
-void Log::EndReturn(void) {
+void EndReturn(void) {
     EndTag("return");
     NewLine();
 }
 
-void Log::Escape(const char *s) {
-    /* FIXME */
-    Write(s);
-}
 
-
-Log * g_pLog = NULL;
+} /* namespace Log */
