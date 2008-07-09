@@ -5,7 +5,7 @@
 
 Wrapper DLLs to trace D3D8 and D3D9 APIs calls.
 
-Based on the idea and code (public domain) from Michael Koch. 
+Based on the idea from Michael Koch. 
 
 See also:
 * http://www.mikoweb.eu/index.php?node=21
@@ -15,21 +15,28 @@ See also:
 
 = Status =
 
-* Only Direct3D 8 supported at the moment.
+* Only Direct3D 8 and 9 are supported at the moment.
+* It has not been tested with many applications. Bugs may cause the application to crash. 
 
 
-= Build =
+= Building from source =
 
-* Install SCons and DirectX SDK.
-* Run:
-  scons
+Requirements:
+* Python (tested with version 2.5)
+* SCons (tested with 0.98.4)
+* Microsoft Visual Studio (tested with 2005 version)
+* Microsoft DirectX SDK (tested with August 2007 release)
+
+Instructions:
+* Invoke scons:
+ scons
 
 
 = Usage =
 
-* Copy d3d8.dll, d3dtrace.xsl, d3dtrace.css to the directory with the application you want to trace.
+* Copy d3d8.dll/d3d9.dll, d3dtrace.xsl, d3dtrace.css to the directory with the application you want to trace.
 * Run the application.
-* Open the output XML file with Firefox or Internet Explorer.
+* Open the output XML file with Firefox or Internet Explorer to view the log.
 * For long XML files is better to use the d3dtrace-txt.xsl stylesheet together with a dedicated XSL processor like xsltproc, or msxsl.
 
 
