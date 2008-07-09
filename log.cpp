@@ -69,11 +69,10 @@ static void _ReOpen(void) {
                          NULL);
 }
 
-static void Write(const char *szText) {
+static void Write(const char *sBuffer, DWORD dwBytesToWrite) {
     if(g_hFile == INVALID_HANDLE_VALUE)
         return;
     
-    DWORD dwBytesToWrite = (DWORD)strlen(szText);
     DWORD dwBytesWritten = 0;
     
     while (dwBytesWritten < dwBytesToWrite) {
@@ -85,7 +84,7 @@ static void Write(const char *szText) {
         overlapped.OffsetHigh = 0xffffffff;
         
         if(WriteFile(g_hFile,
-                     szText + dwBytesWritten,
+                     sBuffer + dwBytesWritten,
                      dwBytesToWrite - dwBytesWritten,
                      &dwBytesWritten,
                      &overlapped) == FALSE) {
@@ -94,6 +93,10 @@ static void Write(const char *szText) {
             return;
         }
     }
+}
+
+static void Write(const char *szText) {
+    Write(szText, (DWORD)strlen(szText));
 }
 
 void Open(const TCHAR *szName) {
@@ -227,7 +230,11 @@ void DumpString(const char *str) {
     Log::Text("\"");
     unsigned char c;
     while((c = *p++) != 0) {
-        if(c >= 0x20 && c <= 0x7e)
+        if(c == '\"')
+            Text("\\\"");
+        else if(c == '\\')
+            Text("\\\\");
+        else if(c >= 0x20 && c <= 0x7e)
             TextChar(c);
         else if(c == '\t')
             Text("\\t");
