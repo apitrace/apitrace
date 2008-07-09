@@ -28,8 +28,22 @@ Requirements:
 * Microsoft DirectX SDK (tested with August 2007 release)
 
 Instructions:
+
 * Invoke scons:
- scons
+
+ scons debug=no dxsdk=C:\DXSDK
+ 
+* You can write those options to a file named config.py:
+
+ # config.py
+ debug=1
+ dxsdk='C:\\DXSDK'
+ 
+* Invoke
+
+  scons -h
+
+See the scons manpage for more info.
 
 
 = Usage =

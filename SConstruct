@@ -1,23 +1,21 @@
-#######################################################################
-# Top-level SConstruct
+#############################################################################
 #
-# For example, invoke scons as 
+# Copyright 2008 Tungsten Graphics, Inc.
 #
-#   scons debug=1
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# to set configuration variables. Or you can write those options to a file
-# named config.py:
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 #
-#   # config.py
-#   debug=1
-#   dxsdk='C:\\DXSDK'
-# 
-# Invoke
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-#   scons -h
-#
-# to get the full list of options. See scons manpage for more info.
-#  
+#############################################################################
 
 import os
 import os.path
@@ -74,9 +72,6 @@ env.Prepend(LIBS = [
     'kernel32',
     'user32',
     'gdi32',
-    'comdlg32',
-    'advapi32',
-    'shell32',
 ])
 
 env.Append(CPPPATH = [
