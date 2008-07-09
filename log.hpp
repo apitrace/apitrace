@@ -47,6 +47,8 @@ namespace Log {
     void EndParam(void);
     void BeginReturn(const char *type);
     void EndReturn(void);
+
+    void DumpString(const char *str);
 }
 
 #endif /* _LOG_HPP_ */

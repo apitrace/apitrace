@@ -19,6 +19,12 @@
 
 """C basic types"""
 
+
+import debug
+
+
+all_types = {}
+
 class Type:
 
     def __init__(self, name):
@@ -30,32 +36,72 @@ class Type:
     def isoutput(self):
         return False
 
+    def decl(self):
+        pass
+
+    def impl(self):
+        pass
+
     def dump(self, instance):
         raise NotImplementedError
     
     def wrap_instance(self, instance):
-        pass
+        pass 
 
     def unwrap_instance(self, instance):
         pass
 
 
-class Void(Type):
+class _Void(Type):
 
     def __init__(self):
         Type.__init__(self, "void")
 
-Void = Void()
+Void = _Void()
 
 
-class Intrinsic(Type):
+class Concrete(Type):
 
-    def __init__(self, name, format):
+    def __init__(self, name):
+        for char in name:
+            assert char.isalnum() or char == '_'
+
         Type.__init__(self, name)
+        
+        assert self.name not in all_types
+        if self.name not in all_types:
+            all_types[self.name] = self
+
+    def decl(self):
+        print 'void Dump%s(const %s &value);' % (self.name, str(self))
+    
+    def impl(self):
+        print 'void Dump%s(const %s &value) {' % (self.name, str(self))
+        self._dump("value");
+        print '}'
+        print
+    
+    def _dump(self, instance):
+        raise NotImplementedError
+    
+    def dump(self, instance):
+        print '    Dump%s(%s);' % (self.name, instance)
+    
+
+class Intrinsic(Concrete):
+
+    def __init__(self, expr, format, name = None):
+        if name is None:
+            name = expr
+        Concrete.__init__(self, name)
+        self.expr = expr
         self.format = format
 
-    def dump(self, instance):
+    def _dump(self, instance):
         print '    Log::TextF("%s", %s);' % (self.format, instance)
+        
+    def __str__(self):
+        return self.expr
 
 
 class Const(Type):
@@ -107,13 +153,13 @@ class OutPointer(Pointer):
         return True
 
 
-class Enum(Type):
+class Enum(Concrete):
 
     def __init__(self, name, values):
-        Type.__init__(self, name)
+        Concrete.__init__(self, name)
         self.values = values
     
-    def dump(self, instance):
+    def _dump(self, instance):
         print '    switch(%s) {' % instance
         for value in self.values:
             print '    case %s:' % value
@@ -125,32 +171,36 @@ class Enum(Type):
         print '    }'
 
 
-class Flags(Type):
+class Flags(Concrete):
 
+    __seq = 0
+    
     def __init__(self, type, values):
-        Type.__init__(self, type.name)
+        Flags.__seq += 1
+        Concrete.__init__(self, type.name + str(Flags.__seq))
         self.type = type
         self.values = values
 
-    def dump(self, instance):
-        print '    {'
-        print '        %s l_Value = %s;' % (self.type, instance)
+    def __str__(self):
+        return str(self.type)
+    
+    def _dump(self, instance):
+        print '    %s l_Value = %s;' % (self.type, instance)
         for value in self.values:
-            print '        if((l_Value & %s) == %s) {' % (value, value)
-            print '            Log::Text("%s | ");' % value
-            print '            l_Value &= ~%s;' % value
-            print '        }'
+            print '    if((l_Value & %s) == %s) {' % (value, value)
+            print '        Log::Text("%s | ");' % value
+            print '        l_Value &= ~%s;' % value
+            print '    }'
         self.type.dump("l_Value");
-        print '    }'
 
 
-class Struct(Type):
+class Struct(Concrete):
 
     def __init__(self, name, members):
-        Type.__init__(self, name)
+        Concrete.__init__(self, name)
         self.members = members
 
-    def dump(self, instance):
+    def _dump(self, instance):
         print '    Log::Text("{");'
         first = True
         for type, name in self.members:
@@ -311,7 +361,21 @@ class WrapPointer(Pointer):
         print "    if(%s)" % instance
         print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, self.type.wrap_name(), instance)
 
-String = Intrinsic("char *", "%s")
+
+class _String(Type):
+
+    def __init__(self):
+        Type.__init__(self, "String")
+
+    def __str__(self):
+        return "char *"
+
+    def dump(self, instance):
+        print '    Log::DumpString(%s);' % instance
+
+String = _String()
+
+
 Short = Intrinsic("short", "%i")
 Int = Intrinsic("int", "%i")
 Long = Intrinsic("long", "%li")
@@ -319,6 +383,12 @@ Float = Intrinsic("float", "%f")
 
 
 def wrap():
+    for type in all_types.itervalues():
+        type.decl()
+    print
+    for type in all_types.itervalues():
+        type.impl()
+    print
     for type in towrap:
         type.wrap_pre_decl()
     print

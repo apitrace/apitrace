@@ -48,9 +48,31 @@ HWND = Intrinsic("HWND", "%p")
 HDC = Intrinsic("HDC", "%p")
 HMONITOR = Intrinsic("HMONITOR", "%p")
 
-REFIID = Alias("REFIID", PVOID)
-GUID = Alias("GUID", PVOID)
-LUID = Alias("LUID", PVOID)
+GUID = Struct("GUID", [
+    (DWORD, "Data1"),
+    (WORD, "Data2"),
+    (WORD, "Data3"),
+    (BYTE, "Data4[0]"),
+    (BYTE, "Data4[1]"),
+    (BYTE, "Data4[2]"),
+    (BYTE, "Data4[3]"),
+    (BYTE, "Data4[4]"),
+    (BYTE, "Data4[5]"),
+    (BYTE, "Data4[6]"),
+    (BYTE, "Data4[7]"),
+])
+
+#REFGUID = Alias("REFGUID", Pointer(GUID))
+REFGUID = Alias("REFGUID", GUID)
+
+IID = Alias("IID", GUID)
+#REFIID = Alias("REFIID", Pointer(IID))
+REFIID = Alias("REFIID", IID)
+
+LUID = Struct("LUID", [
+    (DWORD, "LowPart"),
+    (LONG, "HighPart"),
+])
 
 POINT = Struct("POINT", (
   (LONG, "x"),
@@ -71,8 +93,19 @@ PALETTEENTRY = Struct("PALETTEENTRY", (
   (BYTE, "peFlags"), 
 )) 
 
-RGNDATA = Struct("RGNDATA", ())
-REFGUID = Alias("REFGUID", PVOID)
+
+RGNDATAHEADER = Struct("RGNDATAHEADER", [
+    (DWORD, "dwSize"),
+    (DWORD, "iType"),
+    (DWORD, "nCount"),
+    (DWORD, "nRgnSize"),
+    (RECT, "rcBound"),
+])
+
+RGNDATA = Struct("RGNDATA", [
+    (RGNDATAHEADER, "rdh"),
+    #(Char, "Buffer[1]"),
+])
 
 
 IUnknown = Interface("IUnknown")

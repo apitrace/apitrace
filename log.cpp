@@ -96,7 +96,6 @@ static void Write(const char *szText) {
     }
 }
 
-
 void Open(const TCHAR *szName) {
     _Open(szName, TEXT("xml"));
     Write("<?xml version='1.0' encoding='UTF-8'?>");
@@ -175,13 +174,20 @@ void Text(const char *text) {
     Escape(text);
 }
 
+static void TextChar(char c) {
+    char szText[2];
+    szText[0] = c;
+    szText[1] = 0;
+    Text(szText);
+}
+
 void TextF(const char *format, ...) {
     char szBuffer[4196];
     va_list ap;
     va_start(ap, format);
     vsnprintf(szBuffer, sizeof(szBuffer), format, ap);
     va_end(ap);
-    Escape(szBuffer);
+    Text(szBuffer);
 }
 
 void BeginCall(const char *function) {
@@ -216,5 +222,32 @@ void EndReturn(void) {
     NewLine();
 }
 
+void DumpString(const char *str) {
+    const unsigned char *p = (const unsigned char *)str;
+    Log::Text("\"");
+    unsigned char c;
+    while((c = *p++) != 0) {
+        if(c >= 0x20 && c <= 0x7e)
+            TextChar(c);
+        else if(c == '\t')
+            Text("\\t");
+        else if(c == '\r')
+            Text("\\r");
+        else if(c == '\n')
+            Text("\\n");
+        else {
+            unsigned char octal0 = c & 0x7;
+            unsigned char octal1 = (c >> 3) & 0x7;
+            unsigned char octal2 = (c >> 3) & 0x7;
+            if(octal2)
+                TextF("\\%u%u%u", octal2, octal1, octal0);
+            else if(octal1)
+                TextF("\\%u%u", octal1, octal0);
+            else
+                TextF("\\%u", octal0);
+        }
+    }
+    Log::Text("\"");
+}
 
 } /* namespace Log */
