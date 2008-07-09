@@ -13,24 +13,48 @@
 	<xsl:template match="call">
 		<xsl:value-of select="@name"/>
 		<xsl:text>(</xsl:text>
-		<xsl:apply-templates select="param"/>
+		<xsl:apply-templates select="arg"/>
 		<xsl:text>)</xsl:text>
-		<xsl:apply-templates select="return"/>
+		<xsl:apply-templates select="ret"/>
 		<xsl:text>&#10;</xsl:text>
 	</xsl:template>
 
-	<xsl:template match="param">
+	<xsl:template match="arg|elem">
 		<xsl:value-of select="@name"/>
 		<xsl:text> = </xsl:text>
-		<xsl:value-of select="."/>
+		<xsl:call-template name="compound"/>
 		<xsl:if test="position() != last()">
 			<xsl:text>, </xsl:text>
 		</xsl:if>
 	</xsl:template>
 
-	<xsl:template match="return">
+	<xsl:template match="ret">
 		<xsl:text> = </xsl:text>
-		<xsl:value-of select="."/>
+		<xsl:call-template name="compound"/>
 	</xsl:template>
 
+	<xsl:template match="ref">
+		<xsl:choose>
+			<xsl:when test="*">
+				<xsl:text>&amp;</xsl:text>
+				<xsl:call-template name="compound"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="@addr"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
+	<xsl:template name="compound">
+		<xsl:choose>
+			<xsl:when test="elem">
+				<xsl:text>{</xsl:text>
+				<xsl:apply-templates />
+				<xsl:text>}</xsl:text>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:apply-templates />
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 </xsl:transform>

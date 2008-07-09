@@ -5,10 +5,31 @@ body {
 	text-align : left;
 }
 
-ul {
+ul.calls {
 	list-style: none;
 	margin-left: 0px;
 	padding-left: 0px;
+}
+
+ul.args {
+	display:inline;
+	list-style: none;
+	margin-left: 0px;
+	padding-left: 0px;
+}
+
+ul.args li {
+	display:inline;
+}
+
+ul.elems {
+	list-style: none;
+	margin-left: 2em;
+	padding-left: 0px;
+}
+
+ul.elems li {
+	display:block;
 }
 
 .fun {
@@ -26,3 +47,25 @@ ul {
 .lit {
 	color: #0000ff;
 }
+
+.addr {
+	color: #008000;
+}
+
+.ref {
+	position: relative;
+}
+
+.def {
+	display: none;
+	position: absolute;
+	top: 1.5em;
+	left: 0;
+	width: 32em;
+	background: #f7f7f7;
+}
+
+.ref:hover .def {
+	display: block;
+}
+

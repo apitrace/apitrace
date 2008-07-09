@@ -31,6 +31,7 @@ namespace Log {
     void Close(void);
     
     void NewLine(void);
+    
     void Tag(const char *name);
     void BeginTag(const char *name);
     void BeginTag(const char *name, 
@@ -39,16 +40,28 @@ namespace Log {
                   const char *attr1, const char *value1,
                   const char *attr2, const char *value2);
     void EndTag(const char *name);
+    
     void Text(const char *text);
     void TextF(const char *format, ...);
+    
     void BeginCall(const char *function);
     void EndCall(void);
-    void BeginParam(const char *name, const char *type);
-    void EndParam(void);
+    
+    void BeginArg(const char *type, const char *name);
+    void EndArg(void);
+
     void BeginReturn(const char *type);
     void EndReturn(void);
 
+    void BeginElement(const char *type);
+    void BeginElement(const char *type, const char *name);
+    void EndElement(void);
+
+    void BeginReference(const char *type, const void *addr);
+    void EndReference(void);
+
     void DumpString(const char *str);
+    
 }
 
 #endif /* _LOG_HPP_ */

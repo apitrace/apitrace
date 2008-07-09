@@ -128,10 +128,12 @@ class Pointer(Type):
     
     def dump(self, instance):
         print '    if(%s) {' % instance
+        print '        Log::BeginReference("%s", %s);' % (self.type, instance)
         try:
             self.type.dump("*" + instance)
         except NotImplementedError:
-            print '        Log::TextF("%%p", %s);' % instance
+            pass
+        print '        Log::EndReference();'
         print '    }'
         print '    else'
         print '        Log::Text("NULL");'
@@ -201,15 +203,10 @@ class Struct(Concrete):
         self.members = members
 
     def _dump(self, instance):
-        print '    Log::Text("{");'
-        first = True
         for type, name in self.members:
-            if first:
-                first = False
-            else:
-                print '    Log::Text(", ");'
+            print '    Log::BeginElement("%s", "%s");' % (type, name)
             type.dump('(%s).%s' % (instance, name))
-        print '    Log::Text("}");'
+            print '    Log::EndElement();'
 
 
 class Alias(Type):
@@ -302,21 +299,21 @@ class Interface(Type):
                 print '    %s result;' % method.type
                 result = 'result = '
             print '    Log::BeginCall("%s");' % (self.name + '::' + method.name)
-            print '    Log::BeginParam("this", "%s *");' % self.name
+            print '    Log::BeginArg("%s *", "this");' % self.name
             print '    Log::TextF("%p", m_pInstance);'
-            print '    Log::EndParam();'
+            print '    Log::EndArg();'
             for type, name in method.args:
                 if not type.isoutput():
                     type.unwrap_instance(name)
-                    print '    Log::BeginParam("%s", "%s");' % (name, type)
+                    print '    Log::BeginArg("%s", "%s");' % (type, name)
                     type.dump(name)
-                    print '    Log::EndParam();'
+                    print '    Log::EndArg();'
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
             for type, name in method.args:
                 if type.isoutput():
-                    print '    Log::BeginParam("%s", "%s");' % (name, type)
+                    print '    Log::BeginArg("%s", "%s");' % (type, name)
                     type.dump(name)
-                    print '    Log::EndParam();'
+                    print '    Log::EndArg();'
                     type.wrap_instance(name)
             if method.type is not Void:
                 print '    Log::BeginReturn("%s");' % method.type

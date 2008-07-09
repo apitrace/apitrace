@@ -124,8 +124,13 @@ static void Escape(const char *s) {
     Write(s);
 }
 
+
+DWORD g_dwIndent = 0;
+
 void NewLine(void) {
     Write("\r\n");
+    for(unsigned i = 0; i < g_dwIndent; ++i)
+        Write("\t");        
 }
 
 void Tag(const char *name) {
@@ -138,6 +143,7 @@ void BeginTag(const char *name) {
     Write("<");
     Write(name);
     Write(">");
+    ++g_dwIndent;
 }
 
 void BeginTag(const char *name, 
@@ -149,6 +155,7 @@ void BeginTag(const char *name,
     Write("=\"");
     Escape(value1);
     Write("\">");
+    ++g_dwIndent;
 }
 
 void BeginTag(const char *name, 
@@ -165,9 +172,33 @@ void BeginTag(const char *name,
     Write("=\"");
     Escape(value2);
     Write("\">");
+    ++g_dwIndent;
+}
+
+void BeginTag(const char *name, 
+              const char *attr1, const char *value1,
+              const char *attr2, const char *value2,
+              const char *attr3, const char *value3) {
+    Write("<");
+    Write(name);
+    Write(" ");
+    Write(attr1);
+    Write("=\"");
+    Escape(value1);
+    Write("\" ");
+    Write(attr2);
+    Write("=\"");
+    Escape(value2);
+    Write("\" ");
+    Write(attr3);
+    Write("=\"");
+    Escape(value3);
+    Write("\">");
+    ++g_dwIndent;
 }
 
 void EndTag(const char *name) {
+    --g_dwIndent;
     Write("</");
     Write(name);
     Write(">");
@@ -194,35 +225,53 @@ void TextF(const char *format, ...) {
 }
 
 void BeginCall(const char *function) {
-    Write("\t");
     BeginTag("call", "name", function);
     NewLine();
 }
 
 void EndCall(void) {
-    Write("\t");
     EndTag("call");
     NewLine();
 }
 
-void BeginParam(const char *name, const char *type) {
-    Write("\t\t");
-    BeginTag("param", "name", name, "type", type);
+void BeginArg(const char *type, const char *name) {
+    BeginTag("arg", "type", type, "name", name);
 }
 
-void EndParam(void) {
-    EndTag("param");
+void EndArg(void) {
+    EndTag("arg");
     NewLine();
 }
 
 void BeginReturn(const char *type) {
-    Write("\t\t");
-    BeginTag("return", "type", type);
+    BeginTag("ret", "type", type);
 }
 
 void EndReturn(void) {
-    EndTag("return");
+    EndTag("ret");
     NewLine();
+}
+
+void BeginElement(const char *type, const char *name) {
+    BeginTag("elem", "type", type, "name", name);
+}
+
+void BeginElement(const char *type) {
+    BeginTag("elem", "type", type);
+}
+
+void EndElement(void) {
+    EndTag("elem");
+}
+
+void BeginReference(const char *type, const void *addr) {
+    char saddr[256];
+    _snprintf(saddr, sizeof(saddr), "%p", addr);
+    BeginTag("ref", "type", type, "addr", saddr);
+}
+
+void EndReference(void) {
+    EndTag("ref");
 }
 
 void DumpString(const char *str) {
