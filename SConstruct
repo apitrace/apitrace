@@ -127,6 +127,7 @@ zip = env.Package(
         'COPYING',
         'COPYING.LESSER',
         'd3d8.dll',
+        'd3d9.dll',
         'd3dtrace.xsl',
         'd3dtrace.css',
         'd3dtrace-txt.xsl',
