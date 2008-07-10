@@ -300,7 +300,8 @@ class Interface(Type):
                 result = 'result = '
             print '    Log::BeginCall("%s");' % (self.name + '::' + method.name)
             print '    Log::BeginArg("%s *", "this");' % self.name
-            print '    Log::TextF("%p", m_pInstance);'
+            print '    Log::BeginReference("%s", m_pInstance);' % self.name
+            print '    Log::EndReference();'
             print '    Log::EndArg();'
             for type, name in method.args:
                 if not type.isoutput():
