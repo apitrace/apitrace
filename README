@@ -1,6 +1,24 @@
 				   D3D Trace
 
 
+= Copyright =
+
+Copyright 2008 Jose Fonseca, Tungsten Graphics, Inc.
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 = About =
 
 Wrapper DLLs to trace D3D8 and D3D9 APIs calls.
@@ -54,5 +72,3 @@ See the scons manpage for more info.
 * For long XML files is better to use the d3dtrace-txt.xsl stylesheet together with a dedicated XSL processor like xsltproc, or msxsl.
 
 
--- 
-Jose Fonseca <jrfonseca@tungstengraphics.com>
