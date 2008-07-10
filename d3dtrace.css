@@ -73,6 +73,7 @@ ul.elems li {
 
 .ref {
 	position: relative;
+	cursor: help;
 }
 
 .def {
@@ -82,6 +83,7 @@ ul.elems li {
 	left: 0;
 	width: 32em;
 	background: #f7f7f7;
+	cursor: default;
 }
 
 .ref:hover .def {
