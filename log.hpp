@@ -30,17 +30,6 @@ namespace Log {
     void ReOpen(void);
     void Close(void);
     
-    void NewLine(void);
-    
-    void Tag(const char *name);
-    void BeginTag(const char *name);
-    void BeginTag(const char *name, 
-                  const char *attr1, const char *value1);
-    void BeginTag(const char *name, 
-                  const char *attr1, const char *value1,
-                  const char *attr2, const char *value2);
-    void EndTag(const char *name);
-    
     void Text(const char *text);
     void TextF(const char *format, ...);
     

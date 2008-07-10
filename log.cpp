@@ -99,55 +99,40 @@ static void Write(const char *szText) {
     Write(szText, (DWORD)strlen(szText));
 }
 
-void Open(const TCHAR *szName) {
-    _Open(szName, TEXT("xml"));
-    Write("<?xml version='1.0' encoding='UTF-8'?>");
-    NewLine();
-    Write("<?xml-stylesheet type='text/xsl' href='d3dtrace.xsl'?>");
-    NewLine();
-    Write("<trace>");
-    NewLine();
-}
-
-void ReOpen(void) {
-    _ReOpen();
-}
-
-void Close(void) {
-    Write("</trace>");
-    NewLine();
-    _Close();
-}
-
-static void Escape(const char *s) {
+static inline void 
+Escape(const char *s) {
     /* FIXME */
     Write(s);
 }
 
-
-DWORD g_dwIndent = 0;
-
-void NewLine(void) {
-    Write("\r\n");
-    for(unsigned i = 0; i < g_dwIndent; ++i)
-        Write("\t");        
+static inline void 
+Indent(unsigned level) {
+    for(unsigned i = 0; i < level; ++i)
+        Write("\t");
 }
 
-void Tag(const char *name) {
+static inline void 
+NewLine(void) {
+    Write("\r\n");
+}
+
+static inline void 
+Tag(const char *name) {
     Write("<");
     Write(name);
     Write("/>");
 }
 
-void BeginTag(const char *name) {
+static inline void 
+BeginTag(const char *name) {
     Write("<");
     Write(name);
     Write(">");
-    ++g_dwIndent;
 }
 
-void BeginTag(const char *name, 
-              const char *attr1, const char *value1) {
+static inline void 
+BeginTag(const char *name, 
+         const char *attr1, const char *value1) {
     Write("<");
     Write(name);
     Write(" ");
@@ -155,12 +140,12 @@ void BeginTag(const char *name,
     Write("=\"");
     Escape(value1);
     Write("\">");
-    ++g_dwIndent;
 }
 
-void BeginTag(const char *name, 
-              const char *attr1, const char *value1,
-              const char *attr2, const char *value2) {
+static inline void 
+BeginTag(const char *name, 
+         const char *attr1, const char *value1,
+         const char *attr2, const char *value2) {
     Write("<");
     Write(name);
     Write(" ");
@@ -172,10 +157,10 @@ void BeginTag(const char *name,
     Write("=\"");
     Escape(value2);
     Write("\">");
-    ++g_dwIndent;
 }
 
-void BeginTag(const char *name, 
+static inline void 
+BeginTag(const char *name, 
               const char *attr1, const char *value1,
               const char *attr2, const char *value2,
               const char *attr3, const char *value3) {
@@ -194,14 +179,33 @@ void BeginTag(const char *name,
     Write("=\"");
     Escape(value3);
     Write("\">");
-    ++g_dwIndent;
 }
 
-void EndTag(const char *name) {
-    --g_dwIndent;
+static inline void
+EndTag(const char *name) {
     Write("</");
     Write(name);
     Write(">");
+}
+
+void Open(const TCHAR *szName) {
+    _Open(szName, TEXT("xml"));
+    Write("<?xml version='1.0' encoding='UTF-8'?>");
+    NewLine();
+    Write("<?xml-stylesheet type='text/xsl' href='d3dtrace.xsl'?>");
+    NewLine();
+    BeginTag("trace");
+    NewLine();
+}
+
+void ReOpen(void) {
+    _ReOpen();
+}
+
+void Close(void) {
+    EndTag("trace");
+    NewLine();
+    _Close();
 }
 
 void Text(const char *text) {
@@ -225,16 +229,19 @@ void TextF(const char *format, ...) {
 }
 
 void BeginCall(const char *function) {
+    Indent(1);
     BeginTag("call", "name", function);
     NewLine();
 }
 
 void EndCall(void) {
+    Indent(1);
     EndTag("call");
     NewLine();
 }
 
 void BeginArg(const char *type, const char *name) {
+    Indent(2);
     BeginTag("arg", "type", type, "name", name);
 }
 
@@ -244,6 +251,7 @@ void EndArg(void) {
 }
 
 void BeginReturn(const char *type) {
+    Indent(2);
     BeginTag("ret", "type", type);
 }
 
