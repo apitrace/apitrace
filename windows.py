@@ -167,7 +167,7 @@ class Dll:
             print function.prototype() + ' {'
             if 1:
                 print '    Log::Close();'
-                print '    Log::Open(TEXT("%s"));' % self.name
+                print '    Log::Open("%s");' % self.name
             #print '    Log::ReOpen();'
             print '    typedef ' + function.prototype('* %s' % type) + ';'
             print '    %s pFunction;' % type

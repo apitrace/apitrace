@@ -74,6 +74,9 @@ env.Prepend(LIBS = [
     'gdi32',
 ])
 
+Export('env')
+SConscript('zlib/SConscript')
+
 env.Append(CPPPATH = [
     os.path.join(env['dxsdk'], 'Include'),
 ])

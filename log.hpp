@@ -20,13 +20,9 @@
 #ifndef _LOG_HPP_
 #define _LOG_HPP_
 
-#include <windows.h>
-#include <tchar.h>
-
-
 namespace Log {
 
-    void Open(const TCHAR *szName);
+    void Open(const char *name);
     void ReOpen(void);
     void Close(void);
     

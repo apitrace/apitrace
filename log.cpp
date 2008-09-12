@@ -18,85 +18,80 @@
  ****************************************************************************/
 
 
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <zlib.h>
 
 #include "log.hpp"
+
+
+#ifdef WIN32
+#ifndef PATH_MAX
+#define PATH_MAX _MAX_PATH
+#endif
+#ifndef snprintf
+#define snprintf _snprintf
+#endif
+#ifndef vsnprintf
+#define vsnprintf _vsnprintf
+#endif
+#endif
 
 
 namespace Log {
 
 
-static HANDLE g_hFile = INVALID_HANDLE_VALUE;
-static TCHAR g_szFileName[MAX_PATH];
+static gzFile g_gzFile = NULL;
+static char g_szFileName[PATH_MAX];
 
 static void _Close(void) {
-    if(g_hFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(g_hFile);
-        g_hFile = INVALID_HANDLE_VALUE;
+    if(g_gzFile != NULL) {
+        gzclose(g_gzFile);
+        g_gzFile = NULL;
     }
 }
 
-static void _Open(const TCHAR *szName, const TCHAR *szExtension) {
+static void _Open(const char *szName, const char *szExtension) {
     _Close();
     
-    DWORD dwCounter = 0;
-    do {
+    static unsigned dwCounter = 0;
+
+    for(;;) {
+        FILE *file;
+        
         if(dwCounter)
-            _sntprintf(g_szFileName, MAX_PATH, TEXT("%s.%u.%s"), szName, dwCounter, szExtension);
+            snprintf(g_szFileName, PATH_MAX, "%s.%u.%s.gz", szName, dwCounter, szExtension);
         else
-            _sntprintf(g_szFileName, MAX_PATH, TEXT("%s.%s"), szName, szExtension);
-
-        g_hFile = CreateFile(g_szFileName,
-                             GENERIC_WRITE,
-                             FILE_SHARE_WRITE,
-                             NULL,
-                             CREATE_NEW,
-                             FILE_ATTRIBUTE_NORMAL,
-                             NULL);
+            snprintf(g_szFileName, PATH_MAX, "%s.%s.gz", szName, szExtension);
+        
+        file = fopen(g_szFileName, "rb");
+        if(file == NULL)
+            break;
+        
+        fclose(file);
+        
         ++dwCounter;
-    } while(g_hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_EXISTS);
+    }
+
+    g_gzFile = gzopen(g_szFileName, "wb");
 }
 
-static void _ReOpen(void) {
-    _Close();
-    
-    g_hFile = CreateFile(g_szFileName,
-                         GENERIC_WRITE,
-                         FILE_SHARE_WRITE,
-                         NULL,
-                         OPEN_EXISTING,
-                         FILE_ATTRIBUTE_NORMAL,
-                         NULL);
+static inline void _ReOpen(void) {
+    /* XXX */
 }
 
-static void Write(const char *sBuffer, DWORD dwBytesToWrite) {
-    if(g_hFile == INVALID_HANDLE_VALUE)
+static inline void Write(const char *sBuffer, size_t dwBytesToWrite) {
+    if(g_gzFile == NULL)
         return;
     
-    DWORD dwBytesWritten = 0;
-    
-    while (dwBytesWritten < dwBytesToWrite) {
-        OVERLAPPED overlapped;
-        memset(&overlapped, 0, sizeof(OVERLAPPED));
-
-        /* Write to end of file */
-        overlapped.Offset = 0xffffffff;
-        overlapped.OffsetHigh = 0xffffffff;
-        
-        if(WriteFile(g_hFile,
-                     sBuffer + dwBytesWritten,
-                     dwBytesToWrite - dwBytesWritten,
-                     &dwBytesWritten,
-                     &overlapped) == FALSE) {
-            _Close();
-            _Open(TEXT("extra"), TEXT("xml"));
-            return;
-        }
-    }
+    gzwrite(g_gzFile, sBuffer, dwBytesToWrite);
 }
 
-static void Write(const char *szText) {
-    Write(szText, (DWORD)strlen(szText));
+static inline void Write(const char *szText) {
+    Write(szText, strlen(szText));
 }
 
 static inline void 
@@ -188,8 +183,8 @@ EndTag(const char *name) {
     Write(">");
 }
 
-void Open(const TCHAR *szName) {
-    _Open(szName, TEXT("xml"));
+void Open(const char *name) {
+    _Open(name, "xml");
     Write("<?xml version='1.0' encoding='UTF-8'?>");
     NewLine();
     Write("<?xml-stylesheet type='text/xsl' href='d3dtrace.xsl'?>");
@@ -274,7 +269,7 @@ void EndElement(void) {
 
 void BeginReference(const char *type, const void *addr) {
     char saddr[256];
-    _snprintf(saddr, sizeof(saddr), "%p", addr);
+    snprintf(saddr, sizeof(saddr), "%p", addr);
     BeginTag("ref", "type", type, "addr", saddr);
 }
 
