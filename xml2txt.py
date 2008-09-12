@@ -239,9 +239,14 @@ class TraceParser(XmlParser):
 
 
 def main():
-    for arg in sys.argv[1:]:
-        parser = TraceParser(open(arg, 'rt'))
-        parser.parse()
+    args = sys.argv[1:]
+    if args:
+        for arg in args:
+            parser = TraceParser(open(arg, 'rt'))
+            parser.parse()
+    else:
+            parser = TraceParser(sys.stdin)
+            parser.parse()
 
 
 if __name__ == '__main__':
