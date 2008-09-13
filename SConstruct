@@ -119,7 +119,7 @@ env.Tool('packaging')
 
 zip = env.Package(
     NAME           = 'd3dtrace',
-    VERSION        = '0.1',
+    VERSION        = '0.2',
     PACKAGEVERSION = 0,
     PACKAGETYPE    = 'zip',
     LICENSE        = 'lgpl',
@@ -133,7 +133,7 @@ zip = env.Package(
         'd3d9.dll',
         'd3dtrace.xsl',
         'd3dtrace.css',
-        'd3dtrace-txt.xsl',
+        'xml2txt.py',
     ],
 )
 

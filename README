@@ -69,6 +69,6 @@ See the scons manpage for more info.
 * Copy d3d8.dll/d3d9.dll, d3dtrace.xsl, d3dtrace.css to the directory with the application you want to trace.
 * Run the application.
 * Open the output XML file with Firefox or Internet Explorer to view the log.
-* For long XML files is better to use the d3dtrace-txt.xsl stylesheet together with a dedicated XSL processor like xsltproc, or msxsl.
+* For long XML files is better to use xml2txt.py script.
 
 
