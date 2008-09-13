@@ -175,7 +175,61 @@ class XmlParser:
         return data
 
 
+class Formatter:
+    
+    def function(self, name):
+        return name
+        
+    def variable(self, name):
+        return name
+
+    def literal(self, value):
+        return str(value)
+    
+    def address(self, addr):
+        return addr
+
+
+class AnsiFormatter(Formatter):
+    '''Formatter for plain-text files which outputs ANSI escape codes. See
+    http://en.wikipedia.org/wiki/ANSI_escape_code for more information
+    concerning ANSI escape codes.
+    '''
+
+    _csi = '\33['
+
+    _normal = '0m'
+    _bold = '1m'
+    _italic = '3m'
+    _red = '31m'
+    _green = '32m'
+    _blue = '34m'
+
+    def _escape(self, code, text):
+        return self._csi + code + text + self._csi + self._normal
+
+    def function(self, name):
+        text = Formatter.function(self, name)
+        return self._escape(self._bold, text)
+        
+    def variable(self, name):
+        text = Formatter.variable(self, name)
+        return self._escape(self._italic, text)
+
+    def literal(self, value):
+        text = Formatter.literal(self, value)
+        return self._escape(self._blue, text)
+    
+    def address(self, value):
+        text = Formatter.address(self, value)
+        return self._escape(self._green, text)
+
+
 class TraceParser(XmlParser):
+
+    def __init__(self, stream, formatter):
+        XmlParser.__init__(self, stream)
+        self.formatter = formatter
 
     def parse(self):
         self.element_start('trace')
@@ -198,11 +252,17 @@ class TraceParser(XmlParser):
                 raise TokenMismatch("<arg ...> or <ret ...>", self.token)
         self.element_end('call')
         
-        sys.stdout.write(name)
-        sys.stdout.write('(' + ', '.join([name + ' = ' + value for name, value in args]) + ')')
+        call = self.formatter.function(name)
+        call += '(' + ', '.join([self.formatter.variable(name) + ' = ' + value for name, value in args]) + ')'
         if ret is not None:
-            sys.stdout.write(' = ' + ret)
-        sys.stdout.write('\n')
+            call += ' = ' + ret
+        call += '\n'
+        
+        try:
+            sys.stdout.write(call)
+        except IOError: 
+            # catch broken pipe
+            sys.exit(0)
 
     def parse_arg(self):
         attrs = self.element_start('arg')
@@ -221,7 +281,7 @@ class TraceParser(XmlParser):
 
     def parse_value(self):
         if self.token.type == CHARACTER_DATA:
-            return self.character_data()
+            return self.formatter.literal(self.character_data())
         if self.token.type == ELEMENT_START:
             if self.token.name_or_data == 'elem':
                 return self.parse_elems()
@@ -248,20 +308,22 @@ class TraceParser(XmlParser):
         if self.token.type != ELEMENT_END:
             value = '&' + self.parse_value()
         else:
-            value = attrs['addr']
+            value = self.formatter.address(attrs['addr'])
         self.element_end('ref')
 
         return value
 
 
 def main():
+    formatter = AnsiFormatter()
+    
     args = sys.argv[1:]
     if args:
         for arg in args:
-            parser = TraceParser(open(arg, 'rt'))
+            parser = TraceParser(open(arg, 'rt'), formatter)
             parser.parse()
     else:
-            parser = TraceParser(sys.stdin)
+            parser = TraceParser(sys.stdin, formatter)
             parser.parse()
 
 
