@@ -51,12 +51,15 @@ class XmlToken:
 class XmlTokenizer:
     """Expat based XML tokenizer."""
 
-    def __init__(self, fp, strip = True):
+    def __init__(self, fp, skip_ws = True):
         self.fp = fp
         self.tokens = []
         self.index = 0
         self.final = False
-        self.strip = strip
+        self.skip_ws = skip_ws
+        
+        self.character_pos = 0, 0
+        self.character_data = ''
         
         self.parser = xml.parsers.expat.ParserCreate()
         self.parser.StartElementHandler  = self.handle_element_start
@@ -64,24 +67,29 @@ class XmlTokenizer:
         self.parser.CharacterDataHandler = self.handle_character_data
     
     def handle_element_start(self, name, attributes):
+        self.finish_character_data()
         line, column = self.pos()
         token = XmlToken(ELEMENT_START, name, attributes, line, column)
         self.tokens.append(token)
     
     def handle_element_end(self, name):
+        self.finish_character_data()
         line, column = self.pos()
         token = XmlToken(ELEMENT_END, name, None, line, column)
         self.tokens.append(token)
 
     def handle_character_data(self, data):
-        if self.strip:
-            data = data.strip()
-            if not data:
-                return
-
-        line, column = self.pos()
-        token = XmlToken(CHARACTER_DATA, data, None, line, column)
-        self.tokens.append(token)
+        if not self.character_data:
+            self.character_pos = self.pos()
+        self.character_data += data
+    
+    def finish_character_data(self):
+        if self.character_data:
+            if not self.skip_ws or not self.character_data.isspace(): 
+                line, column = self.character_pos
+                token = XmlToken(CHARACTER_DATA, self.character_data, None, line, column)
+                self.tokens.append(token)
+            self.character_data = ''
     
     def next(self):
         size = 16*1024
@@ -90,7 +98,14 @@ class XmlTokenizer:
             self.index = 0
             data = self.fp.read(size)
             self.final = len(data) < size
-            self.parser.Parse(data, self.final)
+            try:
+                self.parser.Parse(data, self.final)
+            except xml.parsers.expat.ExpatError, e:
+                #if e.code == xml.parsers.expat.errors.XML_ERROR_NO_ELEMENTS:
+                if e.code == 3:
+                    pass
+                else:
+                    raise e
         if self.index >= len(self.tokens):
             line, column = self.pos()
             token = XmlToken(EOF, None, None, line, column)
@@ -150,12 +165,13 @@ class XmlParser:
             raise TokenMismatch(XmlToken(ELEMENT_END, name), self.token)
         self.consume()
 
-    def character_data(self):
-        if self.token.type == CHARACTER_DATA:
-            data = self.token.name_or_data
+    def character_data(self, strip = True):
+        data = ''
+        while self.token.type == CHARACTER_DATA:
+            data += self.token.name_or_data
             self.consume()
-        else:
-            data = ''
+        if strip:
+            data = data.strip()
         return data
 
 
