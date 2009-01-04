@@ -38,11 +38,21 @@ DWORD = Intrinsic("DWORD", "0x%08lx")
 
 BOOL = Intrinsic("BOOL", "%i")
 
+LPLONG = Pointer(LONG)
+LPWORD = Pointer(WORD)
+LPDWORD = Pointer(DWORD)
+LPBOOL = Pointer(BOOL)
+LPSIZE = LPDWORD
+
+LPSTR = String
+LPWSTR = String
+
 LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%llx")
 
 HRESULT = Alias("HRESULT", Int)
 
 PVOID = Intrinsic("PVOID", "%p")
+LPVOID = PVOID
 HANDLE = Intrinsic("HANDLE", "%p")
 HWND = Intrinsic("HWND", "%p")
 HDC = Intrinsic("HDC", "%p")
@@ -61,6 +71,7 @@ GUID = Struct("GUID", [
     (BYTE, "Data4[6]"),
     (BYTE, "Data4[7]"),
 ])
+LPGUID = Pointer(GUID)
 
 #REFGUID = Alias("REFGUID", Pointer(GUID))
 REFGUID = Alias("REFGUID", GUID)
@@ -68,6 +79,10 @@ REFGUID = Alias("REFGUID", GUID)
 IID = Alias("IID", GUID)
 #REFIID = Alias("REFIID", Pointer(IID))
 REFIID = Alias("REFIID", IID)
+
+CLSID = Alias("CLSID", GUID)
+#REFCLSID = Alias("REFCLSID", Pointer(CLSID))
+REFCLSID = Alias("REFCLSID", CLSID)
 
 LUID = Struct("LUID", [
     (DWORD, "LowPart"),
@@ -78,6 +93,7 @@ POINT = Struct("POINT", (
   (LONG, "x"),
   (LONG, "y"),
 )) 
+LPPOINT = Pointer(POINT)
 
 RECT = Struct("RECT", (
   (LONG, "left"),
@@ -85,6 +101,7 @@ RECT = Struct("RECT", (
   (LONG, "right"), 
   (LONG, "bottom"), 
 )) 
+LPRECT = Pointer(RECT)
 
 PALETTEENTRY = Struct("PALETTEENTRY", (
   (BYTE, "peRed"),
@@ -92,6 +109,7 @@ PALETTEENTRY = Struct("PALETTEENTRY", (
   (BYTE, "peBlue"), 
   (BYTE, "peFlags"), 
 )) 
+LPPALETTEENTRY = Pointer(PALETTEENTRY)
 
 
 RGNDATAHEADER = Struct("RGNDATAHEADER", [
@@ -106,6 +124,7 @@ RGNDATA = Struct("RGNDATA", [
     (RGNDATAHEADER, "rdh"),
     #(Char, "Buffer[1]"),
 ])
+LPRGNDATA = Pointer(RGNDATA)
 
 
 IUnknown = Interface("IUnknown")
