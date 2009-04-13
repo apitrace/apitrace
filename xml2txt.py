@@ -248,6 +248,8 @@ class TraceParser(XmlParser):
                 args.append(arg)
             elif self.token.name_or_data == 'ret':
                 ret = self.parse_ret()
+            elif self.token.name_or_data == 'call':
+                self.parse_call()
             else:
                 raise TokenMismatch("<arg ...> or <ret ...>", self.token)
         self.element_end('call')
