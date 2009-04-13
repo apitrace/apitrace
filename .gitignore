@@ -15,6 +15,7 @@
 *.xml
 *.zip
 config.log
+ddraw.cpp
 d3d8.cpp
 d3d9.cpp
 opengl32.cpp

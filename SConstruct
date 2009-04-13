@@ -85,7 +85,26 @@ env.Append(CPPPATH = [
 conf = Configure(env)
 has_d3d9 = conf.CheckCHeader('d3d9.h')
 has_d3d8 = conf.CheckCHeader('d3d8.h')
+has_d3d7 = conf.CheckCHeader('ddraw.h')
 env = conf.Finish()
+
+if has_d3d7:
+    env.Command(
+        target = 'ddraw.cpp', 
+        source = ['ddraw.py', 'd3d.py', 'd3dtypes.py', 'd3dcaps.py', 'windows.py', 'base.py'],
+        action = 'python $SOURCE > $TARGET',
+    )
+        
+    ddraw = env.SharedLibrary(
+        target = 'ddraw',
+        source = [
+            'ddraw.def',
+            'ddraw.cpp',
+            'log.cpp',
+        ]
+    )
+
+    env.Default(ddraw)
 
 if has_d3d8:
     env.Command(
