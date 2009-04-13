@@ -322,7 +322,15 @@ def main():
     args = sys.argv[1:]
     if args:
         for arg in args:
-            parser = TraceParser(open(arg, 'rt'), formatter)
+            if arg.endswith('.gz'):
+                from gzip import GzipFile
+                stream = GzipFile(arg, 'rt')
+            elif arg.endswith('.bz2'):
+                from bz2 import BZ2File
+                stream = BZ2File(arg, 'rt')
+            else:
+                stream = open(arg, 'rt')
+            parser = TraceParser(stream, formatter)
             parser.parse()
     else:
             parser = TraceParser(sys.stdin, formatter)
