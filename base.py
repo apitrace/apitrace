@@ -33,6 +33,9 @@ class Type:
     def __str__(self):
         return self.name
 
+    def identifier(self):
+        return self.name.replace(' ', '_')
+
     def isoutput(self):
         return False
 
@@ -64,7 +67,7 @@ class Concrete(Type):
 
     def __init__(self, name):
         for char in name:
-            assert char.isalnum() or char == '_'
+            assert char.isalnum() or char in '_ '
 
         Type.__init__(self, name)
         
@@ -73,10 +76,10 @@ class Concrete(Type):
             all_types[self.name] = self
 
     def decl(self):
-        print 'void Dump%s(const %s &value);' % (self.name, str(self))
+        print 'void Dump%s(const %s &value);' % (self.identifier(), str(self))
     
     def impl(self):
-        print 'void Dump%s(const %s &value) {' % (self.name, str(self))
+        print 'void Dump%s(const %s &value) {' % (self.identifier(), str(self))
         self._dump("value");
         print '}'
         print
@@ -85,7 +88,7 @@ class Concrete(Type):
         raise NotImplementedError
     
     def dump(self, instance):
-        print '    Dump%s(%s);' % (self.name, instance)
+        print '    Dump%s(%s);' % (self.identifier(), instance)
     
 
 class Intrinsic(Concrete):
@@ -374,10 +377,16 @@ class _String(Type):
 String = _String()
 
 
+SChar = Intrinsic("signed char", "%i")
+UChar = Intrinsic("unsigned char", "%u")
 Short = Intrinsic("short", "%i")
 Int = Intrinsic("int", "%i")
 Long = Intrinsic("long", "%li")
+UShort = Intrinsic("unsigned short", "%u")
+UInt = Intrinsic("unsigned int", "%u")
+ULong = Intrinsic("unsigned long", "%lu")
 Float = Intrinsic("float", "%f")
+Double = Intrinsic("double", "%f")
 
 
 def wrap():
