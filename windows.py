@@ -205,13 +205,25 @@ class Dll:
             print '    if(!pFunction)'
             print '        ExitProcess(0);'
             print '    Log::BeginCall("%s");' % (function.name)
+            for type, name in function.args:
+                if not type.isoutput():
+                    type.unwrap_instance(name)
+                    print '    Log::BeginArg("%s", "%s");' % (type, name)
+                    type.dump(name)
+                    print '    Log::EndArg();'
             print '    %spFunction(%s);' % (result, ', '.join([str(name) for type, name in function.args]))
-            print '    Log::EndCall();'
             for type, name in function.args:
                 if type.isoutput():
+                    print '    Log::BeginArg("%s", "%s");' % (type, name)
+                    type.dump(name)
+                    print '    Log::EndArg();'
                     type.wrap_instance(name)
             if function.type is not Void:
+                print '    Log::BeginReturn("%s");' % function.type
+                function.type.dump("result")
+                print '    Log::EndReturn();'
                 function.type.wrap_instance('result')
+            print '    Log::EndCall();'
             if function.type is not Void:
                 print '    return result;'
             print '}'
