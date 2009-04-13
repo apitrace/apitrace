@@ -164,6 +164,7 @@ class Dll:
         print r'        if(!GetSystemDirectory(g_szDll, MAX_PATH))'
         print r'            return FALSE;'
         print r'        _tcscat(g_szDll, TEXT("\\%s.dll"));' % self.name
+        print r'        Log::Open("%s");' % self.name
         print r'    case DLL_THREAD_ATTACH:'
         print r'        return TRUE;'
         print r'    case DLL_THREAD_DETACH:'
@@ -184,7 +185,7 @@ class Dll:
         for function in self.functions:
             type = 'P' + function.name
             print function.prototype() + ' {'
-            if 1:
+            if 0:
                 print '    Log::Close();'
                 print '    Log::Open("%s");' % self.name
             #print '    Log::ReOpen();'
