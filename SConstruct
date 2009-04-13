@@ -24,6 +24,7 @@ import sys
 opts = Options('config.py')
 opts.Add(BoolOption('debug', 'build debug version', 'no'))
 opts.Add(PathOption('dxsdk', 'DirectX SDK installation dir', os.environ.get('DXSDK_DIR', 'C:\\DXSDK')))
+opts.Add(EnumOption('MSVS_VERSION', 'Microsoft Visual Studio version', None, allowed_values=('7.1', '8.0', '9.0')))
 
 env = Environment(
     options = opts, 
