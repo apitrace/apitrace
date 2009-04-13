@@ -372,7 +372,7 @@ class _String(Type):
         return "char *"
 
     def dump(self, instance):
-        print '    Log::DumpString(%s);' % instance
+        print '    Log::DumpString((const char *)%s);' % instance
 
 String = _String()
 
