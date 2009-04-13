@@ -82,39 +82,46 @@ env.Append(CPPPATH = [
     os.path.join(env['dxsdk'], 'Include'),
 ])
 
-env.Command(
-    target = 'd3d8.cpp', 
-    source = ['d3d8.py', 'd3d8types.py', 'd3d8caps.py', 'windows.py', 'base.py'],
-    action = 'python $SOURCE > $TARGET',
-)
-    
-d3d8 = env.SharedLibrary(
-    target = 'd3d8',
-    source = [
-        'd3d8.def',
-        'd3d8.cpp',
-        'log.cpp',
-    ]
-)
+conf = Configure(env)
+has_d3d9 = conf.CheckCHeader('d3d9.h')
+has_d3d8 = conf.CheckCHeader('d3d8.h')
+env = conf.Finish()
 
-env.Default(d3d8)
+if has_d3d8:
+    env.Command(
+        target = 'd3d8.cpp', 
+        source = ['d3d8.py', 'd3d8types.py', 'd3d8caps.py', 'windows.py', 'base.py'],
+        action = 'python $SOURCE > $TARGET',
+    )
+        
+    d3d8 = env.SharedLibrary(
+        target = 'd3d8',
+        source = [
+            'd3d8.def',
+            'd3d8.cpp',
+            'log.cpp',
+        ]
+    )
 
-env.Command(
-    target = 'd3d9.cpp', 
-    source = ['d3d9.py', 'd3d9types.py', 'd3d9caps.py', 'windows.py', 'base.py'],
-    action = 'python $SOURCE > $TARGET',
-)
-    
-d3d9 = env.SharedLibrary(
-    target = 'd3d9',
-    source = [
-        'd3d9.def',
-        'd3d9.cpp',
-        'log.cpp',
-    ]
-)
+    env.Default(d3d8)
 
-env.Default(d3d9)
+if has_d3d9:
+    env.Command(
+        target = 'd3d9.cpp', 
+        source = ['d3d9.py', 'd3d9types.py', 'd3d9caps.py', 'windows.py', 'base.py'],
+        action = 'python $SOURCE > $TARGET',
+    )
+        
+    d3d9 = env.SharedLibrary(
+        target = 'd3d9',
+        source = [
+            'd3d9.def',
+            'd3d9.cpp',
+            'log.cpp',
+        ]
+    )
+
+    env.Default(d3d9)
 
 env.Tool('packaging')
 
