@@ -45,6 +45,7 @@ LPBOOL = Pointer(BOOL)
 LPSIZE = LPDWORD
 
 LPSTR = String
+LPCSTR = Const(String)
 LPWSTR = String
 
 LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%llx")

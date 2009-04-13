@@ -123,6 +123,23 @@ if has_d3d9:
 
     env.Default(d3d9)
 
+env.Command(
+    target = 'opengl32.cpp', 
+    source = ['opengl32.py', 'gl.py', 'windows.py', 'base.py'],
+    action = 'python $SOURCE > $TARGET',
+)
+    
+opengl32 = env.SharedLibrary(
+    target = 'opengl32',
+    source = [
+        'opengl32.def',
+        'opengl32.cpp',
+        'log.cpp',
+    ]
+)
+
+env.Default(opengl32)
+
 env.Tool('packaging')
 
 zip = env.Package(
