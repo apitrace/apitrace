@@ -66,7 +66,7 @@ See the scons manpage for more info.
 
 = Usage =
 
-* Copy d3d8.dll/d3d9.dll, d3dtrace.xsl, d3dtrace.css to the directory with the application you want to trace.
+* Copy d3d8.dll/d3d9.dll, apitrace.xsl, apitrace.css to the directory with the application you want to trace.
 * Run the application.
 * Open the output XML file with Firefox or Internet Explorer to view the log.
 * For long XML files is better to use xml2txt.py script.

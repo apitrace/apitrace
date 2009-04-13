@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<html>
 			<head>
 				<title>D3D Trace</title>
-				<link rel="stylesheet" type="text/css" href="d3dtrace.css"/>
+				<link rel="stylesheet" type="text/css" href="apitrace.css"/>
 			</head>
 			<body>
 				<ul class="calls">

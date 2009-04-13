@@ -187,7 +187,7 @@ void Open(const char *name) {
     _Open(name, "xml");
     Write("<?xml version='1.0' encoding='UTF-8'?>");
     NewLine();
-    Write("<?xml-stylesheet type='text/xsl' href='d3dtrace.xsl'?>");
+    Write("<?xml-stylesheet type='text/xsl' href='apitrace.xsl'?>");
     NewLine();
     BeginTag("trace");
     NewLine();

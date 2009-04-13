@@ -162,21 +162,21 @@ env.Default(opengl32)
 env.Tool('packaging')
 
 zip = env.Package(
-    NAME           = 'd3dtrace',
-    VERSION        = '0.2',
+    NAME           = 'apitrace',
+    VERSION        = '0.3',
     PACKAGEVERSION = 0,
     PACKAGETYPE    = 'zip',
     LICENSE        = 'lgpl',
-    SUMMARY        = 'Tool to trace Direct3D API calls from applications.',
-    SOURCE_URL     = 'http://cgit.freedesktop.org/~jrfonseca/d3dtrace/',
+    SUMMARY        = 'Tool to trace Direct3D & OpenGL API calls from applications.',
+    SOURCE_URL     = 'http://cgit.freedesktop.org/~jrfonseca/apitrace/',
     source = [
         'README',
         'COPYING',
         'COPYING.LESSER',
         'd3d8.dll',
         'd3d9.dll',
-        'd3dtrace.xsl',
-        'd3dtrace.css',
+        'apitrace.xsl',
+        'apitrace.css',
         'xml2txt.py',
     ],
 )
