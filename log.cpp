@@ -233,6 +233,7 @@ void EndCall(void) {
     Indent(1);
     EndTag("call");
     NewLine();
+    gzflush(g_gzFile, Z_SYNC_FLUSH);
 }
 
 void BeginArg(const char *type, const char *name) {
