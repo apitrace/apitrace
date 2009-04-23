@@ -383,8 +383,8 @@ IDirect3DSwapChain9Ex.methods += [
 
 d3d9 = Dll("d3d9")
 d3d9.functions += [
-    Function(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")]),
-    Function(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), (OutPointer(PDIRECT3D9EX), "ppD3D")]),
+    Function(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
+    Function(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), (OutPointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),
 ]
 
 if __name__ == '__main__':

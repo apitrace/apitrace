@@ -224,11 +224,12 @@ class Alias(Type):
 
 class Function:
 
-    def __init__(self, type, name, args, call = '__stdcall'):
+    def __init__(self, type, name, args, call = '__stdcall', fail = None):
         self.type = type
         self.name = name
         self.args = args
         self.call = call
+        self.fail = fail
 
     def prototype(self, name=None):
         if name is not None:

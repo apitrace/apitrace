@@ -204,7 +204,11 @@ class Dll:
             print '    }'
             print '    pFunction = (%s)GetProcAddress( g_hDll, "%s");' % (type, function.name)
             print '    if(!pFunction)'
-            print '        ExitProcess(0);'
+            if function.fail is not None:
+                assert function.type is not Void
+                print '        return %s;' % function.fail
+            else:
+                print '        ExitProcess(0);'
             print '    Log::BeginCall("%s");' % (function.name)
             for type, name in function.args:
                 if not type.isoutput():
