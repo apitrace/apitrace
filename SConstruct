@@ -40,6 +40,7 @@ env.Append(CPPDEFINES = [
     '_CRT_NON_CONFORMING_SWPRINTFS',
     'WIN32_LEAN_AND_MEAN',
     '_USRDLL',
+    ('_WIN32_WINNT', '0x0501'), # minimum required OS version
 ])
 
 if env['debug']:
