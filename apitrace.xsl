@@ -2,6 +2,7 @@
 
 <!--
 
+Copyright 2009 VMware, Inc.
 Copyright 2008 Tungsten Graphics, Inc.
 
 This program is free software: you can redistribute it and/or modify it
@@ -29,8 +30,81 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<html>
 			<head>
 				<title>D3D Trace</title>
-				<link rel="stylesheet" type="text/css" href="apitrace.css"/>
 			</head>
+			<style>
+				body {
+					font-family: verdana, sans-serif;
+					font-size: 11px;
+					font-weight: normal;
+					text-align : left;
+				}
+
+				ul.calls {
+					list-style: none;
+					margin-left: 0px;
+					padding-left: 0px;
+				}
+
+				ul.args {
+					display:inline;
+					list-style: none;
+					margin-left: 0px;
+					padding-left: 0px;
+				}
+
+				ul.args li {
+					display:inline;
+				}
+
+				ul.elems {
+					list-style: none;
+					margin-left: 2em;
+					padding-left: 0px;
+				}
+
+				ul.elems li {
+					display:block;
+				}
+
+				.fun {
+					font-weight: bold;
+				}
+
+				.var {
+					font-style: italic;
+				}
+
+				.typ {
+					display: none;
+				}
+
+				.lit {
+					color: #0000ff;
+				}
+
+				.addr {
+					color: #008000;
+				}
+
+				.ref {
+					position: relative;
+					cursor: help;
+				}
+
+				.def {
+					display: none;
+					position: absolute;
+					top: 1.5em;
+					left: 0;
+					width: 32em;
+					background: #f7f7f7;
+					cursor: default;
+				}
+
+				.ref:hover .def {
+					display: block;
+				}
+			</style>
 			<body>
 				<ul class="calls">
 					<xsl:apply-templates/>
