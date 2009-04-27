@@ -176,8 +176,8 @@ zip = env.Package(
         'COPYING.LESSER',
         'd3d8.dll',
         'd3d9.dll',
+        'opengl32.dll',
         'apitrace.xsl',
-        'apitrace.css',
         'xml2txt.py',
     ],
 )
