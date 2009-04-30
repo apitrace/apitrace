@@ -435,10 +435,27 @@ opengl32.functions += [
 HGLRC = Alias("HGLRC", HANDLE)
 PROC = Alias("PROC", LPVOID)
 
+PFD = Flags(DWORD, [
+    "PFD_DOUBLEBUFFER",
+    "PFD_STEREO",
+    "PFD_DRAW_TO_WINDOW",
+    "PFD_DRAW_TO_BITMAP",
+    "PFD_SUPPORT_GDI",
+    "PFD_SUPPORT_OPENGL",
+    "PFD_GENERIC_FORMAT",
+    "PFD_NEED_PALETTE",
+    "PFD_NEED_SYSTEM_PALETTE",
+    "PFD_SWAP_EXCHANGE",
+    "PFD_SWAP_COPY",
+    "PFD_SWAP_LAYER_BUFFERS",
+    "PFD_GENERIC_ACCELERATED",
+    "PFD_SUPPORT_DIRECTDRAW",
+])
+
 PIXELFORMATDESCRIPTOR = Struct("PIXELFORMATDESCRIPTOR", [
     (WORD, "nSize"),
     (WORD, "nVersion"),
-    (DWORD, "dwFlags"),
+    (PFD, "dwFlags"),
     (BYTE, "iPixelType"),
     (BYTE, "cColorBits"),
     (BYTE, "cRedBits"),
@@ -479,6 +496,8 @@ GLYPHMETRICSFLOAT = Struct("GLYPHMETRICSFLOAT", [
 LPGLYPHMETRICSFLOAT = Pointer(GLYPHMETRICSFLOAT)
 
 COLORREF = Alias("COLORREF", DWORD)
+
+
 LAYERPLANEDESCRIPTOR = Struct("LAYERPLANEDESCRIPTOR", [
     (WORD, "nSize"),
     (WORD, "nVersion"),
@@ -522,7 +541,7 @@ opengl32.functions += [
     Function(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")]),
     Function(PROC, "wglGetDefaultProcAddress", [(LPCSTR, "lpszProc")]),
     Function(Int, "wglChoosePixelFormat", [(HDC, "hdc"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]), 
-    Function(Int, "wglDescribePixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (UINT, "nBytes"), (Pointer(PIXELFORMATDESCRIPTOR), "ppfd")]),
+    Function(Int, "wglDescribePixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (UINT, "nBytes"), (OutPointer(PIXELFORMATDESCRIPTOR), "ppfd")]),
     Function(Int, "wglGetPixelFormat", [(HDC, "hdc")]),
     Function(BOOL, "wglSetPixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]),
     Function(BOOL, "wglMakeCurrent", [(HDC, "hdc"), (HGLRC, "hglrc")]),
