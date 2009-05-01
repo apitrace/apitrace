@@ -20,6 +20,7 @@
 
 
 import sys
+import optparse
 import xml.parsers.expat
 
 
@@ -317,9 +318,20 @@ class TraceParser(XmlParser):
 
 
 def main():
-    formatter = AnsiFormatter()
+    parser = optparse.OptionParser(
+        usage="\n\t%prog [options] [file] ...")
+    parser.add_option(
+        '--color', '--colour',
+        type="choice", choices=('never', 'always', 'auto'), metavar='WHEN',
+        dest="color", default="auto",
+        help="coloring: never, always, or auto [default: %default]")
+    (options, args) = parser.parse_args(sys.argv[1:])
+
+    if options.color == 'always' or options.color == 'auto' and sys.stdout.isatty():
+        formatter = AnsiFormatter()
+    else:
+        formatter = Formatter()
     
-    args = sys.argv[1:]
     if args:
         for arg in args:
             if arg.endswith('.gz'):
