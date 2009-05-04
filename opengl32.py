@@ -570,6 +570,8 @@ if __name__ == '__main__':
     print '#include <windows.h>'
     print '#include <tchar.h>'
     print '#include <GL/gl.h>'
+    print '#include "glext.h"'
+    print '#include "wglext.h"'
     print
     print '#include "log.hpp"'
     print
