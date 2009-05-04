@@ -433,7 +433,7 @@ opengl32.functions += [
 ]
 
 HGLRC = Alias("HGLRC", HANDLE)
-PROC = Alias("PROC", LPVOID)
+PROC = Intrinsic("PROC", "%p")
 
 PFD = Flags(DWORD, [
     "PFD_DOUBLEBUFFER",
@@ -449,7 +449,7 @@ PFD = Flags(DWORD, [
     "PFD_SWAP_COPY",
     "PFD_SWAP_LAYER_BUFFERS",
     "PFD_GENERIC_ACCELERATED",
-    "PFD_SUPPORT_DIRECTDRAW",
+    #"PFD_SUPPORT_DIRECTDRAW",
 ])
 
 PIXELFORMATDESCRIPTOR = Struct("PIXELFORMATDESCRIPTOR", [
@@ -526,11 +526,6 @@ LAYERPLANEDESCRIPTOR = Struct("LAYERPLANEDESCRIPTOR", [
 ])
 LPLAYERPLANEDESCRIPTOR = Pointer(LAYERPLANEDESCRIPTOR)
 
-WGLSWAP = Struct("WGLSWAP", [
-    (HDC, "hdc"),
-    (UINT, "uiFlags"),
-])
-
 opengl32.functions += [
     Function(BOOL, "wglCopyContext", [(HGLRC, "hglrcSrc"), (HGLRC, "hglrcDst"), (UINT, "mask")]),
     Function(HGLRC, "wglCreateContext", [(HDC, "hdc")]),
@@ -556,8 +551,17 @@ opengl32.functions += [
     Function(Int  , "wglGetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), (OutPointer(COLORREF), "pcr")]),
     Function(BOOL , "wglRealizeLayerPalette", [(HDC, "hdc"), (Int, "iLayerPlane"), (BOOL, "bRealize")]),
     Function(BOOL , "wglSwapLayerBuffers", [(HDC, "hdc"), (UINT, "fuPlanes")]),
-    Function(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Pointer(Const(WGLSWAP)), "ps")]),
 ]
+
+if False:
+    WGLSWAP = Struct("WGLSWAP", [
+        (HDC, "hdc"),
+        (UINT, "uiFlags"),
+    ])
+
+    opengl32.functions += [
+        Function(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Pointer(Const(WGLSWAP)), "ps")]),
+    ]
 
 if __name__ == '__main__':
     print
@@ -569,4 +573,8 @@ if __name__ == '__main__':
     print
     print '#include "log.hpp"'
     print
+    print 'extern "C" {'
+    print
     wrap()
+    print
+    print '}'
