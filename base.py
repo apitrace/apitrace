@@ -176,6 +176,19 @@ class Enum(Concrete):
         print '    }'
 
 
+class FakeEnum(Enum):
+
+    __seq = 0
+    
+    def __init__(self, type, values):
+        FakeEnum.__seq += 1
+        Enum.__init__(self, type.name + str(FakeEnum.__seq), values)
+        self.type = type
+    
+    def __str__(self):
+        return str(self.type)
+
+
 class Flags(Concrete):
 
     __seq = 0

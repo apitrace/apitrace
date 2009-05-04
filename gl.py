@@ -804,7 +804,7 @@ GLenum = Enum("GLenum", [
 #    "GL_MAX_TEXTURE_UNITS_ARB", # 0x84E2
 ])
 
-[
+GLprimenum = FakeEnum(GLenum, [
     "GL_POINTS", # 0x0000
     "GL_LINES", # 0x0001
     "GL_LINE_LOOP", # 0x0002
@@ -815,7 +815,14 @@ GLenum = Enum("GLenum", [
     "GL_QUADS", # 0x0007
     "GL_QUAD_STRIP", # 0x0008
     "GL_POLYGON", # 0x0009
-]
+])
+
+GLbufferbitfield = Flags(GLbitfield, [
+    "GL_DEPTH_BUFFER_BIT", # 0x00000100
+    "GL_ACCUM_BUFFER_BIT", # 0x00000200
+    "GL_STENCIL_BUFFER_BIT", # 0x00000400
+    "GL_COLOR_BUFFER_BIT", # 0x00004000
+])
 
 [
     "GL_ALL_ATTRIB_BITS", # 0x000FFFFF
@@ -827,13 +834,9 @@ GLenum = Enum("GLenum", [
     "GL_PIXEL_MODE_BIT", # 0x00000020
     "GL_LIGHTING_BIT", # 0x00000040
     "GL_FOG_BIT", # 0x00000080
-    "GL_DEPTH_BUFFER_BIT", # 0x00000100
-    "GL_ACCUM_BUFFER_BIT", # 0x00000200
-    "GL_STENCIL_BUFFER_BIT", # 0x00000400
     "GL_VIEWPORT_BIT", # 0x00000800
     "GL_TRANSFORM_BIT", # 0x00001000
     "GL_ENABLE_BIT", # 0x00002000
-    "GL_COLOR_BUFFER_BIT", # 0x00004000
     "GL_HINT_BIT", # 0x00008000
     "GL_EVAL_BIT", # 0x00010000
     "GL_LIST_BIT", # 0x00020000
