@@ -323,10 +323,14 @@ class Function:
             print '    Log::EndReturn();'
             self.type.wrap_instance('result')
         print '    Log::EndCall();'
+        self.post_call_impl()
         if self.type is not Void:
             print '    return result;'
         print '}'
         print
+
+    def post_call_impl(self):
+        pass
 
 
 class Interface(Type):

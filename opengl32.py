@@ -533,7 +533,6 @@ opengl32.functions += [
     DllFunction(BOOL, "wglDeleteContext", [(HGLRC, "hglrc")]),
     DllFunction(HGLRC, "wglGetCurrentContext", []),
     DllFunction(HDC, "wglGetCurrentDC", []),
-    DllFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")]),
     DllFunction(PROC, "wglGetDefaultProcAddress", [(LPCSTR, "lpszProc")]),
     DllFunction(Int, "wglChoosePixelFormat", [(HDC, "hdc"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]), 
     DllFunction(Int, "wglDescribePixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (UINT, "nBytes"), (OutPointer(PIXELFORMATDESCRIPTOR), "ppfd")]),
@@ -562,6 +561,48 @@ if False:
     opengl32.functions += [
         DllFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Pointer(Const(WGLSWAP)), "ps")]),
     ]
+
+
+class WglGetProcAddressFunction(DllFunction):
+
+    def __init__(self, type, name, args):
+        DllFunction.__init__(self, type, name, args)
+        self.functions = []
+
+    def wrap_decl(self):
+        for function in self.functions:
+            function.wrap_decl()
+        DllFunction.wrap_decl(self)
+
+    def wrap_impl(self):
+        for function in self.functions:
+            function.wrap_impl()
+        DllFunction.wrap_impl(self)
+
+    def post_call_impl(self):
+        for function in self.functions:
+            ptype = function.pointer_type()
+            pvalue = function.pointer_value()
+            print '    if(!strcmp("%s", lpszProc)) {' % function.name
+            print '        %s = (%s)result;' % (pvalue, ptype)
+            print '        result = (PROC)&%s;' % function.name;
+            print '    }'
+
+
+wglgetprocaddress = WglGetProcAddressFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")])
+opengl32.functions.append(wglgetprocaddress)
+
+class WglFunction(Function):
+
+    def get_true_pointer(self):
+        ptype = self.pointer_type()
+        pvalue = self.pointer_value()
+        print '    if(!%s)' % (pvalue,)
+        self.fail_impl()
+
+wglgetprocaddress.functions += [
+    WglFunction(Const(String), "wglGetExtensionsStringARB", [(HDC, "hdc")]),
+]
 
 if __name__ == '__main__':
     print

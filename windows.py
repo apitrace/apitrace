@@ -148,7 +148,7 @@ class DllFunction(Function):
         self.fail_impl()
         print '    }'
         print '    if(!%s) {' % (pvalue,)
-        print '        %s = (%s)GetProcAddress( g_hDll, "%s");' % (pvalue, ptype, self.name)
+        print '        %s = (%s)GetProcAddress(g_hDll, "%s");' % (pvalue, ptype, self.name)
         print '        if(!%s)' % (pvalue,)
         self.fail_impl()
         print '    }'
