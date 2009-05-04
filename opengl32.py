@@ -580,13 +580,15 @@ class WglGetProcAddressFunction(DllFunction):
         DllFunction.wrap_impl(self)
 
     def post_call_impl(self):
+        print '    if(result) {'
         for function in self.functions:
             ptype = function.pointer_type()
             pvalue = function.pointer_value()
-            print '    if(!strcmp("%s", lpszProc)) {' % function.name
-            print '        %s = (%s)result;' % (pvalue, ptype)
-            print '        result = (PROC)&%s;' % function.name;
-            print '    }'
+            print '        if(!strcmp("%s", lpszProc)) {' % function.name
+            print '            %s = (%s)result;' % (pvalue, ptype)
+            print '            result = (PROC)&%s;' % function.name;
+            print '        }'
+        print '    }'
 
 
 wglgetprocaddress = WglGetProcAddressFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")])
