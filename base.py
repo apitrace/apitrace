@@ -271,6 +271,63 @@ class Function:
         s += ")"
         return s
 
+    def pointer_type(self):
+        return 'P' + self.name
+
+    def pointer_value(self):
+        return 'p' + self.name
+
+    def wrap_decl(self):
+        ptype = self.pointer_type()
+        pvalue = self.pointer_value()
+        print 'typedef ' + self.prototype('* %s' % ptype) + ';'
+        print 'static %s %s = NULL;' % (ptype, pvalue)
+        print
+
+    def get_true_pointer(self):
+        raise NotImplementedError
+
+    def fail_impl(self):
+        if self.fail is not None:
+            assert self.type is not Void
+            print '            return %s;' % self.fail
+        else:
+            print '            ExitProcess(0);'
+
+    def wrap_impl(self):
+        pvalue = self.pointer_value()
+        print self.prototype() + ' {'
+        if self.type is Void:
+            result = ''
+        else:
+            print '    %s result;' % self.type
+            result = 'result = '
+        self.get_true_pointer()
+        print '    Log::BeginCall("%s");' % (self.name)
+        for type, name in self.args:
+            if not type.isoutput():
+                type.unwrap_instance(name)
+                print '    Log::BeginArg("%s", "%s");' % (type, name)
+                type.dump(name)
+                print '    Log::EndArg();'
+        print '    %s%s(%s);' % (result, pvalue, ', '.join([str(name) for type, name in self.args]))
+        for type, name in self.args:
+            if type.isoutput():
+                print '    Log::BeginArg("%s", "%s");' % (type, name)
+                type.dump(name)
+                print '    Log::EndArg();'
+                type.wrap_instance(name)
+        if self.type is not Void:
+            print '    Log::BeginReturn("%s");' % self.type
+            self.type.dump("result")
+            print '    Log::EndReturn();'
+            self.type.wrap_instance('result')
+        print '    Log::EndCall();'
+        if self.type is not Void:
+            print '    return result;'
+        print '}'
+        print
+
 
 class Interface(Type):
 

@@ -1603,13 +1603,13 @@ DDCREATE = Flags(DWORD, [
 
 ddraw = Dll("ddraw")
 ddraw.functions += [
-    Function(HRESULT, "DirectDrawEnumerateW", [(LPDDENUMCALLBACKW, "lpCallback"), (LPVOID, "lpContext")]),
-    Function(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")]),
-    Function(HRESULT, "DirectDrawEnumerateExW", [(LPDDENUMCALLBACKEXW, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
-    Function(HRESULT, "DirectDrawEnumerateExA", [(LPDDENUMCALLBACKEXA, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
-    Function(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), (OutPointer(LPDIRECTDRAW), "lplpDD"), (Pointer(IUnknown), "pUnkOuter")]),
-    Function(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), (OutPointer(LPVOID), "lplpDD"), (REFIID, "iid"), (Pointer(IUnknown), "pUnkOuter")]),
-    Function(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), (OutPointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
+    DllFunction(HRESULT, "DirectDrawEnumerateW", [(LPDDENUMCALLBACKW, "lpCallback"), (LPVOID, "lpContext")]),
+    DllFunction(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")]),
+    DllFunction(HRESULT, "DirectDrawEnumerateExW", [(LPDDENUMCALLBACKEXW, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
+    DllFunction(HRESULT, "DirectDrawEnumerateExA", [(LPDDENUMCALLBACKEXA, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
+    DllFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), (OutPointer(LPDIRECTDRAW), "lplpDD"), (Pointer(IUnknown), "pUnkOuter")]),
+    DllFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), (OutPointer(LPVOID), "lplpDD"), (REFIID, "iid"), (Pointer(IUnknown), "pUnkOuter")]),
+    DllFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), (OutPointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
 ]
 
 if __name__ == '__main__':

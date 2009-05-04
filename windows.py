@@ -137,6 +137,23 @@ IUnknown.methods = (
 )
 
 
+class DllFunction(Function):
+
+    def get_true_pointer(self):
+        ptype = self.pointer_type()
+        pvalue = self.pointer_value()
+        print '    if(!g_hDll) {'
+        print '        g_hDll = LoadLibrary(g_szDll);'
+        print '        if(!g_hDll)'
+        self.fail_impl()
+        print '    }'
+        print '    if(!%s) {' % (pvalue,)
+        print '        %s = (%s)GetProcAddress( g_hDll, "%s");' % (pvalue, ptype, self.name)
+        print '        if(!%s)' % (pvalue,)
+        self.fail_impl()
+        print '    }'
+
+
 class Dll:
 
     def __init__(self, name):
@@ -156,6 +173,9 @@ class Dll:
         print 'static TCHAR g_szDll[MAX_PATH] = {0};'
         print
         print 'BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);'
+        print
+        for function in self.functions:
+            function.wrap_decl()
         print
 
     def wrap_impl(self):
@@ -184,54 +204,6 @@ class Dll:
         print r'}'
         print
         for function in self.functions:
-            type = 'P' + function.name
-            print function.prototype() + ' {'
-            if 0:
-                print '    Log::Close();'
-                print '    Log::Open("%s");' % self.name
-            #print '    Log::ReOpen();'
-            print '    typedef ' + function.prototype('* %s' % type) + ';'
-            print '    %s pFunction;' % type
-            if function.type is Void:
-                result = ''
-            else:
-                print '    %s result;' % function.type
-                result = 'result = '
-            print '    if(!g_hDll) {'
-            print '        g_hDll = LoadLibrary(g_szDll);'
-            print '        if(!g_hDll)'
-            print '            ExitProcess(0);'
-            print '    }'
-            print '    pFunction = (%s)GetProcAddress( g_hDll, "%s");' % (type, function.name)
-            print '    if(!pFunction)'
-            if function.fail is not None:
-                assert function.type is not Void
-                print '        return %s;' % function.fail
-            else:
-                print '        ExitProcess(0);'
-            print '    Log::BeginCall("%s");' % (function.name)
-            for type, name in function.args:
-                if not type.isoutput():
-                    type.unwrap_instance(name)
-                    print '    Log::BeginArg("%s", "%s");' % (type, name)
-                    type.dump(name)
-                    print '    Log::EndArg();'
-            print '    %spFunction(%s);' % (result, ', '.join([str(name) for type, name in function.args]))
-            for type, name in function.args:
-                if type.isoutput():
-                    print '    Log::BeginArg("%s", "%s");' % (type, name)
-                    type.dump(name)
-                    print '    Log::EndArg();'
-                    type.wrap_instance(name)
-            if function.type is not Void:
-                print '    Log::BeginReturn("%s");' % function.type
-                function.type.dump("result")
-                print '    Log::EndReturn();'
-                function.type.wrap_instance('result')
-            print '    Log::EndCall();'
-            if function.type is not Void:
-                print '    return result;'
-            print '}'
-            print
+            function.wrap_impl()
         print
 

@@ -269,7 +269,7 @@ IDirect3DVolume8.methods += [
 
 d3d8 = Dll("d3d8")
 d3d8.functions += [
-    Function(PDIRECT3D8, "Direct3DCreate8", [(UINT, "SDKVersion")]),
+    DllFunction(PDIRECT3D8, "Direct3DCreate8", [(UINT, "SDKVersion")]),
 ]
 
 if __name__ == '__main__':
