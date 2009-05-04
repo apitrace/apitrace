@@ -19,56 +19,159 @@
 
 import os
 import os.path
+import platform
 import sys
 
-opts = Options('config.py')
-opts.Add(BoolOption('debug', 'build debug version', 'no'))
-opts.Add(PathOption('dxsdk', 'DirectX SDK installation dir', os.environ.get('DXSDK_DIR', 'C:\\DXSDK')))
-opts.Add(EnumOption('MSVS_VERSION', 'Microsoft Visual Studio version', None, allowed_values=('7.1', '8.0', '9.0')))
+_platform_map = {
+    'freebsd': 'freebsd',
+    'linux2': 'linux',
+    'win32': 'windows',
+}
+
+default_platform = _platform_map.get(sys.platform, 'unix')
+
+_machine_map = {
+    'x86': 'x86',
+    'i386': 'x86',
+    'i486': 'x86',
+    'i586': 'x86',
+    'i686': 'x86',
+    'ppc' : 'ppc',
+    'x86_64': 'x86_64',
+}
+if 'PROCESSOR_ARCHITECTURE' in os.environ:
+    default_machine = os.environ['PROCESSOR_ARCHITECTURE']
+else:
+    default_machine = platform.machine()
+default_machine = _machine_map.get(default_machine, 'generic')
+
+vars = Variables()
+vars.Add(BoolVariable('debug', 'debug build', 'no'))
+vars.Add(EnumVariable('platform', 'target platform', default_platform,
+                      allowed_values=('linux', 'freebsd', 'unix', 'other', 'windows')))
+vars.Add(EnumVariable('machine', 'use machine-specific assembly code', default_machine,
+                      allowed_values=('generic', 'ppc', 'x86', 'x86_64')))
+vars.Add(EnumVariable('toolchain', 'compiler toolchain', 'default',
+                      allowed_values=('default', 'crossmingw', 'winsdk')))
+#vars.Add(PathVariable('dxsdk', 'DirectX SDK installation dir', os.environ.get('DXSDK_DIR', 'C:\\DXSDK')))
+vars.Add(EnumVariable('MSVS_VERSION', 'Microsoft Visual Studio version', None, allowed_values=('7.1', '8.0', '9.0')))
 
 env = Environment(
-    options = opts, 
+    variables = vars, 
     ENV = os.environ)
-Help(opts.GenerateHelpText(env))
+Help(vars.GenerateHelpText(env))
 
-env.Append(CPPDEFINES = [
-    'WIN32', 
-    '_WINDOWS', 
-    '_UNICODE',
-    'UNICODE',
-    '_CRT_SECURE_NO_DEPRECATE',
-    '_CRT_NON_CONFORMING_SWPRINTFS',
-    'WIN32_LEAN_AND_MEAN',
-    '_USRDLL',
-    ('_WIN32_WINNT', '0x0501'), # minimum required OS version
-])
+Export(['env'])
 
-if env['debug']:
-    env.Append(CPPDEFINES = ['_DEBUG'])
-else:
-    env.Append(CPPDEFINES = ['NDEBUG'])
-env['PDB'] = '${TARGET.base}.pdb'
+env.Tool(env['toolchain'], ['scons'])
 
-cflags = [
-    '/W4', # warning level
-]
-if env['debug']:
-    cflags += [
-      '/Od', # disable optimizations
-      '/Oy-', # disable frame pointer omission
+env['gcc'] = 'gcc' in os.path.basename(env['CC']).split('-')
+env['msvc'] = env['CC'] == 'cl'
+
+# C preprocessor options
+cppdefines = []
+if not env['debug']:
+    cppdefines += ['NDEBUG']
+if env['platform'] == 'windows':
+    cppdefines += [
+        'WIN32',
+        '_WINDOWS', 
+        '_UNICODE',
+        'UNICODE',
+        '_CRT_SECURE_NO_DEPRECATE',
+        '_CRT_NON_CONFORMING_SWPRINTFS',
+        'WIN32_LEAN_AND_MEAN',
+        '_USRDLL',
+        ('_WIN32_WINNT', '0x0501'), # minimum required OS version
     ]
-else:
-    cflags += [
-      '/Ox', # maximum optimizations
-      '/Os', # favor code space
+    if env['debug']:
+        cppdefines += ['_DEBUG']
+env.Append(CPPDEFINES = cppdefines)
+
+# C compiler options
+cflags = [] # C
+cxxflags = [] # C++
+ccflags = [] # C & C++
+if env['gcc']:
+    if env['debug']:
+        ccflags += ['-O0', '-g3']
+    else:
+        ccflags += ['-O3', '-g0']
+    if env['machine'] == 'x86':
+        ccflags += ['-m32']
+    if env['machine'] == 'x86_64':
+        ccflags += ['-m64']
+    # See also:
+    # - http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+    ccflags += [
+        '-Werror=declaration-after-statement',
+        '-Wall',
+        '-Wmissing-field-initializers',
+        '-Wpointer-arith',
+        '-fmessage-length=0', # be nice to Eclipse
     ]
-cflags += [
-    '/Oi', # enable intrinsic functions
-    '/GF', # enable read-only string pooling
-    '/MT',
-]
+    cflags += [
+        '-Wmissing-prototypes',
+    ]
+if env['msvc']:
+    if env['debug']:
+        ccflags += [
+          '/Od', # disable optimizations
+          '/Oi', # enable intrinsic functions
+          '/Oy-', # disable frame pointer omission
+          '/GL-', # disable whole program optimization
+        ]
+    else:
+        ccflags += [
+          '/Ox', # maximum optimizations
+          '/Oi', # enable intrinsic functions
+          '/Ot', # favor code speed
+        ]
+    ccflags += [
+        '/EHsc', # set exception handling model
+        '/W4', # warning level
+        #'/Wp64', # enable 64 bit porting warnings
+    ]
+    # Automatic pdb generation
+    # See http://scons.tigris.org/issues/show_bug.cgi?id=1656
+    env.EnsureSConsVersion(0, 98, 0)
+    env['PDB'] = '${TARGET.base}.pdb'
+env.Append(CCFLAGS = ccflags)
 env.Append(CFLAGS = cflags)
-env.Append(CXXFLAGS = cflags)
+env.Append(CXXFLAGS = cxxflags)
+
+if env['platform'] == 'windows' and env['msvc']:
+    # Choose the appropriate MSVC CRT
+    # http://msdn.microsoft.com/en-us/library/2kzt1wy3.aspx
+    if env['debug']:
+        env.Append(CCFLAGS = ['/MTd'])
+        env.Append(SHCCFLAGS = ['/LDd'])
+    else:
+        env.Append(CCFLAGS = ['/MT'])
+        env.Append(SHCCFLAGS = ['/LD'])
+    
+# Assembler options
+if env['gcc']:
+    if env['machine'] == 'x86':
+        env.Append(ASFLAGS = ['-m32'])
+    if env['machine'] == 'x86_64':
+        env.Append(ASFLAGS = ['-m64'])
+
+# Linker options
+linkflags = []
+if env['gcc']:
+    if env['machine'] == 'x86':
+        linkflags += ['-m32']
+    if env['machine'] == 'x86_64':
+        linkflags += ['-m64']
+if env['platform'] == 'windows' and env['msvc']:
+    # See also:
+    # - http://msdn2.microsoft.com/en-us/library/y0zzbyt4.aspx
+    linkflags += [
+        '/fixed:no',
+        '/incremental:no',
+    ]
+env.Append(LINKFLAGS = linkflags)
 
 env.Prepend(LIBS = [
     'kernel32',
@@ -76,12 +179,12 @@ env.Prepend(LIBS = [
     'gdi32',
 ])
 
-Export('env')
 SConscript('zlib/SConscript')
 
-env.Append(CPPPATH = [
-    os.path.join(env['dxsdk'], 'Include'),
-])
+try:
+    env.Append(CPPPATH = [os.path.join(os.environ['DXSDK'], 'Include'),]) 
+except KeyError:
+    pass
 
 conf = Configure(env)
 has_d3d9 = conf.CheckCHeader('d3d9.h')
