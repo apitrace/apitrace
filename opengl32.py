@@ -602,8 +602,63 @@ class WglFunction(Function):
         print '    if(!%s)' % (pvalue,)
         self.fail_impl()
 
+attribute = FakeEnum(Int, [
+    "WGL_NUMBER_PIXEL_FORMATS_EXT",
+    "WGL_DRAW_TO_WINDOW_EXT",
+    "WGL_DRAW_TO_BITMAP_EXT",
+    "WGL_ACCELERATION_EXT",
+    "WGL_NEED_PALETTE_EXT",
+    "WGL_NEED_SYSTEM_PALETTE_EXT",
+    "WGL_SWAP_LAYER_BUFFERS_EXT",
+    "WGL_SWAP_METHOD_EXT",
+    "WGL_NUMBER_OVERLAYS_EXT",
+    "WGL_NUMBER_UNDERLAYS_EXT",
+    "WGL_TRANSPARENT_EXT",
+    "WGL_TRANSPARENT_VALUE_EXT",
+    "WGL_SHARE_DEPTH_EXT",
+    "WGL_SHARE_STENCIL_EXT",
+    "WGL_SHARE_ACCUM_EXT",
+    "WGL_SUPPORT_GDI_EXT",
+    "WGL_SUPPORT_OPENGL_EXT",
+    "WGL_DOUBLE_BUFFER_EXT",
+    "WGL_STEREO_EXT",
+    "WGL_PIXEL_TYPE_EXT",
+    "WGL_COLOR_BITS_EXT",
+    "WGL_RED_BITS_EXT",
+    "WGL_RED_SHIFT_EXT",
+    "WGL_GREEN_BITS_EXT",
+    "WGL_GREEN_SHIFT_EXT",
+    "WGL_BLUE_BITS_EXT",
+    "WGL_BLUE_SHIFT_EXT",
+    "WGL_ALPHA_BITS_EXT",
+    "WGL_ALPHA_SHIFT_EXT",
+    "WGL_ACCUM_BITS_EXT",
+    "WGL_ACCUM_RED_BITS_EXT",
+    "WGL_ACCUM_GREEN_BITS_EXT",
+    "WGL_ACCUM_BLUE_BITS_EXT",
+    "WGL_ACCUM_ALPHA_BITS_EXT",
+    "WGL_DEPTH_BITS_EXT",
+    "WGL_STENCIL_BITS_EXT",
+    "WGL_AUX_BUFFERS_EXT",
+    "WGL_NO_ACCELERATION_EXT",
+    "WGL_GENERIC_ACCELERATION_EXT",
+    "WGL_FULL_ACCELERATION_EXT",
+    "WGL_SWAP_EXCHANGE_EXT",
+    "WGL_SWAP_COPY_EXT",
+    "WGL_SWAP_UNDEFINED_EXT",
+    "WGL_TYPE_RGBA_EXT",
+    "WGL_TYPE_COLORINDEX_EXT",
+])
+
 wglgetprocaddress.functions += [
+    # WGL_ARB_extensions_string
     WglFunction(Const(String), "wglGetExtensionsStringARB", [(HDC, "hdc")]),
+    # WGL_EXT_extensions_string
+    WglFunction(Const(String), "wglGetExtensionsStringEXT", []),
+    # WGL_EXT_pixel_format
+    WglFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Pointer(attribute), "piAttributes"), (OutPointer(Int), "piValues")]),
+    WglFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Pointer(attribute), "piAttributes"), (OutPointer(FLOAT), "pfValues")]),
+    WglFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), (Pointer(Int), "piFormats"), (Pointer(UINT), "nNumFormats")]),
 ]
 
 if __name__ == '__main__':
