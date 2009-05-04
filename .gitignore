@@ -1,6 +1,7 @@
 .*.sw?
 .scon*
 *~
+*.a
 *.bz2
 *.dll
 *.exe
@@ -8,6 +9,7 @@
 *.gz
 *.ilk
 *.lib
+*.o
 *.obj
 *.pdb
 *.pyc
