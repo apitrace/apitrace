@@ -203,13 +203,21 @@ class Flags(Concrete):
         return str(self.type)
     
     def _dump(self, instance):
+        print '    bool l_First = TRUE;'
         print '    %s l_Value = %s;' % (self.type, instance)
         for value in self.values:
             print '    if((l_Value & %s) == %s) {' % (value, value)
-            print '        Log::Text("%s | ");' % value
+            print '        if(!l_First)'
+            print '            Log::Text(" | ");'
+            print '        Log::Text("%s");' % value
             print '        l_Value &= ~%s;' % value
+            print '        l_First = FALSE;'
             print '    }'
+        print '    if(l_Value || l_First) {'
+        print '        if(!l_First)'
+        print '            Log::Text(" | ");'
         self.type.dump("l_Value");
+        print '    }'
 
 
 class Struct(Concrete):
