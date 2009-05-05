@@ -686,7 +686,7 @@ GLenum = Enum("GLenum", [
     "GL_PHONG_WIN",                      # 0x80EA
     "GL_PHONG_HINT_WIN",                 # 0x80EB
     "GL_FOG_SPECULAR_TEXTURE_WIN",       # 0x80EC
-    "GL_TEXTURE_INDEX_SIZE_EXT",         # 0x80ED
+    #"GL_TEXTURE_INDEX_SIZE_EXT",         # 0x80ED
     "GL_CLIP_VOLUME_CLIPPING_HINT_EXT",  # 0x80F0
     "GL_DUAL_ALPHA4_SGIS",               # 0x8110
     "GL_DUAL_ALPHA8_SGIS",               # 0x8111
