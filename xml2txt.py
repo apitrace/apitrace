@@ -323,7 +323,7 @@ def main():
     parser.add_option(
         '--color', '--colour',
         type="choice", choices=('never', 'always', 'auto'), metavar='WHEN',
-        dest="color", default="auto",
+        dest="color", default="always",
         help="coloring: never, always, or auto [default: %default]")
     (options, args) = parser.parse_args(sys.argv[1:])
 
