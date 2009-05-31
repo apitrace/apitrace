@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc.
+ * Copyright 2008-2009 VMware, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published
@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <windows.h>
 
 #include <zlib.h>
 
@@ -46,11 +48,13 @@ namespace Log {
 
 static gzFile g_gzFile = NULL;
 static char g_szFileName[PATH_MAX];
+static CRITICAL_SECTION CriticalSection;
 
 static void _Close(void) {
     if(g_gzFile != NULL) {
         gzclose(g_gzFile);
         g_gzFile = NULL;
+        DeleteCriticalSection(&CriticalSection);
     }
 }
 
@@ -77,6 +81,7 @@ static void _Open(const char *szName, const char *szExtension) {
     }
 
     g_gzFile = gzopen(g_szFileName, "wb");
+    InitializeCriticalSection(&CriticalSection);
 }
 
 static inline void _ReOpen(void) {
@@ -224,6 +229,7 @@ void TextF(const char *format, ...) {
 }
 
 void BeginCall(const char *function) {
+    EnterCriticalSection(&CriticalSection); 
     Indent(1);
     BeginTag("call", "name", function);
     NewLine();
@@ -234,6 +240,7 @@ void EndCall(void) {
     EndTag("call");
     NewLine();
     gzflush(g_gzFile, Z_SYNC_FLUSH);
+    LeaveCriticalSection(&CriticalSection); 
 }
 
 void BeginArg(const char *type, const char *name) {
