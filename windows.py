@@ -46,7 +46,8 @@ LPSIZE = LPDWORD
 
 LPSTR = String
 LPCSTR = Const(String)
-LPWSTR = String
+LPWSTR = WString
+LPCWSTR = WString
 
 LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%llx")
 

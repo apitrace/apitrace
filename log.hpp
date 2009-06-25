@@ -46,6 +46,7 @@ namespace Log {
     void EndReference(void);
 
     void DumpString(const char *str);
+    void DumpWString(const wchar_t *str);
     
 }
 

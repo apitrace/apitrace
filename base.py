@@ -452,12 +452,25 @@ class _String(Type):
         Type.__init__(self, "String")
 
     def __str__(self):
-        return "char *"
+        return "const char *"
 
     def dump(self, instance):
         print '    Log::DumpString((const char *)%s);' % instance
 
 String = _String()
+
+class _WString(Type):
+
+    def __init__(self):
+        Type.__init__(self, "WString")
+
+    def __str__(self):
+        return "const wchar_t *"
+
+    def dump(self, instance):
+        print '    Log::DumpWString(%s);' % instance
+
+WString = _WString()
 
 
 SChar = Intrinsic("signed char", "%i")

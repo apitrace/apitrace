@@ -317,4 +317,36 @@ void DumpString(const char *str) {
     Log::Text("\"");
 }
 
+void DumpWString(const wchar_t *str) {
+    const wchar_t *p = str;
+    Log::Text("L\"");
+    wchar_t c;
+    while((c = *p++) != 0) {
+        if(c == '\"')
+            Text("\\\"");
+        else if(c == '\\')
+            Text("\\\\");
+        else if(c >= 0x20 && c <= 0x7e)
+            TextChar((char)c);
+        else if(c == '\t')
+            Text("\\t");
+        else if(c == '\r')
+            Text("\\r");
+        else if(c == '\n')
+            Text("\\n");
+        else {
+            unsigned octal0 = c & 0x7;
+            unsigned octal1 = (c >> 3) & 0x7;
+            unsigned octal2 = (c >> 3) & 0x7;
+            if(octal2)
+                TextF("\\%u%u%u", octal2, octal1, octal0);
+            else if(octal1)
+                TextF("\\%u%u", octal1, octal0);
+            else
+                TextF("\\%u", octal0);
+        }
+    }
+    Log::Text("\"");
+}
+
 } /* namespace Log */
