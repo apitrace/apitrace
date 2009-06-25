@@ -289,8 +289,12 @@ class Function:
 
     def fail_impl(self):
         if self.fail is not None:
-            assert self.type is not Void
-            print '            return %s;' % self.fail
+            if self.type is Void:
+                assert self.fail == ''
+                print '            return;' 
+            else:
+                assert self.fail != ''
+                print '            return %s;' % self.fail
         else:
             print '            ExitProcess(0);'
 
