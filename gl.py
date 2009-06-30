@@ -34,6 +34,18 @@ GLdouble = Alias("GLdouble", Double)
 GLclampd = Alias("GLclampd", Double)
 GLbitfield = Alias("GLbitfield", UInt)
 
+GLchar = Alias("GLchar", SChar)
+GLcharARB = Alias("GLcharARB", SChar)
+GLintptr = Alias("GLintptr", Int)
+GLsizeiptr = Alias("GLsizeiptr", Int)
+GLintptrARB = Alias("GLintptrARB", Int)
+GLsizeiptrARB = Alias("GLsizeiptrARB", Int)
+GLhandleARB = Alias("GLhandleARB", UInt)
+GLhalfARB = Alias("GLhalfARB", UShort)
+GLhalfNV = Alias("GLhalfNV", UShort)
+GLint64EXT = Alias("GLint64EXT", Long) # FIXME
+GLuint64EXT = Alias("GLuint64EXT", ULong) # FIXME
+
 GLenum = Enum("GLenum", [
     #"GL_NO_ERROR",                       # 0x0
     #"GL_NONE",                           # 0x0
