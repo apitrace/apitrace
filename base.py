@@ -117,7 +117,10 @@ class Const(Type):
         self.type.dump(instance)
 
     def __str__(self):
-        return "const " + str(self.type)
+        if isinstance(self.type, Pointer):
+            return str(self.type) + " const"
+        else:
+            return "const " + str(self.type)
 
 
 class Pointer(Type):
@@ -456,7 +459,7 @@ class _String(Type):
         Type.__init__(self, "String")
 
     def __str__(self):
-        return "const char *"
+        return "char *"
 
     def dump(self, instance):
         print '    Log::DumpString((const char *)%s);' % instance
@@ -469,7 +472,7 @@ class _WString(Type):
         Type.__init__(self, "WString")
 
     def __str__(self):
-        return "const wchar_t *"
+        return "wchar_t *"
 
     def dump(self, instance):
         print '    Log::DumpWString(%s);' % instance
