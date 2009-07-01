@@ -234,9 +234,10 @@ class TraceParser(XmlParser):
 
     def parse(self):
         self.element_start('trace')
-        while self.token.type != ELEMENT_END:
+        while self.token.type not in (ELEMENT_END, EOF):
             self.parse_call()
-        self.element_end('trace')
+        if self.token.type != EOF:
+            self.element_end('trace')
 
     def parse_call(self):
         attrs = self.element_start('call')
@@ -250,6 +251,7 @@ class TraceParser(XmlParser):
             elif self.token.name_or_data == 'ret':
                 ret = self.parse_ret()
             elif self.token.name_or_data == 'call':
+                # ignore nested function calls
                 self.parse_call()
             else:
                 raise TokenMismatch("<arg ...> or <ret ...>", self.token)
