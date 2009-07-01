@@ -39,6 +39,8 @@ See also:
 
 = Building from source =
 
+= MSVC = 
+
 Requirements:
 * Python (tested with version 2.5)
 * SCons (tested with 0.98.4)
@@ -51,18 +53,15 @@ Instructions:
 
  scons debug=no dxsdk=C:\DXSDK
  
-* You can write those options to a file named config.py:
 
- # config.py
- debug=1
- dxsdk='C:\\DXSDK'
- 
-* Invoke
+== MinGW crosscompiler == 
 
-  scons -h
+Requirements:
+* apt-get install mingw32
 
-See the scons manpage for more info.
+Intructions:
 
+  scons platform=windows machine=x86 toolchain=crossmingw opengl32.dll
 
 = Usage =
 
