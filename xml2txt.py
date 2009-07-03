@@ -22,6 +22,7 @@
 import sys
 import optparse
 import xml.parsers.expat
+import gzip
 
 
 ELEMENT_START, ELEMENT_END, CHARACTER_DATA, EOF = range(4)
@@ -99,6 +100,7 @@ class XmlTokenizer:
             self.index = 0
             data = self.fp.read(size)
             self.final = len(data) < size
+            data = data.rstrip('\0')
             try:
                 self.parser.Parse(data, self.final)
             except xml.parsers.expat.ExpatError, e:
@@ -174,6 +176,16 @@ class XmlParser:
         if strip:
             data = data.strip()
         return data
+
+
+class GzipFile(gzip.GzipFile):
+
+    def _read_eof(self):
+        # Ignore incomplete files
+        try:
+            gzip.GzipFile._read_eof(self)
+        except IOError:
+            pass
 
 
 class Formatter:
@@ -337,7 +349,6 @@ def main():
     if args:
         for arg in args:
             if arg.endswith('.gz'):
-                from gzip import GzipFile
                 stream = GzipFile(arg, 'rt')
             elif arg.endswith('.bz2'):
                 from bz2 import BZ2File
