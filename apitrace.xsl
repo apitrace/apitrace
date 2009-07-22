@@ -184,7 +184,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 	<xsl:template match="text()">
 		<span class="lit">
-			<xsl:value-of select="."/>
+			<xsl:call-template name="break">
+				<xsl:with-param name="text" select="."/>
+			</xsl:call-template>
 		</span>
 	</xsl:template>
 
@@ -199,6 +201,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:apply-templates />
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+
+	<xsl:template name="break">
+		<xsl:param name="text" select="."/>
+		<xsl:choose>
+			<xsl:when test="contains($text, '&#xa;')">
+				<xsl:value-of select="substring-before($text, '&#xa;')"/>
+				<br/>
+				<xsl:call-template name="break">
+					 <xsl:with-param name="text" select="substring-after($text, '&#xa;')"/>
+				</xsl:call-template>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$text"/>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>

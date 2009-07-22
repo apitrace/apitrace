@@ -301,7 +301,7 @@ void DumpString(const char *str) {
         else if(c == '\r')
             Text("\\r");
         else if(c == '\n')
-            Text("\\n");
+            Text("&#10;");
         else {
             unsigned char octal0 = c & 0x7;
             unsigned char octal1 = (c >> 3) & 0x7;
@@ -333,7 +333,7 @@ void DumpWString(const wchar_t *str) {
         else if(c == '\r')
             Text("\\r");
         else if(c == '\n')
-            Text("\\n");
+            Text("&#10;");
         else {
             unsigned octal0 = c & 0x7;
             unsigned octal1 = (c >> 3) & 0x7;
