@@ -206,6 +206,28 @@ class Flags(Concrete):
         print '    }'
 
 
+class Array(Type):
+
+    def __init__(self, type, length):
+        Type.__init__(self, type.expr + " *", 'P' + type.id)
+        self.type = type
+        self.length = length
+
+    def dump(self, instance):
+        index = '__i' + self.type.id
+        print '    for (int %s; %s < %s; ++%s) {' % (index, index, self.length, index)
+        print '        Log::BeginElement("%s");' % (self.type,)
+        self.type.dump('(%s)[%s]' % (instance, index))
+        print '        Log::EndElement();'
+        print '    }'
+
+    def wrap_instance(self, instance):
+        self.type.wrap_instance("*" + instance)
+
+    def unwrap_instance(self, instance):
+        self.type.wrap_instance("*" + instance)
+
+
 class Struct(Concrete):
 
     def __init__(self, name, members):

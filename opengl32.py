@@ -36,7 +36,7 @@ opengl32.functions += [
     DllFunction(Void, "glColor3d", [(GLdouble, "red"), (GLdouble, "green"), (GLdouble, "blue")]),
     DllFunction(Void, "glColor3dv", [(Pointer(Const(GLdouble)), "v")]),
     DllFunction(Void, "glColor3f", [(GLfloat, "red"), (GLfloat, "green"), (GLfloat, "blue")]),
-    DllFunction(Void, "glColor3fv", [(Pointer(Const(GLfloat)), "v")]),
+    DllFunction(Void, "glColor3fv", [(Array(Const(GLfloat), "3"), "v")]),
     DllFunction(Void, "glColor3i", [(GLint, "red"), (GLint, "green"), (GLint, "blue")]),
     DllFunction(Void, "glColor3iv", [(Pointer(Const(GLint)), "v")]),
     DllFunction(Void, "glColor3s", [(GLshort, "red"), (GLshort, "green"), (GLshort, "blue")]),
