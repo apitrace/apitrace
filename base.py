@@ -27,14 +27,27 @@ all_types = {}
 
 class Type:
 
-    def __init__(self, name):
-        self.name = name
+    __seq = 0
+
+    def __init__(self, expr, id = ''):
+        self.expr = expr
+        
+        for char in id:
+            assert char.isalnum() or char in '_ '
+
+        id = id.replace(' ', '_')
+        
+        if id in all_types:
+            Type.__seq += 1
+            id += str(Type.__seq)
+        
+        assert id not in all_types
+        all_types[id] = self
+
+        self.id = id
 
     def __str__(self):
-        return self.name
-
-    def identifier(self):
-        return self.name.replace(' ', '_')
+        return self.expr
 
     def isoutput(self):
         return False
@@ -65,21 +78,11 @@ Void = _Void()
 
 class Concrete(Type):
 
-    def __init__(self, name):
-        for char in name:
-            assert char.isalnum() or char in '_ '
-
-        Type.__init__(self, name)
-        
-        assert self.name not in all_types
-        if self.name not in all_types:
-            all_types[self.name] = self
-
     def decl(self):
-        print 'void Dump%s(const %s &value);' % (self.identifier(), str(self))
+        print 'void Dump%s(const %s &value);' % (self.id, self.expr)
     
     def impl(self):
-        print 'void Dump%s(const %s &value) {' % (self.identifier(), str(self))
+        print 'void Dump%s(const %s &value) {' % (self.id, self.expr)
         self._dump("value");
         print '}'
         print
@@ -88,50 +91,42 @@ class Concrete(Type):
         raise NotImplementedError
     
     def dump(self, instance):
-        print '    Dump%s(%s);' % (self.identifier(), instance)
+        print '    Dump%s(%s);' % (self.id, instance)
     
 
 class Intrinsic(Concrete):
 
-    def __init__(self, expr, format, name = None):
-        if name is None:
-            name = expr
-        Concrete.__init__(self, name)
-        self.expr = expr
+    def __init__(self, expr, format):
+        Concrete.__init__(self, expr)
         self.format = format
 
     def _dump(self, instance):
         print '    Log::TextF("%s", %s);' % (self.format, instance)
-        
-    def __str__(self):
-        return self.expr
 
 
 class Const(Type):
 
     def __init__(self, type):
-        Type.__init__(self, 'C' + type.name)
+
+        if isinstance(type, Pointer):
+            expr = type.expr + " const"
+        else:
+            expr = "const " + type.expr
+
+        Type.__init__(self, expr, 'C' + type.id)
+
         self.type = type
 
     def dump(self, instance):
         self.type.dump(instance)
 
-    def __str__(self):
-        if isinstance(self.type, Pointer):
-            return str(self.type) + " const"
-        else:
-            return "const " + str(self.type)
-
 
 class Pointer(Type):
 
     def __init__(self, type):
-        Type.__init__(self, 'P' + type.name)
+        Type.__init__(self, type.expr + " *", 'P' + type.id)
         self.type = type
 
-    def __str__(self):
-        return str(self.type) + " *"
-    
     def dump(self, instance):
         print '    if(%s) {' % instance
         print '        Log::BeginReference("%s", %s);' % (self.type, instance)
@@ -181,30 +176,18 @@ class Enum(Concrete):
 
 class FakeEnum(Enum):
 
-    __seq = 0
-    
     def __init__(self, type, values):
-        FakeEnum.__seq += 1
-        Enum.__init__(self, type.name + str(FakeEnum.__seq), values)
+        Enum.__init__(self, type.expr, values)
         self.type = type
-    
-    def __str__(self):
-        return str(self.type)
 
 
 class Flags(Concrete):
 
-    __seq = 0
-    
     def __init__(self, type, values):
-        Flags.__seq += 1
-        Concrete.__init__(self, type.name + str(Flags.__seq))
+        Concrete.__init__(self, type.expr)
         self.type = type
         self.values = values
 
-    def __str__(self):
-        return str(self.type)
-    
     def _dump(self, instance):
         print '    bool l_First = TRUE;'
         print '    %s l_Value = %s;' % (self.type, instance)
@@ -265,7 +248,7 @@ class Function:
             s = self.call + ' ' + s
         if name.startswith('*'):
             s = '(' + s + ')'
-        s = str(self.type) + ' ' + s
+        s = self.type.expr + ' ' + s
         s += "("
         if self.args:
             s += ", ".join(["%s %s" % (type, name) for type, name in self.args])
@@ -344,6 +327,7 @@ class Interface(Type):
 
     def __init__(self, name, base=None):
         Type.__init__(self, name)
+        self.name = name
         self.base = base
         self.methods = []
 
@@ -356,7 +340,7 @@ class Interface(Type):
         raise StopIteration
 
     def wrap_name(self):
-        return "Wrap" + self.name
+        return "Wrap" + self.expr
 
     def wrap_pre_decl(self):
         print "class %s;" % self.wrap_name()
@@ -456,10 +440,7 @@ class WrapPointer(Pointer):
 class _String(Type):
 
     def __init__(self):
-        Type.__init__(self, "String")
-
-    def __str__(self):
-        return "char *"
+        Type.__init__(self, "char *")
 
     def dump(self, instance):
         print '    Log::DumpString((const char *)%s);' % instance
@@ -469,10 +450,7 @@ String = _String()
 class _WString(Type):
 
     def __init__(self):
-        Type.__init__(self, "WString")
-
-    def __str__(self):
-        return "wchar_t *"
+        Type.__init__(self, "wchar_t *")
 
     def dump(self, instance):
         print '    Log::DumpWString(%s);' % instance
