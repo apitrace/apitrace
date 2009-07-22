@@ -20,8 +20,11 @@
 """d3d9.h"""
 
 from windows import *
+from d3dshader import *
 from d3d9types import *
 from d3d9caps import *
+
+D3DSHADER9 = D3DShader(9)
 
 HRESULT = Enum("HRESULT", [
     "D3D_OK",
@@ -204,7 +207,7 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "GetVertexDeclaration", [(OutPointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
     Method(HRESULT, "SetFVF", [(DWORD, "FVF")]),
     Method(HRESULT, "GetFVF", [(OutPointer(DWORD), "pFVF")]),
-    Method(HRESULT, "CreateVertexShader", [(ConstPointer(DWORD), "pFunction"), (OutPointer(PDIRECT3DVERTEXSHADER9), "ppShader")]),
+    Method(HRESULT, "CreateVertexShader", [(D3DSHADER9, "pFunction"), (OutPointer(PDIRECT3DVERTEXSHADER9), "ppShader")]),
     Method(HRESULT, "SetVertexShader", [(PDIRECT3DVERTEXSHADER9, "pShader")]),
     Method(HRESULT, "GetVertexShader", [(OutPointer(PDIRECT3DVERTEXSHADER9), "ppShader")]),
     Method(HRESULT, "SetVertexShaderConstantF", [(UINT, "StartRegister"), (ConstPointer(Float), "pConstantData"), (UINT, "Vector4fCount")]),
@@ -219,7 +222,7 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "GetStreamSourceFreq", [(UINT, "StreamNumber"), (OutPointer(UINT), "pSetting")]),
     Method(HRESULT, "SetIndices", [(PDIRECT3DINDEXBUFFER9, "pIndexData")]),
     Method(HRESULT, "GetIndices", [(OutPointer(PDIRECT3DINDEXBUFFER9), "ppIndexData")]),
-    Method(HRESULT, "CreatePixelShader", [(ConstPointer(DWORD), "pFunction"), (OutPointer(PDIRECT3DPIXELSHADER9), "ppShader")]),
+    Method(HRESULT, "CreatePixelShader", [(D3DSHADER9, "pFunction"), (OutPointer(PDIRECT3DPIXELSHADER9), "ppShader")]),
     Method(HRESULT, "SetPixelShader", [(PDIRECT3DPIXELSHADER9, "pShader")]),
     Method(HRESULT, "GetPixelShader", [(OutPointer(PDIRECT3DPIXELSHADER9), "ppShader")]),
     Method(HRESULT, "SetPixelShaderConstantF", [(UINT, "StartRegister"), (ConstPointer(Float), "pConstantData"), (UINT, "Vector4fCount")]),

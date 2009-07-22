@@ -231,7 +231,7 @@ if has_d3d8:
 if has_d3d9:
     env.Command(
         target = 'd3d9.cpp', 
-        source = ['d3d9.py', 'd3d9types.py', 'd3d9caps.py', 'windows.py', 'base.py'],
+        source = ['d3d9.py', 'd3d9types.py', 'd3d9caps.py', 'd3dshader.py', 'windows.py', 'base.py'],
         action = 'python $SOURCE > $TARGET',
     )
         
