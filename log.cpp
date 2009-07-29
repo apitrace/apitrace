@@ -228,14 +228,34 @@ void TextF(const char *format, ...) {
     Text(szBuffer);
 }
 
+static LARGE_INTEGER frequency = {0};
+static LARGE_INTEGER startcounter;
+
 void BeginCall(const char *function) {
     EnterCriticalSection(&CriticalSection); 
     Indent(1);
     BeginTag("call", "name", function);
     NewLine();
+
+    if(!frequency.QuadPart)
+	QueryPerformanceFrequency(&frequency);
+    
+    QueryPerformanceCounter(&startcounter);
 }
 
 void EndCall(void) {
+    LARGE_INTEGER endcounter;
+    LONGLONG usecs;
+
+    QueryPerformanceCounter(&endcounter);
+    usecs = (endcounter.QuadPart - startcounter.QuadPart)*1000000/frequency.QuadPart;
+
+    Indent(2);
+    BeginTag("duration");
+    TextF("%llu", usecs);
+    EndTag("duration");
+    NewLine();
+
     Indent(1);
     EndTag("call");
     NewLine();
