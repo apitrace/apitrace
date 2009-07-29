@@ -272,22 +272,7 @@ class TraceParser(XmlParser):
                 raise TokenMismatch("<arg ...> or <ret ...>", self.token)
         self.element_end('call')
         
-        call = ''
-
-        if duration is not None:
-            call += '%8u ' % (duration)
-
-        call += self.formatter.function(name)
-        call += '(' + ', '.join([self.formatter.variable(name) + ' = ' + value for name, value in args]) + ')'
-        if ret is not None:
-            call += ' = ' + ret
-        call += '\n'
-        
-        try:
-            sys.stdout.write(call)
-        except IOError: 
-            # catch broken pipe
-            sys.exit(0)
+        self.handle_call(name, args, ret, duration)
 
     def parse_arg(self):
         attrs = self.element_start('arg')
@@ -344,10 +329,59 @@ class TraceParser(XmlParser):
 
         return value
 
+    def handle_call(self, name, args, ret, duration):
+        s = ''
+
+        if duration is not None:
+            s += '%8u ' % (duration)
+
+        s += self.formatter.function(name)
+        s += '(' + ', '.join([self.formatter.variable(name) + ' = ' + value for name, value in args]) + ')'
+        if ret is not None:
+            s += ' = ' + ret
+        s += '\n'
+        
+        try:
+            sys.stdout.write(s)
+        except IOError: 
+            # catch broken pipe
+            sys.exit(0)
+
+
+class StatsTraceParser(TraceParser):
+
+    def __init__(self, stream, formatter):
+        TraceParser.__init__(self, stream, formatter)
+        self.stats = {}
+
+    def parse(self):
+        TraceParser.parse(self)
+
+        sys.stdout.write('%s\t%s\t%s\n' % ("name", "calls", "duration"))
+        for name, (calls, duration) in self.stats.iteritems():
+            sys.stdout.write('%s\t%u\t%f\n' % (name, calls, duration/1000000.0))
+
+    def handle_call(self, name, args, ret, duration):
+        try:
+            nr_calls, total_duration = self.stats[name]
+        except KeyError:
+            nr_calls = 1
+            total_duration = duration
+        else:
+            nr_calls += 1
+            if duration is not None:
+                total_duration += duration
+        self.stats[name] = nr_calls, total_duration
+
 
 def main():
     parser = optparse.OptionParser(
         usage="\n\t%prog [options] [file] ...")
+    parser.add_option(
+        '-s', '--stats',
+        action="store_true",
+        dest="stats", default=False,
+        help="generate statistics instead")
     parser.add_option(
         '--color', '--colour',
         type="choice", choices=('never', 'always', 'auto'), metavar='WHEN',
@@ -360,6 +394,11 @@ def main():
     else:
         formatter = Formatter()
     
+    if options.stats:
+        factory = StatsTraceParser
+    else:
+        factory = TraceParser
+
     if args:
         for arg in args:
             if arg.endswith('.gz'):
@@ -369,10 +408,10 @@ def main():
                 stream = BZ2File(arg, 'rt')
             else:
                 stream = open(arg, 'rt')
-            parser = TraceParser(stream, formatter)
+            parser = factory(stream, formatter)
             parser.parse()
     else:
-            parser = TraceParser(sys.stdin, formatter)
+            parser = factory(sys.stdin, formatter)
             parser.parse()
 
 
