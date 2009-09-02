@@ -402,7 +402,7 @@ def main():
     if args:
         for arg in args:
             if arg.endswith('.gz'):
-                stream = GzipFile(arg, 'rt')
+                stream = GzipFile(arg, 'rb')
             elif arg.endswith('.bz2'):
                 from bz2 import BZ2File
                 stream = BZ2File(arg, 'rt')
