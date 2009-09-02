@@ -3,7 +3,7 @@
 
 = Copyright =
 
-Copyright 2008 Tungsten Graphics, Inc.
+Copyright 2008-2009 VMware, Inc.
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU Lesser General Public License as published
@@ -39,7 +39,8 @@ See also:
 
 = Building from source =
 
-= MSVC = 
+
+== MSVC ==
 
 Requirements:
 * Python (tested with version 2.5)
@@ -63,11 +64,14 @@ Intructions:
 
   scons platform=windows machine=x86 toolchain=crossmingw opengl32.dll
 
+
 = Usage =
 
 * Copy d3d8.dll, d3d9.dll, or opengl32.dll and apitrace.xsl to the directory with the application you want to trace.
 * Run the application.
-* Open the output XML file with Firefox or Internet Explorer to view the log.
-* For long XML files is better to use xml2txt.py script.
+* Decompress the output .xml.gz and open the XML with Firefox or Internet Explorer to view the log. On Firefox hover on the arguments to see their contents.
+* For long XML files is better to use xml2txt.py script directly on the .xml.gz file, as:
 
+  python xml2txt.py d3d9.xml.gz > d3d9.log
 
+See also http://jrfonseca.blogspot.com/2008/07/tracing-d3d-applications.html
