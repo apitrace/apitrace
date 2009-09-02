@@ -238,6 +238,13 @@ class AnsiFormatter(Formatter):
         return self._escape(self._green, text)
 
 
+def DefaultFormatter():
+    if sys.platform in ('linux2', 'cygwin'):
+        return AnsiFormatter()
+    else:
+        return Formatter()
+
+
 class TraceParser(XmlParser):
 
     def __init__(self, stream, formatter):
@@ -390,7 +397,7 @@ def main():
     (options, args) = parser.parse_args(sys.argv[1:])
 
     if options.color == 'always' or options.color == 'auto' and sys.stdout.isatty():
-        formatter = AnsiFormatter()
+        formatter = DefaultFormatter()
     else:
         formatter = Formatter()
     
