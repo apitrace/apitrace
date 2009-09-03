@@ -63,13 +63,25 @@ static void _Open(const char *szName, const char *szExtension) {
     
     static unsigned dwCounter = 0;
 
+    char szProcessPath[PATH_MAX];
+    char *lpProcessName;
+    char *lpProcessExt;
+
+    GetModuleFileNameA(NULL, szProcessPath, sizeof(szProcessPath)/sizeof(szProcessPath[0]));
+
+    lpProcessName = strrchr(szProcessPath, '\\');
+    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
+    lpProcessExt = strrchr(lpProcessName, '.');
+    if(lpProcessExt)
+	*lpProcessExt = '\0';
+
     for(;;) {
         FILE *file;
         
         if(dwCounter)
-            snprintf(g_szFileName, PATH_MAX, "%s.%u.%s.gz", szName, dwCounter, szExtension);
+            snprintf(g_szFileName, PATH_MAX, "%s.%s.%u.%s.gz", lpProcessName, szName, dwCounter, szExtension);
         else
-            snprintf(g_szFileName, PATH_MAX, "%s.%s.gz", szName, szExtension);
+            snprintf(g_szFileName, PATH_MAX, "%s.%s.%s.gz", lpProcessName, szName, szExtension);
         
         file = fopen(g_szFileName, "rb");
         if(file == NULL)
