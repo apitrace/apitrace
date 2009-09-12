@@ -215,7 +215,7 @@ class Array(Type):
 
     def dump(self, instance):
         index = '__i' + self.type.id
-        print '    for (int %s; %s < %s; ++%s) {' % (index, index, self.length, index)
+        print '    for (int %s = 0; %s < %s; ++%s) {' % (index, index, self.length, index)
         print '        Log::BeginElement("%s");' % (self.type,)
         self.type.dump('(%s)[%s]' % (instance, index))
         print '        Log::EndElement();'
