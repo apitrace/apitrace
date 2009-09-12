@@ -316,15 +316,21 @@ class TraceParser(XmlParser):
         elems = [self.parse_elem()]
         while self.token.type != ELEMENT_END:
             elems.append(self.parse_elem())
-        return '{' + ', '.join([name + ' = ' + value for name, value in elems]) + '}'
+        return '{' + ', '.join(elems) + '}'
 
     def parse_elem(self):
         attrs = self.element_start('elem')
-        name = attrs['name']
         value = self.parse_value()
         self.element_end('elem')
 
-        return name, value
+        try:
+            name = attrs['name']
+        except KeyError:
+            pass
+        else:
+            value = name + ' = ' + value
+
+        return value
 
     def parse_ref(self):
         attrs = self.element_start('ref')
@@ -339,8 +345,8 @@ class TraceParser(XmlParser):
     def handle_call(self, name, args, ret, duration):
         s = ''
 
-        if duration is not None:
-            s += '%8u ' % (duration)
+        #if duration is not None:
+        #    s += '%8u ' % (duration)
 
         s += self.formatter.function(name)
         s += '(' + ', '.join([self.formatter.variable(name) + ' = ' + value for name, value in args]) + ')'
