@@ -79,10 +79,10 @@ Void = _Void()
 class Concrete(Type):
 
     def decl(self):
-        print 'void Dump%s(const %s &value);' % (self.id, self.expr)
+        print 'static void Dump%s(const %s &value);' % (self.id, self.expr)
     
     def impl(self):
-        print 'void Dump%s(const %s &value) {' % (self.id, self.expr)
+        print 'static void Dump%s(const %s &value) {' % (self.id, self.expr)
         self._dump("value");
         print '}'
         print
