@@ -1,6 +1,6 @@
 #############################################################################
 #
-# Copyright 2008 Tungsten Graphics, Inc.
+# Copyright 2008-2009 VMware, Inc.
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published
@@ -53,7 +53,6 @@ vars.Add(EnumVariable('machine', 'use machine-specific assembly code', default_m
                       allowed_values=('generic', 'ppc', 'x86', 'x86_64')))
 vars.Add(EnumVariable('toolchain', 'compiler toolchain', 'default',
                       allowed_values=('default', 'crossmingw', 'winsdk')))
-#vars.Add(PathVariable('dxsdk', 'DirectX SDK installation dir', os.environ.get('DXSDK_DIR', 'C:\\DXSDK')))
 vars.Add(EnumVariable('MSVS_VERSION', 'Microsoft Visual Studio version', None, allowed_values=('7.1', '8.0', '9.0')))
 
 env = Environment(
@@ -63,7 +62,7 @@ Help(vars.GenerateHelpText(env))
 
 Export(['env'])
 
-env.Tool(env['toolchain'], ['scons'])
+env.Tool(env['toolchain'], toolpath = ['scons'])
 
 env['gcc'] = 'gcc' in os.path.basename(env['CC']).split('-')
 env['msvc'] = env['CC'] == 'cl'
@@ -181,10 +180,7 @@ env.Prepend(LIBS = [
 
 SConscript('zlib/SConscript')
 
-try:
-    env.Append(CPPPATH = [os.path.join(os.environ['DXSDK'], 'Include'),]) 
-except KeyError:
-    pass
+env.Tool('dxsdk', toolpath = ['scons'])
 
 conf = Configure(env)
 has_d3d9 = conf.CheckCHeader('d3d9.h')
