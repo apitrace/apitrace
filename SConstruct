@@ -183,12 +183,19 @@ SConscript('zlib/SConscript')
 env.Tool('dxsdk', toolpath = ['scons'])
 
 conf = Configure(env)
-has_d3d9 = conf.CheckCHeader('d3d9.h')
-has_d3d8 = conf.CheckCHeader('d3d8.h')
-has_d3d7 = conf.CheckCHeader('ddraw.h')
+has_d3d7 = conf.CheckCXXHeader('ddraw.h')
+has_d3d8 = conf.CheckCXXHeader('d3d8.h')
+has_d3d9 = conf.CheckCXXHeader('d3d9.h')
+if env['toolchain'] != 'crossmingw':
+    has_d3d10 = conf.CheckCXXHeader('d3d10.h')
+    has_d3d10_1 = conf.CheckCXXHeader('d3d10_1.h')
+else:
+    # The above checks do not give reliable results for MinGW
+    has_d3d10 = True
+    has_d3d10_1 = True
 env = conf.Finish()
 
-if has_d3d7:
+if has_d3d7 and False:
     env.Command(
         target = 'ddraw.cpp', 
         source = ['ddraw.py', 'd3d.py', 'd3dtypes.py', 'd3dcaps.py', 'windows.py', 'base.py'],
@@ -241,6 +248,42 @@ if has_d3d9:
     )
 
     env.Default(d3d9)
+
+if has_d3d10:
+    env.Command(
+        target = 'd3d10.cpp', 
+        source = ['d3d10misc.py', 'windows.py', 'base.py'],
+        action = 'python $SOURCE > $TARGET',
+    )
+        
+    d3d10 = env.SharedLibrary(
+        target = 'd3d10',
+        source = [
+            'd3d10.def',
+            'd3d10.cpp',
+            'log.cpp',
+        ]
+    )
+
+    env.Default(d3d10)
+
+if has_d3d10_1:
+    env.Command(
+        target = 'd3d10_1.cpp', 
+        source = ['d3d10_1.py', 'windows.py', 'base.py'],
+        action = 'python $SOURCE > $TARGET',
+    )
+        
+    d3d10_1 = env.SharedLibrary(
+        target = 'd3d10_1',
+        source = [
+            'd3d10_1.def',
+            'd3d10_1.cpp',
+            'log.cpp',
+        ]
+    )
+
+    env.Default(d3d10_1)
 
 env.Command(
     target = 'opengl32.cpp', 

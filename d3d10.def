@@ -1,0 +1,6 @@
+LIBRARY	"d3d10"
+
+EXPORTS
+        D3D10CreateDevice
+        D3D10CreateDeviceAndSwapChain
+        D3D10CreateBlob

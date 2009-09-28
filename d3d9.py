@@ -400,6 +400,9 @@ d3d9.functions += [
 if __name__ == '__main__':
     print '#include <windows.h>'
     print '#include <tchar.h>'
+    print
+    print '#include "compat.h"'
+    print
     print '#include <d3d9.h>'
     print
     print '#include "log.hpp"'

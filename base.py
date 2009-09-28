@@ -490,6 +490,7 @@ UInt = Intrinsic("unsigned int", "%u")
 ULong = Intrinsic("unsigned long", "%lu")
 Float = Intrinsic("float", "%f")
 Double = Intrinsic("double", "%f")
+SizeT = Intrinsic("size_t", "%lu")
 
 
 def wrap():

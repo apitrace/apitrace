@@ -16,8 +16,12 @@
 *.pyo
 *.xml
 *.zip
+MD5SUM
 config.log
 ddraw.cpp
 d3d8.cpp
 d3d9.cpp
+d3d10.cpp
+d3d10_1.cpp
+dxsdk
 opengl32.cpp

@@ -50,6 +50,7 @@ LPWSTR = WString
 LPCWSTR = Const(WString)
 
 LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%llx")
+SIZE_T = Alias("SIZE_T", SizeT)
 
 HRESULT = Alias("HRESULT", Int)
 
@@ -128,6 +129,7 @@ RGNDATA = Struct("RGNDATA", [
 ])
 LPRGNDATA = Pointer(RGNDATA)
 
+HMODULE = Alias("HMODULE", LPVOID)
 
 IUnknown = Interface("IUnknown")
 
