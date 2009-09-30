@@ -314,8 +314,6 @@ zip = env.Package(
     SOURCE_URL     = 'http://cgit.freedesktop.org/~jrfonseca/apitrace/',
     source = [
         'README',
-        'COPYING',
-        'COPYING.LESSER',
         'd3d8.dll',
         'd3d9.dll',
         'opengl32.dll',
