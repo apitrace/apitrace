@@ -656,6 +656,8 @@ attribute = FakeEnum(Int, [
     "WGL_TYPE_COLORINDEX_EXT",
 ])
 
+HPBUFFERARB = Alias("HPBUFFERARB", HANDLE)
+
 wglgetprocaddress.functions += [
     WglFunction(Void, "glAttachShader", [(GLuint, "program"), (GLuint, "shader")]),
     WglFunction(GLuint, "glCreateProgram", []),
@@ -1026,6 +1028,12 @@ wglgetprocaddress.functions += [
     WglFunction(Void, "glGetQueryObjectui64vEXT", [(GLuint, "id"), (GLenum, "pname"), (Pointer(GLuint64EXT), "params")]),
     # WGL_ARB_extensions_string
     WglFunction(Const(String), "wglGetExtensionsStringARB", [(HDC, "hdc")]),
+    # WGL_ARB_pbuffer
+    WglFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]), 
+    WglFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")]),
+    WglFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
+    WglFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]), 
+    WglFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iAttribute"), (Pointer(Int), "piValue")]),
     # WGL_ARB_pixel_format
     WglFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Pointer(attribute), "piAttributes"), (OutPointer(Int), "piValues")]),
     WglFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Pointer(attribute), "piAttributes"), (OutPointer(FLOAT), "pfValues")]),
