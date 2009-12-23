@@ -311,7 +311,7 @@ zip = env.Package(
     PACKAGETYPE    = 'zip',
     LICENSE        = 'lgpl',
     SUMMARY        = 'Tool to trace Direct3D & OpenGL API calls from applications.',
-    SOURCE_URL     = 'http://cgit.freedesktop.org/~jrfonseca/apitrace/',
+    SOURCE_URL     = 'http://code.google.com/p/jrfonseca/source/browse?repo=apitrace',
     source = [
         'README',
         'd3d8.dll',
