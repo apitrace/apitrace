@@ -1,4 +1,4 @@
-				   D3D Trace
+				   API Trace
 
 
 = Copyright =
@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 = About =
 
-Wrapper DLLs to trace D3D8 and D3D9 APIs calls.
+Wrapper DLLs to trace D3D8, D3D9, and OpenGL APIs calls.
 
 Based on the idea from Michael Koch. 
 
