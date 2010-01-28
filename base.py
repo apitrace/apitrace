@@ -234,6 +234,12 @@ class Array(Type):
         self.type.wrap_instance("*" + instance)
 
 
+class OutArray(Array):
+
+    def isoutput(self):
+        return True
+
+
 class Struct(Concrete):
 
     def __init__(self, name, members):
@@ -255,6 +261,31 @@ class Alias(Type):
 
     def dump(self, instance):
         self.type.dump(instance)
+
+
+class Out(Type):
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr)
+        self.type = type
+
+    def isoutput(self):
+        return True
+
+    def decl(self):
+        self.type.decl()
+
+    def impl(self):
+        self.type.impl()
+
+    def dump(self, instance):
+        self.type.dump(instance)
+    
+    def wrap_instance(self, instance):
+        self.type.wrap_instance(instance)
+
+    def unwrap_instance(self, instance):
+        self.type.unwrap_instance(instance)
 
 
 class Function:

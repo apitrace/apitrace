@@ -52,6 +52,9 @@ GLhalfNV = Alias("GLhalfNV", UShort)
 GLint64EXT = Alias("GLint64EXT", Long) # FIXME
 GLuint64EXT = Alias("GLuint64EXT", ULong) # FIXME
 
+GLstring = Alias("GLchar *", String)
+GLstringARB = Alias("GLcharARB *", String)
+
 GLenum = Enum("GLenum", [
     #"GL_NO_ERROR",                       # 0x0
     #"GL_NONE",                           # 0x0
