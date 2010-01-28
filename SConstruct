@@ -27,6 +27,7 @@ import os
 import os.path
 import platform
 import sys
+import time
 
 _platform_map = {
     'freebsd': 'freebsd',
@@ -312,7 +313,7 @@ env.Tool('packaging')
 
 zip = env.Package(
     NAME           = 'apitrace',
-    VERSION        = '0.3',
+    VERSION        = time.strftime('%Y%m%d'),
     PACKAGEVERSION = 0,
     PACKAGETYPE    = 'zip',
     LICENSE        = 'lgpl',
@@ -328,4 +329,4 @@ zip = env.Package(
     ],
 )
 
-env.Alias('zip', zip)
+env.Alias('dist', zip)
