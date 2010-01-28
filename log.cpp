@@ -339,9 +339,9 @@ void DumpString(const char *str) {
         else if(c >= 0x20 && c <= 0x7e)
             TextChar(c);
         else if(c == '\t')
-            Text("\\t");
+            Text("&#09;");
         else if(c == '\r')
-            Text("\\r");
+            Text("&#13;");
         else if(c == '\n')
             Text("&#10;");
         else {
@@ -375,9 +375,9 @@ void DumpWString(const wchar_t *str) {
         else if(c >= 0x20 && c <= 0x7e)
             TextChar((char)c);
         else if(c == '\t')
-            Text("\\t");
+            Text("&#09;");
         else if(c == '\r')
-            Text("\\r");
+            Text("&#13;");
         else if(c == '\n')
             Text("&#10;");
         else {
