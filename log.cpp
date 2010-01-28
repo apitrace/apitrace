@@ -325,6 +325,10 @@ void EndReference(void) {
 
 void DumpString(const char *str) {
     const unsigned char *p = (const unsigned char *)str;
+    if (!str) {
+        Log::Text("L\"");
+        return;
+    }
     Log::Text("\"");
     unsigned char c;
     while((c = *p++) != 0) {
@@ -357,6 +361,10 @@ void DumpString(const char *str) {
 
 void DumpWString(const wchar_t *str) {
     const wchar_t *p = str;
+    if (!str) {
+        Log::Text("L\"");
+        return;
+    }
     Log::Text("L\"");
     wchar_t c;
     while((c = *p++) != 0) {
