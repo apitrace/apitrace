@@ -532,6 +532,11 @@ LAYERPLANEDESCRIPTOR = Struct("LAYERPLANEDESCRIPTOR", [
 ])
 LPLAYERPLANEDESCRIPTOR = Pointer(LAYERPLANEDESCRIPTOR)
 
+WGLSWAP = Struct("WGLSWAP", [
+   (HDC, "hdc"),
+    (UINT, "uiFlags"),
+])
+
 opengl32.functions += [
     DllFunction(BOOL, "wglCopyContext", [(HGLRC, "hglrcSrc"), (HGLRC, "hglrcDst"), (UINT, "mask")]),
     DllFunction(HGLRC, "wglCreateContext", [(HDC, "hdc")]),
@@ -556,17 +561,8 @@ opengl32.functions += [
     DllFunction(Int  , "wglGetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), (OutPointer(COLORREF), "pcr")]),
     DllFunction(BOOL , "wglRealizeLayerPalette", [(HDC, "hdc"), (Int, "iLayerPlane"), (BOOL, "bRealize")]),
     DllFunction(BOOL , "wglSwapLayerBuffers", [(HDC, "hdc"), (UINT, "fuPlanes")]),
+    DllFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Pointer(Const(WGLSWAP)), "ps")]),
 ]
-
-if False:
-    WGLSWAP = Struct("WGLSWAP", [
-        (HDC, "hdc"),
-        (UINT, "uiFlags"),
-    ])
-
-    opengl32.functions += [
-        DllFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Pointer(Const(WGLSWAP)), "ps")]),
-    ]
 
 
 class WglGetProcAddressFunction(DllFunction):
@@ -1269,6 +1265,18 @@ if __name__ == '__main__':
     print '#include "wglext.h"'
     print
     print '#include "log.hpp"'
+    print
+    print '#ifdef __MINGW32__'
+    print ''
+    print 'typedef struct _WGLSWAP'
+    print '{'
+    print '    HDC hdc;'
+    print '    UINT uiFlags;'
+    print '} WGLSWAP, *PWGLSWAP, FAR *LPWGLSWAP;'
+    print ''
+    print '#define WGL_SWAPMULTIPLE_MAX 16'
+    print ''
+    print '#endif'
     print
     print 'extern "C" {'
     print
