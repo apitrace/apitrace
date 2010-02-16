@@ -117,10 +117,64 @@ static inline void Write(const char *szText) {
     Write(szText, strlen(szText));
 }
 
+static inline void Write(char c) 
+{
+    Write(&c, 1);
+}
+
+static inline void
+WriteF(const char *format, ...) 
+{
+    char szBuffer[4096];
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(szBuffer, sizeof(szBuffer), format, ap);
+    va_end(ap);
+    Write(szBuffer);
+}
+
 static inline void 
-Escape(const char *s) {
-    /* FIXME */
-    Write(s);
+Escape(char c) 
+{
+    switch(c) {
+    case '&':
+        Write("&amp;");
+        break;
+    case '<':
+        Write("&lt;");
+        break;
+    case '>':
+        Write("&gt;");
+        break;
+    case '"':
+        Write("&quot;");
+        break;
+    case '\'':
+        Write("&apos;");
+        break;
+    default:
+        Write(c);
+    }
+}
+
+static inline void 
+Escape(const char *s)
+{
+    unsigned char c;
+    while((c = *s++) != 0) {
+        Escape(c);
+    }
+}
+
+static inline void
+EscapeF(const char *format, ...)
+{
+    char szBuffer[4096];
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(szBuffer, sizeof(szBuffer), format, ap);
+    va_end(ap);
+    Escape(szBuffer);
 }
 
 static inline void 
@@ -230,20 +284,13 @@ void Text(const char *text) {
     Escape(text);
 }
 
-static void TextChar(char c) {
-    char szText[2];
-    szText[0] = c;
-    szText[1] = 0;
-    Text(szText);
-}
-
 void TextF(const char *format, ...) {
     char szBuffer[4096];
     va_list ap;
     va_start(ap, format);
     vsnprintf(szBuffer, sizeof(szBuffer), format, ap);
     va_end(ap);
-    Text(szBuffer);
+    Escape(szBuffer);
 }
 
 static LARGE_INTEGER frequency = {0};
@@ -326,73 +373,73 @@ void EndReference(void) {
 void DumpString(const char *str) {
     const unsigned char *p = (const unsigned char *)str;
     if (!str) {
-        Log::Text("NULL");
+        Write("NULL");
         return;
     }
-    Log::Text("\"");
+    Write("\"");
     unsigned char c;
     while((c = *p++) != 0) {
         if(c == '\"')
-            Text("\\\"");
+            Write("\\\"");
         else if(c == '\\')
-            Text("\\\\");
+            Write("\\\\");
         else if(c >= 0x20 && c <= 0x7e)
-            TextChar(c);
+            Write(c);
         else if(c == '\t')
-            Text("&#09;");
+            Write("&#09;");
         else if(c == '\r')
-            Text("&#13;");
+            Write("&#13;");
         else if(c == '\n')
-            Text("&#10;");
+            Write("&#10;");
         else {
             unsigned char octal0 = c & 0x7;
             unsigned char octal1 = (c >> 3) & 0x7;
             unsigned char octal2 = (c >> 3) & 0x7;
             if(octal2)
-                TextF("\\%u%u%u", octal2, octal1, octal0);
+                WriteF("\\%u%u%u", octal2, octal1, octal0);
             else if(octal1)
-                TextF("\\%u%u", octal1, octal0);
+                WriteF("\\%u%u", octal1, octal0);
             else
-                TextF("\\%u", octal0);
+                WriteF("\\%u", octal0);
         }
     }
-    Log::Text("\"");
+    Write("\"");
 }
 
 void DumpWString(const wchar_t *str) {
     const wchar_t *p = str;
     if (!str) {
-        Log::Text("NULL");
+        Write("NULL");
         return;
     }
-    Log::Text("L\"");
+    Write("L\"");
     wchar_t c;
     while((c = *p++) != 0) {
         if(c == '\"')
-            Text("\\\"");
+            Write("\\\"");
         else if(c == '\\')
-            Text("\\\\");
+            Write("\\\\");
         else if(c >= 0x20 && c <= 0x7e)
-            TextChar((char)c);
+            Write((char)c);
         else if(c == '\t')
-            Text("&#09;");
+            Write("&#09;");
         else if(c == '\r')
-            Text("&#13;");
+            Write("&#13;");
         else if(c == '\n')
-            Text("&#10;");
+            Write("&#10;");
         else {
             unsigned octal0 = c & 0x7;
             unsigned octal1 = (c >> 3) & 0x7;
             unsigned octal2 = (c >> 3) & 0x7;
             if(octal2)
-                TextF("\\%u%u%u", octal2, octal1, octal0);
+                WriteF("\\%u%u%u", octal2, octal1, octal0);
             else if(octal1)
-                TextF("\\%u%u", octal1, octal0);
+                WriteF("\\%u%u", octal1, octal0);
             else
-                TextF("\\%u", octal0);
+                WriteF("\\%u", octal0);
         }
     }
-    Log::Text("\"");
+    Write("\"");
 }
 
 } /* namespace Log */
