@@ -238,7 +238,7 @@ static void TextChar(char c) {
 }
 
 void TextF(const char *format, ...) {
-    char szBuffer[4196];
+    char szBuffer[4096];
     va_list ap;
     va_start(ap, format);
     vsnprintf(szBuffer, sizeof(szBuffer), format, ap);
