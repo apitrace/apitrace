@@ -455,7 +455,10 @@ PFD = Flags(DWORD, [
     "PFD_SWAP_COPY",
     "PFD_SWAP_LAYER_BUFFERS",
     "PFD_GENERIC_ACCELERATED",
-    #"PFD_SUPPORT_DIRECTDRAW",
+    "PFD_SUPPORT_DIRECTDRAW",
+    "PFD_DEPTH_DONTCARE",
+    "PFD_DOUBLEBUFFER_DONTCARE",
+    "PFD_STEREO_DONTCARE",
 ])
 
 PIXELFORMATDESCRIPTOR = Struct("PIXELFORMATDESCRIPTOR", [
@@ -1265,6 +1268,13 @@ if __name__ == '__main__':
     print '#include "wglext.h"'
     print
     print '#include "log.hpp"'
+    print
+    print '#ifndef PFD_SUPPORT_DIRECTDRAW'
+    print '#define PFD_SUPPORT_DIRECTDRAW 0x00002000'
+    print '#endif'
+    print '#ifndef PFD_SUPPORT_COMPOSITION'
+    print '#define PFD_SUPPORT_COMPOSITION 0x00008000'
+    print '#endif'
     print
     print '#ifdef __MINGW32__'
     print ''
