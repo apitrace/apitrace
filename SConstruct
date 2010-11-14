@@ -69,7 +69,7 @@ Help(vars.GenerateHelpText(env))
 
 Export(['env'])
 
-env.Tool(env['toolchain'], toolpath = ['scons'])
+env.Tool(env['toolchain'])
 
 env['gcc'] = 'gcc' in os.path.basename(env['CC']).split('-')
 env['msvc'] = env['CC'] == 'cl'
@@ -187,7 +187,7 @@ env.Prepend(LIBS = [
 
 SConscript('zlib/SConscript')
 
-env.Tool('dxsdk', toolpath = ['scons'])
+env.Tool('dxsdk')
 
 conf = Configure(env)
 has_d3d7 = conf.CheckCXXHeader('ddraw.h')
