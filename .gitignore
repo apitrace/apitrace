@@ -14,8 +14,13 @@
 *.pdb
 *.pyc
 *.pyo
+*.so
 *.xml
 *.zip
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+Makefile
 MD5SUM
 config.log
 ddraw.cpp
@@ -24,4 +29,5 @@ d3d9.cpp
 d3d10.cpp
 d3d10_1.cpp
 dxsdk
+glx.cpp
 opengl32.cpp

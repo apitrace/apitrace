@@ -332,6 +332,9 @@ class Function:
     def get_true_pointer(self):
         raise NotImplementedError
 
+    def exit_impl(self):
+        print '            ExitProcess(0);'
+
     def fail_impl(self):
         if self.fail is not None:
             if self.type is Void:
@@ -341,7 +344,7 @@ class Function:
                 assert self.fail != ''
                 print '            return %s;' % self.fail
         else:
-            print '            ExitProcess(0);'
+            self.exit_impl()
 
     def wrap_impl(self):
         pvalue = self.pointer_value()

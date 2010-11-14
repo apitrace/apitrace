@@ -29,7 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WIN32
 #include <windows.h>
+#endif
 
 #include <zlib.h>
 
@@ -46,21 +48,29 @@
 #ifndef vsnprintf
 #define vsnprintf _vsnprintf
 #endif
-#endif
+#endif /* WIN32 */
 
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 namespace Log {
 
 
 static gzFile g_gzFile = NULL;
 static char g_szFileName[PATH_MAX];
+
+#if WIN32
 static CRITICAL_SECTION CriticalSection;
+#endif /* WIN32 */
 
 static void _Close(void) {
     if(g_gzFile != NULL) {
         gzclose(g_gzFile);
         g_gzFile = NULL;
+#if WIN32
         DeleteCriticalSection(&CriticalSection);
+#endif
     }
 }
 
@@ -73,6 +83,7 @@ static void _Open(const char *szName, const char *szExtension) {
     char *lpProcessName;
     char *lpProcessExt;
 
+#ifdef WIN32
     GetModuleFileNameA(NULL, szProcessPath, sizeof(szProcessPath)/sizeof(szProcessPath[0]));
 
     lpProcessName = strrchr(szProcessPath, '\\');
@@ -80,6 +91,10 @@ static void _Open(const char *szName, const char *szExtension) {
     lpProcessExt = strrchr(lpProcessName, '.');
     if(lpProcessExt)
 	*lpProcessExt = '\0';
+#else
+    // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
+    lpProcessName = "";
+#endif
 
     for(;;) {
         FILE *file;
@@ -99,7 +114,9 @@ static void _Open(const char *szName, const char *szExtension) {
     }
 
     g_gzFile = gzopen(g_szFileName, "wb");
+#ifdef WIN32
     InitializeCriticalSection(&CriticalSection);
+#endif
 }
 
 static inline void _ReOpen(void) {
@@ -293,39 +310,23 @@ void TextF(const char *format, ...) {
     Escape(szBuffer);
 }
 
-static LARGE_INTEGER frequency = {0};
-static LARGE_INTEGER startcounter;
-
 void BeginCall(const char *function) {
+#ifdef WIN32
     EnterCriticalSection(&CriticalSection); 
+#endif
     Indent(1);
     BeginTag("call", "name", function);
     NewLine();
-
-    if(!frequency.QuadPart)
-	QueryPerformanceFrequency(&frequency);
-    
-    QueryPerformanceCounter(&startcounter);
 }
 
 void EndCall(void) {
-    LARGE_INTEGER endcounter;
-    LONGLONG usecs;
-
-    QueryPerformanceCounter(&endcounter);
-    usecs = (endcounter.QuadPart - startcounter.QuadPart)*1000000/frequency.QuadPart;
-
-    Indent(2);
-    BeginTag("duration");
-    TextF("%llu", usecs);
-    EndTag("duration");
-    NewLine();
-
     Indent(1);
     EndTag("call");
     NewLine();
     gzflush(g_gzFile, Z_SYNC_FLUSH);
+#ifdef WIN32
     LeaveCriticalSection(&CriticalSection); 
+#endif
 }
 
 void BeginArg(const char *type, const char *name) {
