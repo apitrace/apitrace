@@ -195,7 +195,7 @@ class Flags(Concrete):
         self.values = values
 
     def _dump(self, instance):
-        print '    bool l_First = TRUE;'
+        print '    bool l_First = true;'
         print '    %s l_Value = %s;' % (self.type, instance)
         for value in self.values:
             print '    if((l_Value & %s) == %s) {' % (value, value)
@@ -203,7 +203,7 @@ class Flags(Concrete):
             print '            Log::Text(" | ");'
             print '        Log::Text("%s");' % value
             print '        l_Value &= ~%s;' % value
-            print '        l_First = FALSE;'
+            print '        l_First = false;'
             print '    }'
         print '    if(l_Value || l_First) {'
         print '        if(!l_First)'
