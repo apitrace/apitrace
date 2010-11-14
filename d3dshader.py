@@ -58,13 +58,13 @@ typedef HRESULT
     if(firsttime) {
         if(!hD3DXModule) {
             unsigned release;
-            unsigned version;
+            int version;
             for(release = 0; release <= 1; ++release) {
                 /* Version 41 corresponds to Mar 2009 version of DirectX Runtime / SDK */ 
-                for(version = 41; version >= 24; --version) {
+                for(version = 41; version >= 0; --version) {
                     char filename[256];
                     _snprintf(filename, sizeof(filename), 
-                              "d3dx9%s_%u.dll", release ? "" : "d", version);
+                              "d3dx9%s%s%u.dll", release ? "" : "d", version ? "_" : "", version);
                     hD3DXModule = LoadLibraryA(filename);
                     if(hD3DXModule)
                         goto found;
