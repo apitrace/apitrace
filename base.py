@@ -135,12 +135,12 @@ class Pointer(Type):
 
     def dump(self, instance):
         print '    if(%s) {' % instance
-        print '        Log::BeginReference("%s", %s);' % (self.type, instance)
+        print '        Log::BeginPointer("%s", (const void *)%s);' % (self.type, instance)
         try:
             self.type.dump("*" + instance)
         except NotImplementedError:
             pass
-        print '        Log::EndReference();'
+        print '        Log::EndPointer();'
         print '    }'
         print '    else'
         print '        Log::LiteralNull();'
@@ -440,8 +440,8 @@ class Interface(Type):
                 result = 'result = '
             print '    Log::BeginCall("%s");' % (self.name + '::' + method.name)
             print '    Log::BeginArg("%s *", "this");' % self.name
-            print '    Log::BeginReference("%s", m_pInstance);' % self.name
-            print '    Log::EndReference();'
+            print '    Log::BeginPointer("%s", (const void *)m_pInstance);' % self.name
+            print '    Log::EndPointer();'
             print '    Log::EndArg();'
             for type, name in method.args:
                 if not type.isoutput():
@@ -514,12 +514,12 @@ String = _String()
 class _Opaque(Type):
 
     def __init__(self):
-        Type.__init__(self, "void *")
+        Type.__init__(self, "void")
 
     def dump(self, instance):
-        print '    Log::LiteralOpaque((const void *)%s);' % instance
+        print '    Log::LiteralOpaque();'
 
-Opaque = _Opaque()
+Opaque = Pointer(_Opaque())
 
 
 Bool = Literal("bool", "Bool")

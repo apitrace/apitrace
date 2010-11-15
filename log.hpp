@@ -56,8 +56,8 @@ namespace Log {
     void BeginBitmask(const char *type);
     void EndBitmask(void);
 
-    void BeginReference(const char *type, const void *addr);
-    void EndReference(void);
+    void BeginPointer(const char *type, const void *addr);
+    void EndPointer(void);
 
     void LiteralBool(bool value);
     void LiteralSInt(signed long long value);
@@ -66,8 +66,8 @@ namespace Log {
     void LiteralString(const char *str);
     void LiteralWString(const wchar_t *str);
     void LiteralNamedConstant(const char *str);
-    void LiteralOpaque(const void *addr);
     void LiteralNull(void);
+    void LiteralOpaque(void);
 }
 
 #endif /* _LOG_HPP_ */

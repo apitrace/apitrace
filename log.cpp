@@ -362,14 +362,14 @@ void EndBitmask(void)
     EndTag("bitmask");
 }
 
-void BeginReference(const char *type, const void *addr)
+void BeginPointer(const char *type, const void *addr)
 {
     char saddr[256];
     snprintf(saddr, sizeof(saddr), "%p", addr);
     BeginTag("ref", "type", type, "addr", saddr);
 }
 
-void EndReference(void)
+void EndPointer(void)
 {
     EndTag("ref");
 }
@@ -431,21 +431,14 @@ void LiteralNamedConstant(const char *str)
     EndTag("const");
 }
 
-void LiteralOpaque(const void *addr)
-{
-    char saddr[256];
-    if (!addr) {
-        LiteralNull();
-        return;
-    }
-    snprintf(saddr, sizeof(saddr), "%p", addr);
-    BeginTag("opaque", "addr", saddr);
-    EndTag("opaque");
-}
-
 void LiteralNull(void)
 {
     Tag("null");
+}
+
+void LiteralOpaque(void)
+{
+    Tag("opaque");
 }
 
 } /* namespace Log */
