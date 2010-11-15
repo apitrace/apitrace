@@ -37,7 +37,11 @@ if (MSVC)
 	# Silence several MSVC pedantic warnings
 	add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
 	add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
-endif (MSVC)
+        
+	add_definitions (-W4)
+else ()
+	add_definitions (-Wall)
+endif ()
 
 # Use bundled ZLIB if system one can't be found
 if (NOT ZLIB_FOUND)
