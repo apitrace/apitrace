@@ -27,22 +27,23 @@
 
 from base import *
 
-SHORT = Intrinsic("SHORT", "%i")
-USHORT = Intrinsic("USHORT", "%u")
-INT = Intrinsic("INT", "%i")
-UINT = Intrinsic("UINT", "%u")
-LONG = Intrinsic("LONG", "%li")
-ULONG = Intrinsic("ULONG", "%lu")
-FLOAT = Intrinsic("FLOAT", "%f")
+SHORT = Alias("SHORT", Short)
+USHORT = Alias("USHORT", UShort)
+INT = Alias("INT", Int)
+UINT = Alias("UINT", UInt)
+LONG = Alias("LONG", Long)
+ULONG = Alias("ULONG", ULong)
+LONGLONG = Alias("LONGLONG", LongLong)
+FLOAT = Alias("FLOAT", Float)
 
-INT32 = Intrinsic("INT32", "%i")
-UINT32 = Intrinsic("UINT32", "%i")
+INT32 = Literal("INT32", "UInt")
+UINT32 = Literal("UINT32", "UInt")
 
-BYTE = Intrinsic("BYTE", "0x%02lx")
-WORD = Intrinsic("WORD", "0x%04lx")
-DWORD = Intrinsic("DWORD", "0x%08lx")
+BYTE = Literal("BYTE", "UInt", base=16)
+WORD = Literal("WORD", "UInt", base=16)
+DWORD = Literal("DWORD", "UInt", base=16)
 
-BOOL = Intrinsic("BOOL", "%i")
+BOOL = Alias("BOOL", Bool)
 
 LPLONG = Pointer(LONG)
 LPWORD = Pointer(WORD)
@@ -55,17 +56,20 @@ LPCSTR = Const(String)
 LPWSTR = WString
 LPCWSTR = Const(WString)
 
-LARGE_INTEGER = Intrinsic("LARGE_INTEGER", "0x%llx")
+LARGE_INTEGER = Struct("LARGE_INTEGER", [
+    (LONGLONG, 'QuadPart'),
+])
+
 SIZE_T = Alias("SIZE_T", SizeT)
 
 HRESULT = Alias("HRESULT", Int)
 
-PVOID = Intrinsic("PVOID", "%p")
+PVOID = Alias("PVOID", Opaque)
 LPVOID = PVOID
-HANDLE = Intrinsic("HANDLE", "%p")
-HWND = Intrinsic("HWND", "%p")
-HDC = Intrinsic("HDC", "%p")
-HMONITOR = Intrinsic("HMONITOR", "%p")
+HANDLE = Alias("HANDLE", Opaque)
+HWND = Alias("HWND", Opaque)
+HDC = Alias("HDC", Opaque)
+HMONITOR = Alias("HMONITOR", Opaque)
 
 GUID = Struct("GUID", [
     (DWORD, "Data1"),

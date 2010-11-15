@@ -100,14 +100,14 @@ class Concrete(Type):
         print '    Dump%s(%s);' % (self.id, instance)
     
 
-class Intrinsic(Concrete):
+class Literal(Concrete):
 
-    def __init__(self, expr, format):
+    def __init__(self, expr, format, base=10):
         Concrete.__init__(self, expr)
         self.format = format
 
     def _dump(self, instance):
-        print '    Log::TextF("%s", %s);' % (self.format, instance)
+        print '    Log::Literal%s(%s);' % (self.format, instance)
 
 
 class Const(Type):
@@ -143,7 +143,7 @@ class Pointer(Type):
         print '        Log::EndReference();'
         print '    }'
         print '    else'
-        print '        Log::Text("NULL");'
+        print '        Log::LiteralNull();'
 
     def wrap_instance(self, instance):
         self.type.wrap_instance("*" + instance)
@@ -172,10 +172,10 @@ class Enum(Concrete):
         print '    switch(%s) {' % instance
         for value in self.values:
             print '    case %s:' % value
-            print '        Log::Text("%s");' % value
+            print '        Log::LiteralNamedConstant("%s");' % value
             print '        break;'
         print '    default:'
-        print '        Log::TextF("%%i", %s);' % instance
+        print '        Log::LiteralSInt(%s);' % instance
         print '        break;'
         print '    }'
 
@@ -195,21 +195,17 @@ class Flags(Concrete):
         self.values = values
 
     def _dump(self, instance):
-        print '    bool l_First = true;'
         print '    %s l_Value = %s;' % (self.type, instance)
+        print '    Log::BeginBitmask("%s");' % (self.type,)
         for value in self.values:
             print '    if((l_Value & %s) == %s) {' % (value, value)
-            print '        if(!l_First)'
-            print '            Log::Text(" | ");'
-            print '        Log::Text("%s");' % value
+            print '        Log::LiteralNamedConstant("%s");' % value
             print '        l_Value &= ~%s;' % value
-            print '        l_First = false;'
             print '    }'
-        print '    if(l_Value || l_First) {'
-        print '        if(!l_First)'
-        print '            Log::Text(" | ");'
+        print '    if(l_Value) {'
         self.type.dump("l_Value");
         print '    }'
+        print '    Log::EndBitmask();'
 
 
 class Array(Type):
@@ -221,11 +217,13 @@ class Array(Type):
 
     def dump(self, instance):
         index = '__i' + self.type.id
+        print '    Log::BeginArray("%s", %s);' % (self.type, self.length)
         print '    for (int %s = 0; %s < %s; ++%s) {' % (index, index, self.length, index)
         print '        Log::BeginElement("%s");' % (self.type,)
         self.type.dump('(%s)[%s]' % (instance, index))
         print '        Log::EndElement();'
         print '    }'
+        print '    Log::EndArray();'
 
     def wrap_instance(self, instance):
         self.type.wrap_instance("*" + instance)
@@ -244,13 +242,16 @@ class Struct(Concrete):
 
     def __init__(self, name, members):
         Concrete.__init__(self, name)
+        self.name = name
         self.members = members
 
     def _dump(self, instance):
+        print '    Log::BeginStruct("%s");' % (self.name,)
         for type, name in self.members:
-            print '    Log::BeginElement("%s", "%s");' % (type, name)
+            print '    Log::BeginMember("%s", "%s");' % (type, name)
             type.dump('(%s).%s' % (instance, name))
-            print '    Log::EndElement();'
+            print '    Log::EndMember();'
+        print '    Log::EndStruct();'
 
 
 class Alias(Type):
@@ -478,7 +479,7 @@ class Interface(Type):
 class Method(Function):
 
     def __init__(self, type, name, args):
-        Function.__init__(self, type, name, args)
+        Function.__init__(self, type, name, args, call = '__stdcall')
 
 
 towrap = []
@@ -505,32 +506,36 @@ class _String(Type):
         Type.__init__(self, "char *")
 
     def dump(self, instance):
-        print '    Log::DumpString((const char *)%s);' % instance
+        print '    Log::LiteralString((const char *)%s);' % instance
 
 String = _String()
 
-class _WString(Type):
+
+class _Opaque(Type):
 
     def __init__(self):
-        Type.__init__(self, "wchar_t *")
+        Type.__init__(self, "void *")
 
     def dump(self, instance):
-        print '    Log::DumpWString(%s);' % instance
+        print '    Log::LiteralOpaque((const void *)%s);' % instance
 
-WString = _WString()
+Opaque = _Opaque()
 
 
-SChar = Intrinsic("signed char", "%i")
-UChar = Intrinsic("unsigned char", "%u")
-Short = Intrinsic("short", "%i")
-Int = Intrinsic("int", "%i")
-Long = Intrinsic("long", "%li")
-UShort = Intrinsic("unsigned short", "%u")
-UInt = Intrinsic("unsigned int", "%u")
-ULong = Intrinsic("unsigned long", "%lu")
-Float = Intrinsic("float", "%f")
-Double = Intrinsic("double", "%f")
-SizeT = Intrinsic("size_t", "%lu")
+Bool = Literal("bool", "Bool")
+SChar = Literal("signed char", "SInt")
+UChar = Literal("unsigned char", "UInt")
+Short = Literal("short", "SInt")
+Int = Literal("int", "SInt")
+Long = Literal("long", "SInt")
+LongLong = Literal("long long", "SInt")
+UShort = Literal("unsigned short", "UInt")
+UInt = Literal("unsigned int", "UInt")
+ULong = Literal("unsigned long", "UInt")
+Float = Literal("float", "Float")
+Double = Literal("double", "Float")
+SizeT = Literal("size_t", "UInt")
+WString = Literal("wchar_t *", "WString")
 
 
 def wrap():

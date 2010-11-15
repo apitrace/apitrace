@@ -109,7 +109,7 @@ WriteF(const char *format, ...)
 }
 
 static inline void 
-Escape(char c) 
+Escape(wchar_t c) 
 {
     switch(c) {
     case '&':
@@ -127,13 +127,35 @@ Escape(char c)
     case '\'':
         Write("&apos;");
         break;
+    case '\t':
+        Write("&#09;");
+        break;
+    case '\r':
+        Write("&#13;");
+        break;
+    case '\n':
+        Write("&#10;");
+        break;
     default:
-        Write(c);
+        if (c >= 0x20 && c <= 0x7e) {
+            Write((char)c);
+        } else {
+            Write('.');
+        }
     }
 }
 
 static inline void 
 Escape(const char *s)
+{
+    unsigned char c;
+    while((c = *s++) != 0) {
+        Escape(c);
+    }
+}
+
+static inline void 
+Escape(const wchar_t *s)
 {
     unsigned char c;
     while((c = *s++) != 0) {
@@ -255,19 +277,6 @@ void Close(void) {
     _Close();
 }
 
-void Text(const char *text) {
-    Escape(text);
-}
-
-void TextF(const char *format, ...) {
-    char szBuffer[4096];
-    va_list ap;
-    va_start(ap, format);
-    vsnprintf(szBuffer, sizeof(szBuffer), format, ap);
-    va_end(ap);
-    Escape(szBuffer);
-}
-
 void BeginCall(const char *function) {
     OS::AcquireMutex();
     Indent(1);
@@ -303,98 +312,140 @@ void EndReturn(void) {
     NewLine();
 }
 
-void BeginElement(const char *type, const char *name) {
-    BeginTag("elem", "type", type, "name", name);
+void BeginArray(const char *type, size_t length)
+{
+    BeginTag("array", "type", type);
 }
 
-void BeginElement(const char *type) {
+void EndArray(void)
+{
+    EndTag("array");
+}
+
+void BeginElement(const char *type)
+{
     BeginTag("elem", "type", type);
 }
 
-void EndElement(void) {
+void EndElement(void)
+{
     EndTag("elem");
 }
 
-void BeginReference(const char *type, const void *addr) {
+void BeginStruct(const char *type)
+{
+    BeginTag("struct", "type", type);
+}
+
+void EndStruct(void)
+{
+    EndTag("struct");
+}
+
+void BeginMember(const char *type, const char *name)
+{
+    BeginTag("member", "type", type, "name", name);
+}
+
+void EndMember(void)
+{
+    EndTag("member");
+}
+
+void BeginBitmask(const char *type)
+{
+    BeginTag("bitmask");
+}
+
+void EndBitmask(void)
+{
+    EndTag("bitmask");
+}
+
+void BeginReference(const char *type, const void *addr)
+{
     char saddr[256];
     snprintf(saddr, sizeof(saddr), "%p", addr);
     BeginTag("ref", "type", type, "addr", saddr);
 }
 
-void EndReference(void) {
+void EndReference(void)
+{
     EndTag("ref");
 }
 
-void DumpString(const char *str) {
-    const unsigned char *p = (const unsigned char *)str;
-    if (!str) {
-        Write("NULL");
-        return;
-    }
-    Write("\"");
-    unsigned char c;
-    while((c = *p++) != 0) {
-        if(c == '\"')
-            Write("\\\"");
-        else if(c == '\\')
-            Write("\\\\");
-        else if(c >= 0x20 && c <= 0x7e)
-            Write(c);
-        else if(c == '\t')
-            Write("&#09;");
-        else if(c == '\r')
-            Write("&#13;");
-        else if(c == '\n')
-            Write("&#10;");
-        else {
-            unsigned char octal0 = c & 0x7;
-            unsigned char octal1 = (c >> 3) & 0x7;
-            unsigned char octal2 = (c >> 3) & 0x7;
-            if(octal2)
-                WriteF("\\%u%u%u", octal2, octal1, octal0);
-            else if(octal1)
-                WriteF("\\%u%u", octal1, octal0);
-            else
-                WriteF("\\%u", octal0);
-        }
-    }
-    Write("\"");
+void LiteralBool(bool value)
+{
+    BeginTag("bool");
+    WriteF("%u", value ? 0 : 1);
+    EndTag("bool");
 }
 
-void DumpWString(const wchar_t *str) {
-    const wchar_t *p = str;
+void LiteralSInt(signed long long value)
+{
+    BeginTag("int");
+    WriteF("%lli", value);
+    EndTag("int");
+}
+
+void LiteralUInt(unsigned long long value)
+{
+    BeginTag("uint");
+    WriteF("%llu", value);
+    EndTag("uint");
+}
+
+void LiteralFloat(double value)
+{
+    BeginTag("float");
+    WriteF("%f", value);
+    EndTag("float");
+}
+
+void LiteralString(const char *str)
+{
     if (!str) {
-        Write("NULL");
+        LiteralNull();
         return;
     }
-    Write("L\"");
-    wchar_t c;
-    while((c = *p++) != 0) {
-        if(c == '\"')
-            Write("\\\"");
-        else if(c == '\\')
-            Write("\\\\");
-        else if(c >= 0x20 && c <= 0x7e)
-            Write((char)c);
-        else if(c == '\t')
-            Write("&#09;");
-        else if(c == '\r')
-            Write("&#13;");
-        else if(c == '\n')
-            Write("&#10;");
-        else {
-            unsigned octal0 = c & 0x7;
-            unsigned octal1 = (c >> 3) & 0x7;
-            unsigned octal2 = (c >> 3) & 0x7;
-            if(octal2)
-                WriteF("\\%u%u%u", octal2, octal1, octal0);
-            else if(octal1)
-                WriteF("\\%u%u", octal1, octal0);
-            else
-                WriteF("\\%u", octal0);
-        }
+    BeginTag("string");
+    Escape(str);
+    EndTag("string");
+}
+
+void LiteralWString(const wchar_t *str)
+{
+    if (!str) {
+        LiteralNull();
+        return;
     }
-    Write("\"");
+    BeginTag("wstring");
+    Escape(str);
+    EndTag("wstring");
+}
+    
+void LiteralNamedConstant(const char *str)
+{
+    BeginTag("const");
+    Escape(str);
+    EndTag("const");
+}
+
+void LiteralOpaque(const void *addr)
+{
+    char saddr[256];
+    if (!addr) {
+        LiteralNull();
+        return;
+    }
+    snprintf(saddr, sizeof(saddr), "%p", addr);
+    BeginTag("opaque", "addr", saddr);
+    EndTag("opaque");
+}
+
+void LiteralNull(void)
+{
+    Tag("null");
 }
 
 } /* namespace Log */

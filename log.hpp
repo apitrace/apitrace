@@ -32,9 +32,6 @@ namespace Log {
     void ReOpen(void);
     void Close(void);
     
-    void Text(const char *text);
-    void TextF(const char *format, ...);
-    
     void BeginCall(const char *function);
     void EndCall(void);
     
@@ -44,16 +41,33 @@ namespace Log {
     void BeginReturn(const char *type);
     void EndReturn(void);
 
+    void BeginArray(const char *type, size_t length);
+    void EndArray(void);
+
     void BeginElement(const char *type);
-    void BeginElement(const char *type, const char *name);
     void EndElement(void);
+
+    void BeginStruct(const char *type);
+    void EndStruct(void);
+
+    void BeginMember(const char *type, const char *name);
+    void EndMember(void);
+
+    void BeginBitmask(const char *type);
+    void EndBitmask(void);
 
     void BeginReference(const char *type, const void *addr);
     void EndReference(void);
 
-    void DumpString(const char *str);
-    void DumpWString(const wchar_t *str);
-    
+    void LiteralBool(bool value);
+    void LiteralSInt(signed long long value);
+    void LiteralUInt(unsigned long long value);
+    void LiteralFloat(double value);
+    void LiteralString(const char *str);
+    void LiteralWString(const wchar_t *str);
+    void LiteralNamedConstant(const char *str);
+    void LiteralOpaque(const void *addr);
+    void LiteralNull(void);
 }
 
 #endif /* _LOG_HPP_ */

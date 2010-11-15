@@ -467,7 +467,7 @@ class GlxGetProcAddressFunction(DllFunction):
         print '    }'
 
 
-PROC = Intrinsic("__GLXextFuncPtr", "%p")
+PROC = Alias("__GLXextFuncPtr", Opaque)
 
 glXgetprocaddress = GlxGetProcAddressFunction(PROC, "glXGetProcAddress", [(Pointer(Const(GLubyte)), "procName")])
 libgl.functions.append(glXgetprocaddress)

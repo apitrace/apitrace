@@ -30,6 +30,8 @@ import optparse
 import xml.parsers.expat
 import gzip
 
+from model import *
+
 
 ELEMENT_START, ELEMENT_END, CHARACTER_DATA, EOF = range(4)
 
@@ -194,68 +196,11 @@ class GzipFile(gzip.GzipFile):
             pass
 
 
-class Formatter:
-    
-    def function(self, name):
-        return name
-        
-    def variable(self, name):
-        return name
-
-    def literal(self, value):
-        return str(value)
-    
-    def address(self, addr):
-        return addr
-
-
-class AnsiFormatter(Formatter):
-    '''Formatter for plain-text files which outputs ANSI escape codes. See
-    http://en.wikipedia.org/wiki/ANSI_escape_code for more information
-    concerning ANSI escape codes.
-    '''
-
-    _csi = '\33['
-
-    _normal = '0m'
-    _bold = '1m'
-    _italic = '3m'
-    _red = '31m'
-    _green = '32m'
-    _blue = '34m'
-
-    def _escape(self, code, text):
-        return self._csi + code + text + self._csi + self._normal
-
-    def function(self, name):
-        text = Formatter.function(self, name)
-        return self._escape(self._bold, text)
-        
-    def variable(self, name):
-        text = Formatter.variable(self, name)
-        return self._escape(self._italic, text)
-
-    def literal(self, value):
-        text = Formatter.literal(self, value)
-        return self._escape(self._blue, text)
-    
-    def address(self, value):
-        text = Formatter.address(self, value)
-        return self._escape(self._green, text)
-
-
-def DefaultFormatter():
-    if sys.platform in ('linux2', 'cygwin'):
-        return AnsiFormatter()
-    else:
-        return Formatter()
-
-
 class TraceParser(XmlParser):
 
-    def __init__(self, stream, formatter):
+    def __init__(self, stream):
         XmlParser.__init__(self, stream)
-        self.formatter = formatter
+        self.call_no = 0
 
     def parse(self):
         self.element_start('trace')
@@ -269,15 +214,16 @@ class TraceParser(XmlParser):
         name = attrs['name']
         args = []
         ret = None
-        duration = None
+        properties = {}
         while self.token.type == ELEMENT_START:
             if self.token.name_or_data == 'arg':
                 arg = self.parse_arg()
                 args.append(arg)
             elif self.token.name_or_data == 'ret':
                 ret = self.parse_ret()
-            elif self.token.name_or_data == 'duration':
-                duration = self.parse_duration()
+            elif self.token.name_or_data in ('duration', 'starttsc', 'endtsc'):
+                property = self.token.name_or_data
+                properties[property] = self.parse_hex(self.token.name_or_data)
             elif self.token.name_or_data == 'call':
                 # ignore nested function calls
                 self.parse_call()
@@ -285,7 +231,11 @@ class TraceParser(XmlParser):
                 raise TokenMismatch("<arg ...> or <ret ...>", self.token)
         self.element_end('call')
         
-        self.handle_call(name, args, ret, duration)
+        self.call_no += 1
+
+        call = Call(self.call_no, name, args, ret, properties)
+
+        self.handle_call(call)
 
     def parse_arg(self):
         attrs = self.element_start('arg')
@@ -302,18 +252,28 @@ class TraceParser(XmlParser):
 
         return value
 
-    def parse_duration(self):
-        attrs = self.element_start('duration')
-        value = int(self.character_data())
-        self.element_end('duration')
+    def parse_hex(self, token_name):
+        attrs = self.element_start(token_name)
+        value = int(self.character_data(), 16)
+        self.element_end(token_name)
         return value
 
     def parse_value(self):
-        if self.token.type == CHARACTER_DATA:
-            return self.formatter.literal(self.character_data())
         if self.token.type == ELEMENT_START:
-            if self.token.name_or_data == 'elem':
-                return self.parse_elems()
+            if self.token.name_or_data == 'int':
+                return self.parse_int()
+            if self.token.name_or_data == 'uint':
+                return self.parse_uint()
+            if self.token.name_or_data == 'float':
+                return self.parse_float()
+            if self.token.name_or_data == 'string':
+                return self.parse_string()
+            if self.token.name_or_data == 'wstring':
+                return self.parse_wstring()
+            if self.token.name_or_data == 'const':
+                return self.parse_const()
+            if self.token.name_or_data == 'bitmask':
+                return self.parse_bitmask()
             if self.token.name_or_data == 'ref':
                 return self.parse_ref()
         raise TokenMismatch("<elem ...>, <ref ...>, or text", self.token)
@@ -322,7 +282,7 @@ class TraceParser(XmlParser):
         elems = [self.parse_elem()]
         while self.token.type != ELEMENT_END:
             elems.append(self.parse_elem())
-        return '{' + ', '.join(elems) + '}'
+        return Struct("", elems)
 
     def parse_elem(self):
         attrs = self.element_start('elem')
@@ -332,39 +292,79 @@ class TraceParser(XmlParser):
         try:
             name = attrs['name']
         except KeyError:
-            pass
-        else:
-            value = name + ' = ' + value
+            name = ""
 
-        return value
+        return name, value
 
     def parse_ref(self):
         attrs = self.element_start('ref')
         if self.token.type != ELEMENT_END:
-            value = '&' + self.parse_value()
+            value = self.parse_value()
         else:
-            value = self.formatter.address(attrs['addr'])
+            value = None
         self.element_end('ref')
 
-        return value
+        return Pointer(attrs['addr'], value)
 
-    def handle_call(self, name, args, ret, duration):
-        s = ''
+    def parse_bitmask(self):
+        self.element_start('bitmask')
+        elems = []
+        while self.token.type != ELEMENT_END:
+            elems.append(self.parse_value())
+        self.element_end('bitmask')
+        return Bitmask(elems)
 
-        #if duration is not None:
-        #    s += '%8u ' % (duration)
+    def parse_int(self):
+        self.element_start('int')
+        value = self.character_data()
+        self.element_end('int')
+        return Literal(int(value))
 
-        s += self.formatter.function(name)
-        s += '(' + ', '.join([self.formatter.variable(name) + ' = ' + value for name, value in args]) + ')'
-        if ret is not None:
-            s += ' = ' + ret
-        s += '\n'
-        
-        try:
-            sys.stdout.write(s)
-        except IOError: 
-            # catch broken pipe
-            sys.exit(0)
+    def parse_uint(self):
+        self.element_start('uint')
+        value = self.character_data()
+        self.element_end('uint')
+        return Literal(int(value))
+
+    def parse_float(self):
+        self.element_start('float')
+        value = self.character_data()
+        self.element_end('float')
+        return Literal(float(value))
+
+    def parse_string(self):
+        self.element_start('string')
+        value = self.character_data()
+        self.element_end('string')
+        return Literal(value)
+
+    def parse_wstring(self):
+        self.element_start('wstring')
+        value = self.character_data()
+        self.element_end('wstring')
+        return Literal(value)
+
+    def parse_const(self):
+        self.element_start('const')
+        value = self.character_data()
+        self.element_end('const')
+        return NamedConstant(value)
+
+    def handle_call(self, call):
+        pass
+
+
+class DumpTraceParser(TraceParser):
+
+    def __init__(self, stream, formatter):
+        XmlParser.__init__(self, stream)
+        self.formatter = formatter
+        self.pretty_printer = PrettyPrinter(self.formatter)
+        self.call_no = 0
+
+    def handle_call(self, call):
+        call.visit(self.pretty_printer)
+        self.formatter.newline()
 
 
 class StatsTraceParser(TraceParser):
@@ -393,46 +393,59 @@ class StatsTraceParser(TraceParser):
         self.stats[name] = nr_calls, total_duration
 
 
-def main():
-    parser = optparse.OptionParser(
-        usage="\n\t%prog [options] [file] ...")
-    parser.add_option(
-        '-s', '--stats',
-        action="store_true",
-        dest="stats", default=False,
-        help="generate statistics instead")
-    parser.add_option(
-        '--color', '--colour',
-        type="choice", choices=('never', 'always', 'auto'), metavar='WHEN',
-        dest="color", default="always",
-        help="coloring: never, always, or auto [default: %default]")
-    (options, args) = parser.parse_args(sys.argv[1:])
+class Main:
 
-    if options.color == 'always' or options.color == 'auto' and sys.stdout.isatty():
-        formatter = DefaultFormatter()
-    else:
-        formatter = Formatter()
+    def __init__(self):
+        pass
+
+    def main(self):
+        optparser = self.get_optparser()
+        (options, args) = optparser.parse_args(sys.argv[1:])
     
-    if options.stats:
-        factory = StatsTraceParser
-    else:
-        factory = TraceParser
+        if args:
+            for arg in args:
+                if arg.endswith('.gz'):
+                    from gzip import GzipFile
+                    stream = GzipFile(arg, 'rb')
+                elif arg.endswith('.bz2'):
+                    from bz2 import BZ2File
+                    stream = BZ2File(arg, 'rU')
+                else:
+                    stream = open(arg, 'rt')
+                self.process_arg(stream, options)
+        else:
+            self.process_arg(stream, options)
 
-    if args:
-        for arg in args:
-            if arg.endswith('.gz'):
-                stream = GzipFile(arg, 'rb')
-            elif arg.endswith('.bz2'):
-                from bz2 import BZ2File
-                stream = BZ2File(arg, 'rt')
-            else:
-                stream = open(arg, 'rt')
-            parser = factory(stream, formatter)
-            parser.parse()
-    else:
-            parser = factory(sys.stdin, formatter)
-            parser.parse()
+    def get_optparser(self):
+        optparser = optparse.OptionParser(
+            usage="\n\t%prog [options] [traces] ...")
+        optparser.add_option(
+            '-s', '--stats',
+            action="store_true",
+            dest="stats", default=False,
+            help="generate statistics instead")
+        optparser.add_option(
+            '--color', '--colour',
+            type="choice", choices=('never', 'always', 'auto'), metavar='WHEN',
+            dest="color", default="always",
+            help="coloring: never, always, or auto [default: %default]")
+        return optparser
+
+    def process_arg(self, stream, options):
+        if options.color == 'always' or options.color == 'auto' and sys.stdout.isatty():
+            formatter = format.DefaultFormatter(sys.stdout)
+        else:
+            formatter = format.Formatter(sys.stdout)
+        
+        if options.stats:
+            factory = StatsTraceParser
+        else:
+            factory = DumpTraceParser
+
+        parser = DumpTraceParser(stream, formatter)
+        parser.parse()
 
 
 if __name__ == '__main__':
-    main()
+    Main().main()
+
