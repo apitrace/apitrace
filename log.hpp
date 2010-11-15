@@ -29,7 +29,6 @@
 namespace Log {
 
     void Open(const char *name);
-    void ReOpen(void);
     void Close(void);
     
     void BeginCall(const char *function);

@@ -77,10 +77,6 @@ static void _Open(const char *szName, const char *szExtension) {
     g_gzFile = gzopen(szFileName, "wb");
 }
 
-static inline void _ReOpen(void) {
-    /* XXX */
-}
-
 static inline void Write(const char *sBuffer, size_t dwBytesToWrite) {
     if(g_gzFile == NULL)
         return;
@@ -265,10 +261,6 @@ void Open(const char *name) {
     NewLine();
     BeginTag("trace");
     NewLine();
-}
-
-void ReOpen(void) {
-    _ReOpen();
 }
 
 void Close(void) {
