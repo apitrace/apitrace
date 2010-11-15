@@ -215,6 +215,7 @@ if has_d3d7 and False:
             'ddraw.def',
             'ddraw.cpp',
             'log.cpp',
+            'os_win32.cpp',
         ]
     )
 
@@ -233,6 +234,7 @@ if has_d3d8:
             'd3d8.def',
             'd3d8.cpp',
             'log.cpp',
+            'os_win32.cpp',
         ]
     )
 
@@ -251,6 +253,7 @@ if has_d3d9:
             'd3d9.def',
             'd3d9.cpp',
             'log.cpp',
+            'os_win32.cpp',
         ]
     )
 
@@ -269,6 +272,7 @@ if has_d3d10:
             'd3d10.def',
             'd3d10.cpp',
             'log.cpp',
+            'os_win32.cpp',
         ]
     )
 
@@ -287,6 +291,7 @@ if has_d3d10_1:
             'd3d10_1.def',
             'd3d10_1.cpp',
             'log.cpp',
+            'os_win32.cpp',
         ]
     )
 
@@ -304,6 +309,7 @@ opengl32 = env.SharedLibrary(
         'opengl32.def',
         'opengl32.cpp',
         'log.cpp',
+        'os_win32.cpp',
     ]
 )
 

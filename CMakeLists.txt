@@ -73,7 +73,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.py > ${CMAKE_CURRENT_BINARY_DIR}/opengl32.cpp
 		DEPENDS opengl32.py gl.py windows.py base.py
 	)
-	add_library (opengl32 SHARED opengl32.def opengl32.cpp log.cpp)
+	add_library (opengl32 SHARED opengl32.def opengl32.cpp log.cpp os_win32.cpp)
 	set_target_properties (opengl32 PROPERTIES PREFIX "")
 
 else ()
@@ -84,7 +84,7 @@ else ()
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glx.py > ${CMAKE_CURRENT_BINARY_DIR}/glx.cpp
 		DEPENDS glx.py gl.py dl.py base.py
 	)
-	add_library (glxtrace SHARED glx.cpp log.cpp)
+	add_library (glxtrace SHARED glx.cpp log.cpp os_posix.cpp)
 	set_target_properties (glxtrace PROPERTIES PREFIX "")
 	target_link_libraries (glxtrace dl)
 endif ()

@@ -26,7 +26,7 @@
 from gl import *
 from dl import *
 
-libgl = Dll("libGL.so")
+libgl = Dll("GL")
 libgl.functions += [
     DllFunction(Void, "glNewList", [(GLuint, "list"), (GLenum, "mode")]),
     DllFunction(Void, "glEndList", []),

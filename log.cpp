@@ -29,48 +29,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
 #include <zlib.h>
 
+#include "os.hpp"
 #include "log.hpp"
 
-
-#ifdef WIN32
-#ifndef PATH_MAX
-#define PATH_MAX _MAX_PATH
-#endif
-#ifndef snprintf
-#define snprintf _snprintf
-#endif
-#ifndef vsnprintf
-#define vsnprintf _vsnprintf
-#endif
-#endif /* WIN32 */
-
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
 
 namespace Log {
 
 
 static gzFile g_gzFile = NULL;
-static char g_szFileName[PATH_MAX];
-
-#if WIN32
-static CRITICAL_SECTION CriticalSection;
-#endif /* WIN32 */
-
 static void _Close(void) {
     if(g_gzFile != NULL) {
         gzclose(g_gzFile);
         g_gzFile = NULL;
-#if WIN32
-        DeleteCriticalSection(&CriticalSection);
-#endif
     }
 }
 
@@ -79,32 +51,20 @@ static void _Open(const char *szName, const char *szExtension) {
     
     static unsigned dwCounter = 0;
 
-    char szProcessPath[PATH_MAX];
-    char *lpProcessName;
-    char *lpProcessExt;
+    char szProcessName[PATH_MAX];
+    char szFileName[PATH_MAX];
 
-#ifdef WIN32
-    GetModuleFileNameA(NULL, szProcessPath, sizeof(szProcessPath)/sizeof(szProcessPath[0]));
-
-    lpProcessName = strrchr(szProcessPath, '\\');
-    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
-    lpProcessExt = strrchr(lpProcessName, '.');
-    if(lpProcessExt)
-	*lpProcessExt = '\0';
-#else
-    // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
-    lpProcessName = "";
-#endif
+    OS::GetProcessName(szProcessName, PATH_MAX);
 
     for(;;) {
         FILE *file;
         
         if(dwCounter)
-            snprintf(g_szFileName, PATH_MAX, "%s.%s.%u.%s.gz", lpProcessName, szName, dwCounter, szExtension);
+            snprintf(szFileName, PATH_MAX, "%s.%s.%u.%s.gz", szProcessName, szName, dwCounter, szExtension);
         else
-            snprintf(g_szFileName, PATH_MAX, "%s.%s.%s.gz", lpProcessName, szName, szExtension);
+            snprintf(szFileName, PATH_MAX, "%s.%s.%s.gz", szProcessName, szName, szExtension);
         
-        file = fopen(g_szFileName, "rb");
+        file = fopen(szFileName, "rb");
         if(file == NULL)
             break;
         
@@ -113,10 +73,8 @@ static void _Open(const char *szName, const char *szExtension) {
         ++dwCounter;
     }
 
-    g_gzFile = gzopen(g_szFileName, "wb");
-#ifdef WIN32
-    InitializeCriticalSection(&CriticalSection);
-#endif
+    fprintf(stderr, "Logging to %s\n", szFileName);
+    g_gzFile = gzopen(szFileName, "wb");
 }
 
 static inline void _ReOpen(void) {
@@ -311,9 +269,7 @@ void TextF(const char *format, ...) {
 }
 
 void BeginCall(const char *function) {
-#ifdef WIN32
-    EnterCriticalSection(&CriticalSection); 
-#endif
+    OS::AcquireMutex();
     Indent(1);
     BeginTag("call", "name", function);
     NewLine();
@@ -324,9 +280,7 @@ void EndCall(void) {
     EndTag("call");
     NewLine();
     gzflush(g_gzFile, Z_SYNC_FLUSH);
-#ifdef WIN32
-    LeaveCriticalSection(&CriticalSection); 
-#endif
+    OS::ReleaseMutex();
 }
 
 void BeginArg(const char *type, const char *name) {
