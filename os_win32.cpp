@@ -37,7 +37,7 @@ namespace OS {
  */
 static CRITICAL_SECTION
 CriticalSection = {
-    (_CRITICAL_SECTION_DEBUG *)-1, -1, 0, 0, 0, 0
+    (PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0
 };
 
 

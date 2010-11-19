@@ -85,7 +85,7 @@ found:
         LPD3DXBUFFER pDisassembly = NULL;
    
         if (pfnD3DXDisassembleShader( (DWORD *)tokens, FALSE, NULL, &pDisassembly) == D3D_OK)
-            Log::DumpString((char *)pDisassembly->GetBufferPointer());
+            Log::LiteralString((char *)pDisassembly->GetBufferPointer());
 
         if(pDisassembly)
             pDisassembly->Release();
