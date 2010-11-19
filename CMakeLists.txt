@@ -4,8 +4,17 @@ project (apitrace)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
-
 find_package (ZLIB)
+
+find_package (GLUT)
+
+find_library (GLEW_glew_LIBRARY GLEW
+	/usr/lib
+)
+
+find_path (GLEW_INCLUDE_DIR GL/glew.h
+      /usr/include/GL
+)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	# Nobody likes to include windows.h:
@@ -92,4 +101,31 @@ else ()
 	set_target_properties (glxtrace PROPERTIES PREFIX "")
 	target_link_libraries (glxtrace dl)
 endif ()
+
+add_executable (dump dump.cpp trace_model.cpp)
+
+
+if (GLEW_INCLUDE_DIR)
+	add_custom_command (
+		OUTPUT glretrace.cpp
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
+		DEPENDS glretrace.py glx.py gl.py dl.py base.py
+	)
+
+	include_directories (
+		${OPENGL_INCLUDE_PATH}
+		${GLUT_INCLUDE_DIR}
+		${GLEW_INCLUDE_DIR}
+	)
+
+	add_executable (glretrace glretrace.cpp trace_model.cpp)
+
+	target_link_libraries (glretrace
+		${OPENGL_gl_LIBRARY}
+		${OPENGL_glu_LIBRARY}
+		${GLUT_glut_LIBRARY}
+		${GLEW_glew_LIBRARY}
+	)
+endif (GLEW_INCLUDE_DIR)
+
 

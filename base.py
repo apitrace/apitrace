@@ -172,7 +172,7 @@ class Enum(Concrete):
         print '    switch(%s) {' % instance
         for value in self.values:
             print '    case %s:' % value
-            print '        Log::LiteralNamedConstant("%s");' % value
+            print '        Log::LiteralNamedConstant("%s", %s);' % (value, value)
             print '        break;'
         print '    default:'
         print '        Log::LiteralSInt(%s);' % instance
@@ -199,7 +199,7 @@ class Flags(Concrete):
         print '    Log::BeginBitmask("%s");' % (self.type,)
         for value in self.values:
             print '    if((l_Value & %s) == %s) {' % (value, value)
-            print '        Log::LiteralNamedConstant("%s");' % value
+            print '        Log::LiteralNamedConstant("%s", %s);' % (value, value)
             print '        l_Value &= ~%s;' % value
             print '    }'
         print '    if(l_Value) {'

@@ -6,7 +6,7 @@
 *.dll
 *.exe
 *.exp
-*.gz
+*.trace
 *.ilk
 *.lib
 *.o
@@ -15,7 +15,6 @@
 *.pyc
 *.pyo
 *.so
-*.xml
 *.zip
 CMakeFiles
 CMakeCache.txt
@@ -29,5 +28,8 @@ d3d9.cpp
 d3d10.cpp
 d3d10_1.cpp
 dxsdk
+dump
 glx.cpp
+glretrace
+glretrace.cpp
 opengl32.cpp

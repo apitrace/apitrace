@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007-2010 VMware, Inc.
+ * Copyright 2010 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,51 +23,15 @@
  *
  **************************************************************************/
 
-#ifndef _LOG_HPP_
-#define _LOG_HPP_
 
-namespace Log {
+#include "trace_parser.hpp"
 
-    void Open(const char *name);
-    void Close(void);
-    
-    void BeginCall(const char *function);
-    void EndCall(void);
-    
-    void BeginArg(const char *type, const char *name);
-    void EndArg(void);
 
-    void BeginReturn(const char *type);
-    void EndReturn(void);
-
-    void BeginArray(const char *type, size_t length);
-    void EndArray(void);
-
-    void BeginElement(const char *type);
-    void EndElement(void);
-
-    void BeginStruct(const char *type);
-    void EndStruct(void);
-
-    void BeginMember(const char *type, const char *name);
-    void EndMember(void);
-
-    void BeginBitmask(const char *type);
-    void EndBitmask(void);
-
-    void BeginPointer(const char *type, const void *addr);
-    void EndPointer(void);
-
-    void LiteralBool(bool value);
-    void LiteralSInt(signed long long value);
-    void LiteralUInt(unsigned long long value);
-    void LiteralFloat(float value);
-    void LiteralFloat(double value);
-    void LiteralString(const char *str);
-    void LiteralWString(const wchar_t *str);
-    void LiteralNamedConstant(const char *name, long long value);
-    void LiteralNull(void);
-    void LiteralOpaque(void);
+int main(int argc, char **argv)
+{
+   for (int i = 1; i < argc; ++i) {
+      Trace::Parser p;
+      p.parse(argv[i]);
+   }
+   return 0;
 }
-
-#endif /* _LOG_HPP_ */
