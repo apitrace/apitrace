@@ -28,21 +28,6 @@ import base
 from glx import libgl
 
 
-def is_arg_supported(arg_type):
-    if isinstance(arg_type, (base.Literal, base._String, base.Enum)):
-        return True
-    if isinstance(arg_type, (base.Alias, base.Flags)):
-        return is_arg_supported(arg_type.type)
-    return False
-
-
-def is_function_supported(function):
-    for arg_type, arg_name in function.args:
-        if not is_arg_supported(arg_type):
-            return False
-    return True
-
-
 class ValueExtractor(base.Visitor):
 
     def visit_literal(self, type, lvalue, rvalue):
@@ -94,8 +79,6 @@ if __name__ == '__main__':
     print '#include "trace_parser.hpp"'
     print
 
-    functions = filter(is_function_supported, libgl.functions)
-   
     for function in libgl.functions:
         retrace_function(function)
 
