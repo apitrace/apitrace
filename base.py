@@ -31,6 +31,45 @@ import debug
 
 all_types = {}
 
+
+class Visitor:
+
+    def visit(self, type, *args, **kwargs):
+        return type.visit(self, *args, **kwargs)
+
+    __call__ = visit
+
+    def visit_void(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_literal(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_const(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_struct(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_array(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_enum(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_bitmask(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_pointer(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_alias(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+    def visit_opaque(self, type, *args, **kwargs):
+        raise NotImplementedError
+
+
 class Type:
 
     __seq = 0
@@ -55,6 +94,9 @@ class Type:
     def __str__(self):
         return self.expr
 
+    def visit(self, visitor, *args, **kwargs):
+        raise NotImplementedError
+
     def isoutput(self):
         return False
 
@@ -78,6 +120,9 @@ class _Void(Type):
 
     def __init__(self):
         Type.__init__(self, "void")
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_void(self, *args, **kwargs)
 
 Void = _Void()
 
@@ -106,6 +151,9 @@ class Literal(Concrete):
         Concrete.__init__(self, expr)
         self.format = format
 
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_literal(self, *args, **kwargs)
+
     def _dump(self, instance):
         print '    Log::Literal%s(%s);' % (self.format, instance)
 
@@ -123,6 +171,9 @@ class Const(Type):
 
         self.type = type
 
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_const(self, *args, **kwargs)
+
     def dump(self, instance):
         self.type.dump(instance)
 
@@ -132,6 +183,9 @@ class Pointer(Type):
     def __init__(self, type):
         Type.__init__(self, type.expr + " *", 'P' + type.id)
         self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_pointer(self, *args, **kwargs)
 
     def dump(self, instance):
         print '    if(%s) {' % instance
@@ -168,6 +222,9 @@ class Enum(Concrete):
         Concrete.__init__(self, name)
         self.values = values
     
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_enum(self, *args, **kwargs)
+
     def _dump(self, instance):
         print '    switch(%s) {' % instance
         for value in self.values:
@@ -180,19 +237,19 @@ class Enum(Concrete):
         print '    }'
 
 
-class FakeEnum(Enum):
-
-    def __init__(self, type, values):
-        Enum.__init__(self, type.expr, values)
-        self.type = type
+def FakeEnum(type, values):
+    return Enum(type.expr, values)
 
 
-class Flags(Concrete):
+class Bitmask(Concrete):
 
     def __init__(self, type, values):
         Concrete.__init__(self, type.expr)
         self.type = type
         self.values = values
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_bitmask(self, *args, **kwargs)
 
     def _dump(self, instance):
         print '    %s l_Value = %s;' % (self.type, instance)
@@ -207,6 +264,8 @@ class Flags(Concrete):
         print '    }'
         print '    Log::EndBitmask();'
 
+Flags = Bitmask
+
 
 class Array(Type):
 
@@ -214,6 +273,9 @@ class Array(Type):
         Type.__init__(self, type.expr + " *", 'P' + type.id)
         self.type = type
         self.length = length
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_array(self, *args, **kwargs)
 
     def dump(self, instance):
         index = '__i' + self.type.id
@@ -245,6 +307,9 @@ class Struct(Concrete):
         self.name = name
         self.members = members
 
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_struct(self, *args, **kwargs)
+
     def _dump(self, instance):
         print '    Log::BeginStruct("%s");' % (self.name,)
         for type, name in self.members:
@@ -259,6 +324,9 @@ class Alias(Type):
     def __init__(self, name, type):
         Type.__init__(self, name)
         self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_alias(self, *args, **kwargs)
 
     def dump(self, instance):
         self.type.dump(instance)
@@ -505,6 +573,9 @@ class _String(Type):
     def __init__(self):
         Type.__init__(self, "char *")
 
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_literal(self, *args, **kwargs)
+
     def dump(self, instance):
         print '    Log::LiteralString((const char *)%s);' % instance
 
@@ -515,6 +586,9 @@ class _Opaque(Type):
 
     def __init__(self):
         Type.__init__(self, "void")
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_opaque(self, *args, **kwargs)
 
     def dump(self, instance):
         print '    Log::LiteralOpaque();'

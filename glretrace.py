@@ -43,15 +43,45 @@ def is_function_supported(function):
     return True
 
 
-def extract_value(arg_type, arg_value):
-    if isinstance(arg_type, base.Literal):
-        return 'Trace::as%s(%s)' % (arg_type.format, value)
-    if isinstance(arg_type, base.Enum):
-        return 'Trace::asSInt(%s)' % (value)
-    if isinstance(arg_type, (base.Alias, base.Flags)):
-        return extract_value(arg_type.type, value)
-    assert false
-    return '0'
+class ValueExtractor(base.Visitor):
+
+    def visit_literal(self, type, lvalue, rvalue):
+        #print '    %s = static_cast<%s>(Trace::as%s(%s));' % (lvalue, type, type.format, rvalue)
+        print '    %s = Trace::as%s(%s);' % (lvalue, type.format, rvalue)
+
+    def visit_alias(self, type, lvalue, rvalue):
+        self.visit(type.type, lvalue, rvalue)
+    
+    def visit_enum(self, type, lvalue, rvalue):
+        #print '    %s = static_cast<%s>(Trace::as%s(%s));' % (lvalue, type, 'SInt', rvalue)
+        print '    %s = Trace::as%s(%s);' % (lvalue, 'SInt', rvalue)
+
+    def visit_bitmask(self, type, lvalue, rvalue):
+        self.visit(type.type, lvalue, rvalue)
+
+
+
+def retrace_function(function):
+    print 'static void retrace_%s(Trace::Call &call) {' % function.name
+    if not function.name.startswith('glX'):
+        success = True
+        for arg_type, arg_name in function.args:
+            print '    %s %s;' % (arg_type, arg_name)
+        for arg_type, arg_name in function.args:
+            rvalue = 'call.arg("%s")' % (arg_name,)
+            lvalue = arg_name
+            try:
+                ValueExtractor().visit(arg_type, lvalue, rvalue)
+            except NotImplementedError:
+                success = False
+                print '    %s = 0; // FIXME' % arg_name
+        if not success:
+            print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
+            print '    return;'
+        arg_names = ", ".join([arg_name for arg_type, arg_name in function.args])
+        print '    %s(%s);' % (function.name, arg_names)
+    print '}'
+    print
 
 
 if __name__ == '__main__':
@@ -66,26 +96,16 @@ if __name__ == '__main__':
 
     functions = filter(is_function_supported, libgl.functions)
    
-    for function in functions:
-        print 'static void retrace_%s(Trace::Call &call) {' % function.name
-        for arg_type, arg_name in function.args:
-            print '    %s %s;' % (arg_type, arg_name)
-        for arg_type, arg_name in function.args:
-            value = 'call.get_arg("%s")' % (arg_name,)
-            value = extract_value(arg_type, value)
-            print '    %s = static_cast<%s>(%s);' % (arg_name, arg_type, value)
-        arg_names = ", ".join([arg_name for arg_type, arg_name in function.args])
-        print '    %s(%s);' % (function.name, arg_names)
-        print '}'
-        print
+    for function in libgl.functions:
+        retrace_function(function)
 
     print 'static bool retrace_call(Trace::Call &call) {'
-    for function in functions:
+    for function in libgl.functions:
         print '    if (call.name == "%s") {' % function.name
         print '        retrace_%s(call);' % function.name
         print '        return true;'
         print '    }'
-    print '    std::cerr << "Unsupported call " << call.name << "\\n";'
+    print '    std::cerr << "warning: unsupported call " << call.name << "\\n";'
     print '    return false;'
     print '}'
     print '''

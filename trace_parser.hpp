@@ -59,7 +59,7 @@ public:
 
       version = read_uint();
       if (version != TRACE_VERSION) {
-         std::cerr << "Unsupported format version" << version << "\n";
+         std::cerr << "error: unsupported format version" << version << "\n";
          return false;
       }
 
@@ -90,7 +90,7 @@ public:
             break;
          default:
             assert(0);
-            std::cerr << "Unknown call detail " << c << "\n";
+            std::cerr << "error: unknown call detail " << c << "\n";
             break;
          }
       } while(true);
@@ -134,7 +134,7 @@ public:
       case Trace::TYPE_VOID:
          return NULL;
       default:
-         std::cerr << "Unknown type " << c << "\n";
+         std::cerr << "error: unknown type " << c << "\n";
          assert(0);
          return NULL;
       }
@@ -194,7 +194,7 @@ public:
          case Trace::TYPE_VOID:
             goto done;
          default:
-            std::cerr << "Unexpected type " << c << "\n";
+            std::cerr << "error: uexpected type " << c << "\n";
             assert(0);
             return NULL;
          }

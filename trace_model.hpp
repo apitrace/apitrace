@@ -153,9 +153,9 @@ public:
 std::ostream & operator <<(std::ostream &os, Value *value);
 
 
-signed long long asSInt(const Value *node);
-unsigned long long asUInt(const Value *node);
-double asFloat(const Value *node);
+signed long long asSInt(const Value &node);
+unsigned long long asUInt(const Value &node);
+double asFloat(const Value &node);
 
 
 typedef std::pair<std::string, Value *> Arg;
@@ -169,14 +169,7 @@ public:
 
    Call() : ret(0) { }
 
-   Value * get_arg(const char *name) {
-      for (std::list<Arg>::iterator it = args.begin(); it != args.end(); ++it) {
-         if (it->first == name) {
-            return it->second;
-         }
-      }
-      return NULL;
-   }
+   Value & arg(const char *name);
 };
 
 
