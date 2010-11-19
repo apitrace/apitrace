@@ -53,19 +53,24 @@ ReleaseMutex(void)
 bool
 GetProcessName(char *str, size_t size)
 {
+    ssize_t len;
     char szProcessPath[PATH_MAX + 1];
     char *lpProcessName;
     
     // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
-    if (readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1) == -1) {
+    len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
+    if (len == -1) {
         *str = 0;
         return false;
     }
+    szProcessPath[len] = 0;
 
     lpProcessName = strrchr(szProcessPath, '/');
     lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
-    
+
     strncpy(str, lpProcessName, size);
+    if (size)
+        str[size - 1] = 0;
 
     return true;
 }
