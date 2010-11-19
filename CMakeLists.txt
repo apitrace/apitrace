@@ -2,9 +2,13 @@ cmake_minimum_required (VERSION 2.6)
 
 project (apitrace)
 
+set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
 find_package (ZLIB)
+
+find_package (DirectX)
 
 find_package (GLUT)
 
@@ -43,11 +47,13 @@ if (MSVC)
 	# Enable math constants defines
 	add_definitions (-D_USE_MATH_DEFINES)
 
-	# Silence several MSVC pedantic warnings
+	# Adjust warnings
 	add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
 	add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
-        
 	add_definitions (-W4)
+	add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
+	add_definitions (-wd4505) # unreferenced local function has been removed
+	add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
 else ()
 	add_definitions (-Wall)
 endif ()
@@ -79,6 +85,41 @@ endif (NOT ZLIB_FOUND)
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+	# d3d8.dll
+	if (D3D8_FOUND)
+		include_directories (${D3D8_INCLUDE_DIR})
+		add_custom_command (
+			OUTPUT d3d8.cpp
+			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
+			DEPENDS d3d8.py d3d8types.py d3d8caps.py windows.py base.py
+		)
+		add_library (d3d8 SHARED d3d8.def d3d8.cpp log.cpp os_win32.cpp)
+		set_target_properties (d3d8 PROPERTIES PREFIX "")
+	endif (D3D8_FOUND)
+
+	# d3d9.dll
+	if (D3DX9_FOUND)
+		include_directories (${D3DX9_INCLUDE_DIR})
+		add_custom_command (
+			OUTPUT d3d9.cpp
+			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
+			DEPENDS d3d9.py d3d9types.py d3d9caps.py d3dshader.py windows.py base.py
+		)
+		add_library (d3d9 SHARED d3d9.def d3d9.cpp log.cpp os_win32.cpp)
+		set_target_properties (d3d9 PROPERTIES PREFIX "")
+	endif (D3DX9_FOUND)
+
+	# d3d10.dll
+	if (D3D10_FOUND)
+		include_directories (${D3D10_INCLUDE_DIR})
+		add_custom_command (
+			OUTPUT d3d10.cpp
+			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
+			DEPENDS d3d10misc.py windows.py base.py
+		)
+		add_library (d3d10 SHARED d3d10.def d3d10.cpp log.cpp os_win32.cpp)
+		set_target_properties (d3d10 PROPERTIES PREFIX "")
+	endif (D3D10_FOUND)
 
 	# opengl32.dll
 	add_custom_command (
