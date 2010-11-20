@@ -70,6 +70,44 @@ class Visitor:
         raise NotImplementedError
 
 
+class Rebuilder(Visitor):
+
+    def visit_void(self, void):
+        return void
+
+    def visit_literal(self, literal):
+        return literal
+
+    def visit_const(self, const):
+        return Const(const.type)
+
+    def visit_struct(self, struct):
+        members = [self.visit(member) for member in struct.members]
+        return Struct(struct.name, members)
+
+    def visit_array(self, array):
+        type = self.visit(array.type)
+        return Array(type, array.length)
+
+    def visit_enum(self, enum):
+        return enum
+
+    def visit_bitmask(self, bitmask):
+        type = self.visit(bitmask.type)
+        return Bitmask(type, bitmask.values)
+
+    def visit_pointer(self, pointer):
+        type = self.visit(pointer.type)
+        return Pointer(type)
+
+    def visit_alias(self, alias):
+        type = self.visit(alias.type)
+        return Alias(alias.expr, type)
+
+    def visit_opaque(self, opaque):
+        return opaque
+
+
 class Type:
 
     __seq = 0
@@ -321,8 +359,8 @@ class Struct(Concrete):
 
 class Alias(Type):
 
-    def __init__(self, name, type):
-        Type.__init__(self, name)
+    def __init__(self, expr, type):
+        Type.__init__(self, expr)
         self.type = type
 
     def visit(self, visitor, *args, **kwargs):

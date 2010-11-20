@@ -48,6 +48,48 @@ class Value
 {
 public:
    virtual void visit(Visitor &visitor) = 0;
+
+   operator signed long long (void) const;
+   operator unsigned long long (void) const;
+   operator double (void) const;
+
+   inline operator signed char (void) const { 
+      return static_cast<signed long long>(*this);
+   }
+
+   inline operator unsigned char (void) const { 
+      return static_cast<signed long long>(*this);
+   }
+
+   inline operator signed short (void) const { 
+      return static_cast<signed long long>(*this);
+   }
+
+   inline operator unsigned short (void) const { 
+      return static_cast<unsigned long long>(*this);
+   }
+
+   inline operator signed (void) const { 
+      return static_cast<signed long long>(*this);
+   }
+
+   inline operator unsigned (void) const { 
+      return static_cast<unsigned long long>(*this);
+   }
+
+   inline operator signed long (void) const { 
+      return static_cast<signed long long>(*this);
+   }
+
+   inline operator unsigned long (void) const { 
+      return static_cast<unsigned long long>(*this);
+   }
+
+   inline operator float (void) const { 
+      return static_cast<double>(*this);
+   }
+
+   const Value & operator[](size_t index) const;
 };
 
 

@@ -28,21 +28,33 @@ import base
 from glx import libgl
 
 
+
+class ConstRemover(base.Rebuilder):
+
+    def visit_const(self, const):
+        return const.type
+
+
 class ValueExtractor(base.Visitor):
 
     def visit_literal(self, type, lvalue, rvalue):
-        #print '    %s = static_cast<%s>(Trace::as%s(%s));' % (lvalue, type, type.format, rvalue)
-        print '    %s = Trace::as%s(%s);' % (lvalue, type.format, rvalue)
+        print '    %s = %s;' % (lvalue, rvalue)
 
     def visit_alias(self, type, lvalue, rvalue):
         self.visit(type.type, lvalue, rvalue)
     
     def visit_enum(self, type, lvalue, rvalue):
-        #print '    %s = static_cast<%s>(Trace::as%s(%s));' % (lvalue, type, 'SInt', rvalue)
-        print '    %s = Trace::as%s(%s);' % (lvalue, 'SInt', rvalue)
+        print '    %s = %s;' % (lvalue, rvalue)
 
     def visit_bitmask(self, type, lvalue, rvalue):
         self.visit(type.type, lvalue, rvalue)
+
+    def visit_array(self, array, lvalue, rvalue):
+        print '    %s = new %s[%s];' % (lvalue, array.type, array.length)
+        index = '__i' + array.id
+        print '    for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = array.length)
+        self.visit(array.type, '%s[%s]' % (lvalue, index), '%s[%s]' % (rvalue, index))
+        print '    }'
 
 
 
@@ -51,8 +63,8 @@ def retrace_function(function):
     if not function.name.startswith('glX'):
         success = True
         for arg_type, arg_name in function.args:
+            arg_type = ConstRemover().visit(arg_type)
             print '    %s %s;' % (arg_type, arg_name)
-        for arg_type, arg_name in function.args:
             rvalue = 'call.arg("%s")' % (arg_name,)
             lvalue = arg_name
             try:

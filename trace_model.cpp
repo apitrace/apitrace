@@ -121,26 +121,27 @@ std::ostream & operator <<(std::ostream &os, Value *value) {
 }
 
 
-static const Value *unwrap(const Value &node) {
-   const Const *c = dynamic_cast<const Const *>(&node);
+static inline const Value *unwrap(const Value *node) {
+   const Const *c = dynamic_cast<const Const *>(node);
    if (c)
       return c->value;
-   return &node;
+   return node;
 }
 
-signed long long asSInt(const Value &node) {
-   const SInt *sint = dynamic_cast<const SInt *>(unwrap(node));
+
+Value::operator signed long long(void) const {
+   const SInt *sint = dynamic_cast<const SInt *>(unwrap(this));
    if (sint)
       return sint->value;
-   const UInt *uint = dynamic_cast<const UInt *>(unwrap(node));
+   const UInt *uint = dynamic_cast<const UInt *>(unwrap(this));
    if (uint)
       return uint->value;
    assert(0);
    return 0;
 }
 
-unsigned long long asUInt(const Value &node) {
-   const UInt *uint = dynamic_cast<const UInt *>(unwrap(node));
+Value::operator unsigned long long(void) const {
+   const UInt *uint = dynamic_cast<const UInt *>(unwrap(this));
    if (uint)
       return uint->value;
    assert(0);
@@ -148,13 +149,23 @@ unsigned long long asUInt(const Value &node) {
 }
 
 
-double asFloat(const Value &node) {
-   const Float *fl = dynamic_cast<const Float *>(unwrap(node));
+Value::operator double(void) const {
+   const Float *fl = dynamic_cast<const Float *>(unwrap(this));
    assert(fl);
    return fl->value;
 }
 
 static Void void_;
+
+const Value & Value::operator[](size_t index) const {
+    const Array *array = dynamic_cast<const Array *>(unwrap(this));
+    if (array) {
+        if (index < array->values.size()) {
+            return *array->values[index];
+        }
+    }
+    return void_;
+}
 
 Value & Call::arg(const char *name) {
    for (std::list<Arg>::iterator it = args.begin(); it != args.end(); ++it) {

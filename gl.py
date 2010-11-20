@@ -25,7 +25,7 @@
 
 from base import *
 
-GLboolean = Enum("GLboolean", ["GL_FALSE", "GL_TRUE"])
+GLboolean = Alias("GLboolean", Bool)
 GLvoid = Alias("GLvoid", Void)
 GLbyte = Alias("GLbyte", SChar)
 GLshort = Alias("GLshort", Short)
