@@ -62,6 +62,10 @@ void Array::visit(Visitor &visitor) {
    visitor.visit(this);
 }
 
+void Blob::visit(Visitor &visitor) {
+   visitor.visit(this);
+}
+
 
 class Dumper : public Visitor
 {
@@ -108,6 +112,10 @@ public:
          sep = ", ";
       }
       os << "}";
+   }
+   
+   void visit(Blob *blob) {
+      os << "... " << blob->size;
    }
 };
 
@@ -165,6 +173,12 @@ const Value & Value::operator[](size_t index) const {
         }
     }
     return void_;
+}
+
+Value::operator void *(void) const {
+   const Blob *blob = dynamic_cast<const Blob *>(unwrap(this));
+   assert(blob);
+   return blob->buf;
 }
 
 Value & Call::arg(const char *name) {

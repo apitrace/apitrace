@@ -89,8 +89,8 @@ public:
             call.ret = parse_value();
             break;
          default:
-            assert(0);
             std::cerr << "error: unknown call detail " << c << "\n";
+            assert(0);
             break;
          }
       } while(true);
@@ -129,6 +129,8 @@ public:
          return parse_bitmask();
       case Trace::TYPE_ARRAY:
          return parse_array();
+      case Trace::TYPE_BLOB:
+         return parse_blob();
       case Trace::TYPE_POINTER:
          return parse_pointer();
       case Trace::TYPE_VOID:
@@ -203,13 +205,22 @@ done:
       return new UInt(value);
    }
 
-   Value *parse_array() {
+   Value *parse_array(void) {
       size_t len = read_uint();
       Array *array = new Array(len);
       for (size_t i = 0; i < len; ++i) {
          array->values[i] = parse_value();
       }
       return array;
+   }
+   
+   Value *parse_blob(void) {
+      size_t size = read_uint();
+      Blob *blob = new Blob(size);
+      if (size) {
+          gzread(file, blob->buf, size);
+      }
+      return blob;
    }
    
    Value *parse_pointer() {

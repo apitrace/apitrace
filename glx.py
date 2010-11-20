@@ -210,8 +210,8 @@ libgl.functions += [
     DllFunction(Void, "glTexParameterfv", [(GLenum, "target"), (GLenum, "pname"), (Pointer(Const(GLfloat)), "params")]),
     DllFunction(Void, "glTexParameteri", [(GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
     DllFunction(Void, "glTexParameteriv", [(GLenum, "target"), (GLenum, "pname"), (Pointer(Const(GLint)), "params")]),
-    DllFunction(Void, "glTexImage1D", [(GLenum, "target"), (GLint, "level"), (GLint, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Pointer(Const(GLvoid)), "pixels")]),
-    DllFunction(Void, "glTexImage2D", [(GLenum, "target"), (GLint, "level"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Pointer(Const(GLvoid)), "pixels")]),
+    DllFunction(Void, "glTexImage1D", [(GLenum, "target"), (GLint, "level"), (GLint, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, 1, 1, border)"), "pixels")]),
+    DllFunction(Void, "glTexImage2D", [(GLenum, "target"), (GLint, "level"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, height, 1, border)"), "pixels")]),
     DllFunction(Void, "glTexEnvf", [(GLenum, "target"), (GLenum, "pname"), (GLfloat, "param")]),
     DllFunction(Void, "glTexEnvfv", [(GLenum, "target"), (GLenum, "pname"), (Pointer(Const(GLfloat)), "params")]),
     DllFunction(Void, "glTexEnvi", [(GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
@@ -399,7 +399,7 @@ libgl.functions += [
     DllFunction(Void, "glMinmax", [(GLenum, "target"), (GLenum, "internalformat"), (GLboolean, "sink")]),
     DllFunction(Void, "glResetHistogram", [(GLenum, "target")]),
     DllFunction(Void, "glResetMinmax", [(GLenum, "target")]),
-    DllFunction(Void, "glTexImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Pointer(Const(GLvoid)), "pixels")]),
+    DllFunction(Void, "glTexImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, height, depth, border)"), "pixels")]),
     DllFunction(Void, "glTexSubImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (Pointer(Const(GLvoid)), "pixels")]),
     DllFunction(Void, "glCopyTexSubImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
     DllFunction(Void, "glActiveTextureARB", [(GLenum, "texture")]),
@@ -868,6 +868,7 @@ if __name__ == '__main__':
     print '#include <GL/glxext.h>'
     print
     print '#include "log.hpp"'
+    print '#include "glhelpers.hpp"'
     print
     print 'extern "C" {'
     print

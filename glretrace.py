@@ -56,6 +56,9 @@ class ValueExtractor(base.Visitor):
         self.visit(array.type, '%s[%s]' % (lvalue, index), '%s[%s]' % (rvalue, index))
         print '    }'
 
+    def visit_blob(self, type, lvalue, rvalue):
+        print '    %s = %s;' % (lvalue, rvalue)
+
 
 
 def retrace_function(function):

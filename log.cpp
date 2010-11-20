@@ -79,7 +79,7 @@ static void _Open(const char *szName, const char *szExtension) {
    g_gzFile = gzopen(szFileName, "wb");
 }
 
-static inline void Write(const char *sBuffer, size_t dwBytesToWrite) {
+static inline void Write(const void *sBuffer, size_t dwBytesToWrite) {
    if(g_gzFile == NULL)
       return;
    
@@ -243,7 +243,6 @@ void LiteralString(const char *str) {
 }
 
 void LiteralWString(const wchar_t *str) {
-
    if (!str) {
       LiteralNull();
       return;
@@ -252,6 +251,18 @@ void LiteralWString(const wchar_t *str) {
    WriteString("<wide-string>");
 }
    
+void LiteralBlob(const void *data, size_t size) {
+   if (!data) {
+      LiteralNull();
+      return;
+   }
+   WriteByte(Trace::TYPE_BLOB);
+   WriteUInt(size);
+   if (size) {
+      Write(data, size);
+   }
+}
+
 void LiteralNamedConstant(const char *name, long long value) {
    WriteByte(Trace::TYPE_CONST);
    WriteString(name);

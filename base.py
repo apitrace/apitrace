@@ -54,6 +54,9 @@ class Visitor:
     def visit_array(self, type, *args, **kwargs):
         raise NotImplementedError
 
+    def visit_blob(self, type, *args, **kwargs):
+        raise NotImplementedError
+
     def visit_enum(self, type, *args, **kwargs):
         raise NotImplementedError
 
@@ -88,6 +91,10 @@ class Rebuilder(Visitor):
     def visit_array(self, array):
         type = self.visit(array.type)
         return Array(type, array.length)
+
+    def visit_blob(self, blob):
+        type = self.visit(blob.type)
+        return Blob(type, blob.size)
 
     def visit_enum(self, enum):
         return enum
@@ -308,7 +315,7 @@ Flags = Bitmask
 class Array(Type):
 
     def __init__(self, type, length):
-        Type.__init__(self, type.expr + " *", 'P' + type.id)
+        Type.__init__(self, type.expr + " *")
         self.type = type
         self.length = length
 
@@ -336,6 +343,20 @@ class OutArray(Array):
 
     def isoutput(self):
         return True
+
+
+class Blob(Type):
+
+    def __init__(self, type, size):
+        Type.__init__(self, type.expr + ' *')
+        self.type = type
+        self.size = size
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_blob(self, *args, **kwargs)
+
+    def dump(self, instance):
+        print '    Log::LiteralBlob(%s, %s);' % (instance, self.size)
 
 
 class Struct(Concrete):

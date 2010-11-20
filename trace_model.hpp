@@ -52,6 +52,7 @@ public:
    operator signed long long (void) const;
    operator unsigned long long (void) const;
    operator double (void) const;
+   operator void * (void) const;
 
    inline operator signed char (void) const { 
       return static_cast<signed long long>(*this);
@@ -178,6 +179,25 @@ public:
 };
 
 
+class Blob : public Value
+{
+public:
+   Blob(size_t _size) {
+       size = size;
+       buf = new char[_size];
+   }
+
+   ~Blob() {
+       delete [] buf;
+   }
+
+   void visit(Visitor &visitor);
+
+   size_t size;
+   char *buf;
+};
+
+
 class Visitor
 {
 public:
@@ -189,6 +209,7 @@ public:
    virtual void visit(String *) {assert(0);}
    virtual void visit(Const *) {assert(0);}
    virtual void visit(Array *) {assert(0);}
+   virtual void visit(Blob *) {assert(0);}
 };
 
 
