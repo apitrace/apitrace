@@ -111,8 +111,10 @@ public:
       int c;
       c = gzgetc(file);
       switch(c) {
-      case Trace::TYPE_BOOL:
-         return parse_bool();
+      case Trace::TYPE_FALSE:
+         return new Bool(false);
+      case Trace::TYPE_TRUE:
+         return new Bool(true);
       case Trace::TYPE_SINT:
          return parse_sint();
       case Trace::TYPE_UINT:
@@ -133,8 +135,8 @@ public:
          return parse_blob();
       case Trace::TYPE_POINTER:
          return parse_pointer();
-      case Trace::TYPE_VOID:
-         return NULL;
+      case Trace::TYPE_NULL:
+         return new Null;
       default:
          std::cerr << "error: unknown type " << c << "\n";
          assert(0);
@@ -193,7 +195,7 @@ public:
          case Trace::TYPE_CONST:
             read_string();
             break;
-         case Trace::TYPE_VOID:
+         case Trace::TYPE_NULL:
             goto done;
          default:
             std::cerr << "error: uexpected type " << c << "\n";

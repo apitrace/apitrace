@@ -38,8 +38,9 @@ enum CallDetail {
 };
 
 enum Type {
-   TYPE_VOID = 0,
-   TYPE_BOOL,
+   TYPE_NULL = 0,
+   TYPE_FALSE,
+   TYPE_TRUE,
    TYPE_SINT,
    TYPE_UINT,
    TYPE_FLOAT,

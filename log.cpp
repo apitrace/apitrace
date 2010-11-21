@@ -192,7 +192,7 @@ void BeginBitmask(const char *type) {
 }
 
 void EndBitmask(void) {
-   WriteByte(Trace::TYPE_VOID);
+   WriteByte(Trace::TYPE_NULL);
 }
 
 void BeginPointer(const char *type, const void *addr)
@@ -204,8 +204,7 @@ void BeginPointer(const char *type, const void *addr)
 void EndPointer(void) { }
 
 void LiteralBool(bool value) {
-   WriteByte(Trace::TYPE_BOOL);
-   WriteByte(value ? 0 : 1);
+   WriteByte(value ? Trace::TYPE_TRUE : Trace::TYPE_FALSE);
 }
 
 void LiteralSInt(signed long long value) {
@@ -270,9 +269,7 @@ void LiteralNamedConstant(const char *name, long long value) {
 }
 
 void LiteralNull(void) {
-   WriteByte(Trace::TYPE_POINTER);
-   WriteUInt(0);
-   WriteByte(Trace::TYPE_OPAQUE);
+   WriteByte(Trace::TYPE_NULL);
 }
 
 void LiteralOpaque(void) {

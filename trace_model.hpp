@@ -94,7 +94,7 @@ public:
 };
 
 
-class Void : public Value
+class Null : public Value
 {
 public:
    void visit(Visitor &visitor);
@@ -201,7 +201,7 @@ public:
 class Visitor
 {
 public:
-   virtual void visit(Void *) {assert(0);}
+   virtual void visit(Null *) {assert(0);}
    virtual void visit(Bool *) {assert(0);}
    virtual void visit(SInt *) {assert(0);}
    virtual void visit(UInt *) {assert(0);}

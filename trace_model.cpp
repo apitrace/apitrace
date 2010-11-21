@@ -30,7 +30,7 @@
 namespace Trace {
 
 
-void Void::visit(Visitor &visitor) {
+void Null::visit(Visitor &visitor) {
    visitor.visit(this);
 }
 
@@ -76,7 +76,8 @@ public:
 
    Dumper(std::ostream &_os) : os(_os) {}
 
-   void visit(Void *node) {
+   void visit(Null *node) {
+      os << "NULL";
    }
 
    void visit(Bool *node) {
@@ -163,7 +164,7 @@ Value::operator double(void) const {
    return fl->value;
 }
 
-static Void void_;
+static Null null;
 
 const Value & Value::operator[](size_t index) const {
     const Array *array = dynamic_cast<const Array *>(unwrap(this));
@@ -172,13 +173,18 @@ const Value & Value::operator[](size_t index) const {
             return *array->values[index];
         }
     }
-    return void_;
+    return null;
 }
 
 Value::operator void *(void) const {
    const Blob *blob = dynamic_cast<const Blob *>(unwrap(this));
-   assert(blob);
-   return blob->buf;
+   if (blob)
+       return blob->buf;
+   const Null *null = dynamic_cast<const Null *>(unwrap(this));
+   if (null);
+       return NULL;
+   assert(0);
+   return NULL;
 }
 
 Value & Call::arg(const char *name) {
@@ -187,7 +193,7 @@ Value & Call::arg(const char *name) {
          return *it->second;
       }
    }
-   return void_;
+   return null;
 }
 
 std::ostream & operator <<(std::ostream &os, Call &call) {
