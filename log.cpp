@@ -272,8 +272,13 @@ void LiteralNull(void) {
    WriteByte(Trace::TYPE_NULL);
 }
 
-void LiteralOpaque(void) {
+void LiteralOpaque(const void *addr) {
+   if (!addr) {
+      LiteralNull();
+      return;
+   }
    WriteByte(Trace::TYPE_OPAQUE);
+   WriteUInt((size_t)addr);
 }
 
 } /* namespace Log */

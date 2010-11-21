@@ -111,6 +111,8 @@ public:
       int c;
       c = gzgetc(file);
       switch(c) {
+      case Trace::TYPE_NULL:
+         return new Null;
       case Trace::TYPE_FALSE:
          return new Bool(false);
       case Trace::TYPE_TRUE:
@@ -135,8 +137,8 @@ public:
          return parse_blob();
       case Trace::TYPE_POINTER:
          return parse_pointer();
-      case Trace::TYPE_NULL:
-         return new Null;
+      case Trace::TYPE_OPAQUE:
+         return parse_opaque();
       default:
          std::cerr << "error: unknown type " << c << "\n";
          assert(0);
@@ -233,6 +235,13 @@ done:
       if (!value)
          value = new UInt(addr);
       return value;
+   }
+   
+   Value *parse_opaque() {
+      unsigned long long addr;
+      addr = read_uint();
+      /* XXX */
+      return new UInt(addr);
    }
    
    std::string read_string(void) {

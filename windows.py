@@ -64,12 +64,12 @@ SIZE_T = Alias("SIZE_T", SizeT)
 
 HRESULT = Alias("HRESULT", Int)
 
-PVOID = Alias("PVOID", Opaque)
+PVOID = Opaque("PVOID")
 LPVOID = PVOID
-HANDLE = Alias("HANDLE", Opaque)
-HWND = Alias("HWND", Opaque)
-HDC = Alias("HDC", Opaque)
-HMONITOR = Alias("HMONITOR", Opaque)
+HANDLE = Opaque("HANDLE")
+HWND = Opaque("HWND")
+HDC = Opaque("HDC")
+HMONITOR = Opaque("HMONITOR")
 
 GUID = Struct("GUID", [
     (DWORD, "Data1"),

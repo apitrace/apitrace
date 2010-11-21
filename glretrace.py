@@ -34,6 +34,12 @@ class ConstRemover(base.Rebuilder):
     def visit_const(self, const):
         return const.type
 
+    def visit_opaque(self, opaque):
+        expr = opaque.expr
+        if expr.startswith('const '):
+            expr = expr[6:]
+        return base.Opaque(expr)
+
 
 class ValueExtractor(base.Visitor):
 
@@ -54,7 +60,7 @@ class ValueExtractor(base.Visitor):
         print '    if (__a%s) {' % (array.id)
         print '        %s = new %s[%s];' % (lvalue, array.type, array.length)
         index = '__i' + array.id
-        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = array.length)
+        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = '__a%s->values.size()' % array.id)
         self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
         print '        }'
         print '    } else {'

@@ -207,7 +207,7 @@ class Const(Type):
 
     def __init__(self, type):
 
-        if isinstance(type, Pointer):
+        if type.expr.startswith("const "):
             expr = type.expr + " const"
         else:
             expr = "const " + type.expr
@@ -641,18 +641,21 @@ class _String(Type):
 String = _String()
 
 
-class _Opaque(Type):
+class Opaque(Type):
+    '''Opaque pointer.'''
 
-    def __init__(self):
-        Type.__init__(self, "void")
+    def __init__(self, expr):
+        Type.__init__(self, expr)
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_opaque(self, *args, **kwargs)
 
     def dump(self, instance):
-        print '    Log::LiteralOpaque();'
+        print '    Log::LiteralOpaque((const void *)%s);' % instance
 
-Opaque = Pointer(_Opaque())
+
+def OpaquePointer(type):
+    return Opaque(type.expr + ' *')
 
 
 Bool = Literal("bool", "Bool")

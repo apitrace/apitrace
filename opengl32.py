@@ -439,7 +439,7 @@ opengl32.functions += [
 ]
 
 HGLRC = Alias("HGLRC", HANDLE)
-PROC = Alias("PROC", Opaque)
+PROC = Opaque("PROC")
 
 PFD = Flags(DWORD, [
     "PFD_DOUBLEBUFFER",

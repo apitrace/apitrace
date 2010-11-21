@@ -104,15 +104,21 @@ public:
       os << node->name;
    }
 
-   void visit(Array *node) {
-      const char *sep = "";
-      os << "{";
-      for (std::vector<Value *>::iterator it = node->values.begin(); it != node->values.end(); ++it) {
-         os << sep;
-         (*it)->visit(*this);
-         sep = ", ";
+   void visit(Array *array) {
+      if (array->values.size() == 1) {
+         os << "&";
+         array->values[0]->visit(*this);
       }
-      os << "}";
+      else {
+         const char *sep = "";
+         os << "{";
+         for (std::vector<Value *>::iterator it = array->values.begin(); it != array->values.end(); ++it) {
+            os << sep;
+            (*it)->visit(*this);
+            sep = ", ";
+         }
+         os << "}";
+      }
    }
    
    void visit(Blob *blob) {

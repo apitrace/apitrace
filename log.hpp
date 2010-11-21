@@ -68,7 +68,7 @@ namespace Log {
     void LiteralBlob(const void *data, size_t size);
     void LiteralNamedConstant(const char *name, long long value);
     void LiteralNull(void);
-    void LiteralOpaque(void);
+    void LiteralOpaque(const void *ptr);
 }
 
 #endif /* _LOG_HPP_ */
