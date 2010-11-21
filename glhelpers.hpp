@@ -31,27 +31,78 @@
 
 static inline size_t
 __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLint border) {
-   size_t bits_per_channel;
-   switch (type) {
-   case GL_UNSIGNED_BYTE:
-      bits_per_channel = 8;
+   size_t num_channels;
+   switch (format) {
+   case GL_COLOR_INDEX:
+   case GL_RED:
+   case GL_GREEN:
+   case GL_BLUE:
+   case GL_ALPHA:
+   case GL_INTENSITY:
+   case GL_DEPTH_COMPONENT:
+   case GL_STENCIL_INDEX:
+      num_channels = 1;
+      break;
+   case GL_LUMINANCE_ALPHA:
+      num_channels = 2;
+      break;
+   case GL_RGB:
+   case GL_BGR:
+      num_channels = 3;
+      break;
+   case GL_RGBA:
+   case GL_BGRA:
+      num_channels = 4;
       break;
    default:
       assert(0);
-      bits_per_channel = 0;
+      num_channels = 0;
       break;
    }
 
    size_t bits_per_pixel;
-   switch (format) {
-   case GL_RGB:
-      bits_per_pixel = bits_per_channel * 3;
+   switch (type) {
+   case GL_BITMAP:
+      bits_per_pixel = 1;
+      break;
+   case GL_BYTE:
+   case GL_UNSIGNED_BYTE:
+      bits_per_pixel = 8 * num_channels;
+      break;
+   case GL_SHORT:
+   case GL_UNSIGNED_SHORT:
+      bits_per_pixel = 16 * num_channels;
+      break;
+   case GL_INT:
+   case GL_UNSIGNED_INT:
+   case GL_FLOAT:
+      bits_per_pixel = 32 * num_channels;
+      break;
+   case GL_UNSIGNED_BYTE_3_3_2:
+   case GL_UNSIGNED_BYTE_2_3_3_REV:
+   case GL_UNSIGNED_SHORT_5_6_5:
+   case GL_UNSIGNED_SHORT_5_6_5_REV:
+      bits_per_pixel = 8;
+      break;
+   case GL_UNSIGNED_SHORT_4_4_4_4:
+   case GL_UNSIGNED_SHORT_4_4_4_4_REV:
+   case GL_UNSIGNED_SHORT_5_5_5_1:
+   case GL_UNSIGNED_SHORT_1_5_5_5_REV:
+      bits_per_pixel = 16;
+      break;
+   case GL_UNSIGNED_INT_8_8_8_8:
+   case GL_UNSIGNED_INT_8_8_8_8_REV:
+   case GL_UNSIGNED_INT_10_10_10_2:
+   case GL_UNSIGNED_INT_2_10_10_10_REV:
+      bits_per_pixel = 32;
       break;
    default:
       assert(0);
       bits_per_pixel = 0;
       break;
    }
+
+   /* FIXME: consider glPixelStore settings */
 
    size_t row_stride = (width*bits_per_pixel + 7)/8;
 
