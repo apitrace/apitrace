@@ -37,17 +37,17 @@ class ConstRemover(base.Rebuilder):
 
 class ValueExtractor(base.Visitor):
 
-    def visit_literal(self, type, lvalue, rvalue):
+    def visit_literal(self, literal, lvalue, rvalue):
         print '    %s = %s;' % (lvalue, rvalue)
 
-    def visit_alias(self, type, lvalue, rvalue):
-        self.visit(type.type, lvalue, rvalue)
+    def visit_alias(self, alias, lvalue, rvalue):
+        self.visit(alias.type, lvalue, rvalue)
     
-    def visit_enum(self, type, lvalue, rvalue):
+    def visit_enum(self, enum, lvalue, rvalue):
         print '    %s = %s;' % (lvalue, rvalue)
 
-    def visit_bitmask(self, type, lvalue, rvalue):
-        self.visit(type.type, lvalue, rvalue)
+    def visit_bitmask(self, bitmask, lvalue, rvalue):
+        self.visit(bitmask.type, lvalue, rvalue)
 
     def visit_array(self, array, lvalue, rvalue):
         print '    %s = new %s[%s];' % (lvalue, array.type, array.length)
@@ -56,8 +56,8 @@ class ValueExtractor(base.Visitor):
         self.visit(array.type, '%s[%s]' % (lvalue, index), '%s[%s]' % (rvalue, index))
         print '    }'
 
-    def visit_blob(self, type, lvalue, rvalue):
-        print '    %s = %s;' % (lvalue, rvalue)
+    def visit_blob(self, blob, lvalue, rvalue):
+        print '    %s = (%s)(void *)%s;' % (lvalue, blob, rvalue)
 
 
 

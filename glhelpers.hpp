@@ -30,6 +30,37 @@
 #include <cassert>
 
 static inline size_t
+__gl_calllists_size(GLsizei n, GLenum type)
+{
+   size_t bytes;
+   switch(type) {
+   case GL_BYTE:
+   case GL_UNSIGNED_BYTE:
+      bytes = 1;
+      break;
+   case GL_2_BYTES:
+   case GL_SHORT:
+   case GL_UNSIGNED_SHORT:
+      bytes = 2;
+      break;
+   case GL_3_BYTES:
+      bytes = 3;
+      break;
+   case GL_4_BYTES:
+   case GL_INT:
+   case GL_UNSIGNED_INT:
+   case GL_FLOAT:
+      bytes = 4;
+      break;
+   default:
+      assert(0);
+      bytes = 1;
+   }
+
+   return n*bytes;
+}
+
+static inline size_t
 __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLint border) {
    size_t num_channels;
    switch (format) {
@@ -109,6 +140,11 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
    size_t slice_stride = height*row_stride;
 
    return depth*slice_stride;
+}
+
+static inline size_t
+__gl_bitmap_size(GLsizei width, GLsizei height) {
+   return __gl_image_size(GL_COLOR_INDEX, GL_BITMAP, width, height, 1, 0);
 }
 
 #endif /* _GL_HELPERS_HPP_ */
