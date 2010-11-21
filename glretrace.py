@@ -50,10 +50,15 @@ class ValueExtractor(base.Visitor):
         self.visit(bitmask.type, lvalue, rvalue)
 
     def visit_array(self, array, lvalue, rvalue):
-        print '    %s = new %s[%s];' % (lvalue, array.type, array.length)
+        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.id, rvalue)
+        print '    if (__a%s) {' % (array.id)
+        print '        %s = new %s[%s];' % (lvalue, array.type, array.length)
         index = '__i' + array.id
-        print '    for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = array.length)
-        self.visit(array.type, '%s[%s]' % (lvalue, index), '%s[%s]' % (rvalue, index))
+        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = array.length)
+        self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
+        print '        }'
+        print '    } else {'
+        print '        %s = NULL;' % lvalue
         print '    }'
 
     def visit_blob(self, blob, lvalue, rvalue):
