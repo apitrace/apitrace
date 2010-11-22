@@ -161,8 +161,8 @@ opengl32.functions += [
 
 class WglGetProcAddressFunction(DllFunction):
 
-    def __init__(self, type, name, args **kwargs):
-        DllFunction.__init__(self, type, name, args **kwargs)
+    def __init__(self, type, name, args, **kwargs):
+        DllFunction.__init__(self, type, name, args, **kwargs)
         self.functions = []
 
     def wrap_decl(self):
