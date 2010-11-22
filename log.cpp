@@ -48,6 +48,8 @@ static void _Close(void) {
    }
 }
 
+static int reentrancy = 0;
+
 static void _Open(const char *szName, const char *szExtension) {
    _Close();
    
@@ -83,6 +85,9 @@ static inline void Write(const void *sBuffer, size_t dwBytesToWrite) {
    if(g_gzFile == NULL)
       return;
    
+   if (reentrancy > 1)
+      return;
+
    gzwrite(g_gzFile, sBuffer, dwBytesToWrite);
 }
 
@@ -140,11 +145,13 @@ void Close(void) {
 
 void BeginCall(const char *function) {
    OS::AcquireMutex();
+   ++reentrancy;
    WriteString(function);
 }
 
 void EndCall(void) {
    WriteByte(Trace::CALL_END);
+   --reentrancy;
    gzflush(g_gzFile, Z_SYNC_FLUSH);
    OS::ReleaseMutex();
 }
