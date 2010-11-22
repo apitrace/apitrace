@@ -47,6 +47,8 @@ void ReleaseMutex(void);
 
 bool GetProcessName(char *str, size_t size);
 
+void Abort(void);
+
 } /* namespace OS */
 
 #endif /* _OS_HPP_ */

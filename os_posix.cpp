@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <pthread.h>
 
 #include "os.hpp"
@@ -73,6 +74,13 @@ GetProcessName(char *str, size_t size)
         str[size - 1] = 0;
 
     return true;
+}
+
+
+void
+Abort(void)
+{
+    exit(0);
 }
 
 

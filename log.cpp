@@ -281,4 +281,9 @@ void LiteralOpaque(const void *addr) {
    WriteUInt((size_t)addr);
 }
 
+void Abort(void) {
+    Close();
+    OS::Abort();
+}
+
 } /* namespace Log */

@@ -444,7 +444,7 @@ class Function:
         raise NotImplementedError
 
     def exit_impl(self):
-        print '            ExitProcess(0);'
+        print '            Log::Abort();'
 
     def fail_impl(self):
         if self.fail is not None:

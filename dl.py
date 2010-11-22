@@ -25,16 +25,15 @@
 
 """dl"""
 
+
 from base import *
+
 
 class DllFunction(Function):
 
     def __init__(self, type, name, args, call = '', fail = None):
         Function.__init__(self, type, name, args, call=call, fail=fail)
         
-    def exit_impl(self):
-        print '            exit(0);'
-
     def get_true_pointer(self):
         ptype = self.pointer_type()
         pvalue = self.pointer_value()

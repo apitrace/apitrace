@@ -78,4 +78,11 @@ GetProcessName(char *str, size_t size)
 }
 
 
+void
+Abort(void)
+{
+    ExitProcess(0);
+}
+
+
 } /* namespace OS */

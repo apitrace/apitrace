@@ -69,6 +69,8 @@ namespace Log {
     void LiteralNamedConstant(const char *name, long long value);
     void LiteralNull(void);
     void LiteralOpaque(const void *ptr);
+
+    void Abort(void);
 }
 
 #endif /* _LOG_HPP_ */
