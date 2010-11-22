@@ -20,7 +20,7 @@ find_path (GLEW_INCLUDE_DIR GL/glew.h
       /usr/include/GL
 )
 
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+if (WIN32)
 	# Nobody likes to include windows.h:
 	# - Microsoft's GL/gl.h header depends on windows.h but doesn't include it;
 	# - GLEW temporarily defines the necessary defines but undefines them later
@@ -41,7 +41,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	add_definitions (-DGLAPIENTRY=__stdcall)
 
 	link_libraries (winmm)
-endif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+endif (WIN32)
 
 if (MSVC)
 	# Enable math constants defines
@@ -84,10 +84,10 @@ endif (NOT ZLIB_FOUND)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+if (WIN32)
 	# d3d8.dll
-	if (D3D8_FOUND)
-		include_directories (${D3D8_INCLUDE_DIR})
+	if (DirectX_D3D8_FOUND)
+		include_directories (${DirectX_D3D8_INCLUDE_DIR})
 		add_custom_command (
 			OUTPUT d3d8.cpp
 			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
@@ -95,11 +95,11 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		)
 		add_library (d3d8 SHARED d3d8.def d3d8.cpp log.cpp os_win32.cpp)
 		set_target_properties (d3d8 PROPERTIES PREFIX "")
-	endif (D3D8_FOUND)
+	endif (DirectX_D3D8_FOUND)
 
 	# d3d9.dll
-	if (D3DX9_FOUND)
-		include_directories (${D3DX9_INCLUDE_DIR})
+	if (DirectX_D3DX9_FOUND)
+		include_directories (${DirectX_D3DX9_INCLUDE_DIR})
 		add_custom_command (
 			OUTPUT d3d9.cpp
 			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
@@ -107,11 +107,11 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		)
 		add_library (d3d9 SHARED d3d9.def d3d9.cpp log.cpp os_win32.cpp)
 		set_target_properties (d3d9 PROPERTIES PREFIX "")
-	endif (D3DX9_FOUND)
+	endif (DirectX_D3DX9_FOUND)
 
 	# d3d10.dll
-	if (D3D10_FOUND)
-		include_directories (${D3D10_INCLUDE_DIR})
+	if (DirectX_D3D10_FOUND)
+		include_directories (${DirectX_D3D10_INCLUDE_DIR})
 		add_custom_command (
 			OUTPUT d3d10.cpp
 			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
@@ -119,7 +119,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		)
 		add_library (d3d10 SHARED d3d10.def d3d10.cpp log.cpp os_win32.cpp)
 		set_target_properties (d3d10 PROPERTIES PREFIX "")
-	endif (D3D10_FOUND)
+	endif (DirectX_D3D10_FOUND)
 
 	# opengl32.dll
 	add_custom_command (
