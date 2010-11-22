@@ -54,6 +54,17 @@ if (MSVC)
 	add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
 	add_definitions (-wd4505) # unreferenced local function has been removed
 	add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
+	
+	# Use static runtime
+	# http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
+	foreach (flag_var
+		CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
+		CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+	)
+		if (${flag_var} MATCHES "/MD")
+			string (REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+		endif (${flag_var} MATCHES "/MD")
+	endforeach (flag_var)
 else ()
 	add_definitions (-Wall)
 endif ()
@@ -85,6 +96,9 @@ endif (NOT ZLIB_FOUND)
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WIN32)
+	# Put wrappers in a separate directory
+	set (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers)
+
 	# d3d8.dll
 	if (DirectX_D3D8_FOUND)
 		include_directories (${DirectX_D3D8_INCLUDE_DIR})
@@ -128,8 +142,9 @@ if (WIN32)
 		DEPENDS opengl32.py gl.py windows.py base.py
 	)
 	add_library (opengl SHARED opengl32.def opengl32.cpp log.cpp os_win32.cpp)
-	set_target_properties (opengl PROPERTIES PREFIX "")
-	set_target_properties (opengl PROPERTIES OUTPUT_NAME opengl32)
+	set_target_properties (opengl PROPERTIES
+		PREFIX ""
+		OUTPUT_NAME opengl32)
 	if (MINGW)
 		SET_TARGET_PROPERTIES(opengl PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
 	endif (MINGW)
