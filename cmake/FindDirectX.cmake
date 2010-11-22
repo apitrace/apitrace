@@ -4,26 +4,26 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	find_path (D3D8_INCLUDE_DIR d3d8.h
 		PATHS
 			"$ENV{DXSDK_DIR}/Include"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Include"
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Include"
 		DOC "The directory where d3d8.h resides")
 
 	find_path (D3DX8_INCLUDE_DIR d3dx8.h
 		PATHS
 			"$ENV{DXSDK_DIR}/Include"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Include"
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Include"
 		DOC "The directory where d3dx8.h resides")
 
-	find_library (D3D8_LIBRARY d3d8.lib
+	find_library (D3D8_LIBRARY d3d8
 		PATHS
 			"$ENV{DXSDK_DIR}/Lib/x86"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Lib/x86"
-		DOC "The directory where d3d8.lib resides")
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Lib/x86"
+		DOC "The directory where d3d8 resides")
 
-	find_library (D3DX8_LIBRARY d3dx8.lib
+	find_library (D3DX8_LIBRARY d3dx8
 		PATHS
 			"$ENV{DXSDK_DIR}/Lib/x86"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Lib/x86"
-		DOC "The directory where d3dx8.lib resides")
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Lib/x86"
+		DOC "The directory where d3dx8 resides")
 
 	if (D3D8_INCLUDE_DIR AND D3D8_LIBRARY)
 		set (D3D8_FOUND 1)
@@ -36,26 +36,26 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	find_path (D3D9_INCLUDE_DIR d3d9.h
 		PATHS
 			"$ENV{DXSDK_DIR}/Include"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Include"
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Include"
 		DOC "The directory where d3d9.h resides")
 
 	find_path (D3DX9_INCLUDE_DIR d3dx9.h
 		PATHS
 			"$ENV{DXSDK_DIR}/Include"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Include"
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Include"
 		DOC "The directory where d3dx9.h resides")
 
-	find_library (D3D9_LIBRARY d3d9.lib
+	find_library (D3D9_LIBRARY d3d9
 		PATHS
 			"$ENV{DXSDK_DIR}/Lib/x86"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Lib/x86"
-		DOC "The directory where d3d9.lib resides")
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Lib/x86"
+		DOC "The directory where d3d9 resides")
 
-	find_library (D3DX9_LIBRARY d3dx9.lib
+	find_library (D3DX9_LIBRARY d3dx9
 		PATHS
 			"$ENV{DXSDK_DIR}/Lib/x86"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Lib/x86"
-		DOC "The directory where d3dx9.lib resides")
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Lib/x86"
+		DOC "The directory where d3dx9 resides")
 
 	if (D3D9_INCLUDE_DIR AND D3D9_LIBRARY)
 		set (D3D9_FOUND 1)
@@ -68,26 +68,26 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	find_path (D3D10_INCLUDE_DIR d3d10.h
 		PATHS
 			"$ENV{DXSDK_DIR}/Include"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Include"
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Include"
 		DOC "The directory where d3d10.h resides")
 
 	find_path (D3DX10_INCLUDE_DIR d3dx10.h
 		PATHS
 			"$ENV{DXSDK_DIR}/Include"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Include"
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Include"
 		DOC "The directory where d3dx10.h resides")
 
-	find_library (D3D10_LIBRARY d3d10.lib
+	find_library (D3D10_LIBRARY d3d10
 		PATHS
 			"$ENV{DXSDK_DIR}/Lib/x86"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Lib/x86"
-		DOC "The directory where d3d10.lib resides")
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Lib/x86"
+		DOC "The directory where d3d10 resides")
 
-	find_library (D3DX10_LIBRARY d3dx10.lib
+	find_library (D3DX10_LIBRARY d3dx10
 		PATHS
 			"$ENV{DXSDK_DIR}/Lib/x86"
-			"$ENV{PROGRAMFILES}/Microsoft DirectX SDK/Lib/x86"
-		DOC "The directory where d3dx10.lib resides")
+			"$ENV{ProgramFiles}/Microsoft DirectX SDK/Lib/x86"
+		DOC "The directory where d3dx10 resides")
 
 	if (D3D10_INCLUDE_DIR AND D3D10_LIBRARY)
 		set (D3D10_FOUND 1)
