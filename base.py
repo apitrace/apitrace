@@ -142,8 +142,7 @@ class Type:
     def visit(self, visitor, *args, **kwargs):
         raise NotImplementedError
 
-    def isoutput(self):
-        return False
+    isoutput = False
 
     def decl(self):
         pass
@@ -255,10 +254,8 @@ def ConstPointer(type):
     return Pointer(Const(type))
 
 
-class OutPointer(Pointer):
-
-    def isoutput(self):
-        return True
+def OutPointer(type):
+    return Out(Pointer(type))
 
 
 class Enum(Concrete):
@@ -339,10 +336,8 @@ class Array(Type):
         self.type.wrap_instance("*" + instance)
 
 
-class OutArray(Array):
-
-    def isoutput(self):
-        return True
+def OutArray(type, length):
+    return Out(Array(type, length))
 
 
 class Blob(Type):
@@ -391,29 +386,9 @@ class Alias(Type):
         self.type.dump(instance)
 
 
-class Out(Type):
-
-    def __init__(self, type):
-        Type.__init__(self, type.expr)
-        self.type = type
-
-    def isoutput(self):
-        return True
-
-    def decl(self):
-        self.type.decl()
-
-    def impl(self):
-        self.type.impl()
-
-    def dump(self, instance):
-        self.type.dump(instance)
-    
-    def wrap_instance(self, instance):
-        self.type.wrap_instance(instance)
-
-    def unwrap_instance(self, instance):
-        self.type.unwrap_instance(instance)
+def Out(type):
+    type.isoutput = True
+    return type
 
 
 class Function:
@@ -485,14 +460,14 @@ class Function:
         self.get_true_pointer()
         print '    Log::BeginCall("%s");' % (self.name)
         for type, name in self.args:
-            if not type.isoutput():
+            if not type.isoutput:
                 type.unwrap_instance(name)
                 print '    Log::BeginArg("%s", "%s");' % (type, name)
                 type.dump(name)
                 print '    Log::EndArg();'
         print '    %s%s(%s);' % (result, pvalue, ', '.join([str(name) for type, name in self.args]))
         for type, name in self.args:
-            if type.isoutput():
+            if type.isoutput:
                 print '    Log::BeginArg("%s", "%s");' % (type, name)
                 type.dump(name)
                 print '    Log::EndArg();'
@@ -571,14 +546,14 @@ class Interface(Type):
             print '    Log::EndPointer();'
             print '    Log::EndArg();'
             for type, name in method.args:
-                if not type.isoutput():
+                if not type.isoutput:
                     type.unwrap_instance(name)
                     print '    Log::BeginArg("%s", "%s");' % (type, name)
                     type.dump(name)
                     print '    Log::EndArg();'
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
             for type, name in method.args:
-                if type.isoutput():
+                if type.isoutput:
                     print '    Log::BeginArg("%s", "%s");' % (type, name)
                     type.dump(name)
                     print '    Log::EndArg();'
