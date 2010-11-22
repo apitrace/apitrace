@@ -49,7 +49,11 @@ public:
       file = NULL;
    }
 
-   bool parse(const char *filename) {
+   ~Parser() {
+      close();
+   }
+
+   bool open(const char *filename) {
       unsigned long long version;
 
       file = gzopen(filename, "rb");
@@ -63,44 +67,41 @@ public:
          return false;
       }
 
-      while (!gzeof(file)) {
-         parse_call();
-      }
-
       return true;
    }
 
-   void parse_call(void) {
-      Call call;
-      call.name = read_string();
-      int c;
+   void close(void) {
+      if (file) {
+         gzclose(file);
+         file = NULL;
+      }
+   }
+
+   Call *parse_call(void) {
+      Call *call = new Call;
+      call->name = read_string();
       do {
-         c = read_byte();
-         if (c == Trace::CALL_END || c == -1) {
-            break;
-         }
+         int c = read_byte();
          switch(c) {
          case Trace::CALL_END:
-            return;
+            return call;
          case Trace::CALL_ARG:
-            call.args.push_back(parse_arg());
+            call->args.push_back(parse_arg());
             break;
          case Trace::CALL_RET:
-            call.ret = parse_value();
+            call->ret = parse_value();
             break;
          default:
             std::cerr << "error: unknown call detail " << c << "\n";
             assert(0);
-            break;
+            /* fallthrough */
+         case -1:
+            delete call;
+            return NULL;
          }
       } while(true);
-      handle_call(call);
    }
    
-   virtual void handle_call(Call &call) {
-      std::cout << call;
-   }
-
    Arg parse_arg(void) {
       std::string name = read_string();
       Value *value = parse_value();

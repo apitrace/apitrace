@@ -142,31 +142,81 @@ if __name__ == '__main__':
 
     print '''
 
-class Retracer : public Trace::Parser
-{
-    void handle_call(Trace::Call &call) {
-        if (call.name == "wglSwapBuffers" ||
-            call.name == "glXSwapBuffers") {
-            glFlush();
-            return;
-        }
-        retrace_call(call);
-    }
-};
+Trace::Parser parser;
+
+static void display(void) {
+   Trace::Call *call;
+
+   while ((call = parser.parse_call())) {
+      if (call->name == "glFlush()" ||
+          call->name == "glXSwapBuffers" ||
+          call->name == "wglSwapBuffers") {
+         glFlush();
+         return;
+      }
+      
+      retrace_call(*call);
+
+      GLenum error = glGetError();
+      if (error != GL_NO_ERROR) {
+         std::cerr << "warning: glGetError() = ";
+         switch (error) {
+         case GL_INVALID_ENUM:
+            std::cerr << "GL_INVALID_ENUM";
+            break;
+         case GL_INVALID_VALUE:
+            std::cerr << "GL_INVALID_VALUE";
+            break;
+         case GL_INVALID_OPERATION:
+            std::cerr << "GL_INVALID_OPERATION";
+            break;
+         case GL_STACK_OVERFLOW:
+            std::cerr << "GL_STACK_OVERFLOW";
+            break;
+         case GL_STACK_UNDERFLOW:
+            std::cerr << "GL_STACK_UNDERFLOW";
+            break;
+         case GL_OUT_OF_MEMORY:
+            std::cerr << "GL_OUT_OF_MEMORY";
+            break;
+         case GL_TABLE_TOO_LARGE:
+            std::cerr << "GL_TABLE_TOO_LARGE";
+            break;
+         default:
+            std::cerr << error;
+            break;
+         }
+         std::cerr << "\\n";
+      }
+   }
+
+   glFlush();
+   glutIdleFunc(NULL);
+}
+
+static void idle(void) {
+   glutPostRedisplay();
+}
 
 int main(int argc, char **argv)
 {
    glutInit(&argc, argv);
-   glutInitWindowPosition( 0, 0 );
-   glutInitWindowSize( 800, 600 );
-   glutInitDisplayMode( GLUT_DEPTH | GLUT_RGB | GLUT_SINGLE );
+   glutInitWindowPosition(0, 0);
+   glutInitWindowSize(800, 600);
+   glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | GLUT_SINGLE);
    glutCreateWindow(argv[0]);
    glewInit();
+
+   glutDisplayFunc(&display);
+   glutIdleFunc(&idle);
+
    for (int i = 1; i < argc; ++i) {
-      Retracer p;
-      p.parse(argv[i]);
-      glutMainLoop();
+      if (parser.open(argv[i])) {
+         glutMainLoop();
+         parser.close();
+      }
    }
+
    return 0;
 }
 
