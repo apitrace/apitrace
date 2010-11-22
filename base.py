@@ -142,8 +142,6 @@ class Type:
     def visit(self, visitor, *args, **kwargs):
         raise NotImplementedError
 
-    isoutput = False
-
     def decl(self):
         pass
 
@@ -254,10 +252,6 @@ def ConstPointer(type):
     return Pointer(Const(type))
 
 
-def OutPointer(type):
-    return Out(Pointer(type))
-
-
 class Enum(Concrete):
 
     def __init__(self, name, values):
@@ -336,10 +330,6 @@ class Array(Type):
         self.type.wrap_instance("*" + instance)
 
 
-def OutArray(type, length):
-    return Out(Array(type, length))
-
-
 class Blob(Type):
 
     def __init__(self, type, size):
@@ -386,9 +376,20 @@ class Alias(Type):
         self.type.dump(instance)
 
 
-def Out(type):
-    type.isoutput = True
-    return type
+def Out(type, name):
+    arg = Arg(type, name, output=True)
+    return arg
+
+
+class Arg:
+
+    def __init__(self, type, name, output=False):
+        self.type = type
+        self.name = name
+        self.output = output
+
+    def __str__(self):
+        return '%s %s' % (self.type, self.name)
 
 
 class Function:
@@ -396,7 +397,14 @@ class Function:
     def __init__(self, type, name, args, call = '__stdcall', fail = None):
         self.type = type
         self.name = name
-        self.args = args
+
+        self.args = []
+        for arg in args:
+            if isinstance(arg, tuple):
+                arg_type, arg_name = arg
+                arg = Arg(arg_type, arg_name)
+            self.args.append(arg)
+
         self.call = call
         self.fail = fail
 
@@ -413,7 +421,7 @@ class Function:
         s = self.type.expr + ' ' + s
         s += "("
         if self.args:
-            s += ", ".join(["%s %s" % (type, name) for type, name in self.args])
+            s += ", ".join(["%s %s" % (arg.type, arg.name) for arg in self.args])
         else:
             s += "void"
         s += ")"
@@ -459,19 +467,19 @@ class Function:
             result = 'result = '
         self.get_true_pointer()
         print '    Log::BeginCall("%s");' % (self.name)
-        for type, name in self.args:
-            if not type.isoutput:
-                type.unwrap_instance(name)
-                print '    Log::BeginArg("%s", "%s");' % (type, name)
-                type.dump(name)
+        for arg in self.args:
+            if not arg.output:
+                arg.type.unwrap_instance(arg.name)
+                print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                arg.type.dump(arg.name)
                 print '    Log::EndArg();'
-        print '    %s%s(%s);' % (result, pvalue, ', '.join([str(name) for type, name in self.args]))
-        for type, name in self.args:
-            if type.isoutput:
-                print '    Log::BeginArg("%s", "%s");' % (type, name)
-                type.dump(name)
+        print '    %s%s(%s);' % (result, pvalue, ', '.join([str(arg.name) for arg in self.args]))
+        for arg in self.args:
+            if arg.output:
+                print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                arg.type.dump(arg.name)
                 print '    Log::EndArg();'
-                type.wrap_instance(name)
+                arg.type.wrap_instance(arg.name)
         if self.type is not Void:
             print '    Log::BeginReturn("%s");' % self.type
             self.type.dump("result")
@@ -545,19 +553,19 @@ class Interface(Type):
             print '    Log::BeginPointer("%s", (const void *)m_pInstance);' % self.name
             print '    Log::EndPointer();'
             print '    Log::EndArg();'
-            for type, name in method.args:
-                if not type.isoutput:
-                    type.unwrap_instance(name)
-                    print '    Log::BeginArg("%s", "%s");' % (type, name)
-                    type.dump(name)
+            for arg in method.args:
+                if not arg.output:
+                    arg.type.unwrap_instance(arg.name)
+                    print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                    arg.type.dump(arg.name)
                     print '    Log::EndArg();'
-            print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(name) for type, name in method.args]))
-            for type, name in method.args:
-                if type.isoutput:
-                    print '    Log::BeginArg("%s", "%s");' % (type, name)
-                    type.dump(name)
+            print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
+            for arg in method.args:
+                if arg.output:
+                    print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                    arg.type.dump(arg.name)
                     print '    Log::EndArg();'
-                    type.wrap_instance(name)
+                    arg.type.wrap_instance(arg.name)
             if method.type is not Void:
                 print '    Log::BeginReturn("%s");' % method.type
                 method.type.dump("result")

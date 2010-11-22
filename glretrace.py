@@ -76,20 +76,20 @@ def retrace_function(function):
     print 'static void retrace_%s(Trace::Call &call) {' % function.name
     if not function.name.startswith('glX'):
         success = True
-        for arg_type, arg_name in function.args:
-            arg_type = ConstRemover().visit(arg_type)
-            print '    %s %s;' % (arg_type, arg_name)
-            rvalue = 'call.arg("%s")' % (arg_name,)
-            lvalue = arg_name
+        for arg in function.args:
+            arg.type = ConstRemover().visit(arg.type)
+            print '    %s %s;' % (arg.type, arg.name)
+            rvalue = 'call.arg("%s")' % (arg.name,)
+            lvalue = arg.name
             try:
-                ValueExtractor().visit(arg_type, lvalue, rvalue)
+                ValueExtractor().visit(arg.type, lvalue, rvalue)
             except NotImplementedError:
                 success = False
-                print '    %s = 0; // FIXME' % arg_name
+                print '    %s = 0; // FIXME' % arg.name
         if not success:
             print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
             print '    return;'
-        arg_names = ", ".join([arg_name for arg_type, arg_name in function.args])
+        arg_names = ", ".join([arg.name for arg in function.args])
         print '    %s(%s);' % (function.name, arg_names)
     print '}'
     print
