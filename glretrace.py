@@ -80,37 +80,47 @@ class ValueExtractor(base.Visitor):
 
 def retrace_function(function):
     print 'static void retrace_%s(Trace::Call &call) {' % function.name
-    if not function.name.startswith('glX'):
-        success = True
-        for arg in function.args:
-            arg.type = ConstRemover().visit(arg.type)
-            print '    %s %s;' % (arg.type, arg.name)
-            rvalue = 'call.arg("%s")' % (arg.name,)
-            lvalue = arg.name
-            try:
-                ValueExtractor().visit(arg.type, lvalue, rvalue)
-            except NotImplementedError:
-                success = False
-                print '    %s = 0; // FIXME' % arg.name
-        if not success:
-            print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
-            print '    return;'
-        arg_names = ", ".join([arg.name for arg in function.args])
-        print '    %s(%s);' % (function.name, arg_names)
+    success = True
+    for arg in function.args:
+        arg.type = ConstRemover().visit(arg.type)
+        print '    %s %s;' % (arg.type, arg.name)
+        rvalue = 'call.arg("%s")' % (arg.name,)
+        lvalue = arg.name
+        try:
+            ValueExtractor().visit(arg.type, lvalue, rvalue)
+        except NotImplementedError:
+            success = False
+            print '    %s = 0; // FIXME' % arg.name
+    if not success:
+        print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
+        print '    return;'
+    arg_names = ", ".join([arg.name for arg in function.args])
+    print '    %s(%s);' % (function.name, arg_names)
     print '}'
     print
 
 
 def retrace_functions(functions):
     for function in functions:
-        retrace_function(function)
+        if function.sideeffects:
+            retrace_function(function)
 
     print 'static bool retrace_call(Trace::Call &call) {'
     for function in functions:
-        print '    if (call.name == "%s") {' % function.name
-        print '        retrace_%s(call);' % function.name
-        print '        return true;'
-        print '    }'
+        if not function.sideeffects:
+            print '    if (call.name == "%s") {' % function.name
+            print '        return true;'
+            print '    }'
+    print
+    print '    std::cout << call;'
+    print '    std::cout.flush();'
+    print
+    for function in functions:
+        if function.sideeffects:
+            print '    if (call.name == "%s") {' % function.name
+            print '        retrace_%s(call);' % function.name
+            print '        return true;'
+            print '    }'
     print '    std::cerr << "warning: unsupported call " << call.name << "\\n";'
     print '    return false;'
     print '}'
@@ -135,8 +145,6 @@ if __name__ == '__main__':
 class Retracer : public Trace::Parser
 {
     void handle_call(Trace::Call &call) {
-        std::cout << call;
-        std::cout.flush();
         retrace_call(call);
     }
 };

@@ -400,7 +400,7 @@ class Arg:
 
 class Function:
 
-    def __init__(self, type, name, args, call = '__stdcall', fail = None):
+    def __init__(self, type, name, args, call = '__stdcall', fail = None, sideeffects=True):
         self.type = type
         self.name = name
 
@@ -413,6 +413,7 @@ class Function:
 
         self.call = call
         self.fail = fail
+        self.sideeffects = sideeffects
 
     def prototype(self, name=None):
         if name is not None:

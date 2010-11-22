@@ -65,8 +65,8 @@ libgl.functions.append(glXgetprocaddress)
 
 class GlxFunction(Function):
 
-    def __init__(self, type, name, args, call = '', fail = None):
-        Function.__init__(self, type, name, args, call=call, fail=fail)
+    def __init__(self, type, name, args, call = '', **kwargs):
+        Function.__init__(self, type, name, args, call=call, **kwargs)
         
     def get_true_pointer(self):
         ptype = self.pointer_type()

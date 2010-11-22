@@ -136,12 +136,12 @@ opengl32.functions += [
     DllFunction(HGLRC, "wglCreateContext", [(HDC, "hdc")]),
     DllFunction(HGLRC, "wglCreateLayerContext", [(HDC, "hdc"), (Int, "iLayerPlane")]),
     DllFunction(BOOL, "wglDeleteContext", [(HGLRC, "hglrc")]),
-    DllFunction(HGLRC, "wglGetCurrentContext", []),
-    DllFunction(HDC, "wglGetCurrentDC", []),
-    DllFunction(PROC, "wglGetDefaultProcAddress", [(LPCSTR, "lpszProc")]),
+    DllFunction(HGLRC, "wglGetCurrentContext", [], sideeffects=False),
+    DllFunction(HDC, "wglGetCurrentDC", [], sideeffects=False),
+    DllFunction(PROC, "wglGetDefaultProcAddress", [(LPCSTR, "lpszProc")], sideeffects=False),
     DllFunction(Int, "wglChoosePixelFormat", [(HDC, "hdc"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]), 
     DllFunction(Int, "wglDescribePixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (UINT, "nBytes"), Out(Pointer(PIXELFORMATDESCRIPTOR), "ppfd")]),
-    DllFunction(Int, "wglGetPixelFormat", [(HDC, "hdc")]),
+    DllFunction(Int, "wglGetPixelFormat", [(HDC, "hdc")], sideeffects=False),
     DllFunction(BOOL, "wglSetPixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]),
     DllFunction(BOOL, "wglMakeCurrent", [(HDC, "hdc"), (HGLRC, "hglrc")]),
     DllFunction(BOOL, "wglShareLists", [(HGLRC, "hglrc1"), (HGLRC, "hglrc2")]),
@@ -152,7 +152,7 @@ opengl32.functions += [
     DllFunction(BOOL, "wglUseFontOutlinesW", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase"), (FLOAT, "deviation"), (FLOAT, "extrusion"), (Int, "format"), (LPGLYPHMETRICSFLOAT, "lpgmf")]),
     DllFunction(BOOL , "wglDescribeLayerPlane", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nBytes"), Out(Pointer(LAYERPLANEDESCRIPTOR), "plpd")]),
     DllFunction(Int  , "wglSetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), (Array(Const(COLORREF), "cEntries"), "pcr")]),
-    DllFunction(Int  , "wglGetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), Out(Array(COLORREF, "cEntries"), "pcr")]),
+    DllFunction(Int  , "wglGetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), Out(Array(COLORREF, "cEntries"), "pcr")], sideeffects=False),
     DllFunction(BOOL , "wglRealizeLayerPalette", [(HDC, "hdc"), (Int, "iLayerPlane"), (BOOL, "bRealize")]),
     DllFunction(BOOL , "wglSwapLayerBuffers", [(HDC, "hdc"), (UINT, "fuPlanes")]),
     DllFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Array(Const(WGLSWAP), "n"), "ps")]),
@@ -161,8 +161,8 @@ opengl32.functions += [
 
 class WglGetProcAddressFunction(DllFunction):
 
-    def __init__(self, type, name, args):
-        DllFunction.__init__(self, type, name, args)
+    def __init__(self, type, name, args **kwargs):
+        DllFunction.__init__(self, type, name, args **kwargs)
         self.functions = []
 
     def wrap_decl(self):
@@ -252,22 +252,22 @@ wglgetprocaddress.functions += extended_functions(WglFunction)
 
 wglgetprocaddress.functions += [
     # WGL_ARB_extensions_string
-    WglFunction(Const(String), "wglGetExtensionsStringARB", [(HDC, "hdc")]),
+    WglFunction(Const(String), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
     # WGL_ARB_pbuffer
     WglFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]), 
-    WglFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")]),
+    WglFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")], sideeffects=False),
     WglFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
     WglFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]), 
     WglFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iAttribute"), Out(Pointer(Int), "piValue")]),
     # WGL_ARB_pixel_format
-    WglFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")]),
-    WglFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")]),
+    WglFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
+    WglFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
     WglFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
     # WGL_EXT_extensions_string
-    WglFunction(Const(String), "wglGetExtensionsStringEXT", []),
+    WglFunction(Const(String), "wglGetExtensionsStringEXT", [], sideeffects=False),
     # WGL_EXT_pixel_format
-    WglFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")]),
-    WglFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")]),
+    WglFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
+    WglFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
     WglFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 ]
 
