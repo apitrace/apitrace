@@ -49,8 +49,8 @@ GLsizeiptrARB = Alias("GLsizeiptrARB", Int)
 GLhandleARB = Alias("GLhandleARB", UInt)
 GLhalfARB = Alias("GLhalfARB", UShort)
 GLhalfNV = Alias("GLhalfNV", UShort)
-GLint64EXT = Alias("GLint64EXT", Long) # FIXME
-GLuint64EXT = Alias("GLuint64EXT", ULong) # FIXME
+GLint64EXT = Alias("GLint64EXT", LongLong)
+GLuint64EXT = Alias("GLuint64EXT", ULongLong)
 
 GLstring = Alias("const GLchar *", String)
 GLstringARB = Alias("const GLcharARB *", String)
@@ -2466,7 +2466,7 @@ GLenum = Enum("GLenum", [
     "GL_SECONDARY_COLOR_ARRAY_LIST_STRIDE_IBM", # 103087
 ])
 
-GLprimenum = FakeEnum(GLenum, [
+GLenum_mode = FakeEnum(GLenum, [
     "GL_POINTS",                         # 0x0000
     "GL_LINES",                          # 0x0001
     "GL_LINE_LOOP",                      # 0x0002
@@ -2483,40 +2483,36 @@ GLprimenum = FakeEnum(GLenum, [
     "GL_TRIANGLE_STRIP_ADJACENCY_ARB",   # 0x000D
 ])
 
-GLbufferbitfield = Flags(GLbitfield, [
-    "GL_DEPTH_BUFFER_BIT", # 0x00000100
-    "GL_ACCUM_BUFFER_BIT", # 0x00000200
-    "GL_STENCIL_BUFFER_BIT", # 0x00000400
-    "GL_COLOR_BUFFER_BIT", # 0x00004000
+GLbitfield_attrib = Flags(GLbitfield, [
+    "GL_ALL_ATTRIB_BITS",     # 0x000FFFFF
+    "GL_CURRENT_BIT",         # 0x00000001
+    "GL_POINT_BIT",           # 0x00000002
+    "GL_LINE_BIT",            # 0x00000004
+    "GL_POLYGON_BIT",         # 0x00000008
+    "GL_POLYGON_STIPPLE_BIT", # 0x00000010
+    "GL_PIXEL_MODE_BIT",      # 0x00000020
+    "GL_LIGHTING_BIT",        # 0x00000040
+    "GL_FOG_BIT",             # 0x00000080
+    "GL_DEPTH_BUFFER_BIT",    # 0x00000100
+    "GL_ACCUM_BUFFER_BIT",    # 0x00000200
+    "GL_STENCIL_BUFFER_BIT",  # 0x00000400
+    "GL_VIEWPORT_BIT",        # 0x00000800
+    "GL_TRANSFORM_BIT",       # 0x00001000
+    "GL_ENABLE_BIT",          # 0x00002000
+    "GL_COLOR_BUFFER_BIT",    # 0x00004000
+    "GL_HINT_BIT",            # 0x00008000
+    "GL_EVAL_BIT",            # 0x00010000
+    "GL_LIST_BIT",            # 0x00020000
+    "GL_TEXTURE_BIT",         # 0x00040000
+    "GL_SCISSOR_BIT",         # 0x00080000
+    "GL_MULTISAMPLE_BIT",     # 0x20000000
 ])
 
-[
-    "GL_ALL_ATTRIB_BITS", # 0x000FFFFF
-    "GL_CURRENT_BIT", # 0x00000001
-    "GL_POINT_BIT", # 0x00000002
-    "GL_LINE_BIT", # 0x00000004
-    "GL_POLYGON_BIT", # 0x00000008
-    "GL_POLYGON_STIPPLE_BIT", # 0x00000010
-    "GL_PIXEL_MODE_BIT", # 0x00000020
-    "GL_LIGHTING_BIT", # 0x00000040
-    "GL_FOG_BIT", # 0x00000080
-    "GL_VIEWPORT_BIT", # 0x00000800
-    "GL_TRANSFORM_BIT", # 0x00001000
-    "GL_ENABLE_BIT", # 0x00002000
-    "GL_HINT_BIT", # 0x00008000
-    "GL_EVAL_BIT", # 0x00010000
-    "GL_LIST_BIT", # 0x00020000
-    "GL_TEXTURE_BIT", # 0x00040000
-    "GL_SCISSOR_BIT", # 0x00080000
-    "GL_MULTISAMPLE_BIT", # 0x20000000
-]
-
-[
-    "GL_CLIENT_PIXEL_STORE_BIT", # 0x00000001
+GLbitfield_client_attrib = Flags(GLbitfield, [
+    "GL_CLIENT_ALL_ATTRIB_BITS",  # 0xFFFFFFFF
+    "GL_CLIENT_PIXEL_STORE_BIT",  # 0x00000001
     "GL_CLIENT_VERTEX_ARRAY_BIT", # 0x00000002
-    "GL_ALL_CLIENT_ATTRIB_BITS", # 0xFFFFFFFF
-    "GL_CLIENT_ALL_ATTRIB_BITS", # 0xFFFFFFFF
-]
+])
 
 
 def basic_functions(Function):
@@ -2531,7 +2527,7 @@ def basic_functions(Function):
         F(Void, "glDeleteLists", [(GLuint, "list"), (GLsizei, "range")]),
         F(GLuint, "glGenLists", [(GLsizei, "range")]),
         F(Void, "glListBase", [(GLuint, "base")]),
-        F(Void, "glBegin", [(GLprimenum, "mode")]),
+        F(Void, "glBegin", [(GLenum_mode, "mode")]),
         F(Void, "glBitmap", [(GLsizei, "width"), (GLsizei, "height"), (GLfloat, "xorig"), (GLfloat, "yorig"), (GLfloat, "xmove"), (GLfloat, "ymove"), (Blob(Const(GLubyte), "__gl_bitmap_size(width, height)"), "bitmap")]),
         F(Void, "glColor3b", [(GLbyte, "red"), (GLbyte, "green"), (GLbyte, "blue")]),
         F(Void, "glColor3bv", [(Array(Const(GLbyte), "3"), "v")]),
@@ -2727,7 +2723,7 @@ def basic_functions(Function):
         F(Void, "glPopName", []),
         F(Void, "glPushName", [(GLuint, "name")]),
         F(Void, "glDrawBuffer", [(GLenum, "mode")]),
-        F(Void, "glClear", [(GLbufferbitfield, "mask")]),
+        F(Void, "glClear", [(GLbitfield_attrib, "mask")]),
         F(Void, "glClearAccum", [(GLfloat, "red"), (GLfloat, "green"), (GLfloat, "blue"), (GLfloat, "alpha")]),
         F(Void, "glClearIndex", [(GLfloat, "c")]),
         F(Void, "glClearColor", [(GLclampf, "red"), (GLclampf, "green"), (GLclampf, "blue"), (GLclampf, "alpha")]),
@@ -2743,7 +2739,7 @@ def basic_functions(Function):
         F(Void, "glFinish", []),
         F(Void, "glFlush", []),
         F(Void, "glPopAttrib", []),
-        F(Void, "glPushAttrib", [(GLbitfield, "mask")]),
+        F(Void, "glPushAttrib", [(GLbitfield_attrib, "mask")]),
         F(Void, "glMap1d", [(GLenum, "target"), (GLdouble, "u1"), (GLdouble, "u2"), (GLint, "stride"), (GLint, "order"), (OpaquePointer(Const(GLdouble)), "points")]),
         F(Void, "glMap1f", [(GLenum, "target"), (GLfloat, "u1"), (GLfloat, "u2"), (GLint, "stride"), (GLint, "order"), (OpaquePointer(Const(GLfloat)), "points")]),
         F(Void, "glMap2d", [(GLenum, "target"), (GLdouble, "u1"), (GLdouble, "u2"), (GLint, "ustride"), (GLint, "uorder"), (GLdouble, "v1"), (GLdouble, "v2"), (GLint, "vstride"), (GLint, "vorder"), (OpaquePointer(Const(GLdouble)), "points")]),
@@ -2780,8 +2776,8 @@ def basic_functions(Function):
         F(Void, "glPixelMapusv", [(GLenum, "map"), (GLsizei, "mapsize"), (Array(Const(GLushort), "mapsize"), "values")]),
         F(Void, "glReadBuffer", [(GLenum, "mode")]),
         F(Void, "glCopyPixels", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "type")]),
-        F(Void, "glReadPixels", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), Out(Pointer(GLvoid), "pixels")]),
-        F(Void, "glDrawPixels", [(GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "pixels")]),
+        F(Void, "glReadPixels", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), Out(OpaquePointer(GLvoid), "pixels")], sideeffects=False),
+        F(Void, "glDrawPixels", [(GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, height, 1, 0)"), "pixels")]),
         F(Void, "glGetBooleanv", [(GLenum, "pname"), Out(Pointer(GLboolean), "params")], sideeffects=False),
         F(Void, "glGetClipPlane", [(GLenum, "plane"), Out(Array(GLdouble, "4"), "equation")], sideeffects=False),
         F(Void, "glGetDoublev", [(GLenum, "pname"), Out(Pointer(GLdouble), "params")], sideeffects=False),
@@ -2805,7 +2801,7 @@ def basic_functions(Function):
         F(Void, "glGetTexGendv", [(GLenum, "coord"), (GLenum, "pname"), Out(Pointer(GLdouble), "params")], sideeffects=False),
         F(Void, "glGetTexGenfv", [(GLenum, "coord"), (GLenum, "pname"), Out(Pointer(GLfloat), "params")], sideeffects=False),
         F(Void, "glGetTexGeniv", [(GLenum, "coord"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
-        F(Void, "glGetTexImage", [(GLenum, "target"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), Out(Pointer(GLvoid), "pixels")], sideeffects=False),
+        F(Void, "glGetTexImage", [(GLenum, "target"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), Out(OpaquePointer(GLvoid), "pixels")], sideeffects=False),
         F(Void, "glGetTexParameterfv", [(GLenum, "target"), (GLenum, "pname"), Out(Pointer(GLfloat), "params")], sideeffects=False),
         F(Void, "glGetTexParameteriv", [(GLenum, "target"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
         F(Void, "glGetTexLevelParameterfv", [(GLenum, "target"), (GLint, "level"), (GLenum, "pname"), Out(Pointer(GLfloat), "params")], sideeffects=False),
@@ -2834,8 +2830,8 @@ def basic_functions(Function):
         F(Void, "glBindTexture", [(GLenum, "target"), (GLuint, "texture")]),
         F(Void, "glColorPointer", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
         F(Void, "glDisableClientState", [(GLenum, "array")]),
-        F(Void, "glDrawArrays", [(GLenum, "mode"), (GLint, "first"), (GLsizei, "count")]),
-        F(Void, "glDrawElements", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_calllists_size(count, type)"), "indices")]),
+        F(Void, "glDrawArrays", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count")]),
+        F(Void, "glDrawElements", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_calllists_size(count, type)"), "indices")]),
         F(Void, "glEdgeFlagPointer", [(GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
         F(Void, "glEnableClientState", [(GLenum, "array")]),
         F(Void, "glIndexPointer", [(GLenum, "type"), (GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
@@ -2859,10 +2855,10 @@ def basic_functions(Function):
         F(Void, "glTexSubImage1D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, 1, 1, 0)"), "pixels")]),
         F(Void, "glTexSubImage2D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, height, 1, 0)"), "pixels")]),
         F(Void, "glPopClientAttrib", []),
-        F(Void, "glPushClientAttrib", [(GLbitfield, "mask")]),
+        F(Void, "glPushClientAttrib", [(GLbitfield_client_attrib, "mask")]),
         F(Void, "glBlendColor", [(GLclampf, "red"), (GLclampf, "green"), (GLclampf, "blue"), (GLclampf, "alpha")]),
         F(Void, "glBlendEquation", [(GLenum, "mode")]),
-        F(Void, "glDrawRangeElements", [(GLenum, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices")]),
+        F(Void, "glDrawRangeElements", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_calllists_size(count, type)"), "indices")]),
         F(Void, "glColorTable", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "table")]),
         F(Void, "glColorTableParameterfv", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(Const(GLfloat)), "params")]),
         F(Void, "glColorTableParameteriv", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(Const(GLint)), "params")]),
@@ -3043,9 +3039,9 @@ def extended_functions(Function):
         F(OpaquePointer(GLvoid), "glMapBufferARB", [(GLenum, "target"), (GLenum, "access")]),
         F(GLboolean, "glUnmapBufferARB", [(GLenum, "target")]),
         F(Void, "glBeginQueryARB", [(GLenum, "target"), (GLuint, "id")]),
-        F(Void, "glDeleteQueriesARB", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "ids")]),
+        F(Void, "glDeleteQueriesARB", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "ids")]),
         F(Void, "glEndQueryARB", [(GLenum, "target")]),
-        F(Void, "glGenQueriesARB", [(GLsizei, "n"), (OpaquePointer(GLuint), "ids")]),
+        F(Void, "glGenQueriesARB", [(GLsizei, "n"), Out(Array(GLuint, "n"), "ids")]),
         F(Void, "glGetQueryObjectivARB", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
         F(Void, "glGetQueryObjectuivARB", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLuint), "params")], sideeffects=False),
         F(Void, "glGetQueryivARB", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
@@ -3092,7 +3088,7 @@ def extended_functions(Function):
         F(Void, "glBindAttribLocationARB", [(GLhandleARB, "program"), (GLuint, "index"), (OpaquePointer(Const(GLcharARB)), "name")]),
         F(Void, "glGetActiveAttribARB", [(GLhandleARB, "program"), (GLuint, "index"), (GLsizei, "bufSize"), (OpaquePointer(GLsizei), "length"), (OpaquePointer(GLint), "size"), (OpaquePointer(GLenum), "type"), (OpaquePointer(GLcharARB), "name")], sideeffects=False),
         F(GLint, "glGetAttribLocationARB", [(GLhandleARB, "program"), (OpaquePointer(Const(GLcharARB)), "name")], sideeffects=False),
-        F(Void, "glDrawBuffersARB", [(GLsizei, "n"), (OpaquePointer(Const(GLenum)), "bufs")]),
+        F(Void, "glDrawBuffersARB", [(GLsizei, "n"), (Array(Const(GLenum), "n"), "bufs")]),
         F(Void, "glRenderbufferStorageMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
         F(Void, "glPolygonOffsetEXT", [(GLfloat, "factor"), (GLfloat, "bias")]),
         #F(Void, "glGetPixelTexGenParameterfvSGIS", [(GLenum, "pname"), (OpaquePointer(GLfloat), "params")], sideeffects=False),
@@ -3132,8 +3128,8 @@ def extended_functions(Function):
         F(Void, "glSecondaryColor3usEXT", [(GLushort, "red"), (GLushort, "green"), (GLushort, "blue")]),
         F(Void, "glSecondaryColor3usvEXT", [(Array(Const(GLushort), "3"), "v")]),
         F(Void, "glSecondaryColorPointerEXT", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
-        F(Void, "glMultiDrawArraysEXT", [(GLenum, "mode"), (OpaquePointer(GLint), "first"), (OpaquePointer(GLsizei), "count"), (GLsizei, "primcount")]),
-        F(Void, "glMultiDrawElementsEXT", [(GLenum, "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(Const(OpaquePointer(Const(GLvoid))), "primcount"), "indices"), (GLsizei, "primcount")]),
+        F(Void, "glMultiDrawArraysEXT", [(GLenum_mode, "mode"), (OpaquePointer(GLint), "first"), (OpaquePointer(GLsizei), "count"), (GLsizei, "primcount")]),
+        F(Void, "glMultiDrawElementsEXT", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(Const(OpaquePointer(Const(GLvoid))), "primcount"), "indices"), (GLsizei, "primcount")]),
         F(Void, "glFogCoordPointerEXT", [(GLenum, "type"), (GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
         F(Void, "glFogCoorddEXT", [(GLdouble, "coord")]),
         F(Void, "glFogCoorddvEXT", [(OpaquePointer(Const(GLdouble)), "coord")]),
@@ -3181,20 +3177,20 @@ def extended_functions(Function):
         F(Void, "glWindowPos4ivMESA", [(Array(Const(GLint), "4"), "v")]),
         F(Void, "glWindowPos4sMESA", [(GLshort, "x"), (GLshort, "y"), (GLshort, "z"), (GLshort, "w")]),
         F(Void, "glWindowPos4svMESA", [(Array(Const(GLshort), "4"), "v")]),
-        F(Void, "glMultiModeDrawArraysIBM", [(OpaquePointer(Const(GLenum)), "mode"), (OpaquePointer(Const(GLint)), "first"), (OpaquePointer(Const(GLsizei)), "count"), (GLsizei, "primcount"), (GLint, "modestride")]),
-        F(Void, "glMultiModeDrawElementsIBM", [(OpaquePointer(Const(GLenum)), "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(Const(OpaquePointer(Const(GLvoid))), "primcount"), "indices"), (GLsizei, "primcount"), (GLint, "modestride")]),
-        F(Void, "glDeleteFencesNV", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "fences")]),
+        F(Void, "glMultiModeDrawArraysIBM", [(Array(Const(GLenum_mode), "primcount"), "mode"), (Array(Const(GLint), "primcount"), "first"), (Array(Const(GLsizei), "primcount"), "count"), (GLsizei, "primcount"), (GLint, "modestride")]),
+        F(Void, "glMultiModeDrawElementsIBM", [(Array(Const(GLenum_mode), "primcount"), "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(Const(OpaquePointer(Const(GLvoid))), "primcount"), "indices"), (GLsizei, "primcount"), (GLint, "modestride")]),
+        F(Void, "glDeleteFencesNV", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "fences")]),
         F(Void, "glFinishFenceNV", [(GLuint, "fence")]),
-        F(Void, "glGenFencesNV", [(GLsizei, "n"), (OpaquePointer(GLuint), "fences")]),
+        F(Void, "glGenFencesNV", [(GLsizei, "n"), Out(Array(GLuint, "n"), "fences")]),
         F(Void, "glGetFenceivNV", [(GLuint, "fence"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
         F(GLboolean, "glIsFenceNV", [(GLuint, "fence")]),
         F(Void, "glSetFenceNV", [(GLuint, "fence"), (GLenum, "condition")]),
         F(GLboolean, "glTestFenceNV", [(GLuint, "fence")]),
-        F(GLboolean, "glAreProgramsResidentNV", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "ids"), (OpaquePointer(GLboolean), "residences")]),
+        F(GLboolean, "glAreProgramsResidentNV", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "ids"), Out(Array(GLboolean, "n"), "residences")]),
         F(Void, "glBindProgramNV", [(GLenum, "target"), (GLuint, "program")]),
-        F(Void, "glDeleteProgramsNV", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "programs")]),
+        F(Void, "glDeleteProgramsNV", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "programs")]),
         F(Void, "glExecuteProgramNV", [(GLenum, "target"), (GLuint, "id"), (OpaquePointer(Const(GLfloat)), "params")]),
-        F(Void, "glGenProgramsNV", [(GLsizei, "n"), (OpaquePointer(GLuint), "programs")]),
+        F(Void, "glGenProgramsNV", [(GLsizei, "n"), Out(Array(GLuint, "n"), "programs")]),
         F(Void, "glGetProgramParameterdvNV", [(GLenum, "target"), (GLuint, "index"), (GLenum, "pname"), (OpaquePointer(GLdouble), "params")], sideeffects=False),
         F(Void, "glGetProgramParameterfvNV", [(GLenum, "target"), (GLuint, "index"), (GLenum, "pname"), (OpaquePointer(GLfloat), "params")], sideeffects=False),
         F(Void, "glGetProgramStringNV", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLubyte), "program")], sideeffects=False),
@@ -3208,7 +3204,7 @@ def extended_functions(Function):
         F(Void, "glLoadProgramNV", [(GLenum, "target"), (GLuint, "id"), (GLsizei, "len"), (OpaquePointer(Const(GLubyte)), "program")]),
         F(Void, "glProgramParameters4dvNV", [(GLenum, "target"), (GLuint, "index"), (GLuint, "num"), (OpaquePointer(Const(GLdouble)), "params")]),
         F(Void, "glProgramParameters4fvNV", [(GLenum, "target"), (GLuint, "index"), (GLuint, "num"), (OpaquePointer(Const(GLfloat)), "params")]),
-        F(Void, "glRequestResidentProgramsNV", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "ids")]),
+        F(Void, "glRequestResidentProgramsNV", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "ids")]),
         F(Void, "glTrackMatrixNV", [(GLenum, "target"), (GLuint, "address"), (GLenum, "matrix"), (GLenum, "transform")]),
         F(Void, "glVertexAttrib1dNV", [(GLuint, "index"), (GLdouble, "x")]),
         F(Void, "glVertexAttrib1dvNV", [(GLuint, "index"), (Array(Const(GLdouble), "1"), "v")]),
@@ -3272,8 +3268,8 @@ def extended_functions(Function):
         F(Void, "glPointParameterivNV", [(GLenum, "pname"), (OpaquePointer(Const(GLint)), "params")]),
         F(Void, "glActiveStencilFaceEXT", [(GLenum, "face")]),
         F(Void, "glBindVertexArrayAPPLE", [(GLuint, "array")]),
-        F(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "arrays")]),
-        F(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), (OpaquePointer(GLuint), "arrays")]),
+        F(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "arrays")]),
+        F(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLuint, "n"), "arrays")]),
         F(GLboolean, "glIsVertexArrayAPPLE", [(GLuint, "array")]),
         F(Void, "glGetProgramNamedParameterdvNV", [(GLuint, "id"), (GLsizei, "len"), (OpaquePointer(Const(GLubyte)), "name"), (OpaquePointer(GLdouble), "params")], sideeffects=False),
         F(Void, "glGetProgramNamedParameterfvNV", [(GLuint, "id"), (GLsizei, "len"), (OpaquePointer(Const(GLubyte)), "name"), (OpaquePointer(GLfloat), "params")], sideeffects=False),
@@ -3286,21 +3282,21 @@ def extended_functions(Function):
         F(Void, "glBindFramebufferEXT", [(GLenum, "target"), (GLuint, "framebuffer")]),
         F(Void, "glBindRenderbufferEXT", [(GLenum, "target"), (GLuint, "renderbuffer")]),
         F(GLenum, "glCheckFramebufferStatusEXT", [(GLenum, "target")]),
-        F(Void, "glDeleteFramebuffersEXT", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "framebuffers")]),
-        F(Void, "glDeleteRenderbuffersEXT", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "renderbuffers")]),
+        F(Void, "glDeleteFramebuffersEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "framebuffers")]),
+        F(Void, "glDeleteRenderbuffersEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "renderbuffers")]),
         F(Void, "glFramebufferRenderbufferEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLuint, "renderbuffer")]),
         F(Void, "glFramebufferTexture1DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLuint, "texture"), (GLint, "level")]),
         F(Void, "glFramebufferTexture2DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLuint, "texture"), (GLint, "level")]),
         F(Void, "glFramebufferTexture3DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLuint, "texture"), (GLint, "level"), (GLint, "zoffset")]),
-        F(Void, "glGenFramebuffersEXT", [(GLsizei, "n"), (OpaquePointer(GLuint), "framebuffers")]),
-        F(Void, "glGenRenderbuffersEXT", [(GLsizei, "n"), (OpaquePointer(GLuint), "renderbuffers")]),
+        F(Void, "glGenFramebuffersEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "framebuffers")]),
+        F(Void, "glGenRenderbuffersEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "renderbuffers")]),
         F(Void, "glGenerateMipmapEXT", [(GLenum, "target")]),
         F(Void, "glGetFramebufferAttachmentParameterivEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
         F(Void, "glGetRenderbufferParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
         F(GLboolean, "glIsFramebufferEXT", [(GLuint, "framebuffer")]),
         F(GLboolean, "glIsRenderbufferEXT", [(GLuint, "renderbuffer")]),
         F(Void, "glRenderbufferStorageEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
-        F(Void, "glBlitFramebufferEXT", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield, "mask"), (GLenum, "filter")]),
+        F(Void, "glBlitFramebufferEXT", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
         F(Void, "glFramebufferTextureLayerEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLuint, "texture"), (GLint, "level"), (GLint, "layer")]),
         F(Void, "glStencilFuncSeparateATI", [(GLenum, "frontfunc"), (GLenum, "backfunc"), (GLint, "ref"), (GLuint, "mask")]),
         F(Void, "glProgramEnvParameters4fvEXT", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (OpaquePointer(Const(GLfloat)), "params")]),
