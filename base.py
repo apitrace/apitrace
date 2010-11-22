@@ -320,14 +320,18 @@ class Array(Type):
         return visitor.visit_array(self, *args, **kwargs)
 
     def dump(self, instance):
+        print '    if(%s) {' % instance
         index = '__i' + self.type.id
-        print '    Log::BeginArray("%s", %s);' % (self.type, self.length)
-        print '    for (int %s = 0; %s < %s; ++%s) {' % (index, index, self.length, index)
-        print '        Log::BeginElement("%s");' % (self.type,)
+        print '        Log::BeginArray("%s", %s);' % (self.type, self.length)
+        print '        for (int %s = 0; %s < %s; ++%s) {' % (index, index, self.length, index)
+        print '            Log::BeginElement("%s");' % (self.type,)
         self.type.dump('(%s)[%s]' % (instance, index))
-        print '        Log::EndElement();'
+        print '            Log::EndElement();'
+        print '        }'
+        print '        Log::EndArray();'
         print '    }'
-        print '    Log::EndArray();'
+        print '    else'
+        print '        Log::LiteralNull();'
 
     def wrap_instance(self, instance):
         self.type.wrap_instance("*" + instance)
