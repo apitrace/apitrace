@@ -145,6 +145,11 @@ if __name__ == '__main__':
 class Retracer : public Trace::Parser
 {
     void handle_call(Trace::Call &call) {
+        if (call.name == "wglSwapBuffers" ||
+            call.name == "glXSwapBuffers") {
+            glFlush();
+            return;
+        }
         retrace_call(call);
     }
 };
