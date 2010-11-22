@@ -139,12 +139,12 @@ RGNDATA = Struct("RGNDATA", [
 ])
 LPRGNDATA = Pointer(RGNDATA)
 
-HMODULE = Alias("HMODULE", LPVOID)
+HMODULE = Opaque("HMODULE")
 
 IUnknown = Interface("IUnknown")
 
 IUnknown.methods = (
-	Method(HRESULT, "QueryInterface", ((REFIID, "riid"), (Pointer(Pointer(Void)), "ppvObj"))),
+	Method(HRESULT, "QueryInterface", ((REFIID, "riid"), (Pointer(OpaquePointer(Void)), "ppvObj"))),
 	Method(ULONG, "AddRef", ()),
 	Method(ULONG, "Release", ()),
 )

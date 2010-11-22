@@ -238,10 +238,7 @@ class Pointer(Type):
     def dump(self, instance):
         print '    if(%s) {' % instance
         print '        Log::BeginPointer("%s", (const void *)%s);' % (self.type, instance)
-        try:
-            self.type.dump("*" + instance)
-        except NotImplementedError:
-            pass
+        self.type.dump("*" + instance)
         print '        Log::EndPointer();'
         print '    }'
         print '    else'
@@ -507,6 +504,11 @@ class Function:
         pass
 
 
+def FunctionPointer(type, name, args, **kwargs):
+    # XXX
+    return Opaque(name)
+
+
 class Interface(Type):
 
     def __init__(self, name, base=None):
@@ -514,6 +516,9 @@ class Interface(Type):
         self.name = name
         self.base = base
         self.methods = []
+
+    def dump(self, instance):
+        print '    Log::LiteralOpaque((const void *)%s);' % instance
 
     def itermethods(self):
         if self.base is not None:

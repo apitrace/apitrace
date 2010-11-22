@@ -108,7 +108,7 @@ PDIRECT3DDEVICE9EX = WrapPointer(IDirect3DDevice9Ex)
 PDIRECT3DSWAPCHAIN9EX = WrapPointer(IDirect3DSwapChain9Ex)
 
 IDirect3D9.methods += [
-    Method(HRESULT, "RegisterSoftwareDevice", [(Pointer(Void), "pInitializeFunction")]),
+    Method(HRESULT, "RegisterSoftwareDevice", [(OpaquePointer(Void), "pInitializeFunction")]),
     Method(UINT, "GetAdapterCount", []),
     Method(HRESULT, "GetAdapterIdentifier", [(UINT, "Adapter"), (DWORD, "Flags"), Out(Pointer(D3DADAPTER_IDENTIFIER9), "pIdentifier")]),
     Method(UINT, "GetAdapterModeCount", [(UINT, "Adapter"), (D3DFORMAT, "Format")]),
@@ -205,8 +205,8 @@ IDirect3DDevice9.methods += [
     Method(Float, "GetNPatchMode", []),
     Method(HRESULT, "DrawPrimitive", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "StartVertex"), (UINT, "PrimitiveCount")]),
     Method(HRESULT, "DrawIndexedPrimitive", [(D3DPRIMITIVETYPE, "PrimitiveType"), (INT, "BaseVertexIndex"), (UINT, "MinVertexIndex"), (UINT, "NumVertices"), (UINT, "startIndex"), (UINT, "primCount")]),
-    Method(HRESULT, "DrawPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "PrimitiveCount"), (ConstPointer(Void), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
-    Method(HRESULT, "DrawIndexedPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "MinVertexIndex"), (UINT, "NumVertices"), (UINT, "PrimitiveCount"), (ConstPointer(Void), "pIndexData"), (D3DFORMAT, "IndexDataFormat"), (ConstPointer(Void), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
+    Method(HRESULT, "DrawPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "PrimitiveCount"), (OpaquePointer(Const(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
+    Method(HRESULT, "DrawIndexedPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "MinVertexIndex"), (UINT, "NumVertices"), (UINT, "PrimitiveCount"), (OpaquePointer(Const(Void)), "pIndexData"), (D3DFORMAT, "IndexDataFormat"), (OpaquePointer(Const(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     Method(HRESULT, "ProcessVertices", [(UINT, "SrcStartIndex"), (UINT, "DestIndex"), (UINT, "VertexCount"), (PDIRECT3DVERTEXBUFFER9, "pDestBuffer"), (PDIRECT3DVERTEXDECLARATION9, "pVertexDecl"), (DWORD, "Flags")]),
     Method(HRESULT, "CreateVertexDeclaration", [(ConstPointer(D3DVERTEXELEMENT9), "pVertexElements"), Out(Pointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
     Method(HRESULT, "SetVertexDeclaration", [(PDIRECT3DVERTEXDECLARATION9, "pDecl")]),
@@ -261,8 +261,8 @@ IDirect3DSwapChain9.methods += [
 
 IDirect3DResource9.methods += [
     Method(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")]),
-    Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (ConstPointer(Void), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
-    Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(Pointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
+    Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaquePointer(Const(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
+    Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaquePointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
     Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
     Method(DWORD, "SetPriority", [(DWORD, "PriorityNew")]),
     Method(DWORD, "GetPriority", []),
@@ -277,12 +277,12 @@ IDirect3DVertexDeclaration9.methods += [
 
 IDirect3DVertexShader9.methods += [
     Method(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")]),
-    Method(HRESULT, "GetFunction", [Out(Pointer(Void), "pData"), Out(Pointer(UINT), "pSizeOfData")]),
+    Method(HRESULT, "GetFunction", [Out(OpaquePointer(Void), "pData"), Out(Pointer(UINT), "pSizeOfData")]),
 ]
 
 IDirect3DPixelShader9.methods += [
     Method(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")]),
-    Method(HRESULT, "GetFunction", [Out(Pointer(Void), "pData"), Out(Pointer(UINT), "pSizeOfData")]),
+    Method(HRESULT, "GetFunction", [Out(OpaquePointer(Void), "pData"), Out(Pointer(UINT), "pSizeOfData")]),
 ]
 
 IDirect3DBaseTexture9.methods += [
@@ -319,19 +319,19 @@ IDirect3DCubeTexture9.methods += [
 ]
 
 IDirect3DVertexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(Pointer(Void)), "ppbData"), (DWORD, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (DWORD, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")]),
 ]
 
 IDirect3DIndexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(Pointer(Void)), "ppbData"), (DWORD, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (DWORD, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DINDEXBUFFER_DESC), "pDesc")]),
 ]
 
 IDirect3DSurface9.methods += [
-    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(Pointer(Void)), "ppContainer")]),
+    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")]),
     Method(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (DWORD, "Flags")]),
     Method(HRESULT, "UnlockRect", []),
@@ -341,10 +341,10 @@ IDirect3DSurface9.methods += [
 
 IDirect3DVolume9.methods += [
     Method(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")]),
-    Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (ConstPointer(Void), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
-    Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(Pointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
+    Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaquePointer(Const(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
+    Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaquePointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
     Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
-    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(Pointer(Void)), "ppContainer")]),
+    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVOLUME_DESC), "pDesc")]),
     Method(HRESULT, "LockBox", [Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (DWORD, "Flags")]),
     Method(HRESULT, "UnlockBox", []),
@@ -355,7 +355,7 @@ IDirect3DQuery9.methods += [
     Method(D3DQUERYTYPE, "GetType", []),
     Method(DWORD, "GetDataSize", []),
     Method(HRESULT, "Issue", [(DWORD, "dwIssueFlags")]),
-    Method(HRESULT, "GetData", [Out(Pointer(Void), "pData"), (DWORD, "dwSize"), (DWORD, "dwGetDataFlags")]),
+    Method(HRESULT, "GetData", [Out(OpaquePointer(Void), "pData"), (DWORD, "dwSize"), (DWORD, "dwGetDataFlags")]),
 ]
 
 IDirect3D9Ex.methods += [

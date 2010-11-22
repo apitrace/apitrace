@@ -124,16 +124,16 @@ if (WIN32)
 	endif (DirectX_D3DX9_FOUND)
 
 	# d3d10.dll
-	if (DirectX_D3D10_FOUND)
-		include_directories (${DirectX_D3D10_INCLUDE_DIR})
-		add_custom_command (
-			OUTPUT d3d10.cpp
-			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
-			DEPENDS d3d10misc.py windows.py base.py
-		)
-		add_library (d3d10 SHARED d3d10.def d3d10.cpp log.cpp os_win32.cpp)
-		set_target_properties (d3d10 PROPERTIES PREFIX "")
-	endif (DirectX_D3D10_FOUND)
+	#if (DirectX_D3D10_FOUND)
+	#	include_directories (${DirectX_D3D10_INCLUDE_DIR})
+	#	add_custom_command (
+	#		OUTPUT d3d10.cpp
+	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
+	#		DEPENDS d3d10misc.py windows.py base.py
+	#	)
+	#	add_library (d3d10 SHARED d3d10.def d3d10.cpp log.cpp os_win32.cpp)
+	#	set_target_properties (d3d10 PROPERTIES PREFIX "")
+	#endif (DirectX_D3D10_FOUND)
 
 	# opengl32.dll
 	add_custom_command (
