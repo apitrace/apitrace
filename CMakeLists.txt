@@ -127,8 +127,12 @@ if (WIN32)
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.py > ${CMAKE_CURRENT_BINARY_DIR}/opengl32.cpp
 		DEPENDS opengl32.py gl.py windows.py base.py
 	)
-	add_library (opengl32 SHARED opengl32.def opengl32.cpp log.cpp os_win32.cpp)
-	set_target_properties (opengl32 PROPERTIES PREFIX "")
+	add_library (opengl SHARED opengl32.def opengl32.cpp log.cpp os_win32.cpp)
+	set_target_properties (opengl PROPERTIES PREFIX "")
+	set_target_properties (opengl PROPERTIES OUTPUT_NAME opengl32)
+	if (MINGW)
+		SET_TARGET_PROPERTIES(opengl PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
+	endif (MINGW)
 
 else ()
 
