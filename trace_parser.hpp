@@ -75,7 +75,7 @@ public:
       call.name = read_string();
       int c;
       do {
-         c = gzgetc(file);
+         c = read_byte();
          if (c == Trace::CALL_END || c == -1) {
             break;
          }
@@ -109,7 +109,7 @@ public:
    
    Value *parse_value(void) {
       int c;
-      c = gzgetc(file);
+      c = read_byte();
       switch(c) {
       case Trace::TYPE_NULL:
          return new Null;
@@ -133,6 +133,8 @@ public:
          return parse_bitmask();
       case Trace::TYPE_ARRAY:
          return parse_array();
+      case Trace::TYPE_STRUCT:
+         return parse_struct();
       case Trace::TYPE_BLOB:
          return parse_blob();
       case Trace::TYPE_POINTER:
@@ -146,12 +148,6 @@ public:
       }
    }
 
-   Value *parse_bool() {
-      int c;
-      c = gzgetc(file);
-      return new Bool(c);
-   }
-   
    Value *parse_sint() {
       return new SInt(-read_uint());
    }
@@ -186,7 +182,7 @@ public:
       unsigned long long value = 0;
       int c;
       do {
-         c = gzgetc(file);
+         c = read_byte();
          switch(c) {
          case Trace::TYPE_SINT:
             value |= -read_uint();
@@ -237,6 +233,18 @@ done:
       return value;
    }
    
+   Value *parse_struct() {
+      std::string name;
+      /* XXX */
+      name = read_string();
+      while(name.length()) {
+         Value *value = parse_value();
+         std::cout << "  " << name << " = " << value << "\n";
+         name = read_string();
+      }
+      return NULL;
+   }
+   
    Value *parse_opaque() {
       unsigned long long addr;
       addr = read_uint();
@@ -246,10 +254,16 @@ done:
    
    std::string read_string(void) {
       size_t len = read_uint();
+      if (!len) {
+         return std::string();
+      }
       char * buf = new char[len];
       gzread(file, buf, len);
       std::string value(buf, len);
       delete [] buf;
+#ifdef TRACE_VERBOSE
+      std::cerr << '"' << value << '"' << "\n";
+#endif
       return value;
    }
 
@@ -265,7 +279,21 @@ done:
          value |= (unsigned long long)(c & 0x7f) << shift;
          shift += 7;
       } while(c & 0x80);
+#ifdef TRACE_VERBOSE
+      std::cerr << value << "\n";
+#endif
       return value;
+   }
+
+   int read_byte(void) {
+      int c = gzgetc(file);
+#ifdef TRACE_VERBOSE
+      if (c < 0)
+         std::cerr << "EOF" << "\n";
+      else
+         std::cerr << "0x" << std::hex << c << "\n";
+#endif
+      return c;
    }
 };
 
