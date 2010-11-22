@@ -52,7 +52,9 @@ public:
    operator signed long long (void) const;
    operator unsigned long long (void) const;
    operator double (void) const;
-   operator void * (void) const;
+
+   void *blob(void) const;
+   const char *string(void) const;
 
    inline operator signed char (void) const { 
       return static_cast<signed long long>(*this);

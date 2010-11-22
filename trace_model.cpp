@@ -182,10 +182,21 @@ const Value & Value::operator[](size_t index) const {
     return null;
 }
 
-Value::operator void *(void) const {
+void * Value::blob(void) const {
    const Blob *blob = dynamic_cast<const Blob *>(unwrap(this));
    if (blob)
        return blob->buf;
+   const Null *null = dynamic_cast<const Null *>(unwrap(this));
+   if (null);
+       return NULL;
+   assert(0);
+   return NULL;
+}
+
+const char * Value::string(void) const {
+   const String *string = dynamic_cast<const String *>(unwrap(this));
+   if (string)
+       return string->value.c_str();
    const Null *null = dynamic_cast<const Null *>(unwrap(this));
    if (null);
        return NULL;

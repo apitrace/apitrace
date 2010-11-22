@@ -25,7 +25,7 @@
 
 
 import base
-from glx import libgl
+import gl
 
 
 
@@ -58,17 +58,23 @@ class ValueExtractor(base.Visitor):
     def visit_array(self, array, lvalue, rvalue):
         print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.id, rvalue)
         print '    if (__a%s) {' % (array.id)
-        print '        %s = new %s[%s];' % (lvalue, array.type, array.length)
+        length = '__a%s->values.size()' % array.id
+        print '        %s = new %s[%s];' % (lvalue, array.type, length)
         index = '__i' + array.id
-        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = '__a%s->values.size()' % array.id)
-        self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
-        print '        }'
-        print '    } else {'
-        print '        %s = NULL;' % lvalue
-        print '    }'
+        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
+        try:
+            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
+        finally:
+            print '        }'
+            print '    } else {'
+            print '        %s = NULL;' % lvalue
+            print '    }'
 
     def visit_blob(self, blob, lvalue, rvalue):
-        print '    %s = (%s)(void *)%s;' % (lvalue, blob, rvalue)
+        print '    %s = static_cast<%s>((%s).blob());' % (lvalue, blob, rvalue)
+    
+    def visit_string(self, string, lvalue, rvalue):
+        print '    %s = (%s).string();' % (lvalue, rvalue)
 
 
 
@@ -95,6 +101,22 @@ def retrace_function(function):
     print
 
 
+def retrace_functions(functions):
+    for function in functions:
+        retrace_function(function)
+
+    print 'static bool retrace_call(Trace::Call &call) {'
+    for function in functions:
+        print '    if (call.name == "%s") {' % function.name
+        print '        retrace_%s(call);' % function.name
+        print '        return true;'
+        print '    }'
+    print '    std::cerr << "warning: unsupported call " << call.name << "\\n";'
+    print '    return false;'
+    print '}'
+    print
+
+
 if __name__ == '__main__':
     print
     print '#include <stdlib.h>'
@@ -105,18 +127,9 @@ if __name__ == '__main__':
     print '#include "trace_parser.hpp"'
     print
 
-    for function in libgl.functions:
-        retrace_function(function)
+    functions = gl.basic_functions(base.Function) + gl.extended_functions(base.Function)
+    retrace_functions(functions)
 
-    print 'static bool retrace_call(Trace::Call &call) {'
-    for function in libgl.functions:
-        print '    if (call.name == "%s") {' % function.name
-        print '        retrace_%s(call);' % function.name
-        print '        return true;'
-        print '    }'
-    print '    std::cerr << "warning: unsupported call " << call.name << "\\n";'
-    print '    return false;'
-    print '}'
     print '''
 
 class Retracer : public Trace::Parser

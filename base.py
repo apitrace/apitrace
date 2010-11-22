@@ -45,6 +45,9 @@ class Visitor:
     def visit_literal(self, type, *args, **kwargs):
         raise NotImplementedError
 
+    def visit_string(self, type, *args, **kwargs):
+        raise NotImplementedError
+
     def visit_const(self, type, *args, **kwargs):
         raise NotImplementedError
 
@@ -80,6 +83,9 @@ class Rebuilder(Visitor):
 
     def visit_literal(self, literal):
         return literal
+
+    def visit_string(self, string):
+        return string
 
     def visit_const(self, const):
         return Const(const.type)
@@ -616,7 +622,7 @@ class _String(Type):
         Type.__init__(self, "char *")
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_literal(self, *args, **kwargs)
+        return visitor.visit_string(self, *args, **kwargs)
 
     def dump(self, instance):
         print '    Log::LiteralString((const char *)%s);' % instance
