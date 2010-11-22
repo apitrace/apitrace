@@ -3033,7 +3033,7 @@ def extended_functions(Function):
         F(Void, "glBufferDataARB", [(GLenum, "target"), (GLsizeiptrARB, "size"), (Blob(Const(GLvoid), "size"), "data"), (GLenum, "usage")]),
         F(Void, "glBufferSubDataARB", [(GLenum, "target"), (GLintptrARB, "offset"), (GLsizeiptrARB, "size"), (Blob(Const(GLvoid), "size"), "data")]),
         F(Void, "glDeleteBuffersARB", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "buffer")]),
-        F(Void, "glGenBuffersARB", [(GLsizei, "n"), (Array(GLuint, "n"), "buffer")]),
+        F(Void, "glGenBuffersARB", [(GLsizei, "n"), Out(Array(GLuint, "n"), "buffer")]),
         F(Void, "glGetBufferParameterivARB", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
         F(Void, "glGetBufferPointervARB", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
         F(Void, "glGetBufferSubDataARB", [(GLenum, "target"), (GLintptrARB, "offset"), (GLsizeiptrARB, "size"), Out(Blob(GLvoid, "size"), "data")], sideeffects=False),
