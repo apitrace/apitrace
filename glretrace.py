@@ -144,11 +144,13 @@ if __name__ == '__main__':
 
 Trace::Parser parser;
 
+static bool insideGlBeginEnd;
+
 static void display(void) {
    Trace::Call *call;
 
    while ((call = parser.parse_call())) {
-      if (call->name == "glFlush()" ||
+      if (call->name == "glFlush" ||
           call->name == "glXSwapBuffers" ||
           call->name == "wglSwapBuffers") {
          glFlush();
@@ -157,36 +159,46 @@ static void display(void) {
       
       retrace_call(*call);
 
-      GLenum error = glGetError();
-      if (error != GL_NO_ERROR) {
-         std::cerr << "warning: glGetError() = ";
-         switch (error) {
-         case GL_INVALID_ENUM:
-            std::cerr << "GL_INVALID_ENUM";
-            break;
-         case GL_INVALID_VALUE:
-            std::cerr << "GL_INVALID_VALUE";
-            break;
-         case GL_INVALID_OPERATION:
-            std::cerr << "GL_INVALID_OPERATION";
-            break;
-         case GL_STACK_OVERFLOW:
-            std::cerr << "GL_STACK_OVERFLOW";
-            break;
-         case GL_STACK_UNDERFLOW:
-            std::cerr << "GL_STACK_UNDERFLOW";
-            break;
-         case GL_OUT_OF_MEMORY:
-            std::cerr << "GL_OUT_OF_MEMORY";
-            break;
-         case GL_TABLE_TOO_LARGE:
-            std::cerr << "GL_TABLE_TOO_LARGE";
-            break;
-         default:
-            std::cerr << error;
-            break;
+      if (call->name == "glBegin") {
+         insideGlBeginEnd = true;
+      }
+      
+      if (call->name == "glEnd") {
+         insideGlBeginEnd = false;
+      }
+
+      if (!insideGlBeginEnd) {
+         GLenum error = glGetError();
+         if (error != GL_NO_ERROR) {
+            std::cerr << "warning: glGetError() = ";
+            switch (error) {
+            case GL_INVALID_ENUM:
+               std::cerr << "GL_INVALID_ENUM";
+               break;
+            case GL_INVALID_VALUE:
+               std::cerr << "GL_INVALID_VALUE";
+               break;
+            case GL_INVALID_OPERATION:
+               std::cerr << "GL_INVALID_OPERATION";
+               break;
+            case GL_STACK_OVERFLOW:
+               std::cerr << "GL_STACK_OVERFLOW";
+               break;
+            case GL_STACK_UNDERFLOW:
+               std::cerr << "GL_STACK_UNDERFLOW";
+               break;
+            case GL_OUT_OF_MEMORY:
+               std::cerr << "GL_OUT_OF_MEMORY";
+               break;
+            case GL_TABLE_TOO_LARGE:
+               std::cerr << "GL_TABLE_TOO_LARGE";
+               break;
+            default:
+               std::cerr << error;
+               break;
+            }
+            std::cerr << "\\n";
          }
-         std::cerr << "\\n";
       }
    }
 
