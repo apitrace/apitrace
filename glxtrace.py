@@ -59,6 +59,7 @@ class GlxTracer(trace.Tracer):
                 ptype = self.function_pointer_type(f)
                 pvalue = self.function_pointer_value(f)
                 print '        if(!strcmp("%s", (const char *)procName)) {' % f.name
+                print '            %s = (%s)%s;' % (pvalue, ptype, instance)
                 print '            %s = (%s)&%s;' % (instance, function.type, f.name);
                 print '        }'
             print '    }'
