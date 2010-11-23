@@ -156,31 +156,31 @@ void EndCall(void) {
    OS::ReleaseMutex();
 }
 
-void BeginArg(const char *type, const char *name) {
+void BeginArg(const char *name) {
    WriteByte(Trace::CALL_ARG);
    WriteString(name);
 }
 
 void EndArg(void) { }
 
-void BeginReturn(const char *type) {
+void BeginReturn(void) {
    WriteByte(Trace::CALL_RET);
 }
 
 void EndReturn(void) { }
 
-void BeginArray(const char *type, size_t length) {
+void BeginArray(size_t length) {
    WriteByte(Trace::TYPE_ARRAY);
    WriteUInt(length);
 }
 
 void EndArray(void) { }
 
-void BeginElement(const char *type) { }
+void BeginElement(void) { }
 
 void EndElement(void) { }
 
-void BeginStruct(const char *type) {
+void BeginStruct(const char *name) {
    WriteByte(Trace::TYPE_STRUCT);
 }
 
@@ -188,13 +188,13 @@ void EndStruct(void) {
    WriteString("");
 }
 
-void BeginMember(const char *type, const char *name) {
+void BeginMember(const char *name) {
    WriteString(name);
 }
 
 void EndMember(void) { }
 
-void BeginBitmask(const char *type) {
+void BeginBitmask(void) {
    WriteByte(Trace::TYPE_BITMASK);
 }
 
@@ -202,7 +202,7 @@ void EndBitmask(void) {
    WriteByte(Trace::TYPE_NULL);
 }
 
-void BeginPointer(const char *type, const void *addr)
+void BeginPointer(const void *addr)
 {
    WriteByte(Trace::TYPE_POINTER);
    WriteUInt((size_t)addr);

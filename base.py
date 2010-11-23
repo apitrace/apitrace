@@ -193,16 +193,16 @@ class Concrete(Type):
         print '    Dump%s(%s);' % (self.id, instance)
     
 
-class Literal(Concrete):
+class Literal(Type):
 
     def __init__(self, expr, format, base=10):
-        Concrete.__init__(self, expr)
+        Type.__init__(self, expr)
         self.format = format
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_literal(self, *args, **kwargs)
 
-    def _dump(self, instance):
+    def dump(self, instance):
         print '    Log::Literal%s(%s);' % (self.format, instance)
 
 
@@ -237,7 +237,7 @@ class Pointer(Type):
 
     def dump(self, instance):
         print '    if(%s) {' % instance
-        print '        Log::BeginPointer("%s", (const void *)%s);' % (self.type, instance)
+        print '        Log::BeginPointer((const void *)%s);' % (instance,)
         self.type.dump("*" + instance)
         print '        Log::EndPointer();'
         print '    }'
@@ -292,7 +292,7 @@ class Bitmask(Concrete):
 
     def _dump(self, instance):
         print '    %s l_Value = %s;' % (self.type, instance)
-        print '    Log::BeginBitmask("%s");' % (self.type,)
+        print '    Log::BeginBitmask();'
         for value in self.values:
             print '    if((l_Value & %s) == %s) {' % (value, value)
             print '        Log::LiteralNamedConstant("%s", %s);' % (value, value)
@@ -319,9 +319,9 @@ class Array(Type):
     def dump(self, instance):
         print '    if(%s) {' % instance
         index = '__i' + self.type.id
-        print '        Log::BeginArray("%s", %s);' % (self.type, self.length)
+        print '        Log::BeginArray(%s);' % (self.length,)
         print '        for (int %s = 0; %s < %s; ++%s) {' % (index, index, self.length, index)
-        print '            Log::BeginElement("%s");' % (self.type,)
+        print '            Log::BeginElement();'
         self.type.dump('(%s)[%s]' % (instance, index))
         print '            Log::EndElement();'
         print '        }'
@@ -362,9 +362,9 @@ class Struct(Concrete):
         return visitor.visit_struct(self, *args, **kwargs)
 
     def _dump(self, instance):
-        print '    Log::BeginStruct("%s");' % (self.name,)
+        print '    Log::BeginStruct("%s");' % self.name
         for type, name in self.members:
-            print '    Log::BeginMember("%s", "%s");' % (type, name)
+            print '    Log::BeginMember("%s");' % (name,)
             type.dump('(%s).%s' % (instance, name))
             print '    Log::EndMember();'
         print '    Log::EndStruct();'
@@ -478,18 +478,18 @@ class Function:
         for arg in self.args:
             if not arg.output:
                 arg.type.unwrap_instance(arg.name)
-                print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                print '    Log::BeginArg("%s");' % (arg.name,)
                 arg.type.dump(arg.name)
                 print '    Log::EndArg();'
         print '    %s%s(%s);' % (result, pvalue, ', '.join([str(arg.name) for arg in self.args]))
         for arg in self.args:
             if arg.output:
-                print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                print '    Log::BeginArg("%s");' % (arg.name,)
                 arg.type.dump(arg.name)
                 print '    Log::EndArg();'
                 arg.type.wrap_instance(arg.name)
         if self.type is not Void:
-            print '    Log::BeginReturn("%s");' % self.type
+            print '    Log::BeginReturn();'
             self.type.dump("result")
             print '    Log::EndReturn();'
             self.type.wrap_instance('result')
@@ -565,20 +565,19 @@ class Interface(Type):
                 print '    %s result;' % method.type
                 result = 'result = '
             print '    Log::BeginCall("%s");' % (self.name + '::' + method.name)
-            print '    Log::BeginArg("%s *", "this");' % self.name
-            print '    Log::BeginPointer("%s", (const void *)m_pInstance);' % self.name
-            print '    Log::EndPointer();'
+            print '    Log::BeginArg("this");'
+            print '    Log::LiteralOpaque((const void *)m_pInstance);'
             print '    Log::EndArg();'
             for arg in method.args:
                 if not arg.output:
                     arg.type.unwrap_instance(arg.name)
-                    print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                    print '    Log::BeginArg("%s");' % (arg.name,)
                     arg.type.dump(arg.name)
                     print '    Log::EndArg();'
             print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
             for arg in method.args:
                 if arg.output:
-                    print '    Log::BeginArg("%s", "%s");' % (arg.type, arg.name)
+                    print '    Log::BeginArg("%s");' % (arg.name,)
                     arg.type.dump(arg.name)
                     print '    Log::EndArg();'
                     arg.type.wrap_instance(arg.name)

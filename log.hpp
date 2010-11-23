@@ -34,28 +34,28 @@ namespace Log {
     void BeginCall(const char *function);
     void EndCall(void);
     
-    void BeginArg(const char *type, const char *name);
+    void BeginArg(const char *name);
     void EndArg(void);
 
-    void BeginReturn(const char *type);
+    void BeginReturn(void);
     void EndReturn(void);
 
-    void BeginArray(const char *type, size_t length);
+    void BeginArray(size_t length);
     void EndArray(void);
 
-    void BeginElement(const char *type);
+    void BeginElement(void);
     void EndElement(void);
 
-    void BeginStruct(const char *type);
+    void BeginStruct(const char *name);
     void EndStruct(void);
 
-    void BeginMember(const char *type, const char *name);
+    void BeginMember(const char *name);
     void EndMember(void);
 
-    void BeginBitmask(const char *type);
+    void BeginBitmask(void);
     void EndBitmask(void);
 
-    void BeginPointer(const char *type, const void *addr);
+    void BeginPointer(const void *addr);
     void EndPointer(void);
 
     void LiteralBool(bool value);
