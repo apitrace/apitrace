@@ -30,6 +30,7 @@
 #include <pthread.h>
 
 #include "os.hpp"
+#include "log.hpp"
 
 namespace OS {
 
@@ -101,3 +102,9 @@ Abort(void)
 
 
 } /* namespace OS */
+
+static void _uninit(void) __attribute__((destructor));
+static void _uninit(void) {
+    Log::Close();
+}
+

@@ -100,28 +100,28 @@ if (WIN32)
 	set (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers)
 
 	# d3d8.dll
-	if (DirectX_D3D8_FOUND)
-		include_directories (${DirectX_D3D8_INCLUDE_DIR})
-		add_custom_command (
-			OUTPUT d3d8.cpp
-			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
-			DEPENDS d3d8.py d3d8types.py d3d8caps.py windows.py base.py
-		)
-		add_library (d3d8 SHARED d3d8.def d3d8.cpp log.cpp os_win32.cpp)
-		set_target_properties (d3d8 PROPERTIES PREFIX "")
-	endif (DirectX_D3D8_FOUND)
+    #if (DirectX_D3D8_FOUND)
+	#	include_directories (${DirectX_D3D8_INCLUDE_DIR})
+	#	add_custom_command (
+	#		OUTPUT d3d8.cpp
+	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
+	#		DEPENDS d3d8.py d3d8types.py d3d8caps.py windows.py base.py
+	#	)
+	#	add_library (d3d8 SHARED d3d8.def d3d8.cpp log.cpp os_win32.cpp)
+	#	set_target_properties (d3d8 PROPERTIES PREFIX "")
+	#endif (DirectX_D3D8_FOUND)
 
 	# d3d9.dll
-	if (DirectX_D3DX9_FOUND)
-		include_directories (${DirectX_D3DX9_INCLUDE_DIR})
-		add_custom_command (
-			OUTPUT d3d9.cpp
-			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
-			DEPENDS d3d9.py d3d9types.py d3d9caps.py d3dshader.py windows.py base.py
-		)
-		add_library (d3d9 SHARED d3d9.def d3d9.cpp log.cpp os_win32.cpp)
-		set_target_properties (d3d9 PROPERTIES PREFIX "")
-	endif (DirectX_D3DX9_FOUND)
+    #if (DirectX_D3DX9_FOUND)
+	#	include_directories (${DirectX_D3DX9_INCLUDE_DIR})
+	#	add_custom_command (
+	#		OUTPUT d3d9.cpp
+	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
+	#		DEPENDS d3d9.py d3d9types.py d3d9caps.py d3dshader.py windows.py base.py
+	#	)
+	#	add_library (d3d9 SHARED d3d9.def d3d9.cpp log.cpp os_win32.cpp)
+	#	set_target_properties (d3d9 PROPERTIES PREFIX "")
+	#endif (DirectX_D3DX9_FOUND)
 
 	# d3d10.dll
 	#if (DirectX_D3D10_FOUND)

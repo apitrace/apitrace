@@ -199,6 +199,7 @@ void EndElement(void) { }
 
 void BeginStruct(const char *name) {
    WriteByte(Trace::TYPE_STRUCT);
+   (void)name;
 }
 
 void EndStruct(void) {
@@ -308,11 +309,6 @@ void LiteralOpaque(const void *addr) {
 void Abort(void) {
     Close();
     OS::Abort();
-}
-
-static void _uninit(void) __attribute__((destructor));
-static void _uninit(void) {
-   Close();
 }
 
 } /* namespace Log */
