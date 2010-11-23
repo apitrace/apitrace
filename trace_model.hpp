@@ -185,7 +185,7 @@ class Blob : public Value
 {
 public:
    Blob(size_t _size) {
-       size = size;
+       size = _size;
        buf = new char[_size];
    }
 
