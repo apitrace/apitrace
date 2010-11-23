@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include "formatter.hpp"
 #include "trace_model.hpp"
 
 
@@ -69,39 +70,63 @@ void Blob::visit(Visitor &visitor) {
 
 class Dumper : public Visitor
 {
-public:
+protected:
    std::ostream &os;
+   Formatter::Formatter *formatter;
+   Formatter::Attribute *normal;
+   Formatter::Attribute *bold;
+   Formatter::Attribute *italic;
+   Formatter::Attribute *red;
+   Formatter::Attribute *pointer;
+   Formatter::Attribute *literal;
 
-   Dumper() : os(std::cout) {}
+public:
+   Dumper(std::ostream &_os) : os(_os) {
+      formatter = Formatter::defaultFormatter();
+      normal = formatter->normal();
+      bold = formatter->bold();
+      italic = formatter->italic();
+      red = formatter->color(Formatter::RED);
+      pointer = formatter->color(Formatter::GREEN);
+      literal = formatter->color(Formatter::BLUE);
+   }
 
-   Dumper(std::ostream &_os) : os(_os) {}
+   ~Dumper() {
+      delete normal;
+      delete bold;
+      delete italic;
+      delete red;
+      delete pointer;
+      delete literal;
+      delete formatter;
+   }
 
    void visit(Null *node) {
       os << "NULL";
    }
 
    void visit(Bool *node) {
-      os << (node->value ? "true" : "false");
+      os << literal << (node->value ? "true" : "false") << normal;
    }
 
    void visit(SInt *node) {
-      os << node->value;
+      os << literal << node->value << normal;
    }
 
    void visit(UInt *node) {
-      os << node->value;
+      os << literal << node->value << normal;
    }
 
    void visit(Float *node) {
-      os << node->value;
+      os << literal << node->value << normal;
    }
 
    void visit(String *node) {
-      os << '"' << node->value << '"';
+      os << literal << '"' << node->value << '"' << normal;
    }
 
    void visit(Const *node) {
-      os << node->name;
+      os << literal << node->name << normal;
    }
 
    void visit(Array *array) {
@@ -122,7 +147,23 @@ public:
    }
    
    void visit(Blob *blob) {
-      os << "... " << blob->size;
+      os << pointer << "blob(" << blob->size << ")" << normal;
+   }
+
+   void visit(Call *call) {
+      const char *sep = "";
+      os << bold << call->name << normal << "(";
+      for (std::list<Arg>::iterator it = call->args.begin(); it != call->args.end(); ++it) {
+         os << sep << italic << it->first << normal << " = ";
+         it->second->visit(*this);
+         sep = ", ";
+      }
+      os << ")";
+      if (call->ret) {
+         os << " = ";
+         call->ret->visit(*this);
+      }
+      os << "\n";
    }
 };
 
@@ -214,17 +255,8 @@ Value & Call::arg(const char *name) {
 }
 
 std::ostream & operator <<(std::ostream &os, Call &call) {
-   const char *sep = "";
-   os << call.name << "(";
-   for (std::list<Arg>::iterator it = call.args.begin(); it != call.args.end(); ++it) {
-      os << sep << it->first << " = " << it->second;
-      sep = ", ";
-   }
-   os << ")";
-   if (call.ret) {
-      os << " = " << call.ret;
-   }
-   os << "\n";
+   Dumper d(os);
+   d.visit(&call);
    return os;
 }
 
