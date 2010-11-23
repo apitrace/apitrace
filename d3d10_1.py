@@ -59,9 +59,9 @@ DXGI_SWAP_CHAIN_DESC = Alias("DXGI_SWAP_CHAIN_DESC", Void)
 
 d3d10_1 = Dll("d3d10")
 d3d10_1.functions += [
-    DllFunction(HRESULT, "D3D10CreateDevice1", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), (OutPointer(Pointer(ID3D10Device1)), "ppDevice")]),
-    DllFunction(HRESULT, "D3D10CreateDeviceAndSwapChain1", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), (OutPointer(Pointer(IDXGISwapChain)), "ppSwapChain"), (OutPointer(Pointer(ID3D10Device1)), "ppDevice")]),
-    DllFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), (OutPointer(LPD3D10BLOB), "ppBuffer")]),
+    StdFunction(HRESULT, "D3D10CreateDevice1", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), (OutPointer(Pointer(ID3D10Device1)), "ppDevice")]),
+    StdFunction(HRESULT, "D3D10CreateDeviceAndSwapChain1", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), (OutPointer(Pointer(IDXGISwapChain)), "ppSwapChain"), (OutPointer(Pointer(ID3D10Device1)), "ppDevice")]),
+    StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), (OutPointer(LPD3D10BLOB), "ppBuffer")]),
 ]
 
 if __name__ == '__main__':

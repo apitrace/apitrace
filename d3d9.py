@@ -392,15 +392,15 @@ IDirect3DSwapChain9Ex.methods += [
 
 d3d9 = Dll("d3d9")
 d3d9.functions += [
-    DllFunction(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
-    DllFunction(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), Out(Pointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),
-    DllFunction(Int, "D3DPERF_BeginEvent", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail='-1'),
-    DllFunction(Int, "D3DPERF_EndEvent", [], fail='-1'),
-    DllFunction(Void, "D3DPERF_SetMarker", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail=''),
-    DllFunction(Void, "D3DPERF_SetRegion", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail=''),
-    DllFunction(BOOL, "D3DPERF_QueryRepeatFrame", [], fail='FALSE'),
-    DllFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], fail=''),
-    DllFunction(DWORD, "D3DPERF_GetStatus", [], fail='0'),
+    StdFunction(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
+    StdFunction(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), Out(Pointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),
+    StdFunction(Int, "D3DPERF_BeginEvent", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail='-1'),
+    StdFunction(Int, "D3DPERF_EndEvent", [], fail='-1'),
+    StdFunction(Void, "D3DPERF_SetMarker", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail=''),
+    StdFunction(Void, "D3DPERF_SetRegion", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail=''),
+    StdFunction(BOOL, "D3DPERF_QueryRepeatFrame", [], fail='FALSE'),
+    StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], fail=''),
+    StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0'),
 ]
 
 if __name__ == '__main__':

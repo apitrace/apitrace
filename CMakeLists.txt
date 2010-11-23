@@ -21,26 +21,8 @@ find_path (GLEW_INCLUDE_DIR GL/glew.h
 )
 
 if (WIN32)
-	# Nobody likes to include windows.h:
-	# - Microsoft's GL/gl.h header depends on windows.h but doesn't include it;
-	# - GLEW temporarily defines the necessary defines but undefines them later
-	# - certain GLUT distributions don't include it;
-	# - most of our programs are meant to be portable so don't include it.
-	#
-	# We could try to replicate the windows.h definitions required by
-	# GL/gl.h, but the build time savings don't compensate the constant
-	# headaches that brings, so instead we force windows.h to be included
-	# on every file.
-	if (MSVC)
-		add_definitions (-FIwindows.h)
-	else (MSVC)
-		add_definitions (--include windows.h)
-	endif (MSVC)
-
 	# MSVC & MinGW only define & use APIENTRY
 	add_definitions (-DGLAPIENTRY=__stdcall)
-
-	link_libraries (winmm)
 endif (WIN32)
 
 if (MSVC)
@@ -155,7 +137,7 @@ else ()
 	add_custom_command (
 		OUTPUT glxtrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-		DEPENDS glxtrace.py trace.py glapi.py dl.py base.py
+		DEPENDS glxtrace.py trace.py glapi.py base.py
 	)
 
 	add_library (glxtrace SHARED glxtrace.cpp log.cpp os_posix.cpp)
@@ -170,7 +152,7 @@ if (GLEW_INCLUDE_DIR)
 	add_custom_command (
 		OUTPUT glretrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
-		DEPENDS glretrace.py glapi.py dl.py base.py
+		DEPENDS glretrace.py glapi.py base.py
 	)
 
 	include_directories (

@@ -1605,13 +1605,13 @@ DDCREATE = Flags(DWORD, [
 
 ddraw = Dll("ddraw")
 ddraw.functions += [
-    DllFunction(HRESULT, "DirectDrawEnumerateW", [(LPDDENUMCALLBACKW, "lpCallback"), (LPVOID, "lpContext")]),
-    DllFunction(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")]),
-    DllFunction(HRESULT, "DirectDrawEnumerateExW", [(LPDDENUMCALLBACKEXW, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
-    DllFunction(HRESULT, "DirectDrawEnumerateExA", [(LPDDENUMCALLBACKEXA, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
-    DllFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (Pointer(IUnknown), "pUnkOuter")]),
-    DllFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(LPVOID), "lplpDD"), (REFIID, "iid"), (Pointer(IUnknown), "pUnkOuter")]),
-    DllFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawEnumerateW", [(LPDDENUMCALLBACKW, "lpCallback"), (LPVOID, "lpContext")]),
+    StdFunction(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")]),
+    StdFunction(HRESULT, "DirectDrawEnumerateExW", [(LPDDENUMCALLBACKEXW, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
+    StdFunction(HRESULT, "DirectDrawEnumerateExA", [(LPDDENUMCALLBACKEXA, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
+    StdFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (Pointer(IUnknown), "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(LPVOID), "lplpDD"), (REFIID, "iid"), (Pointer(IUnknown), "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
 ]
 
 if __name__ == '__main__':
