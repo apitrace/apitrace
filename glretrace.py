@@ -189,6 +189,9 @@ static void display(void) {
             case GL_OUT_OF_MEMORY:
                std::cerr << "GL_OUT_OF_MEMORY";
                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+               std::cerr << "GL_INVALID_FRAMEBUFFER_OPERATION";
+               break;
             case GL_TABLE_TOO_LARGE:
                std::cerr << "GL_TABLE_TOO_LARGE";
                break;
