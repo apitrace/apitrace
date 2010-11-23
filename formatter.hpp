@@ -40,7 +40,7 @@ class Attribute {
 public:
    virtual ~Attribute() {}
 
-   virtual std::ostream& apply(std::ostream& os) const { return os; }
+   virtual void apply(std::ostream& os) const {}
 };
 
 
@@ -67,8 +67,8 @@ protected:
    const char *escape;
 public:
    AnsiAttribute(const char *_escape) : escape(_escape) {}
-   std::ostream & apply(std::ostream& os) const {
-      return os << "\33[" << escape;
+   void apply(std::ostream& os) const {
+      os << "\33[" << escape;
    }
 };
 
@@ -96,7 +96,8 @@ public:
 
 
 inline std::ostream& operator<<(std::ostream& os, const Attribute *attr) {
-   return attr->apply(os);
+   attr->apply(os);
+   return os;
 }
 
 
@@ -109,17 +110,20 @@ protected:
    WORD wAttributes;
 public:
    WindowsAttribute(WORD _wAttributes) : wAttributes(_wAttributes) {}
-   std::ostream & apply(std::ostream& os) const {
+   void apply(std::ostream& os) const {
       DWORD nStdHandleOutput;
       if (os == std::cout) {
          nStdHandleOutput = STD_OUTPUT_HANDLE;
       } else if (os == std::cerr) {
          nStdHandleOutput = STD_ERROR_HANDLE;
       } else {
-         return os;
+         return;
+      }
+      HANDLE hConsoleOutput = GetStdHandle(nStdHandleOutput);
+      if (hConsoleOutput == INVALID_HANDLE_VALUE) {
+         return;
       }
 
-      HANDLE hConsoleOutput = GetStdHandle(nStdHandleOutput);
       SetConsoleTextAttribute(hConsoleOutput, wAttributes);
    }
 };
