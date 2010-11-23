@@ -2518,6 +2518,8 @@ GLbitfield_client_attrib = Flags(GLbitfield, [
     "GL_CLIENT_VERTEX_ARRAY_BIT", # 0x00000002
 ])
 
+texture = Handle("texture", GLuint)
+
 
 def GlFunction(*args, **kwargs):
     kwargs.setdefault('call', 'GLAPIENTRY')
@@ -2835,7 +2837,7 @@ def basic_functions(Function):
         F(Void, "glTranslatef", [(GLfloat, "x"), (GLfloat, "y"), (GLfloat, "z")]),
         F(Void, "glViewport", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
         F(Void, "glArrayElement", [(GLint, "i")]),
-        F(Void, "glBindTexture", [(GLenum, "target"), (GLuint, "texture")]),
+        F(Void, "glBindTexture", [(GLenum, "target"), (texture, "texture")]),
         F(Void, "glColorPointer", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
         F(Void, "glDisableClientState", [(GLenum, "array")]),
         F(Void, "glDrawArrays", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count")]),
@@ -2850,16 +2852,16 @@ def basic_functions(Function):
         F(Void, "glPolygonOffset", [(GLfloat, "factor"), (GLfloat, "units")]),
         F(Void, "glTexCoordPointer", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
         F(Void, "glVertexPointer", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (OpaquePointer(Const(GLvoid)), "pointer")]),
-        F(GLboolean, "glAreTexturesResident", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "textures"), Out(Array(GLboolean, "n"), "residences")]),
+        F(GLboolean, "glAreTexturesResident", [(GLsizei, "n"), (Array(Const(texture), "n"), "textures"), Out(Array(GLboolean, "n"), "residences")]),
         F(Void, "glCopyTexImage1D", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLint, "border")]),
         F(Void, "glCopyTexImage2D", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border")]),
         F(Void, "glCopyTexSubImage1D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width")]),
         F(Void, "glCopyTexSubImage2D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
-        F(Void, "glDeleteTextures", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "textures")]),
-        F(Void, "glGenTextures", [(GLsizei, "n"), Out(Array(GLuint, "n"), "textures")]),
+        F(Void, "glDeleteTextures", [(GLsizei, "n"), (Array(Const(texture), "n"), "textures")]),
+        F(Void, "glGenTextures", [(GLsizei, "n"), Out(Array(texture, "n"), "textures")]),
         F(Void, "glGetPointerv", [(GLenum, "pname"), Out(Pointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
-        F(GLboolean, "glIsTexture", [(GLuint, "texture")]),
-        F(Void, "glPrioritizeTextures", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "textures"), (Array(Const(GLclampf), "n"), "priorities")]),
+        F(GLboolean, "glIsTexture", [(texture, "texture")]),
+        F(Void, "glPrioritizeTextures", [(GLsizei, "n"), (Array(Const(texture), "n"), "textures"), (Array(Const(GLclampf), "n"), "priorities")]),
         F(Void, "glTexSubImage1D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, 1, 1, 0)"), "pixels")]),
         F(Void, "glTexSubImage2D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__gl_image_size(format, type, width, height, 1, 0)"), "pixels")]),
         F(Void, "glPopClientAttrib", []),
@@ -3296,9 +3298,9 @@ def extended_functions(Function):
         F(Void, "glDeleteFramebuffersEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "framebuffers")]),
         F(Void, "glDeleteRenderbuffersEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "renderbuffers")]),
         F(Void, "glFramebufferRenderbufferEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLuint, "renderbuffer")]),
-        F(Void, "glFramebufferTexture1DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLuint, "texture"), (GLint, "level")]),
-        F(Void, "glFramebufferTexture2DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLuint, "texture"), (GLint, "level")]),
-        F(Void, "glFramebufferTexture3DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLuint, "texture"), (GLint, "level"), (GLint, "zoffset")]),
+        F(Void, "glFramebufferTexture1DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (texture, "texture"), (GLint, "level")]),
+        F(Void, "glFramebufferTexture2DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (texture, "texture"), (GLint, "level")]),
+        F(Void, "glFramebufferTexture3DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (texture, "texture"), (GLint, "level"), (GLint, "zoffset")]),
         F(Void, "glGenFramebuffersEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "framebuffers")]),
         F(Void, "glGenRenderbuffersEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "renderbuffers")]),
         F(Void, "glGenerateMipmapEXT", [(GLenum, "target")]),
@@ -3308,7 +3310,7 @@ def extended_functions(Function):
         F(GLboolean, "glIsRenderbufferEXT", [(GLuint, "renderbuffer")]),
         F(Void, "glRenderbufferStorageEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
         F(Void, "glBlitFramebufferEXT", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
-        F(Void, "glFramebufferTextureLayerEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLuint, "texture"), (GLint, "level"), (GLint, "layer")]),
+        F(Void, "glFramebufferTextureLayerEXT", [(GLenum, "target"), (GLenum, "attachment"), (texture, "texture"), (GLint, "level"), (GLint, "layer")]),
         F(Void, "glStencilFuncSeparateATI", [(GLenum, "frontfunc"), (GLenum, "backfunc"), (GLint, "ref"), (GLuint, "mask")]),
         F(Void, "glProgramEnvParameters4fvEXT", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (OpaquePointer(Const(GLfloat)), "params")]),
         F(Void, "glProgramLocalParameters4fvEXT", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (OpaquePointer(Const(GLfloat)), "params")]),

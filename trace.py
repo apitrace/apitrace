@@ -98,6 +98,9 @@ class DumpDeclarator(base.OnceVisitor):
     def visit_pointer(self, pointer):
         self.visit(pointer.type)
 
+    def visit_handle(self, handle):
+        self.visit(handle.type)
+
     def visit_alias(self, alias):
         self.visit(alias.type)
 
@@ -155,6 +158,9 @@ class DumpImplementer(base.Visitor):
         print '    else'
         print '        Log::LiteralNull();'
 
+    def visit_handle(self, handle, instance):
+        self.visit(handle.type, instance)
+
     def visit_alias(self, alias, instance):
         self.visit(alias.type, instance)
 
@@ -203,6 +209,9 @@ class Wrapper(base.Visitor):
 
     def visit_pointer(self, pointer, instance):
         self.visit(pointer.type, "*" + instance)
+
+    def visit_handle(self, handle, instance):
+        self.visit(handle.type, instance)
 
     def visit_alias(self, alias, instance):
         self.visit(alias.type, instance)

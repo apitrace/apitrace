@@ -67,6 +67,9 @@ class Visitor:
     def visit_pointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
+    def visit_handle(self, handle, *args, **kwargs):
+        raise NotImplementedError
+
     def visit_alias(self, alias, *args, **kwargs):
         raise NotImplementedError
 
@@ -125,6 +128,10 @@ class Rebuilder(Visitor):
     def visit_pointer(self, pointer):
         type = self.visit(pointer.type)
         return Pointer(type)
+
+    def visit_handle(self, handle):
+        type = self.visit(handle.type)
+        return Handle(handle.name, type)
 
     def visit_alias(self, alias):
         type = self.visit(alias.type)
@@ -227,6 +234,17 @@ class Pointer(Type):
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_pointer(self, *args, **kwargs)
+
+
+class Handle(Type):
+
+    def __init__(self, name, type):
+        Type.__init__(self, type.expr, 'P' + type.id)
+        self.name = name
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_handle(self, *args, **kwargs)
 
 
 def ConstPointer(type):

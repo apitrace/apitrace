@@ -69,12 +69,62 @@ class ValueExtractor(base.Visitor):
             print '    } else {'
             print '        %s = NULL;' % lvalue
             print '    }'
+    
+    def visit_pointer(self, pointer, lvalue, rvalue):
+        # FIXME
+        raise NotImplementedError
 
+    def visit_handle(self, handle, lvalue, rvalue):
+        self.visit(handle.type, lvalue, "__%s_map[%s]" %(handle.name, rvalue));
+        print '    std::cout << "%s " << static_cast<%s>(%s) << " <- " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
+    
     def visit_blob(self, blob, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).blob());' % (lvalue, blob, rvalue)
     
     def visit_string(self, string, lvalue, rvalue):
         print '    %s = (%s).string();' % (lvalue, rvalue)
+
+
+
+class ValueWrapper(base.Visitor):
+
+    def visit_literal(self, literal, lvalue, rvalue):
+        pass
+
+    def visit_alias(self, alias, lvalue, rvalue):
+        self.visit(alias.type, lvalue, rvalue)
+    
+    def visit_enum(self, enum, lvalue, rvalue):
+        pass
+
+    def visit_bitmask(self, bitmask, lvalue, rvalue):
+        pass
+
+    def visit_array(self, array, lvalue, rvalue):
+        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.id, rvalue)
+        print '    if (__a%s) {' % (array.id)
+        length = '__a%s->values.size()' % array.id
+        index = '__i' + array.id
+        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
+        try:
+            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
+        finally:
+            print '        }'
+            print '    }'
+    
+    def visit_pointer(self, pointer, lvalue, rvalue):
+        # FIXME
+        raise NotImplementedError
+
+    def visit_handle(self, handle, lvalue, rvalue):
+        print "    __%s_map[static_cast<%s>(%s)] = %s;" % (handle.name, handle.type, rvalue, lvalue)
+        print '    std::cout << "%s " << static_cast<%s>(%s) << " -> " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
+    
+    def visit_blob(self, blob, lvalue, rvalue):
+        pass
+    
+    def visit_string(self, string, lvalue, rvalue):
+        pass
 
 
 
@@ -96,6 +146,15 @@ def retrace_function(function):
         print '    return;'
     arg_names = ", ".join([arg.name for arg in function.args])
     print '    %s(%s);' % (function.name, arg_names)
+    for arg in function.args:
+        if arg.output:
+            arg.type = ConstRemover().visit(arg.type)
+            rvalue = 'call.arg("%s")' % (arg.name,)
+            lvalue = arg.name
+            try:
+                ValueWrapper().visit(arg.type, lvalue, rvalue)
+            except NotImplementedError:
+                print '   // FIXME: %s' % arg.name
     print '}'
     print
 
@@ -135,6 +194,8 @@ if __name__ == '__main__':
     print '#include <GL/glut.h>'
     print
     print '#include "trace_parser.hpp"'
+    print
+    print 'static std::map<GLuint, GLuint> __texture_map;'
     print
 
     retrace_functions(glapi.glapi.functions)
