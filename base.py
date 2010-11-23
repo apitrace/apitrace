@@ -37,43 +37,56 @@ class Visitor:
     def visit(self, type, *args, **kwargs):
         return type.visit(self, *args, **kwargs)
 
-    __call__ = visit
-
-    def visit_void(self, type, *args, **kwargs):
+    def visit_void(self, void, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_literal(self, type, *args, **kwargs):
+    def visit_literal(self, literal, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_string(self, type, *args, **kwargs):
+    def visit_string(self, string, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_const(self, type, *args, **kwargs):
+    def visit_const(self, const, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_struct(self, type, *args, **kwargs):
+    def visit_struct(self, struct, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_array(self, type, *args, **kwargs):
+    def visit_array(self, array, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_blob(self, type, *args, **kwargs):
+    def visit_blob(self, blob, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_enum(self, type, *args, **kwargs):
+    def visit_enum(self, enum, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_bitmask(self, type, *args, **kwargs):
+    def visit_bitmask(self, bitmask, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_pointer(self, type, *args, **kwargs):
+    def visit_pointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_alias(self, type, *args, **kwargs):
+    def visit_alias(self, alias, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_opaque(self, type, *args, **kwargs):
+    def visit_opaque(self, opaque, *args, **kwargs):
         raise NotImplementedError
+
+    def visit_interface(self, interface, *args, **kwargs):
+        raise NotImplementedError
+
+
+class OnceVisitor(Visitor):
+
+    def __init__(self):
+        self.__visited = set()
+
+    def visit(self, type, *args, **kwargs):
+        if type not in self.__visited:
+            self.__visited.add(type)
+            return type.visit(self, *args, **kwargs)
+        return None
 
 
 class Rebuilder(Visitor):
