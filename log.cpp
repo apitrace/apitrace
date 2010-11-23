@@ -50,39 +50,53 @@ static void _Close(void) {
 
 static int reentrancy = 0;
 
-static void _Open(const char *szName, const char *szExtension) {
+static void _Open(const char *szExtension) {
    _Close();
    
    static unsigned dwCounter = 0;
 
-   char szProcessName[PATH_MAX];
    char szFileName[PATH_MAX];
+   const char *lpFileName;
 
-   OS::GetProcessName(szProcessName, PATH_MAX);
+   lpFileName = getenv("TRACE_PATH");
+   if (lpFileName) {
+       strncpy(szFileName, lpFileName, PATH_MAX);
+   }
+   else {
+       char szProcessName[PATH_MAX];
+       char szCurrentDir[PATH_MAX];
+       OS::GetProcessName(szProcessName, PATH_MAX);
+       OS::GetCurrentDir(szCurrentDir, PATH_MAX);
 
-   for(;;) {
-      FILE *file;
-      
-      if(dwCounter)
-         snprintf(szFileName, PATH_MAX, "%s.%s.%u.%s", szProcessName, szName, dwCounter, szExtension);
-      else
-         snprintf(szFileName, PATH_MAX, "%s.%s.%s", szProcessName, szName, szExtension);
-      
-      file = fopen(szFileName, "rb");
-      if(file == NULL)
-         break;
-      
-      fclose(file);
-      
-      ++dwCounter;
+       for(;;) {
+          FILE *file;
+          
+          if (dwCounter)
+             snprintf(szFileName, PATH_MAX, "%s%c%s.%u.%s", szCurrentDir, PATH_SEP, szProcessName, dwCounter, szExtension);
+          else
+             snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir, PATH_SEP, szProcessName, szExtension);
+          
+          file = fopen(szFileName, "rb");
+          if(file == NULL)
+             break;
+          
+          fclose(file);
+          
+          ++dwCounter;
+       }
    }
 
-   fprintf(stderr, "Logging to %s\n", szFileName);
+   {
+       char szMessage[PATH_MAX];
+       snprintf(szMessage, PATH_MAX, "Tracing to %s\n", szFileName);
+       OS::DebugMessage(szMessage);
+   }
+
    g_gzFile = gzopen(szFileName, "wb");
 }
 
 static inline void Write(const void *sBuffer, size_t dwBytesToWrite) {
-   if(g_gzFile == NULL)
+   if (g_gzFile == NULL)
       return;
    
    if (reentrancy > 1)
@@ -134,9 +148,11 @@ WriteString(const char *str) {
    Write(str, len);
 }
 
-void Open(const char *name) {
-   _Open(name, "trace");
-   WriteUInt(TRACE_VERSION);
+void Open(void) {
+    if (!g_gzFile) {
+        _Open("trace");
+        WriteUInt(TRACE_VERSION);
+    }
 }
 
 void Close(void) {
@@ -145,6 +161,7 @@ void Close(void) {
 
 void BeginCall(const char *function) {
    OS::AcquireMutex();
+   Open();
    ++reentrancy;
    WriteString(function);
 }
@@ -291,6 +308,11 @@ void LiteralOpaque(const void *addr) {
 void Abort(void) {
     Close();
     OS::Abort();
+}
+
+static void _uninit(void) __attribute__((destructor));
+static void _uninit(void) {
+   Close();
 }
 
 } /* namespace Log */

@@ -33,7 +33,10 @@
 #ifndef vsnprintf
 #define vsnprintf _vsnprintf
 #endif
-#endif /* WIN32 */
+#define PATH_SEP '\\'
+#else /* !WIN32 */
+#define PATH_SEP '/'
+#endif /* !WIN32 */
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -46,6 +49,9 @@ void AcquireMutex(void);
 void ReleaseMutex(void);
 
 bool GetProcessName(char *str, size_t size);
+bool GetCurrentDir(char *str, size_t size);
+
+void DebugMessage(const char *str);
 
 void Abort(void);
 

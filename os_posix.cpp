@@ -24,6 +24,7 @@
  **************************************************************************/
 
 #include <string.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -76,6 +77,21 @@ GetProcessName(char *str, size_t size)
     return true;
 }
 
+bool
+GetCurrentDir(char *str, size_t size)
+{
+    char *ret;
+    ret = getcwd(str, size);
+    str[size - 1] = 0;
+    return ret ? true : false;
+}
+
+void
+DebugMessage(const char *message)
+{
+   fflush(stdout);
+   fputs(message, stderr);
+}
 
 void
 Abort(void)

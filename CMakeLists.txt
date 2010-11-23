@@ -139,7 +139,7 @@ if (WIN32)
 	add_custom_command (
 		OUTPUT opengl32.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.py > ${CMAKE_CURRENT_BINARY_DIR}/opengl32.cpp
-		DEPENDS opengl32.py gl.py windows.py base.py
+		DEPENDS opengl32.py trace.py wglapi.py glapi.py windows.py base.py
 	)
 	add_library (opengl SHARED opengl32.def opengl32.cpp log.cpp os_win32.cpp)
 	set_target_properties (opengl PROPERTIES
@@ -153,11 +153,12 @@ else ()
 
 	# libGL.so
 	add_custom_command (
-		OUTPUT glx.cpp
-		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glx.py > ${CMAKE_CURRENT_BINARY_DIR}/glx.cpp
-		DEPENDS glx.py gl.py dl.py base.py
+		OUTPUT glxtrace.cpp
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
+		DEPENDS glxtrace.py trace.py glapi.py dl.py base.py
 	)
-	add_library (glxtrace SHARED glx.cpp log.cpp os_posix.cpp)
+
+	add_library (glxtrace SHARED glxtrace.cpp log.cpp os_posix.cpp)
 	set_target_properties (glxtrace PROPERTIES PREFIX "")
 	target_link_libraries (glxtrace dl)
 endif ()
@@ -169,7 +170,7 @@ if (GLEW_INCLUDE_DIR)
 	add_custom_command (
 		OUTPUT glretrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
-		DEPENDS glretrace.py glx.py gl.py dl.py base.py
+		DEPENDS glretrace.py glapi.py dl.py base.py
 	)
 
 	include_directories (

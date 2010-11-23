@@ -23,7 +23,9 @@
 #
 ##########################################################################/
 
+
 from base import *
+
 
 GLboolean = Alias("GLboolean", Bool)
 GLvoid = Alias("GLvoid", Void)
@@ -2517,6 +2519,10 @@ GLbitfield_client_attrib = Flags(GLbitfield, [
 ])
 
 
+def GlFunction(*args, **kwargs):
+    kwargs.setdefault('call', 'GLAPIENTRY')
+    return Function(*args, **kwargs)
+
 def basic_functions(Function):
     def F(*args, **kwargs):
         kwargs.setdefault('call', 'GLAPIENTRY')
@@ -2933,6 +2939,9 @@ def basic_functions(Function):
     ]
 
 
+glapi = API('GL')
+
+
 def extended_functions(Function):
     def F(*args, **kwargs):
         kwargs.setdefault('call', 'GLAPIENTRY')
@@ -3306,3 +3315,7 @@ def extended_functions(Function):
         F(Void, "glGetQueryObjecti64vEXT", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLint64EXT), "params")], sideeffects=False),
         F(Void, "glGetQueryObjectui64vEXT", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLuint64EXT), "params")], sideeffects=False),
     ]
+
+glapi.add_functions(basic_functions(Function))
+glapi.add_functions(extended_functions(Function))
+

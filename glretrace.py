@@ -25,7 +25,7 @@
 
 
 import base
-import gl
+import glapi
 
 
 
@@ -137,8 +137,7 @@ if __name__ == '__main__':
     print '#include "trace_parser.hpp"'
     print
 
-    functions = gl.basic_functions(base.Function) + gl.extended_functions(base.Function)
-    retrace_functions(functions)
+    retrace_functions(glapi.glapi.functions)
 
     print '''
 

@@ -23,58 +23,45 @@
 #
 ##########################################################################/
 
-from gl import *
-from dl import *
 
-libgl = Dll("GL")
-libgl.functions = basic_functions(DllFunction)
+from base import *
+from glapi import glapi
+import trace
 
 
-class GlxGetProcAddressFunction(DllFunction):
-
-    def __init__(self, type, name, args):
-        DllFunction.__init__(self, type, name, args)
-        self.functions = []
-
-    def wrap_decl(self):
-        for function in self.functions:
-            function.wrap_decl()
-        DllFunction.wrap_decl(self)
-
-    def wrap_impl(self):
-        for function in self.functions:
-            function.wrap_impl()
-        DllFunction.wrap_impl(self)
-
-    def post_call_impl(self):
-        print '    if(result) {'
-        for function in self.functions:
-            ptype = function.pointer_type()
-            pvalue = function.pointer_value()
-            print '        if(!strcmp("%s", (const char *)procName)) {' % function.name
-            print '            %s = (%s)result;' % (pvalue, ptype)
-            print '            result = (void(*)())&%s;' % function.name;
-            print '        }'
-        print '    }'
-
+glxapi = API("GLX")
 
 PROC = Opaque("__GLXextFuncPtr")
 
-glXgetprocaddress = GlxGetProcAddressFunction(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", String), "procName")])
-libgl.functions.append(glXgetprocaddress)
+glxapi.add_functions(glapi.functions)
+glxapi.add_functions([
+    Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", String), "procName")])
+])
 
-class GlxFunction(Function):
 
-    def __init__(self, type, name, args, call = '', **kwargs):
-        Function.__init__(self, type, name, args, call=call, **kwargs)
-        
-    def get_true_pointer(self):
-        ptype = self.pointer_type()
-        pvalue = self.pointer_value()
-        print '    if(!%s)' % (pvalue,)
-        self.fail_impl()
+class GlxTracer(trace.Tracer):
 
-glXgetprocaddress.functions += extended_functions(GlxFunction)
+    def get_function_address(self, function):
+        if function.name == "glXGetProcAddress":
+            return 'dlsym(RTLD_NEXT, "%s")' % (function.name,)
+        else:
+            print '    if (!pglXGetProcAddress) {'
+            print '        pglXGetProcAddress = (PglXGetProcAddress)dlsym(RTLD_NEXT, "glXGetProcAddress");'
+            print '        if (!pglXGetProcAddress)'
+            print '            Log::Abort();'
+            print '    }'
+            return 'pglXGetProcAddress((const GLubyte *)"%s")' % (function.name,)
+
+    def wrap_ret(self, function, instance):
+        if function.name == "glXGetProcAddress":
+            print '    if (%s) {' % instance
+            for f in glxapi.functions:
+                ptype = self.function_pointer_type(f)
+                pvalue = self.function_pointer_value(f)
+                print '        if(!strcmp("%s", (const char *)procName)) {' % f.name
+                print '            %s = (%s)&%s;' % (instance, function.type, f.name);
+                print '        }'
+            print '    }'
 
 
 if __name__ == '__main__':
@@ -93,6 +80,7 @@ if __name__ == '__main__':
     print
     print 'extern "C" {'
     print
-    wrap()
+    tracer = GlxTracer()
+    tracer.trace_api(glxapi)
     print
-    print '}'
+    print '} /* extern "C" */'

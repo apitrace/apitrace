@@ -23,253 +23,401 @@
 #
 ##########################################################################/
 
-from gl import *
-from windows import *
 
-opengl32 = Dll("opengl32")
-opengl32.functions += basic_functions(DllFunction)
+from wglapi import wglapi
+from trace import Tracer
 
-HGLRC = Alias("HGLRC", HANDLE)
-PROC = Opaque("PROC")
 
-PFD = Flags(DWORD, [
-    "PFD_DOUBLEBUFFER",
-    "PFD_STEREO",
-    "PFD_DRAW_TO_WINDOW",
-    "PFD_DRAW_TO_BITMAP",
-    "PFD_SUPPORT_GDI",
-    "PFD_SUPPORT_OPENGL",
-    "PFD_GENERIC_FORMAT",
-    "PFD_NEED_PALETTE",
-    "PFD_NEED_SYSTEM_PALETTE",
-    "PFD_SWAP_EXCHANGE",
-    "PFD_SWAP_COPY",
-    "PFD_SWAP_LAYER_BUFFERS",
-    "PFD_GENERIC_ACCELERATED",
-    "PFD_SUPPORT_DIRECTDRAW",
-    "PFD_DEPTH_DONTCARE",
-    "PFD_DOUBLEBUFFER_DONTCARE",
-    "PFD_STEREO_DONTCARE",
+public_symbols = set([
+	"glAccum",
+	"glAlphaFunc",
+	"glAreTexturesResident",
+	"glArrayElement",
+	"glBegin",
+	"glBindTexture",
+	"glBitmap",
+	"glBlendFunc",
+	"glCallList",
+	"glCallLists",
+	"glClear",
+	"glClearAccum",
+	"glClearColor",
+	"glClearDepth",
+	"glClearIndex",
+	"glClearStencil",
+	"glClipPlane",
+	"glColor3b",
+	"glColor3bv",
+	"glColor3d",
+	"glColor3dv",
+	"glColor3f",
+	"glColor3fv",
+	"glColor3i",
+	"glColor3iv",
+	"glColor3s",
+	"glColor3sv",
+	"glColor3ub",
+	"glColor3ubv",
+	"glColor3ui",
+	"glColor3uiv",
+	"glColor3us",
+	"glColor3usv",
+	"glColor4b",
+	"glColor4bv",
+	"glColor4d",
+	"glColor4dv",
+	"glColor4f",
+	"glColor4fv",
+	"glColor4i",
+	"glColor4iv",
+	"glColor4s",
+	"glColor4sv",
+	"glColor4ub",
+	"glColor4ubv",
+	"glColor4ui",
+	"glColor4uiv",
+	"glColor4us",
+	"glColor4usv",
+	"glColorMask",
+	"glColorMaterial",
+	"glColorPointer",
+	"glCopyPixels",
+	"glCopyTexImage1D",
+	"glCopyTexImage2D",
+	"glCopyTexSubImage1D",
+	"glCopyTexSubImage2D",
+	"glCullFace",
+#	"glDebugEntry",
+	"glDeleteLists",
+	"glDeleteTextures",
+	"glDepthFunc",
+	"glDepthMask",
+	"glDepthRange",
+	"glDisable",
+	"glDisableClientState",
+	"glDrawArrays",
+	"glDrawBuffer",
+	"glDrawElements",
+	"glDrawPixels",
+	"glEdgeFlag",
+	"glEdgeFlagPointer",
+	"glEdgeFlagv",
+	"glEnable",
+	"glEnableClientState",
+	"glEnd",
+	"glEndList",
+	"glEvalCoord1d",
+	"glEvalCoord1dv",
+	"glEvalCoord1f",
+	"glEvalCoord1fv",
+	"glEvalCoord2d",
+	"glEvalCoord2dv",
+	"glEvalCoord2f",
+	"glEvalCoord2fv",
+	"glEvalMesh1",
+	"glEvalMesh2",
+	"glEvalPoint1",
+	"glEvalPoint2",
+	"glFeedbackBuffer",
+	"glFinish",
+	"glFlush",
+	"glFogf",
+	"glFogfv",
+	"glFogi",
+	"glFogiv",
+	"glFrontFace",
+	"glFrustum",
+	"glGenLists",
+	"glGenTextures",
+	"glGetBooleanv",
+	"glGetClipPlane",
+	"glGetDoublev",
+	"glGetError",
+	"glGetFloatv",
+	"glGetIntegerv",
+	"glGetLightfv",
+	"glGetLightiv",
+	"glGetMapdv",
+	"glGetMapfv",
+	"glGetMapiv",
+	"glGetMaterialfv",
+	"glGetMaterialiv",
+	"glGetPixelMapfv",
+	"glGetPixelMapuiv",
+	"glGetPixelMapusv",
+	"glGetPointerv",
+	"glGetPolygonStipple",
+	"glGetString",
+	"glGetTexEnvfv",
+	"glGetTexEnviv",
+	"glGetTexGendv",
+	"glGetTexGenfv",
+	"glGetTexGeniv",
+	"glGetTexImage",
+	"glGetTexLevelParameterfv",
+	"glGetTexLevelParameteriv",
+	"glGetTexParameterfv",
+	"glGetTexParameteriv",
+	"glHint",
+	"glIndexMask",
+	"glIndexPointer",
+	"glIndexd",
+	"glIndexdv",
+	"glIndexf",
+	"glIndexfv",
+	"glIndexi",
+	"glIndexiv",
+	"glIndexs",
+	"glIndexsv",
+	"glIndexub",
+	"glIndexubv",
+	"glInitNames",
+	"glInterleavedArrays",
+	"glIsEnabled",
+	"glIsList",
+	"glIsTexture",
+	"glLightModelf",
+	"glLightModelfv",
+	"glLightModeli",
+	"glLightModeliv",
+	"glLightf",
+	"glLightfv",
+	"glLighti",
+	"glLightiv",
+	"glLineStipple",
+	"glLineWidth",
+	"glListBase",
+	"glLoadIdentity",
+	"glLoadMatrixd",
+	"glLoadMatrixf",
+	"glLoadName",
+	"glLogicOp",
+	"glMap1d",
+	"glMap1f",
+	"glMap2d",
+	"glMap2f",
+	"glMapGrid1d",
+	"glMapGrid1f",
+	"glMapGrid2d",
+	"glMapGrid2f",
+	"glMaterialf",
+	"glMaterialfv",
+	"glMateriali",
+	"glMaterialiv",
+	"glMatrixMode",
+	"glMultMatrixd",
+	"glMultMatrixf",
+	"glNewList",
+	"glNormal3b",
+	"glNormal3bv",
+	"glNormal3d",
+	"glNormal3dv",
+	"glNormal3f",
+	"glNormal3fv",
+	"glNormal3i",
+	"glNormal3iv",
+	"glNormal3s",
+	"glNormal3sv",
+	"glNormalPointer",
+	"glOrtho",
+	"glPassThrough",
+	"glPixelMapfv",
+	"glPixelMapuiv",
+	"glPixelMapusv",
+	"glPixelStoref",
+	"glPixelStorei",
+	"glPixelTransferf",
+	"glPixelTransferi",
+	"glPixelZoom",
+	"glPointSize",
+	"glPolygonMode",
+	"glPolygonOffset",
+	"glPolygonStipple",
+	"glPopAttrib",
+	"glPopClientAttrib",
+	"glPopMatrix",
+	"glPopName",
+	"glPrioritizeTextures",
+	"glPushAttrib",
+	"glPushClientAttrib",
+	"glPushMatrix",
+	"glPushName",
+	"glRasterPos2d",
+	"glRasterPos2dv",
+	"glRasterPos2f",
+	"glRasterPos2fv",
+	"glRasterPos2i",
+	"glRasterPos2iv",
+	"glRasterPos2s",
+	"glRasterPos2sv",
+	"glRasterPos3d",
+	"glRasterPos3dv",
+	"glRasterPos3f",
+	"glRasterPos3fv",
+	"glRasterPos3i",
+	"glRasterPos3iv",
+	"glRasterPos3s",
+	"glRasterPos3sv",
+	"glRasterPos4d",
+	"glRasterPos4dv",
+	"glRasterPos4f",
+	"glRasterPos4fv",
+	"glRasterPos4i",
+	"glRasterPos4iv",
+	"glRasterPos4s",
+	"glRasterPos4sv",
+	"glReadBuffer",
+	"glReadPixels",
+	"glRectd",
+	"glRectdv",
+	"glRectf",
+	"glRectfv",
+	"glRecti",
+	"glRectiv",
+	"glRects",
+	"glRectsv",
+	"glRenderMode",
+	"glRotated",
+	"glRotatef",
+	"glScaled",
+	"glScalef",
+	"glScissor",
+	"glSelectBuffer",
+	"glShadeModel",
+	"glStencilFunc",
+	"glStencilMask",
+	"glStencilOp",
+	"glTexCoord1d",
+	"glTexCoord1dv",
+	"glTexCoord1f",
+	"glTexCoord1fv",
+	"glTexCoord1i",
+	"glTexCoord1iv",
+	"glTexCoord1s",
+	"glTexCoord1sv",
+	"glTexCoord2d",
+	"glTexCoord2dv",
+	"glTexCoord2f",
+	"glTexCoord2fv",
+	"glTexCoord2i",
+	"glTexCoord2iv",
+	"glTexCoord2s",
+	"glTexCoord2sv",
+	"glTexCoord3d",
+	"glTexCoord3dv",
+	"glTexCoord3f",
+	"glTexCoord3fv",
+	"glTexCoord3i",
+	"glTexCoord3iv",
+	"glTexCoord3s",
+	"glTexCoord3sv",
+	"glTexCoord4d",
+	"glTexCoord4dv",
+	"glTexCoord4f",
+	"glTexCoord4fv",
+	"glTexCoord4i",
+	"glTexCoord4iv",
+	"glTexCoord4s",
+	"glTexCoord4sv",
+	"glTexCoordPointer",
+	"glTexEnvf",
+	"glTexEnvfv",
+	"glTexEnvi",
+	"glTexEnviv",
+	"glTexGend",
+	"glTexGendv",
+	"glTexGenf",
+	"glTexGenfv",
+	"glTexGeni",
+	"glTexGeniv",
+	"glTexImage1D",
+	"glTexImage2D",
+	"glTexParameterf",
+	"glTexParameterfv",
+	"glTexParameteri",
+	"glTexParameteriv",
+	"glTexSubImage1D",
+	"glTexSubImage2D",
+	"glTranslated",
+	"glTranslatef",
+	"glVertex2d",
+	"glVertex2dv",
+	"glVertex2f",
+	"glVertex2fv",
+	"glVertex2i",
+	"glVertex2iv",
+	"glVertex2s",
+	"glVertex2sv",
+	"glVertex3d",
+	"glVertex3dv",
+	"glVertex3f",
+	"glVertex3fv",
+	"glVertex3i",
+	"glVertex3iv",
+	"glVertex3s",
+	"glVertex3sv",
+	"glVertex4d",
+	"glVertex4dv",
+	"glVertex4f",
+	"glVertex4fv",
+	"glVertex4i",
+	"glVertex4iv",
+	"glVertex4s",
+	"glVertex4sv",
+	"glVertexPointer",
+	"glViewport",
+	"wglChoosePixelFormat",
+	"wglCopyContext",
+	"wglCreateContext",
+	"wglCreateLayerContext",
+	"wglDeleteContext",
+	"wglDescribeLayerPlane",
+	"wglDescribePixelFormat",
+	"wglGetCurrentContext",
+	"wglGetCurrentDC",
+	"wglGetDefaultProcAddress",
+	"wglGetLayerPaletteEntries",
+	"wglGetPixelFormat",
+	"wglGetProcAddress",
+	"wglMakeCurrent",
+	"wglRealizeLayerPalette",
+	"wglSetLayerPaletteEntries",
+	"wglSetPixelFormat",
+	"wglShareLists",
+	"wglSwapBuffers",
+	"wglSwapLayerBuffers",
+	"wglSwapMultipleBuffers",
+	"wglUseFontBitmapsA",
+	"wglUseFontBitmapsW",
+	"wglUseFontOutlinesA",
+	"wglUseFontOutlinesW",
 ])
 
-PIXELFORMATDESCRIPTOR = Struct("PIXELFORMATDESCRIPTOR", [
-    (WORD, "nSize"),
-    (WORD, "nVersion"),
-    (PFD, "dwFlags"),
-    (BYTE, "iPixelType"),
-    (BYTE, "cColorBits"),
-    (BYTE, "cRedBits"),
-    (BYTE, "cRedShift"),
-    (BYTE, "cGreenBits"),
-    (BYTE, "cGreenShift"),
-    (BYTE, "cBlueBits"),
-    (BYTE, "cBlueShift"),
-    (BYTE, "cAlphaBits"),
-    (BYTE, "cAlphaShift"),
-    (BYTE, "cAccumBits"),
-    (BYTE, "cAccumRedBits"),
-    (BYTE, "cAccumGreenBits"),
-    (BYTE, "cAccumBlueBits"),
-    (BYTE, "cAccumAlphaBits"),
-    (BYTE, "cDepthBits"),
-    (BYTE, "cStencilBits"),
-    (BYTE, "cAuxBuffers"),
-    (BYTE, "iLayerType"),
-    (BYTE, "bReserved"),
-    (DWORD, "dwLayerMask"),
-    (DWORD, "dwVisibleMask"),
-    (DWORD, "dwDamageMask"),
-])
+class WglTracer(Tracer):
 
-POINTFLOAT = Struct("POINTFLOAT", [
-    (FLOAT, "x"),
-    (FLOAT, "y"),
-])
-
-GLYPHMETRICSFLOAT = Struct("GLYPHMETRICSFLOAT", [
-    (FLOAT, "gmfBlackBoxX"),
-    (FLOAT, "gmfBlackBoxY"),
-    (POINTFLOAT, "gmfptGlyphOrigin"),
-    (FLOAT, "gmfCellIncX"),
-    (FLOAT, "gmfCellIncY"),
-])
-LPGLYPHMETRICSFLOAT = Pointer(GLYPHMETRICSFLOAT)
-
-COLORREF = Alias("COLORREF", DWORD)
-
-
-LAYERPLANEDESCRIPTOR = Struct("LAYERPLANEDESCRIPTOR", [
-    (WORD, "nSize"),
-    (WORD, "nVersion"),
-    (DWORD, "dwFlags"),
-    (BYTE, "iPixelType"),
-    (BYTE, "cColorBits"),
-    (BYTE, "cRedBits"),
-    (BYTE, "cRedShift"),
-    (BYTE, "cGreenBits"),
-    (BYTE, "cGreenShift"),
-    (BYTE, "cBlueBits"),
-    (BYTE, "cBlueShift"),
-    (BYTE, "cAlphaBits"),
-    (BYTE, "cAlphaShift"),
-    (BYTE, "cAccumBits"),
-    (BYTE, "cAccumRedBits"),
-    (BYTE, "cAccumGreenBits"),
-    (BYTE, "cAccumBlueBits"),
-    (BYTE, "cAccumAlphaBits"),
-    (BYTE, "cDepthBits"),
-    (BYTE, "cStencilBits"),
-    (BYTE, "cAuxBuffers"),
-    (BYTE, "iLayerPlane"),
-    (BYTE, "bReserved"),
-    (COLORREF, "crTransparent"),
-])
-LPLAYERPLANEDESCRIPTOR = Pointer(LAYERPLANEDESCRIPTOR)
-
-WGLSWAP = Struct("WGLSWAP", [
-   (HDC, "hdc"),
-    (UINT, "uiFlags"),
-])
-
-opengl32.functions += [
-    DllFunction(BOOL, "wglCopyContext", [(HGLRC, "hglrcSrc"), (HGLRC, "hglrcDst"), (UINT, "mask")]),
-    DllFunction(HGLRC, "wglCreateContext", [(HDC, "hdc")]),
-    DllFunction(HGLRC, "wglCreateLayerContext", [(HDC, "hdc"), (Int, "iLayerPlane")]),
-    DllFunction(BOOL, "wglDeleteContext", [(HGLRC, "hglrc")]),
-    DllFunction(HGLRC, "wglGetCurrentContext", [], sideeffects=False),
-    DllFunction(HDC, "wglGetCurrentDC", [], sideeffects=False),
-    DllFunction(PROC, "wglGetDefaultProcAddress", [(LPCSTR, "lpszProc")], sideeffects=False),
-    DllFunction(Int, "wglChoosePixelFormat", [(HDC, "hdc"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]), 
-    DllFunction(Int, "wglDescribePixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (UINT, "nBytes"), Out(Pointer(PIXELFORMATDESCRIPTOR), "ppfd")]),
-    DllFunction(Int, "wglGetPixelFormat", [(HDC, "hdc")], sideeffects=False),
-    DllFunction(BOOL, "wglSetPixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]),
-    DllFunction(BOOL, "wglMakeCurrent", [(HDC, "hdc"), (HGLRC, "hglrc")]),
-    DllFunction(BOOL, "wglShareLists", [(HGLRC, "hglrc1"), (HGLRC, "hglrc2")]),
-    DllFunction(BOOL, "wglUseFontBitmapsA", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase")]),
-    DllFunction(BOOL, "wglUseFontBitmapsW", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase")]),
-    DllFunction(BOOL, "wglSwapBuffers", [(HDC, "hdc")]),
-    DllFunction(BOOL, "wglUseFontOutlinesA", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase"), (FLOAT, "deviation"), (FLOAT, "extrusion"), (Int, "format"), (LPGLYPHMETRICSFLOAT, "lpgmf")]),
-    DllFunction(BOOL, "wglUseFontOutlinesW", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase"), (FLOAT, "deviation"), (FLOAT, "extrusion"), (Int, "format"), (LPGLYPHMETRICSFLOAT, "lpgmf")]),
-    DllFunction(BOOL , "wglDescribeLayerPlane", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nBytes"), Out(Pointer(LAYERPLANEDESCRIPTOR), "plpd")]),
-    DllFunction(Int  , "wglSetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), (Array(Const(COLORREF), "cEntries"), "pcr")]),
-    DllFunction(Int  , "wglGetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), Out(Array(COLORREF, "cEntries"), "pcr")], sideeffects=False),
-    DllFunction(BOOL , "wglRealizeLayerPalette", [(HDC, "hdc"), (Int, "iLayerPlane"), (BOOL, "bRealize")]),
-    DllFunction(BOOL , "wglSwapLayerBuffers", [(HDC, "hdc"), (UINT, "fuPlanes")]),
-    DllFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Array(Const(WGLSWAP), "n"), "ps")]),
-]
-
-
-class WglGetProcAddressFunction(DllFunction):
-
-    def __init__(self, type, name, args, **kwargs):
-        DllFunction.__init__(self, type, name, args, **kwargs)
-        self.functions = []
-
-    def wrap_decl(self):
-        for function in self.functions:
-            function.wrap_decl()
-        DllFunction.wrap_decl(self)
-
-    def wrap_impl(self):
-        for function in self.functions:
-            function.wrap_impl()
-        DllFunction.wrap_impl(self)
-
-    def post_call_impl(self):
-        print '    if(result) {'
-        for function in self.functions:
-            ptype = function.pointer_type()
-            pvalue = function.pointer_value()
-            print '        if(!strcmp("%s", lpszProc)) {' % function.name
-            print '            %s = (%s)result;' % (pvalue, ptype)
-            print '            result = (PROC)&%s;' % function.name;
+    def get_function_address(self, function):
+        #print 'DebugBreak();'
+        if function.name in public_symbols:
+            return '__GetProcAddress("%s")' % (function.name,)
+        else:
+            print '        if (!pwglGetProcAddress) {'
+            print '            pwglGetProcAddress = (PwglGetProcAddress)__GetProcAddress("wglGetProcAddress");'
+            print '            if (!pwglGetProcAddress)'
+            print '                Log::Abort();'
             print '        }'
-        print '    }'
+            return 'pwglGetProcAddress("%s")' % (function.name,)
 
+    def wrap_ret(self, function, instance):
+        if function.name == "wglGetProcAddress":
+            print '    if (%s) {' % instance
+            for f in wglapi.functions:
+                ptype = self.function_pointer_type(f)
+                pvalue = self.function_pointer_value(f)
+                print '        if (!strcmp("%s", lpszProc)) {' % f.name
+                print '            %s = (%s)&%s;' % (instance, function.type, f.name);
+                print '        }'
+            print '    }'
 
-wglgetprocaddress = WglGetProcAddressFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")])
-opengl32.functions.append(wglgetprocaddress)
-
-class WglFunction(Function):
-
-    def get_true_pointer(self):
-        ptype = self.pointer_type()
-        pvalue = self.pointer_value()
-        print '    if(!%s)' % (pvalue,)
-        self.fail_impl()
-
-attribute = FakeEnum(Int, [
-    "WGL_NUMBER_PIXEL_FORMATS_EXT",
-    "WGL_DRAW_TO_WINDOW_EXT",
-    "WGL_DRAW_TO_BITMAP_EXT",
-    "WGL_ACCELERATION_EXT",
-    "WGL_NEED_PALETTE_EXT",
-    "WGL_NEED_SYSTEM_PALETTE_EXT",
-    "WGL_SWAP_LAYER_BUFFERS_EXT",
-    "WGL_SWAP_METHOD_EXT",
-    "WGL_NUMBER_OVERLAYS_EXT",
-    "WGL_NUMBER_UNDERLAYS_EXT",
-    "WGL_TRANSPARENT_EXT",
-    "WGL_TRANSPARENT_VALUE_EXT",
-    "WGL_SHARE_DEPTH_EXT",
-    "WGL_SHARE_STENCIL_EXT",
-    "WGL_SHARE_ACCUM_EXT",
-    "WGL_SUPPORT_GDI_EXT",
-    "WGL_SUPPORT_OPENGL_EXT",
-    "WGL_DOUBLE_BUFFER_EXT",
-    "WGL_STEREO_EXT",
-    "WGL_PIXEL_TYPE_EXT",
-    "WGL_COLOR_BITS_EXT",
-    "WGL_RED_BITS_EXT",
-    "WGL_RED_SHIFT_EXT",
-    "WGL_GREEN_BITS_EXT",
-    "WGL_GREEN_SHIFT_EXT",
-    "WGL_BLUE_BITS_EXT",
-    "WGL_BLUE_SHIFT_EXT",
-    "WGL_ALPHA_BITS_EXT",
-    "WGL_ALPHA_SHIFT_EXT",
-    "WGL_ACCUM_BITS_EXT",
-    "WGL_ACCUM_RED_BITS_EXT",
-    "WGL_ACCUM_GREEN_BITS_EXT",
-    "WGL_ACCUM_BLUE_BITS_EXT",
-    "WGL_ACCUM_ALPHA_BITS_EXT",
-    "WGL_DEPTH_BITS_EXT",
-    "WGL_STENCIL_BITS_EXT",
-    "WGL_AUX_BUFFERS_EXT",
-    "WGL_NO_ACCELERATION_EXT",
-    "WGL_GENERIC_ACCELERATION_EXT",
-    "WGL_FULL_ACCELERATION_EXT",
-    "WGL_SWAP_EXCHANGE_EXT",
-    "WGL_SWAP_COPY_EXT",
-    "WGL_SWAP_UNDEFINED_EXT",
-    "WGL_TYPE_RGBA_EXT",
-    "WGL_TYPE_COLORINDEX_EXT",
-])
-
-HPBUFFERARB = Alias("HPBUFFERARB", HANDLE)
-
-wglgetprocaddress.functions += extended_functions(WglFunction)
-
-wglgetprocaddress.functions += [
-    # WGL_ARB_extensions_string
-    WglFunction(Const(String), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
-    # WGL_ARB_pbuffer
-    WglFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]), 
-    WglFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")], sideeffects=False),
-    WglFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
-    WglFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]), 
-    WglFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iAttribute"), Out(Pointer(Int), "piValue")]),
-    # WGL_ARB_pixel_format
-    WglFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
-    WglFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    WglFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
-    # WGL_EXT_extensions_string
-    WglFunction(Const(String), "wglGetExtensionsStringEXT", [], sideeffects=False),
-    # WGL_EXT_pixel_format
-    WglFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
-    WglFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    WglFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
-]
 
 if __name__ == '__main__':
     print
@@ -281,8 +429,8 @@ if __name__ == '__main__':
     print '#include "glext.h"'
     print '#include "wglext.h"'
     print
-    print '#include "glhelpers.hpp"'
     print '#include "log.hpp"'
+    print '#include "glhelpers.hpp"'
     print
     print '#ifndef PFD_SUPPORT_DIRECTDRAW'
     print '#define PFD_SUPPORT_DIRECTDRAW 0x00002000'
@@ -290,6 +438,8 @@ if __name__ == '__main__':
     print '#ifndef PFD_SUPPORT_COMPOSITION'
     print '#define PFD_SUPPORT_COMPOSITION 0x00008000'
     print '#endif'
+
+    print '#define GLAPIENTRY __stdcall'
     print
     print '#ifdef __MINGW32__'
     print ''
@@ -304,7 +454,32 @@ if __name__ == '__main__':
     print '#endif'
     print
     print 'extern "C" {'
+    print '''
+static HINSTANCE g_hDll = NULL;
+
+static PROC
+__GetProcAddress(LPCSTR lpProcName)
+{
+    if (!g_hDll) {
+        char szDll[MAX_PATH] = {0};
+        
+        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
+            return NULL;
+        }
+        
+        strcat(szDll, "\\\\opengl32.dll");
+        
+        g_hDll = LoadLibraryA(szDll);
+        if (!g_hDll) {
+            return NULL;
+        }
+    }
+        
+    return GetProcAddress(g_hDll, lpProcName);
+}
+
+    '''
+    tracer = WglTracer()
+    tracer.trace_api(wglapi)
     print
-    wrap()
-    print
-    print '}'
+    print '} /* extern "C" */'

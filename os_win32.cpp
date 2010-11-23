@@ -25,8 +25,10 @@
 
 #include <windows.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "os.hpp"
+#include "log.hpp"
 
 
 namespace OS {
@@ -69,7 +71,7 @@ GetProcessName(char *str, size_t size)
 
     lpProcessExt = strrchr(lpProcessName, '.');
     if (lpProcessExt) {
-	*lpProcessExt = '\0';
+        *lpProcessExt = '\0';
     }
 
     strncpy(str, lpProcessName, size);
@@ -77,12 +79,55 @@ GetProcessName(char *str, size_t size)
     return true;
 }
 
+bool
+GetCurrentDir(char *str, size_t size)
+{
+    DWORD ret;
+    ret = GetCurrentDirectoryA(size, str);
+    str[size - 1] = 0;
+    return ret == 0 ? false : true;
+}
+
+void
+DebugMessage(const char *message)
+{
+   OutputDebugStringA(message);
+   if (!IsDebuggerPresent()) {
+      fflush(stdout);
+      fputs(message, stderr);
+      fflush(stderr);
+   }
+}
 
 void
 Abort(void)
 {
+#ifndef NDEBUG
+    DebugBreak();
+#else
     ExitProcess(0);
+#endif
 }
 
 
+
 } /* namespace OS */
+
+
+#if 0
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    switch(fdwReason) {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+        return TRUE;
+    case DLL_THREAD_DETACH:
+        return TRUE;
+    case DLL_PROCESS_DETACH:
+        Log::Close();
+        return TRUE;
+    }
+    (void)hinstDLL;
+    (void)lpvReserved;
+    return TRUE;
+}
+#endif
