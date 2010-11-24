@@ -49,6 +49,7 @@ class Value
 public:
    virtual void visit(Visitor &visitor) = 0;
 
+   operator bool (void) const;
    operator signed long long (void) const;
    operator unsigned long long (void) const;
    operator double (void) const;

@@ -185,6 +185,14 @@ static inline const Value *unwrap(const Value *node) {
 }
 
 
+Value::operator bool(void) const {
+   const Bool *b = dynamic_cast<const Bool *>(unwrap(this));
+   if (b)
+      return b->value;
+   assert(0);
+   return false;
+}
+
 Value::operator signed long long(void) const {
    const SInt *sint = dynamic_cast<const SInt *>(unwrap(this));
    if (sint)

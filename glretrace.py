@@ -44,7 +44,13 @@ class ConstRemover(base.Rebuilder):
 class ValueExtractor(base.Visitor):
 
     def visit_literal(self, literal, lvalue, rvalue):
-        print '    %s = %s;' % (lvalue, rvalue)
+        if literal.format == 'Bool':
+            print '    %s = static_cast<bool>(%s);' % (lvalue, rvalue)
+        else:
+            print '    %s = %s;' % (lvalue, rvalue)
+
+    def visit_const(self, const, lvalue, rvalue):
+        self.visit(const.type, lvalue, rvalue)
 
     def visit_alias(self, alias, lvalue, rvalue):
         self.visit(alias.type, lvalue, rvalue)
@@ -60,7 +66,7 @@ class ValueExtractor(base.Visitor):
         print '    if (__a%s) {' % (array.id)
         length = '__a%s->values.size()' % array.id
         print '        %s = new %s[%s];' % (lvalue, array.type, length)
-        index = '__i' + array.id
+        index = '__j' + array.id
         print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
@@ -71,8 +77,15 @@ class ValueExtractor(base.Visitor):
             print '    }'
     
     def visit_pointer(self, pointer, lvalue, rvalue):
-        # FIXME
-        raise NotImplementedError
+        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (pointer.id, rvalue)
+        print '    if (__a%s) {' % (pointer.id)
+        print '        %s = new %s;' % (lvalue, pointer.type)
+        try:
+            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.id,))
+        finally:
+            print '    } else {'
+            print '        %s = NULL;' % lvalue
+            print '    }'
 
     def visit_handle(self, handle, lvalue, rvalue):
         self.visit(handle.type, lvalue, "__%s_map[%s]" %(handle.name, rvalue));
@@ -105,7 +118,7 @@ class ValueWrapper(base.Visitor):
         print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.id, rvalue)
         print '    if (__a%s) {' % (array.id)
         length = '__a%s->values.size()' % array.id
-        index = '__i' + array.id
+        index = '__j' + array.id
         print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
@@ -114,8 +127,13 @@ class ValueWrapper(base.Visitor):
             print '    }'
     
     def visit_pointer(self, pointer, lvalue, rvalue):
-        # FIXME
-        raise NotImplementedError
+        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (pointer.id, rvalue)
+        print '    if (__a%s) {' % (pointer.id)
+        try:
+            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.id,))
+        finally:
+            print '    }'
+    
 
     def visit_handle(self, handle, lvalue, rvalue):
         print "    __%s_map[static_cast<%s>(%s)] = %s;" % (handle.name, handle.type, rvalue, lvalue)
