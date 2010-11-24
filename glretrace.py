@@ -195,7 +195,8 @@ if __name__ == '__main__':
     print
     print '#include "trace_parser.hpp"'
     print
-    print 'static std::map<GLuint, GLuint> __texture_map;'
+    for name in ['texture', 'framebuffer', 'renderbuffer']:
+        print 'static std::map<GLuint, GLuint> __%s_map;' % name
     print
 
     retrace_functions(glapi.glapi.functions)

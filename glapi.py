@@ -2519,6 +2519,8 @@ GLbitfield_client_attrib = Flags(GLbitfield, [
 ])
 
 texture = Handle("texture", GLuint)
+framebuffer = Handle("framebuffer", GLuint)
+renderbuffer = Handle("renderbuffer", GLuint)
 
 
 def GlFunction(*args, **kwargs):
@@ -3292,22 +3294,22 @@ def extended_functions(Function):
         F(Void, "glProgramNamedParameter4fvNV", [(GLuint, "id"), (GLsizei, "len"), (OpaquePointer(Const(GLubyte)), "name"), (Array(Const(GLfloat), "4"), "v")]),
         F(Void, "glDepthBoundsEXT", [(GLclampd, "zmin"), (GLclampd, "zmax")]),
         F(Void, "glBlendEquationSeparateEXT", [(GLenum, "modeRGB"), (GLenum, "modeA")]),
-        F(Void, "glBindFramebufferEXT", [(GLenum, "target"), (GLuint, "framebuffer")]),
-        F(Void, "glBindRenderbufferEXT", [(GLenum, "target"), (GLuint, "renderbuffer")]),
+        F(Void, "glBindFramebufferEXT", [(GLenum, "target"), (framebuffer, "framebuffer")]),
+        F(Void, "glBindRenderbufferEXT", [(GLenum, "target"), (renderbuffer, "renderbuffer")]),
         F(GLenum, "glCheckFramebufferStatusEXT", [(GLenum, "target")]),
-        F(Void, "glDeleteFramebuffersEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "framebuffers")]),
-        F(Void, "glDeleteRenderbuffersEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "renderbuffers")]),
+        F(Void, "glDeleteFramebuffersEXT", [(GLsizei, "n"), (Array(Const(framebuffer), "n"), "framebuffers")]),
+        F(Void, "glDeleteRenderbuffersEXT", [(GLsizei, "n"), (Array(Const(renderbuffer), "n"), "renderbuffers")]),
         F(Void, "glFramebufferRenderbufferEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLuint, "renderbuffer")]),
         F(Void, "glFramebufferTexture1DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (texture, "texture"), (GLint, "level")]),
         F(Void, "glFramebufferTexture2DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (texture, "texture"), (GLint, "level")]),
         F(Void, "glFramebufferTexture3DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (texture, "texture"), (GLint, "level"), (GLint, "zoffset")]),
-        F(Void, "glGenFramebuffersEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "framebuffers")]),
-        F(Void, "glGenRenderbuffersEXT", [(GLsizei, "n"), Out(Array(GLuint, "n"), "renderbuffers")]),
+        F(Void, "glGenFramebuffersEXT", [(GLsizei, "n"), Out(Array(framebuffer, "n"), "framebuffers")]),
+        F(Void, "glGenRenderbuffersEXT", [(GLsizei, "n"), Out(Array(renderbuffer, "n"), "renderbuffers")]),
         F(Void, "glGenerateMipmapEXT", [(GLenum, "target")]),
         F(Void, "glGetFramebufferAttachmentParameterivEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
         F(Void, "glGetRenderbufferParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
-        F(GLboolean, "glIsFramebufferEXT", [(GLuint, "framebuffer")]),
-        F(GLboolean, "glIsRenderbufferEXT", [(GLuint, "renderbuffer")]),
+        F(GLboolean, "glIsFramebufferEXT", [(framebuffer, "framebuffer")]),
+        F(GLboolean, "glIsRenderbufferEXT", [(renderbuffer, "renderbuffer")]),
         F(Void, "glRenderbufferStorageEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
         F(Void, "glBlitFramebufferEXT", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
         F(Void, "glFramebufferTextureLayerEXT", [(GLenum, "target"), (GLenum, "attachment"), (texture, "texture"), (GLint, "level"), (GLint, "layer")]),
