@@ -153,7 +153,7 @@ def retrace_function(function):
     success = True
     for arg in function.args:
         arg_type = ConstRemover().visit(arg.type)
-        print '    // %s ->  %s' % (arg.type, arg_type)
+        #print '    // %s ->  %s' % (arg.type, arg_type)
         print '    %s %s;' % (arg_type, arg.name)
         rvalue = 'call.arg(%u)' % (arg.index,)
         lvalue = arg.name
