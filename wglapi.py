@@ -221,21 +221,29 @@ wglapi.add_functions([
     # WGL_ARB_extensions_string
     StdFunction(Const(CString), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
 
+    # WGL_ARB_pixel_format
+    StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
+    StdFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
+    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Const(OpaquePointer(Int)), "piAttribIList"), (Const(OpaquePointer(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+
     # WGL_ARB_make_current_read
     StdFunction(BOOL, "wglMakeContextCurrentARB", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
     StdFunction(HDC, "wglGetCurrentReadDCARB", [], sideeffects=False),
 
     # WGL_ARB_pbuffer
-    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]),
+    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Const(OpaquePointer(Int)), "piAttribList")]),
     StdFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")], sideeffects=False),
     StdFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
     StdFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]),
     StdFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iAttribute"), Out(Pointer(Int), "piValue")]),
 
-    # WGL_ARB_pixel_format
-    StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
-    StdFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    # WGL_ARB_render_texture
+    StdFunction(BOOL, "wglBindTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
+    StdFunction(BOOL, "wglReleaseTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
+    StdFunction(BOOL, "wglSetPbufferAttribARB", [(HPBUFFERARB, "hPbuffer"), (Const(OpaquePointer(Int)), "piAttribList")]),
+
+    # WGL_ARB_create_context
+    StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (Const(OpaquePointer(Int)), "attribList")]),
 
     # WGL_EXT_extensions_string
     StdFunction(Const(CString), "wglGetExtensionsStringEXT", [], sideeffects=False),
