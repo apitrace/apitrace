@@ -35,14 +35,15 @@ PROC = Opaque("__GLXextFuncPtr")
 
 glxapi.add_functions(glapi.functions)
 glxapi.add_functions([
-    Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", String), "procName")])
+    Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", String), "procName")]),
+    Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", String), "procName")]),
 ])
 
 
 class GlxTracer(trace.Tracer):
 
     def get_function_address(self, function):
-        if function.name == "glXGetProcAddress":
+        if function.name.startswith("glXGetProcAddress"):
             return 'dlsym(RTLD_NEXT, "%s")' % (function.name,)
         else:
             print '    if (!pglXGetProcAddress) {'
@@ -53,7 +54,7 @@ class GlxTracer(trace.Tracer):
             return 'pglXGetProcAddress((const GLubyte *)"%s")' % (function.name,)
 
     def wrap_ret(self, function, instance):
-        if function.name == "glXGetProcAddress":
+        if function.name.startswith("glXGetProcAddress"):
             print '    if (%s) {' % instance
             for f in glxapi.functions:
                 ptype = self.function_pointer_type(f)
