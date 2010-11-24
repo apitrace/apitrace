@@ -153,7 +153,7 @@ public:
    void visit(Call *call) {
       const char *sep = "";
       os << bold << call->name << normal << "(";
-      for (std::list<Arg>::iterator it = call->args.begin(); it != call->args.end(); ++it) {
+      for (std::vector<Arg>::iterator it = call->args.begin(); it != call->args.end(); ++it) {
          os << sep << italic << it->first << normal << " = ";
          _visit(it->second);
          sep = ", ";
@@ -243,15 +243,6 @@ const char * Value::string(void) const {
        return NULL;
    assert(0);
    return NULL;
-}
-
-Value & Call::arg(const char *name) {
-   for (std::list<Arg>::iterator it = args.begin(); it != args.end(); ++it) {
-      if (it->first == name) {
-         return *it->second;
-      }
-   }
-   return null;
 }
 
 std::ostream & operator <<(std::ostream &os, Call &call) {

@@ -340,7 +340,7 @@ class Tracer:
         print
 
     def dump_arg(self, function, arg):
-        print '    Log::BeginArg("%s");' % (arg.name,)
+        print '    Log::BeginArg(%u, "%s");' % (arg.index, arg.name,)
         dump_instance(arg.type, arg.name)
         print '    Log::EndArg();'
 
@@ -402,7 +402,7 @@ class Tracer:
             print '    %s __result;' % method.type
             result = '__result = '
         print '    Log::BeginCall("%s");' % (interface.name + '::' + method.name)
-        print '    Log::BeginArg("this");'
+        print '    Log::BeginArg(0, "this");'
         print '    Log::LiteralOpaque((const void *)m_pInstance);'
         print '    Log::EndArg();'
         for arg in method.args:

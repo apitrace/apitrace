@@ -173,8 +173,9 @@ void EndCall(void) {
    OS::ReleaseMutex();
 }
 
-void BeginArg(const char *name) {
+void BeginArg(unsigned index, const char *name) {
    WriteByte(Trace::CALL_ARG);
+   WriteUInt(index);
    WriteString(name);
 }
 

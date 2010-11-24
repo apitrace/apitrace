@@ -137,7 +137,7 @@ def retrace_function(function):
         arg_type = ConstRemover().visit(arg.type)
         print '    // %s ->  %s' % (arg.type, arg_type)
         print '    %s %s;' % (arg_type, arg.name)
-        rvalue = 'call.arg("%s")' % (arg.name,)
+        rvalue = 'call.arg(%u)' % (arg.index,)
         lvalue = arg.name
         try:
             ValueExtractor().visit(arg_type, lvalue, rvalue)
@@ -156,7 +156,7 @@ def retrace_function(function):
     for arg in function.args:
         if arg.output:
             arg_type = ConstRemover().visit(arg.type)
-            rvalue = 'call.arg("%s")' % (arg.name,)
+            rvalue = 'call.arg(%u)' % (arg.index,)
             lvalue = arg.name
             try:
                 ValueWrapper().visit(arg_type, lvalue, rvalue)

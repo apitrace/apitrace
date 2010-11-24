@@ -86,7 +86,7 @@ public:
          case Trace::CALL_END:
             return call;
          case Trace::CALL_ARG:
-            call->args.push_back(parse_arg());
+            parse_arg(call);
             break;
          case Trace::CALL_RET:
             call->ret = parse_value();
@@ -102,10 +102,14 @@ public:
       } while(true);
    }
    
-   Arg parse_arg(void) {
+   void parse_arg(Call *call) {
+      unsigned index = read_uint();
       std::string name = read_string();
       Value *value = parse_value();
-      return Arg(name, value);
+      if (index >= call->args.size()) {
+          call->args.resize(index + 1);
+      }
+      call->args[index] = Arg(name, value);
    }
    
    Value *parse_value(void) {

@@ -332,6 +332,7 @@ class Arg:
         self.type = type
         self.name = name
         self.output = output
+        self.index = None
 
     def __str__(self):
         return '%s %s' % (self.type, self.name)
@@ -344,10 +345,13 @@ class Function:
         self.name = name
 
         self.args = []
+        index = 0
         for arg in args:
             if isinstance(arg, tuple):
                 arg_type, arg_name = arg
                 arg = Arg(arg_type, arg_name)
+            arg.index = index
+            index += 1
             self.args.append(arg)
 
         self.call = call

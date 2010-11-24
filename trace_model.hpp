@@ -236,12 +236,14 @@ class Call
 {
 public:
    std::string name;
-   std::list<Arg> args;
+   std::vector<Arg> args;
    Value *ret;
 
    Call() : ret(0) { }
 
-   Value & arg(const char *name);
+   inline Value & arg(unsigned index) {
+       return *(args[index].second);
+   }
 };
 
 

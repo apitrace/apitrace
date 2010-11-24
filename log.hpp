@@ -34,7 +34,7 @@ namespace Log {
     void BeginCall(const char *function);
     void EndCall(void);
     
-    void BeginArg(const char *name);
+    void BeginArg(unsigned index, const char *name);
     inline void EndArg(void) {}
 
     void BeginReturn(void);
