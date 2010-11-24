@@ -1,8 +1,16 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8)
 
 project (apitrace)
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+# Set default built type
+if (NOT CMAKE_BUILD_TYPE)
+	set (CMAKE_BUILD_TYPE Debug
+		CACHE
+		STRING "Choose the build type, options are: None, Debug, Release, RelWithDebInfo, or MinSizeRel."
+		FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
