@@ -182,25 +182,29 @@ class SpecParser(LineParser):
             extra += ', sideeffects=False'
         print '    %s(%s, "%s%s", [%s]%s),' % (constructor, ret_type, self.prefix, function_name, ', '.join(args), extra)
 
+    array_re = re.compile(r'^array\s+\[(.*)\]$')
+
     def parse_arg(self, arg_name, arg_type):
         base_type, inout, kind = arg_type.split(' ', 2)
         base_type = self.parse_type(base_type)
+
         if kind == 'value':
             arg_type = base_type
         elif kind == 'reference':
+            arg_type = 'Pointer(%s)' % base_type
             if inout == 'in':
-                arg_type = 'Const(Pointer(%s))' % base_type
-            elif inout == 'out':
-                arg_type = 'Pointer(%s)' % base_type
-            else:
-                assert False
+                arg_type = 'Const(%s)' % arg_type
         elif kind.startswith("array"):
-            if inout == 'in':
-                arg_type = 'Const(Array(%s))' % base_type
-            elif inout == 'out':
-                arg_type = 'Array(%s)' % base_type
+            mo = self.array_re.match(kind)
+            if mo:
+                length = mo.group(1)
+                arg_type = 'Array(%s, "%s")' % (base_type, length)
             else:
-                assert False
+                arg_type = 'OpaquePointer(%s)' % base_type
+            if inout == 'in':
+                arg_type = 'Const(%s)' % arg_type
+        else:
+            assert False
         
         arg = '(%s, "%s")' % (arg_type, arg_name)
         if inout == 'out':
