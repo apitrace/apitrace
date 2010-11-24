@@ -417,8 +417,8 @@ def WrapPointer(type):
 
 class String(Type):
 
-    def __init__(self, length = None):
-        Type.__init__(self, "char *")
+    def __init__(self, expr = "char *", length = None):
+        Type.__init__(self, expr)
         self.length = length
 
     def visit(self, visitor, *args, **kwargs):
@@ -441,25 +441,88 @@ def OpaquePointer(type):
     return Opaque(type.expr + ' *')
 
 
+class Collector(Visitor):
+    '''Collect.'''
+
+    def __init__(self):
+        self.__visited = set()
+        self.types = []
+
+    def visit(self, type):
+        if type in self.__visited:
+            return
+        self.__visited.add(type)
+        Visitor.visit(self, type)
+        self.types.append(type)
+
+    def visit_void(self, literal):
+        pass
+
+    def visit_literal(self, literal):
+        pass
+
+    def visit_string(self, string):
+        pass
+
+    def visit_const(self, const):
+        self.visit(const.type)
+
+    def visit_struct(self, struct):
+        for type, name in struct.members:
+            self.visit(type)
+
+    def visit_array(self, array):
+        self.visit(array.type)
+
+    def visit_blob(self, array):
+        pass
+
+    def visit_enum(self, enum):
+        pass
+
+    def visit_bitmask(self, bitmask):
+        self.visit(bitmask.type)
+
+    def visit_pointer(self, pointer):
+        self.visit(pointer.type)
+
+    def visit_handle(self, handle):
+        self.visit(handle.type)
+
+    def visit_alias(self, alias):
+        self.visit(alias.type)
+
+    def visit_opaque(self, opaque):
+        pass
+
+    def visit_interface(self, interface):
+        pass
+
 
 class API:
 
     def __init__(self, name):
         self.name = name
         self.headers = []
-        self.types = set()
         self.functions = []
         self.interfaces = []
 
-    def add_type(self, type):
-        if type not in self.types:
-            self.types.add(type)
+    def all_types(self):
+        collector = Collector()
+        for function in self.functions:
+            for arg in function.args:
+                collector.visit(arg.type)
+            collector.visit(function.type)
+        for interface in self.interfaces:
+            collector.visit(interface)
+            for method in interface.methods:
+                for arg in method.args:
+                    collector.visit(arg.type)
+                collector.visit(method.type)
+        return collector.types
 
     def add_function(self, function):
         self.functions.append(function)
-        for arg in function.args:
-            self.add_type(arg.type)
-        self.add_type(function.type)
 
     def add_functions(self, functions):
         for function in functions:

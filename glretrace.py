@@ -82,7 +82,7 @@ class ValueExtractor(base.Visitor):
         print '    %s = static_cast<%s>((%s).blob());' % (lvalue, blob, rvalue)
     
     def visit_string(self, string, lvalue, rvalue):
-        print '    %s = (%s).string();' % (lvalue, rvalue)
+        print '    %s = (%s)((%s).string());' % (lvalue, string.expr, rvalue)
 
 
 
@@ -145,7 +145,11 @@ def retrace_function(function):
         print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
         print '    return;'
     arg_names = ", ".join([arg.name for arg in function.args])
-    print '    %s(%s);' % (function.name, arg_names)
+    if function.type is not base.Void:
+        print '    %s __result;' % (function.type)
+        print '    __result = %s(%s);' % (function.name, arg_names)
+    else:
+        print '    %s(%s);' % (function.name, arg_names)
     for arg in function.args:
         if arg.output:
             arg.type = ConstRemover().visit(arg.type)
@@ -155,6 +159,13 @@ def retrace_function(function):
                 ValueWrapper().visit(arg.type, lvalue, rvalue)
             except NotImplementedError:
                 print '   // FIXME: %s' % arg.name
+    if function.type is not base.Void:
+        rvalue = '*call.ret'
+        lvalue = '__result'
+        try:
+            ValueWrapper().visit(function.type, lvalue, rvalue)
+        except NotImplementedError:
+            print '   // FIXME: result'
     print '}'
     print
 
@@ -186,6 +197,17 @@ def retrace_functions(functions):
     print
 
 
+def retrace_api(api):
+    types = api.all_types()
+
+    handles = [type for type in types if isinstance(type, base.Handle)]
+    for handle in handles:
+        print 'static std::map<%s, %s> __%s_map;' % (handle.type, handle.type, handle.name)
+    print
+
+    retrace_functions(api.functions)
+
+
 if __name__ == '__main__':
     print
     print '#include <stdlib.h>'
@@ -195,12 +217,7 @@ if __name__ == '__main__':
     print
     print '#include "trace_parser.hpp"'
     print
-    for name in ['texture', 'framebuffer', 'renderbuffer']:
-        print 'static std::map<GLuint, GLuint> __%s_map;' % name
-    print
-
-    retrace_functions(glapi.glapi.functions)
-
+    retrace_api(glapi.glapi)
     print '''
 
 Trace::Parser parser;

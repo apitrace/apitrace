@@ -118,7 +118,10 @@ class DumpImplementer(base.Visitor):
         print '    Log::Literal%s(%s);' % (literal.format, instance)
 
     def visit_string(self, string, instance):
-        print '    Log::LiteralString((const char *)%s);' % instance
+        if string.length is not None:
+            print '    Log::LiteralString((const char *)%s, %s);' % (instance, string.length)
+        else:
+            print '    Log::LiteralString((const char *)%s);' % instance
 
     def visit_const(self, const, instance):
         self.visit(const.type, instance)
@@ -241,12 +244,13 @@ class Tracer:
 
         # Includes
         for header in api.headers:
-            print '#include <%s>' % header
+            print header
         print
 
         # Type dumpers
+        types = api.all_types()
         visitor = DumpDeclarator()
-        map(visitor.visit, api.types)
+        map(visitor.visit, types)
         print
 
         # Interfaces wrapers
