@@ -46,14 +46,14 @@ CriticalSection = {
 void
 AcquireMutex(void)
 {
-    EnterCriticalSection(&CriticalSection); 
+    //EnterCriticalSection(&CriticalSection); 
 }
 
 
 void
 ReleaseMutex(void)
 {
-    LeaveCriticalSection(&CriticalSection); 
+    //LeaveCriticalSection(&CriticalSection); 
 }
 
 

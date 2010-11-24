@@ -186,6 +186,7 @@ HPBUFFERARB = Alias("HPBUFFERARB", HANDLE)
 
 
 wglapi.add_functions([
+    # WGL
     StdFunction(BOOL, "wglCopyContext", [(HGLRC, "hglrcSrc"), (HGLRC, "hglrcDst"), (UINT, "mask")]),
     StdFunction(HGLRC, "wglCreateContext", [(HDC, "hdc")]),
     StdFunction(HGLRC, "wglCreateLayerContext", [(HDC, "hdc"), (Int, "iLayerPlane")]),
@@ -210,22 +211,28 @@ wglapi.add_functions([
     StdFunction(BOOL , "wglRealizeLayerPalette", [(HDC, "hdc"), (Int, "iLayerPlane"), (BOOL, "bRealize")]),
     StdFunction(BOOL , "wglSwapLayerBuffers", [(HDC, "hdc"), (UINT, "fuPlanes")]),
     StdFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Array(Const(WGLSWAP), "n"), "ps")]),
-    
+
+    # WGL_ARB_buffer_region
+    StdFunction(HANDLE, "wglCreateBufferRegionARB", [(HDC, "hDC"), (Int, "iLayerPlane"), (UINT, "uType")]),
+    StdFunction(VOID, "wglDeleteBufferRegionARB", [(HANDLE, "hRegion")]),
+    StdFunction(BOOL, "wglSaveBufferRegionARB", [(HANDLE, "hRegion"), (Int, "x"), (Int, "y"), (Int, "width"), (Int, "height")]),
+    StdFunction(BOOL, "wglRestoreBufferRegionARB", [(HANDLE, "hRegion"), (Int, "x"), (Int, "y"), (Int, "width"), (Int, "height"), (Int, "xSrc"), (Int, "ySrc")]),
+
     # WGL_ARB_extensions_string
     StdFunction(Const(CString), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
-    
+
     # WGL_ARB_pbuffer
-    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]), 
+    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]),
     StdFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")], sideeffects=False),
     StdFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
-    StdFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]), 
+    StdFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]),
     StdFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iAttribute"), Out(Pointer(Int), "piValue")]),
-    
+
     # WGL_ARB_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
     StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
-    
+
     # WGL_EXT_extensions_string
     StdFunction(Const(CString), "wglGetExtensionsStringEXT", [], sideeffects=False),
 
@@ -237,41 +244,3 @@ wglapi.add_functions([
     # must be last
     StdFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")]),
 ])
-
-if __name__ == '__main__':
-    print
-    print '#define _GDI32_'
-    print
-    print '#include <windows.h>'
-    print '#include <tchar.h>'
-    print '#include <GL/gl.h>'
-    print '#include "glext.h"'
-    print '#include "wglext.h"'
-    print
-    print '#include "glhelpers.hpp"'
-    print '#include "log.hpp"'
-    print
-    print '#ifndef PFD_SUPPORT_DIRECTDRAW'
-    print '#define PFD_SUPPORT_DIRECTDRAW 0x00002000'
-    print '#endif'
-    print '#ifndef PFD_SUPPORT_COMPOSITION'
-    print '#define PFD_SUPPORT_COMPOSITION 0x00008000'
-    print '#endif'
-    print
-    print '#ifdef __MINGW32__'
-    print ''
-    print 'typedef struct _WGLSWAP'
-    print '{'
-    print '    HDC hdc;'
-    print '    UINT uiFlags;'
-    print '} WGLSWAP, *PWGLSWAP, FAR *LPWGLSWAP;'
-    print ''
-    print '#define WGL_SWAPMULTIPLE_MAX 16'
-    print ''
-    print '#endif'
-    print
-    print 'extern "C" {'
-    print
-    wrap()
-    print
-    print '}'
