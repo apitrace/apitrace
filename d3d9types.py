@@ -1171,9 +1171,9 @@ D3DTRIPATCH_INFO = Struct("D3DTRIPATCH_INFO", [
 ])
 
 D3DADAPTER_IDENTIFIER9 = Struct("D3DADAPTER_IDENTIFIER9", [
-    (String, "Driver"),
-    (String, "Description"),
-    (String, "DeviceName"),
+    (CString, "Driver"),
+    (CString, "Description"),
+    (CString, "DeviceName"),
     (LARGE_INTEGER, "DriverVersion"),
     (DWORD, "VendorId"),
     (DWORD, "DeviceId"),

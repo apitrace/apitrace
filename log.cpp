@@ -266,6 +266,16 @@ void LiteralString(const char *str) {
    WriteString(str);
 }
 
+void LiteralString(const char *str, size_t len) {
+   if (!str) {
+      LiteralNull();
+      return;
+   }
+   WriteByte(Trace::TYPE_STRING);
+   WriteUInt(len);
+   Write(str, len);
+}
+
 void LiteralWString(const wchar_t *str) {
    if (!str) {
       LiteralNull();

@@ -415,15 +415,16 @@ def WrapPointer(type):
     return Pointer(type)
 
 
-class _String(Type):
+class String(Type):
 
-    def __init__(self):
+    def __init__(self, length = None):
         Type.__init__(self, "char *")
+        self.length = length
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_string(self, *args, **kwargs)
 
-String = _String()
+CString = String()
 
 
 class Opaque(Type):

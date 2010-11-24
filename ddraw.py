@@ -485,8 +485,8 @@ DDGAMMARAMP = Struct("DDGAMMARAMP", [
 LPDDGAMMARAMP = Pointer(DDGAMMARAMP)
 
 DDDEVICEIDENTIFIER = Struct("DDDEVICEIDENTIFIER", [
-    (String, "szDriver"),
-    (String, "szDescription"),
+    (CString, "szDriver"),
+    (CString, "szDescription"),
     (LARGE_INTEGER, "liDriverVersion"),
     (DWORD, "dwVendorId"),
     (DWORD, "dwDeviceId"),
@@ -497,8 +497,8 @@ DDDEVICEIDENTIFIER = Struct("DDDEVICEIDENTIFIER", [
 LPDDDEVICEIDENTIFIER = Pointer(DDDEVICEIDENTIFIER)
 
 DDDEVICEIDENTIFIER2 = Struct("DDDEVICEIDENTIFIER2", [
-    (String, "szDriver[MAX_DDDEVICEID_STRING]"),
-    (String, "szDescription[MAX_DDDEVICEID_STRING]"),
+    (CString, "szDriver[MAX_DDDEVICEID_STRING]"),
+    (CString, "szDescription[MAX_DDDEVICEID_STRING]"),
     (LARGE_INTEGER, "liDriverVersion"),
     (DWORD, "dwVendorId"),
     (DWORD, "dwDeviceId"),

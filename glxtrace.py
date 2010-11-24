@@ -35,8 +35,8 @@ PROC = Opaque("__GLXextFuncPtr")
 
 glxapi.add_functions(glapi.functions)
 glxapi.add_functions([
-    Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", String), "procName")]),
-    Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", String), "procName")]),
+    Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
+    Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", CString), "procName")]),
 ])
 
 

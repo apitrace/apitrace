@@ -51,8 +51,8 @@ LPDWORD = Pointer(DWORD)
 LPBOOL = Pointer(BOOL)
 LPSIZE = LPDWORD
 
-LPSTR = String
-LPCSTR = Const(String)
+LPSTR = CString
+LPCSTR = Const(CString)
 LPWSTR = WString
 LPCWSTR = Const(WString)
 

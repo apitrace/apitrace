@@ -54,8 +54,8 @@ GLhalfNV = Alias("GLhalfNV", UShort)
 GLint64EXT = Alias("GLint64EXT", LongLong)
 GLuint64EXT = Alias("GLuint64EXT", ULongLong)
 
-GLstring = Alias("const GLchar *", String)
-GLstringARB = Alias("const GLcharARB *", String)
+GLstring = Alias("const GLchar *", CString)
+GLstringARB = Alias("const GLcharARB *", CString)
 
 GLenum = Enum("GLenum", [
     #"GL_NO_ERROR",                       # 0x0
@@ -2807,7 +2807,7 @@ def basic_functions(Function):
         F(Void, "glGetPixelMapuiv", [(GLenum, "map"), Out(Pointer(GLuint), "values")], sideeffects=False),
         F(Void, "glGetPixelMapusv", [(GLenum, "map"), Out(Pointer(GLushort), "values")], sideeffects=False),
         F(Void, "glGetPolygonStipple", [Out(Pointer(GLubyte), "mask")], sideeffects=False),
-        F(Alias("const GLubyte *", String), "glGetString", [(GLenum, "name")], sideeffects=False),
+        F(Alias("const GLubyte *", CString), "glGetString", [(GLenum, "name")], sideeffects=False),
         F(Void, "glGetTexEnvfv", [(GLenum, "target"), (GLenum, "pname"), Out(Pointer(GLfloat), "params")], sideeffects=False),
         F(Void, "glGetTexEnviv", [(GLenum, "target"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
         F(Void, "glGetTexGendv", [(GLenum, "coord"), (GLenum, "pname"), Out(Pointer(GLdouble), "params")], sideeffects=False),
@@ -3004,7 +3004,7 @@ def extended_functions(Function):
         F(Void, "glProgramLocalParameter4dvARB", [(GLenum, "target"), (GLuint, "index"), (OpaquePointer(Const(GLdouble)), "params")]),
         F(Void, "glProgramLocalParameter4fARB", [(GLenum, "target"), (GLuint, "index"), (GLfloat, "x"), (GLfloat, "y"), (GLfloat, "z"), (GLfloat, "w")]),
         F(Void, "glProgramLocalParameter4fvARB", [(GLenum, "target"), (GLuint, "index"), (OpaquePointer(Const(GLfloat)), "params")]),
-        F(Void, "glProgramStringARB", [(GLenum, "target"), (GLenum, "format"), (GLsizei, "len"), (OpaquePointer(Const(GLvoid)), "string")]),
+        F(Void, "glProgramStringARB", [(GLenum, "target"), (GLenum, "format"), (GLsizei, "len"), (Alias("const void *", String("len")), "string")]),
         F(Void, "glVertexAttrib1dARB", [(GLuint, "index"), (GLdouble, "x")]),
         F(Void, "glVertexAttrib1dvARB", [(GLuint, "index"), (Array(Const(GLdouble), "1"), "v")]),
         F(Void, "glVertexAttrib1fARB", [(GLuint, "index"), (GLfloat, "x")]),

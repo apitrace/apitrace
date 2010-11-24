@@ -212,7 +212,7 @@ wglapi.add_functions([
     StdFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Array(Const(WGLSWAP), "n"), "ps")]),
     
     # WGL_ARB_extensions_string
-    StdFunction(Const(String), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
+    StdFunction(Const(CString), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
     
     # WGL_ARB_pbuffer
     StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]), 
@@ -227,7 +227,7 @@ wglapi.add_functions([
     StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
     
     # WGL_EXT_extensions_string
-    StdFunction(Const(String), "wglGetExtensionsStringEXT", [], sideeffects=False),
+    StdFunction(Const(CString), "wglGetExtensionsStringEXT", [], sideeffects=False),
 
     # WGL_EXT_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),

@@ -64,6 +64,7 @@ namespace Log {
     void LiteralFloat(float value);
     void LiteralFloat(double value);
     void LiteralString(const char *str);
+    void LiteralString(const char *str, size_t size);
     void LiteralWString(const wchar_t *str);
     void LiteralBlob(const void *data, size_t size);
     void LiteralNamedConstant(const char *name, long long value);
