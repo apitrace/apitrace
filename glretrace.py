@@ -132,12 +132,13 @@ def retrace_function(function):
     print 'static void retrace_%s(Trace::Call &call) {' % function.name
     success = True
     for arg in function.args:
-        arg.type = ConstRemover().visit(arg.type)
-        print '    %s %s;' % (arg.type, arg.name)
+        arg_type = ConstRemover().visit(arg.type)
+        print '    // %s ->  %s' % (arg.type, arg_type)
+        print '    %s %s;' % (arg_type, arg.name)
         rvalue = 'call.arg("%s")' % (arg.name,)
         lvalue = arg.name
         try:
-            ValueExtractor().visit(arg.type, lvalue, rvalue)
+            ValueExtractor().visit(arg_type, lvalue, rvalue)
         except NotImplementedError:
             success = False
             print '    %s = 0; // FIXME' % arg.name
@@ -152,11 +153,11 @@ def retrace_function(function):
         print '    %s(%s);' % (function.name, arg_names)
     for arg in function.args:
         if arg.output:
-            arg.type = ConstRemover().visit(arg.type)
+            arg_type = ConstRemover().visit(arg.type)
             rvalue = 'call.arg("%s")' % (arg.name,)
             lvalue = arg.name
             try:
-                ValueWrapper().visit(arg.type, lvalue, rvalue)
+                ValueWrapper().visit(arg_type, lvalue, rvalue)
             except NotImplementedError:
                 print '   // FIXME: %s' % arg.name
     if function.type is not base.Void:

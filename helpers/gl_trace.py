@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Copyright 2008 VMware, Inc.
 # Copyright 2004 IBM Corporation
@@ -23,9 +23,15 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+import getopt
+import os.path
+import sys
+
+glapi_path =  os.path.join(os.environ['MESA'], 'src/mapi/glapi/gen')
+sys.path.insert(0, glapi_path)
+
 import gl_XML
 import license
-import sys, getopt
 
 type_map = {
    'void': 'Void',
@@ -82,10 +88,10 @@ class PrintGlTable(gl_XML.gl_print_base):
                     arg_string = '[' + ', '.join(args) + ']'
                     if category in abi:
                         if pass_ == 0:
-                            print '    DllFunction(%s, "gl%s", %s),' % (get_type(f.return_type), name, arg_string)
+                            print '    GlFunction(%s, "gl%s", %s),' % (get_type(f.return_type), name, arg_string)
                     else:
                         if pass_ == 1:
-                            print '    WglFunction(%s, "gl%s", %s),' % (get_type(f.return_type), name, arg_string)
+                            print '    GlFunction(%s, "gl%s", %s),' % (get_type(f.return_type), name, arg_string)
 
     def printRealHeader(self):
         return
@@ -99,7 +105,7 @@ def show_usage():
     sys.exit(1)
 
 if __name__ == '__main__':
-    file_name = "gl_API.xml"
+    file_name = os.path.join(glapi_path, "gl_API.xml")
     
     try:
         (args, trail) = getopt.getopt(sys.argv[1:], "f:")
