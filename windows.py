@@ -64,6 +64,7 @@ SIZE_T = Alias("SIZE_T", SizeT)
 
 HRESULT = Alias("HRESULT", Int)
 
+VOID = Void
 PVOID = Opaque("PVOID")
 LPVOID = PVOID
 HANDLE = Opaque("HANDLE")
