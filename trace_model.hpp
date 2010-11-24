@@ -212,6 +212,13 @@ public:
    virtual void visit(Const *) {assert(0);}
    virtual void visit(Array *) {assert(0);}
    virtual void visit(Blob *) {assert(0);}
+
+protected:
+   inline void _visit(Value *value) {
+      if (value) { 
+         value->visit(*this); 
+      }
+   }
 };
 
 

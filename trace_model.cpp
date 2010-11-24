@@ -132,14 +132,14 @@ public:
    void visit(Array *array) {
       if (array->values.size() == 1) {
          os << "&";
-         array->values[0]->visit(*this);
+         _visit(array->values[0]);
       }
       else {
          const char *sep = "";
          os << "{";
          for (std::vector<Value *>::iterator it = array->values.begin(); it != array->values.end(); ++it) {
             os << sep;
-            (*it)->visit(*this);
+            _visit(*it);
             sep = ", ";
          }
          os << "}";
@@ -155,13 +155,13 @@ public:
       os << bold << call->name << normal << "(";
       for (std::list<Arg>::iterator it = call->args.begin(); it != call->args.end(); ++it) {
          os << sep << italic << it->first << normal << " = ";
-         it->second->visit(*this);
+         _visit(it->second);
          sep = ", ";
       }
       os << ")";
       if (call->ret) {
          os << " = ";
-         call->ret->visit(*this);
+         _visit(call->ret);
       }
       os << "\n";
    }

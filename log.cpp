@@ -178,24 +178,14 @@ void BeginArg(const char *name) {
    WriteString(name);
 }
 
-void EndArg(void) { }
-
 void BeginReturn(void) {
    WriteByte(Trace::CALL_RET);
 }
-
-void EndReturn(void) { }
 
 void BeginArray(size_t length) {
    WriteByte(Trace::TYPE_ARRAY);
    WriteUInt(length);
 }
-
-void EndArray(void) { }
-
-void BeginElement(void) { }
-
-void EndElement(void) { }
 
 void BeginStruct(const char *name) {
    WriteByte(Trace::TYPE_STRUCT);
@@ -210,8 +200,6 @@ void BeginMember(const char *name) {
    WriteString(name);
 }
 
-void EndMember(void) { }
-
 void BeginBitmask(void) {
    WriteByte(Trace::TYPE_BITMASK);
 }
@@ -219,14 +207,6 @@ void BeginBitmask(void) {
 void EndBitmask(void) {
    WriteByte(Trace::TYPE_NULL);
 }
-
-void BeginPointer(const void *addr)
-{
-   WriteByte(Trace::TYPE_POINTER);
-   WriteUInt((size_t)addr);
-}
-
-void EndPointer(void) { }
 
 void LiteralBool(bool value) {
    WriteByte(value ? Trace::TYPE_TRUE : Trace::TYPE_FALSE);

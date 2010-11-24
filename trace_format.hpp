@@ -51,7 +51,6 @@ enum Type {
    TYPE_BITMASK,
    TYPE_ARRAY,
    TYPE_STRUCT,
-   TYPE_POINTER,
    TYPE_OPAQUE,
 };
 

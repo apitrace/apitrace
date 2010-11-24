@@ -138,8 +138,6 @@ public:
          return parse_struct();
       case Trace::TYPE_BLOB:
          return parse_blob();
-      case Trace::TYPE_POINTER:
-         return parse_pointer();
       case Trace::TYPE_OPAQUE:
          return parse_opaque();
       default:
@@ -222,16 +220,6 @@ done:
           gzread(file, blob->buf, size);
       }
       return blob;
-   }
-   
-   Value *parse_pointer() {
-      unsigned long long addr;
-      Value *value;
-      addr = read_uint();
-      value = parse_value();
-      if (!value)
-         value = new UInt(addr);
-      return value;
    }
    
    Value *parse_struct() {

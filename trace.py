@@ -154,9 +154,11 @@ class DumpImplementer(base.Visitor):
 
     def visit_pointer(self, pointer, instance):
         print '    if(%s) {' % instance
-        print '        Log::BeginPointer((const void *)%s);' % (instance,)
+        print '        Log::BeginArray(1);'
+        print '        Log::BeginElement();'
         dump_instance(pointer.type, "*" + instance)
-        print '        Log::EndPointer();'
+        print '        Log::EndElement();'
+        print '        Log::EndArray();'
         print '    }'
         print '    else'
         print '        Log::LiteralNull();'
