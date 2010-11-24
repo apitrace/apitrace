@@ -30,6 +30,10 @@ import re
 import optparse
 
 
+def stderr(x):
+    sys.stderr.write(str(x) + '\n')
+
+
 class Parser:
 
     def __init__(self, stream):
@@ -92,8 +96,9 @@ class TypemapParser(LineParser):
             fields = [field.strip() for field in line.split(',')]
             src = fields[0]
             dst = fields[3]
+            if dst != '*':
+                typemap[src] = dst
             self.skip_whitespace()
-            typemap[src] = dst
         return typemap
     
     def match_comment(self):
@@ -176,7 +181,7 @@ class SpecParser(LineParser):
         if self.prefix == 'wgl':
             constructor = 'StdFunction'
         else:
-            constructor = 'glFunction'
+            constructor = 'GlFunction'
         extra = ''
         if self.get_function_re.match(function_name):
             extra += ', sideeffects=False'
@@ -184,9 +189,15 @@ class SpecParser(LineParser):
 
     array_re = re.compile(r'^array\s+\[(.*)\]$')
 
+    string_typemap = {
+        'GLchar': 'GLstring',
+        'GLcharARB': 'GLstringARB',
+    }
+
     def parse_arg(self, arg_name, arg_type):
-        base_type, inout, kind = arg_type.split(' ', 2)
-        base_type = self.parse_type(base_type)
+        orig_type, inout, kind = arg_type.split(' ', 2)
+
+        base_type = self.parse_type(orig_type)
 
         if kind == 'value':
             arg_type = base_type
@@ -195,12 +206,22 @@ class SpecParser(LineParser):
             if inout == 'in':
                 arg_type = 'Const(%s)' % arg_type
         elif kind.startswith("array"):
+            arg_type = 'OpaquePointer(%s)' % base_type
+
             mo = self.array_re.match(kind)
             if mo:
-                length = mo.group(1)
-                arg_type = 'Array(%s, "%s")' % (base_type, length)
-            else:
-                arg_type = 'OpaquePointer(%s)' % base_type
+                length = mo.group(1).strip()
+                if length == '':
+                    try:
+                        arg_type = self.string_typemap[base_type]
+                    except KeyError:
+                        pass
+                elif length == '1':
+                    arg_type = 'Pointer(%s)' % base_type
+                elif length.find("COMPSIZE") == -1:
+                    # XXX: Handle COMPSIZE better
+                    arg_type = 'Array(%s, "%s")' % (base_type, length)
+            
             if inout == 'in':
                 arg_type = 'Const(%s)' % arg_type
         else:
@@ -211,15 +232,24 @@ class SpecParser(LineParser):
             arg = 'Out' + arg
         return arg
 
-    _typemap = {
+    semantic_typemap = {
+        'String': 'CString',
+        'Texture': 'GLtexture',
+    }
+
+    post_typemap = {
         'void': 'Void',
         'int': 'Int',
         'float': 'Float',
     }
 
     def parse_type(self, type):
+        try:
+            return self.semantic_typemap[type]
+        except KeyError:
+            pass
         type = self.typemap.get(type, type)
-        type = self._typemap.get(type, type)
+        type = self.post_typemap.get(type, type)
         return type
 
     def match_comment(self):
