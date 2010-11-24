@@ -76,7 +76,8 @@ class ValueExtractor(base.Visitor):
 
     def visit_handle(self, handle, lvalue, rvalue):
         self.visit(handle.type, lvalue, "__%s_map[%s]" %(handle.name, rvalue));
-        print '    std::cout << "%s " << static_cast<%s>(%s) << " <- " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
+        print '    if (verbosity >= 2)'
+        print '        std::cout << "%s " << static_cast<%s>(%s) << " <- " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
     
     def visit_blob(self, blob, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).blob());' % (lvalue, blob, rvalue)
@@ -118,7 +119,8 @@ class ValueWrapper(base.Visitor):
 
     def visit_handle(self, handle, lvalue, rvalue):
         print "    __%s_map[static_cast<%s>(%s)] = %s;" % (handle.name, handle.type, rvalue, lvalue)
-        print '    std::cout << "%s " << static_cast<%s>(%s) << " -> " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
+        print '    if (verbosity >= 2)'
+        print '        std::cout << "%s " << static_cast<%s>(%s) << " -> " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
     
     def visit_blob(self, blob, lvalue, rvalue):
         pass
@@ -183,8 +185,10 @@ def retrace_functions(functions):
             print '        return true;'
             print '    }'
     print
-    print '    std::cout << call;'
-    print '    std::cout.flush();'
+    print '    if (verbosity >=1 ) {'
+    print '        std::cout << call;'
+    print '        std::cout.flush();'
+    print '    };'
     print
     for function in functions:
         if function.sideeffects:
@@ -192,7 +196,7 @@ def retrace_functions(functions):
             print '        retrace_%s(call);' % function.name
             print '        return true;'
             print '    }'
-    print '    std::cerr << "warning: unsupported call " << call.name << "\\n";'
+    print '    std::cerr << "warning: unknown call " << call.name << "\\n";'
     print '    return false;'
     print '}'
     print
@@ -213,10 +217,17 @@ if __name__ == '__main__':
     print
     print '#include <stdlib.h>'
     print '#include <string.h>'
+    print
+    print '#ifdef WIN32'
+    print '#include <windows.h>'
+    print '#endif'
+    print
     print '#include <GL/glew.h>'
     print '#include <GL/glut.h>'
     print
     print '#include "trace_parser.hpp"'
+    print
+    print 'unsigned verbosity = 0;'
     print
     retrace_api(glapi.glapi)
     print '''
@@ -304,7 +315,26 @@ int main(int argc, char **argv)
    glutDisplayFunc(&display);
    glutIdleFunc(&idle);
 
-   for (int i = 1; i < argc; ++i) {
+    int i;
+    for (i = 1; i < argc; ++i) {
+      const char *arg = argv[i];
+
+      if (arg[0] != '-') {
+         break;
+      }
+
+      if (!strcmp(arg, "--")) {
+         break;
+      }
+      else if (!strcmp(arg, "-v")) {
+         ++verbosity;
+      } else {
+         std::cerr << "error: unknown option " << arg << "\\n";
+         return 1;
+      }
+   }
+
+   for ( ; i < argc; ++i) {
       if (parser.open(argv[i])) {
          glutMainLoop();
          parser.close();
