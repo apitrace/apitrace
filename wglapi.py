@@ -221,6 +221,10 @@ wglapi.add_functions([
     # WGL_ARB_extensions_string
     StdFunction(Const(CString), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
 
+    # WGL_ARB_make_current_read
+    StdFunction(BOOL, "wglMakeContextCurrentARB", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
+    StdFunction(HDC, "wglGetCurrentReadDCARB", [], sideeffects=False),
+
     # WGL_ARB_pbuffer
     StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Pointer(Const(Int)), "piAttribList")]),
     StdFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")], sideeffects=False),
@@ -236,10 +240,18 @@ wglapi.add_functions([
     # WGL_EXT_extensions_string
     StdFunction(Const(CString), "wglGetExtensionsStringEXT", [], sideeffects=False),
 
+    # WGL_EXT_make_current_read
+    StdFunction(BOOL, "wglMakeContextCurrentEXT", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
+    StdFunction(HDC, "wglGetCurrentReadDCEXT", [], sideeffects=False),
+
     # WGL_EXT_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
     StdFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (Pointer(Const(Int)), "piAttribIList"), (Pointer(Const(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+
+    # WGL_EXT_swap_control
+    StdFunction(BOOL, "wglSwapIntervalEXT", [(Int, "interval")]),
+    StdFunction(Int, "wglGetSwapIntervalEXT", [], sideeffects=False),
 
     # must be last
     StdFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")]),
