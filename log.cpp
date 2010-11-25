@@ -50,8 +50,6 @@ static void _Close(void) {
    }
 }
 
-static int reentrancy = 0;
-
 static void _Open(const char *szExtension) {
    _Close();
    
@@ -101,9 +99,6 @@ static inline void Write(const void *sBuffer, size_t dwBytesToWrite) {
    if (g_gzFile == NULL)
       return;
    
-   if (reentrancy > 1)
-      return;
-
    gzwrite(g_gzFile, sBuffer, dwBytesToWrite);
 }
 
@@ -177,16 +172,30 @@ void Close(void) {
    _Close();
 }
 
-void BeginCall(const char *function) {
+static unsigned call_no = 0;
+
+unsigned BeginEnter(const char *function) {
    OS::AcquireMutex();
    Open();
-   ++reentrancy;
+   WriteByte(Trace::EVENT_ENTER);
    WriteName(function);
+   return call_no++;
 }
 
-void EndCall(void) {
+void EndEnter(void) {
    WriteByte(Trace::CALL_END);
-   --reentrancy;
+   gzflush(g_gzFile, Z_SYNC_FLUSH);
+   OS::ReleaseMutex();
+}
+
+void BeginLeave(unsigned call) {
+   OS::AcquireMutex();
+   WriteByte(Trace::EVENT_LEAVE);
+   WriteUInt(call);
+}
+
+void EndLeave(void) {
+   WriteByte(Trace::CALL_END);
    gzflush(g_gzFile, Z_SYNC_FLUSH);
    OS::ReleaseMutex();
 }

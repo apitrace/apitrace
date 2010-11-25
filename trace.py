@@ -320,19 +320,21 @@ class Tracer:
             print '    %s __result;' % function.type
             result = '__result = '
         self._get_true_pointer(function)
-        print '    Log::BeginCall("%s");' % (function.name)
+        print '    unsigned __call = Log::BeginEnter("%s");' % (function.name)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
                 self.dump_arg(function, arg)
+        print '    Log::EndEnter();'
         print '    %s%s(%s);' % (result, pvalue, ', '.join([str(arg.name) for arg in function.args]))
+        print '    Log::BeginLeave(__call);'
         for arg in function.args:
             if arg.output:
                 self.dump_arg(function, arg)
                 self.wrap_arg(function, arg)
         if function.type is not stdapi.Void:
             self.dump_ret(function, "__result")
-        print '    Log::EndCall();'
+        print '    Log::EndLeave();'
         if function.type is not stdapi.Void:
             self.wrap_ret(function, "__result")
             print '    return __result;'

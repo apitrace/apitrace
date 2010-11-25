@@ -31,8 +31,11 @@ namespace Log {
     void Open(void);
     void Close(void);
     
-    void BeginCall(const char *function);
-    void EndCall(void);
+    unsigned BeginEnter(const char *function);
+    void EndEnter(void);
+    
+    void BeginLeave(unsigned call);
+    void EndLeave(void);
     
     void BeginArg(unsigned index, const char *name);
     inline void EndArg(void) {}

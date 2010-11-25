@@ -236,6 +236,7 @@ typedef std::pair<std::string, Value *> Arg;
 class Call
 {
 public:
+   unsigned no;
    std::string name;
    std::vector<Arg> args;
    Value *ret;

@@ -53,9 +53,15 @@ protected:
    typedef std::map<size_t, std::string> namemap;
    namemap names;
 
+   typedef std::map<unsigned, Call *> callmap;
+   callmap calls;
+
+   unsigned next_call_no;
+
 public:
    Parser() {
       file = NULL;
+      next_call_no = 0;
    }
 
    ~Parser() {
@@ -87,13 +93,52 @@ public:
    }
 
    Call *parse_call(void) {
+      do {
+         int c = read_byte();
+         switch(c) {
+         case Trace::EVENT_ENTER:
+            parse_enter();
+            break;
+         case Trace::EVENT_LEAVE:
+            return parse_leave();
+         case Trace::EVENT_MESSAGE:
+            std::cerr << "message: " << read_string() << "\n";
+            break;
+         default:
+            std::cerr << "error: unknown call detail " << c << "\n";
+            assert(0);
+            /* fallthrough */
+         case -1:
+            return NULL;
+         }
+      } while(true);
+   }
+   
+   void parse_enter(void) {
       Call *call = new Call;
+      call->no = next_call_no++;
       call->name = read_name();
+      parse_call_details(call);
+      calls[call->no] = call;
+   }
+   
+   Call *parse_leave(void) {
+      unsigned call_no = read_uint();
+      Call *call = calls[call_no];
+      assert(call);
+      if (!call) {
+          return NULL;
+      }
+      parse_call_details(call);
+      return call;
+   }
+   
+   void parse_call_details(Call *call) {
       do {
          int c = read_byte();
          switch(c) {
          case Trace::CALL_END:
-            return call;
+            return;
          case Trace::CALL_ARG:
             parse_arg(call);
             break;
@@ -105,8 +150,7 @@ public:
             assert(0);
             /* fallthrough */
          case -1:
-            delete call;
-            return NULL;
+            return;
          }
       } while(true);
    }

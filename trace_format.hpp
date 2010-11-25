@@ -30,6 +30,12 @@ namespace Trace {
 
 #define TRACE_VERSION 0
 
+enum Event {
+   EVENT_ENTER = 0,
+   EVENT_LEAVE,
+   EVENT_MESSAGE
+};
+
 enum CallDetail {
    CALL_END = 0,
    CALL_ARG,
