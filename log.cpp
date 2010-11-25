@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <map>
+
 #include <zlib.h>
 
 #include "os.hpp"
@@ -148,6 +150,22 @@ WriteString(const char *str) {
    Write(str, len);
 }
 
+typedef std::map<const char *, size_t> namemap;
+static namemap names;
+
+static inline void 
+WriteName(const char *name) {
+   namemap::iterator it = names.find(name);
+   if (it == names.end()) {
+       size_t name_id = names.size();
+       WriteUInt(name_id);
+       WriteString(name);
+       names[name] = name_id;
+   } else {
+       WriteUInt(it->second);
+   }
+}
+
 void Open(void) {
     if (!g_gzFile) {
         _Open("trace");
@@ -163,7 +181,7 @@ void BeginCall(const char *function) {
    OS::AcquireMutex();
    Open();
    ++reentrancy;
-   WriteString(function);
+   WriteName(function);
 }
 
 void EndCall(void) {
@@ -176,7 +194,7 @@ void EndCall(void) {
 void BeginArg(unsigned index, const char *name) {
    WriteByte(Trace::CALL_ARG);
    WriteUInt(index);
-   WriteString(name);
+   WriteName(name);
 }
 
 void BeginReturn(void) {
@@ -188,17 +206,13 @@ void BeginArray(size_t length) {
    WriteUInt(length);
 }
 
-void BeginStruct(const char *name) {
+void BeginStruct(size_t length) {
    WriteByte(Trace::TYPE_STRUCT);
-   (void)name;
-}
-
-void EndStruct(void) {
-   WriteString("");
+   WriteUInt(length);
 }
 
 void BeginMember(const char *name) {
-   WriteString(name);
+   WriteName(name);
 }
 
 void BeginBitmask(void) {
@@ -280,7 +294,7 @@ void LiteralBlob(const void *data, size_t size) {
 
 void LiteralNamedConstant(const char *name, long long value) {
    WriteByte(Trace::TYPE_CONST);
-   WriteString(name);
+   WriteName(name);
    LiteralSInt(value);
 }
 

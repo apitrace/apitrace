@@ -51,7 +51,7 @@ class DumpDeclarator(base.OnceVisitor):
         for type, name in struct.members:
             self.visit(type)
         print 'static void __traceStruct%s(const %s &value) {' % (struct.id, struct.expr)
-        print '    Log::BeginStruct("%s");' % struct.name
+        print '    Log::BeginStruct(%u);' % len(struct.members)
         for type, name in struct.members:
             print '    Log::BeginMember("%s");' % (name,)
             dump_instance(type, 'value.%s' % (name,))

@@ -46,8 +46,8 @@ namespace Log {
     inline void BeginElement(void) {}
     inline void EndElement(void) {}
 
-    void BeginStruct(const char *name);
-    void EndStruct(void);
+    void BeginStruct(size_t length);
+    inline void EndStruct(void) {}
 
     void BeginMember(const char *name);
     inline void EndMember(void) {}

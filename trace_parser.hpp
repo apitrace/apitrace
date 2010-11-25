@@ -30,6 +30,8 @@
 #include <cassert>
 
 #include <iostream>
+#include <map>
+#include <string>
 
 #include <zlib.h>
 
@@ -44,6 +46,10 @@ class Parser
 {
 protected:
    gzFile file;
+
+   typedef std::map<size_t, std::string> namemap;
+   namemap names;
+
 public:
    Parser() {
       file = NULL;
@@ -79,7 +85,7 @@ public:
 
    Call *parse_call(void) {
       Call *call = new Call;
-      call->name = read_string();
+      call->name = read_name();
       do {
          int c = read_byte();
          switch(c) {
@@ -104,7 +110,7 @@ public:
    
    void parse_arg(Call *call) {
       unsigned index = read_uint();
-      std::string name = read_string();
+      std::string name = read_name();
       Value *value = parse_value();
       if (index >= call->args.size()) {
           call->args.resize(index + 1);
@@ -176,7 +182,7 @@ public:
    }
    
    Value *parse_const() {
-      std::string name = read_string();
+      std::string name = read_name();
       Value *value = parse_value();
       return new Const(name, value);
    }
@@ -194,7 +200,7 @@ public:
             value |= read_uint();
             break;
          case Trace::TYPE_CONST:
-            read_string();
+            read_name();
             break;
          case Trace::TYPE_NULL:
             goto done;
@@ -227,13 +233,12 @@ done:
    }
    
    Value *parse_struct() {
-      std::string name;
+      size_t length = read_uint();
       /* XXX */
-      name = read_string();
-      while(name.length()) {
+      for (size_t i; i < length; ++i) {
+         std::string name = read_name();
          Value *value = parse_value();
          std::cout << "  " << name << " = " << value << "\n";
-         name = read_string();
       }
       return NULL;
    }
@@ -243,6 +248,18 @@ done:
       addr = read_uint();
       /* XXX */
       return new UInt(addr);
+   }
+
+   std::string read_name(void) {
+       std::string name;
+       size_t id = read_uint();
+       if (id >= names.size()) {
+           name = read_string();
+           names[id] = name;
+           return name;
+       } else {
+           return names[id];
+       }
    }
    
    std::string read_string(void) {
