@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2008-2009 VMware, Inc.
+# Copyright 2008-2010 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,23 +24,11 @@
 ##########################################################################/
 
 
-from stdapi import *
-from glapi import glapi
-import trace
+from glxapi import glxapi
+from trace import Tracer
 
 
-glxapi = API("GLX")
-
-PROC = Opaque("__GLXextFuncPtr")
-
-glxapi.add_functions(glapi.functions)
-glxapi.add_functions([
-    Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
-    Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", CString), "procName")]),
-])
-
-
-class GlxTracer(trace.Tracer):
+class GlxTracer(Tracer):
 
     def get_function_address(self, function):
         if function.name.startswith("glXGetProcAddress"):
