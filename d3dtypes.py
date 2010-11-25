@@ -25,7 +25,7 @@
 
 """d3dtypes.h"""
 
-from windows import *
+from winapi import *
 from ddraw import *
 
 D3DVALUE = Float

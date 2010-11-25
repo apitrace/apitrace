@@ -25,7 +25,7 @@
 
 """d3d8.h"""
 
-from windows import *
+from winapi import *
 from d3d8types import *
 from d3d8caps import *
 

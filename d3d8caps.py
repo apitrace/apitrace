@@ -25,7 +25,7 @@
 
 """d3d8caps.h"""
 
-from windows import *
+from winapi import *
 from d3d8types import *
 
 D3DCAPS = Flags(DWORD, [

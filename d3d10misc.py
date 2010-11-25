@@ -25,7 +25,7 @@
 
 """d3d10misc.h"""
 
-from windows import *
+from winapi import *
 
 ID3D10Blob = Interface("ID3D10Blob", IUnknown)
 LPD3D10BLOB = Pointer(ID3D10Blob)

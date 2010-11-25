@@ -25,7 +25,7 @@
 
 """d3d9.h"""
 
-from windows import *
+from winapi import *
 from d3dshader import *
 from d3d9types import *
 from d3d9caps import *

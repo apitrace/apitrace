@@ -25,7 +25,7 @@
 
 """ddraw.h"""
 
-from windows import *
+from winapi import *
 
 IDirectDraw = Interface("IDirectDraw", IUnknown)
 IDirectDraw2 = Interface("IDirectDraw2", IUnknown)

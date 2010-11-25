@@ -25,7 +25,7 @@
 
 """d3d.h"""
 
-from windows import *
+from winapi import *
 from d3dtypes import *
 from d3dcaps import *
 

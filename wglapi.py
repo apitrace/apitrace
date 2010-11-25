@@ -25,7 +25,7 @@
 
 
 from glapi import *
-from windows import *
+from winapi import *
 
 
 wglapi = API("WGL")
