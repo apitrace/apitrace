@@ -1238,6 +1238,7 @@ __glPointParameterfvEXT_size(GLenum pname)
 
 #define __glPointParameterfv_size __glPointParameterfvEXT_size
 #define __glPointParameteriv_size __glPointParameterfvEXT_size
+#define __glPointParameterfvARB_size __glPointParameterfvEXT_size
 #define __glPointParameterivNV_size __glPointParameterfvEXT_size
 
 static inline size_t
@@ -1379,6 +1380,13 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
 #define __glTexSubImage3D_size(format, type, width, height, depth) __glTexImage3D_size(format, type, width, height, depth, 0)
 #define __glTexSubImage2D_size(format, type, width, height)        __glTexImage2D_size(format, type, width, height, 0)
 #define __glTexSubImage1D_size(format, type, width)                __glTexImage1D_size(format, type, width, 0)
+
+#define __glTexImage3DEXT_size __glTexImage3D_size
+#define __glTexImage2DEXT_size __glTexImage2D_size
+#define __glTexImage1DEXT_size __glTexImage1D_size
+#define __glTexSubImage3DEXT_size __glTexSubImage3D_size
+#define __glTexSubImage2DEXT_size __glTexSubImage2D_size
+#define __glTexSubImage1DEXT_size __glTexSubImage1D_size
 
 #define __glDrawPixels_size(format, type, width, height) __glTexImage2D_size(format, type, width, height, 0)
 

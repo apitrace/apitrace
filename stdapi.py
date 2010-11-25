@@ -442,7 +442,13 @@ class Opaque(Type):
         return visitor.visit_opaque(self, *args, **kwargs)
 
 
-def OpaquePointer(type):
+def OpaquePointer(type, *args):
+    return Opaque(type.expr + ' *')
+
+def OpaqueArray(type, size):
+    return Opaque(type.expr + ' *')
+
+def OpaqueBlob(type, size):
     return Opaque(type.expr + ' *')
 
 

@@ -31,6 +31,15 @@ from retrace import Retracer
 
 class GlRetracer(Retracer):
 
+    def filter_function(self, function):
+        return function.name not in [
+            "glNewBufferRegion",
+            "glDeleteBufferRegion",
+            "glReadBufferRegion",
+            "glDrawBufferRegion",
+            "glBufferRegionEnabled",
+        ]
+
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in [
             "glColorPointer",

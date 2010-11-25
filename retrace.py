@@ -203,7 +203,12 @@ class Retracer:
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         ValueExtractor().visit(arg_type, lvalue, rvalue)
 
+    def filter_function(self, function):
+        return True
+
     def retrace_functions(self, functions):
+        functions = filter(self.filter_function, functions)
+
         for function in functions:
             if function.sideeffects:
                 self.retrace_function(function)
