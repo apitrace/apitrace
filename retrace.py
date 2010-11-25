@@ -136,9 +136,17 @@ class ValueWrapper(stdapi.Visitor):
     
 
     def visit_handle(self, handle, lvalue, rvalue):
-        print "    __%s_map[static_cast<%s>(%s)] = %s;" % (handle.name, handle.type, rvalue, lvalue)
-        print '    if (verbosity >= 2)'
-        print '        std::cout << "%s " << static_cast<%s>(%s) << " -> " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
+        if handle.range is None:
+            print "    __{handle.name}_map[static_cast<{handle.type}>({rvalue})] = {lvalue};".format(**locals())
+            print '    if (verbosity >= 2)'
+            print '        std::cout << "{handle.name} " << static_cast<{handle.type}>({rvalue}) << " -> " << {lvalue} << "\\n";'.format(**locals())
+        else:
+            i = '__h' + handle.id
+            print '    for({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
+            print '        __{handle.name}_map[static_cast<{handle.type}>({rvalue}) + {i}] = {lvalue} + {i};'.format(**locals())
+            print '        if (verbosity >= 2)'
+            print '            std::cout << "{handle.name} " << (static_cast<{handle.type}>({rvalue}) + {i}) << " -> " << ({lvalue} + {i}) << "\\n";'.format(**locals())
+            print '    }'
     
     def visit_blob(self, blob, lvalue, rvalue):
         pass
@@ -229,8 +237,11 @@ class Retracer:
 
         types = api.all_types()
         handles = [type for type in types if isinstance(type, stdapi.Handle)]
+        handle_names = set()
         for handle in handles:
-            print 'static std::map<%s, %s> __%s_map;' % (handle.type, handle.type, handle.name)
+            if handle.name not in handle_names:
+                print 'static std::map<%s, %s> __%s_map;' % (handle.type, handle.type, handle.name)
+                handle_names.add(handle.name)
         print
 
         print 'unsigned verbosity = 0;'

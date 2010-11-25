@@ -131,7 +131,7 @@ class Rebuilder(Visitor):
 
     def visit_handle(self, handle):
         type = self.visit(handle.type)
-        return Handle(handle.name, type)
+        return Handle(handle.name, type, handle.range)
 
     def visit_alias(self, alias):
         type = self.visit(alias.type)
@@ -238,10 +238,11 @@ class Pointer(Type):
 
 class Handle(Type):
 
-    def __init__(self, name, type):
+    def __init__(self, name, type, range=None):
         Type.__init__(self, type.expr, 'P' + type.id)
         self.name = name
         self.type = type
+        self.range = range
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_handle(self, *args, **kwargs)

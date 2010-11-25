@@ -132,7 +132,7 @@ glapi.add_functions([
     GlFunction(Void, "glCallList", [(GLlist, "list")]),
     GlFunction(Void, "glCallLists", [(GLsizei, "n"), (GLenum, "type"), (Blob(Const(GLvoid), "__glCallLists_size(n, type)"), "lists")]), # XXX
     GlFunction(Void, "glDeleteLists", [(GLlist, "list"), (GLsizei, "range")]), # XXX
-    GlFunction(GLlist, "glGenLists", [(GLsizei, "range")]), # XXX
+    GlFunction(Handle("list", GLuint, "range"), "glGenLists", [(GLsizei, "range")]), # XXX
     GlFunction(Void, "glListBase", [(GLuint, "base")]),
     GlFunction(Void, "glBegin", [(GLenum_mode, "mode")]),
     GlFunction(Void, "glBitmap", [(GLsizei, "width"), (GLsizei, "height"), (GLfloat, "xorig"), (GLfloat, "yorig"), (GLfloat, "xmove"), (GLfloat, "ymove"), (Blob(Const(GLubyte), "__glBitmap_size(width, height)"), "bitmap")]),
