@@ -95,7 +95,7 @@ if (WIN32)
 	#	add_custom_command (
 	#		OUTPUT d3d8.cpp
 	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
-	#		DEPENDS d3d8.py d3d8types.py d3d8caps.py winapi.py base.py
+	#		DEPENDS d3d8.py d3d8types.py d3d8caps.py winapi.py stdapi.py
 	#	)
 	#	add_library (d3d8 SHARED d3d8.def d3d8.cpp log.cpp os_win32.cpp)
 	#	set_target_properties (d3d8 PROPERTIES PREFIX "")
@@ -107,7 +107,7 @@ if (WIN32)
 	#	add_custom_command (
 	#		OUTPUT d3d9.cpp
 	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
-	#		DEPENDS d3d9.py d3d9types.py d3d9caps.py d3dshader.py winapi.py base.py
+	#		DEPENDS d3d9.py d3d9types.py d3d9caps.py d3dshader.py winapi.py stdapi.py
 	#	)
 	#	add_library (d3d9 SHARED d3d9.def d3d9.cpp log.cpp os_win32.cpp)
 	#	set_target_properties (d3d9 PROPERTIES PREFIX "")
@@ -119,7 +119,7 @@ if (WIN32)
 	#	add_custom_command (
 	#		OUTPUT d3d10.cpp
 	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
-	#		DEPENDS d3d10misc.py winapi.py base.py
+	#		DEPENDS d3d10misc.py winapi.py stdapi.py
 	#	)
 	#	add_library (d3d10 SHARED d3d10.def d3d10.cpp log.cpp os_win32.cpp)
 	#	set_target_properties (d3d10 PROPERTIES PREFIX "")
@@ -129,7 +129,7 @@ if (WIN32)
 	add_custom_command (
 		OUTPUT opengl32.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.py > ${CMAKE_CURRENT_BINARY_DIR}/opengl32.cpp
-		DEPENDS opengl32.py trace.py wglapi.py glapi.py winapi.py base.py
+		DEPENDS opengl32.py trace.py wglapi.py glapi.py winapi.py stdapi.py
 	)
 	add_library (opengl SHARED opengl32.def opengl32.cpp log.cpp os_win32.cpp)
 	set_target_properties (opengl PROPERTIES
@@ -145,7 +145,7 @@ else ()
 	add_custom_command (
 		OUTPUT glxtrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-		DEPENDS glxtrace.py trace.py glapi.py base.py
+		DEPENDS glxtrace.py trace.py glapi.py stdapi.py
 	)
 
 	add_library (glxtrace SHARED glxtrace.cpp log.cpp os_posix.cpp)
@@ -160,7 +160,7 @@ if (GLEW_INCLUDE_DIR)
 	add_custom_command (
 		OUTPUT glretrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
-		DEPENDS glretrace.py glapi.py base.py
+		DEPENDS glretrace.py glapi.py stdapi.py
 	)
 
 	include_directories (

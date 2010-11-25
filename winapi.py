@@ -25,7 +25,7 @@
 
 """Win32 API type description."""
 
-from base import *
+from stdapi import *
 
 SHORT = Alias("SHORT", Short)
 USHORT = Alias("USHORT", UShort)

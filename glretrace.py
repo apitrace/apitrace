@@ -24,12 +24,12 @@
 ##########################################################################/
 
 
-import base
+import stdapi
 import glapi
 
 
 
-class ConstRemover(base.Rebuilder):
+class ConstRemover(stdapi.Rebuilder):
 
     def visit_const(self, const):
         return const.type
@@ -38,10 +38,10 @@ class ConstRemover(base.Rebuilder):
         expr = opaque.expr
         if expr.startswith('const '):
             expr = expr[6:]
-        return base.Opaque(expr)
+        return stdapi.Opaque(expr)
 
 
-class ValueExtractor(base.Visitor):
+class ValueExtractor(stdapi.Visitor):
 
     def visit_literal(self, literal, lvalue, rvalue):
         if literal.format == 'Bool':
@@ -100,7 +100,7 @@ class ValueExtractor(base.Visitor):
 
 
 
-class ValueWrapper(base.Visitor):
+class ValueWrapper(stdapi.Visitor):
 
     def visit_literal(self, literal, lvalue, rvalue):
         pass
@@ -166,7 +166,7 @@ def retrace_function(function):
         print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
         print '    return;'
     arg_names = ", ".join([arg.name for arg in function.args])
-    if function.type is not base.Void:
+    if function.type is not stdapi.Void:
         print '    %s __result;' % (function.type)
         print '    __result = %s(%s);' % (function.name, arg_names)
     else:
@@ -180,7 +180,7 @@ def retrace_function(function):
                 ValueWrapper().visit(arg_type, lvalue, rvalue)
             except NotImplementedError:
                 print '   // FIXME: %s' % arg.name
-    if function.type is not base.Void:
+    if function.type is not stdapi.Void:
         rvalue = '*call.ret'
         lvalue = '__result'
         try:
@@ -223,7 +223,7 @@ def retrace_functions(functions):
 def retrace_api(api):
     types = api.all_types()
 
-    handles = [type for type in types if isinstance(type, base.Handle)]
+    handles = [type for type in types if isinstance(type, stdapi.Handle)]
     for handle in handles:
         print 'static std::map<%s, %s> __%s_map;' % (handle.type, handle.type, handle.name)
     print

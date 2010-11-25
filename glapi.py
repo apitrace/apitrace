@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from base import *
+from stdapi import *
 
 
 GLboolean = Alias("GLboolean", Bool)

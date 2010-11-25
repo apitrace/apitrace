@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from base import Type
+from stdapi import Type
 
 
 class D3DShader(Type):

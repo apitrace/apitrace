@@ -26,13 +26,13 @@
 """C basic types"""
 
 
-import base
+import stdapi
 
 
 all_types = {}
 
 
-class DumpDeclarator(base.OnceVisitor):
+class DumpDeclarator(stdapi.OnceVisitor):
     '''Declare helper functions to dump complex types.'''
 
     def visit_void(self, literal):
@@ -111,7 +111,7 @@ class DumpDeclarator(base.OnceVisitor):
         pass
 
 
-class DumpImplementer(base.Visitor):
+class DumpImplementer(stdapi.Visitor):
     '''Dump an instance.'''
 
     def visit_literal(self, literal, instance):
@@ -180,7 +180,7 @@ dump_instance = DumpImplementer().visit
 
 
 
-class Wrapper(base.Visitor):
+class Wrapper(stdapi.Visitor):
     '''Wrap an instance.'''
 
     def visit_void(self, type, instance):
@@ -290,7 +290,7 @@ class Tracer:
 
     def trace_function_fail(self, function):
         if function.fail is not None:
-            if function.type is base.Void:
+            if function.type is stdapi.Void:
                 assert function.fail == ''
                 print '            return;' 
             else:
@@ -314,7 +314,7 @@ class Tracer:
     def trace_function_impl(self, function):
         pvalue = self.function_pointer_value(function)
         print function.prototype() + ' {'
-        if function.type is base.Void:
+        if function.type is stdapi.Void:
             result = ''
         else:
             print '    %s __result;' % function.type
@@ -330,10 +330,10 @@ class Tracer:
             if arg.output:
                 self.dump_arg(function, arg)
                 self.wrap_arg(function, arg)
-        if function.type is not base.Void:
+        if function.type is not stdapi.Void:
             self.dump_ret(function, "__result")
         print '    Log::EndCall();'
-        if function.type is not base.Void:
+        if function.type is not stdapi.Void:
             self.wrap_ret(function, "__result")
             print '    return __result;'
         print '}'

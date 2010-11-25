@@ -399,7 +399,7 @@ class Interface(Type):
 
     def itermethods(self):
         if self.base is not None:
-            for method in self.base.itermethods():
+            for method in self.stdapi.itermethods():
                 yield method
         for method in self.methods:
             yield method

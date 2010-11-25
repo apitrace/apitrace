@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from base import *
+from stdapi import *
 from glapi import glapi
 import trace
 
