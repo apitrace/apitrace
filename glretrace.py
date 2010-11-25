@@ -46,6 +46,8 @@ if __name__ == '__main__':
     print '#include <GL/glew.h>'
     print '#include <GL/glut.h>'
     print
+    print 'static bool double_buffer = false;'
+    print
     api = glapi.glapi
     retracer = GlRetracer()
     retracer.retrace_api(glapi.glapi)
@@ -59,10 +61,17 @@ static void display(void) {
    Trace::Call *call;
 
    while ((call = parser.parse_call())) {
-      if (call->name == "glFlush" ||
-          call->name == "glXSwapBuffers" ||
-          call->name == "wglSwapBuffers") {
+      if (call->name == "glFlush") {
          glFlush();
+         return;
+      }
+      
+      if (call->name == "glXSwapBuffers" ||
+          call->name == "wglSwapBuffers") {
+         if (double_buffer)
+            glutSwapBuffers();
+         else
+            glFlush();
          return;
       }
       
@@ -124,18 +133,9 @@ static void idle(void) {
 
 int main(int argc, char **argv)
 {
-   glutInit(&argc, argv);
-   glutInitWindowPosition(0, 0);
-   glutInitWindowSize(800, 600);
-   glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | GLUT_SINGLE);
-   glutCreateWindow(argv[0]);
-   glewInit();
 
-   glutDisplayFunc(&display);
-   glutIdleFunc(&idle);
-
-    int i;
-    for (i = 1; i < argc; ++i) {
+   int i;
+   for (i = 1; i < argc; ++i) {
       const char *arg = argv[i];
 
       if (arg[0] != '-') {
@@ -145,12 +145,28 @@ int main(int argc, char **argv)
       if (!strcmp(arg, "--")) {
          break;
       }
-      else if (!strcmp(arg, "-v")) {
+      else if (!strcmp(arg, "-db")) {
+         double_buffer = true;
+      } else if (!strcmp(arg, "-v")) {
          ++verbosity;
       } else {
          std::cerr << "error: unknown option " << arg << "\\n";
          return 1;
       }
+   }
+
+   glutInit(&argc, argv);
+   glutInitWindowPosition(0, 0);
+   glutInitWindowSize(800, 600);
+   glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | (double_buffer ? GLUT_DOUBLE : GLUT_SINGLE));
+   glutCreateWindow(argv[0]);
+   glewInit();
+
+   glutDisplayFunc(&display);
+   glutIdleFunc(&idle);
+
+   for (GLuint h = 0; h < 1024; ++h) {
+      __list_map[h] = h;
    }
 
    for ( ; i < argc; ++i) {
