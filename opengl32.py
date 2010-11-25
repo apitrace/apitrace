@@ -431,7 +431,7 @@ if __name__ == '__main__':
     print '#include "wglext.h"'
     print
     print '#include "log.hpp"'
-    print '#include "glhelpers.hpp"'
+    print '#include "glsize.hpp"'
     print
     print '#ifndef PFD_SUPPORT_DIRECTDRAW'
     print '#define PFD_SUPPORT_DIRECTDRAW 0x00002000'

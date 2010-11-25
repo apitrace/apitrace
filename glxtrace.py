@@ -78,7 +78,7 @@ if __name__ == '__main__':
     print '#include <GL/glxext.h>'
     print
     print '#include "log.hpp"'
-    print '#include "glhelpers.hpp"'
+    print '#include "glsize.hpp"'
     print
     print 'extern "C" {'
     print
