@@ -33,8 +33,8 @@ class GlRetracer(Retracer):
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in [
-            "glColorPointer"
-            "glEdgeFlagPointer"
+            "glColorPointer",
+            "glEdgeFlagPointer",
             "glIndexPointer",
             "glNormalPointer",
             "glTexCoordPointer",

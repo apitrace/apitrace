@@ -150,7 +150,7 @@ class glx_enum_function:
                     
         print '    default:' 
         print '        assert(0);' 
-        print '        return 0;'
+        print '        return 1;'
         print '    }'
 
 
@@ -244,7 +244,7 @@ class PrintGlxSizeStubs_c(gl_XML.gl_print_base):
     def printBody(self, api):
         enum_sigs = {}
 
-        for func in api.functionIterateGlx():
+        for func in api.functionIterateByOffset():
             ef = glx_enum_function( func.name, api.enums_by_name )
             if len(ef.enums) == 0:
                 continue

@@ -836,6 +836,12 @@ __glGetBooleanv_size(GLenum pname)
     case GL_RGBA_INTEGER_MODE_EXT:
         return __glGetBooleanv_variable_size(pname);
 #endif
+    case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
+    case GL_MAX_VERTEX_UNIFORM_COMPONENTS:
+    case GL_MAX_VARYING_FLOATS:
+    case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+        return 1;
     default:
         assert(0);
         return 0;
