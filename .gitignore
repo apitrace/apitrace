@@ -19,7 +19,7 @@
 CMakeCache.txt
 CMakeFiles
 MD5SUM
-Makefile
+./Makefile
 build
 cmake_install.cmake
 config.log
