@@ -33,8 +33,10 @@ int main(int argc, char **argv)
       Trace::Parser p;
       if (p.open(argv[i])) {
           Trace::Call *call;
-          while ((call = p.parse_call())) {
+          call = p.parse_call();
+          while (call) {
               std::cout << *call;
+              call = p.parse_call();
           }
       }
    }

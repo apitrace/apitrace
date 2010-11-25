@@ -39,6 +39,9 @@
 #include "trace_model.hpp"
 
 
+#define TRACE_VERBOSE 0
+
+
 namespace Trace {
 
 
@@ -254,12 +257,17 @@ done:
        std::string name;
        size_t id = read_uint();
        if (id >= names.size()) {
+           assert(id == names.size());
            name = read_string();
            names[id] = name;
            return name;
        } else {
-           return names[id];
+           name = names[id];
        }
+#if TRACE_VERBOSE
+       std::cerr << "\tNAME " << id << " " << name << "\n";
+#endif
+       return name;
    }
    
    std::string read_string(void) {
@@ -271,8 +279,8 @@ done:
       gzread(file, buf, len);
       std::string value(buf, len);
       delete [] buf;
-#ifdef TRACE_VERBOSE
-      std::cerr << '"' << value << '"' << "\n";
+#if TRACE_VERBOSE
+      std::cerr << "\tSTRING \"" << value << "\"\n";
 #endif
       return value;
    }
@@ -289,19 +297,19 @@ done:
          value |= (unsigned long long)(c & 0x7f) << shift;
          shift += 7;
       } while(c & 0x80);
-#ifdef TRACE_VERBOSE
-      std::cerr << value << "\n";
+#if TRACE_VERBOSE
+      std::cerr << "\tUINT " << value << "\n";
 #endif
       return value;
    }
 
    int read_byte(void) {
       int c = gzgetc(file);
-#ifdef TRACE_VERBOSE
+#if TRACE_VERBOSE
       if (c < 0)
-         std::cerr << "EOF" << "\n";
+         std::cerr << "\tEOF" << "\n";
       else
-         std::cerr << "0x" << std::hex << c << "\n";
+         std::cerr << "\tBYTE 0x" << std::hex << c << std::dec << "\n";
 #endif
       return c;
    }
