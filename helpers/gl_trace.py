@@ -104,9 +104,10 @@ def show_usage():
     print "Usage: %s [-f input_file_name]" % sys.argv[0]
     sys.exit(1)
 
+
 if __name__ == '__main__':
     file_name = os.path.join(glapi_path, "gl_API.xml")
-    
+
     try:
         (args, trail) = getopt.getopt(sys.argv[1:], "f:")
     except Exception,e:

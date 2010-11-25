@@ -424,11 +424,7 @@ if __name__ == '__main__':
     print
     print '#define _GDI32_'
     print
-    print '#include <windows.h>'
-    print '#include <tchar.h>'
-    print '#include <GL/gl.h>'
-    print '#include "glext.h"'
-    print '#include "wglext.h"'
+    print '#include "glimports.hpp"'
     print
     print '#include "log.hpp"'
     print '#include "glsize.hpp"'

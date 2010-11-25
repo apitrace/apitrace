@@ -2529,7 +2529,7 @@ GLrenderbuffer = Handle("renderbuffer", GLuint)
 
 
 def GlFunction(*args, **kwargs):
-    kwargs.setdefault('call', 'GLAPIENTRY')
+    kwargs.setdefault('call', 'APIENTRY')
     return Function(*args, **kwargs)
 
 

@@ -380,7 +380,7 @@ class Function:
 
 
 def StdFunction(*args, **kwargs):
-    kwargs.setdefault('call', 'GLAPIENTRY')
+    kwargs.setdefault('call', '__stdcall')
     return Function(*args, **kwargs)
 
 

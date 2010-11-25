@@ -29,6 +29,9 @@
 
 #include <cassert>
 
+#include "glimports.hpp"
+
+
 static inline size_t
 __gl_calllists_size(GLsizei n, GLenum type)
 {
