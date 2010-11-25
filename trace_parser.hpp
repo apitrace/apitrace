@@ -158,7 +158,7 @@ public:
    }
 
    Value *parse_sint() {
-      return new SInt(-read_uint());
+      return new SInt(-(signed long long)read_uint());
    }
    
    Value *parse_uint() {
@@ -194,7 +194,7 @@ public:
          c = read_byte();
          switch(c) {
          case Trace::TYPE_SINT:
-            value |= -read_uint();
+            value |= -(signed long long)read_uint();
             break;
          case Trace::TYPE_UINT:
             value |= read_uint();
@@ -235,7 +235,7 @@ done:
    Value *parse_struct() {
       size_t length = read_uint();
       /* XXX */
-      for (size_t i; i < length; ++i) {
+      for (size_t i = 0; i < length; ++i) {
          std::string name = read_name();
          Value *value = parse_value();
          std::cout << "  " << name << " = " << value << "\n";

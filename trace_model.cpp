@@ -101,7 +101,7 @@ public:
       delete formatter;
    }
 
-   void visit(Null *node) {
+   void visit(Null *) {
       os << "NULL";
    }
 
@@ -236,7 +236,7 @@ void * Value::blob(void) const {
    if (blob)
        return blob->buf;
    const Null *null = dynamic_cast<const Null *>(unwrap(this));
-   if (null);
+   if (null)
        return NULL;
    assert(0);
    return NULL;
@@ -247,7 +247,7 @@ const char * Value::string(void) const {
    if (string)
        return string->value.c_str();
    const Null *null = dynamic_cast<const Null *>(unwrap(this));
-   if (null);
+   if (null)
        return NULL;
    assert(0);
    return NULL;

@@ -35,10 +35,14 @@
 
 #include <GL/gl.h>
 
-#include <GL/glext.h>
+#include "glext.h"
+
+#ifndef GL_TEXTURE_INDEX_SIZE_EXT
+#define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
+#endif
 
 #ifdef WIN32
-#include <GL/wglext.h>
+#include "wglext.h"
 #endif /* WIN32 */
 
 #endif /* _GLIMPORTS_HPP_ */

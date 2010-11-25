@@ -44,6 +44,8 @@ if (MSVC)
 	add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
 	add_definitions (-wd4505) # unreferenced local function has been removed
 	add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
+	# XXX: it's safer to use ssize_t everywhere instead of disabling warning
+	add_definitions (-wd4018) # signed/unsigned mismatch
 	
 	# Use static runtime
 	# http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
@@ -56,7 +58,10 @@ if (MSVC)
 		endif (${flag_var} MATCHES "/MD")
 	endforeach (flag_var)
 else ()
+	# Adjust warnings
 	add_definitions (-Wall)
+	# XXX: it's safer to use ssize_t everywhere instead of disabling warning
+	add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 endif ()
 
 # Use bundled ZLIB if system one can't be found
@@ -83,7 +88,7 @@ else (NOT ZLIB_FOUND)
 	link_libraries (${ZLIB_LIBRARIES})
 endif (NOT ZLIB_FOUND)
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WIN32)
 	# Put wrappers in a separate directory

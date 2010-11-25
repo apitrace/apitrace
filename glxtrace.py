@@ -73,9 +73,9 @@ if __name__ == '__main__':
     print '#include <dlfcn.h>'
     print '#include <X11/Xlib.h>'
     print '#include <GL/gl.h>'
-    print '#include <GL/glext.h>'
+    print '#include "glext.h"'
     print '#include <GL/glx.h>'
-    print '#include <GL/glxext.h>'
+    print '#include "glxext.h"'
     print
     print '#include "log.hpp"'
     print '#include "glsize.hpp"'

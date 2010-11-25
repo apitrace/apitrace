@@ -40,7 +40,7 @@ class Attribute {
 public:
    virtual ~Attribute() {}
 
-   virtual void apply(std::ostream& os) const {}
+   virtual void apply(std::ostream &) const {}
 };
 
 
@@ -58,7 +58,7 @@ public:
    virtual Attribute *normal(void) const { return new Attribute; }
    virtual Attribute *bold(void) const { return new Attribute; }
    virtual Attribute *italic(void) const { return new Attribute; }
-   virtual Attribute *color(Color color) const { return new Attribute; }
+   virtual Attribute *color(Color) const { return new Attribute; }
 };
  
 
