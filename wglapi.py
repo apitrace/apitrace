@@ -261,6 +261,10 @@ wglapi.add_functions([
     StdFunction(BOOL, "wglSwapIntervalEXT", [(Int, "interval")]),
     StdFunction(Int, "wglGetSwapIntervalEXT", [], sideeffects=False),
 
+    # WGL_NV_vertex_array_range
+    StdFunction(OpaquePointer(Void), "wglAllocateMemoryNV", [(GLsizei, "size"), (GLfloat, "readfreq"), (GLfloat, "writefreq"), (GLfloat, "priority")]),
+    StdFunction(Void, "wglFreeMemoryNV", [(OpaquePointer(Void), "pointer")]),
+
     # must be last
     StdFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")]),
 ])

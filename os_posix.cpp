@@ -88,10 +88,13 @@ GetCurrentDir(char *str, size_t size)
 }
 
 void
-DebugMessage(const char *message)
+DebugMessage(const char *format, ...)
 {
+   va_list ap;
+   va_start(ap, format);
    fflush(stdout);
-   fputs(message, stderr);
+   vfprintf(stderr, format, ap);
+   va_end(ap);
 }
 
 void

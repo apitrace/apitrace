@@ -86,11 +86,7 @@ static void _Open(const char *szExtension) {
        }
    }
 
-   {
-       char szMessage[PATH_MAX];
-       snprintf(szMessage, PATH_MAX, "Tracing to %s\n", szFileName);
-       OS::DebugMessage(szMessage);
-   }
+   OS::DebugMessage("apitrace: tracing to %s\n", szFileName);
 
    g_gzFile = gzopen(szFileName, "wb");
 }

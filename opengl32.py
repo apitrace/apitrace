@@ -410,13 +410,18 @@ class WglTracer(Tracer):
     def wrap_ret(self, function, instance):
         if function.name == "wglGetProcAddress":
             print '    if (%s) {' % instance
+            else_ = ''
             for f in wglapi.functions:
                 ptype = self.function_pointer_type(f)
                 pvalue = self.function_pointer_value(f)
-                print '        if (!strcmp("%s", lpszProc)) {' % f.name
+                print '        %sif (!strcmp("%s", lpszProc)) {' % (else_, f.name)
                 print '            %s = (%s)%s;' % (pvalue, ptype, instance)
                 print '            %s = (%s)&%s;' % (instance, function.type, f.name);
                 print '        }'
+                else_ = 'else '
+            print '        %s{' % (else_,)
+            print '            OS::DebugMessage("apitrace: unknown function \\"%s\\"\\n", lpszProc);'
+            print '        }'
             print '    }'
 
 
@@ -427,6 +432,7 @@ if __name__ == '__main__':
     print '#include "glimports.hpp"'
     print
     print '#include "log.hpp"'
+    print '#include "os.hpp"'
     print '#include "glsize.hpp"'
     print
     print '#ifndef PFD_SUPPORT_DIRECTDRAW'

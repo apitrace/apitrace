@@ -26,6 +26,9 @@
 #ifndef _OS_HPP_
 #define _OS_HPP_
 
+#include <stdlib.h>
+#include <stdarg.h>
+
 #ifdef WIN32
 #ifndef snprintf
 #define snprintf _snprintf
@@ -51,7 +54,7 @@ void ReleaseMutex(void);
 bool GetProcessName(char *str, size_t size);
 bool GetCurrentDir(char *str, size_t size);
 
-void DebugMessage(const char *str);
+void DebugMessage(const char *format, ...);
 
 void Abort(void);
 

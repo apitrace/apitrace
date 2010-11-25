@@ -89,12 +89,20 @@ GetCurrentDir(char *str, size_t size)
 }
 
 void
-DebugMessage(const char *message)
+DebugMessage(const char *format, ...)
 {
-   OutputDebugStringA(message);
+   char buf[4096];
+
+   va_list ap;
+   va_start(ap, format);
+   fflush(stdout);
+   vsnprintf(buf, sizeof buf, format, ap);
+   va_end(ap);
+
+   OutputDebugStringA(buf);
    if (!IsDebuggerPresent()) {
       fflush(stdout);
-      fputs(message, stderr);
+      fputs(buf, stderr);
       fflush(stderr);
    }
 }
