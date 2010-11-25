@@ -173,14 +173,8 @@ class Retracer:
                 success = False
                 print '    %s = 0; // FIXME' % arg.name
         if not success:
-            print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
-            print '    return;'
-        arg_names = ", ".join([arg.name for arg in function.args])
-        if function.type is not stdapi.Void:
-            print '    %s __result;' % (function.type)
-            print '    __result = %s(%s);' % (function.name, arg_names)
-        else:
-            print '    %s(%s);' % (function.name, arg_names)
+            self.fail_function(function)
+        self.call_function(function)
         for arg in function.args:
             if arg.output:
                 arg_type = ConstRemover().visit(arg.type)
@@ -200,8 +194,20 @@ class Retracer:
         print '}'
         print
 
+    def fail_function(self, function):
+        print '    std::cerr << "warning: unsupported call %s\\n";' % function.name
+        print '    return;'
+
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         ValueExtractor().visit(arg_type, lvalue, rvalue)
+
+    def call_function(self, function):
+        arg_names = ", ".join([arg.name for arg in function.args])
+        if function.type is not stdapi.Void:
+            print '    %s __result;' % (function.type)
+            print '    __result = %s(%s);' % (function.name, arg_names)
+        else:
+            print '    %s(%s);' % (function.name, arg_names)
 
     def filter_function(self, function):
         return True

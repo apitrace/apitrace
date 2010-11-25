@@ -40,6 +40,16 @@ class GlRetracer(Retracer):
             "glBufferRegionEnabled",
         ]
 
+    def call_function(self, function):
+        if function.name in ("glDrawArrays", "glDrawElements", "glDrawRangeElements", "glMultiDrawElements"):
+            print '    GLint __array_buffer = 0;'
+            print '    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+            print '    if (!__array_buffer) {'
+            self.fail_function(function)
+            print '    }'
+
+        Retracer.call_function(self, function)
+
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in [
             "glColorPointer",
