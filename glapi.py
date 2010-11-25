@@ -3635,6 +3635,7 @@ glapi.add_functions([
     GlFunction(Void, "glGetProgramNamedParameterfvNV", [(GLprogram, "id"), (GLsizei, "len"), (Const(OpaquePointer(GLubyte)), "name"), (OpaquePointer(GLfloat), "params")], sideeffects=False),
 
     # GL_ATI_separate_stencil
+    GlFunction(Void, "glStencilOpSeparateATI", [(GLenum, "face"), (GLenum, "sfail"), (GLenum, "dpfail"), (GLenum, "dppass")]),
     GlFunction(Void, "glStencilFuncSeparateATI", [(GLenum, "frontfunc"), (GLenum, "backfunc"), (GLint, "ref"), (GLuint, "mask")]),
 
     # GL_EXT_depth_bounds_test
@@ -3664,6 +3665,9 @@ glapi.add_functions([
 
     # GL_EXT_framebuffer_blit
     GlFunction(Void, "glBlitFramebufferEXT", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
+
+    # GL_EXT_framebuffer_multisample
+    GlFunction(Void, "glRenderbufferStorageMultisampleEXT", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
 
     # GL_EXT_timer_query
     GlFunction(Void, "glGetQueryObjecti64vEXT", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLint64EXT), "params")], sideeffects=False),

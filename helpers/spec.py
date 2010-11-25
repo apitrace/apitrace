@@ -147,6 +147,11 @@ class SpecParser(LineParser):
         function_name, arg_names = mo.groups()
         arg_names = [arg_name.strip() for arg_name in arg_names.split(',') if arg_name.strip()]
         
+        extra = ''
+        if self.get_function_re.match(function_name):
+            extra += ', sideeffects=False'
+        function_name = self.prefix + function_name
+
         ret_type = 'Void'
         arg_types = {}
         category = None
@@ -157,7 +162,7 @@ class SpecParser(LineParser):
                 ret_type = self.parse_type(fields[1])
             elif fields[0] == 'param':
                 arg_name, arg_type = fields[1:3]
-                arg_types[fields[1]] = self.parse_arg(arg_name, arg_type)
+                arg_types[fields[1]] = self.parse_arg(function_name, arg_name, arg_type)
             elif fields[0] == 'category':
                 category = fields[1]
             else:
@@ -182,10 +187,8 @@ class SpecParser(LineParser):
             constructor = 'StdFunction'
         else:
             constructor = 'GlFunction'
-        extra = ''
-        if self.get_function_re.match(function_name):
-            extra += ', sideeffects=False'
-        print '    %s(%s, "%s%s", [%s]%s),' % (constructor, ret_type, self.prefix, function_name, ', '.join(args), extra)
+
+        print '    %s(%s, "%s", [%s]%s),' % (constructor, ret_type, function_name, ', '.join(args), extra)
 
     array_re = re.compile(r'^array\s+\[(.*)\]$')
 
@@ -194,7 +197,7 @@ class SpecParser(LineParser):
         'GLcharARB': 'GLstringARB',
     }
 
-    def parse_arg(self, arg_name, arg_type):
+    def parse_arg(self, function_name, arg_name, arg_type):
         orig_type, inout, kind = arg_type.split(' ', 2)
 
         base_type = self.parse_type(orig_type)
@@ -219,9 +222,12 @@ class SpecParser(LineParser):
                 elif length == '1':
                     arg_type = 'Pointer(%s)' % base_type
                 elif length.find("COMPSIZE") == -1:
-                    # XXX: Handle COMPSIZE better
                     arg_type = 'Array(%s, "%s")' % (base_type, length)
-            
+                else:
+                    # XXX: Handle COMPSIZE better
+                    length = length.replace("COMPSIZE", "__%s_size" % function_name)
+                    length = length.replace("/", ",")
+                    arg_type = 'Array(%s, "%s")' % (base_type, length)
             if inout == 'in':
                 arg_type = 'Const(%s)' % arg_type
         else:
