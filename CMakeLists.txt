@@ -165,7 +165,7 @@ if (GLEW_INCLUDE_DIR)
 	add_custom_command (
 		OUTPUT glretrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
-		DEPENDS glretrace.py glapi.py glenum.py stdapi.py
+		DEPENDS glretrace.py retrace.py glapi.py glenum.py stdapi.py
 	)
 
 	include_directories (
