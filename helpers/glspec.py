@@ -211,6 +211,11 @@ class SpecParser(LineParser):
         elif kind.startswith("array"):
             arg_type = 'OpaquePointer(%s)' % base_type
 
+            if base_type == 'Void':
+                constructor = 'Blob'
+            else:
+                constructor = 'Array'
+
             mo = self.array_re.match(kind)
             if mo:
                 length = mo.group(1).strip()
@@ -222,12 +227,12 @@ class SpecParser(LineParser):
                 elif length == '1':
                     arg_type = 'Pointer(%s)' % base_type
                 elif length.find("COMPSIZE") == -1:
-                    arg_type = 'Array(%s, "%s")' % (base_type, length)
+                    arg_type = '%s(%s, "%s")' % (constructor, base_type, length)
                 else:
                     # XXX: Handle COMPSIZE better
                     length = length.replace("COMPSIZE", "__%s_size" % function_name)
-                    length = length.replace("/", ",")
-                    arg_type = 'Array(%s, "%s")' % (base_type, length)
+                    length = length.replace("/", ", ")
+                    arg_type = '%s(%s, "%s")' % (constructor, base_type, length)
             if inout == 'in':
                 arg_type = 'Const(%s)' % arg_type
         else:

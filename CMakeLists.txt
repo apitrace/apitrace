@@ -83,7 +83,7 @@ else (NOT ZLIB_FOUND)
 	link_libraries (${ZLIB_LIBRARIES})
 endif (NOT ZLIB_FOUND)
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if (WIN32)
 	# Put wrappers in a separate directory
@@ -129,7 +129,7 @@ if (WIN32)
 	add_custom_command (
 		OUTPUT opengl32.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.py > ${CMAKE_CURRENT_BINARY_DIR}/opengl32.cpp
-		DEPENDS opengl32.py trace.py wglapi.py glapi.py winapi.py stdapi.py
+		DEPENDS opengl32.py trace.py wglapi.py glenum.py glapi.py glenum.py winapi.py stdapi.py
 	)
 	add_library (opengl SHARED opengl32.def opengl32.cpp log.cpp os_win32.cpp)
 	set_target_properties (opengl PROPERTIES
@@ -145,7 +145,7 @@ else ()
 	add_custom_command (
 		OUTPUT glxtrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-		DEPENDS glxtrace.py trace.py glapi.py stdapi.py
+		DEPENDS glxtrace.py trace.py glapi.py glenum.py stdapi.py
 	)
 
 	add_library (glxtrace SHARED glxtrace.cpp log.cpp os_posix.cpp)
@@ -160,7 +160,7 @@ if (GLEW_INCLUDE_DIR)
 	add_custom_command (
 		OUTPUT glretrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
-		DEPENDS glretrace.py glapi.py stdapi.py
+		DEPENDS glretrace.py glapi.py glenum.py stdapi.py
 	)
 
 	include_directories (
