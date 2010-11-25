@@ -168,7 +168,7 @@ class Retracer:
             rvalue = 'call.arg(%u)' % (arg.index,)
             lvalue = arg.name
             try:
-                ValueExtractor().visit(arg_type, lvalue, rvalue)
+                self.extract_arg(function, arg, arg_type, lvalue, rvalue)
             except NotImplementedError:
                 success = False
                 print '    %s = 0; // FIXME' % arg.name
@@ -200,6 +200,8 @@ class Retracer:
         print '}'
         print
 
+    def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
+        ValueExtractor().visit(arg_type, lvalue, rvalue)
 
     def retrace_functions(self, functions):
         for function in functions:

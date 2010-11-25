@@ -26,12 +26,33 @@
 
 import stdapi
 import glapi
-import retrace
+from retrace import Retracer
 
 
-class GlRetracer(retrace.Retracer):
+class GlRetracer(Retracer):
 
-    pass
+    def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
+        if function.name in [
+            "glColorPointer"
+            "glEdgeFlagPointer"
+            "glIndexPointer",
+            "glNormalPointer",
+            "glTexCoordPointer",
+            "glVertexPointer",
+            "glFogCoordPointer",
+            "glSecondaryColorPointer",
+            "glVertexAttribPointer",
+        ] and arg.name == 'pointer':
+            self.extract_pointer(function, arg, arg_type, lvalue, rvalue)
+        else:
+            Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
+
+    def extract_pointer(self, function, arg, arg_type, lvalue, rvalue):
+        print '    if (dynamic_cast<Trace::Null *>(&%s)) {' % rvalue
+        print '        %s = 0;' % (lvalue)
+        print '    } else {'
+        print '        %s = (%s)(uintptr_t)(%s);' % (lvalue, arg_type, rvalue)
+        print '    }'
 
 
 if __name__ == '__main__':
