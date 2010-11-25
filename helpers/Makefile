@@ -20,13 +20,13 @@ download: \
 %.spec %.tm:
 	wget -N http://www.opengl.org/registry/api/$@
 
-glapi.py: spec.py gl.tm gl.spec
-	python spec.py gl gl.tm gl.spec > $@
+glapi.py: glspec.py gl.tm gl.spec
+	python glspec.py gl gl.tm gl.spec > $@
 
-glxapi.py: spec.py glx.tm glx.spec glxext.spec
-	python spec.py glX glx.tm glx.spec glxext.spec > $@
+glxapi.py: glspec.py glx.tm glx.spec glxext.spec
+	python glspec.py glX glx.tm glx.spec glxext.spec > $@
 
-wglapi.py: spec.py wgl.tm wgl.spec wglext.spec
-	python spec.py wgl wgl.tm wgl.spec wglext.spec > $@
+wglapi.py: glspec.py wgl.tm wgl.spec wglext.spec
+	python glspec.py wgl wgl.tm wgl.spec wglext.spec > $@
 
 .PRECIOUS: %.spec %.tm
