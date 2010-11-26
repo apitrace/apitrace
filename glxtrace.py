@@ -37,7 +37,7 @@ class GlxTracer(Tracer):
             print '    if (!pglXGetProcAddress) {'
             print '        pglXGetProcAddress = (PglXGetProcAddress)dlsym(RTLD_NEXT, "glXGetProcAddress");'
             print '        if (!pglXGetProcAddress)'
-            print '            Log::Abort();'
+            print '            Trace::Abort();'
             print '    }'
             return 'pglXGetProcAddress((const GLubyte *)"%s")' % (function.name,)
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     print '#include <GL/glx.h>'
     print '#include "glxext.h"'
     print
-    print '#include "log.hpp"'
+    print '#include "trace_write.hpp"'
     print '#include "glsize.hpp"'
     print
     print 'extern "C" {'

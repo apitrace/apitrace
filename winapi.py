@@ -199,13 +199,13 @@ class Dll:
         print r'        if(!GetSystemDirectory(g_szDll, MAX_PATH))'
         print r'            return FALSE;'
         print r'        _tcscat(g_szDll, TEXT("\\%s.dll"));' % self.name
-        print r'        Log::Open("%s");' % self.name
+        print r'        Trace::Open("%s");' % self.name
         print r'    case DLL_THREAD_ATTACH:'
         print r'        return TRUE;'
         print r'    case DLL_THREAD_DETACH:'
         print r'        return TRUE;'
         print r'    case DLL_PROCESS_DETACH:'
-        print r'        Log::Close();'
+        print r'        Trace::Close();'
         print r'        if(g_hDll) {'
         print r'            FreeLibrary(g_hDll);'
         print r'            g_hDll = NULL;'

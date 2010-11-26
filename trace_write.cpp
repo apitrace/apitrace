@@ -35,11 +35,11 @@
 #include <zlib.h>
 
 #include "os.hpp"
-#include "log.hpp"
+#include "trace_write.hpp"
 #include "trace_format.hpp"
 
 
-namespace Log {
+namespace Trace {
 
 
 static gzFile g_gzFile = NULL;
@@ -321,4 +321,4 @@ void Abort(void) {
     OS::Abort();
 }
 
-} /* namespace Log */
+} /* namespace Trace */

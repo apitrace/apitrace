@@ -283,7 +283,7 @@ if __name__ == '__main__':
     print '#include <tchar.h>'
     print '#include <d3d8.h>'
     print
-    print '#include "log.hpp"'
+    print '#include "trace_write.hpp"'
     print
     wrap()
 

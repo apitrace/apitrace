@@ -1619,6 +1619,6 @@ if __name__ == '__main__':
     print '#include <tchar.h>'
     print '#include <ddraw.h>'
     print
-    print '#include "log.hpp"'
+    print '#include "trace_write.hpp"'
     print
     wrap()

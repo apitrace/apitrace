@@ -411,7 +411,7 @@ if __name__ == '__main__':
     print
     print '#include <d3d9.h>'
     print
-    print '#include "log.hpp"'
+    print '#include "trace_write.hpp"'
     print
     wrap()
 

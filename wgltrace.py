@@ -403,7 +403,7 @@ class WglTracer(Tracer):
             print '        if (!pwglGetProcAddress) {'
             print '            pwglGetProcAddress = (PwglGetProcAddress)__GetProcAddress("wglGetProcAddress");'
             print '            if (!pwglGetProcAddress)'
-            print '                Log::Abort();'
+            print '                Trace::Abort();'
             print '        }'
             return 'pwglGetProcAddress("%s")' % (function.name,)
 
@@ -431,7 +431,7 @@ if __name__ == '__main__':
     print
     print '#include "glimports.hpp"'
     print
-    print '#include "log.hpp"'
+    print '#include "trace_write.hpp"'
     print '#include "os.hpp"'
     print '#include "glsize.hpp"'
     print

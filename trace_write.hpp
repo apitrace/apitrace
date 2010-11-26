@@ -23,10 +23,10 @@
  *
  **************************************************************************/
 
-#ifndef _LOG_HPP_
-#define _LOG_HPP_
+#ifndef _TRACE_HPP_
+#define _TRACE_HPP_
 
-namespace Log {
+namespace Trace {
 
     void Open(void);
     void Close(void);
@@ -74,4 +74,4 @@ namespace Log {
     void Abort(void);
 }
 
-#endif /* _LOG_HPP_ */
+#endif /* _TRACE_HPP_ */

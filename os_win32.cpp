@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 #include "os.hpp"
-#include "log.hpp"
+#include "trace_write.hpp"
 
 
 namespace OS {
@@ -131,7 +131,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     case DLL_THREAD_DETACH:
         return TRUE;
     case DLL_PROCESS_DETACH:
-        Log::Close();
+        Trace::Close();
         return TRUE;
     }
     (void)hinstDLL;

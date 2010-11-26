@@ -30,7 +30,7 @@
 #include <pthread.h>
 
 #include "os.hpp"
-#include "log.hpp"
+#include "trace_write.hpp"
 
 namespace OS {
 
@@ -108,6 +108,6 @@ Abort(void)
 
 static void _uninit(void) __attribute__((destructor));
 static void _uninit(void) {
-    Log::Close();
+    Trace::Close();
 }
 
