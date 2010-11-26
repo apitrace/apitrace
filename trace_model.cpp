@@ -31,46 +31,17 @@
 namespace Trace {
 
 
-void Null::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void Bool::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void SInt::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void UInt::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void Float::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void String::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void Enum::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void Bitmask::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void Array::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
-void Blob::visit(Visitor &visitor) {
-   visitor.visit(this);
-}
-
+void Null::visit(Visitor &visitor) { visitor.visit(this); }
+void Bool::visit(Visitor &visitor) { visitor.visit(this); } 
+void SInt::visit(Visitor &visitor) { visitor.visit(this); } 
+void UInt::visit(Visitor &visitor) { visitor.visit(this); } 
+void Float::visit(Visitor &visitor) { visitor.visit(this); } 
+void String::visit(Visitor &visitor) { visitor.visit(this); } 
+void Enum::visit(Visitor &visitor) { visitor.visit(this); } 
+void Bitmask::visit(Visitor &visitor) { visitor.visit(this); } 
+void Struct::visit(Visitor &visitor) { visitor.visit(this); } 
+void Array::visit(Visitor &visitor) { visitor.visit(this); } 
+void Blob::visit(Visitor &visitor) { visitor.visit(this); } 
 
 class Dumper : public Visitor
 {
@@ -154,6 +125,17 @@ public:
           }
           os << literal << std::hex << value << std::dec << normal;
       }
+   }
+
+   void visit(Struct *s) {
+      const char *sep = "";
+      os << "{";
+      for (unsigned i = 0; i < s->members.size(); ++i) {
+         os << sep << italic << s->sig->member_names[i] << normal << " = ";
+         _visit(s->members[i]);
+         sep = ", ";
+      }
+      os << "}";
    }
 
    void visit(Array *array) {

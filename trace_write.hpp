@@ -37,6 +37,13 @@ namespace Trace {
         const char **args;
     };
 
+    struct StructSig {
+        Id id;
+        const char *name;
+        unsigned num_members;
+        const char **members;
+    };
+
     struct EnumSig {
         Id id;
         const char *name;
@@ -75,11 +82,8 @@ namespace Trace {
     inline void BeginElement(void) {}
     inline void EndElement(void) {}
 
-    void BeginStruct(size_t length);
+    void BeginStruct(const StructSig *sig);
     inline void EndStruct(void) {}
-
-    void BeginMember(const char *name);
-    inline void EndMember(void) {}
 
     void LiteralBool(bool value);
     void LiteralSInt(signed long long value);

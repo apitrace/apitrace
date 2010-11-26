@@ -59,6 +59,9 @@ protected:
    typedef std::map<size_t, Call::Signature *> FunctionMap;
    FunctionMap functions;
 
+   typedef std::map<size_t, Struct::Signature *> StructMap;
+   StructMap structs;
+
    typedef std::map<size_t, Enum *> EnumMap;
    EnumMap enums;
 
@@ -311,14 +314,30 @@ public:
    }
    
    Value *parse_struct() {
-      size_t length = read_uint();
-      /* XXX */
-      for (size_t i = 0; i < length; ++i) {
-         std::string name = read_name();
-         Value *value = parse_value();
-         std::cout << "  " << name << " = " << value << "\n";
+      size_t id = read_uint();
+
+      Struct::Signature *sig;
+      StructMap::const_iterator it = structs.find(id);
+      if (it == structs.end()) {
+          sig = new Struct::Signature;
+          sig->name = read_string();
+          unsigned size = read_uint();
+          for (unsigned i = 0; i < size; ++i) {
+              sig->member_names.push_back(read_string());
+          }
+          structs[id] = sig;
+      } else {
+          sig = it->second;
       }
-      return NULL;
+      assert(sig);
+
+      Struct *value = new Struct(sig);
+
+      for (size_t i = 0; i < sig->member_names.size(); ++i) {
+          value->members[i] = parse_value();
+      }
+
+      return value;
    }
    
    Value *parse_opaque() {

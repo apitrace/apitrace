@@ -171,6 +171,7 @@ void Close(void) {
 static unsigned call_no = 0;
 
 static std::map<Id, bool> functions;
+static std::map<Id, bool> structs;
 static std::map<Id, bool> enums;
 static std::map<Id, bool> bitmasks;
 
@@ -223,13 +224,17 @@ void BeginArray(size_t length) {
    WriteUInt(length);
 }
 
-void BeginStruct(size_t length) {
+void BeginStruct(const StructSig *sig) {
    WriteByte(Trace::TYPE_STRUCT);
-   WriteUInt(length);
-}
-
-void BeginMember(const char *name) {
-   WriteName(name);
+   WriteUInt(sig->id);
+   if (!structs[sig->id]) {
+      WriteString(sig->name);
+      WriteUInt(sig->num_members);
+      for (unsigned i = 0; i < sig->num_members; ++i) {
+         WriteString(sig->members[i]);
+      }
+      structs[sig->id] = true;
+   }
 }
 
 void LiteralBool(bool value) {

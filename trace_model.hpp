@@ -185,6 +185,23 @@ public:
 };
 
 
+class Struct : public Value
+{
+public:
+   struct Signature {
+      std::string name;
+      std::vector<std::string> member_names;
+   };
+
+   Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
+
+   void visit(Visitor &visitor);
+
+   const Signature *sig;
+   std::vector<Value *> members;
+};
+
+
 class Array : public Value
 {
 public:
@@ -226,6 +243,7 @@ public:
    virtual void visit(String *) {assert(0);}
    virtual void visit(Enum *) {assert(0);}
    virtual void visit(Bitmask *bitmask) {visit(static_cast<UInt *>(bitmask));}
+   virtual void visit(Struct *) {assert(0);}
    virtual void visit(Array *) {assert(0);}
    virtual void visit(Blob *) {assert(0);}
 
@@ -269,7 +287,6 @@ public:
        return *(args[index]);
    }
 };
-
 
 
 std::ostream & operator <<(std::ostream &os, Call &call);

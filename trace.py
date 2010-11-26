@@ -51,11 +51,16 @@ class DumpDeclarator(stdapi.OnceVisitor):
         for type, name in struct.members:
             self.visit(type)
         print 'static void __traceStruct%s(const %s &value) {' % (struct.id, struct.expr)
-        print '    Trace::BeginStruct(%u);' % len(struct.members)
+        print '    static const char * members[%u] = {' % (len(struct.members),)
+        for type, name,  in struct.members:
+            print '        "%s",' % (name,)
+        print '    };'
+        print '    static const Trace::StructSig sig = {'
+        print '       %u, "%s", %u, members' % (int(struct.id), struct.name, len(struct.members))
+        print '    };'
+        print '    Trace::BeginStruct(&sig);'
         for type, name in struct.members:
-            print '    Trace::BeginMember("%s");' % (name,)
             dump_instance(type, 'value.%s' % (name,))
-            print '    Trace::EndMember();'
         print '    Trace::EndStruct();'
         print '}'
         print
