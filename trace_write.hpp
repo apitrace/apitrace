@@ -37,6 +37,12 @@ namespace Trace {
         const char **args;
     };
 
+    struct EnumSig {
+        Id id;
+        const char *name;
+        signed long long value;
+    };
+
     struct BitmaskVal {
         const char *name;
         unsigned long long value;
@@ -84,7 +90,7 @@ namespace Trace {
     void LiteralString(const char *str, size_t size);
     void LiteralWString(const wchar_t *str);
     void LiteralBlob(const void *data, size_t size);
-    void LiteralNamedConstant(const char *name, long long value);
+    void LiteralEnum(const EnumSig *sig);
     void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value);
     void LiteralNull(void);
     void LiteralOpaque(const void *ptr);

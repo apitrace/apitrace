@@ -68,15 +68,22 @@ class DumpDeclarator(stdapi.OnceVisitor):
 
     def visit_enum(self, enum):
         print 'static void __traceEnum%s(const %s value) {' % (enum.id, enum.expr)
+        n = len(enum.values)
+        for i in range(n):
+            value = enum.values[i]
+            print '    static const Trace::EnumSig sig%u = {%u, "%s", %s};' % (i, enum.vid + i, value, value)
+        print '    const Trace::EnumSig *sig;'
         print '    switch(value) {'
-        for value in enum.values:
+        for i in range(n):
+            value = enum.values[i]
             print '    case %s:' % value
-            print '        Trace::LiteralNamedConstant("%s", %s);' % (value, value)
+            print '        sig = &sig%u;' % i
             print '        break;'
         print '    default:'
         print '        Trace::LiteralSInt(value);'
-        print '        break;'
+        print '        return;'
         print '    }'
+        print '        Trace::LiteralEnum(sig);'
         print '}'
         print
 

@@ -53,7 +53,7 @@ enum Type {
    TYPE_DOUBLE,
    TYPE_STRING, // Null terminated, human readible string
    TYPE_BLOB, // Block of bytes
-   TYPE_CONST,
+   TYPE_ENUM,
    TYPE_BITMASK,
    TYPE_ARRAY,
    TYPE_STRUCT,

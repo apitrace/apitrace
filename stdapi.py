@@ -254,9 +254,13 @@ def ConstPointer(type):
 
 class Enum(Concrete):
 
+    __vid = 0
+
     def __init__(self, name, values):
         Concrete.__init__(self, name)
-        self.values = values
+        self.vid = Enum.__vid
+        Enum.__vid += len(values)
+        self.values = list(values)
     
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_enum(self, *args, **kwargs)

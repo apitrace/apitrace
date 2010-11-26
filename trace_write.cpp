@@ -171,6 +171,7 @@ void Close(void) {
 static unsigned call_no = 0;
 
 static std::map<Id, bool> functions;
+static std::map<Id, bool> enums;
 static std::map<Id, bool> bitmasks;
 
 
@@ -229,14 +230,6 @@ void BeginStruct(size_t length) {
 
 void BeginMember(const char *name) {
    WriteName(name);
-}
-
-void BeginBitmask(void) {
-   WriteByte(Trace::TYPE_BITMASK);
-}
-
-void EndBitmask(void) {
-   WriteByte(Trace::TYPE_NULL);
 }
 
 void LiteralBool(bool value) {
@@ -308,10 +301,14 @@ void LiteralBlob(const void *data, size_t size) {
    }
 }
 
-void LiteralNamedConstant(const char *name, long long value) {
-   WriteByte(Trace::TYPE_CONST);
-   WriteName(name);
-   LiteralSInt(value);
+void LiteralEnum(const EnumSig *sig) {
+   WriteByte(Trace::TYPE_ENUM);
+   WriteUInt(sig->id);
+   if (!enums[sig->id]) {
+      WriteString(sig->name);
+      LiteralSInt(sig->value);
+      enums[sig->id] = true;
+   }
 }
 
 void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value) {

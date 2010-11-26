@@ -159,10 +159,10 @@ public:
 };
 
 
-class Const : public Value
+class Enum : public Value
 {
 public:
-   Const(std::string _name, Value *_value) : name(_name), value(_value) {}
+   Enum(std::string &_name, Value *_value) : name(_name), value(_value) {}
 
    void visit(Visitor &visitor);
 
@@ -224,7 +224,7 @@ public:
    virtual void visit(UInt *) {assert(0);}
    virtual void visit(Float *) {assert(0);}
    virtual void visit(String *) {assert(0);}
-   virtual void visit(Const *) {assert(0);}
+   virtual void visit(Enum *) {assert(0);}
    virtual void visit(Bitmask *bitmask) {visit(static_cast<UInt *>(bitmask));}
    virtual void visit(Array *) {assert(0);}
    virtual void visit(Blob *) {assert(0);}

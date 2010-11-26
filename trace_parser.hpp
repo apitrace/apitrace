@@ -59,6 +59,9 @@ protected:
    typedef std::map<size_t, Call::Signature *> FunctionMap;
    FunctionMap functions;
 
+   typedef std::map<size_t, Enum *> EnumMap;
+   EnumMap enums;
+
    typedef std::map<size_t, Bitmask::Signature *> BitmaskMap;
    BitmaskMap bitmasks;
 
@@ -207,8 +210,8 @@ public:
          return parse_double();
       case Trace::TYPE_STRING:
          return parse_string();
-      case Trace::TYPE_CONST:
-         return parse_const();
+      case Trace::TYPE_ENUM:
+         return parse_enum();
       case Trace::TYPE_BITMASK:
          return parse_bitmask();
       case Trace::TYPE_ARRAY:
@@ -250,10 +253,20 @@ public:
       return new String(read_string());
    }
    
-   Value *parse_const() {
-      std::string name = read_name();
-      Value *value = parse_value();
-      return new Const(name, value);
+   Value *parse_enum() {
+      size_t id = read_uint();
+      Enum *sig;
+      EnumMap::const_iterator it = enums.find(id);
+      if (it == enums.end()) {
+          std::string name = read_string();
+          Value *value = parse_value();
+          sig = new Enum(name, value);
+          enums[id] = sig;
+      } else {
+          sig = it->second;
+      }
+      assert(sig);
+      return sig;
    }
    
    Value *parse_bitmask() {

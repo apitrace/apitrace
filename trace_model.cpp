@@ -55,7 +55,7 @@ void String::visit(Visitor &visitor) {
    visitor.visit(this);
 }
 
-void Const::visit(Visitor &visitor) {
+void Enum::visit(Visitor &visitor) {
    visitor.visit(this);
 }
 
@@ -129,7 +129,7 @@ public:
       os << literal << '"' << node->value << '"' << normal;
    }
 
-   void visit(Const *node) {
+   void visit(Enum *node) {
       os << literal << node->name << normal;
    }
 
@@ -205,7 +205,7 @@ std::ostream & operator <<(std::ostream &os, Value *value) {
 
 
 static inline const Value *unwrap(const Value *node) {
-   const Const *c = dynamic_cast<const Const *>(node);
+   const Enum *c = dynamic_cast<const Enum *>(node);
    if (c)
       return c->value;
    return node;
