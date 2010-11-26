@@ -1,0 +1,29 @@
+				  Things To Do
+			    (in no particular order)
+
+
+* Determine blob sizes passed to glXxxPointer functions.
+
+  Potentially using tricks such as:
+  * http://fixunix.com/linux/337646-isbadreadptr-linux.html
+  * http://www.gamedev.net/community/forums/topic.asp?topic_id=132787
+  * http://msdn.microsoft.com/en-us/library/aa366781(v=VS.85).aspx
+  * http://msdn.microsoft.com/en-us/library/aa366902(v=VS.85).aspx
+  * http://stackoverflow.com/questions/1281686/determine-size-of-dynamically-allocated-memory-in-c
+
+* Drop GLEW dependency -- the supported extension subset is different from what
+  we want, and it is trivial to code generate the wrappers
+
+* Trace multiple threads
+  * GetCurrentThreadId()
+  * pthread_self()
+
+* Trace TSCs
+
+* Retrace multiple threads (which will imply abandoning GLUT)
+
+* Provide a readline-like interactive mode to gltrace
+  * http://github.com/antirez/linenoise
+    * https://github.com/antirez/linenoise/issues#issue/8
+  * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c 
+
