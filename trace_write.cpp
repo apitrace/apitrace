@@ -170,11 +170,23 @@ void Close(void) {
 
 static unsigned call_no = 0;
 
-unsigned BeginEnter(const char *function) {
+static std::map<Id, bool> functions;
+static std::map<Id, bool> bitmasks;
+
+
+unsigned BeginEnter(const FunctionSig &function) {
    OS::AcquireMutex();
    Open();
    WriteByte(Trace::EVENT_ENTER);
-   WriteName(function);
+   WriteUInt(function.id);
+   if (!functions[function.id]) {
+      WriteString(function.name);
+      WriteUInt(function.num_args);
+      for (unsigned i = 0; i < function.num_args; ++i) {
+         WriteString(function.args[i]);
+      }
+      functions[function.id] = true;
+   }
    return call_no++;
 }
 
@@ -196,10 +208,9 @@ void EndLeave(void) {
    OS::ReleaseMutex();
 }
 
-void BeginArg(unsigned index, const char *name) {
+void BeginArg(unsigned index) {
    WriteByte(Trace::CALL_ARG);
    WriteUInt(index);
-   WriteName(name);
 }
 
 void BeginReturn(void) {
@@ -302,8 +313,6 @@ void LiteralNamedConstant(const char *name, long long value) {
    WriteName(name);
    LiteralSInt(value);
 }
-
-static std::map<Id, bool> bitmasks;
 
 void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value) {
    WriteByte(Trace::TYPE_BITMASK);

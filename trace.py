@@ -283,6 +283,16 @@ class Tracer:
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
         print 'static %s %s = NULL;' % (ptype, pvalue)
         print
+        print 'static const char * __%s_args[] = {' % (function.name)
+        for arg in function.args:
+            print '   "%s",' % (arg.name,)
+        print '};'
+        print
+        print 'static const Trace::FunctionSig __%s_sig = {' % (function.name)
+        print '   %u, "%s", %u, __%s_args' % (int(function.id), function.name, len(function.args), function.name)
+        print '};'
+        print
+
 
     def trace_function_fail(self, function):
         if function.fail is not None:
@@ -316,7 +326,7 @@ class Tracer:
             print '    %s __result;' % function.type
             result = '__result = '
         self._get_true_pointer(function)
-        print '    unsigned __call = Trace::BeginEnter("%s");' % (function.name)
+        print '    unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
@@ -338,7 +348,7 @@ class Tracer:
         print
 
     def dump_arg(self, function, arg):
-        print '    Trace::BeginArg(%u, "%s");' % (arg.index, arg.name,)
+        print '    Trace::BeginArg(%u);' % (arg.index,)
         dump_instance(arg.type, arg.name)
         print '    Trace::EndArg();'
 
@@ -400,7 +410,7 @@ class Tracer:
             print '    %s __result;' % method.type
             result = '__result = '
         print '    Trace::BeginCall("%s");' % (interface.name + '::' + method.name)
-        print '    Trace::BeginArg(0, "this");'
+        print '    Trace::BeginArg(0);'
         print '    Trace::LiteralOpaque((const void *)m_pInstance);'
         print '    Trace::EndArg();'
         for arg in method.args:

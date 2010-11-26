@@ -222,7 +222,7 @@ class Retracer:
         print 'static bool retrace_call(Trace::Call &call) {'
         for function in functions:
             if not function.sideeffects:
-                print '    if (call.name == "%s") {' % function.name
+                print '    if (call.name() == "%s") {' % function.name
                 print '        return true;'
                 print '    }'
         print
@@ -233,11 +233,11 @@ class Retracer:
         print
         for function in functions:
             if function.sideeffects:
-                print '    if (call.name == "%s") {' % function.name
+                print '    if (call.name() == "%s") {' % function.name
                 print '        retrace_%s(call);' % function.name
                 print '        return true;'
                 print '    }'
-        print '    std::cerr << "warning: unknown call " << call.name << "\\n";'
+        print '    std::cerr << "warning: unknown call " << call.name() << "\\n";'
         print '    return false;'
         print '}'
         print
@@ -286,20 +286,20 @@ static void display(void) {
    Trace::Call *call;
 
    while ((call = parser.parse_call())) {
-      if (call->name == "glFlush" ||
-          call->name == "glXSwapBuffers" ||
-          call->name == "wglSwapBuffers") {
+      if (call->name() == "glFlush" ||
+          call->name() == "glXSwapBuffers" ||
+          call->name() == "wglSwapBuffers") {
          glFlush();
          return;
       }
       
       retrace_call(*call);
 
-      if (call->name == "glBegin") {
+      if (call->name() == "glBegin") {
          insideGlBeginEnd = true;
       }
       
-      if (call->name == "glEnd") {
+      if (call->name() == "glEnd") {
          insideGlBeginEnd = false;
       }
 

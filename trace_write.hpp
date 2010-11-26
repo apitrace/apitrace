@@ -30,6 +30,13 @@ namespace Trace {
 
     typedef unsigned Id;
 
+    struct FunctionSig {
+        Id id;
+        const char *name;
+        unsigned num_args;
+        const char **args;
+    };
+
     struct BitmaskVal {
         const char *name;
         unsigned long long value;
@@ -44,13 +51,13 @@ namespace Trace {
     void Open(void);
     void Close(void);
     
-    unsigned BeginEnter(const char *function);
+    unsigned BeginEnter(const FunctionSig &function);
     void EndEnter(void);
     
     void BeginLeave(unsigned call);
     void EndLeave(void);
     
-    void BeginArg(unsigned index, const char *name);
+    void BeginArg(unsigned index);
     inline void EndArg(void) {}
 
     void BeginReturn(void);

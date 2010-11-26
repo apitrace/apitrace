@@ -101,13 +101,13 @@ static void display(void) {
    Trace::Call *call;
 
    while ((call = parser.parse_call())) {
-      if (call->name == "glFlush") {
+      if (call->name() == "glFlush") {
          glFlush();
          return;
       }
       
-      if (call->name == "glXSwapBuffers" ||
-          call->name == "wglSwapBuffers") {
+      if (call->name() == "glXSwapBuffers" ||
+          call->name() == "wglSwapBuffers") {
          if (double_buffer)
             glutSwapBuffers();
          else
@@ -117,11 +117,11 @@ static void display(void) {
       
       retrace_call(*call);
 
-      if (call->name == "glBegin") {
+      if (call->name() == "glBegin") {
          insideGlBeginEnd = true;
       }
       
-      if (call->name == "glEnd") {
+      if (call->name() == "glEnd") {
          insideGlBeginEnd = false;
       }
 

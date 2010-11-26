@@ -246,20 +246,27 @@ unsigned long long asUInt(const Value &node);
 double asFloat(const Value &node);
 
 
-typedef std::pair<std::string, Value *> Arg;
-
 class Call
 {
 public:
+   struct Signature {
+      std::string name;
+      std::vector<std::string> arg_names;
+   };
+
    unsigned no;
-   std::string name;
-   std::vector<Arg> args;
+   const Signature *sig;
+   std::vector<Value *> args;
    Value *ret;
 
-   Call() : ret(0) { }
+   Call(Signature *_sig) : sig(_sig), ret(0) { }
+
+   inline const std::string name(void) const {
+       return sig->name;
+   }
 
    inline Value & arg(unsigned index) {
-       return *(args[index].second);
+       return *(args[index]);
    }
 };
 

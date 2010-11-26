@@ -341,7 +341,12 @@ class Arg:
 
 class Function:
 
+    __id = 0
+
     def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, hidden=False):
+        self.id = Function.__id
+        Function.__id += 1
+
         self.type = type
         self.name = name
 
@@ -562,3 +567,11 @@ Double = Literal("double", "Float")
 SizeT = Literal("size_t", "UInt")
 WString = Literal("wchar_t *", "WString")
 
+Int8 = Literal("int8_t", "SInt")
+UInt8 = Literal("uint8_t", "UInt")
+Int16 = Literal("int16_t", "SInt")
+UInt16 = Literal("uint16_t", "UInt")
+Int32 = Literal("int32_t", "SInt")
+UInt32 = Literal("uint32_t", "UInt")
+Int64 = Literal("int64_t", "SInt")
+UInt64 = Literal("uint64_t", "UInt")

@@ -56,6 +56,9 @@ protected:
    typedef std::map<unsigned, Call *> callmap;
    callmap calls;
 
+   typedef std::map<size_t, Call::Signature *> FunctionMap;
+   FunctionMap functions;
+
    typedef std::map<size_t, Bitmask::Signature *> BitmaskMap;
    BitmaskMap bitmasks;
 
@@ -118,9 +121,26 @@ public:
    }
    
    void parse_enter(void) {
-      Call *call = new Call;
+      size_t id = read_uint();
+
+      Call::Signature *sig;
+      FunctionMap::const_iterator it = functions.find(id);
+      if (it == functions.end()) {
+          sig = new Call::Signature;
+          sig->name = read_string();
+          unsigned size = read_uint();
+          for (unsigned i = 0; i < size; ++i) {
+              sig->arg_names.push_back(read_string());
+          }
+          functions[id] = sig;
+      } else {
+          sig = it->second;
+      }
+      assert(sig);
+
+      Call *call = new Call(sig);
       call->no = next_call_no++;
-      call->name = read_name();
+
       parse_call_details(call);
       calls[call->no] = call;
    }
@@ -160,12 +180,11 @@ public:
    
    void parse_arg(Call *call) {
       unsigned index = read_uint();
-      std::string name = read_name();
       Value *value = parse_value();
       if (index >= call->args.size()) {
           call->args.resize(index + 1);
       }
-      call->args[index] = Arg(name, value);
+      call->args[index] = value;
    }
    
    Value *parse_value(void) {

@@ -179,10 +179,10 @@ public:
 
    void visit(Call *call) {
       const char *sep = "";
-      os << bold << call->name << normal << "(";
-      for (std::vector<Arg>::iterator it = call->args.begin(); it != call->args.end(); ++it) {
-         os << sep << italic << it->first << normal << " = ";
-         _visit(it->second);
+      os << bold << call->sig->name << normal << "(";
+      for (unsigned i = 0; i < call->args.size(); ++i) {
+         os << sep << italic << call->sig->arg_names[i] << normal << " = ";
+         _visit(call->args[i]);
          sep = ", ";
       }
       os << ")";
