@@ -50,9 +50,6 @@ class Parser
 protected:
    gzFile file;
 
-   typedef std::map<size_t, std::string> namemap;
-   namemap names;
-
    typedef std::map<unsigned, Call *> callmap;
    callmap calls;
 
@@ -347,23 +344,6 @@ public:
       return new UInt(addr);
    }
 
-   std::string read_name(void) {
-       std::string name;
-       size_t id = read_uint();
-       if (id >= names.size()) {
-           assert(id == names.size());
-           name = read_string();
-           names[id] = name;
-           return name;
-       } else {
-           name = names[id];
-       }
-#if TRACE_VERBOSE
-       std::cerr << "\tNAME " << id << " " << name << "\n";
-#endif
-       return name;
-   }
-   
    std::string read_string(void) {
       size_t len = read_uint();
       if (!len) {

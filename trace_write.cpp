@@ -141,22 +141,6 @@ WriteString(const char *str) {
    Write(str, len);
 }
 
-typedef std::map<const char *, size_t> namemap;
-static namemap names;
-
-static inline void 
-WriteName(const char *name) {
-   namemap::iterator it = names.find(name);
-   if (it == names.end()) {
-       size_t name_id = names.size();
-       WriteUInt(name_id);
-       WriteString(name);
-       names[name] = name_id;
-   } else {
-       WriteUInt(it->second);
-   }
-}
-
 void Open(void) {
     if (!g_gzFile) {
         _Open("trace");
