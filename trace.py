@@ -81,18 +81,14 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print
 
     def visit_bitmask(self, bitmask):
-        print 'static void __traceBitmask%s(%s value) {' % (bitmask.id, bitmask.type)
-        print '    Trace::BeginBitmask();'
+        print 'static const Trace::BitmaskVal __bitmask%s_vals[] = {' % (bitmask.id)
         for value in bitmask.values:
-            print '    if((value & %s) == %s) {' % (value, value)
-            print '        Trace::LiteralNamedConstant("%s", %s);' % (value, value)
-            print '        value &= ~%s;' % value
-            print '    }'
-        print '    if(value) {'
-        dump_instance(bitmask.type, "value");
-        print '    }'
-        print '    Trace::EndBitmask();'
-        print '}'
+            print '   {"%s", %s},' % (value, value)
+        print '};'
+        print
+        print 'static const Trace::BitmaskSig __bitmask%s_sig = {' % (bitmask.id)
+        print '   %u, %u, __bitmask%s_vals' % (int(bitmask.id), len(bitmask.values), bitmask.id)
+        print '};'
         print
 
     def visit_pointer(self, pointer):
@@ -150,7 +146,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    __traceEnum%s(%s);' % (enum.id, instance)
 
     def visit_bitmask(self, bitmask, instance):
-        print '    __traceBitmask%s(%s);' % (bitmask.id, instance)
+        print '    Trace::LiteralBitmask(__bitmask%s_sig, %s);' % (bitmask.id, instance)
 
     def visit_pointer(self, pointer, instance):
         print '    if(%s) {' % instance

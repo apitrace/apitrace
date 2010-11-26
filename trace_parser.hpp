@@ -56,6 +56,9 @@ protected:
    typedef std::map<unsigned, Call *> callmap;
    callmap calls;
 
+   typedef std::map<size_t, Bitmask::Signature *> BitmaskMap;
+   BitmaskMap bitmasks;
+
    unsigned next_call_no;
 
 public:
@@ -235,30 +238,26 @@ public:
    }
    
    Value *parse_bitmask() {
-      unsigned long long value = 0;
-      int c;
-      do {
-         c = read_byte();
-         switch(c) {
-         case Trace::TYPE_SINT:
-            value |= -(signed long long)read_uint();
-            break;
-         case Trace::TYPE_UINT:
-            value |= read_uint();
-            break;
-         case Trace::TYPE_CONST:
-            read_name();
-            break;
-         case Trace::TYPE_NULL:
-            goto done;
-         default:
-            std::cerr << "error: uexpected type " << c << "\n";
-            assert(0);
-            return NULL;
-         }
-      } while(true);
-done:
-      return new UInt(value);
+      size_t id = read_uint();
+      Bitmask::Signature *sig;
+      BitmaskMap::const_iterator it = bitmasks.find(id);
+      if (it == bitmasks.end()) {
+          size_t size = read_uint();
+          sig = new Bitmask::Signature(size);
+          for (Bitmask::Signature::iterator it = sig->begin(); it != sig->end(); ++it) {
+              it->first = read_string();
+              it->second = read_uint();
+              assert(it->second);
+          }
+          bitmasks[id] = sig;
+      } else {
+          sig = it->second;
+      }
+      assert(sig);
+
+      unsigned long long value = read_uint();
+
+      return new Bitmask(sig, value);
    }
 
    Value *parse_array(void) {

@@ -59,6 +59,10 @@ void Const::visit(Visitor &visitor) {
    visitor.visit(this);
 }
 
+void Bitmask::visit(Visitor &visitor) {
+   visitor.visit(this);
+}
+
 void Array::visit(Visitor &visitor) {
    visitor.visit(this);
 }
@@ -127,6 +131,29 @@ public:
 
    void visit(Const *node) {
       os << literal << node->name << normal;
+   }
+
+   void visit(Bitmask *bitmask) {
+      unsigned long long value = bitmask->value;
+      const Bitmask::Signature *sig = bitmask->sig;
+      bool first = true;
+      for (Bitmask::Signature::const_iterator it = sig->begin(); value != 0 && it != sig->end(); ++it) {
+          assert(it->second);
+          if ((value & it->second) == it->second) {
+              if (!first) {
+                  os << " | ";
+              }
+              os << literal << it->first << normal;
+              value &= ~it->second;
+              first = false;
+          }
+      }
+      if (value || first) {
+          if (!first) {
+              os << " | ";
+          }
+          os << literal << std::hex << value << std::dec << normal;
+      }
    }
 
    void visit(Array *array) {

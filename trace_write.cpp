@@ -303,6 +303,22 @@ void LiteralNamedConstant(const char *name, long long value) {
    LiteralSInt(value);
 }
 
+static std::map<Id, bool> bitmasks;
+
+void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value) {
+   WriteByte(Trace::TYPE_BITMASK);
+   WriteUInt(bitmask.id);
+   if (!bitmasks[bitmask.id]) {
+      WriteUInt(bitmask.count);
+      for (unsigned i = 0; i < bitmask.count; ++i) {
+         WriteString(bitmask.values[i].name);
+         WriteUInt(bitmask.values[i].value);
+      }
+      bitmasks[bitmask.id] = true;
+   }
+   WriteUInt(value);
+}
+
 void LiteralNull(void) {
    WriteByte(Trace::TYPE_NULL);
 }

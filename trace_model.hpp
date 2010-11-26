@@ -171,6 +171,20 @@ public:
 };
 
 
+class Bitmask : public UInt
+{
+public:
+   typedef std::pair<std::string, unsigned long long> Pair;
+   typedef std::vector<Pair> Signature;
+
+   Bitmask(const Signature *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
+
+   void visit(Visitor &visitor);
+
+   const Signature *sig;
+};
+
+
 class Array : public Value
 {
 public:
@@ -211,6 +225,7 @@ public:
    virtual void visit(Float *) {assert(0);}
    virtual void visit(String *) {assert(0);}
    virtual void visit(Const *) {assert(0);}
+   virtual void visit(Bitmask *bitmask) {visit(static_cast<UInt *>(bitmask));}
    virtual void visit(Array *) {assert(0);}
    virtual void visit(Blob *) {assert(0);}
 

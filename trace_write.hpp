@@ -23,10 +23,23 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_HPP_
-#define _TRACE_HPP_
+#ifndef _TRACE_WRITE_HPP_
+#define _TRACE_WRITE_HPP_
 
 namespace Trace {
+
+    typedef unsigned Id;
+
+    struct BitmaskVal {
+        const char *name;
+        unsigned long long value;
+    };
+
+    struct BitmaskSig {
+        Id id;
+        unsigned count;
+        const BitmaskVal *values;
+    };
 
     void Open(void);
     void Close(void);
@@ -55,9 +68,6 @@ namespace Trace {
     void BeginMember(const char *name);
     inline void EndMember(void) {}
 
-    void BeginBitmask(void);
-    void EndBitmask(void);
-
     void LiteralBool(bool value);
     void LiteralSInt(signed long long value);
     void LiteralUInt(unsigned long long value);
@@ -68,10 +78,11 @@ namespace Trace {
     void LiteralWString(const wchar_t *str);
     void LiteralBlob(const void *data, size_t size);
     void LiteralNamedConstant(const char *name, long long value);
+    void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value);
     void LiteralNull(void);
     void LiteralOpaque(const void *ptr);
 
     void Abort(void);
 }
 
-#endif /* _TRACE_HPP_ */
+#endif /* _TRACE_WRITE_HPP_ */
