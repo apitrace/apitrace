@@ -27,6 +27,26 @@
 from stdapi import *
 from glapi import glapi
 
+VisualID = Alias("VisualID", UInt32)
+
+GLXContext = Opaque("GLXContext")
+Display = Opaque("Display *")
+Visual = Opaque("Visual *")
+
+XVisualInfo = Struct("XVisualInfo", [
+  (Visual, "visual"),
+  (VisualID, "visualid"),
+  (Int, "screen"),
+  (Int, "depth"),
+  (Int, "c_class"),
+  (ULong, "red_mask"),
+  (ULong, "green_mask"),
+  (ULong, "blue_mask"),
+  (Int, "colormap_size"),
+  (Int, "bits_per_rgb"),
+])
+
+Bool_ = Alias("Bool", Int)
 
 glxapi = API("GLX")
 
@@ -34,6 +54,8 @@ PROC = Opaque("__GLXextFuncPtr")
 
 glxapi.add_functions(glapi.functions)
 glxapi.add_functions([
+    Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool_, "direct")]),
+
     Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
     Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", CString), "procName")]),
 ])
