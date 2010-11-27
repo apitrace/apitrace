@@ -26,7 +26,7 @@
 
 import stdapi
 import glapi
-
+from codegen import *
 
 
 class ConstRemover(stdapi.Rebuilder):
@@ -220,23 +220,24 @@ class Retracer:
                 self.retrace_function(function)
 
         print 'static bool retrace_call(Trace::Call &call) {'
-        for function in functions:
-            if not function.sideeffects:
-                print '    if (call.name() == "%s") {' % function.name
-                print '        return true;'
-                print '    }'
+        print '    const char *name = call.name().c_str();'
         print
         print '    if (verbosity >=1 ) {'
         print '        std::cout << call;'
         print '        std::cout.flush();'
         print '    };'
         print
-        for function in functions:
+
+        func_dict = dict([(function.name, function) for function in functions])
+
+        def handle_case(function_name):
+            function = func_dict[function_name]
             if function.sideeffects:
-                print '    if (call.name() == "%s") {' % function.name
                 print '        retrace_%s(call);' % function.name
-                print '        return true;'
-                print '    }'
+            print '        return true;'
+    
+        string_switch('name', func_dict.keys(), handle_case)
+
         print '    std::cerr << "warning: unknown call " << call.name() << "\\n";'
         print '    return false;'
         print '}'
