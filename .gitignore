@@ -1,5 +1,4 @@
 .*.sw?
-.scon*
 *~
 *.a
 *.bz2
@@ -18,11 +17,9 @@
 *.zip
 CMakeCache.txt
 CMakeFiles
-MD5SUM
 ./Makefile
 build
 cmake_install.cmake
-config.log
 d3d10.cpp
 d3d10_1.cpp
 d3d8.cpp
