@@ -11,12 +11,16 @@
   * http://msdn.microsoft.com/en-us/library/aa366902(v=VS.85).aspx
   * http://stackoverflow.com/questions/1281686/determine-size-of-dynamically-allocated-memory-in-c
 
+* Allow clamping to a GL version or a number of extensions.
+
 * Drop GLEW dependency -- the supported extension subset is different from what
   we want, and it is trivial to code generate the wrappers
 
 * Trace multiple threads
   * GetCurrentThreadId()
   * pthread_self()
+
+* Put zlib (de)compression in a separate thread.
 
 * Trace TSCs
 
