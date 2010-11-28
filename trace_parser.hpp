@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <map>
+#include <list>
 #include <string>
 
 #include <zlib.h>
@@ -50,8 +51,8 @@ class Parser
 protected:
    gzFile file;
 
-   typedef std::map<unsigned, Call *> callmap;
-   callmap calls;
+   typedef std::list<Call *> CallList;
+   CallList calls;
 
    typedef std::map<size_t, Call::Signature *> FunctionMap;
    FunctionMap functions;
@@ -145,12 +146,21 @@ public:
       call->no = next_call_no++;
 
       parse_call_details(call);
-      calls[call->no] = call;
+
+      calls.push_back(call);
    }
    
    Call *parse_leave(void) {
       unsigned call_no = read_uint();
-      Call *call = calls[call_no];
+
+      Call *call = NULL;
+      for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
+         if ((*it)->no == call_no) {
+            call = *it;
+            calls.erase(it);
+            break;
+         }
+      }
       assert(call);
       if (!call) {
           return NULL;
