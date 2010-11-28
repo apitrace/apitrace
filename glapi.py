@@ -51,8 +51,11 @@ GLsizeiptrARB = Alias("GLsizeiptrARB", Int)
 GLhandleARB = Alias("GLhandleARB", UInt)
 GLhalfARB = Alias("GLhalfARB", UShort)
 GLhalfNV = Alias("GLhalfNV", UShort)
-GLint64EXT = Alias("GLint64EXT", LongLong)
-GLuint64EXT = Alias("GLuint64EXT", ULongLong)
+GLint64 = Alias("GLint64", Int64)
+GLuint64 = Alias("GLuint64", UInt64)
+GLint64EXT = Alias("GLint64EXT", Int64)
+GLuint64EXT = Alias("GLuint64EXT", UInt64)
+GLDEBUGPROCARB = Opaque("GLDEBUGPROCARB")
 
 GLstring = String("GLchar *")
 GLstringARB = String("GLcharARB *")
@@ -69,8 +72,11 @@ GLprogramNV = Handle("programNV", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
-GLvertexArrayAPPLE = Handle("vertexArrayAPPLE", GLuint)
+GLvertexArray = Handle("vertexArrayAPPLE", GLuint)
 GLregion = Handle("region", GLuint)
+
+GLsync_ = Opaque("GLsync")
+GLsync = Handle("sync", GLsync_)
 
 
 def GlFunction(*args, **kwargs):
@@ -939,6 +945,325 @@ glapi.add_functions([
     GlFunction(Void, "glRenderbufferStorageMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glFramebufferTextureLayer", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLint, "layer")]),
 
+    # GL_ARB_geometry_shader4
+    GlFunction(Void, "glProgramParameteriARB", [(GLprogram, "program"), (GLenum, "pname"), (GLint, "value")]),
+    GlFunction(Void, "glFramebufferTextureARB", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level")]),
+    GlFunction(Void, "glFramebufferTextureLayerARB", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLint, "layer")]),
+    GlFunction(Void, "glFramebufferTextureFaceARB", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLenum, "face")]),
+
+    # GL_ARB_instanced_arrays
+    GlFunction(Void, "glVertexAttribDivisorARB", [(GLuint, "index"), (GLuint, "divisor")]),
+
+    # GL_ARB_map_buffer_range
+    GlFunction(OpaquePointer(GLvoid), "glMapBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield, "access")]),
+    GlFunction(Void, "glFlushMappedBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length")]),
+
+    # GL_ARB_texture_buffer_object
+    GlFunction(Void, "glTexBufferARB", [(GLenum, "target"), (GLenum, "internalformat"), (GLuint, "buffer")]),
+
+    # GL_ARB_vertex_array_object
+    GlFunction(Void, "glBindVertexArray", [(GLvertexArray, "array")]),
+    GlFunction(Void, "glDeleteVertexArrays", [(GLsizei, "n"), (Const(Array(GLvertexArray, "n")), "arrays")]),
+    GlFunction(Void, "glGenVertexArrays", [(GLsizei, "n"), Out(Array(GLvertexArray, "n"), "arrays")]),
+    GlFunction(GLboolean, "glIsVertexArray", [(GLvertexArray, "array")]),
+
+    # GL_ARB_uniform_buffer_object
+    GlFunction(Void, "glGetUniformIndices", [(GLuint, "program"), (GLsizei, "uniformCount"), (Const(OpaqueArray(GLstring, "__glGetUniformIndices_size(uniformCount)")), "uniformNames"), Out(OpaqueArray(GLuint, "__glGetUniformIndices_size(uniformCount)"), "uniformIndices")], sideeffects=False),
+    GlFunction(Void, "glGetActiveUniformsiv", [(GLuint, "program"), (GLsizei, "uniformCount"), (Const(OpaqueArray(GLuint, "__glGetActiveUniformsiv_size(uniformCount)")), "uniformIndices"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetActiveUniformsiv_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetActiveUniformName", [(GLuint, "program"), (GLuint, "uniformIndex"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLchar, "bufSize"), "uniformName")], sideeffects=False),
+    GlFunction(GLuint, "glGetUniformBlockIndex", [(GLuint, "program"), (Const(OpaqueArray(GLchar, "__glGetUniformBlockIndex_size()")), "uniformBlockName")], sideeffects=False),
+    GlFunction(Void, "glGetActiveUniformBlockiv", [(GLuint, "program"), (GLuint, "uniformBlockIndex"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetActiveUniformBlockiv_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetActiveUniformBlockName", [(GLuint, "program"), (GLuint, "uniformBlockIndex"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLchar, "bufSize"), "uniformBlockName")], sideeffects=False),
+    GlFunction(Void, "glUniformBlockBinding", [(GLuint, "program"), (GLuint, "uniformBlockIndex"), (GLuint, "uniformBlockBinding")]),
+
+    # GL_ARB_copy_buffer
+    GlFunction(Void, "glCopyBufferSubData", [(GLenum, "readTarget"), (GLenum, "writeTarget"), (GLintptr, "readOffset"), (GLintptr, "writeOffset"), (GLsizeiptr, "size")]),
+
+    # GL_ARB_draw_elements_base_vertex
+    GlFunction(Void, "glDrawElementsBaseVertex", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueArray(GLvoid, "__glDrawElementsBaseVertex_size(count, type)")), "indices"), (GLint, "basevertex")]),
+    GlFunction(Void, "glDrawRangeElementsBaseVertex", [(GLenum, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueArray(GLvoid, "__glDrawRangeElementsBaseVertex_size(count, type)")), "indices"), (GLint, "basevertex")]),
+    GlFunction(Void, "glDrawElementsInstancedBaseVertex", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueBlob(GLvoid, "__glDrawElementsInstancedBaseVertex_size(count, type)")), "indices"), (GLsizei, "primcount"), (GLint, "basevertex")]),
+    GlFunction(Void, "glMultiDrawElementsBaseVertex", [(GLenum, "mode"), (Const(OpaqueArray(GLsizei, "__glMultiDrawElementsBaseVertex_size(primcount)")), "count"), (GLenum, "type"), (Const(OpaqueBlob(GLvoid, "__glMultiDrawElementsBaseVertex_size(primcount)")), "indices"), (GLsizei, "primcount"), (Const(OpaqueArray(GLint, "__glMultiDrawElementsBaseVertex_size(primcount)")), "basevertex")]),
+
+    # GL_ARB_provoking_vertex
+    GlFunction(Void, "glProvokingVertex", [(GLenum, "mode")]),
+
+    # GL_ARB_sync
+    #GlFunction(GLsync, "glFenceSync", [(GLenum, "condition"), (GLbitfield, "flags")]),
+    #GlFunction(GLboolean, "glIsSync", [(GLsync, "sync")]),
+    #GlFunction(Void, "glDeleteSync", [(GLsync, "sync")]),
+    #GlFunction(GLenum, "glClientWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
+    #GlFunction(Void, "glWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
+    #GlFunction(Void, "glGetInteger64v", [(GLenum, "pname"), Out(OpaqueArray(GLint64, "__glGetInteger64v_size(pname)"), "params")], sideeffects=False),
+    #GlFunction(Void, "glGetSynciv", [(GLsync, "sync"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "length"), "values")], sideeffects=False),
+
+    # GL_ARB_texture_multisample
+    GlFunction(Void, "glTexImage2DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedsamplelocations")]),
+    GlFunction(Void, "glTexImage3DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedsamplelocations")]),
+    GlFunction(Void, "glGetMultisamplefv", [(GLenum, "pname"), (GLuint, "index"), Out(OpaqueArray(GLfloat, "__glGetMultisamplefv_size(pname)"), "val")], sideeffects=False),
+    GlFunction(Void, "glSampleMaski", [(GLuint, "index"), (GLbitfield, "mask")]),
+
+    # GL_ARB_draw_buffers_blend
+    GlFunction(Void, "glBlendEquationiARB", [(GLuint, "buf"), (GLenum, "mode")]),
+    GlFunction(Void, "glBlendEquationSeparateiARB", [(GLuint, "buf"), (GLenum, "modeRGB"), (GLenum, "modeAlpha")]),
+    GlFunction(Void, "glBlendFunciARB", [(GLuint, "buf"), (GLenum, "src"), (GLenum, "dst")]),
+    GlFunction(Void, "glBlendFuncSeparateiARB", [(GLuint, "buf"), (GLenum, "srcRGB"), (GLenum, "dstRGB"), (GLenum, "srcAlpha"), (GLenum, "dstAlpha")]),
+
+    # GL_ARB_sample_shading
+    GlFunction(Void, "glMinSampleShadingARB", [(GLclampf, "value")]),
+
+    # GL_ARB_shading_language_include
+    #GlFunction(Void, "glNamedStringARB", [(GLenum, "type"), (GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name"), (GLint, "stringlen"), (Const(Array(GLchar, "stringlen")), "string")]),
+    #GlFunction(Void, "glDeleteNamedStringARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name")]),
+    #GlFunction(Void, "glCompileShaderIncludeARB", [(GLuint, "shader"), (GLsizei, "count"), (Const(Array(GLstring, "count")), "path"), (Const(Array(GLint, "count")), "length")]),
+    #GlFunction(GLboolean, "glIsNamedStringARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name")]),
+    #GlFunction(Void, "glGetNamedStringARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name"), (GLsizei, "bufSize"), Out(Pointer(GLint), "stringlen"), Out(Array(GLchar, "bufSize"), "string")], sideeffects=False),
+    #GlFunction(Void, "glGetNamedStringivARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetNamedStringivARB_size(pname)"), "params")], sideeffects=False),
+
+    # GL_ARB_blend_func_extended
+    GlFunction(Void, "glBindFragDataLocationIndexed", [(GLuint, "program"), (GLuint, "colorNumber"), (GLuint, "index"), (Const(GLstring), "name")]),
+    GlFunction(GLint, "glGetFragDataIndex", [(GLuint, "program"), (Const(GLstring), "name")], sideeffects=False),
+
+    # GL_ARB_sampler_objects
+    GlFunction(Void, "glGenSamplers", [(GLsizei, "count"), Out(Array(GLuint, "count"), "samplers")]),
+    GlFunction(Void, "glDeleteSamplers", [(GLsizei, "count"), (Const(Array(GLuint, "count")), "samplers")]),
+    GlFunction(GLboolean, "glIsSampler", [(GLuint, "sampler")]),
+    GlFunction(Void, "glBindSampler", [(GLuint, "unit"), (GLuint, "sampler")]),
+    GlFunction(Void, "glSamplerParameteri", [(GLuint, "sampler"), (GLenum, "pname"), (GLint, "param")]),
+    GlFunction(Void, "glSamplerParameteriv", [(GLuint, "sampler"), (GLenum, "pname"), (Const(OpaqueArray(GLint, "__glSamplerParameteriv_size(pname)")), "param")]),
+    GlFunction(Void, "glSamplerParameterf", [(GLuint, "sampler"), (GLenum, "pname"), (GLfloat, "param")]),
+    GlFunction(Void, "glSamplerParameterfv", [(GLuint, "sampler"), (GLenum, "pname"), (Const(OpaqueArray(GLfloat, "__glSamplerParameterfv_size(pname)")), "param")]),
+    GlFunction(Void, "glSamplerParameterIiv", [(GLuint, "sampler"), (GLenum, "pname"), (Const(OpaqueArray(GLint, "__glSamplerParameterIiv_size(pname)")), "param")]),
+    GlFunction(Void, "glSamplerParameterIuiv", [(GLuint, "sampler"), (GLenum, "pname"), (Const(OpaqueArray(GLuint, "__glSamplerParameterIuiv_size(pname)")), "param")]),
+    GlFunction(Void, "glGetSamplerParameteriv", [(GLuint, "sampler"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetSamplerParameteriv_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetSamplerParameterIiv", [(GLuint, "sampler"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetSamplerParameterIiv_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetSamplerParameterfv", [(GLuint, "sampler"), (GLenum, "pname"), Out(OpaqueArray(GLfloat, "__glGetSamplerParameterfv_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetSamplerParameterIuiv", [(GLuint, "sampler"), (GLenum, "pname"), Out(OpaqueArray(GLuint, "__glGetSamplerParameterIuiv_size(pname)"), "params")], sideeffects=False),
+
+    # GL_ARB_timer_query
+    GlFunction(Void, "glQueryCounter", [(GLuint, "id"), (GLenum, "target")]),
+    GlFunction(Void, "glGetQueryObjecti64v", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLint64, "__glGetQueryObjecti64v_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectui64v", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLuint64, "__glGetQueryObjectui64v_size(pname)"), "params")], sideeffects=False),
+
+    # GL_ARB_vertex_type_2_10_10_10_rev
+    GlFunction(Void, "glVertexP2ui", [(GLenum, "type"), (GLuint, "value")]),
+    GlFunction(Void, "glVertexP2uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "value")]),
+    GlFunction(Void, "glVertexP3ui", [(GLenum, "type"), (GLuint, "value")]),
+    GlFunction(Void, "glVertexP3uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "value")]),
+    GlFunction(Void, "glVertexP4ui", [(GLenum, "type"), (GLuint, "value")]),
+    GlFunction(Void, "glVertexP4uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "value")]),
+    GlFunction(Void, "glTexCoordP1ui", [(GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glTexCoordP1uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glTexCoordP2ui", [(GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glTexCoordP2uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glTexCoordP3ui", [(GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glTexCoordP3uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glTexCoordP4ui", [(GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glTexCoordP4uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glMultiTexCoordP1ui", [(GLenum, "texture"), (GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glMultiTexCoordP1uiv", [(GLenum, "texture"), (GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glMultiTexCoordP2ui", [(GLenum, "texture"), (GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glMultiTexCoordP2uiv", [(GLenum, "texture"), (GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glMultiTexCoordP3ui", [(GLenum, "texture"), (GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glMultiTexCoordP3uiv", [(GLenum, "texture"), (GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glMultiTexCoordP4ui", [(GLenum, "texture"), (GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glMultiTexCoordP4uiv", [(GLenum, "texture"), (GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glNormalP3ui", [(GLenum, "type"), (GLuint, "coords")]),
+    GlFunction(Void, "glNormalP3uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "coords")]),
+    GlFunction(Void, "glColorP3ui", [(GLenum, "type"), (GLuint, "color")]),
+    GlFunction(Void, "glColorP3uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "color")]),
+    GlFunction(Void, "glColorP4ui", [(GLenum, "type"), (GLuint, "color")]),
+    GlFunction(Void, "glColorP4uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "color")]),
+    GlFunction(Void, "glSecondaryColorP3ui", [(GLenum, "type"), (GLuint, "color")]),
+    GlFunction(Void, "glSecondaryColorP3uiv", [(GLenum, "type"), (Const(Pointer(GLuint)), "color")]),
+    GlFunction(Void, "glVertexAttribP1ui", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "value")]),
+    GlFunction(Void, "glVertexAttribP1uiv", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (Const(Pointer(GLuint)), "value")]),
+    GlFunction(Void, "glVertexAttribP2ui", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "value")]),
+    GlFunction(Void, "glVertexAttribP2uiv", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (Const(Pointer(GLuint)), "value")]),
+    GlFunction(Void, "glVertexAttribP3ui", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "value")]),
+    GlFunction(Void, "glVertexAttribP3uiv", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (Const(Pointer(GLuint)), "value")]),
+    GlFunction(Void, "glVertexAttribP4ui", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "value")]),
+    GlFunction(Void, "glVertexAttribP4uiv", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (Const(Pointer(GLuint)), "value")]),
+
+    # GL_ARB_draw_indirect
+    GlFunction(Void, "glDrawArraysIndirect", [(GLenum, "mode"), (Const(OpaquePointer(GLvoid)), "indirect")]),
+    GlFunction(Void, "glDrawElementsIndirect", [(GLenum, "mode"), (GLenum, "type"), (Const(OpaquePointer(GLvoid)), "indirect")]),
+
+    # GL_ARB_gpu_shader_fp64
+    GlFunction(Void, "glUniform1d", [(GLint, "location"), (GLdouble, "x")]),
+    GlFunction(Void, "glUniform2d", [(GLint, "location"), (GLdouble, "x"), (GLdouble, "y")]),
+    GlFunction(Void, "glUniform3d", [(GLint, "location"), (GLdouble, "x"), (GLdouble, "y"), (GLdouble, "z")]),
+    GlFunction(Void, "glUniform4d", [(GLint, "location"), (GLdouble, "x"), (GLdouble, "y"), (GLdouble, "z"), (GLdouble, "w")]),
+    GlFunction(Void, "glUniform1dv", [(GLint, "location"), (GLsizei, "count"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniform2dv", [(GLint, "location"), (GLsizei, "count"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniform3dv", [(GLint, "location"), (GLsizei, "count"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniform4dv", [(GLint, "location"), (GLsizei, "count"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix2dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix3dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix4dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix2x3dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix2x4dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix3x2dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix3x4dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix4x2dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glUniformMatrix4x3dv", [(GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glGetUniformdv", [(GLuint, "program"), (GLint, "location"), Out(OpaqueArray(GLdouble, "__glGetUniformdv_size(location)"), "params")], sideeffects=False),
+
+    # GL_ARB_shader_subroutine
+    GlFunction(GLint, "glGetSubroutineUniformLocation", [(GLuint, "program"), (GLenum, "shadertype"), (Const(GLstring), "name")], sideeffects=False),
+    GlFunction(GLuint, "glGetSubroutineIndex", [(GLuint, "program"), (GLenum, "shadertype"), (Const(GLstring), "name")], sideeffects=False),
+    GlFunction(Void, "glGetActiveSubroutineUniformiv", [(GLuint, "program"), (GLenum, "shadertype"), (GLuint, "index"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetActiveSubroutineUniformiv_size(pname)"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetActiveSubroutineUniformName", [(GLuint, "program"), (GLenum, "shadertype"), (GLuint, "index"), (GLsizei, "bufsize"), Out(Pointer(GLsizei), "length"), Out(Array(GLchar, "bufsize"), "name")], sideeffects=False),
+    GlFunction(Void, "glGetActiveSubroutineName", [(GLuint, "program"), (GLenum, "shadertype"), (GLuint, "index"), (GLsizei, "bufsize"), Out(Pointer(GLsizei), "length"), Out(Array(GLchar, "bufsize"), "name")], sideeffects=False),
+    GlFunction(Void, "glUniformSubroutinesuiv", [(GLenum, "shadertype"), (GLsizei, "count"), (Const(Array(GLuint, "count")), "indices")]),
+    GlFunction(Void, "glGetUniformSubroutineuiv", [(GLenum, "shadertype"), (GLint, "location"), Out(Pointer(GLuint), "params")], sideeffects=False),
+    GlFunction(Void, "glGetProgramStageiv", [(GLuint, "program"), (GLenum, "shadertype"), (GLenum, "pname"), Out(Pointer(GLint), "values")], sideeffects=False),
+
+    # GL_ARB_tessellation_shader
+    GlFunction(Void, "glPatchParameteri", [(GLenum, "pname"), (GLint, "value")]),
+    GlFunction(Void, "glPatchParameterfv", [(GLenum, "pname"), (Const(OpaqueArray(GLfloat, "__glPatchParameterfv_size(pname)")), "values")]),
+
+    # GL_ARB_transform_feedback2
+    GlFunction(Void, "glBindTransformFeedback", [(GLenum, "target"), (GLuint, "id")]),
+    GlFunction(Void, "glDeleteTransformFeedbacks", [(GLsizei, "n"), (Const(Array(GLuint, "n")), "ids")]),
+    GlFunction(Void, "glGenTransformFeedbacks", [(GLsizei, "n"), Out(Array(GLuint, "n"), "ids")]),
+    GlFunction(GLboolean, "glIsTransformFeedback", [(GLuint, "id")]),
+    GlFunction(Void, "glPauseTransformFeedback", []),
+    GlFunction(Void, "glResumeTransformFeedback", []),
+    GlFunction(Void, "glDrawTransformFeedback", [(GLenum, "mode"), (GLuint, "id")]),
+
+    # GL_ARB_transform_feedback3
+    GlFunction(Void, "glDrawTransformFeedbackStream", [(GLenum, "mode"), (GLuint, "id"), (GLuint, "stream")]),
+    GlFunction(Void, "glBeginQueryIndexed", [(GLenum, "target"), (GLuint, "index"), (GLuint, "id")]),
+    GlFunction(Void, "glEndQueryIndexed", [(GLenum, "target"), (GLuint, "index")]),
+    GlFunction(Void, "glGetQueryIndexediv", [(GLenum, "target"), (GLuint, "index"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetQueryIndexediv_size(pname)"), "params")], sideeffects=False),
+
+    # GL_ARB_ES2_compatibility
+    GlFunction(Void, "glReleaseShaderCompiler", []),
+    GlFunction(Void, "glShaderBinary", [(GLsizei, "count"), (Const(Array(GLuint, "count")), "shaders"), (GLenum, "binaryformat"), (Const(Blob(GLvoid, "length")), "binary"), (GLsizei, "length")]),
+    GlFunction(Void, "glGetShaderPrecisionFormat", [(GLenum, "shadertype"), (GLenum, "precisiontype"), Out(Array(GLint, "2"), "range"), Out(Array(GLint, "2"), "precision")], sideeffects=False),
+    GlFunction(Void, "glDepthRangef", [(GLclampf, "n"), (GLclampf, "f")]),
+    GlFunction(Void, "glClearDepthf", [(GLclampf, "d")]),
+
+    # GL_ARB_get_program_binary
+    GlFunction(Void, "glGetProgramBinary", [(GLuint, "program"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLenum), "binaryFormat"), Out(OpaqueArray(GLvoid, "__glGetProgramBinary_size(length)"), "binary")], sideeffects=False),
+    GlFunction(Void, "glProgramBinary", [(GLuint, "program"), (GLenum, "binaryFormat"), (Const(Blob(GLvoid, "length")), "binary"), (GLsizei, "length")]),
+    GlFunction(Void, "glProgramParameteri", [(GLuint, "program"), (GLenum, "pname"), (GLint, "value")]),
+
+    # GL_ARB_separate_shader_objects
+    GlFunction(Void, "glUseProgramStages", [(GLuint, "pipeline"), (GLbitfield, "stages"), (GLuint, "program")]),
+    GlFunction(Void, "glActiveShaderProgram", [(GLuint, "pipeline"), (GLuint, "program")]),
+    GlFunction(GLuint, "glCreateShaderProgramv", [(GLenum, "type"), (GLsizei, "count"), (Const(Array(Const(GLstring), "count")), "strings")]),
+    GlFunction(Void, "glBindProgramPipeline", [(GLuint, "pipeline")]),
+    GlFunction(Void, "glDeleteProgramPipelines", [(GLsizei, "n"), (Const(Array(GLuint, "n")), "pipelines")]),
+    GlFunction(Void, "glGenProgramPipelines", [(GLsizei, "n"), Out(Array(GLuint, "n"), "pipelines")]),
+    GlFunction(GLboolean, "glIsProgramPipeline", [(GLuint, "pipeline")]),
+    GlFunction(Void, "glGetProgramPipelineiv", [(GLuint, "pipeline"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetProgramPipelineiv_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glProgramUniform1i", [(GLuint, "program"), (GLint, "location"), (GLint, "v0")]),
+    GlFunction(Void, "glProgramUniform1iv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Pointer(GLint)), "value")]),
+    GlFunction(Void, "glProgramUniform1f", [(GLuint, "program"), (GLint, "location"), (GLfloat, "v0")]),
+    GlFunction(Void, "glProgramUniform1fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Pointer(GLfloat)), "value")]),
+    GlFunction(Void, "glProgramUniform1d", [(GLuint, "program"), (GLint, "location"), (GLdouble, "v0")]),
+    GlFunction(Void, "glProgramUniform1dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Pointer(GLdouble)), "value")]),
+    GlFunction(Void, "glProgramUniform1ui", [(GLuint, "program"), (GLint, "location"), (GLuint, "v0")]),
+    GlFunction(Void, "glProgramUniform1uiv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Pointer(GLuint)), "value")]),
+    GlFunction(Void, "glProgramUniform2i", [(GLuint, "program"), (GLint, "location"), (GLint, "v0"), (GLint, "v1")]),
+    GlFunction(Void, "glProgramUniform2iv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLint, "2")), "value")]),
+    GlFunction(Void, "glProgramUniform2f", [(GLuint, "program"), (GLint, "location"), (GLfloat, "v0"), (GLfloat, "v1")]),
+    GlFunction(Void, "glProgramUniform2fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLfloat, "2")), "value")]),
+    GlFunction(Void, "glProgramUniform2d", [(GLuint, "program"), (GLint, "location"), (GLdouble, "v0"), (GLdouble, "v1")]),
+    GlFunction(Void, "glProgramUniform2dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLdouble, "2")), "value")]),
+    GlFunction(Void, "glProgramUniform2ui", [(GLuint, "program"), (GLint, "location"), (GLuint, "v0"), (GLuint, "v1")]),
+    GlFunction(Void, "glProgramUniform2uiv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLuint, "2")), "value")]),
+    GlFunction(Void, "glProgramUniform3i", [(GLuint, "program"), (GLint, "location"), (GLint, "v0"), (GLint, "v1"), (GLint, "v2")]),
+    GlFunction(Void, "glProgramUniform3iv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLint, "3")), "value")]),
+    GlFunction(Void, "glProgramUniform3f", [(GLuint, "program"), (GLint, "location"), (GLfloat, "v0"), (GLfloat, "v1"), (GLfloat, "v2")]),
+    GlFunction(Void, "glProgramUniform3fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLfloat, "3")), "value")]),
+    GlFunction(Void, "glProgramUniform3d", [(GLuint, "program"), (GLint, "location"), (GLdouble, "v0"), (GLdouble, "v1"), (GLdouble, "v2")]),
+    GlFunction(Void, "glProgramUniform3dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLdouble, "3")), "value")]),
+    GlFunction(Void, "glProgramUniform3ui", [(GLuint, "program"), (GLint, "location"), (GLuint, "v0"), (GLuint, "v1"), (GLuint, "v2")]),
+    GlFunction(Void, "glProgramUniform3uiv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLuint, "3")), "value")]),
+    GlFunction(Void, "glProgramUniform4i", [(GLuint, "program"), (GLint, "location"), (GLint, "v0"), (GLint, "v1"), (GLint, "v2"), (GLint, "v3")]),
+    GlFunction(Void, "glProgramUniform4iv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLint, "4")), "value")]),
+    GlFunction(Void, "glProgramUniform4f", [(GLuint, "program"), (GLint, "location"), (GLfloat, "v0"), (GLfloat, "v1"), (GLfloat, "v2"), (GLfloat, "v3")]),
+    GlFunction(Void, "glProgramUniform4fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLfloat, "4")), "value")]),
+    GlFunction(Void, "glProgramUniform4d", [(GLuint, "program"), (GLint, "location"), (GLdouble, "v0"), (GLdouble, "v1"), (GLdouble, "v2"), (GLdouble, "v3")]),
+    GlFunction(Void, "glProgramUniform4dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLdouble, "4")), "value")]),
+    GlFunction(Void, "glProgramUniform4ui", [(GLuint, "program"), (GLint, "location"), (GLuint, "v0"), (GLuint, "v1"), (GLuint, "v2"), (GLuint, "v3")]),
+    GlFunction(Void, "glProgramUniform4uiv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (Const(Array(GLuint, "4")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix2fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "2")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix3fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "3")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix4fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "4")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix2dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "2")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix3dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "3")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix4dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "4")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix2x3fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix3x2fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix2x4fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix4x2fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix3x4fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix4x3fv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLfloat, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix2x3dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix3x2dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix2x4dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix4x2dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix3x4dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glProgramUniformMatrix4x3dv", [(GLuint, "program"), (GLint, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Const(Array(GLdouble, "count")), "value")]),
+    GlFunction(Void, "glValidateProgramPipeline", [(GLuint, "pipeline")]),
+    GlFunction(Void, "glGetProgramPipelineInfoLog", [(GLuint, "pipeline"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(OpaqueArray(GLchar, "__glGetProgramPipelineInfoLog_size(length)"), "infoLog")], sideeffects=False),
+
+    # GL_ARB_vertex_attrib_64bit
+    GlFunction(Void, "glVertexAttribL1d", [(GLuint, "index"), (GLdouble, "x")]),
+    GlFunction(Void, "glVertexAttribL2d", [(GLuint, "index"), (GLdouble, "x"), (GLdouble, "y")]),
+    GlFunction(Void, "glVertexAttribL3d", [(GLuint, "index"), (GLdouble, "x"), (GLdouble, "y"), (GLdouble, "z")]),
+    GlFunction(Void, "glVertexAttribL4d", [(GLuint, "index"), (GLdouble, "x"), (GLdouble, "y"), (GLdouble, "z"), (GLdouble, "w")]),
+    GlFunction(Void, "glVertexAttribL1dv", [(GLuint, "index"), (Const(Pointer(GLdouble)), "v")]),
+    GlFunction(Void, "glVertexAttribL2dv", [(GLuint, "index"), (Const(Array(GLdouble, "2")), "v")]),
+    GlFunction(Void, "glVertexAttribL3dv", [(GLuint, "index"), (Const(Array(GLdouble, "3")), "v")]),
+    GlFunction(Void, "glVertexAttribL4dv", [(GLuint, "index"), (Const(Array(GLdouble, "4")), "v")]),
+    GlFunction(Void, "glVertexAttribLPointer", [(GLuint, "index"), (GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (Const(OpaqueBlob(GLvoid, "size")), "pointer")]),
+    GlFunction(Void, "glGetVertexAttribLdv", [(GLuint, "index"), (GLenum, "pname"), Out(OpaqueArray(GLdouble, "__glGetVertexAttribLdv_size(pname)"), "params")], sideeffects=False),
+
+    # GL_ARB_viewport_array
+    GlFunction(Void, "glViewportArrayv", [(GLuint, "first"), (GLsizei, "count"), (Const(OpaqueArray(GLfloat, "__glViewportArrayv_size(count)")), "v")]),
+    GlFunction(Void, "glViewportIndexedf", [(GLuint, "index"), (GLfloat, "x"), (GLfloat, "y"), (GLfloat, "w"), (GLfloat, "h")]),
+    GlFunction(Void, "glViewportIndexedfv", [(GLuint, "index"), (Const(Array(GLfloat, "4")), "v")]),
+    GlFunction(Void, "glScissorArrayv", [(GLuint, "first"), (GLsizei, "count"), (Const(OpaqueArray(GLint, "__glScissorArrayv_size(count)")), "v")]),
+    GlFunction(Void, "glScissorIndexed", [(GLuint, "index"), (GLint, "left"), (GLint, "bottom"), (GLsizei, "width"), (GLsizei, "height")]),
+    GlFunction(Void, "glScissorIndexedv", [(GLuint, "index"), (Const(Array(GLint, "4")), "v")]),
+    GlFunction(Void, "glDepthRangeArrayv", [(GLuint, "first"), (GLsizei, "count"), (Const(OpaqueArray(GLclampd, "__glDepthRangeArrayv_size(count)")), "v")]),
+    GlFunction(Void, "glDepthRangeIndexed", [(GLuint, "index"), (GLclampd, "n"), (GLclampd, "f")]),
+    GlFunction(Void, "glGetFloati_v", [(GLenum, "target"), (GLuint, "index"), Out(OpaqueArray(GLfloat, "__glGetFloati_v_size(target)"), "data")], sideeffects=False),
+    GlFunction(Void, "glGetDoublei_v", [(GLenum, "target"), (GLuint, "index"), Out(OpaqueArray(GLdouble, "__glGetDoublei_v_size(target)"), "data")], sideeffects=False),
+
+    # GL_ARB_debug_output
+    GlFunction(Void, "glDebugMessageControlARB", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Const(Array(GLuint, "count")), "ids"), (GLboolean, "enabled")]),
+    GlFunction(Void, "glDebugMessageInsertARB", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), (Const(String("GLchar *", "length")), "buf")]),
+    GlFunction(Void, "glDebugMessageCallbackARB", [(GLDEBUGPROCARB, "callback"), (Const(OpaqueArray(GLvoid, "__glDebugMessageCallbackARB_size(callback)")), "userParam")]),
+    GlFunction(GLuint, "glGetDebugMessageLogARB", [(GLuint, "count"), (GLsizei, "bufsize"), Out(Array(GLenum, "count"), "sources"), Out(Array(GLenum, "count"), "types"), Out(Array(GLuint, "count"), "ids"), Out(Array(GLenum, "count"), "severities"), Out(Array(GLsizei, "count"), "lengths"), Out(OpaqueArray(GLchar, "__glGetDebugMessageLogARB_size(lengths)"), "messageLog")], sideeffects=False),
+
+    # GL_ARB_robustness
+    GlFunction(GLenum, "glGetGraphicsResetStatusARB", [], sideeffects=False),
+    GlFunction(Void, "glGetnMapdvARB", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "v")], sideeffects=False),
+    GlFunction(Void, "glGetnMapfvARB", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "v")], sideeffects=False),
+    GlFunction(Void, "glGetnMapivARB", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLint, "bufSize"), "v")], sideeffects=False),
+    GlFunction(Void, "glGetnPixelMapfvARB", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetnPixelMapuivARB", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLuint, "bufSize"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetnPixelMapusvARB", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLushort, "bufSize"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetnPolygonStippleARB", [(GLsizei, "bufSize"), Out(Blob(GLubyte, "bufSize"), "pattern")], sideeffects=False),
+    GlFunction(Void, "glGetnColorTableARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "table")], sideeffects=False),
+    GlFunction(Void, "glGetnConvolutionFilterARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "image")], sideeffects=False),
+    GlFunction(Void, "glGetnSeparableFilterARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "rowBufSize"), Out(Blob(GLvoid, "rowBufSize"), "row"), (GLsizei, "columnBufSize"), Out(Blob(GLvoid, "columnBufSize"), "column"), Out(OpaquePointer(GLvoid), "span")], sideeffects=False),
+    GlFunction(Void, "glGetnHistogramARB", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetnMinmaxARB", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetnTexImageARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "img")], sideeffects=False),
+    GlFunction(Void, "glReadnPixelsARB", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "data")], sideeffects=False),
+    GlFunction(Void, "glGetnCompressedTexImageARB", [(GLenum, "target"), (GLint, "lod"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "img")], sideeffects=False),
+    GlFunction(Void, "glGetnUniformfvARB", [(GLuint, "program"), (GLint, "location"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetnUniformivARB", [(GLuint, "program"), (GLint, "location"), (GLsizei, "bufSize"), Out(Array(GLint, "bufSize"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetnUniformuivARB", [(GLuint, "program"), (GLint, "location"), (GLsizei, "bufSize"), Out(Array(GLuint, "bufSize"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetnUniformdvARB", [(GLuint, "program"), (GLint, "location"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "params")], sideeffects=False),
+
     # GL_EXT_blend_color
     GlFunction(Void, "glBlendColorEXT", [(GLclampf, "red"), (GLclampf, "green"), (GLclampf, "blue"), (GLclampf, "alpha")]),
 
@@ -953,12 +1278,12 @@ glapi.add_functions([
     GlFunction(Void, "glPixelTexGenSGIX", [(GLenum, "mode")]),
 
     # GL_SGIS_pixel_texture
-    #GlFunction(Void, "glPixelTexGenParameteriSGIS", [(GLenum, "pname"), (GLint, "param")]),
-    #GlFunction(Void, "glPixelTexGenParameterivSGIS", [(GLenum, "pname"), (Const(Array(GLint, "__glPixelTexGenParameterivSGIS_size(pname)")), "params")]),
-    #GlFunction(Void, "glPixelTexGenParameterfSGIS", [(GLenum, "pname"), (GLfloat, "param")]),
-    #GlFunction(Void, "glPixelTexGenParameterfvSGIS", [(GLenum, "pname"), (Const(Array(GLfloat, "__glPixelTexGenParameterfvSGIS_size(pname)")), "params")]),
-    #GlFunction(Void, "glGetPixelTexGenParameterivSGIS", [(GLenum, "pname"), Out(Array(GLint, "__glGetPixelTexGenParameterivSGIS_size(pname)"), "params")], sideeffects=False),
-    #GlFunction(Void, "glGetPixelTexGenParameterfvSGIS", [(GLenum, "pname"), Out(Array(GLfloat, "__glGetPixelTexGenParameterfvSGIS_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glPixelTexGenParameteriSGIS", [(GLenum, "pname"), (GLint, "param")]),
+    GlFunction(Void, "glPixelTexGenParameterivSGIS", [(GLenum, "pname"), (Const(OpaqueArray(GLint, "__glPixelTexGenParameterivSGIS_size(pname)")), "params")]),
+    GlFunction(Void, "glPixelTexGenParameterfSGIS", [(GLenum, "pname"), (GLfloat, "param")]),
+    GlFunction(Void, "glPixelTexGenParameterfvSGIS", [(GLenum, "pname"), (Const(OpaqueArray(GLfloat, "__glPixelTexGenParameterfvSGIS_size(pname)")), "params")]),
+    GlFunction(Void, "glGetPixelTexGenParameterivSGIS", [(GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetPixelTexGenParameterivSGIS_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetPixelTexGenParameterfvSGIS", [(GLenum, "pname"), Out(OpaqueArray(GLfloat, "__glGetPixelTexGenParameterfvSGIS_size(pname)"), "params")], sideeffects=False),
 
     # GL_EXT_texture_object
     GlFunction(GLboolean, "glAreTexturesResidentEXT", [(GLsizei, "n"), (Const(Array(GLtexture, "n")), "textures"), Out(Array(GLboolean, "n"), "residences")]),
@@ -969,8 +1294,8 @@ glapi.add_functions([
     GlFunction(Void, "glPrioritizeTexturesEXT", [(GLsizei, "n"), (Const(Array(GLtexture, "n")), "textures"), (Const(Array(GLclampf, "n")), "priorities")]),
 
     # GL_SGIS_multisample
-    #GlFunction(Void, "glSampleMaskSGIS", [(GLclampf, "value"), (GLboolean, "invert")]),
-    #GlFunction(Void, "glSamplePatternSGIS", [(GLenum, "pattern")]),
+    GlFunction(Void, "glSampleMaskSGIS", [(GLclampf, "value"), (GLboolean, "invert")]),
+    GlFunction(Void, "glSamplePatternSGIS", [(GLenum, "pattern")]),
 
     # GL_EXT_vertex_array
     GlFunction(Void, "glArrayElementEXT", [(GLint, "i")]),
@@ -1201,10 +1526,10 @@ glapi.add_functions([
     GlFunction(Void, "glActiveStencilFaceEXT", [(GLenum, "face")]),
 
     # GL_APPLE_vertex_array_object
-    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLvertexArrayAPPLE, "array")]),
-    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Const(Array(GLvertexArrayAPPLE, "n")), "arrays")]),
-    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLvertexArrayAPPLE, "n"), "arrays")]),
-    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLvertexArrayAPPLE, "array")]),
+    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLvertexArray, "array")]),
+    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Const(Array(GLvertexArray, "n")), "arrays")]),
+    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLvertexArray, "n"), "arrays")]),
+    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLvertexArray, "array")]),
 
     # GL_NV_fragment_program
     GlFunction(Void, "glProgramNamedParameter4fNV", [(GLprogramNV, "id"), (GLsizei, "len"), (Const(OpaquePointer(GLubyte)), "name"), (GLfloat, "x"), (GLfloat, "y"), (GLfloat, "z"), (GLfloat, "w")]),
