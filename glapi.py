@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2008-2009 VMware, Inc.
+# Copyright 2008-2010 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -68,6 +68,8 @@ GLprogramARB = Handle("programARB", GLuint)
 GLprogramNV = Handle("programNV", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
+GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
+GLvertexArrayAPPLE = Handle("vertexArrayAPPLE", GLuint)
 GLregion = Handle("region", GLuint)
 
 
@@ -134,9 +136,9 @@ glapi.add_functions([
     GlFunction(Void, "glNewList", [(GLlist, "list"), (GLenum, "mode")]),
     GlFunction(Void, "glEndList", []),
     GlFunction(Void, "glCallList", [(GLlist, "list")]),
-    GlFunction(Void, "glCallLists", [(GLsizei, "n"), (GLenum, "type"), (Blob(Const(GLvoid), "__glCallLists_size(n, type)"), "lists")]), # XXX
-    GlFunction(Void, "glDeleteLists", [(GLlist, "list"), (GLsizei, "range")]), # XXX
-    GlFunction(Handle("list", GLuint, "range"), "glGenLists", [(GLsizei, "range")]), # XXX
+    GlFunction(Void, "glCallLists", [(GLsizei, "n"), (GLenum, "type"), (Blob(Const(GLvoid), "__glCallLists_size(n, type)"), "lists")]),
+    GlFunction(Void, "glDeleteLists", [(GLlist, "list"), (GLsizei, "range")]),
+    GlFunction(Handle("list", GLuint, "range"), "glGenLists", [(GLsizei, "range")]),
     GlFunction(Void, "glListBase", [(GLuint, "base")]),
     GlFunction(Void, "glBegin", [(GLenum_mode, "mode")]),
     GlFunction(Void, "glBitmap", [(GLsizei, "width"), (GLsizei, "height"), (GLfloat, "xorig"), (GLfloat, "yorig"), (GLfloat, "xmove"), (GLfloat, "ymove"), (Blob(Const(GLubyte), "__glBitmap_size(width, height)"), "bitmap")]),
@@ -966,7 +968,6 @@ glapi.add_functions([
     GlFunction(GLboolean, "glIsTextureEXT", [(GLtexture, "texture")]),
     GlFunction(Void, "glPrioritizeTexturesEXT", [(GLsizei, "n"), (Const(Array(GLtexture, "n")), "textures"), (Const(Array(GLclampf, "n")), "priorities")]),
 
-
     # GL_SGIS_multisample
     #GlFunction(Void, "glSampleMaskSGIS", [(GLclampf, "value"), (GLboolean, "invert")]),
     #GlFunction(Void, "glSamplePatternSGIS", [(GLenum, "pattern")]),
@@ -1168,9 +1169,9 @@ glapi.add_functions([
     GlFunction(Void, "glGetTexBumpParameterfvATI", [(GLenum, "pname"), Out(OpaquePointer(GLfloat), "param")], sideeffects=False),
 
     # GL_ATI_fragment_shader
-    GlFunction(GLuint, "glGenFragmentShadersATI", [(GLuint, "range")]),
-    GlFunction(Void, "glBindFragmentShaderATI", [(GLuint, "id")]),
-    GlFunction(Void, "glDeleteFragmentShaderATI", [(GLuint, "id")]),
+    GlFunction(Handle("fragmentShaderATI", GLuint, "range"), "glGenFragmentShadersATI", [(GLuint, "range")]),
+    GlFunction(Void, "glBindFragmentShaderATI", [(GLfragmentShaderATI, "id")]),
+    GlFunction(Void, "glDeleteFragmentShaderATI", [(GLfragmentShaderATI, "id")]),
     GlFunction(Void, "glBeginFragmentShaderATI", []),
     GlFunction(Void, "glEndFragmentShaderATI", []),
     GlFunction(Void, "glPassTexCoordATI", [(GLuint, "dst"), (GLuint, "coord"), (GLenum, "swizzle")]),
@@ -1184,13 +1185,13 @@ glapi.add_functions([
     GlFunction(Void, "glSetFragmentShaderConstantATI", [(GLuint, "dst"), (Const(Array(GLfloat, "4")), "value")]),
 
     # GL_NV_occlusion_query
-    GlFunction(Void, "glGenOcclusionQueriesNV", [(GLsizei, "n"), Out(Array(GLuint, "n"), "ids")]),
-    GlFunction(Void, "glDeleteOcclusionQueriesNV", [(GLsizei, "n"), (Const(Array(GLuint, "n")), "ids")]),
-    GlFunction(GLboolean, "glIsOcclusionQueryNV", [(GLuint, "id")]),
-    GlFunction(Void, "glBeginOcclusionQueryNV", [(GLuint, "id")]),
+    GlFunction(Void, "glGenOcclusionQueriesNV", [(GLsizei, "n"), Out(Array(GLquery, "n"), "ids")]),
+    GlFunction(Void, "glDeleteOcclusionQueriesNV", [(GLsizei, "n"), (Const(Array(GLquery, "n")), "ids")]),
+    GlFunction(GLboolean, "glIsOcclusionQueryNV", [(GLquery, "id")]),
+    GlFunction(Void, "glBeginOcclusionQueryNV", [(GLquery, "id")]),
     GlFunction(Void, "glEndOcclusionQueryNV", []),
-    GlFunction(Void, "glGetOcclusionQueryivNV", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetOcclusionQueryivNV_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetOcclusionQueryuivNV", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLuint, "__glGetOcclusionQueryuivNV_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetOcclusionQueryivNV", [(GLquery, "id"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetOcclusionQueryivNV_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetOcclusionQueryuivNV", [(GLquery, "id"), (GLenum, "pname"), Out(OpaqueArray(GLuint, "__glGetOcclusionQueryuivNV_size(pname)"), "params")], sideeffects=False),
 
     # GL_NV_point_sprite
     GlFunction(Void, "glPointParameteriNV", [(GLenum, "pname"), (GLint, "param")]),
@@ -1200,10 +1201,10 @@ glapi.add_functions([
     GlFunction(Void, "glActiveStencilFaceEXT", [(GLenum, "face")]),
 
     # GL_APPLE_vertex_array_object
-    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLuint, "array")]),
-    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Const(Array(GLuint, "n")), "arrays")]),
-    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLuint, "n"), "arrays")]),
-    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLuint, "array")]),
+    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLvertexArrayAPPLE, "array")]),
+    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Const(Array(GLvertexArrayAPPLE, "n")), "arrays")]),
+    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLvertexArrayAPPLE, "n"), "arrays")]),
+    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLvertexArrayAPPLE, "array")]),
 
     # GL_NV_fragment_program
     GlFunction(Void, "glProgramNamedParameter4fNV", [(GLprogramNV, "id"), (GLsizei, "len"), (Const(OpaquePointer(GLubyte)), "name"), (GLfloat, "x"), (GLfloat, "y"), (GLfloat, "z"), (GLfloat, "w")]),
@@ -1249,8 +1250,8 @@ glapi.add_functions([
     GlFunction(Void, "glRenderbufferStorageMultisampleEXT", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
 
     # GL_EXT_timer_query
-    GlFunction(Void, "glGetQueryObjecti64vEXT", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLint64EXT), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectui64vEXT", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLuint64EXT), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjecti64vEXT", [(GLquery, "id"), (GLenum, "pname"), (OpaquePointer(GLint64EXT), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectui64vEXT", [(GLquery, "id"), (GLenum, "pname"), (OpaquePointer(GLuint64EXT), "params")], sideeffects=False),
 
     # GL_EXT_gpu_program_parameters
     GlFunction(Void, "glProgramEnvParameters4fvEXT", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (Const(OpaquePointer(GLfloat)), "params")]),
