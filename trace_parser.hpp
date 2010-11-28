@@ -54,16 +54,16 @@ protected:
    typedef std::list<Call *> CallList;
    CallList calls;
 
-   typedef std::map<size_t, Call::Signature *> FunctionMap;
+   typedef std::vector<Call::Signature *> FunctionMap;
    FunctionMap functions;
 
-   typedef std::map<size_t, Struct::Signature *> StructMap;
+   typedef std::vector<Struct::Signature *> StructMap;
    StructMap structs;
 
-   typedef std::map<size_t, Enum *> EnumMap;
+   typedef std::vector<Enum *> EnumMap;
    EnumMap enums;
 
-   typedef std::map<size_t, Bitmask::Signature *> BitmaskMap;
+   typedef std::vector<Bitmask::Signature *> BitmaskMap;
    BitmaskMap bitmasks;
 
    unsigned next_call_no;
@@ -123,13 +123,25 @@ public:
          }
       } while(true);
    }
-   
+  
+   /**
+    * Helper function to lookup an ID in a vector, resizing the vector if it doesn't fit.
+    */
+   template<class T>
+   T *lookup(std::vector<T *> &map, size_t index) {
+      if (index >= map.size()) {
+         map.resize(index + 1);
+         return NULL;
+      } else {
+         return map[index];
+      }
+   }
+
    void parse_enter(void) {
       size_t id = read_uint();
 
-      Call::Signature *sig;
-      FunctionMap::const_iterator it = functions.find(id);
-      if (it == functions.end()) {
+      Call::Signature *sig = lookup(functions, id);
+      if (!sig) {
           sig = new Call::Signature;
           sig->name = read_string();
           unsigned size = read_uint();
@@ -137,8 +149,6 @@ public:
               sig->arg_names.push_back(read_string());
           }
           functions[id] = sig;
-      } else {
-          sig = it->second;
       }
       assert(sig);
 
@@ -265,15 +275,12 @@ public:
    
    Value *parse_enum() {
       size_t id = read_uint();
-      Enum *sig;
-      EnumMap::const_iterator it = enums.find(id);
-      if (it == enums.end()) {
+      Enum *sig = lookup(enums, id);
+      if (!sig) {
           std::string name = read_string();
           Value *value = parse_value();
           sig = new Enum(name, value);
           enums[id] = sig;
-      } else {
-          sig = it->second;
       }
       assert(sig);
       return sig;
@@ -281,9 +288,8 @@ public:
    
    Value *parse_bitmask() {
       size_t id = read_uint();
-      Bitmask::Signature *sig;
-      BitmaskMap::const_iterator it = bitmasks.find(id);
-      if (it == bitmasks.end()) {
+      Bitmask::Signature *sig = lookup(bitmasks, id);
+      if (!sig) {
           size_t size = read_uint();
           sig = new Bitmask::Signature(size);
           for (Bitmask::Signature::iterator it = sig->begin(); it != sig->end(); ++it) {
@@ -292,8 +298,6 @@ public:
               assert(it->second);
           }
           bitmasks[id] = sig;
-      } else {
-          sig = it->second;
       }
       assert(sig);
 
@@ -323,9 +327,8 @@ public:
    Value *parse_struct() {
       size_t id = read_uint();
 
-      Struct::Signature *sig;
-      StructMap::const_iterator it = structs.find(id);
-      if (it == structs.end()) {
+      Struct::Signature *sig = lookup(structs, id);
+      if (!sig) {
           sig = new Struct::Signature;
           sig->name = read_string();
           unsigned size = read_uint();
@@ -333,8 +336,6 @@ public:
               sig->member_names.push_back(read_string());
           }
           structs[id] = sig;
-      } else {
-          sig = it->second;
       }
       assert(sig);
 
