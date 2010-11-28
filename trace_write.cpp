@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <map>
+#include <vector>
 
 #include <zlib.h>
 
@@ -154,10 +154,19 @@ void Close(void) {
 
 static unsigned call_no = 0;
 
-static std::map<Id, bool> functions;
-static std::map<Id, bool> structs;
-static std::map<Id, bool> enums;
-static std::map<Id, bool> bitmasks;
+inline bool lookup(std::vector<bool> &map, size_t index) {
+   if (index >= map.size()) {
+      map.resize(index + 1);
+      return false;
+   } else {
+      return map[index];
+   }
+}
+
+static std::vector<bool> functions;
+static std::vector<bool> structs;
+static std::vector<bool> enums;
+static std::vector<bool> bitmasks;
 
 
 unsigned BeginEnter(const FunctionSig &function) {
@@ -165,7 +174,7 @@ unsigned BeginEnter(const FunctionSig &function) {
    Open();
    WriteByte(Trace::EVENT_ENTER);
    WriteUInt(function.id);
-   if (!functions[function.id]) {
+   if (!lookup(functions, function.id)) {
       WriteString(function.name);
       WriteUInt(function.num_args);
       for (unsigned i = 0; i < function.num_args; ++i) {
@@ -211,7 +220,7 @@ void BeginArray(size_t length) {
 void BeginStruct(const StructSig *sig) {
    WriteByte(Trace::TYPE_STRUCT);
    WriteUInt(sig->id);
-   if (!structs[sig->id]) {
+   if (!lookup(structs, sig->id)) {
       WriteString(sig->name);
       WriteUInt(sig->num_members);
       for (unsigned i = 0; i < sig->num_members; ++i) {
@@ -293,7 +302,7 @@ void LiteralBlob(const void *data, size_t size) {
 void LiteralEnum(const EnumSig *sig) {
    WriteByte(Trace::TYPE_ENUM);
    WriteUInt(sig->id);
-   if (!enums[sig->id]) {
+   if (!lookup(enums, sig->id)) {
       WriteString(sig->name);
       LiteralSInt(sig->value);
       enums[sig->id] = true;
@@ -303,7 +312,7 @@ void LiteralEnum(const EnumSig *sig) {
 void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value) {
    WriteByte(Trace::TYPE_BITMASK);
    WriteUInt(bitmask.id);
-   if (!bitmasks[bitmask.id]) {
+   if (!lookup(bitmasks, bitmask.id)) {
       WriteUInt(bitmask.count);
       for (unsigned i = 0; i < bitmask.count; ++i) {
          WriteString(bitmask.values[i].name);
