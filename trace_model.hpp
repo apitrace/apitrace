@@ -277,7 +277,7 @@ public:
    std::vector<Value *> args;
    Value *ret;
 
-   Call(Signature *_sig) : sig(_sig), ret(0) { }
+   Call(Signature *_sig) : sig(_sig), args(_sig->arg_names.size()), ret(0) { }
 
    inline const std::string name(void) const {
        return sig->name;
