@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2008-2009 VMware, Inc.
+# Copyright 2010 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,8 +24,10 @@
 ##########################################################################/
 
 
+import stdapi
+from glapi import glapi
+from glxapi import glxapi
 from wglapi import wglapi
-from trace import Tracer
 
 
 public_symbols = set([
@@ -393,54 +395,94 @@ public_symbols = set([
 	"wglUseFontOutlinesW",
 ])
 
-class WglTracer(Tracer):
 
-    def get_function_address(self, function):
-        #print 'DebugBreak();'
+class Dispatcher:
+
+    def function_pointer_type(self, function):
+        return '__PFN' + function.name.upper()
+
+    def function_pointer_value(self, function):
+        return '__' + function.name + '_ptr'
+
+    def dispatch_function(self, function):
         if function.name in public_symbols:
-            return '__GetProcAddress("%s")' % (function.name,)
-        else:
-            print '        if (!pwglGetProcAddress) {'
-            print '            pwglGetProcAddress = (PwglGetProcAddress)__GetProcAddress("wglGetProcAddress");'
-            print '            if (!pwglGetProcAddress)'
-            print '                Trace::Abort();'
-            print '        }'
-            return 'pwglGetProcAddress("%s")' % (function.name,)
+            return
 
-    def wrap_ret(self, function, instance):
-        if function.name == "wglGetProcAddress":
-            print '    if (%s) {' % instance
-            else_ = ''
-            for f in wglapi.functions:
-                ptype = self.function_pointer_type(f)
-                pvalue = self.function_pointer_value(f)
-                print '        %sif (!strcmp("%s", lpszProc)) {' % (else_, f.name)
-                print '            %s = (%s)%s;' % (pvalue, ptype, instance)
-                print '            %s = (%s)&%s;' % (instance, function.type, f.name);
-                print '        }'
-                else_ = 'else '
-            print '        %s{' % (else_,)
-            print '            OS::DebugMessage("apitrace: unknown function \\"%s\\"\\n", lpszProc);'
-            print '        }'
-            print '    }'
+        ptype = self.function_pointer_type(function)
+        pvalue = self.function_pointer_value(function)
+        print 'typedef ' + function.prototype('* %s' % ptype) + ';'
+        print 'static %s %s = NULL;' % (ptype, pvalue)
+        print
+        print 'static inline ' + function.prototype('__' + function.name) + ' {'
+        if function.type is stdapi.Void:
+            ret = ''
+        else:
+            ret = 'return '
+        self.get_true_pointer(function)
+        pvalue = self.function_pointer_value(function)
+        print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
+        print '}'
+        print
+        print '#define %s __%s' % (function.name, function.name)
+
+    def get_true_pointer(self, function):
+        ptype = self.function_pointer_type(function)
+        pvalue = self.function_pointer_value(function)
+        if function.name in public_symbols:
+            get_proc_address = '__getProcAddress'
+        else:
+            get_proc_address = '__glGetProcAddress'
+        print '    if (!%s) {' % (pvalue,)
+        print '        %s = (%s)%s("%s");' % (pvalue, ptype, get_proc_address, function.name)
+        print '        if (!%s) {' % (pvalue,)
+        self.fail_function(function)
+        print '        }'
+        print '    }'
+
+    def fail_function(self, function):
+        print '    std::cerr << "error: unavailable function \\"%s\\"\\n";' % function.name
+        if function.fail is not None:
+            if function.type is stdapi.Void:
+                assert function.fail == ''
+                print '            return;' 
+            else:
+                assert function.fail != ''
+                print '            return %s;' % function.fail
+        else:
+            print '            abort();'
 
 
 if __name__ == '__main__':
     print
-    print '#define _GDI32_'
-    print
     print '#include "glimports.hpp"'
-    print
-    print '#include "trace_write.hpp"'
     print '#include "os.hpp"'
-    print '#include "glsize.hpp"'
     print
-    print 'extern "C" {'
-    print '''
+    if 0:
+        print 'typedef void (*__PROC)(void);'
+        print
+        print 'static __PROC __getProcAddress(const char *name);'
+        print
+        print 'static __PROC __glGetProcAddress(const char *name);'
+    else:
+        print '#ifdef WIN32'
+        print '#define __glGetProcAddress wglGetProcAddress'
+        print '#else'
+        print '#define __glGetProcAddress(name) glXGetProcAddress((const GLubyte *)(name))'
+        print '#endif'
+    print
+    dispatcher = Dispatcher()
+    for function in glapi.functions:
+        dispatcher.dispatch_function(function)
+    print
+    if 0:
+        print '''
+
+#ifdef WIN32
+
 static HINSTANCE g_hDll = NULL;
 
-static PROC
-__GetProcAddress(LPCSTR lpProcName)
+static __PROC
+__getProcAddress(const char *name)
 {
     if (!g_hDll) {
         char szDll[MAX_PATH] = {0};
@@ -457,11 +499,36 @@ __GetProcAddress(LPCSTR lpProcName)
         }
     }
         
-    return GetProcAddress(g_hDll, lpProcName);
+    return GetProcAddress(g_hDll, name);
 }
 
+static inline __PROC
+__glGetProcAddress(const char *name) {
+    return __wglGetProcAddress(name);
+}
+
+#else
+
+static void g_module = NULL;
+
+static __PROC
+__getProcAddress(const char *name)
+{
+    if (!g_module) {
+        g_module = dlopen("libGL.so", RTLD_LAZY);
+        if (!g_module) {
+            return NULL;
+        }
+    }
+        
+    return (__PROC)dlsym(g_module, name);
+}
+
+static inline __PROC
+__glGetProcAddress(const char *name) {
+    return __glXGetProcAddress(name);
+}
+
+#endif
+
     '''
-    tracer = WglTracer()
-    tracer.trace_api(wglapi)
-    print
-    print '} /* extern "C" */'

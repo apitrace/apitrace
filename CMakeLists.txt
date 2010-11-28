@@ -20,14 +20,6 @@ find_package (DirectX)
 
 find_package (GLUT)
 
-find_library (GLEW_glew_LIBRARY GLEW
-	/usr/lib
-)
-
-find_path (GLEW_INCLUDE_DIR GL/glew.h
-      /usr/include/GL
-)
-
 if (WIN32)
 	# MSVC & MinGW only define & use APIENTRY
 	add_definitions (-DGLAPIENTRY=__stdcall)
@@ -161,7 +153,13 @@ endif ()
 add_executable (dump dump.cpp trace_model.cpp)
 
 
-if (GLEW_INCLUDE_DIR)
+if (GLUT_INCLUDE_DIR)
+	add_custom_command (
+		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+		DEPENDS glproc.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
+	)
+
 	add_custom_command (
 		OUTPUT glretrace.cpp
 		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
@@ -169,19 +167,18 @@ if (GLEW_INCLUDE_DIR)
 	)
 
 	include_directories (
+		${CMAKE_CURRENT_BINARY_DIR}
 		${OPENGL_INCLUDE_PATH}
 		${GLUT_INCLUDE_DIR}
-		${GLEW_INCLUDE_DIR}
 	)
 
-	add_executable (glretrace glretrace.cpp trace_model.cpp)
+	add_executable (glretrace glretrace.cpp trace_model.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
 	target_link_libraries (glretrace
 		${OPENGL_gl_LIBRARY}
 		${OPENGL_glu_LIBRARY}
 		${GLUT_glut_LIBRARY}
-		${GLEW_glew_LIBRARY}
 	)
-endif (GLEW_INCLUDE_DIR)
+endif (GLUT_INCLUDE_DIR)
 
 

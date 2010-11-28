@@ -27,6 +27,7 @@ d3d9.cpp
 ddraw.cpp
 dump
 dxsdk
+glproc.hpp
 glretrace
 glretrace.cpp
 glxtrace.cpp

@@ -27,11 +27,18 @@
 #define _GLIMPORTS_HPP_
 
 #ifdef WIN32
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
+
 #include <windows.h>
-#endif
+
+#else /* !WIN32 */
+
+#include <X11/Xlib.h>
+
+#endif /* !WIN32 */
 
 #include <GL/gl.h>
 
@@ -42,7 +49,35 @@
 #endif
 
 #ifdef WIN32
+
 #include "wglext.h"
-#endif /* WIN32 */
+
+#define GLAPIENTRY __stdcall
+
+#ifndef PFD_SUPPORT_DIRECTDRAW
+#define PFD_SUPPORT_DIRECTDRAW 0x00002000
+#endif
+#ifndef PFD_SUPPORT_COMPOSITION
+#define PFD_SUPPORT_COMPOSITION 0x00008000
+#endif
+
+#ifdef __MINGW32__
+
+typedef struct _WGLSWAP
+{
+    HDC hdc;
+    UINT uiFlags;
+} WGLSWAP, *PWGLSWAP, FAR *LPWGLSWAP;
+
+#define WGL_SWAPMULTIPLE_MAX 16
+
+#endif /* __MINGW32__ */
+
+#else /* !WIN32 */
+
+#include <GL/glx.h>
+#include "glxext.h"
+
+#endif /* !WIN32 */
 
 #endif /* _GLIMPORTS_HPP_ */

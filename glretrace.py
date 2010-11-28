@@ -90,11 +90,7 @@ if __name__ == '__main__':
     print '#include <string.h>'
     print '#include <iostream>'
     print
-    print '#ifdef WIN32'
-    print '#include <windows.h>'
-    print '#endif'
-    print
-    print '#include <GL/glew.h>'
+    print '#include "glproc.hpp"'
     print '#include <GL/glut.h>'
     print
     print 'static bool double_buffer = false;'
@@ -210,7 +206,6 @@ int main(int argc, char **argv)
     glutInitWindowSize(800, 600);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | (double_buffer ? GLUT_DOUBLE : GLUT_SINGLE));
     glutCreateWindow(argv[0]);
-    glewInit();
 
     glutDisplayFunc(&display);
     glutIdleFunc(&idle);

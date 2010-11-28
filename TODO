@@ -13,9 +13,6 @@
 
 * Allow clamping to a GL version or a number of extensions.
 
-* Drop GLEW dependency -- the supported extension subset is different from what
-  we want, and it is trivial to code generate the wrappers
-
 * Trace multiple threads
   * GetCurrentThreadId()
   * pthread_self()
