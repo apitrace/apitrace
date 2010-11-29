@@ -1,6 +1,7 @@
 .*.sw?
 *~
 *.a
+*.bmp
 *.bz2
 *.dll
 *.exe

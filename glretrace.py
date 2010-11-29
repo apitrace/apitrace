@@ -89,7 +89,7 @@ class GlRetracer(Retracer):
 
 
 if __name__ == '__main__':
-    print '''
+    print r'''
 #include <string.h>
 #include <iostream>
 
@@ -104,6 +104,8 @@ bool __reshape_window = false;
 
 unsigned __frame = 0;
 long long __startTime = 0;
+bool __screenshots = 0;
+
 
 static void
 checkGlError(void) {
@@ -146,17 +148,32 @@ checkGlError(void) {
         std::cerr << error;
         break;
     }
-    std::cerr << "\\n";
+    std::cerr << "\n";
 }
 '''
     api = glapi.glapi
     retracer = GlRetracer()
     retracer.retrace_api(glapi.glapi)
-    print '''
+    print r'''
 
 static Trace::Parser parser;
 
 static void display_noop(void) {
+}
+
+#include "bmp.hpp"
+
+static void frame_complete(void) {
+    ++__frame;
+    
+    if (__screenshots && !__reshape_window) {
+        char filename[PATH_MAX];
+        snprintf(filename, sizeof filename, "screenshot_%04u.bmp", __frame);
+        unsigned char *pixels = new unsigned char[__window_height*__window_width*4];
+        glReadPixels(0, 0, __window_width, __window_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        BMP::write(filename, pixels, __window_width, __window_height, __window_width*4);
+    }
+
 }
 
 static void display(void) {
@@ -166,8 +183,7 @@ static void display(void) {
         if (call->name() == "glFlush") {
             glFlush();
             if (!double_buffer) {
-                ++__frame;
-                return;
+                frame_complete();
             }
         }
         
@@ -178,7 +194,7 @@ static void display(void) {
                     glutSwapBuffers();
                 else
                     glFlush();
-                ++__frame;
+                frame_complete();
                 return;
             }
         }
@@ -193,7 +209,7 @@ static void display(void) {
     std::cout << 
         "Rendered " << __frame << " frames"
         " in " <<  timeInterval << " secs,"
-        " average of " << (__frame/timeInterval) << " fps\\n";
+        " average of " << (__frame/timeInterval) << " fps\n";
 
     glutDisplayFunc(&display_noop);
     glutIdleFunc(NULL);
@@ -221,13 +237,14 @@ int main(int argc, char **argv)
 
         if (!strcmp(arg, "--")) {
             break;
-        }
-        else if (!strcmp(arg, "-db")) {
+        } else if (!strcmp(arg, "-db")) {
             double_buffer = true;
+        } else if (!strcmp(arg, "-s")) {
+            __screenshots = true;
         } else if (!strcmp(arg, "-v")) {
             ++verbosity;
         } else {
-            std::cerr << "error: unknown option " << arg << "\\n";
+            std::cerr << "error: unknown option " << arg << "\n";
             return 1;
         }
     }
