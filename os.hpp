@@ -56,6 +56,11 @@ bool GetCurrentDir(char *str, size_t size);
 
 void DebugMessage(const char *format, ...);
 
+/**
+ * Get the current time in microseconds from an unknown base.
+ */
+long long GetTime(void);
+
 void Abort(void);
 
 } /* namespace OS */

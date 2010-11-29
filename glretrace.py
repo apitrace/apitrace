@@ -89,19 +89,22 @@ class GlRetracer(Retracer):
 
 
 if __name__ == '__main__':
-    print
-    print '#include <string.h>'
-    print '#include <iostream>'
-    print
-    print '#include "glproc.hpp"'
-    print '#include <GL/glut.h>'
-    print
-    print 'static bool double_buffer = false;'
-    print 'static bool insideGlBeginEnd = false;'
-    print 'static int __window_width = 256, __window_height = 256;'
-    print 'bool __reshape_window = false;'
-    print
     print '''
+#include <string.h>
+#include <iostream>
+
+#include "glproc.hpp"
+#include <GL/glut.h>
+
+static bool double_buffer = false;
+static bool insideGlBeginEnd = false;
+
+static int __window_width = 256, __window_height = 256;
+bool __reshape_window = false;
+
+unsigned __frame = 0;
+long long __startTime = 0;
+
 static void
 checkGlError(void) {
     if (insideGlBeginEnd) {
@@ -153,13 +156,19 @@ checkGlError(void) {
 
 static Trace::Parser parser;
 
+static void display_noop(void) {
+}
+
 static void display(void) {
     Trace::Call *call;
 
     while ((call = parser.parse_call())) {
         if (call->name() == "glFlush") {
             glFlush();
-            return;
+            if (!double_buffer) {
+                ++__frame;
+                return;
+            }
         }
         
         if (!retrace_call(*call)) {
@@ -169,12 +178,24 @@ static void display(void) {
                     glutSwapBuffers();
                 else
                     glFlush();
+                ++__frame;
                 return;
             }
         }
     }
 
+    // Reached the end of trace
     glFlush();
+
+    long long endTime = OS::GetTime();
+    float timeInterval = (endTime - __startTime) * 1.0E-6;
+
+    std::cout << 
+        "Rendered " << __frame << " frames"
+        " in " <<  timeInterval << " secs,"
+        " average of " << (__frame/timeInterval) << " fps\\n";
+
+    glutDisplayFunc(&display_noop);
     glutIdleFunc(NULL);
 }
 
@@ -226,6 +247,7 @@ int main(int argc, char **argv)
 
     for ( ; i < argc; ++i) {
         if (parser.open(argv[i])) {
+            __startTime = OS::GetTime();
             glutMainLoop();
             parser.close();
         }

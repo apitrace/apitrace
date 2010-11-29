@@ -25,12 +25,13 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+
+#include <unistd.h>
+#include <sys/time.h>
 #include <pthread.h>
 
 #include "os.hpp"
-#include "trace_write.hpp"
 
 namespace OS {
 
@@ -97,6 +98,13 @@ DebugMessage(const char *format, ...)
    va_end(ap);
 }
 
+long long GetTime(void)
+{
+   struct timeval tv;
+   gettimeofday(&tv, NULL);
+   return tv.tv_usec + tv.tv_sec*1000000LL;
+}
+
 void
 Abort(void)
 {
@@ -105,9 +113,4 @@ Abort(void)
 
 
 } /* namespace OS */
-
-static void _uninit(void) __attribute__((destructor));
-static void _uninit(void) {
-    Trace::Close();
-}
 

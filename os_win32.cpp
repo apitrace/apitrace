@@ -28,7 +28,6 @@
 #include <stdio.h>
 
 #include "os.hpp"
-#include "trace_write.hpp"
 
 
 namespace OS {
@@ -107,6 +106,16 @@ DebugMessage(const char *format, ...)
    }
 }
 
+long long GetTime(void)
+{
+   static LARGE_INTEGER frequency;
+   LARGE_INTEGER counter;
+   if(!frequency.QuadPart)
+      QueryPerformanceFrequency(&frequency);
+   QueryPerformanceCounter(&counter);
+   return counter.QuadPart*1000000LL/frequency.QuadPart;
+}
+
 void
 Abort(void)
 {
@@ -117,25 +126,4 @@ Abort(void)
 #endif
 }
 
-
-
 } /* namespace OS */
-
-
-#if 0
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-    switch(fdwReason) {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-        return TRUE;
-    case DLL_THREAD_DETACH:
-        return TRUE;
-    case DLL_PROCESS_DETACH:
-        Trace::Close();
-        return TRUE;
-    }
-    (void)hinstDLL;
-    (void)lpvReserved;
-    return TRUE;
-}
-#endif

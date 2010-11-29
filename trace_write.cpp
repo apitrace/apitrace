@@ -342,3 +342,33 @@ void Abort(void) {
 }
 
 } /* namespace Trace */
+
+
+#ifdef WIN32
+
+#if 0
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    switch(fdwReason) {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+        return TRUE;
+    case DLL_THREAD_DETACH:
+        return TRUE;
+    case DLL_PROCESS_DETACH:
+        Trace::Close();
+        return TRUE;
+    }
+    (void)hinstDLL;
+    (void)lpvReserved;
+    return TRUE;
+}
+#endif
+
+#else
+
+static void _uninit(void) __attribute__((destructor));
+static void _uninit(void) {
+    Trace::Close();
+}
+
+#endif
