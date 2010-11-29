@@ -47,60 +47,60 @@ class UInt;
 class Value
 {
 public:
-   virtual void visit(Visitor &visitor) = 0;
+    virtual void visit(Visitor &visitor) = 0;
 
-   operator bool (void) const;
-   operator signed long long (void) const;
-   operator unsigned long long (void) const;
-   operator double (void) const;
+    operator bool (void) const;
+    operator signed long long (void) const;
+    operator unsigned long long (void) const;
+    operator double (void) const;
 
-   void *blob(void) const;
-   const char *string(void) const;
+    void *blob(void) const;
+    const char *string(void) const;
 
-   inline operator signed char (void) const { 
-      return static_cast<signed long long>(*this);
-   }
+    inline operator signed char (void) const { 
+        return static_cast<signed long long>(*this);
+    }
 
-   inline operator unsigned char (void) const { 
-      return static_cast<signed long long>(*this);
-   }
+    inline operator unsigned char (void) const { 
+        return static_cast<signed long long>(*this);
+    }
 
-   inline operator signed short (void) const { 
-      return static_cast<signed long long>(*this);
-   }
+    inline operator signed short (void) const { 
+        return static_cast<signed long long>(*this);
+    }
 
-   inline operator unsigned short (void) const { 
-      return static_cast<unsigned long long>(*this);
-   }
+    inline operator unsigned short (void) const { 
+        return static_cast<unsigned long long>(*this);
+    }
 
-   inline operator signed (void) const { 
-      return static_cast<signed long long>(*this);
-   }
+    inline operator signed (void) const { 
+        return static_cast<signed long long>(*this);
+    }
 
-   inline operator unsigned (void) const { 
-      return static_cast<unsigned long long>(*this);
-   }
+    inline operator unsigned (void) const { 
+        return static_cast<unsigned long long>(*this);
+    }
 
-   inline operator signed long (void) const { 
-      return static_cast<signed long long>(*this);
-   }
+    inline operator signed long (void) const { 
+        return static_cast<signed long long>(*this);
+    }
 
-   inline operator unsigned long (void) const { 
-      return static_cast<unsigned long long>(*this);
-   }
+    inline operator unsigned long (void) const { 
+        return static_cast<unsigned long long>(*this);
+    }
 
-   inline operator float (void) const { 
-      return static_cast<double>(*this);
-   }
+    inline operator float (void) const { 
+        return static_cast<double>(*this);
+    }
 
-   const Value & operator[](size_t index) const;
+    const Value & operator[](size_t index) const;
 };
 
 
 class Null : public Value
 {
 public:
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 };
 
 
@@ -109,152 +109,152 @@ public:
 class Bool : public Value
 {
 public:
-   Bool(bool _value) : value(_value) {}
+    Bool(bool _value) : value(_value) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   bool value;
+    bool value;
 };
 
 
 class SInt : public Value
 {
 public:
-   SInt(signed long long _value) : value(_value) {}
+    SInt(signed long long _value) : value(_value) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   signed long long value;
+    signed long long value;
 };
 
 
 class UInt : public Value
 {
 public:
-   UInt(unsigned long long _value) : value(_value) {}
+    UInt(unsigned long long _value) : value(_value) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   unsigned long long value;
+    unsigned long long value;
 };
 
 
 class Float : public Value
 {
 public:
-   Float(double _value) : value(_value) {}
+    Float(double _value) : value(_value) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   double value;
+    double value;
 };
 
 
 class String : public Value
 {
 public:
-   String(std::string _value) : value(_value) {}
+    String(std::string _value) : value(_value) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   std::string value;
+    std::string value;
 };
 
 
 class Enum : public Value
 {
 public:
-   Enum(std::string &_name, Value *_value) : name(_name), value(_value) {}
+    Enum(std::string &_name, Value *_value) : name(_name), value(_value) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   std::string name;
-   Value *value;
+    std::string name;
+    Value *value;
 };
 
 
 class Bitmask : public UInt
 {
 public:
-   typedef std::pair<std::string, unsigned long long> Pair;
-   typedef std::vector<Pair> Signature;
+    typedef std::pair<std::string, unsigned long long> Pair;
+    typedef std::vector<Pair> Signature;
 
-   Bitmask(const Signature *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
+    Bitmask(const Signature *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   const Signature *sig;
+    const Signature *sig;
 };
 
 
 class Struct : public Value
 {
 public:
-   struct Signature {
-      std::string name;
-      std::vector<std::string> member_names;
-   };
+    struct Signature {
+        std::string name;
+        std::vector<std::string> member_names;
+    };
 
-   Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
+    Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   const Signature *sig;
-   std::vector<Value *> members;
+    const Signature *sig;
+    std::vector<Value *> members;
 };
 
 
 class Array : public Value
 {
 public:
-   Array(size_t len) : values(len) {}
+    Array(size_t len) : values(len) {}
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   std::vector<Value *> values;
+    std::vector<Value *> values;
 };
 
 
 class Blob : public Value
 {
 public:
-   Blob(size_t _size) {
-       size = _size;
-       buf = new char[_size];
-   }
+    Blob(size_t _size) {
+        size = _size;
+        buf = new char[_size];
+    }
 
-   ~Blob() {
-       delete [] buf;
-   }
+    ~Blob() {
+        delete [] buf;
+    }
 
-   void visit(Visitor &visitor);
+    void visit(Visitor &visitor);
 
-   size_t size;
-   char *buf;
+    size_t size;
+    char *buf;
 };
 
 
 class Visitor
 {
 public:
-   virtual void visit(Null *) {assert(0);}
-   virtual void visit(Bool *) {assert(0);}
-   virtual void visit(SInt *) {assert(0);}
-   virtual void visit(UInt *) {assert(0);}
-   virtual void visit(Float *) {assert(0);}
-   virtual void visit(String *) {assert(0);}
-   virtual void visit(Enum *) {assert(0);}
-   virtual void visit(Bitmask *bitmask) {visit(static_cast<UInt *>(bitmask));}
-   virtual void visit(Struct *) {assert(0);}
-   virtual void visit(Array *) {assert(0);}
-   virtual void visit(Blob *) {assert(0);}
+    virtual void visit(Null *) {assert(0);}
+    virtual void visit(Bool *) {assert(0);}
+    virtual void visit(SInt *) {assert(0);}
+    virtual void visit(UInt *) {assert(0);}
+    virtual void visit(Float *) {assert(0);}
+    virtual void visit(String *) {assert(0);}
+    virtual void visit(Enum *) {assert(0);}
+    virtual void visit(Bitmask *bitmask) {visit(static_cast<UInt *>(bitmask));}
+    virtual void visit(Struct *) {assert(0);}
+    virtual void visit(Array *) {assert(0);}
+    virtual void visit(Blob *) {assert(0);}
 
 protected:
-   inline void _visit(Value *value) {
-      if (value) { 
-         value->visit(*this); 
-      }
-   }
+    inline void _visit(Value *value) {
+        if (value) { 
+            value->visit(*this); 
+        }
+    }
 };
 
 
@@ -269,25 +269,25 @@ double asFloat(const Value &node);
 class Call
 {
 public:
-   struct Signature {
-      std::string name;
-      std::vector<std::string> arg_names;
-   };
+    struct Signature {
+        std::string name;
+        std::vector<std::string> arg_names;
+    };
 
-   unsigned no;
-   const Signature *sig;
-   std::vector<Value *> args;
-   Value *ret;
+    unsigned no;
+    const Signature *sig;
+    std::vector<Value *> args;
+    Value *ret;
 
-   Call(Signature *_sig) : sig(_sig), args(_sig->arg_names.size()), ret(0) { }
+    Call(Signature *_sig) : sig(_sig), args(_sig->arg_names.size()), ret(0) { }
 
-   inline const std::string name(void) const {
-       return sig->name;
-   }
+    inline const std::string name(void) const {
+        return sig->name;
+    }
 
-   inline Value & arg(unsigned index) {
-       return *(args[index]);
-   }
+    inline Value & arg(unsigned index) {
+        return *(args[index]);
+    }
 };
 
 

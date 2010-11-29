@@ -63,13 +63,13 @@ namespace Trace {
 
     void Open(void);
     void Close(void);
-    
+
     unsigned BeginEnter(const FunctionSig &function);
     void EndEnter(void);
-    
+
     void BeginLeave(unsigned call);
     void EndLeave(void);
-    
+
     void BeginArg(unsigned index);
     inline void EndArg(void) {}
 

@@ -38,38 +38,38 @@ namespace Formatter {
 
 class Attribute {
 public:
-   virtual ~Attribute() {}
+    virtual ~Attribute() {}
 
-   virtual void apply(std::ostream &) const {}
+    virtual void apply(std::ostream &) const {}
 };
 
 
 enum Color {
-   RED,
-   GREEN,
-   BLUE,
+    RED,
+    GREEN,
+    BLUE,
 };
 
 
 class Formatter {
 public:
-   virtual ~Formatter() {}
+    virtual ~Formatter() {}
 
-   virtual Attribute *normal(void) const { return new Attribute; }
-   virtual Attribute *bold(void) const { return new Attribute; }
-   virtual Attribute *italic(void) const { return new Attribute; }
-   virtual Attribute *color(Color) const { return new Attribute; }
+    virtual Attribute *normal(void) const { return new Attribute; }
+    virtual Attribute *bold(void) const { return new Attribute; }
+    virtual Attribute *italic(void) const { return new Attribute; }
+    virtual Attribute *color(Color) const { return new Attribute; }
 };
- 
+
 
 class AnsiAttribute : public Attribute {
 protected:
-   const char *escape;
+    const char *escape;
 public:
-   AnsiAttribute(const char *_escape) : escape(_escape) {}
-   void apply(std::ostream& os) const {
-      os << "\33[" << escape;
-   }
+    AnsiAttribute(const char *_escape) : escape(_escape) {}
+    void apply(std::ostream& os) const {
+        os << "\33[" << escape;
+    }
 };
 
 
@@ -81,23 +81,23 @@ public:
 class AnsiFormatter : public Formatter {
 protected:
 public:
-   virtual Attribute *normal(void) const { return new AnsiAttribute("0m"); }
-   virtual Attribute *bold(void) const { return new AnsiAttribute("1m"); }
-   virtual Attribute *italic(void) const { return new AnsiAttribute("3m"); }
-   virtual Attribute *color(Color c) const { 
-      static const char *color_escapes[] = {
-         "31m", /* red */
-         "32m", /* green */
-         "34m", /* blue */
-      };
-      return new AnsiAttribute(color_escapes[c]); 
-   }
+    virtual Attribute *normal(void) const { return new AnsiAttribute("0m"); }
+    virtual Attribute *bold(void) const { return new AnsiAttribute("1m"); }
+    virtual Attribute *italic(void) const { return new AnsiAttribute("3m"); }
+    virtual Attribute *color(Color c) const { 
+        static const char *color_escapes[] = {
+            "31m", /* red */
+            "32m", /* green */
+            "34m", /* blue */
+        };
+        return new AnsiAttribute(color_escapes[c]); 
+    }
 };
 
 
 inline std::ostream& operator<<(std::ostream& os, const Attribute *attr) {
-   attr->apply(os);
-   return os;
+    attr->apply(os);
+    return os;
 }
 
 
@@ -107,25 +107,25 @@ inline std::ostream& operator<<(std::ostream& os, const Attribute *attr) {
 
 class WindowsAttribute : public Attribute {
 protected:
-   WORD wAttributes;
+    WORD wAttributes;
 public:
-   WindowsAttribute(WORD _wAttributes) : wAttributes(_wAttributes) {}
-   void apply(std::ostream& os) const {
-      DWORD nStdHandleOutput;
-      if (os == std::cout) {
-         nStdHandleOutput = STD_OUTPUT_HANDLE;
-      } else if (os == std::cerr) {
-         nStdHandleOutput = STD_ERROR_HANDLE;
-      } else {
-         return;
-      }
-      HANDLE hConsoleOutput = GetStdHandle(nStdHandleOutput);
-      if (hConsoleOutput == INVALID_HANDLE_VALUE) {
-         return;
-      }
+    WindowsAttribute(WORD _wAttributes) : wAttributes(_wAttributes) {}
+    void apply(std::ostream& os) const {
+        DWORD nStdHandleOutput;
+        if (os == std::cout) {
+            nStdHandleOutput = STD_OUTPUT_HANDLE;
+        } else if (os == std::cerr) {
+            nStdHandleOutput = STD_ERROR_HANDLE;
+        } else {
+            return;
+        }
+        HANDLE hConsoleOutput = GetStdHandle(nStdHandleOutput);
+        if (hConsoleOutput == INVALID_HANDLE_VALUE) {
+            return;
+        }
 
-      SetConsoleTextAttribute(hConsoleOutput, wAttributes);
-   }
+        SetConsoleTextAttribute(hConsoleOutput, wAttributes);
+    }
 };
 
 
@@ -135,17 +135,17 @@ public:
 class WindowsFormatter : public Formatter {
 protected:
 public:
-   virtual Attribute *normal(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
-   virtual Attribute *bold(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY); }
-   virtual Attribute *italic(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
-   virtual Attribute *color(Color c) const { 
-      static const WORD color_escapes[] = {
-         FOREGROUND_RED | FOREGROUND_INTENSITY,
-         FOREGROUND_GREEN | FOREGROUND_INTENSITY,
-         FOREGROUND_BLUE | FOREGROUND_INTENSITY, 
-      };
-      return new WindowsAttribute(color_escapes[c]); 
-   }
+    virtual Attribute *normal(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
+    virtual Attribute *bold(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY); }
+    virtual Attribute *italic(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
+    virtual Attribute *color(Color c) const { 
+        static const WORD color_escapes[] = {
+            FOREGROUND_RED | FOREGROUND_INTENSITY,
+            FOREGROUND_GREEN | FOREGROUND_INTENSITY,
+            FOREGROUND_BLUE | FOREGROUND_INTENSITY, 
+        };
+        return new WindowsAttribute(color_escapes[c]); 
+    }
 };
 
 #endif
@@ -153,9 +153,9 @@ public:
 
 inline Formatter *defaultFormatter(void) {
 #ifdef WIN32
-   return new WindowsFormatter;
+    return new WindowsFormatter;
 #else
-   return new AnsiFormatter;
+    return new AnsiFormatter;
 #endif
 }
 

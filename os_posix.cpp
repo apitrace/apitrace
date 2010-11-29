@@ -60,7 +60,7 @@ GetProcessName(char *str, size_t size)
     ssize_t len;
     char szProcessPath[PATH_MAX + 1];
     char *lpProcessName;
-    
+
     // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
     len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
     if (len == -1) {
@@ -91,18 +91,18 @@ GetCurrentDir(char *str, size_t size)
 void
 DebugMessage(const char *format, ...)
 {
-   va_list ap;
-   va_start(ap, format);
-   fflush(stdout);
-   vfprintf(stderr, format, ap);
-   va_end(ap);
+    va_list ap;
+    va_start(ap, format);
+    fflush(stdout);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
 }
 
 long long GetTime(void)
 {
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   return tv.tv_usec + tv.tv_sec*1000000LL;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_usec + tv.tv_sec*1000000LL;
 }
 
 void

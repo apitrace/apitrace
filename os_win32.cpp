@@ -90,30 +90,30 @@ GetCurrentDir(char *str, size_t size)
 void
 DebugMessage(const char *format, ...)
 {
-   char buf[4096];
+    char buf[4096];
 
-   va_list ap;
-   va_start(ap, format);
-   fflush(stdout);
-   vsnprintf(buf, sizeof buf, format, ap);
-   va_end(ap);
+    va_list ap;
+    va_start(ap, format);
+    fflush(stdout);
+    vsnprintf(buf, sizeof buf, format, ap);
+    va_end(ap);
 
-   OutputDebugStringA(buf);
-   if (!IsDebuggerPresent()) {
-      fflush(stdout);
-      fputs(buf, stderr);
-      fflush(stderr);
-   }
+    OutputDebugStringA(buf);
+    if (!IsDebuggerPresent()) {
+        fflush(stdout);
+        fputs(buf, stderr);
+        fflush(stderr);
+    }
 }
 
 long long GetTime(void)
 {
-   static LARGE_INTEGER frequency;
-   LARGE_INTEGER counter;
-   if(!frequency.QuadPart)
-      QueryPerformanceFrequency(&frequency);
-   QueryPerformanceCounter(&counter);
-   return counter.QuadPart*1000000LL/frequency.QuadPart;
+    static LARGE_INTEGER frequency;
+    LARGE_INTEGER counter;
+    if(!frequency.QuadPart)
+        QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&counter);
+    return counter.QuadPart*1000000LL/frequency.QuadPart;
 }
 
 void

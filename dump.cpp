@@ -29,16 +29,16 @@
 
 int main(int argc, char **argv)
 {
-   for (int i = 1; i < argc; ++i) {
-      Trace::Parser p;
-      if (p.open(argv[i])) {
-          Trace::Call *call;
-          call = p.parse_call();
-          while (call) {
-              std::cout << *call;
-              call = p.parse_call();
-          }
-      }
-   }
-   return 0;
+    for (int i = 1; i < argc; ++i) {
+        Trace::Parser p;
+        if (p.open(argv[i])) {
+            Trace::Call *call;
+            call = p.parse_call();
+            while (call) {
+                std::cout << *call;
+                call = p.parse_call();
+            }
+        }
+    }
+    return 0;
 }

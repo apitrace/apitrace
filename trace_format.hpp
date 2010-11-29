@@ -31,33 +31,33 @@ namespace Trace {
 #define TRACE_VERSION 0
 
 enum Event {
-   EVENT_ENTER = 0,
-   EVENT_LEAVE,
-   EVENT_MESSAGE
+    EVENT_ENTER = 0,
+    EVENT_LEAVE,
+    EVENT_MESSAGE
 };
 
 enum CallDetail {
-   CALL_END = 0,
-   CALL_ARG,
-   CALL_RET,
-   CALL_THREAD,
+    CALL_END = 0,
+    CALL_ARG,
+    CALL_RET,
+    CALL_THREAD,
 };
 
 enum Type {
-   TYPE_NULL = 0,
-   TYPE_FALSE,
-   TYPE_TRUE,
-   TYPE_SINT,
-   TYPE_UINT,
-   TYPE_FLOAT,
-   TYPE_DOUBLE,
-   TYPE_STRING, // Null terminated, human readible string
-   TYPE_BLOB, // Block of bytes
-   TYPE_ENUM,
-   TYPE_BITMASK,
-   TYPE_ARRAY,
-   TYPE_STRUCT,
-   TYPE_OPAQUE,
+    TYPE_NULL = 0,
+    TYPE_FALSE,
+    TYPE_TRUE,
+    TYPE_SINT,
+    TYPE_UINT,
+    TYPE_FLOAT,
+    TYPE_DOUBLE,
+    TYPE_STRING, // Null terminated, human readible string
+    TYPE_BLOB, // Block of bytes
+    TYPE_ENUM,
+    TYPE_BITMASK,
+    TYPE_ARRAY,
+    TYPE_STRUCT,
+    TYPE_OPAQUE,
 };
 
 /*

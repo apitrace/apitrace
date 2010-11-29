@@ -43,10 +43,10 @@ class D3DShader(Type):
         print '''
 typedef HRESULT 
 (WINAPI *PD3DXDISASSEMBLESHADER)(
-   CONST DWORD *pShader,
-   BOOL EnableColorCode,
-   LPCSTR pComments,
-   LPD3DXBUFFER *ppDisassembly
+    CONST DWORD *pShader,
+    BOOL EnableColorCode,
+    LPCSTR pComments,
+    LPD3DXBUFFER *ppDisassembly
 );
         '''
         print 'void Dump%s(const DWORD *tokens)' % (self.id)
