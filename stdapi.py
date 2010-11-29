@@ -407,9 +407,12 @@ class Interface(Type):
         self.base = base
         self.methods = []
 
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_interface(self, *args, **kwargs)
+
     def itermethods(self):
         if self.base is not None:
-            for method in self.stdapi.itermethods():
+            for method in self.base.itermethods():
                 yield method
         for method in self.methods:
             yield method
@@ -420,7 +423,8 @@ class Method(Function):
 
     def __init__(self, type, name, args):
         Function.__init__(self, type, name, args, call = '__stdcall')
-
+        for index in range(len(self.args)):
+            self.args[index].index = index + 1
 
 towrap = []
 
@@ -516,7 +520,12 @@ class Collector(Visitor):
         pass
 
     def visit_interface(self, interface):
-        pass
+        if interface.base is not None:
+            self.visit(interface.base)
+        for method in interface.itermethods():
+            for arg in method.args:
+                self.visit(arg.type)
+            self.visit(method.type)
 
 
 class API:
@@ -535,7 +544,7 @@ class API:
             collector.visit(function.type)
         for interface in self.interfaces:
             collector.visit(interface)
-            for method in interface.methods:
+            for method in interface.itermethods():
                 for arg in method.args:
                     collector.visit(arg.type)
                 collector.visit(method.type)

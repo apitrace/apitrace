@@ -102,16 +102,16 @@ if (WIN32)
 	#endif (DirectX_D3D8_FOUND)
 
 	# d3d9.dll
-    #if (DirectX_D3DX9_FOUND)
-	#	include_directories (${DirectX_D3DX9_INCLUDE_DIR})
-	#	add_custom_command (
-	#		OUTPUT d3d9.cpp
-	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
-	#		DEPENDS d3d9.py d3d9types.py d3d9caps.py d3dshader.py winapi.py stdapi.py
-	#	)
-	#	add_library (d3d9 SHARED d3d9.def d3d9.cpp trace_write.cpp os_win32.cpp)
-	#	set_target_properties (d3d9 PROPERTIES PREFIX "")
-	#endif (DirectX_D3DX9_FOUND)
+    if (DirectX_D3DX9_FOUND)
+		include_directories (${DirectX_D3DX9_INCLUDE_DIR})
+		add_custom_command (
+			OUTPUT d3d9.cpp
+			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
+			DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py d3dshader.py winapi.py stdapi.py
+		)
+		add_library (d3d9 SHARED d3d9.def d3d9.cpp trace_write.cpp os_win32.cpp)
+		set_target_properties (d3d9 PROPERTIES PREFIX "")
+	endif (DirectX_D3DX9_FOUND)
 
 	# d3d10.dll
 	#if (DirectX_D3D10_FOUND)

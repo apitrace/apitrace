@@ -32,6 +32,9 @@ import stdapi
 all_types = {}
 
 
+def interface_wrap_name(interface):
+    return "Wrap" + interface.expr
+
 class DumpDeclarator(stdapi.OnceVisitor):
     '''Declare helper functions to dump complex types.'''
 
@@ -116,7 +119,19 @@ class DumpDeclarator(stdapi.OnceVisitor):
         pass
 
     def visit_interface(self, interface):
-        pass
+        print "class %s : public %s " % (interface_wrap_name(interface), interface.name)
+        print "{"
+        print "public:"
+        print "    %s(%s * pInstance);" % (interface_wrap_name(interface), interface.name)
+        print "    virtual ~%s();" % interface_wrap_name(interface)
+        print
+        for method in interface.itermethods():
+            print "    " + method.prototype() + ";"
+        print
+        #print "private:"
+        print "    %s * m_pInstance;" % (interface.name,)
+        print "};"
+        print
 
 
 class DumpImplementer(stdapi.Visitor):
@@ -181,7 +196,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    Trace::LiteralOpaque((const void *)%s);' % instance
 
     def visit_interface(self, interface, instance):
-        print '    Trace::LiteralOpaque((const void *)%s);' % instance
+        print '    Trace::LiteralOpaque((const void *)&%s);' % instance
 
 
 dump_instance = DumpImplementer().visit
@@ -233,15 +248,20 @@ class Wrapper(stdapi.Visitor):
         pass
     
     def visit_interface(self, interface, instance):
+        assert instance.startswith('*')
+        instance = instance[1:]
         print "    if(%s)" % instance
-        print "        %s = new %s(%s);" % (instance, interface.type.wrap_name(), instance)
+        print "        %s = new %s(%s);" % (instance, interface_wrap_name(interface), instance)
 
 
 class Unwrapper(Wrapper):
 
     def visit_interface(self, interface, instance):
+        assert instance.startswith('*')
+        instance = instance[1:]
         print "    if(%s)" % instance
-        print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, interface.type.wrap_name(), instance)
+        print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, interface_wrap_name(interface), instance)
+
 
 wrap_instance = Wrapper().visit
 unwrap_instance = Unwrapper().visit
@@ -264,10 +284,8 @@ class Tracer:
         print
 
         # Interfaces wrapers
-        map(self.interface_wrap_name, api.interfaces)
-        map(self.interface_pre_decl, api.interfaces)
-        map(self.interface_decl, api.interfaces)
-        map(self.interface_wrap_impl, api.interfaces)
+        interfaces = [type for type in types if isinstance(type, stdapi.Interface)]
+        map(self.interface_wrap_impl, interfaces)
         print
 
         # Function wrappers
@@ -321,7 +339,7 @@ class Tracer:
 
     def trace_function_impl(self, function):
         pvalue = self.function_pointer_value(function)
-        print function.prototype() + ' {'
+        print 'extern "C" ' + function.prototype() + ' {'
         if function.args:
             print '    static const char * __args[%u] = {%s};' % (len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
         else:
@@ -376,33 +394,12 @@ class Tracer:
     def unwrap_ret(self, function, instance):
         unwrap_instance(function.type, instance)
 
-    def interface_wrap_name(self, interface):
-        return "Wrap" + interface.expr
-
-    def interface_pre_decl(self, interface):
-        print "class %s;" % interface.wrap_name()
-
-    def interface_decl(self, interface):
-        print "class %s : public %s " % (interface.wrap_name(), interface.name)
-        print "{"
-        print "public:"
-        print "    %s(%s * pInstance);" % (interface.wrap_name(), interface.name)
-        print "    virtual ~%s();" % interface.wrap_name()
-        print
-        for method in interface.itermethods():
-            print "    " + method.prototype() + ";"
-        print
-        #print "private:"
-        print "    %s * m_pInstance;" % (interface.name,)
-        print "};"
-        print
-
     def interface_wrap_impl(self, interface):
-        print '%s::%s(%s * pInstance) {' % (interface.wrap_name(), interface.wrap_name(), interface.name)
+        print '%s::%s(%s * pInstance) {' % (interface_wrap_name(interface), interface_wrap_name(interface), interface.name)
         print '    m_pInstance = pInstance;'
         print '}'
         print
-        print '%s::~%s() {' % (interface.wrap_name(), interface.wrap_name())
+        print '%s::~%s() {' % (interface_wrap_name(interface), interface_wrap_name(interface))
         print '}'
         print
         for method in interface.itermethods():
@@ -410,13 +407,10 @@ class Tracer:
         print
 
     def trace_method(self, interface, method):
-        print method.prototype(interface.wrap_name() + '::' + method.name) + ' {'
-        if method.type is Void:
-            result = ''
-        else:
-            print '    %s __result;' % method.type
-            result = '__result = '
-        print '    Trace::BeginCall("%s");' % (interface.name + '::' + method.name)
+        print method.prototype(interface_wrap_name(interface) + '::' + method.name) + ' {'
+        print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
+        print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(method.id), interface.name + '::' + method.name, len(method.args) + 1)
+        print '    unsigned __call = Trace::BeginEnter(__sig);'
         print '    Trace::BeginArg(0);'
         print '    Trace::LiteralOpaque((const void *)m_pInstance);'
         print '    Trace::EndArg();'
@@ -424,27 +418,72 @@ class Tracer:
             if not arg.output:
                 self.unwrap_arg(method, arg)
                 self.dump_arg(method, arg)
+        if method.type is stdapi.Void:
+            result = ''
+        else:
+            print '    %s __result;' % method.type
+            result = '__result = '
+        print '    Trace::EndEnter();'
         print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
+        print '    Trace::BeginLeave(__call);'
         for arg in method.args:
             if arg.output:
                 self.dump_arg(method, arg)
                 self.wrap_arg(method, arg)
-        if method.type is not Void:
-            print '    Trace::BeginReturn("%s");' % method.type
+        if method.type is not stdapi.Void:
+            print '    Trace::BeginReturn();'
             dump_instance(method.type, "__result")
             print '    Trace::EndReturn();'
             wrap_instance(method.type, '__result')
-        print '    Trace::EndCall();'
+        print '    Trace::EndLeave();'
         if method.name == 'QueryInterface':
             print '    if (*ppvObj == m_pInstance)'
             print '        *ppvObj = this;'
         if method.name == 'Release':
-            assert method.type is not Void
+            assert method.type is not stdapi.Void
             print '    if (!__result)'
             print '        delete this;'
-        if method.type is not Void:
+        if method.type is not stdapi.Void:
             print '    return __result;'
         print '}'
         print
 
+
+class DllTracer(Tracer):
+
+    def __init__(self, dllname):
+        self.dllname = dllname
+    
+    def get_function_address(self, function):
+        return '__GetProcAddress("%s")' % (function.name,)
+
+
+    def header(self, api):
+        Tracer.header(self, api)
+
+        print '''
+static HINSTANCE g_hDll = NULL;
+
+static PROC
+__GetProcAddress(LPCSTR lpProcName)
+{
+    if (!g_hDll) {
+        char szDll[MAX_PATH] = {0};
+        
+        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
+            return NULL;
+        }
+        
+        strcat(szDll, "\\\\%s");
+        
+        g_hDll = LoadLibraryA(szDll);
+        if (!g_hDll) {
+            return NULL;
+        }
+    }
+        
+    return GetProcAddress(g_hDll, lpProcName);
+}
+
+    ''' % self.dllname
 

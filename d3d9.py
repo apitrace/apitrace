@@ -26,11 +26,11 @@
 """d3d9.h"""
 
 from winapi import *
-from d3dshader import *
 from d3d9types import *
 from d3d9caps import *
+from trace import DllTracer
 
-D3DSHADER9 = D3DShader(9)
+D3DSHADER9 = Opaque("const DWORD *")
 
 HRESULT = Enum("HRESULT", [
     "D3D_OK",
@@ -390,8 +390,8 @@ IDirect3DSwapChain9Ex.methods += [
     Method(HRESULT, "GetDisplayModeEx", [Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")]),
 ]
 
-d3d9 = Dll("d3d9")
-d3d9.functions += [
+d3d9 = API("d3d9")
+d3d9.add_functions([
     StdFunction(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
     StdFunction(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), Out(Pointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),
     StdFunction(Int, "D3DPERF_BeginEvent", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail='-1'),
@@ -401,7 +401,14 @@ d3d9.functions += [
     StdFunction(BOOL, "D3DPERF_QueryRepeatFrame", [], fail='FALSE'),
     StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], fail=''),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0'),
-]
+])
+
+
+class D3D9Tracer(DllTracer):
+
+    pass
+
+
 
 if __name__ == '__main__':
     print '#include <windows.h>'
@@ -413,5 +420,6 @@ if __name__ == '__main__':
     print
     print '#include "trace_write.hpp"'
     print
-    wrap()
+    tracer = D3D9Tracer('d3d9.dll')
+    tracer.trace_api(d3d9)
 
