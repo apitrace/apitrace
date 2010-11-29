@@ -31,15 +31,6 @@ from retrace import Retracer
 
 class GlRetracer(Retracer):
 
-    def filter_function(self, function):
-        return function.name not in [
-            "glNewBufferRegion",
-            "glDeleteBufferRegion",
-            "glReadBufferRegion",
-            "glDrawBufferRegion",
-            "glBufferRegionEnabled",
-        ]
-
     def retrace_function(self, function):
         Retracer.retrace_function(self, function)
 
