@@ -23,7 +23,7 @@
 #
 ##########################################################################/
 
-"""C basic types"""
+"""Common trace code generation."""
 
 
 import stdapi
