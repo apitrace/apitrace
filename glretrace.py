@@ -67,14 +67,26 @@ class GlRetracer(Retracer):
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in [
             "glColorPointer",
+            "glColorPointerEXT",
             "glEdgeFlagPointer",
-            "glIndexPointer",
-            "glNormalPointer",
-            "glTexCoordPointer",
-            "glVertexPointer",
+            "glEdgeFlagPointerEXT",
             "glFogCoordPointer",
+            "glFogCoordPointerEXT",
+            "glIndexPointer",
+            "glIndexPointerEXT",
+            "glMatrixIndexPointerARB",
+            "glNormalPointer",
+            "glNormalPointerEXT",
             "glSecondaryColorPointer",
+            "glSecondaryColorPointerEXT",
+            "glTexCoordPointer",
+            "glTexCoordPointerEXT",
+            "glVertexAttribLPointer",
             "glVertexAttribPointer",
+            "glVertexAttribPointerARB",
+            "glVertexAttribPointerNV",
+            "glVertexPointer",
+            "glVertexPointerEXT",
         ] and arg.name == 'pointer':
             self.extract_pointer(function, arg, arg_type, lvalue, rvalue)
         else:
