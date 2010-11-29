@@ -322,7 +322,10 @@ class Tracer:
     def trace_function_impl(self, function):
         pvalue = self.function_pointer_value(function)
         print function.prototype() + ' {'
-        print '    static const char * __args[%u] = {%s};' % (len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
+        if function.args:
+            print '    static const char * __args[%u] = {%s};' % (len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
+        else:
+            print '    static const char ** __args = NULL;'
         print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(function.id), function.name, len(function.args))
         if function.type is stdapi.Void:
             result = ''

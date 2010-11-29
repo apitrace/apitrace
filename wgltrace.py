@@ -26,6 +26,7 @@
 
 from wglapi import wglapi
 from trace import Tracer
+from codegen import *
 
 
 public_symbols = set([
@@ -410,18 +411,20 @@ class WglTracer(Tracer):
     def wrap_ret(self, function, instance):
         if function.name == "wglGetProcAddress":
             print '    if (%s) {' % instance
-            else_ = ''
-            for f in wglapi.functions:
+        
+            func_dict = dict([(f.name, f) for f in wglapi.functions])
+
+            def handle_case(function_name):
+                f = func_dict[function_name]
                 ptype = self.function_pointer_type(f)
                 pvalue = self.function_pointer_value(f)
-                print '        %sif (!strcmp("%s", lpszProc)) {' % (else_, f.name)
-                print '            %s = (%s)%s;' % (pvalue, ptype, instance)
-                print '            %s = (%s)&%s;' % (instance, function.type, f.name);
-                print '        }'
-                else_ = 'else '
-            print '        %s{' % (else_,)
-            print '            OS::DebugMessage("apitrace: unknown function \\"%s\\"\\n", lpszProc);'
-            print '        }'
+                print '    %s = (%s)%s;' % (pvalue, ptype, instance)
+                print '    %s = (%s)&%s;' % (instance, function.type, f.name);
+        
+            def handle_default():
+                print '    OS::DebugMessage("apitrace: unknown function \\"%s\\"\\n", lpszProc);'
+
+            string_switch('lpszProc', func_dict.keys(), handle_case, handle_default)
             print '    }'
 
 
