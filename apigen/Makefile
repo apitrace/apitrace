@@ -20,7 +20,10 @@ download: \
 	wglext.spec \
 	wgl.tm
 
-%.spec %.tm:
+%.spec:
+	wget -N http://www.opengl.org/registry/api/$@
+
+%.tm:
 	wget -N http://www.opengl.org/registry/api/$@
 
 glapi.py: glspec.py gl.tm gl.spec
