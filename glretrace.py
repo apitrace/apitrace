@@ -42,9 +42,21 @@ class GlRetracer(Retracer):
             self.fail_function(function)
             print '    }'
 
+        if function.name == "glViewport":
+            print '    if (x + width > __window_width) {'
+            print '        __window_width = x + width;'
+            print '        __reshape_window = true;'
+            print '    }'
+            print '    if (y + height > __window_height) {'
+            print '        __window_height = y + height;'
+            print '        __reshape_window = true;'
+            print '    }'
+
         if function.name == "glEnd":
             print '    insideGlBeginEnd = false;'
+        
         Retracer.call_function(self, function)
+
         if function.name == "glBegin":
             print '    insideGlBeginEnd = true;'
         else:
@@ -86,6 +98,8 @@ if __name__ == '__main__':
     print
     print 'static bool double_buffer = false;'
     print 'static bool insideGlBeginEnd = false;'
+    print 'static int __window_width = 256, __window_height = 256;'
+    print 'bool __reshape_window = false;'
     print
     print '''
 static void
@@ -165,6 +179,11 @@ static void display(void) {
 }
 
 static void idle(void) {
+    if (__reshape_window) {
+        // XXX: doesn't quite work
+        glutReshapeWindow(__window_width, __window_height);
+        __reshape_window = false;
+    }
     glutPostRedisplay();
 }
 
@@ -194,7 +213,7 @@ int main(int argc, char **argv)
 
     glutInit(&argc, argv);
     glutInitWindowPosition(0, 0);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(__window_width, __window_height);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | (double_buffer ? GLUT_DOUBLE : GLUT_SINGLE));
     glutCreateWindow(argv[0]);
 
