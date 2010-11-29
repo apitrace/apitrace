@@ -42,7 +42,7 @@
 
 #include <GL/gl.h>
 
-#include "glext.h"
+#include <GL/glext.h>
 
 #ifndef GL_TEXTURE_INDEX_SIZE_EXT
 #define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
@@ -50,7 +50,7 @@
 
 #ifdef WIN32
 
-#include "wglext.h"
+#include <GL/wglext.h>
 
 #define GLAPIENTRY __stdcall
 
@@ -76,7 +76,7 @@ typedef struct _WGLSWAP
 #else /* !WIN32 */
 
 #include <GL/glx.h>
-#include "glxext.h"
+#include <GL/glext.h>
 
 #endif /* !WIN32 */
 

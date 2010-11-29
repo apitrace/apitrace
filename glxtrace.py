@@ -59,11 +59,8 @@ if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
     print '#include <dlfcn.h>'
-    print '#include <X11/Xlib.h>'
-    print '#include <GL/gl.h>'
-    print '#include "glext.h"'
-    print '#include <GL/glx.h>'
-    print '#include "glxext.h"'
+    print
+    print '#include "glimports.hpp"'
     print
     print '#include "trace_write.hpp"'
     print '#include "glsize.hpp"'
