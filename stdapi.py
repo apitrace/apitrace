@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2008-2009 VMware, Inc.
+# Copyright 2008-2010 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,7 +29,310 @@
 import debug
 
 
-all_types = {}
+class Type:
+
+    __all = {}
+    __seq = 0
+
+    def __init__(self, expr, id = ''):
+        self.expr = expr
+        
+        for char in id:
+            assert char.isalnum() or char in '_ '
+
+        id = id.replace(' ', '_')
+        
+        if id in Type.__all:
+            Type.__seq += 1
+            id += str(Type.__seq)
+        
+        assert id not in Type.__all
+        Type.__all[id] = self
+
+        self.id = id
+
+    def __str__(self):
+        return self.expr
+
+    def visit(self, visitor, *args, **kwargs):
+        raise NotImplementedError
+
+
+
+class _Void(Type):
+
+    def __init__(self):
+        Type.__init__(self, "void")
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_void(self, *args, **kwargs)
+
+Void = _Void()
+
+
+class Literal(Type):
+
+    def __init__(self, expr, format, base=10):
+        Type.__init__(self, expr)
+        self.format = format
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_literal(self, *args, **kwargs)
+
+
+class Const(Type):
+
+    def __init__(self, type):
+
+        if type.expr.startswith("const "):
+            expr = type.expr + " const"
+        else:
+            expr = "const " + type.expr
+
+        Type.__init__(self, expr, 'C' + type.id)
+
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_const(self, *args, **kwargs)
+
+
+class Pointer(Type):
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr + " *", 'P' + type.id)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_pointer(self, *args, **kwargs)
+
+
+class Handle(Type):
+
+    def __init__(self, name, type, range=None):
+        Type.__init__(self, type.expr, 'P' + type.id)
+        self.name = name
+        self.type = type
+        self.range = range
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_handle(self, *args, **kwargs)
+
+
+def ConstPointer(type):
+    return Pointer(Const(type))
+
+
+class Enum(Type):
+
+    __vid = 0
+
+    def __init__(self, name, values):
+        Type.__init__(self, name)
+        self.vid = Enum.__vid
+        Enum.__vid += len(values)
+        self.values = list(values)
+    
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_enum(self, *args, **kwargs)
+
+
+def FakeEnum(type, values):
+    return Enum(type.expr, values)
+
+
+class Bitmask(Type):
+
+    def __init__(self, type, values):
+        Type.__init__(self, type.expr)
+        self.type = type
+        self.values = values
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_bitmask(self, *args, **kwargs)
+
+Flags = Bitmask
+
+
+class Array(Type):
+
+    def __init__(self, type, length):
+        Type.__init__(self, type.expr + " *")
+        self.type = type
+        self.length = length
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_array(self, *args, **kwargs)
+
+
+class Blob(Type):
+
+    def __init__(self, type, size):
+        Type.__init__(self, type.expr + ' *')
+        self.type = type
+        self.size = size
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_blob(self, *args, **kwargs)
+
+
+class Struct(Type):
+
+    def __init__(self, name, members):
+        Type.__init__(self, name)
+        self.name = name
+        self.members = members
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_struct(self, *args, **kwargs)
+
+
+class Alias(Type):
+
+    def __init__(self, expr, type):
+        Type.__init__(self, expr)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_alias(self, *args, **kwargs)
+
+
+def Out(type, name):
+    arg = Arg(type, name, output=True)
+    return arg
+
+
+class Arg:
+
+    def __init__(self, type, name, output=False):
+        self.type = type
+        self.name = name
+        self.output = output
+        self.index = None
+
+    def __str__(self):
+        return '%s %s' % (self.type, self.name)
+
+
+class Function:
+
+    __id = 0
+
+    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, hidden=False):
+        self.id = Function.__id
+        Function.__id += 1
+
+        self.type = type
+        self.name = name
+
+        self.args = []
+        index = 0
+        for arg in args:
+            if isinstance(arg, tuple):
+                arg_type, arg_name = arg
+                arg = Arg(arg_type, arg_name)
+            arg.index = index
+            index += 1
+            self.args.append(arg)
+
+        self.call = call
+        self.fail = fail
+        self.sideeffects = sideeffects
+        self.hidden = False
+
+    def prototype(self, name=None):
+        if name is not None:
+            name = name.strip()
+        else:
+            name = self.name
+        s = name
+        if self.call:
+            s = self.call + ' ' + s
+        if name.startswith('*'):
+            s = '(' + s + ')'
+        s = self.type.expr + ' ' + s
+        s += "("
+        if self.args:
+            s += ", ".join(["%s %s" % (arg.type, arg.name) for arg in self.args])
+        else:
+            s += "void"
+        s += ")"
+        return s
+
+
+def StdFunction(*args, **kwargs):
+    kwargs.setdefault('call', '__stdcall')
+    return Function(*args, **kwargs)
+
+
+def FunctionPointer(type, name, args, **kwargs):
+    # XXX: We should probably treat function pointers (callbacks or not) in a generic fashion
+    return Opaque(name)
+
+
+class Interface(Type):
+
+    def __init__(self, name, base=None):
+        Type.__init__(self, name)
+        self.name = name
+        self.base = base
+        self.methods = []
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_interface(self, *args, **kwargs)
+
+    def itermethods(self):
+        if self.base is not None:
+            for method in self.base.itermethods():
+                yield method
+        for method in self.methods:
+            yield method
+        raise StopIteration
+
+
+class Method(Function):
+
+    def __init__(self, type, name, args):
+        Function.__init__(self, type, name, args, call = '__stdcall')
+        for index in range(len(self.args)):
+            self.args[index].index = index + 1
+
+
+def WrapPointer(type):
+    return Pointer(type)
+
+
+class String(Type):
+
+    def __init__(self, expr = "char *", length = None):
+        Type.__init__(self, expr)
+        self.length = length
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_string(self, *args, **kwargs)
+
+# C string (i.e., zero terminated)
+CString = String()
+
+
+class Opaque(Type):
+    '''Opaque pointer.'''
+
+    def __init__(self, expr):
+        Type.__init__(self, expr)
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_opaque(self, *args, **kwargs)
+
+
+def OpaquePointer(type, *args):
+    return Opaque(type.expr + ' *')
+
+def OpaqueArray(type, size):
+    return Opaque(type.expr + ' *')
+
+def OpaqueBlob(type, size):
+    return Opaque(type.expr + ' *')
 
 
 class Visitor:
@@ -139,330 +442,6 @@ class Rebuilder(Visitor):
 
     def visit_opaque(self, opaque):
         return opaque
-
-
-class Type:
-
-    __seq = 0
-
-    def __init__(self, expr, id = ''):
-        self.expr = expr
-        
-        for char in id:
-            assert char.isalnum() or char in '_ '
-
-        id = id.replace(' ', '_')
-        
-        if id in all_types:
-            Type.__seq += 1
-            id += str(Type.__seq)
-        
-        assert id not in all_types
-        all_types[id] = self
-
-        self.id = id
-
-    def __str__(self):
-        return self.expr
-
-    def visit(self, visitor, *args, **kwargs):
-        raise NotImplementedError
-
-
-
-class _Void(Type):
-
-    def __init__(self):
-        Type.__init__(self, "void")
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_void(self, *args, **kwargs)
-
-Void = _Void()
-
-
-class Concrete(Type):
-
-    def decl(self):
-        print 'static void Dump%s(const %s &value);' % (self.id, self.expr)
-    
-    def impl(self):
-        print 'static void Dump%s(const %s &value) {' % (self.id, self.expr)
-        self._dump("value");
-        print '}'
-        print
-    
-    def _dump(self, instance):
-        raise NotImplementedError
-    
-    def dump(self, instance):
-        print '    Dump%s(%s);' % (self.id, instance)
-    
-
-class Literal(Type):
-
-    def __init__(self, expr, format, base=10):
-        Type.__init__(self, expr)
-        self.format = format
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_literal(self, *args, **kwargs)
-
-
-class Const(Type):
-
-    def __init__(self, type):
-
-        if type.expr.startswith("const "):
-            expr = type.expr + " const"
-        else:
-            expr = "const " + type.expr
-
-        Type.__init__(self, expr, 'C' + type.id)
-
-        self.type = type
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_const(self, *args, **kwargs)
-
-
-class Pointer(Type):
-
-    def __init__(self, type):
-        Type.__init__(self, type.expr + " *", 'P' + type.id)
-        self.type = type
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_pointer(self, *args, **kwargs)
-
-
-class Handle(Type):
-
-    def __init__(self, name, type, range=None):
-        Type.__init__(self, type.expr, 'P' + type.id)
-        self.name = name
-        self.type = type
-        self.range = range
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_handle(self, *args, **kwargs)
-
-
-def ConstPointer(type):
-    return Pointer(Const(type))
-
-
-class Enum(Concrete):
-
-    __vid = 0
-
-    def __init__(self, name, values):
-        Concrete.__init__(self, name)
-        self.vid = Enum.__vid
-        Enum.__vid += len(values)
-        self.values = list(values)
-    
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_enum(self, *args, **kwargs)
-
-
-def FakeEnum(type, values):
-    return Enum(type.expr, values)
-
-
-class Bitmask(Concrete):
-
-    def __init__(self, type, values):
-        Concrete.__init__(self, type.expr)
-        self.type = type
-        self.values = values
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_bitmask(self, *args, **kwargs)
-
-Flags = Bitmask
-
-
-class Array(Type):
-
-    def __init__(self, type, length):
-        Type.__init__(self, type.expr + " *")
-        self.type = type
-        self.length = length
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_array(self, *args, **kwargs)
-
-
-class Blob(Type):
-
-    def __init__(self, type, size):
-        Type.__init__(self, type.expr + ' *')
-        self.type = type
-        self.size = size
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_blob(self, *args, **kwargs)
-
-
-class Struct(Concrete):
-
-    def __init__(self, name, members):
-        Concrete.__init__(self, name)
-        self.name = name
-        self.members = members
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_struct(self, *args, **kwargs)
-
-
-class Alias(Type):
-
-    def __init__(self, expr, type):
-        Type.__init__(self, expr)
-        self.type = type
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_alias(self, *args, **kwargs)
-
-
-def Out(type, name):
-    arg = Arg(type, name, output=True)
-    return arg
-
-
-class Arg:
-
-    def __init__(self, type, name, output=False):
-        self.type = type
-        self.name = name
-        self.output = output
-        self.index = None
-
-    def __str__(self):
-        return '%s %s' % (self.type, self.name)
-
-
-class Function:
-
-    __id = 0
-
-    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, hidden=False):
-        self.id = Function.__id
-        Function.__id += 1
-
-        self.type = type
-        self.name = name
-
-        self.args = []
-        index = 0
-        for arg in args:
-            if isinstance(arg, tuple):
-                arg_type, arg_name = arg
-                arg = Arg(arg_type, arg_name)
-            arg.index = index
-            index += 1
-            self.args.append(arg)
-
-        self.call = call
-        self.fail = fail
-        self.sideeffects = sideeffects
-        self.hidden = False
-
-    def prototype(self, name=None):
-        if name is not None:
-            name = name.strip()
-        else:
-            name = self.name
-        s = name
-        if self.call:
-            s = self.call + ' ' + s
-        if name.startswith('*'):
-            s = '(' + s + ')'
-        s = self.type.expr + ' ' + s
-        s += "("
-        if self.args:
-            s += ", ".join(["%s %s" % (arg.type, arg.name) for arg in self.args])
-        else:
-            s += "void"
-        s += ")"
-        return s
-
-
-def StdFunction(*args, **kwargs):
-    kwargs.setdefault('call', '__stdcall')
-    return Function(*args, **kwargs)
-
-
-def FunctionPointer(type, name, args, **kwargs):
-    # XXX
-    return Opaque(name)
-
-
-class Interface(Type):
-
-    def __init__(self, name, base=None):
-        Type.__init__(self, name)
-        self.name = name
-        self.base = base
-        self.methods = []
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_interface(self, *args, **kwargs)
-
-    def itermethods(self):
-        if self.base is not None:
-            for method in self.base.itermethods():
-                yield method
-        for method in self.methods:
-            yield method
-        raise StopIteration
-
-
-class Method(Function):
-
-    def __init__(self, type, name, args):
-        Function.__init__(self, type, name, args, call = '__stdcall')
-        for index in range(len(self.args)):
-            self.args[index].index = index + 1
-
-towrap = []
-
-
-def WrapPointer(type):
-    return Pointer(type)
-
-
-class String(Type):
-
-    def __init__(self, expr = "char *", length = None):
-        Type.__init__(self, expr)
-        self.length = length
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_string(self, *args, **kwargs)
-
-CString = String()
-
-
-class Opaque(Type):
-    '''Opaque pointer.'''
-
-    def __init__(self, expr):
-        Type.__init__(self, expr)
-
-    def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_opaque(self, *args, **kwargs)
-
-
-def OpaquePointer(type, *args):
-    return Opaque(type.expr + ' *')
-
-def OpaqueArray(type, size):
-    return Opaque(type.expr + ' *')
-
-def OpaqueBlob(type, size):
-    return Opaque(type.expr + ' *')
 
 
 class Collector(Visitor):

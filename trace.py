@@ -29,11 +29,9 @@
 import stdapi
 
 
-all_types = {}
-
-
 def interface_wrap_name(interface):
     return "Wrap" + interface.expr
+
 
 class DumpDeclarator(stdapi.OnceVisitor):
     '''Declare helper functions to dump complex types.'''
