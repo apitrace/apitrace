@@ -34,11 +34,49 @@ class GlRetracer(Retracer):
     def retrace_function(self, function):
         Retracer.retrace_function(self, function)
 
+    draw_array_function_names = set([
+        "glDrawArrays",
+        "glDrawArraysEXT",
+        "glDrawArraysIndirect",
+        "glDrawArraysInstanced",
+        "glDrawArraysInstancedARB",
+        "glDrawArraysInstancedEXT",
+        "glDrawMeshArraysSUN",
+        "glMultiDrawArrays",
+        "glMultiDrawArraysEXT",
+        "glMultiModeDrawArraysIBM",
+    ])
+
+    draw_elements_function_names = set([
+        "glDrawElements",
+        "glDrawElementsBaseVertex",
+        "glDrawElementsIndirect",
+        "glDrawElementsInstanced",
+        "glDrawElementsInstancedARB",
+        "glDrawElementsInstancedBaseVertex",
+        "glDrawElementsInstancedEXT",
+        "glDrawRangeElements",
+        "glDrawRangeElementsBaseVertex",
+        "glDrawRangeElementsEXT",
+        "glMultiDrawElements",
+        "glMultiDrawElementsBaseVertex",
+        "glMultiDrawElementsEXT",
+        "glMultiModeDrawElementsIBM",
+    ])
+
     def call_function(self, function):
-        if function.name in ("glDrawArrays", "glDrawElements", "glDrawRangeElements", "glMultiDrawElements"):
+        if (function.name in self.draw_array_function_names or 
+            function.name in self.draw_elements_function_names):
             print '    GLint __array_buffer = 0;'
             print '    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
+            self.fail_function(function)
+            print '    }'
+
+        if function.name in self.draw_elements_function_names:
+            print '    GLint __element_array_buffer = 0;'
+            print '    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
+            print '    if (!__element_array_buffer) {'
             self.fail_function(function)
             print '    }'
 
@@ -63,31 +101,33 @@ class GlRetracer(Retracer):
             # glGetError is not allowed inside glBegin/glEnd
             print '    checkGlError();'
 
+    pointer_function_names = set([
+        "glColorPointer",
+        "glColorPointerEXT",
+        "glEdgeFlagPointer",
+        "glEdgeFlagPointerEXT",
+        "glFogCoordPointer",
+        "glFogCoordPointerEXT",
+        "glIndexPointer",
+        "glIndexPointerEXT",
+        "glMatrixIndexPointerARB",
+        "glNormalPointer",
+        "glNormalPointerEXT",
+        "glSecondaryColorPointer",
+        "glSecondaryColorPointerEXT",
+        "glTexCoordPointer",
+        "glTexCoordPointerEXT",
+        "glVertexAttribLPointer",
+        "glVertexAttribPointer",
+        "glVertexAttribPointerARB",
+        "glVertexAttribPointerNV",
+        "glVertexPointer",
+        "glVertexPointerEXT",
+    ])
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
-        if function.name in [
-            "glColorPointer",
-            "glColorPointerEXT",
-            "glEdgeFlagPointer",
-            "glEdgeFlagPointerEXT",
-            "glFogCoordPointer",
-            "glFogCoordPointerEXT",
-            "glIndexPointer",
-            "glIndexPointerEXT",
-            "glMatrixIndexPointerARB",
-            "glNormalPointer",
-            "glNormalPointerEXT",
-            "glSecondaryColorPointer",
-            "glSecondaryColorPointerEXT",
-            "glTexCoordPointer",
-            "glTexCoordPointerEXT",
-            "glVertexAttribLPointer",
-            "glVertexAttribPointer",
-            "glVertexAttribPointerARB",
-            "glVertexAttribPointerNV",
-            "glVertexPointer",
-            "glVertexPointerEXT",
-        ] and arg.name == 'pointer':
+        if (function.name in self.pointer_function_names and arg.name == 'pointer' or
+            function.name in self.draw_elements_function_names and arg.name == 'indices'):
             self.extract_pointer(function, arg, arg_type, lvalue, rvalue)
         else:
             Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
