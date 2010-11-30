@@ -229,10 +229,9 @@ class SpecParser(LineParser):
                 elif length.find("COMPSIZE") == -1:
                     arg_type = '%s(%s, "%s")' % (constructor, base_type, length)
                 else:
-                    # XXX: Handle COMPSIZE better
                     length = length.replace("COMPSIZE", "__%s_size" % function_name)
                     length = length.replace("/", ", ")
-                    arg_type = '%s(%s, "%s")' % (constructor, base_type, length)
+                    arg_type = 'Opaque%s(%s, "%s")' % (constructor, base_type, length)
             if inout == 'in':
                 arg_type = 'Const(%s)' % arg_type
         else:
