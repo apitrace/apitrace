@@ -3,3 +3,4 @@
 *.txt
 *api.py
 glsize.hpp
+!Makefile

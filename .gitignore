@@ -18,7 +18,7 @@
 *.zip
 CMakeCache.txt
 CMakeFiles
-./Makefile
+Makefile
 build
 cmake_install.cmake
 d3d10.cpp
