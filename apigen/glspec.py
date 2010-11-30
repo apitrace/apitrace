@@ -211,7 +211,7 @@ class SpecParser(LineParser):
         elif kind.startswith("array"):
             arg_type = 'OpaquePointer(%s)' % base_type
 
-            if base_type == 'Void':
+            if base_type in ('Void', 'void', 'GLvoid'):
                 constructor = 'Blob'
             else:
                 constructor = 'Array'
