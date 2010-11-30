@@ -49,9 +49,6 @@ if (MSVC)
 			string (REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
 		endif (${flag_var} MATCHES "/MD")
 	endforeach (flag_var)
-    
-    # C99 headers
-    include_directories (c99)
 else ()
 	# Adjust warnings
 	add_definitions (-Wall)
