@@ -32,4 +32,5 @@ glproc.hpp
 glretrace
 glretrace.cpp
 glxtrace.cpp
+traces
 wgltrace.cpp
