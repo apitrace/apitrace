@@ -1,4 +1,5 @@
 *.spec
 *.tm
+*.txt
 *api.py
 glsize.hpp

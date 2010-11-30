@@ -1590,6 +1590,24 @@ glapi.add_functions([
     GlFunction(Void, "glClearDepthdNV", [(GLdouble, "depth")]),
     GlFunction(Void, "glDepthBoundsdNV", [(GLdouble, "zmin"), (GLdouble, "zmax")]),
 
+    # GL_NV_gpu_program4
+    GlFunction(Void, "glProgramLocalParameterI4iNV", [(GLenum, "target"), (GLuint, "index"), (GLint, "x"), (GLint, "y"), (GLint, "z"), (GLint, "w")]),
+    GlFunction(Void, "glProgramLocalParameterI4ivNV", [(GLenum, "target"), (GLuint, "index"), (Const(Array(GLint, "4")), "params")]),
+    GlFunction(Void, "glProgramLocalParametersI4ivNV", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (Const(Array(GLint, "count*4")), "params")]),
+    GlFunction(Void, "glProgramLocalParameterI4uiNV", [(GLenum, "target"), (GLuint, "index"), (GLuint, "x"), (GLuint, "y"), (GLuint, "z"), (GLuint, "w")]),
+    GlFunction(Void, "glProgramLocalParameterI4uivNV", [(GLenum, "target"), (GLuint, "index"), (Const(Array(GLuint, "4")), "params")]),
+    GlFunction(Void, "glProgramLocalParametersI4uivNV", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (Const(Array(GLuint, "count*4")), "params")]),
+    GlFunction(Void, "glProgramEnvParameterI4iNV", [(GLenum, "target"), (GLuint, "index"), (GLint, "x"), (GLint, "y"), (GLint, "z"), (GLint, "w")]),
+    GlFunction(Void, "glProgramEnvParameterI4ivNV", [(GLenum, "target"), (GLuint, "index"), (Const(Array(GLint, "4")), "params")]),
+    GlFunction(Void, "glProgramEnvParametersI4ivNV", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (Const(Array(GLint, "count*4")), "params")]),
+    GlFunction(Void, "glProgramEnvParameterI4uiNV", [(GLenum, "target"), (GLuint, "index"), (GLuint, "x"), (GLuint, "y"), (GLuint, "z"), (GLuint, "w")]),
+    GlFunction(Void, "glProgramEnvParameterI4uivNV", [(GLenum, "target"), (GLuint, "index"), (Const(Array(GLuint, "4")), "params")]),
+    GlFunction(Void, "glProgramEnvParametersI4uivNV", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (Const(Array(GLuint, "count*4")), "params")]),
+    GlFunction(Void, "glGetProgramLocalParameterIivNV", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLint, "4"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetProgramLocalParameterIuivNV", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLuint, "4"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetProgramEnvParameterIivNV", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLint, "4"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetProgramEnvParameterIuivNV", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLuint, "4"), "params")], sideeffects=False),
+
     # GL_KTX_buffer_region
     GlFunction(GLregion, "glNewBufferRegion", [(GLenum, "type")]),
     GlFunction(Void, "glDeleteBufferRegion", [(GLregion, "region")]),
