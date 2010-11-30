@@ -68,6 +68,7 @@ GLfenceNV = Handle("fenceNV", GLuint)
 GLprogram = Handle("program", GLuint)
 GLshader = Handle("shader", GLuint)
 GLprogramARB = Handle("programARB", GLuint)
+GLprogramEXT = Handle("programEXT", GLuint)
 GLprogramNV = Handle("programNV", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
@@ -1675,6 +1676,11 @@ glapi.add_functions([
 
     # GL_GREMEDY_frame_terminator
     GlFunction(Void, "glFrameTerminatorGREMEDY", []),
+
+    # GL_EXT_separate_shader_objects
+    GlFunction(Void, "glUseShaderProgramEXT", [(GLenum, "type"), (GLprogramEXT, "program")]),
+    GlFunction(Void, "glActiveProgramEXT", [(GLprogramEXT, "program")]),
+    GlFunction(GLprogramEXT, "glCreateShaderProgramEXT", [(GLenum, "type"), (Const(GLstring), "string")]),
 
     # GL_EXT_provoking_vertex
     GlFunction(Void, "glProvokingVertexEXT", [(GLenum, "mode")]),
