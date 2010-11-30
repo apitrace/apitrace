@@ -127,11 +127,11 @@ if (WIN32)
 
 	# opengl32.dll
 	add_custom_command (
-		OUTPUT opengl32.cpp
-		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/opengl32.cpp
+		OUTPUT wgltrace.cpp
+		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
 		DEPENDS wgltrace.py trace.py wglapi.py glapi.py glenum.py winapi.py stdapi.py
 	)
-	add_library (opengl SHARED opengl32.def opengl32.cpp trace_write.cpp os_win32.cpp)
+	add_library (opengl SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp)
 	set_target_properties (opengl PROPERTIES
 		PREFIX ""
 		OUTPUT_NAME opengl32)

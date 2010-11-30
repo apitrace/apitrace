@@ -32,4 +32,4 @@ glproc.hpp
 glretrace
 glretrace.cpp
 glxtrace.cpp
-opengl32.cpp
+wgltrace.cpp
