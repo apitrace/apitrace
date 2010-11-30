@@ -30,8 +30,7 @@
 #define _GL_HELPERS_HPP_
 
 
-#include <cassert>
-
+#include "os.hpp"
 #include "glimports.hpp"
 
 
@@ -60,7 +59,7 @@ __glCallLists_size(GLsizei n, GLenum type)
         bytes = 4;
         break;
     default:
-        assert(0);
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         bytes = 0;
     }
 
@@ -82,8 +81,8 @@ __glFogfv_size(GLenum pname)
     case GL_FOG_COLOR:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -107,8 +106,8 @@ __glLightfv_size(GLenum pname)
     case GL_POSITION:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -126,8 +125,8 @@ __glLightModelfv_size(GLenum pname)
     case GL_LIGHT_MODEL_AMBIENT:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -148,8 +147,8 @@ __glMaterialfv_size(GLenum pname)
     case GL_AMBIENT_AND_DIFFUSE:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -207,8 +206,8 @@ __glTexParameterfv_size(GLenum pname)
     case GL_POST_TEXTURE_FILTER_SCALE_SGIX:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -247,8 +246,8 @@ __glTexEnvfv_size(GLenum pname)
     case GL_TEXTURE_ENV_COLOR:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -264,8 +263,8 @@ __glTexGendv_size(GLenum pname)
     case GL_EYE_PLANE:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -291,8 +290,8 @@ __glMap1d_size(GLenum pname)
     case GL_MAP1_VERTEX_4:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -316,8 +315,8 @@ __glMap2d_size(GLenum pname)
     case GL_MAP2_VERTEX_4:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -841,10 +840,13 @@ __glGetBooleanv_size(GLenum pname)
     case GL_MAX_VARYING_FLOATS:
     case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
     case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_GEOMETRY_UNIFORM_COMPONENTS:
+    case GL_MAX_GEOMETRY_OUTPUT_VERTICES:
+    case GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -923,8 +925,8 @@ __glGetTexParameterfv_size(GLenum pname)
     case GL_POST_TEXTURE_FILTER_SCALE_SGIX:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -962,8 +964,8 @@ __glGetTexLevelParameterfv_size(GLenum pname)
 /*  case GL_TEXTURE_STENCIL_SIZE_EXT:*/
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -977,8 +979,8 @@ __glColorTableParameterfv_size(GLenum pname)
     case GL_COLOR_TABLE_BIAS:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1009,8 +1011,8 @@ __glGetColorTableParameterfv_size(GLenum pname)
     case GL_COLOR_TABLE_BIAS:
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1031,8 +1033,8 @@ __glConvolutionParameterfv_size(GLenum pname)
 /*  case GL_CONVOLUTION_BORDER_COLOR_HP:*/
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1063,8 +1065,8 @@ __glGetConvolutionParameterfv_size(GLenum pname)
 /*  case GL_CONVOLUTION_BORDER_COLOR_HP:*/
         return 4;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1084,8 +1086,8 @@ __glGetHistogramParameterfv_size(GLenum pname)
     case GL_HISTOGRAM_SINK:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1099,8 +1101,8 @@ __glGetMinmaxParameterfv_size(GLenum pname)
     case GL_MINMAX_SINK:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1155,8 +1157,8 @@ __glGetProgramivARB_size(GLenum pname)
     case GL_MAX_PROGRAM_LOOP_COUNT_NV:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1173,8 +1175,8 @@ __glGetVertexAttribdvARB_size(GLenum pname)
     case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1190,8 +1192,8 @@ __glGetQueryObjectivARB_size(GLenum pname)
     case GL_QUERY_RESULT_AVAILABLE_ARB:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1205,8 +1207,8 @@ __glGetQueryivARB_size(GLenum pname)
     case GL_CURRENT_QUERY_ARB:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1231,8 +1233,8 @@ __glPointParameterfvEXT_size(GLenum pname)
 /*  case GL_POINT_DISTANCE_ATTENUATION_SGIS:*/
         return 3;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1250,8 +1252,8 @@ __glGetProgramivNV_size(GLenum pname)
     case GL_PROGRAM_RESIDENT_NV:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1265,8 +1267,8 @@ __glGetVertexAttribdvNV_size(GLenum pname)
     case GL_CURRENT_ATTRIB_NV:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1285,8 +1287,8 @@ __glGetFramebufferAttachmentParameterivEXT_size(GLenum pname)
     case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_3D_ZOFFSET_EXT:
         return 1;
     default:
-        assert(0);
-        return 0;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
+        return 1;
     }
 }
 
@@ -1318,7 +1320,7 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
         num_channels = 4;
         break;
     default:
-        assert(0);
+        OS::DebugMessage("warning: %s: unexpected GLenum 0x%04X\n", __FUNCTION__, format);
         num_channels = 0;
         break;
     }
@@ -1360,7 +1362,7 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
         bits_per_pixel = 32;
         break;
     default:
-        assert(0);
+        OS::DebugMessage("warning: %s: unexpected GLenum 0x%04X\n", __FUNCTION__, type);
         bits_per_pixel = 0;
         break;
     }

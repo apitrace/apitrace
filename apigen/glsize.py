@@ -149,7 +149,7 @@ class glx_enum_function:
                 print '        return %u;' % (c)
                     
         print '    default:' 
-        print '        assert(0);' 
+        print '        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\\n", __FUNCTION__, pname);'
         print '        return 1;'
         print '    }'
 
