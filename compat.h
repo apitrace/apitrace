@@ -25,6 +25,10 @@
  *
  **************************************************************************/
 
+/*
+ * MinGW compatability macros to allow using recent's DXSDK headers.
+ */
+
 #ifdef __MINGW32__
 #define __in /**/
 #define __out /**/

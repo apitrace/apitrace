@@ -24,6 +24,9 @@
 ##########################################################################/
 
 
+"""GL retracer generator."""
+
+
 import stdapi
 import glapi
 from retrace import Retracer

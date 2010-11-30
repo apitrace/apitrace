@@ -23,6 +23,10 @@
  *
  **************************************************************************/
 
+/*
+ * Binary trace format decription.
+ */
+
 #ifndef _TRACE_FORMAT_HPP_
 #define _TRACE_FORMAT_HPP_
 
@@ -61,6 +65,8 @@ enum Type {
 };
 
 /*
+ * XXX: Update grammar.
+ *
  * trace = call* EOF
  *
  * call = name (detail)* END

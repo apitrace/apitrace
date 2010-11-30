@@ -24,6 +24,9 @@
 ##########################################################################/
 
 
+"""WGL tracing code generator."""
+
+
 from wglapi import wglapi
 from trace import Tracer
 from codegen import *

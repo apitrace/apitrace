@@ -24,6 +24,14 @@
 ##########################################################################/
 
 
+"""GLenum description.
+
+This was semi-automatically generated from glext headers, with vim.  An
+automated procedure to generate it would be nice.
+
+"""
+
+
 from stdapi import *
 
 

@@ -24,6 +24,9 @@
 ##########################################################################/
 
 
+"""GLX tracing generator."""
+
+
 from glxapi import glxapi
 from trace import Tracer
 

@@ -24,6 +24,9 @@
 ##########################################################################/
 
 
+"""C code generation helpers."""
+
+
 def _string_switch(var, prefix, suffixes, case, default):
     index = len(prefix)
     indent = '    '*(index + 1)
@@ -72,6 +75,7 @@ def _noop(*args, **kwargs):
 
 
 def string_switch(var, values, case=_noop, default=None):
+    """Product a switch of strings, using a tree character switches."""
     values = list(values)
     values.sort()
     _string_switch(var, '', values, case, default)

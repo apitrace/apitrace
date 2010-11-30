@@ -24,6 +24,11 @@
  **************************************************************************/
 
 
+/*
+ * Simple utility to dump a trace to standard output.
+ */
+
+
 #include "trace_parser.hpp"
 
 

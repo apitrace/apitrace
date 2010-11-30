@@ -24,6 +24,11 @@
 ##########################################################################/
 
 
+"""Generated an header, glproc.hpp, which does pretty much what GLEW does, but
+covers all the functions we support.
+""" 
+
+
 import stdapi
 from glapi import glapi
 from glxapi import glxapi

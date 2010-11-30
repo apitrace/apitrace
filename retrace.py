@@ -24,6 +24,8 @@
 ##########################################################################/
 
 
+"""Generic retracing code generator."""
+
 import stdapi
 import glapi
 from codegen import *

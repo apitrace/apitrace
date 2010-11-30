@@ -23,6 +23,10 @@
  *
  **************************************************************************/
 
+/*
+ * Trace writing functions.
+ */
+
 #ifndef _TRACE_WRITE_HPP_
 #define _TRACE_WRITE_HPP_
 

@@ -24,6 +24,9 @@
 ##########################################################################/
 
 
+"""WGL API description"""
+
+
 from glapi import *
 from winapi import *
 

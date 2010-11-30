@@ -23,6 +23,10 @@
  *
  **************************************************************************/
 
+/*
+ * Helpers for coloring output.
+ */
+
 #ifndef _FORMATTER_HPP_
 #define _FORMATTER_HPP_
 

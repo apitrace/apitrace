@@ -26,6 +26,15 @@
  *
  **************************************************************************/
 
+/*
+ * Auxiliary functions to compute the size of array/blob arguments, depending.
+ *
+ * Some of these functions were semi-automatically generated with
+ * apigen/glsize.py script from Mesa's XML description of the GL enums.
+ *
+ * Other functions were done by hand.
+ */
+
 #ifndef _GL_HELPERS_HPP_
 #define _GL_HELPERS_HPP_
 

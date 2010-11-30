@@ -24,6 +24,15 @@
 ##########################################################################/
 
 
+"""GL API description.
+
+Most of these were automatically generated with the apigen/glspec.py script
+from Khronos OpenGL spec files, and then manually edited to cover the corner
+cases correctly.
+
+"""
+
+
 from stdapi import *
 from glenum import *
 

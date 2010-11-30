@@ -23,6 +23,8 @@
 #
 ##########################################################################/
 
+"""GLX API description."""
+
 
 from stdapi import *
 from glapi import glapi
@@ -55,7 +57,9 @@ PROC = Opaque("__GLXextFuncPtr")
 glxapi.add_functions(glapi.functions)
 glxapi.add_functions([
     Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool_, "direct")]),
+    # TODO: the rest
 
+    # Must be last
     Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
     Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", CString), "procName")]),
 ])
