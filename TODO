@@ -1,5 +1,5 @@
-				  Things To Do
-			    (in no particular order)
+                                  Things To Do
+                            (in no particular order)
 
 
 * Determine blob sizes passed to glXxxPointer functions.
@@ -29,3 +29,7 @@
   * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c 
 
 * Trace window sizes somehow
+
+* Write snapshots as PNGs instead of BMPs
+
+* Add new mode to compare with previous snapshots instead of writing.
