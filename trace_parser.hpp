@@ -351,8 +351,7 @@ public:
     Value *parse_opaque() {
         unsigned long long addr;
         addr = read_uint();
-        /* XXX */
-        return new UInt(addr);
+        return new Pointer(addr);
     }
 
     std::string read_string(void) {

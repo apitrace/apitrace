@@ -42,6 +42,7 @@ void Bitmask::visit(Visitor &visitor) { visitor.visit(this); }
 void Struct::visit(Visitor &visitor) { visitor.visit(this); } 
 void Array::visit(Visitor &visitor) { visitor.visit(this); } 
 void Blob::visit(Visitor &visitor) { visitor.visit(this); } 
+void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
 
 class Dumper : public Visitor
 {
@@ -123,7 +124,7 @@ public:
             if (!first) {
                 os << " | ";
             }
-            os << literal << std::hex << value << std::dec << normal;
+            os << literal << "0x" << std::hex << value << std::dec << normal;
         }
     }
 
@@ -157,6 +158,10 @@ public:
 
     void visit(Blob *blob) {
         os << pointer << "blob(" << blob->size << ")" << normal;
+    }
+
+    void visit(Pointer *p) {
+        os << pointer << "0x" << std::hex << p->value << std::dec << normal;
     }
 
     void visit(Call *call) {

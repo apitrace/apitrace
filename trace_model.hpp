@@ -51,6 +51,7 @@ class UInt;
 class Value
 {
 public:
+    virtual ~Value() {}
     virtual void visit(Visitor &visitor) = 0;
 
     operator bool (void) const;
@@ -238,6 +239,15 @@ public:
 };
 
 
+class Pointer : public UInt
+{
+public:
+    Pointer(unsigned long long value) : UInt(value) {}
+
+    void visit(Visitor &visitor);
+};
+
+
 class Visitor
 {
 public:
@@ -252,6 +262,7 @@ public:
     virtual void visit(Struct *) {assert(0);}
     virtual void visit(Array *) {assert(0);}
     virtual void visit(Blob *) {assert(0);}
+    virtual void visit(Pointer *) {assert(0);}
 
 protected:
     inline void _visit(Value *value) {
