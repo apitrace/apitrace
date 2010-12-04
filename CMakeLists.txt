@@ -14,9 +14,15 @@ endif (NOT CMAKE_BUILD_TYPE)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
-find_package (ZLIB)
 
-find_package (DirectX)
+if (NOT WIN32)
+    # Always use the bundled zlib and libpng sources on Windows to make it easy
+    # to deploy the wrappers DLLs
+    find_package (ZLIB)
+    find_package (PNG)
+else (NOT WIN32)
+    find_package (DirectX)
+endif (NOT WIN32)
 
 find_package (GLUT)
 
@@ -57,7 +63,10 @@ else ()
 endif ()
 
 # Use bundled ZLIB if system one can't be found
-if (NOT ZLIB_FOUND)
+if (ZLIB_FOUND)
+    include_directories (${ZLIB_INCLUDE_DIRS})
+    link_libraries (${ZLIB_LIBRARIES})
+else (ZLIB_FOUND)
     add_library (zlib STATIC
         zlib/adler32.c
         zlib/compress.c
@@ -72,13 +81,36 @@ if (NOT ZLIB_FOUND)
         zlib/inftrees.c
         zlib/inffast.c
     )
-
     include_directories (zlib)
     link_libraries (zlib)
-else (NOT ZLIB_FOUND)
-    include_directories (${ZLIB_INCLUDE_DIRS})
-    link_libraries (${ZLIB_LIBRARIES})
-endif (NOT ZLIB_FOUND)
+endif (ZLIB_FOUND)
+
+# Use bundled LIBPNG if system one can't be found
+if (PNG_FOUND)
+    include_directories (${PNG_INCLUDE_DIR})
+    add_definitions (${PNG_DEFINITIONS})
+    link_libraries (${PNG_LIBRARIES})
+else (PNG_FOUND)
+    add_library (png STATIC
+        libpng/png.c
+        libpng/pngerror.c
+        libpng/pngget.c
+        libpng/pngmem.c
+        libpng/pngpread.c
+        libpng/pngread.c
+        libpng/pngrio.c
+        libpng/pngrtran.c
+        libpng/pngrutil.c
+        libpng/pngset.c
+        libpng/pngtrans.c
+        libpng/pngwio.c
+        libpng/pngwrite.c
+        libpng/pngwtran.c
+        libpng/pngwutil.c
+    )
+    include_directories (libpng)
+    link_libraries (png)
+endif (PNG_FOUND)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
