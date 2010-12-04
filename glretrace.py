@@ -146,6 +146,7 @@ class GlRetracer(Retracer):
 if __name__ == '__main__':
     print r'''
 #include <string.h>
+#include <stdio.h>
 #include <iostream>
 
 #include "glproc.hpp"
