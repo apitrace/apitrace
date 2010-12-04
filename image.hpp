@@ -60,6 +60,7 @@ public:
     }
 
     bool writeBMP(const char *filename) const;
+    bool writePNG(const char *filename) const;
 };
 
 

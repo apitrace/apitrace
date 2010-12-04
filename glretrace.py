@@ -223,10 +223,10 @@ static void frame_complete(void) {
     
     if (__screenshots && !__reshape_window) {
         char filename[PATH_MAX];
-        snprintf(filename, sizeof filename, "screenshot_%04u.bmp", __frame);
+        snprintf(filename, sizeof filename, "screenshot_%04u.png", __frame);
         Image::Image image(__window_width, __window_height, true);
         glReadPixels(0, 0, __window_width, __window_height, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-        image.writeBMP(filename);
+        image.writePNG(filename);
     }
 
 }

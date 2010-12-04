@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <png.h>
+
 #include <stdint.h>
 
 #include <fstream>
@@ -132,5 +134,79 @@ Image::writeBMP(const char *filename) const {
     return true;
 }
 
+bool
+Image::writePNG(const char *filename) const {
+    FILE *fp;
+    png_structp png_ptr;
+    png_infop info_ptr;
+
+    /* Open the file */
+    fp = fopen(filename, "wb");
+    if (!fp)
+        goto no_fp;
+
+    /* Create and initialize the png_struct with the desired error handler
+     * functions.  If you want to use the default stderr and longjump method,
+     * you can supply NULL for the last three parameters.  We also check that
+     * the library version is compatible with the one used at compile time,
+     * in case we are using dynamically linked libraries.  REQUIRED.
+     */
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png_ptr)
+        goto no_png;
+
+    /* Allocate/initialize the image information data.  REQUIRED */
+    info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr) {
+        png_destroy_write_struct(&png_ptr,  NULL);
+        goto no_png;
+    }
+
+    /* Set error handling.  REQUIRED if you aren't supplying your own
+     * error handling functions in the png_create_write_struct() call.
+     */
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        goto no_png;
+    }
+
+#if 1
+    png_init_io(png_ptr, fp);
+#else
+    png_set_write_fn(png_ptr, (void *)user_io_ptr, user_write_fn,
+        user_IO_flush_function);
+#endif
+
+    png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB_ALPHA,
+        PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
+
+    png_write_info(png_ptr, info_ptr);
+
+    if (!flipped) {
+        for (unsigned y = 0; y < height; ++y) {
+            png_byte *row = (png_byte *)(pixels + y*width*4);
+            png_write_rows(png_ptr, &row, 1);
+        }
+    } else {
+        unsigned y = height;
+        while (y--) {
+            png_byte *row = (png_byte *)(pixels + y*width*4);
+            png_write_rows(png_ptr, &row, 1);
+        }
+    }
+
+    png_write_end(png_ptr, info_ptr);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+
+    fclose(fp);
+    return true;
+
+no_png:
+    fclose(fp);
+no_fp:
+    return false;
+}
 
 } /* namespace Image */

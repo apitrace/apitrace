@@ -12,6 +12,7 @@
 *.o
 *.obj
 *.pdb
+*.png
 *.pyc
 *.pyo
 *.so
