@@ -6,10 +6,10 @@ set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Set default built type
 if (NOT CMAKE_BUILD_TYPE)
-	set (CMAKE_BUILD_TYPE Debug
-		CACHE
-		STRING "Choose the build type, options are: None, Debug, Release, RelWithDebInfo, or MinSizeRel."
-		FORCE)
+    set (CMAKE_BUILD_TYPE Debug
+        CACHE
+        STRING "Choose the build type, options are: None, Debug, Release, RelWithDebInfo, or MinSizeRel."
+        FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 find_package (PythonInterp REQUIRED)
@@ -21,133 +21,133 @@ find_package (DirectX)
 find_package (GLUT)
 
 if (WIN32)
-	# MSVC & MinGW only define & use APIENTRY
-	add_definitions (-DGLAPIENTRY=__stdcall)
+    # MSVC & MinGW only define & use APIENTRY
+    add_definitions (-DGLAPIENTRY=__stdcall)
 endif (WIN32)
 
 if (MSVC)
-	# Enable math constants defines
-	add_definitions (-D_USE_MATH_DEFINES)
+    # Enable math constants defines
+    add_definitions (-D_USE_MATH_DEFINES)
 
-	# Adjust warnings
-	add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
-	add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
-	add_definitions (-W4)
-	add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
-	add_definitions (-wd4505) # unreferenced local function has been removed
-	add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
-	# XXX: it's safer to use ssize_t everywhere instead of disabling warning
-	add_definitions (-wd4018) # signed/unsigned mismatch
-	
-	# Use static runtime
-	# http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
-	foreach (flag_var
-		CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
-		CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
-	)
-		if (${flag_var} MATCHES "/MD")
-			string (REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-		endif (${flag_var} MATCHES "/MD")
-	endforeach (flag_var)
+    # Adjust warnings
+    add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
+    add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
+    add_definitions (-W4)
+    add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
+    add_definitions (-wd4505) # unreferenced local function has been removed
+    add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
+    # XXX: it's safer to use ssize_t everywhere instead of disabling warning
+    add_definitions (-wd4018) # signed/unsigned mismatch
+    
+    # Use static runtime
+    # http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
+    foreach (flag_var
+        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
+        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    )
+        if (${flag_var} MATCHES "/MD")
+            string (REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+        endif (${flag_var} MATCHES "/MD")
+    endforeach (flag_var)
 else ()
-	# Adjust warnings
-	add_definitions (-Wall)
-	# XXX: it's safer to use ssize_t everywhere instead of disabling warning
-	add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+    # Adjust warnings
+    add_definitions (-Wall)
+    # XXX: it's safer to use ssize_t everywhere instead of disabling warning
+    add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 endif ()
 
 # Use bundled ZLIB if system one can't be found
 if (NOT ZLIB_FOUND)
-	add_library (zlib STATIC
-		zlib/adler32.c
-		zlib/compress.c
-		zlib/crc32.c
-		zlib/gzio.c
-		zlib/uncompr.c
-		zlib/deflate.c
-		zlib/trees.c
-		zlib/zutil.c
-		zlib/inflate.c
-		zlib/infback.c
-		zlib/inftrees.c
-		zlib/inffast.c
-	)
+    add_library (zlib STATIC
+        zlib/adler32.c
+        zlib/compress.c
+        zlib/crc32.c
+        zlib/gzio.c
+        zlib/uncompr.c
+        zlib/deflate.c
+        zlib/trees.c
+        zlib/zutil.c
+        zlib/inflate.c
+        zlib/infback.c
+        zlib/inftrees.c
+        zlib/inffast.c
+    )
 
-	include_directories (zlib)
-	link_libraries (zlib)
+    include_directories (zlib)
+    link_libraries (zlib)
 else (NOT ZLIB_FOUND)
-	include_directories (${ZLIB_INCLUDE_DIRS})
-	link_libraries (${ZLIB_LIBRARIES})
+    include_directories (${ZLIB_INCLUDE_DIRS})
+    link_libraries (${ZLIB_LIBRARIES})
 endif (NOT ZLIB_FOUND)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WIN32)
-	# Put wrappers in a separate directory
-	set (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers)
+    # Put wrappers in a separate directory
+    set (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers)
 
-	# d3d8.dll
+    # d3d8.dll
     #if (DirectX_D3D8_FOUND)
-	#	include_directories (${DirectX_D3D8_INCLUDE_DIR})
-	#	add_custom_command (
-	#		OUTPUT d3d8.cpp
-	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
-	#		DEPENDS d3d8.py d3d8types.py d3d8caps.py winapi.py stdapi.py
-	#	)
-	#	add_library (d3d8 SHARED d3d8.def d3d8.cpp trace_write.cpp os_win32.cpp)
-	#	set_target_properties (d3d8 PROPERTIES PREFIX "")
-	#endif (DirectX_D3D8_FOUND)
+    #    include_directories (${DirectX_D3D8_INCLUDE_DIR})
+    #    add_custom_command (
+    #        OUTPUT d3d8.cpp
+    #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
+    #        DEPENDS d3d8.py d3d8types.py d3d8caps.py winapi.py stdapi.py
+    #    )
+    #    add_library (d3d8 SHARED d3d8.def d3d8.cpp trace_write.cpp os_win32.cpp)
+    #    set_target_properties (d3d8 PROPERTIES PREFIX "")
+    #endif (DirectX_D3D8_FOUND)
 
-	# d3d9.dll
+    # d3d9.dll
     if (DirectX_D3DX9_FOUND)
-		include_directories (${DirectX_D3DX9_INCLUDE_DIR})
-		add_custom_command (
-			OUTPUT d3d9.cpp
-			COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
-			DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py d3dshader.py winapi.py stdapi.py
-		)
-		add_library (d3d9 SHARED d3d9.def d3d9.cpp trace_write.cpp os_win32.cpp)
-		set_target_properties (d3d9 PROPERTIES PREFIX "")
-	endif (DirectX_D3DX9_FOUND)
+        include_directories (${DirectX_D3DX9_INCLUDE_DIR})
+        add_custom_command (
+            OUTPUT d3d9.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
+            DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py d3dshader.py winapi.py stdapi.py
+        )
+        add_library (d3d9 SHARED d3d9.def d3d9.cpp trace_write.cpp os_win32.cpp)
+        set_target_properties (d3d9 PROPERTIES PREFIX "")
+    endif (DirectX_D3DX9_FOUND)
 
-	# d3d10.dll
-	#if (DirectX_D3D10_FOUND)
-	#	include_directories (${DirectX_D3D10_INCLUDE_DIR})
-	#	add_custom_command (
-	#		OUTPUT d3d10.cpp
-	#		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
-	#		DEPENDS d3d10misc.py winapi.py stdapi.py
-	#	)
-	#	add_library (d3d10 SHARED d3d10.def d3d10.cpp trace_write.cpp os_win32.cpp)
-	#	set_target_properties (d3d10 PROPERTIES PREFIX "")
-	#endif (DirectX_D3D10_FOUND)
+    # d3d10.dll
+    #if (DirectX_D3D10_FOUND)
+    #    include_directories (${DirectX_D3D10_INCLUDE_DIR})
+    #    add_custom_command (
+    #        OUTPUT d3d10.cpp
+    #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
+    #        DEPENDS d3d10misc.py winapi.py stdapi.py
+    #    )
+    #    add_library (d3d10 SHARED d3d10.def d3d10.cpp trace_write.cpp os_win32.cpp)
+    #    set_target_properties (d3d10 PROPERTIES PREFIX "")
+    #endif (DirectX_D3D10_FOUND)
 
-	# opengl32.dll
-	add_custom_command (
-		OUTPUT wgltrace.cpp
-		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
-		DEPENDS wgltrace.py trace.py wglapi.py glapi.py glenum.py winapi.py stdapi.py
-	)
-	add_library (opengl SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp)
-	set_target_properties (opengl PROPERTIES
-		PREFIX ""
-		OUTPUT_NAME opengl32)
-	if (MINGW)
-		SET_TARGET_PROPERTIES(opengl PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
-	endif (MINGW)
+    # opengl32.dll
+    add_custom_command (
+        OUTPUT wgltrace.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
+        DEPENDS wgltrace.py trace.py wglapi.py glapi.py glenum.py winapi.py stdapi.py
+    )
+    add_library (opengl SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp)
+    set_target_properties (opengl PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME opengl32)
+    if (MINGW)
+        SET_TARGET_PROPERTIES(opengl PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
+    endif (MINGW)
 
 else ()
 
-	# libGL.so
-	add_custom_command (
-		OUTPUT glxtrace.cpp
-		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-		DEPENDS glxtrace.py trace.py glxapi.py glapi.py glenum.py stdapi.py
-	)
+    # libGL.so
+    add_custom_command (
+        OUTPUT glxtrace.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
+        DEPENDS glxtrace.py trace.py glxapi.py glapi.py glenum.py stdapi.py
+    )
 
-	add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp)
-	set_target_properties (glxtrace PROPERTIES PREFIX "")
-	target_link_libraries (glxtrace dl)
+    add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp)
+    set_target_properties (glxtrace PROPERTIES PREFIX "")
+    target_link_libraries (glxtrace dl)
 endif ()
 
 add_executable (dump dump.cpp trace_model.cpp)
@@ -159,31 +159,31 @@ else (WIN32)
 endif (WIN32)
 
 if (GLUT_INCLUDE_DIR)
-	add_custom_command (
-		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-		DEPENDS glproc.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
-	)
+    add_custom_command (
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+        DEPENDS glproc.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
+    )
 
-	add_custom_command (
-		OUTPUT glretrace.cpp
-		COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
-		DEPENDS glretrace.py retrace.py codegen.py glapi.py glenum.py stdapi.py
-	)
+    add_custom_command (
+        OUTPUT glretrace.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
+        DEPENDS glretrace.py retrace.py codegen.py glapi.py glenum.py stdapi.py
+    )
 
-	include_directories (
-		${CMAKE_CURRENT_BINARY_DIR}
-		${OPENGL_INCLUDE_PATH}
-		${GLUT_INCLUDE_DIR}
-	)
+    include_directories (
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${OPENGL_INCLUDE_PATH}
+        ${GLUT_INCLUDE_DIR}
+    )
 
-	add_executable (glretrace glretrace.cpp trace_model.cpp ${os} ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_executable (glretrace glretrace.cpp trace_model.cpp ${os} ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
-	target_link_libraries (glretrace
-		${OPENGL_gl_LIBRARY}
-		${OPENGL_glu_LIBRARY}
-		${GLUT_glut_LIBRARY}
-	)
+    target_link_libraries (glretrace
+        ${OPENGL_gl_LIBRARY}
+        ${OPENGL_glu_LIBRARY}
+        ${GLUT_glut_LIBRARY}
+    )
 endif (GLUT_INCLUDE_DIR)
 
 
