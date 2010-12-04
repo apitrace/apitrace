@@ -23,18 +23,16 @@
  *
  **************************************************************************/
 
-/*
- * BMP image writing.
- */
 
-#ifndef _BMP_HPP_
-#define _BMP_HPP_
-
+#include <stdint.h>
 
 #include <fstream>
 
+#include "image.hpp"
 
-namespace BMP {
+
+namespace Image {
+
 
 #pragma pack(push,2)
 struct FileHeader {
@@ -68,13 +66,8 @@ struct Pixel {
 };
 
 
-static inline void
-write(const char *filename,
-      const unsigned char *rgba, 
-      unsigned width, unsigned height,
-      unsigned stride,
-      bool flip = false)
-{
+void
+Image::writeBMP(const char *filename) const {
     struct FileHeader bmfh;
     struct InfoHeader bmih;
     unsigned x, y;
@@ -102,10 +95,11 @@ write(const char *filename,
     stream.write((const char *)&bmfh, 14);
     stream.write((const char *)&bmih, 40);
 
-    if (flip) {
-        y = height;
-        while (y--) {
-            const unsigned char *ptr = rgba + y * stride;
+    unsigned stride = width*4;
+
+    if (flipped) {
+        for (y = 0; y < height; ++y) {
+            const unsigned char *ptr = pixels + y * stride;
             for (x = 0; x < width; ++x) {
                 struct Pixel pixel;
                 pixel.rgbRed   = ptr[x*4 + 0];
@@ -116,8 +110,9 @@ write(const char *filename,
             }
         }
     } else {
-        for (y = 0; y < height; ++y) {
-            const unsigned char *ptr = rgba + y * stride;
+        y = height;
+        while (y--) {
+            const unsigned char *ptr = pixels + y * stride;
             for (x = 0; x < width; ++x) {
                 struct Pixel pixel;
                 pixel.rgbRed   = ptr[x*4 + 0];
@@ -133,7 +128,4 @@ write(const char *filename,
 }
 
 
-} /* namespace BMP */
-
-
-#endif /* _BMP_HPP_ */
+} /* namespace Image */

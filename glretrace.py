@@ -216,7 +216,7 @@ static Trace::Parser parser;
 static void display_noop(void) {
 }
 
-#include "bmp.hpp"
+#include "image.hpp"
 
 static void frame_complete(void) {
     ++__frame;
@@ -224,9 +224,9 @@ static void frame_complete(void) {
     if (__screenshots && !__reshape_window) {
         char filename[PATH_MAX];
         snprintf(filename, sizeof filename, "screenshot_%04u.bmp", __frame);
-        unsigned char *pixels = new unsigned char[__window_height*__window_width*4];
-        glReadPixels(0, 0, __window_width, __window_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        BMP::write(filename, pixels, __window_width, __window_height, __window_width*4);
+        Image::Image image(__window_width, __window_height, true);
+        glReadPixels(0, 0, __window_width, __window_height, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
+        image.writeBMP(filename);
     }
 
 }

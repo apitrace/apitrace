@@ -177,7 +177,7 @@ if (GLUT_INCLUDE_DIR)
         ${GLUT_INCLUDE_DIR}
     )
 
-    add_executable (glretrace glretrace.cpp trace_model.cpp ${os} ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_executable (glretrace glretrace.cpp trace_model.cpp image.cpp ${os} ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
     target_link_libraries (glretrace
         ${OPENGL_gl_LIBRARY}
