@@ -59,7 +59,7 @@ public:
         delete [] pixels;
     }
 
-    void writeBMP(const char *filename) const;
+    bool writeBMP(const char *filename) const;
 };
 
 

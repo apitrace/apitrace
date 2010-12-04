@@ -66,7 +66,7 @@ struct Pixel {
 };
 
 
-void
+bool
 Image::writeBMP(const char *filename) const {
     struct FileHeader bmfh;
     struct InfoHeader bmih;
@@ -91,6 +91,9 @@ Image::writeBMP(const char *filename) const {
     bmih.biClrImportant = 0;
 
     std::ofstream stream(filename, std::ofstream::binary);
+
+    if (!stream)
+        return false;
 
     stream.write((const char *)&bmfh, 14);
     stream.write((const char *)&bmih, 40);
@@ -125,6 +128,8 @@ Image::writeBMP(const char *filename) const {
     }
 
     stream.close();
+
+    return true;
 }
 
 
