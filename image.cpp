@@ -140,42 +140,26 @@ Image::writePNG(const char *filename) const {
     png_structp png_ptr;
     png_infop info_ptr;
 
-    /* Open the file */
     fp = fopen(filename, "wb");
     if (!fp)
         goto no_fp;
 
-    /* Create and initialize the png_struct with the desired error handler
-     * functions.  If you want to use the default stderr and longjump method,
-     * you can supply NULL for the last three parameters.  We also check that
-     * the library version is compatible with the one used at compile time,
-     * in case we are using dynamically linked libraries.  REQUIRED.
-     */
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
         goto no_png;
 
-    /* Allocate/initialize the image information data.  REQUIRED */
     info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) {
         png_destroy_write_struct(&png_ptr,  NULL);
         goto no_png;
     }
 
-    /* Set error handling.  REQUIRED if you aren't supplying your own
-     * error handling functions in the png_create_write_struct() call.
-     */
     if (setjmp(png_jmpbuf(png_ptr))) {
         png_destroy_write_struct(&png_ptr, &info_ptr);
         goto no_png;
     }
 
-#if 1
     png_init_io(png_ptr, fp);
-#else
-    png_set_write_fn(png_ptr, (void *)user_io_ptr, user_write_fn,
-        user_IO_flush_function);
-#endif
 
     png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB_ALPHA,
         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
@@ -186,13 +170,13 @@ Image::writePNG(const char *filename) const {
 
     if (!flipped) {
         for (unsigned y = 0; y < height; ++y) {
-            png_byte *row = (png_byte *)(pixels + y*width*4);
+            png_bytep row = (png_bytep)(pixels + y*width*4);
             png_write_rows(png_ptr, &row, 1);
         }
     } else {
         unsigned y = height;
         while (y--) {
-            png_byte *row = (png_byte *)(pixels + y*width*4);
+            png_bytep row = (png_bytep)(pixels + y*width*4);
             png_write_rows(png_ptr, &row, 1);
         }
     }
@@ -208,5 +192,85 @@ no_png:
 no_fp:
     return false;
 }
+
+
+Image *
+readPNG(const char *filename)
+{
+    FILE *fp;
+    png_structp png_ptr;
+    png_infop info_ptr;
+    png_infop end_info;
+    Image *image;
+
+    fp = fopen(filename, "rb");
+    if (!fp)
+        goto no_fp;
+
+    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png_ptr)
+        goto no_png;
+
+    info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr) {
+        png_destroy_read_struct(&png_ptr, NULL, NULL);
+        goto no_png;
+    }
+
+    end_info = png_create_info_struct(png_ptr);
+    if (!end_info) {
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        goto no_png;
+    }
+
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+        goto no_png;
+    }
+
+    png_init_io(png_ptr, fp);
+
+    png_read_info(png_ptr, info_ptr);
+
+    png_uint_32 width, height;
+    int bit_depth, color_type, interlace_type, compression_type, filter_method;
+
+    png_get_IHDR(png_ptr, info_ptr,
+                 &width, &height,
+                 &bit_depth, &color_type, &interlace_type,
+                 &compression_type, &filter_method);
+
+    image = new Image(width, height);
+    if (!image)
+        goto no_image;
+
+    /* Convert to RGBA8 */
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_palette_to_rgb(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+        png_set_tRNS_to_alpha(png_ptr);
+    if (bit_depth == 16)
+        png_set_strip_16(png_ptr);
+
+    for (unsigned y = 0; y < height; ++y) {
+        png_bytep row = (png_bytep)(image->pixels + y*width*4);
+        png_read_row(png_ptr, row, NULL);
+    }
+
+    png_read_end(png_ptr, info_ptr);
+    png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+    fclose(fp);
+    return image;
+
+no_image:
+    png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+no_png:
+    fclose(fp);
+no_fp:
+    return NULL;
+}
+
 
 } /* namespace Image */

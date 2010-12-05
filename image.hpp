@@ -64,6 +64,10 @@ public:
 };
 
 
+Image *
+readPNG(const char *filename);
+
+
 } /* namespace Image */
 
 
