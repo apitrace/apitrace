@@ -43,6 +43,14 @@ class ConstRemover(stdapi.Rebuilder):
         return stdapi.Opaque(expr)
 
 
+def handle_entry(handle, value):
+    if handle.key is None:
+        return "__%s_map[%s]" % (handle.name, value)
+    else:
+        key_name, key_type = handle.key
+        return "__%s_map[%s][%s]" % (handle.name, key_name, value)
+
+
 class ValueExtractor(stdapi.Visitor):
 
     def visit_literal(self, literal, lvalue, rvalue):
@@ -90,7 +98,7 @@ class ValueExtractor(stdapi.Visitor):
             print '    }'
 
     def visit_handle(self, handle, lvalue, rvalue):
-        self.visit(handle.type, lvalue, "__%s_map[%s]" %(handle.name, rvalue));
+        self.visit(handle.type, lvalue, handle_entry(handle, rvalue));
         print '    if (verbosity >= 2)'
         print '        std::cout << "%s " << static_cast<%s>(%s) << " <- " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
     
@@ -139,15 +147,20 @@ class ValueWrapper(stdapi.Visitor):
 
     def visit_handle(self, handle, lvalue, rvalue):
         if handle.range is None:
-            print "    __{handle.name}_map[static_cast<{handle.type}>({rvalue})] = {lvalue};".format(**locals())
+            rvalue = "static_cast<%s>(%s)" % (handle.type, rvalue)
+            entry = handle_entry(handle, rvalue) 
+            print "    %s = %s;" % (entry, lvalue)
             print '    if (verbosity >= 2)'
-            print '        std::cout << "{handle.name} " << static_cast<{handle.type}>({rvalue}) << " -> " << {lvalue} << "\\n";'.format(**locals())
+            print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
         else:
             i = '__h' + handle.id
+            lvalue = "%s + %s" % (lvalue, i)
+            rvalue = "static_cast<%s>(%s) + %s" % (handle.type, rvalue, i)
+            entry = handle_entry(handle, rvalue) 
             print '    for({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
-            print '        __{handle.name}_map[static_cast<{handle.type}>({rvalue}) + {i}] = {lvalue} + {i};'.format(**locals())
+            print '        {entry} = {lvalue};'.format(**locals())
             print '        if (verbosity >= 2)'
-            print '            std::cout << "{handle.name} " << (static_cast<{handle.type}>({rvalue}) + {i}) << " -> " << ({lvalue} + {i}) << "\\n";'.format(**locals())
+            print '            std::cout << "{handle.name} " << ({rvalue}) << " -> " << ({lvalue}) << "\\n";'.format(**locals())
             print '    }'
     
     def visit_blob(self, blob, lvalue, rvalue):
@@ -155,7 +168,6 @@ class ValueWrapper(stdapi.Visitor):
     
     def visit_string(self, string, lvalue, rvalue):
         pass
-
 
 
 class Retracer:
@@ -256,7 +268,11 @@ class Retracer:
         handle_names = set()
         for handle in handles:
             if handle.name not in handle_names:
-                print 'static std::map<%s, %s> __%s_map;' % (handle.type, handle.type, handle.name)
+                if handle.key is None:
+                    print 'static std::map<%s, %s> __%s_map;' % (handle.type, handle.type, handle.name)
+                else:
+                    key_name, key_type = handle.key
+                    print 'static std::map<%s, std::map<%s, %s> > __%s_map;' % (key_type, handle.type, handle.type, handle.name)
                 handle_names.add(handle.name)
         print
 

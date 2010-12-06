@@ -132,15 +132,18 @@ class GlRetracer(Retracer):
         if (function.name in self.pointer_function_names and arg.name == 'pointer' or
             function.name in self.draw_elements_function_names and arg.name == 'indices'):
             self.extract_pointer(function, arg, arg_type, lvalue, rvalue)
-        else:
-            Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
+            print '    if (dynamic_cast<Trace::Null *>(&%s)) {' % rvalue
+            print '        %s = 0;' % (lvalue)
+            print '    } else {'
+            print '        %s = (%s)(uintptr_t)(%s);' % (lvalue, arg_type, rvalue)
+            print '    }'
+            return
 
-    def extract_pointer(self, function, arg, arg_type, lvalue, rvalue):
-        print '    if (dynamic_cast<Trace::Null *>(&%s)) {' % rvalue
-        print '        %s = 0;' % (lvalue)
-        print '    } else {'
-        print '        %s = (%s)(uintptr_t)(%s);' % (lvalue, arg_type, rvalue)
-        print '    }'
+        if function.name.startswith('glUniform') and function.args[0].name == arg.name == 'location':
+            print '    GLint program = -1;'
+            print '    glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+
+        Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
 
 
 if __name__ == '__main__':
