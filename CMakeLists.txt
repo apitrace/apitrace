@@ -12,6 +12,8 @@ if (NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
+set (CMAKE_USE_PYTHON_VERSION 2.6)
+
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
 

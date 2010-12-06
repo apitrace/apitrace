@@ -39,7 +39,7 @@ Wrapper DLLs to trace OpenGL, D3D8, and D3D9 APIs calls.
 = Building from source =
 
 Common requirements:
-* Python (tested with version 2.6)
+* Python (requires version 2.6)
 * CMake (tested with version 2.8)
 
 == Linux ==
