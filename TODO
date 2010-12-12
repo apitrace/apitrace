@@ -30,6 +30,4 @@
 
 * Trace window sizes somehow
 
-* Add new mode to compare with previous snapshots instead of writing.
-
 * Plug memory leaks.
