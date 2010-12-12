@@ -26,6 +26,7 @@
 
 #include <png.h>
 
+#include <math.h>
 #include <stdint.h>
 
 #include <fstream>
@@ -271,6 +272,39 @@ no_png:
 no_fp:
     return NULL;
 }
+
+
+double Image::compare(Image &ref)
+{
+    if (width != ref.width ||
+        height != ref.height) {
+        return 0.0;
+    }
+
+    const unsigned char *pSrc = start();
+    const unsigned char *pRef = ref.start();
+
+    unsigned long long error = 0;
+    for (unsigned y = 0; y < height; ++y) {
+        for (unsigned  x = 0; x < width*4; ++x) {
+            int delta = pSrc[x] - pRef[x];
+            error += delta*delta;
+        }
+
+        pSrc += stride();
+        pRef += ref.stride();
+    }
+
+    double numerator = error*2 + 1;
+    double denominator = height*width*4ULL*255ULL*255ULL*2;
+    double quotient = numerator/denominator;
+
+    // Precision in bits
+    double precision = -log(quotient)/log(2.0);
+
+    return precision;
+}
+
 
 
 } /* namespace Image */

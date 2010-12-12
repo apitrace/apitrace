@@ -59,8 +59,22 @@ public:
         delete [] pixels;
     }
 
+    inline unsigned char *start(void) {
+        return flipped ? pixels + (height - 1)*width*4 : pixels;
+    }
+
+    inline unsigned char *end(void) {
+        return flipped ? pixels - width*4 : pixels + height*width*4;
+    }
+
+    inline signed stride(void) const {
+        return flipped ? -width*4 : width*4;
+    }
+
     bool writeBMP(const char *filename) const;
     bool writePNG(const char *filename) const;
+
+    double compare(Image &ref);
 };
 
 
