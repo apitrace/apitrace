@@ -266,24 +266,32 @@ static void display(void) {
     Trace::Call *call;
 
     while ((call = parser.parse_call())) {
-        if (call->name() == "glFlush") {
-            glFlush();
-            if (!double_buffer) {
-                frame_complete();
-            }
-        }
-        
-        if (!retrace_call(*call)) {
-            if (call->name() == "glXSwapBuffers" ||
-                call->name() == "wglSwapBuffers") {
+        const std::string &name = call->name();
+
+        if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
+            (name[0] == 'g' && name[1] == 'l' && name[2] == 'X')) {
+            // XXX: We ignore the majority of the OS-specific calls for now
+            if (name == "glXSwapBuffers" ||
+                name == "wglSwapBuffers") {
                 if (double_buffer)
                     glutSwapBuffers();
                 else
                     glFlush();
                 frame_complete();
                 return;
+            } else {
+                continue;
             }
         }
+
+        if (name == "glFlush") {
+            glFlush();
+            if (!double_buffer) {
+                frame_complete();
+            }
+        }
+        
+        retrace_call(*call);
     }
 
     // Reached the end of trace
