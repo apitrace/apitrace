@@ -1536,6 +1536,9 @@ glapi.add_functions([
     # GL_EXT_blend_func_separate
     GlFunction(Void, "glBlendFuncSeparateEXT", [(GLenum, "sfactorRGB"), (GLenum, "dfactorRGB"), (GLenum, "sfactorAlpha"), (GLenum, "dfactorAlpha")]),
 
+    # GL_INGR_blend_func_separate
+    GlFunction(Void, "glBlendFuncSeparateINGR", [(GLenum, "sfactorRGB"), (GLenum, "dfactorRGB"), (GLenum, "sfactorAlpha"), (GLenum, "dfactorAlpha")]),
+
     # GL_EXT_vertex_weighting
     GlFunction(Void, "glVertexWeightfEXT", [(GLfloat, "weight")]),
     GlFunction(Void, "glVertexWeightfvEXT", [(Const(Pointer(GLfloat)), "weight")]),
