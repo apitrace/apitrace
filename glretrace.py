@@ -235,7 +235,7 @@ static void frame_complete(void) {
 
         snprintf(filename, sizeof filename, "%s%04u.png", __snapshot_prefix, __frame);
         
-        Image::Image *ref;
+        Image::Image *ref = NULL;
         if (__mode == MODE_COMPARE) {
             ref = Image::readPNG(filename);
             if (!ref) {
