@@ -167,6 +167,7 @@ static enum {
     MODE_SNAPSHOT,
     MODE_COMPARE,
 } __mode = MODE_DISPLAY;
+bool __wait = false;
 
 const char *__snapshot_prefix = "";
 
@@ -305,7 +306,7 @@ static void display(void) {
         " in " <<  timeInterval << " secs,"
         " average of " << (__frame/timeInterval) << " fps\n";
 
-    if (__mode == MODE_DISPLAY) {
+    if (__wait) {
         glutDisplayFunc(&display_noop);
         glutIdleFunc(NULL);
     } else {
@@ -360,6 +361,8 @@ int main(int argc, char **argv)
             __mode = MODE_SNAPSHOT;
         } else if (!strcmp(arg, "-v")) {
             ++verbosity;
+        } else if (!strcmp(arg, "-w")) {
+            __wait = true;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage();
