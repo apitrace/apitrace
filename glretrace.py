@@ -350,7 +350,6 @@ int main(int argc, char **argv)
         } else if (!strcmp(arg, "--help")) {
             usage();
             return 0;
-        } else if (!strcmp(arg, "-p")) {
         } else if (!strcmp(arg, "-s")) {
             __snapshot_prefix = argv[++i];
         } else if (!strcmp(arg, "-v")) {
