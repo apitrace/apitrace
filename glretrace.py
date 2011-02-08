@@ -162,13 +162,9 @@ bool __reshape_window = false;
 
 unsigned __frame = 0;
 long long __startTime = 0;
-static enum {
-    MODE_DISPLAY = 0,
-    MODE_SNAPSHOT,
-    MODE_COMPARE,
-} __mode = MODE_DISPLAY;
 bool __wait = false;
 
+const char *__compare_prefix = "";
 const char *__snapshot_prefix = "";
 
 
@@ -231,13 +227,11 @@ static void display_noop(void) {
 static void frame_complete(void) {
     ++__frame;
     
-    if (!__reshape_window && (__mode == MODE_SNAPSHOT || __mode == MODE_COMPARE)) {
-        char filename[PATH_MAX];
-
-        snprintf(filename, sizeof filename, "%s%04u.png", __snapshot_prefix, __frame);
-        
+    if (!__reshape_window && (__snapshot_prefix || __compare_prefix)) {
         Image::Image *ref = NULL;
-        if (__mode == MODE_COMPARE) {
+        if (__compare_prefix) {
+            char filename[PATH_MAX];
+            snprintf(filename, sizeof filename, "%s%04u.png", __compare_prefix, __frame);
             ref = Image::readPNG(filename);
             if (!ref) {
                 return;
@@ -249,13 +243,15 @@ static void frame_complete(void) {
         Image::Image src(__window_width, __window_height, true);
         glReadPixels(0, 0, __window_width, __window_height, GL_RGBA, GL_UNSIGNED_BYTE, src.pixels);
 
-        if (__mode == MODE_SNAPSHOT) {
+        if (__snapshot_prefix) {
+            char filename[PATH_MAX];
+            snprintf(filename, sizeof filename, "%s%04u.png", __snapshot_prefix, __frame);
             if (src.writePNG(filename) && verbosity) {
                 std::cout << "Wrote " << filename << "\n";
             }
         }
 
-        if (__mode == MODE_COMPARE) {
+        if (ref) {
             std::cout << "Frame " << __frame << " average precision of " << src.compare(*ref) << " bits\n";
             delete ref;
         }
@@ -328,10 +324,9 @@ static void usage(void) {
         "Usage: glretrace [OPTION] TRACE\n"
         "Replay TRACE.\n"
         "\n"
-        "  -c           compare against snapshots\n"
+        "  -c PREFIX    compare against snapshots\n"
         "  -db          use a double buffer visual\n"
-        "  -p PREFIX    snapshot prefix\n"
-        "  -s           take snapshots\n"
+        "  -s PREFIX    take snapshots\n"
         "  -v           verbose output\n";
 }
 
@@ -349,16 +344,15 @@ int main(int argc, char **argv)
         if (!strcmp(arg, "--")) {
             break;
         } else if (!strcmp(arg, "-c")) {
-            __mode = MODE_COMPARE;
+            __compare_prefix = argv[++i];
         } else if (!strcmp(arg, "-db")) {
             double_buffer = true;
         } else if (!strcmp(arg, "--help")) {
             usage();
             return 0;
         } else if (!strcmp(arg, "-p")) {
-            __snapshot_prefix = argv[++i];
         } else if (!strcmp(arg, "-s")) {
-            __mode = MODE_SNAPSHOT;
+            __snapshot_prefix = argv[++i];
         } else if (!strcmp(arg, "-v")) {
             ++verbosity;
         } else if (!strcmp(arg, "-w")) {
