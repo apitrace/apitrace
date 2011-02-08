@@ -286,9 +286,13 @@ double Image::compare(Image &ref)
 
     unsigned long long error = 0;
     for (unsigned y = 0; y < height; ++y) {
-        for (unsigned  x = 0; x < width*4; ++x) {
-            int delta = pSrc[x] - pRef[x];
-            error += delta*delta;
+        for (unsigned  x = 0; x < width; ++x) {
+            // FIXME: Ignore alpha channel until we are able to pick a visual
+            // that matches the traces
+            for (unsigned  c = 0; c < 3; ++c) {
+                int delta = pSrc[x*4 + c] - pRef[x*4 + c];
+                error += delta*delta;
+            }
         }
 
         pSrc += stride();
@@ -296,7 +300,7 @@ double Image::compare(Image &ref)
     }
 
     double numerator = error*2 + 1;
-    double denominator = height*width*4ULL*255ULL*255ULL*2;
+    double denominator = height*width*3ULL*255ULL*255ULL*2;
     double quotient = numerator/denominator;
 
     // Precision in bits

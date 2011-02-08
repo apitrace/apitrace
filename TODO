@@ -13,6 +13,8 @@
 
 * Allow clamping to a GL version or a number of extensions.
 
+* Match the traced visuals (which will imply abandoning GLUT)
+
 * Trace multiple threads
   * GetCurrentThreadId()
   * pthread_self()
