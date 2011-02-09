@@ -169,12 +169,13 @@ public:
 class Enum : public Value
 {
 public:
-    Enum(std::string &_name, Value *_value) : name(_name), value(_value) {}
+    typedef std::pair<std::string, Value *> Signature;
+
+    Enum(const Signature *_sig) : sig(_sig) {}
 
     void visit(Visitor &visitor);
 
-    std::string name;
-    Value *value;
+    const Signature *sig;
 };
 
 
@@ -201,6 +202,7 @@ public:
     };
 
     Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
+    ~Struct();
 
     void visit(Visitor &visitor);
 
@@ -213,6 +215,7 @@ class Array : public Value
 {
 public:
     Array(size_t len) : values(len) {}
+    ~Array();
 
     void visit(Visitor &visitor);
 
@@ -295,6 +298,7 @@ public:
     Value *ret;
 
     Call(Signature *_sig) : sig(_sig), args(_sig->arg_names.size()), ret(0) { }
+    ~Call();
 
     inline const std::string name(void) const {
         return sig->name;

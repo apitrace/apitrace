@@ -41,6 +41,7 @@ int main(int argc, char **argv)
             call = p.parse_call();
             while (call) {
                 std::cout << *call;
+                delete call;
                 call = p.parse_call();
             }
         }

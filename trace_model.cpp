@@ -31,6 +31,31 @@
 namespace Trace {
 
 
+Call::~Call() {
+    for (unsigned i = 0; i < args.size(); ++i) {
+        delete args[i];
+    }
+
+    if (ret) {
+        delete ret;
+    }
+}
+
+
+Struct::~Struct() {
+    for (std::vector<Value *>::iterator it = members.begin(); it != members.end(); ++it) {
+        delete *it;
+    }
+}
+
+
+Array::~Array() {
+    for (std::vector<Value *>::iterator it = values.begin(); it != values.end(); ++it) {
+        delete *it;
+    }
+}
+
+
 void Null::visit(Visitor &visitor) { visitor.visit(this); }
 void Bool::visit(Visitor &visitor) { visitor.visit(this); } 
 void SInt::visit(Visitor &visitor) { visitor.visit(this); } 
@@ -43,6 +68,7 @@ void Struct::visit(Visitor &visitor) { visitor.visit(this); }
 void Array::visit(Visitor &visitor) { visitor.visit(this); } 
 void Blob::visit(Visitor &visitor) { visitor.visit(this); } 
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
+
 
 class Dumper : public Visitor
 {
@@ -102,7 +128,7 @@ public:
     }
 
     void visit(Enum *node) {
-        os << literal << node->name << normal;
+        os << literal << node->sig->first << normal;
     }
 
     void visit(Bitmask *bitmask) {
@@ -194,7 +220,7 @@ std::ostream & operator <<(std::ostream &os, Value *value) {
 static inline const Value *unwrap(const Value *node) {
     const Enum *c = dynamic_cast<const Enum *>(node);
     if (c)
-        return c->value;
+        return c->sig->second;
     return node;
 }
 

@@ -290,6 +290,8 @@ static void display(void) {
         }
         
         retrace_call(*call);
+
+        delete call;
     }
 
     // Reached the end of trace

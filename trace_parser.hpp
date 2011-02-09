@@ -60,7 +60,7 @@ protected:
     typedef std::vector<Struct::Signature *> StructMap;
     StructMap structs;
 
-    typedef std::vector<Enum *> EnumMap;
+    typedef std::vector<Enum::Signature *> EnumMap;
     EnumMap enums;
 
     typedef std::vector<Bitmask::Signature *> BitmaskMap;
@@ -275,15 +275,15 @@ public:
 
     Value *parse_enum() {
         size_t id = read_uint();
-        Enum *sig = lookup(enums, id);
+        Enum::Signature *sig = lookup(enums, id);
         if (!sig) {
             std::string name = read_string();
             Value *value = parse_value();
-            sig = new Enum(name, value);
+            sig = new Enum::Signature(name, value);
             enums[id] = sig;
         }
         assert(sig);
-        return sig;
+        return new Enum(sig);
     }
 
     Value *parse_bitmask() {
