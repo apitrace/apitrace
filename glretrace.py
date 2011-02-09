@@ -164,8 +164,8 @@ unsigned __frame = 0;
 long long __startTime = 0;
 bool __wait = false;
 
-const char *__compare_prefix = "";
-const char *__snapshot_prefix = "";
+const char *__compare_prefix = NULL;
+const char *__snapshot_prefix = NULL;
 
 
 static void
