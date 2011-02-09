@@ -225,6 +225,17 @@ static void display_noop(void) {
 
 #include "image.hpp"
 
+static void snapshot(Image::Image &image) {
+    GLint drawbuffer = double_buffer ? GL_BACK : GL_FRONT;
+    GLint readbuffer = double_buffer ? GL_BACK : GL_FRONT;
+    glGetIntegerv(GL_READ_BUFFER, &drawbuffer);
+    glGetIntegerv(GL_READ_BUFFER, &readbuffer);
+    glReadBuffer(drawbuffer);
+    glReadPixels(0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
+    checkGlError();
+    glReadBuffer(readbuffer);
+}
+
 static void frame_complete(void) {
     ++__frame;
     
@@ -242,7 +253,7 @@ static void frame_complete(void) {
         }
         
         Image::Image src(__window_width, __window_height, true);
-        glReadPixels(0, 0, __window_width, __window_height, GL_RGBA, GL_UNSIGNED_BYTE, src.pixels);
+        snapshot(src);
 
         if (__snapshot_prefix) {
             char filename[PATH_MAX];
@@ -271,11 +282,11 @@ static void display(void) {
             // XXX: We ignore the majority of the OS-specific calls for now
             if (name == "glXSwapBuffers" ||
                 name == "wglSwapBuffers") {
+                frame_complete();
                 if (double_buffer)
                     glutSwapBuffers();
                 else
                     glFlush();
-                frame_complete();
                 return;
             } else {
                 continue;
@@ -283,10 +294,10 @@ static void display(void) {
         }
 
         if (name == "glFlush") {
-            glFlush();
             if (!double_buffer) {
                 frame_complete();
             }
+            glFlush();
         }
         
         retrace_call(*call);
