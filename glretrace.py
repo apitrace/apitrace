@@ -164,13 +164,14 @@ unsigned __frame = 0;
 long long __startTime = 0;
 bool __wait = false;
 
+bool __benchmark = false;
 const char *__compare_prefix = NULL;
 const char *__snapshot_prefix = NULL;
 
 
 static void
 checkGlError(void) {
-    if (insideGlBeginEnd) {
+    if (__benchmark || insideGlBeginEnd) {
         return;
     }
 
@@ -236,7 +237,7 @@ static void frame_complete(void) {
             if (!ref) {
                 return;
             }
-            if (verbosity)
+            if (verbosity >= 0)
                 std::cout << "Read " << filename << "\n";
         }
         
@@ -246,7 +247,7 @@ static void frame_complete(void) {
         if (__snapshot_prefix) {
             char filename[PATH_MAX];
             snprintf(filename, sizeof filename, "%s%04u.png", __snapshot_prefix, __frame);
-            if (src.writePNG(filename) && verbosity) {
+            if (src.writePNG(filename) && verbosity >= 0) {
                 std::cout << "Wrote " << filename << "\n";
             }
         }
@@ -324,6 +325,7 @@ static void usage(void) {
         "Usage: glretrace [OPTION] TRACE\n"
         "Replay TRACE.\n"
         "\n"
+        "  -b           benchmark (no glgeterror; no messages)\n"
         "  -c PREFIX    compare against snapshots\n"
         "  -db          use a double buffer visual\n"
         "  -s PREFIX    take snapshots\n"
@@ -343,6 +345,9 @@ int main(int argc, char **argv)
 
         if (!strcmp(arg, "--")) {
             break;
+        } else if (!strcmp(arg, "-b")) {
+            __benchmark = true;
+            --verbosity;
         } else if (!strcmp(arg, "-c")) {
             __compare_prefix = argv[++i];
         } else if (!strcmp(arg, "-db")) {

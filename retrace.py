@@ -276,7 +276,7 @@ class Retracer:
                 handle_names.add(handle.name)
         print
 
-        print 'unsigned verbosity = 0;'
+        print 'int verbosity = 0;'
         print
 
         self.retrace_functions(api.functions)
