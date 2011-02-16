@@ -295,6 +295,7 @@ const char * Value::string(void) const {
 
 std::ostream & operator <<(std::ostream &os, Call &call) {
     Dumper d(os);
+    os << call.no << " ";
     d.visit(&call);
     return os;
 }
