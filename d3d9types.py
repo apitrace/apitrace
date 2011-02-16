@@ -123,7 +123,7 @@ D3DLIGHT9 = Struct("D3DLIGHT9", [
     (Float, "Phi"),
 ])
 
-D3DCS = Flags(DWORD, [
+D3DCLEAR = Flags(DWORD, [
     "D3DCLEAR_TARGET",
     "D3DCLEAR_ZBUFFER",
     "D3DCLEAR_STENCIL",

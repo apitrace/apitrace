@@ -165,7 +165,7 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "GetDepthStencilSurface", [Out(Pointer(PDIRECT3DSURFACE9), "ppZStencilSurface")]),
     Method(HRESULT, "BeginScene", []),
     Method(HRESULT, "EndScene", []),
-    Method(HRESULT, "Clear", [(DWORD, "Count"), (ConstPointer(D3DRECT), "pRects"), (DWORD, "Flags"), (D3DCOLOR, "Color"), (Float, "Z"), (DWORD, "Stencil")]),
+    Method(HRESULT, "Clear", [(DWORD, "Count"), (ConstPointer(D3DRECT), "pRects"), (D3DCLEAR, "Flags"), (D3DCOLOR, "Color"), (Float, "Z"), (DWORD, "Stencil")]),
     Method(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "State"), (ConstPointer(D3DMATRIX), "pMatrix")]),
     Method(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "State"), Out(Pointer(D3DMATRIX), "pMatrix")]),
     Method(HRESULT, "MultiplyTransform", [(D3DTRANSFORMSTATETYPE, "State"), (ConstPointer(D3DMATRIX), "pMatrix")]),
@@ -250,7 +250,7 @@ IDirect3DStateBlock9.methods += [
 ]
 
 IDirect3DSwapChain9.methods += [
-    Method(HRESULT, "Present", [(ConstPointer(RECT), "pSourceRect"), (ConstPointer(RECT), "pDestRect"), (HWND, "hDestWindowOverride"), (ConstPointer(RGNDATA), "pDirtyRegion"), (DWORD, "dwFlags")]),
+    Method(HRESULT, "Present", [(ConstPointer(RECT), "pSourceRect"), (ConstPointer(RECT), "pDestRect"), (HWND, "hDestWindowOverride"), (ConstPointer(RGNDATA), "pDirtyRegion"), (D3DPRESENT, "dwFlags")]),
     Method(HRESULT, "GetFrontBufferData", [(PDIRECT3DSURFACE9, "pDestSurface")]),
     Method(HRESULT, "GetBackBuffer", [(UINT, "iBackBuffer"), (D3DBACKBUFFER_TYPE, "Type"), Out(Pointer(PDIRECT3DSURFACE9), "ppBackBuffer")]),
     Method(HRESULT, "GetRasterStatus", [Out(Pointer(D3DRASTER_STATUS), "pRasterStatus")]),
@@ -297,7 +297,7 @@ IDirect3DBaseTexture9.methods += [
 IDirect3DTexture9.methods += [
     Method(HRESULT, "GetLevelDesc", [(UINT, "Level"), Out(Pointer(D3DSURFACE_DESC), "pDesc")]),
     Method(HRESULT, "GetSurfaceLevel", [(UINT, "Level"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurfaceLevel")]),
-    Method(HRESULT, "LockRect", [(UINT, "Level"), Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (DWORD, "Flags")]),
+    Method(HRESULT, "LockRect", [(UINT, "Level"), Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "UnlockRect", [(UINT, "Level")]),
     Method(HRESULT, "AddDirtyRect", [(ConstPointer(RECT), "pDirtyRect")]),
 ]
@@ -305,7 +305,7 @@ IDirect3DTexture9.methods += [
 IDirect3DVolumeTexture9.methods += [
     Method(HRESULT, "GetLevelDesc", [(UINT, "Level"), Out(Pointer(D3DVOLUME_DESC), "pDesc")]),
     Method(HRESULT, "GetVolumeLevel", [(UINT, "Level"), Out(Pointer(PDIRECT3DVOLUME9), "ppVolumeLevel")]),
-    Method(HRESULT, "LockBox", [(UINT, "Level"), Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (DWORD, "Flags")]),
+    Method(HRESULT, "LockBox", [(UINT, "Level"), Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "UnlockBox", [(UINT, "Level")]),
     Method(HRESULT, "AddDirtyBox", [(ConstPointer(D3DBOX), "pDirtyBox")]),
 ]
@@ -313,19 +313,19 @@ IDirect3DVolumeTexture9.methods += [
 IDirect3DCubeTexture9.methods += [
     Method(HRESULT, "GetLevelDesc", [(UINT, "Level"), Out(Pointer(D3DSURFACE_DESC), "pDesc")]),
     Method(HRESULT, "GetCubeMapSurface", [(D3DCUBEMAP_FACES, "FaceType"), (UINT, "Level"), Out(Pointer(PDIRECT3DSURFACE9), "ppCubeMapSurface")]),
-    Method(HRESULT, "LockRect", [(D3DCUBEMAP_FACES, "FaceType"), (UINT, "Level"), Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (DWORD, "Flags")]),
+    Method(HRESULT, "LockRect", [(D3DCUBEMAP_FACES, "FaceType"), (UINT, "Level"), Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "UnlockRect", [(D3DCUBEMAP_FACES, "FaceType"), (UINT, "Level")]),
     Method(HRESULT, "AddDirtyRect", [(D3DCUBEMAP_FACES, "FaceType"), (ConstPointer(RECT), "pDirtyRect")]),
 ]
 
 IDirect3DVertexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (DWORD, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")]),
 ]
 
 IDirect3DIndexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (DWORD, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DINDEXBUFFER_DESC), "pDesc")]),
 ]
@@ -333,7 +333,7 @@ IDirect3DIndexBuffer9.methods += [
 IDirect3DSurface9.methods += [
     Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")]),
-    Method(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (DWORD, "Flags")]),
+    Method(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "UnlockRect", []),
     Method(HRESULT, "GetDC", [Out(Pointer(HDC), "phdc")]),
     Method(HRESULT, "ReleaseDC", [(HDC, "hdc")]),
@@ -346,7 +346,7 @@ IDirect3DVolume9.methods += [
     Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
     Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVOLUME_DESC), "pDesc")]),
-    Method(HRESULT, "LockBox", [Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (DWORD, "Flags")]),
+    Method(HRESULT, "LockBox", [Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "UnlockBox", []),
 ]
 
