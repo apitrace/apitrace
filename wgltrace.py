@@ -27,6 +27,8 @@
 """WGL tracing code generator."""
 
 
+from stdapi import API
+from glapi import glapi
 from wglapi import wglapi
 from trace import Tracer
 from codegen import *
@@ -400,16 +402,7 @@ public_symbols = set([
 class WglTracer(Tracer):
 
     def get_function_address(self, function):
-        #print 'DebugBreak();'
-        if function.name in public_symbols:
-            return '__GetProcAddress("%s")' % (function.name,)
-        else:
-            print '        if (!pwglGetProcAddress) {'
-            print '            pwglGetProcAddress = (PwglGetProcAddress)__GetProcAddress("wglGetProcAddress");'
-            print '            if (!pwglGetProcAddress)'
-            print '                Trace::Abort();'
-            print '        }'
-            return 'pwglGetProcAddress("%s")' % (function.name,)
+        return '__%s' % (function.name,)
 
     def wrap_ret(self, function, instance):
         if function.name == "wglGetProcAddress":
@@ -435,18 +428,17 @@ if __name__ == '__main__':
     print
     print '#define _GDI32_'
     print
-    print '#include "glimports.hpp"'
+    print '#include <string.h>'
+    print '#include <windows.h>'
     print
     print '#include "trace_write.hpp"'
     print '#include "os.hpp"'
-    print '#include "glsize.hpp"'
     print
-    print 'extern "C" {'
     print '''
 static HINSTANCE g_hDll = NULL;
 
 static PROC
-__GetProcAddress(LPCSTR lpProcName)
+__getPublicProcAddress(LPCSTR lpProcName)
 {
     if (!g_hDll) {
         char szDll[MAX_PATH] = {0};
@@ -467,7 +459,15 @@ __GetProcAddress(LPCSTR lpProcName)
 }
 
     '''
+    print '#include "glproc.hpp"'
+    print '#include "glsize.hpp"'
+    print
+    print 'extern "C" {'
+    print
+    api = API()
+    api.add_api(wglapi)
+    api.add_api(glapi)
     tracer = WglTracer()
-    tracer.trace_api(wglapi)
+    tracer.trace_api(api)
     print
     print '} /* extern "C" */'

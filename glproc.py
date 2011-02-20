@@ -35,6 +35,7 @@ from glxapi import glxapi
 from wglapi import wglapi
 
 
+# See http://www.opengl.org/registry/ABI/
 public_symbols = set([
 	"glAccum",
 	"glAlphaFunc",
@@ -398,10 +399,32 @@ public_symbols = set([
 	"wglUseFontBitmapsW",
 	"wglUseFontOutlinesA",
 	"wglUseFontOutlinesW",
+
+    "glXGetProcAddressARB",
+    "glXGetProcAddress",
 ])
 
 
 class Dispatcher:
+
+    def header(self):
+        pass
+        #print 'typedef void (*__PROC)(void);'
+        #print
+        #print 'static __PROC __getPublicProcAddress(const char *name);'
+        #print 'static __PROC __getPrivateProcAddress(const char *name);'
+        #print
+
+    def dispatch_api(self, api):
+        for function in api.functions:
+            dispatcher.dispatch_function(function)
+        
+        print '#ifdef RETRACE'
+        for function in api.functions:
+            if not self.is_public_function(function):
+                print '#define %s __%s' % (function.name, function.name)
+        print '#endif /* RETRACE */'
+        print
 
     def function_pointer_type(self, function):
         return '__PFN' + function.name.upper()
@@ -410,9 +433,9 @@ class Dispatcher:
         return '__' + function.name + '_ptr'
 
     def dispatch_function(self, function):
-        if function.name in public_symbols:
-            return
-
+        if self.is_public_function(function):
+            print '#ifndef RETRACE'
+            print
         ptype = self.function_pointer_type(function)
         pvalue = self.function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
@@ -428,15 +451,20 @@ class Dispatcher:
         print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
         print '}'
         print
-        print '#define %s __%s' % (function.name, function.name)
+        if self.is_public_function(function):
+            print '#endif /* !RETRACE */'
+            print
+
+    def is_public_function(self, function):
+        return True
 
     def get_true_pointer(self, function):
         ptype = self.function_pointer_type(function)
         pvalue = self.function_pointer_value(function)
-        if function.name in public_symbols:
-            get_proc_address = '__getProcAddress'
+        if self.is_public_function(function):
+            get_proc_address = '__getPublicProcAddress'
         else:
-            get_proc_address = '__glGetProcAddress'
+            get_proc_address = '__getPrivateProcAddress'
         print '    if (!%s) {' % (pvalue,)
         print '        %s = (%s)%s("%s");' % (pvalue, ptype, get_proc_address, function.name)
         print '        if (!%s) {' % (pvalue,)
@@ -445,7 +473,7 @@ class Dispatcher:
         print '    }'
 
     def fail_function(self, function):
-        print '    std::cerr << "error: unavailable function \\"%s\\"\\n";' % function.name
+        print '            OS::DebugMessage("error: unavailable function \\"%s\\"\\n");' % function.name
         if function.fail is not None:
             if function.type is stdapi.Void:
                 assert function.fail == ''
@@ -454,7 +482,35 @@ class Dispatcher:
                 assert function.fail != ''
                 print '            return %s;' % function.fail
         else:
-            print '            abort();'
+            print '            __abort();'
+
+
+class GlDispatcher(Dispatcher):
+
+    def header(self):
+        Dispatcher.header(self)
+        print '#ifdef RETRACE'
+        print '#  ifdef WIN32'
+        print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
+        print '#  else'
+        print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
+        print '#  endif'
+        print '#  define __abort() OS::Abort()'
+        print '#else /* !RETRACE */'
+        print '#  ifdef WIN32'
+        print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
+        print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
+        print '#  else'
+        print '#    define __getPublicProcAddress(name) dlsym(RTLD_NEXT, name)'
+        print '#    define __getPrivateProcAddress(name) __glXGetProcAddressARB((const GLubyte *)(name))'
+        print '     static inline __GLXextFuncPtr __glXGetProcAddressARB(const GLubyte * procName);'
+        print '#  endif'
+        print '#  define __abort() Trace::Abort()'
+        print '#endif /* !RETRACE */'
+        print
+        
+    def is_public_function(self, function):
+        return function.name in public_symbols
 
 
 if __name__ == '__main__':
@@ -462,22 +518,18 @@ if __name__ == '__main__':
     print '#include "glimports.hpp"'
     print '#include "os.hpp"'
     print
-    if 0:
-        print 'typedef void (*__PROC)(void);'
-        print
-        print 'static __PROC __getProcAddress(const char *name);'
-        print
-        print 'static __PROC __glGetProcAddress(const char *name);'
-    else:
-        print '#ifdef WIN32'
-        print '#define __glGetProcAddress wglGetProcAddress'
-        print '#else'
-        print '#define __glGetProcAddress(name) glXGetProcAddress((const GLubyte *)(name))'
-        print '#endif'
     print
-    dispatcher = Dispatcher()
-    for function in glapi.functions:
-        dispatcher.dispatch_function(function)
+    dispatcher = GlDispatcher()
+    dispatcher.header()
+    print '#ifdef WIN32'
+    print
+    dispatcher.dispatch_api(wglapi)
+    print '#else /* !WIN32 */'
+    print
+    dispatcher.dispatch_api(glxapi)
+    print '#endif /* !WIN32 */'
+    print
+    dispatcher.dispatch_api(glapi)
     print
     if 0:
         print '''
@@ -507,11 +559,6 @@ __getProcAddress(const char *name)
     return GetProcAddress(g_hDll, name);
 }
 
-static inline __PROC
-__glGetProcAddress(const char *name) {
-    return __wglGetProcAddress(name);
-}
-
 #else
 
 static void g_module = NULL;
@@ -531,7 +578,7 @@ __getProcAddress(const char *name)
 
 static inline __PROC
 __glGetProcAddress(const char *name) {
-    return __glXGetProcAddress(name);
+    return __glXGetProcAddressARB(name);
 }
 
 #endif

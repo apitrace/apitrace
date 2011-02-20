@@ -151,6 +151,8 @@ if __name__ == '__main__':
 #include <stdio.h>
 #include <iostream>
 
+#define RETRACE
+
 #include "glproc.hpp"
 #include <GL/glut.h>
 

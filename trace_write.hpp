@@ -30,6 +30,8 @@
 #ifndef _TRACE_WRITE_HPP_
 #define _TRACE_WRITE_HPP_
 
+#include <stddef.h>
+
 namespace Trace {
 
     typedef unsigned Id;

@@ -453,8 +453,7 @@ class DllTracer(Tracer):
         self.dllname = dllname
     
     def get_function_address(self, function):
-        return '__GetProcAddress("%s")' % (function.name,)
-
+        return '__%s' % (function.name,)
 
     def header(self, api):
         Tracer.header(self, api)

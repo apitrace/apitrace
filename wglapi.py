@@ -32,7 +32,6 @@ from winapi import *
 
 
 wglapi = API("WGL")
-wglapi.add_functions(glapi.functions)
 
 
 HGLRC = Alias("HGLRC", HANDLE)

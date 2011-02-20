@@ -54,7 +54,6 @@ glxapi = API("GLX")
 
 PROC = Opaque("__GLXextFuncPtr")
 
-glxapi.add_functions(glapi.functions)
 glxapi.add_functions([
     Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool_, "direct")]),
     # TODO: the rest
