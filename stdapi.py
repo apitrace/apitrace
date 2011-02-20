@@ -543,6 +543,12 @@ class API:
     def add_interfaces(self, interfaces):
         self.interfaces.extend(interfaces)
 
+    def get_function_by_name(self, name):
+        for function in self.functions:
+            if function.name == name:
+                return function
+        return None
+
 
 Bool = Literal("bool", "Bool")
 SChar = Literal("signed char", "SInt")
