@@ -310,6 +310,11 @@ class Tracer:
         pvalue = self.function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
         print 'static %s %s = NULL;' % (ptype, pvalue)
+        if function.args:
+            print '    static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
+        else:
+            print '    static const char ** __%s_args = NULL;' % (function.name,)
+        print '    static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, int(function.id), function.name, len(function.args), function.name)
         print
 
     def trace_function_fail(self, function):
@@ -338,18 +343,13 @@ class Tracer:
     def trace_function_impl(self, function):
         pvalue = self.function_pointer_value(function)
         print 'extern "C" ' + function.prototype() + ' {'
-        if function.args:
-            print '    static const char * __args[%u] = {%s};' % (len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
-        else:
-            print '    static const char ** __args = NULL;'
-        print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(function.id), function.name, len(function.args))
         if function.type is stdapi.Void:
             result = ''
         else:
             print '    %s __result;' % function.type
             result = '__result = '
         self._get_true_pointer(function)
-        print '    unsigned __call = Trace::BeginEnter(__sig);'
+        print '    unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
