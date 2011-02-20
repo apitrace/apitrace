@@ -30,10 +30,10 @@
 from stdapi import API
 from glapi import glapi
 from glxapi import glxapi
-from trace import Tracer
+from gltrace import GlTracer
 
 
-class GlxTracer(Tracer):
+class GlxTracer(GlTracer):
 
     def get_function_address(self, function):
         return '__%s' % (function.name,)

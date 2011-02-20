@@ -30,7 +30,7 @@
 from stdapi import API
 from glapi import glapi
 from wglapi import wglapi
-from trace import Tracer
+from gltrace import GlTracer
 from codegen import *
 
 
@@ -399,7 +399,7 @@ public_symbols = set([
 	"wglUseFontOutlinesW",
 ])
 
-class WglTracer(Tracer):
+class WglTracer(GlTracer):
 
     def get_function_address(self, function):
         return '__%s' % (function.name,)
