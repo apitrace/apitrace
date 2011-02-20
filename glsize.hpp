@@ -44,35 +44,52 @@
 
 
 static inline size_t
-__glCallLists_size(GLsizei n, GLenum type)
+__gl_type_size(GLenum type)
 {
-    size_t bytes;
-    switch(type) {
+    switch (type) {
+    case GL_BOOL:
     case GL_BYTE:
     case GL_UNSIGNED_BYTE:
-        bytes = 1;
+        return 1;
         break;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
     case GL_2_BYTES:
     case GL_HALF_FLOAT:
-        bytes = 2;
+        return 2;
         break;
     case GL_3_BYTES:
-        bytes = 3;
+        return 3;
         break;
     case GL_INT:
     case GL_UNSIGNED_INT:
     case GL_FLOAT:
     case GL_4_BYTES:
-        bytes = 4;
+        return 4;
+        break;
+    case GL_DOUBLE:
+        return 8;
         break;
     default:
         OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
-        bytes = 0;
+        return 0;
     }
+}
 
-    return n*bytes;
+static inline size_t
+__glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
+{
+    GLsizei elementSize = size*__gl_type_size(type);
+    if (!stride) {
+        stride = elementSize;
+    }
+    return stride*maxIndex + elementSize;
+}
+
+static inline size_t
+__glCallLists_size(GLsizei n, GLenum type)
+{
+    return n*__gl_type_size(type);
 }
 
 static inline size_t

@@ -46,7 +46,7 @@ class WglTracer(GlTracer):
         if function.name == "wglGetProcAddress":
             print '    if (%s) {' % instance
         
-            func_dict = dict([(f.name, f) for f in wglapi.functions])
+            func_dict = dict([(f.name, f) for f in glapi.functions + wglapi.functions])
 
             def handle_case(function_name):
                 f = func_dict[function_name]

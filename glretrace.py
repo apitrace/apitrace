@@ -68,8 +68,7 @@ class GlRetracer(Retracer):
     ])
 
     def call_function(self, function):
-        if (function.name in self.draw_array_function_names or 
-            function.name in self.draw_elements_function_names):
+        if function.name in self.draw_elements_function_names:
             print '    GLint __array_buffer = 0;'
             print '    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
@@ -106,31 +105,34 @@ class GlRetracer(Retracer):
 
     pointer_function_names = set([
         "glColorPointer",
-        "glColorPointerEXT",
+        #"glColorPointerEXT",
         "glEdgeFlagPointer",
-        "glEdgeFlagPointerEXT",
+        #"glEdgeFlagPointerEXT",
         "glFogCoordPointer",
-        "glFogCoordPointerEXT",
+        #"glFogCoordPointerEXT",
         "glIndexPointer",
-        "glIndexPointerEXT",
-        "glMatrixIndexPointerARB",
+        #"glIndexPointerEXT",
+        #"glMatrixIndexPointerARB",
         "glNormalPointer",
-        "glNormalPointerEXT",
+        #"glNormalPointerEXT",
         "glSecondaryColorPointer",
-        "glSecondaryColorPointerEXT",
+        #"glSecondaryColorPointerEXT",
         "glTexCoordPointer",
-        "glTexCoordPointerEXT",
-        "glVertexAttribLPointer",
-        "glVertexAttribPointer",
-        "glVertexAttribPointerARB",
-        "glVertexAttribPointerNV",
+        #"glTexCoordPointerEXT",
+        #"glVertexAttribLPointer",
+        #"glVertexAttribPointer",
+        #"glVertexAttribPointerARB",
+        #"glVertexAttribPointerNV",
         "glVertexPointer",
-        "glVertexPointerEXT",
+        #"glVertexPointerEXT",
     ])
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
-        if (function.name in self.pointer_function_names and arg.name == 'pointer' or
-            function.name in self.draw_elements_function_names and arg.name == 'indices'):
+        if function.name in self.pointer_function_names and arg.name == 'pointer':
+            print '    %s = dynamic_cast<void *>(&%s);' % (lvalue, rvalue)
+            return
+
+        if function.name in self.draw_elements_function_names and arg.name == 'indices':
             print '    if (dynamic_cast<Trace::Null *>(&%s)) {' % rvalue
             print '        %s = 0;' % (lvalue)
             print '    } else {'

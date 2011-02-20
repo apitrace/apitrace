@@ -278,6 +278,11 @@ void * Value::blob(void) const {
     const Null *null = dynamic_cast<const Null *>(unwrap(this));
     if (null)
         return NULL;
+    const Pointer *pointer = dynamic_cast<const Pointer *>(unwrap(this));
+    if (pointer) {
+        assert(pointer->value  < 0x100000ULL);
+        return (void *)pointer->value;
+    }
     assert(0);
     return NULL;
 }

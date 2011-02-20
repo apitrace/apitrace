@@ -232,7 +232,8 @@ public:
     }
 
     ~Blob() {
-        delete [] buf;
+        // FIXME
+        //delete [] buf;
     }
 
     void visit(Visitor &visitor);

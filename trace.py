@@ -300,42 +300,37 @@ class Tracer:
         pass
 
     def trace_function_decl(self, function):
-        if function.args:
-            print '    static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
-        else:
-            print '    static const char ** __%s_args = NULL;' % (function.name,)
-        print '    static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, int(function.id), function.name, len(function.args), function.name)
-        print
+        # Per-function declarations
 
-    def trace_function_fail(self, function):
-        if function.fail is not None:
-            if function.type is stdapi.Void:
-                assert function.fail == ''
-                print '            return;' 
-            else:
-                assert function.fail != ''
-                print '            return %s;' % function.fail
+        if function.args:
+            print 'static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
         else:
-            print '            Trace::Abort();'
+            print 'static const char ** __%s_args = NULL;' % (function.name,)
+        print 'static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, int(function.id), function.name, len(function.args), function.name)
+        print
 
     def get_dispatch_function(self, function):
         return '__' + function.name
 
     def trace_function_impl(self, function):
         print 'extern "C" ' + function.prototype() + ' {'
-        if function.type is stdapi.Void:
-            result = ''
-        else:
+        if function.type is not stdapi.Void:
             print '    %s __result;' % function.type
-            result = '__result = '
+        self.trace_function_impl_body(function)
+        if function.type is not stdapi.Void:
+            self.wrap_ret(function, "__result")
+            print '    return __result;'
+        print '}'
+        print
+
+    def trace_function_impl_body(self, function):
         print '    unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
                 self.dump_arg(function, arg)
         print '    Trace::EndEnter();'
-        dispatch = self.get_dispatch_function(function)
-        print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
+        self.dispatch_function(function)
         print '    Trace::BeginLeave(__call);'
         for arg in function.args:
             if arg.output:
@@ -344,11 +339,14 @@ class Tracer:
         if function.type is not stdapi.Void:
             self.dump_ret(function, "__result")
         print '    Trace::EndLeave();'
-        if function.type is not stdapi.Void:
-            self.wrap_ret(function, "__result")
-            print '    return __result;'
-        print '}'
-        print
+
+    def dispatch_function(self, function):
+        if function.type is stdapi.Void:
+            result = ''
+        else:
+            result = '__result = '
+        dispatch = self.get_dispatch_function(function)
+        print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
 
     def dump_arg(self, function, arg):
         print '    Trace::BeginArg(%u);' % (arg.index,)
