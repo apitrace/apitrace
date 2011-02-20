@@ -299,17 +299,7 @@ class Tracer:
     def footer(self, api):
         pass
 
-    def function_pointer_type(self, function):
-        return 'P' + function.name
-
-    def function_pointer_value(self, function):
-        return 'p' + function.name
-
     def trace_function_decl(self, function):
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        print 'typedef ' + function.prototype('* %s' % ptype) + ';'
-        print 'static %s %s = NULL;' % (ptype, pvalue)
         if function.args:
             print '    static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
         else:
@@ -328,34 +318,24 @@ class Tracer:
         else:
             print '            Trace::Abort();'
 
-    def get_function_address(self, function):
-        raise NotImplementedError
-
-    def _get_true_pointer(self, function):
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        print '    if(!%s) {' % (pvalue,)
-        print '        %s = (%s)%s;' % (pvalue, ptype, self.get_function_address(function))
-        print '        if(!%s)' % (pvalue,)
-        self.trace_function_fail(function)
-        print '    }'
+    def get_dispatch_function(self, function):
+        return '__' + function.name
 
     def trace_function_impl(self, function):
-        pvalue = self.function_pointer_value(function)
         print 'extern "C" ' + function.prototype() + ' {'
         if function.type is stdapi.Void:
             result = ''
         else:
             print '    %s __result;' % function.type
             result = '__result = '
-        self._get_true_pointer(function)
         print '    unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
                 self.dump_arg(function, arg)
         print '    Trace::EndEnter();'
-        print '    %s%s(%s);' % (result, pvalue, ', '.join([str(arg.name) for arg in function.args]))
+        dispatch = self.get_dispatch_function(function)
+        print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
         print '    Trace::BeginLeave(__call);'
         for arg in function.args:
             if arg.output:

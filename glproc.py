@@ -30,6 +30,7 @@ covers all the functions we support.
 
 
 import stdapi
+from dispatch import Dispatcher
 from glapi import glapi
 from glxapi import glxapi
 from wglapi import wglapi
@@ -405,90 +406,9 @@ public_symbols = set([
 ])
 
 
-class Dispatcher:
-
-    def header(self):
-        pass
-        #print 'typedef void (*__PROC)(void);'
-        #print
-        #print 'static __PROC __getPublicProcAddress(const char *name);'
-        #print 'static __PROC __getPrivateProcAddress(const char *name);'
-        #print
-
-    def dispatch_api(self, api):
-        for function in api.functions:
-            dispatcher.dispatch_function(function)
-        
-        print '#ifdef RETRACE'
-        for function in api.functions:
-            if not self.is_public_function(function):
-                print '#define %s __%s' % (function.name, function.name)
-        print '#endif /* RETRACE */'
-        print
-
-    def function_pointer_type(self, function):
-        return '__PFN' + function.name.upper()
-
-    def function_pointer_value(self, function):
-        return '__' + function.name + '_ptr'
-
-    def dispatch_function(self, function):
-        if self.is_public_function(function):
-            print '#ifndef RETRACE'
-            print
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        print 'typedef ' + function.prototype('* %s' % ptype) + ';'
-        print 'static %s %s = NULL;' % (ptype, pvalue)
-        print
-        print 'static inline ' + function.prototype('__' + function.name) + ' {'
-        if function.type is stdapi.Void:
-            ret = ''
-        else:
-            ret = 'return '
-        self.get_true_pointer(function)
-        pvalue = self.function_pointer_value(function)
-        print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
-        print '}'
-        print
-        if self.is_public_function(function):
-            print '#endif /* !RETRACE */'
-            print
-
-    def is_public_function(self, function):
-        return True
-
-    def get_true_pointer(self, function):
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        if self.is_public_function(function):
-            get_proc_address = '__getPublicProcAddress'
-        else:
-            get_proc_address = '__getPrivateProcAddress'
-        print '    if (!%s) {' % (pvalue,)
-        print '        %s = (%s)%s("%s");' % (pvalue, ptype, get_proc_address, function.name)
-        print '        if (!%s) {' % (pvalue,)
-        self.fail_function(function)
-        print '        }'
-        print '    }'
-
-    def fail_function(self, function):
-        print '            OS::DebugMessage("error: unavailable function \\"%s\\"\\n");' % function.name
-        if function.fail is not None:
-            if function.type is stdapi.Void:
-                assert function.fail == ''
-                print '            return;' 
-            else:
-                assert function.fail != ''
-                print '            return %s;' % function.fail
-        else:
-            print '            __abort();'
-
-
 class GlDispatcher(Dispatcher):
 
     def header(self):
-        Dispatcher.header(self)
         print '#ifdef RETRACE'
         print '#  ifdef WIN32'
         print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
@@ -515,6 +435,9 @@ class GlDispatcher(Dispatcher):
 
 if __name__ == '__main__':
     print
+    print '#ifndef _GLPROC_HPP_'
+    print '#define _GLPROC_HPP_'
+    print 
     print '#include "glimports.hpp"'
     print '#include "os.hpp"'
     print
@@ -531,56 +454,5 @@ if __name__ == '__main__':
     print
     dispatcher.dispatch_api(glapi)
     print
-    if 0:
-        print '''
-
-#ifdef WIN32
-
-static HINSTANCE g_hDll = NULL;
-
-static __PROC
-__getProcAddress(const char *name)
-{
-    if (!g_hDll) {
-        char szDll[MAX_PATH] = {0};
-        
-        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
-            return NULL;
-        }
-        
-        strcat(szDll, "\\\\opengl32.dll");
-        
-        g_hDll = LoadLibraryA(szDll);
-        if (!g_hDll) {
-            return NULL;
-        }
-    }
-        
-    return GetProcAddress(g_hDll, name);
-}
-
-#else
-
-static void g_module = NULL;
-
-static __PROC
-__getProcAddress(const char *name)
-{
-    if (!g_module) {
-        g_module = dlopen("libGL.so", RTLD_LAZY);
-        if (!g_module) {
-            return NULL;
-        }
-    }
-        
-    return (__PROC)dlsym(g_module, name);
-}
-
-static inline __PROC
-__glGetProcAddress(const char *name) {
-    return __glXGetProcAddressARB(name);
-}
-
-#endif
-
-    '''
+    print '#endif /* !_GLPROC_HPP_ */'
+    print

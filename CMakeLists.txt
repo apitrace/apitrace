@@ -119,7 +119,7 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    DEPENDS glproc.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
+    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
 )
 
 if (WIN32)

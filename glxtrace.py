@@ -31,6 +31,7 @@ from stdapi import API
 from glapi import glapi
 from glxapi import glxapi
 from gltrace import GlTracer
+from dispatch import function_pointer_type, function_pointer_value
 
 
 class GlxTracer(GlTracer):
@@ -42,8 +43,8 @@ class GlxTracer(GlTracer):
         if function.name.startswith("glXGetProcAddress"):
             print '    if (%s) {' % instance
             for f in glxapi.functions:
-                ptype = self.function_pointer_type(f)
-                pvalue = self.function_pointer_value(f)
+                ptype = function_pointer_type(f)
+                pvalue = function_pointer_value(f)
                 print '        if(!strcmp("%s", (const char *)procName)) {' % f.name
                 print '            %s = (%s)%s;' % (pvalue, ptype, instance)
                 print '            %s = (%s)&%s;' % (instance, function.type, f.name);
