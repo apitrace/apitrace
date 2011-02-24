@@ -67,11 +67,11 @@ def main():
         help="output filename [stdout]")
     optparser.add_option(
         '--start', metavar='FRAME',
-        type="int", dest="start", default=1,
+        type="int", dest="start", default=0,
         help="start frame [default: %default]")
     optparser.add_option(
         '--stop', metavar='FRAME',
-        type="int", dest="stop", default=9999,
+        type="int", dest="stop", default=0xffffffff,
         help="stop frame [default: %default]")
     optparser.add_option(
         '-f', '--fuzz',
@@ -94,10 +94,11 @@ def main():
     html.write('  <body>\n')
     html.write('    <table border="1">\n')
     html.write('      <tr><th>ref</th><th>src</th><th>&Delta;</th></tr>\n')
-    for frame_no in range(options.start, options.stop + 1):
-        ref_image = "%s%04u.png" % (ref_prefix, frame_no)
-        src_image = "%s%04u.png" % (src_prefix, frame_no)
-        delta_image = "%s%04u_diff.png" % (src_prefix, frame_no)
+    frame_no = options.start
+    while frame_no <= options.stop:
+        ref_image = "%s%010u.png" % (ref_prefix, frame_no)
+        src_image = "%s%010u.png" % (src_prefix, frame_no)
+        delta_image = "%s%010u_diff.png" % (src_prefix, frame_no)
         if os.path.exists(ref_image) and os.path.exists(src_image):
             html.write('      <tr>\n')
             subprocess.call(["compare", '-metric', 'AE', '-fuzz', options.fuzz, ref_image, src_image, delta_image])
@@ -106,6 +107,7 @@ def main():
             surface(html, delta_image)
             html.write('      </tr>\n')
             html.flush()
+        frame_no += 1
     html.write('    </table>\n')
     html.write('  </body>\n')
     html.write('</html>\n')

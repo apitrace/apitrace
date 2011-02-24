@@ -111,14 +111,14 @@ static void snapshot(Image::Image &image) {
 }
 
 
-static void frame_complete(void) {
+static void frame_complete(unsigned call_no) {
     ++frame;
     
     if (snapshot_prefix || compare_prefix) {
         Image::Image *ref = NULL;
         if (compare_prefix) {
             char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%04u.png", compare_prefix, frame);
+            snprintf(filename, sizeof filename, "%s%010u.png", compare_prefix, call_no);
             ref = Image::readPNG(filename);
             if (!ref) {
                 return;
@@ -132,19 +132,18 @@ static void frame_complete(void) {
 
         if (snapshot_prefix) {
             char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%04u.png", snapshot_prefix, frame);
+            snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
             if (src.writePNG(filename) && retrace::verbosity >= 0) {
                 std::cout << "Wrote " << filename << "\n";
             }
         }
 
         if (ref) {
-            std::cout << "Frame " << frame << " average precision of " << src.compare(*ref) << " bits\n";
+            std::cout << "Snapshot " << call_no << " average precision of " << src.compare(*ref) << " bits\n";
             delete ref;
         }
     }
-    
-    ws->processEvents();
+
 }
 
 
@@ -163,7 +162,7 @@ static void display(void) {
                     std::cout << *call;
                     std::cout.flush();
                 };
-                frame_complete();
+                frame_complete(call->no);
                 if (double_buffer)
                     drawable->swapBuffers();
                 else
@@ -172,7 +171,7 @@ static void display(void) {
                        name == "wglMakeCurrent") {
                 glFlush();
                 if (!double_buffer) {
-                    frame_complete();
+                    frame_complete(call->no);
                 }
             } else {
                 continue;
@@ -182,7 +181,7 @@ static void display(void) {
         if (name == "glFlush") {
             glFlush();
             if (!double_buffer) {
-                frame_complete();
+                frame_complete(call->no);
             }
         }
         
