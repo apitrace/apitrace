@@ -228,14 +228,14 @@ wglapi.add_functions([
     # WGL_ARB_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(attribute, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Const(OpaquePointer(Int)), "piAttribIList"), (Const(OpaquePointer(FLOAT)), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "nMaxFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Const(Array(Int, "__AttribList_size(piAttribIList)")), "piAttribIList"), (Const(Array(FLOAT, "__AttribList_size(pfAttribFList)")), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "(*nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 
     # WGL_ARB_make_current_read
     StdFunction(BOOL, "wglMakeContextCurrentARB", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
     StdFunction(HDC, "wglGetCurrentReadDCARB", [], sideeffects=False),
 
     # WGL_ARB_pbuffer
-    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Const(OpaquePointer(Int)), "piAttribList")]),
+    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Const(Array(Int, "__AttribList_size(piAttribList)")), "piAttribList")]),
     StdFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")], sideeffects=False),
     StdFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
     StdFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]),
@@ -244,10 +244,10 @@ wglapi.add_functions([
     # WGL_ARB_render_texture
     StdFunction(BOOL, "wglBindTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
     StdFunction(BOOL, "wglReleaseTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
-    StdFunction(BOOL, "wglSetPbufferAttribARB", [(HPBUFFERARB, "hPbuffer"), (Const(OpaquePointer(Int)), "piAttribList")]),
+    StdFunction(BOOL, "wglSetPbufferAttribARB", [(HPBUFFERARB, "hPbuffer"), (Const(Array(Int, "__AttribList_size(piAttribList)")), "piAttribList")]),
 
     # WGL_ARB_create_context
-    StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (Const(OpaquePointer(Int)), "attribList")]),
+    StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (Const(Array(Int, "__AttribList_size(attribList)")), "attribList")]),
 
     # WGL_EXT_extensions_string
     StdFunction(Const(CString), "wglGetExtensionsStringEXT", [], sideeffects=False),

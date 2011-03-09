@@ -1404,4 +1404,24 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
 #define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height, 0)
 #define __glPolygonStipple_size() __glBitmap_size(32, 32)
 
+
+/* 
+ * 0 terminated integer/float attribute list.
+ */
+template<class T>
+static inline size_t
+__AttribList_size(const T *pAttribList)
+{
+    size_t size = 0;
+
+    if (pAttribList) {
+        do {
+            ++size;
+        } while (*pAttribList++);
+    }
+
+    return size;
+}
+
+
 #endif /* _GL_HELPERS_HPP_ */
