@@ -55,6 +55,11 @@ Array::~Array() {
     }
 }
 
+Blob::~Blob() {
+    // FIXME
+    //delete [] buf;
+}
+
 
 void Null::visit(Visitor &visitor) { visitor.visit(this); }
 void Bool::visit(Visitor &visitor) { visitor.visit(this); } 

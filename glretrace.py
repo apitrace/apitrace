@@ -61,14 +61,17 @@ class GlRetracer(Retracer):
         "glDrawRangeElements",
         "glDrawRangeElementsBaseVertex",
         "glDrawRangeElementsEXT",
-        "glMultiDrawElements",
-        "glMultiDrawElementsBaseVertex",
-        "glMultiDrawElementsEXT",
-        "glMultiModeDrawElementsIBM",
+        #"glMultiDrawElements",
+        #"glMultiDrawElementsBaseVertex",
+        #"glMultiDrawElementsEXT",
+        #"glMultiModeDrawElementsIBM",
     ])
 
     def call_function(self, function):
-        if function.name in self.draw_elements_function_names:
+        print '    if (Trace::Parser::version < 1) {'
+
+        if function.name in self.draw_array_function_names or \
+           function.name in self.draw_elements_function_names:
             print '    GLint __array_buffer = 0;'
             print '    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
@@ -81,6 +84,8 @@ class GlRetracer(Retracer):
             print '    if (!__element_array_buffer) {'
             self.fail_function(function)
             print '    }'
+
+        print '    }'
 
         if function.name == "glViewport":
             print '    if (x + width > __window_width) {'
@@ -129,15 +134,11 @@ class GlRetracer(Retracer):
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.pointer_function_names and arg.name == 'pointer':
-            print '    %s = dynamic_cast<void *>(&%s);' % (lvalue, rvalue)
+            print '    %s = %s.blob();' % (lvalue, rvalue)
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices':
-            print '    if (dynamic_cast<Trace::Null *>(&%s)) {' % rvalue
-            print '        %s = 0;' % (lvalue)
-            print '    } else {'
-            print '        %s = (%s)(uintptr_t)(%s);' % (lvalue, arg_type, rvalue)
-            print '    }'
+            print '    %s = %s.blob();' % (lvalue, rvalue)
             return
 
         if function.name.startswith('glUniform') and function.args[0].name == arg.name == 'location':

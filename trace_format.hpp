@@ -32,7 +32,7 @@
 
 namespace Trace {
 
-#define TRACE_VERSION 0
+#define TRACE_VERSION 1
 
 enum Event {
     EVENT_ENTER = 0,

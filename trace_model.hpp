@@ -231,10 +231,7 @@ public:
         buf = new char[_size];
     }
 
-    ~Blob() {
-        // FIXME
-        //delete [] buf;
-    }
+    ~Blob();
 
     void visit(Visitor &visitor);
 

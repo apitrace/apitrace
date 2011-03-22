@@ -86,6 +86,61 @@ __glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
     return stride*maxIndex + elementSize;
 }
 
+#define __glVertexPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glNormalPointer_size(type, stride, maxIndex) __glArrayPointer_size(3, type, stride, maxIndex)
+#define __glColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glIndexPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
+#define __glTexCoordPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glEdgeFlagPointer_size(stride, maxIndex) __glArrayPointer_size(1, GL_BOOL, stride, maxIndex)
+#define __glFogCoordPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
+#define __glSecondaryColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+
+static inline size_t
+__glDrawArrays_maxindex(GLint first, GLsizei count)
+{
+    return first + count - 1;
+}
+
+static inline size_t
+__glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *_indices)
+{
+    size_t maxindex = 0;
+    unsigned i;
+
+    if (type == GL_UNSIGNED_BYTE) {
+        const GLubyte *indices = (const GLubyte *)_indices;
+        for (i = 0; i < count; ++i) {
+            if (indices[i] > maxindex) {
+                maxindex = indices[i];
+            }
+        }
+    } else if (type == GL_UNSIGNED_SHORT) {
+        const GLushort *indices = (const GLushort *)_indices;
+        for (i = 0; i < count; ++i) {
+            if (indices[i] > maxindex) {
+                maxindex = indices[i];
+            }
+        }
+    } else if (type == GL_UNSIGNED_INT) {
+        const GLuint *indices = (const GLuint *)_indices;
+        for (i = 0; i < count; ++i) {
+            if (indices[i] > maxindex) {
+                maxindex = indices[i];
+            }
+        }
+    } else {
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+    }
+
+    return maxindex;
+}
+
+static inline size_t
+__glDrawRangeElements_maxindex(GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices)
+{
+    return __glDrawElements_maxindex(count, type, indices);
+}
+
 static inline size_t
 __glCallLists_size(GLsizei n, GLenum type)
 {

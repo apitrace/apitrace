@@ -27,8 +27,39 @@
 """GL tracing generator."""
 
 
+import stdapi
+import glapi
 from glxapi import glxapi
 from trace import Tracer, dump_instance
+
+
+class TypeGetter(stdapi.Visitor):
+    '''Determine which glGet*v function that matches the specified type.'''
+
+    def visit_const(self, const):
+        return self.visit(const.type)
+
+    def visit_alias(self, alias):
+        if alias.expr == 'GLboolean':
+            return 'glGetBooleanv', alias.expr
+        elif alias.expr == 'GLdouble':
+            return 'glGetDoublev', alias.expr
+        elif alias.expr == 'GLfloat':
+            return 'glGetFloatv', alias.expr
+        elif alias.expr in ('GLint', 'GLsizei'):
+            return 'glGetIntegerv', 'GLint'
+        else:
+            print alias.expr
+            assert False
+    
+    def visit_enum(self, enum):
+        return 'glGetIntegerv', 'GLint'
+
+    def visit_bitmask(self, bitmask):
+        return 'glGetIntegerv', 'GLint'
+
+    def visit_opaque(self, pointer):
+        return 'glGetPointerv', 'GLvoid *'
 
 
 class GlTracer(Tracer):
@@ -41,181 +72,129 @@ class GlTracer(Tracer):
         Tracer.footer(self, api)
         self.state_tracker_impl(api)
 
-    array_names = {
-        "VERTEX": "glVertexPointer",
-        "NORMAL": "glNormalPointer",
-        "COLOR": "glColorPointer",
-        "INDEX": "glIndexPointer",
-        "TEX_COORD": "glTexCoordPointer",
-        "EDGE_FLAG": "glEdgeFlagPointer",
-        "FOG_COORD": "glFogCoordPointer",
-        "SECONDARY_COLOR": "glSecondaryColorPointer",
-    }
-
-    pointer_function_names = {
-        "glVertexPointer": "VERTEX",
-        "glNormalPointer": "NORMAL",
-        "glColorPointer": "COLOR",
-        "glIndexPointer": "INDEX",
-        "glTexCoordPointer": "TEX_COORD",
-        "glEdgeFlagPointer": "EDGE_FLAG",
-        "glFogCoordPointer": "FOG_COORD",
-        "glSecondaryColorPointer": "SECONDARY_COLOR",
-        #"glInterleavedArrays": ("InterleavedArrays", None)
-        #"glVertexPointerEXT": "VERTEX",
-        #"glNormalPointerEXT": "NORMAL",
-        #"glColorPointerEXT": "COLOR",
-        #"glIndexPointerEXT": "INDEX",
-        #"glTexCoordPointerEXT": "TEX_COORD",
-        #"glEdgeFlagPointerEXT": "EDGE_FLAG",
-        #"glFogCoordPointerEXT": "FOG_COORD",
-        #"glSecondaryColorPointerEXT": "SECONDARY_COLOR",
-
-        #"glVertexAttribPointer": "VertexAttribPointer",
-        #"glVertexAttribPointerARB": "VertexAttribPointer",
-        #"glVertexAttribPointerNV": "VertexAttribPointer",
-        #"glVertexAttribLPointer": "VertexAttribLPointer",
-        
-        #"glMatrixIndexPointerARB": "MatrixIndexPointer",
-    }
-
-    bind_buffer_enums = [
-        'ARRAY_BUFFER',
-        'ELEMENT_ARRAY_BUFFER',
-        'PIXEL_PACK_BUFFER',
-        'PIXEL_UNPACK_BUFFER',
-    ]
-
-    client_state_enums = [
-         'COLOR_ARRAY',
-         'EDGE_FLAG_ARRAY', 
-         'FOG_COORD_ARRAY', 
-         'INDEX_ARRAY', 
-         'NORMAL_ARRAY', 
-         'SECONDARY_COLOR_ARRAY', 
-         'TEXTURE_COORD_ARRAY', 
-         'VERTEX_ARRAY',
+    arrays = [
+        ("Vertex", "VERTEX"),
+        ("Normal", "NORMAL"),
+        ("Color", "COLOR"),
+        ("Index", "INDEX"),
+        ("TexCoord", "TEXTURE_COORD"),
+        ("EdgeFlag", "EDGE_FLAG"),
+        ("FogCoord", "FOG_COORD"),
+        ("SecondaryColor", "SECONDARY_COLOR"),
     ]
 
     def state_tracker_decl(self, api):
         # A simple state tracker to track the pointer values
 
-        # define the NEW_XXXX dirty flags
-        value = 1
-        for array_name in self.array_names.iterkeys():
-            dirtyflag = "NEW_%s" % array_name.upper()
-            print '#define %s 0x%x' % (dirtyflag, value)
-            value <<= 1
-        print
-
-        # declare the state structure
-        print 'struct {'
-        for enum in self.bind_buffer_enums:
-            print '    GLuint %s;' % (enum.lower(),)
-        for enum in self.client_state_enums:
-            print '    GLboolean %s;' % (enum.lower(),)
-        for array_name, function_name in self.array_names.iteritems():
-            function = api.get_function_by_name(function_name)
-            print '    struct {'
-            for arg in function.args:
-                print '        %s %s;' % (arg.type, arg.name)
-            print '    } %s;' % array_name.lower()
-        print '    unsigned dirty;'
-        print '} __state;'
-        print
-        print 'static void __state_update(GLsizei maxIndex);'
+        print 'static void __trace_arrays(GLsizei maxindex);'
         print
     
+    array_pointer_function_names = set((
+        "glVertexPointer",
+        "glNormalPointer",
+        "glColorPointer",
+        "glIndexPointer",
+        "glTexCoordPointer",
+        "glEdgeFlagPointer",
+        "glFogCoordPointer",
+        "glSecondaryColorPointer",
+
+        "glInterleavedArrays",
+
+        #"glVertexPointerEXT",
+        #"glNormalPointerEXT",
+        #"glColorPointerEXT",
+        #"glIndexPointerEXT",
+        #"glTexCoordPointerEXT",
+        #"glEdgeFlagPointerEXT",
+        #"glFogCoordPointerEXT",
+        #"glSecondaryColorPointerEXT",
+
+        #"glVertexAttribPointer",
+        #"glVertexAttribPointerARB",
+        #"glVertexAttribPointerNV",
+        #"glVertexAttribLPointer",
+        
+        #"glMatrixIndexPointerARB",
+    ))
+
+    draw_function_names = set((
+        'glDrawArrays',
+        'glDrawElements',
+        'glDrawRangeElements',
+    ))
+
     def trace_function_impl_body(self, function):
-        # Track bound VBOs
-        if function.name in ('glBindBuffer', 'glBindBufferARB'):
-            print '    switch(%s) {' % function.args[0].name
-            for enum in self.bind_buffer_enums:
-                print '    case GL_%s:' % enum
-                print '        __state.%s = %s;' % (enum.lower(), function.args[1].name)
-                print '        break;'
-            print '    }'
-
-        # Track enabled arrays
-        if function.name == 'glEnableClientState':
-            print '    switch(%s) {' % function.args[0].name
-            for enum in self.client_state_enums:
-                print '    case GL_%s:' % enum
-                print '        __state.%s = GL_TRUE;' % (enum.lower(),)
-                print '        break;'
-            print '    }'
-        if function.name == 'glDisableClientState':
-            print '    switch(%s) {' % function.args[0].name
-            for enum in self.client_state_enums:
-                print '    case GL_%s:' % enum
-                print '        __state.%s = GL_FALSE;' % (enum.lower(),)
-                print '        break;'
-            print '    }'
-
-        # Track array pointers
-        if function.name in self.pointer_function_names:
-            array_name = self.pointer_function_names[function.name]
-            dirtyflag = "NEW_%s" % array_name.upper()
-            for arg in function.args:
-                assert not arg.output
-                print '    __state.%s.%s = %s;' % (array_name.lower(), arg.name, arg.name)
-            print '    __state.dirty |= %s; ' % dirtyflag
-
-            # Defer tracing
+        # Defer tracing of array pointers
+        if function.name in self.array_pointer_function_names:
+            print '    GLint __array_buffer = 0;'
+            print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+            print '    if (!__array_buffer) {'
             self.dispatch_function(function)
-            return
+            print '        return;'
+            print '    }'
 
-        if function.name == 'glDrawArrays':
-            print '   __state_update(first + count - 1);'
+        if function.name in self.draw_function_names:
+            arg_names = ', '.join([arg.name for arg in function.args[1:]])
+            print '    __trace_arrays(__%s_maxindex(%s));' % (function.name, arg_names)
         
         Tracer.trace_function_impl_body(self, function)
+
+    def dump_arg_instance(self, function, arg):
+        if function.name in self.draw_function_names and arg.name == 'indices':
+            print '    Trace::LiteralBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
+        else:
+            dump_instance(arg.type, arg.name)
 
     def state_tracker_impl(self, api):
         # A simple state tracker to track the pointer values
 
         # update the state
-        print 'static void __state_update(GLsizei maxIndex)'
+        print 'static void __trace_arrays(GLsizei maxindex)'
         print '{'
-        print '    GLint __array_buffer = 0;'
-        print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
-        for array_name, function_name in self.array_names.iteritems():
+        for camelcase_name, uppercase_name in self.arrays:
+            function_name = 'gl%sPointer' % camelcase_name
+            enable_name = 'GL_%s_ARRAY' % uppercase_name
+            binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
             function = api.get_function_by_name(function_name)
-            dirtyflag = "NEW_%s" % array_name.upper()
-            if array_name == 'TEX_COORD':
-                enableflag = 'TEXTURE_COORD_ARRAY'.lower()
-            else:
-                enableflag = '%s_array' % array_name.lower()
-            print '    if (__state.%s && (__state.dirty & %s)) {' % (enableflag, dirtyflag)
-            print '        unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+
+            print '    // %s' % function.name
+            print '    {'
+            print '        GLboolean __enabled = GL_FALSE;'
+            print '        __glGetBooleanv(%s, &__enabled);' % enable_name
+            print '        if (__enabled) {'
+            print '            GLint __binding = 0;'
+            print '            __glGetIntegerv(%s, &__binding);' % binding_name
+            print '            if (!__binding) {'
+
+            # Get the arguments via glGet*
+            for arg in function.args:
+                arg_get_enum = 'GL_%s_ARRAY_%s' % (uppercase_name, arg.name.upper())
+                arg_get_function, arg_type = TypeGetter().visit(arg.type)
+                print '                %s %s = 0;' % (arg_type, arg.name)
+                print '                __%s(%s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
+            
+            arg_names = ', '.join([arg.name for arg in function.args[:-1]])
+            print '                size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
+
+            # Emit a fake function
+            print '                unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
-                value = '__state.%s.%s' % (array_name.lower(), arg.name)
-                print '        Trace::BeginArg(%u);' % (arg.index,)
+                print '                Trace::BeginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
-                    dump_instance(arg.type, value)
+                    dump_instance(arg.type, arg.name)
                 else:
-                    print '        if (__state.array_buffer) {'
-                    print '            Trace::LiteralOpaque((const void *)%s);' % value
-                    print '            __state.dirty &= ~%s;' % dirtyflag
-                    print '        } else {'
-                    if array_name in ('INDEX', 'EDGE_FLAG', 'FOG_COORD'):
-                        size = '1'
-                    elif array_name == 'NORMAL':
-                        size = '3'
-                    else:
-                        size = '__state.%s.size' % array_name.lower()
-                    if array_name == 'EDGE_FLAG':
-                        type = 'GL_BOOL'
-                    else:
-                        type = '__state.%s.type' % array_name.lower()
-                    stride = '__state.%s.stride' % array_name.lower()
-                    print '            Trace::LiteralBlob((const void *)%s, __glArrayPointer_size(%s, %s, %s, maxIndex));' % (value, size, type, stride)
-                    print '        }'
-                    print '        Trace::EndArg();'
-            print '        Trace::EndEnter();'
-            print '        Trace::BeginLeave(__call);'
-            print '        Trace::EndLeave();'
+                    print '                Trace::LiteralBlob((const void *)%s, __size);' % (arg.name)
+                print '                Trace::EndArg();'
+            
+            print '                Trace::EndEnter();'
+            print '                Trace::BeginLeave(__call);'
+            print '                Trace::EndLeave();'
+            print '            }'
+            print '        }'
             print '    }'
+            print
         print '}'
         print
 

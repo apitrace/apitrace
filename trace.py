@@ -350,8 +350,11 @@ class Tracer:
 
     def dump_arg(self, function, arg):
         print '    Trace::BeginArg(%u);' % (arg.index,)
-        dump_instance(arg.type, arg.name)
+        self.dump_arg_instance(function, arg)
         print '    Trace::EndArg();'
+
+    def dump_arg_instance(self, function, arg):
+        dump_instance(arg.type, arg.name)
 
     def wrap_arg(self, function, arg):
         wrap_instance(arg.type, arg.name)

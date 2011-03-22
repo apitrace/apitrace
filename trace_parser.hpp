@@ -69,6 +69,8 @@ protected:
     unsigned next_call_no;
 
 public:
+    static unsigned long long version;
+
     Parser() {
         file = NULL;
         next_call_no = 0;
@@ -79,15 +81,13 @@ public:
     }
 
     bool open(const char *filename) {
-        unsigned long long version;
-
         file = gzopen(filename, "rb");
         if (!file) {
             return false;
         }
 
         version = read_uint();
-        if (version != TRACE_VERSION) {
+        if (version > TRACE_VERSION) {
             std::cerr << "error: unsupported format version" << version << "\n";
             return false;
         }
@@ -398,6 +398,9 @@ public:
         return c;
     }
 };
+
+
+unsigned long long Trace::Parser::version = 0;
 
 
 } /* namespace Trace */
