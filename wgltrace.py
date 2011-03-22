@@ -35,8 +35,6 @@ from gltrace import GlTracer
 from codegen import *
 
 
-
-
 class WglTracer(GlTracer):
 
     def get_function_address(self, function):
@@ -103,8 +101,8 @@ __getPublicProcAddress(LPCSTR lpProcName)
     print 'extern "C" {'
     print
     api = API()
-    api.add_api(wglapi)
     api.add_api(glapi)
+    api.add_api(wglapi)
     tracer = WglTracer()
     tracer.trace_api(api)
     print
