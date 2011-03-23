@@ -37,6 +37,35 @@ class GlRetracer(Retracer):
     def retrace_function(self, function):
         Retracer.retrace_function(self, function)
 
+    array_pointer_function_names = set((
+        "glVertexPointer",
+        "glNormalPointer",
+        "glColorPointer",
+        "glIndexPointer",
+        "glTexCoordPointer",
+        "glEdgeFlagPointer",
+        "glFogCoordPointer",
+        "glSecondaryColorPointer",
+
+        "glInterleavedArrays",
+
+        #"glVertexPointerEXT",
+        #"glNormalPointerEXT",
+        #"glColorPointerEXT",
+        #"glIndexPointerEXT",
+        #"glTexCoordPointerEXT",
+        #"glEdgeFlagPointerEXT",
+        #"glFogCoordPointerEXT",
+        #"glSecondaryColorPointerEXT",
+
+        #"glVertexAttribPointer",
+        #"glVertexAttribPointerARB",
+        #"glVertexAttribPointerNV",
+        #"glVertexAttribLPointer",
+        
+        #"glMatrixIndexPointerARB",
+    ))
+
     draw_array_function_names = set([
         "glDrawArrays",
         "glDrawArraysEXT",
@@ -67,26 +96,33 @@ class GlRetracer(Retracer):
         #"glMultiModeDrawElementsIBM",
     ])
 
+    def retrace_function_body(self, function):
+        is_array_pointer = function.name in self.array_pointer_function_names
+        is_draw_array = function.name in self.draw_array_function_names
+        is_draw_elements = function.name in self.draw_elements_function_names
+
+        if is_array_pointer or is_draw_array or is_draw_elements:
+            print '    if (Trace::Parser::version < 1) {'
+
+            if is_array_pointer or is_draw_array:
+                print '        GLint __array_buffer = 0;'
+                print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+                print '        if (!__array_buffer) {'
+                self.fail_function(function)
+                print '        }'
+
+            if is_draw_elements:
+                print '        GLint __element_array_buffer = 0;'
+                print '        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
+                print '        if (!__element_array_buffer) {'
+                self.fail_function(function)
+                print '        }'
+            
+            print '    }'
+
+        Retracer.retrace_function_body(self, function)
+
     def call_function(self, function):
-        print '    if (Trace::Parser::version < 1) {'
-
-        if function.name in self.draw_array_function_names or \
-           function.name in self.draw_elements_function_names:
-            print '    GLint __array_buffer = 0;'
-            print '    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
-            print '    if (!__array_buffer) {'
-            self.fail_function(function)
-            print '    }'
-
-        if function.name in self.draw_elements_function_names:
-            print '    GLint __element_array_buffer = 0;'
-            print '    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
-            print '    if (!__element_array_buffer) {'
-            self.fail_function(function)
-            print '    }'
-
-        print '    }'
-
         if function.name == "glViewport":
             print '    if (x + width > __window_width) {'
             print '        __window_width = x + width;'
