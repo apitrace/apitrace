@@ -84,9 +84,31 @@ class GlTracer(Tracer):
     ]
 
     def state_tracker_decl(self, api):
-        # A simple state tracker to track the pointer values
+        # Whether we need user arrays
+        print 'static inline bool __need_user_arrays(void)'
+        print '{'
+        for camelcase_name, uppercase_name in self.arrays:
+            function_name = 'gl%sPointer' % camelcase_name
+            enable_name = 'GL_%s_ARRAY' % uppercase_name
+            binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
+            print '    // %s' % function_name
+            print '    {'
+            print '        GLboolean __enabled = GL_FALSE;'
+            print '        __glGetBooleanv(%s, &__enabled);' % enable_name
+            print '        if (__enabled) {'
+            print '            GLint __binding = 0;'
+            print '            __glGetIntegerv(%s, &__binding);' % binding_name
+            print '            if (!__binding) {'
+            print '                return true;'
+            print '            }'
+            print '        }'
+            print '    }'
+            print
+        print '    return false;'
+        print '}'
+        print
 
-        print 'static void __trace_arrays(GLsizei maxindex);'
+        print 'static void __trace_user_arrays(GLuint maxindex);'
         print
     
     array_pointer_function_names = set((
@@ -125,7 +147,7 @@ class GlTracer(Tracer):
     ))
 
     def trace_function_impl_body(self, function):
-        # Defer tracing of array pointers
+        # Defer tracing of user array pointers...
         if function.name in self.array_pointer_function_names:
             print '    GLint __array_buffer = 0;'
             print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
@@ -134,23 +156,34 @@ class GlTracer(Tracer):
             print '        return;'
             print '    }'
 
+        # ... to the draw calls
         if function.name in self.draw_function_names:
+            print '    if (__need_user_arrays()) {'
             arg_names = ', '.join([arg.name for arg in function.args[1:]])
-            print '    __trace_arrays(__%s_maxindex(%s));' % (function.name, arg_names)
+            print '        GLuint maxindex = __%s_maxindex(%s);' % (function.name, arg_names)
+            print '        __trace_user_arrays(maxindex);'
+            print '    }'
         
         Tracer.trace_function_impl_body(self, function)
 
     def dump_arg_instance(self, function, arg):
         if function.name in self.draw_function_names and arg.name == 'indices':
-            print '    Trace::LiteralBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
-        else:
-            dump_instance(arg.type, arg.name)
+            print '    GLint __element_array_buffer = 0;'
+            print '    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
+            print '    if (!__element_array_buffer) {'
+            print '        Trace::LiteralBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
+            print '    } else {'
+            print '        Trace::LiteralOpaque((const void *)%s);' % (arg.name)
+            print '    }'
+            return
+
+        Tracer.dump_arg_instance(self, function, arg)
 
     def state_tracker_impl(self, api):
         # A simple state tracker to track the pointer values
 
         # update the state
-        print 'static void __trace_arrays(GLsizei maxindex)'
+        print 'static void __trace_user_arrays(GLuint maxindex)'
         print '{'
         for camelcase_name, uppercase_name in self.arrays:
             function_name = 'gl%sPointer' % camelcase_name
