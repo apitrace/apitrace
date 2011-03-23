@@ -282,6 +282,10 @@ static void display(void) {
             // XXX: We ignore the majority of the OS-specific calls for now
             if (name == "glXSwapBuffers" ||
                 name == "wglSwapBuffers") {
+                if (verbosity >= 1) {
+                    std::cout << *call;
+                    std::cout.flush();
+                };
                 frame_complete();
                 if (double_buffer)
                     glutSwapBuffers();
