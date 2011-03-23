@@ -79,9 +79,9 @@ __gl_type_size(GLenum type)
 static inline size_t
 __glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
 {
-    GLsizei elementSize = size*__gl_type_size(type);
+    size_t elementSize = size*__gl_type_size(type);
     if (!stride) {
-        stride = elementSize;
+        stride = (GLsizei)elementSize;
     }
     return stride*maxIndex + elementSize;
 }

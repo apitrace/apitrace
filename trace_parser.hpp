@@ -319,7 +319,7 @@ public:
         size_t size = read_uint();
         Blob *blob = new Blob(size);
         if (size) {
-            gzread(file, blob->buf, size);
+            gzread(file, blob->buf, (unsigned)size);
         }
         return blob;
     }
@@ -360,7 +360,7 @@ public:
             return std::string();
         }
         char * buf = new char[len];
-        gzread(file, buf, len);
+        gzread(file, buf, (unsigned)len);
         std::string value(buf, len);
         delete [] buf;
 #if TRACE_VERBOSE
