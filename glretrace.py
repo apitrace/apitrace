@@ -347,7 +347,8 @@ static void usage(void) {
         "  -c PREFIX    compare against snapshots\n"
         "  -db          use a double buffer visual\n"
         "  -s PREFIX    take snapshots\n"
-        "  -v           verbose output\n";
+        "  -v           verbose output\n"
+        "  -w           wait on final frame\n";
 }
 
 int main(int argc, char **argv)
