@@ -174,6 +174,11 @@ class Retracer:
 
     def retrace_function(self, function):
         print 'static void retrace_%s(Trace::Call &call) {' % function.name
+        self.retrace_function_body(function)
+        print '}'
+        print
+
+    def retrace_function_body(self, function):
         success = True
         for arg in function.args:
             arg_type = ConstRemover().visit(arg.type)
@@ -205,8 +210,6 @@ class Retracer:
                 ValueWrapper().visit(function.type, lvalue, rvalue)
             except NotImplementedError:
                 print '   // FIXME: result'
-        print '}'
-        print
 
     def fail_function(self, function):
         print '    if (verbosity >= 0)'

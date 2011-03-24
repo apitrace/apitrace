@@ -30,11 +30,13 @@ covers all the functions we support.
 
 
 import stdapi
+from dispatch import Dispatcher
 from glapi import glapi
 from glxapi import glxapi
 from wglapi import wglapi
 
 
+# See http://www.opengl.org/registry/ABI/
 public_symbols = set([
 	"glAccum",
 	"glAlphaFunc",
@@ -398,142 +400,59 @@ public_symbols = set([
 	"wglUseFontBitmapsW",
 	"wglUseFontOutlinesA",
 	"wglUseFontOutlinesW",
+
+    "glXGetProcAddressARB",
+    "glXGetProcAddress",
 ])
 
 
-class Dispatcher:
+class GlDispatcher(Dispatcher):
 
-    def function_pointer_type(self, function):
-        return '__PFN' + function.name.upper()
-
-    def function_pointer_value(self, function):
-        return '__' + function.name + '_ptr'
-
-    def dispatch_function(self, function):
-        if function.name in public_symbols:
-            return
-
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        print 'typedef ' + function.prototype('* %s' % ptype) + ';'
-        print 'static %s %s = NULL;' % (ptype, pvalue)
+    def header(self):
+        print '#ifdef RETRACE'
+        print '#  ifdef WIN32'
+        print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
+        print '#  else'
+        print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
+        print '#  endif'
+        print '#  define __abort() OS::Abort()'
+        print '#else /* !RETRACE */'
+        print '#  ifdef WIN32'
+        print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
+        print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
+        print '#  else'
+        print '#    define __getPublicProcAddress(name) dlsym(RTLD_NEXT, name)'
+        print '#    define __getPrivateProcAddress(name) __glXGetProcAddressARB((const GLubyte *)(name))'
+        print '     static inline __GLXextFuncPtr __glXGetProcAddressARB(const GLubyte * procName);'
+        print '#  endif'
+        print '#  define __abort() Trace::Abort()'
+        print '#endif /* !RETRACE */'
         print
-        print 'static inline ' + function.prototype('__' + function.name) + ' {'
-        if function.type is stdapi.Void:
-            ret = ''
-        else:
-            ret = 'return '
-        self.get_true_pointer(function)
-        pvalue = self.function_pointer_value(function)
-        print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
-        print '}'
-        print
-        print '#define %s __%s' % (function.name, function.name)
-
-    def get_true_pointer(self, function):
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        if function.name in public_symbols:
-            get_proc_address = '__getProcAddress'
-        else:
-            get_proc_address = '__glGetProcAddress'
-        print '    if (!%s) {' % (pvalue,)
-        print '        %s = (%s)%s("%s");' % (pvalue, ptype, get_proc_address, function.name)
-        print '        if (!%s) {' % (pvalue,)
-        self.fail_function(function)
-        print '        }'
-        print '    }'
-
-    def fail_function(self, function):
-        print '    std::cerr << "error: unavailable function \\"%s\\"\\n";' % function.name
-        if function.fail is not None:
-            if function.type is stdapi.Void:
-                assert function.fail == ''
-                print '            return;' 
-            else:
-                assert function.fail != ''
-                print '            return %s;' % function.fail
-        else:
-            print '            abort();'
+        
+    def is_public_function(self, function):
+        return function.name in public_symbols
 
 
 if __name__ == '__main__':
     print
+    print '#ifndef _GLPROC_HPP_'
+    print '#define _GLPROC_HPP_'
+    print 
     print '#include "glimports.hpp"'
     print '#include "os.hpp"'
     print
-    if 0:
-        print 'typedef void (*__PROC)(void);'
-        print
-        print 'static __PROC __getProcAddress(const char *name);'
-        print
-        print 'static __PROC __glGetProcAddress(const char *name);'
-    else:
-        print '#ifdef WIN32'
-        print '#define __glGetProcAddress wglGetProcAddress'
-        print '#else'
-        print '#define __glGetProcAddress(name) glXGetProcAddress((const GLubyte *)(name))'
-        print '#endif'
     print
-    dispatcher = Dispatcher()
-    for function in glapi.functions:
-        dispatcher.dispatch_function(function)
+    dispatcher = GlDispatcher()
+    dispatcher.header()
+    print '#ifdef WIN32'
     print
-    if 0:
-        print '''
-
-#ifdef WIN32
-
-static HINSTANCE g_hDll = NULL;
-
-static __PROC
-__getProcAddress(const char *name)
-{
-    if (!g_hDll) {
-        char szDll[MAX_PATH] = {0};
-        
-        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
-            return NULL;
-        }
-        
-        strcat(szDll, "\\\\opengl32.dll");
-        
-        g_hDll = LoadLibraryA(szDll);
-        if (!g_hDll) {
-            return NULL;
-        }
-    }
-        
-    return GetProcAddress(g_hDll, name);
-}
-
-static inline __PROC
-__glGetProcAddress(const char *name) {
-    return __wglGetProcAddress(name);
-}
-
-#else
-
-static void g_module = NULL;
-
-static __PROC
-__getProcAddress(const char *name)
-{
-    if (!g_module) {
-        g_module = dlopen("libGL.so", RTLD_LAZY);
-        if (!g_module) {
-            return NULL;
-        }
-    }
-        
-    return (__PROC)dlsym(g_module, name);
-}
-
-static inline __PROC
-__glGetProcAddress(const char *name) {
-    return __glXGetProcAddress(name);
-}
-
-#endif
-
-    '''
+    dispatcher.dispatch_api(wglapi)
+    print '#else /* !WIN32 */'
+    print
+    dispatcher.dispatch_api(glxapi)
+    print '#endif /* !WIN32 */'
+    print
+    dispatcher.dispatch_api(glapi)
+    print
+    print '#endif /* !_GLPROC_HPP_ */'
+    print

@@ -37,6 +37,35 @@ class GlRetracer(Retracer):
     def retrace_function(self, function):
         Retracer.retrace_function(self, function)
 
+    array_pointer_function_names = set((
+        "glVertexPointer",
+        "glNormalPointer",
+        "glColorPointer",
+        "glIndexPointer",
+        "glTexCoordPointer",
+        "glEdgeFlagPointer",
+        "glFogCoordPointer",
+        "glSecondaryColorPointer",
+
+        "glInterleavedArrays",
+
+        #"glVertexPointerEXT",
+        #"glNormalPointerEXT",
+        #"glColorPointerEXT",
+        #"glIndexPointerEXT",
+        #"glTexCoordPointerEXT",
+        #"glEdgeFlagPointerEXT",
+        #"glFogCoordPointerEXT",
+        #"glSecondaryColorPointerEXT",
+
+        #"glVertexAttribPointer",
+        #"glVertexAttribPointerARB",
+        #"glVertexAttribPointerNV",
+        #"glVertexAttribLPointer",
+        
+        #"glMatrixIndexPointerARB",
+    ))
+
     draw_array_function_names = set([
         "glDrawArrays",
         "glDrawArraysEXT",
@@ -61,28 +90,39 @@ class GlRetracer(Retracer):
         "glDrawRangeElements",
         "glDrawRangeElementsBaseVertex",
         "glDrawRangeElementsEXT",
-        "glMultiDrawElements",
-        "glMultiDrawElementsBaseVertex",
-        "glMultiDrawElementsEXT",
-        "glMultiModeDrawElementsIBM",
+        #"glMultiDrawElements",
+        #"glMultiDrawElementsBaseVertex",
+        #"glMultiDrawElementsEXT",
+        #"glMultiModeDrawElementsIBM",
     ])
 
+    def retrace_function_body(self, function):
+        is_array_pointer = function.name in self.array_pointer_function_names
+        is_draw_array = function.name in self.draw_array_function_names
+        is_draw_elements = function.name in self.draw_elements_function_names
+
+        if is_array_pointer or is_draw_array or is_draw_elements:
+            print '    if (Trace::Parser::version < 1) {'
+
+            if is_array_pointer or is_draw_array:
+                print '        GLint __array_buffer = 0;'
+                print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+                print '        if (!__array_buffer) {'
+                self.fail_function(function)
+                print '        }'
+
+            if is_draw_elements:
+                print '        GLint __element_array_buffer = 0;'
+                print '        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
+                print '        if (!__element_array_buffer) {'
+                self.fail_function(function)
+                print '        }'
+            
+            print '    }'
+
+        Retracer.retrace_function_body(self, function)
+
     def call_function(self, function):
-        if (function.name in self.draw_array_function_names or 
-            function.name in self.draw_elements_function_names):
-            print '    GLint __array_buffer = 0;'
-            print '    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
-            print '    if (!__array_buffer) {'
-            self.fail_function(function)
-            print '    }'
-
-        if function.name in self.draw_elements_function_names:
-            print '    GLint __element_array_buffer = 0;'
-            print '    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
-            print '    if (!__element_array_buffer) {'
-            self.fail_function(function)
-            print '    }'
-
         if function.name == "glViewport":
             print '    if (x + width > __window_width) {'
             print '        __window_width = x + width;'
@@ -106,36 +146,35 @@ class GlRetracer(Retracer):
 
     pointer_function_names = set([
         "glColorPointer",
-        "glColorPointerEXT",
+        #"glColorPointerEXT",
         "glEdgeFlagPointer",
-        "glEdgeFlagPointerEXT",
+        #"glEdgeFlagPointerEXT",
         "glFogCoordPointer",
-        "glFogCoordPointerEXT",
+        #"glFogCoordPointerEXT",
         "glIndexPointer",
-        "glIndexPointerEXT",
-        "glMatrixIndexPointerARB",
+        #"glIndexPointerEXT",
+        #"glMatrixIndexPointerARB",
         "glNormalPointer",
-        "glNormalPointerEXT",
+        #"glNormalPointerEXT",
         "glSecondaryColorPointer",
-        "glSecondaryColorPointerEXT",
+        #"glSecondaryColorPointerEXT",
         "glTexCoordPointer",
-        "glTexCoordPointerEXT",
-        "glVertexAttribLPointer",
-        "glVertexAttribPointer",
-        "glVertexAttribPointerARB",
-        "glVertexAttribPointerNV",
+        #"glTexCoordPointerEXT",
+        #"glVertexAttribLPointer",
+        #"glVertexAttribPointer",
+        #"glVertexAttribPointerARB",
+        #"glVertexAttribPointerNV",
         "glVertexPointer",
-        "glVertexPointerEXT",
+        #"glVertexPointerEXT",
     ])
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
-        if (function.name in self.pointer_function_names and arg.name == 'pointer' or
-            function.name in self.draw_elements_function_names and arg.name == 'indices'):
-            print '    if (dynamic_cast<Trace::Null *>(&%s)) {' % rvalue
-            print '        %s = 0;' % (lvalue)
-            print '    } else {'
-            print '        %s = (%s)(uintptr_t)(%s);' % (lvalue, arg_type, rvalue)
-            print '    }'
+        if function.name in self.pointer_function_names and arg.name == 'pointer':
+            print '    %s = %s.blob();' % (lvalue, rvalue)
+            return
+
+        if function.name in self.draw_elements_function_names and arg.name == 'indices':
+            print '    %s = %s.blob();' % (lvalue, rvalue)
             return
 
         if function.name.startswith('glUniform') and function.args[0].name == arg.name == 'location':
@@ -150,6 +189,8 @@ if __name__ == '__main__':
 #include <string.h>
 #include <stdio.h>
 #include <iostream>
+
+#define RETRACE
 
 #include "glproc.hpp"
 #include <GL/glut.h>
@@ -346,7 +387,8 @@ static void usage(void) {
         "  -c PREFIX    compare against snapshots\n"
         "  -db          use a double buffer visual\n"
         "  -s PREFIX    take snapshots\n"
-        "  -v           verbose output\n";
+        "  -v           verbose output\n"
+        "  -w           wait on final frame\n";
 }
 
 int main(int argc, char **argv)

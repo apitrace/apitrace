@@ -231,9 +231,7 @@ public:
         buf = new char[_size];
     }
 
-    ~Blob() {
-        delete [] buf;
-    }
+    ~Blob();
 
     void visit(Visitor &visitor);
 

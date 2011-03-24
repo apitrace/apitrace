@@ -27,34 +27,21 @@
 """GLX tracing generator."""
 
 
+from stdapi import API
+from glapi import glapi
 from glxapi import glxapi
-from trace import Tracer
+from gltrace import GlTracer
+from dispatch import function_pointer_type, function_pointer_value
 
 
-class GlxTracer(Tracer):
+class GlxTracer(GlTracer):
 
     def get_function_address(self, function):
-        if function.name.startswith("glXGetProcAddress"):
-            return 'dlsym(RTLD_NEXT, "%s")' % (function.name,)
-        else:
-            print '    if (!pglXGetProcAddress) {'
-            print '        pglXGetProcAddress = (PglXGetProcAddress)dlsym(RTLD_NEXT, "glXGetProcAddress");'
-            print '        if (!pglXGetProcAddress)'
-            print '            Trace::Abort();'
-            print '    }'
-            return 'pglXGetProcAddress((const GLubyte *)"%s")' % (function.name,)
+        return '__%s' % (function.name,)
 
     def wrap_ret(self, function, instance):
-        if function.name.startswith("glXGetProcAddress"):
-            print '    if (%s) {' % instance
-            for f in glxapi.functions:
-                ptype = self.function_pointer_type(f)
-                pvalue = self.function_pointer_value(f)
-                print '        if(!strcmp("%s", (const char *)procName)) {' % f.name
-                print '            %s = (%s)%s;' % (pvalue, ptype, instance)
-                print '            %s = (%s)&%s;' % (instance, function.type, f.name);
-                print '        }'
-            print '    }'
+        if function.name in ("glXGetProcAddress", "glXGetProcAddressARB"):
+            print '    %s = __unwrap_proc_addr(procName, %s);' % (instance, instance)
 
 
 if __name__ == '__main__':
@@ -63,14 +50,34 @@ if __name__ == '__main__':
     print '#include <string.h>'
     print '#include <dlfcn.h>'
     print
-    print '#include "glimports.hpp"'
-    print
     print '#include "trace_write.hpp"'
+    print
+    print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
     print 'extern "C" {'
     print
+    print 'static __GLXextFuncPtr __unwrap_proc_addr(const GLubyte * procName, __GLXextFuncPtr procPtr);'
+    print
+
+    api = API()
+    api.add_api(glxapi)
+    api.add_api(glapi)
     tracer = GlxTracer()
-    tracer.trace_api(glxapi)
+    tracer.trace_api(api)
+
+    print 'static __GLXextFuncPtr __unwrap_proc_addr(const GLubyte * procName, __GLXextFuncPtr procPtr) {'
+    print '    if (!procPtr) {'
+    print '        return procPtr;'
+    print '    }'
+    for f in api.functions:
+        ptype = function_pointer_type(f)
+        pvalue = function_pointer_value(f)
+        print '    if(!strcmp("%s", (const char *)procName)) {' % f.name
+        print '        %s = (%s)procPtr;' % (pvalue, ptype)
+        print '        return (__GLXextFuncPtr)&%s;' % (f.name,)
+        print '    }'
+    print '    return procPtr;'
+    print '}'
     print
     print '} /* extern "C" */'

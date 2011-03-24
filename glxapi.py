@@ -64,7 +64,6 @@ glxapi = API("GLX")
 
 PROC = Opaque("__GLXextFuncPtr")
 
-glxapi.add_functions(glapi.functions)
 glxapi.add_functions([
     # GLX
     Function(Pointer(XVisualInfo), "glXChooseVisual", [(Display, "dpy"), (Int, "screen"), (Pointer(Int), "attribList")]),

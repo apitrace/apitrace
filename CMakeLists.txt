@@ -116,6 +116,12 @@ endif (PNG_FOUND)
 
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
+add_custom_command (
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
+)
+
 if (WIN32)
     # Put wrappers in a separate directory
     set (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers)
@@ -160,14 +166,14 @@ if (WIN32)
     add_custom_command (
         OUTPUT wgltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
-        DEPENDS wgltrace.py trace.py wglapi.py wglenum.py glapi.py glenum.py winapi.py stdapi.py
+        DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glenum.py winapi.py stdapi.py
     )
-    add_library (opengl SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp)
+    add_library (opengl SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
     set_target_properties (opengl PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32)
     if (MINGW)
-        SET_TARGET_PROPERTIES(opengl PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
+        set_target_properties(opengl PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
     endif (MINGW)
 
 else ()
@@ -176,11 +182,14 @@ else ()
     add_custom_command (
         OUTPUT glxtrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-        DEPENDS glxtrace.py trace.py glxapi.py glapi.py glenum.py stdapi.py
+        DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glenum.py stdapi.py
     )
 
-    add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp)
-    set_target_properties (glxtrace PROPERTIES PREFIX "")
+    add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    set_target_properties (glxtrace PROPERTIES 
+        COMPILER_DEFINITIONS "-DRETRACE"
+        PREFIX ""
+    )
     target_link_libraries (glxtrace dl)
 endif ()
 
@@ -193,12 +202,6 @@ else (WIN32)
 endif (WIN32)
 
 if (GLUT_INCLUDE_DIR)
-    add_custom_command (
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-        DEPENDS glproc.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
-    )
-
     add_custom_command (
         OUTPUT glretrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp

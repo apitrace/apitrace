@@ -27,6 +27,7 @@
 
 
 import stdapi
+from dispatch import Dispatcher
 
 
 def interface_wrap_name(interface):
@@ -299,63 +300,38 @@ class Tracer:
     def footer(self, api):
         pass
 
-    def function_pointer_type(self, function):
-        return 'P' + function.name
-
-    def function_pointer_value(self, function):
-        return 'p' + function.name
-
     def trace_function_decl(self, function):
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        print 'typedef ' + function.prototype('* %s' % ptype) + ';'
-        print 'static %s %s = NULL;' % (ptype, pvalue)
+        # Per-function declarations
+
+        if function.args:
+            print 'static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
+        else:
+            print 'static const char ** __%s_args = NULL;' % (function.name,)
+        print 'static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, int(function.id), function.name, len(function.args), function.name)
         print
 
-    def trace_function_fail(self, function):
-        if function.fail is not None:
-            if function.type is stdapi.Void:
-                assert function.fail == ''
-                print '            return;' 
-            else:
-                assert function.fail != ''
-                print '            return %s;' % function.fail
-        else:
-            print '            Trace::Abort();'
-
-    def get_function_address(self, function):
-        raise NotImplementedError
-
-    def _get_true_pointer(self, function):
-        ptype = self.function_pointer_type(function)
-        pvalue = self.function_pointer_value(function)
-        print '    if(!%s) {' % (pvalue,)
-        print '        %s = (%s)%s;' % (pvalue, ptype, self.get_function_address(function))
-        print '        if(!%s)' % (pvalue,)
-        self.trace_function_fail(function)
-        print '    }'
+    def get_dispatch_function(self, function):
+        return '__' + function.name
 
     def trace_function_impl(self, function):
-        pvalue = self.function_pointer_value(function)
         print 'extern "C" ' + function.prototype() + ' {'
-        if function.args:
-            print '    static const char * __args[%u] = {%s};' % (len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
-        else:
-            print '    static const char ** __args = NULL;'
-        print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(function.id), function.name, len(function.args))
-        if function.type is stdapi.Void:
-            result = ''
-        else:
+        if function.type is not stdapi.Void:
             print '    %s __result;' % function.type
-            result = '__result = '
-        self._get_true_pointer(function)
-        print '    unsigned __call = Trace::BeginEnter(__sig);'
+        self.trace_function_impl_body(function)
+        if function.type is not stdapi.Void:
+            self.wrap_ret(function, "__result")
+            print '    return __result;'
+        print '}'
+        print
+
+    def trace_function_impl_body(self, function):
+        print '    unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
                 self.dump_arg(function, arg)
         print '    Trace::EndEnter();'
-        print '    %s%s(%s);' % (result, pvalue, ', '.join([str(arg.name) for arg in function.args]))
+        self.dispatch_function(function)
         print '    Trace::BeginLeave(__call);'
         for arg in function.args:
             if arg.output:
@@ -364,16 +340,22 @@ class Tracer:
         if function.type is not stdapi.Void:
             self.dump_ret(function, "__result")
         print '    Trace::EndLeave();'
-        if function.type is not stdapi.Void:
-            self.wrap_ret(function, "__result")
-            print '    return __result;'
-        print '}'
-        print
+
+    def dispatch_function(self, function):
+        if function.type is stdapi.Void:
+            result = ''
+        else:
+            result = '__result = '
+        dispatch = self.get_dispatch_function(function)
+        print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
 
     def dump_arg(self, function, arg):
         print '    Trace::BeginArg(%u);' % (arg.index,)
-        dump_instance(arg.type, arg.name)
+        self.dump_arg_instance(function, arg)
         print '    Trace::EndArg();'
+
+    def dump_arg_instance(self, function, arg):
+        dump_instance(arg.type, arg.name)
 
     def wrap_arg(self, function, arg):
         wrap_instance(arg.type, arg.name)
@@ -453,17 +435,14 @@ class DllTracer(Tracer):
         self.dllname = dllname
     
     def get_function_address(self, function):
-        return '__GetProcAddress("%s")' % (function.name,)
-
+        return '__%s' % (function.name,)
 
     def header(self, api):
-        Tracer.header(self, api)
-
         print '''
 static HINSTANCE g_hDll = NULL;
 
 static PROC
-__GetProcAddress(LPCSTR lpProcName)
+__getPublicProcAddress(LPCSTR lpProcName)
 {
     if (!g_hDll) {
         char szDll[MAX_PATH] = {0};
@@ -484,4 +463,9 @@ __GetProcAddress(LPCSTR lpProcName)
 }
 
     ''' % self.dllname
+
+        dispatcher = Dispatcher()
+        dispatcher.dispatch_api(api)
+
+        Tracer.header(self, api)
 

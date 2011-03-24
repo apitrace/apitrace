@@ -510,7 +510,7 @@ class Collector(Visitor):
 
 class API:
 
-    def __init__(self, name):
+    def __init__(self, name = None):
         self.name = name
         self.headers = []
         self.functions = []
@@ -542,6 +542,17 @@ class API:
 
     def add_interfaces(self, interfaces):
         self.interfaces.extend(interfaces)
+
+    def add_api(self, api):
+        self.headers.extend(api.headers)
+        self.add_functions(api.functions)
+        self.add_interfaces(api.interfaces)
+
+    def get_function_by_name(self, name):
+        for function in self.functions:
+            if function.name == name:
+                return function
+        return None
 
 
 Bool = Literal("bool", "Bool")

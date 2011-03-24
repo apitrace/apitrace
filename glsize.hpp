@@ -44,35 +44,132 @@
 
 
 static inline size_t
-__glCallLists_size(GLsizei n, GLenum type)
+__gl_type_size(GLenum type)
 {
-    size_t bytes;
-    switch(type) {
+    switch (type) {
+    case GL_BOOL:
     case GL_BYTE:
     case GL_UNSIGNED_BYTE:
-        bytes = 1;
+        return 1;
         break;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
     case GL_2_BYTES:
     case GL_HALF_FLOAT:
-        bytes = 2;
+        return 2;
         break;
     case GL_3_BYTES:
-        bytes = 3;
+        return 3;
         break;
     case GL_INT:
     case GL_UNSIGNED_INT:
     case GL_FLOAT:
     case GL_4_BYTES:
-        bytes = 4;
+        return 4;
+        break;
+    case GL_DOUBLE:
+        return 8;
         break;
     default:
         OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
-        bytes = 0;
+        return 0;
+    }
+}
+
+static inline size_t
+__glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
+{
+    size_t elementSize = size*__gl_type_size(type);
+    if (!stride) {
+        stride = (GLsizei)elementSize;
+    }
+    return stride*maxIndex + elementSize;
+}
+
+#define __glVertexPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glNormalPointer_size(type, stride, maxIndex) __glArrayPointer_size(3, type, stride, maxIndex)
+#define __glColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glIndexPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
+#define __glTexCoordPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glEdgeFlagPointer_size(stride, maxIndex) __glArrayPointer_size(1, GL_BOOL, stride, maxIndex)
+#define __glFogCoordPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
+#define __glSecondaryColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+
+static inline GLuint
+__glDrawArrays_maxindex(GLint first, GLsizei count)
+{
+    return first + count - 1;
+}
+
+static inline GLuint
+__glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *indices)
+{
+    GLvoid *temp = 0;
+    GLint __element_array_buffer = 0;
+    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);
+    if (__element_array_buffer) {
+        // Read indices from index buffer object
+        GLintptr offset = (GLintptr)indices;
+        GLsizeiptr size = count*__gl_type_size(type);
+        GLvoid *temp = malloc(size);
+        if (!temp) {
+            return 0;
+        }
+        memset(temp, 0, size);
+        __glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, temp);
+        indices = temp;
+    } else {
+        if (!indices) {
+            return 0;
+        }
     }
 
-    return n*bytes;
+    GLuint maxindex = 0;
+    GLsizei i;
+    if (type == GL_UNSIGNED_BYTE) {
+        const GLubyte *p = (const GLubyte *)indices;
+        for (i = 0; i < count; ++i) {
+            if (p[i] > maxindex) {
+                maxindex = p[i];
+            }
+        }
+    } else if (type == GL_UNSIGNED_SHORT) {
+        const GLushort *p = (const GLushort *)indices;
+        for (i = 0; i < count; ++i) {
+            if (p[i] > maxindex) {
+                maxindex = p[i];
+            }
+        }
+    } else if (type == GL_UNSIGNED_INT) {
+        const GLuint *p = (const GLuint *)indices;
+        for (i = 0; i < count; ++i) {
+            if (p[i] > maxindex) {
+                maxindex = p[i];
+            }
+        }
+    } else {
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+    }
+
+    if (__element_array_buffer) {
+        free(temp);
+    }
+
+    return maxindex;
+}
+
+static inline GLuint
+__glDrawRangeElements_maxindex(GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices)
+{
+    (void)start;
+    (void)end;
+    return __glDrawElements_maxindex(count, type, indices);
+}
+
+static inline size_t
+__glCallLists_size(GLsizei n, GLenum type)
+{
+    return n*__gl_type_size(type);
 }
 
 static inline size_t
@@ -738,6 +835,8 @@ __glGetBooleanv_size(GLenum pname)
     case GL_DEPTH_BOUNDS_TEST_EXT:
     case GL_ARRAY_BUFFER_BINDING_ARB:
     case GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB:
+    case GL_PIXEL_PACK_BUFFER_BINDING:
+    case GL_PIXEL_UNPACK_BUFFER_BINDING:
     case GL_VERTEX_ARRAY_BUFFER_BINDING_ARB:
     case GL_NORMAL_ARRAY_BUFFER_BINDING_ARB:
     case GL_COLOR_ARRAY_BUFFER_BINDING_ARB:
