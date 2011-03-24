@@ -27,6 +27,7 @@
 
 
 import stdapi
+from dispatch import Dispatcher
 
 
 def interface_wrap_name(interface):
@@ -437,13 +438,11 @@ class DllTracer(Tracer):
         return '__%s' % (function.name,)
 
     def header(self, api):
-        Tracer.header(self, api)
-
         print '''
 static HINSTANCE g_hDll = NULL;
 
 static PROC
-__GetProcAddress(LPCSTR lpProcName)
+__getPublicProcAddress(LPCSTR lpProcName)
 {
     if (!g_hDll) {
         char szDll[MAX_PATH] = {0};
@@ -464,4 +463,9 @@ __GetProcAddress(LPCSTR lpProcName)
 }
 
     ''' % self.dllname
+
+        dispatcher = Dispatcher()
+        dispatcher.dispatch_api(api)
+
+        Tracer.header(self, api)
 

@@ -419,6 +419,7 @@ if __name__ == '__main__':
     print '#include <d3d9.h>'
     print
     print '#include "trace_write.hpp"'
+    print '#include "os.hpp"'
     print
     tracer = D3D9Tracer('d3d9.dll')
     tracer.trace_api(d3d9)
