@@ -238,4 +238,4 @@ if (GLUT_INCLUDE_DIR)
     )
 endif (GLUT_INCLUDE_DIR)
 
-
+add_subdirectory(gui)
