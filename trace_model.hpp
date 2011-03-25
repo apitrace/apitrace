@@ -252,18 +252,18 @@ public:
 class Visitor
 {
 public:
-    virtual void visit(Null *) {assert(0);}
-    virtual void visit(Bool *) {assert(0);}
-    virtual void visit(SInt *) {assert(0);}
-    virtual void visit(UInt *) {assert(0);}
-    virtual void visit(Float *) {assert(0);}
-    virtual void visit(String *) {assert(0);}
-    virtual void visit(Enum *) {assert(0);}
-    virtual void visit(Bitmask *bitmask) {visit(static_cast<UInt *>(bitmask));}
-    virtual void visit(Struct *) {assert(0);}
-    virtual void visit(Array *) {assert(0);}
-    virtual void visit(Blob *) {assert(0);}
-    virtual void visit(Pointer *) {assert(0);}
+    virtual void visit(Null *);
+    virtual void visit(Bool *);
+    virtual void visit(SInt *);
+    virtual void visit(UInt *);
+    virtual void visit(Float *);
+    virtual void visit(String *);
+    virtual void visit(Enum *);
+    virtual void visit(Bitmask *);
+    virtual void visit(Struct *);
+    virtual void visit(Array *);
+    virtual void visit(Blob *);
+    virtual void visit(Pointer *);
 
 protected:
     inline void _visit(Value *value) {
