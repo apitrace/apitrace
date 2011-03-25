@@ -2,14 +2,7 @@
                             (in no particular order)
 
 
-* Determine blob sizes passed to glXxxPointer functions.
-
-  Potentially using tricks such as:
-  * http://fixunix.com/linux/337646-isbadreadptr-linux.html
-  * http://www.gamedev.net/community/forums/topic.asp?topic_id=132787
-  * http://msdn.microsoft.com/en-us/library/aa366781(v=VS.85).aspx
-  * http://msdn.microsoft.com/en-us/library/aa366902(v=VS.85).aspx
-  * http://stackoverflow.com/questions/1281686/determine-size-of-dynamically-allocated-memory-in-c
+* Handle glInterleavedArrays correctly.
 
 * Allow clamping to a GL version or a number of extensions.
 
