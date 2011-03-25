@@ -82,6 +82,7 @@ class GlTracer(Tracer):
         ("FogCoord", "FOG_COORD"),
         ("SecondaryColor", "SECONDARY_COLOR"),
     ]
+    arrays.reverse()
 
     def state_tracker_decl(self, api):
         # Whether we need user arrays
@@ -121,8 +122,6 @@ class GlTracer(Tracer):
         "glFogCoordPointer",
         "glSecondaryColorPointer",
 
-        "glInterleavedArrays",
-
         #"glVertexPointerEXT",
         #"glNormalPointerEXT",
         #"glColorPointerEXT",
@@ -146,6 +145,23 @@ class GlTracer(Tracer):
         'glDrawRangeElements',
     ))
 
+    interleaved_formats = [
+         'GL_V2F',
+         'GL_V3F',
+         'GL_C4UB_V2F',
+         'GL_C4UB_V3F',
+         'GL_C3F_V3F',
+         'GL_N3F_V3F',
+         'GL_C4F_N3F_V3F',
+         'GL_T2F_V3F',
+         'GL_T4F_V4F',
+         'GL_T2F_C4UB_V3F',
+         'GL_T2F_C3F_V3F',
+         'GL_T2F_N3F_V3F',
+         'GL_T2F_C4F_N3F_V3F',
+         'GL_T4F_C4F_N3F_V4F',
+    ]
+
     def trace_function_impl_body(self, function):
         # Defer tracing of user array pointers...
         if function.name in self.array_pointer_function_names:
@@ -164,7 +180,63 @@ class GlTracer(Tracer):
             print '        __trace_user_arrays(maxindex);'
             print '    }'
         
+        # And also break down glInterleavedArrays into the individual calls
+        if function.name == 'glInterleavedArrays':
+            print '    GLint __array_buffer = 0;'
+            print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+            print '    if (!__array_buffer) {'
+            self.dispatch_function(function)
+            print
+
+            # Initialize the enable flags
+            for camelcase_name, uppercase_name in self.arrays:
+                flag_name = '__' + uppercase_name.lower()
+                print '        GLboolean %s = GL_FALSE;' % flag_name
+            print
+
+            # Swicth for the interleaved formats
+            print '        switch (format) {'
+            for format in self.interleaved_formats:
+                print '            case %s:' % format
+                for camelcase_name, uppercase_name in self.arrays:
+                    flag_name = '__' + uppercase_name.lower()
+                    if format.find('_' + uppercase_name[0]) >= 0:
+                        print '                %s = GL_TRUE;' % flag_name
+                print '                break;'
+            print '            default:'
+            print '               return;'
+            print '        }'
+            print
+
+            # Emit fake glEnableClientState/glDisableClientState flags
+            for camelcase_name, uppercase_name in self.arrays:
+                flag_name = '__' + uppercase_name.lower()
+                enable_name = 'GL_%s_ARRAY' % uppercase_name
+
+                # Emit a fake function
+                print '        {'
+                print '            static const Trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
+                print '            unsigned __call = Trace::BeginEnter(__sig);'
+                print '            Trace::BeginArg(0);'
+                dump_instance(glapi.GLenum, enable_name)
+                print '            Trace::EndArg();'
+                print '            Trace::EndEnter();'
+                print '            Trace::BeginLeave(__call);'
+                print '            Trace::EndLeave();'
+                print '        }'
+
+            print '        return;'
+            print '    }'
+
         Tracer.trace_function_impl_body(self, function)
+
+    boolean_names = [
+        'GL_FALSE',
+        'GL_TRUE',
+    ]
+
+    def gl_boolean(self, value):
+        return self.boolean_names[int(bool(value))]
 
     def dump_arg_instance(self, function, arg):
         if function.name in self.draw_function_names and arg.name == 'indices':

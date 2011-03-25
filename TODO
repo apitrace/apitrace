@@ -2,8 +2,6 @@
                             (in no particular order)
 
 
-* Handle glInterleavedArrays correctly.
-
 * Allow clamping to a GL version or a number of extensions.
 
 * Match the traced visuals (which will imply abandoning GLUT)
@@ -26,3 +24,6 @@
 * Trace window sizes somehow
 
 * Plug memory leaks.
+
+* Allow to distinguish between the calls really done by the program, vs the
+  fakes one necessary to retrace correctly.
