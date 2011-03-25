@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 2.8)
 find_package(Qt4 REQUIRED)
 
 set(qapitrace_SRCS
-   ../trace_model.cpp
    apitracemodel.cpp
    loaderthread.cpp
    mainwindow.cpp
@@ -45,7 +44,7 @@ include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_S
 
 add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-target_link_libraries(qapitrace ${QT_QTCORE_LIBRARIES} ${QT_QTGUI_LIBRARIES} )
+target_link_libraries(qapitrace trace ${QT_QTCORE_LIBRARIES} ${QT_QTGUI_LIBRARIES} )
 
 ########### install files ###############
 
