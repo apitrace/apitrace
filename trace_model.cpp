@@ -56,7 +56,8 @@ Array::~Array() {
 }
 
 Blob::~Blob() {
-    // FIXME
+    // TODO: Don't leak blobs.  Blobs are often bound and accessed during many
+    // calls, so we can't delete them here.
     //delete [] buf;
 }
 
