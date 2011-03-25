@@ -16,6 +16,7 @@ set (CMAKE_USE_PYTHON_VERSION 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
+find_package (Qt4)
 
 if (NOT WIN32)
     # Always use the bundled zlib and libpng sources on Windows to make it easy
@@ -238,4 +239,6 @@ if (GLUT_INCLUDE_DIR)
     )
 endif (GLUT_INCLUDE_DIR)
 
-add_subdirectory(gui)
+if (QT4_FOUND)
+    add_subdirectory(gui)
+endif (QT4_FOUND)
