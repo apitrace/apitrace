@@ -59,7 +59,7 @@ public:
     operator unsigned long long (void) const;
     operator double (void) const;
 
-    void *blob(void) const;
+    virtual void *blob(void) const;
     const char *string(void) const;
 
     inline operator signed char (void) const { 
@@ -105,6 +105,7 @@ public:
 class Null : public Value
 {
 public:
+    void *blob(void) const;
     void visit(Visitor &visitor);
 };
 
@@ -233,6 +234,7 @@ public:
 
     ~Blob();
 
+    void *blob(void) const;
     void visit(Visitor &visitor);
 
     size_t size;
@@ -245,6 +247,7 @@ class Pointer : public UInt
 public:
     Pointer(unsigned long long value) : UInt(value) {}
 
+    void *blob(void) const;
     void visit(Visitor &visitor);
 };
 

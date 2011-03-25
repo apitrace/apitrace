@@ -62,6 +62,13 @@ Blob::~Blob() {
 }
 
 
+// virtual Value::blob()
+void * Value  ::blob(void) const { assert(0); return NULL; }
+void * Null   ::blob(void) const { return NULL; }
+void * Blob   ::blob(void) const { return buf; }
+void * Pointer::blob(void) const { assert(value < 0x100000ULL); return (void *)value; }
+
+
 // virtual Value::visit()
 void Null   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Bool   ::visit(Visitor &visitor) { visitor.visit(this); }
@@ -290,22 +297,6 @@ const Value & Value::operator[](size_t index) const {
         }
     }
     return null;
-}
-
-void * Value::blob(void) const {
-    const Blob *blob = dynamic_cast<const Blob *>(unwrap(this));
-    if (blob)
-        return blob->buf;
-    const Null *null = dynamic_cast<const Null *>(unwrap(this));
-    if (null)
-        return NULL;
-    const Pointer *pointer = dynamic_cast<const Pointer *>(unwrap(this));
-    if (pointer) {
-        assert(pointer->value  < 0x100000ULL);
-        return (void *)pointer->value;
-    }
-    assert(0);
-    return NULL;
 }
 
 const char * Value::string(void) const {
