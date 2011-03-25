@@ -56,23 +56,46 @@ Array::~Array() {
 }
 
 Blob::~Blob() {
-    // FIXME
+    // TODO: Don't leak blobs.  Blobs are often bound and accessed during many
+    // calls, so we can't delete them here.
     //delete [] buf;
 }
 
 
-void Null::visit(Visitor &visitor) { visitor.visit(this); }
-void Bool::visit(Visitor &visitor) { visitor.visit(this); } 
-void SInt::visit(Visitor &visitor) { visitor.visit(this); } 
-void UInt::visit(Visitor &visitor) { visitor.visit(this); } 
-void Float::visit(Visitor &visitor) { visitor.visit(this); } 
-void String::visit(Visitor &visitor) { visitor.visit(this); } 
-void Enum::visit(Visitor &visitor) { visitor.visit(this); } 
-void Bitmask::visit(Visitor &visitor) { visitor.visit(this); } 
-void Struct::visit(Visitor &visitor) { visitor.visit(this); } 
-void Array::visit(Visitor &visitor) { visitor.visit(this); } 
-void Blob::visit(Visitor &visitor) { visitor.visit(this); } 
+// virtual Value::blob()
+void * Value  ::blob(void) const { assert(0); return NULL; }
+void * Null   ::blob(void) const { return NULL; }
+void * Blob   ::blob(void) const { return buf; }
+void * Pointer::blob(void) const { assert(value < 0x100000ULL); return (void *)value; }
+
+
+// virtual Value::visit()
+void Null   ::visit(Visitor &visitor) { visitor.visit(this); }
+void Bool   ::visit(Visitor &visitor) { visitor.visit(this); }
+void SInt   ::visit(Visitor &visitor) { visitor.visit(this); }
+void UInt   ::visit(Visitor &visitor) { visitor.visit(this); }
+void Float  ::visit(Visitor &visitor) { visitor.visit(this); }
+void String ::visit(Visitor &visitor) { visitor.visit(this); }
+void Enum   ::visit(Visitor &visitor) { visitor.visit(this); }
+void Bitmask::visit(Visitor &visitor) { visitor.visit(this); }
+void Struct ::visit(Visitor &visitor) { visitor.visit(this); }
+void Array  ::visit(Visitor &visitor) { visitor.visit(this); }
+void Blob   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
+
+
+void Visitor::visit(Null *) { assert(0); }
+void Visitor::visit(Bool *) { assert(0); }
+void Visitor::visit(SInt *) { assert(0); }
+void Visitor::visit(UInt *) { assert(0); }
+void Visitor::visit(Float *) { assert(0); }
+void Visitor::visit(String *) { assert(0); }
+void Visitor::visit(Enum *) { assert(0); }
+void Visitor::visit(Bitmask *bitmask) { visit(static_cast<UInt *>(bitmask)); }
+void Visitor::visit(Struct *) { assert(0); }
+void Visitor::visit(Array *) { assert(0); }
+void Visitor::visit(Blob *) { assert(0); }
+void Visitor::visit(Pointer *) { assert(0); }
 
 
 class Dumper : public Visitor
@@ -274,22 +297,6 @@ const Value & Value::operator[](size_t index) const {
         }
     }
     return null;
-}
-
-void * Value::blob(void) const {
-    const Blob *blob = dynamic_cast<const Blob *>(unwrap(this));
-    if (blob)
-        return blob->buf;
-    const Null *null = dynamic_cast<const Null *>(unwrap(this));
-    if (null)
-        return NULL;
-    const Pointer *pointer = dynamic_cast<const Pointer *>(unwrap(this));
-    if (pointer) {
-        assert(pointer->value  < 0x100000ULL);
-        return (void *)pointer->value;
-    }
-    assert(0);
-    return NULL;
 }
 
 const char * Value::string(void) const {
