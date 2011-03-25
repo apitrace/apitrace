@@ -193,13 +193,16 @@ else ()
     target_link_libraries (glxtrace dl)
 endif ()
 
-add_executable (dump dump.cpp trace_model.cpp)
-
 if (WIN32)
     set (os os_win32.cpp)
 else (WIN32)
     set (os os_posix.cpp)
 endif (WIN32)
+
+add_library (trace trace_model.cpp trace_parser.cpp ${os})
+
+add_executable (dump dump.cpp)
+target_link_libraries (dump trace)
 
 if (GLUT_INCLUDE_DIR)
     add_custom_command (
@@ -214,9 +217,10 @@ if (GLUT_INCLUDE_DIR)
         ${GLUT_INCLUDE_DIR}
     )
 
-    add_executable (glretrace glretrace.cpp trace_model.cpp image.cpp ${os} ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_executable (glretrace glretrace.cpp image.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
     target_link_libraries (glretrace
+        trace
         ${OPENGL_gl_LIBRARY}
         ${OPENGL_glu_LIBRARY}
         ${GLUT_glut_LIBRARY}

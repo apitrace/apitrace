@@ -400,9 +400,6 @@ public:
 };
 
 
-unsigned long long Trace::Parser::version = 0;
-
-
 } /* namespace Trace */
 
 #endif /* _TRACE_PARSER_HPP_ */
