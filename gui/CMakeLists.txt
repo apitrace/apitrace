@@ -1,4 +1,6 @@
 set(qapitrace_SRCS
+   apitracecall.cpp
+   apitracefilter.cpp
    apitracemodel.cpp
    loaderthread.cpp
    mainwindow.cpp

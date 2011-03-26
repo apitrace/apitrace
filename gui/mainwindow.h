@@ -6,6 +6,7 @@
 #include <QtGui/QMainWindow>
 
 class ApiTraceModel;
+class ApiTraceFilter;
 
 class MainWindow : public QMainWindow
 {
@@ -22,6 +23,7 @@ private slots:
 private:
     Ui_MainWindow m_ui;
     ApiTraceModel *m_model;
+    ApiTraceFilter *m_proxyModel;
 };
 
 

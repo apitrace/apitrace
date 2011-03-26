@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include "apitracemodel.h"
+#include "apitracefilter.h"
 
 #include <QAction>
 #include <QDebug>
@@ -14,6 +15,8 @@ MainWindow::MainWindow()
     m_ui.setupUi(this);
 
     m_model = new ApiTraceModel();
+    m_proxyModel = new ApiTraceFilter();
+    m_proxyModel->setSourceModel(m_model);
     m_ui.callView->setModel(m_model);
     for (int column = 0; column < m_model->columnCount(); ++column)
         m_ui.callView->resizeColumnToContents(column);

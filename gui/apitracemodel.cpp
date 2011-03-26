@@ -4,87 +4,15 @@
 #include "loaderthread.h"
 #include "trace_parser.hpp"
 
+#include <QDebug>
 #include <QVariant>
 
-class VariantVisitor : public Trace::Visitor
-{
-public:
-    virtual void visit(Trace::Null *)
-    {
-        // Nothing
-    }
-    virtual void visit(Trace::Bool *node)
-    {
-        m_variant = QVariant(node->value);
-    }
-    virtual void visit(Trace::SInt *node)
-    {
-        m_variant = QVariant(node->value);
-    }
-    virtual void visit(Trace::UInt *node)
-    {
-        m_variant = QVariant(node->value);
-    }
-    virtual void visit(Trace::Float *node)
-    {
-        m_variant = QVariant(node->value);
-    }
-    virtual void visit(Trace::String *node)
-    {
-        m_variant = QVariant(QString::fromStdString(node->value));
-    }
-    virtual void visit(Trace::Enum *e)
-    {
-        m_variant = QVariant(QString::fromStdString(e->sig->first));
-    }
-    virtual void visit(Trace::Bitmask *bitmask)
-    {
-        //XXX we should probably convert it to QImage
-        visit(static_cast<Trace::UInt *>(bitmask));
-    }
-    virtual void visit(Trace::Struct *str)
-    {
-        //XXX: need a custom QVariant type for this one
-        QVariantList lst;
-        for (int i = 0; i < str->members.size(); ++i) {
-            VariantVisitor vst;
-            str->members[i]->visit(vst);
-            lst.append(vst.variant());
-        }
-        m_variant = QVariant(lst);
-    }
-    virtual void visit(Trace::Array *array)
-    {
-        QVariantList lst;
-        for (int i = 0; i < array->values.size(); ++i) {
-            VariantVisitor vst;
-            array->values[i]->visit(vst);
-            lst.append(vst.variant());
-        }
-        m_variant = QVariant(lst);
-    }
-    virtual void visit(Trace::Blob *blob)
-    {
-        QByteArray barray = QByteArray::fromRawData(blob->buf, blob->size);
-        m_variant = QVariant(barray);
-    }
-    virtual void visit(Trace::Pointer *ptr)
-    {
-        m_variant = QVariant(ptr->value);
-    }
-
-    QVariant variant() const
-    {
-        return m_variant;
-    }
-private:
-    QVariant m_variant;
-};
 
 ApiTraceModel::ApiTraceModel(QObject *parent)
     : QAbstractItemModel(parent)
 {
     m_loader = new LoaderThread();
+
     connect(m_loader, SIGNAL(parsedCalls(const QList<Trace::Call*>&)),
             SLOT(appendCalls(const QList<Trace::Call*>&)));
 }
@@ -109,21 +37,27 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     switch (index.column()) {
-    case 0:
-        return item->name;
-    case 1: {
+    case 0: {
         QString str;
+        str += QString::number(index.row());
+        str += QLatin1String(") ");
+        str += item->name;
+        str += QLatin1String("(");
         for (int i = 0; i < item->argNames.count(); ++i) {
             str += item->argNames[i];
             str += QString::fromLatin1(" = ");
-            str += item->argValues[i].toString();
+            str += apiVariantToString(item->argValues[i]);
             if (i < item->argNames.count() - 1)
                 str += QString::fromLatin1(", ");
         }
+        str += QLatin1String(")");
+
+        if (item->returnValue.isValid()) {
+            str += QLatin1String(" = ");
+            str += apiVariantToString(item->returnValue);
+        }
         return str;
     }
-    case 2:
-        return item->returnValue.toString();
     default:
         return QVariant();
     }
@@ -144,10 +78,6 @@ QVariant ApiTraceModel::headerData(int section, Qt::Orientation orientation,
         switch (section) {
         case 0:
             return tr("Function");
-        case 1:
-            return tr("Arguments");
-        case 2:
-            return tr("Return");
         default:
             //fall through
             break;
@@ -192,7 +122,7 @@ int ApiTraceModel::rowCount(const QModelIndex &parent) const
 
 int ApiTraceModel::columnCount(const QModelIndex &parent) const
 {
-    return parent.isValid() ? 0 : 3;
+    return parent.isValid() ? 0 : 1;
 }
 
 
@@ -247,8 +177,8 @@ void ApiTraceModel::appendCalls(const QList<Trace::Call*> traceCalls)
             apiCall->argNames +=
                 QString::fromStdString(call->sig->arg_names[i]);
         }
-        VariantVisitor retVisitor;
         if (call->ret) {
+            VariantVisitor retVisitor;
             call->ret->visit(retVisitor);
             apiCall->returnValue = retVisitor.variant();
         }
@@ -257,6 +187,7 @@ void ApiTraceModel::appendCalls(const QList<Trace::Call*> traceCalls)
             call->args[i]->visit(argVisitor);
             apiCall->argValues += argVisitor.variant();
         }
+
         m_calls.append(apiCall);
     }
     endInsertRows();
