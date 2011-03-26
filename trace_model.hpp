@@ -54,10 +54,10 @@ public:
     virtual ~Value() {}
     virtual void visit(Visitor &visitor) = 0;
 
-    operator bool (void) const;
-    operator signed long long (void) const;
-    operator unsigned long long (void) const;
-    operator double (void) const;
+    virtual operator bool (void) const = 0;
+    virtual operator signed long long (void) const;
+    virtual operator unsigned long long (void) const;
+    virtual operator double (void) const;
 
     virtual void *blob(void) const;
     const char *string(void) const;
@@ -105,6 +105,10 @@ public:
 class Null : public Value
 {
 public:
+    operator bool (void) const;
+    operator signed long long (void) const;
+    operator unsigned long long (void) const;
+    operator double (void) const;
     void *blob(void) const;
     void visit(Visitor &visitor);
 };
@@ -117,6 +121,10 @@ class Bool : public Value
 public:
     Bool(bool _value) : value(_value) {}
 
+    operator bool (void) const;
+    operator signed long long (void) const;
+    operator unsigned long long (void) const;
+    operator double (void) const;
     void visit(Visitor &visitor);
 
     bool value;
@@ -128,6 +136,10 @@ class SInt : public Value
 public:
     SInt(signed long long _value) : value(_value) {}
 
+    operator bool (void) const;
+    operator signed long long (void) const;
+    operator unsigned long long (void) const;
+    operator double (void) const;
     void visit(Visitor &visitor);
 
     signed long long value;
@@ -139,6 +151,10 @@ class UInt : public Value
 public:
     UInt(unsigned long long _value) : value(_value) {}
 
+    operator bool (void) const;
+    operator signed long long (void) const;
+    operator unsigned long long (void) const;
+    operator double (void) const;
     void visit(Visitor &visitor);
 
     unsigned long long value;
@@ -150,6 +166,10 @@ class Float : public Value
 public:
     Float(double _value) : value(_value) {}
 
+    operator bool (void) const;
+    operator signed long long (void) const;
+    operator unsigned long long (void) const;
+    operator double (void) const;
     void visit(Visitor &visitor);
 
     double value;
@@ -161,6 +181,7 @@ class String : public Value
 public:
     String(std::string _value) : value(_value) {}
 
+    operator bool (void) const;
     void visit(Visitor &visitor);
 
     std::string value;
@@ -174,6 +195,10 @@ public:
 
     Enum(const Signature *_sig) : sig(_sig) {}
 
+    operator bool (void) const;
+    operator signed long long (void) const;
+    operator unsigned long long (void) const;
+    operator double (void) const;
     void visit(Visitor &visitor);
 
     const Signature *sig;
@@ -205,6 +230,7 @@ public:
     Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
     ~Struct();
 
+    operator bool (void) const;
     void visit(Visitor &visitor);
 
     const Signature *sig;
@@ -218,6 +244,7 @@ public:
     Array(size_t len) : values(len) {}
     ~Array();
 
+    operator bool (void) const;
     void visit(Visitor &visitor);
 
     std::vector<Value *> values;
@@ -234,6 +261,7 @@ public:
 
     ~Blob();
 
+    operator bool (void) const;
     void *blob(void) const;
     void visit(Visitor &visitor);
 
@@ -247,6 +275,7 @@ class Pointer : public UInt
 public:
     Pointer(unsigned long long value) : UInt(value) {}
 
+    operator bool (void) const;
     void *blob(void) const;
     void visit(Visitor &visitor);
 };

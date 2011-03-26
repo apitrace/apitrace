@@ -62,7 +62,51 @@ Blob::~Blob() {
 }
 
 
-// virtual Value::blob()
+// bool cast
+Null   ::operator bool(void) const { return false; }
+Bool   ::operator bool(void) const { return value; }
+SInt   ::operator bool(void) const { return value != 0; }
+UInt   ::operator bool(void) const { return value != 0; }
+Float  ::operator bool(void) const { return value != 0; }
+String ::operator bool(void) const { return true; }
+Enum   ::operator bool(void) const { return static_cast<bool>(*sig->second); }
+Struct ::operator bool(void) const { return true; }
+Array  ::operator bool(void) const { return true; }
+Blob   ::operator bool(void) const { return true; }
+Pointer::operator bool(void) const { return value != 0; }
+
+
+// signed integer cast
+Value  ::operator signed long long (void) const { assert(0); return NULL; }
+Null   ::operator signed long long (void) const { return 0; }
+Bool   ::operator signed long long (void) const { return static_cast<signed long long>(value); }
+SInt   ::operator signed long long (void) const { return value; }
+UInt   ::operator signed long long (void) const { assert(static_cast<signed long long>(value) >= 0); return static_cast<signed long long>(value); }
+Float  ::operator signed long long (void) const { return static_cast<signed long long>(value); }
+Enum   ::operator signed long long (void) const { return static_cast<signed long long>(*sig->second); }
+
+
+// unsigned integer cast
+Value  ::operator unsigned long long (void) const { assert(0); return NULL; }
+Null   ::operator unsigned long long (void) const { return 0; }
+Bool   ::operator unsigned long long (void) const { return static_cast<unsigned long long>(value); }
+SInt   ::operator unsigned long long (void) const { assert(value >= 0); return static_cast<signed long long>(value); }
+UInt   ::operator unsigned long long (void) const { return value; }
+Float  ::operator unsigned long long (void) const { return static_cast<unsigned long long>(value); }
+Enum   ::operator unsigned long long (void) const { return static_cast<unsigned long long>(*sig->second); }
+
+
+// floating point cast
+Value  ::operator double (void) const { assert(0); return NULL; }
+Null   ::operator double (void) const { return 0; }
+Bool   ::operator double (void) const { return static_cast<double>(value); }
+SInt   ::operator double (void) const { return static_cast<double>(value); }
+UInt   ::operator double (void) const { return static_cast<double>(value); }
+Float  ::operator double (void) const { return value; }
+Enum   ::operator double (void) const { return static_cast<unsigned long long>(*sig->second); }
+
+
+// blob cast
 void * Value  ::blob(void) const { assert(0); return NULL; }
 void * Null   ::blob(void) const { return NULL; }
 void * Blob   ::blob(void) const { return buf; }
@@ -90,8 +134,8 @@ void Visitor::visit(SInt *) { assert(0); }
 void Visitor::visit(UInt *) { assert(0); }
 void Visitor::visit(Float *) { assert(0); }
 void Visitor::visit(String *) { assert(0); }
-void Visitor::visit(Enum *) { assert(0); }
-void Visitor::visit(Bitmask *bitmask) { visit(static_cast<UInt *>(bitmask)); }
+void Visitor::visit(Enum *node) { _visit(node->sig->second); }
+void Visitor::visit(Bitmask *node) { visit(static_cast<UInt *>(node)); }
 void Visitor::visit(Struct *) { assert(0); }
 void Visitor::visit(Array *) { assert(0); }
 void Visitor::visit(Blob *) { assert(0); }
@@ -252,40 +296,6 @@ static inline const Value *unwrap(const Value *node) {
     return node;
 }
 
-
-Value::operator bool(void) const {
-    const Bool *b = dynamic_cast<const Bool *>(unwrap(this));
-    if (b)
-        return b->value;
-    assert(0);
-    return false;
-}
-
-Value::operator signed long long(void) const {
-    const SInt *sint = dynamic_cast<const SInt *>(unwrap(this));
-    if (sint)
-        return sint->value;
-    const UInt *uint = dynamic_cast<const UInt *>(unwrap(this));
-    if (uint)
-        return uint->value;
-    assert(0);
-    return 0;
-}
-
-Value::operator unsigned long long(void) const {
-    const UInt *uint = dynamic_cast<const UInt *>(unwrap(this));
-    if (uint)
-        return uint->value;
-    assert(0);
-    return 0;
-}
-
-
-Value::operator double(void) const {
-    const Float *fl = dynamic_cast<const Float *>(unwrap(this));
-    assert(fl);
-    return fl->value;
-}
 
 static Null null;
 
