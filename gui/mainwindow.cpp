@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include "apicalldelegate.h"
 #include "apitracemodel.h"
 #include "apitracefilter.h"
 
@@ -18,6 +19,7 @@ MainWindow::MainWindow()
     m_proxyModel = new ApiTraceFilter();
     m_proxyModel->setSourceModel(m_model);
     m_ui.callView->setModel(m_model);
+    m_ui.callView->setItemDelegate(new ApiCallDelegate);
     for (int column = 0; column < m_model->columnCount(); ++column)
         m_ui.callView->resizeColumnToContents(column);
 

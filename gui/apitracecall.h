@@ -1,6 +1,7 @@
 #ifndef APITRACECALL_H
 #define APITRACECALL_H
 
+#include <QStaticText>
 #include <QStringList>
 #include <QVariant>
 
@@ -104,6 +105,12 @@ public:
     QStringList argNames;
     QVariantList argValues;
     QVariant returnValue;
+
+    QString richText() const;
+    QStaticText staticText() const;
+private:
+    mutable QString m_richText;
+    mutable QStaticText m_staticText;
 };
 
 #endif

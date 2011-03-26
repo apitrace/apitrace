@@ -224,3 +224,42 @@ void ApiArray::init(const Trace::Array *arr)
         m_array.append(vis.variant());
     }
 }
+
+QStaticText ApiTraceCall::staticText() const
+{
+    if (!m_richText.isEmpty())
+        return m_staticText;
+
+    m_richText = QString::fromLatin1("<span style=\"font-weight:bold\">%1</span>(").arg(name);
+    for (int i = 0; i < argNames.count(); ++i) {
+        m_richText += argNames[i];
+        m_richText += QString::fromLatin1(" = ");
+        m_richText += QLatin1String("<span style=\"color:#0000ff\">");
+        m_richText += apiVariantToString(argValues[i]);
+        m_richText += QLatin1String("</span>");
+        if (i < argNames.count() - 1)
+            m_richText += QString::fromLatin1(", ");
+    }
+    m_richText += QLatin1String(")");
+
+    if (returnValue.isValid()) {
+        m_richText += QLatin1String(" = ");
+        m_richText += QLatin1String("<span style=\"color:#0000ff\">");
+        m_richText += apiVariantToString(returnValue);
+        m_richText += QLatin1String("</span>");
+    }
+
+    m_staticText.setText(m_richText);
+    QTextOption opt;
+    opt.setWrapMode(QTextOption::NoWrap);
+    m_staticText.setTextOption(opt);
+    m_staticText.prepare();
+
+    return m_staticText;
+}
+
+QString ApiTraceCall::richText() const
+{
+    staticText();
+    return m_richText;
+}

@@ -38,25 +38,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
 
     switch (index.column()) {
     case 0: {
-        QString str;
-        str += QString::number(index.row());
-        str += QLatin1String(") ");
-        str += item->name;
-        str += QLatin1String("(");
-        for (int i = 0; i < item->argNames.count(); ++i) {
-            str += item->argNames[i];
-            str += QString::fromLatin1(" = ");
-            str += apiVariantToString(item->argValues[i]);
-            if (i < item->argNames.count() - 1)
-                str += QString::fromLatin1(", ");
-        }
-        str += QLatin1String(")");
-
-        if (item->returnValue.isValid()) {
-            str += QLatin1String(" = ");
-            str += apiVariantToString(item->returnValue);
-        }
-        return str;
+        return item->richText();
     }
     default:
         return QVariant();
