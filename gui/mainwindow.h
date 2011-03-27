@@ -8,6 +8,7 @@
 
 class ApiTraceModel;
 class ApiTraceFilter;
+class QLineEdit;
 class QModelIndex;
 
 class MainWindow : public QMainWindow
@@ -22,11 +23,13 @@ public slots:
 private slots:
     void callItemSelected(const QModelIndex &index);
     void openTrace();
+    void filterTrace();
 
 private:
     Ui_MainWindow m_ui;
     ApiTraceModel *m_model;
     ApiTraceFilter *m_proxyModel;
+    QLineEdit *m_filterEdit;
 };
 
 

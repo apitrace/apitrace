@@ -8,7 +8,9 @@
 #include <QAction>
 #include <QDebug>
 #include <QDir>
+#include <QLineEdit>
 #include <QFileDialog>
+#include <QToolBar>
 #include <QWebView>
 
 
@@ -25,13 +27,18 @@ MainWindow::MainWindow()
     for (int column = 0; column < m_model->columnCount(); ++column)
         m_ui.callView->resizeColumnToContents(column);
 
+    QToolBar *toolBar = addToolBar(tr("Navigation"));
+    m_filterEdit = new QLineEdit(toolBar);
+    toolBar->addWidget(m_filterEdit);
+
     m_ui.detailsDock->hide();
 
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
-
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
+    connect(m_filterEdit, SIGNAL(returnPressed()),
+            this, SLOT(filterTrace()));
 }
 
 void MainWindow::openTrace()
@@ -64,6 +71,11 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     } else {
         m_ui.detailsDock->hide();
     }
+}
+
+void MainWindow::filterTrace()
+{
+    m_proxyModel->setFilterString(m_filterEdit->text());
 }
 
 #include "mainwindow.moc"

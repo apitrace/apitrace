@@ -21,6 +21,10 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
 
     QString function = call->name;
 
+    if (!m_text.isEmpty()) {
+        return function.contains(m_text);
+    }
+
     //XXX make it configurable
     if (function.contains(QLatin1String("glXGetProcAddress")))
         return false;
@@ -35,5 +39,13 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
     return true;
 }
 
+
+void ApiTraceFilter::setFilterString(const QString &text)
+{
+    if (text != m_text) {
+        m_text = text;
+        invalidate();
+    }
+}
 
 #include "apitracefilter.moc"
