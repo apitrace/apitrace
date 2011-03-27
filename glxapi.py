@@ -58,7 +58,106 @@ XVisualInfo = Struct("XVisualInfo", [
   (Int, "bits_per_rgb"),
 ])
 
-Bool_ = Alias("Bool", Int)
+Bool_ = Enum("Bool", [
+    "False",
+    "True",
+])
+
+GLXAttrib = FakeEnum(Int, [
+    "GLX_USE_GL",
+    "GLX_BUFFER_SIZE",
+    "GLX_LEVEL",
+    "GLX_RGBA",
+    "GLX_DOUBLEBUFFER",
+    "GLX_STEREO",
+    "GLX_AUX_BUFFERS",
+    "GLX_RED_SIZE",
+    "GLX_GREEN_SIZE",
+    "GLX_BLUE_SIZE",
+    "GLX_ALPHA_SIZE",
+    "GLX_DEPTH_SIZE",
+    "GLX_STENCIL_SIZE",
+    "GLX_ACCUM_RED_SIZE",
+    "GLX_ACCUM_GREEN_SIZE",
+    "GLX_ACCUM_BLUE_SIZE",
+    "GLX_ACCUM_ALPHA_SIZE",
+    "GLX_CONFIG_CAVEAT",
+    "GLX_X_VISUAL_TYPE",
+    "GLX_TRANSPARENT_TYPE",
+    "GLX_TRANSPARENT_INDEX_VALUE",
+    "GLX_TRANSPARENT_RED_VALUE",
+    "GLX_TRANSPARENT_GREEN_VALUE",
+    "GLX_TRANSPARENT_BLUE_VALUE",
+    "GLX_TRANSPARENT_ALPHA_VALUE",
+    "GLX_DONT_CARE",
+])
+
+GLXError = FakeEnum(Int, [
+    "GLX_BAD_SCREEN",
+    "GLX_BAD_ATTRIBUTE",
+    "GLX_NO_EXTENSION",
+    "GLX_BAD_VISUAL",
+    "GLX_BAD_CONTEXT",
+    "GLX_BAD_VALUE",
+    "GLX_BAD_ENUM",
+])
+
+
+GLXbuffer = Flags(Int, [
+    "GLX_WINDOW_BIT",
+    "GLX_PIXMAP_BIT",
+    "GLX_PBUFFER_BIT",
+    "GLX_AUX_BUFFERS_BIT",
+    "GLX_FRONT_LEFT_BUFFER_BIT",
+    "GLX_FRONT_RIGHT_BUFFER_BIT",
+    "GLX_BACK_LEFT_BUFFER_BIT",
+    "GLX_BACK_RIGHT_BUFFER_BIT",
+    "GLX_DEPTH_BUFFER_BIT",
+    "GLX_STENCIL_BUFFER_BIT",
+    "GLX_ACCUM_BUFFER_BIT",
+])
+
+GLXEnum = FakeEnum(Int, [
+    "GLX_NONE",
+    "GLX_SLOW_CONFIG",
+    "GLX_TRUE_COLOR",
+    "GLX_DIRECT_COLOR",
+    "GLX_PSEUDO_COLOR",
+    "GLX_STATIC_COLOR",
+    "GLX_GRAY_SCALE",
+    "GLX_STATIC_GRAY",
+    "GLX_TRANSPARENT_RGB",
+    "GLX_TRANSPARENT_INDEX",
+    "GLX_VISUAL_ID",
+    "GLX_SCREEN",
+    "GLX_NON_CONFORMANT_CONFIG",
+    "GLX_DRAWABLE_TYPE",
+    "GLX_RENDER_TYPE",
+    "GLX_X_RENDERABLE",
+    "GLX_FBCONFIG_ID",
+    "GLX_RGBA_TYPE",
+    "GLX_COLOR_INDEX_TYPE",
+    "GLX_MAX_PBUFFER_WIDTH",
+    "GLX_MAX_PBUFFER_HEIGHT",
+    "GLX_MAX_PBUFFER_PIXELS",
+    "GLX_PRESERVED_CONTENTS",
+    "GLX_LARGEST_PBUFFER",
+    "GLX_WIDTH",
+    "GLX_HEIGHT",
+    "GLX_EVENT_MASK",
+    "GLX_DAMAGED",
+    "GLX_SAVED",
+    "GLX_WINDOW",
+    "GLX_PBUFFER",
+    "GLX_PBUFFER_HEIGHT",
+    "GLX_PBUFFER_WIDTH",
+])
+
+GLXbuffer = Flags(Int, [
+    "GLX_RGBA_BIT",
+    "GLX_COLOR_INDEX_BIT",
+    "GLX_PBUFFER_CLOBBER_MASK",
+])
 
 glxapi = API("GLX")
 
@@ -66,7 +165,7 @@ PROC = Opaque("__GLXextFuncPtr")
 
 glxapi.add_functions([
     # GLX
-    Function(Pointer(XVisualInfo), "glXChooseVisual", [(Display, "dpy"), (Int, "screen"), (Pointer(Int), "attribList")]),
+    Function(Pointer(XVisualInfo), "glXChooseVisual", [(Display, "dpy"), (Int, "screen"), (Array(GLXAttrib, "__AttribList_size(attribList)"), "attribList")]),
     Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool_, "direct")]),
     Function(Void, "glXDestroyContext",  [(Display, "dpy"), (GLXContext, "ctx")]),
     Function(Bool_, "glXMakeCurrent", [(Display, "dpy"), (GLXDrawable, "drawable"), (GLXContext, "ctx")]),
@@ -76,11 +175,11 @@ glxapi.add_functions([
     Function(GLXPixmap, "glXCreateGLXPixmap", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"),
                                                (Pixmap, "pixmap")]),
     Function(Void, "glXDestroyGLXPixmap", [(Display, "dpy"), (GLXPixmap, "pixmap")]),
-    Function(Bool_, "glXQueryExtension", [(Display, "dpy"), (Pointer(Int), "errorb"), (Pointer(Int), "event")]),
-    Function(Bool_, "glXQueryVersion", [(Display, "dpy"), (Pointer(Int), "maj"), (Pointer(Int), "min")]),
+    Function(Bool_, "glXQueryExtension", [(Display, "dpy"), Out(Pointer(Int), "errorb"), Out(Pointer(Int), "event")]),
+    Function(Bool_, "glXQueryVersion", [(Display, "dpy"), Out(Pointer(Int), "maj"), Out(Pointer(Int), "min")]),
     Function(Bool_, "glXIsDirect", [(Display, "dpy"), (GLXContext, "ctx")]),
-    Function(Int, "glXGetConfig", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"),
-                                    (Int, "attrib"), (Pointer(Int), "value")]),
+    Function(GLXError, "glXGetConfig", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"),
+                                    (GLXAttrib, "attrib"), Out(Pointer(Int), "value")]),
     Function(GLXContext, "glXGetCurrentContext", [], sideeffects=False),
     Function(GLXDrawable, "glXGetCurrentDrawable", [], sideeffects=False),
     Function(Void, "glXWaitGL", []),
@@ -96,37 +195,35 @@ glxapi.add_functions([
     Function(Display, "glXGetCurrentDisplay", [], sideeffects=False),
 
     # GLX 1.3 and later
-    Function(Pointer(GLXFBConfig), "glXChooseFBConfig", [(Display, "dpy"), (Int, "screen"),
-                                                         (Pointer(Const(Int)), "attribList"), (Pointer(Int), "nitems")]),
-    Function(Int, "glXGetFBConfigAttrib", [(Display, "dpy"), (GLXFBConfig, "config"),
-                                            (Int, "attribute"), (Pointer(Int), "value")]),
-    Function(Pointer(GLXFBConfig), "glXGetFBConfigs", [(Display, "dpy"), (Int, "screen"),
-                                              (Pointer(Int), "nelements")]),
+    Function(Array(GLXFBConfig, "*nitems"), "glXChooseFBConfig", [(Display, "dpy"), (Int, "screen"), (Const(Array(GLXAttrib, "__AttribList_size(attribList)")), "attribList"), Out(Pointer(Int), "nitems")]),
+    Function(Int, "glXGetFBConfigAttrib", [(Display, "dpy"), (GLXFBConfig, "config"), (GLXAttrib, "attribute"), Out(Pointer(Int), "value")]),
+    Function(Array(GLXFBConfig, "*nelements"), "glXGetFBConfigs", [(Display, "dpy"), (Int, "screen"), 
+                                                                   Out(Pointer(Int), "nelements")]),
     Function(Pointer(XVisualInfo), "glXGetVisualFromFBConfig", [(Display, "dpy"),
                                                                 (GLXFBConfig, "config")]),
     Function(GLXWindow, "glXCreateWindow", [(Display, "dpy"), (GLXFBConfig, "config"),
-                                            (Window, "win"), (Pointer(Const(Int)), "attribList")]),
+                                            (Window, "win"), (Const(Array(Int, "__AttribList_size(attribList)")), "attribList")]),
     Function(Void, "glXDestroyWindow", [(Display, "dpy"), (GLXWindow, "window")]),
     Function(GLXPixmap, "glXCreatePixmap", [(Display, "dpy"), (GLXFBConfig, "config"),
-                                            (Pixmap, "pixmap"), (Pointer(Const(Int)), "attribList")]),
+                                            (Pixmap, "pixmap"), (Const(Array(Int, "__AttribList_size(attribList)")), "attribList")]),
     Function(Void, "glXDestroyPixmap", [(Display, "dpy"), (GLXPixmap, "pixmap")]),
     Function(GLXPbuffer, "glXCreatePbuffer", [(Display, "dpy"), (GLXFBConfig, "config"),
-                                              (Pointer(Const(Int)), "attribList")]),
+                                              (Const(Array(GLXEnum, "__AttribList_size(attribList)")), "attribList")]),
     Function(Void, "glXDestroyPbuffer", [(Display, "dpy"), (GLXPbuffer, "pbuf")]),
-    Function(Void, "glXQueryDrawable", [(Display, "dpy"), (GLXDrawable, "draw"), (Int, "attribute"),
-                                        (Pointer(UInt), "value")]),
+    Function(Void, "glXQueryDrawable", [(Display, "dpy"), (GLXDrawable, "draw"), (GLXEnum, "attribute"),
+                                        Out(Pointer(UInt), "value")]),
     Function(GLXContext, "glXCreateNewContext", [(Display, "dpy"), (GLXFBConfig, "config"),
-                                                 (Int, "renderType"), (GLXContext, "shareList"),
+                                                 (GLXEnum, "renderType"), (GLXContext, "shareList"),
                                                  (Bool_, "direct")]),
     Function(Bool_, "glXMakeContextCurrent", [(Display, "dpy"), (GLXDrawable, "draw"),
                                              (GLXDrawable, "read"), (GLXContext, "ctx")]),
     Function(GLXDrawable, "glXGetCurrentReadDrawable", []),
-    Function(Int, "glXQueryContext", [(Display, "dpy"), (GLXContext, "ctx"), (Int, "attribute"),
-                                      (Pointer(Int), "value")]),
+    Function(Int, "glXQueryContext", [(Display, "dpy"), (GLXContext, "ctx"), (GLXEnum, "attribute"),
+                                      Out(Pointer(Int), "value")]),
     Function(Void, "glXSelectEvent", [(Display, "dpy"), (GLXDrawable, "drawable"),
                                       (ULong, "mask")]),
     Function(Void, "glXGetSelectedEvent", [(Display, "dpy"), (GLXDrawable, "drawable"),
-                                           (Pointer(ULong), "mask")]),
+                                           Out(Pointer(ULong), "mask")]),
     # TODO: extensions
 
     # Must be last
