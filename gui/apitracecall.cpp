@@ -263,3 +263,25 @@ QString ApiTraceCall::richText() const
     staticText();
     return m_richText;
 }
+
+QString ApiTraceCall::filterText() const
+{
+    if (!m_filterText.isEmpty())
+        return m_filterText;
+
+    m_filterText = name;
+    for (int i = 0; i < argNames.count(); ++i) {
+        m_filterText += argNames[i];
+        m_filterText += QString::fromLatin1(" = ");
+        m_filterText += apiVariantToString(argValues[i]);
+        if (i < argNames.count() - 1)
+            m_filterText += QString::fromLatin1(", ");
+    }
+    m_filterText += QLatin1String(")");
+
+    if (returnValue.isValid()) {
+        m_filterText += QLatin1String(" = ");
+        m_filterText += apiVariantToString(returnValue);
+    }
+    return m_filterText;
+}

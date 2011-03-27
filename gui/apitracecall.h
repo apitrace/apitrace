@@ -106,11 +106,13 @@ public:
     QVariantList argValues;
     QVariant returnValue;
 
+    QString filterText() const;
     QString richText() const;
     QStaticText staticText() const;
 private:
     mutable QString m_richText;
     mutable QStaticText m_staticText;
+    mutable QString m_filterText;
 };
 Q_DECLARE_METATYPE(ApiTraceCall);
 Q_DECLARE_METATYPE(ApiTraceCall*);
