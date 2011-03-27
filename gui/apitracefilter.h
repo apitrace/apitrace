@@ -3,7 +3,6 @@
 
 #include <QSortFilterProxyModel>
 
-//! [0]
 class ApiTraceFilter : public QSortFilterProxyModel
 {
     Q_OBJECT

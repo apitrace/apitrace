@@ -3,10 +3,12 @@
 
 #include "ui_mainwindow.h"
 
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
+
 
 class ApiTraceModel;
 class ApiTraceFilter;
+class QModelIndex;
 
 class MainWindow : public QMainWindow
 {
@@ -18,6 +20,7 @@ public slots:
     void loadTrace(const QString &fileName);
 
 private slots:
+    void callItemSelected(const QModelIndex &index);
     void openTrace();
 
 private:

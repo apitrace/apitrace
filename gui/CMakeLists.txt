@@ -21,7 +21,7 @@ include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_S
 
 add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-target_link_libraries(qapitrace trace ${QT_QTCORE_LIBRARIES} ${QT_QTGUI_LIBRARIES} )
+target_link_libraries(qapitrace trace ${QT_QTCORE_LIBRARIES} ${QT_QTGUI_LIBRARIES} ${QT_QTWEBKIT_LIBRARIES})
 
 ########### install files ###############
 

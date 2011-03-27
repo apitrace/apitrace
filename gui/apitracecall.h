@@ -112,5 +112,7 @@ private:
     mutable QString m_richText;
     mutable QStaticText m_staticText;
 };
+Q_DECLARE_METATYPE(ApiTraceCall);
+Q_DECLARE_METATYPE(ApiTraceCall*);
 
 #endif

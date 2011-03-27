@@ -38,7 +38,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
 
     switch (index.column()) {
     case 0: {
-        return item->richText();
+        return QVariant::fromValue(item);
     }
     default:
         return QVariant();
