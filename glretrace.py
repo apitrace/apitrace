@@ -332,17 +332,29 @@ static void display(void) {
                     glutSwapBuffers();
                 else
                     glFlush();
+
+                // Return now to allow GLUT to resize the window.
+                delete call;
                 return;
+            } else if (name == "glXMakeCurrent" ||
+                       name == "wglMakeCurrent") {
+                glFlush();
+                if (!double_buffer) {
+                    frame_complete();
+                    // Return now to allow GLUT to resize window.
+                    delete call;
+                    return;
+                }
             } else {
                 continue;
             }
         }
 
         if (name == "glFlush") {
+            glFlush();
             if (!double_buffer) {
                 frame_complete();
             }
-            glFlush();
         }
         
         retrace_call(*call);
