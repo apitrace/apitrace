@@ -8,14 +8,17 @@
 #include <QAction>
 #include <QDebug>
 #include <QDir>
-#include <QLineEdit>
 #include <QFileDialog>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QProcess>
 #include <QToolBar>
 #include <QWebView>
 
 
 MainWindow::MainWindow()
-    : QMainWindow()
+    : QMainWindow(),
+      m_replayProcess(0)
 {
     m_ui.setupUi(this);
 
@@ -35,6 +38,14 @@ MainWindow::MainWindow()
 
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
+    connect(m_ui.actionQuit, SIGNAL(triggered()),
+            this, SLOT(close()));
+
+    connect(m_ui.actionReplay, SIGNAL(triggered()),
+            this, SLOT(replayStart()));
+    connect(m_ui.actionStop, SIGNAL(triggered()),
+            this, SLOT(replayStop()));
+
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
     connect(m_filterEdit, SIGNAL(returnPressed()),
@@ -52,21 +63,28 @@ void MainWindow::openTrace()
 
     qDebug()<< "File name : " <<fileName;
 
+    newTraceFile(fileName);
     m_model->loadTraceFile(fileName);
 }
 
 void MainWindow::loadTrace(const QString &fileName)
 {
+    if (!QFile::exists(fileName)) {
+        QMessageBox::warning(this, tr("File Missing"),
+                             tr("File '%1' doesn't exist.").arg(fileName));
+        return;
+    }
     qDebug()<< "Loading  : " <<fileName;
 
     m_model->loadTraceFile(fileName);
+    newTraceFile(fileName);
 }
 
 void MainWindow::callItemSelected(const QModelIndex &index)
 {
     ApiTraceCall *call = index.data().value<ApiTraceCall*>();
     if (call) {
-        m_ui.detailsWebView->setHtml(call->richText());
+        m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
     } else {
         m_ui.detailsDock->hide();
@@ -76,6 +94,94 @@ void MainWindow::callItemSelected(const QModelIndex &index)
 void MainWindow::filterTrace()
 {
     m_proxyModel->setFilterString(m_filterEdit->text());
+}
+
+void MainWindow::replayStart()
+{
+    if (!m_replayProcess) {
+#ifdef Q_OS_WIN
+        QString format = QLatin1String("%1;");
+#else
+        QString format = QLatin1String("%1:");
+#endif
+        QString buildPath = format.arg(BUILD_DIR);
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert("PATH", buildPath + env.value("PATH"));
+
+        qputenv("PATH", env.value("PATH").toLatin1());
+
+        m_replayProcess = new QProcess(this);
+        m_replayProcess->setProcessEnvironment(env);
+
+        connect(m_replayProcess, SIGNAL(finished(int, QProcess::ExitStatus)),
+                this, SLOT(replayFinished()));
+        connect(m_replayProcess, SIGNAL(error(QProcess::ProcessError)),
+                this, SLOT(replayError(QProcess::ProcessError)));
+    }
+
+    if (m_traceFileName.isEmpty())
+        return;
+
+    QStringList arguments;
+    arguments << m_traceFileName;
+
+    m_replayProcess->start(QLatin1String("glretrace"),
+                           arguments);
+
+    m_ui.actionStop->setEnabled(true);
+    m_ui.actionReplay->setEnabled(false);
+}
+
+void MainWindow::replayStop()
+{
+    if (m_replayProcess) {
+        m_replayProcess->kill();
+
+        m_ui.actionStop->setEnabled(false);
+        m_ui.actionReplay->setEnabled(true);
+    }
+}
+
+void MainWindow::newTraceFile(const QString &fileName)
+{
+    m_traceFileName = fileName;
+
+    if (m_traceFileName.isEmpty()) {
+        m_ui.actionReplay->setEnabled(false);
+    } else {
+        m_ui.actionReplay->setEnabled(true);
+    }
+}
+
+void MainWindow::replayFinished()
+{
+    m_ui.actionStop->setEnabled(false);
+    m_ui.actionReplay->setEnabled(true);
+
+    QString output = m_replayProcess->readAllStandardOutput();
+
+#if 0
+    qDebug()<<"Process finished = ";
+    qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
+    qDebug()<<"\tout = "<<output;
+#endif
+
+    if (output.length() < 80) {
+        statusBar()->showMessage(output);
+    }
+}
+
+void MainWindow::replayError(QProcess::ProcessError err)
+{
+    m_ui.actionStop->setEnabled(false);
+    m_ui.actionReplay->setEnabled(true);
+
+    qDebug()<<"Process error = "<<err;
+    qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
+    qDebug()<<"\tout = "<<m_replayProcess->readAllStandardOutput();
+    QMessageBox::warning(
+        this, tr("Replay Failed"),
+        tr("Couldn't execute the replay file '%1'").arg(m_traceFileName));
 }
 
 #include "mainwindow.moc"
