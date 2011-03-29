@@ -51,25 +51,20 @@ __gl_type_size(GLenum type)
     case GL_BYTE:
     case GL_UNSIGNED_BYTE:
         return 1;
-        break;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
     case GL_2_BYTES:
     case GL_HALF_FLOAT:
         return 2;
-        break;
     case GL_3_BYTES:
         return 3;
-        break;
     case GL_INT:
     case GL_UNSIGNED_INT:
     case GL_FLOAT:
     case GL_4_BYTES:
         return 4;
-        break;
     case GL_DOUBLE:
         return 8;
-        break;
     default:
         OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         return 0;
