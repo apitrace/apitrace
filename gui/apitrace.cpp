@@ -8,6 +8,10 @@ ApiTrace::ApiTrace()
     m_loader = new LoaderThread(this);
     connect(m_loader, SIGNAL(parsedFrames(const QList<ApiTraceFrame*>)),
             this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
+    connect(m_loader, SIGNAL(started()),
+            this, SIGNAL(startedLoadingTrace()));
+    connect(m_loader, SIGNAL(finished()),
+            this, SIGNAL(finishedLoadingTrace()));
 }
 
 ApiTrace::~ApiTrace()

@@ -43,6 +43,8 @@ public slots:
     void setFrameMarker(FrameMarker marker);
 
 signals:
+    void startedLoadingTrace();
+    void finishedLoadingTrace();
     void invalidated();
     void framesInvalidated();
 

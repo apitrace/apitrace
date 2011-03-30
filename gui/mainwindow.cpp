@@ -13,6 +13,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProcess>
+#include <QProgressBar>
 #include <QToolBar>
 #include <QWebView>
 
@@ -24,6 +25,10 @@ MainWindow::MainWindow()
     m_ui.setupUi(this);
 
     m_trace = new ApiTrace();
+    connect(m_trace, SIGNAL(startedLoadingTrace()),
+            this, SLOT(startedLoadingTrace()));
+    connect(m_trace, SIGNAL(finishedLoadingTrace()),
+            this, SLOT(finishedLoadingTrace()));
 
     m_model = new ApiTraceModel();
     m_model->setApiTrace(m_trace);
@@ -37,6 +42,11 @@ MainWindow::MainWindow()
     QToolBar *toolBar = addToolBar(tr("Navigation"));
     m_filterEdit = new QLineEdit(toolBar);
     toolBar->addWidget(m_filterEdit);
+
+    m_progressBar = new QProgressBar();
+    m_progressBar->setRange(0, 0);
+    statusBar()->addPermanentWidget(m_progressBar);
+    m_progressBar->hide();
 
     m_ui.detailsDock->hide();
 
@@ -79,6 +89,7 @@ void MainWindow::loadTrace(const QString &fileName)
     }
     qDebug()<< "Loading  : " <<fileName;
 
+    m_progressBar->setValue(0);
     newTraceFile(fileName);
 }
 
@@ -185,6 +196,26 @@ void MainWindow::replayError(QProcess::ProcessError err)
     QMessageBox::warning(
         this, tr("Replay Failed"),
         tr("Couldn't execute the replay file '%1'").arg(m_traceFileName));
+}
+
+void MainWindow::startedLoadingTrace()
+{
+    Q_ASSERT(m_trace);
+    m_progressBar->show();
+    QFileInfo info(m_trace->fileName());
+    statusBar()->showMessage(
+        tr("Loading %1...").arg(info.fileName()));
+}
+
+void MainWindow::finishedLoadingTrace()
+{
+    m_progressBar->hide();
+    if (!m_trace) {
+        return;
+    }
+    QFileInfo info(m_trace->fileName());
+    statusBar()->showMessage(
+        tr("Loaded %1").arg(info.fileName()), 3000);
 }
 
 #include "mainwindow.moc"
