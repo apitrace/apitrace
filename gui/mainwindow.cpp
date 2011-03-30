@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include "apitrace.h"
 #include "apitracecall.h"
 #include "apicalldelegate.h"
 #include "apitracemodel.h"
@@ -22,7 +23,10 @@ MainWindow::MainWindow()
 {
     m_ui.setupUi(this);
 
+    m_trace = new ApiTrace();
+
     m_model = new ApiTraceModel();
+    m_model->setApiTrace(m_trace);
     m_proxyModel = new ApiTraceFilter();
     m_proxyModel->setSourceModel(m_model);
     m_ui.callView->setModel(m_proxyModel);
@@ -64,7 +68,6 @@ void MainWindow::openTrace()
     qDebug()<< "File name : " <<fileName;
 
     newTraceFile(fileName);
-    m_model->loadTraceFile(fileName);
 }
 
 void MainWindow::loadTrace(const QString &fileName)
@@ -76,7 +79,6 @@ void MainWindow::loadTrace(const QString &fileName)
     }
     qDebug()<< "Loading  : " <<fileName;
 
-    m_model->loadTraceFile(fileName);
     newTraceFile(fileName);
 }
 
@@ -145,6 +147,7 @@ void MainWindow::replayStop()
 void MainWindow::newTraceFile(const QString &fileName)
 {
     m_traceFileName = fileName;
+    m_trace->setFileName(fileName);
 
     if (m_traceFileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);

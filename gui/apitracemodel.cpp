@@ -9,18 +9,14 @@
 
 
 ApiTraceModel::ApiTraceModel(QObject *parent)
-    : QAbstractItemModel(parent)
+    : QAbstractItemModel(parent),
+      m_trace(0)
 {
-    m_loader = new LoaderThread();
-
-    connect(m_loader, SIGNAL(parsedCalls(const QList<Trace::Call*>&)),
-            SLOT(appendCalls(const QList<Trace::Call*>&)));
 }
 
 ApiTraceModel::~ApiTraceModel()
 {
-    qDeleteAll(m_calls);
-    delete m_loader;
+    m_trace = 0;
 }
 
 QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
@@ -31,18 +27,24 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    ApiTraceCall *item = m_calls.value(index.row());
-
-    if (!item)
+    //data only in the first column
+    if (index.column() != 0)
         return QVariant();
 
-    switch (index.column()) {
-    case 0: {
-        return QVariant::fromValue(item);
+    ApiTraceEvent *itm = item(index);
+    if (itm) {
+        if (itm->type() == ApiTraceEvent::Frame) {
+            ApiTraceFrame *frame =
+                static_cast<ApiTraceFrame *>(itm);
+            return QVariant::fromValue(frame);
+        } else if (itm->type() == ApiTraceEvent::Call) {
+            ApiTraceCall *call =
+                static_cast<ApiTraceCall *>(itm);
+            return QVariant::fromValue(call);
+        }
     }
-    default:
-        return QVariant();
-    }
+
+    return QVariant();
 }
 
 Qt::ItemFlags ApiTraceModel::flags(const QModelIndex &index) const
@@ -59,7 +61,7 @@ QVariant ApiTraceModel::headerData(int section, Qt::Orientation orientation,
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
         switch (section) {
         case 0:
-            return tr("Function");
+            return tr("Event");
         default:
             //fall through
             break;
@@ -75,17 +77,39 @@ QModelIndex ApiTraceModel::index(int row, int column,
     if (parent.isValid() && parent.column() != 0)
         return QModelIndex();
 
-    ApiTraceCall *call = m_calls.value(row);
-
-    if (call)
-        return createIndex(row, column, call);
-    else
-        return QModelIndex();
+    if (parent.isValid()) {
+        QVariant data = parent.data();
+        ApiTraceFrame *frame = data.value<ApiTraceFrame*>();
+        if (!frame) {
+            qDebug()<<"got a valid parent but it's not a frame "<<data;
+            return QModelIndex();
+        }
+        ApiTraceCall *call = frame->calls.value(row);
+        if (call)
+            return createIndex(row, column, call);
+        else
+            return QModelIndex();
+    } else {
+        ApiTraceFrame *frame = m_trace->frameAt(row);
+        if (frame)
+            return createIndex(row, column, frame);
+        else
+            return QModelIndex();
+    }
+    return QModelIndex();
 }
 
 bool ApiTraceModel::hasChildren(const QModelIndex &parent) const
 {
-    return parent.isValid() ? false : (rowCount() > 0);
+    if (parent.isValid()) {
+        ApiTraceFrame *frame = parent.data().value<ApiTraceFrame*>();
+        if (frame)
+            return !frame->calls.isEmpty();
+        else
+            return false;
+    } else {
+        return (rowCount() > 0);
+    }
 }
 
 QModelIndex ApiTraceModel::parent(const QModelIndex &index) const
@@ -93,18 +117,34 @@ QModelIndex ApiTraceModel::parent(const QModelIndex &index) const
     if (!index.isValid())
         return QModelIndex();
 
-    //list for now
+    ApiTraceCall *call = index.data().value<ApiTraceCall*>();
+    if (call) {
+        Q_ASSERT(call->parentFrame);
+        return createIndex(call->parentFrame->number,
+                           0, call->parentFrame);
+    }
     return QModelIndex();
 }
 
 int ApiTraceModel::rowCount(const QModelIndex &parent) const
 {
-    return m_calls.count();
+    if (!parent.isValid())
+        return m_trace->numFrames();
+
+    ApiTraceCall *call = parent.data().value<ApiTraceCall*>();
+    if (call)
+        return 0;
+
+    ApiTraceFrame *frame = parent.data().value<ApiTraceFrame*>();
+    if (frame)
+        return frame->calls.count();
+
+    return 0;
 }
 
 int ApiTraceModel::columnCount(const QModelIndex &parent) const
 {
-    return parent.isValid() ? 0 : 1;
+    return 1;
 }
 
 
@@ -121,60 +161,49 @@ bool ApiTraceModel::removeRows(int position, int rows,
 
     Q_UNUSED(parent);
 
-    if (m_calls.count() <= position)
-        return false;
-
     beginRemoveRows(parent, position, position + rows - 1);
-    for (int i = 0; i < rows; ++i) {
-        ApiTraceCall *call = m_calls.value(i);
-        m_calls.removeAt(i);
-        delete call;
-    }
+    //XXX remove it from ApiTrace
     endRemoveRows();
 
     return success;
 }
 
-void ApiTraceModel::loadTraceFile(const QString &fileName)
+void ApiTraceModel::setApiTrace(ApiTrace *trace)
 {
-    if (m_loader->isRunning()) {
-        m_loader->terminate();
-        m_loader->wait();
-    }
-    removeRows(0, m_calls.count(), QModelIndex());
-
-    m_loader->loadFile(fileName);
+    if (m_trace == trace)
+        return;
+    if (m_trace)
+        disconnect(m_trace);
+    m_trace = trace;
+    connect(m_trace, SIGNAL(framesInvalidated()),
+            this, SLOT(invalidateFrames()));
+    connect(m_trace, SIGNAL(framesAdded(int, int)),
+            this, SLOT(appendFrames(int, int)));
 }
 
-void ApiTraceModel::appendCalls(const QList<Trace::Call*> traceCalls)
+const ApiTrace * ApiTraceModel::apiTrace() const
 {
-    beginInsertRows(QModelIndex(), m_calls.count(),
-                    m_calls.count() + traceCalls.count());
-    foreach(Trace::Call *call, traceCalls) {
-        ApiTraceCall *apiCall = new ApiTraceCall;
-        apiCall->name = QString::fromStdString(call->sig->name);
+    return m_trace;
+}
 
-        QString argumentsText;
-        for (int i = 0; i < call->sig->arg_names.size(); ++i) {
-            apiCall->argNames +=
-                QString::fromStdString(call->sig->arg_names[i]);
-        }
-        if (call->ret) {
-            VariantVisitor retVisitor;
-            call->ret->visit(retVisitor);
-            apiCall->returnValue = retVisitor.variant();
-        }
-        for (int i = 0; i < call->args.size(); ++i) {
-            VariantVisitor argVisitor;
-            call->args[i]->visit(argVisitor);
-            apiCall->argValues += argVisitor.variant();
-        }
+void ApiTraceModel::invalidateFrames()
+{
+    beginResetModel();
+    endResetModel();
+}
 
-        m_calls.append(apiCall);
-    }
+void ApiTraceModel::appendFrames(int oldCount, int numAdded)
+{
+    beginInsertRows(QModelIndex(), oldCount,
+                    oldCount + numAdded);
     endInsertRows();
+}
 
-    qDeleteAll(traceCalls);
+ApiTraceEvent * ApiTraceModel::item(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return 0;
+    return static_cast<ApiTraceEvent*>(index.internalPointer());
 }
 
 #include "apitracemodel.moc"

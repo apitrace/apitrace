@@ -4,7 +4,7 @@
 
 #include <QDebug>
 
-ApiTraceFilter::ApiTraceFilter(QObject *parent )
+ApiTraceFilter::ApiTraceFilter(QObject *parent)
     : QSortFilterProxyModel()
 {
 }
@@ -16,8 +16,10 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
     QVariant varientData = sourceModel()->data(index0);
     ApiTraceCall *call = varientData.value<ApiTraceCall*>();
 
-    if (!call)
-        return false;
+    if (!call) {
+        ApiTraceFrame *frame = varientData.value<ApiTraceFrame*>();
+        return frame != 0;
+    }
 
     QString function = call->name;
 

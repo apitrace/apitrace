@@ -12,7 +12,8 @@ ApiCallDelegate::ApiCallDelegate(QWidget *parent)
 {
 }
 
-void ApiCallDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
+void ApiCallDelegate::paint(QPainter *painter,
+                            const QStyleOptionViewItem &option,
                             const QModelIndex &index) const
 {
     ApiTraceCall *call = index.data().value<ApiTraceCall*>();
@@ -21,8 +22,16 @@ void ApiCallDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
         //text.setTextWidth(option.rect.width());
         QStyledItemDelegate::paint(painter, option, index);
         painter->drawStaticText(option.rect.topLeft(), text);
-    } else{
-        QStyledItemDelegate::paint(painter, option, index);
+    } else {
+        ApiTraceFrame *frame = index.data().value<ApiTraceFrame*>();
+        if (frame) {
+            QStaticText text = frame->staticText();
+            //text.setTextWidth(option.rect.width());
+            QStyledItemDelegate::paint(painter, option, index);
+            painter->drawStaticText(option.rect.topLeft(), text);
+        } else {
+            QStyledItemDelegate::paint(painter, option, index);
+        }
     }
 }
 
@@ -34,6 +43,13 @@ QSize ApiCallDelegate::sizeHint(const QStyleOptionViewItem &option,
         QStaticText text = call->staticText();
         //text.setTextWidth(option.rect.width());
         return text.size().toSize();
+    } else {
+        ApiTraceFrame *frame = index.data().value<ApiTraceFrame*>();
+        if (frame) {
+            QStaticText text = frame->staticText();
+            //text.setTextWidth(option.rect.width());
+            return text.size().toSize();
+        }
     }
     return QStyledItemDelegate::sizeHint(option, index);
 }

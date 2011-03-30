@@ -1,8 +1,6 @@
 #ifndef APICALLDELEGATE_H
 #define APICALLDELEGATE_H
 
-
-
 #include <QStyledItemDelegate>
 
 class ApiCallDelegate : public QStyledItemDelegate

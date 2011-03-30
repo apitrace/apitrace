@@ -296,3 +296,54 @@ QString ApiTraceCall::filterText() const
     }
     return m_filterText;
 }
+
+QStaticText ApiTraceFrame::staticText() const
+{
+    if (!m_staticText.text().isEmpty())
+        return m_staticText;
+
+    QString richText =
+        QString::fromLatin1("<span style=\"font-weight:bold\">Frame %1</span>").arg(number);
+
+    m_staticText.setText(richText);
+    QTextOption opt;
+    opt.setWrapMode(QTextOption::NoWrap);
+    m_staticText.setTextOption(opt);
+    m_staticText.prepare();
+
+    return m_staticText;
+}
+
+int ApiTraceCall::numChildren() const
+{
+    return 0;
+}
+
+int ApiTraceFrame::numChildren() const
+{
+    return calls.count();
+}
+
+ApiTraceFrame::ApiTraceFrame()
+    : ApiTraceEvent(ApiTraceEvent::Frame)
+{
+}
+
+ApiTraceCall::ApiTraceCall()
+    : ApiTraceEvent(ApiTraceEvent::Call)
+{
+}
+
+ApiTraceEvent::ApiTraceEvent()
+    : m_type(ApiTraceEvent::None)
+{
+}
+
+ApiTraceEvent::ApiTraceEvent(Type t)
+    : m_type(t)
+{
+}
+
+ApiTraceCall::~ApiTraceCall()
+{
+}

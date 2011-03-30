@@ -1,18 +1,18 @@
 #include "mainwindow.h"
 
-#include "trace_model.hpp"
+#include "apitracecall.h"
 
 #include <QApplication>
 #include <QMetaType>
 #include <QVariant>
 
-Q_DECLARE_METATYPE(QList<Trace::Call*>);
+Q_DECLARE_METATYPE(QList<ApiTraceFrame*>);
 
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    qRegisterMetaType<QList<Trace::Call*> >();
+    qRegisterMetaType<QList<ApiTraceFrame*> >();
     MainWindow window;
 
     window.show();

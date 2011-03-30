@@ -6,7 +6,7 @@
 #include <QMainWindow>
 #include <QProcess>
 
-
+class ApiTrace;
 class ApiTraceModel;
 class ApiTraceFilter;
 class QLineEdit;
@@ -36,6 +36,7 @@ private:
 
 private:
     Ui_MainWindow m_ui;
+    ApiTrace *m_trace;
     ApiTraceModel *m_model;
     ApiTraceFilter *m_proxyModel;
     QLineEdit *m_filterEdit;

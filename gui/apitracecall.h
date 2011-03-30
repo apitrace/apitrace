@@ -98,23 +98,68 @@ Q_DECLARE_METATYPE(ApiArray);
 
 QString apiVariantToString(const QVariant &variant);
 
-class ApiTraceCall
+class ApiTraceFrame;
+
+class ApiTraceEvent
 {
 public:
+    enum Type {
+        None,
+        Call,
+        Frame
+    };
+public:
+    ApiTraceEvent();
+    ApiTraceEvent(Type t);
+
+    Type type() const { return m_type; }
+
+    virtual QStaticText staticText() const = 0;
+    virtual int numChildren() const = 0;
+
+protected:
+    Type m_type;
+};
+Q_DECLARE_METATYPE(ApiTraceEvent*);
+
+class ApiTraceCall : public ApiTraceEvent
+{
+public:
+    ApiTraceCall();
+    ~ApiTraceCall();
+
+    int index;
     QString name;
     QStringList argNames;
     QVariantList argValues;
     QVariant returnValue;
+    ApiTraceFrame *parentFrame;
 
     QString toHtml() const;
     QString filterText() const;
     QStaticText staticText() const;
+    int numChildren() const;
 private:
     mutable QString m_richText;
     mutable QString m_filterText;
     mutable QStaticText m_staticText;
 };
-Q_DECLARE_METATYPE(ApiTraceCall);
 Q_DECLARE_METATYPE(ApiTraceCall*);
+
+class ApiTraceFrame : public ApiTraceEvent
+{
+public:
+    ApiTraceFrame();
+    int number;
+    QList<ApiTraceCall*> calls;
+
+
+    int numChildren() const;
+    QStaticText staticText() const;
+private:
+    mutable QStaticText m_staticText;
+};
+Q_DECLARE_METATYPE(ApiTraceFrame*);
+
 
 #endif

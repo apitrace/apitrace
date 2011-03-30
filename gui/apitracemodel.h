@@ -6,20 +6,22 @@
 #include <QModelIndex>
 #include <QVariant>
 
+class ApiTrace;
 class ApiTraceCall;
-class LoaderThread;
-namespace Trace {
-    class Call;
-}
+class ApiTraceEvent;
 
 class ApiTraceModel : public QAbstractItemModel
 {
     Q_OBJECT
-
 public:
     ApiTraceModel(QObject *parent = 0);
     ~ApiTraceModel();
 
+    void setApiTrace(ApiTrace *trace);
+    const ApiTrace *apiTrace() const;
+
+public:
+    /* QAbstractItemModel { */
     QVariant data(const QModelIndex &index, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QVariant headerData(int section, Qt::Orientation orientation,
@@ -35,14 +37,17 @@ public:
                     const QModelIndex &parent = QModelIndex());
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex());
+    /* } QAbstractItemModel; */
 
-public slots:
-    void loadTraceFile(const QString &fileName);
-    void appendCalls(const QList<Trace::Call*> traceCalls);
+private slots:
+    void invalidateFrames();
+    void appendFrames(int oldCount, int numAdded);
 
 private:
-    QList<ApiTraceCall*> m_calls;
-    LoaderThread        *m_loader;
+    ApiTraceEvent *item(const QModelIndex &index) const;
+
+private:
+    ApiTrace *m_trace;
 };
 
 #endif

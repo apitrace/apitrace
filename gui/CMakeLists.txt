@@ -1,4 +1,5 @@
 set(qapitrace_SRCS
+   apitrace.cpp
    apicalldelegate.cpp
    apitracecall.cpp
    apitracefilter.cpp
