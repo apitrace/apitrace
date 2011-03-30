@@ -193,6 +193,8 @@ if __name__ == '__main__':
 #define RETRACE
 
 #include "glproc.hpp"
+#include "glstate.hpp"
+
 #include <GL/glut.h>
 
 static bool double_buffer = false;
@@ -208,6 +210,8 @@ bool __wait = false;
 bool __benchmark = false;
 const char *__compare_prefix = NULL;
 const char *__snapshot_prefix = NULL;
+
+unsigned __dump_state = ~0;
 
 
 static void
@@ -318,6 +322,10 @@ static void display(void) {
     while ((call = parser.parse_call())) {
         const std::string &name = call->name();
 
+        if (call->no == __dump_state) {
+            state_dump(std::cout);
+        }
+
         if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
             (name[0] == 'g' && name[1] == 'l' && name[2] == 'X')) {
             // XXX: We ignore the majority of the OS-specific calls for now
@@ -368,10 +376,12 @@ static void display(void) {
     long long endTime = OS::GetTime();
     float timeInterval = (endTime - __startTime) * 1.0E-6;
 
-    std::cout << 
-        "Rendered " << __frame << " frames"
-        " in " <<  timeInterval << " secs,"
-        " average of " << (__frame/timeInterval) << " fps\n";
+    if (verbosity >= -1) { 
+        std::cout << 
+            "Rendered " << __frame << " frames"
+            " in " <<  timeInterval << " secs,"
+            " average of " << (__frame/timeInterval) << " fps\n";
+    }
 
     if (__wait) {
         glutDisplayFunc(&display_noop);
@@ -400,6 +410,7 @@ static void usage(void) {
         "  -db          use a double buffer visual\n"
         "  -s PREFIX    take snapshots\n"
         "  -v           verbose output\n"
+        "  -D CALLNO    dump state at specific call no\n"
         "  -w           wait on final frame\n";
 }
 
@@ -418,9 +429,12 @@ int main(int argc, char **argv)
             break;
         } else if (!strcmp(arg, "-b")) {
             __benchmark = true;
-            --verbosity;
+            verbosity = -1;
         } else if (!strcmp(arg, "-c")) {
             __compare_prefix = argv[++i];
+        } else if (!strcmp(arg, "-D")) {
+            __dump_state = atoi(argv[++i]);
+            verbosity = -2;
         } else if (!strcmp(arg, "-db")) {
             double_buffer = true;
         } else if (!strcmp(arg, "--help")) {

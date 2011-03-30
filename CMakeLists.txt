@@ -211,13 +211,24 @@ if (GLUT_INCLUDE_DIR)
         DEPENDS glretrace.py retrace.py codegen.py glapi.py glenum.py stdapi.py
     )
 
+    add_custom_command (
+        OUTPUT glstate.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate.cpp
+        DEPENDS glstate.py glenum.py stdapi.py
+    )
+
     include_directories (
         ${CMAKE_CURRENT_BINARY_DIR}
         ${OPENGL_INCLUDE_PATH}
         ${GLUT_INCLUDE_DIR}
     )
 
-    add_executable (glretrace glretrace.cpp image.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_executable (glretrace
+        glretrace.cpp
+        glstate.cpp
+        image.cpp 
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+    )
 
     target_link_libraries (glretrace
         trace
