@@ -9,6 +9,7 @@ apiCallFromTraceCall(const Trace::Call *call)
 {
     ApiTraceCall *apiCall = new ApiTraceCall();
     apiCall->name = QString::fromStdString(call->sig->name);
+    apiCall->index = call->no;
 
     QString argumentsText;
     for (int i = 0; i < call->sig->arg_names.size(); ++i) {
@@ -54,7 +55,6 @@ void LoaderThread::run()
             ApiTraceCall *apiCall =
                 apiCallFromTraceCall(call);
             apiCall->parentFrame = currentFrame;
-            apiCall->index = currentFrame->calls.count();
             currentFrame->calls.append(apiCall);
             if (ApiTrace::isCallAFrameMarker(apiCall,
                                              m_frameMarker)) {

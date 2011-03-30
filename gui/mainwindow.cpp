@@ -20,7 +20,8 @@
 
 MainWindow::MainWindow()
     : QMainWindow(),
-      m_replayProcess(0)
+      m_replayProcess(0),
+      m_findingState(false)
 {
     m_ui.setupUi(this);
 
@@ -59,6 +60,8 @@ MainWindow::MainWindow()
             this, SLOT(replayStart()));
     connect(m_ui.actionStop, SIGNAL(triggered()),
             this, SLOT(replayStop()));
+    connect(m_ui.actionLookupState, SIGNAL(triggered()),
+            this, SLOT(lookupState()));
 
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
@@ -99,7 +102,9 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     if (call) {
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
+        m_currentFrame = call->parentFrame;
     } else {
+        m_currentFrame = index.data().value<ApiTraceFrame*>();
         m_ui.detailsDock->hide();
     }
 }
@@ -111,38 +116,7 @@ void MainWindow::filterTrace()
 
 void MainWindow::replayStart()
 {
-    if (!m_replayProcess) {
-#ifdef Q_OS_WIN
-        QString format = QLatin1String("%1;");
-#else
-        QString format = QLatin1String("%1:");
-#endif
-        QString buildPath = format.arg(BUILD_DIR);
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert("PATH", buildPath + env.value("PATH"));
-
-        qputenv("PATH", env.value("PATH").toLatin1());
-
-        m_replayProcess = new QProcess(this);
-        m_replayProcess->setProcessEnvironment(env);
-
-        connect(m_replayProcess, SIGNAL(finished(int, QProcess::ExitStatus)),
-                this, SLOT(replayFinished()));
-        connect(m_replayProcess, SIGNAL(error(QProcess::ProcessError)),
-                this, SLOT(replayError(QProcess::ProcessError)));
-    }
-
-    if (m_traceFileName.isEmpty())
-        return;
-
-    QStringList arguments;
-    arguments << m_traceFileName;
-
-    m_replayProcess->start(QLatin1String("glretrace"),
-                           arguments);
-
-    m_ui.actionStop->setEnabled(true);
-    m_ui.actionReplay->setEnabled(false);
+    replayTrace(false);
 }
 
 void MainWindow::replayStop()
@@ -152,6 +126,7 @@ void MainWindow::replayStop()
 
         m_ui.actionStop->setEnabled(false);
         m_ui.actionReplay->setEnabled(true);
+        m_ui.actionLookupState->setEnabled(true);
     }
 }
 
@@ -162,8 +137,10 @@ void MainWindow::newTraceFile(const QString &fileName)
 
     if (m_traceFileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);
+        m_ui.actionLookupState->setEnabled(false);
     } else {
         m_ui.actionReplay->setEnabled(true);
+        m_ui.actionLookupState->setEnabled(true);
     }
 }
 
@@ -171,16 +148,19 @@ void MainWindow::replayFinished()
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
+    m_ui.actionLookupState->setEnabled(true);
 
-    QString output = m_replayProcess->readAllStandardOutput();
+    QByteArray output = m_replayProcess->readAllStandardOutput();
 
-#if 0
+#if 1
     qDebug()<<"Process finished = ";
     qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
     qDebug()<<"\tout = "<<output;
 #endif
 
-    if (output.length() < 80) {
+    if (m_findingState) {
+        qDebug()<<"json parse";
+    } else if (output.length() < 80) {
         statusBar()->showMessage(output);
     }
 }
@@ -189,6 +169,8 @@ void MainWindow::replayError(QProcess::ProcessError err)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
+    m_ui.actionLookupState->setEnabled(true);
+    m_findingState = false;
 
     qDebug()<<"Process error = "<<err;
     qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
@@ -216,6 +198,58 @@ void MainWindow::finishedLoadingTrace()
     QFileInfo info(m_trace->fileName());
     statusBar()->showMessage(
         tr("Loaded %1").arg(info.fileName()), 3000);
+}
+
+void MainWindow::replayTrace(bool dumpState)
+{
+    if (!m_replayProcess) {
+#ifdef Q_OS_WIN
+        QString format = QLatin1String("%1;");
+#else
+        QString format = QLatin1String("%1:");
+#endif
+        QString buildPath = format.arg(BUILD_DIR);
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert("PATH", buildPath + env.value("PATH"));
+
+        qputenv("PATH", env.value("PATH").toLatin1());
+
+        m_replayProcess = new QProcess(this);
+        m_replayProcess->setProcessEnvironment(env);
+
+        connect(m_replayProcess, SIGNAL(finished(int, QProcess::ExitStatus)),
+                this, SLOT(replayFinished()));
+        connect(m_replayProcess, SIGNAL(error(QProcess::ProcessError)),
+                this, SLOT(replayError(QProcess::ProcessError)));
+    }
+
+    if (m_traceFileName.isEmpty())
+        return;
+
+    QStringList arguments;
+    if (dumpState &&
+        m_currentFrame && !m_currentFrame->calls.isEmpty()) {
+        arguments << QLatin1String("-D");
+        arguments << QString::number(m_currentFrame->calls.first()->index);
+    }
+    arguments << m_traceFileName;
+
+    m_replayProcess->start(QLatin1String("glretrace"),
+                           arguments);
+
+    m_ui.actionStop->setEnabled(true);
+}
+
+void MainWindow::lookupState()
+{
+    if (!m_currentFrame) {
+        QMessageBox::warning(
+            this, tr("Unknown Frame"),
+            tr("To inspect the state select a frame in the trace."));
+        return;
+    }
+    m_findingState = true;
+    replayTrace(true);
 }
 
 #include "mainwindow.moc"

@@ -152,7 +152,6 @@ void ApiTrace::detectFrames()
             currentFrame->number = m_frames.count();
         }
         apiCall->parentFrame = currentFrame;
-        apiCall->index = currentFrame->calls.count();
         currentFrame->calls.append(apiCall);
         if (ApiTrace::isCallAFrameMarker(apiCall,
                                          m_frameMarker)) {

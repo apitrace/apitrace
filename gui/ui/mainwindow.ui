@@ -50,6 +50,7 @@
     </property>
     <addaction name="actionReplay"/>
     <addaction name="actionStop"/>
+    <addaction name="actionLookupState"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Trace"/>
@@ -163,6 +164,14 @@
    </property>
    <property name="text">
     <string>&amp;Stop</string>
+   </property>
+  </action>
+  <action name="actionLookupState">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Lookup State</string>
    </property>
   </action>
  </widget>

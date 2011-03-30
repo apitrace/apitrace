@@ -7,6 +7,7 @@
 #include <QProcess>
 
 class ApiTrace;
+class ApiTraceFrame;
 class ApiTraceModel;
 class ApiTraceFilter;
 class QLineEdit;
@@ -33,9 +34,11 @@ private slots:
     void replayError(QProcess::ProcessError err);
     void startedLoadingTrace();
     void finishedLoadingTrace();
+    void lookupState();
 
 private:
     void newTraceFile(const QString &fileName);
+    void replayTrace(bool dumpState);
 
 private:
     Ui_MainWindow m_ui;
@@ -49,6 +52,9 @@ private:
     QProgressBar *m_progressBar;
 
     QString m_traceFileName;
+
+    ApiTraceFrame *m_currentFrame;
+    bool m_findingState;
 };
 
 
