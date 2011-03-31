@@ -6,6 +6,8 @@
 #include "apitracemodel.h"
 #include "apitracefilter.h"
 
+#include <qjson/parser.h>
+
 #include <QAction>
 #include <QDebug>
 #include <QDir>

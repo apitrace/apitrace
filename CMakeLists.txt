@@ -16,7 +16,8 @@ set (CMAKE_USE_PYTHON_VERSION 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
-find_package (Qt4)
+find_package (Qt4 COMPONENTS QtCore QtGui QtWebKit)
+find_package (QJSON)
 
 if (NOT WIN32)
     # Always use the bundled zlib and libpng sources on Windows to make it easy
@@ -239,6 +240,8 @@ if (GLUT_INCLUDE_DIR)
     )
 endif (GLUT_INCLUDE_DIR)
 
-if (QT4_FOUND)
+if (QT4_FOUND AND QJSON_FOUND)
+    # Include the cmake file needed to use qt4
+    include( ${QT_USE_FILE} )
     add_subdirectory(gui)
-endif (QT4_FOUND)
+endif (QT4_FOUND AND QJSON_FOUND)
