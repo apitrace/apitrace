@@ -153,7 +153,7 @@ public:
     int number;
     QList<ApiTraceCall*> calls;
 
-    QMap<QString, QVariant> state;
+    QVariantMap state;
 
     int numChildren() const;
     QStaticText staticText() const;

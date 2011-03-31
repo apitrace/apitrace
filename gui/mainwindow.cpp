@@ -23,7 +23,10 @@
 MainWindow::MainWindow()
     : QMainWindow(),
       m_replayProcess(0),
-      m_findingState(false)
+      m_currentFrame(0),
+      m_stateFrame(0),
+      m_findingState(false),
+      m_jsonParser(new QJson::Parser())
 {
     m_ui.setupUi(this);
 
@@ -52,6 +55,7 @@ MainWindow::MainWindow()
     m_progressBar->hide();
 
     m_ui.detailsDock->hide();
+    m_ui.stateDock->hide();
 
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
@@ -109,6 +113,10 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         m_currentFrame = index.data().value<ApiTraceFrame*>();
         m_ui.detailsDock->hide();
     }
+    if (m_currentFrame && !m_currentFrame->state.isEmpty()) {
+        fillStateForFrame();
+    } else
+        m_ui.stateDock->hide();
 }
 
 void MainWindow::filterTrace()
@@ -154,17 +162,21 @@ void MainWindow::replayFinished()
 
     QByteArray output = m_replayProcess->readAllStandardOutput();
 
-#if 1
+#if 0
     qDebug()<<"Process finished = ";
     qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
     qDebug()<<"\tout = "<<output;
 #endif
 
     if (m_findingState) {
-        qDebug()<<"json parse";
+        bool ok = false;
+        QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
+        parseState(parsedJson[QLatin1String("parameters")].toMap());
     } else if (output.length() < 80) {
         statusBar()->showMessage(output);
     }
+    m_stateFrame = 0;
+    m_findingState = false;
 }
 
 void MainWindow::replayError(QProcess::ProcessError err)
@@ -173,6 +185,7 @@ void MainWindow::replayError(QProcess::ProcessError err)
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
     m_findingState = false;
+    m_stateFrame = 0;
 
     qDebug()<<"Process error = "<<err;
     qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
@@ -250,8 +263,76 @@ void MainWindow::lookupState()
             tr("To inspect the state select a frame in the trace."));
         return;
     }
+    m_stateFrame = m_currentFrame;
     m_findingState = true;
     replayTrace(true);
+}
+
+MainWindow::~MainWindow()
+{
+    delete m_jsonParser;
+}
+
+void MainWindow::parseState(const QVariantMap &params)
+{
+    QVariantMap::const_iterator itr;
+
+    m_stateFrame->state.clear();
+    m_stateFrame->state = params;
+    if (m_currentFrame == m_stateFrame) {
+        fillStateForFrame();
+    } else {
+        m_ui.stateDock->hide();
+    }
+}
+
+static void
+variantToString(const QVariant &var, QString &str)
+{
+    if (var.type() == QVariant::List) {
+        QVariantList lst = var.toList();
+        str += QLatin1String("[");
+        for (int i = 0; i < lst.count(); ++i) {
+            QVariant val = lst[i];
+            variantToString(val, str);
+            if (i < lst.count() - 1)
+                str += QLatin1String(", ");
+        }
+        str += QLatin1String("]");
+    } else if (var.type() == QVariant::Map) {
+        Q_ASSERT(!"unsupported state type");
+    } else if (var.type() == QVariant::Hash) {
+        Q_ASSERT(!"unsupported state type");
+    } else {
+        str += var.toString();
+    }
+}
+
+void MainWindow::fillStateForFrame()
+{
+    QVariantMap::const_iterator itr;
+    QVariantMap params;
+
+    if (!m_currentFrame || m_currentFrame->state.isEmpty())
+        return;
+
+    m_ui.stateTreeWidget->clear();
+    params = m_currentFrame->state;
+    QList<QTreeWidgetItem *> items;
+    for (itr = params.constBegin(); itr != params.constEnd(); ++itr) {
+        QString key = itr.key();
+        QString val;
+
+        variantToString(itr.value(), val);
+        //qDebug()<<"key = "<<key;
+        //qDebug()<<"val = "<<val;
+        QStringList lst;
+        lst += key;
+        lst += val;
+        items.append(new QTreeWidgetItem((QTreeWidget*)0, lst));
+    }
+    m_ui.stateTreeWidget->insertTopLevelItems(0, items);
+    m_ui.stateDock->show();
 }
 
 #include "mainwindow.moc"

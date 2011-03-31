@@ -15,11 +15,16 @@ class QModelIndex;
 class QProcess;
 class QProgressBar;
 
+namespace QJson {
+    class Parser;
+}
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
     MainWindow();
+    ~MainWindow();
 
 public slots:
     void loadTrace(const QString &fileName);
@@ -39,6 +44,8 @@ private slots:
 private:
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState);
+    void parseState(const QVariantMap &params);
+    void fillStateForFrame();
 
 private:
     Ui_MainWindow m_ui;
@@ -54,7 +61,11 @@ private:
     QString m_traceFileName;
 
     ApiTraceFrame *m_currentFrame;
+
+    ApiTraceFrame *m_stateFrame;
     bool m_findingState;
+
+    QJson::Parser *m_jsonParser;
 };
 
 
