@@ -239,6 +239,12 @@ QStaticText ApiTraceCall::staticText() const
             richText += QString::fromLatin1(", ");
     }
     richText += QLatin1String(")");
+    if (returnValue.isValid()) {
+        richText += QLatin1String(" = ");
+        richText += QLatin1String("<span style=\"color:#0000ff\">");
+        richText += apiVariantToString(returnValue);
+        richText += QLatin1String("</span>");
+    }
 
     m_staticText.setText(richText);
     QTextOption opt;
