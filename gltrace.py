@@ -46,7 +46,7 @@ class TypeGetter(stdapi.Visitor):
             return 'glGetDoublev', alias.expr
         elif alias.expr == 'GLfloat':
             return 'glGetFloatv', alias.expr
-        elif alias.expr in ('GLint', 'GLsizei'):
+        elif alias.expr in ('GLint', 'GLuint', 'GLsizei'):
             return 'glGetIntegerv', 'GLint'
         else:
             print alias.expr
@@ -93,18 +93,15 @@ class GlTracer(Tracer):
             enable_name = 'GL_%s_ARRAY' % uppercase_name
             binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
             print '    // %s' % function_name
-            print '    {'
-            print '        GLboolean __enabled = GL_FALSE;'
-            print '        __glGetBooleanv(%s, &__enabled);' % enable_name
-            print '        if (__enabled) {'
-            print '            GLint __binding = 0;'
-            print '            __glGetIntegerv(%s, &__binding);' % binding_name
-            print '            if (!__binding) {'
-            print '                return true;'
-            print '            }'
+            print '    if (__glIsEnabled(%s)) {' % enable_name
+            print '        GLint __binding = 0;'
+            print '        __glGetIntegerv(%s, &__binding);' % binding_name
+            print '        if (!__binding) {'
+            print '            return true;'
             print '        }'
             print '    }'
             print
+
         print '    return false;'
         print '}'
         print
@@ -121,20 +118,21 @@ class GlTracer(Tracer):
         "glEdgeFlagPointer",
         "glFogCoordPointer",
         "glSecondaryColorPointer",
+        
+        "glVertexPointerEXT",
+        "glNormalPointerEXT",
+        "glColorPointerEXT",
+        "glIndexPointerEXT",
+        "glTexCoordPointerEXT",
+        "glEdgeFlagPointerEXT",
+        "glFogCoordPointerEXT",
+        "glSecondaryColorPointerEXT",
 
-        #"glVertexPointerEXT",
-        #"glNormalPointerEXT",
-        #"glColorPointerEXT",
-        #"glIndexPointerEXT",
-        #"glTexCoordPointerEXT",
-        #"glEdgeFlagPointerEXT",
-        #"glFogCoordPointerEXT",
-        #"glSecondaryColorPointerEXT",
-
-        #"glVertexAttribPointer",
-        #"glVertexAttribPointerARB",
-        #"glVertexAttribPointerNV",
-        #"glVertexAttribLPointer",
+        "glVertexAttribPointer",
+        "glVertexAttribPointerARB",
+        "glVertexAttribPointerNV",
+        "glVertexAttribLPointer",
+        "glVertexAttribLPointerEXT",
         
         #"glMatrixIndexPointerARB",
     ))
@@ -264,39 +262,35 @@ class GlTracer(Tracer):
             function = api.get_function_by_name(function_name)
 
             print '    // %s' % function.name
-            print '    {'
-            print '        GLboolean __enabled = GL_FALSE;'
-            print '        __glGetBooleanv(%s, &__enabled);' % enable_name
-            print '        if (__enabled) {'
-            print '            GLint __binding = 0;'
-            print '            __glGetIntegerv(%s, &__binding);' % binding_name
-            print '            if (!__binding) {'
+            print '    if (__glIsEnabled(%s)) {;' % enable_name
+            print '        GLint __binding = 0;'
+            print '        __glGetIntegerv(%s, &__binding);' % binding_name
+            print '        if (!__binding) {'
 
             # Get the arguments via glGet*
             for arg in function.args:
                 arg_get_enum = 'GL_%s_ARRAY_%s' % (uppercase_name, arg.name.upper())
                 arg_get_function, arg_type = TypeGetter().visit(arg.type)
-                print '                %s %s = 0;' % (arg_type, arg.name)
-                print '                __%s(%s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
+                print '            %s %s = 0;' % (arg_type, arg.name)
+                print '            __%s(%s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
             
             arg_names = ', '.join([arg.name for arg in function.args[:-1]])
-            print '                size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
+            print '            size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
             # Emit a fake function
-            print '                unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+            print '            unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
-                print '                Trace::BeginArg(%u);' % (arg.index,)
+                print '            Trace::BeginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
                     dump_instance(arg.type, arg.name)
                 else:
-                    print '                Trace::LiteralBlob((const void *)%s, __size);' % (arg.name)
-                print '                Trace::EndArg();'
+                    print '            Trace::LiteralBlob((const void *)%s, __size);' % (arg.name)
+                print '            Trace::EndArg();'
             
-            print '                Trace::EndEnter();'
-            print '                Trace::BeginLeave(__call);'
-            print '                Trace::EndLeave();'
-            print '            }'
+            print '            Trace::EndEnter();'
+            print '            Trace::BeginLeave(__call);'
+            print '            Trace::EndLeave();'
             print '        }'
             print '    }'
             print

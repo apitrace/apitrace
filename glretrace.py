@@ -58,10 +58,11 @@ class GlRetracer(Retracer):
         #"glFogCoordPointerEXT",
         #"glSecondaryColorPointerEXT",
 
-        #"glVertexAttribPointer",
-        #"glVertexAttribPointerARB",
-        #"glVertexAttribPointerNV",
-        #"glVertexAttribLPointer",
+        "glVertexAttribPointer",
+        "glVertexAttribPointerARB",
+        "glVertexAttribPointerNV",
+        "glVertexAttribLPointer",
+        "glVertexAttribLPointerEXT",
         
         #"glMatrixIndexPointerARB",
     ))
@@ -144,32 +145,8 @@ class GlRetracer(Retracer):
             # glGetError is not allowed inside glBegin/glEnd
             print '    checkGlError();'
 
-    pointer_function_names = set([
-        "glColorPointer",
-        #"glColorPointerEXT",
-        "glEdgeFlagPointer",
-        #"glEdgeFlagPointerEXT",
-        "glFogCoordPointer",
-        #"glFogCoordPointerEXT",
-        "glIndexPointer",
-        #"glIndexPointerEXT",
-        #"glMatrixIndexPointerARB",
-        "glNormalPointer",
-        #"glNormalPointerEXT",
-        "glSecondaryColorPointer",
-        #"glSecondaryColorPointerEXT",
-        "glTexCoordPointer",
-        #"glTexCoordPointerEXT",
-        #"glVertexAttribLPointer",
-        #"glVertexAttribPointer",
-        #"glVertexAttribPointerARB",
-        #"glVertexAttribPointerNV",
-        "glVertexPointer",
-        #"glVertexPointerEXT",
-    ])
-
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
-        if function.name in self.pointer_function_names and arg.name == 'pointer':
+        if function.name in self.array_pointer_function_names and arg.name == 'pointer':
             print '    %s = %s.blob();' % (lvalue, rvalue)
             return
 
