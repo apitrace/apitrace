@@ -35,6 +35,7 @@ I = Int
 E = GLenum
 F = Float
 P = OpaquePointer(Void)
+S = String
 
 # TODO: This table and the one on glenum.py should be unified
 parameters = [
@@ -434,10 +435,10 @@ parameters = [
     (X,	1,	"GL_REPLACE"),	# 0x1E01
     (X,	1,	"GL_INCR"),	# 0x1E02
     (X,	1,	"GL_DECR"),	# 0x1E03
-    (X,	1,	"GL_VENDOR"),	# 0x1F00
-    (X,	1,	"GL_RENDERER"),	# 0x1F01
-    (X,	1,	"GL_VERSION"),	# 0x1F02
-    (X,	1,	"GL_EXTENSIONS"),	# 0x1F03
+    (S,	1,	"GL_VENDOR"),	# 0x1F00
+    (S,	1,	"GL_RENDERER"),	# 0x1F01
+    (S,	1,	"GL_VERSION"),	# 0x1F02
+    (S,	1,	"GL_EXTENSIONS"),	# 0x1F03
     (X,	1,	"GL_S"),	# 0x2000
     (X,	1,	"GL_T"),	# 0x2001
     (X,	1,	"GL_R"),	# 0x2002
@@ -2889,6 +2890,7 @@ class StateDumper:
         print
 
     def dump_parameters(self):
+        print '    const GLubyte * sparams[1];'
         print '    GLboolean bparams[16];'
         print '    GLint iparams[16];'
         print '    GLfloat fparams[16];'
@@ -2918,10 +2920,18 @@ class StateDumper:
                 buf = 'pparams'
                 getter = 'glGetPointerv'
                 writer = 'json.writeNumber((size_t)%s)'
+            elif type is S:
+                buf = 'sparams'
+                getter = 'glGetString'
+                writer = 'json.writeString((const char *)%s)'
             else:
                 raise NotImplementedError
             print '    memset(%s, 0, %u * sizeof *%s);' % (buf, count, buf)
-            print '    %s(%s, %s);' % (getter, name, buf)
+            if getter.endswith('v'):
+                print '    %s(%s, %s);' % (getter, name, buf)
+            else:
+                assert count == 1
+                print '    %s[0] = %s(%s);' % (buf, getter, name)
             print '    if (glGetError() != GL_NO_ERROR) {'
             #print '        std::cerr << "warning: %s(%s) failed\\n";' % (getter, name)
             print '    } else {'
