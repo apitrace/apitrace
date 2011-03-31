@@ -36,30 +36,46 @@ from trace import Tracer, dump_instance
 class TypeGetter(stdapi.Visitor):
     '''Determine which glGet*v function that matches the specified type.'''
 
+    def __init__(self, prefix = 'glGet', long_suffix = True):
+        self.prefix = prefix
+        self.long_suffix = long_suffix
+
     def visit_const(self, const):
         return self.visit(const.type)
 
     def visit_alias(self, alias):
         if alias.expr == 'GLboolean':
-            return 'glGetBooleanv', alias.expr
+            if self.long_suffix:
+                return self.prefix + 'Booleanv', alias.expr
+            else:
+                return self.prefix + 'iv', 'GLint'
         elif alias.expr == 'GLdouble':
-            return 'glGetDoublev', alias.expr
+            if self.long_suffix:
+                return self.prefix + 'Doublev', alias.expr
+            else:
+                return self.prefix + 'dv', alias.expr
         elif alias.expr == 'GLfloat':
-            return 'glGetFloatv', alias.expr
+            if self.long_suffix:
+                return self.prefix + 'Floatv', alias.expr
+            else:
+                return self.prefix + 'fv', alias.expr
         elif alias.expr in ('GLint', 'GLuint', 'GLsizei'):
-            return 'glGetIntegerv', 'GLint'
+            if self.long_suffix:
+                return self.prefix + 'Integerv', 'GLint'
+            else:
+                return self.prefix + 'iv', 'GLint'
         else:
             print alias.expr
             assert False
     
     def visit_enum(self, enum):
-        return 'glGetIntegerv', 'GLint'
+        return self.visit(glapi.GLint)
 
     def visit_bitmask(self, bitmask):
-        return 'glGetIntegerv', 'GLint'
+        return self.visit(glapi.GLint)
 
     def visit_opaque(self, pointer):
-        return 'glGetPointerv', 'GLvoid *'
+        return self.prefix + 'Pointerv', 'GLvoid *'
 
 
 class GlTracer(Tracer):
@@ -88,6 +104,7 @@ class GlTracer(Tracer):
         # Whether we need user arrays
         print 'static inline bool __need_user_arrays(void)'
         print '{'
+
         for camelcase_name, uppercase_name in self.arrays:
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -101,6 +118,22 @@ class GlTracer(Tracer):
             print '        }'
             print '    }'
             print
+
+        print '    // glVertexAttribPointer'
+        print '    GLint __max_vertex_attribs;'
+        print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
+        print '    for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
+        print '        GLint __enabled = 0;'
+        print '        __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &__enabled);'
+        print '        if (__enabled) {'
+        print '            GLint __binding = 0;'
+        print '            __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &__binding);'
+        print '            if (!__binding) {'
+        print '                return true;'
+        print '            }'
+        print '        }'
+        print '    }'
+        print
 
         print '    return false;'
         print '}'
@@ -255,6 +288,7 @@ class GlTracer(Tracer):
         # update the state
         print 'static void __trace_user_arrays(GLuint maxindex)'
         print '{'
+
         for camelcase_name, uppercase_name in self.arrays:
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -294,6 +328,50 @@ class GlTracer(Tracer):
             print '        }'
             print '    }'
             print
+
+        # Samething, but for glVertexAttribPointer
+        print '    // glVertexAttribPointer'
+        print '    GLint __max_vertex_attribs;'
+        print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
+        print '    for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
+        print '        GLint __enabled = 0;'
+        print '        __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &__enabled);'
+        print '        if (__enabled) {'
+        print '            GLint __binding = 0;'
+        print '            __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &__binding);'
+        print '            if (!__binding) {'
+
+        function = api.get_function_by_name('glVertexAttribPointer')
+
+        # Get the arguments via glGet*
+        for arg in function.args[1:]:
+            arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s' % (arg.name.upper(),)
+            arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False).visit(arg.type)
+            print '                %s %s = 0;' % (arg_type, arg.name)
+            print '                __%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
+        
+        arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
+        print '                size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
+
+        # Emit a fake function
+        print '                unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+        for arg in function.args:
+            assert not arg.output
+            print '                Trace::BeginArg(%u);' % (arg.index,)
+            if arg.name != 'pointer':
+                dump_instance(arg.type, arg.name)
+            else:
+                print '                Trace::LiteralBlob((const void *)%s, __size);' % (arg.name)
+            print '                Trace::EndArg();'
+        
+        print '                Trace::EndEnter();'
+        print '                Trace::BeginLeave(__call);'
+        print '                Trace::EndLeave();'
+        print '            }'
+        print '        }'
+        print '    }'
+        print
+
         print '}'
         print
 
