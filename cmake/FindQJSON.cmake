@@ -17,7 +17,7 @@ else (QJSON_INCLUDE_DIR AND QJSON_LIBRARIES)
     # use pkg-config to get the values of QJSON_INCLUDE_DIRS
     # and QJSON_LIBRARY_DIRS to add as hints to the find commands.
     include (FindPkgConfig)
-    pkg_check_modules (QJSON REQUIRED QJson>=0.5)
+    pkg_check_modules (QJSON QJson>=0.5)
   endif (NOT WIN32)
 
   find_library (QJSON_LIBRARIES
