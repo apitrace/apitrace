@@ -1,0 +1,3 @@
+*.moc
+qapitrace
+ui_mainwindow.h
