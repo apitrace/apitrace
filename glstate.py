@@ -32,9 +32,9 @@ from glenum import GLenum
 X = None # To be determined
 B = Bool
 I = Int
-E = Int # XXX: GLenum
+E = GLenum
 F = Float
-P = None # XXX: Pointer
+P = OpaquePointer(Void)
 
 # TODO: This table and the one on glenum.py should be unified
 parameters = [
@@ -136,48 +136,48 @@ parameters = [
     (I,	1,	"GL_LINE_STIPPLE"),	# 0x0B24
     (I,	1,	"GL_LINE_STIPPLE_PATTERN"),	# 0x0B25
     (I,	1,	"GL_LINE_STIPPLE_REPEAT"),	# 0x0B26
-    (I,	1,	"GL_LIST_MODE"),	# 0x0B30
+    (E,	1,	"GL_LIST_MODE"),	# 0x0B30
     (I,	1,	"GL_MAX_LIST_NESTING"),	# 0x0B31
     (I,	1,	"GL_LIST_BASE"),	# 0x0B32
     (I,	1,	"GL_LIST_INDEX"),	# 0x0B33
-    (I,	2,	"GL_POLYGON_MODE"),	# 0x0B40
+    (E,	2,	"GL_POLYGON_MODE"),	# 0x0B40
     (I,	1,	"GL_POLYGON_SMOOTH"),	# 0x0B41
     (I,	1,	"GL_POLYGON_STIPPLE"),	# 0x0B42
     (I,	1,	"GL_EDGE_FLAG"),	# 0x0B43
     (I,	1,	"GL_CULL_FACE"),	# 0x0B44
-    (I,	1,	"GL_CULL_FACE_MODE"),	# 0x0B45
-    (I,	1,	"GL_FRONT_FACE"),	# 0x0B46
+    (E,	1,	"GL_CULL_FACE_MODE"),	# 0x0B45
+    (E,	1,	"GL_FRONT_FACE"),	# 0x0B46
     (I,	1,	"GL_LIGHTING"),	# 0x0B50
     (I,	1,	"GL_LIGHT_MODEL_LOCAL_VIEWER"),	# 0x0B51
     (I,	1,	"GL_LIGHT_MODEL_TWO_SIDE"),	# 0x0B52
     (F,	4,	"GL_LIGHT_MODEL_AMBIENT"),	# 0x0B53
-    (I,	1,	"GL_SHADE_MODEL"),	# 0x0B54
-    (I,	1,	"GL_COLOR_MATERIAL_FACE"),	# 0x0B55
-    (I,	1,	"GL_COLOR_MATERIAL_PARAMETER"),	# 0x0B56
-    (I,	1,	"GL_COLOR_MATERIAL"),	# 0x0B57
+    (E,	1,	"GL_SHADE_MODEL"),	# 0x0B54
+    (E,	1,	"GL_COLOR_MATERIAL_FACE"),	# 0x0B55
+    (E,	1,	"GL_COLOR_MATERIAL_PARAMETER"),	# 0x0B56
+    (B,	1,	"GL_COLOR_MATERIAL"),	# 0x0B57
     (I,	1,	"GL_FOG"),	# 0x0B60
     (I,	1,	"GL_FOG_INDEX"),	# 0x0B61
     (F,	1,	"GL_FOG_DENSITY"),	# 0x0B62
     (F,	1,	"GL_FOG_START"),	# 0x0B63
     (F,	1,	"GL_FOG_END"),	# 0x0B64
-    (I,	1,	"GL_FOG_MODE"),	# 0x0B65
+    (E,	1,	"GL_FOG_MODE"),	# 0x0B65
     (F,	4,	"GL_FOG_COLOR"),	# 0x0B66
     (F,	2,	"GL_DEPTH_RANGE"),	# 0x0B70
     (I,	1,	"GL_DEPTH_TEST"),	# 0x0B71
     (I,	1,	"GL_DEPTH_WRITEMASK"),	# 0x0B72
     (F,	1,	"GL_DEPTH_CLEAR_VALUE"),	# 0x0B73
-    (I,	1,	"GL_DEPTH_FUNC"),	# 0x0B74
+    (E,	1,	"GL_DEPTH_FUNC"),	# 0x0B74
     (F,	4,	"GL_ACCUM_CLEAR_VALUE"),	# 0x0B80
     (I,	1,	"GL_STENCIL_TEST"),	# 0x0B90
     (I,	1,	"GL_STENCIL_CLEAR_VALUE"),	# 0x0B91
-    (I,	1,	"GL_STENCIL_FUNC"),	# 0x0B92
+    (E,	1,	"GL_STENCIL_FUNC"),	# 0x0B92
     (I,	1,	"GL_STENCIL_VALUE_MASK"),	# 0x0B93
-    (I,	1,	"GL_STENCIL_FAIL"),	# 0x0B94
-    (I,	1,	"GL_STENCIL_PASS_DEPTH_FAIL"),	# 0x0B95
-    (I,	1,	"GL_STENCIL_PASS_DEPTH_PASS"),	# 0x0B96
+    (E,	1,	"GL_STENCIL_FAIL"),	# 0x0B94
+    (E,	1,	"GL_STENCIL_PASS_DEPTH_FAIL"),	# 0x0B95
+    (E,	1,	"GL_STENCIL_PASS_DEPTH_PASS"),	# 0x0B96
     (I,	1,	"GL_STENCIL_REF"),	# 0x0B97
     (I,	1,	"GL_STENCIL_WRITEMASK"),	# 0x0B98
-    (I,	1,	"GL_MATRIX_MODE"),	# 0x0BA0
+    (E,	1,	"GL_MATRIX_MODE"),	# 0x0BA0
     (I,	1,	"GL_NORMALIZE"),	# 0x0BA1
     (I,	4,	"GL_VIEWPORT"),	# 0x0BA2
     (I,	1,	"GL_MODELVIEW_STACK_DEPTH"),	# 0x0BA3
@@ -189,18 +189,18 @@ parameters = [
     (I,	1,	"GL_ATTRIB_STACK_DEPTH"),	# 0x0BB0
     (I,	1,	"GL_CLIENT_ATTRIB_STACK_DEPTH"),	# 0x0BB1
     (B,	1,	"GL_ALPHA_TEST"),	# 0x0BC0
-    (I,	1,	"GL_ALPHA_TEST_FUNC"),	# 0x0BC1
+    (E,	1,	"GL_ALPHA_TEST_FUNC"),	# 0x0BC1
     (F,	1,	"GL_ALPHA_TEST_REF"),	# 0x0BC2
     (I,	1,	"GL_DITHER"),	# 0x0BD0
     (I,	1,	"GL_BLEND_DST"),	# 0x0BE0
     (I,	1,	"GL_BLEND_SRC"),	# 0x0BE1
     (B,	1,	"GL_BLEND"),	# 0x0BE2
-    (I,	1,	"GL_LOGIC_OP_MODE"),	# 0x0BF0
+    (E,	1,	"GL_LOGIC_OP_MODE"),	# 0x0BF0
     (I,	1,	"GL_LOGIC_OP"),	# 0x0BF1
     (I,	1,	"GL_COLOR_LOGIC_OP"),	# 0x0BF2
     (I,	1,	"GL_AUX_BUFFERS"),	# 0x0C00
-    (I,	1,	"GL_DRAW_BUFFER"),	# 0x0C01
-    (I,	1,	"GL_READ_BUFFER"),	# 0x0C02
+    (E,	1,	"GL_DRAW_BUFFER"),	# 0x0C01
+    (E,	1,	"GL_READ_BUFFER"),	# 0x0C02
     (I,	4,	"GL_SCISSOR_BOX"),	# 0x0C10
     (I,	1,	"GL_SCISSOR_TEST"),	# 0x0C11
     (I,	1,	"GL_INDEX_CLEAR_VALUE"),	# 0x0C20
@@ -211,12 +211,12 @@ parameters = [
     (I,	1,	"GL_RGBA_MODE"),	# 0x0C31
     (I,	1,	"GL_DOUBLEBUFFER"),	# 0x0C32
     (I,	1,	"GL_STEREO"),	# 0x0C33
-    (I,	1,	"GL_RENDER_MODE"),	# 0x0C40
-    (I,	1,	"GL_PERSPECTIVE_CORRECTION_HINT"),	# 0x0C50
-    (I,	1,	"GL_POINT_SMOOTH_HINT"),	# 0x0C51
-    (I,	1,	"GL_LINE_SMOOTH_HINT"),	# 0x0C52
-    (I,	1,	"GL_POLYGON_SMOOTH_HINT"),	# 0x0C53
-    (I,	1,	"GL_FOG_HINT"),	# 0x0C54
+    (E,	1,	"GL_RENDER_MODE"),	# 0x0C40
+    (E,	1,	"GL_PERSPECTIVE_CORRECTION_HINT"),	# 0x0C50
+    (E,	1,	"GL_POINT_SMOOTH_HINT"),	# 0x0C51
+    (E,	1,	"GL_LINE_SMOOTH_HINT"),	# 0x0C52
+    (E,	1,	"GL_POLYGON_SMOOTH_HINT"),	# 0x0C53
+    (E,	1,	"GL_FOG_HINT"),	# 0x0C54
     (I,	1,	"GL_TEXTURE_GEN_S"),	# 0x0C60
     (I,	1,	"GL_TEXTURE_GEN_T"),	# 0x0C61
     (I,	1,	"GL_TEXTURE_GEN_R"),	# 0x0C62
@@ -295,34 +295,34 @@ parameters = [
     (I,	1,	"GL_ACCUM_ALPHA_BITS"),	# 0x0D5B
     (I,	1,	"GL_NAME_STACK_DEPTH"),	# 0x0D70
     (B,	1,	"GL_AUTO_NORMAL"),	# 0x0D80
-    (I,	1,	"GL_MAP1_COLOR_4"),	# 0x0D90
-    (I,	1,	"GL_MAP1_INDEX"),	# 0x0D91
-    (I,	1,	"GL_MAP1_NORMAL"),	# 0x0D92
-    (I,	1,	"GL_MAP1_TEXTURE_COORD_1"),	# 0x0D93
-    (I,	1,	"GL_MAP1_TEXTURE_COORD_2"),	# 0x0D94
-    (I,	1,	"GL_MAP1_TEXTURE_COORD_3"),	# 0x0D95
-    (I,	1,	"GL_MAP1_TEXTURE_COORD_4"),	# 0x0D96
-    (I,	1,	"GL_MAP1_VERTEX_3"),	# 0x0D97
-    (I,	1,	"GL_MAP1_VERTEX_4"),	# 0x0D98
-    (I,	1,	"GL_MAP2_COLOR_4"),	# 0x0DB0
-    (I,	1,	"GL_MAP2_INDEX"),	# 0x0DB1
-    (I,	1,	"GL_MAP2_NORMAL"),	# 0x0DB2
-    (I,	1,	"GL_MAP2_TEXTURE_COORD_1"),	# 0x0DB3
-    (I,	1,	"GL_MAP2_TEXTURE_COORD_2"),	# 0x0DB4
-    (I,	1,	"GL_MAP2_TEXTURE_COORD_3"),	# 0x0DB5
-    (I,	1,	"GL_MAP2_TEXTURE_COORD_4"),	# 0x0DB6
-    (I,	1,	"GL_MAP2_VERTEX_3"),	# 0x0DB7
-    (I,	1,	"GL_MAP2_VERTEX_4"),	# 0x0DB8
+    (B,	1,	"GL_MAP1_COLOR_4"),	# 0x0D90
+    (B,	1,	"GL_MAP1_INDEX"),	# 0x0D91
+    (B,	1,	"GL_MAP1_NORMAL"),	# 0x0D92
+    (B,	1,	"GL_MAP1_TEXTURE_COORD_1"),	# 0x0D93
+    (B,	1,	"GL_MAP1_TEXTURE_COORD_2"),	# 0x0D94
+    (B,	1,	"GL_MAP1_TEXTURE_COORD_3"),	# 0x0D95
+    (B,	1,	"GL_MAP1_TEXTURE_COORD_4"),	# 0x0D96
+    (B,	1,	"GL_MAP1_VERTEX_3"),	# 0x0D97
+    (B,	1,	"GL_MAP1_VERTEX_4"),	# 0x0D98
+    (B,	1,	"GL_MAP2_COLOR_4"),	# 0x0DB0
+    (B,	1,	"GL_MAP2_INDEX"),	# 0x0DB1
+    (B,	1,	"GL_MAP2_NORMAL"),	# 0x0DB2
+    (B,	1,	"GL_MAP2_TEXTURE_COORD_1"),	# 0x0DB3
+    (B,	1,	"GL_MAP2_TEXTURE_COORD_2"),	# 0x0DB4
+    (B,	1,	"GL_MAP2_TEXTURE_COORD_3"),	# 0x0DB5
+    (B,	1,	"GL_MAP2_TEXTURE_COORD_4"),	# 0x0DB6
+    (B,	1,	"GL_MAP2_VERTEX_3"),	# 0x0DB7
+    (B,	1,	"GL_MAP2_VERTEX_4"),	# 0x0DB8
     (F,	2,	"GL_MAP1_GRID_DOMAIN"),	# 0x0DD0
     (I,	1,	"GL_MAP1_GRID_SEGMENTS"),	# 0x0DD1
     (F,	4,	"GL_MAP2_GRID_DOMAIN"),	# 0x0DD2
     (I,	2,	"GL_MAP2_GRID_SEGMENTS"),	# 0x0DD3
     (I,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
     (I,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
-    (X,	1,	"GL_FEEDBACK_BUFFER_POINTER"),	# 0x0DF0
+    (P,	1,	"GL_FEEDBACK_BUFFER_POINTER"),	# 0x0DF0
     (I,	1,	"GL_FEEDBACK_BUFFER_SIZE"),	# 0x0DF1
     (I,	1,	"GL_FEEDBACK_BUFFER_TYPE"),	# 0x0DF2
-    (X,	1,	"GL_SELECTION_BUFFER_POINTER"),	# 0x0DF3
+    (P,	1,	"GL_SELECTION_BUFFER_POINTER"),	# 0x0DF3
     (I,	1,	"GL_SELECTION_BUFFER_SIZE"),	# 0x0DF4
     (X,	1,	"GL_TEXTURE_WIDTH"),	# 0x1000
     (X,	1,	"GL_TEXTURE_HEIGHT"),	# 0x1001
@@ -508,7 +508,7 @@ parameters = [
     (X,	1,	"GL_FUNC_ADD"),	# 0x8006
     (X,	1,	"GL_MIN"),	# 0x8007
     (X,	1,	"GL_MAX"),	# 0x8008
-    (I,	1,	"GL_BLEND_EQUATION"),	# 0x8009
+    (E,	1,	"GL_BLEND_EQUATION"),	# 0x8009
     (X,	1,	"GL_FUNC_SUBTRACT"),	# 0x800A
     (X,	1,	"GL_FUNC_REVERSE_SUBTRACT"),	# 0x800B
     (X,	1,	"GL_CMYK_EXT"),	# 0x800C
@@ -622,21 +622,21 @@ parameters = [
     (B,	1,	"GL_TEXTURE_COORD_ARRAY"),	# 0x8078
     (B,	1,	"GL_EDGE_FLAG_ARRAY"),	# 0x8079
     (I,	1,	"GL_VERTEX_ARRAY_SIZE"),	# 0x807A
-    (I,	1,	"GL_VERTEX_ARRAY_TYPE"),	# 0x807B
+    (E,	1,	"GL_VERTEX_ARRAY_TYPE"),	# 0x807B
     (I,	1,	"GL_VERTEX_ARRAY_STRIDE"),	# 0x807C
     (I,	1,	"GL_VERTEX_ARRAY_COUNT_EXT"),	# 0x807D
-    (I,	1,	"GL_NORMAL_ARRAY_TYPE"),	# 0x807E
+    (E,	1,	"GL_NORMAL_ARRAY_TYPE"),	# 0x807E
     (I,	1,	"GL_NORMAL_ARRAY_STRIDE"),	# 0x807F
     (I,	1,	"GL_NORMAL_ARRAY_COUNT_EXT"),	# 0x8080
     (I,	1,	"GL_COLOR_ARRAY_SIZE"),	# 0x8081
-    (I,	1,	"GL_COLOR_ARRAY_TYPE"),	# 0x8082
+    (E,	1,	"GL_COLOR_ARRAY_TYPE"),	# 0x8082
     (I,	1,	"GL_COLOR_ARRAY_STRIDE"),	# 0x8083
     (I,	1,	"GL_COLOR_ARRAY_COUNT_EXT"),	# 0x8084
-    (I,	1,	"GL_INDEX_ARRAY_TYPE"),	# 0x8085
+    (E,	1,	"GL_INDEX_ARRAY_TYPE"),	# 0x8085
     (I,	1,	"GL_INDEX_ARRAY_STRIDE"),	# 0x8086
     (I,	1,	"GL_INDEX_ARRAY_COUNT_EXT"),	# 0x8087
     (I,	1,	"GL_TEXTURE_COORD_ARRAY_SIZE"),	# 0x8088
-    (I,	1,	"GL_TEXTURE_COORD_ARRAY_TYPE"),	# 0x8089
+    (E,	1,	"GL_TEXTURE_COORD_ARRAY_TYPE"),	# 0x8089
     (I,	1,	"GL_TEXTURE_COORD_ARRAY_STRIDE"),	# 0x808A
     (I,	1,	"GL_TEXTURE_COORD_ARRAY_COUNT_EXT"),	# 0x808B
     (I,	1,	"GL_EDGE_FLAG_ARRAY_STRIDE"),	# 0x808C
@@ -723,8 +723,8 @@ parameters = [
     (X,	1,	"GL_COLOR_INDEX8_EXT"),	# 0x80E5
     (X,	1,	"GL_COLOR_INDEX12_EXT"),	# 0x80E6
     (X,	1,	"GL_COLOR_INDEX16_EXT"),	# 0x80E7
-    (X,	1,	"GL_MAX_ELEMENTS_VERTICES"),	# 0x80E8
-    (X,	1,	"GL_MAX_ELEMENTS_INDICES"),	# 0x80E9
+    (I,	1,	"GL_MAX_ELEMENTS_VERTICES"),	# 0x80E8
+    (I,	1,	"GL_MAX_ELEMENTS_INDICES"),	# 0x80E9
     (X,	1,	"GL_PHONG_WIN"),	# 0x80EA
     (X,	1,	"GL_PHONG_HINT_WIN"),	# 0x80EB
     (X,	1,	"GL_FOG_SPECULAR_TEXTURE_WIN"),	# 0x80EC
@@ -852,7 +852,7 @@ parameters = [
     (X,	1,	"GL_TEXTURE_LOD_BIAS_T_SGIX"),	# 0x818F
     (X,	1,	"GL_TEXTURE_LOD_BIAS_R_SGIX"),	# 0x8190
     (X,	1,	"GL_GENERATE_MIPMAP"),	# 0x8191
-    (I,	1,	"GL_GENERATE_MIPMAP_HINT"),	# 0x8192
+    (E,	1,	"GL_GENERATE_MIPMAP_HINT"),	# 0x8192
     (X,	1,	"GL_GEOMETRY_DEFORMATION_SGIX"),	# 0x8194
     (X,	1,	"GL_TEXTURE_DEFORMATION_SGIX"),	# 0x8195
     (I,	1,	"GL_DEFORMATIONS_MASK_SGIX"),	# 0x8196
@@ -903,7 +903,7 @@ parameters = [
     (X,	1,	"GL_OBJECT_POINT_SGIS"),	# 0x81F5
     (X,	1,	"GL_EYE_LINE_SGIS"),	# 0x81F6
     (X,	1,	"GL_OBJECT_LINE_SGIS"),	# 0x81F7
-    (I,	1,	"GL_LIGHT_MODEL_COLOR_CONTROL"),	# 0x81F8
+    (E,	1,	"GL_LIGHT_MODEL_COLOR_CONTROL"),	# 0x81F8
     (X,	1,	"GL_SINGLE_COLOR"),	# 0x81F9
     (X,	1,	"GL_SEPARATE_SPECULAR_COLOR"),	# 0x81FA
     (X,	1,	"GL_SHARED_TEXTURE_PALETTE_EXT"),	# 0x81FB
@@ -1082,9 +1082,9 @@ parameters = [
     (X,	1,	"GL_BINORMAL_ARRAY_EXT"),	# 0x843A
     (X,	1,	"GL_CURRENT_TANGENT_EXT"),	# 0x843B
     (X,	1,	"GL_CURRENT_BINORMAL_EXT"),	# 0x843C
-    (X,	1,	"GL_TANGENT_ARRAY_TYPE_EXT"),	# 0x843E
+    (E,	1,	"GL_TANGENT_ARRAY_TYPE_EXT"),	# 0x843E
     (X,	1,	"GL_TANGENT_ARRAY_STRIDE_EXT"),	# 0x843F
-    (X,	1,	"GL_BINORMAL_ARRAY_TYPE_EXT"),	# 0x8440
+    (E,	1,	"GL_BINORMAL_ARRAY_TYPE_EXT"),	# 0x8440
     (X,	1,	"GL_BINORMAL_ARRAY_STRIDE_EXT"),	# 0x8441
     (P,	1,	"GL_TANGENT_ARRAY_POINTER_EXT"),	# 0x8442
     (P,	1,	"GL_BINORMAL_ARRAY_POINTER_EXT"),	# 0x8443
@@ -1095,18 +1095,18 @@ parameters = [
     (X,	1,	"GL_NEAREST_CLIPMAP_NEAREST_SGIX"),	# 0x844D
     (X,	1,	"GL_NEAREST_CLIPMAP_LINEAR_SGIX"),	# 0x844E
     (X,	1,	"GL_LINEAR_CLIPMAP_NEAREST_SGIX"),	# 0x844F
-    (X,	1,	"GL_FOG_COORD_SRC"),	# 0x8450
+    (E,	1,	"GL_FOG_COORD_SRC"),	# 0x8450
     (X,	1,	"GL_FOG_COORD"),	# 0x8451
     (X,	1,	"GL_FRAGMENT_DEPTH"),	# 0x8452
     (F,	1,	"GL_CURRENT_FOG_COORD"),	# 0x8453
-    (I,	1,	"GL_FOG_COORD_ARRAY_TYPE"),	# 0x8454
+    (E,	1,	"GL_FOG_COORD_ARRAY_TYPE"),	# 0x8454
     (I,	1,	"GL_FOG_COORD_ARRAY_STRIDE"),	# 0x8455
     (X,	1,	"GL_FOG_COORD_ARRAY_POINTER"),	# 0x8456
     (B,	1,	"GL_FOG_COORD_ARRAY"),	# 0x8457
     (I,	1,	"GL_COLOR_SUM"),	# 0x8458
     (F,	3,	"GL_CURRENT_SECONDARY_COLOR"),	# 0x8459
     (I,	1,	"GL_SECONDARY_COLOR_ARRAY_SIZE"),	# 0x845A
-    (I,	1,	"GL_SECONDARY_COLOR_ARRAY_TYPE"),	# 0x845B
+    (E,	1,	"GL_SECONDARY_COLOR_ARRAY_TYPE"),	# 0x845B
     (I,	1,	"GL_SECONDARY_COLOR_ARRAY_STRIDE"),	# 0x845C
     (X,	1,	"GL_SECONDARY_COLOR_ARRAY_POINTER"),	# 0x845D
     (B,	1,	"GL_SECONDARY_COLOR_ARRAY"),	# 0x845E
@@ -1147,8 +1147,8 @@ parameters = [
     (X,	1,	"GL_TEXTURE29"),	# 0x84DD
     (X,	1,	"GL_TEXTURE30"),	# 0x84DE
     (X,	1,	"GL_TEXTURE31"),	# 0x84DF
-    (I,	1,	"GL_ACTIVE_TEXTURE"),	# 0x84E0
-    (I,	1,	"GL_CLIENT_ACTIVE_TEXTURE"),	# 0x84E1
+    (E,	1,	"GL_ACTIVE_TEXTURE"),	# 0x84E0
+    (E,	1,	"GL_CLIENT_ACTIVE_TEXTURE"),	# 0x84E1
     (I,	1,	"GL_MAX_TEXTURE_UNITS"),	# 0x84E2
     (F,	16,	"GL_TRANSPOSE_MODELVIEW_MATRIX"),	# 0x84E3
     (F,	16,	"GL_TRANSPOSE_PROJECTION_MATRIX"),	# 0x84E4
@@ -1191,7 +1191,7 @@ parameters = [
     (X,	1,	"GL_CURRENT_VERTEX_WEIGHT_EXT"),	# 0x850B
     (X,	1,	"GL_VERTEX_WEIGHT_ARRAY_EXT"),	# 0x850C
     (X,	1,	"GL_VERTEX_WEIGHT_ARRAY_SIZE_EXT"),	# 0x850D
-    (X,	1,	"GL_VERTEX_WEIGHT_ARRAY_TYPE_EXT"),	# 0x850E
+    (E,	1,	"GL_VERTEX_WEIGHT_ARRAY_TYPE_EXT"),	# 0x850E
     (X,	1,	"GL_VERTEX_WEIGHT_ARRAY_STRIDE_EXT"),	# 0x850F
     (X,	1,	"GL_VERTEX_WEIGHT_ARRAY_POINTER_EXT"),	# 0x8510
     (X,	1,	"GL_NORMAL_MAP"),	# 0x8511
@@ -1329,7 +1329,7 @@ parameters = [
     (X,	1,	"GL_STORAGE_CACHED_APPLE"),	# 0x85BE
     (X,	1,	"GL_STORAGE_SHARED_APPLE"),	# 0x85BF
     (X,	1,	"GL_REPLACEMENT_CODE_ARRAY_SUN"),	# 0x85C0
-    (X,	1,	"GL_REPLACEMENT_CODE_ARRAY_TYPE_SUN"),	# 0x85C1
+    (E,	1,	"GL_REPLACEMENT_CODE_ARRAY_TYPE_SUN"),	# 0x85C1
     (X,	1,	"GL_REPLACEMENT_CODE_ARRAY_STRIDE_SUN"),	# 0x85C2
     (X,	1,	"GL_REPLACEMENT_CODE_ARRAY_POINTER_SUN"),	# 0x85C3
     (X,	1,	"GL_R1UI_V3F_SUN"),	# 0x85C4
@@ -1348,7 +1348,7 @@ parameters = [
     (X,	1,	"GL_VERTEX_ATTRIB_ARRAY_ENABLED"),	# 0x8622
     (X,	1,	"GL_VERTEX_ATTRIB_ARRAY_SIZE"),	# 0x8623
     (X,	1,	"GL_VERTEX_ATTRIB_ARRAY_STRIDE"),	# 0x8624
-    (X,	1,	"GL_VERTEX_ATTRIB_ARRAY_TYPE"),	# 0x8625
+    (E,	1,	"GL_VERTEX_ATTRIB_ARRAY_TYPE"),	# 0x8625
     (X,	1,	"GL_CURRENT_VERTEX_ATTRIB"),	# 0x8626
     (X,	1,	"GL_PROGRAM_LENGTH_ARB"),	# 0x8627
     (X,	1,	"GL_PROGRAM_STRING_ARB"),	# 0x8628
@@ -1434,13 +1434,14 @@ parameters = [
     (X,	1,	"GL_TEXTURE_COMPRESSED_IMAGE_SIZE"),	# 0x86A0
     (X,	1,	"GL_TEXTURE_COMPRESSED"),	# 0x86A1
     (X,	1,	"GL_NUM_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A2
-    (X,	1,	"GL_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A3
+    # XXX: the list is GL_NUM_COMPRESSED_TEXTURES
+    #(E,	1,	"GL_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A3
     (X,	1,	"GL_MAX_VERTEX_UNITS_ARB"),	# 0x86A4
     (X,	1,	"GL_ACTIVE_VERTEX_UNITS_ARB"),	# 0x86A5
     (X,	1,	"GL_WEIGHT_SUM_UNITY_ARB"),	# 0x86A6
     (X,	1,	"GL_VERTEX_BLEND_ARB"),	# 0x86A7
     (X,	1,	"GL_CURRENT_WEIGHT_ARB"),	# 0x86A8
-    (X,	1,	"GL_WEIGHT_ARRAY_TYPE_ARB"),	# 0x86A9
+    (E,	1,	"GL_WEIGHT_ARRAY_TYPE_ARB"),	# 0x86A9
     (X,	1,	"GL_WEIGHT_ARRAY_STRIDE_ARB"),	# 0x86AA
     (X,	1,	"GL_WEIGHT_ARRAY_SIZE_ARB"),	# 0x86AB
     (X,	1,	"GL_WEIGHT_ARRAY_POINTER_ARB"),	# 0x86AC
@@ -1602,7 +1603,7 @@ parameters = [
     (X,	1,	"GL_ARRAY_OBJECT_BUFFER_ATI"),	# 0x8766
     (X,	1,	"GL_ARRAY_OBJECT_OFFSET_ATI"),	# 0x8767
     (X,	1,	"GL_ELEMENT_ARRAY_ATI"),	# 0x8768
-    (X,	1,	"GL_ELEMENT_ARRAY_TYPE_ATI"),	# 0x8769
+    (E,	1,	"GL_ELEMENT_ARRAY_TYPE_ATI"),	# 0x8769
     (X,	1,	"GL_ELEMENT_ARRAY_POINTER_ATI"),	# 0x876A
     (X,	1,	"GL_MAX_VERTEX_STREAMS_ATI"),	# 0x876B
     (X,	1,	"GL_VERTEX_STREAM0_ATI"),	# 0x876C
@@ -1725,7 +1726,7 @@ parameters = [
     (X,	1,	"GL_VARIANT_VALUE_EXT"),	# 0x87E4
     (X,	1,	"GL_VARIANT_DATATYPE_EXT"),	# 0x87E5
     (X,	1,	"GL_VARIANT_ARRAY_STRIDE_EXT"),	# 0x87E6
-    (X,	1,	"GL_VARIANT_ARRAY_TYPE_EXT"),	# 0x87E7
+    (E,	1,	"GL_VARIANT_ARRAY_TYPE_EXT"),	# 0x87E7
     (X,	1,	"GL_VARIANT_ARRAY_EXT"),	# 0x87E8
     (X,	1,	"GL_VARIANT_ARRAY_POINTER_EXT"),	# 0x87E9
     (X,	1,	"GL_INVARIANT_VALUE_EXT"),	# 0x87EA
@@ -1746,10 +1747,10 @@ parameters = [
     (X,	1,	"GL_RENDERBUFFER_FREE_MEMORY_ATI"),	# 0x87FD
     (X,	1,	"GL_NUM_PROGRAM_BINARY_FORMATS"),	# 0x87FE
     (X,	1,	"GL_PROGRAM_BINARY_FORMATS"),	# 0x87FF
-    (X,	1,	"GL_STENCIL_BACK_FUNC"),	# 0x8800
-    (X,	1,	"GL_STENCIL_BACK_FAIL"),	# 0x8801
-    (X,	1,	"GL_STENCIL_BACK_PASS_DEPTH_FAIL"),	# 0x8802
-    (X,	1,	"GL_STENCIL_BACK_PASS_DEPTH_PASS"),	# 0x8803
+    (E,	1,	"GL_STENCIL_BACK_FUNC"),	# 0x8800
+    (E,	1,	"GL_STENCIL_BACK_FAIL"),	# 0x8801
+    (E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_FAIL"),	# 0x8802
+    (E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_PASS"),	# 0x8803
     (X,	1,	"GL_FRAGMENT_PROGRAM_ARB"),	# 0x8804
     (X,	1,	"GL_PROGRAM_ALU_INSTRUCTIONS_ARB"),	# 0x8805
     (X,	1,	"GL_PROGRAM_TEX_INSTRUCTIONS_ARB"),	# 0x8806
@@ -1776,23 +1777,23 @@ parameters = [
     (X,	1,	"GL_LUMINANCE16F_ARB"),	# 0x881E
     (X,	1,	"GL_LUMINANCE_ALPHA16F_ARB"),	# 0x881F
     (X,	1,	"GL_RGBA_FLOAT_MODE_ARB"),	# 0x8820
-    (X,	1,	"GL_MAX_DRAW_BUFFERS"),	# 0x8824
-    (X,	1,	"GL_DRAW_BUFFER0"),	# 0x8825
-    (X,	1,	"GL_DRAW_BUFFER1"),	# 0x8826
-    (X,	1,	"GL_DRAW_BUFFER2"),	# 0x8827
-    (X,	1,	"GL_DRAW_BUFFER3"),	# 0x8828
-    (X,	1,	"GL_DRAW_BUFFER4"),	# 0x8829
-    (X,	1,	"GL_DRAW_BUFFER5"),	# 0x882A
-    (X,	1,	"GL_DRAW_BUFFER6"),	# 0x882B
-    (X,	1,	"GL_DRAW_BUFFER7"),	# 0x882C
-    (X,	1,	"GL_DRAW_BUFFER8"),	# 0x882D
-    (X,	1,	"GL_DRAW_BUFFER9"),	# 0x882E
-    (X,	1,	"GL_DRAW_BUFFER10"),	# 0x882F
-    (X,	1,	"GL_DRAW_BUFFER11"),	# 0x8830
-    (X,	1,	"GL_DRAW_BUFFER12"),	# 0x8831
-    (X,	1,	"GL_DRAW_BUFFER13"),	# 0x8832
-    (X,	1,	"GL_DRAW_BUFFER14"),	# 0x8833
-    (X,	1,	"GL_DRAW_BUFFER15"),	# 0x8834
+    (I,	1,	"GL_MAX_DRAW_BUFFERS"),	# 0x8824
+    (E,	1,	"GL_DRAW_BUFFER0"),	# 0x8825
+    (E,	1,	"GL_DRAW_BUFFER1"),	# 0x8826
+    (E,	1,	"GL_DRAW_BUFFER2"),	# 0x8827
+    (E,	1,	"GL_DRAW_BUFFER3"),	# 0x8828
+    (E,	1,	"GL_DRAW_BUFFER4"),	# 0x8829
+    (E,	1,	"GL_DRAW_BUFFER5"),	# 0x882A
+    (E,	1,	"GL_DRAW_BUFFER6"),	# 0x882B
+    (E,	1,	"GL_DRAW_BUFFER7"),	# 0x882C
+    (E,	1,	"GL_DRAW_BUFFER8"),	# 0x882D
+    (E,	1,	"GL_DRAW_BUFFER9"),	# 0x882E
+    (E,	1,	"GL_DRAW_BUFFER10"),	# 0x882F
+    (E,	1,	"GL_DRAW_BUFFER11"),	# 0x8830
+    (E,	1,	"GL_DRAW_BUFFER12"),	# 0x8831
+    (E,	1,	"GL_DRAW_BUFFER13"),	# 0x8832
+    (E,	1,	"GL_DRAW_BUFFER14"),	# 0x8833
+    (E,	1,	"GL_DRAW_BUFFER15"),	# 0x8834
     (X,	1,	"GL_COLOR_CLEAR_UNCLAMPED_VALUE_ATI"),	# 0x8835
     (X,	1,	"GL_BLEND_EQUATION_ALPHA"),	# 0x883D
     (X,	1,	"GL_MATRIX_PALETTE_ARB"),	# 0x8840
@@ -1802,7 +1803,7 @@ parameters = [
     (X,	1,	"GL_MATRIX_INDEX_ARRAY_ARB"),	# 0x8844
     (X,	1,	"GL_CURRENT_MATRIX_INDEX_ARB"),	# 0x8845
     (X,	1,	"GL_MATRIX_INDEX_ARRAY_SIZE_ARB"),	# 0x8846
-    (X,	1,	"GL_MATRIX_INDEX_ARRAY_TYPE_ARB"),	# 0x8847
+    (E,	1,	"GL_MATRIX_INDEX_ARRAY_TYPE_ARB"),	# 0x8847
     (X,	1,	"GL_MATRIX_INDEX_ARRAY_STRIDE_ARB"),	# 0x8848
     (X,	1,	"GL_MATRIX_INDEX_ARRAY_POINTER_ARB"),	# 0x8849
     (X,	1,	"GL_TEXTURE_DEPTH_SIZE"),	# 0x884A
@@ -2115,7 +2116,7 @@ parameters = [
     (X,	1,	"GL_DRAW_PIXELS_APPLE"),	# 0x8A0A
     (X,	1,	"GL_FENCE_APPLE"),	# 0x8A0B
     (X,	1,	"GL_ELEMENT_ARRAY_APPLE"),	# 0x8A0C
-    (X,	1,	"GL_ELEMENT_ARRAY_TYPE_APPLE"),	# 0x8A0D
+    (E,	1,	"GL_ELEMENT_ARRAY_TYPE_APPLE"),	# 0x8A0D
     (X,	1,	"GL_ELEMENT_ARRAY_POINTER_APPLE"),	# 0x8A0E
     (X,	1,	"GL_COLOR_FLOAT_APPLE"),	# 0x8A0F
     (X,	1,	"GL_UNIFORM_BUFFER"),	# 0x8A11
@@ -2145,7 +2146,7 @@ parameters = [
     (X,	1,	"GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT"),	# 0x8A34
     (X,	1,	"GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH"),	# 0x8A35
     (X,	1,	"GL_ACTIVE_UNIFORM_BLOCKS"),	# 0x8A36
-    (X,	1,	"GL_UNIFORM_TYPE"),	# 0x8A37
+    (E,	1,	"GL_UNIFORM_TYPE"),	# 0x8A37
     (X,	1,	"GL_UNIFORM_SIZE"),	# 0x8A38
     (X,	1,	"GL_UNIFORM_NAME_LENGTH"),	# 0x8A39
     (X,	1,	"GL_UNIFORM_BLOCK_INDEX"),	# 0x8A3A
@@ -2161,20 +2162,20 @@ parameters = [
     (X,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER"),	# 0x8A44
     (X,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x8A45
     (X,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x8A46
-    (X,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
-    (X,	1,	"GL_DECODE_EXT"),	# 0x8A49
-    (X,	1,	"GL_SKIP_DECODE_EXT"),	# 0x8A4A
+    #(X,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
+    #(X,	1,	"GL_DECODE_EXT"),	# 0x8A49
+    #(X,	1,	"GL_SKIP_DECODE_EXT"),	# 0x8A4A
     (X,	1,	"GL_FRAGMENT_SHADER"),	# 0x8B30
     (X,	1,	"GL_VERTEX_SHADER"),	# 0x8B31
     (X,	1,	"GL_PROGRAM_OBJECT_ARB"),	# 0x8B40
     (X,	1,	"GL_SHADER_OBJECT_ARB"),	# 0x8B48
-    (X,	1,	"GL_MAX_FRAGMENT_UNIFORM_COMPONENTS"),	# 0x8B49
-    (X,	1,	"GL_MAX_VERTEX_UNIFORM_COMPONENTS"),	# 0x8B4A
-    (X,	1,	"GL_MAX_VARYING_COMPONENTS"),	# 0x8B4B
-    (X,	1,	"GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS"),	# 0x8B4C
-    (X,	1,	"GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS"),	# 0x8B4D
-    (X,	1,	"GL_OBJECT_TYPE_ARB"),	# 0x8B4E
-    (X,	1,	"GL_SHADER_TYPE"),	# 0x8B4F
+    (I,	1,	"GL_MAX_FRAGMENT_UNIFORM_COMPONENTS"),	# 0x8B49
+    (I,	1,	"GL_MAX_VERTEX_UNIFORM_COMPONENTS"),	# 0x8B4A
+    (I,	1,	"GL_MAX_VARYING_COMPONENTS"),	# 0x8B4B
+    (I,	1,	"GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS"),	# 0x8B4C
+    (I,	1,	"GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS"),	# 0x8B4D
+    (E,	1,	"GL_OBJECT_TYPE_ARB"),	# 0x8B4E
+    (E,	1,	"GL_SHADER_TYPE"),	# 0x8B4F
     (X,	1,	"GL_FLOAT_VEC2"),	# 0x8B50
     (X,	1,	"GL_FLOAT_VEC3"),	# 0x8B51
     (X,	1,	"GL_FLOAT_VEC4"),	# 0x8B52
@@ -2822,7 +2823,6 @@ parameters = [
     (X,	1,	"GL_QUERY_OBJECT_AMD"),	# 0x9153
     (X,	1,	"GL_VERTEX_ARRAY_OBJECT_AMD"),	# 0x9154
     (X,	1,	"GL_SAMPLER_OBJECT_AMD"),	# 0x9155
-    (X,	1,	"GL_TIMEOUT_IGNORED"),	# 0xFFFFFFFFFFFFFFFFull
     (X,	1,	"GL_INVALID_INDEX"),	# 0xFFFFFFFFu
 ]
 
@@ -2865,6 +2865,21 @@ class StateDumper:
         print '#include "glimports.hpp"'
         print '#include "glstate.hpp"'
         print
+
+        print 'static inline void'
+        print 'writeEnum(JSONWriter &json, GLenum pname)'
+        print '{'
+        print '    switch(pname) {'
+        for type, count, name in parameters:
+            print '    case %s:' % name
+            print '        json.writeString("%s");' % name
+            print '        break;'
+        print '    default:'
+        print '        json.writeNumber(pname);'
+        print '    }'
+        print '}'
+        print
+
         print 'void state_dump(std::ostream &os)'
         print '{'
         print '    JSONWriter json(os);'
@@ -2877,6 +2892,7 @@ class StateDumper:
         print '    GLboolean bparams[16];'
         print '    GLint iparams[16];'
         print '    GLfloat fparams[16];'
+        print '    GLvoid * pparams[16];'
         print '    json.beginMember("parameters");'
         print '    json.beginObject();'
         for type, count, name in parameters:
@@ -2885,15 +2901,23 @@ class StateDumper:
             elif type is B:
                 buf = 'bparams'
                 getter = 'glGetBooleanv'
-                writer = 'writeBool'
+                writer = 'json.writeBool(%s)'
             elif type is I:
                 buf = 'iparams'
                 getter = 'glGetIntegerv'
-                writer = 'writeNumber'
+                writer = 'json.writeNumber(%s)'
+            elif type is E:
+                buf = 'iparams'
+                getter = 'glGetIntegerv'
+                writer = 'writeEnum(json, %s)'
             elif type is F:
                 buf = 'fparams'
                 getter = 'glGetFloatv'
-                writer = 'writeNumber'
+                writer = 'json.writeNumber(%s)'
+            elif type is P:
+                buf = 'pparams'
+                getter = 'glGetPointerv'
+                writer = 'json.writeNumber((size_t)%s)'
             else:
                 raise NotImplementedError
             print '    memset(%s, 0, %u * sizeof *%s);' % (buf, count, buf)
@@ -2903,11 +2927,11 @@ class StateDumper:
             print '    } else {'
             print '        json.beginMember("%s");' % name
             if count == 1:
-                print '        json.%s(%s[0]);' % (writer, buf)
+                print '        %s;' % (writer % ( '%s[0]' % buf))
             else:
                 print '        json.beginArray();'
                 for i in range(count):
-                    print '        json.%s(%s[%u]);' % (writer, buf, i)
+                    print '        %s;' % (writer % ( '%s[%u]' % (buf, i)))
                 print '        json.endArray();'
             print '        json.endMember();'
             print '    }'

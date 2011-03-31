@@ -143,7 +143,7 @@ public:
     inline void writeString(const char *s) {
         separator();
         escapeString(s);
-        value = false;
+        value = true;
     }
 
     inline void writeNull(void) {
