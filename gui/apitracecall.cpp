@@ -367,3 +367,13 @@ ApiTraceEvent::ApiTraceEvent(Type t)
 ApiTraceCall::~ApiTraceCall()
 {
 }
+
+QVariantMap ApiTraceEvent::state() const
+{
+    return m_state;
+}
+
+void ApiTraceEvent::setState(const QVariantMap &state)
+{
+    m_state = state;
+}

@@ -117,8 +117,12 @@ public:
     virtual QStaticText staticText() const = 0;
     virtual int numChildren() const = 0;
 
+    QVariantMap state() const;
+    void setState(const QVariantMap &state);
+
 protected:
     Type m_type;
+    QVariantMap m_state;
 };
 Q_DECLARE_METATYPE(ApiTraceEvent*);
 
@@ -152,8 +156,6 @@ public:
     ApiTraceFrame();
     int number;
     QList<ApiTraceCall*> calls;
-
-    QVariantMap state;
 
     int numChildren() const;
     QStaticText staticText() const;

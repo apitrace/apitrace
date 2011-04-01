@@ -7,9 +7,10 @@
 #include <QProcess>
 
 class ApiTrace;
+class ApiTraceEvent;
+class ApiTraceFilter;
 class ApiTraceFrame;
 class ApiTraceModel;
-class ApiTraceFilter;
 class QLineEdit;
 class QModelIndex;
 class QProcess;
@@ -60,9 +61,9 @@ private:
 
     QString m_traceFileName;
 
-    ApiTraceFrame *m_currentFrame;
+    ApiTraceEvent *m_selectedEvent;
 
-    ApiTraceFrame *m_stateFrame;
+    ApiTraceEvent *m_stateEvent;
     bool m_findingState;
 
     QJson::Parser *m_jsonParser;

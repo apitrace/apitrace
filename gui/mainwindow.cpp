@@ -23,8 +23,8 @@
 MainWindow::MainWindow()
     : QMainWindow(),
       m_replayProcess(0),
-      m_currentFrame(0),
-      m_stateFrame(0),
+      m_selectedEvent(0),
+      m_stateEvent(0),
       m_findingState(false),
       m_jsonParser(new QJson::Parser())
 {
@@ -108,12 +108,12 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     if (call) {
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
-        m_currentFrame = call->parentFrame;
+        m_selectedEvent = call;
     } else {
-        m_currentFrame = index.data().value<ApiTraceFrame*>();
+        m_selectedEvent = index.data().value<ApiTraceFrame*>();
         m_ui.detailsDock->hide();
     }
-    if (m_currentFrame && !m_currentFrame->state.isEmpty()) {
+    if (m_selectedEvent && !m_selectedEvent->state().isEmpty()) {
         fillStateForFrame();
     } else
         m_ui.stateDock->hide();
@@ -175,7 +175,7 @@ void MainWindow::replayFinished()
     } else if (output.length() < 80) {
         statusBar()->showMessage(output);
     }
-    m_stateFrame = 0;
+    m_stateEvent = 0;
     m_findingState = false;
 }
 
@@ -185,7 +185,7 @@ void MainWindow::replayError(QProcess::ProcessError err)
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
     m_findingState = false;
-    m_stateFrame = 0;
+    m_stateEvent = 0;
 
     qDebug()<<"Process error = "<<err;
     qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
@@ -243,9 +243,24 @@ void MainWindow::replayTrace(bool dumpState)
 
     QStringList arguments;
     if (dumpState &&
-        m_currentFrame && !m_currentFrame->calls.isEmpty()) {
+        m_selectedEvent) {
+        int index = 0;
+        if (m_selectedEvent->type() == ApiTraceEvent::Call) {
+            index = static_cast<ApiTraceCall*>(m_selectedEvent)->index;
+        } else if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(m_selectedEvent);
+            if (frame->calls.isEmpty()) {
+                //XXX i guess we could still get the current state
+                qDebug()<<"tried to get a state for an empty frame";
+                return;
+            }
+            index = frame->calls.first()->index;
+        } else {
+            qDebug()<<"Unknown event type";
+            return;
+        }
         arguments << QLatin1String("-D");
-        arguments << QString::number(m_currentFrame->calls.first()->index);
+        arguments << QString::number(index);
     }
     arguments << m_traceFileName;
 
@@ -257,13 +272,13 @@ void MainWindow::replayTrace(bool dumpState)
 
 void MainWindow::lookupState()
 {
-    if (!m_currentFrame) {
+    if (!m_selectedEvent) {
         QMessageBox::warning(
-            this, tr("Unknown Frame"),
-            tr("To inspect the state select a frame in the trace."));
+            this, tr("Unknown Event"),
+            tr("To inspect the state select an event in the event list."));
         return;
     }
-    m_stateFrame = m_currentFrame;
+    m_stateEvent = m_selectedEvent;
     m_findingState = true;
     replayTrace(true);
 }
@@ -277,9 +292,8 @@ void MainWindow::parseState(const QVariantMap &params)
 {
     QVariantMap::const_iterator itr;
 
-    m_stateFrame->state.clear();
-    m_stateFrame->state = params;
-    if (m_currentFrame == m_stateFrame) {
+    m_stateEvent->setState(params);
+    if (m_selectedEvent == m_stateEvent) {
         fillStateForFrame();
     } else {
         m_ui.stateDock->hide();
@@ -313,11 +327,11 @@ void MainWindow::fillStateForFrame()
     QVariantMap::const_iterator itr;
     QVariantMap params;
 
-    if (!m_currentFrame || m_currentFrame->state.isEmpty())
+    if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
         return;
 
     m_ui.stateTreeWidget->clear();
-    params = m_currentFrame->state;
+    params = m_selectedEvent->state();
     QList<QTreeWidgetItem *> items;
     for (itr = params.constBegin(); itr != params.constEnd(); ++itr) {
         QString key = itr.key();
