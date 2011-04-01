@@ -233,7 +233,21 @@ QStaticText ApiTraceCall::staticText() const
     QString richText = QString::fromLatin1("<span style=\"font-weight:bold\">%1</span>(").arg(name);
     for (int i = 0; i < argNames.count(); ++i) {
         richText += QLatin1String("<span style=\"color:#0000ff\">");
-        richText += apiVariantToString(argValues[i]);
+        QString argText = apiVariantToString(argValues[i]);
+
+        //if arguments are really long (e.g. shader text), cut them
+        // and elide it
+        if (argText.length() > 40) {
+            QString shortened = argText.mid(0, 40);
+            shortened[argText.length() - 5] = '.';
+            shortened[argText.length() - 4] = '.';
+            shortened[argText.length() - 3] = '.';
+            shortened[argText.length() - 2] = argText[argText.length() - 2];
+            shortened[argText.length() - 1] = argText[argText.length() - 1];
+            richText += shortened;
+        } else {
+            richText += argText;
+        }
         richText += QLatin1String("</span>");
         if (i < argNames.count() - 1)
             richText += QString::fromLatin1(", ");
