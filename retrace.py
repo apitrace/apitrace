@@ -266,6 +266,7 @@ class Retracer:
     def retrace_api(self, api):
 
         print '#include "trace_parser.hpp"'
+        print '#include "retrace.hpp"'
         print
 
         types = api.all_types()
@@ -274,10 +275,10 @@ class Retracer:
         for handle in handles:
             if handle.name not in handle_names:
                 if handle.key is None:
-                    print 'static std::map<%s, %s> __%s_map;' % (handle.type, handle.type, handle.name)
+                    print 'static retrace::map<%s> __%s_map;' % (handle.type, handle.name)
                 else:
                     key_name, key_type = handle.key
-                    print 'static std::map<%s, std::map<%s, %s> > __%s_map;' % (key_type, handle.type, handle.type, handle.name)
+                    print 'static std::map<%s, retrace::map<%s> > __%s_map;' % (key_type, handle.type, handle.name)
                 handle_names.add(handle.name)
         print
 
