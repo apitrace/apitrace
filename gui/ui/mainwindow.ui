@@ -160,9 +160,8 @@
   </action>
   <action name="actionOpen">
    <property name="icon">
-    <iconset>
-     <normaloff/>
-    </iconset>
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/document-open.png</normaloff>:/resources/document-open.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Open...</string>
@@ -173,9 +172,8 @@
   </action>
   <action name="actionQuit">
    <property name="icon">
-    <iconset>
-     <normaloff/>
-    </iconset>
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/application-exit.png</normaloff>:/resources/application-exit.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Quit</string>
@@ -195,9 +193,8 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
-     <normaloff/>
-    </iconset>
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/media-playback-start.png</normaloff>:/resources/media-playback-start.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Replay</string>
@@ -208,9 +205,8 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
-     <normaloff/>
-    </iconset>
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/media-playback-stop.png</normaloff>:/resources/media-playback-stop.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Stop</string>
@@ -219,6 +215,10 @@
   <action name="actionLookupState">
    <property name="enabled">
     <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/media-record.png</normaloff>:/resources/media-record.png</iconset>
    </property>
    <property name="text">
     <string>Lookup State</string>
@@ -232,6 +232,8 @@
    <header>QtWebKit/QWebView</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../qapitrace.qrc"/>
+ </resources>
  <connections/>
 </ui>

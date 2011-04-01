@@ -1,0 +1,10 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>resources/application-exit.png</file>
+    <file>resources/dialog-information.png</file>
+    <file>resources/document-open.png</file>
+    <file>resources/media-playback-start.png</file>
+    <file>resources/media-playback-stop.png</file>
+    <file>resources/media-record.png</file>
+</qresource>
+</RCC>

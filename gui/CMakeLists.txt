@@ -11,6 +11,8 @@ set(qapitrace_SRCS
 
 qt4_automoc(${qapitrace_SRCS})
 
+qt4_add_resources(qapitrace_SRCS qapitrace.qrc)
+
 set(qapitrace_UIS
    ui/mainwindow.ui)
 
