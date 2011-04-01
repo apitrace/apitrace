@@ -29,6 +29,7 @@ MainWindow::MainWindow()
       m_jsonParser(new QJson::Parser())
 {
     m_ui.setupUi(this);
+    m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
 
     m_trace = new ApiTrace();
     connect(m_trace, SIGNAL(startedLoadingTrace()),
