@@ -14,11 +14,16 @@ class ApiTraceModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
+    enum Roles {
+        EventRole = Qt::UserRole + 1
+    };
+public:
     ApiTraceModel(QObject *parent = 0);
     ~ApiTraceModel();
 
     void setApiTrace(ApiTrace *trace);
     const ApiTrace *apiTrace() const;
+    void stateSetOnEvent(ApiTraceEvent *event);
 
 public:
     /* QAbstractItemModel { */

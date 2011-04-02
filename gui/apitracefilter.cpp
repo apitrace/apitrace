@@ -1,6 +1,7 @@
 #include "apitracefilter.h"
 
 #include "apitracecall.h"
+#include "apitracemodel.h"
 
 #include <QDebug>
 
@@ -13,14 +14,19 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
                                       const QModelIndex &sourceParent) const
 {
     QModelIndex index0 = sourceModel()->index(sourceRow, 0, sourceParent);
-    QVariant varientData = sourceModel()->data(index0);
-    ApiTraceCall *call = varientData.value<ApiTraceCall*>();
+    QVariant varientData = sourceModel()->data(index0, ApiTraceModel::EventRole);
+    ApiTraceEvent *event = varientData.value<ApiTraceEvent*>();
 
-    if (!call) {
-        ApiTraceFrame *frame = varientData.value<ApiTraceFrame*>();
-        return frame != 0;
+    Q_ASSERT(event);
+    if (!event)
+        return false;
+
+    //we don't filter frames
+    if (event->type() == ApiTraceEvent::Frame) {
+        return true;
     }
 
+    ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
     QString function = call->name;
 
     if (!m_text.isEmpty()) {

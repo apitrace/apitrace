@@ -43,8 +43,9 @@ MainWindow::MainWindow()
     m_proxyModel->setSourceModel(m_model);
     m_ui.callView->setModel(m_proxyModel);
     m_ui.callView->setItemDelegate(new ApiCallDelegate);
-    for (int column = 0; column < m_model->columnCount(); ++column)
-        m_ui.callView->resizeColumnToContents(column);
+    m_ui.callView->resizeColumnToContents(0);
+    m_ui.callView->header()->swapSections(0, 1);
+    m_ui.callView->setColumnWidth(1, 42);
 
     QToolBar *toolBar = addToolBar(tr("Navigation"));
     m_filterEdit = new QLineEdit(toolBar);
@@ -105,13 +106,19 @@ void MainWindow::loadTrace(const QString &fileName)
 
 void MainWindow::callItemSelected(const QModelIndex &index)
 {
-    ApiTraceCall *call = index.data().value<ApiTraceCall*>();
-    if (call) {
+    ApiTraceEvent *event =
+        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+
+    if (event && event->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
         m_selectedEvent = call;
     } else {
-        m_selectedEvent = index.data().value<ApiTraceFrame*>();
+        if (event && event->type() == ApiTraceEvent::Frame) {
+            m_selectedEvent = static_cast<ApiTraceFrame*>(event);
+        } else
+            m_selectedEvent = 0;
         m_ui.detailsDock->hide();
     }
     if (m_selectedEvent && !m_selectedEvent->state().isEmpty()) {
@@ -294,6 +301,7 @@ void MainWindow::parseState(const QVariantMap &params)
     QVariantMap::const_iterator itr;
 
     m_stateEvent->setState(params);
+    m_model->stateSetOnEvent(m_stateEvent);
     if (m_selectedEvent == m_stateEvent) {
         fillStateForFrame();
     } else {
