@@ -301,6 +301,7 @@ static void display(void) {
 
         if (call->no == __dump_state) {
             state_dump(std::cout);
+            exit(0);
         }
 
         if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
