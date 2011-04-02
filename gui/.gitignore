@@ -1,3 +1,4 @@
 *.moc
 qapitrace
+qrc_qapitrace.cxx
 ui_mainwindow.h
