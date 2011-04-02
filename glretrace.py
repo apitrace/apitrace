@@ -171,8 +171,7 @@ if __name__ == '__main__':
 
 #include "glproc.hpp"
 #include "glstate.hpp"
-
-#include <GL/glut.h>
+#include "glretrace.hpp"
 
 static bool double_buffer = false;
 static bool insideGlBeginEnd = false;
@@ -241,9 +240,10 @@ checkGlError(void) {
     print r'''
 
 static Trace::Parser parser;
-
-static void display_noop(void) {
-}
+static glretrace::WindowSystem *__ws = NULL;
+static glretrace::Visual *__visual = NULL;
+static glretrace::Drawable *__drawable = NULL;
+static glretrace::Context *__context = NULL;
 
 #include "image.hpp"
 
@@ -290,7 +290,14 @@ static void frame_complete(void) {
             delete ref;
         }
     }
+    
+    if (__reshape_window) {
+        // XXX: doesn't quite work
+        __drawable->resize(__window_width, __window_height);
+        __reshape_window = false;
+    }
 
+    __ws->processEvents();
 }
 
 static void display(void) {
@@ -315,21 +322,14 @@ static void display(void) {
                 };
                 frame_complete();
                 if (double_buffer)
-                    glutSwapBuffers();
+                    __drawable->swapBuffers();
                 else
                     glFlush();
-
-                // Return now to allow GLUT to resize the window.
-                delete call;
-                return;
             } else if (name == "glXMakeCurrent" ||
                        name == "wglMakeCurrent") {
                 glFlush();
                 if (!double_buffer) {
                     frame_complete();
-                    // Return now to allow GLUT to resize window.
-                    delete call;
-                    return;
                 }
             } else {
                 continue;
@@ -362,20 +362,10 @@ static void display(void) {
     }
 
     if (__wait) {
-        glutDisplayFunc(&display_noop);
-        glutIdleFunc(NULL);
+        while (__ws->processEvents()) {}
     } else {
         exit(0);
     }
-}
-
-static void idle(void) {
-    if (__reshape_window) {
-        // XXX: doesn't quite work
-        glutReshapeWindow(__window_width, __window_height);
-        __reshape_window = false;
-    }
-    glutPostRedisplay();
 }
 
 static void usage(void) {
@@ -431,14 +421,12 @@ int main(int argc, char **argv)
         }
     }
 
-    glutInit(&argc, argv);
-    glutInitWindowPosition(0, 0);
-    glutInitWindowSize(__window_width, __window_height);
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | (double_buffer ? GLUT_DOUBLE : GLUT_SINGLE));
-    glutCreateWindow(argv[0]);
-
-    glutDisplayFunc(&display);
-    glutIdleFunc(&idle);
+    __ws = glretrace::createNativeWindowSystem();
+    __visual = __ws->createVisual(double_buffer);
+    __drawable = __ws->createDrawable(__visual);
+    __drawable->resize(__window_width, __window_height);
+    __context = __ws->createContext(__visual);
+    __ws->makeCurrent(__drawable, __context);
 
     for (GLuint h = 0; h < 1024; ++h) {
         __list_map[h] = h;
@@ -447,7 +435,7 @@ int main(int argc, char **argv)
     for ( ; i < argc; ++i) {
         if (parser.open(argv[i])) {
             __startTime = OS::GetTime();
-            glutMainLoop();
+            display();
             parser.close();
         }
     }

@@ -28,8 +28,6 @@ else (NOT WIN32)
     find_package (DirectX)
 endif (NOT WIN32)
 
-find_package (GLUT)
-
 if (WIN32)
     # MSVC & MinGW only define & use APIENTRY
     add_definitions (-DGLAPIENTRY=__stdcall)
@@ -206,39 +204,36 @@ add_library (trace trace_model.cpp trace_parser.cpp ${os})
 add_executable (dump dump.cpp)
 target_link_libraries (dump trace)
 
-if (GLUT_INCLUDE_DIR)
-    add_custom_command (
-        OUTPUT glretrace.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
-        DEPENDS glretrace.py retrace.py codegen.py glapi.py glenum.py stdapi.py
-    )
+add_custom_command (
+    OUTPUT glretrace.cpp
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
+    DEPENDS glretrace.py retrace.py codegen.py glapi.py glenum.py stdapi.py
+)
 
-    add_custom_command (
-        OUTPUT glstate.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate.cpp
-        DEPENDS glstate.py glenum.py stdapi.py
-    )
+add_custom_command (
+    OUTPUT glstate.cpp
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate.cpp
+    DEPENDS glstate.py glenum.py stdapi.py
+)
 
-    include_directories (
-        ${CMAKE_CURRENT_BINARY_DIR}
-        ${OPENGL_INCLUDE_PATH}
-        ${GLUT_INCLUDE_DIR}
-    )
+include_directories (
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${OPENGL_INCLUDE_PATH}
+)
 
-    add_executable (glretrace
-        glretrace.cpp
-        glstate.cpp
-        image.cpp 
-        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    )
+add_executable (glretrace
+    glretrace.cpp
+    glretrace_xlib.cpp
+    glstate.cpp
+    image.cpp 
+    ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+)
 
-    target_link_libraries (glretrace
-        trace
-        ${OPENGL_gl_LIBRARY}
-        ${OPENGL_glu_LIBRARY}
-        ${GLUT_glut_LIBRARY}
-    )
-endif (GLUT_INCLUDE_DIR)
+target_link_libraries (glretrace
+    trace
+    ${OPENGL_gl_LIBRARY}
+    ${OPENGL_glu_LIBRARY}
+)
 
 if (QT4_FOUND AND QJSON_FOUND)
     # Include the cmake file needed to use qt4

@@ -34,26 +34,52 @@
 namespace glretrace {
 
 
-struct Visual
+class Visual
 {
+public:
     unsigned long redMask;
     unsigned long greenMask;
     unsigned long blueMask;
     unsigned long alphaMask;
     bool doubleBuffer;
+
+    virtual ~Visual() {}
 };
 
 
-struct Context
+class Drawable
 {
+public:
     const Visual *visual;
-};
-
-
-struct Drawable
-{
     unsigned width;
     unsigned height;
+
+    Drawable(const Visual *vis) :
+        visual(vis)
+    {}
+
+    virtual ~Drawable() {}
+    
+    virtual void
+    resize(unsigned w, unsigned h) {
+        width = w;
+        height = h;
+    }
+
+    virtual void swapBuffers(void) = 0;
+};
+
+
+class Context
+{
+public:
+    const Visual *visual;
+    
+    Context(const Visual *vis) :
+        visual(vis)
+    {}
+
+    virtual ~Context() {}
 };
 
 
@@ -71,28 +97,14 @@ public:
 
     virtual ~WindowSystem() {}
 
-    //
-    // Drawables
-    //
-
+    virtual Visual *
+    createVisual(bool doubleBuffer=false) = 0;
+    
     virtual Drawable *
-    createDrawable(unsigned width = 0, unsigned height = 0) = 0;
+    createDrawable(const Visual *visual) = 0;
 
-    virtual void
-    resizeDrawable(Drawable *drawable, unsigned width, unsigned height) = 0;
-
-    virtual Void *
-    destroyDrawable(void) = 0;
-
-    // 
-    // Contexts
-    //
- 
     virtual Context *
     createContext(const Visual *visual) = 0;
-
-    virtual void
-    deleteContext(Context *) = 0;
     
     virtual bool
     makeCurrent(Drawable *drawable, Context *context) = 0;
