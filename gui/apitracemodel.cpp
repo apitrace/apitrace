@@ -38,6 +38,27 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
         return itm->staticText().text();
     case Qt::DecorationRole:
         return QImage();
+    case Qt::ToolTipRole: {
+        const QString stateText = tr("State info available.");
+        if (itm->type() == ApiTraceEvent::Call) {
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(itm);
+            if (call->state().isEmpty())
+                return QString::fromLatin1("<b>%1</b>").arg(call->name);
+            else
+                return QString::fromLatin1("<b>%1</b><br/>%2")
+                    .arg(call->name)
+                    .arg(stateText);
+        } else {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(itm);
+            QString text = frame->staticText().text();
+            if (frame->state().isEmpty())
+                return QString::fromLatin1("<b>%1</b>").arg(text);
+            else
+                return QString::fromLatin1("<b>%1</b><br/>%2")
+                    .arg(text)
+                    .arg(stateText);
+        }
+    }
     case ApiTraceModel::EventRole:
         return QVariant::fromValue(itm);
     }
