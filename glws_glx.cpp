@@ -24,10 +24,10 @@
  **************************************************************************/
 
 #include "glimports.hpp"
-#include "glretrace.hpp"
+#include "glws.hpp"
 
 
-namespace glretrace {
+namespace glws {
 
 
 class XlibVisual : public Visual

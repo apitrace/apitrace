@@ -195,8 +195,10 @@ endif ()
 
 if (WIN32)
     set (os os_win32.cpp)
+    set (glws glws_wgl.cpp)
 else (WIN32)
     set (os os_posix.cpp)
+    set (glws glws_glx.cpp)
 endif (WIN32)
 
 add_library (trace trace_model.cpp trace_parser.cpp ${os})
@@ -223,8 +225,8 @@ include_directories (
 
 add_executable (glretrace
     glretrace.cpp
-    glretrace_xlib.cpp
     glstate.cpp
+    ${glws}
     image.cpp 
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
 )

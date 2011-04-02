@@ -27,11 +27,11 @@
  * Abstraction for GL window system specific APIs (GLX, WGL).
  */
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
+#ifndef _GLWS_HPP_
+#define _GLWS_HPP_
 
 
-namespace glretrace {
+namespace glws {
 
 
 class Visual
@@ -117,7 +117,7 @@ public:
 WindowSystem *createNativeWindowSystem(void);
 
 
-} /* namespace glretrace */
+} /* namespace glws */
 
 
-#endif /* _GLRETRACE_HPP_ */
+#endif /* _GLWS_HPP_ */

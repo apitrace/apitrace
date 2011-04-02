@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
 #include "glproc.hpp"
 #include "glstate.hpp"
-#include "glretrace.hpp"
+#include "glws.hpp"
 
 static bool double_buffer = false;
 static bool insideGlBeginEnd = false;
@@ -240,10 +240,10 @@ checkGlError(void) {
     print r'''
 
 static Trace::Parser parser;
-static glretrace::WindowSystem *__ws = NULL;
-static glretrace::Visual *__visual = NULL;
-static glretrace::Drawable *__drawable = NULL;
-static glretrace::Context *__context = NULL;
+static glws::WindowSystem *__ws = NULL;
+static glws::Visual *__visual = NULL;
+static glws::Drawable *__drawable = NULL;
+static glws::Context *__context = NULL;
 
 #include "image.hpp"
 
@@ -421,7 +421,7 @@ int main(int argc, char **argv)
         }
     }
 
-    __ws = glretrace::createNativeWindowSystem();
+    __ws = glws::createNativeWindowSystem();
     __visual = __ws->createVisual(double_buffer);
     __drawable = __ws->createDrawable(__visual);
     __drawable->resize(__window_width, __window_height);
