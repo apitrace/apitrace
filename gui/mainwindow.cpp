@@ -5,6 +5,7 @@
 #include "apicalldelegate.h"
 #include "apitracemodel.h"
 #include "apitracefilter.h"
+#include "settingsdialog.h"
 
 #include <qjson/parser.h>
 
@@ -70,6 +71,8 @@ MainWindow::MainWindow()
             this, SLOT(replayStop()));
     connect(m_ui.actionLookupState, SIGNAL(triggered()),
             this, SLOT(lookupState()));
+       connect(m_ui.actionOptions, SIGNAL(triggered()),
+            this, SLOT(showSettings()));
 
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
@@ -356,6 +359,16 @@ void MainWindow::fillStateForFrame()
     }
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
     m_ui.stateDock->show();
+}
+
+void MainWindow::showSettings()
+{
+    SettingsDialog dialog;
+    dialog.setFilterOptions(m_proxyModel->filterOptions());
+
+    if (dialog.exec() == QDialog::Accepted) {
+        m_proxyModel->setFilterOptions(dialog.filterOptions());
+    }
 }
 
 #include "mainwindow.moc"

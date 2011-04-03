@@ -6,7 +6,9 @@
 #include <QDebug>
 
 ApiTraceFilter::ApiTraceFilter(QObject *parent)
-    : QSortFilterProxyModel()
+    : QSortFilterProxyModel(),
+      m_filters(ExtensionsFilter | ResolutionsFilter |
+                ErrorsQueryFilter | ExtraStateFilter)
 {
 }
 
@@ -33,16 +35,31 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
         return function.contains(m_text);
     }
 
-    //XXX make it configurable
-    if (function.contains(QLatin1String("glXGetProcAddress")))
-        return false;
-    if (function.contains(QLatin1String("wglGetProcAddress")))
-        return false;
+    if (m_filters & ResolutionsFilter) {
+        if (function.contains(QLatin1String("glXGetProcAddress")))
+            return false;
+        if (function.contains(QLatin1String("wglGetProcAddress")))
+            return false;
+    }
 
-    QString fullText = call->filterText();
-    if (function.contains(QLatin1String("glGetString")) &&
-        fullText.contains(QLatin1String("GL_EXTENSIONS")))
-        return false;
+    if (m_filters & ExtensionsFilter) {
+        QString fullText = call->filterText();
+        if (function.contains(QLatin1String("glGetString")) &&
+            fullText.contains(QLatin1String("GL_EXTENSIONS")))
+            return false;
+        if (function.contains(QLatin1String("glXGetClientString")))
+            return false;
+    }
+
+    if (m_filters & ErrorsQueryFilter) {
+        if (function.contains(QLatin1String("glGetError")))
+            return false;
+    }
+
+    if (m_filters & ExtraStateFilter) {
+        if (function.contains(QLatin1String("glXGetCurrentDisplay")))
+            return false;
+    }
 
     return true;
 }
@@ -52,6 +69,19 @@ void ApiTraceFilter::setFilterString(const QString &text)
 {
     if (text != m_text) {
         m_text = text;
+        invalidate();
+    }
+}
+
+ApiTraceFilter::FilterOptions ApiTraceFilter::filterOptions() const
+{
+    return m_filters;
+}
+
+void ApiTraceFilter::setFilterOptions(ApiTraceFilter::FilterOptions opts)
+{
+    if (opts != m_filters) {
+        m_filters = opts;
         invalidate();
     }
 }

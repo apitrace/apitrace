@@ -41,6 +41,7 @@ private slots:
     void startedLoadingTrace();
     void finishedLoadingTrace();
     void lookupState();
+    void showSettings();
 
 private:
     void newTraceFile(const QString &fileName);

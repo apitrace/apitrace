@@ -54,6 +54,8 @@
     <addaction name="actionReplay"/>
     <addaction name="actionStop"/>
     <addaction name="actionLookupState"/>
+    <addaction name="separator"/>
+    <addaction name="actionOptions"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Trace"/>
@@ -222,6 +224,11 @@
    </property>
    <property name="text">
     <string>Lookup State</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
    </property>
   </action>
  </widget>
