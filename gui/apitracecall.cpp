@@ -3,6 +3,7 @@
 #include "trace_model.hpp"
 
 #include <QDebug>
+#include <QObject>
 
 ApiPointer::ApiPointer(int val)
     : m_value(val)
@@ -21,6 +22,10 @@ QString apiVariantToString(const QVariant &variant)
 {
     if (variant.userType() == QVariant::Double) {
         return QString::number(variant.toFloat());
+    }
+    if (variant.userType() == QVariant::ByteArray) {
+        float kb = variant.toByteArray().size()/1024.;
+        return QObject::tr("[binary data, size = %1kb]").arg(kb);
     }
 
     if (variant.userType() < QVariant::UserType) {
