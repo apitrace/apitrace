@@ -42,15 +42,6 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
             return false;
     }
 
-    if (m_filters & ExtensionsFilter) {
-        QString fullText = call->filterText();
-        if (function.contains(QLatin1String("glGetString")) &&
-            fullText.contains(QLatin1String("GL_EXTENSIONS")))
-            return false;
-        if (function.contains(QLatin1String("glXGetClientString")))
-            return false;
-    }
-
     if (m_filters & ErrorsQueryFilter) {
         if (function.contains(QLatin1String("glGetError")))
             return false;
@@ -60,6 +51,18 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
         if (function.contains(QLatin1String("glXGetCurrentDisplay")))
             return false;
     }
+
+    if (m_filters & ExtensionsFilter) {
+        if (function.contains(QLatin1String("glXGetClientString")))
+            return false;
+        if (function.contains(QLatin1String("glXQueryExtensionsString")))
+            return false;
+        QString fullText = call->filterText();
+        if (function.contains(QLatin1String("glGetString")) &&
+            fullText.contains(QLatin1String("GL_EXTENSIONS")))
+            return false;
+    }
+
 
     return true;
 }
