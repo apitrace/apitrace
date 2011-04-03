@@ -279,7 +279,9 @@ QString ApiTraceCall::toHtml() const
     if (!m_richText.isEmpty())
         return m_richText;
 
-    m_richText = QString::fromLatin1("<span style=\"font-weight:bold\">%1</span>(").arg(name);
+    m_richText = QString::fromLatin1("%1) <span style=\"font-weight:bold\">%2</span>(")
+                 .arg(index)
+                 .arg(name);
     for (int i = 0; i < argNames.count(); ++i) {
         m_richText += argNames[i];
         m_richText += QString::fromLatin1(" = ");

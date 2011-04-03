@@ -43,9 +43,12 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
         if (itm->type() == ApiTraceEvent::Call) {
             ApiTraceCall *call = static_cast<ApiTraceCall*>(itm);
             if (call->state().isEmpty())
-                return QString::fromLatin1("<b>%1</b>").arg(call->name);
+                return QString::fromLatin1("%1)&nbsp;<b>%2</b>")
+                    .arg(call->index)
+                    .arg(call->name);
             else
-                return QString::fromLatin1("<b>%1</b><br/>%2")
+                return QString::fromLatin1("%1)&nbsp;<b>%2</b><br/>%3")
+                    .arg(call->index)
                     .arg(call->name)
                     .arg(stateText);
         } else {
