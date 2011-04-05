@@ -196,7 +196,35 @@ public:
     }
 
     void visit(String *node) {
-        os << literal << '"' << node->value << '"' << normal;
+        os << literal << "\"";
+        for (std::string::const_iterator it = node->value.begin(); it != node->value.end(); ++it) {
+            unsigned char c = (unsigned char) *it;
+            if (c == '\"')
+                os << "\\\"";
+            else if (c == '\\')
+                os << "\\\\";
+            else if (c >= 0x20 && c <= 0x7e)
+                os << c;
+            else if (c == '\t') {
+                os << "\t";
+            } else if (c == '\r') {
+                // Ignore carriage-return
+            } else if (c == '\n') {
+                // Reset formatting so that it looks correct with 'less -R'
+                os << normal << '\n' << literal;
+            } else {
+                unsigned octal0 = c & 0x7;
+                unsigned octal1 = (c >> 3) & 0x7;
+                unsigned octal2 = (c >> 3) & 0x7;
+                os << "\\";
+                if (octal2)
+                    os << octal2;
+                if (octal1)
+                    os << octal1;
+                os << octal0;
+            }
+        }
+        os << "\"" << normal;
     }
 
     void visit(Enum *node) {
