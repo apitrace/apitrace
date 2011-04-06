@@ -36,7 +36,7 @@ E = GLenum
 F = Float
 D = Double
 P = OpaquePointer(Void)
-S = String
+S = CString
 
 # TODO: This table and the one on glenum.py should be unified
 parameters = [
@@ -2830,8 +2830,11 @@ parameters = [
 ]
 
 
-class ParamDumper(Visitor):
-    '''Dump an instance.'''
+class JsonDumper(Visitor):
+    '''Visitor that will dump a value of the specified type through the JSON
+    writer.
+    
+    It expects a previously declared JSONWriter instance named "json".'''
 
     def visit_literal(self, literal, instance):
         if literal.format == 'Bool':
@@ -2846,13 +2849,31 @@ class ParamDumper(Visitor):
         print '    json.writeString((const char *)%s);' % instance
 
     def visit_enum(self, enum, instance):
-        raise NotImplementedError
+        if enum.expr == 'GLenum':
+            print '    writeEnum(json, %s);' % instance
+        else:
+            print '    json.writeNumber(%s);' % instance
 
     def visit_bitmask(self, bitmask, instance):
         raise NotImplementedError
 
     def visit_alias(self, alias, instance):
         self.visit(alias.type, instance)
+
+    def visit_opaque(self, opaque, instance):
+        print '    json.writeNumber((size_t)%s);' % instance
+
+    __index = 0
+
+    def visit_array(self, array, instance):
+        index = '__i%u' % JsonDumper.__index
+        JsonDumper.__index += 1
+        print '    json.beginArray();'
+        print '    for (unsigned %s; %s < %s; ++%s) {' % (index, index, array.length, index)
+        self.visit(array.type, '%s[%s]' % (instance, index))
+        print '    }'
+        print '    json.endArray();'
+
 
 
 class StateDumper:
@@ -2911,31 +2932,24 @@ class StateDumper:
             elif type is B:
                 buf = 'bparams'
                 getter = 'glGetBooleanv'
-                writer = 'json.writeBool(%s)'
             elif type is I:
                 buf = 'iparams'
                 getter = 'glGetIntegerv'
-                writer = 'json.writeNumber(%s)'
             elif type is E:
                 buf = 'iparams'
                 getter = 'glGetIntegerv'
-                writer = 'writeEnum(json, %s)'
             elif type is F:
                 buf = 'fparams'
                 getter = 'glGetFloatv'
-                writer = 'json.writeNumber(%s)'
             elif type is D:
                 buf = 'dparams'
                 getter = 'glGetDoublev'
-                writer = 'json.writeNumber(%s)'
             elif type is P:
                 buf = 'pparams'
                 getter = 'glGetPointerv'
-                writer = 'json.writeNumber((size_t)%s)'
             elif type is S:
                 buf = 'sparams'
                 getter = 'glGetString'
-                writer = 'json.writeString((const char *)%s)'
             else:
                 raise NotImplementedError
             print '    memset(%s, 0, %u * sizeof *%s);' % (buf, count, buf)
@@ -2949,12 +2963,9 @@ class StateDumper:
             print '    } else {'
             print '        json.beginMember("%s");' % name
             if count == 1:
-                print '        %s;' % (writer % ( '%s[0]' % buf))
+                JsonDumper().visit(type, '%s[0]' % buf)
             else:
-                print '        json.beginArray();'
-                for i in range(count):
-                    print '        %s;' % (writer % ( '%s[%u]' % (buf, i)))
-                print '        json.endArray();'
+                JsonDumper().visit(Array(type, str(count)), buf)
             print '        json.endMember();'
             print '    }'
         print '    json.endObject();'
