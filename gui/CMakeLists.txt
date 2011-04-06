@@ -7,6 +7,7 @@ set(qapitrace_SRCS
    loaderthread.cpp
    mainwindow.cpp
    main.cpp
+   retracer.cpp
    settingsdialog.cpp
  )
 

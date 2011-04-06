@@ -5,6 +5,7 @@
 #include "apicalldelegate.h"
 #include "apitracemodel.h"
 #include "apitracefilter.h"
+#include "retracer.h"
 #include "settingsdialog.h"
 
 #include <qjson/parser.h>
@@ -15,7 +16,6 @@
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QMessageBox>
-#include <QProcess>
 #include <QProgressBar>
 #include <QToolBar>
 #include <QWebView>
@@ -23,10 +23,8 @@
 
 MainWindow::MainWindow()
     : QMainWindow(),
-      m_replayProcess(0),
       m_selectedEvent(0),
       m_stateEvent(0),
-      m_findingState(false),
       m_jsonParser(new QJson::Parser())
 {
     m_ui.setupUi(this);
@@ -37,6 +35,12 @@ MainWindow::MainWindow()
             this, SLOT(startedLoadingTrace()));
     connect(m_trace, SIGNAL(finishedLoadingTrace()),
             this, SLOT(finishedLoadingTrace()));
+
+    m_retracer = new Retracer(this);
+    connect(m_retracer, SIGNAL(finished(const QByteArray&)),
+            this, SLOT(replayFinished(const QByteArray&)));
+    connect(m_retracer, SIGNAL(error(const QString&)),
+            this, SLOT(replayError(const QString&)));
 
     m_model = new ApiTraceModel();
     m_model->setApiTrace(m_trace);
@@ -142,13 +146,10 @@ void MainWindow::replayStart()
 
 void MainWindow::replayStop()
 {
-    if (m_replayProcess) {
-        m_replayProcess->kill();
-
-        m_ui.actionStop->setEnabled(false);
-        m_ui.actionReplay->setEnabled(true);
-        m_ui.actionLookupState->setEnabled(true);
-    }
+    m_retracer->terminate();
+    m_ui.actionStop->setEnabled(false);
+    m_ui.actionReplay->setEnabled(true);
+    m_ui.actionLookupState->setEnabled(true);
 }
 
 void MainWindow::newTraceFile(const QString &fileName)
@@ -165,21 +166,13 @@ void MainWindow::newTraceFile(const QString &fileName)
     }
 }
 
-void MainWindow::replayFinished()
+void MainWindow::replayFinished(const QByteArray &output)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
 
-    QByteArray output = m_replayProcess->readAllStandardOutput();
-
-#if 0
-    qDebug()<<"Process finished = ";
-    qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
-    qDebug()<<"\tout = "<<output;
-#endif
-
-    if (m_findingState) {
+    if (m_retracer->captureState()) {
         bool ok = false;
         QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
         parseState(parsedJson[QLatin1String("parameters")].toMap());
@@ -187,23 +180,17 @@ void MainWindow::replayFinished()
         statusBar()->showMessage(output);
     }
     m_stateEvent = 0;
-    m_findingState = false;
 }
 
-void MainWindow::replayError(QProcess::ProcessError err)
+void MainWindow::replayError(const QString &message)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
-    m_findingState = false;
     m_stateEvent = 0;
 
-    qDebug()<<"Process error = "<<err;
-    qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
-    qDebug()<<"\tout = "<<m_replayProcess->readAllStandardOutput();
     QMessageBox::warning(
-        this, tr("Replay Failed"),
-        tr("Couldn't execute the replay file '%1'").arg(m_traceFileName));
+        this, tr("Replay Failed"), message);
 }
 
 void MainWindow::startedLoadingTrace()
@@ -228,33 +215,12 @@ void MainWindow::finishedLoadingTrace()
 
 void MainWindow::replayTrace(bool dumpState)
 {
-    if (!m_replayProcess) {
-#ifdef Q_OS_WIN
-        QString format = QLatin1String("%1;");
-#else
-        QString format = QLatin1String("%1:");
-#endif
-        QString buildPath = format.arg(BUILD_DIR);
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert("PATH", buildPath + env.value("PATH"));
-
-        qputenv("PATH", env.value("PATH").toLatin1());
-
-        m_replayProcess = new QProcess(this);
-        m_replayProcess->setProcessEnvironment(env);
-
-        connect(m_replayProcess, SIGNAL(finished(int, QProcess::ExitStatus)),
-                this, SLOT(replayFinished()));
-        connect(m_replayProcess, SIGNAL(error(QProcess::ProcessError)),
-                this, SLOT(replayError(QProcess::ProcessError)));
-    }
-
     if (m_traceFileName.isEmpty())
         return;
 
-    QStringList arguments;
-    if (dumpState &&
-        m_selectedEvent) {
+    m_retracer->setFileName(m_traceFileName);
+    m_retracer->setCaptureState(dumpState);
+    if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
         if (m_selectedEvent->type() == ApiTraceEvent::Call) {
             index = static_cast<ApiTraceCall*>(m_selectedEvent)->index;
@@ -270,13 +236,9 @@ void MainWindow::replayTrace(bool dumpState)
             qDebug()<<"Unknown event type";
             return;
         }
-        arguments << QLatin1String("-D");
-        arguments << QString::number(index);
+        m_retracer->setCaptureAtCallNumber(index);
     }
-    arguments << m_traceFileName;
-
-    m_replayProcess->start(QLatin1String("glretrace"),
-                           arguments);
+    m_retracer->start();
 
     m_ui.actionStop->setEnabled(true);
 }
@@ -290,7 +252,6 @@ void MainWindow::lookupState()
         return;
     }
     m_stateEvent = m_selectedEvent;
-    m_findingState = true;
     replayTrace(true);
 }
 
