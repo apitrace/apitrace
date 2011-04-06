@@ -77,7 +77,7 @@ Pointer::operator bool(void) const { return value != 0; }
 
 
 // signed integer cast
-Value  ::operator signed long long (void) const { assert(0); return NULL; }
+Value  ::operator signed long long (void) const { assert(0); return 0; }
 Null   ::operator signed long long (void) const { return 0; }
 Bool   ::operator signed long long (void) const { return static_cast<signed long long>(value); }
 SInt   ::operator signed long long (void) const { return value; }
@@ -87,7 +87,7 @@ Enum   ::operator signed long long (void) const { return static_cast<signed long
 
 
 // unsigned integer cast
-Value  ::operator unsigned long long (void) const { assert(0); return NULL; }
+Value  ::operator unsigned long long (void) const { assert(0); return 0; }
 Null   ::operator unsigned long long (void) const { return 0; }
 Bool   ::operator unsigned long long (void) const { return static_cast<unsigned long long>(value); }
 SInt   ::operator unsigned long long (void) const { assert(value >= 0); return static_cast<signed long long>(value); }
@@ -97,7 +97,7 @@ Enum   ::operator unsigned long long (void) const { return static_cast<unsigned 
 
 
 // floating point cast
-Value  ::operator double (void) const { assert(0); return NULL; }
+Value  ::operator double (void) const { assert(0); return 0; }
 Null   ::operator double (void) const { return 0; }
 Bool   ::operator double (void) const { return static_cast<double>(value); }
 SInt   ::operator double (void) const { return static_cast<double>(value); }
