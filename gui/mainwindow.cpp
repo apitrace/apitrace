@@ -160,9 +160,13 @@ void MainWindow::newTraceFile(const QString &fileName)
     if (m_traceFileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);
         m_ui.actionLookupState->setEnabled(false);
+        setWindowTitle(tr("QApiTrace"));
     } else {
+        QFileInfo info(fileName);
         m_ui.actionReplay->setEnabled(true);
         m_ui.actionLookupState->setEnabled(true);
+        setWindowTitle(
+            tr("QApiTrace - %1").arg(info.fileName()));
     }
 }
 
