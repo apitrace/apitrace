@@ -3,6 +3,7 @@
 
 #include <QStaticText>
 #include <QStringList>
+#include <QUrl>
 #include <QVariant>
 
 #include "trace_model.hpp"
@@ -138,6 +139,7 @@ public:
     QVariantList argValues;
     QVariant returnValue;
     ApiTraceFrame *parentFrame;
+    QUrl helpUrl;
 
     QString toHtml() const;
     QString filterText() const;

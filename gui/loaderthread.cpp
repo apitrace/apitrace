@@ -2,10 +2,17 @@
 
 #include "trace_parser.hpp"
 
+#include <QFile>
+#include <QHash>
+#include <QUrl>
+
+#include <QDebug>
+
 #define FRAMES_TO_CACHE 100
 
 static ApiTraceCall *
-apiCallFromTraceCall(const Trace::Call *call)
+apiCallFromTraceCall(const Trace::Call *call,
+                     const QHash<QString, QUrl> &helpHash)
 {
     ApiTraceCall *apiCall = new ApiTraceCall();
     apiCall->name = QString::fromStdString(call->sig->name);
@@ -27,6 +34,8 @@ apiCallFromTraceCall(const Trace::Call *call)
         apiCall->argValues += argVisitor.variant();
     }
 
+    apiCall->helpUrl = helpHash.value(apiCall->name);
+
     //force generation of the internal state
     apiCall->filterText();
     return apiCall;
@@ -43,6 +52,26 @@ void LoaderThread::run()
     QList<ApiTraceFrame*> frames;
     ApiTraceFrame *currentFrame = 0;
     int frameCount = 0;
+
+    QHash<QString, QUrl> helpHash;
+
+
+    QFile file(":/resources/glreference.tsv");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QString line;
+        while (!file.atEnd()) {
+            line = file.readLine();
+            QString function = line.section('\t', 0, 0).trimmed();
+            QUrl url = QUrl(line.section('\t', 1, 1).trimmed());
+            //qDebug()<<"function = "<<function<<", url = "<<url.toString();
+            helpHash.insert(function, url);
+        }
+    } else {
+        qWarning() << "Couldn't open reference file "
+                   << file.fileName();
+    }
+    file.close();
+
     Trace::Parser p;
     if (p.open(m_fileName.toLatin1().constData())) {
         Trace::Call *call;
@@ -55,7 +84,7 @@ void LoaderThread::run()
                 ++frameCount;
             }
             ApiTraceCall *apiCall =
-                apiCallFromTraceCall(call);
+                apiCallFromTraceCall(call, helpHash);
             apiCall->parentFrame = currentFrame;
             currentFrame->calls.append(apiCall);
             if (ApiTrace::isCallAFrameMarker(apiCall,

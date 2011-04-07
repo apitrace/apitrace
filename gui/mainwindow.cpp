@@ -13,12 +13,15 @@
 
 #include <QAction>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QToolBar>
+#include <QUrl>
+#include <QWebPage>
 #include <QWebView>
 
 
@@ -105,6 +108,11 @@ MainWindow::MainWindow()
             this, SLOT(callItemSelected(const QModelIndex &)));
     connect(m_filterEdit, SIGNAL(returnPressed()),
             this, SLOT(filterTrace()));
+
+    m_ui.detailsWebView->page()->setLinkDelegationPolicy(
+        QWebPage::DelegateExternalLinks);
+    connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
+            this, SLOT(openHelp(const QUrl&)));
 }
 
 void MainWindow::openTrace()
@@ -380,6 +388,11 @@ void MainWindow::showSettings()
     if (dialog.exec() == QDialog::Accepted) {
         m_proxyModel->setFilterOptions(dialog.filterOptions());
     }
+}
+
+void MainWindow::openHelp(const QUrl &url)
+{
+    QDesktopServices::openUrl(url);
 }
 
 #include "mainwindow.moc"

@@ -14,6 +14,7 @@ class ApiTraceModel;
 class QLineEdit;
 class QModelIndex;
 class QProgressBar;
+class QUrl;
 class Retracer;
 class VertexDataInterpreter;
 
@@ -43,6 +44,7 @@ private slots:
     void finishedLoadingTrace();
     void lookupState();
     void showSettings();
+    void openHelp(const QUrl &url);
 
 private:
     void newTraceFile(const QString &fileName);

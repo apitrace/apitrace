@@ -6,5 +6,6 @@
     <file>resources/media-playback-start.png</file>
     <file>resources/media-playback-stop.png</file>
     <file>resources/media-record.png</file>
+    <file>resources/glreference.tsv</file>
 </qresource>
 </RCC>
