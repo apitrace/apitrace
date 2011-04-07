@@ -188,10 +188,6 @@ else ()
     )
 
     add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
-    set_target_properties (glxtrace PROPERTIES 
-        COMPILER_DEFINITIONS "-DRETRACE"
-        PREFIX ""
-    )
     target_link_libraries (glxtrace dl)
 endif ()
 
@@ -232,12 +228,19 @@ if (GLUT_INCLUDE_DIR)
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     )
 
+    set_property (
+        TARGET glretrace
+        APPEND
+        PROPERTY COMPILE_DEFINITIONS "RETRACE"
+    )
+
     target_link_libraries (glretrace
         trace
         ${OPENGL_gl_LIBRARY}
         ${OPENGL_glu_LIBRARY}
         ${GLUT_glut_LIBRARY}
     )
+    
 endif (GLUT_INCLUDE_DIR)
 
 if (QT4_FOUND AND QJSON_FOUND)

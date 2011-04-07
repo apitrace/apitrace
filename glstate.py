@@ -2178,7 +2178,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS"),	# 0x8B4C
     ("glGet",	I,	1,	"GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS"),	# 0x8B4D
     ("glGet",	E,	1,	"GL_OBJECT_TYPE_ARB"),	# 0x8B4E
-    ("glGet",	E,	1,	"GL_SHADER_TYPE"),	# 0x8B4F
+    ("glGetShader",	E,	1,	"GL_SHADER_TYPE"),	# 0x8B4F
     ("glGet",	X,	1,	"GL_FLOAT_VEC2"),	# 0x8B50
     ("glGet",	X,	1,	"GL_FLOAT_VEC3"),	# 0x8B51
     ("glGet",	X,	1,	"GL_FLOAT_VEC4"),	# 0x8B52
@@ -2214,7 +2214,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_ATTACHED_SHADERS"),	# 0x8B85
     ("glGet",	X,	1,	"GL_ACTIVE_UNIFORMS"),	# 0x8B86
     ("glGet",	X,	1,	"GL_ACTIVE_UNIFORM_MAX_LENGTH"),	# 0x8B87
-    ("glGet",	X,	1,	"GL_SHADER_SOURCE_LENGTH"),	# 0x8B88
+    ("glGetShader",	I,	1,	"GL_SHADER_SOURCE_LENGTH"),	# 0x8B88
     ("glGet",	X,	1,	"GL_ACTIVE_ATTRIBUTES"),	# 0x8B89
     ("glGet",	X,	1,	"GL_ACTIVE_ATTRIBUTE_MAX_LENGTH"),	# 0x8B8A
     ("glGet",	X,	1,	"GL_FRAGMENT_SHADER_DERIVATIVE_HINT"),	# 0x8B8B
@@ -2830,9 +2830,72 @@ parameters = [
 ]
 
 
-class JsonDumper(Visitor):
-    '''Visitor that will dump a value of the specified type through the JSON
-    writer.
+class GlGetter(Visitor):
+    '''Type visitor
+    Determine which glGet*v function that matches the specified type.'''
+
+    def __init__(self, prefix = 'glGet', long_suffix = True):
+        self.prefix = prefix
+        self.long_suffix = long_suffix
+
+        if prefix == 'glGet':
+            self.suffixes = {
+                'GLboolean': 'Booleanv',
+                'GLint': 'Intv',
+                'GLfloat': 'Floatv',
+                'GLdouble': 'Doublev',
+                'GLstring': 'String',
+            }
+        else:
+            self.suffixes = {
+                'GLint': 'iv',
+                'GLfloat': 'fv',
+                'GLdouble': 'Doublev',
+                'GLstring': 'String',
+            }
+
+
+    def visit_const(self, const):
+        return self.visit(const.type)
+
+    def visit_alias(self, alias):
+        if alias.expr == 'GLboolean':
+            if self.long_suffix:
+                return self.prefix + 'Booleanv', alias.expr
+            else:
+                return self.prefix + 'iv', 'GLint'
+        elif alias.expr == 'GLdouble':
+            if self.long_suffix:
+                return self.prefix + 'Doublev', alias.expr
+            else:
+                return self.prefix + 'dv', alias.expr
+        elif alias.expr == 'GLfloat':
+            if self.long_suffix:
+                return self.prefix + 'Floatv', alias.expr
+            else:
+                return self.prefix + 'fv', alias.expr
+        elif alias.expr in ('GLint', 'GLuint', 'GLsizei'):
+            if self.long_suffix:
+                return self.prefix + 'Integerv', 'GLint'
+            else:
+                return self.prefix + 'iv', 'GLint'
+        else:
+            print alias.expr
+            assert False
+    
+    def visit_enum(self, enum):
+        return self.visit(glapi.GLint)
+
+    def visit_bitmask(self, bitmask):
+        return self.visit(glapi.GLint)
+
+    def visit_opaque(self, pointer):
+        return self.prefix + 'Pointerv', 'GLvoid *'
+
+
+class JsonWriter(Visitor):
+    '''Type visitor that will dump a value of the specified type through the
+    JSON writer.
     
     It expects a previously declared JSONWriter instance named "json".'''
 
@@ -2866,8 +2929,8 @@ class JsonDumper(Visitor):
     __index = 0
 
     def visit_array(self, array, instance):
-        index = '__i%u' % JsonDumper.__index
-        JsonDumper.__index += 1
+        index = '__i%u' % JsonWriter.__index
+        JsonWriter.__index += 1
         print '    json.beginArray();'
         print '    for (unsigned %s; %s < %s; ++%s) {' % (index, index, array.length, index)
         self.visit(array.type, '%s[%s]' % (instance, index))
@@ -2887,14 +2950,15 @@ class StateDumper:
         print
         print '#include "json.hpp"'
         print '#include "glimports.hpp"'
+        print '#include "glproc.hpp"'
         print '#include "glstate.hpp"'
         print
 
-        print 'static inline void'
+        print 'static void'
         print 'writeEnum(JSONWriter &json, GLenum pname)'
         print '{'
         print '    switch(pname) {'
-        for function, type, count, name in parameters:
+        for name in GLenum.values:
             print '    case %s:' % name
             print '        json.writeString("%s");' % name
             print '        break;'
@@ -2904,11 +2968,66 @@ class StateDumper:
         print '}'
         print
 
+        print 'static void'
+        print 'writeShader(JSONWriter &json, GLuint shader)'
+        print '{'
+        print '    if (!shader) {'
+        print '        json.writeNull();'
+        print '        return;'
+        print '    }'
+        print
+        print '    json.beginObject();'
+        print '    GLint source_length = 0;'
+        print '    glGetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &source_length);'
+        print '    json.beginMember("source");'
+        print '    if (source_length) {'
+        print '        GLchar *source = new GLchar[source_length];'
+        print '        GLsizei length = 0;'
+        print '        source[0] = 0;'
+        print '        glGetShaderSource(shader, source_length, &length, source);'
+        print '        json.writeString(source);'
+        print '        delete [] source;'
+        print '    } else {'
+        print '        json.writeNull();'
+        print '    }'
+        print '    json.endMember(); // source'
+        print '    json.endObject();'
+        print '}'
+        print
+
+        print 'static inline void'
+        print 'writeProgram(JSONWriter &json, GLuint program)'
+        print '{'
+        print '    if (!program) {'
+        print '        json.writeNull();'
+        print '        return;'
+        print '    }'
+        print
+        print '    json.beginObject();'
+        print '    json.beginMember("attached_shaders");'
+        print '    GLint attached_shaders = 0;'
+        print '    glGetProgramiv(program, GL_ATTACHED_SHADERS, &attached_shaders);'
+        print '    json.beginArray();'
+        print '    if (attached_shaders) {'
+        print '        GLuint *shaders = new GLuint[attached_shaders];'
+        print '        GLsizei count = 0;'
+        print '        glGetAttachedShaders(program, attached_shaders, &count, shaders);'
+        print '        for (GLsizei i = 0; i < count; ++ i) {'
+        print '           writeShader(json, shaders[i]);'
+        print '        }'
+        print '        delete [] shaders;'
+        print '    }'
+        print '    json.endArray();'
+        print '    json.endMember();'
+        print '    json.endObject();'
+        print '}'
+        print
+
         print 'void state_dump(std::ostream &os)'
         print '{'
         print '    JSONWriter json(os);'
         self.dump_parameters()
-
+        self.dump_current_program()
         print '}'
         print
 
@@ -2963,13 +3082,21 @@ class StateDumper:
             print '    } else {'
             print '        json.beginMember("%s");' % name
             if count == 1:
-                JsonDumper().visit(type, '%s[0]' % buf)
+                JsonWriter().visit(type, '%s[0]' % buf)
             else:
-                JsonDumper().visit(Array(type, str(count)), buf)
+                JsonWriter().visit(Array(type, str(count)), buf)
             print '        json.endMember();'
             print '    }'
         print '    json.endObject();'
         print '    json.endMember(); // parameters'
+        print
+
+    def dump_current_program(self):
+        print '    GLint current_program = 0;'
+        print '    glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);'
+        print '    json.beginMember("current_program");'
+        print '    writeProgram(json, current_program);'
+        print '    json.endMember();'
         print
 
     def write_line(s):
