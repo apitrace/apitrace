@@ -1,3 +1,6 @@
+# Include the cmake file needed to use qt4
+include( ${QT_USE_FILE} )
+
 set(qapitrace_SRCS
    apitrace.cpp
    apicalldelegate.cpp

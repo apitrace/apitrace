@@ -241,7 +241,5 @@ if (GLUT_INCLUDE_DIR)
 endif (GLUT_INCLUDE_DIR)
 
 if (QT4_FOUND AND QJSON_FOUND)
-    # Include the cmake file needed to use qt4
-    include( ${QT_USE_FILE} )
     add_subdirectory(gui)
 endif (QT4_FOUND AND QJSON_FOUND)
