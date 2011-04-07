@@ -68,11 +68,11 @@ private:
             else if (c >= 0x20 && c <= 0x7e)
                 os << c;
             else if (c == '\t')
-                os << "\\t";
+                os << "\t";
             else if (c == '\r')
-                os << "\\r";
+                os << "\r";
             else if (c == '\n')
-                os << "&#10;";
+                os << "\n";
             else {
                 unsigned octal0 = c & 0x7;
                 unsigned octal1 = (c >> 3) & 0x7;
@@ -103,6 +103,7 @@ public:
     }
 
     inline void beginObject() {
+        separator();
         os << "{";
         ++level;
         value = false;
