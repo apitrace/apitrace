@@ -27,6 +27,8 @@ apiCallFromTraceCall(const Trace::Call *call)
         apiCall->argValues += argVisitor.variant();
     }
 
+    //force generation of the internal state
+    apiCall->filterText();
     return apiCall;
 }
 
