@@ -57,7 +57,7 @@ MainWindow::MainWindow()
 
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
-    connect(m_ui.vertexTypeCB, SIGNAL(activated(const QString&)),
+    connect(m_ui.vertexTypeCB, SIGNAL(currentIndexChanged(const QString&)),
             m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
     connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
             m_vdataInterpreter, SLOT(setStride(int)));

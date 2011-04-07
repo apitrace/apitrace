@@ -7,6 +7,8 @@
 
 #include <GL/gl.h>
 
+#include <qmath.h>
+
 static int
 sizeForType(int glType)
 {
@@ -25,6 +27,8 @@ sizeForType(int glType)
         return sizeof(GLint);
     case GL_UNSIGNED_INT:
         return sizeof(GLuint);
+    case GL_DOUBLE:
+        return sizeof(GLdouble);
     default:
         return sizeof(GLint);
     }
@@ -41,35 +45,39 @@ convertData(const QByteArray &dataArray,
 
     const char *data = dataArray.constData();
     int typeSize = sizeForType(type);
-    int sizePerAttribute = typeSize;
+    int elementSize = numComponents * typeSize;
 
-    if (stride)
-        sizePerAttribute = stride;
+    if (!stride)
+        stride = elementSize;
 
-    int numElements = dataArray.size() / sizePerAttribute;
+    int numElements = dataArray.size() / stride;
+
+    if ((numElements % numComponents) != 0) {
+        int temp = qFloor(dataArray.size() / (float)stride);
+        int fullElemSize = temp * stride;
+        if (fullElemSize + numComponents * typeSize <= dataArray.size()){
+            /* num full elements plus the part of the buffer in which we fit */
+            numElements = temp + 1;
+        } else {
+            numElements = temp;
+        }
+    }
 
 #if 0
     qDebug() << "numElements = "<<numElements;
-    qDebug() << "sizePerAttribute = "<<sizePerAttribute;
+    qDebug() << "elementSize = "<<elementSize;
     qDebug() << "stride = "<<stride;
     qDebug() << "numComponents = "<<numComponents;
+    qDebug() << "typeSize = "<<typeSize;
 #endif
 
-    if (numElements * sizePerAttribute > dataArray.size()) {
-        qDebug()<<"Vertex data too large for the given binary data";
-        return strings;
-    }
-    if ((numElements % numComponents) != 0) {
-        qDebug()<<"Bad stride for the given vertex data";
-        return strings;
-    }
 
-    for (int i = 0; i < numElements; i += numComponents) {
-        QString vectorString = QString::fromLatin1("%1) [").arg(i / numComponents);
+    for (int i = 0; i < numElements; ++i) {
+        QString vectorString = QString::fromLatin1("%1) [").arg(i);
         for (int j = 0; j < numComponents; ++j) {
-            int idx = i + j;
+            int offset = i*stride + j*typeSize;
             const T *elementPtr =
-                (const T*)(data + idx * sizePerAttribute);
+                (const T*)(data + offset);
             T elem = *elementPtr;
             vectorString += QString::number(elem);
             if ((j + 1) < numComponents)
@@ -172,6 +180,9 @@ void VertexDataInterpreter::interpretData()
     case GL_UNSIGNED_INT:
         lst = convertData<int>(m_data, m_type, m_stride, m_components);
         break;
+    case GL_DOUBLE:
+        lst = convertData<double>(m_data, m_type, m_stride, m_components);
+        break;
     default:
         qDebug()<<"unkown gltype = "<<m_type;
     }
@@ -196,6 +207,8 @@ void VertexDataInterpreter::setTypeFromString(const QString &str)
         setType(GL_BYTE);
     } else if (str == QLatin1String("GL_UNSIGNED_BYTE")) {
         setType(GL_UNSIGNED_BYTE);
+    } else if (str == QLatin1String("GL_DOUBLE")) {
+        setType(GL_DOUBLE);
     } else {
         qDebug()<<"unknown vertex data type";
     }
