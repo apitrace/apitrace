@@ -143,10 +143,14 @@ public:
     QString filterText() const;
     QStaticText staticText() const;
     int numChildren() const;
+    bool hasBinaryData() const;
+    int binaryDataIndex() const;
 private:
     mutable QString m_richText;
     mutable QString m_filterText;
     mutable QStaticText m_staticText;
+    mutable bool m_hasBinaryData;
+    mutable int m_binaryDataIndex;
 };
 Q_DECLARE_METATYPE(ApiTraceCall*);
 

@@ -9,6 +9,7 @@ set(qapitrace_SRCS
    main.cpp
    retracer.cpp
    settingsdialog.cpp
+   vertexdatainterpreter.cpp
  )
 
 qt4_automoc(${qapitrace_SRCS})

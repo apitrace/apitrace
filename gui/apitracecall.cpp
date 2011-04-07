@@ -24,8 +24,13 @@ QString apiVariantToString(const QVariant &variant)
         return QString::number(variant.toFloat());
     }
     if (variant.userType() == QVariant::ByteArray) {
-        float kb = variant.toByteArray().size()/1024.;
-        return QObject::tr("[binary data, size = %1kb]").arg(kb);
+        if (variant.toByteArray().size() < 1024) {
+            int bytes = variant.toByteArray().size();
+            return QObject::tr("[binary data, size = %1 bytes]").arg(bytes);
+        } else {
+            float kb = variant.toByteArray().size()/1024.;
+            return QObject::tr("[binary data, size = %1 kb]").arg(kb);
+        }
     }
 
     if (variant.userType() < QVariant::UserType) {
@@ -311,6 +316,11 @@ QString ApiTraceCall::filterText() const
     for (int i = 0; i < argNames.count(); ++i) {
         m_filterText += argNames[i];
         m_filterText += QString::fromLatin1(" = ");
+
+        if (argValues[i].type() == QVariant::ByteArray) {
+            m_hasBinaryData = true;
+            m_binaryDataIndex = i;
+        }
         m_filterText += apiVariantToString(argValues[i]);
         if (i < argNames.count() - 1)
             m_filterText += QString::fromLatin1(", ");
@@ -357,7 +367,9 @@ ApiTraceFrame::ApiTraceFrame()
 }
 
 ApiTraceCall::ApiTraceCall()
-    : ApiTraceEvent(ApiTraceEvent::Call)
+    : ApiTraceEvent(ApiTraceEvent::Call),
+      m_hasBinaryData(false),
+      m_binaryDataIndex(0)
 {
 }
 
@@ -383,4 +395,14 @@ QVariantMap ApiTraceEvent::state() const
 void ApiTraceEvent::setState(const QVariantMap &state)
 {
     m_state = state;
+}
+
+bool ApiTraceCall::hasBinaryData() const
+{
+    return m_hasBinaryData;
+}
+
+int ApiTraceCall::binaryDataIndex() const
+{
+    return m_binaryDataIndex;
 }

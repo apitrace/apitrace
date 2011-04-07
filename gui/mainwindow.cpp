@@ -7,6 +7,7 @@
 #include "apitracefilter.h"
 #include "retracer.h"
 #include "settingsdialog.h"
+#include "vertexdatainterpreter.h"
 
 #include <qjson/parser.h>
 
@@ -42,6 +43,24 @@ MainWindow::MainWindow()
     connect(m_retracer, SIGNAL(error(const QString&)),
             this, SLOT(replayError(const QString&)));
 
+    m_vdataInterpreter = new VertexDataInterpreter(this);
+    m_vdataInterpreter->setListWidget(m_ui.vertexDataListWidget);
+    m_vdataInterpreter->setStride(
+        m_ui.vertexStrideSB->value());
+    m_vdataInterpreter->setComponents(
+        m_ui.vertexComponentsSB->value());
+    m_vdataInterpreter->setTypeFromString(
+        m_ui.vertexTypeCB->currentText());
+
+    connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
+            m_vdataInterpreter, SLOT(interpretData()));
+    connect(m_ui.vertexTypeCB, SIGNAL(activated(const QString&)),
+            m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
+    connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setStride(int)));
+    connect(m_ui.vertexComponentsSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setComponents(int)));
+
     m_model = new ApiTraceModel();
     m_model->setApiTrace(m_trace);
     m_proxyModel = new ApiTraceFilter();
@@ -62,7 +81,11 @@ MainWindow::MainWindow()
     m_progressBar->hide();
 
     m_ui.detailsDock->hide();
+    m_ui.vertexDataDock->hide();
     m_ui.stateDock->hide();
+    setDockOptions(dockOptions() | QMainWindow::ForceTabbedDocks);
+
+    tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
 
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
@@ -120,6 +143,28 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
+        if (call->hasBinaryData()) {
+            QByteArray data =
+                call->argValues[call->binaryDataIndex()].toByteArray();
+            m_vdataInterpreter->setData(data);
+
+            for (int i = 0; i < call->argNames.count(); ++i) {
+                QString name = call->argNames[i];
+                if (name == QLatin1String("stride")) {
+                    int stride = call->argValues[i].toInt();
+                    m_ui.vertexStrideSB->setValue(stride);
+                } else if (name == QLatin1String("size")) {
+                    int components = call->argValues[i].toInt();
+                    m_ui.vertexComponentsSB->setValue(components);
+                } else if (name == QLatin1String("type")) {
+                    QString val = call->argValues[i].toString();
+                    int textIndex = m_ui.vertexTypeCB->findText(val);
+                    if (textIndex >= 0)
+                        m_ui.vertexTypeCB->setCurrentIndex(textIndex);
+                }
+            }
+        }
+        m_ui.vertexDataDock->setVisible(call->hasBinaryData());
         m_selectedEvent = call;
     } else {
         if (event && event->type() == ApiTraceEvent::Frame) {
@@ -127,6 +172,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         } else
             m_selectedEvent = 0;
         m_ui.detailsDock->hide();
+        m_ui.vertexDataDock->hide();
     }
     if (m_selectedEvent && !m_selectedEvent->state().isEmpty()) {
         fillStateForFrame();

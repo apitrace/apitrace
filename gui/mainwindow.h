@@ -15,6 +15,7 @@ class QLineEdit;
 class QModelIndex;
 class QProgressBar;
 class Retracer;
+class VertexDataInterpreter;
 
 namespace QJson {
     class Parser;
@@ -67,6 +68,8 @@ private:
     QJson::Parser *m_jsonParser;
 
     Retracer *m_retracer;
+
+    VertexDataInterpreter *m_vdataInterpreter;
 };
 
 
