@@ -52,6 +52,8 @@ MainWindow::MainWindow()
         m_ui.vertexStrideSB->value());
     m_vdataInterpreter->setComponents(
         m_ui.vertexComponentsSB->value());
+    m_vdataInterpreter->setStartingOffset(
+        m_ui.startingOffsetSB->value());
     m_vdataInterpreter->setTypeFromString(
         m_ui.vertexTypeCB->currentText());
 
@@ -63,6 +65,8 @@ MainWindow::MainWindow()
             m_vdataInterpreter, SLOT(setStride(int)));
     connect(m_ui.vertexComponentsSB, SIGNAL(valueChanged(int)),
             m_vdataInterpreter, SLOT(setComponents(int)));
+    connect(m_ui.startingOffsetSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setStartingOffset(int)));
 
     m_model = new ApiTraceModel();
     m_model->setApiTrace(m_trace);

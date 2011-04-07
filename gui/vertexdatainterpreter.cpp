@@ -39,23 +39,25 @@ static QStringList
 convertData(const QByteArray &dataArray,
             int type,
             int stride,
-            int numComponents)
+            int numComponents,
+            int startingOffset)
 {
     QStringList strings;
 
-    const char *data = dataArray.constData();
+    int dataSize = dataArray.size() - startingOffset;
+    const char *data = dataArray.constData() + startingOffset;
     int typeSize = sizeForType(type);
     int elementSize = numComponents * typeSize;
 
     if (!stride)
         stride = elementSize;
 
-    int numElements = dataArray.size() / stride;
+    int numElements = dataSize / stride;
 
     if ((numElements % numComponents) != 0) {
-        int temp = qFloor(dataArray.size() / (float)stride);
+        int temp = qFloor(dataSize / (float)stride);
         int fullElemSize = temp * stride;
-        if (fullElemSize + numComponents * typeSize <= dataArray.size()){
+        if (fullElemSize + numComponents * typeSize <= dataSize) {
             /* num full elements plus the part of the buffer in which we fit */
             numElements = temp + 1;
         } else {
@@ -96,7 +98,8 @@ VertexDataInterpreter::VertexDataInterpreter(QObject *parent)
       m_listWidget(0),
       m_type(GL_FLOAT),
       m_stride(16),
-      m_components(4)
+      m_components(4),
+      m_startingOffset(0)
 {
 }
 
@@ -160,28 +163,36 @@ void VertexDataInterpreter::interpretData()
     QStringList lst;
     switch(m_type) {
     case GL_FLOAT:
-        lst = convertData<float>(m_data, m_type, m_stride, m_components);
+        lst = convertData<float>(m_data, m_type, m_stride, m_components,
+                                 m_startingOffset);
         break;
     case GL_UNSIGNED_BYTE:
-        lst = convertData<quint8>(m_data, m_type, m_stride, m_components);
+        lst = convertData<quint8>(m_data, m_type, m_stride, m_components,
+                                  m_startingOffset);
         break;
     case GL_BYTE:
-        lst = convertData<qint8>(m_data, m_type, m_stride, m_components);
+        lst = convertData<qint8>(m_data, m_type, m_stride, m_components,
+                                 m_startingOffset);
         break;
     case GL_SHORT:
-        lst = convertData<qint16>(m_data, m_type, m_stride, m_components);
+        lst = convertData<qint16>(m_data, m_type, m_stride, m_components,
+                                  m_startingOffset);
         break;
     case GL_UNSIGNED_SHORT:
-        lst = convertData<quint16>(m_data, m_type, m_stride, m_components);
+        lst = convertData<quint16>(m_data, m_type, m_stride, m_components,
+                                   m_startingOffset);
         break;
     case GL_INT:
-        lst = convertData<unsigned int>(m_data, m_type, m_stride, m_components);
+        lst = convertData<unsigned int>(m_data, m_type, m_stride, m_components,
+                                        m_startingOffset);
         break;
     case GL_UNSIGNED_INT:
-        lst = convertData<int>(m_data, m_type, m_stride, m_components);
+        lst = convertData<int>(m_data, m_type, m_stride, m_components,
+                               m_startingOffset);
         break;
     case GL_DOUBLE:
-        lst = convertData<double>(m_data, m_type, m_stride, m_components);
+        lst = convertData<double>(m_data, m_type, m_stride, m_components,
+                                  m_startingOffset);
         break;
     default:
         qDebug()<<"unkown gltype = "<<m_type;
@@ -212,6 +223,16 @@ void VertexDataInterpreter::setTypeFromString(const QString &str)
     } else {
         qDebug()<<"unknown vertex data type";
     }
+}
+
+int VertexDataInterpreter::startingOffset() const
+{
+    return m_startingOffset;
+}
+
+void VertexDataInterpreter::setStartingOffset(int offset)
+{
+    m_startingOffset = offset;
 }
 
 #include "vertexdatainterpreter.moc"
