@@ -21,6 +21,7 @@ qt4_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
    ui/mainwindow.ui
+   ui/retracerdialog.ui
    ui/settings.ui)
 
 QT4_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})

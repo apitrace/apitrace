@@ -7,6 +7,7 @@
 #include "apitracefilter.h"
 #include "retracer.h"
 #include "settingsdialog.h"
+#include "ui_retracerdialog.h"
 #include "vertexdatainterpreter.h"
 
 #include <qjson/parser.h>
@@ -199,7 +200,22 @@ void MainWindow::filterTrace()
 
 void MainWindow::replayStart()
 {
-    replayTrace(false);
+    QDialog dlg;
+    Ui_RetracerDialog dlgUi;
+    dlgUi.setupUi(&dlg);
+
+    dlgUi.doubleBufferingCB->setChecked(
+        m_retracer->isDoubleBuffered());
+    dlgUi.benchmarkCB->setChecked(
+        m_retracer->isBenchmarking());
+
+    if (dlg.exec() == QDialog::Accepted) {
+        m_retracer->setDoubleBuffered(
+            dlgUi.doubleBufferingCB->isChecked());
+        m_retracer->setBenchmarking(
+            dlgUi.benchmarkCB->isChecked());
+        replayTrace(false);
+    }
 }
 
 void MainWindow::replayStop()
