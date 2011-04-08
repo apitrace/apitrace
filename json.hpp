@@ -32,8 +32,10 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <wchar.h>
 
 #include <ostream>
+#include <iomanip>
 
 
 class JSONWriter
@@ -56,35 +58,73 @@ private:
         }
     }
 
-    void escapeString(const char *str) {
-        const unsigned char *p = (const unsigned char *)str;
+    void escapeAsciiString(const char *str) {
         os << "\"";
+
+        const unsigned char *src = (const unsigned char *)str;
         unsigned char c;
-        while ((c = *p++) != 0) {
-            if (c == '\"')
-                os << "\\\"";
-            else if (c == '\\')
-                os << "\\\\";
-            else if (c >= 0x20 && c <= 0x7e)
-                os << c;
-            else if (c == '\t')
-                os << "\t";
-            else if (c == '\r')
-                os << "\r";
-            else if (c == '\n')
-                os << "\n";
-            else {
-                unsigned octal0 = c & 0x7;
-                unsigned octal1 = (c >> 3) & 0x7;
-                unsigned octal2 = (c >> 3) & 0x7;
-                os << "\\";
-                if (octal2)
-                    os << octal2;
-                if (octal1)
-                    os << octal1;
-                os << octal0;
+        while ((c = *src++)) {
+            if ((c == '\"') ||
+                (c == '\\')) {
+                // escape character
+                os << '\\' << (unsigned char)c;
+            } else if ((c >= 0x20 && c <= 0x7e) ||
+                        c == '\t' ||
+                        c == '\r' ||
+                        c == '\n') {
+                // pass-through character
+                os << (unsigned char)c;
+            } else {
+                assert(0);
+                os << "?";
             }
         }
+
+        os << "\"";
+    }
+
+    void escapeUnicodeString(const char *str) {
+        os << "\"";
+
+        const char *locale = setlocale(LC_CTYPE, "");
+        const char *src = str;
+        mbstate_t state;
+
+        memset(&state, 0, sizeof state);
+
+        do {
+            // Convert characters one at a time in order to recover from
+            // conversion errors
+            wchar_t c;
+            size_t written = mbsrtowcs(&c, &src, 1, &state);
+            if (written == 0) {
+                // completed
+                break;
+            } if (written == (size_t)-1) {
+                // conversion error -- skip 
+                os << "?";
+                do {
+                    ++src;
+                } while (*src & 0x80);
+            } else if ((c == '\"') ||
+                       (c == '\\')) {
+                // escape character
+                os << '\\' << (unsigned char)c;
+            } else if ((c >= 0x20 && c <= 0x7e) ||
+                        c == '\t' ||
+                        c == '\r' ||
+                        c == '\n') {
+                // pass-through character
+                os << (unsigned char)c;
+            } else {
+                // unicode
+                os << "\\u" << std::setfill('0') << std::hex << std::setw(4) << (unsigned)c;
+                os << std::dec;
+            }
+        } while (src);
+
+        setlocale(LC_CTYPE, locale);
+
         os << "\"";
     }
 
@@ -120,7 +160,7 @@ public:
     inline void beginMember(const char * name) {
         separator();
         newline();
-        escapeString(name);
+        escapeAsciiString(name);
         os << ": ";
         value = false;
     }
@@ -143,7 +183,7 @@ public:
 
     inline void writeString(const char *s) {
         separator();
-        escapeString(s);
+        escapeUnicodeString(s);
         value = true;
     }
 
@@ -162,7 +202,7 @@ public:
     template<class T>
     void writeNumber(T n) {
         separator();
-        os << n;
+        os << std::dec << n;
         value = true;
     }
 };
