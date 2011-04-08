@@ -980,7 +980,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_RESET_NOTIFICATION_STRATEGY_ARB"),	# 0x8256
     ("glGet",	X,	1,	"GL_PROGRAM_BINARY_RETRIEVABLE_HINT"),	# 0x8257
     ("glGet",	X,	1,	"GL_PROGRAM_SEPARABLE"),	# 0x8258
-    ("glGet",	X,	1,	"GL_ACTIVE_PROGRAM"),	# 0x8259
+    ("glGet",	I,	1,	"GL_ACTIVE_PROGRAM"),	# 0x8259
     ("glGet",	I,	1,	"GL_PROGRAM_PIPELINE_BINDING"),	# 0x825A
     ("glGet",	X,	1,	"GL_MAX_VIEWPORTS"),	# 0x825B
     ("glGet",	X,	1,	"GL_VIEWPORT_SUBPIXEL_BITS"),	# 0x825C
@@ -1847,8 +1847,8 @@ parameters = [
     ("glGet",	X,	1,	"GL_DEPTH_STENCIL_TO_RGBA_NV"),	# 0x886E
     ("glGet",	X,	1,	"GL_DEPTH_STENCIL_TO_BGRA_NV"),	# 0x886F
     ("glGet",	X,	1,	"GL_FRAGMENT_PROGRAM_NV"),	# 0x8870
-    ("glGet",	X,	1,	"GL_MAX_TEXTURE_COORDS"),	# 0x8871
-    ("glGet",	X,	1,	"GL_MAX_TEXTURE_IMAGE_UNITS"),	# 0x8872
+    ("glGet",	I,	1,	"GL_MAX_TEXTURE_COORDS"),	# 0x8871
+    ("glGet",	I,	1,	"GL_MAX_TEXTURE_IMAGE_UNITS"),	# 0x8872
     ("glGet",	I,	1,	"GL_FRAGMENT_PROGRAM_BINDING_NV"),	# 0x8873
     ("glGet",	X,	1,	"GL_PROGRAM_ERROR_STRING_ARB"),	# 0x8874
     ("glGet",	X,	1,	"GL_PROGRAM_FORMAT_ASCII_ARB"),	# 0x8875
@@ -2219,7 +2219,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_ACTIVE_ATTRIBUTE_MAX_LENGTH"),	# 0x8B8A
     ("glGet",	X,	1,	"GL_FRAGMENT_SHADER_DERIVATIVE_HINT"),	# 0x8B8B
     ("glGet",	X,	1,	"GL_SHADING_LANGUAGE_VERSION"),	# 0x8B8C
-    ("glGet",	X,	1,	"GL_CURRENT_PROGRAM"),	# 0x8B8D
+    ("glGet",	I,	1,	"GL_CURRENT_PROGRAM"),	# 0x8B8D
     ("glGet",	X,	1,	"GL_IMPLEMENTATION_COLOR_READ_TYPE"),	# 0x8B9A
     ("glGet",	X,	1,	"GL_IMPLEMENTATION_COLOR_READ_FORMAT"),	# 0x8B9B
     ("glGet",	X,	1,	"GL_COUNTER_TYPE_AMD"),	# 0x8BC0
@@ -3187,13 +3187,24 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 
     def dump_textures(self):
         print '    json.beginMember("textures");'
-        print '    json.beginObject();'
+        print '    json.beginArray();'
+        print '    GLint active_texture = GL_TEXTURE0;'
+        print '    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);'
+        print '    GLint max_texture_coords = 0;'
+        print '    glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+        print '    for (GLint unit = 0; unit < max_texture_coords; ++unit) {'
+        print '        glActiveTexture(GL_TEXTURE0 + unit);'
+        print '        json.beginObject();'
         for target in texture_targets:
-            print '    json.beginMember("%s");' % target
-            print '    writeTexture(json, %s);' % target
-            print '    json.endMember();'
-        print '    json.endObject();'
+            print '        json.beginMember("%s");' % target
+            print '        writeTexture(json, %s);' % target
+            print '        json.endMember();'
+        print '        json.endObject();'
+        print '    }'
+        print '    glActiveTexture(active_texture);'
+        print '    json.endArray();'
         print '    json.endMember(); // texture'
+        print
 
     def write_line(s):
         self.write('  '*self.level + s + '\n')

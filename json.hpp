@@ -66,6 +66,10 @@ private:
                 os << space;
                 break;
             }
+        } else {
+            if (space == '\n') {
+                newline();
+            }
         }
     }
 
@@ -190,10 +194,14 @@ public:
         os << "[";
         ++level;
         value = false;
+        space = 0;
     }
 
     inline void endArray(void) {
         --level;
+        if (space == '\n') {
+            newline();
+        }
         os << "]";
         value = true;
         space = '\n';
