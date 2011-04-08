@@ -45,6 +45,7 @@ private:
 
     int level;
     bool value;
+    char space;
 
     void newline(void) {
         os << "\n";
@@ -55,6 +56,16 @@ private:
     void separator(void) {
         if (value) {
             os << ",";
+            switch (space) {
+            case '\0':
+                break;
+            case '\n':
+                newline();
+                break;
+            default:
+                os << space;
+                break;
+            }
         }
     }
 
@@ -132,7 +143,8 @@ public:
     JSONWriter(std::ostream &_os) : 
         os(_os), 
         level(0),
-        value(false)
+        value(false),
+        space(0)
     {
         beginObject();
     }
@@ -155,9 +167,11 @@ public:
             newline();
         os << "}";
         value = true;
+        space = '\n';
     }
 
     inline void beginMember(const char * name) {
+        space = 0;
         separator();
         newline();
         escapeAsciiString(name);
@@ -168,35 +182,42 @@ public:
     inline void endMember(void) {
         assert(value);
         value = true;
+        space = 0;
     }
 
     inline void beginArray() {
         separator();
         os << "[";
+        ++level;
         value = false;
     }
 
     inline void endArray(void) {
+        --level;
         os << "]";
         value = true;
+        space = '\n';
     }
 
     inline void writeString(const char *s) {
         separator();
         escapeUnicodeString(s);
         value = true;
+        space = ' ';
     }
 
     inline void writeNull(void) {
         separator();
         os << "null";
         value = true;
+        space = ' ';
     }
 
     inline void writeBool(bool b) {
         separator();
         os << (b ? "true" : "false");
         value = true;
+        space = ' ';
     }
 
     template<class T>
@@ -204,6 +225,7 @@ public:
         separator();
         os << std::dec << n;
         value = true;
+        space = ' ';
     }
 };
 

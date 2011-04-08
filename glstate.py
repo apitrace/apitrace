@@ -320,18 +320,18 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAP1_GRID_SEGMENTS"),	# 0x0DD1
     ("glGet",	F,	4,	"GL_MAP2_GRID_DOMAIN"),	# 0x0DD2
     ("glGet",	I,	2,	"GL_MAP2_GRID_SEGMENTS"),	# 0x0DD3
-    ("glGet",	I,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
-    ("glGet",	I,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
+    ("glGet",	B,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
+    ("glGet",	B,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
     ("glGet",	P,	1,	"GL_FEEDBACK_BUFFER_POINTER"),	# 0x0DF0
     ("glGet",	I,	1,	"GL_FEEDBACK_BUFFER_SIZE"),	# 0x0DF1
-    ("glGet",	I,	1,	"GL_FEEDBACK_BUFFER_TYPE"),	# 0x0DF2
+    ("glGet",	E,	1,	"GL_FEEDBACK_BUFFER_TYPE"),	# 0x0DF2
     ("glGet",	P,	1,	"GL_SELECTION_BUFFER_POINTER"),	# 0x0DF3
     ("glGet",	I,	1,	"GL_SELECTION_BUFFER_SIZE"),	# 0x0DF4
-    ("glGet",	X,	1,	"GL_TEXTURE_WIDTH"),	# 0x1000
-    ("glGet",	X,	1,	"GL_TEXTURE_HEIGHT"),	# 0x1001
-    ("glGet",	X,	1,	"GL_TEXTURE_INTERNAL_FORMAT"),	# 0x1003
+    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_WIDTH"),	# 0x1000
+    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_HEIGHT"),	# 0x1001
+    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_INTERNAL_FORMAT"),	# 0x1003
     ("glGet",	X,	1,	"GL_TEXTURE_BORDER_COLOR"),	# 0x1004
-    ("glGet",	X,	1,	"GL_TEXTURE_BORDER"),	# 0x1005
+    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_BORDER"),	# 0x1005
     ("glGet",	X,	1,	"GL_DONT_CARE"),	# 0x1100
     ("glGet",	X,	1,	"GL_FASTEST"),	# 0x1101
     ("glGet",	X,	1,	"GL_NICEST"),	# 0x1102
@@ -613,7 +613,7 @@ parameters = [
     ("glGet",	F,	1,	"GL_PACK_IMAGE_HEIGHT"),	# 0x806C
     ("glGet",	I,	1,	"GL_UNPACK_SKIP_IMAGES"),	# 0x806D
     ("glGet",	F,	1,	"GL_UNPACK_IMAGE_HEIGHT"),	# 0x806E
-    ("glGet",	I,	1,	"GL_TEXTURE_3D"),	# 0x806F
+    ("glGet",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_3D"),	# 0x8070
     ("glGet",	X,	1,	"GL_TEXTURE_DEPTH"),	# 0x8071
     ("glGet",	X,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
@@ -1199,7 +1199,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_VERTEX_WEIGHT_ARRAY_POINTER_EXT"),	# 0x8510
     ("glGet",	X,	1,	"GL_NORMAL_MAP"),	# 0x8511
     ("glGet",	X,	1,	"GL_REFLECTION_MAP"),	# 0x8512
-    ("glGet",	X,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
+    ("glGet",	B,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
     ("glGet",	X,	1,	"GL_TEXTURE_BINDING_CUBE_MAP"),	# 0x8514
     ("glGet",	X,	1,	"GL_TEXTURE_CUBE_MAP_POSITIVE_X"),	# 0x8515
     ("glGet",	X,	1,	"GL_TEXTURE_CUBE_MAP_NEGATIVE_X"),	# 0x8516
@@ -2829,6 +2829,13 @@ parameters = [
     (None,	X,	1,	"GL_INVALID_INDEX"),	# 0xFFFFFFFFu
 ]
 
+texture_targets = [
+    'GL_TEXTURE_1D',
+    'GL_TEXTURE_2D',
+    'GL_TEXTURE_3D',
+    #GL_TEXTURE_CUBE_MAP,
+]
+
 
 class GlGetter(Visitor):
     '''Type visitor
@@ -2932,7 +2939,7 @@ class JsonWriter(Visitor):
         index = '__i%u' % JsonWriter.__index
         JsonWriter.__index += 1
         print '    json.beginArray();'
-        print '    for (unsigned %s; %s < %s; ++%s) {' % (index, index, array.length, index)
+        print '    for (unsigned %s = 0; %s < %s; ++%s) {' % (index, index, array.length, index)
         self.visit(array.type, '%s[%s]' % (instance, index))
         print '    }'
         print '    json.endArray();'
@@ -2968,6 +2975,7 @@ class StateDumper:
         print '}'
         print
 
+        # shaders
         print 'static void'
         print 'writeShader(JSONWriter &json, GLuint shader)'
         print '{'
@@ -2995,6 +3003,7 @@ class StateDumper:
         print '}'
         print
 
+        # programs
         print 'static inline void'
         print 'writeProgram(JSONWriter &json, GLuint program)'
         print '{'
@@ -3023,11 +3032,88 @@ class StateDumper:
         print '}'
         print
 
+        # texture image
+        print '''
+static inline void
+writeTextureImage(JSONWriter &json, GLenum target, GLint level)
+{
+    json.beginMember("__image__");
+
+    GLint width = 0, height = 0;
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
+    if (!width || !height) {
+        json.writeNull();
+    } else {
+        float *pixels = new float[width*height*4];
+        glGetTexImage(target, level, GL_RGBA, GL_FLOAT, pixels);
+        json.beginArray();
+        for (GLint y = 0; y < height; ++y) {
+            json.beginArray();
+            for (GLint x = 0; x < width; ++x) {
+                json.beginArray();
+                for (GLint chan = 0; chan < 4; ++chan) {
+                    json.writeNumber(pixels[(y*width + x)*4 + chan]); 
+                }
+                json.endArray();
+            }
+            json.endArray();
+        }
+        json.endArray();
+        delete [] pixels;
+    }
+}
+'''
+
+        # textures
+        print 'static inline void'
+        print 'writeTexture(JSONWriter &json, GLenum target)'
+        print '{'
+        print '    if (!glIsEnabled(target)) {'
+        print '        json.writeNull();'
+        print '        return;'
+        print '    }'
+        print
+        print '    json.beginObject();'
+        print
+        print '    json.beginMember("levels");'
+        print '    json.beginArray();'
+        print '    GLint level = 0;'
+        print '    do {'
+        print '        GLint width = 0, height = 0;'
+        print '        glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);'
+        print '        glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);'
+        print '        if (!width || !height) {'
+        print '            break;'
+        print '        }'
+        print '        json.beginObject();'
+        print
+        print '        json.beginMember("GL_TEXTURE_WIDTH");'
+        print '        json.writeNumber(width);'
+        print '        json.endMember();'
+        print
+        print '        json.beginMember("GL_TEXTURE_WIDTH");'
+        print '        json.writeNumber(width);'
+        print '        json.endMember();'
+        print
+        print '        writeTextureImage(json, target, level);'
+        print
+        print '        json.endObject();'
+        print '        ++level;'
+        print '    } while(true);'
+        print '    json.endArray();'
+        print '    json.endMember(); // levels'
+        print
+        print '    json.endObject();'
+        print '}'
+        print
+
         print 'void state_dump(std::ostream &os)'
         print '{'
         print '    JSONWriter json(os);'
         self.dump_parameters()
         self.dump_current_program()
+        self.dump_textures()
         print '}'
         print
 
@@ -3098,6 +3184,16 @@ class StateDumper:
         print '    writeProgram(json, current_program);'
         print '    json.endMember();'
         print
+
+    def dump_textures(self):
+        print '    json.beginMember("textures");'
+        print '    json.beginObject();'
+        for target in texture_targets:
+            print '    json.beginMember("%s");' % target
+            print '    writeTexture(json, %s);' % target
+            print '    json.endMember();'
+        print '    json.endObject();'
+        print '    json.endMember(); // texture'
 
     def write_line(s):
         self.write('  '*self.level + s + '\n')
