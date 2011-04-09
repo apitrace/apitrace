@@ -169,7 +169,7 @@ private:
             size -= 3;
             ++written;
 
-            if (written >= 76/4) {
+            if (written >= 76/4 && size) {
                 os << "\n";
                 written = 0;
             }
@@ -178,6 +178,8 @@ private:
         if (size > 0) {
             c0 = bytes[0] >> 2;
             c1 = ((bytes[0] & 0x03) << 4);
+            buf[2] = '=';
+            buf[3] = '=';
             
             if (size > 1) {
                 c1 |= ((bytes[1] & 0xf0) >> 4);
@@ -186,13 +188,8 @@ private:
                     c2 |= ((bytes[2] & 0xc0) >> 6);
                     c3 = bytes[2] & 0x3f;
                     buf[3] = table64[c3];
-                } else {
-                    buf[3] = '=';
                 }
                 buf[2] = table64[c2];
-            } else {
-                buf[3] = '=';
-                buf[2] = '=';
             }
             buf[1] = table64[c1];
             buf[0] = table64[c0];
