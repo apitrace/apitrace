@@ -4,7 +4,7 @@
 
 * Allow clamping to a GL version or a number of extensions.
 
-* Match the traced visuals (which will imply abandoning GLUT)
+* Match the traced visuals
 
 * Trace multiple threads
   * GetCurrentThreadId()
@@ -14,7 +14,7 @@
 
 * Trace TSCs
 
-* Retrace multiple threads (which will imply abandoning GLUT)
+* Retrace multiple threads
 
 * Provide a readline-like interactive mode to gltrace
   * http://github.com/antirez/linenoise
