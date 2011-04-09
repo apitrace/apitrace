@@ -16,6 +16,7 @@ class QModelIndex;
 class QProgressBar;
 class QUrl;
 class Retracer;
+class ShadersSourceWidget;
 class VertexDataInterpreter;
 
 namespace QJson {
@@ -54,6 +55,8 @@ private:
 
 private:
     Ui_MainWindow m_ui;
+    ShadersSourceWidget *m_sourcesWidget;
+
     ApiTrace *m_trace;
     ApiTraceModel *m_model;
     ApiTraceFilter *m_proxyModel;

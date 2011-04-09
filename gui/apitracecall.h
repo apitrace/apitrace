@@ -101,6 +101,20 @@ QString apiVariantToString(const QVariant &variant);
 
 class ApiTraceFrame;
 
+class ApiTraceState {
+public:
+    ApiTraceState();
+    explicit ApiTraceState(const QVariantMap &parseJson);
+
+    bool isEmpty() const;
+    QVariantMap parameters() const;
+    QStringList shaderSources() const;
+
+private:
+    QVariantMap m_parameters;
+    QStringList m_shaderSources;
+};
+
 class ApiTraceEvent
 {
 public:
@@ -118,12 +132,13 @@ public:
     virtual QStaticText staticText() const = 0;
     virtual int numChildren() const = 0;
 
-    QVariantMap state() const;
-    void setState(const QVariantMap &state);
+    QVariantMap stateParameters() const;
+    ApiTraceState state() const;
+    void setState(const ApiTraceState &state);
 
 protected:
     Type m_type;
-    QVariantMap m_state;
+    ApiTraceState m_state;
 };
 Q_DECLARE_METATYPE(ApiTraceEvent*);
 

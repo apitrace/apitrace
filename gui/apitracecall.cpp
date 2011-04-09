@@ -397,12 +397,17 @@ ApiTraceCall::~ApiTraceCall()
 {
 }
 
-QVariantMap ApiTraceEvent::state() const
+QVariantMap ApiTraceEvent::stateParameters() const
+{
+    return m_state.parameters();
+}
+
+ApiTraceState ApiTraceEvent::state() const
 {
     return m_state;
 }
 
-void ApiTraceEvent::setState(const QVariantMap &state)
+void ApiTraceEvent::setState(const ApiTraceState &state)
 {
     m_state = state;
 }
@@ -416,3 +421,40 @@ int ApiTraceCall::binaryDataIndex() const
 {
     return m_binaryDataIndex;
 }
+
+ApiTraceState::ApiTraceState()
+{
+}
+
+ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
+{
+    m_parameters = parsedJson[QLatin1String("parameters")].toMap();
+    QVariantMap currentProgram =
+        parsedJson[QLatin1String("current_program")].toMap();
+    QVariantList attachedShaders =
+        currentProgram[QLatin1String("attached_shaders")].toList();
+
+
+    for (int i = 0; i < attachedShaders.count(); ++i) {
+        QVariantMap var = attachedShaders[i].toMap();
+        m_shaderSources.append(
+            var[QLatin1String("source")].toString());
+    }
+}
+
+QVariantMap ApiTraceState::parameters() const
+{
+    return m_parameters;
+}
+
+QStringList ApiTraceState::shaderSources() const
+{
+    return m_shaderSources;
+}
+
+bool ApiTraceState::isEmpty() const
+{
+    return m_parameters.isEmpty();
+}
+
+

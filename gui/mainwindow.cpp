@@ -7,6 +7,7 @@
 #include "apitracefilter.h"
 #include "retracer.h"
 #include "settingsdialog.h"
+#include "shaderssourcewidget.h"
 #include "ui_retracerdialog.h"
 #include "vertexdatainterpreter.h"
 
@@ -22,6 +23,7 @@
 #include <QProgressBar>
 #include <QToolBar>
 #include <QUrl>
+#include <QVBoxLayout>
 #include <QWebPage>
 #include <QWebView>
 
@@ -34,6 +36,11 @@ MainWindow::MainWindow()
 {
     m_ui.setupUi(this);
     m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
+
+    m_sourcesWidget = new ShadersSourceWidget(m_ui.shadersTab);
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(m_sourcesWidget);
+    m_ui.shadersTab->setLayout(layout);
 
     m_trace = new ApiTrace();
     connect(m_trace, SIGNAL(startedLoadingTrace()),
@@ -253,7 +260,7 @@ void MainWindow::replayFinished(const QByteArray &output)
     if (m_retracer->captureState()) {
         bool ok = false;
         QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
-        parseState(parsedJson[QLatin1String("parameters")].toMap());
+        parseState(parsedJson);
     } else if (output.length() < 80) {
         statusBar()->showMessage(output);
     }
@@ -338,11 +345,9 @@ MainWindow::~MainWindow()
     delete m_jsonParser;
 }
 
-void MainWindow::parseState(const QVariantMap &params)
+void MainWindow::parseState(const QVariantMap &parsedJson)
 {
-    QVariantMap::const_iterator itr;
-
-    m_stateEvent->setState(params);
+    m_stateEvent->setState(ApiTraceState(parsedJson));
     m_model->stateSetOnEvent(m_stateEvent);
     if (m_selectedEvent == m_stateEvent) {
         fillStateForFrame();
@@ -381,8 +386,9 @@ void MainWindow::fillStateForFrame()
     if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
         return;
 
+    const ApiTraceState &state = m_selectedEvent->state();
     m_ui.stateTreeWidget->clear();
-    params = m_selectedEvent->state();
+    params = state.parameters();
     QList<QTreeWidgetItem *> items;
     for (itr = params.constBegin(); itr != params.constEnd(); ++itr) {
         QString key = itr.key();
@@ -397,6 +403,15 @@ void MainWindow::fillStateForFrame()
         items.append(new QTreeWidgetItem((QTreeWidget*)0, lst));
     }
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
+
+    QStringList shaderSources = state.shaderSources();
+    if (shaderSources.isEmpty()) {
+        m_sourcesWidget->setShaders(shaderSources);
+    } else {
+        m_sourcesWidget->setShaders(shaderSources);
+    }
+
+    m_ui.surfacesTab->setEnabled(false);
     m_ui.stateDock->show();
 }
 

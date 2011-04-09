@@ -12,6 +12,7 @@ set(qapitrace_SRCS
    main.cpp
    retracer.cpp
    settingsdialog.cpp
+   shaderssourcewidget.cpp
    vertexdatainterpreter.cpp
  )
 
@@ -22,7 +23,9 @@ qt4_add_resources(qapitrace_SRCS qapitrace.qrc)
 set(qapitrace_UIS
    ui/mainwindow.ui
    ui/retracerdialog.ui
-   ui/settings.ui)
+   ui/settings.ui
+   ui/shaderssourcewidget.ui
+   )
 
 QT4_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
 
