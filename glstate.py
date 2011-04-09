@@ -3091,6 +3091,8 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         print '        }'
         print '        json.beginObject();'
         print
+        # FIXME: This is not the original texture name in the trace -- we need
+        # to do a reverse lookup of the texture mappings to find the original one
         print '        json.beginMember("binding");'
         print '        json.writeNumber(texture);'
         print '        json.endMember();'
@@ -3099,8 +3101,8 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         print '        json.writeNumber(width);'
         print '        json.endMember();'
         print
-        print '        json.beginMember("GL_TEXTURE_WIDTH");'
-        print '        json.writeNumber(width);'
+        print '        json.beginMember("GL_TEXTURE_HEIGHT");'
+        print '        json.writeNumber(height);'
         print '        json.endMember();'
         print
         print '        writeTextureImage(json, target, level);'
