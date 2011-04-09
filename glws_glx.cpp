@@ -98,12 +98,9 @@ private:
     int screen;
 
 public:
-    Drawable *currentDrawable;
-    Context *currentContext;
-
     XlibWindowSystem() {
-       display = XOpenDisplay(NULL);
-       screen = DefaultScreen(display);
+        display = XOpenDisplay(NULL);
+        screen = DefaultScreen(display);
     }
 
     ~XlibWindowSystem() {
@@ -199,27 +196,17 @@ public:
         Window win = drawable ? dynamic_cast<XlibDrawable *>(drawable)->window : NULL;
         GLXContext ctx = context ? dynamic_cast<XlibContext *>(context)->context : NULL;
 
-        bool ret = glXMakeCurrent(display, win, ctx);
-
-        if (drawable && context && ret) {
-            currentDrawable = drawable;
-            currentContext = context;
-        } else {
-            currentDrawable = NULL;
-            currentContext = NULL;
-        }
-
-        return ret;
+        return glXMakeCurrent(display, win, ctx);
     }
 
     bool
     processEvents(void) {
-      while (XPending(display) > 0) {
-         XEvent event;
-         XNextEvent(display, &event);
-         // TODO
-      }
-      return true;
+        while (XPending(display) > 0) {
+            XEvent event;
+            XNextEvent(display, &event);
+            // TODO
+        }
+        return true;
     }
 };
 

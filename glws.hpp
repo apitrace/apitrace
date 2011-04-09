@@ -86,19 +86,10 @@ public:
 class WindowSystem
 {
 public:
-    Drawable *currentDrawable;
-    Context *currentContext;
-
-
-    inline WindowSystem() :
-        currentDrawable(NULL),
-        currentContext(NULL)
-    {}
-
     virtual ~WindowSystem() {}
 
     virtual Visual *
-    createVisual(bool doubleBuffer=false) = 0;
+    createVisual(bool doubleBuffer = false) = 0;
     
     virtual Drawable *
     createDrawable(const Visual *visual) = 0;
