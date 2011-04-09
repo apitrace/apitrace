@@ -438,10 +438,6 @@ int main(int argc, char **argv)
     glutDisplayFunc(&display);
     glutIdleFunc(&idle);
 
-    for (GLuint h = 0; h < 1024; ++h) {
-        __list_map[h] = h;
-    }
-
     for ( ; i < argc; ++i) {
         if (parser.open(argv[i])) {
             __startTime = OS::GetTime();
