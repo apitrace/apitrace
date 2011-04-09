@@ -90,6 +90,8 @@ public:
         pfd.cRedBits = 1;
         pfd.cGreenBits = 1;
         pfd.cBlueBits = 1;
+        pfd.cDepthBits = 1;
+        pfd.cStencilBits = 1;
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
         pfd.iLayerType = PFD_MAIN_PLANE;
         pfd.iPixelType = PFD_TYPE_RGBA;
