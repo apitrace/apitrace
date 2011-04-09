@@ -2830,10 +2830,10 @@ parameters = [
 ]
 
 texture_targets = [
-    'GL_TEXTURE_1D',
-    'GL_TEXTURE_2D',
-    'GL_TEXTURE_3D',
-    #GL_TEXTURE_CUBE_MAP,
+    ('GL_TEXTURE_1D', 'GL_TEXTURE_BINDING_1D'),
+    ('GL_TEXTURE_2D', 'GL_TEXTURE_BINDING_2D'),
+    ('GL_TEXTURE_3D', 'GL_TEXTURE_BINDING_3D'),
+    #(GL_TEXTURE_CUBE_MAP, 'GL_TEXTURE_BINDING_CUBE_MAP')
 ]
 
 
@@ -3042,6 +3042,7 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
     GLint width = 0, height = 0;
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
+
     if (!width || !height) {
         json.writeNull();
     } else {
@@ -3067,9 +3068,11 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 
         # textures
         print 'static inline void'
-        print 'writeTexture(JSONWriter &json, GLenum target)'
+        print 'writeTexture(JSONWriter &json, GLenum target, GLenum binding)'
         print '{'
-        print '    if (!glIsEnabled(target)) {'
+        print '    GLint texture = 0;'
+        print '    glGetIntegerv(binding, &texture);'
+        print '    if (!glIsEnabled(target) && !texture) {'
         print '        json.writeNull();'
         print '        return;'
         print '    }'
@@ -3087,6 +3090,10 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         print '            break;'
         print '        }'
         print '        json.beginObject();'
+        print
+        print '        json.beginMember("binding");'
+        print '        json.writeNumber(texture);'
+        print '        json.endMember();'
         print
         print '        json.beginMember("GL_TEXTURE_WIDTH");'
         print '        json.writeNumber(width);'
@@ -3195,9 +3202,9 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         print '    for (GLint unit = 0; unit < max_texture_coords; ++unit) {'
         print '        glActiveTexture(GL_TEXTURE0 + unit);'
         print '        json.beginObject();'
-        for target in texture_targets:
+        for target, binding in texture_targets:
             print '        json.beginMember("%s");' % target
-            print '        writeTexture(json, %s);' % target
+            print '        writeTexture(json, %s, %s);' % (target, binding)
             print '        json.endMember();'
         print '        json.endObject();'
         print '    }'
