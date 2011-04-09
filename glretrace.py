@@ -167,8 +167,6 @@ if __name__ == '__main__':
 #include <stdio.h>
 #include <iostream>
 
-#define RETRACE
-
 #include "glproc.hpp"
 #include "glstate.hpp"
 #include "glws.hpp"
@@ -427,10 +425,6 @@ int main(int argc, char **argv)
     __drawable->resize(__window_width, __window_height);
     __context = __ws->createContext(__visual);
     __ws->makeCurrent(__drawable, __context);
-
-    for (GLuint h = 0; h < 1024; ++h) {
-        __list_map[h] = h;
-    }
 
     for ( ; i < argc; ++i) {
         if (parser.open(argv[i])) {

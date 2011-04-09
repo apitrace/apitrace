@@ -89,7 +89,7 @@ __glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
 #define __glEdgeFlagPointer_size(stride, maxIndex) __glArrayPointer_size(1, GL_BOOL, stride, maxIndex)
 #define __glFogCoordPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
 #define __glSecondaryColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
-#define __glVertexAttribPointer_size(size, type, stride, normalized, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glVertexAttribPointer_size(size, type, normalized, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
 
 static inline GLuint
 __glDrawArrays_maxindex(GLint first, GLsizei count)
@@ -1408,6 +1408,7 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
     case GL_BLUE:
     case GL_ALPHA:
     case GL_INTENSITY:
+    case GL_LUMINANCE:
     case GL_DEPTH_COMPONENT:
     case GL_STENCIL_INDEX:
         num_channels = 1;
@@ -1424,7 +1425,7 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
         num_channels = 4;
         break;
     default:
-        OS::DebugMessage("warning: %s: unexpected GLenum 0x%04X\n", __FUNCTION__, format);
+        OS::DebugMessage("warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
         num_channels = 0;
         break;
     }
@@ -1466,7 +1467,7 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
         bits_per_pixel = 32;
         break;
     default:
-        OS::DebugMessage("warning: %s: unexpected GLenum 0x%04X\n", __FUNCTION__, type);
+        OS::DebugMessage("warning: %s: unexpected type GLenum 0x%04X\n", __FUNCTION__, type);
         bits_per_pixel = 0;
         break;
     }

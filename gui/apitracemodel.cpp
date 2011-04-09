@@ -5,6 +5,7 @@
 #include "trace_parser.hpp"
 
 #include <QDebug>
+#include <QImage>
 #include <QVariant>
 
 
@@ -24,24 +25,45 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    if (role != Qt::DisplayRole)
-        return QVariant();
-
-    //data only in the first column
     if (index.column() != 0)
         return QVariant();
 
     ApiTraceEvent *itm = item(index);
-    if (itm) {
-        if (itm->type() == ApiTraceEvent::Frame) {
-            ApiTraceFrame *frame =
-                static_cast<ApiTraceFrame *>(itm);
-            return QVariant::fromValue(frame);
-        } else if (itm->type() == ApiTraceEvent::Call) {
-            ApiTraceCall *call =
-                static_cast<ApiTraceCall *>(itm);
-            return QVariant::fromValue(call);
+    if (!itm) {
+        return QVariant();
+    }
+
+    switch (role) {
+    case Qt::DisplayRole:
+        return itm->staticText().text();
+    case Qt::DecorationRole:
+        return QImage();
+    case Qt::ToolTipRole: {
+        const QString stateText = tr("State info available.");
+        if (itm->type() == ApiTraceEvent::Call) {
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(itm);
+            if (call->state().isEmpty())
+                return QString::fromLatin1("%1)&nbsp;<b>%2</b>")
+                    .arg(call->index)
+                    .arg(call->name);
+            else
+                return QString::fromLatin1("%1)&nbsp;<b>%2</b><br/>%3")
+                    .arg(call->index)
+                    .arg(call->name)
+                    .arg(stateText);
+        } else {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(itm);
+            QString text = frame->staticText().text();
+            if (frame->state().isEmpty())
+                return QString::fromLatin1("<b>%1</b>").arg(text);
+            else
+                return QString::fromLatin1("<b>%1</b><br/>%2")
+                    .arg(text)
+                    .arg(stateText);
         }
+    }
+    case ApiTraceModel::EventRole:
+        return QVariant::fromValue(itm);
     }
 
     return QVariant();
@@ -61,7 +83,9 @@ QVariant ApiTraceModel::headerData(int section, Qt::Orientation orientation,
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
         switch (section) {
         case 0:
-            return tr("Event");
+            return tr("Events");
+        case 1:
+            return tr("Flags");
         default:
             //fall through
             break;
@@ -77,13 +101,13 @@ QModelIndex ApiTraceModel::index(int row, int column,
     if (parent.isValid() && parent.column() != 0)
         return QModelIndex();
 
-    if (parent.isValid()) {
-        QVariant data = parent.data();
-        ApiTraceFrame *frame = data.value<ApiTraceFrame*>();
-        if (!frame) {
-            qDebug()<<"got a valid parent but it's not a frame "<<data;
+    ApiTraceEvent *event = item(parent);
+    if (event) {
+        if (event->type() != ApiTraceEvent::Frame) {
+            qDebug()<<"got a valid parent but it's not a frame "<<event->type();
             return QModelIndex();
         }
+        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
         ApiTraceCall *call = frame->calls.value(row);
         if (call)
             return createIndex(row, column, call);
@@ -102,10 +126,11 @@ QModelIndex ApiTraceModel::index(int row, int column,
 bool ApiTraceModel::hasChildren(const QModelIndex &parent) const
 {
     if (parent.isValid()) {
-        ApiTraceFrame *frame = parent.data().value<ApiTraceFrame*>();
-        if (frame)
+        ApiTraceEvent *event = item(parent);
+        if (event && event->type() == ApiTraceEvent::Frame) {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
             return !frame->calls.isEmpty();
-        else
+        } else
             return false;
     } else {
         return (rowCount() > 0);
@@ -117,8 +142,9 @@ QModelIndex ApiTraceModel::parent(const QModelIndex &index) const
     if (!index.isValid())
         return QModelIndex();
 
-    ApiTraceCall *call = index.data().value<ApiTraceCall*>();
-    if (call) {
+    ApiTraceEvent *event = item(index);
+    if (event && event->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
         Q_ASSERT(call->parentFrame);
         return createIndex(call->parentFrame->number,
                            0, call->parentFrame);
@@ -131,11 +157,11 @@ int ApiTraceModel::rowCount(const QModelIndex &parent) const
     if (!parent.isValid())
         return m_trace->numFrames();
 
-    ApiTraceCall *call = parent.data().value<ApiTraceCall*>();
-    if (call)
+    ApiTraceEvent *event = item(parent);
+    if (!event || event->type() == ApiTraceEvent::Call)
         return 0;
 
-    ApiTraceFrame *frame = parent.data().value<ApiTraceFrame*>();
+    ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
     if (frame)
         return frame->calls.count();
 
@@ -146,7 +172,6 @@ int ApiTraceModel::columnCount(const QModelIndex &parent) const
 {
     return 1;
 }
-
 
 bool ApiTraceModel::insertRows(int position, int rows,
                                const QModelIndex &parent)
@@ -195,7 +220,7 @@ void ApiTraceModel::invalidateFrames()
 void ApiTraceModel::appendFrames(int oldCount, int numAdded)
 {
     beginInsertRows(QModelIndex(), oldCount,
-                    oldCount + numAdded);
+                    oldCount + numAdded - 1);
     endInsertRows();
 }
 
@@ -204,6 +229,26 @@ ApiTraceEvent * ApiTraceModel::item(const QModelIndex &index) const
     if (!index.isValid())
         return 0;
     return static_cast<ApiTraceEvent*>(index.internalPointer());
+}
+
+void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
+{
+    if (!event)
+        return;
+
+    if (event->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+        ApiTraceFrame *frame = call->parentFrame;
+        int row = frame->calls.indexOf(call);
+        QModelIndex index = createIndex(row, 0, call);
+        emit dataChanged(index, index);
+    } else if (event->type() == ApiTraceEvent::Frame) {
+        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
+        const QList<ApiTraceFrame*> frames = m_trace->frames();
+        int row = frames.indexOf(frame);
+        QModelIndex index = createIndex(row, 0, frame);
+        emit dataChanged(index, index);
+    }
 }
 
 #include "apitracemodel.moc"

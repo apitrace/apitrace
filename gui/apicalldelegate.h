@@ -14,6 +14,9 @@ public:
                const QModelIndex &index) const;
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const;
+
+private:
+    QIcon m_stateEmblem;
 };
 
 #endif

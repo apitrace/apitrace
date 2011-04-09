@@ -1,3 +1,6 @@
+# Include the cmake file needed to use qt4
+include( ${QT_USE_FILE} )
+
 set(qapitrace_SRCS
    apitrace.cpp
    apicalldelegate.cpp
@@ -7,6 +10,9 @@ set(qapitrace_SRCS
    loaderthread.cpp
    mainwindow.cpp
    main.cpp
+   retracer.cpp
+   settingsdialog.cpp
+   vertexdatainterpreter.cpp
  )
 
 qt4_automoc(${qapitrace_SRCS})
@@ -14,7 +20,9 @@ qt4_automoc(${qapitrace_SRCS})
 qt4_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
-   ui/mainwindow.ui)
+   ui/mainwindow.ui
+   ui/retracerdialog.ui
+   ui/settings.ui)
 
 QT4_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
 

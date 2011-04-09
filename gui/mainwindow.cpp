@@ -5,27 +5,31 @@
 #include "apicalldelegate.h"
 #include "apitracemodel.h"
 #include "apitracefilter.h"
+#include "retracer.h"
+#include "settingsdialog.h"
+#include "ui_retracerdialog.h"
+#include "vertexdatainterpreter.h"
 
 #include <qjson/parser.h>
 
 #include <QAction>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QMessageBox>
-#include <QProcess>
 #include <QProgressBar>
 #include <QToolBar>
+#include <QUrl>
+#include <QWebPage>
 #include <QWebView>
 
 
 MainWindow::MainWindow()
     : QMainWindow(),
-      m_replayProcess(0),
       m_selectedEvent(0),
       m_stateEvent(0),
-      m_findingState(false),
       m_jsonParser(new QJson::Parser())
 {
     m_ui.setupUi(this);
@@ -37,14 +41,43 @@ MainWindow::MainWindow()
     connect(m_trace, SIGNAL(finishedLoadingTrace()),
             this, SLOT(finishedLoadingTrace()));
 
+    m_retracer = new Retracer(this);
+    connect(m_retracer, SIGNAL(finished(const QByteArray&)),
+            this, SLOT(replayFinished(const QByteArray&)));
+    connect(m_retracer, SIGNAL(error(const QString&)),
+            this, SLOT(replayError(const QString&)));
+
+    m_vdataInterpreter = new VertexDataInterpreter(this);
+    m_vdataInterpreter->setListWidget(m_ui.vertexDataListWidget);
+    m_vdataInterpreter->setStride(
+        m_ui.vertexStrideSB->value());
+    m_vdataInterpreter->setComponents(
+        m_ui.vertexComponentsSB->value());
+    m_vdataInterpreter->setStartingOffset(
+        m_ui.startingOffsetSB->value());
+    m_vdataInterpreter->setTypeFromString(
+        m_ui.vertexTypeCB->currentText());
+
+    connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
+            m_vdataInterpreter, SLOT(interpretData()));
+    connect(m_ui.vertexTypeCB, SIGNAL(currentIndexChanged(const QString&)),
+            m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
+    connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setStride(int)));
+    connect(m_ui.vertexComponentsSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setComponents(int)));
+    connect(m_ui.startingOffsetSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setStartingOffset(int)));
+
     m_model = new ApiTraceModel();
     m_model->setApiTrace(m_trace);
     m_proxyModel = new ApiTraceFilter();
     m_proxyModel->setSourceModel(m_model);
     m_ui.callView->setModel(m_proxyModel);
     m_ui.callView->setItemDelegate(new ApiCallDelegate);
-    for (int column = 0; column < m_model->columnCount(); ++column)
-        m_ui.callView->resizeColumnToContents(column);
+    m_ui.callView->resizeColumnToContents(0);
+    m_ui.callView->header()->swapSections(0, 1);
+    m_ui.callView->setColumnWidth(1, 42);
 
     QToolBar *toolBar = addToolBar(tr("Navigation"));
     m_filterEdit = new QLineEdit(toolBar);
@@ -56,7 +89,11 @@ MainWindow::MainWindow()
     m_progressBar->hide();
 
     m_ui.detailsDock->hide();
+    m_ui.vertexDataDock->hide();
     m_ui.stateDock->hide();
+    setDockOptions(dockOptions() | QMainWindow::ForceTabbedDocks);
+
+    tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
 
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
@@ -69,11 +106,18 @@ MainWindow::MainWindow()
             this, SLOT(replayStop()));
     connect(m_ui.actionLookupState, SIGNAL(triggered()),
             this, SLOT(lookupState()));
+       connect(m_ui.actionOptions, SIGNAL(triggered()),
+            this, SLOT(showSettings()));
 
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
     connect(m_filterEdit, SIGNAL(returnPressed()),
             this, SLOT(filterTrace()));
+
+    m_ui.detailsWebView->page()->setLinkDelegationPolicy(
+        QWebPage::DelegateExternalLinks);
+    connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
+            this, SLOT(openHelp(const QUrl&)));
 }
 
 void MainWindow::openTrace()
@@ -105,14 +149,43 @@ void MainWindow::loadTrace(const QString &fileName)
 
 void MainWindow::callItemSelected(const QModelIndex &index)
 {
-    ApiTraceCall *call = index.data().value<ApiTraceCall*>();
-    if (call) {
+    ApiTraceEvent *event =
+        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+
+    if (event && event->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
+        if (call->hasBinaryData()) {
+            QByteArray data =
+                call->argValues[call->binaryDataIndex()].toByteArray();
+            m_vdataInterpreter->setData(data);
+
+            for (int i = 0; i < call->argNames.count(); ++i) {
+                QString name = call->argNames[i];
+                if (name == QLatin1String("stride")) {
+                    int stride = call->argValues[i].toInt();
+                    m_ui.vertexStrideSB->setValue(stride);
+                } else if (name == QLatin1String("size")) {
+                    int components = call->argValues[i].toInt();
+                    m_ui.vertexComponentsSB->setValue(components);
+                } else if (name == QLatin1String("type")) {
+                    QString val = call->argValues[i].toString();
+                    int textIndex = m_ui.vertexTypeCB->findText(val);
+                    if (textIndex >= 0)
+                        m_ui.vertexTypeCB->setCurrentIndex(textIndex);
+                }
+            }
+        }
+        m_ui.vertexDataDock->setVisible(call->hasBinaryData());
         m_selectedEvent = call;
     } else {
-        m_selectedEvent = index.data().value<ApiTraceFrame*>();
+        if (event && event->type() == ApiTraceEvent::Frame) {
+            m_selectedEvent = static_cast<ApiTraceFrame*>(event);
+        } else
+            m_selectedEvent = 0;
         m_ui.detailsDock->hide();
+        m_ui.vertexDataDock->hide();
     }
     if (m_selectedEvent && !m_selectedEvent->state().isEmpty()) {
         fillStateForFrame();
@@ -127,18 +200,30 @@ void MainWindow::filterTrace()
 
 void MainWindow::replayStart()
 {
-    replayTrace(false);
+    QDialog dlg;
+    Ui_RetracerDialog dlgUi;
+    dlgUi.setupUi(&dlg);
+
+    dlgUi.doubleBufferingCB->setChecked(
+        m_retracer->isDoubleBuffered());
+    dlgUi.benchmarkCB->setChecked(
+        m_retracer->isBenchmarking());
+
+    if (dlg.exec() == QDialog::Accepted) {
+        m_retracer->setDoubleBuffered(
+            dlgUi.doubleBufferingCB->isChecked());
+        m_retracer->setBenchmarking(
+            dlgUi.benchmarkCB->isChecked());
+        replayTrace(false);
+    }
 }
 
 void MainWindow::replayStop()
 {
-    if (m_replayProcess) {
-        m_replayProcess->kill();
-
-        m_ui.actionStop->setEnabled(false);
-        m_ui.actionReplay->setEnabled(true);
-        m_ui.actionLookupState->setEnabled(true);
-    }
+    m_retracer->terminate();
+    m_ui.actionStop->setEnabled(false);
+    m_ui.actionReplay->setEnabled(true);
+    m_ui.actionLookupState->setEnabled(true);
 }
 
 void MainWindow::newTraceFile(const QString &fileName)
@@ -149,27 +234,23 @@ void MainWindow::newTraceFile(const QString &fileName)
     if (m_traceFileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);
         m_ui.actionLookupState->setEnabled(false);
+        setWindowTitle(tr("QApiTrace"));
     } else {
+        QFileInfo info(fileName);
         m_ui.actionReplay->setEnabled(true);
         m_ui.actionLookupState->setEnabled(true);
+        setWindowTitle(
+            tr("QApiTrace - %1").arg(info.fileName()));
     }
 }
 
-void MainWindow::replayFinished()
+void MainWindow::replayFinished(const QByteArray &output)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
 
-    QByteArray output = m_replayProcess->readAllStandardOutput();
-
-#if 0
-    qDebug()<<"Process finished = ";
-    qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
-    qDebug()<<"\tout = "<<output;
-#endif
-
-    if (m_findingState) {
+    if (m_retracer->captureState()) {
         bool ok = false;
         QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
         parseState(parsedJson[QLatin1String("parameters")].toMap());
@@ -177,23 +258,17 @@ void MainWindow::replayFinished()
         statusBar()->showMessage(output);
     }
     m_stateEvent = 0;
-    m_findingState = false;
 }
 
-void MainWindow::replayError(QProcess::ProcessError err)
+void MainWindow::replayError(const QString &message)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
-    m_findingState = false;
     m_stateEvent = 0;
 
-    qDebug()<<"Process error = "<<err;
-    qDebug()<<"\terr = "<<m_replayProcess->readAllStandardError();
-    qDebug()<<"\tout = "<<m_replayProcess->readAllStandardOutput();
     QMessageBox::warning(
-        this, tr("Replay Failed"),
-        tr("Couldn't execute the replay file '%1'").arg(m_traceFileName));
+        this, tr("Replay Failed"), message);
 }
 
 void MainWindow::startedLoadingTrace()
@@ -218,33 +293,12 @@ void MainWindow::finishedLoadingTrace()
 
 void MainWindow::replayTrace(bool dumpState)
 {
-    if (!m_replayProcess) {
-#ifdef Q_OS_WIN
-        QString format = QLatin1String("%1;");
-#else
-        QString format = QLatin1String("%1:");
-#endif
-        QString buildPath = format.arg(BUILD_DIR);
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert("PATH", buildPath + env.value("PATH"));
-
-        qputenv("PATH", env.value("PATH").toLatin1());
-
-        m_replayProcess = new QProcess(this);
-        m_replayProcess->setProcessEnvironment(env);
-
-        connect(m_replayProcess, SIGNAL(finished(int, QProcess::ExitStatus)),
-                this, SLOT(replayFinished()));
-        connect(m_replayProcess, SIGNAL(error(QProcess::ProcessError)),
-                this, SLOT(replayError(QProcess::ProcessError)));
-    }
-
     if (m_traceFileName.isEmpty())
         return;
 
-    QStringList arguments;
-    if (dumpState &&
-        m_selectedEvent) {
+    m_retracer->setFileName(m_traceFileName);
+    m_retracer->setCaptureState(dumpState);
+    if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
         if (m_selectedEvent->type() == ApiTraceEvent::Call) {
             index = static_cast<ApiTraceCall*>(m_selectedEvent)->index;
@@ -260,13 +314,9 @@ void MainWindow::replayTrace(bool dumpState)
             qDebug()<<"Unknown event type";
             return;
         }
-        arguments << QLatin1String("-D");
-        arguments << QString::number(index);
+        m_retracer->setCaptureAtCallNumber(index);
     }
-    arguments << m_traceFileName;
-
-    m_replayProcess->start(QLatin1String("glretrace"),
-                           arguments);
+    m_retracer->start();
 
     m_ui.actionStop->setEnabled(true);
 }
@@ -280,7 +330,6 @@ void MainWindow::lookupState()
         return;
     }
     m_stateEvent = m_selectedEvent;
-    m_findingState = true;
     replayTrace(true);
 }
 
@@ -294,6 +343,7 @@ void MainWindow::parseState(const QVariantMap &params)
     QVariantMap::const_iterator itr;
 
     m_stateEvent->setState(params);
+    m_model->stateSetOnEvent(m_stateEvent);
     if (m_selectedEvent == m_stateEvent) {
         fillStateForFrame();
     } else {
@@ -348,6 +398,21 @@ void MainWindow::fillStateForFrame()
     }
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
     m_ui.stateDock->show();
+}
+
+void MainWindow::showSettings()
+{
+    SettingsDialog dialog;
+    dialog.setFilterOptions(m_proxyModel->filterOptions());
+
+    if (dialog.exec() == QDialog::Accepted) {
+        m_proxyModel->setFilterOptions(dialog.filterOptions());
+    }
+}
+
+void MainWindow::openHelp(const QUrl &url)
+{
+    QDesktopServices::openUrl(url);
 }
 
 #include "mainwindow.moc"

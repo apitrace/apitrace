@@ -3,6 +3,7 @@
 #include "trace_model.hpp"
 
 #include <QDebug>
+#include <QObject>
 
 ApiPointer::ApiPointer(int val)
     : m_value(val)
@@ -21,6 +22,15 @@ QString apiVariantToString(const QVariant &variant)
 {
     if (variant.userType() == QVariant::Double) {
         return QString::number(variant.toFloat());
+    }
+    if (variant.userType() == QVariant::ByteArray) {
+        if (variant.toByteArray().size() < 1024) {
+            int bytes = variant.toByteArray().size();
+            return QObject::tr("[binary data, size = %1 bytes]").arg(bytes);
+        } else {
+            float kb = variant.toByteArray().size()/1024.;
+            return QObject::tr("[binary data, size = %1 kb]").arg(kb);
+        }
     }
 
     if (variant.userType() < QVariant::UserType) {
@@ -274,7 +284,19 @@ QString ApiTraceCall::toHtml() const
     if (!m_richText.isEmpty())
         return m_richText;
 
-    m_richText = QString::fromLatin1("<span style=\"font-weight:bold\">%1</span>(").arg(name);
+    if (helpUrl.isEmpty()) {
+        m_richText = QString::fromLatin1(
+            "%1) <span style=\"font-weight:bold\">%2</span>(")
+                     .arg(index)
+                     .arg(name);
+    } else {
+        m_richText = QString::fromLatin1(
+            "%1) <span style=\"font-weight:bold\"><a href=\"%2\">%3</a></span>(")
+                      .arg(index)
+                      .arg(helpUrl.toString())
+                      .arg(name);
+    }
+
     for (int i = 0; i < argNames.count(); ++i) {
         m_richText += argNames[i];
         m_richText += QString::fromLatin1(" = ");
@@ -304,6 +326,11 @@ QString ApiTraceCall::filterText() const
     for (int i = 0; i < argNames.count(); ++i) {
         m_filterText += argNames[i];
         m_filterText += QString::fromLatin1(" = ");
+
+        if (argValues[i].type() == QVariant::ByteArray) {
+            m_hasBinaryData = true;
+            m_binaryDataIndex = i;
+        }
         m_filterText += apiVariantToString(argValues[i]);
         if (i < argNames.count() - 1)
             m_filterText += QString::fromLatin1(", ");
@@ -350,7 +377,9 @@ ApiTraceFrame::ApiTraceFrame()
 }
 
 ApiTraceCall::ApiTraceCall()
-    : ApiTraceEvent(ApiTraceEvent::Call)
+    : ApiTraceEvent(ApiTraceEvent::Call),
+      m_hasBinaryData(false),
+      m_binaryDataIndex(0)
 {
 }
 
@@ -376,4 +405,14 @@ QVariantMap ApiTraceEvent::state() const
 void ApiTraceEvent::setState(const QVariantMap &state)
 {
     m_state = state;
+}
+
+bool ApiTraceCall::hasBinaryData() const
+{
+    return m_hasBinaryData;
+}
+
+int ApiTraceCall::binaryDataIndex() const
+{
+    return m_binaryDataIndex;
 }

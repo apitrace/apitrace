@@ -77,7 +77,7 @@ Pointer::operator bool(void) const { return value != 0; }
 
 
 // signed integer cast
-Value  ::operator signed long long (void) const { assert(0); return NULL; }
+Value  ::operator signed long long (void) const { assert(0); return 0; }
 Null   ::operator signed long long (void) const { return 0; }
 Bool   ::operator signed long long (void) const { return static_cast<signed long long>(value); }
 SInt   ::operator signed long long (void) const { return value; }
@@ -87,7 +87,7 @@ Enum   ::operator signed long long (void) const { return static_cast<signed long
 
 
 // unsigned integer cast
-Value  ::operator unsigned long long (void) const { assert(0); return NULL; }
+Value  ::operator unsigned long long (void) const { assert(0); return 0; }
 Null   ::operator unsigned long long (void) const { return 0; }
 Bool   ::operator unsigned long long (void) const { return static_cast<unsigned long long>(value); }
 SInt   ::operator unsigned long long (void) const { assert(value >= 0); return static_cast<signed long long>(value); }
@@ -97,7 +97,7 @@ Enum   ::operator unsigned long long (void) const { return static_cast<unsigned 
 
 
 // floating point cast
-Value  ::operator double (void) const { assert(0); return NULL; }
+Value  ::operator double (void) const { assert(0); return 0; }
 Null   ::operator double (void) const { return 0; }
 Bool   ::operator double (void) const { return static_cast<double>(value); }
 SInt   ::operator double (void) const { return static_cast<double>(value); }
@@ -196,7 +196,35 @@ public:
     }
 
     void visit(String *node) {
-        os << literal << '"' << node->value << '"' << normal;
+        os << literal << "\"";
+        for (std::string::const_iterator it = node->value.begin(); it != node->value.end(); ++it) {
+            unsigned char c = (unsigned char) *it;
+            if (c == '\"')
+                os << "\\\"";
+            else if (c == '\\')
+                os << "\\\\";
+            else if (c >= 0x20 && c <= 0x7e)
+                os << c;
+            else if (c == '\t') {
+                os << "\t";
+            } else if (c == '\r') {
+                // Ignore carriage-return
+            } else if (c == '\n') {
+                // Reset formatting so that it looks correct with 'less -R'
+                os << normal << '\n' << literal;
+            } else {
+                unsigned octal0 = c & 0x7;
+                unsigned octal1 = (c >> 3) & 0x7;
+                unsigned octal2 = (c >> 3) & 0x7;
+                os << "\\";
+                if (octal2)
+                    os << octal2;
+                if (octal1)
+                    os << octal1;
+                os << octal0;
+            }
+        }
+        os << "\"" << normal;
     }
 
     void visit(Enum *node) {

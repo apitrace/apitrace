@@ -13,8 +13,10 @@ class ApiTraceFrame;
 class ApiTraceModel;
 class QLineEdit;
 class QModelIndex;
-class QProcess;
 class QProgressBar;
+class QUrl;
+class Retracer;
+class VertexDataInterpreter;
 
 namespace QJson {
     class Parser;
@@ -36,11 +38,13 @@ private slots:
     void filterTrace();
     void replayStart();
     void replayStop();
-    void replayFinished();
-    void replayError(QProcess::ProcessError err);
+    void replayFinished(const QByteArray &output);
+    void replayError(const QString &msg);
     void startedLoadingTrace();
     void finishedLoadingTrace();
     void lookupState();
+    void showSettings();
+    void openHelp(const QUrl &url);
 
 private:
     void newTraceFile(const QString &fileName);
@@ -55,8 +59,6 @@ private:
     ApiTraceFilter *m_proxyModel;
     QLineEdit *m_filterEdit;
 
-    QProcess *m_replayProcess;
-
     QProgressBar *m_progressBar;
 
     QString m_traceFileName;
@@ -64,9 +66,12 @@ private:
     ApiTraceEvent *m_selectedEvent;
 
     ApiTraceEvent *m_stateEvent;
-    bool m_findingState;
 
     QJson::Parser *m_jsonParser;
+
+    Retracer *m_retracer;
+
+    VertexDataInterpreter *m_vdataInterpreter;
 };
 
 
