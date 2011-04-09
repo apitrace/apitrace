@@ -30,34 +30,34 @@
 namespace glws {
 
 
-class XlibVisual : public Visual
+class GlxVisual : public Visual
 {
 public:
     XVisualInfo *visinfo;
 
-    XlibVisual(XVisualInfo *vi) :
+    GlxVisual(XVisualInfo *vi) :
         visinfo(vi)
     {}
 
-    ~XlibVisual() {
+    ~GlxVisual() {
         XFree(visinfo);
     }
 };
 
 
-class XlibDrawable : public Drawable
+class GlxDrawable : public Drawable
 {
 public:
     Display *display;
     Window window;
 
-    XlibDrawable(const Visual *vis, Display *dpy, Window win) :
+    GlxDrawable(const Visual *vis, Display *dpy, Window win) :
         Drawable(vis),
         display(dpy), 
         window(win)
     {}
 
-    ~XlibDrawable() {
+    ~GlxDrawable() {
         XDestroyWindow(display, window);
     }
     
@@ -73,37 +73,37 @@ public:
 };
 
 
-class XlibContext : public Context
+class GlxContext : public Context
 {
 public:
     Display *display;
     GLXContext context;
     
-    XlibContext(const Visual *vis, Display *dpy, GLXContext ctx) :
+    GlxContext(const Visual *vis, Display *dpy, GLXContext ctx) :
         Context(vis),
         display(dpy), 
         context(ctx)
     {}
 
-    ~XlibContext() {
+    ~GlxContext() {
         glXDestroyContext(display, context);
     }
 };
 
 
-class XlibWindowSystem : public WindowSystem
+class GlxWindowSystem : public WindowSystem
 {
 private:
     Display *display;
     int screen;
 
 public:
-    XlibWindowSystem() {
+    GlxWindowSystem() {
         display = XOpenDisplay(NULL);
         screen = DefaultScreen(display);
     }
 
-    ~XlibWindowSystem() {
+    ~GlxWindowSystem() {
         XCloseDisplay(display);
     }
 
@@ -132,13 +132,13 @@ public:
         
         visinfo = glXChooseVisual(display, screen, doubleBuffer ? double_attribs : single_attribs);
 
-        return new XlibVisual(visinfo);
+        return new GlxVisual(visinfo);
     }
     
     Drawable *
     createDrawable(const Visual *visual)
     {
-        XVisualInfo *visinfo = dynamic_cast<const XlibVisual *>(visual)->visinfo;
+        XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
 
         Window root = RootWindow(display, screen);
 
@@ -179,24 +179,28 @@ public:
 
         XMapWindow(display, window);
         
-        return new XlibDrawable(visual, display, window);
+        return new GlxDrawable(visual, display, window);
     }
 
     Context *
     createContext(const Visual *visual)
     {
-        XVisualInfo *visinfo = dynamic_cast<const XlibVisual *>(visual)->visinfo;
+        XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
         GLXContext context = glXCreateContext(display, visinfo, NULL, True);
-        return new XlibContext(visual, display, context);
+        return new GlxContext(visual, display, context);
     }
 
     bool
     makeCurrent(Drawable *drawable, Context *context)
     {
-        Window win = drawable ? dynamic_cast<XlibDrawable *>(drawable)->window : NULL;
-        GLXContext ctx = context ? dynamic_cast<XlibContext *>(context)->context : NULL;
+        if (!drawable || !context) {
+            return glXMakeCurrent(display, NULL, NULL);
+        } else {
+            GlxDrawable *glxDrawable = dynamic_cast<GlxDrawable *>(drawable);
+            GlxContext *glxContext = dynamic_cast<GlxContext *>(context);
 
-        return glXMakeCurrent(display, win, ctx);
+            return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
+        }
     }
 
     bool
@@ -212,7 +216,7 @@ public:
 
 
 WindowSystem *createNativeWindowSystem(void) {
-    return new XlibWindowSystem();
+    return new GlxWindowSystem();
 }
 
 
