@@ -143,6 +143,66 @@ private:
         os << "\"";
     }
 
+    void encodeBase64String(const unsigned char *bytes, size_t size) {
+        const char *table64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        unsigned char c0, c1, c2, c3;
+        char buf[4];
+        unsigned written;
+
+        os << "\"";
+
+        written = 0;
+        while (size >= 3) {
+            c0 = bytes[0] >> 2;
+            c1 = ((bytes[0] & 0x03) << 4) | ((bytes[1] & 0xf0) >> 4);
+            c2 = ((bytes[1] & 0x0f) << 2) | ((bytes[2] & 0xc0) >> 6);
+            c3 = bytes[2] & 0x3f;
+
+            buf[0] = table64[c0];
+            buf[1] = table64[c1];
+            buf[2] = table64[c2];
+            buf[3] = table64[c3];
+
+            os.write(buf, 4);
+
+            bytes += 3;
+            size -= 3;
+            ++written;
+
+            if (written >= 76/4) {
+                os << "\n";
+                written = 0;
+            }
+        }
+
+        if (size > 0) {
+            c0 = bytes[0] >> 2;
+            c1 = ((bytes[0] & 0x03) << 4);
+            
+            if (size > 1) {
+                c1 |= ((bytes[1] & 0xf0) >> 4);
+                c2 = ((bytes[1] & 0x0f) << 2);
+                if (size > 2) {
+                    c2 |= ((bytes[2] & 0xc0) >> 6);
+                    c3 = bytes[2] & 0x3f;
+                    buf[3] = table64[c3];
+                } else {
+                    buf[3] = '=';
+                }
+                buf[2] = table64[c2];
+            } else {
+                buf[3] = '=';
+                buf[2] = '=';
+            }
+            buf[1] = table64[c1];
+            buf[0] = table64[c0];
+
+            os.write(buf, 4);
+        }
+
+        os << "\"";
+    }
+
 public:
     JSONWriter(std::ostream &_os) : 
         os(_os), 
@@ -214,6 +274,13 @@ public:
         space = ' ';
     }
 
+    inline void writeBase64(const void *bytes, size_t size) {
+        separator();
+        encodeBase64String((const unsigned char *)bytes, size);
+        value = true;
+        space = ' ';
+    }
+
     inline void writeNull(void) {
         separator();
         os << "null";
@@ -229,11 +296,30 @@ public:
     }
 
     template<class T>
-    void writeNumber(T n) {
+    inline void writeNumber(T n) {
         separator();
         os << std::dec << n;
         value = true;
         space = ' ';
+    }
+    
+    inline void writeStringMember(const char *name, const char *s) {
+        beginMember(name);
+        writeString(s);
+        endMember();
+    }
+
+    inline void writeBoolMember(const char *name, bool b) {
+        beginMember(name);
+        writeBool(b);
+        endMember();
+    }
+
+    template<class T>
+    inline void writeNumberMember(const char *name, T n) {
+        beginMember(name);
+        writeNumber(n);
+        endMember();
     }
 };
 

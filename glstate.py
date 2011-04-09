@@ -3037,8 +3037,6 @@ class StateDumper:
 static inline void
 writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 {
-    json.beginMember("__image__");
-
     GLint width = 0, height = 0;
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
@@ -3046,22 +3044,51 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
     if (!width || !height) {
         json.writeNull();
     } else {
+        json.beginObject();
+
+        // Tell the GUI this is no ordinary object, but an image
+        json.writeStringMember("__class__", "image");
+
+        json.writeNumberMember("__width__", width);
+        json.writeNumberMember("__height__", height);
+        json.writeNumberMember("__depth__", 1);
+
+        // Hardcoded for now, but we could chose types more adequate to the
+        // texture internal format
+        json.writeStringMember("__type__", "float");
+        json.writeNumberMember("__channels__", 4);
+        
         float *pixels = new float[width*height*4];
+        
         glGetTexImage(target, level, GL_RGBA, GL_FLOAT, pixels);
-        json.beginArray();
-        for (GLint y = 0; y < height; ++y) {
+
+        if (0) {
+            json.writeStringMember("__encoding__", "array");
+            json.beginMember("__data__");
+
             json.beginArray();
-            for (GLint x = 0; x < width; ++x) {
+            for (GLint y = 0; y < height; ++y) {
                 json.beginArray();
-                for (GLint chan = 0; chan < 4; ++chan) {
-                    json.writeNumber(pixels[(y*width + x)*4 + chan]); 
+                for (GLint x = 0; x < width; ++x) {
+                    json.beginArray();
+                    for (GLint chan = 0; chan < 4; ++chan) {
+                        json.writeNumber(pixels[(y*width + x)*4 + chan]); 
+                    }
+                    json.endArray();
                 }
                 json.endArray();
             }
             json.endArray();
+            json.endMember(); // __data__
+        } else {
+            json.writeStringMember("__encoding__", "base64");
+            json.beginMember("__data__");
+            json.writeBase64(pixels, width * height * 4 * sizeof *pixels);
+            json.endMember(); // __data__
         }
-        json.endArray();
+
         delete [] pixels;
+        json.endObject();
     }
 }
 '''
@@ -3105,7 +3132,9 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         print '        json.writeNumber(height);'
         print '        json.endMember();'
         print
+        print '        json.beginMember("image");'
         print '        writeTextureImage(json, target, level);'
+        print '        json.endMember();'
         print
         print '        json.endObject();'
         print '        ++level;'
