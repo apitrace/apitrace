@@ -103,7 +103,7 @@ checkGlError(void) {
 static void snapshot(Image::Image &image) {
     GLint drawbuffer = double_buffer ? GL_BACK : GL_FRONT;
     GLint readbuffer = double_buffer ? GL_BACK : GL_FRONT;
-    glGetIntegerv(GL_READ_BUFFER, &drawbuffer);
+    glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
     glGetIntegerv(GL_READ_BUFFER, &readbuffer);
     glReadBuffer(drawbuffer);
     glReadPixels(0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);

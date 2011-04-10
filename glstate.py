@@ -3071,6 +3071,50 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         json.endObject();
     }
 }
+
+static inline void
+writeDrawBufferImage(JSONWriter &json)
+{
+    GLint width  = glretrace::window_width;
+    GLint height = glretrace::window_height;
+
+    if (!width || !height) {
+        json.writeNull();
+    } else {
+        json.beginObject();
+
+        // Tell the GUI this is no ordinary object, but an image
+        json.writeStringMember("__class__", "image");
+
+        json.writeNumberMember("__width__", width);
+        json.writeNumberMember("__height__", height);
+        json.writeNumberMember("__depth__", 1);
+
+        // Hardcoded for now, but we could chose types more adequate to the
+        // texture internal format
+        json.writeStringMember("__type__", "float");
+        json.writeNumberMember("__channels__", 4);
+        
+        float *pixels = new float[width*height*4];
+        
+        GLint drawbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;
+        GLint readbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;
+        glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
+        glGetIntegerv(GL_READ_BUFFER, &readbuffer);
+        glReadBuffer(drawbuffer);
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glReadBuffer(readbuffer);
+
+        json.writeStringMember("__encoding__", "base64");
+        json.beginMember("__data__");
+        json.writeBase64(pixels, width * height * 4 * sizeof *pixels);
+        json.endMember(); // __data__
+
+        delete [] pixels;
+        json.endObject();
+    }
+}
+
 '''
 
         # textures
@@ -3132,6 +3176,7 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         self.dump_parameters()
         self.dump_current_program()
         self.dump_textures()
+        self.dump_framebuffer()
         print '}'
         print
 
@@ -3223,6 +3268,17 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         print '    json.endArray();'
         print '    json.endMember(); // texture'
         print
+
+    def dump_framebuffer(self):
+        print '    json.beginMember("framebuffer");'
+        print '    json.beginObject();'
+        print '    json.beginMember("GL_DRAW_BUFFER");'
+        # TODO: Handle FBOs
+        print '    writeDrawBufferImage(json);'
+        print '    json.endMember();'
+        print '    json.endObject();'
+        print '    json.endMember(); // framebuffer'
+        pass
 
     def write_line(s):
         self.write('  '*self.level + s + '\n')
