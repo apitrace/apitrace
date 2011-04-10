@@ -18,6 +18,12 @@ void ApiSurface::setSize(const QSize &size)
 }
 
 static inline int
+rgba8_to_argb(quint8 r, quint8 g, quint8 b, quint8 a)
+{
+    return (a << 24 | r << 16 | g << 8 | b);
+}
+
+static inline int
 rgbaf2argb(float r, float g, float b, float a)
 {
     quint8 rb = r * 255;
@@ -31,7 +37,7 @@ rgbaf2argb(float r, float g, float b, float a)
 void ApiSurface::contentsFromBase64(const QByteArray &base64)
 {
     QByteArray dataArray = QByteArray::fromBase64(base64);
-    const float *data = (const float*)dataArray.data();
+    const quint8 *data = (const quint8*)dataArray.data();
     int width = m_size.width();
     int height = m_size.height();
 
@@ -45,10 +51,10 @@ void ApiSurface::contentsFromBase64(const QByteArray &base64)
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            int pixel = rgbaf2argb(data[(y * width + x) * 4 + 0],
-                                   data[(y * width + x) * 4 + 1],
-                                   data[(y * width + x) * 4 + 2],
-                                   data[(y * width + x) * 4 + 3]);
+            int pixel = rgba8_to_argb(data[(y * width + x) * 4 + 0],
+                                      data[(y * width + x) * 4 + 1],
+                                      data[(y * width + x) * 4 + 2],
+                                      data[(y * width + x) * 4 + 3]);
             pixelData[y * width + x] = pixel;
         }
     }

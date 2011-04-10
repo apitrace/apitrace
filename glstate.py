@@ -3065,12 +3065,13 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 
         // Hardcoded for now, but we could chose types more adequate to the
         // texture internal format
-        json.writeStringMember("__type__", "float");
+        json.writeStringMember("__type__", "uint8");
+        json.writeBoolMember("__normalized__", true);
         json.writeNumberMember("__channels__", 4);
         
-        float *pixels = new float[depth*width*height*4];
+        GLubyte *pixels = new GLubyte[depth*width*height*4];
         
-        glGetTexImage(target, level, GL_RGBA, GL_FLOAT, pixels);
+        glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
         json.writeStringMember("__encoding__", "base64");
         json.beginMember("__data__");
@@ -3102,10 +3103,11 @@ writeDrawBufferImage(JSONWriter &json)
 
         // Hardcoded for now, but we could chose types more adequate to the
         // texture internal format
-        json.writeStringMember("__type__", "float");
+        json.writeStringMember("__type__", "uint8");
+        json.writeBoolMember("__normalized__", true);
         json.writeNumberMember("__channels__", 4);
         
-        float *pixels = new float[width*height*4];
+        GLubyte *pixels = new GLubyte[width*height*4];
         
         GLint drawbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;
         GLint readbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;

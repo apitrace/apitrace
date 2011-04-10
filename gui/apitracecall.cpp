@@ -457,11 +457,14 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
                                image[QLatin1String("__height__")].toInt());
                     QString cls = image[QLatin1String("__class__")].toString();
                     QString type = image[QLatin1String("__type__")].toString();
+                    bool normalized =
+                        image[QLatin1String("__normalized__")].toBool();
                     int numChannels =
                         image[QLatin1String("__channels__")].toInt();
 
                     Q_ASSERT(numChannels == 4);
-                    Q_ASSERT(type == QLatin1String("float"));
+                    Q_ASSERT(type == QLatin1String("uint8"));
+                    Q_ASSERT(normalized == true);
 
                     QByteArray dataArray =
                         image[QLatin1String("__data__")].toByteArray();
