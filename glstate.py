@@ -3148,7 +3148,7 @@ writeDrawBufferImage(JSONWriter &json)
                 continue
             print '        glGetTexParameterfv(target, %s, &param);' % name
             print '        json.beginMember("%s");'  % name
-            print '        json.writeNumber(param);'
+            JsonWriter().visit(type, 'param')
             print '        json.endMember();'
             print
         print
@@ -3176,7 +3176,7 @@ writeDrawBufferImage(JSONWriter &json)
                 continue
             print '        glGetTexLevelParameterfv(target, level, %s, &param);' % name
             print '        json.beginMember("%s");'  % name
-            print '        json.writeNumber(param);'
+            JsonWriter().visit(type, 'param')
             print '        json.endMember();'
             print
         print '        json.beginMember("image");'
