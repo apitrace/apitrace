@@ -462,10 +462,10 @@ parameters = [
     ("glGet",	X,	1,	"GL_LINEAR_MIPMAP_NEAREST"),	# 0x2701
     ("glGet",	X,	1,	"GL_NEAREST_MIPMAP_LINEAR"),	# 0x2702
     ("glGet",	X,	1,	"GL_LINEAR_MIPMAP_LINEAR"),	# 0x2703
-    ("glGet",	X,	1,	"GL_TEXTURE_MAG_FILTER"),	# 0x2800
-    ("glGet",	X,	1,	"GL_TEXTURE_MIN_FILTER"),	# 0x2801
-    ("glGet",	X,	1,	"GL_TEXTURE_WRAP_S"),	# 0x2802
-    ("glGet",	X,	1,	"GL_TEXTURE_WRAP_T"),	# 0x2803
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_MAG_FILTER"),	# 0x2800
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_MIN_FILTER"),	# 0x2801
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_WRAP_S"),	# 0x2802
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_WRAP_T"),	# 0x2803
     ("glGet",	X,	1,	"GL_CLAMP"),	# 0x2900
     ("glGet",	X,	1,	"GL_REPEAT"),	# 0x2901
     ("glGet",	F,	1,	"GL_POLYGON_OFFSET_UNITS"),	# 0x2A00
@@ -604,8 +604,8 @@ parameters = [
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_1D"),	# 0x8063
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_2D"),	# 0x8064
     ("glGet",	X,	1,	"GL_TEXTURE_TOO_LARGE_EXT"),	# 0x8065
-    ("glGet",	X,	1,	"GL_TEXTURE_PRIORITY"),	# 0x8066
-    ("glGet",	X,	1,	"GL_TEXTURE_RESIDENT"),	# 0x8067
+    ("glGetTexParameter",	I,	1,	"GL_TEXTURE_PRIORITY"),	# 0x8066
+    ("glGetTexParameter",	B,	1,	"GL_TEXTURE_RESIDENT"),	# 0x8067
     ("glGet",	I,	1,	"GL_TEXTURE_BINDING_1D"),	# 0x8068
     ("glGet",	I,	1,	"GL_TEXTURE_BINDING_2D"),	# 0x8069
     ("glGet",	I,	1,	"GL_TEXTURE_BINDING_3D"),	# 0x806A
@@ -616,7 +616,7 @@ parameters = [
     ("glGet",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_3D"),	# 0x8070
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_DEPTH"),	# 0x8071
-    ("glGet",	X,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
     ("glGet",	I,	1,	"GL_MAX_3D_TEXTURE_SIZE"),	# 0x8073
     ("glGet",	B,	1,	"GL_VERTEX_ARRAY"),	# 0x8074
     ("glGet",	B,	1,	"GL_NORMAL_ARRAY"),	# 0x8075
@@ -775,10 +775,10 @@ parameters = [
     ("glGet",	X,	1,	"GL_TEXTURE_WRAP_Q_SGIS"),	# 0x8137
     ("glGet",	I,	1,	"GL_MAX_4D_TEXTURE_SIZE_SGIS"),	# 0x8138
     ("glGet",	I,	1,	"GL_PIXEL_TEX_GEN_SGIX"),	# 0x8139
-    ("glGet",	X,	1,	"GL_TEXTURE_MIN_LOD"),	# 0x813A
-    ("glGet",	X,	1,	"GL_TEXTURE_MAX_LOD"),	# 0x813B
-    ("glGet",	X,	1,	"GL_TEXTURE_BASE_LEVEL"),	# 0x813C
-    ("glGet",	X,	1,	"GL_TEXTURE_MAX_LEVEL"),	# 0x813D
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MIN_LOD"),	# 0x813A
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_LOD"),	# 0x813B
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_BASE_LEVEL"),	# 0x813C
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_LEVEL"),	# 0x813D
     ("glGet",	I,	1,	"GL_PIXEL_TILE_BEST_ALIGNMENT_SGIX"),	# 0x813E
     ("glGet",	I,	1,	"GL_PIXEL_TILE_CACHE_INCREMENT_SGIX"),	# 0x813F
     ("glGet",	I,	1,	"GL_PIXEL_TILE_WIDTH_SGIX"),	# 0x8140
@@ -854,7 +854,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_TEXTURE_LOD_BIAS_S_SGIX"),	# 0x818E
     ("glGet",	X,	1,	"GL_TEXTURE_LOD_BIAS_T_SGIX"),	# 0x818F
     ("glGet",	X,	1,	"GL_TEXTURE_LOD_BIAS_R_SGIX"),	# 0x8190
-    ("glGet",	X,	1,	"GL_GENERATE_MIPMAP"),	# 0x8191
+    ("glGetTexParameter",	B,	1,	"GL_GENERATE_MIPMAP"),	# 0x8191
     ("glGet",	E,	1,	"GL_GENERATE_MIPMAP_HINT"),	# 0x8192
     ("glGet",	X,	1,	"GL_GEOMETRY_DEFORMATION_SGIX"),	# 0x8194
     ("glGet",	X,	1,	"GL_TEXTURE_DEFORMATION_SGIX"),	# 0x8195
@@ -1809,11 +1809,11 @@ parameters = [
     ("glGet",	E,	1,	"GL_MATRIX_INDEX_ARRAY_TYPE_ARB"),	# 0x8847
     ("glGet",	X,	1,	"GL_MATRIX_INDEX_ARRAY_STRIDE_ARB"),	# 0x8848
     ("glGet",	X,	1,	"GL_MATRIX_INDEX_ARRAY_POINTER_ARB"),	# 0x8849
-    ("glGet",	X,	1,	"GL_TEXTURE_DEPTH_SIZE"),	# 0x884A
-    ("glGet",	X,	1,	"GL_DEPTH_TEXTURE_MODE"),	# 0x884B
-    ("glGet",	X,	1,	"GL_TEXTURE_COMPARE_MODE"),	# 0x884C
-    ("glGet",	X,	1,	"GL_TEXTURE_COMPARE_FUNC"),	# 0x884D
-    ("glGet",	X,	1,	"GL_COMPARE_R_TO_TEXTURE"),	# 0x884E
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_DEPTH_SIZE"),	# 0x884A
+    ("glGetTexParameter",	E,	1,	"GL_DEPTH_TEXTURE_MODE"),	# 0x884B
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_COMPARE_MODE"),	# 0x884C
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_COMPARE_FUNC"),	# 0x884D
+    (None,	X,	1,	"GL_COMPARE_R_TO_TEXTURE"),	# 0x884E
     ("glGet",	X,	1,	"GL_TEXTURE_CUBE_MAP_SEAMLESS"),	# 0x884F
     ("glGet",	X,	1,	"GL_OFFSET_PROJECTIVE_TEXTURE_2D_NV"),	# 0x8850
     ("glGet",	X,	1,	"GL_OFFSET_PROJECTIVE_TEXTURE_2D_SCALE_NV"),	# 0x8851
@@ -3130,6 +3130,16 @@ writeDrawBufferImage(JSONWriter &json)
         print
         print '    json.beginObject();'
         print
+        print '    GLfloat param;'
+        for function, type, count, name in parameters:
+            if function != 'glGetTexParameter' or count != 1:
+                continue
+            print '        glGetTexParameterfv(target, %s, &param);' % name
+            print '        json.beginMember("%s");'  % name
+            print '        json.writeNumber(param);'
+            print '        json.endMember();'
+            print
+        print
         print '    json.beginMember("levels");'
         print '    json.beginArray();'
         print '    GLint level = 0;'
@@ -3148,12 +3158,11 @@ writeDrawBufferImage(JSONWriter &json)
         print '        json.writeNumber(texture);'
         print '        json.endMember();'
         print
-        print '        GLint param;'
         # TODO: Generalize this
         for function, type, count, name in parameters:
-            if function != 'glGetTexLevelParameter':
+            if function != 'glGetTexLevelParameter' or count != 1:
                 continue
-            print '        glGetTexLevelParameteriv(target, level, %s, &param);' % name
+            print '        glGetTexLevelParameterfv(target, level, %s, &param);' % name
             print '        json.beginMember("%s");'  % name
             print '        json.writeNumber(param);'
             print '        json.endMember();'
