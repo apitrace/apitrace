@@ -127,7 +127,7 @@
      <item>
       <widget class="QTabWidget" name="stateTabWidget">
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="parametersTab">
         <attribute name="title">
@@ -176,12 +176,12 @@
           <widget class="QTreeWidget" name="surfacesTreeWidget">
            <column>
             <property name="text">
-             <string>Type</string>
+             <string>Thumbnail</string>
             </property>
            </column>
            <column>
             <property name="text">
-             <string>Size</string>
+             <string>Description</string>
             </property>
            </column>
           </widget>

@@ -8,6 +8,7 @@ set(qapitrace_SRCS
    apitracecall.cpp
    apitracefilter.cpp
    apitracemodel.cpp
+   imageviewer.cpp
    loaderthread.cpp
    mainwindow.cpp
    main.cpp
@@ -22,6 +23,7 @@ qt4_automoc(${qapitrace_SRCS})
 qt4_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
+   ui/imageviewer.ui
    ui/mainwindow.ui
    ui/retracerdialog.ui
    ui/settings.ui

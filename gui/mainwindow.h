@@ -11,6 +11,7 @@ class ApiTraceEvent;
 class ApiTraceFilter;
 class ApiTraceFrame;
 class ApiTraceModel;
+class ImageViewer;
 class QLineEdit;
 class QModelIndex;
 class QProgressBar;
@@ -46,6 +47,8 @@ private slots:
     void lookupState();
     void showSettings();
     void openHelp(const QUrl &url);
+    void showSurfacesMenu(const QPoint &pos);
+    void showSelectedSurface();
 
 private:
     void newTraceFile(const QString &fileName);
@@ -75,6 +78,8 @@ private:
     Retracer *m_retracer;
 
     VertexDataInterpreter *m_vdataInterpreter;
+
+    ImageViewer *m_imageViewer;
 };
 
 

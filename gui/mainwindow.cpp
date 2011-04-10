@@ -5,6 +5,7 @@
 #include "apicalldelegate.h"
 #include "apitracemodel.h"
 #include "apitracefilter.h"
+#include "imageviewer.h"
 #include "retracer.h"
 #include "settingsdialog.h"
 #include "shaderssourcewidget.h"
@@ -65,6 +66,8 @@ MainWindow::MainWindow()
     m_vdataInterpreter->setTypeFromString(
         m_ui.vertexTypeCB->currentText());
 
+    m_imageViewer = new ImageViewer(this);
+
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
     connect(m_ui.vertexTypeCB, SIGNAL(currentIndexChanged(const QString&)),
@@ -120,6 +123,14 @@ MainWindow::MainWindow()
             this, SLOT(callItemSelected(const QModelIndex &)));
     connect(m_filterEdit, SIGNAL(returnPressed()),
             this, SLOT(filterTrace()));
+
+    m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_ui.surfacesTreeWidget,
+            SIGNAL(customContextMenuRequested(const QPoint &)),
+            SLOT(showSurfacesMenu(const QPoint &)));
+    connect(m_ui.surfacesTreeWidget,
+            SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
+            SLOT(showSelectedSurface()));
 
     m_ui.detailsWebView->page()->setLinkDelegationPolicy(
         QWebPage::DelegateExternalLinks);
@@ -411,7 +422,37 @@ void MainWindow::fillStateForFrame()
         m_sourcesWidget->setShaders(shaderSources);
     }
 
-    m_ui.surfacesTab->setEnabled(false);
+    const QList<ApiTexture> &textures =
+        state.textures();
+
+    if (textures.isEmpty()) {
+        m_ui.surfacesTreeWidget->clear();
+        m_ui.surfacesTab->setDisabled(false);
+    } else {
+        QTreeWidgetItem *textureItem =
+            new QTreeWidgetItem(m_ui.surfacesTreeWidget);
+        m_ui.surfacesTreeWidget->setIconSize(QSize(64, 64));
+        textureItem->setText(0, tr("Textures"));
+        for (int i = 0; i < textures.count(); ++i) {
+            const ApiTexture &texture =
+                textures[i];
+            QIcon icon(QPixmap::fromImage(texture.thumb()));
+            QTreeWidgetItem *item = new QTreeWidgetItem(textureItem);
+            item->setIcon(0, icon);
+            int width = texture.size().width();
+            int height = texture.size().height();
+            QString descr =
+                QString::fromLatin1("%1, %2 x %3")
+                .arg(texture.target())
+                .arg(width)
+                .arg(height);
+            item->setText(1, descr);
+
+            item->setData(0, Qt::UserRole,
+                          texture.image());
+        }
+        m_ui.surfacesTab->setEnabled(true);
+    }
     m_ui.stateDock->show();
 }
 
@@ -428,6 +469,38 @@ void MainWindow::showSettings()
 void MainWindow::openHelp(const QUrl &url)
 {
     QDesktopServices::openUrl(url);
+}
+
+void MainWindow::showSurfacesMenu(const QPoint &pos)
+{
+    QTreeWidget *tree = m_ui.surfacesTreeWidget;
+    QTreeWidgetItem *item = tree->itemAt(pos);
+    if (!item)
+        return;
+
+    QMenu menu(tr("Surfaces"), this);
+    //add needed actions
+    QAction *act = menu.addAction(tr("View Image"));
+    act->setStatusTip(tr("View the currently selected surface"));
+    connect(act, SIGNAL(triggered()),
+            SLOT(showSelectedSurface()));
+
+    menu.exec(tree->viewport()->mapToGlobal(pos));
+}
+
+void MainWindow::showSelectedSurface()
+{
+    QTreeWidgetItem *item =
+        m_ui.surfacesTreeWidget->currentItem();
+
+    if (!item)
+        return;
+
+    QVariant var = item->data(0, Qt::UserRole);
+    m_imageViewer->setImage(var.value<QImage>());
+    m_imageViewer->show();
+    m_imageViewer->raise();
+    m_imageViewer->activateWindow();
 }
 
 #include "mainwindow.moc"
