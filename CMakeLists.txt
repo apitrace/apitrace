@@ -24,6 +24,7 @@ if (NOT WIN32)
     # to deploy the wrappers DLLs
     find_package (ZLIB)
     find_package (PNG)
+    find_package (X11 REQUIRED)
 else (NOT WIN32)
     find_package (DirectX)
 endif (NOT WIN32)
@@ -177,6 +178,7 @@ if (WIN32)
     endif (MINGW)
 
 else ()
+    include_directories (${X11_INCLUDE_DIR})
 
     # libGL.so
     add_custom_command (
@@ -237,7 +239,12 @@ target_link_libraries (glretrace
     trace
     ${OPENGL_gl_LIBRARY}
     ${OPENGL_glu_LIBRARY}
+    ${X11_LIBRARIES}
 )
+
+if (NOT WIN32)
+    target_link_libraries (glretrace ${X11_LIBRARIES})
+endif (NOT WIN32)
 
 if (QT4_FOUND AND QJSON_FOUND)
     add_subdirectory(gui)
