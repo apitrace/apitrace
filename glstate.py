@@ -327,11 +327,11 @@ parameters = [
     ("glGet",	E,	1,	"GL_FEEDBACK_BUFFER_TYPE"),	# 0x0DF2
     ("glGet",	P,	1,	"GL_SELECTION_BUFFER_POINTER"),	# 0x0DF3
     ("glGet",	I,	1,	"GL_SELECTION_BUFFER_SIZE"),	# 0x0DF4
-    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_WIDTH"),	# 0x1000
-    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_HEIGHT"),	# 0x1001
-    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_INTERNAL_FORMAT"),	# 0x1003
-    ("glGet",	X,	1,	"GL_TEXTURE_BORDER_COLOR"),	# 0x1004
-    ("glGetTexLevelParameter",	X,	1,	"GL_TEXTURE_BORDER"),	# 0x1005
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_WIDTH"),	# 0x1000
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_HEIGHT"),	# 0x1001
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_INTERNAL_FORMAT"),	# 0x1003
+    ("glGetTexParameter",	F,	4,	"GL_TEXTURE_BORDER_COLOR"),	# 0x1004
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BORDER"),	# 0x1005
     ("glGet",	X,	1,	"GL_DONT_CARE"),	# 0x1100
     ("glGet",	X,	1,	"GL_FASTEST"),	# 0x1101
     ("glGet",	X,	1,	"GL_NICEST"),	# 0x1102
@@ -594,12 +594,12 @@ parameters = [
     ("glGet",	X,	1,	"GL_RGB10_A2"),	# 0x8059
     ("glGet",	X,	1,	"GL_RGBA12"),	# 0x805A
     ("glGet",	X,	1,	"GL_RGBA16"),	# 0x805B
-    ("glGet",	X,	1,	"GL_TEXTURE_RED_SIZE"),	# 0x805C
-    ("glGet",	X,	1,	"GL_TEXTURE_GREEN_SIZE"),	# 0x805D
-    ("glGet",	X,	1,	"GL_TEXTURE_BLUE_SIZE"),	# 0x805E
-    ("glGet",	X,	1,	"GL_TEXTURE_ALPHA_SIZE"),	# 0x805F
-    ("glGet",	X,	1,	"GL_TEXTURE_LUMINANCE_SIZE"),	# 0x8060
-    ("glGet",	X,	1,	"GL_TEXTURE_INTENSITY_SIZE"),	# 0x8061
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_RED_SIZE"),	# 0x805C
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_GREEN_SIZE"),	# 0x805D
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BLUE_SIZE"),	# 0x805E
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_ALPHA_SIZE"),	# 0x805F
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_LUMINANCE_SIZE"),	# 0x8060
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_INTENSITY_SIZE"),	# 0x8061
     ("glGet",	X,	1,	"GL_REPLACE_EXT"),	# 0x8062
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_1D"),	# 0x8063
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_2D"),	# 0x8064
@@ -615,7 +615,7 @@ parameters = [
     ("glGet",	F,	1,	"GL_UNPACK_IMAGE_HEIGHT"),	# 0x806E
     ("glGet",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_3D"),	# 0x8070
-    ("glGet",	X,	1,	"GL_TEXTURE_DEPTH"),	# 0x8071
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_DEPTH"),	# 0x8071
     ("glGet",	X,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
     ("glGet",	I,	1,	"GL_MAX_3D_TEXTURE_SIZE"),	# 0x8073
     ("glGet",	B,	1,	"GL_VERTEX_ARRAY"),	# 0x8074
@@ -1435,7 +1435,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB14_4_NV"),	# 0x867E
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB15_4_NV"),	# 0x867F
     ("glGet",	X,	1,	"GL_TEXTURE_COMPRESSED_IMAGE_SIZE"),	# 0x86A0
-    ("glGet",	X,	1,	"GL_TEXTURE_COMPRESSED"),	# 0x86A1
+    ("glGetTexLevelParameter",	B,	1,	"GL_TEXTURE_COMPRESSED"),	# 0x86A1
     ("glGet",	X,	1,	"GL_NUM_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A2
     #XXX: the list is GL_NUM_COMPRESSED_TEXTURES
     #("glGet",	E,	1,	"GL_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A3
@@ -3148,14 +3148,16 @@ writeDrawBufferImage(JSONWriter &json)
         print '        json.writeNumber(texture);'
         print '        json.endMember();'
         print
-        print '        json.beginMember("GL_TEXTURE_WIDTH");'
-        print '        json.writeNumber(width);'
-        print '        json.endMember();'
-        print
-        print '        json.beginMember("GL_TEXTURE_HEIGHT");'
-        print '        json.writeNumber(height);'
-        print '        json.endMember();'
-        print
+        print '        GLint param;'
+        # TODO: Generalize this
+        for function, type, count, name in parameters:
+            if function != 'glGetTexLevelParameter':
+                continue
+            print '        glGetTexLevelParameteriv(target, level, %s, &param);' % name
+            print '        json.beginMember("%s");'  % name
+            print '        json.writeNumber(param);'
+            print '        json.endMember();'
+            print
         print '        json.beginMember("image");'
         print '        writeTextureImage(json, target, level);'
         print '        json.endMember();'
