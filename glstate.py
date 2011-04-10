@@ -3062,30 +3062,10 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         
         glGetTexImage(target, level, GL_RGBA, GL_FLOAT, pixels);
 
-        if (0) {
-            json.writeStringMember("__encoding__", "array");
-            json.beginMember("__data__");
-
-            json.beginArray();
-            for (GLint y = 0; y < height; ++y) {
-                json.beginArray();
-                for (GLint x = 0; x < width; ++x) {
-                    json.beginArray();
-                    for (GLint chan = 0; chan < 4; ++chan) {
-                        json.writeNumber(pixels[(y*width + x)*4 + chan]); 
-                    }
-                    json.endArray();
-                }
-                json.endArray();
-            }
-            json.endArray();
-            json.endMember(); // __data__
-        } else {
-            json.writeStringMember("__encoding__", "base64");
-            json.beginMember("__data__");
-            json.writeBase64(pixels, width * height * 4 * sizeof *pixels);
-            json.endMember(); // __data__
-        }
+        json.writeStringMember("__encoding__", "base64");
+        json.beginMember("__data__");
+        json.writeBase64(pixels, width * height * 4 * sizeof *pixels);
+        json.endMember(); // __data__
 
         delete [] pixels;
         json.endObject();

@@ -459,11 +459,8 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
                     QString type = image[QLatin1String("__type__")].toString();
                     int numChannels =
                         image[QLatin1String("__channels__")].toInt();
-                    QString encoding =
-                        image[QLatin1String("__encoding__")].toString();
 
                     Q_ASSERT(numChannels == 4);
-                    Q_ASSERT(encoding == QLatin1String("base64"));
                     Q_ASSERT(type == QLatin1String("float"));
 
                     QByteArray dataArray =
