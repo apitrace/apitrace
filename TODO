@@ -2,9 +2,9 @@
                             (in no particular order)
 
 
-* Allow clamping to a GL version or a number of extensions.
+Tracing:
 
-* Match the traced visuals
+* Allow clamping to a GL version or a number of extensions.
 
 * Trace multiple threads
   * GetCurrentThreadId()
@@ -14,16 +14,67 @@
 
 * Trace TSCs
 
-* Retrace multiple threads
+* Trace window sizes somehow
+
+* Allow to distinguish between the calls really done by the program, vs the
+  fakes one necessary to retrace correctly.
+
+* Trace writes done through glMapBuffer and glMapBufferRange correctly
+
+* Start tracing on demand (e.g., key-press, or by frame no), emitting calls
+  that recreate all current state.
+
+* Add option to include call stack frames in the trace
+
+
+Retracing:
+
+* Use visuals that best match those used in the trace; specially auto
+  detect single/double buffer visuals.
+
+* Support multiple contexts
+
+* Support multiple threads
 
 * Provide a readline-like interactive mode to gltrace
   * http://github.com/antirez/linenoise
     * https://github.com/antirez/linenoise/issues#issue/8
   * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c 
 
-* Trace window sizes somehow
-
 * Plug memory leaks.
 
-* Allow to distinguish between the calls really done by the program, vs the
-  fakes one necessary to retrace correctly.
+* Allow to retrace with two libGL.so in parallel, and output differences in
+  rendered frames / draw calls.
+
+* D3D support.
+
+
+GUI:
+
+* Trace editing.
+
+* Timeline view.
+
+* Interface to create traces of applications on unices via LD_PRELOAD.
+
+* Visualize meshes in draw commands.
+
+
+Other:
+
+* Side-by-side trace diffing; either as a separate tool on or the GUI.
+
+* Side-by-side state diffing.
+
+* Ability to extract just a single frame from a trace, and all previous calls
+  that contributed to it:
+
+  * via a state tracker (i.e., knowledge of how calls affect the state);
+
+  * or by leveragine retrace, dumping the calls to emit all state at beginning
+    of the frame.
+
+* MacOSX support.
+
+
+See also FIXME, TODO, and XXX comments on the source code.
