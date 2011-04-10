@@ -3037,11 +3037,21 @@ class StateDumper:
 static inline void
 writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 {
-    GLint width = 0, height = 0;
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
+    GLint width, height = 1, depth = 1;
 
-    if (!width || !height) {
+    width = 0;
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
+
+    if (target != GL_TEXTURE_1D) {
+        height = 0;
+        glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
+        if (target == GL_TEXTURE_3D) {
+            depth = 0;
+            glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH, &depth);
+        }
+    }
+
+    if (width <= 0 || height <= 0 || depth <= 0) {
         json.writeNull();
     } else {
         json.beginObject();
@@ -3051,20 +3061,20 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 
         json.writeNumberMember("__width__", width);
         json.writeNumberMember("__height__", height);
-        json.writeNumberMember("__depth__", 1);
+        json.writeNumberMember("__depth__", depth);
 
         // Hardcoded for now, but we could chose types more adequate to the
         // texture internal format
         json.writeStringMember("__type__", "float");
         json.writeNumberMember("__channels__", 4);
         
-        float *pixels = new float[width*height*4];
+        float *pixels = new float[depth*width*height*4];
         
         glGetTexImage(target, level, GL_RGBA, GL_FLOAT, pixels);
 
         json.writeStringMember("__encoding__", "base64");
         json.beginMember("__data__");
-        json.writeBase64(pixels, width * height * 4 * sizeof *pixels);
+        json.writeBase64(pixels, depth * width * height * 4 * sizeof *pixels);
         json.endMember(); // __data__
 
         delete [] pixels;
