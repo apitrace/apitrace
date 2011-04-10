@@ -2,6 +2,7 @@
 include( ${QT_USE_FILE} )
 
 set(qapitrace_SRCS
+   apisurface.cpp
    apitrace.cpp
    apicalldelegate.cpp
    apitracecall.cpp

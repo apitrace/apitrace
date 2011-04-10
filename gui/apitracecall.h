@@ -1,6 +1,8 @@
 #ifndef APITRACECALL_H
 #define APITRACECALL_H
 
+#include "apisurface.h"
+
 #include <QStaticText>
 #include <QStringList>
 #include <QUrl>
@@ -109,10 +111,12 @@ public:
     bool isEmpty() const;
     QVariantMap parameters() const;
     QStringList shaderSources() const;
+    QList<ApiTexture> textures() const;
 
 private:
     QVariantMap m_parameters;
     QStringList m_shaderSources;
+    QList<ApiTexture> m_textures;
 };
 
 class ApiTraceEvent

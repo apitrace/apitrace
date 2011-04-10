@@ -440,6 +440,47 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         m_shaderSources.append(
             var[QLatin1String("source")].toString());
     }
+
+    QVariantList textureUnits =
+        parsedJson[QLatin1String("textures")].toList();
+    for (int i = 0; i < textureUnits.count(); ++i) {
+        QVariantMap unit = textureUnits[i].toMap();
+        QVariantMap::const_iterator itr;
+        for (itr = unit.constBegin(); itr != unit.constEnd(); ++itr) {
+            QVariantMap target = itr.value().toMap();
+            if (target.count()) {
+                QVariantList levels = target[QLatin1String("levels")].toList();
+                for (int j = 0; j < levels.count(); ++j) {
+                    QVariantMap level = levels[j].toMap();
+                    QVariantMap image = level[QLatin1String("image")].toMap();
+                    QSize size(image[QLatin1String("__width__")].toInt(),
+                               image[QLatin1String("__height__")].toInt());
+                    QString cls = image[QLatin1String("__class__")].toString();
+                    QString type = image[QLatin1String("__type__")].toString();
+                    int numChannels =
+                        image[QLatin1String("__channels__")].toInt();
+                    QString encoding =
+                        image[QLatin1String("__encoding__")].toString();
+
+                    Q_ASSERT(numChannels == 4);
+                    Q_ASSERT(encoding == QLatin1String("base64"));
+                    Q_ASSERT(type == QLatin1String("float"));
+
+                    QByteArray dataArray =
+                        image[QLatin1String("__data__")].toByteArray();
+
+                    ApiTexture tex;
+                    tex.setSize(size);
+                    tex.setLevel(j);
+                    tex.setUnit(i);
+                    tex.setTarget(itr.key());
+                    tex.contentsFromBase64(dataArray);
+
+                    m_textures.append(tex);
+                }
+            }
+        }
+    }
 }
 
 QVariantMap ApiTraceState::parameters() const
@@ -455,6 +496,11 @@ QStringList ApiTraceState::shaderSources() const
 bool ApiTraceState::isEmpty() const
 {
     return m_parameters.isEmpty();
+}
+
+QList<ApiTexture> ApiTraceState::textures() const
+{
+    return m_textures;
 }
 
 
