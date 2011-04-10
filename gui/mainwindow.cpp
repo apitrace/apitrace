@@ -425,8 +425,8 @@ void MainWindow::fillStateForFrame()
     const QList<ApiTexture> &textures =
         state.textures();
 
+    m_ui.surfacesTreeWidget->clear();
     if (textures.isEmpty()) {
-        m_ui.surfacesTreeWidget->clear();
         m_ui.surfacesTab->setDisabled(false);
     } else {
         QTreeWidgetItem *textureItem =
