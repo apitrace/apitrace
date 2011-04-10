@@ -321,32 +321,59 @@ void MainWindow::fillStateForFrame()
 
     const QList<ApiTexture> &textures =
         state.textures();
+    const QList<ApiFramebuffer> &fbos =
+        state.framebuffers();
 
     m_ui.surfacesTreeWidget->clear();
-    if (textures.isEmpty()) {
+    if (textures.isEmpty() && fbos.isEmpty()) {
         m_ui.surfacesTab->setDisabled(false);
     } else {
-        QTreeWidgetItem *textureItem =
-            new QTreeWidgetItem(m_ui.surfacesTreeWidget);
         m_ui.surfacesTreeWidget->setIconSize(QSize(64, 64));
-        textureItem->setText(0, tr("Textures"));
-        for (int i = 0; i < textures.count(); ++i) {
-            const ApiTexture &texture =
-                textures[i];
-            QIcon icon(QPixmap::fromImage(texture.thumb()));
-            QTreeWidgetItem *item = new QTreeWidgetItem(textureItem);
-            item->setIcon(0, icon);
-            int width = texture.size().width();
-            int height = texture.size().height();
-            QString descr =
-                QString::fromLatin1("%1, %2 x %3")
-                .arg(texture.target())
-                .arg(width)
-                .arg(height);
-            item->setText(1, descr);
+        if (!textures.isEmpty()) {
+            QTreeWidgetItem *textureItem =
+                new QTreeWidgetItem(m_ui.surfacesTreeWidget);
+            textureItem->setText(0, tr("Textures"));
+            for (int i = 0; i < textures.count(); ++i) {
+                const ApiTexture &texture =
+                    textures[i];
+                QIcon icon(QPixmap::fromImage(texture.thumb()));
+                QTreeWidgetItem *item = new QTreeWidgetItem(textureItem);
+                item->setIcon(0, icon);
+                int width = texture.size().width();
+                int height = texture.size().height();
+                QString descr =
+                    QString::fromLatin1("%1, %2 x %3")
+                    .arg(texture.target())
+                    .arg(width)
+                    .arg(height);
+                item->setText(1, descr);
 
-            item->setData(0, Qt::UserRole,
-                          texture.image());
+                item->setData(0, Qt::UserRole,
+                              texture.image());
+            }
+        }
+        if (!fbos.isEmpty()) {
+            QTreeWidgetItem *fboItem =
+                new QTreeWidgetItem(m_ui.surfacesTreeWidget);
+            fboItem->setText(0, tr("Framebuffers"));
+            for (int i = 0; i < fbos.count(); ++i) {
+                const ApiFramebuffer &fbo =
+                    fbos[i];
+                QIcon icon(QPixmap::fromImage(fbo.thumb()));
+                QTreeWidgetItem *item = new QTreeWidgetItem(fboItem);
+                item->setIcon(0, icon);
+                int width = fbo.size().width();
+                int height = fbo.size().height();
+                QString descr =
+                    QString::fromLatin1("%1, %2 x %3")
+                    .arg(fbo.type())
+                    .arg(width)
+                    .arg(height);
+                item->setText(1, descr);
+
+                item->setData(0, Qt::UserRole,
+                              fbo.image());
+            }
         }
         m_ui.surfacesTab->setEnabled(true);
     }

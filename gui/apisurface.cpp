@@ -114,3 +114,18 @@ void ApiTexture::setLevel(int l)
 {
     m_level = l;
 }
+
+ApiFramebuffer::ApiFramebuffer()
+    : ApiSurface()
+{
+}
+
+QString ApiFramebuffer::type() const
+{
+    return m_type;
+}
+
+void ApiFramebuffer::setType(const QString &str)
+{
+    m_type = str;
+}

@@ -481,6 +481,32 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
             }
         }
     }
+
+    QVariantMap fbos =
+        parsedJson[QLatin1String("framebuffer")].toMap();
+    QVariantMap::const_iterator itr;
+    for (itr = fbos.constBegin(); itr != fbos.constEnd(); ++itr) {
+        QVariantMap buffer = itr.value().toMap();
+        QSize size(buffer[QLatin1String("__width__")].toInt(),
+                   buffer[QLatin1String("__height__")].toInt());
+        QString cls = buffer[QLatin1String("__class__")].toString();
+        QString type = buffer[QLatin1String("__type__")].toString();
+        bool normalized = buffer[QLatin1String("__normalized__")].toBool();
+        int numChannels = buffer[QLatin1String("__channels__")].toInt();
+
+        Q_ASSERT(numChannels == 4);
+        Q_ASSERT(type == QLatin1String("uint8"));
+        Q_ASSERT(normalized == true);
+
+        QByteArray dataArray =
+            buffer[QLatin1String("__data__")].toByteArray();
+
+        ApiFramebuffer fbo;
+        fbo.setSize(size);
+        fbo.setType(itr.key());
+        fbo.contentsFromBase64(dataArray);
+        m_framebuffers.append(fbo);
+    }
 }
 
 QVariantMap ApiTraceState::parameters() const
@@ -501,6 +527,11 @@ bool ApiTraceState::isEmpty() const
 QList<ApiTexture> ApiTraceState::textures() const
 {
     return m_textures;
+}
+
+QList<ApiFramebuffer> ApiTraceState::framebuffers() const
+{
+    return m_framebuffers;
 }
 
 

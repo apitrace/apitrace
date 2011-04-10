@@ -112,11 +112,13 @@ public:
     QVariantMap parameters() const;
     QStringList shaderSources() const;
     QList<ApiTexture> textures() const;
+    QList<ApiFramebuffer> framebuffers() const;
 
 private:
     QVariantMap m_parameters;
     QStringList m_shaderSources;
     QList<ApiTexture> m_textures;
+    QList<ApiFramebuffer> m_framebuffers;
 };
 Q_DECLARE_METATYPE(ApiTraceState);
 

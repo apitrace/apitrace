@@ -45,4 +45,17 @@ private:
     QString m_target;
 };
 
+class ApiFramebuffer : public ApiSurface
+{
+public:
+    ApiFramebuffer();
+
+    QString type() const;
+    void setType(const QString &str);
+
+private:
+    QString m_type;
+
+};
+
 #endif
