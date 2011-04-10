@@ -1,6 +1,4 @@
 *.moc
 qapitrace
 qrc_qapitrace.cxx
-ui_mainwindow.h
-ui_retracerdialog.h
-ui_settings.h
+ui_*.h
