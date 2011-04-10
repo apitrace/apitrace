@@ -114,8 +114,6 @@ public:
 };
 
 
-#undef Bool
-
 class Bool : public Value
 {
 public:

@@ -23,11 +23,47 @@
  *
  **************************************************************************/
 
-#ifndef _GLSTATE_HPP_
-#define _GLSTATE_HPP_
+#ifndef _GLRETRACE_HPP_
+#define _GLRETRACE_HPP_
 
 #include <ostream>
 
+#include "trace_parser.hpp"
+#include "glws.hpp"
+
+
+namespace glretrace {
+
+
+extern bool double_buffer;
+extern bool insideGlBeginEnd;
+extern Trace::Parser parser;
+extern glws::WindowSystem *ws;
+extern glws::Visual *visual;
+extern glws::Drawable *drawable;
+extern glws::Context *context;
+
+extern int window_width;
+extern int window_height;
+extern bool reshape_window;
+
+extern unsigned frame;
+extern long long startTime;
+extern bool wait;
+
+extern bool benchmark;
+extern const char *compare_prefix;
+extern const char *snapshot_prefix;
+
+extern unsigned dump_state;
+
+void
+checkGlError(void);
+
 void state_dump(std::ostream &os);
 
-#endif /* _GLSTATE_HPP_ */
+
+} /* namespace glretrace */
+
+
+#endif /* _GLRETRACE_HPP_ */

@@ -58,7 +58,7 @@ XVisualInfo = Struct("XVisualInfo", [
   (Int, "bits_per_rgb"),
 ])
 
-Bool_ = Enum("Bool", [
+Bool_ = FakeEnum(Int, [
     "False",
     "True",
 ])

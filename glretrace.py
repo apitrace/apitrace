@@ -125,25 +125,25 @@ class GlRetracer(Retracer):
 
     def call_function(self, function):
         if function.name == "glViewport":
-            print '    if (x + width > __window_width) {'
-            print '        __window_width = x + width;'
-            print '        __reshape_window = true;'
+            print '    if (x + width > glretrace::window_width) {'
+            print '        glretrace::window_width = x + width;'
+            print '        glretrace::reshape_window = true;'
             print '    }'
-            print '    if (y + height > __window_height) {'
-            print '        __window_height = y + height;'
-            print '        __reshape_window = true;'
+            print '    if (y + height > glretrace::window_height) {'
+            print '        glretrace::window_height = y + height;'
+            print '        glretrace::reshape_window = true;'
             print '    }'
 
         if function.name == "glEnd":
-            print '    insideGlBeginEnd = false;'
+            print '    glretrace::insideGlBeginEnd = false;'
         
         Retracer.call_function(self, function)
 
         if function.name == "glBegin":
-            print '    insideGlBeginEnd = true;'
+            print '    glretrace::insideGlBeginEnd = true;'
         else:
             # glGetError is not allowed inside glBegin/glEnd
-            print '    checkGlError();'
+            print '    glretrace::checkGlError();'
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
@@ -163,278 +163,11 @@ class GlRetracer(Retracer):
 
 if __name__ == '__main__':
     print r'''
-#include <string.h>
-#include <stdio.h>
-#include <iostream>
-
 #include "glproc.hpp"
-#include "glstate.hpp"
-#include "glws.hpp"
-
-static bool double_buffer = false;
-static bool insideGlBeginEnd = false;
-
-static int __window_width = 256, __window_height = 256;
-bool __reshape_window = false;
-
-unsigned __frame = 0;
-long long __startTime = 0;
-bool __wait = false;
-
-bool __benchmark = false;
-const char *__compare_prefix = NULL;
-const char *__snapshot_prefix = NULL;
-
-unsigned __dump_state = ~0;
+#include "glretrace.hpp"
 
 
-static void
-checkGlError(void) {
-    if (__benchmark || insideGlBeginEnd) {
-        return;
-    }
-
-    GLenum error = glGetError();
-    if (error == GL_NO_ERROR) {
-        return;
-    }
-
-    std::cerr << "warning: glGetError() = ";
-    switch (error) {
-    case GL_INVALID_ENUM:
-        std::cerr << "GL_INVALID_ENUM";
-        break;
-    case GL_INVALID_VALUE:
-        std::cerr << "GL_INVALID_VALUE";
-        break;
-    case GL_INVALID_OPERATION:
-        std::cerr << "GL_INVALID_OPERATION";
-        break;
-    case GL_STACK_OVERFLOW:
-        std::cerr << "GL_STACK_OVERFLOW";
-        break;
-    case GL_STACK_UNDERFLOW:
-        std::cerr << "GL_STACK_UNDERFLOW";
-        break;
-    case GL_OUT_OF_MEMORY:
-        std::cerr << "GL_OUT_OF_MEMORY";
-        break;
-    case GL_INVALID_FRAMEBUFFER_OPERATION:
-        std::cerr << "GL_INVALID_FRAMEBUFFER_OPERATION";
-        break;
-    case GL_TABLE_TOO_LARGE:
-        std::cerr << "GL_TABLE_TOO_LARGE";
-        break;
-    default:
-        std::cerr << error;
-        break;
-    }
-    std::cerr << "\n";
-}
 '''
     api = glapi.glapi
     retracer = GlRetracer()
     retracer.retrace_api(glapi.glapi)
-    print r'''
-
-static Trace::Parser parser;
-static glws::WindowSystem *__ws = NULL;
-static glws::Visual *__visual = NULL;
-static glws::Drawable *__drawable = NULL;
-static glws::Context *__context = NULL;
-
-#include "image.hpp"
-
-static void snapshot(Image::Image &image) {
-    GLint drawbuffer = double_buffer ? GL_BACK : GL_FRONT;
-    GLint readbuffer = double_buffer ? GL_BACK : GL_FRONT;
-    glGetIntegerv(GL_READ_BUFFER, &drawbuffer);
-    glGetIntegerv(GL_READ_BUFFER, &readbuffer);
-    glReadBuffer(drawbuffer);
-    glReadPixels(0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-    checkGlError();
-    glReadBuffer(readbuffer);
-}
-
-static void frame_complete(void) {
-    ++__frame;
-    
-    if (!__reshape_window && (__snapshot_prefix || __compare_prefix)) {
-        Image::Image *ref = NULL;
-        if (__compare_prefix) {
-            char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%04u.png", __compare_prefix, __frame);
-            ref = Image::readPNG(filename);
-            if (!ref) {
-                return;
-            }
-            if (verbosity >= 0)
-                std::cout << "Read " << filename << "\n";
-        }
-        
-        Image::Image src(__window_width, __window_height, true);
-        snapshot(src);
-
-        if (__snapshot_prefix) {
-            char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%04u.png", __snapshot_prefix, __frame);
-            if (src.writePNG(filename) && verbosity >= 0) {
-                std::cout << "Wrote " << filename << "\n";
-            }
-        }
-
-        if (ref) {
-            std::cout << "Frame " << __frame << " average precision of " << src.compare(*ref) << " bits\n";
-            delete ref;
-        }
-    }
-    
-    if (__reshape_window) {
-        // XXX: doesn't quite work
-        __drawable->resize(__window_width, __window_height);
-        __reshape_window = false;
-    }
-
-    __ws->processEvents();
-}
-
-static void display(void) {
-    Trace::Call *call;
-
-    while ((call = parser.parse_call())) {
-        const std::string &name = call->name();
-
-        if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
-            (name[0] == 'g' && name[1] == 'l' && name[2] == 'X')) {
-            // XXX: We ignore the majority of the OS-specific calls for now
-            if (name == "glXSwapBuffers" ||
-                name == "wglSwapBuffers") {
-                if (verbosity >= 1) {
-                    std::cout << *call;
-                    std::cout.flush();
-                };
-                frame_complete();
-                if (double_buffer)
-                    __drawable->swapBuffers();
-                else
-                    glFlush();
-            } else if (name == "glXMakeCurrent" ||
-                       name == "wglMakeCurrent") {
-                glFlush();
-                if (!double_buffer) {
-                    frame_complete();
-                }
-            } else {
-                continue;
-            }
-        }
-
-        if (name == "glFlush") {
-            glFlush();
-            if (!double_buffer) {
-                frame_complete();
-            }
-        }
-        
-        retrace_call(*call);
-
-        if (!insideGlBeginEnd && call->no >= __dump_state) {
-            state_dump(std::cout);
-            exit(0);
-        }
-
-        delete call;
-    }
-
-    // Reached the end of trace
-    glFlush();
-
-    long long endTime = OS::GetTime();
-    float timeInterval = (endTime - __startTime) * 1.0E-6;
-
-    if (verbosity >= -1) { 
-        std::cout << 
-            "Rendered " << __frame << " frames"
-            " in " <<  timeInterval << " secs,"
-            " average of " << (__frame/timeInterval) << " fps\n";
-    }
-
-    if (__wait) {
-        while (__ws->processEvents()) {}
-    } else {
-        exit(0);
-    }
-}
-
-static void usage(void) {
-    std::cout << 
-        "Usage: glretrace [OPTION] TRACE\n"
-        "Replay TRACE.\n"
-        "\n"
-        "  -b           benchmark (no glgeterror; no messages)\n"
-        "  -c PREFIX    compare against snapshots\n"
-        "  -db          use a double buffer visual\n"
-        "  -s PREFIX    take snapshots\n"
-        "  -v           verbose output\n"
-        "  -D CALLNO    dump state at specific call no\n"
-        "  -w           wait on final frame\n";
-}
-
-int main(int argc, char **argv)
-{
-
-    int i;
-    for (i = 1; i < argc; ++i) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "-b")) {
-            __benchmark = true;
-            verbosity = -1;
-        } else if (!strcmp(arg, "-c")) {
-            __compare_prefix = argv[++i];
-        } else if (!strcmp(arg, "-D")) {
-            __dump_state = atoi(argv[++i]);
-            verbosity = -2;
-        } else if (!strcmp(arg, "-db")) {
-            double_buffer = true;
-        } else if (!strcmp(arg, "--help")) {
-            usage();
-            return 0;
-        } else if (!strcmp(arg, "-s")) {
-            __snapshot_prefix = argv[++i];
-        } else if (!strcmp(arg, "-v")) {
-            ++verbosity;
-        } else if (!strcmp(arg, "-w")) {
-            __wait = true;
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
-            usage();
-            return 1;
-        }
-    }
-
-    __ws = glws::createNativeWindowSystem();
-    __visual = __ws->createVisual(double_buffer);
-    __drawable = __ws->createDrawable(__visual);
-    __drawable->resize(__window_width, __window_height);
-    __context = __ws->createContext(__visual);
-    __ws->makeCurrent(__drawable, __context);
-
-    for ( ; i < argc; ++i) {
-        if (parser.open(argv[i])) {
-            __startTime = OS::GetTime();
-            display();
-            parser.close();
-        }
-    }
-
-    return 0;
-}
-
-'''    

@@ -99,7 +99,7 @@ class ValueExtractor(stdapi.Visitor):
 
     def visit_handle(self, handle, lvalue, rvalue):
         self.visit(handle.type, lvalue, handle_entry(handle, rvalue));
-        print '    if (verbosity >= 2)'
+        print '    if (retrace::verbosity >= 2)'
         print '        std::cout << "%s " << static_cast<%s>(%s) << " <- " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
     
     def visit_blob(self, blob, lvalue, rvalue):
@@ -150,7 +150,7 @@ class ValueWrapper(stdapi.Visitor):
             rvalue = "static_cast<%s>(%s)" % (handle.type, rvalue)
             entry = handle_entry(handle, rvalue) 
             print "    %s = %s;" % (entry, lvalue)
-            print '    if (verbosity >= 2)'
+            print '    if (retrace::verbosity >= 2)'
             print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
         else:
             i = '__h' + handle.id
@@ -159,7 +159,7 @@ class ValueWrapper(stdapi.Visitor):
             entry = handle_entry(handle, rvalue) 
             print '    for({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
             print '        {entry} = {lvalue};'.format(**locals())
-            print '        if (verbosity >= 2)'
+            print '        if (retrace::verbosity >= 2)'
             print '            std::cout << "{handle.name} " << ({rvalue}) << " -> " << ({lvalue}) << "\\n";'.format(**locals())
             print '    }'
     
@@ -212,7 +212,7 @@ class Retracer:
                 print '   // FIXME: result'
 
     def fail_function(self, function):
-        print '    if (verbosity >= 0)'
+        print '    if (retrace::verbosity >= 0)'
         print '        std::cerr << "warning: unsupported call %s\\n";' % function.name
         print '    return;'
 
@@ -237,10 +237,10 @@ class Retracer:
             if function.sideeffects:
                 self.retrace_function(function)
 
-        print 'static bool retrace_call(Trace::Call &call) {'
+        print 'bool retrace::retrace_call(Trace::Call &call) {'
         print '    const char *name = call.name().c_str();'
         print
-        print '    if (verbosity >= 1) {'
+        print '    if (retrace::verbosity >= 1) {'
         print '        std::cout << call;'
         print '        std::cout.flush();'
         print '    };'
@@ -256,7 +256,7 @@ class Retracer:
     
         string_switch('name', func_dict.keys(), handle_case)
 
-        print '    if (verbosity >= 0)'
+        print '    if (retrace::verbosity >= 0)'
         print '        std::cerr << "warning: unknown call " << call.name() << "\\n";'
         print '    return false;'
         print '}'
@@ -280,9 +280,6 @@ class Retracer:
                     key_name, key_type = handle.key
                     print 'static std::map<%s, retrace::map<%s> > __%s_map;' % (key_type, handle.type, handle.name)
                 handle_names.add(handle.name)
-        print
-
-        print 'int verbosity = 0;'
         print
 
         self.retrace_functions(api.functions)

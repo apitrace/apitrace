@@ -2958,7 +2958,7 @@ class StateDumper:
         print '#include "json.hpp"'
         print '#include "glimports.hpp"'
         print '#include "glproc.hpp"'
-        print '#include "glstate.hpp"'
+        print '#include "glretrace.hpp"'
         print
 
         print 'static void'
@@ -3146,7 +3146,7 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         print '}'
         print
 
-        print 'void state_dump(std::ostream &os)'
+        print 'void glretrace::state_dump(std::ostream &os)'
         print '{'
         print '    JSONWriter json(os);'
         self.dump_parameters()

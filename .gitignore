@@ -31,8 +31,8 @@ dump
 dxsdk
 glproc.hpp
 glretrace
-glretrace.cpp
-glstate.cpp
+glretrace_gl.cpp
+glretrace_state.cpp
 glxtrace.cpp
 traces
 wgltrace.cpp

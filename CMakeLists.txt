@@ -205,14 +205,14 @@ add_executable (dump dump.cpp)
 target_link_libraries (dump trace)
 
 add_custom_command (
-    OUTPUT glretrace.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace.cpp
+    OUTPUT glretrace_gl.cpp
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
     DEPENDS glretrace.py retrace.py codegen.py glapi.py glenum.py stdapi.py
 )
 
 add_custom_command (
-    OUTPUT glstate.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate.cpp
+    OUTPUT glretrace_state.cpp
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_state.cpp
     DEPENDS glstate.py glenum.py stdapi.py
 )
 
@@ -222,8 +222,10 @@ include_directories (
 )
 
 add_executable (glretrace
-    glretrace.cpp
-    glstate.cpp
+    glretrace_gl.cpp
+    glretrace_main.cpp
+    glretrace_state.cpp
+    retrace.cpp
     ${glws}
     image.cpp 
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp

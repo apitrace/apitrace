@@ -28,6 +28,9 @@
 
 #include <map>
 
+#include "trace_model.hpp"
+
+
 namespace retrace {
 
 
@@ -71,6 +74,15 @@ public:
         return it->second;
     }
 };
+
+
+/**
+ * Output verbosity when retracing files.
+ */
+extern int verbosity;
+
+
+bool retrace_call(Trace::Call &call);
 
 
 } /* namespace retrace */

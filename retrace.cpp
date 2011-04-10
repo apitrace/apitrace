@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2010 VMware, Inc.
+ * Copyright 2011 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,69 +23,14 @@
  *
  **************************************************************************/
 
-/*
- * Central place for all GL includes, and respective OS dependent headers.
- */
 
-#ifndef _GLIMPORTS_HPP_
-#define _GLIMPORTS_HPP_
+#include "retrace.hpp"
 
-#ifdef WIN32
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN 1
-#endif
+namespace retrace {
 
-#include <windows.h>
 
-#else /* !WIN32 */
+int verbosity = 0;
 
-#include <X11/Xlib.h>
 
-#endif /* !WIN32 */
-
-#include <GL/gl.h>
-
-#include <GL/glext.h>
-
-#ifndef GL_TEXTURE_INDEX_SIZE_EXT
-#define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
-#endif
-
-#ifdef WIN32
-
-#include <GL/wglext.h>
-
-#define GLAPIENTRY __stdcall
-
-#ifndef PFD_SUPPORT_DIRECTDRAW
-#define PFD_SUPPORT_DIRECTDRAW 0x00002000
-#endif
-#ifndef PFD_SUPPORT_COMPOSITION
-#define PFD_SUPPORT_COMPOSITION 0x00008000
-#endif
-
-#ifdef __MINGW32__
-
-extern "C"
-typedef struct _WGLSWAP
-{
-    HDC hdc;
-    UINT uiFlags;
-} WGLSWAP, *PWGLSWAP, FAR *LPWGLSWAP;
-
-#define WGL_SWAPMULTIPLE_MAX 16
-
-#endif /* __MINGW32__ */
-
-#else /* !WIN32 */
-
-#include <GL/glx.h>
-#include <GL/glext.h>
-
-/* Prevent collision with Trace::Bool */
-#undef Bool
-
-#endif /* !WIN32 */
-
-#endif /* _GLIMPORTS_HPP_ */
+} /* namespace retrace */
