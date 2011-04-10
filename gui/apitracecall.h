@@ -118,6 +118,7 @@ private:
     QStringList m_shaderSources;
     QList<ApiTexture> m_textures;
 };
+Q_DECLARE_METATYPE(ApiTraceState);
 
 class ApiTraceEvent
 {

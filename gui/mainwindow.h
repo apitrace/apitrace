@@ -11,6 +11,7 @@ class ApiTraceEvent;
 class ApiTraceFilter;
 class ApiTraceFrame;
 class ApiTraceModel;
+class ApiTraceState;
 class ImageViewer;
 class QLineEdit;
 class QModelIndex;
@@ -19,10 +20,6 @@ class QUrl;
 class Retracer;
 class ShadersSourceWidget;
 class VertexDataInterpreter;
-
-namespace QJson {
-    class Parser;
-}
 
 class MainWindow : public QMainWindow
 {
@@ -40,7 +37,8 @@ private slots:
     void filterTrace();
     void replayStart();
     void replayStop();
-    void replayFinished(const QByteArray &output);
+    void replayFinished(const QString &output);
+    void replayStateFound(const ApiTraceState &state);
     void replayError(const QString &msg);
     void startedLoadingTrace();
     void finishedLoadingTrace();
@@ -55,7 +53,6 @@ private:
     void initConnections();
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState);
-    void parseState(const QVariantMap &params);
     void fillStateForFrame();
 
 private:
@@ -74,8 +71,6 @@ private:
     ApiTraceEvent *m_selectedEvent;
 
     ApiTraceEvent *m_stateEvent;
-
-    QJson::Parser *m_jsonParser;
 
     Retracer *m_retracer;
 

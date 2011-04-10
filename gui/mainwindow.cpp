@@ -12,8 +12,6 @@
 #include "ui_retracerdialog.h"
 #include "vertexdatainterpreter.h"
 
-#include <qjson/parser.h>
-
 #include <QAction>
 #include <QDebug>
 #include <QDesktopServices>
@@ -32,8 +30,7 @@
 MainWindow::MainWindow()
     : QMainWindow(),
       m_selectedEvent(0),
-      m_stateEvent(0),
-      m_jsonParser(new QJson::Parser())
+      m_stateEvent(0)
 {
     m_ui.setupUi(this);
     initObjects();
@@ -140,7 +137,7 @@ void MainWindow::replayStart()
 
 void MainWindow::replayStop()
 {
-    m_retracer->terminate();
+    m_retracer->quit();
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
@@ -164,20 +161,19 @@ void MainWindow::newTraceFile(const QString &fileName)
     }
 }
 
-void MainWindow::replayFinished(const QByteArray &output)
+void MainWindow::replayFinished(const QString &output)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
 
-    if (m_retracer->captureState()) {
-        bool ok = false;
-        QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
-        parseState(parsedJson);
-    } else if (output.length() < 80) {
+    m_progressBar->hide();
+    if (output.length() < 80) {
         statusBar()->showMessage(output);
     }
     m_stateEvent = 0;
+    statusBar()->showMessage(
+        tr("Replaying finished!"), 2000);
 }
 
 void MainWindow::replayError(const QString &message)
@@ -187,6 +183,9 @@ void MainWindow::replayError(const QString &message)
     m_ui.actionLookupState->setEnabled(true);
     m_stateEvent = 0;
 
+    m_progressBar->hide();
+    statusBar()->showMessage(
+        tr("Replaying unsuccessful."), 2000);
     QMessageBox::warning(
         this, tr("Replay Failed"), message);
 }
@@ -223,7 +222,8 @@ void MainWindow::replayTrace(bool dumpState)
         if (m_selectedEvent->type() == ApiTraceEvent::Call) {
             index = static_cast<ApiTraceCall*>(m_selectedEvent)->index;
         } else if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
-            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(m_selectedEvent);
+            ApiTraceFrame *frame =
+                static_cast<ApiTraceFrame*>(m_selectedEvent);
             if (frame->calls.isEmpty()) {
                 //XXX i guess we could still get the current state
                 qDebug()<<"tried to get a state for an empty frame";
@@ -239,6 +239,13 @@ void MainWindow::replayTrace(bool dumpState)
     m_retracer->start();
 
     m_ui.actionStop->setEnabled(true);
+    m_progressBar->show();
+    if (dumpState)
+        statusBar()->showMessage(
+            tr("Looking up the state..."));
+    else
+        statusBar()->showMessage(
+            tr("Replaying the trace file..."));
 }
 
 void MainWindow::lookupState()
@@ -255,18 +262,6 @@ void MainWindow::lookupState()
 
 MainWindow::~MainWindow()
 {
-    delete m_jsonParser;
-}
-
-void MainWindow::parseState(const QVariantMap &parsedJson)
-{
-    m_stateEvent->setState(ApiTraceState(parsedJson));
-    m_model->stateSetOnEvent(m_stateEvent);
-    if (m_selectedEvent == m_stateEvent) {
-        fillStateForFrame();
-    } else {
-        m_ui.stateDock->hide();
-    }
 }
 
 static void
@@ -469,10 +464,12 @@ void MainWindow::initConnections()
     connect(m_trace, SIGNAL(finishedLoadingTrace()),
             this, SLOT(finishedLoadingTrace()));
 
-    connect(m_retracer, SIGNAL(finished(const QByteArray&)),
-            this, SLOT(replayFinished(const QByteArray&)));
+    connect(m_retracer, SIGNAL(finished(const QString&)),
+            this, SLOT(replayFinished(const QString&)));
     connect(m_retracer, SIGNAL(error(const QString&)),
             this, SLOT(replayError(const QString&)));
+    connect(m_retracer, SIGNAL(foundState(const ApiTraceState&)),
+            this, SLOT(replayStateFound(const ApiTraceState&)));
 
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
@@ -514,6 +511,17 @@ void MainWindow::initConnections()
 
     connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
             this, SLOT(openHelp(const QUrl&)));
+}
+
+void MainWindow::replayStateFound(const ApiTraceState &state)
+{
+    m_stateEvent->setState(state);
+    m_model->stateSetOnEvent(m_stateEvent);
+    if (m_selectedEvent == m_stateEvent) {
+        fillStateForFrame();
+    } else {
+        m_ui.stateDock->hide();
+    }
 }
 
 #include "mainwindow.moc"

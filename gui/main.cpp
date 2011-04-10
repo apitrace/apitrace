@@ -13,6 +13,7 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
 
     qRegisterMetaType<QList<ApiTraceFrame*> >();
+    qRegisterMetaType<ApiTraceState>();
     MainWindow window;
 
     window.show();
