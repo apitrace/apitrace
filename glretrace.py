@@ -304,11 +304,6 @@ static void display(void) {
     while ((call = parser.parse_call())) {
         const std::string &name = call->name();
 
-        if (call->no == __dump_state) {
-            state_dump(std::cout);
-            exit(0);
-        }
-
         if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
             (name[0] == 'g' && name[1] == 'l' && name[2] == 'X')) {
             // XXX: We ignore the majority of the OS-specific calls for now
@@ -342,6 +337,11 @@ static void display(void) {
         }
         
         retrace_call(*call);
+
+        if (!insideGlBeginEnd && call->no >= __dump_state) {
+            state_dump(std::cout);
+            exit(0);
+        }
 
         delete call;
     }
