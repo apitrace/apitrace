@@ -36,106 +36,8 @@ MainWindow::MainWindow()
       m_jsonParser(new QJson::Parser())
 {
     m_ui.setupUi(this);
-    m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
-
-    m_sourcesWidget = new ShadersSourceWidget(m_ui.shadersTab);
-    QVBoxLayout *layout = new QVBoxLayout;
-    layout->addWidget(m_sourcesWidget);
-    m_ui.shadersTab->setLayout(layout);
-
-    m_trace = new ApiTrace();
-    connect(m_trace, SIGNAL(startedLoadingTrace()),
-            this, SLOT(startedLoadingTrace()));
-    connect(m_trace, SIGNAL(finishedLoadingTrace()),
-            this, SLOT(finishedLoadingTrace()));
-
-    m_retracer = new Retracer(this);
-    connect(m_retracer, SIGNAL(finished(const QByteArray&)),
-            this, SLOT(replayFinished(const QByteArray&)));
-    connect(m_retracer, SIGNAL(error(const QString&)),
-            this, SLOT(replayError(const QString&)));
-
-    m_vdataInterpreter = new VertexDataInterpreter(this);
-    m_vdataInterpreter->setListWidget(m_ui.vertexDataListWidget);
-    m_vdataInterpreter->setStride(
-        m_ui.vertexStrideSB->value());
-    m_vdataInterpreter->setComponents(
-        m_ui.vertexComponentsSB->value());
-    m_vdataInterpreter->setStartingOffset(
-        m_ui.startingOffsetSB->value());
-    m_vdataInterpreter->setTypeFromString(
-        m_ui.vertexTypeCB->currentText());
-
-    m_imageViewer = new ImageViewer(this);
-
-    connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
-            m_vdataInterpreter, SLOT(interpretData()));
-    connect(m_ui.vertexTypeCB, SIGNAL(currentIndexChanged(const QString&)),
-            m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
-    connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
-            m_vdataInterpreter, SLOT(setStride(int)));
-    connect(m_ui.vertexComponentsSB, SIGNAL(valueChanged(int)),
-            m_vdataInterpreter, SLOT(setComponents(int)));
-    connect(m_ui.startingOffsetSB, SIGNAL(valueChanged(int)),
-            m_vdataInterpreter, SLOT(setStartingOffset(int)));
-
-    m_model = new ApiTraceModel();
-    m_model->setApiTrace(m_trace);
-    m_proxyModel = new ApiTraceFilter();
-    m_proxyModel->setSourceModel(m_model);
-    m_ui.callView->setModel(m_proxyModel);
-    m_ui.callView->setItemDelegate(new ApiCallDelegate);
-    m_ui.callView->resizeColumnToContents(0);
-    m_ui.callView->header()->swapSections(0, 1);
-    m_ui.callView->setColumnWidth(1, 42);
-
-    QToolBar *toolBar = addToolBar(tr("Navigation"));
-    m_filterEdit = new QLineEdit(toolBar);
-    toolBar->addWidget(m_filterEdit);
-
-    m_progressBar = new QProgressBar();
-    m_progressBar->setRange(0, 0);
-    statusBar()->addPermanentWidget(m_progressBar);
-    m_progressBar->hide();
-
-    m_ui.detailsDock->hide();
-    m_ui.vertexDataDock->hide();
-    m_ui.stateDock->hide();
-    setDockOptions(dockOptions() | QMainWindow::ForceTabbedDocks);
-
-    tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
-
-    connect(m_ui.actionOpen, SIGNAL(triggered()),
-            this, SLOT(openTrace()));
-    connect(m_ui.actionQuit, SIGNAL(triggered()),
-            this, SLOT(close()));
-
-    connect(m_ui.actionReplay, SIGNAL(triggered()),
-            this, SLOT(replayStart()));
-    connect(m_ui.actionStop, SIGNAL(triggered()),
-            this, SLOT(replayStop()));
-    connect(m_ui.actionLookupState, SIGNAL(triggered()),
-            this, SLOT(lookupState()));
-       connect(m_ui.actionOptions, SIGNAL(triggered()),
-            this, SLOT(showSettings()));
-
-    connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
-            this, SLOT(callItemSelected(const QModelIndex &)));
-    connect(m_filterEdit, SIGNAL(returnPressed()),
-            this, SLOT(filterTrace()));
-
-    m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(m_ui.surfacesTreeWidget,
-            SIGNAL(customContextMenuRequested(const QPoint &)),
-            SLOT(showSurfacesMenu(const QPoint &)));
-    connect(m_ui.surfacesTreeWidget,
-            SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
-            SLOT(showSelectedSurface()));
-
-    m_ui.detailsWebView->page()->setLinkDelegationPolicy(
-        QWebPage::DelegateExternalLinks);
-    connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
-            this, SLOT(openHelp(const QUrl&)));
+    initObjects();
+    initConnections();
 }
 
 void MainWindow::openTrace()
@@ -501,6 +403,117 @@ void MainWindow::showSelectedSurface()
     m_imageViewer->show();
     m_imageViewer->raise();
     m_imageViewer->activateWindow();
+}
+
+void MainWindow::initObjects()
+{
+    m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
+
+    m_sourcesWidget = new ShadersSourceWidget(m_ui.shadersTab);
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(m_sourcesWidget);
+    m_ui.shadersTab->setLayout(layout);
+
+    m_trace = new ApiTrace();
+    m_retracer = new Retracer(this);
+
+    m_vdataInterpreter = new VertexDataInterpreter(this);
+    m_vdataInterpreter->setListWidget(m_ui.vertexDataListWidget);
+    m_vdataInterpreter->setStride(
+        m_ui.vertexStrideSB->value());
+    m_vdataInterpreter->setComponents(
+        m_ui.vertexComponentsSB->value());
+    m_vdataInterpreter->setStartingOffset(
+        m_ui.startingOffsetSB->value());
+    m_vdataInterpreter->setTypeFromString(
+        m_ui.vertexTypeCB->currentText());
+
+    m_imageViewer = new ImageViewer(this);
+
+    m_model = new ApiTraceModel();
+    m_model->setApiTrace(m_trace);
+    m_proxyModel = new ApiTraceFilter();
+    m_proxyModel->setSourceModel(m_model);
+    m_ui.callView->setModel(m_proxyModel);
+    m_ui.callView->setItemDelegate(new ApiCallDelegate);
+    m_ui.callView->resizeColumnToContents(0);
+    m_ui.callView->header()->swapSections(0, 1);
+    m_ui.callView->setColumnWidth(1, 42);
+
+    QToolBar *toolBar = addToolBar(tr("Navigation"));
+    m_filterEdit = new QLineEdit(toolBar);
+    toolBar->addWidget(m_filterEdit);
+
+    m_progressBar = new QProgressBar();
+    m_progressBar->setRange(0, 0);
+    statusBar()->addPermanentWidget(m_progressBar);
+    m_progressBar->hide();
+
+    m_ui.detailsDock->hide();
+    m_ui.vertexDataDock->hide();
+    m_ui.stateDock->hide();
+    setDockOptions(dockOptions() | QMainWindow::ForceTabbedDocks);
+
+    tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
+
+    m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    m_ui.detailsWebView->page()->setLinkDelegationPolicy(
+        QWebPage::DelegateExternalLinks);
+}
+
+void MainWindow::initConnections()
+{
+    connect(m_trace, SIGNAL(startedLoadingTrace()),
+            this, SLOT(startedLoadingTrace()));
+    connect(m_trace, SIGNAL(finishedLoadingTrace()),
+            this, SLOT(finishedLoadingTrace()));
+
+    connect(m_retracer, SIGNAL(finished(const QByteArray&)),
+            this, SLOT(replayFinished(const QByteArray&)));
+    connect(m_retracer, SIGNAL(error(const QString&)),
+            this, SLOT(replayError(const QString&)));
+
+    connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
+            m_vdataInterpreter, SLOT(interpretData()));
+    connect(m_ui.vertexTypeCB, SIGNAL(currentIndexChanged(const QString&)),
+            m_vdataInterpreter, SLOT(setTypeFromString(const QString&)));
+    connect(m_ui.vertexStrideSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setStride(int)));
+    connect(m_ui.vertexComponentsSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setComponents(int)));
+    connect(m_ui.startingOffsetSB, SIGNAL(valueChanged(int)),
+            m_vdataInterpreter, SLOT(setStartingOffset(int)));
+
+
+    connect(m_ui.actionOpen, SIGNAL(triggered()),
+            this, SLOT(openTrace()));
+    connect(m_ui.actionQuit, SIGNAL(triggered()),
+            this, SLOT(close()));
+
+    connect(m_ui.actionReplay, SIGNAL(triggered()),
+            this, SLOT(replayStart()));
+    connect(m_ui.actionStop, SIGNAL(triggered()),
+            this, SLOT(replayStop()));
+    connect(m_ui.actionLookupState, SIGNAL(triggered()),
+            this, SLOT(lookupState()));
+    connect(m_ui.actionOptions, SIGNAL(triggered()),
+            this, SLOT(showSettings()));
+
+    connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
+            this, SLOT(callItemSelected(const QModelIndex &)));
+    connect(m_filterEdit, SIGNAL(returnPressed()),
+            this, SLOT(filterTrace()));
+
+    connect(m_ui.surfacesTreeWidget,
+            SIGNAL(customContextMenuRequested(const QPoint &)),
+            SLOT(showSurfacesMenu(const QPoint &)));
+    connect(m_ui.surfacesTreeWidget,
+            SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
+            SLOT(showSelectedSurface()));
+
+    connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
+            this, SLOT(openHelp(const QUrl&)));
 }
 
 #include "mainwindow.moc"

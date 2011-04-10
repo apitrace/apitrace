@@ -51,6 +51,8 @@ private slots:
     void showSelectedSurface();
 
 private:
+    void initObjects();
+    void initConnections();
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState);
     void parseState(const QVariantMap &params);
