@@ -33,6 +33,7 @@ public slots:
 
 private slots:
     void callItemSelected(const QModelIndex &index);
+    void createTrace();
     void openTrace();
     void filterTrace();
     void replayStart();

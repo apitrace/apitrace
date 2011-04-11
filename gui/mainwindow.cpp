@@ -9,6 +9,7 @@
 #include "retracer.h"
 #include "settingsdialog.h"
 #include "shaderssourcewidget.h"
+#include "tracedialog.h"
 #include "ui_retracerdialog.h"
 #include "vertexdatainterpreter.h"
 
@@ -35,6 +36,16 @@ MainWindow::MainWindow()
     m_ui.setupUi(this);
     initObjects();
     initConnections();
+}
+
+void MainWindow::createTrace()
+{
+    TraceDialog dialog;
+
+    if (dialog.exec() == QDialog::Accepted) {
+        qDebug()<< "App : " <<dialog.applicationPath();
+        qDebug()<< "  Arguments: "<<dialog.arguments();
+    }
 }
 
 void MainWindow::openTrace()
@@ -510,6 +521,8 @@ void MainWindow::initConnections()
             m_vdataInterpreter, SLOT(setStartingOffset(int)));
 
 
+    connect(m_ui.actionNew, SIGNAL(triggered()),
+            this, SLOT(createTrace()));
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
     connect(m_ui.actionQuit, SIGNAL(triggered()),

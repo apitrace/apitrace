@@ -15,6 +15,7 @@ set(qapitrace_SRCS
    retracer.cpp
    settingsdialog.cpp
    shaderssourcewidget.cpp
+   tracedialog.cpp
    vertexdatainterpreter.cpp
  )
 
@@ -27,6 +28,7 @@ set(qapitrace_UIS
    ui/mainwindow.ui
    ui/retracerdialog.ui
    ui/settings.ui
+   ui/tracedialog.ui
    ui/shaderssourcewidget.ui
    )
 
