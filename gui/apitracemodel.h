@@ -25,6 +25,8 @@ public:
     const ApiTrace *apiTrace() const;
     void stateSetOnEvent(ApiTraceEvent *event);
 
+    QModelIndex callIndex(int callNum) const;
+
 public:
     /* QAbstractItemModel { */
     QVariant data(const QModelIndex &index, int role) const;

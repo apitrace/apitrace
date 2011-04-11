@@ -23,7 +23,7 @@
    <set>QMainWindow::AnimatedDocks|QMainWindow::ForceTabbedDocks</set>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QVBoxLayout" name="centralLayout">
     <item>
      <widget class="QTreeView" name="callView">
       <property name="alternatingRowColors">

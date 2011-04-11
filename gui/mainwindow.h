@@ -13,6 +13,7 @@ class ApiTraceFrame;
 class ApiTraceModel;
 class ApiTraceState;
 class ImageViewer;
+class JumpWidget;
 class QLineEdit;
 class QModelIndex;
 class QProgressBar;
@@ -48,6 +49,8 @@ private slots:
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
     void showSelectedSurface();
+    void slotGoTo();
+    void slotJumpTo(int callNum);
 
 private:
     void initObjects();
@@ -78,6 +81,8 @@ private:
     VertexDataInterpreter *m_vdataInterpreter;
 
     ImageViewer *m_imageViewer;
+
+    JumpWidget *m_jumpWidget;
 };
 
 

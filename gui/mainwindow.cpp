@@ -6,6 +6,7 @@
 #include "apitracemodel.h"
 #include "apitracefilter.h"
 #include "imageviewer.h"
+#include "jumpwidget.h"
 #include "retracer.h"
 #include "settingsdialog.h"
 #include "shaderssourcewidget.h"
@@ -21,6 +22,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
+#include <QShortcut>
 #include <QToolBar>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -493,6 +495,14 @@ void MainWindow::initObjects()
 
     m_ui.detailsWebView->page()->setLinkDelegationPolicy(
         QWebPage::DelegateExternalLinks);
+
+    m_jumpWidget = new JumpWidget(this);
+    m_ui.centralLayout->addWidget(m_jumpWidget);
+    m_jumpWidget->hide();
+
+
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_G),
+                  this, SLOT(slotGoTo()));
 }
 
 void MainWindow::initConnections()
@@ -551,6 +561,9 @@ void MainWindow::initConnections()
 
     connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
             this, SLOT(openHelp(const QUrl&)));
+
+    connect(m_jumpWidget, SIGNAL(jumpTo(int)),
+            SLOT(slotJumpTo(int)));
 }
 
 void MainWindow::replayStateFound(const ApiTraceState &state)
@@ -561,6 +574,19 @@ void MainWindow::replayStateFound(const ApiTraceState &state)
         fillStateForFrame();
     } else {
         m_ui.stateDock->hide();
+    }
+}
+
+void MainWindow::slotGoTo()
+{
+    m_jumpWidget->show();
+}
+
+void MainWindow::slotJumpTo(int callNum)
+{
+    QModelIndex index = m_proxyModel->callIndex(callNum);
+    if (index.isValid()) {
+        m_ui.callView->setCurrentIndex(index);
     }
 }
 

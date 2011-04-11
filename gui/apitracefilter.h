@@ -22,6 +22,8 @@ public:
     void setFilterOptions(FilterOptions opts);
 
     void setFilterString(const QString &text);
+
+    QModelIndex callIndex(int callNum) const;
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
 

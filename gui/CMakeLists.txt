@@ -9,6 +9,7 @@ set(qapitrace_SRCS
    apitracefilter.cpp
    apitracemodel.cpp
    imageviewer.cpp
+   jumpwidget.cpp
    loaderthread.cpp
    mainwindow.cpp
    main.cpp
@@ -25,6 +26,7 @@ qt4_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
    ui/imageviewer.ui
+   ui/jumpwidget.ui
    ui/mainwindow.ui
    ui/retracerdialog.ui
    ui/settings.ui

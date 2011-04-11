@@ -1,6 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
     <file>resources/application-exit.png</file>
+    <file>resources/dialog-close.png</file>
     <file>resources/dialog-information.png</file>
     <file>resources/document-new.png</file>
     <file>resources/document-open.png</file>
