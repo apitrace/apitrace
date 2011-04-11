@@ -140,7 +140,7 @@ glapi.add_functions([
     GlFunction(Void, "glReadPixels", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), Out(OpaquePointer(GLvoid), "pixels")], sideeffects=False),
     GlFunction(Void, "glGetBooleanv", [(GLenum, "pname"), Out(Array(GLboolean, "__glGetBooleanv_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetDoublev", [(GLenum, "pname"), Out(Array(GLdouble, "__glGetDoublev_size(pname)"), "params")], sideeffects=False),
-    GlFunction(GLenum, "glGetError", [], sideeffects=False),
+    GlFunction(GLenum_error, "glGetError", [], sideeffects=False),
     GlFunction(Void, "glGetFloatv", [(GLenum, "pname"), Out(Array(GLfloat, "__glGetFloatv_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetIntegerv", [(GLenum, "pname"), Out(Array(GLint, "__glGetIntegerv_size(pname)"), "params")], sideeffects=False),
     GlFunction(Alias("const GLubyte *", CString), "glGetString", [(GLenum, "name")], sideeffects=False),

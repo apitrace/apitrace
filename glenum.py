@@ -36,7 +36,6 @@ from stdapi import *
 
 
 GLenum = Enum("GLenum", [
-    #"GL_NO_ERROR",                       # 0x0
     #"GL_NONE",                           # 0x0
     "GL_ZERO",                           # 0x0
     "GL_ONE",                            # 0x1
@@ -76,13 +75,6 @@ GLenum = Enum("GLenum", [
     "GL_AUX1",                           # 0x040A
     "GL_AUX2",                           # 0x040B
     "GL_AUX3",                           # 0x040C
-    "GL_INVALID_ENUM",                   # 0x0500
-    "GL_INVALID_VALUE",                  # 0x0501
-    "GL_INVALID_OPERATION",              # 0x0502
-    "GL_STACK_OVERFLOW",                 # 0x0503
-    "GL_STACK_UNDERFLOW",                # 0x0504
-    "GL_OUT_OF_MEMORY",                  # 0x0505
-    "GL_INVALID_FRAMEBUFFER_OPERATION",  # 0x0506
     "GL_2D",                             # 0x0600
     "GL_3D",                             # 0x0601
     "GL_3D_COLOR",                       # 0x0602
@@ -507,7 +499,6 @@ GLenum = Enum("GLenum", [
     "GL_MINMAX",                         # 0x802E
     "GL_MINMAX_FORMAT",                  # 0x802F
     "GL_MINMAX_SINK",                    # 0x8030
-    "GL_TABLE_TOO_LARGE",                # 0x8031
     "GL_UNSIGNED_BYTE_3_3_2",            # 0x8032
     "GL_UNSIGNED_SHORT_4_4_4_4",         # 0x8033
     "GL_UNSIGNED_SHORT_5_5_5_1",         # 0x8034
@@ -2463,6 +2454,18 @@ GLenum_mode = FakeEnum(GLenum, [
     "GL_LINE_STRIP_ADJACENCY_ARB",       # 0x000B
     "GL_TRIANGLES_ADJACENCY_ARB",        # 0x000C
     "GL_TRIANGLE_STRIP_ADJACENCY_ARB",   # 0x000D
+])
+
+GLenum_error = FakeEnum(GLenum, [
+    "GL_NO_ERROR",                       # 0x0
+    "GL_INVALID_ENUM",                   # 0x0500
+    "GL_INVALID_VALUE",                  # 0x0501
+    "GL_INVALID_OPERATION",              # 0x0502
+    "GL_STACK_OVERFLOW",                 # 0x0503
+    "GL_STACK_UNDERFLOW",                # 0x0504
+    "GL_OUT_OF_MEMORY",                  # 0x0505
+    "GL_INVALID_FRAMEBUFFER_OPERATION",  # 0x0506
+    "GL_TABLE_TOO_LARGE",                # 0x8031
 ])
 
 GLbitfield = Alias("GLbitfield", UInt)
