@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #ifdef WIN32
 #ifndef snprintf

@@ -35,6 +35,9 @@ if (WIN32)
 endif (WIN32)
 
 if (MSVC)
+    # C99 includes for msvc
+    include_directories (msvc)
+
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
 
