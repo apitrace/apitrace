@@ -1121,12 +1121,12 @@ glapi.add_functions([
     GlFunction(Void, "glMinSampleShadingARB", [(GLclampf, "value")]),
 
     # GL_ARB_shading_language_include
-    #GlFunction(Void, "glNamedStringARB", [(GLenum, "type"), (GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name"), (GLint, "stringlen"), (Const(Array(GLchar, "stringlen")), "string")]),
-    #GlFunction(Void, "glDeleteNamedStringARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name")]),
-    #GlFunction(Void, "glCompileShaderIncludeARB", [(GLuint, "shader"), (GLsizei, "count"), (Const(Array(GLstring, "count")), "path"), (Const(Array(GLint, "count")), "length")]),
-    #GlFunction(GLboolean, "glIsNamedStringARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name")]),
-    #GlFunction(Void, "glGetNamedStringARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name"), (GLsizei, "bufSize"), Out(Pointer(GLint), "stringlen"), Out(Array(GLchar, "bufSize"), "string")], sideeffects=False),
-    #GlFunction(Void, "glGetNamedStringivARB", [(GLint, "namelen"), (Const(Array(GLchar, "namelen")), "name"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetNamedStringivARB_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glNamedStringARB", [(GLenum, "type"), (GLint, "namelen"), (Const(String('GLchar *', "namelen")), "name"), (GLint, "stringlen"), (Const(String('GLchar *', "stringlen")), "string")]),
+    GlFunction(Void, "glDeleteNamedStringARB", [(GLint, "namelen"), (Const(String('GLchar *', "namelen")), "name")]),
+    GlFunction(Void, "glCompileShaderIncludeARB", [(GLuint, "shader"), (GLsizei, "count"), (Array(GLstring, "count"), "path"), (Const(Array(GLint, "count")), "length")]),
+    GlFunction(GLboolean, "glIsNamedStringARB", [(GLint, "namelen"), (Const(String('GLchar *', "namelen")), "name")]),
+    GlFunction(Void, "glGetNamedStringARB", [(GLint, "namelen"), (Const(String('GLchar *', "namelen")), "name"), (GLsizei, "bufSize"), Out(Pointer(GLint), "stringlen"), Out(Array(GLchar, "bufSize"), "string")], sideeffects=False),
+    GlFunction(Void, "glGetNamedStringivARB", [(GLint, "namelen"), (Const(String('GLchar *', "namelen")), "name"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetNamedStringivARB_size(pname)"), "params")], sideeffects=False),
 
     # GL_ARB_blend_func_extended
     GlFunction(Void, "glBindFragDataLocationIndexed", [(GLuint, "program"), (GLuint, "colorNumber"), (GLuint, "index"), (Const(GLstring), "name")]),
