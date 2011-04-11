@@ -55,8 +55,6 @@ GUI:
 
 * Timeline view.
 
-* Interface to create traces of applications on unices via LD_PRELOAD.
-
 * Visualize meshes in draw commands.
 
 
