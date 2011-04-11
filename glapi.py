@@ -88,7 +88,7 @@ GLvertexArray = Handle("vertexArrayAPPLE", GLuint)
 GLregion = Handle("region", GLuint)
 
 # Some functions take GLenum disguised as GLint
-GLenum_ = Alias("GLint", GLenum)
+GLenum_int = Alias("GLint", GLenum)
 
 GLsync_ = Opaque("GLsync")
 GLsync = Handle("sync", GLsync_)
@@ -115,8 +115,8 @@ glapi.add_functions([
     GlFunction(Void, "glTexParameterfv", [(GLenum, "target"), (GLenum, "pname"), (Const(Array(GLfloat, "__glTexParameterfv_size(pname)")), "params")]),
     GlFunction(Void, "glTexParameteri", [(GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
     GlFunction(Void, "glTexParameteriv", [(GLenum, "target"), (GLenum, "pname"), (Const(Array(GLint, "__glTexParameteriv_size(pname)")), "params")]),
-    GlFunction(Void, "glTexImage1D", [(GLenum, "target"), (GLint, "level"), (GLenum_, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexImage1D_size(format, type, width, border)"), "pixels")]),
-    GlFunction(Void, "glTexImage2D", [(GLenum, "target"), (GLint, "level"), (GLenum_, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexImage2D_size(format, type, width, height, border)"), "pixels")]),
+    GlFunction(Void, "glTexImage1D", [(GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexImage1D_size(format, type, width, border)"), "pixels")]),
+    GlFunction(Void, "glTexImage2D", [(GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexImage2D_size(format, type, width, height, border)"), "pixels")]),
     GlFunction(Void, "glDrawBuffer", [(GLenum, "mode")]),
     GlFunction(Void, "glClear", [(GLbitfield_attrib, "mask")]),
     GlFunction(Void, "glClearColor", [(GLclampf, "red"), (GLclampf, "green"), (GLclampf, "blue"), (GLclampf, "alpha")]),
@@ -451,7 +451,7 @@ glapi.add_functions([
     GlFunction(Void, "glBlendColor", [(GLclampf, "red"), (GLclampf, "green"), (GLclampf, "blue"), (GLclampf, "alpha")]),
     GlFunction(Void, "glBlendEquation", [(GLenum, "mode")]),
     GlFunction(Void, "glDrawRangeElements", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaquePointer(GLvoid)), "indices")]),
-    GlFunction(Void, "glTexImage3D", [(GLenum, "target"), (GLint, "level"), (GLenum_, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexImage3D_size(format, type, width, height, depth, border)"), "pixels")]),
+    GlFunction(Void, "glTexImage3D", [(GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexImage3D_size(format, type, width, height, depth, border)"), "pixels")]),
     GlFunction(Void, "glTexSubImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexSubImage3D_size(format, type, width, height, depth)"), "pixels")]),
     GlFunction(Void, "glCopyTexSubImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
 
