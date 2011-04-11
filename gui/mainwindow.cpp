@@ -11,6 +11,7 @@
 #include "settingsdialog.h"
 #include "shaderssourcewidget.h"
 #include "tracedialog.h"
+#include "traceprocess.h"
 #include "ui_retracerdialog.h"
 #include "vertexdatainterpreter.h"
 
@@ -44,9 +45,20 @@ void MainWindow::createTrace()
 {
     TraceDialog dialog;
 
+    if (!m_traceProcess->canTrace()) {
+        QMessageBox::warning(
+            this,
+            tr("Unsupported"),
+            tr("Current configuration doesn't support tracing."));
+        return;
+    }
+
     if (dialog.exec() == QDialog::Accepted) {
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
+        m_traceProcess->setExecutablePath(dialog.applicationPath());
+        m_traceProcess->setArguments(dialog.arguments());
+        m_traceProcess->start();
     }
 }
 
@@ -500,6 +512,7 @@ void MainWindow::initObjects()
     m_ui.centralLayout->addWidget(m_jumpWidget);
     m_jumpWidget->hide();
 
+    m_traceProcess = new TraceProcess(this);
 
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_G),
                   this, SLOT(slotGoTo()));
@@ -564,6 +577,11 @@ void MainWindow::initConnections()
 
     connect(m_jumpWidget, SIGNAL(jumpTo(int)),
             SLOT(slotJumpTo(int)));
+
+    connect(m_traceProcess, SIGNAL(tracedFile(const QString&)),
+            SLOT(createdTrace(const QString&)));
+    connect(m_traceProcess, SIGNAL(error(const QString&)),
+            SLOT(traceError(const QString&)));
 }
 
 void MainWindow::replayStateFound(const ApiTraceState &state)
@@ -588,6 +606,20 @@ void MainWindow::slotJumpTo(int callNum)
     if (index.isValid()) {
         m_ui.callView->setCurrentIndex(index);
     }
+}
+
+void MainWindow::createdTrace(const QString &path)
+{
+    qDebug()<<"Done tracing "<<path;
+    newTraceFile(path);
+}
+
+void MainWindow::traceError(const QString &msg)
+{
+    QMessageBox::warning(
+            this,
+            tr("Tracing Error"),
+            msg);
 }
 
 #include "mainwindow.moc"

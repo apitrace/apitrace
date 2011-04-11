@@ -200,6 +200,8 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
     if (m_trace)
         disconnect(m_trace);
     m_trace = trace;
+    connect(m_trace, SIGNAL(invalidated()),
+            this, SLOT(invalidateFrames()));
     connect(m_trace, SIGNAL(framesInvalidated()),
             this, SLOT(invalidateFrames()));
     connect(m_trace, SIGNAL(framesAdded(int, int)),

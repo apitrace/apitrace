@@ -20,6 +20,7 @@ class QProgressBar;
 class QUrl;
 class Retracer;
 class ShadersSourceWidget;
+class TraceProcess;
 class VertexDataInterpreter;
 
 class MainWindow : public QMainWindow
@@ -51,6 +52,8 @@ private slots:
     void showSelectedSurface();
     void slotGoTo();
     void slotJumpTo(int callNum);
+    void createdTrace(const QString &path);
+    void traceError(const QString &msg);
 
 private:
     void initObjects();
@@ -83,6 +86,8 @@ private:
     ImageViewer *m_imageViewer;
 
     JumpWidget *m_jumpWidget;
+
+    TraceProcess *m_traceProcess;
 };
 
 

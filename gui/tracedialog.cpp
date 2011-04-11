@@ -21,7 +21,7 @@ QString TraceDialog::applicationPath() const
 QStringList TraceDialog::arguments() const
 {
     QStringList args =
-        argumentsEdit->text().split(';');
+        argumentsEdit->text().split(';', QString::SkipEmptyParts);
     return args;
 }
 
