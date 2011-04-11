@@ -98,9 +98,11 @@ class ValueExtractor(stdapi.Visitor):
             print '    }'
 
     def visit_handle(self, handle, lvalue, rvalue):
-        self.visit(handle.type, lvalue, handle_entry(handle, rvalue));
+        OpaqueValueExtractor().visit(handle.type, lvalue, rvalue);
+        new_lvalue = handle_entry(handle, lvalue)
         print '    if (retrace::verbosity >= 2)'
-        print '        std::cout << "%s " << static_cast<%s>(%s) << " <- " << %s << "\\n";' % (handle.name, handle.type, rvalue, lvalue)
+        print '        std::cout << "%s " << size_t(%s) << " <- " << size_t(%s) << "\\n";' % (handle.name, lvalue, new_lvalue)
+        print '    %s = %s;' % (lvalue, new_lvalue)
     
     def visit_blob(self, blob, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).blob());' % (lvalue, blob, rvalue)
@@ -108,6 +110,15 @@ class ValueExtractor(stdapi.Visitor):
     def visit_string(self, string, lvalue, rvalue):
         print '    %s = (%s)((%s).string());' % (lvalue, string.expr, rvalue)
 
+
+class OpaqueValueExtractor(ValueExtractor):
+    '''Value extractor that also understands opaque values.
+
+    Normally opaque values can't be retraced, unless they are being extracted
+    in the context of handles.'''
+
+    def visit_opaque(self, opaque, lvalue, rvalue):
+        print '    %s = static_cast<%s>((%s).blob());' % (lvalue, opaque, rvalue)
 
 
 class ValueWrapper(stdapi.Visitor):
@@ -144,10 +155,11 @@ class ValueWrapper(stdapi.Visitor):
         finally:
             print '    }'
     
-
     def visit_handle(self, handle, lvalue, rvalue):
+        print '    %s __orig_result;' % handle.type
+        OpaqueValueExtractor().visit(handle.type, '__orig_result', rvalue);
         if handle.range is None:
-            rvalue = "static_cast<%s>(%s)" % (handle.type, rvalue)
+            rvalue = "__orig_result"
             entry = handle_entry(handle, rvalue) 
             print "    %s = %s;" % (entry, lvalue)
             print '    if (retrace::verbosity >= 2)'
@@ -155,7 +167,7 @@ class ValueWrapper(stdapi.Visitor):
         else:
             i = '__h' + handle.id
             lvalue = "%s + %s" % (lvalue, i)
-            rvalue = "static_cast<%s>(%s) + %s" % (handle.type, rvalue, i)
+            rvalue = "__orig_result + %s" % (i,)
             entry = handle_entry(handle, rvalue) 
             print '    for({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
             print '        {entry} = {lvalue};'.format(**locals())

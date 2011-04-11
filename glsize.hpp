@@ -960,6 +960,8 @@ __glGetBooleanv_size(GLenum pname)
 
 #define __glGetIntegerv_size __glGetBooleanv_size
 
+#define __glGetInteger64v_size __glGetBooleanv_size
+
 #define __glGetLightfv_size __glLightfv_size
 
 #define __glGetLightiv_size __glLightfv_size

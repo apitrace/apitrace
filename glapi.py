@@ -1097,13 +1097,13 @@ glapi.add_functions([
     GlFunction(Void, "glProvokingVertex", [(GLenum, "mode")]),
 
     # GL_ARB_sync
-    #GlFunction(GLsync, "glFenceSync", [(GLenum, "condition"), (GLbitfield, "flags")]),
-    #GlFunction(GLboolean, "glIsSync", [(GLsync, "sync")]),
-    #GlFunction(Void, "glDeleteSync", [(GLsync, "sync")]),
-    #GlFunction(GLenum, "glClientWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
-    #GlFunction(Void, "glWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
-    #GlFunction(Void, "glGetInteger64v", [(GLenum, "pname"), Out(OpaqueArray(GLint64, "__glGetInteger64v_size(pname)"), "params")], sideeffects=False),
-    #GlFunction(Void, "glGetSynciv", [(GLsync, "sync"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "length"), "values")], sideeffects=False),
+    GlFunction(GLsync, "glFenceSync", [(GLenum, "condition"), (GLbitfield, "flags")]),
+    GlFunction(GLboolean, "glIsSync", [(GLsync, "sync")]),
+    GlFunction(Void, "glDeleteSync", [(GLsync, "sync")]),
+    GlFunction(GLenum, "glClientWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
+    GlFunction(Void, "glWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
+    GlFunction(Void, "glGetInteger64v", [(GLenum, "pname"), Out(OpaqueArray(GLint64, "__glGetInteger64v_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetSynciv", [(GLsync, "sync"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "(length ? *length : bufSize)"), "values")], sideeffects=False),
 
     # GL_ARB_texture_multisample
     GlFunction(Void, "glTexImage2DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedsamplelocations")]),
