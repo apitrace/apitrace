@@ -358,6 +358,9 @@ void MainWindow::fillStateForFrame()
             QTreeWidgetItem *textureItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
             textureItem->setText(0, tr("Textures"));
+            if (textures.count() <= 6)
+                textureItem->setExpanded(true);
+
             for (int i = 0; i < textures.count(); ++i) {
                 const ApiTexture &texture =
                     textures[i];
@@ -381,6 +384,9 @@ void MainWindow::fillStateForFrame()
             QTreeWidgetItem *fboItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
             fboItem->setText(0, tr("Framebuffers"));
+            if (fbos.count() <= 6)
+                fboItem->setExpanded(true);
+
             for (int i = 0; i < fbos.count(); ++i) {
                 const ApiFramebuffer &fbo =
                     fbos[i];
