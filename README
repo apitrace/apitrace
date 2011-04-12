@@ -3,6 +3,7 @@
 
 = Copyright =
 
+Copyright 2011 Jose Fonseca, Zack Rusin
 Copyright 2008-2010 VMware, Inc.
 All Rights Reserved.
 
@@ -27,20 +28,30 @@ THE SOFTWARE.
 
 = About =
 
-Wrapper DLLs to trace OpenGL, D3D8, and D3D9 APIs calls.
+This includes a set of tools for:
+- trace OpenGL, D3D8, and D3D9 APIs calls to a file;
+- retrace OpenGL calls from a file;
+- visualize trace files, and inspect state.
 
 
 = Status =
 
-* Direct3D 8 and 9 are broken at the moment.
-* It has not been tested with many applications. Bugs may cause the application to crash. 
+* It has not been tested with many applications. Bugs in less used features may
+  cause application crashes.
+* Direct3D 8 support is currently broken.
+* No Direct3D retrace support
 
 
 = Building from source =
 
-Common requirements:
+Requirements common for all platforms:
 * Python (requires version 2.6)
 * CMake (tested with version 2.8)
+
+Requirements to build the GUI (optional):
+* QT (tested with version 4.7)
+* QJSON (tested with version 0.7.1)
+
 
 == Linux ==
 
@@ -49,16 +60,19 @@ Build as:
  cmake -H. -Bbuild
  make -C build
 
+
 == Windows ==
 
 Requirements:
+
 * Microsoft Visual Studio (tested with 2008 version) or MinGW (tested with gcc version 4.4)
+
 * Microsoft DirectX SDK (tested with August 2007 release)
 
 To build with Visual Studio invoke CMake as:
 
- cmake -G "Visual Studio 9 2008" -H%CD% -B%CD%\build
- cmake --build %CD%\build --config MinSizeRel
+ cmake -G "Visual Studio 9 2008" -H. -Bbuild
+ cmake --build build --config MinSizeRel
  
 It's also possible to build on Linux with MinGW cross compilers.  See
 http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
@@ -66,37 +80,42 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
 = Usage =
 
+
 == Linux ==
 
 * Run the application you want to trace as
 
- LD_PRELOAD=path/to/glxtrace.so path/to/application
+ LD_PRELOAD=/path/to/glxtrace.so /path/to/application
 
 * View the trace with
 
- path/to/dump application.trace
+ /path/to/dump application.trace
 
 * Replay the trace with
 
- path/to/glretrace application.trace
+ /path/to/glretrace application.trace
 
 
 == Windows ==
 
-* Copy opengl32.dll, d3d8.dll, or d3d9.dll to the directory with the application you want to trace.
+* Copy opengl32.dll, d3d8.dll, or d3d9.dll from build/wrappers directory to the
+  directory with the application you want to trace.
+
 * Run the application.
+
 * View the trace with
 
- path/to/dump application.trace
+ /path/to/dump application.trace
 
 * Replay the trace with
 
- path/to/glretrace application.trace
+ /path/to/glretrace application.trace
 
 
-= Related Links =
+= Links =
 
 * http://jrfonseca.blogspot.com/2008/07/tracing-d3d-applications.html
+
 
 == Direct3D ==
 
@@ -104,6 +123,7 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
    * [http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/ Intercept Calls to DirectX with a Proxy DLL]
  * [http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm D3DSpy]
  * [http://msdn.microsoft.com/en-us/library/ee417062.aspx PIX]
+
 
 == OpenGL ==
 
