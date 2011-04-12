@@ -196,7 +196,7 @@ public:
     makeCurrent(Drawable *drawable, Context *context)
     {
         if (!drawable || !context) {
-            return glXMakeCurrent(display, NULL, NULL);
+            return glXMakeCurrent(display, None, NULL);
         } else {
             GlxDrawable *glxDrawable = dynamic_cast<GlxDrawable *>(drawable);
             GlxContext *glxContext = dynamic_cast<GlxContext *>(context);
