@@ -8,6 +8,7 @@ set(qapitrace_SRCS
    apitracecall.cpp
    apitracefilter.cpp
    apitracemodel.cpp
+   glsledit.cpp
    imageviewer.cpp
    jumpwidget.cpp
    loaderthread.cpp

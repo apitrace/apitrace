@@ -4,6 +4,8 @@
 #include "ui_shaderssourcewidget.h"
 #include <QWidget>
 
+class GLSLEdit;
+
 class ShadersSourceWidget : public QWidget
 {
     Q_OBJECT
@@ -18,6 +20,7 @@ private slots:
 private:
     Ui::ShadersSourceWidget m_ui;
     QStringList m_sources;
+    GLSLEdit *m_edit;
 };
 
 #endif

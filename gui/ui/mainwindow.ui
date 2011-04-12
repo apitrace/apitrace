@@ -48,6 +48,15 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
    <widget class="QMenu" name="menu_Trace">
     <property name="title">
      <string>&amp;Trace</string>
@@ -57,15 +66,6 @@
     <addaction name="actionLookupState"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
-   </widget>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>&amp;File</string>
-    </property>
-    <addaction name="actionNew"/>
-    <addaction name="actionOpen"/>
-    <addaction name="separator"/>
-    <addaction name="actionQuit"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Trace"/>

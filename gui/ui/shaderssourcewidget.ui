@@ -28,16 +28,6 @@
      </item>
     </layout>
    </item>
-   <item>
-    <widget class="QPlainTextEdit" name="shadersTextEdit">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-     <property name="textInteractionFlags">
-      <set>Qt::TextSelectableByMouse</set>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>
