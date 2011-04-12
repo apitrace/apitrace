@@ -45,7 +45,6 @@ extern glws::Context *context;
 
 extern int window_width;
 extern int window_height;
-extern bool reshape_window;
 
 extern unsigned frame;
 extern long long startTime;

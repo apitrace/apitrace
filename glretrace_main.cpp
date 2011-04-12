@@ -43,7 +43,6 @@ glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
 
 int window_width = 256, window_height = 256;
-bool reshape_window = false;
 
 unsigned frame = 0;
 long long startTime = 0;
@@ -115,7 +114,7 @@ static void snapshot(Image::Image &image) {
 static void frame_complete(void) {
     ++frame;
     
-    if (!reshape_window && (snapshot_prefix || compare_prefix)) {
+    if (snapshot_prefix || compare_prefix) {
         Image::Image *ref = NULL;
         if (compare_prefix) {
             char filename[PATH_MAX];
@@ -145,12 +144,6 @@ static void frame_complete(void) {
         }
     }
     
-    if (reshape_window) {
-        // XXX: doesn't quite work
-        drawable->resize(window_width, window_height);
-        reshape_window = false;
-    }
-
     ws->processEvents();
 }
 
