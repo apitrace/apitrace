@@ -3116,7 +3116,13 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
         glGetIntegerv(GL_READ_BUFFER, &readbuffer);
         glReadBuffer(drawbuffer);
+
+        glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
         glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
+
+        glPopClientAttrib();
         glReadBuffer(readbuffer);
 
         json.beginMember("__data__");
