@@ -462,7 +462,6 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
                     int numChannels =
                         image[QLatin1String("__channels__")].toInt();
 
-                    Q_ASSERT(numChannels == 4);
                     Q_ASSERT(type == QLatin1String("uint8"));
                     Q_ASSERT(normalized == true);
 
@@ -471,6 +470,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
                     ApiTexture tex;
                     tex.setSize(size);
+                    tex.setNumChannels(numChannels);
                     tex.setLevel(j);
                     tex.setUnit(i);
                     tex.setTarget(itr.key());
@@ -494,7 +494,6 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         bool normalized = buffer[QLatin1String("__normalized__")].toBool();
         int numChannels = buffer[QLatin1String("__channels__")].toInt();
 
-        Q_ASSERT(numChannels == 4);
         Q_ASSERT(type == QLatin1String("uint8"));
         Q_ASSERT(normalized == true);
 
@@ -503,6 +502,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
         ApiFramebuffer fbo;
         fbo.setSize(size);
+        fbo.setNumChannels(numChannels);
         fbo.setType(itr.key());
         fbo.contentsFromBase64(dataArray);
         m_framebuffers.append(fbo);

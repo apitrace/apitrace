@@ -62,7 +62,9 @@ class Dispatcher:
         # functions
         print '#ifdef RETRACE'
         for function in api.functions:
-            if not self.is_public_function(function):
+            if self.is_public_function(function):
+                print '#define __%s %s' % (function.name, function.name)
+            else:
                 print '#define %s __%s' % (function.name, function.name)
         print '#endif /* RETRACE */'
         print

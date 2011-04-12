@@ -17,6 +17,16 @@ void ApiSurface::setSize(const QSize &size)
     m_size = size;
 }
 
+int ApiSurface::numChannels() const
+{
+    return m_numChannels;
+}
+
+void ApiSurface::setNumChannels(int numChannels)
+{
+    m_numChannels = numChannels;
+}
+
 static inline int
 rgba8_to_argb(quint8 r, quint8 g, quint8 b, quint8 a)
 {
@@ -49,14 +59,28 @@ void ApiSurface::contentsFromBase64(const QByteArray &base64)
     //XXX not sure if this will work when
     //    QSysInfo::ByteOrder == QSysInfo::BigEndian
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int pixel = rgba8_to_argb(data[(y * width + x) * 4 + 0],
-                                      data[(y * width + x) * 4 + 1],
-                                      data[(y * width + x) * 4 + 2],
-                                      data[(y * width + x) * 4 + 3]);
-            pixelData[y * width + x] = pixel;
+    if (m_numChannels == 4) {
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int pixel = rgba8_to_argb(data[(y * width + x) * 4 + 0],
+                                          data[(y * width + x) * 4 + 1],
+                                          data[(y * width + x) * 4 + 2],
+                                          data[(y * width + x) * 4 + 3]);
+                pixelData[y * width + x] = pixel;
+            }
         }
+    } else if (m_numChannels == 1) {
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int pixel = rgba8_to_argb(data[y * width + x],
+                                          data[y * width + x],
+                                          data[y * width + x],
+                                          255);
+                pixelData[y * width + x] = pixel;
+            }
+        }
+    } else {
+        Q_ASSERT(0);
     }
 
     m_image = QImage((uchar*)pixelData,

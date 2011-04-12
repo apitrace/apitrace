@@ -13,6 +13,9 @@ public:
     QSize size() const;
     void setSize(const QSize &size);
 
+    int numChannels() const;
+    void setNumChannels(int numChannels);
+
     void contentsFromBase64(const QByteArray &base64);
 
     QImage image() const;
@@ -20,6 +23,7 @@ public:
 
 private:
     QSize  m_size;
+    int m_numChannels;
     QImage m_image;
     QImage m_thumb;
 };

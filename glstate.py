@@ -2958,6 +2958,7 @@ class StateDumper:
         print '#include "json.hpp"'
         print '#include "glimports.hpp"'
         print '#include "glproc.hpp"'
+        print '#include "glsize.hpp"'
         print '#include "glretrace.hpp"'
         print
 
@@ -3084,10 +3085,12 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 }
 
 static inline void
-writeDrawBufferImage(JSONWriter &json)
+writeDrawBufferImage(JSONWriter &json, GLenum format)
 {
     GLint width  = glretrace::window_width;
     GLint height = glretrace::window_height;
+
+    GLint channels = __gl_format_channels(format);
 
     if (!width || !height) {
         json.writeNull();
@@ -3105,21 +3108,21 @@ writeDrawBufferImage(JSONWriter &json)
         // texture internal format
         json.writeStringMember("__type__", "uint8");
         json.writeBoolMember("__normalized__", true);
-        json.writeNumberMember("__channels__", 4);
-        
-        GLubyte *pixels = new GLubyte[width*height*4];
+        json.writeNumberMember("__channels__", channels);
+
+        GLubyte *pixels = new GLubyte[width*height*channels];
         
         GLint drawbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;
         GLint readbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;
         glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
         glGetIntegerv(GL_READ_BUFFER, &readbuffer);
         glReadBuffer(drawbuffer);
-        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
         glReadBuffer(readbuffer);
 
         json.writeStringMember("__encoding__", "base64");
         json.beginMember("__data__");
-        json.writeBase64(pixels, width * height * 4 * sizeof *pixels);
+        json.writeBase64(pixels, width * height * channels * sizeof *pixels);
         json.endMember(); // __data__
 
         delete [] pixels;
@@ -3295,10 +3298,28 @@ writeDrawBufferImage(JSONWriter &json)
     def dump_framebuffer(self):
         print '    json.beginMember("framebuffer");'
         print '    json.beginObject();'
-        print '    json.beginMember("GL_DRAW_BUFFER");'
-        # TODO: Handle FBOs
-        print '    writeDrawBufferImage(json);'
+        # TODO: Handle real FBOs
+        print
+        print '    json.beginMember("GL_RGBA");'
+        print '    writeDrawBufferImage(json, GL_RGBA);'
         print '    json.endMember();'
+        print
+        print '    GLint depth_bits = 0;'
+        print '    glGetIntegerv(GL_DEPTH_BITS, &depth_bits);'
+        print '    if (depth_bits) {'
+        print '        json.beginMember("GL_DEPTH_COMPONENT");'
+        print '        writeDrawBufferImage(json, GL_DEPTH_COMPONENT);'
+        print '        json.endMember();'
+        print '    }'
+        print
+        print '    GLint stencil_bits = 0;'
+        print '    glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);'
+        print '    if (stencil_bits) {'
+        print '        json.beginMember("GL_STENCIL_INDEX");'
+        print '        writeDrawBufferImage(json, GL_STENCIL_INDEX);'
+        print '        json.endMember();'
+        print '    }'
+        print
         print '    json.endObject();'
         print '    json.endMember(); // framebuffer'
         pass

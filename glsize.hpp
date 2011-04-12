@@ -1401,8 +1401,7 @@ __glGetFramebufferAttachmentParameterivEXT_size(GLenum pname)
 #define __glGetFramebufferAttachmentParameteriv_size __glGetFramebufferAttachmentParameterivEXT_size
 
 static inline size_t
-__glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLint border) {
-    size_t num_channels;
+__gl_format_channels(GLenum format) {
     switch (format) {
     case GL_COLOR_INDEX:
     case GL_RED:
@@ -1413,24 +1412,29 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
     case GL_LUMINANCE:
     case GL_DEPTH_COMPONENT:
     case GL_STENCIL_INDEX:
-        num_channels = 1;
+        return 1;
         break;
     case GL_LUMINANCE_ALPHA:
-        num_channels = 2;
+        return 2;
         break;
     case GL_RGB:
     case GL_BGR:
-        num_channels = 3;
+        return 3;
         break;
     case GL_RGBA:
     case GL_BGRA:
-        num_channels = 4;
+        return 4;
         break;
     default:
         OS::DebugMessage("warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
-        num_channels = 0;
+        return 0;
         break;
     }
+}
+
+static inline size_t
+__glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLint border) {
+    size_t num_channels = __gl_format_channels(format);
 
     size_t bits_per_pixel;
     switch (type) {
