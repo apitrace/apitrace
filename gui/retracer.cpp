@@ -117,15 +117,17 @@ void Retracer::run()
 void RetraceProcess::start()
 {
     QStringList arguments;
+
+    if (m_doubleBuffered) {
+        arguments << QLatin1String("-db");
+    }
+
     if (m_captureState) {
         arguments << QLatin1String("-D");
         arguments << QString::number(m_captureCall);
     } else {
         if (m_benchmarking) {
             arguments << QLatin1String("-b");
-        }
-        if (m_doubleBuffered) {
-            arguments << QLatin1String("-db");
         }
     }
 
