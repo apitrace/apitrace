@@ -3074,7 +3074,6 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         
         glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-        json.writeStringMember("__encoding__", "base64");
         json.beginMember("__data__");
         json.writeBase64(pixels, depth * width * height * 4 * sizeof *pixels);
         json.endMember(); // __data__
@@ -3120,7 +3119,6 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
         glReadBuffer(readbuffer);
 
-        json.writeStringMember("__encoding__", "base64");
         json.beginMember("__data__");
         json.writeBase64(pixels, width * height * channels * sizeof *pixels);
         json.endMember(); // __data__
