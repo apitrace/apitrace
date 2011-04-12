@@ -1346,7 +1346,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_SLICE_ACCUM_SUN"),	# 0x85CC
     ("glGet",	X,	1,	"GL_QUAD_MESH_SUN"),	# 0x8614
     ("glGet",	X,	1,	"GL_TRIANGLE_MESH_SUN"),	# 0x8615
-    ("glGet",	X,	1,	"GL_VERTEX_PROGRAM_ARB"),	# 0x8620
+    ("glGet",	B,	1,	"GL_VERTEX_PROGRAM_ARB"),	# 0x8620
     ("glGet",	X,	1,	"GL_VERTEX_STATE_PROGRAM_NV"),	# 0x8621
     ("glGetVertexAttrib",	B,	1,	"GL_VERTEX_ATTRIB_ARRAY_ENABLED"),	# 0x8622
     ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_ARRAY_SIZE"),	# 0x8623
@@ -1360,8 +1360,8 @@ parameters = [
     ("glGet",	X,	1,	"GL_INVERSE_NV"),	# 0x862B
     ("glGet",	X,	1,	"GL_TRANSPOSE_NV"),	# 0x862C
     ("glGet",	X,	1,	"GL_INVERSE_TRANSPOSE_NV"),	# 0x862D
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_MATRIX_STACK_DEPTH_ARB"),	# 0x862E
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_MATRICES_ARB"),	# 0x862F
+    ("glGet",	I,	1,	"GL_MAX_PROGRAM_MATRIX_STACK_DEPTH_ARB"),	# 0x862E
+    ("glGet",	I,	1,	"GL_MAX_PROGRAM_MATRICES_ARB"),	# 0x862F
     ("glGet",	X,	1,	"GL_MATRIX0_NV"),	# 0x8630
     ("glGet",	X,	1,	"GL_MATRIX1_NV"),	# 0x8631
     ("glGet",	X,	1,	"GL_MATRIX2_NV"),	# 0x8632
@@ -1372,8 +1372,8 @@ parameters = [
     ("glGet",	X,	1,	"GL_MATRIX7_NV"),	# 0x8637
     ("glGet",	X,	1,	"GL_CURRENT_MATRIX_STACK_DEPTH_ARB"),	# 0x8640
     ("glGet",	X,	1,	"GL_CURRENT_MATRIX_ARB"),	# 0x8641
-    ("glGet",	X,	1,	"GL_VERTEX_PROGRAM_POINT_SIZE"),	# 0x8642
-    ("glGet",	X,	1,	"GL_VERTEX_PROGRAM_TWO_SIDE"),	# 0x8643
+    ("glGet",	B,	1,	"GL_VERTEX_PROGRAM_POINT_SIZE"),	# 0x8642
+    ("glGet",	B,	1,	"GL_VERTEX_PROGRAM_TWO_SIDE"),	# 0x8643
     ("glGet",	X,	1,	"GL_PROGRAM_PARAMETER_NV"),	# 0x8644
     ("glGetVertexAttrib",	P,	1,	"GL_VERTEX_ATTRIB_ARRAY_POINTER"),	# 0x8645
     ("glGet",	X,	1,	"GL_PROGRAM_TARGET_NV"),	# 0x8646
@@ -1850,7 +1850,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_TEXTURE_COORDS"),	# 0x8871
     ("glGet",	I,	1,	"GL_MAX_TEXTURE_IMAGE_UNITS"),	# 0x8872
     ("glGet",	I,	1,	"GL_FRAGMENT_PROGRAM_BINDING_NV"),	# 0x8873
-    ("glGet",	X,	1,	"GL_PROGRAM_ERROR_STRING_ARB"),	# 0x8874
+    ("glGet",	S,	1,	"GL_PROGRAM_ERROR_STRING_ARB"),	# 0x8874
     ("glGet",	X,	1,	"GL_PROGRAM_FORMAT_ASCII_ARB"),	# 0x8875
     ("glGet",	X,	1,	"GL_PROGRAM_FORMAT_ARB"),	# 0x8876
     ("glGet",	X,	1,	"GL_WRITE_PIXEL_DATA_RANGE_NV"),	# 0x8878
