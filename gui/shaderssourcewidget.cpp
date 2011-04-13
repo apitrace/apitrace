@@ -11,11 +11,11 @@ ShadersSourceWidget::ShadersSourceWidget(QWidget *parent)
 
     m_ui.verticalLayout->addWidget(m_edit);
 
-    connect(m_ui.shadersCB, SIGNAL(currentIndexChanged(int)),
-            SLOT(changeShader(int)));
+    connect(m_ui.shadersCB, SIGNAL(currentIndexChanged(const QString &)),
+            SLOT(changeShader(const QString &)));
 }
 
-void ShadersSourceWidget::setShaders(const QStringList &sources)
+void ShadersSourceWidget::setShaders(const QMap<QString, QString> &sources)
 {
     m_sources = sources;
 
@@ -32,18 +32,16 @@ void ShadersSourceWidget::setShaders(const QStringList &sources)
     m_ui.shadersCB->setEnabled(true);
     m_edit->setEnabled(true);
 
-    for (int i = 0; i < m_sources.count(); ++i) {
-        QString source = m_sources[i];
-        m_ui.shadersCB->insertItem(
-            i,
-            tr("Shader %1").arg(i));
+    QMap<QString, QString>::const_iterator itr;
+    for (itr = m_sources.constBegin(); itr != m_sources.constEnd(); ++itr) {
+        m_ui.shadersCB->addItem(itr.key());
     }
     m_ui.shadersCB->setCurrentIndex(0);
 }
 
-void ShadersSourceWidget::changeShader(int idx)
+void ShadersSourceWidget::changeShader(const QString &key)
 {
-    m_edit->setPlainText(m_sources.value(idx));
+    m_edit->setPlainText(m_sources.value(key));
 }
 
 #include "shaderssourcewidget.moc"

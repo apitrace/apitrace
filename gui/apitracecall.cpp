@@ -432,21 +432,21 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
     m_parameters = parsedJson[QLatin1String("parameters")].toMap();
     QVariantMap currentProgram =
         parsedJson[QLatin1String("current_program")].toMap();
-    QVariantList attachedShaders =
-        currentProgram[QLatin1String("attached_shaders")].toList();
+    QVariantMap attachedShaders =
+        currentProgram[QLatin1String("attached_shaders")].toMap();
+    QVariantMap::const_iterator itr;
 
 
-    for (int i = 0; i < attachedShaders.count(); ++i) {
-        QVariantMap var = attachedShaders[i].toMap();
-        m_shaderSources.append(
-            var[QLatin1String("source")].toString());
+    for (itr = attachedShaders.constBegin(); itr != attachedShaders.constEnd(); ++itr) {
+        QString type = itr.key();
+        QString source = itr.value().toString();
+        m_shaderSources[type] = source;
     }
 
     QVariantList textureUnits =
         parsedJson[QLatin1String("textures")].toList();
     for (int i = 0; i < textureUnits.count(); ++i) {
         QVariantMap unit = textureUnits[i].toMap();
-        QVariantMap::const_iterator itr;
         for (itr = unit.constBegin(); itr != unit.constEnd(); ++itr) {
             QVariantMap target = itr.value().toMap();
             if (target.count()) {
@@ -485,7 +485,6 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
     QVariantMap fbos =
         parsedJson[QLatin1String("framebuffer")].toMap();
-    QVariantMap::const_iterator itr;
     for (itr = fbos.constBegin(); itr != fbos.constEnd(); ++itr) {
         QVariantMap buffer = itr.value().toMap();
         QSize size(buffer[QLatin1String("__width__")].toInt(),
@@ -515,7 +514,7 @@ QVariantMap ApiTraceState::parameters() const
     return m_parameters;
 }
 
-QStringList ApiTraceState::shaderSources() const
+QMap<QString, QString> ApiTraceState::shaderSources() const
 {
     return m_shaderSources;
 }

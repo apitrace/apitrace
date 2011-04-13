@@ -343,7 +343,7 @@ void MainWindow::fillStateForFrame()
     }
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
 
-    QStringList shaderSources = state.shaderSources();
+    QMap<QString, QString> shaderSources = state.shaderSources();
     if (shaderSources.isEmpty()) {
         m_sourcesWidget->setShaders(shaderSources);
     } else {

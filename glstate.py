@@ -3009,47 +3009,78 @@ class StateDumper:
         print '#include "glretrace.hpp"'
         print
 
-        print 'static void'
-        print 'writeEnum(JSONWriter &json, GLenum pname)'
+        print 'static const char *'
+        print '_enum_string(GLenum pname)'
         print '{'
         print '    switch(pname) {'
         for name in GLenum.values:
             print '    case %s:' % name
-            print '        json.writeString("%s");' % name
-            print '        break;'
+            print '        return "%s";' % name
         print '    default:'
+        print '        return NULL;'
+        print '    }'
+        print '}'
+        print
+
+        print 'static const char *'
+        print 'enum_string(GLenum pname)'
+        print '{'
+        print '    const char *s = _enum_string(pname);'
+        print '    if (s) {'
+        print '        return s;'
+        print '    } else {'
+        print '        static char buf[16];'
+        print '        snprintf(buf, sizeof buf, "0x%04x", pname);'
+        print '        return buf;'
+        print '    }'
+        print '}'
+        print
+
+        print 'static inline void'
+        print 'writeEnum(JSONWriter &json, GLenum pname)'
+        print '{'
+        print '    const char *s = _enum_string(pname);'
+        print '    if (s) {'
+        print '        json.writeString(s);'
+        print '    } else {'
         print '        json.writeNumber(pname);'
         print '    }'
         print '}'
         print
 
         # shaders
-        print 'static void'
-        print 'writeShader(JSONWriter &json, GLuint shader)'
-        print '{'
-        print '    if (!shader) {'
-        print '        json.writeNull();'
-        print '        return;'
-        print '    }'
-        print
-        print '    json.beginObject();'
-        print '    GLint source_length = 0;'
-        print '    glGetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &source_length);'
-        print '    json.beginMember("source");'
-        print '    if (source_length) {'
-        print '        GLchar *source = new GLchar[source_length];'
-        print '        GLsizei length = 0;'
-        print '        source[0] = 0;'
-        print '        glGetShaderSource(shader, source_length, &length, source);'
-        print '        json.writeString(source);'
-        print '        delete [] source;'
-        print '    } else {'
-        print '        json.writeNull();'
-        print '    }'
-        print '    json.endMember(); // source'
-        print '    json.endObject();'
-        print '}'
-        print
+        print '''
+static void
+writeShader(JSONWriter &json, GLuint shader)
+{
+    if (!shader) {
+        return;
+    }
+
+    GLint shader_type = 0;
+    glGetShaderiv(shader, GL_SHADER_TYPE, &shader_type);
+    if (!shader_type) {
+        return;
+    }
+
+    GLint source_length = 0;
+    glGetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &source_length);
+    if (!source_length) {
+        return;
+    }
+
+    GLchar *source = new GLchar[source_length];
+    GLsizei length = 0;
+    source[0] = 0;
+    glGetShaderSource(shader, source_length, &length, source);
+
+    json.beginMember(enum_string(shader_type));
+    json.writeString(source);
+    json.endMember();
+
+    delete [] source;
+}
+'''
 
         # programs
         print 'static inline void'
@@ -3064,7 +3095,7 @@ class StateDumper:
         print '    json.beginMember("attached_shaders");'
         print '    GLint attached_shaders = 0;'
         print '    glGetProgramiv(program, GL_ATTACHED_SHADERS, &attached_shaders);'
-        print '    json.beginArray();'
+        print '    json.beginObject();'
         print '    if (attached_shaders) {'
         print '        GLuint *shaders = new GLuint[attached_shaders];'
         print '        GLsizei count = 0;'
@@ -3074,7 +3105,7 @@ class StateDumper:
         print '        }'
         print '        delete [] shaders;'
         print '    }'
-        print '    json.endArray();'
+        print '    json.endObject();'
         print '    json.endMember();'
         print '    json.endObject();'
         print '}'
