@@ -323,6 +323,7 @@ QString ApiTraceCall::filterText() const
         return m_filterText;
 
     m_filterText = name;
+    m_filterText += QLatin1String("(");
     for (int i = 0; i < argNames.count(); ++i) {
         m_filterText += argNames[i];
         m_filterText += QString::fromLatin1(" = ");
