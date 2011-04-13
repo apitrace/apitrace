@@ -6,8 +6,8 @@
 *.dll
 *.exe
 *.exp
-*.trace
 *.ilk
+*.json
 *.lib
 *.o
 *.obj
@@ -16,6 +16,7 @@
 *.pyc
 *.pyo
 *.so
+*.trace
 *.zip
 CMakeCache.txt
 CMakeFiles
