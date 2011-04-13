@@ -430,10 +430,8 @@ ApiTraceState::ApiTraceState()
 ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 {
     m_parameters = parsedJson[QLatin1String("parameters")].toMap();
-    QVariantMap currentProgram =
-        parsedJson[QLatin1String("current_program")].toMap();
     QVariantMap attachedShaders =
-        currentProgram[QLatin1String("attached_shaders")].toMap();
+        parsedJson[QLatin1String("shaders")].toMap();
     QVariantMap::const_iterator itr;
 
 

@@ -3080,36 +3080,31 @@ writeShader(JSONWriter &json, GLuint shader)
 
     delete [] source;
 }
-'''
 
-        # programs
-        print 'static inline void'
-        print 'writeProgram(JSONWriter &json, GLuint program)'
-        print '{'
-        print '    if (!program) {'
-        print '        json.writeNull();'
-        print '        return;'
-        print '    }'
-        print
-        print '    json.beginObject();'
-        print '    json.beginMember("attached_shaders");'
-        print '    GLint attached_shaders = 0;'
-        print '    glGetProgramiv(program, GL_ATTACHED_SHADERS, &attached_shaders);'
-        print '    json.beginObject();'
-        print '    if (attached_shaders) {'
-        print '        GLuint *shaders = new GLuint[attached_shaders];'
-        print '        GLsizei count = 0;'
-        print '        glGetAttachedShaders(program, attached_shaders, &count, shaders);'
-        print '        for (GLsizei i = 0; i < count; ++ i) {'
-        print '           writeShader(json, shaders[i]);'
-        print '        }'
-        print '        delete [] shaders;'
-        print '    }'
-        print '    json.endObject();'
-        print '    json.endMember();'
-        print '    json.endObject();'
-        print '}'
-        print
+static inline void
+writeCurrentProgram(JSONWriter &json)
+{
+    GLint program = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    if (!program) {
+        return;
+    }
+
+    GLint attached_shaders = 0;
+    glGetProgramiv(program, GL_ATTACHED_SHADERS, &attached_shaders);
+    if (!attached_shaders) {
+        return;
+    }
+
+    GLuint *shaders = new GLuint[attached_shaders];
+    GLsizei count = 0;
+    glGetAttachedShaders(program, attached_shaders, &count, shaders);
+    for (GLsizei i = 0; i < count; ++ i) {
+       writeShader(json, shaders[i]);
+    }
+    delete [] shaders;
+}
+'''
 
         # texture image
         print '''
@@ -3316,11 +3311,11 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print
 
     def dump_current_program(self):
-        print '    GLint current_program = 0;'
-        print '    glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);'
-        print '    json.beginMember("current_program");'
-        print '    writeProgram(json, current_program);'
-        print '    json.endMember();'
+        print '    json.beginMember("shaders");'
+        print '    json.beginObject();'
+        print '    writeCurrentProgram(json);'
+        print '    json.endObject();'
+        print '    json.endMember(); //shaders'
         print
 
     def dump_textures(self):
