@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QKeyEvent>
+#include <QKeySequence>
 
 SearchWidget::SearchWidget(QWidget *parent)
     : QWidget(parent)
@@ -19,6 +20,11 @@ SearchWidget::SearchWidget(QWidget *parent)
             SLOT(slotCancel()));
     connect(m_ui.lineEdit, SIGNAL(returnPressed()),
             SLOT(slotSearchNext()));
+
+    m_ui.nextButton->setShortcut(
+        QKeySequence::FindNext);
+    m_ui.prevButton->setShortcut(
+        QKeySequence::FindPrevious);
 
     installEventFilter(this);
 }
