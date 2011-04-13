@@ -93,7 +93,7 @@ def main():
     html.write('<html>\n')
     html.write('  <body>\n')
     html.write('    <table border="1">\n')
-    html.write('      <tr><th><th>ref</th><th>src</th><th>&Delta;</th></tr>\n')
+    html.write('      <tr><th>ref</th><th>src</th><th>&Delta;</th></tr>\n')
     for frame_no in range(options.start, options.stop + 1):
         ref_image = "%s%04u.png" % (ref_prefix, frame_no)
         src_image = "%s%04u.png" % (src_prefix, frame_no)
