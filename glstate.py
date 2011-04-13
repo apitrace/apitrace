@@ -1754,7 +1754,7 @@ parameters = [
     ("glGet",	E,	1,	"GL_STENCIL_BACK_FAIL"),	# 0x8801
     ("glGet",	E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_FAIL"),	# 0x8802
     ("glGet",	E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_PASS"),	# 0x8803
-    ("glGet",	X,	1,	"GL_FRAGMENT_PROGRAM_ARB"),	# 0x8804
+    ("glGet",	B,	1,	"GL_FRAGMENT_PROGRAM_ARB"),	# 0x8804
     ("glGet",	X,	1,	"GL_PROGRAM_ALU_INSTRUCTIONS_ARB"),	# 0x8805
     ("glGet",	X,	1,	"GL_PROGRAM_TEX_INSTRUCTIONS_ARB"),	# 0x8806
     ("glGet",	X,	1,	"GL_PROGRAM_TEX_INDIRECTIONS_ARB"),	# 0x8807
