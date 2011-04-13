@@ -191,6 +191,11 @@ else ()
     )
 
     add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+
+    set_target_properties (glxtrace PROPERTIES
+        PREFIX ""
+    )
+
     target_link_libraries (glxtrace dl)
 endif ()
 

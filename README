@@ -85,7 +85,7 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
 * Run the application you want to trace as
 
- LD_PRELOAD=/path/to/libglxtrace.so /path/to/application
+ LD_PRELOAD=/path/to/glxtrace.so /path/to/application
 
 * View the trace with
 

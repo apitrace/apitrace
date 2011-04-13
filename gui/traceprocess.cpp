@@ -8,19 +8,19 @@
 static QString
 findPreloader()
 {
-    QString libPath = QString::fromLatin1("%1/libglxtrace.so")
+    QString libPath = QString::fromLatin1("%1/glxtrace.so")
                       .arg(BUILD_DIR);
 
     QFileInfo fi(libPath);
     if (fi.exists())
         return libPath;
 
-    libPath = QString::fromLatin1("/usr/local/lib/libglxtrace.so");
+    libPath = QString::fromLatin1("/usr/local/lib/glxtrace.so");
     fi = QFileInfo(libPath);
     if (fi.exists())
         return libPath;
 
-    libPath = QString::fromLatin1("/usr/lib/libglxtrace.so");
+    libPath = QString::fromLatin1("/usr/lib/glxtrace.so");
     fi = QFileInfo(libPath);
     if (fi.exists())
         return libPath;
