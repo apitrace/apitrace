@@ -171,4 +171,14 @@ void ApiTrace::detectFrames()
     emit framesAdded(0, m_frames.count());
 }
 
+ApiTraceCall * ApiTrace::callWithIndex(int idx) const
+{
+    for (int i = 0; i < m_calls.count(); ++i) {
+        ApiTraceCall *call = m_calls[i];
+        if (call->index == idx)
+            return call;
+    }
+    return NULL;
+}
+
 #include "apitrace.moc"

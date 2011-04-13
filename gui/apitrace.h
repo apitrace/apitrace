@@ -31,6 +31,7 @@ public:
 
     QList<ApiTraceCall*> calls() const;
     ApiTraceCall *callAt(int idx) const;
+    ApiTraceCall *callWithIndex(int idx) const;
     int numCalls() const;
 
     QList<ApiTraceFrame*> frames() const;

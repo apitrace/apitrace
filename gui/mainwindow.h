@@ -19,6 +19,7 @@ class QModelIndex;
 class QProgressBar;
 class QUrl;
 class Retracer;
+class SearchWidget;
 class ShadersSourceWidget;
 class TraceProcess;
 class VertexDataInterpreter;
@@ -54,6 +55,9 @@ private slots:
     void slotJumpTo(int callNum);
     void createdTrace(const QString &path);
     void traceError(const QString &msg);
+    void slotSearch();
+    void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity);
+    void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity);
 
 private:
     void initObjects();
@@ -86,6 +90,7 @@ private:
     ImageViewer *m_imageViewer;
 
     JumpWidget *m_jumpWidget;
+    SearchWidget *m_searchWidget;
 
     TraceProcess *m_traceProcess;
 };

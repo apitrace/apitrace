@@ -89,10 +89,10 @@ void ApiTraceFilter::setFilterOptions(ApiTraceFilter::FilterOptions opts)
     }
 }
 
-QModelIndex ApiTraceFilter::callIndex(int callNum) const
+QModelIndex ApiTraceFilter::callIndex(int callIdx) const
 {
     ApiTraceModel *model = static_cast<ApiTraceModel *>(sourceModel());
-    QModelIndex index = model->callIndex(callNum);
+    QModelIndex index = model->callIndex(callIdx);
     return mapFromSource(index);
 }
 

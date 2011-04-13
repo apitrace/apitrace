@@ -255,9 +255,10 @@ void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
 
 QModelIndex ApiTraceModel::callIndex(int callNum) const
 {
-    ApiTraceCall *call = m_trace->callAt(callNum);
+    ApiTraceCall *call = m_trace->callWithIndex(callNum);
 
     if (!call) {
+        qDebug()<<"couldn't find call at "<<callNum;
         return QModelIndex();
     }
 

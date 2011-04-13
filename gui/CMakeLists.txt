@@ -15,6 +15,7 @@ set(qapitrace_SRCS
    mainwindow.cpp
    main.cpp
    retracer.cpp
+   searchwidget.cpp
    settingsdialog.cpp
    shaderssourcewidget.cpp
    tracedialog.cpp
@@ -33,6 +34,7 @@ set(qapitrace_UIS
    ui/retracerdialog.ui
    ui/settings.ui
    ui/tracedialog.ui
+   ui/searchwidget.ui
    ui/shaderssourcewidget.ui
    )
 

@@ -8,6 +8,7 @@
 #include "imageviewer.h"
 #include "jumpwidget.h"
 #include "retracer.h"
+#include "searchwidget.h"
 #include "settingsdialog.h"
 #include "shaderssourcewidget.h"
 #include "tracedialog.h"
@@ -518,10 +519,16 @@ void MainWindow::initObjects()
     m_ui.centralLayout->addWidget(m_jumpWidget);
     m_jumpWidget->hide();
 
+    m_searchWidget = new SearchWidget(this);
+    m_ui.centralLayout->addWidget(m_searchWidget);
+    m_searchWidget->hide();
+
     m_traceProcess = new TraceProcess(this);
 
     new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_G),
                   this, SLOT(slotGoTo()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_F),
+                  this, SLOT(slotSearch()));
 }
 
 void MainWindow::initConnections()
@@ -584,6 +591,11 @@ void MainWindow::initConnections()
     connect(m_jumpWidget, SIGNAL(jumpTo(int)),
             SLOT(slotJumpTo(int)));
 
+    connect(m_searchWidget, SIGNAL(searchNext(const QString&, Qt::CaseSensitivity)),
+            SLOT(slotSearchNext(const QString&, Qt::CaseSensitivity)));
+    connect(m_searchWidget, SIGNAL(searchPrev(const QString&, Qt::CaseSensitivity)),
+            SLOT(slotSearchPrev(const QString&, Qt::CaseSensitivity)));
+
     connect(m_traceProcess, SIGNAL(tracedFile(const QString&)),
             SLOT(createdTrace(const QString&)));
     connect(m_traceProcess, SIGNAL(error(const QString&)),
@@ -603,6 +615,7 @@ void MainWindow::replayStateFound(const ApiTraceState &state)
 
 void MainWindow::slotGoTo()
 {
+    m_searchWidget->hide();
     m_jumpWidget->show();
 }
 
@@ -626,6 +639,90 @@ void MainWindow::traceError(const QString &msg)
             this,
             tr("Tracing Error"),
             msg);
+}
+
+void MainWindow::slotSearch()
+{
+    m_jumpWidget->hide();
+    m_searchWidget->show();
+}
+
+void MainWindow::slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity)
+{
+    QModelIndex index = m_ui.callView->currentIndex();
+    ApiTraceEvent *event =
+        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    ApiTraceCall *call = 0;
+
+    if (event->type() == ApiTraceCall::Call)
+        call = static_cast<ApiTraceCall*>(event);
+    else {
+        Q_ASSERT(event->type() == ApiTraceCall::Frame);
+        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
+        call = frame->calls.value(0);
+    }
+
+    if (!call) {
+        m_searchWidget->setFound(false);
+        return;
+    }
+    const QList<ApiTraceCall*> &calls = m_trace->calls();
+    int callNum = calls.indexOf(call);
+
+    for (int i = callNum + 1; i < calls.count(); ++i) {
+        ApiTraceCall *testCall = calls[i];
+        QString txt = testCall->filterText();
+        if (txt.contains(str, sensitivity)) {
+            QModelIndex index = m_proxyModel->callIndex(testCall->index);
+            /* if it's not valid it means that the proxy model has already
+             * filtered it out */
+            if (index.isValid()) {
+                m_ui.callView->setCurrentIndex(index);
+                m_searchWidget->setFound(true);
+                return;
+            }
+        }
+    }
+    m_searchWidget->setFound(false);
+}
+
+void MainWindow::slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity)
+{
+    QModelIndex index = m_ui.callView->currentIndex();
+    ApiTraceEvent *event =
+        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    ApiTraceCall *call = 0;
+
+    if (event->type() == ApiTraceCall::Call)
+        call = static_cast<ApiTraceCall*>(event);
+    else {
+        Q_ASSERT(event->type() == ApiTraceCall::Frame);
+        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
+        call = frame->calls.value(0);
+    }
+
+    if (!call) {
+        m_searchWidget->setFound(false);
+        return;
+    }
+    const QList<ApiTraceCall*> &calls = m_trace->calls();
+    int callNum = calls.indexOf(call);
+
+    for (int i = callNum - 1; i >= 0; --i) {
+        ApiTraceCall *testCall = calls[i];
+        QString txt = testCall->filterText();
+        if (txt.contains(str, sensitivity)) {
+            QModelIndex index = m_proxyModel->callIndex(testCall->index);
+            /* if it's not valid it means that the proxy model has already
+             * filtered it out */
+            if (index.isValid()) {
+                m_ui.callView->setCurrentIndex(index);
+                m_searchWidget->setFound(true);
+                return;
+            }
+        }
+    }
+    m_searchWidget->setFound(false);
 }
 
 #include "mainwindow.moc"
