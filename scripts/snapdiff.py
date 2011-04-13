@@ -83,8 +83,8 @@ def main():
     if len(args) != 2:
         optparser.error('incorrect number of arguments')
 
-    ref_prefix = sys.argv[1]
-    src_prefix = sys.argv[2]
+    ref_prefix = args[0]
+    src_prefix = args[1]
 
     if options.output:
         html = open(options.output, 'wt')
