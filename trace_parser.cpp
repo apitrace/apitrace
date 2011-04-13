@@ -282,7 +282,9 @@ Value *Parser::parse_bitmask() {
         for (Bitmask::Signature::iterator it = sig->begin(); it != sig->end(); ++it) {
             it->first = read_string();
             it->second = read_uint();
-            assert(it->second);
+            if (it->second == 0 && it != sig->begin()) {
+                std::cerr << "warning: bitmask " << it->first << " is zero but is not first flag\n";
+            }
         }
         bitmasks[id] = sig;
     }

@@ -315,6 +315,9 @@ void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value) {
     if (!lookup(bitmasks, bitmask.id)) {
         WriteUInt(bitmask.count);
         for (unsigned i = 0; i < bitmask.count; ++i) {
+            if (i != 0 && bitmask.values[i].value == 0) {
+                OS::DebugMessage("apitrace: bitmask %s is zero but is not first flag\n", bitmask.values[i].name);
+            }
             WriteString(bitmask.values[i].name);
             WriteUInt(bitmask.values[i].value);
         }

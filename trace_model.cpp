@@ -236,8 +236,8 @@ public:
         const Bitmask::Signature *sig = bitmask->sig;
         bool first = true;
         for (Bitmask::Signature::const_iterator it = sig->begin(); value != 0 && it != sig->end(); ++it) {
-            assert(it->second);
-            if ((value & it->second) == it->second) {
+            if ((it->second && (value & it->second) == it->second) ||
+                (!it->second && value == 0)) {
                 if (!first) {
                     os << " | ";
                 }
