@@ -50,6 +50,8 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
     if (m_filters & ExtraStateFilter) {
         if (function.contains(QLatin1String("glXGetCurrentDisplay")))
             return false;
+        if (function.contains(QLatin1String("wglDescribePixelFormat")))
+            return false;
     }
 
     if (m_filters & ExtensionsFilter) {
