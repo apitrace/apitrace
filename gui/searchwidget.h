@@ -14,6 +14,7 @@ public:
     SearchWidget(QWidget *parent=0);
 
     void setFound(bool f);
+    void show();
 signals:
     void searchNext(const QString &str, Qt::CaseSensitivity cs = Qt::CaseInsensitive);
     void searchPrev(const QString &str, Qt::CaseSensitivity cs = Qt::CaseInsensitive);

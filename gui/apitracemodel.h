@@ -26,6 +26,7 @@ public:
     void stateSetOnEvent(ApiTraceEvent *event);
 
     QModelIndex callIndex(int callNum) const;
+    QModelIndex indexForCall(ApiTraceCall *call) const;
 
 public:
     /* QAbstractItemModel { */

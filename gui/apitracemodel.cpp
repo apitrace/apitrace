@@ -256,9 +256,12 @@ void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
 QModelIndex ApiTraceModel::callIndex(int callNum) const
 {
     ApiTraceCall *call = m_trace->callWithIndex(callNum);
+    return indexForCall(call);
+}
 
+QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
+{
     if (!call) {
-        qDebug()<<"couldn't find call at "<<callNum;
         return QModelIndex();
     }
 
@@ -267,7 +270,7 @@ QModelIndex ApiTraceModel::callIndex(int callNum) const
 
     int row = frame->calls.indexOf(call);
     if (row < 0) {
-        qDebug() << "Couldn't find call num "<<callNum<<" inside parent!";
+        qDebug() << "Couldn't find call num "<<call->index<<" inside parent!";
         return QModelIndex();
     }
     return createIndex(row, 0, call);

@@ -3,6 +3,8 @@
 
 #include <QSortFilterProxyModel>
 
+class ApiTraceCall;
+
 class ApiTraceFilter : public QSortFilterProxyModel
 {
     Q_OBJECT
@@ -24,6 +26,7 @@ public:
     void setFilterString(const QString &text);
 
     QModelIndex callIndex(int callNum) const;
+    QModelIndex indexForCall(ApiTraceCall *call) const;
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
 

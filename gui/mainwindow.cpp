@@ -650,8 +650,19 @@ void MainWindow::slotSearch()
 void MainWindow::slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity)
 {
     QModelIndex index = m_ui.callView->currentIndex();
-    ApiTraceEvent *event =
-        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    ApiTraceEvent *event = 0;
+
+
+    if (!index.isValid()) {
+        index = m_proxyModel->index(0, 0, QModelIndex());
+        if (!index.isValid()) {
+            qDebug()<<"no currently valid index";
+            m_searchWidget->setFound(false);
+            return;
+        }
+    }
+
+    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
     ApiTraceCall *call = 0;
 
     if (event->type() == ApiTraceCall::Call)
@@ -673,7 +684,7 @@ void MainWindow::slotSearchNext(const QString &str, Qt::CaseSensitivity sensitiv
         ApiTraceCall *testCall = calls[i];
         QString txt = testCall->filterText();
         if (txt.contains(str, sensitivity)) {
-            QModelIndex index = m_proxyModel->callIndex(testCall->index);
+            QModelIndex index = m_proxyModel->indexForCall(testCall);
             /* if it's not valid it means that the proxy model has already
              * filtered it out */
             if (index.isValid()) {
@@ -689,8 +700,19 @@ void MainWindow::slotSearchNext(const QString &str, Qt::CaseSensitivity sensitiv
 void MainWindow::slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity)
 {
     QModelIndex index = m_ui.callView->currentIndex();
-    ApiTraceEvent *event =
-        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    ApiTraceEvent *event = 0;
+
+
+    if (!index.isValid()) {
+        index = m_proxyModel->index(0, 0, QModelIndex());
+        if (!index.isValid()) {
+            qDebug()<<"no currently valid index";
+            m_searchWidget->setFound(false);
+            return;
+        }
+    }
+
+    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
     ApiTraceCall *call = 0;
 
     if (event->type() == ApiTraceCall::Call)
@@ -712,7 +734,7 @@ void MainWindow::slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitiv
         ApiTraceCall *testCall = calls[i];
         QString txt = testCall->filterText();
         if (txt.contains(str, sensitivity)) {
-            QModelIndex index = m_proxyModel->callIndex(testCall->index);
+            QModelIndex index = m_proxyModel->indexForCall(testCall);
             /* if it's not valid it means that the proxy model has already
              * filtered it out */
             if (index.isValid()) {

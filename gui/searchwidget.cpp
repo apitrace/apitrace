@@ -44,9 +44,6 @@ void SearchWidget::slotCancel()
 
 void SearchWidget::showEvent(QShowEvent *event)
 {
-    m_ui.lineEdit->selectAll();
-    m_ui.lineEdit->setFocus(Qt::ShortcutFocusReason);
-    m_ui.lineEdit->setPalette(m_origPalette);
     return QWidget::showEvent(event);
 }
 
@@ -75,6 +72,14 @@ void SearchWidget::setFound(bool found)
                  found ? Qt::white : QColor(255, 102, 102));
     m_ui.lineEdit->setPalette(pal);
     m_ui.notFoundLabel->setVisible(!found);
+}
+
+void SearchWidget::show()
+{
+    QWidget::show();
+    m_ui.lineEdit->selectAll();
+    m_ui.lineEdit->setFocus(Qt::ShortcutFocusReason);
+    m_ui.lineEdit->setPalette(m_origPalette);
 }
 
 #include "searchwidget.moc"
