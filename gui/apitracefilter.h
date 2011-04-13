@@ -1,6 +1,7 @@
 #ifndef APITRACEFILTER_H
 #define APITRACEFILTER_H
 
+#include <QRegExp>
 #include <QSortFilterProxyModel>
 
 class ApiTraceCall;
@@ -23,7 +24,8 @@ public:
     FilterOptions filterOptions() const;
     void setFilterOptions(FilterOptions opts);
 
-    void setFilterString(const QString &text);
+    void setFilterRegexp(const QRegExp &regexp);
+    QRegExp filterRegexp() const;
 
     QModelIndex callIndex(int callNum) const;
     QModelIndex indexForCall(ApiTraceCall *call) const;
@@ -31,7 +33,7 @@ protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
 
 private:
-    QString m_text;
+    QRegExp m_regexp;
     FilterOptions m_filters;
 };
 

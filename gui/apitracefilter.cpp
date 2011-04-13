@@ -31,8 +31,8 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
     ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
     QString function = call->name;
 
-    if (!m_text.isEmpty()) {
-        return function.contains(m_text);
+    if (!m_regexp.isEmpty() && m_regexp.isValid()) {
+        return function.contains(m_regexp);
     }
 
     if (m_filters & ResolutionsFilter) {
@@ -68,10 +68,10 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
 }
 
 
-void ApiTraceFilter::setFilterString(const QString &text)
+void ApiTraceFilter::setFilterRegexp(const QRegExp &regexp)
 {
-    if (text != m_text) {
-        m_text = text;
+    if (regexp != m_regexp) {
+        m_regexp = regexp;
         invalidate();
     }
 }
@@ -101,6 +101,11 @@ QModelIndex ApiTraceFilter::indexForCall(ApiTraceCall *call) const
     ApiTraceModel *model = static_cast<ApiTraceModel *>(sourceModel());
     QModelIndex index = model->indexForCall(call);
     return mapFromSource(index);
+}
+
+QRegExp ApiTraceFilter::filterRegexp() const
+{
+    return m_regexp;
 }
 
 #include "apitracefilter.moc"

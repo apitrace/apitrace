@@ -14,7 +14,6 @@ class ApiTraceModel;
 class ApiTraceState;
 class ImageViewer;
 class JumpWidget;
-class QLineEdit;
 class QModelIndex;
 class QProgressBar;
 class QUrl;
@@ -38,7 +37,6 @@ private slots:
     void callItemSelected(const QModelIndex &index);
     void createTrace();
     void openTrace();
-    void filterTrace();
     void replayStart();
     void replayStop();
     void replayFinished(const QString &output);
@@ -73,7 +71,6 @@ private:
     ApiTrace *m_trace;
     ApiTraceModel *m_model;
     ApiTraceFilter *m_proxyModel;
-    QLineEdit *m_filterEdit;
 
     QProgressBar *m_progressBar;
 

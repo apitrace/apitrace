@@ -4,6 +4,7 @@
 #include "apitracefilter.h"
 #include "ui_settings.h"
 #include <QDialog>
+#include <QRegExp>
 
 
 class SettingsDialog : public QDialog, public Ui_Settings
@@ -13,11 +14,17 @@ public:
     SettingsDialog(QWidget *parent = 0);
     void accept();
 
-    void setFilterOptions(ApiTraceFilter::FilterOptions opts);
-    ApiTraceFilter::FilterOptions filterOptions() const;
+    void setFilterModel(ApiTraceFilter *filter);
+private slots:
+    void changeRegexp(const QString &name);
+    void regexpChanged(const QString &pattern);
 
 private:
-    ApiTraceFilter::FilterOptions m_filterOptions;
+    void filtersFromModel(const ApiTraceFilter *model);
+    void filtersToModel(ApiTraceFilter *model);
+private:
+    QMap<QString, QRegExp> m_showFilters;
+    ApiTraceFilter *m_filter;
 };
 
 #endif

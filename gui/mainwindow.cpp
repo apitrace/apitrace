@@ -136,11 +136,6 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         m_ui.stateDock->hide();
 }
 
-void MainWindow::filterTrace()
-{
-    m_proxyModel->setFilterString(m_filterEdit->text());
-}
-
 void MainWindow::replayStart()
 {
     QDialog dlg;
@@ -415,11 +410,9 @@ void MainWindow::fillStateForFrame()
 void MainWindow::showSettings()
 {
     SettingsDialog dialog;
-    dialog.setFilterOptions(m_proxyModel->filterOptions());
+    dialog.setFilterModel(m_proxyModel);
 
-    if (dialog.exec() == QDialog::Accepted) {
-        m_proxyModel->setFilterOptions(dialog.filterOptions());
-    }
+    dialog.exec();
 }
 
 void MainWindow::openHelp(const QUrl &url)
@@ -493,10 +486,6 @@ void MainWindow::initObjects()
     m_ui.callView->resizeColumnToContents(0);
     m_ui.callView->header()->swapSections(0, 1);
     m_ui.callView->setColumnWidth(1, 42);
-
-    QToolBar *toolBar = addToolBar(tr("Navigation"));
-    m_filterEdit = new QLineEdit(toolBar);
-    toolBar->addWidget(m_filterEdit);
 
     m_progressBar = new QProgressBar();
     m_progressBar->setRange(0, 0);
@@ -575,8 +564,6 @@ void MainWindow::initConnections()
 
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
-    connect(m_filterEdit, SIGNAL(returnPressed()),
-            this, SLOT(filterTrace()));
 
     connect(m_ui.surfacesTreeWidget,
             SIGNAL(customContextMenuRequested(const QPoint &)),

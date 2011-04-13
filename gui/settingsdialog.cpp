@@ -1,37 +1,120 @@
 #include "settingsdialog.h"
 
+#include <QMessageBox>
+
 SettingsDialog::SettingsDialog(QWidget *parent)
-    : QDialog(parent)
+    : QDialog(parent),
+      m_filter(0)
 {
     setupUi(this);
+
+    m_showFilters.insert(
+        tr("Draw events"),
+        QRegExp("glDraw|glVertex|glBegin|glEnd"));
+    m_showFilters.insert(
+        tr("Texture events"),
+        QRegExp("glTex|glBindTex|glBegin|glEnd"));
+
+    QMap<QString, QRegExp>::const_iterator itr;
+    for (itr = m_showFilters.constBegin();
+         itr != m_showFilters.constEnd(); ++itr) {
+        showFilterCB->addItem(itr.key(), itr.value());
+    }
+    showFilterCB->addItem(tr("Custom"), QRegExp());
+
+    connect(showFilterCB, SIGNAL(currentIndexChanged(const QString &)),
+            SLOT(changeRegexp(const QString&)));
+    connect(showFilterEdit, SIGNAL(textEdited(const QString &)),
+            SLOT(regexpChanged(const QString&)));
+
+    showFilterCB->setCurrentIndex(0);
+    showFilterEdit->setText(m_showFilters.constBegin().value().pattern());
+}
+
+void SettingsDialog::filtersFromModel(const ApiTraceFilter *model)
+{
+    ApiTraceFilter::FilterOptions opts = model->filterOptions();
+    extensionsBox->setChecked(opts & ApiTraceFilter::ExtensionsFilter);
+    functionsBox->setChecked(opts & ApiTraceFilter::ResolutionsFilter);
+    errorsBox->setChecked(opts & ApiTraceFilter::ErrorsQueryFilter);
+    statesBox->setChecked(opts & ApiTraceFilter::ExtraStateFilter);
+
+    QRegExp regexp = model->filterRegexp();
+    if (regexp.isEmpty()) {
+        showFilterBox->setChecked(false);
+    } else {
+        showFilterBox->setChecked(true);
+        QMap<QString, QRegExp>::const_iterator itr;
+        int i = 0;
+        for (itr = m_showFilters.constBegin();
+             itr != m_showFilters.constEnd(); ++itr, ++i) {
+            if (itr.value() == regexp) {
+                showFilterCB->setCurrentIndex(i);
+                showFilterEdit->setText(itr.value().pattern());
+                return;
+            }
+        }
+        /* custom filter */
+        showFilterCB->setCurrentIndex(m_showFilters.count());
+        showFilterEdit->setText(regexp.pattern());
+    }
+}
+
+void SettingsDialog::filtersToModel(ApiTraceFilter *model)
+{
+    ApiTraceFilter::FilterOptions opts = ApiTraceFilter::NullFilter;
+    if (extensionsBox->isChecked())
+        opts |= ApiTraceFilter::ExtensionsFilter;
+    if (functionsBox->isChecked())
+        opts |= ApiTraceFilter::ResolutionsFilter;
+    if (errorsBox->isChecked())
+        opts |= ApiTraceFilter::ErrorsQueryFilter;
+    if (statesBox->isChecked())
+        opts |= ApiTraceFilter::ExtraStateFilter;
+    m_filter->setFilterOptions(opts);
+    if (showFilterBox->isChecked()) {
+        m_filter->setFilterRegexp(QRegExp(showFilterEdit->text()));
+    } else {
+        m_filter->setFilterRegexp(QRegExp());
+    }
 }
 
 void SettingsDialog::accept()
 {
-    m_filterOptions = ApiTraceFilter::NullFilter;
-    if (extensionsBox->isChecked())
-        m_filterOptions |= ApiTraceFilter::ExtensionsFilter;
-    if (functionsBox->isChecked())
-        m_filterOptions |= ApiTraceFilter::ResolutionsFilter;
-    if (errorsBox->isChecked())
-        m_filterOptions |= ApiTraceFilter::ErrorsQueryFilter;
-    if (statesBox->isChecked())
-        m_filterOptions |= ApiTraceFilter::ExtraStateFilter;
+    if (showFilterBox->isChecked()) {
+        QRegExp regexp(showFilterEdit->text());
+        if (!regexp.isValid()) {
+            QMessageBox::warning(
+                this,
+                tr("Invalid Regexp"),
+                tr("The currently set regular expression "
+                   "for filtering events is invalid."));
+            return;
+        }
+    }
+    filtersToModel(m_filter);
     QDialog::accept();
 }
 
-void SettingsDialog::setFilterOptions(ApiTraceFilter::FilterOptions opts)
+void SettingsDialog::changeRegexp(const QString &name)
 {
-    m_filterOptions = opts;
-    extensionsBox->setChecked(m_filterOptions & ApiTraceFilter::ExtensionsFilter);
-    functionsBox->setChecked(m_filterOptions & ApiTraceFilter::ResolutionsFilter);
-    errorsBox->setChecked(m_filterOptions & ApiTraceFilter::ErrorsQueryFilter);
-    statesBox->setChecked(m_filterOptions & ApiTraceFilter::ExtraStateFilter);
+    showFilterEdit->setText(m_showFilters[name].pattern());
 }
 
-ApiTraceFilter::FilterOptions SettingsDialog::filterOptions() const
+void SettingsDialog::regexpChanged(const QString &pattern)
 {
-    return m_filterOptions;
+    int customIndex = m_showFilters.count();
+    if (showFilterCB->currentIndex() != customIndex) {
+        showFilterCB->blockSignals(true);
+        showFilterCB->setCurrentIndex(customIndex);
+        showFilterCB->blockSignals(false);
+    }
+}
+
+void SettingsDialog::setFilterModel(ApiTraceFilter *filter)
+{
+    m_filter = filter;
+    filtersFromModel(m_filter);
 }
 
 #include "settingsdialog.moc"
