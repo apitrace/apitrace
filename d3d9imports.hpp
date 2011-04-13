@@ -62,12 +62,16 @@
 #define D3DFMT_INTZ ((D3DFORMAT)MAKEFOURCC('I','N','T','Z'))
 #endif
 
+#ifndef D3DFMT_NULL
+#define D3DFMT_NULL ((D3DFORMAT)MAKEFOURCC('N','U','L','L'))
+#endif
+
 #ifndef D3DFMT_NV12
 #define D3DFMT_NV12 ((D3DFORMAT)MAKEFOURCC('N','V','1','2'))
 #endif
 
-#ifndef D3DFMT_NULL
-#define D3DFMT_NULL ((D3DFORMAT)MAKEFOURCC('N','U','L','L'))
+#ifndef D3DFMT_RAWZ
+#define D3DFMT_RAWZ ((D3DFORMAT)MAKEFOURCC('R','A','W','Z'))
 #endif
 
 
