@@ -3104,6 +3104,31 @@ writeCurrentProgram(JSONWriter &json)
     }
     delete [] shaders;
 }
+
+static inline void
+writeArbProgram(JSONWriter &json, GLenum target)
+{
+    if (!glIsEnabled(target)) {
+        return;
+    }
+
+    GLint program_length = 0;
+    glGetProgramivARB(target, GL_PROGRAM_LENGTH_ARB, &program_length);
+    if (!program_length) {
+        return;
+    }
+
+    GLchar *source = new GLchar[program_length + 1];
+    source[0] = 0;
+    glGetProgramStringARB(target, GL_PROGRAM_STRING_ARB, source);
+    source[program_length] = 0;
+
+    json.beginMember(enum_string(target));
+    json.writeString(source);
+    json.endMember();
+
+    delete [] source;
+}
 '''
 
         # texture image
@@ -3314,6 +3339,8 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print '    json.beginMember("shaders");'
         print '    json.beginObject();'
         print '    writeCurrentProgram(json);'
+        print '    writeArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);'
+        print '    writeArbProgram(json, GL_VERTEX_PROGRAM_ARB);'
         print '    json.endObject();'
         print '    json.endMember(); //shaders'
         print

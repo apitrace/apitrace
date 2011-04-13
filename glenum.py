@@ -1250,7 +1250,7 @@ GLenum = Enum("GLenum", [
     "GL_SLICE_ACCUM_SUN",                # 0x85CC
     "GL_QUAD_MESH_SUN",                  # 0x8614
     "GL_TRIANGLE_MESH_SUN",              # 0x8615
-    "GL_VERTEX_PROGRAM_NV",              # 0x8620
+    "GL_VERTEX_PROGRAM_ARB",             # 0x8620
     "GL_VERTEX_STATE_PROGRAM_NV",        # 0x8621
     "GL_VERTEX_ATTRIB_ARRAY_ENABLED",    # 0x8622
     "GL_VERTEX_ATTRIB_ARRAY_SIZE",       # 0x8623
