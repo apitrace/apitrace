@@ -367,13 +367,13 @@ IDirect3D9Ex.methods += [
 ]
 
 IDirect3DDevice9Ex.methods += [
-    Method(HRESULT, "SetConvolutionMonoKernel", [(UINT, "width"), (UINT, "height"), Out(Pointer(Float), "rows"), Out(Pointer(Float), "columns")]),
+    Method(HRESULT, "SetConvolutionMonoKernel", [(UINT, "width"), (UINT, "height"), (Array(Float, "width"), "rows"), (Array(Float, "height"), "columns")]),
     Method(HRESULT, "ComposeRects", [(PDIRECT3DSURFACE9, "pSrc"), (PDIRECT3DSURFACE9, "pDst"), (PDIRECT3DVERTEXBUFFER9, "pSrcRectDescs"), (UINT, "NumRects"), (PDIRECT3DVERTEXBUFFER9, "pDstRectDescs"), (D3DCOMPOSERECTSOP, "Operation"), (Int, "Xoffset"), (Int, "Yoffset")]),
     Method(HRESULT, "PresentEx", [(ConstPointer(RECT), "pSourceRect"), (ConstPointer(RECT), "pDestRect"), (HWND, "hDestWindowOverride"), (ConstPointer(RGNDATA), "pDirtyRegion"), (DWORD, "dwFlags")]),
     Method(HRESULT, "GetGPUThreadPriority", [Out(Pointer(INT), "pPriority")]),
     Method(HRESULT, "SetGPUThreadPriority", [(INT, "Priority")]),
     Method(HRESULT, "WaitForVBlank", [(UINT, "iSwapChain")]),
-    Method(HRESULT, "CheckResourceResidency", [Out(Pointer(PDIRECT3DRESOURCE9), "pResourceArray"), (UINT32, "NumResources")]),
+    Method(HRESULT, "CheckResourceResidency", [(Array(PDIRECT3DRESOURCE9, "NumResources"), "pResourceArray"), (UINT32, "NumResources")]),
     Method(HRESULT, "SetMaximumFrameLatency", [(UINT, "MaxLatency")]),
     Method(HRESULT, "GetMaximumFrameLatency", [Out(Pointer(UINT), "pMaxLatency")]),
     Method(HRESULT, "CheckDeviceState", [(HWND, "hDestinationWindow")]),
