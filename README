@@ -49,7 +49,7 @@ Requirements common for all platforms:
 * CMake (tested with version 2.8)
 
 Requirements to build the GUI (optional):
-* QT (tested with version 4.7)
+* Qt (tested with version 4.7)
 * QJSON (tested with version 0.7.1)
 
 
@@ -85,7 +85,7 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
 * Run the application you want to trace as
 
- LD_PRELOAD=/path/to/glxtrace.so /path/to/application
+ LD_PRELOAD=/path/to/libglxtrace.so /path/to/application
 
 * View the trace with
 
