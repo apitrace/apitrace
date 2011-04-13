@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008-2009 VMware, Inc.
+ * Copyright 2011 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,33 +24,51 @@
  **************************************************************************/
 
 /*
- * MinGW compatability macros to allow using recent's DXSDK headers.
+ * Central place for all D3D9 includes, and respective OS dependent headers.
  */
 
-#ifdef __MINGW32__
-#define __in /**/
-#define __out /**/
-#define __inout /**/
-#define __inout_opt /**/
-#define __in_opt /**/
-#define __out_opt /**/
-#define __in_bcount(x) /**/
-#define __out_bcount(x) /**/
-#define __in_bcount_opt(x) /**/
-#define __out_bcount_opt(x) /**/
-#define __in_range(x,y) /**/
-#define __in_ecount(x) /**/
-#define __out_ecount(x) /**/
-#define __in_ecount_opt(x) /**/
-#define __out_ecount_opt(x) /**/
-#define __field_bcount(x) /**/
-#define __field_ecount(x) /**/
-#define __field_ecount_full(x) /**/
-#define __inline static __inline__
+#ifndef _D3D9IMPORTS_HPP_
+#define _D3D9IMPORTS_HPP_
 
-#define DECLSPEC_DEPRECATED /**/
+#include <windows.h>
+#include <tchar.h>
 
-#define UINT8 uint8_t
+#include "compat.h"
 
+#include <d3d9.h>
+
+
+#ifndef D3DFMT_ATI1
+#define D3DFMT_ATI1 ((D3DFORMAT)MAKEFOURCC('A','T','I','1'))
 #endif
 
+#ifndef D3DFMT_ATI2
+#define D3DFMT_ATI2 ((D3DFORMAT)MAKEFOURCC('A','T','I','2'))
+#endif
+
+#ifndef D3DFMT_AYUV
+#define D3DFMT_AYUV ((D3DFORMAT)MAKEFOURCC('A','Y','U','V'))
+#endif
+
+#ifndef D3DFMT_DF16
+#define D3DFMT_DF16 ((D3DFORMAT)MAKEFOURCC('D','F','1','6'))
+#endif
+
+#ifndef D3DFMT_DF24
+#define D3DFMT_DF24 ((D3DFORMAT)MAKEFOURCC('D','F','2','4'))
+#endif
+
+#ifndef D3DFMT_INTZ
+#define D3DFMT_INTZ ((D3DFORMAT)MAKEFOURCC('I','N','T','Z'))
+#endif
+
+#ifndef D3DFMT_NV12
+#define D3DFMT_NV12 ((D3DFORMAT)MAKEFOURCC('N','V','1','2'))
+#endif
+
+#ifndef D3DFMT_NULL
+#define D3DFMT_NULL ((D3DFORMAT)MAKEFOURCC('N','U','L','L'))
+#endif
+
+
+#endif /* _D3D9IMPORTS_HPP_ */

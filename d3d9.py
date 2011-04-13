@@ -411,12 +411,7 @@ class D3D9Tracer(DllTracer):
 
 
 if __name__ == '__main__':
-    print '#include <windows.h>'
-    print '#include <tchar.h>'
-    print
-    print '#include "compat.h"'
-    print
-    print '#include <d3d9.h>'
+    print '#include "d3d9imports.hpp"'
     print
     print '#include "trace_write.hpp"'
     print '#include "os.hpp"'

@@ -928,6 +928,16 @@ D3DFORMAT = Enum("D3DFORMAT", [
     "D3DFMT_CxV8U8",
     "D3DFMT_A1",
     "D3DFMT_BINARYBUFFER",
+
+    # Unofficial formats
+    "D3DFMT_ATI1",
+    "D3DFMT_ATI2",
+    "D3DFMT_AYUV",
+    "D3DFMT_DF16",
+    "D3DFMT_DF24",
+    "D3DFMT_INTZ",
+    "D3DFMT_NV12",
+    "D3DFMT_NULL",
 ])
 
 D3DDISPLAYMODE = Struct("D3DDISPLAYMODE", [
