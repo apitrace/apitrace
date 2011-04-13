@@ -1,6 +1,7 @@
 #include "jumpwidget.h"
 
 #include <QDebug>
+#include <QKeyEvent>
 
 JumpWidget::JumpWidget(QWidget *parent )
     : QWidget(parent)
@@ -13,6 +14,8 @@ JumpWidget::JumpWidget(QWidget *parent )
             SLOT(slotJump()));
     connect(m_ui.cancelButton, SIGNAL(clicked()),
             SLOT(slotCancel()));
+
+    installEventFilter(this);
 }
 
 void JumpWidget::slotJump()
@@ -32,6 +35,16 @@ void JumpWidget::showEvent(QShowEvent *event)
 {
     m_ui.spinBox->setFocus(Qt::ShortcutFocusReason);
     return QWidget::showEvent(event);
+}
+
+bool JumpWidget::eventFilter(QObject *object, QEvent* event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        if ((static_cast<QKeyEvent*>(event))->key() == Qt::Key_Escape) {
+            hide();
+        }
+    }
+    return QWidget::eventFilter(object, event);
 }
 
 #include "jumpwidget.moc"

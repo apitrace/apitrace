@@ -4,6 +4,7 @@
 #include "ui_jumpwidget.h"
 #include <QWidget>
 
+class QKeyEvent;
 class QShowEvent;
 
 class JumpWidget : public QWidget
@@ -20,6 +21,7 @@ private slots:
     void slotCancel();
 
 protected:
+    virtual bool eventFilter(QObject *object, QEvent* event);
     virtual void showEvent(QShowEvent *event);
 
 private:
