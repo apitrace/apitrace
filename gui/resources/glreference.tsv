@@ -606,7 +606,6 @@ glGetObjectParameterivARB	http://www.opengl.org/registry/specs/ARB/shader_object
 glGetPixelMapfv	http://www.opengl.org/sdk/docs/man/xhtml/glGetPixelMap.xml
 glGetPixelMapuiv	http://www.opengl.org/sdk/docs/man/xhtml/glGetPixelMap.xml
 glGetPixelMapusv	http://www.opengl.org/sdk/docs/man/xhtml/glGetPixelMap.xml
-glGetPointerv	http://www.opengl.org/registry/specs/ARB/debug_output.txt
 glGetPointerv	http://www.opengl.org/sdk/docs/man/xhtml/glGetPointerv.xml
 glGetPolygonStipple	http://www.opengl.org/sdk/docs/man/xhtml/glGetPolygonStipple.xml
 glGetProgramBinary	http://www.opengl.org/registry/specs/ARB/get_program_binary.txt
