@@ -29,6 +29,8 @@ public:
 
     FrameMarker frameMarker() const;
 
+    ApiTraceState defaultState() const;
+
     QList<ApiTraceCall*> calls() const;
     ApiTraceCall *callAt(int idx) const;
     ApiTraceCall *callWithIndex(int idx) const;

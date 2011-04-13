@@ -56,6 +56,7 @@ private slots:
     void slotSearch();
     void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity);
     void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity);
+    void fillState(bool nonDefaults);
 
 private:
     void initObjects();

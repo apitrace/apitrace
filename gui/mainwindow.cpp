@@ -315,6 +315,10 @@ void MainWindow::fillStateForFrame()
     if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
         return;
 
+    bool nonDefaults = m_ui.nonDefaultsCB->isChecked();
+    ApiTraceState defaultState = m_trace->defaultState();
+    QVariantMap defaultParams = defaultState.parameters();
+
     const ApiTraceState &state = m_selectedEvent->state();
     m_ui.stateTreeWidget->clear();
     params = state.parameters();
@@ -324,6 +328,12 @@ void MainWindow::fillStateForFrame()
         QString val;
 
         variantToString(itr.value(), val);
+        if (nonDefaults) {
+            QString defaultValue;
+            variantToString(defaultParams[key], defaultValue);
+            if (defaultValue == val)
+                continue;
+        }
         //qDebug()<<"key = "<<key;
         //qDebug()<<"val = "<<val;
         QStringList lst;
@@ -575,12 +585,17 @@ void MainWindow::initConnections()
     connect(m_ui.detailsWebView, SIGNAL(linkClicked(const QUrl&)),
             this, SLOT(openHelp(const QUrl&)));
 
+    connect(m_ui.nonDefaultsCB, SIGNAL(toggled(bool)),
+            this, SLOT(fillState(bool)));
+
     connect(m_jumpWidget, SIGNAL(jumpTo(int)),
             SLOT(slotJumpTo(int)));
 
-    connect(m_searchWidget, SIGNAL(searchNext(const QString&, Qt::CaseSensitivity)),
+    connect(m_searchWidget,
+            SIGNAL(searchNext(const QString&, Qt::CaseSensitivity)),
             SLOT(slotSearchNext(const QString&, Qt::CaseSensitivity)));
-    connect(m_searchWidget, SIGNAL(searchPrev(const QString&, Qt::CaseSensitivity)),
+    connect(m_searchWidget,
+            SIGNAL(searchPrev(const QString&, Qt::CaseSensitivity)),
             SLOT(slotSearchPrev(const QString&, Qt::CaseSensitivity)));
 
     connect(m_traceProcess, SIGNAL(tracedFile(const QString&)),
@@ -732,6 +747,38 @@ void MainWindow::slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitiv
         }
     }
     m_searchWidget->setFound(false);
+}
+
+void MainWindow::fillState(bool nonDefaults)
+{
+    if (nonDefaults) {
+        ApiTraceState defaultState = m_trace->defaultState();
+        if (defaultState.isEmpty()) {
+            m_ui.nonDefaultsCB->blockSignals(true);
+            m_ui.nonDefaultsCB->setChecked(false);
+            m_ui.nonDefaultsCB->blockSignals(false);
+            int ret = QMessageBox::question(
+                this, tr("Empty Default State"),
+                tr("The applcation needs to figure out the "
+                   "default state for the current trace. "
+                   "This only has to be done once and "
+                   "afterwards you will be able to enable "
+                   "displaying of non default state for all calls."
+                   "\nDo you want to lookup the default state now?"),
+                QMessageBox::Yes | QMessageBox::No);
+            if (ret != QMessageBox::Yes)
+                return;
+            ApiTraceFrame *firstFrame =
+                m_trace->frameAt(0);
+            ApiTraceEvent *oldSelected = m_selectedEvent;
+            if (!firstFrame)
+                return;
+            m_selectedEvent = firstFrame;
+            lookupState();
+            m_selectedEvent = oldSelected;
+        }
+    }
+    fillStateForFrame();
 }
 
 #include "mainwindow.moc"

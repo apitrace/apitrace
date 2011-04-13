@@ -128,13 +128,20 @@
      <item>
       <widget class="QTabWidget" name="stateTabWidget">
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="parametersTab">
         <attribute name="title">
          <string>Parameters</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QCheckBox" name="nonDefaultsCB">
+           <property name="text">
+            <string>Only show non-defaults</string>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QTreeWidget" name="stateTreeWidget">
            <property name="editTriggers">
