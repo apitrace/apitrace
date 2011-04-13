@@ -202,11 +202,11 @@ class Differ(Visitor):
             for i in range(max(len(a), len(b))):
                 try:
                     ae = a[i]
-                except KeyError:
+                except IndexError:
                     ae = None
                 try:
                     be = b[i]
-                except KeyError:
+                except IndexError:
                     be = None
                 self.dumper._indent()
                 if comparer.visit(ae, be):
