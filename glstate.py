@@ -26,15 +26,15 @@
 
 from stdapi import *
 
-from glenum import GLenum
+from glapi import *
 
 
 X = None # To be determined
-B = Bool
-I = Int
+B = GLboolean
+I = GLint
 E = GLenum
-F = Float
-D = Double
+F = GLfloat
+D = GLdouble
 P = OpaquePointer(Void)
 S = CString
 
@@ -2837,67 +2837,112 @@ texture_targets = [
 ]
 
 
-class GlGetter(Visitor):
-    '''Type visitor
-    Determine which glGet*v function that matches the specified type.'''
+class GetInflector:
+    '''Objects that describes how to inflect.'''
 
-    def __init__(self, prefix = 'glGet', long_suffix = True):
-        self.prefix = prefix
-        self.long_suffix = long_suffix
+    reduced_types = {
+        B: I,
+        E: I,
+        I: F,
+    }
 
-        if prefix == 'glGet':
-            self.suffixes = {
-                'GLboolean': 'Booleanv',
-                'GLint': 'Intv',
-                'GLfloat': 'Floatv',
-                'GLdouble': 'Doublev',
-                'GLstring': 'String',
-            }
+    def __init__(self, radical, suffixes):
+        self.radical = radical
+        self.suffixes = suffixes
+
+    def reduced_type(self, type):
+        if type in self.suffixes:
+            return type
+        if type in self.reduced_types:
+            return self.reduced_type(self.reduced_types[type])
+        raise NotImplementedError
+
+    def inflect(self, type):
+        return self.radical + self.suffix(type)
+
+    def suffix(self, type):
+        type = self.reduced_type(type)
+        assert type in self.suffixes
+        return self.suffixes[type]
+
+
+glGet = GetInflector('glGet', {
+    B: 'Booleanv',
+    I: 'Integerv',
+    F: 'Floatv',
+    D: 'Doublev',
+    S: 'String',
+    P: 'Pointerv',
+})
+
+glGetTexParameter = GetInflector('glGetTexParameter', {I: 'iv', F: 'fv'})
+
+
+
+class StateGetter(Visitor):
+    '''Type visitor that is able to extract the state via one of the glGet*
+    functions.
+
+    It will declare any temporary variable
+    '''
+
+    def __init__(self, inflector):
+        self.inflector = inflector
+
+    def temp_name(self, pname):
+        '''Return the name of a temporary variable to hold the state.'''
+
+        return pname[3:].lower()
+
+    def visit_const(self, const, pname):
+        return self.visit(const.type, pname)
+
+    def visit_scalar(self, type, pname):
+        temp_name = self.temp_name(pname)
+        elem_type = self.inflector.reduced_type(type)
+        inflection = self.inflector.inflect(type)
+        if inflection.endswith('v'):
+            print '    %s %s = 0;' % (elem_type, temp_name)
+            print '    %s(%s, &%s);' % (inflection, pname, temp_name)
         else:
-            self.suffixes = {
-                'GLint': 'iv',
-                'GLfloat': 'fv',
-                'GLdouble': 'Doublev',
-                'GLstring': 'String',
-            }
+            print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection, pname)
+        return temp_name
 
+    def visit_string(self, string, pname):
+        temp_name = self.temp_name(pname)
+        inflection = self.inflector.inflect(string)
+        assert not inflection.endswith('v')
+        print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection, pname)
+        return temp_name
 
-    def visit_const(self, const):
-        return self.visit(const.type)
+    def visit_alias(self, alias, pname):
+        return self.visit_scalar(alias, pname)
 
-    def visit_alias(self, alias):
-        if alias.expr == 'GLboolean':
-            if self.long_suffix:
-                return self.prefix + 'Booleanv', alias.expr
-            else:
-                return self.prefix + 'iv', 'GLint'
-        elif alias.expr == 'GLdouble':
-            if self.long_suffix:
-                return self.prefix + 'Doublev', alias.expr
-            else:
-                return self.prefix + 'dv', alias.expr
-        elif alias.expr == 'GLfloat':
-            if self.long_suffix:
-                return self.prefix + 'Floatv', alias.expr
-            else:
-                return self.prefix + 'fv', alias.expr
-        elif alias.expr in ('GLint', 'GLuint', 'GLsizei'):
-            if self.long_suffix:
-                return self.prefix + 'Integerv', 'GLint'
-            else:
-                return self.prefix + 'iv', 'GLint'
-        else:
-            print alias.expr
-            assert False
-    
-    def visit_enum(self, enum):
-        return self.visit(glapi.GLint)
+    def visit_enum(self, enum, pname):
+        return self.visit(GLint, pname)
 
-    def visit_bitmask(self, bitmask):
-        return self.visit(glapi.GLint)
+    def visit_bitmask(self, bitmask, pname):
+        return self.visit(GLint, pname)
 
-    def visit_opaque(self, pointer):
-        return self.prefix + 'Pointerv', 'GLvoid *'
+    def visit_array(self, array, pname):
+        temp_name = self.temp_name(pname)
+        if array.length == '1':
+            return self.visit(array.type)
+        elem_type = self.inflector.reduced_type(array.type)
+        inflection = self.inflector.inflect(array.type)
+        assert inflection.endswith('v')
+        print '    %s %s[%s];' % (elem_type, temp_name, array.length)
+        print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
+        print '    %s(%s, %s);' % (inflection, pname, temp_name)
+        return temp_name
+
+    def visit_opaque(self, pointer, pname):
+        temp_name = self.temp_name(pname)
+        inflection = self.inflector.inflect(pointer)
+        assert inflection.endswith('v')
+        print '    GLvoid *%s;' % temp_name
+        print '    %s(%s, &%s);' % (inflection, pname, temp_name)
+        return temp_name
 
 
 class JsonWriter(Visitor):
@@ -2947,6 +2992,8 @@ class JsonWriter(Visitor):
 
 
 class StateDumper:
+    '''Class to generate code to dump all GL state in JSON format via
+    stdout.'''
 
     def __init__(self):
         self.level = 0
@@ -3211,15 +3258,6 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print
 
     def dump_parameters(self):
-        print '    const GLubyte * sparams[1];'
-        print '    GLboolean bparams[16];'
-        print '    GLint iparams[16];'
-        print '    GLfloat fparams[16];'
-        print '    GLdouble dparams[16];'
-        print '    GLvoid * pparams[16];'
-        print
-        print '    (void)dparams;'
-        print
         print '    json.beginMember("parameters");'
         print '    json.beginObject();'
         for function, type, count, name in parameters:
@@ -3227,45 +3265,21 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
                 continue
             if type is X:
                 continue
-            elif type is B:
-                buf = 'bparams'
-                getter = 'glGetBooleanv'
-            elif type is I:
-                buf = 'iparams'
-                getter = 'glGetIntegerv'
-            elif type is E:
-                buf = 'iparams'
-                getter = 'glGetIntegerv'
-            elif type is F:
-                buf = 'fparams'
-                getter = 'glGetFloatv'
-            elif type is D:
-                buf = 'dparams'
-                getter = 'glGetDoublev'
-            elif type is P:
-                buf = 'pparams'
-                getter = 'glGetPointerv'
-            elif type is S:
-                buf = 'sparams'
-                getter = 'glGetString'
-            else:
-                raise NotImplementedError
-            print '    memset(%s, 0, %u * sizeof *%s);' % (buf, count, buf)
-            if getter.endswith('v'):
-                print '    %s(%s, %s);' % (getter, name, buf)
-            else:
-                assert count == 1
-                print '    %s[0] = %s(%s);' % (buf, getter, name)
-            print '    if (glGetError() != GL_NO_ERROR) {'
-            #print '        std::cerr << "warning: %s(%s) failed\\n";' % (getter, name)
-            print '    } else {'
-            print '        json.beginMember("%s");' % name
-            if count == 1:
-                JsonWriter().visit(type, '%s[0]' % buf)
-            else:
-                JsonWriter().visit(Array(type, str(count)), buf)
-            print '        json.endMember();'
+            if count != 1:
+                type = Array(type, str(count))
+
+            print '    // %s' % name
+            print '    {'
+            value = StateGetter(glGet).visit(type, name)
+            print '        if (glGetError() != GL_NO_ERROR) {'
+            #print '            std::cerr << "warning: %s(%s) failed\\n";' % (glGet.radical, name)
+            print '        } else {'
+            print '            json.beginMember("%s");' % name
+            JsonWriter().visit(type, value)
+            print '            json.endMember();'
+            print '        }'
             print '    }'
+            print
         print '    json.endObject();'
         print '    json.endMember(); // parameters'
         print

@@ -221,7 +221,7 @@ add_custom_command (
 add_custom_command (
     OUTPUT glretrace_state.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_state.cpp
-    DEPENDS glstate.py glenum.py stdapi.py
+    DEPENDS glstate.py glapi.py glenum.py stdapi.py
 )
 
 include_directories (
