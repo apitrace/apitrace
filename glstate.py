@@ -3326,24 +3326,8 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
     def dump_parameters(self):
         print '    json.beginMember("parameters");'
         print '    json.beginObject();'
-        for function, type, count, name in parameters:
-            if function != 'glGet':
-                continue
-            if type is X:
-                continue
-
-            print '    // %s' % name
-            print '    {'
-            type, value = glGet(name)
-            print '        if (glGetError() != GL_NO_ERROR) {'
-            #print '            std::cerr << "warning: %s(%s) failed\\n";' % (glGet.radical, name)
-            print '        } else {'
-            print '            json.beginMember("%s");' % name
-            JsonWriter().visit(type, value)
-            print '            json.endMember();'
-            print '        }'
-            print '    }'
-            print
+        
+        self.dump_atoms(glGet)
         
         self.dump_vertex_attribs()
 
@@ -3352,34 +3336,18 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print
 
     def dump_vertex_attribs(self):
-        print '    json.beginMember("vertex_attrib");'
+        print '    json.beginMember("GL_VERTEX_ATTRIB");'
         print '    json.beginArray();'
         print '    GLint max_vertex_attribs = 0;'
         print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_vertex_attribs);'
         print '    for (GLint index = 0; index < max_vertex_attribs; ++index) {'
         print '        json.beginObject();'
-        for function, type, count, name in parameters:
-            if function != 'glGetVertexAttrib':
-                continue
-            if type is X:
-                contine
-            print '        // %s' % name
-            print '        {'
-            type, value = glGetVertexAttrib('index', name)
-            print '            if (glGetError() != GL_NO_ERROR) {'
-            #print '                std::cerr << "warning: %s(%s) failed\\n";' % (glGet.radical, name)
-            print '            } else {'
-            print '                json.beginMember("%s");' % name
-            JsonWriter().visit(type, value)
-            print '                json.endMember();'
-            print '            }'
-            print '        }'
-            print
+        self.dump_atoms(glGetVertexAttrib, 'index')
         print '        json.endObject();'
         print '    }'
         print
         print '    json.endArray();'
-        print '    json.endMember(); // vertex_attrib'
+        print '    json.endMember(); // GL_VERTEX_ATTRIB'
         print
 
     def dump_current_program(self):
@@ -3441,6 +3409,25 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print '    json.endObject();'
         print '    json.endMember(); // framebuffer'
         pass
+
+    def dump_atoms(self, getter, *args):
+        for function, type, count, name in parameters:
+            if function != getter.inflector.radical:
+                continue
+            if type is X:
+                continue
+            print '        // %s' % name
+            print '        {'
+            type, value = getter(*(args + (name,)))
+            print '            if (glGetError() != GL_NO_ERROR) {'
+            #print '                std::cerr << "warning: %s(%s) failed\\n";' % (glGet.radical, name)
+            print '            } else {'
+            print '                json.beginMember("%s");' % name
+            JsonWriter().visit(type, value)
+            print '                json.endMember();'
+            print '            }'
+            print '        }'
+            print
 
     def write_line(s):
         self.write('  '*self.level + s + '\n')
