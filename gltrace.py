@@ -120,7 +120,7 @@ class GlTracer(Tracer):
             print
 
         print '    // glVertexAttribPointer'
-        print '    GLint __max_vertex_attribs;'
+        print '    GLint __max_vertex_attribs = 0;'
         print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
         print '    for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
         print '        GLint __enabled = 0;'
@@ -331,7 +331,7 @@ class GlTracer(Tracer):
 
         # Samething, but for glVertexAttribPointer
         print '    // glVertexAttribPointer'
-        print '    GLint __max_vertex_attribs;'
+        print '    GLint __max_vertex_attribs = 0;'
         print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
         print '    for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
         print '        GLint __enabled = 0;'
