@@ -307,40 +307,123 @@ variantToString(const QVariant &var, QString &str)
     }
 }
 
-void MainWindow::fillStateForFrame()
+static QTreeWidgetItem *
+variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVar);
+
+static void
+variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap, QList<QTreeWidgetItem *> &items)
 {
     QVariantMap::const_iterator itr;
+    for (itr = map.constBegin(); itr != map.constEnd(); ++itr) {
+        QString key = itr.key();
+        QVariant var = itr.value();
+        QVariant defaultVar = defaultMap[key];
+
+        QTreeWidgetItem *item = variantToItem(key, var, defaultVar);
+        if (item) {
+            items.append(item);
+        }
+    }
+}
+
+static void
+variantListToItems(const QVariantList &lst, const QVariantList &defaultLst, QList<QTreeWidgetItem *> &items)
+{
+    for (int i = 0; i < lst.count(); ++i) {
+        QString key = QString::number(i);
+        QVariant var = lst[i];
+        QVariant defaultVar;
+        
+        if (i < defaultLst.count()) {
+            defaultVar = defaultLst[i];
+        }
+
+        QTreeWidgetItem *item = variantToItem(key, var, defaultVar);
+        if (item) {
+            items.append(item);
+        }
+    }
+}
+
+static bool
+isVariantDeep(const QVariant &var)
+{
+    if (var.type() == QVariant::List) {
+        QVariantList lst = var.toList();
+        for (int i = 0; i < lst.count(); ++i) {
+            if (isVariantDeep(lst[i])) {
+                return true;
+            }
+        }
+        return false;
+    } else if (var.type() == QVariant::Map) {
+        return true;
+    } else if (var.type() == QVariant::Hash) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static QTreeWidgetItem *
+variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVar)
+{
+    if (var == defaultVar) {
+        return NULL;
+    }
+
+    QString val;
+
+    bool deep = isVariantDeep(var);
+    if (!deep) {
+        variantToString(var, val);
+    }
+
+    //qDebug()<<"key = "<<key;
+    //qDebug()<<"val = "<<val;
+    QStringList lst;
+    lst += key;
+    lst += val;
+
+    QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidgetItem *)0, lst);
+
+    if (deep) {
+        QList<QTreeWidgetItem *> children;
+        if (var.type() == QVariant::Map) {
+            QVariantMap map = var.toMap();
+            QVariantMap defaultMap = defaultVar.toMap();
+            variantMapToItems(map, defaultMap, children);
+        }
+        if (var.type() == QVariant::List) {
+            QVariantList lst = var.toList();
+            QVariantList defaultLst = defaultVar.toList();
+            variantListToItems(lst, defaultLst, children);
+        }
+        item->addChildren(children);
+    }
+
+    return item;
+}
+
+void MainWindow::fillStateForFrame()
+{
     QVariantMap params;
 
     if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
         return;
 
     bool nonDefaults = m_ui.nonDefaultsCB->isChecked();
-    ApiTraceState defaultState = m_trace->defaultState();
-    QVariantMap defaultParams = defaultState.parameters();
+    QVariantMap defaultParams;
+    if (nonDefaults) {
+        ApiTraceState defaultState = m_trace->defaultState();
+        defaultParams = defaultState.parameters();
+    }
 
     const ApiTraceState &state = m_selectedEvent->state();
     m_ui.stateTreeWidget->clear();
     params = state.parameters();
     QList<QTreeWidgetItem *> items;
-    for (itr = params.constBegin(); itr != params.constEnd(); ++itr) {
-        QString key = itr.key();
-        QString val;
-
-        variantToString(itr.value(), val);
-        if (nonDefaults) {
-            QString defaultValue;
-            variantToString(defaultParams[key], defaultValue);
-            if (defaultValue == val)
-                continue;
-        }
-        //qDebug()<<"key = "<<key;
-        //qDebug()<<"val = "<<val;
-        QStringList lst;
-        lst += key;
-        lst += val;
-        items.append(new QTreeWidgetItem((QTreeWidget*)0, lst));
-    }
+    variantMapToItems(params, defaultParams, items);
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
 
     QMap<QString, QString> shaderSources = state.shaderSources();
