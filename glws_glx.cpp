@@ -63,8 +63,10 @@ public:
     
     void
     resize(unsigned w, unsigned h) {
+        glXWaitGL();
         Drawable::resize(w, h);
         XResizeWindow(display, window, w, h);
+        glXWaitX();
     }
 
     void swapBuffers(void) {
