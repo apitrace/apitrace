@@ -2866,7 +2866,88 @@ class GetInflector:
         return self.suffixes[type]
 
 
-glGet = GetInflector('glGet', {
+class StateGetter(Visitor):
+    '''Type visitor that is able to extract the state via one of the glGet*
+    functions.
+
+    It will declare any temporary variable
+    '''
+
+    def __init__(self, radical, suffixes):
+        self.inflector = GetInflector(radical, suffixes)
+
+    def __call__(self, *args):
+        pname = args[-1]
+
+        for function, type, count, name in parameters:
+            if type is X:
+                continue
+            if name == pname:
+                if count != 1:
+                    type = Array(type, str(count))
+
+                return type, self.visit(type, args)
+
+        raise NotImplementedError
+
+    def temp_name(self, args):
+        '''Return the name of a temporary variable to hold the state.'''
+        pname = args[-1]
+
+        return pname[3:].lower()
+
+    def visit_const(self, const, args):
+        return self.visit(const.type, args)
+
+    def visit_scalar(self, type, args):
+        temp_name = self.temp_name(args)
+        elem_type = self.inflector.reduced_type(type)
+        inflection = self.inflector.inflect(type)
+        if inflection.endswith('v'):
+            print '    %s %s = 0;' % (elem_type, temp_name)
+            print '    %s(%s, &%s);' % (inflection, ', '.join(args), temp_name)
+        else:
+            print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection, ', '.join(args))
+        return temp_name
+
+    def visit_string(self, string, args):
+        temp_name = self.temp_name(args)
+        inflection = self.inflector.inflect(string)
+        assert not inflection.endswith('v')
+        print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection, ', '.join(args))
+        return temp_name
+
+    def visit_alias(self, alias, args):
+        return self.visit_scalar(alias, args)
+
+    def visit_enum(self, enum, args):
+        return self.visit(GLint, args)
+
+    def visit_bitmask(self, bitmask, args):
+        return self.visit(GLint, args)
+
+    def visit_array(self, array, args):
+        temp_name = self.temp_name(args)
+        if array.length == '1':
+            return self.visit(array.type)
+        elem_type = self.inflector.reduced_type(array.type)
+        inflection = self.inflector.inflect(array.type)
+        assert inflection.endswith('v')
+        print '    %s %s[%s];' % (elem_type, temp_name, array.length)
+        print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
+        print '    %s(%s, %s);' % (inflection, ', '.join(args), temp_name)
+        return temp_name
+
+    def visit_opaque(self, pointer, args):
+        temp_name = self.temp_name(args)
+        inflection = self.inflector.inflect(pointer)
+        assert inflection.endswith('v')
+        print '    GLvoid *%s;' % temp_name
+        print '    %s(%s, &%s);' % (inflection, ', '.join(args), temp_name)
+        return temp_name
+
+
+glGet = StateGetter('glGet', {
     B: 'Booleanv',
     I: 'Integerv',
     F: 'Floatv',
@@ -2875,74 +2956,8 @@ glGet = GetInflector('glGet', {
     P: 'Pointerv',
 })
 
-glGetTexParameter = GetInflector('glGetTexParameter', {I: 'iv', F: 'fv'})
-
-
-
-class StateGetter(Visitor):
-    '''Type visitor that is able to extract the state via one of the glGet*
-    functions.
-
-    It will declare any temporary variable
-    '''
-
-    def __init__(self, inflector):
-        self.inflector = inflector
-
-    def temp_name(self, pname):
-        '''Return the name of a temporary variable to hold the state.'''
-
-        return pname[3:].lower()
-
-    def visit_const(self, const, pname):
-        return self.visit(const.type, pname)
-
-    def visit_scalar(self, type, pname):
-        temp_name = self.temp_name(pname)
-        elem_type = self.inflector.reduced_type(type)
-        inflection = self.inflector.inflect(type)
-        if inflection.endswith('v'):
-            print '    %s %s = 0;' % (elem_type, temp_name)
-            print '    %s(%s, &%s);' % (inflection, pname, temp_name)
-        else:
-            print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection, pname)
-        return temp_name
-
-    def visit_string(self, string, pname):
-        temp_name = self.temp_name(pname)
-        inflection = self.inflector.inflect(string)
-        assert not inflection.endswith('v')
-        print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection, pname)
-        return temp_name
-
-    def visit_alias(self, alias, pname):
-        return self.visit_scalar(alias, pname)
-
-    def visit_enum(self, enum, pname):
-        return self.visit(GLint, pname)
-
-    def visit_bitmask(self, bitmask, pname):
-        return self.visit(GLint, pname)
-
-    def visit_array(self, array, pname):
-        temp_name = self.temp_name(pname)
-        if array.length == '1':
-            return self.visit(array.type)
-        elem_type = self.inflector.reduced_type(array.type)
-        inflection = self.inflector.inflect(array.type)
-        assert inflection.endswith('v')
-        print '    %s %s[%s];' % (elem_type, temp_name, array.length)
-        print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
-        print '    %s(%s, %s);' % (inflection, pname, temp_name)
-        return temp_name
-
-    def visit_opaque(self, pointer, pname):
-        temp_name = self.temp_name(pname)
-        inflection = self.inflector.inflect(pointer)
-        assert inflection.endswith('v')
-        print '    GLvoid *%s;' % temp_name
-        print '    %s(%s, &%s);' % (inflection, pname, temp_name)
-        return temp_name
+glGetVertexAttrib = StateGetter('glGetVertexAttrib', {I: 'iv', F: 'fv', D: 'dv', P: 'Pointerv'})
+glGetTexParameter = StateGetter('glGetTexParameter', {I: 'iv', F: 'fv'})
 
 
 class JsonWriter(Visitor):
@@ -3316,12 +3331,10 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
                 continue
             if type is X:
                 continue
-            if count != 1:
-                type = Array(type, str(count))
 
             print '    // %s' % name
             print '    {'
-            value = StateGetter(glGet).visit(type, name)
+            type, value = glGet(name)
             print '        if (glGetError() != GL_NO_ERROR) {'
             #print '            std::cerr << "warning: %s(%s) failed\\n";' % (glGet.radical, name)
             print '        } else {'
@@ -3331,8 +3344,42 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
             print '        }'
             print '    }'
             print
+        
+        self.dump_vertex_attribs()
+
         print '    json.endObject();'
         print '    json.endMember(); // parameters'
+        print
+
+    def dump_vertex_attribs(self):
+        print '    json.beginMember("vertex_attrib");'
+        print '    json.beginArray();'
+        print '    GLint max_vertex_attribs = 0;'
+        print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_vertex_attribs);'
+        print '    for (GLint index = 0; index < max_vertex_attribs; ++index) {'
+        print '        json.beginObject();'
+        for function, type, count, name in parameters:
+            if function != 'glGetVertexAttrib':
+                continue
+            if type is X:
+                contine
+            print '        // %s' % name
+            print '        {'
+            type, value = glGetVertexAttrib('index', name)
+            print '            if (glGetError() != GL_NO_ERROR) {'
+            #print '                std::cerr << "warning: %s(%s) failed\\n";' % (glGet.radical, name)
+            print '            } else {'
+            print '                json.beginMember("%s");' % name
+            JsonWriter().visit(type, value)
+            print '                json.endMember();'
+            print '            }'
+            print '        }'
+            print
+        print '        json.endObject();'
+        print '    }'
+        print
+        print '    json.endArray();'
+        print '    json.endMember(); // vertex_attrib'
         print
 
     def dump_current_program(self):
