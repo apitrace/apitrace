@@ -41,6 +41,9 @@ if (MSVC)
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
 
+    # No min/max macros
+    add_definitions (-DNOMINMAX)
+
     # Adjust warnings
     add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
     add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
