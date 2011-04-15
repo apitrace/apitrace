@@ -295,7 +295,7 @@ public:
     template<class T>
     inline void writeNumber(T n) {
         separator();
-        os << std::dec << n;
+        os << std::dec << std::setprecision(9) << n;
         value = true;
         space = ' ';
     }
