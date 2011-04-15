@@ -209,8 +209,8 @@ endif (WIN32)
 
 add_library (trace trace_model.cpp trace_parser.cpp ${os})
 
-add_executable (dump dump.cpp)
-target_link_libraries (dump trace)
+add_executable (tracedump tracedump.cpp)
+target_link_libraries (tracedump trace)
 
 add_custom_command (
     OUTPUT glretrace_gl.cpp

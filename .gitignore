@@ -28,12 +28,12 @@ d3d10_1.cpp
 d3d8.cpp
 d3d9.cpp
 ddraw.cpp
-dump
 dxsdk
 glproc.hpp
 glretrace
 glretrace_gl.cpp
 glretrace_state.cpp
 glxtrace.cpp
+tracedump
 traces
 wgltrace.cpp

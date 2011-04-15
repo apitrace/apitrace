@@ -89,7 +89,7 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
 * View the trace with
 
- /path/to/dump application.trace
+ /path/to/tracedump application.trace
 
 * Replay the trace with
 
@@ -105,7 +105,7 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
 * View the trace with
 
- /path/to/dump application.trace
+ /path/to/tracedump application.trace
 
 * Replay the trace with
 

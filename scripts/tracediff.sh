@@ -26,13 +26,13 @@
 
 set -e
 
-DUMP=${DUMP:-`dirname "$0"`/dump}
+TRACEDUMP=${TRACEDUMP:-`dirname "$0"`/tracedump}
 
-$DUMP
+$TRACEDUMP
 
 stripdump () {
     # http://www.theeggeadventure.com/wikimedia/index.php/Linux_Tips#Use_sed_to_remove_ANSI_colors
-    $DUMP "$1" \
+    $TRACEDUMP "$1" \
     | sed \
         -e 's/\x1b\[[0-9]\{1,2\}\(;[0-9]\{1,2\}\)\{0,2\}m//g' \
         -e 's/\r$//g' \
