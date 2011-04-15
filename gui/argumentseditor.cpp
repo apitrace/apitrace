@@ -10,6 +10,23 @@
 
 #include "apitracecall.h"
 
+
+static bool
+isVariantEditable(const QVariant &var)
+{
+    switch (var.userType()) {
+    case QVariant::Bool:
+    case QVariant::Int:
+    case QVariant::UInt:
+    case QVariant::LongLong:
+    case QVariant::ULongLong:
+    case QVariant::Double:
+        return true;
+    default:
+        return false;
+    }
+}
+
 ArgumentsEditor::ArgumentsEditor(QWidget *parent)
     : QWidget(parent),
       m_model(new QStandardItemModel()),
@@ -77,6 +94,9 @@ void ArgumentsEditor::setupCall()
             QList<QVariant> vals = array.values();
             QVariant firstVal = vals.value(0);
 
+            QVariant x = val;
+            x.convert(QVariant::String);
+            qDebug()<<"aaaaa = "<<x;
             if (firstVal.userType() == QVariant::String) {
                 m_ui.argsTabWidget->addTab(
                     m_ui.shaderTab, argName);
@@ -140,7 +160,15 @@ void ArgumentsEditor::setupCall()
         } else {
             QStandardItem *item
                 = new QStandardItem();
-            item->setFlags(item->flags() | Qt::ItemIsEditable);
+
+            if (isVariantEditable(val)) {
+                item->setFlags(item->flags() | Qt::ItemIsEditable);
+            } else {
+                QIcon icon(":/resources/emblem-locked.png");
+                item->setIcon(icon);
+                item->setFlags(item->flags() ^ Qt::ItemIsEditable);
+                item->setToolTip(tr("Argument is read-only"));
+            }
             item->setData(val, Qt::DisplayRole);
             topRow.append(item);
         }
@@ -197,7 +225,7 @@ QWidget * ArgumentsItemEditorFactory::createEditor(QVariant::Type type,
         sb->setFrame(false);
         sb->setMinimum(-DBL_MAX);
         sb->setMaximum(DBL_MAX);
-        sb->setDecimals(10);
+        sb->setDecimals(8);
         return sb;
     }
     default:

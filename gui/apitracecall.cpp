@@ -536,5 +536,3 @@ QList<QVariant> ApiArray::values() const
 {
     return m_array;
 }
-
-
