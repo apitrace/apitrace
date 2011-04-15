@@ -38,9 +38,9 @@ public:
     void setCall(ApiTraceCall *call);
     ApiTraceCall *call() const;
 
-signals:
-    void argumentsEdited(ApiTraceCall *call);
-
+private slots:
+    void currentSourceChanged(int idx);
+    void sourceChanged();
 private:
     void init();
     void setupCall();
