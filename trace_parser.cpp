@@ -38,12 +38,10 @@
 namespace Trace {
 
 
-unsigned long long Parser::version = 0;
-
-
 Parser::Parser() {
     file = NULL;
     next_call_no = 0;
+    version = 0;
 }
 
 

@@ -62,7 +62,7 @@ protected:
     unsigned next_call_no;
 
 public:
-    static unsigned long long version;
+    unsigned long long version;
 
     Parser();
 
