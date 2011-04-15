@@ -3,9 +3,9 @@
 
 #include "ui_argumentseditor.h"
 #include <QComboBox>
+#include <QDialog>
 #include <QItemEditorFactory>
 #include <QStandardItemModel>
-#include <QWidget>
 
 class ApiTraceCall;
 
@@ -27,7 +27,7 @@ public:
     QByteArray valuePropertyName(QVariant::Type) const;
 };
 
-class ArgumentsEditor : public QWidget
+class ArgumentsEditor : public QDialog
 {
     Q_OBJECT
 public:

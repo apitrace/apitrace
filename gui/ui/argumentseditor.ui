@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ArgumentsEditor</class>
- <widget class="QWidget" name="ArgumentsEditor">
+ <widget class="QDialog" name="ArgumentsEditor">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>290</width>
-    <height>472</height>
+    <width>481</width>
+    <height>615</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Trace Arguments Editor</string>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
@@ -92,7 +98,7 @@
    <item>
     <widget class="QTabWidget" name="argsTabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -117,13 +123,6 @@
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <widget class="QComboBox" name="selectStringCB"/>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="editableBox">
-           <property name="text">
-            <string>Editable</string>
-           </property>
-          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_4">
@@ -165,6 +164,16 @@
      </widget>
     </widget>
    </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -177,5 +186,38 @@
  <resources>
   <include location="../qapitrace.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>ArgumentsEditor</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>ArgumentsEditor</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

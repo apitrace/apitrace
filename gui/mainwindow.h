@@ -58,6 +58,8 @@ private slots:
     void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity);
     void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity);
     void fillState(bool nonDefaults);
+    void customContextMenuRequested(QPoint pos);
+    void editCall();
 
 private:
     void initObjects();

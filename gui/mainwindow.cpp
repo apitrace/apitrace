@@ -100,7 +100,6 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
-        m_argsEditor->setCall(call);
         if (call->hasBinaryData()) {
             QByteArray data =
                 call->argValues[call->binaryDataIndex()].toByteArray();
@@ -122,7 +121,6 @@ void MainWindow::callItemSelected(const QModelIndex &index)
                 }
             }
         }
-        m_ui.argsEditorDock->show();
         m_ui.vertexDataDock->setVisible(call->hasBinaryData());
         m_selectedEvent = call;
     } else {
@@ -582,6 +580,7 @@ void MainWindow::initObjects()
     m_ui.callView->resizeColumnToContents(0);
     m_ui.callView->header()->swapSections(0, 1);
     m_ui.callView->setColumnWidth(1, 42);
+    m_ui.callView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_progressBar = new QProgressBar();
     m_progressBar->setRange(0, 0);
@@ -589,16 +588,13 @@ void MainWindow::initObjects()
     m_progressBar->hide();
 
     m_argsEditor = new ArgumentsEditor(this);
-    m_ui.argsEditorLayout->addWidget(m_argsEditor);
 
     m_ui.detailsDock->hide();
     m_ui.vertexDataDock->hide();
     m_ui.stateDock->hide();
-    m_ui.argsEditorDock->hide();
     setDockOptions(dockOptions() | QMainWindow::ForceTabbedDocks);
 
     tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
-    tabifyDockWidget(m_ui.vertexDataDock, m_ui.argsEditorDock);
 
     m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -665,6 +661,8 @@ void MainWindow::initConnections()
 
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
+    connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
+            this, SLOT(customContextMenuRequested(QPoint)));
 
     connect(m_ui.surfacesTreeWidget,
             SIGNAL(customContextMenuRequested(const QPoint &)),
@@ -870,6 +868,36 @@ void MainWindow::fillState(bool nonDefaults)
         }
     }
     fillStateForFrame();
+}
+
+void MainWindow::customContextMenuRequested(QPoint pos)
+{
+    QMenu menu;
+    QModelIndex index = m_ui.callView->indexAt(pos);
+
+    callItemSelected(index);
+    if (!index.isValid())
+        return;
+
+    ApiTraceEvent *event =
+        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    if (!event || event->type() != ApiTraceEvent::Call)
+        return;
+
+    menu.addAction(QIcon(":/resources/media-record.png"),
+                   tr("Lookup state"), this, SLOT(lookupState()));
+    menu.addAction(tr("Edit"), this, SLOT(editCall()));
+
+    menu.exec(QCursor::pos());
+}
+
+void MainWindow::editCall()
+{
+    if (m_selectedEvent && m_selectedEvent->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(m_selectedEvent);
+        m_argsEditor->setCall(call);
+        m_argsEditor->show();
+    }
 }
 
 #include "mainwindow.moc"

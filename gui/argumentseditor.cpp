@@ -120,7 +120,7 @@ bool BooleanComboBox::value() const
 }
 
 ArgumentsEditor::ArgumentsEditor(QWidget *parent)
-    : QWidget(parent),
+    : QDialog(parent),
       m_model(new QStandardItemModel()),
       m_call(0)
 {
