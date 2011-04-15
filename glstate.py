@@ -604,7 +604,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_1D"),	# 0x8063
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_2D"),	# 0x8064
     ("glGet",	X,	1,	"GL_TEXTURE_TOO_LARGE_EXT"),	# 0x8065
-    ("glGetTexParameter",	I,	1,	"GL_TEXTURE_PRIORITY"),	# 0x8066
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_PRIORITY"),	# 0x8066
     ("glGetTexParameter",	B,	1,	"GL_TEXTURE_RESIDENT"),	# 0x8067
     ("glGet",	I,	1,	"GL_TEXTURE_BINDING_1D"),	# 0x8068
     ("glGet",	I,	1,	"GL_TEXTURE_BINDING_2D"),	# 0x8069
@@ -3017,6 +3017,7 @@ class StateDumper:
     def dump(self):
         print '#include <string.h>'
         print '#include <iostream>'
+        print '#include <algorithm>'
         print
         print '#include "json.hpp"'
         print '#include "glimports.hpp"'
@@ -3362,24 +3363,29 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print
 
     def dump_textures(self):
-        print '    json.beginMember("textures");'
-        print '    json.beginArray();'
-        print '    GLint active_texture = GL_TEXTURE0;'
-        print '    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);'
-        print '    GLint max_texture_coords = 0;'
-        print '    glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
-        print '    for (GLint unit = 0; unit < max_texture_coords; ++unit) {'
-        print '        glActiveTexture(GL_TEXTURE0 + unit);'
-        print '        json.beginObject();'
+        print '    {'
+        print '        json.beginMember("textures");'
+        print '        json.beginArray();'
+        print '        GLint active_texture = GL_TEXTURE0;'
+        print '        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);'
+        print '        GLint max_texture_coords = 0;'
+        print '        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+        print '        GLint max_combined_texture_image_units = 0;'
+        print '        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);'
+        print '        GLint max_units = std::max(max_combined_texture_image_units, max_texture_coords);'
+        print '        for (GLint unit = 0; unit < max_units; ++unit) {'
+        print '            glActiveTexture(GL_TEXTURE0 + unit);'
+        print '            json.beginObject();'
         for target, binding in texture_targets:
-            print '        json.beginMember("%s");' % target
-            print '        writeTexture(json, %s, %s);' % (target, binding)
-            print '        json.endMember();'
-        print '        json.endObject();'
+            print '            json.beginMember("%s");' % target
+            print '            writeTexture(json, %s, %s);' % (target, binding)
+            print '            json.endMember();'
+        print '            json.endObject();'
+        print '        }'
+        print '        glActiveTexture(active_texture);'
+        print '        json.endArray();'
+        print '        json.endMember(); // texture'
         print '    }'
-        print '    glActiveTexture(active_texture);'
-        print '    json.endArray();'
-        print '    json.endMember(); // texture'
         print
 
     def dump_framebuffer(self):
