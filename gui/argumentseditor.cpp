@@ -1,7 +1,12 @@
 #include "argumentseditor.h"
 
 #include <QDebug>
+#include <QDoubleSpinBox>
 #include <QItemEditorFactory>
+#include <QSpinBox>
+
+#include <limits.h>
+#include <float.h>
 
 #include "apitracecall.h"
 
@@ -35,17 +40,10 @@ void ArgumentsEditor::init()
     m_ui.setupUi(this);
 
     m_ui.argsTree->setModel(m_model);
-#if 0
-    const QItemEditorFactory *factory = QItemEditorFactory::defaultFactory();
-
-    QItemEditorCreatorBase *apiBitmaskCreator =
-        new QStandardItemEditorCreator<ApiBitmaskEditor>();
-
-    factory->registerEditor(QMetaType::type("ApiBitmask") ,
-                            apiBitmaskCreator);
+    QItemEditorFactory *factory =
+        new ArgumentsItemEditorFactory();
 
     QItemEditorFactory::setDefaultFactory(factory);
-#endif
 }
 
 void ArgumentsEditor::setupCall()
@@ -152,7 +150,97 @@ void ArgumentsEditor::setupCall()
 
 void ArgumentsEditor::setupShaderEditor(const QList<QVariant> &sources)
 {
-    
+}
+
+ArgumentsItemEditorFactory::ArgumentsItemEditorFactory()
+    : QItemEditorFactory()
+{
+}
+
+QWidget * ArgumentsItemEditorFactory::createEditor(QVariant::Type type,
+                                                   QWidget *parent) const
+{
+    switch (type) {
+    case QVariant::Bool: {
+        BooleanComboBox *cb = new BooleanComboBox(parent);
+        cb->setFrame(false);
+        return cb;
+    }
+    case QVariant::UInt: {
+        QSpinBox *sb = new QSpinBox(parent);
+        sb->setFrame(false);
+        sb->setMaximum(INT_MAX);
+        return sb; }
+    case QVariant::Int: {
+        QSpinBox *sb = new QSpinBox(parent);
+        sb->setFrame(false);
+        sb->setMinimum(INT_MIN);
+        sb->setMaximum(INT_MAX);
+        return sb;
+    }
+    case QVariant::ULongLong: {
+        QSpinBox *sb = new QSpinBox(parent);
+        sb->setFrame(false);
+        sb->setMaximum(INT_MAX);
+        return sb; }
+    case QVariant::LongLong: {
+        QSpinBox *sb = new QSpinBox(parent);
+        sb->setFrame(false);
+        sb->setMinimum(INT_MIN);
+        sb->setMaximum(INT_MAX);
+        return sb;
+    }
+    case QVariant::Pixmap:
+        return new QLabel(parent);
+    case QVariant::Double: {
+        QDoubleSpinBox *sb = new QDoubleSpinBox(parent);
+        sb->setFrame(false);
+        sb->setMinimum(-DBL_MAX);
+        sb->setMaximum(DBL_MAX);
+        sb->setDecimals(10);
+        return sb;
+    }
+    default:
+        break;
+    }
+    return 0;
+}
+
+QByteArray
+ArgumentsItemEditorFactory::valuePropertyName(QVariant::Type type) const
+{
+    switch (type) {
+    case QVariant::Bool:
+        return "currentIndex";
+    case QVariant::UInt:
+    case QVariant::Int:
+    case QVariant::LongLong:
+    case QVariant::ULongLong:
+    case QVariant::Double:
+        return "value";
+#if 0
+    case QVariant::String:
+#endif
+    default:
+        return "text";
+    }
+}
+
+BooleanComboBox::BooleanComboBox(QWidget *parent)
+    : QComboBox(parent)
+{
+    addItem(tr("False"));
+    addItem(tr("True"));
+}
+
+void BooleanComboBox::setValue(bool value)
+{
+    setCurrentIndex(value ? 1 : 0);
+}
+
+bool BooleanComboBox::value() const
+{
+    return (currentIndex() == 1);
 }
 
 #include "argumentseditor.moc"
