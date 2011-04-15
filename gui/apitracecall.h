@@ -91,6 +91,7 @@ public:
 
     QString toString() const;
 
+    QList<QVariant> values() const;
 private:
     void init(const Trace::Array *arr);
 private:

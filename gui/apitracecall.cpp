@@ -532,4 +532,9 @@ QList<ApiFramebuffer> ApiTraceState::framebuffers() const
     return m_framebuffers;
 }
 
+QList<QVariant> ApiArray::values() const
+{
+    return m_array;
+}
+
 

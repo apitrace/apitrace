@@ -5,6 +5,7 @@
 #include "apicalldelegate.h"
 #include "apitracemodel.h"
 #include "apitracefilter.h"
+#include "argumentseditor.h"
 #include "imageviewer.h"
 #include "jumpwidget.h"
 #include "retracer.h"
@@ -99,6 +100,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
+        m_argsEditor->setCall(call);
         if (call->hasBinaryData()) {
             QByteArray data =
                 call->argValues[call->binaryDataIndex()].toByteArray();
@@ -120,6 +122,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
                 }
             }
         }
+        m_ui.argsEditorDock->show();
         m_ui.vertexDataDock->setVisible(call->hasBinaryData());
         m_selectedEvent = call;
     } else {
@@ -585,12 +588,17 @@ void MainWindow::initObjects()
     statusBar()->addPermanentWidget(m_progressBar);
     m_progressBar->hide();
 
+    m_argsEditor = new ArgumentsEditor(this);
+    m_ui.argsEditorLayout->addWidget(m_argsEditor);
+
     m_ui.detailsDock->hide();
     m_ui.vertexDataDock->hide();
     m_ui.stateDock->hide();
+    m_ui.argsEditorDock->hide();
     setDockOptions(dockOptions() | QMainWindow::ForceTabbedDocks);
 
     tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
+    tabifyDockWidget(m_ui.vertexDataDock, m_ui.argsEditorDock);
 
     m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 

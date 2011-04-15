@@ -12,6 +12,7 @@ class ApiTraceFilter;
 class ApiTraceFrame;
 class ApiTraceModel;
 class ApiTraceState;
+class ArgumentsEditor;
 class ImageViewer;
 class JumpWidget;
 class QModelIndex;
@@ -91,6 +92,8 @@ private:
     SearchWidget *m_searchWidget;
 
     TraceProcess *m_traceProcess;
+
+    ArgumentsEditor *m_argsEditor;
 };
 
 
