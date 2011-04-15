@@ -3263,17 +3263,6 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print '    }'
         print
         print '    json.beginObject();'
-        print
-        print '    GLfloat param;'
-        for function, type, count, name in parameters:
-            if function != 'glGetTexParameter' or count != 1:
-                continue
-            print '        glGetTexParameterfv(target, %s, &param);' % name
-            print '        json.beginMember("%s");'  % name
-            JsonWriter().visit(type, 'param')
-            print '        json.endMember();'
-            print
-        print
         print '    json.beginMember("levels");'
         print '    json.beginArray();'
         print '    GLint level = 0;'
@@ -3292,15 +3281,6 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print '        json.writeNumber(texture);'
         print '        json.endMember();'
         print
-        # TODO: Generalize this
-        for function, type, count, name in parameters:
-            if function != 'glGetTexLevelParameter' or count != 1:
-                continue
-            print '        glGetTexLevelParameterfv(target, level, %s, &param);' % name
-            print '        json.beginMember("%s");'  % name
-            JsonWriter().visit(type, 'param')
-            print '        json.endMember();'
-            print
         print '        json.beginMember("image");'
         print '        writeTextureImage(json, target, level);'
         print '        json.endMember();'
@@ -3332,6 +3312,7 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         self.dump_atoms(glGet)
         
         self.dump_vertex_attribs()
+        self.dump_texture_parameters()
 
         print '    json.endObject();'
         print '    json.endMember(); // parameters'
@@ -3350,6 +3331,43 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print '        json.endMember(); // GL_VERTEX_ATTRIB_ARRAYi'
         print '    }'
         print
+
+    def dump_texture_parameters(self):
+        print '    {'
+        print '        GLint active_texture = GL_TEXTURE0;'
+        print '        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);'
+        print '        GLint max_texture_coords = 0;'
+        print '        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+        print '        GLint max_combined_texture_image_units = 0;'
+        print '        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);'
+        print '        GLint max_units = std::max(max_combined_texture_image_units, max_texture_coords);'
+        print '        for (GLint unit = 0; unit < max_units; ++unit) {'
+        print '            char name[32];'
+        print '            snprintf(name, sizeof name, "GL_TEXTURE%i", unit);'
+        print '            json.beginMember(name);'
+        print '            glActiveTexture(GL_TEXTURE0 + unit);'
+        print '            json.beginObject();'
+        print '            GLint texture;'
+        print
+        for target, binding in texture_targets:
+            print '            // %s' % target
+            print '            texture = 0;'
+            print '            glGetIntegerv(%s, &texture);' % binding
+            print '            if (glIsEnabled(%s) || texture) {' % target
+            print '                json.beginMember("%s");' % target
+            print '                json.beginObject();'
+            self.dump_atoms(glGetTexParameter, target)
+            # We only dump the first level parameters
+            self.dump_atoms(glGetTexLevelParameter, target, "0")
+            print '                json.endObject();'
+            print '                json.endMember(); // %s' % target
+            print '            }'
+            print
+        print '            json.endObject();'
+        print '            json.endMember(); // GL_TEXTUREi'
+        print '        }'
+        print '        glActiveTexture(active_texture);'
+        print '    }'
         print
 
     def dump_current_program(self):
