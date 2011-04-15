@@ -2958,6 +2958,7 @@ glGet = StateGetter('glGet', {
 
 glGetVertexAttrib = StateGetter('glGetVertexAttrib', {I: 'iv', F: 'fv', D: 'dv', P: 'Pointerv'})
 glGetTexParameter = StateGetter('glGetTexParameter', {I: 'iv', F: 'fv'})
+glGetTexLevelParameter = StateGetter('glGetTexLevelParameter', {I: 'iv', F: 'fv'})
 
 
 class JsonWriter(Visitor):
@@ -3336,18 +3337,18 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print
 
     def dump_vertex_attribs(self):
-        print '    json.beginMember("GL_VERTEX_ATTRIB");'
-        print '    json.beginArray();'
         print '    GLint max_vertex_attribs = 0;'
         print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_vertex_attribs);'
         print '    for (GLint index = 0; index < max_vertex_attribs; ++index) {'
+        print '        char name[32];'
+        print '        snprintf(name, sizeof name, "GL_VERTEX_ATTRIB_ARRAY%i", index);'
+        print '        json.beginMember(name);'
         print '        json.beginObject();'
         self.dump_atoms(glGetVertexAttrib, 'index')
         print '        json.endObject();'
+        print '        json.endMember(); // GL_VERTEX_ATTRIB_ARRAYi'
         print '    }'
         print
-        print '    json.endArray();'
-        print '    json.endMember(); // GL_VERTEX_ATTRIB'
         print
 
     def dump_current_program(self):
