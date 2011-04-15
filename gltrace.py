@@ -110,13 +110,16 @@ class GlTracer(Tracer):
             enable_name = 'GL_%s_ARRAY' % uppercase_name
             binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
             print '    // %s' % function_name
+            self.array_prolog(api, uppercase_name)
             print '    if (__glIsEnabled(%s)) {' % enable_name
             print '        GLint __binding = 0;'
             print '        __glGetIntegerv(%s, &__binding);' % binding_name
             print '        if (!__binding) {'
+            self.array_cleanup(api, uppercase_name)
             print '            return true;'
             print '        }'
             print '    }'
+            self.array_epilog(api, uppercase_name)
             print
 
         print '    // glVertexAttribPointer'
@@ -296,7 +299,9 @@ class GlTracer(Tracer):
             function = api.get_function_by_name(function_name)
 
             print '    // %s' % function.name
-            print '    if (__glIsEnabled(%s)) {;' % enable_name
+            self.array_trace_prolog(api, uppercase_name)
+            self.array_prolog(api, uppercase_name)
+            print '    if (__glIsEnabled(%s)) {' % enable_name
             print '        GLint __binding = 0;'
             print '        __glGetIntegerv(%s, &__binding);' % binding_name
             print '        if (!__binding) {'
@@ -312,6 +317,7 @@ class GlTracer(Tracer):
             print '            size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
             # Emit a fake function
+            self.array_trace_intermezzo(api, uppercase_name)
             print '            unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
@@ -327,6 +333,8 @@ class GlTracer(Tracer):
             print '            Trace::EndLeave();'
             print '        }'
             print '    }'
+            self.array_epilog(api, uppercase_name)
+            self.array_trace_epilog(api, uppercase_name)
             print
 
         # Samething, but for glVertexAttribPointer
@@ -374,6 +382,66 @@ class GlTracer(Tracer):
 
         print '}'
         print
+
+    #
+    # Hooks for glTexCoordPointer, which is identical to the other array
+    # pointers except the fact that it is indexed by glClientActiveTexture.
+    #
+
+    def array_prolog(self, api, uppercase_name):
+        if uppercase_name == 'TEXTURE_COORD':
+            print '    GLint client_active_texture = 0;'
+            print '    __glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &client_active_texture);'
+            print '    GLint max_texture_coords = 0;'
+            print '    __glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+            print '    for (GLint unit = 0; unit < max_texture_coords; ++unit) {'
+            print '        GLenum texture = GL_TEXTURE0 + unit;'
+            print '        __glClientActiveTexture(texture);'
+
+    def array_trace_prolog(self, api, uppercase_name):
+        if uppercase_name == 'TEXTURE_COORD':
+            print '    bool client_active_texture_dirty = false;'
+
+    def array_epilog(self, api, uppercase_name):
+        if uppercase_name == 'TEXTURE_COORD':
+            print '    }'
+        self.array_cleanup(api, uppercase_name)
+
+    def array_cleanup(self, api, uppercase_name):
+        if uppercase_name == 'TEXTURE_COORD':
+            print '    __glClientActiveTexture(client_active_texture);'
+        
+    def array_trace_intermezzo(self, api, uppercase_name):
+        if uppercase_name == 'TEXTURE_COORD':
+            print '    if (texture != client_active_texture || client_active_texture_dirty) {'
+            print '        client_active_texture_dirty = true;'
+            self.fake_glClientActiveTexture_call(api, "texture");
+            print '    }'
+
+    def array_trace_epilog(self, api, uppercase_name):
+        if uppercase_name == 'TEXTURE_COORD':
+            print '    if (client_active_texture_dirty) {'
+            self.fake_glClientActiveTexture_call(api, "client_active_texture");
+            print '    }'
+
+    def fake_glClientActiveTexture_call(self, api, texture):
+        function = api.get_function_by_name('glClientActiveTexture')
+        self.fake_call(function, [texture])
+
+    def fake_call(self, function, args):
+        print '            unsigned __fake_call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+        for arg, instance in zip(function.args, args):
+            assert not arg.output
+            print '            Trace::BeginArg(%u);' % (arg.index,)
+            dump_instance(arg.type, instance)
+            print '            Trace::EndArg();'
+        print '            Trace::EndEnter();'
+        print '            Trace::BeginLeave(__fake_call);'
+        print '            Trace::EndLeave();'
+
+
+
+
 
 
 
