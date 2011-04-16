@@ -53,6 +53,7 @@ private:
                           const QVariant &orignalValue) const;
     QVariant arrayFromIndex(const QModelIndex &index,
                             const ApiArray &array) const;
+    QVariant arrayFromEditor(const ApiArray &origArray) const;
 private:
     Ui_ArgumentsEditor m_ui;
     QStandardItemModel *m_model;

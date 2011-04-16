@@ -27,6 +27,20 @@ isVariantEditable(const QVariant &var)
     }
 }
 
+static bool
+isVariantStringArray(const QVariant &var)
+{
+    if (var.isNull() || var.userType() != QMetaType::type("ApiArray"))
+        return false;
+
+    ApiArray array = var.value<ApiArray>();
+    QList<QVariant> origValues = array.values();
+    if (origValues.isEmpty() ||
+        origValues.first().userType() != QVariant::String)
+        return false;
+
+    return true;
+}
 
 ArgumentsItemEditorFactory::ArgumentsItemEditorFactory()
     : QItemEditorFactory()
@@ -298,6 +312,10 @@ void ArgumentsEditor::sourceChanged()
     QString str = m_ui.glslEdit->toPlainText();
     m_ui.lengthLabel->setText(
         tr("%1").arg(str.length()));
+
+    m_ui.selectStringCB->setItemData(
+        m_ui.selectStringCB->currentIndex(),
+        str);
 }
 
 void ArgumentsEditor::accept()
@@ -320,6 +338,13 @@ QVariant ArgumentsEditor::valueForName(const QString &name,
                                        const QVariant &originalValue) const
 {
     QVariant val;
+
+    //Handle string arrays specially
+    if (isVariantStringArray(originalValue)) {
+        ApiArray array = originalValue.value<ApiArray>();
+        return arrayFromEditor(array);
+    }
+
     for (int topRow = 0; topRow < m_model->rowCount(); ++topRow) {
         QModelIndex nameIdx = m_model->index(topRow, 0, QModelIndex());
         QString argName = nameIdx.data().toString();
@@ -342,24 +367,31 @@ QVariant ArgumentsEditor::arrayFromIndex(const QModelIndex &parentIndex,
                                          const ApiArray &origArray) const
 {
     QList<QVariant> origValues = origArray.values();
-    QVariant newValue;
     if (origValues.isEmpty())
         return QVariant::fromValue(ApiArray());
 
-    if (origValues.first().userType() == QVariant::String) {
-        //shaders
-
-    } else {
-        QList<QVariant> lst;
-        for (int i = 0; i < origValues.count(); ++i) {
-            QModelIndex valIdx = m_model->index(i, 1, parentIndex);
-            QVariant var = valIdx.data();
-            //qDebug()<<"\t\tarray "<<i<<") "<<var;
-            lst.append(var);
-        }
-        newValue = QVariant::fromValue(ApiArray(lst));
+    QList<QVariant> lst;
+    for (int i = 0; i < origValues.count(); ++i) {
+        QModelIndex valIdx = m_model->index(i, 1, parentIndex);
+        QVariant var = valIdx.data();
+        //qDebug()<<"\t\tarray "<<i<<") "<<var;
+        lst.append(var);
     }
-    return newValue;
+    return QVariant::fromValue(ApiArray(lst));
+}
+
+QVariant ArgumentsEditor::arrayFromEditor(const ApiArray &origArray) const
+{
+    QList<QVariant> vals;
+    QList<QVariant> origValues = origArray.values();
+
+    Q_ASSERT(isVariantStringArray(QVariant::fromValue(origArray)));
+    //shaders
+    for (int i = 0; i < m_ui.selectStringCB->count(); ++i) {
+        QVariant val = m_ui.selectStringCB->itemData(i);
+        vals.append(val);
+    }
+    return QVariant::fromValue(ApiArray(vals));
 }
 
 #include "argumentseditor.moc"
