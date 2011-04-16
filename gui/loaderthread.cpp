@@ -56,8 +56,7 @@ void LoaderThread::run()
 
     Trace::Parser p;
     if (p.open(m_fileName.toLatin1().constData())) {
-        Trace::Call *call;
-        call = p.parse_call();
+        Trace::Call *call = p.parse_call();
         while (call) {
             //std::cout << *call;
             if (!currentFrame) {
@@ -78,6 +77,7 @@ void LoaderThread::run()
                     frames.clear();
                 }
             }
+            delete call;
             call = p.parse_call();
         }
     }
