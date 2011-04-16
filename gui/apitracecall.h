@@ -88,6 +88,7 @@ class ApiArray
 {
 public:
     ApiArray(const Trace::Array *arr = 0);
+    ApiArray(const QList<QVariant> &vals);
 
     QString toString() const;
 

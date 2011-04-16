@@ -207,6 +207,11 @@ ApiArray::ApiArray(const Trace::Array *arr)
     init(arr);
 }
 
+ApiArray::ApiArray(const QList<QVariant> &vals)
+    : m_array(vals)
+{
+}
+
 QString ApiArray::toString() const
 {
     QString str;
@@ -606,3 +611,4 @@ ApiTraceFrame * ApiTraceCall::parentFrame()const
 {
     return m_parentFrame;
 }
+

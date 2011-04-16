@@ -184,7 +184,6 @@ void ArgumentsEditor::setupCall()
         nameItem->setFlags(nameItem->flags() ^ Qt::ItemIsEditable);
         QList<QStandardItem*> topRow;
         topRow.append(nameItem);
-        qDebug()<<"arg "<<argName<<", val = "<<val;
 
         if (val.canConvert<ApiArray>()) {
             ApiArray array = val.value<ApiArray>();
@@ -299,6 +298,68 @@ void ArgumentsEditor::sourceChanged()
     QString str = m_ui.glslEdit->toPlainText();
     m_ui.lengthLabel->setText(
         tr("%1").arg(str.length()));
+}
+
+void ArgumentsEditor::accept()
+{
+    QStringList argNames = m_call->argNames();
+    QList<QVariant> originalValues = m_call->arguments();
+    for (int i = 0; i < argNames.count(); ++i) {
+        QString argName = argNames[i];
+        QVariant argValue = originalValues[i];
+        QVariant editorValue = valueForName(argName, argValue);
+        qDebug()<<"Arg = "<<argName;
+        qDebug()<<"\toriginal = "<<argValue;
+        qDebug()<<"\teditor   = "<<editorValue;
+    }
+
+    QDialog::accept();
+}
+
+QVariant ArgumentsEditor::valueForName(const QString &name,
+                                       const QVariant &originalValue) const
+{
+    QVariant val;
+    for (int topRow = 0; topRow < m_model->rowCount(); ++topRow) {
+        QModelIndex nameIdx = m_model->index(topRow, 0, QModelIndex());
+        QString argName = nameIdx.data().toString();
+        /* we display shaders in a separate widget so
+         * the ordering might be different */
+        if (argName == name) {
+            if (originalValue.userType() == QMetaType::type("ApiArray")) {
+                ApiArray array = originalValue.value<ApiArray>();
+                val = arrayFromIndex(nameIdx, array);
+            } else {
+                QModelIndex valIdx = m_model->index(topRow, 1, QModelIndex());
+                val = valIdx.data();
+            }
+        }
+    }
+    return val;
+}
+
+QVariant ArgumentsEditor::arrayFromIndex(const QModelIndex &parentIndex,
+                                         const ApiArray &origArray) const
+{
+    QList<QVariant> origValues = origArray.values();
+    QVariant newValue;
+    if (origValues.isEmpty())
+        return QVariant::fromValue(ApiArray());
+
+    if (origValues.first().userType() == QVariant::String) {
+        //shaders
+
+    } else {
+        QList<QVariant> lst;
+        for (int i = 0; i < origValues.count(); ++i) {
+            QModelIndex valIdx = m_model->index(i, 1, parentIndex);
+            QVariant var = valIdx.data();
+            //qDebug()<<"\t\tarray "<<i<<") "<<var;
+            lst.append(var);
+        }
+        newValue = QVariant::fromValue(ApiArray(lst));
+    }
+    return newValue;
 }
 
 #include "argumentseditor.moc"

@@ -1,7 +1,9 @@
 #ifndef ARGUMENTSEDITOR_H
 #define ARGUMENTSEDITOR_H
 
+#include "apitracecall.h"
 #include "ui_argumentseditor.h"
+
 #include <QComboBox>
 #include <QDialog>
 #include <QItemEditorFactory>
@@ -35,6 +37,8 @@ public:
     ~ArgumentsEditor();
 
 
+    virtual void accept();
+
     void setCall(ApiTraceCall *call);
     ApiTraceCall *call() const;
 
@@ -45,6 +49,10 @@ private:
     void init();
     void setupCall();
     void setupShaderEditor(const QList<QVariant> &sources);
+    QVariant valueForName(const QString &name,
+                          const QVariant &orignalValue) const;
+    QVariant arrayFromIndex(const QModelIndex &index,
+                            const ApiArray &array) const;
 private:
     Ui_ArgumentsEditor m_ui;
     QStandardItemModel *m_model;
