@@ -26,6 +26,9 @@ Tracing:
 
 * Add option to include call stack frames in the trace
 
+* Call gzflush() only when there is a signal/exception, except of doing it on
+  every call.
+
 
 Retracing:
 
