@@ -135,6 +135,7 @@ public:
 public:
     ApiTraceEvent();
     ApiTraceEvent(Type t);
+    virtual ~ApiTraceEvent();
 
     Type type() const { return m_type; }
 
@@ -148,6 +149,8 @@ public:
 protected:
     Type m_type;
     ApiTraceState m_state;
+
+    mutable QStaticText *m_staticText;
 };
 Q_DECLARE_METATYPE(ApiTraceEvent*);
 
@@ -185,7 +188,6 @@ private:
 
     mutable QString m_richText;
     mutable QString m_filterText;
-    mutable QStaticText m_staticText;
     mutable bool m_hasBinaryData;
     mutable int m_binaryDataIndex;
 };
@@ -200,8 +202,6 @@ public:
 
     int numChildren() const;
     QStaticText staticText() const;
-private:
-    mutable QStaticText m_staticText;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

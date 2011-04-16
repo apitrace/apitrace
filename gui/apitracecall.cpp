@@ -242,10 +242,11 @@ void ApiArray::init(const Trace::Array *arr)
 
 QStaticText ApiTraceCall::staticText() const
 {
-    if (!m_staticText.text().isEmpty())
-        return m_staticText;
+    if (m_staticText && !m_staticText->text().isEmpty())
+        return *m_staticText;
 
-    QString richText = QString::fromLatin1("<span style=\"font-weight:bold\">%1</span>(").arg(m_name);
+    QString richText = QString::fromLatin1(
+        "<span style=\"font-weight:bold\">%1</span>(").arg(m_name);
     for (int i = 0; i < m_argNames.count(); ++i) {
         richText += QLatin1String("<span style=\"color:#0000ff\">");
         QString argText = apiVariantToString(m_argValues[i]);
@@ -275,13 +276,14 @@ QStaticText ApiTraceCall::staticText() const
         richText += QLatin1String("</span>");
     }
 
-    m_staticText.setText(richText);
+    if (!m_staticText)
+        m_staticText = new QStaticText(richText);
     QTextOption opt;
     opt.setWrapMode(QTextOption::NoWrap);
-    m_staticText.setTextOption(opt);
-    m_staticText.prepare();
+    m_staticText->setTextOption(opt);
+    m_staticText->prepare();
 
-    return m_staticText;
+    return *m_staticText;
 }
 
 QString ApiTraceCall::toHtml() const
@@ -352,19 +354,21 @@ QString ApiTraceCall::filterText() const
 
 QStaticText ApiTraceFrame::staticText() const
 {
-    if (!m_staticText.text().isEmpty())
-        return m_staticText;
+    if (m_staticText && !m_staticText->text().isEmpty())
+        return *m_staticText;
 
     QString richText =
         QString::fromLatin1("<span style=\"font-weight:bold\">Frame %1</span>").arg(number);
 
-    m_staticText.setText(richText);
+    if (!m_staticText)
+        m_staticText = new QStaticText(richText);
+
     QTextOption opt;
     opt.setWrapMode(QTextOption::NoWrap);
-    m_staticText.setTextOption(opt);
-    m_staticText.prepare();
+    m_staticText->setTextOption(opt);
+    m_staticText->prepare();
 
-    return m_staticText;
+    return *m_staticText;
 }
 
 int ApiTraceCall::numChildren() const
@@ -390,12 +394,14 @@ ApiTraceCall::ApiTraceCall()
 }
 
 ApiTraceEvent::ApiTraceEvent()
-    : m_type(ApiTraceEvent::None)
+    : m_type(ApiTraceEvent::None),
+      m_staticText(0)
 {
 }
 
 ApiTraceEvent::ApiTraceEvent(Type t)
-    : m_type(t)
+    : m_type(t),
+      m_staticText(0)
 {
 }
 
@@ -594,6 +600,19 @@ ApiTraceCall::ApiTraceCall(const Trace::Call *call)
         VariantVisitor argVisitor;
         call->args[i]->visit(argVisitor);
         m_argValues += argVisitor.variant();
+
+        //XXX
+        //FIXME: this is a nasty hack. Trace::Blob's can't
+        //   delete the contents in the destructor because
+        //   the data is being used by other calls. we should
+        //   use something like Boost's shared_ptr or
+        //   Qt's QSharedPointer to handle it.
+        Trace::Blob *b = dynamic_cast<Trace::Blob*>(call->args[i]);
+        if (b && b->blob()) {
+            char *buf = (char*)b->blob();
+            delete [] buf;
+        }
+
     }
 }
 
@@ -610,5 +629,10 @@ void ApiTraceCall::setParentFrame(ApiTraceFrame *frame)
 ApiTraceFrame * ApiTraceCall::parentFrame()const
 {
     return m_parentFrame;
+}
+
+ApiTraceEvent::~ApiTraceEvent()
+{
+    delete m_staticText;
 }
 
