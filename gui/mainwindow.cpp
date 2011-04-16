@@ -102,19 +102,20 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         m_ui.detailsDock->show();
         if (call->hasBinaryData()) {
             QByteArray data =
-                call->argValues[call->binaryDataIndex()].toByteArray();
+                call->arguments()[call->binaryDataIndex()].toByteArray();
             m_vdataInterpreter->setData(data);
+            QVariantList args = call->arguments();
 
-            for (int i = 0; i < call->argNames.count(); ++i) {
-                QString name = call->argNames[i];
+            for (int i = 0; i < call->argNames().count(); ++i) {
+                QString name = call->argNames()[i];
                 if (name == QLatin1String("stride")) {
-                    int stride = call->argValues[i].toInt();
+                    int stride = args[i].toInt();
                     m_ui.vertexStrideSB->setValue(stride);
                 } else if (name == QLatin1String("size")) {
-                    int components = call->argValues[i].toInt();
+                    int components = args[i].toInt();
                     m_ui.vertexComponentsSB->setValue(components);
                 } else if (name == QLatin1String("type")) {
-                    QString val = call->argValues[i].toString();
+                    QString val = args[i].toString();
                     int textIndex = m_ui.vertexTypeCB->findText(val);
                     if (textIndex >= 0)
                         m_ui.vertexTypeCB->setCurrentIndex(textIndex);
@@ -242,7 +243,7 @@ void MainWindow::replayTrace(bool dumpState)
     if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
         if (m_selectedEvent->type() == ApiTraceEvent::Call) {
-            index = static_cast<ApiTraceCall*>(m_selectedEvent)->index;
+            index = static_cast<ApiTraceCall*>(m_selectedEvent)->index();
         } else if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame =
                 static_cast<ApiTraceFrame*>(m_selectedEvent);
@@ -251,7 +252,7 @@ void MainWindow::replayTrace(bool dumpState)
                 qDebug()<<"tried to get a state for an empty frame";
                 return;
             }
-            index = frame->calls.first()->index;
+            index = frame->calls.first()->index();
         } else {
             qDebug()<<"Unknown event type";
             return;

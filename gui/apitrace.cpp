@@ -29,13 +29,13 @@ bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
 
     switch (marker) {
     case FrameMarker_SwapBuffers:
-        return call->name.contains(QLatin1String("SwapBuffers"));
+        return call->name().contains(QLatin1String("SwapBuffers"));
     case FrameMarker_Flush:
-        return call->name == QLatin1String("glFlush");
+        return call->name() == QLatin1String("glFlush");
     case FrameMarker_Finish:
-        return call->name == QLatin1String("glFinish");
+        return call->name() == QLatin1String("glFinish");
     case FrameMarker_Clear:
-        return call->name == QLatin1String("glClear");
+        return call->name() == QLatin1String("glClear");
     }
 
     Q_ASSERT(!"unknown frame marker");
@@ -153,7 +153,7 @@ void ApiTrace::detectFrames()
             currentFrame = new ApiTraceFrame();
             currentFrame->number = m_frames.count();
         }
-        apiCall->parentFrame = currentFrame;
+        apiCall->setParentFrame(currentFrame);
         currentFrame->calls.append(apiCall);
         if (ApiTrace::isCallAFrameMarker(apiCall,
                                          m_frameMarker)) {
@@ -175,7 +175,7 @@ ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 {
     for (int i = 0; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];
-        if (call->index == idx)
+        if (call->index() == idx)
             return call;
     }
     return NULL;

@@ -154,15 +154,18 @@ class ApiTraceCall : public ApiTraceEvent
 {
 public:
     ApiTraceCall();
+    ApiTraceCall(const Trace::Call *tcall);
     ~ApiTraceCall();
 
-    int index;
-    QString name;
-    QStringList argNames;
-    QVariantList argValues;
-    QVariant returnValue;
-    ApiTraceFrame *parentFrame;
-    QUrl helpUrl;
+    int index() const;
+    QString name() const;
+    QStringList argNames() const;
+    QVariantList arguments() const;
+    QVariant returnValue() const;
+    QUrl helpUrl() const;
+    void setHelpUrl(const QUrl &url);
+    ApiTraceFrame *parentFrame()const;
+    void setParentFrame(ApiTraceFrame *frame);
 
     QString toHtml() const;
     QString filterText() const;
@@ -171,6 +174,14 @@ public:
     bool hasBinaryData() const;
     int binaryDataIndex() const;
 private:
+    int m_index;
+    QString m_name;
+    QStringList m_argNames;
+    QVariantList m_argValues;
+    QVariant m_returnValue;
+    ApiTraceFrame *m_parentFrame;
+    QUrl m_helpUrl;
+
     mutable QString m_richText;
     mutable QString m_filterText;
     mutable QStaticText m_staticText;

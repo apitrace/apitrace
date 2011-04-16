@@ -240,10 +240,10 @@ QStaticText ApiTraceCall::staticText() const
     if (!m_staticText.text().isEmpty())
         return m_staticText;
 
-    QString richText = QString::fromLatin1("<span style=\"font-weight:bold\">%1</span>(").arg(name);
-    for (int i = 0; i < argNames.count(); ++i) {
+    QString richText = QString::fromLatin1("<span style=\"font-weight:bold\">%1</span>(").arg(m_name);
+    for (int i = 0; i < m_argNames.count(); ++i) {
         richText += QLatin1String("<span style=\"color:#0000ff\">");
-        QString argText = apiVariantToString(argValues[i]);
+        QString argText = apiVariantToString(m_argValues[i]);
 
         //if arguments are really long (e.g. shader text), cut them
         // and elide it
@@ -259,14 +259,14 @@ QStaticText ApiTraceCall::staticText() const
             richText += argText;
         }
         richText += QLatin1String("</span>");
-        if (i < argNames.count() - 1)
+        if (i < m_argNames.count() - 1)
             richText += QString::fromLatin1(", ");
     }
     richText += QLatin1String(")");
-    if (returnValue.isValid()) {
+    if (m_returnValue.isValid()) {
         richText += QLatin1String(" = ");
         richText += QLatin1String("<span style=\"color:#0000ff\">");
-        richText += apiVariantToString(returnValue);
+        richText += apiVariantToString(m_returnValue);
         richText += QLatin1String("</span>");
     }
 
@@ -284,34 +284,34 @@ QString ApiTraceCall::toHtml() const
     if (!m_richText.isEmpty())
         return m_richText;
 
-    if (helpUrl.isEmpty()) {
+    if (m_helpUrl.isEmpty()) {
         m_richText = QString::fromLatin1(
             "%1) <span style=\"font-weight:bold\">%2</span>(")
-                     .arg(index)
-                     .arg(name);
+                     .arg(m_index)
+                     .arg(m_name);
     } else {
         m_richText = QString::fromLatin1(
             "%1) <span style=\"font-weight:bold\"><a href=\"%2\">%3</a></span>(")
-                      .arg(index)
-                      .arg(helpUrl.toString())
-                      .arg(name);
+                      .arg(m_index)
+                      .arg(m_helpUrl.toString())
+                      .arg(m_name);
     }
 
-    for (int i = 0; i < argNames.count(); ++i) {
-        m_richText += argNames[i];
+    for (int i = 0; i < m_argNames.count(); ++i) {
+        m_richText += m_argNames[i];
         m_richText += QString::fromLatin1(" = ");
         m_richText += QLatin1String("<span style=\"color:#0000ff\">");
-        m_richText += apiVariantToString(argValues[i]);
+        m_richText += apiVariantToString(m_argValues[i]);
         m_richText += QLatin1String("</span>");
-        if (i < argNames.count() - 1)
+        if (i < m_argNames.count() - 1)
             m_richText += QString::fromLatin1(", ");
     }
     m_richText += QLatin1String(")");
 
-    if (returnValue.isValid()) {
+    if (m_returnValue.isValid()) {
         m_richText += QLatin1String(" = ");
         m_richText += QLatin1String("<span style=\"color:#0000ff\">");
-        m_richText += apiVariantToString(returnValue);
+        m_richText += apiVariantToString(m_returnValue);
         m_richText += QLatin1String("</span>");
     }
     return m_richText;
@@ -322,25 +322,25 @@ QString ApiTraceCall::filterText() const
     if (!m_filterText.isEmpty())
         return m_filterText;
 
-    m_filterText = name;
+    m_filterText = m_name;
     m_filterText += QLatin1String("(");
-    for (int i = 0; i < argNames.count(); ++i) {
-        m_filterText += argNames[i];
+    for (int i = 0; i < m_argNames.count(); ++i) {
+        m_filterText += m_argNames[i];
         m_filterText += QString::fromLatin1(" = ");
 
-        if (argValues[i].type() == QVariant::ByteArray) {
+        if (m_argValues[i].type() == QVariant::ByteArray) {
             m_hasBinaryData = true;
             m_binaryDataIndex = i;
         }
-        m_filterText += apiVariantToString(argValues[i]);
-        if (i < argNames.count() - 1)
+        m_filterText += apiVariantToString(m_argValues[i]);
+        if (i < m_argNames.count() - 1)
             m_filterText += QString::fromLatin1(", ");
     }
     m_filterText += QLatin1String(")");
 
-    if (returnValue.isValid()) {
+    if (m_returnValue.isValid()) {
         m_filterText += QLatin1String(" = ");
-        m_filterText += apiVariantToString(returnValue);
+        m_filterText += apiVariantToString(m_returnValue);
     }
     return m_filterText;
 }
@@ -535,4 +535,74 @@ QList<ApiFramebuffer> ApiTraceState::framebuffers() const
 QList<QVariant> ApiArray::values() const
 {
     return m_array;
+}
+
+int ApiTraceCall::index() const
+{
+    return m_index;
+}
+
+QString ApiTraceCall::name() const
+{
+    return m_name;
+}
+
+QStringList ApiTraceCall::argNames() const
+{
+    return m_argNames;
+}
+
+QVariantList ApiTraceCall::arguments() const
+{
+    return m_argValues;
+}
+
+QVariant ApiTraceCall::returnValue() const
+{
+    return m_returnValue;
+}
+
+QUrl ApiTraceCall::helpUrl() const
+{
+    return m_helpUrl;
+}
+
+ApiTraceCall::ApiTraceCall(const Trace::Call *call)
+    : ApiTraceEvent(ApiTraceEvent::Call),
+      m_hasBinaryData(false),
+      m_binaryDataIndex(0)
+{
+    m_name = QString::fromStdString(call->sig->name);
+    m_index = call->no;
+
+    QString argumentsText;
+    for (int i = 0; i < call->sig->arg_names.size(); ++i) {
+        m_argNames +=
+            QString::fromStdString(call->sig->arg_names[i]);
+    }
+    if (call->ret) {
+        VariantVisitor retVisitor;
+        call->ret->visit(retVisitor);
+        m_returnValue = retVisitor.variant();
+    }
+    for (int i = 0; i < call->args.size(); ++i) {
+        VariantVisitor argVisitor;
+        call->args[i]->visit(argVisitor);
+        m_argValues += argVisitor.variant();
+    }
+}
+
+void ApiTraceCall::setHelpUrl(const QUrl &url)
+{
+    m_helpUrl = url;
+}
+
+void ApiTraceCall::setParentFrame(ApiTraceFrame *frame)
+{
+    m_parentFrame = frame;
+}
+
+ApiTraceFrame * ApiTraceCall::parentFrame()const
+{
+    return m_parentFrame;
 }

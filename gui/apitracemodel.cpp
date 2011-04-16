@@ -44,12 +44,12 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
             ApiTraceCall *call = static_cast<ApiTraceCall*>(itm);
             if (call->state().isEmpty())
                 return QString::fromLatin1("%1)&nbsp;<b>%2</b>")
-                    .arg(call->index)
-                    .arg(call->name);
+                    .arg(call->index())
+                    .arg(call->name());
             else
                 return QString::fromLatin1("%1)&nbsp;<b>%2</b><br/>%3")
-                    .arg(call->index)
-                    .arg(call->name)
+                    .arg(call->index())
+                    .arg(call->name())
                     .arg(stateText);
         } else {
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(itm);
@@ -145,9 +145,9 @@ QModelIndex ApiTraceModel::parent(const QModelIndex &index) const
     ApiTraceEvent *event = item(index);
     if (event && event->type() == ApiTraceEvent::Call) {
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
-        Q_ASSERT(call->parentFrame);
-        return createIndex(call->parentFrame->number,
-                           0, call->parentFrame);
+        Q_ASSERT(call->parentFrame());
+        return createIndex(call->parentFrame()->number,
+                           0, call->parentFrame());
     }
     return QModelIndex();
 }
@@ -240,7 +240,7 @@ void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
 
     if (event->type() == ApiTraceEvent::Call) {
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
-        ApiTraceFrame *frame = call->parentFrame;
+        ApiTraceFrame *frame = call->parentFrame();
         int row = frame->calls.indexOf(call);
         QModelIndex index = createIndex(row, 0, call);
         emit dataChanged(index, index);
@@ -265,12 +265,12 @@ QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
         return QModelIndex();
     }
 
-    ApiTraceFrame *frame = call->parentFrame;
+    ApiTraceFrame *frame = call->parentFrame();
     Q_ASSERT(frame);
 
     int row = frame->calls.indexOf(call);
     if (row < 0) {
-        qDebug() << "Couldn't find call num "<<call->index<<" inside parent!";
+        qDebug() << "Couldn't find call num "<<call->index()<<" inside parent!";
         return QModelIndex();
     }
     return createIndex(row, 0, call);

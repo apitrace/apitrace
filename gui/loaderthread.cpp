@@ -14,27 +14,9 @@ static ApiTraceCall *
 apiCallFromTraceCall(const Trace::Call *call,
                      const QHash<QString, QUrl> &helpHash)
 {
-    ApiTraceCall *apiCall = new ApiTraceCall();
-    apiCall->name = QString::fromStdString(call->sig->name);
-    apiCall->index = call->no;
+    ApiTraceCall *apiCall = new ApiTraceCall(call);
 
-    QString argumentsText;
-    for (int i = 0; i < call->sig->arg_names.size(); ++i) {
-        apiCall->argNames +=
-            QString::fromStdString(call->sig->arg_names[i]);
-    }
-    if (call->ret) {
-        VariantVisitor retVisitor;
-        call->ret->visit(retVisitor);
-        apiCall->returnValue = retVisitor.variant();
-    }
-    for (int i = 0; i < call->args.size(); ++i) {
-        VariantVisitor argVisitor;
-        call->args[i]->visit(argVisitor);
-        apiCall->argValues += argVisitor.variant();
-    }
-
-    apiCall->helpUrl = helpHash.value(apiCall->name);
+    apiCall->setHelpUrl(helpHash.value(apiCall->name()));
 
     //force generation of the internal state
     apiCall->filterText();
@@ -85,7 +67,7 @@ void LoaderThread::run()
             }
             ApiTraceCall *apiCall =
                 apiCallFromTraceCall(call, helpHash);
-            apiCall->parentFrame = currentFrame;
+            apiCall->setParentFrame(currentFrame);
             currentFrame->calls.append(apiCall);
             if (ApiTrace::isCallAFrameMarker(apiCall,
                                              m_frameMarker)) {

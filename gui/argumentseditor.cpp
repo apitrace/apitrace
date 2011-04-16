@@ -175,11 +175,11 @@ void ArgumentsEditor::setupCall()
     if (!m_call)
         return;
 
-    m_ui.callLabel->setText(m_call->name);
+    m_ui.callLabel->setText(m_call->name());
     QStandardItem *rootItem = m_model->invisibleRootItem();
-    for (int i = 0; i < m_call->argNames.count(); ++i) {
-        QString argName = m_call->argNames[i];
-        QVariant val = m_call->argValues[i];
+    for (int i = 0; i < m_call->argNames().count(); ++i) {
+        QString argName = m_call->argNames()[i];
+        QVariant val = m_call->arguments()[i];
         QStandardItem *nameItem = new QStandardItem(argName);
         nameItem->setFlags(nameItem->flags() ^ Qt::ItemIsEditable);
         QList<QStandardItem*> topRow;
