@@ -48,6 +48,10 @@ if __name__ == '__main__':
     print
     print '#include <stdlib.h>'
     print '#include <string.h>'
+    print
+    print '#ifndef _GNU_SOURCE'
+    print '#define _GNU_SOURCE // for dladdr'
+    print '#endif'
     print '#include <dlfcn.h>'
     print
     print '#include "trace_write.hpp"'
@@ -80,4 +84,54 @@ if __name__ == '__main__':
     print '    return procPtr;'
     print '}'
     print
+    print r'''
+
+/*
+ * Several applications, such as Quake3, use dlopen("libGL.so.1"), but
+ * LD_PRELOAD does not intercept symbols obtained via dlopen/dlsym, therefore
+ * we need to intercept the dlopen() call here, and redirect to our wrapper
+ * shared object.
+ */
+void *dlopen(const char *filename, int flag)
+{
+    typedef void * (*PFNDLOPEN)(const char *, int);
+    static PFNDLOPEN dlopen_ptr = NULL;
+    void *handle;
+
+    if (!dlopen_ptr) {
+        dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
+        if (!dlopen_ptr) {
+            OS::DebugMessage("error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
+            return NULL;
+        }
+    }
+
+    handle = dlopen_ptr(filename, flag);
+
+    if (filename && handle) {
+        if (0) {
+            OS::DebugMessage("warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
+        }
+
+        // FIXME: handle absolute paths and other versions
+        if (strcmp(filename, "libGL.so.1") == 0) {
+            // Use the true libGL.so handle instead of RTLD_NEXT from now on
+            libgl_handle = handle;
+
+            // Get the file path for our shared object, and use it instead
+            static int dummy = 0xdeedbeef;
+            Dl_info info;
+            if (dladdr(&dummy, &info)) {
+                OS::DebugMessage("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
+                handle = dlopen_ptr(info.dli_fname, flag);
+            } else {
+                OS::DebugMessage("warning: dladdr() failed\n");
+            }
+        }
+    }
+
+    return handle;
+}
+
+'''
     print '} /* extern "C" */'
