@@ -239,6 +239,15 @@ void ArgumentsEditor::setupCall()
             item->setIcon(icon);
             item->setToolTip(tr("Argument is read-only"));
             topRow.append(item);
+        } else if (val.canConvert<ApiEnum>()) {
+            ApiEnum en = val.value<ApiEnum>();
+            QStandardItem *item = new QStandardItem();
+            item->setFlags(item->flags() ^ Qt::ItemIsEditable);
+            item->setText(en.toString());
+            QIcon icon(":/resources/emblem-locked.png");
+            item->setIcon(icon);
+            item->setToolTip(tr("Argument is read-only"));
+            topRow.append(item);
         } else if (val.canConvert<ApiBitmask>()) {
             ApiBitmask mask = val.value<ApiBitmask>();
             QStandardItem *item = new QStandardItem();

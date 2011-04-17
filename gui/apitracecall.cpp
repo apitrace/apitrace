@@ -52,6 +52,9 @@ QString apiVariantToString(const QVariant &variant)
     if (variant.canConvert<ApiArray>()) {
         return variant.value<ApiArray>().toString();
     }
+    if (variant.canConvert<ApiEnum>()) {
+        return variant.value<ApiEnum>().toString();
+    }
 
     return QString();
 }
@@ -176,7 +179,13 @@ void VariantVisitor::visit(Trace::String *node)
 
 void VariantVisitor::visit(Trace::Enum *e)
 {
-    m_variant = QVariant(QString::fromStdString(e->sig->first));
+    VariantVisitor vis;
+    e->sig->second->visit(vis);
+
+    QVariant val = vis.variant();
+
+    m_variant = QVariant::fromValue(
+        ApiEnum(QString::fromStdString(e->sig->first), val));
 }
 
 void VariantVisitor::visit(Trace::Bitmask *bitmask)
@@ -690,5 +699,26 @@ QVariantList ApiTraceCall::editedValues() const
 bool ApiTraceCall::edited() const
 {
     return !m_editedValues.isEmpty();
+}
+
+ApiEnum::ApiEnum(const QString &name, const QVariant &val)
+    : m_name(name),
+      m_value(val)
+{
+}
+
+QString ApiEnum::toString() const
+{
+    return m_name;
+}
+
+QVariant ApiEnum::value() const
+{
+    return m_value;
+}
+
+QString ApiEnum::name() const
+{
+    return m_name;
 }
 

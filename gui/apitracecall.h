@@ -37,6 +37,20 @@ private:
     QVariant m_variant;
 };
 
+class ApiEnum
+{
+public:
+    ApiEnum(const QString &name = QString(), const QVariant &val=QVariant());
+
+    QString toString() const;
+
+    QVariant value() const;
+    QString name() const;
+private:
+    QString m_name;
+    QVariant m_value;
+};
+Q_DECLARE_METATYPE(ApiEnum);
 
 class ApiPointer
 {
