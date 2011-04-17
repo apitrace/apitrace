@@ -4,6 +4,8 @@
 
 #include <QDebug>
 #include <QObject>
+#define QT_USE_FAST_OPERATOR_PLUS
+#include <QStringBuilder>
 
 ApiPointer::ApiPointer(int val)
     : m_value(val)
@@ -115,9 +117,9 @@ QString ApiStruct::toString() const
 
     str += QLatin1String("{");
     for (unsigned i = 0; i < m_members.count(); ++i) {
-        str += m_sig.memberNames[i];
-        str += QLatin1String(" = ");
-        str += apiVariantToString(m_members[i]);
+        str += m_sig.memberNames[i] %
+               QLatin1Literal(" = ") %
+               apiVariantToString(m_members[i]);
         if (i < m_members.count() - 1)
             str += QLatin1String(", ");
     }
@@ -266,14 +268,15 @@ QStaticText ApiTraceCall::staticText() const
         }
         richText += QLatin1String("</span>");
         if (i < m_argNames.count() - 1)
-            richText += QString::fromLatin1(", ");
+            richText += QLatin1String(", ");
     }
     richText += QLatin1String(")");
     if (m_returnValue.isValid()) {
-        richText += QLatin1String(" = ");
-        richText += QLatin1String("<span style=\"color:#0000ff\">");
-        richText += apiVariantToString(m_returnValue);
-        richText += QLatin1String("</span>");
+        richText +=
+            QLatin1Literal(" = ") %
+            QLatin1Literal("<span style=\"color:#0000ff\">") %
+            apiVariantToString(m_returnValue) %
+            QLatin1Literal("</span>");
     }
 
     if (!m_staticText)
@@ -305,22 +308,24 @@ QString ApiTraceCall::toHtml() const
     }
 
     for (int i = 0; i < m_argNames.count(); ++i) {
-        m_richText += m_argNames[i];
-        m_richText += QString::fromLatin1(" = ");
-        m_richText += QLatin1String("<span style=\"color:#0000ff\">");
-        m_richText += apiVariantToString(m_argValues[i]);
-        m_richText += QLatin1String("</span>");
+        m_richText += m_argNames[i] +
+                      QLatin1Literal(" = ") +
+                      QLatin1Literal("<span style=\"color:#0000ff\">") +
+                      apiVariantToString(m_argValues[i]) +
+                      QLatin1Literal("</span>");
         if (i < m_argNames.count() - 1)
-            m_richText += QString::fromLatin1(", ");
+            m_richText += QLatin1String(", ");
     }
     m_richText += QLatin1String(")");
 
     if (m_returnValue.isValid()) {
-        m_richText += QLatin1String(" = ");
-        m_richText += QLatin1String("<span style=\"color:#0000ff\">");
-        m_richText += apiVariantToString(m_returnValue);
-        m_richText += QLatin1String("</span>");
+        m_richText +=
+            QLatin1String(" = ") +
+            QLatin1String("<span style=\"color:#0000ff\">") +
+            apiVariantToString(m_returnValue) +
+            QLatin1String("</span>");
     }
+    m_richText.squeeze();
     return m_richText;
 }
 
@@ -329,26 +334,25 @@ QString ApiTraceCall::filterText() const
     if (!m_filterText.isEmpty())
         return m_filterText;
 
-    m_filterText = m_name;
-    m_filterText += QLatin1String("(");
+    m_filterText = m_name + QLatin1Literal("(");
     for (int i = 0; i < m_argNames.count(); ++i) {
-        m_filterText += m_argNames[i];
-        m_filterText += QString::fromLatin1(" = ");
-
+        m_filterText += m_argNames[i] +
+                        QLatin1Literal(" = ") +
+                        apiVariantToString(m_argValues[i]);
         if (m_argValues[i].type() == QVariant::ByteArray) {
             m_hasBinaryData = true;
             m_binaryDataIndex = i;
         }
-        m_filterText += apiVariantToString(m_argValues[i]);
         if (i < m_argNames.count() - 1)
-            m_filterText += QString::fromLatin1(", ");
+            m_filterText += QLatin1String(", ");
     }
     m_filterText += QLatin1String(")");
 
     if (m_returnValue.isValid()) {
-        m_filterText += QLatin1String(" = ");
-        m_filterText += apiVariantToString(m_returnValue);
+        m_filterText += QLatin1Literal(" = ") +
+                        apiVariantToString(m_returnValue);
     }
+    m_filterText.squeeze();
     return m_filterText;
 }
 
@@ -446,7 +450,8 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
     QVariantMap::const_iterator itr;
 
 
-    for (itr = attachedShaders.constBegin(); itr != attachedShaders.constEnd(); ++itr) {
+    for (itr = attachedShaders.constBegin(); itr != attachedShaders.constEnd();
+         ++itr) {
         QString type = itr.key();
         QString source = itr.value().toString();
         m_shaderSources[type] = source;
