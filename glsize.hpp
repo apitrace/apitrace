@@ -1413,22 +1413,18 @@ __gl_format_channels(GLenum format) {
     case GL_DEPTH_COMPONENT:
     case GL_STENCIL_INDEX:
         return 1;
-        break;
     case GL_LUMINANCE_ALPHA:
+    case GL_RG:
         return 2;
-        break;
     case GL_RGB:
     case GL_BGR:
         return 3;
-        break;
     case GL_RGBA:
     case GL_BGRA:
         return 4;
-        break;
     default:
         OS::DebugMessage("warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
         return 0;
-        break;
     }
 }
 
