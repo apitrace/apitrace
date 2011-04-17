@@ -78,8 +78,6 @@ private:
 
     QProgressBar *m_progressBar;
 
-    QString m_traceFileName;
-
     ApiTraceEvent *m_selectedEvent;
 
     ApiTraceEvent *m_stateEvent;

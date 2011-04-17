@@ -168,10 +168,9 @@ void MainWindow::replayStop()
 
 void MainWindow::newTraceFile(const QString &fileName)
 {
-    m_traceFileName = fileName;
     m_trace->setFileName(fileName);
 
-    if (m_traceFileName.isEmpty()) {
+    if (fileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);
         m_ui.actionLookupState->setEnabled(false);
         setWindowTitle(tr("QApiTrace"));
@@ -235,10 +234,10 @@ void MainWindow::finishedLoadingTrace()
 
 void MainWindow::replayTrace(bool dumpState)
 {
-    if (m_traceFileName.isEmpty())
+    if (m_trace->fileName().isEmpty())
         return;
 
-    m_retracer->setFileName(m_traceFileName);
+    m_retracer->setFileName(m_trace->fileName());
     m_retracer->setCaptureState(dumpState);
     if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
