@@ -641,3 +641,7 @@ ApiTraceEvent::~ApiTraceEvent()
     delete m_staticText;
 }
 
+void ApiTraceCall::revert()
+{
+}
+

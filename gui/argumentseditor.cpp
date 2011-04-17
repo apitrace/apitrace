@@ -166,6 +166,8 @@ void ArgumentsEditor::init()
             SLOT(currentSourceChanged(int)));
     connect(m_ui.glslEdit, SIGNAL(textChanged()),
             SLOT(sourceChanged()));
+    connect(m_ui.revertButton, SIGNAL(clicked()),
+            SLOT(revert()));
 
     m_ui.argsTree->setModel(m_model);
     QItemEditorFactory *factory =
@@ -392,6 +394,12 @@ QVariant ArgumentsEditor::arrayFromEditor(const ApiArray &origArray) const
         vals.append(val);
     }
     return QVariant::fromValue(ApiArray(vals));
+}
+
+void ArgumentsEditor::revert()
+{
+    m_call->revert();
+    setupCall();
 }
 
 #include "argumentseditor.moc"

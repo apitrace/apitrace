@@ -45,6 +45,7 @@ public:
 private slots:
     void currentSourceChanged(int idx);
     void sourceChanged();
+    void revert();
 private:
     void init();
     void setupCall();

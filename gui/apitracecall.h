@@ -171,6 +171,8 @@ public:
     ApiTraceFrame *parentFrame()const;
     void setParentFrame(ApiTraceFrame *frame);
 
+    void revert();
+
     QString toHtml() const;
     QString filterText() const;
     QStaticText staticText() const;
