@@ -281,7 +281,10 @@ QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
 void ApiTraceModel::callChanged(ApiTraceCall *call)
 {
     qDebug()<<"Call changed = "<<call->edited();
-    qDebug()<<"\ttrace edited = "<<call->parentFrame()->parentTrace()->edited();
+    ApiTrace *trace = call->parentFrame()->parentTrace();
+    qDebug()<<"\ttrace edited = "<<trace->edited();
+    qDebug()<<"\ttrace file = "<<trace->fileName();
+    qDebug()<<"\ttrace needs saving = "<<trace->needsSaving();
 }
 
 #include "apitracemodel.moc"

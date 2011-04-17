@@ -46,10 +46,12 @@ public:
     void callReverted(ApiTraceCall *call);
 
     bool edited() const;
+    bool needsSaving() const;
 
 public slots:
     void setFileName(const QString &name);
     void setFrameMarker(FrameMarker marker);
+    void save();
 
 signals:
     void startedLoadingTrace();
@@ -57,6 +59,7 @@ signals:
     void invalidated();
     void framesInvalidated();
     void changed(ApiTraceCall *call);
+    void traceSaved();
 
     void framesAdded(int oldCount, int numAdded);
     void callsAdded(int oldCount, int numAdded);
@@ -67,6 +70,7 @@ private:
     void detectFrames();
 private:
     QString m_fileName;
+    QString m_tempFileName;
 
     QList<ApiTraceFrame*> m_frames;
     QList<ApiTraceCall*> m_calls;
@@ -76,6 +80,8 @@ private:
     LoaderThread *m_loader;
 
     QSet<ApiTraceCall*> m_editedCalls;
+
+    bool m_needsSaving;
 };
 
 #endif

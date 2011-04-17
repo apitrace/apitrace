@@ -2,8 +2,11 @@
 
 #include "loaderthread.h"
 
+#include <QDir>
+
 ApiTrace::ApiTrace()
-    : m_frameMarker(ApiTrace::FrameMarker_SwapBuffers)
+    : m_frameMarker(ApiTrace::FrameMarker_SwapBuffers),
+      m_needsSaving(false)
 {
     m_loader = new LoaderThread(this);
     connect(m_loader, SIGNAL(parsedFrames(const QList<ApiTraceFrame*>)),
@@ -50,6 +53,9 @@ bool ApiTrace::isEmpty() const
 
 QString ApiTrace::fileName() const
 {
+    if (edited())
+        return m_tempFileName;
+
     return m_fileName;
 }
 
@@ -194,19 +200,47 @@ ApiTraceState ApiTrace::defaultState() const
 
 void ApiTrace::callEdited(ApiTraceCall *call)
 {
+    if (!m_editedCalls.contains(call)) {
+        //lets generate a temp filename
+        QString tempPath = QDir::tempPath();
+        //lets make sure it exists
+        m_tempFileName = QString::fromLatin1("%1/%2.edited")
+                         .arg(tempPath)
+                         .arg(m_fileName);
+        m_needsSaving = true;
+    }
+
     m_editedCalls.insert(call);
+
     emit changed(call);
 }
 
 void ApiTrace::callReverted(ApiTraceCall *call)
 {
     m_editedCalls.remove(call);
+
+    if (m_editedCalls.isEmpty()) {
+        m_needsSaving = false;
+    }
     emit changed(call);
 }
 
 bool ApiTrace::edited() const
 {
     return !m_editedCalls.isEmpty();
+}
+
+bool ApiTrace::needsSaving() const
+{
+    return m_needsSaving;
+}
+
+void ApiTrace::save()
+{
+    QFileInfo fi(m_tempFileName);
+    QDir dir;
+    dir.mkpath(fi.absolutePath());
+    m_needsSaving = false;
 }
 
 #include "apitrace.moc"
