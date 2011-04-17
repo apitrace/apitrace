@@ -114,7 +114,8 @@ void *dlopen(const char *filename, int flag)
         }
 
         // FIXME: handle absolute paths and other versions
-        if (strcmp(filename, "libGL.so.1") == 0) {
+        if (strcmp(filename, "libGL.so") == 0 ||
+            strcmp(filename, "libGL.so.1") == 0) {
             // Use the true libGL.so handle instead of RTLD_NEXT from now on
             libgl_handle = handle;
 
