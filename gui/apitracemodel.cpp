@@ -206,6 +206,8 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
             this, SLOT(invalidateFrames()));
     connect(m_trace, SIGNAL(framesAdded(int, int)),
             this, SLOT(appendFrames(int, int)));
+    connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
+            this, SLOT(callChanged(ApiTraceCall*)));
 }
 
 const ApiTrace * ApiTraceModel::apiTrace() const
@@ -274,6 +276,12 @@ QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
         return QModelIndex();
     }
     return createIndex(row, 0, call);
+}
+
+void ApiTraceModel::callChanged(ApiTraceCall *call)
+{
+    qDebug()<<"Call changed = "<<call->edited();
+    qDebug()<<"\ttrace edited = "<<call->parentFrame()->parentTrace()->edited();
 }
 
 #include "apitracemodel.moc"

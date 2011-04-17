@@ -204,7 +204,7 @@ void ApiTrace::callReverted(ApiTraceCall *call)
     emit changed(call);
 }
 
-bool ApiTrace::isEdited() const
+bool ApiTrace::edited() const
 {
     return !m_editedCalls.isEmpty();
 }

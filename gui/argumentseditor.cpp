@@ -322,17 +322,23 @@ void ArgumentsEditor::accept()
 {
     QStringList argNames = m_call->argNames();
     QList<QVariant> originalValues = m_call->arguments();
+    QList<QVariant> newValues;
+    bool changed = false;
     for (int i = 0; i < argNames.count(); ++i) {
-        bool changed = false;
+        bool valChanged = false;
         QString argName = argNames[i];
         QVariant argValue = originalValues[i];
-        QVariant editorValue = valueForName(argName, argValue, &changed);
+        QVariant editorValue = valueForName(argName, argValue, &valChanged);
+        newValues.append(editorValue);
         qDebug()<<"Arg = "<<argName;
         qDebug()<<"\toriginal = "<<argValue;
         qDebug()<<"\teditor   = "<<editorValue;
-        qDebug()<<"\tchanged  = "<<changed;
+        qDebug()<<"\tchanged  = "<<valChanged;
+        if (valChanged)
+            changed = true;
     }
-
+    if (changed)
+        m_call->setEditedValues(newValues);
     QDialog::accept();
 }
 

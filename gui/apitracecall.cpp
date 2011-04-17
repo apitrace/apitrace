@@ -648,6 +648,7 @@ ApiTraceEvent::~ApiTraceEvent()
 
 void ApiTraceCall::revert()
 {
+    setEditedValues(QVariantList());
 }
 
 ApiTrace * ApiTraceFrame::parentTrace() const

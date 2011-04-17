@@ -50,6 +50,7 @@ public:
 private slots:
     void invalidateFrames();
     void appendFrames(int oldCount, int numAdded);
+    void callChanged(ApiTraceCall *call);
 
 private:
     ApiTraceEvent *item(const QModelIndex &index) const;

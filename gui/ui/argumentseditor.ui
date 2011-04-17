@@ -82,7 +82,7 @@
      <item>
       <widget class="QPushButton" name="revertButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Revert</string>

@@ -45,7 +45,7 @@ public:
     void callEdited(ApiTraceCall *call);
     void callReverted(ApiTraceCall *call);
 
-    bool isEdited() const;
+    bool edited() const;
 
 public slots:
     void setFileName(const QString &name);
