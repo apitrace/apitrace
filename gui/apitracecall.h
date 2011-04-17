@@ -11,6 +11,8 @@
 #include "trace_model.hpp"
 
 
+class ApiTrace;
+
 class VariantVisitor : public Trace::Visitor
 {
 public:
@@ -202,8 +204,13 @@ public:
     int number;
     QList<ApiTraceCall*> calls;
 
+    ApiTrace *parentTrace() const;
+    void setParentTrace(ApiTrace *trace);
+
     int numChildren() const;
     QStaticText staticText() const;
+private:
+    ApiTrace *m_parentTrace;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

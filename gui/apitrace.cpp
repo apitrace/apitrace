@@ -134,6 +134,7 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
     int currentCalls = m_calls.count();
     int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
+        frame->setParentTrace(this);
         numNewCalls += frame->calls.count();
         m_calls += frame->calls;
     }
@@ -151,6 +152,7 @@ void ApiTrace::detectFrames()
     foreach(ApiTraceCall *apiCall, m_calls) {
         if (!currentFrame) {
             currentFrame = new ApiTraceFrame();
+            currentFrame->setParentTrace(this);
             currentFrame->number = m_frames.count();
         }
         apiCall->setParentFrame(currentFrame);

@@ -386,7 +386,8 @@ int ApiTraceFrame::numChildren() const
 }
 
 ApiTraceFrame::ApiTraceFrame()
-    : ApiTraceEvent(ApiTraceEvent::Frame)
+    : ApiTraceEvent(ApiTraceEvent::Frame),
+      m_parentTrace(0)
 {
 }
 
@@ -643,5 +644,15 @@ ApiTraceEvent::~ApiTraceEvent()
 
 void ApiTraceCall::revert()
 {
+}
+
+ApiTrace * ApiTraceFrame::parentTrace() const
+{
+    return m_parentTrace;
+}
+
+void ApiTraceFrame::setParentTrace(ApiTrace *trace)
+{
+    m_parentTrace = trace;
 }
 
