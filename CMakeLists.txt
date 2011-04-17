@@ -207,7 +207,7 @@ else (WIN32)
     set (glws glws_glx.cpp)
 endif (WIN32)
 
-add_library (trace trace_model.cpp trace_parser.cpp ${os})
+add_library (trace trace_model.cpp trace_parser.cpp trace_write.cpp ${os})
 
 add_executable (dump dump.cpp)
 target_link_libraries (dump trace)
