@@ -1,5 +1,6 @@
 #include "apitracecall.h"
 
+#include "apitrace.h"
 #include "trace_model.hpp"
 
 #include <QDebug>
@@ -571,7 +572,10 @@ QStringList ApiTraceCall::argNames() const
 
 QVariantList ApiTraceCall::arguments() const
 {
-    return m_argValues;
+    if (m_editedValues.isEmpty())
+        return m_argValues;
+    else
+        return m_editedValues;
 }
 
 QVariant ApiTraceCall::returnValue() const
@@ -654,5 +658,36 @@ ApiTrace * ApiTraceFrame::parentTrace() const
 void ApiTraceFrame::setParentTrace(ApiTrace *trace)
 {
     m_parentTrace = trace;
+}
+
+QVariantList ApiTraceCall::originalValues() const
+{
+    return m_argValues;
+}
+
+void ApiTraceCall::setEditedValues(const QVariantList &lst)
+{
+    ApiTrace *trace = 0;
+    if (m_parentFrame)
+        trace = m_parentFrame->parentTrace();
+    m_editedValues = lst;
+
+    if (trace) {
+        if (!lst.isEmpty()) {
+            trace->callEdited(this);
+        } else {
+            trace->callReverted(this);
+        }
+    }
+}
+
+QVariantList ApiTraceCall::editedValues() const
+{
+    return m_editedValues;
+}
+
+bool ApiTraceCall::edited() const
+{
+    return !m_editedValues.isEmpty();
 }
 

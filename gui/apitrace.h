@@ -4,6 +4,7 @@
 #include "apitracecall.h"
 
 #include <QObject>
+#include <QSet>
 
 class LoaderThread;
 
@@ -41,6 +42,11 @@ public:
     int numFrames() const;
     int numCallsInFrame(int idx) const;
 
+    void callEdited(ApiTraceCall *call);
+    void callReverted(ApiTraceCall *call);
+
+    bool isEdited() const;
+
 public slots:
     void setFileName(const QString &name);
     void setFrameMarker(FrameMarker marker);
@@ -50,6 +56,7 @@ signals:
     void finishedLoadingTrace();
     void invalidated();
     void framesInvalidated();
+    void changed(ApiTraceCall *call);
 
     void framesAdded(int oldCount, int numAdded);
     void callsAdded(int oldCount, int numAdded);
@@ -67,6 +74,8 @@ private:
     FrameMarker m_frameMarker;
 
     LoaderThread *m_loader;
+
+    QSet<ApiTraceCall*> m_editedCalls;
 };
 
 #endif

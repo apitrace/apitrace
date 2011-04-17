@@ -147,10 +147,8 @@ ArgumentsEditor::~ArgumentsEditor()
 
 void ArgumentsEditor::setCall(ApiTraceCall *call)
 {
-    if (m_call != call) {
-        m_call = call;
-        setupCall();
-    }
+    m_call = call;
+    setupCall();
 }
 
 ApiTraceCall * ArgumentsEditor::call() const
@@ -325,26 +323,31 @@ void ArgumentsEditor::accept()
     QStringList argNames = m_call->argNames();
     QList<QVariant> originalValues = m_call->arguments();
     for (int i = 0; i < argNames.count(); ++i) {
+        bool changed = false;
         QString argName = argNames[i];
         QVariant argValue = originalValues[i];
-        QVariant editorValue = valueForName(argName, argValue);
+        QVariant editorValue = valueForName(argName, argValue, &changed);
         qDebug()<<"Arg = "<<argName;
         qDebug()<<"\toriginal = "<<argValue;
         qDebug()<<"\teditor   = "<<editorValue;
+        qDebug()<<"\tchanged  = "<<changed;
     }
 
     QDialog::accept();
 }
 
 QVariant ArgumentsEditor::valueForName(const QString &name,
-                                       const QVariant &originalValue) const
+                                       const QVariant &originalValue,
+                                       bool *changed) const
 {
     QVariant val;
+
+    *changed = false;
 
     //Handle string arrays specially
     if (isVariantStringArray(originalValue)) {
         ApiArray array = originalValue.value<ApiArray>();
-        return arrayFromEditor(array);
+        return arrayFromEditor(array, changed);
     }
 
     for (int topRow = 0; topRow < m_model->rowCount(); ++topRow) {
@@ -355,10 +358,12 @@ QVariant ArgumentsEditor::valueForName(const QString &name,
         if (argName == name) {
             if (originalValue.userType() == QMetaType::type("ApiArray")) {
                 ApiArray array = originalValue.value<ApiArray>();
-                val = arrayFromIndex(nameIdx, array);
+                val = arrayFromIndex(nameIdx, array, changed);
             } else {
                 QModelIndex valIdx = m_model->index(topRow, 1, QModelIndex());
                 val = valIdx.data();
+                if (val != originalValue)
+                    *changed = true;
             }
         }
     }
@@ -366,9 +371,13 @@ QVariant ArgumentsEditor::valueForName(const QString &name,
 }
 
 QVariant ArgumentsEditor::arrayFromIndex(const QModelIndex &parentIndex,
-                                         const ApiArray &origArray) const
+                                         const ApiArray &origArray,
+                                         bool *changed) const
 {
     QList<QVariant> origValues = origArray.values();
+
+    *changed = false;
+
     if (origValues.isEmpty())
         return QVariant::fromValue(ApiArray());
 
@@ -376,21 +385,29 @@ QVariant ArgumentsEditor::arrayFromIndex(const QModelIndex &parentIndex,
     for (int i = 0; i < origValues.count(); ++i) {
         QModelIndex valIdx = m_model->index(i, 1, parentIndex);
         QVariant var = valIdx.data();
+        QVariant origValue = origValues[i];
+        if (var != origValue)
+            *changed = true;
         //qDebug()<<"\t\tarray "<<i<<") "<<var;
         lst.append(var);
     }
     return QVariant::fromValue(ApiArray(lst));
 }
 
-QVariant ArgumentsEditor::arrayFromEditor(const ApiArray &origArray) const
+QVariant ArgumentsEditor::arrayFromEditor(const ApiArray &origArray,
+                                          bool *changed) const
 {
     QList<QVariant> vals;
     QList<QVariant> origValues = origArray.values();
 
     Q_ASSERT(isVariantStringArray(QVariant::fromValue(origArray)));
+    *changed = false;
     //shaders
     for (int i = 0; i < m_ui.selectStringCB->count(); ++i) {
         QVariant val = m_ui.selectStringCB->itemData(i);
+        QVariant origValue = origValues[i];
+        if (origValue != val)
+            *changed = true;
         vals.append(val);
     }
     return QVariant::fromValue(ApiArray(vals));

@@ -192,4 +192,21 @@ ApiTraceState ApiTrace::defaultState() const
     return frame->state();
 }
 
+void ApiTrace::callEdited(ApiTraceCall *call)
+{
+    m_editedCalls.insert(call);
+    emit changed(call);
+}
+
+void ApiTrace::callReverted(ApiTraceCall *call)
+{
+    m_editedCalls.remove(call);
+    emit changed(call);
+}
+
+bool ApiTrace::isEdited() const
+{
+    return !m_editedCalls.isEmpty();
+}
+
 #include "apitrace.moc"

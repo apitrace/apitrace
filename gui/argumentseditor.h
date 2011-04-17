@@ -51,10 +51,13 @@ private:
     void setupCall();
     void setupShaderEditor(const QList<QVariant> &sources);
     QVariant valueForName(const QString &name,
-                          const QVariant &orignalValue) const;
+                          const QVariant &orignalValue,
+                          bool *changed) const;
     QVariant arrayFromIndex(const QModelIndex &index,
-                            const ApiArray &array) const;
-    QVariant arrayFromEditor(const ApiArray &origArray) const;
+                            const ApiArray &array,
+                            bool *changed) const;
+    QVariant arrayFromEditor(const ApiArray &origArray,
+                             bool *changed) const;
 private:
     Ui_ArgumentsEditor m_ui;
     QStandardItemModel *m_model;

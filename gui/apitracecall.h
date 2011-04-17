@@ -173,6 +173,11 @@ public:
     ApiTraceFrame *parentFrame()const;
     void setParentFrame(ApiTraceFrame *frame);
 
+    QVariantList originalValues() const;
+
+    bool edited() const;
+    void setEditedValues(const QVariantList &lst);
+    QVariantList editedValues() const;
     void revert();
 
     QString toHtml() const;
@@ -189,6 +194,8 @@ private:
     QVariant m_returnValue;
     ApiTraceFrame *m_parentFrame;
     QUrl m_helpUrl;
+
+    QVariantList m_editedValues;
 
     mutable QString m_richText;
     mutable QString m_filterText;
