@@ -8,6 +8,7 @@ set(qapitrace_SRCS
    apitracecall.cpp
    apitracefilter.cpp
    apitracemodel.cpp
+   argumentseditor.cpp
    glsledit.cpp
    imageviewer.cpp
    jumpwidget.cpp
@@ -15,6 +16,7 @@ set(qapitrace_SRCS
    mainwindow.cpp
    main.cpp
    retracer.cpp
+   saverthread.cpp
    searchwidget.cpp
    settingsdialog.cpp
    shaderssourcewidget.cpp
@@ -28,6 +30,7 @@ qt4_automoc(${qapitrace_SRCS})
 qt4_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
+   ui/argumentseditor.ui
    ui/imageviewer.ui
    ui/jumpwidget.ui
    ui/mainwindow.ui
@@ -42,7 +45,7 @@ QT4_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
 
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
 link_directories(${LINK_DIRECTORIES} ${QJSON_LIBRARY_DIRS})
-include_directories(${QT_INCLUDES} ${QJSON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${QT_INCLUDES} ${QJSON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 add_definitions(-DBUILD_DIR="${CMAKE_CURRENT_BINARY_DIR}/..")
 

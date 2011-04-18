@@ -1,9 +1,13 @@
 #include "apitrace.h"
 
 #include "loaderthread.h"
+#include "saverthread.h"
+
+#include <QDir>
 
 ApiTrace::ApiTrace()
-    : m_frameMarker(ApiTrace::FrameMarker_SwapBuffers)
+    : m_frameMarker(ApiTrace::FrameMarker_SwapBuffers),
+      m_needsSaving(false)
 {
     m_loader = new LoaderThread(this);
     connect(m_loader, SIGNAL(parsedFrames(const QList<ApiTraceFrame*>)),
@@ -12,6 +16,12 @@ ApiTrace::ApiTrace()
             this, SIGNAL(startedLoadingTrace()));
     connect(m_loader, SIGNAL(finished()),
             this, SIGNAL(finishedLoadingTrace()));
+
+    m_saver = new SaverThread(this);
+    connect(m_saver, SIGNAL(traceSaved()),
+            this, SLOT(slotSaved()));
+    connect(m_saver, SIGNAL(traceSaved()),
+            this, SIGNAL(saved()));
 }
 
 ApiTrace::~ApiTrace()
@@ -19,6 +29,7 @@ ApiTrace::~ApiTrace()
     qDeleteAll(m_calls);
     qDeleteAll(m_frames);
     delete m_loader;
+    delete m_saver;
 }
 
 bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
@@ -29,13 +40,13 @@ bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
 
     switch (marker) {
     case FrameMarker_SwapBuffers:
-        return call->name.contains(QLatin1String("SwapBuffers"));
+        return call->name().contains(QLatin1String("SwapBuffers"));
     case FrameMarker_Flush:
-        return call->name == QLatin1String("glFlush");
+        return call->name() == QLatin1String("glFlush");
     case FrameMarker_Finish:
-        return call->name == QLatin1String("glFinish");
+        return call->name() == QLatin1String("glFinish");
     case FrameMarker_Clear:
-        return call->name == QLatin1String("glClear");
+        return call->name() == QLatin1String("glClear");
     }
 
     Q_ASSERT(!"unknown frame marker");
@@ -50,6 +61,9 @@ bool ApiTrace::isEmpty() const
 
 QString ApiTrace::fileName() const
 {
+    if (edited())
+        return m_tempFileName;
+
     return m_fileName;
 }
 
@@ -134,6 +148,7 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
     int currentCalls = m_calls.count();
     int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
+        frame->setParentTrace(this);
         numNewCalls += frame->calls.count();
         m_calls += frame->calls;
     }
@@ -151,9 +166,10 @@ void ApiTrace::detectFrames()
     foreach(ApiTraceCall *apiCall, m_calls) {
         if (!currentFrame) {
             currentFrame = new ApiTraceFrame();
+            currentFrame->setParentTrace(this);
             currentFrame->number = m_frames.count();
         }
-        apiCall->parentFrame = currentFrame;
+        apiCall->setParentFrame(currentFrame);
         currentFrame->calls.append(apiCall);
         if (ApiTrace::isCallAFrameMarker(apiCall,
                                          m_frameMarker)) {
@@ -175,7 +191,7 @@ ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 {
     for (int i = 0; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];
-        if (call->index == idx)
+        if (call->index() == idx)
             return call;
     }
     return NULL;
@@ -188,6 +204,60 @@ ApiTraceState ApiTrace::defaultState() const
         return ApiTraceState();
 
     return frame->state();
+}
+
+void ApiTrace::callEdited(ApiTraceCall *call)
+{
+    if (!m_editedCalls.contains(call)) {
+        //lets generate a temp filename
+        QString tempPath = QDir::tempPath();
+        m_tempFileName = QString::fromLatin1("%1/%2.edited")
+                         .arg(tempPath)
+                         .arg(m_fileName);
+    }
+    m_editedCalls.insert(call);
+    m_needsSaving = true;
+
+    emit changed(call);
+}
+
+void ApiTrace::callReverted(ApiTraceCall *call)
+{
+    m_editedCalls.remove(call);
+
+    if (m_editedCalls.isEmpty()) {
+        m_needsSaving = false;
+    }
+    emit changed(call);
+}
+
+bool ApiTrace::edited() const
+{
+    return !m_editedCalls.isEmpty();
+}
+
+bool ApiTrace::needsSaving() const
+{
+    return m_needsSaving;
+}
+
+void ApiTrace::save()
+{
+    QFileInfo fi(m_tempFileName);
+    QDir dir;
+    emit startedSaving();
+    dir.mkpath(fi.absolutePath());
+    m_saver->saveFile(m_tempFileName, m_calls);
+}
+
+void ApiTrace::slotSaved()
+{
+    m_needsSaving = false;
+}
+
+bool ApiTrace::isSaving() const
+{
+    return m_saver->isRunning();
 }
 
 #include "apitrace.moc"

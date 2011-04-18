@@ -17,6 +17,7 @@ public:
 
 private:
     QIcon m_stateEmblem;
+    QIcon m_editEmblem;
 };
 
 #endif

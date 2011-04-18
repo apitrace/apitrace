@@ -11,7 +11,8 @@
 
 ApiCallDelegate::ApiCallDelegate(QWidget *parent)
     : QStyledItemDelegate(parent),
-      m_stateEmblem(":/resources/dialog-information.png")
+      m_stateEmblem(":/resources/dialog-information.png"),
+      m_editEmblem(":/resources/document-edit.png")
 {
 }
 
@@ -32,10 +33,21 @@ void ApiCallDelegate::paint(QPainter *painter,
         QStyle *style = QApplication::style();
         style->drawControl(QStyle::CE_ItemViewItem, &option, painter, 0);
         if (!event->state().isEmpty()) {
-            QPixmap px = m_stateEmblem.pixmap(option.rect.height(), option.rect.height());
+            QPixmap px = m_stateEmblem.pixmap(option.rect.height(),
+                                              option.rect.height());
             painter->drawPixmap(option.rect.topLeft(), px);
             offset = QPoint(option.rect.height() + 5, 0);
         }
+        if (event->type() == ApiTraceEvent::Call) {
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+            if (call->edited()) {
+                QPixmap px = m_editEmblem.pixmap(option.rect.height(),
+                                                 option.rect.height());
+                painter->drawPixmap(option.rect.topLeft() + offset, px);
+                offset += QPoint(option.rect.height() + 5, 0);
+            }
+        }
+
         painter->drawStaticText(option.rect.topLeft() + offset, text);
     } else {
         QStyledItemDelegate::paint(painter, option, index);

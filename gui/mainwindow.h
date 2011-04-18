@@ -12,6 +12,7 @@ class ApiTraceFilter;
 class ApiTraceFrame;
 class ApiTraceModel;
 class ApiTraceState;
+class ArgumentsEditor;
 class ImageViewer;
 class JumpWidget;
 class QModelIndex;
@@ -57,6 +58,10 @@ private slots:
     void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity);
     void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity);
     void fillState(bool nonDefaults);
+    void customContextMenuRequested(QPoint pos);
+    void editCall();
+    void slotStartedSaving();
+    void slotSaved();
 
 private:
     void initObjects();
@@ -75,8 +80,6 @@ private:
 
     QProgressBar *m_progressBar;
 
-    QString m_traceFileName;
-
     ApiTraceEvent *m_selectedEvent;
 
     ApiTraceEvent *m_stateEvent;
@@ -91,6 +94,8 @@ private:
     SearchWidget *m_searchWidget;
 
     TraceProcess *m_traceProcess;
+
+    ArgumentsEditor *m_argsEditor;
 };
 
 

@@ -5,6 +5,7 @@
 #include "apicalldelegate.h"
 #include "apitracemodel.h"
 #include "apitracefilter.h"
+#include "argumentseditor.h"
 #include "imageviewer.h"
 #include "jumpwidget.h"
 #include "retracer.h"
@@ -101,19 +102,20 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         m_ui.detailsDock->show();
         if (call->hasBinaryData()) {
             QByteArray data =
-                call->argValues[call->binaryDataIndex()].toByteArray();
+                call->arguments()[call->binaryDataIndex()].toByteArray();
             m_vdataInterpreter->setData(data);
+            QVariantList args = call->arguments();
 
-            for (int i = 0; i < call->argNames.count(); ++i) {
-                QString name = call->argNames[i];
+            for (int i = 0; i < call->argNames().count(); ++i) {
+                QString name = call->argNames()[i];
                 if (name == QLatin1String("stride")) {
-                    int stride = call->argValues[i].toInt();
+                    int stride = args[i].toInt();
                     m_ui.vertexStrideSB->setValue(stride);
                 } else if (name == QLatin1String("size")) {
-                    int components = call->argValues[i].toInt();
+                    int components = args[i].toInt();
                     m_ui.vertexComponentsSB->setValue(components);
                 } else if (name == QLatin1String("type")) {
-                    QString val = call->argValues[i].toString();
+                    QString val = args[i].toString();
                     int textIndex = m_ui.vertexTypeCB->findText(val);
                     if (textIndex >= 0)
                         m_ui.vertexTypeCB->setCurrentIndex(textIndex);
@@ -138,6 +140,14 @@ void MainWindow::callItemSelected(const QModelIndex &index)
 
 void MainWindow::replayStart()
 {
+    if (m_trace->isSaving()) {
+        QMessageBox::warning(
+            this,
+            tr("Trace Saving"),
+            tr("QApiTrace is currently saving the edited trace file. "
+               "Please wait until it finishes and try again."));
+        return;
+    }
     QDialog dlg;
     Ui_RetracerDialog dlgUi;
     dlgUi.setupUi(&dlg);
@@ -166,10 +176,9 @@ void MainWindow::replayStop()
 
 void MainWindow::newTraceFile(const QString &fileName)
 {
-    m_traceFileName = fileName;
     m_trace->setFileName(fileName);
 
-    if (m_traceFileName.isEmpty()) {
+    if (fileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);
         m_ui.actionLookupState->setEnabled(false);
         setWindowTitle(tr("QApiTrace"));
@@ -233,15 +242,15 @@ void MainWindow::finishedLoadingTrace()
 
 void MainWindow::replayTrace(bool dumpState)
 {
-    if (m_traceFileName.isEmpty())
+    if (m_trace->fileName().isEmpty())
         return;
 
-    m_retracer->setFileName(m_traceFileName);
+    m_retracer->setFileName(m_trace->fileName());
     m_retracer->setCaptureState(dumpState);
     if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
         if (m_selectedEvent->type() == ApiTraceEvent::Call) {
-            index = static_cast<ApiTraceCall*>(m_selectedEvent)->index;
+            index = static_cast<ApiTraceCall*>(m_selectedEvent)->index();
         } else if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame =
                 static_cast<ApiTraceFrame*>(m_selectedEvent);
@@ -250,7 +259,7 @@ void MainWindow::replayTrace(bool dumpState)
                 qDebug()<<"tried to get a state for an empty frame";
                 return;
             }
-            index = frame->calls.first()->index;
+            index = frame->calls.first()->index();
         } else {
             qDebug()<<"Unknown event type";
             return;
@@ -275,6 +284,14 @@ void MainWindow::lookupState()
         QMessageBox::warning(
             this, tr("Unknown Event"),
             tr("To inspect the state select an event in the event list."));
+        return;
+    }
+    if (m_trace->isSaving()) {
+        QMessageBox::warning(
+            this,
+            tr("Trace Saving"),
+            tr("QApiTrace is currently saving the edited trace file. "
+               "Please wait until it finishes and try again."));
         return;
     }
     m_stateEvent = m_selectedEvent;
@@ -579,11 +596,14 @@ void MainWindow::initObjects()
     m_ui.callView->resizeColumnToContents(0);
     m_ui.callView->header()->swapSections(0, 1);
     m_ui.callView->setColumnWidth(1, 42);
+    m_ui.callView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_progressBar = new QProgressBar();
     m_progressBar->setRange(0, 0);
     statusBar()->addPermanentWidget(m_progressBar);
     m_progressBar->hide();
+
+    m_argsEditor = new ArgumentsEditor(this);
 
     m_ui.detailsDock->hide();
     m_ui.vertexDataDock->hide();
@@ -619,6 +639,10 @@ void MainWindow::initConnections()
             this, SLOT(startedLoadingTrace()));
     connect(m_trace, SIGNAL(finishedLoadingTrace()),
             this, SLOT(finishedLoadingTrace()));
+    connect(m_trace, SIGNAL(startedSaving()),
+            this, SLOT(slotStartedSaving()));
+    connect(m_trace, SIGNAL(saved()),
+            this, SLOT(slotSaved()));
 
     connect(m_retracer, SIGNAL(finished(const QString&)),
             this, SLOT(replayFinished(const QString&)));
@@ -657,6 +681,8 @@ void MainWindow::initConnections()
 
     connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
+    connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
+            this, SLOT(customContextMenuRequested(QPoint)));
 
     connect(m_ui.surfacesTreeWidget,
             SIGNAL(customContextMenuRequested(const QPoint &)),
@@ -862,6 +888,50 @@ void MainWindow::fillState(bool nonDefaults)
         }
     }
     fillStateForFrame();
+}
+
+void MainWindow::customContextMenuRequested(QPoint pos)
+{
+    QMenu menu;
+    QModelIndex index = m_ui.callView->indexAt(pos);
+
+    callItemSelected(index);
+    if (!index.isValid())
+        return;
+
+    ApiTraceEvent *event =
+        index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    if (!event || event->type() != ApiTraceEvent::Call)
+        return;
+
+    menu.addAction(QIcon(":/resources/media-record.png"),
+                   tr("Lookup state"), this, SLOT(lookupState()));
+    menu.addAction(tr("Edit"), this, SLOT(editCall()));
+
+    menu.exec(QCursor::pos());
+}
+
+void MainWindow::editCall()
+{
+    if (m_selectedEvent && m_selectedEvent->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(m_selectedEvent);
+        m_argsEditor->setCall(call);
+        m_argsEditor->show();
+    }
+}
+
+void MainWindow::slotStartedSaving()
+{
+    m_progressBar->show();
+    statusBar()->showMessage(
+        tr("Saving to %1").arg(m_trace->fileName()));
+}
+
+void MainWindow::slotSaved()
+{
+    statusBar()->showMessage(
+        tr("Saved to %1").arg(m_trace->fileName()), 2000);
+    m_progressBar->hide();
 }
 
 #include "mainwindow.moc"
