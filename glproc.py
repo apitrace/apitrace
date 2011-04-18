@@ -410,14 +410,14 @@ class GlDispatcher(Dispatcher):
 
     def header(self):
         print '#ifdef RETRACE'
-        print '#  ifdef WIN32'
+        print '#  ifdef _WIN32'
         print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
         print '#  else'
         print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
         print '#  endif'
         print '#  define __abort() OS::Abort()'
         print '#else /* !RETRACE */'
-        print '#  ifdef WIN32'
+        print '#  ifdef _WIN32'
         print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
         print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
         print '#  else'
@@ -445,13 +445,13 @@ if __name__ == '__main__':
     print
     dispatcher = GlDispatcher()
     dispatcher.header()
-    print '#ifdef WIN32'
+    print '#ifdef _WIN32'
     print
     dispatcher.dispatch_api(wglapi)
-    print '#else /* !WIN32 */'
+    print '#else /* !_WIN32 */'
     print
     dispatcher.dispatch_api(glxapi)
-    print '#endif /* !WIN32 */'
+    print '#endif /* !_WIN32 */'
     print
     dispatcher.dispatch_api(glapi)
     print

@@ -34,7 +34,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef snprintf
 #define snprintf _snprintf
 #endif
@@ -42,9 +42,9 @@
 #define vsnprintf _vsnprintf
 #endif
 #define PATH_SEP '\\'
-#else /* !WIN32 */
+#else /* !_WIN32 */
 #define PATH_SEP '/'
-#endif /* !WIN32 */
+#endif /* !_WIN32 */
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024

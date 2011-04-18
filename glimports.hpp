@@ -30,7 +30,7 @@
 #ifndef _GLIMPORTS_HPP_
 #define _GLIMPORTS_HPP_
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
@@ -38,11 +38,11 @@
 
 #include <windows.h>
 
-#else /* !WIN32 */
+#else /* !_WIN32 */
 
 #include <X11/Xlib.h>
 
-#endif /* !WIN32 */
+#endif /* !_WIN32 */
 
 #include <GL/gl.h>
 
@@ -52,7 +52,7 @@
 #define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #include <GL/wglext.h>
 
@@ -78,7 +78,7 @@ typedef struct _WGLSWAP
 
 #endif /* __MINGW32__ */
 
-#else /* !WIN32 */
+#else /* !_WIN32 */
 
 #include <GL/glx.h>
 #include <GL/glext.h>
@@ -86,6 +86,6 @@ typedef struct _WGLSWAP
 /* Prevent collision with Trace::Bool */
 #undef Bool
 
-#endif /* !WIN32 */
+#endif /* !_WIN32 */
 
 #endif /* _GLIMPORTS_HPP_ */

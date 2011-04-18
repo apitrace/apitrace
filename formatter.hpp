@@ -105,7 +105,7 @@ inline std::ostream& operator<<(std::ostream& os, const Attribute *attr) {
 }
 
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #include <windows.h>
 
@@ -156,7 +156,7 @@ public:
 
 
 inline Formatter *defaultFormatter(void) {
-#ifdef WIN32
+#ifdef _WIN32
     return new WindowsFormatter;
 #else
     return new AnsiFormatter;

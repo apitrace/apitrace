@@ -347,7 +347,7 @@ void Abort(void) {
 } /* namespace Trace */
 
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #if 0
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
