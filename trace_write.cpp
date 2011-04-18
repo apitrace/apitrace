@@ -148,10 +148,6 @@ void Open(void) {
     }
 }
 
-void Close(void) {
-    _Close();
-}
-
 static unsigned call_no = 0;
 
 inline bool lookup(std::vector<bool> &map, size_t index) {
@@ -168,6 +164,15 @@ static std::vector<bool> structs;
 static std::vector<bool> enums;
 static std::vector<bool> bitmasks;
 
+
+void Close(void) {
+    _Close();
+    call_no = 0;
+    functions = std::vector<bool>();
+    structs = std::vector<bool>();
+    enums = std::vector<bool>();
+    bitmasks = std::vector<bool>();
+}
 
 unsigned BeginEnter(const FunctionSig &function) {
     OS::AcquireMutex();
