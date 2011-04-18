@@ -67,7 +67,17 @@
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionFind"/>
+    <addaction name="actionGo"/>
+    <addaction name="actionGoFrameStart"/>
+    <addaction name="actionGoFrameEnd"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menu_Trace"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -452,6 +462,54 @@
    </property>
    <property name="text">
     <string>New</string>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/edit-find.png</normaloff>:/resources/edit-find.png</iconset>
+   </property>
+   <property name="text">
+    <string>Find</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionGo">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/go-jump.png</normaloff>:/resources/go-jump.png</iconset>
+   </property>
+   <property name="text">
+    <string>Go to Call</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
+   </property>
+  </action>
+  <action name="actionGoFrameStart">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/go-top.png</normaloff>:/resources/go-top.png</iconset>
+   </property>
+   <property name="text">
+    <string>Go to Frame Start</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionGoFrameEnd">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/go-bottom.png</normaloff>:/resources/go-bottom.png</iconset>
+   </property>
+   <property name="text">
+    <string>Go to Frame End</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
   <zorder>stateDock</zorder>

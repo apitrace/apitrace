@@ -670,6 +670,15 @@ void MainWindow::initConnections()
     connect(m_ui.actionQuit, SIGNAL(triggered()),
             this, SLOT(close()));
 
+    connect(m_ui.actionFind, SIGNAL(triggered()),
+            this, SLOT(slotSearch()));
+    connect(m_ui.actionGo, SIGNAL(triggered()),
+            this, SLOT(slotGoTo()));
+    connect(m_ui.actionGoFrameStart, SIGNAL(triggered()),
+            this, SLOT(slotGoFrameStart()));
+    connect(m_ui.actionGoFrameEnd, SIGNAL(triggered()),
+            this, SLOT(slotGoFrameEnd()));
+
     connect(m_ui.actionReplay, SIGNAL(triggered()),
             this, SLOT(replayStart()));
     connect(m_ui.actionStop, SIGNAL(triggered()),
@@ -932,6 +941,61 @@ void MainWindow::slotSaved()
     statusBar()->showMessage(
         tr("Saved to %1").arg(m_trace->fileName()), 2000);
     m_progressBar->hide();
+}
+
+void MainWindow::slotGoFrameStart()
+{
+    ApiTraceFrame *frame = currentFrame();
+    if (!frame || frame->calls.isEmpty()) {
+        return;
+    }
+
+    QList<ApiTraceCall*>::const_iterator itr;
+
+    itr = frame->calls.constBegin();
+    while (itr != frame->calls.constEnd()) {
+        ApiTraceCall *call = *itr;
+        QModelIndex idx = m_proxyModel->indexForCall(call);
+        if (idx.isValid()) {
+            m_ui.callView->setCurrentIndex(idx);
+            break;
+        }
+        ++itr;
+    }
+}
+
+void MainWindow::slotGoFrameEnd()
+{
+    ApiTraceFrame *frame = currentFrame();
+    if (!frame || frame->calls.isEmpty()) {
+        return;
+    }
+    QList<ApiTraceCall*>::const_iterator itr;
+
+    itr = frame->calls.constEnd();
+    do {
+        --itr;
+        ApiTraceCall *call = *itr;
+        QModelIndex idx = m_proxyModel->indexForCall(call);
+        if (idx.isValid()) {
+            m_ui.callView->setCurrentIndex(idx);
+            break;
+        }
+    } while (itr != frame->calls.constBegin());
+}
+
+ApiTraceFrame * MainWindow::currentFrame() const
+{
+    if (m_selectedEvent) {
+        if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
+            return static_cast<ApiTraceFrame*>(m_selectedEvent);
+        } else {
+            Q_ASSERT(m_selectedEvent->type() == ApiTraceEvent::Call);
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(m_selectedEvent);
+            return call->parentFrame();
+        }
+    }
+    return NULL;
 }
 
 #include "mainwindow.moc"

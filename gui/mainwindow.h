@@ -62,6 +62,8 @@ private slots:
     void editCall();
     void slotStartedSaving();
     void slotSaved();
+    void slotGoFrameStart();
+    void slotGoFrameEnd();
 
 private:
     void initObjects();
@@ -69,6 +71,7 @@ private:
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState);
     void fillStateForFrame();
+    ApiTraceFrame *currentFrame() const;
 
 private:
     Ui_MainWindow m_ui;
