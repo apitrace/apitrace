@@ -456,7 +456,6 @@
   </action>
   <zorder>stateDock</zorder>
   <zorder>vertexDataDock</zorder>
-  <zorder>argsEditorDock</zorder>
  </widget>
  <customwidgets>
   <customwidget>
