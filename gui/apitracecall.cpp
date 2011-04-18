@@ -8,7 +8,7 @@
 #define QT_USE_FAST_OPERATOR_PLUS
 #include <QStringBuilder>
 
-ApiPointer::ApiPointer(int val)
+ApiPointer::ApiPointer(unsigned long long val)
     : m_value(val)
 {
 }
@@ -720,5 +720,30 @@ QVariant ApiEnum::value() const
 QString ApiEnum::name() const
 {
     return m_name;
+}
+
+unsigned long long ApiBitmask::value() const
+{
+    return m_value;
+}
+
+ApiBitmask::Signature ApiBitmask::signature() const
+{
+    return m_sig;
+}
+
+ApiStruct::Signature ApiStruct::signature() const
+{
+    return m_sig;
+}
+
+QList<QVariant> ApiStruct::values() const
+{
+    return m_members;
+}
+
+unsigned long long ApiPointer::value() const
+{
+    return m_value;
 }
 

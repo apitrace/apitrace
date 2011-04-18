@@ -16,6 +16,7 @@ set(qapitrace_SRCS
    mainwindow.cpp
    main.cpp
    retracer.cpp
+   saverthread.cpp
    searchwidget.cpp
    settingsdialog.cpp
    shaderssourcewidget.cpp

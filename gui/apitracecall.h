@@ -55,11 +55,14 @@ Q_DECLARE_METATYPE(ApiEnum);
 class ApiPointer
 {
 public:
-    ApiPointer(int val=0);
+    ApiPointer(unsigned long long val=0);
 
     QString toString() const;
+
+    unsigned long long value() const;
+
 private:
-    int m_value;
+    unsigned long long m_value;
 };
 Q_DECLARE_METATYPE(ApiPointer);
 
@@ -71,6 +74,9 @@ public:
     ApiBitmask(const Trace::Bitmask *bitmask = 0);
 
     QString toString() const;
+
+    unsigned long long value() const;
+    Signature signature() const;
 
 private:
     void init(const Trace::Bitmask *bitmask);
@@ -91,6 +97,8 @@ public:
     ApiStruct(const Trace::Struct *s = 0);
 
     QString toString() const;
+    Signature signature() const;
+    QList<QVariant> values() const;
 
 private:
     void init(const Trace::Struct *bitmask);
