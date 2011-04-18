@@ -922,7 +922,7 @@ void MainWindow::editCall()
 
 void MainWindow::slotStartedSaving()
 {
-    m_progressBar->setValue(0);
+    m_progressBar->show();
     statusBar()->showMessage(
         tr("Saving to %1").arg(m_trace->fileName()));
 }

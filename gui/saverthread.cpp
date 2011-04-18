@@ -187,11 +187,11 @@ writeValue(const QVariant &var, unsigned &id)
             deleteStructSig(str);
         } else if (type == pointerType) {
             ApiPointer apiPtr = var.value<ApiPointer>();
-            Trace::BeginArray(1);
-            Trace::BeginElement();
+            //Trace::BeginArray(1);
+            //Trace::BeginElement();
             Trace::LiteralOpaque((const void*)apiPtr.value());
-            Trace::EndElement();
-            Trace::EndArray();
+            //Trace::EndElement();
+            //Trace::EndArray();
         } else if (type == enumType) {
             ApiEnum apiEnum = var.value<ApiEnum>();
             Trace::EnumSig *sig = createEnumSig(apiEnum, ++id);

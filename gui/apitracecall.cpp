@@ -149,7 +149,7 @@ void ApiStruct::init(const Trace::Struct *s)
 
 void VariantVisitor::visit(Trace::Null *)
 {
-    m_variant = QVariant(QLatin1String("NULL"));
+    m_variant = QVariant::fromValue(ApiPointer(0));
 }
 
 void VariantVisitor::visit(Trace::Bool *node)
