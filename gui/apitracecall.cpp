@@ -205,6 +205,14 @@ void VariantVisitor::visit(Trace::Array *array)
 
 void VariantVisitor::visit(Trace::Blob *blob)
 {
+    //XXX
+    //FIXME: this is a nasty hack. Trace::Blob's can't
+    //   delete the contents in the destructor because
+    //   the data is being used by other calls. We piggy back
+    //   on that assumption and don't deep copy the data. If
+    //   Blob's will start deleting the data we will need to
+    //   start deep copying it or switch to using something like
+    //   Boost's shared_ptr or Qt's QSharedPointer to handle it
     QByteArray barray = QByteArray::fromRawData(blob->buf, blob->size);
     m_variant = QVariant(barray);
 }
@@ -619,19 +627,6 @@ ApiTraceCall::ApiTraceCall(const Trace::Call *call)
         VariantVisitor argVisitor;
         call->args[i]->visit(argVisitor);
         m_argValues += argVisitor.variant();
-
-        //XXX
-        //FIXME: this is a nasty hack. Trace::Blob's can't
-        //   delete the contents in the destructor because
-        //   the data is being used by other calls. we should
-        //   use something like Boost's shared_ptr or
-        //   Qt's QSharedPointer to handle it.
-        Trace::Blob *b = dynamic_cast<Trace::Blob*>(call->args[i]);
-        if (b && b->blob()) {
-            char *buf = (char*)b->blob();
-            delete [] buf;
-        }
-
     }
 }
 

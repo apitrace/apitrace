@@ -118,7 +118,7 @@ deleteBitmaskSig(Trace::BitmaskSig *sig)
 }
 
 static void
-writeArgument(const QVariant &var, unsigned &id)
+writeValue(const QVariant &var, unsigned &id)
 {
     int arrayType   = QMetaType::type("ApiArray");
     int bitmaskType = QMetaType::type("ApiBitmask");
@@ -127,7 +127,6 @@ writeArgument(const QVariant &var, unsigned &id)
     int enumType    = QMetaType::type("ApiEnum");
     int type = var.userType();
 
-    Trace::BeginArg(++id);
     switch(type) {
     case QVariant::Bool:
         Trace::LiteralBool(var.toBool());
@@ -167,7 +166,7 @@ writeArgument(const QVariant &var, unsigned &id)
             Trace::BeginArray(vals.count());
             foreach(QVariant el, vals) {
                 Trace::BeginElement();
-                writeArgument(el, ++id);
+                writeValue(el, ++id);
                 Trace::EndElement();
             }
             Trace::EndArray();
@@ -182,7 +181,7 @@ writeArgument(const QVariant &var, unsigned &id)
             Trace::StructSig *str = createStructSig(apiStr, ++id);
             Trace::BeginStruct(str);
             foreach(QVariant val, vals) {
-                writeArgument(val, ++id);
+                writeValue(val, ++id);
             }
             Trace::EndStruct();
             deleteStructSig(str);
@@ -203,10 +202,7 @@ writeArgument(const QVariant &var, unsigned &id)
                       << QMetaType::typeName(type);
         }
     }
-
-    Trace::EndArg();
 }
-
 
 SaverThread::SaverThread(QObject *parent)
     : QThread(parent)
@@ -230,12 +226,15 @@ void SaverThread::run()
     for (int i = 0; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];
         Trace::FunctionSig *funcSig = createFunctionSig(call, ++id);
-        unsigned callNo = BeginEnter(*funcSig);
+        unsigned callNo = Trace::BeginEnter(*funcSig);
         {
             //args
             QVariantList vars = call->arguments();
+            int index = 0;
             foreach(QVariant var, vars) {
-                writeArgument(var, ++id);
+                Trace::BeginArg(index++);
+                writeValue(var, ++id);
+                Trace::EndArg();
             }
         }
         Trace::EndEnter();
@@ -244,7 +243,7 @@ void SaverThread::run()
             QVariant ret = call->returnValue();
             if (!ret.isNull()) {
                 Trace::BeginReturn();
-                writeArgument(ret, ++id);
+                writeValue(ret, ++id);
                 Trace::EndReturn();
             }
         }
