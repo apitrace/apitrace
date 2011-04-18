@@ -7,6 +7,7 @@
 #include <QSet>
 
 class LoaderThread;
+class SaverThread;
 
 class ApiTrace : public QObject
 {
@@ -78,6 +79,7 @@ private:
     FrameMarker m_frameMarker;
 
     LoaderThread *m_loader;
+    SaverThread  *m_saver;
 
     QSet<ApiTraceCall*> m_editedCalls;
 

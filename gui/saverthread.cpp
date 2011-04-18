@@ -99,7 +99,7 @@ createBitmaskSig(const ApiBitmask &bt, unsigned id)
     sig->values = values;
 
     int i = 0;
-    for (itr != bsig.constBegin(); itr != bsig.constEnd(); ++itr, ++i) {
+    for (itr = bsig.constBegin(); itr != bsig.constEnd(); ++itr, ++i) {
         values[i].name = qstrdup(itr->first.toLocal8Bit());
         values[i].value = itr->second;
     }
@@ -127,15 +127,39 @@ writeArgument(const QVariant &var, unsigned &id)
     int enumType    = QMetaType::type("ApiEnum");
     int type = var.userType();
 
+    Trace::BeginArg(++id);
     switch(type) {
     case QVariant::Bool:
-    case QVariant::ByteArray:
+        Trace::LiteralBool(var.toBool());
+        break;
+    case QVariant::ByteArray: {
+        QByteArray ba = var.toByteArray();
+        Trace::LiteralBlob((const void*)ba.constData(), ba.size());
+    }
+        break;
     case QVariant::Double:
+        Trace::LiteralFloat(var.toDouble());
+        break;
+    case QMetaType::Float:
+        Trace::LiteralFloat(var.toFloat());
+        break;
     case QVariant::Int:
+        Trace::LiteralSInt(var.toInt());
+        break;
     case QVariant::LongLong:
-    case QVariant::String:
+        Trace::LiteralSInt(var.toLongLong());
+        break;
+    case QVariant::String: {
+        QString str = var.toString();
+        Trace::LiteralString(str.toLocal8Bit().constData(), str.length());
+    }
+        break;
     case QVariant::UInt:
+        Trace::LiteralUInt(var.toInt());
+        break;
     case QVariant::ULongLong:
+        Trace::LiteralUInt(var.toLongLong());
+        break;
     default:
         if (type == arrayType) {
             ApiArray array = var.value<ApiArray>();
@@ -174,15 +198,13 @@ writeArgument(const QVariant &var, unsigned &id)
             Trace::EnumSig *sig = createEnumSig(apiEnum, ++id);
             Trace::LiteralEnum(sig);
             deleteEnumSig(sig);
-        } else if (type == QVariant::ByteArray) {
-            QByteArray ba = var.toByteArray();
-            Trace::LiteralBlob((const void*)ba.constData(), ba.size());
         } else {
             qWarning()<<"Unsupported write variant : "
                       << QMetaType::typeName(type);
         }
     }
 
+    Trace::EndArg();
 }
 
 
@@ -201,10 +223,10 @@ void SaverThread::saveFile(const QString &fileName,
 
 void SaverThread::run()
 {
-
-    Trace::Open();
+    qputenv("TRACE_PATH", m_fileName.toLocal8Bit());
     unsigned id = 0;
 
+    Trace::Open();
     for (int i = 0; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];
         Trace::FunctionSig *funcSig = createFunctionSig(call, ++id);
@@ -213,7 +235,7 @@ void SaverThread::run()
             //args
             QVariantList vars = call->arguments();
             foreach(QVariant var, vars) {
-                writeArgument(var, id);
+                writeArgument(var, ++id);
             }
         }
         Trace::EndEnter();
@@ -222,7 +244,7 @@ void SaverThread::run()
             QVariant ret = call->returnValue();
             if (!ret.isNull()) {
                 Trace::BeginReturn();
-                writeArgument(ret, id);
+                writeArgument(ret, ++id);
                 Trace::EndReturn();
             }
         }
@@ -230,7 +252,6 @@ void SaverThread::run()
 
         deleteFunctionSig(funcSig);
     }
-
     Trace::Close();
 
     emit traceSaved(m_fileName);

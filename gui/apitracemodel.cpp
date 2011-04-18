@@ -285,6 +285,7 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
     qDebug()<<"\ttrace edited = "<<trace->edited();
     qDebug()<<"\ttrace file = "<<trace->fileName();
     qDebug()<<"\ttrace needs saving = "<<trace->needsSaving();
+    trace->save();
 }
 
 #include "apitracemodel.moc"

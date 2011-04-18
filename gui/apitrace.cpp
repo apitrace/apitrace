@@ -1,6 +1,7 @@
 #include "apitrace.h"
 
 #include "loaderthread.h"
+#include "saverthread.h"
 
 #include <QDir>
 
@@ -15,6 +16,8 @@ ApiTrace::ApiTrace()
             this, SIGNAL(startedLoadingTrace()));
     connect(m_loader, SIGNAL(finished()),
             this, SIGNAL(finishedLoadingTrace()));
+
+    m_saver = new SaverThread(this);
 }
 
 ApiTrace::~ApiTrace()
@@ -22,6 +25,7 @@ ApiTrace::~ApiTrace()
     qDeleteAll(m_calls);
     qDeleteAll(m_frames);
     delete m_loader;
+    delete m_saver;
 }
 
 bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
@@ -241,6 +245,8 @@ void ApiTrace::save()
     QDir dir;
     dir.mkpath(fi.absolutePath());
     m_needsSaving = false;
+
+    m_saver->saveFile(m_tempFileName, m_calls);
 }
 
 #include "apitrace.moc"
