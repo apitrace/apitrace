@@ -60,6 +60,8 @@ private slots:
     void fillState(bool nonDefaults);
     void customContextMenuRequested(QPoint pos);
     void editCall();
+    void slotStartedSaving();
+    void slotSaved();
 
 private:
     void initObjects();

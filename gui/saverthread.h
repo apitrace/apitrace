@@ -20,7 +20,7 @@ public slots:
                   const QList<ApiTraceCall*> &calls);
 
 signals:
-    void traceSaved(const QString &fileName);
+    void traceSaved();
 
 protected:
     virtual void run();

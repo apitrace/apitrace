@@ -18,6 +18,10 @@ ApiTrace::ApiTrace()
             this, SIGNAL(finishedLoadingTrace()));
 
     m_saver = new SaverThread(this);
+    connect(m_saver, SIGNAL(traceSaved()),
+            this, SLOT(slotSaved()));
+    connect(m_saver, SIGNAL(traceSaved()),
+            this, SIGNAL(saved()));
 }
 
 ApiTrace::~ApiTrace()
@@ -207,14 +211,12 @@ void ApiTrace::callEdited(ApiTraceCall *call)
     if (!m_editedCalls.contains(call)) {
         //lets generate a temp filename
         QString tempPath = QDir::tempPath();
-        //lets make sure it exists
         m_tempFileName = QString::fromLatin1("%1/%2.edited")
                          .arg(tempPath)
                          .arg(m_fileName);
-        m_needsSaving = true;
     }
-
     m_editedCalls.insert(call);
+    m_needsSaving = true;
 
     emit changed(call);
 }
@@ -243,10 +245,19 @@ void ApiTrace::save()
 {
     QFileInfo fi(m_tempFileName);
     QDir dir;
+    emit startedSaving();
     dir.mkpath(fi.absolutePath());
-    m_needsSaving = false;
-
     m_saver->saveFile(m_tempFileName, m_calls);
+}
+
+void ApiTrace::slotSaved()
+{
+    m_needsSaving = false;
+}
+
+bool ApiTrace::isSaving() const
+{
+    return m_saver->isRunning();
 }
 
 #include "apitrace.moc"

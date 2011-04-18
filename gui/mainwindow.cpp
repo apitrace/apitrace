@@ -140,6 +140,14 @@ void MainWindow::callItemSelected(const QModelIndex &index)
 
 void MainWindow::replayStart()
 {
+    if (m_trace->isSaving()) {
+        QMessageBox::warning(
+            this,
+            tr("Trace Saving"),
+            tr("QApiTrace is currently saving the edited trace file. "
+               "Please wait until it finishes and try again."));
+        return;
+    }
     QDialog dlg;
     Ui_RetracerDialog dlgUi;
     dlgUi.setupUi(&dlg);
@@ -276,6 +284,14 @@ void MainWindow::lookupState()
         QMessageBox::warning(
             this, tr("Unknown Event"),
             tr("To inspect the state select an event in the event list."));
+        return;
+    }
+    if (m_trace->isSaving()) {
+        QMessageBox::warning(
+            this,
+            tr("Trace Saving"),
+            tr("QApiTrace is currently saving the edited trace file. "
+               "Please wait until it finishes and try again."));
         return;
     }
     m_stateEvent = m_selectedEvent;
@@ -623,6 +639,10 @@ void MainWindow::initConnections()
             this, SLOT(startedLoadingTrace()));
     connect(m_trace, SIGNAL(finishedLoadingTrace()),
             this, SLOT(finishedLoadingTrace()));
+    connect(m_trace, SIGNAL(startedSaving()),
+            this, SLOT(slotStartedSaving()));
+    connect(m_trace, SIGNAL(saved()),
+            this, SLOT(slotSaved()));
 
     connect(m_retracer, SIGNAL(finished(const QString&)),
             this, SLOT(replayFinished(const QString&)));
@@ -898,6 +918,20 @@ void MainWindow::editCall()
         m_argsEditor->setCall(call);
         m_argsEditor->show();
     }
+}
+
+void MainWindow::slotStartedSaving()
+{
+    m_progressBar->setValue(0);
+    statusBar()->showMessage(
+        tr("Saving to %1").arg(m_trace->fileName()));
+}
+
+void MainWindow::slotSaved()
+{
+    statusBar()->showMessage(
+        tr("Saved to %1").arg(m_trace->fileName()), 2000);
+    m_progressBar->hide();
 }
 
 #include "mainwindow.moc"

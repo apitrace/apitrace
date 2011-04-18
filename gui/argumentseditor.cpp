@@ -339,10 +339,12 @@ void ArgumentsEditor::accept()
         QVariant argValue = originalValues[i];
         QVariant editorValue = valueForName(argName, argValue, &valChanged);
         newValues.append(editorValue);
+#if 0
         qDebug()<<"Arg = "<<argName;
         qDebug()<<"\toriginal = "<<argValue;
         qDebug()<<"\teditor   = "<<editorValue;
         qDebug()<<"\tchanged  = "<<valChanged;
+#endif
         if (valChanged)
             changed = true;
     }

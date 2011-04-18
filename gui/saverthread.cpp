@@ -253,7 +253,7 @@ void SaverThread::run()
     }
     Trace::Close();
 
-    emit traceSaved(m_fileName);
+    emit traceSaved();
 }
 
 #include "saverthread.moc"

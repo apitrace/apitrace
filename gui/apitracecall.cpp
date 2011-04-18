@@ -265,11 +265,13 @@ QStaticText ApiTraceCall::staticText() const
     if (m_staticText && !m_staticText->text().isEmpty())
         return *m_staticText;
 
+    QVariantList argValues = arguments();
+
     QString richText = QString::fromLatin1(
         "<span style=\"font-weight:bold\">%1</span>(").arg(m_name);
     for (int i = 0; i < m_argNames.count(); ++i) {
         richText += QLatin1String("<span style=\"color:#0000ff\">");
-        QString argText = apiVariantToString(m_argValues[i]);
+        QString argText = apiVariantToString(argValues[i]);
 
         //if arguments are really long (e.g. shader text), cut them
         // and elide it
@@ -299,6 +301,8 @@ QStaticText ApiTraceCall::staticText() const
 
     if (!m_staticText)
         m_staticText = new QStaticText(richText);
+    else
+        m_staticText->setText(richText);
     QTextOption opt;
     opt.setWrapMode(QTextOption::NoWrap);
     m_staticText->setTextOption(opt);
@@ -325,11 +329,12 @@ QString ApiTraceCall::toHtml() const
                       .arg(m_name);
     }
 
+    QVariantList argValues = arguments();
     for (int i = 0; i < m_argNames.count(); ++i) {
         m_richText += m_argNames[i] +
                       QLatin1Literal(" = ") +
                       QLatin1Literal("<span style=\"color:#0000ff\">") +
-                      apiVariantToString(m_argValues[i]) +
+                      apiVariantToString(argValues[i]) +
                       QLatin1Literal("</span>");
         if (i < m_argNames.count() - 1)
             m_richText += QLatin1String(", ");
@@ -352,12 +357,13 @@ QString ApiTraceCall::filterText() const
     if (!m_filterText.isEmpty())
         return m_filterText;
 
+    QVariantList argValues = arguments();
     m_filterText = m_name + QLatin1Literal("(");
     for (int i = 0; i < m_argNames.count(); ++i) {
         m_filterText += m_argNames[i] +
                         QLatin1Literal(" = ") +
-                        apiVariantToString(m_argValues[i]);
-        if (m_argValues[i].type() == QVariant::ByteArray) {
+                        apiVariantToString(argValues[i]);
+        if (argValues[i].type() == QVariant::ByteArray) {
             m_hasBinaryData = true;
             m_binaryDataIndex = i;
         }
@@ -675,7 +681,13 @@ void ApiTraceCall::setEditedValues(const QVariantList &lst)
     ApiTrace *trace = 0;
     if (m_parentFrame)
         trace = m_parentFrame->parentTrace();
+
     m_editedValues = lst;
+    //lets regenerate data
+    m_richText = QString();
+    m_filterText = QString();
+    delete m_staticText;
+    m_staticText = 0;
 
     if (trace) {
         if (!lst.isEmpty()) {

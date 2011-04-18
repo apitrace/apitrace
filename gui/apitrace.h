@@ -49,6 +49,8 @@ public:
     bool edited() const;
     bool needsSaving() const;
 
+    bool isSaving() const;
+
 public slots:
     void setFileName(const QString &name);
     void setFrameMarker(FrameMarker marker);
@@ -60,13 +62,15 @@ signals:
     void invalidated();
     void framesInvalidated();
     void changed(ApiTraceCall *call);
-    void traceSaved();
+    void startedSaving();
+    void saved();
 
     void framesAdded(int oldCount, int numAdded);
     void callsAdded(int oldCount, int numAdded);
 
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
+    void slotSaved();
 private:
     void detectFrames();
 private:
