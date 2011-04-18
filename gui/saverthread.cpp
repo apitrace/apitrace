@@ -175,7 +175,8 @@ writeArgument(const QVariant &var, unsigned &id)
             Trace::LiteralEnum(sig);
             deleteEnumSig(sig);
         } else if (type == QVariant::ByteArray) {
-            
+            QByteArray ba = var.toByteArray();
+            Trace::LiteralBlob((const void*)ba.constData(), ba.size());
         } else {
             qWarning()<<"Unsupported write variant : "
                       << QMetaType::typeName(type);
