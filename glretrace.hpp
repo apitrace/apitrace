@@ -57,7 +57,7 @@ extern const char *snapshot_prefix;
 extern unsigned dump_state;
 
 void
-checkGlError(void);
+checkGlError(int callIdx = -1);
 
 void state_dump(std::ostream &os);
 

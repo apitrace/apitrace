@@ -149,7 +149,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = true;'
         else:
             # glGetError is not allowed inside glBegin/glEnd
-            print '    glretrace::checkGlError();'
+            print '    glretrace::checkGlError(call.no);'
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':

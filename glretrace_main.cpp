@@ -55,7 +55,7 @@ const char *snapshot_prefix = NULL;
 unsigned dump_state = ~0;
 
 void
-checkGlError(void) {
+checkGlError(int callIdx) {
     if (benchmark || insideGlBeginEnd) {
         return;
     }
@@ -63,6 +63,10 @@ checkGlError(void) {
     GLenum error = glGetError();
     if (error == GL_NO_ERROR) {
         return;
+    }
+
+    if (callIdx >= 0) {
+        std::cerr << callIdx << ": ";
     }
 
     std::cerr << "warning: glGetError() = ";
