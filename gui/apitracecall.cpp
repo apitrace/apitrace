@@ -30,14 +30,16 @@ const char * const styleSheet =
     "    color: #0000ff;\n"
     "}\n"
     ".error {\n"
+    "    border: 1px solid rgb(255,0,0);\n"
     "    margin: 10px;\n"
-    "    padding: 0;\n"
-    "    color: red;\n"
-    "    background: #6fb2e5;\n"
-    "    box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
-    "    -o-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
-    "    -webkit-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
-    "    -moz-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    "    padding: 1;\n"
+    "    border-radius: 4px;\n"
+    // also looks great but qtwebkit doesn't support it
+    //"    background: #6fb2e5;\n"
+    //"    box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    //"    -o-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    //"    -webkit-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    //"    -moz-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
     "}\n";
 
 ApiPointer::ApiPointer(unsigned long long val)
@@ -386,6 +388,14 @@ QString ApiTraceCall::toHtml() const
             QLatin1String("</span>");
     }
     m_richText += QLatin1String("</div>");
+
+    if (hasError()) {
+        QString errorStr =
+            QString::fromLatin1(
+                "<div class=\"error\">%1</div>")
+            .arg(m_error);
+        m_richText += errorStr;
+    }
 
     m_richText =
         QString::fromLatin1(
@@ -814,6 +824,7 @@ void ApiTraceCall::setError(const QString &msg)
     if (m_error != msg) {
         ApiTrace *trace = parentTrace();
         m_error = msg;
+        m_richText = QString();
         if (trace)
             trace->callError(this);
     }

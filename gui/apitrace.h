@@ -52,6 +52,8 @@ public:
 
     bool isSaving() const;
 
+    bool hasErrors() const;
+
 public slots:
     void setFileName(const QString &name);
     void setFrameMarker(FrameMarker marker);
@@ -89,6 +91,8 @@ private:
     QSet<ApiTraceCall*> m_editedCalls;
 
     bool m_needsSaving;
+
+    QSet<ApiTraceCall*> m_errors;
 };
 
 #endif

@@ -262,7 +262,19 @@ bool ApiTrace::isSaving() const
 
 void ApiTrace::callError(ApiTraceCall *call)
 {
+    Q_ASSERT(call);
+
+    if (call->hasError())
+        m_errors.insert(call);
+    else
+        m_errors.remove(call);
+
     emit changed(call);
+}
+
+bool ApiTrace::hasErrors() const
+{
+    return !m_errors.isEmpty();
 }
 
 #include "apitrace.moc"

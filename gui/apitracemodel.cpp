@@ -282,7 +282,7 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
 {
     ApiTrace *trace = call->parentFrame()->parentTrace();
 
-#if 1
+#if 0
     qDebug()<<"Call changed = "<<call->edited();
     qDebug()<<"\ttrace edited = "<<trace->edited();
     qDebug()<<"\ttrace file = "<<trace->fileName();

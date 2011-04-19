@@ -645,6 +645,8 @@ void MainWindow::initConnections()
             this, SLOT(slotStartedSaving()));
     connect(m_trace, SIGNAL(saved()),
             this, SLOT(slotSaved()));
+    connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
+            this, SLOT(slotTraceChanged(ApiTraceCall*)));
 
     connect(m_retracer, SIGNAL(finished(const QString&)),
             this, SLOT(replayFinished(const QString&)));
@@ -727,10 +729,6 @@ void MainWindow::initConnections()
 void MainWindow::replayStateFound(const ApiTraceState &state)
 {
     m_stateEvent->setState(state);
-    if (m_stateEvent->type() == ApiTraceEvent::Call) {
-        ApiTraceCall *call = static_cast<ApiTraceCall*>(m_stateEvent);
-        call->setError(tr("Some wonky error."));
-    }
     m_model->stateSetOnEvent(m_stateEvent);
     if (m_selectedEvent == m_stateEvent) {
         fillStateForFrame();
@@ -1002,6 +1000,14 @@ ApiTraceFrame * MainWindow::currentFrame() const
         }
     }
     return NULL;
+}
+
+void MainWindow::slotTraceChanged(ApiTraceCall *call)
+{
+    Q_ASSERT(call);
+    if (call == m_selectedEvent) {
+        m_ui.detailsWebView->setHtml(call->toHtml());
+    }
 }
 
 #include "mainwindow.moc"

@@ -7,6 +7,7 @@
 #include <QProcess>
 
 class ApiTrace;
+class ApiTraceCall;
 class ApiTraceEvent;
 class ApiTraceFilter;
 class ApiTraceFrame;
@@ -64,6 +65,7 @@ private slots:
     void slotSaved();
     void slotGoFrameStart();
     void slotGoFrameEnd();
+    void slotTraceChanged(ApiTraceCall *call);
 
 private:
     void initObjects();
