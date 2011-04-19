@@ -429,6 +429,7 @@ __glGetBooleanv_size(GLenum pname)
 {
     switch (pname) {
     case GL_CURRENT_INDEX:
+    case GL_CURRENT_PROGRAM:
     case GL_CURRENT_RASTER_INDEX:
     case GL_CURRENT_RASTER_POSITION_VALID:
     case GL_CURRENT_RASTER_DISTANCE:
