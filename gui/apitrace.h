@@ -45,6 +45,7 @@ public:
 
     void callEdited(ApiTraceCall *call);
     void callReverted(ApiTraceCall *call);
+    void callError(ApiTraceCall *call);
 
     bool edited() const;
     bool needsSaving() const;

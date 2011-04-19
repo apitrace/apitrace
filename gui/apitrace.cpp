@@ -260,4 +260,9 @@ bool ApiTrace::isSaving() const
     return m_saver->isRunning();
 }
 
+void ApiTrace::callError(ApiTraceCall *call)
+{
+    emit changed(call);
+}
+
 #include "apitrace.moc"

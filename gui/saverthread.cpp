@@ -221,7 +221,7 @@ void SaverThread::run()
 {
     qputenv("TRACE_PATH", m_fileName.toLocal8Bit());
     unsigned id = 0;
-
+    qDebug()<<"saver thread!";
     Trace::Open();
     for (int i = 0; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];

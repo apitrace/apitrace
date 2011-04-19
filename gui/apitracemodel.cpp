@@ -282,15 +282,16 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
 {
     ApiTrace *trace = call->parentFrame()->parentTrace();
 
-    Q_ASSERT(trace);
-    trace->save();
-
-#if 0
+#if 1
     qDebug()<<"Call changed = "<<call->edited();
     qDebug()<<"\ttrace edited = "<<trace->edited();
     qDebug()<<"\ttrace file = "<<trace->fileName();
     qDebug()<<"\ttrace needs saving = "<<trace->needsSaving();
 #endif
+
+    Q_ASSERT(trace);
+    if (trace->needsSaving())
+        trace->save();
 
     ApiTraceFrame *frame = call->parentFrame();
     int row = frame->calls.indexOf(call);

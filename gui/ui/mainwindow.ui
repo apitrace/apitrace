@@ -374,6 +374,40 @@
     </layout>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="errorsDock">
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="windowTitle">
+    <string>Errors</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_4">
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <item>
+      <widget class="QTreeWidget" name="errorsTreeWidget">
+       <column>
+        <property name="text">
+         <string>Index</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Name</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Error</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
@@ -514,6 +548,7 @@
   </action>
   <zorder>stateDock</zorder>
   <zorder>vertexDataDock</zorder>
+  <zorder>errorsDock</zorder>
  </widget>
  <customwidgets>
   <customwidget>

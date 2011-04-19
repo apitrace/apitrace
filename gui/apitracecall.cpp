@@ -8,6 +8,38 @@
 #define QT_USE_FAST_OPERATOR_PLUS
 #include <QStringBuilder>
 
+const char * const styleSheet =
+    ".call {\n"
+    "    font-weight:bold;\n"
+    // text shadow looks great but doesn't work well in qtwebkit 4.7
+    "    /*text-shadow: 0px 2px 3px #555;*/\n"
+    "    font-size: 1.2em;\n"
+    "}\n"
+    ".arg-name {\n"
+    "    border: 1px solid rgb(238,206,0);\n"
+    "    border-radius: 4px;\n"
+    "    background: yellow;\n"
+    "    padding: 2px;\n"
+    "    box-shadow: 0px 1px 3px dimgrey;\n"
+    "    -webkit-transition: background 1s linear;\n"
+    "}\n"
+    ".arg-name:hover {\n"
+    "    background: white;\n"
+    "}\n"
+    ".arg-value {\n"
+    "    color: #0000ff;\n"
+    "}\n"
+    ".error {\n"
+    "    margin: 10px;\n"
+    "    padding: 0;\n"
+    "    color: red;\n"
+    "    background: #6fb2e5;\n"
+    "    box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    "    -o-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    "    -webkit-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    "    -moz-box-shadow: 0 1px 5px #0061aa, inset 0 10px 20px #b6f9ff;\n"
+    "}\n";
+
 ApiPointer::ApiPointer(unsigned long long val)
     : m_value(val)
 {
@@ -316,14 +348,16 @@ QString ApiTraceCall::toHtml() const
     if (!m_richText.isEmpty())
         return m_richText;
 
+    m_richText = QLatin1String("<div class=\"call\">");
+
     if (m_helpUrl.isEmpty()) {
-        m_richText = QString::fromLatin1(
-            "%1) <span style=\"font-weight:bold\">%2</span>(")
-                     .arg(m_index)
-                     .arg(m_name);
+        m_richText += QString::fromLatin1(
+            "%1) <span class=\"callName\">%2</span>(")
+                      .arg(m_index)
+                      .arg(m_name);
     } else {
-        m_richText = QString::fromLatin1(
-            "%1) <span style=\"font-weight:bold\"><a href=\"%2\">%3</a></span>(")
+        m_richText += QString::fromLatin1(
+            "%1) <span class=\"callName\"><a href=\"%2\">%3</a></span>(")
                       .arg(m_index)
                       .arg(m_helpUrl.toString())
                       .arg(m_name);
@@ -331,11 +365,14 @@ QString ApiTraceCall::toHtml() const
 
     QVariantList argValues = arguments();
     for (int i = 0; i < m_argNames.count(); ++i) {
-        m_richText += m_argNames[i] +
-                      QLatin1Literal(" = ") +
-                      QLatin1Literal("<span style=\"color:#0000ff\">") +
-                      apiVariantToString(argValues[i]) +
-                      QLatin1Literal("</span>");
+        m_richText +=
+            QLatin1String("<span class=\"arg-name\">") +
+            m_argNames[i] +
+            QLatin1String("</span>") +
+            QLatin1Literal(" = ") +
+            QLatin1Literal("<span class=\"arg-value\">") +
+            apiVariantToString(argValues[i]) +
+            QLatin1Literal("</span>");
         if (i < m_argNames.count() - 1)
             m_richText += QLatin1String(", ");
     }
@@ -348,7 +385,17 @@ QString ApiTraceCall::toHtml() const
             apiVariantToString(m_returnValue) +
             QLatin1String("</span>");
     }
+    m_richText += QLatin1String("</div>");
+
+    m_richText =
+        QString::fromLatin1(
+            "<html><head><style type=\"text/css\" media=\"all\">"
+            "%1</style></head><body>%2</body></html>")
+        .arg(styleSheet)
+        .arg(m_richText);
     m_richText.squeeze();
+
+    //qDebug()<<m_richText;
     return m_richText;
 }
 
@@ -678,9 +725,7 @@ QVariantList ApiTraceCall::originalValues() const
 
 void ApiTraceCall::setEditedValues(const QVariantList &lst)
 {
-    ApiTrace *trace = 0;
-    if (m_parentFrame)
-        trace = m_parentFrame->parentTrace();
+    ApiTrace *trace = parentTrace();
 
     m_editedValues = lst;
     //lets regenerate data
@@ -752,5 +797,32 @@ QList<QVariant> ApiStruct::values() const
 unsigned long long ApiPointer::value() const
 {
     return m_value;
+}
+
+bool ApiTraceCall::hasError() const
+{
+    return !m_error.isEmpty();
+}
+
+QString ApiTraceCall::error() const
+{
+    return m_error;
+}
+
+void ApiTraceCall::setError(const QString &msg)
+{
+    if (m_error != msg) {
+        ApiTrace *trace = parentTrace();
+        m_error = msg;
+        if (trace)
+            trace->callError(this);
+    }
+}
+
+ApiTrace * ApiTraceCall::parentTrace() const
+{
+    if (m_parentFrame)
+        return m_parentFrame->parentTrace();
+    return NULL;
 }
 

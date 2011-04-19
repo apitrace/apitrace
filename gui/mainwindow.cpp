@@ -606,11 +606,13 @@ void MainWindow::initObjects()
     m_argsEditor = new ArgumentsEditor(this);
 
     m_ui.detailsDock->hide();
+    m_ui.errorsDock->hide();
     m_ui.vertexDataDock->hide();
     m_ui.stateDock->hide();
     setDockOptions(dockOptions() | QMainWindow::ForceTabbedDocks);
 
     tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
+    tabifyDockWidget(m_ui.detailsDock, m_ui.errorsDock);
 
     m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -725,6 +727,10 @@ void MainWindow::initConnections()
 void MainWindow::replayStateFound(const ApiTraceState &state)
 {
     m_stateEvent->setState(state);
+    if (m_stateEvent->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(m_stateEvent);
+        call->setError(tr("Some wonky error."));
+    }
     m_model->stateSetOnEvent(m_stateEvent);
     if (m_selectedEvent == m_stateEvent) {
         fillStateForFrame();
