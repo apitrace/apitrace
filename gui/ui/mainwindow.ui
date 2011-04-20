@@ -57,6 +57,17 @@
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionFind"/>
+    <addaction name="actionGo"/>
+    <addaction name="actionGoFrameStart"/>
+    <addaction name="actionGoFrameEnd"/>
+    <addaction name="separator"/>
+    <addaction name="actionShowErrorsDock"/>
+   </widget>
    <widget class="QMenu" name="menu_Trace">
     <property name="title">
      <string>&amp;Trace</string>
@@ -66,15 +77,6 @@
     <addaction name="actionLookupState"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
-   </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>&amp;Edit</string>
-    </property>
-    <addaction name="actionFind"/>
-    <addaction name="actionGo"/>
-    <addaction name="actionGoFrameStart"/>
-    <addaction name="actionGoFrameEnd"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -544,6 +546,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionShowErrorsDock">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Show Errors Dock</string>
    </property>
   </action>
   <zorder>stateDock</zorder>

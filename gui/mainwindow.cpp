@@ -202,6 +202,9 @@ void MainWindow::replayFinished(const QString &output)
         statusBar()->showMessage(output);
     }
     m_stateEvent = 0;
+    m_ui.actionShowErrorsDock->setEnabled(m_trace->hasErrors());
+    m_ui.errorsDock->setVisible(m_trace->hasErrors());
+
     statusBar()->showMessage(
         tr("Replaying finished!"), 2000);
 }
@@ -726,6 +729,11 @@ void MainWindow::initConnections()
             SLOT(createdTrace(const QString&)));
     connect(m_traceProcess, SIGNAL(error(const QString&)),
             SLOT(traceError(const QString&)));
+
+    connect(m_ui.errorsDock, SIGNAL(visibilityChanged(bool)),
+            m_ui.actionShowErrorsDock, SLOT(setChecked(bool)));
+    connect(m_ui.actionShowErrorsDock, SIGNAL(triggered(bool)),
+            m_ui.errorsDock, SLOT(setVisible(bool)));
 }
 
 void MainWindow::replayStateFound(const ApiTraceState &state)
@@ -1031,8 +1039,6 @@ void MainWindow::slotRetraceErrors(const QList<RetraceError> &errors)
         item->setData(1, Qt::DisplayRole, type);
         item->setData(2, Qt::DisplayRole, error.message);
     }
-
-    m_ui.errorsDock->setVisible(!errors.isEmpty());
 }
 
 #include "mainwindow.moc"
