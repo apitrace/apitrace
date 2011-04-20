@@ -734,6 +734,8 @@ void MainWindow::initConnections()
             m_ui.actionShowErrorsDock, SLOT(setChecked(bool)));
     connect(m_ui.actionShowErrorsDock, SIGNAL(triggered(bool)),
             m_ui.errorsDock, SLOT(setVisible(bool)));
+    connect(m_ui.errorsTreeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
+            this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
 }
 
 void MainWindow::replayStateFound(const ApiTraceState &state)
@@ -1038,6 +1040,21 @@ void MainWindow::slotRetraceErrors(const QList<RetraceError> &errors)
         type[0] = type[0].toUpper();
         item->setData(1, Qt::DisplayRole, type);
         item->setData(2, Qt::DisplayRole, error.message);
+    }
+}
+
+void MainWindow::slotErrorSelected(QTreeWidgetItem *current)
+{
+    if (current) {
+        ApiTraceCall *call =
+            current->data(0, Qt::UserRole).value<ApiTraceCall*>();
+        Q_ASSERT(call);
+        QModelIndex index = m_proxyModel->indexForCall(call);
+        if (index.isValid()) {
+            m_ui.callView->setCurrentIndex(index);
+        } else {
+            statusBar()->showMessage(tr("Call has been filtered out."));
+        }
     }
 }
 

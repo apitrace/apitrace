@@ -18,6 +18,7 @@ class ImageViewer;
 class JumpWidget;
 class QModelIndex;
 class QProgressBar;
+class QTreeWidgetItem;
 class QUrl;
 class RetraceError;
 class Retracer;
@@ -68,6 +69,7 @@ private slots:
     void slotGoFrameEnd();
     void slotTraceChanged(ApiTraceCall *call);
     void slotRetraceErrors(const QList<RetraceError> &errors);
+    void slotErrorSelected(QTreeWidgetItem *current);
 
 private:
     void initObjects();
