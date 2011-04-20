@@ -25,7 +25,6 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
-#include <QShortcut>
 #include <QToolBar>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -204,6 +203,8 @@ void MainWindow::replayFinished(const QString &output)
     m_stateEvent = 0;
     m_ui.actionShowErrorsDock->setEnabled(m_trace->hasErrors());
     m_ui.errorsDock->setVisible(m_trace->hasErrors());
+    if (!m_trace->hasErrors())
+        m_ui.errorsTreeWidget->clear();
 
     statusBar()->showMessage(
         tr("Replaying finished!"), 2000);
@@ -631,11 +632,6 @@ void MainWindow::initObjects()
     m_searchWidget->hide();
 
     m_traceProcess = new TraceProcess(this);
-
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_G),
-                  this, SLOT(slotGoTo()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_F),
-                  this, SLOT(slotSearch()));
 }
 
 void MainWindow::initConnections()

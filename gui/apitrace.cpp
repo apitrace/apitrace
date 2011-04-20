@@ -122,6 +122,9 @@ void ApiTrace::setFileName(const QString &name)
         }
         m_frames.clear();
         m_calls.clear();
+        m_errors.clear();
+        m_editedCalls.clear();
+        m_needsSaving = false;
         emit invalidated();
 
         m_loader->loadFile(m_fileName);
