@@ -44,9 +44,14 @@
 
 #endif /* !_WIN32 */
 
+// Prevent including system's glext.h
+#define __glext_h_
+
 #include <GL/gl.h>
 
-#include <GL/glext.h>
+#undef __glext_h_
+
+#include "glext/glext.h"
 
 #ifndef GL_TEXTURE_INDEX_SIZE_EXT
 #define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
@@ -54,7 +59,7 @@
 
 #ifdef _WIN32
 
-#include <GL/wglext.h>
+#include "glext/wglext.h"
 
 #define GLAPIENTRY __stdcall
 
@@ -81,7 +86,7 @@ typedef struct _WGLSWAP
 #else /* !_WIN32 */
 
 #include <GL/glx.h>
-#include <GL/glext.h>
+#include "glext/glxext.h"
 
 /* Prevent collision with Trace::Bool */
 #undef Bool
