@@ -9,6 +9,12 @@ namespace QJson {
     class Parser;
 }
 
+struct RetraceError {
+    int callIndex;
+    QString type;
+    QString message;
+};
+
 /* internal class used by the retracer to run
  * in the thread */
 class RetraceProcess : public QObject
@@ -43,6 +49,7 @@ signals:
     void finished(const QString &output);
     void error(const QString &msg);
     void foundState(const ApiTraceState &state);
+    void retraceErrors(const QList<RetraceError> &errors);
 
 private slots:
     void replayFinished();
@@ -84,6 +91,7 @@ signals:
     void finished(const QString &output);
     void foundState(const ApiTraceState &state);
     void error(const QString &msg);
+    void retraceErrors(const QList<RetraceError> &errors);
 
 protected:
     virtual void run();

@@ -100,6 +100,8 @@ void Retracer::run()
             this, SIGNAL(error(const QString&)));
     connect(retrace, SIGNAL(foundState(const ApiTraceState&)),
             this, SIGNAL(foundState(const ApiTraceState&)));
+    connect(retrace, SIGNAL(retraceErrors(const QList<RetraceError>&)),
+            this, SIGNAL(retraceErrors(const QList<RetraceError>&)));
 
     retrace->start();
 
@@ -141,10 +143,11 @@ void RetraceProcess::replayFinished()
 {
     QByteArray output = m_process->readAllStandardOutput();
     QString msg;
+    QString errStr = m_process->readAllStandardError();
 
 #if 0
     qDebug()<<"Process finished = ";
-    qDebug()<<"\terr = "<<m_process->readAllStandardError();
+    qDebug()<<"\terr = "<<errStr;
     qDebug()<<"\tout = "<<output;
 #endif
     if (m_captureState) {
@@ -157,6 +160,21 @@ void RetraceProcess::replayFinished()
         msg = QString::fromUtf8(output);
     }
 
+    QStringList errorLines = errStr.split('\n');
+    QList<RetraceError> errors;
+    QRegExp regexp("(^\\d+): +(\\b\\w+\\b): (.+$)");
+    foreach(QString line, errorLines) {
+        if (regexp.indexIn(line) != -1) {
+            RetraceError error;
+            error.callIndex = regexp.cap(1).toInt();
+            error.type = regexp.cap(2);
+            error.message = regexp.cap(3);
+            errors.append(error);
+        }
+    }
+    if (!errors.isEmpty()) {
+        emit retraceErrors(errors);
+    }
     emit finished(msg);
 }
 
@@ -170,12 +188,14 @@ void RetraceProcess::replayError(QProcess::ProcessError err)
         tr("Couldn't execute the replay file '%1'").arg(m_fileName));
 }
 
-
+Q_DECLARE_METATYPE(QList<RetraceError>);
 RetraceProcess::RetraceProcess(QObject *parent)
     : QObject(parent)
 {
     m_process = new QProcess(this);
     m_jsonParser = new QJson::Parser();
+
+    qRegisterMetaType<QList<RetraceError> >();
 
     connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)),
             this, SLOT(replayFinished()));

@@ -654,6 +654,8 @@ void MainWindow::initConnections()
             this, SLOT(replayError(const QString&)));
     connect(m_retracer, SIGNAL(foundState(const ApiTraceState&)),
             this, SLOT(replayStateFound(const ApiTraceState&)));
+    connect(m_retracer, SIGNAL(retraceErrors(const QList<RetraceError>&)),
+            this, SLOT(slotRetraceErrors(const QList<RetraceError>&)));
 
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
@@ -1008,6 +1010,29 @@ void MainWindow::slotTraceChanged(ApiTraceCall *call)
     if (call == m_selectedEvent) {
         m_ui.detailsWebView->setHtml(call->toHtml());
     }
+}
+
+void MainWindow::slotRetraceErrors(const QList<RetraceError> &errors)
+{
+    m_ui.errorsTreeWidget->clear();
+
+    foreach(RetraceError error, errors) {
+        ApiTraceCall *call = m_trace->callWithIndex(error.callIndex);
+        if (!call)
+            continue;
+        call->setError(error.message);
+
+        QTreeWidgetItem *item =
+            new QTreeWidgetItem(m_ui.errorsTreeWidget);
+        item->setData(0, Qt::DisplayRole, error.callIndex);
+        item->setData(0, Qt::UserRole, QVariant::fromValue(call));
+        QString type = error.type;
+        type[0] = type[0].toUpper();
+        item->setData(1, Qt::DisplayRole, type);
+        item->setData(2, Qt::DisplayRole, error.message);
+    }
+
+    m_ui.errorsDock->setVisible(!errors.isEmpty());
 }
 
 #include "mainwindow.moc"

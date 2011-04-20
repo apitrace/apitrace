@@ -19,6 +19,7 @@ class JumpWidget;
 class QModelIndex;
 class QProgressBar;
 class QUrl;
+class RetraceError;
 class Retracer;
 class SearchWidget;
 class ShadersSourceWidget;
@@ -66,6 +67,7 @@ private slots:
     void slotGoFrameStart();
     void slotGoFrameEnd();
     void slotTraceChanged(ApiTraceCall *call);
+    void slotRetraceErrors(const QList<RetraceError> &errors);
 
 private:
     void initObjects();
