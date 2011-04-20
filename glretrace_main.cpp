@@ -156,6 +156,7 @@ static void display(void) {
 
     while ((call = parser.parse_call())) {
         const std::string &name = call->name();
+        bool skipCall = false;
 
         if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
             (name[0] == 'g' && name[1] == 'l' && name[2] == 'X')) {
@@ -177,9 +178,8 @@ static void display(void) {
                 if (!double_buffer) {
                     frame_complete(call->no);
                 }
-            } else {
-                continue;
             }
+            skipCall = true;
         }
 
         if (name == "glFlush") {
@@ -188,8 +188,10 @@ static void display(void) {
                 frame_complete(call->no);
             }
         }
-        
-        retrace::retrace_call(*call);
+
+        if (!skipCall) {
+            retrace::retrace_call(*call);
+        }
 
         if (!insideGlBeginEnd && call->no >= dump_state) {
             state_dump(std::cout);
