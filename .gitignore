@@ -4,6 +4,7 @@
 *.bmp
 *.bz2
 *.dll
+*.dylib
 *.exe
 *.exp
 *.ilk

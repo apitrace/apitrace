@@ -25,6 +25,12 @@ if (NOT WIN32)
     find_package (ZLIB)
     find_package (PNG)
     find_package (X11 REQUIRED)
+
+    # We use GLX on MacOSX, which is in a separate library
+    if (APPLE)
+        find_library (X11_GL_LIB GL ${X11_LIB_SEARCH_PATH})
+        set(X11_LIBRARIES ${X11_LIBRARIES} ${X11_GL_LIB})
+    endif (APPLE)
 else (NOT WIN32)
     find_package (DirectX)
 endif (NOT WIN32)
