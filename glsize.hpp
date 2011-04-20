@@ -306,6 +306,7 @@ __glTexParameterfv_size(GLenum pname)
     case GL_TEXTURE_BORDER_COLOR:
     case GL_POST_TEXTURE_FILTER_BIAS_SGIX:
     case GL_POST_TEXTURE_FILTER_SCALE_SGIX:
+    case GL_TEXTURE_SWIZZLE_RGBA:
         return 4;
     default:
         OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
@@ -343,8 +344,18 @@ __glTexEnvfv_size(GLenum pname)
     case GL_OPERAND3_ALPHA_NV:
     case GL_BUMP_TARGET_ATI:
     case GL_COORD_REPLACE_ARB:
+    case GL_RGBA_UNSIGNED_DOT_PRODUCT_MAPPING_NV:
+    case GL_SHADER_OPERATION_NV:
+    case GL_PREVIOUS_TEXTURE_INPUT_NV:
+    case GL_OFFSET_TEXTURE_SCALE_NV:
+    case GL_OFFSET_TEXTURE_BIAS_NV:
+    case GL_SHADER_CONSISTENT_NV:
 /*  case GL_COORD_REPLACE_NV:*/
         return 1;
+    case GL_CONST_EYE_NV:
+        return 3;
+    case GL_CULL_MODES_NV:
+    case GL_OFFSET_TEXTURE_MATRIX_NV:
     case GL_TEXTURE_ENV_COLOR:
         return 4;
     default:
@@ -861,6 +872,11 @@ __glGetBooleanv_size(GLenum pname)
 /*  case GL_MAX_SAMPLES_EXT:*/
     case GL_MAX_SERVER_WAIT_TIMEOUT:
     case GL_RASTER_POSITION_UNCLIPPED_IBM:
+    case GL_PROVOKING_VERTEX_EXT:
+    case GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION_EXT:
+    case GL_VERTEX_ARRAY_RANGE_LENGTH_NV:
+    case GL_VERTEX_ARRAY_RANGE_VALID_NV:
+    case GL_MAX_VERTEX_ARRAY_RANGE_ELEMENT_NV:
         return 1;
     case GL_SMOOTH_POINT_SIZE_RANGE:
     case GL_LINE_WIDTH_RANGE:
@@ -1414,6 +1430,7 @@ __gl_format_channels(GLenum format) {
     case GL_DEPTH_COMPONENT:
     case GL_STENCIL_INDEX:
         return 1;
+    case GL_DEPTH_STENCIL:
     case GL_LUMINANCE_ALPHA:
     case GL_RG:
         return 2;
@@ -1467,6 +1484,7 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
     case GL_UNSIGNED_INT_8_8_8_8_REV:
     case GL_UNSIGNED_INT_10_10_10_2:
     case GL_UNSIGNED_INT_2_10_10_10_REV:
+    case GL_UNSIGNED_INT_24_8:
         bits_per_pixel = 32;
         break;
     default:
