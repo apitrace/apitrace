@@ -37,10 +37,7 @@ class ConstRemover(stdapi.Rebuilder):
         return const.type
 
     def visit_opaque(self, opaque):
-        expr = opaque.expr
-        if expr.startswith('const '):
-            expr = expr[6:]
-        return stdapi.Opaque(expr)
+        return opaque
 
 
 def handle_entry(handle, value):

@@ -33,6 +33,8 @@ cases correctly.
 """
 
 
+import platform
+
 from stdapi import *
 from glenum import *
 
@@ -87,8 +89,13 @@ GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
 GLvertexArray = Handle("vertexArrayAPPLE", GLuint)
 GLregion = Handle("region", GLuint)
 
-# Some functions take GLenum disguised as GLint
-GLenum_int = Alias("GLint", GLenum)
+# Some functions take GLenum disguised as GLint.  Apple noticed and fixed it in
+# the gl.h header.  Regardless, C++ typechecking rules force the wrappers to
+# match the prototype precisely.
+if platform.system() == 'Darwin':
+    GLenum_int = GLenum
+else:
+    GLenum_int = Alias("GLint", GLenum)
 
 GLsync_ = Opaque("GLsync")
 GLsync = Handle("sync", GLsync_)
@@ -541,8 +548,8 @@ glapi.add_functions([
 
     # GL_VERSION_1_4
     GlFunction(Void, "glBlendFuncSeparate", [(GLenum, "sfactorRGB"), (GLenum, "dfactorRGB"), (GLenum, "sfactorAlpha"), (GLenum, "dfactorAlpha")]),
-    GlFunction(Void, "glMultiDrawArrays", [(GLenum_mode, "mode"), (OpaquePointer(GLint), "first"), (OpaquePointer(GLsizei), "count"), (GLsizei, "primcount")]),
-    GlFunction(Void, "glMultiDrawElements", [(GLenum_mode, "mode"), (Const(Array(GLsizei, "primcount")), "count"), (GLenum, "type"), (Array(Const(Const(OpaquePointer(GLvoid))), "primcount"), "indices"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glMultiDrawArrays", [(GLenum_mode, "mode"), (Const(Array(GLint, "primcount")), "first"), (Const(Array(GLsizei, "primcount")), "count"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glMultiDrawElements", [(GLenum_mode, "mode"), (Const(Array(GLsizei, "primcount")), "count"), (GLenum, "type"), (Array(Opaque("const GLvoid *"), "primcount"), "indices"), (GLsizei, "primcount")]),
     GlFunction(Void, "glPointParameterf", [(GLenum, "pname"), (GLfloat, "param")]),
     GlFunction(Void, "glPointParameterfv", [(GLenum, "pname"), (Const(Array(GLfloat, "__glPointParameterfv_size(pname)")), "params")]),
     GlFunction(Void, "glPointParameteri", [(GLenum, "pname"), (GLint, "param")]),
