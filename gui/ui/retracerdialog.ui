@@ -76,9 +76,12 @@
       </spacer>
      </item>
      <item>
-      <widget class="QCheckBox" name="benchmarkCB">
+      <widget class="QCheckBox" name="errorCheckCB">
        <property name="text">
-        <string>Benchmark</string>
+        <string>Error checking</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

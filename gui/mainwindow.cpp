@@ -154,14 +154,14 @@ void MainWindow::replayStart()
 
     dlgUi.doubleBufferingCB->setChecked(
         m_retracer->isDoubleBuffered());
-    dlgUi.benchmarkCB->setChecked(
-        m_retracer->isBenchmarking());
+    dlgUi.errorCheckCB->setChecked(
+        !m_retracer->isBenchmarking());
 
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setDoubleBuffered(
             dlgUi.doubleBufferingCB->isChecked());
         m_retracer->setBenchmarking(
-            dlgUi.benchmarkCB->isChecked());
+            !dlgUi.errorCheckCB->isChecked());
         replayTrace(false);
     }
 }

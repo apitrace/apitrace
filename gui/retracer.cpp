@@ -9,7 +9,7 @@
 
 Retracer::Retracer(QObject *parent)
     : QThread(parent),
-      m_benchmarking(true),
+      m_benchmarking(false),
       m_doubleBuffered(true),
       m_captureState(false),
       m_captureCall(0)
