@@ -23,6 +23,9 @@
  *
  **************************************************************************/
 
+#include <stdlib.h>
+#include <iostream>
+
 #include "glimports.hpp"
 #include "glws.hpp"
 
@@ -102,6 +105,10 @@ private:
 public:
     GlxWindowSystem() {
         display = XOpenDisplay(NULL);
+	if (!display) {
+            std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
+            exit(1);
+        }
         screen = DefaultScreen(display);
     }
 
