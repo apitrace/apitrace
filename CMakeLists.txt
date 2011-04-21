@@ -77,6 +77,10 @@ else ()
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 endif ()
 
+# Put all executables into the same top level build directory, regardless of
+# which subdirectory they are declared
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 # Use bundled ZLIB if system one can't be found
 if (ZLIB_FOUND)
     include_directories (${ZLIB_INCLUDE_DIRS})
