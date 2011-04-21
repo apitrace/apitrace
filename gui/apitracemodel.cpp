@@ -98,7 +98,7 @@ QVariant ApiTraceModel::headerData(int section, Qt::Orientation orientation,
 QModelIndex ApiTraceModel::index(int row, int column,
                                  const QModelIndex &parent) const
 {
-    if (parent.isValid() && parent.column() != 0)
+    if ((parent.isValid() && parent.column() != 0) || column != 0)
         return QModelIndex();
 
     ApiTraceEvent *event = item(parent);
@@ -204,8 +204,10 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
             this, SLOT(invalidateFrames()));
     connect(m_trace, SIGNAL(framesInvalidated()),
             this, SLOT(invalidateFrames()));
-    connect(m_trace, SIGNAL(framesAdded(int, int)),
-            this, SLOT(appendFrames(int, int)));
+    connect(m_trace, SIGNAL(beginAddingFrames(int, int)),
+            this, SLOT(beginAddingFrames(int, int)));
+    connect(m_trace, SIGNAL(endAddingFrames()),
+            this, SLOT(endAddingFrames()));
     connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
             this, SLOT(callChanged(ApiTraceCall*)));
 }
@@ -221,11 +223,10 @@ void ApiTraceModel::invalidateFrames()
     endResetModel();
 }
 
-void ApiTraceModel::appendFrames(int oldCount, int numAdded)
+void ApiTraceModel::beginAddingFrames(int oldCount, int numAdded)
 {
     beginInsertRows(QModelIndex(), oldCount,
                     oldCount + numAdded - 1);
-    endInsertRows();
 }
 
 ApiTraceEvent * ApiTraceModel::item(const QModelIndex &index) const
@@ -297,6 +298,11 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
     int row = frame->calls.indexOf(call);
     QModelIndex index = createIndex(row, 0, call);
     emit dataChanged(index, index);
+}
+
+void ApiTraceModel::endAddingFrames()
+{
+    endInsertRows();
 }
 
 #include "apitracemodel.moc"

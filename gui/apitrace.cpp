@@ -146,6 +146,9 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
 {
     int currentFrames = m_frames.count();
     int numNewFrames = frames.count();
+
+    emit beginAddingFrames(currentFrames, numNewFrames);
+
     m_frames += frames;
 
     int currentCalls = m_calls.count();
@@ -156,7 +159,7 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
         m_calls += frame->calls;
     }
 
-    emit framesAdded(currentFrames, numNewFrames);
+    emit endAddingFrames();
     emit callsAdded(currentCalls, numNewCalls);
 }
 
@@ -164,6 +167,8 @@ void ApiTrace::detectFrames()
 {
     if (m_calls.isEmpty())
         return;
+
+    emit beginAddingFrames(0, m_frames.count());
 
     ApiTraceFrame *currentFrame = 0;
     foreach(ApiTraceCall *apiCall, m_calls) {
@@ -187,7 +192,7 @@ void ApiTrace::detectFrames()
         m_frames.append(currentFrame);
         currentFrame = 0;
     }
-    emit framesAdded(0, m_frames.count());
+    emit endAddingFrames();
 }
 
 ApiTraceCall * ApiTrace::callWithIndex(int idx) const

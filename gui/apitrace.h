@@ -68,7 +68,8 @@ signals:
     void startedSaving();
     void saved();
 
-    void framesAdded(int oldCount, int numAdded);
+    void beginAddingFrames(int oldCount, int numAdded);
+    void endAddingFrames();
     void callsAdded(int oldCount, int numAdded);
 
 private slots:
