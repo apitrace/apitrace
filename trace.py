@@ -152,7 +152,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    __traceStruct%s(%s);' % (struct.id, instance)
 
     def visit_array(self, array, instance):
-        print '    if(%s) {' % instance
+        print '    if (%s) {' % instance
         index = '__i' + array.type.id
         print '        Trace::BeginArray(%s);' % (array.length,)
         print '        for (int %s = 0; %s < %s; ++%s) {' % (index, index, array.length, index)
@@ -175,7 +175,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    Trace::LiteralBitmask(__bitmask%s_sig, %s);' % (bitmask.id, instance)
 
     def visit_pointer(self, pointer, instance):
-        print '    if(%s) {' % instance
+        print '    if (%s) {' % instance
         print '        Trace::BeginArray(1);'
         print '        Trace::BeginElement();'
         dump_instance(pointer.type, "*" + instance)
@@ -249,7 +249,7 @@ class Wrapper(stdapi.Visitor):
     def visit_interface(self, interface, instance):
         assert instance.startswith('*')
         instance = instance[1:]
-        print "    if(%s)" % instance
+        print "    if (%s)" % instance
         print "        %s = new %s(%s);" % (instance, interface_wrap_name(interface), instance)
 
 
@@ -258,7 +258,7 @@ class Unwrapper(Wrapper):
     def visit_interface(self, interface, instance):
         assert instance.startswith('*')
         instance = instance[1:]
-        print "    if(%s)" % instance
+        print "    if (%s)" % instance
         print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, interface_wrap_name(interface), instance)
 
 

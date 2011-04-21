@@ -55,18 +55,18 @@ typedef HRESULT
     static HMODULE hD3DXModule = NULL; 
     static PD3DXDISASSEMBLESHADER pfnD3DXDisassembleShader = NULL;
 
-    if(firsttime) {
-        if(!hD3DXModule) {
+    if (firsttime) {
+        if (!hD3DXModule) {
             unsigned release;
             int version;
-            for(release = 0; release <= 1; ++release) {
+            for (release = 0; release <= 1; ++release) {
                 /* Version 41 corresponds to Mar 2009 version of DirectX Runtime / SDK */ 
-                for(version = 41; version >= 0; --version) {
+                for (version = 41; version >= 0; --version) {
                     char filename[256];
                     _snprintf(filename, sizeof(filename), 
                               "d3dx9%s%s%u.dll", release ? "" : "d", version ? "_" : "", version);
                     hD3DXModule = LoadLibraryA(filename);
-                    if(hD3DXModule)
+                    if (hD3DXModule)
                         goto found;
                 }
             }
@@ -75,19 +75,19 @@ found:
         }
 
         if (hD3DXModule)
-            if(!pfnD3DXDisassembleShader)
+            if (!pfnD3DXDisassembleShader)
                 pfnD3DXDisassembleShader = (PD3DXDISASSEMBLESHADER)GetProcAddress(hD3DXModule, "D3DXDisassembleShader");
 
         firsttime = FALSE;
     }
    
-    if(pfnD3DXDisassembleShader) {
+    if (pfnD3DXDisassembleShader) {
         LPD3DXBUFFER pDisassembly = NULL;
    
         if (pfnD3DXDisassembleShader( (DWORD *)tokens, FALSE, NULL, &pDisassembly) == D3D_OK)
             Trace::LiteralString((char *)pDisassembly->GetBufferPointer());
 
-        if(pDisassembly)
+        if (pDisassembly)
             pDisassembly->Release();
     }
 }

@@ -110,7 +110,7 @@ long long GetTime(void)
 {
     static LARGE_INTEGER frequency;
     LARGE_INTEGER counter;
-    if(!frequency.QuadPart)
+    if (!frequency.QuadPart)
         QueryPerformanceFrequency(&frequency);
     QueryPerformanceCounter(&counter);
     return counter.QuadPart*1000000LL/frequency.QuadPart;

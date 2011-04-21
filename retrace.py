@@ -74,7 +74,7 @@ class ValueExtractor(stdapi.Visitor):
         length = '__a%s->values.size()' % array.id
         print '        %s = new %s[%s];' % (lvalue, array.type, length)
         index = '__j' + array.id
-        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
+        print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
         finally:
@@ -137,7 +137,7 @@ class ValueWrapper(stdapi.Visitor):
         print '    if (__a%s) {' % (array.id)
         length = '__a%s->values.size()' % array.id
         index = '__j' + array.id
-        print '        for(size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
+        print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
         finally:
@@ -166,7 +166,7 @@ class ValueWrapper(stdapi.Visitor):
             lvalue = "%s + %s" % (lvalue, i)
             rvalue = "__orig_result + %s" % (i,)
             entry = handle_entry(handle, rvalue) 
-            print '    for({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
+            print '    for ({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
             print '        {entry} = {lvalue};'.format(**locals())
             print '        if (retrace::verbosity >= 2)'
             print '            std::cout << "{handle.name} " << ({rvalue}) << " -> " << ({lvalue}) << "\\n";'.format(**locals())

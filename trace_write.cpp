@@ -44,7 +44,7 @@ namespace Trace {
 
 static gzFile g_gzFile = NULL;
 static void _Close(void) {
-    if(g_gzFile != NULL) {
+    if (g_gzFile != NULL) {
         gzclose(g_gzFile);
         g_gzFile = NULL;
     }
@@ -77,7 +77,7 @@ static void _Open(const char *szExtension) {
                 snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir, PATH_SEP, szProcessName, szExtension);
  
             file = fopen(szFileName, "rb");
-            if(file == NULL)
+            if (file == NULL)
                 break;
  
             fclose(file);
