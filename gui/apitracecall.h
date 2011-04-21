@@ -125,7 +125,7 @@ private:
 Q_DECLARE_METATYPE(ApiArray);
 
 
-QString apiVariantToString(const QVariant &variant);
+QString apiVariantToString(const QVariant &variant, bool multiLine = false);
 
 class ApiTraceFrame;
 

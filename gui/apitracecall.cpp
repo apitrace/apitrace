@@ -7,6 +7,7 @@
 #include <QObject>
 #define QT_USE_FAST_OPERATOR_PLUS
 #include <QStringBuilder>
+#include <QTextDocument>
 
 const char * const styleSheet =
     ".call {\n"
@@ -55,7 +56,59 @@ QString ApiPointer::toString() const
         return QLatin1String("NULL");
 }
 
-QString apiVariantToString(const QVariant &variant)
+// Qt::convertFromPlainText doesn't do precisely what we want
+static QString
+plainTextToHTML(const QString & plain, bool multiLine)
+{
+    int col = 0;
+    bool quote = false;
+    QString rich;
+    for (int i = 0; i < plain.length(); ++i) {
+        if (plain[i] == QLatin1Char('\n')){
+            if (multiLine) {
+                rich += QLatin1String("<br>\n");
+            } else {
+                rich += QLatin1String("\\n");
+            }
+            col = 0;
+            quote = true;
+        } else {
+            if (plain[i] == QLatin1Char('\t')){
+                if (multiLine) {
+                    rich += QChar(0x00a0U);
+                    ++col;
+                    while (col % 8) {
+                        rich += QChar(0x00a0U);
+                        ++col;
+                    }
+                } else {
+                    rich += QLatin1String("\\t");
+                }
+                quote = true;
+            } else if (plain[i].isSpace()) {
+                rich += QChar(0x00a0U);
+                quote = true;
+            } else if (plain[i] == QLatin1Char('<')) {
+                rich += QLatin1String("&lt;");
+            } else if (plain[i] == QLatin1Char('>')) {
+                rich += QLatin1String("&gt;");
+            } else if (plain[i] == QLatin1Char('&')) {
+                rich += QLatin1String("&amp;");
+            } else {
+                rich += plain[i];
+            }
+            ++col;
+        }
+    }
+
+    if (quote) {
+        return QLatin1Literal("\"") + rich + QLatin1Literal("\"");
+    }
+
+    return rich;
+}
+
+QString apiVariantToString(const QVariant &variant, bool multiLine)
 {
     if (variant.userType() == QVariant::Double) {
         return QString::number(variant.toFloat());
@@ -68,6 +121,10 @@ QString apiVariantToString(const QVariant &variant)
             float kb = variant.toByteArray().size()/1024.;
             return QObject::tr("[binary data, size = %1 kb]").arg(kb);
         }
+    }
+
+    if (variant.userType() == QVariant::String) {
+        return plainTextToHTML(variant.toString(), multiLine);
     }
 
     if (variant.userType() < QVariant::UserType) {
@@ -373,7 +430,7 @@ QString ApiTraceCall::toHtml() const
             QLatin1String("</span>") +
             QLatin1Literal(" = ") +
             QLatin1Literal("<span class=\"arg-value\">") +
-            apiVariantToString(argValues[i]) +
+            apiVariantToString(argValues[i], true) +
             QLatin1Literal("</span>");
         if (i < m_argNames.count() - 1)
             m_richText += QLatin1String(", ");
@@ -384,7 +441,7 @@ QString ApiTraceCall::toHtml() const
         m_richText +=
             QLatin1String(" = ") +
             QLatin1String("<span style=\"color:#0000ff\">") +
-            apiVariantToString(m_returnValue) +
+            apiVariantToString(m_returnValue, true) +
             QLatin1String("</span>");
     }
     m_richText += QLatin1String("</div>");
