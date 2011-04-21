@@ -1461,6 +1461,7 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
         break;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
+    case GL_HALF_FLOAT:
         bits_per_pixel = 16 * num_channels;
         break;
     case GL_INT:
