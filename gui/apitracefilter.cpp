@@ -59,9 +59,7 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
             return false;
         if (function.contains(QLatin1String("glXQueryExtensionsString")))
             return false;
-        QString fullText = call->filterText();
-        if (function.contains(QLatin1String("glGetString")) &&
-            fullText.contains(QLatin1String("GL_EXTENSIONS")))
+        if (function.contains(QLatin1String("glGetString")))
             return false;
     }
 

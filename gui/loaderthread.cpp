@@ -18,8 +18,6 @@ apiCallFromTraceCall(const Trace::Call *call,
 
     apiCall->setHelpUrl(helpHash.value(apiCall->name()));
 
-    //force generation of the internal state
-    apiCall->filterText();
     return apiCall;
 }
 
