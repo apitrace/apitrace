@@ -261,8 +261,6 @@ set_property (
 target_link_libraries (glretrace
     trace
     ${OPENGL_gl_LIBRARY}
-    ${OPENGL_glu_LIBRARY}
-    ${X11_LIBRARIES}
 )
 
 if (NOT WIN32)
