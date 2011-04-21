@@ -86,17 +86,17 @@ if __name__ == '__main__':
     print
     print r'''
 
+
+static void *libgl_handle = NULL;
+
+
 /*
- * Several applications, such as Quake3, use dlopen("libGL.so.1"), but
- * LD_PRELOAD does not intercept symbols obtained via dlopen/dlsym, therefore
- * we need to intercept the dlopen() call here, and redirect to our wrapper
- * shared object.
+ * Invoke the true dlopen() function.
  */
-void *dlopen(const char *filename, int flag)
+static void *__dlopen(const char *filename, int flag)
 {
     typedef void * (*PFNDLOPEN)(const char *, int);
     static PFNDLOPEN dlopen_ptr = NULL;
-    void *handle;
 
     if (!dlopen_ptr) {
         dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
@@ -106,7 +106,21 @@ void *dlopen(const char *filename, int flag)
         }
     }
 
-    handle = dlopen_ptr(filename, flag);
+    return dlopen_ptr(filename, flag);
+}
+
+
+/*
+ * Several applications, such as Quake3, use dlopen("libGL.so.1"), but
+ * LD_PRELOAD does not intercept symbols obtained via dlopen/dlsym, therefore
+ * we need to intercept the dlopen() call here, and redirect to our wrapper
+ * shared object.
+ */
+void *dlopen(const char *filename, int flag)
+{
+    void *handle;
+
+    handle = __dlopen(filename, flag);
 
     if (filename && handle) {
         if (0) {
@@ -124,7 +138,7 @@ void *dlopen(const char *filename, int flag)
             Dl_info info;
             if (dladdr(&dummy, &info)) {
                 OS::DebugMessage("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
-                handle = dlopen_ptr(info.dli_fname, flag);
+                handle = __dlopen(info.dli_fname, flag);
             } else {
                 OS::DebugMessage("warning: dladdr() failed\n");
             }
@@ -134,5 +148,39 @@ void *dlopen(const char *filename, int flag)
     return handle;
 }
 
+} /* extern "C" */
+
+
+/*
+ * Lookup a libGL symbol
+ */
+static void * __dlsym(const char *symbol)
+{
+    void *result;
+
+    if (!libgl_handle) {
+        /*
+         * Try to use whatever libGL.so the library is linked against.
+         */
+        result = dlsym(RTLD_NEXT, symbol);
+        if (result) {
+            libgl_handle = RTLD_NEXT;
+            return result;
+        }
+
+        /*
+         * The app doesn't directly link against libGL.so, nor does it directly
+         * dlopen it.  So we have to load it ourselves.
+         */
+        libgl_handle = __dlopen("libGL.so", RTLD_LAZY | RTLD_LOCAL);
+        if (!libgl_handle) {
+            OS::DebugMessage("error: couldn't find libGL.so\n");
+            return NULL;
+        }
+    }
+
+    return dlsym(libgl_handle, symbol);
+}
+
+
 '''
-    print '} /* extern "C" */'
