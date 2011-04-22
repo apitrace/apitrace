@@ -1775,6 +1775,9 @@ glapi.add_functions([
     GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLvertexArray, "n"), "arrays")]),
     GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLvertexArray, "array")]),
 
+    # GL_ATI_draw_buffers
+    GlFunction(Void, "glDrawBuffersATI", [(GLsizei, "n"), (Const(Array(GLenum, "n")), "bufs")]),
+
     # GL_NV_fragment_program
     GlFunction(Void, "glProgramNamedParameter4fNV", [(GLprogramNV, "id"), (GLsizei, "len"), (Const(OpaquePointer(GLubyte)), "name"), (GLfloat, "x"), (GLfloat, "y"), (GLfloat, "z"), (GLfloat, "w")]),
     GlFunction(Void, "glProgramNamedParameter4dNV", [(GLprogramNV, "id"), (GLsizei, "len"), (Const(OpaquePointer(GLubyte)), "name"), (GLdouble, "x"), (GLdouble, "y"), (GLdouble, "z"), (GLdouble, "w")]),
@@ -2264,6 +2267,24 @@ glapi.add_functions([
 
     # GL_EXT_provoking_vertex
     GlFunction(Void, "glProvokingVertexEXT", [(GLenum, "mode")]),
+
+    # GL_APPLE_texture_range
+    GlFunction(Void, "glTextureRangeAPPLE", [(GLenum, "target"), (GLsizei, "length"), (Const(Blob(GLvoid, "length")), "pointer")]),
+    GlFunction(Void, "glGetTexParameterPointervAPPLE", [(GLenum, "target"), (GLenum, "pname"), Out(Pointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
+
+    # GL_APPLE_vertex_program_evaluators
+    GlFunction(Void, "glEnableVertexAttribAPPLE", [(GLuint, "index"), (GLenum, "pname")]),
+    GlFunction(Void, "glDisableVertexAttribAPPLE", [(GLuint, "index"), (GLenum, "pname")]),
+    GlFunction(GLboolean, "glIsVertexAttribEnabledAPPLE", [(GLuint, "index"), (GLenum, "pname")]),
+    GlFunction(Void, "glMapVertexAttrib1dAPPLE", [(GLuint, "index"), (GLuint, "size"), (GLdouble, "u1"), (GLdouble, "u2"), (GLint, "stride"), (GLint, "order"), (Const(OpaqueArray(GLdouble, "__glMapVertexAttrib1dAPPLE_size(size, stride, order)")), "points")]),
+    GlFunction(Void, "glMapVertexAttrib1fAPPLE", [(GLuint, "index"), (GLuint, "size"), (GLfloat, "u1"), (GLfloat, "u2"), (GLint, "stride"), (GLint, "order"), (Const(OpaqueArray(GLfloat, "__glMapVertexAttrib1fAPPLE_size(size, stride, order)")), "points")]),
+    GlFunction(Void, "glMapVertexAttrib2dAPPLE", [(GLuint, "index"), (GLuint, "size"), (GLdouble, "u1"), (GLdouble, "u2"), (GLint, "ustride"), (GLint, "uorder"), (GLdouble, "v1"), (GLdouble, "v2"), (GLint, "vstride"), (GLint, "vorder"), (Const(OpaqueArray(GLdouble, "__glMapVertexAttrib2dAPPLE_size(size, ustride, uorder, vstride, vorder)")), "points")]),
+    GlFunction(Void, "glMapVertexAttrib2fAPPLE", [(GLuint, "index"), (GLuint, "size"), (GLfloat, "u1"), (GLfloat, "u2"), (GLint, "ustride"), (GLint, "uorder"), (GLfloat, "v1"), (GLfloat, "v2"), (GLint, "vstride"), (GLint, "vorder"), (Const(OpaqueArray(GLfloat, "__glMapVertexAttrib2fAPPLE_size(size, ustride, uorder, vstride, vorder)")), "points")]),
+
+    # GL_APPLE_object_purgeable
+    GlFunction(GLenum, "glObjectPurgeableAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "option")]),
+    GlFunction(GLenum, "glObjectUnpurgeableAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "option")]),
+    GlFunction(Void, "glGetObjectParameterivAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetObjectParameterivAPPLE_size(pname)"), "params")], sideeffects=False),
 
     # GL_NV_copy_image
     GlFunction(Void, "glCopyImageSubDataNV", [(GLuint, "srcName"), (GLenum, "srcTarget"), (GLint, "srcLevel"), (GLint, "srcX"), (GLint, "srcY"), (GLint, "srcZ"), (GLuint, "dstName"), (GLenum, "dstTarget"), (GLint, "dstLevel"), (GLint, "dstX"), (GLint, "dstY"), (GLint, "dstZ"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth")]),
