@@ -98,12 +98,8 @@ __getPublicProcAddress(LPCSTR lpProcName)
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
-    print 'extern "C" {'
-    print
     api = API()
     api.add_api(glapi)
     api.add_api(wglapi)
     tracer = WglTracer()
     tracer.trace_api(api)
-    print
-    print '} /* extern "C" */'

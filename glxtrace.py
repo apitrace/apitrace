@@ -59,8 +59,6 @@ if __name__ == '__main__':
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
-    print 'extern "C" {'
-    print
     print 'static __GLXextFuncPtr __unwrap_proc_addr(const GLubyte * procName, __GLXextFuncPtr procPtr);'
     print
 
@@ -116,7 +114,8 @@ static void *__dlopen(const char *filename, int flag)
  * we need to intercept the dlopen() call here, and redirect to our wrapper
  * shared object.
  */
-void *dlopen(const char *filename, int flag)
+extern "C" void *
+dlopen(const char *filename, int flag)
 {
     void *handle;
 
@@ -147,8 +146,6 @@ void *dlopen(const char *filename, int flag)
 
     return handle;
 }
-
-} /* extern "C" */
 
 
 /*
