@@ -213,7 +213,10 @@ else ()
     add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
     set_target_properties (glxtrace PROPERTIES
+        # avoid the default "lib" prefix
         PREFIX ""
+        # prevent symbol relocations internal to our wrapper library to be overwritten by the application
+        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
     )
 
     target_link_libraries (glxtrace dl)
