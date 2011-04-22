@@ -58,7 +58,7 @@ static void _Open(const char *szExtension) {
     char szFileName[PATH_MAX];
     const char *lpFileName;
 
-    lpFileName = getenv("TRACE_PATH");
+    lpFileName = getenv("TRACE_FILE");
     if (lpFileName) {
         strncpy(szFileName, lpFileName, PATH_MAX);
     }

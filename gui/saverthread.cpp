@@ -219,7 +219,7 @@ void SaverThread::saveFile(const QString &fileName,
 
 void SaverThread::run()
 {
-    qputenv("TRACE_PATH", m_fileName.toLocal8Bit());
+    qputenv("TRACE_FILE", m_fileName.toLocal8Bit());
     unsigned id = 0;
     qDebug()<<"saver thread!";
     Trace::Open();

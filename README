@@ -87,6 +87,10 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
  LD_PRELOAD=/path/to/glxtrace.so /path/to/application
 
+and it will generate a trace named "application.trace" in the current
+directory.  You can specify the written trace filename by setting the
+TRACE_FILE envirnment variable before running.
+
 * View the trace with
 
  /path/to/tracedump application.trace
