@@ -461,6 +461,9 @@
    <property name="text">
     <string>&amp;Replay</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
   </action>
   <action name="actionStop">
    <property name="enabled">
@@ -484,6 +487,9 @@
    </property>
    <property name="text">
     <string>Lookup State</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
    </property>
   </action>
   <action name="actionOptions">
