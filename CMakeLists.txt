@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 
+include (CheckCXXCompilerFlag)
+
 project (apitrace)
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -38,6 +40,11 @@ endif (NOT WIN32)
 if (WIN32)
     # MSVC & MinGW only define & use APIENTRY
     add_definitions (-DGLAPIENTRY=__stdcall)
+else (WIN32)
+    CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
+    if (CXX_COMPILER_FLAG_VISIBILITY)
+        add_definitions ("-fvisibility=hidden")
+    endif (CXX_COMPILER_FLAG_VISIBILITY)
 endif (WIN32)
 
 if (MSVC)

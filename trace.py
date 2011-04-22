@@ -313,8 +313,15 @@ class Tracer:
     def get_dispatch_function(self, function):
         return '__' + function.name
 
+    def is_public_function(self, function):
+        return True
+
     def trace_function_impl(self, function):
-        print 'extern "C" ' + function.prototype() + ' {'
+        if self.is_public_function(function):
+            print 'extern "C" PUBLIC'
+        else:
+            print 'extern "C" PRIVATE'
+        print function.prototype() + ' {'
         if function.type is not stdapi.Void:
             print '    %s __result;' % function.type
         self.trace_function_impl_body(function)

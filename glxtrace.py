@@ -1,5 +1,6 @@
 ##########################################################################
 #
+# Copyright 2011 Jose Fonseca
 # Copyright 2008-2010 VMware, Inc.
 # All Rights Reserved.
 #
@@ -35,6 +36,10 @@ from dispatch import function_pointer_type, function_pointer_value
 
 
 class GlxTracer(GlTracer):
+
+    def is_public_function(self, function):
+        # The symbols visible in libGL.so can vary, so expose them all
+        return True
 
     def get_function_address(self, function):
         return '__%s' % (function.name,)
@@ -114,8 +119,8 @@ static void *__dlopen(const char *filename, int flag)
  * we need to intercept the dlopen() call here, and redirect to our wrapper
  * shared object.
  */
-extern "C" void *
-dlopen(const char *filename, int flag)
+extern "C" PUBLIC
+void * dlopen(const char *filename, int flag)
 {
     void *handle;
 

@@ -61,6 +61,24 @@ bool GetCurrentDir(char *str, size_t size);
 
 void DebugMessage(const char *format, ...);
 
+#if defined _WIN32 || defined __CYGWIN__
+  /* We always use .def files on windows for now */
+  #if 0
+  #define PUBLIC __declspec(dllexport)
+  #else
+  #define PUBLIC
+  #endif
+  #define PRIVATE
+#else
+  #if __GNUC__ >= 4
+    #define PUBLIC __attribute__ ((visibility("default")))
+    #define PRIVATE __attribute__ ((visibility("hidden")))
+  #else
+    #define PUBLIC
+    #define PRIVATE
+  #endif
+#endif
+
 /**
  * Get the current time in microseconds from an unknown base.
  */
