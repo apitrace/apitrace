@@ -560,10 +560,13 @@ void MainWindow::showSelectedSurface()
         return;
 
     QVariant var = item->data(0, Qt::UserRole);
-    m_imageViewer->setImage(var.value<QImage>());
-    m_imageViewer->show();
-    m_imageViewer->raise();
-    m_imageViewer->activateWindow();
+
+    ImageViewer *viewer = new ImageViewer(this);
+    viewer->setAttribute(Qt::WA_DeleteOnClose, true);
+    viewer->setImage(var.value<QImage>());
+    viewer->show();
+    viewer->raise();
+    viewer->activateWindow();
 }
 
 void MainWindow::initObjects()
@@ -588,8 +591,6 @@ void MainWindow::initObjects()
         m_ui.startingOffsetSB->value());
     m_vdataInterpreter->setTypeFromString(
         m_ui.vertexTypeCB->currentText());
-
-    m_imageViewer = new ImageViewer(this);
 
     m_model = new ApiTraceModel();
     m_model->setApiTrace(m_trace);

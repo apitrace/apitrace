@@ -14,7 +14,6 @@ class ApiTraceFrame;
 class ApiTraceModel;
 class ApiTraceState;
 class ArgumentsEditor;
-class ImageViewer;
 class JumpWidget;
 class QModelIndex;
 class QProgressBar;
@@ -96,8 +95,6 @@ private:
     Retracer *m_retracer;
 
     VertexDataInterpreter *m_vdataInterpreter;
-
-    ImageViewer *m_imageViewer;
 
     JumpWidget *m_jumpWidget;
     SearchWidget *m_searchWidget;
