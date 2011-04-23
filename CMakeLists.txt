@@ -215,9 +215,15 @@ else ()
     set_target_properties (glxtrace PROPERTIES
         # avoid the default "lib" prefix
         PREFIX ""
-        # prevent symbol relocations internal to our wrapper library to be overwritten by the application
-        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
     )
+
+    # Prevent symbol relocations internal to our wrapper library to be
+    # overwritten by the application.
+    if (NOT APPLE)
+        set_target_properties (glxtrace PROPERTIES
+            LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+        )
+    endif (NOT APPLE)
 
     target_link_libraries (glxtrace dl)
 endif ()
