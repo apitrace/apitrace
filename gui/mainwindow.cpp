@@ -564,6 +564,16 @@ void MainWindow::showSelectedSurface()
     QVariant var = item->data(0, Qt::UserRole);
     QImage img = var.value<QImage>();
     ImageViewer *viewer = new ImageViewer(this);
+
+    QString title;
+    if (currentCall()) {
+        title = tr("QApiTrace - Surface at %1 (%2)")
+                .arg(currentCall()->name())
+                .arg(currentCall()->index());
+    } else {
+        title = tr("QApiTrace - Surface Viewer");
+    }
+    viewer->setWindowTitle(title);
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
     viewer->setImage(img);
     QRect screenRect = QApplication::desktop()->availableGeometry();
@@ -1058,6 +1068,15 @@ void MainWindow::slotErrorSelected(QTreeWidgetItem *current)
             statusBar()->showMessage(tr("Call has been filtered out."));
         }
     }
+}
+
+ApiTraceCall * MainWindow::currentCall() const
+{
+    if (m_selectedEvent &&
+        m_selectedEvent->type() == ApiTraceEvent::Call) {
+        return static_cast<ApiTraceCall*>(m_selectedEvent);
+    }
+    return NULL;
 }
 
 #include "mainwindow.moc"

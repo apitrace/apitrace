@@ -77,6 +77,7 @@ private:
     void replayTrace(bool dumpState);
     void fillStateForFrame();
     ApiTraceFrame *currentFrame() const;
+    ApiTraceCall *currentCall() const;
 
 private:
     Ui_MainWindow m_ui;
