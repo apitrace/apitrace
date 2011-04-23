@@ -60,6 +60,12 @@ Build as:
  cmake -H. -Bbuild
  make -C build
 
+You can also build the 32bit GL wrapper on 64bit distro with a multilib gcc by
+doing:
+
+ cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_LINK_FLAGS=-m32
+ make -C build32 glxtrace
+
 
 == Windows ==
 
@@ -93,7 +99,7 @@ TRACE_FILE envirnment variable before running.
 
 * View the trace with
 
- /path/to/tracedump application.trace
+ /path/to/tracedump application.trace | less -R
 
 * Replay the trace with
 
