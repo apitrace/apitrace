@@ -3249,6 +3249,136 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
     }
 }
 
+static inline GLuint
+downsampledFramebuffer(GLuint oldFbo, GLint drawbuffer,
+                       GLint colorRb, GLint depthRb, GLint stencilRb,
+                       GLuint *rbs, GLint *numRbs)
+{
+    GLuint fbo;
+    GLint format;
+    GLint w, h;
+
+    *numRbs = 0;
+
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, colorRb);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                 GL_RENDERBUFFER_WIDTH, &w);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                 GL_RENDERBUFFER_HEIGHT, &h);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                 GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+
+    glGenRenderbuffers(1, &rbs[*numRbs]);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
+    glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, drawbuffer,
+                              GL_RENDERBUFFER, rbs[*numRbs]);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+    glDrawBuffer(drawbuffer);
+    glReadBuffer(drawbuffer);
+    glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    ++*numRbs;
+
+    if (stencilRb == depthRb && stencilRb) {
+        //combined depth and stencil buffer
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRb);
+        glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                     GL_RENDERBUFFER_WIDTH, &w);
+        glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                     GL_RENDERBUFFER_HEIGHT, &h);
+        glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                     GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+
+        glGenRenderbuffers(1, &rbs[*numRbs]);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
+        glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, rbs[*numRbs]);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+        glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+                          GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        ++*numRbs;
+    } else {
+        if (depthRb) {
+            glBindRenderbuffer(GL_RENDERBUFFER, depthRb);
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                         GL_RENDERBUFFER_WIDTH, &w);
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                         GL_RENDERBUFFER_HEIGHT, &h);
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                         GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+
+            glGenRenderbuffers(1, &rbs[*numRbs]);
+            glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
+            glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                      GL_DEPTH_ATTACHMENT,
+                                      GL_RENDERBUFFER, rbs[*numRbs]);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+            glDrawBuffer(GL_DEPTH_ATTACHMENT);
+            glReadBuffer(GL_DEPTH_ATTACHMENT);
+            glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+                              GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+            ++*numRbs;
+        }
+        if (stencilRb) {
+            glBindRenderbuffer(GL_RENDERBUFFER, stencilRb);
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                         GL_RENDERBUFFER_WIDTH, &w);
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                         GL_RENDERBUFFER_HEIGHT, &h);
+            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
+                                     GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+
+            glGenRenderbuffers(1, &rbs[*numRbs]);
+            glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
+            glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                      GL_STENCIL_ATTACHMENT,
+                                      GL_RENDERBUFFER, rbs[*numRbs]);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+            glDrawBuffer(GL_STENCIL_ATTACHMENT);
+            glReadBuffer(GL_STENCIL_ATTACHMENT);
+            glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+                              GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+            ++*numRbs;
+        }
+    }
+
+    return fbo;
+}
+
+static void
+writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
+{
+    json.beginMember("GL_RGBA");
+    writeDrawBufferImage(json, GL_RGBA);
+    json.endMember();
+
+    if (writeDepth) {
+        json.beginMember("GL_DEPTH_COMPONENT");
+        writeDrawBufferImage(json, GL_DEPTH_COMPONENT);
+        json.endMember();
+    }
+
+    if (writeStencil) {
+        json.beginMember("GL_STENCIL_INDEX");
+        writeDrawBufferImage(json, GL_STENCIL_INDEX);
+        json.endMember();
+    }
+}
+
 '''
 
         # textures
@@ -3411,24 +3541,70 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         print '    json.beginObject();'
         # TODO: Handle real FBOs
         print
-        print '    json.beginMember("GL_RGBA");'
-        print '    writeDrawBufferImage(json, GL_RGBA);'
-        print '    json.endMember();'
+        print '    GLint boundDrawFbo = 0, boundReadFbo = 0;'
+        print '    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &boundDrawFbo);'
+        print '    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &boundReadFbo);'
+        print '    if (!boundDrawFbo) {'
+        print '        GLint depth_bits = 0;'
+        print '        glGetIntegerv(GL_DEPTH_BITS, &depth_bits);'
+        print '        GLint stencil_bits = 0;'
+        print '        glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);'
+        print '        writeDrawBuffers(json, depth_bits, stencil_bits);'
+        print '    } else {'
+        print '        GLint colorRb, stencilRb, depthRb;'
+        print '        GLint boundRb;'
+        print '        glGetIntegerv(GL_RENDERBUFFER_BINDING, &boundRb);'
+        print '        GLint drawbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;'
+        print '        glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);'
         print
-        print '    GLint depth_bits = 0;'
-        print '    glGetIntegerv(GL_DEPTH_BITS, &depth_bits);'
-        print '    if (depth_bits) {'
-        print '        json.beginMember("GL_DEPTH_COMPONENT");'
-        print '        writeDrawBufferImage(json, GL_DEPTH_COMPONENT);'
-        print '        json.endMember();'
-        print '    }'
+        print '        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER,'
+        print '                                              drawbuffer,'
+        print '                                              GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,'
+        print '                                              &colorRb);'
+        print '        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER,'
+        print '                                              GL_DEPTH_ATTACHMENT,'
+        print '                                              GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,'
+        print '                                              &depthRb);'
+        print '        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER,'
+        print '                                              GL_STENCIL_ATTACHMENT,'
+        print '                                              GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,'
+        print '                                              &stencilRb);'
         print
-        print '    GLint stencil_bits = 0;'
-        print '    glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);'
-        print '    if (stencil_bits) {'
-        print '        json.beginMember("GL_STENCIL_INDEX");'
-        print '        writeDrawBufferImage(json, GL_STENCIL_INDEX);'
-        print '        json.endMember();'
+        print '        GLint colorSamples, depthSamples, stencilSamples;'
+        print '        GLuint rbs[3];'
+        print '        GLint numRbs = 0;'
+        print '        GLuint fboCopy = 0;'
+        print '        glBindRenderbuffer(GL_RENDERBUFFER, colorRb);'
+        print '        glGetRenderbufferParameteriv(GL_RENDERBUFFER,'
+        print '                                     GL_RENDERBUFFER_SAMPLES, &colorSamples);'
+        print '        glBindRenderbuffer(GL_RENDERBUFFER, depthRb);'
+        print '        glGetRenderbufferParameteriv(GL_RENDERBUFFER,'
+        print '                                     GL_RENDERBUFFER_SAMPLES, &depthSamples);'
+        print '        glBindRenderbuffer(GL_RENDERBUFFER, stencilRb);'
+        print '        glGetRenderbufferParameteriv(GL_RENDERBUFFER,'
+        print '                                     GL_RENDERBUFFER_SAMPLES, &stencilSamples);'
+        print '        glBindRenderbuffer(GL_RENDERBUFFER, boundRb);'
+        print
+        print '        if (colorSamples || depthSamples || stencilSamples) {'
+        print '            //glReadPixels doesnt support multisampled buffers so we need'
+        print '            // to blit the fbo to a temporary one'
+        print '            fboCopy = downsampledFramebuffer(boundDrawFbo, drawbuffer,'
+        print '                                             colorRb, depthRb, stencilRb,'
+        print '                                             rbs, &numRbs);'
+        print '        }'
+        print '        glDrawBuffer(drawbuffer);'
+        print '        glReadBuffer(drawbuffer);'
+        print
+        print '        writeDrawBuffers(json, depthRb, stencilRb);'
+        print
+        print '        if (fboCopy) {'
+        print '            glBindFramebuffer(GL_FRAMEBUFFER, boundDrawFbo);'
+        print '            glBindFramebuffer(GL_READ_FRAMEBUFFER, boundReadFbo);'
+        print '            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, boundDrawFbo);'
+        print '            glBindRenderbuffer(GL_RENDERBUFFER_BINDING, boundRb);'
+        print '            glDeleteRenderbuffers(numRbs, rbs);'
+        print '            glDeleteFramebuffers(1, &fboCopy);'
+        print '        }'
         print '    }'
         print
         print '    json.endObject();'
