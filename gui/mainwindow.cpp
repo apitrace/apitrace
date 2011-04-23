@@ -18,8 +18,10 @@
 #include "vertexdatainterpreter.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QDebug>
 #include <QDesktopServices>
+#include <QDesktopWidget>
 #include <QDir>
 #include <QFileDialog>
 #include <QLineEdit>
@@ -560,10 +562,13 @@ void MainWindow::showSelectedSurface()
         return;
 
     QVariant var = item->data(0, Qt::UserRole);
-
+    QImage img = var.value<QImage>();
     ImageViewer *viewer = new ImageViewer(this);
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
-    viewer->setImage(var.value<QImage>());
+    viewer->setImage(img);
+    QRect screenRect = QApplication::desktop()->availableGeometry();
+    viewer->resize(qMin(int(0.75 * screenRect.width()), img.width()) + 40,
+                   qMin(int(0.75 * screenRect.height()), img.height()) + 40);
     viewer->show();
     viewer->raise();
     viewer->activateWindow();
