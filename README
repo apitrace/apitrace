@@ -89,7 +89,7 @@ http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
 == Linux ==
 
-* Run the application you want to trace as
+Run the application you want to trace as
 
  LD_PRELOAD=/path/to/glxtrace.so /path/to/application
 
@@ -97,13 +97,30 @@ and it will generate a trace named "application.trace" in the current
 directory.  You can specify the written trace filename by setting the
 TRACE_FILE envirnment variable before running.
 
-* View the trace with
+View the trace with
 
  /path/to/tracedump application.trace | less -R
 
-* Replay the trace with
+Replay the trace with
 
  /path/to/glretrace application.trace
+
+
+The LD_PRELOAD mechanism should work with most applications.  There are some
+applications, e.g., Unigine Heaven, which global function pointers with the
+same name as GL entrypoints, living in a shared object that wasn't linked with
+-Bsymbolic flag, so relocations to those globals function pointers get
+overwritten with the address to our wrapper library, and the application will
+segfault when trying to write to them.  For these applications it is possible
+to trace by using glxtrace.so as an ordinary libGL.so and injecting into
+LD_LIBRARY_PATH:
+
+  ln -s glxtrace.so libGL.so
+  ln -s glxtrace.so libGL.so.1
+  ln -s glxtrace.so libGL.so.1.2
+  export LD_LIBRARY_PATH=/path/to/directory/where/glxtrace/is:$LD_LIBRARY_PATH
+  export TRACE_LIBGL=/path/to/real/libGL.so.1
+  /path/to/application
 
 
 == Windows ==

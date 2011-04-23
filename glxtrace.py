@@ -90,6 +90,9 @@ if __name__ == '__main__':
     print r'''
 
 
+/*
+ * Handle to the true libGL.so
+ */
 static void *libgl_handle = NULL;
 
 
@@ -126,7 +129,9 @@ void * dlopen(const char *filename, int flag)
 
     handle = __dlopen(filename, flag);
 
-    if (filename && handle) {
+    const char * libgl_filename = getenv("TRACE_LIBGL");
+
+    if (filename && handle && !libgl_filename) {
         if (0) {
             OS::DebugMessage("warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
         }
@@ -134,6 +139,7 @@ void * dlopen(const char *filename, int flag)
         // FIXME: handle absolute paths and other versions
         if (strcmp(filename, "libGL.so") == 0 ||
             strcmp(filename, "libGL.so.1") == 0) {
+
             // Use the true libGL.so handle instead of RTLD_NEXT from now on
             libgl_handle = handle;
 
@@ -162,19 +168,34 @@ static void * __dlsym(const char *symbol)
 
     if (!libgl_handle) {
         /*
-         * Try to use whatever libGL.so the library is linked against.
-         */
-        result = dlsym(RTLD_NEXT, symbol);
-        if (result) {
-            libgl_handle = RTLD_NEXT;
-            return result;
-        }
-
-        /*
          * The app doesn't directly link against libGL.so, nor does it directly
          * dlopen it.  So we have to load it ourselves.
          */
-        libgl_handle = __dlopen("libGL.so", RTLD_LAZY | RTLD_LOCAL);
+
+        const char * libgl_filename = getenv("TRACE_LIBGL");
+
+        if (!libgl_filename) {
+            /*
+             * Try to use whatever libGL.so the library is linked against.
+             */
+
+            result = dlsym(RTLD_NEXT, symbol);
+            if (result) {
+                libgl_handle = RTLD_NEXT;
+                return result;
+            }
+
+            libgl_filename = "libGL.so.1";
+        }
+
+        /*
+         * It would have been preferable to use RTLD_LOCAL to ensure that the
+         * application can never access libGL.so symbols directly, but this
+         * won't work, given libGL.so often loads a driver specific SO and
+         * exposes symbols to it.
+         */
+
+        libgl_handle = __dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
         if (!libgl_handle) {
             OS::DebugMessage("error: couldn't find libGL.so\n");
             return NULL;
