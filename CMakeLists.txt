@@ -18,7 +18,7 @@ set (CMAKE_USE_PYTHON_VERSION 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
-find_package (Qt4 COMPONENTS QtCore QtGui QtWebKit)
+find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit)
 find_package (QJSON)
 
 if (NOT WIN32)
