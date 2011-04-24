@@ -88,6 +88,7 @@ GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
 GLvertexArray = Handle("vertexArrayAPPLE", GLuint)
 GLregion = Handle("region", GLuint)
+GLmap = Handle("map", OpaquePointer(GLvoid))
 
 # Some functions take GLenum disguised as GLint.  Apple noticed and fixed it in
 # the gl.h header.  Regardless, C++ typechecking rules force the wrappers to
@@ -611,10 +612,10 @@ glapi.add_functions([
     GlFunction(Void, "glBufferData", [(GLenum, "target"), (GLsizeiptr, "size"), (Blob(Const(GLvoid), "size"), "data"), (GLenum, "usage")]),
     GlFunction(Void, "glBufferSubData", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "size"), (Blob(Const(GLvoid), "size"), "data")]),
     GlFunction(Void, "glGetBufferSubData", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "size"), Out(Blob(GLvoid, "size"), "data")], sideeffects=False),
-    GlFunction(OpaquePointer(GLvoid), "glMapBuffer", [(GLenum, "target"), (GLenum, "access")]),
+    GlFunction(GLmap, "glMapBuffer", [(GLenum, "target"), (GLenum, "access")]),
     GlFunction(GLboolean, "glUnmapBuffer", [(GLenum, "target")]),
-    GlFunction(Void, "glGetBufferParameteriv", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
-    GlFunction(Void, "glGetBufferPointerv", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
+    GlFunction(Void, "glGetBufferParameteriv", [(GLenum, "target"), (GLenum, "pname"), (Pointer(GLint), "params")], sideeffects=False),
+    GlFunction(Void, "glGetBufferPointerv", [(GLenum, "target"), (GLenum, "pname"), (Pointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
 
     # GL_VERSION_2_0
     GlFunction(Void, "glBlendEquationSeparate", [(GLenum, "modeRGB"), (GLenum, "modeAlpha")]),
@@ -967,10 +968,10 @@ glapi.add_functions([
     GlFunction(Void, "glBufferDataARB", [(GLenum, "target"), (GLsizeiptrARB, "size"), (Const(Blob(GLvoid, "size")), "data"), (GLenum, "usage")]),
     GlFunction(Void, "glBufferSubDataARB", [(GLenum, "target"), (GLintptrARB, "offset"), (GLsizeiptrARB, "size"), (Const(Blob(GLvoid, "size")), "data")]),
     GlFunction(Void, "glGetBufferSubDataARB", [(GLenum, "target"), (GLintptrARB, "offset"), (GLsizeiptrARB, "size"), Out(Blob(GLvoid, "size"), "data")], sideeffects=False),
-    GlFunction(OpaquePointer(GLvoid), "glMapBufferARB", [(GLenum, "target"), (GLenum, "access")]),
+    GlFunction(GLmap, "glMapBufferARB", [(GLenum, "target"), (GLenum, "access")]),
     GlFunction(GLboolean, "glUnmapBufferARB", [(GLenum, "target")]),
-    GlFunction(Void, "glGetBufferParameterivARB", [(GLenum, "target"), (GLenum, "pname"), Out(OpaquePointer(GLint), "params")], sideeffects=False),
-    GlFunction(Void, "glGetBufferPointervARB", [(GLenum, "target"), (GLenum, "pname"), Out(Array(OpaquePointer(GLvoid), "1"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetBufferParameterivARB", [(GLenum, "target"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
+    GlFunction(Void, "glGetBufferPointervARB", [(GLenum, "target"), (GLenum, "pname"), Out(Pointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
 
     # GL_ARB_occlusion_query
     GlFunction(Void, "glGenQueriesARB", [(GLsizei, "n"), Out(Array(GLquery, "n"), "ids")]),
@@ -1070,7 +1071,7 @@ glapi.add_functions([
     GlFunction(Void, "glVertexAttribDivisorARB", [(GLuint, "index"), (GLuint, "divisor")]),
 
     # GL_ARB_map_buffer_range
-    GlFunction(OpaquePointer(GLvoid), "glMapBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield, "access")]),
+    GlFunction(GLmap, "glMapBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield, "access")]),
     GlFunction(Void, "glFlushMappedBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length")]),
 
     # GL_ARB_texture_buffer_object
@@ -2302,3 +2303,5 @@ glapi.add_functions([
     GlFunction(GLuint, "glBufferRegionEnabled", [], sideeffects=False),
 ])
 
+
+memcpy = Function(Void, "memcpy", [(GLmap, "dest"), (Blob(Const(Void), "n"), "src"), (SizeT, "n")])

@@ -19,8 +19,6 @@ Tracing:
 * Allow to distinguish between the calls really done by the program, vs the
   fakes one necessary to retrace correctly.
 
-* Trace writes done through glMapBuffer and glMapBufferRange correctly
-
 * Start tracing on demand (e.g., key-press, or by frame no), emitting calls
   that recreate all current state.
 

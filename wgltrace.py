@@ -41,6 +41,8 @@ class WglTracer(GlTracer):
         return '__%s' % (function.name,)
 
     def wrap_ret(self, function, instance):
+        GlTracer.wrap_ret(self, function, instance)
+
         if function.name == "wglGetProcAddress":
             print '    if (%s) {' % instance
         

@@ -110,7 +110,7 @@ Enum   ::operator double (void) const { return static_cast<unsigned long long>(*
 void * Value  ::blob(void) const { assert(0); return NULL; }
 void * Null   ::blob(void) const { return NULL; }
 void * Blob   ::blob(void) const { return buf; }
-void * Pointer::blob(void) const { assert(value < 0x100000ULL); return (void *)value; }
+void * Pointer::blob(void) const { return (void *)value; }
 
 
 // virtual Value::visit()

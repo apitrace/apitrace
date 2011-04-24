@@ -151,6 +151,31 @@ class GlTracer(Tracer):
 
         print 'static void __trace_user_arrays(GLuint maxindex);'
         print
+
+        print 'struct buffer_mapping {'
+        print '    void *map;'
+        print '    GLint length;'
+        print '    bool write;'
+        print '};'
+        print
+        for target in self.buffer_targets:
+            print 'struct buffer_mapping __%s_mapping;' % target.lower();
+        print
+        print 'static inline struct buffer_mapping *'
+        print 'get_buffer_mapping(GLenum target) {'
+        print '    switch(target) {'
+        for target in self.buffer_targets:
+            print '    case GL_%s:' % target
+            print '        return & __%s_mapping;' % target.lower()
+        print '    default:'
+        print '        OS::DebugMessage("warning: unknown buffer target 0x%04X\\n", target);'
+        print '        return NULL;'
+        print '    }'
+        print '}'
+        print
+
+        # Generate memcpy's signature
+        self.trace_function_decl(glapi.memcpy)
     
     array_pointer_function_names = set((
         "glVertexPointer",
@@ -271,7 +296,53 @@ class GlTracer(Tracer):
             print '        return;'
             print '    }'
 
+        # Emit a fake memcpy on
+        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB'):
+            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '    if (mapping && mapping->write) {'
+            print '        unsigned __call = Trace::BeginEnter(__memcpy_sig);'
+            print '        Trace::BeginArg(0);'
+            print '        Trace::LiteralOpaque(mapping->map);'
+            print '        Trace::EndArg();'
+            print '        Trace::BeginArg(1);'
+            print '        Trace::LiteralBlob(mapping->map, mapping->length);'
+            print '        Trace::EndArg();'
+            print '        Trace::BeginArg(2);'
+            print '        Trace::LiteralUInt(mapping->length);'
+            print '        Trace::EndArg();'
+            print '        Trace::EndEnter();'
+            print '        Trace::BeginLeave(__call);'
+            print '        Trace::EndLeave();'
+            print '    }'
+
         Tracer.trace_function_impl_body(self, function)
+       
+    buffer_targets = [
+        'ARRAY_BUFFER',
+        'ELEMENT_ARRAY_BUFFER',
+        'PIXEL_PACK_BUFFER',
+        'PIXEL_UNPACK_BUFFER',
+    ]
+
+    def wrap_ret(self, function, instance):
+        Tracer.wrap_ret(self, function, instance)
+            
+        if function.name in ('glMapBuffer', 'glMapBufferARB'):
+            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '    if (mapping) {'
+            print '        mapping->map = %s;' % (instance)
+            print '        mapping->length = 0;'
+            print '        __glGetBufferParameteriv(target, GL_BUFFER_SIZE, &mapping->length);'
+            print '        mapping->write = (access != GL_READ_ONLY);'
+            print '    }'
+
+        if function.name == 'glMapBufferRange':
+            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '    if (mapping) {'
+            print '        mapping->map = %s;' % (instance)
+            print '        mapping->length = length;'
+            print '        mapping->write = access & GL_MAP_WRITE_BIT;'
+            print '    }'
 
     boolean_names = [
         'GL_FALSE',

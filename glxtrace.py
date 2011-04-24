@@ -45,6 +45,8 @@ class GlxTracer(GlTracer):
         return '__%s' % (function.name,)
 
     def wrap_ret(self, function, instance):
+        GlTracer.wrap_ret(self, function, instance)
+
         if function.name in ("glXGetProcAddress", "glXGetProcAddressARB"):
             print '    %s = __unwrap_proc_addr(procName, %s);' % (instance, instance)
 

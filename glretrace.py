@@ -169,11 +169,14 @@ class GlRetracer(Retracer):
 
 if __name__ == '__main__':
     print r'''
+#include <string.h>
+
 #include "glproc.hpp"
 #include "glretrace.hpp"
 
 
 '''
     api = glapi.glapi
+    api.add_function(glapi.memcpy)
     retracer = GlRetracer()
     retracer.retrace_api(glapi.glapi)
