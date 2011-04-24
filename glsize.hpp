@@ -877,6 +877,7 @@ __glGetBooleanv_size(GLenum pname)
     case GL_VERTEX_ARRAY_RANGE_LENGTH_NV:
     case GL_VERTEX_ARRAY_RANGE_VALID_NV:
     case GL_MAX_VERTEX_ARRAY_RANGE_ELEMENT_NV:
+    case GL_VERTEX_ARRAY_BINDING:
         return 1;
     case GL_SMOOTH_POINT_SIZE_RANGE:
     case GL_LINE_WIDTH_RANGE:
