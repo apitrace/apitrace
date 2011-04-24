@@ -101,9 +101,16 @@ class GlTracer(Tracer):
     arrays.reverse()
 
     def state_tracker_decl(self, api):
+        print '// Whether user arrays were used'
+        print 'static bool __user_arrays = false;'
+        print
         # Whether we need user arrays
         print 'static inline bool __need_user_arrays(void)'
         print '{'
+        print '    if (!__user_arrays) {'
+        print '        return false;'
+        print '    }'
+        print
 
         for camelcase_name, uppercase_name in self.arrays:
             function_name = 'gl%sPointer' % camelcase_name
@@ -202,6 +209,7 @@ class GlTracer(Tracer):
             print '    GLint __array_buffer = 0;'
             print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
+            print '        __user_arrays = true;'
             self.dispatch_function(function)
             print '        return;'
             print '    }'
@@ -219,6 +227,7 @@ class GlTracer(Tracer):
             print '    GLint __array_buffer = 0;'
             print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
+            print '        __user_arrays = true;'
             self.dispatch_function(function)
             print
 
