@@ -219,7 +219,7 @@ class Function:
 
     __id = 0
 
-    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, hidden=False):
+    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True):
         self.id = Function.__id
         Function.__id += 1
 
@@ -239,7 +239,6 @@ class Function:
         self.call = call
         self.fail = fail
         self.sideeffects = sideeffects
-        self.hidden = False
 
     def prototype(self, name=None):
         if name is not None:
