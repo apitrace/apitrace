@@ -795,7 +795,8 @@ void MainWindow::slotSearch()
     m_searchWidget->show();
 }
 
-void MainWindow::slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity)
+void MainWindow::slotSearchNext(const QString &str,
+                                Qt::CaseSensitivity sensitivity)
 {
     QModelIndex index = m_ui.callView->currentIndex();
     ApiTraceEvent *event = 0;
@@ -830,12 +831,12 @@ void MainWindow::slotSearchNext(const QString &str, Qt::CaseSensitivity sensitiv
 
     for (int i = callNum + 1; i < calls.count(); ++i) {
         ApiTraceCall *testCall = calls[i];
-        QString txt = testCall->filterText();
-        if (txt.contains(str, sensitivity)) {
-            QModelIndex index = m_proxyModel->indexForCall(testCall);
-            /* if it's not valid it means that the proxy model has already
-             * filtered it out */
-            if (index.isValid()) {
+        QModelIndex index = m_proxyModel->indexForCall(testCall);
+        /* if it's not valid it means that the proxy model has already
+         * filtered it out */
+        if (index.isValid()) {
+            QString txt = testCall->filterText();
+            if (txt.contains(str, sensitivity)) {
                 m_ui.callView->setCurrentIndex(index);
                 m_searchWidget->setFound(true);
                 return;
@@ -845,7 +846,8 @@ void MainWindow::slotSearchNext(const QString &str, Qt::CaseSensitivity sensitiv
     m_searchWidget->setFound(false);
 }
 
-void MainWindow::slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity)
+void MainWindow::slotSearchPrev(const QString &str,
+                                Qt::CaseSensitivity sensitivity)
 {
     QModelIndex index = m_ui.callView->currentIndex();
     ApiTraceEvent *event = 0;
@@ -880,12 +882,12 @@ void MainWindow::slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitiv
 
     for (int i = callNum - 1; i >= 0; --i) {
         ApiTraceCall *testCall = calls[i];
-        QString txt = testCall->filterText();
-        if (txt.contains(str, sensitivity)) {
-            QModelIndex index = m_proxyModel->indexForCall(testCall);
-            /* if it's not valid it means that the proxy model has already
-             * filtered it out */
-            if (index.isValid()) {
+        QModelIndex index = m_proxyModel->indexForCall(testCall);
+        /* if it's not valid it means that the proxy model has already
+         * filtered it out */
+        if (index.isValid()) {
+            QString txt = testCall->filterText();
+            if (txt.contains(str, sensitivity)) {
                 m_ui.callView->setCurrentIndex(index);
                 m_searchWidget->setFound(true);
                 return;
