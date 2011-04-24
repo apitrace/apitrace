@@ -143,6 +143,7 @@ ArgumentsEditor::ArgumentsEditor(QWidget *parent)
 
 ArgumentsEditor::~ArgumentsEditor()
 {
+    delete m_model;
 }
 
 void ArgumentsEditor::setCall(ApiTraceCall *call)

@@ -617,7 +617,8 @@ void MainWindow::initObjects()
     m_proxyModel = new ApiTraceFilter();
     m_proxyModel->setSourceModel(m_model);
     m_ui.callView->setModel(m_proxyModel);
-    m_ui.callView->setItemDelegate(new ApiCallDelegate);
+    m_ui.callView->setItemDelegate(
+        new ApiCallDelegate(m_ui.callView));
     m_ui.callView->resizeColumnToContents(0);
     m_ui.callView->header()->swapSections(0, 1);
     m_ui.callView->setColumnWidth(1, 42);
