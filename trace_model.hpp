@@ -189,7 +189,19 @@ public:
 class Enum : public Value
 {
 public:
-    typedef std::pair<std::string, Value *> Signature;
+    struct Signature : public std::pair<std::string, Value *>
+    {
+        Signature()
+            : std::pair<std::string, Value *>()
+        {}
+        Signature(const std::string &n, Trace::Value *val)
+            : std::pair<std::string, Value *>(n, val)
+        {}
+        ~Signature()
+        {
+            delete second;
+        }
+    };
 
     Enum(const Signature *_sig) : sig(_sig) {}
 
