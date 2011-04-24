@@ -306,6 +306,11 @@ void MainWindow::lookupState()
 
 MainWindow::~MainWindow()
 {
+    delete m_trace;
+    m_trace = 0;
+
+    delete m_proxyModel;
+    delete m_model;
 }
 
 static void

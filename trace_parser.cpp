@@ -65,12 +65,34 @@ bool Parser::open(const char *filename) {
     return true;
 }
 
+template <typename Iter>
+inline void
+deleteAll(Iter begin, Iter end)
+{
+    while (begin != end) {
+        delete *begin;
+        ++begin;
+    }
+}
+
+template <typename Container>
+inline void
+deleteAll(const Container &c)
+{
+    deleteAll(c.begin(), c.end());
+}
 
 void Parser::close(void) {
     if (file) {
         gzclose(file);
         file = NULL;
     }
+
+    deleteAll(calls);
+    deleteAll(functions);
+    deleteAll(structs);
+    deleteAll(enums);
+    deleteAll(bitmasks);
 }
 
 
