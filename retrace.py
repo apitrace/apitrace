@@ -255,7 +255,11 @@ class Retracer:
         print '    };'
         print
 
-        func_dict = dict([(function.name, function) for function in functions])
+        func_dict = {}
+        for f in functions:
+            func_dict[f.name] = f
+            for alias in f.aliases:
+                func_dict[alias] = f
 
         def handle_case(function_name):
             function = func_dict[function_name]

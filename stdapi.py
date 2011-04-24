@@ -219,7 +219,7 @@ class Function:
 
     __id = 0
 
-    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True):
+    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, aliases = ()):
         self.id = Function.__id
         Function.__id += 1
 
@@ -239,6 +239,10 @@ class Function:
         self.call = call
         self.fail = fail
         self.sideeffects = sideeffects
+        self.aliases = list(aliases)
+
+    def names(self):
+        return [self.name] + self.aliases
 
     def prototype(self, name=None):
         if name is not None:
@@ -550,6 +554,8 @@ class API:
     def get_function_by_name(self, name):
         for function in self.functions:
             if function.name == name:
+                return function
+            if name in function.aliases:
                 return function
         return None
 

@@ -313,11 +313,11 @@ class Tracer:
     def get_dispatch_function(self, function):
         return '__' + function.name
 
-    def is_public_function(self, function):
+    def is_public_function(self, function_name):
         return True
 
     def trace_function_impl(self, function):
-        if self.is_public_function(function):
+        if self.is_public_function(function.name):
             print 'extern "C" PUBLIC'
         else:
             print 'extern "C" PRIVATE'
@@ -330,6 +330,21 @@ class Tracer:
             print '    return __result;'
         print '}'
         print
+
+        # Aliases
+        for alias in function.aliases:
+            if self.is_public_function(alias):
+                print 'extern "C" PUBLIC'
+            else:
+                print 'extern "C" PRIVATE'
+            print function.prototype(name = alias) + ' {'
+            if function.type is not stdapi.Void:
+                result = 'return '
+            else:
+                result = ''
+            print '    %s%s(%s);' % (result, function.name, ', '.join([str(arg.name) for arg in function.args]))
+            print '}'
+            print
 
     def trace_function_impl_body(self, function):
         print '    unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)

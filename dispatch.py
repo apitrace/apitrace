@@ -95,17 +95,21 @@ class Dispatcher:
         return True
 
     def get_true_pointer(self, function):
+        self._get_true_pointer(function, function.names())
+
+    def _get_true_pointer(self, function, names):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
-        if self.is_public_function(function):
-            get_proc_address = '__getPublicProcAddress'
-        else:
-            get_proc_address = '__getPrivateProcAddress'
         print '    if (!%s) {' % (pvalue,)
-        print '        %s = (%s)%s("%s");' % (pvalue, ptype, get_proc_address, function.name)
-        print '        if (!%s) {' % (pvalue,)
-        self.fail_function(function)
-        print '        }'
+        if names:
+            if self.is_public_function(function):
+                get_proc_address = '__getPublicProcAddress'
+            else:
+                get_proc_address = '__getPrivateProcAddress'
+            print '        %s = (%s)%s("%s");' % (pvalue, ptype, get_proc_address, names[0])
+            self._get_true_pointer(function, names[1:])
+        else:
+            self.fail_function(function)
         print '    }'
 
     def fail_function(self, function):
