@@ -3019,6 +3019,7 @@ class StateDumper:
         print '#include <iostream>'
         print '#include <algorithm>'
         print
+        print '#include "image.hpp"'
         print '#include "json.hpp"'
         print '#include "glimports.hpp"'
         print '#include "glproc.hpp"'
@@ -3190,7 +3191,11 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
         json.beginMember("__data__");
-        json.writeBase64(pixels, depth * width * height * 4 * sizeof *pixels);
+        char *pngBuffer;
+        int pngBufferSize;
+        Image::writePixelsToBuffer(pixels, width, height, 4, false, &pngBuffer, &pngBufferSize);
+        json.writeBase64(pngBuffer, pngBufferSize);
+        free(pngBuffer);
         json.endMember(); // __data__
 
         delete [] pixels;
@@ -3241,7 +3246,13 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
         glReadBuffer(readbuffer);
 
         json.beginMember("__data__");
-        json.writeBase64(pixels, width * height * channels * sizeof *pixels);
+        char *pngBuffer;
+        int pngBufferSize;
+        Image::writePixelsToBuffer(pixels, width, height, channels, false, &pngBuffer, &pngBufferSize);
+        //std::cerr <<" Before = "<<(width * height * channels * sizeof *pixels)
+        //          <<", after = "<<pngBufferSize << ", ratio = " << double(width * height * channels * sizeof *pixels)/pngBufferSize;
+        json.writeBase64(pngBuffer, pngBufferSize);
+        free(pngBuffer);
         json.endMember(); // __data__
 
         delete [] pixels;
