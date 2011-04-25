@@ -150,9 +150,9 @@ parameters = [
     ("glGet",	I,	1,	"GL_CULL_FACE"),	# 0x0B44
     ("glGet",	E,	1,	"GL_CULL_FACE_MODE"),	# 0x0B45
     ("glGet",	E,	1,	"GL_FRONT_FACE"),	# 0x0B46
-    ("glGet",	I,	1,	"GL_LIGHTING"),	# 0x0B50
-    ("glGet",	I,	1,	"GL_LIGHT_MODEL_LOCAL_VIEWER"),	# 0x0B51
-    ("glGet",	I,	1,	"GL_LIGHT_MODEL_TWO_SIDE"),	# 0x0B52
+    ("glGet",	B,	1,	"GL_LIGHTING"),	# 0x0B50
+    ("glGet",	B,	1,	"GL_LIGHT_MODEL_LOCAL_VIEWER"),	# 0x0B51
+    ("glGet",	B,	1,	"GL_LIGHT_MODEL_TWO_SIDE"),	# 0x0B52
     ("glGet",	F,	4,	"GL_LIGHT_MODEL_AMBIENT"),	# 0x0B53
     ("glGet",	E,	1,	"GL_SHADE_MODEL"),	# 0x0B54
     ("glGet",	E,	1,	"GL_COLOR_MATERIAL_FACE"),	# 0x0B55
@@ -335,16 +335,16 @@ parameters = [
     ("glGet",	X,	1,	"GL_DONT_CARE"),	# 0x1100
     ("glGet",	X,	1,	"GL_FASTEST"),	# 0x1101
     ("glGet",	X,	1,	"GL_NICEST"),	# 0x1102
-    ("glGet",	X,	1,	"GL_AMBIENT"),	# 0x1200
-    ("glGet",	X,	1,	"GL_DIFFUSE"),	# 0x1201
-    ("glGet",	X,	1,	"GL_SPECULAR"),	# 0x1202
-    ("glGet",	X,	1,	"GL_POSITION"),	# 0x1203
-    ("glGet",	X,	1,	"GL_SPOT_DIRECTION"),	# 0x1204
-    ("glGet",	X,	1,	"GL_SPOT_EXPONENT"),	# 0x1205
-    ("glGet",	X,	1,	"GL_SPOT_CUTOFF"),	# 0x1206
-    ("glGet",	X,	1,	"GL_CONSTANT_ATTENUATION"),	# 0x1207
-    ("glGet",	X,	1,	"GL_LINEAR_ATTENUATION"),	# 0x1208
-    ("glGet",	X,	1,	"GL_QUADRATIC_ATTENUATION"),	# 0x1209
+    ("glGetLight,glGetMaterial",	F,	4,	"GL_AMBIENT"),	# 0x1200
+    ("glGetLight,glGetMaterial",	F,	4,	"GL_DIFFUSE"),	# 0x1201
+    ("glGetLight,glGetMaterial",	F,	4,	"GL_SPECULAR"),	# 0x1202
+    ("glGetLight",	F,	4,	"GL_POSITION"),	# 0x1203
+    ("glGetLight",	F,	3,	"GL_SPOT_DIRECTION"),	# 0x1204
+    ("glGetLight",	F,	1,	"GL_SPOT_EXPONENT"),	# 0x1205
+    ("glGetLight",	F,	1,	"GL_SPOT_CUTOFF"),	# 0x1206
+    ("glGetLight",	F,	1,	"GL_CONSTANT_ATTENUATION"),	# 0x1207
+    ("glGetLight",	F,	1,	"GL_LINEAR_ATTENUATION"),	# 0x1208
+    ("glGetLight",	F,	1,	"GL_QUADRATIC_ATTENUATION"),	# 0x1209
     ("glGet",	X,	1,	"GL_COMPILE"),	# 0x1300
     ("glGet",	X,	1,	"GL_COMPILE_AND_EXECUTE"),	# 0x1301
     ("glGet",	X,	1,	"GL_BYTE"),	# 0x1400
@@ -378,10 +378,10 @@ parameters = [
     ("glGet",	X,	1,	"GL_OR_INVERTED"),	# 0x150D
     ("glGet",	X,	1,	"GL_NAND"),	# 0x150E
     ("glGet",	X,	1,	"GL_SET"),	# 0x150F
-    ("glGet",	X,	1,	"GL_EMISSION"),	# 0x1600
-    ("glGet",	X,	1,	"GL_SHININESS"),	# 0x1601
-    ("glGet",	X,	1,	"GL_AMBIENT_AND_DIFFUSE"),	# 0x1602
-    ("glGet",	X,	1,	"GL_COLOR_INDEXES"),	# 0x1603
+    ("glGetMaterial",	F,	4,	"GL_EMISSION"),	# 0x1600
+    ("glGetMaterial",	F,	1,	"GL_SHININESS"),	# 0x1601
+    (None,	F,	4,	"GL_AMBIENT_AND_DIFFUSE"),	# 0x1602
+    ("glGetMaterial",	F,	3,	"GL_COLOR_INDEXES"),	# 0x1603
     ("glGet",	X,	1,	"GL_MODELVIEW"),	# 0x1700
     ("glGet",	X,	1,	"GL_PROJECTION"),	# 0x1701
     ("glGet",	X,	1,	"GL_TEXTURE"),	# 0x1702
@@ -494,14 +494,14 @@ parameters = [
     ("glGet",	B,	1,	"GL_CLIP_PLANE5"),	# 0x3005
     ("glGet",	X,	1,	"GL_CLIP_DISTANCE6"),	# 0x3006
     ("glGet",	X,	1,	"GL_CLIP_DISTANCE7"),	# 0x3007
-    ("glGet",	I,	1,	"GL_LIGHT0"),	# 0x4000
-    ("glGet",	I,	1,	"GL_LIGHT1"),	# 0x4001
-    ("glGet",	I,	1,	"GL_LIGHT2"),	# 0x4002
-    ("glGet",	I,	1,	"GL_LIGHT3"),	# 0x4003
-    ("glGet",	I,	1,	"GL_LIGHT4"),	# 0x4004
-    ("glGet",	I,	1,	"GL_LIGHT5"),	# 0x4005
-    ("glGet",	I,	1,	"GL_LIGHT6"),	# 0x4006
-    ("glGet",	I,	1,	"GL_LIGHT7"),	# 0x4007
+    (None,	B,	1,	"GL_LIGHT0"),	# 0x4000
+    (None,	B,	1,	"GL_LIGHT1"),	# 0x4001
+    (None,	B,	1,	"GL_LIGHT2"),	# 0x4002
+    (None,	B,	1,	"GL_LIGHT3"),	# 0x4003
+    (None,	B,	1,	"GL_LIGHT4"),	# 0x4004
+    (None,	B,	1,	"GL_LIGHT5"),	# 0x4005
+    (None,	B,	1,	"GL_LIGHT6"),	# 0x4006
+    (None,	B,	1,	"GL_LIGHT7"),	# 0x4007
     ("glGet",	X,	1,	"GL_ABGR_EXT"),	# 0x8000
     ("glGet",	X,	1,	"GL_CONSTANT_COLOR"),	# 0x8001
     ("glGet",	X,	1,	"GL_ONE_MINUS_CONSTANT_COLOR"),	# 0x8002
@@ -1270,9 +1270,9 @@ parameters = [
     ("glGet",	X,	1,	"GL_COMBINER7_NV"),	# 0x8557
     ("glGet",	X,	1,	"GL_PRIMITIVE_RESTART_NV"),	# 0x8558
     ("glGet",	X,	1,	"GL_PRIMITIVE_RESTART_INDEX_NV"),	# 0x8559
-    ("glGet",	X,	1,	"GL_FOG_DISTANCE_MODE_NV"),	# 0x855A
-    ("glGet",	X,	1,	"GL_EYE_RADIAL_NV"),	# 0x855B
-    ("glGet",	X,	1,	"GL_EYE_PLANE_ABSOLUTE_NV"),	# 0x855C
+    ("glGet",	E,	1,	"GL_FOG_DISTANCE_MODE_NV"),	# 0x855A
+    (None,	X,	1,	"GL_EYE_RADIAL_NV"),	# 0x855B
+    (None,	X,	1,	"GL_EYE_PLANE_ABSOLUTE_NV"),	# 0x855C
     ("glGet",	X,	1,	"GL_EMBOSS_LIGHT_NV"),	# 0x855D
     ("glGet",	X,	1,	"GL_EMBOSS_CONSTANT_NV"),	# 0x855E
     ("glGet",	X,	1,	"GL_EMBOSS_MAP_NV"),	# 0x855F
@@ -2956,6 +2956,8 @@ glGet = StateGetter('glGet', {
     P: 'Pointerv',
 })
 
+glGetMaterial = StateGetter('glGetMaterial', {I: 'iv', F: 'fv'})
+glGetLight = StateGetter('glGetLight', {I: 'iv', F: 'fv'})
 glGetVertexAttrib = StateGetter('glGetVertexAttrib', {I: 'iv', F: 'fv', D: 'dv', P: 'Pointerv'})
 glGetTexParameter = StateGetter('glGetTexParameter', {I: 'iv', F: 'fv'})
 glGetTexLevelParameter = StateGetter('glGetTexLevelParameter', {I: 'iv', F: 'fv'})
@@ -3452,11 +3454,38 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         
         self.dump_atoms(glGet)
         
+        self.dump_material_params()
+        self.dump_light_params()
         self.dump_vertex_attribs()
         self.dump_texture_parameters()
 
         print '    json.endObject();'
         print '    json.endMember(); // parameters'
+        print
+
+    def dump_material_params(self):
+        for face in ['GL_FRONT', 'GL_BACK']:
+            print '    json.beginMember("%s");' % face
+            print '    json.beginObject();'
+            self.dump_atoms(glGetMaterial, face)
+            print '    json.endObject();'
+        print
+
+    def dump_light_params(self):
+        print '    GLint max_lights = 0;'
+        print '    __glGetIntegerv(GL_MAX_LIGHTS, &max_lights);'
+        print '    for (GLint index = 0; index < max_lights; ++index) {'
+        print '        GLenum light = GL_LIGHT0 + index;'
+        print '        if (glIsEnabled(light)) {'
+        print '            char name[32];'
+        print '            snprintf(name, sizeof name, "GL_LIGHT%i", index);'
+        print '            json.beginMember(name);'
+        print '            json.beginObject();'
+        self.dump_atoms(glGetLight, '    GL_LIGHT0 + index')
+        print '            json.endObject();'
+        print '            json.endMember(); // GL_LIGHTi'
+        print '        }'
+        print '    }'
         print
 
     def dump_vertex_attribs(self):
@@ -3624,7 +3653,9 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
 
     def dump_atoms(self, getter, *args):
         for function, type, count, name in parameters:
-            if function != getter.inflector.radical:
+            if function is None:
+                continue
+            if getter.inflector.radical not in function.split(','):
                 continue
             if type is X:
                 continue
