@@ -268,7 +268,7 @@ parameters = [
     ("glGet",	F,	1,	"GL_GREEN_BIAS"),	# 0x0D19
     ("glGet",	F,	1,	"GL_BLUE_SCALE"),	# 0x0D1A
     ("glGet",	F,	1,	"GL_BLUE_BIAS"),	# 0x0D1B
-    ("glGet",	F,	1,	"GL_ALPHA_SCALE"),	# 0x0D1C
+    ("glGet,glGetTexEnv",	F,	1,	"GL_ALPHA_SCALE"),	# 0x0D1C
     ("glGet",	F,	1,	"GL_ALPHA_BIAS"),	# 0x0D1D
     ("glGet",	F,	1,	"GL_DEPTH_SCALE"),	# 0x0D1E
     ("glGet",	F,	1,	"GL_DEPTH_BIAS"),	# 0x0D1F
@@ -447,15 +447,15 @@ parameters = [
     ("glGet",	X,	1,	"GL_Q"),	# 0x2003
     ("glGet",	X,	1,	"GL_MODULATE"),	# 0x2100
     ("glGet",	X,	1,	"GL_DECAL"),	# 0x2101
-    ("glGet",	X,	1,	"GL_TEXTURE_ENV_MODE"),	# 0x2200
-    ("glGet",	X,	1,	"GL_TEXTURE_ENV_COLOR"),	# 0x2201
-    ("glGet",	X,	1,	"GL_TEXTURE_ENV"),	# 0x2300
+    ("glGetTexEnv",	E,	1,	"GL_TEXTURE_ENV_MODE"),	# 0x2200
+    ("glGetTexEnv",	F,	4,	"GL_TEXTURE_ENV_COLOR"),	# 0x2201
+    (None,	X,	1,	"GL_TEXTURE_ENV"),	# 0x2300
     ("glGet",	X,	1,	"GL_EYE_LINEAR"),	# 0x2400
     ("glGet",	X,	1,	"GL_OBJECT_LINEAR"),	# 0x2401
     ("glGet",	X,	1,	"GL_SPHERE_MAP"),	# 0x2402
-    ("glGet",	X,	1,	"GL_TEXTURE_GEN_MODE"),	# 0x2500
-    ("glGet",	X,	1,	"GL_OBJECT_PLANE"),	# 0x2501
-    ("glGet",	X,	1,	"GL_EYE_PLANE"),	# 0x2502
+    ("glGetTexGen",	E,	1,	"GL_TEXTURE_GEN_MODE"),	# 0x2500
+    ("glGetTexGen",	F,	4,	"GL_OBJECT_PLANE"),	# 0x2501
+    ("glGetTexGen",	F,	4,	"GL_EYE_PLANE"),	# 0x2502
     ("glGet",	X,	1,	"GL_NEAREST"),	# 0x2600
     ("glGet",	X,	1,	"GL_LINEAR"),	# 0x2601
     ("glGet",	X,	1,	"GL_NEAREST_MIPMAP_NEAREST"),	# 0x2700
@@ -693,7 +693,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_TEXTURE_COLOR_TABLE_SGI"),	# 0x80BC
     ("glGet",	X,	1,	"GL_PROXY_TEXTURE_COLOR_TABLE_SGI"),	# 0x80BD
     ("glGet",	X,	1,	"GL_TEXTURE_ENV_BIAS_SGIX"),	# 0x80BE
-    ("glGet",	X,	1,	"GL_TEXTURE_COMPARE_FAIL_VALUE_ARB"),	# 0x80BF
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_COMPARE_FAIL_VALUE_ARB"),	# 0x80BF
     ("glGet",	X,	1,	"GL_BLEND_DST_RGB"),	# 0x80C8
     ("glGet",	X,	1,	"GL_BLEND_SRC_RGB"),	# 0x80C9
     ("glGet",	X,	1,	"GL_BLEND_DST_ALPHA"),	# 0x80CA
@@ -822,16 +822,16 @@ parameters = [
     ("glGet",	X,	1,	"GL_TEXTURE_POST_SPECULAR_HP"),	# 0x8168
     ("glGet",	X,	1,	"GL_TEXTURE_PRE_SPECULAR_HP"),	# 0x8169
     ("glGet",	X,	1,	"GL_LINEAR_CLIPMAP_LINEAR_SGIX"),	# 0x8170
-    ("glGet",	X,	1,	"GL_TEXTURE_CLIPMAP_CENTER_SGIX"),	# 0x8171
-    ("glGet",	X,	1,	"GL_TEXTURE_CLIPMAP_FRAME_SGIX"),	# 0x8172
-    ("glGet",	X,	1,	"GL_TEXTURE_CLIPMAP_OFFSET_SGIX"),	# 0x8173
-    ("glGet",	X,	1,	"GL_TEXTURE_CLIPMAP_VIRTUAL_DEPTH_SGIX"),	# 0x8174
+    ("glGetTexParameter",	I,	2,	"GL_TEXTURE_CLIPMAP_CENTER_SGIX"),	# 0x8171
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_CLIPMAP_FRAME_SGIX"),	# 0x8172
+    ("glGetTexParameter",	I,	2,	"GL_TEXTURE_CLIPMAP_OFFSET_SGIX"),	# 0x8173
+    ("glGetTexParameter",	I,	3,	"GL_TEXTURE_CLIPMAP_VIRTUAL_DEPTH_SGIX"),	# 0x8174
     ("glGet",	X,	1,	"GL_TEXTURE_CLIPMAP_LOD_OFFSET_SGIX"),	# 0x8175
     ("glGet",	X,	1,	"GL_TEXTURE_CLIPMAP_DEPTH_SGIX"),	# 0x8176
     ("glGet",	I,	1,	"GL_MAX_CLIPMAP_DEPTH_SGIX"),	# 0x8177
     ("glGet",	I,	1,	"GL_MAX_CLIPMAP_VIRTUAL_DEPTH_SGIX"),	# 0x8178
-    ("glGet",	X,	1,	"GL_POST_TEXTURE_FILTER_BIAS_SGIX"),	# 0x8179
-    ("glGet",	X,	1,	"GL_POST_TEXTURE_FILTER_SCALE_SGIX"),	# 0x817A
+    ("glGetTexParameter",	F,	1,	"GL_POST_TEXTURE_FILTER_BIAS_SGIX"),	# 0x8179
+    ("glGetTexParameter",	F,	1,	"GL_POST_TEXTURE_FILTER_SCALE_SGIX"),	# 0x817A
     ("glGet",	F,	2,	"GL_POST_TEXTURE_FILTER_BIAS_RANGE_SGIX"),	# 0x817B
     ("glGet",	F,	2,	"GL_POST_TEXTURE_FILTER_SCALE_RANGE_SGIX"),	# 0x817C
     ("glGet",	I,	1,	"GL_REFERENCE_PLANE_SGIX"),	# 0x817D
@@ -851,9 +851,9 @@ parameters = [
     ("glGet",	I,	1,	"GL_FRAMEZOOM_SGIX"),	# 0x818B
     ("glGet",	I,	1,	"GL_FRAMEZOOM_FACTOR_SGIX"),	# 0x818C
     ("glGet",	I,	1,	"GL_MAX_FRAMEZOOM_FACTOR_SGIX"),	# 0x818D
-    ("glGet",	X,	1,	"GL_TEXTURE_LOD_BIAS_S_SGIX"),	# 0x818E
-    ("glGet",	X,	1,	"GL_TEXTURE_LOD_BIAS_T_SGIX"),	# 0x818F
-    ("glGet",	X,	1,	"GL_TEXTURE_LOD_BIAS_R_SGIX"),	# 0x8190
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_LOD_BIAS_S_SGIX"),	# 0x818E
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_LOD_BIAS_T_SGIX"),	# 0x818F
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_LOD_BIAS_R_SGIX"),	# 0x8190
     ("glGetTexParameter",	B,	1,	"GL_GENERATE_MIPMAP"),	# 0x8191
     ("glGet",	E,	1,	"GL_GENERATE_MIPMAP_HINT"),	# 0x8192
     ("glGet",	X,	1,	"GL_GEOMETRY_DEFORMATION_SGIX"),	# 0x8194
@@ -862,10 +862,10 @@ parameters = [
     ("glGet",	X,	1,	"GL_MAX_DEFORMATION_ORDER_SGIX"),	# 0x8197
     ("glGet",	I,	1,	"GL_FOG_OFFSET_SGIX"),	# 0x8198
     ("glGet",	F,	4,	"GL_FOG_OFFSET_VALUE_SGIX"),	# 0x8199
-    ("glGet",	X,	1,	"GL_TEXTURE_COMPARE_SGIX"),	# 0x819A
-    ("glGet",	X,	1,	"GL_TEXTURE_COMPARE_OPERATOR_SGIX"),	# 0x819B
-    ("glGet",	X,	1,	"GL_TEXTURE_LEQUAL_R_SGIX"),	# 0x819C
-    ("glGet",	X,	1,	"GL_TEXTURE_GEQUAL_R_SGIX"),	# 0x819D
+    ("glGetTexParameter",	B,	1,	"GL_TEXTURE_COMPARE_SGIX"),	# 0x819A
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_COMPARE_OPERATOR_SGIX"),	# 0x819B
+    (None,	X,	1,	"GL_TEXTURE_LEQUAL_R_SGIX"),	# 0x819C
+    (None,	X,	1,	"GL_TEXTURE_GEQUAL_R_SGIX"),	# 0x819D
     ("glGet",	X,	1,	"GL_DEPTH_COMPONENT16"),	# 0x81A5
     ("glGet",	X,	1,	"GL_DEPTH_COMPONENT24"),	# 0x81A6
     ("glGet",	X,	1,	"GL_DEPTH_COMPONENT32"),	# 0x81A7
@@ -1037,9 +1037,9 @@ parameters = [
     ("glGet",	X,	1,	"GL_UNSIGNED_SHORT_1_5_5_5_REV"),	# 0x8366
     ("glGet",	X,	1,	"GL_UNSIGNED_INT_8_8_8_8_REV"),	# 0x8367
     ("glGet",	X,	1,	"GL_UNSIGNED_INT_2_10_10_10_REV"),	# 0x8368
-    ("glGet",	X,	1,	"GL_TEXTURE_MAX_CLAMP_S_SGIX"),	# 0x8369
-    ("glGet",	X,	1,	"GL_TEXTURE_MAX_CLAMP_T_SGIX"),	# 0x836A
-    ("glGet",	X,	1,	"GL_TEXTURE_MAX_CLAMP_R_SGIX"),	# 0x836B
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_CLAMP_S_SGIX"),	# 0x8369
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_CLAMP_T_SGIX"),	# 0x836A
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_CLAMP_R_SGIX"),	# 0x836B
     ("glGet",	X,	1,	"GL_MIRRORED_REPEAT"),	# 0x8370
     ("glGet",	X,	1,	"GL_RGB_S3TC"),	# 0x83A0
     ("glGet",	X,	1,	"GL_RGB4_S3TC"),	# 0x83A1
@@ -1177,11 +1177,11 @@ parameters = [
     ("glGet",	X,	1,	"GL_MAX_RECTANGLE_TEXTURE_SIZE"),	# 0x84F8
     ("glGet",	X,	1,	"GL_DEPTH_STENCIL"),	# 0x84F9
     ("glGet",	X,	1,	"GL_UNSIGNED_INT_24_8"),	# 0x84FA
-    ("glGet",	X,	1,	"GL_MAX_TEXTURE_LOD_BIAS"),	# 0x84FD
-    ("glGet",	X,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
-    ("glGet",	X,	1,	"GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FF
-    ("glGet",	X,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
-    ("glGet",	X,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
+    ("glGet",	F,	1,	"GL_MAX_TEXTURE_LOD_BIAS"),	# 0x84FD
+    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
+    ("glGet",	F,	1,	"GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FF
+    ("glGetTexEnv",	E,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
+    ("glGetTexParameter,glGetTexEnv",	F,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
     ("glGet",	X,	1,	"GL_MODELVIEW1_STACK_DEPTH_EXT"),	# 0x8502
     ("glGet",	X,	1,	"GL_COMBINE4_NV"),	# 0x8503
     ("glGet",	X,	1,	"GL_MAX_SHININESS_NV"),	# 0x8504
@@ -1286,29 +1286,29 @@ parameters = [
     ("glGet",	X,	1,	"GL_ALPHA_MAX_CLAMP_INGR"),	# 0x8567
     ("glGet",	X,	1,	"GL_INTERLACE_READ_INGR"),	# 0x8568
     ("glGet",	X,	1,	"GL_COMBINE"),	# 0x8570
-    ("glGet",	X,	1,	"GL_COMBINE_RGB"),	# 0x8571
-    ("glGet",	X,	1,	"GL_COMBINE_ALPHA"),	# 0x8572
-    ("glGet",	X,	1,	"GL_RGB_SCALE"),	# 0x8573
+    ("glGetTexEnv",	E,	1,	"GL_COMBINE_RGB"),	# 0x8571
+    ("glGetTexEnv",	E,	1,	"GL_COMBINE_ALPHA"),	# 0x8572
+    ("glGetTexEnv",	F,	1,	"GL_RGB_SCALE"),	# 0x8573
     ("glGet",	X,	1,	"GL_ADD_SIGNED"),	# 0x8574
     ("glGet",	X,	1,	"GL_INTERPOLATE"),	# 0x8575
     ("glGet",	X,	1,	"GL_CONSTANT"),	# 0x8576
     ("glGet",	X,	1,	"GL_PRIMARY_COLOR"),	# 0x8577
     ("glGet",	X,	1,	"GL_PREVIOUS"),	# 0x8578
-    ("glGet",	X,	1,	"GL_SRC0_RGB"),	# 0x8580
-    ("glGet",	X,	1,	"GL_SRC1_RGB"),	# 0x8581
-    ("glGet",	X,	1,	"GL_SRC2_RGB"),	# 0x8582
-    ("glGet",	X,	1,	"GL_SOURCE3_RGB_NV"),	# 0x8583
-    ("glGet",	X,	1,	"GL_SRC0_ALPHA"),	# 0x8588
-    ("glGet",	X,	1,	"GL_SRC1_ALPHA"),	# 0x8589
-    ("glGet",	X,	1,	"GL_SRC2_ALPHA"),	# 0x858A
-    ("glGet",	X,	1,	"GL_SOURCE3_ALPHA_NV"),	# 0x858B
-    ("glGet",	X,	1,	"GL_OPERAND0_RGB"),	# 0x8590
-    ("glGet",	X,	1,	"GL_OPERAND1_RGB"),	# 0x8591
-    ("glGet",	X,	1,	"GL_OPERAND2_RGB"),	# 0x8592
-    ("glGet",	X,	1,	"GL_OPERAND0_ALPHA"),	# 0x8598
-    ("glGet",	X,	1,	"GL_OPERAND1_ALPHA"),	# 0x8599
-    ("glGet",	X,	1,	"GL_OPERAND2_ALPHA"),	# 0x859A
-    ("glGet",	X,	1,	"GL_OPERAND3_ALPHA_NV"),	# 0x859B
+    ("glGetTexEnv",	E,	1,	"GL_SRC0_RGB"),	# 0x8580
+    ("glGetTexEnv",	E,	1,	"GL_SRC1_RGB"),	# 0x8581
+    ("glGetTexEnv",	E,	1,	"GL_SRC2_RGB"),	# 0x8582
+    ("glGetTexEnv",	E,	1,	"GL_SOURCE3_RGB_NV"),	# 0x8583
+    ("glGetTexEnv",	E,	1,	"GL_SRC0_ALPHA"),	# 0x8588
+    ("glGetTexEnv",	E,	1,	"GL_SRC1_ALPHA"),	# 0x8589
+    ("glGetTexEnv",	E,	1,	"GL_SRC2_ALPHA"),	# 0x858A
+    ("glGetTexEnv",	E,	1,	"GL_SOURCE3_ALPHA_NV"),	# 0x858B
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND0_RGB"),	# 0x8590
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND1_RGB"),	# 0x8591
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND2_RGB"),	# 0x8592
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND0_ALPHA"),	# 0x8598
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND1_ALPHA"),	# 0x8599
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND2_ALPHA"),	# 0x859A
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND3_ALPHA_NV"),	# 0x859B
     ("glGet",	X,	1,	"GL_PACK_SUBSAMPLE_RATE_SGIX"),	# 0x85A0
     ("glGet",	X,	1,	"GL_UNPACK_SUBSAMPLE_RATE_SGIX"),	# 0x85A1
     ("glGet",	X,	1,	"GL_PIXEL_SUBSAMPLE_4444_SGIX"),	# 0x85A2
@@ -1322,15 +1322,15 @@ parameters = [
     ("glGet",	X,	1,	"GL_BUFFER_OBJECT_APPLE"),	# 0x85B3
     ("glGet",	X,	1,	"GL_STORAGE_CLIENT_APPLE"),	# 0x85B4
     ("glGet",	I,	1,	"GL_VERTEX_ARRAY_BINDING"),	# 0x85B5
-    ("glGet",	X,	1,	"GL_TEXTURE_RANGE_LENGTH_APPLE"),	# 0x85B7
-    ("glGet",	X,	1,	"GL_TEXTURE_RANGE_POINTER_APPLE"),	# 0x85B8
+    ("glGetTexParameter",	X,	1,	"GL_TEXTURE_RANGE_LENGTH_APPLE"),	# 0x85B7
+    (None,	P,	1,	"GL_TEXTURE_RANGE_POINTER_APPLE"),	# 0x85B8
     ("glGet",	X,	1,	"GL_YCBCR_422_APPLE"),	# 0x85B9
     ("glGet",	X,	1,	"GL_UNSIGNED_SHORT_8_8_MESA"),	# 0x85BA
     ("glGet",	X,	1,	"GL_UNSIGNED_SHORT_8_8_REV_MESA"),	# 0x85BB
-    ("glGet",	X,	1,	"GL_TEXTURE_STORAGE_HINT_APPLE"),	# 0x85BC
-    ("glGet",	X,	1,	"GL_STORAGE_PRIVATE_APPLE"),	# 0x85BD
-    ("glGet",	X,	1,	"GL_STORAGE_CACHED_APPLE"),	# 0x85BE
-    ("glGet",	X,	1,	"GL_STORAGE_SHARED_APPLE"),	# 0x85BF
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_STORAGE_HINT_APPLE"),	# 0x85BC
+    (None,	X,	1,	"GL_STORAGE_PRIVATE_APPLE"),	# 0x85BD
+    (None,	X,	1,	"GL_STORAGE_CACHED_APPLE"),	# 0x85BE
+    (None,	X,	1,	"GL_STORAGE_SHARED_APPLE"),	# 0x85BF
     ("glGet",	X,	1,	"GL_REPLACEMENT_CODE_ARRAY_SUN"),	# 0x85C0
     ("glGet",	E,	1,	"GL_REPLACEMENT_CODE_ARRAY_TYPE_SUN"),	# 0x85C1
     ("glGet",	X,	1,	"GL_REPLACEMENT_CODE_ARRAY_STRIDE_SUN"),	# 0x85C2
@@ -1488,12 +1488,12 @@ parameters = [
     ("glGet",	X,	1,	"GL_SHADER_CONSISTENT_NV"),	# 0x86DD
     ("glGet",	X,	1,	"GL_TEXTURE_SHADER_NV"),	# 0x86DE
     ("glGet",	X,	1,	"GL_SHADER_OPERATION_NV"),	# 0x86DF
-    ("glGet",	X,	1,	"GL_CULL_MODES_NV"),	# 0x86E0
-    ("glGet",	X,	1,	"GL_OFFSET_TEXTURE_MATRIX_NV"),	# 0x86E1
+    ("glGetTexEnv",	F,	4,	"GL_CULL_MODES_NV"),	# 0x86E0
+    ("glGetTexEnv",	F,	4,	"GL_OFFSET_TEXTURE_MATRIX_NV"),	# 0x86E1
     ("glGet",	X,	1,	"GL_OFFSET_TEXTURE_SCALE_NV"),	# 0x86E2
     ("glGet",	X,	1,	"GL_OFFSET_TEXTURE_BIAS_NV"),	# 0x86E3
     ("glGet",	X,	1,	"GL_PREVIOUS_TEXTURE_INPUT_NV"),	# 0x86E4
-    ("glGet",	X,	1,	"GL_CONST_EYE_NV"),	# 0x86E5
+    ("glGetTexEnv",	F,	3,	"GL_CONST_EYE_NV"),	# 0x86E5
     ("glGet",	X,	1,	"GL_PASS_THROUGH_NV"),	# 0x86E6
     ("glGet",	X,	1,	"GL_CULL_FRAGMENT_NV"),	# 0x86E7
     ("glGet",	X,	1,	"GL_OFFSET_TEXTURE_2D_NV"),	# 0x86E8
@@ -1833,7 +1833,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_SIGNED_HILO8_NV"),	# 0x885F
     ("glGet",	X,	1,	"GL_FORCE_BLUE_TO_ONE_NV"),	# 0x8860
     ("glGet",	X,	1,	"GL_POINT_SPRITE"),	# 0x8861
-    ("glGet",	X,	1,	"GL_COORD_REPLACE"),	# 0x8862
+    ("glGetTexEnv",	B,	1,	"GL_COORD_REPLACE"),	# 0x8862
     ("glGet",	X,	1,	"GL_POINT_SPRITE_R_MODE_NV"),	# 0x8863
     ("glGet",	X,	1,	"GL_QUERY_COUNTER_BITS"),	# 0x8864
     ("glGet",	X,	1,	"GL_CURRENT_QUERY"),	# 0x8865
@@ -1875,7 +1875,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_TEXTURE_FLOAT_COMPONENTS_NV"),	# 0x888C
     ("glGet",	X,	1,	"GL_FLOAT_CLEAR_COLOR_VALUE_NV"),	# 0x888D
     ("glGet",	X,	1,	"GL_FLOAT_RGBA_MODE_NV"),	# 0x888E
-    ("glGet",	X,	1,	"GL_TEXTURE_UNSIGNED_REMAP_MODE_NV"),	# 0x888F
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_UNSIGNED_REMAP_MODE_NV"),	# 0x888F
     ("glGet",	X,	1,	"GL_DEPTH_BOUNDS_TEST_EXT"),	# 0x8890
     ("glGet",	X,	1,	"GL_DEPTH_BOUNDS_EXT"),	# 0x8891
     ("glGet",	X,	1,	"GL_ARRAY_BUFFER"),	# 0x8892
@@ -2521,11 +2521,11 @@ parameters = [
     ("glGet",	X,	1,	"GL_PROGRAM_MATRIX_EXT"),	# 0x8E2D
     ("glGet",	X,	1,	"GL_TRANSPOSE_PROGRAM_MATRIX_EXT"),	# 0x8E2E
     ("glGet",	X,	1,	"GL_PROGRAM_MATRIX_STACK_DEPTH_EXT"),	# 0x8E2F
-    ("glGet",	X,	1,	"GL_TEXTURE_SWIZZLE_R"),	# 0x8E42
-    ("glGet",	X,	1,	"GL_TEXTURE_SWIZZLE_G"),	# 0x8E43
-    ("glGet",	X,	1,	"GL_TEXTURE_SWIZZLE_B"),	# 0x8E44
-    ("glGet",	X,	1,	"GL_TEXTURE_SWIZZLE_A"),	# 0x8E45
-    ("glGet",	X,	1,	"GL_TEXTURE_SWIZZLE_RGBA"),	# 0x8E46
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SWIZZLE_R"),	# 0x8E42
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SWIZZLE_G"),	# 0x8E43
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SWIZZLE_B"),	# 0x8E44
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SWIZZLE_A"),	# 0x8E45
+    ("glGetTexParameter",	E,	4,	"GL_TEXTURE_SWIZZLE_RGBA"),	# 0x8E46
     ("glGet",	X,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS"),	# 0x8E47
     ("glGet",	X,	1,	"GL_ACTIVE_SUBROUTINE_MAX_LENGTH"),	# 0x8E48
     ("glGet",	X,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORM_MAX_LENGTH"),	# 0x8E49
@@ -2960,6 +2960,7 @@ glGetMaterial = StateGetter('glGetMaterial', {I: 'iv', F: 'fv'})
 glGetLight = StateGetter('glGetLight', {I: 'iv', F: 'fv'})
 glGetVertexAttrib = StateGetter('glGetVertexAttrib', {I: 'iv', F: 'fv', D: 'dv', P: 'Pointerv'})
 glGetTexParameter = StateGetter('glGetTexParameter', {I: 'iv', F: 'fv'})
+glGetTexEnv = StateGetter('glGetTexEnv', {I: 'iv', F: 'fv'})
 glGetTexLevelParameter = StateGetter('glGetTexLevelParameter', {I: 'iv', F: 'fv'})
 
 
@@ -3457,6 +3458,7 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         self.dump_material_params()
         self.dump_light_params()
         self.dump_vertex_attribs()
+        self.dump_texenv_params()
         self.dump_texture_parameters()
 
         print '    json.endObject();'
@@ -3487,6 +3489,13 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '        }'
         print '    }'
         print
+
+    def dump_texenv_params(self):
+        for target in ['GL_TEXTURE_ENV', 'GL_TEXTURE_FILTER_CONTROL', 'GL_POINT_SPRITE']:
+            print '    json.beginMember("%s");' % target
+            print '    json.beginObject();'
+            self.dump_atoms(glGetTexEnv, target)
+            print '    json.endObject();'
 
     def dump_vertex_attribs(self):
         print '    GLint max_vertex_attribs = 0;'
