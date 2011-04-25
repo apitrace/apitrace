@@ -477,10 +477,6 @@ QString ApiTraceCall::filterText() const
         m_filterText += m_argNames[i] +
                         QLatin1Literal(" = ") +
                         apiVariantToString(argValues[i]);
-        if (argValues[i].type() == QVariant::ByteArray) {
-            m_hasBinaryData = true;
-            m_binaryDataIndex = i;
-        }
         if (i < m_argNames.count() - 1)
             m_filterText += QLatin1String(", ");
     }
@@ -747,6 +743,10 @@ ApiTraceCall::ApiTraceCall(const Trace::Call *call)
         VariantVisitor argVisitor;
         call->args[i]->visit(argVisitor);
         m_argValues += argVisitor.variant();
+        if (m_argValues[i].type() == QVariant::ByteArray) {
+            m_hasBinaryData = true;
+            m_binaryDataIndex = i;
+        }
     }
 }
 
