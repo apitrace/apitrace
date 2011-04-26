@@ -29,6 +29,7 @@
 
 import stdapi
 import glapi
+import glstate
 from glxapi import glxapi
 from trace import Tracer, dump_instance
 
@@ -176,6 +177,29 @@ class GlTracer(Tracer):
 
         # Generate memcpy's signature
         self.trace_function_decl(glapi.memcpy)
+
+        # Generate a helper function to determine whether a parameter name
+        # refers to a symbolic value or not
+        print 'static bool'
+        print 'is_symbolic_pname(GLenum pname) {'
+        print '    switch(pname) {'
+        for function, type, count, name in glstate.parameters:
+            if type is glapi.GLenum:
+                print '    case %s: return true;' % name
+        print '    default: return false;'
+        print '    }'
+        print '}'
+        print
+        
+        # Generate a helper function to determine whether a parameter value is
+        # potentially symbolic or not; i.e., if the value can be represented in
+        # an enum or not
+        print 'template<class T>'
+        print 'static inline bool'
+        print 'is_symbolic_param(T param) {'
+        print '    return static_cast<T>(static_cast<GLenum>(param)) == param;'
+        print '}'
+        print
     
     array_pointer_function_names = set((
         "glVertexPointer",
@@ -360,6 +384,19 @@ class GlTracer(Tracer):
             print '        Trace::LiteralBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
             print '    } else {'
             print '        Trace::LiteralOpaque((const void *)%s);' % (arg.name)
+            print '    }'
+            return
+
+        # Several GL state functions take GLenum symbolic names as
+        # integer/floats; so dump the symbolic name whenever possible
+        if arg.type in (glapi.GLint, glapi.GLfloat) and arg.name == 'param':
+            assert arg.index > 0
+            assert function.args[arg.index - 1].name == 'pname'
+            assert function.args[arg.index - 1].type == glapi.GLenum
+            print '    if (is_symbolic_pname(pname) && is_symbolic_param(%s)) {' % arg.name
+            dump_instance(glapi.GLenum, arg.name)
+            print '    } else {'
+            Tracer.dump_arg_instance(self, function, arg)
             print '    }'
             return
 

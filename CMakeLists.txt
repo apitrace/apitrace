@@ -207,7 +207,7 @@ else ()
     add_custom_command (
         OUTPUT glxtrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-        DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glenum.py stdapi.py
+        DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glstate.py glenum.py stdapi.py
     )
 
     add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
