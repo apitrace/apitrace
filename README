@@ -105,6 +105,13 @@ Replay the trace with
 
  /path/to/glretrace application.trace
 
+Pass the -db option to use a double buffered visual.  Pass --help to glretrace
+for more options.
+
+Start the GUI as
+
+  /path/to/qapitrace application.trace
+
 
 The LD_PRELOAD mechanism should work with most applications.  There are some
 applications, e.g., Unigine Heaven, which global function pointers with the
