@@ -847,12 +847,12 @@ glapi.add_functions([
     GlFunction(Void, "glSampleCoverageARB", [(GLclampf, "value"), (GLboolean, "invert")]),
 
     # GL_ARB_texture_compression
-    GlFunction(Void, "glCompressedTexImage3DARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLsizei, "imageSize"), (Const(OpaquePointer(Void)), "data")]),
-    GlFunction(Void, "glCompressedTexImage2DARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLsizei, "imageSize"), (Const(OpaquePointer(Void)), "data")]),
-    GlFunction(Void, "glCompressedTexImage1DARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLsizei, "imageSize"), (Const(OpaquePointer(Void)), "data")]),
-    GlFunction(Void, "glCompressedTexSubImage3DARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLsizei, "imageSize"), (Const(OpaquePointer(Void)), "data")]),
-    GlFunction(Void, "glCompressedTexSubImage2DARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLsizei, "imageSize"), (Const(OpaquePointer(Void)), "data")]),
-    GlFunction(Void, "glCompressedTexSubImage1DARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLsizei, "width"), (GLenum, "format"), (GLsizei, "imageSize"), (Const(OpaquePointer(Void)), "data")]),
+    GlFunction(Void, "glCompressedTexImage3DARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLsizei, "imageSize"), (Const(Blob(GLvoid, "imageSize")), "data")]),
+    GlFunction(Void, "glCompressedTexImage2DARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLsizei, "imageSize"), (Const(Blob(GLvoid, "imageSize")), "data")]),
+    GlFunction(Void, "glCompressedTexImage1DARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLsizei, "imageSize"), (Const(Blob(GLvoid, "imageSize")), "data")]),
+    GlFunction(Void, "glCompressedTexSubImage3DARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLsizei, "imageSize"), (Const(Blob(GLvoid, "imageSize")), "data")]),
+    GlFunction(Void, "glCompressedTexSubImage2DARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLsizei, "imageSize"), (Const(Blob(GLvoid, "imageSize")), "data")]),
+    GlFunction(Void, "glCompressedTexSubImage1DARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLsizei, "width"), (GLenum, "format"), (GLsizei, "imageSize"), (Const(Blob(GLvoid, "imageSize")), "data")]),
     GlFunction(Void, "glGetCompressedTexImageARB", [(GLenum, "target"), (GLint, "level"), Out(OpaquePointer(GLvoid), "img")], sideeffects=False),
 
     # GL_ARB_point_parameters
