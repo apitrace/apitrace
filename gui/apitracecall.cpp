@@ -516,12 +516,13 @@ int ApiTraceCall::numChildren() const
 
 int ApiTraceFrame::numChildren() const
 {
-    return calls.count();
+    return m_calls.count();
 }
 
 ApiTraceFrame::ApiTraceFrame()
     : ApiTraceEvent(ApiTraceEvent::Frame),
-      m_parentTrace(0)
+      m_parentTrace(0),
+      m_binaryDataSize(0)
 {
 }
 
@@ -892,5 +893,30 @@ ApiTrace * ApiTraceCall::parentTrace() const
     if (m_parentFrame)
         return m_parentFrame->parentTrace();
     return NULL;
+}
+
+void ApiTraceFrame::addCall(ApiTraceCall *call)
+{
+    m_calls.append(call);
+}
+
+QList<ApiTraceCall*> ApiTraceFrame::calls() const
+{
+    return m_calls;
+}
+
+ApiTraceCall * ApiTraceFrame::call(int idx) const
+{
+    return m_calls.value(idx);
+}
+
+int ApiTraceFrame::callIndex(ApiTraceCall *call) const
+{
+    return m_calls.indexOf(call);
+}
+
+bool ApiTraceFrame::isEmpty() const
+{
+    return m_calls.isEmpty();
 }
 

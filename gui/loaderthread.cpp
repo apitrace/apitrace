@@ -65,7 +65,7 @@ void LoaderThread::run()
             ApiTraceCall *apiCall =
                 apiCallFromTraceCall(call, helpHash);
             apiCall->setParentFrame(currentFrame);
-            currentFrame->calls.append(apiCall);
+            currentFrame->addCall(apiCall);
             if (ApiTrace::isCallAFrameMarker(apiCall,
                                              m_frameMarker)) {
                 frames.append(currentFrame);

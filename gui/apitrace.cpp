@@ -106,7 +106,7 @@ int ApiTrace::numCallsInFrame(int idx) const
 {
     const ApiTraceFrame *frame = frameAt(idx);
     if (frame)
-        return frame->calls.count();
+        return frame->numChildren();
     else
         return 0;
 }
@@ -155,8 +155,8 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
     int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
         frame->setParentTrace(this);
-        numNewCalls += frame->calls.count();
-        m_calls += frame->calls;
+        numNewCalls += frame->numChildren();
+        m_calls += frame->calls();
     }
 
     emit endAddingFrames();
@@ -178,7 +178,7 @@ void ApiTrace::detectFrames()
             currentFrame->number = m_frames.count();
         }
         apiCall->setParentFrame(currentFrame);
-        currentFrame->calls.append(apiCall);
+        currentFrame->addCall(apiCall);
         if (ApiTrace::isCallAFrameMarker(apiCall,
                                          m_frameMarker)) {
             m_frames.append(currentFrame);

@@ -239,15 +239,24 @@ class ApiTraceFrame : public ApiTraceEvent
 public:
     ApiTraceFrame();
     int number;
-    QList<ApiTraceCall*> calls;
+
+    bool isEmpty() const;
 
     ApiTrace *parentTrace() const;
     void setParentTrace(ApiTrace *trace);
 
     int numChildren() const;
     QStaticText staticText() const;
+
+    int callIndex(ApiTraceCall *call) const;
+    ApiTraceCall *call(int idx) const;
+    void addCall(ApiTraceCall *call);
+    QList<ApiTraceCall*> calls() const;
+
 private:
     ApiTrace *m_parentTrace;
+    quint64 m_binaryDataSize;
+    QList<ApiTraceCall*> m_calls;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

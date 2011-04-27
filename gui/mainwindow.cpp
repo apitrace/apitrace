@@ -260,12 +260,12 @@ void MainWindow::replayTrace(bool dumpState)
         } else if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame =
                 static_cast<ApiTraceFrame*>(m_selectedEvent);
-            if (frame->calls.isEmpty()) {
+            if (frame->isEmpty()) {
                 //XXX i guess we could still get the current state
                 qDebug()<<"tried to get a state for an empty frame";
                 return;
             }
-            index = frame->calls.first()->index();
+            index = frame->calls().first()->index();
         } else {
             qDebug()<<"Unknown event type";
             return;
@@ -825,7 +825,7 @@ void MainWindow::slotSearchNext(const QString &str,
     else {
         Q_ASSERT(event->type() == ApiTraceCall::Frame);
         ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        call = frame->calls.value(0);
+        call = frame->call(0);
     }
 
     if (!call) {
@@ -876,7 +876,7 @@ void MainWindow::slotSearchPrev(const QString &str,
     else {
         Q_ASSERT(event->type() == ApiTraceCall::Frame);
         ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        call = frame->calls.value(0);
+        call = frame->call(0);
     }
 
     if (!call) {
@@ -982,14 +982,15 @@ void MainWindow::slotSaved()
 void MainWindow::slotGoFrameStart()
 {
     ApiTraceFrame *frame = currentFrame();
-    if (!frame || frame->calls.isEmpty()) {
+    if (!frame || frame->isEmpty()) {
         return;
     }
 
     QList<ApiTraceCall*>::const_iterator itr;
+    QList<ApiTraceCall*> calls = frame->calls();
 
-    itr = frame->calls.constBegin();
-    while (itr != frame->calls.constEnd()) {
+    itr = calls.constBegin();
+    while (itr != calls.constEnd()) {
         ApiTraceCall *call = *itr;
         QModelIndex idx = m_proxyModel->indexForCall(call);
         if (idx.isValid()) {
@@ -1003,12 +1004,13 @@ void MainWindow::slotGoFrameStart()
 void MainWindow::slotGoFrameEnd()
 {
     ApiTraceFrame *frame = currentFrame();
-    if (!frame || frame->calls.isEmpty()) {
+    if (!frame || frame->isEmpty()) {
         return;
     }
     QList<ApiTraceCall*>::const_iterator itr;
+    QList<ApiTraceCall*> calls = frame->calls();
 
-    itr = frame->calls.constEnd();
+    itr = calls.constEnd();
     do {
         --itr;
         ApiTraceCall *call = *itr;
@@ -1017,7 +1019,7 @@ void MainWindow::slotGoFrameEnd()
             m_ui.callView->setCurrentIndex(idx);
             break;
         }
-    } while (itr != frame->calls.constBegin());
+    } while (itr != calls.constBegin());
 }
 
 ApiTraceFrame * MainWindow::currentFrame() const
