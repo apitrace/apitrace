@@ -4,6 +4,7 @@
 #include "trace_model.hpp"
 
 #include <QDebug>
+#include <QLocale>
 #include <QObject>
 #define QT_USE_FAST_OPERATOR_PLUS
 #include <QStringBuilder>
@@ -495,8 +496,24 @@ QStaticText ApiTraceFrame::staticText() const
     if (m_staticText && !m_staticText->text().isEmpty())
         return *m_staticText;
 
-    QString richText =
-        QString::fromLatin1("<span style=\"font-weight:bold\">Frame %1</span>").arg(number);
+    QString richText;
+
+    //mark the frame if it uploads more than a meg a frame
+    if (m_binaryDataSize > (1024*1024)) {
+        richText =
+            QObject::tr(
+                "<span style=\"font-weight:bold;\">"
+                "Frame&nbsp;%1</span>"
+                "<span style=\"font-style:italic;\">"
+                "&nbsp;&nbsp;&nbsp;&nbsp;(%2MB)</span>")
+            .arg(number)
+            .arg(double(m_binaryDataSize / (1024.*1024.)), 0, 'g', 2);
+    } else {
+        richText =
+            QObject::tr(
+                "<span style=\"font-weight:bold\">Frame %1</span>")
+            .arg(number);
+    }
 
     if (!m_staticText)
         m_staticText = new QStaticText(richText);
@@ -898,6 +915,11 @@ ApiTrace * ApiTraceCall::parentTrace() const
 void ApiTraceFrame::addCall(ApiTraceCall *call)
 {
     m_calls.append(call);
+    if (call->hasBinaryData()) {
+        QByteArray data =
+            call->arguments()[call->binaryDataIndex()].toByteArray();
+        m_binaryDataSize += data.size();
+    }
 }
 
 QList<ApiTraceCall*> ApiTraceFrame::calls() const
@@ -918,5 +940,10 @@ int ApiTraceFrame::callIndex(ApiTraceCall *call) const
 bool ApiTraceFrame::isEmpty() const
 {
     return m_calls.isEmpty();
+}
+
+int ApiTraceFrame::binaryDataSize() const
+{
+    return m_binaryDataSize;
 }
 

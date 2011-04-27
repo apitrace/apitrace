@@ -253,6 +253,7 @@ public:
     void addCall(ApiTraceCall *call);
     QList<ApiTraceCall*> calls() const;
 
+    int binaryDataSize() const;
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;

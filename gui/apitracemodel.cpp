@@ -53,12 +53,20 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
                     .arg(stateText);
         } else {
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(itm);
-            QString text = frame->staticText().text();
+            QString text = QObject::tr("%1)&nbsp;Frame&nbsp;")
+                           .arg(frame->number);
+            int binaryDataSize = frame->binaryDataSize() / 1024;
             if (frame->state().isEmpty())
-                return QString::fromLatin1("<b>%1</b>").arg(text);
-            else
-                return QString::fromLatin1("<b>%1</b><br/>%2")
+                return QObject::tr(
+                    "<b>%1&nbsp;</b>(binary&nbsp;data&nbsp;size&nbsp;=&nbsp;%2kB)")
                     .arg(text)
+                    .arg(binaryDataSize);
+            else
+                return QObject::tr(
+                    "<b>%1&nbsp;(binary&nbsp;data&nbsp;size&nbsp;=&nbsp;%2kB)</b>"
+                    "<br/>%3")
+                    .arg(text)
+                    .arg(binaryDataSize)
                     .arg(stateText);
         }
     }
