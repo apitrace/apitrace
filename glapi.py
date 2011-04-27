@@ -602,9 +602,9 @@ glapi.add_functions([
     GlFunction(GLboolean, "glIsQuery", [(GLquery, "id")]),
     GlFunction(Void, "glBeginQuery", [(GLenum, "target"), (GLquery, "id")]),
     GlFunction(Void, "glEndQuery", [(GLenum, "target")]),
-    GlFunction(Void, "glGetQueryiv", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "pname"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectiv", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLint, "pname"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectuiv", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint, "pname"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryiv", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "__glGetQueryivARB_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectiv", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLint, "__glGetQueryObjectivARB_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectuiv", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint, "__glGetQueryObjectuivARB_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glBindBuffer", [(GLenum, "target"), (GLbuffer, "buffer")]),
     GlFunction(Void, "glDeleteBuffers", [(GLsizei, "n"), (Const(Array(GLbuffer, "n")), "buffer")]),
     GlFunction(Void, "glGenBuffers", [(GLsizei, "n"), Out(Array(GLbuffer, "n"), "buffer")]),
@@ -979,9 +979,9 @@ glapi.add_functions([
     GlFunction(GLboolean, "glIsQueryARB", [(GLquery, "id")]),
     GlFunction(Void, "glBeginQueryARB", [(GLenum, "target"), (GLquery, "id")]),
     GlFunction(Void, "glEndQueryARB", [(GLenum, "target")]),
-    GlFunction(Void, "glGetQueryivARB", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectivARB", [(GLquery, "id"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectuivARB", [(GLquery, "id"), (GLenum, "pname"), (OpaquePointer(GLuint), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryivARB", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "__glGetQueryivARB_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectivARB", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLint, "__glGetQueryObjectivARB_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectuivARB", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint, "__glGetQueryObjectuivARB_size(pname)"), "params")], sideeffects=False),
 
     # GL_ARB_shader_objects
     GlFunction(Void, "glDeleteObjectARB", [(GLhandleARB, "obj")]),
@@ -1158,8 +1158,8 @@ glapi.add_functions([
 
     # GL_ARB_timer_query
     GlFunction(Void, "glQueryCounter", [(GLuint, "id"), (GLenum, "target")]),
-    GlFunction(Void, "glGetQueryObjecti64v", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLint64, "__glGetQueryObjecti64v_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectui64v", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLuint64, "__glGetQueryObjectui64v_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjecti64v", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLint64, "__glGetQueryObjectivARB_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectui64v", [(GLuint, "id"), (GLenum, "pname"), Out(OpaqueArray(GLuint64, "__glGetQueryObjectuivARB_size(pname)"), "params")], sideeffects=False),
 
     # GL_ARB_vertex_type_2_10_10_10_rev
     GlFunction(Void, "glVertexP2ui", [(GLenum, "type"), (GLuint, "value")]),
