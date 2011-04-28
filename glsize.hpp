@@ -1472,14 +1472,14 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
         break;
     case GL_UNSIGNED_BYTE_3_3_2:
     case GL_UNSIGNED_BYTE_2_3_3_REV:
-    case GL_UNSIGNED_SHORT_5_6_5:
-    case GL_UNSIGNED_SHORT_5_6_5_REV:
         bits_per_pixel = 8;
         break;
     case GL_UNSIGNED_SHORT_4_4_4_4:
     case GL_UNSIGNED_SHORT_4_4_4_4_REV:
     case GL_UNSIGNED_SHORT_5_5_5_1:
     case GL_UNSIGNED_SHORT_1_5_5_5_REV:
+    case GL_UNSIGNED_SHORT_5_6_5:
+    case GL_UNSIGNED_SHORT_5_6_5_REV:
         bits_per_pixel = 16;
         break;
     case GL_UNSIGNED_INT_8_8_8_8:
