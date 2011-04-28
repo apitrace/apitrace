@@ -406,12 +406,18 @@ d3d9.add_functions([
 
 class D3D9Tracer(DllTracer):
 
-    pass
+    def dump_arg_instance(self, function, arg):
+        # Dump shaders as strings
+        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
+            print '    DumpShader(%s);' % (arg.name)
+            return
 
+        DllTracer.dump_arg_instance(self, function, arg)
 
 
 if __name__ == '__main__':
     print '#include "d3d9imports.hpp"'
+    print '#include "d3d9shader.hpp"'
     print
     print '#include "trace_write.hpp"'
     print '#include "os.hpp"'

@@ -36,6 +36,7 @@
 #include "compat.h"
 
 #include <d3d9.h>
+#include <d3dx9.h>
 
 
 #ifndef D3DFMT_ATI1

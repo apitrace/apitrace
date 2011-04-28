@@ -147,11 +147,8 @@ add_custom_command (
 )
 
 if (WIN32)
-    # Put wrappers in a separate directory
-    set (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers)
-
     # d3d8.dll
-    #if (DirectX_D3D8_FOUND)
+    #if (DirectX_D3D8_INCLUDE_DIR)
     #    include_directories (${DirectX_D3D8_INCLUDE_DIR})
     #    add_custom_command (
     #        OUTPUT d3d8.cpp
@@ -160,10 +157,10 @@ if (WIN32)
     #    )
     #    add_library (d3d8 SHARED d3d8.def d3d8.cpp trace_write.cpp os_win32.cpp)
     #    set_target_properties (d3d8 PROPERTIES PREFIX "")
-    #endif (DirectX_D3D8_FOUND)
+    #endif (DirectX_D3D8_INCLUDE_DIR)
 
     # d3d9.dll
-    if (DirectX_D3DX9_FOUND)
+    if (DirectX_D3DX9_INCLUDE_DIR)
         include_directories (${DirectX_D3DX9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d9.cpp
@@ -171,11 +168,15 @@ if (WIN32)
             DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py d3dshader.py winapi.py stdapi.py
         )
         add_library (d3d9 SHARED d3d9.def d3d9.cpp trace_write.cpp os_win32.cpp)
-        set_target_properties (d3d9 PROPERTIES PREFIX "")
-    endif (DirectX_D3DX9_FOUND)
+        set_target_properties (d3d9
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+        )
+    endif (DirectX_D3DX9_INCLUDE_DIR)
 
     # d3d10.dll
-    #if (DirectX_D3D10_FOUND)
+    #if (DirectX_D3D10_INCLUDE_DIR)
     #    include_directories (${DirectX_D3D10_INCLUDE_DIR})
     #    add_custom_command (
     #        OUTPUT d3d10.cpp
@@ -184,7 +185,7 @@ if (WIN32)
     #    )
     #    add_library (d3d10 SHARED d3d10.def d3d10.cpp trace_write.cpp os_win32.cpp)
     #    set_target_properties (d3d10 PROPERTIES PREFIX "")
-    #endif (DirectX_D3D10_FOUND)
+    #endif (DirectX_D3D10_INCLUDE_DIR)
 
     # opengl32.dll
     add_custom_command (
@@ -192,12 +193,15 @@ if (WIN32)
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
         DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glenum.py winapi.py stdapi.py
     )
-    add_library (opengl SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
-    set_target_properties (opengl PROPERTIES
+    add_library (wgltrace SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    set_target_properties (wgltrace PROPERTIES
         PREFIX ""
-        OUTPUT_NAME opengl32)
+        OUTPUT_NAME opengl32
+        RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+        LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+    )
     if (MINGW)
-        set_target_properties(opengl PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
+        set_target_properties(wgltrace PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
     endif (MINGW)
 
 else ()
