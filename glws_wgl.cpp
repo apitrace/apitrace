@@ -30,6 +30,27 @@
 namespace glws {
 
 
+static LRESULT CALLBACK
+WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    MINMAXINFO *pMMI;
+    switch (uMsg) {
+    case WM_GETMINMAXINFO:
+        // Allow to create a window bigger than the desktop
+        pMMI = (MINMAXINFO *)lParam;
+        pMMI->ptMaxSize.x = 60000;
+        pMMI->ptMaxSize.y = 60000;
+        pMMI->ptMaxTrackSize.x = 60000;
+        pMMI->ptMaxTrackSize.y = 60000;
+        break;
+    default:
+        break;
+    }
+
+    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+
 class WglDrawable : public Drawable
 {
 public:
@@ -52,7 +73,7 @@ public:
             wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
             wc.hCursor = LoadCursor(NULL, IDC_ARROW);
             wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-            wc.lpfnWndProc = DefWindowProc;
+            wc.lpfnWndProc = WndProc;
             wc.lpszClassName = "glretrace";
             wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
             RegisterClass(&wc);
@@ -75,8 +96,8 @@ public:
                               "glretrace", /* wc.lpszClassName */
                               NULL,
                               dwStyle,
-                              CW_USEDEFAULT, /* x */
-                              CW_USEDEFAULT, /* y */
+                              0, /* x */
+                              0, /* y */
                               rect.right - rect.left, /* width */
                               rect.bottom - rect.top, /* height */
                               NULL,
@@ -120,7 +141,7 @@ public:
         GetWindowRect(hWnd, &rWindow);
         w += (rWindow.right  - rWindow.left) - rClient.right;
         h += (rWindow.bottom - rWindow.top)  - rClient.bottom;
-        MoveWindow(hWnd, rWindow.left, rWindow.top, w, h, TRUE);
+        SetWindowPos(hWnd, NULL, rWindow.left, rWindow.top, w, h, SWP_NOMOVE);
     }
 
     void swapBuffers(void) {
