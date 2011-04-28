@@ -74,9 +74,9 @@ void MainWindow::openTrace()
             QDir::homePath(),
             tr("Trace Files (*.trace)"));
 
-    qDebug()<< "File name : " <<fileName;
-
-    newTraceFile(fileName);
+    if (!fileName.isEmpty() && QFile::exists(fileName)) {
+        newTraceFile(fileName);
+    }
 }
 
 void MainWindow::loadTrace(const QString &fileName)
@@ -86,9 +86,7 @@ void MainWindow::loadTrace(const QString &fileName)
                              tr("File '%1' doesn't exist.").arg(fileName));
         return;
     }
-    qDebug()<< "Loading  : " <<fileName;
 
-    m_progressBar->setValue(0);
     newTraceFile(fileName);
 }
 
@@ -177,6 +175,9 @@ void MainWindow::replayStop()
 
 void MainWindow::newTraceFile(const QString &fileName)
 {
+    qDebug()<< "Loading  : " <<fileName;
+
+    m_progressBar->setValue(0);
     m_trace->setFileName(fileName);
 
     if (fileName.isEmpty()) {
