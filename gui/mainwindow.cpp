@@ -37,7 +37,8 @@
 MainWindow::MainWindow()
     : QMainWindow(),
       m_selectedEvent(0),
-      m_stateEvent(0)
+      m_stateEvent(0),
+      m_nonDefaultsLookupEvent(0)
 {
     m_ui.setupUi(this);
     initObjects();
@@ -219,6 +220,7 @@ void MainWindow::replayError(const QString &message)
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
     m_stateEvent = 0;
+    m_nonDefaultsLookupEvent = 0;
 
     m_progressBar->hide();
     statusBar()->showMessage(
@@ -440,6 +442,12 @@ void MainWindow::fillStateForFrame()
 
     if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
         return;
+
+    if (m_nonDefaultsLookupEvent) {
+        m_ui.nonDefaultsCB->blockSignals(true);
+        m_ui.nonDefaultsCB->setChecked(true);
+        m_ui.nonDefaultsCB->blockSignals(false);
+    }
 
     bool nonDefaults = m_ui.nonDefaultsCB->isChecked();
     QVariantMap defaultParams;
@@ -753,7 +761,8 @@ void MainWindow::initConnections()
             m_ui.actionShowErrorsDock, SLOT(setChecked(bool)));
     connect(m_ui.actionShowErrorsDock, SIGNAL(triggered(bool)),
             m_ui.errorsDock, SLOT(setVisible(bool)));
-    connect(m_ui.errorsTreeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
+    connect(m_ui.errorsTreeWidget,
+            SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
             this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
 }
 
@@ -761,11 +770,13 @@ void MainWindow::replayStateFound(const ApiTraceState &state)
 {
     m_stateEvent->setState(state);
     m_model->stateSetOnEvent(m_stateEvent);
-    if (m_selectedEvent == m_stateEvent) {
+    if (m_selectedEvent == m_stateEvent ||
+        m_nonDefaultsLookupEvent == m_selectedEvent) {
         fillStateForFrame();
     } else {
         m_ui.stateDock->hide();
     }
+    m_nonDefaultsLookupEvent = 0;
 }
 
 void MainWindow::slotGoTo()
@@ -928,6 +939,7 @@ void MainWindow::fillState(bool nonDefaults)
             ApiTraceEvent *oldSelected = m_selectedEvent;
             if (!firstFrame)
                 return;
+            m_nonDefaultsLookupEvent = m_selectedEvent;
             m_selectedEvent = firstFrame;
             lookupState();
             m_selectedEvent = oldSelected;

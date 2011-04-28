@@ -103,6 +103,8 @@ private:
     TraceProcess *m_traceProcess;
 
     ArgumentsEditor *m_argsEditor;
+
+    ApiTraceEvent *m_nonDefaultsLookupEvent;
 };
 
 
