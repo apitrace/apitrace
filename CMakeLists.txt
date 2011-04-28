@@ -158,8 +158,8 @@ if (WIN32)
         add_library (d3d8 SHARED d3d8.def d3d8.cpp trace_write.cpp os_win32.cpp)
         set_target_properties (d3d8
             PROPERTIES PREFIX ""
-            RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
-            LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
     endif (DirectX_D3D8_INCLUDE_DIR)
 
@@ -174,8 +174,8 @@ if (WIN32)
         add_library (d3d9 SHARED d3d9.def d3d9.cpp trace_write.cpp os_win32.cpp)
         set_target_properties (d3d9
             PROPERTIES PREFIX ""
-            RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
-            LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
     endif (DirectX_D3DX9_INCLUDE_DIR)
 
