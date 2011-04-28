@@ -28,6 +28,7 @@
 from winapi import *
 from d3d8types import *
 from d3d8caps import *
+from trace import DllTracer
 
 HRESULT = Enum("HRESULT", [
     "D3D_OK",
@@ -273,17 +274,24 @@ IDirect3DVolume8.methods += [
     Method(HRESULT, "UnlockBox", []),
 ]
 
-d3d8 = Dll("d3d8")
-d3d8.functions += [
+d3d8 = API("d3d8")
+d3d8.add_functions([
     StdFunction(PDIRECT3D8, "Direct3DCreate8", [(UINT, "SDKVersion")]),
-]
+])
+
+
+class D3D8Tracer(DllTracer):
+
+    pass
+
 
 if __name__ == '__main__':
     print '#include <windows.h>'
-    print '#include <tchar.h>'
     print '#include <d3d8.h>'
     print
     print '#include "trace_write.hpp"'
+    print '#include "os.hpp"'
     print
-    wrap()
+    tracer = D3D8Tracer('d3d8.dll')
+    tracer.trace_api(d3d8)
 

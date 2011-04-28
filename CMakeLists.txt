@@ -148,16 +148,20 @@ add_custom_command (
 
 if (WIN32)
     # d3d8.dll
-    #if (DirectX_D3D8_INCLUDE_DIR)
-    #    include_directories (${DirectX_D3D8_INCLUDE_DIR})
-    #    add_custom_command (
-    #        OUTPUT d3d8.cpp
-    #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
-    #        DEPENDS d3d8.py d3d8types.py d3d8caps.py winapi.py stdapi.py
-    #    )
-    #    add_library (d3d8 SHARED d3d8.def d3d8.cpp trace_write.cpp os_win32.cpp)
-    #    set_target_properties (d3d8 PROPERTIES PREFIX "")
-    #endif (DirectX_D3D8_INCLUDE_DIR)
+    if (DirectX_D3D8_INCLUDE_DIR)
+        include_directories (${DirectX_D3D8_INCLUDE_DIR})
+        add_custom_command (
+            OUTPUT d3d8.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
+            DEPENDS d3d8.py trace.py d3d8types.py d3d8caps.py d3dshader.py winapi.py stdapi.py
+        )
+        add_library (d3d8 SHARED d3d8.def d3d8.cpp trace_write.cpp os_win32.cpp)
+        set_target_properties (d3d8
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+        )
+    endif (DirectX_D3D8_INCLUDE_DIR)
 
     # d3d9.dll
     if (DirectX_D3DX9_INCLUDE_DIR)
