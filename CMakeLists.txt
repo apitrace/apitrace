@@ -201,8 +201,8 @@ if (WIN32)
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32
-        RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
-        LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/wrappers
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
     if (MINGW)
         set_target_properties(wgltrace PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
