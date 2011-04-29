@@ -1487,6 +1487,8 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
     case GL_UNSIGNED_SHORT_1_5_5_5_REV:
     case GL_UNSIGNED_SHORT_5_6_5:
     case GL_UNSIGNED_SHORT_5_6_5_REV:
+    case GL_UNSIGNED_SHORT_8_8_MESA:
+    case GL_UNSIGNED_SHORT_8_8_REV_MESA:
         bits_per_pixel = 16;
         break;
     case GL_UNSIGNED_INT_8_8_8_8:
@@ -1494,7 +1496,14 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
     case GL_UNSIGNED_INT_10_10_10_2:
     case GL_UNSIGNED_INT_2_10_10_10_REV:
     case GL_UNSIGNED_INT_24_8:
+    case GL_UNSIGNED_INT_10F_11F_11F_REV:
+    case GL_UNSIGNED_INT_5_9_9_9_REV:
+    case GL_UNSIGNED_INT_S8_S8_8_8_NV:
+    case GL_UNSIGNED_INT_8_8_S8_S8_REV_NV:
         bits_per_pixel = 32;
+        break;
+    case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
+        bits_per_pixel = 64;
         break;
     default:
         OS::DebugMessage("warning: %s: unexpected type GLenum 0x%04X\n", __FUNCTION__, type);
