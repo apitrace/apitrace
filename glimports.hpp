@@ -70,7 +70,7 @@
 #define PFD_SUPPORT_COMPOSITION 0x00008000
 #endif
 
-#ifdef __MINGW32__
+#ifndef WGL_SWAPMULTIPLE_MAX
 
 extern "C"
 typedef struct _WGLSWAP
@@ -81,7 +81,7 @@ typedef struct _WGLSWAP
 
 #define WGL_SWAPMULTIPLE_MAX 16
 
-#endif /* __MINGW32__ */
+#endif /* !WGL_SWAPMULTIPLE_MAX */
 
 #else /* !_WIN32 */
 
