@@ -94,6 +94,9 @@ __glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
 static inline GLuint
 __glDrawArrays_maxindex(GLint first, GLsizei count)
 {
+    if (!count) {
+        return 0;
+    }
     return first + count - 1;
 }
 
@@ -102,6 +105,10 @@ __glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *indices)
 {
     GLvoid *temp = 0;
     GLint __element_array_buffer = 0;
+
+    if (!count) {
+        return 0;
+    }
     __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);
     if (__element_array_buffer) {
         // Read indices from index buffer object
