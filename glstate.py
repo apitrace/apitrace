@@ -518,18 +518,18 @@ parameters = [
     ("glGet",	X,	1,	"GL_CMYKA_EXT"),	# 0x800D
     ("glGet",	I,	1,	"GL_PACK_CMYK_HINT_EXT"),	# 0x800E
     ("glGet",	I,	1,	"GL_UNPACK_CMYK_HINT_EXT"),	# 0x800F
-    ("glGet",	I,	1,	"GL_CONVOLUTION_1D"),	# 0x8010
-    ("glGet",	I,	1,	"GL_CONVOLUTION_2D"),	# 0x8011
+    ("glGet",	B,	1,	"GL_CONVOLUTION_1D"),	# 0x8010
+    ("glGet",	B,	1,	"GL_CONVOLUTION_2D"),	# 0x8011
     ("glGet",	I,	1,	"GL_SEPARABLE_2D"),	# 0x8012
-    ("glGet",	X,	1,	"GL_CONVOLUTION_BORDER_MODE"),	# 0x8013
-    ("glGet",	X,	1,	"GL_CONVOLUTION_FILTER_SCALE"),	# 0x8014
-    ("glGet",	X,	1,	"GL_CONVOLUTION_FILTER_BIAS"),	# 0x8015
+    ("glGetConvolutionParameter",	E,	1,	"GL_CONVOLUTION_BORDER_MODE"),	# 0x8013
+    ("glGetConvolutionParameter",	F,	4,	"GL_CONVOLUTION_FILTER_SCALE"),	# 0x8014
+    ("glGetConvolutionParameter",	F,	4,	"GL_CONVOLUTION_FILTER_BIAS"),	# 0x8015
     ("glGet",	X,	1,	"GL_REDUCE"),	# 0x8016
-    ("glGet",	X,	1,	"GL_CONVOLUTION_FORMAT"),	# 0x8017
-    ("glGet",	X,	1,	"GL_CONVOLUTION_WIDTH"),	# 0x8018
-    ("glGet",	X,	1,	"GL_CONVOLUTION_HEIGHT"),	# 0x8019
-    ("glGet",	X,	1,	"GL_MAX_CONVOLUTION_WIDTH"),	# 0x801A
-    ("glGet",	X,	1,	"GL_MAX_CONVOLUTION_HEIGHT"),	# 0x801B
+    ("glGetConvolutionParameter",	E,	1,	"GL_CONVOLUTION_FORMAT"),	# 0x8017
+    ("glGetConvolutionParameter",	I,	1,	"GL_CONVOLUTION_WIDTH"),	# 0x8018
+    ("glGetConvolutionParameter",	I,	1,	"GL_CONVOLUTION_HEIGHT"),	# 0x8019
+    ("glGetConvolutionParameter",	I,	1,	"GL_MAX_CONVOLUTION_WIDTH"),	# 0x801A
+    ("glGetConvolutionParameter",	I,	1,	"GL_MAX_CONVOLUTION_HEIGHT"),	# 0x801B
     ("glGet",	F,	1,	"GL_POST_CONVOLUTION_RED_SCALE"),	# 0x801C
     ("glGet",	F,	1,	"GL_POST_CONVOLUTION_GREEN_SCALE"),	# 0x801D
     ("glGet",	F,	1,	"GL_POST_CONVOLUTION_BLUE_SCALE"),	# 0x801E
@@ -538,19 +538,19 @@ parameters = [
     ("glGet",	F,	1,	"GL_POST_CONVOLUTION_GREEN_BIAS"),	# 0x8021
     ("glGet",	F,	1,	"GL_POST_CONVOLUTION_BLUE_BIAS"),	# 0x8022
     ("glGet",	F,	1,	"GL_POST_CONVOLUTION_ALPHA_BIAS"),	# 0x8023
-    ("glGet",	I,	1,	"GL_HISTOGRAM"),	# 0x8024
+    ("glGet",	B,	1,	"GL_HISTOGRAM"),	# 0x8024
     ("glGet",	X,	1,	"GL_PROXY_HISTOGRAM"),	# 0x8025
-    ("glGet",	X,	1,	"GL_HISTOGRAM_WIDTH"),	# 0x8026
-    ("glGet",	X,	1,	"GL_HISTOGRAM_FORMAT"),	# 0x8027
-    ("glGet",	X,	1,	"GL_HISTOGRAM_RED_SIZE"),	# 0x8028
-    ("glGet",	X,	1,	"GL_HISTOGRAM_GREEN_SIZE"),	# 0x8029
-    ("glGet",	X,	1,	"GL_HISTOGRAM_BLUE_SIZE"),	# 0x802A
-    ("glGet",	X,	1,	"GL_HISTOGRAM_ALPHA_SIZE"),	# 0x802B
-    ("glGet",	X,	1,	"GL_HISTOGRAM_LUMINANCE_SIZE"),	# 0x802C
-    ("glGet",	X,	1,	"GL_HISTOGRAM_SINK"),	# 0x802D
-    ("glGet",	I,	1,	"GL_MINMAX"),	# 0x802E
-    ("glGet",	X,	1,	"GL_MINMAX_FORMAT"),	# 0x802F
-    ("glGet",	X,	1,	"GL_MINMAX_SINK"),	# 0x8030
+    ("glGetHistogramParameter",	I,	1,	"GL_HISTOGRAM_WIDTH"),	# 0x8026
+    ("glGetHistogramParameter",	E,	1,	"GL_HISTOGRAM_FORMAT"),	# 0x8027
+    ("glGetHistogramParameter",	I,	1,	"GL_HISTOGRAM_RED_SIZE"),	# 0x8028
+    ("glGetHistogramParameter",	I,	1,	"GL_HISTOGRAM_GREEN_SIZE"),	# 0x8029
+    ("glGetHistogramParameter",	I,	1,	"GL_HISTOGRAM_BLUE_SIZE"),	# 0x802A
+    ("glGetHistogramParameter",	I,	1,	"GL_HISTOGRAM_ALPHA_SIZE"),	# 0x802B
+    ("glGetHistogramParameter",	I,	1,	"GL_HISTOGRAM_LUMINANCE_SIZE"),	# 0x802C
+    ("glGetHistogramParameter",	B,	1,	"GL_HISTOGRAM_SINK"),	# 0x802D
+    ("glGet",	B,	1,	"GL_MINMAX"),	# 0x802E
+    ("glGetMinMaxParameter",	E,	1,	"GL_MINMAX_FORMAT"),	# 0x802F
+    ("glGetMinMaxParameter",	B,	1,	"GL_MINMAX_SINK"),	# 0x8030
     ("glGet",	X,	1,	"GL_TABLE_TOO_LARGE"),	# 0x8031
     ("glGet",	X,	1,	"GL_UNSIGNED_BYTE_3_3_2"),	# 0x8032
     ("glGet",	X,	1,	"GL_UNSIGNED_SHORT_4_4_4_4"),	# 0x8033
@@ -702,22 +702,22 @@ parameters = [
     ("glGet",	X,	1,	"GL_422_REV_EXT"),	# 0x80CD
     ("glGet",	X,	1,	"GL_422_AVERAGE_EXT"),	# 0x80CE
     ("glGet",	X,	1,	"GL_422_REV_AVERAGE_EXT"),	# 0x80CF
-    ("glGet",	I,	1,	"GL_COLOR_TABLE"),	# 0x80D0
+    ("glGet",	B,	1,	"GL_COLOR_TABLE"),	# 0x80D0
     ("glGet",	I,	1,	"GL_POST_CONVOLUTION_COLOR_TABLE"),	# 0x80D1
     ("glGet",	I,	1,	"GL_POST_COLOR_MATRIX_COLOR_TABLE"),	# 0x80D2
     ("glGet",	X,	1,	"GL_PROXY_COLOR_TABLE"),	# 0x80D3
     ("glGet",	X,	1,	"GL_PROXY_POST_CONVOLUTION_COLOR_TABLE"),	# 0x80D4
     ("glGet",	X,	1,	"GL_PROXY_POST_COLOR_MATRIX_COLOR_TABLE"),	# 0x80D5
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_SCALE"),	# 0x80D6
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_BIAS"),	# 0x80D7
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_FORMAT"),	# 0x80D8
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_WIDTH"),	# 0x80D9
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_RED_SIZE"),	# 0x80DA
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_GREEN_SIZE"),	# 0x80DB
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_BLUE_SIZE"),	# 0x80DC
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_ALPHA_SIZE"),	# 0x80DD
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_LUMINANCE_SIZE"),	# 0x80DE
-    ("glGet",	X,	1,	"GL_COLOR_TABLE_INTENSITY_SIZE"),	# 0x80DF
+    ("glGetColorTableParameter",	F,	4,	"GL_COLOR_TABLE_SCALE"),	# 0x80D6
+    ("glGetColorTableParameter",	F,	4,	"GL_COLOR_TABLE_BIAS"),	# 0x80D7
+    ("glGetColorTableParameter",	E,	1,	"GL_COLOR_TABLE_FORMAT"),	# 0x80D8
+    ("glGetColorTableParameter",	I,	1,	"GL_COLOR_TABLE_WIDTH"),	# 0x80D9
+    ("glGetColorTableParameter",	I,	1,	"GL_COLOR_TABLE_RED_SIZE"),	# 0x80DA
+    ("glGetColorTableParameter",	I,	1,	"GL_COLOR_TABLE_GREEN_SIZE"),	# 0x80DB
+    ("glGetColorTableParameter",	I,	1,	"GL_COLOR_TABLE_BLUE_SIZE"),	# 0x80DC
+    ("glGetColorTableParameter",	I,	1,	"GL_COLOR_TABLE_ALPHA_SIZE"),	# 0x80DD
+    ("glGetColorTableParameter",	I,	1,	"GL_COLOR_TABLE_LUMINANCE_SIZE"),	# 0x80DE
+    ("glGetColorTableParameter",	I,	1,	"GL_COLOR_TABLE_INTENSITY_SIZE"),	# 0x80DF
     ("glGet",	X,	1,	"GL_BGR"),	# 0x80E0
     ("glGet",	X,	1,	"GL_BGRA"),	# 0x80E1
     ("glGet",	X,	1,	"GL_COLOR_INDEX1_EXT"),	# 0x80E2
@@ -800,7 +800,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_IGNORE_BORDER_HP"),	# 0x8150
     ("glGet",	X,	1,	"GL_CONSTANT_BORDER"),	# 0x8151
     ("glGet",	X,	1,	"GL_REPLICATE_BORDER"),	# 0x8153
-    ("glGet",	X,	1,	"GL_CONVOLUTION_BORDER_COLOR"),	# 0x8154
+    ("glGetConvolutionParameter",	F,	4,	"GL_CONVOLUTION_BORDER_COLOR"),	# 0x8154
     ("glGet",	X,	1,	"GL_IMAGE_SCALE_X_HP"),	# 0x8155
     ("glGet",	X,	1,	"GL_IMAGE_SCALE_Y_HP"),	# 0x8156
     ("glGet",	X,	1,	"GL_IMAGE_TRANSLATE_X_HP"),	# 0x8157
@@ -1353,8 +1353,8 @@ parameters = [
     ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_ARRAY_STRIDE"),	# 0x8624
     ("glGetVertexAttrib",	E,	1,	"GL_VERTEX_ATTRIB_ARRAY_TYPE"),	# 0x8625
     ("glGetVertexAttrib",	D,	4,	"GL_CURRENT_VERTEX_ATTRIB"),	# 0x8626
-    ("glGet",	X,	1,	"GL_PROGRAM_LENGTH_ARB"),	# 0x8627
-    ("glGet",	X,	1,	"GL_PROGRAM_STRING_ARB"),	# 0x8628
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_LENGTH_ARB"),	# 0x8627
+    ("glGetProgramARB",	S,	1,	"GL_PROGRAM_STRING_ARB"),	# 0x8628
     ("glGet",	X,	1,	"GL_MODELVIEW_PROJECTION_NV"),	# 0x8629
     ("glGet",	X,	1,	"GL_IDENTITY_NV"),	# 0x862A
     ("glGet",	X,	1,	"GL_INVERSE_NV"),	# 0x862B
@@ -1370,8 +1370,8 @@ parameters = [
     ("glGet",	X,	1,	"GL_MATRIX5_NV"),	# 0x8635
     ("glGet",	X,	1,	"GL_MATRIX6_NV"),	# 0x8636
     ("glGet",	X,	1,	"GL_MATRIX7_NV"),	# 0x8637
-    ("glGet",	X,	1,	"GL_CURRENT_MATRIX_STACK_DEPTH_ARB"),	# 0x8640
-    ("glGet",	X,	1,	"GL_CURRENT_MATRIX_ARB"),	# 0x8641
+    ("glGet",	I,	1,	"GL_CURRENT_MATRIX_STACK_DEPTH_ARB"),	# 0x8640
+    ("glGet",	F,	16,	"GL_CURRENT_MATRIX_ARB"),	# 0x8641
     ("glGet",	B,	1,	"GL_VERTEX_PROGRAM_POINT_SIZE"),	# 0x8642
     ("glGet",	B,	1,	"GL_VERTEX_PROGRAM_TWO_SIDE"),	# 0x8643
     ("glGet",	X,	1,	"GL_PROGRAM_PARAMETER_NV"),	# 0x8644
@@ -1381,7 +1381,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_TRACK_MATRIX_NV"),	# 0x8648
     ("glGet",	X,	1,	"GL_TRACK_MATRIX_TRANSFORM_NV"),	# 0x8649
     ("glGet",	I,	1,	"GL_VERTEX_PROGRAM_BINDING_NV"),	# 0x864A
-    ("glGet",	X,	1,	"GL_PROGRAM_ERROR_POSITION_ARB"),	# 0x864B
+    ("glGet",	I,	1,	"GL_PROGRAM_ERROR_POSITION_ARB"),	# 0x864B
     ("glGet",	X,	1,	"GL_OFFSET_TEXTURE_RECTANGLE_NV"),	# 0x864C
     ("glGet",	X,	1,	"GL_OFFSET_TEXTURE_RECTANGLE_SCALE_NV"),	# 0x864D
     ("glGet",	X,	1,	"GL_DOT_PRODUCT_TEXTURE_RECTANGLE_NV"),	# 0x864E
@@ -1755,18 +1755,18 @@ parameters = [
     ("glGet",	E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_FAIL"),	# 0x8802
     ("glGet",	E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_PASS"),	# 0x8803
     ("glGet",	B,	1,	"GL_FRAGMENT_PROGRAM_ARB"),	# 0x8804
-    ("glGet",	X,	1,	"GL_PROGRAM_ALU_INSTRUCTIONS_ARB"),	# 0x8805
-    ("glGet",	X,	1,	"GL_PROGRAM_TEX_INSTRUCTIONS_ARB"),	# 0x8806
-    ("glGet",	X,	1,	"GL_PROGRAM_TEX_INDIRECTIONS_ARB"),	# 0x8807
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB"),	# 0x8808
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB"),	# 0x8809
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB"),	# 0x880A
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB"),	# 0x880B
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_TEX_INSTRUCTIONS_ARB"),	# 0x880C
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_TEX_INDIRECTIONS_ARB"),	# 0x880D
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB"),	# 0x880E
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB"),	# 0x880F
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB"),	# 0x8810
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_ALU_INSTRUCTIONS_ARB"),	# 0x8805
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_TEX_INSTRUCTIONS_ARB"),	# 0x8806
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_TEX_INDIRECTIONS_ARB"),	# 0x8807
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB"),	# 0x8808
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB"),	# 0x8809
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB"),	# 0x880A
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB"),	# 0x880B
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_TEX_INSTRUCTIONS_ARB"),	# 0x880C
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_TEX_INDIRECTIONS_ARB"),	# 0x880D
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB"),	# 0x880E
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB"),	# 0x880F
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB"),	# 0x8810
     ("glGet",	X,	1,	"GL_RGBA32F"),	# 0x8814
     ("glGet",	X,	1,	"GL_RGB32F"),	# 0x8815
     ("glGet",	X,	1,	"GL_ALPHA32F_ARB"),	# 0x8816
@@ -1852,7 +1852,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_FRAGMENT_PROGRAM_BINDING_NV"),	# 0x8873
     ("glGet",	S,	1,	"GL_PROGRAM_ERROR_STRING_ARB"),	# 0x8874
     ("glGet",	X,	1,	"GL_PROGRAM_FORMAT_ASCII_ARB"),	# 0x8875
-    ("glGet",	X,	1,	"GL_PROGRAM_FORMAT_ARB"),	# 0x8876
+    ("glGetProgramARB",	E,	1,	"GL_PROGRAM_FORMAT_ARB"),	# 0x8876
     ("glGet",	X,	1,	"GL_WRITE_PIXEL_DATA_RANGE_NV"),	# 0x8878
     ("glGet",	X,	1,	"GL_READ_PIXEL_DATA_RANGE_NV"),	# 0x8879
     ("glGet",	X,	1,	"GL_WRITE_PIXEL_DATA_RANGE_LENGTH_NV"),	# 0x887A
@@ -1892,30 +1892,30 @@ parameters = [
     ("glGet",	I,	1,	"GL_FOG_COORD_ARRAY_BUFFER_BINDING"),	# 0x889D
     ("glGet",	I,	1,	"GL_WEIGHT_ARRAY_BUFFER_BINDING"),	# 0x889E
     ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING"),	# 0x889F
-    ("glGet",	X,	1,	"GL_PROGRAM_INSTRUCTIONS_ARB"),	# 0x88A0
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_INSTRUCTIONS_ARB"),	# 0x88A1
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_INSTRUCTIONS_ARB"),	# 0x88A2
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS_ARB"),	# 0x88A3
-    ("glGet",	X,	1,	"GL_PROGRAM_TEMPORARIES_ARB"),	# 0x88A4
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_TEMPORARIES_ARB"),	# 0x88A5
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_TEMPORARIES_ARB"),	# 0x88A6
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_TEMPORARIES_ARB"),	# 0x88A7
-    ("glGet",	X,	1,	"GL_PROGRAM_PARAMETERS_ARB"),	# 0x88A8
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_PARAMETERS_ARB"),	# 0x88A9
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_PARAMETERS_ARB"),	# 0x88AA
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_PARAMETERS_ARB"),	# 0x88AB
-    ("glGet",	X,	1,	"GL_PROGRAM_ATTRIBS_ARB"),	# 0x88AC
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_ATTRIBS_ARB"),	# 0x88AD
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_ATTRIBS_ARB"),	# 0x88AE
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB"),	# 0x88AF
-    ("glGet",	X,	1,	"GL_PROGRAM_ADDRESS_REGISTERS_ARB"),	# 0x88B0
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_ADDRESS_REGISTERS_ARB"),	# 0x88B1
-    ("glGet",	X,	1,	"GL_PROGRAM_NATIVE_ADDRESS_REGISTERS_ARB"),	# 0x88B2
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_NATIVE_ADDRESS_REGISTERS_ARB"),	# 0x88B3
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB"),	# 0x88B4
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_ENV_PARAMETERS_ARB"),	# 0x88B5
-    ("glGet",	X,	1,	"GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB"),	# 0x88B6
-    ("glGet",	X,	1,	"GL_TRANSPOSE_CURRENT_MATRIX_ARB"),	# 0x88B7
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_INSTRUCTIONS_ARB"),	# 0x88A0
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_INSTRUCTIONS_ARB"),	# 0x88A1
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_INSTRUCTIONS_ARB"),	# 0x88A2
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS_ARB"),	# 0x88A3
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_TEMPORARIES_ARB"),	# 0x88A4
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_TEMPORARIES_ARB"),	# 0x88A5
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_TEMPORARIES_ARB"),	# 0x88A6
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_TEMPORARIES_ARB"),	# 0x88A7
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_PARAMETERS_ARB"),	# 0x88A8
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_PARAMETERS_ARB"),	# 0x88A9
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_PARAMETERS_ARB"),	# 0x88AA
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_PARAMETERS_ARB"),	# 0x88AB
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_ATTRIBS_ARB"),	# 0x88AC
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_ATTRIBS_ARB"),	# 0x88AD
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_ATTRIBS_ARB"),	# 0x88AE
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB"),	# 0x88AF
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_ADDRESS_REGISTERS_ARB"),	# 0x88B0
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_ADDRESS_REGISTERS_ARB"),	# 0x88B1
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_NATIVE_ADDRESS_REGISTERS_ARB"),	# 0x88B2
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_NATIVE_ADDRESS_REGISTERS_ARB"),	# 0x88B3
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB"),	# 0x88B4
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_ENV_PARAMETERS_ARB"),	# 0x88B5
+    ("glGetProgramARB",	B,	1,	"GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB"),	# 0x88B6
+    ("glGet",	E,	1,	"GL_TRANSPOSE_CURRENT_MATRIX_ARB"),	# 0x88B7
     ("glGet",	X,	1,	"GL_READ_ONLY"),	# 0x88B8
     ("glGet",	X,	1,	"GL_WRITE_ONLY"),	# 0x88B9
     ("glGet",	X,	1,	"GL_READ_WRITE"),	# 0x88BA
@@ -1973,11 +1973,11 @@ parameters = [
     ("glGet",	X,	1,	"GL_TEXTURE_STENCIL_SIZE"),	# 0x88F1
     ("glGet",	X,	1,	"GL_STENCIL_TAG_BITS_EXT"),	# 0x88F2
     ("glGet",	X,	1,	"GL_STENCIL_CLEAR_TAG_VALUE_EXT"),	# 0x88F3
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_EXEC_INSTRUCTIONS_NV"),	# 0x88F4
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_CALL_DEPTH_NV"),	# 0x88F5
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_IF_DEPTH_NV"),	# 0x88F6
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_LOOP_DEPTH_NV"),	# 0x88F7
-    ("glGet",	X,	1,	"GL_MAX_PROGRAM_LOOP_COUNT_NV"),	# 0x88F8
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_EXEC_INSTRUCTIONS_NV"),	# 0x88F4
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_CALL_DEPTH_NV"),	# 0x88F5
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_IF_DEPTH_NV"),	# 0x88F6
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_LOOP_DEPTH_NV"),	# 0x88F7
+    ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_LOOP_COUNT_NV"),	# 0x88F8
     ("glGet",	X,	1,	"GL_SRC1_COLOR"),	# 0x88F9
     ("glGet",	X,	1,	"GL_ONE_MINUS_SRC1_COLOR"),	# 0x88FA
     ("glGet",	X,	1,	"GL_ONE_MINUS_SRC1_ALPHA"),	# 0x88FB
