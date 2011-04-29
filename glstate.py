@@ -1354,7 +1354,7 @@ parameters = [
     ("glGetVertexAttrib",	E,	1,	"GL_VERTEX_ATTRIB_ARRAY_TYPE"),	# 0x8625
     ("glGetVertexAttrib",	D,	4,	"GL_CURRENT_VERTEX_ATTRIB"),	# 0x8626
     ("glGetProgramARB",	I,	1,	"GL_PROGRAM_LENGTH_ARB"),	# 0x8627
-    ("glGetProgramARB",	S,	1,	"GL_PROGRAM_STRING_ARB"),	# 0x8628
+    ("",	S,	1,	"GL_PROGRAM_STRING_ARB"),	# 0x8628
     ("glGet",	X,	1,	"GL_MODELVIEW_PROJECTION_NV"),	# 0x8629
     ("glGet",	X,	1,	"GL_IDENTITY_NV"),	# 0x862A
     ("glGet",	X,	1,	"GL_INVERSE_NV"),	# 0x862B
@@ -1425,7 +1425,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB4_4_NV"),	# 0x8674
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB5_4_NV"),	# 0x8675
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB6_4_NV"),	# 0x8676
-    ("glGet",	I,	1,	"GL_PROGRAM_BINDING_ARB"),	# 0x8677
+    ("glGetProgramARB",	I,	1,	"GL_PROGRAM_BINDING_ARB"),	# 0x8677
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB8_4_NV"),	# 0x8678
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB9_4_NV"),	# 0x8679
     ("glGet",	X,	1,	"GL_MAP2_VERTEX_ATTRIB10_4_NV"),	# 0x867A
@@ -2873,8 +2873,9 @@ class StateGetter(Visitor):
     It will declare any temporary variable
     '''
 
-    def __init__(self, radical, suffixes):
-        self.inflector = GetInflector(radical, suffixes)
+    def __init__(self, radical, inflections, suffix=''):
+        self.inflector = GetInflector(radical, inflections)
+        self.suffix = suffix
 
     def __call__(self, *args):
         pname = args[-1]
@@ -2905,16 +2906,16 @@ class StateGetter(Visitor):
         inflection = self.inflector.inflect(type)
         if inflection.endswith('v'):
             print '    %s %s = 0;' % (elem_type, temp_name)
-            print '    %s(%s, &%s);' % (inflection, ', '.join(args), temp_name)
+            print '    %s(%s, &%s);' % (inflection + self.suffix, ', '.join(args), temp_name)
         else:
-            print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection, ', '.join(args))
+            print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection + self.suffix, ', '.join(args))
         return temp_name
 
     def visit_string(self, string, args):
         temp_name = self.temp_name(args)
         inflection = self.inflector.inflect(string)
         assert not inflection.endswith('v')
-        print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection, ', '.join(args))
+        print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection + self.suffix, ', '.join(args))
         return temp_name
 
     def visit_alias(self, alias, args):
@@ -2935,7 +2936,7 @@ class StateGetter(Visitor):
         assert inflection.endswith('v')
         print '    %s %s[%s];' % (elem_type, temp_name, array.length)
         print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
-        print '    %s(%s, %s);' % (inflection, ', '.join(args), temp_name)
+        print '    %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
         return temp_name
 
     def visit_opaque(self, pointer, args):
@@ -2943,7 +2944,7 @@ class StateGetter(Visitor):
         inflection = self.inflector.inflect(pointer)
         assert inflection.endswith('v')
         print '    GLvoid *%s;' % temp_name
-        print '    %s(%s, &%s);' % (inflection, ', '.join(args), temp_name)
+        print '    %s(%s, &%s);' % (inflection + self.suffix, ', '.join(args), temp_name)
         return temp_name
 
 
@@ -2962,6 +2963,7 @@ glGetVertexAttrib = StateGetter('glGetVertexAttrib', {I: 'iv', F: 'fv', D: 'dv',
 glGetTexParameter = StateGetter('glGetTexParameter', {I: 'iv', F: 'fv'})
 glGetTexEnv = StateGetter('glGetTexEnv', {I: 'iv', F: 'fv'})
 glGetTexLevelParameter = StateGetter('glGetTexLevelParameter', {I: 'iv', F: 'fv'})
+glGetProgramARB = StateGetter('glGetProgram', {I: 'iv', F: 'fv', S: 'Stringv'}, 'ARB')
 
 
 class JsonWriter(Visitor):
@@ -3459,6 +3461,7 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         self.dump_light_params()
         self.dump_vertex_attribs()
         self.dump_texenv_params()
+        self.dump_program_params()
         self.dump_texture_parameters()
 
         print '    json.endObject();'
@@ -3511,6 +3514,18 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '    }'
         print
 
+    program_targets = [
+        'GL_FRAGMENT_PROGRAM_ARB',
+        'GL_VERTEX_PROGRAM_ARB',
+    ]
+
+    def dump_program_params(self):
+        for target in self.program_targets:
+            print '    json.beginMember("%s");' % target
+            print '    json.beginObject();'
+            self.dump_atoms(glGetProgramARB, target)
+            print '    json.endObject();'
+
     def dump_texture_parameters(self):
         print '    {'
         print '        GLint active_texture = GL_TEXTURE0;'
@@ -3553,8 +3568,8 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '    json.beginMember("shaders");'
         print '    json.beginObject();'
         print '    writeCurrentProgram(json);'
-        print '    writeArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);'
-        print '    writeArbProgram(json, GL_VERTEX_PROGRAM_ARB);'
+        for target in self.program_targets:
+            print '    writeArbProgram(json, %s);' % target
         print '    json.endObject();'
         print '    json.endMember(); //shaders'
         print
@@ -3662,9 +3677,10 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
 
     def dump_atoms(self, getter, *args):
         for function, type, count, name in parameters:
+            inflection = getter.inflector.radical + getter.suffix
             if function is None:
                 continue
-            if getter.inflector.radical not in function.split(','):
+            if inflection not in function.split(','):
                 continue
             if type is X:
                 continue
@@ -3672,7 +3688,7 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
             print '        {'
             type, value = getter(*(args + (name,)))
             print '            if (glGetError() != GL_NO_ERROR) {'
-            #print '                std::cerr << "warning: %s(%s) failed\\n";' % (glGet.radical, name)
+            print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
             print '            } else {'
             print '                json.beginMember("%s");' % name
             JsonWriter().visit(type, value)
