@@ -52,8 +52,6 @@ Retracing:
 
 GUI:
 
-* Trace editing.
-
 * Timeline view.
 
 * Visualize meshes in draw commands.
@@ -72,8 +70,6 @@ Other:
 
   * or by leveragine retrace, dumping the calls to emit all state at beginning
     of the frame.
-
-* MacOSX support.
 
 
 See also FIXME, TODO, and XXX comments on the source code.
