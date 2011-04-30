@@ -81,14 +81,6 @@ class TypeGetter(stdapi.Visitor):
 
 class GlTracer(Tracer):
 
-    def header(self, api):
-        Tracer.header(self, api)
-        self.state_tracker_decl(api)
-
-    def footer(self, api):
-        Tracer.footer(self, api)
-        self.state_tracker_impl(api)
-
     arrays = [
         ("Vertex", "VERTEX"),
         ("Normal", "NORMAL"),
@@ -101,7 +93,9 @@ class GlTracer(Tracer):
     ]
     arrays.reverse()
 
-    def state_tracker_decl(self, api):
+    def header(self, api):
+        Tracer.header(self, api)
+
         print '// Whether user arrays were used'
         print 'static bool __user_arrays = false;'
         print
@@ -185,8 +179,10 @@ class GlTracer(Tracer):
         print '    switch(pname) {'
         for function, type, count, name in glstate.parameters:
             if type is glapi.GLenum:
-                print '    case %s: return true;' % name
-        print '    default: return false;'
+                print '    case %s:' % name
+        print '        return true;'
+        print '    default:'
+        print '        return false;'
         print '    }'
         print '}'
         print
@@ -200,6 +196,26 @@ class GlTracer(Tracer):
         print '    return static_cast<T>(static_cast<GLenum>(param)) == param;'
         print '}'
         print
+
+        # Generate a helper function to know how many elements a parameter has
+        print 'static size_t'
+        print 'pname_size(GLenum pname) {'
+        print '    switch(pname) {'
+        for function, type, count, name in glstate.parameters:
+            if type is not None:
+                print '    case %s: return %u;' % (name, count)
+        print '    case GL_COMPRESSED_TEXTURE_FORMATS: {'
+        print '            GLint num_compressed_texture_formats = 0;'
+        print '            __glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &num_compressed_texture_formats);'
+        print '            return num_compressed_texture_formats;'
+        print '        }'
+        print '    default:'
+        print r'        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);'
+        print '        return 1;'
+        print '    }'
+        print '}'
+        print
+
     
     array_pointer_function_names = set((
         "glVertexPointer",
@@ -402,9 +418,10 @@ class GlTracer(Tracer):
 
         Tracer.dump_arg_instance(self, function, arg)
 
-    def state_tracker_impl(self, api):
-        # A simple state tracker to track the pointer values
+    def footer(self, api):
+        Tracer.footer(self, api)
 
+        # A simple state tracker to track the pointer values
         # update the state
         print 'static void __trace_user_arrays(GLuint maxindex)'
         print '{'

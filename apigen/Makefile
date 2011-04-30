@@ -1,8 +1,7 @@
 
 all: \
 	download \
-	glapi.py glxapi.py wglapi.py \
-	glsize.hpp
+	glapi.py glxapi.py wglapi.py
 
 download: \
 	enum.spec \
@@ -34,8 +33,5 @@ glxapi.py: glspec.py glx.tm glx.spec glxext.spec
 
 wglapi.py: glspec.py wgl.tm wgl.spec wglext.spec
 	python glspec.py wgl wgl.tm wgl.spec wglext.spec > $@
-
-glsize.hpp: glsize.py
-	python glsize.py > $@
 
 .PRECIOUS: %.spec %.tm
