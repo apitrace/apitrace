@@ -1346,7 +1346,7 @@ parameters = [
     ("glGet",	X,	1,	"GL_SLICE_ACCUM_SUN"),	# 0x85CC
     ("glGet",	X,	1,	"GL_QUAD_MESH_SUN"),	# 0x8614
     ("glGet",	X,	1,	"GL_TRIANGLE_MESH_SUN"),	# 0x8615
-    ("glGet",	B,	1,	"GL_VERTEX_PROGRAM_ARB"),	# 0x8620
+    ("_glGet",	B,	1,	"GL_VERTEX_PROGRAM_ARB"),	# 0x8620
     ("glGet",	X,	1,	"GL_VERTEX_STATE_PROGRAM_NV"),	# 0x8621
     ("glGetVertexAttrib",	B,	1,	"GL_VERTEX_ATTRIB_ARRAY_ENABLED"),	# 0x8622
     ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_ARRAY_SIZE"),	# 0x8623
@@ -1754,7 +1754,7 @@ parameters = [
     ("glGet",	E,	1,	"GL_STENCIL_BACK_FAIL"),	# 0x8801
     ("glGet",	E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_FAIL"),	# 0x8802
     ("glGet",	E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_PASS"),	# 0x8803
-    ("glGet",	B,	1,	"GL_FRAGMENT_PROGRAM_ARB"),	# 0x8804
+    ("_glGet",	B,	1,	"GL_FRAGMENT_PROGRAM_ARB"),	# 0x8804
     ("glGetProgramARB",	I,	1,	"GL_PROGRAM_ALU_INSTRUCTIONS_ARB"),	# 0x8805
     ("glGetProgramARB",	I,	1,	"GL_PROGRAM_TEX_INSTRUCTIONS_ARB"),	# 0x8806
     ("glGetProgramARB",	I,	1,	"GL_PROGRAM_TEX_INDIRECTIONS_ARB"),	# 0x8807
@@ -2846,24 +2846,28 @@ class GetInflector:
         I: F,
     }
 
-    def __init__(self, radical, suffixes):
+    def __init__(self, radical, inflections, suffix = ''):
         self.radical = radical
-        self.suffixes = suffixes
+        self.inflections = inflections
+        self.suffix = suffix
 
     def reduced_type(self, type):
-        if type in self.suffixes:
+        if type in self.inflections:
             return type
         if type in self.reduced_types:
             return self.reduced_type(self.reduced_types[type])
         raise NotImplementedError
 
     def inflect(self, type):
-        return self.radical + self.suffix(type)
+        return self.radical + self.inflection(type) + self.suffix
 
-    def suffix(self, type):
+    def inflection(self, type):
         type = self.reduced_type(type)
-        assert type in self.suffixes
-        return self.suffixes[type]
+        assert type in self.inflections
+        return self.inflections[type]
+
+    def __str__(self):
+        return self.radical + self.suffix
 
 
 class StateGetter(Visitor):
@@ -3521,10 +3525,12 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
 
     def dump_program_params(self):
         for target in self.program_targets:
-            print '    json.beginMember("%s");' % target
-            print '    json.beginObject();'
+            print '    if (glIsEnabled(%s)) {' % target
+            print '        json.beginMember("%s");' % target
+            print '        json.beginObject();'
             self.dump_atoms(glGetProgramARB, target)
-            print '    json.endObject();'
+            print '        json.endObject();'
+            print '    }'
 
     def dump_texture_parameters(self):
         print '    {'
@@ -3688,7 +3694,7 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
             print '        {'
             type, value = getter(*(args + (name,)))
             print '            if (glGetError() != GL_NO_ERROR) {'
-            print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
+            #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
             print '            } else {'
             print '                json.beginMember("%s");' % name
             JsonWriter().visit(type, value)
