@@ -42,21 +42,25 @@ S = CString
 # TODO: This table and the one on glenum.py should be unified
 parameters = [
     # (functions, type, count, name) # value
-    ("",	X,	1,	"GL_POINTS"),	# 0x0000
-    ("",	X,	1,	"GL_LINES"),	# 0x0001
-    ("",	X,	1,	"GL_LINE_LOOP"),	# 0x0002
-    ("",	X,	1,	"GL_LINE_STRIP"),	# 0x0003
-    ("",	X,	1,	"GL_TRIANGLES"),	# 0x0004
-    ("",	X,	1,	"GL_TRIANGLE_STRIP"),	# 0x0005
-    ("",	X,	1,	"GL_TRIANGLE_FAN"),	# 0x0006
-    ("",	X,	1,	"GL_QUADS"),	# 0x0007
-    ("",	X,	1,	"GL_QUAD_STRIP"),	# 0x0008
-    ("",	X,	1,	"GL_POLYGON"),	# 0x0009
-    ("",	X,	1,	"GL_LINES_ADJACENCY"),	# 0x000A
-    ("",	X,	1,	"GL_LINE_STRIP_ADJACENCY"),	# 0x000B
-    ("",	X,	1,	"GL_TRIANGLES_ADJACENCY"),	# 0x000C
-    ("",	X,	1,	"GL_TRIANGLE_STRIP_ADJACENCY"),	# 0x000D
-    ("",	X,	1,	"GL_PATCHES"),	# 0x000E
+    ("",	X,	1,	"GL_ZERO"),	# 0x0000
+    ("",	X,	1,	"GL_ONE"),	# 0x0001
+
+    #("",	X,	1,	"GL_POINTS"),	# 0x0000
+    #("",	X,	1,	"GL_LINES"),	# 0x0001
+    #("",	X,	1,	"GL_LINE_LOOP"),	# 0x0002
+    #("",	X,	1,	"GL_LINE_STRIP"),	# 0x0003
+    #("",	X,	1,	"GL_TRIANGLES"),	# 0x0004
+    #("",	X,	1,	"GL_TRIANGLE_STRIP"),	# 0x0005
+    #("",	X,	1,	"GL_TRIANGLE_FAN"),	# 0x0006
+    #("",	X,	1,	"GL_QUADS"),	# 0x0007
+    #("",	X,	1,	"GL_QUAD_STRIP"),	# 0x0008
+    #("",	X,	1,	"GL_POLYGON"),	# 0x0009
+    #("",	X,	1,	"GL_LINES_ADJACENCY"),	# 0x000A
+    #("",	X,	1,	"GL_LINE_STRIP_ADJACENCY"),	# 0x000B
+    #("",	X,	1,	"GL_TRIANGLES_ADJACENCY"),	# 0x000C
+    #("",	X,	1,	"GL_TRIANGLE_STRIP_ADJACENCY"),	# 0x000D
+    #("",	X,	1,	"GL_PATCHES"),	# 0x000E
+
     ("",	X,	1,	"GL_ACCUM"),	# 0x0100
     ("",	X,	1,	"GL_LOAD"),	# 0x0101
     ("",	X,	1,	"GL_RETURN"),	# 0x0102
@@ -1306,6 +1310,7 @@ parameters = [
     ("glGetTexEnv",	E,	1,	"GL_OPERAND0_RGB"),	# 0x8590
     ("glGetTexEnv",	E,	1,	"GL_OPERAND1_RGB"),	# 0x8591
     ("glGetTexEnv",	E,	1,	"GL_OPERAND2_RGB"),	# 0x8592
+    ("glGetTexEnv",	E,	1,	"GL_OPERAND3_RGB_NV"),	# 0x8593
     ("glGetTexEnv",	E,	1,	"GL_OPERAND0_ALPHA"),	# 0x8598
     ("glGetTexEnv",	E,	1,	"GL_OPERAND1_ALPHA"),	# 0x8599
     ("glGetTexEnv",	E,	1,	"GL_OPERAND2_ALPHA"),	# 0x859A
@@ -2292,6 +2297,7 @@ parameters = [
     ("",	X,	1,	"GL_VERTEX_ID_NV"),	# 0x8C7B
     ("",	X,	1,	"GL_PRIMITIVE_ID_NV"),	# 0x8C7C
     ("",	X,	1,	"GL_GENERIC_ATTRIB_NV"),	# 0x8C7D
+    ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_ATTRIBS_NV"),	# 0x8C7F
     ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_MODE"),	# 0x8C7F
     ("",	X,	1,	"GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS"),	# 0x8C80
     ("",	X,	1,	"GL_ACTIVE_VARYINGS_NV"),	# 0x8C81
