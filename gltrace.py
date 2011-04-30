@@ -227,14 +227,14 @@ class GlTracer(Tracer):
         "glFogCoordPointer",
         "glSecondaryColorPointer",
         
-        #"glVertexPointerEXT",
-        #"glNormalPointerEXT",
-        #"glColorPointerEXT",
-        #"glIndexPointerEXT",
-        #"glTexCoordPointerEXT",
-        #"glEdgeFlagPointerEXT",
-        #"glFogCoordPointerEXT",
-        #"glSecondaryColorPointerEXT",
+        "glVertexPointerEXT",
+        "glNormalPointerEXT",
+        "glColorPointerEXT",
+        "glIndexPointerEXT",
+        "glTexCoordPointerEXT",
+        "glEdgeFlagPointerEXT",
+        "glFogCoordPointerEXT",
+        "glSecondaryColorPointerEXT",
 
         "glVertexAttribPointer",
         "glVertexAttribPointerARB",
@@ -247,8 +247,10 @@ class GlTracer(Tracer):
 
     draw_function_names = set((
         'glDrawArrays',
+        'glDrawArraysEXT',
         'glDrawElements',
         'glDrawRangeElements',
+        'glDrawRangeElementsEXT',
     ))
 
     interleaved_formats = [

@@ -95,6 +95,8 @@ __glDrawArrays_maxindex(GLint first, GLsizei count)
     return first + count - 1;
 }
 
+#define __glDrawArraysEXT_maxindex __glDrawArrays_maxindex
+
 static inline GLuint
 __glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *indices)
 {
@@ -163,6 +165,8 @@ __glDrawRangeElements_maxindex(GLuint start, GLuint end, GLsizei count, GLenum t
     (void)end;
     return __glDrawElements_maxindex(count, type, indices);
 }
+
+#define __glDrawRangeElementsEXT_maxindex __glDrawRangeElements_maxindex
 
 static inline size_t
 __glCallLists_size(GLsizei n, GLenum type)
