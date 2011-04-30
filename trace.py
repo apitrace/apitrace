@@ -90,7 +90,7 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print '        Trace::LiteralSInt(value);'
         print '        return;'
         print '    }'
-        print '        Trace::LiteralEnum(sig);'
+        print '    Trace::LiteralEnum(sig);'
         print '}'
         print
 
