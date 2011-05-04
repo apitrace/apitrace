@@ -82,7 +82,7 @@ public:
 extern int verbosity;
 
 
-bool retrace_call(Trace::Call &call);
+void retrace_call(Trace::Call &call);
 
 
 } /* namespace retrace */

@@ -246,13 +246,8 @@ class Retracer:
             if function.sideeffects:
                 self.retrace_function(function)
 
-        print 'bool retrace::retrace_call(Trace::Call &call) {'
+        print 'void retrace::retrace_call(Trace::Call &call) {'
         print '    const char *name = call.name().c_str();'
-        print
-        print '    if (retrace::verbosity >= 1) {'
-        print '        std::cout << call;'
-        print '        std::cout.flush();'
-        print '    };'
         print
 
         func_dict = dict([(function.name, function) for function in functions])
@@ -261,13 +256,12 @@ class Retracer:
             function = func_dict[function_name]
             if function.sideeffects:
                 print '        retrace_%s(call);' % function.name
-            print '        return true;'
+            print '        return;'
     
         string_switch('name', func_dict.keys(), handle_case)
 
         print '    if (retrace::verbosity >= 0)'
         print '        std::cerr << call.no << ": warning: unknown call " << call.name() << "\\n";'
-        print '    return false;'
         print '}'
         print
 

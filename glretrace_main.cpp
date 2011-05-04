@@ -158,15 +158,16 @@ static void display(void) {
         const std::string &name = call->name();
         bool skipCall = false;
 
+        if (retrace::verbosity >= 1) {
+            std::cout << *call;
+            std::cout.flush();
+        }
+
         if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
             (name[0] == 'g' && name[1] == 'l' && name[2] == 'X')) {
             // XXX: We ignore the majority of the OS-specific calls for now
             if (name == "glXSwapBuffers" ||
                 name == "wglSwapBuffers") {
-                if (retrace::verbosity >= 1) {
-                    std::cout << *call;
-                    std::cout.flush();
-                };
                 frame_complete(call->no);
                 if (double_buffer)
                     drawable->swapBuffers();
