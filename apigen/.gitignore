@@ -2,5 +2,6 @@
 *.tm
 *.txt
 *api.py
-glsize.hpp
+glparams.py
+wglenum.py
 !Makefile

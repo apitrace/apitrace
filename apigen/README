@@ -1,0 +1,12 @@
+This directory contains several helper scripts that facilitate the generation
+of the API descriptions from specs.
+
+The specs are not expressive enough, which is why we can just code generate
+everything from them.
+
+The typical procedure is to run
+
+  make -B
+
+and then manually crossport new functions / enums to the files in the top dir
+via a side-by-side diff tool, such as gvimdiff.
