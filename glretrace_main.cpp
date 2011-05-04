@@ -115,7 +115,7 @@ static void snapshot(Image::Image &image) {
 }
 
 
-static void frame_complete(unsigned call_no) {
+void frame_complete(unsigned call_no) {
     ++frame;
     
     if (snapshot_prefix || compare_prefix) {
@@ -180,13 +180,6 @@ static void display(void) {
                 }
             }
             skipCall = true;
-        }
-
-        if (name == "glFlush") {
-            glFlush();
-            if (!double_buffer) {
-                frame_complete(call->no);
-            }
         }
 
         if (!skipCall) {

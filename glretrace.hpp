@@ -59,6 +59,8 @@ extern unsigned dump_state;
 void
 checkGlError(int callIdx = -1);
 
+void frame_complete(unsigned call_no);
+
 void state_dump(std::ostream &os);
 
 
