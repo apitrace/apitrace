@@ -49,18 +49,20 @@ class GlRetracer(Retracer):
 
         "glInterleavedArrays",
 
-        #"glVertexPointerEXT",
-        #"glNormalPointerEXT",
-        #"glColorPointerEXT",
-        #"glIndexPointerEXT",
-        #"glTexCoordPointerEXT",
-        #"glEdgeFlagPointerEXT",
-        #"glFogCoordPointerEXT",
-        #"glSecondaryColorPointerEXT",
+        "glVertexPointerEXT",
+        "glNormalPointerEXT",
+        "glColorPointerEXT",
+        "glIndexPointerEXT",
+        "glTexCoordPointerEXT",
+        "glEdgeFlagPointerEXT",
+        "glFogCoordPointerEXT",
+        "glSecondaryColorPointerEXT",
 
         "glVertexAttribPointer",
         "glVertexAttribPointerARB",
         "glVertexAttribPointerNV",
+        "glVertexAttribIPointer",
+        "glVertexAttribIPointerEXT",
         "glVertexAttribLPointer",
         "glVertexAttribLPointerEXT",
         
@@ -153,7 +155,7 @@ class GlRetracer(Retracer):
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
-            print '    %s = %s.blob();' % (lvalue, rvalue)
+            print '    %s = static_cast<%s>(%s.blob());' % (lvalue, arg_type, rvalue)
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices':

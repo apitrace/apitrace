@@ -216,7 +216,6 @@ class GlTracer(Tracer):
         print '}'
         print
 
-    
     array_pointer_function_names = set((
         "glVertexPointer",
         "glNormalPointer",
@@ -227,6 +226,8 @@ class GlTracer(Tracer):
         "glFogCoordPointer",
         "glSecondaryColorPointer",
         
+        "glInterleavedArrays",
+
         "glVertexPointerEXT",
         "glNormalPointerEXT",
         "glColorPointerEXT",
@@ -239,6 +240,8 @@ class GlTracer(Tracer):
         "glVertexAttribPointer",
         "glVertexAttribPointerARB",
         "glVertexAttribPointerNV",
+        "glVertexAttribIPointer",
+        "glVertexAttribIPointerEXT",
         "glVertexAttribLPointer",
         "glVertexAttribLPointerEXT",
         
@@ -278,6 +281,48 @@ class GlTracer(Tracer):
             print '    if (!__array_buffer) {'
             print '        __user_arrays = true;'
             self.dispatch_function(function)
+
+            # And also break down glInterleavedArrays into the individual calls
+            if function.name == 'glInterleavedArrays':
+                print
+
+                # Initialize the enable flags
+                for camelcase_name, uppercase_name in self.arrays:
+                    flag_name = '__' + uppercase_name.lower()
+                    print '        GLboolean %s = GL_FALSE;' % flag_name
+                print
+
+                # Switch for the interleaved formats
+                print '        switch (format) {'
+                for format in self.interleaved_formats:
+                    print '            case %s:' % format
+                    for camelcase_name, uppercase_name in self.arrays:
+                        flag_name = '__' + uppercase_name.lower()
+                        if format.find('_' + uppercase_name[0]) >= 0:
+                            print '                %s = GL_TRUE;' % flag_name
+                    print '                break;'
+                print '            default:'
+                print '               return;'
+                print '        }'
+                print
+
+                # Emit fake glEnableClientState/glDisableClientState flags
+                for camelcase_name, uppercase_name in self.arrays:
+                    flag_name = '__' + uppercase_name.lower()
+                    enable_name = 'GL_%s_ARRAY' % uppercase_name
+
+                    # Emit a fake function
+                    print '        {'
+                    print '            static const Trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
+                    print '            unsigned __call = Trace::BeginEnter(__sig);'
+                    print '            Trace::BeginArg(0);'
+                    dump_instance(glapi.GLenum, enable_name)
+                    print '            Trace::EndArg();'
+                    print '            Trace::EndEnter();'
+                    print '            Trace::BeginLeave(__call);'
+                    print '            Trace::EndLeave();'
+                    print '        }'
+
             print '        return;'
             print '    }'
 
@@ -289,55 +334,6 @@ class GlTracer(Tracer):
             print '        __trace_user_arrays(maxindex);'
             print '    }'
         
-        # And also break down glInterleavedArrays into the individual calls
-        if function.name == 'glInterleavedArrays':
-            print '    GLint __array_buffer = 0;'
-            print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
-            print '    if (!__array_buffer) {'
-            print '        __user_arrays = true;'
-            self.dispatch_function(function)
-            print
-
-            # Initialize the enable flags
-            for camelcase_name, uppercase_name in self.arrays:
-                flag_name = '__' + uppercase_name.lower()
-                print '        GLboolean %s = GL_FALSE;' % flag_name
-            print
-
-            # Swicth for the interleaved formats
-            print '        switch (format) {'
-            for format in self.interleaved_formats:
-                print '            case %s:' % format
-                for camelcase_name, uppercase_name in self.arrays:
-                    flag_name = '__' + uppercase_name.lower()
-                    if format.find('_' + uppercase_name[0]) >= 0:
-                        print '                %s = GL_TRUE;' % flag_name
-                print '                break;'
-            print '            default:'
-            print '               return;'
-            print '        }'
-            print
-
-            # Emit fake glEnableClientState/glDisableClientState flags
-            for camelcase_name, uppercase_name in self.arrays:
-                flag_name = '__' + uppercase_name.lower()
-                enable_name = 'GL_%s_ARRAY' % uppercase_name
-
-                # Emit a fake function
-                print '        {'
-                print '            static const Trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
-                print '            unsigned __call = Trace::BeginEnter(__sig);'
-                print '            Trace::BeginArg(0);'
-                dump_instance(glapi.GLenum, enable_name)
-                print '            Trace::EndArg();'
-                print '            Trace::EndEnter();'
-                print '            Trace::BeginLeave(__call);'
-                print '            Trace::EndLeave();'
-                print '        }'
-
-            print '        return;'
-            print '    }'
-
         # Emit a fake memcpy on
         if function.name in ('glUnmapBuffer', 'glUnmapBufferARB'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
