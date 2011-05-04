@@ -35,6 +35,7 @@ glretrace
 glretrace_gl.cpp
 glretrace_state.cpp
 glxtrace.cpp
+qapitrace
 tracedump
 traces
 wgltrace.cpp
