@@ -19,7 +19,7 @@ class QModelIndex;
 class QProgressBar;
 class QTreeWidgetItem;
 class QUrl;
-class RetraceError;
+struct RetraceError;
 class Retracer;
 class SearchWidget;
 class ShadersSourceWidget;
