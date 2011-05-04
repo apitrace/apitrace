@@ -225,7 +225,7 @@ class StateDumper:
     stdout.'''
 
     def __init__(self):
-        self.level = 0
+        pass
 
     def dump(self):
         print '#include <string.h>'
@@ -909,19 +909,6 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
             print '            }'
             print '        }'
             print
-
-    def write_line(s):
-        self.write('  '*self.level + s + '\n')
-
-    def write(self, s):
-        sys.stdout.write(s)
-
-    def indent(self):
-        self.level += 1
-
-    def dedent(self):
-        self.level -= 1
-
 
 
 if __name__ == '__main__':
