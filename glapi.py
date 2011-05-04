@@ -1,5 +1,6 @@
 ##########################################################################
 #
+# Copyright 2011 Jose Fonseca
 # Copyright 2008-2010 VMware, Inc.
 # All Rights Reserved.
 #
@@ -33,73 +34,9 @@ cases correctly.
 """
 
 
-import platform
-
 from stdapi import *
-from glenum import *
-
-
-GLboolean = Alias("GLboolean", Bool)
-GLvoid = Alias("GLvoid", Void)
-GLbyte = Alias("GLbyte", SChar)
-GLshort = Alias("GLshort", Short)
-GLint = Alias("GLint", Int)
-GLubyte = Alias("GLubyte", UChar)
-GLushort = Alias("GLushort", UShort)
-GLuint = Alias("GLuint", UInt)
-GLsizei = Alias("GLsizei", Int)
-GLfloat = Alias("GLfloat", Float)
-GLclampf = Alias("GLclampf", Float)
-GLdouble = Alias("GLdouble", Double)
-GLclampd = Alias("GLclampd", Double)
-
-GLchar = Alias("GLchar", SChar)
-GLcharARB = Alias("GLcharARB", SChar)
-GLintptr = Alias("GLintptr", Int)
-GLsizeiptr = Alias("GLsizeiptr", Int)
-GLintptrARB = Alias("GLintptrARB", Int)
-GLsizeiptrARB = Alias("GLsizeiptrARB", Int)
-GLhandleARB = Alias("GLhandleARB", UInt)
-GLhalfARB = Alias("GLhalfARB", UShort)
-GLhalfNV = Alias("GLhalfNV", UShort)
-GLint64 = Alias("GLint64", Int64)
-GLuint64 = Alias("GLuint64", UInt64)
-GLint64EXT = Alias("GLint64EXT", Int64)
-GLuint64EXT = Alias("GLuint64EXT", UInt64)
-GLDEBUGPROCARB = Opaque("GLDEBUGPROCARB")
-
-GLstring = String("GLchar *")
-GLstringARB = String("GLcharARB *")
-
-GLlist = Handle("list", GLuint)
-GLtexture = Handle("texture", GLuint)
-GLbuffer = Handle("buffer", GLuint)
-GLquery = Handle("query", GLuint)
-GLfenceNV = Handle("fenceNV", GLuint)
-GLprogram = Handle("program", GLuint)
-GLshader = Handle("shader", GLuint)
-GLlocation = Handle("location", GLint, key=('program', GLuint))
-GLlocationARB = Handle("locationARB", GLint)
-GLprogramARB = Handle("programARB", GLuint)
-GLprogramEXT = Handle("programEXT", GLuint)
-GLprogramNV = Handle("programNV", GLuint)
-GLframebuffer = Handle("framebuffer", GLuint)
-GLrenderbuffer = Handle("renderbuffer", GLuint)
-GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
-GLvertexArray = Handle("vertexArrayAPPLE", GLuint)
-GLregion = Handle("region", GLuint)
-GLmap = Handle("map", OpaquePointer(GLvoid))
-
-# Some functions take GLenum disguised as GLint.  Apple noticed and fixed it in
-# the gl.h header.  Regardless, C++ typechecking rules force the wrappers to
-# match the prototype precisely.
-if platform.system() == 'Darwin':
-    GLenum_int = GLenum
-else:
-    GLenum_int = Alias("GLint", GLenum)
-
-GLsync_ = Opaque("GLsync")
-GLsync = Handle("sync", GLsync_)
+from gltypes import *
+import glparams
 
 
 def GlFunction(*args, **kwargs):

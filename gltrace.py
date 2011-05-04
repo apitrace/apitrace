@@ -29,7 +29,7 @@
 
 import stdapi
 import glapi
-import glstate
+import glparams
 from glxapi import glxapi
 from trace import Tracer, dump_instance
 
@@ -177,7 +177,7 @@ class GlTracer(Tracer):
         print 'static bool'
         print 'is_symbolic_pname(GLenum pname) {'
         print '    switch(pname) {'
-        for function, type, count, name in glstate.parameters:
+        for function, type, count, name in glparams.parameters:
             if type is glapi.GLenum:
                 print '    case %s:' % name
         print '        return true;'
@@ -201,7 +201,7 @@ class GlTracer(Tracer):
         print 'static size_t'
         print 'pname_size(GLenum pname) {'
         print '    switch(pname) {'
-        for function, type, count, name in glstate.parameters:
+        for function, type, count, name in glparams.parameters:
             if type is not None:
                 print '    case %s: return %u;' % (name, count)
         print '    case GL_COMPRESSED_TEXTURE_FORMATS: {'

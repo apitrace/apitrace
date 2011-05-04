@@ -143,7 +143,7 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py glapi.py glenum.py stdapi.py
+    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py glapi.py gltypes.py stdapi.py
 )
 
 if (WIN32)
@@ -195,7 +195,7 @@ if (WIN32)
     add_custom_command (
         OUTPUT wgltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
-        DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glenum.py winapi.py stdapi.py
+        DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glparams.py gltypes.py winapi.py stdapi.py
     )
     add_library (wgltrace SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
     set_target_properties (wgltrace PROPERTIES
@@ -215,7 +215,7 @@ else ()
     add_custom_command (
         OUTPUT glxtrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-        DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glstate.py glenum.py stdapi.py
+        DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
     )
 
     add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
@@ -252,13 +252,13 @@ target_link_libraries (tracedump trace)
 add_custom_command (
     OUTPUT glretrace_gl.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
-    DEPENDS glretrace.py retrace.py codegen.py glapi.py glenum.py stdapi.py
+    DEPENDS glretrace.py retrace.py codegen.py glapi.py gltypes.py stdapi.py
 )
 
 add_custom_command (
     OUTPUT glretrace_state.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_state.cpp
-    DEPENDS glstate.py glapi.py glenum.py stdapi.py
+    DEPENDS glstate.py glparams.py gltypes.py stdapi.py
 )
 
 include_directories (
