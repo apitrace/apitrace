@@ -32,16 +32,56 @@
 using namespace glretrace;
 
 
+typedef std::map<void *, glws::Drawable *> DrawableMap;
+typedef std::map<void *, glws::Context *> ContextMap;
+static DrawableMap drawable_map;
+static DrawableMap pbuffer_map;
+static ContextMap context_map;
+
+
+static glws::Drawable *
+getDrawable(void * hdc) {
+    if (hdc == NULL) {
+        return NULL;
+    }
+
+    DrawableMap::const_iterator it;
+    it = drawable_map.find(hdc);
+    if (it == drawable_map.end()) {
+        return (drawable_map[hdc] = ws->createDrawable(visual));
+    }
+
+    return it->second;
+}
+
 static void retrace_wglCreateContext(Trace::Call &call) {
+    void * orig_context = call.ret->blob();
+    glws::Context *context = ws->createContext(glretrace::visual);
+    context_map[orig_context] = context;
 }
 
 static void retrace_wglDeleteContext(Trace::Call &call) {
 }
 
 static void retrace_wglMakeCurrent(Trace::Call &call) {
-    glFlush();
-    if (!double_buffer) {
-        frame_complete(call.no);
+    if (drawable && context) {
+        glFlush();
+        if (!double_buffer) {
+            frame_complete(call.no);
+        }
+    }
+    
+    glws::Drawable *new_drawable = getDrawable(call.arg(0).blob());
+    glws::Context *new_context = context_map[call.arg(1).blob()];
+
+    bool result = ws->makeCurrent(new_drawable, new_context);
+
+    if (new_drawable && new_context && result) {
+        drawable = new_drawable;
+        context = new_context;
+    } else {
+        drawable = NULL;
+        context = NULL;
     }
 }
 
@@ -118,6 +158,23 @@ static void retrace_wglMakeContextCurrentARB(Trace::Call &call) {
 }
 
 static void retrace_wglCreatePbufferARB(Trace::Call &call) {
+    unsigned iWidth = call.arg(2);
+    unsigned iHeight = call.arg(3);
+
+    void * orig_pbuffer = call.ret->blob();
+    glws::Drawable *drawable = ws->createDrawable(glretrace::visual);
+
+    drawable->resize(iWidth, iHeight);
+
+    pbuffer_map[orig_pbuffer] = drawable;
+}
+
+static void retrace_wglGetPbufferDCARB(Trace::Call &call) {
+    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).blob()];
+
+    void * orig_hdc = call.ret->blob();
+
+    drawable_map[orig_hdc] = pbuffer;
 }
 
 static void retrace_wglReleasePbufferDCARB(Trace::Call &call) {
@@ -633,6 +690,7 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                 case 'b':
                                     if (name[8] == 'u' && name[9] == 'f' && name[10] == 'f' && name[11] == 'e' && name[12] == 'r' && name[13] == 'D' && name[14] == 'C' && name[15] == 'A' && name[16] == 'R' && name[17] == 'B' && name[18] == '\0') {
                                         // wglGetPbufferDCARB
+                                        retrace_wglGetPbufferDCARB(call);
                                         return;
                                     }
                                     break;

@@ -66,9 +66,11 @@ static void retrace_glXDestroyContext(Trace::Call &call) {
 }
 
 static void retrace_glXMakeCurrent(Trace::Call &call) {
-    glFlush();
-    if (!double_buffer) {
-        frame_complete(call.no);
+    if (drawable && context) {
+        glFlush();
+        if (!double_buffer) {
+            frame_complete(call.no);
+        }
     }
 
     glws::Drawable *new_drawable = getDrawable(static_cast<unsigned long>(call.arg(1)));

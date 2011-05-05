@@ -188,10 +188,10 @@ wglapi.add_functions([
 
     # WGL_ARB_pbuffer
     StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Const(Array(WGLenum, "__AttribList_size(piAttribList)")), "piAttribList")]),
-    StdFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")], sideeffects=False),
+    StdFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")]),
     StdFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
     StdFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]),
-    StdFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (WGLenum, "iAttribute"), Out(Pointer(Int), "piValue")]),
+    StdFunction(BOOL, "wglQueryPbufferARB", [(HPBUFFERARB, "hPbuffer"), (WGLenum, "iAttribute"), Out(Pointer(Int), "piValue")], sideeffects=False),
 
     # WGL_ARB_render_texture
     StdFunction(BOOL, "wglBindTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
