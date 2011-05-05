@@ -169,8 +169,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
     case 'g':
         if (name[1] == 'l' && name[2] == 'A' && name[3] == 'd' && name[4] == 'd' && name[5] == 'S' && name[6] == 'w' && name[7] == 'a' && name[8] == 'p' && name[9] == 'H' && name[10] == 'i' && name[11] == 'n' && name[12] == 't' && name[13] == 'R' && name[14] == 'e' && name[15] == 'c' && name[16] == 't' && name[17] == 'W' && name[18] == 'I' && name[19] == 'N' && name[20] == '\0') {
             // glAddSwapHintRectWIN
-        retrace_glAddSwapHintRectWIN(call);
-        return;
+            retrace_glAddSwapHintRectWIN(call);
+            return;
         }
         break;
     case 'w':
@@ -182,15 +182,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                 case 'A':
                     if (name[4] == 'l' && name[5] == 'l' && name[6] == 'o' && name[7] == 'c' && name[8] == 'a' && name[9] == 't' && name[10] == 'e' && name[11] == 'M' && name[12] == 'e' && name[13] == 'm' && name[14] == 'o' && name[15] == 'r' && name[16] == 'y' && name[17] == 'N' && name[18] == 'V' && name[19] == '\0') {
                         // wglAllocateMemoryNV
-        retrace_wglAllocateMemoryNV(call);
-        return;
+                        retrace_wglAllocateMemoryNV(call);
+                        return;
                     }
                     break;
                 case 'B':
                     if (name[4] == 'i' && name[5] == 'n' && name[6] == 'd' && name[7] == 'T' && name[8] == 'e' && name[9] == 'x' && name[10] == 'I' && name[11] == 'm' && name[12] == 'a' && name[13] == 'g' && name[14] == 'e' && name[15] == 'A' && name[16] == 'R' && name[17] == 'B' && name[18] == '\0') {
                         // wglBindTexImageARB
-        retrace_wglBindTexImageARB(call);
-        return;
+                        retrace_wglBindTexImageARB(call);
+                        return;
                     }
                     break;
                 case 'C':
@@ -229,21 +229,21 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                                     switch (name[20]) {
                                                                                     case '\0':
                                                                                         // wglChoosePixelFormat
-        retrace_wglChoosePixelFormat(call);
-        return;
+                                                                                        retrace_wglChoosePixelFormat(call);
+                                                                                        return;
                                                                                         break;
                                                                                     case 'A':
                                                                                         if (name[21] == 'R' && name[22] == 'B' && name[23] == '\0') {
                                                                                             // wglChoosePixelFormatARB
-        retrace_wglChoosePixelFormatARB(call);
-        return;
+                                                                                            retrace_wglChoosePixelFormatARB(call);
+                                                                                            return;
                                                                                         }
                                                                                         break;
                                                                                     case 'E':
                                                                                         if (name[21] == 'X' && name[22] == 'T' && name[23] == '\0') {
                                                                                             // wglChoosePixelFormatEXT
-        retrace_wglChoosePixelFormatEXT(call);
-        return;
+                                                                                            retrace_wglChoosePixelFormatEXT(call);
+                                                                                            return;
                                                                                         }
                                                                                         break;
                                                                                     }
@@ -281,8 +281,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                     case 'o':
                         if (name[5] == 'p' && name[6] == 'y' && name[7] == 'C' && name[8] == 'o' && name[9] == 'n' && name[10] == 't' && name[11] == 'e' && name[12] == 'x' && name[13] == 't' && name[14] == '\0') {
                             // wglCopyContext
-        retrace_wglCopyContext(call);
-        return;
+                            retrace_wglCopyContext(call);
+                            return;
                         }
                         break;
                     case 'r':
@@ -298,8 +298,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                         case 'B':
                                             if (name[10] == 'u' && name[11] == 'f' && name[12] == 'f' && name[13] == 'e' && name[14] == 'r' && name[15] == 'R' && name[16] == 'e' && name[17] == 'g' && name[18] == 'i' && name[19] == 'o' && name[20] == 'n' && name[21] == 'A' && name[22] == 'R' && name[23] == 'B' && name[24] == '\0') {
                                                 // wglCreateBufferRegionARB
-        retrace_wglCreateBufferRegionARB(call);
-        return;
+                                                retrace_wglCreateBufferRegionARB(call);
+                                                return;
                                             }
                                             break;
                                         case 'C':
@@ -318,14 +318,14 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                     switch (name[16]) {
                                                                     case '\0':
                                                                         // wglCreateContext
-        retrace_wglCreateContext(call);
-        return;
+                                                                        retrace_wglCreateContext(call);
+                                                                        return;
                                                                         break;
                                                                     case 'A':
                                                                         if (name[17] == 't' && name[18] == 't' && name[19] == 'r' && name[20] == 'i' && name[21] == 'b' && name[22] == 's' && name[23] == 'A' && name[24] == 'R' && name[25] == 'B' && name[26] == '\0') {
                                                                             // wglCreateContextAttribsARB
-        retrace_wglCreateContextAttribsARB(call);
-        return;
+                                                                            retrace_wglCreateContextAttribsARB(call);
+                                                                            return;
                                                                         }
                                                                         break;
                                                                     }
@@ -345,15 +345,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                         case 'L':
                                             if (name[10] == 'a' && name[11] == 'y' && name[12] == 'e' && name[13] == 'r' && name[14] == 'C' && name[15] == 'o' && name[16] == 'n' && name[17] == 't' && name[18] == 'e' && name[19] == 'x' && name[20] == 't' && name[21] == '\0') {
                                                 // wglCreateLayerContext
-        retrace_wglCreateLayerContext(call);
-        return;
+                                                retrace_wglCreateLayerContext(call);
+                                                return;
                                             }
                                             break;
                                         case 'P':
                                             if (name[10] == 'b' && name[11] == 'u' && name[12] == 'f' && name[13] == 'f' && name[14] == 'e' && name[15] == 'r' && name[16] == 'A' && name[17] == 'R' && name[18] == 'B' && name[19] == '\0') {
                                                 // wglCreatePbufferARB
-        retrace_wglCreatePbufferARB(call);
-        return;
+                                                retrace_wglCreatePbufferARB(call);
+                                                return;
                                             }
                                             break;
                                         }
@@ -383,15 +383,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                         case 'B':
                                             if (name[10] == 'u' && name[11] == 'f' && name[12] == 'f' && name[13] == 'e' && name[14] == 'r' && name[15] == 'R' && name[16] == 'e' && name[17] == 'g' && name[18] == 'i' && name[19] == 'o' && name[20] == 'n' && name[21] == 'A' && name[22] == 'R' && name[23] == 'B' && name[24] == '\0') {
                                                 // wglDeleteBufferRegionARB
-        retrace_wglDeleteBufferRegionARB(call);
-        return;
+                                                retrace_wglDeleteBufferRegionARB(call);
+                                                return;
                                             }
                                             break;
                                         case 'C':
                                             if (name[10] == 'o' && name[11] == 'n' && name[12] == 't' && name[13] == 'e' && name[14] == 'x' && name[15] == 't' && name[16] == '\0') {
                                                 // wglDeleteContext
-        retrace_wglDeleteContext(call);
-        return;
+                                                retrace_wglDeleteContext(call);
+                                                return;
                                             }
                                             break;
                                         }
@@ -417,15 +417,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                 case 'L':
                                                     if (name[12] == 'a' && name[13] == 'y' && name[14] == 'e' && name[15] == 'r' && name[16] == 'P' && name[17] == 'l' && name[18] == 'a' && name[19] == 'n' && name[20] == 'e' && name[21] == '\0') {
                                                         // wglDescribeLayerPlane
-        retrace_wglDescribeLayerPlane(call);
-        return;
+                                                        retrace_wglDescribeLayerPlane(call);
+                                                        return;
                                                     }
                                                     break;
                                                 case 'P':
                                                     if (name[12] == 'i' && name[13] == 'x' && name[14] == 'e' && name[15] == 'l' && name[16] == 'F' && name[17] == 'o' && name[18] == 'r' && name[19] == 'm' && name[20] == 'a' && name[21] == 't' && name[22] == '\0') {
                                                         // wglDescribePixelFormat
-        retrace_wglDescribePixelFormat(call);
-        return;
+                                                        retrace_wglDescribePixelFormat(call);
+                                                        return;
                                                     }
                                                     break;
                                                 }
@@ -441,8 +441,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                             case 't':
                                 if (name[7] == 'r' && name[8] == 'o' && name[9] == 'y' && name[10] == 'P' && name[11] == 'b' && name[12] == 'u' && name[13] == 'f' && name[14] == 'f' && name[15] == 'e' && name[16] == 'r' && name[17] == 'A' && name[18] == 'R' && name[19] == 'B' && name[20] == '\0') {
                                     // wglDestroyPbufferARB
-        retrace_wglDestroyPbufferARB(call);
-        return;
+                                    retrace_wglDestroyPbufferARB(call);
+                                    return;
                                 }
                                 break;
                             }
@@ -454,8 +454,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                 case 'F':
                     if (name[4] == 'r' && name[5] == 'e' && name[6] == 'e' && name[7] == 'M' && name[8] == 'e' && name[9] == 'm' && name[10] == 'o' && name[11] == 'r' && name[12] == 'y' && name[13] == 'N' && name[14] == 'V' && name[15] == '\0') {
                         // wglFreeMemoryNV
-        retrace_wglFreeMemoryNV(call);
-        return;
+                        retrace_wglFreeMemoryNV(call);
+                        return;
                     }
                     break;
                 case 'G':
@@ -481,13 +481,13 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                         case 'C':
                                                             if (name[14] == 'o' && name[15] == 'n' && name[16] == 't' && name[17] == 'e' && name[18] == 'x' && name[19] == 't' && name[20] == '\0') {
                                                                 // wglGetCurrentContext
-        return;
+                                                                return;
                                                             }
                                                             break;
                                                         case 'D':
                                                             if (name[14] == 'C' && name[15] == '\0') {
                                                                 // wglGetCurrentDC
-        return;
+                                                                return;
                                                             }
                                                             break;
                                                         case 'R':
@@ -505,13 +505,13 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                                 case 'A':
                                                                                     if (name[20] == 'R' && name[21] == 'B' && name[22] == '\0') {
                                                                                         // wglGetCurrentReadDCARB
-        return;
+                                                                                        return;
                                                                                     }
                                                                                     break;
                                                                                 case 'E':
                                                                                     if (name[20] == 'X' && name[21] == 'T' && name[22] == '\0') {
                                                                                         // wglGetCurrentReadDCEXT
-        return;
+                                                                                        return;
                                                                                     }
                                                                                     break;
                                                                                 }
@@ -543,7 +543,7 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                             case 'D':
                                 if (name[7] == 'e' && name[8] == 'f' && name[9] == 'a' && name[10] == 'u' && name[11] == 'l' && name[12] == 't' && name[13] == 'P' && name[14] == 'r' && name[15] == 'o' && name[16] == 'c' && name[17] == 'A' && name[18] == 'd' && name[19] == 'd' && name[20] == 'r' && name[21] == 'e' && name[22] == 's' && name[23] == 's' && name[24] == '\0') {
                                     // wglGetDefaultProcAddress
-        return;
+                                    return;
                                 }
                                 break;
                             case 'E':
@@ -581,13 +581,13 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                                             case 'A':
                                                                                                 if (name[23] == 'R' && name[24] == 'B' && name[25] == '\0') {
                                                                                                     // wglGetExtensionsStringARB
-        return;
+                                                                                                    return;
                                                                                                 }
                                                                                                 break;
                                                                                             case 'E':
                                                                                                 if (name[23] == 'X' && name[24] == 'T' && name[25] == '\0') {
                                                                                                     // wglGetExtensionsStringEXT
-        return;
+                                                                                                    return;
                                                                                                 }
                                                                                                 break;
                                                                                             }
@@ -625,7 +625,7 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                             case 'L':
                                 if (name[7] == 'a' && name[8] == 'y' && name[9] == 'e' && name[10] == 'r' && name[11] == 'P' && name[12] == 'a' && name[13] == 'l' && name[14] == 'e' && name[15] == 't' && name[16] == 't' && name[17] == 'e' && name[18] == 'E' && name[19] == 'n' && name[20] == 't' && name[21] == 'r' && name[22] == 'i' && name[23] == 'e' && name[24] == 's' && name[25] == '\0') {
                                     // wglGetLayerPaletteEntries
-        return;
+                                    return;
                                 }
                                 break;
                             case 'P':
@@ -633,7 +633,7 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                 case 'b':
                                     if (name[8] == 'u' && name[9] == 'f' && name[10] == 'f' && name[11] == 'e' && name[12] == 'r' && name[13] == 'D' && name[14] == 'C' && name[15] == 'A' && name[16] == 'R' && name[17] == 'B' && name[18] == '\0') {
                                         // wglGetPbufferDCARB
-        return;
+                                        return;
                                     }
                                     break;
                                 case 'i':
@@ -658,7 +658,7 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                         switch (name[17]) {
                                                                         case '\0':
                                                                             // wglGetPixelFormat
-        return;
+                                                                            return;
                                                                             break;
                                                                         case 'A':
                                                                             switch (name[18]) {
@@ -679,13 +679,13 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                                                         case 'A':
                                                                                                             if (name[26] == 'R' && name[27] == 'B' && name[28] == '\0') {
                                                                                                                 // wglGetPixelFormatAttribfvARB
-        return;
+                                                                                                                return;
                                                                                                             }
                                                                                                             break;
                                                                                                         case 'E':
                                                                                                             if (name[26] == 'X' && name[27] == 'T' && name[28] == '\0') {
                                                                                                                 // wglGetPixelFormatAttribfvEXT
-        return;
+                                                                                                                return;
                                                                                                             }
                                                                                                             break;
                                                                                                         }
@@ -699,13 +699,13 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                                                         case 'A':
                                                                                                             if (name[26] == 'R' && name[27] == 'B' && name[28] == '\0') {
                                                                                                                 // wglGetPixelFormatAttribivARB
-        return;
+                                                                                                                return;
                                                                                                             }
                                                                                                             break;
                                                                                                         case 'E':
                                                                                                             if (name[26] == 'X' && name[27] == 'T' && name[28] == '\0') {
                                                                                                                 // wglGetPixelFormatAttribivEXT
-        return;
+                                                                                                                return;
                                                                                                             }
                                                                                                             break;
                                                                                                         }
@@ -747,8 +747,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                 case 'r':
                                     if (name[8] == 'o' && name[9] == 'c' && name[10] == 'A' && name[11] == 'd' && name[12] == 'd' && name[13] == 'r' && name[14] == 'e' && name[15] == 's' && name[16] == 's' && name[17] == '\0') {
                                         // wglGetProcAddress
-        retrace_wglGetProcAddress(call);
-        return;
+                                        retrace_wglGetProcAddress(call);
+                                        return;
                                     }
                                     break;
                                 }
@@ -756,7 +756,7 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                             case 'S':
                                 if (name[7] == 'w' && name[8] == 'a' && name[9] == 'p' && name[10] == 'I' && name[11] == 'n' && name[12] == 't' && name[13] == 'e' && name[14] == 'r' && name[15] == 'v' && name[16] == 'a' && name[17] == 'l' && name[18] == 'E' && name[19] == 'X' && name[20] == 'T' && name[21] == '\0') {
                                     // wglGetSwapIntervalEXT
-        return;
+                                    return;
                                 }
                                 break;
                             }
@@ -804,15 +804,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                                         case 'A':
                                                                                             if (name[22] == 'R' && name[23] == 'B' && name[24] == '\0') {
                                                                                                 // wglMakeContextCurrentARB
-        retrace_wglMakeContextCurrentARB(call);
-        return;
+                                                                                                retrace_wglMakeContextCurrentARB(call);
+                                                                                                return;
                                                                                             }
                                                                                             break;
                                                                                         case 'E':
                                                                                             if (name[22] == 'X' && name[23] == 'T' && name[24] == '\0') {
                                                                                                 // wglMakeContextCurrentEXT
-        retrace_wglMakeContextCurrentEXT(call);
-        return;
+                                                                                                retrace_wglMakeContextCurrentEXT(call);
+                                                                                                return;
                                                                                             }
                                                                                             break;
                                                                                         }
@@ -844,8 +844,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                     case 'u':
                                         if (name[9] == 'r' && name[10] == 'r' && name[11] == 'e' && name[12] == 'n' && name[13] == 't' && name[14] == '\0') {
                                             // wglMakeCurrent
-        retrace_wglMakeCurrent(call);
-        return;
+                                            retrace_wglMakeCurrent(call);
+                                            return;
                                         }
                                         break;
                                     }
@@ -861,8 +861,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                 case 'Q':
                     if (name[4] == 'u' && name[5] == 'e' && name[6] == 'r' && name[7] == 'y' && name[8] == 'P' && name[9] == 'b' && name[10] == 'u' && name[11] == 'f' && name[12] == 'f' && name[13] == 'e' && name[14] == 'r' && name[15] == 'A' && name[16] == 'R' && name[17] == 'B' && name[18] == '\0') {
                         // wglQueryPbufferARB
-        retrace_wglQueryPbufferARB(call);
-        return;
+                        retrace_wglQueryPbufferARB(call);
+                        return;
                     }
                     break;
                 case 'R':
@@ -872,8 +872,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                         case 'a':
                             if (name[6] == 'l' && name[7] == 'i' && name[8] == 'z' && name[9] == 'e' && name[10] == 'L' && name[11] == 'a' && name[12] == 'y' && name[13] == 'e' && name[14] == 'r' && name[15] == 'P' && name[16] == 'a' && name[17] == 'l' && name[18] == 'e' && name[19] == 't' && name[20] == 't' && name[21] == 'e' && name[22] == '\0') {
                                 // wglRealizeLayerPalette
-        retrace_wglRealizeLayerPalette(call);
-        return;
+                                retrace_wglRealizeLayerPalette(call);
+                                return;
                             }
                             break;
                         case 'l':
@@ -889,15 +889,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                             case 'P':
                                                 if (name[11] == 'b' && name[12] == 'u' && name[13] == 'f' && name[14] == 'f' && name[15] == 'e' && name[16] == 'r' && name[17] == 'D' && name[18] == 'C' && name[19] == 'A' && name[20] == 'R' && name[21] == 'B' && name[22] == '\0') {
                                                     // wglReleasePbufferDCARB
-        retrace_wglReleasePbufferDCARB(call);
-        return;
+                                                    retrace_wglReleasePbufferDCARB(call);
+                                                    return;
                                                 }
                                                 break;
                                             case 'T':
                                                 if (name[11] == 'e' && name[12] == 'x' && name[13] == 'I' && name[14] == 'm' && name[15] == 'a' && name[16] == 'g' && name[17] == 'e' && name[18] == 'A' && name[19] == 'R' && name[20] == 'B' && name[21] == '\0') {
                                                     // wglReleaseTexImageARB
-        retrace_wglReleaseTexImageARB(call);
-        return;
+                                                    retrace_wglReleaseTexImageARB(call);
+                                                    return;
                                                 }
                                                 break;
                                             }
@@ -913,8 +913,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                         case 's':
                             if (name[6] == 't' && name[7] == 'o' && name[8] == 'r' && name[9] == 'e' && name[10] == 'B' && name[11] == 'u' && name[12] == 'f' && name[13] == 'f' && name[14] == 'e' && name[15] == 'r' && name[16] == 'R' && name[17] == 'e' && name[18] == 'g' && name[19] == 'i' && name[20] == 'o' && name[21] == 'n' && name[22] == 'A' && name[23] == 'R' && name[24] == 'B' && name[25] == '\0') {
                                 // wglRestoreBufferRegionARB
-        retrace_wglRestoreBufferRegionARB(call);
-        return;
+                                retrace_wglRestoreBufferRegionARB(call);
+                                return;
                             }
                             break;
                         }
@@ -926,8 +926,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                     case 'a':
                         if (name[5] == 'v' && name[6] == 'e' && name[7] == 'B' && name[8] == 'u' && name[9] == 'f' && name[10] == 'f' && name[11] == 'e' && name[12] == 'r' && name[13] == 'R' && name[14] == 'e' && name[15] == 'g' && name[16] == 'i' && name[17] == 'o' && name[18] == 'n' && name[19] == 'A' && name[20] == 'R' && name[21] == 'B' && name[22] == '\0') {
                             // wglSaveBufferRegionARB
-        retrace_wglSaveBufferRegionARB(call);
-        return;
+                            retrace_wglSaveBufferRegionARB(call);
+                            return;
                         }
                         break;
                     case 'e':
@@ -937,8 +937,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                             case 'L':
                                 if (name[7] == 'a' && name[8] == 'y' && name[9] == 'e' && name[10] == 'r' && name[11] == 'P' && name[12] == 'a' && name[13] == 'l' && name[14] == 'e' && name[15] == 't' && name[16] == 't' && name[17] == 'e' && name[18] == 'E' && name[19] == 'n' && name[20] == 't' && name[21] == 'r' && name[22] == 'i' && name[23] == 'e' && name[24] == 's' && name[25] == '\0') {
                                     // wglSetLayerPaletteEntries
-        retrace_wglSetLayerPaletteEntries(call);
-        return;
+                                    retrace_wglSetLayerPaletteEntries(call);
+                                    return;
                                 }
                                 break;
                             case 'P':
@@ -946,15 +946,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                 case 'b':
                                     if (name[8] == 'u' && name[9] == 'f' && name[10] == 'f' && name[11] == 'e' && name[12] == 'r' && name[13] == 'A' && name[14] == 't' && name[15] == 't' && name[16] == 'r' && name[17] == 'i' && name[18] == 'b' && name[19] == 'A' && name[20] == 'R' && name[21] == 'B' && name[22] == '\0') {
                                         // wglSetPbufferAttribARB
-        retrace_wglSetPbufferAttribARB(call);
-        return;
+                                        retrace_wglSetPbufferAttribARB(call);
+                                        return;
                                     }
                                     break;
                                 case 'i':
                                     if (name[8] == 'x' && name[9] == 'e' && name[10] == 'l' && name[11] == 'F' && name[12] == 'o' && name[13] == 'r' && name[14] == 'm' && name[15] == 'a' && name[16] == 't' && name[17] == '\0') {
                                         // wglSetPixelFormat
-        retrace_wglSetPixelFormat(call);
-        return;
+                                        retrace_wglSetPixelFormat(call);
+                                        return;
                                     }
                                     break;
                                 }
@@ -966,8 +966,8 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                     case 'h':
                         if (name[5] == 'a' && name[6] == 'r' && name[7] == 'e' && name[8] == 'L' && name[9] == 'i' && name[10] == 's' && name[11] == 't' && name[12] == 's' && name[13] == '\0') {
                             // wglShareLists
-        retrace_wglShareLists(call);
-        return;
+                            retrace_wglShareLists(call);
+                            return;
                         }
                         break;
                     case 'w':
@@ -979,29 +979,29 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                 case 'B':
                                     if (name[8] == 'u' && name[9] == 'f' && name[10] == 'f' && name[11] == 'e' && name[12] == 'r' && name[13] == 's' && name[14] == '\0') {
                                         // wglSwapBuffers
-        retrace_wglSwapBuffers(call);
-        return;
+                                        retrace_wglSwapBuffers(call);
+                                        return;
                                     }
                                     break;
                                 case 'I':
                                     if (name[8] == 'n' && name[9] == 't' && name[10] == 'e' && name[11] == 'r' && name[12] == 'v' && name[13] == 'a' && name[14] == 'l' && name[15] == 'E' && name[16] == 'X' && name[17] == 'T' && name[18] == '\0') {
                                         // wglSwapIntervalEXT
-        retrace_wglSwapIntervalEXT(call);
-        return;
+                                        retrace_wglSwapIntervalEXT(call);
+                                        return;
                                     }
                                     break;
                                 case 'L':
                                     if (name[8] == 'a' && name[9] == 'y' && name[10] == 'e' && name[11] == 'r' && name[12] == 'B' && name[13] == 'u' && name[14] == 'f' && name[15] == 'f' && name[16] == 'e' && name[17] == 'r' && name[18] == 's' && name[19] == '\0') {
                                         // wglSwapLayerBuffers
-        retrace_wglSwapLayerBuffers(call);
-        return;
+                                        retrace_wglSwapLayerBuffers(call);
+                                        return;
                                     }
                                     break;
                                 case 'M':
                                     if (name[8] == 'u' && name[9] == 'l' && name[10] == 't' && name[11] == 'i' && name[12] == 'p' && name[13] == 'l' && name[14] == 'e' && name[15] == 'B' && name[16] == 'u' && name[17] == 'f' && name[18] == 'f' && name[19] == 'e' && name[20] == 'r' && name[21] == 's' && name[22] == '\0') {
                                         // wglSwapMultipleBuffers
-        retrace_wglSwapMultipleBuffers(call);
-        return;
+                                        retrace_wglSwapMultipleBuffers(call);
+                                        return;
                                     }
                                     break;
                                 }
@@ -1043,15 +1043,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                         case 'A':
                                                                             if (name[18] == '\0') {
                                                                                 // wglUseFontBitmapsA
-        retrace_wglUseFontBitmapsA(call);
-        return;
+                                                                                retrace_wglUseFontBitmapsA(call);
+                                                                                return;
                                                                             }
                                                                             break;
                                                                         case 'W':
                                                                             if (name[18] == '\0') {
                                                                                 // wglUseFontBitmapsW
-        retrace_wglUseFontBitmapsW(call);
-        return;
+                                                                                retrace_wglUseFontBitmapsW(call);
+                                                                                return;
                                                                             }
                                                                             break;
                                                                         }
@@ -1087,15 +1087,15 @@ void glretrace::retrace_call_wgl(Trace::Call &call) {
                                                                             case 'A':
                                                                                 if (name[19] == '\0') {
                                                                                     // wglUseFontOutlinesA
-        retrace_wglUseFontOutlinesA(call);
-        return;
+                                                                                    retrace_wglUseFontOutlinesA(call);
+                                                                                    return;
                                                                                 }
                                                                                 break;
                                                                             case 'W':
                                                                                 if (name[19] == '\0') {
                                                                                     // wglUseFontOutlinesW
-        retrace_wglUseFontOutlinesW(call);
-        return;
+                                                                                    retrace_wglUseFontOutlinesW(call);
+                                                                                    return;
                                                                                 }
                                                                                 break;
                                                                             }
