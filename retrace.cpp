@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <iostream>
+
 #include "retrace.hpp"
 
 
@@ -31,6 +33,13 @@ namespace retrace {
 
 
 int verbosity = 0;
+
+
+void retrace_unknown(Trace::Call &call) {
+    if (verbosity >= 0) {
+        std::cerr << call.no << ": warning: unknown call " << call.name() << "\n";
+    }
+}
 
 
 } /* namespace retrace */

@@ -260,8 +260,7 @@ class Retracer:
     
         string_switch('name', func_dict.keys(), handle_case)
 
-        print '    if (retrace::verbosity >= 0)'
-        print '        std::cerr << call.no << ": warning: unknown call " << call.name() << "\\n";'
+        print '    retrace_unknown(call);'
         print '}'
         print
 

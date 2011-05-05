@@ -84,6 +84,8 @@ extern int verbosity;
 
 void retrace_call(Trace::Call &call);
 
+void retrace_unknown(Trace::Call &call);
+
 
 } /* namespace retrace */
 
