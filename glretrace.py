@@ -149,7 +149,7 @@ class GlRetracer(Retracer):
 
         if function.name == "glBegin":
             print '    glretrace::insideGlBeginEnd = true;'
-        else:
+        elif function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
             print '    glretrace::checkGlError(call.no);'
 
