@@ -32,10 +32,34 @@
 using namespace glretrace;
 
 
+typedef std::map<unsigned long, glws::Drawable *> DrawableMap;
+typedef std::map<void *, glws::Context *> ContextMap;
+static DrawableMap drawable_map;
+static ContextMap context_map;
+
+
+static glws::Drawable *
+getDrawable(unsigned long drawable_id) {
+    if (drawable_id == 0) {
+        return NULL;
+    }
+
+    DrawableMap::const_iterator it;
+    it = drawable_map.find(drawable_id);
+    if (it == drawable_map.end()) {
+        return (drawable_map[drawable_id] = ws->createDrawable(visual));
+    }
+
+    return it->second;
+}
+
 static void retrace_glXChooseVisual(Trace::Call &call) {
 }
 
 static void retrace_glXCreateContext(Trace::Call &call) {
+    void * orig_context = call.ret->blob();
+    glws::Context *context = ws->createContext(glretrace::visual);
+    context_map[orig_context] = context;
 }
 
 static void retrace_glXDestroyContext(Trace::Call &call) {
@@ -45,6 +69,19 @@ static void retrace_glXMakeCurrent(Trace::Call &call) {
     glFlush();
     if (!double_buffer) {
         frame_complete(call.no);
+    }
+
+    glws::Drawable *new_drawable = getDrawable(static_cast<unsigned long>(call.arg(1)));
+    glws::Context *new_context = context_map[call.arg(2).blob()];
+
+    bool result = ws->makeCurrent(new_drawable, new_context);
+
+    if (new_drawable && new_context && result) {
+        drawable = new_drawable;
+        context = new_context;
+    } else {
+        drawable = NULL;
+        context = NULL;
     }
 }
 
