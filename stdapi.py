@@ -410,7 +410,7 @@ class Rebuilder(Visitor):
         return Const(const.type)
 
     def visit_struct(self, struct):
-        members = [self.visit(member) for member in struct.members]
+        members = [(self.visit(type), name) for type, name in struct.members]
         return Struct(struct.name, members)
 
     def visit_array(self, array):

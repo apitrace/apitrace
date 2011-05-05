@@ -156,34 +156,18 @@ static void display(void) {
 
     while ((call = parser.parse_call())) {
         const std::string &name = call->name();
-        bool skipCall = false;
 
         if (retrace::verbosity >= 1) {
             std::cout << *call;
             std::cout.flush();
         }
 
-        if ((name[0] == 'w' && name[1] == 'g' && name[2] == 'l') ||
-            (name[0] == 'g' && name[1] == 'l' && name[2] == 'X')) {
-            // XXX: We ignore the majority of the OS-specific calls for now
-            if (name == "glXSwapBuffers" ||
-                name == "wglSwapBuffers") {
-                frame_complete(call->no);
-                if (double_buffer)
-                    drawable->swapBuffers();
-                else
-                    glFlush();
-            } else if (name == "glXMakeCurrent" ||
-                       name == "wglMakeCurrent") {
-                glFlush();
-                if (!double_buffer) {
-                    frame_complete(call->no);
-                }
-            }
-            skipCall = true;
+        if (name[0] == 'w' && name[1] == 'g' && name[2] == 'l') {
+            glretrace::retrace_call_wgl(*call);
         }
-
-        if (!skipCall) {
+        else if (name[0] == 'g' && name[1] == 'l' && name[2] == 'X') {
+            glretrace::retrace_call_glx(*call);
+        } else {
             retrace::retrace_call(*call);
         }
 

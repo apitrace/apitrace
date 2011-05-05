@@ -59,6 +59,9 @@ extern unsigned dump_state;
 void
 checkGlError(int callIdx = -1);
 
+void retrace_call_glx(Trace::Call &call);
+void retrace_call_wgl(Trace::Call &call);
+
 void frame_complete(unsigned call_no);
 
 void state_dump(std::ostream &os);

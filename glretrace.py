@@ -186,4 +186,4 @@ if __name__ == '__main__':
     api = glapi.glapi
     api.add_function(glapi.memcpy)
     retracer = GlRetracer()
-    retracer.retrace_api(glapi.glapi)
+    retracer.retrace_api(api)
