@@ -61,8 +61,8 @@ public:
     PIXELFORMATDESCRIPTOR pfd;
     int iPixelFormat;
 
-    WglDrawable(const Visual *vis) :
-        Drawable(vis)
+    WglDrawable(const Visual *vis, int width, int height) :
+        Drawable(vis, width, height)
     {
         static bool first = TRUE;
         RECT rect;
@@ -83,7 +83,7 @@ public:
         dwExStyle = 0;
         dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 
-        int x = 0, y = 0, width = 256, height = 256;
+        int x = 0, y = 0;
 
         rect.left = x;
         rect.top = y;
@@ -134,7 +134,7 @@ public:
     }
     
     void
-    resize(unsigned w, unsigned h) {
+    resize(int w, int h) {
         Drawable::resize(w, h);
         RECT rClient, rWindow;
         GetClientRect(hWnd, &rClient);
@@ -181,9 +181,9 @@ public:
     }
     
     Drawable *
-    createDrawable(const Visual *visual)
+    createDrawable(const Visual *visual, int width, int height)
     {
-        return new WglDrawable(visual);
+        return new WglDrawable(visual, width, height);
     }
 
     Context *

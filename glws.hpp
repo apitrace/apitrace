@@ -51,17 +51,19 @@ class Drawable
 {
 public:
     const Visual *visual;
-    unsigned width;
-    unsigned height;
+    int width;
+    int height;
 
-    Drawable(const Visual *vis) :
-        visual(vis)
+    Drawable(const Visual *vis, int w, int h) :
+        visual(vis),
+        width(w),
+        height(h)
     {}
 
     virtual ~Drawable() {}
     
     virtual void
-    resize(unsigned w, unsigned h) {
+    resize(int w, int h) {
         width = w;
         height = h;
     }
@@ -92,7 +94,7 @@ public:
     createVisual(bool doubleBuffer = false) = 0;
     
     virtual Drawable *
-    createDrawable(const Visual *visual) = 0;
+    createDrawable(const Visual *visual, int width = 256, int height = 256) = 0;
 
     virtual Context *
     createContext(const Visual *visual) = 0;

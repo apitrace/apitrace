@@ -33,6 +33,9 @@
 namespace glws {
 
 
+static Display *display = NULL;
+static int screen = 0;
+
 class GlxVisual : public Visual
 {
 public:
@@ -51,21 +54,59 @@ public:
 class GlxDrawable : public Drawable
 {
 public:
-    Display *display;
     Window window;
 
-    GlxDrawable(const Visual *vis, Display *dpy, Window win) :
-        Drawable(vis),
-        display(dpy), 
-        window(win)
-    {}
+    GlxDrawable(const Visual *vis, int w, int h) :
+        Drawable(vis, w, h)
+    {
+        XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
+
+        Window root = RootWindow(display, screen);
+
+        /* window attributes */
+        XSetWindowAttributes attr;
+        attr.background_pixel = 0;
+        attr.border_pixel = 0;
+        attr.colormap = XCreateColormap(display, root, visinfo->visual, AllocNone);
+        attr.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
+
+        unsigned long mask;
+        mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
+
+        int x = 0, y = 0;
+
+        window = XCreateWindow(
+            display, root,
+            x, y, width, height,
+            0,
+            visinfo->depth,
+            InputOutput,
+            visinfo->visual,
+            mask,
+            &attr);
+
+        XSizeHints sizehints;
+        sizehints.x = x;
+        sizehints.y = y;
+        sizehints.width  = width;
+        sizehints.height = height;
+        sizehints.flags = USSize | USPosition;
+        XSetNormalHints(display, window, &sizehints);
+
+        const char *name = "glretrace";
+        XSetStandardProperties(
+            display, window, name, name,
+            None, (char **)NULL, 0, &sizehints);
+
+        XMapWindow(display, window);
+    }
 
     ~GlxDrawable() {
         XDestroyWindow(display, window);
     }
-    
+
     void
-    resize(unsigned w, unsigned h) {
+    resize(int w, int h) {
         glXWaitGL();
         Drawable::resize(w, h);
         XResizeWindow(display, window, w, h);
@@ -81,12 +122,10 @@ public:
 class GlxContext : public Context
 {
 public:
-    Display *display;
     GLXContext context;
-    
-    GlxContext(const Visual *vis, Display *dpy, GLXContext ctx) :
+
+    GlxContext(const Visual *vis, GLXContext ctx) :
         Context(vis),
-        display(dpy), 
         context(ctx)
     {}
 
@@ -98,18 +137,16 @@ public:
 
 class GlxWindowSystem : public WindowSystem
 {
-private:
-    Display *display;
-    int screen;
-
 public:
     GlxWindowSystem() {
-        display = XOpenDisplay(NULL);
-	if (!display) {
-            std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
-            exit(1);
+        if (!display) {
+            display = XOpenDisplay(NULL);
+            if (!display) {
+                std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
+                exit(1);
+            }
+            screen = DefaultScreen(display);
         }
-        screen = DefaultScreen(display);
     }
 
     ~GlxWindowSystem() {
@@ -140,57 +177,16 @@ public:
         };
 
         XVisualInfo *visinfo;
-        
+
         visinfo = glXChooseVisual(display, screen, doubleBuffer ? double_attribs : single_attribs);
 
         return new GlxVisual(visinfo);
     }
-    
+
     Drawable *
-    createDrawable(const Visual *visual)
+    createDrawable(const Visual *visual, int width, int height)
     {
-        XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
-
-        Window root = RootWindow(display, screen);
-
-        /* window attributes */
-        XSetWindowAttributes attr;
-        attr.background_pixel = 0;
-        attr.border_pixel = 0;
-        attr.colormap = XCreateColormap(display, root, visinfo->visual, AllocNone);
-        attr.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
-        
-        unsigned long mask;
-        mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
-
-        int x = 0, y = 0, width = 256, height = 256;
-
-        Window window = XCreateWindow(
-            display, root, 
-            x, y, width, height,
-            0, 
-            visinfo->depth, 
-            InputOutput,
-            visinfo->visual, 
-            mask, 
-            &attr);
-
-        XSizeHints sizehints;
-        sizehints.x = x;
-        sizehints.y = y;
-        sizehints.width  = width;
-        sizehints.height = height;
-        sizehints.flags = USSize | USPosition;
-        XSetNormalHints(display, window, &sizehints);
-        
-        const char *name = "glretrace";
-        XSetStandardProperties(
-            display, window, name, name,
-            None, (char **)NULL, 0, &sizehints);
-
-        XMapWindow(display, window);
-        
-        return new GlxDrawable(visual, display, window);
+        return new GlxDrawable(visual, width, height);
     }
 
     Context *
@@ -198,7 +194,7 @@ public:
     {
         XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
         GLXContext context = glXCreateContext(display, visinfo, NULL, True);
-        return new GlxContext(visual, display, context);
+        return new GlxContext(visual, context);
     }
 
     bool
