@@ -34,19 +34,11 @@ class ApiTexture : public ApiSurface
 public:
     ApiTexture();
 
-    int unit() const;
-    void setUnit(int un);
-
-    int level() const;
-    void setLevel(int l);
-
-    QString target() const;
-    void setTarget(const QString &str);
+    QString label() const;
+    void setLabel(const QString &str);
 
 private:
-    int m_unit;
-    int m_level;
-    QString m_target;
+    QString m_label;
 };
 
 class ApiFramebuffer : public ApiSurface

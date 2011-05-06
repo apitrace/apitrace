@@ -383,8 +383,16 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
     }
 
     if (width <= 0 || height <= 0 || depth <= 0) {
-        json.writeNull();
+        return;
     } else {
+        char label[512];
+
+        GLint active_texture = GL_TEXTURE0;
+        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+        snprintf(label, sizeof label, "%s, %s, level = %i", _enum_string(active_texture), _enum_string(target), level);
+
+        json.beginMember(label);
+
         json.beginObject();
 
         // Tell the GUI this is no ordinary object, but an image
@@ -615,16 +623,12 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print 'static inline void'
         print 'writeTexture(JSONWriter &json, GLenum target, GLenum binding)'
         print '{'
-        print '    GLint texture = 0;'
-        print '    glGetIntegerv(binding, &texture);'
-        print '    if (!glIsEnabled(target) && !texture) {'
-        print '        json.writeNull();'
+        print '    GLint texture_binding = 0;'
+        print '    glGetIntegerv(binding, &texture_binding);'
+        print '    if (!glIsEnabled(target) && !texture_binding) {'
         print '        return;'
         print '    }'
         print
-        print '    json.beginObject();'
-        print '    json.beginMember("levels");'
-        print '    json.beginArray();'
         print '    GLint level = 0;'
         print '    do {'
         print '        GLint width = 0, height = 0;'
@@ -633,25 +637,11 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '        if (!width || !height) {'
         print '            break;'
         print '        }'
-        print '        json.beginObject();'
         print
-        # FIXME: This is not the original texture name in the trace -- we need
-        # to do a reverse lookup of the texture mappings to find the original one
-        print '        json.beginMember("binding");'
-        print '        json.writeNumber(texture);'
-        print '        json.endMember();'
-        print
-        print '        json.beginMember("image");'
         print '        writeTextureImage(json, target, level);'
-        print '        json.endMember();'
         print
-        print '        json.endObject();'
         print '        ++level;'
         print '    } while(true);'
-        print '    json.endArray();'
-        print '    json.endMember(); // levels'
-        print
-        print '    json.endObject();'
         print '}'
         print
 
@@ -798,7 +788,7 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
     def dump_textures(self):
         print '    {'
         print '        json.beginMember("textures");'
-        print '        json.beginArray();'
+        print '        json.beginObject();'
         print '        GLint active_texture = GL_TEXTURE0;'
         print '        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);'
         print '        GLint max_texture_coords = 0;'
@@ -807,17 +797,14 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);'
         print '        GLint max_units = std::max(max_combined_texture_image_units, max_texture_coords);'
         print '        for (GLint unit = 0; unit < max_units; ++unit) {'
-        print '            glActiveTexture(GL_TEXTURE0 + unit);'
-        print '            json.beginObject();'
+        print '            GLenum texture = GL_TEXTURE0 + unit;'
+        print '            glActiveTexture(texture);'
         for target, binding in texture_targets:
-            print '            json.beginMember("%s");' % target
             print '            writeTexture(json, %s, %s);' % (target, binding)
-            print '            json.endMember();'
-        print '            json.endObject();'
         print '        }'
         print '        glActiveTexture(active_texture);'
-        print '        json.endArray();'
-        print '        json.endMember(); // texture'
+        print '        json.endObject();'
+        print '        json.endMember(); // textures'
         print '    }'
         print
 

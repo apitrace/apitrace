@@ -610,44 +610,32 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         m_shaderSources[type] = source;
     }
 
-    QVariantList textureUnits =
-        parsedJson[QLatin1String("textures")].toList();
-    for (int i = 0; i < textureUnits.count(); ++i) {
-        QVariantMap unit = textureUnits[i].toMap();
-        for (itr = unit.constBegin(); itr != unit.constEnd(); ++itr) {
-            QVariantMap target = itr.value().toMap();
-            if (target.count()) {
-                QVariantList levels = target[QLatin1String("levels")].toList();
-                for (int j = 0; j < levels.count(); ++j) {
-                    QVariantMap level = levels[j].toMap();
-                    QVariantMap image = level[QLatin1String("image")].toMap();
-                    QSize size(image[QLatin1String("__width__")].toInt(),
-                               image[QLatin1String("__height__")].toInt());
-                    QString cls = image[QLatin1String("__class__")].toString();
-                    QString type = image[QLatin1String("__type__")].toString();
-                    bool normalized =
-                        image[QLatin1String("__normalized__")].toBool();
-                    int numChannels =
-                        image[QLatin1String("__channels__")].toInt();
+    QVariantMap textures =
+        parsedJson[QLatin1String("textures")].toMap();
+    for (itr = textures.constBegin(); itr != textures.constEnd(); ++itr) {
+        QVariantMap image = itr.value().toMap();
+        QSize size(image[QLatin1String("__width__")].toInt(),
+                   image[QLatin1String("__height__")].toInt());
+        QString cls = image[QLatin1String("__class__")].toString();
+        QString type = image[QLatin1String("__type__")].toString();
+        bool normalized =
+            image[QLatin1String("__normalized__")].toBool();
+        int numChannels =
+            image[QLatin1String("__channels__")].toInt();
 
-                    Q_ASSERT(type == QLatin1String("uint8"));
-                    Q_ASSERT(normalized == true);
+        Q_ASSERT(type == QLatin1String("uint8"));
+        Q_ASSERT(normalized == true);
 
-                    QByteArray dataArray =
-                        image[QLatin1String("__data__")].toByteArray();
+        QByteArray dataArray =
+            image[QLatin1String("__data__")].toByteArray();
 
-                    ApiTexture tex;
-                    tex.setSize(size);
-                    tex.setNumChannels(numChannels);
-                    tex.setLevel(j);
-                    tex.setUnit(i);
-                    tex.setTarget(itr.key());
-                    tex.contentsFromBase64(dataArray);
+        ApiTexture tex;
+        tex.setSize(size);
+        tex.setNumChannels(numChannels);
+        tex.setLabel(itr.key());
+        tex.contentsFromBase64(dataArray);
 
-                    m_textures.append(tex);
-                }
-            }
-        }
+        m_textures.append(tex);
     }
 
     QVariantMap fbos =

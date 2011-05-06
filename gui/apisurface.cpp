@@ -46,40 +46,18 @@ QImage ApiSurface::thumb() const
 }
 
 ApiTexture::ApiTexture()
-    : ApiSurface(),
-      m_unit(0),
-      m_level(0)
+    : ApiSurface()
 {
 }
 
-int ApiTexture::unit() const
+QString ApiTexture::label() const
 {
-    return m_unit;
+    return m_label;
 }
 
-void ApiTexture::setUnit(int un)
+void ApiTexture::setLabel(const QString &str)
 {
-    m_unit = un;
-}
-
-QString ApiTexture::target() const
-{
-    return m_target;
-}
-
-void ApiTexture::setTarget(const QString &str)
-{
-    m_target = str;
-}
-
-int ApiTexture::level() const
-{
-    return m_level;
-}
-
-void ApiTexture::setLevel(int l)
-{
-    m_level = l;
+    m_label = str;
 }
 
 ApiFramebuffer::ApiFramebuffer()
