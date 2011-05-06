@@ -419,14 +419,14 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
 static inline void
 writeDrawBufferImage(JSONWriter &json, GLenum format)
 {
-    GLint width  = glretrace::window_width;
-    GLint height = glretrace::window_height;
-
     GLint channels = __gl_format_channels(format);
 
-    if (!width || !height) {
+    if (!glretrace::drawable) {
         json.writeNull();
     } else {
+        GLint width  = glretrace::drawable->width;
+        GLint height = glretrace::drawable->height;
+
         json.beginObject();
 
         // Tell the GUI this is no ordinary object, but an image

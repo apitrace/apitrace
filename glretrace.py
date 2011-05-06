@@ -127,19 +127,13 @@ class GlRetracer(Retracer):
 
     def call_function(self, function):
         if function.name == "glViewport":
-            print '    bool reshape_window = false;'
-            print '    if (x + width > glretrace::window_width) {'
-            print '        glretrace::window_width = x + width;'
-            print '        reshape_window = true;'
-            print '    }'
-            print '    if (y + height > glretrace::window_height) {'
-            print '        glretrace::window_height = y + height;'
-            print '        reshape_window = true;'
-            print '    }'
-            print '    if (reshape_window) {'
-            print '        // XXX: does not always work'
-            print '        glretrace::drawable->resize(glretrace::window_width, glretrace::window_height);'
-            print '        reshape_window = false;'
+            print '    if (glretrace::drawable) {'
+            print '        int drawable_width  = x + width;'
+            print '        int drawable_height = y + height;'
+            print '        if (drawable_width  > (int)glretrace::drawable->width ||'
+            print '            drawable_height > (int)glretrace::drawable->height) {'
+            print '            glretrace::drawable->resize(drawable_width, drawable_height);'
+            print '        }'
             print '    }'
 
         if function.name == "glEnd":

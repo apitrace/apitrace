@@ -42,8 +42,6 @@ glws::Visual *visual = NULL;
 glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
 
-int window_width = 256, window_height = 256;
-
 unsigned frame = 0;
 long long startTime = 0;
 bool wait = false;
@@ -118,7 +116,8 @@ static void snapshot(Image::Image &image) {
 void frame_complete(unsigned call_no) {
     ++frame;
     
-    if (snapshot_prefix || compare_prefix) {
+    if (drawable &&
+        (snapshot_prefix || compare_prefix)) {
         Image::Image *ref = NULL;
         if (compare_prefix) {
             char filename[PATH_MAX];
@@ -131,7 +130,7 @@ void frame_complete(unsigned call_no) {
                 std::cout << "Read " << filename << "\n";
         }
         
-        Image::Image src(window_width, window_height, true);
+        Image::Image src(drawable->width, drawable->height, true);
         snapshot(src);
 
         if (snapshot_prefix) {
@@ -171,7 +170,9 @@ static void display(void) {
             retrace::retrace_call(*call);
         }
 
-        if (!insideGlBeginEnd && call->no >= dump_state) {
+        if (!insideGlBeginEnd &&
+            drawable && context &&
+            call->no >= dump_state) {
             state_dump(std::cout);
             exit(0);
         }
@@ -256,10 +257,6 @@ int main(int argc, char **argv)
 
     ws = glws::createNativeWindowSystem();
     visual = ws->createVisual(double_buffer);
-    drawable = ws->createDrawable(visual);
-    drawable->resize(window_width, window_height);
-    context = ws->createContext(visual);
-    ws->makeCurrent(drawable, context);
 
     for ( ; i < argc; ++i) {
         if (parser.open(argv[i])) {

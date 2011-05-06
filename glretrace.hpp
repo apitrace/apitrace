@@ -43,9 +43,6 @@ extern glws::Visual *visual;
 extern glws::Drawable *drawable;
 extern glws::Context *context;
 
-extern int window_width;
-extern int window_height;
-
 extern unsigned frame;
 extern long long startTime;
 extern bool wait;
