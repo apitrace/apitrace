@@ -169,9 +169,29 @@ static void retrace_glXQueryDrawable(Trace::Call &call) {
 }
 
 static void retrace_glXCreateNewContext(Trace::Call &call) {
+    retrace_glXCreateContext(call);
 }
 
 static void retrace_glXMakeContextCurrent(Trace::Call &call) {
+    if (drawable && context) {
+        glFlush();
+        if (!double_buffer) {
+            frame_complete(call.no);
+        }
+    }
+
+    glws::Drawable *new_drawable = getDrawable(static_cast<unsigned long>(call.arg(1)));
+    glws::Context *new_context = context_map[call.arg(3).toPointer()];
+
+    bool result = ws->makeCurrent(new_drawable, new_context);
+
+    if (new_drawable && new_context && result) {
+        drawable = new_drawable;
+        context = new_context;
+    } else {
+        drawable = NULL;
+        context = NULL;
+    }
 }
 
 static void retrace_glXGetCurrentReadDrawable(Trace::Call &call) {
