@@ -59,8 +59,9 @@ public:
     virtual operator unsigned long long (void) const;
     virtual operator double (void) const;
 
-    virtual void *blob(void) const;
-    const char *string(void) const;
+    virtual void *toPointer(void) const;
+    virtual unsigned long long toUIntPtr(void) const;
+    virtual const char *toString(void) const;
 
     inline operator signed char (void) const { 
         return static_cast<signed long long>(*this);
@@ -109,7 +110,9 @@ public:
     operator signed long long (void) const;
     operator unsigned long long (void) const;
     operator double (void) const;
-    void *blob(void) const;
+    void *toPointer(void) const;
+    unsigned long long toUIntPtr(void) const;
+    const char *toString(void) const;
     void visit(Visitor &visitor);
 };
 
@@ -180,6 +183,7 @@ public:
     String(std::string _value) : value(_value) {}
 
     operator bool (void) const;
+    const char *toString(void) const;
     void visit(Visitor &visitor);
 
     std::string value;
@@ -272,7 +276,7 @@ public:
     ~Blob();
 
     operator bool (void) const;
-    void *blob(void) const;
+    void *toPointer(void) const;
     void visit(Visitor &visitor);
 
     size_t size;
@@ -286,7 +290,8 @@ public:
     Pointer(unsigned long long value) : UInt(value) {}
 
     operator bool (void) const;
-    void *blob(void) const;
+    void *toPointer(void) const;
+    unsigned long long toUIntPtr(void) const;
     void visit(Visitor &visitor);
 };
 

@@ -102,10 +102,10 @@ class ValueExtractor(stdapi.Visitor):
         print '    %s = %s;' % (lvalue, new_lvalue)
     
     def visit_blob(self, blob, lvalue, rvalue):
-        print '    %s = static_cast<%s>((%s).blob());' % (lvalue, blob, rvalue)
+        print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, blob, rvalue)
     
     def visit_string(self, string, lvalue, rvalue):
-        print '    %s = (%s)((%s).string());' % (lvalue, string.expr, rvalue)
+        print '    %s = (%s)((%s).toString());' % (lvalue, string.expr, rvalue)
 
 
 class OpaqueValueExtractor(ValueExtractor):
@@ -115,7 +115,7 @@ class OpaqueValueExtractor(ValueExtractor):
     in the context of handles.'''
 
     def visit_opaque(self, opaque, lvalue, rvalue):
-        print '    %s = static_cast<%s>((%s).blob());' % (lvalue, opaque, rvalue)
+        print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, opaque, rvalue)
 
 
 class ValueWrapper(stdapi.Visitor):

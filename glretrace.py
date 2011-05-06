@@ -160,11 +160,11 @@ class GlRetracer(Retracer):
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
-            print '    %s = static_cast<%s>(%s.blob());' % (lvalue, arg_type, rvalue)
+            print '    %s = static_cast<%s>(%s.toPointer());' % (lvalue, arg_type, rvalue)
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices':
-            print '    %s = %s.blob();' % (lvalue, rvalue)
+            print '    %s = %s.toPointer();' % (lvalue, rvalue)
             return
 
         if function.name.startswith('glUniform') and function.args[0].name == arg.name == 'location':

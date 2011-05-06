@@ -32,16 +32,16 @@
 using namespace glretrace;
 
 
-typedef std::map<void *, glws::Drawable *> DrawableMap;
-typedef std::map<void *, glws::Context *> ContextMap;
+typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
+typedef std::map<unsigned long long, glws::Context *> ContextMap;
 static DrawableMap drawable_map;
 static DrawableMap pbuffer_map;
 static ContextMap context_map;
 
 
 static glws::Drawable *
-getDrawable(void * hdc) {
-    if (hdc == NULL) {
+getDrawable(unsigned long long hdc) {
+    if (hdc == 0) {
         return NULL;
     }
 
@@ -55,7 +55,7 @@ getDrawable(void * hdc) {
 }
 
 static void retrace_wglCreateContext(Trace::Call &call) {
-    void * orig_context = call.ret->blob();
+    unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *context = ws->createContext(glretrace::visual);
     context_map[orig_context] = context;
 }
@@ -71,8 +71,8 @@ static void retrace_wglMakeCurrent(Trace::Call &call) {
         }
     }
     
-    glws::Drawable *new_drawable = getDrawable(call.arg(0).blob());
-    glws::Context *new_context = context_map[call.arg(1).blob()];
+    glws::Drawable *new_drawable = getDrawable(call.arg(0).toUIntPtr());
+    glws::Context *new_context = context_map[call.arg(1).toUIntPtr()];
 
     bool result = ws->makeCurrent(new_drawable, new_context);
 
@@ -161,7 +161,7 @@ static void retrace_wglCreatePbufferARB(Trace::Call &call) {
     unsigned iWidth = call.arg(2);
     unsigned iHeight = call.arg(3);
 
-    void * orig_pbuffer = call.ret->blob();
+    unsigned long long orig_pbuffer = call.ret->toUIntPtr();
     glws::Drawable *drawable = ws->createDrawable(glretrace::visual);
 
     drawable->resize(iWidth, iHeight);
@@ -170,9 +170,9 @@ static void retrace_wglCreatePbufferARB(Trace::Call &call) {
 }
 
 static void retrace_wglGetPbufferDCARB(Trace::Call &call) {
-    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).blob()];
+    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).toUIntPtr()];
 
-    void * orig_hdc = call.ret->blob();
+    unsigned long long orig_hdc = call.ret->toUIntPtr();
 
     drawable_map[orig_hdc] = pbuffer;
 }

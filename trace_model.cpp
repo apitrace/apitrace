@@ -106,11 +106,23 @@ Float  ::operator double (void) const { return value; }
 Enum   ::operator double (void) const { return static_cast<unsigned long long>(*sig->second); }
 
 
-// blob cast
-void * Value  ::blob(void) const { assert(0); return NULL; }
-void * Null   ::blob(void) const { return NULL; }
-void * Blob   ::blob(void) const { return buf; }
-void * Pointer::blob(void) const { return (void *)value; }
+// pointer cast
+void * Value  ::toPointer(void) const { assert(0); return NULL; }
+void * Null   ::toPointer(void) const { return NULL; }
+void * Blob   ::toPointer(void) const { return buf; }
+void * Pointer::toPointer(void) const { return (void *)value; }
+
+
+// pointer cast
+unsigned long long Value  ::toUIntPtr(void) const { assert(0); return 0; }
+unsigned long long Null   ::toUIntPtr(void) const { return 0; }
+unsigned long long Pointer::toUIntPtr(void) const { return value; }
+
+
+// string cast
+const char * Value ::toString(void) const { assert(0); return NULL; }
+const char * Null  ::toString(void) const { return NULL; }
+const char * String::toString(void) const { return value.c_str(); }
 
 
 // virtual Value::visit()
@@ -335,17 +347,6 @@ const Value & Value::operator[](size_t index) const {
         }
     }
     return null;
-}
-
-const char * Value::string(void) const {
-    const String *string = dynamic_cast<const String *>(unwrap(this));
-    if (string)
-        return string->value.c_str();
-    const Null *null = dynamic_cast<const Null *>(unwrap(this));
-    if (null)
-        return NULL;
-    assert(0);
-    return NULL;
 }
 
 std::ostream & operator <<(std::ostream &os, Call &call) {

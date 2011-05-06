@@ -57,7 +57,7 @@ static void retrace_glXChooseVisual(Trace::Call &call) {
 }
 
 static void retrace_glXCreateContext(Trace::Call &call) {
-    void * orig_context = call.ret->blob();
+    void * orig_context = call.ret->toPointer();
     glws::Context *context = ws->createContext(glretrace::visual);
     context_map[orig_context] = context;
 }
@@ -74,7 +74,7 @@ static void retrace_glXMakeCurrent(Trace::Call &call) {
     }
 
     glws::Drawable *new_drawable = getDrawable(static_cast<unsigned long>(call.arg(1)));
-    glws::Context *new_context = context_map[call.arg(2).blob()];
+    glws::Context *new_context = context_map[call.arg(2).toPointer()];
 
     bool result = ws->makeCurrent(new_drawable, new_context);
 
