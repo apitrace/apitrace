@@ -38,7 +38,7 @@ texture_targets = [
     ('GL_TEXTURE_2D', 'GL_TEXTURE_BINDING_2D'),
     ('GL_TEXTURE_3D', 'GL_TEXTURE_BINDING_3D'),
     ('GL_TEXTURE_RECTANGLE', 'GL_TEXTURE_BINDING_RECTANGLE'),
-    #(GL_TEXTURE_CUBE_MAP, 'GL_TEXTURE_BINDING_CUBE_MAP')
+    ('GL_TEXTURE_CUBE_MAP', 'GL_TEXTURE_BINDING_CUBE_MAP')
 ]
 
 
@@ -401,6 +401,11 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         json.writeNumberMember("__channels__", 4);
         
         GLubyte *pixels = new GLubyte[depth*width*height*4];
+
+        if (target == GL_TEXTURE_CUBE_MAP) {
+            // TODO: dump other faces too
+            target = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        }
         
         glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
