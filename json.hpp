@@ -294,10 +294,15 @@ public:
 
     template<class T>
     inline void writeNumber(T n) {
-        separator();
-        os << std::dec << std::setprecision(9) << n;
-        value = true;
-        space = ' ';
+        if (n != n) {
+            // NaN
+            writeNull();
+        } else {
+            separator();
+            os << std::dec << std::setprecision(9) << n;
+            value = true;
+            space = ' ';
+        }
     }
     
     inline void writeStringMember(const char *name, const char *s) {
