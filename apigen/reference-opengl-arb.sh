@@ -1,5 +1,5 @@
 #!/bin/sh
-# Script to extract reference link for functions documented in OpenGL ARB specs
+# Script to extract reference URLs for functions documented in OpenGL ARB specs
 
 extract_urls () {
     for URL

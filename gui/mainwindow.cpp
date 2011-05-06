@@ -497,7 +497,7 @@ void MainWindow::fillStateForFrame()
                 int height = texture.size().height();
                 QString descr =
                     QString::fromLatin1("%1, %2 x %3")
-                    .arg(texture.target())
+                    .arg(texture.label())
                     .arg(width)
                     .arg(height);
                 item->setText(1, descr);
