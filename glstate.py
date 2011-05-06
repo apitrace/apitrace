@@ -410,11 +410,6 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
         
         GLubyte *pixels = new GLubyte[depth*width*height*4];
 
-        if (target == GL_TEXTURE_CUBE_MAP) {
-            // TODO: dump other faces too
-            target = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-        }
-        
         glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
         json.beginMember("__data__");
@@ -638,7 +633,13 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '            break;'
         print '        }'
         print
-        print '        writeTextureImage(json, target, level);'
+        print '        if (target == GL_TEXTURE_CUBE_MAP) {'
+        print '            for (int face = 0; face < 6; ++face) {'
+        print '                writeTextureImage(json, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level);'
+        print '            }'
+        print '        } else {'
+        print '            writeTextureImage(json, target, level);'
+        print '        }'
         print
         print '        ++level;'
         print '    } while(true);'
