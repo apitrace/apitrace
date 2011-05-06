@@ -110,6 +110,7 @@ static void retrace_wglShareLists(Trace::Call &call) {
 }
 
 static void retrace_wglCreateLayerContext(Trace::Call &call) {
+    retrace_wglCreateContext(call);
 }
 
 static void retrace_wglDescribeLayerPlane(Trace::Call &call) {
@@ -122,6 +123,7 @@ static void retrace_wglRealizeLayerPalette(Trace::Call &call) {
 }
 
 static void retrace_wglSwapLayerBuffers(Trace::Call &call) {
+    retrace_wglSwapBuffers(call);
 }
 
 static void retrace_wglUseFontBitmapsA(Trace::Call &call) {
