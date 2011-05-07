@@ -137,7 +137,7 @@ writeValue(const QVariant &var, unsigned &id)
     }
         break;
     case QVariant::Double:
-        Trace::LiteralFloat(var.toDouble());
+        Trace::LiteralDouble(var.toDouble());
         break;
     case QMetaType::Float:
         Trace::LiteralFloat(var.toFloat());

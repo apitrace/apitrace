@@ -57,7 +57,8 @@ public:
     virtual bool toBool(void) const = 0;
     virtual signed long long toSInt(void) const;
     virtual unsigned long long toUInt(void) const;
-    virtual double toFloat(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
 
     virtual void *toPointer(void) const;
     virtual unsigned long long toUIntPtr(void) const;
@@ -73,7 +74,8 @@ public:
     bool toBool(void) const;
     signed long long toSInt(void) const;
     unsigned long long toUInt(void) const;
-    double toFloat(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
     void *toPointer(void) const;
     unsigned long long toUIntPtr(void) const;
     const char *toString(void) const;
@@ -89,7 +91,8 @@ public:
     bool toBool(void) const;
     signed long long toSInt(void) const;
     unsigned long long toUInt(void) const;
-    double toFloat(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
     bool value;
@@ -104,7 +107,8 @@ public:
     bool toBool(void) const;
     signed long long toSInt(void) const;
     unsigned long long toUInt(void) const;
-    double toFloat(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
     signed long long value;
@@ -119,7 +123,8 @@ public:
     bool toBool(void) const;
     signed long long toSInt(void) const;
     unsigned long long toUInt(void) const;
-    double toFloat(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
     unsigned long long value;
@@ -134,7 +139,8 @@ public:
     bool toBool(void) const;
     signed long long toSInt(void) const;
     unsigned long long toUInt(void) const;
-    double toFloat(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
     double value;
@@ -176,7 +182,8 @@ public:
     bool toBool(void) const;
     signed long long toSInt(void) const;
     unsigned long long toUInt(void) const;
-    double toFloat(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
     const Signature *sig;
@@ -286,11 +293,6 @@ protected:
 
 
 std::ostream & operator <<(std::ostream &os, Value *value);
-
-
-signed long long asSInt(const Value &node);
-unsigned long long asUInt(const Value &node);
-double asFloat(const Value &node);
 
 
 class Call

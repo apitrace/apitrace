@@ -95,7 +95,7 @@ namespace Trace {
     void LiteralSInt(signed long long value);
     void LiteralUInt(unsigned long long value);
     void LiteralFloat(float value);
-    void LiteralFloat(double value);
+    void LiteralDouble(double value);
     void LiteralString(const char *str);
     void LiteralString(const char *str, size_t size);
     void LiteralWString(const wchar_t *str);

@@ -566,7 +566,7 @@ UInt = Literal("unsigned int", "UInt")
 ULong = Literal("unsigned long", "UInt")
 ULongLong = Literal("unsigned long long", "UInt")
 Float = Literal("float", "Float")
-Double = Literal("double", "Float")
+Double = Literal("double", "Double")
 SizeT = Literal("size_t", "UInt")
 WString = Literal("wchar_t *", "WString")
 

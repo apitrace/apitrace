@@ -259,7 +259,7 @@ void LiteralFloat(float value) {
     WriteFloat(value);
 }
 
-void LiteralFloat(double value) {
+void LiteralDouble(double value) {
     WriteByte(Trace::TYPE_DOUBLE);
     WriteDouble(value);
 }

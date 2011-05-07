@@ -97,13 +97,23 @@ unsigned long long Enum   ::toUInt(void) const { return sig->second->toUInt(); }
 
 
 // floating point cast
-double Value  ::toFloat(void) const { assert(0); return 0; }
-double Null   ::toFloat(void) const { return 0; }
-double Bool   ::toFloat(void) const { return static_cast<double>(value); }
-double SInt   ::toFloat(void) const { return static_cast<double>(value); }
-double UInt   ::toFloat(void) const { return static_cast<double>(value); }
-double Float  ::toFloat(void) const { return value; }
-double Enum   ::toFloat(void) const { return sig->second->toFloat(); }
+float Value  ::toFloat(void) const { assert(0); return 0; }
+float Null   ::toFloat(void) const { return 0; }
+float Bool   ::toFloat(void) const { return static_cast<float>(value); }
+float SInt   ::toFloat(void) const { return static_cast<float>(value); }
+float UInt   ::toFloat(void) const { return static_cast<float>(value); }
+float Float  ::toFloat(void) const { return value; }
+float Enum   ::toFloat(void) const { return sig->second->toFloat(); }
+
+
+// floating point cast
+double Value  ::toDouble(void) const { assert(0); return 0; }
+double Null   ::toDouble(void) const { return 0; }
+double Bool   ::toDouble(void) const { return static_cast<double>(value); }
+double SInt   ::toDouble(void) const { return static_cast<double>(value); }
+double UInt   ::toDouble(void) const { return static_cast<double>(value); }
+double Float  ::toDouble(void) const { return value; }
+double Enum   ::toDouble(void) const { return sig->second->toDouble(); }
 
 
 // pointer cast
