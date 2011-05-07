@@ -436,6 +436,32 @@ variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVa
     return item;
 }
 
+static void addSurfaceItem(const ApiSurface &surface,
+                           const QString &label,
+                           QTreeWidgetItem *parent,
+                           QTreeWidget *tree)
+{
+    int width = surface.size().width();
+    int height = surface.size().height();
+    QIcon icon(QPixmap::fromImage(surface.thumb()));
+    QTreeWidgetItem *item = new QTreeWidgetItem(parent);
+
+    item->setIcon(0, icon);
+
+    QString descr =
+        QString::fromLatin1("%1, %2 x %3")
+        .arg(label)
+        .arg(width)
+        .arg(height);
+
+    //item->setText(1, descr);
+    QLabel *l = new QLabel(descr, tree);
+    l->setWordWrap(true);
+    tree->setItemWidget(item, 1, l);
+
+    item->setData(0, Qt::UserRole, surface.image());
+}
+
 void MainWindow::fillStateForFrame()
 {
     QVariantMap params;
@@ -490,20 +516,9 @@ void MainWindow::fillStateForFrame()
             for (int i = 0; i < textures.count(); ++i) {
                 const ApiTexture &texture =
                     textures[i];
-                QIcon icon(QPixmap::fromImage(texture.thumb()));
-                QTreeWidgetItem *item = new QTreeWidgetItem(textureItem);
-                item->setIcon(0, icon);
-                int width = texture.size().width();
-                int height = texture.size().height();
-                QString descr =
-                    QString::fromLatin1("%1, %2 x %3")
-                    .arg(texture.label())
-                    .arg(width)
-                    .arg(height);
-                item->setText(1, descr);
-
-                item->setData(0, Qt::UserRole,
-                              texture.image());
+                addSurfaceItem(texture, texture.label(),
+                               textureItem,
+                               m_ui.surfacesTreeWidget);
             }
         }
         if (!fbos.isEmpty()) {
@@ -516,20 +531,9 @@ void MainWindow::fillStateForFrame()
             for (int i = 0; i < fbos.count(); ++i) {
                 const ApiFramebuffer &fbo =
                     fbos[i];
-                QIcon icon(QPixmap::fromImage(fbo.thumb()));
-                QTreeWidgetItem *item = new QTreeWidgetItem(fboItem);
-                item->setIcon(0, icon);
-                int width = fbo.size().width();
-                int height = fbo.size().height();
-                QString descr =
-                    QString::fromLatin1("%1, %2 x %3")
-                    .arg(fbo.type())
-                    .arg(width)
-                    .arg(height);
-                item->setText(1, descr);
-
-                item->setData(0, Qt::UserRole,
-                              fbo.image());
+                addSurfaceItem(fbo, fbo.type(),
+                               fboItem,
+                               m_ui.surfacesTreeWidget);
             }
         }
         m_ui.surfacesTab->setEnabled(true);
