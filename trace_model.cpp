@@ -63,47 +63,47 @@ Blob::~Blob() {
 
 
 // bool cast
-Null   ::operator bool(void) const { return false; }
-Bool   ::operator bool(void) const { return value; }
-SInt   ::operator bool(void) const { return value != 0; }
-UInt   ::operator bool(void) const { return value != 0; }
-Float  ::operator bool(void) const { return value != 0; }
-String ::operator bool(void) const { return true; }
-Enum   ::operator bool(void) const { return static_cast<bool>(*sig->second); }
-Struct ::operator bool(void) const { return true; }
-Array  ::operator bool(void) const { return true; }
-Blob   ::operator bool(void) const { return true; }
-Pointer::operator bool(void) const { return value != 0; }
+bool Null   ::toBool(void) const { return false; }
+bool Bool   ::toBool(void) const { return value; }
+bool SInt   ::toBool(void) const { return value != 0; }
+bool UInt   ::toBool(void) const { return value != 0; }
+bool Float  ::toBool(void) const { return value != 0; }
+bool String ::toBool(void) const { return true; }
+bool Enum   ::toBool(void) const { return sig->second->toBool(); }
+bool Struct ::toBool(void) const { return true; }
+bool Array  ::toBool(void) const { return true; }
+bool Blob   ::toBool(void) const { return true; }
+bool Pointer::toBool(void) const { return value != 0; }
 
 
 // signed integer cast
-Value  ::operator signed long long (void) const { assert(0); return 0; }
-Null   ::operator signed long long (void) const { return 0; }
-Bool   ::operator signed long long (void) const { return static_cast<signed long long>(value); }
-SInt   ::operator signed long long (void) const { return value; }
-UInt   ::operator signed long long (void) const { assert(static_cast<signed long long>(value) >= 0); return static_cast<signed long long>(value); }
-Float  ::operator signed long long (void) const { return static_cast<signed long long>(value); }
-Enum   ::operator signed long long (void) const { return static_cast<signed long long>(*sig->second); }
+signed long long Value  ::toSInt(void) const { assert(0); return 0; }
+signed long long Null   ::toSInt(void) const { return 0; }
+signed long long Bool   ::toSInt(void) const { return static_cast<signed long long>(value); }
+signed long long SInt   ::toSInt(void) const { return value; }
+signed long long UInt   ::toSInt(void) const { assert(static_cast<signed long long>(value) >= 0); return static_cast<signed long long>(value); }
+signed long long Float  ::toSInt(void) const { return static_cast<signed long long>(value); }
+signed long long Enum   ::toSInt(void) const { return sig->second->toSInt(); }
 
 
 // unsigned integer cast
-Value  ::operator unsigned long long (void) const { assert(0); return 0; }
-Null   ::operator unsigned long long (void) const { return 0; }
-Bool   ::operator unsigned long long (void) const { return static_cast<unsigned long long>(value); }
-SInt   ::operator unsigned long long (void) const { assert(value >= 0); return static_cast<signed long long>(value); }
-UInt   ::operator unsigned long long (void) const { return value; }
-Float  ::operator unsigned long long (void) const { return static_cast<unsigned long long>(value); }
-Enum   ::operator unsigned long long (void) const { return static_cast<unsigned long long>(*sig->second); }
+unsigned long long Value  ::toUInt(void) const { assert(0); return 0; }
+unsigned long long Null   ::toUInt(void) const { return 0; }
+unsigned long long Bool   ::toUInt(void) const { return static_cast<unsigned long long>(value); }
+unsigned long long SInt   ::toUInt(void) const { assert(value >= 0); return static_cast<signed long long>(value); }
+unsigned long long UInt   ::toUInt(void) const { return value; }
+unsigned long long Float  ::toUInt(void) const { return static_cast<unsigned long long>(value); }
+unsigned long long Enum   ::toUInt(void) const { return sig->second->toUInt(); }
 
 
 // floating point cast
-Value  ::operator double (void) const { assert(0); return 0; }
-Null   ::operator double (void) const { return 0; }
-Bool   ::operator double (void) const { return static_cast<double>(value); }
-SInt   ::operator double (void) const { return static_cast<double>(value); }
-UInt   ::operator double (void) const { return static_cast<double>(value); }
-Float  ::operator double (void) const { return value; }
-Enum   ::operator double (void) const { return static_cast<unsigned long long>(*sig->second); }
+double Value  ::toFloat(void) const { assert(0); return 0; }
+double Null   ::toFloat(void) const { return 0; }
+double Bool   ::toFloat(void) const { return static_cast<double>(value); }
+double SInt   ::toFloat(void) const { return static_cast<double>(value); }
+double UInt   ::toFloat(void) const { return static_cast<double>(value); }
+double Float  ::toFloat(void) const { return value; }
+double Enum   ::toFloat(void) const { return sig->second->toFloat(); }
 
 
 // pointer cast

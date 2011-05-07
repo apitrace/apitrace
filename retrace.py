@@ -51,10 +51,8 @@ def handle_entry(handle, value):
 class ValueExtractor(stdapi.Visitor):
 
     def visit_literal(self, literal, lvalue, rvalue):
-        if literal.format == 'Bool':
-            print '    %s = static_cast<bool>(%s);' % (lvalue, rvalue)
-        else:
-            print '    %s = %s;' % (lvalue, rvalue)
+        #if literal.format in ('Bool', 'UInt'):
+        print '    %s = (%s).to%s();' % (lvalue, rvalue, literal.format)
 
     def visit_const(self, const, lvalue, rvalue):
         self.visit(const.type, lvalue, rvalue)
@@ -63,7 +61,7 @@ class ValueExtractor(stdapi.Visitor):
         self.visit(alias.type, lvalue, rvalue)
     
     def visit_enum(self, enum, lvalue, rvalue):
-        print '    %s = %s;' % (lvalue, rvalue)
+        print '    %s = (%s).toSInt();' % (lvalue, rvalue)
 
     def visit_bitmask(self, bitmask, lvalue, rvalue):
         self.visit(bitmask.type, lvalue, rvalue)

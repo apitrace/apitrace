@@ -54,50 +54,14 @@ public:
     virtual ~Value() {}
     virtual void visit(Visitor &visitor) = 0;
 
-    virtual operator bool (void) const = 0;
-    virtual operator signed long long (void) const;
-    virtual operator unsigned long long (void) const;
-    virtual operator double (void) const;
+    virtual bool toBool(void) const = 0;
+    virtual signed long long toSInt(void) const;
+    virtual unsigned long long toUInt(void) const;
+    virtual double toFloat(void) const;
 
     virtual void *toPointer(void) const;
     virtual unsigned long long toUIntPtr(void) const;
     virtual const char *toString(void) const;
-
-    inline operator signed char (void) const { 
-        return static_cast<signed long long>(*this);
-    }
-
-    inline operator unsigned char (void) const { 
-        return static_cast<signed long long>(*this);
-    }
-
-    inline operator signed short (void) const { 
-        return static_cast<signed long long>(*this);
-    }
-
-    inline operator unsigned short (void) const { 
-        return static_cast<unsigned long long>(*this);
-    }
-
-    inline operator signed (void) const { 
-        return static_cast<signed long long>(*this);
-    }
-
-    inline operator unsigned (void) const { 
-        return static_cast<unsigned long long>(*this);
-    }
-
-    inline operator signed long (void) const { 
-        return static_cast<signed long long>(*this);
-    }
-
-    inline operator unsigned long (void) const { 
-        return static_cast<unsigned long long>(*this);
-    }
-
-    inline operator float (void) const { 
-        return static_cast<double>(*this);
-    }
 
     const Value & operator[](size_t index) const;
 };
@@ -106,10 +70,10 @@ public:
 class Null : public Value
 {
 public:
-    operator bool (void) const;
-    operator signed long long (void) const;
-    operator unsigned long long (void) const;
-    operator double (void) const;
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    double toFloat(void) const;
     void *toPointer(void) const;
     unsigned long long toUIntPtr(void) const;
     const char *toString(void) const;
@@ -122,10 +86,10 @@ class Bool : public Value
 public:
     Bool(bool _value) : value(_value) {}
 
-    operator bool (void) const;
-    operator signed long long (void) const;
-    operator unsigned long long (void) const;
-    operator double (void) const;
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    double toFloat(void) const;
     void visit(Visitor &visitor);
 
     bool value;
@@ -137,10 +101,10 @@ class SInt : public Value
 public:
     SInt(signed long long _value) : value(_value) {}
 
-    operator bool (void) const;
-    operator signed long long (void) const;
-    operator unsigned long long (void) const;
-    operator double (void) const;
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    double toFloat(void) const;
     void visit(Visitor &visitor);
 
     signed long long value;
@@ -152,10 +116,10 @@ class UInt : public Value
 public:
     UInt(unsigned long long _value) : value(_value) {}
 
-    operator bool (void) const;
-    operator signed long long (void) const;
-    operator unsigned long long (void) const;
-    operator double (void) const;
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    double toFloat(void) const;
     void visit(Visitor &visitor);
 
     unsigned long long value;
@@ -167,10 +131,10 @@ class Float : public Value
 public:
     Float(double _value) : value(_value) {}
 
-    operator bool (void) const;
-    operator signed long long (void) const;
-    operator unsigned long long (void) const;
-    operator double (void) const;
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    double toFloat(void) const;
     void visit(Visitor &visitor);
 
     double value;
@@ -182,7 +146,7 @@ class String : public Value
 public:
     String(std::string _value) : value(_value) {}
 
-    operator bool (void) const;
+    bool toBool(void) const;
     const char *toString(void) const;
     void visit(Visitor &visitor);
 
@@ -209,10 +173,10 @@ public:
 
     Enum(const Signature *_sig) : sig(_sig) {}
 
-    operator bool (void) const;
-    operator signed long long (void) const;
-    operator unsigned long long (void) const;
-    operator double (void) const;
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    double toFloat(void) const;
     void visit(Visitor &visitor);
 
     const Signature *sig;
@@ -244,7 +208,7 @@ public:
     Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
     ~Struct();
 
-    operator bool (void) const;
+    bool toBool(void) const;
     void visit(Visitor &visitor);
 
     const Signature *sig;
@@ -258,7 +222,7 @@ public:
     Array(size_t len) : values(len) {}
     ~Array();
 
-    operator bool (void) const;
+    bool toBool(void) const;
     void visit(Visitor &visitor);
 
     std::vector<Value *> values;
@@ -275,7 +239,7 @@ public:
 
     ~Blob();
 
-    operator bool (void) const;
+    bool toBool(void) const;
     void *toPointer(void) const;
     void visit(Visitor &visitor);
 
@@ -289,7 +253,7 @@ class Pointer : public UInt
 public:
     Pointer(unsigned long long value) : UInt(value) {}
 
-    operator bool (void) const;
+    bool toBool(void) const;
     void *toPointer(void) const;
     unsigned long long toUIntPtr(void) const;
     void visit(Visitor &visitor);
