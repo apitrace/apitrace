@@ -33,7 +33,7 @@ Retracing:
 * Use visuals that best match those used in the trace; specially auto
   detect single/double buffer visuals.
 
-* Support multiple contexts
+* Respect multiple context sharing of the traces.
 
 * Support multiple threads
 
