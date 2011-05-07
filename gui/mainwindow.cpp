@@ -963,12 +963,14 @@ void MainWindow::customContextMenuRequested(QPoint pos)
 
     ApiTraceEvent *event =
         index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
-    if (!event || event->type() != ApiTraceEvent::Call)
+    if (!event)
         return;
 
     menu.addAction(QIcon(":/resources/media-record.png"),
                    tr("Lookup state"), this, SLOT(lookupState()));
-    menu.addAction(tr("Edit"), this, SLOT(editCall()));
+    if (event->type() == ApiTraceEvent::Call) {
+        menu.addAction(tr("Edit"), this, SLOT(editCall()));
+    }
 
     menu.exec(QCursor::pos());
 }
