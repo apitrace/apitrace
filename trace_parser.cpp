@@ -26,6 +26,7 @@
 
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <zlib.h>
 
@@ -109,9 +110,8 @@ Call *Parser::parse_call(void) {
             std::cerr << "message: " << read_string() << "\n";
             break;
         default:
-            std::cerr << "error: unknown call detail " << c << "\n";
-            assert(0);
-            /* fallthrough */
+            std::cerr << "error: unknown event " << c << "\n";
+            exit(1);
         case -1:
             return NULL;
         }
@@ -151,15 +151,16 @@ void Parser::parse_enter(void) {
     Call *call = new Call(sig);
     call->no = next_call_no++;
 
-    parse_call_details(call);
-
-    calls.push_back(call);
+    if (parse_call_details(call)) {
+        calls.push_back(call);
+    } else {
+        delete call;
+    }
 }
 
 
 Call *Parser::parse_leave(void) {
     unsigned call_no = read_uint();
-
     Call *call = NULL;
     for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
         if ((*it)->no == call_no) {
@@ -168,21 +169,25 @@ Call *Parser::parse_leave(void) {
             break;
         }
     }
-    assert(call);
     if (!call) {
         return NULL;
     }
-    parse_call_details(call);
-    return call;
+
+    if (parse_call_details(call)) {
+        return call;
+    } else {
+        delete call;
+        return NULL;
+    }
 }
 
 
-void Parser::parse_call_details(Call *call) {
+bool Parser::parse_call_details(Call *call) {
     do {
         int c = read_byte();
         switch(c) {
         case Trace::CALL_END:
-            return;
+            return true;
         case Trace::CALL_ARG:
             parse_arg(call);
             break;
@@ -191,10 +196,9 @@ void Parser::parse_call_details(Call *call) {
             break;
         default:
             std::cerr << "error: unknown call detail " << c << "\n";
-            assert(0);
-            /* fallthrough */
+            exit(1);
         case -1:
-            return;
+            return false;
         }
     } while(true);
 }
@@ -244,7 +248,8 @@ Value *Parser::parse_value(void) {
         return parse_opaque();
     default:
         std::cerr << "error: unknown type " << c << "\n";
-        assert(0);
+        exit(1);
+    case -1:
         return NULL;
     }
 }
