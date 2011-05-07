@@ -160,8 +160,8 @@ static void retrace_wglMakeContextCurrentARB(Trace::Call &call) {
 }
 
 static void retrace_wglCreatePbufferARB(Trace::Call &call) {
-    unsigned iWidth = call.arg(2).toUInt();
-    unsigned iHeight = call.arg(3).toUInt();
+    int iWidth = call.arg(2).toUInt();
+    int iHeight = call.arg(3).toUInt();
 
     unsigned long long orig_pbuffer = call.ret->toUIntPtr();
     glws::Drawable *drawable = ws->createDrawable(glretrace::visual);
@@ -198,6 +198,8 @@ static void retrace_wglSetPbufferAttribARB(Trace::Call &call) {
 }
 
 static void retrace_wglCreateContextAttribsARB(Trace::Call &call) {
+    retrace_wglCreateContext(call);
+    /* TODO: handle context sharing */
 }
 
 static void retrace_wglMakeContextCurrentEXT(Trace::Call &call) {
