@@ -148,6 +148,7 @@ LD_LIBRARY_PATH:
 
 = Links =
 
+* http://zrusin.blogspot.com/2011/04/apitrace.html
 * http://jrfonseca.blogspot.com/2008/07/tracing-d3d-applications.html
 
 
@@ -156,11 +157,16 @@ LD_LIBRARY_PATH:
  * [http://www.mikoweb.eu/index.php?node=21 Proxy DLL]
    * [http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/ Intercept Calls to DirectX with a Proxy DLL]
  * [http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm D3DSpy]
- * [http://msdn.microsoft.com/en-us/library/ee417062.aspx PIX]
+ * [http://msdn.microsoft.com/en-us/library/ee417062.aspx Microsoft PIX]
+ * [http://graphics.stanford.edu/~mdfisher/D3D9Interceptor.html Direct3D 9 API Interceptor]
+ * [http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx AMD GPU PerfStudio]
 
 
 == OpenGL ==
 
  * [http://www.opengl.org/sdk/tools/BuGLe/ BuGLe]
- * [http://glintercept.nutty.org/ GLIntercept]
+ * [http://code.google.com/p/glintercept/ GLIntercept]
  * [http://www.gremedy.com/products.php gDEBugger]
+ * [http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html glslDevil]
+ * [http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx AMD GPU PerfStudio]
+
