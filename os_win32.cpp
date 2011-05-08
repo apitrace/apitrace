@@ -99,11 +99,18 @@ DebugMessage(const char *format, ...)
     va_end(ap);
 
     OutputDebugStringA(buf);
+
+    /*
+     * Also write the message to stderr, when a debugger is not present (to
+     * avoid duplicate messages in command line debuggers).
+     */
+#if _WIN32_WINNT > 0x0400
     if (!IsDebuggerPresent()) {
         fflush(stdout);
         fputs(buf, stderr);
         fflush(stderr);
     }
+#endif
 }
 
 long long GetTime(void)

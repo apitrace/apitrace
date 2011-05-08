@@ -40,6 +40,9 @@ endif (NOT WIN32)
 if (WIN32)
     # MSVC & MinGW only define & use APIENTRY
     add_definitions (-DGLAPIENTRY=__stdcall)
+
+    # http://msdn.microsoft.com/en-us/library/aa383745.aspx
+    add_definitions (-D_WIN32_WINNT=0x0500 -DWINVER=0x0500)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
