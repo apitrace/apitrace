@@ -199,7 +199,7 @@ class GlTracer(Tracer):
 
         # Generate a helper function to know how many elements a parameter has
         print 'static size_t'
-        print 'pname_size(GLenum pname) {'
+        print '__gl_param_size(GLenum pname) {'
         print '    switch(pname) {'
         for function, type, count, name in glparams.parameters:
             if type is not None:
