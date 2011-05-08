@@ -126,12 +126,8 @@ def ConstPointer(type):
 
 class Enum(Type):
 
-    __vid = 0
-
     def __init__(self, name, values):
         Type.__init__(self, name)
-        self.vid = Enum.__vid
-        Enum.__vid += len(values)
         self.values = list(values)
     
     def visit(self, visitor, *args, **kwargs):
