@@ -54,7 +54,7 @@ extern const char *snapshot_prefix;
 extern unsigned dump_state;
 
 void
-checkGlError(int callIdx = -1);
+checkGlError(const Trace::Call &call);
 
 void retrace_call_glx(Trace::Call &call);
 void retrace_call_wgl(Trace::Call &call);

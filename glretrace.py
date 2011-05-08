@@ -145,7 +145,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = true;'
         elif function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    glretrace::checkGlError(call.no);'
+            print '    glretrace::checkGlError(call);'
 
         if function.name == 'glFlush':
             print '    if (!glretrace::double_buffer) {'

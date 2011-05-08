@@ -53,7 +53,7 @@ const char *snapshot_prefix = NULL;
 unsigned dump_state = ~0;
 
 void
-checkGlError(int callIdx) {
+checkGlError(const Trace::Call &call) {
     if (benchmark || insideGlBeginEnd) {
         return;
     }
@@ -63,11 +63,11 @@ checkGlError(int callIdx) {
         return;
     }
 
-    if (callIdx >= 0) {
-        std::cerr << callIdx << ": ";
-    }
+    std::cerr << call.no << ": ";
+    std::cerr << "warning: glGetError(";
+    std::cerr << call.name();
+    std::cerr << ") = ";
 
-    std::cerr << "warning: glGetError() = ";
     switch (error) {
     case GL_INVALID_ENUM:
         std::cerr << "GL_INVALID_ENUM";
@@ -108,7 +108,6 @@ static void snapshot(Image::Image &image) {
     glGetIntegerv(GL_READ_BUFFER, &readbuffer);
     glReadBuffer(drawbuffer);
     glReadPixels(0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-    checkGlError();
     glReadBuffer(readbuffer);
 }
 
