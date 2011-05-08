@@ -107,6 +107,18 @@ static void retrace_wglSwapBuffers(Trace::Call &call) {
 }
 
 static void retrace_wglShareLists(Trace::Call &call) {
+    unsigned long long hglrc1 = call.arg(0).toUIntPtr();
+    unsigned long long hglrc2 = call.arg(1).toUIntPtr();
+
+    glws::Context *share_context = context_map[hglrc1];
+    glws::Context *old_context = context_map[hglrc2];
+
+    glws::Context *new_context =
+        ws->createContext(old_context->visual, share_context);
+    if (new_context) {
+        delete old_context;
+        context_map[hglrc2] = new_context;
+    }
 }
 
 static void retrace_wglCreateLayerContext(Trace::Call &call) {
@@ -198,8 +210,15 @@ static void retrace_wglSetPbufferAttribARB(Trace::Call &call) {
 }
 
 static void retrace_wglCreateContextAttribsARB(Trace::Call &call) {
-    retrace_wglCreateContext(call);
-    /* TODO: handle context sharing */
+    unsigned long long orig_context = call.ret->toUIntPtr();
+    glws::Context *share_context = NULL;
+
+    if (call.arg(1).toPointer()) {
+        share_context = context_map[call.arg(1).toUIntPtr()];
+    }
+
+    glws::Context *context = ws->createContext(glretrace::visual, share_context);
+    context_map[orig_context] = context;
 }
 
 static void retrace_wglMakeContextCurrentEXT(Trace::Call &call) {

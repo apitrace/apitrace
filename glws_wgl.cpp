@@ -154,10 +154,12 @@ class WglContext : public Context
 {
 public:
     HGLRC hglrc;
-    
-    WglContext(const Visual *vis) :
+    WglContext *shareContext;
+
+    WglContext(const Visual *vis, WglContext *share) :
         Context(vis),
-        hglrc(0)
+        hglrc(0),
+        shareContext(share)
     {}
 
     ~WglContext() {
@@ -187,9 +189,9 @@ public:
     }
 
     Context *
-    createContext(const Visual *visual)
+    createContext(const Visual *visual, Context *shareContext)
     {
-        return new WglContext(visual);
+        return new WglContext(visual, dynamic_cast<WglContext *>(shareContext));
     }
 
     bool
@@ -205,6 +207,10 @@ public:
                 wglContext->hglrc = wglCreateContext(wglDrawable->hDC);
                 if (!wglContext->hglrc) {
                     return false;
+                }
+                if (wglContext->shareContext) {
+                    wglShareLists(wglContext->shareContext->hglrc,
+                                  wglContext->hglrc);
                 }
             }
 

@@ -190,10 +190,18 @@ public:
     }
 
     Context *
-    createContext(const Visual *visual)
+    createContext(const Visual *visual, Context *shareContext)
     {
         XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
-        GLXContext context = glXCreateContext(display, visinfo, NULL, True);
+        GLXContext share_context = NULL;
+        GLXContext context;
+
+        if (shareContext) {
+            share_context = dynamic_cast<GlxContext*>(shareContext)->context;
+        }
+
+        context = glXCreateContext(display, visinfo,
+                                   share_context, True);
         return new GlxContext(visual, context);
     }
 

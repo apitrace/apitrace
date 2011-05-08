@@ -58,7 +58,13 @@ static void retrace_glXChooseVisual(Trace::Call &call) {
 
 static void retrace_glXCreateContext(Trace::Call &call) {
     void * orig_context = call.ret->toPointer();
-    glws::Context *context = ws->createContext(glretrace::visual);
+    glws::Context *share_context = NULL;
+
+    if (call.arg(2).toPointer()) {
+        share_context = context_map[call.arg(2).toPointer()];
+    }
+
+    glws::Context *context = ws->createContext(glretrace::visual, share_context);
     context_map[orig_context] = context;
 }
 
@@ -169,7 +175,15 @@ static void retrace_glXQueryDrawable(Trace::Call &call) {
 }
 
 static void retrace_glXCreateNewContext(Trace::Call &call) {
-    retrace_glXCreateContext(call);
+    void * orig_context = call.ret->toPointer();
+    glws::Context *share_context = NULL;
+
+    if (call.arg(3).toPointer()) {
+        share_context = context_map[call.arg(3).toPointer()];
+    }
+
+    glws::Context *context = ws->createContext(glretrace::visual, share_context);
+    context_map[orig_context] = context;
 }
 
 static void retrace_glXMakeContextCurrent(Trace::Call &call) {

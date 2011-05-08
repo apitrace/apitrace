@@ -97,7 +97,7 @@ public:
     createDrawable(const Visual *visual, int width = 256, int height = 256) = 0;
 
     virtual Context *
-    createContext(const Visual *visual) = 0;
+    createContext(const Visual *visual, Context *shareContext = NULL) = 0;
     
     virtual bool
     makeCurrent(Drawable *drawable, Context *context) = 0;
