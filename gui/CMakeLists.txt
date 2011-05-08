@@ -55,5 +55,5 @@ target_link_libraries(qapitrace trace ${QJSON_LIBRARIES} ${QT_LIBRARIES} )
 
 ########### install files ###############
 
-#install(TARGETS qapitrace ${INSTALL_TARGETS_DEFAULT_ARGS} )
-#install( FILES qapitrace.desktop  DESTINATION ${XDG_APPS_INSTALL_DIR} )
+install (TARGETS qapitrace RUNTIME DESTINATION bin)
+#install (FILES qapitrace.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})

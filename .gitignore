@@ -3,10 +3,12 @@
 *.a
 *.bmp
 *.bz2
+*.cmake
 *.dll
 *.dylib
 *.exe
 *.exp
+*.gz
 *.ilk
 *.json
 *.lib
@@ -19,11 +21,11 @@
 *.so
 *.trace
 *.zip
+_CPack_Packages
 CMakeCache.txt
 CMakeFiles
 Makefile
 build
-cmake_install.cmake
 d3d10.cpp
 d3d10_1.cpp
 d3d8.cpp
@@ -35,6 +37,7 @@ glretrace
 glretrace_gl.cpp
 glretrace_state.cpp
 glxtrace.cpp
+install_manifest.txt
 qapitrace
 tracedump
 traces
