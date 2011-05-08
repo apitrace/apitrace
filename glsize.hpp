@@ -396,7 +396,7 @@ __gl_format_channels(GLenum format) {
 }
 
 static inline size_t
-__glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLint border) {
+__glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth) {
     size_t num_channels = __gl_format_channels(format);
 
     size_t bits_per_pixel;
@@ -461,12 +461,12 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
     return depth*slice_stride;
 }
 
-#define __glTexImage2D_size(format, type, width, height, border) __glTexImage3D_size(format, type, width, height, 1, border)
-#define __glTexImage1D_size(format, type, width, border)         __glTexImage3D_size(format, type, width, 1, 1, border)
+#define __glTexImage2D_size(format, type, width, height) __glTexImage3D_size(format, type, width, height, 1)
+#define __glTexImage1D_size(format, type, width)         __glTexImage3D_size(format, type, width, 1, 1)
 
-#define __glTexSubImage3D_size(format, type, width, height, depth) __glTexImage3D_size(format, type, width, height, depth, 0)
-#define __glTexSubImage2D_size(format, type, width, height)        __glTexImage2D_size(format, type, width, height, 0)
-#define __glTexSubImage1D_size(format, type, width)                __glTexImage1D_size(format, type, width, 0)
+#define __glTexSubImage3D_size(format, type, width, height, depth) __glTexImage3D_size(format, type, width, height, depth)
+#define __glTexSubImage2D_size(format, type, width, height)        __glTexImage2D_size(format, type, width, height)
+#define __glTexSubImage1D_size(format, type, width)                __glTexImage1D_size(format, type, width)
 
 #define __glTexImage3DEXT_size __glTexImage3D_size
 #define __glTexImage2DEXT_size __glTexImage2D_size
@@ -475,9 +475,9 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
 #define __glTexSubImage2DEXT_size __glTexSubImage2D_size
 #define __glTexSubImage1DEXT_size __glTexSubImage1D_size
 
-#define __glDrawPixels_size(format, type, width, height) __glTexImage2D_size(format, type, width, height, 0)
+#define __glDrawPixels_size(format, type, width, height) __glTexImage2D_size(format, type, width, height)
 
-#define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height, 0)
+#define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height)
 #define __glPolygonStipple_size() __glBitmap_size(32, 32)
 
 
