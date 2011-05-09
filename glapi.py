@@ -1566,7 +1566,7 @@ glapi.add_functions([
     GlFunction(Void, "glGenProgramsNV", [(GLsizei, "n"), Out(Array(GLprogramARB, "n"), "programs")]),
     GlFunction(Void, "glGetProgramParameterdvNV", [(GLenum, "target"), (GLuint, "index"), (GLenum, "pname"), (OpaquePointer(GLdouble), "params")], sideeffects=False),
     GlFunction(Void, "glGetProgramParameterfvNV", [(GLenum, "target"), (GLuint, "index"), (GLenum, "pname"), (OpaquePointer(GLfloat), "params")], sideeffects=False),
-    GlFunction(Void, "glGetProgramivNV", [(GLprogramARB, "id"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
+    GlFunction(Void, "glGetProgramivNV", [(GLprogramARB, "id"), (GLenum, "pname"), (Pointer(GLint), "params")], sideeffects=False),
     GlFunction(Void, "glGetProgramStringNV", [(GLprogramARB, "id"), (GLenum, "pname"), (OpaquePointer(GLubyte), "program")], sideeffects=False),
     GlFunction(Void, "glGetTrackMatrixivNV", [(GLenum, "target"), (GLuint, "address"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
     GlFunction(Void, "glGetVertexAttribdvNV", [(GLuint, "index"), (GLenum, "pname"), (OpaquePointer(GLdouble), "params")], sideeffects=False),
