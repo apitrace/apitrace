@@ -97,6 +97,10 @@ __getPublicProcAddress(LPCSTR lpProcName)
 }
 
     '''
+    print '// To validate our prototypes'
+    print '#define GL_GLEXT_PROTOTYPES'
+    print '#define WGL_GLXEXT_PROTOTYPES'
+    print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print

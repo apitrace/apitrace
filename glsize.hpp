@@ -98,7 +98,7 @@ __glDrawArrays_maxindex(GLint first, GLsizei count)
 #define __glDrawArraysEXT_maxindex __glDrawArrays_maxindex
 
 static inline GLuint
-__glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *indices)
+__glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
 {
     GLvoid *temp = 0;
     GLint __element_array_buffer = 0;
@@ -155,18 +155,64 @@ __glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *indices)
         free(temp);
     }
 
+    maxindex += basevertex;
+
     return maxindex;
 }
 
+#define __glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
+
+#define __glDrawElements_maxindex(count, type, indices) __glDrawElementsBaseVertex_maxindex(count, type, indices, 0);
+#define __glDrawRangeElements_maxindex(start, end, count, type, indices) __glDrawElements_maxindex(count, type, indices)
+#define __glDrawRangeElementsEXT_maxindex __glDrawRangeElements_maxindex
+
+#define __glDrawArraysInstanced_maxindex(first, count, primcount) __glDrawArrays_maxindex(first, count)
+#define __glDrawElementsInstanced_maxindex(count, type, indices, primcount) __glDrawElements_maxindex(count, type, indices)
+#define __glDrawElementsInstancedBaseVertex_maxindex(count, type, indices, primcount, basevertex) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
+#define __glDrawRangeElementsInstanced_maxindex(start, end, count, type, indices, primcount) __glDrawRangeElements_maxindex(start, end, count, type, indices)
+#define __glDrawRangeElementsInstancedBaseVertex_maxindex(start, end, count, type, indices, primcount, basevertex) __glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex)
+
+#define __glDrawArraysInstancedARB_maxindex __glDrawArraysInstanced_maxindex
+#define __glDrawElementsInstancedARB_maxindex __glDrawElementsInstanced_maxindex
+#define __glDrawArraysInstancedEXT_maxindex __glDrawArraysInstanced_maxindex
+#define __glDrawElementsInstancedEXT_maxindex __glDrawElementsInstanced_maxindex
+
 static inline GLuint
-__glDrawRangeElements_maxindex(GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices)
-{
-    (void)start;
-    (void)end;
-    return __glDrawElements_maxindex(count, type, indices);
+__glDrawArraysIndirect_maxindex(const GLvoid *indirect) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
 }
 
-#define __glDrawRangeElementsEXT_maxindex __glDrawRangeElements_maxindex
+static inline GLuint
+__glDrawElementsIndirect_maxindex(GLenum type, const GLvoid *indirect) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+static inline GLuint
+__glMultiDrawArrays_maxindex(const GLint *first, const GLsizei *count, GLsizei primcount) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+static inline GLuint
+__glMultiDrawElements_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+static inline GLuint
+__glMultiDrawElementsBaseVertex_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount, const GLint * basevertex) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+#define __glMultiDrawArraysEXT_maxindex __glMultiDrawArrays_maxindex
+#define __glMultiDrawElementsEXT_maxindex __glMultiDrawElements_maxindex
+
+#define __glMultiModeDrawArraysIBM_maxindex(first, count, primcount, modestride) __glMultiDrawArrays_maxindex(first, count, primcount)
+#define __glMultiModeDrawElementsIBM_maxindex(count, type, indices, primcount, modestride) __glMultiDrawElements_maxindex(count, type, (const GLvoid **)indices, primcount)
+
 
 static inline size_t
 __glCallLists_size(GLsizei n, GLenum type)
@@ -174,27 +220,18 @@ __glCallLists_size(GLsizei n, GLenum type)
     return n*__gl_type_size(type);
 }
 
-#define __glFogfv_size pname_size
-#define __glFogiv_size pname_size
+#define __glFogfv_size __gl_param_size
+#define __glFogiv_size __gl_param_size
 
-#define __glLightfv_size pname_size
-#define __glLightiv_size pname_size
+#define __glLightfv_size __gl_param_size
+#define __glLightiv_size __gl_param_size
 
-#define __glLightModelfv_size pname_size
+#define __glLightModelfv_size __gl_param_size
 #define __glLightModeliv_size __glLightModelfv_size
 
-#define __glMaterialfv_size pname_size
+#define __glMaterialfv_size __gl_param_size
 #define __glMaterialiv_size __glMaterialfv_size
 
-#define __glTexParameterfv_size pname_size
-#define __glTexParameteriv_size __glTexParameterfv_size
-
-#define __glTexEnvfv_size pname_size
-#define __glTexEnviv_size __glTexEnvfv_size
-
-#define __glTexGendv_size pname_size
-#define __glTexGenfv_size __glTexGendv_size
-#define __glTexGeniv_size __glTexGendv_size
 
 static inline size_t
 __glMap1d_size(GLenum pname)
@@ -246,7 +283,7 @@ __glMap2d_size(GLenum pname)
 
 #define __glMap2f_size __glMap2d_size
 
-#define __glGetBooleanv_size pname_size
+#define __glGetBooleanv_size __gl_param_size
 #define __glGetDoublev_size __glGetBooleanv_size
 #define __glGetFloatv_size __glGetBooleanv_size
 #define __glGetIntegerv_size __glGetBooleanv_size
@@ -258,113 +295,45 @@ __glMap2d_size(GLenum pname)
 #define __glGetMaterialfv_size __glMaterialfv_size
 #define __glGetMaterialiv_size __glMaterialfv_size
 
-#define __glGetTexEnvfv_size __glTexEnvfv_size
-#define __glGetTexEnviv_size __glTexEnvfv_size
 
-#define __glGetTexGendv_size __glTexGendv_size
-#define __glGetTexGenfv_size __glTexGendv_size
-#define __glGetTexGeniv_size __glTexGendv_size
+#define __glColorTableParameterfv_size __gl_param_size
+#define __glColorTableParameteriv_size __gl_param_size
+#define __glGetColorTableParameterfv_size __gl_param_size
+#define __glGetColorTableParameteriv_size __gl_param_size
 
-static inline size_t
-__glGetTexParameterfv_size(GLenum pname)
-{
-    switch (pname) {
-    case GL_TEXTURE_MAG_FILTER:
-    case GL_TEXTURE_MIN_FILTER:
-    case GL_TEXTURE_WRAP_S:
-    case GL_TEXTURE_WRAP_T:
-    case GL_TEXTURE_PRIORITY:
-    case GL_TEXTURE_RESIDENT:
-    case GL_TEXTURE_WRAP_R:
-    case GL_TEXTURE_COMPARE_FAIL_VALUE_ARB:
-/*  case GL_SHADOW_AMBIENT_SGIX:*/
-    case GL_TEXTURE_MIN_LOD:
-    case GL_TEXTURE_MAX_LOD:
-    case GL_TEXTURE_BASE_LEVEL:
-    case GL_TEXTURE_MAX_LEVEL:
-    case GL_TEXTURE_CLIPMAP_FRAME_SGIX:
-    case GL_TEXTURE_LOD_BIAS_S_SGIX:
-    case GL_TEXTURE_LOD_BIAS_T_SGIX:
-    case GL_TEXTURE_LOD_BIAS_R_SGIX:
-    case GL_GENERATE_MIPMAP:
-/*  case GL_GENERATE_MIPMAP_SGIS:*/
-    case GL_TEXTURE_COMPARE_SGIX:
-    case GL_TEXTURE_COMPARE_OPERATOR_SGIX:
-    case GL_TEXTURE_MAX_CLAMP_S_SGIX:
-    case GL_TEXTURE_MAX_CLAMP_T_SGIX:
-    case GL_TEXTURE_MAX_CLAMP_R_SGIX:
-    case GL_TEXTURE_MAX_ANISOTROPY_EXT:
-    case GL_TEXTURE_LOD_BIAS:
-/*  case GL_TEXTURE_LOD_BIAS_EXT:*/
-    case GL_TEXTURE_RANGE_LENGTH_APPLE:
-    case GL_TEXTURE_STORAGE_HINT_APPLE:
-    case GL_DEPTH_TEXTURE_MODE:
-/*  case GL_DEPTH_TEXTURE_MODE_ARB:*/
-    case GL_TEXTURE_COMPARE_MODE:
-/*  case GL_TEXTURE_COMPARE_MODE_ARB:*/
-    case GL_TEXTURE_COMPARE_FUNC:
-/*  case GL_TEXTURE_COMPARE_FUNC_ARB:*/
-    case GL_TEXTURE_UNSIGNED_REMAP_MODE_NV:
-        return 1;
-    case GL_TEXTURE_CLIPMAP_CENTER_SGIX:
-    case GL_TEXTURE_CLIPMAP_OFFSET_SGIX:
-        return 2;
-    case GL_TEXTURE_CLIPMAP_VIRTUAL_DEPTH_SGIX:
-        return 3;
-    case GL_TEXTURE_BORDER_COLOR:
-    case GL_POST_TEXTURE_FILTER_BIAS_SGIX:
-    case GL_POST_TEXTURE_FILTER_SCALE_SGIX:
-        return 4;
-    default:
-        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
-        return 1;
-    }
-}
+#define __glConvolutionParameterfv_size __gl_param_size
+#define __glConvolutionParameteriv_size __gl_param_size
+#define __glGetConvolutionParameterfv_size __gl_param_size
+#define __glGetConvolutionParameteriv_size __gl_param_size
 
-#define __glGetTexParameterfv_size pname_size
-#define __glGetTexParameteriv_size __glGetTexParameterfv_size
+#define __glGetHistogramParameterfv_size __gl_param_size
+#define __glGetHistogramParameteriv_size __gl_param_size
 
-#define __glGetTexLevelParameterfv_size pname_size
-#define __glGetTexLevelParameteriv_size __glGetTexLevelParameterfv_size
+#define __glGetMinmaxParameterfv_size __gl_param_size
+#define __glGetMinmaxParameteriv_size __gl_param_size
 
-#define __glColorTableParameterfv_size pname_size
-#define __glColorTableParameteriv_size pname_size
-#define __glGetColorTableParameterfv_size pname_size
-#define __glGetColorTableParameteriv_size pname_size
+#define __glGetProgramivARB_size __gl_param_size
+#define __glGetProgramivNV_size __gl_param_size
 
-#define __glConvolutionParameterfv_size pname_size
-#define __glConvolutionParameteriv_size pname_size
-#define __glGetConvolutionParameterfv_size pname_size
-#define __glGetConvolutionParameteriv_size pname_size
+#define __glGetVertexAttribdvARB_size __gl_param_size
+#define __glGetVertexAttribfvARB_size __gl_param_size
+#define __glGetVertexAttribivARB_size __gl_param_size
+#define __glGetVertexAttribdvNV_size __gl_param_size
+#define __glGetVertexAttribfvNV_size __gl_param_size
+#define __glGetVertexAttribivNV_size __gl_param_size
 
-#define __glGetHistogramParameterfv_size pname_size
-#define __glGetHistogramParameteriv_size pname_size
-
-#define __glGetMinmaxParameterfv_size pname_size
-#define __glGetMinmaxParameteriv_size pname_size
-
-#define __glGetProgramivARB_size pname_size
-#define __glGetProgramivNV_size pname_size
-
-#define __glGetVertexAttribdvARB_size pname_size
-#define __glGetVertexAttribfvARB_size pname_size
-#define __glGetVertexAttribivARB_size pname_size
-#define __glGetVertexAttribdvNV_size pname_size
-#define __glGetVertexAttribfvNV_size pname_size
-#define __glGetVertexAttribivNV_size pname_size
-
-#define __glGetQueryObjectivARB_size pname_size
+#define __glGetQueryObjectivARB_size __gl_param_size
 #define __glGetQueryObjectuivARB_size __glGetQueryObjectivARB_size
-#define __glGetQueryivARB_size pname_size
+#define __glGetQueryivARB_size __gl_param_size
 
 #define __glPointParameterfv_size __glPointParameterfvEXT_size
 #define __glPointParameteriv_size __glPointParameterfvEXT_size
 #define __glPointParameterfvARB_size __glPointParameterfvEXT_size
-#define __glPointParameterfvEXT_size pname_size
+#define __glPointParameterfvEXT_size __gl_param_size
 #define __glPointParameterivNV_size __glPointParameterfvEXT_size
 
-#define __glGetFramebufferAttachmentParameteriv_size pname_size
-#define __glGetFramebufferAttachmentParameterivEXT_size pname_size
+#define __glGetFramebufferAttachmentParameteriv_size __gl_param_size
+#define __glGetFramebufferAttachmentParameterivEXT_size __gl_param_size
 
 static inline size_t
 __gl_format_channels(GLenum format) {
@@ -396,7 +365,7 @@ __gl_format_channels(GLenum format) {
 }
 
 static inline size_t
-__glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLint border) {
+__gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth) {
     size_t num_channels = __gl_format_channels(format);
 
     size_t bits_per_pixel;
@@ -461,12 +430,32 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
     return depth*slice_stride;
 }
 
-#define __glTexImage2D_size(format, type, width, height, border) __glTexImage3D_size(format, type, width, height, 1, border)
-#define __glTexImage1D_size(format, type, width, border)         __glTexImage3D_size(format, type, width, 1, 1, border)
+#define __glTexParameterfv_size __gl_param_size
+#define __glTexParameteriv_size __gl_param_size
+#define __glGetTexParameterfv_size __gl_param_size
+#define __glGetTexParameteriv_size __gl_param_size
+#define __glGetTexLevelParameterfv_size __gl_param_size
+#define __glGetTexLevelParameteriv_size __gl_param_size
 
-#define __glTexSubImage3D_size(format, type, width, height, depth) __glTexImage3D_size(format, type, width, height, depth, 0)
-#define __glTexSubImage2D_size(format, type, width, height)        __glTexImage2D_size(format, type, width, height, 0)
-#define __glTexSubImage1D_size(format, type, width)                __glTexImage1D_size(format, type, width, 0)
+#define __glTexEnvfv_size __gl_param_size
+#define __glTexEnviv_size __gl_param_size
+#define __glGetTexEnvfv_size __gl_param_size
+#define __glGetTexEnviv_size __gl_param_size
+
+#define __glTexGendv_size __gl_param_size
+#define __glTexGenfv_size __gl_param_size
+#define __glTexGeniv_size __gl_param_size
+#define __glGetTexGendv_size __gl_param_size
+#define __glGetTexGenfv_size __gl_param_size
+#define __glGetTexGeniv_size __gl_param_size
+
+#define __glTexImage3D_size(format, type, width, height, depth) __gl_image_size(format, type, width, height, depth)
+#define __glTexImage2D_size(format, type, width, height)        __gl_image_size(format, type, width, height, 1)
+#define __glTexImage1D_size(format, type, width)                __gl_image_size(format, type, width, 1, 1)
+
+#define __glTexSubImage3D_size(format, type, width, height, depth) __glTexImage3D_size(format, type, width, height, depth)
+#define __glTexSubImage2D_size(format, type, width, height)        __glTexImage2D_size(format, type, width, height)
+#define __glTexSubImage1D_size(format, type, width)                __glTexImage1D_size(format, type, width)
 
 #define __glTexImage3DEXT_size __glTexImage3D_size
 #define __glTexImage2DEXT_size __glTexImage2D_size
@@ -475,9 +464,23 @@ __glTexImage3D_size(GLenum format, GLenum type, GLsizei width, GLsizei height, G
 #define __glTexSubImage2DEXT_size __glTexSubImage2D_size
 #define __glTexSubImage1DEXT_size __glTexSubImage1D_size
 
-#define __glDrawPixels_size(format, type, width, height) __glTexImage2D_size(format, type, width, height, 0)
+#define __glTextureImage3DEXT_size __glTexImage3D_size
+#define __glTextureImage2DEXT_size __glTexImage2D_size
+#define __glTextureImage1DEXT_size __glTexImage1D_size
+#define __glTextureSubImage3DEXT_size __glTexSubImage3D_size
+#define __glTextureSubImage2DEXT_size __glTexSubImage2D_size
+#define __glTextureSubImage1DEXT_size __glTexSubImage1D_size
 
-#define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height, 0)
+#define __glMultiTexImage3DEXT_size __glTexImage3D_size
+#define __glMultiTexImage2DEXT_size __glTexImage2D_size
+#define __glMultiTexImage1DEXT_size __glTexImage1D_size
+#define __glMultiTexSubImage3DEXT_size __glTexSubImage3D_size
+#define __glMultiTexSubImage2DEXT_size __glTexSubImage2D_size
+#define __glMultiTexSubImage1DEXT_size __glTexSubImage1D_size
+
+#define __glDrawPixels_size(format, type, width, height) __glTexImage2D_size(format, type, width, height)
+
+#define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height)
 #define __glPolygonStipple_size() __glBitmap_size(32, 32)
 
 

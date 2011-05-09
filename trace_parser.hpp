@@ -78,7 +78,7 @@ protected:
 
     Call *parse_leave(void);
 
-    void parse_call_details(Call *call);
+    bool parse_call_details(Call *call);
 
     void parse_arg(Call *call);
 

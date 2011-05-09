@@ -71,16 +71,15 @@ GLfenceNV = Handle("fenceNV", GLuint)
 GLprogram = Handle("program", GLuint)
 GLshader = Handle("shader", GLuint)
 GLlocation = Handle("location", GLint, key=('program', GLuint))
-GLlocationARB = Handle("locationARB", GLint)
+GLlocationARB = Handle("locationARB", GLint, key=('programObj', GLhandleARB))
 GLprogramARB = Handle("programARB", GLuint)
-GLprogramEXT = Handle("programEXT", GLuint)
-GLprogramNV = Handle("programNV", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
-GLvertexArray = Handle("vertexArrayAPPLE", GLuint)
+GLarray = Handle("array", GLuint)
 GLregion = Handle("region", GLuint)
 GLmap = Handle("map", OpaquePointer(GLvoid))
+GLpipeline = Handle("pipeline", GLuint)
 
 GLsync_ = Opaque("GLsync")
 GLsync = Handle("sync", GLsync_)
@@ -160,3 +159,11 @@ GLbitfield_client_attrib = Flags(GLbitfield, [
     "GL_CLIENT_VERTEX_ARRAY_BIT", # 0x00000002
 ])
 
+GLbitfield_shader = Flags(GLbitfield, [
+    "GL_ALL_SHADER_BITS",                        # 0xFFFFFFFF
+    "GL_VERTEX_SHADER_BIT",                      # 0x00000001
+    "GL_FRAGMENT_SHADER_BIT",                    # 0x00000002
+    "GL_GEOMETRY_SHADER_BIT",                    # 0x00000004
+    "GL_TESS_CONTROL_SHADER_BIT",                # 0x00000008
+    "GL_TESS_EVALUATION_SHADER_BIT",             # 0x00000010
+])

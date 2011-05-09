@@ -1,8 +1,10 @@
 cmake_minimum_required (VERSION 2.8)
 
-include (CheckCXXCompilerFlag)
-
 project (apitrace)
+
+
+##############################################################################
+# Find dependencies
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -37,9 +39,18 @@ else (NOT WIN32)
     find_package (DirectX)
 endif (NOT WIN32)
 
+
+##############################################################################
+# Set global build options
+
+include (CheckCXXCompilerFlag)
+
 if (WIN32)
     # MSVC & MinGW only define & use APIENTRY
     add_definitions (-DGLAPIENTRY=__stdcall)
+
+    # http://msdn.microsoft.com/en-us/library/aa383745.aspx
+    add_definitions (-D_WIN32_WINNT=0x0500 -DWINVER=0x0500)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
@@ -84,9 +95,16 @@ else ()
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 endif ()
 
+
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+
+
+##############################################################################
+# Bundled dependencies
 
 # Use bundled ZLIB if system one can't be found
 if (ZLIB_FOUND)
@@ -138,13 +156,33 @@ else (PNG_FOUND)
     link_libraries (png)
 endif (PNG_FOUND)
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+
+##############################################################################
+# Common libraries / utilities
 
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     DEPENDS glproc.py dispatch.py wglapi.py glxapi.py glapi.py gltypes.py stdapi.py
 )
+
+if (WIN32)
+    set (os os_win32.cpp)
+    set (glws glws_wgl.cpp)
+else (WIN32)
+    set (os os_posix.cpp)
+    set (glws glws_glx.cpp)
+endif (WIN32)
+
+add_library (trace trace_model.cpp trace_parser.cpp trace_write.cpp ${os})
+
+add_executable (tracedump tracedump.cpp)
+target_link_libraries (tracedump trace)
+install (TARGETS tracedump RUNTIME DESTINATION bin) 
+
+
+##############################################################################
+# API tracers
 
 if (WIN32)
     # d3d8.dll
@@ -161,6 +199,7 @@ if (WIN32)
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
+        install (TARGETS d3d8 RUNTIME DESTINATION wrappers)
     endif (DirectX_D3D8_INCLUDE_DIR)
 
     # d3d9.dll
@@ -177,6 +216,7 @@ if (WIN32)
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
+        install (TARGETS d3d9 RUNTIME DESTINATION wrappers)
     endif (DirectX_D3DX9_INCLUDE_DIR)
 
     # d3d10.dll
@@ -189,6 +229,7 @@ if (WIN32)
     #    )
     #    add_library (d3d10 SHARED d3d10.def d3d10.cpp trace_write.cpp os_win32.cpp)
     #    set_target_properties (d3d10 PROPERTIES PREFIX "")
+    #    install (TARGETS d3d10 RUNTIME DESTINATION wrappers)
     #endif (DirectX_D3D10_INCLUDE_DIR)
 
     # opengl32.dll
@@ -207,6 +248,7 @@ if (WIN32)
     if (MINGW)
         set_target_properties(wgltrace PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
     endif (MINGW)
+    install (TARGETS wgltrace RUNTIME DESTINATION wrappers)
 
 else ()
     include_directories (${X11_INCLUDE_DIR})
@@ -234,20 +276,13 @@ else ()
     endif (NOT APPLE)
 
     target_link_libraries (glxtrace dl)
+    
+    install (TARGETS glxtrace LIBRARY DESTINATION lib)
 endif ()
 
-if (WIN32)
-    set (os os_win32.cpp)
-    set (glws glws_wgl.cpp)
-else (WIN32)
-    set (os os_posix.cpp)
-    set (glws glws_glx.cpp)
-endif (WIN32)
 
-add_library (trace trace_model.cpp trace_parser.cpp trace_write.cpp ${os})
-
-add_executable (tracedump tracedump.cpp)
-target_link_libraries (tracedump trace)
+##############################################################################
+# API retracers
 
 add_custom_command (
     OUTPUT glretrace_gl.cpp
@@ -293,6 +328,33 @@ if (NOT WIN32)
     target_link_libraries (glretrace ${X11_LIBRARIES})
 endif (NOT WIN32)
 
+install (TARGETS glretrace RUNTIME DESTINATION bin) 
+
+
+##############################################################################
+# GUI
+
 if (QT4_FOUND AND QJSON_FOUND)
     add_subdirectory(gui)
 endif (QT4_FOUND AND QJSON_FOUND)
+
+
+##############################################################################
+# Packaging
+
+set (CPACK_PACKAGE_VERSION_MAJOR "1")
+set (CPACK_PACKAGE_VERSION_MINOR "0")
+
+# Use current date in YYYYMMDD format as patch number 
+execute_process (
+    COMMAND ${PYTHON_EXECUTABLE} -c "import time, sys; sys.stdout.write(time.strftime('%Y%m%d'))"
+    OUTPUT_VARIABLE CPACK_PACKAGE_VERSION_PATCH
+)
+
+if (WIN32)
+    set (CPACK_GENERATOR "ZIP")
+else (WIN32)
+    set (CPACK_GENERATOR "TGZ")
+endif (WIN32)
+
+include(CPack)

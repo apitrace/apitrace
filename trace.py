@@ -73,12 +73,15 @@ class DumpDeclarator(stdapi.OnceVisitor):
     def visit_blob(self, array):
         pass
 
+    __enum_id = 0
+
     def visit_enum(self, enum):
         print 'static void __traceEnum%s(const %s value) {' % (enum.id, enum.expr)
         n = len(enum.values)
         for i in range(n):
             value = enum.values[i]
-            print '    static const Trace::EnumSig sig%u = {%u, "%s", %s};' % (i, enum.vid + i, value, value)
+            print '    static const Trace::EnumSig sig%u = {%u, "%s", %s};' % (i, DumpDeclarator.__enum_id, value, value)
+            DumpDeclarator.__enum_id += 1
         print '    const Trace::EnumSig *sig;'
         print '    switch(value) {'
         for i in range(n):

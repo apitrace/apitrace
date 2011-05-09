@@ -199,7 +199,7 @@ class GlTracer(Tracer):
 
         # Generate a helper function to know how many elements a parameter has
         print 'static size_t'
-        print 'pname_size(GLenum pname) {'
+        print '__gl_param_size(GLenum pname) {'
         print '    switch(pname) {'
         for function, type, count, name in glparams.parameters:
             if type is not None:
@@ -250,10 +250,29 @@ class GlTracer(Tracer):
 
     draw_function_names = set((
         'glDrawArrays',
-        'glDrawArraysEXT',
         'glDrawElements',
         'glDrawRangeElements',
+        'glMultiDrawArrays',
+        'glMultiDrawElements',
+        'glDrawArraysInstanced',
+        'glDrawElementsInstanced',
+        'glDrawArraysInstancedARB',
+        'glDrawElementsInstancedARB',
+        'glDrawElementsBaseVertex',
+        'glDrawRangeElementsBaseVertex',
+        'glDrawElementsInstancedBaseVertex',
+        'glMultiDrawElementsBaseVertex',
+        'glDrawArraysIndirect',
+        'glDrawElementsIndirect',
+        'glDrawArraysEXT',
         'glDrawRangeElementsEXT',
+        'glDrawRangeElementsEXT_size',
+        'glMultiDrawArraysEXT',
+        'glMultiDrawElementsEXT',
+        'glMultiModeDrawArraysIBM',
+        'glMultiModeDrawElementsIBM',
+        'glDrawArraysInstancedEXT',
+        'glDrawElementsInstancedEXT',
     ))
 
     interleaved_formats = [
@@ -395,9 +414,19 @@ class GlTracer(Tracer):
             print '    GLint __element_array_buffer = 0;'
             print '    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
             print '    if (!__element_array_buffer) {'
-            print '        Trace::LiteralBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
+            if isinstance(arg.type, stdapi.Array):
+                Tracer.dump_arg_instance(self, function, arg)
+                print '        Trace::BeginArray(%s);' % arg.type.length
+                print '        for(GLsizei i = 0; i < %s; ++i) {' % arg.type.length
+                print '            Trace::BeginElement();'
+                print '            Trace::LiteralBlob((const void *)%s, count[i]*__gl_type_size(type));' % (arg.name)
+                print '            Trace::EndElement();'
+                print '        }'
+                print '        Trace::EndArray();'
+            else:
+                print '        Trace::LiteralBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
             print '    } else {'
-            print '        Trace::LiteralOpaque((const void *)%s);' % (arg.name)
+            Tracer.dump_arg_instance(self, function, arg)
             print '    }'
             return
 
