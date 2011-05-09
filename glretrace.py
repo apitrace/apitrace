@@ -125,6 +125,15 @@ class GlRetracer(Retracer):
 
         Retracer.retrace_function_body(self, function)
 
+        if function.name in ('glFlush', 'glFinish'):
+            print '    if (!glretrace::double_buffer) {'
+            print '        glretrace::frame_complete(call.no);'
+            print '    }'
+
+        if function.name == 'glReadPixels':
+            print '    glFinish();'
+            print '    glretrace::frame_complete(call.no);'
+
     def call_function(self, function):
         if function.name == "glViewport":
             print '    bool reshape_window = false;'
@@ -208,11 +217,6 @@ class GlRetracer(Retracer):
             print r'         std::cerr << call.no << ": warning: " << infoLog << "\n";'
             print r'         delete [] infoLog;'
             print r'    }'
-
-        if function.name == 'glFlush':
-            print '    if (!glretrace::double_buffer) {'
-            print '        glretrace::frame_complete(call.no);'
-            print '    }'
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':

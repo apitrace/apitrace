@@ -188,6 +188,9 @@ class Retracer:
         print
 
     def retrace_function_body(self, function):
+        if not function.sideeffects:
+            return
+
         success = True
         for arg in function.args:
             arg_type = ConstRemover().visit(arg.type)
@@ -243,8 +246,7 @@ class Retracer:
         functions = filter(self.filter_function, functions)
 
         for function in functions:
-            if function.sideeffects:
-                self.retrace_function(function)
+            self.retrace_function(function)
 
         print 'void retrace::retrace_call(Trace::Call &call) {'
         print '    const char *name = call.name().c_str();'
@@ -254,8 +256,7 @@ class Retracer:
 
         def handle_case(function_name):
             function = func_dict[function_name]
-            if function.sideeffects:
-                print '        retrace_%s(call);' % function.name
+            print '        retrace_%s(call);' % function.name
             print '        return;'
     
         string_switch('name', func_dict.keys(), handle_case)
