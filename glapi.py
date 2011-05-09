@@ -360,7 +360,7 @@ glapi.add_functions([
 
     # GL_VERSION_1_1
     GlFunction(Void, "glDrawArrays", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count")]),
-    GlFunction(Void, "glDrawElements", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaquePointer(GLvoid)), "indices")]),
+    GlFunction(Void, "glDrawElements", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices")]),
     GlFunction(Void, "glGetPointerv", [(GLenum, "pname"), Out(Pointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
     GlFunction(Void, "glPolygonOffset", [(GLfloat, "factor"), (GLfloat, "units")]),
     GlFunction(Void, "glCopyTexImage1D", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLint, "border")]),
@@ -395,7 +395,7 @@ glapi.add_functions([
     # GL_VERSION_1_2
     GlFunction(Void, "glBlendColor", [(GLclampf, "red"), (GLclampf, "green"), (GLclampf, "blue"), (GLclampf, "alpha")]),
     GlFunction(Void, "glBlendEquation", [(GLenum, "mode")]),
-    GlFunction(Void, "glDrawRangeElements", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaquePointer(GLvoid)), "indices")]),
+    GlFunction(Void, "glDrawRangeElements", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices")]),
     GlFunction(Void, "glTexImage3D", [(GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexImage3D_size(format, type, width, height, depth)"), "pixels")]),
     GlFunction(Void, "glTexSubImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glTexSubImage3D_size(format, type, width, height, depth)"), "pixels")]),
     GlFunction(Void, "glCopyTexSubImage3D", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
@@ -718,8 +718,8 @@ glapi.add_functions([
     GlFunction(String("const GLubyte *"), "glGetStringi", [(GLenum, "name"), (GLuint, "index")], sideeffects=False),
 
     # GL_VERSION_3_1
-    GlFunction(Void, "glDrawArraysInstanced", [(GLenum, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount")]),
-    GlFunction(Void, "glDrawElementsInstanced", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueBlob(GLvoid, "__glDrawElementsInstanced_size(count, type)")), "indices"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawArraysInstanced", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawElementsInstanced", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices"), (GLsizei, "primcount")]),
     GlFunction(Void, "glTexBuffer", [(GLenum, "target"), (GLenum, "internalformat"), (GLuint, "buffer")]),
     GlFunction(Void, "glPrimitiveRestartIndex", [(GLuint, "index")]),
 
@@ -973,8 +973,8 @@ glapi.add_functions([
     GlFunction(Void, "glClampColorARB", [(GLenum, "target"), (GLenum, "clamp")]),
 
     # GL_ARB_draw_instanced
-    GlFunction(Void, "glDrawArraysInstancedARB", [(GLenum, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount")]),
-    GlFunction(Void, "glDrawElementsInstancedARB", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaquePointer(GLvoid)), "indices"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawArraysInstancedARB", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawElementsInstancedARB", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices"), (GLsizei, "primcount")]),
 
     # GL_ARB_framebuffer_object
     GlFunction(GLboolean, "glIsRenderbuffer", [(GLrenderbuffer, "renderbuffer")], sideeffects=False),
@@ -1033,10 +1033,10 @@ glapi.add_functions([
     GlFunction(Void, "glCopyBufferSubData", [(GLenum, "readTarget"), (GLenum, "writeTarget"), (GLintptr, "readOffset"), (GLintptr, "writeOffset"), (GLsizeiptr, "size")]),
 
     # GL_ARB_draw_elements_base_vertex
-    GlFunction(Void, "glDrawElementsBaseVertex", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueArray(GLvoid, "__glDrawElementsBaseVertex_size(count, type)")), "indices"), (GLint, "basevertex")]),
-    GlFunction(Void, "glDrawRangeElementsBaseVertex", [(GLenum, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueArray(GLvoid, "__glDrawRangeElementsBaseVertex_size(count, type)")), "indices"), (GLint, "basevertex")]),
-    GlFunction(Void, "glDrawElementsInstancedBaseVertex", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueBlob(GLvoid, "__glDrawElementsInstancedBaseVertex_size(count, type)")), "indices"), (GLsizei, "primcount"), (GLint, "basevertex")]),
-    GlFunction(Void, "glMultiDrawElementsBaseVertex", [(GLenum, "mode"), (Const(Array(GLsizei, "primcount")), "count"), (GLenum, "type"), (Array(Opaque("const GLvoid *"), "primcount"), "indices"), (GLsizei, "primcount"), (Const(Array(GLint, "primcount")), "basevertex")]),
+    GlFunction(Void, "glDrawElementsBaseVertex", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices"), (GLint, "basevertex")]),
+    GlFunction(Void, "glDrawRangeElementsBaseVertex", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices"), (GLint, "basevertex")]),
+    GlFunction(Void, "glDrawElementsInstancedBaseVertex", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices"), (GLsizei, "primcount"), (GLint, "basevertex")]),
+    GlFunction(Void, "glMultiDrawElementsBaseVertex", [(GLenum_mode, "mode"), (Const(Array(GLsizei, "primcount")), "count"), (GLenum, "type"), (Array(Opaque("const GLvoid *"), "primcount"), "indices"), (GLsizei, "primcount"), (Const(Array(GLint, "primcount")), "basevertex")]),
 
     # GL_ARB_provoking_vertex
     GlFunction(Void, "glProvokingVertex", [(GLenum, "mode")]),
@@ -1139,8 +1139,8 @@ glapi.add_functions([
     GlFunction(Void, "glVertexAttribP4uiv", [(GLuint, "index"), (GLenum, "type"), (GLboolean, "normalized"), (Const(Pointer(GLuint)), "value")]),
 
     # GL_ARB_draw_indirect
-    GlFunction(Void, "glDrawArraysIndirect", [(GLenum, "mode"), (Const(OpaquePointer(GLvoid)), "indirect")]),
-    GlFunction(Void, "glDrawElementsIndirect", [(GLenum, "mode"), (GLenum, "type"), (Const(OpaquePointer(GLvoid)), "indirect")]),
+    GlFunction(Void, "glDrawArraysIndirect", [(GLenum_mode, "mode"), (Const(OpaquePointer(GLvoid)), "indirect")]),
+    GlFunction(Void, "glDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (Const(OpaquePointer(GLvoid)), "indirect")]),
 
     # GL_ARB_gpu_shader_fp64
     GlFunction(Void, "glUniform1d", [(GLlocation, "location"), (GLdouble, "x")]),
@@ -1368,7 +1368,7 @@ glapi.add_functions([
     # GL_EXT_vertex_array
     GlFunction(Void, "glArrayElementEXT", [(GLint, "i")]),
     GlFunction(Void, "glColorPointerEXT", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLsizei, "count"), (Const(OpaquePointer(GLvoid)), "pointer")]),
-    GlFunction(Void, "glDrawArraysEXT", [(GLenum, "mode"), (GLint, "first"), (GLsizei, "count")]),
+    GlFunction(Void, "glDrawArraysEXT", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count")]),
     GlFunction(Void, "glEdgeFlagPointerEXT", [(GLsizei, "stride"), (GLsizei, "count"), (Const(OpaquePointer(GLboolean)), "pointer")]),
     GlFunction(Void, "glGetPointervEXT", [(GLenum, "pname"), Out(Pointer(OpaquePointer(GLvoid)), "params")], sideeffects=False),
     GlFunction(Void, "glIndexPointerEXT", [(GLenum, "type"), (GLsizei, "stride"), (GLsizei, "count"), (Const(OpaquePointer(GLvoid)), "pointer")]),
@@ -1408,7 +1408,7 @@ glapi.add_functions([
     GlFunction(Void, "glCullParameterfvEXT", [(GLenum, "pname"), (Array(GLfloat, "4"), "params")]),
 
     # GL_EXT_draw_range_elements
-    GlFunction(Void, "glDrawRangeElementsEXT", [(GLenum, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueBlob(GLvoid, "__glDrawRangeElementsEXT_size(count, type)")), "indices")]),
+    GlFunction(Void, "glDrawRangeElementsEXT", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices")]),
 
     # GL_EXT_light_texture
     GlFunction(Void, "glApplyTextureEXT", [(GLenum, "mode")]),
@@ -1902,8 +1902,8 @@ glapi.add_functions([
     GlFunction(Void, "glUniform4uivEXT", [(GLint, "location"), (GLsizei, "count"), (Const(Array(GLuint, "count*4")), "value")]),
 
     # GL_EXT_draw_instanced
-    GlFunction(Void, "glDrawArraysInstancedEXT", [(GLenum, "mode"), (GLint, "start"), (GLsizei, "count"), (GLsizei, "primcount")]),
-    GlFunction(Void, "glDrawElementsInstancedEXT", [(GLenum, "mode"), (GLsizei, "count"), (GLenum, "type"), (Const(OpaqueBlob(GLvoid, "__glDrawElementsInstancedEXT_size(count, type)")), "indices"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawArraysInstancedEXT", [(GLenum_mode, "mode"), (GLint, "start"), (GLsizei, "count"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glDrawElementsInstancedEXT", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (OpaquePointer(Const(GLvoid)), "indices"), (GLsizei, "primcount")]),
 
     # GL_EXT_texture_buffer_object
     GlFunction(Void, "glTexBufferEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLuint, "buffer")]),

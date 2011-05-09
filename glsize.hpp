@@ -98,7 +98,7 @@ __glDrawArrays_maxindex(GLint first, GLsizei count)
 #define __glDrawArraysEXT_maxindex __glDrawArrays_maxindex
 
 static inline GLuint
-__glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *indices)
+__glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
 {
     GLvoid *temp = 0;
     GLint __element_array_buffer = 0;
@@ -155,18 +155,64 @@ __glDrawElements_maxindex(GLsizei count, GLenum type, const GLvoid *indices)
         free(temp);
     }
 
+    maxindex += basevertex;
+
     return maxindex;
 }
 
+#define __glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
+
+#define __glDrawElements_maxindex(count, type, indices) __glDrawElementsBaseVertex_maxindex(count, type, indices, 0);
+#define __glDrawRangeElements_maxindex(start, end, count, type, indices) __glDrawElements_maxindex(count, type, indices)
+#define __glDrawRangeElementsEXT_maxindex __glDrawRangeElements_maxindex
+
+#define __glDrawArraysInstanced_maxindex(first, count, primcount) __glDrawArrays_maxindex(first, count)
+#define __glDrawElementsInstanced_maxindex(count, type, indices, primcount) __glDrawElements_maxindex(count, type, indices)
+#define __glDrawElementsInstancedBaseVertex_maxindex(count, type, indices, primcount, basevertex) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
+#define __glDrawRangeElementsInstanced_maxindex(start, end, count, type, indices, primcount) __glDrawRangeElements_maxindex(start, end, count, type, indices)
+#define __glDrawRangeElementsInstancedBaseVertex_maxindex(start, end, count, type, indices, primcount, basevertex) __glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex)
+
+#define __glDrawArraysInstancedARB_maxindex __glDrawArraysInstanced_maxindex
+#define __glDrawElementsInstancedARB_maxindex __glDrawElementsInstanced_maxindex
+#define __glDrawArraysInstancedEXT_maxindex __glDrawArraysInstanced_maxindex
+#define __glDrawElementsInstancedEXT_maxindex __glDrawElementsInstanced_maxindex
+
 static inline GLuint
-__glDrawRangeElements_maxindex(GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices)
-{
-    (void)start;
-    (void)end;
-    return __glDrawElements_maxindex(count, type, indices);
+__glDrawArraysIndirect_maxindex(const GLvoid *indirect) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
 }
 
-#define __glDrawRangeElementsEXT_maxindex __glDrawRangeElements_maxindex
+static inline GLuint
+__glDrawElementsIndirect_maxindex(GLenum type, const GLvoid *indirect) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+static inline GLuint
+__glMultiDrawArrays_maxindex(const GLint *first, const GLsizei *count, GLsizei primcount) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+static inline GLuint
+__glMultiDrawElements_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+static inline GLuint
+__glMultiDrawElementsBaseVertex_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount, const GLint * basevertex) {
+    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
+    return 0;
+}
+
+#define __glMultiDrawArraysEXT_maxindex __glMultiDrawArrays_maxindex
+#define __glMultiDrawElementsEXT_maxindex __glMultiDrawElements_maxindex
+
+#define __glMultiModeDrawArraysIBM_maxindex(first, count, primcount, modestride) __glMultiDrawArrays_maxindex(first, count, primcount)
+#define __glMultiModeDrawElementsIBM_maxindex(count, type, indices, primcount, modestride) __glMultiDrawElements_maxindex(count, type, (const GLvoid **)indices, primcount)
+
 
 static inline size_t
 __glCallLists_size(GLsizei n, GLenum type)
