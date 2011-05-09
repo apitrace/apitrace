@@ -153,6 +153,30 @@ class GlRetracer(Retracer):
             # glGetError is not allowed inside glBegin/glEnd
             print '    glretrace::checkGlError(call);'
 
+        if function.name == 'glCompileShader':
+            print r'    GLint compile_status = 0;'
+            print r'    glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);'
+            print r'    if (!compile_status) {'
+            print r'         GLint info_log_length = 0;'
+            print r'         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_length);'
+            print r'         GLchar *infoLog = new GLchar[info_log_length];'
+            print r'         glGetShaderInfoLog(shader, info_log_length, NULL, infoLog);'
+            print r'         std::cerr << call.no << ": warning: " << infoLog << "\n";'
+            print r'         delete [] infoLog;'
+            print r'    }'
+
+        if function.name == 'glLinkProgram':
+            print r'    GLint link_status = 0;'
+            print r'    glGetProgramiv(program, GL_LINK_STATUS, &link_status);'
+            print r'    if (!link_status) {'
+            print r'         GLint info_log_length = 0;'
+            print r'         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);'
+            print r'         GLchar *infoLog = new GLchar[info_log_length];'
+            print r'         glGetProgramInfoLog(program, info_log_length, NULL, infoLog);'
+            print r'         std::cerr << call.no << ": warning: " << infoLog << "\n";'
+            print r'         delete [] infoLog;'
+            print r'    }'
+
         if function.name == 'glFlush':
             print '    if (!glretrace::double_buffer) {'
             print '        glretrace::frame_complete(call.no);'
