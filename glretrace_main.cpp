@@ -55,7 +55,7 @@ const char *snapshot_prefix = NULL;
 unsigned dump_state = ~0;
 
 void
-checkGlError(const Trace::Call &call) {
+checkGlError(Trace::Call &call) {
     if (benchmark || insideGlBeginEnd) {
         return;
     }
@@ -63,6 +63,11 @@ checkGlError(const Trace::Call &call) {
     GLenum error = glGetError();
     if (error == GL_NO_ERROR) {
         return;
+    }
+
+    if (retrace::verbosity == 0) {
+        std::cout << call;
+        std::cout.flush();
     }
 
     std::cerr << call.no << ": ";
