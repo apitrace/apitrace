@@ -1780,8 +1780,8 @@ glapi.add_functions([
     GlFunction(Void, "glPrimitiveRestartIndexNV", [(GLuint, "index")]),
 
     # GL_ATI_map_object_buffer
-    GlFunction(OpaquePointer(GLvoid), "glMapObjectBufferATI", [(GLuint, "buffer")]),
-    GlFunction(Void, "glUnmapObjectBufferATI", [(GLuint, "buffer")]),
+    GlFunction(GLmap, "glMapObjectBufferATI", [(GLbuffer, "buffer")]),
+    GlFunction(Void, "glUnmapObjectBufferATI", [(GLbuffer, "buffer")]),
 
     # GL_ATI_separate_stencil
     GlFunction(Void, "glStencilOpSeparateATI", [(GLenum, "face"), (GLenum, "sfail"), (GLenum, "dpfail"), (GLenum, "dppass")]),
@@ -2139,9 +2139,9 @@ glapi.add_functions([
     GlFunction(Void, "glProgramUniform4uivEXT", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Const(Array(GLuint, "count*4")), "value")]),
     GlFunction(Void, "glNamedBufferDataEXT", [(GLbuffer, "buffer"), (GLsizeiptr, "size"), (Const(Blob(GLvoid, "size")), "data"), (GLenum, "usage")]),
     GlFunction(Void, "glNamedBufferSubDataEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "size"), (Const(Blob(GLvoid, "size")), "data")]),
-    GlFunction(OpaquePointer(GLvoid), "glMapNamedBufferEXT", [(GLbuffer, "buffer"), (GLenum, "access")]),
+    GlFunction(GLmap, "glMapNamedBufferEXT", [(GLbuffer, "buffer"), (GLenum, "access")]),
     GlFunction(GLboolean, "glUnmapNamedBufferEXT", [(GLbuffer, "buffer")]),
-    GlFunction(OpaquePointer(GLvoid), "glMapNamedBufferRangeEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield, "access")]),
+    GlFunction(GLmap, "glMapNamedBufferRangeEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield, "access")]),
     GlFunction(Void, "glFlushMappedNamedBufferRangeEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "length")]),
     GlFunction(Void, "glNamedCopyBufferSubDataEXT", [(GLbuffer, "readBuffer"), (GLbuffer, "writeBuffer"), (GLintptr, "readOffset"), (GLintptr, "writeOffset"), (GLsizeiptr, "size")]),
     GlFunction(Void, "glGetNamedBufferParameterivEXT", [(GLbuffer, "buffer"), (GLenum, "pname"), Out(Array(GLint, "__gl_param_size(pname)"), "params")], sideeffects=False),
