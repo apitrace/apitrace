@@ -174,7 +174,7 @@ class GlRetracer(Retracer):
         
         if arg.type is glapi.GLlocationARB \
            and 'programObj' not in [arg.name for arg in function.args]:
-            print '    GLint programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);'
+            print '    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);'
 
         Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
 
