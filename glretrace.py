@@ -167,10 +167,14 @@ class GlRetracer(Retracer):
             print '    %s = %s.blob();' % (lvalue, rvalue)
             return
 
-        if arg.type is glapi.GLlocation:
-            if 'program' not in [arg.name for arg in function.args]:
-                print '    GLint program = -1;'
-                print '    glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+        if arg.type is glapi.GLlocation \
+           and 'program' not in [arg.name for arg in function.args]:
+            print '    GLint program = -1;'
+            print '    glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+        
+        if arg.type is glapi.GLlocationARB \
+           and 'programObj' not in [arg.name for arg in function.args]:
+            print '    GLint programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);'
 
         Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
 

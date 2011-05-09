@@ -42,6 +42,7 @@ F = GLfloat
 D = GLdouble
 P = OpaquePointer(Void)
 S = CString
+H = GLhandleARB
 
 
 parameters = [
@@ -2181,7 +2182,7 @@ parameters = [
     #"glGet",	(X,	1,	"GL_SKIP_DECODE_EXT"),	# 0x8A4A
     ("",	X,	1,	"GL_FRAGMENT_SHADER"),	# 0x8B30
     ("",	X,	1,	"GL_VERTEX_SHADER"),	# 0x8B31
-    ("",	X,	1,	"GL_PROGRAM_OBJECT_ARB"),	# 0x8B40
+    ("",	H,	1,	"GL_PROGRAM_OBJECT_ARB"),	# 0x8B40
     ("",	X,	1,	"GL_SHADER_OBJECT_ARB"),	# 0x8B48
     ("glGet",	I,	1,	"GL_MAX_FRAGMENT_UNIFORM_COMPONENTS"),	# 0x8B49
     ("glGet",	I,	1,	"GL_MAX_VERTEX_UNIFORM_COMPONENTS"),	# 0x8B4A
