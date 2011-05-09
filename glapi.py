@@ -1015,10 +1015,10 @@ glapi.add_functions([
     GlFunction(Void, "glTexBufferARB", [(GLenum, "target"), (GLenum, "internalformat"), (GLuint, "buffer")]),
 
     # GL_ARB_vertex_array_object
-    GlFunction(Void, "glBindVertexArray", [(GLvertexArray, "array")]),
-    GlFunction(Void, "glDeleteVertexArrays", [(GLsizei, "n"), (Const(Array(GLvertexArray, "n")), "arrays")]),
-    GlFunction(Void, "glGenVertexArrays", [(GLsizei, "n"), Out(Array(GLvertexArray, "n"), "arrays")]),
-    GlFunction(GLboolean, "glIsVertexArray", [(GLvertexArray, "array")]),
+    GlFunction(Void, "glBindVertexArray", [(GLarray, "array")]),
+    GlFunction(Void, "glDeleteVertexArrays", [(GLsizei, "n"), (Const(Array(GLarray, "n")), "arrays")]),
+    GlFunction(Void, "glGenVertexArrays", [(GLsizei, "n"), Out(Array(GLarray, "n"), "arrays")]),
+    GlFunction(GLboolean, "glIsVertexArray", [(GLarray, "array")], sideeffects=False),
 
     # GL_ARB_uniform_buffer_object
     GlFunction(Void, "glGetUniformIndices", [(GLuint, "program"), (GLsizei, "uniformCount"), (Const(OpaqueArray(GLstring, "__glGetUniformIndices_size(uniformCount)")), "uniformNames"), Out(OpaqueArray(GLuint, "__glGetUniformIndices_size(uniformCount)"), "uniformIndices")], sideeffects=False),
@@ -1708,10 +1708,10 @@ glapi.add_functions([
     GlFunction(Void, "glActiveStencilFaceEXT", [(GLenum, "face")]),
 
     # GL_APPLE_vertex_array_object
-    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLvertexArray, "array")]),
-    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Const(Array(GLvertexArray, "n")), "arrays")]),
-    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLvertexArray, "n"), "arrays")]),
-    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLvertexArray, "array")]),
+    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLarray, "array")]),
+    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Const(Array(GLarray, "n")), "arrays")]),
+    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLarray, "n"), "arrays")]),
+    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLarray, "array")], sideeffects=False),
 
     # GL_ATI_draw_buffers
     GlFunction(Void, "glDrawBuffersATI", [(GLsizei, "n"), (Const(Array(GLenum, "n")), "bufs")]),

@@ -78,7 +78,7 @@ GLprogramNV = Handle("programNV", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
-GLvertexArray = Handle("vertexArrayAPPLE", GLuint)
+GLarray = Handle("array", GLuint)
 GLregion = Handle("region", GLuint)
 GLmap = Handle("map", OpaquePointer(GLvoid))
 
