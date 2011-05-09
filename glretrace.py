@@ -178,6 +178,15 @@ class GlRetracer(Retracer):
 
         Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
 
+        # Don't try to use more samples than the implementation supports
+        if arg.name == 'samples':
+            assert arg.type is glapi.GLsizei
+            print '    GLint max_samples = 0;'
+            print '    glGetIntegerv(GL_MAX_SAMPLES, &max_samples);'
+            print '    if (samples > max_samples) {'
+            print '        samples = max_samples;'
+            print '    }'
+
 
 if __name__ == '__main__':
     print r'''
