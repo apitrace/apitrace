@@ -2218,17 +2218,17 @@ parameters = [
     ("",	X,	1,	"GL_FLOAT_MAT3x4"),	# 0x8B68
     ("",	X,	1,	"GL_FLOAT_MAT4x2"),	# 0x8B69
     ("",	X,	1,	"GL_FLOAT_MAT4x3"),	# 0x8B6A
-    ("",	X,	1,	"GL_DELETE_STATUS"),	# 0x8B80
-    ("",	X,	1,	"GL_COMPILE_STATUS"),	# 0x8B81
-    ("",	X,	1,	"GL_LINK_STATUS"),	# 0x8B82
-    ("",	X,	1,	"GL_VALIDATE_STATUS"),	# 0x8B83
-    ("",	X,	1,	"GL_INFO_LOG_LENGTH"),	# 0x8B84
-    ("",	X,	1,	"GL_ATTACHED_SHADERS"),	# 0x8B85
-    ("",	X,	1,	"GL_ACTIVE_UNIFORMS"),	# 0x8B86
-    ("",	X,	1,	"GL_ACTIVE_UNIFORM_MAX_LENGTH"),	# 0x8B87
+    ("glGetProgram",	B,	1,	"GL_DELETE_STATUS"),	# 0x8B80
+    ("glGetProgram",	B,	1,	"GL_COMPILE_STATUS"),	# 0x8B81
+    ("glGetProgram",	B,	1,	"GL_LINK_STATUS"),	# 0x8B82
+    ("glGetProgram",	B,	1,	"GL_VALIDATE_STATUS"),	# 0x8B83
+    ("glGetProgram",	I,	1,	"GL_INFO_LOG_LENGTH"),	# 0x8B84
+    ("glGetProgram",	I,	1,	"GL_ATTACHED_SHADERS"),	# 0x8B85
+    ("glGetProgram",	I,	1,	"GL_ACTIVE_UNIFORMS"),	# 0x8B86
+    ("glGetProgram",	I,	1,	"GL_ACTIVE_UNIFORM_MAX_LENGTH"),	# 0x8B87
     ("glGetShader",	I,	1,	"GL_SHADER_SOURCE_LENGTH"),	# 0x8B88
-    ("",	X,	1,	"GL_ACTIVE_ATTRIBUTES"),	# 0x8B89
-    ("",	X,	1,	"GL_ACTIVE_ATTRIBUTE_MAX_LENGTH"),	# 0x8B8A
+    ("glGetProgram",	I,	1,	"GL_ACTIVE_ATTRIBUTES"),	# 0x8B89
+    ("glGetProgram",	I,	1,	"GL_ACTIVE_ATTRIBUTE_MAX_LENGTH"),	# 0x8B8A
     ("",	X,	1,	"GL_FRAGMENT_SHADER_DERIVATIVE_HINT"),	# 0x8B8B
     ("",	X,	1,	"GL_SHADING_LANGUAGE_VERSION"),	# 0x8B8C
     ("glGet",	I,	1,	"GL_CURRENT_PROGRAM"),	# 0x8B8D
