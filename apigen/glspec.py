@@ -139,7 +139,7 @@ class SpecParser(LineParser):
             values = value.split()
             #self.prefix = values[0]
 
-    get_function_re = re.compile(r'^Get[A-Z]\w+')
+    get_function_re = re.compile(r'^(Get|Is|Are)[A-Z]\w+')
 
     def parse_prototype(self):
         line = self.consume()
