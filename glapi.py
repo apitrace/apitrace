@@ -282,7 +282,7 @@ glapi.add_functions([
     GlFunction(Void, "glTexGeniv", [(GLenum, "coord"), (GLenum, "pname"), (Const(Array(GLint, "__glTexGeniv_size(pname)")), "params")]),
     GlFunction(Void, "glFeedbackBuffer", [(GLsizei, "size"), (GLenum, "type"), Out(Array(GLfloat, "size"), "buffer")]),
     GlFunction(Void, "glSelectBuffer", [(GLsizei, "size"), Out(Array(GLuint, "size"), "buffer")]),
-    GlFunction(GLint, "glRenderMode", [(GLenum, "mode")]),
+    GlFunction(Alias("GLint", GLenum), "glRenderMode", [(GLenum, "mode")]),
     GlFunction(Void, "glInitNames", []),
     GlFunction(Void, "glLoadName", [(GLuint, "name")]),
     GlFunction(Void, "glPassThrough", [(GLfloat, "token")]),
@@ -1544,7 +1544,6 @@ glapi.add_functions([
     # GL_EXT_multisample
     GlFunction(Void, "glSampleMaskEXT", [(GLclampf, "value"), (GLboolean, "invert")]),
     GlFunction(Void, "glSamplePatternEXT", [(GLenum, "pattern")]),
-
 
     # GL_NV_fence
     GlFunction(Void, "glDeleteFencesNV", [(GLsizei, "n"), (Const(Array(GLfenceNV, "n")), "fences")]),
