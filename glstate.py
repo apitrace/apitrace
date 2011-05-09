@@ -172,6 +172,7 @@ glGetVertexAttrib = StateGetter('glGetVertexAttrib', {I: 'iv', F: 'fv', D: 'dv',
 glGetTexParameter = StateGetter('glGetTexParameter', {I: 'iv', F: 'fv'})
 glGetTexEnv = StateGetter('glGetTexEnv', {I: 'iv', F: 'fv'})
 glGetTexLevelParameter = StateGetter('glGetTexLevelParameter', {I: 'iv', F: 'fv'})
+glGetShader = StateGetter('glGetShaderiv', {I: 'iv'})
 glGetProgram = StateGetter('glGetProgram', {I: 'iv'})
 glGetProgramARB = StateGetter('glGetProgram', {I: 'iv', F: 'fv', S: 'Stringv'}, 'ARB')
 

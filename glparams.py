@@ -2218,11 +2218,11 @@ parameters = [
     ("",	X,	1,	"GL_FLOAT_MAT3x4"),	# 0x8B68
     ("",	X,	1,	"GL_FLOAT_MAT4x2"),	# 0x8B69
     ("",	X,	1,	"GL_FLOAT_MAT4x3"),	# 0x8B6A
-    ("glGetProgram",	B,	1,	"GL_DELETE_STATUS"),	# 0x8B80
-    ("glGetProgram",	B,	1,	"GL_COMPILE_STATUS"),	# 0x8B81
-    ("glGetProgram",	B,	1,	"GL_LINK_STATUS"),	# 0x8B82
-    ("glGetProgram",	B,	1,	"GL_VALIDATE_STATUS"),	# 0x8B83
-    ("glGetProgram",	I,	1,	"GL_INFO_LOG_LENGTH"),	# 0x8B84
+    ("glGetShader,glGetProgram",	B,	1,	"GL_DELETE_STATUS"),	# 0x8B80
+    ("glGetShader,glGetProgram",	B,	1,	"GL_COMPILE_STATUS"),	# 0x8B81
+    ("glGetShader,glGetProgram",	B,	1,	"GL_LINK_STATUS"),	# 0x8B82
+    ("glGetShader,glGetProgram",	B,	1,	"GL_VALIDATE_STATUS"),	# 0x8B83
+    ("glGetShader,glGetProgram",	I,	1,	"GL_INFO_LOG_LENGTH"),	# 0x8B84
     ("glGetProgram",	I,	1,	"GL_ATTACHED_SHADERS"),	# 0x8B85
     ("glGetProgram",	I,	1,	"GL_ACTIVE_UNIFORMS"),	# 0x8B86
     ("glGetProgram",	I,	1,	"GL_ACTIVE_UNIFORM_MAX_LENGTH"),	# 0x8B87
