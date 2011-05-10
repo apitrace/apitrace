@@ -87,6 +87,8 @@ __glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
 #define __glFogCoordPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
 #define __glSecondaryColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
 #define __glVertexAttribPointer_size(size, type, normalized, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glVertexAttribPointerARB_size(size, type, normalized, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define __glVertexAttribPointerNV_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
 
 static inline GLuint
 __glDrawArrays_maxindex(GLint first, GLsizei count)

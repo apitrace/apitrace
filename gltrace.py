@@ -627,48 +627,62 @@ class GlTracer(Tracer):
             self.array_trace_epilog(api, uppercase_name)
             print
 
-        # Samething, but for glVertexAttribPointer
-        print '    // glVertexAttribPointer'
-        print '    GLint __max_vertex_attribs = 0;'
-        print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
-        print '    for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
-        print '        GLint __enabled = 0;'
-        print '        __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &__enabled);'
-        print '        if (__enabled) {'
-        print '            GLint __binding = 0;'
-        print '            __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &__binding);'
-        print '            if (!__binding) {'
+        # Samething, but for glVertexAttribPointer*
+        #
+        # Some variants of glVertexAttribPointer alias conventional and generic attributes:
+        # - glVertexAttribPointer: no
+        # - glVertexAttribPointerARB: implementation dependent
+        # - glVertexAttribPointerNV: yes
+        #
+        # This means that the implementations of these functions do not always
+        # alias, and they need to be considered independently.
+        #
+        for suffix in ['', 'ARB']:
+            function_name = 'glVertexAttribPointer' + suffix
+            print '    // %s' % function_name
+            print '    if (__glVertexAttribPointer%s_ptr &&' % suffix
+            print '        (__glVertexAttribPointer%s_ptr != __glVertexAttribPointer_ptr)) {' % suffix
+            print '        GLint __max_vertex_attribs = 0;'
+            print '        __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
+            print '        for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
+            print '            GLint __enabled = 0;'
+            print '            __glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &__enabled);' % suffix
+            print '            if (__enabled) {'
+            print '                GLint __binding = 0;'
+            print '                __glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &__binding);' % suffix
+            print '                if (!__binding) {'
 
-        function = api.get_function_by_name('glVertexAttribPointer')
+            function = api.get_function_by_name(function_name)
 
-        # Get the arguments via glGet*
-        for arg in function.args[1:]:
-            arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s' % (arg.name.upper(),)
-            arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False).visit(arg.type)
-            print '                %s %s = 0;' % (arg_type, arg.name)
-            print '                __%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
-        
-        arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
-        print '                size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
+            # Get the arguments via glGet*
+            for arg in function.args[1:]:
+                arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s' % (arg.name.upper(),)
+                arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False).visit(arg.type)
+                print '                    %s %s = 0;' % (arg_type, arg.name)
+                print '                    __%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
+            
+            arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
+            print '                    size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
-        # Emit a fake function
-        print '                unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
-        for arg in function.args:
-            assert not arg.output
-            print '                __writer.beginArg(%u);' % (arg.index,)
-            if arg.name != 'pointer':
-                dump_instance(arg.type, arg.name)
-            else:
-                print '                __writer.writeBlob((const void *)%s, __size);' % (arg.name)
-            print '                __writer.endArg();'
-        
-        print '                __writer.endEnter();'
-        print '                __writer.beginLeave(__call);'
-        print '                __writer.endLeave();'
-        print '            }'
-        print '        }'
-        print '    }'
-        print
+            # Emit a fake function
+            print '                    unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
+            for arg in function.args:
+                assert not arg.output
+                print '                    __writer.beginArg(%u);' % (arg.index,)
+                if arg.name != 'pointer':
+                    dump_instance(arg.type, arg.name)
+                else:
+                    print '                    __writer.writeBlob((const void *)%s, __size);' % (arg.name)
+                print '                    __writer.endArg();'
+            
+            print '                    __writer.endEnter();'
+            print '                    __writer.beginLeave(__call);'
+            print '                    __writer.endLeave();'
+            print '                }'
+            print '            }'
+            print '        }'
+            print '    }'
+            print
 
         print '}'
         print
