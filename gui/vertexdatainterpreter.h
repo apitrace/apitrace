@@ -5,6 +5,17 @@
 
 class QListWidget;
 
+enum DataType {
+    DT_INT8,
+    DT_UINT8,
+    DT_INT16,
+    DT_UINT16,
+    DT_INT32,
+    DT_UINT32,
+    DT_FLOAT,
+    DT_DOUBLE,
+};
+
 class VertexDataInterpreter : public QObject
 {
     Q_OBJECT

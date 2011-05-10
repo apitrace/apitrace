@@ -5,32 +5,27 @@
 
 #include <QDebug>
 
-#include <GL/gl.h>
-
 #include <qmath.h>
 
 static int
-sizeForType(int glType)
+sizeForType(int type)
 {
-    switch(glType) {
-    case GL_FLOAT:
-        return sizeof(GLfloat);
-    case GL_UNSIGNED_BYTE:
-        return sizeof(GLubyte);
-    case GL_BYTE:
-        return sizeof(GLbyte);
-    case GL_SHORT:
-        return sizeof(GLshort);
-    case GL_UNSIGNED_SHORT:
-        return sizeof(GLushort);
-    case GL_INT:
-        return sizeof(GLint);
-    case GL_UNSIGNED_INT:
-        return sizeof(GLuint);
-    case GL_DOUBLE:
-        return sizeof(GLdouble);
+    switch(type) {
+    case DT_INT8:
+    case DT_UINT8:
+        return 1;
+    case DT_INT16:
+    case DT_UINT16:
+        return 2;
+    case DT_INT32:
+    case DT_UINT32:
+        return 4;
+    case DT_FLOAT:
+        return sizeof(float);
+    case DT_DOUBLE:
+        return sizeof(double);
     default:
-        return sizeof(GLint);
+        return sizeof(int);
     }
 }
 
@@ -96,7 +91,7 @@ convertData(const QByteArray &dataArray,
 VertexDataInterpreter::VertexDataInterpreter(QObject *parent)
     : QObject(parent),
       m_listWidget(0),
-      m_type(GL_FLOAT),
+      m_type(DT_FLOAT),
       m_stride(16),
       m_components(4),
       m_startingOffset(0)
@@ -162,35 +157,35 @@ void VertexDataInterpreter::interpretData()
 
     QStringList lst;
     switch(m_type) {
-    case GL_FLOAT:
-        lst = convertData<float>(m_data, m_type, m_stride, m_components,
-                                 m_startingOffset);
-        break;
-    case GL_UNSIGNED_BYTE:
-        lst = convertData<quint8>(m_data, m_type, m_stride, m_components,
-                                  m_startingOffset);
-        break;
-    case GL_BYTE:
+    case DT_INT8:
         lst = convertData<qint8>(m_data, m_type, m_stride, m_components,
                                  m_startingOffset);
         break;
-    case GL_SHORT:
+    case DT_UINT8:
+        lst = convertData<quint8>(m_data, m_type, m_stride, m_components,
+                                  m_startingOffset);
+        break;
+    case DT_INT16:
         lst = convertData<qint16>(m_data, m_type, m_stride, m_components,
                                   m_startingOffset);
         break;
-    case GL_UNSIGNED_SHORT:
+    case DT_UINT16:
         lst = convertData<quint16>(m_data, m_type, m_stride, m_components,
                                    m_startingOffset);
         break;
-    case GL_INT:
-        lst = convertData<unsigned int>(m_data, m_type, m_stride, m_components,
-                                        m_startingOffset);
+    case DT_INT32:
+        lst = convertData<qint32>(m_data, m_type, m_stride, m_components,
+                                  m_startingOffset);
         break;
-    case GL_UNSIGNED_INT:
-        lst = convertData<int>(m_data, m_type, m_stride, m_components,
-                               m_startingOffset);
+    case DT_UINT32:
+        lst = convertData<quint32>(m_data, m_type, m_stride, m_components,
+                                   m_startingOffset);
         break;
-    case GL_DOUBLE:
+    case DT_FLOAT:
+        lst = convertData<float>(m_data, m_type, m_stride, m_components,
+                                 m_startingOffset);
+        break;
+    case DT_DOUBLE:
         lst = convertData<double>(m_data, m_type, m_stride, m_components,
                                   m_startingOffset);
         break;
@@ -205,21 +200,21 @@ void VertexDataInterpreter::interpretData()
 void VertexDataInterpreter::setTypeFromString(const QString &str)
 {
     if (str == QLatin1String("GL_FLOAT")) {
-        setType(GL_FLOAT);
+        setType(DT_FLOAT);
     } else if (str == QLatin1String("GL_INT")) {
-        setType(GL_INT);
+        setType(DT_INT32);
     } else if (str == QLatin1String("GL_UNSIGNED_INT")) {
-        setType(GL_UNSIGNED_INT);
+        setType(DT_UINT32);
     } else if (str == QLatin1String("GL_SHORT")) {
-        setType(GL_SHORT);
+        setType(DT_INT16);
     } else if (str == QLatin1String("GL_UNSIGNED_SHORT")) {
-        setType(GL_UNSIGNED_SHORT);
+        setType(DT_UINT16);
     } else if (str == QLatin1String("GL_BYTE")) {
-        setType(GL_BYTE);
+        setType(DT_INT8);
     } else if (str == QLatin1String("GL_UNSIGNED_BYTE")) {
-        setType(GL_UNSIGNED_BYTE);
+        setType(DT_UINT8);
     } else if (str == QLatin1String("GL_DOUBLE")) {
-        setType(GL_DOUBLE);
+        setType(DT_DOUBLE);
     } else {
         qDebug()<<"unknown vertex data type";
     }
