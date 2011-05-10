@@ -95,8 +95,9 @@ class ValueExtractor(stdapi.Visitor):
     def visit_handle(self, handle, lvalue, rvalue):
         OpaqueValueExtractor().visit(handle.type, lvalue, rvalue);
         new_lvalue = handle_entry(handle, lvalue)
-        print '    if (retrace::verbosity >= 2)'
+        print '    if (retrace::verbosity >= 2) {'
         print '        std::cout << "%s " << size_t(%s) << " <- " << size_t(%s) << "\\n";' % (handle.name, lvalue, new_lvalue)
+        print '    }'
         print '    %s = %s;' % (lvalue, new_lvalue)
     
     def visit_blob(self, blob, lvalue, rvalue):
@@ -157,8 +158,9 @@ class ValueWrapper(stdapi.Visitor):
             rvalue = "__orig_result"
             entry = handle_entry(handle, rvalue) 
             print "    %s = %s;" % (entry, lvalue)
-            print '    if (retrace::verbosity >= 2)'
+            print '    if (retrace::verbosity >= 2) {'
             print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
+            print '    }'
         else:
             i = '__h' + handle.id
             lvalue = "%s + %s" % (lvalue, i)
@@ -166,8 +168,9 @@ class ValueWrapper(stdapi.Visitor):
             entry = handle_entry(handle, rvalue) 
             print '    for ({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
             print '        {entry} = {lvalue};'.format(**locals())
-            print '        if (retrace::verbosity >= 2)'
+            print '        if (retrace::verbosity >= 2) {'
             print '            std::cout << "{handle.name} " << ({rvalue}) << " -> " << ({lvalue}) << "\\n";'.format(**locals())
+            print '        }'
             print '    }'
     
     def visit_blob(self, blob, lvalue, rvalue):
