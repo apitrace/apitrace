@@ -106,7 +106,7 @@ checkGlError(Trace::Call &call) {
 }
 
 
-static void snapshot(Image::Image &image) {
+static void color_snapshot(Image::Image &image) {
     GLint drawbuffer = double_buffer ? GL_BACK : GL_FRONT;
     GLint readbuffer = double_buffer ? GL_BACK : GL_FRONT;
     glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
@@ -131,40 +131,48 @@ static void snapshot(Image::Image &image) {
 }
 
 
-void frame_complete(unsigned call_no) {
-    ++frame;
-    
-    if (drawable &&
-        (snapshot_prefix || compare_prefix)) {
-        Image::Image *ref = NULL;
-        if (compare_prefix) {
-            char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%010u.png", compare_prefix, call_no);
-            ref = Image::readPNG(filename);
-            if (!ref) {
-                return;
-            }
-            if (retrace::verbosity >= 0)
-                std::cout << "Read " << filename << "\n";
-        }
-        
-        Image::Image src(drawable->width, drawable->height, true);
-        snapshot(src);
+void snapshot(unsigned call_no) {
+    if (!drawable ||
+        (!snapshot_prefix && !compare_prefix)) {
+        return;
+    }
 
-        if (snapshot_prefix) {
-            char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
-            if (src.writePNG(filename) && retrace::verbosity >= 0) {
-                std::cout << "Wrote " << filename << "\n";
-            }
-        }
+    Image::Image *ref = NULL;
 
-        if (ref) {
-            std::cout << "Snapshot " << call_no << " average precision of " << src.compare(*ref) << " bits\n";
-            delete ref;
+    if (compare_prefix) {
+        char filename[PATH_MAX];
+        snprintf(filename, sizeof filename, "%s%010u.png", compare_prefix, call_no);
+        ref = Image::readPNG(filename);
+        if (!ref) {
+            return;
+        }
+        if (retrace::verbosity >= 0) {
+            std::cout << "Read " << filename << "\n";
         }
     }
 
+    Image::Image src(drawable->width, drawable->height, true);
+    color_snapshot(src);
+
+    if (snapshot_prefix) {
+        char filename[PATH_MAX];
+        snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
+        if (src.writePNG(filename) && retrace::verbosity >= 0) {
+            std::cout << "Wrote " << filename << "\n";
+        }
+    }
+
+    if (ref) {
+        std::cout << "Snapshot " << call_no << " average precision of " << src.compare(*ref) << " bits\n";
+        delete ref;
+    }
+}
+
+
+void frame_complete(unsigned call_no) {
+    ++frame;
+
+    snapshot(call_no);
 }
 
 

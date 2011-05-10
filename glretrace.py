@@ -132,7 +132,7 @@ class GlRetracer(Retracer):
 
         if function.name == 'glReadPixels':
             print '    glFinish();'
-            print '    glretrace::frame_complete(call.no);'
+            print '    glretrace::snapshot(call.no);'
 
     def call_function(self, function):
         if function.name == "glViewport":

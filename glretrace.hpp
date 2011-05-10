@@ -59,6 +59,7 @@ checkGlError(Trace::Call &call);
 void retrace_call_glx(Trace::Call &call);
 void retrace_call_wgl(Trace::Call &call);
 
+void snapshot(unsigned call_no);
 void frame_complete(unsigned call_no);
 
 void state_dump(std::ostream &os);
