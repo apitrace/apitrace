@@ -141,6 +141,11 @@ GLXError = FakeEnum(Int, [
     "GLX_BAD_ENUM",
 ])
 
+GLXname = FakeEnum(Int, [
+    "GLX_VENDOR",
+    "GLX_VERSION",
+    "GLX_EXTENSIONS",
+])
 
 GLXbuffer = Flags(Int, [
     "GLX_WINDOW_BIT",
@@ -227,8 +232,8 @@ glxapi.add_functions([
 
     # GLX 1.1 and later
     Function((Const(String("char *"))), "glXQueryExtensionsString", [(Display, "dpy"), (Int, "screen")]),
-    Function((Const(String("char *"))), "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (Int, "name")]),
-    Function((Const(String("char *"))), "glXGetClientString", [(Display, "dpy"), (Int, "name")]),
+    Function((Const(String("char *"))), "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (GLXname, "name")]),
+    Function((Const(String("char *"))), "glXGetClientString", [(Display, "dpy"), (GLXname, "name")]),
 
     # GLX 1.2 and later
     Function(Display, "glXGetCurrentDisplay", [], sideeffects=False),
