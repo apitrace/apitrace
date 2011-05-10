@@ -573,7 +573,7 @@ glapi.add_functions([
     GlFunction(Void, "glGetActiveAttrib", [(GLprogram, "program"), (GLuint, "index"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLint), "size"), Out(Pointer(GLenum), "type"), Out(GLstring, "name")], sideeffects=False),
     GlFunction(Void, "glGetActiveUniform", [(GLprogram, "program"), (GLuint, "index"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLint), "size"), Out(Pointer(GLenum), "type"), Out(GLstring, "name")], sideeffects=False),
     GlFunction(Void, "glGetAttachedShaders", [(GLprogram, "program"), (GLsizei, "maxCount"), Out(Pointer(GLsizei), "count"), Out(Array(GLuint, "(count ? *count : maxCount)"), "obj")], sideeffects=False),
-    GlFunction(GLlocation, "glGetAttribLocation", [(GLprogram, "program"), (Const(GLstring), "name")]),
+    GlFunction(GLint, "glGetAttribLocation", [(GLprogram, "program"), (Const(GLstring), "name")], sideeffects=False),
     GlFunction(Void, "glGetProgramiv", [(GLprogram, "program"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
     GlFunction(Void, "glGetProgramInfoLog", [(GLprogram, "program"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(GLstring, "infoLog")], sideeffects=False),
     GlFunction(Void, "glGetShaderiv", [(GLshader, "shader"), (GLenum, "pname"), Out(Pointer(GLint), "params")], sideeffects=False),
@@ -964,7 +964,7 @@ glapi.add_functions([
     # GL_ARB_vertex_shader
     GlFunction(Void, "glBindAttribLocationARB", [(GLhandleARB, "programObj"), (GLuint, "index"), (Const(GLstringARB), "name")]),
     GlFunction(Void, "glGetActiveAttribARB", [(GLhandleARB, "programObj"), (GLuint, "index"), (GLsizei, "maxLength"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLint), "size"), Out(Pointer(GLenum), "type"), Out(GLstringARB, "name")], sideeffects=False),
-    GlFunction(GLlocationARB, "glGetAttribLocationARB", [(GLhandleARB, "programObj"), (Const(GLstringARB), "name")]),
+    GlFunction(GLint, "glGetAttribLocationARB", [(GLhandleARB, "programObj"), (Const(GLstringARB), "name")], sideeffects=False),
 
     # GL_ARB_draw_buffers
     GlFunction(Void, "glDrawBuffersARB", [(GLsizei, "n"), (Const(Array(GLenum, "n")), "bufs")]),
