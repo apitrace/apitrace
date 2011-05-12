@@ -1383,6 +1383,10 @@ glapi.add_functions([
     GlFunction(Void, "glPointParameterfEXT", [(GLenum, "pname"), (GLfloat, "param")]),
     GlFunction(Void, "glPointParameterfvEXT", [(GLenum, "pname"), (Const(Array(GLfloat, "__glPointParameterfv_size(pname)")), "params")]),
 
+    # GL_SGIS_point_parameters
+    GlFunction(Void, "glPointParameterfSGIS", [(GLenum, "pname"), (GLfloat, "param")]),
+    GlFunction(Void, "glPointParameterfvSGIS", [(GLenum, "pname"), (Const(Array(GLfloat, "__glPointParameterfv_size(pname)")), "params")]),
+
     # GL_EXT_color_subtable
     GlFunction(Void, "glColorSubTableEXT", [(GLenum, "target"), (GLsizei, "start"), (GLsizei, "count"), (GLenum, "format"), (GLenum, "type"), (Const(OpaqueBlob(GLvoid, "__glColorSubTable_size(format, type, count)")), "data")]),
     GlFunction(Void, "glCopyColorSubTableEXT", [(GLenum, "target"), (GLsizei, "start"), (GLint, "x"), (GLint, "y"), (GLsizei, "width")]),
