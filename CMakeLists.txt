@@ -30,11 +30,6 @@ if (NOT WIN32)
     find_package (PNG)
     find_package (X11 REQUIRED)
 
-    # We use GLX on MacOSX, which is in a separate library
-    if (APPLE)
-        find_library (X11_GL_LIB GL ${X11_LIB_SEARCH_PATH})
-        set(X11_LIBRARIES ${X11_LIBRARIES} ${X11_GL_LIB})
-    endif (APPLE)
 else (NOT WIN32)
     find_package (DirectX)
 endif (NOT WIN32)
@@ -325,7 +320,13 @@ target_link_libraries (glretrace
 )
 
 if (NOT WIN32)
-    target_link_libraries (glretrace ${X11_LIBRARIES})
+    target_link_libraries (glretrace ${X11_X11_LIB})
+
+    # We use GLX on MacOSX, which is in a separate library
+    if (APPLE)
+        find_library (X11_GL_LIB GL ${X11_LIB_SEARCH_PATH})
+        target_link_libraries (glretrace ${X11_GL_LIB})
+    endif (APPLE)
 endif (NOT WIN32)
 
 install (TARGETS glretrace RUNTIME DESTINATION bin) 
