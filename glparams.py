@@ -139,15 +139,15 @@ parameters = [
     ("glGet",	F,	4,	"GL_CURRENT_RASTER_POSITION"),	# 0x0B07
     ("glGet",	I,	1,	"GL_CURRENT_RASTER_POSITION_VALID"),	# 0x0B08
     ("glGet",	F,	1,	"GL_CURRENT_RASTER_DISTANCE"),	# 0x0B09
-    ("glGet",	I,	1,	"GL_POINT_SMOOTH"),	# 0x0B10
+    ("glGet",	B,	1,	"GL_POINT_SMOOTH"),	# 0x0B10
     ("glGet",	F,	1,	"GL_POINT_SIZE"),	# 0x0B11
     ("glGet",	F,	2,	"GL_POINT_SIZE_RANGE"),	# 0x0B12
     ("glGet",	F,	1,	"GL_POINT_SIZE_GRANULARITY"),	# 0x0B13
-    ("glGet",	I,	1,	"GL_LINE_SMOOTH"),	# 0x0B20
+    ("glGet",	B,	1,	"GL_LINE_SMOOTH"),	# 0x0B20
     ("glGet",	F,	1,	"GL_LINE_WIDTH"),	# 0x0B21
     ("glGet",	F,	2,	"GL_LINE_WIDTH_RANGE"),	# 0x0B22
     ("glGet",	F,	1,	"GL_LINE_WIDTH_GRANULARITY"),	# 0x0B23
-    ("glGet",	I,	1,	"GL_LINE_STIPPLE"),	# 0x0B24
+    ("glGet",	B,	1,	"GL_LINE_STIPPLE"),	# 0x0B24
     ("glGet",	I,	1,	"GL_LINE_STIPPLE_PATTERN"),	# 0x0B25
     ("glGet",	I,	1,	"GL_LINE_STIPPLE_REPEAT"),	# 0x0B26
     ("glGet",	E,	1,	"GL_LIST_MODE"),	# 0x0B30
@@ -155,10 +155,10 @@ parameters = [
     ("glGet",	I,	1,	"GL_LIST_BASE"),	# 0x0B32
     ("glGet",	I,	1,	"GL_LIST_INDEX"),	# 0x0B33
     ("glGet",	E,	2,	"GL_POLYGON_MODE"),	# 0x0B40
-    ("glGet",	I,	1,	"GL_POLYGON_SMOOTH"),	# 0x0B41
-    ("glGet",	I,	1,	"GL_POLYGON_STIPPLE"),	# 0x0B42
-    ("glGet",	I,	1,	"GL_EDGE_FLAG"),	# 0x0B43
-    ("glGet",	I,	1,	"GL_CULL_FACE"),	# 0x0B44
+    ("glGet",	B,	1,	"GL_POLYGON_SMOOTH"),	# 0x0B41
+    ("glGet",	B,	1,	"GL_POLYGON_STIPPLE"),	# 0x0B42
+    ("glGet",	B,	1,	"GL_EDGE_FLAG"),	# 0x0B43
+    ("glGet",	B,	1,	"GL_CULL_FACE"),	# 0x0B44
     ("glGet",	E,	1,	"GL_CULL_FACE_MODE"),	# 0x0B45
     ("glGet",	E,	1,	"GL_FRONT_FACE"),	# 0x0B46
     ("glGet",	B,	1,	"GL_LIGHTING"),	# 0x0B50
@@ -169,7 +169,7 @@ parameters = [
     ("glGet",	E,	1,	"GL_COLOR_MATERIAL_FACE"),	# 0x0B55
     ("glGet",	E,	1,	"GL_COLOR_MATERIAL_PARAMETER"),	# 0x0B56
     ("glGet",	B,	1,	"GL_COLOR_MATERIAL"),	# 0x0B57
-    ("glGet",	I,	1,	"GL_FOG"),	# 0x0B60
+    ("glGet",	B,	1,	"GL_FOG"),	# 0x0B60
     ("glGet",	I,	1,	"GL_FOG_INDEX"),	# 0x0B61
     ("glGet",	F,	1,	"GL_FOG_DENSITY"),	# 0x0B62
     ("glGet",	F,	1,	"GL_FOG_START"),	# 0x0B63
@@ -177,12 +177,12 @@ parameters = [
     ("glGet",	E,	1,	"GL_FOG_MODE"),	# 0x0B65
     ("glGet",	F,	4,	"GL_FOG_COLOR"),	# 0x0B66
     ("glGet",	F,	2,	"GL_DEPTH_RANGE"),	# 0x0B70
-    ("glGet",	I,	1,	"GL_DEPTH_TEST"),	# 0x0B71
-    ("glGet",	I,	1,	"GL_DEPTH_WRITEMASK"),	# 0x0B72
+    ("glGet",	B,	1,	"GL_DEPTH_TEST"),	# 0x0B71
+    ("glGet",	B,	1,	"GL_DEPTH_WRITEMASK"),	# 0x0B72
     ("glGet",	F,	1,	"GL_DEPTH_CLEAR_VALUE"),	# 0x0B73
     ("glGet",	E,	1,	"GL_DEPTH_FUNC"),	# 0x0B74
     ("glGet",	F,	4,	"GL_ACCUM_CLEAR_VALUE"),	# 0x0B80
-    ("glGet",	I,	1,	"GL_STENCIL_TEST"),	# 0x0B90
+    ("glGet",	B,	1,	"GL_STENCIL_TEST"),	# 0x0B90
     ("glGet",	I,	1,	"GL_STENCIL_CLEAR_VALUE"),	# 0x0B91
     ("glGet",	E,	1,	"GL_STENCIL_FUNC"),	# 0x0B92
     ("glGet",	I,	1,	"GL_STENCIL_VALUE_MASK"),	# 0x0B93
@@ -192,7 +192,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_STENCIL_REF"),	# 0x0B97
     ("glGet",	I,	1,	"GL_STENCIL_WRITEMASK"),	# 0x0B98
     ("glGet",	E,	1,	"GL_MATRIX_MODE"),	# 0x0BA0
-    ("glGet",	I,	1,	"GL_NORMALIZE"),	# 0x0BA1
+    ("glGet",	B,	1,	"GL_NORMALIZE"),	# 0x0BA1
     ("glGet",	I,	4,	"GL_VIEWPORT"),	# 0x0BA2
     ("glGet",	I,	1,	"GL_MODELVIEW_STACK_DEPTH"),	# 0x0BA3
     ("glGet",	I,	1,	"GL_PROJECTION_STACK_DEPTH"),	# 0x0BA4
@@ -205,36 +205,36 @@ parameters = [
     ("glGet",	B,	1,	"GL_ALPHA_TEST"),	# 0x0BC0
     ("glGet",	E,	1,	"GL_ALPHA_TEST_FUNC"),	# 0x0BC1
     ("glGet",	F,	1,	"GL_ALPHA_TEST_REF"),	# 0x0BC2
-    ("glGet",	I,	1,	"GL_DITHER"),	# 0x0BD0
-    ("glGet",	I,	1,	"GL_BLEND_DST"),	# 0x0BE0
-    ("glGet",	I,	1,	"GL_BLEND_SRC"),	# 0x0BE1
+    ("glGet",	B,	1,	"GL_DITHER"),	# 0x0BD0
+    ("glGet",	E,	1,	"GL_BLEND_DST"),	# 0x0BE0
+    ("glGet",	E,	1,	"GL_BLEND_SRC"),	# 0x0BE1
     ("glGet",	B,	1,	"GL_BLEND"),	# 0x0BE2
     ("glGet",	E,	1,	"GL_LOGIC_OP_MODE"),	# 0x0BF0
-    ("glGet",	I,	1,	"GL_LOGIC_OP"),	# 0x0BF1
-    ("glGet",	I,	1,	"GL_COLOR_LOGIC_OP"),	# 0x0BF2
+    ("glGet",	B,	1,	"GL_INDEX_LOGIC_OP"),	# 0x0BF1
+    ("glGet",	B,	1,	"GL_COLOR_LOGIC_OP"),	# 0x0BF2
     ("glGet",	I,	1,	"GL_AUX_BUFFERS"),	# 0x0C00
     ("glGet",	E,	1,	"GL_DRAW_BUFFER"),	# 0x0C01
     ("glGet",	E,	1,	"GL_READ_BUFFER"),	# 0x0C02
     ("glGet",	I,	4,	"GL_SCISSOR_BOX"),	# 0x0C10
-    ("glGet",	I,	1,	"GL_SCISSOR_TEST"),	# 0x0C11
+    ("glGet",	B,	1,	"GL_SCISSOR_TEST"),	# 0x0C11
     ("glGet",	I,	1,	"GL_INDEX_CLEAR_VALUE"),	# 0x0C20
     ("glGet",	I,	1,	"GL_INDEX_WRITEMASK"),	# 0x0C21
     ("glGet",	F,	4,	"GL_COLOR_CLEAR_VALUE"),	# 0x0C22
-    ("glGet",	I,	4,	"GL_COLOR_WRITEMASK"),	# 0x0C23
-    ("glGet",	I,	1,	"GL_INDEX_MODE"),	# 0x0C30
-    ("glGet",	I,	1,	"GL_RGBA_MODE"),	# 0x0C31
-    ("glGet",	I,	1,	"GL_DOUBLEBUFFER"),	# 0x0C32
-    ("glGet",	I,	1,	"GL_STEREO"),	# 0x0C33
+    ("glGet",	B,	4,	"GL_COLOR_WRITEMASK"),	# 0x0C23
+    ("glGet",	B,	1,	"GL_INDEX_MODE"),	# 0x0C30
+    ("glGet",	B,	1,	"GL_RGBA_MODE"),	# 0x0C31
+    ("glGet",	B,	1,	"GL_DOUBLEBUFFER"),	# 0x0C32
+    ("glGet",	B,	1,	"GL_STEREO"),	# 0x0C33
     ("glGet",	E,	1,	"GL_RENDER_MODE"),	# 0x0C40
     ("glGet",	E,	1,	"GL_PERSPECTIVE_CORRECTION_HINT"),	# 0x0C50
     ("glGet",	E,	1,	"GL_POINT_SMOOTH_HINT"),	# 0x0C51
     ("glGet",	E,	1,	"GL_LINE_SMOOTH_HINT"),	# 0x0C52
     ("glGet",	E,	1,	"GL_POLYGON_SMOOTH_HINT"),	# 0x0C53
     ("glGet",	E,	1,	"GL_FOG_HINT"),	# 0x0C54
-    ("glGet",	I,	1,	"GL_TEXTURE_GEN_S"),	# 0x0C60
-    ("glGet",	I,	1,	"GL_TEXTURE_GEN_T"),	# 0x0C61
-    ("glGet",	I,	1,	"GL_TEXTURE_GEN_R"),	# 0x0C62
-    ("glGet",	I,	1,	"GL_TEXTURE_GEN_Q"),	# 0x0C63
+    ("glGet",	B,	1,	"GL_TEXTURE_GEN_S"),	# 0x0C60
+    ("glGet",	B,	1,	"GL_TEXTURE_GEN_T"),	# 0x0C61
+    ("glGet",	B,	1,	"GL_TEXTURE_GEN_R"),	# 0x0C62
+    ("glGet",	B,	1,	"GL_TEXTURE_GEN_Q"),	# 0x0C63
     ("",	X,	1,	"GL_PIXEL_MAP_I_TO_I"),	# 0x0C70
     ("",	X,	1,	"GL_PIXEL_MAP_S_TO_S"),	# 0x0C71
     ("",	X,	1,	"GL_PIXEL_MAP_I_TO_R"),	# 0x0C72
@@ -255,20 +255,20 @@ parameters = [
     ("glGet",	I,	1,	"GL_PIXEL_MAP_G_TO_G_SIZE"),	# 0x0CB7
     ("glGet",	I,	1,	"GL_PIXEL_MAP_B_TO_B_SIZE"),	# 0x0CB8
     ("glGet",	I,	1,	"GL_PIXEL_MAP_A_TO_A_SIZE"),	# 0x0CB9
-    ("glGet",	I,	1,	"GL_UNPACK_SWAP_BYTES"),	# 0x0CF0
-    ("glGet",	I,	1,	"GL_UNPACK_LSB_FIRST"),	# 0x0CF1
+    ("glGet",	B,	1,	"GL_UNPACK_SWAP_BYTES"),	# 0x0CF0
+    ("glGet",	B,	1,	"GL_UNPACK_LSB_FIRST"),	# 0x0CF1
     ("glGet",	I,	1,	"GL_UNPACK_ROW_LENGTH"),	# 0x0CF2
     ("glGet",	I,	1,	"GL_UNPACK_SKIP_ROWS"),	# 0x0CF3
     ("glGet",	I,	1,	"GL_UNPACK_SKIP_PIXELS"),	# 0x0CF4
     ("glGet",	I,	1,	"GL_UNPACK_ALIGNMENT"),	# 0x0CF5
-    ("glGet",	I,	1,	"GL_PACK_SWAP_BYTES"),	# 0x0D00
-    ("glGet",	I,	1,	"GL_PACK_LSB_FIRST"),	# 0x0D01
+    ("glGet",	B,	1,	"GL_PACK_SWAP_BYTES"),	# 0x0D00
+    ("glGet",	B,	1,	"GL_PACK_LSB_FIRST"),	# 0x0D01
     ("glGet",	I,	1,	"GL_PACK_ROW_LENGTH"),	# 0x0D02
     ("glGet",	I,	1,	"GL_PACK_SKIP_ROWS"),	# 0x0D03
     ("glGet",	I,	1,	"GL_PACK_SKIP_PIXELS"),	# 0x0D04
     ("glGet",	I,	1,	"GL_PACK_ALIGNMENT"),	# 0x0D05
-    ("glGet",	I,	1,	"GL_MAP_COLOR"),	# 0x0D10
-    ("glGet",	I,	1,	"GL_MAP_STENCIL"),	# 0x0D11
+    ("glGet",	B,	1,	"GL_MAP_COLOR"),	# 0x0D10
+    ("glGet",	B,	1,	"GL_MAP_STENCIL"),	# 0x0D11
     ("glGet",	I,	1,	"GL_INDEX_SHIFT"),	# 0x0D12
     ("glGet",	I,	1,	"GL_INDEX_OFFSET"),	# 0x0D13
     ("glGet",	F,	1,	"GL_RED_SCALE"),	# 0x0D14
@@ -480,8 +480,8 @@ parameters = [
     ("",	X,	1,	"GL_CLAMP"),	# 0x2900
     ("",	X,	1,	"GL_REPEAT"),	# 0x2901
     ("glGet",	F,	1,	"GL_POLYGON_OFFSET_UNITS"),	# 0x2A00
-    ("glGet",	I,	1,	"GL_POLYGON_OFFSET_POINT"),	# 0x2A01
-    ("glGet",	I,	1,	"GL_POLYGON_OFFSET_LINE"),	# 0x2A02
+    ("glGet",	B,	1,	"GL_POLYGON_OFFSET_POINT"),	# 0x2A01
+    ("glGet",	B,	1,	"GL_POLYGON_OFFSET_LINE"),	# 0x2A02
     ("",	X,	1,	"GL_R3_G3_B2"),	# 0x2A10
     ("",	X,	1,	"GL_V2F"),	# 0x2A20
     ("",	X,	1,	"GL_V3F"),	# 0x2A21
@@ -531,7 +531,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_UNPACK_CMYK_HINT_EXT"),	# 0x800F
     ("glGet",	B,	1,	"GL_CONVOLUTION_1D"),	# 0x8010
     ("glGet",	B,	1,	"GL_CONVOLUTION_2D"),	# 0x8011
-    ("glGet",	I,	1,	"GL_SEPARABLE_2D"),	# 0x8012
+    ("glGet",	B,	1,	"GL_SEPARABLE_2D"),	# 0x8012
     ("glGetConvolutionParameter",	E,	1,	"GL_CONVOLUTION_BORDER_MODE"),	# 0x8013
     ("glGetConvolutionParameter",	F,	4,	"GL_CONVOLUTION_FILTER_SCALE"),	# 0x8014
     ("glGetConvolutionParameter",	F,	4,	"GL_CONVOLUTION_FILTER_BIAS"),	# 0x8015
@@ -568,10 +568,10 @@ parameters = [
     ("",	X,	1,	"GL_UNSIGNED_SHORT_5_5_5_1"),	# 0x8034
     ("",	X,	1,	"GL_UNSIGNED_INT_8_8_8_8"),	# 0x8035
     ("",	X,	1,	"GL_UNSIGNED_INT_10_10_10_2"),	# 0x8036
-    ("glGet",	I,	1,	"GL_POLYGON_OFFSET_FILL"),	# 0x8037
+    ("glGet",	B,	1,	"GL_POLYGON_OFFSET_FILL"),	# 0x8037
     ("glGet",	F,	1,	"GL_POLYGON_OFFSET_FACTOR"),	# 0x8038
     ("glGet",	F,	1,	"GL_POLYGON_OFFSET_BIAS_EXT"),	# 0x8039
-    ("glGet",	I,	1,	"GL_RESCALE_NORMAL"),	# 0x803A
+    ("glGet",	B,	1,	"GL_RESCALE_NORMAL"),	# 0x803A
     ("",	X,	1,	"GL_ALPHA4"),	# 0x803B
     ("",	X,	1,	"GL_ALPHA8"),	# 0x803C
     ("",	X,	1,	"GL_ALPHA12"),	# 0x803D
@@ -705,10 +705,10 @@ parameters = [
     ("",	X,	1,	"GL_PROXY_TEXTURE_COLOR_TABLE_SGI"),	# 0x80BD
     ("",	X,	1,	"GL_TEXTURE_ENV_BIAS_SGIX"),	# 0x80BE
     ("glGetTexParameter",	F,	1,	"GL_TEXTURE_COMPARE_FAIL_VALUE_ARB"),	# 0x80BF
-    ("glGet",	F,	1,	"GL_BLEND_DST_RGB"),	# 0x80C8
-    ("glGet",	F,	1,	"GL_BLEND_SRC_RGB"),	# 0x80C9
-    ("glGet",	F,	1,	"GL_BLEND_DST_ALPHA"),	# 0x80CA
-    ("glGet",	F,	1,	"GL_BLEND_SRC_ALPHA"),	# 0x80CB
+    ("glGet",	E,	1,	"GL_BLEND_DST_RGB"),	# 0x80C8
+    ("glGet",	E,	1,	"GL_BLEND_SRC_RGB"),	# 0x80C9
+    ("glGet",	E,	1,	"GL_BLEND_DST_ALPHA"),	# 0x80CA
+    ("glGet",	E,	1,	"GL_BLEND_SRC_ALPHA"),	# 0x80CB
     ("",	X,	1,	"GL_422_EXT"),	# 0x80CC
     ("",	X,	1,	"GL_422_REV_EXT"),	# 0x80CD
     ("",	X,	1,	"GL_422_AVERAGE_EXT"),	# 0x80CE
