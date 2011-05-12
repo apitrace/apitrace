@@ -315,6 +315,37 @@ writeShader(JSONWriter &json, GLuint shader)
     delete [] source;
 }
 
+static void
+writeShaderObj(JSONWriter &json, GLhandleARB shaderObj)
+{
+    if (!shaderObj) {
+        return;
+    }
+
+    GLint shader_type = 0;
+    glGetObjectParameterivARB(shaderObj, GL_OBJECT_TYPE_ARB, &shader_type);
+    if (!shader_type) {
+        return;
+    }
+
+    GLint source_length = 0;
+    glGetObjectParameterivARB(shaderObj, GL_OBJECT_SHADER_SOURCE_LENGTH_ARB, &source_length);
+    if (!source_length) {
+        return;
+    }
+
+    GLcharARB *source = new GLcharARB[source_length];
+    GLsizei length = 0;
+    source[0] = 0;
+    glGetShaderSource(shaderObj, source_length, &length, source);
+
+    json.beginMember(enum_string(shader_type));
+    json.writeString(source);
+    json.endMember();
+
+    delete [] source;
+}
+
 static inline void
 writeCurrentProgram(JSONWriter &json)
 {
@@ -337,6 +368,29 @@ writeCurrentProgram(JSONWriter &json)
        writeShader(json, shaders[i]);
     }
     delete [] shaders;
+}
+
+static inline void
+writeCurrentProgramObj(JSONWriter &json)
+{
+    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+    if (!programObj) {
+        return;
+    }
+
+    GLint attached_shaders = 0;
+    glGetProgramivARB(programObj, GL_OBJECT_ATTACHED_OBJECTS_ARB, &attached_shaders);
+    if (!attached_shaders) {
+        return;
+    }
+
+    GLhandleARB *shaderObjs = new GLhandleARB[attached_shaders];
+    GLsizei count = 0;
+    glGetAttachedObjectsARB(programObj, attached_shaders, &count, shaderObjs);
+    for (GLsizei i = 0; i < count; ++ i) {
+       writeShaderObj(json, shaderObjs[i]);
+    }
+    delete [] shaderObjs;
 }
 
 static inline void
