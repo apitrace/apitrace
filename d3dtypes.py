@@ -116,7 +116,7 @@ D3DVERTEX = Struct("D3DVERTEX", [
 LPD3DVERTEX = Pointer(D3DVERTEX)
 
 D3DMATRIX = Struct("D3DMATRIX", [
-    (D3DVALUE, "m[4][4]"),
+    (Array(Array(D3DVALUE, "4"), "4"), "m"),
 ])
 LPD3DMATRIX = Pointer(D3DMATRIX)
 
@@ -663,8 +663,8 @@ D3DSTATE = Struct("D3DSTATE", [
     (D3DTRANSFORMSTATETYPE, "dtstTransformStateType"),
     (D3DLIGHTSTATETYPE, "dlstLightStateType"),
     (D3DRENDERSTATETYPE, "drstRenderStateType"),
-    (DWORD, "dwArg[1]"),
-    (D3DVALUE, "dvArg[1]"),
+    (Array(DWORD, "1"), "dwArg"),
+    (Array(D3DVALUE, "1"), "dvArg"),
 ])
 
 D3DMATRIXLOAD = Struct("D3DMATRIXLOAD", [
@@ -965,7 +965,7 @@ D3DDRAWPRIMITIVESTRIDEDDATA = Struct("D3DDRAWPRIMITIVESTRIDEDDATA", [
     (D3DDP_PTRSTRIDE, "normal"),
     (D3DDP_PTRSTRIDE, "diffuse"),
     (D3DDP_PTRSTRIDE, "specular"),
-    (D3DDP_PTRSTRIDE, "textureCoords[D3DDP_MAXTEXCOORD]"),
+    (Array(D3DDP_PTRSTRIDE, "D3DDP_MAXTEXCOORD"), "textureCoords"),
 ])
 LPD3DDRAWPRIMITIVESTRIDEDDATA = Pointer(D3DDRAWPRIMITIVESTRIDEDDATA)
 
