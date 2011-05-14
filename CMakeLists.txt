@@ -8,14 +8,6 @@ project (apitrace)
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Set default built type
-if (NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE Debug
-        CACHE
-        STRING "Choose the build type, options are: None, Debug, Release, RelWithDebInfo, or MinSizeRel."
-        FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-
 set (CMAKE_USE_PYTHON_VERSION 2.6)
 
 find_package (PythonInterp REQUIRED)
