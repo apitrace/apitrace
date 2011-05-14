@@ -111,6 +111,14 @@ def main():
         type='string', dest='retrace', default='glretrace',
         help='retrace command [default: %default]')
     optparser.add_option(
+        '-c', '--compare', metavar='PREFIX',
+        type='string', dest='compare_prefix', default=None,
+        help='snapshot comparison prefix')
+    optparser.add_option(
+        '--precision-threshold', metavar='BITS',
+        type='float', dest='precision_threshold', default='12',
+        help='precision threshold in bits [default: %default]')
+    optparser.add_option(
         '--gl-renderer', metavar='REGEXP',
         type='string', dest='gl_renderer_re', default='^.*$',
         help='require a matching GL_RENDERER string [default: %default]')
@@ -145,6 +153,9 @@ def main():
         for line in stdout.split('\n'):
             if line.startswith(gl_renderer_header):
                 gl_renderer = line[len(gl_renderer_header):]
+            if line.startswith('direct rendering: No'):
+                sys.stderr.write('Indirect rendering.\n')
+                skip()
 
         # and match it against the regular expression specified in the command
         # line.
@@ -153,13 +164,37 @@ def main():
             skip()
 
     # Run glretrace
-    retrace = [options.retrace] + args
-    sys.stdout.write(' '.join(retrace) + '\n')
+    command = [options.retrace]
+    if options.compare_prefix:
+        command += ['-c', options.compare_prefix]
+    else:
+        command += ['-b']
+    command += args
+    sys.stdout.write(' '.join(command) + '\n')
     sys.stdout.flush()
-    returncode = subprocess.call(retrace)
-    if returncode:
-        # TODO: allow other criterias here, such as, snapshot comparison or performance threshold
-        bad()
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if p.returncode:
+        if not options.compare_prefix:
+            bad()
+        else:
+            skip()
+
+    if options.compare_prefix:
+        failed = False
+        precision_re = re.compile('^Snapshot (\S+) average precision of (\S+) bits$')
+        for line in stdout.split('\n'):
+            mo = precision_re.match(line)
+            if mo:
+                print line
+                call_no = int(mo.group(1))
+                precision = float(mo.group(2))
+                if precision < options.precision_threshold:
+                    failed = True
+        if failed:
+            bad()
+
+    # TODO: allow more criterias here, such as, performance threshold
 
     # Success
     good()
