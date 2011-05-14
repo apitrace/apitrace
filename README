@@ -69,7 +69,7 @@ doing:
 
 == Windows ==
 
-Requirements:
+Additional requirements:
 
 * Microsoft Visual Studio (tested with 2008 version) or MinGW (tested with gcc version 4.4)
 
@@ -79,9 +79,14 @@ To build with Visual Studio invoke CMake as:
 
  cmake -G "Visual Studio 9 2008" -H. -Bbuild
  cmake --build build --config MinSizeRel
+
+If you are building with GUI support (i.e, with QT and QJSON), it should detect
+the official QT sdk automatically, but you will need to build QJSON yourself
+and also set the QJSON_INCLUDE_DIR and QJSON_LIBRARIES variables in the
+generated CMakeCache.txt when building apitrace and repeat the above sequence.
  
-It's also possible to build on Linux with MinGW cross compilers.  See
-http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
+It's also possible to build for Windows on Linux with MinGW cross compilers.
+See http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
 
 = Usage =
