@@ -9,14 +9,6 @@ This includes a set of tools for:
 - visualize trace files, and inspect state.
 
 
-= Status =
-
-* It has not been tested with many applications. Bugs in less used features may
-  cause application crashes.
-* Direct3D 8 support is currently broken.
-* No Direct3D retrace support
-
-
 = Building from source =
 
 Requirements common for all platforms:
