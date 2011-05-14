@@ -159,18 +159,25 @@ LD_LIBRARY_PATH:
 
 == Direct3D ==
 
+Open-source:
  * [http://www.mikoweb.eu/index.php?node=21 Proxy DLL]
    * [http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/ Intercept Calls to DirectX with a Proxy DLL]
- * [http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm D3DSpy]
- * [http://msdn.microsoft.com/en-us/library/ee417062.aspx Microsoft PIX]
  * [http://graphics.stanford.edu/~mdfisher/D3D9Interceptor.html Direct3D 9 API Interceptor]
+
+Closed-source:
+ * [http://msdn.microsoft.com/en-us/library/ee417062.aspx Microsoft PIX]
+   * [http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm D3DSpy]: the predecessor of PIX
  * [http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx AMD GPU PerfStudio]
 
 
 == OpenGL ==
 
+Open-source:
  * [http://www.opengl.org/sdk/tools/BuGLe/ BuGLe]
  * [http://code.google.com/p/glintercept/ GLIntercept]
+ * [https://gitorious.org/tracy tracy]: OpenGL ES and OpenVG trace, retrace, and state inspection
+
+Closed-source:
  * [http://www.gremedy.com/products.php gDEBugger]
  * [http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html glslDevil]
  * [http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx AMD GPU PerfStudio]
