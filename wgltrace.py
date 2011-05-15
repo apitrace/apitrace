@@ -37,9 +37,6 @@ from codegen import *
 
 class WglTracer(GlTracer):
 
-    def get_function_address(self, function):
-        return '__%s' % (function.name,)
-
     def wrap_ret(self, function, instance):
         GlTracer.wrap_ret(self, function, instance)
 

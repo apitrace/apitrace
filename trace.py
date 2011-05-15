@@ -444,9 +444,6 @@ class DllTracer(Tracer):
     def __init__(self, dllname):
         self.dllname = dllname
     
-    def get_function_address(self, function):
-        return '__%s' % (function.name,)
-
     def header(self, api):
         print '''
 static HINSTANCE g_hDll = NULL;

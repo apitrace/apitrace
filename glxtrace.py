@@ -41,9 +41,6 @@ class GlxTracer(GlTracer):
         # The symbols visible in libGL.so can vary, so expose them all
         return True
 
-    def get_function_address(self, function):
-        return '__%s' % (function.name,)
-
     def wrap_ret(self, function, instance):
         GlTracer.wrap_ret(self, function, instance)
 
