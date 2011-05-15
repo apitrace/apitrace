@@ -150,7 +150,7 @@ endif (PNG_FOUND)
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py glapi.py gltypes.py stdapi.py
+    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py cglapi.py glapi.py gltypes.py stdapi.py
 )
 
 if (WIN32)
@@ -237,6 +237,37 @@ if (WIN32)
     endif (MINGW)
     install (TARGETS wgltrace RUNTIME DESTINATION wrappers)
 
+elseif (APPLE)
+    include_directories (${X11_INCLUDE_DIR})
+
+    # libGL.dylib
+    add_custom_command (
+        OUTPUT cgltrace.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
+        DEPENDS cgltrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
+    )
+
+    add_library (cgltrace SHARED cgltrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+
+    set_target_properties (cgltrace PROPERTIES
+        # libGL.dylib
+        OUTPUT_NAME GL
+        # match the version
+        LINK_FLAGS "-compatibility_version 1 -current_version 1.0.0"
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+    )
+
+    target_link_libraries (cgltrace dl)
+
+    # Symbolic link from system's libGL.dylib
+    add_custom_command (
+        OUTPUT ${PROJECT_BINARY_DIR}/wrappers/libGL.system.dylib
+        COMMAND ln -sf /System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib ${PROJECT_BINARY_DIR}/wrappers/libGL.system.dylib
+        DEPENDS cgltrace
+    )
+
+    install (TARGETS cgltrace LIBRARY DESTINATION lib)
 else ()
     include_directories (${X11_INCLUDE_DIR})
 
@@ -256,11 +287,9 @@ else ()
 
     # Prevent symbol relocations internal to our wrapper library to be
     # overwritten by the application.
-    if (NOT APPLE)
-        set_target_properties (glxtrace PROPERTIES
-            LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
-        )
-    endif (NOT APPLE)
+    set_target_properties (glxtrace PROPERTIES
+        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+    )
 
     target_link_libraries (glxtrace dl)
     

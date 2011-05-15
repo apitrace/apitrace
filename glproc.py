@@ -34,6 +34,7 @@ from dispatch import Dispatcher
 from glapi import glapi
 from glxapi import glxapi
 from wglapi import wglapi
+from cglapi import cglapi
 
 
 # See http://www.opengl.org/registry/ABI/
@@ -422,9 +423,13 @@ class GlDispatcher(Dispatcher):
         print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
         print '#  else'
         print '#    define __getPublicProcAddress(name) __dlsym(name)'
-        print '#    define __getPrivateProcAddress(name) __glXGetProcAddressARB((const GLubyte *)(name))'
         print '     static void * __dlsym(const char *symbol);'
-        print '     static inline __GLXextFuncPtr __glXGetProcAddressARB(const GLubyte * procName);'
+        print '#    ifdef __APPLE__'
+        print '#      define __getPrivateProcAddress(name) __getPublicProcAddress(name)'
+        print '#    else'
+        print '#      define __getPrivateProcAddress(name) __glXGetProcAddressARB((const GLubyte *)(name))'
+        print '       static inline __GLXextFuncPtr __glXGetProcAddressARB(const GLubyte * procName);'
+        print '#    endif'
         print '#  endif'
         print '#  define __abort() Trace::Abort()'
         print '#endif /* !RETRACE */'
@@ -452,6 +457,10 @@ if __name__ == '__main__':
     print
     dispatcher.dispatch_api(glxapi)
     print '#endif /* !_WIN32 */'
+    print
+    print '#ifdef __APPLE__'
+    dispatcher.dispatch_api(cglapi)
+    print '#endif /* __APPLE__ */'
     print
     dispatcher.dispatch_api(glapi)
     print

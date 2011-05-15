@@ -20,7 +20,7 @@ Requirements to build the GUI (optional):
 * QJSON (tested with version 0.7.1)
 
 
-== Linux ==
+== Linux / Mac OS X ==
 
 Build as:
 
@@ -100,6 +100,22 @@ LD_LIBRARY_PATH:
   export LD_LIBRARY_PATH=/path/to/directory/where/glxtrace/is:$LD_LIBRARY_PATH
   export TRACE_LIBGL=/path/to/real/libGL.so.1
   /path/to/application
+
+See the 'ld.so' man page for more information about LD_PRELOAD and
+LD_LIBRARY_PATH environment flags.
+
+
+== Mac OS X ==
+
+Usage on Mac OS X is similar to Linux above, except for the tracing procedure,
+which is instead:
+
+  DYLD_LIBRARY_PATH=/path/to/apitrace/wrappers /path/to/application
+
+Note that although Mac OS X has an LD_PRELOAD equivalent,
+DYLD_INSERT_LIBRARIES, it is mostly useless because it only works with
+DYLD_FORCE_FLAT_NAMESPACE=1 which breaks most applications.  See the 'dyld' man
+page for more details about these environment flags.
 
 
 == Windows ==

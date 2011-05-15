@@ -93,4 +93,10 @@ typedef struct _WGLSWAP
 
 #endif /* !_WIN32 */
 
+#ifdef __APPLE__
+
+#include <OpenGL/CGLCurrent.h>
+
+#endif /* __APPLE__ */
+
 #endif /* _GLIMPORTS_HPP_ */
