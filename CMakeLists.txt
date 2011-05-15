@@ -262,9 +262,8 @@ elseif (APPLE)
 
     # Symbolic link from system's libGL.dylib
     add_custom_command (
-        OUTPUT ${PROJECT_BINARY_DIR}/wrappers/libGL.system.dylib
+        TARGET cgltrace
         COMMAND ln -sf /System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib ${PROJECT_BINARY_DIR}/wrappers/libGL.system.dylib
-        DEPENDS cgltrace
     )
 
     install (TARGETS cgltrace LIBRARY DESTINATION lib)
