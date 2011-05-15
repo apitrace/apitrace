@@ -45,34 +45,52 @@ def compare(im, ref):
 
 
 def surface(html, image):
-    if False:
-        html.write('        <td><a href="%s"><img src="%s"/></a></td>\n' % (image, image))
-    else:
+    if True:
         name, ext = os.path.splitext(image)
-        thumb = name + '_thumb' + ext
-        if not os.path.exists(thumb) and os.path.exists(image):
+        thumb = name + '.thumb' + ext
+        if os.path.exists(image) \
+           and (not os.path.exists(thumb) \
+                or os.path.getmtime(thumb) < os.path.getmtime(image)):
             im = Image.open(image)
             im.thumbnail(thumb_size)
             im.save(thumb)
-        html.write('        <td><a href="%s"><img src="%s"/></a></td>\n' % (image, thumb))
+    else:
+        thumb = image
+    html.write('        <td><a href="%s"><img src="%s"/></a></td>\n' % (image, thumb))
+
+
+def is_image(path):
+    return \
+        path.endswith('.png') \
+        and not path.endswith('.diff.png') \
+        and not path.endswith('.thumb.png')
+
+
+def find_images(prefix):
+    prefix = os.path.abspath(prefix)
+    if os.path.isdir(prefix):
+        prefix_dir = prefix
+    else:
+        prefix_dir = os.path.dirname(prefix)
+
+    images = []
+    for dirname, dirnames, filenames in os.walk(prefix_dir, followlinks=True):
+        for filename in filenames:
+            filepath = os.path.join(dirname, filename)
+            if filepath.startswith(prefix) and is_image(filepath):
+                images.append(filepath[len(prefix):])
+
+    return images
 
 
 def main():
     optparser = optparse.OptionParser(
-        usage="\n\t%prog [options] [file] ...",
+        usage="\n\t%prog [options] <ref_prefix> <src_prefix>",
         version="%%prog")
     optparser.add_option(
         '-o', '--output', metavar='FILE',
         type="string", dest="output",
         help="output filename [stdout]")
-    optparser.add_option(
-        '--start', metavar='FRAME',
-        type="int", dest="start", default=0,
-        help="start frame [default: %default]")
-    optparser.add_option(
-        '--stop', metavar='FRAME',
-        type="int", dest="stop", default=0xffffffff,
-        help="stop frame [default: %default]")
     optparser.add_option(
         '-f', '--fuzz',
         type="string", dest="fuzz", default='5%',
@@ -86,6 +104,11 @@ def main():
     ref_prefix = args[0]
     src_prefix = args[1]
 
+    ref_images = find_images(ref_prefix)
+    src_images = find_images(src_prefix)
+    images = list(set(ref_images).intersection(set(src_images)))
+    images.sort()
+
     if options.output:
         html = open(options.output, 'wt')
     else:
@@ -93,21 +116,24 @@ def main():
     html.write('<html>\n')
     html.write('  <body>\n')
     html.write('    <table border="1">\n')
-    html.write('      <tr><th>ref</th><th>src</th><th>&Delta;</th></tr>\n')
-    frame_no = options.start
-    while frame_no <= options.stop:
-        ref_image = "%s%010u.png" % (ref_prefix, frame_no)
-        src_image = "%s%010u.png" % (src_prefix, frame_no)
-        delta_image = "%s%010u_diff.png" % (src_prefix, frame_no)
+    html.write('      <tr><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
+    for image in images:
+        ref_image = ref_prefix + image
+        src_image = src_prefix + image
+        root, ext = os.path.splitext(src_image)
+        delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
+            if not os.path.exists(delta_image) \
+               or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
+                   and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
+                subprocess.call(["compare", '-metric', 'AE', '-fuzz', options.fuzz, ref_image, src_image, delta_image])
+
             html.write('      <tr>\n')
-            subprocess.call(["compare", '-metric', 'AE', '-fuzz', options.fuzz, ref_image, src_image, delta_image])
             surface(html, ref_image)
             surface(html, src_image)
             surface(html, delta_image)
             html.write('      </tr>\n')
             html.flush()
-        frame_no += 1
     html.write('    </table>\n')
     html.write('  </body>\n')
     html.write('</html>\n')
