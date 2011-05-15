@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2010 VMware, Inc.
+ * Copyright 2010-2011 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,6 +23,7 @@
  *
  **************************************************************************/
 
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +32,12 @@
 #include <sys/time.h>
 #include <pthread.h>
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 #include "os.hpp"
+
 
 namespace OS {
 
@@ -57,16 +63,24 @@ ReleaseMutex(void)
 bool
 GetProcessName(char *str, size_t size)
 {
-    ssize_t len;
     char szProcessPath[PATH_MAX + 1];
     char *lpProcessName;
 
     // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
+#ifdef __APPLE__
+    uint32_t len = sizeof szProcessPath;
+    if (_NSGetExecutablePath(szProcessPath, &len) != 0) {
+        *str = 0;
+        return false;
+    }
+#else
+    ssize_t len;
     len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
     if (len == -1) {
         *str = 0;
         return false;
     }
+#endif
     szProcessPath[len] = 0;
 
     lpProcessName = strrchr(szProcessPath, '/');
