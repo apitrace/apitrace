@@ -31,7 +31,7 @@
 #define _TRACE_MODEL_HPP_
 
 
-#include <cassert>
+#include <assert.h>
 
 #include <string>
 #include <map>
@@ -316,6 +316,7 @@ public:
     }
 
     inline Value & arg(unsigned index) {
+        assert(index < args.size());
         return *(args[index]);
     }
 };

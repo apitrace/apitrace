@@ -318,6 +318,7 @@ include_directories (
 
 add_executable (glretrace
     glretrace_gl.cpp
+    glretrace_cgl.cpp
     glretrace_glx.cpp
     glretrace_wgl.cpp
     glretrace_main.cpp

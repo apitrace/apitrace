@@ -56,6 +56,7 @@ extern unsigned dump_state;
 void
 checkGlError(Trace::Call &call);
 
+void retrace_call_cgl(Trace::Call &call);
 void retrace_call_glx(Trace::Call &call);
 void retrace_call_wgl(Trace::Call &call);
 

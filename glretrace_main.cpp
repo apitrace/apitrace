@@ -187,7 +187,10 @@ static void display(void) {
             std::cout.flush();
         }
 
-        if (name[0] == 'w' && name[1] == 'g' && name[2] == 'l') {
+        if (name[0] == 'C' && name[1] == 'G' && name[2] == 'L') {
+            glretrace::retrace_call_cgl(*call);
+        }
+        else if (name[0] == 'w' && name[1] == 'g' && name[2] == 'l') {
             glretrace::retrace_call_wgl(*call);
         }
         else if (name[0] == 'g' && name[1] == 'l' && name[2] == 'X') {
