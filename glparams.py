@@ -1613,8 +1613,8 @@ parameters = [
     ("",	X,	1,	"GL_DYNAMIC_ATI"),	# 0x8761
     ("",	X,	1,	"GL_PRESERVE_ATI"),	# 0x8762
     ("",	X,	1,	"GL_DISCARD_ATI"),	# 0x8763
-    ("",	X,	1,	"GL_BUFFER_SIZE"),	# 0x8764
-    ("",	X,	1,	"GL_BUFFER_USAGE"),	# 0x8765
+    ("glGetBufferParameter",	I,	1,	"GL_BUFFER_SIZE"),	# 0x8764
+    ("glGetBufferParameter",	E,	1,	"GL_BUFFER_USAGE"),	# 0x8765
     ("",	X,	1,	"GL_ARRAY_OBJECT_BUFFER_ATI"),	# 0x8766
     ("",	X,	1,	"GL_ARRAY_OBJECT_OFFSET_ATI"),	# 0x8767
     ("",	X,	1,	"GL_ELEMENT_ARRAY_ATI"),	# 0x8768
@@ -1931,9 +1931,9 @@ parameters = [
     ("",	X,	1,	"GL_READ_ONLY"),	# 0x88B8
     ("",	X,	1,	"GL_WRITE_ONLY"),	# 0x88B9
     ("",	X,	1,	"GL_READ_WRITE"),	# 0x88BA
-    ("",	X,	1,	"GL_BUFFER_ACCESS"),	# 0x88BB
-    ("",	X,	1,	"GL_BUFFER_MAPPED"),	# 0x88BC
-    ("",	X,	1,	"GL_BUFFER_MAP_POINTER"),	# 0x88BD
+    ("glGetBufferParameter",	E,	1,	"GL_BUFFER_ACCESS"),	# 0x88BB
+    ("glGetBufferParameter",	B,	1,	"GL_BUFFER_MAPPED"),	# 0x88BC
+    ("glGetBufferParameter",	P,	1,	"GL_BUFFER_MAP_POINTER"),	# 0x88BD
     ("",	X,	1,	"GL_WRITE_DISCARD_NV"),	# 0x88BE
     ("",	X,	1,	"GL_TIME_ELAPSED"),	# 0x88BF
     ("",	X,	1,	"GL_MATRIX0_ARB"),	# 0x88C0
@@ -2332,7 +2332,7 @@ parameters = [
     ("",	X,	1,	"GL_READ_FRAMEBUFFER"),	# 0x8CA8
     ("",	X,	1,	"GL_DRAW_FRAMEBUFFER"),	# 0x8CA9
     ("glGet",	I,	1,	"GL_READ_FRAMEBUFFER_BINDING"),	# 0x8CAA
-    ("",	X,	1,	"GL_RENDERBUFFER_SAMPLES"),	# 0x8CAB
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_SAMPLES"),	# 0x8CAB
     ("",	X,	1,	"GL_DEPTH_COMPONENT32F"),	# 0x8CAC
     ("",	X,	1,	"GL_DEPTH32F_STENCIL8"),	# 0x8CAD
     ("glGetFramebufferAttachmentParameter",	E,	1,	"GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE"),	# 0x8CD0
@@ -2369,19 +2369,19 @@ parameters = [
     ("",	X,	1,	"GL_STENCIL_ATTACHMENT"),	# 0x8D20
     ("",	X,	1,	"GL_FRAMEBUFFER"),	# 0x8D40
     ("",	X,	1,	"GL_RENDERBUFFER"),	# 0x8D41
-    ("",	X,	1,	"GL_RENDERBUFFER_WIDTH"),	# 0x8D42
-    ("",	X,	1,	"GL_RENDERBUFFER_HEIGHT"),	# 0x8D43
-    ("",	X,	1,	"GL_RENDERBUFFER_INTERNAL_FORMAT"),	# 0x8D44
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_WIDTH"),	# 0x8D42
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_HEIGHT"),	# 0x8D43
+    ("glGetRenderbufferParameter",	E,	1,	"GL_RENDERBUFFER_INTERNAL_FORMAT"),	# 0x8D44
     ("",	X,	1,	"GL_STENCIL_INDEX1"),	# 0x8D46
     ("",	X,	1,	"GL_STENCIL_INDEX4"),	# 0x8D47
     ("",	X,	1,	"GL_STENCIL_INDEX8"),	# 0x8D48
     ("",	X,	1,	"GL_STENCIL_INDEX16"),	# 0x8D49
-    ("",	X,	1,	"GL_RENDERBUFFER_RED_SIZE"),	# 0x8D50
-    ("",	X,	1,	"GL_RENDERBUFFER_GREEN_SIZE"),	# 0x8D51
-    ("",	X,	1,	"GL_RENDERBUFFER_BLUE_SIZE"),	# 0x8D52
-    ("",	X,	1,	"GL_RENDERBUFFER_ALPHA_SIZE"),	# 0x8D53
-    ("",	X,	1,	"GL_RENDERBUFFER_DEPTH_SIZE"),	# 0x8D54
-    ("",	X,	1,	"GL_RENDERBUFFER_STENCIL_SIZE"),	# 0x8D55
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_RED_SIZE"),	# 0x8D50
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_GREEN_SIZE"),	# 0x8D51
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_BLUE_SIZE"),	# 0x8D52
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_ALPHA_SIZE"),	# 0x8D53
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_DEPTH_SIZE"),	# 0x8D54
+    ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_STENCIL_SIZE"),	# 0x8D55
     ("",	X,	1,	"GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"),	# 0x8D56
     ("glGet",	I,	1,	"GL_MAX_SAMPLES"),	# 0x8D57
     ("",	X,	1,	"GL_RGBA32UI"),	# 0x8D70
@@ -2812,9 +2812,9 @@ parameters = [
     ("",	X,	1,	"GL_TIMEOUT_EXPIRED"),	# 0x911B
     ("",	X,	1,	"GL_CONDITION_SATISFIED"),	# 0x911C
     ("",	X,	1,	"GL_WAIT_FAILED"),	# 0x911D
-    ("",	X,	1,	"GL_BUFFER_ACCESS_FLAGS"),	# 0x911F
-    ("",	X,	1,	"GL_BUFFER_MAP_LENGTH"),	# 0x9120
-    ("",	X,	1,	"GL_BUFFER_MAP_OFFSET"),	# 0x9121
+    ("glGetBufferParameter",	I,	1,	"GL_BUFFER_ACCESS_FLAGS"),	# 0x911F
+    ("glGetBufferParameter",	I,	1,	"GL_BUFFER_MAP_LENGTH"),	# 0x9120
+    ("glGetBufferParameter",	I,	1,	"GL_BUFFER_MAP_OFFSET"),	# 0x9121
     ("",	X,	1,	"GL_MAX_VERTEX_OUTPUT_COMPONENTS"),	# 0x9122
     ("",	X,	1,	"GL_MAX_GEOMETRY_INPUT_COMPONENTS"),	# 0x9123
     ("",	X,	1,	"GL_MAX_GEOMETRY_OUTPUT_COMPONENTS"),	# 0x9124
