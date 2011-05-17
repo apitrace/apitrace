@@ -36,6 +36,7 @@ namespace glws {
 static Display *display = NULL;
 static int screen = 0;
 
+
 class GlxVisual : public Visual
 {
 public:
@@ -49,6 +50,42 @@ public:
         XFree(visinfo);
     }
 };
+
+
+static void describeEvent(const XEvent &event) {
+    if (0) {
+        switch (event.type) {
+        case ConfigureNotify:
+            std::cerr << "ConfigureNotify";
+            break;
+        case Expose:
+            std::cerr << "Expose";
+            break;
+        case KeyPress:
+            std::cerr << "KeyPress";
+            break;
+        case MapNotify:
+            std::cerr << "MapNotify";
+            break;
+        case ReparentNotify:
+            std::cerr << "ReparentNotify";
+            break;
+        default:
+            std::cerr << "Event " << event.type;
+        }
+        std::cerr << " " << event.xany.window << "\n";
+    }
+}
+
+static void waitForEvent(Window window, int type) {
+    XFlush(display);
+    XEvent event;
+    do {
+        XNextEvent(display, &event);
+        describeEvent(event);
+    } while (event.type != type ||
+             event.xany.window != window);
+}
 
 
 class GlxDrawable : public Drawable
@@ -99,6 +136,9 @@ public:
             None, (char **)NULL, 0, &sizehints);
 
         XMapWindow(display, window);
+
+        waitForEvent(window, Expose);
+        glXWaitX();
     }
 
     ~GlxDrawable() {
@@ -108,8 +148,18 @@ public:
     void
     resize(int w, int h) {
         glXWaitGL();
+
+        // We need to ensure that pending events are processed here, and XSync
+        // with discard = True guarantees that, but it appears the limited
+        // event processing we do so far is sufficient
+        //XSync(display, True);
+
         Drawable::resize(w, h);
+
         XResizeWindow(display, window, w, h);
+
+        waitForEvent(window, ConfigureNotify);
+
         glXWaitX();
     }
 
@@ -220,10 +270,11 @@ public:
 
     bool
     processEvents(void) {
+        XFlush(display);
         while (XPending(display) > 0) {
             XEvent event;
             XNextEvent(display, &event);
-            // TODO
+            describeEvent(event);
         }
         return true;
     }

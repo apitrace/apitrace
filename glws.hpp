@@ -94,7 +94,7 @@ public:
     createVisual(bool doubleBuffer = false) = 0;
     
     virtual Drawable *
-    createDrawable(const Visual *visual, int width = 256, int height = 256) = 0;
+    createDrawable(const Visual *visual, int width = 32, int height = 32) = 0;
 
     virtual Context *
     createContext(const Visual *visual, Context *shareContext = NULL) = 0;
