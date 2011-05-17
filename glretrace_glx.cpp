@@ -72,15 +72,19 @@ static void retrace_glXDestroyContext(Trace::Call &call) {
 }
 
 static void retrace_glXMakeCurrent(Trace::Call &call) {
+    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
+    glws::Context *new_context = context_map[call.arg(2).toPointer()];
+
+    if (new_drawable == drawable && new_context == context) {
+        return;
+    }
+
     if (drawable && context) {
         glFlush();
         if (!double_buffer) {
             frame_complete(call.no);
         }
     }
-
-    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
-    glws::Context *new_context = context_map[call.arg(2).toPointer()];
 
     bool result = ws->makeCurrent(new_drawable, new_context);
 
@@ -187,15 +191,19 @@ static void retrace_glXCreateNewContext(Trace::Call &call) {
 }
 
 static void retrace_glXMakeContextCurrent(Trace::Call &call) {
+    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
+    glws::Context *new_context = context_map[call.arg(3).toPointer()];
+
+    if (new_drawable == drawable && new_context == context) {
+        return;
+    }
+
     if (drawable && context) {
         glFlush();
         if (!double_buffer) {
             frame_complete(call.no);
         }
     }
-
-    glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
-    glws::Context *new_context = context_map[call.arg(3).toPointer()];
 
     bool result = ws->makeCurrent(new_drawable, new_context);
 
