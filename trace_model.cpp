@@ -317,7 +317,11 @@ public:
         os << bold << call->sig->name << normal << "(";
         for (unsigned i = 0; i < call->args.size(); ++i) {
             os << sep << italic << call->sig->arg_names[i] << normal << " = ";
-            _visit(call->args[i]);
+            if (call->args[i]) {
+                _visit(call->args[i]);
+            } else {
+               os << "?";
+            }
             sep = ", ";
         }
         os << ")";

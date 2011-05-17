@@ -113,6 +113,10 @@ Call *Parser::parse_call(void) {
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
         case -1:
+            for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
+                std::cerr << "warning: incomplete call " << (*it)->name() << "\n";
+                std::cerr << **it << "\n";
+            }
             return NULL;
         }
     } while(true);
