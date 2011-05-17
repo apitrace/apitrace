@@ -38,6 +38,7 @@ typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, glws::Context *> ContextMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
+static glws::Context *sharedContext = NULL;
 
 
 static glws::Drawable *
@@ -65,7 +66,12 @@ getContext(unsigned long long ctx) {
     ContextMap::const_iterator it;
     it = context_map.find(ctx);
     if (it == context_map.end()) {
-        return (context_map[ctx] = ws->createContext(visual));
+        glws::Context *context;
+        context_map[ctx] = context = ws->createContext(visual, sharedContext);
+        if (!sharedContext) {
+            sharedContext = context;
+        }
+        return context;
     }
 
     return it->second;
