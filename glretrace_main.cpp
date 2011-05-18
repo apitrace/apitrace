@@ -29,6 +29,7 @@
 #include "image.hpp"
 #include "retrace.hpp"
 #include "glproc.hpp"
+#include "glstate.hpp"
 #include "glretrace.hpp"
 
 
@@ -202,7 +203,7 @@ static void display(void) {
         if (!insideGlBeginEnd &&
             drawable && context &&
             call->no >= dump_state) {
-            state_dump(std::cout);
+            glstate::state_dump(std::cout);
             exit(0);
         }
 

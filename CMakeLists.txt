@@ -306,8 +306,8 @@ add_custom_command (
 )
 
 add_custom_command (
-    OUTPUT glretrace_state.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_state.cpp
+    OUTPUT glstate.cpp
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate.cpp
     DEPENDS glstate.py glparams.py gltypes.py stdapi.py
 )
 
@@ -322,7 +322,7 @@ add_executable (glretrace
     glretrace_glx.cpp
     glretrace_wgl.cpp
     glretrace_main.cpp
-    glretrace_state.cpp
+    glstate.cpp
     retrace.cpp
     ${glws}
     image.cpp 

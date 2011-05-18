@@ -240,7 +240,7 @@ class StateDumper:
         print '#include "glimports.hpp"'
         print '#include "glproc.hpp"'
         print '#include "glsize.hpp"'
-        print '#include "glretrace.hpp"'
+        print '#include "glstate.hpp"'
         print
 
         print 'static const char *'
@@ -481,17 +481,72 @@ writeTextureImage(JSONWriter &json, GLenum target, GLint level)
     }
 }
 
+
+static bool
+getDrawableBounds(GLint *width, GLint *height) {
+#if defined(_WIN32)
+
+    HDC hDC = wglGetCurrentDC();
+    if (!hDC) {
+        return false;
+    }
+
+    HWND hWnd = WindowFromDC(hDC);
+    RECT rect;
+
+    if (!GetClientRect(hWnd, &rect)) {
+       return false;
+    }
+
+    *width  = rect.right  - rect.left;
+    *height = rect.bottom - rect.top;
+
+#elif 0 /* __APPLE__ */
+
+    CGLError CGLGetSurface(CGLContextObj, CGSConnectionID*, CGSWindowID*, CGSSurfaceID*);
+    CGError CGSGetWindowBounds(CGSConnectionID, CGWindowID, CGRect *ret);
+
+#else
+
+    Display *display;
+    Drawable drawable;
+    Window root;
+    int x, y;
+    unsigned int w, h, bw, depth;
+
+    display = glXGetCurrentDisplay();
+    if (!display) {
+        return false;
+    }
+
+    drawable = glXGetCurrentDrawable();
+    if (drawable == None) {
+        return false;
+    }
+
+    if (!XGetGeometry(display, drawable, &root, &x, &y, &w, &h, &bw, &depth)) {
+        return false;
+    }
+
+    *width = w;
+    *height = h;
+
+#endif
+
+    return true;
+}
+
+
 static inline void
 writeDrawBufferImage(JSONWriter &json, GLenum format)
 {
     GLint channels = __gl_format_channels(format);
 
-    if (!glretrace::drawable) {
+    GLint width, height;
+
+    if (!getDrawableBounds(&width, &height)) {
         json.writeNull();
     } else {
-        GLint width  = glretrace::drawable->width;
-        GLint height = glretrace::drawable->height;
-
         json.beginObject();
 
         // Tell the GUI this is no ordinary object, but an image
@@ -509,8 +564,8 @@ writeDrawBufferImage(JSONWriter &json, GLenum format)
 
         GLubyte *pixels = new GLubyte[width*height*channels];
         
-        GLint drawbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;
-        GLint readbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;
+        GLint drawbuffer = GL_NONE;
+        GLint readbuffer = GL_NONE;
         glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
         glGetIntegerv(GL_READ_BUFFER, &readbuffer);
         glReadBuffer(drawbuffer);
@@ -702,7 +757,7 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '}'
         print
 
-        print 'void glretrace::state_dump(std::ostream &os)'
+        print 'void glstate::state_dump(std::ostream &os)'
         print '{'
         print '    JSONWriter json(os);'
         self.dump_parameters()
@@ -883,7 +938,7 @@ writeDrawBuffers(JSONWriter &json, GLboolean writeDepth, GLboolean writeStencil)
         print '        GLint colorRb, stencilRb, depthRb;'
         print '        GLint boundRb;'
         print '        glGetIntegerv(GL_RENDERBUFFER_BINDING, &boundRb);'
-        print '        GLint drawbuffer = glretrace::double_buffer ? GL_BACK : GL_FRONT;'
+        print '        GLint drawbuffer = GL_NONE;'
         print '        glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);'
         print
         print '        glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER,'

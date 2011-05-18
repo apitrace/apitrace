@@ -35,7 +35,7 @@ dxsdk
 glproc.hpp
 glretrace
 glretrace_gl.cpp
-glretrace_state.cpp
+glstate.cpp
 glxtrace.cpp
 install_manifest.txt
 qapitrace
