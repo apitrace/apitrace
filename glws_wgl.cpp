@@ -107,10 +107,11 @@ public:
         hDC = GetDC(hWnd);
    
         memset(&pfd, 0, sizeof pfd);
-        pfd.cColorBits = 3;
+        pfd.cColorBits = 4;
         pfd.cRedBits = 1;
         pfd.cGreenBits = 1;
         pfd.cBlueBits = 1;
+        pfd.cAlphaBits = 1;
         pfd.cDepthBits = 1;
         pfd.cStencilBits = 1;
         pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;

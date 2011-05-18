@@ -210,6 +210,7 @@ public:
             GLX_RED_SIZE, 1,
             GLX_GREEN_SIZE, 1,
             GLX_BLUE_SIZE, 1,
+            GLX_ALPHA_SIZE, 1,
             GLX_DEPTH_SIZE, 1,
             GLX_STENCIL_SIZE, 1,
             None
@@ -220,6 +221,7 @@ public:
             GLX_RED_SIZE, 1,
             GLX_GREEN_SIZE, 1,
             GLX_BLUE_SIZE, 1,
+            GLX_ALPHA_SIZE, 1,
             GLX_DOUBLEBUFFER,
             GLX_DEPTH_SIZE, 1,
             GLX_STENCIL_SIZE, 1,
