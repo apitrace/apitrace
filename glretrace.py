@@ -142,6 +142,7 @@ class GlRetracer(Retracer):
             print '        if (drawable_width  > (int)glretrace::drawable->width ||'
             print '            drawable_height > (int)glretrace::drawable->height) {'
             print '            glretrace::drawable->resize(drawable_width, drawable_height);'
+            print '            glScissor(0, 0, drawable_width, drawable_height);'
             print '        }'
             print '    }'
 
