@@ -30,7 +30,8 @@
 #ifndef _GLIMPORTS_HPP_
 #define _GLIMPORTS_HPP_
 
-#ifdef _WIN32
+
+#if defined(_WIN32)
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
@@ -38,11 +39,14 @@
 
 #include <windows.h>
 
-#else /* !_WIN32 */
+#elif defined(__APPLE__)
+
+#else
 
 #include <X11/Xlib.h>
 
 #endif /* !_WIN32 */
+
 
 // Prevent including system's glext.h
 #define __glext_h_
@@ -57,7 +61,8 @@
 #define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
 #endif
 
-#ifdef _WIN32
+
+#if defined(_WIN32)
 
 #include "glext/wglext.h"
 
@@ -83,7 +88,11 @@ typedef struct _WGLSWAP
 
 #endif /* !WGL_SWAPMULTIPLE_MAX */
 
-#else /* !_WIN32 */
+#elif defined(__APPLE__)
+
+#include <OpenGL/OpenGL.h>
+
+#else
 
 #include <GL/glx.h>
 #include "glext/glxext.h"
@@ -91,12 +100,7 @@ typedef struct _WGLSWAP
 /* Prevent collision with Trace::Bool */
 #undef Bool
 
-#endif /* !_WIN32 */
+#endif
 
-#ifdef __APPLE__
-
-#include <OpenGL/CGLCurrent.h>
-
-#endif /* __APPLE__ */
 
 #endif /* _GLIMPORTS_HPP_ */

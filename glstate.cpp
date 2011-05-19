@@ -35,6 +35,28 @@
 #include "glstate.hpp"
 
 
+#ifdef __APPLE__
+
+#include <Carbon/Carbon.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef int CGSConnectionID;
+typedef int CGSWindowID;
+typedef int CGSSurfaceID;
+
+CGLError CGLGetSurface(CGLContextObj, CGSConnectionID*, CGSWindowID*, CGSSurfaceID*);
+OSStatus CGSGetSurfaceBounds(CGSConnectionID, CGWindowID, CGSSurfaceID, CGRect *);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __APPLE__ */
+
+
 namespace glstate {
 
 
@@ -328,10 +350,29 @@ getDrawableBounds(GLint *width, GLint *height) {
     *width  = rect.right  - rect.left;
     *height = rect.bottom - rect.top;
 
-#elif 0 /* __APPLE__ */
+#elif defined(__APPLE__)
 
-    CGLError CGLGetSurface(CGLContextObj, CGSConnectionID*, CGSWindowID*, CGSSurfaceID*);
-    CGError CGSGetWindowBounds(CGSConnectionID, CGWindowID, CGRect *ret);
+    CGLContextObj ctx = CGLGetCurrentContext();
+    if (ctx == NULL) {
+        return false;
+    }
+
+    CGSConnectionID cid;
+    CGSWindowID wid;
+    CGSSurfaceID sid;
+
+    if (CGLGetSurface(ctx, &cid, &wid, &sid) != kCGLNoError) {
+        return false;
+    }
+
+    CGRect rect;
+
+    if (CGSGetSurfaceBounds(cid, wid, sid, &rect) != 0) {
+        return false;
+    }
+
+    *width = rect.size.width;
+    *height = rect.size.height;
 
 #else
 

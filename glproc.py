@@ -411,8 +411,11 @@ class GlDispatcher(Dispatcher):
 
     def header(self):
         print '#ifdef RETRACE'
-        print '#  ifdef _WIN32'
+        print '#  if defined(_WIN32)'
         print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
+        print '#  elif defined(__APPLE__)'
+        print '#    include <dlfcn.h>'
+        print '#    define __getPrivateProcAddress(name) dlsym(RTLD_DEFAULT, name)'
         print '#  else'
         print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
         print '#  endif'
@@ -450,17 +453,15 @@ if __name__ == '__main__':
     print
     dispatcher = GlDispatcher()
     dispatcher.header()
-    print '#ifdef _WIN32'
+    print '#if defined(_WIN32)'
     print
     dispatcher.dispatch_api(wglapi)
-    print '#else /* !_WIN32 */'
+    print '#elif defined(__APPLE__)'
+    dispatcher.dispatch_api(cglapi)
+    print '#else'
     print
     dispatcher.dispatch_api(glxapi)
-    print '#endif /* !_WIN32 */'
-    print
-    print '#ifdef __APPLE__'
-    dispatcher.dispatch_api(cglapi)
-    print '#endif /* __APPLE__ */'
+    print '#endif'
     print
     dispatcher.dispatch_api(glapi)
     print

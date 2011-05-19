@@ -347,7 +347,8 @@ if (NOT WIN32)
     # We use GLX on MacOSX, which is in a separate library
     if (APPLE)
         find_library (X11_GL_LIB GL ${X11_LIB_SEARCH_PATH})
-        target_link_libraries (glretrace ${X11_GL_LIB})
+        find_library (APPLICATIONSERVICES ApplicationServices)
+        target_link_libraries (glretrace ${X11_GL_LIB} ${APPLICATIONSERVICES})
     endif (APPLE)
 endif (NOT WIN32)
 

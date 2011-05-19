@@ -29,6 +29,9 @@
 #include "glimports.hpp"
 #include "glws.hpp"
 
+#include <X11/Xlib.h>
+#include <GL/glx.h>
+
 
 namespace glws {
 
