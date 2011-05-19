@@ -29,14 +29,25 @@
 
 #include <ostream>
 
+#include "glimports.hpp"
+
+
+class JSONWriter;
+
 
 namespace glstate {
 
 
-void state_dump(std::ostream &os);
+const char *enumToString(GLenum pname);
+
+void dumpEnum(JSONWriter &json, GLenum pname);
+
+void dumpParameters(JSONWriter &json);
+
+void dumpCurrentContext(std::ostream &os);
 
 
-} /* namespace glretrace */
+} /* namespace glstate */
 
 
 #endif /* _GLSTATE_HPP_ */

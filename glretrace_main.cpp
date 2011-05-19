@@ -203,7 +203,7 @@ static void display(void) {
         if (!insideGlBeginEnd &&
             drawable && context &&
             call->no >= dump_state) {
-            glstate::state_dump(std::cout);
+            glstate::dumpCurrentContext(std::cout);
             exit(0);
         }
 
