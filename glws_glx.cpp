@@ -161,6 +161,15 @@ public:
 
         XResizeWindow(display, window, w, h);
 
+        // Tell the window manager to respect the requested size
+        XSizeHints *size_hints;
+        size_hints = XAllocSizeHints();
+        size_hints->max_width  = size_hints->min_width  = w;
+        size_hints->max_height = size_hints->min_height = h;
+        size_hints->flags = PMinSize | PMaxSize;
+        XSetWMNormalHints(display, window, size_hints);
+        XFree(size_hints);
+
         waitForEvent(window, ConfigureNotify);
 
         glXWaitX();
