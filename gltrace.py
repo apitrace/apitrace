@@ -151,6 +151,7 @@ class GlTracer(Tracer):
         print '    void *map;'
         print '    GLint length;'
         print '    bool write;'
+        print '    bool explicit_flush;'
         print '};'
         print
         for target in self.buffer_targets:
@@ -353,26 +354,40 @@ class GlTracer(Tracer):
             print '        __trace_user_arrays(maxindex);'
             print '    }'
         
-        # Emit a fake memcpy on
-        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB'):
+        # Emit a fake memcpy on buffer uploads
+        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB', ):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
-            print '    if (mapping && mapping->write) {'
-            print '        unsigned __call = Trace::BeginEnter(__memcpy_sig);'
-            print '        Trace::BeginArg(0);'
-            print '        Trace::LiteralOpaque(mapping->map);'
-            print '        Trace::EndArg();'
-            print '        Trace::BeginArg(1);'
-            print '        Trace::LiteralBlob(mapping->map, mapping->length);'
-            print '        Trace::EndArg();'
-            print '        Trace::BeginArg(2);'
-            print '        Trace::LiteralUInt(mapping->length);'
-            print '        Trace::EndArg();'
-            print '        Trace::EndEnter();'
-            print '        Trace::BeginLeave(__call);'
-            print '        Trace::EndLeave();'
+            print '    if (mapping && mapping->write && !mapping->explicit_flush) {'
+            self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
             print '    }'
+        if function.name in ('glFlushMappedBufferRange', 'glFlushMappedBufferRangeAPPLE'):
+            # TODO: avoid copying [0, offset] bytes
+            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '    if (mapping) {'
+            if function.name.endswith('APPLE'):
+                 print '        GLsizeiptr length = size;'
+                 print '        mapping->explicit_flush = true;'
+            print '        //assert(offset + length <= mapping->length);'
+            self.emit_memcpy('mapping->map', 'mapping->map', 'offset + length')
+            print '    }'
+        # FIXME: glFlushMappedNamedBufferRangeEXT
 
         Tracer.trace_function_impl_body(self, function)
+
+    def emit_memcpy(self, dest, src, length):
+        print '        unsigned __call = Trace::BeginEnter(__memcpy_sig);'
+        print '        Trace::BeginArg(0);'
+        print '        Trace::LiteralOpaque(%s);' % dest
+        print '        Trace::EndArg();'
+        print '        Trace::BeginArg(1);'
+        print '        Trace::LiteralBlob(%s, %s);' % (src, length)
+        print '        Trace::EndArg();'
+        print '        Trace::BeginArg(2);'
+        print '        Trace::LiteralUInt(%s);' % length
+        print '        Trace::EndArg();'
+        print '        Trace::EndEnter();'
+        print '        Trace::BeginLeave(__call);'
+        print '        Trace::EndLeave();'
        
     buffer_targets = [
         'ARRAY_BUFFER',
@@ -391,6 +406,7 @@ class GlTracer(Tracer):
             print '        mapping->length = 0;'
             print '        __glGetBufferParameteriv(target, GL_BUFFER_SIZE, &mapping->length);'
             print '        mapping->write = (access != GL_READ_ONLY);'
+            print '        mapping->explicit_flush = false;'
             print '    }'
 
         if function.name == 'glMapBufferRange':
@@ -399,6 +415,7 @@ class GlTracer(Tracer):
             print '        mapping->map = %s;' % (instance)
             print '        mapping->length = length;'
             print '        mapping->write = access & GL_MAP_WRITE_BIT;'
+            print '        mapping->explicit_flush = access & GL_MAP_FLUSH_EXPLICIT_BIT;'
             print '    }'
 
     boolean_names = [
