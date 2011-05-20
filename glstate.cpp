@@ -439,6 +439,13 @@ dumpDrawBufferImage(JSONWriter &json, GLenum format)
         glReadBuffer(drawbuffer);
 
         glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+        glPixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
+        glPixelStorei(GL_PACK_LSB_FIRST, GL_FALSE);
+        glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+        glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
+        glPixelStorei(GL_PACK_SKIP_ROWS, 0);
+        glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
+        glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
         glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
