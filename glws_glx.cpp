@@ -138,9 +138,6 @@ public:
             display, window, name, name,
             None, (char **)NULL, 0, &sizehints);
 
-        XMapWindow(display, window);
-
-        waitForEvent(window, Expose);
         glXWaitX();
     }
 
@@ -173,6 +170,16 @@ public:
         waitForEvent(window, ConfigureNotify);
 
         glXWaitX();
+    }
+
+    void show(void) {
+        if (!visible) {
+            XMapWindow(display, window);
+
+            waitForEvent(window, Expose);
+
+            Drawable::show();
+        }
     }
 
     void swapBuffers(void) {

@@ -81,7 +81,7 @@ public:
         }
 
         dwExStyle = 0;
-        dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE | WS_OVERLAPPEDWINDOW;
+        dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
 
         int x = 0, y = 0;
 
@@ -143,6 +143,14 @@ public:
         w += (rWindow.right  - rWindow.left) - rClient.right;
         h += (rWindow.bottom - rWindow.top)  - rClient.bottom;
         SetWindowPos(hWnd, NULL, rWindow.left, rWindow.top, w, h, SWP_NOMOVE);
+    }
+
+    void show(void) {
+        if (!visible) {
+            ShowWindow(hWnd, SW_SHOW);
+
+            Drawable::show();
+        }
     }
 
     void swapBuffers(void) {

@@ -53,11 +53,13 @@ public:
     const Visual *visual;
     int width;
     int height;
+    bool visible;
 
     Drawable(const Visual *vis, int w, int h) :
         visual(vis),
         width(w),
-        height(h)
+        height(h),
+        visible(false)
     {}
 
     virtual ~Drawable() {}
@@ -66,6 +68,11 @@ public:
     resize(int w, int h) {
         width = w;
         height = h;
+    }
+
+    virtual void
+    show(void) {
+        visible = true;
     }
 
     virtual void swapBuffers(void) = 0;
