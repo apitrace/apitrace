@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <zlib.h>
 #include <png.h>
 
 #include <math.h>
@@ -319,7 +320,7 @@ struct png_tmp_buffer
 static void
 pngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length)
 {
-    struct png_tmp_buffer *buf = (struct png_tmp_buffer*) png_ptr->io_ptr;
+    struct png_tmp_buffer *buf = (struct png_tmp_buffer*) png_get_io_ptr(png_ptr);
     size_t nsize = buf->size + length;
 
     /* allocate or grow buffer */
