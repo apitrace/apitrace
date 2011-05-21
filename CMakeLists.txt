@@ -98,20 +98,7 @@ if (ZLIB_FOUND)
     include_directories (${ZLIB_INCLUDE_DIRS})
     link_libraries (${ZLIB_LIBRARIES})
 else (ZLIB_FOUND)
-    add_library (zlib STATIC
-        zlib/adler32.c
-        zlib/compress.c
-        zlib/crc32.c
-        zlib/gzio.c
-        zlib/uncompr.c
-        zlib/deflate.c
-        zlib/trees.c
-        zlib/zutil.c
-        zlib/inflate.c
-        zlib/infback.c
-        zlib/inftrees.c
-        zlib/inffast.c
-    )
+    add_subdirectory (zlib)
     include_directories (zlib)
     link_libraries (zlib)
 endif (ZLIB_FOUND)
