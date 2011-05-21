@@ -26,6 +26,10 @@
 ##########################################################################/
 
 
+'''Snapshot (image) comparison script.
+'''
+
+
 import sys
 import os.path
 import optparse
