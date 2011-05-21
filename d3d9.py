@@ -463,7 +463,7 @@ class D3D9Tracer(DllTracer):
 
 if __name__ == '__main__':
     print '#include "d3d9imports.hpp"'
-    print '#include "d3d9shader.hpp"'
+    print '#include "d3dshader.hpp"'
     print
     print '#include "trace_write.hpp"'
     print '#include "os.hpp"'

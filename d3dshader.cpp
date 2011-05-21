@@ -24,14 +24,12 @@
  *
  **************************************************************************/
 
-#ifndef _D3D9SHADER_HPP_
-#define _D3D9SHADER_HPP_
-
 
 #include <stdio.h>
 
-#include "d3d9imports.hpp"
 #include "trace_write.hpp"
+#include "d3d9imports.hpp"
+#include "d3dshader.hpp"
 
 
 typedef HRESULT
@@ -43,7 +41,7 @@ typedef HRESULT
 );
 
 
-static void DumpShader(const DWORD *tokens)
+void DumpShader(const DWORD *tokens)
 {
     static BOOL firsttime = TRUE;
     static HMODULE hD3DXModule = NULL;
@@ -97,6 +95,3 @@ found:
 
     Trace::LiteralOpaque(tokens);
 }
-
-
-#endif /* _D3D9SHADER_HPP_ */

@@ -282,12 +282,19 @@ d3d8.add_functions([
 
 class D3D8Tracer(DllTracer):
 
-    pass
+    def dump_arg_instance(self, function, arg):
+        # Dump shaders as strings
+        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
+            print '    DumpShader(%s);' % (arg.name)
+            return
+
+        DllTracer.dump_arg_instance(self, function, arg)
 
 
 if __name__ == '__main__':
     print '#include <windows.h>'
     print '#include <d3d8.h>'
+    print '#include "d3dshader.hpp"'
     print
     print '#include "trace_write.hpp"'
     print '#include "os.hpp"'
