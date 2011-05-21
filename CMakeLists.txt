@@ -178,7 +178,7 @@ if (WIN32)
         add_custom_command (
             OUTPUT d3d8.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
-            DEPENDS d3d8.py trace.py d3d8types.py d3d8caps.py d3dshader.py winapi.py stdapi.py
+            DEPENDS d3d8.py trace.py d3d8types.py d3d8caps.py winapi.py stdapi.py
         )
         add_library (d3d8 SHARED d3d8.def d3d8.cpp trace_write.cpp os_win32.cpp)
         set_target_properties (d3d8
@@ -195,7 +195,7 @@ if (WIN32)
         add_custom_command (
             OUTPUT d3d9.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
-            DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py d3dshader.py winapi.py stdapi.py
+            DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py winapi.py stdapi.py
         )
         add_library (d3d9 SHARED d3d9.def d3d9.cpp trace_write.cpp os_win32.cpp)
         set_target_properties (d3d9
