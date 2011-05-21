@@ -55,10 +55,6 @@ unsigned dump_state = ~0;
 
 void
 checkGlError(Trace::Call &call) {
-    if (benchmark || insideGlBeginEnd) {
-        return;
-    }
-
     GLenum error = glGetError();
     if (error == GL_NO_ERROR) {
         return;

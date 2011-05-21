@@ -154,67 +154,65 @@ class GlRetracer(Retracer):
         
         Retracer.call_function(self, function)
 
+        # Error checking
         if function.name == "glBegin":
             print '    glretrace::insideGlBeginEnd = true;'
         elif function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    glretrace::checkGlError(call);'
-
-        if function.name in ('glProgramStringARB', 'glProgramStringNV'):
-            print r'    GLint error_position = -1;'
-            print r'    glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &error_position);'
-            print r'    if (error_position != -1) {'
-            print r'        const char *error_string = (const char *)glGetString(GL_PROGRAM_ERROR_STRING_ARB);'
-            print r'        std::cerr << call.no << ": warning: " << error_string << "\n";'
-            print r'    }'
-
-        if function.name == 'glCompileShader':
-            print r'    GLint compile_status = 0;'
-            print r'    glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);'
-            print r'    if (!compile_status) {'
-            print r'         GLint info_log_length = 0;'
-            print r'         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_length);'
-            print r'         GLchar *infoLog = new GLchar[info_log_length];'
-            print r'         glGetShaderInfoLog(shader, info_log_length, NULL, infoLog);'
-            print r'         std::cerr << call.no << ": warning: " << infoLog << "\n";'
-            print r'         delete [] infoLog;'
-            print r'    }'
-
-        if function.name == 'glLinkProgram':
-            print r'    GLint link_status = 0;'
-            print r'    glGetProgramiv(program, GL_LINK_STATUS, &link_status);'
-            print r'    if (!link_status) {'
-            print r'         GLint info_log_length = 0;'
-            print r'         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);'
-            print r'         GLchar *infoLog = new GLchar[info_log_length];'
-            print r'         glGetProgramInfoLog(program, info_log_length, NULL, infoLog);'
-            print r'         std::cerr << call.no << ": warning: " << infoLog << "\n";'
-            print r'         delete [] infoLog;'
-            print r'    }'
-
-        if function.name == 'glCompileShaderARB':
-            print r'    GLint compile_status = 0;'
-            print r'    glGetObjectParameterivARB(shaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compile_status);'
-            print r'    if (!compile_status) {'
-            print r'         GLint info_log_length = 0;'
-            print r'         glGetObjectParameterivARB(shaderObj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &info_log_length);'
-            print r'         GLchar *infoLog = new GLchar[info_log_length];'
-            print r'         glGetInfoLogARB(shaderObj, info_log_length, NULL, infoLog);'
-            print r'         std::cerr << call.no << ": warning: " << infoLog << "\n";'
-            print r'         delete [] infoLog;'
-            print r'    }'
-
-        if function.name == 'glLinkProgramARB':
-            print r'    GLint link_status = 0;'
-            print r'    glGetObjectParameterivARB(programObj, GL_OBJECT_LINK_STATUS_ARB, &link_status);'
-            print r'    if (!link_status) {'
-            print r'         GLint info_log_length = 0;'
-            print r'         glGetObjectParameterivARB(programObj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &info_log_length);'
-            print r'         GLchar *infoLog = new GLchar[info_log_length];'
-            print r'         glGetInfoLogARB(programObj, info_log_length, NULL, infoLog);'
-            print r'         std::cerr << call.no << ": warning: " << infoLog << "\n";'
-            print r'         delete [] infoLog;'
-            print r'    }'
+            print '    if (!glretrace::benchmark && !glretrace::insideGlBeginEnd) {'
+            print '        glretrace::checkGlError(call);'
+            if function.name in ('glProgramStringARB', 'glProgramStringNV'):
+                print r'        GLint error_position = -1;'
+                print r'        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &error_position);'
+                print r'        if (error_position != -1) {'
+                print r'            const char *error_string = (const char *)glGetString(GL_PROGRAM_ERROR_STRING_ARB);'
+                print r'            std::cerr << call.no << ": warning: " << error_string << "\n";'
+                print r'        }'
+            if function.name == 'glCompileShader':
+                print r'        GLint compile_status = 0;'
+                print r'        glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);'
+                print r'        if (!compile_status) {'
+                print r'             GLint info_log_length = 0;'
+                print r'             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_length);'
+                print r'             GLchar *infoLog = new GLchar[info_log_length];'
+                print r'             glGetShaderInfoLog(shader, info_log_length, NULL, infoLog);'
+                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             delete [] infoLog;'
+                print r'        }'
+            if function.name == 'glLinkProgram':
+                print r'        GLint link_status = 0;'
+                print r'        glGetProgramiv(program, GL_LINK_STATUS, &link_status);'
+                print r'        if (!link_status) {'
+                print r'             GLint info_log_length = 0;'
+                print r'             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);'
+                print r'             GLchar *infoLog = new GLchar[info_log_length];'
+                print r'             glGetProgramInfoLog(program, info_log_length, NULL, infoLog);'
+                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             delete [] infoLog;'
+                print r'        }'
+            if function.name == 'glCompileShaderARB':
+                print r'        GLint compile_status = 0;'
+                print r'        glGetObjectParameterivARB(shaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compile_status);'
+                print r'        if (!compile_status) {'
+                print r'             GLint info_log_length = 0;'
+                print r'             glGetObjectParameterivARB(shaderObj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &info_log_length);'
+                print r'             GLchar *infoLog = new GLchar[info_log_length];'
+                print r'             glGetInfoLogARB(shaderObj, info_log_length, NULL, infoLog);'
+                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             delete [] infoLog;'
+                print r'        }'
+            if function.name == 'glLinkProgramARB':
+                print r'        GLint link_status = 0;'
+                print r'        glGetObjectParameterivARB(programObj, GL_OBJECT_LINK_STATUS_ARB, &link_status);'
+                print r'        if (!link_status) {'
+                print r'             GLint info_log_length = 0;'
+                print r'             glGetObjectParameterivARB(programObj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &info_log_length);'
+                print r'             GLchar *infoLog = new GLchar[info_log_length];'
+                print r'             glGetInfoLogARB(programObj, info_log_length, NULL, infoLog);'
+                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             delete [] infoLog;'
+                print r'        }'
+            print '    }'
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
