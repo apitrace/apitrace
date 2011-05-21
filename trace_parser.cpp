@@ -106,9 +106,6 @@ Call *Parser::parse_call(void) {
             break;
         case Trace::EVENT_LEAVE:
             return parse_leave();
-        case Trace::EVENT_MESSAGE:
-            std::cerr << "message: " << read_string() << "\n";
-            break;
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
