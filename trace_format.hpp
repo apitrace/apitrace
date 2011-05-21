@@ -24,7 +24,47 @@
  **************************************************************************/
 
 /*
- * Binary trace format decription.
+ * Trace binary format.
+ *
+ * Grammar:
+ *
+ *   trace = event* EOF
+ *
+ *   event = EVENT_ENTER call_sig call_detail+
+ *         | EVENT_LEAVE call_no call_detail+
+ *
+ *   call_sig = sig_id ( name arg_names )?
+ *
+ *   call_detail = ARG index value
+ *               | RET value
+ *               | END
+ *
+ *   value = NULL
+ *         | FALSE
+ *         | TRUE
+ *         | SINT int
+ *         | UINT int
+ *         | FLOAT float
+ *         | DOUBLE double
+ *         | STRING string
+ *         | BLOB string
+ *         | ENUM enum_sig
+ *         | BITMASK bitmask_sig value
+ *         | ARRAY length value+
+ *         | STRUCT struct_sig value+
+ *         | OPAQUE int
+ *
+ *   call_sig = id name arg_name*
+ *            | id
+ *
+ *   enum_sig = id name value
+ *            | id
+ *
+ *   bitmask_sig = id count (name value)+
+ *               | id
+ *
+ *   string = length (BYTE)*
+ *
  */
 
 #ifndef _TRACE_FORMAT_HPP_
@@ -62,37 +102,6 @@ enum Type {
     TYPE_STRUCT,
     TYPE_OPAQUE,
 };
-
-/*
- * XXX: Update grammar.
- *
- * trace = call* EOF
- *
- * call = name (detail)* END
- *
- * detail = ARG name value
- *        | RET value
- *        | ...
- *
- * value = VOID
- *       | BOOL BOOL_VALUE
- *       | SINT INT_VALUE
- *       | UINT INT_VALUE
- *       | FLOAT FLOAT_VALUE
- *       | STRING string
- *       | BLOB string
- *       | CONST name value
- *       | BITMASK value+
- *       | ARRAY length 
- *
- * bool = 0 | 1
- *
- * name = string
- *
- * string = length (BYTE)*
- *
- * length = INT_VALUE
- */
 
 
 } /* namespace Trace */
