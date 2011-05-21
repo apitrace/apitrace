@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 ##########################################################################
 #
+# Copyright 2011 Jose Fonseca
 # Copyright 2008-2009 VMware, Inc.
 # All Rights Reserved.
 #
@@ -27,21 +28,58 @@
 
 import sys
 import os.path
-import subprocess
 import optparse
+import math
+import operator
 
 import Image
+import ImageChops
+import ImageEnhance
 
 
 thumb_size = 320, 320
 
 
-def compare(im, ref):
-    import ImageMath
-    # See http://www.pythonware.com/library/pil/handbook/imagemath.htm
-    mask = ImageMath.eval("min(abs(a - b), 1)", a=im, b=ref)
-    gray = ref.convert('L')
-    # TODO
+def _compare(ref_image, src_image, delta_image):
+    import subprocess
+    p = subprocess.Popen([
+        'compare', 
+        '-metric', 'AE', 
+        '-fuzz', '%u%%' % options.fuzz, 
+        '-dissimilarity-threshold', '1',
+        ref_image, src_image, delta_image
+    ], stderr=subprocess.PIPE)
+    _, stderr = p.communicate()
+    try:
+        return int(stderr)
+    except ValueError:
+        return 0xffffffff
+
+
+def compare(ref_image, src_image, delta_image):
+    ref_im = Image.open(ref_image)
+    src_im = Image.open(src_image)
+
+    ref_im = ref_im.convert('RGB')
+    src_im = src_im.convert('RGB')
+
+    diff = ImageChops.difference(src_im, ref_im)
+
+    mask = ImageEnhance.Brightness(diff).enhance(100.0/options.fuzz)
+    mask = mask.convert('L')
+
+    lowlight = Image.new('RGB', src_im.size, (0xff, 0xff, 0xff))
+    highlight = Image.new('RGB', src_im.size, (0xf1, 0x00, 0x1e))
+    delta_im = Image.composite(highlight, lowlight, mask)
+
+    delta_im = Image.blend(src_im, delta_im, 0xcc/255.0)
+    delta_im.save(delta_image)
+
+    # See also http://effbot.org/zone/pil-comparing-images.htm
+    # TODO: this is approximate due to the grayscale conversion
+    h = diff.convert('L').histogram()
+    ae = sum(h[255 * options.fuzz // 100 + 1 : 256])
+    return ae
 
 
 def surface(html, image):
@@ -84,17 +122,23 @@ def find_images(prefix):
 
 
 def main():
+    global options
+
     optparser = optparse.OptionParser(
         usage="\n\t%prog [options] <ref_prefix> <src_prefix>",
         version="%%prog")
     optparser.add_option(
         '-o', '--output', metavar='FILE',
-        type="string", dest="output",
-        help="output filename [stdout]")
+        type="string", dest="output", default='index.html',
+        help="output filename [default: %default]")
     optparser.add_option(
         '-f', '--fuzz',
-        type="string", dest="fuzz", default='5%',
-        help="fuzz [default: %default]")
+        type="int", dest="fuzz", default=5,
+        help="fuzz percentage [default: %default]")
+    optparser.add_option(
+        '--overwrite',
+        action="store_true", dest="overwrite", default=False,
+        help="overwrite")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
 
@@ -123,10 +167,11 @@ def main():
         root, ext = os.path.splitext(src_image)
         delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
-            if not os.path.exists(delta_image) \
+            if options.overwrite \
+               or not os.path.exists(delta_image) \
                or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
                    and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
-                subprocess.call(["compare", '-metric', 'AE', '-fuzz', options.fuzz, ref_image, src_image, delta_image])
+                compare(ref_image, src_image, delta_image)
 
             html.write('      <tr>\n')
             surface(html, ref_image)
