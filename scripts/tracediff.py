@@ -70,6 +70,58 @@ def readtrace(trace):
     return lines
 
 
+class SDiffer:
+
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    def diff(self):
+        matcher = difflib.SequenceMatcher(None, self.a, self.b)
+        for tag, alo, ahi, blo, bhi in matcher.get_opcodes():
+            if tag == 'replace':
+                g = self.replace(alo, ahi, blo, bhi)
+            elif tag == 'delete':
+                g = self.delete(alo, ahi)
+            elif tag == 'insert':
+                g = self.insert(blo, bhi)
+            elif tag == 'equal':
+                g = self.equal(alo, ahi)
+            else:
+                raise ValueError, 'unknown tag %s' % (tag,)
+
+            for line in g:
+                yield line
+
+    def replace(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+        if bhi - blo < ahi - alo:
+            first  = self.insert(blo, bhi)
+            second = self.delete(alo, ahi)
+        else:
+            first  = self.delete(alo, ahi)
+            second = self.insert(blo, bhi)
+
+        for g in first, second:
+            for line in g:
+                yield line
+
+    escape = "\33["
+
+    def delete(self, alo, ahi):
+        return self.dump('- ' + self.escape + '9m', self.a, alo, ahi, self.escape + '0m')
+
+    def insert(self, blo, bhi):
+        return self.dump('+ ', self.b, blo, bhi)
+
+    def equal(self, alo, ahi):
+        return self.dump('  ' + self.escape + '2m', self.a, alo, ahi, self.escape + '0m')
+
+    def dump(self, prefix, x, lo, hi, suffix=""):
+        for i in xrange(lo, hi):
+            yield prefix + str(x[i]) + suffix
+
+
 def main():
     global options
 
@@ -88,7 +140,7 @@ def main():
     ref_lines = readtrace(args[0])
     src_lines = readtrace(args[1])
 
-    diff = difflib.unified_diff(ref_lines, src_lines, n=3)
+    diff = SDiffer(ref_lines, src_lines).diff()
     sys.stdout.writelines(diff)
 
 
