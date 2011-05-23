@@ -151,6 +151,9 @@ class GlRetracer(Retracer):
 
         if function.name == "glEnd":
             print '    glretrace::insideGlBeginEnd = false;'
+
+        if function.name == 'memcpy':
+            print '    if (!dest || !src || !n) return;'
         
         Retracer.call_function(self, function)
 
@@ -211,6 +214,10 @@ class GlRetracer(Retracer):
                 print r'             glGetInfoLogARB(programObj, info_log_length, NULL, infoLog);'
                 print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
                 print r'             delete [] infoLog;'
+                print r'        }'
+            if function.name in ('glMapBuffer', 'glMapBufferARB', 'glMapBufferRange', 'glMapNamedBufferEXT', 'glMapNamedBufferRangeEXT'):
+                print r'        if (!__result) {'
+                print r'             std::cerr << call.no << ": warning: failed to map buffer\n";'
                 print r'        }'
             if function.name in ('glGetAttribLocation', 'glGetAttribLocationARB'):
                 print r'    GLint __orig_result = call.ret->toSInt();'
