@@ -167,3 +167,16 @@ GLbitfield_shader = Flags(GLbitfield, [
     "GL_TESS_CONTROL_SHADER_BIT",                # 0x00000008
     "GL_TESS_EVALUATION_SHADER_BIT",             # 0x00000010
 ])
+
+GLbitfield_access = Flags(GLbitfield, [
+    "GL_MAP_READ_BIT",                # 0x0001
+    "GL_MAP_WRITE_BIT",               # 0x0002
+    "GL_MAP_INVALIDATE_RANGE_BIT",    # 0x0004
+    "GL_MAP_INVALIDATE_BUFFER_BIT",   # 0x0008
+    "GL_MAP_FLUSH_EXPLICIT_BIT",      # 0x0010
+    "GL_MAP_UNSYNCHRONIZED_BIT",      # 0x0020
+])
+
+GLbitfield_sync_flush = Flags(GLbitfield, [
+    "GL_SYNC_FLUSH_COMMANDS_BIT",				# 0x00000001
+])

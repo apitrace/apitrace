@@ -1008,7 +1008,7 @@ glapi.add_functions([
     GlFunction(Void, "glVertexAttribDivisorARB", [(GLuint, "index"), (GLuint, "divisor")]),
 
     # GL_ARB_map_buffer_range
-    GlFunction(GLmap, "glMapBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield, "access")]),
+    GlFunction(GLmap, "glMapBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield_access, "access")]),
     GlFunction(Void, "glFlushMappedBufferRange", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length")]),
 
     # GL_ARB_texture_buffer_object
@@ -1045,7 +1045,7 @@ glapi.add_functions([
     GlFunction(GLsync, "glFenceSync", [(GLenum, "condition"), (GLbitfield, "flags")]),
     GlFunction(GLboolean, "glIsSync", [(GLsync, "sync")], sideeffects=False),
     GlFunction(Void, "glDeleteSync", [(GLsync, "sync")]),
-    GlFunction(GLenum, "glClientWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
+    GlFunction(GLenum, "glClientWaitSync", [(GLsync, "sync"), (GLbitfield_sync_flush, "flags"), (GLuint64, "timeout")]),
     GlFunction(Void, "glWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
     GlFunction(Void, "glGetInteger64v", [(GLenum, "pname"), Out(OpaqueArray(GLint64, "__glGetInteger64v_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetSynciv", [(GLsync, "sync"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "(length ? *length : bufSize)"), "values")], sideeffects=False),
@@ -1985,8 +1985,8 @@ glapi.add_functions([
     GlFunction(Void, "glGetTransformFeedbackVaryingEXT", [(GLprogram, "program"), (GLuint, "index"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLsizei), "size"), Out(Pointer(GLenum), "type"), Out(GLstring, "name")], sideeffects=False),
 
     # GL_EXT_direct_state_access
-    GlFunction(Void, "glClientAttribDefaultEXT", [(GLbitfield, "mask")]),
-    GlFunction(Void, "glPushClientAttribDefaultEXT", [(GLbitfield, "mask")]),
+    GlFunction(Void, "glClientAttribDefaultEXT", [(GLbitfield_client_attrib, "mask")]),
+    GlFunction(Void, "glPushClientAttribDefaultEXT", [(GLbitfield_client_attrib, "mask")]),
     GlFunction(Void, "glMatrixLoadfEXT", [(GLenum, "mode"), (Const(Array(GLfloat, "16")), "m")]),
     GlFunction(Void, "glMatrixLoaddEXT", [(GLenum, "mode"), (Const(Array(GLdouble, "16")), "m")]),
     GlFunction(Void, "glMatrixMultfEXT", [(GLenum, "mode"), (Const(Array(GLfloat, "16")), "m")]),
@@ -2145,7 +2145,7 @@ glapi.add_functions([
     GlFunction(Void, "glNamedBufferSubDataEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "size"), (Const(Blob(GLvoid, "size")), "data")]),
     GlFunction(GLmap, "glMapNamedBufferEXT", [(GLbuffer, "buffer"), (GLenum, "access")]),
     GlFunction(GLboolean, "glUnmapNamedBufferEXT", [(GLbuffer, "buffer")]),
-    GlFunction(GLmap, "glMapNamedBufferRangeEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield, "access")]),
+    GlFunction(GLmap, "glMapNamedBufferRangeEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield_access, "access")]),
     GlFunction(Void, "glFlushMappedNamedBufferRangeEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "length")]),
     GlFunction(Void, "glNamedCopyBufferSubDataEXT", [(GLbuffer, "readBuffer"), (GLbuffer, "writeBuffer"), (GLintptr, "readOffset"), (GLintptr, "writeOffset"), (GLsizeiptr, "size")]),
     GlFunction(Void, "glGetNamedBufferParameterivEXT", [(GLbuffer, "buffer"), (GLenum, "pname"), Out(Array(GLint, "__gl_param_size(pname)"), "params")], sideeffects=False),
