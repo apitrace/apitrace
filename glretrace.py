@@ -212,6 +212,11 @@ class GlRetracer(Retracer):
                 print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
+            if function.name in ('glGetAttribLocation', 'glGetAttribLocationARB'):
+                print r'    GLint __orig_result = call.ret->toSInt();'
+                print r'    if (__result != __orig_result) {'
+                print r'        std::cerr << call.no << ": warning vertex attrib location mismatch " << __orig_result << " -> " << __result << "\n";'
+                print r'    }'
             print '    }'
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):

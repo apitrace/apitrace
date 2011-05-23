@@ -372,7 +372,52 @@ class GlTracer(Tracer):
             print '    }'
         # FIXME: glFlushMappedNamedBufferRangeEXT
 
+        # Don't leave vertex attrib locations to chance.  Instead emit fake
+        # glBindAttribLocation calls to ensure that the same locations will be
+        # used when retracing.  Trying to remap locations after the fact would
+        # be an herculian task given that vertex attrib locations appear in
+        # many entry-points, including non-shader related ones.
+        if function.name == 'glLinkProgram':
+            Tracer.dispatch_function(self, function)
+            print '    GLint active_attributes = 0;'
+            print '    __glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &active_attributes);'
+            print '    for (GLuint attrib = 0; attrib < active_attributes; ++attrib) {'
+            print '        GLint size = 0;'
+            print '        GLenum type = 0;'
+            print '        GLchar name[256];'
+            # TODO: Use ACTIVE_ATTRIBUTE_MAX_LENGTH instead of 256
+            print '        __glGetActiveAttrib(program, attrib, sizeof name, NULL, &size, &type, name);'
+            print '        GLint location = __glGetAttribLocation(program, name);'
+            print '        if (location >= 0) {'
+            bind_function = glapi.glapi.get_function_by_name('glBindAttribLocation')
+            self.fake_call(bind_function, ['program', 'location', 'name'])
+            print '        }'
+            print '    }'
+        if function.name == 'glLinkProgramARB':
+            Tracer.dispatch_function(self, function)
+            print '    GLint active_attributes = 0;'
+            print '    __glGetObjectParameterivARB(programObj, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &active_attributes);'
+            print '    for (GLuint attrib = 0; attrib < active_attributes; ++attrib) {'
+            print '        GLint size = 0;'
+            print '        GLenum type = 0;'
+            print '        GLcharARB name[256];'
+            # TODO: Use ACTIVE_ATTRIBUTE_MAX_LENGTH instead of 256
+            print '        __glGetActiveAttribARB(programObj, attrib, sizeof name, NULL, &size, &type, name);'
+            print '        GLint location = __glGetAttribLocationARB(programObj, name);'
+            print '        if (location >= 0) {'
+            bind_function = glapi.glapi.get_function_by_name('glBindAttribLocationARB')
+            self.fake_call(bind_function, ['programObj', 'location', 'name'])
+            print '        }'
+            print '    }'
+
         Tracer.trace_function_impl_body(self, function)
+
+    def dispatch_function(self, function):
+        if function.name in ('glLinkProgram', 'glLinkProgramARB'):
+            # These functions have been dispatched already
+            return
+
+        Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
         print '        unsigned __call = Trace::BeginEnter(__memcpy_sig);'
