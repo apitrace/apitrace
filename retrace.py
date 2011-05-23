@@ -237,6 +237,7 @@ class Retracer:
         if function.type is not stdapi.Void:
             print '    %s __result;' % (function.type)
             print '    __result = %s(%s);' % (function.name, arg_names)
+            print '    (void)__result;'
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
