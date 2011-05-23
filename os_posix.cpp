@@ -77,8 +77,8 @@ GetProcessName(char *str, size_t size)
     ssize_t len;
     len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
     if (len == -1) {
-        *str = 0;
-        return false;
+        snprintf(str, size, "%i", (int)getpid());
+        return true;
     }
 #endif
     szProcessPath[len] = 0;
