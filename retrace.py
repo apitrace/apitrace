@@ -190,6 +190,7 @@ class Retracer:
 
     def retrace_function_body(self, function):
         if not function.sideeffects:
+            print '    (void)call;'
             return
 
         success = True
@@ -205,7 +206,9 @@ class Retracer:
                 success = False
                 print '    %s = 0; // FIXME' % arg.name
         if not success:
+            print '    if (1) {'
             self.fail_function(function)
+            print '    }'
         self.call_function(function)
         for arg in function.args:
             if arg.output:
