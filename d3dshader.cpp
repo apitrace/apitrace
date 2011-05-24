@@ -27,7 +27,7 @@
 
 #include <stdio.h>
 
-#include "trace_write.hpp"
+#include "trace_writer.hpp"
 #include "d3d9imports.hpp"
 #include "d3dshader.hpp"
 

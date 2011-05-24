@@ -35,7 +35,7 @@
 #include <zlib.h>
 
 #include "os.hpp"
-#include "trace_write.hpp"
+#include "trace_writer.hpp"
 #include "trace_format.hpp"
 
 

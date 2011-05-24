@@ -66,7 +66,7 @@ if __name__ == '__main__':
     print '#include <string.h>'
     print '#include <windows.h>'
     print
-    print '#include "trace_write.hpp"'
+    print '#include "trace_writer.hpp"'
     print '#include "os.hpp"'
     print
     print '''

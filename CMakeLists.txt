@@ -161,7 +161,7 @@ else (WIN32)
     set (glws glws_glx.cpp)
 endif (WIN32)
 
-add_library (trace trace_model.cpp trace_parser.cpp trace_write.cpp ${os})
+add_library (trace trace_model.cpp trace_parser.cpp trace_writer.cpp ${os})
 
 add_executable (tracedump tracedump.cpp)
 target_link_libraries (tracedump trace)
@@ -180,7 +180,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
             DEPENDS d3d8.py trace.py d3d8types.py d3d8caps.py winapi.py stdapi.py
         )
-        add_library (d3d8 SHARED d3d8.def d3d8.cpp d3dshader.cpp trace_write.cpp os_win32.cpp)
+        add_library (d3d8 SHARED d3d8.def d3d8.cpp d3dshader.cpp trace_writer.cpp os_win32.cpp)
         set_target_properties (d3d8
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -197,7 +197,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
             DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py winapi.py stdapi.py
         )
-        add_library (d3d9 SHARED d3d9.def d3d9.cpp d3dshader.cpp trace_write.cpp os_win32.cpp)
+        add_library (d3d9 SHARED d3d9.def d3d9.cpp d3dshader.cpp trace_writer.cpp os_win32.cpp)
         set_target_properties (d3d9
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -214,7 +214,7 @@ if (WIN32)
     #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
     #        DEPENDS d3d10misc.py winapi.py stdapi.py
     #    )
-    #    add_library (d3d10 SHARED d3d10.def d3d10.cpp trace_write.cpp os_win32.cpp)
+    #    add_library (d3d10 SHARED d3d10.def d3d10.cpp trace_writer.cpp os_win32.cpp)
     #    set_target_properties (d3d10 PROPERTIES PREFIX "")
     #    install (TARGETS d3d10 RUNTIME DESTINATION wrappers)
     #endif (DirectX_D3D10_INCLUDE_DIR)
@@ -225,7 +225,7 @@ if (WIN32)
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
         DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glparams.py gltypes.py winapi.py stdapi.py
     )
-    add_library (wgltrace SHARED opengl32.def wgltrace.cpp trace_write.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (wgltrace SHARED opengl32.def wgltrace.cpp trace_writer.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32
@@ -247,7 +247,7 @@ elseif (APPLE)
         DEPENDS cgltrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
     )
 
-    add_library (cgltrace SHARED cgltrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (cgltrace SHARED cgltrace.cpp trace_writer.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
     set_target_properties (cgltrace PROPERTIES
         # libGL.dylib
@@ -277,7 +277,7 @@ else ()
         DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
     )
 
-    add_library (glxtrace SHARED glxtrace.cpp trace_write.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (glxtrace SHARED glxtrace.cpp trace_writer.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
     set_target_properties (glxtrace PROPERTIES
         # avoid the default "lib" prefix

@@ -1,6 +1,6 @@
 #include "saverthread.h"
 
-#include "trace_write.hpp"
+#include "trace_writer.hpp"
 
 #include <QFile>
 #include <QHash>

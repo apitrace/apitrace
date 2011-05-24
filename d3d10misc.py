@@ -64,6 +64,6 @@ if __name__ == '__main__':
     print
     print '#include <d3d10.h>'
     print
-    print '#include "trace_write.hpp"'
+    print '#include "trace_writer.hpp"'
     print
     wrap()
