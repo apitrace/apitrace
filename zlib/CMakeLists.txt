@@ -23,8 +23,13 @@ check_include_file(unistd.h Z_HAVE_UNISTD_H)
 
 add_definitions(-DNO_VIZ)
 
+if (MSVC)
+    add_definitions (-wd4127) # conditional expression is constant
+    add_definitions (-wd4131) # uses old-style declaratorion
+endif (MSVC)
+
 if (NOT WIN32)
-    add_definitions(-fPIC)
+    add_definitions (-fPIC)
 endif (NOT WIN32)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

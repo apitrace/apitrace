@@ -59,6 +59,7 @@ if (MSVC)
     add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
     add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
     add_definitions (-W4)
+    add_definitions (-wd4127) # conditional expression is constant
     add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
     add_definitions (-wd4505) # unreferenced local function has been removed
     add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
