@@ -35,6 +35,11 @@
 class JSONWriter;
 
 
+namespace Image {
+    class Image;
+}
+
+
 namespace glstate {
 
 
@@ -45,6 +50,9 @@ void dumpEnum(JSONWriter &json, GLenum pname);
 void dumpParameters(JSONWriter &json);
 
 void dumpCurrentContext(std::ostream &os);
+
+Image::Image *
+getDrawBufferImage(GLenum format);
 
 
 } /* namespace glstate */

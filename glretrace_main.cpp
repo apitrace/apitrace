@@ -103,31 +103,6 @@ checkGlError(Trace::Call &call) {
 }
 
 
-static void color_snapshot(Image::Image &image) {
-    GLint drawbuffer = double_buffer ? GL_BACK : GL_FRONT;
-    GLint readbuffer = double_buffer ? GL_BACK : GL_FRONT;
-    glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
-    glGetIntegerv(GL_READ_BUFFER, &readbuffer);
-    glReadBuffer(drawbuffer);
-
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
-    glPixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
-    glPixelStorei(GL_PACK_LSB_FIRST, GL_FALSE);
-    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
-    glPixelStorei(GL_PACK_SKIP_ROWS, 0);
-    glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
-    glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-
-    glReadPixels(0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-    
-    glPopClientAttrib();
-
-    glReadBuffer(readbuffer);
-}
-
-
 void snapshot(unsigned call_no) {
     if (!drawable ||
         (!snapshot_prefix && !compare_prefix)) {
@@ -148,21 +123,25 @@ void snapshot(unsigned call_no) {
         }
     }
 
-    Image::Image src(drawable->width, drawable->height, true);
-    color_snapshot(src);
+    Image::Image *src = glstate::getDrawBufferImage(GL_RGBA);
+    if (!src) {
+        return;
+    }
 
     if (snapshot_prefix) {
         char filename[PATH_MAX];
         snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
-        if (src.writePNG(filename) && retrace::verbosity >= 0) {
+        if (src->writePNG(filename) && retrace::verbosity >= 0) {
             std::cout << "Wrote " << filename << "\n";
         }
     }
 
     if (ref) {
-        std::cout << "Snapshot " << call_no << " average precision of " << src.compare(*ref) << " bits\n";
+        std::cout << "Snapshot " << call_no << " average precision of " << src->compare(*ref) << " bits\n";
         delete ref;
     }
+
+    delete src;
 }
 
 
