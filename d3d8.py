@@ -106,6 +106,9 @@ IDirect3DDevice8.methods += [
     Method(HRESULT, "GetDisplayMode", [Out(Pointer(D3DDISPLAYMODE), "pMode")]),
     Method(HRESULT, "GetCreationParameters", [Out(Pointer(D3DDEVICE_CREATION_PARAMETERS), "pParameters")]),
     Method(HRESULT, "SetCursorProperties", [(UINT, "XHotSpot"), (UINT, "YHotSpot"), (PDIRECT3DSURFACE8, "pCursorBitmap")]),
+    # XXX: There are different signatures of
+    # IDirect3DDevice8::SetCursorPosition depending on the DXSDK version
+    Method(Void, "SetCursorPosition", [(UINT, "XScreenSpace"), (UINT, "YScreenSpace"), (DWORD, "Flags")]),
     Method(Void, "SetCursorPosition", [(Int, "X"), (Int, "Y"), (DWORD, "Flags")]),
     Method(BOOL, "ShowCursor", [(BOOL, "bShow")]),
     Method(HRESULT, "CreateAdditionalSwapChain", [Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DSWAPCHAIN8), "pSwapChain")]),
@@ -131,7 +134,7 @@ IDirect3DDevice8.methods += [
     Method(HRESULT, "GetDepthStencilSurface", [Out(Pointer(PDIRECT3DSURFACE8), "ppZStencilSurface")]),
     Method(HRESULT, "BeginScene", []),
     Method(HRESULT, "EndScene", []),
-    Method(HRESULT, "Clear", [(DWORD, "Count"), (ConstPointer(D3DRECT), "pRects"), (DWORD, "Flags"), (D3DCOLOR, "Color"), (Float, "Z"), (DWORD, "Stencil")]),
+    Method(HRESULT, "Clear", [(DWORD, "Count"), (ConstPointer(D3DRECT), "pRects"), (D3DCLEAR, "Flags"), (D3DCOLOR, "Color"), (Float, "Z"), (DWORD, "Stencil")]),
     Method(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "State"), (ConstPointer(D3DMATRIX), "pMatrix")]),
     Method(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "State"), Out(Pointer(D3DMATRIX), "pMatrix")]),
     Method(HRESULT, "MultiplyTransform", [(D3DTRANSFORMSTATETYPE, "State"), (ConstPointer(D3DMATRIX), "pMatrix")]),
