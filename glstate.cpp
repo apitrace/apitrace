@@ -407,18 +407,17 @@ getDrawableBounds(GLint *width, GLint *height) {
 
 Image::Image *
 getDrawBufferImage(GLenum format) {
-    GLint width, height;
-
-    if (format != GL_RGBA) {
-        // FIXME: this function can only handle 4-channel images
+    GLint channels = __gl_format_channels(format);
+    if (channels > 4) {
         return NULL;
     }
 
+    GLint width, height;
     if (!getDrawableBounds(&width, &height)) {
         return NULL;
     }
 
-    Image::Image *image = new Image::Image(width, height, true);
+    Image::Image *image = new Image::Image(width, height, channels, true);
     if (!image) {
         return NULL;
     }
@@ -439,7 +438,7 @@ getDrawBufferImage(GLenum format) {
     glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, image->pixels);
+    glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, image->pixels);
 
     glPopClientAttrib();
 

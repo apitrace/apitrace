@@ -1,5 +1,6 @@
 /**************************************************************************
  *
+ * Copyright 2011 Jose Fonseca
  * Copyright 2008-2010 VMware, Inc.
  * All Rights Reserved.
  *
@@ -27,6 +28,7 @@
 #include <zlib.h>
 #include <png.h>
 
+#include <assert.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -73,6 +75,8 @@ struct Pixel {
 
 bool
 Image::writeBMP(const char *filename) const {
+    assert(channels == 4);
+
     struct FileHeader bmfh;
     struct InfoHeader bmih;
     unsigned x, y;
@@ -164,7 +168,26 @@ Image::writePNG(const char *filename) const {
 
     png_init_io(png_ptr, fp);
 
-    png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB_ALPHA,
+    int color_type;
+    switch (channels) {
+    case 4:
+        color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+        break;
+    case 3:
+        color_type = PNG_COLOR_TYPE_RGB;
+        break;
+    case 2:
+        color_type = PNG_COLOR_TYPE_GRAY_ALPHA;
+        break;
+    case 1:
+        color_type = PNG_COLOR_TYPE_GRAY;
+        break;
+    default:
+        assert(0);
+        return false;
+    }
+
+    png_set_IHDR(png_ptr, info_ptr, width, height, 8, color_type,
         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
     png_set_compression_level(png_ptr, Z_DEFAULT_COMPRESSION);
@@ -173,13 +196,13 @@ Image::writePNG(const char *filename) const {
 
     if (!flipped) {
         for (unsigned y = 0; y < height; ++y) {
-            png_bytep row = (png_bytep)(pixels + y*width*4);
+            png_bytep row = (png_bytep)(pixels + y*width*channels);
             png_write_rows(png_ptr, &row, 1);
         }
     } else {
         unsigned y = height;
         while (y--) {
-            png_bytep row = (png_bytep)(pixels + y*width*4);
+            png_bytep row = (png_bytep)(pixels + y*width*channels);
             png_write_rows(png_ptr, &row, 1);
         }
     }
@@ -279,12 +302,15 @@ no_fp:
 double Image::compare(Image &ref)
 {
     if (width != ref.width ||
-        height != ref.height) {
+        height != ref.height ||
+        channels != ref.channels) {
         return 0.0;
     }
 
     const unsigned char *pSrc = start();
     const unsigned char *pRef = ref.start();
+
+    assert(channels >= 3);
 
     unsigned long long error = 0;
     for (unsigned y = 0; y < height; ++y) {
@@ -292,7 +318,7 @@ double Image::compare(Image &ref)
             // FIXME: Ignore alpha channel until we are able to pick a visual
             // that matches the traces
             for (unsigned  c = 0; c < 3; ++c) {
-                int delta = pSrc[x*4 + c] - pRef[x*4 + c];
+                int delta = pSrc[x*channels + c] - pRef[x*channels + c];
                 error += delta*delta;
             }
         }

@@ -41,6 +41,7 @@ class Image {
 public:
     unsigned width;
     unsigned height;
+    unsigned channels;
 
     // Flipped vertically or not
     bool flipped;
@@ -48,11 +49,12 @@ public:
     // Pixels in RGBA format
     unsigned char *pixels;
 
-    inline Image(unsigned w, unsigned h, bool f = false) : 
+    inline Image(unsigned w, unsigned h, unsigned c = 4, bool f = false) : 
         width(w),
         height(h),
+        channels(c),
         flipped(f),
-        pixels(new unsigned char[h*w*4])
+        pixels(new unsigned char[h*w*c])
     {}
 
     inline ~Image() {
@@ -60,15 +62,15 @@ public:
     }
 
     inline unsigned char *start(void) {
-        return flipped ? pixels + (height - 1)*width*4 : pixels;
+        return flipped ? pixels + (height - 1)*width*channels : pixels;
     }
 
     inline unsigned char *end(void) {
-        return flipped ? pixels - width*4 : pixels + height*width*4;
+        return flipped ? pixels - width*channels : pixels + height*width*channels;
     }
 
     inline signed stride(void) const {
-        return flipped ? -width*4 : width*4;
+        return flipped ? -width*channels : width*channels;
     }
 
     bool writeBMP(const char *filename) const;
