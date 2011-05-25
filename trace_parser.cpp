@@ -217,42 +217,64 @@ void Parser::parse_arg(Call *call) {
 
 Value *Parser::parse_value(void) {
     int c;
+    Value *value;
     c = read_byte();
     switch(c) {
     case Trace::TYPE_NULL:
-        return new Null;
+        value = new Null;
+        break;
     case Trace::TYPE_FALSE:
-        return new Bool(false);
+        value = new Bool(false);
+        break;
     case Trace::TYPE_TRUE:
-        return new Bool(true);
+        value = new Bool(true);
+        break;
     case Trace::TYPE_SINT:
-        return parse_sint();
+        value = parse_sint();
+        break;
     case Trace::TYPE_UINT:
-        return parse_uint();
+        value = parse_uint();
+        break;
     case Trace::TYPE_FLOAT:
-        return parse_float();
+        value = parse_float();
+        break;
     case Trace::TYPE_DOUBLE:
-        return parse_double();
+        value = parse_double();
+        break;
     case Trace::TYPE_STRING:
-        return parse_string();
+        value = parse_string();
+        break;
     case Trace::TYPE_ENUM:
-        return parse_enum();
+        value = parse_enum();
+        break;
     case Trace::TYPE_BITMASK:
-        return parse_bitmask();
+        value = parse_bitmask();
+        break;
     case Trace::TYPE_ARRAY:
-        return parse_array();
+        value = parse_array();
+        break;
     case Trace::TYPE_STRUCT:
-        return parse_struct();
+        value = parse_struct();
+        break;
     case Trace::TYPE_BLOB:
-        return parse_blob();
+        value = parse_blob();
+        break;
     case Trace::TYPE_OPAQUE:
-        return parse_opaque();
+        value = parse_opaque();
+        break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
         exit(1);
     case -1:
-        return NULL;
+        value = NULL;
+        break;
     }
+#if TRACE_VERBOSE
+    if (value) {
+        std::cerr << "\tVALUE " << value << "\n";
+    }
+#endif
+    return value;
 }
 
 
