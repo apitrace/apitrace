@@ -1,10 +1,10 @@
 This directory contains several helper scripts that facilitate the generation
-of the API descriptions from specs.
+of the API descriptions from specs and/or header files.
 
-The specs are not expressive enough, which is why we can just code generate
-everything from them.
+The specs/headers are not expressive enough, which is why we can't just code
+generate everything from them.
 
-The typical procedure is to run
+For GL the typical procedure is to run
 
   make -B
 

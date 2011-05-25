@@ -41,5 +41,11 @@ glparams.py: glparams.sed enum.spec sort.sh
 wglenum.py: wglenum.sh wglenumext.spec
 	./wglenum.sh wglenumext.spec > $@
 
+clean:
+	rm -f \
+        glapi.py glxapi.py wglapi.py \
+        glparams.py wglenum.py
 
 .PRECIOUS: %.spec %.tm
+
+.PHONY: download clean
