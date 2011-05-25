@@ -76,14 +76,7 @@ GUID = Struct("GUID", [
     (DWORD, "Data1"),
     (WORD, "Data2"),
     (WORD, "Data3"),
-    (BYTE, "Data4[0]"),
-    (BYTE, "Data4[1]"),
-    (BYTE, "Data4[2]"),
-    (BYTE, "Data4[3]"),
-    (BYTE, "Data4[4]"),
-    (BYTE, "Data4[5]"),
-    (BYTE, "Data4[6]"),
-    (BYTE, "Data4[7]"),
+    (Array(BYTE, "8"), "Data4"),
 ])
 LPGUID = Pointer(GUID)
 
@@ -150,8 +143,14 @@ HMODULE = Opaque("HMODULE")
 
 IUnknown = Interface("IUnknown")
 
+HRESULT_com = FakeEnum(HRESULT, [
+    "S_OK",
+    "E_NOINTERFACE",
+    "E_POINTER",
+])
+
 IUnknown.methods = (
-	Method(HRESULT, "QueryInterface", ((REFIID, "riid"), (Pointer(OpaquePointer(Void)), "ppvObj"))),
+	Method(HRESULT_com, "QueryInterface", ((REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppvObj"))),
 	Method(ULONG, "AddRef", ()),
 	Method(ULONG, "Release", ()),
 )

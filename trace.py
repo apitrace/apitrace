@@ -271,7 +271,12 @@ unwrap_instance = Unwrapper().visit
 
 class Tracer:
 
+    def __init__(self):
+        self.api = None
+
     def trace_api(self, api):
+        self.api = api
+
         self.header(api)
 
         # Includes
@@ -427,8 +432,15 @@ class Tracer:
             wrap_instance(method.type, '__result')
         print '    Trace::EndLeave();'
         if method.name == 'QueryInterface':
-            print '    if (*ppvObj == m_pInstance)'
-            print '        *ppvObj = this;'
+            print '    if (ppvObj && *ppvObj) {'
+            print '        if (*ppvObj == m_pInstance) {'
+            print '            *ppvObj = this;'
+            print '        }'
+            for iface in self.api.interfaces:
+                print '        else if (riid == IID_%s) {' % iface.name
+                print '            *ppvObj = new Wrap%s((%s *) *ppvObj);' % (iface.name, iface.name)
+                print '        }'
+            print '    }'
         if method.name == 'Release':
             assert method.type is not stdapi.Void
             print '    if (!__result)'

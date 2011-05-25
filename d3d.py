@@ -472,6 +472,13 @@ ddraw.add_interfaces(interfaces)
 
 class DDrawTracer(DllTracer):
 
+    def trace_function_impl_body(self, function):
+        if function.name in ('AcquireDDThreadLock', 'ReleaseDDThreadLock'):
+            self.dispatch_function(function)
+            return
+
+        DllTracer.trace_function_impl_body(self, function)
+
     def wrap_arg(self, function, arg):
         if function.name == 'DirectDrawCreateEx' and arg.name == 'lplpDD':
             print '    if (*lplpDD) {'
@@ -480,12 +487,8 @@ class DDrawTracer(DllTracer):
                 print '            *lplpDD = (LPVOID) new Wrap%s((%s *)*lplpDD);' % (iface.name, iface.name)
                 print '        }'
             print '    }'
-        # Dump shaders as strings
-        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
-            print '    DumpShader(%s);' % (arg.name)
-            return
 
-        DllTracer.dump_arg_instance(self, function, arg)
+        DllTracer.wrap_arg(self, function, arg)
 
 
 if __name__ == '__main__':
