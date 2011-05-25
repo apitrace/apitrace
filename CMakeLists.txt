@@ -178,8 +178,8 @@ if (WIN32)
     endif (DirectX_D3D_INCLUDE_DIR)
 
     # d3d8.dll
-    if (DirectX_D3D8_INCLUDE_DIR)
-        include_directories (${DirectX_D3D8_INCLUDE_DIR})
+    if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
+        include_directories (${DirectX_D3D8_INCLUDE_DIR} ${DirectX_D3DX9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
@@ -192,7 +192,7 @@ if (WIN32)
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
         install (TARGETS d3d8 RUNTIME DESTINATION wrappers)
-    endif (DirectX_D3D8_INCLUDE_DIR)
+    endif (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
 
     # d3d9.dll
     if (DirectX_D3DX9_INCLUDE_DIR)

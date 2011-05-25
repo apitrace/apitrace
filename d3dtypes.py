@@ -122,7 +122,7 @@ D3DMATRIX = Struct("D3DMATRIX", [
          41, 42, 43, 44
     ]
 ])
-LPD3DMATRIX = Pointer(D3DMATRIX)
+LPD3DMATRIX = Alias("LPD3DMATRIX", Pointer(D3DMATRIX))
 
 D3DVIEWPORT = Struct("D3DVIEWPORT", [
     (DWORD, "dwSize"),
