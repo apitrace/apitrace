@@ -160,6 +160,23 @@ install (TARGETS tracedump RUNTIME DESTINATION bin)
 # API tracers
 
 if (WIN32)
+    # ddraw.dll
+    if (DirectX_D3D_INCLUDE_DIR)
+        include_directories (${DirectX_D3D_INCLUDE_DIR})
+        add_custom_command (
+            OUTPUT ddraw.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d.py > ${CMAKE_CURRENT_BINARY_DIR}/ddraw.cpp
+            DEPENDS d3d.py d3dtypes.py d3dcaps.py ddraw.py trace.py winapi.py stdapi.py
+        )
+        add_library (ddraw SHARED ddraw.def ddraw.cpp trace_writer.cpp os_win32.cpp)
+        set_target_properties (ddraw
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        )
+        install (TARGETS ddraw RUNTIME DESTINATION wrappers)
+    endif (DirectX_D3D_INCLUDE_DIR)
+
     # d3d8.dll
     if (DirectX_D3D8_INCLUDE_DIR)
         include_directories (${DirectX_D3D8_INCLUDE_DIR})

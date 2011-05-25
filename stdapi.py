@@ -225,8 +225,12 @@ class Function:
         self.args = []
         index = 0
         for arg in args:
-            if isinstance(arg, tuple):
-                arg_type, arg_name = arg
+            if not isinstance(arg, Arg):
+                if isinstance(arg, tuple):
+                    arg_type, arg_name = arg
+                else:
+                    arg_type = arg
+                    arg_name = "arg%u" % index
                 arg = Arg(arg_type, arg_name)
             arg.index = index
             index += 1

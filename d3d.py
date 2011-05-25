@@ -26,8 +26,12 @@
 """d3d.h"""
 
 from winapi import *
+from ddraw import *
 from d3dtypes import *
 from d3dcaps import *
+
+def OutPointer(type):
+    return Out(Pointer(type), "out")
 
 D3DNEXT = Flags(DWORD, [
     "D3DNEXT_NEXT",
@@ -225,7 +229,8 @@ IDirect3DDevice.methods += [
     Method(HRESULT, "GetPickRecords", [LPDWORD,LPD3DPICKRECORD]),
     Method(HRESULT, "EnumTextureFormats", [LPD3DENUMTEXTUREFORMATSCALLBACK,LPVOID]),
     Method(HRESULT, "CreateMatrix", [LPD3DMATRIXHANDLE]),
-    Method(HRESULT, "SetMatrix", [D3DMATRIXHANDLE,Const(LPD3DMATRIX)]),
+    #Method(HRESULT, "SetMatrix", [D3DMATRIXHANDLE,Const(LPD3DMATRIX)]),
+    Method(HRESULT, "SetMatrix", [D3DMATRIXHANDLE,LPD3DMATRIX]),
     Method(HRESULT, "GetMatrix", [D3DMATRIXHANDLE,LPD3DMATRIX]),
     Method(HRESULT, "DeleteMatrix", [D3DMATRIXHANDLE]),
     Method(HRESULT, "BeginScene", []),
@@ -451,3 +456,58 @@ IDirect3DVertexBuffer7.methods += [
     Method(HRESULT, "Optimize", [LPDIRECT3DDEVICE7,DWORD]),
     Method(HRESULT, "ProcessVerticesStrided", [DWORD,DWORD,DWORD,LPD3DDRAWPRIMITIVESTRIDEDDATA,DWORD,LPDIRECT3DDEVICE7,DWORD]),
 ]
+
+interfaces = [
+    IDirectDraw,
+    IDirectDraw2,
+    IDirectDraw4,
+    IDirectDraw7,
+    IDirect3D,
+    IDirect3D2,
+    IDirect3D3,
+    IDirect3D7,
+]
+
+ddraw.add_interfaces(interfaces)
+
+
+class DDrawTracer(DllTracer):
+
+    def wrap_arg(self, function, arg):
+        if function.name == 'DirectDrawCreateEx' and arg.name == 'lplpDD':
+            print '    if (*lplpDD) {'
+            for iface in interfaces:
+                print '        if (iid == IID_%s) {' % iface.name
+                print '            *lplpDD = (LPVOID) new Wrap%s((%s *)*lplpDD);' % (iface.name, iface.name)
+                print '        }'
+            print '    }'
+        # Dump shaders as strings
+        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
+            print '    DumpShader(%s);' % (arg.name)
+            return
+
+        DllTracer.dump_arg_instance(self, function, arg)
+
+
+if __name__ == '__main__':
+    print '#define INITGUID'
+    print '#include <windows.h>'
+    print '#include <ddraw.h>'
+    print '#include <d3d.h>'
+    print
+    print '''
+
+#ifndef D3DLIGHT_PARALLELPOINT
+#define D3DLIGHT_PARALLELPOINT (D3DLIGHTTYPE)4
+#endif
+
+#ifndef D3DLIGHT_GLSPOT
+#define D3DLIGHT_GLSPOT (D3DLIGHTTYPE)5
+#endif
+
+'''
+    print '#include "trace_writer.hpp"'
+    print '#include "os.hpp"'
+    print
+    tracer = DDrawTracer('ddraw.dll')
+    tracer.trace_api(ddraw)

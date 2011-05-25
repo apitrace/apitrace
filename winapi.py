@@ -43,13 +43,13 @@ BYTE = Literal("BYTE", "UInt", base=16)
 WORD = Literal("WORD", "UInt", base=16)
 DWORD = Literal("DWORD", "UInt", base=16)
 
+
 BOOL = Alias("BOOL", Bool)
 
 LPLONG = Pointer(LONG)
 LPWORD = Pointer(WORD)
 LPDWORD = Pointer(DWORD)
 LPBOOL = Pointer(BOOL)
-LPSIZE = LPDWORD
 
 LPSTR = CString
 LPCSTR = Const(CString)
@@ -108,6 +108,12 @@ POINT = Struct("POINT", (
   (LONG, "y"),
 )) 
 LPPOINT = Pointer(POINT)
+
+SIZE = Struct("SIZE", (
+  (LONG, "cx"),
+  (LONG, "cy"),
+)) 
+LPSIZE = Pointer(SIZE)
 
 RECT = Struct("RECT", (
   (LONG, "left"),
