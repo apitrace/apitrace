@@ -28,6 +28,24 @@
 from winapi import *
 from trace import DllTracer
 
+DirectDrawOptSurfaceDescFlags = Flags(DWORD, [
+    "DDOSD_GUID",
+    "DDOSD_COMPRESSION_RATIO",
+    "DDOSD_SCAPS",
+    "DDOSD_OSCAPS",
+    "DDOSD_ALL",
+])
+
+DirectDrawOptSurfaceDescCapsFlags = Flags(DWORD, [
+    "DDOSDCAPS_OPTCOMPRESSED",
+    "DDOSDCAPS_OPTREORDERED",
+    "DDOSDCAPS_MONOLITHICMIPMAP",
+])
+
+DirectDrawGetDeviceIdentifierFlags = Flags(DWORD, [
+    "DDGDI_GETHOSTIDENTIFIER",
+])
+
 IDirectDraw = Interface("IDirectDraw", IUnknown)
 IDirectDraw2 = Interface("IDirectDraw2", IUnknown)
 IDirectDraw4 = Interface("IDirectDraw4", IUnknown)
@@ -510,8 +528,8 @@ DDDEVICEIDENTIFIER2 = Struct("DDDEVICEIDENTIFIER2", [
 ])
 LPDDDEVICEIDENTIFIER2 = Pointer(DDDEVICEIDENTIFIER2)
 
-LPCLIPPERCALLBACK = FunctionPointer("DWORD", "LPCLIPPERCALLBACK", [(LPDIRECTDRAWCLIPPER, "lpDDClipper"), (HWND, "hWnd"), (DWORD, "code"), (LPVOID, "lpContext")])
-LPSURFACESTREAMINGCALLBACK = FunctionPointer("DWORD", "LPSURFACESTREAMINGCALLBACK", [DWORD])
+LPCLIPPERCALLBACK = FunctionPointer(DWORD, "LPCLIPPERCALLBACK", [(LPDIRECTDRAWCLIPPER, "lpDDClipper"), (HWND, "hWnd"), (DWORD, "code"), (LPVOID, "lpContext")])
+LPSURFACESTREAMINGCALLBACK = FunctionPointer(DWORD, "LPSURFACESTREAMINGCALLBACK", [DWORD])
 
 DDSURFACEDESC = Struct("DDSURFACEDESC", [
     (DWORD, "dwSize"),
@@ -563,7 +581,7 @@ DDSURFACEDESC2 = Struct("DDSURFACEDESC2", [
 ])
 LPDDSURFACEDESC2 = Pointer(DDSURFACEDESC2)
 
-DDSD = Flags(DWORD, [
+DirectDrawSurfaceDescFlags = Flags(DWORD, [
     "DDSD_CAPS",
     "DDSD_HEIGHT",
     "DDSD_WIDTH",
@@ -626,7 +644,18 @@ DDCOLORCONTROL = Struct("DDCOLORCONTROL", [
 ])
 LPDDCOLORCONTROL = Pointer(DDCOLORCONTROL)
 
-DDCOLOR = Flags(DWORD, [
+DirectDrawEnumerateExFlags = Flags(DWORD, [
+    "DDENUM_ATTACHEDSECONDARYDEVICES",
+    "DDENUM_DETACHEDSECONDARYDEVICES",
+    "DDENUM_NONDISPLAYDEVICES",
+])
+
+DirectDrawCreateFlags = FakeEnum(DWORD, [
+    "DDCREATE_HARDWAREONLY",
+    "DDCREATE_EMULATIONONLY",
+])
+
+DirectDrawColorControlFlags = Flags(DWORD, [
     "DDCOLOR_BRIGHTNESS",
     "DDCOLOR_CONTRAST",
     "DDCOLOR_HUE",
@@ -636,7 +665,7 @@ DDCOLOR = Flags(DWORD, [
     "DDCOLOR_COLORENABLE",
 ])
 
-DDSCAPS = Flags(DWORD, [
+DirectDrawCapsFlags = Flags(DWORD, [
     "DDSCAPS_RESERVED1",
     "DDSCAPS_ALPHA",
     "DDSCAPS_BACKBUFFER",
@@ -669,7 +698,8 @@ DDSCAPS = Flags(DWORD, [
     "DDSCAPS_STANDARDVGAMODE",
     "DDSCAPS_OPTIMIZED",
 ])
-DDCAPS2 = Flags(DWORD, [
+
+DirectDrawCapabilityFlags2 = Flags(DWORD, [
     "DDSCAPS2_RESERVED4",
     "DDSCAPS2_HARDWAREDEINTERLACE",
     "DDSCAPS2_HINTDYNAMIC",
@@ -716,7 +746,7 @@ DDSCAPS3 = Flags(DWORD, [
     "DDSCAPS3_OPENSHAREDRESOURCE",
 ])
 
-DDCAPS = Flags(DWORD, [
+DirectDrawDriverCapsFlags = Flags(DWORD, [
     "DDCAPS_3D",
     "DDCAPS_ALIGNBOUNDARYDEST",
     "DDCAPS_ALIGNSIZEDEST",
@@ -751,7 +781,7 @@ DDCAPS = Flags(DWORD, [
     "DDCAPS_CANBLTSYSMEM",
 ])
 
-DDCAPS2 = Flags(DWORD, [
+DirectDrawDriverCapsFlags2 = Flags(DWORD, [
     "DDCAPS2_CERTIFIED",
     "DDCAPS2_NO2DDURING3DSCENE",
     "DDCAPS2_VIDEOPORT",
@@ -784,7 +814,7 @@ DDCAPS2 = Flags(DWORD, [
     "DDCAPS2_CANSHARERESOURCE",
 ])
 
-DDFXALPHACAPS = Flags(DWORD, [
+DirectDrawFxAlphaCapsFlags = Flags(DWORD, [
     "DDFXALPHACAPS_BLTALPHAEDGEBLEND",
     "DDFXALPHACAPS_BLTALPHAPIXELS",
     "DDFXALPHACAPS_BLTALPHAPIXELSNEG",
@@ -797,7 +827,7 @@ DDFXALPHACAPS = Flags(DWORD, [
     "DDFXALPHACAPS_OVERLAYALPHASURFACESNEG",
 ])
 
-DDFXCAPS = Flags(DWORD, [
+DirectDrawFxCapsFlags = Flags(DWORD, [
     "DDFXCAPS_BLTARITHSTRETCHY",
     "DDFXCAPS_BLTARITHSTRETCHYN",
     "DDFXCAPS_BLTMIRRORLEFTRIGHT",
@@ -831,7 +861,7 @@ DDFXCAPS = Flags(DWORD, [
     "DDFXCAPS_OVERLAYFILTER",
 ])
 
-DDSVCAPS = Flags(DWORD, [
+DirectDrawStereoViewCapsFlags = Flags(DWORD, [
     "DDSVCAPS_RESERVED1",
     "DDSVCAPS_RESERVED2",
     "DDSVCAPS_RESERVED3",
@@ -839,7 +869,7 @@ DDSVCAPS = Flags(DWORD, [
     "DDSVCAPS_STEREOSEQUENTIAL",
 ])
 
-DDPCAPS = Flags(DWORD, [
+DirectDrawPaletteCapsFlags = Flags(DWORD, [
     "DDPCAPS_4BIT",
     "DDPCAPS_8BITENTRIES",
     "DDPCAPS_8BIT",
@@ -853,12 +883,12 @@ DDPCAPS = Flags(DWORD, [
     "DDPCAPS_ALPHA",
 ])
 
-DDSPD = Flags(DWORD, [
+DirectDrawSurfaceSetPrivateDataConstants = FakeEnum(DWORD, [
     "DDSPD_IUNKNOWNPOINTER",
     "DDSPD_VOLATILE",
 ])
 
-DDBD = Flags(DWORD, [
+DirectDrawSurfaceSetPaletteConstants = FakeEnum(DWORD, [
     "DDBD_1",
     "DDBD_2",
     "DDBD_4",
@@ -868,7 +898,7 @@ DDBD = Flags(DWORD, [
     "DDBD_32",
 ])
 
-DDCKEY = Flags(DWORD, [
+DirectDrawSurfaceSetGetColorKeyFlags = Flags(DWORD, [
     "DDCKEY_COLORSPACE",
     "DDCKEY_DESTBLT",
     "DDCKEY_DESTOVERLAY",
@@ -876,7 +906,7 @@ DDCKEY = Flags(DWORD, [
     "DDCKEY_SRCOVERLAY",
 ])
 
-DDCKEYCAPS = Flags(DWORD, [
+DirectDrawColorKeyCapsFlags = Flags(DWORD, [
     "DDCKEYCAPS_DESTBLT",
     "DDCKEYCAPS_DESTBLTCLRSPACE",
     "DDCKEYCAPS_DESTBLTCLRSPACEYUV",
@@ -898,7 +928,7 @@ DDCKEYCAPS = Flags(DWORD, [
     "DDCKEYCAPS_NOCOSTOVERLAY",
 ])
 
-DDPF = Flags(DWORD, [
+DirectDrawPixelFormatFlags = Flags(DWORD, [
     "DDPF_ALPHAPIXELS",
     "DDPF_ALPHA",
     "DDPF_FOURCC",
@@ -920,7 +950,7 @@ DDPF = Flags(DWORD, [
     "DDPF_BUMPDUDV",
 ])
 
-DDENUMSURFACES = Flags(DWORD, [
+DirectDrawEnumSurfacesFlags = Flags(DWORD, [
     "DDENUMSURFACES_ALL",
     "DDENUMSURFACES_MATCH",
     "DDENUMSURFACES_NOMATCH",
@@ -928,16 +958,16 @@ DDENUMSURFACES = Flags(DWORD, [
     "DDENUMSURFACES_DOESEXIST",
 ])
 
-DDSDM = Flags(DWORD, [
+DirectDrawSetDisplayModeFlags = Flags(DWORD, [
     "DDSDM_STANDARDVGAMODE",
 ])
 
-DDEDM = Flags(DWORD, [
+DirectDrawEnumDisplayModesFlags = Flags(DWORD, [
     "DDEDM_REFRESHRATES",
     "DDEDM_STANDARDVGAMODES",
 ])
 
-DDSCL = Flags(DWORD, [
+DirectDrawSetCooperativeLevelFlags = Flags(DWORD, [
     "DDSCL_FULLSCREEN",
     "DDSCL_ALLOWREBOOT",
     "DDSCL_NOWINDOWCHANGES",
@@ -952,7 +982,7 @@ DDSCL = Flags(DWORD, [
     "DDSCL_FPUPRESERVE",
 ])
 
-DDBLT = Flags(DWORD, [
+DirectDrawBltFlags = Flags(DWORD, [
     "DDBLT_ALPHADEST",
     "DDBLT_ALPHADESTCONSTOVERRIDE",
     "DDBLT_ALPHADESTNEG",
@@ -986,7 +1016,7 @@ DDBLT = Flags(DWORD, [
     "DDBLT_EXTENDED_LINEAR_CONTENT",
 ])
 
-DDBLTFAST = Flags(DWORD, [
+DirectDrawBltFastFlags = Flags(DWORD, [
     "DDBLTFAST_NOCOLORKEY",
     "DDBLTFAST_SRCCOLORKEY",
     "DDBLTFAST_DESTCOLORKEY",
@@ -994,7 +1024,7 @@ DDBLTFAST = Flags(DWORD, [
     "DDBLTFAST_DONOTWAIT",
 ])
 
-DDFLIP = Flags(DWORD, [
+DirectDrawFlipFlags = Flags(DWORD, [
     "DDFLIP_WAIT",
     "DDFLIP_EVEN",
     "DDFLIP_ODD",
@@ -1006,7 +1036,7 @@ DDFLIP = Flags(DWORD, [
     "DDFLIP_DONOTWAIT",
 ])
 
-DDOVER = Flags(DWORD, [
+DirectDrawSurfaceOverlayFlags = Flags(DWORD, [
     "DDOVER_ALPHADEST",
     "DDOVER_ALPHADESTCONSTOVERRIDE",
     "DDOVER_ALPHADESTNEG",
@@ -1040,7 +1070,7 @@ DDSETSURFACEDESC = Flags(DWORD, [
     #"DDSETSURFACEDESC_PRESERVEDC",
 ])
 
-DDLOCK = Flags(DWORD, [
+DirectDrawSurfaceLockFlags = Flags(DWORD, [
     "DDLOCK_SURFACEMEMORYPTR",
     "DDLOCK_WAIT",
     "DDLOCK_EVENT",
@@ -1055,7 +1085,7 @@ DDLOCK = Flags(DWORD, [
     "DDLOCK_NODIRTYUPDATE",
 ])
 
-DDBLTFX = Flags(DWORD, [
+DirectDrawSurfaceBltFxFlags = Flags(DWORD, [
     "DDBLTFX_ARITHSTRETCHY",
     "DDBLTFX_MIRRORLEFTRIGHT",
     "DDBLTFX_MIRRORUPDOWN",
@@ -1067,35 +1097,35 @@ DDBLTFX = Flags(DWORD, [
     "DDBLTFX_ZBUFFERBASEDEST",
 ])
 
-DDOVERFX = Flags(DWORD, [
+DirectDrawOverlayFxFlags = Flags(DWORD, [
     "DDOVERFX_ARITHSTRETCHY",
     "DDOVERFX_MIRRORLEFTRIGHT",
     "DDOVERFX_MIRRORUPDOWN",
     "DDOVERFX_DEINTERLACE",
 ])
 
-DDWAITVB = Flags(DWORD, [
+DirectDrawWaitForVerticalBlankFlags = Flags(DWORD, [
     "DDWAITVB_BLOCKBEGIN",
     "DDWAITVB_BLOCKBEGINEVENT",
     "DDWAITVB_BLOCKEND",
 ])
 
-DDGFS = Flags(DWORD, [
+DirectDrawGetFlipStatusFlags = Flags(DWORD, [
     "DDGFS_CANFLIP",
     "DDGFS_ISFLIPDONE",
 ])
 
-DDGBS = Flags(DWORD, [
+DirectDrawGetBltStatusFlags = Flags(DWORD, [
     "DDGBS_CANBLT",
     "DDGBS_ISBLTDONE",
 ])
 
-DDENUMOVERLAYZ = Flags(DWORD, [
+DirectDrawEnumOverlayZOrderFlags = Flags(DWORD, [
     "DDENUMOVERLAYZ_BACKTOFRONT",
     "DDENUMOVERLAYZ_FRONTTOBACK",
 ])
 
-DDOVERZ = Flags(DWORD, [
+DirectDrawUpdateOverlayZOrderFlags = Flags(DWORD, [
     "DDOVERZ_SENDTOFRONT",
     "DDOVERZ_SENDTOBACK",
     "DDOVERZ_MOVEFORWARD",
@@ -1104,20 +1134,20 @@ DDOVERZ = Flags(DWORD, [
     "DDOVERZ_INSERTINBACKOF",
 ])
 
-DDSGR = Flags(DWORD, [
+DirectDrawSetGammaRampFlags = Flags(DWORD, [
     "DDSGR_CALIBRATE",
 ])
 
-DDSMT = Flags(DWORD, [
+DirectDrawStartModeTestFlags = Flags(DWORD, [
     "DDSMT_ISTESTREQUIRED",
 ])
 
-DDEM = Flags(DWORD, [
+DirectDrawEvaluateModeFlags = Flags(DWORD, [
     "DDEM_MODEPASSED",
     "DDEM_MODEFAILED",
 ])
 
-HRESULT = Enum("HRESULT", [
+DDRESULT = FakeEnum(HRESULT, [
     "DD_OK",
     "DD_FALSE",
     "DDERR_ALREADYINITIALIZED",
@@ -1248,344 +1278,344 @@ LPDDENUMSURFACESCALLBACK2 = FunctionPointer(HRESULT, "LPDDENUMSURFACESCALLBACK2"
 LPDDENUMSURFACESCALLBACK7 = FunctionPointer(HRESULT, "LPDDENUMSURFACESCALLBACK7", [LPDIRECTDRAWSURFACE7, LPDDSURFACEDESC2, LPVOID])
 
 IDirectDraw.methods += [
-    Method(HRESULT, "Compact", []),
-    Method(HRESULT, "CreateClipper", [DWORD, Pointer(LPDIRECTDRAWCLIPPER), Pointer(IUnknown)]),
-    Method(HRESULT, "CreatePalette", [DWORD, LPPALETTEENTRY, Pointer(LPDIRECTDRAWPALETTE) , Pointer(IUnknown)]),
-    Method(HRESULT, "CreateSurface", [LPDDSURFACEDESC, Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), Pointer(IUnknown)]),
-    Method(HRESULT, "DuplicateSurface", [LPDIRECTDRAWSURFACE, Pointer(LPDIRECTDRAWSURFACE)]),
-    Method(HRESULT, "EnumDisplayModes", [DWORD, LPDDSURFACEDESC, LPVOID, LPDDENUMMODESCALLBACK]),
-    Method(HRESULT, "EnumSurfaces", [DWORD, LPDDSURFACEDESC, LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "FlipToGDISurface", []),
-    Method(HRESULT, "GetCaps", [LPDDCAPS, LPDDCAPS]),
-    Method(HRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
-    Method(HRESULT, "GetFourCCCodes", [LPDWORD, LPDWORD]),
-    Method(HRESULT, "GetGDISurface", [Pointer(LPDIRECTDRAWSURFACE)]),
-    Method(HRESULT, "GetMonitorFrequency", [LPDWORD]),
-    Method(HRESULT, "GetScanLine", [LPDWORD]),
-    Method(HRESULT, "GetVerticalBlankStatus", [LPBOOL]),
-    Method(HRESULT, "Initialize", [Pointer(GUID)]),
-    Method(HRESULT, "RestoreDisplayMode", []),
-    Method(HRESULT, "SetCooperativeLevel", [HWND, DWORD]),
-    Method(HRESULT, "SetDisplayMode", [DWORD, DWORD,DWORD]),
-    Method(HRESULT, "WaitForVerticalBlank", [DWORD, HANDLE]),
+    Method(DDRESULT, "Compact", []),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDupDDSurface")]),
+    Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK, "lpEnumModesCallback")]),
+    Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "FlipToGDISurface", []),
+    Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
+    Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE), "lplpGDIDDSSurface")]),
+    Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
+    Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
+    Method(DDRESULT, "GetVerticalBlankStatus", [Out(LPBOOL, "lpbIsInVB")]),
+    Method(DDRESULT, "Initialize", [(Pointer(GUID), "lpGUID")]),
+    Method(DDRESULT, "RestoreDisplayMode", []),
+    Method(DDRESULT, "SetCooperativeLevel", [(HWND, "hWnd"), (DirectDrawSetCooperativeLevelFlags, "dwFlags")]),
+    Method(DDRESULT, "SetDisplayMode", [(DWORD, "dwWidth"), (DWORD, "dwHeight"), (DWORD, "dwBPP")]),
+    Method(DDRESULT, "WaitForVerticalBlank", [(DirectDrawWaitForVerticalBlankFlags, "dwFlags"), (HANDLE, "hEvent")]),
 ]
 
 IDirectDraw2.methods += [
-    Method(HRESULT, "Compact", []),
-    Method(HRESULT, "CreateClipper", [DWORD, Pointer(LPDIRECTDRAWCLIPPER) , Pointer(IUnknown)]),
-    Method(HRESULT, "CreatePalette", [DWORD, LPPALETTEENTRY, Pointer(LPDIRECTDRAWPALETTE) , Pointer(IUnknown)]),
-    Method(HRESULT, "CreateSurface", [LPDDSURFACEDESC, Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), Pointer(IUnknown)]),
-    Method(HRESULT, "DuplicateSurface", [LPDIRECTDRAWSURFACE, Pointer(LPDIRECTDRAWSURFACE)]),
-    Method(HRESULT, "EnumDisplayModes", [DWORD, LPDDSURFACEDESC, LPVOID, LPDDENUMMODESCALLBACK]),
-    Method(HRESULT, "EnumSurfaces", [DWORD, LPDDSURFACEDESC, LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "FlipToGDISurface", []),
-    Method(HRESULT, "GetCaps", [LPDDCAPS, LPDDCAPS]),
-    Method(HRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
-    Method(HRESULT, "GetFourCCCodes", [LPDWORD, LPDWORD]),
-    Method(HRESULT, "GetGDISurface", [Pointer(LPDIRECTDRAWSURFACE)]),
-    Method(HRESULT, "GetMonitorFrequency", [LPDWORD]),
-    Method(HRESULT, "GetScanLine", [LPDWORD]),
-    Method(HRESULT, "GetVerticalBlankStatus", [LPBOOL]),
-    Method(HRESULT, "Initialize", [Pointer(GUID)]),
-    Method(HRESULT, "RestoreDisplayMode", []),
-    Method(HRESULT, "SetCooperativeLevel", [HWND, DWORD]),
-    Method(HRESULT, "SetDisplayMode", [DWORD, DWORD,DWORD, DWORD, DWORD]),
-    Method(HRESULT, "WaitForVerticalBlank", [DWORD, HANDLE]),
-    Method(HRESULT, "GetAvailableVidMem", [LPDDSCAPS, LPDWORD, LPDWORD]),
+    Method(DDRESULT, "Compact", []),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDupDDSurface")]),
+    Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK, "lpEnumModesCallback")]),
+    Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "FlipToGDISurface", []),
+    Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
+    Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE), "lplpGDIDDSSurface")]),
+    Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
+    Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
+    Method(DDRESULT, "GetVerticalBlankStatus", [Out(LPBOOL, "lpbIsInVB")]),
+    Method(DDRESULT, "Initialize", [(Pointer(GUID), "lpGUID")]),
+    Method(DDRESULT, "RestoreDisplayMode", []),
+    Method(DDRESULT, "SetCooperativeLevel", [(HWND, "hWnd"), (DirectDrawSetCooperativeLevelFlags, "dwFlags")]),
+    Method(DDRESULT, "SetDisplayMode", [(DWORD, "dwWidth"), (DWORD, "dwHeight"), (DWORD, "dwBPP"), (DWORD, "dwRefreshRate"), (DirectDrawSetDisplayModeFlags, "dwFlags")]),
+    Method(DDRESULT, "WaitForVerticalBlank", [(DirectDrawWaitForVerticalBlankFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "GetAvailableVidMem", [(LPDDSCAPS, "lpDDSCaps"), Out(LPDWORD, "lpdwTotal"), Out(LPDWORD, "lpdwFree")]),
 ]
 
 IDirectDraw4.methods += [
-    Method(HRESULT, "Compact", []),
-    Method(HRESULT, "CreateClipper", [DWORD, Pointer(LPDIRECTDRAWCLIPPER) , Pointer(IUnknown)]),
-    Method(HRESULT, "CreatePalette", [DWORD, LPPALETTEENTRY, Pointer(LPDIRECTDRAWPALETTE) , Pointer(IUnknown)]),
-    Method(HRESULT, "CreateSurface", [LPDDSURFACEDESC2, Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDDSurface"), Pointer(IUnknown)]),
-    Method(HRESULT, "DuplicateSurface", [LPDIRECTDRAWSURFACE4, Pointer(LPDIRECTDRAWSURFACE4)]),
-    Method(HRESULT, "EnumDisplayModes", [DWORD, LPDDSURFACEDESC2, LPVOID, LPDDENUMMODESCALLBACK2]),
-    Method(HRESULT, "EnumSurfaces", [DWORD, LPDDSURFACEDESC2, LPVOID,LPDDENUMSURFACESCALLBACK2]),
-    Method(HRESULT, "FlipToGDISurface", []),
-    Method(HRESULT, "GetCaps", [LPDDCAPS, LPDDCAPS]),
-    Method(HRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
-    Method(HRESULT, "GetFourCCCodes", [LPDWORD, LPDWORD]),
-    Method(HRESULT, "GetGDISurface", [Pointer(LPDIRECTDRAWSURFACE4)]),
-    Method(HRESULT, "GetMonitorFrequency", [LPDWORD]),
-    Method(HRESULT, "GetScanLine", [LPDWORD]),
-    Method(HRESULT, "GetVerticalBlankStatus", [LPBOOL]),
-    Method(HRESULT, "Initialize", [Pointer(GUID)]),
-    Method(HRESULT, "RestoreDisplayMode", []),
-    Method(HRESULT, "SetCooperativeLevel", [HWND, DWORD]),
-    Method(HRESULT, "SetDisplayMode", [DWORD, DWORD,DWORD, DWORD, DWORD]),
-    Method(HRESULT, "WaitForVerticalBlank", [DWORD, HANDLE]),
-    Method(HRESULT, "GetAvailableVidMem", [LPDDSCAPS2, LPDWORD, LPDWORD]),
-    Method(HRESULT, "GetSurfaceFromDC", [HDC, Pointer(LPDIRECTDRAWSURFACE4)]),
-    Method(HRESULT, "RestoreAllSurfaces", []),
-    Method(HRESULT, "TestCooperativeLevel", []),
-    Method(HRESULT, "GetDeviceIdentifier", [Out(LPDDDEVICEIDENTIFIER, "lpDDDeviceIdentifier"), DWORD]),
+    Method(DDRESULT, "Compact", []),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE4, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDupDDSurface")]),
+    Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK2, "lpEnumModesCallback")]),
+    Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK2, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "FlipToGDISurface", []),
+    Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
+    Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpGDIDDSSurface")]),
+    Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
+    Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
+    Method(DDRESULT, "GetVerticalBlankStatus", [Out(LPBOOL, "lpbIsInVB")]),
+    Method(DDRESULT, "Initialize", [(Pointer(GUID), "lpGUID")]),
+    Method(DDRESULT, "RestoreDisplayMode", []),
+    Method(DDRESULT, "SetCooperativeLevel", [(HWND, "hWnd"), (DirectDrawSetCooperativeLevelFlags, "dwFlags")]),
+    Method(DDRESULT, "SetDisplayMode", [(DWORD, "dwWidth"), (DWORD, "dwHeight"), (DWORD, "dwBPP"), (DWORD, "dwRefreshRate"), (DirectDrawSetDisplayModeFlags, "dwFlags")]),
+    Method(DDRESULT, "WaitForVerticalBlank", [(DirectDrawWaitForVerticalBlankFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "GetAvailableVidMem", [(LPDDSCAPS2, "lpDDSCaps"), Out(LPDWORD, "lpdwTotal"), Out(LPDWORD, "lpdwFree")]),
+    Method(DDRESULT, "GetSurfaceFromDC", [(HDC, "hdc"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lpDDSurface")]),
+    Method(DDRESULT, "RestoreAllSurfaces", []),
+    Method(DDRESULT, "TestCooperativeLevel", []),
+    Method(DDRESULT, "GetDeviceIdentifier", [(LPDDDEVICEIDENTIFIER, "lpDDDI"), (DirectDrawGetDeviceIdentifierFlags, "dwFlags")]),
 ]
 
 IDirectDraw7.methods += [
-    Method(HRESULT, "Compact", []),
-    Method(HRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(HRESULT, "CreatePalette", [DWORD, LPPALETTEENTRY, Pointer(LPDIRECTDRAWPALETTE) , Pointer(IUnknown)]),
-    Method(HRESULT, "CreateSurface", [LPDDSURFACEDESC2, Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpDDSurface") , Pointer(IUnknown)]),
-    Method(HRESULT, "DuplicateSurface", [LPDIRECTDRAWSURFACE7, Pointer(LPDIRECTDRAWSURFACE7)]),
-    Method(HRESULT, "EnumDisplayModes", [DWORD, LPDDSURFACEDESC2, LPVOID, LPDDENUMMODESCALLBACK2]),
-    Method(HRESULT, "EnumSurfaces", [DWORD, LPDDSURFACEDESC2, LPVOID,LPDDENUMSURFACESCALLBACK7]),
-    Method(HRESULT, "FlipToGDISurface", []),
-    Method(HRESULT, "GetCaps", [LPDDCAPS, LPDDCAPS]),
-    Method(HRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
-    Method(HRESULT, "GetFourCCCodes", [LPDWORD, LPDWORD]),
-    Method(HRESULT, "GetGDISurface", [Pointer(LPDIRECTDRAWSURFACE7)]),
-    Method(HRESULT, "GetMonitorFrequency", [LPDWORD]),
-    Method(HRESULT, "GetScanLine", [LPDWORD]),
-    Method(HRESULT, "GetVerticalBlankStatus", [LPBOOL]),
-    Method(HRESULT, "Initialize", [Pointer(GUID)]),
-    Method(HRESULT, "RestoreDisplayMode", []),
-    Method(HRESULT, "SetCooperativeLevel", [HWND, DWORD]),
-    Method(HRESULT, "SetDisplayMode", [DWORD, DWORD,DWORD, DWORD, DWORD]),
-    Method(HRESULT, "WaitForVerticalBlank", [DWORD, HANDLE]),
-    Method(HRESULT, "GetAvailableVidMem", [LPDDSCAPS2, LPDWORD, LPDWORD]),
-    Method(HRESULT, "GetSurfaceFromDC", [HDC, Pointer(LPDIRECTDRAWSURFACE7)]),
-    Method(HRESULT, "RestoreAllSurfaces", []),
-    Method(HRESULT, "TestCooperativeLevel", []),
-    Method(HRESULT, "GetDeviceIdentifier", [Out(LPDDDEVICEIDENTIFIER2, "lpDDDeviceIdentifier"), DWORD]),
-    Method(HRESULT, "StartModeTest", [LPSIZE, DWORD, DWORD]),
-    Method(HRESULT, "EvaluateMode", [DWORD, Pointer(DWORD)]),
+    Method(DDRESULT, "Compact", []),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE7, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpDupDDSurface")]),
+    Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK2, "lpEnumModesCallback")]),
+    Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK7, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "FlipToGDISurface", []),
+    Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
+    Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpGDIDDSSurface")]),
+    Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
+    Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
+    Method(DDRESULT, "GetVerticalBlankStatus", [Out(LPBOOL, "lpbIsInVB")]),
+    Method(DDRESULT, "Initialize", [(Pointer(GUID), "lpGUID")]),
+    Method(DDRESULT, "RestoreDisplayMode", []),
+    Method(DDRESULT, "SetCooperativeLevel", [(HWND, "hWnd"), (DirectDrawSetCooperativeLevelFlags, "dwFlags")]),
+    Method(DDRESULT, "SetDisplayMode", [(DWORD, "dwWidth"), (DWORD, "dwHeight"), (DWORD, "dwBPP"), (DWORD, "dwRefreshRate"), (DirectDrawSetDisplayModeFlags, "dwFlags")]),
+    Method(DDRESULT, "WaitForVerticalBlank", [(DirectDrawWaitForVerticalBlankFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "GetAvailableVidMem", [(LPDDSCAPS2, "lpDDSCaps"), Out(LPDWORD, "lpdwTotal"), Out(LPDWORD, "lpdwFree")]),
+    Method(DDRESULT, "GetSurfaceFromDC", [(HDC, "hdc"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lpDDSurface")]),
+    Method(DDRESULT, "RestoreAllSurfaces", []),
+    Method(DDRESULT, "TestCooperativeLevel", []),
+    Method(DDRESULT, "GetDeviceIdentifier", [(LPDDDEVICEIDENTIFIER2, "lpDDDI"), (DirectDrawGetDeviceIdentifierFlags, "dwFlags")]),
+    Method(DDRESULT, "StartModeTest", [(LPSIZE, "lpModesToTest"), (DWORD, "dwNumEntries"), (DirectDrawStartModeTestFlags, "dwFlags")]),
+    Method(DDRESULT, "EvaluateMode", [(DirectDrawEvaluateModeFlags, "dwFlags"), Out(Pointer(DWORD), "pSecondsUntilTimeout")]),
 ]
 
 IDirectDrawPalette.methods += [
-    Method(HRESULT, "GetCaps", [LPDWORD]),
-    Method(HRESULT, "GetEntries", [DWORD,DWORD,DWORD,LPPALETTEENTRY]),
-    Method(HRESULT, "Initialize", [LPDIRECTDRAW, DWORD, LPPALETTEENTRY]),
-    Method(HRESULT, "SetEntries", [DWORD,DWORD,DWORD,LPPALETTEENTRY]),
+    Method(DDRESULT, "GetCaps", [Out(Pointer(DirectDrawPaletteCapsFlags), "lpdwCaps")]),
+    Method(DDRESULT, "GetEntries", [(DWORD, "dwFlags"), (DWORD, "dwBase"), (DWORD, "dwNumEntries"), (LPPALETTEENTRY, "lpEntries")]),
+    Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (DWORD, "dwFlags"), (LPPALETTEENTRY, "lpDDColorTable")]),
+    Method(DDRESULT, "SetEntries", [(DWORD, "dwFlags"), (DWORD, "dwStartingEntry"), (DWORD, "dwCount"), (LPPALETTEENTRY, "lpEntries")]),
 ]
 
 IDirectDrawClipper.methods += [
-    Method(HRESULT, "GetClipList", [LPRECT, LPRGNDATA, LPDWORD]),
-    Method(HRESULT, "GetHWnd", [Pointer(HWND)]),
-    Method(HRESULT, "Initialize", [LPDIRECTDRAW, DWORD]),
-    Method(HRESULT, "IsClipListChanged", [Pointer(BOOL)]),
-    Method(HRESULT, "SetClipList", [LPRGNDATA,DWORD]),
-    Method(HRESULT, "SetHWnd", [DWORD, HWND]),
+    Method(DDRESULT, "GetClipList", [(LPRECT, "lpRect"), (LPRGNDATA, "lpClipList"), Out(LPDWORD, "lpdwSize")]),
+    Method(DDRESULT, "GetHWnd", [Out(Pointer(HWND), "hWnd")]),
+    Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "IsClipListChanged", [Out(Pointer(BOOL), "lpbChanged")]),
+    Method(DDRESULT, "SetClipList", [(LPRGNDATA, "lpClipList"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "SetHWnd", [(DWORD, "dwFlags"), (HWND, "hWnd")]),
 ]
 
 
 IDirectDrawSurface.methods += [
-    Method(HRESULT, "AddAttachedSurface", [LPDIRECTDRAWSURFACE]),
-    Method(HRESULT, "AddOverlayDirtyRect", [LPRECT]),
-    Method(HRESULT, "Blt", [LPRECT,LPDIRECTDRAWSURFACE, LPRECT,DWORD, LPDDBLTFX]),
-    Method(HRESULT, "BltBatch", [LPDDBLTBATCH, DWORD, DWORD]),
-    Method(HRESULT, "BltFast", [DWORD,DWORD,LPDIRECTDRAWSURFACE, LPRECT,DWORD]),
-    Method(HRESULT, "DeleteAttachedSurface", [DWORD,LPDIRECTDRAWSURFACE]),
-    Method(HRESULT, "EnumAttachedSurfaces", [LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "EnumOverlayZOrders", [DWORD,LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "Flip", [LPDIRECTDRAWSURFACE, DWORD]),
-    Method(HRESULT, "GetAttachedSurface", [LPDDSCAPS, Pointer(LPDIRECTDRAWSURFACE)]),
-    Method(HRESULT, "GetBltStatus", [DWORD]),
-    Method(HRESULT, "GetCaps", [LPDDSCAPS]),
-    Method(HRESULT, "GetClipper", [Pointer(LPDIRECTDRAWCLIPPER)]),
-    Method(HRESULT, "GetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "GetDC", [Pointer(HDC)]),
-    Method(HRESULT, "GetFlipStatus", [DWORD]),
-    Method(HRESULT, "GetOverlayPosition", [LPLONG, LPLONG]),
-    Method(HRESULT, "GetPalette", [Pointer(LPDIRECTDRAWPALETTE)]),
-    Method(HRESULT, "GetPixelFormat", [LPDDPIXELFORMAT]),
-    Method(HRESULT, "GetSurfaceDesc", [LPDDSURFACEDESC]),
-    Method(HRESULT, "Initialize", [LPDIRECTDRAW, LPDDSURFACEDESC]),
-    Method(HRESULT, "IsLost", []),
-    Method(HRESULT, "Lock", [LPRECT,LPDDSURFACEDESC,DWORD,HANDLE]),
-    Method(HRESULT, "ReleaseDC", [HDC]),
-    Method(HRESULT, "Restore", []),
-    Method(HRESULT, "SetClipper", [LPDIRECTDRAWCLIPPER]),
-    Method(HRESULT, "SetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "SetOverlayPosition", [LONG, LONG]),
-    Method(HRESULT, "SetPalette", [LPDIRECTDRAWPALETTE]),
-    Method(HRESULT, "Unlock", [LPVOID]),
-    Method(HRESULT, "UpdateOverlay", [LPRECT, LPDIRECTDRAWSURFACE,LPRECT,DWORD, LPDDOVERLAYFX]),
-    Method(HRESULT, "UpdateOverlayDisplay", [DWORD]),
-    Method(HRESULT, "UpdateOverlayZOrder", [DWORD, LPDIRECTDRAWSURFACE]),
+    Method(DDRESULT, "AddAttachedSurface", [(LPDIRECTDRAWSURFACE, "lpDDSAttachedSurface")]),
+    Method(DDRESULT, "AddOverlayDirtyRect", [(LPRECT, "lpRect")]),
+    Method(DDRESULT, "Blt", [(LPRECT, "lpDestRect"), (LPDIRECTDRAWSURFACE, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DirectDrawBltFlags, "dwFlags"), (LPDDBLTFX, "lpDDBltFx")]),
+    Method(DDRESULT, "BltBatch", [(LPDDBLTBATCH, "lpDDBltBatch"), (DWORD, "dwCount"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "BltFast", [(DWORD, "dwX"), (DWORD, "dwY"), (LPDIRECTDRAWSURFACE, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DWORD, "dwTrans")]),
+    Method(DDRESULT, "DeleteAttachedSurface", [(DWORD, "dwFlags"), (LPDIRECTDRAWSURFACE, "lpDDSurface")]),
+    Method(DDRESULT, "EnumAttachedSurfaces", [(LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "EnumOverlayZOrders", [(DirectDrawEnumOverlayZOrderFlags, "dwFlags"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpfnCallback")]),
+    Method(DDRESULT, "Flip", [(LPDIRECTDRAWSURFACE, "lpDDSurfaceTargetOverride"), (DirectDrawFlipFlags, "dwFlags")]),
+    Method(DDRESULT, "GetAttachedSurface", [(LPDDSCAPS, "lpDDSCaps"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDAttachedSurface")]),
+    Method(DDRESULT, "GetBltStatus", [(DirectDrawGetBltStatusFlags, "dwFlags")]),
+    Method(DDRESULT, "GetCaps", [Out(LPDDSCAPS, "lpDDSCaps")]),
+    Method(DDRESULT, "GetClipper", [Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper")]),
+    Method(DDRESULT, "GetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "GetDC", [Out(Pointer(HDC), "phDC")]),
+    Method(DDRESULT, "GetFlipStatus", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "GetOverlayPosition", [Out(LPLONG, "lplX"), Out(LPLONG, "lplY")]),
+    Method(DDRESULT, "GetPalette", [Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette")]),
+    Method(DDRESULT, "GetPixelFormat", [Out(LPDDPIXELFORMAT, "lpDDPixelFormat")]),
+    Method(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "IsLost", []),
+    Method(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
+    Method(DDRESULT, "Restore", []),
+    Method(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
+    Method(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
+    Method(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
+    Method(DDRESULT, "Unlock", [(LPVOID, "lp")]),
+    Method(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
+    Method(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE, "lpDDSReference")]),
 ]
 
 IDirectDrawSurface2.methods += [
-    Method(HRESULT, "AddAttachedSurface", [LPDIRECTDRAWSURFACE2]),
-    Method(HRESULT, "AddOverlayDirtyRect", [LPRECT]),
-    Method(HRESULT, "Blt", [LPRECT,LPDIRECTDRAWSURFACE2, LPRECT,DWORD, LPDDBLTFX]),
-    Method(HRESULT, "BltBatch", [LPDDBLTBATCH, DWORD, DWORD]),
-    Method(HRESULT, "BltFast", [DWORD,DWORD,LPDIRECTDRAWSURFACE2, LPRECT,DWORD]),
-    Method(HRESULT, "DeleteAttachedSurface", [DWORD,LPDIRECTDRAWSURFACE2]),
-    Method(HRESULT, "EnumAttachedSurfaces", [LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "EnumOverlayZOrders", [DWORD,LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "Flip", [LPDIRECTDRAWSURFACE2, DWORD]),
-    Method(HRESULT, "GetAttachedSurface", [LPDDSCAPS, Pointer(LPDIRECTDRAWSURFACE2)]),
-    Method(HRESULT, "GetBltStatus", [DWORD]),
-    Method(HRESULT, "GetCaps", [LPDDSCAPS]),
-    Method(HRESULT, "GetClipper", [Pointer(LPDIRECTDRAWCLIPPER)]),
-    Method(HRESULT, "GetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "GetDC", [Pointer(HDC)]),
-    Method(HRESULT, "GetFlipStatus", [DWORD]),
-    Method(HRESULT, "GetOverlayPosition", [LPLONG, LPLONG]),
-    Method(HRESULT, "GetPalette", [Pointer(LPDIRECTDRAWPALETTE)]),
-    Method(HRESULT, "GetPixelFormat", [LPDDPIXELFORMAT]),
-    Method(HRESULT, "GetSurfaceDesc", [LPDDSURFACEDESC]),
-    Method(HRESULT, "Initialize", [LPDIRECTDRAW, LPDDSURFACEDESC]),
-    Method(HRESULT, "IsLost", []),
-    Method(HRESULT, "Lock", [LPRECT,LPDDSURFACEDESC,DWORD,HANDLE]),
-    Method(HRESULT, "ReleaseDC", [HDC]),
-    Method(HRESULT, "Restore", []),
-    Method(HRESULT, "SetClipper", [LPDIRECTDRAWCLIPPER]),
-    Method(HRESULT, "SetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "SetOverlayPosition", [LONG, LONG]),
-    Method(HRESULT, "SetPalette", [LPDIRECTDRAWPALETTE]),
-    Method(HRESULT, "Unlock", [LPVOID]),
-    Method(HRESULT, "UpdateOverlay", [LPRECT, LPDIRECTDRAWSURFACE2,LPRECT,DWORD, LPDDOVERLAYFX]),
-    Method(HRESULT, "UpdateOverlayDisplay", [DWORD]),
-    Method(HRESULT, "UpdateOverlayZOrder", [DWORD, LPDIRECTDRAWSURFACE2]),
-    Method(HRESULT, "GetDDInterface", [Pointer(LPVOID)]),
-    Method(HRESULT, "PageLock", [DWORD]),
-    Method(HRESULT, "PageUnlock", [DWORD]),
+    Method(DDRESULT, "AddAttachedSurface", [(LPDIRECTDRAWSURFACE2, "lpDDSAttachedSurface")]),
+    Method(DDRESULT, "AddOverlayDirtyRect", [(LPRECT, "lpRect")]),
+    Method(DDRESULT, "Blt", [(LPRECT, "lpDestRect"), (LPDIRECTDRAWSURFACE2, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DirectDrawBltFlags, "dwFlags"), (LPDDBLTFX, "lpDDBltFx")]),
+    Method(DDRESULT, "BltBatch", [(LPDDBLTBATCH, "lpDDBltBatch"), (DWORD, "dwCount"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "BltFast", [(DWORD, "dwX"), (DWORD, "dwY"), (LPDIRECTDRAWSURFACE2, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DWORD, "dwTrans")]),
+    Method(DDRESULT, "DeleteAttachedSurface", [(DWORD, "dwFlags"), (LPDIRECTDRAWSURFACE2, "lpDDSurface")]),
+    Method(DDRESULT, "EnumAttachedSurfaces", [(LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "EnumOverlayZOrders", [(DirectDrawEnumOverlayZOrderFlags, "dwFlags"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpfnCallback")]),
+    Method(DDRESULT, "Flip", [(LPDIRECTDRAWSURFACE2, "lpDDSurfaceTargetOverride"), (DirectDrawFlipFlags, "dwFlags")]),
+    Method(DDRESULT, "GetAttachedSurface", [(LPDDSCAPS, "lpDDSCaps"), Out(Pointer(LPDIRECTDRAWSURFACE2), "lplpDDAttachedSurface")]),
+    Method(DDRESULT, "GetBltStatus", [(DirectDrawGetBltStatusFlags, "dwFlags")]),
+    Method(DDRESULT, "GetCaps", [Out(LPDDSCAPS, "lpDDSCaps")]),
+    Method(DDRESULT, "GetClipper", [Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper")]),
+    Method(DDRESULT, "GetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "GetDC", [Out(Pointer(HDC), "phDC")]),
+    Method(DDRESULT, "GetFlipStatus", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "GetOverlayPosition", [Out(LPLONG, "lplX"), Out(LPLONG, "lplY")]),
+    Method(DDRESULT, "GetPalette", [Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette")]),
+    Method(DDRESULT, "GetPixelFormat", [Out(LPDDPIXELFORMAT, "lpDDPixelFormat")]),
+    Method(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "IsLost", []),
+    Method(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
+    Method(DDRESULT, "Restore", []),
+    Method(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
+    Method(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
+    Method(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
+    Method(DDRESULT, "Unlock", [(LPVOID, "lp")]),
+    Method(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE2, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
+    Method(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE2, "lpDDSReference")]),
+    Method(DDRESULT, "GetDDInterface", [Out(Pointer(IUnknown), "lplpDD")]),
+    Method(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
 ]
 
 IDirectDrawSurface3.methods += [
-    Method(HRESULT, "AddAttachedSurface", [LPDIRECTDRAWSURFACE3]),
-    Method(HRESULT, "AddOverlayDirtyRect", [LPRECT]),
-    Method(HRESULT, "Blt", [LPRECT,LPDIRECTDRAWSURFACE3, LPRECT,DWORD, LPDDBLTFX]),
-    Method(HRESULT, "BltBatch", [LPDDBLTBATCH, DWORD, DWORD]),
-    Method(HRESULT, "BltFast", [DWORD,DWORD,LPDIRECTDRAWSURFACE3, LPRECT,DWORD]),
-    Method(HRESULT, "DeleteAttachedSurface", [DWORD,LPDIRECTDRAWSURFACE3]),
-    Method(HRESULT, "EnumAttachedSurfaces", [LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "EnumOverlayZOrders", [DWORD,LPVOID,LPDDENUMSURFACESCALLBACK]),
-    Method(HRESULT, "Flip", [LPDIRECTDRAWSURFACE3, DWORD]),
-    Method(HRESULT, "GetAttachedSurface", [LPDDSCAPS, Pointer(LPDIRECTDRAWSURFACE3)]),
-    Method(HRESULT, "GetBltStatus", [DWORD]),
-    Method(HRESULT, "GetCaps", [LPDDSCAPS]),
-    Method(HRESULT, "GetClipper", [Pointer(LPDIRECTDRAWCLIPPER)]),
-    Method(HRESULT, "GetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "GetDC", [Pointer(HDC)]),
-    Method(HRESULT, "GetFlipStatus", [DWORD]),
-    Method(HRESULT, "GetOverlayPosition", [LPLONG, LPLONG]),
-    Method(HRESULT, "GetPalette", [Pointer(LPDIRECTDRAWPALETTE)]),
-    Method(HRESULT, "GetPixelFormat", [LPDDPIXELFORMAT]),
-    Method(HRESULT, "GetSurfaceDesc", [LPDDSURFACEDESC]),
-    Method(HRESULT, "Initialize", [LPDIRECTDRAW, LPDDSURFACEDESC]),
-    Method(HRESULT, "IsLost", []),
-    Method(HRESULT, "Lock", [LPRECT,LPDDSURFACEDESC,DWORD,HANDLE]),
-    Method(HRESULT, "ReleaseDC", [HDC]),
-    Method(HRESULT, "Restore", []),
-    Method(HRESULT, "SetClipper", [LPDIRECTDRAWCLIPPER]),
-    Method(HRESULT, "SetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "SetOverlayPosition", [LONG, LONG]),
-    Method(HRESULT, "SetPalette", [LPDIRECTDRAWPALETTE]),
-    Method(HRESULT, "Unlock", [LPVOID]),
-    Method(HRESULT, "UpdateOverlay", [LPRECT, LPDIRECTDRAWSURFACE3,LPRECT,DWORD, LPDDOVERLAYFX]),
-    Method(HRESULT, "UpdateOverlayDisplay", [DWORD]),
-    Method(HRESULT, "UpdateOverlayZOrder", [DWORD, LPDIRECTDRAWSURFACE3]),
-    Method(HRESULT, "GetDDInterface", [Pointer(LPVOID)]),
-    Method(HRESULT, "PageLock", [DWORD]),
-    Method(HRESULT, "PageUnlock", [DWORD]),
-    Method(HRESULT, "SetSurfaceDesc", [LPDDSURFACEDESC, DWORD]),
+    Method(DDRESULT, "AddAttachedSurface", [(LPDIRECTDRAWSURFACE3, "lpDDSAttachedSurface")]),
+    Method(DDRESULT, "AddOverlayDirtyRect", [(LPRECT, "lpRect")]),
+    Method(DDRESULT, "Blt", [(LPRECT, "lpDestRect"), (LPDIRECTDRAWSURFACE3, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DirectDrawBltFlags, "dwFlags"), (LPDDBLTFX, "lpDDBltFx")]),
+    Method(DDRESULT, "BltBatch", [(LPDDBLTBATCH, "lpDDBltBatch"), (DWORD, "dwCount"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "BltFast", [(DWORD, "dwX"), (DWORD, "dwY"), (LPDIRECTDRAWSURFACE3, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DWORD, "dwTrans")]),
+    Method(DDRESULT, "DeleteAttachedSurface", [(DWORD, "dwFlags"), (LPDIRECTDRAWSURFACE3, "lpDDSurface")]),
+    Method(DDRESULT, "EnumAttachedSurfaces", [(LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "EnumOverlayZOrders", [(DirectDrawEnumOverlayZOrderFlags, "dwFlags"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpfnCallback")]),
+    Method(DDRESULT, "Flip", [(LPDIRECTDRAWSURFACE3, "lpDDSurfaceTargetOverride"), (DirectDrawFlipFlags, "dwFlags")]),
+    Method(DDRESULT, "GetAttachedSurface", [(LPDDSCAPS, "lpDDSCaps"), Out(Pointer(LPDIRECTDRAWSURFACE3), "lplpDDAttachedSurface")]),
+    Method(DDRESULT, "GetBltStatus", [(DirectDrawGetBltStatusFlags, "dwFlags")]),
+    Method(DDRESULT, "GetCaps", [Out(LPDDSCAPS, "lpDDSCaps")]),
+    Method(DDRESULT, "GetClipper", [Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper")]),
+    Method(DDRESULT, "GetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "GetDC", [Out(Pointer(HDC), "phDC")]),
+    Method(DDRESULT, "GetFlipStatus", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "GetOverlayPosition", [Out(LPLONG, "lplX"), Out(LPLONG, "lplY")]),
+    Method(DDRESULT, "GetPalette", [Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette")]),
+    Method(DDRESULT, "GetPixelFormat", [Out(LPDDPIXELFORMAT, "lpDDPixelFormat")]),
+    Method(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "IsLost", []),
+    Method(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
+    Method(DDRESULT, "Restore", []),
+    Method(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
+    Method(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
+    Method(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
+    Method(DDRESULT, "Unlock", [(LPVOID, "lp")]),
+    Method(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE3, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
+    Method(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE3, "lpDDSReference")]),
+    Method(DDRESULT, "GetDDInterface", [Out(Pointer(IUnknown), "lplpDD")]),
+    Method(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "SetSurfaceDesc", [(LPDDSURFACEDESC, "lpDDSD"), (DWORD, "dwFlags")]),
 ]
 
 IDirectDrawSurface4.methods += [
-    Method(HRESULT, "AddAttachedSurface", [LPDIRECTDRAWSURFACE4]),
-    Method(HRESULT, "AddOverlayDirtyRect", [LPRECT]),
-    Method(HRESULT, "Blt", [LPRECT,LPDIRECTDRAWSURFACE4, LPRECT,DWORD, LPDDBLTFX]),
-    Method(HRESULT, "BltBatch", [LPDDBLTBATCH, DWORD, DWORD]),
-    Method(HRESULT, "BltFast", [DWORD,DWORD,LPDIRECTDRAWSURFACE4, LPRECT,DWORD]),
-    Method(HRESULT, "DeleteAttachedSurface", [DWORD,LPDIRECTDRAWSURFACE4]),
-    Method(HRESULT, "EnumAttachedSurfaces", [LPVOID,LPDDENUMSURFACESCALLBACK2]),
-    Method(HRESULT, "EnumOverlayZOrders", [DWORD,LPVOID,LPDDENUMSURFACESCALLBACK2]),
-    Method(HRESULT, "Flip", [LPDIRECTDRAWSURFACE4, DWORD]),
-    Method(HRESULT, "GetAttachedSurface", [LPDDSCAPS2, Pointer(LPDIRECTDRAWSURFACE4)]),
-    Method(HRESULT, "GetBltStatus", [DWORD]),
-    Method(HRESULT, "GetCaps", [LPDDSCAPS2]),
-    Method(HRESULT, "GetClipper", [Pointer(LPDIRECTDRAWCLIPPER)]),
-    Method(HRESULT, "GetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "GetDC", [Pointer(HDC)]),
-    Method(HRESULT, "GetFlipStatus", [DWORD]),
-    Method(HRESULT, "GetOverlayPosition", [LPLONG, LPLONG]),
-    Method(HRESULT, "GetPalette", [Pointer(LPDIRECTDRAWPALETTE)]),
-    Method(HRESULT, "GetPixelFormat", [LPDDPIXELFORMAT]),
-    Method(HRESULT, "GetSurfaceDesc", [LPDDSURFACEDESC2]),
-    Method(HRESULT, "Initialize", [LPDIRECTDRAW, LPDDSURFACEDESC2]),
-    Method(HRESULT, "IsLost", []),
-    Method(HRESULT, "Lock", [LPRECT,LPDDSURFACEDESC2,DWORD,HANDLE]),
-    Method(HRESULT, "ReleaseDC", [HDC]),
-    Method(HRESULT, "Restore", []),
-    Method(HRESULT, "SetClipper", [LPDIRECTDRAWCLIPPER]),
-    Method(HRESULT, "SetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "SetOverlayPosition", [LONG, LONG]),
-    Method(HRESULT, "SetPalette", [LPDIRECTDRAWPALETTE]),
-    Method(HRESULT, "Unlock", [LPRECT]),
-    Method(HRESULT, "UpdateOverlay", [LPRECT, LPDIRECTDRAWSURFACE4,LPRECT,DWORD, LPDDOVERLAYFX]),
-    Method(HRESULT, "UpdateOverlayDisplay", [DWORD]),
-    Method(HRESULT, "UpdateOverlayZOrder", [DWORD, LPDIRECTDRAWSURFACE4]),
-    Method(HRESULT, "GetDDInterface", [Pointer(LPVOID)]),
-    Method(HRESULT, "PageLock", [DWORD]),
-    Method(HRESULT, "PageUnlock", [DWORD]),
-    Method(HRESULT, "SetSurfaceDesc", [LPDDSURFACEDESC2, DWORD]),
-    Method(HRESULT, "SetPrivateData", [REFGUID, LPVOID, DWORD, DWORD]),
-    Method(HRESULT, "GetPrivateData", [REFGUID, LPVOID, LPDWORD]),
-    Method(HRESULT, "FreePrivateData", [REFGUID]),
-    Method(HRESULT, "GetUniquenessValue", [LPDWORD]),
-    Method(HRESULT, "ChangeUniquenessValue", []),
+    Method(DDRESULT, "AddAttachedSurface", [(LPDIRECTDRAWSURFACE4, "lpDDSAttachedSurface")]),
+    Method(DDRESULT, "AddOverlayDirtyRect", [(LPRECT, "lpRect")]),
+    Method(DDRESULT, "Blt", [(LPRECT, "lpDestRect"), (LPDIRECTDRAWSURFACE4, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DirectDrawBltFlags, "dwFlags"), (LPDDBLTFX, "lpDDBltFx")]),
+    Method(DDRESULT, "BltBatch", [(LPDDBLTBATCH, "lpDDBltBatch"), (DWORD, "dwCount"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "BltFast", [(DWORD, "dwX"), (DWORD, "dwY"), (LPDIRECTDRAWSURFACE4, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DWORD, "dwTrans")]),
+    Method(DDRESULT, "DeleteAttachedSurface", [(DWORD, "dwFlags"), (LPDIRECTDRAWSURFACE4, "lpDDSurface")]),
+    Method(DDRESULT, "EnumAttachedSurfaces", [(LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK2, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "EnumOverlayZOrders", [(DirectDrawEnumOverlayZOrderFlags, "dwFlags"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK2, "lpfnCallback")]),
+    Method(DDRESULT, "Flip", [(LPDIRECTDRAWSURFACE4, "lpDDSurfaceTargetOverride"), (DirectDrawFlipFlags, "dwFlags")]),
+    Method(DDRESULT, "GetAttachedSurface", [(LPDDSCAPS2, "lpDDSCaps"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDDAttachedSurface")]),
+    Method(DDRESULT, "GetBltStatus", [(DirectDrawGetBltStatusFlags, "dwFlags")]),
+    Method(DDRESULT, "GetCaps", [Out(LPDDSCAPS2, "lpDDSCaps")]),
+    Method(DDRESULT, "GetClipper", [Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper")]),
+    Method(DDRESULT, "GetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "GetDC", [Out(Pointer(HDC), "phDC")]),
+    Method(DDRESULT, "GetFlipStatus", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "GetOverlayPosition", [Out(LPLONG, "lplX"), Out(LPLONG, "lplY")]),
+    Method(DDRESULT, "GetPalette", [Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette")]),
+    Method(DDRESULT, "GetPixelFormat", [Out(LPDDPIXELFORMAT, "lpDDPixelFormat")]),
+    Method(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "IsLost", []),
+    Method(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
+    Method(DDRESULT, "Restore", []),
+    Method(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
+    Method(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
+    Method(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
+    Method(DDRESULT, "Unlock", [(LPRECT, "lpRect")]),
+    Method(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE4, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
+    Method(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE4, "lpDDSReference")]),
+    Method(DDRESULT, "GetDDInterface", [Out(Pointer(LPVOID), "lplpDD")]),
+    Method(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "SetSurfaceDesc", [(LPDDSURFACEDESC2, "lpDDSD"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "SetPrivateData", [(REFGUID, "guidTag"), (LPVOID, "lpData"), (DWORD, "cbSize"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "GetPrivateData", [(REFGUID, "guidTag"), (LPVOID, "lpData"), Out(LPDWORD, "lpcbBufferSize")]),
+    Method(DDRESULT, "FreePrivateData", [(REFGUID, "guidTag")]),
+    Method(DDRESULT, "GetUniquenessValue", [Out(LPDWORD, "lpValue")]),
+    Method(DDRESULT, "ChangeUniquenessValue", []),
 ]
 
 IDirectDrawSurface7.methods += [
-    Method(HRESULT, "AddAttachedSurface", [LPDIRECTDRAWSURFACE7]),
-    Method(HRESULT, "AddOverlayDirtyRect", [LPRECT]),
-    Method(HRESULT, "Blt", [LPRECT,LPDIRECTDRAWSURFACE7, LPRECT,DWORD, LPDDBLTFX]),
-    Method(HRESULT, "BltBatch", [LPDDBLTBATCH, DWORD, DWORD]),
-    Method(HRESULT, "BltFast", [DWORD,DWORD,LPDIRECTDRAWSURFACE7, LPRECT,DWORD]),
-    Method(HRESULT, "DeleteAttachedSurface", [DWORD,LPDIRECTDRAWSURFACE7]),
-    Method(HRESULT, "EnumAttachedSurfaces", [LPVOID,LPDDENUMSURFACESCALLBACK7]),
-    Method(HRESULT, "EnumOverlayZOrders", [DWORD,LPVOID,LPDDENUMSURFACESCALLBACK7]),
-    Method(HRESULT, "Flip", [LPDIRECTDRAWSURFACE7, DWORD]),
-    Method(HRESULT, "GetAttachedSurface", [LPDDSCAPS2, Pointer(LPDIRECTDRAWSURFACE7)]),
-    Method(HRESULT, "GetBltStatus", [DWORD]),
-    Method(HRESULT, "GetCaps", [LPDDSCAPS2]),
-    Method(HRESULT, "GetClipper", [Pointer(LPDIRECTDRAWCLIPPER)]),
-    Method(HRESULT, "GetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "GetDC", [Pointer(HDC)]),
-    Method(HRESULT, "GetFlipStatus", [DWORD]),
-    Method(HRESULT, "GetOverlayPosition", [LPLONG, LPLONG]),
-    Method(HRESULT, "GetPalette", [Pointer(LPDIRECTDRAWPALETTE)]),
-    Method(HRESULT, "GetPixelFormat", [LPDDPIXELFORMAT]),
-    Method(HRESULT, "GetSurfaceDesc", [LPDDSURFACEDESC2]),
-    Method(HRESULT, "Initialize", [LPDIRECTDRAW, LPDDSURFACEDESC2]),
-    Method(HRESULT, "IsLost", []),
-    Method(HRESULT, "Lock", [LPRECT,LPDDSURFACEDESC2,DWORD,HANDLE]),
-    Method(HRESULT, "ReleaseDC", [HDC]),
-    Method(HRESULT, "Restore", []),
-    Method(HRESULT, "SetClipper", [LPDIRECTDRAWCLIPPER]),
-    Method(HRESULT, "SetColorKey", [DWORD, LPDDCOLORKEY]),
-    Method(HRESULT, "SetOverlayPosition", [LONG, LONG]),
-    Method(HRESULT, "SetPalette", [LPDIRECTDRAWPALETTE]),
-    Method(HRESULT, "Unlock", [LPRECT]),
-    Method(HRESULT, "UpdateOverlay", [LPRECT, LPDIRECTDRAWSURFACE7,LPRECT,DWORD, LPDDOVERLAYFX]),
-    Method(HRESULT, "UpdateOverlayDisplay", [DWORD]),
-    Method(HRESULT, "UpdateOverlayZOrder", [DWORD, LPDIRECTDRAWSURFACE7]),
-    Method(HRESULT, "GetDDInterface", [Pointer(LPVOID)]),
-    Method(HRESULT, "PageLock", [DWORD]),
-    Method(HRESULT, "PageUnlock", [DWORD]),
-    Method(HRESULT, "SetSurfaceDesc", [LPDDSURFACEDESC2, DWORD]),
-    Method(HRESULT, "SetPrivateData", [REFGUID, LPVOID, DWORD, DWORD]),
-    Method(HRESULT, "GetPrivateData", [REFGUID, LPVOID, LPDWORD]),
-    Method(HRESULT, "FreePrivateData", [REFGUID]),
-    Method(HRESULT, "GetUniquenessValue", [LPDWORD]),
-    Method(HRESULT, "ChangeUniquenessValue", []),
-    Method(HRESULT, "SetPriority", [DWORD]),
-    Method(HRESULT, "GetPriority", [LPDWORD]),
-    Method(HRESULT, "SetLOD", [DWORD]),
-    Method(HRESULT, "GetLOD", [LPDWORD]),
+    Method(DDRESULT, "AddAttachedSurface", [(LPDIRECTDRAWSURFACE7, "lpDDSAttachedSurface")]),
+    Method(DDRESULT, "AddOverlayDirtyRect", [(LPRECT, "lpRect")]),
+    Method(DDRESULT, "Blt", [(LPRECT, "lpDestRect"), (LPDIRECTDRAWSURFACE7, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DirectDrawBltFlags, "dwFlags"), (LPDDBLTFX, "lpDDBltFx")]),
+    Method(DDRESULT, "BltBatch", [(LPDDBLTBATCH, "lpDDBltBatch"), (DWORD, "dwCount"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "BltFast", [(DWORD, "dwX"), (DWORD, "dwY"), (LPDIRECTDRAWSURFACE7, "lpDDSrcSurface"), (LPRECT, "lpSrcRect"), (DWORD, "dwTrans")]),
+    Method(DDRESULT, "DeleteAttachedSurface", [(DWORD, "dwFlags"), (LPDIRECTDRAWSURFACE7, "lpDDSurface")]),
+    Method(DDRESULT, "EnumAttachedSurfaces", [(LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK7, "lpEnumSurfacesCallback")]),
+    Method(DDRESULT, "EnumOverlayZOrders", [(DirectDrawEnumOverlayZOrderFlags, "dwFlags"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK7, "lpfnCallback")]),
+    Method(DDRESULT, "Flip", [(LPDIRECTDRAWSURFACE7, "lpDDSurfaceTargetOverride"), (DirectDrawFlipFlags, "dwFlags")]),
+    Method(DDRESULT, "GetAttachedSurface", [(LPDDSCAPS2, "lpDDSCaps"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpDDAttachedSurface")]),
+    Method(DDRESULT, "GetBltStatus", [(DirectDrawGetBltStatusFlags, "dwFlags")]),
+    Method(DDRESULT, "GetCaps", [Out(LPDDSCAPS2, "lpDDSCaps")]),
+    Method(DDRESULT, "GetClipper", [Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper")]),
+    Method(DDRESULT, "GetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "GetDC", [Out(Pointer(HDC), "phDC")]),
+    Method(DDRESULT, "GetFlipStatus", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "GetOverlayPosition", [Out(LPLONG, "lplX"), Out(LPLONG, "lplY")]),
+    Method(DDRESULT, "GetPalette", [Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette")]),
+    Method(DDRESULT, "GetPixelFormat", [Out(LPDDPIXELFORMAT, "lpDDPixelFormat")]),
+    Method(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
+    Method(DDRESULT, "IsLost", []),
+    Method(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    Method(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
+    Method(DDRESULT, "Restore", []),
+    Method(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
+    Method(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
+    Method(DDRESULT, "SetOverlayPosition", [(LONG, "lX"), (LONG, "lY")]),
+    Method(DDRESULT, "SetPalette", [(LPDIRECTDRAWPALETTE, "lpDDPalette")]),
+    Method(DDRESULT, "Unlock", [(LPRECT, "lpRect")]),
+    Method(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE7, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
+    Method(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE7, "lpDDSReference")]),
+    Method(DDRESULT, "GetDDInterface", [Out(Pointer(LPVOID), "lplpDD")]),
+    Method(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
+    Method(DDRESULT, "SetSurfaceDesc", [(LPDDSURFACEDESC2, "lpDDSD"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "SetPrivateData", [(REFGUID, "guidTag"), (LPVOID, "lpData"), (DWORD, "cbSize"), (DWORD, "dwFlags")]),
+    Method(DDRESULT, "GetPrivateData", [(REFGUID, "guidTag"), (LPVOID, "lpData"), Out(LPDWORD, "lpcbBufferSize")]),
+    Method(DDRESULT, "FreePrivateData", [(REFGUID, "guidTag")]),
+    Method(DDRESULT, "GetUniquenessValue", [Out(LPDWORD, "lpValue")]),
+    Method(DDRESULT, "ChangeUniquenessValue", []),
+    Method(DDRESULT, "SetPriority", [(DWORD, "dwPriority")]),
+    Method(DDRESULT, "GetPriority", [Out(LPDWORD, "lpdwPriority")]),
+    Method(DDRESULT, "SetLOD", [(DWORD, "dwMaxLOD")]),
+    Method(DDRESULT, "GetLOD", [Out(LPDWORD, "lpdwMaxLOD")]),
 ]
 
 IDirectDrawColorControl.methods += [
-    Method(HRESULT, "GetColorControls", [LPDDCOLORCONTROL]),
-    Method(HRESULT, "SetColorControls", [LPDDCOLORCONTROL]),
+    Method(DDRESULT, "GetColorControls", [(LPDDCOLORCONTROL, "lpColorControl")]),
+    Method(DDRESULT, "SetColorControls", [(LPDDCOLORCONTROL, "lpColorControl")]),
 ]
 
 IDirectDrawGammaControl.methods += [
-    Method(HRESULT, "GetGammaRamp", [DWORD, LPDDGAMMARAMP]),
-    Method(HRESULT, "SetGammaRamp", [DWORD, LPDDGAMMARAMP]),
+    Method(DDRESULT, "GetGammaRamp", [(DWORD, "dwFlags"), (LPDDGAMMARAMP, "lpRampData")]),
+    Method(DDRESULT, "SetGammaRamp", [(DirectDrawSetGammaRampFlags, "dwFlags"), (LPDDGAMMARAMP, "lpRampData")]),
 ]
 
 LPDDENUMCALLBACKA   = FunctionPointer(BOOL, "LPDDENUMCALLBACKA", [Pointer(GUID), LPSTR, LPSTR, LPVOID])

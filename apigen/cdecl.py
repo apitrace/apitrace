@@ -38,7 +38,8 @@ class Parser:
 
     token_re = re.compile(r'(\w+|\s+|.)')
 
-    comment_re = re.compile(r'/\*.*?\*/', flags = re.DOTALL)
+    multi_comment_re = re.compile(r'/\*.*?\*/', flags = re.DOTALL)
+    single_comment_re = re.compile(r'//.*',)
 
     def __init__(self):
         self.tokens = []
@@ -47,13 +48,14 @@ class Parser:
         return True
 
     def parse(self, s):
-        s = self.comment_re.sub('', s)
+        s = self.multi_comment_re.sub('', s)
+        s = self.single_comment_re.sub('', s)
         self.tokens = self.token_re.split(s)
         self.tokens = [token for token in self.tokens if self.filter_token(token)]
 
         while self.tokens:
             #print self.tokens[0:10]
-            self.parse_prototype()
+            self.parse_declaration()
 
     def filter_token(self, token):
         if not token or token.isspace():
@@ -64,7 +66,57 @@ class Parser:
             return False
         return True
 
-    def parse_prototype(self):
+    def parse_declaration(self):
+        if self.tokens[0] == 'mask':
+            self.parse_value('mask', 'Flags')
+        elif self.tokens[0] == 'value':
+            self.parse_value('value', 'FakeEnum')
+        elif self.tokens[0] == 'interface':
+            self.parse_interface()
+        else:
+            self.parse_prototype()
+
+    def parse_value(self, ref_token, constructor):
+        self.match(ref_token)
+        type = self.tokens.pop(0)
+        name = self.tokens.pop(0)
+        self.match('{')
+
+        print '%s = %s(%s, [' % (name, constructor, type)
+
+        while self.tokens[0] != '}':
+            self.match('#')
+            self.match('define')
+            name = self.tokens.pop(0)
+            value = self.tokens.pop(0)
+            tag = self.parse_tag()
+            #print '    "%s",\t# %s' % (name, value) 
+            print '    "%s",' % (name,) 
+        self.match('}')
+        self.match(';')
+
+        print '])'
+        print
+
+    def parse_interface(self):
+        self.match('interface')
+        name = self.tokens.pop(0)
+        self.match(':')
+        base = self.tokens.pop(0)
+        self.match('{')
+
+        print '%s = Interface("%s", %s)' % (name, name, base)
+        print '%s.methods += [' % (name,)
+
+        while self.tokens[0] != '}':
+            self.parse_prototype('Method')
+        self.match('}')
+        self.match(';')
+
+        print ']'
+        print
+
+    def parse_prototype(self, creator = 'Function'):
         if self.tokens[0] == 'extern':
             self.tokens.pop(0)
 
@@ -76,7 +128,7 @@ class Parser:
             extra += ', sideeffects=False'
         name = name
 
-        assert self.tokens.pop(0) == '('
+        self.match('(')
         args = []
         while self.tokens[0] != ')':
             arg = self.parse_arg()
@@ -88,12 +140,26 @@ class Parser:
         if self.tokens and self.tokens[0] == ';':
             self.tokens.pop(0)
 
-        print '    Function(%s, "%s", [%s]%s),' % (ret, name, ', '.join(args), extra)
+        print '    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
 
     def parse_arg(self):
+        tag = self.parse_tag()
+
         type = self.parse_type()
         name = self.tokens.pop(0)
-        return '(%s, "%s")' % (type, name)
+
+        arg = '(%s, "%s")' % (type, name)
+        if tag == 'out':
+            arg = 'Out' + arg
+        return arg
+
+    def parse_tag(self):
+        tag = None
+        if self.tokens[0] == '[':
+            self.tokens.pop(0)
+            tag = self.tokens.pop(0)
+            self.match(']')
+        return tag
 
     def parse_type(self):
         token = self.tokens.pop(0)
@@ -107,6 +173,16 @@ class Parser:
             type = 'OpaquePointer(%s)' % type
             self.tokens.pop(0)
         return type
+
+    def match(self, ref_token):
+        if not self.tokens:
+            raise Exception('unexpected EOF')
+        token = self.tokens.pop(0)
+        if token != ref_token:
+            raise Exception('token mismatch', token, ref_token)
+
+
+        
 
 
 def main():
