@@ -387,10 +387,12 @@ class GlTracer(Tracer):
             print '        GLchar name[256];'
             # TODO: Use ACTIVE_ATTRIBUTE_MAX_LENGTH instead of 256
             print '        __glGetActiveAttrib(program, attrib, sizeof name, NULL, &size, &type, name);'
-            print '        GLint location = __glGetAttribLocation(program, name);'
-            print '        if (location >= 0) {'
+            print "        if (name[0] != 'g' || name[1] != 'l' || name[2] != '_') {"
+            print '            GLint location = __glGetAttribLocation(program, name);'
+            print '            if (location >= 0) {'
             bind_function = glapi.glapi.get_function_by_name('glBindAttribLocation')
             self.fake_call(bind_function, ['program', 'location', 'name'])
+            print '            }'
             print '        }'
             print '    }'
         if function.name == 'glLinkProgramARB':
@@ -403,10 +405,12 @@ class GlTracer(Tracer):
             print '        GLcharARB name[256];'
             # TODO: Use ACTIVE_ATTRIBUTE_MAX_LENGTH instead of 256
             print '        __glGetActiveAttribARB(programObj, attrib, sizeof name, NULL, &size, &type, name);'
-            print '        GLint location = __glGetAttribLocationARB(programObj, name);'
-            print '        if (location >= 0) {'
+            print "        if (name[0] != 'g' || name[1] != 'l' || name[2] != '_') {"
+            print '            GLint location = __glGetAttribLocationARB(programObj, name);'
+            print '            if (location >= 0) {'
             bind_function = glapi.glapi.get_function_by_name('glBindAttribLocationARB')
             self.fake_call(bind_function, ['programObj', 'location', 'name'])
+            print '            }'
             print '        }'
             print '    }'
 
