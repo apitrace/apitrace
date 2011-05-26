@@ -4,7 +4,7 @@
 = About =
 
 This includes a set of tools for:
-- trace OpenGL, D3D8, and D3D9 APIs calls to a file;
+- trace OpenGL, D3D9, D3D8, D3D7, and DDRAW APIs calls to a file;
 - retrace OpenGL calls from a file;
 - visualize trace files, and inspect state.
 
