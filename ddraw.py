@@ -1288,7 +1288,7 @@ IDirectDraw.methods += [
     Method(DDRESULT, "FlipToGDISurface", []),
     Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
     Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
-    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), Out(LPDWORD, "lpCodes")]),
     Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE), "lplpGDIDDSSurface")]),
     Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
     Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
@@ -1311,7 +1311,7 @@ IDirectDraw2.methods += [
     Method(DDRESULT, "FlipToGDISurface", []),
     Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
     Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
-    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), Out(LPDWORD, "lpCodes")]),
     Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE), "lplpGDIDDSSurface")]),
     Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
     Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
@@ -1335,7 +1335,7 @@ IDirectDraw4.methods += [
     Method(DDRESULT, "FlipToGDISurface", []),
     Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
     Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
-    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), Out(LPDWORD, "lpCodes")]),
     Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpGDIDDSSurface")]),
     Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
     Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
@@ -1349,7 +1349,7 @@ IDirectDraw4.methods += [
     Method(DDRESULT, "GetSurfaceFromDC", [(HDC, "hdc"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lpDDSurface")]),
     Method(DDRESULT, "RestoreAllSurfaces", []),
     Method(DDRESULT, "TestCooperativeLevel", []),
-    Method(DDRESULT, "GetDeviceIdentifier", [(LPDDDEVICEIDENTIFIER, "lpDDDI"), (DirectDrawGetDeviceIdentifierFlags, "dwFlags")]),
+    Method(DDRESULT, "GetDeviceIdentifier", [Out(LPDDDEVICEIDENTIFIER, "lpDDDI"), (DirectDrawGetDeviceIdentifierFlags, "dwFlags")]),
 ]
 
 IDirectDraw7.methods += [
@@ -1363,7 +1363,7 @@ IDirectDraw7.methods += [
     Method(DDRESULT, "FlipToGDISurface", []),
     Method(DDRESULT, "GetCaps", [Out(LPDDCAPS, "lpDDDriverCaps"), Out(LPDDCAPS, "lpDDHELCaps")]),
     Method(DDRESULT, "GetDisplayMode", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
-    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), (LPDWORD, "lpCodes")]),
+    Method(DDRESULT, "GetFourCCCodes", [Out(LPDWORD, "lpNumCodes"), Out(LPDWORD, "lpCodes")]),
     Method(DDRESULT, "GetGDISurface", [Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpGDIDDSSurface")]),
     Method(DDRESULT, "GetMonitorFrequency", [Out(LPDWORD, "lpdwFrequency")]),
     Method(DDRESULT, "GetScanLine", [Out(LPDWORD, "lpdwScanLine")]),
@@ -1377,14 +1377,14 @@ IDirectDraw7.methods += [
     Method(DDRESULT, "GetSurfaceFromDC", [(HDC, "hdc"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lpDDSurface")]),
     Method(DDRESULT, "RestoreAllSurfaces", []),
     Method(DDRESULT, "TestCooperativeLevel", []),
-    Method(DDRESULT, "GetDeviceIdentifier", [(LPDDDEVICEIDENTIFIER2, "lpDDDI"), (DirectDrawGetDeviceIdentifierFlags, "dwFlags")]),
+    Method(DDRESULT, "GetDeviceIdentifier", [Out(LPDDDEVICEIDENTIFIER2, "lpDDDI"), (DirectDrawGetDeviceIdentifierFlags, "dwFlags")]),
     Method(DDRESULT, "StartModeTest", [(LPSIZE, "lpModesToTest"), (DWORD, "dwNumEntries"), (DirectDrawStartModeTestFlags, "dwFlags")]),
     Method(DDRESULT, "EvaluateMode", [(DirectDrawEvaluateModeFlags, "dwFlags"), Out(Pointer(DWORD), "pSecondsUntilTimeout")]),
 ]
 
 IDirectDrawPalette.methods += [
     Method(DDRESULT, "GetCaps", [Out(Pointer(DirectDrawPaletteCapsFlags), "lpdwCaps")]),
-    Method(DDRESULT, "GetEntries", [(DWORD, "dwFlags"), (DWORD, "dwBase"), (DWORD, "dwNumEntries"), (LPPALETTEENTRY, "lpEntries")]),
+    Method(DDRESULT, "GetEntries", [(DWORD, "dwFlags"), (DWORD, "dwBase"), (DWORD, "dwNumEntries"), Out(LPPALETTEENTRY, "lpEntries")]),
     Method(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (DWORD, "dwFlags"), (LPPALETTEENTRY, "lpDDColorTable")]),
     Method(DDRESULT, "SetEntries", [(DWORD, "dwFlags"), (DWORD, "dwStartingEntry"), (DWORD, "dwCount"), (LPPALETTEENTRY, "lpEntries")]),
 ]
@@ -1614,7 +1614,7 @@ IDirectDrawColorControl.methods += [
 ]
 
 IDirectDrawGammaControl.methods += [
-    Method(DDRESULT, "GetGammaRamp", [(DWORD, "dwFlags"), (LPDDGAMMARAMP, "lpRampData")]),
+    Method(DDRESULT, "GetGammaRamp", [(DWORD, "dwFlags"), Out(LPDDGAMMARAMP, "lpRampData")]),
     Method(DDRESULT, "SetGammaRamp", [(DirectDrawSetGammaRampFlags, "dwFlags"), (LPDDGAMMARAMP, "lpRampData")]),
 ]
 

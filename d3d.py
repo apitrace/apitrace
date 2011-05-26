@@ -503,6 +503,14 @@ if __name__ == '__main__':
     print
     print '''
 
+#ifndef DDBLT_EXTENDED_FLAGS
+#define DDBLT_EXTENDED_FLAGS 0x40000000l
+#endif
+
+#ifndef DDBLT_EXTENDED_LINEAR_CONTENT
+#define DDBLT_EXTENDED_LINEAR_CONTENT 0x00000004l
+#endif
+
 #ifndef D3DLIGHT_PARALLELPOINT
 #define D3DLIGHT_PARALLELPOINT (D3DLIGHTTYPE)4
 #endif
