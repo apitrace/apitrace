@@ -419,7 +419,6 @@ class GlDispatcher(Dispatcher):
         print '#  else'
         print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
         print '#  endif'
-        print '#  define __abort() OS::Abort()'
         print '#else /* !RETRACE */'
         print '#  ifdef _WIN32'
         print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
@@ -434,7 +433,6 @@ class GlDispatcher(Dispatcher):
         print '       static inline __GLXextFuncPtr __glXGetProcAddressARB(const GLubyte * procName);'
         print '#    endif'
         print '#  endif'
-        print '#  define __abort() Trace::Abort()'
         print '#endif /* !RETRACE */'
         print
         

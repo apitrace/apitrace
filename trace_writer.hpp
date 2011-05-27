@@ -104,8 +104,6 @@ namespace Trace {
     void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value);
     void LiteralNull(void);
     void LiteralOpaque(const void *ptr);
-
-    void Abort(void);
 }
 
 #endif /* _TRACE_WRITER_HPP_ */

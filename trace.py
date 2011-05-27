@@ -485,7 +485,6 @@ __getPublicProcAddress(LPCSTR lpProcName)
     return GetProcAddress(g_hDll, lpProcName);
 }
 
-#define __abort() OS::Abort()
 ''' % self.dllname
 
         dispatcher = Dispatcher()

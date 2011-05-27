@@ -49,7 +49,6 @@ class Dispatcher:
         #
         #  static __PROC __getPublicProcAddress(const char *name);
         #  static __PROC __getPrivateProcAddress(const char *name);
-        #  static void __abort(void);
         #
         raise NotImplementedError
 
@@ -118,6 +117,6 @@ class Dispatcher:
                 assert function.fail != ''
                 print '            return %s;' % function.fail
         else:
-            print '            __abort();'
+            print '            OS::Abort();'
 
 
