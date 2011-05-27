@@ -44,6 +44,7 @@ if __name__ == '__main__':
     print
     print '#include <stdlib.h>'
     print '#include <string.h>'
+    print '#include <unistd.h>'
     print
     print '#ifndef _GNU_SOURCE'
     print '#define _GNU_SOURCE // for dladdr'
@@ -69,7 +70,13 @@ if __name__ == '__main__':
 
 
 /*
- * Handle to the true libGL.so
+ * Path to the true OpenGL framework
+ */
+static const char *libgl_filename = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
+
+
+/*
+ * Handle to the true OpenGL framework.
  */
 static void *libgl_handle = NULL;
 
@@ -80,19 +87,27 @@ static void *libgl_handle = NULL;
 static void * __dlsym(const char *symbol)
 {
     void *result;
+
     if (!libgl_handle) {
-        const char * libgl_filename;
-
         /* 
-         * Unfortunately we can't just dlopen
-         * /System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib
-         * because DYLD_LIBRARY_PATH takes precedence, even for absolute paths.
+	 * Unfortunately we can't just dlopen the true dynamic library because
+	 * DYLD_LIBRARY_PATH/DYLD_FRAMEWORK_PATH take precedence, even for
+	 * absolute paths.  So we create a temporary symlink, and dlopen that
+	 * instead.
          */
-        libgl_filename = "libGL.system.dylib";
 
-        libgl_handle = dlopen(libgl_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+        char temp_filename[] = "/tmp/tmp.XXXXXX";
+
+        if (mktemp(temp_filename) != NULL) {
+	    if (symlink(libgl_filename, temp_filename) == 0) {
+                libgl_handle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+                remove(temp_filename);
+            }
+        }
+
         if (!libgl_handle) {
             OS::DebugMessage("error: couldn't load %s\n", libgl_filename);
+            OS::Abort();
             return NULL;
         }
     }

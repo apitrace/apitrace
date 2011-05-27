@@ -47,6 +47,9 @@ getDrawable(unsigned long drawable_id) {
         return NULL;
     }
 
+    /* XXX: Support multiple drawables. */
+    drawable_id = 1;
+
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
@@ -77,22 +80,9 @@ getContext(unsigned long long ctx) {
     return it->second;
 }
 
+
 static void retrace_CGLSetCurrentContext(Trace::Call &call) {
     unsigned long long ctx = call.arg(0).toUIntPtr();
-
-    /*
-     * XXX: Frame termination is mostly a guess, because we don't trace enough
-     * of the CGL API to know that.
-     */
-    if (drawable && context) {
-        if (double_buffer) {
-            drawable->swapBuffers();
-        } else {
-            glFlush();
-        }
-
-        frame_complete(call.no);
-    }
 
     glws::Drawable *new_drawable = getDrawable(ctx);
     glws::Context *new_context = getContext(ctx);
@@ -109,6 +99,19 @@ static void retrace_CGLSetCurrentContext(Trace::Call &call) {
 }
 
 
+static void retrace_CGLFlushDrawable(Trace::Call &call) {
+    if (drawable && context) {
+        if (double_buffer) {
+            drawable->swapBuffers();
+        } else {
+            glFlush();
+        }
+
+        frame_complete(call.no);
+    }
+}
+
+
 void glretrace::retrace_call_cgl(Trace::Call &call) {
     const char *name = call.name().c_str();
 
@@ -117,10 +120,11 @@ void glretrace::retrace_call_cgl(Trace::Call &call) {
        return;
     }
 
-    if (strcmp(name, "CGLGetCurrentContext") == 0) {
+    if (strcmp(name, "CGLFlushDrawable") == 0) {
+       retrace_CGLFlushDrawable(call);
        return;
     }
 
-    retrace::retrace_unknown(call);
+    return;
 }
 

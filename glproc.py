@@ -439,7 +439,7 @@ class GlDispatcher(Dispatcher):
         print
         
     def is_public_function(self, function):
-        return function.name in public_symbols
+        return function.name in public_symbols or function.name.startswith('CGL')
 
 
 if __name__ == '__main__':

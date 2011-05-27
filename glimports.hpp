@@ -91,6 +91,20 @@ typedef struct _WGLSWAP
 #elif defined(__APPLE__)
 
 #include <OpenGL/OpenGL.h>
+#include <OpenGL/CGLIOSurface.h>
+#include <OpenGL/CGLDevice.h>
+
+extern "C" {
+
+typedef int CGSConnectionID;
+typedef int CGSWindowID;
+typedef int CGSSurfaceID;
+
+CGLError CGLSetSurface(CGLContextObj ctx, CGSConnectionID cid, CGSWindowID wid, CGSSurfaceID sid);
+CGLError CGLGetSurface(CGLContextObj ctx, CGSConnectionID* cid, CGSWindowID* wid, CGSSurfaceID* sid);
+CGLError CGLUpdateContext(CGLContextObj ctx);
+
+}
 
 #else
 

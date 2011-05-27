@@ -43,11 +43,6 @@
 extern "C" {
 #endif
 
-typedef int CGSConnectionID;
-typedef int CGSWindowID;
-typedef int CGSSurfaceID;
-
-CGLError CGLGetSurface(CGLContextObj, CGSConnectionID*, CGSWindowID*, CGSSurfaceID*);
 OSStatus CGSGetSurfaceBounds(CGSConnectionID, CGWindowID, CGSSurfaceID, CGRect *);
 
 #ifdef __cplusplus

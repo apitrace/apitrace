@@ -259,31 +259,25 @@ if (WIN32)
 elseif (APPLE)
     include_directories (${X11_INCLUDE_DIR})
 
-    # libGL.dylib
+    # OpenGL framework
     add_custom_command (
         OUTPUT cgltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
-        DEPENDS cgltrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
+        DEPENDS cgltrace.py gltrace.py trace.py cglapi.py glapi.py glparams.py gltypes.py stdapi.py
     )
 
     add_library (cgltrace SHARED cgltrace.cpp trace_writer.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
     set_target_properties (cgltrace PROPERTIES
-        # libGL.dylib
-        OUTPUT_NAME GL
-        # match the version
-        LINK_FLAGS "-compatibility_version 1 -current_version 1.0.0"
+        # For
+        PREFIX "" OUTPUT_NAME "OpenGL" SUFFIX ""
+        # Specificy the version and reexport GLU symbols
+        LINK_FLAGS "-compatibility_version 1 -current_version 1.0.0 -Wl,-reexport_library,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib"
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
 
     target_link_libraries (cgltrace dl)
-
-    # Symbolic link from system's libGL.dylib
-    add_custom_command (
-        TARGET cgltrace
-        COMMAND ln -sf /System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib ${PROJECT_BINARY_DIR}/wrappers/libGL.system.dylib
-    )
 
     install (TARGETS cgltrace LIBRARY DESTINATION lib)
 else ()
