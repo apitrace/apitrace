@@ -927,17 +927,6 @@ void MainWindow::fillState(bool nonDefaults)
             m_ui.nonDefaultsCB->blockSignals(true);
             m_ui.nonDefaultsCB->setChecked(false);
             m_ui.nonDefaultsCB->blockSignals(false);
-            int ret = QMessageBox::question(
-                this, tr("Empty Default State"),
-                tr("The applcation needs to figure out the "
-                   "default state for the current trace. "
-                   "This only has to be done once and "
-                   "afterwards you will be able to enable "
-                   "displaying of non default state for all calls."
-                   "\nDo you want to lookup the default state now?"),
-                QMessageBox::Yes | QMessageBox::No);
-            if (ret != QMessageBox::Yes)
-                return;
             ApiTraceFrame *firstFrame =
                 m_trace->frameAt(0);
             ApiTraceEvent *oldSelected = m_selectedEvent;
