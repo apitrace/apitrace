@@ -69,10 +69,10 @@ Writer::open(const char *filename) {
     }
 
     call_no = 0;
-    functions = std::vector<bool>();
-    structs = std::vector<bool>();
-    enums = std::vector<bool>();
-    bitmasks = std::vector<bool>();
+    functions.clear();
+    structs.clear();
+    enums.clear();
+    bitmasks.clear();
 
     _writeUInt(TRACE_VERSION);
 
