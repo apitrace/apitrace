@@ -30,7 +30,9 @@
 
 #include <windows.h>
 
-void DumpShader(const DWORD *tokens);
+#include "trace_writer.hpp"
+
+void DumpShader(Trace::Writer &writer, const DWORD *tokens);
 
 
 #endif /* _D3DSHADER_HPP_ */

@@ -27,7 +27,6 @@
 
 #include <stdio.h>
 
-#include "trace_writer.hpp"
 #include "d3d9imports.hpp"
 #include "d3dshader.hpp"
 
@@ -41,7 +40,7 @@ typedef HRESULT
 );
 
 
-void DumpShader(const DWORD *tokens)
+void DumpShader(Trace::Writer &writer, const DWORD *tokens)
 {
     static BOOL firsttime = TRUE;
     static HMODULE hD3DXModule = NULL;
@@ -81,7 +80,7 @@ found:
 
         hr = pfnD3DXDisassembleShader( (DWORD *)tokens, FALSE, NULL, &pDisassembly);
         if (hr == D3D_OK) {
-            Trace::LiteralString((const char *)pDisassembly->GetBufferPointer());
+            writer.writeString((const char *)pDisassembly->GetBufferPointer());
         }
 
         if (pDisassembly) {
@@ -93,5 +92,5 @@ found:
         }
     }
 
-    Trace::LiteralOpaque(tokens);
+    writer.writeOpaque(tokens);
 }

@@ -288,7 +288,7 @@ class D3D8Tracer(DllTracer):
     def dump_arg_instance(self, function, arg):
         # Dump shaders as strings
         if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
-            print '    DumpShader(%s);' % (arg.name)
+            print '    DumpShader(__writer, %s);' % (arg.name)
             return
 
         DllTracer.dump_arg_instance(self, function, arg)
