@@ -166,11 +166,11 @@ void ApiBitmask::init(const Trace::Bitmask *bitmask)
     m_value = bitmask->value;
     for (Trace::Bitmask::Signature::const_iterator it = bitmask->sig->begin();
          it != bitmask->sig->end(); ++it) {
-        assert(it->second);
+        assert(it->value);
         QPair<QString, unsigned long long> pair;
 
-        pair.first = QString::fromStdString(it->first);
-        pair.second = it->second;
+        pair.first = QString::fromStdString(it->name);
+        pair.second = it->value;
 
         m_sig.append(pair);
     }

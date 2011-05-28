@@ -258,13 +258,13 @@ public:
         const Bitmask::Signature *sig = bitmask->sig;
         bool first = true;
         for (Bitmask::Signature::const_iterator it = sig->begin(); value != 0 && it != sig->end(); ++it) {
-            if ((it->second && (value & it->second) == it->second) ||
-                (!it->second && value == 0)) {
+            if ((it->value && (value & it->value) == it->value) ||
+                (!it->value && value == 0)) {
                 if (!first) {
                     os << " | ";
                 }
-                os << literal << it->first << normal;
-                value &= ~it->second;
+                os << literal << it->name << normal;
+                value &= ~it->value;
                 first = false;
             }
         }

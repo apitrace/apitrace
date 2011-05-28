@@ -38,6 +38,8 @@
 #include <vector>
 #include <iostream>
 
+#include "trace_writer.hpp"
+
 
 namespace Trace {
 
@@ -190,8 +192,7 @@ public:
 class Bitmask : public UInt
 {
 public:
-    typedef std::pair<const char *, unsigned long long> Pair;
-    typedef std::vector<Pair> Signature;
+    typedef std::vector<BitmaskVal> Signature;
 
     Bitmask(const Signature *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
 

@@ -328,10 +328,10 @@ Value *Parser::parse_bitmask() {
         size_t size = read_uint();
         sig = new Bitmask::Signature(size);
         for (Bitmask::Signature::iterator it = sig->begin(); it != sig->end(); ++it) {
-            it->first = read_string();
-            it->second = read_uint();
-            if (it->second == 0 && it != sig->begin()) {
-                std::cerr << "warning: bitmask " << it->first << " is zero but is not first flag\n";
+            it->name = read_string();
+            it->value = read_uint();
+            if (it->value == 0 && it != sig->begin()) {
+                std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
             }
         }
         bitmasks[id] = sig;
