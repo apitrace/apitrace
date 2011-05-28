@@ -255,9 +255,9 @@ public:
 
     void visit(Bitmask *bitmask) {
         unsigned long long value = bitmask->value;
-        const Bitmask::Signature *sig = bitmask->sig;
+        const BitmaskSig *sig = bitmask->sig;
         bool first = true;
-        for (Bitmask::Signature::const_iterator it = sig->begin(); value != 0 && it != sig->end(); ++it) {
+        for (const BitmaskVal *it = sig->values; value != 0 && it != sig->values + sig->count; ++it) {
             if ((it->value && (value & it->value) == it->value) ||
                 (!it->value && value == 0)) {
                 if (!first) {

@@ -54,7 +54,7 @@ protected:
     typedef std::vector<Enum::Signature *> EnumMap;
     EnumMap enums;
 
-    typedef std::vector<Bitmask::Signature *> BitmaskMap;
+    typedef std::vector<BitmaskSig *> BitmaskMap;
     BitmaskMap bitmasks;
 
     unsigned next_call_no;

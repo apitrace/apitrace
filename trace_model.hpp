@@ -192,13 +192,11 @@ public:
 class Bitmask : public UInt
 {
 public:
-    typedef std::vector<BitmaskVal> Signature;
-
-    Bitmask(const Signature *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
+    Bitmask(const BitmaskSig *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
 
     void visit(Visitor &visitor);
 
-    const Signature *sig;
+    const BitmaskSig *sig;
 };
 
 

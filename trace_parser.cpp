@@ -323,17 +323,21 @@ Value *Parser::parse_enum() {
 
 Value *Parser::parse_bitmask() {
     size_t id = read_uint();
-    Bitmask::Signature *sig = lookup(bitmasks, id);
+    BitmaskSig *sig = lookup(bitmasks, id);
     if (!sig) {
-        size_t size = read_uint();
-        sig = new Bitmask::Signature(size);
-        for (Bitmask::Signature::iterator it = sig->begin(); it != sig->end(); ++it) {
+        size_t count = read_uint();
+        BitmaskVal *values = new BitmaskVal[count];
+        for (BitmaskVal *it = values; it != values + count; ++it) {
             it->name = read_string();
             it->value = read_uint();
-            if (it->value == 0 && it != sig->begin()) {
+            if (it->value == 0 && it != values) {
                 std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
             }
         }
+        sig = new BitmaskSig;
+        sig->id = id;
+        sig->count = count;
+        sig->values = values;
         bitmasks[id] = sig;
     }
     assert(sig);
