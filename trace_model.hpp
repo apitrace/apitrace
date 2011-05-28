@@ -189,18 +189,13 @@ public:
 class Struct : public Value
 {
 public:
-    struct Signature {
-        const char *name;
-        std::vector<const char *> member_names;
-    };
-
-    Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
+    Struct(StructSig *_sig) : sig(_sig), members(_sig->num_members) { }
     ~Struct();
 
     bool toBool(void) const;
     void visit(Visitor &visitor);
 
-    const Signature *sig;
+    const StructSig *sig;
     std::vector<Value *> members;
 };
 

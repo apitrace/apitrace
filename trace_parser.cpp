@@ -374,21 +374,24 @@ Value *Parser::parse_blob(void) {
 Value *Parser::parse_struct() {
     size_t id = read_uint();
 
-    Struct::Signature *sig = lookup(structs, id);
+    StructSig *sig = lookup(structs, id);
     if (!sig) {
-        sig = new Struct::Signature;
+        sig = new StructSig;
+        sig->id = id;
         sig->name = read_string();
-        unsigned size = read_uint();
-        for (unsigned i = 0; i < size; ++i) {
-            sig->member_names.push_back(read_string());
+        sig->num_members = read_uint();
+        const char **member_names = new const char *[sig->num_members];
+        for (unsigned i = 0; i < sig->num_members; ++i) {
+            member_names[i] = read_string();
         }
+        sig->member_names = member_names;
         structs[id] = sig;
     }
     assert(sig);
 
     Struct *value = new Struct(sig);
 
-    for (size_t i = 0; i < sig->member_names.size(); ++i) {
+    for (size_t i = 0; i < sig->num_members; ++i) {
         value->members[i] = parse_value();
     }
 

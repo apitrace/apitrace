@@ -49,7 +49,7 @@ namespace Trace {
         Id id;
         const char *name;
         unsigned num_members;
-        const char **members;
+        const char **member_names;
     };
 
     struct EnumSig {

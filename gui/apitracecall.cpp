@@ -230,7 +230,7 @@ void ApiStruct::init(const Trace::Struct *s)
         return;
 
     m_sig.name = QString::fromStdString(s->sig->name);
-    for (unsigned i = 0; i < s->members.size(); ++i) {
+    for (unsigned i = 0; i < s->sig->num_members; ++i) {
         VariantVisitor vis;
         m_sig.memberNames.append(
             QString::fromStdString(s->sig->member_names[i]));

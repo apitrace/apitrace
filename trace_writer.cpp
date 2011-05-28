@@ -241,7 +241,7 @@ void Writer::beginStruct(const StructSig *sig) {
         _writeString(sig->name);
         _writeUInt(sig->num_members);
         for (unsigned i = 0; i < sig->num_members; ++i) {
-            _writeString(sig->members[i]);
+            _writeString(sig->member_names[i]);
         }
         structs[sig->id] = true;
     }

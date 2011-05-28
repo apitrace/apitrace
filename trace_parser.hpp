@@ -48,7 +48,7 @@ protected:
     typedef std::vector<Call::Signature *> FunctionMap;
     FunctionMap functions;
 
-    typedef std::vector<Struct::Signature *> StructMap;
+    typedef std::vector<StructSig *> StructMap;
     StructMap structs;
 
     typedef std::vector<EnumSig *> EnumMap;

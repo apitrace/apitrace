@@ -47,10 +47,10 @@ createStructSig(const ApiStruct &str, unsigned id)
     sig->id = id;
     sig->name = qstrdup(aSig.name.toLocal8Bit());
     sig->num_members = aSig.memberNames.count();
-    char **members = new char*[aSig.memberNames.count()];
-    sig->members = (const char **)members;
+    char **member_names = new char*[aSig.memberNames.count()];
+    sig->member_names = (const char **)member_names;
     for (int i = 0; i < aSig.memberNames.count(); ++i) {
-        members[i] = qstrdup(aSig.memberNames[i].toLocal8Bit());
+        member_names[i] = qstrdup(aSig.memberNames[i].toLocal8Bit());
     }
     return sig;
 }
@@ -59,9 +59,9 @@ static void
 deleteStructSig(Trace::StructSig *sig)
 {
     for (int i = 0; i < sig->num_members; ++i) {
-        delete [] sig->members[i];
+        delete [] sig->member_names[i];
     }
-    delete [] sig->members;
+    delete [] sig->member_names;
     delete [] sig->name;
     delete sig;
 }
