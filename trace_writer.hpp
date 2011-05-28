@@ -30,44 +30,15 @@
 #ifndef _TRACE_WRITER_HPP_
 #define _TRACE_WRITER_HPP_
 
+
 #include <stddef.h>
 
 #include <vector>
 
+#include "trace_model.hpp"
+
+
 namespace Trace {
-
-    typedef unsigned Id;
-
-    struct FunctionSig {
-        Id id;
-        const char *name;
-        unsigned num_args;
-        const char **arg_names;
-    };
-
-    struct StructSig {
-        Id id;
-        const char *name;
-        unsigned num_members;
-        const char **member_names;
-    };
-
-    struct EnumSig {
-        Id id;
-        const char *name;
-        signed long long value;
-    };
-
-    struct BitmaskFlag {
-        const char *name;
-        unsigned long long value;
-    };
-
-    struct BitmaskSig {
-        Id id;
-        unsigned num_flags;
-        const BitmaskFlag *flags;
-    };
 
     class Writer {
     protected:
