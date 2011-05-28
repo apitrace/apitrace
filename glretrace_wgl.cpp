@@ -243,7 +243,7 @@ static void retrace_wglGetProcAddress(Trace::Call &call) {
 }
 
 void glretrace::retrace_call_wgl(Trace::Call &call) {
-    const char *name = call.name().c_str();
+    const char *name = call.name();
 
     switch (name[0]) {
     case 'g':

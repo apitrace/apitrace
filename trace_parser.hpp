@@ -29,7 +29,6 @@
 
 #include <iostream>
 #include <list>
-#include <string>
 
 #include "trace_format.hpp"
 #include "trace_model.hpp"
@@ -106,7 +105,7 @@ protected:
 
     Value *parse_opaque();
 
-    std::string read_string(void);
+    const char * read_string(void);
 
     unsigned long long read_uint(void);
 

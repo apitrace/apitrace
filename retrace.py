@@ -254,7 +254,7 @@ class Retracer:
             self.retrace_function(function)
 
         print 'void retrace::retrace_call(Trace::Call &call) {'
-        print '    const char *name = call.name().c_str();'
+        print '    const char *name = call.name();'
         print
 
         func_dict = dict([(function.name, function) for function in functions])

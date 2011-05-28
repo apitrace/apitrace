@@ -156,7 +156,7 @@ static void display(void) {
     Trace::Call *call;
 
     while ((call = parser.parse_call())) {
-        const std::string &name = call->name();
+        const char *name = call->name();
 
         if (retrace::verbosity >= 1) {
             std::cout << *call;

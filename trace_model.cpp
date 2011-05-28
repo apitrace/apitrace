@@ -132,7 +132,7 @@ unsigned long long Pointer::toUIntPtr(void) const { return value; }
 // string cast
 const char * Value ::toString(void) const { assert(0); return NULL; }
 const char * Null  ::toString(void) const { return NULL; }
-const char * String::toString(void) const { return value.c_str(); }
+const char * String::toString(void) const { return value; }
 
 
 // virtual Value::visit()
@@ -219,7 +219,7 @@ public:
 
     void visit(String *node) {
         os << literal << "\"";
-        for (std::string::const_iterator it = node->value.begin(); it != node->value.end(); ++it) {
+        for (const char *it = node->value; *it; ++it) {
             unsigned char c = (unsigned char) *it;
             if (c == '\"')
                 os << "\\\"";

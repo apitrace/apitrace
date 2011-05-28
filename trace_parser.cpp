@@ -311,7 +311,7 @@ Value *Parser::parse_enum() {
     size_t id = read_uint();
     Enum::Signature *sig = lookup(enums, id);
     if (!sig) {
-        std::string name = read_string();
+        const char *name = read_string();
         Value *value = parse_value();
         sig = new Enum::Signature(name, value);
         enums[id] = sig;
@@ -396,15 +396,13 @@ Value *Parser::parse_opaque() {
 }
 
 
-std::string Parser::read_string(void) {
+const char * Parser::read_string(void) {
     size_t len = read_uint();
-    if (!len) {
-        return std::string();
+    char * value = new char[len + 1];
+    if (len) {
+        gzread(file, value, (unsigned)len);
     }
-    char * buf = new char[len];
-    gzread(file, buf, (unsigned)len);
-    std::string value(buf, len);
-    delete [] buf;
+    value[len] = 0;
 #if TRACE_VERBOSE
     std::cerr << "\tSTRING \"" << value << "\"\n";
 #endif

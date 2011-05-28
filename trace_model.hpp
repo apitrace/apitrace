@@ -33,7 +33,6 @@
 
 #include <assert.h>
 
-#include <string>
 #include <map>
 #include <list>
 #include <vector>
@@ -44,8 +43,6 @@ namespace Trace {
 
 
 class Visitor;
-class Dumper;
-class UInt;
 
 
 class Value
@@ -150,26 +147,26 @@ public:
 class String : public Value
 {
 public:
-    String(std::string _value) : value(_value) {}
+    String(const char * _value) : value(_value) {}
 
     bool toBool(void) const;
     const char *toString(void) const;
     void visit(Visitor &visitor);
 
-    std::string value;
+    const char * value;
 };
 
 
 class Enum : public Value
 {
 public:
-    struct Signature : public std::pair<std::string, Value *>
+    struct Signature : public std::pair<const char *, Value *>
     {
         Signature()
-            : std::pair<std::string, Value *>()
+            : std::pair<const char *, Value *>()
         {}
-        Signature(const std::string &n, Trace::Value *val)
-            : std::pair<std::string, Value *>(n, val)
+        Signature(const char *n, Trace::Value *val)
+            : std::pair<const char *, Value *>(n, val)
         {}
         ~Signature()
         {
@@ -193,7 +190,7 @@ public:
 class Bitmask : public UInt
 {
 public:
-    typedef std::pair<std::string, unsigned long long> Pair;
+    typedef std::pair<const char *, unsigned long long> Pair;
     typedef std::vector<Pair> Signature;
 
     Bitmask(const Signature *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
@@ -208,8 +205,8 @@ class Struct : public Value
 {
 public:
     struct Signature {
-        std::string name;
-        std::vector<std::string> member_names;
+        const char *name;
+        std::vector<const char *> member_names;
     };
 
     Struct(Signature *_sig) : sig(_sig), members(_sig->member_names.size()) { }
@@ -299,8 +296,8 @@ class Call
 {
 public:
     struct Signature {
-        std::string name;
-        std::vector<std::string> arg_names;
+        const char * name;
+        std::vector<const char *> arg_names;
     };
 
     unsigned no;
@@ -311,7 +308,7 @@ public:
     Call(Signature *_sig) : sig(_sig), args(_sig->arg_names.size()), ret(0) { }
     ~Call();
 
-    inline const std::string & name(void) const {
+    inline const char * name(void) const {
         return sig->name;
     }
 

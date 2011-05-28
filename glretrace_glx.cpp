@@ -235,7 +235,7 @@ static void retrace_glXGetProcAddress(Trace::Call &call) {
 }
 
 void glretrace::retrace_call_glx(Trace::Call &call) {
-    const char *name = call.name().c_str();
+    const char *name = call.name();
 
     switch (name[3]) {
     case 'C':
