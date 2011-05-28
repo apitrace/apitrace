@@ -343,18 +343,10 @@ std::ostream & operator <<(std::ostream &os, Value *value) {
 }
 
 
-static inline const Value *unwrap(const Value *node) {
-    const Enum *c = dynamic_cast<const Enum *>(node);
-    if (c)
-        return c->sig->second;
-    return node;
-}
-
-
 static Null null;
 
 const Value & Value::operator[](size_t index) const {
-    const Array *array = dynamic_cast<const Array *>(unwrap(this));
+    const Array *array = dynamic_cast<const Array *>(this);
     if (array) {
         if (index < array->values.size()) {
             return *array->values[index];
