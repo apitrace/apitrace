@@ -334,13 +334,13 @@ class GlTracer(Tracer):
                     # Emit a fake function
                     print '        {'
                     print '            static const Trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
-                    print '            unsigned __call = Trace::BeginEnter(__sig);'
-                    print '            Trace::BeginArg(0);'
+                    print '            unsigned __call = __writer.beginEnter(__sig);'
+                    print '            __writer.beginArg(0);'
                     dump_instance(glapi.GLenum, enable_name)
-                    print '            Trace::EndArg();'
-                    print '            Trace::EndEnter();'
-                    print '            Trace::BeginLeave(__call);'
-                    print '            Trace::EndLeave();'
+                    print '            __writer.endArg();'
+                    print '            __writer.endEnter();'
+                    print '            __writer.beginLeave(__call);'
+                    print '            __writer.endLeave();'
                     print '        }'
 
             print '        return;'
@@ -424,19 +424,19 @@ class GlTracer(Tracer):
         Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned __call = Trace::BeginEnter(__memcpy_sig);'
-        print '        Trace::BeginArg(0);'
-        print '        Trace::LiteralOpaque(%s);' % dest
-        print '        Trace::EndArg();'
-        print '        Trace::BeginArg(1);'
-        print '        Trace::LiteralBlob(%s, %s);' % (src, length)
-        print '        Trace::EndArg();'
-        print '        Trace::BeginArg(2);'
-        print '        Trace::LiteralUInt(%s);' % length
-        print '        Trace::EndArg();'
-        print '        Trace::EndEnter();'
-        print '        Trace::BeginLeave(__call);'
-        print '        Trace::EndLeave();'
+        print '        unsigned __call = __writer.beginEnter(__memcpy_sig);'
+        print '        __writer.beginArg(0);'
+        print '        __writer.writeOpaque(%s);' % dest
+        print '        __writer.endArg();'
+        print '        __writer.beginArg(1);'
+        print '        __writer.writeBlob(%s, %s);' % (src, length)
+        print '        __writer.endArg();'
+        print '        __writer.beginArg(2);'
+        print '        __writer.writeUInt(%s);' % length
+        print '        __writer.endArg();'
+        print '        __writer.endEnter();'
+        print '        __writer.beginLeave(__call);'
+        print '        __writer.endLeave();'
        
     buffer_targets = [
         'ARRAY_BUFFER',
@@ -482,15 +482,15 @@ class GlTracer(Tracer):
             print '    if (!__element_array_buffer) {'
             if isinstance(arg.type, stdapi.Array):
                 Tracer.dump_arg_instance(self, function, arg)
-                print '        Trace::BeginArray(%s);' % arg.type.length
+                print '        __writer.beginArray(%s);' % arg.type.length
                 print '        for(GLsizei i = 0; i < %s; ++i) {' % arg.type.length
-                print '            Trace::BeginElement();'
-                print '            Trace::LiteralBlob((const void *)%s, count[i]*__gl_type_size(type));' % (arg.name)
-                print '            Trace::EndElement();'
+                print '            __writer.beginElement();'
+                print '            __writer.writeBlob((const void *)%s, count[i]*__gl_type_size(type));' % (arg.name)
+                print '            __writer.endElement();'
                 print '        }'
-                print '        Trace::EndArray();'
+                print '        __writer.endArray();'
             else:
-                print '        Trace::LiteralBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
+                print '        __writer.writeBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
             print '    } else {'
             Tracer.dump_arg_instance(self, function, arg)
             print '    }'
@@ -547,19 +547,19 @@ class GlTracer(Tracer):
 
             # Emit a fake function
             self.array_trace_intermezzo(api, uppercase_name)
-            print '            unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+            print '            unsigned __call = __writer.beginEnter(__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
-                print '            Trace::BeginArg(%u);' % (arg.index,)
+                print '            __writer.beginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
                     dump_instance(arg.type, arg.name)
                 else:
-                    print '            Trace::LiteralBlob((const void *)%s, __size);' % (arg.name)
-                print '            Trace::EndArg();'
+                    print '            __writer.writeBlob((const void *)%s, __size);' % (arg.name)
+                print '            __writer.endArg();'
             
-            print '            Trace::EndEnter();'
-            print '            Trace::BeginLeave(__call);'
-            print '            Trace::EndLeave();'
+            print '            __writer.endEnter();'
+            print '            __writer.beginLeave(__call);'
+            print '            __writer.endLeave();'
             print '        }'
             print '    }'
             self.array_epilog(api, uppercase_name)
@@ -591,19 +591,19 @@ class GlTracer(Tracer):
         print '                size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
         # Emit a fake function
-        print '                unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+        print '                unsigned __call = __writer.beginEnter(__%s_sig);' % (function.name,)
         for arg in function.args:
             assert not arg.output
-            print '                Trace::BeginArg(%u);' % (arg.index,)
+            print '                __writer.beginArg(%u);' % (arg.index,)
             if arg.name != 'pointer':
                 dump_instance(arg.type, arg.name)
             else:
-                print '                Trace::LiteralBlob((const void *)%s, __size);' % (arg.name)
-            print '                Trace::EndArg();'
+                print '                __writer.writeBlob((const void *)%s, __size);' % (arg.name)
+            print '                __writer.endArg();'
         
-        print '                Trace::EndEnter();'
-        print '                Trace::BeginLeave(__call);'
-        print '                Trace::EndLeave();'
+        print '                __writer.endEnter();'
+        print '                __writer.beginLeave(__call);'
+        print '                __writer.endLeave();'
         print '            }'
         print '        }'
         print '    }'
@@ -658,15 +658,15 @@ class GlTracer(Tracer):
         self.fake_call(function, [texture])
 
     def fake_call(self, function, args):
-        print '            unsigned __fake_call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+        print '            unsigned __fake_call = __writer.beginEnter(__%s_sig);' % (function.name,)
         for arg, instance in zip(function.args, args):
             assert not arg.output
-            print '            Trace::BeginArg(%u);' % (arg.index,)
+            print '            __writer.beginArg(%u);' % (arg.index,)
             dump_instance(arg.type, instance)
-            print '            Trace::EndArg();'
-        print '            Trace::EndEnter();'
-        print '            Trace::BeginLeave(__fake_call);'
-        print '            Trace::EndLeave();'
+            print '            __writer.endArg();'
+        print '            __writer.endEnter();'
+        print '            __writer.beginLeave(__fake_call);'
+        print '            __writer.endLeave();'
 
 
 

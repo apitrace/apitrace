@@ -32,6 +32,8 @@
 
 #include <stddef.h>
 
+#include <vector>
+
 namespace Trace {
 
     typedef unsigned Id;
@@ -67,43 +69,68 @@ namespace Trace {
         const BitmaskVal *values;
     };
 
-    void Open(void);
-    void Close(void);
+    class Writer {
+    protected:
+        void *g_gzFile;
+        unsigned call_no;
 
-    unsigned BeginEnter(const FunctionSig &function);
-    void EndEnter(void);
+        std::vector<bool> functions;
+        std::vector<bool> structs;
+        std::vector<bool> enums;
+        std::vector<bool> bitmasks;
 
-    void BeginLeave(unsigned call);
-    void EndLeave(void);
+    public:
+        Writer();
+        ~Writer();
 
-    void BeginArg(unsigned index);
-    inline void EndArg(void) {}
+        void open(void);
+        bool open(const char *filename);
+        void close(void);
 
-    void BeginReturn(void);
-    inline void EndReturn(void) {}
+        unsigned beginEnter(const FunctionSig &function);
+        void endEnter(void);
 
-    void BeginArray(size_t length);
-    inline void EndArray(void) {}
+        void beginLeave(unsigned call);
+        void endLeave(void);
 
-    inline void BeginElement(void) {}
-    inline void EndElement(void) {}
+        void beginArg(unsigned index);
+        inline void endArg(void) {}
 
-    void BeginStruct(const StructSig *sig);
-    inline void EndStruct(void) {}
+        void beginReturn(void);
+        inline void endReturn(void) {}
 
-    void LiteralBool(bool value);
-    void LiteralSInt(signed long long value);
-    void LiteralUInt(unsigned long long value);
-    void LiteralFloat(float value);
-    void LiteralDouble(double value);
-    void LiteralString(const char *str);
-    void LiteralString(const char *str, size_t size);
-    void LiteralWString(const wchar_t *str);
-    void LiteralBlob(const void *data, size_t size);
-    void LiteralEnum(const EnumSig *sig);
-    void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value);
-    void LiteralNull(void);
-    void LiteralOpaque(const void *ptr);
+        void beginArray(size_t length);
+        inline void endArray(void) {}
+
+        inline void beginElement(void) {}
+        inline void endElement(void) {}
+
+        void beginStruct(const StructSig *sig);
+        inline void endStruct(void) {}
+
+        void writeBool(bool value);
+        void writeSInt(signed long long value);
+        void writeUInt(unsigned long long value);
+        void writeFloat(float value);
+        void writeDouble(double value);
+        void writeString(const char *str);
+        void writeString(const char *str, size_t size);
+        void writeWString(const wchar_t *str);
+        void writeBlob(const void *data, size_t size);
+        void writeEnum(const EnumSig *sig);
+        void writeBitmask(const BitmaskSig &bitmask, unsigned long long value);
+        void writeNull(void);
+        void writeOpaque(const void *ptr);
+
+    protected:
+        void inline _write(const void *sBuffer, size_t dwBytesToWrite);
+        void inline _writeByte(char c);
+        void inline _writeUInt(unsigned long long value);
+        void inline _writeFloat(float value);
+        void inline _writeDouble(double value);
+        void inline _writeString(const char *str);
+
+    };
 }
 
 #endif /* _TRACE_WRITER_HPP_ */

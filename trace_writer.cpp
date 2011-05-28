@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <vector>
-
 #include <zlib.h>
 
 #include "os.hpp"
@@ -42,19 +40,51 @@
 namespace Trace {
 
 
-static gzFile g_gzFile = NULL;
-static void _Close(void) {
+Writer::Writer() :
+    g_gzFile(NULL),
+    call_no(0)
+{
+    close();
+};
+
+Writer::~Writer() {
+    close();
+};
+
+void
+Writer::close(void) {
     if (g_gzFile != NULL) {
         gzclose(g_gzFile);
         g_gzFile = NULL;
     }
 }
 
-static void _Open(const char *szExtension) {
-    _Close();
+bool
+Writer::open(const char *filename) {
+    close();
+
+    g_gzFile = gzopen(filename, "wb");
+    if (!g_gzFile) {
+        return false;
+    }
+
+    call_no = 0;
+    functions = std::vector<bool>();
+    structs = std::vector<bool>();
+    enums = std::vector<bool>();
+    bitmasks = std::vector<bool>();
+
+    _writeUInt(TRACE_VERSION);
+
+    return true;
+}
+
+void
+Writer::open(void) {
 
     static unsigned dwCounter = 0;
 
+    const char *szExtension = "trace";
     char szFileName[PATH_MAX];
     const char *lpFileName;
 
@@ -70,41 +100,42 @@ static void _Open(const char *szExtension) {
 
         for (;;) {
             FILE *file;
- 
+
             if (dwCounter)
                 snprintf(szFileName, PATH_MAX, "%s%c%s.%u.%s", szCurrentDir, PATH_SEP, szProcessName, dwCounter, szExtension);
             else
                 snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir, PATH_SEP, szProcessName, szExtension);
- 
+
             file = fopen(szFileName, "rb");
             if (file == NULL)
                 break;
- 
+
             fclose(file);
- 
+
             ++dwCounter;
         }
     }
 
     OS::DebugMessage("apitrace: tracing to %s\n", szFileName);
 
-    g_gzFile = gzopen(szFileName, "wb");
+    open(szFileName);
 }
 
-static inline void Write(const void *sBuffer, size_t dwBytesToWrite) {
+void inline
+Writer::_write(const void *sBuffer, size_t dwBytesToWrite) {
     if (g_gzFile == NULL)
         return;
 
     gzwrite(g_gzFile, sBuffer, dwBytesToWrite);
 }
 
-static inline void 
-WriteByte(char c) {
-    Write(&c, 1);
+void inline
+Writer::_writeByte(char c) {
+    _write(&c, 1);
 }
 
-void inline 
-WriteUInt(unsigned long long value) {
+void inline
+Writer::_writeUInt(unsigned long long value) {
     char buf[2 * sizeof value];
     unsigned len;
 
@@ -119,36 +150,27 @@ WriteUInt(unsigned long long value) {
     assert(len);
     buf[len - 1] &= 0x7f;
 
-    Write(buf, len);
+    _write(buf, len);
 }
 
-static inline void 
-WriteFloat(float value) {
+void inline
+Writer::_writeFloat(float value) {
     assert(sizeof value == 4);
-    Write((const char *)&value, sizeof value);
+    _write((const char *)&value, sizeof value);
 }
 
-static inline void 
-WriteDouble(double value) {
+void inline
+Writer::_writeDouble(double value) {
     assert(sizeof value == 8);
-    Write((const char *)&value, sizeof value);
+    _write((const char *)&value, sizeof value);
 }
 
-static inline void 
-WriteString(const char *str) {
+void inline
+Writer::_writeString(const char *str) {
     size_t len = strlen(str);
-    WriteUInt(len);
-    Write(str, len);
+    _writeUInt(len);
+    _write(str, len);
 }
-
-void Open(void) {
-    if (!g_gzFile) {
-        _Open("trace");
-        WriteUInt(TRACE_VERSION);
-    }
-}
-
-static unsigned call_no = 0;
 
 inline bool lookup(std::vector<bool> &map, size_t index) {
     if (index >= map.size()) {
@@ -159,219 +181,180 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
     }
 }
 
-static std::vector<bool> functions;
-static std::vector<bool> structs;
-static std::vector<bool> enums;
-static std::vector<bool> bitmasks;
-
-
-void Close(void) {
-    _Close();
-    call_no = 0;
-    functions = std::vector<bool>();
-    structs = std::vector<bool>();
-    enums = std::vector<bool>();
-    bitmasks = std::vector<bool>();
-}
-
-unsigned BeginEnter(const FunctionSig &function) {
+unsigned Writer::beginEnter(const FunctionSig &function) {
     OS::AcquireMutex();
-    Open();
-    WriteByte(Trace::EVENT_ENTER);
-    WriteUInt(function.id);
+
+    if (!g_gzFile) {
+        open();
+    }
+
+    _writeByte(Trace::EVENT_ENTER);
+    _writeUInt(function.id);
     if (!lookup(functions, function.id)) {
-        WriteString(function.name);
-        WriteUInt(function.num_args);
+        _writeString(function.name);
+        _writeUInt(function.num_args);
         for (unsigned i = 0; i < function.num_args; ++i) {
-            WriteString(function.args[i]);
+            _writeString(function.args[i]);
         }
         functions[function.id] = true;
     }
+
     return call_no++;
 }
 
-void EndEnter(void) {
-    WriteByte(Trace::CALL_END);
+void Writer::endEnter(void) {
+    _writeByte(Trace::CALL_END);
     gzflush(g_gzFile, Z_SYNC_FLUSH);
     OS::ReleaseMutex();
 }
 
-void BeginLeave(unsigned call) {
+void Writer::beginLeave(unsigned call) {
     OS::AcquireMutex();
-    WriteByte(Trace::EVENT_LEAVE);
-    WriteUInt(call);
+    _writeByte(Trace::EVENT_LEAVE);
+    _writeUInt(call);
 }
 
-void EndLeave(void) {
-    WriteByte(Trace::CALL_END);
+void Writer::endLeave(void) {
+    _writeByte(Trace::CALL_END);
     gzflush(g_gzFile, Z_SYNC_FLUSH);
     OS::ReleaseMutex();
 }
 
-void BeginArg(unsigned index) {
-    WriteByte(Trace::CALL_ARG);
-    WriteUInt(index);
+void Writer::beginArg(unsigned index) {
+    _writeByte(Trace::CALL_ARG);
+    _writeUInt(index);
 }
 
-void BeginReturn(void) {
-    WriteByte(Trace::CALL_RET);
+void Writer::beginReturn(void) {
+    _writeByte(Trace::CALL_RET);
 }
 
-void BeginArray(size_t length) {
-    WriteByte(Trace::TYPE_ARRAY);
-    WriteUInt(length);
+void Writer::beginArray(size_t length) {
+    _writeByte(Trace::TYPE_ARRAY);
+    _writeUInt(length);
 }
 
-void BeginStruct(const StructSig *sig) {
-    WriteByte(Trace::TYPE_STRUCT);
-    WriteUInt(sig->id);
+void Writer::beginStruct(const StructSig *sig) {
+    _writeByte(Trace::TYPE_STRUCT);
+    _writeUInt(sig->id);
     if (!lookup(structs, sig->id)) {
-        WriteString(sig->name);
-        WriteUInt(sig->num_members);
+        _writeString(sig->name);
+        _writeUInt(sig->num_members);
         for (unsigned i = 0; i < sig->num_members; ++i) {
-            WriteString(sig->members[i]);
+            _writeString(sig->members[i]);
         }
         structs[sig->id] = true;
     }
 }
 
-void LiteralBool(bool value) {
-    WriteByte(value ? Trace::TYPE_TRUE : Trace::TYPE_FALSE);
+void Writer::writeBool(bool value) {
+    _writeByte(value ? Trace::TYPE_TRUE : Trace::TYPE_FALSE);
 }
 
-void LiteralSInt(signed long long value) {
+void Writer::writeSInt(signed long long value) {
     if (value < 0) {
-        WriteByte(Trace::TYPE_SINT);
-        WriteUInt(-value);
+        _writeByte(Trace::TYPE_SINT);
+        _writeUInt(-value);
     } else {
-        WriteByte(Trace::TYPE_UINT);
-        WriteUInt(value);
+        _writeByte(Trace::TYPE_UINT);
+        _writeUInt(value);
     }
 }
 
-void LiteralUInt(unsigned long long value) {
-    WriteByte(Trace::TYPE_UINT);
-    WriteUInt(value);
+void Writer::writeUInt(unsigned long long value) {
+    _writeByte(Trace::TYPE_UINT);
+    _writeUInt(value);
 }
 
-void LiteralFloat(float value) {
-    WriteByte(Trace::TYPE_FLOAT);
-    WriteFloat(value);
+void Writer::writeFloat(float value) {
+    _writeByte(Trace::TYPE_FLOAT);
+    _writeFloat(value);
 }
 
-void LiteralDouble(double value) {
-    WriteByte(Trace::TYPE_DOUBLE);
-    WriteDouble(value);
+void Writer::writeDouble(double value) {
+    _writeByte(Trace::TYPE_DOUBLE);
+    _writeDouble(value);
 }
 
-void LiteralString(const char *str) {
+void Writer::writeString(const char *str) {
     if (!str) {
-        LiteralNull();
+        Writer::writeNull();
         return;
     }
-    WriteByte(Trace::TYPE_STRING);
-    WriteString(str);
+    _writeByte(Trace::TYPE_STRING);
+    _writeString(str);
 }
 
-void LiteralString(const char *str, size_t len) {
+void Writer::writeString(const char *str, size_t len) {
     if (!str) {
-        LiteralNull();
+        Writer::writeNull();
         return;
     }
-    WriteByte(Trace::TYPE_STRING);
-    WriteUInt(len);
-    Write(str, len);
+    _writeByte(Trace::TYPE_STRING);
+    _writeUInt(len);
+    _write(str, len);
 }
 
-void LiteralWString(const wchar_t *str) {
+void Writer::writeWString(const wchar_t *str) {
     if (!str) {
-        LiteralNull();
+        Writer::writeNull();
         return;
     }
-    WriteByte(Trace::TYPE_STRING);
-    WriteString("<wide-string>");
+    _writeByte(Trace::TYPE_STRING);
+    _writeString("<wide-string>");
 }
 
-void LiteralBlob(const void *data, size_t size) {
+void Writer::writeBlob(const void *data, size_t size) {
     if (!data) {
-        LiteralNull();
+        Writer::writeNull();
         return;
     }
-    WriteByte(Trace::TYPE_BLOB);
-    WriteUInt(size);
+    _writeByte(Trace::TYPE_BLOB);
+    _writeUInt(size);
     if (size) {
-        Write(data, size);
+        _write(data, size);
     }
 }
 
-void LiteralEnum(const EnumSig *sig) {
-    WriteByte(Trace::TYPE_ENUM);
-    WriteUInt(sig->id);
+void Writer::writeEnum(const EnumSig *sig) {
+    _writeByte(Trace::TYPE_ENUM);
+    _writeUInt(sig->id);
     if (!lookup(enums, sig->id)) {
-        WriteString(sig->name);
-        LiteralSInt(sig->value);
+        _writeString(sig->name);
+        Writer::writeSInt(sig->value);
         enums[sig->id] = true;
     }
 }
 
-void LiteralBitmask(const BitmaskSig &bitmask, unsigned long long value) {
-    WriteByte(Trace::TYPE_BITMASK);
-    WriteUInt(bitmask.id);
+void Writer::writeBitmask(const BitmaskSig &bitmask, unsigned long long value) {
+    _writeByte(Trace::TYPE_BITMASK);
+    _writeUInt(bitmask.id);
     if (!lookup(bitmasks, bitmask.id)) {
-        WriteUInt(bitmask.count);
+        _writeUInt(bitmask.count);
         for (unsigned i = 0; i < bitmask.count; ++i) {
             if (i != 0 && bitmask.values[i].value == 0) {
                 OS::DebugMessage("apitrace: bitmask %s is zero but is not first flag\n", bitmask.values[i].name);
             }
-            WriteString(bitmask.values[i].name);
-            WriteUInt(bitmask.values[i].value);
+            _writeString(bitmask.values[i].name);
+            _writeUInt(bitmask.values[i].value);
         }
         bitmasks[bitmask.id] = true;
     }
-    WriteUInt(value);
+    _writeUInt(value);
 }
 
-void LiteralNull(void) {
-    WriteByte(Trace::TYPE_NULL);
+void Writer::writeNull(void) {
+    _writeByte(Trace::TYPE_NULL);
 }
 
-void LiteralOpaque(const void *addr) {
+void Writer::writeOpaque(const void *addr) {
     if (!addr) {
-        LiteralNull();
+        Writer::writeNull();
         return;
     }
-    WriteByte(Trace::TYPE_OPAQUE);
-    WriteUInt((size_t)addr);
+    _writeByte(Trace::TYPE_OPAQUE);
+    _writeUInt((size_t)addr);
 }
 
 } /* namespace Trace */
 
-
-#ifdef _WIN32
-
-#if 0
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-    switch(fdwReason) {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-        return TRUE;
-    case DLL_THREAD_DETACH:
-        return TRUE;
-    case DLL_PROCESS_DETACH:
-        Trace::Close();
-        return TRUE;
-    }
-    (void)hinstDLL;
-    (void)lpvReserved;
-    return TRUE;
-}
-#endif
-
-#else
-
-static void _uninit(void) __attribute__((destructor));
-static void _uninit(void) {
-    Trace::Close();
-}
-
-#endif

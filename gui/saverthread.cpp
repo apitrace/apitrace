@@ -118,7 +118,7 @@ deleteBitmaskSig(Trace::BitmaskSig *sig)
 }
 
 static void
-writeValue(const QVariant &var, unsigned &id)
+writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
 {
     int arrayType   = QMetaType::type("ApiArray");
     int bitmaskType = QMetaType::type("ApiBitmask");
@@ -129,73 +129,73 @@ writeValue(const QVariant &var, unsigned &id)
 
     switch(type) {
     case QVariant::Bool:
-        Trace::LiteralBool(var.toBool());
+        writer.writeBool(var.toBool());
         break;
     case QVariant::ByteArray: {
         QByteArray ba = var.toByteArray();
-        Trace::LiteralBlob((const void*)ba.constData(), ba.size());
+        writer.writeBlob((const void*)ba.constData(), ba.size());
     }
         break;
     case QVariant::Double:
-        Trace::LiteralDouble(var.toDouble());
+        writer.writeDouble(var.toDouble());
         break;
     case QMetaType::Float:
-        Trace::LiteralFloat(var.toFloat());
+        writer.writeFloat(var.toFloat());
         break;
     case QVariant::Int:
-        Trace::LiteralSInt(var.toInt());
+        writer.writeSInt(var.toInt());
         break;
     case QVariant::LongLong:
-        Trace::LiteralSInt(var.toLongLong());
+        writer.writeSInt(var.toLongLong());
         break;
     case QVariant::String: {
         QString str = var.toString();
-        Trace::LiteralString(str.toLocal8Bit().constData(), str.length());
+        writer.writeString(str.toLocal8Bit().constData(), str.length());
     }
         break;
     case QVariant::UInt:
-        Trace::LiteralUInt(var.toInt());
+        writer.writeUInt(var.toInt());
         break;
     case QVariant::ULongLong:
-        Trace::LiteralUInt(var.toLongLong());
+        writer.writeUInt(var.toLongLong());
         break;
     default:
         if (type == arrayType) {
             ApiArray array = var.value<ApiArray>();
             QList<QVariant> vals = array.values();
-            Trace::BeginArray(vals.count());
+            writer.beginArray(vals.count());
             foreach(QVariant el, vals) {
-                Trace::BeginElement();
-                writeValue(el, ++id);
-                Trace::EndElement();
+                writer.beginElement();
+                writeValue(writer, el, ++id);
+                writer.endElement();
             }
-            Trace::EndArray();
+            writer.endArray();
         } else if (type == bitmaskType) {
             ApiBitmask bm = var.value<ApiBitmask>();
             Trace::BitmaskSig *sig = createBitmaskSig(bm, ++id);
-            LiteralBitmask(*sig, bm.value());
+            writer.writeBitmask(*sig, bm.value());
             deleteBitmaskSig(sig);
         } else if (type == structType) {
             ApiStruct apiStr = var.value<ApiStruct>();
             QList<QVariant> vals = apiStr.values();
             Trace::StructSig *str = createStructSig(apiStr, ++id);
-            Trace::BeginStruct(str);
+            writer.beginStruct(str);
             foreach(QVariant val, vals) {
-                writeValue(val, ++id);
+                writeValue(writer, val, ++id);
             }
-            Trace::EndStruct();
+            writer.endStruct();
             deleteStructSig(str);
         } else if (type == pointerType) {
             ApiPointer apiPtr = var.value<ApiPointer>();
-            //Trace::BeginArray(1);
-            //Trace::BeginElement();
-            Trace::LiteralOpaque((const void*)apiPtr.value());
-            //Trace::EndElement();
-            //Trace::EndArray();
+            //writer.beginArray(1);
+            //writer.beginElement();
+            writer.writeOpaque((const void*)apiPtr.value());
+            //writer.endElement();
+            //writer.endArray();
         } else if (type == enumType) {
             ApiEnum apiEnum = var.value<ApiEnum>();
             Trace::EnumSig *sig = createEnumSig(apiEnum, ++id);
-            Trace::LiteralEnum(sig);
+            writer.writeEnum(sig);
             deleteEnumSig(sig);
         } else {
             qWarning()<<"Unsupported write variant : "
@@ -219,39 +219,39 @@ void SaverThread::saveFile(const QString &fileName,
 
 void SaverThread::run()
 {
-    qputenv("TRACE_FILE", m_fileName.toLocal8Bit());
     unsigned id = 0;
-    qDebug()<<"saver thread!";
-    Trace::Open();
+    qDebug() << "Saving  : " << m_fileName;
+    Trace::Writer writer;
+    writer.open(m_fileName.toLocal8Bit());
     for (int i = 0; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];
         Trace::FunctionSig *funcSig = createFunctionSig(call, ++id);
-        unsigned callNo = Trace::BeginEnter(*funcSig);
+        unsigned callNo = writer.beginEnter(*funcSig);
         {
             //args
             QVariantList vars = call->arguments();
             int index = 0;
             foreach(QVariant var, vars) {
-                Trace::BeginArg(index++);
-                writeValue(var, ++id);
-                Trace::EndArg();
+                writer.beginArg(index++);
+                writeValue(writer, var, ++id);
+                writer.endArg();
             }
         }
-        Trace::EndEnter();
-        Trace::BeginLeave(callNo);
+        writer.endEnter();
+        writer.beginLeave(callNo);
         {
             QVariant ret = call->returnValue();
             if (!ret.isNull()) {
-                Trace::BeginReturn();
-                writeValue(ret, ++id);
-                Trace::EndReturn();
+                writer.beginReturn();
+                writeValue(writer, ret, ++id);
+                writer.endReturn();
             }
         }
-        Trace::EndLeave();
+        writer.endLeave();
 
         deleteFunctionSig(funcSig);
     }
-    Trace::Close();
+    writer.close();
 
     emit traceSaved();
 }

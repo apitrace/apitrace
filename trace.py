@@ -60,10 +60,10 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print '    static const Trace::StructSig sig = {'
         print '       %u, "%s", %u, members' % (int(struct.id), struct.name, len(struct.members))
         print '    };'
-        print '    Trace::BeginStruct(&sig);'
+        print '    __writer.beginStruct(&sig);'
         for type, name in struct.members:
             dump_instance(type, 'value.%s' % (name,))
-        print '    Trace::EndStruct();'
+        print '    __writer.endStruct();'
         print '}'
         print
 
@@ -90,10 +90,10 @@ class DumpDeclarator(stdapi.OnceVisitor):
             print '        sig = &sig%u;' % i
             print '        break;'
         print '    default:'
-        print '        Trace::LiteralSInt(value);'
+        print '        __writer.writeSInt(value);'
         print '        return;'
         print '    }'
-        print '    Trace::LiteralEnum(sig);'
+        print '    __writer.writeEnum(sig);'
         print '}'
         print
 
@@ -140,13 +140,13 @@ class DumpImplementer(stdapi.Visitor):
     '''Dump an instance.'''
 
     def visit_literal(self, literal, instance):
-        print '    Trace::Literal%s(%s);' % (literal.format, instance)
+        print '    __writer.write%s(%s);' % (literal.format, instance)
 
     def visit_string(self, string, instance):
         if string.length is not None:
-            print '    Trace::LiteralString((const char *)%s, %s);' % (instance, string.length)
+            print '    __writer.writeString((const char *)%s, %s);' % (instance, string.length)
         else:
-            print '    Trace::LiteralString((const char *)%s);' % instance
+            print '    __writer.writeString((const char *)%s);' % instance
 
     def visit_const(self, const, instance):
         self.visit(const.type, instance)
@@ -157,36 +157,36 @@ class DumpImplementer(stdapi.Visitor):
     def visit_array(self, array, instance):
         print '    if (%s) {' % instance
         index = '__i' + array.type.id
-        print '        Trace::BeginArray(%s);' % (array.length,)
+        print '        __writer.beginArray(%s);' % (array.length,)
         print '        for (int %s = 0; %s < %s; ++%s) {' % (index, index, array.length, index)
-        print '            Trace::BeginElement();'
+        print '            __writer.beginElement();'
         self.visit(array.type, '(%s)[%s]' % (instance, index))
-        print '            Trace::EndElement();'
+        print '            __writer.endElement();'
         print '        }'
-        print '        Trace::EndArray();'
+        print '        __writer.endArray();'
         print '    }'
         print '    else'
-        print '        Trace::LiteralNull();'
+        print '        __writer.writeNull();'
 
     def visit_blob(self, blob, instance):
-        print '    Trace::LiteralBlob(%s, %s);' % (instance, blob.size)
+        print '    __writer.writeBlob(%s, %s);' % (instance, blob.size)
 
     def visit_enum(self, enum, instance):
         print '    __traceEnum%s(%s);' % (enum.id, instance)
 
     def visit_bitmask(self, bitmask, instance):
-        print '    Trace::LiteralBitmask(__bitmask%s_sig, %s);' % (bitmask.id, instance)
+        print '    __writer.writeBitmask(__bitmask%s_sig, %s);' % (bitmask.id, instance)
 
     def visit_pointer(self, pointer, instance):
         print '    if (%s) {' % instance
-        print '        Trace::BeginArray(1);'
-        print '        Trace::BeginElement();'
+        print '        __writer.beginArray(1);'
+        print '        __writer.beginElement();'
         dump_instance(pointer.type, "*" + instance)
-        print '        Trace::EndElement();'
-        print '        Trace::EndArray();'
+        print '        __writer.endElement();'
+        print '        __writer.endArray();'
         print '    }'
         print '    else'
-        print '        Trace::LiteralNull();'
+        print '        __writer.writeNull();'
 
     def visit_handle(self, handle, instance):
         self.visit(handle.type, instance)
@@ -195,10 +195,10 @@ class DumpImplementer(stdapi.Visitor):
         self.visit(alias.type, instance)
 
     def visit_opaque(self, opaque, instance):
-        print '    Trace::LiteralOpaque((const void *)%s);' % instance
+        print '    __writer.writeOpaque((const void *)%s);' % instance
 
     def visit_interface(self, interface, instance):
-        print '    Trace::LiteralOpaque((const void *)&%s);' % instance
+        print '    __writer.writeOpaque((const void *)&%s);' % instance
 
 
 dump_instance = DumpImplementer().visit
@@ -307,7 +307,8 @@ class Tracer:
         self.footer(api)
 
     def header(self, api):
-        pass
+        print 'Trace::Writer __writer;'
+        print
 
     def footer(self, api):
         pass
@@ -344,21 +345,21 @@ class Tracer:
         print
 
     def trace_function_impl_body(self, function):
-        print '    unsigned __call = Trace::BeginEnter(__%s_sig);' % (function.name,)
+        print '    unsigned __call = __writer.beginEnter(__%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
                 self.dump_arg(function, arg)
-        print '    Trace::EndEnter();'
+        print '    __writer.endEnter();'
         self.dispatch_function(function)
-        print '    Trace::BeginLeave(__call);'
+        print '    __writer.beginLeave(__call);'
         for arg in function.args:
             if arg.output:
                 self.dump_arg(function, arg)
                 self.wrap_arg(function, arg)
         if function.type is not stdapi.Void:
             self.dump_ret(function, "__result")
-        print '    Trace::EndLeave();'
+        print '    __writer.endLeave();'
 
     def dispatch_function(self, function):
         if function.type is stdapi.Void:
@@ -369,9 +370,9 @@ class Tracer:
         print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
 
     def dump_arg(self, function, arg):
-        print '    Trace::BeginArg(%u);' % (arg.index,)
+        print '    __writer.beginArg(%u);' % (arg.index,)
         self.dump_arg_instance(function, arg)
-        print '    Trace::EndArg();'
+        print '    __writer.endArg();'
 
     def dump_arg_instance(self, function, arg):
         dump_instance(arg.type, arg.name)
@@ -383,9 +384,9 @@ class Tracer:
         unwrap_instance(arg.type, arg.name)
 
     def dump_ret(self, function, instance):
-        print '    Trace::BeginReturn();'
+        print '    __writer.beginReturn();'
         dump_instance(function.type, instance)
-        print '    Trace::EndReturn();'
+        print '    __writer.endReturn();'
 
     def wrap_ret(self, function, instance):
         wrap_instance(function.type, instance)
@@ -409,10 +410,10 @@ class Tracer:
         print method.prototype(interface_wrap_name(interface) + '::' + method.name) + ' {'
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(method.id), interface.name + '::' + method.name, len(method.args) + 1)
-        print '    unsigned __call = Trace::BeginEnter(__sig);'
-        print '    Trace::BeginArg(0);'
-        print '    Trace::LiteralOpaque((const void *)m_pInstance);'
-        print '    Trace::EndArg();'
+        print '    unsigned __call = __writer.beginEnter(__sig);'
+        print '    __writer.beginArg(0);'
+        print '    __writer.writeOpaque((const void *)m_pInstance);'
+        print '    __writer.endArg();'
         for arg in method.args:
             if not arg.output:
                 self.unwrap_arg(method, arg)
@@ -422,19 +423,19 @@ class Tracer:
         else:
             print '    %s __result;' % method.type
             result = '__result = '
-        print '    Trace::EndEnter();'
+        print '    __writer.endEnter();'
         print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
-        print '    Trace::BeginLeave(__call);'
+        print '    __writer.beginLeave(__call);'
         for arg in method.args:
             if arg.output:
                 self.dump_arg(method, arg)
                 self.wrap_arg(method, arg)
         if method.type is not stdapi.Void:
-            print '    Trace::BeginReturn();'
+            print '    __writer.beginReturn();'
             dump_instance(method.type, "__result")
-            print '    Trace::EndReturn();'
+            print '    __writer.endReturn();'
             wrap_instance(method.type, '__result')
-        print '    Trace::EndLeave();'
+        print '    __writer.endLeave();'
         if method.name == 'QueryInterface':
             print '    if (ppvObj && *ppvObj) {'
             print '        if (*ppvObj == m_pInstance) {'
