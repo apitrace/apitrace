@@ -58,15 +58,15 @@ namespace Trace {
         signed long long value;
     };
 
-    struct BitmaskVal {
+    struct BitmaskFlag {
         const char *name;
         unsigned long long value;
     };
 
     struct BitmaskSig {
         Id id;
-        unsigned count;
-        const BitmaskVal *values;
+        unsigned num_flags;
+        const BitmaskFlag *flags;
     };
 
     class Writer {

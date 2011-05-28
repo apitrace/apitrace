@@ -330,13 +330,13 @@ void Writer::writeBitmask(const BitmaskSig &bitmask, unsigned long long value) {
     _writeByte(Trace::TYPE_BITMASK);
     _writeUInt(bitmask.id);
     if (!lookup(bitmasks, bitmask.id)) {
-        _writeUInt(bitmask.count);
-        for (unsigned i = 0; i < bitmask.count; ++i) {
-            if (i != 0 && bitmask.values[i].value == 0) {
-                OS::DebugMessage("apitrace: bitmask %s is zero but is not first flag\n", bitmask.values[i].name);
+        _writeUInt(bitmask.num_flags);
+        for (unsigned i = 0; i < bitmask.num_flags; ++i) {
+            if (i != 0 && bitmask.flags[i].value == 0) {
+                OS::DebugMessage("apitrace: bitmask %s is zero but is not first flag\n", bitmask.flags[i].name);
             }
-            _writeString(bitmask.values[i].name);
-            _writeUInt(bitmask.values[i].value);
+            _writeString(bitmask.flags[i].name);
+            _writeUInt(bitmask.flags[i].value);
         }
         bitmasks[bitmask.id] = true;
     }

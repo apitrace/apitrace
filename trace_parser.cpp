@@ -330,19 +330,18 @@ Value *Parser::parse_bitmask() {
     size_t id = read_uint();
     BitmaskSig *sig = lookup(bitmasks, id);
     if (!sig) {
-        size_t count = read_uint();
-        BitmaskVal *values = new BitmaskVal[count];
-        for (BitmaskVal *it = values; it != values + count; ++it) {
+        sig = new BitmaskSig;
+        sig->id = id;
+        sig->num_flags = read_uint();
+        BitmaskFlag *flags = new BitmaskFlag[sig->num_flags];
+        for (BitmaskFlag *it = flags; it != flags + sig->num_flags; ++it) {
             it->name = read_string();
             it->value = read_uint();
-            if (it->value == 0 && it != values) {
+            if (it->value == 0 && it != flags) {
                 std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
             }
         }
-        sig = new BitmaskSig;
-        sig->id = id;
-        sig->count = count;
-        sig->values = values;
+        sig->flags = flags;
         bitmasks[id] = sig;
     }
     assert(sig);

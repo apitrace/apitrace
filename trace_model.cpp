@@ -257,7 +257,7 @@ public:
         unsigned long long value = bitmask->value;
         const BitmaskSig *sig = bitmask->sig;
         bool first = true;
-        for (const BitmaskVal *it = sig->values; value != 0 && it != sig->values + sig->count; ++it) {
+        for (const BitmaskFlag *it = sig->flags; value != 0 && it != sig->flags + sig->num_flags; ++it) {
             if ((it->value && (value & it->value) == it->value) ||
                 (!it->value && value == 0)) {
                 if (!first) {

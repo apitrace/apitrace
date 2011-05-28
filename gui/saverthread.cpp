@@ -92,16 +92,16 @@ createBitmaskSig(const ApiBitmask &bt, unsigned id)
     ApiBitmask::Signature::const_iterator itr;
 
     Trace::BitmaskSig *sig = new Trace::BitmaskSig();
-    Trace::BitmaskVal *values = new Trace::BitmaskVal[bsig.count()];
+    Trace::BitmaskFlag *flags = new Trace::BitmaskFlag[bsig.count()];
 
     sig->id = id;
-    sig->count = bsig.count();
-    sig->values = values;
+    sig->num_flags = bsig.count();
+    sig->flags = flags;
 
     int i = 0;
     for (itr = bsig.constBegin(); itr != bsig.constEnd(); ++itr, ++i) {
-        values[i].name = qstrdup(itr->first.toLocal8Bit());
-        values[i].value = itr->second;
+        flags[i].name = qstrdup(itr->first.toLocal8Bit());
+        flags[i].value = itr->second;
     }
 
     return sig;
@@ -110,10 +110,10 @@ createBitmaskSig(const ApiBitmask &bt, unsigned id)
 static void
 deleteBitmaskSig(Trace::BitmaskSig *sig)
 {
-    for (int i = 0; i < sig->count; ++i) {
-        delete [] sig->values[i].name;
+    for (int i = 0; i < sig->num_flags; ++i) {
+        delete [] sig->flags[i].name;
     }
-    delete [] sig->values;
+    delete [] sig->flags;
     delete sig;
 }
 

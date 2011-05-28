@@ -98,13 +98,13 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print
 
     def visit_bitmask(self, bitmask):
-        print 'static const Trace::BitmaskVal __bitmask%s_vals[] = {' % (bitmask.id)
+        print 'static const Trace::BitmaskFlag __bitmask%s_flags[] = {' % (bitmask.id)
         for value in bitmask.values:
             print '   {"%s", %s},' % (value, value)
         print '};'
         print
         print 'static const Trace::BitmaskSig __bitmask%s_sig = {' % (bitmask.id)
-        print '   %u, %u, __bitmask%s_vals' % (int(bitmask.id), len(bitmask.values), bitmask.id)
+        print '   %u, %u, __bitmask%s_flags' % (int(bitmask.id), len(bitmask.values), bitmask.id)
         print '};'
         print
 

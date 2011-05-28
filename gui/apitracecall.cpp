@@ -164,8 +164,8 @@ void ApiBitmask::init(const Trace::Bitmask *bitmask)
         return;
 
     m_value = bitmask->value;
-    for (const Trace::BitmaskVal *it = bitmask->sig->values;
-         it != bitmask->sig->values + bitmask->sig->count; ++it) {
+    for (const Trace::BitmaskFlag *it = bitmask->sig->flags;
+         it != bitmask->sig->flags + bitmask->sig->num_flags; ++it) {
         assert(it->value);
         QPair<QString, unsigned long long> pair;
 
