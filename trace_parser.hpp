@@ -45,7 +45,7 @@ protected:
     typedef std::list<Call *> CallList;
     CallList calls;
 
-    typedef std::vector<Call::Signature *> FunctionMap;
+    typedef std::vector<FunctionSig *> FunctionMap;
     FunctionMap functions;
 
     typedef std::vector<StructSig *> StructMap;

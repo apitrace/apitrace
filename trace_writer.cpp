@@ -194,7 +194,7 @@ unsigned Writer::beginEnter(const FunctionSig &function) {
         _writeString(function.name);
         _writeUInt(function.num_args);
         for (unsigned i = 0; i < function.num_args; ++i) {
-            _writeString(function.args[i]);
+            _writeString(function.arg_names[i]);
         }
         functions[function.id] = true;
     }

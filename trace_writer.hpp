@@ -42,7 +42,7 @@ namespace Trace {
         Id id;
         const char *name;
         unsigned num_args;
-        const char **args;
+        const char **arg_names;
     };
 
     struct StructSig {

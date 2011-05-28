@@ -733,7 +733,7 @@ ApiTraceCall::ApiTraceCall(const Trace::Call *call)
     m_index = call->no;
 
     QString argumentsText;
-    for (int i = 0; i < call->sig->arg_names.size(); ++i) {
+    for (int i = 0; i < call->sig->num_args; ++i) {
         m_argNames +=
             QString::fromStdString(call->sig->arg_names[i]);
     }

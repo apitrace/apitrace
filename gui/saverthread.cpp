@@ -19,9 +19,9 @@ createFunctionSig(ApiTraceCall *call, unsigned id)
 
     QStringList args = call->argNames();
     sig->num_args = args.count();
-    sig->args = new const char*[args.count()];
+    sig->arg_names = new const char*[args.count()];
     for (int i = 0; i < args.count(); ++i) {
-        sig->args[i] = qstrdup(args[i].toLocal8Bit());
+        sig->arg_names[i] = qstrdup(args[i].toLocal8Bit());
     }
 
     return sig;
@@ -31,9 +31,9 @@ static void
 deleteFunctionSig(Trace::FunctionSig *sig)
 {
     for (int i = 0; i < sig->num_args; ++i) {
-        delete [] sig->args[i];
+        delete [] sig->arg_names[i];
     }
-    delete [] sig->args;
+    delete [] sig->arg_names;
     delete [] sig->name;
     delete sig;
 }

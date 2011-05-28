@@ -275,17 +275,12 @@ std::ostream & operator <<(std::ostream &os, Value *value);
 class Call
 {
 public:
-    struct Signature {
-        const char * name;
-        std::vector<const char *> arg_names;
-    };
-
     unsigned no;
-    const Signature *sig;
+    const FunctionSig *sig;
     std::vector<Value *> args;
     Value *ret;
 
-    Call(Signature *_sig) : sig(_sig), args(_sig->arg_names.size()), ret(0) { }
+    Call(FunctionSig *_sig) : sig(_sig), args(_sig->num_args), ret(0) { }
     ~Call();
 
     inline const char * name(void) const {

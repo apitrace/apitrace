@@ -137,14 +137,16 @@ T *lookup(std::vector<T *> &map, size_t index) {
 void Parser::parse_enter(void) {
     size_t id = read_uint();
 
-    Call::Signature *sig = lookup(functions, id);
+    FunctionSig *sig = lookup(functions, id);
     if (!sig) {
-        sig = new Call::Signature;
+        sig = new FunctionSig;
         sig->name = read_string();
-        unsigned size = read_uint();
-        for (unsigned i = 0; i < size; ++i) {
-            sig->arg_names.push_back(read_string());
+        sig->num_args = read_uint();
+        const char **arg_names = new const char *[sig->num_args];
+        for (unsigned i = 0; i < sig->num_args; ++i) {
+            arg_names[i] = read_string();
         }
+        sig->arg_names = arg_names;
         functions[id] = sig;
     }
     assert(sig);
