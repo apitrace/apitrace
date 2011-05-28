@@ -51,7 +51,7 @@ protected:
     typedef std::vector<Struct::Signature *> StructMap;
     StructMap structs;
 
-    typedef std::vector<Enum::Signature *> EnumMap;
+    typedef std::vector<EnumSig *> EnumMap;
     EnumMap enums;
 
     typedef std::vector<BitmaskSig *> BitmaskMap;

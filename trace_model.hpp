@@ -162,21 +162,7 @@ public:
 class Enum : public Value
 {
 public:
-    struct Signature : public std::pair<const char *, Value *>
-    {
-        Signature()
-            : std::pair<const char *, Value *>()
-        {}
-        Signature(const char *n, Trace::Value *val)
-            : std::pair<const char *, Value *>(n, val)
-        {}
-        ~Signature()
-        {
-            delete second;
-        }
-    };
-
-    Enum(const Signature *_sig) : sig(_sig) {}
+    Enum(const EnumSig *_sig) : sig(_sig) {}
 
     bool toBool(void) const;
     signed long long toSInt(void) const;
@@ -185,7 +171,7 @@ public:
     virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
-    const Signature *sig;
+    const EnumSig *sig;
 };
 
 

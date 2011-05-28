@@ -271,13 +271,10 @@ void VariantVisitor::visit(Trace::String *node)
 
 void VariantVisitor::visit(Trace::Enum *e)
 {
-    VariantVisitor vis;
-    e->sig->second->visit(vis);
-
-    QVariant val = vis.variant();
+    QVariant val = QVariant(e->sig->value);
 
     m_variant = QVariant::fromValue(
-        ApiEnum(QString::fromStdString(e->sig->first), val));
+        ApiEnum(QString::fromStdString(e->sig->name), val));
 }
 
 void VariantVisitor::visit(Trace::Bitmask *bitmask)

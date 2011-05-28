@@ -309,11 +309,14 @@ Value *Parser::parse_string() {
 
 Value *Parser::parse_enum() {
     size_t id = read_uint();
-    Enum::Signature *sig = lookup(enums, id);
+    EnumSig *sig = lookup(enums, id);
     if (!sig) {
-        const char *name = read_string();
+        sig = new EnumSig;
+        sig->id = id;
+        sig->name = read_string();
         Value *value = parse_value();
-        sig = new Enum::Signature(name, value);
+        sig->value = value->toSInt();
+        delete value;
         enums[id] = sig;
     }
     assert(sig);

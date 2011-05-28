@@ -69,7 +69,7 @@ bool SInt   ::toBool(void) const { return value != 0; }
 bool UInt   ::toBool(void) const { return value != 0; }
 bool Float  ::toBool(void) const { return value != 0; }
 bool String ::toBool(void) const { return true; }
-bool Enum   ::toBool(void) const { return sig->second->toBool(); }
+bool Enum   ::toBool(void) const { return sig->value != 0; }
 bool Struct ::toBool(void) const { return true; }
 bool Array  ::toBool(void) const { return true; }
 bool Blob   ::toBool(void) const { return true; }
@@ -83,7 +83,7 @@ signed long long Bool   ::toSInt(void) const { return static_cast<signed long lo
 signed long long SInt   ::toSInt(void) const { return value; }
 signed long long UInt   ::toSInt(void) const { assert(static_cast<signed long long>(value) >= 0); return static_cast<signed long long>(value); }
 signed long long Float  ::toSInt(void) const { return static_cast<signed long long>(value); }
-signed long long Enum   ::toSInt(void) const { return sig->second->toSInt(); }
+signed long long Enum   ::toSInt(void) const { return sig->value; }
 
 
 // unsigned integer cast
@@ -93,7 +93,7 @@ unsigned long long Bool   ::toUInt(void) const { return static_cast<unsigned lon
 unsigned long long SInt   ::toUInt(void) const { assert(value >= 0); return static_cast<signed long long>(value); }
 unsigned long long UInt   ::toUInt(void) const { return value; }
 unsigned long long Float  ::toUInt(void) const { return static_cast<unsigned long long>(value); }
-unsigned long long Enum   ::toUInt(void) const { return sig->second->toUInt(); }
+unsigned long long Enum   ::toUInt(void) const { assert(sig->value >= 0); return sig->value; }
 
 
 // floating point cast
@@ -103,7 +103,7 @@ float Bool   ::toFloat(void) const { return static_cast<float>(value); }
 float SInt   ::toFloat(void) const { return static_cast<float>(value); }
 float UInt   ::toFloat(void) const { return static_cast<float>(value); }
 float Float  ::toFloat(void) const { return value; }
-float Enum   ::toFloat(void) const { return sig->second->toFloat(); }
+float Enum   ::toFloat(void) const { return static_cast<float>(sig->value); }
 
 
 // floating point cast
@@ -113,7 +113,7 @@ double Bool   ::toDouble(void) const { return static_cast<double>(value); }
 double SInt   ::toDouble(void) const { return static_cast<double>(value); }
 double UInt   ::toDouble(void) const { return static_cast<double>(value); }
 double Float  ::toDouble(void) const { return value; }
-double Enum   ::toDouble(void) const { return sig->second->toDouble(); }
+double Enum   ::toDouble(void) const { return static_cast<double>(sig->value); }
 
 
 // pointer cast
@@ -156,7 +156,7 @@ void Visitor::visit(SInt *) { assert(0); }
 void Visitor::visit(UInt *) { assert(0); }
 void Visitor::visit(Float *) { assert(0); }
 void Visitor::visit(String *) { assert(0); }
-void Visitor::visit(Enum *node) { _visit(node->sig->second); }
+void Visitor::visit(Enum *node) { assert(0); }
 void Visitor::visit(Bitmask *node) { visit(static_cast<UInt *>(node)); }
 void Visitor::visit(Struct *) { assert(0); }
 void Visitor::visit(Array *) { assert(0); }
@@ -250,7 +250,7 @@ public:
     }
 
     void visit(Enum *node) {
-        os << literal << node->sig->first << normal;
+        os << literal << node->sig->name << normal;
     }
 
     void visit(Bitmask *bitmask) {
