@@ -93,6 +93,8 @@ namespace Trace {
         void writeNull(void);
         void writeOpaque(const void *ptr);
 
+        void writeCall(Call *call);
+
     protected:
         void inline _write(const void *sBuffer, size_t dwBytesToWrite);
         void inline _writeByte(char c);
