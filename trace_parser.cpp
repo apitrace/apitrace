@@ -140,6 +140,7 @@ void Parser::parse_enter(void) {
     FunctionSig *sig = lookup(functions, id);
     if (!sig) {
         sig = new FunctionSig;
+        sig->id = id;
         sig->name = read_string();
         sig->num_args = read_uint();
         const char **arg_names = new const char *[sig->num_args];
