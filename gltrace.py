@@ -334,7 +334,7 @@ class GlTracer(Tracer):
                     # Emit a fake function
                     print '        {'
                     print '            static const Trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
-                    print '            unsigned __call = __writer.beginEnter(__sig);'
+                    print '            unsigned __call = __writer.beginEnter(&__sig);'
                     print '            __writer.beginArg(0);'
                     dump_instance(glapi.GLenum, enable_name)
                     print '            __writer.endArg();'
@@ -424,7 +424,7 @@ class GlTracer(Tracer):
         Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned __call = __writer.beginEnter(__memcpy_sig);'
+        print '        unsigned __call = __writer.beginEnter(&__memcpy_sig);'
         print '        __writer.beginArg(0);'
         print '        __writer.writeOpaque(%s);' % dest
         print '        __writer.endArg();'
@@ -547,7 +547,7 @@ class GlTracer(Tracer):
 
             # Emit a fake function
             self.array_trace_intermezzo(api, uppercase_name)
-            print '            unsigned __call = __writer.beginEnter(__%s_sig);' % (function.name,)
+            print '            unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
                 print '            __writer.beginArg(%u);' % (arg.index,)
@@ -591,7 +591,7 @@ class GlTracer(Tracer):
         print '                size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
         # Emit a fake function
-        print '                unsigned __call = __writer.beginEnter(__%s_sig);' % (function.name,)
+        print '                unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
         for arg in function.args:
             assert not arg.output
             print '                __writer.beginArg(%u);' % (arg.index,)
@@ -658,7 +658,7 @@ class GlTracer(Tracer):
         self.fake_call(function, [texture])
 
     def fake_call(self, function, args):
-        print '            unsigned __fake_call = __writer.beginEnter(__%s_sig);' % (function.name,)
+        print '            unsigned __fake_call = __writer.beginEnter(&__%s_sig);' % (function.name,)
         for arg, instance in zip(function.args, args):
             assert not arg.output
             print '            __writer.beginArg(%u);' % (arg.index,)

@@ -181,7 +181,7 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
     }
 }
 
-unsigned Writer::beginEnter(const FunctionSig &function) {
+unsigned Writer::beginEnter(const FunctionSig *sig) {
     OS::AcquireMutex();
 
     if (!g_gzFile) {
@@ -189,14 +189,14 @@ unsigned Writer::beginEnter(const FunctionSig &function) {
     }
 
     _writeByte(Trace::EVENT_ENTER);
-    _writeUInt(function.id);
-    if (!lookup(functions, function.id)) {
-        _writeString(function.name);
-        _writeUInt(function.num_args);
-        for (unsigned i = 0; i < function.num_args; ++i) {
-            _writeString(function.arg_names[i]);
+    _writeUInt(sig->id);
+    if (!lookup(functions, sig->id)) {
+        _writeString(sig->name);
+        _writeUInt(sig->num_args);
+        for (unsigned i = 0; i < sig->num_args; ++i) {
+            _writeString(sig->arg_names[i]);
         }
-        functions[function.id] = true;
+        functions[sig->id] = true;
     }
 
     return call_no++;
@@ -326,19 +326,19 @@ void Writer::writeEnum(const EnumSig *sig) {
     }
 }
 
-void Writer::writeBitmask(const BitmaskSig &bitmask, unsigned long long value) {
+void Writer::writeBitmask(const BitmaskSig *sig, unsigned long long value) {
     _writeByte(Trace::TYPE_BITMASK);
-    _writeUInt(bitmask.id);
-    if (!lookup(bitmasks, bitmask.id)) {
-        _writeUInt(bitmask.num_flags);
-        for (unsigned i = 0; i < bitmask.num_flags; ++i) {
-            if (i != 0 && bitmask.flags[i].value == 0) {
-                OS::DebugMessage("apitrace: bitmask %s is zero but is not first flag\n", bitmask.flags[i].name);
+    _writeUInt(sig->id);
+    if (!lookup(bitmasks, sig->id)) {
+        _writeUInt(sig->num_flags);
+        for (unsigned i = 0; i < sig->num_flags; ++i) {
+            if (i != 0 && sig->flags[i].value == 0) {
+                OS::DebugMessage("apitrace: sig %s is zero but is not first flag\n", sig->flags[i].name);
             }
-            _writeString(bitmask.flags[i].name);
-            _writeUInt(bitmask.flags[i].value);
+            _writeString(sig->flags[i].name);
+            _writeUInt(sig->flags[i].value);
         }
-        bitmasks[bitmask.id] = true;
+        bitmasks[sig->id] = true;
     }
     _writeUInt(value);
 }

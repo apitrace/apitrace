@@ -87,7 +87,7 @@ namespace Trace {
         bool open(const char *filename);
         void close(void);
 
-        unsigned beginEnter(const FunctionSig &function);
+        unsigned beginEnter(const FunctionSig *sig);
         void endEnter(void);
 
         void beginLeave(unsigned call);
@@ -118,7 +118,7 @@ namespace Trace {
         void writeWString(const wchar_t *str);
         void writeBlob(const void *data, size_t size);
         void writeEnum(const EnumSig *sig);
-        void writeBitmask(const BitmaskSig &bitmask, unsigned long long value);
+        void writeBitmask(const BitmaskSig *sig, unsigned long long value);
         void writeNull(void);
         void writeOpaque(const void *ptr);
 

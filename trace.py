@@ -175,7 +175,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    __traceEnum%s(%s);' % (enum.id, instance)
 
     def visit_bitmask(self, bitmask, instance):
-        print '    __writer.writeBitmask(__bitmask%s_sig, %s);' % (bitmask.id, instance)
+        print '    __writer.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.id, instance)
 
     def visit_pointer(self, pointer, instance):
         print '    if (%s) {' % instance
@@ -345,7 +345,7 @@ class Tracer:
         print
 
     def trace_function_impl_body(self, function):
-        print '    unsigned __call = __writer.beginEnter(__%s_sig);' % (function.name,)
+        print '    unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
@@ -410,7 +410,7 @@ class Tracer:
         print method.prototype(interface_wrap_name(interface) + '::' + method.name) + ' {'
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(method.id), interface.name + '::' + method.name, len(method.args) + 1)
-        print '    unsigned __call = __writer.beginEnter(__sig);'
+        print '    unsigned __call = __writer.beginEnter(&__sig);'
         print '    __writer.beginArg(0);'
         print '    __writer.writeOpaque((const void *)m_pInstance);'
         print '    __writer.endArg();'

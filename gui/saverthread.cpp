@@ -173,7 +173,7 @@ writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
         } else if (type == bitmaskType) {
             ApiBitmask bm = var.value<ApiBitmask>();
             Trace::BitmaskSig *sig = createBitmaskSig(bm, ++id);
-            writer.writeBitmask(*sig, bm.value());
+            writer.writeBitmask(sig, bm.value());
             deleteBitmaskSig(sig);
         } else if (type == structType) {
             ApiStruct apiStr = var.value<ApiStruct>();
@@ -226,7 +226,7 @@ void SaverThread::run()
     for (int i = 0; i < m_calls.count(); ++i) {
         ApiTraceCall *call = m_calls[i];
         Trace::FunctionSig *funcSig = createFunctionSig(call, ++id);
-        unsigned callNo = writer.beginEnter(*funcSig);
+        unsigned callNo = writer.beginEnter(funcSig);
         {
             //args
             QVariantList vars = call->arguments();
