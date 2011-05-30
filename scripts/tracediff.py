@@ -28,19 +28,14 @@
 import difflib
 import optparse
 import os.path
-import re
-import subprocess
 import sys
 
+from trace import Parser
 
-call_re = re.compile('^([0-9]+) (\w+)\(')
-
-ansi_re = re.compile('\x1b\[[0-9]{1,2}(;[0-9]{1,2}){0,2}m')
-
-
-def ansi_strip(s):
-    # http://www.theeggeadventure.com/wikimedia/index.php/Linux_Tips#Use_sed_to_remove_ANSI_colors
-    return ansi_re.sub('', s)
+try:
+    import debug
+except ImportError:
+    pass
 
 
 ignored_function_names = set([
@@ -54,20 +49,16 @@ ignored_function_names = set([
 
 
 def readtrace(trace):
-    p = subprocess.Popen([options.tracedump, trace], stdout=subprocess.PIPE)
-    lines = []
-    for line in p.stdout.readlines():
-        line = ansi_strip(line)
-        mo = call_re.match(line)
-        if mo:
-            function_name = mo.group(2)
-            if function_name in ignored_function_names:
-                continue
-            lines.append(line[mo.start(2):])
-        else:
-            lines[-1] += line
-    p.wait()
-    return lines
+    calls = []
+    parser = Parser()
+    parser.open(trace)
+    call = parser.parse_call()
+    while call and len(calls) < 1000:
+        hash(call)
+        if call.sig.name not in ignored_function_names:
+            calls.append(call)
+        call = parser.parse_call()
+    return calls
 
 
 class SDiffer:
@@ -80,20 +71,60 @@ class SDiffer:
         matcher = difflib.SequenceMatcher(None, self.a, self.b)
         for tag, alo, ahi, blo, bhi in matcher.get_opcodes():
             if tag == 'replace':
-                g = self.replace(alo, ahi, blo, bhi)
+                self.replace(alo, ahi, blo, bhi)
             elif tag == 'delete':
-                g = self.delete(alo, ahi)
+                self.delete(alo, ahi)
             elif tag == 'insert':
-                g = self.insert(blo, bhi)
+                self.insert(blo, bhi)
             elif tag == 'equal':
-                g = self.equal(alo, ahi)
+                self.equal(alo, ahi)
             else:
                 raise ValueError, 'unknown tag %s' % (tag,)
 
-            for line in g:
-                yield line
-
     def replace(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+        
+        a_names = [call.name for call in self.a[alo:ahi]]
+        b_names = [call.name for call in self.b[blo:bhi]]
+
+        matcher = difflib.SequenceMatcher(None, a_names, b_names)
+        for tag, _alo, _ahi, _blo, _bhi in matcher.get_opcodes():
+            _alo += alo
+            _ahi += alo
+            _blo += blo
+            _bhi += blo
+            if tag == 'replace':
+                self.replace_dissimilar(_alo, _ahi, _blo, _bhi)
+            elif tag == 'delete':
+                self.delete(_alo, _ahi)
+            elif tag == 'insert':
+                self.insert(_blo, _bhi)
+            elif tag == 'equal':
+                self.replace_similar(_alo, _ahi, _blo, _bhi)
+            else:
+                raise ValueError, 'unknown tag %s' % (tag,)
+
+    def replace_similar(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+        assert ahi - alo == bhi - blo
+        for i in xrange(0, bhi - blo):
+            a_call = self.a[alo + i]
+            b_call = self.b[blo + i]
+            assert a_call.name == b_call.name
+            assert len(a_call.args) == len(b_call.args)
+            sys.stdout.write(b_call.name + '(')
+            sep = ''
+            for j in xrange(len(b_call.args)):
+                sys.stdout.write(sep)
+                self.replace_value(a_call.args[j], b_call.args[j])
+                sep = ', '
+            sys.stdout.write(')')
+            if a_call.ret is not None or b_call.ret is not None:
+                sys.stdout.write(' = ')
+                self.replace_value(a_call.ret, b_call.ret)
+            sys.stdout.write('\n')
+
+    def replace_dissimilar(self, alo, ahi, blo, bhi):
         assert alo < ahi and blo < bhi
         if bhi - blo < ahi - alo:
             first  = self.insert(blo, bhi)
@@ -106,20 +137,26 @@ class SDiffer:
             for line in g:
                 yield line
 
+    def replace_value(self, a, b):
+        if b == a:
+            sys.stdout.write(str(b))
+        else:
+            sys.stdout.write('%s -> %s' % (a, b))
+
     escape = "\33["
 
     def delete(self, alo, ahi):
-        return self.dump('- ' + self.escape + '9m', self.a, alo, ahi, self.escape + '0m')
+        self.dump('- ' + self.escape + '9m', self.a, alo, ahi, self.escape + '0m')
 
     def insert(self, blo, bhi):
-        return self.dump('+ ', self.b, blo, bhi)
+        self.dump('+ ', self.b, blo, bhi)
 
     def equal(self, alo, ahi):
-        return self.dump('  ' + self.escape + '2m', self.a, alo, ahi, self.escape + '0m')
+        self.dump('  ' + self.escape + '2m', self.a, alo, ahi, self.escape + '0m')
 
     def dump(self, prefix, x, lo, hi, suffix=""):
         for i in xrange(lo, hi):
-            yield prefix + str(x[i]) + suffix
+            sys.stdout.write(prefix + str(x[i]) + suffix + '\n')
 
 
 def main():
@@ -137,11 +174,11 @@ def main():
     if len(args) != 2:
         optparser.error("incorrect number of arguments")
 
-    ref_lines = readtrace(args[0])
-    src_lines = readtrace(args[1])
+    ref_calls = readtrace(args[0])
+    src_calls = readtrace(args[1])
 
-    diff = SDiffer(ref_lines, src_lines).diff()
-    sys.stdout.writelines(diff)
+    differ = SDiffer(ref_calls, src_calls)
+    differ.diff()
 
 
 if __name__ == '__main__':
