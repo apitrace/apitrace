@@ -211,9 +211,10 @@ static void usage(void) {
         "Usage: glretrace [OPTION] TRACE\n"
         "Replay TRACE.\n"
         "\n"
-        "  -b           benchmark (no glgeterror; no messages)\n"
+        "  -b           benchmark mode (no error checking or warning messages)\n"
         "  -c PREFIX    compare against snapshots\n"
-        "  -db          use a double buffer visual\n"
+        "  -db          use a double buffer visual (default)\n"
+        "  -sb          use a single buffer visual\n"
         "  -s PREFIX    take snapshots\n"
         "  -v           verbose output\n"
         "  -D CALLNO    dump state at specific call no\n"
@@ -244,6 +245,8 @@ int main(int argc, char **argv)
             retrace::verbosity = -2;
         } else if (!strcmp(arg, "-db")) {
             double_buffer = true;
+        } else if (!strcmp(arg, "-sb")) {
+            double_buffer = false;
         } else if (!strcmp(arg, "--help")) {
             usage();
             return 0;

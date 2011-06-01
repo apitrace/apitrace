@@ -122,6 +122,8 @@ void RetraceProcess::start()
 
     if (m_doubleBuffered) {
         arguments << QLatin1String("-db");
+    } else {
+        arguments << QLatin1String("-sb");
     }
 
     if (m_captureState) {

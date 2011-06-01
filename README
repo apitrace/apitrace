@@ -77,7 +77,7 @@ Replay the trace with
 
  /path/to/glretrace application.trace
 
-Pass the -db option to use a double buffered visual.  Pass --help to glretrace
+Pass the -sb option to use a single buffered visual.  Pass --help to glretrace
 for more options.
 
 Start the GUI as
