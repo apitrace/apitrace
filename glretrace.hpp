@@ -45,9 +45,17 @@ extern unsigned frame;
 extern long long startTime;
 extern bool wait;
 
+enum frequency {
+    FREQUENCY_NEVER = 0,
+    FREQUENCY_FRAME,
+    FREQUENCY_FRAMEBUFFER,
+    FREQUENCY_DRAW,
+};
+
 extern bool benchmark;
 extern const char *compare_prefix;
 extern const char *snapshot_prefix;
+extern enum frequency snapshot_frequency;
 
 extern unsigned dump_state;
 

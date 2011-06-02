@@ -99,10 +99,22 @@ class GlRetracer(Retracer):
         #"glMultiModeDrawElementsIBM",
     ])
 
+    misc_draw_function_names = set([
+        "glClear",
+        "glEnd",
+    ])
+
+    bind_framebuffer_function_names = set([
+        "glBindFramebuffer",
+        "glBindFramebufferARB",
+        "glBindFramebufferEXT",
+    ])
+
     def retrace_function_body(self, function):
         is_array_pointer = function.name in self.array_pointer_function_names
         is_draw_array = function.name in self.draw_array_function_names
         is_draw_elements = function.name in self.draw_elements_function_names
+        is_misc_draw = function.name in self.misc_draw_function_names
 
         if is_array_pointer or is_draw_array or is_draw_elements:
             print '    if (glretrace::parser.version < 1) {'
@@ -123,16 +135,30 @@ class GlRetracer(Retracer):
             
             print '    }'
 
+        # Pre-snapshots
+        if function.name in self.bind_framebuffer_function_names:
+            print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
+            print '        glretrace::snapshot(call.no - 1);'
+            print '    }'
+
         Retracer.retrace_function_body(self, function)
 
+        # Post-snapshots
         if function.name in ('glFlush', 'glFinish'):
             print '    if (!glretrace::double_buffer) {'
             print '        glretrace::frame_complete(call.no);'
             print '    }'
-
         if function.name == 'glReadPixels':
             print '    glFinish();'
-            print '    glretrace::snapshot(call.no);'
+            print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAME ||'
+            print '        glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
+            print '        glretrace::snapshot(call.no);'
+            print '    }'
+        if is_draw_array or is_draw_elements or is_misc_draw:
+            print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_DRAW) {'
+            print '        glretrace::snapshot(call.no);'
+            print '    }'
+
 
     def call_function(self, function):
         if function.name == "glViewport":

@@ -50,6 +50,7 @@ bool wait = false;
 bool benchmark = false;
 const char *compare_prefix = NULL;
 const char *snapshot_prefix = NULL;
+enum frequency snapshot_frequency = FREQUENCY_NEVER;
 
 unsigned dump_state = ~0;
 
@@ -148,7 +149,10 @@ void snapshot(unsigned call_no) {
 void frame_complete(unsigned call_no) {
     ++frame;
 
-    snapshot(call_no);
+    if (snapshot_frequency == FREQUENCY_FRAME ||
+        snapshot_frequency == FREQUENCY_FRAMEBUFFER) {
+        snapshot(call_no);
+    }
 }
 
 
@@ -216,6 +220,7 @@ static void usage(void) {
         "  -db          use a double buffer visual (default)\n"
         "  -sb          use a single buffer visual\n"
         "  -s PREFIX    take snapshots\n"
+        "  -S FREQUENCY snapshot frequency: frame (default), framebuffer, or draw\n"
         "  -v           verbose output\n"
         "  -D CALLNO    dump state at specific call no\n"
         "  -w           wait on final frame\n";
@@ -252,6 +257,25 @@ int main(int argc, char **argv)
             return 0;
         } else if (!strcmp(arg, "-s")) {
             snapshot_prefix = argv[++i];
+            if (snapshot_frequency == FREQUENCY_NEVER) {
+                snapshot_frequency = FREQUENCY_FRAME;
+            }
+        } else if (!strcmp(arg, "-S")) {
+            arg = argv[++i];
+            if (!strcmp(arg, "frame")) {
+                snapshot_frequency = FREQUENCY_FRAME;
+            } else if (!strcmp(arg, "framebuffer")) {
+                snapshot_frequency = FREQUENCY_FRAMEBUFFER;
+            } else if (!strcmp(arg, "draw")) {
+                snapshot_frequency = FREQUENCY_DRAW;
+            } else {
+                std::cerr << "error: unknown frequency " << arg << "\n";
+                usage();
+                return 1;
+            }
+            if (snapshot_prefix == NULL) {
+                snapshot_prefix = "";
+            }
         } else if (!strcmp(arg, "-v")) {
             ++retrace::verbosity;
         } else if (!strcmp(arg, "-w")) {
