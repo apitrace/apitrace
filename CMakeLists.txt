@@ -279,7 +279,7 @@ elseif (APPLE)
 
     target_link_libraries (cgltrace dl)
 
-    install (TARGETS cgltrace LIBRARY DESTINATION lib)
+    install (TARGETS cgltrace LIBRARY DESTINATION wrappers)
 else ()
     include_directories (${X11_INCLUDE_DIR})
 
@@ -390,10 +390,13 @@ execute_process (
     OUTPUT_VARIABLE CPACK_PACKAGE_VERSION_PATCH
 )
 
+# See http://www.vtk.org/Wiki/CMake:CPackPackageGenerators
 if (WIN32)
     set (CPACK_GENERATOR "ZIP")
-else (WIN32)
+elseif (APPLE)
+    set (CPACK_GENERATOR "DragNDrop")
+else ()
     set (CPACK_GENERATOR "TGZ")
-endif (WIN32)
+endif ()
 
 include(CPack)
