@@ -30,7 +30,7 @@ Build as:
 You can also build the 32bit GL wrapper on 64bit distro with a multilib gcc by
 doing:
 
- cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_LINK_FLAGS=-m32
+ cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32
  make -C build32 glxtrace
 
 
@@ -42,16 +42,29 @@ Additional requirements:
 
 * Microsoft DirectX SDK (tested with August 2007 release)
 
-To build with Visual Studio invoke CMake as:
+To build with Visual Studio first invoke CMake GUI as:
 
- cmake -G "Visual Studio 9 2008" -H. -Bbuild
- cmake --build build --config MinSizeRel
+ cmake-gui -H. -B%cd%\build
+
+and press the "Configure" button.
+
+It will try to detect most required/optional dependencies automatically.  When
+not found automatically, you can manually specify the location of the
+dependencies from the GUI.
 
 If you are building with GUI support (i.e, with QT and QJSON), it should detect
 the official QT sdk automatically, but you will need to build QJSON yourself
 and also set the QJSON_INCLUDE_DIR and QJSON_LIBRARIES variables in the
 generated CMakeCache.txt when building apitrace and repeat the above sequence.
  
+After you've succesfully configured, you can start the build by opening the
+generated build\apitrace.sln solution file, or invoking cmake as:
+
+ cmake --build build --config MinSizeRel
+
+The steps to build 64bit version are similar, but replacing "Visual Studio 9
+2008" with "Visual Studio 9 2008 Win64".
+
 It's also possible to build for Windows on Linux with MinGW cross compilers.
 See http://www.cmake.org/Wiki/CmakeMingw for detailed instructions.
 
