@@ -55,6 +55,27 @@ OSStatus CGSGetSurfaceBounds(CGSConnectionID, CGWindowID, CGSSurfaceID, CGRect *
 namespace glstate {
 
 
+static inline void
+resetPixelPackState(void) {
+    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+    glPixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
+    glPixelStorei(GL_PACK_LSB_FIRST, GL_FALSE);
+    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
+    glPixelStorei(GL_PACK_SKIP_ROWS, 0);
+    glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+}
+
+
+static inline void
+restorePixelPackState(void) {
+    glPopClientAttrib();
+}
+
+
 static void
 dumpShader(JSONWriter &json, GLuint shader)
 {
@@ -252,7 +273,11 @@ dumpTextureImage(JSONWriter &json, GLenum target, GLint level)
 
         GLubyte *pixels = new GLubyte[depth*width*height*4];
 
+        resetPixelPackState();
+
         glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+        restorePixelPackState();
 
         json.beginMember("__data__");
         char *pngBuffer;
@@ -417,27 +442,18 @@ getDrawBufferImage(GLenum format) {
         return NULL;
     }
 
-    GLint drawbuffer = GL_NONE;
-    GLint readbuffer = GL_NONE;
-    glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
-    glGetIntegerv(GL_READ_BUFFER, &readbuffer);
-    glReadBuffer(drawbuffer);
+    GLint draw_buffer = GL_NONE;
+    GLint read_buffer = GL_NONE;
+    glGetIntegerv(GL_DRAW_BUFFER, &draw_buffer);
+    glGetIntegerv(GL_READ_BUFFER, &read_buffer);
+    glReadBuffer(draw_buffer);
 
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
-    glPixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
-    glPixelStorei(GL_PACK_LSB_FIRST, GL_FALSE);
-    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
-    glPixelStorei(GL_PACK_SKIP_ROWS, 0);
-    glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
-    glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    resetPixelPackState();
 
     glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, image->pixels);
 
-    glPopClientAttrib();
-
-    glReadBuffer(readbuffer);
+    restorePixelPackState();
+    glReadBuffer(read_buffer);
 
     return image;
 }
@@ -470,26 +486,18 @@ dumpDrawBufferImage(JSONWriter &json, GLenum format)
 
         GLubyte *pixels = new GLubyte[width*height*channels];
 
-        GLint drawbuffer = GL_NONE;
-        GLint readbuffer = GL_NONE;
-        glGetIntegerv(GL_DRAW_BUFFER, &drawbuffer);
-        glGetIntegerv(GL_READ_BUFFER, &readbuffer);
-        glReadBuffer(drawbuffer);
+        GLint draw_buffer = GL_NONE;
+        GLint read_buffer = GL_NONE;
+        glGetIntegerv(GL_DRAW_BUFFER, &draw_buffer);
+        glGetIntegerv(GL_READ_BUFFER, &read_buffer);
+        glReadBuffer(draw_buffer);
 
-        glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
-        glPixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
-        glPixelStorei(GL_PACK_LSB_FIRST, GL_FALSE);
-        glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-        glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
-        glPixelStorei(GL_PACK_SKIP_ROWS, 0);
-        glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
-        glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        resetPixelPackState();
 
         glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
 
-        glPopClientAttrib();
-        glReadBuffer(readbuffer);
+        restorePixelPackState();
+        glReadBuffer(read_buffer);
 
         json.beginMember("__data__");
         char *pngBuffer;
