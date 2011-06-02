@@ -364,6 +364,18 @@ __gl_format_channels(GLenum format) {
     }
 }
 
+template<class X>
+static inline bool
+_is_pot(X x) {
+    return (x & (x - 1)) == 0;
+}
+
+template<class X, class Y>
+static inline X
+_align(X x, Y y) {
+    return (x + (y - 1)) & (y - 1);
+}
+
 static inline size_t
 __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth) {
     size_t num_channels = __gl_format_channels(format);
@@ -421,13 +433,48 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
         break;
     }
 
-    /* FIXME: consider glPixelStore settings */
+    GLint alignment = 4;
+    GLint row_length = 0;
+    GLint image_height = 0;
+    GLint skip_rows = 0;
+    GLint skip_pixels = 0;
+    GLint skip_images = 0;
 
-    size_t row_stride = (width*bits_per_pixel + 7)/8;
+    __glGetIntegerv(GL_UNPACK_ALIGNMENT,    &alignment);
+    __glGetIntegerv(GL_UNPACK_ROW_LENGTH,   &row_length);
+    __glGetIntegerv(GL_UNPACK_IMAGE_HEIGHT, &image_height);
+    __glGetIntegerv(GL_UNPACK_SKIP_ROWS,    &skip_rows);
+    __glGetIntegerv(GL_UNPACK_SKIP_PIXELS,  &skip_pixels);
+    __glGetIntegerv(GL_UNPACK_SKIP_IMAGES,  &skip_images);
 
-    size_t slice_stride = height*row_stride;
+    if (row_length <= 0) {
+        row_length = width;
+    }
 
-    return depth*slice_stride;
+    size_t row_stride = (row_length*bits_per_pixel + 7)/8;
+
+    if (bits_per_pixel < alignment*8 &&
+        (bits_per_pixel & 7) == 0 &&
+        _is_pot(bits_per_pixel)) {
+        row_stride = _align(row_stride, alignment);
+    }
+
+    if (image_height <= 0) {
+        image_height = height;
+    }
+
+    /* XXX: GL_UNPACK_IMAGE_HEIGHT and GL_UNPACK_SKIP_IMAGES should probably
+     * not be considered for pixel rectangles. */
+
+    size_t image_stride = image_height*row_stride;
+
+    size_t size = depth*image_stride;
+
+    size += (skip_pixels*bits_per_pixel + 7)/8;
+    size += skip_rows*row_stride;
+    size += skip_images*image_stride;
+
+    return size;
 }
 
 #define __glTexParameterfv_size __gl_param_size
