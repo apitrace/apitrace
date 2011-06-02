@@ -475,6 +475,36 @@ class GlTracer(Tracer):
     def gl_boolean(self, value):
         return self.boolean_names[int(bool(value))]
 
+    unpack_function_names = set([
+        'glBitmap',
+        'glDrawPixels',
+        'glMultiTexImage1DEXT',
+        'glMultiTexImage2DEXT',
+        'glMultiTexImage3DEXT',
+        'glMultiTexSubImage1DEXT',
+        'glMultiTexSubImage2DEXT',
+        'glMultiTexSubImage3DEXT',
+        'glPolygonStipple',
+        'glTexImage1D',
+        'glTexImage1DEXT',
+        'glTexImage2D',
+        'glTexImage2DEXT',
+        'glTexImage3D',
+        'glTexImage3DEXT',
+        'glTexSubImage1D',
+        'glTexSubImage1DEXT',
+        'glTexSubImage2D',
+        'glTexSubImage2DEXT',
+        'glTexSubImage3D',
+        'glTexSubImage3DEXT',
+        'glTextureImage1DEXT',
+        'glTextureImage2DEXT',
+        'glTextureImage3DEXT',
+        'glTextureSubImage1DEXT',
+        'glTextureSubImage2DEXT',
+        'glTextureSubImage3DEXT',
+    ])
+
     def dump_arg_instance(self, function, arg):
         if function.name in self.draw_function_names and arg.name == 'indices':
             print '    GLint __element_array_buffer = 0;'
@@ -491,6 +521,20 @@ class GlTracer(Tracer):
                 print '        __writer.endArray();'
             else:
                 print '        __writer.writeBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
+            print '    } else {'
+            Tracer.dump_arg_instance(self, function, arg)
+            print '    }'
+            return
+
+        # Recognize offsets instead of blobs when a PBO is bound
+        if function.name in self.unpack_function_names \
+           and (isinstance(arg.type, stdapi.Blob) \
+                or (isinstance(arg.type, stdapi.Const) \
+                    and isinstance(arg.type.type, stdapi.Blob))):
+            print '    GLint __unpack_buffer = 0;'
+            print '    __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
+            print '    if (__unpack_buffer) {'
+            print '        __writer.writeOpaque(%s);' % arg.name
             print '    } else {'
             Tracer.dump_arg_instance(self, function, arg)
             print '    }'
