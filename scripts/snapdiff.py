@@ -49,7 +49,7 @@ def _compare(ref_image, src_image, delta_image):
     p = subprocess.Popen([
         'compare', 
         '-metric', 'AE', 
-        '-fuzz', '%u%%' % options.fuzz, 
+        '-fuzz', '%u%%' % (100*options.fuzz,),
         '-dissimilarity-threshold', '1',
         ref_image, src_image, delta_image
     ], stderr=subprocess.PIPE)
@@ -69,7 +69,7 @@ def compare(ref_image, src_image, delta_image):
 
     diff = ImageChops.difference(src_im, ref_im)
 
-    mask = ImageEnhance.Brightness(diff).enhance(100.0/options.fuzz)
+    mask = ImageEnhance.Brightness(diff).enhance(1.0/options.fuzz)
     mask = mask.convert('L')
 
     lowlight = Image.new('RGB', src_im.size, (0xff, 0xff, 0xff))
@@ -82,7 +82,7 @@ def compare(ref_image, src_image, delta_image):
     # See also http://effbot.org/zone/pil-comparing-images.htm
     # TODO: this is approximate due to the grayscale conversion
     h = diff.convert('L').histogram()
-    ae = sum(h[255 * options.fuzz // 100 + 1 : 256])
+    ae = sum(h[int(255 * options.fuzz) + 1 : 256])
     return ae
 
 
@@ -137,8 +137,8 @@ def main():
         help="output filename [default: %default]")
     optparser.add_option(
         '-f', '--fuzz',
-        type="int", dest="fuzz", default=5,
-        help="fuzz percentage [default: %default]")
+        type="float", dest="fuzz", default=.05,
+        help="fuzz ratio [default: %default]")
     optparser.add_option(
         '--overwrite',
         action="store_true", dest="overwrite", default=False,
