@@ -234,51 +234,83 @@ __glCallLists_size(GLsizei n, GLenum type)
 
 
 static inline size_t
-__glMap1d_size(GLenum pname)
+__glMap1d_size(GLenum target, GLint stride, GLint order)
 {
-    switch (pname) {
+    if (order < 1) {
+        return 0;
+    }
+
+    GLint channels;
+    switch (target) {
     case GL_MAP1_INDEX:
     case GL_MAP1_TEXTURE_COORD_1:
-        return 1;
+        channels = 1;
+        break;
     case GL_MAP1_TEXTURE_COORD_2:
-        return 2;
+        channels = 2;
+        break;
     case GL_MAP1_NORMAL:
     case GL_MAP1_TEXTURE_COORD_3:
     case GL_MAP1_VERTEX_3:
-        return 3;
+        channels = 3;
+        break;
     case GL_MAP1_COLOR_4:
     case GL_MAP1_TEXTURE_COORD_4:
     case GL_MAP1_VERTEX_4:
-        return 4;
+        channels = 4;
+        break;
     default:
-        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
-        return 1;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
+        return 0;
     }
+
+    if (stride < channels) {
+        return 0;
+    }
+
+    return channels + stride * (order - 1);
 }
 
 #define __glMap1f_size __glMap1d_size
 
 static inline size_t
-__glMap2d_size(GLenum pname)
+__glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint vorder)
 {
-    switch (pname) {
+    if (uorder < 1 || vorder < 1) {
+        return 0;
+    }
+
+    GLint channels;
+    switch (target) {
     case GL_MAP2_INDEX:
     case GL_MAP2_TEXTURE_COORD_1:
-        return 1;
+        channels = 1;
+        break;
     case GL_MAP2_TEXTURE_COORD_2:
-        return 2;
+        channels = 2;
+        break;
     case GL_MAP2_NORMAL:
     case GL_MAP2_TEXTURE_COORD_3:
     case GL_MAP2_VERTEX_3:
-        return 3;
+        channels = 3;
+        break;
     case GL_MAP2_COLOR_4:
     case GL_MAP2_TEXTURE_COORD_4:
     case GL_MAP2_VERTEX_4:
-        return 4;
+        channels = 4;
+        break;
     default:
-        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);
-        return 1;
+        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
+        return 0;
     }
+
+    if (ustride < channels || vstride < channels) {
+        return 0;
+    }
+
+    return channels + 
+           ustride * (uorder - 1) +
+           vstride * (vorder - 1);
 }
 
 #define __glMap2f_size __glMap2d_size
