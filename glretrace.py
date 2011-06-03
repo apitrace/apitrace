@@ -93,10 +93,10 @@ class GlRetracer(Retracer):
         "glDrawRangeElements",
         "glDrawRangeElementsBaseVertex",
         "glDrawRangeElementsEXT",
-        #"glMultiDrawElements",
-        #"glMultiDrawElementsBaseVertex",
-        #"glMultiDrawElementsEXT",
-        #"glMultiModeDrawElementsIBM",
+        "glMultiDrawElements",
+        "glMultiDrawElementsBaseVertex",
+        "glMultiDrawElementsEXT",
+        "glMultiModeDrawElementsIBM",
     ])
 
     misc_draw_function_names = set([
@@ -258,7 +258,7 @@ class GlRetracer(Retracer):
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices':
-            print '    %s = %s.toPointer();' % (lvalue, rvalue)
+            self.extract_opaque_arg(function, arg, arg_type, lvalue, rvalue)
             return
 
         if arg.type is glapi.GLlocation \

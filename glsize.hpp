@@ -191,20 +191,32 @@ __glDrawElementsIndirect_maxindex(GLenum type, const GLvoid *indirect) {
 
 static inline GLuint
 __glMultiDrawArrays_maxindex(const GLint *first, const GLsizei *count, GLsizei primcount) {
-    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
-    return 0;
+    GLuint maxindex = 0;
+    for (GLsizei prim = 0; prim < primcount; ++prim) {
+        GLuint maxindex_prim = __glDrawArrays_maxindex(first[prim], count[prim]);
+        maxindex = std::max(maxindex, maxindex_prim);
+    }
+    return maxindex;
 }
 
 static inline GLuint
 __glMultiDrawElements_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount) {
-    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
-    return 0;
+    GLuint maxindex = 0;
+    for (GLsizei prim = 0; prim < primcount; ++prim) {
+        GLuint maxindex_prim = __glDrawElements_maxindex(count[prim], type, indices[prim]);
+        maxindex = std::max(maxindex, maxindex_prim);
+    }
+    return maxindex;
 }
 
 static inline GLuint
 __glMultiDrawElementsBaseVertex_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount, const GLint * basevertex) {
-    OS::DebugMessage("warning: %s: unsupported\n", __FUNCTION__);
-    return 0;
+    GLuint maxindex = 0;
+    for (GLsizei prim = 0; prim < primcount; ++prim) {
+        GLuint maxindex_prim = __glDrawElementsBaseVertex_maxindex(count[prim], type, indices[prim], basevertex[prim]);
+        maxindex = std::max(maxindex, maxindex_prim);
+    }
+    return maxindex;
 }
 
 #define __glMultiDrawArraysEXT_maxindex __glMultiDrawArrays_maxindex

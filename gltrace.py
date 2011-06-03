@@ -511,16 +511,15 @@ class GlTracer(Tracer):
             print '    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
             print '    if (!__element_array_buffer) {'
             if isinstance(arg.type, stdapi.Array):
-                Tracer.dump_arg_instance(self, function, arg)
                 print '        __writer.beginArray(%s);' % arg.type.length
                 print '        for(GLsizei i = 0; i < %s; ++i) {' % arg.type.length
                 print '            __writer.beginElement();'
-                print '            __writer.writeBlob((const void *)%s, count[i]*__gl_type_size(type));' % (arg.name)
+                print '            __writer.writeBlob(%s[i], count[i]*__gl_type_size(type));' % (arg.name)
                 print '            __writer.endElement();'
                 print '        }'
                 print '        __writer.endArray();'
             else:
-                print '        __writer.writeBlob((const void *)%s, count*__gl_type_size(type));' % (arg.name)
+                print '        __writer.writeBlob(%s, count*__gl_type_size(type));' % (arg.name)
             print '    } else {'
             Tracer.dump_arg_instance(self, function, arg)
             print '    }'

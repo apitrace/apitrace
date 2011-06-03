@@ -234,6 +234,9 @@ class Retracer:
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         ValueExtractor().visit(arg_type, lvalue, rvalue)
+    
+    def extract_opaque_arg(self, function, arg, arg_type, lvalue, rvalue):
+        OpaqueValueExtractor().visit(arg_type, lvalue, rvalue)
 
     def call_function(self, function):
         arg_names = ", ".join([arg.name for arg in function.args])

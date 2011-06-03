@@ -155,18 +155,20 @@ class DumpImplementer(stdapi.Visitor):
         print '    __traceStruct%s(%s);' % (struct.id, instance)
 
     def visit_array(self, array, instance):
-        print '    if (%s) {' % instance
+        length = '__c' + array.type.id
         index = '__i' + array.type.id
-        print '        __writer.beginArray(%s);' % (array.length,)
-        print '        for (int %s = 0; %s < %s; ++%s) {' % (index, index, array.length, index)
+        print '    if (%s) {' % instance
+        print '        size_t %s = %s;' % (length, array.length)
+        print '        __writer.beginArray(%s);' % length
+        print '        for (size_t %s = 0; %s < %s; ++%s) {' % (index, index, length, index)
         print '            __writer.beginElement();'
         self.visit(array.type, '(%s)[%s]' % (instance, index))
         print '            __writer.endElement();'
         print '        }'
         print '        __writer.endArray();'
-        print '    }'
-        print '    else'
+        print '    } else {'
         print '        __writer.writeNull();'
+        print '    }'
 
     def visit_blob(self, blob, instance):
         print '    __writer.writeBlob(%s, %s);' % (instance, blob.size)
@@ -184,9 +186,9 @@ class DumpImplementer(stdapi.Visitor):
         dump_instance(pointer.type, "*" + instance)
         print '        __writer.endElement();'
         print '        __writer.endArray();'
-        print '    }'
-        print '    else'
+        print '    } else {'
         print '        __writer.writeNull();'
+        print '    }'
 
     def visit_handle(self, handle, instance):
         self.visit(handle.type, instance)
