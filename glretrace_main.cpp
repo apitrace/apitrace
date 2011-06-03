@@ -35,7 +35,7 @@
 
 namespace glretrace {
 
-bool double_buffer = false;
+bool double_buffer = true;
 bool insideGlBeginEnd = false;
 Trace::Parser parser;
 glws::WindowSystem *ws = NULL;
