@@ -87,6 +87,7 @@ if __name__ == '__main__':
         print '        %s = (%s)procPtr;' % (pvalue, ptype)
         print '        return (__GLXextFuncPtr)&%s;' % (f.name,)
         print '    }'
+    print '    OS::DebugMessage("apitrace: unknown function \\"%s\\"\\n", (const char *)procName);'
     print '    return procPtr;'
     print '}'
     print

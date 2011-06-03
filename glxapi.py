@@ -91,6 +91,35 @@ GLXAttrib = FakeEnum(Int, [
     "GLX_TRANSPARENT_BLUE_VALUE",	# 0x27
     "GLX_TRANSPARENT_ALPHA_VALUE",	# 0x28
 
+    "GLX_BIND_TO_TEXTURE_RGB_EXT",        # 0x20D0
+    "GLX_BIND_TO_TEXTURE_RGBA_EXT",       # 0x20D1
+    "GLX_BIND_TO_MIPMAP_TEXTURE_EXT",     # 0x20D2
+    "GLX_BIND_TO_TEXTURE_TARGETS_EXT",    # 0x20D3
+    "GLX_Y_INVERTED_EXT",                 # 0x20D4
+    "GLX_TEXTURE_FORMAT_EXT",             # 0x20D5
+    "GLX_TEXTURE_TARGET_EXT",             # 0x20D6
+    "GLX_MIPMAP_TEXTURE_EXT",             # 0x20D7
+    "GLX_TEXTURE_FORMAT_NONE_EXT",        # 0x20D8
+    "GLX_TEXTURE_FORMAT_RGB_EXT",         # 0x20D9
+    "GLX_TEXTURE_FORMAT_RGBA_EXT",        # 0x20DA
+    "GLX_TEXTURE_1D_EXT",                 # 0x20DB
+    "GLX_TEXTURE_2D_EXT",                 # 0x20DC
+    "GLX_TEXTURE_RECTANGLE_EXT",          # 0x20DD
+    "GLX_FRONT_LEFT_EXT",                 # 0x20DE
+    "GLX_FRONT_RIGHT_EXT",                # 0x20DF
+    "GLX_BACK_LEFT_EXT",                  # 0x20E0
+    "GLX_BACK_RIGHT_EXT",                 # 0x20E1
+    "GLX_AUX0_EXT",                       # 0x20E2
+    "GLX_AUX1_EXT",                       # 0x20E3
+    "GLX_AUX2_EXT",                       # 0x20E4
+    "GLX_AUX3_EXT",                       # 0x20E5
+    "GLX_AUX4_EXT",                       # 0x20E6
+    "GLX_AUX5_EXT",                       # 0x20E7
+    "GLX_AUX6_EXT",                       # 0x20E8
+    "GLX_AUX7_EXT",                       # 0x20E9
+    "GLX_AUX8_EXT",                       # 0x20EA
+    "GLX_AUX9_EXT",                       # 0x20EB
+
     "GLX_NONE",			# 0x8000
     "GLX_SLOW_CONFIG",			# 0x8001
     "GLX_TRUE_COLOR",			# 0x8002
@@ -268,7 +297,12 @@ glxapi.add_functions([
                                       (ULong, "mask")]),
     Function(Void, "glXGetSelectedEvent", [(Display, "dpy"), (GLXDrawable, "drawable"),
                                            Out(Pointer(ULong), "mask")]),
-    # TODO: extensions
+
+    # EXT_texture_from_pixmap
+    Function(Void, "glXBindTexImageEXT", [(Display, "display"), (GLXDrawable, "drawable"), (Int, "buffer"), (Const(Array(Int, "__AttribList_size(attrib_list)")), "attrib_list")]),
+    Function(Void, "glXReleaseTexImageEXT", [(Display, "display"), (GLXDrawable, "drawable"), (Int, "buffer")]),
+
+    # TODO: more extensions
 
     # Must be last
     Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
