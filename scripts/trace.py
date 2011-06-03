@@ -309,6 +309,8 @@ class PrettyPrinter:
 
 class Parser:
 
+    debug = False
+
     def __init__(self):
         self.file = None
         self.next_call_no = 0
@@ -334,6 +336,8 @@ class Parser:
         return True
 
     def parse_call(self):
+        if self.debug:
+            sys.stdout.flush()
         while True:
             c = self.read_byte()
             if c == EVENT_ENTER:
@@ -402,6 +406,8 @@ class Parser:
         if index >= len(call.args):
             call.args.resize(index + 1)
         call.args[index] = value
+        if self.debug:
+            sys.stderr.write("\tARG %i %s\n" % (index, value))
 
     def parse_value(self):
         c = self.read_byte()
@@ -436,7 +442,8 @@ class Parser:
         else:
             sys.stderr.write("error: unknown type %i\n" % c)
             sys.exit(1)
-        #self.debug("\tVALUE %s\n" % value)
+        if self.debug:
+            sys.stderr.write("\tVALUE %s\n" % value)
         return value
 
     def parse_sint(self):
@@ -531,7 +538,8 @@ class Parser:
             value = self.file.read(size)
         else:
             value = ''
-        #self.debug("\tSTRING \"%s\"\n" % value)
+        if self.debug:
+            sys.stderr.write("\tSTRING \"%s\"\n" % value)
         return value
 
     def read_uint(self):
@@ -546,21 +554,21 @@ class Parser:
             shift += 7
             if c & 0x80 == 0:
                 break
-        #self.debug("\tUINT %u\n" % value)
+        if self.debug:
+            sys.stderr.write("\tUINT %u\n" % value)
         return value
 
     def read_byte(self):
         c = self.file.read(1)
         if c == "":
-            #self.debug("\tEOF\n")
+            if self.debug:
+                sys.stderr.write("\tEOF\n")
             return -1
         else:
             c = ord(c)
-            #self.debug("\tBYTE 0x%x\n" % c)
+            if self.debug:
+                sys.stderr.write("\tBYTE 0x%x\n" % c)
         return c
-
-    def debug(self, s):
-        sys.stderr.write(s)
 
 
 def main():
