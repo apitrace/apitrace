@@ -44,22 +44,6 @@ import ImageEnhance
 thumb_size = 320, 320
 
 
-def _compare(ref_image, src_image, delta_image):
-    import subprocess
-    p = subprocess.Popen([
-        'compare', 
-        '-metric', 'AE', 
-        '-fuzz', '%u%%' % (100*options.fuzz,),
-        '-dissimilarity-threshold', '1',
-        ref_image, src_image, delta_image
-    ], stderr=subprocess.PIPE)
-    _, stderr = p.communicate()
-    try:
-        return int(stderr)
-    except ValueError:
-        return 0xffffffff
-
-
 def compare(ref_image, src_image, delta_image):
     ref_im = Image.open(ref_image)
     src_im = Image.open(src_image)
@@ -69,6 +53,7 @@ def compare(ref_image, src_image, delta_image):
 
     diff = ImageChops.difference(src_im, ref_im)
 
+    # make a difference image similar to ImageMagick's compare utility
     mask = ImageEnhance.Brightness(diff).enhance(1.0/options.fuzz)
     mask = mask.convert('L')
 
