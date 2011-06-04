@@ -245,6 +245,9 @@ int main(int argc, char **argv)
             retrace::verbosity = -1;
         } else if (!strcmp(arg, "-c")) {
             compare_prefix = argv[++i];
+            if (snapshot_frequency == FREQUENCY_NEVER) {
+                snapshot_frequency = FREQUENCY_FRAME;
+            }
         } else if (!strcmp(arg, "-D")) {
             dump_state = atoi(argv[++i]);
             retrace::verbosity = -2;
