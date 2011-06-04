@@ -78,6 +78,7 @@ class Dispatcher:
         print 'static %s %s = NULL;' % (ptype, pvalue)
         print
         print 'static inline ' + function.prototype('__' + function.name) + ' {'
+        print '    const char *__name = "%s";' % function.name
         if function.type is stdapi.Void:
             ret = ''
         else:
@@ -101,14 +102,14 @@ class Dispatcher:
         else:
             get_proc_address = '__getPrivateProcAddress'
         print '    if (!%s) {' % (pvalue,)
-        print '        %s = (%s)%s("%s");' % (pvalue, ptype, get_proc_address, function.name)
+        print '        %s = (%s)%s(__name);' % (pvalue, ptype, get_proc_address)
         print '        if (!%s) {' % (pvalue,)
         self.fail_function(function)
         print '        }'
         print '    }'
 
     def fail_function(self, function):
-        print '            OS::DebugMessage("error: unavailable function \\"%s\\"\\n");' % function.name
+        print r'            OS::DebugMessage("error: unavailable function \"%s\"\n", __name);'
         if function.fail is not None:
             if function.type is stdapi.Void:
                 assert function.fail == ''
