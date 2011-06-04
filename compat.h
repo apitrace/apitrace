@@ -28,6 +28,7 @@
  */
 
 #ifdef __MINGW32__
+
 #define __in /**/
 #define __out /**/
 #define __inout /**/
@@ -52,5 +53,5 @@
 
 #define UINT8 uint8_t
 
-#endif
+#endif /* __MINGW32__ */
 

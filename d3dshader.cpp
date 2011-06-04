@@ -27,8 +27,8 @@
 
 #include <stdio.h>
 
-#include "d3d9imports.hpp"
 #include "d3dshader.hpp"
+#include "d3d9imports.hpp"
 
 
 typedef HRESULT
