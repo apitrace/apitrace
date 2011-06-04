@@ -96,54 +96,26 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 # Bundled dependencies
 
 # Use bundled ZLIB if system one can't be found
-if (ZLIB_FOUND)
-    include_directories (${ZLIB_INCLUDE_DIRS})
-    link_libraries (${ZLIB_LIBRARIES})
-else (ZLIB_FOUND)
-    add_library (zlib STATIC
-        zlib/adler32.c
-        zlib/compress.c
-        zlib/crc32.c
-        zlib/gzio.c
-        zlib/uncompr.c
-        zlib/deflate.c
-        zlib/trees.c
-        zlib/zutil.c
-        zlib/inflate.c
-        zlib/infback.c
-        zlib/inftrees.c
-        zlib/inffast.c
-    )
-    include_directories (zlib)
-    link_libraries (zlib)
-endif (ZLIB_FOUND)
+if (NOT ZLIB_FOUND)
+    set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
+    set (ZLIB_LIBRARIES zlib)
+    add_subdirectory (zlib EXCLUDE_FROM_ALL)
+endif (NOT ZLIB_FOUND)
+
+include_directories (${ZLIB_INCLUDE_DIRS})
+link_libraries (${ZLIB_LIBRARIES})
 
 # Use bundled LIBPNG if system one can't be found
 if (PNG_FOUND)
-    include_directories (${PNG_INCLUDE_DIR})
-    add_definitions (${PNG_DEFINITIONS})
-    link_libraries (${PNG_LIBRARIES})
 else (PNG_FOUND)
-    add_library (png STATIC
-        libpng/png.c
-        libpng/pngerror.c
-        libpng/pngget.c
-        libpng/pngmem.c
-        libpng/pngpread.c
-        libpng/pngread.c
-        libpng/pngrio.c
-        libpng/pngrtran.c
-        libpng/pngrutil.c
-        libpng/pngset.c
-        libpng/pngtrans.c
-        libpng/pngwio.c
-        libpng/pngwrite.c
-        libpng/pngwtran.c
-        libpng/pngwutil.c
-    )
-    include_directories (libpng)
-    link_libraries (png)
+    set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libpng)
+    set (PNG_DEFINITIONS "")
+    set (PNG_LIBRARIES png)
+    add_subdirectory (libpng EXCLUDE_FROM_ALL)
 endif (PNG_FOUND)
+include_directories (${PNG_INCLUDE_DIR})
+add_definitions (${PNG_DEFINITIONS})
+link_libraries (${PNG_LIBRARIES})
 
 
 ##############################################################################
