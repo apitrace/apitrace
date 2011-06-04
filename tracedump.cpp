@@ -36,14 +36,16 @@ int main(int argc, char **argv)
 {
     for (int i = 1; i < argc; ++i) {
         Trace::Parser p;
-        if (p.open(argv[i])) {
-            Trace::Call *call;
-            call = p.parse_call();
-            while (call) {
-                std::cout << *call;
-                delete call;
-                call = p.parse_call();
-            }
+
+        if (!p.open(argv[i])) {
+            std::cerr << "error: failed to open " << argv[i] << "\n";
+            return 1;
+        }
+
+        Trace::Call *call;
+        while ((call = p.parse_call())) {
+            std::cout << *call;
+            delete call;
         }
     }
     return 0;

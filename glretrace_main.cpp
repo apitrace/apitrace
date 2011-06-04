@@ -157,6 +157,7 @@ void frame_complete(unsigned call_no) {
 
 
 static void display(void) {
+    startTime = OS::GetTime();
     Trace::Call *call;
 
     while ((call = parser.parse_call())) {
@@ -294,11 +295,14 @@ int main(int argc, char **argv)
     visual = ws->createVisual(double_buffer);
 
     for ( ; i < argc; ++i) {
-        if (parser.open(argv[i])) {
-            startTime = OS::GetTime();
-            display();
-            parser.close();
+        if (!parser.open(argv[i])) {
+            std::cerr << "error: failed to open " << argv[i] << "\n";
+            return 1;
         }
+
+        display();
+
+        parser.close();
     }
 
     return 0;
