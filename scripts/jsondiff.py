@@ -60,11 +60,12 @@ class Visitor:
 
 class Dumper(Visitor):
 
-    def __init__(self):
+    def __init__(self, stream = sys.stdout):
+        self.stream = stream
         self.level = 0;
 
     def _write(self, s):
-        sys.stdout.write(s)
+        self.stream.write(s)
 
     def _indent(self):
         self._write('  '*self.level)
@@ -166,8 +167,8 @@ comparer = Comparer()
 
 class Differ(Visitor):
 
-    def __init__(self):
-        self.dumper = Dumper()
+    def __init__(self, stream = sys.stdout):
+        self.dumper = Dumper(stream)
 
     def visit(self, a, b):
         if comparer.visit(a, b):
@@ -227,13 +228,13 @@ class Differ(Visitor):
         self.dumper.visit(b)
 
 
-def load(filename):
-    return json.load(open(filename, 'rt'), strict=False, object_hook = object_hook)
+def load(stream):
+    return json.load(stream, strict=False, object_hook = object_hook)
 
 
 def main():
-    a = load(sys.argv[1])
-    b = load(sys.argv[2])
+    a = load(open(sys.argv[1], 'rt'))
+    b = load(open(sys.argv[2], 'rt'))
 
     #dumper = Dumper()
     #dumper.visit(a)

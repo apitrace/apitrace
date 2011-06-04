@@ -44,31 +44,48 @@ import ImageEnhance
 thumb_size = 320, 320
 
 
-def compare(ref_image, src_image, delta_image):
-    ref_im = Image.open(ref_image)
-    src_im = Image.open(src_image)
+class Comparer:
+    '''Image comparer.'''
 
-    ref_im = ref_im.convert('RGB')
-    src_im = src_im.convert('RGB')
+    def __init__(self, ref_image, src_image, alpha = False):
+        self.ref_im = Image.open(ref_image)
+        self.src_im = Image.open(src_image)
 
-    diff = ImageChops.difference(src_im, ref_im)
+        # Ignore
+        if not alpha:
+            self.ref_im = self.ref_im.convert('RGB')
+            self.src_im = self.src_im.convert('RGB')
 
-    # make a difference image similar to ImageMagick's compare utility
-    mask = ImageEnhance.Brightness(diff).enhance(1.0/options.fuzz)
-    mask = mask.convert('L')
+        self.diff = ImageChops.difference(self.src_im, self.ref_im)
 
-    lowlight = Image.new('RGB', src_im.size, (0xff, 0xff, 0xff))
-    highlight = Image.new('RGB', src_im.size, (0xf1, 0x00, 0x1e))
-    delta_im = Image.composite(highlight, lowlight, mask)
+    def write_diff(self, diff_image, fuzz = 0.05):
+        # make a difference image similar to ImageMagick's compare utility
+        mask = ImageEnhance.Brightness(self.diff).enhance(1.0/fuzz)
+        mask = mask.convert('L')
 
-    delta_im = Image.blend(src_im, delta_im, 0xcc/255.0)
-    delta_im.save(delta_image)
+        lowlight = Image.new('RGB', self.src_im.size, (0xff, 0xff, 0xff))
+        highlight = Image.new('RGB', self.src_im.size, (0xf1, 0x00, 0x1e))
+        diff_im = Image.composite(highlight, lowlight, mask)
 
-    # See also http://effbot.org/zone/pil-comparing-images.htm
-    # TODO: this is approximate due to the grayscale conversion
-    h = diff.convert('L').histogram()
-    ae = sum(h[int(255 * options.fuzz) + 1 : 256])
-    return ae
+        diff_im = Image.blend(self.src_im, diff_im, 0xcc/255.0)
+        diff_im.save(diff_image)
+
+    def precision(self):
+        # See also http://effbot.org/zone/pil-comparing-images.htm
+        h = self.diff.histogram()
+        square_error = 0
+        for i in range(1, 256):
+            square_error += sum(h[i : 3*256: 256])*i*i
+        rel_error = float(square_error*2 + 1) / float(self.diff.size[0]*self.diff.size[1]*3*255*255*2)
+        bits = -math.log(rel_error)/math.log(2.0)
+        return bits
+
+    def ae(self):
+        # Compute absolute error
+        # TODO: this is approximate due to the grayscale conversion
+        h = self.diff.convert('L').histogram()
+        ae = sum(h[int(255 * fuzz) + 1 : 256])
+        return ae
 
 
 def surface(html, image):
@@ -122,7 +139,7 @@ def main():
         help="output filename [default: %default]")
     optparser.add_option(
         '-f', '--fuzz',
-        type="float", dest="fuzz", default=.05,
+        type="float", dest="fuzz", default=0.05,
         help="fuzz ratio [default: %default]")
     optparser.add_option(
         '--overwrite',
@@ -160,7 +177,9 @@ def main():
                or not os.path.exists(delta_image) \
                or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
                    and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
-                compare(ref_image, src_image, delta_image)
+
+                comparer = Comparer(ref_image, src_image)
+                comparer.write_diff(delta_image, fuzz=options.fuzz)
 
             html.write('      <tr>\n')
             surface(html, ref_image)
