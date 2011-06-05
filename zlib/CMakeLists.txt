@@ -1,9 +1,5 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-if (NOT WIN32)
-    add_definitions (-fPIC)
-endif (NOT WIN32)
-
 add_library (zlib STATIC
     adler32.c
     compress.c
@@ -17,4 +13,8 @@ add_library (zlib STATIC
     infback.c
     inftrees.c
     inffast.c
+)
+
+set_target_properties (zlib PROPERTIES
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
 )

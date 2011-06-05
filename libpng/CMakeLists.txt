@@ -1,9 +1,5 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-if (NOT WIN32)
-    add_definitions (-fPIC)
-endif (NOT WIN32)
-
 add_library (png STATIC
     png.c
     pngerror.c
@@ -20,4 +16,8 @@ add_library (png STATIC
     pngwrite.c
     pngwtran.c
     pngwutil.c
+)
+
+set_target_properties (png PROPERTIES
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
 )
