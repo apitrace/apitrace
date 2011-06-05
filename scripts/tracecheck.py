@@ -116,7 +116,7 @@ def main():
         help='snapshot comparison prefix')
     optparser.add_option(
         '--precision-threshold', metavar='BITS',
-        type='float', dest='precision_threshold', default='12',
+        type='float', dest='precision_threshold', default=8.0,
         help='precision threshold in bits [default: %default]')
     optparser.add_option(
         '--gl-renderer', metavar='REGEXP',
