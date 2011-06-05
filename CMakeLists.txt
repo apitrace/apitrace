@@ -8,7 +8,7 @@ project (apitrace)
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-set (CMAKE_USE_PYTHON_VERSION 2.6)
+set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
