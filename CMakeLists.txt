@@ -20,11 +20,36 @@ if (NOT WIN32)
     # to deploy the wrappers DLLs
     find_package (ZLIB)
     find_package (PNG)
+endif (NOT WIN32)
+
+if (NOT WIN32)
     find_package (X11 REQUIRED)
 
-else (NOT WIN32)
-    find_package (DirectX)
+    # On Mac OS X, GLX is provided as a separate OpenGL implementation, different
+    # from the standard OpenGL framework which provides support for native Mac OS X
+    # applications.
+    if (APPLE)
+        find_path (X11_GL_INCLUDE_PATH GL/glx.h ${X11_INC_SEARCH_PATH})
+        if (NOT X11_GL_INCLUDE_PATH)
+            message (SEND_ERROR "Could not find GL/glx.h")
+        endif (NOT X11_GL_INCLUDE_PATH)
+        set (X11_INCLUDE_DIR ${X11_INCLUDE_DIR} ${X11_GL_INCLUDE_PATH})
+
+        find_library (X11_GL_LIB GL ${X11_LIB_SEARCH_PATH})
+        if (NOT X11_GL_LIB)
+            message (SEND_ERROR "Could not find libGL.dylib")
+        endif (NOT X11_GL_LIB)
+    else ()
+        set (X11_INCLUDE_DIR ${X11_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
+        set (X11_GL_LIB ${OPENGL_gl_LIBRARY})
+    endif ()
+
+    include_directories (${X11_INCLUDE_DIR})
 endif (NOT WIN32)
+
+if (WIN32)
+    find_package (DirectX)
+endif (WIN32)
 
 
 ##############################################################################
@@ -229,8 +254,6 @@ if (WIN32)
     install (TARGETS wgltrace LIBRARY DESTINATION wrappers)
 
 elseif (APPLE)
-    include_directories (${X11_INCLUDE_DIR})
-
     # OpenGL framework
     add_custom_command (
         OUTPUT cgltrace.cpp
@@ -241,7 +264,7 @@ elseif (APPLE)
     add_library (cgltrace SHARED cgltrace.cpp trace_writer.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
     set_target_properties (cgltrace PROPERTIES
-        # For
+        # OpenGL framework name
         PREFIX "" OUTPUT_NAME "OpenGL" SUFFIX ""
         # Specificy the version and reexport GLU symbols
         LINK_FLAGS "-compatibility_version 1 -current_version 1.0.0 -Wl,-reexport_library,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib"
@@ -253,8 +276,6 @@ elseif (APPLE)
 
     install (TARGETS cgltrace LIBRARY DESTINATION wrappers)
 else ()
-    include_directories (${X11_INCLUDE_DIR})
-
     # libGL.so
     add_custom_command (
         OUTPUT glxtrace.cpp
@@ -323,19 +344,21 @@ set_property (
 
 target_link_libraries (glretrace
     trace
-    ${OPENGL_gl_LIBRARY}
 )
 
-if (NOT WIN32)
-    target_link_libraries (glretrace ${X11_X11_LIB})
-
-    # We use GLX on MacOSX, which is in a separate library
-    if (APPLE)
-        find_library (X11_GL_LIB GL ${X11_LIB_SEARCH_PATH})
-        find_library (APPLICATIONSERVICES ApplicationServices)
-        target_link_libraries (glretrace ${X11_GL_LIB} ${APPLICATIONSERVICES})
-    endif (APPLE)
-endif (NOT WIN32)
+if (WIN32)
+    target_link_libraries (glretrace ${OPENGL_gl_LIBRARY})
+elseif (APPLE)
+    # XXX: We use GLX on MacOSX, which is in a separate library.
+    target_link_libraries (glretrace
+        ${X11_GL_LIB}
+        ${X11_X11_LIB}
+        "-framework ApplicationServices" # CGS*
+        ${OPENGL_gl_LIBRARY} # CGL*
+    )
+else ()
+    target_link_libraries (glretrace ${OPENGL_gl_LIBRARY} ${X11_X11_LIB})
+endif ()
 
 install (TARGETS glretrace RUNTIME DESTINATION bin) 
 

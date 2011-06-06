@@ -31,6 +31,10 @@
 #define _GLIMPORTS_HPP_
 
 
+// Prevent including system's glext.h
+#define __glext_h_
+
+
 #if defined(_WIN32)
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -38,24 +42,24 @@
 #endif
 
 #include <windows.h>
+#include <GL/gl.h>
 
 #elif defined(__APPLE__)
+
+#include <OpenGL/gl.h>
 
 #else
 
 #include <X11/Xlib.h>
+#include <GL/gl.h>
 
 #endif /* !_WIN32 */
 
 
-// Prevent including system's glext.h
-#define __glext_h_
-
-#include <GL/gl.h>
-
+// Include our own glext.h
 #undef __glext_h_
-
 #include "glext/glext.h"
+
 
 #ifndef GL_TEXTURE_INDEX_SIZE_EXT
 #define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED

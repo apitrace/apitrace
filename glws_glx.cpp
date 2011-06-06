@@ -26,10 +26,10 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "glimports.hpp"
 #include "glws.hpp"
 
 #include <X11/Xlib.h>
+#include <GL/gl.h>
 #include <GL/glx.h>
 
 
