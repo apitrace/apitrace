@@ -40,7 +40,8 @@ bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
 
     switch (marker) {
     case FrameMarker_SwapBuffers:
-        return call->name().contains(QLatin1String("SwapBuffers"));
+        return call->name().contains(QLatin1String("SwapBuffers")) ||
+               call->name() == QLatin1String("CGLFlushDrawable");
     case FrameMarker_Flush:
         return call->name() == QLatin1String("glFlush");
     case FrameMarker_Finish:
