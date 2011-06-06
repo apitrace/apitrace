@@ -924,14 +924,14 @@ parameters = [
     ("",	X,	1,	"GL_FOG_SCALE_SGIX"),	# 0x81FC
     ("",	X,	1,	"GL_FOG_SCALE_VALUE_SGIX"),	# 0x81FD
     ("",	X,	1,	"GL_TEXT_FRAGMENT_SHADER_ATI"),	# 0x8200
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING"),	# 0x8210
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE"),	# 0x8211
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE"),	# 0x8212
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE"),	# 0x8213
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE"),	# 0x8214
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE"),	# 0x8215
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE"),	# 0x8216
-    ("",	X,	1,	"GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE"),	# 0x8217
+    ("glGetFramebufferAttachmentParameter",	E,	1,	"GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING"),	# 0x8210
+    ("glGetFramebufferAttachmentParameter",	E,	1,	"GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE"),	# 0x8211
+    ("glGetFramebufferAttachmentParameter",	I,	1,	"GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE"),	# 0x8212
+    ("glGetFramebufferAttachmentParameter",	I,	1,	"GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE"),	# 0x8213
+    ("glGetFramebufferAttachmentParameter",	I,	1,	"GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE"),	# 0x8214
+    ("glGetFramebufferAttachmentParameter",	I,	1,	"GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE"),	# 0x8215
+    ("glGetFramebufferAttachmentParameter",	I,	1,	"GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE"),	# 0x8216
+    ("glGetFramebufferAttachmentParameter",	I,	1,	"GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE"),	# 0x8217
     ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT"),	# 0x8218
     ("",	X,	1,	"GL_FRAMEBUFFER_UNDEFINED"),	# 0x8219
     ("",	X,	1,	"GL_DEPTH_STENCIL_ATTACHMENT"),	# 0x821A
@@ -2327,10 +2327,10 @@ parameters = [
     ("",	X,	1,	"GL_STENCIL_BACK_REF"),	# 0x8CA3
     ("",	X,	1,	"GL_STENCIL_BACK_VALUE_MASK"),	# 0x8CA4
     ("",	X,	1,	"GL_STENCIL_BACK_WRITEMASK"),	# 0x8CA5
-    ("glGet",	I,	1,	"GL_FRAMEBUFFER_BINDING"),	# 0x8CA6
+    ("glGet",	I,	1,	"GL_DRAW_FRAMEBUFFER_BINDING"),	# 0x8CA6
     ("glGet",	I,	1,	"GL_RENDERBUFFER_BINDING"),	# 0x8CA7
-    ("",	X,	1,	"GL_READ_FRAMEBUFFER"),	# 0x8CA8
-    ("",	X,	1,	"GL_DRAW_FRAMEBUFFER"),	# 0x8CA9
+    ("",	I,	1,	"GL_READ_FRAMEBUFFER"),	# 0x8CA8
+    ("",	I,	1,	"GL_DRAW_FRAMEBUFFER"),	# 0x8CA9
     ("glGet",	I,	1,	"GL_READ_FRAMEBUFFER_BINDING"),	# 0x8CAA
     ("glGetRenderbufferParameter",	I,	1,	"GL_RENDERBUFFER_SAMPLES"),	# 0x8CAB
     ("",	X,	1,	"GL_DEPTH_COMPONENT32F"),	# 0x8CAC

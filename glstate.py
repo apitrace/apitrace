@@ -41,6 +41,10 @@ texture_targets = [
     ('GL_TEXTURE_CUBE_MAP', 'GL_TEXTURE_BINDING_CUBE_MAP')
 ]
 
+framebuffer_targets = [
+    ('GL_DRAW_FRAMEBUFFER', 'GL_DRAW_FRAMEBUFFER_BINDING'),
+    ('GL_READ_FRAMEBUFFER', 'GL_READ_FRAMEBUFFER_BINDING'),
+]
 
 class GetInflector:
     '''Objects that describes how to inflect.'''
@@ -175,6 +179,7 @@ glGetTexLevelParameter = StateGetter('glGetTexLevelParameter', {I: 'iv', F: 'fv'
 glGetShader = StateGetter('glGetShaderiv', {I: 'iv'})
 glGetProgram = StateGetter('glGetProgram', {I: 'iv'})
 glGetProgramARB = StateGetter('glGetProgram', {I: 'iv', F: 'fv', S: 'Stringv'}, 'ARB')
+glGetFramebufferAttachmentParameter = StateGetter('glGetFramebufferAttachmentParameter', {I: 'iv'})
 
 
 class JsonWriter(Visitor):
@@ -279,6 +284,7 @@ class StateDumper:
         self.dump_texenv_params()
         self.dump_program_params()
         self.dump_texture_parameters()
+        self.dump_framebuffer_parameters()
 
         print '    json.endObject();'
         print '    json.endMember(); // parameters'
@@ -389,6 +395,45 @@ class StateDumper:
         print '        glActiveTexture(active_texture);'
         print '    }'
         print
+
+    def dump_framebuffer_parameters(self):
+        print '    {'
+        print '        GLint max_color_attachments = 0;'
+        print '        glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &max_color_attachments);'
+        print '        GLint framebuffer;'
+        for target, binding in framebuffer_targets:
+            print '            // %s' % target
+            print '            framebuffer = 0;'
+            print '            glGetIntegerv(%s, &framebuffer);' % binding
+            print '            if (framebuffer) {'
+            print '                json.beginMember("%s");' % target
+            print '                json.beginObject();'
+            print '                for (GLint i = 0; i < max_color_attachments; ++i) {'
+            print '                    GLint color_attachment = GL_COLOR_ATTACHMENT0 + i;'
+            self.dump_attachment_parameters(target, 'color_attachment')
+            print '                }'
+            self.dump_attachment_parameters(target, 'GL_DEPTH_ATTACHMENT')
+            self.dump_attachment_parameters(target, 'GL_STENCIL_ATTACHMENT')
+            #self.dump_attachment_parameters(target, 'GL_DEPTH_STENCIL_ATTACHMENT')
+            print '                json.endObject();'
+            print '                json.endMember(); // %s' % target
+            print '            }'
+            print
+        print '    }'
+        print
+
+    def dump_attachment_parameters(self, target, attachment):
+        print '            {'
+        print '                GLint object_type = GL_NONE;'
+        print '                glGetFramebufferAttachmentParameteriv(%s, %s, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &object_type);' % (target, attachment)
+        print '                if (object_type != GL_NONE) {'
+        print '                    json.beginMember(enumToString(%s));' % attachment
+        print '                    json.beginObject();'
+        self.dump_atoms(glGetFramebufferAttachmentParameter, target, attachment)
+        print '                    json.endObject();'
+        print '                    json.endMember(); // GL_x_ATTACHMENT'
+        print '                }'
+        print '            }'
 
     def dump_atoms(self, getter, *args):
         for function, type, count, name in parameters:
