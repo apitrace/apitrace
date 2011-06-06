@@ -109,15 +109,16 @@ class Dispatcher:
         print '    }'
 
     def fail_function(self, function):
-        print r'            OS::DebugMessage("error: unavailable function \"%s\"\n", __name);'
-        if function.fail is not None:
+        if function.type is stdapi.Void or function.fail is not None:
+            print r'            OS::DebugMessage("warning: ignoring call to unavailable function %s\n", __name);'
             if function.type is stdapi.Void:
-                assert function.fail == ''
+                assert function.fail is None
                 print '            return;' 
             else:
-                assert function.fail != ''
+                assert function.fail is not None
                 print '            return %s;' % function.fail
         else:
-            print '            OS::Abort();'
+            print r'            OS::DebugMessage("error: unavailable function %s\n", __name);'
+            print r'            OS::Abort();'
 
 
