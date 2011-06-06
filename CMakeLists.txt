@@ -368,7 +368,7 @@ if (WIN32)
 elseif (APPLE)
     set (CPACK_GENERATOR "DragNDrop")
 else ()
-    set (CPACK_GENERATOR "TGZ")
+    set (CPACK_GENERATOR "TBZ2")
 endif ()
 
 include(CPack)
