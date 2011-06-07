@@ -48,12 +48,12 @@ ignored_function_names = set([
 ])
 
 
-def readtrace(trace):
+def readtrace(trace, limit=sys.maxint):
     calls = []
     parser = Parser()
     parser.open(trace)
     call = parser.parse_call()
-    while call and len(calls) < 1000:
+    while call and len(calls) < limit:
         hash(call)
         if call.sig.name not in ignored_function_names:
             calls.append(call)
@@ -169,13 +169,17 @@ def main():
         '-d', '--tracedump', metavar='PROGRAM',
         type='string', dest='tracedump', default='tracedump',
         help='tracedump command [default: %default]')
+    optparser.add_option(
+        '-l', '--limit', metavar='CALLS',
+        type='int', dest='limit', default=1000,
+        help='limit the number of calls [default: %default]')
 
     (options, args) = optparser.parse_args(sys.argv[1:])
     if len(args) != 2:
         optparser.error("incorrect number of arguments")
 
-    ref_calls = readtrace(args[0])
-    src_calls = readtrace(args[1])
+    ref_calls = readtrace(args[0], options.limit)
+    src_calls = readtrace(args[1], options.limit)
 
     differ = SDiffer(ref_calls, src_calls)
     differ.diff()
