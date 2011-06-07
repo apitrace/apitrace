@@ -102,6 +102,9 @@ class GlRetracer(Retracer):
     misc_draw_function_names = set([
         "glClear",
         "glEnd",
+        "glDrawPixels",
+        "glBlitFramebuffer",
+        "glBlitFramebufferEXT",
     ])
 
     bind_framebuffer_function_names = set([
