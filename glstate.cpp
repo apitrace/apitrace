@@ -425,6 +425,116 @@ getDrawableBounds(GLint *width, GLint *height) {
 }
 
 
+static const GLenum texture_bindings[][2] = {
+    {GL_TEXTURE_1D, GL_TEXTURE_BINDING_1D},
+    {GL_TEXTURE_2D, GL_TEXTURE_BINDING_2D},
+    {GL_TEXTURE_3D, GL_TEXTURE_BINDING_3D},
+    {GL_TEXTURE_RECTANGLE, GL_TEXTURE_BINDING_RECTANGLE},
+    {GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BINDING_CUBE_MAP}
+};
+
+
+static bool
+bindTexture(GLint texture, GLenum &target, GLint &bound_texture)
+{
+
+    for (unsigned i = 0; i < sizeof(texture_bindings)/sizeof(texture_bindings[0]); ++i) {
+        target  = texture_bindings[i][0];
+
+        GLenum binding = texture_bindings[i][1];
+
+        while (glGetError() != GL_NO_ERROR)
+            ;
+
+        glGetIntegerv(binding, &bound_texture);
+        glBindTexture(target, texture);
+
+        if (glGetError() == GL_NO_ERROR) {
+            return true;
+        }
+
+        glBindTexture(target, bound_texture);
+    }
+
+    target = GL_NONE;
+
+    return false;
+}
+
+
+static bool
+getTextureLevelSize(GLint texture, GLint level, GLint *width, GLint *height)
+{
+    *width = 0;
+    *height = 0;
+
+    GLenum target;
+    GLint bound_texture = 0;
+    if (!bindTexture(texture, target, bound_texture)) {
+        return false;
+    }
+
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, width);
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, height);
+
+    glBindTexture(target, bound_texture);
+
+    return *width > 0 && *height > 0;
+}
+
+
+static bool
+getRenderbufferSize(GLint renderbuffer, GLint *width, GLint *height)
+{
+    GLint bound_renderbuffer = 0;
+    glGetIntegerv(GL_RENDERBUFFER_BINDING, &bound_renderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+
+    *width = 0;
+    *height = 0;
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, width);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, height);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
+    
+    return *width > 0 && *height > 0;
+}
+
+
+static bool
+getFramebufferAttachmentSize(GLenum target, GLenum attachment, GLint *width, GLint *height)
+{
+    GLint object_type = GL_NONE;
+    glGetFramebufferAttachmentParameteriv(target, attachment,
+                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
+                                          &object_type);
+    if (object_type == GL_NONE) {
+        return false;
+    }
+
+    GLint object_name = 0;
+    glGetFramebufferAttachmentParameteriv(target, attachment,
+                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+                                          &object_name);
+    if (object_name == 0) {
+        return false;
+    }
+
+    if (object_type == GL_RENDERBUFFER) {
+        return getRenderbufferSize(object_name, width, height);
+    } else if (object_type == GL_TEXTURE) {
+        GLint texture_level = 0;
+        glGetFramebufferAttachmentParameteriv(target, attachment,
+                                              GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
+                                              &texture_level);
+        return getTextureLevelSize(object_name, texture_level, width, height);
+    } else {
+        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
+        return false;
+    }
+}
+
+
 Image::Image *
 getDrawBufferImage(GLenum format) {
     GLint channels = __gl_format_channels(format);
@@ -432,9 +542,29 @@ getDrawBufferImage(GLenum format) {
         return NULL;
     }
 
+    GLint draw_framebuffer = 0;
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_framebuffer);
+
+    GLint draw_buffer = GL_NONE;
     GLint width, height;
-    if (!getDrawableBounds(&width, &height)) {
-        return NULL;
+    if (draw_framebuffer) {
+        glGetIntegerv(GL_DRAW_BUFFER0, &draw_buffer);
+        if (draw_buffer == GL_NONE) {
+            return NULL;
+        }
+
+        if (!getFramebufferAttachmentSize(GL_DRAW_FRAMEBUFFER, draw_buffer, &width, &height)) {
+            return NULL;
+        }
+    } else {
+        glGetIntegerv(GL_DRAW_BUFFER, &draw_buffer);
+        if (draw_buffer == GL_NONE) {
+            return NULL;
+        }
+
+        if (!getDrawableBounds(&width, &height)) {
+            return NULL;
+        }
     }
 
     Image::Image *image = new Image::Image(width, height, channels, true);
@@ -442,9 +572,13 @@ getDrawBufferImage(GLenum format) {
         return NULL;
     }
 
-    GLint draw_buffer = GL_NONE;
-    GLint read_buffer = GL_NONE;
-    glGetIntegerv(GL_DRAW_BUFFER, &draw_buffer);
+    while (glGetError() != GL_NO_ERROR) {}
+
+    GLint read_framebuffer = 0;
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, draw_framebuffer);
+
+    GLint read_buffer = 0;
     glGetIntegerv(GL_READ_BUFFER, &read_buffer);
     glReadBuffer(draw_buffer);
 
@@ -454,7 +588,18 @@ getDrawBufferImage(GLenum format) {
 
     restorePixelPackState();
     glReadBuffer(read_buffer);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
 
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        do {
+            std::cerr << "warning: " << enumToString(error) << " while getting snapshot\n";
+            error = glGetError();
+        } while(error != GL_NO_ERROR);
+        delete image;
+        return NULL;
+    }
+     
     return image;
 }
 
@@ -662,66 +807,6 @@ dumpDrawableImages(JSONWriter &json)
         json.endMember();
     }
 }
-
-
-static const GLenum texture_bindings[][2] = {
-    {GL_TEXTURE_1D, GL_TEXTURE_BINDING_1D},
-    {GL_TEXTURE_2D, GL_TEXTURE_BINDING_2D},
-    {GL_TEXTURE_3D, GL_TEXTURE_BINDING_3D},
-    {GL_TEXTURE_RECTANGLE, GL_TEXTURE_BINDING_RECTANGLE},
-    {GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BINDING_CUBE_MAP}
-};
-
-
-static bool
-bindTexture(GLint texture, GLenum &target, GLint &bound_texture)
-{
-
-    for (unsigned i = 0; i < sizeof(texture_bindings)/sizeof(texture_bindings[0]); ++i) {
-        target  = texture_bindings[i][0];
-
-        GLenum binding = texture_bindings[i][1];
-
-        while (glGetError() != GL_NO_ERROR)
-            ;
-
-        glGetIntegerv(binding, &bound_texture);
-        glBindTexture(target, texture);
-
-        if (glGetError() == GL_NO_ERROR) {
-            return true;
-        }
-
-        glBindTexture(target, bound_texture);
-    }
-
-    target = GL_NONE;
-
-    return false;
-}
-
-
-static bool
-getTextureLevelSize(GLint texture, GLint level, GLint *width, GLint *height)
-{
-    *width = 0;
-    *height = 0;
-
-    GLenum target;
-    GLint bound_texture = 0;
-    if (!bindTexture(texture, target, bound_texture)) {
-        return false;
-    }
-
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, width);
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, height);
-
-    glBindTexture(target, bound_texture);
-
-    return *width > 0 && *height > 0;
-}
-
-
 /**
  * Dump the specified framebuffer attachment.
  *
@@ -730,49 +815,8 @@ getTextureLevelSize(GLint texture, GLint level, GLint *width, GLint *height)
 static void
 dumpFramebufferAttachment(JSONWriter &json, GLenum target, GLenum attachment, GLenum format)
 {
-    GLint width = 0;
-    GLint height = 0;
-
-    GLint object_type = GL_NONE;
-    glGetFramebufferAttachmentParameteriv(target, attachment,
-                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
-                                          &object_type);
-    if (object_type == GL_NONE) {
-        return;
-    }
-
-    GLint object_name = 0;
-    glGetFramebufferAttachmentParameteriv(target, attachment,
-                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
-                                          &object_name);
-    if (object_name == 0) {
-        return;
-    }
-
-    if (object_type == GL_RENDERBUFFER) {
-        GLint bound_renderbuffer = 0;
-        glGetIntegerv(GL_RENDERBUFFER_BINDING, &bound_renderbuffer);
-
-        glBindRenderbuffer(GL_RENDERBUFFER, object_name);
-        glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &width);
-        glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &height);
-
-        if (width <= 0 || height <= 0) {
-            return;
-        }
-
-        glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
-
-    } else if (object_type == GL_TEXTURE) {
-        GLint texture_level = 0;
-        glGetFramebufferAttachmentParameteriv(target, attachment,
-                                              GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
-                                              &texture_level);
-        if (!getTextureLevelSize(object_name, texture_level, &width, &height)) {
-            return;
-        }
-    } else {
-        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
+    GLint width = 0, height = 0;
+    if (!getFramebufferAttachmentSize(target, attachment, &width, &height)) {
         return;
     }
 
