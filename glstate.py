@@ -259,6 +259,13 @@ class StateDumper:
         print '}'
         print
 
+        print 'static void'
+        print 'dumpFramebufferAttachementParameters(JSONWriter &json, GLenum target, GLenum attachment)'
+        print '{'
+        self.dump_attachment_parameters('target', 'attachment')
+        print '}'
+        print
+
         print 'void'
         print 'dumpEnum(JSONWriter &json, GLenum pname)'
         print '{'
@@ -410,11 +417,10 @@ class StateDumper:
             print '                json.beginObject();'
             print '                for (GLint i = 0; i < max_color_attachments; ++i) {'
             print '                    GLint color_attachment = GL_COLOR_ATTACHMENT0 + i;'
-            self.dump_attachment_parameters(target, 'color_attachment')
+            print '                    dumpFramebufferAttachementParameters(json, %s, color_attachment);' % target
             print '                }'
-            self.dump_attachment_parameters(target, 'GL_DEPTH_ATTACHMENT')
-            self.dump_attachment_parameters(target, 'GL_STENCIL_ATTACHMENT')
-            #self.dump_attachment_parameters(target, 'GL_DEPTH_STENCIL_ATTACHMENT')
+            print '                dumpFramebufferAttachementParameters(json, %s, GL_DEPTH_ATTACHMENT);' % target
+            print '                dumpFramebufferAttachementParameters(json, %s, GL_STENCIL_ATTACHMENT);' % target
             print '                json.endObject();'
             print '                json.endMember(); // %s' % target
             print '            }'
