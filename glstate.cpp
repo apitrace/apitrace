@@ -955,13 +955,60 @@ dumpFramebuffer(JSONWriter &json)
 }
 
 
+static const GLenum bindings[] = {
+    GL_DRAW_BUFFER,
+    GL_READ_BUFFER,
+    GL_PIXEL_PACK_BUFFER_BINDING,
+    GL_PIXEL_UNPACK_BUFFER_BINDING,
+    GL_TEXTURE_BINDING_1D,
+    GL_TEXTURE_BINDING_2D,
+    GL_TEXTURE_BINDING_3D,
+    GL_TEXTURE_BINDING_RECTANGLE,
+    GL_TEXTURE_BINDING_CUBE_MAP,
+    GL_DRAW_FRAMEBUFFER_BINDING,
+    GL_READ_FRAMEBUFFER_BINDING,
+    GL_RENDERBUFFER_BINDING,
+    GL_DRAW_BUFFER0,
+    GL_DRAW_BUFFER1,
+    GL_DRAW_BUFFER2,
+    GL_DRAW_BUFFER3,
+    GL_DRAW_BUFFER4,
+    GL_DRAW_BUFFER5,
+    GL_DRAW_BUFFER6,
+    GL_DRAW_BUFFER7,
+};
+
+
+#define NUM_BINDINGS sizeof(bindings)/sizeof(bindings[0])
+
+
 void dumpCurrentContext(std::ostream &os)
 {
     JSONWriter json(os);
+
+#ifndef NDEBUG
+    GLint old_bindings[NUM_BINDINGS];
+    for (unsigned i = 0; i < NUM_BINDINGS; ++i) {
+        old_bindings[i] = 0;
+        glGetIntegerv(bindings[i], &old_bindings[i]);
+    }
+#endif
+
     dumpParameters(json);
     dumpShaders(json);
     dumpTextures(json);
     dumpFramebuffer(json);
+
+#ifndef NDEBUG
+    for (unsigned i = 0; i < NUM_BINDINGS; ++i) {
+        GLint new_binding = 0;
+        glGetIntegerv(bindings[i], &new_binding);
+        if (new_binding != old_bindings[i]) {
+            std::cerr << "warning: " << enumToString(bindings[i]) << " was clobbered\n";
+        }
+    }
+#endif
+
 }
 
 
