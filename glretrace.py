@@ -250,6 +250,12 @@ class GlRetracer(Retracer):
                 print r'    if (__result != __orig_result) {'
                 print r'        std::cerr << call.no << ": warning vertex attrib location mismatch " << __orig_result << " -> " << __result << "\n";'
                 print r'    }'
+            if function.name in ('glCheckFramebufferStatus', 'glCheckFramebufferStatusEXT', 'glCheckNamedFramebufferStatusEXT'):
+                print r'    GLint __orig_result = call.ret->toSInt();'
+                print r'    if (__orig_result == GL_FRAMEBUFFER_COMPLETE &&'
+                print r'        __result != GL_FRAMEBUFFER_COMPLETE) {'
+                print r'        std::cerr << call.no << ": incomplete framebuffer (" << __result << ")\n";'
+                print r'    }'
             print '    }'
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
