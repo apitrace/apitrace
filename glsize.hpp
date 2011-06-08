@@ -574,6 +574,25 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
 #define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height)
 #define __glPolygonStipple_size() __glBitmap_size(32, 32)
 
+static inline size_t
+__glClearBuffer_size(GLenum buffer)
+{
+    switch (buffer) {
+    case GL_COLOR:
+    case GL_FRONT:
+    case GL_BACK:
+    case GL_LEFT:
+    case GL_RIGHT:
+    case GL_FRONT_AND_BACK:
+        return 4;
+    case GL_DEPTH:
+    case GL_STENCIL:
+        return 1;
+    default:
+        OS::DebugMessage("apitrace: warning: %s: unexpected buffer GLenum 0x%04X\n", __FUNCTION__, buffer);
+        return 0;
+    }
+}
 
 /* 
  * 0 terminated integer/float attribute list.

@@ -711,9 +711,9 @@ glapi.add_functions([
     GlFunction(Void, "glTexParameterIuiv", [(GLenum, "target"), (GLenum, "pname"), (Const(OpaqueArray(GLuint, "__glTexParameterIuiv_size(pname)")), "params")]),
     GlFunction(Void, "glGetTexParameterIiv", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetTexParameterIiv_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetTexParameterIuiv", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLuint, "__glGetTexParameterIuiv_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glClearBufferiv", [(GLenum, "buffer"), (GLint, "drawbuffer"), (Const(OpaqueArray(GLint, "__glClearBufferiv_size(buffer)")), "value")]),
-    GlFunction(Void, "glClearBufferuiv", [(GLenum, "buffer"), (GLint, "drawbuffer"), (Const(OpaqueArray(GLuint, "__glClearBufferuiv_size(buffer)")), "value")]),
-    GlFunction(Void, "glClearBufferfv", [(GLenum, "buffer"), (GLint, "drawbuffer"), (Const(OpaqueArray(GLfloat, "__glClearBufferfv_size(buffer)")), "value")]),
+    GlFunction(Void, "glClearBufferiv", [(GLenum, "buffer"), (GLint, "drawbuffer"), (Const(Array(GLint, "__glClearBuffer_size(buffer)")), "value")]),
+    GlFunction(Void, "glClearBufferuiv", [(GLenum, "buffer"), (GLint, "drawbuffer"), (Const(Array(GLuint, "__glClearBuffer_size(buffer)")), "value")]),
+    GlFunction(Void, "glClearBufferfv", [(GLenum, "buffer"), (GLint, "drawbuffer"), (Const(Array(GLfloat, "__glClearBuffer_size(buffer)")), "value")]),
     GlFunction(Void, "glClearBufferfi", [(GLenum, "buffer"), (GLint, "drawbuffer"), (GLfloat, "depth"), (GLint, "stencil")]),
     GlFunction(String("const GLubyte *"), "glGetStringi", [(GLenum, "name"), (GLuint, "index")], sideeffects=False),
 
