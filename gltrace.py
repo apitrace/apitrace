@@ -164,7 +164,7 @@ class GlTracer(Tracer):
             print '    case GL_%s:' % target
             print '        return & __%s_mapping;' % target.lower()
         print '    default:'
-        print '        OS::DebugMessage("warning: unknown buffer target 0x%04X\\n", target);'
+        print '        OS::DebugMessage("apitrace: warning: unknown buffer target 0x%04X\\n", target);'
         print '        return NULL;'
         print '    }'
         print '}'
@@ -211,7 +211,7 @@ class GlTracer(Tracer):
         print '            return num_compressed_texture_formats;'
         print '        }'
         print '    default:'
-        print r'        OS::DebugMessage("warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);'
+        print r'        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);'
         print '        return 1;'
         print '    }'
         print '}'

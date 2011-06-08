@@ -87,7 +87,7 @@ if __name__ == '__main__':
         print '        %s = (%s)procPtr;' % (pvalue, ptype)
         print '        return (__GLXextFuncPtr)&%s;' % (f.name,)
         print '    }'
-    print '    OS::DebugMessage("apitrace: unknown function \\"%s\\"\\n", (const char *)procName);'
+    print '    OS::DebugMessage("apitrace: warning: unknown function \\"%s\\"\\n", (const char *)procName);'
     print '    return procPtr;'
     print '}'
     print
@@ -111,7 +111,7 @@ static void *__dlopen(const char *filename, int flag)
     if (!dlopen_ptr) {
         dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
         if (!dlopen_ptr) {
-            OS::DebugMessage("error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
+            OS::DebugMessage("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
             return NULL;
         }
     }
@@ -137,7 +137,7 @@ void * dlopen(const char *filename, int flag)
 
     if (filename && handle && !libgl_filename) {
         if (0) {
-            OS::DebugMessage("warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
+            OS::DebugMessage("apitrace: warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
         }
 
         // FIXME: handle absolute paths and other versions
@@ -154,7 +154,7 @@ void * dlopen(const char *filename, int flag)
                 OS::DebugMessage("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
                 handle = __dlopen(info.dli_fname, flag);
             } else {
-                OS::DebugMessage("warning: dladdr() failed\n");
+                OS::DebugMessage("apitrace: warning: dladdr() failed\n");
             }
         }
     }
@@ -201,7 +201,7 @@ static void * __dlsym(const char *symbol)
 
         libgl_handle = __dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
         if (!libgl_handle) {
-            OS::DebugMessage("error: couldn't find libGL.so\n");
+            OS::DebugMessage("apitrace: error: couldn't find libGL.so\n");
             return NULL;
         }
     }

@@ -333,7 +333,7 @@ void Writer::writeBitmask(const BitmaskSig *sig, unsigned long long value) {
         _writeUInt(sig->num_flags);
         for (unsigned i = 0; i < sig->num_flags; ++i) {
             if (i != 0 && sig->flags[i].value == 0) {
-                OS::DebugMessage("apitrace: sig %s is zero but is not first flag\n", sig->flags[i].name);
+                OS::DebugMessage("apitrace: warning: sig %s is zero but is not first flag\n", sig->flags[i].name);
             }
             _writeString(sig->flags[i].name);
             _writeUInt(sig->flags[i].value);
