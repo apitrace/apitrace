@@ -27,7 +27,7 @@
 
 
 from stdapi import *
-from glapi import glapi
+from glapi import *
 
 VisualID = Alias("VisualID", UInt32)
 Display = Opaque("Display *")
@@ -40,10 +40,13 @@ GLXContext = Opaque("GLXContext")
 GLXPixmap = Alias("GLXPixmap", UInt32)
 GLXDrawable = Alias("GLXDrawable", UInt32)
 GLXFBConfig = Opaque("GLXFBConfig")
+GLXFBConfigSGIX = Opaque("GLXFBConfigSGIX")
 GLXFBConfigID = Alias("GLXFBConfigID", UInt32)
 GLXContextID = Alias("GLXContextID", UInt32)
 GLXWindow = Alias("GLXWindow", UInt32)
 GLXPbuffer = Alias("GLXPbuffer", UInt32)
+GLXPbufferSGIX = Alias("GLXPbufferSGIX", UInt32)
+GLXVideoSourceSGIX = Alias("GLXVideoSourceSGIX", UInt32)
 
 XVisualInfo = Struct("XVisualInfo", [
   (Visual, "visual"),
@@ -58,7 +61,7 @@ XVisualInfo = Struct("XVisualInfo", [
   (Int, "bits_per_rgb"),
 ])
 
-Bool_ = FakeEnum(Int, [
+Bool = FakeEnum(Int, [
     "False",
     "True",
 ])
@@ -239,18 +242,18 @@ PROC = Opaque("__GLXextFuncPtr")
 glxapi.add_functions([
     # GLX
     Function(Pointer(XVisualInfo), "glXChooseVisual", [(Display, "dpy"), (Int, "screen"), (Array(GLXAttrib, "__AttribList_size(attribList)"), "attribList")]),
-    Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool_, "direct")]),
+    Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool, "direct")]),
     Function(Void, "glXDestroyContext",  [(Display, "dpy"), (GLXContext, "ctx")]),
-    Function(Bool_, "glXMakeCurrent", [(Display, "dpy"), (GLXDrawable, "drawable"), (GLXContext, "ctx")]),
+    Function(Bool, "glXMakeCurrent", [(Display, "dpy"), (GLXDrawable, "drawable"), (GLXContext, "ctx")]),
     Function(Void, "glXCopyContext", [(Display, "dpy"), (GLXContext, "src"), (GLXContext, "dst"),
                                       (ULong, "mask")]),
     Function(Void, "glXSwapBuffers", [(Display, "dpy"), (GLXDrawable, "drawable")]),
     Function(GLXPixmap, "glXCreateGLXPixmap", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"),
                                                (Pixmap, "pixmap")]),
     Function(Void, "glXDestroyGLXPixmap", [(Display, "dpy"), (GLXPixmap, "pixmap")]),
-    Function(Bool_, "glXQueryExtension", [(Display, "dpy"), Out(Pointer(Int), "errorb"), Out(Pointer(Int), "event")]),
-    Function(Bool_, "glXQueryVersion", [(Display, "dpy"), Out(Pointer(Int), "maj"), Out(Pointer(Int), "min")]),
-    Function(Bool_, "glXIsDirect", [(Display, "dpy"), (GLXContext, "ctx")]),
+    Function(Bool, "glXQueryExtension", [(Display, "dpy"), Out(Pointer(Int), "errorb"), Out(Pointer(Int), "event")]),
+    Function(Bool, "glXQueryVersion", [(Display, "dpy"), Out(Pointer(Int), "maj"), Out(Pointer(Int), "min")]),
+    Function(Bool, "glXIsDirect", [(Display, "dpy"), (GLXContext, "ctx")]),
     Function(GLXError, "glXGetConfig", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"),
                                     (GLXAttrib, "attrib"), Out(Pointer(Int), "value")]),
     Function(GLXContext, "glXGetCurrentContext", [], sideeffects=False),
@@ -287,8 +290,8 @@ glxapi.add_functions([
                                         Out(Pointer(UInt), "value")]),
     Function(GLXContext, "glXCreateNewContext", [(Display, "dpy"), (GLXFBConfig, "config"),
                                                  (GLXEnum, "renderType"), (GLXContext, "shareList"),
-                                                 (Bool_, "direct")]),
-    Function(Bool_, "glXMakeContextCurrent", [(Display, "dpy"), (GLXDrawable, "draw"),
+                                                 (Bool, "direct")]),
+    Function(Bool, "glXMakeContextCurrent", [(Display, "dpy"), (GLXDrawable, "draw"),
                                              (GLXDrawable, "read"), (GLXContext, "ctx")]),
     Function(GLXDrawable, "glXGetCurrentReadDrawable", []),
     Function(Int, "glXQueryContext", [(Display, "dpy"), (GLXContext, "ctx"), (GLXEnum, "attribute"),
@@ -298,11 +301,137 @@ glxapi.add_functions([
     Function(Void, "glXGetSelectedEvent", [(Display, "dpy"), (GLXDrawable, "drawable"),
                                            Out(Pointer(ULong), "mask")]),
 
+    # GLX_ARB_create_context
+    Function(GLXContext, "glXCreateContextAttribsARB", [(Display, "dpy"), (GLXFBConfig, "config"), (GLXContext, "share_context"), (Bool, "direct"), (Const(OpaquePointer(Int)), "attrib_list")]),
+
+    # GLX_SGI_swap_control
+    Function(Int, "glXSwapIntervalSGI", [(Int, "interval")]),
+
+    # GLX_SGI_video_sync
+    Function(Int, "glXGetVideoSyncSGI", [(OpaquePointer(UInt), "count")]),
+    Function(Int, "glXWaitVideoSyncSGI", [(Int, "divisor"), (Int, "remainder"), (OpaquePointer(UInt), "count")]),
+
+    # GLX_SGI_make_current_read
+    Function(Bool, "glXMakeCurrentReadSGI", [(Display, "dpy"), (GLXDrawable, "draw"), (GLXDrawable, "read"), (GLXContext, "ctx")]),
+    Function(GLXDrawable, "glXGetCurrentReadDrawableSGI", []),
+
+    # GLX_SGIX_video_source
+    #Function(GLXVideoSourceSGIX, "glXCreateGLXVideoSourceSGIX", [(Display, "display"), (Int, "screen"), (VLServer, "server"), (VLPath, "path"), (Int, "nodeClass"), (VLNode, "drainNode")]),
+    #Function(Void, "glXDestroyGLXVideoSourceSGIX", [(Display, "dpy"), (GLXVideoSourceSGIX, "glxvideosource")]),
+
+    # GLX_EXT_import_context
+    Function(Display, "glXGetCurrentDisplayEXT", []),
+    Function(Int, "glXQueryContextInfoEXT", [(Display, "dpy"), (GLXContext, "context"), (Int, "attribute"), (OpaquePointer(Int), "value")]),
+    Function(GLXContextID, "glXGetContextIDEXT", [(Const(GLXContext), "context")]),
+    Function(GLXContext, "glXImportContextEXT", [(Display, "dpy"), (GLXContextID, "contextID")]),
+    Function(Void, "glXFreeContextEXT", [(Display, "dpy"), (GLXContext, "context")]),
+
+    # GLX_SGIX_fbconfig
+    Function(Int, "glXGetFBConfigAttribSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (Int, "attribute"), (OpaquePointer(Int), "value")]),
+    Function(OpaquePointer(GLXFBConfigSGIX), "glXChooseFBConfigSGIX", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(Int), "attrib_list"), (OpaquePointer(Int), "nelements")]),
+    Function(GLXPixmap, "glXCreateGLXPixmapWithConfigSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (Pixmap, "pixmap")]),
+    Function(GLXContext, "glXCreateContextWithConfigSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (Int, "render_type"), (GLXContext, "share_list"), (Bool, "direct")]),
+    Function(OpaquePointer(XVisualInfo), "glXGetVisualFromFBConfigSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config")]),
+    Function(GLXFBConfigSGIX, "glXGetFBConfigFromVisualSGIX", [(Display, "dpy"), (OpaquePointer(XVisualInfo), "vis")]),
+
+    # GLX_SGIX_pbuffer
+    Function(GLXPbufferSGIX, "glXCreateGLXPbufferSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (UInt, "width"), (UInt, "height"), (OpaquePointer(Int), "attrib_list")]),
+    Function(Void, "glXDestroyGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf")]),
+    Function(Int, "glXQueryGLXPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuf"), (Int, "attribute"), (OpaquePointer(UInt), "value")]),
+    Function(Void, "glXSelectEventSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), (ULong, "mask")]),
+    Function(Void, "glXGetSelectedEventSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(ULong), "mask")]),
+
+    # GLX_SGI_cushion
+    Function(Void, "glXCushionSGI", [(Display, "dpy"), (Window, "window"), (Float, "cushion")]),
+
+    # GLX_SGIX_video_resize
+    Function(Int, "glXBindChannelToWindowSGIX", [(Display, "display"), (Int, "screen"), (Int, "channel"), (Window, "window")]),
+    Function(Int, "glXChannelRectSGIX", [(Display, "display"), (Int, "screen"), (Int, "channel"), (Int, "x"), (Int, "y"), (Int, "w"), (Int, "h")]),
+    Function(Int, "glXQueryChannelRectSGIX", [(Display, "display"), (Int, "screen"), (Int, "channel"), (OpaquePointer(Int), "dx"), (OpaquePointer(Int), "dy"), (OpaquePointer(Int), "dw"), (OpaquePointer(Int), "dh")]),
+    Function(Int, "glXQueryChannelDeltasSGIX", [(Display, "display"), (Int, "screen"), (Int, "channel"), (OpaquePointer(Int), "x"), (OpaquePointer(Int), "y"), (OpaquePointer(Int), "w"), (OpaquePointer(Int), "h")]),
+    Function(Int, "glXChannelRectSyncSGIX", [(Display, "display"), (Int, "screen"), (Int, "channel"), (GLenum, "synctype")]),
+
+    # GLX_SGIX_dmbuffer
+    #Function(Bool, "glXAssociateDMPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuffer"), (OpaquePointer(DMparams), "params"), (DMbuffer, "dmbuffer")]),
+
+    # GLX_SGIX_swap_group
+    Function(Void, "glXJoinSwapGroupSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), (GLXDrawable, "member")]),
+
+    # GLX_SGIX_swap_barrier
+    Function(Void, "glXBindSwapBarrierSGIX", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int, "barrier")]),
+    Function(Bool, "glXQueryMaxSwapBarriersSGIX", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(Int), "max")]),
+
+    # GLX_SUN_get_transparent_index
+    #Function(Status, "glXGetTransparentIndexSUN", [(Display, "dpy"), (Window, "overlay"), (Window, "underlay"), (OpaquePointer(Long), "pTransparentIndex")]),
+
+    # GLX_MESA_copy_sub_buffer
+    Function(Void, "glXCopySubBufferMESA", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int, "x"), (Int, "y"), (Int, "width"), (Int, "height")]),
+
+    # GLX_MESA_pixmap_colormap
+    #Function(GLXPixmap, "glXCreateGLXPixmapMESA", [(Display, "dpy"), (OpaquePointer(XVisualInfo), "visual"), (Pixmap, "pixmap"), (Colormap, "cmap")]),
+
+    # GLX_MESA_release_buffers
+    Function(Bool, "glXReleaseBuffersMESA", [(Display, "dpy"), (GLXDrawable, "drawable")]),
+
+    # GLX_MESA_set_3dfx_mode
+    Function(Bool, "glXSet3DfxModeMESA", [(Int, "mode")]),
+
+    # GLX_OML_sync_control
+    Function(Bool, "glXGetSyncValuesOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(Int64), "ust"), (OpaquePointer(Int64), "msc"), (OpaquePointer(Int64), "sbc")]),
+    Function(Bool, "glXGetMscRateOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(Int32), "numerator"), (OpaquePointer(Int32), "denominator")]),
+    Function(Int64, "glXSwapBuffersMscOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int64, "target_msc"), (Int64, "divisor"), (Int64, "remainder")]),
+    Function(Bool, "glXWaitForMscOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int64, "target_msc"), (Int64, "divisor"), (Int64, "remainder"), (OpaquePointer(Int64), "ust"), (OpaquePointer(Int64), "msc"), (OpaquePointer(Int64), "sbc")]),
+    Function(Bool, "glXWaitForSbcOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int64, "target_sbc"), (OpaquePointer(Int64), "ust"), (OpaquePointer(Int64), "msc"), (OpaquePointer(Int64), "sbc")]),
+
+    # GLX_SGIX_hyperpipe
+    #Function(OpaquePointer(GLXHyperpipeNetworkSGIX), "glXQueryHyperpipeNetworkSGIX", [(Display, "dpy"), (OpaquePointer(Int), "npipes")]),
+    #Function(Int, "glXHyperpipeConfigSGIX", [(Display, "dpy"), (Int, "networkId"), (Int, "npipes"), (OpaquePointer(GLXHyperpipeConfigSGIX), "cfg"), (OpaquePointer(Int), "hpId")]),
+    #Function(OpaquePointer(GLXHyperpipeConfigSGIX), "glXQueryHyperpipeConfigSGIX", [(Display, "dpy"), (Int, "hpId"), (OpaquePointer(Int), "npipes")]),
+    #Function(Int, "glXDestroyHyperpipeConfigSGIX", [(Display, "dpy"), (Int, "hpId")]),
+    #Function(Int, "glXBindHyperpipeSGIX", [(Display, "dpy"), (Int, "hpId")]),
+    #Function(Int, "glXQueryHyperpipeBestAttribSGIX", [(Display, "dpy"), (Int, "timeSlice"), (Int, "attrib"), (Int, "size"), (OpaquePointer(Void), "attribList"), (OpaquePointer(Void), "returnAttribList")]),
+    #Function(Int, "glXHyperpipeAttribSGIX", [(Display, "dpy"), (Int, "timeSlice"), (Int, "attrib"), (Int, "size"), (OpaquePointer(Void), "attribList")]),
+    #Function(Int, "glXQueryHyperpipeAttribSGIX", [(Display, "dpy"), (Int, "timeSlice"), (Int, "attrib"), (Int, "size"), (OpaquePointer(Void), "returnAttribList")]),
+
+    # GLX_MESA_agp_offset
+    Function(UInt, "glXGetAGPOffsetMESA", [(Const(OpaquePointer(Void)), "pointer")]),
+    
     # EXT_texture_from_pixmap
     Function(Void, "glXBindTexImageEXT", [(Display, "display"), (GLXDrawable, "drawable"), (Int, "buffer"), (Const(Array(Int, "__AttribList_size(attrib_list)")), "attrib_list")]),
     Function(Void, "glXReleaseTexImageEXT", [(Display, "display"), (GLXDrawable, "drawable"), (Int, "buffer")]),
 
-    # TODO: more extensions
+    # GLX_NV_present_video
+    #Function(OpaquePointer(UInt), "glXEnumerateVideoDevicesNV", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(Int), "nelements")]),
+    #Function(Int, "glXBindVideoDeviceNV", [(Display, "dpy"), (UInt, "video_slot"), (UInt, "video_device"), (Const(OpaquePointer(Int)), "attrib_list")]),
+
+    # GLX_NV_video_output
+    #Function(Int, "glXGetVideoDeviceNV", [(Display, "dpy"), (Int, "screen"), (Int, "numVideoDevices"), (OpaquePointer(GLXVideoDeviceNV), "pVideoDevice")]),
+    #Function(Int, "glXReleaseVideoDeviceNV", [(Display, "dpy"), (Int, "screen"), (GLXVideoDeviceNV, "VideoDevice")]),
+    #Function(Int, "glXBindVideoImageNV", [(Display, "dpy"), (GLXVideoDeviceNV, "VideoDevice"), (GLXPbuffer, "pbuf"), (Int, "iVideoBuffer")]),
+    #Function(Int, "glXReleaseVideoImageNV", [(Display, "dpy"), (GLXPbuffer, "pbuf")]),
+    #Function(Int, "glXSendPbufferToVideoNV", [(Display, "dpy"), (GLXPbuffer, "pbuf"), (Int, "iBufferType"), (OpaquePointer(ULong), "pulCounterPbuffer"), (GLboolean, "bBlock")]),
+    #Function(Int, "glXGetVideoInfoNV", [(Display, "dpy"), (Int, "screen"), (GLXVideoDeviceNV, "VideoDevice"), (OpaquePointer(ULong), "pulCounterOutputPbuffer"), (OpaquePointer(ULong), "pulCounterOutputVideo")]),
+
+    # GLX_NV_swap_group
+    Function(Bool, "glXJoinSwapGroupNV", [(Display, "dpy"), (GLXDrawable, "drawable"), (GLuint, "group")]),
+    Function(Bool, "glXBindSwapBarrierNV", [(Display, "dpy"), (GLuint, "group"), (GLuint, "barrier")]),
+    Function(Bool, "glXQuerySwapGroupNV", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(GLuint), "group"), (OpaquePointer(GLuint), "barrier")]),
+    Function(Bool, "glXQueryMaxSwapGroupsNV", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(GLuint), "maxGroups"), (OpaquePointer(GLuint), "maxBarriers")]),
+    Function(Bool, "glXQueryFrameCountNV", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(GLuint), "count")]),
+    Function(Bool, "glXResetFrameCountNV", [(Display, "dpy"), (Int, "screen")]),
+
+    # GLX_NV_video_capture
+    #Function(Int, "glXBindVideoCaptureDeviceNV", [(Display, "dpy"), (UInt, "video_capture_slot"), (GLXVideoCaptureDeviceNV, "device")]),
+    #Function(OpaquePointer(GLXVideoCaptureDeviceNV), "glXEnumerateVideoCaptureDevicesNV", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(Int), "nelements")]),
+    #Function(Void, "glXLockVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device")]),
+    #Function(Int, "glXQueryVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device"), (Int, "attribute"), (OpaquePointer(Int), "value")]),
+    #Function(Void, "glXReleaseVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device")]),
+
+    # GLX_EXT_swap_control
+    Function(Int, "glXSwapIntervalEXT", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int, "interval")]),
+
+    # GLX_NV_copy_image
+    Function(Void, "glXCopyImageSubDataNV", [(Display, "dpy"), (GLXContext, "srcCtx"), (GLuint, "srcName"), (GLenum, "srcTarget"), (GLint, "srcLevel"), (GLint, "srcX"), (GLint, "srcY"), (GLint, "srcZ"), (GLXContext, "dstCtx"), (GLuint, "dstName"), (GLenum, "dstTarget"), (GLint, "dstLevel"), (GLint, "dstX"), (GLint, "dstY"), (GLint, "dstZ"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth")]),
 
     # Must be last
     Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
