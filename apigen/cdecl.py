@@ -130,6 +130,8 @@ class Parser:
 
         self.match('(')
         args = []
+        if self.tokens[0] == 'void' and self.tokens[1] == ')':
+            self.tokens.pop(0)
         while self.tokens[0] != ')':
             arg = self.parse_arg()
             args.append(arg)
@@ -161,14 +163,62 @@ class Parser:
             self.match(']')
         return tag
 
+    int_tokens = ('unsigned', 'signed', 'int', 'long', 'short', 'char')
+
+    type_table = {
+        'float':    'Float',
+        'double':   'Double',
+        'int8_t':   'Int8',
+        'uint8_t':  'UInt8',
+        'int16_t':  'Int16',
+        'uint16_t': 'UInt16',
+        'int32_t':  'Int32',
+        'uint32_t': 'UInt32',
+        'int64_t' : 'Int64',
+        'uint64_t': 'UInt64',
+    }
+
     def parse_type(self):
         token = self.tokens.pop(0)
         if token == 'const':
             return 'Const(%s)' % self.parse_type()
         if token == 'void':
             type = 'Void'
+        elif token in self.int_tokens:
+            unsigned = False
+            signed = False
+            long = 0
+            short = 0
+            char = False
+            while token in self.int_tokens:
+                if token == 'unsigned':
+                    unsigned = True
+                if token == 'signed':
+                    signed = True
+                if token == 'long':
+                    long += 1
+                if token == 'short':
+                    short += 1
+                if token == 'char':
+                    char = False
+                if self.tokens[0] in self.int_tokens:
+                    token = self.tokens.pop(0)
+                else:
+                    token = None
+            if char:
+                type = 'Char'
+                if signed:
+                    type = 'S' + type
+            elif short:
+                type = 'Short'
+            elif long:
+                type = 'Long' * long
+            else:
+                type = 'Int'
+            if unsigned:
+                type = 'U' + type
         else:
-            type = token
+            type = self.type_table.get(token, token)
         while self.tokens[0] == '*':
             type = 'OpaquePointer(%s)' % type
             self.tokens.pop(0)
