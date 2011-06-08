@@ -935,10 +935,10 @@ parameters = [
     ("",	X,	1,	"GL_FRAMEBUFFER_DEFAULT"),	# 0x8218
     ("",	X,	1,	"GL_FRAMEBUFFER_UNDEFINED"),	# 0x8219
     ("",	X,	1,	"GL_DEPTH_STENCIL_ATTACHMENT"),	# 0x821A
-    ("",	X,	1,	"GL_MAJOR_VERSION"),	# 0x821B
-    ("",	X,	1,	"GL_MINOR_VERSION"),	# 0x821C
-    ("",	X,	1,	"GL_NUM_EXTENSIONS"),	# 0x821D
-    ("",	X,	1,	"GL_CONTEXT_FLAGS"),	# 0x821E
+    ("glGet",	I,	1,	"GL_MAJOR_VERSION"),	# 0x821B
+    ("glGet",	I,	1,	"GL_MINOR_VERSION"),	# 0x821C
+    ("glGet",	I,	1,	"GL_NUM_EXTENSIONS"),	# 0x821D
+    ("glGet",	I,	1,	"GL_CONTEXT_FLAGS"),	# 0x821E
     ("",	X,	1,	"GL_INDEX"),	# 0x8222
     ("",	X,	1,	"GL_DEPTH_BUFFER"),	# 0x8223
     ("",	X,	1,	"GL_STENCIL_BUFFER"),	# 0x8224
@@ -988,7 +988,7 @@ parameters = [
     ("",	X,	1,	"GL_GUILTY_CONTEXT_RESET_ARB"),	# 0x8253
     ("",	X,	1,	"GL_INNOCENT_CONTEXT_RESET_ARB"),	# 0x8254
     ("",	X,	1,	"GL_UNKNOWN_CONTEXT_RESET_ARB"),	# 0x8255
-    ("",	X,	1,	"GL_RESET_NOTIFICATION_STRATEGY_ARB"),	# 0x8256
+    ("glGet",	E,	1,	"GL_RESET_NOTIFICATION_STRATEGY_ARB"),	# 0x8256
     ("",	X,	1,	"GL_PROGRAM_BINARY_RETRIEVABLE_HINT"),	# 0x8257
     ("",	X,	1,	"GL_PROGRAM_SEPARABLE"),	# 0x8258
     ("glGet",	I,	1,	"GL_ACTIVE_PROGRAM"),	# 0x8259
@@ -2448,8 +2448,8 @@ parameters = [
     ("",	X,	1,	"GL_FLOAT_32_UNSIGNED_INT_24_8_REV"),	# 0x8DAD
     ("",	X,	1,	"GL_SHADER_INCLUDE_ARB"),	# 0x8DAE
     ("",	X,	1,	"GL_DEPTH_BUFFER_FLOAT_MODE_NV"),	# 0x8DAF
-    ("",	X,	1,	"GL_FRAMEBUFFER_SRGB"),	# 0x8DB9
-    ("",	X,	1,	"GL_FRAMEBUFFER_SRGB_CAPABLE_EXT"),	# 0x8DBA
+    ("glGet",	B,	1,	"GL_FRAMEBUFFER_SRGB"),	# 0x8DB9
+    ("glGet",	B,	1,	"GL_FRAMEBUFFER_SRGB_CAPABLE_EXT"),	# 0x8DBA
     ("",	X,	1,	"GL_COMPRESSED_RED_RGTC1"),	# 0x8DBB
     ("",	X,	1,	"GL_COMPRESSED_SIGNED_RED_RGTC1"),	# 0x8DBC
     ("",	X,	1,	"GL_COMPRESSED_RG_RGTC2"),	# 0x8DBD
@@ -2658,8 +2658,8 @@ parameters = [
     ("",	X,	1,	"GL_RGB16_SNORM"),	# 0x8F9A
     ("",	X,	1,	"GL_RGBA16_SNORM"),	# 0x8F9B
     ("",	X,	1,	"GL_SIGNED_NORMALIZED"),	# 0x8F9C
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART"),	# 0x8F9D
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART_INDEX"),	# 0x8F9E
+    ("glGet",	B,	1,	"GL_PRIMITIVE_RESTART"),	# 0x8F9D
+    ("glGet",	I,	1,	"GL_PRIMITIVE_RESTART_INDEX"),	# 0x8F9E
     ("",	X,	1,	"GL_INT8_NV"),	# 0x8FE0
     ("",	X,	1,	"GL_INT8_VEC2_NV"),	# 0x8FE1
     ("",	X,	1,	"GL_INT8_VEC3_NV"),	# 0x8FE2
@@ -2819,7 +2819,7 @@ parameters = [
     ("",	X,	1,	"GL_MAX_GEOMETRY_INPUT_COMPONENTS"),	# 0x9123
     ("",	X,	1,	"GL_MAX_GEOMETRY_OUTPUT_COMPONENTS"),	# 0x9124
     ("",	X,	1,	"GL_MAX_FRAGMENT_INPUT_COMPONENTS"),	# 0x9125
-    ("",	X,	1,	"GL_CONTEXT_PROFILE_MASK"),	# 0x9126
+    ("glGet",	I,	1,	"GL_CONTEXT_PROFILE_MASK"),	# 0x9126
     ("",	X,	1,	"GL_MAX_DEBUG_MESSAGE_LENGTH_ARB"),	# 0x9143
     ("",	X,	1,	"GL_MAX_DEBUG_LOGGED_MESSAGES_ARB"),	# 0x9144
     ("",	X,	1,	"GL_DEBUG_LOGGED_MESSAGES_ARB"),	# 0x9145
