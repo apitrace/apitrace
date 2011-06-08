@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <string.h>
 #include <iostream>
 
 #include "retrace.hpp"
@@ -35,10 +36,29 @@ namespace retrace {
 int verbosity = 0;
 
 
+void ignore(Trace::Call &call) {
+    (void)call;
+}
+
 void retrace_unknown(Trace::Call &call) {
     if (verbosity >= 0) {
         std::cerr << call.no << ": warning: unknown call " << call.name() << "\n";
     }
+}
+
+void dispatch(Trace::Call &call, const Entry *entries, unsigned num_entries)
+{
+    /* TODO: do a bisection instead of a linear search */
+
+    const char *name = call.name();
+    for (unsigned i = 0; i < num_entries; ++i) {
+        if (strcmp(name, entries[i].name) == 0) {
+            entries[i].callback(call);
+            return;
+        }
+    }
+
+    retrace_unknown(call);
 }
 
 

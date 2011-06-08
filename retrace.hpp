@@ -84,8 +84,21 @@ extern int verbosity;
 
 void retrace_call(Trace::Call &call);
 
+void ignore(Trace::Call &call);
 void retrace_unknown(Trace::Call &call);
 
+
+typedef void (*Callback)(Trace::Call &call);
+
+struct Entry {
+    const char *name;
+    Callback callback;
+};
+
+#define RETRACE_DISPATCH_ENTRY(name) {#name, &retrace_##name}
+#define RETRACE_IGNORE_ENTRY(name) {#name, &retrace_ignore}
+
+void dispatch(Trace::Call &call, const Entry *entries, unsigned num_entries);
 
 } /* namespace retrace */
 
