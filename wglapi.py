@@ -221,9 +221,6 @@ wglapi.add_functions([
     StdFunction(OpaquePointer(Void), "wglAllocateMemoryNV", [(GLsizei, "size"), (GLfloat, "readfreq"), (GLfloat, "writefreq"), (GLfloat, "priority")]),
     StdFunction(Void, "wglFreeMemoryNV", [(OpaquePointer(Void), "pointer")]),
 
-    # GL_WIN_swap_hint
-    StdFunction(Void, "glAddSwapHintRectWIN", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
-
     # must be last
     StdFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")]),
 ])
