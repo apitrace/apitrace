@@ -445,7 +445,7 @@ d3d9.add_functions([
     StdFunction(Void, "D3DPERF_SetMarker", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")]),
     StdFunction(Void, "D3DPERF_SetRegion", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")]),
     StdFunction(BOOL, "D3DPERF_QueryRepeatFrame", [], fail='FALSE'),
-    StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], fail=''),
+    StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")]),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0'),
 ])
 
