@@ -332,6 +332,11 @@ __glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint 
 #define __glGetFloatv_size __glGetBooleanv_size
 #define __glGetIntegerv_size __glGetBooleanv_size
 #define __glGetInteger64v_size __glGetBooleanv_size
+#define __glGetBooleani_v_size __gl_param_size
+#define __glGetDoublei_v_size __glGetBooleanv_size
+#define __glGetFloati_v_size __glGetBooleanv_size
+#define __glGetIntegeri_v_size __glGetBooleani_v_size
+#define __glGetInteger64i_v_size __glGetBooleani_v_size
 
 #define __glGetLightfv_size __glLightfv_size
 #define __glGetLightiv_size __glLightfv_size
@@ -527,6 +532,10 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
 #define __glGetTexParameteriv_size __gl_param_size
 #define __glGetTexLevelParameterfv_size __gl_param_size
 #define __glGetTexLevelParameteriv_size __gl_param_size
+#define __glTexParameterIiv_size __gl_param_size
+#define __glTexParameterIuiv_size __gl_param_size
+#define __glGetTexParameterIiv_size __gl_param_size
+#define __glGetTexParameterIuiv_size __gl_param_size
 
 #define __glTexEnvfv_size __gl_param_size
 #define __glTexEnviv_size __gl_param_size

@@ -993,11 +993,11 @@ parameters = [
     ("",	X,	1,	"GL_PROGRAM_SEPARABLE"),	# 0x8258
     ("glGet",	I,	1,	"GL_ACTIVE_PROGRAM"),	# 0x8259
     ("glGet",	I,	1,	"GL_PROGRAM_PIPELINE_BINDING"),	# 0x825A
-    ("",	X,	1,	"GL_MAX_VIEWPORTS"),	# 0x825B
-    ("",	X,	1,	"GL_VIEWPORT_SUBPIXEL_BITS"),	# 0x825C
-    ("",	X,	1,	"GL_VIEWPORT_BOUNDS_RANGE"),	# 0x825D
-    ("",	X,	1,	"GL_LAYER_PROVOKING_VERTEX"),	# 0x825E
-    ("",	X,	1,	"GL_VIEWPORT_INDEX_PROVOKING_VERTEX"),	# 0x825F
+    ("glGet",	I,	1,	"GL_MAX_VIEWPORTS"),	# 0x825B
+    ("glGet",	I,	1,	"GL_VIEWPORT_SUBPIXEL_BITS"),	# 0x825C
+    ("glGet",	F,	2,	"GL_VIEWPORT_BOUNDS_RANGE"),	# 0x825D
+    ("glGet",	E,	1,	"GL_LAYER_PROVOKING_VERTEX"),	# 0x825E
+    ("glGet",	E,	1,	"GL_VIEWPORT_INDEX_PROVOKING_VERTEX"),	# 0x825F
     ("",	X,	1,	"GL_UNDEFINED_VERTEX"),	# 0x8260
     ("",	X,	1,	"GL_NO_RESET_NOTIFICATION_ARB"),	# 0x8261
     ("",	X,	1,	"GL_DEPTH_PASS_INSTRUMENT_SGIX"),	# 0x8310
@@ -2567,9 +2567,9 @@ parameters = [
     ("",	X,	1,	"GL_MAX_TRANSFORM_FEEDBACK_BUFFERS"),	# 0x8E70
     ("",	X,	1,	"GL_MAX_VERTEX_STREAMS"),	# 0x8E71
     ("",	X,	1,	"GL_PATCH_VERTICES"),	# 0x8E72
-    ("",	X,	1,	"GL_PATCH_DEFAULT_INNER_LEVEL"),	# 0x8E73
-    ("",	X,	1,	"GL_PATCH_DEFAULT_OUTER_LEVEL"),	# 0x8E74
-    ("",	X,	1,	"GL_TESS_CONTROL_OUTPUT_VERTICES"),	# 0x8E75
+    ("",	F,	2,	"GL_PATCH_DEFAULT_INNER_LEVEL"),	# 0x8E73
+    ("glGetPatchParameter",	F,	4,	"GL_PATCH_DEFAULT_OUTER_LEVEL"),	# 0x8E74
+    ("glGetPatchParameter",	X,	1,	"GL_TESS_CONTROL_OUTPUT_VERTICES"),	# 0x8E75
     ("",	X,	1,	"GL_TESS_GEN_MODE"),	# 0x8E76
     ("",	X,	1,	"GL_TESS_GEN_SPACING"),	# 0x8E77
     ("",	X,	1,	"GL_TESS_GEN_VERTEX_ORDER"),	# 0x8E78
