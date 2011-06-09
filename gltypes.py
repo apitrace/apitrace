@@ -81,6 +81,7 @@ GLarray = Handle("array", GLuint)
 GLregion = Handle("region", GLuint)
 GLmap = Handle("map", OpaquePointer(GLvoid))
 GLpipeline = Handle("pipeline", GLuint)
+GLsampler = Handle("sampler", GLuint)
 
 GLsync_ = Opaque("GLsync")
 GLsync = Handle("sync", GLsync_)
