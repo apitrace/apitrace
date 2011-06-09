@@ -406,7 +406,11 @@ __gl_format_channels(GLenum format) {
         return 3;
     case GL_RGBA:
     case GL_BGRA:
+    case GL_ABGR_EXT:
+    case GL_CMYK_EXT:
         return 4;
+    case GL_CMYKA_EXT:
+        return 5;
     default:
         OS::DebugMessage("apitrace: warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
         return 0;
