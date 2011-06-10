@@ -426,7 +426,7 @@ _is_pot(X x) {
 template<class X, class Y>
 static inline X
 _align(X x, Y y) {
-    return (x + (y - 1)) & (y - 1);
+    return (x + (y - 1)) & ~(y - 1);
 }
 
 static inline size_t
