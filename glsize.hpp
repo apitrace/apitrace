@@ -34,6 +34,8 @@
 #define _GL_SIZE_HPP_
 
 
+#include <string.h>
+
 #include "os.hpp"
 #include "glimports.hpp"
 
@@ -585,6 +587,8 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
 #define __glDrawPixels_size(format, type, width, height) __glTexImage2D_size(format, type, width, height)
 #define __glConvolutionFilter1D_size(format, type, width) __glTexImage1D_size(format, type, width)
 #define __glConvolutionFilter2D_size(format, type, width, height) __glTexImage2D_size(format, type, width, height)
+#define __glColorTable_size(format, type, width) __glTexImage1D_size(format, type, width)
+#define __glColorSubTable_size(format, type, count) __glColorTable_size(format, type, count)
 
 #define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height)
 #define __glPolygonStipple_size() __glBitmap_size(32, 32)
