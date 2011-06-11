@@ -582,6 +582,7 @@ getDrawBufferImage(GLenum format) {
     glGetIntegerv(GL_READ_BUFFER, &read_buffer);
     glReadBuffer(draw_buffer);
 
+    // TODO: reset imaging state too
     resetPixelPackState();
 
     glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, image->pixels);
@@ -629,6 +630,7 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format)
 
     GLubyte *pixels = new GLubyte[width*height*channels];
 
+    // TODO: reset imaging state too
     resetPixelPackState();
 
     glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
