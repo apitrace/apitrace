@@ -59,7 +59,11 @@ void ReleaseMutex(void);
 bool GetProcessName(char *str, size_t size);
 bool GetCurrentDir(char *str, size_t size);
 
-void DebugMessage(const char *format, ...);
+void DebugMessage(const char *format, ...)
+#ifdef __GNUC__
+    __attribute__ ((format (printf, 1, 2)))
+#endif
+;
 
 #if defined _WIN32 || defined __CYGWIN__
   /* We always use .def files on windows for now */
