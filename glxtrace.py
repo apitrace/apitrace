@@ -166,7 +166,7 @@ void * dlopen(const char *filename, int flag)
 /*
  * Lookup a libGL symbol
  */
-static void * __dlsym(const char *symbol)
+void * __libgl_sym(const char *symbol)
 {
     void *result;
 

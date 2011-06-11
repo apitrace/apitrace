@@ -84,7 +84,7 @@ static void *libgl_handle = NULL;
 /*
  * Lookup a libGL symbol
  */
-static void * __dlsym(const char *symbol)
+void * __libgl_sym(const char *symbol)
 {
     void *result;
 
