@@ -113,6 +113,33 @@ class GlRetracer(Retracer):
         "glBindFramebufferEXT",
     ])
 
+    # Names of the functions that can pack into the current pixel buffer
+    # object.  See also the ARB_pixel_buffer_object specification.
+    pack_function_names = set([
+        'glGetCompressedTexImage',
+        'glGetConvolutionFilter',
+        'glGetHistogram',
+        'glGetMinmax',
+        'glGetPixelMapfv',
+        'glGetPixelMapuiv',
+        'glGetPixelMapusv',
+        'glGetPolygonStipple',
+        'glGetSeparableFilter,',
+        'glGetTexImage',
+        'glReadPixels',
+        'glGetnCompressedTexImageARB',
+        'glGetnConvolutionFilterARB',
+        'glGetnHistogramARB',
+        'glGetnMinmaxARB',
+        'glGetnPixelMapfvARB',
+        'glGetnPixelMapuivARB',
+        'glGetnPixelMapusvARB',
+        'glGetnPolygonStippleARB',
+        'glGetnSeparableFilterARB',
+        'glGetnTexImageARB',
+        'glReadnPixelsARB',
+    ])
+
     def retrace_function_body(self, function):
         is_array_pointer = function.name in self.array_pointer_function_names
         is_draw_array = function.name in self.draw_array_function_names
@@ -136,6 +163,14 @@ class GlRetracer(Retracer):
                 self.fail_function(function)
                 print '        }'
             
+            print '    }'
+
+        # When no pack buffer object is bound, the pack functions are no-ops.
+        if function.name in self.pack_function_names:
+            print '    GLint __pack_buffer = 0;'
+            print '    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &__pack_buffer);'
+            print '    if (!__pack_buffer) {'
+            print '        return;'
             print '    }'
 
         # Pre-snapshots
@@ -267,6 +302,12 @@ class GlRetracer(Retracer):
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices':
+            self.extract_opaque_arg(function, arg, arg_type, lvalue, rvalue)
+            return
+
+        # Handle pointer with offsets into the current pack pixel buffer
+        # object.
+        if function.name in self.pack_function_names and arg.output:
             self.extract_opaque_arg(function, arg, arg_type, lvalue, rvalue)
             return
 

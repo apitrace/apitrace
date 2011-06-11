@@ -475,8 +475,20 @@ class GlTracer(Tracer):
     def gl_boolean(self, value):
         return self.boolean_names[int(bool(value))]
 
+    # Names of the functions that unpack from a pixel buffer object.  See the
+    # ARB_pixel_buffer_object specification.
     unpack_function_names = set([
         'glBitmap',
+        'glColorSubTable',
+        'glColorTable',
+        'glCompressedTexImage1D',
+        'glCompressedTexImage2D',
+        'glCompressedTexImage3D',
+        'glCompressedTexSubImage1D',
+        'glCompressedTexSubImage2D',
+        'glCompressedTexSubImage3D',
+        'glConvolutionFilter1D',
+        'glConvolutionFilter2D',
         'glDrawPixels',
         'glMultiTexImage1DEXT',
         'glMultiTexImage2DEXT',
@@ -484,7 +496,11 @@ class GlTracer(Tracer):
         'glMultiTexSubImage1DEXT',
         'glMultiTexSubImage2DEXT',
         'glMultiTexSubImage3DEXT',
+        'glPixelMapfv',
+        'glPixelMapuiv',
+        'glPixelMapusv',
         'glPolygonStipple',
+        'glSeparableFilter2D',
         'glTexImage1D',
         'glTexImage1DEXT',
         'glTexImage2D',
@@ -530,12 +546,14 @@ class GlTracer(Tracer):
            and (isinstance(arg.type, stdapi.Blob) \
                 or (isinstance(arg.type, stdapi.Const) \
                     and isinstance(arg.type.type, stdapi.Blob))):
-            print '    GLint __unpack_buffer = 0;'
-            print '    __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
-            print '    if (__unpack_buffer) {'
-            print '        __writer.writeOpaque(%s);' % arg.name
-            print '    } else {'
+            print '    {'
+            print '        GLint __unpack_buffer = 0;'
+            print '        __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
+            print '        if (__unpack_buffer) {'
+            print '            __writer.writeOpaque(%s);' % arg.name
+            print '        } else {'
             Tracer.dump_arg_instance(self, function, arg)
+            print '        }'
             print '    }'
             return
 
