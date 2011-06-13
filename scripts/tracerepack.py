@@ -54,7 +54,7 @@ def repack(in_name):
     print '%u -> %u' % (in_size, out_size)
     
     if out_size < in_size:
-        os.rename(out_name, in_name)
+        shutil.move(out_name, in_name)
     else:
         os.unlink(out_name)
 
