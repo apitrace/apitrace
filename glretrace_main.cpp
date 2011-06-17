@@ -48,6 +48,7 @@ long long startTime = 0;
 bool wait = false;
 
 bool benchmark = false;
+bool snapshot_raw = false;
 const char *compare_prefix = NULL;
 const char *snapshot_prefix = NULL;
 enum frequency snapshot_frequency = FREQUENCY_NEVER;
@@ -106,7 +107,7 @@ checkGlError(Trace::Call &call) {
 
 void snapshot(unsigned call_no) {
     if (!drawable ||
-        (!snapshot_prefix && !compare_prefix)) {
+        (!snapshot_prefix && !compare_prefix && !snapshot_raw)) {
         return;
     }
 
@@ -135,6 +136,12 @@ void snapshot(unsigned call_no) {
         if (src->writePNG(filename) && retrace::verbosity >= 0) {
             std::cout << "Wrote " << filename << "\n";
         }
+    }
+
+    if (snapshot_raw) {
+        int size = src->channels * src->width * src->height;
+        fwrite(src->pixels, 1, src->channels * src->width * src->height, stdout);
+        fflush(stdout);
     }
 
     if (ref) {
@@ -220,6 +227,7 @@ static void usage(void) {
         "  -c PREFIX    compare against snapshots\n"
         "  -db          use a double buffer visual (default)\n"
         "  -sb          use a single buffer visual\n"
+        "  -sr          write raw snapshot to stdout\n"
         "  -s PREFIX    take snapshots\n"
         "  -S FREQUENCY snapshot frequency: frame (default), framebuffer, or draw\n"
         "  -v           verbose output\n"
@@ -259,6 +267,12 @@ int main(int argc, char **argv)
         } else if (!strcmp(arg, "--help")) {
             usage();
             return 0;
+        } else if (!strcmp(arg, "-sr")) {
+            retrace::verbosity = -9;
+            snapshot_raw = true;
+            if (snapshot_frequency == FREQUENCY_NEVER) {
+                snapshot_frequency = FREQUENCY_FRAME;
+            }
         } else if (!strcmp(arg, "-s")) {
             snapshot_prefix = argv[++i];
             if (snapshot_frequency == FREQUENCY_NEVER) {
