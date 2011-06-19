@@ -41,6 +41,23 @@ class GlxTracer(GlTracer):
         # The symbols visible in libGL.so can vary, so expose them all
         return True
 
+    def trace_function_impl_body(self, function):
+        GlTracer.trace_function_impl_body(self, function)
+
+        # Take snapshots
+        if function.name == 'glXSwapBuffers':
+            print '    glsnapshot::snapshot(__call);'
+        if function.name in ('glFinish', 'glFlush'):
+            print '    GLint __draw_framebuffer = 0;'
+            print '    __glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &__draw_framebuffer);'
+            print '    if (__draw_framebuffer == 0) {'
+            print '        GLint __draw_buffer = GL_NONE;'
+            print '        __glGetIntegerv(GL_DRAW_BUFFER, &__draw_buffer);'
+            print '        if (__draw_buffer == GL_FRONT) {'
+            print '             glsnapshot::snapshot(__call);'
+            print '        }'
+            print '    }'
+
     def wrap_ret(self, function, instance):
         GlTracer.wrap_ret(self, function, instance)
 
@@ -66,6 +83,7 @@ if __name__ == '__main__':
     print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
+    print '#include "glsnapshot.hpp"'
     print
     print 'static __GLXextFuncPtr __unwrap_proc_addr(const GLubyte * procName, __GLXextFuncPtr procPtr);'
     print

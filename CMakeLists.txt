@@ -283,7 +283,14 @@ else ()
         DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
     )
 
-    add_library (glxtrace SHARED glxtrace.cpp trace_writer.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (glxtrace SHARED
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+        glxtrace.cpp
+        glsnapshot.cpp
+        trace_writer.cpp
+        image.cpp
+        os_posix.cpp
+    )
 
     set_target_properties (glxtrace PROPERTIES
         # avoid the default "lib" prefix
@@ -296,7 +303,7 @@ else ()
         LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
     )
 
-    target_link_libraries (glxtrace dl)
+    target_link_libraries (glxtrace dl ${X11_X11_LIB})
     
     install (TARGETS glxtrace LIBRARY DESTINATION lib)
 endif ()
