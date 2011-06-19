@@ -32,6 +32,31 @@
 #include "glsize.hpp"
 
 
+#if !defined(_WIN32) && !defined(__APPLE__)
+
+
+#include <X11/Xproto.h>
+
+
+static int
+errorHandler(Display *display, XErrorEvent *event)
+{
+    if (event->error_code == BadDrawable &&
+        event->request_code == X_GetGeometry) {
+        return 0;
+    }
+
+    char error_text[512];
+    XGetErrorText(display, event->error_code, error_text, sizeof error_text);
+    fprintf(stderr, "X Error of failed request:  %s\n", error_text);
+
+    return 0;
+}
+
+
+#endif /* !_WIN32 && !__APPLE__ */
+
+
 namespace glsnapshot {
 
 
@@ -91,7 +116,13 @@ getDrawableImage(void) {
      * XXX: This does not work for drawables created with glXCreateWindow
      */
 
-    if (!XGetGeometry(display, drawable, &root, &x, &y, &w, &h, &bw, &depth)) {
+    int (*oldErrorHandler)(Display *, XErrorEvent *);
+    Status status;
+
+    oldErrorHandler = XSetErrorHandler(errorHandler);
+    status = XGetGeometry(display, drawable, &root, &x, &y, &w, &h, &bw, &depth);
+    XSetErrorHandler(oldErrorHandler);
+    if (!status) {
         return false;
     }
 
