@@ -562,11 +562,16 @@ void MainWindow::showSurfacesMenu(const QPoint &pos)
         return;
 
     QMenu menu(tr("Surfaces"), this);
-    //add needed actions
+
     QAction *act = menu.addAction(tr("View Image"));
     act->setStatusTip(tr("View the currently selected surface"));
     connect(act, SIGNAL(triggered()),
             SLOT(showSelectedSurface()));
+
+    act = menu.addAction(tr("Save Image"));
+    act->setStatusTip(tr("Save the currently selected surface"));
+    connect(act, SIGNAL(triggered()),
+            SLOT(saveSelectedSurface()));
 
     menu.exec(tree->viewport()->mapToGlobal(pos));
 }
@@ -1095,6 +1100,59 @@ ApiTraceCall * MainWindow::currentCall() const
         return static_cast<ApiTraceCall*>(m_selectedEvent);
     }
     return NULL;
+}
+
+void MainWindow::saveSelectedSurface()
+{
+    QTreeWidgetItem *item =
+        m_ui.surfacesTreeWidget->currentItem();
+
+    if (!item || !m_trace)
+        return;
+
+    QVariant var = item->data(0, Qt::UserRole);
+    QImage img = var.value<QImage>();
+
+    QString imageIndex;
+    if (currentCall()) {
+        imageIndex = tr("_call_%1")
+                     .arg(currentCall()->index());
+    } else if (currentFrame()) {
+        ApiTraceCall *firstCall = currentFrame()->call(0);
+        if (firstCall) {
+            imageIndex = tr("_frame_%1")
+                         .arg(firstCall->index());
+        } else {
+            qDebug()<<"unknown frame number";
+            imageIndex = tr("_frame_%1")
+                         .arg(firstCall->index());
+        }
+    }
+
+    //which of the surfaces are we saving
+    QTreeWidgetItem *parent = item->parent();
+    int parentIndex =
+        m_ui.surfacesTreeWidget->indexOfTopLevelItem(parent);
+    if (parentIndex < 0) {
+        parentIndex = 0;
+    }
+    int childIndex = 0;
+    if (parent) {
+        childIndex = parent->indexOfChild(item);
+    } else {
+        childIndex = m_ui.surfacesTreeWidget->indexOfTopLevelItem(item);
+    }
+
+
+    QString fileName =
+        tr("%1%2-%3_%4.png")
+        .arg(m_trace->fileName())
+        .arg(imageIndex)
+        .arg(parentIndex)
+        .arg(childIndex);
+    //qDebug()<<"save "<<fileName;
+    img.save(fileName, "PNG");
+    statusBar()->showMessage( tr("Saved '%1'").arg(fileName), 5000);
 }
 
 #include "mainwindow.moc"

@@ -52,6 +52,7 @@ private slots:
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
     void showSelectedSurface();
+    void saveSelectedSurface();
     void slotGoTo();
     void slotJumpTo(int callNum);
     void createdTrace(const QString &path);
