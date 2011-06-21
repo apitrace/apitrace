@@ -2148,7 +2148,7 @@ glapi.add_functions([
     GlFunction(Void, "glGenerateMipmapEXT", [(GLenum, "target")]),
 
     # GL_GREMEDY_string_marker
-    GlFunction(Void, "glStringMarkerGREMEDY", [(GLsizei, "len"), (Const(String("GLvoid *", "len")), "string")]),
+    GlFunction(Void, "glStringMarkerGREMEDY", [(GLsizei, "len"), (Const(String("GLvoid *", "len ? len : strlen((const char *)string)")), "string")], sideeffects=False),
 
     # GL_EXT_stencil_clear_tag
     GlFunction(Void, "glStencilClearTagEXT", [(GLsizei, "stencilTagBits"), (GLuint, "stencilClearTag")]),
@@ -2292,7 +2292,7 @@ glapi.add_functions([
     GlFunction(Void, "glClearColorIuiEXT", [(GLuint, "red"), (GLuint, "green"), (GLuint, "blue"), (GLuint, "alpha")]),
 
     # GL_GREMEDY_frame_terminator
-    GlFunction(Void, "glFrameTerminatorGREMEDY", []),
+    GlFunction(Void, "glFrameTerminatorGREMEDY", [], sideeffects=False),
 
     # GL_NV_conditional_render
     GlFunction(Void, "glBeginConditionalRenderNV", [(GLuint, "id"), (GLenum, "mode")]),
