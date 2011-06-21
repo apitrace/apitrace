@@ -2042,6 +2042,11 @@ glapi.add_functions([
     GlFunction(Void, "glFlushVertexArrayRangeAPPLE", [(GLsizei, "length"), Out(Blob(GLvoid, "length"), "pointer")]),
     GlFunction(Void, "glVertexArrayParameteriAPPLE", [(GLenum, "pname"), (GLint, "param")]),
 
+    # GL_APPLE_flush_render
+    GlFunction(Void, "glFlushRenderAPPLE", []),
+    GlFunction(Void, "glFinishRenderAPPLE", []),
+    GlFunction(Void, "glSwapAPPLE", []),
+
     # GL_ATI_draw_buffers
     GlFunction(Void, "glDrawBuffersATI", [(GLsizei, "n"), (Const(Array(GLenum, "n")), "bufs")]),
 
