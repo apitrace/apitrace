@@ -16,13 +16,6 @@ find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit)
 find_package (QJSON)
 
 if (NOT WIN32)
-    # Always use the bundled zlib and libpng sources on Windows to make it easy
-    # to deploy the wrappers DLLs
-    find_package (ZLIB)
-    find_package (PNG)
-endif (NOT WIN32)
-
-if (NOT WIN32)
     find_package (X11 REQUIRED)
 
     # On Mac OS X, GLX is provided as a separate OpenGL implementation, different
@@ -119,25 +112,24 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
 ##############################################################################
 # Bundled dependencies
+#
+# We always use the bundled zlib and libpng sources:
+# - on Windows to make it easy to deploy the wrappers DLLs
+# - on unices to prevent symbol collisions when tracing applications that link
+# against other versions of these libraries
 
-# Use bundled ZLIB if system one can't be found
-if (NOT ZLIB_FOUND)
-    set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
-    set (ZLIB_LIBRARIES zlib)
-    add_subdirectory (zlib EXCLUDE_FROM_ALL)
-endif (NOT ZLIB_FOUND)
+set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
+set (ZLIB_LIBRARIES z_bundled)
+add_subdirectory (zlib EXCLUDE_FROM_ALL)
 
 include_directories (${ZLIB_INCLUDE_DIRS})
 link_libraries (${ZLIB_LIBRARIES})
 
-# Use bundled LIBPNG if system one can't be found
-if (PNG_FOUND)
-else (PNG_FOUND)
-    set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libpng)
-    set (PNG_DEFINITIONS "")
-    set (PNG_LIBRARIES png)
-    add_subdirectory (libpng EXCLUDE_FROM_ALL)
-endif (PNG_FOUND)
+set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libpng)
+set (PNG_DEFINITIONS "")
+set (PNG_LIBRARIES png_bundled)
+
+add_subdirectory (libpng EXCLUDE_FROM_ALL)
 include_directories (${PNG_INCLUDE_DIR})
 add_definitions (${PNG_DEFINITIONS})
 link_libraries (${PNG_LIBRARIES})

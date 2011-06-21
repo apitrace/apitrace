@@ -1,6 +1,6 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library (png STATIC
+add_library (png_bundled STATIC
     png.c
     pngerror.c
     pngget.c
@@ -18,6 +18,6 @@ add_library (png STATIC
     pngwutil.c
 )
 
-set_target_properties (png PROPERTIES
+set_target_properties (png_bundled PROPERTIES
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
 )

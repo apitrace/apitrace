@@ -1,6 +1,6 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library (zlib STATIC
+add_library (z_bundled STATIC
     adler32.c
     compress.c
     crc32.c
@@ -15,6 +15,6 @@ add_library (zlib STATIC
     inffast.c
 )
 
-set_target_properties (zlib PROPERTIES
+set_target_properties (z_bundled PROPERTIES
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
 )
