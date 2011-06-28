@@ -124,17 +124,36 @@ class GlTracer(Tracer):
             self.array_epilog(api, uppercase_name)
             print
 
-        print '    // glVertexAttribPointer'
-        print '    GLint __max_vertex_attribs = 0;'
-        print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
-        print '    for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
-        print '        GLint __enabled = 0;'
-        print '        __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &__enabled);'
-        print '        if (__enabled) {'
-        print '            GLint __binding = 0;'
-        print '            __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &__binding);'
-        print '            if (!__binding) {'
-        print '                return true;'
+        print '    GLboolean __vertex_program = GL_FALSE;'
+        print '    __glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &__vertex_program);'
+        print '    if (__vertex_program) {'
+        print '        // glVertexAttribPointerARB'
+        print '        GLint __max_vertex_attribs = 0;'
+        print '        __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS_ARB, &__max_vertex_attribs);'
+        print '        for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
+        print '            GLint __enabled = 0;'
+        print '            __glGetVertexAttribivARB(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED_ARB, &__enabled);'
+        print '            if (__enabled) {'
+        print '                GLint __binding = 0;'
+        print '                __glGetVertexAttribivARB(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB, &__binding);'
+        print '                if (!__binding) {'
+        print '                    return true;'
+        print '                }'
+        print '            }'
+        print '        }'
+        print '    } else {'
+        print '        // glVertexAttribPointer'
+        print '        GLint __max_vertex_attribs = 0;'
+        print '        __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
+        print '        for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
+        print '            GLint __enabled = 0;'
+        print '            __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &__enabled);'
+        print '            if (__enabled) {'
+        print '                GLint __binding = 0;'
+        print '                __glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &__binding);'
+        print '                if (!__binding) {'
+        print '                    return true;'
+        print '                }'
         print '            }'
         print '        }'
         print '    }'
@@ -637,47 +656,57 @@ class GlTracer(Tracer):
         # This means that the implementations of these functions do not always
         # alias, and they need to be considered independently.
         #
+        print '    GLboolean __vertex_program = GL_FALSE;'
+        print '    __glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &__vertex_program);'
         for suffix in ['', 'ARB']:
+            if suffix == 'ARB':
+                SUFFIX = '_' + suffix
+                logic_op = ''
+            else:
+                SUFFIX = ''
+                logic_op = '!'
+            print '    if (%s__vertex_program) {' % logic_op
             function_name = 'glVertexAttribPointer' + suffix
-            print '    // %s' % function_name
-            print '    if (__glVertexAttribPointer%s_ptr &&' % suffix
-            print '        (__glVertexAttribPointer%s_ptr != __glVertexAttribPointer_ptr)) {' % suffix
-            print '        GLint __max_vertex_attribs = 0;'
-            print '        __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
-            print '        for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
-            print '            GLint __enabled = 0;'
-            print '            __glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &__enabled);' % suffix
-            print '            if (__enabled) {'
-            print '                GLint __binding = 0;'
-            print '                __glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &__binding);' % suffix
-            print '                if (!__binding) {'
+            print '        // %s' % function_name
+            print '        if (__glVertexAttribPointer%s_ptr &&' % suffix
+            print '            (__glVertexAttribPointer%s_ptr != __glVertexAttribPointer_ptr)) {' % suffix
+            print '            GLint __max_vertex_attribs = 0;'
+            print '            __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &__max_vertex_attribs);'
+            print '            for (GLint index = 0; index < __max_vertex_attribs; ++index) {'
+            print '                GLint __enabled = 0;'
+            print '                __glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED%s, &__enabled);' % (suffix, SUFFIX)
+            print '                if (__enabled) {'
+            print '                    GLint __binding = 0;'
+            print '                    __glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING%s, &__binding);' % (suffix, SUFFIX)
+            print '                    if (!__binding) {'
 
             function = api.get_function_by_name(function_name)
 
             # Get the arguments via glGet*
             for arg in function.args[1:]:
-                arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s' % (arg.name.upper(),)
+                arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s%s' % (arg.name.upper(), SUFFIX)
                 arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False).visit(arg.type)
-                print '                    %s %s = 0;' % (arg_type, arg.name)
-                print '                    __%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
+                print '                        %s %s = 0;' % (arg_type, arg.name)
+                print '                        __%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
             
             arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
-            print '                    size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
+            print '                        size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
             # Emit a fake function
-            print '                    unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
+            print '                        unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
-                print '                    __writer.beginArg(%u);' % (arg.index,)
+                print '                        __writer.beginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
                     dump_instance(arg.type, arg.name)
                 else:
-                    print '                    __writer.writeBlob((const void *)%s, __size);' % (arg.name)
-                print '                    __writer.endArg();'
+                    print '                        __writer.writeBlob((const void *)%s, __size);' % (arg.name)
+                print '                        __writer.endArg();'
             
-            print '                    __writer.endEnter();'
-            print '                    __writer.beginLeave(__call);'
-            print '                    __writer.endLeave();'
+            print '                        __writer.endEnter();'
+            print '                        __writer.beginLeave(__call);'
+            print '                        __writer.endLeave();'
+            print '                    }'
             print '                }'
             print '            }'
             print '        }'
