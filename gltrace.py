@@ -37,9 +37,10 @@ from trace import Tracer, dump_instance
 class TypeGetter(stdapi.Visitor):
     '''Determine which glGet*v function that matches the specified type.'''
 
-    def __init__(self, prefix = 'glGet', long_suffix = True):
+    def __init__(self, prefix = 'glGet', long_suffix = True, ext_suffix = ''):
         self.prefix = prefix
         self.long_suffix = long_suffix
+        self.ext_suffix = ext_suffix
 
     def visit_const(self, const):
         return self.visit(const.type)
@@ -47,27 +48,37 @@ class TypeGetter(stdapi.Visitor):
     def visit_alias(self, alias):
         if alias.expr == 'GLboolean':
             if self.long_suffix:
-                return self.prefix + 'Booleanv', alias.expr
+                suffix = 'Booleanv'
+                arg_type = alias.expr
             else:
-                return self.prefix + 'iv', 'GLint'
+                suffix = 'iv'
+                arg_type = 'GLint'
         elif alias.expr == 'GLdouble':
             if self.long_suffix:
-                return self.prefix + 'Doublev', alias.expr
+                suffix = 'Doublev'
+                arg_type = alias.expr
             else:
-                return self.prefix + 'dv', alias.expr
+                suffix = 'dv'
+                arg_type = alias.expr
         elif alias.expr == 'GLfloat':
             if self.long_suffix:
-                return self.prefix + 'Floatv', alias.expr
+                suffix = 'Floatv'
+                arg_type = alias.expr
             else:
-                return self.prefix + 'fv', alias.expr
+                suffix = 'fv'
+                arg_type = alias.expr
         elif alias.expr in ('GLint', 'GLuint', 'GLsizei'):
             if self.long_suffix:
-                return self.prefix + 'Integerv', 'GLint'
+                suffix = 'Integerv'
+                arg_type = 'GLint'
             else:
-                return self.prefix + 'iv', 'GLint'
+                suffix = 'iv'
+                arg_type = 'GLint'
         else:
             print alias.expr
             assert False
+        function_name = self.prefix + suffix + self.ext_suffix
+        return function_name, arg_type
     
     def visit_enum(self, enum):
         return self.visit(glapi.GLint)
@@ -76,7 +87,7 @@ class TypeGetter(stdapi.Visitor):
         return self.visit(glapi.GLint)
 
     def visit_opaque(self, pointer):
-        return self.prefix + 'Pointerv', 'GLvoid *'
+        return self.prefix + 'Pointerv' + self.ext_suffix, 'GLvoid *'
 
 
 class GlTracer(Tracer):
@@ -685,7 +696,7 @@ class GlTracer(Tracer):
             # Get the arguments via glGet*
             for arg in function.args[1:]:
                 arg_get_enum = 'GL_VERTEX_ATTRIB_ARRAY_%s%s' % (arg.name.upper(), SUFFIX)
-                arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False).visit(arg.type)
+                arg_get_function, arg_type = TypeGetter('glGetVertexAttrib', False, suffix).visit(arg.type)
                 print '                        %s %s = 0;' % (arg_type, arg.name)
                 print '                        __%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
             
