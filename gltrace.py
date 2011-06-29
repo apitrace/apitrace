@@ -121,7 +121,7 @@ class GlTracer(Tracer):
         print '};'
         print
         print 'static vertex_attrib __get_vertex_attrib(void) {'
-        print '    if (__user_arrays_arb) {'
+        print '    if (__user_arrays_arb || __user_arrays_nv) {'
         print '        GLboolean __vertex_program = GL_FALSE;'
         print '        __glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &__vertex_program);'
         print '        if (__vertex_program) {'
