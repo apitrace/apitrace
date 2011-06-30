@@ -65,7 +65,7 @@ endif (WIN32)
 
 if (MSVC)
     # C99 includes for msvc
-    include_directories (msvc)
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msvc)
 
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
@@ -107,8 +107,6 @@ endif ()
 # which subdirectory they are declared
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
-
 
 ##############################################################################
 # Bundled dependencies
@@ -118,21 +116,24 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 # - on unices to prevent symbol collisions when tracing applications that link
 # against other versions of these libraries
 
-set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/zlib)
+set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
 set (ZLIB_LIBRARIES z_bundled)
-add_subdirectory (zlib EXCLUDE_FROM_ALL)
+add_subdirectory (thirdparty/zlib EXCLUDE_FROM_ALL)
 
 include_directories (${ZLIB_INCLUDE_DIRS})
 link_libraries (${ZLIB_LIBRARIES})
 
-set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libpng)
+set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
 set (PNG_DEFINITIONS "")
 set (PNG_LIBRARIES png_bundled)
 
-add_subdirectory (libpng EXCLUDE_FROM_ALL)
+add_subdirectory (thirdparty/libpng EXCLUDE_FROM_ALL)
 include_directories (${PNG_INCLUDE_DIR})
 add_definitions (${PNG_DEFINITIONS})
 link_libraries (${PNG_LIBRARIES})
+
+# For glext headers
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 
 
 ##############################################################################
