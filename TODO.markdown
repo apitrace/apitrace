@@ -1,14 +1,19 @@
-                                  Things To Do
-                            (in no particular order)
+Things To Do
+============
+
+(in no particular order)
 
 
-Tracing:
+Tracing
+-------
 
 * Allow clamping to a GL version or a number of extensions.
 
-* Trace multiple threads
-  * GetCurrentThreadId()
-  * pthread_self()
+* Trace multiple threads:
+
+  * `GetCurrentThreadId()`
+
+  * `pthread_self()`
 
 * Put zlib (de)compression in a separate thread.
 
@@ -28,7 +33,8 @@ Tracing:
   every call.
 
 
-Retracing:
+Retracing
+---------
 
 * Use visuals that best match those used in the trace; specially auto
   detect single/double buffer visuals.
@@ -38,9 +44,12 @@ Retracing:
 * Support multiple threads
 
 * Provide a readline-like interactive mode to gltrace
+
   * http://github.com/antirez/linenoise
+
     * https://github.com/antirez/linenoise/issues#issue/8
-  * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c 
+
+  * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c
 
 * Plug memory leaks.
 
@@ -50,7 +59,8 @@ Retracing:
 * D3D support.
 
 
-GUI:
+GUI
+---
 
 * Timeline view.
 
