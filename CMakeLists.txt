@@ -105,7 +105,7 @@ endif ()
 
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 
 ##############################################################################
@@ -138,6 +138,8 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 
 ##############################################################################
 # Common libraries / utilities
+
+include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
