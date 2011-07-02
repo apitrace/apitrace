@@ -376,7 +376,7 @@ endif (QT4_FOUND AND QJSON_FOUND)
 ##############################################################################
 # Packaging
 
-install (FILES LICENSE README TODO DESTINATION doc)
+install (FILES LICENSE README.markdown TODO.markdown DESTINATION doc)
 
 set (CPACK_PACKAGE_VERSION_MAJOR "1")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
