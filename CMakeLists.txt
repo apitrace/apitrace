@@ -162,6 +162,7 @@ add_library (common
     trace_model_writer.cpp
     image.cpp
     image_bmp.cpp
+    image_pnm.cpp
     image_png.cpp
     ${os}
 )

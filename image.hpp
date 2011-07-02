@@ -65,7 +65,15 @@ public:
         return flipped ? pixels + (height - 1)*width*channels : pixels;
     }
 
+    inline const unsigned char *start(void) const {
+        return flipped ? pixels + (height - 1)*width*channels : pixels;
+    }
+
     inline unsigned char *end(void) {
+        return flipped ? pixels - width*channels : pixels + height*width*channels;
+    }
+
+    inline const unsigned char *end(void) const {
         return flipped ? pixels - width*channels : pixels + height*width*channels;
     }
 
@@ -74,6 +82,18 @@ public:
     }
 
     bool writeBMP(const char *filename) const;
+
+    void writePNM(std::ostream &os) const;
+
+    inline bool writePNM(const char *filename) const {
+        std::ofstream os(filename, std::ofstream::binary);
+        if (!os) {
+            return false;
+        }
+        writePNM(os);
+        return true;
+    }
+
     bool writePNG(const char *filename) const;
 
     double compare(Image &ref);

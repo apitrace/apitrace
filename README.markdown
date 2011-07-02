@@ -129,6 +129,12 @@ to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
 See the 'ld.so' man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
+You can make a video of the output by doing
+
+    /path/to/glretrace -s - application.trace \
+    | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
+
+
 
 Mac OS X
 --------

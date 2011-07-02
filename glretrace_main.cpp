@@ -130,10 +130,14 @@ void snapshot(unsigned call_no) {
     }
 
     if (snapshot_prefix) {
-        char filename[PATH_MAX];
-        snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
-        if (src->writePNG(filename) && retrace::verbosity >= 0) {
-            std::cout << "Wrote " << filename << "\n";
+        if (snapshot_prefix[0] == '-' && snapshot_prefix[1] == 0) {
+            src->writePNM(std::cout);
+        } else {
+            char filename[PATH_MAX];
+            snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
+            if (src->writePNG(filename) && retrace::verbosity >= 0) {
+                std::cout << "Wrote " << filename << "\n";
+            }
         }
     }
 
@@ -220,7 +224,7 @@ static void usage(void) {
         "  -c PREFIX    compare against snapshots\n"
         "  -db          use a double buffer visual (default)\n"
         "  -sb          use a single buffer visual\n"
-        "  -s PREFIX    take snapshots\n"
+        "  -s PREFIX    take snapshots; `-` for PNM stdout output\n"
         "  -S FREQUENCY snapshot frequency: frame (default), framebuffer, or draw\n"
         "  -v           verbose output\n"
         "  -D CALLNO    dump state at specific call no\n"
@@ -263,6 +267,9 @@ int main(int argc, char **argv)
             snapshot_prefix = argv[++i];
             if (snapshot_frequency == FREQUENCY_NEVER) {
                 snapshot_frequency = FREQUENCY_FRAME;
+            }
+            if (snapshot_prefix[0] == '-' && snapshot_prefix[1] == 0) {
+                retrace::verbosity = -2;
             }
         } else if (!strcmp(arg, "-S")) {
             arg = argv[++i];
