@@ -51,7 +51,7 @@ add_definitions(-DBUILD_DIR="${CMAKE_BINARY_DIR}")
 
 add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-target_link_libraries(qapitrace trace ${QJSON_LIBRARIES} ${QT_LIBRARIES} )
+target_link_libraries(qapitrace common ${QJSON_LIBRARIES} ${QT_LIBRARIES} )
 
 ########### install files ###############
 

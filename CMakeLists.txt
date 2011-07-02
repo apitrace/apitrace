@@ -155,10 +155,16 @@ else (WIN32)
     set (glws glws_glx.cpp)
 endif (WIN32)
 
-add_library (trace trace_model.cpp trace_parser.cpp trace_writer.cpp trace_model_writer.cpp ${os})
+add_library (common
+    trace_model.cpp
+    trace_parser.cpp
+    trace_writer.cpp
+    trace_model_writer.cpp
+    ${os}
+)
 
 add_executable (tracedump tracedump.cpp)
-target_link_libraries (tracedump trace)
+target_link_libraries (tracedump common)
 install (TARGETS tracedump RUNTIME DESTINATION bin) 
 
 
@@ -345,7 +351,7 @@ set_property (
 )
 
 target_link_libraries (glretrace
-    trace
+    common
 )
 
 if (WIN32)
