@@ -160,6 +160,9 @@ add_library (common
     trace_parser.cpp
     trace_writer.cpp
     trace_model_writer.cpp
+    image.cpp
+    image_bmp.cpp
+    image_png.cpp
     ${os}
 )
 
