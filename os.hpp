@@ -90,6 +90,8 @@ long long GetTime(void);
 
 void Abort(void);
 
+void queryVirtualAddress(const void *address);
+
 } /* namespace OS */
 
 #endif /* _OS_HPP_ */

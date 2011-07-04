@@ -376,6 +376,7 @@ class GlTracer(Tracer):
                 print '        __user_arrays_arb = true;'
             if function.name == "glVertexAttribPointerNV":
                 print '        __user_arrays_nv = true;'
+            print '    OS::queryVirtualAddress(pointer);'
             self.dispatch_function(function)
 
             # And also break down glInterleavedArrays into the individual calls

@@ -133,4 +133,50 @@ Abort(void)
 #endif
 }
 
+
+static DWORD dwPageSize = 0;
+
+
+void queryVirtualAddress(const void *address)
+{
+    if (!address) {
+        DebugMessage("%p -> NULL\n", address);
+        return;
+    }
+
+    if (!dwPageSize) {
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        dwPageSize = si.dwPageSize;
+    }
+
+    MEMORY_BASIC_INFORMATION mbi;
+
+    LPCVOID lpAddress = (const void *)((SIZE_T)address & ~(dwPageSize - 1));
+
+    if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != sizeof mbi) {
+        return;
+    }
+
+    DebugMessage("%p -> base = %p, size = 0x%lx, offset = %lx\n",
+            address,
+            mbi.BaseAddress,
+            (unsigned long)mbi.RegionSize,
+            (unsigned long)((SIZE_T)address - (SIZE_T)mbi.BaseAddress));
+
+    HMODULE hModule;
+    if (GetModuleHandleExA(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            (LPSTR)address,
+            &hModule) ) {
+        char szFileName[512];
+        if (GetModuleFileNameA(hModule, szFileName, sizeof szFileName)) {
+            DebugMessage("  %s\n", szFileName);
+        }
+    }
+
+}
+
+
 } /* namespace OS */

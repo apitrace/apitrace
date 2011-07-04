@@ -126,5 +126,16 @@ Abort(void)
 }
 
 
+void queryVirtualAddress(const void *address)
+{
+
+    int fd = open("/proc/self/maps", O_RDONLY);
+
+    /* TODO */
+
+    close(fd);
+}
+
+
 } /* namespace OS */
 
