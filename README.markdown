@@ -126,7 +126,7 @@ to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
     export TRACE_LIBGL=/path/to/real/libGL.so.1
     /path/to/application
 
-See the 'ld.so' man page for more information about `LD_PRELOAD` and
+See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
 You can make a video of the output by doing
@@ -160,11 +160,11 @@ Windows
 
 * View the trace with
 
-        /path/to/tracedump application.trace
+        \path\to\tracedump application.trace
 
 * Replay the trace with
 
-        /path/to/glretrace application.trace
+        \path\to\glretrace application.trace
 
 
 Links
