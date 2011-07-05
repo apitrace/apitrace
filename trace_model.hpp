@@ -80,6 +80,12 @@ struct BitmaskSig {
 };
 
 
+struct RegionSig {
+    Id id;
+    size_t size;
+};
+
+
 class Visitor;
 
 
@@ -268,6 +274,31 @@ public:
 };
 
 
+struct Region : public RegionSig
+{
+    char *buf;
+};
+
+
+class Range: public Value
+{
+public:
+    Range(Region *_region, size_t _offset, size_t _length) :
+        region(_region),
+        offset(_offset),
+        length(_length)
+    {}
+
+    bool toBool(void) const;
+    void *toPointer(void) const;
+    void visit(Visitor &visitor);
+
+    Region *region;
+    size_t offset;
+    size_t length;
+};
+
+
 class Pointer : public UInt
 {
 public:
@@ -295,6 +326,7 @@ public:
     virtual void visit(Array *);
     virtual void visit(Blob *);
     virtual void visit(Pointer *);
+    virtual void visit(Range *);
 
 protected:
     inline void _visit(Value *value) {

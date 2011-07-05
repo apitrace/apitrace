@@ -27,10 +27,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <unistd.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -126,14 +129,129 @@ Abort(void)
 }
 
 
-void queryVirtualAddress(const void *address)
+class MapReader
 {
+protected:
+    int fd;
+    char buf[512];
+    int pos;
+    int len;
+    int lookahead;
+    void *brk;
 
-    int fd = open("/proc/self/maps", O_RDONLY);
+public:
+    MapReader() {
+        fd = open("/proc/self/maps", O_RDONLY);
+        pos = 0;
+        len = 0;
+        lookahead = 0;
+    }
 
-    /* TODO */
+    ~MapReader() {
+        close(fd);
+    }
 
-    close(fd);
+    bool lookup(uintptr_t address, MemoryInfo *info) {
+        if (lseek(fd, 0, SEEK_SET)) {
+            return false;
+        }
+
+        slurp();
+        
+        brk = sbrk(0);
+
+        while (lookahead) {
+            if (read_entry(address, info)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool read_entry(uintptr_t address, MemoryInfo *info) {
+        uintptr_t start, stop;
+        read_address(start, stop);
+#if 0
+        read_perms();
+        read_offset();
+        read_dev();
+        read_inode();
+        read_pathname();
+#else
+        while (lookahead != '\n') {
+            consume();
+        }
+        consume(); // '\n'
+#endif
+        //DebugMessage("%08lx-%08lx\n", (unsigned long)start, (unsigned long)stop);
+
+        if (start <= address && address < stop) {
+            info->start = (const void *)start;
+            info->stop  = (const void *)stop;
+
+            //DebugMessage("   sbrk = %08lx\n", (unsigned long)brk);
+
+            return true;
+        }
+
+        return false;
+    }
+    
+    inline void read_address(uintptr_t &start, uintptr_t &stop) {
+        start = read_hex();
+        consume(); // '-'
+        stop = read_hex();
+    }
+
+    uintptr_t read_hex() {
+        uintptr_t val = 0;
+        while (true) {
+            if (lookahead >= '0' && lookahead <= '9') {
+                val <<= 4;
+                val |= lookahead - '0';
+            } else if (lookahead >= 'A' && lookahead <= 'F') {
+                val <<= 4;
+                val |= lookahead - 'A' + 10;
+            } else if (lookahead >= 'a' && lookahead <= 'f') {
+                val <<= 4;
+                val |= lookahead - 'a' + 10;
+            } else {
+                break;
+            }
+            consume();
+        }
+        return val;
+    }
+
+    inline void consume() {
+        ++pos;
+        if (pos < len) {
+            lookahead = buf[pos];
+        } else {
+            slurp();
+        }
+    }
+
+    void slurp(void) {
+        pos = 0;
+        ssize_t nread = read(fd, buf, sizeof buf);
+        if (nread > 0) {
+            len = nread;
+            lookahead = buf[0];
+        } else {
+            lookahead = 0;
+        }
+    }
+};
+
+
+
+bool queryVirtualAddress(const void *address, MemoryInfo *info)
+{
+    MapReader reader;
+
+    return reader.lookup((uintptr_t)address, info); 
 }
 
 

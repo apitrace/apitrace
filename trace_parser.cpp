@@ -265,6 +265,9 @@ Value *Parser::parse_value(void) {
     case Trace::TYPE_OPAQUE:
         value = parse_opaque();
         break;
+    case Trace::TYPE_RANGE:
+        value = parse_range();
+        break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
         exit(1);
@@ -405,6 +408,28 @@ Value *Parser::parse_opaque() {
     unsigned long long addr;
     addr = read_uint();
     return new Pointer(addr);
+}
+
+
+Value *Parser::parse_range() {
+    size_t id = read_uint();
+
+    Region *region = lookup(regions, id);
+    if (!region) {
+        region = new Region;
+        region->id = id;
+        region->size = read_uint();
+        region->buf = new char[region->size];
+        regions[id] = region;
+    }
+    assert(region);
+    
+    size_t offset = read_uint();
+    size_t length = read_uint();
+
+    Range *value = new Range(region, offset, length);
+
+    return value;
 }
 
 

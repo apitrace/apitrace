@@ -90,7 +90,13 @@ long long GetTime(void);
 
 void Abort(void);
 
-void queryVirtualAddress(const void *address);
+struct MemoryInfo
+{
+    const void *start;
+    const void *stop;
+};
+
+bool queryVirtualAddress(const void *address, MemoryInfo *info);
 
 } /* namespace OS */
 

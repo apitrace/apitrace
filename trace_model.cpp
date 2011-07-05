@@ -74,6 +74,7 @@ bool Struct ::toBool(void) const { return true; }
 bool Array  ::toBool(void) const { return true; }
 bool Blob   ::toBool(void) const { return true; }
 bool Pointer::toBool(void) const { return value != 0; }
+bool Range  ::toBool(void) const { return true; }
 
 
 // signed integer cast
@@ -121,6 +122,7 @@ void * Value  ::toPointer(void) const { assert(0); return NULL; }
 void * Null   ::toPointer(void) const { return NULL; }
 void * Blob   ::toPointer(void) const { return buf; }
 void * Pointer::toPointer(void) const { return (void *)value; }
+void * Range  ::toPointer(void) const { return region->buf + offset; }
 
 
 // pointer cast
@@ -148,20 +150,22 @@ void Struct ::visit(Visitor &visitor) { visitor.visit(this); }
 void Array  ::visit(Visitor &visitor) { visitor.visit(this); }
 void Blob   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
+void Range  ::visit(Visitor &visitor) { visitor.visit(this); }
 
 
-void Visitor::visit(Null *) { assert(0); }
-void Visitor::visit(Bool *) { assert(0); }
-void Visitor::visit(SInt *) { assert(0); }
-void Visitor::visit(UInt *) { assert(0); }
-void Visitor::visit(Float *) { assert(0); }
-void Visitor::visit(String *) { assert(0); }
-void Visitor::visit(Enum *node) { assert(0); }
+void Visitor::visit(Null *)        { assert(0); }
+void Visitor::visit(Bool *)        { assert(0); }
+void Visitor::visit(SInt *)        { assert(0); }
+void Visitor::visit(UInt *)        { assert(0); }
+void Visitor::visit(Float *)       { assert(0); }
+void Visitor::visit(String *)      { assert(0); }
+void Visitor::visit(Enum *node)    { assert(0); }
 void Visitor::visit(Bitmask *node) { visit(static_cast<UInt *>(node)); }
-void Visitor::visit(Struct *) { assert(0); }
-void Visitor::visit(Array *) { assert(0); }
-void Visitor::visit(Blob *) { assert(0); }
-void Visitor::visit(Pointer *) { assert(0); }
+void Visitor::visit(Struct *)      { assert(0); }
+void Visitor::visit(Array *)       { assert(0); }
+void Visitor::visit(Blob *)        { assert(0); }
+void Visitor::visit(Pointer *)     { assert(0); }
+void Visitor::visit(Range *)       { assert(0); }
 
 
 class Dumper : public Visitor
@@ -310,6 +314,10 @@ public:
 
     void visit(Pointer *p) {
         os << pointer << "0x" << std::hex << p->value << std::dec << normal;
+    }
+
+    void visit(Range *node) {
+        os << pointer << "range(" << node->length << ")" << normal;
     }
 
     void visit(Call *call) {

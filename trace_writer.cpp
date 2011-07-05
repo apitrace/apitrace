@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <list>
+
 #include <zlib.h>
 
 #include "os.hpp"
@@ -354,6 +356,115 @@ void Writer::writeOpaque(const void *addr) {
     }
     _writeByte(Trace::TYPE_OPAQUE);
     _writeUInt((size_t)addr);
+}
+
+void Writer::writeRange(const RegionSig *sig, size_t offset, size_t length)
+{
+    _writeByte(Trace::TYPE_RANGE);
+    _writeUInt(sig->id);
+    if (!lookup(regions, sig->id)) {
+        _writeUInt(sig->size);
+        regions[sig->id] = true;
+    }
+    _writeUInt(offset);
+    _writeUInt(length);
+}
+
+
+struct RegionInfo : public RegionSig
+{
+    const char *start;
+};
+
+typedef std::list<RegionInfo> RegionInfoList;
+
+static RegionInfoList regionInfoList;
+
+
+static RegionInfo * lookupRegionInfo(const void *ptr) {
+    OS::MemoryInfo info;
+
+    if (!OS::queryVirtualAddress(ptr, &info)) {
+        OS::DebugMessage("apitrace: warning: failed to query virtual address %p\n", ptr);
+        return NULL;
+    }
+
+    OS::DebugMessage("apitrace: %p => %p..%p\n", ptr, info.start, info.stop);
+
+    for (RegionInfoList::iterator it = regionInfoList.begin(); it != regionInfoList.end(); ++it) {
+        const char *start = it->start;
+        const char *stop  = start + it->size;
+        if (info.start < stop && info.stop > start) {
+            // Intersect
+            if (info.start == start && info.stop == stop) {
+                return &*it;
+            } else {
+                OS::DebugMessage("apitrace: warning: range %p-%p changed to %p-%p\n", start, stop, info.start, info.stop);
+                it = regionInfoList.erase(it);
+            }
+        }
+    }
+
+    RegionInfo regionInfo;
+    regionInfo.id = regionInfoList.size();
+    regionInfo.size = (const char*)info.stop - (const char*)info.start;
+    regionInfo.start = (const char *)info.start;
+
+    return &*regionInfoList.insert(regionInfoList.end(), regionInfo);
+}
+
+
+void Writer::writePointer(const void *ptr) {
+    if (!ptr) {
+        Writer::writeNull();
+        return;
+    }
+
+    RegionInfo * regionInfo = lookupRegionInfo(ptr);
+
+    if (!regionInfo) {
+        writeOpaque(ptr);
+        return;
+    }
+
+    size_t offset = (const char *)ptr - regionInfo->start;
+    size_t length = regionInfo->size - offset;
+
+    writeRange(regionInfo, offset, length);
+}
+
+
+void Writer::updateRegion(const void *ptr, size_t size, const Trace::FunctionSig *memcpy_sig) {
+    if (!ptr) {
+        return;
+    }
+
+    RegionInfo * regionInfo = lookupRegionInfo(ptr);
+
+    if (!regionInfo) {
+        writeOpaque(ptr);
+        return;
+    }
+
+    size_t offset = (const char *)ptr - regionInfo->start;
+    size_t length = regionInfo->size - offset;
+
+    assert(strcmp(memcpy_sig->name, "memcpy") == 0);
+    assert(memcpy_sig->num_args == 3);
+
+    unsigned __call = beginEnter(memcpy_sig);
+    beginArg(0);
+    writeRange(regionInfo, offset, length);
+    endArg();
+    beginArg(1);
+    writeBlob(ptr, size);
+    endArg();
+    beginArg(2);
+    writeUInt(size);
+    endArg();
+    endEnter();
+    beginLeave(__call);
+    endLeave();
 }
 
 } /* namespace Trace */

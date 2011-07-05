@@ -24,6 +24,8 @@
  **************************************************************************/
 
 #include <windows.h>
+
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -137,11 +139,11 @@ Abort(void)
 static DWORD dwPageSize = 0;
 
 
-void queryVirtualAddress(const void *address)
+bool queryVirtualAddress(const void *address, MemoryInfo *info)
 {
     if (!address) {
-        DebugMessage("%p -> NULL\n", address);
-        return;
+        assert(0);
+        return false;
     }
 
     if (!dwPageSize) {
@@ -155,8 +157,11 @@ void queryVirtualAddress(const void *address)
     LPCVOID lpAddress = (const void *)((SIZE_T)address & ~(dwPageSize - 1));
 
     if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != sizeof mbi) {
-        return;
+        return false;
     }
+
+    info->start = mbi.BaseAddress;
+    info->stop  = (const char *)mbi.BaseAddress + mbi.RegionSize;
 
     DebugMessage("%p -> base = %p, size = 0x%lx, offset = %lx\n",
             address,
@@ -176,6 +181,7 @@ void queryVirtualAddress(const void *address)
         }
     }
 
+    return true;
 }
 
 

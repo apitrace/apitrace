@@ -49,6 +49,7 @@ namespace Trace {
         std::vector<bool> structs;
         std::vector<bool> enums;
         std::vector<bool> bitmasks;
+        std::vector<bool> regions;
 
     public:
         Writer();
@@ -92,6 +93,10 @@ namespace Trace {
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
         void writeNull(void);
         void writeOpaque(const void *ptr);
+        void writeRange(const RegionSig *sig, size_t offset, size_t length);
+        void writePointer(const void *ptr);
+
+        void updateRegion(const void *start, size_t size, const Trace::FunctionSig *memcpy_sig);
 
         void writeCall(Call *call);
 

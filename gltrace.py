@@ -366,63 +366,6 @@ class GlTracer(Tracer):
     ]
 
     def trace_function_impl_body(self, function):
-        # Defer tracing of user array pointers...
-        if function.name in self.array_pointer_function_names:
-            print '    GLint __array_buffer = 0;'
-            print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
-            print '    if (!__array_buffer) {'
-            print '        __user_arrays = true;'
-            if function.name == "glVertexAttribPointerARB":
-                print '        __user_arrays_arb = true;'
-            if function.name == "glVertexAttribPointerNV":
-                print '        __user_arrays_nv = true;'
-            print '    OS::queryVirtualAddress(pointer);'
-            self.dispatch_function(function)
-
-            # And also break down glInterleavedArrays into the individual calls
-            if function.name == 'glInterleavedArrays':
-                print
-
-                # Initialize the enable flags
-                for camelcase_name, uppercase_name in self.arrays:
-                    flag_name = '__' + uppercase_name.lower()
-                    print '        GLboolean %s = GL_FALSE;' % flag_name
-                print
-
-                # Switch for the interleaved formats
-                print '        switch (format) {'
-                for format in self.interleaved_formats:
-                    print '            case %s:' % format
-                    for camelcase_name, uppercase_name in self.arrays:
-                        flag_name = '__' + uppercase_name.lower()
-                        if format.find('_' + uppercase_name[0]) >= 0:
-                            print '                %s = GL_TRUE;' % flag_name
-                    print '                break;'
-                print '            default:'
-                print '               return;'
-                print '        }'
-                print
-
-                # Emit fake glEnableClientState/glDisableClientState flags
-                for camelcase_name, uppercase_name in self.arrays:
-                    flag_name = '__' + uppercase_name.lower()
-                    enable_name = 'GL_%s_ARRAY' % uppercase_name
-
-                    # Emit a fake function
-                    print '        {'
-                    print '            static const Trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
-                    print '            unsigned __call = __writer.beginEnter(&__sig);'
-                    print '            __writer.beginArg(0);'
-                    dump_instance(glapi.GLenum, enable_name)
-                    print '            __writer.endArg();'
-                    print '            __writer.endEnter();'
-                    print '            __writer.beginLeave(__call);'
-                    print '            __writer.endLeave();'
-                    print '        }'
-
-            print '        return;'
-            print '    }'
-
         # ... to the draw calls
         if function.name in self.draw_function_names:
             print '    if (__need_user_arrays()) {'
@@ -599,6 +542,26 @@ class GlTracer(Tracer):
     ])
 
     def dump_arg_instance(self, function, arg):
+        # Defer tracing of user array pointers...
+        if function.name in self.array_pointer_function_names and arg.name == 'pointer':
+            print '    if (!%s) {' % arg.name
+            print '        __writer.writeNull();'
+            print '    } else {'
+            print '        GLint __array_buffer = 0;'
+            print '        __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+            print '        if (__array_buffer) {'
+            print '            __writer.writeOpaque(%s);' % arg.name
+            print '        } else {'
+            print '            __user_arrays = true;'
+            if function.name == "glVertexAttribPointerARB":
+                print '            __user_arrays_arb = true;'
+            if function.name == "glVertexAttribPointerNV":
+                print '            __user_arrays_nv = true;'
+            print '            __writer.writePointer(%s);' % arg.name
+            print '        }'
+            print '    }'
+            return
+
         if function.name in self.draw_function_names and arg.name == 'indices':
             print '    GLint __element_array_buffer = 0;'
             print '    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
@@ -666,7 +629,6 @@ class GlTracer(Tracer):
             function = api.get_function_by_name(function_name)
 
             print '    // %s' % function.name
-            self.array_trace_prolog(api, uppercase_name)
             self.array_prolog(api, uppercase_name)
             print '    if (__glIsEnabled(%s)) {' % enable_name
             print '        GLint __binding = 0;'
@@ -683,25 +645,11 @@ class GlTracer(Tracer):
             arg_names = ', '.join([arg.name for arg in function.args[:-1]])
             print '            size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
-            # Emit a fake function
-            self.array_trace_intermezzo(api, uppercase_name)
-            print '            unsigned __call = __writer.beginEnter(&__%s_sig);' % (function.name,)
-            for arg in function.args:
-                assert not arg.output
-                print '            __writer.beginArg(%u);' % (arg.index,)
-                if arg.name != 'pointer':
-                    dump_instance(arg.type, arg.name)
-                else:
-                    print '            __writer.writeBlob((const void *)%s, __size);' % (arg.name)
-                print '            __writer.endArg();'
-            
-            print '            __writer.endEnter();'
-            print '            __writer.beginLeave(__call);'
-            print '            __writer.endLeave();'
+            # Update the region
+            print '            __writer.updateRegion((const void *)pointer, __size, &__memcpy_sig);'
             print '        }'
             print '    }'
             self.array_epilog(api, uppercase_name)
-            self.array_trace_epilog(api, uppercase_name)
             print
 
         # Samething, but for glVertexAttribPointer*
@@ -795,10 +743,6 @@ class GlTracer(Tracer):
             print '        GLenum texture = GL_TEXTURE0 + unit;'
             print '        __glClientActiveTexture(texture);'
 
-    def array_trace_prolog(self, api, uppercase_name):
-        if uppercase_name == 'TEXTURE_COORD':
-            print '    bool client_active_texture_dirty = false;'
-
     def array_epilog(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
             print '    }'
@@ -808,23 +752,6 @@ class GlTracer(Tracer):
         if uppercase_name == 'TEXTURE_COORD':
             print '    __glClientActiveTexture(client_active_texture);'
         
-    def array_trace_intermezzo(self, api, uppercase_name):
-        if uppercase_name == 'TEXTURE_COORD':
-            print '    if (texture != client_active_texture || client_active_texture_dirty) {'
-            print '        client_active_texture_dirty = true;'
-            self.fake_glClientActiveTexture_call(api, "texture");
-            print '    }'
-
-    def array_trace_epilog(self, api, uppercase_name):
-        if uppercase_name == 'TEXTURE_COORD':
-            print '    if (client_active_texture_dirty) {'
-            self.fake_glClientActiveTexture_call(api, "client_active_texture");
-            print '    }'
-
-    def fake_glClientActiveTexture_call(self, api, texture):
-        function = api.get_function_by_name('glClientActiveTexture')
-        self.fake_call(function, [texture])
-
     def fake_call(self, function, args):
         print '            unsigned __fake_call = __writer.beginEnter(&__%s_sig);' % (function.name,)
         for arg, instance in zip(function.args, args):
