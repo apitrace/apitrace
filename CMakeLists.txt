@@ -294,6 +294,7 @@ else ()
         glsnapshot.cpp
         trace_writer.cpp
         image.cpp
+        image_png.cpp
         os_posix.cpp
     )
 
