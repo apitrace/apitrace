@@ -317,7 +317,7 @@ public:
     }
 
     void visit(Range *node) {
-        os << pointer << "range(" << node->length << ")" << normal;
+        os << pointer << "region" << node->region->id << " + " << node->offset << normal;
     }
 
     void visit(Call *call) {
