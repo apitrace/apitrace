@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <algorithm>
 #include <list>
 
 #include <zlib.h>
@@ -371,9 +372,48 @@ void Writer::writeRange(const RegionSig *sig, size_t offset, size_t length)
 }
 
 
+struct RangeInfo
+{
+    size_t start;
+    size_t stop;
+    unsigned long crc;
+};
+
+typedef std::list<RangeInfo> RangeInfoList;
+
 struct RegionInfo : public RegionSig
 {
     const char *start;
+    RangeInfoList ranges;
+
+    void defineRanges(size_t start, size_t stop) {
+        assert(stop <= size);
+        assert(stop > start);
+
+        for (RangeInfoList::iterator it = ranges.begin(); it != ranges.end(); ++it) {
+            if (start < it->start) {
+                RangeInfo range;
+                range.start = start;
+                range.stop = std::min(stop, it->start);
+                range.crc = 0;
+                ranges.insert(it, range);
+            }
+
+            start = std::max(start, it->stop);
+
+            if (start >= stop) {
+                return;
+            }
+        }
+
+        if (start < stop) {
+            RangeInfo range;
+            range.start = start;
+            range.stop = stop;
+            range.crc = 0;
+            ranges.push_back(range);
+        }
+    }
 };
 
 typedef std::list<RegionInfo> RegionInfoList;
@@ -405,8 +445,10 @@ static RegionInfo * lookupRegionInfo(const void *ptr) {
         }
     }
 
+    static unsigned long next_region_id = 0;
+
     RegionInfo regionInfo;
-    regionInfo.id = regionInfoList.size();
+    regionInfo.id = next_region_id++;
     regionInfo.size = (const char*)info.stop - (const char*)info.start;
     regionInfo.start = (const char *)info.start;
 
@@ -446,25 +488,44 @@ void Writer::updateRegion(const void *ptr, size_t size, const Trace::FunctionSig
         return;
     }
 
-    size_t offset = (const char *)ptr - regionInfo->start;
-    size_t length = regionInfo->size - offset;
+    size_t start = (const char *)ptr - regionInfo->start;
+    size_t stop = start + size;
 
     assert(strcmp(memcpy_sig->name, "memcpy") == 0);
     assert(memcpy_sig->num_args == 3);
 
-    unsigned __call = beginEnter(memcpy_sig);
-    beginArg(0);
-    writeRange(regionInfo, offset, length);
-    endArg();
-    beginArg(1);
-    writeBlob(ptr, size);
-    endArg();
-    beginArg(2);
-    writeUInt(size);
-    endArg();
-    endEnter();
-    beginLeave(__call);
-    endLeave();
+    regionInfo->defineRanges(start, stop);
+
+    for (RangeInfoList::iterator it = regionInfo->ranges.begin(); it != regionInfo->ranges.end(); ++it) {
+        OS::DebugMessage("%lx-%lx\n", (unsigned long)it->start, (unsigned long)it->stop);
+        assert (it->start < it->stop);
+        if (it->start < stop && it->stop > start) {
+            const Bytef *p = (const Bytef *)regionInfo->start + it->start;
+            size_t length = it->stop - it->start;
+
+            unsigned long crc = crc32(0L, Z_NULL, 0);
+            crc = crc32(crc, p, length);
+
+            if (it->crc != crc) {
+                unsigned __call = beginEnter(memcpy_sig);
+                beginArg(0);
+                writeRange(regionInfo, it->start, length);
+                endArg();
+                beginArg(1);
+                writeBlob(p, length);
+                endArg();
+                beginArg(2);
+                writeUInt(length);
+                endArg();
+                endEnter();
+                beginLeave(__call);
+                endLeave();
+
+                it->crc = crc;
+            }
+        }
+    }
+    OS::DebugMessage("\n");
 }
 
 } /* namespace Trace */
