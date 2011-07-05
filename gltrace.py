@@ -366,6 +366,11 @@ class GlTracer(Tracer):
     ]
 
     def trace_function_impl_body(self, function):
+        # Defer tracing of user array pointers...
+        if function.name in self.array_pointer_function_names:
+            print '    GLint __array_buffer = 0;'
+            print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+
         # ... to the draw calls
         if function.name in self.draw_function_names:
             print '    if (__need_user_arrays()) {'
@@ -547,8 +552,6 @@ class GlTracer(Tracer):
             print '    if (!%s) {' % arg.name
             print '        __writer.writeNull();'
             print '    } else {'
-            print '        GLint __array_buffer = 0;'
-            print '        __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '        if (__array_buffer) {'
             print '            __writer.writeOpaque(%s);' % arg.name
             print '        } else {'
