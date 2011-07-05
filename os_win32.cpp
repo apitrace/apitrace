@@ -160,15 +160,28 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info)
         return false;
     }
 
-    info->start = mbi.BaseAddress;
-    info->stop  = (const char *)mbi.BaseAddress + mbi.RegionSize;
+    if (mbi.State == MEM_FREE) {
+        return false;
+    }
+
+    info->start = mbi.AllocationBase;
+    
+    do {
+        info->stop  = (const char *)mbi.BaseAddress + mbi.RegionSize;
+
+        if (VirtualQuery(info->stop, &mbi, sizeof mbi) != sizeof mbi) {
+            return false;
+        }
+
+    } while (mbi.State != MEM_FREE && mbi.AllocationBase == info->start);
 
     DebugMessage("%p -> base = %p, size = 0x%lx, offset = %lx\n",
             address,
-            mbi.BaseAddress,
-            (unsigned long)mbi.RegionSize,
-            (unsigned long)((SIZE_T)address - (SIZE_T)mbi.BaseAddress));
+            info->start,
+            (unsigned long)((SIZE_T)info->stop - (SIZE_T)info->start),
+            (unsigned long)((SIZE_T)address - (SIZE_T)info->start));
 
+#if 0
     HMODULE hModule;
     if (GetModuleHandleExA(
             GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
@@ -180,6 +193,7 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info)
             DebugMessage("  %s\n", szFileName);
         }
     }
+#endif
 
     return true;
 }
