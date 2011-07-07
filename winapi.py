@@ -36,7 +36,7 @@ ULONG = Alias("ULONG", ULong)
 LONGLONG = Alias("LONGLONG", LongLong)
 FLOAT = Alias("FLOAT", Float)
 
-INT32 = Literal("INT32", "UInt")
+INT32 = Literal("INT32", "SInt")
 UINT32 = Literal("UINT32", "UInt")
 
 BYTE = Literal("BYTE", "UInt", base=16)
