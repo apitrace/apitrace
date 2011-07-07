@@ -36,8 +36,10 @@
 #include <fcntl.h>
 
 #ifdef __APPLE__
+#include <mach/mach.h>
+#include <mach/mach_vm.h>
 #include <mach-o/dyld.h>
-#endif
+#endif /* __APPLE__ */
 
 #include "os.hpp"
 
@@ -127,6 +129,9 @@ Abort(void)
 {
     exit(0);
 }
+
+
+#ifdef __linux__
 
 
 class MapReader
@@ -246,13 +251,51 @@ public:
 };
 
 
-
 bool queryVirtualAddress(const void *address, MemoryInfo *info)
 {
     MapReader reader;
 
     return reader.lookup((uintptr_t)address, info); 
 }
+
+
+#endif /* __linux__ */
+
+
+#ifdef __APPLE__
+
+
+bool queryVirtualAddress(const void *address, MemoryInfo *info)
+{
+    /**
+     * http://www.opensource.apple.com/source/xnu/xnu-1456.1.26/osfmk/man/vm_region.html?txt
+     * http://www.gnu.org/software/hurd/gnumach-doc/Memory-Attributes.html#Memory-Attributes
+     * http://stackoverflow.com/questions/1627998/retrieving-the-memory-map-of-its-own-process-in-os-x-10-5-10-6
+     */
+
+    vm_map_t task = mach_task_self();
+    vm_address_t vmaddr = (vm_address_t)address;
+    vm_size_t vmsize = 0;
+    vm_region_flavor_t flavor = VM_REGION_BASIC_INFO_64;
+    vm_region_basic_info_data_64_t vminfo;
+    mach_msg_type_number_t info_count = VM_REGION_BASIC_INFO_COUNT_64;
+    mach_port_t object_name;
+
+    kern_return_t kr;
+    kr = vm_region_64(task, &vmaddr, &vmsize, flavor,
+                      (vm_region_info_t)&vminfo, &info_count, &object_name);
+    if (kr != KERN_SUCCESS) {
+        return false;
+    }
+
+    info->start = (const void *)vmaddr;
+    info->stop  = (const void *)(vmaddr + vmsize);
+
+    return true;
+}
+
+
+#endif /* __APPLE__ */
 
 
 } /* namespace OS */
