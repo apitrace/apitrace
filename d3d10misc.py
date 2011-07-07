@@ -26,6 +26,8 @@
 """d3d10misc.h"""
 
 from winapi import *
+from d3d10 import *
+from trace import DllTracer
 
 ID3D10Blob = Interface("ID3D10Blob", IUnknown)
 LPD3D10BLOB = Pointer(ID3D10Blob)
@@ -43,20 +45,19 @@ D3D10_DRIVER_TYPE = Enum("D3D10_DRIVER_TYPE", [
     "D3D10_DRIVER_TYPE_WARP",
 ])
 
-# TODO
-IDXGIAdapter = Alias("IDXGIAdapter", Void)
-ID3D10Device = Alias("ID3D10Device", Void)
-IDXGISwapChain = Alias("IDXGISwapChain", Void)
-DXGI_SWAP_CHAIN_DESC = Alias("DXGI_SWAP_CHAIN_DESC", Void)
 
-d3d10 = Dll("d3d10")
-d3d10.functions += [
+d3d10 = API("d3d10")
+d3d10.add_functions([
     StdFunction(HRESULT, "D3D10CreateDevice", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (UINT, "SDKVersion"), Out(Pointer(Pointer(ID3D10Device)), "ppDevice")]),
     StdFunction(HRESULT, "D3D10CreateDeviceAndSwapChain", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), Out(Pointer(Pointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(Pointer(ID3D10Device)), "ppDevice")]),
     StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), Out(Pointer(LPD3D10BLOB), "ppBuffer")]),
-]
+])
+
 
 if __name__ == '__main__':
+    print '#include "trace_writer.hpp"'
+    print '#include "os.hpp"'
+    print
     print '#include <windows.h>'
     print '#include <tchar.h>'
     print
@@ -64,6 +65,5 @@ if __name__ == '__main__':
     print
     print '#include <d3d10.h>'
     print
-    print '#include "trace_writer.hpp"'
-    print
-    wrap()
+    tracer = DllTracer('d3d10.dll')
+    tracer.trace_api(d3d10)

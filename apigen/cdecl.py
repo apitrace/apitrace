@@ -47,15 +47,12 @@ class Parser:
     def has_side_effects(self, name):
         return True
 
-    def parse(self, s):
+
+    def tokenize(self, s):
         s = self.multi_comment_re.sub('', s)
         s = self.single_comment_re.sub('', s)
         self.tokens = self.token_re.split(s)
         self.tokens = [token for token in self.tokens if self.filter_token(token)]
-
-        while self.tokens:
-            #print self.tokens[0:10]
-            self.parse_declaration()
 
     def filter_token(self, token):
         if not token or token.isspace():
@@ -66,102 +63,214 @@ class Parser:
             return False
         return True
 
+    def lookahead(self, index = 0):
+        try:
+            return self.tokens[index]
+        except KeyError:
+            return None
+
+    def match(self, *ref_tokens):
+        return self.lookahead() in ref_tokens
+
+    def consume(self, *ref_tokens):
+        if not self.tokens:
+            raise Exception('unexpected EOF')
+        token = self.tokens.pop(0)
+        if ref_tokens and token not in ref_tokens:
+            raise Exception('token mismatch', token, ref_tokens)
+        return token
+
+    def eof(self):
+        return not self.tokens
+
+
+    def parse(self, s):
+        self.tokenize(s)
+
+        while not self.eof():
+            #print self.tokens[0:10]
+            self.parse_declaration()
+
     def parse_declaration(self):
-        if self.tokens[0] == 'mask':
-            self.parse_value('mask', 'Flags')
-        elif self.tokens[0] == 'value':
-            self.parse_value('value', 'FakeEnum')
-        elif self.tokens[0] == 'interface':
+        self.parse_tags()
+        if self.match('enum'):
+            self.parse_enum()
+        elif self.match('interface'):
             self.parse_interface()
+        elif self.match('mask'):
+            self.parse_value('mask', 'Flags')
+        elif self.match('struct'):
+            self.parse_struct()
+        elif self.match('value'):
+            self.parse_value('value', 'FakeEnum')
+        elif self.match('typedef'):
+            self.parse_typedef()
         else:
             self.parse_prototype()
+        if not self.eof() and self.match(';'):
+            self.consume(';')
+
+    def parse_typedef(self):
+        self.consume('typedef')
+        if self.lookahead(2) in (';', ','):
+            base_type = self.consume()
+            while True:
+                type = base_type
+                if self.match('*'):
+                    self.consume()
+                    type = 'Pointer(%s)' % type
+                name = self.consume()
+                print '%s = Alias("%s", %s)' % (name, name, type)
+                if self.match(','):
+                    self.consume()
+                else:
+                    break
+        else:
+            self.parse_declaration()
+            self.consume()
+
+    def parse_enum(self):
+        self.consume('enum')
+        name = self.consume()
+        self.consume('{')
+
+        print '%s = Enum("%s", [' % (name, name)
+
+        #value = 0
+        while self.lookahead() != '}':
+            name = self.consume()
+            if self.match('='):
+                self.consume('=')
+                value = self.consume()
+            if self.match(','):
+                self.consume(',')
+            tags = self.parse_tags()
+            #print '    "%s",\t# %s' % (name, value) 
+            print '    "%s",' % (name,) 
+            #value += 1
+        self.consume('}')
+
+        print '])'
+        print
 
     def parse_value(self, ref_token, constructor):
-        self.match(ref_token)
-        type = self.tokens.pop(0)
-        name = self.tokens.pop(0)
-        self.match('{')
+        self.consume(ref_token)
+        type = self.consume()
+        name = self.consume()
+        self.consume('{')
 
         print '%s = %s(%s, [' % (name, constructor, type)
 
-        while self.tokens[0] != '}':
-            self.match('#')
-            self.match('define')
-            name = self.tokens.pop(0)
-            value = self.tokens.pop(0)
-            tag = self.parse_tag()
+        while self.lookahead() != '}':
+            self.consume('#')
+            self.consume('define')
+            name = self.consume()
+            value = self.consume()
             #print '    "%s",\t# %s' % (name, value) 
             print '    "%s",' % (name,) 
-        self.match('}')
-        self.match(';')
+        self.consume('}')
+
+        print '])'
+        print
+
+    def parse_struct(self):
+        self.consume('struct')
+        name = self.consume()
+        self.consume('{')
+
+        print '%s = Struct("%s", [' % (name, name)
+
+        value = 0
+        while self.lookahead() != '}':
+            type, name = self.parse_named_type()
+            if self.match(','):
+                self.consume(',')
+            self.consume(';')
+            print '    (%s, "%s"),' % (type, name) 
+            value += 1
+        self.consume('}')
 
         print '])'
         print
 
     def parse_interface(self):
-        self.match('interface')
-        name = self.tokens.pop(0)
-        self.match(':')
-        base = self.tokens.pop(0)
-        self.match('{')
+        self.consume('interface')
+        name = self.consume()
+        if self.match(';'):
+            return
+        self.consume(':')
+        base = self.consume()
+        self.consume('{')
 
         print '%s = Interface("%s", %s)' % (name, name, base)
         print '%s.methods += [' % (name,)
 
-        while self.tokens[0] != '}':
+        while self.lookahead() != '}':
             self.parse_prototype('Method')
-        self.match('}')
-        self.match(';')
+            self.consume(';')
+        self.consume('}')
 
         print ']'
         print
 
     def parse_prototype(self, creator = 'Function'):
-        if self.tokens[0] == 'extern':
-            self.tokens.pop(0)
+        if self.match('extern'):
+            self.consume()
 
         ret = self.parse_type()
 
-        name = self.tokens.pop(0)
+        if self.match('__stdcall'):
+            self.consume()
+            creator = 'StdFunction'
+
+        name = self.consume()
         extra = ''
         if not self.has_side_effects(name):
             extra += ', sideeffects=False'
         name = name
 
-        self.match('(')
+        self.consume('(')
         args = []
-        if self.tokens[0] == 'void' and self.tokens[1] == ')':
-            self.tokens.pop(0)
-        while self.tokens[0] != ')':
+        if self.match('void') and self.tokens[1] == ')':
+            self.consume()
+        while self.lookahead() != ')':
             arg = self.parse_arg()
             args.append(arg)
-            if self.tokens[0] == ',':
-                self.tokens.pop(0)
-        self.tokens.pop(0) == ')'
+            if self.match(','):
+                self.consume()
+        self.consume() == ')'
         
-        if self.tokens and self.tokens[0] == ';':
-            self.tokens.pop(0)
-
         print '    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
 
     def parse_arg(self):
-        tag = self.parse_tag()
+        tags = self.parse_tags()
 
-        type = self.parse_type()
-        name = self.tokens.pop(0)
+        type, name = self.parse_named_type()
 
         arg = '(%s, "%s")' % (type, name)
-        if tag == 'out':
+        if 'out' in tags:
             arg = 'Out' + arg
         return arg
 
-    def parse_tag(self):
-        tag = None
-        if self.tokens[0] == '[':
-            self.tokens.pop(0)
-            tag = self.tokens.pop(0)
-            self.match(']')
-        return tag
+    def parse_tags(self):
+        tags = []
+        if self.match('['):
+            self.consume()
+            while not self.match(']'):
+                tag = self.consume()
+                tags.append(tag)
+            self.consume(']')
+        return tags
+
+    def parse_named_type(self):
+        type = self.parse_type()
+        name = self.consume()
+        if self.match('['):
+            self.consume()
+            length = self.consume()
+            self.consume(']')
+            type = 'Array(%s, "%s")' % (type, length)
+        return type, name
 
     int_tokens = ('unsigned', 'signed', 'int', 'long', 'short', 'char')
 
@@ -179,7 +288,7 @@ class Parser:
     }
 
     def parse_type(self):
-        token = self.tokens.pop(0)
+        token = self.consume()
         if token == 'const':
             return 'Const(%s)' % self.parse_type()
         if token == 'void':
@@ -201,8 +310,8 @@ class Parser:
                     short += 1
                 if token == 'char':
                     char = False
-                if self.tokens[0] in self.int_tokens:
-                    token = self.tokens.pop(0)
+                if self.lookahead() in self.int_tokens:
+                    token = self.consume()
                 else:
                     token = None
             if char:
@@ -219,17 +328,17 @@ class Parser:
                 type = 'U' + type
         else:
             type = self.type_table.get(token, token)
-        while self.tokens[0] == '*':
-            type = 'OpaquePointer(%s)' % type
-            self.tokens.pop(0)
+        while True:
+            if self.match('*'):
+                self.consume('*')
+                type = 'OpaquePointer(%s)' % type
+            elif self.match('const'):
+                self.consume('const')
+                type = 'Const(%s)' % type
+            else:
+                break
         return type
 
-    def match(self, ref_token):
-        if not self.tokens:
-            raise Exception('unexpected EOF')
-        token = self.tokens.pop(0)
-        if token != ref_token:
-            raise Exception('token mismatch', token, ref_token)
 
 
         
