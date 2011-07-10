@@ -34,6 +34,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <malloc.h>
 
 #ifdef __APPLE__
 #include <mach/mach.h>
@@ -133,84 +134,126 @@ Abort(void)
 
 #ifdef __linux__
 
+struct MapRegion {
+    uintptr_t start;
+    uintptr_t stop;
+    bool read;
+    bool write;
+    bool execute;
+    bool shared;
+};
 
-class MapReader
+
+/**
+ * Reader for Linux's /proc/[pid]/maps.
+ *
+ * See also:
+ * - http://www.kernel.org/doc/Documentation/filesystems/proc.txt
+ */
+class MapsReader
 {
 protected:
     int fd;
     char buf[512];
     int pos;
     int len;
-    int lookahead;
-    void *brk;
+    char lookahead;
 
-public:
-    MapReader() {
-        fd = open("/proc/self/maps", O_RDONLY);
+    /**
+     * Read some data into buf.
+     */
+    void slurp(void) {
         pos = 0;
         len = 0;
         lookahead = 0;
+
+        if (fd >= 0) {
+            ssize_t nread = read(fd, buf, sizeof buf);
+            if (nread > 0) {
+                len = nread;
+                lookahead = buf[0];
+            }
+        }
     }
 
-    ~MapReader() {
+    /**
+     * Consume one byte.
+     */
+    inline void consume(void) {
+        ++pos;
+        if (pos < len) {
+            lookahead = buf[pos];
+        } else {
+            slurp();
+        }
+    }
+
+public:
+    MapsReader() {
+        fd = open("/proc/self/maps", O_RDONLY);
+        slurp();
+    }
+
+    ~MapsReader() {
         close(fd);
     }
 
-    bool lookup(uintptr_t address, MemoryInfo *info) {
-        if (lseek(fd, 0, SEEK_SET)) {
+    bool read_region(MapRegion &region) {
+        if (lookahead == 0) {
+            // EOF
             return false;
         }
 
-        slurp();
-        
-        brk = sbrk(0);
-
-        while (lookahead) {
-            if (read_entry(address, info)) {
-                return true;
-            }
+        // address range
+        if (!read_hex(region.start)) {
+            return false;
+        }
+        if (lookahead != '-') {
+            return false;
+        }
+        consume();
+        if (!read_hex(region.stop)) {
+            return false;
         }
 
-        return false;
-    }
+        if (!read_space()) {
+            return false;
+        }
 
-    bool read_entry(uintptr_t address, MemoryInfo *info) {
-        uintptr_t start, stop;
-        read_address(start, stop);
-#if 0
-        read_perms();
-        read_offset();
-        read_dev();
-        read_inode();
-        read_pathname();
-#else
+        // permissions
+        if (!read_flag('r', '-', region.read)) {
+            return false;
+        }
+        if (!read_flag('w', '-', region.write)) {
+            return false;
+        }
+        if (!read_flag('x', '-', region.execute)) {
+            return false;
+        }
+        if (!read_flag('s', 'p', region.shared)) {
+            return false;
+        }
+
+        if (!read_space()) {
+            return false;
+        }
+
+        // rest
         while (lookahead != '\n') {
+            if (lookahead == 0) {
+                return false;
+            }
             consume();
         }
-        consume(); // '\n'
-#endif
-        //DebugMessage("%08lx-%08lx\n", (unsigned long)start, (unsigned long)stop);
+        consume();
 
-        if (start <= address && address < stop) {
-            info->start = (const void *)start;
-            info->stop  = (const void *)stop;
-
-            //DebugMessage("   sbrk = %08lx\n", (unsigned long)brk);
-
-            return true;
-        }
-
-        return false;
-    }
-    
-    inline void read_address(uintptr_t &start, uintptr_t &stop) {
-        start = read_hex();
-        consume(); // '-'
-        stop = read_hex();
+        return true;
     }
 
-    uintptr_t read_hex() {
-        uintptr_t val = 0;
+protected:
+    bool read_hex(uintptr_t &val) {
+        bool success = false;
+        val = 0;
         while (true) {
             if (lookahead >= '0' && lookahead <= '9') {
                 val <<= 4;
@@ -225,37 +268,166 @@ public:
                 break;
             }
             consume();
+            success = true;
         }
-        return val;
+        return success;
     }
 
-    inline void consume() {
-        ++pos;
-        if (pos < len) {
-            lookahead = buf[pos];
-        } else {
-            slurp();
+    bool read_flag(char t, char f, bool &flag) {
+        if (lookahead == t) {
+            flag = true;
+            consume();
+            return true;
         }
+
+        if (lookahead == f) {
+            flag = false;
+            consume();
+            return true;
+        }
+
+        return false;
     }
 
-    void slurp(void) {
-        pos = 0;
-        ssize_t nread = read(fd, buf, sizeof buf);
-        if (nread > 0) {
-            len = nread;
-            lookahead = buf[0];
-        } else {
-            lookahead = 0;
+    inline bool read_space(void) {
+        bool success = false;
+        while (lookahead == ' ') {
+            consume();
+            success = true;
         }
+        return success;
     }
 };
 
 
+/**
+ * Data segment sub-break.
+ *
+ * glibc's malloc request memory from the kernel by changing the program break
+ * to satisfy mallocs smaller than a certain size.  This means that the heap
+ * region often varies in size (typically growing), which is very difficult to
+ * replay.
+ *
+ * To avoid this, we malloc these sub-breaks which split the heap, such that
+ * the address of interest are enclosed by them.  Therefore, we turn the
+ * ever-growing heap region into a growing collection of disjoint and fixed
+ * sized regions, at the expense of fragmenting the heap.
+ */
+union SubBreak
+{
+    SubBreak *next;
+
+    /**
+     * It must not be bigger than M_MMAP_THRESHOLD.
+     */
+    const char padding[1024];
+};
+
+
+/**
+ * Singly-linked list of the sub-breaks.
+ */
+static SubBreak *subBreaks = NULL;
+
+
 bool queryVirtualAddress(const void *address, MemoryInfo *info)
 {
-    MapReader reader;
+    MapsReader reader;
+    MapRegion region;
 
-    return reader.lookup((uintptr_t)address, info); 
+    // Prevent the data segment from shrinking
+    mallopt(M_TRIM_THRESHOLD, -1);
+
+    // Use mmap more frequently
+    mallopt(M_MMAP_THRESHOLD, 64*1024);
+
+    void *brk = sbrk(0);
+
+    while (reader.read_region(region)) {
+        if (region.start <= (uintptr_t)address && (uintptr_t)address < region.stop) {
+            // Found an enclosing region
+
+            if (!region.read) {
+                return false;
+            }
+
+            info->start = (const void *)region.start;
+            info->stop  = (const void *)region.stop;
+
+            // The 
+            if (info->stop <= brk) {
+
+                // Find a sub-break that encloses the address
+                SubBreak *subBreak = subBreaks;
+                while (subBreak) {
+                    if (address <= (const void *)subBreak) {
+                        break;
+                        return true;
+                    }
+
+                    subBreak = subBreak->next;
+                }
+
+                if (!subBreak) {
+                    // The address is higher than all existing sub-breaks
+
+                    SubBreak *tmpBreaks = NULL;
+
+                    // Keep allocating sub-breaks until reach an address that
+                    // encloses the address
+                    while (true) {
+                        subBreak = (SubBreak *)malloc(sizeof *subBreak);
+                        if (!subBreak) {
+                            break;
+                        }
+
+                        if (address < (const void *)subBreak) {
+                            break;
+                        }
+
+                        subBreak->next = tmpBreaks;
+                        tmpBreaks = subBreak;
+                    }
+
+                    // Add the new sub-break to the list
+                    if (subBreak) {
+                        //DebugMessage("   subbreak = %p, break = %p\n", subBreak, sbrk(0));
+                        subBreak->next = subBreaks;
+                        subBreaks = subBreak;
+                    }
+
+                    // Free all temporary malloced memory below the address
+                    while (tmpBreaks) {
+                        SubBreak *nextTmpBreak = tmpBreaks->next;
+                        free(tmpBreaks);
+                        tmpBreaks = nextTmpBreak;
+                    }
+                }
+
+                // Adjust the range to the enclosing sub-break
+                if (subBreak) {
+                    info->stop = (const void *)subBreak;
+                    if (subBreak->next) {
+                        info->start = (const void *)(subBreak + 1);
+                    }
+                    return true;
+                }
+            }
+
+            // Concatenate the next region. Necessary because when program or
+            // shared objects are loaded, the data segments are made part of
+            // file mapping, part anynomous.
+            while (reader.read_region(region) &&
+                   region.read && !region.execute &&
+                   region.start == (uintptr_t)info->stop) {
+                info->stop  = (const void *)region.stop;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 
