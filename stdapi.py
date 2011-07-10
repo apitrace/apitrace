@@ -213,7 +213,8 @@ class Arg:
 
 class Function:
 
-    __id = 0
+    # 0 is reserved to memcpy
+    __id = 1
 
     def __init__(self, type, name, args, call = '', fail = None, sideeffects=True):
         self.id = Function.__id

@@ -242,9 +242,6 @@ class GlTracer(Tracer):
         print '}'
         print
 
-        # Generate memcpy's signature
-        self.trace_function_decl(glapi.memcpy)
-
         # Generate a helper function to determine whether a parameter name
         # refers to a symbolic value or not
         print 'static bool'
@@ -449,7 +446,7 @@ class GlTracer(Tracer):
         Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned __call = __writer.beginEnter(&__memcpy_sig);'
+        print '        unsigned __call = __writer.beginEnter(&Trace::memcpy_sig);'
         print '        __writer.beginArg(0);'
         print '        __writer.writeOpaque(%s);' % dest
         print '        __writer.endArg();'
@@ -649,7 +646,7 @@ class GlTracer(Tracer):
             print '            size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
             # Update the region
-            print '            __writer.updateRegion((const void *)pointer, __size, &__memcpy_sig);'
+            print '            __writer.updateRegion((const void *)pointer, __size);'
             print '        }'
             print '    }'
             self.array_epilog(api, uppercase_name)

@@ -40,6 +40,8 @@
 
 namespace Trace {
 
+    extern const FunctionSig memcpy_sig;
+
     class Writer {
     protected:
         void *g_gzFile;
@@ -96,7 +98,7 @@ namespace Trace {
         void writeRange(const RegionSig *sig, size_t offset, size_t length);
         void writePointer(const void *ptr);
 
-        void updateRegion(const void *start, size_t size, const Trace::FunctionSig *memcpy_sig);
+        void updateRegion(const void *start, size_t size);
 
         void writeCall(Call *call);
 

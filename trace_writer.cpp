@@ -476,7 +476,10 @@ void Writer::writePointer(const void *ptr) {
 }
 
 
-void Writer::updateRegion(const void *ptr, size_t size, const Trace::FunctionSig *memcpy_sig) {
+static const char *memcpy_args[3] = {"dest", "src", "n"};
+const FunctionSig memcpy_sig = {0, "memcpy", 3, memcpy_args};
+
+void Writer::updateRegion(const void *ptr, size_t size) {
     if (!ptr) {
         return;
     }
@@ -491,9 +494,6 @@ void Writer::updateRegion(const void *ptr, size_t size, const Trace::FunctionSig
     size_t start = (const char *)ptr - regionInfo->start;
     size_t stop = start + size;
 
-    assert(strcmp(memcpy_sig->name, "memcpy") == 0);
-    assert(memcpy_sig->num_args == 3);
-
     regionInfo->defineRanges(start, stop);
 
     for (RangeInfoList::iterator it = regionInfo->ranges.begin(); it != regionInfo->ranges.end(); ++it) {
@@ -507,7 +507,7 @@ void Writer::updateRegion(const void *ptr, size_t size, const Trace::FunctionSig
             crc = crc32(crc, p, length);
 
             if (it->crc != crc) {
-                unsigned __call = beginEnter(memcpy_sig);
+                unsigned __call = beginEnter(&memcpy_sig);
                 beginArg(0);
                 writeRange(regionInfo, it->start, length);
                 endArg();
