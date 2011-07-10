@@ -103,14 +103,12 @@ namespace range {
         }
 
         void sub(const range<T> &r) {
-            std::cout << *this << " - " << r << "\n";
             typename range_list::iterator it = ranges.begin();
             while (it != ranges.end()) {
                 if (it->contained(r)) {
                     it = ranges.erase(it);
                 } else {
                     if (it->intersects(r)) {
-                        std::cout << "  " << *it << " - " << r << "\n";
                         if (it->start < r.start && r.stop < it->stop) {
                             range<T> new_range(r.stop, it->stop);
                             it->stop = r.start;
