@@ -36,6 +36,7 @@
 #include <zlib.h>
 
 #include "os.hpp"
+#include "range.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
 
@@ -372,10 +373,8 @@ void Writer::writeRange(const RegionSig *sig, size_t offset, size_t length)
 }
 
 
-struct RangeInfo
+struct RangeInfo : public range::range<size_t>
 {
-    size_t start;
-    size_t stop;
     unsigned long crc;
 };
 
@@ -385,35 +384,6 @@ struct RegionInfo : public RegionSig
 {
     const char *start;
     RangeInfoList ranges;
-
-    void defineRanges(size_t start, size_t stop) {
-        assert(stop <= size);
-        assert(stop > start);
-
-        for (RangeInfoList::iterator it = ranges.begin(); it != ranges.end(); ++it) {
-            if (start < it->start) {
-                RangeInfo range;
-                range.start = start;
-                range.stop = std::min(stop, it->start);
-                range.crc = 0;
-                ranges.insert(it, range);
-            }
-
-            start = std::max(start, it->stop);
-
-            if (start >= stop) {
-                return;
-            }
-        }
-
-        if (start < stop) {
-            RangeInfo range;
-            range.start = start;
-            range.stop = stop;
-            range.crc = 0;
-            ranges.push_back(range);
-        }
-    }
 };
 
 typedef std::list<RegionInfo> RegionInfoList;
@@ -431,7 +401,7 @@ static RegionInfo * lookupRegionInfo(const void *ptr) {
 
     OS::DebugMessage("apitrace: %p => %p..%p\n", ptr, info.start, info.stop);
 
-    for (RegionInfoList::iterator it = regionInfoList.begin(); it != regionInfoList.end(); ++it) {
+    for (RegionInfoList::iterator it = regionInfoList.begin(); it != regionInfoList.end(); ) {
         const char *start = it->start;
         const char *stop  = start + it->size;
         if (info.start < stop && info.stop > start) {
@@ -442,6 +412,8 @@ static RegionInfo * lookupRegionInfo(const void *ptr) {
                 OS::DebugMessage("apitrace: warning: range %p-%p changed to %p-%p\n", start, stop, info.start, info.stop);
                 it = regionInfoList.erase(it);
             }
+        } else {
+            ++it;
         }
     }
 
@@ -479,6 +451,10 @@ void Writer::writePointer(const void *ptr) {
 static const char *memcpy_args[3] = {"dest", "src", "n"};
 const FunctionSig memcpy_sig = {0, "memcpy", 3, memcpy_args};
 
+
+/**
+ * Ensure this region is updated, emitting the necessary memcpy calls.
+ */
 void Writer::updateRegion(const void *ptr, size_t size) {
     if (!ptr) {
         return;
@@ -492,40 +468,86 @@ void Writer::updateRegion(const void *ptr, size_t size) {
     }
 
     size_t start = (const char *)ptr - regionInfo->start;
+
+#if 0
+
+    // Simply emit one memcpy for the whole range
+    unsigned __call = beginEnter(&memcpy_sig);
+    beginArg(0);
+    writeRange(regionInfo, start, size);
+    endArg();
+    beginArg(1);
+    writeBlob(ptr, size);
+    endArg();
+    beginArg(2);
+    writeUInt(size);
+    endArg();
+    endEnter();
+    beginLeave(__call);
+    endLeave();
+
+#else
+
     size_t stop = start + size;
 
-    regionInfo->defineRanges(start, stop);
+    // The range for what needs to be updated
+    range::range<size_t> update(start, stop);
 
-    for (RangeInfoList::iterator it = regionInfo->ranges.begin(); it != regionInfo->ranges.end(); ++it) {
-        OS::DebugMessage("%lx-%lx\n", (unsigned long)it->start, (unsigned long)it->stop);
-        assert (it->start < it->stop);
-        if (it->start < stop && it->stop > start) {
+    // The set of ranges which need to be copied, i.e., the update range minus
+    // everything that did not change since last time.
+    range::range_set<size_t> copy(update);
+
+    // Go through the all ranges that intersect the update range, checking for redundancy,
+    for (RangeInfoList::iterator it = regionInfo->ranges.begin(); it != regionInfo->ranges.end(); ) {
+        if (it->intersects(update)) {
             const Bytef *p = (const Bytef *)regionInfo->start + it->start;
             size_t length = it->stop - it->start;
 
             unsigned long crc = crc32(0L, Z_NULL, 0);
             crc = crc32(crc, p, length);
 
-            if (it->crc != crc) {
-                unsigned __call = beginEnter(&memcpy_sig);
-                beginArg(0);
-                writeRange(regionInfo, it->start, length);
-                endArg();
-                beginArg(1);
-                writeBlob(p, length);
-                endArg();
-                beginArg(2);
-                writeUInt(length);
-                endArg();
-                endEnter();
-                beginLeave(__call);
-                endLeave();
-
-                it->crc = crc;
+            if (it->crc == crc) {
+                // This range did not change, so no need to copy it.
+                copy.sub(*it);
+                ++it;
+            } else {
+                // This range did change, so remove all info about it.
+                it = regionInfo->ranges.erase(it);
             }
+        } else {
+            ++it;
         }
     }
-    OS::DebugMessage("\n");
+
+    // Emit fake memcpy calls for each range that needs to be copied
+    for (range::range_set<size_t>::const_iterator it = copy.begin(); it != copy.end(); ++it) {
+        const Bytef *p = (const Bytef *)regionInfo->start + it->start;
+        size_t length = it->stop - it->start;
+
+        unsigned __call = beginEnter(&memcpy_sig);
+        beginArg(0);
+        writeRange(regionInfo, it->start, length);
+        endArg();
+        beginArg(1);
+        writeBlob(p, length);
+        endArg();
+        beginArg(2);
+        writeUInt(length);
+        endArg();
+        endEnter();
+        beginLeave(__call);
+        endLeave();
+
+        // Note down this range's CRC for future redundancy checks.
+        RangeInfo r;
+        r.start = it->start;
+        r.stop = it->stop;
+        r.crc = crc32(0L, Z_NULL, 0);
+        r.crc = crc32(r.crc, p, length);
+        regionInfo->ranges.push_front(r);
+    }
+
+#endif
 }
 
 } /* namespace Trace */
