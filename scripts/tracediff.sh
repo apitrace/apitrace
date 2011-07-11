@@ -26,7 +26,7 @@
 
 set -e
 
-TRACEDUMP=${TRACEDUMP:-`dirname "$0"`/tracedump}
+TRACEDUMP=${TRACEDUMP:-`dirname "$0"`/../tracedump}
 
 $TRACEDUMP
 
