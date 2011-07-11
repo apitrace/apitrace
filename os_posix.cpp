@@ -34,7 +34,10 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifdef __linux__
 #include <malloc.h>
+#endif /* __linux__ */
 
 #ifdef __APPLE__
 #include <mach/mach.h>
