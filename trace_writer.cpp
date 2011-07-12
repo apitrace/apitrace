@@ -360,19 +360,6 @@ void Writer::writeOpaque(const void *addr) {
     _writeUInt((size_t)addr);
 }
 
-void Writer::writeRange(const RegionSig *sig, size_t offset, size_t length)
-{
-    _writeByte(Trace::TYPE_RANGE);
-    _writeUInt(sig->id);
-    if (!lookup(regions, sig->id)) {
-        _writeUInt(sig->size);
-        regions[sig->id] = true;
-    }
-    _writeUInt(offset);
-    _writeUInt(length);
-}
-
-
 struct RangeInfo : public range::range<size_t>
 {
     unsigned long crc;
@@ -380,8 +367,9 @@ struct RangeInfo : public range::range<size_t>
 
 typedef std::list<RangeInfo> RangeInfoList;
 
-struct RegionInfo : public RegionSig
+struct RegionInfo
 {
+    size_t size;
     const char *start;
     RangeInfoList ranges;
 };
@@ -418,10 +406,7 @@ static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
         }
     }
 
-    static unsigned long next_region_id = 0;
-
     RegionInfo regionInfo;
-    regionInfo.id = next_region_id++;
     regionInfo.size = (const char*)info.stop - (const char*)info.start;
     regionInfo.start = (const char *)info.start;
 
@@ -478,7 +463,7 @@ void Writer::updateRegion(const void *ptr, size_t size) {
     // Simply emit one memcpy for the whole range
     unsigned __call = beginEnter(&memcpy_sig);
     beginArg(0);
-    writeRange(regionInfo, start, size);
+    writeOpaque(ptr);
     endArg();
     beginArg(1);
     writeBlob(ptr, size);
@@ -530,7 +515,7 @@ void Writer::updateRegion(const void *ptr, size_t size) {
 
         unsigned __call = beginEnter(&memcpy_sig);
         beginArg(0);
-        writeRange(regionInfo, it->start, length);
+        writeOpaque(p);
         endArg();
         beginArg(1);
         writeBlob(p, length);

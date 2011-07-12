@@ -53,7 +53,6 @@
  *         | ARRAY length value+
  *         | STRUCT struct_sig value+
  *         | OPAQUE int
- *         | RANGE region_sig offset length
  *
  *   call_sig = id name arg_name*
  *            | id
@@ -63,9 +62,6 @@
  *
  *   bitmask_sig = id count (name value)+
  *               | id
- *
- *   region_sig = id size
- *              | id
  *
  *   string = length (BYTE)*
  *
@@ -105,7 +101,6 @@ enum Type {
     TYPE_ARRAY,
     TYPE_STRUCT,
     TYPE_OPAQUE,
-    TYPE_RANGE,
 };
 
 

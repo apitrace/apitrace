@@ -98,7 +98,6 @@ namespace Trace {
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
         void writeNull(void);
         void writeOpaque(const void *ptr);
-        void writeRange(const RegionSig *sig, size_t offset, size_t length);
 
         void updateRegion(const void *ptr, size_t size = 0);
 

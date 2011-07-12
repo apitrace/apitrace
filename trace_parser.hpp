@@ -57,9 +57,6 @@ protected:
     typedef std::vector<BitmaskSig *> BitmaskMap;
     BitmaskMap bitmasks;
 
-    typedef std::vector<Region *> RegionMap;
-    RegionMap regions;
-
     unsigned next_call_no;
 
 public:
@@ -107,8 +104,6 @@ protected:
     Value *parse_struct();
 
     Value *parse_opaque();
-
-    Value *parse_range();
 
     const char * read_string(void);
 
