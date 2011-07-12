@@ -36,9 +36,9 @@ import optparse
 import math
 import operator
 
-import Image
-import ImageChops
-import ImageEnhance
+from PIL import Image
+from PIL import ImageChops
+from PIL import ImageEnhance
 
 
 thumb_size = 320, 320
