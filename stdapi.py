@@ -213,7 +213,7 @@ class Arg:
 
 class Function:
 
-    # 0 is reserved to memcpy
+    # 0-3 are reserved to memcpy, malloc, free, and realloc
     __id = 1
 
     def __init__(self, type, name, args, call = '', fail = None, sideeffects=True):

@@ -41,6 +41,9 @@
 namespace Trace {
 
     extern const FunctionSig memcpy_sig;
+    extern const FunctionSig malloc_sig;
+    extern const FunctionSig free_sig;
+    extern const FunctionSig realloc_sig;
 
     class Writer {
     protected:
@@ -96,9 +99,8 @@ namespace Trace {
         void writeNull(void);
         void writeOpaque(const void *ptr);
         void writeRange(const RegionSig *sig, size_t offset, size_t length);
-        void writePointer(const void *ptr);
 
-        void updateRegion(const void *start, size_t size);
+        void updateRegion(const void *ptr, size_t size = 0);
 
         void writeCall(Call *call);
 

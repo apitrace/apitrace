@@ -391,7 +391,7 @@ typedef std::list<RegionInfo> RegionInfoList;
 static RegionInfoList regionInfoList;
 
 
-static RegionInfo * lookupRegionInfo(const void *ptr) {
+static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
     OS::MemoryInfo info;
 
     if (!OS::queryVirtualAddress(ptr, &info)) {
@@ -410,6 +410,7 @@ static RegionInfo * lookupRegionInfo(const void *ptr) {
                 return &*it;
             } else {
                 OS::DebugMessage("apitrace: warning: range %p-%p changed to %p-%p\n", start, stop, info.start, info.stop);
+                // XXX: Emit a realloc
                 it = regionInfoList.erase(it);
             }
         } else {
@@ -424,32 +425,32 @@ static RegionInfo * lookupRegionInfo(const void *ptr) {
     regionInfo.size = (const char*)info.stop - (const char*)info.start;
     regionInfo.start = (const char *)info.start;
 
+    unsigned __call = writer.beginEnter(&malloc_sig);
+    writer.beginArg(0);
+    writer.writeUInt(regionInfo.size);
+    writer.endArg();
+    writer.endEnter();
+    writer.beginLeave(__call);
+    writer.beginReturn();
+    writer.writeOpaque(regionInfo.start);
+    writer.endReturn();
+    writer.endLeave();
+
     return &*regionInfoList.insert(regionInfoList.end(), regionInfo);
-}
-
-
-void Writer::writePointer(const void *ptr) {
-    if (!ptr) {
-        Writer::writeNull();
-        return;
-    }
-
-    RegionInfo * regionInfo = lookupRegionInfo(ptr);
-
-    if (!regionInfo) {
-        writeOpaque(ptr);
-        return;
-    }
-
-    size_t offset = (const char *)ptr - regionInfo->start;
-    size_t length = regionInfo->size - offset;
-
-    writeRange(regionInfo, offset, length);
 }
 
 
 static const char *memcpy_args[3] = {"dest", "src", "n"};
 const FunctionSig memcpy_sig = {0, "memcpy", 3, memcpy_args};
+
+static const char *malloc_args[1] = {"size"};
+const FunctionSig malloc_sig = {1, "malloc", 1, malloc_args};
+
+static const char *free_args[1] = {"ptr"};
+const FunctionSig free_sig = {2, "free", 1, free_args};
+
+static const char *realloc_args[2] = {"ptr", "size"};
+const FunctionSig realloc_sig = {3, "realloc", 2, realloc_args};
 
 
 /**
@@ -460,10 +461,13 @@ void Writer::updateRegion(const void *ptr, size_t size) {
         return;
     }
 
-    RegionInfo * regionInfo = lookupRegionInfo(ptr);
+    RegionInfo * regionInfo = lookupRegionInfo(*this, ptr);
 
     if (!regionInfo) {
-        writeOpaque(ptr);
+        return;
+    }
+
+    if (!size) {
         return;
     }
 

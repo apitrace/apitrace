@@ -367,6 +367,16 @@ class GlTracer(Tracer):
         if function.name in self.array_pointer_function_names:
             print '    GLint __array_buffer = 0;'
             print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
+            print '    if (pointer) {'
+            print '        if (!__array_buffer) {'
+            print '            __user_arrays = true;'
+            if function.name == "glVertexAttribPointerARB":
+                print '            __user_arrays_arb = true;'
+            if function.name == "glVertexAttribPointerNV":
+                print '            __user_arrays_nv = true;'
+            print '            __writer.updateRegion(pointer);'
+            print '        }'
+            print '    }'
 
         # ... to the draw calls
         if function.name in self.draw_function_names:
@@ -544,24 +554,6 @@ class GlTracer(Tracer):
     ])
 
     def dump_arg_instance(self, function, arg):
-        # Defer tracing of user array pointers...
-        if function.name in self.array_pointer_function_names and arg.name == 'pointer':
-            print '    if (!%s) {' % arg.name
-            print '        __writer.writeNull();'
-            print '    } else {'
-            print '        if (__array_buffer) {'
-            print '            __writer.writeOpaque(%s);' % arg.name
-            print '        } else {'
-            print '            __user_arrays = true;'
-            if function.name == "glVertexAttribPointerARB":
-                print '            __user_arrays_arb = true;'
-            if function.name == "glVertexAttribPointerNV":
-                print '            __user_arrays_nv = true;'
-            print '            __writer.writePointer(%s);' % arg.name
-            print '        }'
-            print '    }'
-            return
-
         if function.name in self.draw_function_names and arg.name == 'indices':
             print '    GLint __element_array_buffer = 0;'
             print '    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
