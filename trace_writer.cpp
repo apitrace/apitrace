@@ -457,6 +457,13 @@ void Writer::updateRegion(const void *ptr, size_t size) {
         return;
     }
 
+    if ((char *)ptr + size > regionInfo->start + regionInfo->size) {
+        OS::DebugMessage("apitrace: warning: range %p-%p exceeds region %p-%p\n", 
+                         ptr, (char *)ptr + size,
+                         regionInfo->start, regionInfo->start + regionInfo->size);
+
+    }
+
     size_t start = (const char *)ptr - regionInfo->start;
 
 #if 0
