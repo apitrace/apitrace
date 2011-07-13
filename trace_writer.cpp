@@ -387,7 +387,9 @@ static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
         return NULL;
     }
 
-    OS::DebugMessage("apitrace: %p => %p..%p\n", ptr, info.start, info.stop);
+    if (0) {
+        OS::DebugMessage("apitrace: %p => %p..%p\n", ptr, info.start, info.stop);
+    }
 
     for (RegionInfoList::iterator it = regionInfoList.begin(); it != regionInfoList.end(); ) {
         const char *start = it->start;
@@ -446,13 +448,12 @@ void Writer::updateRegion(const void *ptr, size_t size) {
         return;
     }
 
+    OS::AcquireMutex();
+
     RegionInfo * regionInfo = lookupRegionInfo(*this, ptr);
 
-    if (!regionInfo) {
-        return;
-    }
-
-    if (!size) {
+    if (!regionInfo || !size) {
+        OS::ReleaseMutex();
         return;
     }
 
@@ -537,6 +538,8 @@ void Writer::updateRegion(const void *ptr, size_t size) {
     }
 
 #endif
+
+    OS::ReleaseMutex();
 }
 
 } /* namespace Trace */
