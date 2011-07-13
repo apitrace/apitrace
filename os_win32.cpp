@@ -165,7 +165,7 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info)
     }
 
     info->start = mbi.AllocationBase;
-    
+
     do {
         info->stop  = (const char *)mbi.BaseAddress + mbi.RegionSize;
 
@@ -174,26 +174,6 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info)
         }
 
     } while (mbi.State != MEM_FREE && mbi.AllocationBase == info->start);
-
-    DebugMessage("%p -> base = %p, size = 0x%lx, offset = %lx\n",
-            address,
-            info->start,
-            (unsigned long)((SIZE_T)info->stop - (SIZE_T)info->start),
-            (unsigned long)((SIZE_T)address - (SIZE_T)info->start));
-
-#if 0
-    HMODULE hModule;
-    if (GetModuleHandleExA(
-            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-            (LPSTR)address,
-            &hModule) ) {
-        char szFileName[512];
-        if (GetModuleFileNameA(hModule, szFileName, sizeof szFileName)) {
-            DebugMessage("  %s\n", szFileName);
-        }
-    }
-#endif
 
     return true;
 }
