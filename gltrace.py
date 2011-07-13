@@ -393,14 +393,13 @@ class GlTracer(Tracer):
             self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
             print '    }'
         if function.name in ('glFlushMappedBufferRange', 'glFlushMappedBufferRangeAPPLE'):
-            # TODO: avoid copying [0, offset] bytes
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
             if function.name.endswith('APPLE'):
                  print '        GLsizeiptr length = size;'
                  print '        mapping->explicit_flush = true;'
             print '        //assert(offset + length <= mapping->length);'
-            self.emit_memcpy('mapping->map', 'mapping->map', 'offset + length')
+            self.emit_memcpy('(char *)mapping->map + offset', '(const char *)mapping->map + offset', 'length')
             print '    }'
         # FIXME: glFlushMappedNamedBufferRangeEXT
 

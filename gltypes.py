@@ -79,7 +79,7 @@ GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
 GLarray = Handle("array", GLuint)
 GLregion = Handle("region", GLuint)
-GLmap = Handle("map", OpaquePointer(GLvoid))
+GLmap = OpaquePointer(GLvoid)
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
 

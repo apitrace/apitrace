@@ -47,9 +47,45 @@ struct Region
 typedef std::map<unsigned long long, Region> RegionMap;
 static RegionMap regionMap;
 
+// Iterator to the first region that contains the address
+static RegionMap::iterator
+lowerBound(unsigned long long address) {
+    RegionMap::iterator it = regionMap.lower_bound(address);
+
+    while (it != regionMap.begin() &&
+           it != regionMap.end() &&
+           it->first + it->second. size > address) {
+        --it;
+    }
+
+    return it;
+}
+
+// Iterator to the first region that not contains the address
+static RegionMap::iterator
+upperBound(unsigned long long address) {
+    RegionMap::iterator it = regionMap.upper_bound(address);
+
+    while (it != regionMap.end() &&
+           it->first + it->second.size > address) {
+        ++it;
+    }
+
+    return it;
+}
+
 void
 addRegion(unsigned long long address, void *buffer, unsigned long long size)
 {
+    // Forget all regions that intersect this new one.
+    if (0) {
+        RegionMap::iterator start = lowerBound(address);
+        if (start != regionMap.end()) {
+            RegionMap::iterator stop = upperBound(address + size);
+            regionMap.erase(start, stop);
+        }
+    }
+
     assert(buffer);
 
     Region region;
@@ -59,7 +95,7 @@ addRegion(unsigned long long address, void *buffer, unsigned long long size)
     regionMap[address] = region;
 }
 
-RegionMap::iterator
+static RegionMap::iterator
 lookupRegion(unsigned long long address) {
     RegionMap::iterator it = regionMap.lower_bound(address);
 
@@ -85,6 +121,19 @@ delRegion(unsigned long long address) {
     } else {
         assert(0);
     }
+}
+
+
+void
+delRegionByPointer(void *ptr) {
+    RegionMap::iterator it = regionMap.begin();
+    while (it != regionMap.end()) {
+        if (it->second.buffer == ptr) {
+            regionMap.erase(it);
+            return;
+        }
+    }
+    assert(0);
 }
 
 void *
