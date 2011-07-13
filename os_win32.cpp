@@ -154,7 +154,7 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info)
 
     MEMORY_BASIC_INFORMATION mbi;
 
-    LPCVOID lpAddress = (const void *)((SIZE_T)address & ~(dwPageSize - 1));
+    LPCVOID lpAddress = (const void *)((SIZE_T)address & ~(SIZE_T)(dwPageSize - 1));
 
     if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != sizeof mbi) {
         return false;
