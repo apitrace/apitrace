@@ -76,12 +76,17 @@ public:
 };
 
 
+void *
+toPointer(Trace::Value &value);
+
+
 /**
  * Output verbosity when retracing files.
  */
 extern int verbosity;
 
 
+void retrace_call_stdc(Trace::Call &call);
 void retrace_call(Trace::Call &call);
 
 void ignore(Trace::Call &call);

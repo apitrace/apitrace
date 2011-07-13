@@ -1,0 +1,184 @@
+/**************************************************************************
+ *
+ * Copyright 2011 Jose Fonseca
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ **************************************************************************/
+
+
+#include <assert.h>
+
+#include <string.h>
+
+#include "glproc.hpp"
+
+
+
+#include "trace_parser.hpp"
+#include "retrace.hpp"
+
+
+namespace retrace {
+
+struct Region
+{
+    void *buffer;
+    unsigned long long size;
+};
+
+typedef std::map<unsigned long long, Region> RegionMap;
+static RegionMap regionMap;
+
+void
+addRegion(unsigned long long address, void *buffer, unsigned long long size)
+{
+    assert(buffer);
+
+    Region region;
+    region.buffer = buffer;
+    region.size = size;
+
+    regionMap[address] = region;
+}
+
+RegionMap::iterator
+lookupRegion(unsigned long long address) {
+    RegionMap::iterator it = regionMap.lower_bound(address);
+
+    if (it == regionMap.end() ||
+        it->first > address) {
+        if (it == regionMap.begin()) {
+            return regionMap.end();
+        } else {
+            --it;
+        }
+    }
+
+    assert(it->first <= address);
+    assert(it->first + it->second.size >= address);
+    return it;
+}
+
+void
+delRegion(unsigned long long address) {
+    RegionMap::iterator it = lookupRegion(address);
+    if (it != regionMap.end()) {
+        regionMap.erase(it);
+    } else {
+        assert(0);
+    }
+}
+
+void *
+lookupAddress(unsigned long long address) {
+    RegionMap::iterator it = lookupRegion(address);
+    if (it != regionMap.end()) {
+        unsigned long long offset = address - it->first;
+        assert(offset < it->second.size);
+        return (char *)it->second.buffer + offset;
+    }
+
+    if (address >= 0x00400000) {
+        std::cerr << "warning: could not translate address 0x" << std::hex << address << std::dec << "\n";
+    }
+
+    return (void *)(uintptr_t)address;
+}
+
+
+class Translator : protected Trace::Visitor
+{
+protected:
+    void *result;
+
+    void visit(Trace::Null *) {
+        result = NULL;
+    }
+
+    void visit(Trace::Blob *blob) {
+        result = blob->buf;
+    }
+
+    void visit(Trace::Pointer *p) {
+        result = lookupAddress(p->value);
+    }
+
+public:
+    Translator(void) :
+        result(NULL)
+    {}
+
+    void * operator() (Trace::Value *node) {
+        _visit(node);
+        return result;
+    }
+};
+
+
+void *
+toPointer(Trace::Value &value) {
+    return Translator() (&value);
+}
+
+
+static void retrace_malloc(Trace::Call &call) {
+    size_t size = call.arg(0).toUInt();
+    unsigned long long address = call.ret->toUIntPtr();
+
+    if (!address) {
+        return;
+    }
+
+    void *buffer = malloc(size);
+    if (!buffer) {
+        std::cerr << "error: failed to allocated " << size << " bytes.";
+        return;
+    }
+
+    addRegion(address, buffer, size);
+}
+
+
+static void retrace_memcpy(Trace::Call &call) {
+    void * dest = toPointer(call.arg(0));
+    void * src  = toPointer(call.arg(1));
+    size_t n    = call.arg(2).toUInt();
+
+    if (!dest || !src || !n) {
+        return;
+    }
+
+    memcpy(dest, src, n);
+}
+
+
+static const retrace::Entry callbacks[] = {
+    {"malloc", &retrace_malloc},
+    {"memcpy", &retrace_memcpy},
+};
+
+
+void retrace_call_stdc(Trace::Call &call) {
+    retrace::dispatch(call, callbacks, sizeof(callbacks)/sizeof(callbacks[0]));
+}
+
+
+} /* retrace */

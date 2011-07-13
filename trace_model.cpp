@@ -150,18 +150,18 @@ void Blob   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
 
 
-void Visitor::visit(Null *) { assert(0); }
-void Visitor::visit(Bool *) { assert(0); }
-void Visitor::visit(SInt *) { assert(0); }
-void Visitor::visit(UInt *) { assert(0); }
-void Visitor::visit(Float *) { assert(0); }
-void Visitor::visit(String *) { assert(0); }
-void Visitor::visit(Enum *node) { assert(0); }
+void Visitor::visit(Null *)        { assert(0); }
+void Visitor::visit(Bool *)        { assert(0); }
+void Visitor::visit(SInt *)        { assert(0); }
+void Visitor::visit(UInt *)        { assert(0); }
+void Visitor::visit(Float *)       { assert(0); }
+void Visitor::visit(String *)      { assert(0); }
+void Visitor::visit(Enum *node)    { assert(0); }
 void Visitor::visit(Bitmask *node) { visit(static_cast<UInt *>(node)); }
-void Visitor::visit(Struct *) { assert(0); }
-void Visitor::visit(Array *) { assert(0); }
-void Visitor::visit(Blob *) { assert(0); }
-void Visitor::visit(Pointer *) { assert(0); }
+void Visitor::visit(Struct *)      { assert(0); }
+void Visitor::visit(Array *)       { assert(0); }
+void Visitor::visit(Blob *)        { assert(0); }
+void Visitor::visit(Pointer *)     { assert(0); }
 
 
 class Dumper : public Visitor
