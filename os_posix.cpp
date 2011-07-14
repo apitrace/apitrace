@@ -77,6 +77,15 @@ GetProcessName(char *str, size_t size)
     ssize_t len;
     len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
     if (len == -1) {
+        // /proc/self/exe is not available on setuid processes, so fallback to
+        // /proc/self/cmdline.
+        int fd = open("/proc/self/cmdline", O_RDONLY);
+        if (fd >= 0) {
+            len = read(fd, szProcessPath, sizeof(szProcessPath) - 1);
+            close(fd);
+        }
+    }
+    if (len <= 0) {
         snprintf(str, size, "%i", (int)getpid());
         return true;
     }
