@@ -31,6 +31,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
