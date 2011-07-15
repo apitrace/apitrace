@@ -246,7 +246,13 @@ if (WIN32)
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
         DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glparams.py gltypes.py winapi.py stdapi.py
     )
-    add_library (wgltrace MODULE opengl32.def wgltrace.cpp trace_writer.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (wgltrace MODULE opengl32.def
+        wgltrace.cpp
+        glcaps.cpp
+        trace_writer.cpp
+        os_win32.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+    )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32
@@ -266,7 +272,13 @@ elseif (APPLE)
         DEPENDS cgltrace.py gltrace.py trace.py cglapi.py glapi.py glparams.py gltypes.py stdapi.py
     )
 
-    add_library (cgltrace SHARED cgltrace.cpp trace_writer.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (cgltrace SHARED
+        cgltrace.cpp
+        glcaps.cpp
+        trace_writer.cpp
+        os_posix.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+    )
 
     set_target_properties (cgltrace PROPERTIES
         # OpenGL framework name
@@ -291,6 +303,7 @@ else ()
     add_library (glxtrace SHARED
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         glxtrace.cpp
+        glcaps.cpp
         glsnapshot.cpp
         trace_writer.cpp
         image.cpp

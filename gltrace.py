@@ -107,6 +107,8 @@ class GlTracer(Tracer):
     def header(self, api):
         Tracer.header(self, api)
 
+        print '#include "gltrace.hpp"'
+        print
         print '// Whether user arrays were used'
         print 'static bool __user_arrays = false;'
         print 'static bool __user_arrays_arb = false;'
@@ -497,6 +499,10 @@ class GlTracer(Tracer):
             # These functions have been dispatched already
             return
 
+        # We implement the GREMEDY extensions, not the driver
+        if function.name in ('glStringMarkerGREMEDY', 'glFrameTerminatorGREMEDY'):
+            return
+
         Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
@@ -523,6 +529,17 @@ class GlTracer(Tracer):
 
     def wrap_ret(self, function, instance):
         Tracer.wrap_ret(self, function, instance)
+
+        if function.name == 'glGetString':
+            print '    if (__result) {'
+            print '        switch (name) {'
+            print '        case GL_EXTENSIONS:'
+            print '            __result = gltrace::translateExtensionsString(__result);'
+            print '            break;'
+            print '        default:'
+            print '            break;'
+            print '        }'
+            print '    }'
             
         if function.name in ('glMapBuffer', 'glMapBufferARB'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
