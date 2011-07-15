@@ -101,7 +101,7 @@ if __name__ == '__main__':
     for f in api.functions:
         ptype = function_pointer_type(f)
         pvalue = function_pointer_value(f)
-        print '    if (!strcmp("%s", (const char *)procName)) {' % f.name
+        print '    if (strcmp("%s", (const char *)procName) == 0) {' % f.name
         print '        %s = (%s)procPtr;' % (pvalue, ptype)
         print '        return (__GLXextFuncPtr)&%s;' % (f.name,)
         print '    }'

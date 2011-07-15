@@ -494,13 +494,30 @@ class GlTracer(Tracer):
 
         Tracer.trace_function_impl_body(self, function)
 
+    gremedy_functions = [
+        'glStringMarkerGREMEDY',
+        'glFrameTerminatorGREMEDY',
+    ]
+
     def dispatch_function(self, function):
         if function.name in ('glLinkProgram', 'glLinkProgramARB'):
             # These functions have been dispatched already
             return
 
         # We implement the GREMEDY extensions, not the driver
-        if function.name in ('glStringMarkerGREMEDY', 'glFrameTerminatorGREMEDY'):
+        if function.name in self.gremedy_functions:
+            return
+
+        if function.name in ('glXGetProcAddress', 'glXGetProcAddressARB', 'wglGetProcAddress'):
+            if_ = 'if'
+            for gremedy_function in self.gremedy_functions:
+                print '    %s (strcmp("%s", (const char *)%s) == 0) {' % (if_, gremedy_function, function.args[0].name)
+                print '        __result = (%s)&%s;' % (function.type, gremedy_function)
+                print '    }'
+                if_ = 'else if'
+            print '    else {'
+            Tracer.dispatch_function(self, function)
+            print '    }'
             return
 
         Tracer.dispatch_function(self, function)
