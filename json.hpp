@@ -34,8 +34,9 @@
 #include <stddef.h>
 #include <wchar.h>
 
-#include <ostream>
 #include <iomanip>
+#include <ostream>
+#include <string>
 
 
 class JSONWriter
@@ -240,6 +241,10 @@ public:
         value = false;
     }
 
+    inline void beginMember(const std::string &name) {
+        beginMember(name.c_str());
+    }
+
     inline void endMember(void) {
         assert(value);
         value = true;
@@ -269,6 +274,10 @@ public:
         escapeUnicodeString(s);
         value = true;
         space = ' ';
+    }
+
+    inline void writeString(const std::string &s) {
+        writeString(s.c_str());
     }
 
     inline void writeBase64(const void *bytes, size_t size) {

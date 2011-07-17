@@ -25,8 +25,10 @@
 
 
 #include <string.h>
-#include <iostream>
+
 #include <algorithm>
+#include <iostream>
+#include <map>
 
 #include "image.hpp"
 #include "json.hpp"
@@ -76,8 +78,13 @@ restorePixelPackState(void) {
 }
 
 
+// Mapping from shader type to shader source, used to accumulated the sources
+// of different shaders with same type.
+typedef std::map<std::string, std::string> ShaderMap;
+
+
 static void
-dumpShader(JSONWriter &json, GLuint shader)
+getShaderSource(ShaderMap &shaderMap, GLuint shader)
 {
     if (!shader) {
         return;
@@ -100,16 +107,14 @@ dumpShader(JSONWriter &json, GLuint shader)
     source[0] = 0;
     glGetShaderSource(shader, source_length, &length, source);
 
-    json.beginMember(enumToString(shader_type));
-    json.writeString(source);
-    json.endMember();
+    shaderMap[enumToString(shader_type)] += source;
 
     delete [] source;
 }
 
 
 static void
-dumpShaderObj(JSONWriter &json, GLhandleARB shaderObj)
+getShaderObjSource(ShaderMap &shaderMap, GLhandleARB shaderObj)
 {
     if (!shaderObj) {
         return;
@@ -132,9 +137,7 @@ dumpShaderObj(JSONWriter &json, GLhandleARB shaderObj)
     source[0] = 0;
     glGetShaderSource(shaderObj, source_length, &length, source);
 
-    json.beginMember(enumToString(shader_type));
-    json.writeString(source);
-    json.endMember();
+    shaderMap[enumToString(shader_type)] += source;
 
     delete [] source;
 }
@@ -155,13 +158,21 @@ dumpCurrentProgram(JSONWriter &json)
         return;
     }
 
+    ShaderMap shaderMap;
+
     GLuint *shaders = new GLuint[attached_shaders];
     GLsizei count = 0;
     glGetAttachedShaders(program, attached_shaders, &count, shaders);
     for (GLsizei i = 0; i < count; ++ i) {
-       dumpShader(json, shaders[i]);
+       getShaderSource(shaderMap, shaders[i]);
     }
     delete [] shaders;
+
+    for (ShaderMap::const_iterator it = shaderMap.begin(); it != shaderMap.end(); ++it) {
+        json.beginMember(it->first);
+        json.writeString(it->second);
+        json.endMember();
+    }
 }
 
 
@@ -179,13 +190,21 @@ dumpCurrentProgramObj(JSONWriter &json)
         return;
     }
 
+    ShaderMap shaderMap;
+
     GLhandleARB *shaderObjs = new GLhandleARB[attached_shaders];
     GLsizei count = 0;
     glGetAttachedObjectsARB(programObj, attached_shaders, &count, shaderObjs);
     for (GLsizei i = 0; i < count; ++ i) {
-       dumpShaderObj(json, shaderObjs[i]);
+       getShaderObjSource(shaderMap, shaderObjs[i]);
     }
     delete [] shaderObjs;
+
+    for (ShaderMap::const_iterator it = shaderMap.begin(); it != shaderMap.end(); ++it) {
+        json.beginMember(it->first);
+        json.writeString(it->second);
+        json.endMember();
+    }
 }
 
 
