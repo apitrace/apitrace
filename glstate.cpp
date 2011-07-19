@@ -163,6 +163,7 @@ dumpCurrentProgram(JSONWriter &json)
     GLuint *shaders = new GLuint[attached_shaders];
     GLsizei count = 0;
     glGetAttachedShaders(program, attached_shaders, &count, shaders);
+    std::sort(shaders, shaders + count);
     for (GLsizei i = 0; i < count; ++ i) {
        getShaderSource(shaderMap, shaders[i]);
     }
@@ -195,6 +196,7 @@ dumpCurrentProgramObj(JSONWriter &json)
     GLhandleARB *shaderObjs = new GLhandleARB[attached_shaders];
     GLsizei count = 0;
     glGetAttachedObjectsARB(programObj, attached_shaders, &count, shaderObjs);
+    std::sort(shaderObjs, shaderObjs + count);
     for (GLsizei i = 0; i < count; ++ i) {
        getShaderObjSource(shaderMap, shaderObjs[i]);
     }
