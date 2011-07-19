@@ -68,6 +68,212 @@ __gl_type_size(GLenum type)
     }
 }
 
+static inline void
+__gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
+    switch (type) {
+    case GL_FLOAT:
+        elemType = GL_FLOAT;
+        numElems = 1;
+        break;
+    case GL_FLOAT_VEC2:
+        elemType = GL_FLOAT;
+        numElems = 2;
+        break;
+    case GL_FLOAT_VEC3:
+        elemType = GL_FLOAT;
+        numElems = 3;
+        break;
+    case GL_FLOAT_VEC4:
+        elemType = GL_FLOAT;
+        numElems = 4;
+        break;
+    case GL_DOUBLE:
+        elemType = GL_DOUBLE;
+        numElems = 1;
+        break;
+    case GL_DOUBLE_VEC2:
+        elemType = GL_DOUBLE;
+        numElems = 2;
+        break;
+    case GL_DOUBLE_VEC3:
+        elemType = GL_DOUBLE;
+        numElems = 3;
+        break;
+    case GL_DOUBLE_VEC4:
+        elemType = GL_DOUBLE;
+        numElems = 4;
+        break;
+    case GL_INT:
+        elemType = GL_INT;
+        numElems = 1;
+        break;
+    case GL_INT_VEC2:
+        elemType = GL_INT;
+        numElems = 2;
+        break;
+    case GL_INT_VEC3:
+        elemType = GL_INT;
+        numElems = 3;
+        break;
+    case GL_INT_VEC4:
+        elemType = GL_INT;
+        numElems = 4;
+        break;
+    case GL_UNSIGNED_INT:
+        elemType = GL_UNSIGNED_INT;
+        numElems = 1;
+        break;
+    case GL_UNSIGNED_INT_VEC2:
+        elemType = GL_UNSIGNED_INT;
+        numElems = 2;
+        break;
+    case GL_UNSIGNED_INT_VEC3:
+        elemType = GL_UNSIGNED_INT;
+        numElems = 3;
+        break;
+    case GL_UNSIGNED_INT_VEC4:
+        elemType = GL_UNSIGNED_INT;
+        numElems = 4;
+        break;
+    case GL_BOOL:
+        elemType = GL_BOOL;
+        numElems = 1;
+        break;
+    case GL_BOOL_VEC2:
+        elemType = GL_BOOL;
+        numElems = 2;
+        break;
+    case GL_BOOL_VEC3:
+        elemType = GL_BOOL;
+        numElems = 3;
+        break;
+    case GL_BOOL_VEC4:
+        elemType = GL_BOOL;
+        numElems = 4;
+        break;
+    case GL_FLOAT_MAT2:
+        elemType = GL_FLOAT;
+        numElems = 2*2;
+        break;
+    case GL_FLOAT_MAT3:
+        elemType = GL_FLOAT;
+        numElems = 3*3;
+        break;
+    case GL_FLOAT_MAT4:
+        elemType = GL_FLOAT;
+        numElems = 4*4;
+        break;
+    case GL_FLOAT_MAT2x3:
+        elemType = GL_FLOAT;
+        numElems = 2*3;
+        break;
+    case GL_FLOAT_MAT2x4:
+        elemType = GL_FLOAT;
+        numElems = 2*4;
+        break;
+    case GL_FLOAT_MAT3x2:
+        elemType = GL_FLOAT;
+        numElems = 3*2;
+        break;
+    case GL_FLOAT_MAT3x4:
+        elemType = GL_FLOAT;
+        numElems = 3*4;
+        break;
+    case GL_FLOAT_MAT4x2:
+        elemType = GL_FLOAT;
+        numElems = 4*2;
+        break;
+    case GL_FLOAT_MAT4x3:
+        elemType = GL_FLOAT;
+        numElems = 4*3;
+        break;
+    case GL_DOUBLE_MAT2:
+        elemType = GL_DOUBLE;
+        numElems = 2*2;
+        break;
+    case GL_DOUBLE_MAT3:
+        elemType = GL_DOUBLE;
+        numElems = 3*3;
+        break;
+    case GL_DOUBLE_MAT4:
+        elemType = GL_DOUBLE;
+        numElems = 4*4;
+        break;
+    case GL_DOUBLE_MAT2x3:
+        elemType = GL_DOUBLE;
+        numElems = 2*3;
+        break;
+    case GL_DOUBLE_MAT2x4:
+        elemType = GL_DOUBLE;
+        numElems = 2*4;
+        break;
+    case GL_DOUBLE_MAT3x2:
+        elemType = GL_DOUBLE;
+        numElems = 3*2;
+        break;
+    case GL_DOUBLE_MAT3x4:
+        elemType = GL_DOUBLE;
+        numElems = 3*4;
+        break;
+    case GL_DOUBLE_MAT4x2:
+        elemType = GL_DOUBLE;
+        numElems = 4*2;
+        break;
+    case GL_DOUBLE_MAT4x3:
+        elemType = GL_DOUBLE;
+        numElems = 4*3;
+        break;
+    case GL_SAMPLER_1D:
+    case GL_SAMPLER_2D:
+    case GL_SAMPLER_3D:
+    case GL_SAMPLER_CUBE:
+    case GL_SAMPLER_1D_SHADOW:
+    case GL_SAMPLER_2D_SHADOW:
+    case GL_SAMPLER_1D_ARRAY:
+    case GL_SAMPLER_2D_ARRAY:
+    case GL_SAMPLER_CUBE_MAP_ARRAY:
+    case GL_SAMPLER_1D_ARRAY_SHADOW:
+    case GL_SAMPLER_2D_ARRAY_SHADOW:
+    case GL_SAMPLER_2D_MULTISAMPLE:
+    case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_SAMPLER_CUBE_SHADOW:
+    case GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW:
+    case GL_SAMPLER_BUFFER:
+    case GL_SAMPLER_2D_RECT:
+    case GL_SAMPLER_2D_RECT_SHADOW:
+    case GL_INT_SAMPLER_1D:
+    case GL_INT_SAMPLER_2D:
+    case GL_INT_SAMPLER_3D:
+    case GL_INT_SAMPLER_CUBE:
+    case GL_INT_SAMPLER_1D_ARRAY:
+    case GL_INT_SAMPLER_2D_ARRAY:
+    case GL_INT_SAMPLER_CUBE_MAP_ARRAY:
+    case GL_INT_SAMPLER_2D_MULTISAMPLE:
+    case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_INT_SAMPLER_BUFFER:
+    case GL_INT_SAMPLER_2D_RECT:
+    case GL_UNSIGNED_INT_SAMPLER_1D:
+    case GL_UNSIGNED_INT_SAMPLER_2D:
+    case GL_UNSIGNED_INT_SAMPLER_3D:
+    case GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+    case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_BUFFER:
+    case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+        elemType = GL_INT;
+        numElems = 1;
+        break;
+    default:
+        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+        elemType = GL_NONE;
+        numElems = 0;
+        return;
+    }
+}
+    
 static inline size_t
 __glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
 {

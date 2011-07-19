@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <sstream>
 
 #include "image.hpp"
 #include "json.hpp"
@@ -209,41 +210,86 @@ dumpCurrentProgramObj(JSONWriter &json)
     }
 }
 
-static void
-dumpUniform(JSONWriter &json, GLint program, GLenum type, const GLchar *name) {
-    
-    GLenum basicType;
-    GLint length;
 
-    switch (type) {
-    case GL_FLOAT_VEC4:
-        basicType = GL_FLOAT;
-        length = 4;
-        break;
-    case GL_FLOAT_MAT4:
-        basicType = GL_FLOAT;
-        length = 4*4;
-        break;
-    default:
-        json.writeNull();
+static void
+dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLchar *name) {
+    
+    GLenum elemType;
+    GLint numElems;
+    __gl_uniform_size(type, elemType, numElems);
+    if (elemType == GL_NONE) {
         return;
     }
-    
-    GLint location = glGetUniformLocation(program, name);
 
     GLfloat fvalues[4*4];
+    GLdouble dvalues[4*4];
+    GLint ivalues[4*4];
+    GLuint uivalues[4*4];
 
-    json.beginArray();
-    switch (basicType) {
-    case GL_FLOAT:
-        glGetUniformfv(program, location, fvalues);
-        for (GLint index = 0; index < length; ++index) {
-            json.writeNumber(fvalues[index]);
+    GLint i, j;
+
+    for (i = 0; i < size; ++i) {
+        std::stringstream ss;
+        ss << name;
+
+        if (size > 1) {
+            ss << '[' << i << ']';
         }
-        break;
+
+        std::string elemName = ss.str();
+
+        json.beginMember(elemName);
+
+        GLint location = glGetUniformLocation(program, elemName.c_str());
+
+        if (numElems > 1) {
+            json.beginArray();
+        }
+
+        switch (elemType) {
+        case GL_FLOAT:
+            glGetUniformfv(program, location, fvalues);
+            for (j = 0; j < numElems; ++j) {
+                json.writeNumber(fvalues[j]);
+            }
+            break;
+        case GL_DOUBLE:
+            glGetUniformdv(program, location, dvalues);
+            for (j = 0; j < numElems; ++j) {
+                json.writeNumber(dvalues[j]);
+            }
+            break;
+        case GL_INT:
+            glGetUniformiv(program, location, ivalues);
+            for (j = 0; j < numElems; ++j) {
+                json.writeNumber(ivalues[j]);
+            }
+            break;
+        case GL_UNSIGNED_INT:
+            glGetUniformuiv(program, location, uivalues);
+            for (j = 0; j < numElems; ++j) {
+                json.writeNumber(uivalues[j]);
+            }
+            break;
+        case GL_BOOL:
+            glGetUniformiv(program, location, ivalues);
+            for (j = 0; j < numElems; ++j) {
+                json.writeBool(ivalues[j]);
+            }
+            break;
+        default:
+            assert(0);
+            break;
+        }
+
+        if (numElems > 1) {
+            json.endArray();
+        }
+
+        json.endMember();
     }
-    json.endArray();
 }
+
 
 static inline void
 dumpCurrentProgramUniforms(JSONWriter &json)
@@ -273,18 +319,7 @@ dumpCurrentProgramUniforms(JSONWriter &json)
         GLenum type = GL_NONE;
         glGetActiveUniform(program, index, active_uniform_max_length, &length, &size, &type, name);
 
-
-        json.beginMember(name);
-        json.beginObject();
-        json.writeNumberMember("size", size);
-        json.writeStringMember("type", enumToString(type));
-        
-        json.beginMember("value");
-        dumpUniform(json, program, type, name);
-        json.endMember();
-
-        json.endObject();
-        json.endMember();
+        dumpUniform(json, program, size, type, name);
     }
 
     delete [] name;
