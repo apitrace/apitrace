@@ -240,6 +240,7 @@ dumpShaders(JSONWriter &json)
     json.beginMember("shaders");
     json.beginObject();
     dumpCurrentProgram(json);
+    dumpCurrentProgramObj(json);
     dumpArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);
     dumpArbProgram(json, GL_VERTEX_PROGRAM_ARB);
     json.endObject();
