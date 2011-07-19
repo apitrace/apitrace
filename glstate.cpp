@@ -209,6 +209,87 @@ dumpCurrentProgramObj(JSONWriter &json)
     }
 }
 
+static void
+dumpUniform(JSONWriter &json, GLint program, GLenum type, const GLchar *name) {
+    
+    GLenum basicType;
+    GLint length;
+
+    switch (type) {
+    case GL_FLOAT_VEC4:
+        basicType = GL_FLOAT;
+        length = 4;
+        break;
+    case GL_FLOAT_MAT4:
+        basicType = GL_FLOAT;
+        length = 4*4;
+        break;
+    default:
+        json.writeNull();
+        return;
+    }
+    
+    GLint location = glGetUniformLocation(program, name);
+
+    GLfloat fvalues[4*4];
+
+    json.beginArray();
+    switch (basicType) {
+    case GL_FLOAT:
+        glGetUniformfv(program, location, fvalues);
+        for (GLint index = 0; index < length; ++index) {
+            json.writeNumber(fvalues[index]);
+        }
+        break;
+    }
+    json.endArray();
+}
+
+static inline void
+dumpCurrentProgramUniforms(JSONWriter &json)
+{
+    GLint program = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    if (!program) {
+        return;
+    }
+
+    GLint active_uniforms = 0;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &active_uniforms);
+    if (!active_uniforms) {
+        return;
+    }
+
+    GLint active_uniform_max_length = 0;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &active_uniform_max_length);
+    GLchar *name = new GLchar[active_uniform_max_length];
+    if (!name) {
+        return;
+    }
+
+    for (GLint index = 0; index < active_uniforms; ++index) {
+        GLsizei length = 0;
+        GLint size = 0;
+        GLenum type = GL_NONE;
+        glGetActiveUniform(program, index, active_uniform_max_length, &length, &size, &type, name);
+
+
+        json.beginMember(name);
+        json.beginObject();
+        json.writeNumberMember("size", size);
+        json.writeStringMember("type", enumToString(type));
+        
+        json.beginMember("value");
+        dumpUniform(json, program, type, name);
+        json.endMember();
+
+        json.endObject();
+        json.endMember();
+    }
+
+    delete [] name;
+}
+
 
 static inline void
 dumpArbProgram(JSONWriter &json, GLenum target)
@@ -246,7 +327,18 @@ dumpShaders(JSONWriter &json)
     dumpArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);
     dumpArbProgram(json, GL_VERTEX_PROGRAM_ARB);
     json.endObject();
-    json.endMember(); //shaders
+    json.endMember(); // shaders
+}
+
+
+static inline void
+dumpUniforms(JSONWriter &json)
+{
+    json.beginMember("uniforms");
+    json.beginObject();
+    dumpCurrentProgramUniforms(json);
+    json.endObject();
+    json.endMember(); // uniforms
 }
 
 
@@ -1020,6 +1112,7 @@ void dumpCurrentContext(std::ostream &os)
 
     dumpParameters(json);
     dumpShaders(json);
+    dumpUniforms(json);
     dumpTextures(json);
     dumpFramebuffer(json);
 
