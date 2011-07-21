@@ -457,6 +457,67 @@ dumpArbProgram(JSONWriter &json, GLenum target)
 
 
 static inline void
+dumpProgramUniformsARB(JSONWriter &json, GLenum target, const char *prefix)
+{
+    if (!glIsEnabled(target)) {
+        return;
+    }
+
+    GLint program_parameters = 0;
+    glGetProgramivARB(target, GL_PROGRAM_PARAMETERS_ARB, &program_parameters);
+    if (!program_parameters) {
+        return;
+    }
+
+    GLint max_program_local_parameters = 0;
+    glGetProgramivARB(target, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &max_program_local_parameters);
+    for (GLuint index = 0; index < max_program_local_parameters; ++index) {
+        GLdouble params[4] = {0, 0, 0, 0};
+        glGetProgramLocalParameterdvARB(target, index, params);
+
+        if (!params[0] && !params[1] && !params[2] && !params[3]) {
+            continue;
+        }
+
+        char name[256];
+        snprintf(name, sizeof name, "%sprogram.local[%u]", prefix, index);
+
+        json.beginMember(name);
+        json.beginArray();
+        json.writeNumber(params[0]);
+        json.writeNumber(params[1]);
+        json.writeNumber(params[2]);
+        json.writeNumber(params[3]);
+        json.endArray();
+        json.endMember();
+    }
+
+    GLint max_program_env_parameters = 0;
+    glGetProgramivARB(target, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &max_program_env_parameters);
+    for (GLuint index = 0; index < max_program_env_parameters; ++index) {
+        GLdouble params[4] = {0, 0, 0, 0};
+        glGetProgramEnvParameterdvARB(target, index, params);
+
+        if (!params[0] && !params[1] && !params[2] && !params[3]) {
+            continue;
+        }
+
+        char name[256];
+        snprintf(name, sizeof name, "%sprogram.env[%u]", prefix, index);
+
+        json.beginMember(name);
+        json.beginArray();
+        json.writeNumber(params[0]);
+        json.writeNumber(params[1]);
+        json.writeNumber(params[2]);
+        json.writeNumber(params[3]);
+        json.endArray();
+        json.endMember();
+    }
+}
+
+
+static inline void
 dumpShaders(JSONWriter &json)
 {
     json.beginMember("shaders");
@@ -477,6 +538,8 @@ dumpUniforms(JSONWriter &json)
     json.beginObject();
     dumpCurrentProgramUniforms(json);
     dumpCurrentProgramUniformsARB(json);
+    dumpProgramUniformsARB(json, GL_FRAGMENT_PROGRAM_ARB, "fp.");
+    dumpProgramUniformsARB(json, GL_VERTEX_PROGRAM_ARB, "vp.");
     json.endObject();
     json.endMember(); // uniforms
 }
