@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 
 project (apitrace)
 
+option (ENABLE_GUI "Build the Qt-based GUI." ON)
 
 ##############################################################################
 # Find dependencies
@@ -12,8 +13,11 @@ set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
-find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit)
-find_package (QJSON)
+
+if (ENABLE_GUI)
+    find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit REQUIRED)
+    find_package (QJSON REQUIRED)
+endif (ENABLE_GUI)
 
 if (NOT WIN32)
     find_package (X11 REQUIRED)
@@ -392,9 +396,9 @@ install (TARGETS glretrace RUNTIME DESTINATION bin)
 ##############################################################################
 # GUI
 
-if (QT4_FOUND AND QJSON_FOUND)
+if (ENABLE_GUI)
     add_subdirectory(gui)
-endif (QT4_FOUND AND QJSON_FOUND)
+endif (ENABLE_GUI)
 
 
 ##############################################################################
