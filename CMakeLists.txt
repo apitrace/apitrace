@@ -4,6 +4,17 @@ project (apitrace)
 
 
 ##############################################################################
+# Options
+#
+# We use a cached string variable instead of the standard (boolean) OPTION
+# command so that we can default to auto-detecting optional depencies, while
+# still providing a mechanism to force/disable these optional dependencies, as
+# prescribed in http://www.gentoo.org/proj/en/qa/automagic.xmltest
+
+set (ENABLE_GUI "AUTO" CACHE STRING "Enable QT GUI.")
+
+
+##############################################################################
 # Find dependencies
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -12,8 +23,14 @@ set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
-find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit)
-find_package (QJSON)
+
+if (ENABLE_GUI)
+    if (NOT (ENABLE_GUI STREQUAL "AUTO"))
+        set (REQUIRE_GUI REQUIRED)
+    endif ()
+    find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit ${REQUIRE_GUI})
+    find_package (QJSON ${REQUIRE_GUI})
+endif ()
 
 if (NOT WIN32)
     find_package (X11 REQUIRED)
@@ -392,9 +409,9 @@ install (TARGETS glretrace RUNTIME DESTINATION bin)
 ##############################################################################
 # GUI
 
-if (QT4_FOUND AND QJSON_FOUND)
+if (ENABLE_GUI AND QT4_FOUND AND QJSON_FOUND)
     add_subdirectory(gui)
-endif (QT4_FOUND AND QJSON_FOUND)
+endif ()
 
 
 ##############################################################################
