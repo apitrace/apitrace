@@ -11,7 +11,7 @@ project (apitrace)
 # still providing a mechanism to force/disable these optional dependencies, as
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
 
-set (ENABLE_GUI "AUTO" CACHE STRING "Enable QT GUI.")
+set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
 
 ##############################################################################
