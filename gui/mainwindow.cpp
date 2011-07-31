@@ -464,8 +464,6 @@ static void addSurfaceItem(const ApiSurface &surface,
 
 void MainWindow::fillStateForFrame()
 {
-    QVariantMap params;
-
     if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
         return;
 
@@ -484,9 +482,8 @@ void MainWindow::fillStateForFrame()
 
     const ApiTraceState &state = m_selectedEvent->state();
     m_ui.stateTreeWidget->clear();
-    params = state.parameters();
     QList<QTreeWidgetItem *> items;
-    variantMapToItems(params, defaultParams, items);
+    variantMapToItems(state.parameters(), defaultParams, items);
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
 
     QMap<QString, QString> shaderSources = state.shaderSources();
@@ -495,6 +492,11 @@ void MainWindow::fillStateForFrame()
     } else {
         m_sourcesWidget->setShaders(shaderSources);
     }
+
+    m_ui.uniformsTreeWidget->clear();
+    QList<QTreeWidgetItem *> uniformsItems;
+    variantMapToItems(state.uniforms, QVariantMap(), uniformsItems);
+    m_ui.uniformsTreeWidget->insertTopLevelItems(0, uniformsItems);
 
     const QList<ApiTexture> &textures =
         state.textures();

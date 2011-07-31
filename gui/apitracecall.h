@@ -135,10 +135,10 @@ public:
     explicit ApiTraceState(const QVariantMap &parseJson);
 
     bool isEmpty() const;
-    QVariantMap parameters() const;
-    QMap<QString, QString> shaderSources() const;
-    QList<ApiTexture> textures() const;
-    QList<ApiFramebuffer> framebuffers() const;
+    const QVariantMap & parameters() const;
+    const QMap<QString, QString> & shaderSources() const;
+    const QList<ApiTexture> & textures() const;
+    const QList<ApiFramebuffer> & framebuffers() const;
 
 private:
     QVariantMap m_parameters;

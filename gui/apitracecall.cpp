@@ -661,12 +661,12 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
     }
 }
 
-QVariantMap ApiTraceState::parameters() const
+const QVariantMap & ApiTraceState::parameters() const
 {
     return m_parameters;
 }
 
-QMap<QString, QString> ApiTraceState::shaderSources() const
+const QMap<QString, QString> & ApiTraceState::shaderSources() const
 {
     return m_shaderSources;
 }
@@ -676,12 +676,12 @@ bool ApiTraceState::isEmpty() const
     return m_parameters.isEmpty();
 }
 
-QList<ApiTexture> ApiTraceState::textures() const
+const QList<ApiTexture> & ApiTraceState::textures() const
 {
     return m_textures;
 }
 
-QList<ApiFramebuffer> ApiTraceState::framebuffers() const
+const QList<ApiFramebuffer> & ApiTraceState::framebuffers() const
 {
     return m_framebuffers;
 }
