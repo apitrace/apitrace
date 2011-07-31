@@ -607,6 +607,8 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         m_shaderSources[type] = source;
     }
 
+    m_uniforms = parsedJson[QLatin1String("uniforms")].toMap();
+
     QVariantMap textures =
         parsedJson[QLatin1String("textures")].toMap();
     for (itr = textures.constBegin(); itr != textures.constEnd(); ++itr) {
@@ -669,6 +671,11 @@ const QVariantMap & ApiTraceState::parameters() const
 const QMap<QString, QString> & ApiTraceState::shaderSources() const
 {
     return m_shaderSources;
+}
+
+const QVariantMap & ApiTraceState::uniforms() const
+{
+    return m_uniforms;
 }
 
 bool ApiTraceState::isEmpty() const

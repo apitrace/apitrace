@@ -495,7 +495,7 @@ void MainWindow::fillStateForFrame()
 
     m_ui.uniformsTreeWidget->clear();
     QList<QTreeWidgetItem *> uniformsItems;
-    variantMapToItems(state.uniforms, QVariantMap(), uniformsItems);
+    variantMapToItems(state.uniforms(), QVariantMap(), uniformsItems);
     m_ui.uniformsTreeWidget->insertTopLevelItems(0, uniformsItems);
 
     const QList<ApiTexture> &textures =

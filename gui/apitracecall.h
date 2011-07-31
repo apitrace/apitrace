@@ -137,12 +137,14 @@ public:
     bool isEmpty() const;
     const QVariantMap & parameters() const;
     const QMap<QString, QString> & shaderSources() const;
+    const QVariantMap & uniforms() const;
     const QList<ApiTexture> & textures() const;
     const QList<ApiFramebuffer> & framebuffers() const;
 
 private:
     QVariantMap m_parameters;
     QMap<QString, QString> m_shaderSources;
+    QVariantMap m_uniforms;
     QList<ApiTexture> m_textures;
     QList<ApiFramebuffer> m_framebuffers;
 };
