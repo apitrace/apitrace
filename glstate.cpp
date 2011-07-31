@@ -151,14 +151,8 @@ getShaderObjSource(ShaderMap &shaderMap, GLhandleARB shaderObj)
 
 
 static inline void
-dumpCurrentProgram(JSONWriter &json)
+dumpProgram(JSONWriter &json, GLint program)
 {
-    GLint program = 0;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-    if (!program) {
-        return;
-    }
-
     GLint attached_shaders = 0;
     glGetProgramiv(program, GL_ATTACHED_SHADERS, &attached_shaders);
     if (!attached_shaders) {
@@ -185,13 +179,8 @@ dumpCurrentProgram(JSONWriter &json)
 
 
 static inline void
-dumpCurrentProgramObj(JSONWriter &json)
+dumpProgramObj(JSONWriter &json, GLhandleARB programObj)
 {
-    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
-    if (!programObj) {
-        return;
-    }
-
     GLint attached_shaders = 0;
     glGetObjectParameterivARB(programObj, GL_OBJECT_ATTACHED_OBJECTS_ARB, &attached_shaders);
     if (!attached_shaders) {
@@ -368,14 +357,8 @@ dumpUniformARB(JSONWriter &json, GLhandleARB programObj, GLint size, GLenum type
 
 
 static inline void
-dumpCurrentProgramUniforms(JSONWriter &json)
+dumpProgramUniforms(JSONWriter &json, GLint program)
 {
-    GLint program = 0;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-    if (!program) {
-        return;
-    }
-
     GLint active_uniforms = 0;
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &active_uniforms);
     if (!active_uniforms) {
@@ -403,13 +386,8 @@ dumpCurrentProgramUniforms(JSONWriter &json)
 
 
 static inline void
-dumpCurrentProgramUniformsARB(JSONWriter &json)
+dumpProgramObjUniforms(JSONWriter &json, GLhandleARB programObj)
 {
-    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
-    if (!programObj) {
-        return;
-    }
-
     GLint active_uniforms = 0;
     glGetObjectParameterivARB(programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &active_uniforms);
     if (!active_uniforms) {
@@ -463,7 +441,7 @@ dumpArbProgram(JSONWriter &json, GLenum target)
 
 
 static inline void
-dumpProgramUniformsARB(JSONWriter &json, GLenum target, const char *prefix)
+dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
 {
     if (!glIsEnabled(target)) {
         return;
@@ -524,28 +502,36 @@ dumpProgramUniformsARB(JSONWriter &json, GLenum target, const char *prefix)
 
 
 static inline void
-dumpShaders(JSONWriter &json)
+dumpShadersUniforms(JSONWriter &json)
 {
+    GLint program = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+
+    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+
     json.beginMember("shaders");
     json.beginObject();
-    dumpCurrentProgram(json);
-    dumpCurrentProgramObj(json);
-    dumpArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);
-    dumpArbProgram(json, GL_VERTEX_PROGRAM_ARB);
+    if (program) {
+        dumpProgram(json, program);
+    } else if (programObj) {
+        dumpProgramObj(json, programObj);
+    } else {
+        dumpArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);
+        dumpArbProgram(json, GL_VERTEX_PROGRAM_ARB);
+    }
     json.endObject();
     json.endMember(); // shaders
-}
 
-
-static inline void
-dumpUniforms(JSONWriter &json)
-{
     json.beginMember("uniforms");
     json.beginObject();
-    dumpCurrentProgramUniforms(json);
-    dumpCurrentProgramUniformsARB(json);
-    dumpProgramUniformsARB(json, GL_FRAGMENT_PROGRAM_ARB, "fp.");
-    dumpProgramUniformsARB(json, GL_VERTEX_PROGRAM_ARB, "vp.");
+    if (program) {
+        dumpProgramUniforms(json, program);
+    } else if (programObj) {
+        dumpProgramObjUniforms(json, programObj);
+    } else {
+        dumpArbProgramUniforms(json, GL_FRAGMENT_PROGRAM_ARB, "fp.");
+        dumpArbProgramUniforms(json, GL_VERTEX_PROGRAM_ARB, "vp.");
+    }
     json.endObject();
     json.endMember(); // uniforms
 }
@@ -1320,8 +1306,7 @@ void dumpCurrentContext(std::ostream &os)
 #endif
 
     dumpParameters(json);
-    dumpShaders(json);
-    dumpUniforms(json);
+    dumpShadersUniforms(json);
     dumpTextures(json);
     dumpFramebuffer(json);
 
