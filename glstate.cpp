@@ -121,8 +121,14 @@ getShaderObjSource(ShaderMap &shaderMap, GLhandleARB shaderObj)
         return;
     }
 
+    GLint object_type = 0;
+    glGetObjectParameterivARB(shaderObj, GL_OBJECT_TYPE_ARB, &object_type);
+    if (object_type != GL_SHADER_OBJECT_ARB) {
+        return;
+    }
+
     GLint shader_type = 0;
-    glGetObjectParameterivARB(shaderObj, GL_OBJECT_TYPE_ARB, &shader_type);
+    glGetObjectParameterivARB(shaderObj, GL_OBJECT_SUBTYPE_ARB, &shader_type);
     if (!shader_type) {
         return;
     }
