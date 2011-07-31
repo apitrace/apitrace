@@ -612,6 +612,7 @@ void MainWindow::showSelectedSurface()
 void MainWindow::initObjects()
 {
     m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
+    m_ui.uniformsTreeWidget->sortByColumn(0, Qt::AscendingOrder);
 
     m_sourcesWidget = new ShadersSourceWidget(m_ui.shadersTab);
     QVBoxLayout *layout = new QVBoxLayout;
