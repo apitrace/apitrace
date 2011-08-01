@@ -34,25 +34,23 @@
 #ifndef OS_THREAD_H_
 #define OS_THREAD_H_
 
-namespace OS {
-
 #if defined _WIN32
 #include <windows.h>
-typedef HANDLE Thread;
-typedef CRITICAL_SECTION Mutex;
-typedef CONDITION_VARIABLE Condvar;
 #else
 #include <pthread.h> /* POSIX threads headers */
 #include <stdio.h> /* for perror() */
 #include <signal.h>
-typedef pthread_t Thread;
-typedef pthread_mutex_t Mutex;
-typedef pthread_cond_t Condvar;
 #endif
 
+namespace OS {
+
+
 #if defined _WIN32
-#define THREAD_ROUTINE( name, param ) \
-   void * WINAPI name( void *param )
+
+typedef HANDLE Thread;
+typedef CRITICAL_SECTION Mutex;
+
+#define THREAD_ROUTINE WINAPI
 
 static inline Thread ThreadCreate(void *(WINAPI * routine)(void *),
                                   void *param)
@@ -92,10 +90,16 @@ static inline int ThreadDestroy(Thread thread)
 #define MutexUnlock(mutex) \
    LeaveCriticalSection(&mutex)
 
-/* CONDITION_VARIABLE is only available on newer versions of Windows
- * (Server 2008/Vista or later).
+#if 0
+
+/*
+ * CONDITION_VARIABLE is only available on newer versions of Windows
+ * (Server 2008/Vista or later), but we care for XP.
+ *
  * http://msdn.microsoft.com/en-us/library/ms682052(VS.85).aspx
  */
+
+typedef CONDITION_VARIABLE Condvar;
 
 #define CondvarStatic(cond) \
    /*static*/ Condvar cond = CONDITION_VARIABLE_INIT
@@ -117,8 +121,45 @@ static inline int ThreadDestroy(Thread thread)
 
 #else
 
-#define THREAD_ROUTINE( name, param ) \
-   void *name( void *param )
+/*
+ * See http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+ * for potential pitfalls in implementation.
+ */
+typedef DWORD Condvar;
+
+#define CondvarStatic(cond) \
+   /*static*/ pipe_condvar cond = 1
+
+#define CondvarInit(cond) \
+   (void) (cond = 1)
+
+#define CondvarDestroy(cond) \
+   (void) cond
+
+/* Poor man's pthread_cond_wait():
+   Just release the mutex and sleep for one millisecond.
+   The caller's while() loop does all the work. */
+#define CondvarWait(cond, mutex) \
+   do { MutexUnlock(mutex); \
+        Sleep(cond); \
+        MutexLock(mutex); \
+   } while (0)
+
+#define CondvarSignal(cond) \
+   (void) cond
+
+#define CondvarBroadcast(cond) \
+   (void) cond
+
+#endif
+
+#else /* !_WIN32 */
+
+typedef pthread_t Thread;
+typedef pthread_mutex_t Mutex;
+typedef pthread_cond_t Condvar;
+
+#define THREAD_ROUTINE /* */
 
 static inline Thread ThreadCreate(void *(* routine)( void *),
                                   void *param)
@@ -126,6 +167,10 @@ static inline Thread ThreadCreate(void *(* routine)( void *),
    Thread thread;
    sigset_t saved_set, new_set;
    int ret;
+
+   /*
+    * Block signals for new thread when spawning threads.
+    */
 
    sigfillset(&new_set);
    pthread_sigmask(SIG_SETMASK, &new_set, &saved_set);

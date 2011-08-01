@@ -40,7 +40,7 @@
 
 namespace Trace {
 
-static void *
+static void * THREAD_ROUTINE
 gzipWriterThread(void *arg)
 {
     static const int BUFFER_SIZE = 1 * 1024 * 1024;
