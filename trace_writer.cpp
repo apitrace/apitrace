@@ -45,7 +45,6 @@ gzipWriterThread(void *arg)
 {
     static const int BUFFER_SIZE = 1 * 1024 * 1024;
     Trace::WriterThreadData *td = (Trace::WriterThreadData *)arg;
-    char *tempBuffer = new char[BUFFER_SIZE];
 
     std::cerr << "START gzipWriterThread finished = "
               << td->finished
@@ -63,14 +62,14 @@ gzipWriterThread(void *arg)
         }
         int bufSize = std::min(BUFFER_SIZE,
                                td->buffer->sizeToRead());
-        td->buffer->read(tempBuffer, bufSize);
+        gzwrite(gzFile, td->buffer->readPointer(), bufSize);
+        td->buffer->readPointerAdvance(bufSize);
         CondvarSignal(td->readCond);
-        gzwrite(gzFile, tempBuffer, bufSize);
     }
     if (td->buffer->sizeToRead() > 0) {
         int bufSize = td->buffer->sizeToRead();
-        td->buffer->read(tempBuffer, bufSize);
-        gzwrite(gzFile, tempBuffer, bufSize);
+        gzwrite(gzFile, td->buffer->readPointer(), bufSize);
+        td->buffer->readPointerAdvance(bufSize);
     }
 
     std::cerr << "END gzipWriterThread finished = "
@@ -82,7 +81,6 @@ gzipWriterThread(void *arg)
     }
 
     td->running = false;
-    delete [] tempBuffer;
 
     return (void*)true;
 }

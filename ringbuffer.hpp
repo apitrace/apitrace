@@ -21,6 +21,9 @@ public:
 
     void reset();
 
+    char *readPointer() const;
+    void readPointerAdvance(int size);
+
 private:
     char *m_buffer;
     long m_size;

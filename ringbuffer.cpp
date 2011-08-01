@@ -62,9 +62,21 @@ void Ringbuffer::read(char *buffer, int size)
     MutexUnlock(m_mutex);
 }
 
-void OS::Ringbuffer::reset()
+void Ringbuffer::reset()
 {
     m_writePtr = m_buffer;
     m_readPtr = m_buffer;
+}
+
+char * Ringbuffer::readPointer() const
+{
+    return m_readPtr;
+}
+
+void Ringbuffer::readPointerAdvance(int size)
+{
+    MutexLock(m_mutex);
+    m_readPtr += size;
+    MutexUnlock(m_mutex);
 }
 
