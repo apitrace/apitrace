@@ -24,6 +24,13 @@ set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
 
+# compile in debug mode
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 if (ENABLE_GUI)
     if (NOT (ENABLE_GUI STREQUAL "AUTO"))
         set (REQUIRE_GUI REQUIRED)
