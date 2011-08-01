@@ -184,8 +184,14 @@ add_library (common
     ${os}
 )
 
+set_target_properties (common PROPERTIES
+    # Ensure it can be statically linked in shared libraries
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
+)
+
+link_libraries (common)
+
 add_executable (tracedump tracedump.cpp)
-target_link_libraries (tracedump common)
 install (TARGETS tracedump RUNTIME DESTINATION bin) 
 
 
@@ -201,7 +207,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d.py > ${CMAKE_CURRENT_BINARY_DIR}/ddraw.cpp
             DEPENDS d3d.py d3dtypes.py d3dcaps.py ddraw.py trace.py winapi.py stdapi.py
         )
-        add_library (ddraw MODULE ddraw.def ddraw.cpp trace_writer.cpp os_win32.cpp)
+        add_library (ddraw MODULE ddraw.def ddraw.cpp)
         set_target_properties (ddraw
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -218,7 +224,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
             DEPENDS d3d8.py trace.py d3d8types.py d3d8caps.py winapi.py stdapi.py
         )
-        add_library (d3d8 MODULE d3d8.def d3d8.cpp d3dshader.cpp trace_writer.cpp os_win32.cpp)
+        add_library (d3d8 MODULE d3d8.def d3d8.cpp d3dshader.cpp)
         set_target_properties (d3d8
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -235,7 +241,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
             DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py winapi.py stdapi.py
         )
-        add_library (d3d9 MODULE d3d9.def d3d9.cpp d3dshader.cpp trace_writer.cpp os_win32.cpp)
+        add_library (d3d9 MODULE d3d9.def d3d9.cpp d3dshader.cpp)
         set_target_properties (d3d9
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -252,7 +258,7 @@ if (WIN32)
     #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
     #        DEPENDS d3d10misc.py winapi.py stdapi.py
     #    )
-    #    add_library (d3d10 MODULE d3d10.def d3d10.cpp trace_writer.cpp os_win32.cpp)
+    #    add_library (d3d10 MODULE d3d10.def d3d10.cpp)
     #    set_target_properties (d3d10 PROPERTIES PREFIX "")
     #    install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
     #endif (DirectX_D3D10_INCLUDE_DIR)
@@ -266,8 +272,6 @@ if (WIN32)
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
         glcaps.cpp
-        trace_writer.cpp
-        os_win32.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     )
     set_target_properties (wgltrace PROPERTIES
@@ -292,8 +296,6 @@ elseif (APPLE)
     add_library (cgltrace SHARED
         cgltrace.cpp
         glcaps.cpp
-        trace_writer.cpp
-        os_posix.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     )
 
@@ -322,10 +324,6 @@ else ()
         glxtrace.cpp
         glcaps.cpp
         glsnapshot.cpp
-        trace_writer.cpp
-        image.cpp
-        image_png.cpp
-        os_posix.cpp
     )
 
     set_target_properties (glxtrace PROPERTIES
