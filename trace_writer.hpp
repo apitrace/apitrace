@@ -37,12 +37,32 @@
 
 #include "trace_model.hpp"
 
+#include "os_thread.hpp"
+#include "ringbuffer.hpp"
 
 namespace Trace {
 
+    class WriterThreadData {
+    public:
+        WriterThreadData();
+        ~WriterThreadData();
+
+        OS::Ringbuffer *buffer;
+        std::string filename;
+        bool finished;
+        bool running;
+
+        OS::Mutex readMutex;
+        OS::Condvar readCond;
+
+        OS::Mutex writeMutex;
+        OS::Condvar writeCond;
+    };
+
     class Writer {
     protected:
-        void *g_gzFile;
+        OS::Thread m_thread;
+        WriterThreadData *m_threadData;
         unsigned call_no;
 
         std::vector<bool> functions;

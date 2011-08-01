@@ -177,6 +177,7 @@ add_library (common
     trace_parser.cpp
     trace_writer.cpp
     trace_model_writer.cpp
+    ringbuffer.cpp
     image.cpp
     image_bmp.cpp
     image_pnm.cpp
@@ -323,6 +324,7 @@ else ()
         glcaps.cpp
         glsnapshot.cpp
         trace_writer.cpp
+        ringbuffer.cpp
         image.cpp
         image_png.cpp
         os_posix.cpp

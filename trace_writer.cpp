@@ -35,38 +35,123 @@
 #include "os.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
+#include "os_thread.hpp"
 
 
 namespace Trace {
 
+static void *
+gzipWriterThread(void *arg)
+{
+    static const int BUFFER_SIZE = 1 * 1024 * 1024;
+    Trace::WriterThreadData *td = (Trace::WriterThreadData *)arg;
+    char *tempBuffer = new char[BUFFER_SIZE];
+
+    std::cerr << "START gzipWriterThread finished = "
+              << td->finished
+              <<std::endl;
+
+    void *gzFile = gzopen(td->filename.c_str(), "wb");
+    if (!gzFile) {
+        td->running = false;
+        return (void*)false;
+    }
+
+    while (!td->finished) {
+        while (!td->finished && td->buffer->sizeToRead() < BUFFER_SIZE) {
+            CondvarWait(td->writeCond, td->writeMutex);
+        }
+        int bufSize = std::min(BUFFER_SIZE,
+                               td->buffer->sizeToRead());
+        td->buffer->read(tempBuffer, bufSize);
+        CondvarSignal(td->readCond);
+        gzwrite(gzFile, tempBuffer, bufSize);
+        gzflush(gzFile, Z_SYNC_FLUSH);
+    }
+    if (td->buffer->sizeToRead() > 0) {
+        int bufSize = td->buffer->sizeToRead();
+        td->buffer->read(tempBuffer, bufSize);
+        gzwrite(gzFile, tempBuffer, bufSize);
+    }
+
+    std::cerr << "END gzipWriterThread finished = "
+              << td->finished
+              <<std::endl;
+    if (gzFile != NULL) {
+        gzclose(gzFile);
+        gzFile = NULL;
+    }
+
+    td->running = false;
+    delete [] tempBuffer;
+
+    return (void*)true;
+}
+
+
+WriterThreadData::WriterThreadData()
+{
+    buffer = new OS::Ringbuffer;
+    finished = true;
+    running = false;
+
+    MutexInit(writeMutex);
+    CondvarInit(writeCond);
+    MutexInit(readMutex);
+    CondvarInit(readCond);
+}
+
+WriterThreadData::~WriterThreadData()
+{
+    delete buffer;
+
+    MutexDestroy(writeMutex);
+    CondvarDestroy(writeCond);
+    MutexDestroy(readMutex);
+    CondvarDestroy(readCond);
+}
 
 Writer::Writer() :
-    g_gzFile(NULL),
     call_no(0)
 {
-    close();
+    m_threadData = new WriterThreadData;
 };
 
 Writer::~Writer() {
     close();
+
+    delete m_threadData;
 };
 
 void
 Writer::close(void) {
-    if (g_gzFile != NULL) {
-        gzclose(g_gzFile);
-        g_gzFile = NULL;
-    }
+    if (!m_threadData->running)
+        return;
+
+    std::cerr << "close, running =  "
+              << m_threadData->running
+              << ", finished = " <<m_threadData->finished
+              <<std::endl;
+    m_threadData->finished = true;
+    CondvarSignal(m_threadData->writeCond);
+    OS::ThreadWait(m_thread);
+    OS::ThreadDestroy(m_thread);
+    assert(!m_threadData->running);
 }
 
 bool
 Writer::open(const char *filename) {
+        std::cerr << "open, running =  "
+              << m_threadData->running
+              << ", finished = " <<m_threadData->finished
+              <<std::endl;
     close();
 
-    g_gzFile = gzopen(filename, "wb");
-    if (!g_gzFile) {
-        return false;
-    }
+    m_threadData->filename = std::string(filename);
+    m_threadData->buffer->reset();
+    m_threadData->finished = false;
+    m_threadData->running = true;
+    m_thread = OS::ThreadCreate(gzipWriterThread, m_threadData);
 
     call_no = 0;
     functions.clear();
@@ -123,10 +208,13 @@ Writer::open(void) {
 
 void inline
 Writer::_write(const void *sBuffer, size_t dwBytesToWrite) {
-    if (g_gzFile == NULL)
-        return;
+    assert(dwBytesToWrite < m_threadData->buffer->size());
 
-    gzwrite(g_gzFile, sBuffer, dwBytesToWrite);
+    while (dwBytesToWrite >= m_threadData->buffer->sizeToWrite()) {
+        CondvarWait(m_threadData->readCond, m_threadData->readMutex);
+    }
+    m_threadData->buffer->write((char*)sBuffer, dwBytesToWrite);
+    CondvarSignal(m_threadData->writeCond);
 }
 
 void inline
@@ -184,7 +272,7 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
 unsigned Writer::beginEnter(const FunctionSig *sig) {
     OS::AcquireMutex();
 
-    if (!g_gzFile) {
+    if (!m_threadData->running) {
         open();
     }
 
@@ -204,7 +292,6 @@ unsigned Writer::beginEnter(const FunctionSig *sig) {
 
 void Writer::endEnter(void) {
     _writeByte(Trace::CALL_END);
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
     OS::ReleaseMutex();
 }
 
@@ -216,7 +303,6 @@ void Writer::beginLeave(unsigned call) {
 
 void Writer::endLeave(void) {
     _writeByte(Trace::CALL_END);
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
     OS::ReleaseMutex();
 }
 
