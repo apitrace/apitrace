@@ -49,8 +49,16 @@ void Ringbuffer::write(char *buffer, int size)
         return;
     }
     MutexLock(m_mutex);
-    memcpy(m_writePtr, buffer, size);
-    m_writePtr += size;
+    if (m_writePtr + size > m_buffer + m_size) {
+        int endSize = (m_writePtr + size) - (m_buffer + m_size);
+        int beginSize = size - endSize;
+        memcpy(m_writePtr, buffer, endSize);
+        memcpy(m_buffer, buffer + endSize, beginSize);
+        m_writePtr = m_buffer + beginSize;
+    } else {
+        memcpy(m_writePtr, buffer, size);
+        m_writePtr += size;
+    }
     MutexUnlock(m_mutex);
 }
 
@@ -76,7 +84,26 @@ char * Ringbuffer::readPointer() const
 void Ringbuffer::readPointerAdvance(int size)
 {
     MutexLock(m_mutex);
-    m_readPtr += size;
+    if ((m_readPtr + size) > (m_buffer + m_size)) {
+        m_readPtr = m_buffer + readOverflowsBy(size);
+    } else {
+        m_readPtr += size;
+    }
     MutexUnlock(m_mutex);
+}
+
+bool Ringbuffer::readOverflows(int size) const
+{
+    return (m_readPtr + size) > (m_buffer + m_size);
+}
+
+int Ringbuffer::readOverflowsBy(int size) const
+{
+    return (m_readPtr + size) - (m_buffer + m_size);
+}
+
+char * Ringbuffer::buffer()
+{
+    return m_buffer;
 }
 

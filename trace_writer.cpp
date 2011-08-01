@@ -42,6 +42,20 @@ namespace Trace {
 
 static const int BUFFER_SIZE = 1 * 1024 * 1024;
 
+static void
+gzipWriteRing(void *gzFile, OS::Ringbuffer *buffer, int bufSize)
+{
+    if (buffer->readOverflows(bufSize)) {
+        int overflow = buffer->readOverflowsBy(bufSize);
+        gzwrite(gzFile, buffer->readPointer(), bufSize - overflow);
+        gzwrite(gzFile, buffer->buffer(), overflow);
+        buffer->readPointerAdvance(bufSize);
+    } else {
+        gzwrite(gzFile, buffer->readPointer(), bufSize);
+        buffer->readPointerAdvance(bufSize);
+    }
+}
+
 static void * THREAD_ROUTINE
 gzipWriterThread(void *arg)
 {
@@ -63,14 +77,12 @@ gzipWriterThread(void *arg)
         }
         int bufSize = std::min(BUFFER_SIZE,
                                td->buffer->sizeToRead());
-        gzwrite(gzFile, td->buffer->readPointer(), bufSize);
-        td->buffer->readPointerAdvance(bufSize);
+        gzipWriteRing(gzFile, td->buffer, bufSize);
         CondvarSignal(td->readCond);
     }
     if (td->buffer->sizeToRead() > 0) {
         int bufSize = td->buffer->sizeToRead();
-        gzwrite(gzFile, td->buffer->readPointer(), bufSize);
-        td->buffer->readPointerAdvance(bufSize);
+        gzipWriteRing(gzFile, td->buffer, bufSize);
     }
 
     std::cerr << "END gzipWriterThread finished = "
