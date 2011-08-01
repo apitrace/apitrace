@@ -66,7 +66,6 @@ gzipWriterThread(void *arg)
         td->buffer->read(tempBuffer, bufSize);
         CondvarSignal(td->readCond);
         gzwrite(gzFile, tempBuffer, bufSize);
-        gzflush(gzFile, Z_SYNC_FLUSH);
     }
     if (td->buffer->sizeToRead() > 0) {
         int bufSize = td->buffer->sizeToRead();
