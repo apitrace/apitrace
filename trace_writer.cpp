@@ -40,10 +40,11 @@
 
 namespace Trace {
 
+static const int BUFFER_SIZE = 1 * 1024 * 1024;
+
 static void * THREAD_ROUTINE
 gzipWriterThread(void *arg)
 {
-    static const int BUFFER_SIZE = 1 * 1024 * 1024;
     Trace::WriterThreadData *td = (Trace::WriterThreadData *)arg;
 
     std::cerr << "START gzipWriterThread finished = "
@@ -211,7 +212,8 @@ Writer::_write(const void *sBuffer, size_t dwBytesToWrite) {
         CondvarWait(m_threadData->readCond, m_threadData->readMutex);
     }
     m_threadData->buffer->write((char*)sBuffer, dwBytesToWrite);
-    CondvarSignal(m_threadData->writeCond);
+    if (m_threadData->buffer->sizeToRead() >= BUFFER_SIZE)
+        CondvarSignal(m_threadData->writeCond);
 }
 
 void inline
