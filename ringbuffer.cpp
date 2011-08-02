@@ -3,6 +3,8 @@
 
 #include "ringbuffer.hpp"
 
+#include <iostream>
+
 using namespace OS;
 
 Ringbuffer::Ringbuffer(long size)
@@ -44,13 +46,13 @@ int Ringbuffer::sizeToRead() const
 
 void Ringbuffer::write(char *buffer, int size)
 {
-    if (size >= this->size()) {
+    if (size > sizeToWrite()) {
         assert(0);
         return;
     }
     MutexLock(m_mutex);
     if (m_writePtr + size > m_buffer + m_size) {
-        int endSize = (m_writePtr + size) - (m_buffer + m_size);
+        int endSize = (m_buffer + m_size) - m_writePtr;
         int beginSize = size - endSize;
         memcpy(m_writePtr, buffer, endSize);
         memcpy(m_buffer, buffer + endSize, beginSize);
