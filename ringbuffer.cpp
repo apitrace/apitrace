@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+//#define DBG 1
+
 using namespace OS;
 
 Ringbuffer::Ringbuffer(long size)
@@ -46,6 +48,13 @@ int Ringbuffer::sizeToRead() const
 
 void Ringbuffer::write(char *buffer, int size)
 {
+#if DBG
+    std::cerr << "::write toRead = "<<sizeToRead()
+              << ", toWrite = " << sizeToWrite()
+              <<", bufSize = "<<size
+              <<". "
+              << std::endl;
+#endif
     if (size > sizeToWrite()) {
         assert(0);
         return;

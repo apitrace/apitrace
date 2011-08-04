@@ -32,19 +32,30 @@
 
 #include <zlib.h>
 
+
+#include <iostream>
 #include "os.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
 #include "os_thread.hpp"
 
+//#define DBG 1
 
 namespace Trace {
 
-static const int BUFFER_SIZE = 1 * 1024 * 1024;
+static const int BUFFER_SIZE = 2 * 1024 * 1024;
+static const int MIN_BUFFER_SIZE = BUFFER_SIZE / 2;
 
 static void
 gzipWriteRing(void *gzFile, OS::Ringbuffer *buffer, int bufSize)
 {
+#if DBG
+    std::cerr << "::read toRead = "<<buffer->sizeToRead()
+              << ", toWrite = " << buffer->sizeToWrite()
+              <<", bufSize = "<<bufSize
+              <<". "
+              << std::endl;
+#endif
     if (buffer->readOverflows(bufSize)) {
         int overflow = buffer->readOverflowsBy(bufSize);
         gzwrite(gzFile, buffer->readPointer(), bufSize - overflow);
@@ -54,6 +65,9 @@ gzipWriteRing(void *gzFile, OS::Ringbuffer *buffer, int bufSize)
         gzwrite(gzFile, buffer->readPointer(), bufSize);
         buffer->readPointerAdvance(bufSize);
     }
+#if DBG
+    std::cerr << "\t::read end"<<std::endl;
+#endif
 }
 
 static void * THREAD_ROUTINE
@@ -61,9 +75,11 @@ gzipWriterThread(void *arg)
 {
     Trace::WriterThreadData *td = (Trace::WriterThreadData *)arg;
 
+#if DBG
     std::cerr << "START gzipWriterThread finished = "
               << td->finished
               <<std::endl;
+#endif
 
     void *gzFile = gzopen(td->filename.c_str(), "wb");
     if (!gzFile) {
@@ -72,7 +88,10 @@ gzipWriterThread(void *arg)
     }
 
     while (!td->finished) {
-        while (!td->finished && td->buffer->sizeToRead() < BUFFER_SIZE) {
+        while (!td->finished && td->buffer->sizeToRead() < MIN_BUFFER_SIZE) {
+#if DBG
+            std::cerr << "\tread sleep....................." <<std::endl;
+#endif
             CondvarWait(td->writeCond, td->writeMutex);
         }
         int bufSize = std::min(BUFFER_SIZE,
@@ -85,9 +104,11 @@ gzipWriterThread(void *arg)
         gzipWriteRing(gzFile, td->buffer, bufSize);
     }
 
+#if DBG
     std::cerr << "END gzipWriterThread finished = "
               << td->finished
               <<std::endl;
+#endif
     if (gzFile != NULL) {
         gzclose(gzFile);
         gzFile = NULL;
@@ -138,10 +159,12 @@ Writer::close(void) {
     if (!m_threadData->running)
         return;
 
+#if DBG
     std::cerr << "close, running =  "
               << m_threadData->running
               << ", finished = " <<m_threadData->finished
               <<std::endl;
+#endif
     m_threadData->finished = true;
     CondvarSignal(m_threadData->writeCond);
     OS::ThreadWait(m_thread);
@@ -224,7 +247,7 @@ Writer::_write(const void *sBuffer, size_t dwBytesToWrite) {
         CondvarWait(m_threadData->readCond, m_threadData->readMutex);
     }
     m_threadData->buffer->write((char*)sBuffer, dwBytesToWrite);
-    if (m_threadData->buffer->sizeToRead() >= BUFFER_SIZE)
+    if (m_threadData->buffer->sizeToRead() >= MIN_BUFFER_SIZE)
         CondvarSignal(m_threadData->writeCond);
 }
 
