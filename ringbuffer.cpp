@@ -33,7 +33,7 @@ int Ringbuffer::sizeToWrite() const
     if (m_writePtr > m_readPtr) {
         return m_size - (m_writePtr - m_readPtr);
     } else if (m_writePtr == m_readPtr) {
-        return m_size - (m_writePtr - m_buffer);
+        return m_size;
     } else {
         return m_readPtr - m_writePtr;
     }
