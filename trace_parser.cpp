@@ -28,8 +28,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include <zlib.h>
-
+#include "trace_file.hpp"
 #include "trace_parser.hpp"
 
 
@@ -40,7 +39,7 @@ namespace Trace {
 
 
 Parser::Parser() {
-    file = NULL;
+    file = new Trace::ZLibFile;
     next_call_no = 0;
     version = 0;
 }
@@ -48,12 +47,12 @@ Parser::Parser() {
 
 Parser::~Parser() {
     close();
+    delete file;
 }
 
 
 bool Parser::open(const char *filename) {
-    file = gzopen(filename, "rb");
-    if (!file) {
+    if (!file->open(filename, File::Read)) {
         return false;
     }
 
@@ -84,10 +83,7 @@ deleteAll(const Container &c)
 }
 
 void Parser::close(void) {
-    if (file) {
-        gzclose(file);
-        file = NULL;
-    }
+    file->close();
 
     deleteAll(calls);
     deleteAll(functions);
@@ -293,14 +289,14 @@ Value *Parser::parse_uint() {
 
 Value *Parser::parse_float() {
     float value;
-    gzread(file, &value, sizeof value);
+    file->read(&value, sizeof value);
     return new Float(value);
 }
 
 
 Value *Parser::parse_double() {
     double value;
-    gzread(file, &value, sizeof value);
+    file->read(&value, sizeof value);
     return new Float(value);
 }
 
@@ -367,7 +363,7 @@ Value *Parser::parse_blob(void) {
     size_t size = read_uint();
     Blob *blob = new Blob(size);
     if (size) {
-        gzread(file, blob->buf, (unsigned)size);
+        file->read(blob->buf, (unsigned)size);
     }
     return blob;
 }
@@ -412,7 +408,7 @@ const char * Parser::read_string(void) {
     size_t len = read_uint();
     char * value = new char[len + 1];
     if (len) {
-        gzread(file, value, (unsigned)len);
+        file->read(value, (unsigned)len);
     }
     value[len] = 0;
 #if TRACE_VERBOSE
@@ -427,7 +423,7 @@ unsigned long long Parser::read_uint(void) {
     int c;
     unsigned shift = 0;
     do {
-        c = gzgetc(file);
+        c = file->getc();
         if (c == -1) {
             break;
         }
@@ -442,7 +438,7 @@ unsigned long long Parser::read_uint(void) {
 
 
 inline int Parser::read_byte(void) {
-    int c = gzgetc(file);
+    int c = file->getc();
 #if TRACE_VERBOSE
     if (c < 0)
         std::cerr << "\tEOF" << "\n";

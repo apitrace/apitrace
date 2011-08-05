@@ -30,10 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <zlib.h>
-
 #include "os.hpp"
 #include "trace_writer.hpp"
+#include "trace_file.hpp"
 #include "trace_format.hpp"
 
 
@@ -41,30 +40,29 @@ namespace Trace {
 
 
 Writer::Writer() :
-    g_gzFile(NULL),
     call_no(0)
 {
+    m_file = new Trace::ZLibFile;
     close();
-};
+}
 
-Writer::~Writer() {
+Writer::~Writer()
+{
     close();
-};
+    delete m_file;
+    m_file = NULL;
+}
 
 void
 Writer::close(void) {
-    if (g_gzFile != NULL) {
-        gzclose(g_gzFile);
-        g_gzFile = NULL;
-    }
+    m_file->close();
 }
 
 bool
 Writer::open(const char *filename) {
     close();
 
-    g_gzFile = gzopen(filename, "wb");
-    if (!g_gzFile) {
+    if (!m_file->open(filename, File::Write)) {
         return false;
     }
 
@@ -123,10 +121,7 @@ Writer::open(void) {
 
 void inline
 Writer::_write(const void *sBuffer, size_t dwBytesToWrite) {
-    if (g_gzFile == NULL)
-        return;
-
-    gzwrite(g_gzFile, sBuffer, dwBytesToWrite);
+    m_file->write(sBuffer, dwBytesToWrite);
 }
 
 void inline
@@ -184,7 +179,7 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
 unsigned Writer::beginEnter(const FunctionSig *sig) {
     OS::AcquireMutex();
 
-    if (!g_gzFile) {
+    if (!m_file->isOpened()) {
         open();
     }
 
@@ -204,7 +199,7 @@ unsigned Writer::beginEnter(const FunctionSig *sig) {
 
 void Writer::endEnter(void) {
     _writeByte(Trace::CALL_END);
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
+    m_file->flush();
     OS::ReleaseMutex();
 }
 
@@ -216,7 +211,7 @@ void Writer::beginLeave(unsigned call) {
 
 void Writer::endLeave(void) {
     _writeByte(Trace::CALL_END);
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
+    m_file->flush();
     OS::ReleaseMutex();
 }
 

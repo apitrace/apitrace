@@ -36,11 +36,12 @@
 
 namespace Trace {
 
+class File;
 
 class Parser
 {
 protected:
-    void *file;
+    File *file;
 
     typedef std::list<Call *> CallList;
     CallList calls;
