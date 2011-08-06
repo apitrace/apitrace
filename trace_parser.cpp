@@ -195,7 +195,8 @@ bool Parser::parse_call_details(Call *call) {
             call->ret = parse_value();
             break;
         default:
-            std::cerr << "error: unknown call detail " << c << "\n";
+            std::cerr << "error: ("<<call->name()<< ") unknown call detail "
+                      << c << "\n";
             exit(1);
         case -1:
             return false;
