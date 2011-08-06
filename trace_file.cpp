@@ -112,12 +112,12 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
 
 bool ZLibFile::rawWrite(const void *buffer, int length)
 {
-    return gzwrite(m_gzFile, buffer, length);
+    return gzwrite(m_gzFile, buffer, length) != -1;
 }
 
 bool ZLibFile::rawRead(void *buffer, int length)
 {
-    return gzread(m_gzFile, buffer, length);
+    return gzread(m_gzFile, buffer, length) != -1;
 }
 
 char ZLibFile::rawGetc()
