@@ -84,7 +84,7 @@ void File::flush()
     rawFlush();
 }
 
-char File::getc()
+int File::getc()
 {
     if (!m_isOpened || m_mode != File::Read) {
         return 0;
@@ -120,7 +120,7 @@ bool ZLibFile::rawRead(void *buffer, int length)
     return gzread(m_gzFile, buffer, length) != -1;
 }
 
-char ZLibFile::rawGetc()
+int ZLibFile::rawGetc()
 {
     return gzgetc(m_gzFile);
 }
@@ -243,7 +243,7 @@ bool SnappyFile::rawRead(void *buffer, int length)
     return true;
 }
 
-char SnappyFile::rawGetc()
+int SnappyFile::rawGetc()
 {
     char c;
     rawRead(&c, 1);

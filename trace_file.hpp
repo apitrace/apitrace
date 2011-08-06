@@ -26,13 +26,13 @@ public:
     bool read(void *buffer, int length);
     void close();
     void flush();
-    char getc();
+    int getc();
 
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode) = 0;
     virtual bool rawWrite(const void *buffer, int length) = 0;
     virtual bool rawRead(void *buffer, int length) = 0;
-    virtual char rawGetc() = 0;
+    virtual int rawGetc() = 0;
     virtual void rawClose() = 0;
     virtual void rawFlush() = 0;
 
@@ -52,7 +52,7 @@ protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, int length);
     virtual bool rawRead(void *buffer, int length);
-    virtual char rawGetc();
+    virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
 private:
@@ -74,7 +74,7 @@ protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, int length);
     virtual bool rawRead(void *buffer, int length);
-    virtual char rawGetc();
+    virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
 
