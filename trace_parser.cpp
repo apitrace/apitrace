@@ -39,7 +39,7 @@ namespace Trace {
 
 
 Parser::Parser() {
-    file = new Trace::SnappyFile;
+    file = NULL;
     next_call_no = 0;
     version = 0;
 }
@@ -47,11 +47,17 @@ Parser::Parser() {
 
 Parser::~Parser() {
     close();
-    delete file;
 }
 
 
 bool Parser::open(const char *filename) {
+    assert(!file);
+    if (File::isZLibCompressed(filename)) {
+        file = new ZLibFile;
+    } else {
+        file = new SnappyFile;
+    }
+
     if (!file->open(filename, File::Read)) {
         return false;
     }
@@ -84,6 +90,8 @@ deleteAll(const Container &c)
 
 void Parser::close(void) {
     file->close();
+    delete file;
+    file = NULL;
 
     deleteAll(calls);
     deleteAll(functions);

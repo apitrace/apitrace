@@ -89,6 +89,21 @@ int File::getc()
     return rawGetc();
 }
 
+bool File::isZLibCompressed(const std::string &filename)
+{
+    std::fstream stream(filename.c_str(),
+                        std::fstream::binary | std::fstream::in);
+    if (!stream.is_open())
+        return false;
+
+    unsigned char byte1, byte2;
+    stream >> byte1;
+    stream >> byte2;
+    stream.close();
+
+    return (byte1 == 0x1f && byte2 == 0x8b);
+}
+
 ZLibFile::ZLibFile(const std::string &filename,
                    File::Mode mode)
     : File(filename, mode),

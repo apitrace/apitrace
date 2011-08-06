@@ -13,6 +13,8 @@ public:
         Write
     };
 public:
+    static bool isZLibCompressed(const std::string &filename);
+public:
     File(const std::string &filename = std::string(),
          File::Mode mode = File::Read);
     virtual ~File();
