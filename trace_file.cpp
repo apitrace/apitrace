@@ -21,11 +21,9 @@ File::File(const std::string &filename,
     }
 }
 
-static size_t writtenRef = 0;
 
 File::~File()
 {
-    std::cerr << "written ref = "<<writtenRef << std::endl;
     close();
 }
 
@@ -59,7 +57,6 @@ bool File::write(const void *buffer, int length)
     if (!m_isOpened || m_mode != File::Write) {
         return false;
     }
-    writtenRef += length;
     return rawWrite(buffer, length);
 }
 
@@ -153,9 +150,6 @@ SnappyFile::~SnappyFile()
     delete [] m_compressedCache;
 }
 
-static size_t written = 0;
-static size_t writtenComp = 0;
-
 bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
 {
     std::ios_base::openmode fmode = std::fstream::binary;
@@ -177,15 +171,6 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
 
 bool SnappyFile::rawWrite(const void *buffer, int length)
 {
-    static int bufWritten = 0;
-    if (bufWritten < 500) {
-        const char *cbuffer = (const char*)buffer;
-        for (int i = 0; i < length; ++i) {
-            std::cerr << "--- "<<bufWritten << ") "<< (int) cbuffer[i]
-                      << std::endl;
-            ++ bufWritten;
-        }
-    }
     if (freeCacheSize() > length) {
         memcpy(m_cachePtr, buffer, length);
         m_cachePtr += length;
@@ -216,19 +201,19 @@ bool SnappyFile::rawWrite(const void *buffer, int length)
 
 bool SnappyFile::rawRead(void *buffer, int length)
 {
-    std::cerr << "Reading byte = "<< (m_cachePtr - m_cache) << std::endl;
+    if (m_stream.eof()) {
+        return false;
+    }
     if (freeCacheSize() > length) {
         memcpy(buffer, m_cachePtr, length);
         m_cachePtr += length;
     } else if (freeCacheSize() == length) {
         memcpy(buffer, m_cachePtr, length);
         m_cachePtr += length;
-        assert(0);
         flushCache();
     } else {
         int sizeToRead = length;
         int offset = 0;
-        assert(0);
         while (sizeToRead) {
             int chunkSize = std::min(freeCacheSize(), sizeToRead);
             offset = length - sizeToRead;
@@ -245,17 +230,15 @@ bool SnappyFile::rawRead(void *buffer, int length)
 
 int SnappyFile::rawGetc()
 {
-    char c;
-    rawRead(&c, 1);
+    int c = 0;
+    if (!rawRead(&c, 1))
+        return -1;
     return c;
 }
 
 void SnappyFile::rawClose()
 {
     flushCache();
-    std::cerr << "written = "<< written
-              <<", comp = "<< writtenComp
-              << std::endl;
     m_stream.close();
     delete [] m_cache;
     m_cache = NULL;
@@ -272,27 +255,11 @@ void SnappyFile::flushCache()
     if (m_mode == File::Write) {
         size_t compressedLength;
 
-        static bool first = true;
-        if (first) {
-            std::cerr << "Buffer = [";
-            for (int i = 0; i < 512; ++i) {
-                std::cerr << i << " ) "<< (int)m_cache[i] << std::endl;
-            }
-            std::cerr << "]"<<std::endl;
-            first = false;
-        }
-
         ::snappy::RawCompress(m_cache, SNAPPY_CHUNK_SIZE - freeCacheSize(),
                               m_compressedCache, &compressedLength);
 
         m_stream << compressedLength;
         m_stream.write(m_compressedCache, compressedLength);
-        std::cerr << "compressed length = "<<compressedLength
-                  <<" cache size = "<<(SNAPPY_CHUNK_SIZE - freeCacheSize())
-                  <<" (ref = " << SNAPPY_CHUNK_SIZE <<")"
-                  << std::endl;
-        written += SNAPPY_CHUNK_SIZE - freeCacheSize();
-        writtenComp += compressedLength;
         m_cachePtr = m_cache;
     } else if (m_mode == File::Read) {
         if (m_stream.eof())
@@ -303,24 +270,11 @@ void SnappyFile::flushCache()
         m_stream.read((char*)m_compressedCache, compressedLength);
         ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
                                         &m_cacheSize);
-        std::cerr << "compressed length = "<<compressedLength
-                  <<" cache size = "<<m_cacheSize
-                  <<" (ref = " << SNAPPY_CHUNK_SIZE <<")"
-                  << std::endl;
         if (m_cache)
             delete [] m_cache;
         createCache(m_cacheSize);
         ::snappy::RawUncompress(m_compressedCache, compressedLength,
                                 m_cache);
-        static bool first = true;
-        if (first) {
-            std::cerr << "Buffer = [";
-            for (int i = 0; i < 512; ++i) {
-                std::cerr << i << " ) "<< (int)m_cache[i] << std::endl;
-            }
-            std::cerr << "]"<<std::endl;
-            first = false;
-        }
     }
 }
 
