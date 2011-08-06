@@ -39,7 +39,7 @@ namespace Trace {
 
 
 Parser::Parser() {
-    file = new Trace::ZLibFile;
+    file = new Trace::SnappyFile;
     next_call_no = 0;
     version = 0;
 }

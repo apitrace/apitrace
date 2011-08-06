@@ -42,7 +42,7 @@ namespace Trace {
 Writer::Writer() :
     call_no(0)
 {
-    m_file = new Trace::ZLibFile;
+    m_file = new Trace::SnappyFile;
     close();
 }
 
