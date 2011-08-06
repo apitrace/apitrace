@@ -23,6 +23,7 @@ set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
+find_package (Snappy REQUIRED)
 
 if (ENABLE_GUI)
     if (NOT (ENABLE_GUI STREQUAL "AUTO"))
@@ -139,6 +140,8 @@ add_subdirectory (thirdparty/zlib EXCLUDE_FROM_ALL)
 
 include_directories (${ZLIB_INCLUDE_DIRS})
 link_libraries (${ZLIB_LIBRARIES})
+
+link_libraries(${SNAPPY_LIBRARIES})
 
 set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
 set (PNG_DEFINITIONS "")
@@ -339,7 +342,7 @@ else ()
     )
 
     target_link_libraries (glxtrace dl ${X11_X11_LIB})
-    
+
     install (TARGETS glxtrace LIBRARY DESTINATION lib)
 endif ()
 
