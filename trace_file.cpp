@@ -10,6 +10,9 @@
 
 using namespace Trace;
 
+#define SNAPPY_BYTE1 'a'
+#define SNAPPY_BYTE2 't'
+
 File::File(const std::string &filename,
            File::Mode mode)
     : m_filename(filename),
@@ -104,6 +107,23 @@ bool File::isZLibCompressed(const std::string &filename)
     return (byte1 == 0x1f && byte2 == 0x8b);
 }
 
+
+bool File::isSnappyCompressed(const std::string &filename)
+{
+    std::fstream stream(filename.c_str(),
+                        std::fstream::binary | std::fstream::in);
+    if (!stream.is_open())
+        return false;
+
+    unsigned char byte1, byte2;
+    stream >> byte1;
+    stream >> byte2;
+    stream.close();
+
+    return (byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
+}
+
+
 ZLibFile::ZLibFile(const std::string &filename,
                    File::Mode mode)
     : File(filename, mode),
@@ -179,7 +199,17 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
 
     //read in the initial buffer if we're reading
     if (m_stream.is_open() && mode == File::Read) {
+        // read the snappy file identifier
+        unsigned char byte1, byte2;
+        m_stream >> byte1;
+        m_stream >> byte2;
+        assert(byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
+
         flushCache();
+    } else if (m_stream.is_open() && mode == File::Write) {
+        // write the snappy file identifier
+        m_stream << SNAPPY_BYTE1;
+        m_stream << SNAPPY_BYTE2;
     }
     return m_stream.is_open();
 }
