@@ -14,6 +14,14 @@
 static bool
 isVariantEditable(const QVariant &var)
 {
+    if (var.canConvert<ApiArray>()) {
+        ApiArray array = var.value<ApiArray>();
+        QList<QVariant> vals = array.values();
+        if (vals.isEmpty())
+            return false;
+        else
+            return isVariantEditable(vals.first());
+    }
     switch (var.userType()) {
     case QVariant::Bool:
     case QVariant::Int:
@@ -339,6 +347,7 @@ void ArgumentsEditor::accept()
         QString argName = argNames[i];
         QVariant argValue = originalValues[i];
         QVariant editorValue = valueForName(argName, argValue, &valChanged);
+
         newValues.append(editorValue);
 #if 0
         qDebug()<<"Arg = "<<argName;
@@ -366,6 +375,10 @@ QVariant ArgumentsEditor::valueForName(const QString &name,
     if (isVariantStringArray(originalValue)) {
         ApiArray array = originalValue.value<ApiArray>();
         return arrayFromEditor(array, changed);
+    }
+
+    if (!isVariantEditable(originalValue)) {
+        return originalValue;
     }
 
     for (int topRow = 0; topRow < m_model->rowCount(); ++topRow) {
