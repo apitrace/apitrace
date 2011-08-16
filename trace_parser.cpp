@@ -89,9 +89,11 @@ deleteAll(const Container &c)
 }
 
 void Parser::close(void) {
-    file->close();
-    delete file;
-    file = NULL;
+    if (file) {
+        file->close();
+        delete file;
+        file = NULL;
+    }
 
     deleteAll(calls);
     deleteAll(functions);
