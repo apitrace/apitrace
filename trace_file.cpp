@@ -6,12 +6,61 @@
 #include <zlib.h>
 #include <snappy.h>
 
+#include "os.hpp"
+
 #include <iostream>
+#include <set>
 
 using namespace Trace;
 
 #define SNAPPY_BYTE1 'a'
 #define SNAPPY_BYTE2 't'
+
+static void cleanupHandler(int sig);
+
+class FileCleanup
+{
+public:
+    FileCleanup()
+        : m_quitOnFlush(false)
+    {
+        OS::CatchInterrupts(cleanupHandler);
+    }
+
+    ~FileCleanup()
+    {
+    }
+
+    void addFile(Trace::File *file)
+    {
+        m_files.insert(file);
+    }
+    void removeFile(Trace::File *file)
+    {
+        m_files.erase(file);
+        if (m_files.empty() && m_quitOnFlush) {
+            OS::Abort();
+        }
+    }
+
+    void setQuitOnFlush(bool quit) {
+        m_quitOnFlush = quit;
+    }
+    bool quitOnFlush() const
+    {
+        return m_quitOnFlush;
+    }
+
+private:
+    std::set<Trace::File*> m_files;
+    bool m_quitOnFlush;
+};
+static FileCleanup s_cleaner;
+
+static void cleanupHandler(int sig)
+{
+    s_cleaner.setQuitOnFlush(true);
+}
 
 File::File(const std::string &filename,
            File::Mode mode)
@@ -52,6 +101,10 @@ bool File::open(const std::string &filename, File::Mode mode)
     }
     m_isOpened = rawOpen(filename, mode);
     m_mode = mode;
+
+    if (m_isOpened) {
+        s_cleaner.addFile(this);
+    }
     return m_isOpened;
 }
 
@@ -76,12 +129,16 @@ void File::close()
     if (m_isOpened) {
         rawClose();
         m_isOpened = false;
+        s_cleaner.removeFile(this);
     }
 }
 
 void File::flush()
 {
     rawFlush();
+    if (s_cleaner.quitOnFlush()) {
+        close();
+    }
 }
 
 int File::getc()

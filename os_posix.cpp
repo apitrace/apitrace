@@ -33,6 +33,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -136,6 +137,29 @@ Abort(void)
     exit(0);
 }
 
+
+void
+CatchInterrupts(void (*func)(int))
+{
+    struct sigaction new_action, old_action;
+
+    new_action.sa_handler = func;
+    sigemptyset(&new_action.sa_mask);
+    new_action.sa_flags = 0;
+
+#define SET_IF_NOT_IGNORED(sig)                \
+    do {                                       \
+        sigaction(sig, NULL, &old_action);     \
+        if (old_action.sa_handler != SIG_IGN)  \
+            sigaction(sig, &new_action, NULL); \
+    } while (0)
+
+    SET_IF_NOT_IGNORED(SIGINT);
+    SET_IF_NOT_IGNORED(SIGHUP);
+    SET_IF_NOT_IGNORED(SIGTERM);
+
+#undef SET_IF_NOT_IGNORED
+}
 
 } /* namespace OS */
 

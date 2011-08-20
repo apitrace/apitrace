@@ -199,7 +199,6 @@ unsigned Writer::beginEnter(const FunctionSig *sig) {
 
 void Writer::endEnter(void) {
     _writeByte(Trace::CALL_END);
-    m_file->flush();
     OS::ReleaseMutex();
 }
 

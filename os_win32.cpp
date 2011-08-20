@@ -24,6 +24,7 @@
  **************************************************************************/
 
 #include <windows.h>
+#include <signal.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -132,5 +133,14 @@ Abort(void)
     ExitProcess(0);
 #endif
 }
+
+void
+CatchInterrupts(void (*func)(int))
+{
+    signal(SIGINT, func);
+    signal(SIGHUP, func);
+    signal(SIGTERM, func);
+}
+
 
 } /* namespace OS */

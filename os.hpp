@@ -90,6 +90,8 @@ long long GetTime(void);
 
 void Abort(void);
 
+void CatchInterrupts(void (*func)(int));
+
 } /* namespace OS */
 
 #endif /* _OS_HPP_ */
