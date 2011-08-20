@@ -31,10 +31,8 @@ TRACEDUMP=${TRACEDUMP:-`dirname "$0"`/../tracedump}
 $TRACEDUMP
 
 stripdump () {
-    # http://www.theeggeadventure.com/wikimedia/index.php/Linux_Tips#Use_sed_to_remove_ANSI_colors
-    $TRACEDUMP "$1" \
+    $TRACEDUMP --no-color "$1" \
     | sed \
-        -e 's/\x1b\[[0-9]\{1,2\}\(;[0-9]\{1,2\}\)\{0,2\}m//g' \
         -e 's/\r$//g' \
         -e 's/^[0-9]\+ //' \
         -e 's/hdc = \w\+/hdc/g' \
