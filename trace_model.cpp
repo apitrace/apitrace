@@ -177,8 +177,8 @@ protected:
     Formatter::Attribute *literal;
 
 public:
-    Dumper(std::ostream &_os) : os(_os) {
-        formatter = Formatter::defaultFormatter();
+    Dumper(std::ostream &_os, bool color) : os(_os) {
+        formatter = Formatter::defaultFormatter(color);
         normal = formatter->normal();
         bold = formatter->bold();
         italic = formatter->italic();
@@ -334,12 +334,9 @@ public:
 };
 
 
-std::ostream & operator <<(std::ostream &os, Value *value) {
-    Dumper d(os);
-    if (value) {
-        value->visit(d);
-    }
-    return os;
+void Value::dump(std::ostream &os, bool color) {
+    Dumper d(os, color);
+    visit(d);
 }
 
 
@@ -355,11 +352,10 @@ const Value & Value::operator[](size_t index) const {
     return null;
 }
 
-std::ostream & operator <<(std::ostream &os, Call &call) {
-    Dumper d(os);
-    os << call.no << " ";
-    d.visit(&call);
-    return os;
+void Call::dump(std::ostream &os, bool color) {
+    Dumper d(os, color);
+    os << no << " ";
+    d.visit(this);
 }
 
 

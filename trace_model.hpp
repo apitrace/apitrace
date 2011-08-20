@@ -100,6 +100,8 @@ public:
     virtual const char *toString(void) const;
 
     const Value & operator[](size_t index) const;
+
+    void dump(std::ostream &os, bool color=true);
 };
 
 
@@ -305,7 +307,12 @@ protected:
 };
 
 
-std::ostream & operator <<(std::ostream &os, Value *value);
+inline std::ostream & operator <<(std::ostream &os, Value *value) {
+    if (value) {
+        value->dump(os);
+    }
+    return os;
+}
 
 
 class Call
@@ -327,10 +334,15 @@ public:
         assert(index < args.size());
         return *(args[index]);
     }
+
+    void dump(std::ostream &os, bool color=true);
 };
 
 
-std::ostream & operator <<(std::ostream &os, Call &call);
+inline std::ostream & operator <<(std::ostream &os, Call &call) {
+    call.dump(os);
+    return os;
+}
 
 
 } /* namespace Trace */
