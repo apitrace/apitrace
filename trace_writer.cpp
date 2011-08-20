@@ -79,48 +79,6 @@ Writer::open(const char *filename) {
     return true;
 }
 
-void
-Writer::open(void) {
-
-    static unsigned dwCounter = 0;
-
-    const char *szExtension = "trace";
-    char szFileName[PATH_MAX];
-    const char *lpFileName;
-
-    lpFileName = getenv("TRACE_FILE");
-    if (lpFileName) {
-        strncpy(szFileName, lpFileName, PATH_MAX);
-    }
-    else {
-        char szProcessName[PATH_MAX];
-        char szCurrentDir[PATH_MAX];
-        OS::GetProcessName(szProcessName, PATH_MAX);
-        OS::GetCurrentDir(szCurrentDir, PATH_MAX);
-
-        for (;;) {
-            FILE *file;
-
-            if (dwCounter)
-                snprintf(szFileName, PATH_MAX, "%s%c%s.%u.%s", szCurrentDir, PATH_SEP, szProcessName, dwCounter, szExtension);
-            else
-                snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir, PATH_SEP, szProcessName, szExtension);
-
-            file = fopen(szFileName, "rb");
-            if (file == NULL)
-                break;
-
-            fclose(file);
-
-            ++dwCounter;
-        }
-    }
-
-    OS::DebugMessage("apitrace: tracing to %s\n", szFileName);
-
-    open(szFileName);
-}
-
 void inline
 Writer::_write(const void *sBuffer, size_t dwBytesToWrite) {
     if (g_gzFile == NULL)
@@ -182,12 +140,6 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
 }
 
 unsigned Writer::beginEnter(const FunctionSig *sig) {
-    OS::AcquireMutex();
-
-    if (!g_gzFile) {
-        open();
-    }
-
     _writeByte(Trace::EVENT_ENTER);
     _writeUInt(sig->id);
     if (!lookup(functions, sig->id)) {
@@ -204,20 +156,15 @@ unsigned Writer::beginEnter(const FunctionSig *sig) {
 
 void Writer::endEnter(void) {
     _writeByte(Trace::CALL_END);
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
-    OS::ReleaseMutex();
 }
 
 void Writer::beginLeave(unsigned call) {
-    OS::AcquireMutex();
     _writeByte(Trace::EVENT_LEAVE);
     _writeUInt(call);
 }
 
 void Writer::endLeave(void) {
     _writeByte(Trace::CALL_END);
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
-    OS::ReleaseMutex();
 }
 
 void Writer::beginArg(unsigned index) {
@@ -355,6 +302,77 @@ void Writer::writeOpaque(const void *addr) {
     _writeByte(Trace::TYPE_OPAQUE);
     _writeUInt((size_t)addr);
 }
+
+
+void
+LocalWriter::open(void) {
+
+    static unsigned dwCounter = 0;
+
+    const char *szExtension = "trace";
+    char szFileName[PATH_MAX];
+    const char *lpFileName;
+
+    lpFileName = getenv("TRACE_FILE");
+    if (lpFileName) {
+        strncpy(szFileName, lpFileName, PATH_MAX);
+    }
+    else {
+        char szProcessName[PATH_MAX];
+        char szCurrentDir[PATH_MAX];
+        OS::GetProcessName(szProcessName, PATH_MAX);
+        OS::GetCurrentDir(szCurrentDir, PATH_MAX);
+
+        for (;;) {
+            FILE *file;
+
+            if (dwCounter)
+                snprintf(szFileName, PATH_MAX, "%s%c%s.%u.%s", szCurrentDir, PATH_SEP, szProcessName, dwCounter, szExtension);
+            else
+                snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir, PATH_SEP, szProcessName, szExtension);
+
+            file = fopen(szFileName, "rb");
+            if (file == NULL)
+                break;
+
+            fclose(file);
+
+            ++dwCounter;
+        }
+    }
+
+    OS::DebugMessage("apitrace: tracing to %s\n", szFileName);
+
+    Writer::open(szFileName);
+}
+
+unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
+    OS::AcquireMutex();
+
+    if (!g_gzFile) {
+        open();
+    }
+
+    return Writer::beginEnter(sig);
+}
+
+void LocalWriter::endEnter(void) {
+    Writer::endEnter();
+    gzflush(g_gzFile, Z_SYNC_FLUSH);
+    OS::ReleaseMutex();
+}
+
+void LocalWriter::beginLeave(unsigned call) {
+    OS::AcquireMutex();
+    Writer::beginLeave(call);
+}
+
+void LocalWriter::endLeave(void) {
+    Writer::endLeave();
+    gzflush(g_gzFile, Z_SYNC_FLUSH);
+    OS::ReleaseMutex();
+}
+
 
 } /* namespace Trace */
 
