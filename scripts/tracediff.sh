@@ -52,6 +52,10 @@ mkfifo "$FIFO2"
 stripdump "$1" "$FIFO1" &
 stripdump "$2" "$FIFO2" &
 
-sdiff --width=`tput cols` --speed-large-files "$FIFO1" "$FIFO2" | less -R
+sdiff \
+    --width=`tput cols` \
+    --speed-large-files \
+    "$FIFO1" "$FIFO2" \
+| less -R
 
 rm -rf "$FIFODIR"
