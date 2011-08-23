@@ -138,27 +138,70 @@ Abort(void)
 }
 
 
+struct Interrupts
+{
+    Interrupts()
+        : set(false),
+          sig_int(NULL),
+          sig_hup(NULL),
+          sig_term(NULL)
+    {}
+
+    bool set;
+    void (*sig_int)(int);
+    void (*sig_hup)(int);
+    void (*sig_term)(int);
+
+    void (*handler)(int);
+};
+static Interrupts interrupts;
+
+static void InterruptHandler(int sig)
+{
+    if (interrupts.set && interrupts.handler) {
+        interrupts.handler(sig);
+    }
+    if (sig == SIGINT) {
+        if (!interrupts.sig_int)
+            exit(sig);
+        interrupts.sig_int(sig);
+    } else if (sig == SIGHUP) {
+        if (!interrupts.sig_hup)
+            exit(sig);
+        interrupts.sig_hup(sig);
+    } else if (sig == SIGTERM) {
+        if (!interrupts.sig_term)
+            exit(sig);
+        interrupts.sig_term(sig);
+    }
+}
+
 void
 CatchInterrupts(void (*func)(int))
 {
-    struct sigaction new_action, old_action;
+    interrupts.handler = func;
 
-    new_action.sa_handler = func;
-    sigemptyset(&new_action.sa_mask);
-    new_action.sa_flags = 0;
+    if (!interrupts.set) {
+        struct sigaction new_action, old_action;
+        new_action.sa_handler = InterruptHandler;
+        sigemptyset(&new_action.sa_mask);
+        new_action.sa_flags = 0;
+#define SET_IF_NOT_IGNORED(sig, old_handler)            \
+        do {                                            \
+            sigaction(sig, NULL, &old_action);          \
+            if (old_action.sa_handler != SIG_IGN) {     \
+                old_handler = old_action.sa_handler;    \
+                sigaction(sig, &new_action, NULL);      \
+            }                                           \
+        } while (0)
 
-#define SET_IF_NOT_IGNORED(sig)                \
-    do {                                       \
-        sigaction(sig, NULL, &old_action);     \
-        if (old_action.sa_handler != SIG_IGN)  \
-            sigaction(sig, &new_action, NULL); \
-    } while (0)
+        SET_IF_NOT_IGNORED(SIGINT, interrupts.sig_int);
+        SET_IF_NOT_IGNORED(SIGHUP, interrupts.sig_hup);
+        SET_IF_NOT_IGNORED(SIGTERM, interrupts.sig_term);
 
-    SET_IF_NOT_IGNORED(SIGINT);
-    SET_IF_NOT_IGNORED(SIGHUP);
-    SET_IF_NOT_IGNORED(SIGTERM);
-
+        interrupts.set = true;
 #undef SET_IF_NOT_IGNORED
+    }
 }
 
 } /* namespace OS */

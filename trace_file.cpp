@@ -22,13 +22,14 @@ class FileCleanup
 {
 public:
     FileCleanup()
-        : m_quitOnFlush(false)
     {
         OS::CatchInterrupts(cleanupHandler);
     }
 
     ~FileCleanup()
     {
+        flush();
+        m_files.clear();
     }
 
     void addFile(Trace::File *file)
@@ -38,28 +39,24 @@ public:
     void removeFile(Trace::File *file)
     {
         m_files.erase(file);
-        if (m_files.empty() && m_quitOnFlush) {
-            OS::Abort();
-        }
     }
 
-    void setQuitOnFlush(bool quit) {
-        m_quitOnFlush = quit;
-    }
-    bool quitOnFlush() const
+    void flush()
     {
-        return m_quitOnFlush;
+        std::set<Trace::File*>::const_iterator itr;
+        for (itr = m_files.begin(); itr != m_files.end(); ++itr) {
+            (*itr)->flush(File::FlushDeep);
+        }
     }
 
 private:
     std::set<Trace::File*> m_files;
-    bool m_quitOnFlush;
 };
 static FileCleanup s_cleaner;
 
 static void cleanupHandler(int sig)
 {
-    s_cleaner.setQuitOnFlush(true);
+    s_cleaner.flush();
 }
 
 File::File(const std::string &filename,
@@ -133,12 +130,9 @@ void File::close()
     }
 }
 
-void File::flush()
+void File::flush(FlushType type)
 {
-    rawFlush();
-    if (s_cleaner.quitOnFlush()) {
-        close();
-    }
+    rawFlush(type);
 }
 
 int File::getc()
@@ -222,7 +216,7 @@ void ZLibFile::rawClose()
     }
 }
 
-void ZLibFile::rawFlush()
+void ZLibFile::rawFlush(FlushType type)
 {
     gzflush(m_gzFile, Z_SYNC_FLUSH);
 }
@@ -324,6 +318,8 @@ bool SnappyFile::rawRead(void *buffer, int length)
             sizeToRead -= chunkSize;
             if (sizeToRead > 0)
                 flushCache();
+            if (!m_cacheSize)
+                break;
         }
     }
 
@@ -347,8 +343,11 @@ void SnappyFile::rawClose()
     m_cachePtr = NULL;
 }
 
-void SnappyFile::rawFlush()
+void SnappyFile::rawFlush(FlushType type)
 {
+    if (type == FlushDeep) {
+        flushCache();
+    }
     m_stream.flush();
 }
 

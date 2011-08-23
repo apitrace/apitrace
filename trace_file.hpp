@@ -12,6 +12,10 @@ public:
         Read,
         Write
     };
+    enum FlushType {
+        FlushShallow,
+        FlushDeep
+    };
 public:
     static bool isZLibCompressed(const std::string &filename);
     static bool isSnappyCompressed(const std::string &filename);
@@ -28,7 +32,7 @@ public:
     bool write(const void *buffer, int length);
     bool read(void *buffer, int length);
     void close();
-    void flush();
+    void flush(FlushType type = FlushShallow);
     int getc();
 
 protected:
@@ -37,7 +41,7 @@ protected:
     virtual bool rawRead(void *buffer, int length) = 0;
     virtual int rawGetc() = 0;
     virtual void rawClose() = 0;
-    virtual void rawFlush() = 0;
+    virtual void rawFlush(FlushType type) = 0;
 
 protected:
     std::string m_filename;
@@ -57,7 +61,7 @@ protected:
     virtual bool rawRead(void *buffer, int length);
     virtual int rawGetc();
     virtual void rawClose();
-    virtual void rawFlush();
+    virtual void rawFlush(FlushType type);
 private:
     void *m_gzFile;
 };
@@ -79,7 +83,7 @@ protected:
     virtual bool rawRead(void *buffer, int length);
     virtual int rawGetc();
     virtual void rawClose();
-    virtual void rawFlush();
+    virtual void rawFlush(FlushType type);
 
 private:
     inline int freeCacheSize() const
