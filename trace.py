@@ -309,7 +309,7 @@ class Tracer:
         self.footer(api)
 
     def header(self, api):
-        print 'Trace::Writer __writer;'
+        print 'Trace::LocalWriter __writer;'
         print
 
     def footer(self, api):

@@ -55,7 +55,6 @@ namespace Trace {
         Writer();
         ~Writer();
 
-        void open(void);
         bool open(const char *filename);
         void close(void);
 
@@ -104,6 +103,27 @@ namespace Trace {
         void inline _writeDouble(double value);
         void inline _writeString(const char *str);
 
+    };
+
+    /**
+     * A specialized Writer class, mean to trace the current process.
+     *
+     * In particular:
+     * - it creates a trace file based on the current process name
+     * - uses mutexes to allow tracing from multiple threades
+     * - flushes the output to ensure the last call is traced in event of
+     *   abnormal termination
+     */
+    class LocalWriter : public Writer {
+    protected:
+    public:
+        void open(void);
+
+        unsigned beginEnter(const FunctionSig *sig);
+        void endEnter(void);
+
+        void beginLeave(unsigned call);
+        void endLeave(void);
     };
 }
 

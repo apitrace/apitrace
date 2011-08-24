@@ -155,12 +155,16 @@ public:
 #endif
 
 
-inline Formatter *defaultFormatter(void) {
+inline Formatter *defaultFormatter(bool color = true) {
+    if (color) {
 #ifdef _WIN32
-    return new WindowsFormatter;
+        return new WindowsFormatter;
 #else
-    return new AnsiFormatter;
+        return new AnsiFormatter;
 #endif
+    } else {
+        return new Formatter;
+    }
 }
 
 

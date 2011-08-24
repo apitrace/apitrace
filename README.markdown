@@ -172,6 +172,8 @@ Links
 
 About **apitrace**:
 
+* [Official mailing list](http://lists.freedesktop.org/mailman/listinfo/apitrace)
+
 * [Zack Rusin's blog introducing the GUI](http://zrusin.blogspot.com/2011/04/apitrace.html)
 
 * [Jose's Fonseca blog introducing the tool](http://jrfonseca.blogspot.com/2008/07/tracing-d3d-applications.html)
