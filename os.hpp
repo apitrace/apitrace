@@ -90,6 +90,9 @@ long long GetTime(void);
 
 void Abort(void);
 
+void SetExceptionCallback(void (*callback)(void));
+void ResetExceptionCallback(void);
+
 } /* namespace OS */
 
 #endif /* _OS_HPP_ */

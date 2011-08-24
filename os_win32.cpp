@@ -24,6 +24,8 @@
  **************************************************************************/
 
 #include <windows.h>
+#include <assert.h>
+#include <signal.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -132,5 +134,42 @@ Abort(void)
     ExitProcess(0);
 #endif
 }
+
+
+static LPTOP_LEVEL_EXCEPTION_FILTER prevExceptionFilter = NULL;
+static void (*gCallback)(void) = NULL;
+
+static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
+{
+    if (gCallback) {
+        gCallback();
+    }
+
+	if (prevExceptionFilter) {
+		return prevExceptionFilter(pExceptionInfo);
+    } else {
+		return EXCEPTION_CONTINUE_SEARCH;
+    }
+}
+
+void
+SetExceptionCallback(void (*callback)(void))
+{
+    assert(!gCallback);
+
+    if (!gCallback) {
+        gCallback = callback;
+
+        assert(!prevExceptionFilter);
+        prevExceptionFilter = SetUnhandledExceptionFilter(UnhandledExceptionFilter);
+    }
+}
+
+void
+ResetExceptionCallback(void)
+{
+    gCallback = NULL;
+}
+
 
 } /* namespace OS */

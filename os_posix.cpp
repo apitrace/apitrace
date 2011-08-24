@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +34,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -136,6 +138,93 @@ Abort(void)
     exit(0);
 }
 
+
+static void (*gCallback)(void) = NULL;
+
+#define NUM_SIGNALS 16
+
+struct sigaction old_actions[NUM_SIGNALS];
+
+static void signal_handler(int sig, siginfo_t *info, void *context)
+{
+    static int recursion_count = 0;
+
+    fprintf(stderr, "signal_handler: sig = %i\n", sig);
+
+    if (recursion_count) {
+        fprintf(stderr, "recursion with sig %i\n", sig);
+    } else {
+        if (gCallback) {
+            ++recursion_count;
+            gCallback();
+            --recursion_count;
+        }
+    }
+
+    struct sigaction *old_action;
+    if (sig >= NUM_SIGNALS) {
+        /* This should never happen */
+        fprintf(stderr, "Unexpected signal %i\n", sig);
+        raise(SIGKILL);
+    }
+    old_action = &old_actions[sig];
+
+    if (old_action->sa_flags & SA_SIGINFO) {
+        // Handler is in sa_sigaction
+        old_action->sa_sigaction(sig, info, context);
+    } else {
+        if (old_action->sa_handler == SIG_DFL) {
+            fprintf(stderr, "taking default action for signal %i\n", sig);
+
+#if 1
+            struct sigaction dfl_action;
+            dfl_action.sa_handler = SIG_DFL;
+            sigemptyset (&dfl_action.sa_mask);
+            dfl_action.sa_flags = 0;
+            sigaction(sig, &dfl_action, NULL);
+
+            raise(sig);
+#else
+            raise(SIGKILL);
+#endif
+        } else if (old_action->sa_handler == SIG_IGN) {
+            /* ignore */
+        } else {
+            /* dispatch to handler */
+            old_action->sa_handler(sig);
+        }
+    }
+}
+
+void
+SetExceptionCallback(void (*callback)(void))
+{
+    assert(!gCallback);
+    if (!gCallback) {
+        gCallback = callback;
+
+        struct sigaction new_action;
+        new_action.sa_sigaction = signal_handler;
+        sigemptyset(&new_action.sa_mask);
+        new_action.sa_flags = SA_SIGINFO | SA_RESTART;
+
+
+        for (int sig = 1; sig < NUM_SIGNALS; ++sig) {
+            // SIGKILL and SIGSTOP can't be handled
+            if (sig != SIGKILL && sig != SIGSTOP) {
+                if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
+                    sigaction(sig,  &new_action, NULL);
+                }
+            }
+        }
+    }
+}
+
+void
+ResetExceptionCallback(void)
+{
+    gCallback = NULL;
+}
 
 } /* namespace OS */
 
