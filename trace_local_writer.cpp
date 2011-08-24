@@ -40,7 +40,20 @@
 namespace Trace {
 
 
-LocalWriter::LocalWriter() {
+static void exceptionCallback(void)
+{
+    OS::DebugMessage("apitrace: flushing trace due to an exception\n");
+    localWriter.flush();
+}
+
+
+LocalWriter::LocalWriter() :
+    acquired(0)
+{}
+
+LocalWriter::~LocalWriter()
+{
+    OS::ResetExceptionCallback();
 }
 
 void
@@ -83,10 +96,18 @@ LocalWriter::open(void) {
     OS::DebugMessage("apitrace: tracing to %s\n", szFileName);
 
     Writer::open(szFileName);
+
+    OS::SetExceptionCallback(exceptionCallback);
+
+#if 0
+    // For debugging the exception handler
+    *((int *)0) = 0;
+#endif
 }
 
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
     OS::AcquireMutex();
+    ++acquired;
 
     if (!g_gzFile) {
         open();
@@ -97,19 +118,35 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
 
 void LocalWriter::endEnter(void) {
     Writer::endEnter();
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
+    --acquired;
     OS::ReleaseMutex();
 }
 
 void LocalWriter::beginLeave(unsigned call) {
     OS::AcquireMutex();
+    ++acquired;
     Writer::beginLeave(call);
 }
 
 void LocalWriter::endLeave(void) {
     Writer::endLeave();
-    gzflush(g_gzFile, Z_SYNC_FLUSH);
+    --acquired;
     OS::ReleaseMutex();
+}
+
+void LocalWriter::flush(void) {
+    /*
+     * Do nothing if the mutex is already acquired (e.g., if a segfault happen
+     * while writing the file) to prevent dead-lock.
+     */
+
+    if (!acquired) {
+        OS::AcquireMutex();
+            if (g_gzFile) {
+                gzflush(g_gzFile, Z_SYNC_FLUSH);
+            }
+        OS::ReleaseMutex();
+    }
 }
 
 

@@ -115,11 +115,14 @@ namespace Trace {
      */
     class LocalWriter : public Writer {
     protected:
+        int acquired;
+
     public:
         /**
          * Should never called directly -- use localWriter singleton below instead.
          */
         LocalWriter();
+        ~LocalWriter();
 
         void open(void);
 
@@ -128,6 +131,8 @@ namespace Trace {
 
         void beginLeave(unsigned call);
         void endLeave(void);
+
+        void flush(void);
     };
 
     /**
