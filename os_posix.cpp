@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -138,81 +139,91 @@ Abort(void)
 }
 
 
-struct Interrupts
+static void (*gCallback)(void) = NULL;
+
+#define NUM_SIGNALS 16
+
+struct sigaction old_actions[NUM_SIGNALS];
+
+static void signal_handler(int sig, siginfo_t *info, void *context)
 {
-    Interrupts()
-        : set(false),
-          sig_int(NULL),
-          sig_hup(NULL),
-          sig_term(NULL),
-          sig_segv(NULL),
-          handler(NULL)
-    {}
+    static int recursion_count = 0;
 
-    bool set;
-    void (*sig_int)(int);
-    void (*sig_hup)(int);
-    void (*sig_term)(int);
-    void (*sig_segv)(int);
+    fprintf(stderr, "signal_handler: sig = %i\n", sig);
 
-    void (*handler)(int);
-};
-static Interrupts interrupts;
-
-static void InterruptHandler(int sig)
-{
-    if (interrupts.set && interrupts.handler) {
-        interrupts.handler(sig);
+    if (recursion_count) {
+        fprintf(stderr, "recursion with sig %i\n", sig);
+    } else {
+        if (gCallback) {
+            ++recursion_count;
+            gCallback();
+            --recursion_count;
+        }
     }
-    if (sig == SIGINT) {
-        if (!interrupts.sig_int) {
-            exit(sig);
-        }
-        interrupts.sig_int(sig);
-    } else if (sig == SIGHUP) {
-        if (!interrupts.sig_hup) {
-            exit(sig);
-        }
-        interrupts.sig_hup(sig);
-    } else if (sig == SIGTERM) {
-        if (!interrupts.sig_term) {
-            exit(sig);
-        }
-        interrupts.sig_term(sig);
-    } else if (sig == SIGSEGV) {
-        if (interrupts.sig_segv) {
-            interrupts.sig_segv(sig);
+
+    struct sigaction *old_action;
+    if (sig >= NUM_SIGNALS) {
+        /* This should never happen */
+        fprintf(stderr, "Unexpected signal %i\n", sig);
+        raise(SIGKILL);
+    }
+    old_action = &old_actions[sig];
+
+    if (old_action->sa_flags & SA_SIGINFO) {
+        // Handler is in sa_sigaction
+        old_action->sa_sigaction(sig, info, context);
+    } else {
+        if (old_action->sa_handler == SIG_DFL) {
+            fprintf(stderr, "taking default action for signal %i\n", sig);
+
+#if 1
+            struct sigaction dfl_action;
+            dfl_action.sa_handler = SIG_DFL;
+            sigemptyset (&dfl_action.sa_mask);
+            dfl_action.sa_flags = 0;
+            sigaction(sig, &dfl_action, NULL);
+
+            raise(sig);
+#else
+            raise(SIGKILL);
+#endif
+        } else if (old_action->sa_handler == SIG_IGN) {
+            /* ignore */
+        } else {
+            /* dispatch to handler */
+            old_action->sa_handler(sig);
         }
     }
 }
 
 void
-CatchInterrupts(void (*func)(int))
+SetExceptionCallback(void (*callback)(void))
 {
-    interrupts.handler = func;
+    assert(!gCallback);
+    if (!gCallback) {
+        gCallback = callback;
 
-    if (!interrupts.set) {
-        struct sigaction new_action, old_action;
-        new_action.sa_handler = InterruptHandler;
+        struct sigaction new_action;
+        new_action.sa_sigaction = signal_handler;
         sigemptyset(&new_action.sa_mask);
-        new_action.sa_flags = 0;
-#define SET_IF_NOT_IGNORED(sig, old_handler)            \
-        do {                                            \
-            sigaction(sig, NULL, &old_action);          \
-            if (old_action.sa_handler != SIG_IGN) {     \
-                old_handler = old_action.sa_handler;    \
-                sigaction(sig, &new_action, NULL);      \
-            }                                           \
-        } while (0)
+        new_action.sa_flags = SA_SIGINFO | SA_RESTART;
 
-        SET_IF_NOT_IGNORED(SIGINT, interrupts.sig_int);
-        SET_IF_NOT_IGNORED(SIGHUP, interrupts.sig_hup);
-        SET_IF_NOT_IGNORED(SIGTERM, interrupts.sig_term);
-        SET_IF_NOT_IGNORED(SIGSEGV, interrupts.sig_segv);
 
-        interrupts.set = true;
-#undef SET_IF_NOT_IGNORED
+        for (int sig = 1; sig < NUM_SIGNALS; ++sig) {
+            // SIGKILL and SIGSTOP can't be handled
+            if (sig != SIGKILL && sig != SIGSTOP) {
+                if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
+                    sigaction(sig,  &new_action, NULL);
+                }
+            }
+        }
     }
+}
+
+void
+ResetExceptionCallback(void)
+{
+    gCallback = NULL;
 }
 
 } /* namespace OS */

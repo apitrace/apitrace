@@ -90,7 +90,8 @@ long long GetTime(void);
 
 void Abort(void);
 
-void CatchInterrupts(void (*func)(int));
+void SetExceptionCallback(void (*callback)(void));
+void ResetExceptionCallback(void);
 
 } /* namespace OS */
 

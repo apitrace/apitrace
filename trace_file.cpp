@@ -9,55 +9,11 @@
 #include "os.hpp"
 
 #include <iostream>
-#include <set>
 
 using namespace Trace;
 
 #define SNAPPY_BYTE1 'a'
 #define SNAPPY_BYTE2 't'
-
-static void cleanupHandler(int sig);
-
-class FileCleanup
-{
-public:
-    FileCleanup()
-    {
-        OS::CatchInterrupts(cleanupHandler);
-    }
-
-    ~FileCleanup()
-    {
-        flush();
-        m_files.clear();
-    }
-
-    void addFile(Trace::File *file)
-    {
-        m_files.insert(file);
-    }
-    void removeFile(Trace::File *file)
-    {
-        m_files.erase(file);
-    }
-
-    void flush()
-    {
-        std::set<Trace::File*>::const_iterator itr;
-        for (itr = m_files.begin(); itr != m_files.end(); ++itr) {
-            (*itr)->flush(File::FlushDeep);
-        }
-    }
-
-private:
-    std::set<Trace::File*> m_files;
-};
-static FileCleanup s_cleaner;
-
-static void cleanupHandler(int sig)
-{
-    s_cleaner.flush();
-}
 
 File::File(const std::string &filename,
            File::Mode mode)
@@ -99,9 +55,6 @@ bool File::open(const std::string &filename, File::Mode mode)
     m_isOpened = rawOpen(filename, mode);
     m_mode = mode;
 
-    if (m_isOpened) {
-        s_cleaner.addFile(this);
-    }
     return m_isOpened;
 }
 
@@ -126,7 +79,6 @@ void File::close()
     if (m_isOpened) {
         rawClose();
         m_isOpened = false;
-        s_cleaner.removeFile(this);
     }
 }
 

@@ -137,21 +137,12 @@ Abort(void)
 
 
 static LPTOP_LEVEL_EXCEPTION_FILTER prevExceptionFilter = NULL;
-
-static void (*handler)(int) = NULL;
+static void (*gCallback)(void) = NULL;
 
 static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
 {
-    if (handler) {
-        int exceptionCode = 0;
-        if (pExceptionInfo) {
-            PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
-            if (pExceptionRecord) {
-                exceptionCode = pExceptionRecord->ExceptionCode;
-            }
-        }
-
-        handler(exceptionCode);
+    if (gCallback) {
+        gCallback();
     }
 
 	if (prevExceptionFilter) {
@@ -162,17 +153,22 @@ static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
 }
 
 void
-CatchInterrupts(void (*func)(int))
+SetExceptionCallback(void (*callback)(void))
 {
-    assert(!handler);
-    assert(!prevExceptionFilter);
+    assert(!gCallback);
 
-    handler = func;
+    if (!gCallback) {
+        gCallback = callback;
 
-    if (handler && !prevExceptionFilter) {
-        prevExceptionFilter =
-            SetUnhandledExceptionFilter(UnhandledExceptionFilter);
+        assert(!prevExceptionFilter);
+        prevExceptionFilter = SetUnhandledExceptionFilter(UnhandledExceptionFilter);
     }
+}
+
+void
+ResetExceptionCallback(void)
+{
+    gCallback = NULL;
 }
 
 
