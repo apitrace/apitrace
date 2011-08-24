@@ -40,6 +40,9 @@
 namespace Trace {
 
 
+LocalWriter::LocalWriter() {
+}
+
 void
 LocalWriter::open(void) {
 
@@ -108,6 +111,9 @@ void LocalWriter::endLeave(void) {
     gzflush(g_gzFile, Z_SYNC_FLUSH);
     OS::ReleaseMutex();
 }
+
+
+LocalWriter localWriter;
 
 
 } /* namespace Trace */

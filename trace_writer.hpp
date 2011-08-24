@@ -116,6 +116,11 @@ namespace Trace {
     class LocalWriter : public Writer {
     protected:
     public:
+        /**
+         * Should never called directly -- use localWriter singleton below instead.
+         */
+        LocalWriter();
+
         void open(void);
 
         unsigned beginEnter(const FunctionSig *sig);
@@ -124,6 +129,11 @@ namespace Trace {
         void beginLeave(unsigned call);
         void endLeave(void);
     };
+
+    /**
+     * Singleton.
+     */
+    extern LocalWriter localWriter;
 }
 
 #endif /* _TRACE_WRITER_HPP_ */
