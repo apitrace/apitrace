@@ -24,6 +24,7 @@
  **************************************************************************/
 
 #include <windows.h>
+#include <assert.h>
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
@@ -135,48 +136,42 @@ Abort(void)
 }
 
 
-struct Interrupts
+static LPTOP_LEVEL_EXCEPTION_FILTER prevExceptionFilter = NULL;
+
+static void (*handler)(int) = NULL;
+
+static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
 {
-    Interrupts()
-        : set(false),
-          prevfilter(NULL),
-          handler(NULL)
-    {}
-
-    bool set;
-    LPTOP_LEVEL_EXCEPTION_FILTER prevFilter;
-
-    void (*handler)(int);
-};
-static Interrupts interrupts;
-
-LONG WINAPI InterruptHandler(EXCEPTION_POINTERS *exceptionInfo)
-{
-    if (interrupts.handler) {
+    if (handler) {
         int exceptionCode = 0;
-        if (exceptionInfo) {
-            exceptionCode = exceptionInfo->ExceptionRecord.ExceptionCode;
+        if (pExceptionInfo) {
+            PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+            if (pExceptionRecord) {
+                exceptionCode = pExceptionRecord->ExceptionCode;
+            }
         }
 
-        interrupts.handler(exceptionCode);
+        handler(exceptionCode);
     }
 
-    if (interrupts.prevFilter) {
-        return interrupts.prevFilter(exceptionInfo);
+	if (prevExceptionFilter) {
+		return prevExceptionFilter(pExceptionInfo);
     } else {
-        return EXCEPTION_CONTINUE_SEARCH;
+		return EXCEPTION_CONTINUE_SEARCH;
     }
 }
 
 void
 CatchInterrupts(void (*func)(int))
 {
-    interrupts.handler = func;
+    assert(!handler);
+    assert(!prevExceptionFilter);
 
-    if (!interrupts.set) {
-        interrupts.prevFilter =
-            SetUnhandledExceptionFilter(InterruptHandler);
-        interrupts.set = true;
+    handler = func;
+
+    if (handler && !prevExceptionFilter) {
+        prevExceptionFilter =
+            SetUnhandledExceptionFilter(UnhandledExceptionFilter);
     }
 }
 
