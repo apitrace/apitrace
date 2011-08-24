@@ -144,13 +144,16 @@ struct Interrupts
         : set(false),
           sig_int(NULL),
           sig_hup(NULL),
-          sig_term(NULL)
+          sig_term(NULL),
+          sig_segv(NULL),
+          handler(NULL)
     {}
 
     bool set;
     void (*sig_int)(int);
     void (*sig_hup)(int);
     void (*sig_term)(int);
+    void (*sig_segv)(int);
 
     void (*handler)(int);
 };
@@ -162,17 +165,24 @@ static void InterruptHandler(int sig)
         interrupts.handler(sig);
     }
     if (sig == SIGINT) {
-        if (!interrupts.sig_int)
+        if (!interrupts.sig_int) {
             exit(sig);
+        }
         interrupts.sig_int(sig);
     } else if (sig == SIGHUP) {
-        if (!interrupts.sig_hup)
+        if (!interrupts.sig_hup) {
             exit(sig);
+        }
         interrupts.sig_hup(sig);
     } else if (sig == SIGTERM) {
-        if (!interrupts.sig_term)
+        if (!interrupts.sig_term) {
             exit(sig);
+        }
         interrupts.sig_term(sig);
+    } else if (sig == SIGSEGV) {
+        if (interrupts.sig_segv) {
+            interrupts.sig_segv(sig);
+        }
     }
 }
 
@@ -198,6 +208,7 @@ CatchInterrupts(void (*func)(int))
         SET_IF_NOT_IGNORED(SIGINT, interrupts.sig_int);
         SET_IF_NOT_IGNORED(SIGHUP, interrupts.sig_hup);
         SET_IF_NOT_IGNORED(SIGTERM, interrupts.sig_term);
+        SET_IF_NOT_IGNORED(SIGSEGV, interrupts.sig_segv);
 
         interrupts.set = true;
 #undef SET_IF_NOT_IGNORED
