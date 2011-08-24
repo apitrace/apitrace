@@ -134,12 +134,50 @@ Abort(void)
 #endif
 }
 
+
+struct Interrupts
+{
+    Interrupts()
+        : set(false),
+          prevfilter(NULL),
+          handler(NULL)
+    {}
+
+    bool set;
+    LPTOP_LEVEL_EXCEPTION_FILTER prevFilter;
+
+    void (*handler)(int);
+};
+static Interrupts interrupts;
+
+LONG WINAPI InterruptHandler(EXCEPTION_POINTERS *exceptionInfo)
+{
+    if (interrupts.handler) {
+        int exceptionCode = 0;
+        if (exceptionInfo) {
+            exceptionCode = exceptionInfo->ExceptionRecord.ExceptionCode;
+        }
+
+        interrupts.handler(exceptionCode);
+    }
+
+    if (interrupts.prevFilter) {
+        return interrupts.prevFilter(exceptionInfo);
+    } else {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+}
+
 void
 CatchInterrupts(void (*func)(int))
 {
-    signal(SIGINT, func);
-    signal(SIGHUP, func);
-    signal(SIGTERM, func);
+    interrupts.handler = func;
+
+    if (!interrupts.set) {
+        interrupts.prevFilter =
+            SetUnhandledExceptionFilter(InterruptHandler);
+        interrupts.set = true;
+    }
 }
 
 
