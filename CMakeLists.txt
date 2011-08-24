@@ -176,6 +176,7 @@ add_library (common
     trace_model.cpp
     trace_parser.cpp
     trace_writer.cpp
+    trace_local_writer.cpp
     trace_model_writer.cpp
     image.cpp
     image_bmp.cpp
