@@ -6,6 +6,8 @@
 #include <string>
 #include <fstream>
 
+#include <stdint.h>
+
 namespace snappy {
     class File;
 }
@@ -42,8 +44,8 @@ private:
     }
     void flushCache();
     void createCache(size_t size);
-    void writeCompressedLength(size_t num);
-    size_t readCompressedLength();
+    void writeCompressedLength(uint32_t  num);
+    uint32_t readCompressedLength();
 private:
     std::fstream m_stream;
     char *m_cache;

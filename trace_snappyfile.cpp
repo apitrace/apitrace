@@ -7,6 +7,32 @@
 
 using namespace Trace;
 
+/*
+ * Snappy file format.
+ * -------------------
+ *
+ * Snappy at its core is just a compressoin algorithm so we're
+ * creating a new file format which uses snappy compression
+ * to hold the trace data.
+ *
+ * The file is composed of a number of chunks, they are:
+ * chunk {
+ *     uint32 - specifying the length of the compressed data
+ *     compressed data
+ * }
+ * File can contain any number of such chunks.
+ * The default size of an uncompressed chunk is specified in
+ * SNAPPY_CHUNK_SIZE.
+ *
+ * Note:
+ * Currently the default size for a a to-be-compressed data is
+ * 1mb, meaning that the compressed data will be <= 1mb.
+ * The reason it's 1mb is because it seems
+ * to offer a pretty good compression/disk io speed ratio
+ * but that might change.
+ *
+ */
+
 SnappyFile::SnappyFile(const std::string &filename,
                               File::Mode mode)
     : File(),
@@ -172,14 +198,14 @@ void SnappyFile::createCache(size_t size)
     m_cacheSize = size;
 }
 
-void SnappyFile::writeCompressedLength(size_t value)
+void SnappyFile::writeCompressedLength(uint32_t value)
 {
     m_stream.write((char*)&value, sizeof value);
 }
 
-size_t SnappyFile::readCompressedLength()
+uint32_t SnappyFile::readCompressedLength()
 {
-    size_t len;
+    uint32_t len;
     m_stream.read((char*)&len, sizeof len);
     return len;
 }
