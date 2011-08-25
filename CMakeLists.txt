@@ -181,6 +181,7 @@ endif (WIN32)
 
 add_library (common
     trace_file.cpp
+    trace_snappyfile.cpp
     trace_model.cpp
     trace_parser.cpp
     trace_writer.cpp

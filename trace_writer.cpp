@@ -32,7 +32,7 @@
 
 #include "os.hpp"
 #include "trace_writer.hpp"
-#include "trace_file.hpp"
+#include "trace_snappyfile.hpp"
 #include "trace_format.hpp"
 
 

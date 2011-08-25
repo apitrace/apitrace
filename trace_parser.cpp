@@ -29,6 +29,7 @@
 #include <stdlib.h>
 
 #include "trace_file.hpp"
+#include "trace_snappyfile.hpp"
 #include "trace_parser.hpp"
 
 
