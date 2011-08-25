@@ -33,14 +33,14 @@
 namespace gltrace {
 
 
-const char *
-translateExtensionsString(const char *extensions);
+const GLubyte *
+__glGetString_override(GLenum name);
 
+void
+__glGetIntegerv_override(GLenum pname, GLint *params);
 
-inline const GLubyte *
-translateExtensionsString(const GLubyte *extensions) {
-    return (const GLubyte *)translateExtensionsString((const char *)extensions);
-}
+const GLubyte *
+__glGetStringi_override(GLenum name, GLuint index);
 
 
 } /* namespace gltrace */

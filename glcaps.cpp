@@ -24,12 +24,21 @@
  **************************************************************************/
 
 
+/*
+ * Manipulation of GL extensions.
+ *
+ * So far we insert GREMEDY extensions, but in the future we could also clamp
+ * the GL extensions to core GL versions here.
+ */
+
+
 #include <string.h>
 #include <stdlib.h>
 
 #include <string>
 #include <map>
 
+#include "glproc.hpp"
 #include "gltrace.hpp"
 
 
@@ -43,18 +52,21 @@ static ExtensionsMap extensionsMap;
 
 
 // Additional extensions to be advertised
-const char extra_extensions[] =
-    "GL_GREMEDY_string_marker "
-    "GL_GREMEDY_frame_terminator "
-;
+static const char *extra_extensions[] = {
+    "GL_GREMEDY_string_marker",
+    "GL_GREMEDY_frame_terminator",
+};
+#define NUM_EXTRA_EXTENSIONS (sizeof(extra_extensions)/sizeof(extra_extensions[0]))
 
 
 /**
  * Translate the GL extensions string, adding new extensions.
  */
-const char *
-translateExtensionsString(const char *extensions)
+static const char *
+overrideExtensionsString(const char *extensions)
 {
+    int i;
+
     ExtensionsMap::const_iterator it = extensionsMap.find(extensions);
     if (it != extensionsMap.end()) {
         return it->second;
@@ -62,7 +74,14 @@ translateExtensionsString(const char *extensions)
 
     size_t extensions_len = strlen(extensions);
 
-    char *new_extensions = (char *)malloc(extensions_len + 1 + sizeof extra_extensions);
+    size_t extra_extensions_len = 0;
+    for (i = 0; i < NUM_EXTRA_EXTENSIONS; ++i) {
+        const char * extra_extension = extra_extensions[i];
+        size_t extra_extension_len = strlen(extra_extension);
+        extra_extensions_len += extra_extension_len + 1;
+    }
+
+    char *new_extensions = (char *)malloc(extensions_len + 1 + extra_extensions_len);
     if (!new_extensions) {
         return extensions;
     }
@@ -76,11 +95,75 @@ translateExtensionsString(const char *extensions)
         }
     }
 
-    memcpy(new_extensions + extensions_len, extra_extensions, sizeof extra_extensions);
+    for (i = 0; i < NUM_EXTRA_EXTENSIONS; ++i) {
+        const char * extra_extension = extra_extensions[i];
+        size_t extra_extension_len = strlen(extra_extension);
+        memcpy(new_extensions + extensions_len, extra_extension, extra_extension_len);
+        extensions_len += extra_extension_len;
+        new_extensions[extensions_len++] = ' ';
+    }
+    new_extensions[extensions_len] = '\0';
 
     extensionsMap[extensions] = new_extensions;
 
     return new_extensions;
+}
+
+
+const GLubyte *
+__glGetString_override(GLenum name)
+{
+    const GLubyte *result = __glGetString(name);
+
+    if (result) {
+        switch (name) {
+        case GL_EXTENSIONS:
+            result = (const GLubyte *)overrideExtensionsString((const char *)result);
+            break;
+        default:
+            break;
+        }
+    }
+
+    return result;
+}
+
+
+void
+__glGetIntegerv_override(GLenum pname, GLint *params)
+{
+    __glGetIntegerv(pname, params);
+
+    if (params) {
+        switch (pname) {
+        case GL_NUM_EXTENSIONS:
+            *params += NUM_EXTRA_EXTENSIONS;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+
+const GLubyte *
+__glGetStringi_override(GLenum name, GLuint index)
+{
+    switch (name) {
+    case GL_EXTENSIONS:
+        {
+            GLint num_extensions = 0;
+            __glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
+            if (num_extensions <= index && index < num_extensions + NUM_EXTRA_EXTENSIONS) {
+                return (const GLubyte *)extra_extensions[index - num_extensions];
+            }
+        }
+        break;
+    default:
+        break;
+    }
+
+    return __glGetStringi(name, index);
 }
 
 

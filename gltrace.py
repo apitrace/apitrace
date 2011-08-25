@@ -520,6 +520,11 @@ class GlTracer(Tracer):
             print '    }'
             return
 
+        # Override GL extensions
+        if function.name in ('glGetString', 'glGetIntegerv', 'glGetStringi'):
+            Tracer.dispatch_function(self, function, prefix = 'gltrace::__', suffix = '_override')
+            return
+
         Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
@@ -547,16 +552,6 @@ class GlTracer(Tracer):
     def wrap_ret(self, function, instance):
         Tracer.wrap_ret(self, function, instance)
 
-        if function.name == 'glGetString':
-            print '    if (__result) {'
-            print '        switch (name) {'
-            print '        case GL_EXTENSIONS:'
-            print '            __result = gltrace::translateExtensionsString(__result);'
-            print '            break;'
-            print '        default:'
-            print '            break;'
-            print '        }'
-            print '    }'
             
         if function.name in ('glMapBuffer', 'glMapBufferARB'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'

@@ -324,9 +324,6 @@ class Tracer:
         print 'static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, int(function.id), function.name, len(function.args), function.name)
         print
 
-    def get_dispatch_function(self, function):
-        return '__' + function.name
-
     def is_public_function(self, function):
         return True
 
@@ -362,12 +359,12 @@ class Tracer:
             self.dump_ret(function, "__result")
         print '    Trace::localWriter.endLeave();'
 
-    def dispatch_function(self, function):
+    def dispatch_function(self, function, prefix='__', suffix=''):
         if function.type is stdapi.Void:
             result = ''
         else:
             result = '__result = '
-        dispatch = self.get_dispatch_function(function)
+        dispatch = prefix + function.name + suffix
         print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
 
     def dump_arg(self, function, arg):
