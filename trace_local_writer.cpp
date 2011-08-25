@@ -30,9 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <zlib.h>
-
 #include "os.hpp"
+#include "trace_file.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
 
@@ -109,7 +108,7 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
     OS::AcquireMutex();
     ++acquired;
 
-    if (!g_gzFile) {
+    if (!m_file->isOpened()) {
         open();
     }
 
@@ -142,9 +141,9 @@ void LocalWriter::flush(void) {
 
     if (!acquired) {
         OS::AcquireMutex();
-            if (g_gzFile) {
-                gzflush(g_gzFile, Z_SYNC_FLUSH);
-            }
+        if (m_file->isOpened()) {
+            m_file->flush();
+        }
         OS::ReleaseMutex();
     }
 }

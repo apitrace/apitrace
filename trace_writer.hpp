@@ -39,10 +39,11 @@
 
 
 namespace Trace {
+    class File;
 
     class Writer {
     protected:
-        void *g_gzFile;
+        File *m_file;
         unsigned call_no;
 
         std::vector<bool> functions;

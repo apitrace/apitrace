@@ -28,8 +28,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include <zlib.h>
-
+#include "trace_file.hpp"
+#include "trace_snappyfile.hpp"
 #include "trace_parser.hpp"
 
 
@@ -52,8 +52,14 @@ Parser::~Parser() {
 
 
 bool Parser::open(const char *filename) {
-    file = gzopen(filename, "rb");
-    if (!file) {
+    assert(!file);
+    if (File::isZLibCompressed(filename)) {
+        file = new ZLibFile;
+    } else {
+        file = new SnappyFile;
+    }
+
+    if (!file->open(filename, File::Read)) {
         return false;
     }
 
@@ -85,7 +91,8 @@ deleteAll(const Container &c)
 
 void Parser::close(void) {
     if (file) {
-        gzclose(file);
+        file->close();
+        delete file;
         file = NULL;
     }
 
@@ -199,7 +206,8 @@ bool Parser::parse_call_details(Call *call) {
             call->ret = parse_value();
             break;
         default:
-            std::cerr << "error: unknown call detail " << c << "\n";
+            std::cerr << "error: ("<<call->name()<< ") unknown call detail "
+                      << c << "\n";
             exit(1);
         case -1:
             return false;
@@ -293,14 +301,14 @@ Value *Parser::parse_uint() {
 
 Value *Parser::parse_float() {
     float value;
-    gzread(file, &value, sizeof value);
+    file->read(&value, sizeof value);
     return new Float(value);
 }
 
 
 Value *Parser::parse_double() {
     double value;
-    gzread(file, &value, sizeof value);
+    file->read(&value, sizeof value);
     return new Float(value);
 }
 
@@ -367,7 +375,7 @@ Value *Parser::parse_blob(void) {
     size_t size = read_uint();
     Blob *blob = new Blob(size);
     if (size) {
-        gzread(file, blob->buf, (unsigned)size);
+        file->read(blob->buf, (unsigned)size);
     }
     return blob;
 }
@@ -412,7 +420,7 @@ const char * Parser::read_string(void) {
     size_t len = read_uint();
     char * value = new char[len + 1];
     if (len) {
-        gzread(file, value, (unsigned)len);
+        file->read(value, (unsigned)len);
     }
     value[len] = 0;
 #if TRACE_VERBOSE
@@ -427,7 +435,7 @@ unsigned long long Parser::read_uint(void) {
     int c;
     unsigned shift = 0;
     do {
-        c = gzgetc(file);
+        c = file->getc();
         if (c == -1) {
             break;
         }
@@ -442,7 +450,7 @@ unsigned long long Parser::read_uint(void) {
 
 
 inline int Parser::read_byte(void) {
-    int c = gzgetc(file);
+    int c = file->getc();
 #if TRACE_VERBOSE
     if (c < 0)
         std::cerr << "\tEOF" << "\n";

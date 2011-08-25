@@ -140,6 +140,13 @@ add_subdirectory (thirdparty/zlib EXCLUDE_FROM_ALL)
 include_directories (${ZLIB_INCLUDE_DIRS})
 link_libraries (${ZLIB_LIBRARIES})
 
+set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
+set (SNAPPY_LIBRARIES snappy_bundled)
+add_subdirectory (thirdparty/snappy EXCLUDE_FROM_ALL)
+
+include_directories (${SNAPPY_INCLUDE_DIRS})
+link_libraries (${SNAPPY_LIBRARIES})
+
 set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
 set (PNG_DEFINITIONS "")
 set (PNG_LIBRARIES png_bundled)
@@ -173,6 +180,8 @@ else (WIN32)
 endif (WIN32)
 
 add_library (common
+    trace_file.cpp
+    trace_snappyfile.cpp
     trace_model.cpp
     trace_parser.cpp
     trace_writer.cpp
@@ -339,7 +348,7 @@ else ()
     )
 
     target_link_libraries (glxtrace dl ${X11_X11_LIB})
-    
+
     install (TARGETS glxtrace LIBRARY DESTINATION lib)
 endif ()
 
