@@ -145,7 +145,7 @@ void SnappyFile::flushCache()
         ::snappy::RawCompress(m_cache, SNAPPY_CHUNK_SIZE - freeCacheSize(),
                               m_compressedCache, &compressedLength);
 
-        m_stream << compressedLength;
+        writeCompressedLength(compressedLength);
         m_stream.write(m_compressedCache, compressedLength);
         m_cachePtr = m_cache;
     } else if (m_mode == File::Read) {
@@ -153,7 +153,7 @@ void SnappyFile::flushCache()
             return;
         //assert(m_cachePtr == m_cache + m_cacheSize);
         size_t compressedLength;
-        m_stream >> compressedLength;
+        compressedLength = readCompressedLength();
         m_stream.read((char*)m_compressedCache, compressedLength);
         ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
                                         &m_cacheSize);
@@ -170,4 +170,16 @@ void SnappyFile::createCache(size_t size)
     m_cache = new char[size];
     m_cachePtr = m_cache;
     m_cacheSize = size;
+}
+
+void SnappyFile::writeCompressedLength(size_t value)
+{
+    m_stream.write((char*)&value, sizeof value);
+}
+
+size_t SnappyFile::readCompressedLength()
+{
+    size_t len;
+    m_stream.read((char*)&len, sizeof len);
+    return len;
 }
