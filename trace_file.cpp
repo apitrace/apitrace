@@ -25,73 +25,9 @@ File::File(const std::string &filename,
     }
 }
 
-
 File::~File()
 {
     close();
-}
-
-bool File::isOpened() const
-{
-    return m_isOpened;
-}
-
-File::Mode File::mode() const
-{
-    return m_mode;
-}
-
-std::string File::filename() const
-{
-    return m_filename;
-}
-
-bool File::open(const std::string &filename, File::Mode mode)
-{
-    if (m_isOpened) {
-        close();
-    }
-    m_isOpened = rawOpen(filename, mode);
-    m_mode = mode;
-
-    return m_isOpened;
-}
-
-bool File::write(const void *buffer, int length)
-{
-    if (!m_isOpened || m_mode != File::Write) {
-        return false;
-    }
-    return rawWrite(buffer, length);
-}
-
-bool File::read(void *buffer, int length)
-{
-    if (!m_isOpened || m_mode != File::Read) {
-        return false;
-    }
-    return rawRead(buffer, length);
-}
-
-void File::close()
-{
-    if (m_isOpened) {
-        rawClose();
-        m_isOpened = false;
-    }
-}
-
-void File::flush(FlushType type)
-{
-    rawFlush(type);
-}
-
-int File::getc()
-{
-    if (!m_isOpened || m_mode != File::Read) {
-        return 0;
-    }
-    return rawGetc();
 }
 
 bool File::isZLibCompressed(const std::string &filename)

@@ -26,6 +26,7 @@ public:
 
     bool isOpened() const;
     File::Mode mode() const;
+
     std::string filename() const;
 
     bool open(const std::string &filename, File::Mode mode);
@@ -48,6 +49,69 @@ protected:
     File::Mode m_mode;
     bool m_isOpened;
 };
+
+inline bool File::isOpened() const
+{
+    return m_isOpened;
+}
+
+inline File::Mode File::mode() const
+{
+    return m_mode;
+}
+
+inline std::string File::filename() const
+{
+    return m_filename;
+}
+
+inline bool File::open(const std::string &filename, File::Mode mode)
+{
+    if (m_isOpened) {
+        close();
+    }
+    m_isOpened = rawOpen(filename, mode);
+    m_mode = mode;
+
+    return m_isOpened;
+}
+
+inline bool File::write(const void *buffer, int length)
+{
+    if (!m_isOpened || m_mode != File::Write) {
+        return false;
+    }
+    return rawWrite(buffer, length);
+}
+
+inline bool File::read(void *buffer, int length)
+{
+    if (!m_isOpened || m_mode != File::Read) {
+        return false;
+    }
+    return rawRead(buffer, length);
+}
+
+inline void File::close()
+{
+    if (m_isOpened) {
+        rawClose();
+        m_isOpened = false;
+    }
+}
+
+inline void File::flush(File::FlushType type)
+{
+    rawFlush(type);
+}
+
+inline int File::getc()
+{
+    if (!m_isOpened || m_mode != File::Read) {
+        return 0;
+    }
+    return rawGetc();
+}
 
 class ZLibFile : public File {
 public:
