@@ -72,7 +72,7 @@ if __name__ == '__main__':
     print '''
 static HINSTANCE g_hDll = NULL;
 
-static PROC
+PROC
 __getPublicProcAddress(LPCSTR lpProcName)
 {
     if (!g_hDll) {
