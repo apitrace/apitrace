@@ -129,7 +129,7 @@ void ZLibFile::rawClose()
     }
 }
 
-void ZLibFile::rawFlush(FlushType type)
+void ZLibFile::rawFlush()
 {
     gzflush(m_gzFile, Z_SYNC_FLUSH);
 }

@@ -181,11 +181,9 @@ void SnappyFile::rawClose()
     m_cachePtr = NULL;
 }
 
-void SnappyFile::rawFlush(FlushType type)
+void SnappyFile::rawFlush()
 {
-    if (type == FlushDeep) {
-        flushCache();
-    }
+    flushCache();
     m_stream.flush();
 }
 

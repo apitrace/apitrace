@@ -58,7 +58,7 @@ protected:
     virtual bool rawRead(void *buffer, int length);
     virtual int rawGetc();
     virtual void rawClose();
-    virtual void rawFlush(FlushType type);
+    virtual void rawFlush();
 
 private:
     inline int freeCacheSize() const
