@@ -56,6 +56,16 @@ File::~File()
     close();
 }
 
+
+File::Offset File::currentOffset()
+{
+    return File::Offset();
+}
+
+void File::setCurrentOffset(const File::Offset &offset)
+{
+}
+
 bool File::isZLibCompressed(const std::string &filename)
 {
     std::fstream stream(filename.c_str(),
@@ -132,4 +142,10 @@ void ZLibFile::rawClose()
 void ZLibFile::rawFlush()
 {
     gzflush(m_gzFile, Z_SYNC_FLUSH);
+}
+
+
+bool ZLibFile::supportsOffsets() const
+{
+    return false;
 }

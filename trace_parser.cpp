@@ -84,9 +84,10 @@ deleteAll(Iter begin, Iter end)
 
 template <typename Container>
 inline void
-deleteAll(const Container &c)
+deleteAll(Container &c)
 {
     deleteAll(c.begin(), c.end());
+    c.clear();
 }
 
 void Parser::close(void) {

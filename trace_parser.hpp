@@ -30,13 +30,12 @@
 #include <iostream>
 #include <list>
 
+#include "trace_file.hpp"
 #include "trace_format.hpp"
 #include "trace_model.hpp"
 
 
 namespace Trace {
-
-class File;
 
 class Parser
 {
@@ -72,6 +71,21 @@ public:
     void close(void);
 
     Call *parse_call(void);
+
+    bool supportsOffsets() const
+    {
+        return file-supportsOffsets();
+    }
+
+    File::Offset currentOffset()
+    {
+        return file->currentOffset();
+    }
+
+    void setCurrentOffset(const File::Offset &offset)
+    {
+        file->setCurrentOffset(offset);
+    }
 
 protected:
     void parse_enter(void);

@@ -28,6 +28,8 @@
 
 #include <snappy.h>
 
+#include <iostream>
+
 #include <assert.h>
 #include <string.h>
 
@@ -135,16 +137,13 @@ bool SnappyFile::rawWrite(const void *buffer, int length)
 
 bool SnappyFile::rawRead(void *buffer, int length)
 {
-    if (m_stream.eof()) {
+    if (endOfData()) {
         return false;
     }
-    if (freeCacheSize() > length) {
+
+    if (freeCacheSize() >= length) {
         memcpy(buffer, m_cachePtr, length);
         m_cachePtr += length;
-    } else if (freeCacheSize() == length) {
-        memcpy(buffer, m_cachePtr, length);
-        m_cachePtr += length;
-        flushCache();
     } else {
         int sizeToRead = length;
         int offset = 0;
@@ -202,9 +201,18 @@ void SnappyFile::flushCache()
         if (m_stream.eof())
             return;
         //assert(m_cachePtr == m_cache + m_cacheSize);
+        m_currentOffset.chunk = m_stream.tellg();
         size_t compressedLength;
         compressedLength = readCompressedLength();
         m_stream.read((char*)m_compressedCache, compressedLength);
+        /*
+         * The reason we peek here is because the last read will
+         * read all the way until the last character, but that will not
+         * trigger m_stream.eof() to be set, so by calling peek
+         * we assure that if we in fact have read the entire stream
+         * then the m_stream.eof() is always set.
+         */
+        m_stream.peek();
         ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
                                         &m_cacheSize);
         if (m_cache)
@@ -232,4 +240,29 @@ uint32_t SnappyFile::readCompressedLength()
     uint32_t len;
     m_stream.read((char*)&len, sizeof len);
     return len;
+}
+
+bool SnappyFile::supportsOffsets() const
+{
+    return true;
+}
+
+File::Offset SnappyFile::currentOffset()
+{
+    m_currentOffset.offsetInChunk = m_cachePtr - m_cache;
+    return m_currentOffset;
+}
+
+void SnappyFile::setCurrentOffset(const File::Offset &offset)
+{
+    // to remove eof bit
+    m_stream.clear();
+    // seek to the start of a chunk
+    m_stream.seekg(offset.chunk, std::ios::beg);
+    // load the chunk
+    flushCache();
+    assert(m_cacheSize >= offset.offsetInChunk);
+    // seek within our cache to the correct location within the chunk
+    m_cachePtr = m_cache + offset.offsetInChunk;
+
 }

@@ -29,6 +29,7 @@
 
 #include <string>
 #include <fstream>
+#include <stdint.h>
 
 namespace Trace {
 
@@ -38,6 +39,15 @@ public:
         Read,
         Write
     };
+    struct Offset {
+        Offset()
+            : chunk(0),
+              offsetInChunk(0)
+        {}
+        uint64_t chunk;
+        uint32_t offsetInChunk;
+    };
+
 public:
     static bool isZLibCompressed(const std::string &filename);
     static bool isSnappyCompressed(const std::string &filename);
@@ -58,6 +68,9 @@ public:
     void flush(void);
     int getc();
 
+    virtual bool supportsOffsets() const = 0;
+    virtual File::Offset currentOffset();
+    virtual void setCurrentOffset(const File::Offset &offset);
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode) = 0;
     virtual bool rawWrite(const void *buffer, int length) = 0;
@@ -141,6 +154,8 @@ public:
              File::Mode mode = File::Read);
     virtual ~ZLibFile();
 
+
+    virtual bool supportsOffsets() const;
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, int length);
