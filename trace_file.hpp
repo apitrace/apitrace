@@ -143,7 +143,7 @@ inline void File::flush(void)
 inline int File::getc()
 {
     if (!m_isOpened || m_mode != File::Read) {
-        return 0;
+        return -1;
     }
     return rawGetc();
 }
