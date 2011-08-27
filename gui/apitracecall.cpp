@@ -440,6 +440,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
         Q_ASSERT(type == QLatin1String("uint8"));
         Q_ASSERT(normalized == true);
+        Q_UNUSED(normalized);
 
         QByteArray dataArray =
             image[QLatin1String("__data__")].toByteArray();
@@ -466,6 +467,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
         Q_ASSERT(type == QLatin1String("uint8"));
         Q_ASSERT(normalized == true);
+        Q_UNUSED(normalized);
 
         QByteArray dataArray =
             buffer[QLatin1String("__data__")].toByteArray();
@@ -730,8 +732,8 @@ QStaticText ApiTraceCall::staticText() const
             shortened[argText.length() - 5] = '.';
             shortened[argText.length() - 4] = '.';
             shortened[argText.length() - 3] = '.';
-            shortened[argText.length() - 2] = argText[argText.length() - 2];
-            shortened[argText.length() - 1] = argText[argText.length() - 1];
+            shortened[argText.length() - 2] = argText.at(argText.length() - 2);
+            shortened[argText.length() - 1] = argText.at(argText.length() - 1);
             richText += shortened;
         } else {
             richText += argText;
