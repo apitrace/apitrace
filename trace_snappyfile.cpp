@@ -135,16 +135,13 @@ bool SnappyFile::rawWrite(const void *buffer, int length)
 
 bool SnappyFile::rawRead(void *buffer, int length)
 {
-    if (m_stream.eof()) {
+    if (endOfData()) {
         return false;
     }
-    if (freeCacheSize() > length) {
+
+    if (freeCacheSize() >= length) {
         memcpy(buffer, m_cachePtr, length);
         m_cachePtr += length;
-    } else if (freeCacheSize() == length) {
-        memcpy(buffer, m_cachePtr, length);
-        m_cachePtr += length;
-        flushCache();
     } else {
         int sizeToRead = length;
         int offset = 0;
@@ -205,6 +202,14 @@ void SnappyFile::flushCache()
         size_t compressedLength;
         compressedLength = readCompressedLength();
         m_stream.read((char*)m_compressedCache, compressedLength);
+        /*
+         * The reason we peek here is because the last read will
+         * read all the way until the last character, but that will not
+         * trigger m_stream.eof() to be set, so by calling peek
+         * we assure that if we in fact have read the entire stream
+         * then the m_stream.eof() is always set.
+         */
+        m_stream.peek();
         ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
                                         &m_cacheSize);
         if (m_cache)

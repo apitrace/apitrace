@@ -68,6 +68,10 @@ private:
         else
             return 0;
     }
+    inline bool endOfData() const
+    {
+        return m_stream.eof() && freeCacheSize() == 0;
+    }
     void flushCache();
     void createCache(size_t size);
     void writeCompressedLength(uint32_t  num);
