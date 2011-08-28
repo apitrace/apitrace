@@ -396,6 +396,7 @@ void ApiArray::init(const Trace::Array *arr)
     if (!arr)
         return;
 
+    m_array.reserve(arr->values.size());
     for (int i = 0; i < arr->values.size(); ++i) {
         VariantVisitor vis;
         arr->values[i]->visit(vis);
