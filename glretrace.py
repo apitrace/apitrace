@@ -302,7 +302,7 @@ class GlRetracer(Retracer):
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
-            print '    %s = static_cast<%s>(%s.toPointer());' % (lvalue, arg_type, rvalue)
+            print '    %s = static_cast<%s>(%s.toPointer(true));' % (lvalue, arg_type, rvalue)
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices':

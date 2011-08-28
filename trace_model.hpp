@@ -96,6 +96,7 @@ public:
     virtual double toDouble(void) const;
 
     virtual void *toPointer(void) const;
+    virtual void *toPointer(bool bind);
     virtual unsigned long long toUIntPtr(void) const;
     virtual const char *toString(void) const;
 
@@ -114,6 +115,7 @@ public:
     virtual float toFloat(void) const;
     virtual double toDouble(void) const;
     void *toPointer(void) const;
+    void *toPointer(bool bind);
     unsigned long long toUIntPtr(void) const;
     const char *toString(void) const;
     void visit(Visitor &visitor);
@@ -257,16 +259,19 @@ public:
     Blob(size_t _size) {
         size = _size;
         buf = new char[_size];
+        bound = false;
     }
 
     ~Blob();
 
     bool toBool(void) const;
     void *toPointer(void) const;
+    void *toPointer(bool bind);
     void visit(Visitor &visitor);
 
     size_t size;
     char *buf;
+    bool bound;
 };
 
 
@@ -277,6 +282,7 @@ public:
 
     bool toBool(void) const;
     void *toPointer(void) const;
+    void *toPointer(bool bind);
     unsigned long long toUIntPtr(void) const;
     void visit(Visitor &visitor);
 };
