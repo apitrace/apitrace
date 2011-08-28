@@ -146,6 +146,7 @@ void ApiTrace::setFrameMarker(FrameMarker marker)
 
 void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
 {
+    QList<ApiTraceCall*> calls;
     int currentFrames = m_frames.count();
     int numNewFrames = frames.count();
 
@@ -158,8 +159,10 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
     foreach(ApiTraceFrame *frame, frames) {
         Q_ASSERT(this == frame->parentTrace());
         numNewCalls += frame->numChildren();
-        m_calls += frame->calls();
+        calls += frame->calls();
     }
+    m_calls.reserve(m_calls.count() + calls.count());
+    m_calls += calls;
 
     emit endAddingFrames();
     emit callsAdded(currentCalls, numNewCalls);
