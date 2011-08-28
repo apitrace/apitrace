@@ -132,7 +132,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         m_ui.detailsDock->hide();
         m_ui.vertexDataDock->hide();
     }
-    if (m_selectedEvent && !m_selectedEvent->state().isEmpty()) {
+    if (m_selectedEvent && m_selectedEvent->hasState()) {
         fillStateForFrame();
     } else
         m_ui.stateDock->hide();
@@ -464,7 +464,7 @@ static void addSurfaceItem(const ApiSurface &surface,
 
 void MainWindow::fillStateForFrame()
 {
-    if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
+    if (!m_selectedEvent || !m_selectedEvent->hasState())
         return;
 
     if (m_nonDefaultsLookupEvent) {
@@ -480,7 +480,7 @@ void MainWindow::fillStateForFrame()
         defaultParams = defaultState.parameters();
     }
 
-    const ApiTraceState &state = m_selectedEvent->state();
+    const ApiTraceState &state = *m_selectedEvent->state();
     m_ui.stateTreeWidget->clear();
     QList<QTreeWidgetItem *> items;
     variantMapToItems(state.parameters(), defaultParams, items);
@@ -694,8 +694,8 @@ void MainWindow::initConnections()
             this, SLOT(replayFinished(const QString&)));
     connect(m_retracer, SIGNAL(error(const QString&)),
             this, SLOT(replayError(const QString&)));
-    connect(m_retracer, SIGNAL(foundState(const ApiTraceState&)),
-            this, SLOT(replayStateFound(const ApiTraceState&)));
+    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
+            this, SLOT(replayStateFound(ApiTraceState*)));
     connect(m_retracer, SIGNAL(retraceErrors(const QList<RetraceError>&)),
             this, SLOT(slotRetraceErrors(const QList<RetraceError>&)));
 
@@ -778,7 +778,7 @@ void MainWindow::initConnections()
             this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
 }
 
-void MainWindow::replayStateFound(const ApiTraceState &state)
+void MainWindow::replayStateFound(ApiTraceState *state)
 {
     m_stateEvent->setState(state);
     m_model->stateSetOnEvent(m_stateEvent);

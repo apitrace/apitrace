@@ -212,10 +212,10 @@ ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 ApiTraceState ApiTrace::defaultState() const
 {
     ApiTraceFrame *frame = frameAt(0);
-    if (!frame)
+    if (!frame || !frame->hasState())
         return ApiTraceState();
 
-    return frame->state();
+    return *frame->state();
 }
 
 void ApiTrace::callEdited(ApiTraceCall *call)

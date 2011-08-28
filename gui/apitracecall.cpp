@@ -535,41 +535,50 @@ void ApiTraceCallSignature::setHelpUrl(const QUrl &url)
 
 ApiTraceEvent::ApiTraceEvent()
     : m_type(ApiTraceEvent::None),
+      m_hasBinaryData(false),
+      m_binaryDataIndex(0),
+      m_state(0),
       m_staticText(0)
 {
 }
 
 ApiTraceEvent::ApiTraceEvent(Type t)
     : m_type(t),
+      m_hasBinaryData(false),
+      m_binaryDataIndex(0),
+      m_state(0),
       m_staticText(0)
 {
 }
 
 ApiTraceEvent::~ApiTraceEvent()
 {
+    delete m_state;
     delete m_staticText;
 }
 
 QVariantMap ApiTraceEvent::stateParameters() const
 {
-    return m_state.parameters();
+    if (m_state) {
+        return m_state->parameters();
+    } else {
+        return QVariantMap();
+    }
 }
 
-ApiTraceState ApiTraceEvent::state() const
+ApiTraceState *ApiTraceEvent::state() const
 {
     return m_state;
 }
 
-void ApiTraceEvent::setState(const ApiTraceState &state)
+void ApiTraceEvent::setState(ApiTraceState *state)
 {
     m_state = state;
 }
 
 ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
     : ApiTraceEvent(ApiTraceEvent::Call),
-      m_parentFrame(parentFrame),
-      m_hasBinaryData(false),
-      m_binaryDataIndex(0)
+      m_parentFrame(parentFrame)
 {
     ApiTrace *trace = parentTrace();
 

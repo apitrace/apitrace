@@ -179,27 +179,33 @@ class ApiTraceEvent
 {
 public:
     enum Type {
-        None,
-        Call,
-        Frame
+        None  = 0,
+        Call  = 1 << 0,
+        Frame = 1 << 1
     };
 public:
     ApiTraceEvent();
     ApiTraceEvent(Type t);
     virtual ~ApiTraceEvent();
 
-    Type type() const { return m_type; }
+    Type type() const { return (Type)m_type; }
 
     virtual QStaticText staticText() const = 0;
     virtual int numChildren() const = 0;
 
     QVariantMap stateParameters() const;
-    ApiTraceState state() const;
-    void setState(const ApiTraceState &state);
+    ApiTraceState *state() const;
+    void setState(ApiTraceState *state);
+    bool hasState() const
+    {
+        return m_state && !m_state->isEmpty();
+    }
 
 protected:
-    Type m_type;
-    ApiTraceState m_state;
+    int m_type : 4;
+    mutable bool m_hasBinaryData;
+    mutable int m_binaryDataIndex:8;
+    ApiTraceState *m_state;
 
     mutable QStaticText *m_staticText;
 };
@@ -253,8 +259,6 @@ private:
 
     mutable QString m_richText;
     mutable QString m_searchText;
-    mutable bool m_hasBinaryData;
-    mutable int m_binaryDataIndex;
 };
 Q_DECLARE_METATYPE(ApiTraceCall*);
 
