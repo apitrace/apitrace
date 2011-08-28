@@ -865,7 +865,7 @@ void MainWindow::slotSearchNext(const QString &str,
         /* if it's not valid it means that the proxy model has already
          * filtered it out */
         if (index.isValid()) {
-            QString txt = testCall->filterText();
+            QString txt = testCall->searchText();
             if (txt.contains(str, sensitivity)) {
                 m_ui.callView->setCurrentIndex(index);
                 m_searchWidget->setFound(true);
@@ -916,7 +916,7 @@ void MainWindow::slotSearchPrev(const QString &str,
         /* if it's not valid it means that the proxy model has already
          * filtered it out */
         if (index.isValid()) {
-            QString txt = testCall->filterText();
+            QString txt = testCall->searchText();
             if (txt.contains(str, sensitivity)) {
                 m_ui.callView->setCurrentIndex(index);
                 m_searchWidget->setFound(true);

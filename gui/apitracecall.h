@@ -211,7 +211,7 @@ public:
     ApiTrace *parentTrace() const;
 
     QString toHtml() const;
-    QString filterText() const;
+    QString searchText() const;
     QStaticText staticText() const;
     int numChildren() const;
     bool hasBinaryData() const;
@@ -230,7 +230,7 @@ private:
     QString m_error;
 
     mutable QString m_richText;
-    mutable QString m_filterText;
+    mutable QString m_searchText;
     mutable bool m_hasBinaryData;
     mutable int m_binaryDataIndex;
 };

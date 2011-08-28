@@ -626,7 +626,7 @@ void ApiTraceCall::setEditedValues(const QVariantList &lst)
     m_editedValues = lst;
     //lets regenerate data
     m_richText = QString();
-    m_filterText = QString();
+    m_searchText = QString();
     delete m_staticText;
     m_staticText = 0;
 
@@ -827,28 +827,28 @@ QString ApiTraceCall::toHtml() const
     return m_richText;
 }
 
-QString ApiTraceCall::filterText() const
+QString ApiTraceCall::searchText() const
 {
-    if (!m_filterText.isEmpty())
-        return m_filterText;
+    if (!m_searchText.isEmpty())
+        return m_searchText;
 
     QVariantList argValues = arguments();
-    m_filterText = m_name + QLatin1Literal("(");
+    m_searchText = m_name + QLatin1Literal("(");
     for (int i = 0; i < m_argNames.count(); ++i) {
-        m_filterText += m_argNames[i] +
+        m_searchText += m_argNames[i] +
                         QLatin1Literal(" = ") +
                         apiVariantToString(argValues[i]);
         if (i < m_argNames.count() - 1)
-            m_filterText += QLatin1String(", ");
+            m_searchText += QLatin1String(", ");
     }
-    m_filterText += QLatin1String(")");
+    m_searchText += QLatin1String(")");
 
     if (m_returnValue.isValid()) {
-        m_filterText += QLatin1Literal(" = ") +
+        m_searchText += QLatin1Literal(" = ") +
                         apiVariantToString(m_returnValue);
     }
-    m_filterText.squeeze();
-    return m_filterText;
+    m_searchText.squeeze();
+    return m_searchText;
 }
 
 int ApiTraceCall::numChildren() const
