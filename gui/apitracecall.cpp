@@ -581,9 +581,9 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
 
     if (!m_signature) {
         QStringList argNames;
+        argNames.reserve(call->sig->num_args);
         for (int i = 0; i < call->sig->num_args; ++i) {
-            argNames +=
-                QString::fromStdString(call->sig->arg_names[i]);
+            argNames += QString::fromStdString(call->sig->arg_names[i]);
         }
         m_signature = new ApiTraceCallSignature(name, argNames);
         trace->addSignature(m_signature);
@@ -593,10 +593,11 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
         call->ret->visit(retVisitor);
         m_returnValue = retVisitor.variant();
     }
+    m_argValues.reserve(call->args.size());
     for (int i = 0; i < call->args.size(); ++i) {
         VariantVisitor argVisitor;
         call->args[i]->visit(argVisitor);
-        m_argValues += argVisitor.variant();
+        m_argValues.append(argVisitor.variant());
         if (m_argValues[i].type() == QVariant::ByteArray) {
             m_hasBinaryData = true;
             m_binaryDataIndex = i;
