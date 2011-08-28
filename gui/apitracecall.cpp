@@ -586,17 +586,17 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
 
     m_index = call->no;
 
-    QString name = QString::fromStdString(call->sig->name);
-    m_signature = trace->signature(name);
+    m_signature = trace->signature(call->sig->id);
 
     if (!m_signature) {
+        QString name = QString::fromStdString(call->sig->name);
         QStringList argNames;
         argNames.reserve(call->sig->num_args);
         for (int i = 0; i < call->sig->num_args; ++i) {
             argNames += QString::fromStdString(call->sig->arg_names[i]);
         }
         m_signature = new ApiTraceCallSignature(name, argNames);
-        trace->addSignature(m_signature);
+        trace->addSignature(call->sig->id, m_signature);
     }
     if (call->ret) {
         VariantVisitor retVisitor;

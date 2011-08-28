@@ -289,14 +289,19 @@ bool ApiTrace::hasErrors() const
     return !m_errors.isEmpty();
 }
 
-ApiTraceCallSignature * ApiTrace::signature(const QString &callName)
+ApiTraceCallSignature * ApiTrace::signature(unsigned id)
 {
-    return m_signatures[callName];
+    if (id >= m_signatures.count()) {
+        m_signatures.resize(id + 1);
+        return NULL;
+    } else {
+        return m_signatures[id];
+    }
 }
 
-void ApiTrace::addSignature(ApiTraceCallSignature *signature)
+void ApiTrace::addSignature(unsigned id, ApiTraceCallSignature *signature)
 {
-    m_signatures.insert(signature->name(), signature);
+    m_signatures[id] = signature;
 }
 
 #include "apitrace.moc"
