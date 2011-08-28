@@ -156,7 +156,7 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
     int currentCalls = m_calls.count();
     int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
-        frame->setParentTrace(this);
+        Q_ASSERT(this == frame->parentTrace());
         numNewCalls += frame->numChildren();
         m_calls += frame->calls();
     }
@@ -175,8 +175,7 @@ void ApiTrace::detectFrames()
     ApiTraceFrame *currentFrame = 0;
     foreach(ApiTraceCall *apiCall, m_calls) {
         if (!currentFrame) {
-            currentFrame = new ApiTraceFrame();
-            currentFrame->setParentTrace(this);
+            currentFrame = new ApiTraceFrame(this);
             currentFrame->number = m_frames.count();
         }
         apiCall->setParentFrame(currentFrame);
@@ -285,6 +284,16 @@ void ApiTrace::callError(ApiTraceCall *call)
 bool ApiTrace::hasErrors() const
 {
     return !m_errors.isEmpty();
+}
+
+ApiTraceCallSignature * ApiTrace::signature(const QString &callName)
+{
+    return m_signatures[callName];
+}
+
+void ApiTrace::addSignature(ApiTraceCallSignature *signature)
+{
+    m_signatures.insert(signature->name(), signature);
 }
 
 #include "apitrace.moc"

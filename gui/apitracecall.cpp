@@ -511,6 +511,27 @@ const QList<ApiFramebuffer> & ApiTraceState::framebuffers() const
     return m_framebuffers;
 }
 
+ApiTraceCallSignature::ApiTraceCallSignature(const QString &name,
+                                             const QStringList &argNames)
+    : m_name(name),
+      m_argNames(argNames)
+{
+}
+
+ApiTraceCallSignature::~ApiTraceCallSignature()
+{
+}
+
+QUrl ApiTraceCallSignature::helpUrl() const
+{
+    return m_helpUrl;
+}
+
+void ApiTraceCallSignature::setHelpUrl(const QUrl &url)
+{
+    m_helpUrl = url;
+}
+
 ApiTraceEvent::ApiTraceEvent()
     : m_type(ApiTraceEvent::None),
       m_staticText(0)
@@ -543,27 +564,29 @@ void ApiTraceEvent::setState(const ApiTraceState &state)
     m_state = state;
 }
 
-
-ApiTraceCall::ApiTraceCall()
+ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
     : ApiTraceEvent(ApiTraceEvent::Call),
+      m_parentFrame(parentFrame),
       m_hasBinaryData(false),
       m_binaryDataIndex(0)
 {
-}
+    ApiTrace *trace = parentTrace();
 
+    Q_ASSERT(trace);
 
-ApiTraceCall::ApiTraceCall(const Trace::Call *call)
-    : ApiTraceEvent(ApiTraceEvent::Call),
-      m_hasBinaryData(false),
-      m_binaryDataIndex(0)
-{
-    m_name = QString::fromStdString(call->sig->name);
     m_index = call->no;
 
-    QString argumentsText;
-    for (int i = 0; i < call->sig->num_args; ++i) {
-        m_argNames +=
-            QString::fromStdString(call->sig->arg_names[i]);
+    QString name = QString::fromStdString(call->sig->name);
+    m_signature = trace->signature(name);
+
+    if (!m_signature) {
+        QStringList argNames;
+        for (int i = 0; i < call->sig->num_args; ++i) {
+            argNames +=
+                QString::fromStdString(call->sig->arg_names[i]);
+        }
+        m_signature = new ApiTraceCallSignature(name, argNames);
+        trace->addSignature(m_signature);
     }
     if (call->ret) {
         VariantVisitor retVisitor;
@@ -656,7 +679,7 @@ void ApiTraceCall::revert()
 
 void ApiTraceCall::setHelpUrl(const QUrl &url)
 {
-    m_helpUrl = url;
+    m_signature->setHelpUrl(url);
 }
 
 void ApiTraceCall::setParentFrame(ApiTraceFrame *frame)
@@ -676,12 +699,12 @@ int ApiTraceCall::index() const
 
 QString ApiTraceCall::name() const
 {
-    return m_name;
+    return m_signature->name();
 }
 
 QStringList ApiTraceCall::argNames() const
 {
-    return m_argNames;
+    return m_signature->argNames();
 }
 
 QVariantList ApiTraceCall::arguments() const
@@ -699,7 +722,7 @@ QVariant ApiTraceCall::returnValue() const
 
 QUrl ApiTraceCall::helpUrl() const
 {
-    return m_helpUrl;
+    return m_signature->helpUrl();
 }
 
 bool ApiTraceCall::hasBinaryData() const
@@ -720,8 +743,10 @@ QStaticText ApiTraceCall::staticText() const
     QVariantList argValues = arguments();
 
     QString richText = QString::fromLatin1(
-        "<span style=\"font-weight:bold\">%1</span>(").arg(m_name);
-    for (int i = 0; i < m_argNames.count(); ++i) {
+        "<span style=\"font-weight:bold\">%1</span>(").arg(
+            m_signature->name());
+    QStringList argNames = m_signature->argNames();
+    for (int i = 0; i < argNames.count(); ++i) {
         richText += QLatin1String("<span style=\"color:#0000ff\">");
         QString argText = apiVariantToString(argValues[i]);
 
@@ -739,7 +764,7 @@ QStaticText ApiTraceCall::staticText() const
             richText += argText;
         }
         richText += QLatin1String("</span>");
-        if (i < m_argNames.count() - 1)
+        if (i < argNames.count() - 1)
             richText += QLatin1String(", ");
     }
     richText += QLatin1String(")");
@@ -770,30 +795,32 @@ QString ApiTraceCall::toHtml() const
 
     m_richText = QLatin1String("<div class=\"call\">");
 
-    if (m_helpUrl.isEmpty()) {
+    QUrl helpUrl = m_signature->helpUrl();
+    if (helpUrl.isEmpty()) {
         m_richText += QString::fromLatin1(
             "%1) <span class=\"callName\">%2</span>(")
                       .arg(m_index)
-                      .arg(m_name);
+                      .arg(m_signature->name());
     } else {
         m_richText += QString::fromLatin1(
             "%1) <span class=\"callName\"><a href=\"%2\">%3</a></span>(")
                       .arg(m_index)
-                      .arg(m_helpUrl.toString())
-                      .arg(m_name);
+                      .arg(helpUrl.toString())
+                      .arg(m_signature->name());
     }
 
     QVariantList argValues = arguments();
-    for (int i = 0; i < m_argNames.count(); ++i) {
+    QStringList argNames = m_signature->argNames();
+    for (int i = 0; i < argNames.count(); ++i) {
         m_richText +=
             QLatin1String("<span class=\"arg-name\">") +
-            m_argNames[i] +
+            argNames[i] +
             QLatin1String("</span>") +
             QLatin1Literal(" = ") +
             QLatin1Literal("<span class=\"arg-value\">") +
             apiVariantToString(argValues[i], true) +
             QLatin1Literal("</span>");
-        if (i < m_argNames.count() - 1)
+        if (i < argNames.count() - 1)
             m_richText += QLatin1String(", ");
     }
     m_richText += QLatin1String(")");
@@ -833,12 +860,13 @@ QString ApiTraceCall::searchText() const
         return m_searchText;
 
     QVariantList argValues = arguments();
-    m_searchText = m_name + QLatin1Literal("(");
-    for (int i = 0; i < m_argNames.count(); ++i) {
-        m_searchText += m_argNames[i] +
+    m_searchText = m_signature->name() + QLatin1Literal("(");
+    QStringList argNames = m_signature->argNames();
+    for (int i = 0; i < argNames.count(); ++i) {
+        m_searchText += argNames[i] +
                         QLatin1Literal(" = ") +
                         apiVariantToString(argValues[i]);
-        if (i < m_argNames.count() - 1)
+        if (i < argNames.count() - 1)
             m_searchText += QLatin1String(", ");
     }
     m_searchText += QLatin1String(")");
@@ -856,9 +884,9 @@ int ApiTraceCall::numChildren() const
     return 0;
 }
 
-ApiTraceFrame::ApiTraceFrame()
+ApiTraceFrame::ApiTraceFrame(ApiTrace *parentTrace)
     : ApiTraceEvent(ApiTraceEvent::Frame),
-      m_parentTrace(0),
+      m_parentTrace(parentTrace),
       m_binaryDataSize(0)
 {
 }
@@ -906,11 +934,6 @@ int ApiTraceFrame::numChildren() const
 ApiTrace * ApiTraceFrame::parentTrace() const
 {
     return m_parentTrace;
-}
-
-void ApiTraceFrame::setParentTrace(ApiTrace *trace)
-{
-    m_parentTrace = trace;
 }
 
 void ApiTraceFrame::addCall(ApiTraceCall *call)

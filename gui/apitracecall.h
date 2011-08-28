@@ -150,6 +150,31 @@ private:
 };
 Q_DECLARE_METATYPE(ApiTraceState);
 
+class ApiTraceCallSignature
+{
+public:
+    ApiTraceCallSignature(const QString &name,
+                          const QStringList &argNames);
+    ~ApiTraceCallSignature();
+
+    QString name() const
+    {
+        return m_name;
+    }
+    QStringList argNames() const
+    {
+        return m_argNames;
+    }
+
+    QUrl helpUrl() const;
+    void setHelpUrl(const QUrl &url);
+
+private:
+    QString m_name;
+    QStringList m_argNames;
+    QUrl m_helpUrl;
+};
+
 class ApiTraceEvent
 {
 public:
@@ -183,8 +208,7 @@ Q_DECLARE_METATYPE(ApiTraceEvent*);
 class ApiTraceCall : public ApiTraceEvent
 {
 public:
-    ApiTraceCall();
-    ApiTraceCall(const Trace::Call *tcall);
+    ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *tcall);
     ~ApiTraceCall();
 
     int index() const;
@@ -218,12 +242,10 @@ public:
     int binaryDataIndex() const;
 private:
     int m_index;
-    QString m_name;
-    QStringList m_argNames;
+    ApiTraceCallSignature *m_signature;
     QVariantList m_argValues;
     QVariant m_returnValue;
     ApiTraceFrame *m_parentFrame;
-    QUrl m_helpUrl;
 
     QVariantList m_editedValues;
 
@@ -239,13 +261,12 @@ Q_DECLARE_METATYPE(ApiTraceCall*);
 class ApiTraceFrame : public ApiTraceEvent
 {
 public:
-    ApiTraceFrame();
+    ApiTraceFrame(ApiTrace *parent);
     int number;
 
     bool isEmpty() const;
 
     ApiTrace *parentTrace() const;
-    void setParentTrace(ApiTrace *trace);
 
     int numChildren() const;
     QStaticText staticText() const;

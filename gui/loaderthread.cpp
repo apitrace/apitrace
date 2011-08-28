@@ -12,18 +12,20 @@
 
 static ApiTraceCall *
 apiCallFromTraceCall(const Trace::Call *call,
-                     const QHash<QString, QUrl> &helpHash)
+                     const QHash<QString, QUrl> &helpHash,
+                     ApiTraceFrame *frame)
 {
-    ApiTraceCall *apiCall = new ApiTraceCall(call);
+    ApiTraceCall *apiCall = new ApiTraceCall(frame, call);
 
     apiCall->setHelpUrl(helpHash.value(apiCall->name()));
 
     return apiCall;
 }
 
-LoaderThread::LoaderThread(QObject *parent)
+LoaderThread::LoaderThread(ApiTrace *parent)
     : QThread(parent),
-      m_frameMarker(ApiTrace::FrameMarker_SwapBuffers)
+      m_frameMarker(ApiTrace::FrameMarker_SwapBuffers),
+      m_trace(parent)
 {
 }
 
@@ -58,13 +60,12 @@ void LoaderThread::run()
         while (call) {
             //std::cout << *call;
             if (!currentFrame) {
-                currentFrame = new ApiTraceFrame();
+                currentFrame = new ApiTraceFrame(m_trace);
                 currentFrame->number = frameCount;
                 ++frameCount;
             }
             ApiTraceCall *apiCall =
-                apiCallFromTraceCall(call, helpHash);
-            apiCall->setParentFrame(currentFrame);
+                apiCallFromTraceCall(call, helpHash, currentFrame);
             currentFrame->addCall(apiCall);
             if (ApiTrace::isCallAFrameMarker(apiCall,
                                              m_frameMarker)) {

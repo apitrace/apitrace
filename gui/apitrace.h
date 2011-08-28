@@ -33,6 +33,9 @@ public:
 
     ApiTraceState defaultState() const;
 
+    ApiTraceCallSignature *signature(const QString &callName);
+    void addSignature(ApiTraceCallSignature *signature);
+
     QList<ApiTraceCall*> calls() const;
     ApiTraceCall *callAt(int idx) const;
     ApiTraceCall *callWithIndex(int idx) const;
@@ -94,6 +97,7 @@ private:
     bool m_needsSaving;
 
     QSet<ApiTraceCall*> m_errors;
+    QHash<QString, ApiTraceCallSignature*> m_signatures;
 };
 
 #endif
