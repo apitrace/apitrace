@@ -210,7 +210,7 @@ SaverThread::SaverThread(QObject *parent)
 }
 
 void SaverThread::saveFile(const QString &fileName,
-                           const QList<ApiTraceCall*> &calls)
+                           const QVector<ApiTraceCall*> &calls)
 {
     m_fileName = fileName;
     m_calls = calls;

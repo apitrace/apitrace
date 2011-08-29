@@ -4,7 +4,7 @@
 
 #include "apitrace.h"
 #include <QThread>
-#include <QList>
+#include <QVector>
 
 class ApiTraceCall;
 class ApiTraceFrame;
@@ -17,7 +17,7 @@ public:
 
 public slots:
     void saveFile(const QString &fileName,
-                  const QList<ApiTraceCall*> &calls);
+                  const QVector<ApiTraceCall*> &calls);
 
 signals:
     void traceSaved();
@@ -27,7 +27,7 @@ protected:
 
 private:
     QString m_fileName;
-    QList<ApiTraceCall*> m_calls;
+    QVector<ApiTraceCall*> m_calls;
 };
 
 

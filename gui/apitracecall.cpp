@@ -979,7 +979,7 @@ void ApiTraceFrame::addCall(ApiTraceCall *call)
     }
 }
 
-QList<ApiTraceCall*> ApiTraceFrame::calls() const
+QVector<ApiTraceCall*> ApiTraceFrame::calls() const
 {
     return m_calls;
 }
@@ -1002,4 +1002,11 @@ bool ApiTraceFrame::isEmpty() const
 int ApiTraceFrame::binaryDataSize() const
 {
     return m_binaryDataSize;
+}
+
+void ApiTraceFrame::setCalls(const QVector<ApiTraceCall*> &calls,
+                             quint64 binaryDataSize)
+{
+    m_calls = calls;
+    m_binaryDataSize = binaryDataSize;
 }

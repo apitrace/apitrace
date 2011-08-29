@@ -856,7 +856,7 @@ void MainWindow::slotSearchNext(const QString &str,
         m_searchWidget->setFound(false);
         return;
     }
-    const QList<ApiTraceCall*> &calls = m_trace->calls();
+    const QVector<ApiTraceCall*> &calls = m_trace->calls();
     int callNum = calls.indexOf(call);
 
     for (int i = callNum + 1; i < calls.count(); ++i) {
@@ -907,7 +907,7 @@ void MainWindow::slotSearchPrev(const QString &str,
         m_searchWidget->setFound(false);
         return;
     }
-    const QList<ApiTraceCall*> &calls = m_trace->calls();
+    const QVector<ApiTraceCall*> &calls = m_trace->calls();
     int callNum = calls.indexOf(call);
 
     for (int i = callNum - 1; i >= 0; --i) {
@@ -1002,8 +1002,8 @@ void MainWindow::slotGoFrameStart()
         return;
     }
 
-    QList<ApiTraceCall*>::const_iterator itr;
-    QList<ApiTraceCall*> calls = frame->calls();
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
 
     itr = calls.constBegin();
     while (itr != calls.constEnd()) {
@@ -1023,8 +1023,8 @@ void MainWindow::slotGoFrameEnd()
     if (!frame || frame->isEmpty()) {
         return;
     }
-    QList<ApiTraceCall*>::const_iterator itr;
-    QList<ApiTraceCall*> calls = frame->calls();
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
 
     itr = calls.constEnd();
     do {

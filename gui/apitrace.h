@@ -40,7 +40,7 @@ public:
     void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
 
 
-    QList<ApiTraceCall*> calls() const;
+    QVector<ApiTraceCall*> calls() const;
     ApiTraceCall *callAt(int idx) const;
     ApiTraceCall *callWithIndex(int idx) const;
     int numCalls() const;
@@ -89,7 +89,7 @@ private:
     QString m_tempFileName;
 
     QList<ApiTraceFrame*> m_frames;
-    QList<ApiTraceCall*> m_calls;
+    QVector<ApiTraceCall*> m_calls;
 
     FrameMarker m_frameMarker;
 

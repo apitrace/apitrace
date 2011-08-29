@@ -297,13 +297,15 @@ public:
     int callIndex(ApiTraceCall *call) const;
     ApiTraceCall *call(int idx) const;
     void addCall(ApiTraceCall *call);
-    QList<ApiTraceCall*> calls() const;
+    QVector<ApiTraceCall*> calls() const;
+    void setCalls(const QVector<ApiTraceCall*> &calls,
+                  quint64 binaryDataSize);
 
     int binaryDataSize() const;
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;
-    QList<ApiTraceCall*> m_calls;
+    QVector<ApiTraceCall*> m_calls;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 
