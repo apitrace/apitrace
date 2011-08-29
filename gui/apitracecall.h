@@ -131,15 +131,15 @@ class ApiArray
 {
 public:
     ApiArray(const Trace::Array *arr = 0);
-    ApiArray(const QList<QVariant> &vals);
+    ApiArray(const QVector<QVariant> &vals);
 
     QString toString() const;
 
-    QList<QVariant> values() const;
+    QVector<QVariant> values() const;
 private:
     void init(const Trace::Array *arr);
 private:
-    QList<QVariant> m_array;
+    QVector<QVariant> m_array;
 };
 Q_DECLARE_METATYPE(ApiArray);
 

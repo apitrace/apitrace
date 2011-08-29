@@ -388,12 +388,12 @@ ApiArray::ApiArray(const Trace::Array *arr)
     init(arr);
 }
 
-ApiArray::ApiArray(const QList<QVariant> &vals)
+ApiArray::ApiArray(const QVector<QVariant> &vals)
     : m_array(vals)
 {
 }
 
-QList<QVariant> ApiArray::values() const
+QVector<QVariant> ApiArray::values() const
 {
     return m_array;
 }
@@ -425,6 +425,7 @@ void ApiArray::init(const Trace::Array *arr)
 
         m_array.append(vis.variant());
     }
+    m_array.squeeze();
 }
 
 ApiTraceState::ApiTraceState()

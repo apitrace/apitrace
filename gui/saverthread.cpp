@@ -162,7 +162,7 @@ writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
     default:
         if (type == arrayType) {
             ApiArray array = var.value<ApiArray>();
-            QList<QVariant> vals = array.values();
+            QVector<QVariant> vals = array.values();
             writer.beginArray(vals.count());
             foreach(QVariant el, vals) {
                 writer.beginElement();
