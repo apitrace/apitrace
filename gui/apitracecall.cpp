@@ -215,6 +215,7 @@ void VariantVisitor::visit(Trace::Blob *blob)
     //   Blob's will start deleting the data we will need to
     //   start deep copying it or switch to using something like
     //   Boost's shared_ptr or Qt's QSharedPointer to handle it
+    blob->toPointer(true);
     QByteArray barray = QByteArray::fromRawData(blob->buf, blob->size);
     m_variant = QVariant(barray);
 }
