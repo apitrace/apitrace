@@ -173,10 +173,21 @@ void VariantVisitor::visit(Trace::String *node)
 
 void VariantVisitor::visit(Trace::Enum *e)
 {
-    QVariant val = QVariant(e->sig->value);
+    ApiTraceEnumSignature *sig = 0;
 
-    m_variant = QVariant::fromValue(
-        ApiEnum(QString::fromStdString(e->sig->name), val));
+    if (m_trace) {
+        sig = m_trace->enumSignature(e->sig->id);
+    }
+    if (!sig) {
+        sig = new ApiTraceEnumSignature(
+            QString::fromStdString(e->sig->name),
+            QVariant(e->sig->value));
+        if (m_trace) {
+            m_trace->addEnumSignature(e->sig->id, sig);
+        }
+    }
+
+    m_variant = QVariant::fromValue(ApiEnum(sig));
 }
 
 void VariantVisitor::visit(Trace::Bitmask *bitmask)
@@ -214,25 +225,36 @@ void VariantVisitor::visit(Trace::Pointer *ptr)
 }
 
 
-ApiEnum::ApiEnum(const QString &name, const QVariant &val)
-    : m_name(name),
-      m_value(val)
+ApiEnum::ApiEnum(ApiTraceEnumSignature *sig)
+    : m_sig(sig)
 {
 }
 
 QString ApiEnum::toString() const
 {
-    return m_name;
+    if (m_sig) {
+        return m_sig->name();
+    }
+    Q_ASSERT(!"should never happen");
+    return QString();
 }
 
 QVariant ApiEnum::value() const
 {
-    return m_value;
+    if (m_sig) {
+        return m_sig->value();
+    }
+    Q_ASSERT(!"should never happen");
+    return QVariant();
 }
 
 QString ApiEnum::name() const
 {
-    return m_name;
+    if (m_sig) {
+        return m_sig->name();
+    }
+    Q_ASSERT(!"should never happen");
+    return QString();
 }
 
 unsigned long long ApiBitmask::value() const
@@ -353,7 +375,7 @@ void ApiStruct::init(const Trace::Struct *s)
 
     m_sig.name = QString::fromStdString(s->sig->name);
     for (unsigned i = 0; i < s->sig->num_members; ++i) {
-        VariantVisitor vis;
+        VariantVisitor vis(0);
         m_sig.memberNames.append(
             QString::fromStdString(s->sig->member_names[i]));
         s->members[i]->visit(vis);
@@ -398,7 +420,7 @@ void ApiArray::init(const Trace::Array *arr)
 
     m_array.reserve(arr->values.size());
     for (int i = 0; i < arr->values.size(); ++i) {
-        VariantVisitor vis;
+        VariantVisitor vis(0);
         arr->values[i]->visit(vis);
 
         m_array.append(vis.variant());
@@ -599,13 +621,13 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
         trace->addSignature(call->sig->id, m_signature);
     }
     if (call->ret) {
-        VariantVisitor retVisitor;
+        VariantVisitor retVisitor(trace);
         call->ret->visit(retVisitor);
         m_returnValue = retVisitor.variant();
     }
     m_argValues.reserve(call->args.size());
     for (int i = 0; i < call->args.size(); ++i) {
-        VariantVisitor argVisitor;
+        VariantVisitor argVisitor(trace);
         call->args[i]->visit(argVisitor);
         m_argValues.append(argVisitor.variant());
         if (m_argValues[i].type() == QVariant::ByteArray) {

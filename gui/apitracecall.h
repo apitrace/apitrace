@@ -16,6 +16,9 @@ class ApiTrace;
 class VariantVisitor : public Trace::Visitor
 {
 public:
+    VariantVisitor(ApiTrace *trace)
+        : m_trace(trace)
+    {}
     virtual void visit(Trace::Null *);
     virtual void visit(Trace::Bool *node);
     virtual void visit(Trace::SInt *node);
@@ -34,21 +37,37 @@ public:
         return m_variant;
     }
 private:
+    ApiTrace *m_trace;
     QVariant m_variant;
+};
+
+class ApiTraceEnumSignature
+{
+public:
+    ApiTraceEnumSignature(const QString &name = QString(),
+                          const QVariant &val=QVariant())\
+        : m_name(name),
+          m_value(val)
+    {}
+
+    QVariant value() const { return m_value; }
+    QString name() const { return m_name; }
+private:
+    QString m_name;
+    QVariant m_value;
 };
 
 class ApiEnum
 {
 public:
-    ApiEnum(const QString &name = QString(), const QVariant &val=QVariant());
+    ApiEnum(ApiTraceEnumSignature *sig=0);
 
     QString toString() const;
 
     QVariant value() const;
     QString name() const;
 private:
-    QString m_name;
-    QVariant m_value;
+    ApiTraceEnumSignature *m_sig;
 };
 Q_DECLARE_METATYPE(ApiEnum);
 

@@ -304,4 +304,19 @@ void ApiTrace::addSignature(unsigned id, ApiTraceCallSignature *signature)
     m_signatures[id] = signature;
 }
 
+ApiTraceEnumSignature * ApiTrace::enumSignature(unsigned id)
+{
+    if (id >= m_signatures.count()) {
+        m_enumSignatures.resize(id + 1);
+        return NULL;
+    } else {
+        return m_enumSignatures[id];
+    }
+}
+
+void ApiTrace::addEnumSignature(unsigned id, ApiTraceEnumSignature *signature)
+{
+    m_enumSignatures[id] = signature;
+}
+
 #include "apitrace.moc"

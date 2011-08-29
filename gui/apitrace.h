@@ -36,6 +36,10 @@ public:
     ApiTraceCallSignature *signature(unsigned id);
     void addSignature(unsigned id, ApiTraceCallSignature *signature);
 
+    ApiTraceEnumSignature *enumSignature(unsigned id);
+    void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
+
+
     QList<ApiTraceCall*> calls() const;
     ApiTraceCall *callAt(int idx) const;
     ApiTraceCall *callWithIndex(int idx) const;
@@ -98,6 +102,7 @@ private:
 
     QSet<ApiTraceCall*> m_errors;
     QVector<ApiTraceCallSignature*> m_signatures;
+    QVector<ApiTraceEnumSignature*> m_enumSignatures;
 };
 
 #endif
