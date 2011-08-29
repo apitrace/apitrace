@@ -339,8 +339,8 @@ void ArgumentsEditor::sourceChanged()
 void ArgumentsEditor::accept()
 {
     QStringList argNames = m_call->argNames();
-    QList<QVariant> originalValues = m_call->arguments();
-    QList<QVariant> newValues;
+    QVector<QVariant> originalValues = m_call->arguments();
+    QVector<QVariant> newValues;
     bool changed = false;
     for (int i = 0; i < argNames.count(); ++i) {
         bool valChanged = false;

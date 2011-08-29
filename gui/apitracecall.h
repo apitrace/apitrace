@@ -239,7 +239,7 @@ public:
     int index() const;
     QString name() const;
     QStringList argNames() const;
-    QVariantList arguments() const;
+    QVector<QVariant> arguments() const;
     QVariant returnValue() const;
     QUrl helpUrl() const;
     void setHelpUrl(const QUrl &url);
@@ -250,11 +250,11 @@ public:
     QString error() const;
     void setError(const QString &msg);
 
-    QVariantList originalValues() const;
+    QVector<QVariant> originalValues() const;
 
     bool edited() const;
-    void setEditedValues(const QVariantList &lst);
-    QVariantList editedValues() const;
+    void setEditedValues(const QVector<QVariant> &lst);
+    QVector<QVariant> editedValues() const;
     void revert();
 
     ApiTrace *parentTrace() const;
@@ -268,11 +268,11 @@ public:
 private:
     int m_index;
     ApiTraceCallSignature *m_signature;
-    QVariantList m_argValues;
+    QVector<QVariant> m_argValues;
     QVariant m_returnValue;
     ApiTraceFrame *m_parentFrame;
 
-    QVariantList m_editedValues;
+    QVector<QVariant> m_editedValues;
 
     QString m_error;
 

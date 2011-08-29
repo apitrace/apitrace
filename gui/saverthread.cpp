@@ -229,7 +229,7 @@ void SaverThread::run()
         unsigned callNo = writer.beginEnter(funcSig);
         {
             //args
-            QVariantList vars = call->arguments();
+            QVector<QVariant> vars = call->arguments();
             int index = 0;
             foreach(QVariant var, vars) {
                 writer.beginArg(index++);

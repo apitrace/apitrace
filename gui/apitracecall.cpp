@@ -635,6 +635,7 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
             m_binaryDataIndex = i;
         }
     }
+    m_argValues.squeeze();
 }
 
 ApiTraceCall::~ApiTraceCall()
@@ -670,12 +671,12 @@ ApiTrace * ApiTraceCall::parentTrace() const
     return NULL;
 }
 
-QVariantList ApiTraceCall::originalValues() const
+QVector<QVariant> ApiTraceCall::originalValues() const
 {
     return m_argValues;
 }
 
-void ApiTraceCall::setEditedValues(const QVariantList &lst)
+void ApiTraceCall::setEditedValues(const QVector<QVariant> &lst)
 {
     ApiTrace *trace = parentTrace();
 
@@ -695,7 +696,7 @@ void ApiTraceCall::setEditedValues(const QVariantList &lst)
     }
 }
 
-QVariantList ApiTraceCall::editedValues() const
+QVector<QVariant> ApiTraceCall::editedValues() const
 {
     return m_editedValues;
 }
@@ -707,7 +708,7 @@ bool ApiTraceCall::edited() const
 
 void ApiTraceCall::revert()
 {
-    setEditedValues(QVariantList());
+    setEditedValues(QVector<QVariant>());
 }
 
 void ApiTraceCall::setHelpUrl(const QUrl &url)
@@ -740,7 +741,7 @@ QStringList ApiTraceCall::argNames() const
     return m_signature->argNames();
 }
 
-QVariantList ApiTraceCall::arguments() const
+QVector<QVariant> ApiTraceCall::arguments() const
 {
     if (m_editedValues.isEmpty())
         return m_argValues;
@@ -773,7 +774,7 @@ QStaticText ApiTraceCall::staticText() const
     if (m_staticText && !m_staticText->text().isEmpty())
         return *m_staticText;
 
-    QVariantList argValues = arguments();
+    QVector<QVariant> argValues = arguments();
 
     QString richText = QString::fromLatin1(
         "<span style=\"font-weight:bold\">%1</span>(").arg(
@@ -842,7 +843,7 @@ QString ApiTraceCall::toHtml() const
                       .arg(m_signature->name());
     }
 
-    QVariantList argValues = arguments();
+    QVector<QVariant> argValues = arguments();
     QStringList argNames = m_signature->argNames();
     for (int i = 0; i < argNames.count(); ++i) {
         m_richText +=
@@ -892,7 +893,7 @@ QString ApiTraceCall::searchText() const
     if (!m_searchText.isEmpty())
         return m_searchText;
 
-    QVariantList argValues = arguments();
+    QVector<QVariant> argValues = arguments();
     m_searchText = m_signature->name() + QLatin1Literal("(");
     QStringList argNames = m_signature->argNames();
     for (int i = 0; i < argNames.count(); ++i) {
