@@ -306,7 +306,7 @@ void ApiTrace::addSignature(unsigned id, ApiTraceCallSignature *signature)
 
 ApiTraceEnumSignature * ApiTrace::enumSignature(unsigned id)
 {
-    if (id >= m_signatures.count()) {
+    if (id >= m_enumSignatures.count()) {
         m_enumSignatures.resize(id + 1);
         return NULL;
     } else {
