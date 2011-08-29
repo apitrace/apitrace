@@ -66,7 +66,9 @@ SnappyFile::SnappyFile(const std::string &filename,
       m_cachePtr(0),
       m_cacheSize(0)
 {
-    m_compressedCache = new char[SNAPPY_CHUNK_SIZE];
+    size_t maxCompressedLength =
+        snappy::MaxCompressedLength(SNAPPY_CHUNK_SIZE);
+    m_compressedCache = new char[maxCompressedLength];
 }
 
 SnappyFile::~SnappyFile()
