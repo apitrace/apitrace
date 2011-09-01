@@ -32,8 +32,6 @@
 #include <string>
 #include <fstream>
 
-#include <stdint.h>
-
 namespace snappy {
     class File;
 }
@@ -54,14 +52,14 @@ public:
 
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
-    virtual bool rawWrite(const void *buffer, int length);
-    virtual bool rawRead(void *buffer, int length);
+    virtual bool rawWrite(const void *buffer, size_t length);
+    virtual bool rawRead(void *buffer, size_t length);
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
 
 private:
-    inline int freeCacheSize() const
+    inline size_t freeCacheSize() const
     {
         if (m_cacheSize > 0)
             return m_cacheSize - (m_cachePtr - m_cache);
@@ -74,8 +72,8 @@ private:
     }
     void flushCache();
     void createCache(size_t size);
-    void writeCompressedLength(uint32_t  num);
-    uint32_t readCompressedLength();
+    void writeCompressedLength(size_t length);
+    size_t readCompressedLength();
 private:
     std::fstream m_stream;
     char *m_cache;

@@ -30,6 +30,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
 
 using namespace Trace;
 
@@ -105,7 +106,7 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
     return m_stream.is_open();
 }
 
-bool SnappyFile::rawWrite(const void *buffer, int length)
+bool SnappyFile::rawWrite(const void *buffer, size_t length)
 {
     if (freeCacheSize() > length) {
         memcpy(m_cachePtr, buffer, length);
@@ -120,14 +121,14 @@ bool SnappyFile::rawWrite(const void *buffer, int length)
         while (sizeToWrite >= freeCacheSize()) {
             int endSize = freeCacheSize();
             int offset = length - sizeToWrite;
-            memcpy(m_cachePtr, (char*)buffer + offset, endSize);
+            memcpy(m_cachePtr, (const char*)buffer + offset, endSize);
             sizeToWrite -= endSize;
             m_cachePtr += endSize;
             flushCache();
         }
         if (sizeToWrite) {
             int offset = length - sizeToWrite;
-            memcpy(m_cachePtr, (char*)buffer + offset, sizeToWrite);
+            memcpy(m_cachePtr, (const char*)buffer + offset, sizeToWrite);
             m_cachePtr += sizeToWrite;
         }
     }
@@ -135,7 +136,7 @@ bool SnappyFile::rawWrite(const void *buffer, int length)
     return true;
 }
 
-bool SnappyFile::rawRead(void *buffer, int length)
+bool SnappyFile::rawRead(void *buffer, size_t length)
 {
     if (endOfData()) {
         return false;
@@ -145,10 +146,10 @@ bool SnappyFile::rawRead(void *buffer, int length)
         memcpy(buffer, m_cachePtr, length);
         m_cachePtr += length;
     } else {
-        int sizeToRead = length;
-        int offset = 0;
+        size_t sizeToRead = length;
+        size_t offset = 0;
         while (sizeToRead) {
-            int chunkSize = std::min(freeCacheSize(), sizeToRead);
+            size_t chunkSize = std::min(freeCacheSize(), sizeToRead);
             offset = length - sizeToRead;
             memcpy((char*)buffer + offset, m_cachePtr, chunkSize);
             m_cachePtr += chunkSize;
@@ -229,14 +230,16 @@ void SnappyFile::createCache(size_t size)
     m_cacheSize = size;
 }
 
-void SnappyFile::writeCompressedLength(uint32_t value)
+void SnappyFile::writeCompressedLength(size_t length)
 {
+    uint32_t value = length;
+    assert(value == length);
     m_stream.write((const char*)&value, sizeof value);
 }
 
-uint32_t SnappyFile::readCompressedLength()
+size_t SnappyFile::readCompressedLength()
 {
-    uint32_t len;
-    m_stream.read((char*)&len, sizeof len);
-    return len;
+    uint32_t length = 0;
+    m_stream.read((char*)&length, sizeof length);
+    return length;
 }
