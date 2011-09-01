@@ -30,7 +30,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <stdint.h>
 
 using namespace Trace;
 
@@ -45,7 +44,7 @@ using namespace Trace;
  * The file is composed of a number of chunks, they are:
  * chunk {
  *     uint32 - specifying the length of the compressed data
- *     compressed data
+ *     compressed data, in little endian
  * }
  * File can contain any number of such chunks.
  * The default size of an uncompressed chunk is specified in
@@ -232,14 +231,27 @@ void SnappyFile::createCache(size_t size)
 
 void SnappyFile::writeCompressedLength(size_t length)
 {
-    uint32_t value = length;
-    assert(value == length);
-    m_stream.write((const char*)&value, sizeof value);
+    unsigned char buf[4];
+    buf[0] = length & 0xff; length >>= 8;
+    buf[1] = length & 0xff; length >>= 8;
+    buf[2] = length & 0xff; length >>= 8;
+    buf[3] = length & 0xff; length >>= 8;
+    assert(length == 0);
+    m_stream.write((const char *)buf, sizeof buf);
 }
 
 size_t SnappyFile::readCompressedLength()
 {
-    uint32_t length = 0;
-    m_stream.read((char*)&length, sizeof length);
+    unsigned char buf[4];
+    size_t length;
+    m_stream.read((char *)buf, sizeof buf);
+    if (m_stream.fail()) {
+        length = 0;
+    } else {
+        length  =  (size_t)buf[0];
+        length |= ((size_t)buf[1] <<  8);
+        length |= ((size_t)buf[2] << 16);
+        length |= ((size_t)buf[3] << 24);
+    }
     return length;
 }
