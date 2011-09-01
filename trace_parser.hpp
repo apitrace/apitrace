@@ -84,7 +84,7 @@ public:
 
     bool supportsOffsets() const
     {
-        return file-supportsOffsets();
+        return file->supportsOffsets();
     }
 
     File::Offset currentOffset()
@@ -101,8 +101,16 @@ public:
     bool structWithSignature(const File::Offset &offset) const;
     bool enumWithSignature(const File::Offset &offset) const;
     bool bitmaskWithSignature(const File::Offset &offset) const;
-    bool hasCallBeenParsed(const File::Offset &offset) const;
-    unsigned callNumForOffset(const File::Offset &offset) const;
+
+    unsigned currentCallNumber() const
+    {
+        return next_call_no;
+    }
+
+    void setCurrentCallNumber(unsigned num)
+    {
+        next_call_no = num;
+    }
 
 protected:
     void parse_enter(void);

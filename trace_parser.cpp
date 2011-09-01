@@ -174,13 +174,8 @@ void Parser::parse_enter(void) {
 
     Call *call = new Call(sig);
 
-    if (hasCallBeenParsed(offset)) {
-        call->no = callNumForOffset(offset);
-    } else {
-        call->no = next_call_no++;
-        m_callNumOffsets.insert(
-                    std::pair<File::Offset, unsigned>(offset, call->no));
-    }
+
+    call->no = next_call_no++;
 
     if (parse_call_details(call)) {
         calls.push_back(call);
@@ -530,18 +525,6 @@ inline bool Parser::enumWithSignature(const File::Offset &offset) const
 inline bool Parser::bitmaskWithSignature(const File::Offset &offset) const
 {
     return m_bitmaskSigOffsets.find(offset) != m_bitmaskSigOffsets.end();
-}
-
-bool Parser::hasCallBeenParsed(const File::Offset &offset) const
-{
-    return m_callNumOffsets.find(offset) != m_callNumOffsets.end();
-}
-
-unsigned Parser::callNumForOffset(const File::Offset &offset) const
-{
-    CallNumOffsets::const_iterator itr = m_callNumOffsets.find(offset);
-    assert(itr != m_callNumOffsets.end());
-    return itr->second;
 }
 
 } /* namespace Trace */

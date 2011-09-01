@@ -30,7 +30,7 @@ public:
     void setFrameMarker(Loader::FrameMarker marker);
 
     int numberOfFrames() const;
-    int numberOfCallsInFrame(int frameIdx);
+    int numberOfCallsInFrame(int frameIdx) const;
 
     bool open(const char *filename);
     void close();
@@ -42,16 +42,14 @@ private:
         FrameOffset()
             : numberOfCalls(0)
         {}
-        FrameOffset(const File::Offset &s,
-                    const File::Offset &e)
+        FrameOffset(const File::Offset &s)
             : start(s),
-              end(e),
               numberOfCalls(0)
         {}
 
         File::Offset start;
-        File::Offset end;
         int numberOfCalls;
+        unsigned callNumber;
     };
     bool isCallAFrameMarker(const Trace::Call *call) const;
 
@@ -62,7 +60,8 @@ private:
     std::map<int, Trace::Frame*> m_frameCache;
     std::queue<Trace::Frame*> m_loadedFrames;
 
-    std::map<int, FrameOffset> m_frameOffsets;
+    typedef std::map<int, FrameOffset> FrameOffsets;
+    FrameOffsets m_frameOffsets;
 
     Trace::File *file;
 };

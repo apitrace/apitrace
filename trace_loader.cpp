@@ -30,13 +30,14 @@ int Loader::numberOfFrames() const
     return m_frameOffsets.size();
 }
 
-int Loader::numberOfCallsInFrame(int frameIdx)
+int Loader::numberOfCallsInFrame(int frameIdx) const
 {
     if (frameIdx > m_frameOffsets.size()) {
         return 0;
     }
-
-    return m_frameOffsets[frameIdx].numberOfCalls;
+    FrameOffsets::const_iterator itr =
+        m_frameOffsets.find(frameIdx);
+    return itr->second.numberOfCalls;
 }
 
 bool Loader::open(const char *filename)
@@ -55,8 +56,10 @@ bool Loader::open(const char *filename)
     File::Offset startOffset;
     int numOfFrames = 0;
     int numOfCalls = 0;
+    unsigned callNum = 0;
 
     startOffset = m_parser.currentOffset();
+    callNum = m_parser.currentCallNumber();
 
     while ((call = m_parser.parse_call())) {
 
@@ -64,13 +67,15 @@ bool Loader::open(const char *filename)
 
         if (isCallAFrameMarker(call)) {
             File::Offset endOffset = m_parser.currentOffset();
-            FrameOffset frameOffset(startOffset, endOffset);
-
+            FrameOffset frameOffset(startOffset);
             frameOffset.numberOfCalls = numOfCalls;
+            frameOffset.callNumber = callNum;
+
             m_frameOffsets[numOfFrames] = frameOffset;
             ++numOfFrames;
 
             startOffset = endOffset;
+            callNum = m_parser.currentCallNumber();
             numOfCalls = 0;
         }
         //call->dump(std::cout, color);
@@ -111,8 +116,10 @@ std::vector<Trace::Call *> Loader::frame(int idx)
 {
     int numOfCalls = numberOfCallsInFrame(idx);
     if (numOfCalls) {
+        const FrameOffset &frameOffset = m_frameOffsets[idx];
         std::vector<Trace::Call*> calls(numOfCalls);
-        m_parser.setCurrentOffset(m_frameOffsets[idx].start);
+        m_parser.setCurrentOffset(frameOffset.start);
+        m_parser.setCurrentCallNumber(frameOffset.callNumber);
 
         Trace::Call *call;
         int parsedCalls = 0;
