@@ -2297,7 +2297,7 @@ glapi.add_functions([
     GlFunction(Void, "glClearColorIuiEXT", [(GLuint, "red"), (GLuint, "green"), (GLuint, "blue"), (GLuint, "alpha")]),
 
     # GL_GREMEDY_frame_terminator
-    GlFunction(Void, "glFrameTerminatorGREMEDY", [], sideeffects=False),
+    GlFunction(Void, "glFrameTerminatorGREMEDY", []),
 
     # GL_NV_conditional_render
     GlFunction(Void, "glBeginConditionalRenderNV", [(GLuint, "id"), (GLenum, "mode")]),

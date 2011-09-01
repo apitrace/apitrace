@@ -178,6 +178,9 @@ class GlRetracer(Retracer):
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
             print '        glretrace::snapshot(call.no - 1);'
             print '    }'
+        if function.name == 'glFrameTerminatorGREMEDY':
+            print '    glretrace::frame_complete(call.no);'
+            return
 
         Retracer.retrace_function_body(self, function)
 
