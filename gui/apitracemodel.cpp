@@ -42,7 +42,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
         const QString stateText = tr("State info available.");
         if (itm->type() == ApiTraceEvent::Call) {
             ApiTraceCall *call = static_cast<ApiTraceCall*>(itm);
-            if (call->state().isEmpty())
+            if (!call->hasState())
                 return QString::fromLatin1("%1)&nbsp;<b>%2</b>")
                     .arg(call->index())
                     .arg(call->name());
@@ -56,7 +56,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
             QString text = QObject::tr("%1)&nbsp;Frame&nbsp;")
                            .arg(frame->number);
             int binaryDataSize = frame->binaryDataSize() / 1024;
-            if (frame->state().isEmpty())
+            if (!frame->hasState())
                 return QObject::tr(
                     "<b>%1&nbsp;</b>(binary&nbsp;data&nbsp;size&nbsp;=&nbsp;%2kB)")
                     .arg(text)

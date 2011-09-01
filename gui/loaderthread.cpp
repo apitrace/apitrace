@@ -12,18 +12,20 @@
 
 static ApiTraceCall *
 apiCallFromTraceCall(const Trace::Call *call,
-                     const QHash<QString, QUrl> &helpHash)
+                     const QHash<QString, QUrl> &helpHash,
+                     ApiTraceFrame *frame)
 {
-    ApiTraceCall *apiCall = new ApiTraceCall(call);
+    ApiTraceCall *apiCall = new ApiTraceCall(frame, call);
 
     apiCall->setHelpUrl(helpHash.value(apiCall->name()));
 
     return apiCall;
 }
 
-LoaderThread::LoaderThread(QObject *parent)
+LoaderThread::LoaderThread(ApiTrace *parent)
     : QThread(parent),
-      m_frameMarker(ApiTrace::FrameMarker_SwapBuffers)
+      m_frameMarker(ApiTrace::FrameMarker_SwapBuffers),
+      m_trace(parent)
 {
 }
 
@@ -53,23 +55,33 @@ void LoaderThread::run()
     file.close();
 
     Trace::Parser p;
+    QVector<ApiTraceCall*> calls;
+    quint64 binaryDataSize = 0;
     if (p.open(m_fileName.toLatin1().constData())) {
         Trace::Call *call = p.parse_call();
         while (call) {
             //std::cout << *call;
             if (!currentFrame) {
-                currentFrame = new ApiTraceFrame();
+                currentFrame = new ApiTraceFrame(m_trace);
                 currentFrame->number = frameCount;
                 ++frameCount;
             }
             ApiTraceCall *apiCall =
-                apiCallFromTraceCall(call, helpHash);
-            apiCall->setParentFrame(currentFrame);
-            currentFrame->addCall(apiCall);
+                apiCallFromTraceCall(call, helpHash, currentFrame);
+            calls.append(apiCall);
+            if (apiCall->hasBinaryData()) {
+                QByteArray data =
+                    apiCall->arguments()[apiCall->binaryDataIndex()].toByteArray();
+                binaryDataSize += data.size();
+            }
             if (ApiTrace::isCallAFrameMarker(apiCall,
                                              m_frameMarker)) {
+                calls.squeeze();
+                currentFrame->setCalls(calls, binaryDataSize);
+                calls.clear();
                 frames.append(currentFrame);
                 currentFrame = 0;
+                binaryDataSize = 0;
                 if (frames.count() >= FRAMES_TO_CACHE) {
                     emit parsedFrames(frames);
                     frames.clear();

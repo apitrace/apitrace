@@ -74,7 +74,7 @@ ApiTrace::FrameMarker ApiTrace::frameMarker() const
     return m_frameMarker;
 }
 
-QList<ApiTraceCall*> ApiTrace::calls() const
+QVector<ApiTraceCall*> ApiTrace::calls() const
 {
     return m_calls;
 }
@@ -146,6 +146,7 @@ void ApiTrace::setFrameMarker(FrameMarker marker)
 
 void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
 {
+    QVector<ApiTraceCall*> calls;
     int currentFrames = m_frames.count();
     int numNewFrames = frames.count();
 
@@ -156,10 +157,12 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
     int currentCalls = m_calls.count();
     int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
-        frame->setParentTrace(this);
+        Q_ASSERT(this == frame->parentTrace());
         numNewCalls += frame->numChildren();
-        m_calls += frame->calls();
+        calls += frame->calls();
     }
+    m_calls.reserve(m_calls.count() + calls.count() + 1);
+    m_calls += calls;
 
     emit endAddingFrames();
     emit callsAdded(currentCalls, numNewCalls);
@@ -175,8 +178,7 @@ void ApiTrace::detectFrames()
     ApiTraceFrame *currentFrame = 0;
     foreach(ApiTraceCall *apiCall, m_calls) {
         if (!currentFrame) {
-            currentFrame = new ApiTraceFrame();
-            currentFrame->setParentTrace(this);
+            currentFrame = new ApiTraceFrame(this);
             currentFrame->number = m_frames.count();
         }
         apiCall->setParentFrame(currentFrame);
@@ -210,10 +212,10 @@ ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 ApiTraceState ApiTrace::defaultState() const
 {
     ApiTraceFrame *frame = frameAt(0);
-    if (!frame)
+    if (!frame || !frame->hasState())
         return ApiTraceState();
 
-    return frame->state();
+    return *frame->state();
 }
 
 void ApiTrace::callEdited(ApiTraceCall *call)
@@ -285,6 +287,36 @@ void ApiTrace::callError(ApiTraceCall *call)
 bool ApiTrace::hasErrors() const
 {
     return !m_errors.isEmpty();
+}
+
+ApiTraceCallSignature * ApiTrace::signature(unsigned id)
+{
+    if (id >= m_signatures.count()) {
+        m_signatures.resize(id + 1);
+        return NULL;
+    } else {
+        return m_signatures[id];
+    }
+}
+
+void ApiTrace::addSignature(unsigned id, ApiTraceCallSignature *signature)
+{
+    m_signatures[id] = signature;
+}
+
+ApiTraceEnumSignature * ApiTrace::enumSignature(unsigned id)
+{
+    if (id >= m_enumSignatures.count()) {
+        m_enumSignatures.resize(id + 1);
+        return NULL;
+    } else {
+        return m_enumSignatures[id];
+    }
+}
+
+void ApiTrace::addEnumSignature(unsigned id, ApiTraceEnumSignature *signature)
+{
+    m_enumSignatures[id] = signature;
 }
 
 #include "apitrace.moc"

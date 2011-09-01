@@ -33,7 +33,7 @@ void ApiCallDelegate::paint(QPainter *painter,
         //QStyledItemDelegate::paint(painter, option, index);
         QStyle *style = QApplication::style();
         style->drawControl(QStyle::CE_ItemViewItem, &option, painter, 0);
-        if (!event->state().isEmpty()) {
+        if (event->hasState()) {
             QPixmap px = m_stateEmblem.pixmap(option.rect.height(),
                                               option.rect.height());
             painter->drawPixmap(option.rect.topLeft(), px);

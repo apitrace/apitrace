@@ -104,7 +104,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
             QByteArray data =
                 call->arguments()[call->binaryDataIndex()].toByteArray();
             m_vdataInterpreter->setData(data);
-            QVariantList args = call->arguments();
+            QVector<QVariant> args = call->arguments();
 
             for (int i = 0; i < call->argNames().count(); ++i) {
                 QString name = call->argNames()[i];
@@ -132,7 +132,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
         m_ui.detailsDock->hide();
         m_ui.vertexDataDock->hide();
     }
-    if (m_selectedEvent && !m_selectedEvent->state().isEmpty()) {
+    if (m_selectedEvent && m_selectedEvent->hasState()) {
         fillStateForFrame();
     } else
         m_ui.stateDock->hide();
@@ -320,7 +320,7 @@ static void
 variantToString(const QVariant &var, QString &str)
 {
     if (var.type() == QVariant::List) {
-        QVariantList lst = var.toList();
+        QVector<QVariant> lst = var.toList().toVector();
         str += QLatin1String("[");
         for (int i = 0; i < lst.count(); ++i) {
             QVariant val = lst[i];
@@ -358,7 +358,8 @@ variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap, QList<Q
 }
 
 static void
-variantListToItems(const QVariantList &lst, const QVariantList &defaultLst, QList<QTreeWidgetItem *> &items)
+variantListToItems(const QVector<QVariant> &lst, const QVector<QVariant> &defaultLst,
+                   QList<QTreeWidgetItem *> &items)
 {
     for (int i = 0; i < lst.count(); ++i) {
         QString key = QString::number(i);
@@ -380,7 +381,7 @@ static bool
 isVariantDeep(const QVariant &var)
 {
     if (var.type() == QVariant::List) {
-        QVariantList lst = var.toList();
+        QVector<QVariant> lst = var.toList().toVector();
         for (int i = 0; i < lst.count(); ++i) {
             if (isVariantDeep(lst[i])) {
                 return true;
@@ -426,8 +427,8 @@ variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVa
             variantMapToItems(map, defaultMap, children);
         }
         if (var.type() == QVariant::List) {
-            QVariantList lst = var.toList();
-            QVariantList defaultLst = defaultVar.toList();
+            QVector<QVariant> lst = var.toList().toVector();
+            QVector<QVariant> defaultLst = defaultVar.toList().toVector();
             variantListToItems(lst, defaultLst, children);
         }
         item->addChildren(children);
@@ -464,7 +465,7 @@ static void addSurfaceItem(const ApiSurface &surface,
 
 void MainWindow::fillStateForFrame()
 {
-    if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
+    if (!m_selectedEvent || !m_selectedEvent->hasState())
         return;
 
     if (m_nonDefaultsLookupEvent) {
@@ -480,7 +481,7 @@ void MainWindow::fillStateForFrame()
         defaultParams = defaultState.parameters();
     }
 
-    const ApiTraceState &state = m_selectedEvent->state();
+    const ApiTraceState &state = *m_selectedEvent->state();
     m_ui.stateTreeWidget->clear();
     QList<QTreeWidgetItem *> items;
     variantMapToItems(state.parameters(), defaultParams, items);
@@ -694,8 +695,8 @@ void MainWindow::initConnections()
             this, SLOT(replayFinished(const QString&)));
     connect(m_retracer, SIGNAL(error(const QString&)),
             this, SLOT(replayError(const QString&)));
-    connect(m_retracer, SIGNAL(foundState(const ApiTraceState&)),
-            this, SLOT(replayStateFound(const ApiTraceState&)));
+    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
+            this, SLOT(replayStateFound(ApiTraceState*)));
     connect(m_retracer, SIGNAL(retraceErrors(const QList<RetraceError>&)),
             this, SLOT(slotRetraceErrors(const QList<RetraceError>&)));
 
@@ -778,7 +779,7 @@ void MainWindow::initConnections()
             this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
 }
 
-void MainWindow::replayStateFound(const ApiTraceState &state)
+void MainWindow::replayStateFound(ApiTraceState *state)
 {
     m_stateEvent->setState(state);
     m_model->stateSetOnEvent(m_stateEvent);
@@ -856,7 +857,7 @@ void MainWindow::slotSearchNext(const QString &str,
         m_searchWidget->setFound(false);
         return;
     }
-    const QList<ApiTraceCall*> &calls = m_trace->calls();
+    const QVector<ApiTraceCall*> &calls = m_trace->calls();
     int callNum = calls.indexOf(call);
 
     for (int i = callNum + 1; i < calls.count(); ++i) {
@@ -865,7 +866,7 @@ void MainWindow::slotSearchNext(const QString &str,
         /* if it's not valid it means that the proxy model has already
          * filtered it out */
         if (index.isValid()) {
-            QString txt = testCall->filterText();
+            QString txt = testCall->searchText();
             if (txt.contains(str, sensitivity)) {
                 m_ui.callView->setCurrentIndex(index);
                 m_searchWidget->setFound(true);
@@ -907,7 +908,7 @@ void MainWindow::slotSearchPrev(const QString &str,
         m_searchWidget->setFound(false);
         return;
     }
-    const QList<ApiTraceCall*> &calls = m_trace->calls();
+    const QVector<ApiTraceCall*> &calls = m_trace->calls();
     int callNum = calls.indexOf(call);
 
     for (int i = callNum - 1; i >= 0; --i) {
@@ -916,7 +917,7 @@ void MainWindow::slotSearchPrev(const QString &str,
         /* if it's not valid it means that the proxy model has already
          * filtered it out */
         if (index.isValid()) {
-            QString txt = testCall->filterText();
+            QString txt = testCall->searchText();
             if (txt.contains(str, sensitivity)) {
                 m_ui.callView->setCurrentIndex(index);
                 m_searchWidget->setFound(true);
@@ -1002,8 +1003,8 @@ void MainWindow::slotGoFrameStart()
         return;
     }
 
-    QList<ApiTraceCall*>::const_iterator itr;
-    QList<ApiTraceCall*> calls = frame->calls();
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
 
     itr = calls.constBegin();
     while (itr != calls.constEnd()) {
@@ -1023,8 +1024,8 @@ void MainWindow::slotGoFrameEnd()
     if (!frame || frame->isEmpty()) {
         return;
     }
-    QList<ApiTraceCall*>::const_iterator itr;
-    QList<ApiTraceCall*> calls = frame->calls();
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
 
     itr = calls.constEnd();
     do {

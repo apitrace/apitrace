@@ -162,7 +162,7 @@ writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
     default:
         if (type == arrayType) {
             ApiArray array = var.value<ApiArray>();
-            QList<QVariant> vals = array.values();
+            QVector<QVariant> vals = array.values();
             writer.beginArray(vals.count());
             foreach(QVariant el, vals) {
                 writer.beginElement();
@@ -210,7 +210,7 @@ SaverThread::SaverThread(QObject *parent)
 }
 
 void SaverThread::saveFile(const QString &fileName,
-                           const QList<ApiTraceCall*> &calls)
+                           const QVector<ApiTraceCall*> &calls)
 {
     m_fileName = fileName;
     m_calls = calls;
@@ -229,7 +229,7 @@ void SaverThread::run()
         unsigned callNo = writer.beginEnter(funcSig);
         {
             //args
-            QVariantList vars = call->arguments();
+            QVector<QVariant> vars = call->arguments();
             int index = 0;
             foreach(QVariant var, vars) {
                 writer.beginArg(index++);

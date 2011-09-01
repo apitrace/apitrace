@@ -48,7 +48,7 @@ public slots:
 signals:
     void finished(const QString &output);
     void error(const QString &msg);
-    void foundState(const ApiTraceState &state);
+    void foundState(ApiTraceState *state);
     void retraceErrors(const QList<RetraceError> &errors);
 
 private slots:
@@ -89,7 +89,7 @@ public:
 
 signals:
     void finished(const QString &output);
-    void foundState(const ApiTraceState &state);
+    void foundState(ApiTraceState *state);
     void error(const QString &msg);
     void retraceErrors(const QList<RetraceError> &errors);
 

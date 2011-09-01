@@ -16,6 +16,9 @@ class ApiTrace;
 class VariantVisitor : public Trace::Visitor
 {
 public:
+    VariantVisitor(ApiTrace *trace)
+        : m_trace(trace)
+    {}
     virtual void visit(Trace::Null *);
     virtual void visit(Trace::Bool *node);
     virtual void visit(Trace::SInt *node);
@@ -34,21 +37,37 @@ public:
         return m_variant;
     }
 private:
+    ApiTrace *m_trace;
     QVariant m_variant;
+};
+
+class ApiTraceEnumSignature
+{
+public:
+    ApiTraceEnumSignature(const QString &name = QString(),
+                          const QVariant &val=QVariant())\
+        : m_name(name),
+          m_value(val)
+    {}
+
+    QVariant value() const { return m_value; }
+    QString name() const { return m_name; }
+private:
+    QString m_name;
+    QVariant m_value;
 };
 
 class ApiEnum
 {
 public:
-    ApiEnum(const QString &name = QString(), const QVariant &val=QVariant());
+    ApiEnum(ApiTraceEnumSignature *sig=0);
 
     QString toString() const;
 
     QVariant value() const;
     QString name() const;
 private:
-    QString m_name;
-    QVariant m_value;
+    ApiTraceEnumSignature *m_sig;
 };
 Q_DECLARE_METATYPE(ApiEnum);
 
@@ -112,15 +131,15 @@ class ApiArray
 {
 public:
     ApiArray(const Trace::Array *arr = 0);
-    ApiArray(const QList<QVariant> &vals);
+    ApiArray(const QVector<QVariant> &vals);
 
     QString toString() const;
 
-    QList<QVariant> values() const;
+    QVector<QVariant> values() const;
 private:
     void init(const Trace::Array *arr);
 private:
-    QList<QVariant> m_array;
+    QVector<QVariant> m_array;
 };
 Q_DECLARE_METATYPE(ApiArray);
 
@@ -150,31 +169,62 @@ private:
 };
 Q_DECLARE_METATYPE(ApiTraceState);
 
+class ApiTraceCallSignature
+{
+public:
+    ApiTraceCallSignature(const QString &name,
+                          const QStringList &argNames);
+    ~ApiTraceCallSignature();
+
+    QString name() const
+    {
+        return m_name;
+    }
+    QStringList argNames() const
+    {
+        return m_argNames;
+    }
+
+    QUrl helpUrl() const;
+    void setHelpUrl(const QUrl &url);
+
+private:
+    QString m_name;
+    QStringList m_argNames;
+    QUrl m_helpUrl;
+};
+
 class ApiTraceEvent
 {
 public:
     enum Type {
-        None,
-        Call,
-        Frame
+        None  = 0,
+        Call  = 1 << 0,
+        Frame = 1 << 1
     };
 public:
     ApiTraceEvent();
     ApiTraceEvent(Type t);
     virtual ~ApiTraceEvent();
 
-    Type type() const { return m_type; }
+    Type type() const { return (Type)m_type; }
 
     virtual QStaticText staticText() const = 0;
     virtual int numChildren() const = 0;
 
     QVariantMap stateParameters() const;
-    ApiTraceState state() const;
-    void setState(const ApiTraceState &state);
+    ApiTraceState *state() const;
+    void setState(ApiTraceState *state);
+    bool hasState() const
+    {
+        return m_state && !m_state->isEmpty();
+    }
 
 protected:
-    Type m_type;
-    ApiTraceState m_state;
+    int m_type : 4;
+    mutable bool m_hasBinaryData;
+    mutable int m_binaryDataIndex:8;
+    ApiTraceState *m_state;
 
     mutable QStaticText *m_staticText;
 };
@@ -183,14 +233,13 @@ Q_DECLARE_METATYPE(ApiTraceEvent*);
 class ApiTraceCall : public ApiTraceEvent
 {
 public:
-    ApiTraceCall();
-    ApiTraceCall(const Trace::Call *tcall);
+    ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *tcall);
     ~ApiTraceCall();
 
     int index() const;
     QString name() const;
     QStringList argNames() const;
-    QVariantList arguments() const;
+    QVector<QVariant> arguments() const;
     QVariant returnValue() const;
     QUrl helpUrl() const;
     void setHelpUrl(const QUrl &url);
@@ -201,51 +250,46 @@ public:
     QString error() const;
     void setError(const QString &msg);
 
-    QVariantList originalValues() const;
+    QVector<QVariant> originalValues() const;
 
     bool edited() const;
-    void setEditedValues(const QVariantList &lst);
-    QVariantList editedValues() const;
+    void setEditedValues(const QVector<QVariant> &lst);
+    QVector<QVariant> editedValues() const;
     void revert();
 
     ApiTrace *parentTrace() const;
 
     QString toHtml() const;
-    QString filterText() const;
+    QString searchText() const;
     QStaticText staticText() const;
     int numChildren() const;
     bool hasBinaryData() const;
     int binaryDataIndex() const;
 private:
     int m_index;
-    QString m_name;
-    QStringList m_argNames;
-    QVariantList m_argValues;
+    ApiTraceCallSignature *m_signature;
+    QVector<QVariant> m_argValues;
     QVariant m_returnValue;
     ApiTraceFrame *m_parentFrame;
-    QUrl m_helpUrl;
 
-    QVariantList m_editedValues;
+    QVector<QVariant> m_editedValues;
 
     QString m_error;
 
     mutable QString m_richText;
-    mutable QString m_filterText;
-    mutable bool m_hasBinaryData;
-    mutable int m_binaryDataIndex;
+    mutable QString m_searchText;
 };
 Q_DECLARE_METATYPE(ApiTraceCall*);
 
 class ApiTraceFrame : public ApiTraceEvent
 {
 public:
-    ApiTraceFrame();
+    ApiTraceFrame(ApiTrace *parent);
     int number;
 
     bool isEmpty() const;
 
     ApiTrace *parentTrace() const;
-    void setParentTrace(ApiTrace *trace);
 
     int numChildren() const;
     QStaticText staticText() const;
@@ -253,13 +297,15 @@ public:
     int callIndex(ApiTraceCall *call) const;
     ApiTraceCall *call(int idx) const;
     void addCall(ApiTraceCall *call);
-    QList<ApiTraceCall*> calls() const;
+    QVector<ApiTraceCall*> calls() const;
+    void setCalls(const QVector<ApiTraceCall*> &calls,
+                  quint64 binaryDataSize);
 
     int binaryDataSize() const;
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;
-    QList<ApiTraceCall*> m_calls;
+    QVector<ApiTraceCall*> m_calls;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

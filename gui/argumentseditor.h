@@ -49,7 +49,7 @@ private slots:
 private:
     void init();
     void setupCall();
-    void setupShaderEditor(const QList<QVariant> &sources);
+    void setupShaderEditor(const QVector<QVariant> &sources);
     QVariant valueForName(const QString &name,
                           const QVariant &orignalValue,
                           bool *changed) const;

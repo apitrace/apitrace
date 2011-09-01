@@ -12,7 +12,7 @@ class LoaderThread : public QThread
 {
     Q_OBJECT
 public:
-    LoaderThread(QObject *parent=0);
+    LoaderThread(ApiTrace *parent);
 
     ApiTrace::FrameMarker frameMarker() const;
     void setFrameMarker(ApiTrace::FrameMarker marker);
@@ -28,6 +28,7 @@ protected:
 private:
     QString m_fileName;
     ApiTrace::FrameMarker m_frameMarker;
+    ApiTrace *m_trace;
 };
 
 #endif

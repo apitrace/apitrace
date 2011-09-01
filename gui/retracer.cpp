@@ -98,8 +98,8 @@ void Retracer::run()
             this, SIGNAL(finished(const QString&)));
     connect(retrace, SIGNAL(error(const QString&)),
             this, SIGNAL(error(const QString&)));
-    connect(retrace, SIGNAL(foundState(const ApiTraceState&)),
-            this, SIGNAL(foundState(const ApiTraceState&)));
+    connect(retrace, SIGNAL(foundState(ApiTraceState*)),
+            this, SIGNAL(foundState(ApiTraceState*)));
     connect(retrace, SIGNAL(retraceErrors(const QList<RetraceError>&)),
             this, SIGNAL(retraceErrors(const QList<RetraceError>&)));
 
@@ -155,7 +155,7 @@ void RetraceProcess::replayFinished()
     if (m_captureState) {
         bool ok = false;
         QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
-        ApiTraceState state(parsedJson);
+        ApiTraceState *state = new ApiTraceState(parsedJson);
         emit foundState(state);
         msg = tr("State fetched.");
     } else {

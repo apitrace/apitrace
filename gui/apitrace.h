@@ -33,7 +33,14 @@ public:
 
     ApiTraceState defaultState() const;
 
-    QList<ApiTraceCall*> calls() const;
+    ApiTraceCallSignature *signature(unsigned id);
+    void addSignature(unsigned id, ApiTraceCallSignature *signature);
+
+    ApiTraceEnumSignature *enumSignature(unsigned id);
+    void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
+
+
+    QVector<ApiTraceCall*> calls() const;
     ApiTraceCall *callAt(int idx) const;
     ApiTraceCall *callWithIndex(int idx) const;
     int numCalls() const;
@@ -82,7 +89,7 @@ private:
     QString m_tempFileName;
 
     QList<ApiTraceFrame*> m_frames;
-    QList<ApiTraceCall*> m_calls;
+    QVector<ApiTraceCall*> m_calls;
 
     FrameMarker m_frameMarker;
 
@@ -94,6 +101,8 @@ private:
     bool m_needsSaving;
 
     QSet<ApiTraceCall*> m_errors;
+    QVector<ApiTraceCallSignature*> m_signatures;
+    QVector<ApiTraceEnumSignature*> m_enumSignatures;
 };
 
 #endif

@@ -56,9 +56,16 @@ Array::~Array() {
 }
 
 Blob::~Blob() {
-    // TODO: Don't leak blobs.  Blobs are often bound and accessed during many
-    // calls, so we can't delete them here.
-    //delete [] buf;
+    // Blobs are often bound and referred during many calls, so we can't delete
+    // them here in that case.
+    //
+    // Once bound there is no way to know when they were unbound, which
+    // effectively means we have to leak them.  A better solution would be to
+    // keep a list of bound pointers, and defer the destruction to when the
+    // trace in question has been fully processed.
+    if (!bound) {
+        delete [] buf;
+    }
 }
 
 
@@ -121,6 +128,11 @@ void * Value  ::toPointer(void) const { assert(0); return NULL; }
 void * Null   ::toPointer(void) const { return NULL; }
 void * Blob   ::toPointer(void) const { return buf; }
 void * Pointer::toPointer(void) const { return (void *)value; }
+
+void * Value  ::toPointer(bool bind) { assert(0); return NULL; }
+void * Null   ::toPointer(bool bind) { return NULL; }
+void * Blob   ::toPointer(bool bind) { if (bind) bound = true; return buf; }
+void * Pointer::toPointer(bool bind) { return (void *)value; }
 
 
 // pointer cast
