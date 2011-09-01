@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 
 
         std::vector<Trace::Call*> frame = loader.frame(
-                 0);
+                    loader.numberOfFrames()/2);
         std::vector<Trace::Call*>::const_iterator itr;
         for (itr = frame.begin(); itr != frame.end(); ++itr) {
            (*itr)->dump(std::cout, true);

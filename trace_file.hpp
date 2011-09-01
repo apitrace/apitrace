@@ -167,6 +167,40 @@ private:
     void *m_gzFile;
 };
 
+inline bool
+operator<(const File::Offset &one, const File::Offset &two)
+{
+    return one.chunk < two.chunk ||
+            (one.chunk == two.chunk && one.offsetInChunk < two.offsetInChunk);
+}
+
+inline bool
+operator==(const File::Offset &one, const File::Offset &two)
+{
+    return one.chunk == two.chunk &&
+            one.offsetInChunk == two.offsetInChunk;
+}
+
+inline bool
+operator>=(const File::Offset &one, const File::Offset &two)
+{
+    return one.chunk > two.chunk ||
+            (one.chunk == two.chunk && one.offsetInChunk >= two.offsetInChunk);
+}
+
+inline bool
+operator>(const File::Offset &one, const File::Offset &two)
+{
+    return two < one;
+}
+
+inline bool
+operator<=(const File::Offset &one, const File::Offset &two)
+{
+    return two >= one;
+}
+
+
 }
 
 #endif

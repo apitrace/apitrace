@@ -29,6 +29,7 @@
 
 #include <iostream>
 #include <list>
+#include <set>
 
 #include "trace_file.hpp"
 #include "trace_format.hpp"
@@ -56,6 +57,15 @@ protected:
 
     typedef std::vector<BitmaskSig *> BitmaskMap;
     BitmaskMap bitmasks;
+
+    typedef std::set<File::Offset> TraceOffsets;
+    TraceOffsets m_callSigOffsets;
+    TraceOffsets m_structSigOffsets;
+    TraceOffsets m_enumSigOffsets;
+    TraceOffsets m_bitmaskSigOffsets;
+
+    typedef std::map<File::Offset, unsigned> CallNumOffsets;
+    CallNumOffsets m_callNumOffsets;
 
     unsigned next_call_no;
 
@@ -86,6 +96,13 @@ public:
     {
         file->setCurrentOffset(offset);
     }
+
+    bool callWithSignature(const File::Offset &offset) const;
+    bool structWithSignature(const File::Offset &offset) const;
+    bool enumWithSignature(const File::Offset &offset) const;
+    bool bitmaskWithSignature(const File::Offset &offset) const;
+    bool hasCallBeenParsed(const File::Offset &offset) const;
+    unsigned callNumForOffset(const File::Offset &offset) const;
 
 protected:
     void parse_enter(void);

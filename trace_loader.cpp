@@ -45,6 +45,11 @@ bool Loader::open(const char *filename)
         std::cerr << "error: failed to open " << filename << "\n";
         return false;
     }
+    if (!m_parser.supportsOffsets()) {
+        std::cerr << "error: " <<filename<< " doesn't support seeking "
+                  << "\n";
+        return false;
+    }
 
     Trace::Call *call;
     File::Offset startOffset;
@@ -102,7 +107,7 @@ bool Loader::isCallAFrameMarker(const Trace::Call *call) const
     return false;
 }
 
-std::vector<Trace::Call *> Trace::Loader::frame(int idx)
+std::vector<Trace::Call *> Loader::frame(int idx)
 {
     int numOfCalls = numberOfCallsInFrame(idx);
     if (numOfCalls) {
@@ -113,13 +118,15 @@ std::vector<Trace::Call *> Trace::Loader::frame(int idx)
         int parsedCalls = 0;
         while ((call = m_parser.parse_call())) {
 
+            calls[parsedCalls] = call;
+            ++parsedCalls;
+
             if (isCallAFrameMarker(call)) {
                 break;
             }
 
-            calls[parsedCalls] = call;
-            ++parsedCalls;
         }
+        assert(parsedCalls == numOfCalls);
         return calls;
     }
     return std::vector<Trace::Call*>();
