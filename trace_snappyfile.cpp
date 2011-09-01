@@ -190,14 +190,19 @@ void SnappyFile::rawFlush()
 void SnappyFile::flushCache()
 {
     if (m_mode == File::Write) {
-        size_t compressedLength;
+        size_t inputLength = usedCacheSize();
 
-        ::snappy::RawCompress(m_cache, SNAPPY_CHUNK_SIZE - freeCacheSize(),
-                              m_compressedCache, &compressedLength);
+        if (inputLength) {
+            size_t compressedLength;
 
-        writeCompressedLength(compressedLength);
-        m_stream.write(m_compressedCache, compressedLength);
-        m_cachePtr = m_cache;
+            ::snappy::RawCompress(m_cache, inputLength,
+                                  m_compressedCache, &compressedLength);
+
+            writeCompressedLength(compressedLength);
+            m_stream.write(m_compressedCache, compressedLength);
+            m_cachePtr = m_cache;
+        }
+        assert(m_cachePtr == m_cache);
     } else if (m_mode == File::Read) {
         //assert(m_cachePtr == m_cache + m_cacheSize);
         size_t compressedLength;

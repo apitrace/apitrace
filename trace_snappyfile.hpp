@@ -27,6 +27,8 @@
 #ifndef TRACE_SNAPPYFILE_HPP
 #define TRACE_SNAPPYFILE_HPP
 
+#include <assert.h>
+
 #include "trace_file.hpp"
 
 #include <string>
@@ -59,12 +61,19 @@ protected:
     virtual void rawFlush();
 
 private:
+    inline size_t usedCacheSize() const
+    {
+        assert(m_cachePtr >= m_cache);
+        return m_cachePtr - m_cache;
+    }
     inline size_t freeCacheSize() const
     {
-        if (m_cacheSize > 0)
-            return m_cacheSize - (m_cachePtr - m_cache);
-        else
+        assert(m_cacheSize >= usedCacheSize());
+        if (m_cacheSize > 0) {
+            return m_cacheSize - usedCacheSize();
+        } else {
             return 0;
+        }
     }
     inline bool endOfData() const
     {
