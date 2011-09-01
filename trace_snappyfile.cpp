@@ -74,6 +74,7 @@ SnappyFile::SnappyFile(const std::string &filename,
 SnappyFile::~SnappyFile()
 {
     delete [] m_compressedCache;
+    delete [] m_cache;
 }
 
 bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
@@ -198,33 +199,37 @@ void SnappyFile::flushCache()
         m_stream.write(m_compressedCache, compressedLength);
         m_cachePtr = m_cache;
     } else if (m_mode == File::Read) {
-        if (m_stream.eof())
-            return;
         //assert(m_cachePtr == m_cache + m_cacheSize);
         size_t compressedLength;
         compressedLength = readCompressedLength();
-        m_stream.read((char*)m_compressedCache, compressedLength);
-        /*
-         * The reason we peek here is because the last read will
-         * read all the way until the last character, but that will not
-         * trigger m_stream.eof() to be set, so by calling peek
-         * we assure that if we in fact have read the entire stream
-         * then the m_stream.eof() is always set.
-         */
-        m_stream.peek();
-        ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
-                                        &m_cacheSize);
-        if (m_cache)
-            delete [] m_cache;
-        createCache(m_cacheSize);
-        ::snappy::RawUncompress(m_compressedCache, compressedLength,
-                                m_cache);
+
+        if (compressedLength) {
+            m_stream.read((char*)m_compressedCache, compressedLength);
+            ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
+                                            &m_cacheSize);
+            createCache(m_cacheSize);
+            ::snappy::RawUncompress(m_compressedCache, compressedLength,
+                                    m_cache);
+        } else {
+            createCache(0);
+        }
     }
 }
 
 void SnappyFile::createCache(size_t size)
 {
-    m_cache = new char[size];
+    // TODO: only re-allocate if the current buffer is not big enough
+
+    if (m_cache) {
+        delete [] m_cache;
+    }
+
+    if (size) {
+        m_cache = new char[size];
+    } else {
+        m_cache = NULL;
+    }
+
     m_cachePtr = m_cache;
     m_cacheSize = size;
 }
