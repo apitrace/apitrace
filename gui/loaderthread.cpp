@@ -91,14 +91,9 @@ void LoaderThread::run()
             call = p.parse_call();
         }
     }
-    //last frames won't have markers
-    //  it's just a bunch of Delete calls for every object
-    //  after the last SwapBuffers
     if (currentFrame) {
-        if (!frames.count()) {
-            calls.squeeze();
-            currentFrame->setCalls(calls, binaryDataSize);
-        }
+        calls.squeeze();
+        currentFrame->setCalls(calls, binaryDataSize);
         frames.append(currentFrame);
         currentFrame = 0;
     }
