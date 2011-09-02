@@ -116,12 +116,12 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
     return m_gzFile != NULL;
 }
 
-bool ZLibFile::rawWrite(const void *buffer, int length)
+bool ZLibFile::rawWrite(const void *buffer, size_t length)
 {
     return gzwrite(m_gzFile, buffer, length) != -1;
 }
 
-bool ZLibFile::rawRead(void *buffer, int length)
+bool ZLibFile::rawRead(void *buffer, size_t length)
 {
     return gzread(m_gzFile, buffer, length) != -1;
 }

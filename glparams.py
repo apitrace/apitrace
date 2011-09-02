@@ -331,8 +331,8 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAP1_GRID_SEGMENTS"),	# 0x0DD1
     ("glGet",	F,	4,	"GL_MAP2_GRID_DOMAIN"),	# 0x0DD2
     ("glGet",	I,	2,	"GL_MAP2_GRID_SEGMENTS"),	# 0x0DD3
-    ("glGet",	B,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
-    ("glGet",	B,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
+    ("_glGet",	B,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
+    ("_glGet",	B,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
     ("glGet",	P,	1,	"GL_FEEDBACK_BUFFER_POINTER"),	# 0x0DF0
     ("glGet",	I,	1,	"GL_FEEDBACK_BUFFER_SIZE"),	# 0x0DF1
     ("glGet",	E,	1,	"GL_FEEDBACK_BUFFER_TYPE"),	# 0x0DF2
@@ -617,9 +617,9 @@ parameters = [
     ("",	X,	1,	"GL_TEXTURE_TOO_LARGE_EXT"),	# 0x8065
     ("glGetTexParameter",	F,	1,	"GL_TEXTURE_PRIORITY"),	# 0x8066
     ("glGetTexParameter",	B,	1,	"GL_TEXTURE_RESIDENT"),	# 0x8067
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_1D"),	# 0x8068
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_2D"),	# 0x8069
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_3D"),	# 0x806A
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_1D"),	# 0x8068
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_2D"),	# 0x8069
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_3D"),	# 0x806A
     ("glGet",	I,	1,	"GL_PACK_SKIP_IMAGES"),	# 0x806B
     ("glGet",	F,	1,	"GL_PACK_IMAGE_HEIGHT"),	# 0x806C
     ("glGet",	I,	1,	"GL_UNPACK_SKIP_IMAGES"),	# 0x806D
@@ -1182,8 +1182,8 @@ parameters = [
     ("",	X,	1,	"GL_ALL_COMPLETED_NV"),	# 0x84F2
     ("",	X,	1,	"GL_FENCE_STATUS_NV"),	# 0x84F3
     ("",	X,	1,	"GL_FENCE_CONDITION_NV"),	# 0x84F4
-    ("glGet",	B,	1,	"GL_TEXTURE_RECTANGLE"),	# 0x84F5
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_RECTANGLE"),	# 0x84F6
+    ("_glGet",	B,	1,	"GL_TEXTURE_RECTANGLE"),	# 0x84F5
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_RECTANGLE"),	# 0x84F6
     ("",	X,	1,	"GL_PROXY_TEXTURE_RECTANGLE"),	# 0x84F7
     ("glGet",	I,	1,	"GL_MAX_RECTANGLE_TEXTURE_SIZE"),	# 0x84F8
     ("",	X,	1,	"GL_DEPTH_STENCIL"),	# 0x84F9
@@ -1210,8 +1210,8 @@ parameters = [
     ("",	X,	1,	"GL_VERTEX_WEIGHT_ARRAY_POINTER_EXT"),	# 0x8510
     ("",	X,	1,	"GL_NORMAL_MAP"),	# 0x8511
     ("",	X,	1,	"GL_REFLECTION_MAP"),	# 0x8512
-    ("glGet",	B,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP"),	# 0x8514
+    ("_glGet",	B,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP"),	# 0x8514
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_POSITIVE_X"),	# 0x8515
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_NEGATIVE_X"),	# 0x8516
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_POSITIVE_Y"),	# 0x8517
@@ -2253,8 +2253,8 @@ parameters = [
     ("",	X,	1,	"GL_PROXY_TEXTURE_1D_ARRAY"),	# 0x8C19
     ("",	X,	1,	"GL_TEXTURE_2D_ARRAY"),	# 0x8C1A
     ("",	X,	1,	"GL_PROXY_TEXTURE_2D_ARRAY"),	# 0x8C1B
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_1D_ARRAY"),	# 0x8C1C
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_2D_ARRAY"),	# 0x8C1D
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_1D_ARRAY"),	# 0x8C1C
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_2D_ARRAY"),	# 0x8C1D
     ("",	X,	1,	"GL_GEOMETRY_PROGRAM_NV"),	# 0x8C26
     ("",	X,	1,	"GL_MAX_PROGRAM_OUTPUT_VERTICES_NV"),	# 0x8C27
     ("",	X,	1,	"GL_MAX_PROGRAM_TOTAL_OUTPUT_COMPONENTS_NV"),	# 0x8C28
@@ -2697,7 +2697,7 @@ parameters = [
     ("",	X,	1,	"GL_DISCRETE_AMD"),	# 0x9006
     ("",	X,	1,	"GL_CONTINUOUS_AMD"),	# 0x9007
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_ARRAY"),	# 0x9009
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP_ARRAY"),	# 0x900A
+    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP_ARRAY"),	# 0x900A
     ("",	X,	1,	"GL_PROXY_TEXTURE_CUBE_MAP_ARRAY"),	# 0x900B
     ("",	X,	1,	"GL_SAMPLER_CUBE_MAP_ARRAY"),	# 0x900C
     ("",	X,	1,	"GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW"),	# 0x900D

@@ -380,13 +380,18 @@ class StateDumper:
         print '            json.beginMember(name);'
         print '            glActiveTexture(GL_TEXTURE0 + unit);'
         print '            json.beginObject();'
-        print '            GLint texture;'
+        print '            GLboolean enabled;'
+        print '            GLint binding;'
         print
         for target, binding in texture_targets:
             print '            // %s' % target
-            print '            texture = 0;'
-            print '            glGetIntegerv(%s, &texture);' % binding
-            print '            if (glIsEnabled(%s) || texture) {' % target
+            print '            enabled = GL_FALSE;'
+            print '            glGetBooleanv(%s, &enabled);' % target
+            print '            json.writeBoolMember("%s", enabled);' % target
+            print '            binding = 0;'
+            print '            glGetIntegerv(%s, &binding);' % binding
+            print '            json.writeNumberMember("%s", binding);' % binding
+            print '            if (enabled || binding) {'
             print '                json.beginMember("%s");' % target
             print '                json.beginObject();'
             self.dump_atoms(glGetTexParameter, target)

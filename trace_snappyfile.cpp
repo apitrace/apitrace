@@ -46,7 +46,7 @@ using namespace Trace;
  * The file is composed of a number of chunks, they are:
  * chunk {
  *     uint32 - specifying the length of the compressed data
- *     compressed data
+ *     compressed data, in little endian
  * }
  * File can contain any number of such chunks.
  * The default size of an uncompressed chunk is specified in
@@ -76,6 +76,7 @@ SnappyFile::SnappyFile(const std::string &filename,
 SnappyFile::~SnappyFile()
 {
     delete [] m_compressedCache;
+    delete [] m_cache;
 }
 
 bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
@@ -107,7 +108,7 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
     return m_stream.is_open();
 }
 
-bool SnappyFile::rawWrite(const void *buffer, int length)
+bool SnappyFile::rawWrite(const void *buffer, size_t length)
 {
     if (freeCacheSize() > length) {
         memcpy(m_cachePtr, buffer, length);
@@ -122,14 +123,14 @@ bool SnappyFile::rawWrite(const void *buffer, int length)
         while (sizeToWrite >= freeCacheSize()) {
             int endSize = freeCacheSize();
             int offset = length - sizeToWrite;
-            memcpy(m_cachePtr, (char*)buffer + offset, endSize);
+            memcpy(m_cachePtr, (const char*)buffer + offset, endSize);
             sizeToWrite -= endSize;
             m_cachePtr += endSize;
             flushCache();
         }
         if (sizeToWrite) {
             int offset = length - sizeToWrite;
-            memcpy(m_cachePtr, (char*)buffer + offset, sizeToWrite);
+            memcpy(m_cachePtr, (const char*)buffer + offset, sizeToWrite);
             m_cachePtr += sizeToWrite;
         }
     }
@@ -137,7 +138,7 @@ bool SnappyFile::rawWrite(const void *buffer, int length)
     return true;
 }
 
-bool SnappyFile::rawRead(void *buffer, int length)
+bool SnappyFile::rawRead(void *buffer, size_t length)
 {
     if (endOfData()) {
         return false;
@@ -147,10 +148,10 @@ bool SnappyFile::rawRead(void *buffer, int length)
         memcpy(buffer, m_cachePtr, length);
         m_cachePtr += length;
     } else {
-        int sizeToRead = length;
-        int offset = 0;
+        size_t sizeToRead = length;
+        size_t offset = 0;
         while (sizeToRead) {
-            int chunkSize = std::min(freeCacheSize(), sizeToRead);
+            size_t chunkSize = std::min(freeCacheSize(), sizeToRead);
             offset = length - sizeToRead;
             memcpy((char*)buffer + offset, m_cachePtr, chunkSize);
             m_cachePtr += chunkSize;
@@ -191,57 +192,81 @@ void SnappyFile::rawFlush()
 void SnappyFile::flushCache()
 {
     if (m_mode == File::Write) {
-        size_t compressedLength;
+        size_t inputLength = usedCacheSize();
 
-        ::snappy::RawCompress(m_cache, SNAPPY_CHUNK_SIZE - freeCacheSize(),
-                              m_compressedCache, &compressedLength);
+        if (inputLength) {
+            size_t compressedLength;
 
-        writeCompressedLength(compressedLength);
-        m_stream.write(m_compressedCache, compressedLength);
-        m_cachePtr = m_cache;
+            ::snappy::RawCompress(m_cache, inputLength,
+                                  m_compressedCache, &compressedLength);
+
+            writeCompressedLength(compressedLength);
+            m_stream.write(m_compressedCache, compressedLength);
+            m_cachePtr = m_cache;
+        }
+        assert(m_cachePtr == m_cache);
     } else if (m_mode == File::Read) {
-        if (m_stream.eof())
-            return;
         //assert(m_cachePtr == m_cache + m_cacheSize);
         m_currentOffset.chunk = m_stream.tellg();
         size_t compressedLength;
         compressedLength = readCompressedLength();
-        m_stream.read((char*)m_compressedCache, compressedLength);
-        /*
-         * The reason we peek here is because the last read will
-         * read all the way until the last character, but that will not
-         * trigger m_stream.eof() to be set, so by calling peek
-         * we assure that if we in fact have read the entire stream
-         * then the m_stream.eof() is always set.
-         */
-        m_stream.peek();
-        ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
-                                        &m_cacheSize);
-        if (m_cache)
-            delete [] m_cache;
-        createCache(m_cacheSize);
-        ::snappy::RawUncompress(m_compressedCache, compressedLength,
-                                m_cache);
+
+        if (compressedLength) {
+            m_stream.read((char*)m_compressedCache, compressedLength);
+            ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
+                                            &m_cacheSize);
+            createCache(m_cacheSize);
+            ::snappy::RawUncompress(m_compressedCache, compressedLength,
+                                    m_cache);
+        } else {
+            createCache(0);
+        }
     }
 }
 
 void SnappyFile::createCache(size_t size)
 {
-    m_cache = new char[size];
+    // TODO: only re-allocate if the current buffer is not big enough
+
+    if (m_cache) {
+        delete [] m_cache;
+    }
+
+    if (size) {
+        m_cache = new char[size];
+    } else {
+        m_cache = NULL;
+    }
+
     m_cachePtr = m_cache;
     m_cacheSize = size;
 }
 
-void SnappyFile::writeCompressedLength(uint32_t value)
+void SnappyFile::writeCompressedLength(size_t length)
 {
-    m_stream.write((const char*)&value, sizeof value);
+    unsigned char buf[4];
+    buf[0] = length & 0xff; length >>= 8;
+    buf[1] = length & 0xff; length >>= 8;
+    buf[2] = length & 0xff; length >>= 8;
+    buf[3] = length & 0xff; length >>= 8;
+    assert(length == 0);
+    m_stream.write((const char *)buf, sizeof buf);
 }
 
-uint32_t SnappyFile::readCompressedLength()
+size_t SnappyFile::readCompressedLength()
 {
-    uint32_t len;
-    m_stream.read((char*)&len, sizeof len);
-    return len;
+    unsigned char buf[4];
+    size_t length;
+    m_stream.read((char *)buf, sizeof buf);
+    if (m_stream.fail()) {
+        length = 0;
+    } else {
+        length  =  (size_t)buf[0];
+        length |= ((size_t)buf[1] <<  8);
+        length |= ((size_t)buf[2] << 16);
+        length |= ((size_t)buf[3] << 24);
+    }
+    return length;
 }
 
 bool SnappyFile::supportsOffsets() const

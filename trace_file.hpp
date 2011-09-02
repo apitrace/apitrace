@@ -62,8 +62,8 @@ public:
     std::string filename() const;
 
     bool open(const std::string &filename, File::Mode mode);
-    bool write(const void *buffer, int length);
-    bool read(void *buffer, int length);
+    bool write(const void *buffer, size_t length);
+    bool read(void *buffer, size_t length);
     void close();
     void flush(void);
     int getc();
@@ -74,8 +74,8 @@ public:
     virtual void setCurrentOffset(const File::Offset &offset);
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode) = 0;
-    virtual bool rawWrite(const void *buffer, int length) = 0;
-    virtual bool rawRead(void *buffer, int length) = 0;
+    virtual bool rawWrite(const void *buffer, size_t length) = 0;
+    virtual bool rawRead(void *buffer, size_t length) = 0;
     virtual int rawGetc() = 0;
     virtual void rawClose() = 0;
     virtual void rawFlush() = 0;
@@ -113,7 +113,7 @@ inline bool File::open(const std::string &filename, File::Mode mode)
     return m_isOpened;
 }
 
-inline bool File::write(const void *buffer, int length)
+inline bool File::write(const void *buffer, size_t length)
 {
     if (!m_isOpened || m_mode != File::Write) {
         return false;
@@ -121,7 +121,7 @@ inline bool File::write(const void *buffer, int length)
     return rawWrite(buffer, length);
 }
 
-inline bool File::read(void *buffer, int length)
+inline bool File::read(void *buffer, size_t length)
 {
     if (!m_isOpened || m_mode != File::Read) {
         return false;
@@ -168,8 +168,8 @@ public:
     virtual bool supportsOffsets() const;
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
-    virtual bool rawWrite(const void *buffer, int length);
-    virtual bool rawRead(void *buffer, int length);
+    virtual bool rawWrite(const void *buffer, size_t length);
+    virtual bool rawRead(void *buffer, size_t length);
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();

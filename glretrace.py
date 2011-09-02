@@ -170,6 +170,12 @@ class GlRetracer(Retracer):
             print '    GLint __pack_buffer = 0;'
             print '    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &__pack_buffer);'
             print '    if (!__pack_buffer) {'
+            if function.name == 'glReadPixels':
+                print '    glFinish();'
+                print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAME ||'
+                print '        glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
+                print '        glretrace::snapshot(call.no);'
+                print '    }'
             print '        return;'
             print '    }'
 
@@ -178,6 +184,9 @@ class GlRetracer(Retracer):
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
             print '        glretrace::snapshot(call.no - 1);'
             print '    }'
+        if function.name == 'glFrameTerminatorGREMEDY':
+            print '    glretrace::frame_complete(call.no);'
+            return
 
         Retracer.retrace_function_body(self, function)
 
@@ -185,12 +194,6 @@ class GlRetracer(Retracer):
         if function.name in ('glFlush', 'glFinish'):
             print '    if (!glretrace::double_buffer) {'
             print '        glretrace::frame_complete(call.no);'
-            print '    }'
-        if function.name == 'glReadPixels':
-            print '    glFinish();'
-            print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAME ||'
-            print '        glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
-            print '        glretrace::snapshot(call.no);'
             print '    }'
         if is_draw_array or is_draw_elements or is_misc_draw:
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_DRAW) {'
