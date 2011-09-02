@@ -57,13 +57,8 @@ private:
     Trace::Parser m_parser;
     FrameMarker m_frameMarker;
 
-    std::map<int, Trace::Frame*> m_frameCache;
-    std::queue<Trace::Frame*> m_loadedFrames;
-
     typedef std::map<int, FrameOffset> FrameOffsets;
     FrameOffsets m_frameOffsets;
-
-    Trace::File *file;
 };
 
 }

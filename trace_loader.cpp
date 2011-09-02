@@ -5,8 +5,7 @@
 using namespace Trace;
 
 Loader::Loader()
-    : m_frameMarker(FrameMarker_SwapBuffers),
-      file(0)
+    : m_frameMarker(FrameMarker_SwapBuffers)
 {
 }
 
