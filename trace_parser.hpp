@@ -112,6 +112,8 @@ public:
         next_call_no = num;
     }
 
+    Call *scan_call();
+
 protected:
     void parse_enter(void);
 
@@ -150,6 +152,45 @@ protected:
     unsigned long long read_uint(void);
 
     inline int read_byte(void);
+
+protected:
+    void scan_enter(void);
+
+    Call *scan_leave(void);
+
+    bool scan_call_details(Call *call);
+
+    void scan_arg(Call *call);
+
+    void scan_value(void);
+
+    void scan_sint();
+
+    void scan_uint();
+
+    void scan_float();
+
+    void scan_double();
+
+    void scan_string();
+
+    void scan_enum();
+
+    void scan_bitmask();
+
+    void scan_array(void);
+
+    void scan_blob(void);
+
+    void scan_struct();
+
+    void scan_opaque();
+
+    void skip_string(void);
+
+    void skip_uint(void);
+
+    inline void skip_byte(void);
 };
 
 

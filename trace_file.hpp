@@ -67,6 +67,7 @@ public:
     void close();
     void flush(void);
     int getc();
+    bool skip(unsigned length);
 
     virtual bool supportsOffsets() const = 0;
     virtual File::Offset currentOffset();
@@ -78,6 +79,7 @@ protected:
     virtual int rawGetc() = 0;
     virtual void rawClose() = 0;
     virtual void rawFlush() = 0;
+    virtual bool rawSkip(unsigned length) = 0;
 
 protected:
     std::string m_filename;
@@ -148,6 +150,14 @@ inline int File::getc()
     return rawGetc();
 }
 
+inline bool File::skip(unsigned length)
+{
+    if (!m_isOpened || m_mode != File::Read) {
+        return false;
+    }
+    return rawSkip(length);
+}
+
 class ZLibFile : public File {
 public:
     ZLibFile(const std::string &filename = std::string(),
@@ -163,6 +173,7 @@ protected:
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
+    virtual bool rawSkip(unsigned length);
 private:
     void *m_gzFile;
 };

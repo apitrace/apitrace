@@ -149,3 +149,8 @@ bool ZLibFile::supportsOffsets() const
 {
     return false;
 }
+
+bool ZLibFile::rawSkip(unsigned)
+{
+    return false;
+}

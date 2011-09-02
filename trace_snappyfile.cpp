@@ -268,3 +268,27 @@ void SnappyFile::setCurrentOffset(const File::Offset &offset)
     m_cachePtr = m_cache + offset.offsetInChunk;
 
 }
+
+bool SnappyFile::rawSkip(unsigned length)
+{
+    if (endOfData()) {
+        return false;
+    }
+
+    if (freeCacheSize() >= length) {
+        m_cachePtr += length;
+    } else {
+        int sizeToRead = length;
+        while (sizeToRead) {
+            int chunkSize = std::min(freeCacheSize(), sizeToRead);
+            m_cachePtr += chunkSize;
+            sizeToRead -= chunkSize;
+            if (sizeToRead > 0)
+                flushCache();
+            if (!m_cacheSize)
+                break;
+        }
+    }
+
+    return true;
+}

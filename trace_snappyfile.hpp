@@ -62,6 +62,7 @@ protected:
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
+    virtual bool rawSkip(unsigned length);
 
 private:
     inline int freeCacheSize() const

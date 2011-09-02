@@ -61,8 +61,7 @@ bool Loader::open(const char *filename)
     startOffset = m_parser.currentOffset();
     callNum = m_parser.currentCallNumber();
 
-    while ((call = m_parser.parse_call())) {
-
+    while ((call = m_parser.scan_call())) {
         ++numOfCalls;
 
         if (isCallAFrameMarker(call)) {
