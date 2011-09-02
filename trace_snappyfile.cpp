@@ -303,9 +303,9 @@ bool SnappyFile::rawSkip(unsigned length)
     if (freeCacheSize() >= length) {
         m_cachePtr += length;
     } else {
-        int sizeToRead = length;
+        size_t sizeToRead = length;
         while (sizeToRead) {
-            int chunkSize = std::min(freeCacheSize(), sizeToRead);
+            size_t chunkSize = std::min(freeCacheSize(), sizeToRead);
             m_cachePtr += chunkSize;
             sizeToRead -= chunkSize;
             if (sizeToRead > 0)
