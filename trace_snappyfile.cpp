@@ -97,7 +97,7 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
         m_stream >> byte2;
         assert(byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
 
-        flushCache();
+        flushReadCache();
     } else if (m_stream.is_open() && mode == File::Write) {
         // write the snappy file identifier
         m_stream << SNAPPY_BYTE1;
@@ -114,7 +114,7 @@ bool SnappyFile::rawWrite(const void *buffer, size_t length)
     } else if (freeCacheSize() == length) {
         memcpy(m_cachePtr, buffer, length);
         m_cachePtr += length;
-        flushCache();
+        flushWriteCache();
     } else {
         int sizeToWrite = length;
 
@@ -124,7 +124,7 @@ bool SnappyFile::rawWrite(const void *buffer, size_t length)
             memcpy(m_cachePtr, (const char*)buffer + offset, endSize);
             sizeToWrite -= endSize;
             m_cachePtr += endSize;
-            flushCache();
+            flushWriteCache();
         }
         if (sizeToWrite) {
             int offset = length - sizeToWrite;
@@ -154,10 +154,12 @@ bool SnappyFile::rawRead(void *buffer, size_t length)
             memcpy((char*)buffer + offset, m_cachePtr, chunkSize);
             m_cachePtr += chunkSize;
             sizeToRead -= chunkSize;
-            if (sizeToRead > 0)
-                flushCache();
-            if (!m_cacheSize)
+            if (sizeToRead > 0) {
+                flushReadCache();
+            }
+            if (!m_cacheSize) {
                 break;
+            }
         }
     }
 
@@ -174,7 +176,9 @@ int SnappyFile::rawGetc()
 
 void SnappyFile::rawClose()
 {
-    flushCache();
+    if (m_mode == File::Write) {
+        flushWriteCache();
+    }
     m_stream.close();
     delete [] m_cache;
     m_cache = NULL;
@@ -183,41 +187,43 @@ void SnappyFile::rawClose()
 
 void SnappyFile::rawFlush()
 {
-    flushCache();
+    assert(m_mode == File::Write);
+    flushWriteCache();
     m_stream.flush();
 }
 
-void SnappyFile::flushCache()
+void SnappyFile::flushWriteCache()
 {
-    if (m_mode == File::Write) {
-        size_t inputLength = usedCacheSize();
+    size_t inputLength = usedCacheSize();
 
-        if (inputLength) {
-            size_t compressedLength;
-
-            ::snappy::RawCompress(m_cache, inputLength,
-                                  m_compressedCache, &compressedLength);
-
-            writeCompressedLength(compressedLength);
-            m_stream.write(m_compressedCache, compressedLength);
-            m_cachePtr = m_cache;
-        }
-        assert(m_cachePtr == m_cache);
-    } else if (m_mode == File::Read) {
-        //assert(m_cachePtr == m_cache + m_cacheSize);
+    if (inputLength) {
         size_t compressedLength;
-        compressedLength = readCompressedLength();
 
-        if (compressedLength) {
-            m_stream.read((char*)m_compressedCache, compressedLength);
-            ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
-                                            &m_cacheSize);
-            createCache(m_cacheSize);
-            ::snappy::RawUncompress(m_compressedCache, compressedLength,
-                                    m_cache);
-        } else {
-            createCache(0);
-        }
+        ::snappy::RawCompress(m_cache, inputLength,
+                              m_compressedCache, &compressedLength);
+
+        writeCompressedLength(compressedLength);
+        m_stream.write(m_compressedCache, compressedLength);
+        m_cachePtr = m_cache;
+    }
+    assert(m_cachePtr == m_cache);
+}
+
+void SnappyFile::flushReadCache()
+{
+    //assert(m_cachePtr == m_cache + m_cacheSize);
+    size_t compressedLength;
+    compressedLength = readCompressedLength();
+
+    if (compressedLength) {
+        m_stream.read((char*)m_compressedCache, compressedLength);
+        ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
+                                        &m_cacheSize);
+        createCache(m_cacheSize);
+        ::snappy::RawUncompress(m_compressedCache, compressedLength,
+                                m_cache);
+    } else {
+        createCache(0);
     }
 }
 

@@ -124,7 +124,9 @@ inline void File::close()
 
 inline void File::flush(void)
 {
-    rawFlush();
+    if (m_mode == File::Write) {
+        rawFlush();
+    }
 }
 
 inline int File::getc()
