@@ -300,7 +300,7 @@ void SnappyFile::setCurrentOffset(const File::Offset &offset)
 
 }
 
-bool SnappyFile::rawSkip(unsigned length)
+bool SnappyFile::rawSkip(size_t length)
 {
     if (endOfData()) {
         return false;

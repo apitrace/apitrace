@@ -150,7 +150,7 @@ bool ZLibFile::supportsOffsets() const
     return false;
 }
 
-bool ZLibFile::rawSkip(unsigned)
+bool ZLibFile::rawSkip(size_t)
 {
     return false;
 }
