@@ -83,7 +83,8 @@ private:
     {
         return m_stream.eof() && freeCacheSize() == 0;
     }
-    void flushCache();
+    void flushWriteCache();
+    void flushReadCache();
     void createCache(size_t size);
     void writeCompressedLength(size_t length);
     size_t readCompressedLength();
