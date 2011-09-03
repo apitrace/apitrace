@@ -211,7 +211,7 @@ void SnappyFile::flushWriteCache()
     assert(m_cachePtr == m_cache);
 }
 
-void SnappyFile::flushReadCache()
+void SnappyFile::flushReadCache(size_t skipLength)
 {
     //assert(m_cachePtr == m_cache + m_cacheSize);
     m_currentOffset.chunk = m_stream.tellg();
@@ -223,8 +223,10 @@ void SnappyFile::flushReadCache()
         ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
                                         &m_cacheSize);
         createCache(m_cacheSize);
-        ::snappy::RawUncompress(m_compressedCache, compressedLength,
-                                m_cache);
+        if (skipLength < m_cacheSize) {
+            ::snappy::RawUncompress(m_compressedCache, compressedLength,
+                                    m_cache);
+        }
     } else {
         createCache(0);
     }
@@ -315,7 +317,7 @@ bool SnappyFile::rawSkip(size_t length)
             m_cachePtr += chunkSize;
             sizeToRead -= chunkSize;
             if (sizeToRead > 0) {
-                flushReadCache();
+                flushReadCache(sizeToRead);
             }
             if (!m_cacheSize) {
                 break;
