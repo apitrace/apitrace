@@ -56,6 +56,7 @@ bool Loader::open(const char *filename)
     int numOfFrames = 0;
     int numOfCalls = 0;
     unsigned callNum = 0;
+    int lastPercentReport = 0;
 
     startOffset = m_parser.currentOffset();
     callNum = m_parser.currentCallNumber();
@@ -72,6 +73,12 @@ bool Loader::open(const char *filename)
             m_frameOffsets[numOfFrames] = frameOffset;
             ++numOfFrames;
 
+            if (m_parser.percentRead() - lastPercentReport >= 5) {
+                std::cerr << "\tPercent scanned = "
+                          << m_parser.percentRead()
+                          << "..."<<std::endl;
+                lastPercentReport = m_parser.percentRead();
+            }
             startOffset = endOffset;
             callNum = m_parser.currentCallNumber();
             numOfCalls = 0;

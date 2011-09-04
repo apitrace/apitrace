@@ -113,6 +113,12 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
 {
     m_gzFile = gzopen(filename.c_str(),
                       (mode == File::Write) ? "wb" : "rb");
+
+    if (mode == File::Read && m_gzFile) {
+        m_endOffset = gzseek(m_gzFile, 0, SEEK_END);
+        gzrewind(m_gzFile);
+    }
+
     return m_gzFile != NULL;
 }
 
@@ -153,4 +159,9 @@ bool ZLibFile::supportsOffsets() const
 bool ZLibFile::rawSkip(size_t)
 {
     return false;
+}
+
+int ZLibFile::rawPercentRead()
+{
+    return 100 * (gztell(m_gzFile) / m_endOffset);
 }

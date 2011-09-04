@@ -63,6 +63,7 @@ protected:
     virtual void rawClose();
     virtual void rawFlush();
     virtual bool rawSkip(size_t length);
+    virtual int rawPercentRead();
 
 private:
     inline size_t usedCacheSize() const
@@ -97,6 +98,7 @@ private:
     char *m_compressedCache;
 
     File::Offset m_currentOffset;
+    std::streampos m_endPos;
 };
 
 }

@@ -93,6 +93,10 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
 
     //read in the initial buffer if we're reading
     if (m_stream.is_open() && mode == File::Read) {
+        m_stream.seekg(0, std::ios::end);
+        m_endPos = m_stream.tellg();
+        m_stream.seekg(0, std::ios::beg);
+
         // read the snappy file identifier
         unsigned char byte1, byte2;
         m_stream >> byte1;
@@ -326,4 +330,9 @@ bool SnappyFile::rawSkip(size_t length)
     }
 
     return true;
+}
+
+int SnappyFile::rawPercentRead()
+{
+    return 100 * (double(m_stream.tellg()) / double(m_endPos));
 }

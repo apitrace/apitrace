@@ -112,6 +112,11 @@ public:
         next_call_no = num;
     }
 
+    int percentRead()
+    {
+        return file->percentRead();
+    }
+
     Call *scan_call();
 
 protected:

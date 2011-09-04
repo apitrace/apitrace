@@ -68,6 +68,7 @@ public:
     void flush(void);
     int getc();
     bool skip(size_t length);
+    int percentRead();
 
     virtual bool supportsOffsets() const = 0;
     virtual File::Offset currentOffset();
@@ -80,6 +81,7 @@ protected:
     virtual void rawClose() = 0;
     virtual void rawFlush() = 0;
     virtual bool rawSkip(size_t length) = 0;
+    virtual int rawPercentRead() = 0;
 
 protected:
     std::string m_filename;
@@ -129,6 +131,14 @@ inline bool File::read(void *buffer, size_t length)
     return rawRead(buffer, length);
 }
 
+inline int File::percentRead()
+{
+    if (!m_isOpened || m_mode != File::Read) {
+        return 0;
+    }
+    return rawPercentRead();
+}
+
 inline void File::close()
 {
     if (m_isOpened) {
@@ -176,8 +186,10 @@ protected:
     virtual void rawClose();
     virtual void rawFlush();
     virtual bool rawSkip(size_t length);
+    virtual int  rawPercentRead();
 private:
     void *m_gzFile;
+    double m_endOffset;
 };
 
 inline bool
