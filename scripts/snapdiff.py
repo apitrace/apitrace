@@ -48,8 +48,15 @@ class Comparer:
     '''Image comparer.'''
 
     def __init__(self, ref_image, src_image, alpha = False):
-        self.ref_im = Image.open(ref_image)
-        self.src_im = Image.open(src_image)
+        if isinstance(ref_image, basestring):
+            self.ref_im = Image.open(ref_image)
+        else:
+            self.ref_im = ref_image
+
+        if isinstance(src_image, basestring):
+            self.src_im = Image.open(src_image)
+        else:
+            self.src_im = src_image
 
         # Ignore
         if not alpha:

@@ -37,6 +37,8 @@ import platform
 import sys
 import tempfile
 
+from PIL import Image
+
 from snapdiff import Comparer
 import jsondiff
 
@@ -54,10 +56,10 @@ class Setup:
         self.args = args
         self.env = env
 
-    def retrace(self, snapshot_dir):
+    def retrace(self):
         cmd = [
             options.retrace,
-            '-s', snapshot_dir + os.path.sep,
+            '-s', '-',
             '-S', options.snapshot_frequency,
         ] + self.args
         p = subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
@@ -76,7 +78,29 @@ class Setup:
         return state
 
 
+def read_pnm(stream):
+    '''Read a PNM from the stream, and return the image object, and the comment.'''
+
+    magic = stream.readline()
+    if not magic:
+        return None, None
+    assert magic.rstrip() == 'P6'
+    comment = ''
+    line = stream.readline()
+    while line.startswith('#'):
+        comment += line[1:]
+        line = stream.readline()
+    width, height = map(int, line.strip().split())
+    maximum = int(stream.readline().strip())
+    assert maximum == 255
+    data = stream.read(height * width * 3)
+    image = Image.frombuffer('RGB', (width, height), data, 'raw', 'RGB', 0, 1)
+    return image, comment
+
+
 def diff_state(setup, ref_call_no, src_call_no):
+    '''Compare the state between two calls.'''
+
     ref_state = setup.dump_state(ref_call_no)
     src_state = setup.dump_state(src_call_no)
     sys.stdout.flush()
@@ -115,15 +139,15 @@ def main():
     optparser.add_option(
         '--ref-env', metavar='NAME=VALUE',
         type='string', action='append', dest='ref_env', default=[],
-        help='reference environment variable')
+        help='add variable to reference environment')
     optparser.add_option(
         '--src-env', metavar='NAME=VALUE',
         type='string', action='append', dest='src_env', default=[],
-        help='reference environment variable')
+        help='add variable to source environment')
     optparser.add_option(
         '--diff-prefix', metavar='PATH',
         type='string', dest='diff_prefix', default='.',
-        help='reference environment variable')
+        help='prefix for the difference images')
     optparser.add_option(
         '-t', '--threshold', metavar='BITS',
         type="float", dest="threshold", default=12.0,
@@ -131,7 +155,7 @@ def main():
     optparser.add_option(
         '-S', '--snapshot-frequency', metavar='FREQUENCY',
         type="string", dest="snapshot_frequency", default='draw',
-        help="snapshot frequency  [default: %default]")
+        help="snapshot frequency: frame, framebuffer, or draw  [default: %default]")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
     ref_env = parse_env(optparser, options.ref_env)
@@ -146,58 +170,51 @@ def main():
 
     last_good = -1
     last_bad = -1
-    ref_snapshot_dir = tempfile.mkdtemp()
+    ref_proc = ref_setup.retrace()
     try:
-        src_snapshot_dir = tempfile.mkdtemp()
+        src_proc = src_setup.retrace()
         try:
-            ref_proc = ref_setup.retrace(ref_snapshot_dir)
-            try:
-                src_proc = src_setup.retrace(src_snapshot_dir)
-                try:
-                    for ref_line in ref_proc.stdout:
-                        # Get the reference image
-                        ref_line = ref_line.rstrip()
-                        mo = image_re.match(ref_line)
-                        if mo:
-                            ref_image = mo.group(1)
-                            for src_line in src_proc.stdout:
-                                # Get the source image
-                                src_line = src_line.rstrip()
-                                mo = image_re.match(src_line)
-                                if mo:
-                                    src_image = mo.group(1)
-                                    
-                                    root, ext = os.path.splitext(os.path.basename(src_image))
-                                    call_no = int(root)
+            while True:
+                # Get the reference image
+                ref_image, ref_comment = read_pnm(ref_proc.stdout)
+                if ref_image is None:
+                    break
 
-                                    # Compare the two images
-                                    comparer = Comparer(ref_image, src_image)
-                                    precision = comparer.precision()
+                # Get the source image
+                src_image, src_comment = read_pnm(src_proc.stdout)
+                if src_image is None:
+                    break
 
-                                    sys.stdout.write('%u %f\n' % (call_no, precision))
-                                    
-                                    if precision < options.threshold:
-                                        if options.diff_prefix:
-                                            comparer.write_diff(os.path.join(options.diff_prefix, root + '.diff.png'))
-                                        if last_bad < last_good:
-                                            diff_state(src_setup, last_good, call_no)
-                                        last_bad = call_no
-                                    else:
-                                        last_good = call_no
+                assert ref_comment == src_comment
 
-                                    sys.stdout.flush()
-                                   
-                                    os.unlink(src_image)
-                                    break
-                            os.unlink(ref_image)
-                finally:
-                    src_proc.terminate()
-            finally:
-                ref_proc.terminate()
+                call_no = int(ref_comment.strip())
+
+                # Compare the two images
+                comparer = Comparer(ref_image, src_image)
+                precision = comparer.precision()
+
+                sys.stdout.write('%u %f\n' % (call_no, precision))
+
+                if precision < options.threshold:
+                    if options.diff_prefix:
+                        prefix = os.path.join(options.diff_prefix, '%010u' % call_no)
+                        prefix_dir = os.path.dirname(prefix)
+                        if not os.path.isdir(prefix_dir):
+                            os.makedirs(prefix_dir)
+                        ref_image.save(prefix + '.ref.png')
+                        src_image.save(prefix + '.src.png')
+                        comparer.write_diff(prefix + '.diff.png')
+                    if last_bad < last_good:
+                        diff_state(src_setup, last_good, call_no)
+                    last_bad = call_no
+                else:
+                    last_good = call_no
+
+                sys.stdout.flush()
         finally:
-            shutil.rmtree(ref_snapshot_dir)
+            src_proc.terminate()
     finally:
-        shutil.rmtree(src_snapshot_dir)
+        ref_proc.terminate()
 
 
 if __name__ == '__main__':
