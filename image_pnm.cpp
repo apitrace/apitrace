@@ -35,12 +35,16 @@ namespace Image {
 
 /**
  * http://en.wikipedia.org/wiki/Netpbm_format
+ * http://netpbm.sourceforge.net/doc/ppm.html
  */
 void
-Image::writePNM(std::ostream &os) const {
+Image::writePNM(std::ostream &os, const char *comment) const {
     assert(channels == 1 || channels >= 3);
 
     os << (channels == 1 ? "P5" : "P6") << "\n";
+    if (comment) {
+        os << "#" << comment << "\n";
+    }
     os << width << " " << height << "\n";
     os << "255" << "\n";
 

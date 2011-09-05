@@ -131,7 +131,9 @@ void snapshot(unsigned call_no) {
 
     if (snapshot_prefix) {
         if (snapshot_prefix[0] == '-' && snapshot_prefix[1] == 0) {
-            src->writePNM(std::cout);
+            char comment[21];
+            snprintf(comment, sizeof comment, "%u", call_no);
+            src->writePNM(std::cout, comment);
         } else {
             char filename[PATH_MAX];
             snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);

@@ -83,14 +83,14 @@ public:
 
     bool writeBMP(const char *filename) const;
 
-    void writePNM(std::ostream &os) const;
+    void writePNM(std::ostream &os, const char *comment = NULL) const;
 
-    inline bool writePNM(const char *filename) const {
+    inline bool writePNM(const char *filename, const char *comment = NULL) const {
         std::ofstream os(filename, std::ofstream::binary);
         if (!os) {
             return false;
         }
-        writePNM(os);
+        writePNM(os, comment);
         return true;
     }
 
