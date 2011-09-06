@@ -50,9 +50,6 @@ Retracing
 
 * Plug memory leaks.
 
-* Allow to retrace with two libGL.so in parallel, and output differences in
-  rendered frames / draw calls.
-
 * D3D support.
 
 
@@ -64,11 +61,10 @@ GUI
 * Visualize meshes in draw commands.
 
 
-Other:
+Other
+-----
 
 * Side-by-side trace diffing; either as a separate tool on or the GUI.
-
-* Side-by-side state diffing.
 
 * Ability to extract just a single frame from a trace, and all previous calls
   that contributed to it:
