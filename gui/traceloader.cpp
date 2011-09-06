@@ -246,7 +246,6 @@ void TraceLoader::parseTrace()
             frames.clear();
          }
          if (m_parser.percentRead() - lastPercentReport >= 5) {
-            qDebug()<<"emitting = " << m_parser.percentRead();
             emit parsed(m_parser.percentRead());
             lastPercentReport = m_parser.percentRead();
          }
@@ -259,15 +258,13 @@ void TraceLoader::parseTrace()
    //  it's just a bunch of Delete calls for every object
    //  after the last SwapBuffers
    if (currentFrame) {
-      if (!frames.count()) {
-         calls.squeeze();
-         currentFrame->setCalls(calls, binaryDataSize);
-      }
-      frames.append(currentFrame);
-      currentFrame = 0;
+       calls.squeeze();
+       currentFrame->setCalls(calls, binaryDataSize);
+       frames.append(currentFrame);
+       currentFrame = 0;
    }
    if (frames.count()) {
-      emit framesLoaded(frames);
+       emit framesLoaded(frames);
    }
 }
 
