@@ -1,31 +1,46 @@
 #include "apitrace.h"
 
-#include "loaderthread.h"
+#include "traceloader.h"
 #include "saverthread.h"
 
 #include <QDir>
+#include <QThread>
 
 ApiTrace::ApiTrace()
     : m_frameMarker(ApiTrace::FrameMarker_SwapBuffers),
       m_needsSaving(false)
 {
-    m_loader = new LoaderThread(this);
-    connect(m_loader, SIGNAL(parsedFrames(const QList<ApiTraceFrame*>)),
+    m_loader = new TraceLoader();
+    connect(this, SIGNAL(loadTrace(QString)),
+            m_loader, SLOT(loadTrace(QString)));
+    connect(m_loader, SIGNAL(framesLoaded(const QList<ApiTraceFrame*>)),
             this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
-    connect(m_loader, SIGNAL(started()),
+    connect(m_loader, SIGNAL(frameLoaded(int,QVector<ApiTraceCall*>,quint64)),
+            this, SLOT(fillFrame(int,QVector<ApiTraceCall*>,quint64)));
+
+    connect(m_loader, SIGNAL(startedParsing()),
             this, SIGNAL(startedLoadingTrace()));
-    connect(m_loader, SIGNAL(finished()),
+    connect(m_loader, SIGNAL(parsed(int)),
+            this, SIGNAL(loaded(int)));
+    connect(m_loader, SIGNAL(finishedParsing()),
             this, SIGNAL(finishedLoadingTrace()));
+
 
     m_saver = new SaverThread(this);
     connect(m_saver, SIGNAL(traceSaved()),
             this, SLOT(slotSaved()));
     connect(m_saver, SIGNAL(traceSaved()),
             this, SIGNAL(saved()));
+
+    m_loaderThread = new QThread();
+    m_loader->moveToThread(m_loaderThread);
+    m_loaderThread->start();
 }
 
 ApiTrace::~ApiTrace()
 {
+    m_loaderThread->quit();
+    m_loaderThread->deleteLater();
     qDeleteAll(m_calls);
     qDeleteAll(m_frames);
     delete m_loader;
@@ -118,10 +133,6 @@ void ApiTrace::setFileName(const QString &name)
     if (m_fileName != name) {
         m_fileName = name;
 
-        if (m_loader->isRunning()) {
-            m_loader->terminate();
-            m_loader->wait();
-        }
         m_frames.clear();
         m_calls.clear();
         m_errors.clear();
@@ -129,7 +140,8 @@ void ApiTrace::setFileName(const QString &name)
         m_needsSaving = false;
         emit invalidated();
 
-        m_loader->loadFile(m_fileName);
+//        m_loader->loadTrace(m_fileName);
+        emit loadTrace(m_fileName);
     }
 }
 
@@ -157,7 +169,7 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
     int currentCalls = m_calls.count();
     int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
-        Q_ASSERT(this == frame->parentTrace());
+        frame->setParentTrace(this);
         numNewCalls += frame->numChildren();
         calls += frame->calls();
     }
@@ -290,34 +302,9 @@ bool ApiTrace::hasErrors() const
     return !m_errors.isEmpty();
 }
 
-ApiTraceCallSignature * ApiTrace::signature(unsigned id)
+void ApiTrace::fillFrame(int frameIdx, const QVector<ApiTraceCall *> &calls,
+                         quint64 binaryDataSize)
 {
-    if (id >= m_signatures.count()) {
-        m_signatures.resize(id + 1);
-        return NULL;
-    } else {
-        return m_signatures[id];
-    }
-}
-
-void ApiTrace::addSignature(unsigned id, ApiTraceCallSignature *signature)
-{
-    m_signatures[id] = signature;
-}
-
-ApiTraceEnumSignature * ApiTrace::enumSignature(unsigned id)
-{
-    if (id >= m_enumSignatures.count()) {
-        m_enumSignatures.resize(id + 1);
-        return NULL;
-    } else {
-        return m_enumSignatures[id];
-    }
-}
-
-void ApiTrace::addEnumSignature(unsigned id, ApiTraceEnumSignature *signature)
-{
-    m_enumSignatures[id] = signature;
 }
 
 #include "apitrace.moc"

@@ -67,6 +67,8 @@ protected:
     typedef std::map<File::Offset, unsigned> CallNumOffsets;
     CallNumOffsets m_callNumOffsets;
 
+    bool m_supportsSeeking;
+
     unsigned next_call_no;
 
 public:

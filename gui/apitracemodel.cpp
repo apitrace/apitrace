@@ -1,7 +1,7 @@
 #include "apitracemodel.h"
 
 #include "apitracecall.h"
-#include "loaderthread.h"
+#include "traceloader.h"
 #include "trace_parser.hpp"
 
 #include <QDebug>

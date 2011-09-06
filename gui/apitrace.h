@@ -6,8 +6,9 @@
 #include <QObject>
 #include <QSet>
 
-class LoaderThread;
+class TraceLoader;
 class SaverThread;
+class QThread;
 
 class ApiTrace : public QObject
 {
@@ -32,13 +33,6 @@ public:
     FrameMarker frameMarker() const;
 
     ApiTraceState defaultState() const;
-
-    ApiTraceCallSignature *signature(unsigned id);
-    void addSignature(unsigned id, ApiTraceCallSignature *signature);
-
-    ApiTraceEnumSignature *enumSignature(unsigned id);
-    void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
-
 
     QVector<ApiTraceCall*> calls() const;
     ApiTraceCall *callAt(int idx) const;
@@ -67,7 +61,9 @@ public slots:
     void save();
 
 signals:
+    void loadTrace(const QString &name);
     void startedLoadingTrace();
+    void loaded(int percent);
     void finishedLoadingTrace();
     void invalidated();
     void framesInvalidated();
@@ -81,6 +77,8 @@ signals:
 
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
+    void fillFrame(int frameIdx, const QVector<ApiTraceCall*> &calls,
+                   quint64 binaryDataSize);
     void slotSaved();
 private:
     void detectFrames();
@@ -93,7 +91,8 @@ private:
 
     FrameMarker m_frameMarker;
 
-    LoaderThread *m_loader;
+    TraceLoader *m_loader;
+    QThread     *m_loaderThread;
     SaverThread  *m_saver;
 
     QSet<ApiTraceCall*> m_editedCalls;
@@ -101,8 +100,6 @@ private:
     bool m_needsSaving;
 
     QSet<ApiTraceCall*> m_errors;
-    QVector<ApiTraceCallSignature*> m_signatures;
-    QVector<ApiTraceEnumSignature*> m_enumSignatures;
 };
 
 #endif

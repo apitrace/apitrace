@@ -1,6 +1,7 @@
 #include "apitracecall.h"
 
 #include "apitrace.h"
+#include "traceloader.h"
 #include "trace_model.hpp"
 
 #include <QDebug>
@@ -175,15 +176,15 @@ void VariantVisitor::visit(Trace::Enum *e)
 {
     ApiTraceEnumSignature *sig = 0;
 
-    if (m_trace) {
-        sig = m_trace->enumSignature(e->sig->id);
+    if (m_loader) {
+        sig = m_loader->enumSignature(e->sig->id);
     }
     if (!sig) {
         sig = new ApiTraceEnumSignature(
             QString::fromStdString(e->sig->name),
             QVariant(e->sig->value));
-        if (m_trace) {
-            m_trace->addEnumSignature(e->sig->id, sig);
+        if (m_loader) {
+            m_loader->addEnumSignature(e->sig->id, sig);
         }
     }
 
@@ -600,17 +601,15 @@ void ApiTraceEvent::setState(ApiTraceState *state)
     m_state = state;
 }
 
-ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
+ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
+                           TraceLoader *loader,
+                           const Trace::Call *call)
     : ApiTraceEvent(ApiTraceEvent::Call),
       m_parentFrame(parentFrame)
 {
-    ApiTrace *trace = parentTrace();
-
-    Q_ASSERT(trace);
-
     m_index = call->no;
 
-    m_signature = trace->signature(call->sig->id);
+    m_signature = loader->signature(call->sig->id);
 
     if (!m_signature) {
         QString name = QString::fromStdString(call->sig->name);
@@ -620,16 +619,16 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *call)
             argNames += QString::fromStdString(call->sig->arg_names[i]);
         }
         m_signature = new ApiTraceCallSignature(name, argNames);
-        trace->addSignature(call->sig->id, m_signature);
+        loader->addSignature(call->sig->id, m_signature);
     }
     if (call->ret) {
-        VariantVisitor retVisitor(trace);
+        VariantVisitor retVisitor(loader);
         call->ret->visit(retVisitor);
         m_returnValue = retVisitor.variant();
     }
     m_argValues.reserve(call->args.size());
     for (int i = 0; i < call->args.size(); ++i) {
-        VariantVisitor argVisitor(trace);
+        VariantVisitor argVisitor(loader);
         call->args[i]->visit(argVisitor);
         m_argValues.append(argVisitor.variant());
         if (m_argValues[i].type() == QVariant::ByteArray) {
@@ -1034,4 +1033,9 @@ void ApiTraceFrame::setLoaded(bool l)
 void ApiTraceFrame::setNumChildren(int num)
 {
     m_callsToLoad = num;
+}
+
+void ApiTraceFrame::setParentTrace(ApiTrace *parent)
+{
+    m_parentTrace = parent;
 }

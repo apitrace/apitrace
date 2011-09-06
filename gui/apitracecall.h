@@ -12,12 +12,13 @@
 
 
 class ApiTrace;
+class TraceLoader;
 
 class VariantVisitor : public Trace::Visitor
 {
 public:
-    VariantVisitor(ApiTrace *trace)
-        : m_trace(trace)
+    VariantVisitor(TraceLoader *loader)
+        : m_loader(loader)
     {}
     virtual void visit(Trace::Null *);
     virtual void visit(Trace::Bool *node);
@@ -37,7 +38,7 @@ public:
         return m_variant;
     }
 private:
-    ApiTrace *m_trace;
+    TraceLoader *m_loader;
     QVariant m_variant;
 };
 
@@ -233,7 +234,8 @@ Q_DECLARE_METATYPE(ApiTraceEvent*);
 class ApiTraceCall : public ApiTraceEvent
 {
 public:
-    ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *tcall);
+    ApiTraceCall(ApiTraceFrame *parentFrame, TraceLoader *loader,
+                 const Trace::Call *tcall);
     ~ApiTraceCall();
 
     int index() const;
@@ -284,11 +286,12 @@ Q_DECLARE_METATYPE(ApiTraceCall*);
 class ApiTraceFrame : public ApiTraceEvent
 {
 public:
-    ApiTraceFrame(ApiTrace *parent);
+    ApiTraceFrame(ApiTrace *parent=0);
     int number;
 
     bool isEmpty() const;
 
+    void setParentTrace(ApiTrace *parent);
     ApiTrace *parentTrace() const;
 
     void setNumChildren(int num);

@@ -12,7 +12,6 @@ set(qapitrace_SRCS
    glsledit.cpp
    imageviewer.cpp
    jumpwidget.cpp
-   loaderthread.cpp
    mainwindow.cpp
    main.cpp
    retracer.cpp

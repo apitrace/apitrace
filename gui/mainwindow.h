@@ -46,6 +46,7 @@ private slots:
     void replayStateFound(ApiTraceState *state);
     void replayError(const QString &msg);
     void startedLoadingTrace();
+    void loadProgess(int percent);
     void finishedLoadingTrace();
     void lookupState();
     void showSettings();

@@ -647,7 +647,7 @@ void MainWindow::initObjects()
     m_ui.callView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_progressBar = new QProgressBar();
-    m_progressBar->setRange(0, 0);
+    m_progressBar->setRange(0, 100);
     statusBar()->addPermanentWidget(m_progressBar);
     m_progressBar->hide();
 
@@ -682,6 +682,8 @@ void MainWindow::initConnections()
 {
     connect(m_trace, SIGNAL(startedLoadingTrace()),
             this, SLOT(startedLoadingTrace()));
+    connect(m_trace, SIGNAL(loaded(int)),
+            this, SLOT(loadProgess(int)));
     connect(m_trace, SIGNAL(finishedLoadingTrace()),
             this, SLOT(finishedLoadingTrace()));
     connect(m_trace, SIGNAL(startedSaving()),
@@ -1157,6 +1159,11 @@ void MainWindow::saveSelectedSurface()
     //qDebug()<<"save "<<fileName;
     img.save(fileName, "PNG");
     statusBar()->showMessage( tr("Saved '%1'").arg(fileName), 5000);
+}
+
+void MainWindow::loadProgess(int percent)
+{
+    m_progressBar->setValue(percent);
 }
 
 #include "mainwindow.moc"

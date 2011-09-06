@@ -8,18 +8,18 @@
 static ApiTraceCall *
 apiCallFromTraceCall(const Trace::Call *call,
                      const QHash<QString, QUrl> &helpHash,
-                     ApiTraceFrame *frame)
+                     ApiTraceFrame *frame,
+                     TraceLoader *loader)
 {
-    ApiTraceCall *apiCall = new ApiTraceCall(frame, call);
+    ApiTraceCall *apiCall = new ApiTraceCall(frame, loader, call);
 
     apiCall->setHelpUrl(helpHash.value(apiCall->name()));
 
     return apiCall;
 }
 
-TraceLoader::TraceLoader(ApiTrace *parent)
+TraceLoader::TraceLoader(QObject *parent)
     : QObject(parent),
-      m_trace(parent),
       m_frameMarker(ApiTrace::FrameMarker_SwapBuffers)
 {
 }
@@ -39,9 +39,10 @@ void TraceLoader::loadTrace(const QString &filename)
         qDebug() << "error: failed to open " << filename;
         return;
     }
-
+    qDebug()<<"load trace with "<<filename;
     emit startedParsing();
 
+    qDebug() <<"\t support offsets = "<<m_parser.supportsOffsets();
     if (m_parser.supportsOffsets()) {
        scanTrace();
     } else {
@@ -166,7 +167,7 @@ void TraceLoader::scanTrace()
            frameOffset.numberOfCalls = numOfCalls;
            frameOffset.callNumber = callNum;
 
-           currentFrame = new ApiTraceFrame(m_trace);
+           currentFrame = new ApiTraceFrame();
            currentFrame->number = numOfFrames;
            currentFrame->setNumChildren(numOfCalls);
            frames.append(currentFrame);
@@ -192,7 +193,7 @@ void TraceLoader::scanTrace()
       frameOffset.numberOfCalls = numOfCalls;
       frameOffset.callNumber = callNum;
 
-      currentFrame = new ApiTraceFrame(m_trace);
+      currentFrame = new ApiTraceFrame();
       currentFrame->number = numOfFrames;
       currentFrame->setNumChildren(numOfCalls);
       frames.append(currentFrame);
@@ -220,12 +221,12 @@ void TraceLoader::parseTrace()
    while (call) {
       //std::cout << *call;
       if (!currentFrame) {
-         currentFrame = new ApiTraceFrame(m_trace);
+         currentFrame = new ApiTraceFrame();
          currentFrame->number = frameCount;
          ++frameCount;
       }
       ApiTraceCall *apiCall =
-            apiCallFromTraceCall(call, m_helpHash, currentFrame);
+            apiCallFromTraceCall(call, m_helpHash, currentFrame, this);
       calls.append(apiCall);
       if (apiCall->hasBinaryData()) {
          QByteArray data =
@@ -245,6 +246,7 @@ void TraceLoader::parseTrace()
             frames.clear();
          }
          if (m_parser.percentRead() - lastPercentReport >= 5) {
+            qDebug()<<"emitting = " << m_parser.percentRead();
             emit parsed(m_parser.percentRead());
             lastPercentReport = m_parser.percentRead();
          }
@@ -269,5 +271,35 @@ void TraceLoader::parseTrace()
    }
 }
 
+
+ApiTraceCallSignature * TraceLoader::signature(unsigned id)
+{
+    if (id >= m_signatures.count()) {
+        m_signatures.resize(id + 1);
+        return NULL;
+    } else {
+        return m_signatures[id];
+    }
+}
+
+void TraceLoader::addSignature(unsigned id, ApiTraceCallSignature *signature)
+{
+    m_signatures[id] = signature;
+}
+
+ApiTraceEnumSignature * TraceLoader::enumSignature(unsigned id)
+{
+    if (id >= m_enumSignatures.count()) {
+        m_enumSignatures.resize(id + 1);
+        return NULL;
+    } else {
+        return m_enumSignatures[id];
+    }
+}
+
+void TraceLoader::addEnumSignature(unsigned id, ApiTraceEnumSignature *signature)
+{
+    m_enumSignatures[id] = signature;
+}
 
 #include "traceloader.moc"

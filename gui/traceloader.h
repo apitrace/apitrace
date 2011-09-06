@@ -14,8 +14,15 @@ class TraceLoader : public QObject
 {
     Q_OBJECT
 public:
-    TraceLoader(ApiTrace *parent);
+    TraceLoader(QObject *parent=0);
     ~TraceLoader();
+
+
+    ApiTraceCallSignature *signature(unsigned id);
+    void addSignature(unsigned id, ApiTraceCallSignature *signature);
+
+    ApiTraceEnumSignature *enumSignature(unsigned id);
+    void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
 
 public slots:
     void loadTrace(const QString &filename);
@@ -24,7 +31,7 @@ public slots:
 
 signals:
     void startedParsing();
-    void parsed(float percent);
+    void parsed(int percent);
     void finishedParsing();
 
     void framesLoaded(const QList<ApiTraceFrame*> &frames);
@@ -53,8 +60,8 @@ private:
     void loadHelpFile();
     void scanTrace();
     void parseTrace();
+
 private:
-    ApiTrace *m_trace;
     Trace::Parser m_parser;
     QString m_fileName;
     ApiTrace::FrameMarker m_frameMarker;
@@ -63,6 +70,9 @@ private:
     FrameOffsets m_frameOffsets;
 
     QHash<QString, QUrl> m_helpHash;
+
+    QVector<ApiTraceCallSignature*> m_signatures;
+    QVector<ApiTraceEnumSignature*> m_enumSignatures;
 };
 
 #endif

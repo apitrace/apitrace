@@ -43,6 +43,7 @@ Parser::Parser() {
     file = NULL;
     next_call_no = 0;
     version = 0;
+    m_supportsSeeking = false;
 }
 
 
@@ -62,6 +63,7 @@ bool Parser::open(const char *filename) {
     if (!file->open(filename, File::Read)) {
         return false;
     }
+    m_supportsSeeking = file->supportsOffsets();
 
     version = read_uint();
     if (version > TRACE_VERSION) {
@@ -146,8 +148,15 @@ void Parser::parse_enter(void) {
     size_t id = read_uint();
 
     FunctionSig *sig = lookup(functions, id);
-    const File::Offset offset = file->currentOffset();
-    bool callWithSig = callWithSignature(offset);
+
+
+    File::Offset offset;
+    bool callWithSig = false;
+    if (m_supportsSeeking) {
+        offset = file->currentOffset();
+        callWithSig = callWithSignature(offset);
+    }
+
     if (!sig || callWithSig) {
         if (!sig) {
             sig = new FunctionSig;
@@ -160,7 +169,9 @@ void Parser::parse_enter(void) {
             }
             sig->arg_names = arg_names;
             functions[id] = sig;
-            m_callSigOffsets.insert(offset);
+            if (m_supportsSeeking) {
+                m_callSigOffsets.insert(offset);
+            }
         } else {
             /* skip over the signature */
             skip_string(); /* name */
@@ -336,8 +347,14 @@ Value *Parser::parse_string() {
 Value *Parser::parse_enum() {
     size_t id = read_uint();
     EnumSig *sig = lookup(enums, id);
-    const File::Offset offset = file->currentOffset();
-    bool enumWithSig = enumWithSignature(offset);
+    File::Offset offset;
+    bool enumWithSig = false;
+
+    if (m_supportsSeeking) {
+        offset = file->currentOffset();
+        enumWithSig = enumWithSignature(offset);
+    }
+
     if (!sig || enumWithSig) {
         if (!sig) {
             sig = new EnumSig;
@@ -347,7 +364,9 @@ Value *Parser::parse_enum() {
             sig->value = value->toSInt();
             delete value;
             enums[id] = sig;
-            m_enumSigOffsets.insert(offset);
+            if (m_supportsSeeking) {
+                m_enumSigOffsets.insert(offset);
+            }
         } else {
             skip_string(); /*name*/
             scan_value();
@@ -361,8 +380,14 @@ Value *Parser::parse_enum() {
 Value *Parser::parse_bitmask() {
     size_t id = read_uint();
     BitmaskSig *sig = lookup(bitmasks, id);
-    const File::Offset offset = file->currentOffset();
-    bool bitmaskWithSig = bitmaskWithSignature(offset);
+    File::Offset offset;
+    bool bitmaskWithSig = false;
+
+    if (m_supportsSeeking) {
+        offset = file->currentOffset();
+        bitmaskWithSig = bitmaskWithSignature(offset);
+    }
+
     if (!sig || bitmaskWithSig) {
         if (!sig) {
             sig = new BitmaskSig;
@@ -378,7 +403,9 @@ Value *Parser::parse_bitmask() {
             }
             sig->flags = flags;
             bitmasks[id] = sig;
-            m_bitmaskSigOffsets.insert(offset);
+            if (m_supportsSeeking) {
+                m_bitmaskSigOffsets.insert(offset);
+            }
         } else {
             int num_flags = read_uint();
             for (int i = 0; i < num_flags; ++i) {
@@ -419,8 +446,14 @@ Value *Parser::parse_struct() {
     size_t id = read_uint();
 
     StructSig *sig = lookup(structs, id);
-    const File::Offset offset = file->currentOffset();
-    bool structWithSig = structWithSignature(offset);
+    File::Offset offset;
+    bool structWithSig = false;
+
+    if (m_supportsSeeking) {
+        offset = file->currentOffset();
+        structWithSig = structWithSignature(offset);
+    }
+
     if (!sig || structWithSig) {
         if (!sig) {
             sig = new StructSig;
@@ -433,7 +466,9 @@ Value *Parser::parse_struct() {
             }
             sig->member_names = member_names;
             structs[id] = sig;
-            m_structSigOffsets.insert(offset);
+            if (m_supportsSeeking) {
+                m_structSigOffsets.insert(offset);
+            }
         } else {
             skip_string(); /* name */
             unsigned num_members = read_uint();
@@ -528,6 +563,7 @@ inline bool Parser::bitmaskWithSignature(const File::Offset &offset) const
 
 Call * Parser::scan_call()
 {
+    assert(m_supportsSeeking);
     do {
         int c = read_byte();
         switch(c) {
