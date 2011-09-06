@@ -10,77 +10,8 @@ About **apitrace**
 * visualize trace files, and inspect state.
 
 
-Building from source
-====================
-
-
-Requirements common for all platforms:
-
-* Python (requires version 2.6)
-
-* CMake (tested with version 2.8)
-
-Requirements to build the GUI (optional):
-
-* Qt (tested with version 4.7)
-
-* QJSON (tested with version 0.7.1)
-
-
-Linux / Mac OS X
-----------------
-
-Build as:
-
-    cmake -H. -Bbuild
-    make -C build
-
-You can also build the 32bit GL wrapper on 64bit distro with a multilib gcc by
-doing:
-
-    cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32
-    make -C build32 glxtrace
-
-
-Windows
--------
-
-Additional requirements:
-
-* Microsoft Visual Studio (tested with 2008 version) or MinGW (tested with gcc version 4.4)
-
-* Microsoft DirectX SDK (tested with August 2007 release)
-
-To build with Visual Studio first invoke CMake GUI as:
-
-    cmake-gui -H. -B%cd%\build
-
-and press the _Configure_ button.
-
-It will try to detect most required/optional dependencies automatically.  When
-not found automatically, you can manually specify the location of the
-dependencies from the GUI.
-
-If you are building with GUI support (i.e, with QT and QJSON), it should detect
-the official QT sdk automatically, but you will need to build QJSON yourself
-and also set the `QJSON_INCLUDE_DIR` and `QJSON_LIBRARIES` variables in the
-generated `CMakeCache.txt` when building apitrace and repeat the above
-sequence.
-
-After you've succesfully configured, you can start the build by opening the
-generated `build\apitrace.sln` solution file, or invoking `cmake` as:
-
-    cmake --build build --config MinSizeRel
-
-The steps to build 64bit version are similar, but choosing _Visual Studio 9
-2008 Win64_ instead of _Visual Studio 9 2008_.
-
-It's also possible to instruct `cmake` build Windows binaries on Linux with
-[MinGW cross compilers](http://www.cmake.org/Wiki/CmakeMingw).
-
-
-Usage
-=====
+Basic usage
+===========
 
 
 Linux
@@ -129,11 +60,6 @@ to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
 See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
-You can make a video of the output by doing
-
-    /path/to/glretrace -s - application.trace \
-    | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
-
 
 
 Mac OS X
@@ -165,6 +91,151 @@ Windows
 * Replay the trace with
 
         \path\to\glretrace application.trace
+
+
+Advanced command line usage
+===========================
+
+
+Dump GL state at a particular call
+----------------------------------
+
+You can get a dump of the bound GL state at call 12345 by doing:
+
+    /path/to/glretrace -D 12345 application.trace > 12345.json
+
+This is precisely the mechanism the GUI obtains its own state.
+
+You can compare two state dumps with the jsondiff.py script:
+
+    ./scripts/jsondiff.py 12345.json 67890.json
+
+
+Comparing two traces side by side
+---------------------------------
+
+    ./scripts/tracediff.sh trace1.trace trace2.trace
+
+This works only on Unices, and it will truncate the traces due to performance
+limitations.
+
+
+Recording a video with FFmpeg
+-----------------------------
+
+You can make a video of the output by doing
+
+    /path/to/glretrace -s - application.trace \
+    | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
+
+
+Advanced usage for OpenGL implementors
+======================================
+
+There are several avanced usage examples meant for OpenGL implementors.
+
+
+Regression testing
+------------------
+
+These are the steps to create a regression testsuite around apitrace:
+
+* obtain a trace
+
+* obtain reference snapshots, by doing:
+
+        mkdir /path/to/snapshots/
+        /path/to/glretrace -s /path/to/reference/snapshots/ application.trace
+
+  on reference system.
+
+* prune the snapshots which are not interesting
+
+* to do a regression test, do:
+
+        /path/to/glretrace -c /path/to/reference/snapshots/ application.trace
+
+  Alternatively, for a HTML summary, use the snapdiff script:
+
+        /path/to/glretrace -s /path/to/current/snapshots/ application.trace
+        ./scripts/snapdiff.py --output summary.html /path/to/reference/snapshots/ /path/to/current/snapshots/
+
+
+Automated git-bisection
+-----------------------
+
+With tracecheck.py it is possible to automate git bisect and pinpoint the
+commit responsible for a regression.
+
+Below is an example of using tracecheck.py to bisect a regression in the
+Mesa-based Intel 965 driver.  But the procedure could be applied to any GL
+driver hosted on a git repository.
+
+First, create a build script, named build-script.sh, containing:
+
+    #!/bin/sh
+    set -e
+    export PATH=/usr/lib/ccache:$PATH
+    export CFLAGS='-g'
+    export CXXFLAGS='-g'
+    ./autogen.sh --disable-egl --disable-gallium --disable-glut --disable-glu --disable-glw --with-dri-drivers=i965
+    make clean
+    make "$@"
+
+It is important that builds are both robust, and efficient.  Due to broken
+dependency discovery in Mesa's makefile system, it was necessary invoke `make
+clean` in every iteration step.  `ccache` should be installed to avoid
+recompiling unchanged source files.
+
+Then do:
+
+    cd /path/to/mesa
+    export LIBGL_DEBUG=verbose
+    export LD_LIBRARY_PATH=$PWD/lib
+    export LIBGL_DRIVERS_DIR=$PWD/lib
+    git bisect start \
+        6491e9593d5cbc5644eb02593a2f562447efdcbb 71acbb54f49089b03d3498b6f88c1681d3f649ac \
+        -- src/mesa/drivers/dri/intel src/mesa/drivers/dri/i965/
+    git bisect run /path/to/tracecheck.py \
+        --precision-threshold 8.0 \
+        --build /path/to/build-script.sh \
+        --gl-renderer '.*Mesa.*Intel.*' \
+        --retrace=/path/to/glretrace \
+        -c /path/to/reference/snapshots/ \
+        topogun-1.06-orc-84k.trace
+
+The trace-check.py script will skip automatically when there are build
+failures.
+
+The `--gl-renderer` option will also cause a commit to be skipped if the
+`GL_RENDERER` is unexpected (e.g., when a software renderer or another GL
+driver is unintentianlly loaded due to missing symbol in the DRI driver, or
+another runtime fault).
+
+
+Side by side retracing
+----------------------
+
+In order to determine which draw call a regression first manifests one could
+generate snapshots for every draw call, using the -S option.  That is, however,
+very inefficient for big traces with many draw calls.
+
+A faster approach is to run both the bad and a good GL driver side-by-side.
+The latter can be either a preivously known good build of the GL driver, or a
+reference software renderer.
+
+This can be achieved with retracediff.py script, which invokes glretrace with
+different environments, allowing to choose the desired GL driver by
+manipulating variables such as `LD_LIBRARY_PATH` or `LIBGL_DRIVERS_DIR`.
+
+For example:
+
+    ./scripts/retracediff.py \
+        --ref-env LD_LIBRARY_PATH=/path/to/reference/GL/implementation \
+        -r ./glretrace \
+        --diff-prefix=/path/to/output/diffs \
+        application.trace
+
 
 
 Links
