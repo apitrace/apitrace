@@ -37,6 +37,7 @@ import sys
 from PIL import Image
 
 from snapdiff import Comparer
+from highlight import Highlighter
 import jsondiff
 
 
@@ -72,13 +73,14 @@ class Setup:
         p = subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
         state = jsondiff.load(p.stdout)
         p.wait()
-        return state
+        return state.get('parameters', {})
 
     def diff_state(self, ref_call_no, src_call_no):
         '''Compare the state between two calls.'''
 
         ref_state = self.dump_state(ref_call_no)
         src_state = self.dump_state(src_call_no)
+
         sys.stdout.flush()
         differ = jsondiff.Differ(sys.stdout)
         differ.visit(ref_state, src_state)
@@ -162,7 +164,9 @@ def main():
     ref_setup = Setup(args, ref_env)
     src_setup = Setup(args, src_env)
 
-    sys.stdout.write('call\tprecision\n')
+    highligher = Highlighter(sys.stdout)
+
+    highligher.write('call\tprecision\n')
 
     last_bad = -1
     last_good = 0
@@ -189,9 +193,16 @@ def main():
                 comparer = Comparer(ref_image, src_image)
                 precision = comparer.precision()
 
-                sys.stdout.write('%u\t%f\n' % (call_no, precision))
+                mismatch = precision < options.threshold
 
-                if precision < options.threshold:
+                if mismatch:
+                    highligher.color(highligher.red)
+                    highligher.bold()
+                highligher.write('%u\t%f\n' % (call_no, precision))
+                if mismatch:
+                    highligher.normal()
+
+                if mismatch:
                     if options.diff_prefix:
                         prefix = os.path.join(options.diff_prefix, '%010u' % call_no)
                         prefix_dir = os.path.dirname(prefix)
@@ -206,7 +217,7 @@ def main():
                 else:
                     last_good = call_no
 
-                sys.stdout.flush()
+                highligher.flush()
         finally:
             src_proc.terminate()
     finally:
