@@ -923,7 +923,9 @@ int ApiTraceCall::numChildren() const
 ApiTraceFrame::ApiTraceFrame(ApiTrace *parentTrace)
     : ApiTraceEvent(ApiTraceEvent::Frame),
       m_parentTrace(parentTrace),
-      m_binaryDataSize(0)
+      m_binaryDataSize(0),
+      m_loaded(false),
+      m_callsToLoad(0)
 {
 }
 
@@ -964,7 +966,11 @@ QStaticText ApiTraceFrame::staticText() const
 
 int ApiTraceFrame::numChildren() const
 {
-    return m_calls.count();
+    if (m_loaded) {
+        return m_calls.count();
+    } else {
+        return m_callsToLoad;
+    }
 }
 
 ApiTrace * ApiTraceFrame::parentTrace() const
@@ -1012,4 +1018,20 @@ void ApiTraceFrame::setCalls(const QVector<ApiTraceCall*> &calls,
 {
     m_calls = calls;
     m_binaryDataSize = binaryDataSize;
+    m_loaded = true;
+}
+
+bool ApiTraceFrame::loaded() const
+{
+    return m_loaded;
+}
+
+void ApiTraceFrame::setLoaded(bool l)
+{
+    m_loaded = l;
+}
+
+void ApiTraceFrame::setNumChildren(int num)
+{
+    m_callsToLoad = num;
 }

@@ -291,6 +291,7 @@ public:
 
     ApiTrace *parentTrace() const;
 
+    void setNumChildren(int num);
     int numChildren() const;
     QStaticText staticText() const;
 
@@ -302,10 +303,15 @@ public:
                   quint64 binaryDataSize);
 
     int binaryDataSize() const;
+
+    bool loaded() const;
+    void setLoaded(bool l);
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;
     QVector<ApiTraceCall*> m_calls;
+    bool m_loaded;
+    unsigned m_callsToLoad;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

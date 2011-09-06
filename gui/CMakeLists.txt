@@ -21,6 +21,7 @@ set(qapitrace_SRCS
    settingsdialog.cpp
    shaderssourcewidget.cpp
    tracedialog.cpp
+   traceloader.cpp
    traceprocess.cpp
    vertexdatainterpreter.cpp
  )

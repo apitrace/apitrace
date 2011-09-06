@@ -180,6 +180,7 @@ void ApiTrace::detectFrames()
         if (!currentFrame) {
             currentFrame = new ApiTraceFrame(this);
             currentFrame->number = m_frames.count();
+            currentFrame->setLoaded(true);
         }
         apiCall->setParentFrame(currentFrame);
         currentFrame->addCall(apiCall);
