@@ -26,6 +26,7 @@
 
 
 #include <assert.h>
+#include <string.h>
 #include <stdint.h>
 
 #include "image.hpp"
@@ -35,12 +36,16 @@ namespace Image {
 
 /**
  * http://en.wikipedia.org/wiki/Netpbm_format
+ * http://netpbm.sourceforge.net/doc/ppm.html
  */
 void
-Image::writePNM(std::ostream &os) const {
+Image::writePNM(std::ostream &os, const char *comment) const {
     assert(channels == 1 || channels >= 3);
 
     os << (channels == 1 ? "P5" : "P6") << "\n";
+    if (comment) {
+        os << "#" << comment << "\n";
+    }
     os << width << " " << height << "\n";
     os << "255" << "\n";
 
@@ -51,15 +56,55 @@ Image::writePNM(std::ostream &os) const {
             os.write((const char *)row, width*channels);
         }
     } else {
-        unsigned char pixel[3] = {0, 0, 0};
-        for (row = start(); row != end(); row += stride()) {
-            for (unsigned x = 0; x < width; ++x) {
-                for (unsigned channel = 0; channel < channels; ++channel) {
-                    pixel[channel] = row[x*channels + channel];
+        unsigned char *tmp = new unsigned char[width*3];
+        if (channels == 4) {
+            for (row = start(); row != end(); row += stride()) {
+                const uint32_t *src = (const uint32_t *)row;
+                uint32_t *dst = (uint32_t *)tmp;
+                unsigned x;
+                for (x = 0; x + 4 <= width; x += 4) {
+                    /*
+                     * It's much faster to access dwords than bytes.
+                     *
+                     * FIXME: Big-endian version.
+                     */
+
+                    uint32_t rgba0 = *src++ & 0xffffff;
+                    uint32_t rgba1 = *src++ & 0xffffff;
+                    uint32_t rgba2 = *src++ & 0xffffff;
+                    uint32_t rgba3 = *src++ & 0xffffff;
+                    uint32_t rgb0 = rgba0
+                                  | (rgba1 << 24);
+                    uint32_t rgb1 = (rgba1 >> 8)
+                                  | (rgba2 << 16);
+                    uint32_t rgb2 = (rgba2 >> 16)
+                                  | (rgba3 << 8);
+                    *dst++ = rgb0;
+                    *dst++ = rgb1;
+                    *dst++ = rgb2;
                 }
-                os.write((const char *)pixel, sizeof pixel);
+                for (; x < width; ++x) {
+                    tmp[x*3 + 0] = row[x*4 + 0];
+                    tmp[x*3 + 1] = row[x*4 + 1];
+                    tmp[x*3 + 2] = row[x*4 + 2];
+                }
+                os.write((const char *)tmp, width*3);
             }
+        } else if (channels == 2) {
+            for (row = start(); row != end(); row += stride()) {
+                const unsigned char *src = row;
+                unsigned char *dst = tmp;
+                for (unsigned x = 0; x < width; ++x) {
+                    *dst++ = *src++;
+                    *dst++ = *src++;
+                    *dst++ = 0;
+                }
+                os.write((const char *)tmp, width*3);
+            }
+        } else {
+            assert(0);
         }
+        delete [] tmp;
     }
 }
 
