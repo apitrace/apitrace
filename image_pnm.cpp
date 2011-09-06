@@ -26,7 +26,7 @@
 
 
 #include <assert.h>
-#include <stdint.h>
+#include <string.h>
 
 #include "image.hpp"
 
@@ -55,15 +55,29 @@ Image::writePNM(std::ostream &os, const char *comment) const {
             os.write((const char *)row, width*channels);
         }
     } else {
-        unsigned char pixel[3] = {0, 0, 0};
-        for (row = start(); row != end(); row += stride()) {
-            for (unsigned x = 0; x < width; ++x) {
-                for (unsigned channel = 0; channel < channels; ++channel) {
-                    pixel[channel] = row[x*channels + channel];
+        unsigned char *pixels = new unsigned char[width*3];
+        if (channels == 4) {
+            for (row = start(); row != end(); row += stride()) {
+                for (unsigned x = 0; x < width; ++x) {
+                    pixels[x*3 + 0] = row[x*4 + 0];
+                    pixels[x*3 + 1] = row[x*4 + 1];
+                    pixels[x*3 + 2] = row[x*4 + 2];
                 }
-                os.write((const char *)pixel, sizeof pixel);
+                os.write((const char *)pixels, width*3);
             }
+        } else if (channels == 2) {
+            for (row = start(); row != end(); row += stride()) {
+                for (unsigned x = 0; x < width; ++x) {
+                    pixels[x*3 + 0] = row[x*2 + 0];
+                    pixels[x*3 + 1] = row[x*2 + 1];
+                    pixels[x*3 + 2] = 0;
+                }
+                os.write((const char *)pixels, width*3);
+            }
+        } else {
+            assert(0);
         }
+        delete [] pixels;
     }
 }
 
