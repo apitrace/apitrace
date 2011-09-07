@@ -56,7 +56,8 @@ private slots:
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
     void callChanged(ApiTraceCall *call);
-    void frameChanged(ApiTraceFrame *frame);
+    void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
+    void endLoadingFrame(ApiTraceFrame *frame);
 
 private:
     ApiTraceEvent *item(const QModelIndex &index) const;

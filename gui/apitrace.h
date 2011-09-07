@@ -71,15 +71,19 @@ signals:
     void changed(ApiTraceCall *call);
     void startedSaving();
     void saved();
-    void frameLoaded(ApiTraceFrame *frame);
 
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
     void callsAdded(int oldCount, int numAdded);
+    void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
+    void endLoadingFrame(ApiTraceFrame *frame);
 
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
     void slotSaved();
+    void finishedParsing();
+    void frameLoadFinished(ApiTraceFrame *frame);
+
 private:
     void detectFrames();
 private:

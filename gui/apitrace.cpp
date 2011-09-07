@@ -12,6 +12,7 @@ ApiTrace::ApiTrace()
       m_needsSaving(false)
 {
     m_loader = new TraceLoader();
+
     connect(this, SIGNAL(loadTrace(QString)),
             m_loader, SLOT(loadTrace(QString)));
     connect(this, SIGNAL(requestFrame(ApiTraceFrame*)),
@@ -19,7 +20,9 @@ ApiTrace::ApiTrace()
     connect(m_loader, SIGNAL(framesLoaded(const QList<ApiTraceFrame*>)),
             this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
     connect(m_loader, SIGNAL(frameLoaded(ApiTraceFrame*)),
-            this, SIGNAL(frameLoaded(ApiTraceFrame*)));
+            this, SLOT(frameLoadFinished(ApiTraceFrame*)));
+    connect(m_loader, SIGNAL(finishedParsing()),
+            this, SLOT(finishedParsing()));
 
     connect(m_loader, SIGNAL(startedParsing()),
             this, SIGNAL(startedLoadingTrace()));
@@ -303,7 +306,21 @@ bool ApiTrace::hasErrors() const
 void ApiTrace::loadFrame(ApiTraceFrame *frame)
 {
     Q_ASSERT(!frame->loaded());
+    emit beginLoadingFrame(frame, frame->numChildrenToLoad());
     emit requestFrame(frame);
+}
+
+void ApiTrace::finishedParsing()
+{
+    ApiTraceFrame *firstFrame = m_frames[0];
+    if (firstFrame && !firstFrame->loaded()) {
+        loadFrame(firstFrame);
+    }
+}
+
+void ApiTrace::frameLoadFinished(ApiTraceFrame *frame)
+{
+    emit endLoadingFrame(frame);
 }
 
 #include "apitrace.moc"

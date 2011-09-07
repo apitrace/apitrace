@@ -218,8 +218,11 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
             this, SLOT(endAddingFrames()));
     connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
             this, SLOT(callChanged(ApiTraceCall*)));
-    connect(m_trace, SIGNAL(frameLoaded(ApiTraceFrame*)),
-            this, SLOT(frameChanged(ApiTraceFrame*)));
+    connect(m_trace, SIGNAL(beginLoadingFrame(ApiTraceFrame*,int)),
+            this, SLOT(beginLoadingFrame(ApiTraceFrame*,int)));
+    connect(m_trace, SIGNAL(endLoadingFrame(ApiTraceFrame*)),
+            this, SLOT(endLoadingFrame(ApiTraceFrame*)));
+
 }
 
 const ApiTrace * ApiTraceModel::apiTrace() const
@@ -339,15 +342,19 @@ void ApiTraceModel::fetchMore(const QModelIndex &parent)
 
             Q_ASSERT(!frame->loaded());
             m_loadingFrames.insert(frame);
-            beginInsertRows(index, 0,
-                            frame->numChildrenToLoad() - 1);
 
             m_trace->loadFrame(frame);
         }
     }
 }
 
-void ApiTraceModel::frameChanged(ApiTraceFrame *frame)
+void ApiTraceModel::beginLoadingFrame(ApiTraceFrame *frame, int numAdded)
+{
+    QModelIndex index = createIndex(frame->number, 0, frame);
+    beginInsertRows(index, 0, numAdded - 1);
+}
+
+void ApiTraceModel::endLoadingFrame(ApiTraceFrame *frame)
 {
     QModelIndex index = createIndex(frame->number, 0, frame);
 #if 0
@@ -358,10 +365,11 @@ void ApiTraceModel::frameChanged(ApiTraceFrame *frame)
     qDebug()<<"\tindex is "<<index;
 #endif
 
-
     endInsertRows();
 
     emit dataChanged(index, index);
+
+    m_loadingFrames.remove(frame);
 }
 
 #include "apitracemodel.moc"
