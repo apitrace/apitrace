@@ -296,6 +296,7 @@ public:
 
     void setNumChildren(int num);
     int numChildren() const;
+    int numChildrenToLoad() const;
     QStaticText staticText() const;
 
     int callIndex(ApiTraceCall *call) const;

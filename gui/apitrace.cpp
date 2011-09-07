@@ -3,6 +3,7 @@
 #include "traceloader.h"
 #include "saverthread.h"
 
+#include <QDebug>
 #include <QDir>
 #include <QThread>
 
@@ -13,10 +14,12 @@ ApiTrace::ApiTrace()
     m_loader = new TraceLoader();
     connect(this, SIGNAL(loadTrace(QString)),
             m_loader, SLOT(loadTrace(QString)));
+    connect(this, SIGNAL(requestFrame(ApiTraceFrame*)),
+            m_loader, SLOT(loadFrame(ApiTraceFrame*)));
     connect(m_loader, SIGNAL(framesLoaded(const QList<ApiTraceFrame*>)),
             this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
-    connect(m_loader, SIGNAL(frameLoaded(int,QVector<ApiTraceCall*>,quint64)),
-            this, SLOT(fillFrame(int,QVector<ApiTraceCall*>,quint64)));
+    connect(m_loader, SIGNAL(frameLoaded(ApiTraceFrame*)),
+            this, SIGNAL(frameLoaded(ApiTraceFrame*)));
 
     connect(m_loader, SIGNAL(startedParsing()),
             this, SIGNAL(startedLoadingTrace()));
@@ -92,11 +95,6 @@ ApiTrace::FrameMarker ApiTrace::frameMarker() const
 QVector<ApiTraceCall*> ApiTrace::calls() const
 {
     return m_calls;
-}
-
-ApiTraceCall * ApiTrace::callAt(int idx) const
-{
-    return m_calls.value(idx);
 }
 
 int ApiTrace::numCalls() const
@@ -302,9 +300,10 @@ bool ApiTrace::hasErrors() const
     return !m_errors.isEmpty();
 }
 
-void ApiTrace::fillFrame(int frameIdx, const QVector<ApiTraceCall *> &calls,
-                         quint64 binaryDataSize)
+void ApiTrace::loadFrame(ApiTraceFrame *frame)
 {
+    Q_ASSERT(!frame->loaded());
+    emit requestFrame(frame);
 }
 
 #include "apitrace.moc"

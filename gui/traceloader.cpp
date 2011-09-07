@@ -1,5 +1,6 @@
 #include "traceloader.h"
 
+#include "apitrace.h"
 #include <QDebug>
 #include <QFile>
 
@@ -53,30 +54,50 @@ void TraceLoader::loadTrace(const QString &filename)
     emit finishedParsing();
 }
 
-void TraceLoader::loadFrame(int frameIdx)
+void TraceLoader::loadFrame(ApiTraceFrame *currentFrame)
 {
     if (m_parser.supportsOffsets()) {
+        unsigned frameIdx = currentFrame->number;
         int numOfCalls = numberOfCallsInFrame(frameIdx);
+
         if (numOfCalls) {
+            quint64 binaryDataSize = 0;
+            QVector<ApiTraceCall*> calls(numOfCalls);
             const FrameOffset &frameOffset = m_frameOffsets[frameIdx];
-            std::vector<Trace::Call*> calls(numOfCalls);
+
             m_parser.setCurrentOffset(frameOffset.start);
             m_parser.setCurrentCallNumber(frameOffset.callNumber);
 
             Trace::Call *call;
             int parsedCalls = 0;
             while ((call = m_parser.parse_call())) {
+                ApiTraceCall *apiCall =
+                        apiCallFromTraceCall(call, m_helpHash,
+                                             currentFrame, this);
+                calls[parsedCalls] = apiCall;
+                Q_ASSERT(calls[parsedCalls]);
+                if (apiCall->hasBinaryData()) {
+                    QByteArray data =
+                            apiCall->arguments()[
+                            apiCall->binaryDataIndex()].toByteArray();
+                    binaryDataSize += data.size();
+                }
 
-                calls[parsedCalls] = call;
                 ++parsedCalls;
 
-                if (isCallAFrameMarker(call)) {
+                delete call;
+
+                if (ApiTrace::isCallAFrameMarker(apiCall, m_frameMarker)) {
                     break;
                 }
 
             }
             assert(parsedCalls == numOfCalls);
-            //            emit parsedFrame();
+            Q_ASSERT(parsedCalls == calls.size());
+            Q_ASSERT(parsedCalls == currentFrame->numChildrenToLoad());
+            calls.squeeze();
+            currentFrame->setCalls(calls, binaryDataSize);
+            emit frameLoaded(currentFrame);
         }
     }
 }
@@ -183,12 +204,11 @@ void TraceLoader::scanTrace()
             callNum = m_parser.currentCallNumber();
             numOfCalls = 0;
         }
-        //call->dump(std::cout, color);
         delete call;
     }
 
     if (numOfCalls) {
-        //      Trace::File::Offset endOffset = m_parser.currentOffset();
+        //Trace::File::Offset endOffset = m_parser.currentOffset();
         FrameOffset frameOffset(startOffset);
         frameOffset.numberOfCalls = numOfCalls;
         frameOffset.callNumber = callNum;

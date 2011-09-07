@@ -965,11 +965,7 @@ QStaticText ApiTraceFrame::staticText() const
 
 int ApiTraceFrame::numChildren() const
 {
-    if (m_loaded) {
-        return m_calls.count();
-    } else {
-        return m_callsToLoad;
-    }
+    return m_calls.count();
 }
 
 ApiTrace * ApiTraceFrame::parentTrace() const
@@ -1004,7 +1000,11 @@ int ApiTraceFrame::callIndex(ApiTraceCall *call) const
 
 bool ApiTraceFrame::isEmpty() const
 {
-    return m_calls.isEmpty();
+    if (m_loaded) {
+        return m_calls.isEmpty();
+    } else {
+        return m_callsToLoad == 0;
+    }
 }
 
 int ApiTraceFrame::binaryDataSize() const
@@ -1038,4 +1038,9 @@ void ApiTraceFrame::setNumChildren(int num)
 void ApiTraceFrame::setParentTrace(ApiTrace *parent)
 {
     m_parentTrace = parent;
+}
+
+int ApiTraceFrame::numChildrenToLoad() const
+{
+    return m_callsToLoad;
 }

@@ -218,6 +218,8 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
             this, SLOT(endAddingFrames()));
     connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
             this, SLOT(callChanged(ApiTraceCall*)));
+    connect(m_trace, SIGNAL(frameLoaded(ApiTraceFrame*)),
+            this, SLOT(frameChanged(ApiTraceFrame*)));
 }
 
 const ApiTrace * ApiTraceModel::apiTrace() const
@@ -311,6 +313,55 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
 void ApiTraceModel::endAddingFrames()
 {
     endInsertRows();
+}
+
+bool ApiTraceModel::canFetchMore(const QModelIndex &parent) const
+{
+    if (parent.isValid()) {
+        ApiTraceEvent *event = item(parent);
+        if (event && event->type() == ApiTraceEvent::Frame) {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
+            return !frame->loaded() && !m_loadingFrames.contains(frame);
+        } else
+            return false;
+    } else {
+        return false;
+    }
+}
+
+void ApiTraceModel::fetchMore(const QModelIndex &parent)
+{
+    if (parent.isValid()) {
+        ApiTraceEvent *event = item(parent);
+        if (event && event->type() == ApiTraceEvent::Frame) {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
+            QModelIndex index = createIndex(frame->number, 0, frame);
+
+            Q_ASSERT(!frame->loaded());
+            m_loadingFrames.insert(frame);
+            beginInsertRows(index, 0,
+                            frame->numChildrenToLoad() - 1);
+
+            m_trace->loadFrame(frame);
+        }
+    }
+}
+
+void ApiTraceModel::frameChanged(ApiTraceFrame *frame)
+{
+    QModelIndex index = createIndex(frame->number, 0, frame);
+#if 0
+    qDebug()<<"Frame loaded = "<<frame->loaded();
+    qDebug()<<"\tframe idx = "<<frame->number;
+    qDebug()<<"\tis empty = "<<frame->isEmpty();
+    qDebug()<<"\tnum children = "<<frame->numChildren();
+    qDebug()<<"\tindex is "<<index;
+#endif
+
+
+    endInsertRows();
+
+    emit dataChanged(index, index);
 }
 
 #include "apitracemodel.moc"

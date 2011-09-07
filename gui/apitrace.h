@@ -35,7 +35,6 @@ public:
     ApiTraceState defaultState() const;
 
     QVector<ApiTraceCall*> calls() const;
-    ApiTraceCall *callAt(int idx) const;
     ApiTraceCall *callWithIndex(int idx) const;
     int numCalls() const;
 
@@ -59,9 +58,11 @@ public slots:
     void setFileName(const QString &name);
     void setFrameMarker(FrameMarker marker);
     void save();
+    void loadFrame(ApiTraceFrame *frame);
 
 signals:
     void loadTrace(const QString &name);
+    void requestFrame(ApiTraceFrame *frame);
     void startedLoadingTrace();
     void loaded(int percent);
     void finishedLoadingTrace();
@@ -70,6 +71,7 @@ signals:
     void changed(ApiTraceCall *call);
     void startedSaving();
     void saved();
+    void frameLoaded(ApiTraceFrame *frame);
 
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
@@ -77,8 +79,6 @@ signals:
 
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
-    void fillFrame(int frameIdx, const QVector<ApiTraceCall*> &calls,
-                   quint64 binaryDataSize);
     void slotSaved();
 private:
     void detectFrames();

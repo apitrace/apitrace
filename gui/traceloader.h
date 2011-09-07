@@ -26,7 +26,7 @@ public:
 
 public slots:
     void loadTrace(const QString &filename);
-    void loadFrame(int frameIdx);
+    void loadFrame(ApiTraceFrame *frame);
     void setFrameMarker(ApiTrace::FrameMarker marker);
 
 signals:
@@ -35,9 +35,7 @@ signals:
     void finishedParsing();
 
     void framesLoaded(const QList<ApiTraceFrame*> &frames);
-    void frameLoaded(int frameIdx,
-                     const QVector<ApiTraceCall*> &calls,
-                     quint64 binaryDataSize);
+    void frameLoaded(ApiTraceFrame *frame);
 
 private:
     struct FrameOffset {
