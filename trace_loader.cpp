@@ -1,6 +1,5 @@
 #include "trace_loader.hpp"
 
-#include "trace_snappyfile.hpp"
 
 using namespace Trace;
 
