@@ -59,8 +59,6 @@ public:
     bool isOpened() const;
     File::Mode mode() const;
 
-    std::string filename() const;
-
     bool open(const std::string &filename, File::Mode mode);
     bool write(const void *buffer, size_t length);
     bool read(void *buffer, size_t length);
@@ -84,7 +82,6 @@ protected:
     virtual int rawPercentRead() = 0;
 
 protected:
-    std::string m_filename;
     File::Mode m_mode;
     bool m_isOpened;
 };
@@ -97,11 +94,6 @@ inline bool File::isOpened() const
 inline File::Mode File::mode() const
 {
     return m_mode;
-}
-
-inline std::string File::filename() const
-{
-    return m_filename;
 }
 
 inline bool File::open(const std::string &filename, File::Mode mode)

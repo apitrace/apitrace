@@ -42,12 +42,11 @@ using namespace Trace;
 
 File::File(const std::string &filename,
            File::Mode mode)
-    : m_filename(filename),
-      m_mode(mode),
+    : m_mode(mode),
       m_isOpened(false)
 {
-    if (!m_filename.empty()) {
-        open(m_filename, m_mode);
+    if (!filename.empty()) {
+        open(filename, m_mode);
     }
 }
 
