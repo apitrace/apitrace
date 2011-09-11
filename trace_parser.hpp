@@ -78,8 +78,6 @@ protected:
     EnumMap enums;
     BitmaskMap bitmasks;
 
-    bool m_supportsSeeking;
-
     unsigned next_call_no;
 
 public:
@@ -100,15 +98,9 @@ public:
         return file->supportsOffsets();
     }
 
-    void getBookmark(ParseBookmark &bookmark) {
-        bookmark.offset = file->currentOffset();
-        bookmark.next_call_no = next_call_no;
-    }
+    void getBookmark(ParseBookmark &bookmark);
 
-    void setBookmark(const ParseBookmark &bookmark) {
-        file->setCurrentOffset(bookmark.offset);
-        next_call_no = bookmark.next_call_no;
-    }
+    void setBookmark(const ParseBookmark &bookmark);
 
     int percentRead()
     {

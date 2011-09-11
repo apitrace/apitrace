@@ -43,7 +43,6 @@ Parser::Parser() {
     file = NULL;
     next_call_no = 0;
     version = 0;
-    m_supportsSeeking = false;
 }
 
 
@@ -63,7 +62,6 @@ bool Parser::open(const char *filename) {
     if (!file->open(filename, File::Read)) {
         return false;
     }
-    m_supportsSeeking = file->supportsOffsets();
 
     version = read_uint();
     if (version > TRACE_VERSION) {
@@ -107,6 +105,18 @@ void Parser::close(void) {
 }
 
 
+void Parser::getBookmark(ParseBookmark &bookmark) {
+    bookmark.offset = file->currentOffset();
+    bookmark.next_call_no = next_call_no;
+}
+
+
+void Parser::setBookmark(const ParseBookmark &bookmark) {
+    file->setCurrentOffset(bookmark.offset);
+    next_call_no = bookmark.next_call_no;
+}
+
+
 Call *Parser::parse_call(void) {
     do {
         int c = read_byte();
@@ -132,7 +142,6 @@ Call *Parser::parse_call(void) {
 
 Call * Parser::scan_call()
 {
-    assert(m_supportsSeeking);
     do {
         int c = read_byte();
         switch(c) {
