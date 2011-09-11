@@ -59,6 +59,7 @@ File::~File()
 
 void File::setCurrentOffset(const File::Offset &offset)
 {
+    assert(0);
 }
 
 bool File::isZLibCompressed(const std::string &filename)

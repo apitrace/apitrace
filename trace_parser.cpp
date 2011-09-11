@@ -160,9 +160,7 @@ FunctionSig *Parser::parse_function_sig(void) {
             arg_names[i] = read_string();
         }
         sig->arg_names = arg_names;
-        if (m_supportsSeeking) {
-            sig->offset = file->currentOffset();
-        }
+        sig->offset = file->currentOffset();
         functions[id] = sig;
     } else if (file->currentOffset() < sig->offset) {
         /* skip over the signature */
