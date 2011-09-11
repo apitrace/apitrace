@@ -46,26 +46,30 @@ protected:
     typedef std::list<Call *> CallList;
     CallList calls;
 
-    typedef std::vector<FunctionSig *> FunctionMap;
+    // Helper template that extends a base signature structure, with additional
+    // parsing information.
+    template< class T >
+    struct SigState : public T {
+        // Offset in the file of where signature was defined.  It is used when
+        // reparsing to determine whether the signature definition is to be
+        // expected next or not.
+        File::Offset offset;
+    };
+
+    typedef SigState<FunctionSig> FunctionSigState;
+    typedef SigState<StructSig> StructSigState;
+    typedef SigState<EnumSig> EnumSigState;
+    typedef SigState<BitmaskSig> BitmaskSigState;
+
+    typedef std::vector<FunctionSigState *> FunctionMap;
+    typedef std::vector<StructSigState *> StructMap;
+    typedef std::vector<EnumSigState *> EnumMap;
+    typedef std::vector<BitmaskSigState *> BitmaskMap;
+
     FunctionMap functions;
-
-    typedef std::vector<StructSig *> StructMap;
     StructMap structs;
-
-    typedef std::vector<EnumSig *> EnumMap;
     EnumMap enums;
-
-    typedef std::vector<BitmaskSig *> BitmaskMap;
     BitmaskMap bitmasks;
-
-    typedef std::set<File::Offset> TraceOffsets;
-    TraceOffsets m_callSigOffsets;
-    TraceOffsets m_structSigOffsets;
-    TraceOffsets m_enumSigOffsets;
-    TraceOffsets m_bitmaskSigOffsets;
-
-    typedef std::map<File::Offset, unsigned> CallNumOffsets;
-    CallNumOffsets m_callNumOffsets;
 
     bool m_supportsSeeking;
 
@@ -99,11 +103,6 @@ public:
         file->setCurrentOffset(offset);
     }
 
-    bool callWithSignature(const File::Offset &offset) const;
-    bool structWithSignature(const File::Offset &offset) const;
-    bool enumWithSignature(const File::Offset &offset) const;
-    bool bitmaskWithSignature(const File::Offset &offset) const;
-
     unsigned currentCallNumber() const
     {
         return next_call_no;
@@ -122,6 +121,11 @@ public:
     Call *scan_call();
 
 protected:
+    FunctionSig *parse_function_sig(void);
+    StructSig *parse_struct_sig();
+    EnumSig *parse_enum_sig();
+    BitmaskSig *parse_bitmask_sig();
+
     void parse_enter(void);
 
     Call *parse_leave(void);

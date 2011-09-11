@@ -144,47 +144,43 @@ T *lookup(std::vector<T *> &map, size_t index) {
 }
 
 
-void Parser::parse_enter(void) {
+FunctionSig *Parser::parse_function_sig(void) {
     size_t id = read_uint();
 
-    FunctionSig *sig = lookup(functions, id);
+    FunctionSigState *sig = lookup(functions, id);
 
-
-    File::Offset offset;
-    bool callWithSig = false;
-    if (m_supportsSeeking) {
-        offset = file->currentOffset();
-        callWithSig = callWithSignature(offset);
-    }
-
-    if (!sig || callWithSig) {
-        if (!sig) {
-            sig = new FunctionSig;
-            sig->id = id;
-            sig->name = read_string();
-            sig->num_args = read_uint();
-            const char **arg_names = new const char *[sig->num_args];
-            for (unsigned i = 0; i < sig->num_args; ++i) {
-                arg_names[i] = read_string();
-            }
-            sig->arg_names = arg_names;
-            functions[id] = sig;
-            if (m_supportsSeeking) {
-                m_callSigOffsets.insert(offset);
-            }
-        } else {
-            /* skip over the signature */
-            skip_string(); /* name */
-            int num_args = read_uint();
-            for (unsigned i = 0; i < num_args; ++i) {
-                 skip_string(); /*arg_name*/
-            }
+    if (!sig) {
+        /* parse the signature */
+        sig = new FunctionSigState;
+        sig->id = id;
+        sig->name = read_string();
+        sig->num_args = read_uint();
+        const char **arg_names = new const char *[sig->num_args];
+        for (unsigned i = 0; i < sig->num_args; ++i) {
+            arg_names[i] = read_string();
+        }
+        sig->arg_names = arg_names;
+        if (m_supportsSeeking) {
+            sig->offset = file->currentOffset();
+        }
+        functions[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        skip_string(); /* name */
+        int num_args = read_uint();
+        for (unsigned i = 0; i < num_args; ++i) {
+             skip_string(); /*arg_name*/
         }
     }
+
     assert(sig);
+    return sig;
+}
+
+void Parser::parse_enter(void) {
+    FunctionSig *sig = parse_function_sig();
 
     Call *call = new Call(sig);
-
 
     call->no = next_call_no++;
 
@@ -344,77 +340,74 @@ Value *Parser::parse_string() {
 }
 
 
-Value *Parser::parse_enum() {
+EnumSig *Parser::parse_enum_sig() {
     size_t id = read_uint();
-    EnumSig *sig = lookup(enums, id);
-    File::Offset offset;
-    bool enumWithSig = false;
 
-    if (m_supportsSeeking) {
-        offset = file->currentOffset();
-        enumWithSig = enumWithSignature(offset);
+    EnumSigState *sig = lookup(enums, id);
+
+    if (!sig) {
+        /* parse the signature */
+        sig = new EnumSigState;
+        sig->id = id;
+        sig->name = read_string();
+        Value *value = parse_value();
+        sig->value = value->toSInt();
+        delete value;
+        sig->offset = file->currentOffset();
+        enums[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        skip_string(); /*name*/
+        scan_value();
     }
 
-    if (!sig || enumWithSig) {
-        if (!sig) {
-            sig = new EnumSig;
-            sig->id = id;
-            sig->name = read_string();
-            Value *value = parse_value();
-            sig->value = value->toSInt();
-            delete value;
-            enums[id] = sig;
-            if (m_supportsSeeking) {
-                m_enumSigOffsets.insert(offset);
-            }
-        } else {
-            skip_string(); /*name*/
-            scan_value();
-        }
-    }
     assert(sig);
+    return sig;
+}
+
+Value *Parser::parse_enum() {
+    EnumSig *sig = parse_enum_sig();
     return new Enum(sig);
 }
 
 
-Value *Parser::parse_bitmask() {
+BitmaskSig *Parser::parse_bitmask_sig() {
     size_t id = read_uint();
-    BitmaskSig *sig = lookup(bitmasks, id);
-    File::Offset offset;
-    bool bitmaskWithSig = false;
 
-    if (m_supportsSeeking) {
-        offset = file->currentOffset();
-        bitmaskWithSig = bitmaskWithSignature(offset);
-    }
+    BitmaskSigState *sig = lookup(bitmasks, id);
 
-    if (!sig || bitmaskWithSig) {
-        if (!sig) {
-            sig = new BitmaskSig;
-            sig->id = id;
-            sig->num_flags = read_uint();
-            BitmaskFlag *flags = new BitmaskFlag[sig->num_flags];
-            for (BitmaskFlag *it = flags; it != flags + sig->num_flags; ++it) {
-                it->name = read_string();
-                it->value = read_uint();
-                if (it->value == 0 && it != flags) {
-                    std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
-                }
-            }
-            sig->flags = flags;
-            bitmasks[id] = sig;
-            if (m_supportsSeeking) {
-                m_bitmaskSigOffsets.insert(offset);
-            }
-        } else {
-            int num_flags = read_uint();
-            for (int i = 0; i < num_flags; ++i) {
-                skip_string(); /*name */
-                skip_uint(); /* value */
+    if (!sig) {
+        /* parse the signature */
+        sig = new BitmaskSigState;
+        sig->id = id;
+        sig->num_flags = read_uint();
+        BitmaskFlag *flags = new BitmaskFlag[sig->num_flags];
+        for (BitmaskFlag *it = flags; it != flags + sig->num_flags; ++it) {
+            it->name = read_string();
+            it->value = read_uint();
+            if (it->value == 0 && it != flags) {
+                std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
             }
         }
+        sig->flags = flags;
+        sig->offset = file->currentOffset();
+        bitmasks[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        int num_flags = read_uint();
+        for (int i = 0; i < num_flags; ++i) {
+            skip_string(); /*name */
+            skip_uint(); /* value */
+        }
     }
+
     assert(sig);
+    return sig;
+}
+
+
+Value *Parser::parse_bitmask() {
+    BitmaskSig *sig = parse_bitmask_sig();
 
     unsigned long long value = read_uint();
 
@@ -442,43 +435,39 @@ Value *Parser::parse_blob(void) {
 }
 
 
-Value *Parser::parse_struct() {
+StructSig *Parser::parse_struct_sig() {
     size_t id = read_uint();
 
-    StructSig *sig = lookup(structs, id);
-    File::Offset offset;
-    bool structWithSig = false;
+    StructSigState *sig = lookup(structs, id);
 
-    if (m_supportsSeeking) {
-        offset = file->currentOffset();
-        structWithSig = structWithSignature(offset);
-    }
-
-    if (!sig || structWithSig) {
-        if (!sig) {
-            sig = new StructSig;
-            sig->id = id;
-            sig->name = read_string();
-            sig->num_members = read_uint();
-            const char **member_names = new const char *[sig->num_members];
-            for (unsigned i = 0; i < sig->num_members; ++i) {
-                member_names[i] = read_string();
-            }
-            sig->member_names = member_names;
-            structs[id] = sig;
-            if (m_supportsSeeking) {
-                m_structSigOffsets.insert(offset);
-            }
-        } else {
-            skip_string(); /* name */
-            unsigned num_members = read_uint();
-            for (unsigned i = 0; i < num_members; ++i) {
-                skip_string(); /* member_name */
-            }
+    if (!sig) {
+        /* parse the signature */
+        sig = new StructSigState;
+        sig->id = id;
+        sig->name = read_string();
+        sig->num_members = read_uint();
+        const char **member_names = new const char *[sig->num_members];
+        for (unsigned i = 0; i < sig->num_members; ++i) {
+            member_names[i] = read_string();
+        }
+        sig->member_names = member_names;
+        sig->offset = file->currentOffset();
+        structs[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        skip_string(); /* name */
+        unsigned num_members = read_uint();
+        for (unsigned i = 0; i < num_members; ++i) {
+            skip_string(); /* member_name */
         }
     }
-    assert(sig);
 
+    assert(sig);
+    return sig;
+}
+
+Value *Parser::parse_struct() {
+    StructSig *sig = parse_struct_sig();
     Struct *value = new Struct(sig);
 
     for (size_t i = 0; i < sig->num_members; ++i) {
@@ -541,26 +530,6 @@ inline int Parser::read_byte(void) {
 }
 
 
-inline bool Parser::callWithSignature(const File::Offset &offset) const
-{
-    return m_callSigOffsets.find(offset) != m_callSigOffsets.end();
-}
-
-inline bool Parser::structWithSignature(const File::Offset &offset) const
-{
-    return m_structSigOffsets.find(offset) != m_structSigOffsets.end();
-}
-
-inline bool Parser::enumWithSignature(const File::Offset &offset) const
-{
-    return m_enumSigOffsets.find(offset) != m_enumSigOffsets.end();
-}
-
-inline bool Parser::bitmaskWithSignature(const File::Offset &offset) const
-{
-    return m_bitmaskSigOffsets.find(offset) != m_bitmaskSigOffsets.end();
-}
-
 Call * Parser::scan_call()
 {
     assert(m_supportsSeeking);
@@ -586,24 +555,7 @@ Call * Parser::scan_call()
 }
 
 void Parser::scan_enter(void) {
-    size_t id = read_uint();
-
-    FunctionSig *sig = lookup(functions, id);
-    const File::Offset offset = file->currentOffset();
-    if (!sig) {
-        sig = new FunctionSig;
-        sig->id = id;
-        sig->name = read_string();
-        sig->num_args = read_uint();
-        const char **arg_names = new const char *[sig->num_args];
-        for (unsigned i = 0; i < sig->num_args; ++i) {
-            arg_names[i] = read_string();
-        }
-        sig->arg_names = arg_names;
-        functions[id] = sig;
-        m_callSigOffsets.insert(offset);
-    }
-    assert(sig);
+    FunctionSig *sig = parse_function_sig();
 
     Call *call = new Call(sig);
     call->no = next_call_no++;
@@ -740,45 +692,12 @@ void Parser::scan_string() {
 
 
 void Parser::scan_enum() {
-    size_t id = read_uint();
-    EnumSig *sig = lookup(enums, id);
-    const File::Offset offset = file->currentOffset();
-    if (!sig) {
-        sig = new EnumSig;
-        sig->id = id;
-        sig->name = read_string();
-        Value *value = parse_value();
-        sig->value = value->toSInt();
-        delete value;
-        enums[id] = sig;
-        m_enumSigOffsets.insert(offset);
-    }
-    assert(sig);
+    parse_enum_sig();
 }
 
 
 void Parser::scan_bitmask() {
-    size_t id = read_uint();
-    BitmaskSig *sig = lookup(bitmasks, id);
-    const File::Offset offset = file->currentOffset();
-    if (!sig) {
-        sig = new BitmaskSig;
-        sig->id = id;
-        sig->num_flags = read_uint();
-        BitmaskFlag *flags = new BitmaskFlag[sig->num_flags];
-        for (BitmaskFlag *it = flags; it != flags + sig->num_flags; ++it) {
-            it->name = read_string();
-            it->value = read_uint();
-            if (it->value == 0 && it != flags) {
-                std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
-            }
-        }
-        sig->flags = flags;
-        bitmasks[id] = sig;
-        m_bitmaskSigOffsets.insert(offset);
-    }
-    assert(sig);
-
+    parse_bitmask_sig();
     skip_uint(); /* value */
 }
 
@@ -800,25 +719,7 @@ void Parser::scan_blob(void) {
 
 
 void Parser::scan_struct() {
-    size_t id = read_uint();
-
-    StructSig *sig = lookup(structs, id);
-    const File::Offset offset = file->currentOffset();
-    if (!sig) {
-        sig = new StructSig;
-        sig->id = id;
-        sig->name = read_string();
-        sig->num_members = read_uint();
-        const char **member_names = new const char *[sig->num_members];
-        for (unsigned i = 0; i < sig->num_members; ++i) {
-            member_names[i] = read_string();
-        }
-        sig->member_names = member_names;
-        structs[id] = sig;
-        m_structSigOffsets.insert(offset);
-    }
-    assert(sig);
-
+    StructSig *sig = parse_struct_sig();
     for (size_t i = 0; i < sig->num_members; ++i) {
         scan_value();
     }
