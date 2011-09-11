@@ -50,6 +50,12 @@ class Parser
 protected:
     File *file;
 
+    enum Mode {
+        FULL = 0,
+        SCAN,
+        SKIP
+    };
+
     typedef std::list<Call *> CallList;
     CallList calls;
 
@@ -91,7 +97,9 @@ public:
 
     void close(void);
 
-    Call *parse_call(void);
+    Call *parse_call(void) {
+        return parse_call(FULL);
+    }
 
     bool supportsOffsets() const
     {
@@ -107,28 +115,38 @@ public:
         return file->percentRead();
     }
 
-    Call *scan_call();
+    Call *scan_call() {
+        return parse_call(SCAN);
+    }
 
 protected:
+    Call *parse_call(Mode mode);
+
     FunctionSig *parse_function_sig(void);
     StructSig *parse_struct_sig();
     EnumSig *parse_enum_sig();
     BitmaskSig *parse_bitmask_sig();
+    
+    Call *parse_Call(Mode mode);
 
-    void parse_enter(void);
-    void scan_enter(void);
+    void parse_enter(Mode mode);
 
-    Call *parse_leave(void);
-    Call *scan_leave(void);
+    Call *parse_leave(Mode mode);
 
-    bool parse_call_details(Call *call);
-    bool scan_call_details(Call *call);
+    bool parse_call_details(Call *call, Mode mode);
 
-    void parse_arg(Call *call);
-    void scan_arg(Call *call);
+    void parse_arg(Call *call, Mode mode);
 
     Value *parse_value(void);
     void scan_value(void);
+    inline Value *parse_value(Mode mode) {
+        if (mode == FULL) {
+            return parse_value();
+        } else {
+            scan_value();
+            return NULL;
+        }
+    }
 
     Value *parse_sint();
     void scan_sint();

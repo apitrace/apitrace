@@ -120,15 +120,15 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
 }
 
 
-Call *Parser::parse_call(void) {
+Call *Parser::parse_call(Mode mode) {
     do {
         int c = read_byte();
         switch(c) {
         case Trace::EVENT_ENTER:
-            parse_enter();
+            parse_enter(mode);
             break;
         case Trace::EVENT_LEAVE:
-            return parse_leave();
+            return parse_leave(mode);
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
@@ -140,30 +140,6 @@ Call *Parser::parse_call(void) {
             return NULL;
         }
     } while(true);
-}
-
-
-Call * Parser::scan_call()
-{
-    do {
-        int c = read_byte();
-        switch(c) {
-        case Trace::EVENT_ENTER:
-            scan_enter();
-            break;
-        case Trace::EVENT_LEAVE:
-            return scan_leave();
-        default:
-            std::cerr << "error: unknown event " << c << "\n";
-            exit(1);
-        case -1:
-            for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
-                std::cerr << "warning: incomplete call " << (*it)->name() << "\n";
-                std::cerr << **it << "\n";
-            }
-            return NULL;
-        }
-    } while (true);
 }
 
 
@@ -306,14 +282,14 @@ BitmaskSig *Parser::parse_bitmask_sig() {
 }
 
 
-void Parser::parse_enter(void) {
+void Parser::parse_enter(Mode mode) {
     FunctionSig *sig = parse_function_sig();
 
     Call *call = new Call(sig);
 
     call->no = next_call_no++;
 
-    if (parse_call_details(call)) {
+    if (parse_call_details(call, mode)) {
         calls.push_back(call);
     } else {
         delete call;
@@ -321,21 +297,7 @@ void Parser::parse_enter(void) {
 }
 
 
-void Parser::scan_enter(void) {
-    FunctionSig *sig = parse_function_sig();
-
-    Call *call = new Call(sig);
-    call->no = next_call_no++;
-
-    if (scan_call_details(call)) {
-        calls.push_back(call);
-    } else {
-        delete call;
-    }
-}
-
-
-Call *Parser::parse_leave(void) {
+Call *Parser::parse_leave(Mode mode) {
     unsigned call_no = read_uint();
     Call *call = NULL;
     for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
@@ -349,7 +311,7 @@ Call *Parser::parse_leave(void) {
         return NULL;
     }
 
-    if (parse_call_details(call)) {
+    if (parse_call_details(call, mode)) {
         return call;
     } else {
         delete call;
@@ -358,40 +320,17 @@ Call *Parser::parse_leave(void) {
 }
 
 
-Call *Parser::scan_leave(void) {
-    unsigned call_no = read_uint();
-    Call *call = NULL;
-    for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
-        if ((*it)->no == call_no) {
-            call = *it;
-            calls.erase(it);
-            break;
-        }
-    }
-    if (!call) {
-        return NULL;
-    }
-
-    if (scan_call_details(call)) {
-        return call;
-    } else {
-        delete call;
-        return NULL;
-    }
-}
-
-
-bool Parser::parse_call_details(Call *call) {
+bool Parser::parse_call_details(Call *call, Mode mode) {
     do {
         int c = read_byte();
         switch(c) {
         case Trace::CALL_END:
             return true;
         case Trace::CALL_ARG:
-            parse_arg(call);
+            parse_arg(call, mode);
             break;
         case Trace::CALL_RET:
-            call->ret = parse_value();
+            call->ret = parse_value(mode);
             break;
         default:
             std::cerr << "error: ("<<call->name()<< ") unknown call detail "
@@ -404,42 +343,15 @@ bool Parser::parse_call_details(Call *call) {
 }
 
 
-bool Parser::scan_call_details(Call *call) {
-    do {
-        int c = read_byte();
-        switch(c) {
-        case Trace::CALL_END:
-            return true;
-        case Trace::CALL_ARG:
-            scan_arg(call);
-            break;
-        case Trace::CALL_RET:
-            scan_value();
-            break;
-        default:
-            std::cerr << "error: ("<<call->name()<< ") unknown call detail "
-                      << c << "\n";
-            exit(1);
-        case -1:
-            return false;
-        }
-    } while(true);
-}
-
-
-void Parser::parse_arg(Call *call) {
+void Parser::parse_arg(Call *call, Mode mode) {
     unsigned index = read_uint();
-    Value *value = parse_value();
-    if (index >= call->args.size()) {
-        call->args.resize(index + 1);
+    Value *value = parse_value(mode);
+    if (value) {
+        if (index >= call->args.size()) {
+            call->args.resize(index + 1);
+        }
+        call->args[index] = value;
     }
-    call->args[index] = value;
-}
-
-
-void Parser::scan_arg(Call *call) {
-    skip_uint(); /* index */
-    scan_value(); /* value */
 }
 
 
