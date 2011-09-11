@@ -42,6 +42,11 @@ Call::~Call() {
 }
 
 
+String::~String() {
+    delete [] value;
+}
+
+
 Struct::~Struct() {
     for (std::vector<Value *>::iterator it = members.begin(); it != members.end(); ++it) {
         delete *it;

@@ -190,6 +190,7 @@ class String : public Value
 {
 public:
     String(const char * _value) : value(_value) {}
+    ~String();
 
     bool toBool(void) const;
     const char *toString(void) const;
