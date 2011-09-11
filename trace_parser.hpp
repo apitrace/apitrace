@@ -29,7 +29,6 @@
 
 #include <iostream>
 #include <list>
-#include <set>
 
 #include "trace_file.hpp"
 #include "trace_format.hpp"
@@ -127,80 +126,60 @@ protected:
     BitmaskSig *parse_bitmask_sig();
 
     void parse_enter(void);
-
-    Call *parse_leave(void);
-
-    bool parse_call_details(Call *call);
-
-    void parse_arg(Call *call);
-
-    Value *parse_value(void);
-
-    Value *parse_sint();
-
-    Value *parse_uint();
-
-    Value *parse_float();
-
-    Value *parse_double();
-
-    Value *parse_string();
-
-    Value *parse_enum();
-
-    Value *parse_bitmask();
-
-    Value *parse_array(void);
-
-    Value *parse_blob(void);
-
-    Value *parse_struct();
-
-    Value *parse_opaque();
-
-    const char * read_string(void);
-
-    unsigned long long read_uint(void);
-
-    inline int read_byte(void);
-
-protected:
     void scan_enter(void);
 
+    Call *parse_leave(void);
     Call *scan_leave(void);
 
+    bool parse_call_details(Call *call);
     bool scan_call_details(Call *call);
 
+    void parse_arg(Call *call);
     void scan_arg(Call *call);
 
+    Value *parse_value(void);
     void scan_value(void);
 
+    Value *parse_sint();
     void scan_sint();
 
+    Value *parse_uint();
     void scan_uint();
 
+    Value *parse_float();
     void scan_float();
 
+    Value *parse_double();
     void scan_double();
 
+    Value *parse_string();
     void scan_string();
 
+    Value *parse_enum();
     void scan_enum();
 
+    Value *parse_bitmask();
     void scan_bitmask();
 
+    Value *parse_array(void);
     void scan_array(void);
 
+    Value *parse_blob(void);
     void scan_blob(void);
 
+    Value *parse_struct();
     void scan_struct();
 
+    Value *parse_opaque();
     void scan_opaque();
 
+    const char * read_string(void);
     void skip_string(void);
 
+    unsigned long long read_uint(void);
     void skip_uint(void);
 
+    inline int read_byte(void);
     inline void skip_byte(void);
 };
 
