@@ -40,9 +40,9 @@ public:
         Write
     };
     struct Offset {
-        Offset()
-            : chunk(0),
-              offsetInChunk(0)
+        Offset(uint64_t _chunk = 0, uint32_t _offsetInChunk = 0)
+            : chunk(_chunk),
+              offsetInChunk(_offsetInChunk)
         {}
         uint64_t chunk;
         uint32_t offsetInChunk;
@@ -71,7 +71,7 @@ public:
     int percentRead();
 
     virtual bool supportsOffsets() const = 0;
-    virtual File::Offset currentOffset();
+    virtual File::Offset currentOffset() = 0;
     virtual void setCurrentOffset(const File::Offset &offset);
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode) = 0;
@@ -178,6 +178,7 @@ public:
 
 
     virtual bool supportsOffsets() const;
+    virtual File::Offset currentOffset();
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, size_t length);

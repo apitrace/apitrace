@@ -57,11 +57,6 @@ File::~File()
 }
 
 
-File::Offset File::currentOffset()
-{
-    return File::Offset();
-}
-
 void File::setCurrentOffset(const File::Offset &offset)
 {
 }
@@ -163,6 +158,10 @@ void ZLibFile::rawFlush()
     gzflush(m_gzFile, Z_SYNC_FLUSH);
 }
 
+File::Offset ZLibFile::currentOffset()
+{
+    return File::Offset(gztell(m_gzFile));
+}
 
 bool ZLibFile::supportsOffsets() const
 {
