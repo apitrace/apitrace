@@ -98,10 +98,56 @@ void Parser::close(void) {
     }
 
     deleteAll(calls);
-    deleteAll(functions);
-    deleteAll(structs);
-    deleteAll(enums);
-    deleteAll(bitmasks);
+
+    // Delete all signature data.  Signatures are mere structures which don't
+    // own their own memory, so we need to destroy all data we created here.
+
+    for (FunctionMap::iterator it = functions.begin(); it != functions.end(); ++it) {
+        FunctionSigState *sig = *it;
+        if (sig) {
+            delete [] sig->name;
+            for (unsigned arg = 0; arg < sig->num_args; ++arg) {
+                delete [] sig->arg_names[arg];
+            }
+            delete [] sig->arg_names;
+            delete sig;
+        }
+    }
+    functions.clear();
+
+    for (StructMap::iterator it = structs.begin(); it != structs.end(); ++it) {
+        StructSigState *sig = *it;
+        if (sig) {
+            delete [] sig->name;
+            for (unsigned member = 0; member < sig->num_members; ++member) {
+                delete [] sig->member_names[member];
+            }
+            delete [] sig->member_names;
+            delete sig;
+        }
+    }
+    structs.clear();
+
+    for (EnumMap::iterator it = enums.begin(); it != enums.end(); ++it) {
+        EnumSigState *sig = *it;
+        if (sig) {
+            delete [] sig->name;
+            delete sig;
+        }
+    }
+    enums.clear();
+    
+    for (BitmaskMap::iterator it = bitmasks.begin(); it != bitmasks.end(); ++it) {
+        BitmaskSigState *sig = *it;
+        if (sig) {
+            for (unsigned flag = 0; flag < sig->num_flags; ++flag) {
+                delete [] sig->flags[flag].name;
+            }
+            delete [] sig->flags;
+            delete sig;
+        }
+    }
+    bitmasks.clear();
 }
 
 
