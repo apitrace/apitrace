@@ -794,7 +794,7 @@ void Parser::scan_array(void) {
 void Parser::scan_blob(void) {
     size_t size = read_uint();
     if (size) {
-        file->skip((unsigned)size);
+        file->skip(size);
     }
 }
 
@@ -832,7 +832,7 @@ void Parser::scan_opaque() {
 
 void Parser::skip_string(void) {
     size_t len = read_uint();
-    file->skip((unsigned)len);
+    file->skip(len);
 }
 
 
