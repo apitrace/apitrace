@@ -114,6 +114,9 @@ void Parser::getBookmark(ParseBookmark &bookmark) {
 void Parser::setBookmark(const ParseBookmark &bookmark) {
     file->setCurrentOffset(bookmark.offset);
     next_call_no = bookmark.next_call_no;
+    
+    // Simply ignore all pending calls
+    deleteAll(calls);
 }
 
 
