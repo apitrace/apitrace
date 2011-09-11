@@ -21,6 +21,10 @@ static void timeFrameFetch(Trace::Loader &loader, unsigned frameIdx)
               << " is = "
               << (t2 - t1)/msecsInSec
               << " secs "<<std::endl;
+
+    for (unsigned i = 0; i < frame.size(); ++i) {
+        delete frame[i];
+    }
 }
 
 
