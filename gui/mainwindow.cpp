@@ -592,10 +592,10 @@ void MainWindow::showSelectedSurface()
     ImageViewer *viewer = new ImageViewer(this);
 
     QString title;
-    if (currentCall()) {
+    if (selectedCall()) {
         title = tr("QApiTrace - Surface at %1 (%2)")
-                .arg(currentCall()->name())
-                .arg(currentCall()->index());
+                .arg(selectedCall()->name())
+                .arg(selectedCall()->index());
     } else {
         title = tr("QApiTrace - Surface Viewer");
     }
@@ -692,6 +692,8 @@ void MainWindow::initConnections()
             this, SLOT(slotSaved()));
     connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
             this, SLOT(slotTraceChanged(ApiTraceCall*)));
+    connect(m_trace, SIGNAL(findResult(ApiTrace::SearchResult,ApiTraceCall*)),
+            this, SLOT(slotSearchResult(ApiTrace::SearchResult,ApiTraceCall*)));
 
     connect(m_retracer, SIGNAL(finished(const QString&)),
             this, SLOT(replayFinished(const QString&)));
@@ -831,103 +833,31 @@ void MainWindow::slotSearch()
 void MainWindow::slotSearchNext(const QString &str,
                                 Qt::CaseSensitivity sensitivity)
 {
-    QModelIndex index = m_ui.callView->currentIndex();
-    ApiTraceEvent *event = 0;
+    ApiTraceCall *call = currentCall();
+    ApiTraceFrame *frame = currentFrame();
 
-
-    if (!index.isValid()) {
-        index = m_proxyModel->index(0, 0, QModelIndex());
-        if (!index.isValid()) {
-            qDebug()<<"no currently valid index";
-            m_searchWidget->setFound(false);
-            return;
-        }
+    Q_ASSERT(call || frame);
+    if (!frame) {
+        frame = call->parentFrame();
     }
+    Q_ASSERT(frame);
 
-    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
-    ApiTraceCall *call = 0;
-
-    if (event->type() == ApiTraceCall::Call)
-        call = static_cast<ApiTraceCall*>(event);
-    else {
-        Q_ASSERT(event->type() == ApiTraceCall::Frame);
-        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        call = frame->call(0);
-    }
-
-    if (!call) {
-        m_searchWidget->setFound(false);
-        return;
-    }
-    const QVector<ApiTraceCall*> &calls = m_trace->calls();
-    int callNum = calls.indexOf(call);
-
-    for (int i = callNum + 1; i < calls.count(); ++i) {
-        ApiTraceCall *testCall = calls[i];
-        QModelIndex index = m_proxyModel->indexForCall(testCall);
-        /* if it's not valid it means that the proxy model has already
-         * filtered it out */
-        if (index.isValid()) {
-            QString txt = testCall->searchText();
-            if (txt.contains(str, sensitivity)) {
-                m_ui.callView->setCurrentIndex(index);
-                m_searchWidget->setFound(true);
-                return;
-            }
-        }
-    }
-    m_searchWidget->setFound(false);
+    m_trace->findNext(frame, call, str, sensitivity);
 }
 
 void MainWindow::slotSearchPrev(const QString &str,
                                 Qt::CaseSensitivity sensitivity)
 {
-    QModelIndex index = m_ui.callView->currentIndex();
-    ApiTraceEvent *event = 0;
+    ApiTraceCall *call = currentCall();
+    ApiTraceFrame *frame = currentFrame();
 
-
-    if (!index.isValid()) {
-        index = m_proxyModel->index(0, 0, QModelIndex());
-        if (!index.isValid()) {
-            qDebug()<<"no currently valid index";
-            m_searchWidget->setFound(false);
-            return;
-        }
+    Q_ASSERT(call || frame);
+    if (!frame) {
+        frame = call->parentFrame();
     }
+    Q_ASSERT(frame);
 
-    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
-    ApiTraceCall *call = 0;
-
-    if (event->type() == ApiTraceCall::Call)
-        call = static_cast<ApiTraceCall*>(event);
-    else {
-        Q_ASSERT(event->type() == ApiTraceCall::Frame);
-        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        call = frame->call(0);
-    }
-
-    if (!call) {
-        m_searchWidget->setFound(false);
-        return;
-    }
-    const QVector<ApiTraceCall*> &calls = m_trace->calls();
-    int callNum = calls.indexOf(call);
-
-    for (int i = callNum - 1; i >= 0; --i) {
-        ApiTraceCall *testCall = calls[i];
-        QModelIndex index = m_proxyModel->indexForCall(testCall);
-        /* if it's not valid it means that the proxy model has already
-         * filtered it out */
-        if (index.isValid()) {
-            QString txt = testCall->searchText();
-            if (txt.contains(str, sensitivity)) {
-                m_ui.callView->setCurrentIndex(index);
-                m_searchWidget->setFound(true);
-                return;
-            }
-        }
-    }
-    m_searchWidget->setFound(false);
+    m_trace->findPrev(frame, call, str, sensitivity);
 }
 
 void MainWindow::fillState(bool nonDefaults)
@@ -1000,7 +930,7 @@ void MainWindow::slotSaved()
 
 void MainWindow::slotGoFrameStart()
 {
-    ApiTraceFrame *frame = currentFrame();
+    ApiTraceFrame *frame = selectedFrame();
     if (!frame || frame->isEmpty()) {
         return;
     }
@@ -1022,7 +952,7 @@ void MainWindow::slotGoFrameStart()
 
 void MainWindow::slotGoFrameEnd()
 {
-    ApiTraceFrame *frame = currentFrame();
+    ApiTraceFrame *frame = selectedFrame();
     if (!frame || frame->isEmpty()) {
         return;
     }
@@ -1041,7 +971,7 @@ void MainWindow::slotGoFrameEnd()
     } while (itr != calls.constBegin());
 }
 
-ApiTraceFrame * MainWindow::currentFrame() const
+ApiTraceFrame * MainWindow::selectedFrame() const
 {
     if (m_selectedEvent) {
         if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
@@ -1099,7 +1029,7 @@ void MainWindow::slotErrorSelected(QTreeWidgetItem *current)
     }
 }
 
-ApiTraceCall * MainWindow::currentCall() const
+ApiTraceCall * MainWindow::selectedCall() const
 {
     if (m_selectedEvent &&
         m_selectedEvent->type() == ApiTraceEvent::Call) {
@@ -1120,11 +1050,11 @@ void MainWindow::saveSelectedSurface()
     QImage img = var.value<QImage>();
 
     QString imageIndex;
-    if (currentCall()) {
+    if (selectedCall()) {
         imageIndex = tr("_call_%1")
-                     .arg(currentCall()->index());
-    } else if (currentFrame()) {
-        ApiTraceCall *firstCall = currentFrame()->call(0);
+                     .arg(selectedCall()->index());
+    } else if (selectedFrame()) {
+        ApiTraceCall *firstCall = selectedFrame()->call(0);
         if (firstCall) {
             imageIndex = tr("_frame_%1")
                          .arg(firstCall->index());
@@ -1164,6 +1094,79 @@ void MainWindow::saveSelectedSurface()
 void MainWindow::loadProgess(int percent)
 {
     m_progressBar->setValue(percent);
+}
+
+void MainWindow::slotSearchResult(ApiTrace::SearchResult result,
+                                  ApiTraceCall *call)
+{
+    switch (result) {
+    case ApiTrace::SearchNotFound:
+        m_searchWidget->setFound(false);
+        break;
+    case ApiTrace::SearchFound: {
+        QModelIndex index = m_proxyModel->indexForCall(call);
+        m_ui.callView->setCurrentIndex(index);
+        m_searchWidget->setFound(true);
+    }
+        break;
+    case ApiTrace::SearchWrapped:
+        m_searchWidget->setFound(false);
+        break;
+    }
+}
+
+ApiTraceFrame * MainWindow::currentFrame() const
+{
+    QModelIndex index = m_ui.callView->currentIndex();
+    ApiTraceEvent *event = 0;
+
+    if (!index.isValid()) {
+        index = m_proxyModel->index(0, 0, QModelIndex());
+        if (!index.isValid()) {
+            qDebug()<<"no currently valid index";
+            return 0;
+        }
+    }
+
+    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    Q_ASSERT(event);
+    if (!event) {
+        return 0;
+    }
+
+    ApiTraceFrame *frame = 0;
+    if (event->type() == ApiTraceCall::Frame) {
+        frame = static_cast<ApiTraceFrame*>(event);
+    }
+    return frame;
+}
+
+ApiTraceCall * MainWindow::currentCall() const
+{
+    QModelIndex index = m_ui.callView->currentIndex();
+    ApiTraceEvent *event = 0;
+
+    if (!index.isValid()) {
+        index = m_proxyModel->index(0, 0, QModelIndex());
+        if (!index.isValid()) {
+            qDebug()<<"no currently valid index";
+            return 0;
+        }
+    }
+
+    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    Q_ASSERT(event);
+    if (!event) {
+        return 0;
+    }
+
+    ApiTraceCall *call = 0;
+    if (event->type() == ApiTraceCall::Call) {
+        call = static_cast<ApiTraceCall*>(event);
+    }
+
+    return call;
+
 }
 
 #include "mainwindow.moc"

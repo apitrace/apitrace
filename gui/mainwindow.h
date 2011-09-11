@@ -3,6 +3,8 @@
 
 #include "ui_mainwindow.h"
 
+#include "apitrace.h"
+
 #include <QMainWindow>
 #include <QProcess>
 
@@ -71,6 +73,8 @@ private slots:
     void slotTraceChanged(ApiTraceCall *call);
     void slotRetraceErrors(const QList<RetraceError> &errors);
     void slotErrorSelected(QTreeWidgetItem *current);
+    void slotSearchResult(ApiTrace::SearchResult result,
+                          ApiTraceCall *call);
 
 private:
     void initObjects();
@@ -78,8 +82,16 @@ private:
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState);
     void fillStateForFrame();
+
+    /* there's a difference between selected frame/call and
+     * current call/frame. the former implies actual selection
+     * the latter might be just a highlight, e.g. during searching
+     */
+    ApiTraceFrame *selectedFrame() const;
+    ApiTraceCall *selectedCall() const;
     ApiTraceFrame *currentFrame() const;
     ApiTraceCall *currentCall() const;
+
 
 private:
     Ui_MainWindow m_ui;

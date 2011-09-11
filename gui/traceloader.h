@@ -28,6 +28,12 @@ public slots:
     void loadTrace(const QString &filename);
     void loadFrame(ApiTraceFrame *frame);
     void setFrameMarker(ApiTrace::FrameMarker marker);
+    void searchNext(int startFrame,
+                    const QString &str,
+                    Qt::CaseSensitivity sensitivity);
+    void searchPrev(int startFrame,
+                    const QString &str,
+                    Qt::CaseSensitivity sensitivity);
 
 signals:
     void startedParsing();
@@ -35,8 +41,11 @@ signals:
     void finishedParsing();
 
     void framesLoaded(const QList<ApiTraceFrame*> &frames);
-    void frameLoaded(ApiTraceFrame *frame);
+    void frameContentsLoaded(ApiTraceFrame *frame,
+                             const QVector<ApiTraceCall*> &calls,
+                             quint64 binaryDataSize);
 
+    void searchResult(ApiTrace::SearchResult result, ApiTraceCall *call);
 private:
     struct FrameBookmark {
         FrameBookmark()
@@ -58,6 +67,12 @@ private:
     void scanTrace();
     void parseTrace();
 
+    int callInFrame(int callIdx) const;
+    bool callContains(Trace::Call *call,
+                      const QString &str,
+                      Qt::CaseSensitivity sensitivity);
+     QVector<ApiTraceCall*> fetchFrameContents(ApiTraceFrame *frame);
+
 private:
     Trace::Parser m_parser;
     QString m_fileName;
@@ -65,6 +80,7 @@ private:
 
     typedef QMap<int, FrameBookmark> FrameBookmarks;
     FrameBookmarks m_frameBookmarks;
+    QList<ApiTraceFrame*> m_createdFrames;
 
     QHash<QString, QUrl> m_helpHash;
 

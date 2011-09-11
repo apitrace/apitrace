@@ -259,6 +259,9 @@ public:
     QVector<QVariant> editedValues() const;
     void revert();
 
+    bool contains(const QString &str,
+                  Qt::CaseSensitivity sensitivity) const;
+
     ApiTrace *parentTrace() const;
 
     QString toHtml() const;
@@ -305,6 +308,14 @@ public:
     QVector<ApiTraceCall*> calls() const;
     void setCalls(const QVector<ApiTraceCall*> &calls,
                   quint64 binaryDataSize);
+
+    ApiTraceCall *findNextCall(ApiTraceCall *from,
+                               const QString &str,
+                               Qt::CaseSensitivity sensitivity) const;
+
+    ApiTraceCall *findPrevCall(ApiTraceCall *from,
+                               const QString &str,
+                               Qt::CaseSensitivity sensitivity) const;
 
     int binaryDataSize() const;
 

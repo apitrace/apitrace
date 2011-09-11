@@ -919,6 +919,14 @@ int ApiTraceCall::numChildren() const
     return 0;
 }
 
+bool ApiTraceCall::contains(const QString &str,
+                            Qt::CaseSensitivity sensitivity) const
+{
+    QString txt = searchText();
+    return txt.contains(str, sensitivity);
+}
+
+
 ApiTraceFrame::ApiTraceFrame(ApiTrace *parentTrace)
     : ApiTraceEvent(ApiTraceEvent::Frame),
       m_parentTrace(parentTrace),
@@ -1043,4 +1051,48 @@ void ApiTraceFrame::setParentTrace(ApiTrace *parent)
 int ApiTraceFrame::numChildrenToLoad() const
 {
     return m_callsToLoad;
+}
+
+ApiTraceCall *
+ApiTraceFrame::findNextCall(ApiTraceCall *from,
+                            const QString &str,
+                            Qt::CaseSensitivity sensitivity) const
+{
+    Q_ASSERT(m_loaded);
+
+    int callIndex = 0;
+
+    if (from) {
+        callIndex = m_calls.indexOf(from) + 1;
+    }
+
+    for (int i = callIndex; i < m_calls.count(); ++i) {
+        ApiTraceCall *call = m_calls[i];
+        if (call->contains(str, sensitivity)) {
+            return call;
+        }
+    }
+    return 0;
+}
+
+ApiTraceCall *
+ApiTraceFrame::findPrevCall(ApiTraceCall *from,
+                            const QString &str,
+                            Qt::CaseSensitivity sensitivity) const
+{
+    Q_ASSERT(m_loaded);
+
+    int callIndex = m_calls.count() - 1;
+
+    if (from) {
+        callIndex = m_calls.indexOf(from) - 1;
+    }
+
+    for (int i = callIndex; i >= 0; --i) {
+        ApiTraceCall *call = m_calls[i];
+        if (call->contains(str, sensitivity)) {
+            return call;
+        }
+    }
+    return 0;
 }

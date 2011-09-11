@@ -19,10 +19,21 @@ ApiTrace::ApiTrace()
             m_loader, SLOT(loadFrame(ApiTraceFrame*)));
     connect(m_loader, SIGNAL(framesLoaded(const QList<ApiTraceFrame*>)),
             this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
-    connect(m_loader, SIGNAL(frameLoaded(ApiTraceFrame*)),
-            this, SLOT(frameLoadFinished(ApiTraceFrame*)));
+    connect(m_loader,
+            SIGNAL(frameContentsLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)),
+            this,
+            SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)));
     connect(m_loader, SIGNAL(finishedParsing()),
             this, SLOT(finishedParsing()));
+    connect(this, SIGNAL(loaderSearchNext(int,QString,Qt::CaseSensitivity)),
+            m_loader, SLOT(searchNext(int,QString,Qt::CaseSensitivity)));
+    connect(this, SIGNAL(loaderSearchPrev(int,QString,Qt::CaseSensitivity)),
+            m_loader, SLOT(searchPrev(int,QString,Qt::CaseSensitivity)));
+    connect(m_loader,
+            SIGNAL(searchResult(ApiTrace::SearchResult,ApiTraceCall*)),
+            this,
+            SLOT(loaderSearchResult(ApiTrace::SearchResult,ApiTraceCall*)));
+
 
     connect(m_loader, SIGNAL(startedParsing()),
             this, SIGNAL(startedLoadingTrace()));
@@ -306,7 +317,6 @@ bool ApiTrace::hasErrors() const
 void ApiTrace::loadFrame(ApiTraceFrame *frame)
 {
     Q_ASSERT(!frame->loaded());
-    emit beginLoadingFrame(frame, frame->numChildrenToLoad());
     emit requestFrame(frame);
 }
 
@@ -318,9 +328,92 @@ void ApiTrace::finishedParsing()
     }
 }
 
-void ApiTrace::frameLoadFinished(ApiTraceFrame *frame)
+void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
+                                 const QVector<ApiTraceCall*> &calls,
+                                 quint64 binaryDataSize)
 {
+    Q_ASSERT(frame->numChildrenToLoad() == calls.size());
+    emit beginLoadingFrame(frame, calls.size());
+    frame->setCalls(calls, binaryDataSize);
     emit endLoadingFrame(frame);
+}
+
+void ApiTrace::findNext(ApiTraceFrame *frame,
+                        ApiTraceCall *from,
+                        const QString &str,
+                        Qt::CaseSensitivity sensitivity)
+{
+    ApiTraceCall *foundCall = 0;
+    int frameIdx = m_frames.indexOf(frame);
+
+    if (frame->loaded()) {
+        foundCall = frame->findNextCall(from, str, sensitivity);
+        if (foundCall) {
+            emit findResult(SearchFound, foundCall);
+            return;
+        }
+
+        //if the frame is loaded we already searched it above
+        // so skip it
+        frameIdx += 1;
+    }
+
+    for (int i = frameIdx; i < m_frames.count(); ++i) {
+        ApiTraceFrame *frame = m_frames[i];
+        if (!frame->loaded()) {
+            emit loaderSearchNext(i, str, sensitivity);
+            return;
+        } else {
+            ApiTraceCall *call = frame->findNextCall(0, str, sensitivity);
+            if (call) {
+                emit findResult(SearchFound, call);
+            }
+        }
+    }
+    emit findResult(SearchWrapped, 0);
+}
+
+void ApiTrace::findPrev(ApiTraceFrame *frame,
+                        ApiTraceCall *from,
+                        const QString &str,
+                        Qt::CaseSensitivity sensitivity)
+{
+    ApiTraceCall *foundCall = 0;
+    int frameIdx = m_frames.indexOf(frame);
+
+    if (frame->loaded()) {
+        foundCall = frame->findPrevCall(from, str, sensitivity);
+        if (foundCall) {
+            emit findResult(SearchFound, foundCall);
+            return;
+        }
+
+        //if the frame is loaded we already searched it above
+        // so skip it
+        frameIdx -= 1;
+    }
+
+    for (int i = frameIdx; i <= 0; --i) {
+        ApiTraceFrame *frame = m_frames[i];
+        if (!frame->loaded()) {
+            emit loaderSearchPrev(i, str, sensitivity);
+            return;
+        } else {
+            ApiTraceCall *call = frame->findPrevCall(0, str, sensitivity);
+            if (call) {
+                emit findResult(SearchFound, call);
+            }
+        }
+    }
+    emit findResult(SearchWrapped, 0);
+}
+
+void ApiTrace::loaderSearchResult(ApiTrace::SearchResult result,
+                                  ApiTraceCall *call)
+{
+    //qDebug()<<"Search result = "<<result
+    //       <<", call is = "<<call;
+    emit findResult(result, call);
 }
 
 #include "apitrace.moc"

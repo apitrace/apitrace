@@ -56,49 +56,7 @@ void TraceLoader::loadTrace(const QString &filename)
 
 void TraceLoader::loadFrame(ApiTraceFrame *currentFrame)
 {
-    if (m_parser.supportsOffsets()) {
-        unsigned frameIdx = currentFrame->number;
-        int numOfCalls = numberOfCallsInFrame(frameIdx);
-
-        if (numOfCalls) {
-            quint64 binaryDataSize = 0;
-            QVector<ApiTraceCall*> calls(numOfCalls);
-            const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
-
-            m_parser.setBookmark(frameBookmark.start);
-
-            Trace::Call *call;
-            int parsedCalls = 0;
-            while ((call = m_parser.parse_call())) {
-                ApiTraceCall *apiCall =
-                        apiCallFromTraceCall(call, m_helpHash,
-                                             currentFrame, this);
-                calls[parsedCalls] = apiCall;
-                Q_ASSERT(calls[parsedCalls]);
-                if (apiCall->hasBinaryData()) {
-                    QByteArray data =
-                            apiCall->arguments()[
-                            apiCall->binaryDataIndex()].toByteArray();
-                    binaryDataSize += data.size();
-                }
-
-                ++parsedCalls;
-
-                delete call;
-
-                if (ApiTrace::isCallAFrameMarker(apiCall, m_frameMarker)) {
-                    break;
-                }
-
-            }
-            assert(parsedCalls == numOfCalls);
-            Q_ASSERT(parsedCalls == calls.size());
-            Q_ASSERT(parsedCalls == currentFrame->numChildrenToLoad());
-            calls.squeeze();
-            currentFrame->setCalls(calls, binaryDataSize);
-            emit frameLoaded(currentFrame);
-        }
-    }
+    fetchFrameContents(currentFrame);
 }
 
 void TraceLoader::setFrameMarker(ApiTrace::FrameMarker marker)
@@ -188,6 +146,7 @@ void TraceLoader::scanTrace()
             currentFrame->setNumChildren(numOfCalls);
             frames.append(currentFrame);
 
+            m_createdFrames.append(currentFrame);
             m_frameBookmarks[numOfFrames] = frameBookmark;
             ++numOfFrames;
 
@@ -211,6 +170,7 @@ void TraceLoader::scanTrace()
         currentFrame->setNumChildren(numOfCalls);
         frames.append(currentFrame);
 
+        m_createdFrames.append(currentFrame);
         m_frameBookmarks[numOfFrames] = frameBookmark;
         ++numOfFrames;
     }
@@ -310,6 +270,127 @@ ApiTraceEnumSignature * TraceLoader::enumSignature(unsigned id)
 void TraceLoader::addEnumSignature(unsigned id, ApiTraceEnumSignature *signature)
 {
     m_enumSignatures[id] = signature;
+}
+
+void TraceLoader::searchNext(int startFrame,
+                             const QString &str,
+                             Qt::CaseSensitivity sensitivity)
+{
+    Q_ASSERT(m_parser.supportsOffsets());
+    if (m_parser.supportsOffsets()) {
+        const FrameBookmark &frameBookmark = m_frameBookmarks[startFrame];
+        m_parser.setBookmark(frameBookmark.start);
+        Trace::Call *call = 0;
+        while ((call = m_parser.parse_call())) {
+
+            if (callContains(call, str, sensitivity)) {
+                unsigned frameIdx = callInFrame(call->no);
+                ApiTraceFrame *frame = m_createdFrames[frameIdx];
+                const QVector<ApiTraceCall*> calls =
+                        fetchFrameContents(frame);
+                for (int i = 0; i < calls.count(); ++i) {
+                    if (calls[i]->index() == call->no) {
+                        emit searchResult(ApiTrace::SearchFound, calls[i]);
+                        break;
+                    }
+                }
+                delete call;
+                return;
+            }
+
+            delete call;
+        }
+    }
+    emit searchResult(ApiTrace::SearchNotFound, 0);
+}
+
+void TraceLoader::searchPrev(int startFrame,
+                             const QString &str,
+                             Qt::CaseSensitivity sensitivity)
+{
+}
+
+int TraceLoader::callInFrame(int callIdx) const
+{
+    unsigned numCalls = 0;
+
+    for (int frameIdx = 0; frameIdx <= m_frameBookmarks.size(); ++frameIdx) {
+        const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
+        unsigned firstCall = numCalls;
+        unsigned endCall = numCalls + frameBookmark.numberOfCalls;
+        if (firstCall <= callIdx && endCall > callIdx) {
+            return frameIdx;
+        }
+        numCalls = endCall;
+    }
+    Q_ASSERT(!"call not in the trace");
+    return 0;
+}
+
+bool TraceLoader::callContains(Trace::Call *call,
+                               const QString &str,
+                               Qt::CaseSensitivity sensitivity)
+{
+    /*
+     * FIXME: do string comparison directly on Trace::Call
+     */
+    ApiTraceCall *apiCall = apiCallFromTraceCall(call, m_helpHash,
+                                                 0, this);
+    bool result = apiCall->contains(str, sensitivity);
+    delete apiCall;
+    return result;
+}
+
+QVector<ApiTraceCall*>
+TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
+{
+    Q_ASSERT(currentFrame);
+    if (m_parser.supportsOffsets()) {
+        unsigned frameIdx = currentFrame->number;
+        int numOfCalls = numberOfCallsInFrame(frameIdx);
+
+        if (numOfCalls) {
+            quint64 binaryDataSize = 0;
+            QVector<ApiTraceCall*> calls(numOfCalls);
+            const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
+
+            m_parser.setBookmark(frameBookmark.start);
+
+            Trace::Call *call;
+            int parsedCalls = 0;
+            while ((call = m_parser.parse_call())) {
+                ApiTraceCall *apiCall =
+                    apiCallFromTraceCall(call, m_helpHash,
+                                         currentFrame, this);
+                calls[parsedCalls] = apiCall;
+                Q_ASSERT(calls[parsedCalls]);
+                if (apiCall->hasBinaryData()) {
+                    QByteArray data =
+                        apiCall->arguments()[
+                            apiCall->binaryDataIndex()].toByteArray();
+                    binaryDataSize += data.size();
+                }
+
+                ++parsedCalls;
+
+                delete call;
+
+                if (ApiTrace::isCallAFrameMarker(apiCall, m_frameMarker)) {
+                    break;
+                }
+
+            }
+            assert(parsedCalls == numOfCalls);
+            Q_ASSERT(parsedCalls == calls.size());
+            calls.squeeze();
+
+            Q_ASSERT(parsedCalls == currentFrame->numChildrenToLoad());
+            emit frameContentsLoaded(currentFrame,
+                                     calls, binaryDataSize);
+            return calls;
+        }
+    }
+    return QVector<ApiTraceCall*>();
 }
 
 #include "traceloader.moc"

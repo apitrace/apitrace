@@ -20,6 +20,12 @@ public:
         FrameMarker_Finish,
         FrameMarker_Clear
     };
+    enum SearchResult {
+        SearchNotFound,
+        SearchFound,
+        SearchWrapped
+    };
+
     static bool isCallAFrameMarker(const ApiTraceCall *call,
                                    FrameMarker marker);
 public:
@@ -59,6 +65,15 @@ public slots:
     void setFrameMarker(FrameMarker marker);
     void save();
     void loadFrame(ApiTraceFrame *frame);
+    void findNext(ApiTraceFrame *frame,
+                  ApiTraceCall *call,
+                  const QString &str,
+                  Qt::CaseSensitivity sensitivity);
+    void findPrev(ApiTraceFrame *frame,
+                  ApiTraceCall *call,
+                  const QString &str,
+                  Qt::CaseSensitivity sensitivity);
+
 
 signals:
     void loadTrace(const QString &name);
@@ -71,6 +86,8 @@ signals:
     void changed(ApiTraceCall *call);
     void startedSaving();
     void saved();
+    void findResult(ApiTrace::SearchResult result,
+                    ApiTraceCall *call);
 
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
@@ -78,11 +95,24 @@ signals:
     void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
     void endLoadingFrame(ApiTraceFrame *frame);
 
+
+signals:
+    void loaderSearchNext(int startFrame,
+                          const QString &str,
+                          Qt::CaseSensitivity sensitivity);
+    void loaderSearchPrev(int startFrame,
+                          const QString &str,
+                          Qt::CaseSensitivity sensitivity);
+
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
     void slotSaved();
     void finishedParsing();
-    void frameLoadFinished(ApiTraceFrame *frame);
+    void loaderFrameLoaded(ApiTraceFrame *frame,
+                           const QVector<ApiTraceCall*> &calls,
+                           quint64 binaryDataSize);
+    void loaderSearchResult(ApiTrace::SearchResult result,
+                            ApiTraceCall *call);
 
 private:
     void detectFrames();
