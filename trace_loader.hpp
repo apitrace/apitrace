@@ -38,18 +38,17 @@ public:
     std::vector<Trace::Call*> frame(int idx);
 
 private:
-    struct FrameOffset {
-        FrameOffset()
+    struct FrameBookmark {
+        FrameBookmark()
             : numberOfCalls(0)
         {}
-        FrameOffset(const File::Offset &s)
+        FrameBookmark(const ParseBookmark &s)
             : start(s),
               numberOfCalls(0)
         {}
 
-        File::Offset start;
+        ParseBookmark start;
         int numberOfCalls;
-        unsigned callNumber;
     };
     bool isCallAFrameMarker(const Trace::Call *call) const;
 
@@ -57,8 +56,8 @@ private:
     Trace::Parser m_parser;
     FrameMarker m_frameMarker;
 
-    typedef std::map<int, FrameOffset> FrameOffsets;
-    FrameOffsets m_frameOffsets;
+    typedef std::map<int, FrameBookmark> FrameBookmarks;
+    FrameBookmarks m_frameBookmarks;
 };
 
 }

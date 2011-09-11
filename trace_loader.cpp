@@ -25,16 +25,16 @@ void Loader::setFrameMarker(Loader::FrameMarker marker)
 
 int Loader::numberOfFrames() const
 {
-    return m_frameOffsets.size();
+    return m_frameBookmarks.size();
 }
 
 int Loader::numberOfCallsInFrame(int frameIdx) const
 {
-    if (frameIdx > m_frameOffsets.size()) {
+    if (frameIdx > m_frameBookmarks.size()) {
         return 0;
     }
-    FrameOffsets::const_iterator itr =
-        m_frameOffsets.find(frameIdx);
+    FrameBookmarks::const_iterator itr =
+        m_frameBookmarks.find(frameIdx);
     return itr->second.numberOfCalls;
 }
 
@@ -51,25 +51,21 @@ bool Loader::open(const char *filename)
     }
 
     Trace::Call *call;
-    File::Offset startOffset;
+    ParseBookmark startBookmark;
     int numOfFrames = 0;
     int numOfCalls = 0;
-    unsigned callNum = 0;
     int lastPercentReport = 0;
 
-    startOffset = m_parser.currentOffset();
-    callNum = m_parser.currentCallNumber();
+    m_parser.getBookmark(startBookmark);
 
     while ((call = m_parser.scan_call())) {
         ++numOfCalls;
 
         if (isCallAFrameMarker(call)) {
-            File::Offset endOffset = m_parser.currentOffset();
-            FrameOffset frameOffset(startOffset);
-            frameOffset.numberOfCalls = numOfCalls;
-            frameOffset.callNumber = callNum;
+            FrameBookmark frameBookmark(startBookmark);
+            frameBookmark.numberOfCalls = numOfCalls;
 
-            m_frameOffsets[numOfFrames] = frameOffset;
+            m_frameBookmarks[numOfFrames] = frameBookmark;
             ++numOfFrames;
 
             if (m_parser.percentRead() - lastPercentReport >= 5) {
@@ -78,8 +74,8 @@ bool Loader::open(const char *filename)
                           << "..."<<std::endl;
                 lastPercentReport = m_parser.percentRead();
             }
-            startOffset = endOffset;
-            callNum = m_parser.currentCallNumber();
+            
+            m_parser.getBookmark(startBookmark);
             numOfCalls = 0;
         }
         //call->dump(std::cout, color);
@@ -120,10 +116,9 @@ std::vector<Trace::Call *> Loader::frame(int idx)
 {
     int numOfCalls = numberOfCallsInFrame(idx);
     if (numOfCalls) {
-        const FrameOffset &frameOffset = m_frameOffsets[idx];
+        const FrameBookmark &frameBookmark = m_frameBookmarks[idx];
         std::vector<Trace::Call*> calls(numOfCalls);
-        m_parser.setCurrentOffset(frameOffset.start);
-        m_parser.setCurrentCallNumber(frameOffset.callNumber);
+        m_parser.setBookmark(frameBookmark.start);
 
         Trace::Call *call;
         int parsedCalls = 0;

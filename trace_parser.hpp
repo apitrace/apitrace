@@ -37,6 +37,14 @@
 
 namespace Trace {
 
+
+struct ParseBookmark
+{
+    File::Offset offset;
+    unsigned next_call_no;
+};
+
+
 class Parser
 {
 protected:
@@ -92,24 +100,14 @@ public:
         return file->supportsOffsets();
     }
 
-    File::Offset currentOffset()
-    {
-        return file->currentOffset();
+    void getBookmark(ParseBookmark &bookmark) {
+        bookmark.offset = file->currentOffset();
+        bookmark.next_call_no = next_call_no;
     }
 
-    void setCurrentOffset(const File::Offset &offset)
-    {
-        file->setCurrentOffset(offset);
-    }
-
-    unsigned currentCallNumber() const
-    {
-        return next_call_no;
-    }
-
-    void setCurrentCallNumber(unsigned num)
-    {
-        next_call_no = num;
+    void setBookmark(const ParseBookmark &bookmark) {
+        file->setCurrentOffset(bookmark.offset);
+        next_call_no = bookmark.next_call_no;
     }
 
     int percentRead()

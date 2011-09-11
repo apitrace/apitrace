@@ -63,10 +63,9 @@ void TraceLoader::loadFrame(ApiTraceFrame *currentFrame)
         if (numOfCalls) {
             quint64 binaryDataSize = 0;
             QVector<ApiTraceCall*> calls(numOfCalls);
-            const FrameOffset &frameOffset = m_frameOffsets[frameIdx];
+            const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
 
-            m_parser.setCurrentOffset(frameOffset.start);
-            m_parser.setCurrentCallNumber(frameOffset.callNumber);
+            m_parser.setBookmark(frameBookmark.start);
 
             Trace::Call *call;
             int parsedCalls = 0;
@@ -132,16 +131,16 @@ bool TraceLoader::isCallAFrameMarker(const Trace::Call *call) const
 
 int TraceLoader::numberOfFrames() const
 {
-    return m_frameOffsets.size();
+    return m_frameBookmarks.size();
 }
 
 int TraceLoader::numberOfCallsInFrame(int frameIdx) const
 {
-    if (frameIdx > m_frameOffsets.size()) {
+    if (frameIdx > m_frameBookmarks.size()) {
         return 0;
     }
-    FrameOffsets::const_iterator itr =
-            m_frameOffsets.find(frameIdx);
+    FrameBookmarks::const_iterator itr =
+            m_frameBookmarks.find(frameIdx);
     return itr->numberOfCalls;
 }
 
@@ -170,55 +169,49 @@ void TraceLoader::scanTrace()
     ApiTraceFrame *currentFrame = 0;
 
     Trace::Call *call;
-    Trace::File::Offset startOffset;
+    Trace::ParseBookmark startBookmark;
     int numOfFrames = 0;
     int numOfCalls = 0;
-    unsigned callNum = 0;
     int lastPercentReport = 0;
 
-    startOffset = m_parser.currentOffset();
-    callNum = m_parser.currentCallNumber();
+    m_parser.getBookmark(startBookmark);
 
     while ((call = m_parser.scan_call())) {
         ++numOfCalls;
 
         if (isCallAFrameMarker(call)) {
-            Trace::File::Offset endOffset = m_parser.currentOffset();
-            FrameOffset frameOffset(startOffset);
-            frameOffset.numberOfCalls = numOfCalls;
-            frameOffset.callNumber = callNum;
+            FrameBookmark frameBookmark(startBookmark);
+            frameBookmark.numberOfCalls = numOfCalls;
 
             currentFrame = new ApiTraceFrame();
             currentFrame->number = numOfFrames;
             currentFrame->setNumChildren(numOfCalls);
             frames.append(currentFrame);
 
-            m_frameOffsets[numOfFrames] = frameOffset;
+            m_frameBookmarks[numOfFrames] = frameBookmark;
             ++numOfFrames;
 
             if (m_parser.percentRead() - lastPercentReport >= 5) {
                 emit parsed(m_parser.percentRead());
                 lastPercentReport = m_parser.percentRead();
             }
-            startOffset = endOffset;
-            callNum = m_parser.currentCallNumber();
+            m_parser.getBookmark(startBookmark);
             numOfCalls = 0;
         }
         delete call;
     }
 
     if (numOfCalls) {
-        //Trace::File::Offset endOffset = m_parser.currentOffset();
-        FrameOffset frameOffset(startOffset);
-        frameOffset.numberOfCalls = numOfCalls;
-        frameOffset.callNumber = callNum;
+        //Trace::File::Bookmark endBookmark = m_parser.currentBookmark();
+        FrameBookmark frameBookmark(startBookmark);
+        frameBookmark.numberOfCalls = numOfCalls;
 
         currentFrame = new ApiTraceFrame();
         currentFrame->number = numOfFrames;
         currentFrame->setNumChildren(numOfCalls);
         frames.append(currentFrame);
 
-        m_frameOffsets[numOfFrames] = frameOffset;
+        m_frameBookmarks[numOfFrames] = frameBookmark;
         ++numOfFrames;
     }
 

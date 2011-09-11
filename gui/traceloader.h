@@ -38,18 +38,17 @@ signals:
     void frameLoaded(ApiTraceFrame *frame);
 
 private:
-    struct FrameOffset {
-        FrameOffset()
+    struct FrameBookmark {
+        FrameBookmark()
             : numberOfCalls(0)
         {}
-        FrameOffset(const Trace::File::Offset &s)
+        FrameBookmark(const Trace::ParseBookmark &s)
             : start(s),
               numberOfCalls(0)
         {}
 
-        Trace::File::Offset start;
+        Trace::ParseBookmark start;
         int numberOfCalls;
-        unsigned callNumber;
     };
     bool isCallAFrameMarker(const Trace::Call *call) const;
     int numberOfFrames() const;
@@ -64,8 +63,8 @@ private:
     QString m_fileName;
     ApiTrace::FrameMarker m_frameMarker;
 
-    typedef QMap<int, FrameOffset> FrameOffsets;
-    FrameOffsets m_frameOffsets;
+    typedef QMap<int, FrameBookmark> FrameBookmarks;
+    FrameBookmarks m_frameBookmarks;
 
     QHash<QString, QUrl> m_helpHash;
 
