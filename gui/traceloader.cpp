@@ -308,6 +308,67 @@ void TraceLoader::searchPrev(int startFrame,
                              const QString &str,
                              Qt::CaseSensitivity sensitivity)
 {
+    Q_ASSERT(m_parser.supportsOffsets());
+    if (m_parser.supportsOffsets()) {
+        Trace::Call *call = 0;
+        QList<Trace::Call*> frameCalls;
+        int frameIdx = startFrame;
+
+        const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
+        int numCallsToParse = frameBookmark.numberOfCalls;
+        m_parser.setBookmark(frameBookmark.start);
+
+        while ((call = m_parser.parse_call())) {
+
+            frameCalls.append(call);
+            --numCallsToParse;
+
+            if (numCallsToParse == 0) {
+                bool foundCall = searchCallsBackwards(frameCalls,
+                                                      frameIdx,
+                                                      str, sensitivity);
+
+                qDeleteAll(frameCalls);
+                frameCalls.clear();
+                if (foundCall) {
+                    return;
+                }
+
+                --frameIdx;
+
+                if (frameIdx >= 0) {
+                    const FrameBookmark &frameBookmark =
+                            m_frameBookmarks[frameIdx];
+                    m_parser.setBookmark(frameBookmark.start);
+                    numCallsToParse = frameBookmark.numberOfCalls;
+                }
+            }
+        }
+    }
+    emit searchResult(ApiTrace::SearchNotFound, 0);
+}
+
+bool TraceLoader::searchCallsBackwards(const QList<Trace::Call*> &calls,
+                                       int frameIdx,
+                                       const QString &str,
+                                       Qt::CaseSensitivity sensitivity)
+{
+    for (int i = calls.count() - 1; i >= 0; --i) {
+        Trace::Call *call = calls[i];
+        if (callContains(call, str, sensitivity)) {
+            ApiTraceFrame *frame = m_createdFrames[frameIdx];
+            const QVector<ApiTraceCall*> apiCalls =
+                    fetchFrameContents(frame);
+            for (int i = 0; i < apiCalls.count(); ++i) {
+                if (apiCalls[i]->index() == call->no) {
+                    emit searchResult(ApiTrace::SearchFound, apiCalls[i]);
+                    break;
+                }
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 int TraceLoader::callInFrame(int callIdx) const

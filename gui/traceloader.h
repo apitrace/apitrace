@@ -72,6 +72,10 @@ private:
                       const QString &str,
                       Qt::CaseSensitivity sensitivity);
      QVector<ApiTraceCall*> fetchFrameContents(ApiTraceFrame *frame);
+     bool searchCallsBackwards(const QList<Trace::Call*> &calls,
+                               int frameIdx,
+                               const QString &str,
+                               Qt::CaseSensitivity sensitivity);
 
 private:
     Trace::Parser m_parser;

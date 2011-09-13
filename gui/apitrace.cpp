@@ -367,6 +367,7 @@ void ApiTrace::findNext(ApiTraceFrame *frame,
             ApiTraceCall *call = frame->findNextCall(0, str, sensitivity);
             if (call) {
                 emit findResult(SearchFound, call);
+                return;
             }
         }
     }
@@ -393,7 +394,7 @@ void ApiTrace::findPrev(ApiTraceFrame *frame,
         frameIdx -= 1;
     }
 
-    for (int i = frameIdx; i <= 0; --i) {
+    for (int i = frameIdx; i >= 0; --i) {
         ApiTraceFrame *frame = m_frames[i];
         if (!frame->loaded()) {
             emit loaderSearchPrev(i, str, sensitivity);
@@ -402,6 +403,7 @@ void ApiTrace::findPrev(ApiTraceFrame *frame,
             ApiTraceCall *call = frame->findPrevCall(0, str, sensitivity);
             if (call) {
                 emit findResult(SearchFound, call);
+                return;
             }
         }
     }
