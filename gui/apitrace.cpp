@@ -118,16 +118,6 @@ ApiTrace::FrameMarker ApiTrace::frameMarker() const
     return m_frameMarker;
 }
 
-QVector<ApiTraceCall*> ApiTrace::calls() const
-{
-    return m_calls;
-}
-
-int ApiTrace::numCalls() const
-{
-    return m_calls.count();
-}
-
 QList<ApiTraceFrame*> ApiTrace::frames() const
 {
     return m_frames;

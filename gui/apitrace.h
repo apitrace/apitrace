@@ -40,9 +40,7 @@ public:
 
     ApiTraceState defaultState() const;
 
-    QVector<ApiTraceCall*> calls() const;
     ApiTraceCall *callWithIndex(int idx) const;
-    int numCalls() const;
 
     QList<ApiTraceFrame*> frames() const;
     ApiTraceFrame *frameAt(int idx) const;
