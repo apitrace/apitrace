@@ -33,6 +33,14 @@ ApiTrace::ApiTrace()
             SIGNAL(searchResult(ApiTrace::SearchResult,ApiTraceCall*)),
             this,
             SLOT(loaderSearchResult(ApiTrace::SearchResult,ApiTraceCall*)));
+    connect(this, SIGNAL(loaderFindFrameStart(ApiTraceFrame*)),
+            m_loader, SLOT(findFrameStart(ApiTraceFrame*)));
+    connect(this, SIGNAL(loaderFindFrameEnd(ApiTraceFrame*)),
+            m_loader, SLOT(findFrameEnd(ApiTraceFrame*)));
+    connect(m_loader, SIGNAL(foundFrameStart(ApiTraceFrame*)),
+            this, SIGNAL(foundFrameStart(ApiTraceFrame*)));
+    connect(m_loader, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
+            this, SIGNAL(foundFrameEnd(ApiTraceFrame*)));
 
 
     connect(m_loader, SIGNAL(startedParsing()),
@@ -416,6 +424,24 @@ void ApiTrace::loaderSearchResult(ApiTrace::SearchResult result,
     //qDebug()<<"Search result = "<<result
     //       <<", call is = "<<call;
     emit findResult(result, call);
+}
+
+void ApiTrace::findFrameStart(ApiTraceFrame *frame)
+{
+    if (frame->loaded()) {
+        emit foundFrameStart(frame);
+    } else {
+        emit loaderFindFrameStart(frame);
+    }
+}
+
+void ApiTrace::findFrameEnd(ApiTraceFrame *frame)
+{
+    if (frame->loaded()) {
+        emit foundFrameEnd(frame);
+    } else {
+        emit loaderFindFrameEnd(frame);
+    }
 }
 
 #include "apitrace.moc"

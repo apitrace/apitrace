@@ -454,4 +454,16 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
     return QVector<ApiTraceCall*>();
 }
 
+void TraceLoader::findFrameStart(ApiTraceFrame *frame)
+{
+    loadFrame(frame);
+    emit foundFrameStart(frame);
+}
+
+void TraceLoader::findFrameEnd(ApiTraceFrame *frame)
+{
+    loadFrame(frame);
+    emit foundFrameEnd(frame);
+}
+
 #include "traceloader.moc"

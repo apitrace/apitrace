@@ -73,6 +73,8 @@ public slots:
                   ApiTraceCall *call,
                   const QString &str,
                   Qt::CaseSensitivity sensitivity);
+    void findFrameStart(ApiTraceFrame *frame);
+    void findFrameEnd(ApiTraceFrame *frame);
 
 
 signals:
@@ -94,6 +96,8 @@ signals:
     void callsAdded(int oldCount, int numAdded);
     void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
     void endLoadingFrame(ApiTraceFrame *frame);
+    void foundFrameStart(ApiTraceFrame *frame);
+    void foundFrameEnd(ApiTraceFrame *frame);
 
 
 signals:
@@ -103,6 +107,8 @@ signals:
     void loaderSearchPrev(int startFrame,
                           const QString &str,
                           Qt::CaseSensitivity sensitivity);
+    void loaderFindFrameStart(ApiTraceFrame *frame);
+    void loaderFindFrameEnd(ApiTraceFrame *frame);
 
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);

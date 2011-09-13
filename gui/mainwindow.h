@@ -75,6 +75,8 @@ private slots:
     void slotErrorSelected(QTreeWidgetItem *current);
     void slotSearchResult(ApiTrace::SearchResult result,
                           ApiTraceCall *call);
+    void slotFoundFrameStart(ApiTraceFrame *frame);
+    void slotFoundFrameEnd(ApiTraceFrame *frame);
 
 private:
     void initObjects();

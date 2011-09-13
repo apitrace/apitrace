@@ -694,6 +694,10 @@ void MainWindow::initConnections()
             this, SLOT(slotTraceChanged(ApiTraceCall*)));
     connect(m_trace, SIGNAL(findResult(ApiTrace::SearchResult,ApiTraceCall*)),
             this, SLOT(slotSearchResult(ApiTrace::SearchResult,ApiTraceCall*)));
+    connect(m_trace, SIGNAL(foundFrameStart(ApiTraceFrame*)),
+            this, SLOT(slotFoundFrameStart(ApiTraceFrame*)));
+    connect(m_trace, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
+            this, SLOT(slotFoundFrameEnd(ApiTraceFrame*)));
 
     connect(m_retracer, SIGNAL(finished(const QString&)),
             this, SLOT(replayFinished(const QString&)));
@@ -930,45 +934,26 @@ void MainWindow::slotSaved()
 
 void MainWindow::slotGoFrameStart()
 {
-    ApiTraceFrame *frame = selectedFrame();
-    if (!frame || frame->isEmpty()) {
-        return;
+    ApiTraceFrame *frame = currentFrame();
+    ApiTraceCall *call = currentCall();
+
+    if (!frame && call) {
+        frame = call->parentFrame();
     }
 
-    QVector<ApiTraceCall*>::const_iterator itr;
-    QVector<ApiTraceCall*> calls = frame->calls();
-
-    itr = calls.constBegin();
-    while (itr != calls.constEnd()) {
-        ApiTraceCall *call = *itr;
-        QModelIndex idx = m_proxyModel->indexForCall(call);
-        if (idx.isValid()) {
-            m_ui.callView->setCurrentIndex(idx);
-            break;
-        }
-        ++itr;
-    }
+    m_trace->findFrameStart(frame);
 }
 
 void MainWindow::slotGoFrameEnd()
 {
-    ApiTraceFrame *frame = selectedFrame();
-    if (!frame || frame->isEmpty()) {
-        return;
-    }
-    QVector<ApiTraceCall*>::const_iterator itr;
-    QVector<ApiTraceCall*> calls = frame->calls();
+    ApiTraceFrame *frame = currentFrame();
+    ApiTraceCall *call = currentCall();
 
-    itr = calls.constEnd();
-    do {
-        --itr;
-        ApiTraceCall *call = *itr;
-        QModelIndex idx = m_proxyModel->indexForCall(call);
-        if (idx.isValid()) {
-            m_ui.callView->setCurrentIndex(idx);
-            break;
-        }
-    } while (itr != calls.constBegin());
+    if (!frame && call) {
+        frame = call->parentFrame();
+    }
+
+    m_trace->findFrameEnd(frame);
 }
 
 ApiTraceFrame * MainWindow::selectedFrame() const
@@ -1167,6 +1152,49 @@ ApiTraceCall * MainWindow::currentCall() const
 
     return call;
 
+}
+
+void MainWindow::slotFoundFrameStart(ApiTraceFrame *frame)
+{
+    Q_ASSERT(frame->loaded());
+    if (!frame || frame->isEmpty()) {
+        return;
+    }
+
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
+
+    itr = calls.constBegin();
+    while (itr != calls.constEnd()) {
+        ApiTraceCall *call = *itr;
+        QModelIndex idx = m_proxyModel->indexForCall(call);
+        if (idx.isValid()) {
+            m_ui.callView->setCurrentIndex(idx);
+            break;
+        }
+        ++itr;
+    }
+}
+
+void MainWindow::slotFoundFrameEnd(ApiTraceFrame *frame)
+{
+    Q_ASSERT(frame->loaded());
+    if (!frame || frame->isEmpty()) {
+        return;
+    }
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
+
+    itr = calls.constEnd();
+    do {
+        --itr;
+        ApiTraceCall *call = *itr;
+        QModelIndex idx = m_proxyModel->indexForCall(call);
+        if (idx.isValid()) {
+            m_ui.callView->setCurrentIndex(idx);
+            break;
+        }
+    } while (itr != calls.constBegin());
 }
 
 #include "mainwindow.moc"

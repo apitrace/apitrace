@@ -34,6 +34,8 @@ public slots:
     void searchPrev(int startFrame,
                     const QString &str,
                     Qt::CaseSensitivity sensitivity);
+    void findFrameStart(ApiTraceFrame *frame);
+    void findFrameEnd(ApiTraceFrame *frame);
 
 signals:
     void startedParsing();
@@ -46,6 +48,8 @@ signals:
                              quint64 binaryDataSize);
 
     void searchResult(ApiTrace::SearchResult result, ApiTraceCall *call);
+    void foundFrameStart(ApiTraceFrame *frame);
+    void foundFrameEnd(ApiTraceFrame *frame);
 private:
     struct FrameBookmark {
         FrameBookmark()
