@@ -698,6 +698,8 @@ void MainWindow::initConnections()
             this, SLOT(slotFoundFrameStart(ApiTraceFrame*)));
     connect(m_trace, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
             this, SLOT(slotFoundFrameEnd(ApiTraceFrame*)));
+    connect(m_trace, SIGNAL(foundCallIndex(ApiTraceCall*)),
+            this, SLOT(slotJumpToResult(ApiTraceCall*)));
 
     connect(m_retracer, SIGNAL(finished(const QString&)),
             this, SLOT(replayFinished(const QString&)));
@@ -808,10 +810,7 @@ void MainWindow::slotGoTo()
 
 void MainWindow::slotJumpTo(int callNum)
 {
-    QModelIndex index = m_proxyModel->callIndex(callNum);
-    if (index.isValid()) {
-        m_ui.callView->setCurrentIndex(index);
-    }
+    m_trace->findCallIndex(callNum);
 }
 
 void MainWindow::createdTrace(const QString &path)
@@ -1195,6 +1194,14 @@ void MainWindow::slotFoundFrameEnd(ApiTraceFrame *frame)
             break;
         }
     } while (itr != calls.constBegin());
+}
+
+void MainWindow::slotJumpToResult(ApiTraceCall *call)
+{
+    QModelIndex index = m_proxyModel->indexForCall(call);
+    if (index.isValid()) {
+        m_ui.callView->setCurrentIndex(index);
+    }
 }
 
 #include "mainwindow.moc"

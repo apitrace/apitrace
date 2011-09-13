@@ -1001,6 +1001,18 @@ ApiTraceCall * ApiTraceFrame::call(int idx) const
     return m_calls.value(idx);
 }
 
+
+ApiTraceCall * ApiTraceFrame::callWithIndex(int index) const
+{
+    QVector<ApiTraceCall*>::const_iterator itr;
+    for (itr = m_calls.constBegin(); itr != m_calls.constEnd(); ++itr) {
+        if ((*itr)->index() == index) {
+            return *itr;
+        }
+    }
+    return 0;
+}
+
 int ApiTraceFrame::callIndex(ApiTraceCall *call) const
 {
     return m_calls.indexOf(call);

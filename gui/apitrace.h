@@ -75,6 +75,7 @@ public slots:
                   Qt::CaseSensitivity sensitivity);
     void findFrameStart(ApiTraceFrame *frame);
     void findFrameEnd(ApiTraceFrame *frame);
+    void findCallIndex(int index);
 
 
 signals:
@@ -98,7 +99,7 @@ signals:
     void endLoadingFrame(ApiTraceFrame *frame);
     void foundFrameStart(ApiTraceFrame *frame);
     void foundFrameEnd(ApiTraceFrame *frame);
-
+    void foundCallIndex(ApiTraceCall *call);
 
 signals:
     void loaderSearchNext(int startFrame,
@@ -109,6 +110,7 @@ signals:
                           Qt::CaseSensitivity sensitivity);
     void loaderFindFrameStart(ApiTraceFrame *frame);
     void loaderFindFrameEnd(ApiTraceFrame *frame);
+    void loaderFindCallIndex(int index);
 
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
@@ -122,6 +124,7 @@ private slots:
 
 private:
     void detectFrames();
+    int callInFrame(int callIdx) const;
 private:
     QString m_fileName;
     QString m_tempFileName;

@@ -304,6 +304,7 @@ public:
 
     int callIndex(ApiTraceCall *call) const;
     ApiTraceCall *call(int idx) const;
+    ApiTraceCall *callWithIndex(int index) const;
     void addCall(ApiTraceCall *call);
     QVector<ApiTraceCall*> calls() const;
     void setCalls(const QVector<ApiTraceCall*> &calls,

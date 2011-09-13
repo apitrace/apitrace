@@ -41,6 +41,10 @@ ApiTrace::ApiTrace()
             this, SIGNAL(foundFrameStart(ApiTraceFrame*)));
     connect(m_loader, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
             this, SIGNAL(foundFrameEnd(ApiTraceFrame*)));
+    connect(this, SIGNAL(loaderFindCallIndex(int)),
+            m_loader, SLOT(findCallIndex(int)));
+    connect(m_loader, SIGNAL(foundCallIndex(ApiTraceCall*)),
+            this, SIGNAL(foundCallIndex(ApiTraceCall*)));
 
 
     connect(m_loader, SIGNAL(startedParsing()),
@@ -442,6 +446,48 @@ void ApiTrace::findFrameEnd(ApiTraceFrame *frame)
     } else {
         emit loaderFindFrameEnd(frame);
     }
+}
+
+void ApiTrace::findCallIndex(int index)
+{
+    int frameIdx = callInFrame(index);
+    ApiTraceFrame *frame = 0;
+
+    if (frameIdx < 0) {
+        emit foundCallIndex(0);
+        return;
+    }
+
+    frame = m_frames[frameIdx];
+
+    if (frame) {
+        if (frame->loaded()) {
+            ApiTraceCall *call = frame->callWithIndex(index);
+            emit foundCallIndex(call);
+        } else {
+            emit loaderFindCallIndex(index);
+        }
+    }
+}
+
+int ApiTrace::callInFrame(int callIdx) const
+{
+    unsigned numCalls = 0;
+
+    for (int frameIdx = 0; frameIdx <= m_frames.size(); ++frameIdx) {
+        const ApiTraceFrame *frame = m_frames[frameIdx];
+        unsigned numCallsInFrame =  frame->loaded()
+                ? frame->numChildren()
+                : frame->numChildrenToLoad();
+        unsigned firstCall = numCalls;
+        unsigned endCall = numCalls + numCallsInFrame;
+        if (firstCall <= callIdx && endCall > callIdx) {
+            return frameIdx;
+        }
+        numCalls = endCall;
+    }
+
+    return -1;
 }
 
 #include "apitrace.moc"

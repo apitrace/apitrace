@@ -466,4 +466,20 @@ void TraceLoader::findFrameEnd(ApiTraceFrame *frame)
     emit foundFrameEnd(frame);
 }
 
+void TraceLoader::findCallIndex(int index)
+{
+    int frameIdx = callInFrame(index);
+    ApiTraceFrame *frame = m_createdFrames[frameIdx];
+    QVector<ApiTraceCall*> calls = fetchFrameContents(frame);
+    QVector<ApiTraceCall*>::const_iterator itr;
+    ApiTraceCall *call = 0;
+    for (itr = calls.constBegin(); itr != calls.constEnd(); ++itr) {
+        if ((*itr)->index() == index) {
+            call = *itr;
+        }
+    }
+    Q_ASSERT(call);
+    emit foundCallIndex(call);
+}
+
 #include "traceloader.moc"

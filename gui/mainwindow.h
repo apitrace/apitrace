@@ -77,6 +77,7 @@ private slots:
                           ApiTraceCall *call);
     void slotFoundFrameStart(ApiTraceFrame *frame);
     void slotFoundFrameEnd(ApiTraceFrame *frame);
+    void slotJumpToResult(ApiTraceCall *call);
 
 private:
     void initObjects();

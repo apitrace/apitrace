@@ -36,6 +36,7 @@ public slots:
                     Qt::CaseSensitivity sensitivity);
     void findFrameStart(ApiTraceFrame *frame);
     void findFrameEnd(ApiTraceFrame *frame);
+    void findCallIndex(int index);
 
 signals:
     void startedParsing();
@@ -50,6 +51,7 @@ signals:
     void searchResult(ApiTrace::SearchResult result, ApiTraceCall *call);
     void foundFrameStart(ApiTraceFrame *frame);
     void foundFrameEnd(ApiTraceFrame *frame);
+    void foundCallIndex(ApiTraceCall *call);
 private:
     struct FrameBookmark {
         FrameBookmark()
