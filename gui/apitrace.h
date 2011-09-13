@@ -60,7 +60,6 @@ public:
 
 public slots:
     void setFileName(const QString &name);
-    void setFrameMarker(FrameMarker marker);
     void save();
     void loadFrame(ApiTraceFrame *frame);
     void findNext(ApiTraceFrame *frame,
@@ -92,7 +91,6 @@ signals:
 
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
-    void callsAdded(int oldCount, int numAdded);
     void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
     void endLoadingFrame(ApiTraceFrame *frame);
     void foundFrameStart(ApiTraceFrame *frame);
@@ -121,7 +119,6 @@ private slots:
                             ApiTraceCall *call);
 
 private:
-    void detectFrames();
     int callInFrame(int callIdx) const;
 private:
     QString m_fileName;

@@ -936,6 +936,11 @@ ApiTraceFrame::ApiTraceFrame(ApiTrace *parentTrace)
 {
 }
 
+ApiTraceFrame::~ApiTraceFrame()
+{
+    qDeleteAll(m_calls);
+}
+
 QStaticText ApiTraceFrame::staticText() const
 {
     if (m_staticText && !m_staticText->text().isEmpty())

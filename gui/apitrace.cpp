@@ -70,7 +70,6 @@ ApiTrace::~ApiTrace()
 {
     m_loaderThread->quit();
     m_loaderThread->deleteLater();
-    qDeleteAll(m_calls);
     qDeleteAll(m_frames);
     delete m_loader;
     delete m_saver;
@@ -102,7 +101,7 @@ bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
 
 bool ApiTrace::isEmpty() const
 {
-    return m_calls.isEmpty();
+    return m_frames.isEmpty();
 }
 
 QString ApiTrace::fileName() const
@@ -148,7 +147,6 @@ void ApiTrace::setFileName(const QString &name)
         m_fileName = name;
 
         m_frames.clear();
-        m_calls.clear();
         m_errors.clear();
         m_editedCalls.clear();
         m_needsSaving = false;
@@ -156,17 +154,6 @@ void ApiTrace::setFileName(const QString &name)
 
 //        m_loader->loadTrace(m_fileName);
         emit loadTrace(m_fileName);
-    }
-}
-
-void ApiTrace::setFrameMarker(FrameMarker marker)
-{
-    if (m_frameMarker != marker) {
-        emit framesInvalidated();
-
-        qDeleteAll(m_frames);
-        m_frames.clear();
-        detectFrames();
     }
 }
 
@@ -180,57 +167,21 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
 
     m_frames += frames;
 
-    int currentCalls = m_calls.count();
     int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
         frame->setParentTrace(this);
         numNewCalls += frame->numChildren();
         calls += frame->calls();
     }
-    m_calls.reserve(m_calls.count() + calls.count() + 1);
-    m_calls += calls;
 
-    emit endAddingFrames();
-    emit callsAdded(currentCalls, numNewCalls);
-}
-
-void ApiTrace::detectFrames()
-{
-    if (m_calls.isEmpty())
-        return;
-
-    emit beginAddingFrames(0, m_frames.count());
-
-    ApiTraceFrame *currentFrame = 0;
-    foreach(ApiTraceCall *apiCall, m_calls) {
-        if (!currentFrame) {
-            currentFrame = new ApiTraceFrame(this);
-            currentFrame->number = m_frames.count();
-            currentFrame->setLoaded(true);
-        }
-        apiCall->setParentFrame(currentFrame);
-        currentFrame->addCall(apiCall);
-        if (ApiTrace::isCallAFrameMarker(apiCall,
-                                         m_frameMarker)) {
-            m_frames.append(currentFrame);
-            currentFrame = 0;
-        }
-    }
-    //last frames won't have markers
-    //  it's just a bunch of Delete calls for every object
-    //  after the last SwapBuffers
-    if (currentFrame) {
-        m_frames.append(currentFrame);
-        currentFrame = 0;
-    }
     emit endAddingFrames();
 }
 
 ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 {
-    for (int i = 0; i < m_calls.count(); ++i) {
-        ApiTraceCall *call = m_calls[i];
-        if (call->index() == idx)
+    for (int i = 0; i < m_frames.count(); ++i) {
+        ApiTraceCall *call = m_frames[i]->callWithIndex(idx);
+        if (call)
             return call;
     }
     return NULL;
@@ -286,7 +237,8 @@ void ApiTrace::save()
     QDir dir;
     emit startedSaving();
     dir.mkpath(fi.absolutePath());
-    m_saver->saveFile(m_tempFileName, m_calls);
+    Q_ASSERT(!"saving not implemented");
+    m_saver->saveFile(m_tempFileName, QVector<ApiTraceCall*>());
 }
 
 void ApiTrace::slotSaved()

@@ -290,6 +290,7 @@ class ApiTraceFrame : public ApiTraceEvent
 {
 public:
     ApiTraceFrame(ApiTrace *parent=0);
+    ~ApiTraceFrame();
     int number;
 
     bool isEmpty() const;
