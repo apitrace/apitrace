@@ -27,7 +27,6 @@ public:
     void setFilterRegexp(const QRegExp &regexp);
     QRegExp filterRegexp() const;
 
-    QModelIndex callIndex(int callNum) const;
     QModelIndex indexForCall(ApiTraceCall *call) const;
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;

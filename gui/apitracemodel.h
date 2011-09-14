@@ -27,7 +27,6 @@ public:
     const ApiTrace *apiTrace() const;
     void stateSetOnEvent(ApiTraceEvent *event);
 
-    QModelIndex callIndex(int callNum) const;
     QModelIndex indexForCall(ApiTraceCall *call) const;
 
 public:

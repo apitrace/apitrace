@@ -269,12 +269,6 @@ void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
     }
 }
 
-QModelIndex ApiTraceModel::callIndex(int callNum) const
-{
-    ApiTraceCall *call = m_trace->callWithIndex(callNum);
-    return indexForCall(call);
-}
-
 QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
 {
     if (!call) {
