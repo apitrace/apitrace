@@ -943,23 +943,23 @@ QStaticText ApiTraceFrame::staticText() const
     if (m_staticText && !m_staticText->text().isEmpty())
         return *m_staticText;
 
-    QString richText;
+    QString richText = QObject::tr(
+                "<span style=\"font-weight:bold\">Frame %1</span>"
+                "&nbsp;&nbsp;&nbsp;"
+                "<span style=\"font-style:italic;font-size:small;font-weight:lighter;\"> "
+                "(%2 calls)</span>")
+            .arg(number)
+            .arg(m_loaded ? m_calls.count() : m_callsToLoad);
 
     //mark the frame if it uploads more than a meg a frame
     if (m_binaryDataSize > (1024*1024)) {
         richText =
             QObject::tr(
-                "<span style=\"font-weight:bold;\">"
-                "Frame&nbsp;%1</span>"
+                "%1"
                 "<span style=\"font-style:italic;\">"
                 "&nbsp;&nbsp;&nbsp;&nbsp;(%2MB)</span>")
-            .arg(number)
+            .arg(richText)
             .arg(double(m_binaryDataSize / (1024.*1024.)), 0, 'g', 2);
-    } else {
-        richText =
-            QObject::tr(
-                "<span style=\"font-weight:bold\">Frame %1</span>")
-            .arg(number);
     }
 
     if (!m_staticText)
@@ -1040,6 +1040,8 @@ void ApiTraceFrame::setCalls(const QVector<ApiTraceCall*> &calls,
     m_calls = calls;
     m_binaryDataSize = binaryDataSize;
     m_loaded = true;
+    delete m_staticText;
+    m_staticText = 0;
 }
 
 bool ApiTraceFrame::loaded() const
