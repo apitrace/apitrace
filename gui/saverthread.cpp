@@ -357,7 +357,7 @@ void SaverThread::run()
                 const QVariant &val = values[i];
                 overwriteValue(call, val, i);
             }
-
+            writer.writeCall(call);
         } else {
             writer.writeCall(call);
         }
