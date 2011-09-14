@@ -16,8 +16,9 @@ public:
     SaverThread(QObject *parent=0);
 
 public slots:
-    void saveFile(const QString &fileName,
-                  const QVector<ApiTraceCall*> &calls);
+    void saveFile(const QString &saveFileName,
+                  const QString &readFileName,
+                  const QSet<ApiTraceCall*> &editedCalls);
 
 signals:
     void traceSaved();
@@ -26,8 +27,9 @@ protected:
     virtual void run();
 
 private:
-    QString m_fileName;
-    QVector<ApiTraceCall*> m_calls;
+    QString m_readFileName;
+    QString m_writeFileName;
+    QSet<ApiTraceCall*> m_editedCalls;
 };
 
 

@@ -237,8 +237,9 @@ void ApiTrace::save()
     QDir dir;
     emit startedSaving();
     dir.mkpath(fi.absolutePath());
-    Q_ASSERT(!"saving not implemented");
-    m_saver->saveFile(m_tempFileName, QVector<ApiTraceCall*>());
+    m_saver->saveFile(m_tempFileName,
+                      m_fileName,
+                      m_editedCalls);
 }
 
 void ApiTrace::slotSaved()
