@@ -21,7 +21,7 @@ class QModelIndex;
 class QProgressBar;
 class QTreeWidgetItem;
 class QUrl;
-struct RetraceError;
+struct ApiTraceError;
 class Retracer;
 class SearchWidget;
 class ShadersSourceWidget;
@@ -71,7 +71,7 @@ private slots:
     void slotGoFrameStart();
     void slotGoFrameEnd();
     void slotTraceChanged(ApiTraceCall *call);
-    void slotRetraceErrors(const QList<RetraceError> &errors);
+    void slotRetraceErrors(const QList<ApiTraceError> &errors);
     void slotErrorSelected(QTreeWidgetItem *current);
     void slotSearchResult(ApiTrace::SearchResult result,
                           ApiTraceCall *call);

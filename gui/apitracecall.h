@@ -42,6 +42,14 @@ private:
     QVariant m_variant;
 };
 
+
+struct ApiTraceError
+{
+    int callIndex;
+    QString type;
+    QString message;
+};
+
 class ApiTraceEnumSignature
 {
 public:

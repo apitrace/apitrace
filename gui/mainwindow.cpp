@@ -707,8 +707,8 @@ void MainWindow::initConnections()
             this, SLOT(replayError(const QString&)));
     connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
             this, SLOT(replayStateFound(ApiTraceState*)));
-    connect(m_retracer, SIGNAL(retraceErrors(const QList<RetraceError>&)),
-            this, SLOT(slotRetraceErrors(const QList<RetraceError>&)));
+    connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
+            this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
 
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
@@ -977,20 +977,17 @@ void MainWindow::slotTraceChanged(ApiTraceCall *call)
     }
 }
 
-void MainWindow::slotRetraceErrors(const QList<RetraceError> &errors)
+void MainWindow::slotRetraceErrors(const QList<ApiTraceError> &errors)
 {
     m_ui.errorsTreeWidget->clear();
 
-    foreach(RetraceError error, errors) {
-        ApiTraceCall *call = m_trace->callWithIndex(error.callIndex);
-        if (!call)
-            continue;
-        call->setError(error.message);
+    foreach(ApiTraceError error, errors) {
+        m_trace->setCallError(error);
 
         QTreeWidgetItem *item =
             new QTreeWidgetItem(m_ui.errorsTreeWidget);
         item->setData(0, Qt::DisplayRole, error.callIndex);
-        item->setData(0, Qt::UserRole, QVariant::fromValue(call));
+        item->setData(0, Qt::UserRole, error.callIndex);
         QString type = error.type;
         type[0] = type[0].toUpper();
         item->setData(1, Qt::DisplayRole, type);
@@ -1001,15 +998,9 @@ void MainWindow::slotRetraceErrors(const QList<RetraceError> &errors)
 void MainWindow::slotErrorSelected(QTreeWidgetItem *current)
 {
     if (current) {
-        ApiTraceCall *call =
-            current->data(0, Qt::UserRole).value<ApiTraceCall*>();
-        Q_ASSERT(call);
-        QModelIndex index = m_proxyModel->indexForCall(call);
-        if (index.isValid()) {
-            m_ui.callView->setCurrentIndex(index);
-        } else {
-            statusBar()->showMessage(tr("Call has been filtered out."));
-        }
+        int callIndex =
+            current->data(0, Qt::UserRole).toInt();
+        m_trace->findCallIndex(callIndex);
     }
 }
 
@@ -1201,6 +1192,8 @@ void MainWindow::slotJumpToResult(ApiTraceCall *call)
     QModelIndex index = m_proxyModel->indexForCall(call);
     if (index.isValid()) {
         m_ui.callView->setCurrentIndex(index);
+    } else {
+        statusBar()->showMessage(tr("Call has been filtered out."));
     }
 }
 

@@ -252,18 +252,6 @@ bool ApiTrace::isSaving() const
     return m_saver->isRunning();
 }
 
-void ApiTrace::callError(ApiTraceCall *call)
-{
-    Q_ASSERT(call);
-
-    if (call->hasError())
-        m_errors.insert(call);
-    else
-        m_errors.remove(call);
-
-    emit changed(call);
-}
-
 bool ApiTrace::hasErrors() const
 {
     return !m_errors.isEmpty();
@@ -291,6 +279,31 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
     emit beginLoadingFrame(frame, calls.size());
     frame->setCalls(calls, binaryDataSize);
     emit endLoadingFrame(frame);
+
+    if (!m_queuedErrors.isEmpty()) {
+        QList< QPair<ApiTraceFrame*, ApiTraceError> >::iterator itr;
+        for (itr = m_queuedErrors.begin(); itr != m_queuedErrors.end();
+             ++itr) {
+            const ApiTraceError &error = (*itr).second;
+            if ((*itr).first == frame) {
+                ApiTraceCall *call = frame->callWithIndex(error.callIndex);
+
+                if (!call) {
+                    continue;
+                }
+
+                call->setError(error.message);
+                m_queuedErrors.erase(itr);
+
+                if (call->hasError()) {
+                    m_errors.insert(call);
+                } else {
+                    m_errors.remove(call);
+                }
+                emit changed(call);
+            }
+        }
+    }
 }
 
 void ApiTrace::findNext(ApiTraceFrame *frame,
@@ -431,6 +444,31 @@ int ApiTrace::callInFrame(int callIdx) const
     }
 
     return -1;
+}
+
+void ApiTrace::setCallError(const ApiTraceError &error)
+{
+    int frameIdx = callInFrame(error.callIndex);
+    ApiTraceFrame *frame = 0;
+
+    if (frameIdx < 0) {
+        return;
+    }
+    frame = m_frames[frameIdx];
+
+    if (frame->loaded()) {
+        ApiTraceCall *call = frame->callWithIndex(error.callIndex);
+        call->setError(error.message);
+        if (call->hasError()) {
+            m_errors.insert(call);
+        } else {
+            m_errors.remove(call);
+        }
+        emit changed(call);
+    } else {
+        emit requestFrame(frame);
+        m_queuedErrors.append(qMakePair(frame, error));
+    }
 }
 
 #include "apitrace.moc"

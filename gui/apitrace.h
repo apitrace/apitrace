@@ -73,6 +73,7 @@ public slots:
     void findFrameStart(ApiTraceFrame *frame);
     void findFrameEnd(ApiTraceFrame *frame);
     void findCallIndex(int index);
+    void setCallError(const ApiTraceError &error);
 
 
 signals:
@@ -138,6 +139,7 @@ private:
     bool m_needsSaving;
 
     QSet<ApiTraceCall*> m_errors;
+    QList< QPair<ApiTraceFrame*, ApiTraceError> > m_queuedErrors;
 };
 
 #endif

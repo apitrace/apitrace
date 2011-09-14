@@ -657,11 +657,8 @@ QString ApiTraceCall::error() const
 void ApiTraceCall::setError(const QString &msg)
 {
     if (m_error != msg) {
-        ApiTrace *trace = parentTrace();
         m_error = msg;
         m_richText = QString();
-        if (trace)
-            trace->callError(this);
     }
 }
 
