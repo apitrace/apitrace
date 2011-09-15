@@ -144,6 +144,7 @@ void TraceLoader::scanTrace()
             currentFrame = new ApiTraceFrame();
             currentFrame->number = numOfFrames;
             currentFrame->setNumChildren(numOfCalls);
+            currentFrame->setLastCallIndex(call->no);
             frames.append(currentFrame);
 
             m_createdFrames.append(currentFrame);

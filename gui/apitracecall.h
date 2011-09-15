@@ -331,12 +331,16 @@ public:
 
     bool loaded() const;
     void setLoaded(bool l);
+
+    void setLastCallIndex(unsigned index);
+    unsigned lastCallIndex() const;
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;
     QVector<ApiTraceCall*> m_calls;
     bool m_loaded;
     unsigned m_callsToLoad;
+    unsigned m_lastCallIndex;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

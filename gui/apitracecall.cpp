@@ -929,7 +929,8 @@ ApiTraceFrame::ApiTraceFrame(ApiTrace *parentTrace)
       m_parentTrace(parentTrace),
       m_binaryDataSize(0),
       m_loaded(false),
-      m_callsToLoad(0)
+      m_callsToLoad(0),
+      m_lastCallIndex(0)
 {
 }
 
@@ -1111,4 +1112,18 @@ ApiTraceFrame::findPrevCall(ApiTraceCall *from,
         }
     }
     return 0;
+}
+
+void ApiTraceFrame::setLastCallIndex(unsigned index)
+{
+    m_lastCallIndex = index;
+}
+
+unsigned ApiTraceFrame::lastCallIndex() const
+{
+    if (m_loaded && !m_calls.isEmpty()) {
+        return m_calls.last()->index();
+    } else {
+        return m_lastCallIndex;
+    }
 }

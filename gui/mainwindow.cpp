@@ -268,7 +268,7 @@ void MainWindow::replayTrace(bool dumpState)
                 qDebug()<<"tried to get a state for an empty frame";
                 return;
             }
-            index = frame->calls().first()->index();
+            index = frame->lastCallIndex();
         } else {
             qDebug()<<"Unknown event type";
             return;
@@ -873,11 +873,16 @@ void MainWindow::fillState(bool nonDefaults)
             m_ui.nonDefaultsCB->blockSignals(false);
             ApiTraceFrame *firstFrame =
                 m_trace->frameAt(0);
-            ApiTraceEvent *oldSelected = m_selectedEvent;
             if (!firstFrame)
                 return;
+            if (!firstFrame->loaded()) {
+                m_trace->loadFrame(firstFrame);
+                return;
+            }
+            ApiTraceCall *firstCall = firstFrame->calls().first();
+            ApiTraceEvent *oldSelected = m_selectedEvent;
             m_nonDefaultsLookupEvent = m_selectedEvent;
-            m_selectedEvent = firstFrame;
+            m_selectedEvent = firstCall;
             lookupState();
             m_selectedEvent = oldSelected;
         }
