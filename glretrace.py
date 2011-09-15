@@ -99,6 +99,11 @@ class GlRetracer(Retracer):
         "glMultiModeDrawElementsIBM",
     ])
 
+    draw_indirect_function_names = set([
+        "glDrawArraysIndirect",
+        "glDrawElementsIndirect",
+    ])
+
     misc_draw_function_names = set([
         "glClear",
         "glEnd",
@@ -308,7 +313,8 @@ class GlRetracer(Retracer):
             print '    %s = static_cast<%s>(%s.toPointer(true));' % (lvalue, arg_type, rvalue)
             return
 
-        if function.name in self.draw_elements_function_names and arg.name == 'indices':
+        if function.name in self.draw_elements_function_names and arg.name == 'indices' or\
+           function.name in self.draw_indirect_function_names and arg.name == 'indirect':
             self.extract_opaque_arg(function, arg, arg_type, lvalue, rvalue)
             return
 
