@@ -33,7 +33,7 @@ from gltypes import *
 
 
 # Shorthands for the types
-X = None # To be determined
+X = None # To be determined, merely an enum
 B = GLboolean
 I = GLint
 I64 = GLint64
@@ -44,6 +44,8 @@ P = OpaquePointer(Void)
 S = CString
 H = GLhandleARB
 
+# A underscore prefix (e.g., _glGet) is used to skip automatic code generation
+# for parameters that are obtained through other ways.
 
 parameters = [
     # (functions, type, count, name) # value
