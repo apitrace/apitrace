@@ -169,6 +169,7 @@ public:
     const QList<ApiTexture> & textures() const;
     const QList<ApiFramebuffer> & framebuffers() const;
 
+    ApiFramebuffer colorBuffer() const;
 private:
     QVariantMap m_parameters;
     QMap<QString, QString> m_shaderSources;

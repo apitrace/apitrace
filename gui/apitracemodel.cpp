@@ -4,6 +4,7 @@
 #include "traceloader.h"
 #include "trace_parser.hpp"
 
+#include <QBuffer>
 #include <QDebug>
 #include <QImage>
 #include <QVariant>
@@ -52,22 +53,53 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
                     .arg(call->name())
                     .arg(stateText);
         } else {
+            const char *htmlTempl =
+                    "<div>\n"
+                    "<div>\n"
+                    "%1"
+                    "<span style=\"font-weight:bold; font-size:large; vertical-align:center; padding-bottom: 30px \">\n"
+                    "Frame %2</span>\n"
+                    "</div>\n"
+                    "<div >%3 calls%4</div>\n"
+                    "</div>\n";
+
+
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(itm);
-            QString text = QObject::tr("%1)&nbsp;Frame&nbsp;")
-                           .arg(frame->number);
-            int binaryDataSize = frame->binaryDataSize() / 1024;
-            if (!frame->hasState())
-                return QObject::tr(
-                    "<b>%1&nbsp;</b>(binary&nbsp;data&nbsp;size&nbsp;=&nbsp;%2kB)")
-                    .arg(text)
-                    .arg(binaryDataSize);
-            else
-                return QObject::tr(
-                    "<b>%1&nbsp;(binary&nbsp;data&nbsp;size&nbsp;=&nbsp;%2kB)</b>"
-                    "<br/>%3")
-                    .arg(text)
-                    .arg(binaryDataSize)
-                    .arg(stateText);
+            QString thumbStr, sizeStr;
+
+            if (frame->hasState()) {
+                static const char *imgTempl =
+                        "<img style=\"float:left;\" "
+                        "src=\"data:image/png;base64,%1\"/>\n";
+                static const char *sizeTempl =
+                        ", %1kb";
+
+                ApiFramebuffer fbo = frame->state()->colorBuffer();
+                QImage thumb = fbo.thumb();
+                if (!thumb.isNull()) {
+                    QByteArray ba;
+                    QBuffer buffer(&ba);
+                    buffer.open(QIODevice::WriteOnly);
+                    thumb.save(&buffer, "PNG");
+                    thumbStr = tr(imgTempl).arg(
+                                QString(buffer.data().toBase64()));
+                }
+
+                int binaryDataSize = frame->binaryDataSize() / 1024;
+                if (binaryDataSize > 0) {
+                    sizeStr = tr(sizeTempl).arg(binaryDataSize);
+                }
+            }
+
+            int numCalls = frame->loaded()
+                    ? frame->numChildren()
+                    : frame->numChildrenToLoad();
+
+            return tr(htmlTempl)
+                    .arg(thumbStr)
+                    .arg(frame->number)
+                    .arg(numCalls)
+                    .arg(sizeStr);
         }
     }
     case ApiTraceModel::EventRole:

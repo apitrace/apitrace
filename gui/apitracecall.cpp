@@ -537,6 +537,22 @@ const QList<ApiFramebuffer> & ApiTraceState::framebuffers() const
     return m_framebuffers;
 }
 
+ApiFramebuffer ApiTraceState::colorBuffer() const
+{
+    foreach (ApiFramebuffer fbo, m_framebuffers) {
+        if (fbo.type() == QLatin1String("GL_BACK")) {
+            return fbo;
+        }
+    }
+    foreach (ApiFramebuffer fbo, m_framebuffers) {
+        if (fbo.type() == QLatin1String("GL_FRONT")) {
+            return fbo;
+        }
+    }
+    return ApiFramebuffer();
+}
+
+
 ApiTraceCallSignature::ApiTraceCallSignature(const QString &name,
                                              const QStringList &argNames)
     : m_name(name),
