@@ -425,7 +425,13 @@ endif ()
 ##############################################################################
 # Packaging
 
-install (FILES LICENSE README.markdown TODO.markdown DESTINATION doc)
+install (
+    FILES
+        BUGS.markdown
+        LICENSE
+        README.markdown
+        TODO.markdown
+    DESTINATION doc)
 
 set (CPACK_PACKAGE_VERSION_MAJOR "1")
 set (CPACK_PACKAGE_VERSION_MINOR "0")

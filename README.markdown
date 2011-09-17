@@ -217,7 +217,7 @@ Side by side retracing
 ----------------------
 
 In order to determine which draw call a regression first manifests one could
-generate snapshots for every draw call, using the -S option.  That is, however,
+generate snapshots for every draw call, using the `-S` option.  That is, however,
 very inefficient for big traces with many draw calls.
 
 A faster approach is to run both the bad and a good GL driver side-by-side.
