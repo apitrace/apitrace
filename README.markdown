@@ -165,13 +165,13 @@ You can make a video of the output by doing
 Advanced usage for OpenGL implementors
 ======================================
 
-There are several avanced usage examples meant for OpenGL implementors.
+There are several advanced usage examples meant for OpenGL implementors.
 
 
 Regression testing
 ------------------
 
-These are the steps to create a regression testsuite around apitrace:
+These are the steps to create a regression test-suite around apitrace:
 
 * obtain a trace
 
@@ -242,7 +242,7 @@ failures.
 
 The `--gl-renderer` option will also cause a commit to be skipped if the
 `GL_RENDERER` is unexpected (e.g., when a software renderer or another GL
-driver is unintentianlly loaded due to missing symbol in the DRI driver, or
+driver is unintentionally loaded due to missing symbol in the DRI driver, or
 another runtime fault).
 
 
@@ -254,7 +254,7 @@ generate snapshots for every draw call, using the `-S` option.  That is, however
 very inefficient for big traces with many draw calls.
 
 A faster approach is to run both the bad and a good GL driver side-by-side.
-The latter can be either a preivously known good build of the GL driver, or a
+The latter can be either a previously known good build of the GL driver, or a
 reference software renderer.
 
 This can be achieved with retracediff.py script, which invokes glretrace with
