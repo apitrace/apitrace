@@ -21,9 +21,9 @@ public:
         FrameMarker_Clear
     };
     enum SearchResult {
-        SearchNotFound,
-        SearchFound,
-        SearchWrapped
+        SearchResult_NotFound,
+        SearchResult_Found,
+        SearchResult_Wrapped
     };
 
     static bool isCallAFrameMarker(const ApiTraceCall *call,

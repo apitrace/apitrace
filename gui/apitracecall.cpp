@@ -1061,7 +1061,7 @@ void ApiTraceFrame::setCalls(const QVector<ApiTraceCall*> &calls,
     m_staticText = 0;
 }
 
-bool ApiTraceFrame::loaded() const
+bool ApiTraceFrame::isLoaded() const
 {
     return m_loaded;
 }

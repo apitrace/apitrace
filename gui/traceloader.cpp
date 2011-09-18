@@ -291,7 +291,7 @@ void TraceLoader::searchNext(int startFrame,
                         fetchFrameContents(frame);
                 for (int i = 0; i < calls.count(); ++i) {
                     if (calls[i]->index() == call->no) {
-                        emit searchResult(ApiTrace::SearchFound, calls[i]);
+                        emit searchResult(ApiTrace::SearchResult_Found, calls[i]);
                         break;
                     }
                 }
@@ -302,7 +302,7 @@ void TraceLoader::searchNext(int startFrame,
             delete call;
         }
     }
-    emit searchResult(ApiTrace::SearchNotFound, 0);
+    emit searchResult(ApiTrace::SearchResult_NotFound, 0);
 }
 
 void TraceLoader::searchPrev(int startFrame,
@@ -346,7 +346,7 @@ void TraceLoader::searchPrev(int startFrame,
             }
         }
     }
-    emit searchResult(ApiTrace::SearchNotFound, 0);
+    emit searchResult(ApiTrace::SearchResult_NotFound, 0);
 }
 
 bool TraceLoader::searchCallsBackwards(const QList<Trace::Call*> &calls,
@@ -362,7 +362,7 @@ bool TraceLoader::searchCallsBackwards(const QList<Trace::Call*> &calls,
                     fetchFrameContents(frame);
             for (int i = 0; i < apiCalls.count(); ++i) {
                 if (apiCalls[i]->index() == call->no) {
-                    emit searchResult(ApiTrace::SearchFound, apiCalls[i]);
+                    emit searchResult(ApiTrace::SearchResult_Found, apiCalls[i]);
                     break;
                 }
             }

@@ -152,7 +152,6 @@ void ApiTrace::setFileName(const QString &name)
         m_needsSaving = false;
         emit invalidated();
 
-//        m_loader->loadTrace(m_fileName);
         emit loadTrace(m_fileName);
     }
 }
@@ -190,7 +189,7 @@ ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 ApiTraceState ApiTrace::defaultState() const
 {
     ApiTraceFrame *frame = frameAt(0);
-    if (!frame || !frame->loaded() || frame->isEmpty())
+    if (!frame || !frame->isLoaded() || frame->isEmpty())
         return ApiTraceState();
 
     ApiTraceCall *firstCall = frame->calls().first();
@@ -264,14 +263,14 @@ bool ApiTrace::hasErrors() const
 
 void ApiTrace::loadFrame(ApiTraceFrame *frame)
 {
-    Q_ASSERT(!frame->loaded());
+    Q_ASSERT(!frame->isLoaded());
     emit requestFrame(frame);
 }
 
 void ApiTrace::finishedParsing()
 {
     ApiTraceFrame *firstFrame = m_frames[0];
-    if (firstFrame && !firstFrame->loaded()) {
+    if (firstFrame && !firstFrame->isLoaded()) {
         loadFrame(firstFrame);
     }
 }
@@ -319,10 +318,10 @@ void ApiTrace::findNext(ApiTraceFrame *frame,
     ApiTraceCall *foundCall = 0;
     int frameIdx = m_frames.indexOf(frame);
 
-    if (frame->loaded()) {
+    if (frame->isLoaded()) {
         foundCall = frame->findNextCall(from, str, sensitivity);
         if (foundCall) {
-            emit findResult(SearchFound, foundCall);
+            emit findResult(SearchResult_Found, foundCall);
             return;
         }
 
@@ -333,18 +332,18 @@ void ApiTrace::findNext(ApiTraceFrame *frame,
 
     for (int i = frameIdx; i < m_frames.count(); ++i) {
         ApiTraceFrame *frame = m_frames[i];
-        if (!frame->loaded()) {
+        if (!frame->isLoaded()) {
             emit loaderSearchNext(i, str, sensitivity);
             return;
         } else {
             ApiTraceCall *call = frame->findNextCall(0, str, sensitivity);
             if (call) {
-                emit findResult(SearchFound, call);
+                emit findResult(SearchResult_Found, call);
                 return;
             }
         }
     }
-    emit findResult(SearchWrapped, 0);
+    emit findResult(SearchResult_Wrapped, 0);
 }
 
 void ApiTrace::findPrev(ApiTraceFrame *frame,
@@ -355,10 +354,10 @@ void ApiTrace::findPrev(ApiTraceFrame *frame,
     ApiTraceCall *foundCall = 0;
     int frameIdx = m_frames.indexOf(frame);
 
-    if (frame->loaded()) {
+    if (frame->isLoaded()) {
         foundCall = frame->findPrevCall(from, str, sensitivity);
         if (foundCall) {
-            emit findResult(SearchFound, foundCall);
+            emit findResult(SearchResult_Found, foundCall);
             return;
         }
 
@@ -369,18 +368,18 @@ void ApiTrace::findPrev(ApiTraceFrame *frame,
 
     for (int i = frameIdx; i >= 0; --i) {
         ApiTraceFrame *frame = m_frames[i];
-        if (!frame->loaded()) {
+        if (!frame->isLoaded()) {
             emit loaderSearchPrev(i, str, sensitivity);
             return;
         } else {
             ApiTraceCall *call = frame->findPrevCall(0, str, sensitivity);
             if (call) {
-                emit findResult(SearchFound, call);
+                emit findResult(SearchResult_Found, call);
                 return;
             }
         }
     }
-    emit findResult(SearchWrapped, 0);
+    emit findResult(SearchResult_Wrapped, 0);
 }
 
 void ApiTrace::loaderSearchResult(ApiTrace::SearchResult result,
@@ -393,7 +392,7 @@ void ApiTrace::loaderSearchResult(ApiTrace::SearchResult result,
 
 void ApiTrace::findFrameStart(ApiTraceFrame *frame)
 {
-    if (frame->loaded()) {
+    if (frame->isLoaded()) {
         emit foundFrameStart(frame);
     } else {
         emit loaderFindFrameStart(frame);
@@ -402,7 +401,7 @@ void ApiTrace::findFrameStart(ApiTraceFrame *frame)
 
 void ApiTrace::findFrameEnd(ApiTraceFrame *frame)
 {
-    if (frame->loaded()) {
+    if (frame->isLoaded()) {
         emit foundFrameEnd(frame);
     } else {
         emit loaderFindFrameEnd(frame);
@@ -422,7 +421,7 @@ void ApiTrace::findCallIndex(int index)
     frame = m_frames[frameIdx];
 
     if (frame) {
-        if (frame->loaded()) {
+        if (frame->isLoaded()) {
             ApiTraceCall *call = frame->callWithIndex(index);
             emit foundCallIndex(call);
         } else {
@@ -437,7 +436,7 @@ int ApiTrace::callInFrame(int callIdx) const
 
     for (int frameIdx = 0; frameIdx <= m_frames.size(); ++frameIdx) {
         const ApiTraceFrame *frame = m_frames[frameIdx];
-        unsigned numCallsInFrame =  frame->loaded()
+        unsigned numCallsInFrame =  frame->isLoaded()
                 ? frame->numChildren()
                 : frame->numChildrenToLoad();
         unsigned firstCall = numCalls;
@@ -461,7 +460,7 @@ void ApiTrace::setCallError(const ApiTraceError &error)
     }
     frame = m_frames[frameIdx];
 
-    if (frame->loaded()) {
+    if (frame->isLoaded()) {
         ApiTraceCall *call = frame->callWithIndex(error.callIndex);
         call->setError(error.message);
         if (call->hasError()) {

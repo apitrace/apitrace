@@ -91,7 +91,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
                 }
             }
 
-            int numCalls = frame->loaded()
+            int numCalls = frame->isLoaded()
                     ? frame->numChildren()
                     : frame->numChildrenToLoad();
 
@@ -350,7 +350,7 @@ bool ApiTraceModel::canFetchMore(const QModelIndex &parent) const
         ApiTraceEvent *event = item(parent);
         if (event && event->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-            return !frame->loaded() && !m_loadingFrames.contains(frame);
+            return !frame->isLoaded() && !m_loadingFrames.contains(frame);
         } else
             return false;
     } else {
@@ -366,7 +366,7 @@ void ApiTraceModel::fetchMore(const QModelIndex &parent)
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
             QModelIndex index = createIndex(frame->number, 0, frame);
 
-            Q_ASSERT(!frame->loaded());
+            Q_ASSERT(!frame->isLoaded());
             m_loadingFrames.insert(frame);
 
             m_trace->loadFrame(frame);

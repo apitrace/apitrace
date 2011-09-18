@@ -875,7 +875,7 @@ void MainWindow::fillState(bool nonDefaults)
                 m_trace->frameAt(0);
             if (!firstFrame)
                 return;
-            if (!firstFrame->loaded()) {
+            if (!firstFrame->isLoaded()) {
                 m_trace->loadFrame(firstFrame);
                 return;
             }
@@ -1080,16 +1080,16 @@ void MainWindow::slotSearchResult(ApiTrace::SearchResult result,
                                   ApiTraceCall *call)
 {
     switch (result) {
-    case ApiTrace::SearchNotFound:
+    case ApiTrace::SearchResult_NotFound:
         m_searchWidget->setFound(false);
         break;
-    case ApiTrace::SearchFound: {
+    case ApiTrace::SearchResult_Found: {
         QModelIndex index = m_proxyModel->indexForCall(call);
         m_ui.callView->setCurrentIndex(index);
         m_searchWidget->setFound(true);
     }
         break;
-    case ApiTrace::SearchWrapped:
+    case ApiTrace::SearchResult_Wrapped:
         m_searchWidget->setFound(false);
         break;
     }
@@ -1151,7 +1151,7 @@ ApiTraceCall * MainWindow::currentCall() const
 
 void MainWindow::slotFoundFrameStart(ApiTraceFrame *frame)
 {
-    Q_ASSERT(frame->loaded());
+    Q_ASSERT(frame->isLoaded());
     if (!frame || frame->isEmpty()) {
         return;
     }
@@ -1173,7 +1173,7 @@ void MainWindow::slotFoundFrameStart(ApiTraceFrame *frame)
 
 void MainWindow::slotFoundFrameEnd(ApiTraceFrame *frame)
 {
-    Q_ASSERT(frame->loaded());
+    Q_ASSERT(frame->isLoaded());
     if (!frame || frame->isEmpty()) {
         return;
     }

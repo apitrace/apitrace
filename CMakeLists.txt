@@ -205,9 +205,6 @@ link_libraries (common)
 add_executable (tracedump tracedump.cpp)
 install (TARGETS tracedump RUNTIME DESTINATION bin) 
 
-add_executable (loadertest loadertest.cpp)
-install (TARGETS loadertest RUNTIME DESTINATION bin)
-
 ##############################################################################
 # API tracers
 

@@ -330,7 +330,7 @@ public:
 
     int binaryDataSize() const;
 
-    bool loaded() const;
+    bool isLoaded() const;
     void setLoaded(bool l);
 
     void setLastCallIndex(unsigned index);
