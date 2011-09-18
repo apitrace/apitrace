@@ -429,6 +429,7 @@ install (
     FILES
         BUGS.markdown
         LICENSE
+        NEWS.markdown
         README.markdown
         TODO.markdown
     DESTINATION doc)
