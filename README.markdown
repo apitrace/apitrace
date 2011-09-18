@@ -97,6 +97,39 @@ Advanced command line usage
 ===========================
 
 
+Emitting annotations to the trace from GL applications
+------------------------------------------------------
+
+You can emit string and frame annotations through the
+[`GL_GREMEDY_string_marker`](http://www.opengl.org/registry/specs/GREMEDY/string_marker.txt)
+and
+[`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
+GL extensions.
+
+*apitrace* will advertise and intercept these GL extensions independently of
+the GL implementation.  So all you have to do is to use these extensions when
+available.
+
+For example, if you use [GLEW](http://glew.sourceforge.net/) to dynamically
+detect and use GL extensions, you could easily accomplish this by doing:
+
+    void foo() {
+    
+      if (GLEW_GREMEDY_string_marker) {
+        glStringMarkerGREMEDY(0, __FUNCTION__ ": enter");
+      }
+      
+      ...
+      
+      if (GLEW_GREMEDY_string_marker) {
+        glStringMarkerGREMEDY(0, __FUNCTION__ ": leave");
+      }
+      
+    }
+
+This has the added advantage of working equally well with gDEBugger.
+
+
 Dump GL state at a particular call
 ----------------------------------
 
