@@ -103,6 +103,37 @@ checkGlError(Trace::Call &call) {
     std::cerr << "\n";
 }
 
+/**
+ * Grow the current drawble.
+ *
+ * We need to infer the drawable size from GL calls because the drawable sizes
+ * are specified by OS specific calls which we do not trace.
+ */
+void
+updateDrawable(int width, int height) {
+    if (!drawable) {
+        return;
+    }
+
+    if (width  <= glretrace::drawable->width &&
+        height <= glretrace::drawable->height) {
+        return;
+    }
+
+    // Check for bound framebuffer last, as this may have a performance impact.
+    GLint draw_framebuffer = 0;
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_framebuffer);
+    if (draw_framebuffer != 0) {
+        return;
+    }
+
+    glretrace::drawable->resize(width, height);
+    if (!drawable->visible) {
+        drawable->show();
+    }
+    glScissor(0, 0, width, height);
+}
+
 
 void snapshot(unsigned call_no) {
     if (!drawable ||

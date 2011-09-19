@@ -207,23 +207,13 @@ class GlRetracer(Retracer):
 
 
     def call_function(self, function):
+        # Infer the drawable size from GL calls
         if function.name == "glViewport":
-            print '    GLint draw_framebuffer = 0;'
-            print '    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_framebuffer);'
-            print '    if (draw_framebuffer == 0) {'
-            print '        if (glretrace::drawable) {'
-            print '            int drawable_width  = x + width;'
-            print '            int drawable_height = y + height;'
-            print '            if (drawable_width  > (int)glretrace::drawable->width ||'
-            print '                drawable_height > (int)glretrace::drawable->height) {'
-            print '                glretrace::drawable->resize(drawable_width, drawable_height);'
-            print '                if (!glretrace::drawable->visible) {'
-            print '                    glretrace::drawable->show();'
-            print '                }'
-            print '                glScissor(0, 0, drawable_width, drawable_height);'
-            print '            }'
-            print '        }'
-            print '    }'
+            print '    glretrace::updateDrawable(x + width, y + height);'
+        if function.name in ('glBlitFramebuffer', 'glBlitFramebufferEXT'):
+            # Some applications do all their rendering in a framebuffer, and
+            # then just blit to the drawable without ever calling glViewport.
+            print '    glretrace::updateDrawable(std::max(dstX0, dstX1), std::max(dstY0, dstY1));'
 
         if function.name == "glEnd":
             print '    glretrace::insideGlBeginEnd = false;'
