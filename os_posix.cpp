@@ -145,6 +145,12 @@ static void (*gCallback)(void) = NULL;
 
 struct sigaction old_actions[NUM_SIGNALS];
 
+
+/*
+ * See also:
+ * - http://sourceware.org/git/?p=glibc.git;a=blob;f=debug/segfault.c
+ * - http://ggi.cvs.sourceforge.net/viewvc/ggi/ggi-core/libgg/gg/cleanup.c?view=markup
+ */
 static void signal_handler(int sig, siginfo_t *info, void *context)
 {
     static int recursion_count = 0;
