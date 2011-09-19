@@ -433,6 +433,10 @@ glxapi.add_functions([
     # GLX_NV_copy_image
     Function(Void, "glXCopyImageSubDataNV", [(Display, "dpy"), (GLXContext, "srcCtx"), (GLuint, "srcName"), (GLenum, "srcTarget"), (GLint, "srcLevel"), (GLint, "srcX"), (GLint, "srcY"), (GLint, "srcZ"), (GLXContext, "dstCtx"), (GLuint, "dstName"), (GLenum, "dstTarget"), (GLint, "dstLevel"), (GLint, "dstX"), (GLint, "dstY"), (GLint, "dstZ"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth")]),
 
+    # GLX_NV_vertex_array_range
+    Function(OpaquePointer(Void), "glXAllocateMemoryNV", [(GLsizei, "size"), (GLfloat, "readfreq"), (GLfloat, "writefreq"), (GLfloat, "priority")]),
+    Function(Void, "glXFreeMemoryNV", [(OpaquePointer(Void), "pointer")]),
+
     # Must be last
     Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
     Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", CString), "procName")]),
