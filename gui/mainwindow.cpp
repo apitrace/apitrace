@@ -47,8 +47,6 @@ MainWindow::MainWindow()
 
 void MainWindow::createTrace()
 {
-    TraceDialog dialog;
-
     if (!m_traceProcess->canTrace()) {
         QMessageBox::warning(
             this,
@@ -57,6 +55,7 @@ void MainWindow::createTrace()
         return;
     }
 
+    TraceDialog dialog;
     if (dialog.exec() == QDialog::Accepted) {
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
@@ -69,11 +68,11 @@ void MainWindow::createTrace()
 void MainWindow::openTrace()
 {
     QString fileName =
-        QFileDialog::getOpenFileName(
-            this,
-            tr("Open Trace"),
-            QDir::homePath(),
-            tr("Trace Files (*.trace)"));
+            QFileDialog::getOpenFileName(
+                this,
+                tr("Open Trace"),
+                QDir::homePath(),
+                tr("Trace Files (*.trace)"));
 
     if (!fileName.isEmpty() && QFile::exists(fileName)) {
         newTraceFile(fileName);
@@ -104,8 +103,8 @@ void MainWindow::callItemSelected(const QModelIndex &index)
             QByteArray data =
                 call->arguments()[call->binaryDataIndex()].toByteArray();
             m_vdataInterpreter->setData(data);
-            QVector<QVariant> args = call->arguments();
 
+            QVector<QVariant> args = call->arguments();
             for (int i = 0; i < call->argNames().count(); ++i) {
                 QString name = call->argNames()[i];
                 if (name == QLatin1String("stride")) {
@@ -117,8 +116,9 @@ void MainWindow::callItemSelected(const QModelIndex &index)
                 } else if (name == QLatin1String("type")) {
                     QString val = args[i].toString();
                     int textIndex = m_ui.vertexTypeCB->findText(val);
-                    if (textIndex >= 0)
+                    if (textIndex >= 0) {
                         m_ui.vertexTypeCB->setCurrentIndex(textIndex);
+                    }
                 }
             }
         }
@@ -127,15 +127,17 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     } else {
         if (event && event->type() == ApiTraceEvent::Frame) {
             m_selectedEvent = static_cast<ApiTraceFrame*>(event);
-        } else
+        } else {
             m_selectedEvent = 0;
+        }
         m_ui.detailsDock->hide();
         m_ui.vertexDataDock->hide();
     }
     if (m_selectedEvent && m_selectedEvent->hasState()) {
         fillStateForFrame();
-    } else
+    } else {
         m_ui.stateDock->hide();
+    }
 }
 
 void MainWindow::replayStart()
@@ -207,8 +209,9 @@ void MainWindow::replayFinished(const QString &output)
     m_stateEvent = 0;
     m_ui.actionShowErrorsDock->setEnabled(m_trace->hasErrors());
     m_ui.errorsDock->setVisible(m_trace->hasErrors());
-    if (!m_trace->hasErrors())
+    if (!m_trace->hasErrors()) {
         m_ui.errorsTreeWidget->clear();
+    }
 
     statusBar()->showMessage(
         tr("Replaying finished!"), 2000);
@@ -251,8 +254,9 @@ void MainWindow::finishedLoadingTrace()
 
 void MainWindow::replayTrace(bool dumpState)
 {
-    if (m_trace->fileName().isEmpty())
+    if (m_trace->fileName().isEmpty()) {
         return;
+    }
 
     m_retracer->setFileName(m_trace->fileName());
     m_retracer->setCaptureState(dumpState);
@@ -279,12 +283,13 @@ void MainWindow::replayTrace(bool dumpState)
 
     m_ui.actionStop->setEnabled(true);
     m_progressBar->show();
-    if (dumpState)
+    if (dumpState) {
         statusBar()->showMessage(
             tr("Looking up the state..."));
-    else
+    } else {
         statusBar()->showMessage(
             tr("Replaying the trace file..."));
+    }
 }
 
 void MainWindow::lookupState()
@@ -339,10 +344,12 @@ variantToString(const QVariant &var, QString &str)
 }
 
 static QTreeWidgetItem *
-variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVar);
+variantToItem(const QString &key, const QVariant &var,
+              const QVariant &defaultVar);
 
 static void
-variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap, QList<QTreeWidgetItem *> &items)
+variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap,
+                  QList<QTreeWidgetItem *> &items)
 {
     QVariantMap::const_iterator itr;
     for (itr = map.constBegin(); itr != map.constEnd(); ++itr) {
@@ -358,7 +365,8 @@ variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap, QList<Q
 }
 
 static void
-variantListToItems(const QVector<QVariant> &lst, const QVector<QVariant> &defaultLst,
+variantListToItems(const QVector<QVariant> &lst,
+                   const QVector<QVariant> &defaultLst,
                    QList<QTreeWidgetItem *> &items)
 {
     for (int i = 0; i < lst.count(); ++i) {
@@ -398,7 +406,8 @@ isVariantDeep(const QVariant &var)
 }
 
 static QTreeWidgetItem *
-variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVar)
+variantToItem(const QString &key, const QVariant &var,
+              const QVariant &defaultVar)
 {
     if (var == defaultVar) {
         return NULL;
@@ -442,13 +451,12 @@ static void addSurfaceItem(const ApiSurface &surface,
                            QTreeWidgetItem *parent,
                            QTreeWidget *tree)
 {
-    int width = surface.size().width();
-    int height = surface.size().height();
     QIcon icon(QPixmap::fromImage(surface.thumb()));
     QTreeWidgetItem *item = new QTreeWidgetItem(parent);
-
     item->setIcon(0, icon);
 
+    int width = surface.size().width();
+    int height = surface.size().height();
     QString descr =
         QString::fromLatin1("%1, %2 x %3")
         .arg(label)
@@ -465,8 +473,9 @@ static void addSurfaceItem(const ApiSurface &surface,
 
 void MainWindow::fillStateForFrame()
 {
-    if (!m_selectedEvent || !m_selectedEvent->hasState())
+    if (!m_selectedEvent || !m_selectedEvent->hasState()) {
         return;
+    }
 
     if (m_nonDefaultsLookupEvent) {
         m_ui.nonDefaultsCB->blockSignals(true);
@@ -513,8 +522,9 @@ void MainWindow::fillStateForFrame()
             QTreeWidgetItem *textureItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
             textureItem->setText(0, tr("Textures"));
-            if (textures.count() <= 6)
+            if (textures.count() <= 6) {
                 textureItem->setExpanded(true);
+            }
 
             for (int i = 0; i < textures.count(); ++i) {
                 const ApiTexture &texture =
@@ -528,8 +538,9 @@ void MainWindow::fillStateForFrame()
             QTreeWidgetItem *fboItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
             fboItem->setText(0, tr("Framebuffers"));
-            if (fbos.count() <= 6)
+            if (fbos.count() <= 6) {
                 fboItem->setExpanded(true);
+            }
 
             for (int i = 0; i < fbos.count(); ++i) {
                 const ApiFramebuffer &fbo =
@@ -561,8 +572,9 @@ void MainWindow::showSurfacesMenu(const QPoint &pos)
 {
     QTreeWidget *tree = m_ui.surfacesTreeWidget;
     QTreeWidgetItem *item = tree->itemAt(pos);
-    if (!item)
+    if (!item) {
         return;
+    }
 
     QMenu menu(tr("Surfaces"), this);
 
@@ -584,11 +596,10 @@ void MainWindow::showSelectedSurface()
     QTreeWidgetItem *item =
         m_ui.surfacesTreeWidget->currentItem();
 
-    if (!item)
+    if (!item) {
         return;
+    }
 
-    QVariant var = item->data(0, Qt::UserRole);
-    QImage img = var.value<QImage>();
     ImageViewer *viewer = new ImageViewer(this);
 
     QString title;
@@ -600,8 +611,13 @@ void MainWindow::showSelectedSurface()
         title = tr("QApiTrace - Surface Viewer");
     }
     viewer->setWindowTitle(title);
+
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
+
+    QVariant var = item->data(0, Qt::UserRole);
+    QImage img = var.value<QImage>();
     viewer->setImage(img);
+
     QRect screenRect = QApplication::desktop()->availableGeometry();
     viewer->resize(qMin(int(0.75 * screenRect.width()), img.width()) + 40,
                    qMin(int(0.75 * screenRect.height()), img.height()) + 40);
@@ -873,8 +889,9 @@ void MainWindow::fillState(bool nonDefaults)
             m_ui.nonDefaultsCB->blockSignals(false);
             ApiTraceFrame *firstFrame =
                 m_trace->frameAt(0);
-            if (!firstFrame)
+            if (!firstFrame) {
                 return;
+            }
             if (!firstFrame->isLoaded()) {
                 m_trace->loadFrame(firstFrame);
                 return;
@@ -892,18 +909,20 @@ void MainWindow::fillState(bool nonDefaults)
 
 void MainWindow::customContextMenuRequested(QPoint pos)
 {
-    QMenu menu;
     QModelIndex index = m_ui.callView->indexAt(pos);
 
     callItemSelected(index);
-    if (!index.isValid())
+    if (!index.isValid()) {
         return;
+    }
 
     ApiTraceEvent *event =
         index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
-    if (!event)
+    if (!event) {
         return;
+    }
 
+    QMenu menu;
     menu.addAction(QIcon(":/resources/media-record.png"),
                    tr("Lookup state"), this, SLOT(lookupState()));
     if (event->type() == ApiTraceEvent::Call) {
@@ -1023,8 +1042,9 @@ void MainWindow::saveSelectedSurface()
     QTreeWidgetItem *item =
         m_ui.surfacesTreeWidget->currentItem();
 
-    if (!item || !m_trace)
+    if (!item || !m_trace) {
         return;
+    }
 
     QVariant var = item->data(0, Qt::UserRole);
     QImage img = var.value<QImage>();

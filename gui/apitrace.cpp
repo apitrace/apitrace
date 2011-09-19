@@ -78,8 +78,9 @@ ApiTrace::~ApiTrace()
 bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
                                   ApiTrace::FrameMarker marker)
 {
-    if (!call)
+    if (!call) {
         return false;
+    }
 
     switch (marker) {
     case FrameMarker_SwapBuffers:
@@ -106,8 +107,9 @@ bool ApiTrace::isEmpty() const
 
 QString ApiTrace::fileName() const
 {
-    if (edited())
+    if (edited()) {
         return m_tempFileName;
+    }
 
     return m_fileName;
 }
@@ -135,10 +137,11 @@ int ApiTrace::numFrames() const
 int ApiTrace::numCallsInFrame(int idx) const
 {
     const ApiTraceFrame *frame = frameAt(idx);
-    if (frame)
+    if (frame) {
         return frame->numChildren();
-    else
+    } else {
         return 0;
+    }
 }
 
 void ApiTrace::setFileName(const QString &name)
@@ -158,7 +161,6 @@ void ApiTrace::setFileName(const QString &name)
 
 void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
 {
-    QVector<ApiTraceCall*> calls;
     int currentFrames = m_frames.count();
     int numNewFrames = frames.count();
 
@@ -166,11 +168,8 @@ void ApiTrace::addFrames(const QList<ApiTraceFrame*> &frames)
 
     m_frames += frames;
 
-    int numNewCalls = 0;
     foreach(ApiTraceFrame *frame, frames) {
         frame->setParentTrace(this);
-        numNewCalls += frame->numChildren();
-        calls += frame->calls();
     }
 
     emit endAddingFrames();
@@ -180,8 +179,9 @@ ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 {
     for (int i = 0; i < m_frames.count(); ++i) {
         ApiTraceCall *call = m_frames[i]->callWithIndex(idx);
-        if (call)
+        if (call) {
             return call;
+        }
     }
     return NULL;
 }
@@ -189,8 +189,9 @@ ApiTraceCall * ApiTrace::callWithIndex(int idx) const
 ApiTraceState ApiTrace::defaultState() const
 {
     ApiTraceFrame *frame = frameAt(0);
-    if (!frame || !frame->isLoaded() || frame->isEmpty())
+    if (!frame || !frame->isLoaded() || frame->isEmpty()) {
         return ApiTraceState();
+    }
 
     ApiTraceCall *firstCall = frame->calls().first();
     if (!firstCall->hasState()) {
