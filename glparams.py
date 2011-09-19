@@ -2185,9 +2185,9 @@ parameters = [
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER"),	# 0x8A44
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x8A45
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x8A46
-    #"glGet",	(X,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
-    #"glGet",	(X,	1,	"GL_DECODE_EXT"),	# 0x8A49
-    #"glGet",	(X,	1,	"GL_SKIP_DECODE_EXT"),	# 0x8A4A
+    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
+    ("",	X,	1,	"GL_DECODE_EXT"),	# 0x8A49
+    ("",	X,	1,	"GL_SKIP_DECODE_EXT"),	# 0x8A4A
     ("",	X,	1,	"GL_FRAGMENT_SHADER"),	# 0x8B30
     ("",	X,	1,	"GL_VERTEX_SHADER"),	# 0x8B31
     ("",	H,	1,	"GL_PROGRAM_OBJECT_ARB"),	# 0x8B40
