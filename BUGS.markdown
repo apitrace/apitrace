@@ -96,6 +96,17 @@ To obtain a stack back-trace, run the application with gdb from a terminal:
     (gdb) bt
 
 
+See also more detailed and Distro specific instructions:
+
+* http://wiki.debian.org/HowToGetABacktrace
+
+* https://wiki.ubuntu.com/Backtrace
+
+* http://fedoraproject.org/wiki/StackTraces
+
+* http://live.gnome.org/GettingTraces
+
+
 Windows
 -------
 
