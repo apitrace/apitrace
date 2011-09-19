@@ -1235,8 +1235,8 @@ parameters = [
     ("",	X,	1,	"GL_VARIABLE_E_NV"),	# 0x8527
     ("",	X,	1,	"GL_VARIABLE_F_NV"),	# 0x8528
     ("",	X,	1,	"GL_VARIABLE_G_NV"),	# 0x8529
-    ("",	X,	1,	"GL_CONSTANT_COLOR0_NV"),	# 0x852A
-    ("",	X,	1,	"GL_CONSTANT_COLOR1_NV"),	# 0x852B
+    ("glGet",	F,	4,	"GL_CONSTANT_COLOR0_NV"),	# 0x852A
+    ("glGet",	F,	4,	"GL_CONSTANT_COLOR1_NV"),	# 0x852B
     ("",	X,	1,	"GL_PRIMARY_COLOR_NV"),	# 0x852C
     ("",	X,	1,	"GL_SECONDARY_COLOR_NV"),	# 0x852D
     ("",	X,	1,	"GL_SPARE0_NV"),	# 0x852E
@@ -1270,9 +1270,9 @@ parameters = [
     ("",	X,	1,	"GL_COMBINER_AB_OUTPUT_NV"),	# 0x854A
     ("",	X,	1,	"GL_COMBINER_CD_OUTPUT_NV"),	# 0x854B
     ("",	X,	1,	"GL_COMBINER_SUM_OUTPUT_NV"),	# 0x854C
-    ("",	X,	1,	"GL_MAX_GENERAL_COMBINERS_NV"),	# 0x854D
-    ("",	X,	1,	"GL_NUM_GENERAL_COMBINERS_NV"),	# 0x854E
-    ("",	X,	1,	"GL_COLOR_SUM_CLAMP_NV"),	# 0x854F
+    ("glGet",	I,	1,	"GL_MAX_GENERAL_COMBINERS_NV"),	# 0x854D
+    ("glGet",	I,	1,	"GL_NUM_GENERAL_COMBINERS_NV"),	# 0x854E
+    ("glGet",	B,	1,	"GL_COLOR_SUM_CLAMP_NV"),	# 0x854F
     ("",	X,	1,	"GL_COMBINER0_NV"),	# 0x8550
     ("",	X,	1,	"GL_COMBINER1_NV"),	# 0x8551
     ("",	X,	1,	"GL_COMBINER2_NV"),	# 0x8552
