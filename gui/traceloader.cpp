@@ -407,6 +407,11 @@ QVector<ApiTraceCall*>
 TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
 {
     Q_ASSERT(currentFrame);
+
+    if (currentFrame->isLoaded) {
+        return currentFrame->calls();
+    }
+
     if (m_parser.supportsOffsets()) {
         unsigned frameIdx = currentFrame->number;
         int numOfCalls = numberOfCallsInFrame(frameIdx);
@@ -457,13 +462,17 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
 
 void TraceLoader::findFrameStart(ApiTraceFrame *frame)
 {
-    loadFrame(frame);
+    if (!frame->isLoaded()) {
+        loadFrame(frame);
+    }
     emit foundFrameStart(frame);
 }
 
 void TraceLoader::findFrameEnd(ApiTraceFrame *frame)
 {
-    loadFrame(frame);
+    if (!frame->isLoaded()) {
+        loadFrame(frame);
+    }
     emit foundFrameEnd(frame);
 }
 
