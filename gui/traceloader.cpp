@@ -408,7 +408,7 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
 {
     Q_ASSERT(currentFrame);
 
-    if (currentFrame->isLoaded) {
+    if (currentFrame->isLoaded()) {
         return currentFrame->calls();
     }
 
