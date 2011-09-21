@@ -6,8 +6,9 @@
 #include <QObject>
 #include <QSet>
 
-class LoaderThread;
+class TraceLoader;
 class SaverThread;
+class QThread;
 
 class ApiTrace : public QObject
 {
@@ -19,6 +20,12 @@ public:
         FrameMarker_Finish,
         FrameMarker_Clear
     };
+    enum SearchResult {
+        SearchResult_NotFound,
+        SearchResult_Found,
+        SearchResult_Wrapped
+    };
+
     static bool isCallAFrameMarker(const ApiTraceCall *call,
                                    FrameMarker marker);
 public:
@@ -33,17 +40,7 @@ public:
 
     ApiTraceState defaultState() const;
 
-    ApiTraceCallSignature *signature(unsigned id);
-    void addSignature(unsigned id, ApiTraceCallSignature *signature);
-
-    ApiTraceEnumSignature *enumSignature(unsigned id);
-    void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
-
-
-    QVector<ApiTraceCall*> calls() const;
-    ApiTraceCall *callAt(int idx) const;
     ApiTraceCall *callWithIndex(int idx) const;
-    int numCalls() const;
 
     QList<ApiTraceFrame*> frames() const;
     ApiTraceFrame *frameAt(int idx) const;
@@ -63,27 +60,67 @@ public:
 
 public slots:
     void setFileName(const QString &name);
-    void setFrameMarker(FrameMarker marker);
     void save();
+    void loadFrame(ApiTraceFrame *frame);
+    void findNext(ApiTraceFrame *frame,
+                  ApiTraceCall *call,
+                  const QString &str,
+                  Qt::CaseSensitivity sensitivity);
+    void findPrev(ApiTraceFrame *frame,
+                  ApiTraceCall *call,
+                  const QString &str,
+                  Qt::CaseSensitivity sensitivity);
+    void findFrameStart(ApiTraceFrame *frame);
+    void findFrameEnd(ApiTraceFrame *frame);
+    void findCallIndex(int index);
+    void setCallError(const ApiTraceError &error);
+
 
 signals:
+    void loadTrace(const QString &name);
+    void requestFrame(ApiTraceFrame *frame);
     void startedLoadingTrace();
+    void loaded(int percent);
     void finishedLoadingTrace();
     void invalidated();
     void framesInvalidated();
     void changed(ApiTraceCall *call);
     void startedSaving();
     void saved();
+    void findResult(ApiTrace::SearchResult result,
+                    ApiTraceCall *call);
 
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
-    void callsAdded(int oldCount, int numAdded);
+    void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
+    void endLoadingFrame(ApiTraceFrame *frame);
+    void foundFrameStart(ApiTraceFrame *frame);
+    void foundFrameEnd(ApiTraceFrame *frame);
+    void foundCallIndex(ApiTraceCall *call);
+
+signals:
+    void loaderSearchNext(int startFrame,
+                          const QString &str,
+                          Qt::CaseSensitivity sensitivity);
+    void loaderSearchPrev(int startFrame,
+                          const QString &str,
+                          Qt::CaseSensitivity sensitivity);
+    void loaderFindFrameStart(ApiTraceFrame *frame);
+    void loaderFindFrameEnd(ApiTraceFrame *frame);
+    void loaderFindCallIndex(int index);
 
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
     void slotSaved();
+    void finishedParsing();
+    void loaderFrameLoaded(ApiTraceFrame *frame,
+                           const QVector<ApiTraceCall*> &calls,
+                           quint64 binaryDataSize);
+    void loaderSearchResult(ApiTrace::SearchResult result,
+                            ApiTraceCall *call);
+
 private:
-    void detectFrames();
+    int callInFrame(int callIdx) const;
 private:
     QString m_fileName;
     QString m_tempFileName;
@@ -93,7 +130,8 @@ private:
 
     FrameMarker m_frameMarker;
 
-    LoaderThread *m_loader;
+    TraceLoader *m_loader;
+    QThread     *m_loaderThread;
     SaverThread  *m_saver;
 
     QSet<ApiTraceCall*> m_editedCalls;
@@ -101,8 +139,7 @@ private:
     bool m_needsSaving;
 
     QSet<ApiTraceCall*> m_errors;
-    QVector<ApiTraceCallSignature*> m_signatures;
-    QVector<ApiTraceEnumSignature*> m_enumSignatures;
+    QList< QPair<ApiTraceFrame*, ApiTraceError> > m_queuedErrors;
 };
 
 #endif

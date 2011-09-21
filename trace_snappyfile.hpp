@@ -52,6 +52,9 @@ public:
                File::Mode mode = File::Read);
     virtual ~SnappyFile();
 
+    virtual bool supportsOffsets() const;
+    virtual File::Offset currentOffset();
+    virtual void setCurrentOffset(const File::Offset &offset);
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, size_t length);
@@ -59,6 +62,8 @@ protected:
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
+    virtual bool rawSkip(size_t length);
+    virtual int rawPercentRead();
 
 private:
     inline size_t usedCacheSize() const
@@ -80,7 +85,7 @@ private:
         return m_stream.eof() && freeCacheSize() == 0;
     }
     void flushWriteCache();
-    void flushReadCache();
+    void flushReadCache(size_t skipLength = 0);
     void createCache(size_t size);
     void writeCompressedLength(size_t length);
     size_t readCompressedLength();
@@ -91,6 +96,9 @@ private:
     size_t m_cacheSize;
 
     char *m_compressedCache;
+
+    File::Offset m_currentOffset;
+    std::streampos m_endPos;
 };
 
 }

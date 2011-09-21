@@ -12,12 +12,13 @@
 
 
 class ApiTrace;
+class TraceLoader;
 
 class VariantVisitor : public Trace::Visitor
 {
 public:
-    VariantVisitor(ApiTrace *trace)
-        : m_trace(trace)
+    VariantVisitor(TraceLoader *loader)
+        : m_loader(loader)
     {}
     virtual void visit(Trace::Null *);
     virtual void visit(Trace::Bool *node);
@@ -37,8 +38,16 @@ public:
         return m_variant;
     }
 private:
-    ApiTrace *m_trace;
+    TraceLoader *m_loader;
     QVariant m_variant;
+};
+
+
+struct ApiTraceError
+{
+    int callIndex;
+    QString type;
+    QString message;
 };
 
 class ApiTraceEnumSignature
@@ -160,6 +169,7 @@ public:
     const QList<ApiTexture> & textures() const;
     const QList<ApiFramebuffer> & framebuffers() const;
 
+    ApiFramebuffer colorBuffer() const;
 private:
     QVariantMap m_parameters;
     QMap<QString, QString> m_shaderSources;
@@ -233,7 +243,8 @@ Q_DECLARE_METATYPE(ApiTraceEvent*);
 class ApiTraceCall : public ApiTraceEvent
 {
 public:
-    ApiTraceCall(ApiTraceFrame *parentFrame, const Trace::Call *tcall);
+    ApiTraceCall(ApiTraceFrame *parentFrame, TraceLoader *loader,
+                 const Trace::Call *tcall);
     ~ApiTraceCall();
 
     int index() const;
@@ -256,6 +267,9 @@ public:
     void setEditedValues(const QVector<QVariant> &lst);
     QVector<QVariant> editedValues() const;
     void revert();
+
+    bool contains(const QString &str,
+                  Qt::CaseSensitivity sensitivity) const;
 
     ApiTrace *parentTrace() const;
 
@@ -284,28 +298,50 @@ Q_DECLARE_METATYPE(ApiTraceCall*);
 class ApiTraceFrame : public ApiTraceEvent
 {
 public:
-    ApiTraceFrame(ApiTrace *parent);
+    ApiTraceFrame(ApiTrace *parent=0);
+    ~ApiTraceFrame();
     int number;
 
     bool isEmpty() const;
 
+    void setParentTrace(ApiTrace *parent);
     ApiTrace *parentTrace() const;
 
+    void setNumChildren(int num);
     int numChildren() const;
+    int numChildrenToLoad() const;
     QStaticText staticText() const;
 
     int callIndex(ApiTraceCall *call) const;
     ApiTraceCall *call(int idx) const;
+    ApiTraceCall *callWithIndex(int index) const;
     void addCall(ApiTraceCall *call);
     QVector<ApiTraceCall*> calls() const;
     void setCalls(const QVector<ApiTraceCall*> &calls,
                   quint64 binaryDataSize);
 
+    ApiTraceCall *findNextCall(ApiTraceCall *from,
+                               const QString &str,
+                               Qt::CaseSensitivity sensitivity) const;
+
+    ApiTraceCall *findPrevCall(ApiTraceCall *from,
+                               const QString &str,
+                               Qt::CaseSensitivity sensitivity) const;
+
     int binaryDataSize() const;
+
+    bool isLoaded() const;
+    void setLoaded(bool l);
+
+    void setLastCallIndex(unsigned index);
+    unsigned lastCallIndex() const;
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;
     QVector<ApiTraceCall*> m_calls;
+    bool m_loaded;
+    unsigned m_callsToLoad;
+    unsigned m_lastCallIndex;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

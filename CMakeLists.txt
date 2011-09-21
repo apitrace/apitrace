@@ -187,6 +187,7 @@ add_library (common
     trace_writer.cpp
     trace_local_writer.cpp
     trace_model_writer.cpp
+    trace_loader.cpp
     image.cpp
     image_bmp.cpp
     image_pnm.cpp
@@ -203,7 +204,6 @@ link_libraries (common)
 
 add_executable (tracedump tracedump.cpp)
 install (TARGETS tracedump RUNTIME DESTINATION bin) 
-
 
 ##############################################################################
 # API tracers

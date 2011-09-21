@@ -28,6 +28,8 @@
 
 #include <snappy.h>
 
+#include <iostream>
+
 #include <assert.h>
 #include <string.h>
 
@@ -91,6 +93,10 @@ bool SnappyFile::rawOpen(const std::string &filename, File::Mode mode)
 
     //read in the initial buffer if we're reading
     if (m_stream.is_open() && mode == File::Read) {
+        m_stream.seekg(0, std::ios::end);
+        m_endPos = m_stream.tellg();
+        m_stream.seekg(0, std::ios::beg);
+
         // read the snappy file identifier
         unsigned char byte1, byte2;
         m_stream >> byte1;
@@ -209,9 +215,10 @@ void SnappyFile::flushWriteCache()
     assert(m_cachePtr == m_cache);
 }
 
-void SnappyFile::flushReadCache()
+void SnappyFile::flushReadCache(size_t skipLength)
 {
     //assert(m_cachePtr == m_cache + m_cacheSize);
+    m_currentOffset.chunk = m_stream.tellg();
     size_t compressedLength;
     compressedLength = readCompressedLength();
 
@@ -220,8 +227,10 @@ void SnappyFile::flushReadCache()
         ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
                                         &m_cacheSize);
         createCache(m_cacheSize);
-        ::snappy::RawUncompress(m_compressedCache, compressedLength,
-                                m_cache);
+        if (skipLength < m_cacheSize) {
+            ::snappy::RawUncompress(m_compressedCache, compressedLength,
+                                    m_cache);
+        }
     } else {
         createCache(0);
     }
@@ -270,4 +279,60 @@ size_t SnappyFile::readCompressedLength()
         length |= ((size_t)buf[3] << 24);
     }
     return length;
+}
+
+bool SnappyFile::supportsOffsets() const
+{
+    return true;
+}
+
+File::Offset SnappyFile::currentOffset()
+{
+    m_currentOffset.offsetInChunk = m_cachePtr - m_cache;
+    return m_currentOffset;
+}
+
+void SnappyFile::setCurrentOffset(const File::Offset &offset)
+{
+    // to remove eof bit
+    m_stream.clear();
+    // seek to the start of a chunk
+    m_stream.seekg(offset.chunk, std::ios::beg);
+    // load the chunk
+    flushReadCache();
+    assert(m_cacheSize >= offset.offsetInChunk);
+    // seek within our cache to the correct location within the chunk
+    m_cachePtr = m_cache + offset.offsetInChunk;
+
+}
+
+bool SnappyFile::rawSkip(size_t length)
+{
+    if (endOfData()) {
+        return false;
+    }
+
+    if (freeCacheSize() >= length) {
+        m_cachePtr += length;
+    } else {
+        size_t sizeToRead = length;
+        while (sizeToRead) {
+            size_t chunkSize = std::min(freeCacheSize(), sizeToRead);
+            m_cachePtr += chunkSize;
+            sizeToRead -= chunkSize;
+            if (sizeToRead > 0) {
+                flushReadCache(sizeToRead);
+            }
+            if (!m_cacheSize) {
+                break;
+            }
+        }
+    }
+
+    return true;
+}
+
+int SnappyFile::rawPercentRead()
+{
+    return 100 * (double(m_stream.tellg()) / double(m_endPos));
 }

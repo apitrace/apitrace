@@ -30,32 +30,58 @@
 #include <iostream>
 #include <list>
 
+#include "trace_file.hpp"
 #include "trace_format.hpp"
 #include "trace_model.hpp"
 
 
 namespace Trace {
 
-class File;
+
+struct ParseBookmark
+{
+    File::Offset offset;
+    unsigned next_call_no;
+};
+
 
 class Parser
 {
 protected:
     File *file;
 
+    enum Mode {
+        FULL = 0,
+        SCAN,
+        SKIP
+    };
+
     typedef std::list<Call *> CallList;
     CallList calls;
 
-    typedef std::vector<FunctionSig *> FunctionMap;
+    // Helper template that extends a base signature structure, with additional
+    // parsing information.
+    template< class T >
+    struct SigState : public T {
+        // Offset in the file of where signature was defined.  It is used when
+        // reparsing to determine whether the signature definition is to be
+        // expected next or not.
+        File::Offset offset;
+    };
+
+    typedef SigState<FunctionSig> FunctionSigState;
+    typedef SigState<StructSig> StructSigState;
+    typedef SigState<EnumSig> EnumSigState;
+    typedef SigState<BitmaskSig> BitmaskSigState;
+
+    typedef std::vector<FunctionSigState *> FunctionMap;
+    typedef std::vector<StructSigState *> StructMap;
+    typedef std::vector<EnumSigState *> EnumMap;
+    typedef std::vector<BitmaskSigState *> BitmaskMap;
+
     FunctionMap functions;
-
-    typedef std::vector<StructSig *> StructMap;
     StructMap structs;
-
-    typedef std::vector<EnumSig *> EnumMap;
     EnumMap enums;
-
-    typedef std::vector<BitmaskSig *> BitmaskMap;
     BitmaskMap bitmasks;
 
     unsigned next_call_no;
@@ -71,46 +97,98 @@ public:
 
     void close(void);
 
-    Call *parse_call(void);
+    Call *parse_call(void) {
+        return parse_call(FULL);
+    }
+
+    bool supportsOffsets() const
+    {
+        return file->supportsOffsets();
+    }
+
+    void getBookmark(ParseBookmark &bookmark);
+
+    void setBookmark(const ParseBookmark &bookmark);
+
+    int percentRead()
+    {
+        return file->percentRead();
+    }
+
+    Call *scan_call() {
+        return parse_call(SCAN);
+    }
 
 protected:
-    void parse_enter(void);
+    Call *parse_call(Mode mode);
 
-    Call *parse_leave(void);
+    FunctionSig *parse_function_sig(void);
+    StructSig *parse_struct_sig();
+    EnumSig *parse_enum_sig();
+    BitmaskSig *parse_bitmask_sig();
+    
+    Call *parse_Call(Mode mode);
 
-    bool parse_call_details(Call *call);
+    void parse_enter(Mode mode);
 
-    void parse_arg(Call *call);
+    Call *parse_leave(Mode mode);
+
+    bool parse_call_details(Call *call, Mode mode);
+
+    void parse_arg(Call *call, Mode mode);
 
     Value *parse_value(void);
+    void scan_value(void);
+    inline Value *parse_value(Mode mode) {
+        if (mode == FULL) {
+            return parse_value();
+        } else {
+            scan_value();
+            return NULL;
+        }
+    }
 
     Value *parse_sint();
+    void scan_sint();
 
     Value *parse_uint();
+    void scan_uint();
 
     Value *parse_float();
+    void scan_float();
 
     Value *parse_double();
+    void scan_double();
 
     Value *parse_string();
+    void scan_string();
 
     Value *parse_enum();
+    void scan_enum();
 
     Value *parse_bitmask();
+    void scan_bitmask();
 
     Value *parse_array(void);
+    void scan_array(void);
 
     Value *parse_blob(void);
+    void scan_blob(void);
 
     Value *parse_struct();
+    void scan_struct();
 
     Value *parse_opaque();
+    void scan_opaque();
 
     const char * read_string(void);
+    void skip_string(void);
 
     unsigned long long read_uint(void);
+    void skip_uint(void);
 
     inline int read_byte(void);
+    inline void skip_byte(void);
 };
 
 

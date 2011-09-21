@@ -98,22 +98,83 @@ void Parser::close(void) {
     }
 
     deleteAll(calls);
-    deleteAll(functions);
-    deleteAll(structs);
-    deleteAll(enums);
-    deleteAll(bitmasks);
+
+    // Delete all signature data.  Signatures are mere structures which don't
+    // own their own memory, so we need to destroy all data we created here.
+
+    for (FunctionMap::iterator it = functions.begin(); it != functions.end(); ++it) {
+        FunctionSigState *sig = *it;
+        if (sig) {
+            delete [] sig->name;
+            for (unsigned arg = 0; arg < sig->num_args; ++arg) {
+                delete [] sig->arg_names[arg];
+            }
+            delete [] sig->arg_names;
+            delete sig;
+        }
+    }
+    functions.clear();
+
+    for (StructMap::iterator it = structs.begin(); it != structs.end(); ++it) {
+        StructSigState *sig = *it;
+        if (sig) {
+            delete [] sig->name;
+            for (unsigned member = 0; member < sig->num_members; ++member) {
+                delete [] sig->member_names[member];
+            }
+            delete [] sig->member_names;
+            delete sig;
+        }
+    }
+    structs.clear();
+
+    for (EnumMap::iterator it = enums.begin(); it != enums.end(); ++it) {
+        EnumSigState *sig = *it;
+        if (sig) {
+            delete [] sig->name;
+            delete sig;
+        }
+    }
+    enums.clear();
+    
+    for (BitmaskMap::iterator it = bitmasks.begin(); it != bitmasks.end(); ++it) {
+        BitmaskSigState *sig = *it;
+        if (sig) {
+            for (unsigned flag = 0; flag < sig->num_flags; ++flag) {
+                delete [] sig->flags[flag].name;
+            }
+            delete [] sig->flags;
+            delete sig;
+        }
+    }
+    bitmasks.clear();
 }
 
 
-Call *Parser::parse_call(void) {
+void Parser::getBookmark(ParseBookmark &bookmark) {
+    bookmark.offset = file->currentOffset();
+    bookmark.next_call_no = next_call_no;
+}
+
+
+void Parser::setBookmark(const ParseBookmark &bookmark) {
+    file->setCurrentOffset(bookmark.offset);
+    next_call_no = bookmark.next_call_no;
+    
+    // Simply ignore all pending calls
+    deleteAll(calls);
+}
+
+
+Call *Parser::parse_call(Mode mode) {
     do {
         int c = read_byte();
         switch(c) {
         case Trace::EVENT_ENTER:
-            parse_enter();
+            parse_enter(mode);
             break;
         case Trace::EVENT_LEAVE:
-            return parse_leave();
+            return parse_leave(mode);
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
@@ -142,12 +203,14 @@ T *lookup(std::vector<T *> &map, size_t index) {
 }
 
 
-void Parser::parse_enter(void) {
+FunctionSig *Parser::parse_function_sig(void) {
     size_t id = read_uint();
 
-    FunctionSig *sig = lookup(functions, id);
+    FunctionSigState *sig = lookup(functions, id);
+
     if (!sig) {
-        sig = new FunctionSig;
+        /* parse the signature */
+        sig = new FunctionSigState;
         sig->id = id;
         sig->name = read_string();
         sig->num_args = read_uint();
@@ -156,14 +219,123 @@ void Parser::parse_enter(void) {
             arg_names[i] = read_string();
         }
         sig->arg_names = arg_names;
+        sig->offset = file->currentOffset();
         functions[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        skip_string(); /* name */
+        int num_args = read_uint();
+        for (unsigned i = 0; i < num_args; ++i) {
+             skip_string(); /*arg_name*/
+        }
     }
+
     assert(sig);
+    return sig;
+}
+
+
+StructSig *Parser::parse_struct_sig() {
+    size_t id = read_uint();
+
+    StructSigState *sig = lookup(structs, id);
+
+    if (!sig) {
+        /* parse the signature */
+        sig = new StructSigState;
+        sig->id = id;
+        sig->name = read_string();
+        sig->num_members = read_uint();
+        const char **member_names = new const char *[sig->num_members];
+        for (unsigned i = 0; i < sig->num_members; ++i) {
+            member_names[i] = read_string();
+        }
+        sig->member_names = member_names;
+        sig->offset = file->currentOffset();
+        structs[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        skip_string(); /* name */
+        unsigned num_members = read_uint();
+        for (unsigned i = 0; i < num_members; ++i) {
+            skip_string(); /* member_name */
+        }
+    }
+
+    assert(sig);
+    return sig;
+}
+
+
+EnumSig *Parser::parse_enum_sig() {
+    size_t id = read_uint();
+
+    EnumSigState *sig = lookup(enums, id);
+
+    if (!sig) {
+        /* parse the signature */
+        sig = new EnumSigState;
+        sig->id = id;
+        sig->name = read_string();
+        Value *value = parse_value();
+        sig->value = value->toSInt();
+        delete value;
+        sig->offset = file->currentOffset();
+        enums[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        skip_string(); /*name*/
+        scan_value();
+    }
+
+    assert(sig);
+    return sig;
+}
+
+
+BitmaskSig *Parser::parse_bitmask_sig() {
+    size_t id = read_uint();
+
+    BitmaskSigState *sig = lookup(bitmasks, id);
+
+    if (!sig) {
+        /* parse the signature */
+        sig = new BitmaskSigState;
+        sig->id = id;
+        sig->num_flags = read_uint();
+        BitmaskFlag *flags = new BitmaskFlag[sig->num_flags];
+        for (BitmaskFlag *it = flags; it != flags + sig->num_flags; ++it) {
+            it->name = read_string();
+            it->value = read_uint();
+            if (it->value == 0 && it != flags) {
+                std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
+            }
+        }
+        sig->flags = flags;
+        sig->offset = file->currentOffset();
+        bitmasks[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        int num_flags = read_uint();
+        for (int i = 0; i < num_flags; ++i) {
+            skip_string(); /*name */
+            skip_uint(); /* value */
+        }
+    }
+
+    assert(sig);
+    return sig;
+}
+
+
+void Parser::parse_enter(Mode mode) {
+    FunctionSig *sig = parse_function_sig();
 
     Call *call = new Call(sig);
+
     call->no = next_call_no++;
 
-    if (parse_call_details(call)) {
+    if (parse_call_details(call, mode)) {
         calls.push_back(call);
     } else {
         delete call;
@@ -171,7 +343,7 @@ void Parser::parse_enter(void) {
 }
 
 
-Call *Parser::parse_leave(void) {
+Call *Parser::parse_leave(Mode mode) {
     unsigned call_no = read_uint();
     Call *call = NULL;
     for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
@@ -185,7 +357,7 @@ Call *Parser::parse_leave(void) {
         return NULL;
     }
 
-    if (parse_call_details(call)) {
+    if (parse_call_details(call, mode)) {
         return call;
     } else {
         delete call;
@@ -194,17 +366,17 @@ Call *Parser::parse_leave(void) {
 }
 
 
-bool Parser::parse_call_details(Call *call) {
+bool Parser::parse_call_details(Call *call, Mode mode) {
     do {
         int c = read_byte();
         switch(c) {
         case Trace::CALL_END:
             return true;
         case Trace::CALL_ARG:
-            parse_arg(call);
+            parse_arg(call, mode);
             break;
         case Trace::CALL_RET:
-            call->ret = parse_value();
+            call->ret = parse_value(mode);
             break;
         default:
             std::cerr << "error: ("<<call->name()<< ") unknown call detail "
@@ -217,13 +389,15 @@ bool Parser::parse_call_details(Call *call) {
 }
 
 
-void Parser::parse_arg(Call *call) {
+void Parser::parse_arg(Call *call, Mode mode) {
     unsigned index = read_uint();
-    Value *value = parse_value();
-    if (index >= call->args.size()) {
-        call->args.resize(index + 1);
+    Value *value = parse_value(mode);
+    if (value) {
+        if (index >= call->args.size()) {
+            call->args.resize(index + 1);
+        }
+        call->args[index] = value;
     }
-    call->args[index] = value;
 }
 
 
@@ -290,13 +464,72 @@ Value *Parser::parse_value(void) {
 }
 
 
+void Parser::scan_value(void) {
+    int c = read_byte();
+    switch(c) {
+    case Trace::TYPE_NULL:
+    case Trace::TYPE_FALSE:
+    case Trace::TYPE_TRUE:
+        break;
+    case Trace::TYPE_SINT:
+        scan_sint();
+        break;
+    case Trace::TYPE_UINT:
+        scan_uint();
+        break;
+    case Trace::TYPE_FLOAT:
+        scan_float();
+        break;
+    case Trace::TYPE_DOUBLE:
+        scan_double();
+        break;
+    case Trace::TYPE_STRING:
+        scan_string();
+        break;
+    case Trace::TYPE_ENUM:
+        scan_enum();
+        break;
+    case Trace::TYPE_BITMASK:
+        scan_bitmask();
+        break;
+    case Trace::TYPE_ARRAY:
+        scan_array();
+        break;
+    case Trace::TYPE_STRUCT:
+        scan_struct();
+        break;
+    case Trace::TYPE_BLOB:
+        scan_blob();
+        break;
+    case Trace::TYPE_OPAQUE:
+        scan_opaque();
+        break;
+    default:
+        std::cerr << "error: unknown type " << c << "\n";
+        exit(1);
+    case -1:
+        break;
+    }
+}
+
+
 Value *Parser::parse_sint() {
     return new SInt(-(signed long long)read_uint());
 }
 
 
+void Parser::scan_sint() {
+    skip_uint();
+}
+
+
 Value *Parser::parse_uint() {
     return new UInt(read_uint());
+}
+
+
+void Parser::scan_uint() {
+    skip_uint();
 }
 
 
@@ -307,10 +540,20 @@ Value *Parser::parse_float() {
 }
 
 
+void Parser::scan_float() {
+    file->skip(sizeof(float));
+}
+
+
 Value *Parser::parse_double() {
     double value;
     file->read(&value, sizeof value);
     return new Float(value);
+}
+
+
+void Parser::scan_double() {
+    file->skip(sizeof(double));
 }
 
 
@@ -319,46 +562,34 @@ Value *Parser::parse_string() {
 }
 
 
+void Parser::scan_string() {
+    skip_string();
+}
+
+
 Value *Parser::parse_enum() {
-    size_t id = read_uint();
-    EnumSig *sig = lookup(enums, id);
-    if (!sig) {
-        sig = new EnumSig;
-        sig->id = id;
-        sig->name = read_string();
-        Value *value = parse_value();
-        sig->value = value->toSInt();
-        delete value;
-        enums[id] = sig;
-    }
-    assert(sig);
+    EnumSig *sig = parse_enum_sig();
     return new Enum(sig);
 }
 
 
+void Parser::scan_enum() {
+    parse_enum_sig();
+}
+
+
 Value *Parser::parse_bitmask() {
-    size_t id = read_uint();
-    BitmaskSig *sig = lookup(bitmasks, id);
-    if (!sig) {
-        sig = new BitmaskSig;
-        sig->id = id;
-        sig->num_flags = read_uint();
-        BitmaskFlag *flags = new BitmaskFlag[sig->num_flags];
-        for (BitmaskFlag *it = flags; it != flags + sig->num_flags; ++it) {
-            it->name = read_string();
-            it->value = read_uint();
-            if (it->value == 0 && it != flags) {
-                std::cerr << "warning: bitmask " << it->name << " is zero but is not first flag\n";
-            }
-        }
-        sig->flags = flags;
-        bitmasks[id] = sig;
-    }
-    assert(sig);
+    BitmaskSig *sig = parse_bitmask_sig();
 
     unsigned long long value = read_uint();
 
     return new Bitmask(sig, value);
+}
+
+
+void Parser::scan_bitmask() {
+    parse_bitmask_sig();
+    skip_uint(); /* value */
 }
 
 
@@ -372,6 +603,14 @@ Value *Parser::parse_array(void) {
 }
 
 
+void Parser::scan_array(void) {
+    size_t len = read_uint();
+    for (size_t i = 0; i < len; ++i) {
+        scan_value();
+    }
+}
+
+
 Value *Parser::parse_blob(void) {
     size_t size = read_uint();
     Blob *blob = new Blob(size);
@@ -382,24 +621,16 @@ Value *Parser::parse_blob(void) {
 }
 
 
-Value *Parser::parse_struct() {
-    size_t id = read_uint();
-
-    StructSig *sig = lookup(structs, id);
-    if (!sig) {
-        sig = new StructSig;
-        sig->id = id;
-        sig->name = read_string();
-        sig->num_members = read_uint();
-        const char **member_names = new const char *[sig->num_members];
-        for (unsigned i = 0; i < sig->num_members; ++i) {
-            member_names[i] = read_string();
-        }
-        sig->member_names = member_names;
-        structs[id] = sig;
+void Parser::scan_blob(void) {
+    size_t size = read_uint();
+    if (size) {
+        file->skip(size);
     }
-    assert(sig);
+}
 
+
+Value *Parser::parse_struct() {
+    StructSig *sig = parse_struct_sig();
     Struct *value = new Struct(sig);
 
     for (size_t i = 0; i < sig->num_members; ++i) {
@@ -410,10 +641,23 @@ Value *Parser::parse_struct() {
 }
 
 
+void Parser::scan_struct() {
+    StructSig *sig = parse_struct_sig();
+    for (size_t i = 0; i < sig->num_members; ++i) {
+        scan_value();
+    }
+}
+
+
 Value *Parser::parse_opaque() {
     unsigned long long addr;
     addr = read_uint();
     return new Pointer(addr);
+}
+
+
+void Parser::scan_opaque() {
+    skip_uint();
 }
 
 
@@ -428,6 +672,12 @@ const char * Parser::read_string(void) {
     std::cerr << "\tSTRING \"" << value << "\"\n";
 #endif
     return value;
+}
+
+
+void Parser::skip_string(void) {
+    size_t len = read_uint();
+    file->skip(len);
 }
 
 
@@ -450,6 +700,17 @@ unsigned long long Parser::read_uint(void) {
 }
 
 
+void Parser::skip_uint(void) {
+    int c;
+    do {
+        c = file->getc();
+        if (c == -1) {
+            break;
+        }
+    } while(c & 0x80);
+}
+
+
 inline int Parser::read_byte(void) {
     int c = file->getc();
 #if TRACE_VERBOSE
@@ -459,6 +720,11 @@ inline int Parser::read_byte(void) {
         std::cerr << "\tBYTE 0x" << std::hex << c << std::dec << "\n";
 #endif
     return c;
+}
+
+
+inline void Parser::skip_byte(void) {
+    file->skip(1);
 }
 
 

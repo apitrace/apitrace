@@ -4,11 +4,13 @@
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
+#include <QSet>
 #include <QVariant>
 
 class ApiTrace;
 class ApiTraceCall;
 class ApiTraceEvent;
+class ApiTraceFrame;
 
 class ApiTraceModel : public QAbstractItemModel
 {
@@ -25,7 +27,6 @@ public:
     const ApiTrace *apiTrace() const;
     void stateSetOnEvent(ApiTraceEvent *event);
 
-    QModelIndex callIndex(int callNum) const;
     QModelIndex indexForCall(ApiTraceCall *call) const;
 
 public:
@@ -45,6 +46,8 @@ public:
                     const QModelIndex &parent = QModelIndex());
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex());
+    virtual bool canFetchMore(const QModelIndex & parent) const;
+    virtual void fetchMore(const QModelIndex &parent);
     /* } QAbstractItemModel; */
 
 private slots:
@@ -52,12 +55,15 @@ private slots:
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
     void callChanged(ApiTraceCall *call);
+    void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
+    void endLoadingFrame(ApiTraceFrame *frame);
 
 private:
     ApiTraceEvent *item(const QModelIndex &index) const;
 
 private:
     ApiTrace *m_trace;
+    QSet<ApiTraceFrame*> m_loadingFrames;
 };
 
 #endif
