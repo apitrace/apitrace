@@ -208,6 +208,7 @@ link_libraries (common)
 add_executable (tracedump tracedump.cpp)
 install (TARGETS tracedump RUNTIME DESTINATION bin) 
 
+
 ##############################################################################
 # API tracers
 
@@ -216,11 +217,11 @@ if (WIN32)
     if (DirectX_D3D_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
-            OUTPUT ddraw.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d.py > ${CMAKE_CURRENT_BINARY_DIR}/ddraw.cpp
-            DEPENDS d3d.py d3dtypes.py d3dcaps.py ddraw.py trace.py winapi.py stdapi.py
+            OUTPUT ddrawtrace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
+            DEPENDS ddrawtrace.py d3d.py d3dtypes.py d3dcaps.py ddraw.py trace.py winapi.py stdapi.py
         )
-        add_library (ddraw MODULE ddraw.def ddraw.cpp)
+        add_library (ddraw MODULE ddraw.def ddrawtrace.cpp)
         set_target_properties (ddraw
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -233,11 +234,11 @@ if (WIN32)
     if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D8_INCLUDE_DIR} ${DirectX_D3DX9_INCLUDE_DIR})
         add_custom_command (
-            OUTPUT d3d8.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
-            DEPENDS d3d8.py trace.py d3d8types.py d3d8caps.py winapi.py stdapi.py
+            OUTPUT d3d8trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
+            DEPENDS d3d8trace.py d3d8.py trace.py d3d8types.py d3d8caps.py winapi.py stdapi.py
         )
-        add_library (d3d8 MODULE d3d8.def d3d8.cpp d3dshader.cpp)
+        add_library (d3d8 MODULE d3d8.def d3d8trace.cpp d3dshader.cpp)
         set_target_properties (d3d8
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -250,11 +251,11 @@ if (WIN32)
     if (DirectX_D3DX9_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
         add_custom_command (
-            OUTPUT d3d9.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
-            DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py winapi.py stdapi.py
+            OUTPUT d3d9trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
+            DEPENDS d3d9trace.py d3d9.py trace.py d3d9types.py d3d9caps.py winapi.py stdapi.py
         )
-        add_library (d3d9 MODULE d3d9.def d3d9.cpp d3dshader.cpp)
+        add_library (d3d9 MODULE d3d9.def d3d9trace.cpp d3dshader.cpp)
         set_target_properties (d3d9
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -268,10 +269,10 @@ if (WIN32)
     #    include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
     #    add_custom_command (
     #        OUTPUT d3d10.cpp
-    #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
+    #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
     #        DEPENDS d3d10misc.py winapi.py stdapi.py
     #    )
-    #    add_library (d3d10 MODULE d3d10.def d3d10.cpp)
+    #    add_library (d3d10 MODULE d3d10.def d3d10trace.cpp)
     #    set_target_properties (d3d10 PROPERTIES PREFIX "")
     #    install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
     #endif (DirectX_D3D10_INCLUDE_DIR)

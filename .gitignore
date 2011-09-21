@@ -27,11 +27,10 @@ CMakeCache.txt
 CMakeFiles
 Makefile
 build
-d3d10.cpp
-d3d10_1.cpp
-d3d8.cpp
-d3d9.cpp
-ddraw.cpp
+d3d10trace.cpp
+d3d8trace.cpp
+d3d9trace.cpp
+ddrawtrace.cpp
 dxsdk
 glproc.hpp
 glretrace
