@@ -163,7 +163,10 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 ##############################################################################
 # Common libraries / utilities
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/common
+)
 
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
@@ -180,19 +183,19 @@ else (WIN32)
 endif (WIN32)
 
 add_library (common
-    trace_file.cpp
-    trace_snappyfile.cpp
-    trace_model.cpp
-    trace_parser.cpp
-    trace_writer.cpp
-    trace_local_writer.cpp
-    trace_model_writer.cpp
-    trace_loader.cpp
-    image.cpp
-    image_bmp.cpp
-    image_pnm.cpp
-    image_png.cpp
-    ${os}
+    common/trace_file.cpp
+    common/trace_snappyfile.cpp
+    common/trace_model.cpp
+    common/trace_parser.cpp
+    common/trace_writer.cpp
+    common/trace_local_writer.cpp
+    common/trace_model_writer.cpp
+    common/trace_loader.cpp
+    common/image.cpp
+    common/image_bmp.cpp
+    common/image_pnm.cpp
+    common/image_png.cpp
+    common/${os}
 )
 
 set_target_properties (common PROPERTIES
@@ -383,7 +386,6 @@ add_executable (glretrace
     glstate_params.cpp
     retrace.cpp
     ${glws}
-    image.cpp 
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
 )
 
