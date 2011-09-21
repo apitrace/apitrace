@@ -28,6 +28,8 @@ TraceLoader::TraceLoader(QObject *parent)
 TraceLoader::~TraceLoader()
 {
     m_parser.close();
+    qDeleteAll(m_signatures);
+    qDeleteAll(m_enumSignatures);
 }
 
 void TraceLoader::loadTrace(const QString &filename)
