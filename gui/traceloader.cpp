@@ -42,10 +42,9 @@ void TraceLoader::loadTrace(const QString &filename)
         qDebug() << "error: failed to open " << filename;
         return;
     }
-    qDebug()<<"load trace with "<<filename;
+
     emit startedParsing();
 
-    qDebug() <<"\t support offsets = "<<m_parser.supportsOffsets();
     if (m_parser.supportsOffsets()) {
         scanTrace();
     } else {
