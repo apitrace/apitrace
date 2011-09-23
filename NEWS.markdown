@@ -18,6 +18,9 @@ Recent developments
 
 * Support up-to OpenGL 4.2 calls.
 
+* Better GUI performance with very large traces, by loading frames from disk on
+  demand.
+
 
 Version 1.0
 ===========
