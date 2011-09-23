@@ -270,7 +270,7 @@ if (WIN32)
         add_custom_command (
             OUTPUT d3d10trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
-            DEPENDS d3d10misc.py d3d10.py winapi.py stdapi.py
+            DEPENDS d3d10misc.py d3d10.py dxgi.py winapi.py stdapi.py
         )
         add_library (d3d10 MODULE d3d10.def d3d10trace.cpp)
         set_target_properties (d3d10 PROPERTIES PREFIX "")
