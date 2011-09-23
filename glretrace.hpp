@@ -69,6 +69,7 @@ void retrace_call_wgl(Trace::Call &call);
 void snapshot(unsigned call_no);
 void frame_complete(unsigned call_no);
 
+void updateDrawable(int width, int height);
 
 } /* namespace glretrace */
 

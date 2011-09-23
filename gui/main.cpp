@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include "apitrace.h"
 #include "apitracecall.h"
 
 #include <QApplication>
@@ -7,13 +8,20 @@
 #include <QVariant>
 
 Q_DECLARE_METATYPE(QList<ApiTraceFrame*>);
+Q_DECLARE_METATYPE(QVector<ApiTraceCall*>);
+Q_DECLARE_METATYPE(Qt::CaseSensitivity);
+Q_DECLARE_METATYPE(ApiTrace::SearchResult);
+
 
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
     qRegisterMetaType<QList<ApiTraceFrame*> >();
+    qRegisterMetaType<QVector<ApiTraceCall*> >();
     qRegisterMetaType<ApiTraceState>();
+    qRegisterMetaType<Qt::CaseSensitivity>();
+    qRegisterMetaType<ApiTrace::SearchResult>();
     MainWindow window;
 
     window.show();

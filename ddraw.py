@@ -26,7 +26,6 @@
 """ddraw.h"""
 
 from winapi import *
-from trace import DllTracer
 
 DirectDrawOptSurfaceDescFlags = Flags(DWORD, [
     "DDOSD_GUID",

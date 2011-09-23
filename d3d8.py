@@ -28,7 +28,6 @@
 from winapi import *
 from d3d8types import *
 from d3d8caps import *
-from trace import DllTracer
 
 HRESULT = Enum("HRESULT", [
     "D3D_OK",
@@ -281,27 +280,3 @@ d3d8 = API("d3d8")
 d3d8.add_functions([
     StdFunction(PDIRECT3D8, "Direct3DCreate8", [(UINT, "SDKVersion")]),
 ])
-
-
-class D3D8Tracer(DllTracer):
-
-    def dump_arg_instance(self, function, arg):
-        # Dump shaders as strings
-        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
-            print '    DumpShader(Trace::localWriter, %s);' % (arg.name)
-            return
-
-        DllTracer.dump_arg_instance(self, function, arg)
-
-
-if __name__ == '__main__':
-    print '#include <windows.h>'
-    print '#include <d3d8.h>'
-    print '#include "d3dshader.hpp"'
-    print
-    print '#include "trace_writer.hpp"'
-    print '#include "os.hpp"'
-    print
-    tracer = D3D8Tracer('d3d8.dll')
-    tracer.trace_api(d3d8)
-

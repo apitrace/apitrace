@@ -28,7 +28,7 @@
 from winapi import *
 from d3d9types import *
 from d3d9caps import *
-from trace import DllTracer
+
 
 D3DSHADER9 = Opaque("const DWORD *")
 
@@ -448,26 +448,3 @@ d3d9.add_functions([
     StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")]),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0'),
 ])
-
-
-class D3D9Tracer(DllTracer):
-
-    def dump_arg_instance(self, function, arg):
-        # Dump shaders as strings
-        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
-            print '    DumpShader(Trace::localWriter, %s);' % (arg.name)
-            return
-
-        DllTracer.dump_arg_instance(self, function, arg)
-
-
-if __name__ == '__main__':
-    print '#include "trace_writer.hpp"'
-    print '#include "os.hpp"'
-    print
-    print '#include "d3d9imports.hpp"'
-    print '#include "d3dshader.hpp"'
-    print
-    tracer = D3D9Tracer('d3d9.dll')
-    tracer.trace_api(d3d9)
-

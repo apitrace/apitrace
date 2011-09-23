@@ -41,14 +41,17 @@ namespace Trace {
 
 static void exceptionCallback(void)
 {
-    OS::DebugMessage("apitrace: flushing trace due to an exception\n");
     localWriter.flush();
 }
 
 
 LocalWriter::LocalWriter() :
     acquired(0)
-{}
+{
+    // Install the signal handlers as early as possible, to prevent
+    // interfering with the application's signal handling.
+    OS::SetExceptionCallback(exceptionCallback);
+}
 
 LocalWriter::~LocalWriter()
 {
@@ -96,8 +99,6 @@ LocalWriter::open(void) {
 
     Writer::open(szFileName);
 
-    OS::SetExceptionCallback(exceptionCallback);
-
 #if 0
     // For debugging the exception handler
     *((int *)0) = 0;
@@ -142,6 +143,7 @@ void LocalWriter::flush(void) {
     if (!acquired) {
         OS::AcquireMutex();
         if (m_file->isOpened()) {
+            OS::DebugMessage("apitrace: flushing trace due to an exception\n");
             m_file->flush();
         }
         OS::ReleaseMutex();

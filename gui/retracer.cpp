@@ -98,10 +98,10 @@ void Retracer::run()
             this, SIGNAL(finished(const QString&)));
     connect(retrace, SIGNAL(error(const QString&)),
             this, SIGNAL(error(const QString&)));
-    connect(retrace, SIGNAL(foundState(const ApiTraceState&)),
-            this, SIGNAL(foundState(const ApiTraceState&)));
-    connect(retrace, SIGNAL(retraceErrors(const QList<RetraceError>&)),
-            this, SIGNAL(retraceErrors(const QList<RetraceError>&)));
+    connect(retrace, SIGNAL(foundState(ApiTraceState*)),
+            this, SIGNAL(foundState(ApiTraceState*)));
+    connect(retrace, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
+            this, SIGNAL(retraceErrors(const QList<ApiTraceError>&)));
 
     retrace->start();
 
@@ -155,7 +155,7 @@ void RetraceProcess::replayFinished()
     if (m_captureState) {
         bool ok = false;
         QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
-        ApiTraceState state(parsedJson);
+        ApiTraceState *state = new ApiTraceState(parsedJson);
         emit foundState(state);
         msg = tr("State fetched.");
     } else {
@@ -163,11 +163,11 @@ void RetraceProcess::replayFinished()
     }
 
     QStringList errorLines = errStr.split('\n');
-    QList<RetraceError> errors;
+    QList<ApiTraceError> errors;
     QRegExp regexp("(^\\d+): +(\\b\\w+\\b): (.+$)");
     foreach(QString line, errorLines) {
         if (regexp.indexIn(line) != -1) {
-            RetraceError error;
+            ApiTraceError error;
             error.callIndex = regexp.cap(1).toInt();
             error.type = regexp.cap(2);
             error.message = regexp.cap(3);
@@ -190,14 +190,14 @@ void RetraceProcess::replayError(QProcess::ProcessError err)
         tr("Couldn't execute the replay file '%1'").arg(m_fileName));
 }
 
-Q_DECLARE_METATYPE(QList<RetraceError>);
+Q_DECLARE_METATYPE(QList<ApiTraceError>);
 RetraceProcess::RetraceProcess(QObject *parent)
     : QObject(parent)
 {
     m_process = new QProcess(this);
     m_jsonParser = new QJson::Parser();
 
-    qRegisterMetaType<QList<RetraceError> >();
+    qRegisterMetaType<QList<ApiTraceError> >();
 
     connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)),
             this, SLOT(replayFinished()));

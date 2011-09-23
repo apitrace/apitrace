@@ -610,14 +610,18 @@ __gl_format_channels(GLenum format) {
     case GL_DEPTH_STENCIL:
     case GL_LUMINANCE_ALPHA:
     case GL_RG:
+    case GL_HILO_NV:
+    case GL_DSDT_NV:
         return 2;
     case GL_RGB:
     case GL_BGR:
+    case GL_DSDT_MAG_NV:
         return 3;
     case GL_RGBA:
     case GL_BGRA:
     case GL_ABGR_EXT:
     case GL_CMYK_EXT:
+    case GL_DSDT_MAG_VIB_NV:
         return 4;
     case GL_CMYKA_EXT:
         return 5;

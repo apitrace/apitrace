@@ -42,18 +42,23 @@ using namespace Trace;
 
 File::File(const std::string &filename,
            File::Mode mode)
-    : m_filename(filename),
-      m_mode(mode),
+    : m_mode(mode),
       m_isOpened(false)
 {
-    if (!m_filename.empty()) {
-        open(m_filename, m_mode);
+    if (!filename.empty()) {
+        open(filename, m_mode);
     }
 }
 
 File::~File()
 {
     close();
+}
+
+
+void File::setCurrentOffset(const File::Offset &offset)
+{
+    assert(0);
 }
 
 bool File::isZLibCompressed(const std::string &filename)
@@ -87,6 +92,12 @@ bool File::isSnappyCompressed(const std::string &filename)
     return (byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
 }
 
+typedef struct gz_stream {
+    z_stream stream;
+    int      z_err;   /* error code for last stream operation */
+    int      z_eof;   /* set if end of input file */
+    FILE     *file;   /* .gz file */
+} gz_dummy_stream;
 
 ZLibFile::ZLibFile(const std::string &filename,
                    File::Mode mode)
@@ -103,15 +114,28 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
 {
     m_gzFile = gzopen(filename.c_str(),
                       (mode == File::Write) ? "wb" : "rb");
+
+    if (mode == File::Read && m_gzFile) {
+        //XXX: unfortunately zlib doesn't support
+        //     SEEK_END or we could've done:
+        //m_endOffset = gzseek(m_gzFile, 0, SEEK_END);
+        //gzrewind(m_gzFile);
+        gz_dummy_stream *stream = (gz_dummy_stream *)m_gzFile;
+        long loc = ftell(stream->file);
+        fseek(stream->file,0,SEEK_END);
+        m_endOffset = ftell(stream->file);
+        fseek(stream->file, loc, SEEK_SET);
+    }
+
     return m_gzFile != NULL;
 }
 
-bool ZLibFile::rawWrite(const void *buffer, int length)
+bool ZLibFile::rawWrite(const void *buffer, size_t length)
 {
     return gzwrite(m_gzFile, buffer, length) != -1;
 }
 
-bool ZLibFile::rawRead(void *buffer, int length)
+bool ZLibFile::rawRead(void *buffer, size_t length)
 {
     return gzread(m_gzFile, buffer, length) != -1;
 }
@@ -132,4 +156,25 @@ void ZLibFile::rawClose()
 void ZLibFile::rawFlush()
 {
     gzflush(m_gzFile, Z_SYNC_FLUSH);
+}
+
+File::Offset ZLibFile::currentOffset()
+{
+    return File::Offset(gztell(m_gzFile));
+}
+
+bool ZLibFile::supportsOffsets() const
+{
+    return false;
+}
+
+bool ZLibFile::rawSkip(size_t)
+{
+    return false;
+}
+
+int ZLibFile::rawPercentRead()
+{
+    gz_dummy_stream *stream = (gz_dummy_stream *)m_gzFile;
+    return 100 * (ftell(stream->file) / m_endOffset);
 }

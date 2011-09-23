@@ -82,6 +82,7 @@ GLregion = Handle("region", GLuint)
 GLmap = Handle("map", OpaquePointer(GLvoid))
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
+GLfeedback = Handle("feedback", GLuint)
 
 GLsync_ = Opaque("GLsync")
 GLsync = Handle("sync", GLsync_)
@@ -182,3 +183,21 @@ GLbitfield_access = Flags(GLbitfield, [
 GLbitfield_sync_flush = Flags(GLbitfield, [
     "GL_SYNC_FLUSH_COMMANDS_BIT",				# 0x00000001
 ])
+
+GLbitfield_barrier = Flags(GLbitfield, [
+    "GL_ALL_BARRIER_BITS",                      # 0xFFFFFFFF
+    "GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT",       # 0x00000001
+    "GL_ELEMENT_ARRAY_BARRIER_BIT",             # 0x00000002
+    "GL_UNIFORM_BARRIER_BIT",                   # 0x00000004
+    "GL_TEXTURE_FETCH_BARRIER_BIT",             # 0x00000008
+    "GL_SHADER_GLOBAL_ACCESS_BARRIER_BIT_NV",   # 0x00000010
+    "GL_SHADER_IMAGE_ACCESS_BARRIER_BIT",       # 0x00000020
+    "GL_COMMAND_BARRIER_BIT",                   # 0x00000040
+    "GL_PIXEL_BUFFER_BARRIER_BIT",              # 0x00000080
+    "GL_TEXTURE_UPDATE_BARRIER_BIT",            # 0x00000100
+    "GL_BUFFER_UPDATE_BARRIER_BIT",             # 0x00000200
+    "GL_FRAMEBUFFER_BARRIER_BIT",               # 0x00000400
+    "GL_TRANSFORM_FEEDBACK_BARRIER_BIT",        # 0x00000800
+    "GL_ATOMIC_COUNTER_BARRIER_BIT",            # 0x00001000
+])
+

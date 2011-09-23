@@ -99,6 +99,11 @@ class GlRetracer(Retracer):
         "glMultiModeDrawElementsIBM",
     ])
 
+    draw_indirect_function_names = set([
+        "glDrawArraysIndirect",
+        "glDrawElementsIndirect",
+    ])
+
     misc_draw_function_names = set([
         "glClear",
         "glEnd",
@@ -170,6 +175,12 @@ class GlRetracer(Retracer):
             print '    GLint __pack_buffer = 0;'
             print '    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &__pack_buffer);'
             print '    if (!__pack_buffer) {'
+            if function.name == 'glReadPixels':
+                print '    glFinish();'
+                print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAME ||'
+                print '        glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
+                print '        glretrace::snapshot(call.no);'
+                print '    }'
             print '        return;'
             print '    }'
 
@@ -178,6 +189,9 @@ class GlRetracer(Retracer):
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
             print '        glretrace::snapshot(call.no - 1);'
             print '    }'
+        if function.name == 'glFrameTerminatorGREMEDY':
+            print '    glretrace::frame_complete(call.no);'
+            return
 
         Retracer.retrace_function_body(self, function)
 
@@ -186,12 +200,6 @@ class GlRetracer(Retracer):
             print '    if (!glretrace::double_buffer) {'
             print '        glretrace::frame_complete(call.no);'
             print '    }'
-        if function.name == 'glReadPixels':
-            print '    glFinish();'
-            print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAME ||'
-            print '        glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
-            print '        glretrace::snapshot(call.no);'
-            print '    }'
         if is_draw_array or is_draw_elements or is_misc_draw:
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_DRAW) {'
             print '        glretrace::snapshot(call.no);'
@@ -199,23 +207,13 @@ class GlRetracer(Retracer):
 
 
     def call_function(self, function):
+        # Infer the drawable size from GL calls
         if function.name == "glViewport":
-            print '    GLint draw_framebuffer = 0;'
-            print '    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_framebuffer);'
-            print '    if (draw_framebuffer == 0) {'
-            print '        if (glretrace::drawable) {'
-            print '            int drawable_width  = x + width;'
-            print '            int drawable_height = y + height;'
-            print '            if (drawable_width  > (int)glretrace::drawable->width ||'
-            print '                drawable_height > (int)glretrace::drawable->height) {'
-            print '                glretrace::drawable->resize(drawable_width, drawable_height);'
-            print '                if (!glretrace::drawable->visible) {'
-            print '                    glretrace::drawable->show();'
-            print '                }'
-            print '                glScissor(0, 0, drawable_width, drawable_height);'
-            print '            }'
-            print '        }'
-            print '    }'
+            print '    glretrace::updateDrawable(x + width, y + height);'
+        if function.name in ('glBlitFramebuffer', 'glBlitFramebufferEXT'):
+            # Some applications do all their rendering in a framebuffer, and
+            # then just blit to the drawable without ever calling glViewport.
+            print '    glretrace::updateDrawable(std::max(dstX0, dstX1), std::max(dstY0, dstY1));'
 
         if function.name == "glEnd":
             print '    glretrace::insideGlBeginEnd = false;'
@@ -290,13 +288,13 @@ class GlRetracer(Retracer):
             if function.name in ('glGetAttribLocation', 'glGetAttribLocationARB'):
                 print r'    GLint __orig_result = call.ret->toSInt();'
                 print r'    if (__result != __orig_result) {'
-                print r'        std::cerr << call.no << ": warning vertex attrib location mismatch " << __orig_result << " -> " << __result << "\n";'
+                print r'        std::cerr << call.no << ": warning: vertex attrib location mismatch " << __orig_result << " -> " << __result << "\n";'
                 print r'    }'
             if function.name in ('glCheckFramebufferStatus', 'glCheckFramebufferStatusEXT', 'glCheckNamedFramebufferStatusEXT'):
                 print r'    GLint __orig_result = call.ret->toSInt();'
                 print r'    if (__orig_result == GL_FRAMEBUFFER_COMPLETE &&'
                 print r'        __result != GL_FRAMEBUFFER_COMPLETE) {'
-                print r'        std::cerr << call.no << ": incomplete framebuffer (" << __result << ")\n";'
+                print r'        std::cerr << call.no << ": warning: incomplete framebuffer (" << glstate::enumToString(__result) << ")\n";'
                 print r'    }'
             print '    }'
 
@@ -305,7 +303,8 @@ class GlRetracer(Retracer):
             print '    %s = static_cast<%s>(%s.toPointer(true));' % (lvalue, arg_type, rvalue)
             return
 
-        if function.name in self.draw_elements_function_names and arg.name == 'indices':
+        if function.name in self.draw_elements_function_names and arg.name == 'indices' or\
+           function.name in self.draw_indirect_function_names and arg.name == 'indirect':
             self.extract_opaque_arg(function, arg, arg_type, lvalue, rvalue)
             return
 
@@ -342,6 +341,7 @@ if __name__ == '__main__':
 
 #include "glproc.hpp"
 #include "glretrace.hpp"
+#include "glstate.hpp"
 
 
 '''
