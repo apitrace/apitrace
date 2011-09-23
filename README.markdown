@@ -7,7 +7,9 @@ About **apitrace**
 
 * retrace OpenGL calls from a file;
 
-* visualize trace files, and inspect state.
+* inspect OpenGL state at any call while retracing;
+
+* visualize and edit trace files.
 
 
 Basic usage
@@ -106,7 +108,7 @@ and
 [`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
 GL extensions.
 
-*apitrace* will advertise and intercept these GL extensions independently of
+**apitrace** will advertise and intercept these GL extensions independently of
 the GL implementation.  So all you have to do is to use these extensions when
 available.
 
@@ -171,7 +173,7 @@ There are several advanced usage examples meant for OpenGL implementors.
 Regression testing
 ------------------
 
-These are the steps to create a regression test-suite around apitrace:
+These are the steps to create a regression test-suite around **apitrace**:
 
 * obtain a trace
 
