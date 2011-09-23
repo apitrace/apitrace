@@ -205,10 +205,13 @@ class SpecParser(LineParser):
         if kind == 'value':
             arg_type = base_type
         elif kind == 'reference':
-            arg_type = 'Pointer(%s)' % base_type
             if inout == 'in':
-                arg_type = 'Const(%s)' % arg_type
+                base_type = 'Const(%s)' % base_type
+            arg_type = 'Pointer(%s)' % base_type
         elif kind.startswith("array"):
+            if inout == 'in':
+                base_type = 'Const(%s)' % base_type
+
             arg_type = 'OpaquePointer(%s)' % base_type
 
             if base_type in ('Void', 'void', 'GLvoid'):
@@ -232,8 +235,6 @@ class SpecParser(LineParser):
                     length = length.replace("COMPSIZE", "__%s_size" % function_name)
                     length = length.replace("/", ", ")
                     arg_type = 'Opaque%s(%s, "%s")' % (constructor, base_type, length)
-            if inout == 'in':
-                arg_type = 'Const(%s)' % arg_type
         else:
             assert False
         

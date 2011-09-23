@@ -106,8 +106,8 @@ DXGI_SHARED_RESOURCE = Struct("DXGI_SHARED_RESOURCE", [
 
 IDXGIObject = Interface("IDXGIObject", IUnknown)
 IDXGIObject.methods += [
-    Method(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "data_size"), (Const(OpaquePointer(Void)), "data")]),
-    Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (Const(OpaquePointer(IUnknown)), "object")]),
+    Method(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "data_size"), (OpaquePointer(Const(Void)), "data")]),
+    Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "object")]),
     Method(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(OpaquePointer(UINT), "data_size"), Out(OpaquePointer(Void), "data")]),
     Method(HRESULT, "GetParent", [(REFIID, "riid"), Out(OpaquePointer(OpaquePointer(Void)), "parent")]),
 ]
@@ -155,7 +155,7 @@ IDXGISwapChain.methods += [
     Method(HRESULT, "GetFullscreenState", [Out(OpaquePointer(BOOL), "fullscreen"), Out(OpaquePointer(OpaquePointer(IDXGIOutput)), "target")]),
     Method(HRESULT, "GetDesc", [Out(OpaquePointer(DXGI_SWAP_CHAIN_DESC), "desc")]),
     Method(HRESULT, "ResizeBuffers", [(UINT, "buffer_count"), (UINT, "width"), (UINT, "height"), (DXGI_FORMAT, "format"), (UINT, "flags")]),
-    Method(HRESULT, "ResizeTarget", [(Const(OpaquePointer(DXGI_MODE_DESC)), "target_mode_desc")]),
+    Method(HRESULT, "ResizeTarget", [(OpaquePointer(Const(DXGI_MODE_DESC)), "target_mode_desc")]),
     Method(HRESULT, "GetContainingOutput", [Out(OpaquePointer(OpaquePointer(IDXGIOutput)), "output")]),
     Method(HRESULT, "GetFrameStatistics", [Out(OpaquePointer(DXGI_FRAME_STATISTICS), "stats")]),
     Method(HRESULT, "GetLastPresentCount", [Out(OpaquePointer(UINT), "last_present_count")]),

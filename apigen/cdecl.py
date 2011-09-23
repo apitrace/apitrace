@@ -288,9 +288,11 @@ class Parser:
     }
 
     def parse_type(self):
+        const = False
         token = self.consume()
         if token == 'const':
-            return 'Const(%s)' % self.parse_type()
+            token = self.consume()
+            const = True
         if token == 'void':
             type = 'Void'
         elif token in self.int_tokens:
@@ -328,6 +330,8 @@ class Parser:
                 type = 'U' + type
         else:
             type = self.type_table.get(token, token)
+        if const:
+            type = 'Const(%s)' % type
         while True:
             if self.match('*'):
                 self.consume('*')
