@@ -23,32 +23,21 @@
 #
 ##########################################################################/
 
-"""d3d10misc.h"""
 
-from winapi import *
-from d3d10 import *
-
-
-ID3D10Blob = Interface("ID3D10Blob", IUnknown)
-LPD3D10BLOB = Pointer(ID3D10Blob)
-
-ID3D10Blob.methods += [
-    Method(LPVOID, "GetBufferPointer", []),
-    Method(SIZE_T, "GetBufferSize", []),
-]
-
-D3D10_DRIVER_TYPE = Enum("D3D10_DRIVER_TYPE", [
-    "D3D10_DRIVER_TYPE_HARDWARE",
-    "D3D10_DRIVER_TYPE_REFERENCE",
-    "D3D10_DRIVER_TYPE_NULL",
-    "D3D10_DRIVER_TYPE_SOFTWARE",
-    "D3D10_DRIVER_TYPE_WARP",
-])
+from d3d10misc import d3d10
+from trace import DllTracer
 
 
-d3d10 = API("d3d10")
-d3d10.add_functions([
-    StdFunction(HRESULT, "D3D10CreateDevice", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (UINT, "SDKVersion"), Out(Pointer(Pointer(ID3D10Device)), "ppDevice")]),
-    StdFunction(HRESULT, "D3D10CreateDeviceAndSwapChain", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), Out(Pointer(Pointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(Pointer(ID3D10Device)), "ppDevice")]),
-    StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), Out(Pointer(LPD3D10BLOB), "ppBuffer")]),
-])
+if __name__ == '__main__':
+    print '#include "trace_writer.hpp"'
+    print '#include "os.hpp"'
+    print
+    print '#include <windows.h>'
+    print '#include <tchar.h>'
+    print
+    print '#include "compat.h"'
+    print
+    print '#include <d3d10.h>'
+    print
+    tracer = DllTracer('d3d10.dll')
+    tracer.trace_api(d3d10)
