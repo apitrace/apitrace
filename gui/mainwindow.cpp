@@ -618,9 +618,6 @@ void MainWindow::showSelectedSurface()
     QImage img = var.value<QImage>();
     viewer->setImage(img);
 
-    QRect screenRect = QApplication::desktop()->availableGeometry();
-    viewer->resize(qMin(int(0.75 * screenRect.width()), img.width()) + 40,
-                   qMin(int(0.75 * screenRect.height()), img.height()) + 40);
     viewer->show();
     viewer->raise();
     viewer->activateWindow();
