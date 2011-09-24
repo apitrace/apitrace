@@ -126,7 +126,6 @@ private:
     QString m_tempFileName;
 
     QList<ApiTraceFrame*> m_frames;
-    QVector<ApiTraceCall*> m_calls;
 
     FrameMarker m_frameMarker;
 
