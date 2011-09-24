@@ -89,10 +89,13 @@ public slots:
     void fold(int line);
     void unfold(int line);
     void toggleFold(int line);
+    void indent();
 
 protected:
-    void resizeEvent(QResizeEvent *e);
-    void wheelEvent(QWheelEvent *e);
+    virtual void resizeEvent(QResizeEvent *e);
+    virtual void wheelEvent(QWheelEvent *e);
+    virtual void contextMenuEvent(QContextMenuEvent *e);
+
 
 private slots:
     void updateCursor();
