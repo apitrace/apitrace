@@ -179,9 +179,11 @@ Call *Parser::parse_call(Mode mode) {
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
         case -1:
-            for (CallList::iterator it = calls.begin(); it != calls.end(); ++it) {
-                std::cerr << "warning: incomplete call " << (*it)->name() << "\n";
-                std::cerr << **it << "\n";
+            if (!calls.empty()) {
+                Call *call = calls.front();
+                std::cerr << call->no << ": warning: incomplete call " << call->name() << "\n";
+                calls.pop_front();
+                return call;
             }
             return NULL;
         }
