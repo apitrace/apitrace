@@ -38,6 +38,16 @@ void TraceLoader::loadTrace(const QString &filename)
         loadHelpFile();
     }
 
+    if (!m_frameBookmarks.isEmpty()) {
+        qDeleteAll(m_signatures);
+        qDeleteAll(m_enumSignatures);
+        m_signatures.clear();
+        m_enumSignatures.clear();
+        m_frameBookmarks.clear();
+        m_createdFrames.clear();
+        m_parser.close();
+    }
+
     if (!m_parser.open(filename.toLatin1())) {
         qDebug() << "error: failed to open " << filename;
         return;
@@ -51,7 +61,6 @@ void TraceLoader::loadTrace(const QString &filename)
         //Load the entire file into memory
         parseTrace();
     }
-
     emit finishedParsing();
 }
 

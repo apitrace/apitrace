@@ -148,6 +148,8 @@ void Parser::close(void) {
         }
     }
     bitmasks.clear();
+
+    next_call_no = 0;
 }
 
 

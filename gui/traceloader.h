@@ -85,7 +85,6 @@ private:
 
 private:
     Trace::Parser m_parser;
-    QString m_fileName;
     ApiTrace::FrameMarker m_frameMarker;
 
     typedef QMap<int, FrameBookmark> FrameBookmarks;

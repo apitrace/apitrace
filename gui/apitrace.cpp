@@ -148,10 +148,12 @@ void ApiTrace::setFileName(const QString &name)
 {
     if (m_fileName != name) {
         m_fileName = name;
+        m_tempFileName = QString();
 
         m_frames.clear();
         m_errors.clear();
         m_editedCalls.clear();
+        m_queuedErrors.clear();
         m_needsSaving = false;
         emit invalidated();
 
