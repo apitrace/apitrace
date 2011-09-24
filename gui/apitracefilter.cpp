@@ -63,6 +63,10 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
             return false;
     }
 
+    if (m_filters & CustomFilter) {
+        return !function.contains(m_customRegexp);
+    }
+
 
     return true;
 }
@@ -100,6 +104,16 @@ QModelIndex ApiTraceFilter::indexForCall(ApiTraceCall *call) const
 QRegExp ApiTraceFilter::filterRegexp() const
 {
     return m_regexp;
+}
+
+void ApiTraceFilter::setCustomFilterRegexp(const QString &str)
+{
+    m_customRegexp = QRegExp(str);
+}
+
+QString ApiTraceFilter::customFilterRegexp() const
+{
+    return m_customRegexp.pattern();
 }
 
 #include "apitracefilter.moc"
