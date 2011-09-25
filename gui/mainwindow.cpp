@@ -705,8 +705,8 @@ void MainWindow::initConnections()
             this, SLOT(slotSaved()));
     connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
             this, SLOT(slotTraceChanged(ApiTraceCall*)));
-    connect(m_trace, SIGNAL(findResult(ApiTrace::SearchResult,ApiTraceCall*)),
-            this, SLOT(slotSearchResult(ApiTrace::SearchResult,ApiTraceCall*)));
+    connect(m_trace, SIGNAL(findResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)),
+            this, SLOT(slotSearchResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)));
     connect(m_trace, SIGNAL(foundFrameStart(ApiTraceFrame*)),
             this, SLOT(slotFoundFrameStart(ApiTraceFrame*)));
     connect(m_trace, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
@@ -1093,7 +1093,8 @@ void MainWindow::loadProgess(int percent)
     m_progressBar->setValue(percent);
 }
 
-void MainWindow::slotSearchResult(ApiTrace::SearchResult result,
+void MainWindow::slotSearchResult(const ApiTrace::SearchRequest &request,
+                                  ApiTrace::SearchResult result,
                                   ApiTraceCall *call)
 {
     switch (result) {
@@ -1102,8 +1103,28 @@ void MainWindow::slotSearchResult(ApiTrace::SearchResult result,
         break;
     case ApiTrace::SearchResult_Found: {
         QModelIndex index = m_proxyModel->indexForCall(call);
-        m_ui.callView->setCurrentIndex(index);
-        m_searchWidget->setFound(true);
+
+        if (index.isValid()) {
+            m_ui.callView->setCurrentIndex(index);
+            m_searchWidget->setFound(true);
+        } else {
+            //call is filtered out, so continue searching but from the
+            // filtered call
+            if (!call) {
+                qDebug()<<"Error: search success with no call";
+                return;
+            }
+//            qDebug()<<"filtered! search from "<<call->searchText()
+//                   <<", call idx = "<<call->index();
+
+            if (request.direction == ApiTrace::SearchRequest::Next) {
+                m_trace->findNext(call->parentFrame(), call,
+                                  request.text, request.cs);
+            } else {
+                m_trace->findNext(call->parentFrame(), call,
+                                  request.text, request.cs);
+            }
+        }
     }
         break;
     case ApiTrace::SearchResult_Wrapped:

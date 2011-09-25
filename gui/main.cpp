@@ -11,7 +11,7 @@ Q_DECLARE_METATYPE(QList<ApiTraceFrame*>);
 Q_DECLARE_METATYPE(QVector<ApiTraceCall*>);
 Q_DECLARE_METATYPE(Qt::CaseSensitivity);
 Q_DECLARE_METATYPE(ApiTrace::SearchResult);
-
+Q_DECLARE_METATYPE(ApiTrace::SearchRequest);
 
 int main(int argc, char **argv)
 {
@@ -22,6 +22,7 @@ int main(int argc, char **argv)
     qRegisterMetaType<ApiTraceState>();
     qRegisterMetaType<Qt::CaseSensitivity>();
     qRegisterMetaType<ApiTrace::SearchResult>();
+    qRegisterMetaType<ApiTrace::SearchRequest>();
     MainWindow window;
 
     window.show();

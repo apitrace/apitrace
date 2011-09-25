@@ -28,15 +28,10 @@ public slots:
     void loadTrace(const QString &filename);
     void loadFrame(ApiTraceFrame *frame);
     void setFrameMarker(ApiTrace::FrameMarker marker);
-    void searchNext(int startFrame,
-                    const QString &str,
-                    Qt::CaseSensitivity sensitivity);
-    void searchPrev(int startFrame,
-                    const QString &str,
-                    Qt::CaseSensitivity sensitivity);
     void findFrameStart(ApiTraceFrame *frame);
     void findFrameEnd(ApiTraceFrame *frame);
     void findCallIndex(int index);
+    void search(const ApiTrace::SearchRequest &request);
 
 signals:
     void startedParsing();
@@ -48,7 +43,9 @@ signals:
                              const QVector<ApiTraceCall*> &calls,
                              quint64 binaryDataSize);
 
-    void searchResult(ApiTrace::SearchResult result, ApiTraceCall *call);
+    void searchResult(const ApiTrace::SearchRequest &request,
+                      ApiTrace::SearchResult result,
+                      ApiTraceCall *call);
     void foundFrameStart(ApiTraceFrame *frame);
     void foundFrameEnd(ApiTraceFrame *frame);
     void foundCallIndex(ApiTraceCall *call);
@@ -73,6 +70,9 @@ private:
     void scanTrace();
     void parseTrace();
 
+    void searchNext(const ApiTrace::SearchRequest &request);
+    void searchPrev(const ApiTrace::SearchRequest &request);
+
     int callInFrame(int callIdx) const;
     bool callContains(Trace::Call *call,
                       const QString &str,
@@ -80,8 +80,7 @@ private:
      QVector<ApiTraceCall*> fetchFrameContents(ApiTraceFrame *frame);
      bool searchCallsBackwards(const QList<Trace::Call*> &calls,
                                int frameIdx,
-                               const QString &str,
-                               Qt::CaseSensitivity sensitivity);
+                               const ApiTrace::SearchRequest &request);
 
 private:
     Trace::Parser m_parser;

@@ -283,25 +283,25 @@ void TraceLoader::addEnumSignature(unsigned id, ApiTraceEnumSignature *signature
     m_enumSignatures[id] = signature;
 }
 
-void TraceLoader::searchNext(int startFrame,
-                             const QString &str,
-                             Qt::CaseSensitivity sensitivity)
+void TraceLoader::searchNext(const ApiTrace::SearchRequest &request)
 {
     Q_ASSERT(m_parser.supportsOffsets());
     if (m_parser.supportsOffsets()) {
+        int startFrame = m_createdFrames.indexOf(request.frame);
         const FrameBookmark &frameBookmark = m_frameBookmarks[startFrame];
         m_parser.setBookmark(frameBookmark.start);
         Trace::Call *call = 0;
         while ((call = m_parser.parse_call())) {
 
-            if (callContains(call, str, sensitivity)) {
+            if (callContains(call, request.text, request.cs)) {
                 unsigned frameIdx = callInFrame(call->no);
                 ApiTraceFrame *frame = m_createdFrames[frameIdx];
                 const QVector<ApiTraceCall*> calls =
                         fetchFrameContents(frame);
                 for (int i = 0; i < calls.count(); ++i) {
                     if (calls[i]->index() == call->no) {
-                        emit searchResult(ApiTrace::SearchResult_Found, calls[i]);
+                        emit searchResult(request, ApiTrace::SearchResult_Found,
+                                          calls[i]);
                         break;
                     }
                 }
@@ -312,15 +312,14 @@ void TraceLoader::searchNext(int startFrame,
             delete call;
         }
     }
-    emit searchResult(ApiTrace::SearchResult_NotFound, 0);
+    emit searchResult(request, ApiTrace::SearchResult_NotFound, 0);
 }
 
-void TraceLoader::searchPrev(int startFrame,
-                             const QString &str,
-                             Qt::CaseSensitivity sensitivity)
+void TraceLoader::searchPrev(const ApiTrace::SearchRequest &request)
 {
     Q_ASSERT(m_parser.supportsOffsets());
     if (m_parser.supportsOffsets()) {
+        int startFrame = m_createdFrames.indexOf(request.frame);
         Trace::Call *call = 0;
         QList<Trace::Call*> frameCalls;
         int frameIdx = startFrame;
@@ -337,7 +336,7 @@ void TraceLoader::searchPrev(int startFrame,
             if (numCallsToParse == 0) {
                 bool foundCall = searchCallsBackwards(frameCalls,
                                                       frameIdx,
-                                                      str, sensitivity);
+                                                      request);
 
                 qDeleteAll(frameCalls);
                 frameCalls.clear();
@@ -356,23 +355,24 @@ void TraceLoader::searchPrev(int startFrame,
             }
         }
     }
-    emit searchResult(ApiTrace::SearchResult_NotFound, 0);
+    emit searchResult(request, ApiTrace::SearchResult_NotFound, 0);
 }
 
 bool TraceLoader::searchCallsBackwards(const QList<Trace::Call*> &calls,
                                        int frameIdx,
-                                       const QString &str,
-                                       Qt::CaseSensitivity sensitivity)
+                                       const ApiTrace::SearchRequest &request)
 {
     for (int i = calls.count() - 1; i >= 0; --i) {
         Trace::Call *call = calls[i];
-        if (callContains(call, str, sensitivity)) {
+        if (callContains(call, request.text, request.cs)) {
             ApiTraceFrame *frame = m_createdFrames[frameIdx];
             const QVector<ApiTraceCall*> apiCalls =
                     fetchFrameContents(frame);
             for (int i = 0; i < apiCalls.count(); ++i) {
                 if (apiCalls[i]->index() == call->no) {
-                    emit searchResult(ApiTrace::SearchResult_Found, apiCalls[i]);
+                    emit searchResult(request,
+                                      ApiTrace::SearchResult_Found,
+                                      apiCalls[i]);
                     break;
                 }
             }
@@ -500,6 +500,15 @@ void TraceLoader::findCallIndex(int index)
     }
     Q_ASSERT(call);
     emit foundCallIndex(call);
+}
+
+void TraceLoader::search(const ApiTrace::SearchRequest &request)
+{
+    if (request.direction == ApiTrace::SearchRequest::Next) {
+        searchNext(request);
+    } else {
+        searchPrev(request);
+    }
 }
 
 #include "traceloader.moc"

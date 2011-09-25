@@ -25,6 +25,31 @@ public:
         SearchResult_Found,
         SearchResult_Wrapped
     };
+    struct SearchRequest {
+        enum Direction {
+            Next,
+            Prev
+        };
+        SearchRequest()
+            : direction(Next)
+        {}
+        SearchRequest(Direction dir,
+                      ApiTraceFrame *f,
+                      ApiTraceCall *call,
+                      QString str,
+                      Qt::CaseSensitivity caseSens)
+            : direction(dir),
+              frame(f),
+              from(call),
+              text(str),
+              cs(caseSens)
+        {}
+        Direction direction;
+        ApiTraceFrame *frame;
+        ApiTraceCall *from;
+        QString text;
+        Qt::CaseSensitivity cs;
+    };
 
     static bool isCallAFrameMarker(const ApiTraceCall *call,
                                    FrameMarker marker);
@@ -87,7 +112,8 @@ signals:
     void changed(ApiTraceCall *call);
     void startedSaving();
     void saved();
-    void findResult(ApiTrace::SearchResult result,
+    void findResult(const ApiTrace::SearchRequest &request,
+                    ApiTrace::SearchResult result,
                     ApiTraceCall *call);
 
     void beginAddingFrames(int oldCount, int numAdded);
@@ -99,12 +125,7 @@ signals:
     void foundCallIndex(ApiTraceCall *call);
 
 signals:
-    void loaderSearchNext(int startFrame,
-                          const QString &str,
-                          Qt::CaseSensitivity sensitivity);
-    void loaderSearchPrev(int startFrame,
-                          const QString &str,
-                          Qt::CaseSensitivity sensitivity);
+    void loaderSearch(const ApiTrace::SearchRequest &request);
     void loaderFindFrameStart(ApiTraceFrame *frame);
     void loaderFindFrameEnd(ApiTraceFrame *frame);
     void loaderFindCallIndex(int index);
@@ -116,7 +137,8 @@ private slots:
     void loaderFrameLoaded(ApiTraceFrame *frame,
                            const QVector<ApiTraceCall*> &calls,
                            quint64 binaryDataSize);
-    void loaderSearchResult(ApiTrace::SearchResult result,
+    void loaderSearchResult(const ApiTrace::SearchRequest &request,
+                            ApiTrace::SearchResult result,
                             ApiTraceCall *call);
 
 private:
