@@ -36,13 +36,20 @@ ULONG = Alias("ULONG", ULong)
 LONGLONG = Alias("LONGLONG", LongLong)
 FLOAT = Alias("FLOAT", Float)
 
-INT32 = Literal("INT32", "SInt")
-UINT32 = Literal("UINT32", "UInt")
+INT8 = Alias("INT8", Int8)
+UINT8 = Alias("UINT8", UInt8)
+INT16 = Alias("INT16", Int16)
+UINT16 = Alias("UINT16", UInt16)
+INT32 = Alias("INT32", Int32)
+UINT32 = Alias("UINT32", UInt32)
+INT64 = Alias("INT64", Int64)
+UINT64 = Alias("UINT64", UInt64)
 
 BYTE = Literal("BYTE", "UInt", base=16)
 WORD = Literal("WORD", "UInt", base=16)
 DWORD = Literal("DWORD", "UInt", base=16)
 
+WCHAR = Literal("WCHAR", "SInt")
 
 BOOL = Alias("BOOL", Bool)
 

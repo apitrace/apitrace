@@ -181,7 +181,7 @@ cglapi.add_functions([
     Function(CGLContextObj, "CGLGetCurrentContext", []),
 
     # OpenGL.h, OpenGL framework
-    Function(CGLError, "CGLChoosePixelFormat", [(Const(OpaquePointer(CGLPixelFormatAttribute)), "attribs"), (OpaquePointer(CGLPixelFormatObj), "pix"), (OpaquePointer(GLint), "npix")]),
+    Function(CGLError, "CGLChoosePixelFormat", [(OpaquePointer(Const(CGLPixelFormatAttribute)), "attribs"), (OpaquePointer(CGLPixelFormatObj), "pix"), (OpaquePointer(GLint), "npix")]),
     Function(CGLError, "CGLDestroyPixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), (OpaquePointer(GLint), "value")]),
     Function(Void, "CGLReleasePixelFormat", [(CGLPixelFormatObj, "pix")]),
@@ -215,11 +215,11 @@ cglapi.add_functions([
     Function(CGLError, "CGLEnable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
     Function(CGLError, "CGLDisable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
     Function(CGLError, "CGLIsEnabled", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname"), (OpaquePointer(GLint), "enable")]),
-    Function(CGLError, "CGLSetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), (Const(OpaquePointer(GLint)), "params")]),
+    Function(CGLError, "CGLSetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), (OpaquePointer(Const(GLint)), "params")]),
     Function(CGLError, "CGLGetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), (OpaquePointer(GLint), "params")]),
     Function(CGLError, "CGLSetVirtualScreen", [(CGLContextObj, "ctx"), (GLint, "screen")]),
     Function(CGLError, "CGLGetVirtualScreen", [(CGLContextObj, "ctx"), (OpaquePointer(GLint), "screen")]),
-    Function(CGLError, "CGLSetGlobalOption", [(CGLGlobalOption, "pname"), (Const(OpaquePointer(GLint)), "params")]),
+    Function(CGLError, "CGLSetGlobalOption", [(CGLGlobalOption, "pname"), (OpaquePointer(Const(GLint)), "params")]),
     Function(CGLError, "CGLGetGlobalOption", [(CGLGlobalOption, "pname"), (OpaquePointer(GLint), "params")]),
     Function(CGLError, "CGLSetOption", [(CGLGlobalOption, "pname"), (GLint, "param")]),
     Function(CGLError, "CGLGetOption", [(CGLGlobalOption, "pname"), (OpaquePointer(GLint), "param")]),

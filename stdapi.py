@@ -83,10 +83,17 @@ class Literal(Type):
 class Const(Type):
 
     def __init__(self, type):
-
-        if type.expr.startswith("const "):
+        # While "const foo" and "foo const" are synonymous, "const foo *" and
+        # "foo * const" are not quite the same, and some compilers do enforce
+        # strict const correctness.
+        if isinstance(type, String) or type is WString:
+            # For strings we never intend to say a const pointer to chars, but
+            # rather a point to const chars.
+            expr = "const " + type.expr
+        elif type.expr.startswith("const ") or '*' in type.expr:
             expr = type.expr + " const"
         else:
+            # The most legible
             expr = "const " + type.expr
 
         Type.__init__(self, expr, 'C' + type.id)
