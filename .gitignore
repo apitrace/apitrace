@@ -5,6 +5,7 @@
 *.bz2
 *.cmake
 *.dll
+*.dmg
 *.dylib
 *.exe
 *.exp
