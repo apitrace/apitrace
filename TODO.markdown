@@ -48,8 +48,6 @@ Retracing
 
   * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c
 
-* Plug memory leaks.
-
 * D3D support.
 
 
