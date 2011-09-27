@@ -36,7 +36,7 @@ import optparse
 
 class Parser:
 
-    token_re = re.compile(r'(\w+|\s+|.)')
+    token_re = re.compile(r'(\d[x0-9a-fA-F.UL]*|\w+|\s+|.)')
 
     multi_comment_re = re.compile(r'/\*.*?\*/', flags = re.DOTALL)
     single_comment_re = re.compile(r'//.*',)
@@ -93,7 +93,9 @@ class Parser:
 
     def parse_declaration(self):
         self.parse_tags()
-        if self.match('enum'):
+        if self.match('#'):
+            self.parse_define()
+        elif self.match('enum'):
             self.parse_enum()
         elif self.match('interface'):
             self.parse_interface()
@@ -162,16 +164,20 @@ class Parser:
         print '%s = %s(%s, [' % (name, constructor, type)
 
         while self.lookahead() != '}':
-            self.consume('#')
-            self.consume('define')
-            name = self.consume()
-            value = self.consume()
-            #print '    "%s",\t# %s' % (name, value) 
-            print '    "%s",' % (name,) 
+            name, value = self.parse_define()
         self.consume('}')
 
         print '])'
         print
+
+    def parse_define(self):
+        self.consume('#')
+        self.consume('define')
+        name = self.consume()
+        value = self.consume()
+        #print '    "%s",\t# %s' % (name, value) 
+        print '    "%s",' % (name,) 
+        return name, value
 
     def parse_struct(self):
         self.consume('struct')
