@@ -979,6 +979,12 @@ void GLSLEdit::indent()
     astyle.start("astyle");
     if (!astyle.waitForStarted()) {
         qDebug()<<"Couldn't start the 'astyle' process!";
+        QMessageBox::warning(this,
+                             tr("QApiTrace"),
+                             tr("QApiTrace could not locate the 'astyle'\n"
+                                "binary. Make sure 'astyle' is installed\n"
+                                "and in the PATH."),
+                             QMessageBox::Ok);
         return;
     }
 
