@@ -2,8 +2,8 @@ This file lists the major user visible improvments.  For a full list of changes
 and their authors see the git history.
 
 
-Recent developments
-===================
+Version 2.0
+===========
 
 * Flush/sync trace file only when there is an uncaught signal/exception,
   yielding a 5x speed up while tracing.
