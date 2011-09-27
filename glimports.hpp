@@ -100,7 +100,8 @@ typedef struct _WGLSWAP
 
 extern "C" {
 
-typedef int CGSConnectionID;
+// From http://www.opensource.apple.com/source/gdb/gdb-954/libcheckpoint/cpcg.c
+typedef void * CGSConnectionID;
 typedef int CGSWindowID;
 typedef int CGSSurfaceID;
 
