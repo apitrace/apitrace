@@ -27,7 +27,9 @@ Tracing
 * Start tracing on demand (e.g., key-press, or by frame no), emitting calls
   that recreate all current state.
 
-* Add option to include call stack frames in the trace
+* Add option to include call stack frames in the trace.
+
+* Trace the internal GL calls done by GLU on Mac OS X & Windows.
 
 
 Retracing
