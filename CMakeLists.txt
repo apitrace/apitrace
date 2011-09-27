@@ -5,12 +5,16 @@ project (apitrace)
 
 ##############################################################################
 # Options
-#
+
+# On Mac OS X build fat binaries with i386 and x86_64 architectures by default.
+if (APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
+    set (CMAKE_OSX_ARCHITECTURES "i386;x86_64" CACHE STRING "Build architectures for OSX" FORCE)
+endif ()
+
 # We use a cached string variable instead of the standard (boolean) OPTION
 # command so that we can default to auto-detecting optional depencies, while
 # still providing a mechanism to force/disable these optional dependencies, as
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
-
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
 
