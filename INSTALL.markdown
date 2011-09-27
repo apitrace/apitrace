@@ -2,17 +2,32 @@ Building from source
 ====================
 
 
+Requirements
+------------
+
 Requirements common for all platforms:
 
-* Python (requires version 2.6)
+* Python version 2.6 or 2.7
 
-* CMake (tested with version 2.8)
+* CMake version 2.8 or higher (tested with version 2.8)
 
-Requirements to build the GUI (optional):
 
-* Qt (tested with version 4.7)
+The GUI also dependends on:
 
-* QJSON (tested with version 0.7.1)
+* Qt version 4.7
+
+* QJSON version 0.5 or higher (tested with version 0.7.1, which is bundled)
+
+Qt and QJSON will be required if `-DENABLE_GUI=TRUE` is passed to `cmake`, and
+never used if `-DENABLED_GUI=FALSE` is passed instead.  The implicit default is
+`-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available, using the
+bundled QJSON if it is not found on the system.
+
+
+The code also depends on zlib, libpng, and snappy libraries, but the bundled
+sources are always used regardless of system availability, to make the wrapper
+shared-objects/DLL self contained, and to prevent symbol collisions when
+tracing.
 
 
 Linux / Mac OS X
@@ -47,13 +62,7 @@ and press the _Configure_ button.
 
 It will try to detect most required/optional dependencies automatically.  When
 not found automatically, you can manually specify the location of the
-dependencies from the GUI.
-
-If you are building with GUI support (i.e, with QT and QJSON), it should detect
-the official QT sdk automatically, but you will need to build QJSON yourself
-and also set the `QJSON_INCLUDE_DIR` and `QJSON_LIBRARIES` variables in the
-generated `CMakeCache.txt` when building apitrace and repeat the above
-sequence.
+dependencies from the CMake GUI.
 
 After you've succesfully configured, you can start the build by opening the
 generated `build\apitrace.sln` solution file, or invoking `cmake` as:

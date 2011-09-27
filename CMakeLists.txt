@@ -128,7 +128,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 ##############################################################################
 # Bundled dependencies
 #
-# We always use the bundled zlib and libpng sources:
+# We always use the bundled zlib, libpng, and snappy sources:
 # - on Windows to make it easy to deploy the wrappers DLLs
 # - on unices to prevent symbol collisions when tracing applications that link
 # against other versions of these libraries
@@ -155,6 +155,23 @@ add_subdirectory (thirdparty/libpng EXCLUDE_FROM_ALL)
 include_directories (${PNG_INCLUDE_DIR})
 add_definitions (${PNG_DEFINITIONS})
 link_libraries (${PNG_LIBRARIES})
+
+# The Qt website provides binaries for Windows and MacOSX, and they are
+# automatically found by cmake without any manual intervention.  The situation
+# for QJSON is substantially different: there are no binaries for QJSON
+# available, and there is no standard installation directory that is detected
+# by cmake.
+#
+# By bundling the QJSON source, we make it much more easier to build the GUI on
+# Windows and MacOSX.  But we only use the bundled sources when ENABLE_GUI is
+# AUTO.
+if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
+    add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
+    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/qjson)
+    set (QJSON_LIBRARY_DIRS)
+    set (QJSON_LIBRARIES qjson_bundled)
+    set (QJSON_FOUND TRUE)
+endif ()
 
 # For glext headers
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
