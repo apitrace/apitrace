@@ -238,7 +238,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
             DEPENDS ddrawtrace.py trace.py specs/d3d.py specs/d3dtypes.py specs/d3dcaps.py specs/ddraw.py specs/winapi.py specs/stdapi.py
         )
-        add_library (ddraw MODULE ddraw.def ddrawtrace.cpp)
+        add_library (ddraw MODULE specs/ddraw.def ddrawtrace.cpp)
         set_target_properties (ddraw
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -255,7 +255,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
             DEPENDS d3d8trace.py trace.py specs/d3d8.py specs/d3d8types.py specs/d3d8caps.py specs/winapi.py specs/stdapi.py
         )
-        add_library (d3d8 MODULE d3d8.def d3d8trace.cpp d3dshader.cpp)
+        add_library (d3d8 MODULE specs/d3d8.def d3d8trace.cpp d3dshader.cpp)
         set_target_properties (d3d8
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -272,7 +272,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
             DEPENDS d3d9trace.py trace.py specs/d3d9.py specs/d3d9types.py specs/d3d9caps.py specs/winapi.py specs/stdapi.py
         )
-        add_library (d3d9 MODULE d3d9.def d3d9trace.cpp d3dshader.cpp)
+        add_library (d3d9 MODULE specs/d3d9.def d3d9trace.cpp d3dshader.cpp)
         set_target_properties (d3d9
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -289,7 +289,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
             DEPENDS d3d10trace.py trace.py d3d10misc.py specs/d3d10.py specs/dxgi.py specs/winapi.py specs/stdapi.py
         )
-        add_library (d3d10 MODULE d3d10.def d3d10trace.cpp)
+        add_library (d3d10 MODULE specs/d3d10.def d3d10trace.cpp)
         set_target_properties (d3d10 PROPERTIES PREFIX "")
         install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
     endif (DirectX_D3D10_INCLUDE_DIR)
@@ -300,7 +300,7 @@ if (WIN32)
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
         DEPENDS wgltrace.py gltrace.py trace.py specs/wglapi.py specs/wglenum.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/winapi.py specs/stdapi.py
     )
-    add_library (wgltrace MODULE opengl32.def
+    add_library (wgltrace MODULE specs/opengl32.def
         wgltrace.cpp
         glcaps.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
@@ -312,7 +312,7 @@ if (WIN32)
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
     if (MINGW)
-        set_target_properties(wgltrace PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
+        set_target_properties(wgltrace PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup")
     endif (MINGW)
     install (TARGETS wgltrace LIBRARY DESTINATION wrappers)
 
