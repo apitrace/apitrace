@@ -37,7 +37,7 @@ CGLRendererInfoObj = Opaque("CGLRendererInfoObj")
 CGLPBufferObj = Opaque("CGLPBufferObj")
 CGLShareGroup = Opaque("CGLShareGroup")
 CGLShareGroupObj = Opaque("CGLShareGroupObj")
-CGSConnectionID = Alias("CGSConnectionID", Int)
+CGSConnectionID = Opaque("CGSConnectionID")
 CGSWindowID = Alias("CGSWindowID", Int)
 CGSSurfaceID = Alias("CGSSurfaceID", Int)
 
