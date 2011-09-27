@@ -26,8 +26,8 @@
 
 """Generic retracing code generator."""
 
-import stdapi
-import glapi
+import specs.stdapi as stdapi
+import specs.glapi as glapi
 from codegen import *
 
 

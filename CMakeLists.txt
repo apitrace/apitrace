@@ -188,7 +188,7 @@ include_directories (
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py cglapi.py glapi.py gltypes.py stdapi.py
+    DEPENDS glproc.py dispatch.py specs/wglapi.py specs/glxapi.py specs/cglapi.py specs/glapi.py specs/gltypes.py specs/stdapi.py
 )
 
 if (WIN32)
@@ -236,7 +236,7 @@ if (WIN32)
         add_custom_command (
             OUTPUT ddrawtrace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
-            DEPENDS ddrawtrace.py d3d.py d3dtypes.py d3dcaps.py ddraw.py trace.py winapi.py stdapi.py
+            DEPENDS ddrawtrace.py trace.py specs/d3d.py specs/d3dtypes.py specs/d3dcaps.py specs/ddraw.py specs/winapi.py specs/stdapi.py
         )
         add_library (ddraw MODULE ddraw.def ddrawtrace.cpp)
         set_target_properties (ddraw
@@ -253,7 +253,7 @@ if (WIN32)
         add_custom_command (
             OUTPUT d3d8trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
-            DEPENDS d3d8trace.py d3d8.py trace.py d3d8types.py d3d8caps.py winapi.py stdapi.py
+            DEPENDS d3d8trace.py trace.py specs/d3d8.py specs/d3d8types.py specs/d3d8caps.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d8 MODULE d3d8.def d3d8trace.cpp d3dshader.cpp)
         set_target_properties (d3d8
@@ -270,7 +270,7 @@ if (WIN32)
         add_custom_command (
             OUTPUT d3d9trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
-            DEPENDS d3d9trace.py d3d9.py trace.py d3d9types.py d3d9caps.py winapi.py stdapi.py
+            DEPENDS d3d9trace.py trace.py specs/d3d9.py specs/d3d9types.py specs/d3d9caps.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d9 MODULE d3d9.def d3d9trace.cpp d3dshader.cpp)
         set_target_properties (d3d9
@@ -287,7 +287,7 @@ if (WIN32)
         add_custom_command (
             OUTPUT d3d10trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
-            DEPENDS d3d10trace.py d3d10misc.py d3d10.py dxgi.py winapi.py stdapi.py
+            DEPENDS d3d10trace.py trace.py d3d10misc.py specs/d3d10.py specs/dxgi.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d10 MODULE d3d10.def d3d10trace.cpp)
         set_target_properties (d3d10 PROPERTIES PREFIX "")
@@ -298,7 +298,7 @@ if (WIN32)
     add_custom_command (
         OUTPUT wgltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
-        DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glparams.py gltypes.py winapi.py stdapi.py
+        DEPENDS wgltrace.py gltrace.py trace.py specs/wglapi.py specs/wglenum.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/winapi.py specs/stdapi.py
     )
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
@@ -321,7 +321,7 @@ elseif (APPLE)
     add_custom_command (
         OUTPUT cgltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
-        DEPENDS cgltrace.py gltrace.py trace.py cglapi.py glapi.py glparams.py gltypes.py stdapi.py
+        DEPENDS cgltrace.py gltrace.py trace.py specs/cglapi.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/stdapi.py
     )
 
     add_library (cgltrace SHARED
@@ -347,7 +347,7 @@ else ()
     add_custom_command (
         OUTPUT glxtrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-        DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
+        DEPENDS glxtrace.py gltrace.py trace.py specs/glxapi.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/stdapi.py
     )
 
     add_library (glxtrace SHARED
@@ -380,13 +380,13 @@ endif ()
 add_custom_command (
     OUTPUT glretrace_gl.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
-    DEPENDS glretrace.py retrace.py codegen.py glapi.py gltypes.py stdapi.py
+    DEPENDS glretrace.py retrace.py codegen.py specs/glapi.py specs/gltypes.py specs/stdapi.py
 )
 
 add_custom_command (
     OUTPUT glstate_params.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
-    DEPENDS glstate.py glparams.py gltypes.py stdapi.py
+    DEPENDS glstate.py specs/glparams.py specs/gltypes.py specs/stdapi.py
 )
 
 include_directories (

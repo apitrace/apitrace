@@ -28,7 +28,7 @@
 """ 
 
 
-import stdapi
+import specs.stdapi as stdapi
 
 
 def function_pointer_type(function):

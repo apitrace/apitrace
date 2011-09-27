@@ -25,7 +25,7 @@
 
 
 from trace import DllTracer
-from d3d9 import d3d9
+from specs.d3d9 import d3d9
 
 
 class D3D9Tracer(DllTracer):

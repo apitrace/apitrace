@@ -27,8 +27,8 @@
 """GL retracer generator."""
 
 
-import stdapi
-import glapi
+import specs.stdapi as stdapi
+import specs.glapi as glapi
 from retrace import Retracer
 
 

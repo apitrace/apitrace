@@ -26,7 +26,7 @@
 """Common trace code generation."""
 
 
-import stdapi
+import specs.stdapi as stdapi
 from dispatch import Dispatcher
 
 

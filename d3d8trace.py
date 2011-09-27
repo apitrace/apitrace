@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from d3d8 import d3d8
+from specs.d3d8 import d3d8
 from trace import DllTracer
 
 

@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from d3d import ddraw, interfaces
+from specs.d3d import ddraw, interfaces
 from trace import DllTracer
 
 

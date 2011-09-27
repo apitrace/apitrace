@@ -27,10 +27,10 @@
 """GL tracing generator."""
 
 
-import stdapi
-import glapi
-import glparams
-from glxapi import glxapi
+import specs.stdapi as stdapi
+import specs.glapi as glapi
+import specs.glparams as glparams
+from specs.glxapi import glxapi
 from trace import Tracer, dump_instance
 
 

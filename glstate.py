@@ -27,10 +27,10 @@
 '''Generate code to dump most GL state into JSON.'''
 
 
-from stdapi import *
+from specs.stdapi import *
 
-from gltypes import *
-from glparams import *
+from specs.gltypes import *
+from specs.glparams import *
 
 
 texture_targets = [

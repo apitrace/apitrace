@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from d3d10misc import d3d10
+from specs.d3d10misc import d3d10
 from trace import DllTracer
 
 
