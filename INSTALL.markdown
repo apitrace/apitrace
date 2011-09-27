@@ -41,7 +41,7 @@ Build as:
 You can also build the 32bit GL wrapper on 64bit distro with a multilib gcc by
 doing:
 
-    cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32
+    cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32 -DENABLE_GUI=FALSE
     make -C build32 glxtrace
 
 
