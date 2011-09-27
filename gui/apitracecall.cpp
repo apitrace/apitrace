@@ -208,16 +208,7 @@ void VariantVisitor::visit(Trace::Array *array)
 
 void VariantVisitor::visit(Trace::Blob *blob)
 {
-    //XXX
-    //FIXME: this is a nasty hack. Trace::Blob's can't
-    //   delete the contents in the destructor because
-    //   the data is being used by other calls. We piggy back
-    //   on that assumption and don't deep copy the data. If
-    //   Blob's will start deleting the data we will need to
-    //   start deep copying it or switch to using something like
-    //   Boost's shared_ptr or Qt's QSharedPointer to handle it
-    blob->toPointer(true);
-    QByteArray barray = QByteArray::fromRawData(blob->buf, blob->size);
+    QByteArray barray = QByteArray(blob->buf, blob->size);
     m_variant = QVariant(barray);
 }
 
