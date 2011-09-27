@@ -124,7 +124,7 @@ public:
 
     ApiStruct(const Trace::Struct *s = 0);
 
-    QString toString() const;
+    QString toString(bool multiLine = false) const;
     Signature signature() const;
     QList<QVariant> values() const;
 
@@ -142,7 +142,7 @@ public:
     ApiArray(const Trace::Array *arr = 0);
     ApiArray(const QVector<QVariant> &vals);
 
-    QString toString() const;
+    QString toString(bool multiLine = false) const;
 
     QVector<QVariant> values() const;
 private:

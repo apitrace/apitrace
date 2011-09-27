@@ -129,10 +129,10 @@ apiVariantToString(const QVariant &variant, bool multiLine)
         return variant.value<ApiBitmask>().toString();
     }
     if (variant.canConvert<ApiStruct>()) {
-        return variant.value<ApiStruct>().toString();
+        return variant.value<ApiStruct>().toString(multiLine);
     }
     if (variant.canConvert<ApiArray>()) {
-        return variant.value<ApiArray>().toString();
+        return variant.value<ApiArray>().toString(multiLine);
     }
     if (variant.canConvert<ApiEnum>()) {
         return variant.value<ApiEnum>().toString();
@@ -353,7 +353,7 @@ ApiStruct::ApiStruct(const Trace::Struct *s)
     init(s);
 }
 
-QString ApiStruct::toString() const
+QString ApiStruct::toString(bool multiLine) const
 {
     QString str;
 
@@ -361,7 +361,7 @@ QString ApiStruct::toString() const
     for (unsigned i = 0; i < m_members.count(); ++i) {
         str += m_sig.memberNames[i] %
                QLatin1Literal(" = ") %
-               apiVariantToString(m_members[i]);
+               apiVariantToString(m_members[i], multiLine);
         if (i < m_members.count() - 1)
             str += QLatin1String(", ");
     }
@@ -400,13 +400,13 @@ QVector<QVariant> ApiArray::values() const
     return m_array;
 }
 
-QString ApiArray::toString() const
+QString ApiArray::toString(bool multiLine) const
 {
     QString str;
     str += QLatin1String("[");
     for(int i = 0; i < m_array.count(); ++i) {
         const QVariant &var = m_array[i];
-        str += apiVariantToString(var);
+        str += apiVariantToString(var, multiLine);
         if (i < m_array.count() - 1)
             str += QLatin1String(", ");
     }
