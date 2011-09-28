@@ -234,6 +234,11 @@ install (TARGETS tracedump RUNTIME DESTINATION bin)
 # API tracers
 
 if (WIN32)
+    if (MINGW)
+        # Silence warnings about @nn suffix mismatch
+        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--enable-stdcall-fixup")
+    endif (MINGW)
+
     # ddraw.dll
     if (DirectX_D3D_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D_INCLUDE_DIR})
@@ -319,9 +324,6 @@ if (WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
-    if (MINGW)
-        set_target_properties(wgltrace PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup")
-    endif (MINGW)
     install (TARGETS wgltrace LIBRARY DESTINATION wrappers)
 
 elseif (APPLE)
