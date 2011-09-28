@@ -146,8 +146,8 @@ getDrawableImage(void) {
         if (image) {
             const uint32_t *src = (const uint32_t *)ximage->data;
             uint32_t *dst = (uint32_t*) image->start();
-            for (int y = 0; y < h; ++y) {
-                for (int x = 0; x < w; ++x) {
+            for (unsigned y = 0; y < h; ++y) {
+                for (unsigned x = 0; x < w; ++x) {
                     uint32_t bgra = src[x];
                     uint32_t rgba = (bgra & 0xff00ff00)
                                   | ((bgra >> 16) & 0xff)

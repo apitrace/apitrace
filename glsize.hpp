@@ -594,7 +594,7 @@ __glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint 
 #define __glGetFramebufferAttachmentParameteriv_size __gl_param_size
 #define __glGetFramebufferAttachmentParameterivEXT_size __gl_param_size
 
-static inline size_t
+static inline unsigned
 __gl_format_channels(GLenum format) {
     switch (format) {
     case GL_COLOR_INDEX:
@@ -645,9 +645,9 @@ _align(X x, Y y) {
 
 static inline size_t
 __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth) {
-    size_t num_channels = __gl_format_channels(format);
+    unsigned num_channels = __gl_format_channels(format);
 
-    size_t bits_per_pixel;
+    unsigned bits_per_pixel;
     switch (type) {
     case GL_BITMAP:
         bits_per_pixel = 1;
@@ -720,7 +720,7 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
 
     size_t row_stride = (row_length*bits_per_pixel + 7)/8;
 
-    if (bits_per_pixel < alignment*8 &&
+    if ((GLint)bits_per_pixel < alignment*8 &&
         (bits_per_pixel & 7) == 0 &&
         _is_pot(bits_per_pixel)) {
         row_stride = _align(row_stride, alignment);

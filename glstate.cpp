@@ -455,7 +455,7 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
 
     GLint max_program_local_parameters = 0;
     glGetProgramivARB(target, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &max_program_local_parameters);
-    for (GLuint index = 0; index < max_program_local_parameters; ++index) {
+    for (GLint index = 0; index < max_program_local_parameters; ++index) {
         GLdouble params[4] = {0, 0, 0, 0};
         glGetProgramLocalParameterdvARB(target, index, params);
 
@@ -464,7 +464,7 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
         }
 
         char name[256];
-        snprintf(name, sizeof name, "%sprogram.local[%u]", prefix, index);
+        snprintf(name, sizeof name, "%sprogram.local[%i]", prefix, index);
 
         json.beginMember(name);
         json.beginArray();
@@ -478,7 +478,7 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
 
     GLint max_program_env_parameters = 0;
     glGetProgramivARB(target, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &max_program_env_parameters);
-    for (GLuint index = 0; index < max_program_env_parameters; ++index) {
+    for (GLint index = 0; index < max_program_env_parameters; ++index) {
         GLdouble params[4] = {0, 0, 0, 0};
         glGetProgramEnvParameterdvARB(target, index, params);
 
@@ -487,7 +487,7 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
         }
 
         char name[256];
-        snprintf(name, sizeof name, "%sprogram.env[%u]", prefix, index);
+        snprintf(name, sizeof name, "%sprogram.env[%i]", prefix, index);
 
         json.beginMember(name);
         json.beginArray();

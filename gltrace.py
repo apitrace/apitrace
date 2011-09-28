@@ -459,7 +459,7 @@ class GlTracer(Tracer):
             Tracer.dispatch_function(self, function)
             print '    GLint active_attributes = 0;'
             print '    __glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &active_attributes);'
-            print '    for (GLuint attrib = 0; attrib < active_attributes; ++attrib) {'
+            print '    for (GLint attrib = 0; attrib < active_attributes; ++attrib) {'
             print '        GLint size = 0;'
             print '        GLenum type = 0;'
             print '        GLchar name[256];'
@@ -477,7 +477,7 @@ class GlTracer(Tracer):
             Tracer.dispatch_function(self, function)
             print '    GLint active_attributes = 0;'
             print '    __glGetObjectParameterivARB(programObj, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &active_attributes);'
-            print '    for (GLuint attrib = 0; attrib < active_attributes; ++attrib) {'
+            print '    for (GLint attrib = 0; attrib < active_attributes; ++attrib) {'
             print '        GLint size = 0;'
             print '        GLenum type = 0;'
             print '        GLcharARB name[256];'
@@ -820,7 +820,7 @@ class GlTracer(Tracer):
             print '    GLint max_texture_coords = 0;'
             print '    __glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
             print '    for (GLint unit = 0; unit < max_texture_coords; ++unit) {'
-            print '        GLenum texture = GL_TEXTURE0 + unit;'
+            print '        GLint texture = GL_TEXTURE0 + unit;'
             print '        __glClientActiveTexture(texture);'
 
     def array_trace_prolog(self, api, uppercase_name):

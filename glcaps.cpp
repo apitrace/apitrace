@@ -65,7 +65,7 @@ static const char *extra_extensions[] = {
 static const char *
 overrideExtensionsString(const char *extensions)
 {
-    int i;
+    size_t i;
 
     ExtensionsMap::const_iterator it = extensionsMap.find(extensions);
     if (it != extensionsMap.end()) {
@@ -154,8 +154,8 @@ __glGetStringi_override(GLenum name, GLuint index)
         {
             GLint num_extensions = 0;
             __glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-            if (num_extensions <= index && index < num_extensions + NUM_EXTRA_EXTENSIONS) {
-                return (const GLubyte *)extra_extensions[index - num_extensions];
+            if ((GLuint)num_extensions <= index && index < (GLuint)num_extensions + NUM_EXTRA_EXTENSIONS) {
+                return (const GLubyte *)extra_extensions[index - (GLuint)num_extensions];
             }
         }
         break;
