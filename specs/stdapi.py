@@ -305,10 +305,6 @@ class Method(Function):
             self.args[index].index = index + 1
 
 
-def WrapPointer(type):
-    return Pointer(type)
-
-
 class String(Type):
 
     def __init__(self, expr = "char *", length = None):
