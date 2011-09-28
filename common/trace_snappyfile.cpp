@@ -122,18 +122,18 @@ bool SnappyFile::rawWrite(const void *buffer, size_t length)
         m_cachePtr += length;
         flushWriteCache();
     } else {
-        int sizeToWrite = length;
+        size_t sizeToWrite = length;
 
         while (sizeToWrite >= freeCacheSize()) {
-            int endSize = freeCacheSize();
-            int offset = length - sizeToWrite;
+            size_t endSize = freeCacheSize();
+            size_t offset = length - sizeToWrite;
             memcpy(m_cachePtr, (const char*)buffer + offset, endSize);
             sizeToWrite -= endSize;
             m_cachePtr += endSize;
             flushWriteCache();
         }
         if (sizeToWrite) {
-            int offset = length - sizeToWrite;
+            size_t offset = length - sizeToWrite;
             memcpy(m_cachePtr, (const char*)buffer + offset, sizeToWrite);
             m_cachePtr += sizeToWrite;
         }

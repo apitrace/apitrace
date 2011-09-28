@@ -228,7 +228,7 @@ FunctionSig *Parser::parse_function_sig(void) {
     } else if (file->currentOffset() < sig->offset) {
         /* skip over the signature */
         skip_string(); /* name */
-        int num_args = read_uint();
+        unsigned num_args = read_uint();
         for (unsigned i = 0; i < num_args; ++i) {
              skip_string(); /*arg_name*/
         }

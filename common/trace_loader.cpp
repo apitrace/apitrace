@@ -23,12 +23,12 @@ void Loader::setFrameMarker(Loader::FrameMarker marker)
     m_frameMarker = marker;
 }
 
-int Loader::numberOfFrames() const
+unsigned Loader::numberOfFrames() const
 {
     return m_frameBookmarks.size();
 }
 
-int Loader::numberOfCallsInFrame(int frameIdx) const
+unsigned Loader::numberOfCallsInFrame(unsigned frameIdx) const
 {
     if (frameIdx > m_frameBookmarks.size()) {
         return 0;
@@ -52,8 +52,8 @@ bool Loader::open(const char *filename)
 
     Trace::Call *call;
     ParseBookmark startBookmark;
-    int numOfFrames = 0;
-    int numOfCalls = 0;
+    unsigned numOfFrames = 0;
+    unsigned numOfCalls = 0;
     int lastPercentReport = 0;
 
     m_parser.getBookmark(startBookmark);
@@ -112,16 +112,16 @@ bool Loader::isCallAFrameMarker(const Trace::Call *call) const
     return false;
 }
 
-std::vector<Trace::Call *> Loader::frame(int idx)
+std::vector<Trace::Call *> Loader::frame(unsigned idx)
 {
-    int numOfCalls = numberOfCallsInFrame(idx);
+    unsigned numOfCalls = numberOfCallsInFrame(idx);
     if (numOfCalls) {
         const FrameBookmark &frameBookmark = m_frameBookmarks[idx];
         std::vector<Trace::Call*> calls(numOfCalls);
         m_parser.setBookmark(frameBookmark.start);
 
         Trace::Call *call;
-        int parsedCalls = 0;
+        unsigned parsedCalls = 0;
         while ((call = m_parser.parse_call())) {
 
             calls[parsedCalls] = call;

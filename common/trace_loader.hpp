@@ -29,13 +29,13 @@ public:
     Loader::FrameMarker frameMarker() const;
     void setFrameMarker(Loader::FrameMarker marker);
 
-    int numberOfFrames() const;
-    int numberOfCallsInFrame(int frameIdx) const;
+    unsigned numberOfFrames() const;
+    unsigned numberOfCallsInFrame(unsigned frameIdx) const;
 
     bool open(const char *filename);
     void close();
 
-    std::vector<Trace::Call*> frame(int idx);
+    std::vector<Trace::Call*> frame(unsigned idx);
 
 private:
     struct FrameBookmark {
@@ -48,7 +48,7 @@ private:
         {}
 
         ParseBookmark start;
-        int numberOfCalls;
+        unsigned numberOfCalls;
     };
     bool isCallAFrameMarker(const Trace::Call *call) const;
 
