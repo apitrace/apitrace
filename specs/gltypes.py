@@ -91,13 +91,12 @@ GLenum = Enum("GLenum", [
     # Parameters are added later from glparams.py's parameter table
 ])
 
-# Some functions take GLenum disguised as GLint.  Apple noticed and fixed it in
-# the gl.h header.  Regardless, C++ typechecking rules force the wrappers to
-# match the prototype precisely.
-if platform.system() == 'Darwin':
-    GLenum_int = GLenum
-else:
-    GLenum_int = Alias("GLint", GLenum)
+# Some functions take GLenum disguised as GLint, and need special treatment so
+# that symbolic names are traced correctly.  Apple noticed and fixed it in the
+# gl.h header, which further complicates things.  C++ typechecking rules force
+# the wrappers to match the prototype precisely, so the precise type is defined
+# in glimports.hpp
+GLenum_int = Alias("GLenum_int", GLenum)
 
 GLenum_mode = FakeEnum(GLenum, [
     "GL_POINTS",                         # 0x0000
