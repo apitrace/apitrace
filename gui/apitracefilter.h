@@ -11,11 +11,12 @@ class ApiTraceFilter : public QSortFilterProxyModel
     Q_OBJECT
 public:
     enum FilterOption {
-        NullFilter        =  0,
+        NullFilter        = 0,
         ExtensionsFilter  = 1 << 0,
         ResolutionsFilter = 1 << 1,
         ErrorsQueryFilter = 1 << 2,
         ExtraStateFilter  = 1 << 3,
+        CustomFilter      = 1 << 4,
     };
     Q_DECLARE_FLAGS(FilterOptions, FilterOption)
 public:
@@ -27,7 +28,9 @@ public:
     void setFilterRegexp(const QRegExp &regexp);
     QRegExp filterRegexp() const;
 
-    QModelIndex callIndex(int callNum) const;
+    void setCustomFilterRegexp(const QString &str);
+    QString customFilterRegexp() const;
+
     QModelIndex indexForCall(ApiTraceCall *call) const;
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const;
@@ -35,6 +38,7 @@ protected:
 private:
     QRegExp m_regexp;
     FilterOptions m_filters;
+    QRegExp m_customRegexp;
 };
 
 #endif

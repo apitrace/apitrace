@@ -47,8 +47,6 @@ MainWindow::MainWindow()
 
 void MainWindow::createTrace()
 {
-    TraceDialog dialog;
-
     if (!m_traceProcess->canTrace()) {
         QMessageBox::warning(
             this,
@@ -57,6 +55,7 @@ void MainWindow::createTrace()
         return;
     }
 
+    TraceDialog dialog;
     if (dialog.exec() == QDialog::Accepted) {
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
@@ -69,11 +68,11 @@ void MainWindow::createTrace()
 void MainWindow::openTrace()
 {
     QString fileName =
-        QFileDialog::getOpenFileName(
-            this,
-            tr("Open Trace"),
-            QDir::homePath(),
-            tr("Trace Files (*.trace)"));
+            QFileDialog::getOpenFileName(
+                this,
+                tr("Open Trace"),
+                QDir::homePath(),
+                tr("Trace Files (*.trace)"));
 
     if (!fileName.isEmpty() && QFile::exists(fileName)) {
         newTraceFile(fileName);
@@ -104,8 +103,8 @@ void MainWindow::callItemSelected(const QModelIndex &index)
             QByteArray data =
                 call->arguments()[call->binaryDataIndex()].toByteArray();
             m_vdataInterpreter->setData(data);
-            QVariantList args = call->arguments();
 
+            QVector<QVariant> args = call->arguments();
             for (int i = 0; i < call->argNames().count(); ++i) {
                 QString name = call->argNames()[i];
                 if (name == QLatin1String("stride")) {
@@ -117,8 +116,9 @@ void MainWindow::callItemSelected(const QModelIndex &index)
                 } else if (name == QLatin1String("type")) {
                     QString val = args[i].toString();
                     int textIndex = m_ui.vertexTypeCB->findText(val);
-                    if (textIndex >= 0)
+                    if (textIndex >= 0) {
                         m_ui.vertexTypeCB->setCurrentIndex(textIndex);
+                    }
                 }
             }
         }
@@ -127,15 +127,17 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     } else {
         if (event && event->type() == ApiTraceEvent::Frame) {
             m_selectedEvent = static_cast<ApiTraceFrame*>(event);
-        } else
+        } else {
             m_selectedEvent = 0;
+        }
         m_ui.detailsDock->hide();
         m_ui.vertexDataDock->hide();
     }
-    if (m_selectedEvent && !m_selectedEvent->state().isEmpty()) {
+    if (m_selectedEvent && m_selectedEvent->hasState()) {
         fillStateForFrame();
-    } else
+    } else {
         m_ui.stateDock->hide();
+    }
 }
 
 void MainWindow::replayStart()
@@ -207,8 +209,9 @@ void MainWindow::replayFinished(const QString &output)
     m_stateEvent = 0;
     m_ui.actionShowErrorsDock->setEnabled(m_trace->hasErrors());
     m_ui.errorsDock->setVisible(m_trace->hasErrors());
-    if (!m_trace->hasErrors())
+    if (!m_trace->hasErrors()) {
         m_ui.errorsTreeWidget->clear();
+    }
 
     statusBar()->showMessage(
         tr("Replaying finished!"), 2000);
@@ -251,8 +254,9 @@ void MainWindow::finishedLoadingTrace()
 
 void MainWindow::replayTrace(bool dumpState)
 {
-    if (m_trace->fileName().isEmpty())
+    if (m_trace->fileName().isEmpty()) {
         return;
+    }
 
     m_retracer->setFileName(m_trace->fileName());
     m_retracer->setCaptureState(dumpState);
@@ -268,7 +272,7 @@ void MainWindow::replayTrace(bool dumpState)
                 qDebug()<<"tried to get a state for an empty frame";
                 return;
             }
-            index = frame->calls().first()->index();
+            index = frame->lastCallIndex();
         } else {
             qDebug()<<"Unknown event type";
             return;
@@ -279,12 +283,13 @@ void MainWindow::replayTrace(bool dumpState)
 
     m_ui.actionStop->setEnabled(true);
     m_progressBar->show();
-    if (dumpState)
+    if (dumpState) {
         statusBar()->showMessage(
             tr("Looking up the state..."));
-    else
+    } else {
         statusBar()->showMessage(
             tr("Replaying the trace file..."));
+    }
 }
 
 void MainWindow::lookupState()
@@ -320,7 +325,7 @@ static void
 variantToString(const QVariant &var, QString &str)
 {
     if (var.type() == QVariant::List) {
-        QVariantList lst = var.toList();
+        QVector<QVariant> lst = var.toList().toVector();
         str += QLatin1String("[");
         for (int i = 0; i < lst.count(); ++i) {
             QVariant val = lst[i];
@@ -339,10 +344,12 @@ variantToString(const QVariant &var, QString &str)
 }
 
 static QTreeWidgetItem *
-variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVar);
+variantToItem(const QString &key, const QVariant &var,
+              const QVariant &defaultVar);
 
 static void
-variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap, QList<QTreeWidgetItem *> &items)
+variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap,
+                  QList<QTreeWidgetItem *> &items)
 {
     QVariantMap::const_iterator itr;
     for (itr = map.constBegin(); itr != map.constEnd(); ++itr) {
@@ -358,7 +365,9 @@ variantMapToItems(const QVariantMap &map, const QVariantMap &defaultMap, QList<Q
 }
 
 static void
-variantListToItems(const QVariantList &lst, const QVariantList &defaultLst, QList<QTreeWidgetItem *> &items)
+variantListToItems(const QVector<QVariant> &lst,
+                   const QVector<QVariant> &defaultLst,
+                   QList<QTreeWidgetItem *> &items)
 {
     for (int i = 0; i < lst.count(); ++i) {
         QString key = QString::number(i);
@@ -380,7 +389,7 @@ static bool
 isVariantDeep(const QVariant &var)
 {
     if (var.type() == QVariant::List) {
-        QVariantList lst = var.toList();
+        QVector<QVariant> lst = var.toList().toVector();
         for (int i = 0; i < lst.count(); ++i) {
             if (isVariantDeep(lst[i])) {
                 return true;
@@ -397,7 +406,8 @@ isVariantDeep(const QVariant &var)
 }
 
 static QTreeWidgetItem *
-variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVar)
+variantToItem(const QString &key, const QVariant &var,
+              const QVariant &defaultVar)
 {
     if (var == defaultVar) {
         return NULL;
@@ -426,8 +436,8 @@ variantToItem(const QString &key, const QVariant &var, const QVariant &defaultVa
             variantMapToItems(map, defaultMap, children);
         }
         if (var.type() == QVariant::List) {
-            QVariantList lst = var.toList();
-            QVariantList defaultLst = defaultVar.toList();
+            QVector<QVariant> lst = var.toList().toVector();
+            QVector<QVariant> defaultLst = defaultVar.toList().toVector();
             variantListToItems(lst, defaultLst, children);
         }
         item->addChildren(children);
@@ -441,13 +451,12 @@ static void addSurfaceItem(const ApiSurface &surface,
                            QTreeWidgetItem *parent,
                            QTreeWidget *tree)
 {
-    int width = surface.size().width();
-    int height = surface.size().height();
     QIcon icon(QPixmap::fromImage(surface.thumb()));
     QTreeWidgetItem *item = new QTreeWidgetItem(parent);
-
     item->setIcon(0, icon);
 
+    int width = surface.size().width();
+    int height = surface.size().height();
     QString descr =
         QString::fromLatin1("%1, %2 x %3")
         .arg(label)
@@ -464,10 +473,9 @@ static void addSurfaceItem(const ApiSurface &surface,
 
 void MainWindow::fillStateForFrame()
 {
-    QVariantMap params;
-
-    if (!m_selectedEvent || m_selectedEvent->state().isEmpty())
+    if (!m_selectedEvent || !m_selectedEvent->hasState()) {
         return;
+    }
 
     if (m_nonDefaultsLookupEvent) {
         m_ui.nonDefaultsCB->blockSignals(true);
@@ -482,11 +490,10 @@ void MainWindow::fillStateForFrame()
         defaultParams = defaultState.parameters();
     }
 
-    const ApiTraceState &state = m_selectedEvent->state();
+    const ApiTraceState &state = *m_selectedEvent->state();
     m_ui.stateTreeWidget->clear();
-    params = state.parameters();
     QList<QTreeWidgetItem *> items;
-    variantMapToItems(params, defaultParams, items);
+    variantMapToItems(state.parameters(), defaultParams, items);
     m_ui.stateTreeWidget->insertTopLevelItems(0, items);
 
     QMap<QString, QString> shaderSources = state.shaderSources();
@@ -495,6 +502,11 @@ void MainWindow::fillStateForFrame()
     } else {
         m_sourcesWidget->setShaders(shaderSources);
     }
+
+    m_ui.uniformsTreeWidget->clear();
+    QList<QTreeWidgetItem *> uniformsItems;
+    variantMapToItems(state.uniforms(), QVariantMap(), uniformsItems);
+    m_ui.uniformsTreeWidget->insertTopLevelItems(0, uniformsItems);
 
     const QList<ApiTexture> &textures =
         state.textures();
@@ -510,8 +522,9 @@ void MainWindow::fillStateForFrame()
             QTreeWidgetItem *textureItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
             textureItem->setText(0, tr("Textures"));
-            if (textures.count() <= 6)
+            if (textures.count() <= 6) {
                 textureItem->setExpanded(true);
+            }
 
             for (int i = 0; i < textures.count(); ++i) {
                 const ApiTexture &texture =
@@ -525,8 +538,9 @@ void MainWindow::fillStateForFrame()
             QTreeWidgetItem *fboItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
             fboItem->setText(0, tr("Framebuffers"));
-            if (fbos.count() <= 6)
+            if (fbos.count() <= 6) {
                 fboItem->setExpanded(true);
+            }
 
             for (int i = 0; i < fbos.count(); ++i) {
                 const ApiFramebuffer &fbo =
@@ -558,8 +572,9 @@ void MainWindow::showSurfacesMenu(const QPoint &pos)
 {
     QTreeWidget *tree = m_ui.surfacesTreeWidget;
     QTreeWidgetItem *item = tree->itemAt(pos);
-    if (!item)
+    if (!item) {
         return;
+    }
 
     QMenu menu(tr("Surfaces"), this);
 
@@ -581,27 +596,28 @@ void MainWindow::showSelectedSurface()
     QTreeWidgetItem *item =
         m_ui.surfacesTreeWidget->currentItem();
 
-    if (!item)
+    if (!item) {
         return;
+    }
 
-    QVariant var = item->data(0, Qt::UserRole);
-    QImage img = var.value<QImage>();
     ImageViewer *viewer = new ImageViewer(this);
 
     QString title;
-    if (currentCall()) {
+    if (selectedCall()) {
         title = tr("QApiTrace - Surface at %1 (%2)")
-                .arg(currentCall()->name())
-                .arg(currentCall()->index());
+                .arg(selectedCall()->name())
+                .arg(selectedCall()->index());
     } else {
         title = tr("QApiTrace - Surface Viewer");
     }
     viewer->setWindowTitle(title);
+
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
+
+    QVariant var = item->data(0, Qt::UserRole);
+    QImage img = var.value<QImage>();
     viewer->setImage(img);
-    QRect screenRect = QApplication::desktop()->availableGeometry();
-    viewer->resize(qMin(int(0.75 * screenRect.width()), img.width()) + 40,
-                   qMin(int(0.75 * screenRect.height()), img.height()) + 40);
+
     viewer->show();
     viewer->raise();
     viewer->activateWindow();
@@ -610,6 +626,7 @@ void MainWindow::showSelectedSurface()
 void MainWindow::initObjects()
 {
     m_ui.stateTreeWidget->sortByColumn(0, Qt::AscendingOrder);
+    m_ui.uniformsTreeWidget->sortByColumn(0, Qt::AscendingOrder);
 
     m_sourcesWidget = new ShadersSourceWidget(m_ui.shadersTab);
     QVBoxLayout *layout = new QVBoxLayout;
@@ -643,7 +660,7 @@ void MainWindow::initObjects()
     m_ui.callView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     m_progressBar = new QProgressBar();
-    m_progressBar->setRange(0, 0);
+    m_progressBar->setRange(0, 100);
     statusBar()->addPermanentWidget(m_progressBar);
     m_progressBar->hide();
 
@@ -678,6 +695,8 @@ void MainWindow::initConnections()
 {
     connect(m_trace, SIGNAL(startedLoadingTrace()),
             this, SLOT(startedLoadingTrace()));
+    connect(m_trace, SIGNAL(loaded(int)),
+            this, SLOT(loadProgess(int)));
     connect(m_trace, SIGNAL(finishedLoadingTrace()),
             this, SLOT(finishedLoadingTrace()));
     connect(m_trace, SIGNAL(startedSaving()),
@@ -686,15 +705,23 @@ void MainWindow::initConnections()
             this, SLOT(slotSaved()));
     connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
             this, SLOT(slotTraceChanged(ApiTraceCall*)));
+    connect(m_trace, SIGNAL(findResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)),
+            this, SLOT(slotSearchResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)));
+    connect(m_trace, SIGNAL(foundFrameStart(ApiTraceFrame*)),
+            this, SLOT(slotFoundFrameStart(ApiTraceFrame*)));
+    connect(m_trace, SIGNAL(foundFrameEnd(ApiTraceFrame*)),
+            this, SLOT(slotFoundFrameEnd(ApiTraceFrame*)));
+    connect(m_trace, SIGNAL(foundCallIndex(ApiTraceCall*)),
+            this, SLOT(slotJumpToResult(ApiTraceCall*)));
 
     connect(m_retracer, SIGNAL(finished(const QString&)),
             this, SLOT(replayFinished(const QString&)));
     connect(m_retracer, SIGNAL(error(const QString&)),
             this, SLOT(replayError(const QString&)));
-    connect(m_retracer, SIGNAL(foundState(const ApiTraceState&)),
-            this, SLOT(replayStateFound(const ApiTraceState&)));
-    connect(m_retracer, SIGNAL(retraceErrors(const QList<RetraceError>&)),
-            this, SLOT(slotRetraceErrors(const QList<RetraceError>&)));
+    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
+            this, SLOT(replayStateFound(ApiTraceState*)));
+    connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
+            this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
 
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
@@ -775,7 +802,7 @@ void MainWindow::initConnections()
             this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
 }
 
-void MainWindow::replayStateFound(const ApiTraceState &state)
+void MainWindow::replayStateFound(ApiTraceState *state)
 {
     m_stateEvent->setState(state);
     m_model->stateSetOnEvent(m_stateEvent);
@@ -796,10 +823,7 @@ void MainWindow::slotGoTo()
 
 void MainWindow::slotJumpTo(int callNum)
 {
-    QModelIndex index = m_proxyModel->callIndex(callNum);
-    if (index.isValid()) {
-        m_ui.callView->setCurrentIndex(index);
-    }
+    m_trace->findCallIndex(callNum);
 }
 
 void MainWindow::createdTrace(const QString &path)
@@ -825,103 +849,31 @@ void MainWindow::slotSearch()
 void MainWindow::slotSearchNext(const QString &str,
                                 Qt::CaseSensitivity sensitivity)
 {
-    QModelIndex index = m_ui.callView->currentIndex();
-    ApiTraceEvent *event = 0;
+    ApiTraceCall *call = currentCall();
+    ApiTraceFrame *frame = currentFrame();
 
-
-    if (!index.isValid()) {
-        index = m_proxyModel->index(0, 0, QModelIndex());
-        if (!index.isValid()) {
-            qDebug()<<"no currently valid index";
-            m_searchWidget->setFound(false);
-            return;
-        }
+    Q_ASSERT(call || frame);
+    if (!frame) {
+        frame = call->parentFrame();
     }
+    Q_ASSERT(frame);
 
-    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
-    ApiTraceCall *call = 0;
-
-    if (event->type() == ApiTraceCall::Call)
-        call = static_cast<ApiTraceCall*>(event);
-    else {
-        Q_ASSERT(event->type() == ApiTraceCall::Frame);
-        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        call = frame->call(0);
-    }
-
-    if (!call) {
-        m_searchWidget->setFound(false);
-        return;
-    }
-    const QList<ApiTraceCall*> &calls = m_trace->calls();
-    int callNum = calls.indexOf(call);
-
-    for (int i = callNum + 1; i < calls.count(); ++i) {
-        ApiTraceCall *testCall = calls[i];
-        QModelIndex index = m_proxyModel->indexForCall(testCall);
-        /* if it's not valid it means that the proxy model has already
-         * filtered it out */
-        if (index.isValid()) {
-            QString txt = testCall->filterText();
-            if (txt.contains(str, sensitivity)) {
-                m_ui.callView->setCurrentIndex(index);
-                m_searchWidget->setFound(true);
-                return;
-            }
-        }
-    }
-    m_searchWidget->setFound(false);
+    m_trace->findNext(frame, call, str, sensitivity);
 }
 
 void MainWindow::slotSearchPrev(const QString &str,
                                 Qt::CaseSensitivity sensitivity)
 {
-    QModelIndex index = m_ui.callView->currentIndex();
-    ApiTraceEvent *event = 0;
+    ApiTraceCall *call = currentCall();
+    ApiTraceFrame *frame = currentFrame();
 
-
-    if (!index.isValid()) {
-        index = m_proxyModel->index(0, 0, QModelIndex());
-        if (!index.isValid()) {
-            qDebug()<<"no currently valid index";
-            m_searchWidget->setFound(false);
-            return;
-        }
+    Q_ASSERT(call || frame);
+    if (!frame) {
+        frame = call->parentFrame();
     }
+    Q_ASSERT(frame);
 
-    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
-    ApiTraceCall *call = 0;
-
-    if (event->type() == ApiTraceCall::Call)
-        call = static_cast<ApiTraceCall*>(event);
-    else {
-        Q_ASSERT(event->type() == ApiTraceCall::Frame);
-        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        call = frame->call(0);
-    }
-
-    if (!call) {
-        m_searchWidget->setFound(false);
-        return;
-    }
-    const QList<ApiTraceCall*> &calls = m_trace->calls();
-    int callNum = calls.indexOf(call);
-
-    for (int i = callNum - 1; i >= 0; --i) {
-        ApiTraceCall *testCall = calls[i];
-        QModelIndex index = m_proxyModel->indexForCall(testCall);
-        /* if it's not valid it means that the proxy model has already
-         * filtered it out */
-        if (index.isValid()) {
-            QString txt = testCall->filterText();
-            if (txt.contains(str, sensitivity)) {
-                m_ui.callView->setCurrentIndex(index);
-                m_searchWidget->setFound(true);
-                return;
-            }
-        }
-    }
-    m_searchWidget->setFound(false);
+    m_trace->findPrev(frame, call, str, sensitivity);
 }
 
 void MainWindow::fillState(bool nonDefaults)
@@ -934,11 +886,17 @@ void MainWindow::fillState(bool nonDefaults)
             m_ui.nonDefaultsCB->blockSignals(false);
             ApiTraceFrame *firstFrame =
                 m_trace->frameAt(0);
-            ApiTraceEvent *oldSelected = m_selectedEvent;
-            if (!firstFrame)
+            if (!firstFrame) {
                 return;
+            }
+            if (!firstFrame->isLoaded()) {
+                m_trace->loadFrame(firstFrame);
+                return;
+            }
+            ApiTraceCall *firstCall = firstFrame->calls().first();
+            ApiTraceEvent *oldSelected = m_selectedEvent;
             m_nonDefaultsLookupEvent = m_selectedEvent;
-            m_selectedEvent = firstFrame;
+            m_selectedEvent = firstCall;
             lookupState();
             m_selectedEvent = oldSelected;
         }
@@ -948,18 +906,20 @@ void MainWindow::fillState(bool nonDefaults)
 
 void MainWindow::customContextMenuRequested(QPoint pos)
 {
-    QMenu menu;
     QModelIndex index = m_ui.callView->indexAt(pos);
 
     callItemSelected(index);
-    if (!index.isValid())
+    if (!index.isValid()) {
         return;
+    }
 
     ApiTraceEvent *event =
         index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
-    if (!event)
+    if (!event) {
         return;
+    }
 
+    QMenu menu;
     menu.addAction(QIcon(":/resources/media-record.png"),
                    tr("Lookup state"), this, SLOT(lookupState()));
     if (event->type() == ApiTraceEvent::Call) {
@@ -995,47 +955,28 @@ void MainWindow::slotSaved()
 void MainWindow::slotGoFrameStart()
 {
     ApiTraceFrame *frame = currentFrame();
-    if (!frame || frame->isEmpty()) {
-        return;
+    ApiTraceCall *call = currentCall();
+
+    if (!frame && call) {
+        frame = call->parentFrame();
     }
 
-    QList<ApiTraceCall*>::const_iterator itr;
-    QList<ApiTraceCall*> calls = frame->calls();
-
-    itr = calls.constBegin();
-    while (itr != calls.constEnd()) {
-        ApiTraceCall *call = *itr;
-        QModelIndex idx = m_proxyModel->indexForCall(call);
-        if (idx.isValid()) {
-            m_ui.callView->setCurrentIndex(idx);
-            break;
-        }
-        ++itr;
-    }
+    m_trace->findFrameStart(frame);
 }
 
 void MainWindow::slotGoFrameEnd()
 {
     ApiTraceFrame *frame = currentFrame();
-    if (!frame || frame->isEmpty()) {
-        return;
-    }
-    QList<ApiTraceCall*>::const_iterator itr;
-    QList<ApiTraceCall*> calls = frame->calls();
+    ApiTraceCall *call = currentCall();
 
-    itr = calls.constEnd();
-    do {
-        --itr;
-        ApiTraceCall *call = *itr;
-        QModelIndex idx = m_proxyModel->indexForCall(call);
-        if (idx.isValid()) {
-            m_ui.callView->setCurrentIndex(idx);
-            break;
-        }
-    } while (itr != calls.constBegin());
+    if (!frame && call) {
+        frame = call->parentFrame();
+    }
+
+    m_trace->findFrameEnd(frame);
 }
 
-ApiTraceFrame * MainWindow::currentFrame() const
+ApiTraceFrame * MainWindow::selectedFrame() const
 {
     if (m_selectedEvent) {
         if (m_selectedEvent->type() == ApiTraceEvent::Frame) {
@@ -1057,20 +998,17 @@ void MainWindow::slotTraceChanged(ApiTraceCall *call)
     }
 }
 
-void MainWindow::slotRetraceErrors(const QList<RetraceError> &errors)
+void MainWindow::slotRetraceErrors(const QList<ApiTraceError> &errors)
 {
     m_ui.errorsTreeWidget->clear();
 
-    foreach(RetraceError error, errors) {
-        ApiTraceCall *call = m_trace->callWithIndex(error.callIndex);
-        if (!call)
-            continue;
-        call->setError(error.message);
+    foreach(ApiTraceError error, errors) {
+        m_trace->setCallError(error);
 
         QTreeWidgetItem *item =
             new QTreeWidgetItem(m_ui.errorsTreeWidget);
         item->setData(0, Qt::DisplayRole, error.callIndex);
-        item->setData(0, Qt::UserRole, QVariant::fromValue(call));
+        item->setData(0, Qt::UserRole, error.callIndex);
         QString type = error.type;
         type[0] = type[0].toUpper();
         item->setData(1, Qt::DisplayRole, type);
@@ -1081,19 +1019,13 @@ void MainWindow::slotRetraceErrors(const QList<RetraceError> &errors)
 void MainWindow::slotErrorSelected(QTreeWidgetItem *current)
 {
     if (current) {
-        ApiTraceCall *call =
-            current->data(0, Qt::UserRole).value<ApiTraceCall*>();
-        Q_ASSERT(call);
-        QModelIndex index = m_proxyModel->indexForCall(call);
-        if (index.isValid()) {
-            m_ui.callView->setCurrentIndex(index);
-        } else {
-            statusBar()->showMessage(tr("Call has been filtered out."));
-        }
+        int callIndex =
+            current->data(0, Qt::UserRole).toInt();
+        m_trace->findCallIndex(callIndex);
     }
 }
 
-ApiTraceCall * MainWindow::currentCall() const
+ApiTraceCall * MainWindow::selectedCall() const
 {
     if (m_selectedEvent &&
         m_selectedEvent->type() == ApiTraceEvent::Call) {
@@ -1107,18 +1039,19 @@ void MainWindow::saveSelectedSurface()
     QTreeWidgetItem *item =
         m_ui.surfacesTreeWidget->currentItem();
 
-    if (!item || !m_trace)
+    if (!item || !m_trace) {
         return;
+    }
 
     QVariant var = item->data(0, Qt::UserRole);
     QImage img = var.value<QImage>();
 
     QString imageIndex;
-    if (currentCall()) {
+    if (selectedCall()) {
         imageIndex = tr("_call_%1")
-                     .arg(currentCall()->index());
-    } else if (currentFrame()) {
-        ApiTraceCall *firstCall = currentFrame()->call(0);
+                     .arg(selectedCall()->index());
+    } else if (selectedFrame()) {
+        ApiTraceCall *firstCall = selectedFrame()->call(0);
         if (firstCall) {
             imageIndex = tr("_frame_%1")
                          .arg(firstCall->index());
@@ -1153,6 +1086,158 @@ void MainWindow::saveSelectedSurface()
     //qDebug()<<"save "<<fileName;
     img.save(fileName, "PNG");
     statusBar()->showMessage( tr("Saved '%1'").arg(fileName), 5000);
+}
+
+void MainWindow::loadProgess(int percent)
+{
+    m_progressBar->setValue(percent);
+}
+
+void MainWindow::slotSearchResult(const ApiTrace::SearchRequest &request,
+                                  ApiTrace::SearchResult result,
+                                  ApiTraceCall *call)
+{
+    switch (result) {
+    case ApiTrace::SearchResult_NotFound:
+        m_searchWidget->setFound(false);
+        break;
+    case ApiTrace::SearchResult_Found: {
+        QModelIndex index = m_proxyModel->indexForCall(call);
+
+        if (index.isValid()) {
+            m_ui.callView->setCurrentIndex(index);
+            m_searchWidget->setFound(true);
+        } else {
+            //call is filtered out, so continue searching but from the
+            // filtered call
+            if (!call) {
+                qDebug()<<"Error: search success with no call";
+                return;
+            }
+//            qDebug()<<"filtered! search from "<<call->searchText()
+//                   <<", call idx = "<<call->index();
+
+            if (request.direction == ApiTrace::SearchRequest::Next) {
+                m_trace->findNext(call->parentFrame(), call,
+                                  request.text, request.cs);
+            } else {
+                m_trace->findNext(call->parentFrame(), call,
+                                  request.text, request.cs);
+            }
+        }
+    }
+        break;
+    case ApiTrace::SearchResult_Wrapped:
+        m_searchWidget->setFound(false);
+        break;
+    }
+}
+
+ApiTraceFrame * MainWindow::currentFrame() const
+{
+    QModelIndex index = m_ui.callView->currentIndex();
+    ApiTraceEvent *event = 0;
+
+    if (!index.isValid()) {
+        index = m_proxyModel->index(0, 0, QModelIndex());
+        if (!index.isValid()) {
+            qDebug()<<"no currently valid index";
+            return 0;
+        }
+    }
+
+    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    Q_ASSERT(event);
+    if (!event) {
+        return 0;
+    }
+
+    ApiTraceFrame *frame = 0;
+    if (event->type() == ApiTraceCall::Frame) {
+        frame = static_cast<ApiTraceFrame*>(event);
+    }
+    return frame;
+}
+
+ApiTraceCall * MainWindow::currentCall() const
+{
+    QModelIndex index = m_ui.callView->currentIndex();
+    ApiTraceEvent *event = 0;
+
+    if (!index.isValid()) {
+        index = m_proxyModel->index(0, 0, QModelIndex());
+        if (!index.isValid()) {
+            qDebug()<<"no currently valid index";
+            return 0;
+        }
+    }
+
+    event = index.data(ApiTraceModel::EventRole).value<ApiTraceEvent*>();
+    Q_ASSERT(event);
+    if (!event) {
+        return 0;
+    }
+
+    ApiTraceCall *call = 0;
+    if (event->type() == ApiTraceCall::Call) {
+        call = static_cast<ApiTraceCall*>(event);
+    }
+
+    return call;
+
+}
+
+void MainWindow::slotFoundFrameStart(ApiTraceFrame *frame)
+{
+    Q_ASSERT(frame->isLoaded());
+    if (!frame || frame->isEmpty()) {
+        return;
+    }
+
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
+
+    itr = calls.constBegin();
+    while (itr != calls.constEnd()) {
+        ApiTraceCall *call = *itr;
+        QModelIndex idx = m_proxyModel->indexForCall(call);
+        if (idx.isValid()) {
+            m_ui.callView->setCurrentIndex(idx);
+            break;
+        }
+        ++itr;
+    }
+}
+
+void MainWindow::slotFoundFrameEnd(ApiTraceFrame *frame)
+{
+    Q_ASSERT(frame->isLoaded());
+    if (!frame || frame->isEmpty()) {
+        return;
+    }
+    QVector<ApiTraceCall*>::const_iterator itr;
+    QVector<ApiTraceCall*> calls = frame->calls();
+
+    itr = calls.constEnd();
+    do {
+        --itr;
+        ApiTraceCall *call = *itr;
+        QModelIndex idx = m_proxyModel->indexForCall(call);
+        if (idx.isValid()) {
+            m_ui.callView->setCurrentIndex(idx);
+            break;
+        }
+    } while (itr != calls.constBegin());
+}
+
+void MainWindow::slotJumpToResult(ApiTraceCall *call)
+{
+    QModelIndex index = m_proxyModel->indexForCall(call);
+    if (index.isValid()) {
+        m_ui.callView->setCurrentIndex(index);
+    } else {
+        statusBar()->showMessage(tr("Call has been filtered out."));
+    }
 }
 
 #include "mainwindow.moc"

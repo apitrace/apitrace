@@ -63,6 +63,10 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
             return false;
     }
 
+    if (m_filters & CustomFilter) {
+        return !function.contains(m_customRegexp);
+    }
+
 
     return true;
 }
@@ -89,12 +93,6 @@ void ApiTraceFilter::setFilterOptions(ApiTraceFilter::FilterOptions opts)
     }
 }
 
-QModelIndex ApiTraceFilter::callIndex(int callIdx) const
-{
-    ApiTraceModel *model = static_cast<ApiTraceModel *>(sourceModel());
-    QModelIndex index = model->callIndex(callIdx);
-    return mapFromSource(index);
-}
 
 QModelIndex ApiTraceFilter::indexForCall(ApiTraceCall *call) const
 {
@@ -106,6 +104,16 @@ QModelIndex ApiTraceFilter::indexForCall(ApiTraceCall *call) const
 QRegExp ApiTraceFilter::filterRegexp() const
 {
     return m_regexp;
+}
+
+void ApiTraceFilter::setCustomFilterRegexp(const QString &str)
+{
+    m_customRegexp = QRegExp(str);
+}
+
+QString ApiTraceFilter::customFilterRegexp() const
+{
+    return m_customRegexp.pattern();
 }
 
 #include "apitracefilter.moc"

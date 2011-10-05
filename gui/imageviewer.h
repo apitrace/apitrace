@@ -11,6 +11,10 @@ public:
     ImageViewer(QWidget *parent = 0);
 
     void setImage(const QImage &image);
+
+    QSize sizeHint() const;
+private:
+    QImage m_image;
 };
 
 

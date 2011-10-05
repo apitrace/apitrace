@@ -27,10 +27,9 @@ Tracing
 * Start tracing on demand (e.g., key-press, or by frame no), emitting calls
   that recreate all current state.
 
-* Add option to include call stack frames in the trace
+* Add option to include call stack frames in the trace.
 
-* Call gzflush() only when there is a signal/exception, except of doing it on
-  every call.
+* Trace the internal GL calls done by GLU on Mac OS X & Windows.
 
 
 Retracing
@@ -51,11 +50,6 @@ Retracing
 
   * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c
 
-* Plug memory leaks.
-
-* Allow to retrace with two libGL.so in parallel, and output differences in
-  rendered frames / draw calls.
-
 * D3D support.
 
 
@@ -67,11 +61,10 @@ GUI
 * Visualize meshes in draw commands.
 
 
-Other:
+Other
+-----
 
 * Side-by-side trace diffing; either as a separate tool on or the GUI.
-
-* Side-by-side state diffing.
 
 * Ability to extract just a single frame from a trace, and all previous calls
   that contributed to it:

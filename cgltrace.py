@@ -27,9 +27,9 @@
 """Cgl tracing generator."""
 
 
-from stdapi import API
-from glapi import glapi
-from cglapi import cglapi
+from specs.stdapi import API
+from specs.glapi import glapi
+from specs.cglapi import cglapi
 from gltrace import GlTracer
 
 

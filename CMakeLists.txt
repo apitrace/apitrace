@@ -4,6 +4,21 @@ project (apitrace)
 
 
 ##############################################################################
+# Options
+
+# On Mac OS X build fat binaries with i386 and x86_64 architectures by default.
+if (APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
+    set (CMAKE_OSX_ARCHITECTURES "i386;x86_64" CACHE STRING "Build architectures for OSX" FORCE)
+endif ()
+
+# We use a cached string variable instead of the standard (boolean) OPTION
+# command so that we can default to auto-detecting optional depencies, while
+# still providing a mechanism to force/disable these optional dependencies, as
+# prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
+set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
+
+
+##############################################################################
 # Find dependencies
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -12,8 +27,14 @@ set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
-find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit)
-find_package (QJSON)
+
+if (ENABLE_GUI)
+    if (NOT (ENABLE_GUI STREQUAL "AUTO"))
+        set (REQUIRE_GUI REQUIRED)
+    endif ()
+    find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit ${REQUIRE_GUI})
+    find_package (QJSON ${REQUIRE_GUI})
+endif ()
 
 if (NOT WIN32)
     find_package (X11 REQUIRED)
@@ -111,7 +132,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 ##############################################################################
 # Bundled dependencies
 #
-# We always use the bundled zlib and libpng sources:
+# We always use the bundled zlib, libpng, and snappy sources:
 # - on Windows to make it easy to deploy the wrappers DLLs
 # - on unices to prevent symbol collisions when tracing applications that link
 # against other versions of these libraries
@@ -123,6 +144,13 @@ add_subdirectory (thirdparty/zlib EXCLUDE_FROM_ALL)
 include_directories (${ZLIB_INCLUDE_DIRS})
 link_libraries (${ZLIB_LIBRARIES})
 
+set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
+set (SNAPPY_LIBRARIES snappy_bundled)
+add_subdirectory (thirdparty/snappy EXCLUDE_FROM_ALL)
+
+include_directories (${SNAPPY_INCLUDE_DIRS})
+link_libraries (${SNAPPY_LIBRARIES})
+
 set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
 set (PNG_DEFINITIONS "")
 set (PNG_LIBRARIES png_bundled)
@@ -132,6 +160,23 @@ include_directories (${PNG_INCLUDE_DIR})
 add_definitions (${PNG_DEFINITIONS})
 link_libraries (${PNG_LIBRARIES})
 
+# The Qt website provides binaries for Windows and MacOSX, and they are
+# automatically found by cmake without any manual intervention.  The situation
+# for QJSON is substantially different: there are no binaries for QJSON
+# available, and there is no standard installation directory that is detected
+# by cmake.
+#
+# By bundling the QJSON source, we make it much more easier to build the GUI on
+# Windows and MacOSX.  But we only use the bundled sources when ENABLE_GUI is
+# AUTO.
+if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
+    add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
+    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/qjson)
+    set (QJSON_LIBRARY_DIRS)
+    set (QJSON_LIBRARIES qjson_bundled)
+    set (QJSON_FOUND TRUE)
+endif ()
+
 # For glext headers
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 
@@ -139,12 +184,15 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 ##############################################################################
 # Common libraries / utilities
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/common
+)
 
 add_custom_command (
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    DEPENDS glproc.py dispatch.py wglapi.py glxapi.py cglapi.py glapi.py gltypes.py stdapi.py
+    DEPENDS glproc.py dispatch.py specs/wglapi.py specs/glxapi.py specs/cglapi.py specs/glapi.py specs/gltypes.py specs/stdapi.py
 )
 
 if (WIN32)
@@ -155,20 +203,30 @@ else (WIN32)
     set (glws glws_glx.cpp)
 endif (WIN32)
 
-add_library (common
-    trace_model.cpp
-    trace_parser.cpp
-    trace_writer.cpp
-    trace_model_writer.cpp
-    image.cpp
-    image_bmp.cpp
-    image_pnm.cpp
-    image_png.cpp
-    ${os}
+add_library (common STATIC
+    common/trace_file.cpp
+    common/trace_snappyfile.cpp
+    common/trace_model.cpp
+    common/trace_parser.cpp
+    common/trace_writer.cpp
+    common/trace_local_writer.cpp
+    common/trace_model_writer.cpp
+    common/trace_loader.cpp
+    common/image.cpp
+    common/image_bmp.cpp
+    common/image_pnm.cpp
+    common/image_png.cpp
+    common/${os}
 )
 
+set_target_properties (common PROPERTIES
+    # Ensure it can be statically linked in shared libraries
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
+)
+
+link_libraries (common)
+
 add_executable (tracedump tracedump.cpp)
-target_link_libraries (tracedump common)
 install (TARGETS tracedump RUNTIME DESTINATION bin) 
 
 
@@ -176,15 +234,20 @@ install (TARGETS tracedump RUNTIME DESTINATION bin)
 # API tracers
 
 if (WIN32)
+    if (MINGW)
+        # Silence warnings about @nn suffix mismatch
+        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--enable-stdcall-fixup")
+    endif (MINGW)
+
     # ddraw.dll
     if (DirectX_D3D_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
-            OUTPUT ddraw.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d.py > ${CMAKE_CURRENT_BINARY_DIR}/ddraw.cpp
-            DEPENDS d3d.py d3dtypes.py d3dcaps.py ddraw.py trace.py winapi.py stdapi.py
+            OUTPUT ddrawtrace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
+            DEPENDS ddrawtrace.py trace.py specs/d3d.py specs/d3dtypes.py specs/d3dcaps.py specs/ddraw.py specs/winapi.py specs/stdapi.py
         )
-        add_library (ddraw MODULE ddraw.def ddraw.cpp trace_writer.cpp os_win32.cpp)
+        add_library (ddraw MODULE specs/ddraw.def ddrawtrace.cpp)
         set_target_properties (ddraw
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -197,11 +260,11 @@ if (WIN32)
     if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D8_INCLUDE_DIR} ${DirectX_D3DX9_INCLUDE_DIR})
         add_custom_command (
-            OUTPUT d3d8.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8.cpp
-            DEPENDS d3d8.py trace.py d3d8types.py d3d8caps.py winapi.py stdapi.py
+            OUTPUT d3d8trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
+            DEPENDS d3d8trace.py trace.py specs/d3d8.py specs/d3d8types.py specs/d3d8caps.py specs/winapi.py specs/stdapi.py
         )
-        add_library (d3d8 MODULE d3d8.def d3d8.cpp d3dshader.cpp trace_writer.cpp os_win32.cpp)
+        add_library (d3d8 MODULE specs/d3d8.def d3d8trace.cpp d3dshader.cpp)
         set_target_properties (d3d8
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -214,11 +277,11 @@ if (WIN32)
     if (DirectX_D3DX9_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
         add_custom_command (
-            OUTPUT d3d9.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9.cpp
-            DEPENDS d3d9.py trace.py d3d9types.py d3d9caps.py winapi.py stdapi.py
+            OUTPUT d3d9trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
+            DEPENDS d3d9trace.py trace.py specs/d3d9.py specs/d3d9types.py specs/d3d9caps.py specs/winapi.py specs/stdapi.py
         )
-        add_library (d3d9 MODULE d3d9.def d3d9.cpp d3dshader.cpp trace_writer.cpp os_win32.cpp)
+        add_library (d3d9 MODULE specs/d3d9.def d3d9trace.cpp d3dshader.cpp)
         set_target_properties (d3d9
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -228,34 +291,39 @@ if (WIN32)
     endif (DirectX_D3DX9_INCLUDE_DIR)
 
     # d3d10.dll
-    #if (DirectX_D3D10_INCLUDE_DIR)
-    #    include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
-    #    add_custom_command (
-    #        OUTPUT d3d10.cpp
-    #        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10misc.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10.cpp
-    #        DEPENDS d3d10misc.py winapi.py stdapi.py
-    #    )
-    #    add_library (d3d10 MODULE d3d10.def d3d10.cpp trace_writer.cpp os_win32.cpp)
-    #    set_target_properties (d3d10 PROPERTIES PREFIX "")
-    #    install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
-    #endif (DirectX_D3D10_INCLUDE_DIR)
+    if (DirectX_D3D10_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+        add_custom_command (
+            OUTPUT d3d10trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
+            DEPENDS d3d10trace.py trace.py specs/d3d10misc.py specs/d3d10.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
+        )
+        add_library (d3d10 MODULE specs/d3d10.def d3d10trace.cpp)
+        set_target_properties (d3d10
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        )
+        install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
+    endif (DirectX_D3D10_INCLUDE_DIR)
 
     # opengl32.dll
     add_custom_command (
         OUTPUT wgltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/wgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/wgltrace.cpp
-        DEPENDS wgltrace.py gltrace.py trace.py wglapi.py wglenum.py glapi.py glparams.py gltypes.py winapi.py stdapi.py
+        DEPENDS wgltrace.py gltrace.py trace.py specs/wglapi.py specs/wglenum.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/winapi.py specs/stdapi.py
     )
-    add_library (wgltrace MODULE opengl32.def wgltrace.cpp trace_writer.cpp os_win32.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (wgltrace MODULE specs/opengl32.def
+        wgltrace.cpp
+        glcaps.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+    )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
-    if (MINGW)
-        set_target_properties(wgltrace PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.def")
-    endif (MINGW)
     install (TARGETS wgltrace LIBRARY DESTINATION wrappers)
 
 elseif (APPLE)
@@ -263,10 +331,14 @@ elseif (APPLE)
     add_custom_command (
         OUTPUT cgltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cgltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/cgltrace.cpp
-        DEPENDS cgltrace.py gltrace.py trace.py cglapi.py glapi.py glparams.py gltypes.py stdapi.py
+        DEPENDS cgltrace.py gltrace.py trace.py specs/cglapi.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/stdapi.py
     )
 
-    add_library (cgltrace SHARED cgltrace.cpp trace_writer.cpp os_posix.cpp ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+    add_library (cgltrace SHARED
+        cgltrace.cpp
+        glcaps.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+    )
 
     set_target_properties (cgltrace PROPERTIES
         # OpenGL framework name
@@ -285,17 +357,14 @@ else ()
     add_custom_command (
         OUTPUT glxtrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glxtrace.cpp
-        DEPENDS glxtrace.py gltrace.py trace.py glxapi.py glapi.py glparams.py gltypes.py stdapi.py
+        DEPENDS glxtrace.py gltrace.py trace.py specs/glxapi.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/stdapi.py
     )
 
     add_library (glxtrace SHARED
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         glxtrace.cpp
+        glcaps.cpp
         glsnapshot.cpp
-        trace_writer.cpp
-        image.cpp
-        image_png.cpp
-        os_posix.cpp
     )
 
     set_target_properties (glxtrace PROPERTIES
@@ -310,7 +379,7 @@ else ()
     )
 
     target_link_libraries (glxtrace dl ${X11_X11_LIB})
-    
+
     install (TARGETS glxtrace LIBRARY DESTINATION lib)
 endif ()
 
@@ -321,13 +390,13 @@ endif ()
 add_custom_command (
     OUTPUT glretrace_gl.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
-    DEPENDS glretrace.py retrace.py codegen.py glapi.py gltypes.py stdapi.py
+    DEPENDS glretrace.py retrace.py codegen.py specs/glapi.py specs/gltypes.py specs/stdapi.py
 )
 
 add_custom_command (
     OUTPUT glstate_params.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
-    DEPENDS glstate.py glparams.py gltypes.py stdapi.py
+    DEPENDS glstate.py specs/glparams.py specs/gltypes.py specs/stdapi.py
 )
 
 include_directories (
@@ -346,7 +415,6 @@ add_executable (glretrace
     retrace.cpp
     retrace_stdc.cpp
     ${glws}
-    image.cpp 
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
 )
 
@@ -380,17 +448,24 @@ install (TARGETS glretrace RUNTIME DESTINATION bin)
 ##############################################################################
 # GUI
 
-if (QT4_FOUND AND QJSON_FOUND)
+if (ENABLE_GUI AND QT4_FOUND AND QJSON_FOUND)
     add_subdirectory(gui)
-endif (QT4_FOUND AND QJSON_FOUND)
+endif ()
 
 
 ##############################################################################
 # Packaging
 
-install (FILES LICENSE README.markdown TODO.markdown DESTINATION doc)
+install (
+    FILES
+        BUGS.markdown
+        LICENSE
+        NEWS.markdown
+        README.markdown
+        TODO.markdown
+    DESTINATION doc)
 
-set (CPACK_PACKAGE_VERSION_MAJOR "1")
+set (CPACK_PACKAGE_VERSION_MAJOR "2")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
 
 # Use current date in YYYYMMDD format as patch number 

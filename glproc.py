@@ -29,12 +29,12 @@ covers all the functions we support.
 """ 
 
 
-import stdapi
+import specs.stdapi as stdapi
 from dispatch import Dispatcher
-from glapi import glapi
-from glxapi import glxapi
-from wglapi import wglapi
-from cglapi import cglapi
+from specs.glapi import glapi
+from specs.glxapi import glxapi
+from specs.wglapi import wglapi
+from specs.cglapi import cglapi
 
 
 # See http://www.opengl.org/registry/ABI/
@@ -421,6 +421,7 @@ class GlDispatcher(Dispatcher):
         print '#  endif'
         print '#else /* !RETRACE */'
         print '#  ifdef _WIN32'
+        print '     PROC __getPublicProcAddress(LPCSTR lpProcName);'
         print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
         print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
         print '#  else'

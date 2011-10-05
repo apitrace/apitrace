@@ -38,6 +38,15 @@ void SettingsDialog::filtersFromModel(const ApiTraceFilter *model)
     functionsBox->setChecked(opts & ApiTraceFilter::ResolutionsFilter);
     errorsBox->setChecked(opts & ApiTraceFilter::ErrorsQueryFilter);
     statesBox->setChecked(opts & ApiTraceFilter::ExtraStateFilter);
+    customBox->setChecked(opts & ApiTraceFilter::CustomFilter);
+    QString customFilter = model->customFilterRegexp();
+    if (!customFilter.isEmpty()) {
+        customEdit->setText(customFilter);
+    } else {
+        //Add a common default
+        QLatin1String str("glXMakeContextCurrent");
+        customEdit->setText(str);
+    }
 
     QRegExp regexp = model->filterRegexp();
     if (regexp.isEmpty()) {
@@ -63,14 +72,22 @@ void SettingsDialog::filtersFromModel(const ApiTraceFilter *model)
 void SettingsDialog::filtersToModel(ApiTraceFilter *model)
 {
     ApiTraceFilter::FilterOptions opts = ApiTraceFilter::NullFilter;
-    if (extensionsBox->isChecked())
+    if (extensionsBox->isChecked()) {
         opts |= ApiTraceFilter::ExtensionsFilter;
-    if (functionsBox->isChecked())
+    }
+    if (functionsBox->isChecked()) {
         opts |= ApiTraceFilter::ResolutionsFilter;
-    if (errorsBox->isChecked())
+    }
+    if (errorsBox->isChecked()) {
         opts |= ApiTraceFilter::ErrorsQueryFilter;
-    if (statesBox->isChecked())
+    }
+    if (statesBox->isChecked()) {
         opts |= ApiTraceFilter::ExtraStateFilter;
+    }
+    if (customBox->isChecked()) {
+        opts |= ApiTraceFilter::CustomFilter;
+        m_filter->setCustomFilterRegexp(customEdit->text());
+    }
     m_filter->setFilterOptions(opts);
     if (showFilterBox->isChecked()) {
         m_filter->setFilterRegexp(QRegExp(showFilterEdit->text()));
@@ -89,6 +106,17 @@ void SettingsDialog::accept()
                 tr("Invalid Regexp"),
                 tr("The currently set regular expression "
                    "for filtering events is invalid."));
+            return;
+        }
+    }
+    if (customBox->isChecked()) {
+        QRegExp regexp(customEdit->text());
+        if (!regexp.isValid()) {
+            QMessageBox::warning(
+                this,
+                tr("Invalid Regexp"),
+                tr("The currently set regular expression "
+                   "for custom events is invalid."));
             return;
         }
     }

@@ -29,12 +29,49 @@
  */
 
 
+#include <string.h>
+
 #include "trace_parser.hpp"
+
+
+static bool color = true;
+
+
+static void usage(void) {
+    std::cout <<
+        "Usage: tracedump [OPTION] [TRACE...]\n"
+        "Dump TRACE to standard output.\n"
+        "\n"
+        "  --no-color   no colored syntax highlightint\n"
+        "  --no-colour  alias for --no-color\n"
+    ;
+}
 
 
 int main(int argc, char **argv)
 {
-    for (int i = 1; i < argc; ++i) {
+    int i;
+
+    for (i = 1; i < argc; ++i) {
+        const char *arg = argv[i];
+
+        if (arg[0] != '-') {
+            break;
+        }
+
+        if (!strcmp(arg, "--")) {
+            break;
+        } else if (!strcmp(arg, "--no-color") ||
+                   !strcmp(arg, "--no-colour")) {
+            color = false;
+        } else {
+            std::cerr << "error: unknown option " << arg << "\n";
+            usage();
+            return 1;
+        }
+    }
+
+    for (; i < argc; ++i) {
         Trace::Parser p;
 
         if (!p.open(argv[i])) {
@@ -44,9 +81,10 @@ int main(int argc, char **argv)
 
         Trace::Call *call;
         while ((call = p.parse_call())) {
-            std::cout << *call;
+            call->dump(std::cout, color);
             delete call;
         }
     }
+
     return 0;
 }

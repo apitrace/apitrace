@@ -961,4 +961,50 @@ void GLSLEdit::mark(const QString &str, Qt::CaseSensitivity sens)
     d_ptr->highlighter->mark(str, sens);
 }
 
+void GLSLEdit::indent()
+{
+    QTemporaryFile file(QLatin1String("shader.glsl"));
+    if (!file.open()) {
+        qDebug()<<"Couldn't create temporary file "<<file.fileName();
+        return;
+    }
+    file.write(toPlainText().toUtf8());
+    file.flush();
+
+    QString tempFileName =
+            QDir::toNativeSeparators(QFileInfo(file).canonicalFilePath());
+
+    QProcess astyle;
+    astyle.setStandardInputFile(tempFileName);
+    astyle.start("astyle");
+    if (!astyle.waitForStarted()) {
+        qDebug()<<"Couldn't start the 'astyle' process!";
+        QMessageBox::warning(this,
+                             tr("QApiTrace"),
+                             tr("QApiTrace could not locate the 'astyle'\n"
+                                "binary. Make sure 'astyle' is installed\n"
+                                "and in the PATH."),
+                             QMessageBox::Ok);
+        return;
+    }
+
+    if (!astyle.waitForFinished()) {
+        qDebug()<<"Couldn't finish the 'astyle' process";
+        return;
+    }
+
+    QByteArray result = astyle.readAll();
+    setPlainText(QString::fromUtf8(result));
+}
+
+void GLSLEdit::contextMenuEvent(QContextMenuEvent *e)
+{
+    QMenu *menu = createStandardContextMenu();
+
+    menu->addAction(tr("Indent Code"), this, SLOT(indent()));
+
+    menu->exec(e->globalPos());
+    delete menu;
+}
+
 #include "glsledit.moc"

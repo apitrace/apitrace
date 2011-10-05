@@ -156,6 +156,8 @@ lookupAddress(unsigned long long address) {
 class Translator : protected Trace::Visitor
 {
 protected:
+    bool bind;
+
     void *result;
 
     void visit(Trace::Null *) {
@@ -163,7 +165,7 @@ protected:
     }
 
     void visit(Trace::Blob *blob) {
-        result = blob->buf;
+        result = blob->toPointer(bind);
     }
 
     void visit(Trace::Pointer *p) {
@@ -171,7 +173,8 @@ protected:
     }
 
 public:
-    Translator(void) :
+    Translator(bool _bind) :
+        bind(_bind),
         result(NULL)
     {}
 
@@ -183,8 +186,8 @@ public:
 
 
 void *
-toPointer(Trace::Value &value) {
-    return Translator() (&value);
+toPointer(Trace::Value &value, bool bind) {
+    return Translator(bind) (&value);
 }
 
 

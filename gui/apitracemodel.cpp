@@ -1,9 +1,10 @@
 #include "apitracemodel.h"
 
 #include "apitracecall.h"
-#include "loaderthread.h"
+#include "traceloader.h"
 #include "trace_parser.hpp"
 
+#include <QBuffer>
 #include <QDebug>
 #include <QImage>
 #include <QVariant>
@@ -42,7 +43,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
         const QString stateText = tr("State info available.");
         if (itm->type() == ApiTraceEvent::Call) {
             ApiTraceCall *call = static_cast<ApiTraceCall*>(itm);
-            if (call->state().isEmpty())
+            if (!call->hasState())
                 return QString::fromLatin1("%1)&nbsp;<b>%2</b>")
                     .arg(call->index())
                     .arg(call->name());
@@ -52,22 +53,53 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
                     .arg(call->name())
                     .arg(stateText);
         } else {
+            const char *htmlTempl =
+                    "<div>\n"
+                    "<div>\n"
+                    "%1"
+                    "<span style=\"font-weight:bold; font-size:large; vertical-align:center; padding-bottom: 30px \">\n"
+                    "Frame %2</span>\n"
+                    "</div>\n"
+                    "<div >%3 calls%4</div>\n"
+                    "</div>\n";
+
+
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(itm);
-            QString text = QObject::tr("%1)&nbsp;Frame&nbsp;")
-                           .arg(frame->number);
-            int binaryDataSize = frame->binaryDataSize() / 1024;
-            if (frame->state().isEmpty())
-                return QObject::tr(
-                    "<b>%1&nbsp;</b>(binary&nbsp;data&nbsp;size&nbsp;=&nbsp;%2kB)")
-                    .arg(text)
-                    .arg(binaryDataSize);
-            else
-                return QObject::tr(
-                    "<b>%1&nbsp;(binary&nbsp;data&nbsp;size&nbsp;=&nbsp;%2kB)</b>"
-                    "<br/>%3")
-                    .arg(text)
-                    .arg(binaryDataSize)
-                    .arg(stateText);
+            QString thumbStr, sizeStr;
+
+            if (frame->hasState()) {
+                static const char *imgTempl =
+                        "<img style=\"float:left;\" "
+                        "src=\"data:image/png;base64,%1\"/>\n";
+                static const char *sizeTempl =
+                        ", %1kb";
+
+                ApiFramebuffer fbo = frame->state()->colorBuffer();
+                QImage thumb = fbo.thumb();
+                if (!thumb.isNull()) {
+                    QByteArray ba;
+                    QBuffer buffer(&ba);
+                    buffer.open(QIODevice::WriteOnly);
+                    thumb.save(&buffer, "PNG");
+                    thumbStr = tr(imgTempl).arg(
+                                QString(buffer.data().toBase64()));
+                }
+
+                int binaryDataSize = frame->binaryDataSize() / 1024;
+                if (binaryDataSize > 0) {
+                    sizeStr = tr(sizeTempl).arg(binaryDataSize);
+                }
+            }
+
+            int numCalls = frame->isLoaded()
+                    ? frame->numChildren()
+                    : frame->numChildrenToLoad();
+
+            return tr(htmlTempl)
+                    .arg(thumbStr)
+                    .arg(frame->number)
+                    .arg(numCalls)
+                    .arg(sizeStr);
         }
     }
     case ApiTraceModel::EventRole:
@@ -218,6 +250,11 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
             this, SLOT(endAddingFrames()));
     connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
             this, SLOT(callChanged(ApiTraceCall*)));
+    connect(m_trace, SIGNAL(beginLoadingFrame(ApiTraceFrame*,int)),
+            this, SLOT(beginLoadingFrame(ApiTraceFrame*,int)));
+    connect(m_trace, SIGNAL(endLoadingFrame(ApiTraceFrame*)),
+            this, SLOT(endLoadingFrame(ApiTraceFrame*)));
+
 }
 
 const ApiTrace * ApiTraceModel::apiTrace() const
@@ -264,12 +301,6 @@ void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
     }
 }
 
-QModelIndex ApiTraceModel::callIndex(int callNum) const
-{
-    ApiTraceCall *call = m_trace->callWithIndex(callNum);
-    return indexForCall(call);
-}
-
 QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
 {
     if (!call) {
@@ -311,6 +342,60 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
 void ApiTraceModel::endAddingFrames()
 {
     endInsertRows();
+}
+
+bool ApiTraceModel::canFetchMore(const QModelIndex &parent) const
+{
+    if (parent.isValid()) {
+        ApiTraceEvent *event = item(parent);
+        if (event && event->type() == ApiTraceEvent::Frame) {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
+            return !frame->isLoaded() && !m_loadingFrames.contains(frame);
+        } else
+            return false;
+    } else {
+        return false;
+    }
+}
+
+void ApiTraceModel::fetchMore(const QModelIndex &parent)
+{
+    if (parent.isValid()) {
+        ApiTraceEvent *event = item(parent);
+        if (event && event->type() == ApiTraceEvent::Frame) {
+            ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
+            QModelIndex index = createIndex(frame->number, 0, frame);
+
+            Q_ASSERT(!frame->isLoaded());
+            m_loadingFrames.insert(frame);
+
+            m_trace->loadFrame(frame);
+        }
+    }
+}
+
+void ApiTraceModel::beginLoadingFrame(ApiTraceFrame *frame, int numAdded)
+{
+    QModelIndex index = createIndex(frame->number, 0, frame);
+    beginInsertRows(index, 0, numAdded - 1);
+}
+
+void ApiTraceModel::endLoadingFrame(ApiTraceFrame *frame)
+{
+    QModelIndex index = createIndex(frame->number, 0, frame);
+#if 0
+    qDebug()<<"Frame loaded = "<<frame->loaded();
+    qDebug()<<"\tframe idx = "<<frame->number;
+    qDebug()<<"\tis empty = "<<frame->isEmpty();
+    qDebug()<<"\tnum children = "<<frame->numChildren();
+    qDebug()<<"\tindex is "<<index;
+#endif
+
+    endInsertRows();
+
+    emit dataChanged(index, index);
+
+    m_loadingFrames.remove(frame);
 }
 
 #include "apitracemodel.moc"

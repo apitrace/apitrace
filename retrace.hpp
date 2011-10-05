@@ -83,7 +83,7 @@ void
 delRegionByPointer(void *ptr);
 
 void *
-toPointer(Trace::Value &value);
+toPointer(Trace::Value &value, bool bind = false);
 
 
 /**

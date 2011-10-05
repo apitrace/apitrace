@@ -1,6 +1,8 @@
 #ifndef RETRACER_H
 #define RETRACER_H
 
+#include "apitracecall.h"
+
 #include <QThread>
 #include <QProcess>
 
@@ -8,12 +10,6 @@ class ApiTraceState;
 namespace QJson {
     class Parser;
 }
-
-struct RetraceError {
-    int callIndex;
-    QString type;
-    QString message;
-};
 
 /* internal class used by the retracer to run
  * in the thread */
@@ -48,8 +44,8 @@ public slots:
 signals:
     void finished(const QString &output);
     void error(const QString &msg);
-    void foundState(const ApiTraceState &state);
-    void retraceErrors(const QList<RetraceError> &errors);
+    void foundState(ApiTraceState *state);
+    void retraceErrors(const QList<ApiTraceError> &errors);
 
 private slots:
     void replayFinished();
@@ -89,9 +85,9 @@ public:
 
 signals:
     void finished(const QString &output);
-    void foundState(const ApiTraceState &state);
+    void foundState(ApiTraceState *state);
     void error(const QString &msg);
-    void retraceErrors(const QList<RetraceError> &errors);
+    void retraceErrors(const QList<ApiTraceError> &errors);
 
 protected:
     virtual void run();

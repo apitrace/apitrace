@@ -27,9 +27,9 @@
 """WGL tracing code generator."""
 
 
-from stdapi import API
-from glapi import glapi
-from wglapi import wglapi
+from specs.stdapi import API
+from specs.glapi import glapi
+from specs.wglapi import wglapi
 from dispatch import function_pointer_type, function_pointer_value
 from gltrace import GlTracer
 from codegen import *
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     print '''
 static HINSTANCE g_hDll = NULL;
 
-static PROC
+PROC
 __getPublicProcAddress(LPCSTR lpProcName)
 {
     if (!g_hDll) {

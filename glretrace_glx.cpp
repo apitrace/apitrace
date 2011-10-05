@@ -110,6 +110,17 @@ static void retrace_glXMakeCurrent(Trace::Call &call) {
     }
 }
 
+
+static void retrace_glXDestroyContext(Trace::Call &call) {
+    glws::Context *context = getContext(call.arg(1).toUIntPtr());
+
+    if (!context) {
+        return;
+    }
+
+    delete context;
+}
+
 static void retrace_glXSwapBuffers(Trace::Call &call) {
     frame_complete(call.no);
     if (double_buffer) {
@@ -177,7 +188,7 @@ static const retrace::Entry callbacks[] = {
     //{"glXCreatePixmap", &retrace_glXCreatePixmap},
     //{"glXCreateWindow", &retrace_glXCreateWindow},
     //{"glXCushionSGI", &retrace_glXCushionSGI},
-    //{"glXDestroyContext", &retrace_glXDestroyContext},
+    {"glXDestroyContext", &retrace_glXDestroyContext},
     //{"glXDestroyGLXPbufferSGIX", &retrace_glXDestroyGLXPbufferSGIX},
     //{"glXDestroyGLXPixmap", &retrace_glXDestroyGLXPixmap},
     //{"glXDestroyPbuffer", &retrace_glXDestroyPbuffer},
