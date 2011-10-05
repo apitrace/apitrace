@@ -107,6 +107,12 @@ typedef struct _WGLSWAP
 #include <OpenGL/CGLIOSurface.h>
 #include <OpenGL/CGLDevice.h>
 
+#ifndef CGL_VERSION_1_3
+#define kCGLPFAOpenGLProfile 99
+#define kCGLOGLPVersion_Legacy 0x1000
+#define kCGLOGLPVersion_3_2_Core 0x3200
+#endif
+
 extern "C" {
 
 // From http://www.opensource.apple.com/source/gdb/gdb-954/libcheckpoint/cpcg.c
