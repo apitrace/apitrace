@@ -24,8 +24,8 @@
  **************************************************************************/
 
 #include <windows.h>
+
 #include <assert.h>
-#include <signal.h>
 #include <string.h>
 #include <stdio.h>
 
