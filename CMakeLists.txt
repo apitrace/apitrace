@@ -203,7 +203,7 @@ else (WIN32)
     set (glws glws_glx.cpp)
 endif (WIN32)
 
-add_library (common
+add_library (common STATIC
     common/trace_file.cpp
     common/trace_snappyfile.cpp
     common/trace_model.cpp
@@ -221,7 +221,7 @@ add_library (common
 
 set_target_properties (common PROPERTIES
     # Ensure it can be statically linked in shared libraries
-    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
 
 link_libraries (common)
