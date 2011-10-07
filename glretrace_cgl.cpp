@@ -112,19 +112,9 @@ static void retrace_CGLFlushDrawable(Trace::Call &call) {
 }
 
 
-void glretrace::retrace_call_cgl(Trace::Call &call) {
-    const char *name = call.name();
-
-    if (strcmp(name, "CGLSetCurrentContext") == 0) {
-       retrace_CGLSetCurrentContext(call);
-       return;
-    }
-
-    if (strcmp(name, "CGLFlushDrawable") == 0) {
-       retrace_CGLFlushDrawable(call);
-       return;
-    }
-
-    return;
-}
+const retrace::Entry glretrace::cgl_callbacks[] = {
+    {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
+    {"CGLFlushDrawable", &retrace_CGLFlushDrawable},
+    {NULL, NULL},
+};
 

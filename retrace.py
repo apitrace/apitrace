@@ -28,7 +28,6 @@
 
 import specs.stdapi as stdapi
 import specs.glapi as glapi
-from codegen import *
 
 
 class ConstRemover(stdapi.Rebuilder):
@@ -250,27 +249,19 @@ class Retracer:
     def filter_function(self, function):
         return True
 
+    table_name = 'retrace::callbacks'
+
     def retrace_functions(self, functions):
         functions = filter(self.filter_function, functions)
 
         for function in functions:
             self.retrace_function(function)
 
-        print 'void retrace::retrace_call(Trace::Call &call) {'
-        print '    const char *name = call.name();'
-        print
-
-        func_dict = dict([(function.name, function) for function in functions])
-
-        def handle_case(function_name):
-            function = func_dict[function_name]
-            print '        retrace_%s(call);' % function.name
-            print '        return;'
-    
-        string_switch('name', func_dict.keys(), handle_case)
-
-        print '    retrace_unknown(call);'
-        print '}'
+        print 'const retrace::Entry %s[] = {' % self.table_name
+        for function in functions:
+            print '    {"%s", &retrace_%s},' % (function.name, function.name)
+        print '    {NULL, NULL}'
+        print '};'
         print
 
 

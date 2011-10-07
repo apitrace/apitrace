@@ -46,19 +46,45 @@ void retrace_unknown(Trace::Call &call) {
     }
 }
 
-void dispatch(Trace::Call &call, const Entry *entries, unsigned num_entries)
-{
-    /* TODO: do a bisection instead of a linear search */
+inline void Retracer::addCallback(const Entry *entry) {
+    assert(entry->name);
+    assert(entry->callback);
+    map[entry->name] = entry->callback;
+}
 
-    const char *name = call.name();
-    for (unsigned i = 0; i < num_entries; ++i) {
-        if (strcmp(name, entries[i].name) == 0) {
-            entries[i].callback(call);
-            return;
-        }
+
+void Retracer::addCallbacks(const Entry *entries) {
+    while (entries->name && entries->callback) {
+        addCallback(entries++);
+    }
+}
+
+
+void Retracer::retrace(Trace::Call &call) {
+    Callback callback = 0;
+
+    Trace::Id id = call.sig->id;
+    if (id >= callbacks.size()) {
+        callbacks.resize(id + 1);
+        callback = 0;
+    } else {
+        callback = callbacks[id];
     }
 
-    retrace_unknown(call);
+    if (!callback) {
+        Map::const_iterator it = map.find(call.name());
+        if (it == map.end()) {
+            callback = &retrace_unknown;
+        } else {
+            callback = it->second;
+        }
+        callbacks[id] = callback;
+    }
+
+    assert(callback);
+    assert(callbacks[id] == callback);
+
+    callback(call);
 }
 
 

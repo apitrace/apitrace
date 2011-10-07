@@ -28,6 +28,7 @@
 
 #include "trace_parser.hpp"
 #include "glws.hpp"
+#include "retrace.hpp"
 
 
 namespace glretrace {
@@ -62,9 +63,10 @@ extern unsigned dump_state;
 void
 checkGlError(Trace::Call &call);
 
-void retrace_call_cgl(Trace::Call &call);
-void retrace_call_glx(Trace::Call &call);
-void retrace_call_wgl(Trace::Call &call);
+extern const retrace::Entry gl_callbacks[];
+extern const retrace::Entry cgl_callbacks[];
+extern const retrace::Entry glx_callbacks[];
+extern const retrace::Entry wgl_callbacks[];
 
 void snapshot(unsigned call_no);
 void frame_complete(unsigned call_no);

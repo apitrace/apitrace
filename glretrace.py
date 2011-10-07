@@ -34,6 +34,8 @@ from retrace import Retracer
 
 class GlRetracer(Retracer):
 
+    table_name = 'glretrace::gl_callbacks'
+
     def retrace_function(self, function):
         Retracer.retrace_function(self, function)
 

@@ -194,28 +194,23 @@ void frame_complete(unsigned call_no) {
 
 
 static void display(void) {
+    retrace::Retracer retracer;
+
+    retracer.addCallbacks(gl_callbacks);
+    retracer.addCallbacks(glx_callbacks);
+    retracer.addCallbacks(wgl_callbacks);
+    retracer.addCallbacks(cgl_callbacks);
+
     startTime = OS::GetTime();
     Trace::Call *call;
 
     while ((call = parser.parse_call())) {
-        const char *name = call->name();
-
         if (retrace::verbosity >= 1) {
             std::cout << *call;
             std::cout.flush();
         }
 
-        if (name[0] == 'C' && name[1] == 'G' && name[2] == 'L') {
-            glretrace::retrace_call_cgl(*call);
-        }
-        else if (name[0] == 'w' && name[1] == 'g' && name[2] == 'l') {
-            glretrace::retrace_call_wgl(*call);
-        }
-        else if (name[0] == 'g' && name[1] == 'l' && name[2] == 'X') {
-            glretrace::retrace_call_glx(*call);
-        } else {
-            retrace::retrace_call(*call);
-        }
+        retracer.retrace(*call);
 
         if (!insideGlBeginEnd &&
             drawable && context &&

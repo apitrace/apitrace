@@ -26,6 +26,8 @@
 #ifndef _RETRACE_HPP_
 #define _RETRACE_HPP_
 
+#include <string.h>
+
 #include <map>
 
 #include "trace_model.hpp"
@@ -82,8 +84,6 @@ public:
 extern int verbosity;
 
 
-void retrace_call(Trace::Call &call);
-
 void ignore(Trace::Call &call);
 void retrace_unknown(Trace::Call &call);
 
@@ -95,10 +95,32 @@ struct Entry {
     Callback callback;
 };
 
-#define RETRACE_DISPATCH_ENTRY(name) {#name, &retrace_##name}
-#define RETRACE_IGNORE_ENTRY(name) {#name, &retrace_ignore}
 
-void dispatch(Trace::Call &call, const Entry *entries, unsigned num_entries);
+struct stringComparer {
+  bool operator() (const char *a, const  char *b) {
+    return strcmp(a, b) < 0;
+  }
+};
+
+
+class Retracer
+{
+    typedef std::map<const char *, Callback, stringComparer> Map;
+    Map map;
+
+    std::vector<Callback> callbacks;
+
+public:
+    Retracer() {}
+
+    virtual ~Retracer() {}
+
+    void addCallback(const Entry *entry);
+    void addCallbacks(const Entry *entries);
+
+    void retrace(Trace::Call &call);
+};
+
 
 } /* namespace retrace */
 

@@ -164,7 +164,7 @@ static void retrace_glXMakeContextCurrent(Trace::Call &call) {
     }
 }
 
-static const retrace::Entry callbacks[] = {
+const retrace::Entry glretrace::glx_callbacks[] = {
     //{"glXBindChannelToWindowSGIX", &retrace_glXBindChannelToWindowSGIX},
     //{"glXBindSwapBarrierNV", &retrace_glXBindSwapBarrierNV},
     //{"glXBindSwapBarrierSGIX", &retrace_glXBindSwapBarrierSGIX},
@@ -255,9 +255,6 @@ static const retrace::Entry callbacks[] = {
     {"glXWaitGL", &retrace::ignore},
     {"glXWaitVideoSyncSGI", &retrace::ignore},
     {"glXWaitX", &retrace::ignore},
+    {NULL, NULL},
 };
-
-void glretrace::retrace_call_glx(Trace::Call &call) {
-    retrace::dispatch(call, callbacks, sizeof(callbacks)/sizeof(callbacks[0]));
-}
 

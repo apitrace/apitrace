@@ -390,7 +390,7 @@ endif ()
 add_custom_command (
     OUTPUT glretrace_gl.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
-    DEPENDS glretrace.py retrace.py codegen.py specs/glapi.py specs/gltypes.py specs/stdapi.py
+    DEPENDS glretrace.py retrace.py specs/glapi.py specs/gltypes.py specs/stdapi.py
 )
 
 add_custom_command (
