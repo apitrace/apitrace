@@ -205,11 +205,6 @@ static void display(void) {
     Trace::Call *call;
 
     while ((call = parser.parse_call())) {
-        if (retrace::verbosity >= 1) {
-            std::cout << *call;
-            std::cout.flush();
-        }
-
         retracer.retrace(*call);
 
         if (!insideGlBeginEnd &&

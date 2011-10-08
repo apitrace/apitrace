@@ -61,6 +61,11 @@ void Retracer::addCallbacks(const Entry *entries) {
 
 
 void Retracer::retrace(Trace::Call &call) {
+    if (verbosity >= 1) {
+        std::cout << call;
+        std::cout.flush();
+    }
+
     Callback callback = 0;
 
     Trace::Id id = call.sig->id;
