@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include <zlib.h>
+#include <gzguts.h>
 
 #include "os.hpp"
 
@@ -92,13 +93,6 @@ bool File::isSnappyCompressed(const std::string &filename)
     return (byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
 }
 
-typedef struct gz_stream {
-    z_stream stream;
-    int      z_err;   /* error code for last stream operation */
-    int      z_eof;   /* set if end of input file */
-    FILE     *file;   /* .gz file */
-} gz_dummy_stream;
-
 ZLibFile::ZLibFile(const std::string &filename,
                    File::Mode mode)
     : File(filename, mode),
@@ -120,11 +114,10 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
         //     SEEK_END or we could've done:
         //m_endOffset = gzseek(m_gzFile, 0, SEEK_END);
         //gzrewind(m_gzFile);
-        gz_dummy_stream *stream = (gz_dummy_stream *)m_gzFile;
-        long loc = ftell(stream->file);
-        fseek(stream->file,0,SEEK_END);
-        m_endOffset = ftell(stream->file);
-        fseek(stream->file, loc, SEEK_SET);
+        gz_state *state = (gz_state *)m_gzFile;
+        off_t loc = lseek(state->fd, 0, SEEK_CUR);
+        m_endOffset = lseek(state->fd, 0, SEEK_END);
+        lseek(state->fd, loc, SEEK_SET);
     }
 
     return m_gzFile != NULL;
@@ -175,6 +168,6 @@ bool ZLibFile::rawSkip(size_t)
 
 int ZLibFile::rawPercentRead()
 {
-    gz_dummy_stream *stream = (gz_dummy_stream *)m_gzFile;
-    return 100 * (ftell(stream->file) / m_endOffset);
+    gz_state *state = (gz_state *)m_gzFile;
+    return 100 * (lseek(state->fd, 0, SEEK_CUR) / m_endOffset);
 }
