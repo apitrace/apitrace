@@ -29,9 +29,9 @@ extern "C" {
 */
 
 /* Header file version number, required by OpenGL ABI for Linux */
-/* glext.h last updated $Date: 2011-08-08 00:34:29 -0700 (Mon, 08 Aug 2011) $ */
+/* glext.h last updated $Date: 2011-10-02 22:22:16 -0700 (Sun, 02 Oct 2011) $ */
 /* Current version at http://www.opengl.org/registry/ */
-#define GL_GLEXT_VERSION 72
+#define GL_GLEXT_VERSION 73
 /* Function declaration macros - to move into glplatform.h */
 
 #if defined(_WIN32) && !defined(APIENTRY) && !defined(__CYGWIN__) && !defined(__SCITECH_SNAP__)
@@ -516,8 +516,6 @@ extern "C" {
 #define GL_MINOR_VERSION                  0x821C
 #define GL_NUM_EXTENSIONS                 0x821D
 #define GL_CONTEXT_FLAGS                  0x821E
-#define GL_DEPTH_BUFFER                   0x8223
-#define GL_STENCIL_BUFFER                 0x8224
 #define GL_COMPRESSED_RED                 0x8225
 #define GL_COMPRESSED_RG                  0x8226
 #define GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT 0x0001

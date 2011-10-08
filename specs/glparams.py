@@ -942,8 +942,6 @@ parameters = [
     ("glGet",	I,	1,	"GL_NUM_EXTENSIONS"),	# 0x821D
     ("glGet",	I,	1,	"GL_CONTEXT_FLAGS"),	# 0x821E
     ("",	X,	1,	"GL_INDEX"),	# 0x8222
-    ("",	X,	1,	"GL_DEPTH_BUFFER"),	# 0x8223
-    ("",	X,	1,	"GL_STENCIL_BUFFER"),	# 0x8224
     ("",	X,	1,	"GL_COMPRESSED_RED"),	# 0x8225
     ("",	X,	1,	"GL_COMPRESSED_RG"),	# 0x8226
     ("",	X,	1,	"GL_RG"),	# 0x8227
