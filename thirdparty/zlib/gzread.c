@@ -245,8 +245,14 @@ local int gz_decomp(state)
         if (strm->avail_in == 0 && gz_avail(state) == -1)
             return -1;
         if (strm->avail_in == 0) {
+#if 0
             gz_error(state, Z_DATA_ERROR, "unexpected end of file");
             return -1;
+#else
+            /* APITRACE: Ignore unexpected end of file. */
+            ret = 0;
+            break;
+#endif
         }
 
         /* decompress and handle errors */
