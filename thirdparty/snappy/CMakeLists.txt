@@ -6,6 +6,9 @@ include (CheckCXXSourceCompiles)
 include (TestBigEndian)
 
 check_include_file_cxx (sys/mman.h HAVE_SYS_MMAN_H)
+check_include_file_cxx (sys/byteorder.h HAVE_SYS_BYTEORDER_H)
+check_include_file_cxx (sys/endian.h HAVE_SYS_ENDIAN_H)
+check_include_file_cxx (byteswap.h HAVE_BYTESWAP_H)
 
 check_cxx_source_compiles (
     "main() { return __builtin_expect(1, 1) ? 1 : 0; }"
@@ -22,6 +25,11 @@ test_big_endian (WORDS_BIGENDIAN)
 configure_file (config.h.in config.h)
 
 add_definitions (-DHAVE_CONFIG_H)
+
+# Adjust warnings
+if (CMAKE_COMPILER_IS_GNUCXX)
+    add_definitions (-Wno-unused-function)
+endif ()
 
 
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
