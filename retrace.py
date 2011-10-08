@@ -227,8 +227,9 @@ class Retracer:
                 print '   // FIXME: result'
 
     def fail_function(self, function):
-        print '    if (retrace::verbosity >= 0)'
-        print '        std::cerr << "warning: unsupported call %s\\n";' % function.name
+        print '    if (retrace::verbosity >= 0) {'
+        print '        retrace::unknown(call);'
+        print '    }'
         print '    return;'
 
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):

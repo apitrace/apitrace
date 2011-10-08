@@ -28,7 +28,9 @@
 
 #include <string.h>
 
+#include <list>
 #include <map>
+#include <ostream>
 
 #include "trace_model.hpp"
 
@@ -84,7 +86,11 @@ public:
 extern int verbosity;
 
 
+std::ostream &warning(Trace::Call &call);
+
+
 void ignore(Trace::Call &call);
+void unknown(Trace::Call &call);
 
 
 typedef void (*Callback)(Trace::Call &call);

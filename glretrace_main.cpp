@@ -61,46 +61,42 @@ checkGlError(Trace::Call &call) {
         return;
     }
 
-    if (retrace::verbosity == 0) {
-        std::cout << call;
-        std::cout.flush();
-    }
+    std::ostream & os = retrace::warning(call);
 
-    std::cerr << call.no << ": ";
-    std::cerr << "warning: glGetError(";
-    std::cerr << call.name();
-    std::cerr << ") = ";
+    os << "glGetError(";
+    os << call.name();
+    os << ") = ";
 
     switch (error) {
     case GL_INVALID_ENUM:
-        std::cerr << "GL_INVALID_ENUM";
+        os << "GL_INVALID_ENUM";
         break;
     case GL_INVALID_VALUE:
-        std::cerr << "GL_INVALID_VALUE";
+        os << "GL_INVALID_VALUE";
         break;
     case GL_INVALID_OPERATION:
-        std::cerr << "GL_INVALID_OPERATION";
+        os << "GL_INVALID_OPERATION";
         break;
     case GL_STACK_OVERFLOW:
-        std::cerr << "GL_STACK_OVERFLOW";
+        os << "GL_STACK_OVERFLOW";
         break;
     case GL_STACK_UNDERFLOW:
-        std::cerr << "GL_STACK_UNDERFLOW";
+        os << "GL_STACK_UNDERFLOW";
         break;
     case GL_OUT_OF_MEMORY:
-        std::cerr << "GL_OUT_OF_MEMORY";
+        os << "GL_OUT_OF_MEMORY";
         break;
     case GL_INVALID_FRAMEBUFFER_OPERATION:
-        std::cerr << "GL_INVALID_FRAMEBUFFER_OPERATION";
+        os << "GL_INVALID_FRAMEBUFFER_OPERATION";
         break;
     case GL_TABLE_TOO_LARGE:
-        std::cerr << "GL_TABLE_TOO_LARGE";
+        os << "GL_TABLE_TOO_LARGE";
         break;
     default:
-        std::cerr << error;
+        os << error;
         break;
     }
-    std::cerr << "\n";
+    os << "\n";
 }
 
 /**

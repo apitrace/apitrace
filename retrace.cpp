@@ -36,14 +36,34 @@ namespace retrace {
 int verbosity = 0;
 
 
+static bool call_dumped = false;
+
+
+static void dumpCall(Trace::Call &call) {
+    if (verbosity >= 0 && !call_dumped) {
+        std::cout << call;
+        std::cout.flush();
+        call_dumped = true;
+    }
+}
+
+
+std::ostream &warning(Trace::Call &call) {
+    dumpCall(call);
+
+    std::cerr << call.no << ": ";
+    std::cerr << "warning: ";
+
+    return std::cerr;
+}
+
+
 void ignore(Trace::Call &call) {
     (void)call;
 }
 
-static void unknown(Trace::Call &call) {
-    if (verbosity >= 0) {
-        std::cerr << call.no << ": warning: unknown call " << call.name() << "\n";
-    }
+void unknown(Trace::Call &call) {
+    warning(call) << "unknown call " << call.name() << "\n";
 }
 
 inline void Retracer::addCallback(const Entry *entry) {
@@ -61,9 +81,10 @@ void Retracer::addCallbacks(const Entry *entries) {
 
 
 void Retracer::retrace(Trace::Call &call) {
+    call_dumped = false;
+
     if (verbosity >= 1) {
-        std::cout << call;
-        std::cout.flush();
+        dumpCall(call);
     }
 
     Callback callback = 0;

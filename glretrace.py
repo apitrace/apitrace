@@ -237,7 +237,7 @@ class GlRetracer(Retracer):
                 print r'        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &error_position);'
                 print r'        if (error_position != -1) {'
                 print r'            const char *error_string = (const char *)glGetString(GL_PROGRAM_ERROR_STRING_ARB);'
-                print r'            std::cerr << call.no << ": warning: " << error_string << "\n";'
+                print r'            retrace::warning(call) << error_string << "\n";'
                 print r'        }'
             if function.name == 'glCompileShader':
                 print r'        GLint compile_status = 0;'
@@ -247,7 +247,7 @@ class GlRetracer(Retracer):
                 print r'             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_length);'
                 print r'             GLchar *infoLog = new GLchar[info_log_length];'
                 print r'             glGetShaderInfoLog(shader, info_log_length, NULL, infoLog);'
-                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
             if function.name == 'glLinkProgram':
@@ -258,7 +258,7 @@ class GlRetracer(Retracer):
                 print r'             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);'
                 print r'             GLchar *infoLog = new GLchar[info_log_length];'
                 print r'             glGetProgramInfoLog(program, info_log_length, NULL, infoLog);'
-                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
             if function.name == 'glCompileShaderARB':
@@ -269,7 +269,7 @@ class GlRetracer(Retracer):
                 print r'             glGetObjectParameterivARB(shaderObj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &info_log_length);'
                 print r'             GLchar *infoLog = new GLchar[info_log_length];'
                 print r'             glGetInfoLogARB(shaderObj, info_log_length, NULL, infoLog);'
-                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
             if function.name == 'glLinkProgramARB':
@@ -280,23 +280,23 @@ class GlRetracer(Retracer):
                 print r'             glGetObjectParameterivARB(programObj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &info_log_length);'
                 print r'             GLchar *infoLog = new GLchar[info_log_length];'
                 print r'             glGetInfoLogARB(programObj, info_log_length, NULL, infoLog);'
-                print r'             std::cerr << call.no << ": warning: " << infoLog << "\n";'
+                print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
             if function.name in ('glMapBuffer', 'glMapBufferARB', 'glMapBufferRange', 'glMapNamedBufferEXT', 'glMapNamedBufferRangeEXT'):
                 print r'        if (!__result) {'
-                print r'             std::cerr << call.no << ": warning: failed to map buffer\n";'
+                print r'             retrace::warning(call) << "failed to map buffer\n";'
                 print r'        }'
             if function.name in ('glGetAttribLocation', 'glGetAttribLocationARB'):
                 print r'    GLint __orig_result = call.ret->toSInt();'
                 print r'    if (__result != __orig_result) {'
-                print r'        std::cerr << call.no << ": warning: vertex attrib location mismatch " << __orig_result << " -> " << __result << "\n";'
+                print r'        retrace::warning(call) << "vertex attrib location mismatch " << __orig_result << " -> " << __result << "\n";'
                 print r'    }'
             if function.name in ('glCheckFramebufferStatus', 'glCheckFramebufferStatusEXT', 'glCheckNamedFramebufferStatusEXT'):
                 print r'    GLint __orig_result = call.ret->toSInt();'
                 print r'    if (__orig_result == GL_FRAMEBUFFER_COMPLETE &&'
                 print r'        __result != GL_FRAMEBUFFER_COMPLETE) {'
-                print r'        std::cerr << call.no << ": warning: incomplete framebuffer (" << glstate::enumToString(__result) << ")\n";'
+                print r'        retrace::warning(call) << "incomplete framebuffer (" << glstate::enumToString(__result) << ")\n";'
                 print r'    }'
             print '    }'
 
