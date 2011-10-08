@@ -1,85 +1,94 @@
-/* config.h.in.  Generated from configure.ac by autoheader.  */
-
-/* Define if building universal (internal helper macro) */
-#undef AC_APPLE_UNIVERSAL_BUILD
+/* config.h.  Manually derived from config.h.in, with the subset of defines
+ * that actually affect the library, given that most of them are meant for the
+ * tests, which we don't build. */
 
 /* Define to 1 if the compiler supports __builtin_ctz and friends. */
-#cmakedefine HAVE_BUILTIN_CTZ
+#if defined(__GNUCC__)
+#  define HAVE_BUILTIN_CTZ 1
+#endif
 
 /* Define to 1 if the compiler supports __builtin_expect. */
-#cmakedefine HAVE_BUILTIN_EXPECT
+#if defined(__GNUCC__)
+# define HAVE_BUILTIN_EXPECT 1
+#endif
 
 /* Define to 1 if you have the <byteswap.h> header file. */
-#cmakedefine HAVE_BYTESWAP_H
+#if defined(__linux__)
+#  define HAVE_BYTESWAP_H 1
+#endif
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#cmakedefine HAVE_DLFCN_H
+#undef HAVE_DLFCN_H
 
 /* Use the gflags package for command-line parsing. */
-#cmakedefine HAVE_GFLAGS
+#undef HAVE_GFLAGS
 
 /* Defined when Google Test is available. */
-#cmakedefine HAVE_GTEST
+#undef HAVE_GTEST
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#cmakedefine HAVE_INTTYPES_H
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `fastlz' library (-lfastlz). */
-#cmakedefine HAVE_LIBFASTLZ
+#undef HAVE_LIBFASTLZ
 
 /* Define to 1 if you have the `lzf' library (-llzf). */
-#cmakedefine HAVE_LIBLZF
+#undef HAVE_LIBLZF
 
 /* Define to 1 if you have the `lzo2' library (-llzo2). */
-#cmakedefine HAVE_LIBLZO2
+#undef HAVE_LIBLZO2
 
 /* Define to 1 if you have the `quicklz' library (-lquicklz). */
-#cmakedefine HAVE_LIBQUICKLZ
+#undef HAVE_LIBQUICKLZ
 
 /* Define to 1 if you have the `z' library (-lz). */
-#cmakedefine HAVE_LIBZ
+#undef HAVE_LIBZ
 
 /* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine HAVE_MEMORY_H
+#undef HAVE_MEMORY_H
 
 /* Define to 1 if you have the <stddef.h> header file. */
-#cmakedefine HAVE_STDDEF_H
+#define HAVE_STDDEF_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine HAVE_STDLIB_H
+#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#cmakedefine HAVE_STRINGS_H
+#undef HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
-#cmakedefine HAVE_STRING_H
+#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/byteswap.h> header file. */
-#cmakedefine HAVE_SYS_BYTESWAP_H
+#undef HAVE_SYS_BYTESWAP_H
 
 /* Define to 1 if you have the <sys/endian.h> header file. */
-#cmakedefine HAVE_SYS_ENDIAN_H
+#undef HAVE_SYS_ENDIAN_H
 
 /* Define to 1 if you have the <sys/mman.h> header file. */
-#cmakedefine HAVE_SYS_MMAN_H
+#undef HAVE_SYS_MMAN_H
 
 /* Define to 1 if you have the <sys/resource.h> header file. */
-#cmakedefine HAVE_SYS_RESOURCE_H
+#undef HAVE_SYS_RESOURCE_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine HAVE_SYS_STAT_H
+#undef HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine HAVE_SYS_TYPES_H
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine HAVE_UNISTD_H
+#if !defined(_WIN32)
+#  define HAVE_UNISTD_H 1
+#endif
 
 /* Define to 1 if you have the <windows.h> header file. */
-#cmakedefine HAVE_WINDOWS_H
+#if defined(_WIN32)
+#  define HAVE_WINDOWS_H 1
+#endif
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -107,11 +116,21 @@
 #undef PACKAGE_VERSION
 
 /* Define to 1 if you have the ANSI C header files. */
-#undef STDC_HEADERS
+#define STDC_HEADERS 1
 
 /* Version number of package */
 #undef VERSION
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
-#cmakedefine WORDS_BIGENDIAN
+#if defined(__GLIBC__)
+#  include <endian.h>
+#  if __BYTE_ORDER == __BIG_ENDIAN
+#    define WORDS_BIGENDIAN 1
+#  endif
+#elif defined(__APPLE__)
+#  include <machine/endian.h>
+#  if __DARWIN_BYTE_ORDER == __DARWIN_BIG_ENDIAN
+#    define WORDS_BIGENDIAN 1
+#  endif
+#endif
