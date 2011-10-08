@@ -40,7 +40,7 @@ void ignore(Trace::Call &call) {
     (void)call;
 }
 
-void retrace_unknown(Trace::Call &call) {
+static void unknown(Trace::Call &call) {
     if (verbosity >= 0) {
         std::cerr << call.no << ": warning: unknown call " << call.name() << "\n";
     }
@@ -74,7 +74,7 @@ void Retracer::retrace(Trace::Call &call) {
     if (!callback) {
         Map::const_iterator it = map.find(call.name());
         if (it == map.end()) {
-            callback = &retrace_unknown;
+            callback = &unknown;
         } else {
             callback = it->second;
         }

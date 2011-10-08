@@ -85,7 +85,6 @@ extern int verbosity;
 
 
 void ignore(Trace::Call &call);
-void retrace_unknown(Trace::Call &call);
 
 
 typedef void (*Callback)(Trace::Call &call);
