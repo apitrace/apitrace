@@ -44,3 +44,12 @@ add_library (snappy_bundled STATIC
 set_target_properties (snappy_bundled PROPERTIES
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
+
+# If we're doing an out of source build remove any config.h from the source tree.
+if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+    add_custom_command (
+        TARGET snappy_bundled
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/config.h
+    )
+endif()
