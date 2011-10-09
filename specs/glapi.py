@@ -2800,12 +2800,6 @@ glapi.add_functions([
     GlFunction(Void, "glReadBufferRegion", [(GLregion, "region"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glDrawBufferRegion", [(GLregion, "region"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "xDest"), (GLint, "yDest")]),
     GlFunction(GLuint, "glBufferRegionEnabled", [], sideeffects=False),
-    # XXX: but GLEW uses EXT suffix
-    GlFunction(GLregion, "glNewBufferRegionEXT", [(GLenum, "type")]),
-    GlFunction(Void, "glDeleteBufferRegionEXT", [(GLregion, "region")]),
-    GlFunction(Void, "glReadBufferRegionEXT", [(GLregion, "region"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
-    GlFunction(Void, "glDrawBufferRegionEXT", [(GLregion, "region"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "xDest"), (GLint, "yDest")]),
-    GlFunction(GLuint, "glBufferRegionEnabledEXT", [], sideeffects=False),
 
     # GL_WIN_swap_hint
     GlFunction(Void, "glAddSwapHintRectWIN", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
