@@ -134,7 +134,7 @@ class GlRetracer(Retracer):
         'glGetPixelMapuiv',
         'glGetPixelMapusv',
         'glGetPolygonStipple',
-        'glGetSeparableFilter,',
+        'glGetSeparableFilter',
         'glGetTexImage',
         'glReadPixels',
         'glGetnCompressedTexImageARB',
