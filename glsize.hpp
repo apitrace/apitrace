@@ -449,19 +449,6 @@ __glCallLists_size(GLsizei n, GLenum type)
     return n*__gl_type_size(type);
 }
 
-#define __glFogfv_size __gl_param_size
-#define __glFogiv_size __gl_param_size
-
-#define __glLightfv_size __gl_param_size
-#define __glLightiv_size __gl_param_size
-
-#define __glLightModelfv_size __gl_param_size
-#define __glLightModeliv_size __glLightModelfv_size
-
-#define __glMaterialfv_size __gl_param_size
-#define __glMaterialiv_size __glMaterialfv_size
-
-
 static inline size_t
 __glMap1d_size(GLenum target, GLint stride, GLint order)
 {
@@ -543,63 +530,6 @@ __glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint 
 }
 
 #define __glMap2f_size __glMap2d_size
-
-#define __glGetBooleanv_size __gl_param_size
-#define __glGetDoublev_size __glGetBooleanv_size
-#define __glGetFloatv_size __glGetBooleanv_size
-#define __glGetIntegerv_size __glGetBooleanv_size
-#define __glGetInteger64v_size __glGetBooleanv_size
-#define __glGetBooleani_v_size __gl_param_size
-#define __glGetDoublei_v_size __glGetBooleanv_size
-#define __glGetFloati_v_size __glGetBooleanv_size
-#define __glGetIntegeri_v_size __glGetBooleani_v_size
-#define __glGetInteger64i_v_size __glGetBooleani_v_size
-
-#define __glGetLightfv_size __glLightfv_size
-#define __glGetLightiv_size __glLightfv_size
-
-#define __glGetMaterialfv_size __glMaterialfv_size
-#define __glGetMaterialiv_size __glMaterialfv_size
-
-
-#define __glColorTableParameterfv_size __gl_param_size
-#define __glColorTableParameteriv_size __gl_param_size
-#define __glGetColorTableParameterfv_size __gl_param_size
-#define __glGetColorTableParameteriv_size __gl_param_size
-
-#define __glConvolutionParameterfv_size __gl_param_size
-#define __glConvolutionParameteriv_size __gl_param_size
-#define __glGetConvolutionParameterfv_size __gl_param_size
-#define __glGetConvolutionParameteriv_size __gl_param_size
-
-#define __glGetHistogramParameterfv_size __gl_param_size
-#define __glGetHistogramParameteriv_size __gl_param_size
-
-#define __glGetMinmaxParameterfv_size __gl_param_size
-#define __glGetMinmaxParameteriv_size __gl_param_size
-
-#define __glGetProgramivARB_size __gl_param_size
-#define __glGetProgramivNV_size __gl_param_size
-
-#define __glGetVertexAttribdvARB_size __gl_param_size
-#define __glGetVertexAttribfvARB_size __gl_param_size
-#define __glGetVertexAttribivARB_size __gl_param_size
-#define __glGetVertexAttribdvNV_size __gl_param_size
-#define __glGetVertexAttribfvNV_size __gl_param_size
-#define __glGetVertexAttribivNV_size __gl_param_size
-
-#define __glGetQueryObjectivARB_size __gl_param_size
-#define __glGetQueryObjectuivARB_size __glGetQueryObjectivARB_size
-#define __glGetQueryivARB_size __gl_param_size
-
-#define __glPointParameterfv_size __glPointParameterfvEXT_size
-#define __glPointParameteriv_size __glPointParameterfvEXT_size
-#define __glPointParameterfvARB_size __glPointParameterfvEXT_size
-#define __glPointParameterfvEXT_size __gl_param_size
-#define __glPointParameterivNV_size __glPointParameterfvEXT_size
-
-#define __glGetFramebufferAttachmentParameteriv_size __gl_param_size
-#define __glGetFramebufferAttachmentParameterivEXT_size __gl_param_size
 
 static inline unsigned
 __gl_format_channels(GLenum format) {
@@ -750,29 +680,6 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
 
     return size;
 }
-
-#define __glTexParameterfv_size __gl_param_size
-#define __glTexParameteriv_size __gl_param_size
-#define __glGetTexParameterfv_size __gl_param_size
-#define __glGetTexParameteriv_size __gl_param_size
-#define __glGetTexLevelParameterfv_size __gl_param_size
-#define __glGetTexLevelParameteriv_size __gl_param_size
-#define __glTexParameterIiv_size __gl_param_size
-#define __glTexParameterIuiv_size __gl_param_size
-#define __glGetTexParameterIiv_size __gl_param_size
-#define __glGetTexParameterIuiv_size __gl_param_size
-
-#define __glTexEnvfv_size __gl_param_size
-#define __glTexEnviv_size __gl_param_size
-#define __glGetTexEnvfv_size __gl_param_size
-#define __glGetTexEnviv_size __gl_param_size
-
-#define __glTexGendv_size __gl_param_size
-#define __glTexGenfv_size __gl_param_size
-#define __glTexGeniv_size __gl_param_size
-#define __glGetTexGendv_size __gl_param_size
-#define __glGetTexGenfv_size __gl_param_size
-#define __glGetTexGeniv_size __gl_param_size
 
 #define __glTexImage3D_size(format, type, width, height, depth) __gl_image_size(format, type, width, height, depth)
 #define __glTexImage2D_size(format, type, width, height)        __gl_image_size(format, type, width, height, 1)
