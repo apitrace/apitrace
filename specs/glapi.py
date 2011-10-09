@@ -421,7 +421,7 @@ glapi.add_functions([
     GlFunction(Void, "glGetConvolutionFilter", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetConvolutionFilter_size(target, format, type)"), "image")]),
     GlFunction(Void, "glGetConvolutionParameterfv", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLfloat, "__glGetConvolutionParameterfv_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetConvolutionParameteriv", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "__glGetConvolutionParameteriv_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetSeparableFilter", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilter_size(target, format, type)"), "row"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilter_size(target, format, type)"), "column"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilter_size(target, format, type)"), "span")]),
+    GlFunction(Void, "glGetSeparableFilter", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilter_size(target, format, type)"), "row"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilter_size(target, format, type)"), "column"), Out(OpaquePointer(GLvoid), "span")]),
     GlFunction(Void, "glSeparableFilter2D", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glConvolutionFilter1D_size(format, type, width)"), "row"), (Blob(Const(GLvoid), "__glConvolutionFilter1D_size(format, type, height)"), "column")]),
     GlFunction(Void, "glGetHistogram", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetHistogram_size(target, format, type)"), "values")]),
     GlFunction(Void, "glGetHistogramParameterfv", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLfloat, "__glGetHistogramParameterfv_size(pname)"), "params")], sideeffects=False),
@@ -1382,24 +1382,24 @@ glapi.add_functions([
     GlFunction(Void, "glResetMinmaxEXT", [(GLenum, "target")]),
 
     # GL_EXT_convolution
-    GlFunction(Void, "glConvolutionFilter1DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (OpaqueBlob(Const(GLvoid), "__glConvolutionFilter1DEXT_size(format, type, width)"), "image")]),
-    GlFunction(Void, "glConvolutionFilter2DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (OpaqueBlob(Const(GLvoid), "__glConvolutionFilter2DEXT_size(format, type, width, height)"), "image")]),
+    GlFunction(Void, "glConvolutionFilter1DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glConvolutionFilter1D_size(format, type, width)"), "image")]),
+    GlFunction(Void, "glConvolutionFilter2DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glConvolutionFilter2D_size(format, type, width, height)"), "image")]),
     GlFunction(Void, "glConvolutionParameterfEXT", [(GLenum, "target"), (GLenum, "pname"), (GLfloat, "params")]),
-    GlFunction(Void, "glConvolutionParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), (OpaqueArray(Const(GLfloat), "__glConvolutionParameterfvEXT_size(pname)"), "params")]),
+    GlFunction(Void, "glConvolutionParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), (Array(Const(GLfloat), "__glConvolutionParameterfv_size(pname)"), "params")]),
     GlFunction(Void, "glConvolutionParameteriEXT", [(GLenum, "target"), (GLenum, "pname"), (GLint, "params")]),
-    GlFunction(Void, "glConvolutionParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), (OpaqueArray(Const(GLint), "__glConvolutionParameterivEXT_size(pname)"), "params")]),
+    GlFunction(Void, "glConvolutionParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), (Array(Const(GLint), "__glConvolutionParameteriv_size(pname)"), "params")]),
     GlFunction(Void, "glCopyConvolutionFilter1DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width")]),
     GlFunction(Void, "glCopyConvolutionFilter2DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glGetConvolutionFilterEXT", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetConvolutionFilterEXT_size(target, format, type)"), "image")], sideeffects=False),
-    GlFunction(Void, "glGetConvolutionParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLfloat, "__glGetConvolutionParameterfvEXT_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetConvolutionParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetConvolutionParameterivEXT_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetConvolutionParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLfloat, "__glGetConvolutionParameterfv_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetConvolutionParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "__glGetConvolutionParameteriv_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetSeparableFilterEXT", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilterEXT_size(target, format, type)"), "row"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilterEXT_size(target, format, type)"), "column"), Out(OpaqueBlob(GLvoid, "__glGetSeparableFilterEXT_size(target, format, type)"), "span")], sideeffects=False),
-    GlFunction(Void, "glSeparableFilter2DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (OpaqueBlob(Const(GLvoid), "__glSeparableFilter2DEXT_size(target, format, type, width)"), "row"), (OpaqueBlob(Const(GLvoid), "__glSeparableFilter2DEXT_size(target, format, type, height)"), "column")]),
+    GlFunction(Void, "glSeparableFilter2DEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glConvolutionFilter1D_size(format, type, width)"), "row"), (Blob(Const(GLvoid), "__glConvolutionFilter1D_size(format, type, height)"), "column")]),
 
     # GL_SGI_color_table
-    GlFunction(Void, "glColorTableSGI", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (OpaqueBlob(Const(GLvoid), "__glColorTableSGI_size(format, type, width)"), "table")]),
-    GlFunction(Void, "glColorTableParameterfvSGI", [(GLenum, "target"), (GLenum, "pname"), (OpaqueArray(Const(GLfloat), "__glColorTableParameterfvSGI_size(pname)"), "params")]),
-    GlFunction(Void, "glColorTableParameterivSGI", [(GLenum, "target"), (GLenum, "pname"), (OpaqueArray(Const(GLint), "__glColorTableParameterivSGI_size(pname)"), "params")]),
+    GlFunction(Void, "glColorTableSGI", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glColorTable_size(format, type, width)"), "table")]),
+    GlFunction(Void, "glColorTableParameterfvSGI", [(GLenum, "target"), (GLenum, "pname"), (Array(Const(GLfloat), "__glColorTableParameterfv_size(pname)"), "params")]),
+    GlFunction(Void, "glColorTableParameterivSGI", [(GLenum, "target"), (GLenum, "pname"), (Array(Const(GLint), "__glColorTableParameteriv_size(pname)"), "params")]),
     GlFunction(Void, "glCopyColorTableSGI", [(GLenum, "target"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width")]),
     GlFunction(Void, "glGetColorTableSGI", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetColorTableSGI_size(target, format, type)"), "table")], sideeffects=False),
     GlFunction(Void, "glGetColorTableParameterfvSGI", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLfloat, "__glGetColorTableParameterfvSGI_size(pname)"), "params")], sideeffects=False),
@@ -1466,7 +1466,7 @@ glapi.add_functions([
 
     # GL_SGIS_point_parameters
     GlFunction(Void, "glPointParameterfSGIS", [(GLenum, "pname"), (GLfloat, "param")]),
-    GlFunction(Void, "glPointParameterfvSGIS", [(GLenum, "pname"), (OpaqueArray(Const(GLfloat), "__glPointParameterfvSGIS_size(pname)"), "params")]),
+    GlFunction(Void, "glPointParameterfvSGIS", [(GLenum, "pname"), (Array(Const(GLfloat), "__glPointParameterfv_size(pname)"), "params")]),
 
     # GL_SGIX_instruments
     GlFunction(GLint, "glGetInstrumentsSGIX", [], sideeffects=False),
@@ -1507,14 +1507,14 @@ glapi.add_functions([
     GlFunction(Void, "glGetImageTransformParameterfvHP", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLfloat, "__glGetImageTransformParameterfvHP_size(pname)"), "params")], sideeffects=False),
 
     # GL_EXT_color_subtable
-    GlFunction(Void, "glColorSubTableEXT", [(GLenum, "target"), (GLsizei, "start"), (GLsizei, "count"), (GLenum, "format"), (GLenum, "type"), (OpaqueBlob(Const(GLvoid), "__glColorSubTable_size(format, type, count)"), "data")]),
+    GlFunction(Void, "glColorSubTableEXT", [(GLenum, "target"), (GLsizei, "start"), (GLsizei, "count"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glColorSubTable_size(format, type, count)"), "data")]),
     GlFunction(Void, "glCopyColorSubTableEXT", [(GLenum, "target"), (GLsizei, "start"), (GLint, "x"), (GLint, "y"), (GLsizei, "width")]),
 
     # GL_PGI_misc_hints
     GlFunction(Void, "glHintPGI", [(GLenum, "target"), (GLint, "mode")]),
 
     # GL_EXT_paletted_texture
-    GlFunction(Void, "glColorTableEXT", [(GLenum, "target"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (OpaqueBlob(Const(GLvoid), "__glColorTableEXT_size(format, type, width)"), "table")]),
+    GlFunction(Void, "glColorTableEXT", [(GLenum, "target"), (GLenum, "internalformat"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "__glColorTable_size(format, type, width)"), "table")]),
     GlFunction(Void, "glGetColorTableEXT", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), Out(OpaqueBlob(GLvoid, "__glGetColorTableEXT_size(target, format, type)"), "data")], sideeffects=False),
     GlFunction(Void, "glGetColorTableParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLint, "__glGetColorTableParameterivEXT_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetColorTableParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), Out(OpaqueArray(GLfloat, "__glGetColorTableParameterfvEXT_size(pname)"), "params")], sideeffects=False),

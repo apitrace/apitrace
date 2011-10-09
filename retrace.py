@@ -26,6 +26,9 @@
 
 """Generic retracing code generator."""
 
+
+import sys
+
 import specs.stdapi as stdapi
 import specs.glapi as glapi
 
@@ -217,14 +220,18 @@ class Retracer:
                 try:
                     ValueWrapper().visit(arg_type, lvalue, rvalue)
                 except NotImplementedError:
-                    print '   // FIXME: %s' % arg.name
+                    print '    // XXX: %s' % arg.name
         if function.type is not stdapi.Void:
             rvalue = '*call.ret'
             lvalue = '__result'
             try:
                 ValueWrapper().visit(function.type, lvalue, rvalue)
             except NotImplementedError:
-                print '   // FIXME: result'
+                success = False
+                print '    // FIXME: result'
+        if not success:
+            if function.name[-1].islower():
+                sys.stderr.write('warning: %s unsupported\n' % function.name)
 
     def fail_function(self, function):
         print '    if (retrace::verbosity >= 0) {'
