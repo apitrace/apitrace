@@ -29,7 +29,14 @@
 #include <iostream>
 
 #include "glws.hpp"
+
+#ifdef __APPLE__
+#include <X11/Xlib.h>
+#include <GL/gl.h>
+#include <GL/glx.h>
+#else
 #include "glproc.hpp"
+#endif
 
 
 namespace glws {
@@ -297,7 +304,7 @@ createContext(const Visual *_visual, Context *shareContext)
         share_context = dynamic_cast<GlxContext*>(shareContext)->context;
     }
 
-
+#ifndef __APPLE__
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
         Attributes<int> attribs;
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
@@ -307,7 +314,9 @@ createContext(const Visual *_visual, Context *shareContext)
         attribs.end();
 
         context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
-    } else if (glxVersion >= 0x103) {
+    } else 
+#endif
+           if (glxVersion >= 0x103) {
         context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
     } else {
         context = glXCreateContext(display, visual->visinfo, share_context, True);
