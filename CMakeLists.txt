@@ -197,10 +197,10 @@ add_custom_command (
 
 if (WIN32)
     set (os os_win32.cpp)
-    set (glws glws_wgl.cpp)
+    set (glws_os glws_wgl.cpp)
 else (WIN32)
     set (os os_posix.cpp)
-    set (glws glws_glx.cpp)
+    set (glws_os glws_glx.cpp)
 endif (WIN32)
 
 add_library (common STATIC
@@ -413,7 +413,8 @@ add_executable (glretrace
     glstate.cpp
     glstate_params.cpp
     retrace.cpp
-    ${glws}
+    glws.cpp
+    ${glws_os}
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
 )
 

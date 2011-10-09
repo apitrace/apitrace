@@ -31,7 +31,46 @@
 #define _GLWS_HPP_
 
 
+#include <vector>
+
+
 namespace glws {
+
+
+extern bool debug;
+
+
+bool
+checkExtension(const char *extName, const char *extString);
+
+
+template< class T >
+class Attributes {
+protected:
+    std::vector<T> attribs;
+
+public:
+    void add(T param) {
+        attribs.push_back(param);
+    }
+
+    void add(T pname, T pvalue) {
+        add(pname);
+        add(pvalue);
+    }
+
+    void end(void) {
+        add(0);
+    }
+
+    operator T * (void) {
+        return &attribs[0];
+    }
+
+    operator const T * (void) const {
+        return &attribs[0];
+    }
+};
 
 
 class Visual
@@ -105,7 +144,7 @@ Drawable *
 createDrawable(const Visual *visual, int width = 32, int height = 32);
 
 Context *
-createContext(const Visual *visual, Context *shareContext = NULL);
+createContext(const Visual *visual, Context *shareContext = 0);
 
 bool
 makeCurrent(Drawable *drawable, Context *context);

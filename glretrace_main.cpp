@@ -266,6 +266,7 @@ int main(int argc, char **argv)
         } else if (!strcmp(arg, "-b")) {
             benchmark = true;
             retrace::verbosity = -1;
+            glws::debug = false;
         } else if (!strcmp(arg, "-c")) {
             compare_prefix = argv[++i];
             if (snapshot_frequency == FREQUENCY_NEVER) {
