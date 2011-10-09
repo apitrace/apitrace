@@ -203,108 +203,103 @@ public:
     }
 };
 
-
-class GlxWindowSystem : public WindowSystem
-{
-public:
-    GlxWindowSystem() {
+void
+init(void) {
+    if (!display) {
+        display = XOpenDisplay(NULL);
         if (!display) {
-            display = XOpenDisplay(NULL);
-            if (!display) {
-                std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
-                exit(1);
-            }
-            screen = DefaultScreen(display);
+            std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
+            exit(1);
         }
+        screen = DefaultScreen(display);
     }
+}
 
-    ~GlxWindowSystem() {
+void
+cleanup(void) {
+    if (display) {
         XCloseDisplay(display);
+        display = NULL;
+    }
+}
+
+Visual *
+createVisual(bool doubleBuffer) {
+    int single_attribs[] = {
+        GLX_RGBA,
+        GLX_RED_SIZE, 1,
+        GLX_GREEN_SIZE, 1,
+        GLX_BLUE_SIZE, 1,
+        GLX_ALPHA_SIZE, 1,
+        GLX_DEPTH_SIZE, 1,
+        GLX_STENCIL_SIZE, 1,
+        None
+    };
+
+    int double_attribs[] = {
+        GLX_RGBA,
+        GLX_RED_SIZE, 1,
+        GLX_GREEN_SIZE, 1,
+        GLX_BLUE_SIZE, 1,
+        GLX_ALPHA_SIZE, 1,
+        GLX_DOUBLEBUFFER,
+        GLX_DEPTH_SIZE, 1,
+        GLX_STENCIL_SIZE, 1,
+        None
+    };
+
+    XVisualInfo *visinfo;
+
+    visinfo = glXChooseVisual(display, screen, doubleBuffer ? double_attribs : single_attribs);
+
+    return new GlxVisual(visinfo);
+}
+
+Drawable *
+createDrawable(const Visual *visual, int width, int height)
+{
+    return new GlxDrawable(visual, width, height);
+}
+
+Context *
+createContext(const Visual *visual, Context *shareContext)
+{
+    XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
+    GLXContext share_context = NULL;
+    GLXContext context;
+
+    if (shareContext) {
+        share_context = dynamic_cast<GlxContext*>(shareContext)->context;
     }
 
-    Visual *
-    createVisual(bool doubleBuffer) {
-        int single_attribs[] = {
-            GLX_RGBA,
-            GLX_RED_SIZE, 1,
-            GLX_GREEN_SIZE, 1,
-            GLX_BLUE_SIZE, 1,
-            GLX_ALPHA_SIZE, 1,
-            GLX_DEPTH_SIZE, 1,
-            GLX_STENCIL_SIZE, 1,
-            None
-        };
+    context = glXCreateContext(display, visinfo,
+                               share_context, True);
+    return new GlxContext(visual, context);
+}
 
-        int double_attribs[] = {
-            GLX_RGBA,
-            GLX_RED_SIZE, 1,
-            GLX_GREEN_SIZE, 1,
-            GLX_BLUE_SIZE, 1,
-            GLX_ALPHA_SIZE, 1,
-            GLX_DOUBLEBUFFER,
-            GLX_DEPTH_SIZE, 1,
-            GLX_STENCIL_SIZE, 1,
-            None
-        };
+bool
+makeCurrent(Drawable *drawable, Context *context)
+{
+    if (!drawable || !context) {
+        return glXMakeCurrent(display, None, NULL);
+    } else {
+        GlxDrawable *glxDrawable = dynamic_cast<GlxDrawable *>(drawable);
+        GlxContext *glxContext = dynamic_cast<GlxContext *>(context);
 
-        XVisualInfo *visinfo;
-
-        visinfo = glXChooseVisual(display, screen, doubleBuffer ? double_attribs : single_attribs);
-
-        return new GlxVisual(visinfo);
+        return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
     }
+}
 
-    Drawable *
-    createDrawable(const Visual *visual, int width, int height)
-    {
-        return new GlxDrawable(visual, width, height);
+bool
+processEvents(void) {
+    XFlush(display);
+    while (XPending(display) > 0) {
+        XEvent event;
+        XNextEvent(display, &event);
+        describeEvent(event);
     }
-
-    Context *
-    createContext(const Visual *visual, Context *shareContext)
-    {
-        XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
-        GLXContext share_context = NULL;
-        GLXContext context;
-
-        if (shareContext) {
-            share_context = dynamic_cast<GlxContext*>(shareContext)->context;
-        }
-
-        context = glXCreateContext(display, visinfo,
-                                   share_context, True);
-        return new GlxContext(visual, context);
-    }
-
-    bool
-    makeCurrent(Drawable *drawable, Context *context)
-    {
-        if (!drawable || !context) {
-            return glXMakeCurrent(display, None, NULL);
-        } else {
-            GlxDrawable *glxDrawable = dynamic_cast<GlxDrawable *>(drawable);
-            GlxContext *glxContext = dynamic_cast<GlxContext *>(context);
-
-            return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
-        }
-    }
-
-    bool
-    processEvents(void) {
-        XFlush(display);
-        while (XPending(display) > 0) {
-            XEvent event;
-            XNextEvent(display, &event);
-            describeEvent(event);
-        }
-        return true;
-    }
-};
-
-
-WindowSystem *createNativeWindowSystem(void) {
-    return new GlxWindowSystem();
+    return true;
 }
 
 
-} /* namespace glretrace */
+} /* namespace glws */

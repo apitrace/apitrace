@@ -48,7 +48,7 @@ getDrawable(unsigned long long hdc) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(hdc);
     if (it == drawable_map.end()) {
-        return (drawable_map[hdc] = ws->createDrawable(visual));
+        return (drawable_map[hdc] = glws::createDrawable(visual));
     }
 
     return it->second;
@@ -56,7 +56,7 @@ getDrawable(unsigned long long hdc) {
 
 static void retrace_wglCreateContext(Trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *context = ws->createContext(glretrace::visual);
+    glws::Context *context = glws::createContext(glretrace::visual);
     context_map[orig_context] = context;
 }
 
@@ -74,7 +74,7 @@ static void retrace_wglMakeCurrent(Trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(0).toUIntPtr());
     glws::Context *new_context = context_map[call.arg(1).toUIntPtr()];
 
-    bool result = ws->makeCurrent(new_drawable, new_context);
+    bool result = glws::makeCurrent(new_drawable, new_context);
 
     if (new_drawable && new_context && result) {
         drawable = new_drawable;
@@ -114,7 +114,7 @@ static void retrace_wglShareLists(Trace::Call &call) {
     glws::Context *old_context = context_map[hglrc2];
 
     glws::Context *new_context =
-        ws->createContext(old_context->visual, share_context);
+        glws::createContext(old_context->visual, share_context);
     if (new_context) {
         delete old_context;
         context_map[hglrc2] = new_context;
@@ -176,7 +176,7 @@ static void retrace_wglCreatePbufferARB(Trace::Call &call) {
     int iHeight = call.arg(3).toUInt();
 
     unsigned long long orig_pbuffer = call.ret->toUIntPtr();
-    glws::Drawable *drawable = ws->createDrawable(glretrace::visual);
+    glws::Drawable *drawable = glws::createDrawable(glretrace::visual);
 
     drawable->resize(iWidth, iHeight);
 
@@ -217,7 +217,7 @@ static void retrace_wglCreateContextAttribsARB(Trace::Call &call) {
         share_context = context_map[call.arg(1).toUIntPtr()];
     }
 
-    glws::Context *context = ws->createContext(glretrace::visual, share_context);
+    glws::Context *context = glws::createContext(glretrace::visual, share_context);
     context_map[orig_context] = context;
 }
 

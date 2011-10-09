@@ -38,7 +38,6 @@ namespace glretrace {
 bool double_buffer = true;
 bool insideGlBeginEnd = false;
 Trace::Parser parser;
-glws::WindowSystem *ws = NULL;
 glws::Visual *visual = NULL;
 glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
@@ -227,7 +226,7 @@ static void display(void) {
     }
 
     if (wait) {
-        while (ws->processEvents()) {}
+        while (glws::processEvents()) {}
     } else {
         exit(0);
     }
@@ -317,8 +316,8 @@ int main(int argc, char **argv)
         }
     }
 
-    ws = glws::createNativeWindowSystem();
-    visual = ws->createVisual(double_buffer);
+    glws::init();
+    visual = glws::createVisual(double_buffer);
 
     for ( ; i < argc; ++i) {
         if (!parser.open(argv[i])) {
@@ -330,6 +329,9 @@ int main(int argc, char **argv)
 
         parser.close();
     }
+    
+    delete visual;
+    glws::cleanup();
 
     return 0;
 }

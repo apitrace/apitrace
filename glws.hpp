@@ -92,29 +92,26 @@ public:
 };
 
 
-class WindowSystem
-{
-public:
-    virtual ~WindowSystem() {}
+void
+init(void);
 
-    virtual Visual *
-    createVisual(bool doubleBuffer = false) = 0;
-    
-    virtual Drawable *
-    createDrawable(const Visual *visual, int width = 32, int height = 32) = 0;
+void
+cleanup(void);
 
-    virtual Context *
-    createContext(const Visual *visual, Context *shareContext = NULL) = 0;
-    
-    virtual bool
-    makeCurrent(Drawable *drawable, Context *context) = 0;
+Visual *
+createVisual(bool doubleBuffer = false);
 
-    virtual bool
-    processEvents(void) = 0;
-};
+Drawable *
+createDrawable(const Visual *visual, int width = 32, int height = 32);
 
+Context *
+createContext(const Visual *visual, Context *shareContext = NULL);
 
-WindowSystem *createNativeWindowSystem(void);
+bool
+makeCurrent(Drawable *drawable, Context *context);
+
+bool
+processEvents(void);
 
 
 } /* namespace glws */
