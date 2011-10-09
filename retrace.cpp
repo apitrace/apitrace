@@ -62,8 +62,8 @@ void ignore(Trace::Call &call) {
     (void)call;
 }
 
-void unknown(Trace::Call &call) {
-    warning(call) << "unknown call " << call.name() << "\n";
+void unsupported(Trace::Call &call) {
+    warning(call) << "unsupported " << call.name() << " call\n";
 }
 
 inline void Retracer::addCallback(const Entry *entry) {
@@ -100,7 +100,7 @@ void Retracer::retrace(Trace::Call &call) {
     if (!callback) {
         Map::const_iterator it = map.find(call.name());
         if (it == map.end()) {
-            callback = &unknown;
+            callback = &unsupported;
         } else {
             callback = it->second;
         }

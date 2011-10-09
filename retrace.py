@@ -231,11 +231,11 @@ class Retracer:
                 print '    // FIXME: result'
         if not success:
             if function.name[-1].islower():
-                sys.stderr.write('warning: %s unsupported\n' % function.name)
+                sys.stderr.write('warning: unsupported %s call\n' % function.name)
 
     def fail_function(self, function):
         print '    if (retrace::verbosity >= 0) {'
-        print '        retrace::unknown(call);'
+        print '        retrace::unsupported(call);'
         print '    }'
         print '    return;'
 
