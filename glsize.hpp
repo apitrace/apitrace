@@ -1,5 +1,6 @@
 /**************************************************************************
  *
+ * Copyright 2011 Jose Fonseca
  * Copyright 2010 VMware, Inc.
  * Copyright 2004 IBM Corporation
  * All Rights Reserved.
@@ -316,6 +317,7 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
     if (!count) {
         return 0;
     }
+
     __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);
     if (__element_array_buffer) {
         // Read indices from index buffer object
@@ -376,11 +378,16 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
 #define __glDrawRangeElements_maxindex(start, end, count, type, indices) __glDrawElements_maxindex(count, type, indices)
 #define __glDrawRangeElementsEXT_maxindex __glDrawRangeElements_maxindex
 
+/* FIXME take in consideration instancing */
 #define __glDrawArraysInstanced_maxindex(first, count, primcount) __glDrawArrays_maxindex(first, count)
 #define __glDrawElementsInstanced_maxindex(count, type, indices, primcount) __glDrawElements_maxindex(count, type, indices)
 #define __glDrawElementsInstancedBaseVertex_maxindex(count, type, indices, primcount, basevertex) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
 #define __glDrawRangeElementsInstanced_maxindex(start, end, count, type, indices, primcount) __glDrawRangeElements_maxindex(start, end, count, type, indices)
 #define __glDrawRangeElementsInstancedBaseVertex_maxindex(start, end, count, type, indices, primcount, basevertex) __glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex)
+
+#define __glDrawArraysInstancedBaseInstance_maxindex(first, count, primcount, baseinstance) __glDrawArrays_maxindex(first, count)
+#define __glDrawElementsInstancedBaseInstance_maxindex(count, type, indices, primcount, baseinstance) __glDrawElements_maxindex(count, type, indices)
+#define __glDrawElementsInstancedBaseVertexBaseInstance_maxindex(count, type, indices, primcount, basevertex, baseinstance) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
 
 #define __glDrawArraysInstancedARB_maxindex __glDrawArraysInstanced_maxindex
 #define __glDrawElementsInstancedARB_maxindex __glDrawElementsInstanced_maxindex
