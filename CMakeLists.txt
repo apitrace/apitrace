@@ -38,7 +38,7 @@ endif ()
 
 if (WIN32)
     find_package (DirectX)
-elif (APPLE)
+elseif (APPLE)
 else ()
     find_package (X11 REQUIRED)
 
