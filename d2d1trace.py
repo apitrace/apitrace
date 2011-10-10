@@ -43,6 +43,8 @@ class D2D1Tracer(DllTracer):
 
 
 if __name__ == '__main__':
+    print '#define INITGUID'
+    print
     print '#include "trace_writer.hpp"'
     print '#include "os.hpp"'
     print
@@ -53,5 +55,10 @@ if __name__ == '__main__':
     print '#include <d2d1.h>'
     print '#include <dwrite.h>'
     print
+    print '#ifdef __MINGW32__'
+    print 'DEFINE_GUID(IID_ID2D1Factory,0x06152247,0x6f50,0x465a,0x92,0x45,0x11,0x8b,0xfd,0x3b,0x60,0x07);'
+    print '#endif'
+    print
+
     tracer = D2D1Tracer('d2d1.dll')
     tracer.trace_api(d2d1)
