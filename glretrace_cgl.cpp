@@ -114,6 +114,11 @@ static void retrace_CGLFlushDrawable(Trace::Call &call) {
 
 const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
+    {"CGLGetCurrentContext", &retrace::ignore},
+    {"CGLEnable", &retrace::ignore},
+    {"CGLDisable", &retrace::ignore},
+    {"CGLSetParameter", &retrace::ignore},
+    {"CGLGetParameter", &retrace::ignore},
     {"CGLFlushDrawable", &retrace_CGLFlushDrawable},
     {NULL, NULL},
 };
