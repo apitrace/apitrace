@@ -307,9 +307,10 @@ if (WIN32)
         install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
     endif (DirectX_D3D10_INCLUDE_DIR)
 
-    # d2d1.dll
+    # d2d1.dll, dwrite.dll
     if (DirectX_D2D1_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
+
         add_custom_command (
             OUTPUT d2d1trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
@@ -322,6 +323,19 @@ if (WIN32)
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
         install (TARGETS d2d1 LIBRARY DESTINATION wrappers)
+
+        add_custom_command (
+            OUTPUT dwritetrace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dwritetrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dwritetrace.cpp
+            DEPENDS dwritetrace.py trace.py specs/d2d1.py specs/d2d1.py specs/d2dbasetypes.py specs/d2derr.py specs/dwrite.py specs/dcommon.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
+        )
+        add_library (dwrite MODULE specs/dwrite.def dwritetrace.cpp)
+        set_target_properties (dwrite
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        )
+        install (TARGETS dwrite LIBRARY DESTINATION wrappers)
     endif (DirectX_D2D1_INCLUDE_DIR)
 
     # opengl32.dll

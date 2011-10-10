@@ -400,11 +400,11 @@ class Tracer:
         print '%s::~%s() {' % (interface_wrap_name(interface), interface_wrap_name(interface))
         print '}'
         print
-        for method in interface.itermethods():
-            self.trace_method(interface, method)
+        for base, method in interface.itermethods2():
+            self.trace_method(interface, base, method)
         print
 
-    def trace_method(self, interface, method):
+    def trace_method(self, interface, base, method):
         print method.prototype(interface_wrap_name(interface) + '::' + method.name) + ' {'
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(method.id), interface.name + '::' + method.name, len(method.args) + 1)
@@ -422,7 +422,7 @@ class Tracer:
             print '    %s __result;' % method.type
             result = '__result = '
         print '    Trace::localWriter.endEnter();'
-        print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
+        print '    %sstatic_cast<%s *>(m_pInstance)->%s(%s);' % (result, base, method.name, ', '.join([str(arg.name) for arg in method.args]))
         print '    Trace::localWriter.beginLeave(__call);'
         for arg in method.args:
             if arg.output:

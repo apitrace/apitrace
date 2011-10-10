@@ -462,15 +462,15 @@ IDWriteTextFormat.methods += [
     Method(FLOAT, "GetIncrementalTabStop", []),
     Method(HRESULT, "GetTrimming", [Out(Pointer(DWRITE_TRIMMING), "trimmingOptions"), Out(Pointer(Pointer(IDWriteInlineObject)), "trimmingSign")]),
     Method(HRESULT, "GetLineSpacing", [Out(Pointer(DWRITE_LINE_SPACING_METHOD), "lineSpacingMethod"), Out(Pointer(FLOAT), "lineSpacing"), Out(Pointer(FLOAT), "baseline")]),
-    #Method(HRESULT, "GetFontCollection", [Out(Pointer(Pointer(IDWriteFontCollection)), "fontCollection")]),
-    #Method(UINT32, "GetFontFamilyNameLength", []),
-    #Method(HRESULT, "GetFontFamilyName", [Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize")]),
-    #Method(DWRITE_FONT_WEIGHT, "GetFontWeight", []),
-    #Method(DWRITE_FONT_STYLE, "GetFontStyle", []),
-    #Method(DWRITE_FONT_STRETCH, "GetFontStretch", []),
-    #Method(FLOAT, "GetFontSize", []),
-    #Method(UINT32, "GetLocaleNameLength", []),
-    #Method(HRESULT, "GetLocaleName", [Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize")]),
+    Method(HRESULT, "GetFontCollection", [Out(Pointer(Pointer(IDWriteFontCollection)), "fontCollection")]),
+    Method(UINT32, "GetFontFamilyNameLength", []),
+    Method(HRESULT, "GetFontFamilyName", [Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize")]),
+    Method(DWRITE_FONT_WEIGHT, "GetFontWeight", []),
+    Method(DWRITE_FONT_STYLE, "GetFontStyle", []),
+    Method(DWRITE_FONT_STRETCH, "GetFontStretch", []),
+    Method(FLOAT, "GetFontSize", []),
+    Method(UINT32, "GetLocaleNameLength", []),
+    Method(HRESULT, "GetLocaleName", [Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize")]),
 ]
 
 IDWriteTypography.methods += [
@@ -767,6 +767,7 @@ IDWriteFactory.methods += [
 ]
 
 dwrite = API("dwrite")
+dwrite.add_interface(IDWriteFactory)
 dwrite.add_functions([
     StdFunction(HRESULT, "DWriteCreateFactory", [(DWRITE_FACTORY_TYPE, "factoryType"), (REFIID, "iid"), Out(Pointer(Pointer(IUnknown)), "factory")]),
 ])
