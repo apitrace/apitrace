@@ -443,7 +443,7 @@ ID2D1StrokeStyle.methods += [
     Method(FLOAT, "GetDashOffset", [], const=True),
     Method(D2D1_DASH_STYLE, "GetDashStyle", [], const=True),
     Method(UINT32, "GetDashesCount", [], const=True),
-    Method(Void, "GetDashes", [Out(Pointer(FLOAT), "dashes"), (UINT, "dashesCount")], const=True),
+    Method(Void, "GetDashes", [Out(Array(FLOAT, "dashesCount"), "dashes"), (UINT, "dashesCount")], const=True),
 ]
 
 ID2D1Geometry.methods += [
@@ -477,7 +477,7 @@ ID2D1EllipseGeometry.methods += [
 ID2D1GeometryGroup.methods += [
     Method(D2D1_FILL_MODE, "GetFillMode", [], const=True),
     Method(UINT32, "GetSourceGeometryCount", [], const=True),
-    Method(Void, "GetSourceGeometries", [Out(Pointer(Pointer(ID2D1Geometry)), "geometries"), (UINT, "geometriesCount")], const=True),
+    Method(Void, "GetSourceGeometries", [Out(Array(Pointer(ID2D1Geometry), "geometriesCount"), "geometries"), (UINT, "geometriesCount")], const=True),
 ]
 
 ID2D1TransformedGeometry.methods += [
@@ -489,8 +489,8 @@ ID2D1SimplifiedGeometrySink.methods += [
     Method(Void, "SetFillMode", [(D2D1_FILL_MODE, "fillMode")]),
     Method(Void, "SetSegmentFlags", [(D2D1_PATH_SEGMENT, "vertexFlags")]),
     Method(Void, "BeginFigure", [(D2D1_POINT_2F, "startPoint"), (D2D1_FIGURE_BEGIN, "figureBegin")]),
-    Method(Void, "AddLines", [(Pointer(Const(D2D1_POINT_2F)), "points"), (UINT, "pointsCount")]),
-    Method(Void, "AddBeziers", [(Pointer(Const(D2D1_BEZIER_SEGMENT)), "beziers"), (UINT, "beziersCount")]),
+    Method(Void, "AddLines", [(Array(Const(D2D1_POINT_2F), "pointsCount"), "points"), (UINT, "pointsCount")]),
+    Method(Void, "AddBeziers", [(Array(Const(D2D1_BEZIER_SEGMENT), "beziersCount"), "beziers"), (UINT, "beziersCount")]),
     Method(Void, "EndFigure", [(D2D1_FIGURE_END, "figureEnd")]),
     Method(HRESULT, "Close", []),
 ]
@@ -499,12 +499,12 @@ ID2D1GeometrySink.methods += [
     Method(Void, "AddLine", [(D2D1_POINT_2F, "point")]),
     Method(Void, "AddBezier", [(Pointer(Const(D2D1_BEZIER_SEGMENT)), "bezier")]),
     Method(Void, "AddQuadraticBezier", [(Pointer(Const(D2D1_QUADRATIC_BEZIER_SEGMENT)), "bezier")]),
-    Method(Void, "AddQuadraticBeziers", [(Pointer(Const(D2D1_QUADRATIC_BEZIER_SEGMENT)), "beziers"), (UINT, "beziersCount")]),
+    Method(Void, "AddQuadraticBeziers", [(Array(Const(D2D1_QUADRATIC_BEZIER_SEGMENT), "beziersCount"), "beziers"), (UINT, "beziersCount")]),
     Method(Void, "AddArc", [(Pointer(Const(D2D1_ARC_SEGMENT)), "arc")]),
 ]
 
 ID2D1TessellationSink.methods += [
-    Method(Void, "AddTriangles", [(Pointer(Const(D2D1_TRIANGLE)), "triangles"), (UINT, "trianglesCount")]),
+    Method(Void, "AddTriangles", [(Array(Const(D2D1_TRIANGLE), "trianglesCount"), "triangles"), (UINT, "trianglesCount")]),
     Method(HRESULT, "Close", []),
 ]
 
@@ -536,7 +536,7 @@ ID2D1RenderTarget.methods += [
     Method(HRESULT, "CreateSharedBitmap", [(REFIID, "riid"), Out(OpaquePointer(Void), "data"), (Pointer(Const(D2D1_BITMAP_PROPERTIES)), "bitmapProperties"), Out(Pointer(Pointer(ID2D1Bitmap)), "bitmap")]),
     Method(HRESULT, "CreateBitmapBrush", [(Pointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_BITMAP_BRUSH_PROPERTIES)), "bitmapBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(Pointer(ID2D1BitmapBrush)), "bitmapBrush")]),
     Method(HRESULT, "CreateSolidColorBrush", [(Pointer(Const(D2D1_COLOR_F)), "color"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(Pointer(ID2D1SolidColorBrush)), "solidColorBrush")]),
-    Method(HRESULT, "CreateGradientStopCollection", [(Pointer(Const(D2D1_GRADIENT_STOP)), "gradientStops"), (UINT, "gradientStopsCount"), (D2D1_GAMMA, "colorInterpolationGamma"), (D2D1_EXTEND_MODE, "extendMode"), Out(Pointer(Pointer(ID2D1GradientStopCollection)), "gradientStopCollection")]),
+    Method(HRESULT, "CreateGradientStopCollection", [(Array(Const(D2D1_GRADIENT_STOP), "gradientStopsCount"), "gradientStops"), (UINT, "gradientStopsCount"), (D2D1_GAMMA, "colorInterpolationGamma"), (D2D1_EXTEND_MODE, "extendMode"), Out(Pointer(Pointer(ID2D1GradientStopCollection)), "gradientStopCollection")]),
     Method(HRESULT, "CreateLinearGradientBrush", [(Pointer(Const(D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES)), "linearGradientBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), (Pointer(ID2D1GradientStopCollection), "gradientStopCollection"), Out(Pointer(Pointer(ID2D1LinearGradientBrush)), "linearGradientBrush")]),
     Method(HRESULT, "CreateRadialGradientBrush", [(Pointer(Const(D2D1_RADIAL_GRADIENT_BRUSH_PROPERTIES)), "radialGradientBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), (Pointer(ID2D1GradientStopCollection), "gradientStopCollection"), Out(Pointer(Pointer(ID2D1RadialGradientBrush)), "radialGradientBrush")]),
     Method(HRESULT, "CreateCompatibleRenderTarget", [(Pointer(Const(D2D1_SIZE_F)), "desiredSize"), (Pointer(Const(D2D1_SIZE_U)), "desiredPixelSize"), (Pointer(Const(D2D1_PIXEL_FORMAT)), "desiredFormat"), (D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS, "options"), Out(Pointer(Pointer(ID2D1BitmapRenderTarget)), "bitmapRenderTarget")]),
