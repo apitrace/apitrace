@@ -30,6 +30,7 @@ CMakeFiles
 Makefile
 build
 cgltrace.cpp
+d3d1trace.cpp
 d3d10trace.cpp
 d3d8trace.cpp
 d3d9trace.cpp

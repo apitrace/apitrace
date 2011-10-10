@@ -189,6 +189,11 @@ class Parser:
         value = 0
         while self.lookahead() != '}':
             type, name = self.parse_named_type()
+
+            if self.match(':'):
+                self.consume()
+                self.consume()
+
             if self.match(','):
                 self.consume(',')
             self.consume(';')
@@ -205,6 +210,8 @@ class Parser:
         if self.match(';'):
             return
         self.consume(':')
+        if self.lookahead() in ('public', 'protected'):
+            self.consume()
         base = self.consume()
         self.consume('{')
 
@@ -225,7 +232,7 @@ class Parser:
 
         ret = self.parse_type()
 
-        if self.match('__stdcall'):
+        if self.match('__stdcall', 'WINAPI'):
             self.consume()
             creator = 'StdFunction'
 
@@ -244,7 +251,10 @@ class Parser:
             args.append(arg)
             if self.match(','):
                 self.consume()
-        self.consume() == ')'
+        self.consume(')')
+        if self.lookahead() == 'const':
+            self.consume()
+            extra = ', const=True' + extra
         
         print '    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
 
@@ -256,6 +266,12 @@ class Parser:
         arg = '(%s, "%s")' % (type, name)
         if 'out' in tags:
             arg = 'Out' + arg
+
+        if self.match('='):
+            self.consume()
+            while not self.match(',', ')'):
+                self.consume()
+
         return arg
 
     def parse_tags(self):

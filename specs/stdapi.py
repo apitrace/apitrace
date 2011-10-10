@@ -299,10 +299,17 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args):
+    def __init__(self, type, name, args, const=False):
         Function.__init__(self, type, name, args, call = '__stdcall')
         for index in range(len(self.args)):
             self.args[index].index = index + 1
+        self.const = const
+
+    def prototype(self, name=None):
+        s = Function.prototype(self, name)
+        if self.const:
+            s += ' const'
+        return s
 
 
 class String(Type):

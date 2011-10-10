@@ -307,6 +307,23 @@ if (WIN32)
         install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
     endif (DirectX_D3D10_INCLUDE_DIR)
 
+    # d2d1.dll
+    if (DirectX_D2D1_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
+        add_custom_command (
+            OUTPUT d2d1trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
+            DEPENDS d2d1trace.py trace.py specs/d2d1.py specs/d2d1.py specs/d2dbasetypes.py specs/d2derr.py specs/dwrite.py specs/dcommon.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
+        )
+        add_library (d2d1 MODULE specs/d2d1.def d2d1trace.cpp)
+        set_target_properties (d2d1
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        )
+        install (TARGETS d2d1 LIBRARY DESTINATION wrappers)
+    endif (DirectX_D2D1_INCLUDE_DIR)
+
     # opengl32.dll
     add_custom_command (
         OUTPUT wgltrace.cpp

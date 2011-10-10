@@ -137,6 +137,22 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		endif (DirectX_D3DX10_INCLUDE_DIR AND DirectX_D3DX10_LIBRARY)
 	endif (DirectX_D3D10_INCLUDE_DIR AND DirectX_D3D10_LIBRARY)
 
+
+	find_path (DirectX_D2D1_INCLUDE_DIR d2d1.h
+		PATHS
+			"${DirectX_ROOT_DIR}/Include"
+		DOC "The directory where d2d1.h resides")
+
+	find_library (DirectX_D2D1_LIBRARY d2d1
+		PATHS
+			"${DirectX_ROOT_DIR}/Lib/x86"
+		DOC "The directory where d2d1 resides")
+
+	if (DirectX_D2D1_INCLUDE_DIR AND DirectX_D2D1_LIBRARY)
+		set (DirectX_D2D1_FOUND 1)
+	endif (DirectX_D2D1_INCLUDE_DIR AND DirectX_D2D1_LIBRARY)
+
+
 	mark_as_advanced(
 		DirectX_D3D_INCLUDE_DIR
 		DirectX_D3D_INCLUDE_DIR
@@ -162,6 +178,8 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		DirectX_D3D10_LIBRARY
 		DirectX_D3DX10_INCLUDE_DIR
 		DirectX_D3DX10_LIBRARY
+		DirectX_D2D1_INCLUDE_DIR
+		DirectX_D2D1_LIBRARY
 	)
 
 endif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
@@ -175,4 +193,5 @@ mark_as_advanced (
 	DirectX_D3DX9_FOUND
 	DirectX_D3D10_FOUND
 	DirectX_D3DX10_FOUND
+	DirectX_D2D1_FOUND
 )

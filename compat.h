@@ -47,11 +47,30 @@
 #define __field_bcount(x) /**/
 #define __field_ecount(x) /**/
 #define __field_ecount_full(x) /**/
-#define __inline static __inline__
+#define __inline __inline__
+#define __deref_out /**/
+#define __deref_out_opt /**/
+#define __maybenull
+#define __in_z
+#define __in_z_opt
+#define __out_z
+#define __out_ecount_z(x)
+#define __nullterminated
+#define __notnull
 
+#ifndef DECLSPEC_DEPRECATED
 #define DECLSPEC_DEPRECATED /**/
+#endif
 
+#ifndef DECLSPEC_NOVTABLE
+#define DECLSPEC_NOVTABLE
+#endif
+
+#define INT8 int8_t
 #define UINT8 uint8_t
+#define INT16 int16_t
+#define UINT16 uint16_t
+
 
 #endif /* __MINGW32__ */
 
