@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2011 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,6 +22,19 @@
  * THE SOFTWARE.
  *
  **************************************************************************/
+
+
+/**
+ * Minimal Cocoa integration.
+ *
+ * See also:
+ * - http://developer.apple.com/library/mac/#samplecode/CocoaGL/Introduction/Intro.html
+ * - http://developer.apple.com/library/mac/#samplecode/Cocoa_With_Carbon_or_CPP/Introduction/Intro.html
+ * - http://developer.apple.com/library/mac/#samplecode/glut/Introduction/Intro.html
+ * - http://developer.apple.com/library/mac/#samplecode/GLEssentials/Introduction/Intro.html
+ * - http://www.glfw.org/
+ */
+
 
 #include <stdlib.h>
 #include <iostream>
