@@ -50,6 +50,7 @@
 #define __inline __inline__
 #define __deref_out /**/
 #define __deref_out_opt /**/
+#define __deref_out_bcount(x)
 #define __maybenull
 #define __in_z
 #define __in_z_opt
@@ -65,6 +66,8 @@
 #ifndef DECLSPEC_NOVTABLE
 #define DECLSPEC_NOVTABLE
 #endif
+
+#include <stdint.h>
 
 #define INT8 int8_t
 #define UINT8 uint8_t
