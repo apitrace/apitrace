@@ -116,8 +116,13 @@ static void retrace_wglShareLists(Trace::Call &call) {
     glws::Context *new_context =
         glws::createContext(old_context->visual, share_context);
     if (new_context) {
-        delete old_context;
+        if (context == old_context) {
+            glws::makeCurrent(drawable, new_context);
+        }
+
         context_map[hglrc2] = new_context;
+        
+        delete old_context;
     }
 }
 
