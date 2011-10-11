@@ -106,6 +106,22 @@ else ()
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 endif ()
 
+if (MINGW)
+    # Avoid depending on MinGW runtime DLLs
+    check_cxx_compiler_flag (-static-libgcc HAVE_STATIC_LIBGCC_FLAG)
+    if (HAVE_STATIC_LIBGCC_FLAG)
+        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc")
+        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc")
+        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libgcc")
+    endif ()
+    check_cxx_compiler_flag (-static-libstdc++ HAVE_STATIC_LIBSTDCXX_FLAG)
+    if (HAVE_STATIC_LIBSTDCXX_FLAG)
+        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++")
+        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libstdc++")
+        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libstdc++")
+    endif ()
+endif ()
+
 
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
