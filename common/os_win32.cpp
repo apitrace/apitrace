@@ -161,6 +161,12 @@ SetExceptionCallback(void (*callback)(void))
         gCallback = callback;
 
         assert(!prevExceptionFilter);
+
+        /*
+         * TODO: Unfortunately it seems that the CRT will reset the exception
+         * handler in certain circumnstances.  See
+         * http://www.codeproject.com/KB/winsdk/crash_hook.aspx
+         */
         prevExceptionFilter = SetUnhandledExceptionFilter(UnhandledExceptionFilter);
     }
 }
