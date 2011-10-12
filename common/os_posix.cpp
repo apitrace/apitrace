@@ -54,7 +54,14 @@ namespace OS {
 
 
 static pthread_mutex_t 
-mutex = PTHREAD_MUTEX_INITIALIZER;
+mutex =
+#ifdef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
+    PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
+#else
+#   warning PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP undefined -- deadlocks likely
+    PTHREAD_MUTEX_INITIALIZER
+#endif
+;
 
 
 void
