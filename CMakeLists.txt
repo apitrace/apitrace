@@ -36,34 +36,17 @@ if (ENABLE_GUI)
     find_package (QJSON ${REQUIRE_GUI})
 endif ()
 
-if (NOT WIN32)
-    find_package (X11 REQUIRED)
-
-    # On Mac OS X, GLX is provided as a separate OpenGL implementation, different
-    # from the standard OpenGL framework which provides support for native Mac OS X
-    # applications.
-    if (APPLE)
-        find_path (X11_GL_INCLUDE_PATH GL/glx.h ${X11_INC_SEARCH_PATH})
-        if (NOT X11_GL_INCLUDE_PATH)
-            message (SEND_ERROR "Could not find GL/glx.h")
-        endif (NOT X11_GL_INCLUDE_PATH)
-        set (X11_INCLUDE_DIR ${X11_INCLUDE_DIR} ${X11_GL_INCLUDE_PATH})
-
-        find_library (X11_GL_LIB GL ${X11_LIB_SEARCH_PATH})
-        if (NOT X11_GL_LIB)
-            message (SEND_ERROR "Could not find libGL.dylib")
-        endif (NOT X11_GL_LIB)
-    else ()
-        set (X11_INCLUDE_DIR ${X11_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
-        set (X11_GL_LIB ${OPENGL_gl_LIBRARY})
-    endif ()
-
-    include_directories (${X11_INCLUDE_DIR})
-endif (NOT WIN32)
-
 if (WIN32)
     find_package (DirectX)
-endif (WIN32)
+elseif (APPLE)
+else ()
+    find_package (X11 REQUIRED)
+
+    set (X11_INCLUDE_DIR ${X11_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
+    set (X11_GL_LIB ${OPENGL_gl_LIBRARY})
+
+    include_directories (${X11_INCLUDE_DIR})
+endif ()
 
 
 ##############################################################################
@@ -121,6 +104,22 @@ else ()
     add_definitions (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+endif ()
+
+if (MINGW)
+    # Avoid depending on MinGW runtime DLLs
+    check_cxx_compiler_flag (-static-libgcc HAVE_STATIC_LIBGCC_FLAG)
+    if (HAVE_STATIC_LIBGCC_FLAG)
+        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc")
+        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc")
+        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libgcc")
+    endif ()
+    check_cxx_compiler_flag (-static-libstdc++ HAVE_STATIC_LIBSTDCXX_FLAG)
+    if (HAVE_STATIC_LIBSTDCXX_FLAG)
+        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++")
+        set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libstdc++")
+        set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libstdc++")
+    endif ()
 endif ()
 
 
@@ -197,11 +196,15 @@ add_custom_command (
 
 if (WIN32)
     set (os os_win32.cpp)
-    set (glws glws_wgl.cpp)
-else (WIN32)
+    set (glws_os glws_wgl.cpp)
+else ()
     set (os os_posix.cpp)
-    set (glws glws_glx.cpp)
-endif (WIN32)
+    if (APPLE)
+        set (glws_os glws_cocoa.mm)
+    else ()
+        set (glws_os glws_glx.cpp)
+    endif ()
+endif ()
 
 add_library (common STATIC
     common/trace_file.cpp
@@ -390,7 +393,7 @@ endif ()
 add_custom_command (
     OUTPUT glretrace_gl.cpp
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/glretrace_gl.cpp
-    DEPENDS glretrace.py retrace.py codegen.py specs/glapi.py specs/gltypes.py specs/stdapi.py
+    DEPENDS glretrace.py retrace.py specs/glapi.py specs/gltypes.py specs/stdapi.py
 )
 
 add_custom_command (
@@ -414,7 +417,8 @@ add_executable (glretrace
     glstate_params.cpp
     retrace.cpp
     retrace_stdc.cpp
-    ${glws}
+    glws.cpp
+    ${glws_os}
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
 )
 
@@ -431,10 +435,8 @@ target_link_libraries (glretrace
 if (WIN32)
     target_link_libraries (glretrace ${OPENGL_gl_LIBRARY})
 elseif (APPLE)
-    # XXX: We use GLX on MacOSX, which is in a separate library.
     target_link_libraries (glretrace
-        ${X11_GL_LIB}
-        ${X11_X11_LIB}
+        "-framework Cocoa"
         "-framework ApplicationServices" # CGS*
         ${OPENGL_gl_LIBRARY} # CGL*
     )

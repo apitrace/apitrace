@@ -26,7 +26,11 @@
 #ifndef _RETRACE_HPP_
 #define _RETRACE_HPP_
 
+#include <string.h>
+
+#include <list>
 #include <map>
+#include <ostream>
 
 #include "trace_model.hpp"
 
@@ -92,11 +96,11 @@ toPointer(Trace::Value &value, bool bind = false);
 extern int verbosity;
 
 
-void retrace_call_stdc(Trace::Call &call);
-void retrace_call(Trace::Call &call);
+std::ostream &warning(Trace::Call &call);
+
 
 void ignore(Trace::Call &call);
-void retrace_unknown(Trace::Call &call);
+void unsupported(Trace::Call &call);
 
 
 typedef void (*Callback)(Trace::Call &call);
@@ -106,10 +110,37 @@ struct Entry {
     Callback callback;
 };
 
-#define RETRACE_DISPATCH_ENTRY(name) {#name, &retrace_##name}
-#define RETRACE_IGNORE_ENTRY(name) {#name, &retrace_ignore}
 
-void dispatch(Trace::Call &call, const Entry *entries, unsigned num_entries);
+struct stringComparer {
+  bool operator() (const char *a, const  char *b) const {
+    return strcmp(a, b) < 0;
+  }
+};
+
+
+extern const Entry stdc_callbacks[];
+
+
+class Retracer
+{
+    typedef std::map<const char *, Callback, stringComparer> Map;
+    Map map;
+
+    std::vector<Callback> callbacks;
+
+public:
+    Retracer() {
+        addCallbacks(stdc_callbacks);
+    }
+
+    virtual ~Retracer() {}
+
+    void addCallback(const Entry *entry);
+    void addCallbacks(const Entry *entries);
+
+    void retrace(Trace::Call &call);
+};
+
 
 } /* namespace retrace */
 

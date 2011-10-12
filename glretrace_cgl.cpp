@@ -53,7 +53,7 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = ws->createDrawable(visual));
+        return (drawable_map[drawable_id] = glws::createDrawable(visual));
     }
 
     return it->second;
@@ -70,7 +70,7 @@ getContext(unsigned long long ctx) {
     it = context_map.find(ctx);
     if (it == context_map.end()) {
         glws::Context *context;
-        context_map[ctx] = context = ws->createContext(visual, sharedContext);
+        context_map[ctx] = context = glws::createContext(visual, sharedContext);
         if (!sharedContext) {
             sharedContext = context;
         }
@@ -87,7 +87,7 @@ static void retrace_CGLSetCurrentContext(Trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(ctx);
     glws::Context *new_context = getContext(ctx);
 
-    bool result = ws->makeCurrent(new_drawable, new_context);
+    bool result = glws::makeCurrent(new_drawable, new_context);
 
     if (new_drawable && new_context && result) {
         drawable = new_drawable;
@@ -112,19 +112,14 @@ static void retrace_CGLFlushDrawable(Trace::Call &call) {
 }
 
 
-void glretrace::retrace_call_cgl(Trace::Call &call) {
-    const char *name = call.name();
-
-    if (strcmp(name, "CGLSetCurrentContext") == 0) {
-       retrace_CGLSetCurrentContext(call);
-       return;
-    }
-
-    if (strcmp(name, "CGLFlushDrawable") == 0) {
-       retrace_CGLFlushDrawable(call);
-       return;
-    }
-
-    return;
-}
+const retrace::Entry glretrace::cgl_callbacks[] = {
+    {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
+    {"CGLGetCurrentContext", &retrace::ignore},
+    {"CGLEnable", &retrace::ignore},
+    {"CGLDisable", &retrace::ignore},
+    {"CGLSetParameter", &retrace::ignore},
+    {"CGLGetParameter", &retrace::ignore},
+    {"CGLFlushDrawable", &retrace_CGLFlushDrawable},
+    {NULL, NULL},
+};
 

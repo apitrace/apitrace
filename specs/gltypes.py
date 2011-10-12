@@ -64,6 +64,9 @@ GLuint64EXT = Alias("GLuint64EXT", UInt64)
 GLDEBUGPROCARB = Opaque("GLDEBUGPROCARB")
 GLDEBUGPROCAMD = Opaque("GLDEBUGPROCAMD")
 
+GLpointer = OpaquePointer(GLvoid)
+GLpointerConst = OpaquePointer(Const(GLvoid))
+
 GLlist = Handle("list", GLuint)
 GLtexture = Handle("texture", GLuint)
 GLbuffer = Handle("buffer", GLuint)
@@ -79,7 +82,7 @@ GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
 GLarray = Handle("array", GLuint)
 GLregion = Handle("region", GLuint)
-GLmap = OpaquePointer(GLvoid)
+GLmap = GLpointer
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)

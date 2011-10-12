@@ -42,13 +42,7 @@ Retracing
 
 * Support multiple threads
 
-* Provide a readline-like interactive mode to gltrace
-
-  * http://github.com/antirez/linenoise
-
-    * https://github.com/antirez/linenoise/issues#issue/8
-
-  * http://hg.youterm.com/radare/file/87579f8c5087/src/dietline.c
+* Leverage ARB_debug_output where available.
 
 * D3D support.
 
@@ -59,6 +53,8 @@ GUI
 * Timeline view.
 
 * Visualize meshes in draw commands.
+
+* Breakpointing and step-by-step debugging.
 
 
 Other

@@ -270,6 +270,11 @@ public:
     }
 
     inline void writeString(const char *s) {
+        if (!s) {
+            writeNull();
+            return;
+        }
+
         separator();
         escapeUnicodeString(s);
         value = true;

@@ -38,7 +38,6 @@ namespace glretrace {
 bool double_buffer = true;
 bool insideGlBeginEnd = false;
 Trace::Parser parser;
-glws::WindowSystem *ws = NULL;
 glws::Visual *visual = NULL;
 glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
@@ -61,46 +60,42 @@ checkGlError(Trace::Call &call) {
         return;
     }
 
-    if (retrace::verbosity == 0) {
-        std::cout << call;
-        std::cout.flush();
-    }
+    std::ostream & os = retrace::warning(call);
 
-    std::cerr << call.no << ": ";
-    std::cerr << "warning: glGetError(";
-    std::cerr << call.name();
-    std::cerr << ") = ";
+    os << "glGetError(";
+    os << call.name();
+    os << ") = ";
 
     switch (error) {
     case GL_INVALID_ENUM:
-        std::cerr << "GL_INVALID_ENUM";
+        os << "GL_INVALID_ENUM";
         break;
     case GL_INVALID_VALUE:
-        std::cerr << "GL_INVALID_VALUE";
+        os << "GL_INVALID_VALUE";
         break;
     case GL_INVALID_OPERATION:
-        std::cerr << "GL_INVALID_OPERATION";
+        os << "GL_INVALID_OPERATION";
         break;
     case GL_STACK_OVERFLOW:
-        std::cerr << "GL_STACK_OVERFLOW";
+        os << "GL_STACK_OVERFLOW";
         break;
     case GL_STACK_UNDERFLOW:
-        std::cerr << "GL_STACK_UNDERFLOW";
+        os << "GL_STACK_UNDERFLOW";
         break;
     case GL_OUT_OF_MEMORY:
-        std::cerr << "GL_OUT_OF_MEMORY";
+        os << "GL_OUT_OF_MEMORY";
         break;
     case GL_INVALID_FRAMEBUFFER_OPERATION:
-        std::cerr << "GL_INVALID_FRAMEBUFFER_OPERATION";
+        os << "GL_INVALID_FRAMEBUFFER_OPERATION";
         break;
     case GL_TABLE_TOO_LARGE:
-        std::cerr << "GL_TABLE_TOO_LARGE";
+        os << "GL_TABLE_TOO_LARGE";
         break;
     default:
-        std::cerr << error;
+        os << error;
         break;
     }
-    std::cerr << "\n";
+    os << "\n";
 }
 
 /**
@@ -194,30 +189,18 @@ void frame_complete(unsigned call_no) {
 
 
 static void display(void) {
+    retrace::Retracer retracer;
+
+    retracer.addCallbacks(gl_callbacks);
+    retracer.addCallbacks(glx_callbacks);
+    retracer.addCallbacks(wgl_callbacks);
+    retracer.addCallbacks(cgl_callbacks);
+
     startTime = OS::GetTime();
     Trace::Call *call;
 
     while ((call = parser.parse_call())) {
-        const char *name = call->name();
-
-        if (retrace::verbosity >= 1) {
-            std::cout << *call;
-            std::cout.flush();
-        }
-
-        if (name[0] == 'C' && name[1] == 'G' && name[2] == 'L') {
-            glretrace::retrace_call_cgl(*call);
-        } else if (name[0] == 'w' && name[1] == 'g' && name[2] == 'l') {
-            glretrace::retrace_call_wgl(*call);
-        } else if (name[0] == 'g' && name[1] == 'l') {
-            if (name[2] == 'X') {
-                glretrace::retrace_call_glx(*call);
-            } else {
-                retrace::retrace_call(*call);
-            }
-        } else {
-            retrace::retrace_call_stdc(*call);
-        }
+        retracer.retrace(*call);
 
         if (!insideGlBeginEnd &&
             drawable && context &&
@@ -243,7 +226,7 @@ static void display(void) {
     }
 
     if (wait) {
-        while (ws->processEvents()) {}
+        while (glws::processEvents()) {}
     } else {
         exit(0);
     }
@@ -283,6 +266,7 @@ int main(int argc, char **argv)
         } else if (!strcmp(arg, "-b")) {
             benchmark = true;
             retrace::verbosity = -1;
+            glws::debug = false;
         } else if (!strcmp(arg, "-c")) {
             compare_prefix = argv[++i];
             if (snapshot_frequency == FREQUENCY_NEVER) {
@@ -333,8 +317,8 @@ int main(int argc, char **argv)
         }
     }
 
-    ws = glws::createNativeWindowSystem();
-    visual = ws->createVisual(double_buffer);
+    glws::init();
+    visual = glws::createVisual(double_buffer);
 
     for ( ; i < argc; ++i) {
         if (!parser.open(argv[i])) {
@@ -346,6 +330,9 @@ int main(int argc, char **argv)
 
         parser.close();
     }
+    
+    delete visual;
+    glws::cleanup();
 
     return 0;
 }

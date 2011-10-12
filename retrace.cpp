@@ -36,29 +36,81 @@ namespace retrace {
 int verbosity = 0;
 
 
+static bool call_dumped = false;
+
+
+static void dumpCall(Trace::Call &call) {
+    if (verbosity >= 0 && !call_dumped) {
+        std::cout << call;
+        std::cout.flush();
+        call_dumped = true;
+    }
+}
+
+
+std::ostream &warning(Trace::Call &call) {
+    dumpCall(call);
+
+    std::cerr << call.no << ": ";
+    std::cerr << "warning: ";
+
+    return std::cerr;
+}
+
+
 void ignore(Trace::Call &call) {
     (void)call;
 }
 
-void retrace_unknown(Trace::Call &call) {
-    if (verbosity >= 0) {
-        std::cerr << call.no << ": warning: unknown call " << call.name() << "\n";
+void unsupported(Trace::Call &call) {
+    warning(call) << "unsupported " << call.name() << " call\n";
+}
+
+inline void Retracer::addCallback(const Entry *entry) {
+    assert(entry->name);
+    assert(entry->callback);
+    map[entry->name] = entry->callback;
+}
+
+
+void Retracer::addCallbacks(const Entry *entries) {
+    while (entries->name && entries->callback) {
+        addCallback(entries++);
     }
 }
 
-void dispatch(Trace::Call &call, const Entry *entries, unsigned num_entries)
-{
-    /* TODO: do a bisection instead of a linear search */
 
-    const char *name = call.name();
-    for (unsigned i = 0; i < num_entries; ++i) {
-        if (strcmp(name, entries[i].name) == 0) {
-            entries[i].callback(call);
-            return;
-        }
+void Retracer::retrace(Trace::Call &call) {
+    call_dumped = false;
+
+    if (verbosity >= 1) {
+        dumpCall(call);
     }
 
-    retrace_unknown(call);
+    Callback callback = 0;
+
+    Trace::Id id = call.sig->id;
+    if (id >= callbacks.size()) {
+        callbacks.resize(id + 1);
+        callback = 0;
+    } else {
+        callback = callbacks[id];
+    }
+
+    if (!callback) {
+        Map::const_iterator it = map.find(call.name());
+        if (it == map.end()) {
+            callback = &unsupported;
+        } else {
+            callback = it->second;
+        }
+        callbacks[id] = callback;
+    }
+
+    assert(callback);
+    assert(callbacks[id] == callback);
+
+    callback(call);
 }
 
 

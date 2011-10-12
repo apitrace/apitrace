@@ -179,65 +179,64 @@ public:
 };
 
 
-class WglWindowSystem : public WindowSystem
+void
+init(void) {
+}
+
+void
+cleanup(void) {
+}
+
+Visual *
+createVisual(bool doubleBuffer) {
+    Visual *visual = new Visual();
+
+    visual->doubleBuffer = doubleBuffer;
+
+    return visual;
+}
+
+Drawable *
+createDrawable(const Visual *visual, int width, int height)
 {
-public:
-    Visual *
-    createVisual(bool doubleBuffer) {
-        Visual *visual = new Visual();
+    return new WglDrawable(visual, width, height);
+}
 
-        visual->doubleBuffer = doubleBuffer;
+Context *
+createContext(const Visual *visual, Context *shareContext)
+{
+    return new WglContext(visual, dynamic_cast<WglContext *>(shareContext));
+}
 
-        return visual;
-    }
-    
-    Drawable *
-    createDrawable(const Visual *visual, int width, int height)
-    {
-        return new WglDrawable(visual, width, height);
-    }
+bool
+makeCurrent(Drawable *drawable, Context *context)
+{
+    if (!drawable || !context) {
+        return wglMakeCurrent(NULL, NULL);
+    } else {
+        WglDrawable *wglDrawable = dynamic_cast<WglDrawable *>(drawable);
+        WglContext *wglContext = dynamic_cast<WglContext *>(context);
 
-    Context *
-    createContext(const Visual *visual, Context *shareContext)
-    {
-        return new WglContext(visual, dynamic_cast<WglContext *>(shareContext));
-    }
-
-    bool
-    makeCurrent(Drawable *drawable, Context *context)
-    {
-        if (!drawable || !context) {
-            return wglMakeCurrent(NULL, NULL);
-        } else {
-            WglDrawable *wglDrawable = dynamic_cast<WglDrawable *>(drawable);
-            WglContext *wglContext = dynamic_cast<WglContext *>(context);
-
+        if (!wglContext->hglrc) {
+            wglContext->hglrc = wglCreateContext(wglDrawable->hDC);
             if (!wglContext->hglrc) {
-                wglContext->hglrc = wglCreateContext(wglDrawable->hDC);
-                if (!wglContext->hglrc) {
-                    return false;
-                }
-                if (wglContext->shareContext) {
-                    wglShareLists(wglContext->shareContext->hglrc,
-                                  wglContext->hglrc);
-                }
+                return false;
             }
-
-            return wglMakeCurrent(wglDrawable->hDC, wglContext->hglrc);
+            if (wglContext->shareContext) {
+                wglShareLists(wglContext->shareContext->hglrc,
+                              wglContext->hglrc);
+            }
         }
+
+        return wglMakeCurrent(wglDrawable->hDC, wglContext->hglrc);
     }
+}
 
-    bool
-    processEvents(void) {
-        // TODO
-        return true;
-    }
-};
-
-
-WindowSystem *createNativeWindowSystem(void) {
-    return new WglWindowSystem();
+bool
+processEvents(void) {
+    // TODO
+    return true;
 }
 
 
-} /* namespace glretrace */
+} /* namespace glws */

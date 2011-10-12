@@ -222,15 +222,11 @@ static void retrace_memcpy(Trace::Call &call) {
 }
 
 
-static const retrace::Entry callbacks[] = {
+const retrace::Entry stdc_callbacks[] = {
     {"malloc", &retrace_malloc},
     {"memcpy", &retrace_memcpy},
+    {NULL, NULL}
 };
-
-
-void retrace_call_stdc(Trace::Call &call) {
-    retrace::dispatch(call, callbacks, sizeof(callbacks)/sizeof(callbacks[0]));
-}
 
 
 } /* retrace */

@@ -264,8 +264,11 @@ bool ApiTrace::hasErrors() const
 
 void ApiTrace::loadFrame(ApiTraceFrame *frame)
 {
-    Q_ASSERT(!frame->isLoaded());
-    emit requestFrame(frame);
+    if (!isFrameLoading(frame)) {
+        Q_ASSERT(!frame->isLoaded());
+        m_loadingFrames.insert(frame);
+        emit requestFrame(frame);
+    }
 }
 
 void ApiTrace::finishedParsing()
@@ -281,9 +284,13 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
                                  quint64 binaryDataSize)
 {
     Q_ASSERT(frame->numChildrenToLoad() == calls.size());
-    emit beginLoadingFrame(frame, calls.size());
-    frame->setCalls(calls, binaryDataSize);
-    emit endLoadingFrame(frame);
+
+    if (!frame->isLoaded()) {
+        emit beginLoadingFrame(frame, calls.size());
+        frame->setCalls(calls, binaryDataSize);
+        emit endLoadingFrame(frame);
+        m_loadingFrames.remove(frame);
+    }
 
     if (!m_queuedErrors.isEmpty()) {
         QList< QPair<ApiTraceFrame*, ApiTraceError> >::iterator itr;
@@ -481,9 +488,14 @@ void ApiTrace::setCallError(const ApiTraceError &error)
         }
         emit changed(call);
     } else {
-        emit requestFrame(frame);
+        loadFrame(frame);
         m_queuedErrors.append(qMakePair(frame, error));
     }
+}
+
+bool ApiTrace::isFrameLoading(ApiTraceFrame *frame) const
+{
+    return m_loadingFrames.contains(frame);
 }
 
 #include "apitrace.moc"

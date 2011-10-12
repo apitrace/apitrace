@@ -26,7 +26,6 @@
 #include <windows.h>
 
 #include <assert.h>
-#include <signal.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -162,6 +161,12 @@ SetExceptionCallback(void (*callback)(void))
         gCallback = callback;
 
         assert(!prevExceptionFilter);
+
+        /*
+         * TODO: Unfortunately it seems that the CRT will reset the exception
+         * handler in certain circumnstances.  See
+         * http://www.codeproject.com/KB/winsdk/crash_hook.aspx
+         */
         prevExceptionFilter = SetUnhandledExceptionFilter(UnhandledExceptionFilter);
     }
 }

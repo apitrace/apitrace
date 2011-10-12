@@ -1,30 +1,9 @@
-# We only do the subset of the snappy autoconf that actually affect the library
-# (as most of them are for the tests which we don't build.)
-
-include (CheckIncludeFileCXX)
-include (CheckCXXSourceCompiles)
-include (TestBigEndian)
-
-check_include_file_cxx (sys/mman.h HAVE_SYS_MMAN_H)
-
-check_cxx_source_compiles (
-    "main() { return __builtin_expect(1, 1) ? 1 : 0; }"
-    HAVE_BUILTIN_EXPECT
-)
-
-check_cxx_source_compiles (
-    "main() { return (__builtin_ctzll(0x100000000LL) == 32) ? 1 : 0; }"
-    HAVE_BUILTIN_CTZ
-)
-
-test_big_endian (WORDS_BIGENDIAN)
-
-configure_file (config.h.in config.h)
-
 add_definitions (-DHAVE_CONFIG_H)
 
-
-include_directories (${CMAKE_CURRENT_BINARY_DIR})
+# Adjust warnings
+if (CMAKE_COMPILER_IS_GNUCXX)
+    add_definitions (-Wno-unused-function)
+endif ()
 
 add_library (snappy_bundled STATIC
     snappy.cc

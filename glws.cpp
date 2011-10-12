@@ -23,56 +23,40 @@
  *
  **************************************************************************/
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
 
-#include "trace_parser.hpp"
 #include "glws.hpp"
-#include "retrace.hpp"
 
 
-namespace glretrace {
+namespace glws {
 
 
-extern bool double_buffer;
-extern bool insideGlBeginEnd;
-extern Trace::Parser parser;
-extern glws::Visual *visual;
-extern glws::Drawable *drawable;
-extern glws::Context *context;
-
-extern unsigned frame;
-extern long long startTime;
-extern bool wait;
-
-enum frequency {
-    FREQUENCY_NEVER = 0,
-    FREQUENCY_FRAME,
-    FREQUENCY_FRAMEBUFFER,
-    FREQUENCY_DRAW,
-};
-
-extern bool benchmark;
-extern const char *compare_prefix;
-extern const char *snapshot_prefix;
-extern enum frequency snapshot_frequency;
-
-extern unsigned dump_state;
-
-void
-checkGlError(Trace::Call &call);
-
-extern const retrace::Entry gl_callbacks[];
-extern const retrace::Entry cgl_callbacks[];
-extern const retrace::Entry glx_callbacks[];
-extern const retrace::Entry wgl_callbacks[];
-
-void snapshot(unsigned call_no);
-void frame_complete(unsigned call_no);
-
-void updateDrawable(int width, int height);
-
-} /* namespace glretrace */
+bool debug = true;
 
 
-#endif /* _GLRETRACE_HPP_ */
+bool
+checkExtension(const char *extName, const char *extString)
+{
+   const char *p = extString;
+   const char *q = extName;
+   char c;
+   do {
+       c = *p++;
+       if (c == '\0' || c == ' ') {
+           if (q && *q == '\0') {
+               return true;
+           } else {
+               q = extName;
+           }
+       } else {
+           if (q && *q == c) {
+               ++q;
+           } else {
+               q = 0;
+           }
+       }
+   } while (c);
+   return false;
+}
+
+
+} /* namespace glws */

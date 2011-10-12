@@ -23,7 +23,10 @@
 #
 ##########################################################################/
 
-"""CGL API description."""
+"""CGL API description.
+
+http://developer.apple.com/library/mac/#documentation/GraphicsImaging/Reference/CGL_OpenGL/Reference/reference.html
+"""
 
 
 from stdapi import *
@@ -75,10 +78,14 @@ CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute", [
     "kCGLPFARemotePBuffer",
     "kCGLPFAAllowOfflineRenderers",
     "kCGLPFAAcceleratedCompute",
+    "kCGLPFAOpenGLProfile",
     "kCGLPFAVirtualScreenCount",
     "kCGLPFARobust",
     "kCGLPFAMPSafe",
     "kCGLPFAMultiScreen",
+
+    "kCGLOGLPVersion_Legacy",
+    "kCGLOGLPVersion_3_2_Core",
 ])
 
 CGLRendererProperty = Enum("CGLRendererProperty", [
@@ -181,13 +188,13 @@ cglapi.add_functions([
     Function(CGLContextObj, "CGLGetCurrentContext", []),
 
     # OpenGL.h, OpenGL framework
-    Function(CGLError, "CGLChoosePixelFormat", [(OpaquePointer(Const(CGLPixelFormatAttribute)), "attribs"), (OpaquePointer(CGLPixelFormatObj), "pix"), (OpaquePointer(GLint), "npix")]),
+    Function(CGLError, "CGLChoosePixelFormat", [(Array(Const(CGLPixelFormatAttribute), "__AttribList_size(attribs)"), "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
     Function(CGLError, "CGLDestroyPixelFormat", [(CGLPixelFormatObj, "pix")]),
-    Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), (OpaquePointer(GLint), "value")]),
+    Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")]),
     Function(Void, "CGLReleasePixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(CGLPixelFormatObj, "CGLRetainPixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(GLuint, "CGLGetPixelFormatRetainCount", [(CGLPixelFormatObj, "pix")]),
-    Function(CGLError, "CGLQueryRendererInfo", [(GLuint, "display_mask"), (OpaquePointer(CGLRendererInfoObj), "rend"), (OpaquePointer(GLint), "nrend")]),
+    Function(CGLError, "CGLQueryRendererInfo", [(GLuint, "display_mask"), Out(Pointer(CGLRendererInfoObj), "rend"), Out(Pointer(GLint), "nrend")]),
     Function(CGLError, "CGLDestroyRendererInfo", [(CGLRendererInfoObj, "rend")]),
     Function(CGLError, "CGLDescribeRenderer", [(CGLRendererInfoObj, "rend"), (GLint, "rend_num"), (CGLRendererProperty, "prop"), (OpaquePointer(GLint), "value")]),
     Function(CGLError, "CGLCreateContext", [(CGLPixelFormatObj, "pix"), (CGLContextObj, "share"), Out(Pointer(CGLContextObj), "ctx")]),
@@ -215,8 +222,8 @@ cglapi.add_functions([
     Function(CGLError, "CGLEnable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
     Function(CGLError, "CGLDisable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
     Function(CGLError, "CGLIsEnabled", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname"), Out(Pointer(GLint), "enable")]),
-    Function(CGLError, "CGLSetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), (OpaquePointer(Const(GLint)), "params")]),
-    Function(CGLError, "CGLGetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), Out(OpaquePointer(GLint), "params")]),
+    Function(CGLError, "CGLSetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), (Array(Const(GLint), "1"), "params")]),
+    Function(CGLError, "CGLGetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), Out(Array(GLint, "1"), "params")]),
     Function(CGLError, "CGLSetVirtualScreen", [(CGLContextObj, "ctx"), (GLint, "screen")]),
     Function(CGLError, "CGLGetVirtualScreen", [(CGLContextObj, "ctx"), Out(Pointer(GLint), "screen")]),
     Function(CGLError, "CGLSetGlobalOption", [(CGLGlobalOption, "pname"), (OpaquePointer(Const(GLint)), "params")]),
