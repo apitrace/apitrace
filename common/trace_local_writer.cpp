@@ -175,7 +175,7 @@ typedef std::list<RegionInfo> RegionInfoList;
 static RegionInfoList regionInfoList;
 
 
-static RegionInfo * lookupRegionInfo(LocalWriter &writer, const void *ptr) {
+static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
     OS::MemoryInfo info;
 
     if (!OS::queryVirtualAddress(ptr, &info)) {
@@ -265,19 +265,19 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
 #if 0
 
     // Simply emit one memcpy for the whole range
-    unsigned __call = beginEnter(&memcpy_sig);
-    beginArg(0);
-    writeOpaque(ptr);
-    endArg();
-    beginArg(1);
-    writeBlob(ptr, size);
-    endArg();
-    beginArg(2);
-    writeUInt(size);
-    endArg();
-    endEnter();
-    beginLeave(__call);
-    endLeave();
+    unsigned __call = Writer::beginEnter(&memcpy_sig);
+    Writer::beginArg(0);
+    Writer::writeOpaque(ptr);
+    Writer::endArg();
+    Writer::beginArg(1);
+    Writer::writeBlob(ptr, size);
+    Writer::endArg();
+    Writer::beginArg(2);
+    Writer::writeUInt(size);
+    Writer::endArg();
+    Writer::endEnter();
+    Writer::beginLeave(__call);
+    Writer::endLeave();
 
 #else
 
@@ -317,19 +317,19 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
         const Bytef *p = (const Bytef *)regionInfo->start + it->start;
         size_t length = it->stop - it->start;
 
-        unsigned __call = beginEnter(&memcpy_sig);
-        beginArg(0);
-        writeOpaque(p);
-        endArg();
-        beginArg(1);
-        writeBlob(p, length);
-        endArg();
-        beginArg(2);
-        writeUInt(length);
-        endArg();
-        endEnter();
-        beginLeave(__call);
-        endLeave();
+        unsigned __call = Writer::beginEnter(&memcpy_sig);
+        Writer::beginArg(0);
+        Writer::writeOpaque(p);
+        Writer::endArg();
+        Writer::beginArg(1);
+        Writer::writeBlob(p, length);
+        Writer::endArg();
+        Writer::beginArg(2);
+        Writer::writeUInt(length);
+        Writer::endArg();
+        Writer::endEnter();
+        Writer::beginLeave(__call);
+        Writer::endLeave();
 
         // Note down this range's CRC for future redundancy checks.
         RangeInfo r;
