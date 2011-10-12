@@ -290,6 +290,10 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
     // everything that did not change since last time.
     range::range_set<size_t> copy(update);
 
+    if (0) {
+        OS::DebugMessage("  %p..%p\n", ptr, (const char *)ptr + size);
+    }
+
     // Go through the all ranges that intersect the update range, checking for redundancy,
     for (RangeInfoList::iterator it = regionInfo->ranges.begin(); it != regionInfo->ranges.end(); ) {
         if (it->intersects(update)) {
@@ -298,6 +302,12 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
 
             unsigned long crc = crc32(0L, Z_NULL, 0);
             crc = crc32(crc, p, length);
+
+            if (0) {
+                OS::DebugMessage("    %p+0x%04lx: %08lx %s %08lx\n",
+                    p, (unsigned long)length,
+                    it->crc, it->crc == crc ? "==" : "->", crc);
+            }
 
             if (it->crc == crc) {
                 // This range did not change, so no need to copy it.
