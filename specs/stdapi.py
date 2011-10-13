@@ -338,6 +338,18 @@ def OpaqueBlob(type, size):
     return Opaque(type.expr + ' *')
 
 
+class Polymorphic(Type):
+
+    def __init__(self, default_type, switch_expr, switch_types):
+        Type.__init__(self, default_type.expr)
+        self.default_type = default_type
+        self.switch_expr = switch_expr
+        self.switch_types = switch_types
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visit_polymorphic(self, *args, **kwargs)
+
+
 class Visitor:
 
     def visit(self, type, *args, **kwargs):
@@ -384,6 +396,10 @@ class Visitor:
 
     def visit_interface(self, interface, *args, **kwargs):
         raise NotImplementedError
+
+    def visit_polymorphic(self, polymorphic, *args, **kwargs):
+        raise NotImplementedError
+        #return self.visit(polymorphic.default_type, *args, **kwargs)
 
 
 class OnceVisitor(Visitor):
@@ -445,6 +461,12 @@ class Rebuilder(Visitor):
 
     def visit_opaque(self, opaque):
         return opaque
+
+    def visit_polymorphic(self, polymorphic):
+        default_type = self.visit(polymorphic.default_type)
+        switch_expr = polymorphic.switch_expr
+        switch_types = [(expr, self.visit(type)) for expr, type in polymorphic.switch_types]
+        return Polymorphic(default_type, switch_expr, switch_types)
 
 
 class Collector(Visitor):
@@ -508,6 +530,11 @@ class Collector(Visitor):
             for arg in method.args:
                 self.visit(arg.type)
             self.visit(method.type)
+
+    def visit_polymorphic(self, polymorphic):
+        self.visit(polymorphic.default_type)
+        for expr, type in polymorphic.switch_types:
+            self.visit(type)
 
 
 class API:

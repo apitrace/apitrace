@@ -135,6 +135,9 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print "};"
         print
 
+    def visit_polymorphic(self, polymorphic):
+        pass
+
 
 class DumpImplementer(stdapi.Visitor):
     '''Dump an instance.'''
@@ -202,6 +205,17 @@ class DumpImplementer(stdapi.Visitor):
     def visit_interface(self, interface, instance):
         print '    Trace::localWriter.writeOpaque((const void *)&%s);' % instance
 
+    def visit_polymorphic(self, polymorphic, instance):
+        print '    switch (%s) {' % polymorphic.switch_expr
+        for expr, type in polymorphic.switch_types:
+            print '    case %s:' % expr
+            self.visit(type, 'static_cast<%s>(%s)' % (type, instance));
+            print '        break;'
+        print '    default:'
+        self.visit(polymorphic.default_type, instance);
+        print '        break;'
+        print '    }'
+
 
 dump_instance = DumpImplementer().visit
 
@@ -259,6 +273,10 @@ class Wrapper(stdapi.Visitor):
         print "    if (%s) {" % instance
         print "        %s = new %s(%s);" % (instance, interface_wrap_name(interface), instance)
         print "    }"
+    
+    def visit_polymorphic(self, type, instance):
+        # XXX: There might be polymorphic values that need wrapping in the future
+        pass
 
 
 class Unwrapper(Wrapper):
