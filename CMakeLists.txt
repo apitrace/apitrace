@@ -416,6 +416,7 @@ add_executable (glretrace
     glstate.cpp
     glstate_params.cpp
     retrace.cpp
+    retrace_stdc.cpp
     glws.cpp
     ${glws_os}
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp

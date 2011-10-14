@@ -2804,9 +2804,3 @@ glapi.add_functions([
     # GL_WIN_swap_hint
     GlFunction(Void, "glAddSwapHintRectWIN", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
 ])
-
-
-# memcpy's prototype.  We don't really want to trace all memcpy calls -- just
-# emit a few fake memcpy calls --, which is why the prototype is not together
-# with the rest.
-memcpy = Function(Void, "memcpy", [(GLmap, "dest"), (Blob(Const(Void), "n"), "src"), (SizeT, "n")])

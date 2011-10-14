@@ -220,7 +220,8 @@ class Arg:
 
 class Function:
 
-    __id = 0
+    # 0-3 are reserved to memcpy, malloc, free, and realloc
+    __id = 4
 
     def __init__(self, type, name, args, call = '', fail = None, sideeffects=True):
         self.id = Function.__id

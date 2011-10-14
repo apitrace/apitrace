@@ -244,9 +244,6 @@ class GlTracer(Tracer):
         print '}'
         print
 
-        # Generate memcpy's signature
-        self.trace_function_decl(glapi.memcpy)
-
         # Generate a helper function to determine whether a parameter name
         # refers to a symbolic value or not
         print 'static bool'
@@ -442,14 +439,13 @@ class GlTracer(Tracer):
             self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
             print '    }'
         if function.name in ('glFlushMappedBufferRange', 'glFlushMappedBufferRangeAPPLE'):
-            # TODO: avoid copying [0, offset] bytes
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
             if function.name.endswith('APPLE'):
                  print '        GLsizeiptr length = size;'
                  print '        mapping->explicit_flush = true;'
             print '        //assert(offset + length <= mapping->length);'
-            self.emit_memcpy('mapping->map', 'mapping->map', 'offset + length')
+            self.emit_memcpy('(char *)mapping->map + offset', '(const char *)mapping->map + offset', 'length')
             print '    }'
         # FIXME: glFlushMappedNamedBufferRangeEXT
 
@@ -531,7 +527,7 @@ class GlTracer(Tracer):
         Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned __call = Trace::localWriter.beginEnter(&__memcpy_sig);'
+        print '        unsigned __call = Trace::localWriter.beginEnter(&Trace::memcpy_sig);'
         print '        Trace::localWriter.beginArg(0);'
         print '        Trace::localWriter.writeOpaque(%s);' % dest
         print '        Trace::localWriter.endArg();'

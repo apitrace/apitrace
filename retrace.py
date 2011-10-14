@@ -116,7 +116,7 @@ class OpaqueValueExtractor(ValueExtractor):
     in the context of handles.'''
 
     def visit_opaque(self, opaque, lvalue, rvalue):
-        print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, opaque, rvalue)
+        print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, opaque, rvalue)
 
 
 class ValueWrapper(stdapi.Visitor):
@@ -227,8 +227,7 @@ class Retracer:
             try:
                 ValueWrapper().visit(function.type, lvalue, rvalue)
             except NotImplementedError:
-                success = False
-                print '    // FIXME: result'
+                print '    // XXX: result'
         if not success:
             if function.name[-1].islower():
                 sys.stderr.write('warning: unsupported %s call\n' % function.name)

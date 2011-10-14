@@ -150,6 +150,20 @@ class GlRetracer(Retracer):
         'glReadnPixelsARB',
     ])
 
+    map_function_names = set([
+        'glMapBuffer',
+        'glMapBufferARB',
+        'glMapBufferRange',
+        'glMapNamedBufferEXT',
+        'glMapNamedBufferRangeEXT'
+    ])
+
+    unmap_function_names = set([
+        'glUnmapBuffer',
+        'glUnmapBufferARB',
+        'glUnmapNamedBufferEXT',
+    ])
+
     def retrace_function_body(self, function):
         is_array_pointer = function.name in self.array_pointer_function_names
         is_draw_array = function.name in self.draw_array_function_names
@@ -286,7 +300,7 @@ class GlRetracer(Retracer):
                 print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
-            if function.name in ('glMapBuffer', 'glMapBufferARB', 'glMapBufferRange', 'glMapNamedBufferEXT', 'glMapNamedBufferRangeEXT'):
+            if function.name in self.map_function_names:
                 print r'        if (!__result) {'
                 print r'             retrace::warning(call) << "failed to map buffer\n";'
                 print r'        }'
@@ -303,9 +317,39 @@ class GlRetracer(Retracer):
                 print r'    }'
             print '    }'
 
+            # Update buffer mappings
+            if function.name in self.map_function_names:
+                print r'        if (__result) {'
+                print r'            unsigned long long __address = call.ret->toUIntPtr();'
+                if 'BufferRange' not in function.name:
+                    print r'            GLint length = 0;'
+                    if function.name == 'glMapBuffer':
+                        print r'            glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
+                    elif function.name == 'glMapBufferARB':
+                        print r'            glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
+                    elif function.name == 'glMapNamedBufferEXT':
+                        print r'            glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
+                    else:
+                        assert False
+                print r'             retrace::addRegion(__address, __result, length);'
+                print r'        }'
+            if function.name in self.unmap_function_names:
+                print r'        GLvoid *ptr = NULL;'
+                if function.name == 'glUnmapBuffer':
+                    print r'            glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &ptr);'
+                elif function.name == 'glUnmapBufferARB':
+                    print r'            glGetBufferPointervARB(target, GL_BUFFER_MAP_POINTER_ARB, &ptr);'
+                elif function.name == 'glUnmapNamedBufferEXT':
+                    print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
+                else:
+                    assert False
+                print r'        if (ptr) {'
+                print r'            retrace::delRegionByPointer(ptr);'
+                print r'        }'
+
     def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
-            print '    %s = static_cast<%s>(%s.toPointer(true));' % (lvalue, arg_type, rvalue)
+            print '    %s = static_cast<%s>(retrace::toPointer(%s, true));' % (lvalue, arg_type, rvalue)
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices' or\
@@ -351,6 +395,5 @@ if __name__ == '__main__':
 
 '''
     api = glapi.glapi
-    api.add_function(glapi.memcpy)
     retracer = GlRetracer()
     retracer.retrace_api(api)

@@ -80,6 +80,16 @@ public:
 };
 
 
+void
+addRegion(unsigned long long address, void *buffer, unsigned long long size);
+
+void
+delRegionByPointer(void *ptr);
+
+void *
+toPointer(Trace::Value &value, bool bind = false);
+
+
 /**
  * Output verbosity when retracing files.
  */
@@ -108,6 +118,9 @@ struct stringComparer {
 };
 
 
+extern const Entry stdc_callbacks[];
+
+
 class Retracer
 {
     typedef std::map<const char *, Callback, stringComparer> Map;
@@ -116,7 +129,9 @@ class Retracer
     std::vector<Callback> callbacks;
 
 public:
-    Retracer() {}
+    Retracer() {
+        addCallbacks(stdc_callbacks);
+    }
 
     virtual ~Retracer() {}
 

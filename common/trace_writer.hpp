@@ -105,6 +105,11 @@ namespace Trace {
 
     };
 
+    extern const FunctionSig memcpy_sig;
+    extern const FunctionSig malloc_sig;
+    extern const FunctionSig free_sig;
+    extern const FunctionSig realloc_sig;
+
     /**
      * A specialized Writer class, mean to trace the current process.
      *
