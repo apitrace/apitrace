@@ -136,7 +136,16 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print
 
     def visit_polymorphic(self, polymorphic):
-        pass
+        print 'static void __tracePolymorphic%s(int selector, const %s & value) {' % (polymorphic.id, polymorphic.expr)
+        print '    switch (selector) {'
+        for cases, type in polymorphic.iterswitch():
+            for case in cases:
+                print '    %s:' % case
+            dump_instance(type, 'static_cast<%s>(value)' % (type,))
+            print '        break;'
+        print '    }'
+        print '}'
+        print
 
 
 class DumpImplementer(stdapi.Visitor):
@@ -206,13 +215,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    Trace::localWriter.writeOpaque((const void *)&%s);' % instance
 
     def visit_polymorphic(self, polymorphic, instance):
-        print '    switch (%s) {' % polymorphic.switch_expr
-        for cases, type in polymorphic.iterswitch():
-            for case in cases:
-                print '    %s:' % case
-            self.visit(type, 'static_cast<%s>(%s)' % (type, instance));
-            print '        break;'
-        print '    }'
+        print '    __tracePolymorphic%s(%s, %s);' % (polymorphic.id, polymorphic.switch_expr, instance)
 
 
 dump_instance = DumpImplementer().visit
