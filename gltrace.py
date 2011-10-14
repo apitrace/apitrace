@@ -623,7 +623,7 @@ class GlTracer(Tracer):
         # Several GL state functions take GLenum symbolic names as
         # integer/floats; so dump the symbolic name whenever possible
         if function.name.startswith('gl') \
-           and arg.type in (glapi.GLint, glapi.GLfloat) \
+           and arg.type in (glapi.GLint, glapi.GLfloat, glapi.GLdouble) \
            and arg.name == 'param':
             assert arg.index > 0
             assert function.args[arg.index - 1].name == 'pname'
