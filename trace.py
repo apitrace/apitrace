@@ -207,13 +207,11 @@ class DumpImplementer(stdapi.Visitor):
 
     def visit_polymorphic(self, polymorphic, instance):
         print '    switch (%s) {' % polymorphic.switch_expr
-        for expr, type in polymorphic.switch_types:
-            print '    case %s:' % expr
+        for cases, type in polymorphic.iterswitch():
+            for case in cases:
+                print '    %s:' % case
             self.visit(type, 'static_cast<%s>(%s)' % (type, instance));
             print '        break;'
-        print '    default:'
-        self.visit(polymorphic.default_type, instance);
-        print '        break;'
         print '    }'
 
 

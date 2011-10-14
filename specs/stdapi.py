@@ -349,6 +349,22 @@ class Polymorphic(Type):
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_polymorphic(self, *args, **kwargs)
 
+    def iterswitch(self):
+        cases = [['default']]
+        types = [self.default_type]
+
+        for expr, type in self.switch_types:
+            case = 'case %s' % expr
+            try:
+                i = types.index(type)
+            except ValueError:
+                cases.append([case])
+                types.append(type)
+            else:
+                cases[i].append(case)
+
+        return zip(cases, types)
+
 
 class Visitor:
 
