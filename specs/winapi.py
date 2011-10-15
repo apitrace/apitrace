@@ -45,9 +45,9 @@ UINT32 = Alias("UINT32", UInt32)
 INT64 = Alias("INT64", Int64)
 UINT64 = Alias("UINT64", UInt64)
 
-BYTE = Literal("BYTE", "UInt", base=16)
-WORD = Literal("WORD", "UInt", base=16)
-DWORD = Literal("DWORD", "UInt", base=16)
+BYTE = Alias("BYTE", UInt8)
+WORD = Alias("WORD", UInt16)
+DWORD = Alias("DWORD", UInt32)
 
 WCHAR = Literal("WCHAR", "SInt")
 

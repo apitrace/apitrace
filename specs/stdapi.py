@@ -72,7 +72,7 @@ Void = _Void()
 
 class Literal(Type):
 
-    def __init__(self, expr, format, base=10):
+    def __init__(self, expr, format):
         Type.__init__(self, expr)
         self.format = format
 
