@@ -45,6 +45,19 @@
 namespace Trace {
 
 
+static const char *memcpy_args[3] = {"dest", "src", "n"};
+const FunctionSig memcpy_sig = {0, "memcpy", 3, memcpy_args};
+
+static const char *malloc_args[1] = {"size"};
+const FunctionSig malloc_sig = {1, "malloc", 1, malloc_args};
+
+static const char *free_args[1] = {"ptr"};
+const FunctionSig free_sig = {2, "free", 1, free_args};
+
+static const char *realloc_args[2] = {"ptr", "size"};
+const FunctionSig realloc_sig = {3, "realloc", 2, realloc_args};
+
+
 static void exceptionCallback(void)
 {
     localWriter.flush();
@@ -221,19 +234,6 @@ static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
 
     return &*regionInfoList.insert(regionInfoList.end(), regionInfo);
 }
-
-
-static const char *memcpy_args[3] = {"dest", "src", "n"};
-const FunctionSig memcpy_sig = {0, "memcpy", 3, memcpy_args};
-
-static const char *malloc_args[1] = {"size"};
-const FunctionSig malloc_sig = {1, "malloc", 1, malloc_args};
-
-static const char *free_args[1] = {"ptr"};
-const FunctionSig free_sig = {2, "free", 1, free_args};
-
-static const char *realloc_args[2] = {"ptr", "size"};
-const FunctionSig realloc_sig = {3, "realloc", 2, realloc_args};
 
 
 /**

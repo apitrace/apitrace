@@ -72,7 +72,36 @@
 
 namespace Trace {
 
-#define TRACE_VERSION 1
+/*
+ * Trace file version number.
+ *
+ * We keep backwards compatability reading old traces, i.e., it should always be
+ * possible to parse and retrace old trace files.
+ *
+ * So the trace version number refers not only to changes in the binary format
+ * representation, but also semantic changes in the way certain functions
+ * should be retraced.
+ *
+ * Writing/editing old traces will not be supported however.  An older version
+ * of apitrace should be used in such circunstances.
+ *
+ * Changelog:
+ *
+ * - version 0:
+ *   - initial implementation
+ *
+ * - version 1:
+ *   - support for GL user arrays -- a blob is provided whenever an user memory
+ *   is referred (whereas before calls that operate wit user memory instead of
+ *   VBOs should be ignore)
+ *
+ * - version 2:
+ *   - malloc/free memory calls -- allow to pass user memory as malloc memory
+ *   as opposed to blobs
+ *   - glFlushMappedBufferRange will emit a memcpy only for the flushed range
+ *   (whereas previously it would emit a memcpy for the whole mapped range)
+ */
+#define TRACE_VERSION 2
 
 enum Event {
     EVENT_ENTER = 0,
