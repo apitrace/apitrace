@@ -49,7 +49,7 @@ BYTE = Alias("BYTE", UInt8)
 WORD = Alias("WORD", UInt16)
 DWORD = Alias("DWORD", UInt32)
 
-WCHAR = Literal("WCHAR", "SInt")
+WCHAR = Alias("WCHAR", Short)
 
 BOOL = Alias("BOOL", Bool)
 

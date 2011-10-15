@@ -80,10 +80,14 @@ Void = _Void()
 
 
 class Literal(Type):
+    """Class to describe literal types.
 
-    def __init__(self, expr, format):
+    Types which are not defined in terms of other types, such as integers and
+    floats."""
+
+    def __init__(self, expr, kind):
         Type.__init__(self, expr)
-        self.format = format
+        self.kind = kind
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_literal(self, *args, **kwargs)

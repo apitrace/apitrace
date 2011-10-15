@@ -152,7 +152,7 @@ class DumpImplementer(stdapi.Visitor):
     '''Dump an instance.'''
 
     def visit_literal(self, literal, instance):
-        print '    Trace::localWriter.write%s(%s);' % (literal.format, instance)
+        print '    Trace::localWriter.write%s(%s);' % (literal.kind, instance)
 
     def visit_string(self, string, instance):
         if string.length is not None:

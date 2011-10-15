@@ -189,9 +189,9 @@ class JsonWriter(Visitor):
     It expects a previously declared JSONWriter instance named "json".'''
 
     def visit_literal(self, literal, instance):
-        if literal.format == 'Bool':
+        if literal.kind == 'Bool':
             print '    json.writeBool(%s);' % instance
-        elif literal.format in ('SInt', 'Uint', 'Float', 'Double'):
+        elif literal.kind in ('SInt', 'Uint', 'Float', 'Double'):
             print '    json.writeNumber(%s);' % instance
         else:
             raise NotImplementedError

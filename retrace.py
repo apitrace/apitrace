@@ -53,8 +53,7 @@ def handle_entry(handle, value):
 class ValueExtractor(stdapi.Visitor):
 
     def visit_literal(self, literal, lvalue, rvalue):
-        #if literal.format in ('Bool', 'UInt'):
-        print '    %s = (%s).to%s();' % (lvalue, rvalue, literal.format)
+        print '    %s = (%s).to%s();' % (lvalue, rvalue, literal.kind)
 
     def visit_const(self, const, lvalue, rvalue):
         self.visit(const.type, lvalue, rvalue)
