@@ -83,7 +83,7 @@ GUID = Struct("GUID", [
     (DWORD, "Data1"),
     (WORD, "Data2"),
     (WORD, "Data3"),
-    (Array(BYTE, "8"), "Data4"),
+    (Array(BYTE, 8), "Data4"),
 ])
 LPGUID = Pointer(GUID)
 

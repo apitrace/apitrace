@@ -25,6 +25,9 @@
 ##########################################################################/
 
 
+"""Parser for OpenGL .txt extensions specification."""
+
+
 import sys
 import re
 import optparse
