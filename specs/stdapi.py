@@ -30,28 +30,36 @@ import debug
 
 
 class Type:
+    """Base class for all types."""
 
-    __all = {}
-    __seq = 0
+    __tags = set()
 
-    def __init__(self, expr, id = ''):
+    def __init__(self, expr, tag = None):
         self.expr = expr
-        
-        for char in id:
-            assert char.isalnum() or char in '_ '
 
-        id = id.replace(' ', '_')
-        
-        if id in Type.__all:
-            Type.__seq += 1
-            id += str(Type.__seq)
-        
-        assert id not in Type.__all
-        Type.__all[id] = self
+        # Generate a default tag, used when naming functions that will operate
+        # on this type, so it should preferrably be something representative of
+        # the type.
+        if tag is None:
+            tag = ''.join([c for c in expr if c.isalnum() or c in '_'])
+        else:
+            for c in tag:
+                assert c.isalnum() or c in '_'
 
-        self.id = id
+        # Ensure it is unique.
+        if tag in Type.__tags:
+            suffix = 1
+            while tag + str(suffix) in Type.__tags:
+                suffix += 1
+            tag += str(suffix)
+
+        assert tag not in Type.__tags
+        Type.__tags.add(tag)
+
+        self.tag = tag
 
     def __str__(self):
+        """Return the C/C++ type expression for this type."""
         return self.expr
 
     def visit(self, visitor, *args, **kwargs):
@@ -60,6 +68,7 @@ class Type:
 
 
 class _Void(Type):
+    """Singleton void type."""
 
     def __init__(self):
         Type.__init__(self, "void")
@@ -96,7 +105,7 @@ class Const(Type):
             # The most legible
             expr = "const " + type.expr
 
-        Type.__init__(self, expr, 'C' + type.id)
+        Type.__init__(self, expr, 'C' + type.tag)
 
         self.type = type
 
@@ -107,7 +116,7 @@ class Const(Type):
 class Pointer(Type):
 
     def __init__(self, type):
-        Type.__init__(self, type.expr + " *", 'P' + type.id)
+        Type.__init__(self, type.expr + " *", 'P' + type.tag)
         self.type = type
 
     def visit(self, visitor, *args, **kwargs):
@@ -117,7 +126,7 @@ class Pointer(Type):
 class Handle(Type):
 
     def __init__(self, name, type, range=None, key=None):
-        Type.__init__(self, type.expr, 'P' + type.id)
+        Type.__init__(self, type.expr, 'P' + type.tag)
         self.name = name
         self.type = type
         self.range = range
@@ -133,10 +142,16 @@ def ConstPointer(type):
 
 class Enum(Type):
 
+    __id = 0
+
     def __init__(self, name, values):
         Type.__init__(self, name)
+
+        self.id = Enum.__id
+        Enum.__id += 1
+
         self.values = list(values)
-    
+
     def visit(self, visitor, *args, **kwargs):
         return visitor.visit_enum(self, *args, **kwargs)
 
@@ -147,8 +162,14 @@ def FakeEnum(type, values):
 
 class Bitmask(Type):
 
+    __id = 0
+
     def __init__(self, type, values):
         Type.__init__(self, type.expr)
+
+        self.id = Bitmask.__id
+        Bitmask.__id += 1
+
         self.type = type
         self.values = values
 
@@ -182,8 +203,14 @@ class Blob(Type):
 
 class Struct(Type):
 
+    __id = 0
+
     def __init__(self, name, members):
         Type.__init__(self, name)
+
+        self.id = Struct.__id
+        Struct.__id += 1
+
         self.name = name
         self.members = members
 

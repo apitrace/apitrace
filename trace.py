@@ -52,13 +52,13 @@ class DumpDeclarator(stdapi.OnceVisitor):
     def visit_struct(self, struct):
         for type, name in struct.members:
             self.visit(type)
-        print 'static void __traceStruct%s(const %s &value) {' % (struct.id, struct.expr)
+        print 'static void __traceStruct%s(const %s &value) {' % (struct.tag, struct.expr)
         print '    static const char * members[%u] = {' % (len(struct.members),)
         for type, name,  in struct.members:
             print '        "%s",' % (name,)
         print '    };'
         print '    static const Trace::StructSig sig = {'
-        print '       %u, "%s", %u, members' % (int(struct.id), struct.name, len(struct.members))
+        print '       %u, "%s", %u, members' % (struct.id, struct.name, len(struct.members))
         print '    };'
         print '    Trace::localWriter.beginStruct(&sig);'
         for type, name in struct.members:
@@ -76,7 +76,7 @@ class DumpDeclarator(stdapi.OnceVisitor):
     __enum_id = 0
 
     def visit_enum(self, enum):
-        print 'static void __traceEnum%s(const %s value) {' % (enum.id, enum.expr)
+        print 'static void __traceEnum%s(const %s value) {' % (enum.tag, enum.expr)
         n = len(enum.values)
         for i in range(n):
             value = enum.values[i]
@@ -98,13 +98,13 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print
 
     def visit_bitmask(self, bitmask):
-        print 'static const Trace::BitmaskFlag __bitmask%s_flags[] = {' % (bitmask.id)
+        print 'static const Trace::BitmaskFlag __bitmask%s_flags[] = {' % (bitmask.tag)
         for value in bitmask.values:
             print '   {"%s", %s},' % (value, value)
         print '};'
         print
-        print 'static const Trace::BitmaskSig __bitmask%s_sig = {' % (bitmask.id)
-        print '   %u, %u, __bitmask%s_flags' % (int(bitmask.id), len(bitmask.values), bitmask.id)
+        print 'static const Trace::BitmaskSig __bitmask%s_sig = {' % (bitmask.tag)
+        print '   %u, %u, __bitmask%s_flags' % (bitmask.id, len(bitmask.values), bitmask.tag)
         print '};'
         print
 
@@ -136,7 +136,7 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print
 
     def visit_polymorphic(self, polymorphic):
-        print 'static void __tracePolymorphic%s(int selector, const %s & value) {' % (polymorphic.id, polymorphic.expr)
+        print 'static void __tracePolymorphic%s(int selector, const %s & value) {' % (polymorphic.tag, polymorphic.expr)
         print '    switch (selector) {'
         for cases, type in polymorphic.iterswitch():
             for case in cases:
@@ -164,11 +164,11 @@ class DumpImplementer(stdapi.Visitor):
         self.visit(const.type, instance)
 
     def visit_struct(self, struct, instance):
-        print '    __traceStruct%s(%s);' % (struct.id, instance)
+        print '    __traceStruct%s(%s);' % (struct.tag, instance)
 
     def visit_array(self, array, instance):
-        length = '__c' + array.type.id
-        index = '__i' + array.type.id
+        length = '__c' + array.type.tag
+        index = '__i' + array.type.tag
         print '    if (%s) {' % instance
         print '        size_t %s = %s;' % (length, array.length)
         print '        Trace::localWriter.beginArray(%s);' % length
@@ -186,10 +186,10 @@ class DumpImplementer(stdapi.Visitor):
         print '    Trace::localWriter.writeBlob(%s, %s);' % (instance, blob.size)
 
     def visit_enum(self, enum, instance):
-        print '    __traceEnum%s(%s);' % (enum.id, instance)
+        print '    __traceEnum%s(%s);' % (enum.tag, instance)
 
     def visit_bitmask(self, bitmask, instance):
-        print '    Trace::localWriter.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.id, instance)
+        print '    Trace::localWriter.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.tag, instance)
 
     def visit_pointer(self, pointer, instance):
         print '    if (%s) {' % instance
@@ -215,7 +215,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    Trace::localWriter.writeOpaque((const void *)&%s);' % instance
 
     def visit_polymorphic(self, polymorphic, instance):
-        print '    __tracePolymorphic%s(%s, %s);' % (polymorphic.id, polymorphic.switch_expr, instance)
+        print '    __tracePolymorphic%s(%s, %s);' % (polymorphic.tag, polymorphic.switch_expr, instance)
 
 
 dump_instance = DumpImplementer().visit
@@ -340,7 +340,7 @@ class Tracer:
             print 'static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
         else:
             print 'static const char ** __%s_args = NULL;' % (function.name,)
-        print 'static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, int(function.id), function.name, len(function.args), function.name)
+        print 'static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
         print
 
     def is_public_function(self, function):
@@ -426,7 +426,7 @@ class Tracer:
     def trace_method(self, interface, method):
         print method.prototype(interface_wrap_name(interface) + '::' + method.name) + ' {'
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
-        print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (int(method.id), interface.name + '::' + method.name, len(method.args) + 1)
+        print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
         print '    unsigned __call = Trace::localWriter.beginEnter(&__sig);'
         print '    Trace::localWriter.beginArg(0);'
         print '    Trace::localWriter.writeOpaque((const void *)m_pInstance);'
