@@ -249,7 +249,7 @@ class StateDumper:
         print 'const char *'
         print 'enumToString(GLenum pname)'
         print '{'
-        print '    switch(pname) {'
+        print '    switch (pname) {'
         for name in GLenum.values:
             print '    case %s:' % name
             print '        return "%s";' % name

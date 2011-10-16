@@ -233,7 +233,7 @@ class GlTracer(Tracer):
         print
         print 'static inline struct buffer_mapping *'
         print 'get_buffer_mapping(GLenum target) {'
-        print '    switch(target) {'
+        print '    switch (target) {'
         for target in self.buffer_targets:
             print '    case GL_%s:' % target
             print '        return & __%s_mapping;' % target.lower()
@@ -248,7 +248,7 @@ class GlTracer(Tracer):
         # refers to a symbolic value or not
         print 'static bool'
         print 'is_symbolic_pname(GLenum pname) {'
-        print '    switch(pname) {'
+        print '    switch (pname) {'
         for function, type, count, name in glparams.parameters:
             if type is glapi.GLenum:
                 print '    case %s:' % name
@@ -272,7 +272,7 @@ class GlTracer(Tracer):
         # Generate a helper function to know how many elements a parameter has
         print 'static size_t'
         print '__gl_param_size(GLenum pname) {'
-        print '    switch(pname) {'
+        print '    switch (pname) {'
         for function, type, count, name in glparams.parameters:
             if type is not None:
                 print '    case %s: return %u;' % (name, count)
@@ -692,7 +692,7 @@ class GlTracer(Tracer):
             binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
             function = api.get_function_by_name(function_name)
 
-            print '    // %s' % function.name
+            print '    // %s' % function.prototype()
             self.array_trace_prolog(api, uppercase_name)
             self.array_prolog(api, uppercase_name)
             print '    if (__glIsEnabled(%s)) {' % enable_name
@@ -749,7 +749,9 @@ class GlTracer(Tracer):
             else:
                 SUFFIX = suffix
             function_name = 'glVertexAttribPointer' + suffix
-            print '    // %s' % function_name
+            function = api.get_function_by_name(function_name)
+
+            print '    // %s' % function.prototype()
             print '    if (__vertex_attrib == VERTEX_ATTRIB%s) {' % SUFFIX
             if suffix == 'NV':
                 print '        GLint __max_vertex_attribs = 16;'
@@ -768,8 +770,6 @@ class GlTracer(Tracer):
                 # It doesn't seem possible to use VBOs with NV_vertex_program.
                 print '                __glGetVertexAttribiv%s(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING%s, &__binding);' % (suffix, SUFFIX)
             print '                if (!__binding) {'
-
-            function = api.get_function_by_name(function_name)
 
             # Get the arguments via glGet*
             for arg in function.args[1:]:

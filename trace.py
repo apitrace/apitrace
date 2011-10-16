@@ -52,7 +52,7 @@ class DumpDeclarator(stdapi.OnceVisitor):
     def visit_struct(self, struct):
         for type, name in struct.members:
             self.visit(type)
-        print 'static void __traceStruct%s(const %s &value) {' % (struct.tag, struct.expr)
+        print 'static void _write__%s(const %s &value) {' % (struct.tag, struct.expr)
         print '    static const char * members[%u] = {' % (len(struct.members),)
         for type, name,  in struct.members:
             print '        "%s",' % (name,)
@@ -76,14 +76,14 @@ class DumpDeclarator(stdapi.OnceVisitor):
     __enum_id = 0
 
     def visit_enum(self, enum):
-        print 'static void __traceEnum%s(const %s value) {' % (enum.tag, enum.expr)
+        print 'static void _write__%s(const %s value) {' % (enum.tag, enum.expr)
         n = len(enum.values)
         for i in range(n):
             value = enum.values[i]
             print '    static const Trace::EnumSig sig%u = {%u, "%s", %s};' % (i, DumpDeclarator.__enum_id, value, value)
             DumpDeclarator.__enum_id += 1
         print '    const Trace::EnumSig *sig;'
-        print '    switch(value) {'
+        print '    switch (value) {'
         for i in range(n):
             value = enum.values[i]
             print '    case %s:' % value
@@ -136,7 +136,7 @@ class DumpDeclarator(stdapi.OnceVisitor):
         print
 
     def visit_polymorphic(self, polymorphic):
-        print 'static void __tracePolymorphic%s(int selector, const %s & value) {' % (polymorphic.tag, polymorphic.expr)
+        print 'static void _write__%s(int selector, const %s & value) {' % (polymorphic.tag, polymorphic.expr)
         print '    switch (selector) {'
         for cases, type in polymorphic.iterswitch():
             for case in cases:
@@ -164,7 +164,7 @@ class DumpImplementer(stdapi.Visitor):
         self.visit(const.type, instance)
 
     def visit_struct(self, struct, instance):
-        print '    __traceStruct%s(%s);' % (struct.tag, instance)
+        print '    _write__%s(%s);' % (struct.tag, instance)
 
     def visit_array(self, array, instance):
         length = '__c' + array.type.tag
@@ -186,7 +186,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    Trace::localWriter.writeBlob(%s, %s);' % (instance, blob.size)
 
     def visit_enum(self, enum, instance):
-        print '    __traceEnum%s(%s);' % (enum.tag, instance)
+        print '    _write__%s(%s);' % (enum.tag, instance)
 
     def visit_bitmask(self, bitmask, instance):
         print '    Trace::localWriter.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.tag, instance)
@@ -215,7 +215,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    Trace::localWriter.writeOpaque((const void *)&%s);' % instance
 
     def visit_polymorphic(self, polymorphic, instance):
-        print '    __tracePolymorphic%s(%s, %s);' % (polymorphic.tag, polymorphic.switch_expr, instance)
+        print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switch_expr, instance)
 
 
 dump_instance = DumpImplementer().visit

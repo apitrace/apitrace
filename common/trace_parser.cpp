@@ -171,7 +171,7 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
 Call *Parser::parse_call(Mode mode) {
     do {
         int c = read_byte();
-        switch(c) {
+        switch (c) {
         case Trace::EVENT_ENTER:
             parse_enter(mode);
             break;
@@ -373,7 +373,7 @@ Call *Parser::parse_leave(Mode mode) {
 bool Parser::parse_call_details(Call *call, Mode mode) {
     do {
         int c = read_byte();
-        switch(c) {
+        switch (c) {
         case Trace::CALL_END:
             return true;
         case Trace::CALL_ARG:
@@ -409,7 +409,7 @@ Value *Parser::parse_value(void) {
     int c;
     Value *value;
     c = read_byte();
-    switch(c) {
+    switch (c) {
     case Trace::TYPE_NULL:
         value = new Null;
         break;
@@ -470,7 +470,7 @@ Value *Parser::parse_value(void) {
 
 void Parser::scan_value(void) {
     int c = read_byte();
-    switch(c) {
+    switch (c) {
     case Trace::TYPE_NULL:
     case Trace::TYPE_FALSE:
     case Trace::TYPE_TRUE:
