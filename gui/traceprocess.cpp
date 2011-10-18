@@ -15,12 +15,12 @@ findPreloader()
     if (fi.exists())
         return libPath;
 
-    libPath = QString::fromLatin1("/usr/local/lib/glxtrace.so");
+    libPath = QString::fromLatin1("/usr/local/lib/apitrace/glxtrace.so");
     fi = QFileInfo(libPath);
     if (fi.exists())
         return libPath;
 
-    libPath = QString::fromLatin1("/usr/lib/glxtrace.so");
+    libPath = QString::fromLatin1("/usr/lib/apitrace/glxtrace.so");
     fi = QFileInfo(libPath);
     if (fi.exists())
         return libPath;

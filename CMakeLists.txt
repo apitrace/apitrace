@@ -380,7 +380,7 @@ else ()
 
     target_link_libraries (glxtrace dl ${X11_X11_LIB})
 
-    install (TARGETS glxtrace LIBRARY DESTINATION lib)
+    install (TARGETS glxtrace LIBRARY DESTINATION lib/apitrace)
 endif ()
 
 
@@ -459,6 +459,12 @@ endif ()
 ##############################################################################
 # Packaging
 
+if (WIN32 OR APPLE)
+    set (INSTALL_DOC_DESTINATION doc)
+else ()
+    set (INSTALL_DOC_DESTINATION share/doc/${CMAKE_PROJECT_NAME})
+endif ()
+
 install (
     FILES
         BUGS.markdown
@@ -466,7 +472,8 @@ install (
         NEWS.markdown
         README.markdown
         TODO.markdown
-    DESTINATION doc)
+    DESTINATION ${INSTALL_DOC_DESTINATION}
+)
 
 set (CPACK_PACKAGE_VERSION_MAJOR "2")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
