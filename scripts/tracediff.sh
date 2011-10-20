@@ -31,7 +31,7 @@ TRACEDUMP=${TRACEDUMP:-`dirname "$0"`/../tracedump}
 $TRACEDUMP
 
 stripdump () {
-    $TRACEDUMP --no-color "$1" \
+    $TRACEDUMP --color=never "$1" \
     | sed \
         -e 's/\r$//g' \
         -e 's/^[0-9]\+ //' \
