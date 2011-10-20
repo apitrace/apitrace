@@ -28,6 +28,7 @@ _CPack_Packages
 CMakeCache.txt
 CMakeFiles
 Makefile
+apitrace
 build
 cgltrace.cpp
 d3d10trace.cpp

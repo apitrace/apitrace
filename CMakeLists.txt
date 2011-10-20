@@ -231,8 +231,8 @@ set_target_properties (common PROPERTIES
 link_libraries (common)
 
 add_executable (tracedump tracedump.cpp)
-install (TARGETS tracedump RUNTIME DESTINATION bin) 
 
+install (TARGETS tracedump RUNTIME DESTINATION bin)
 
 ##############################################################################
 # API tracers
@@ -447,6 +447,10 @@ endif ()
 
 install (TARGETS glretrace RUNTIME DESTINATION bin) 
 
+##############################################################################
+# CLI
+
+add_subdirectory(cli)
 
 ##############################################################################
 # GUI
