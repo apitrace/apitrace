@@ -11,4 +11,8 @@ add_executable (apitrace
     cli_trim.cpp
 )
 
+target_link_libraries (apitrace
+    ${GETOPT_LIBRARIES}
+)
+
 install (TARGETS apitrace RUNTIME DESTINATION bin)

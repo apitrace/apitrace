@@ -178,6 +178,12 @@ include_directories (${PNG_INCLUDE_DIR})
 add_definitions (${PNG_DEFINITIONS})
 link_libraries (${PNG_LIBRARIES})
 
+if (MSVC)
+    add_subdirectory (thirdparty/getopt EXCLUDE_FROM_ALL)
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/getopt)
+    set (GETOPT_LIBRARIES getopt_bundled)
+endif ()
+
 # The Qt website provides binaries for Windows and MacOSX, and they are
 # automatically found by cmake without any manual intervention.  The situation
 # for QJSON is substantially different: there are no binaries for QJSON
