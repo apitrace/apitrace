@@ -31,39 +31,48 @@
  * functionality.
  */
 
-#include <iostream>
-#include <iomanip>
-
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "config.h"
+#include "apitrace_cli.hpp"
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
+typedef void (*command_usage_t) (const char *argv0);
 typedef int (*command_function_t) (int argc, char *argv[], int first_command_arg);
 
 typedef struct {
     const char *name;
+    const char *synopsis;
+    command_usage_t usage;
     command_function_t function;
-    const char *arguments;
-    const char *summary;
-    const char *documentation;
 } Command;
+
+#define APITRACE_HELP_SYNOPSIS "Print detailed help for the given command."
+
+static void
+apitrace_help_usage(const char *argv0)
+{
+    std::cout << argv0 << " [<command>]"
+        "\n\n\t"
+        APITRACE_HELP_SYNOPSIS
+        "\n\n\t"
+        "Except in this case, where this is all the help you will get."
+        "\n\n";
+}
 
 static int
 apitrace_help_command(int argc, char *argv[], int first_command_arg);
 
 static Command commands[] = {
-    { "help", apitrace_help_command,
-      "[<command>]",
-      "Print detailed help for the given command.",
-      "\tExcept in this case, where this is all the help you will get." }
+    { "dump",
+      APITRACE_DUMP_SYNOPSIS,
+      apitrace_dump_usage,
+      apitrace_dump_command },
+    { "help",
+      APITRACE_HELP_SYNOPSIS,
+      apitrace_help_usage,
+      apitrace_help_command }
 };
 
-static void
+void
 usage(void)
 {
     Command *command;
@@ -85,7 +94,7 @@ usage(void)
         command = &commands[i];
 
         std::cout << " " << std::setw(max_width+2) << command->name
-                  << " " << command->summary << "\n";
+                  << " " << command->synopsis << "\n";
     }
 
     std::cout << "\n"
@@ -110,13 +119,7 @@ apitrace_help_command(int argc, char *argv[], int first_arg_command)
 
         if (strcmp(command_name, command->name) == 0) {
             std::cout << "Help for \"apitrace " << command_name << "\":\n\n";
-            std::cout << command->name;
-            if (command->arguments)
-                std::cout << " " << command->arguments
-                          << "\n\n\t" << command->summary;
-            else
-                std::cout << "\t" << command->summary;
-            std::cout << "\n\n" << command->documentation << "\n\n";
+            (command->usage) ("apitrace");
 
             return 0;
         }

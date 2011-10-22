@@ -23,16 +23,9 @@
  *
  **************************************************************************/
 
-
-/*
- * Simple utility to dump a trace to standard output.
- */
-
-
-#include <string.h>
+#include "apitrace_cli.hpp"
 
 #include "trace_parser.hpp"
-
 
 enum ColorOption {
     COLOR_OPTION_NEVER = 0,
@@ -42,25 +35,25 @@ enum ColorOption {
 
 static ColorOption color = COLOR_OPTION_AUTO;
 
-
-static void usage(void) {
-    std::cout <<
-        "Usage: tracedump [OPTION] [TRACE]...\n"
-        "Dump TRACE to standard output.\n"
-        "\n"
-        "  --help               display this help and exit\n"
-        "  --color[=WHEN]\n"
-        "  --colour[=WHEN]      colored syntax highlighting;\n"
-        "                       WHEN is 'always', 'never', or 'auto'\n"
-    ;
+void
+apitrace_dump_usage(const char *argv0)
+{
+    std::cout << argv0 << " [OPTIONS] <trace-file>..."
+        "\n\n\t"
+        APITRACE_DUMP_SYNOPSIS
+        "\n\n\t"
+        "Supports the following options:\n\t"
+	"\t--color=<WHEN>\n\t"
+	"\t--colour=<WHEN>     Colored syntax highlighting\n\t"
+	"\t                    WHEN is 'auto', 'always', or 'never'\n";
 }
 
-
-int main(int argc, char **argv)
+int
+apitrace_dump_command(int argc, char *argv[], int first_arg_command)
 {
     int i;
 
-    for (i = 1; i < argc; ++i) {
+    for (i = first_arg_command; i < argc; ++i) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {
@@ -69,9 +62,6 @@ int main(int argc, char **argv)
 
         if (!strcmp(arg, "--")) {
             break;
-        } else if (!strcmp(arg, "--help")) {
-            usage();
-            return 0;
         } else if (!strcmp(arg, "--color=auto") ||
                    !strcmp(arg, "--colour=auto")) {
             color = COLOR_OPTION_AUTO;
