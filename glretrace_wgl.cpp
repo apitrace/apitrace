@@ -67,7 +67,7 @@ static void retrace_wglMakeCurrent(Trace::Call &call) {
     if (drawable && context) {
         glFlush();
         if (!double_buffer) {
-            frame_complete(call.no);
+            frame_complete(call);
         }
     }
     
@@ -98,7 +98,7 @@ static void retrace_wglSetPixelFormat(Trace::Call &call) {
 }
 
 static void retrace_wglSwapBuffers(Trace::Call &call) {
-    frame_complete(call.no);
+    frame_complete(call);
     if (double_buffer) {
         drawable->swapBuffers();
     } else {

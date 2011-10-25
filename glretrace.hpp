@@ -68,7 +68,7 @@ extern const retrace::Entry glx_callbacks[];
 extern const retrace::Entry wgl_callbacks[];
 
 void snapshot(unsigned call_no);
-void frame_complete(unsigned call_no);
+void frame_complete(Trace::Call &call);
 
 void updateDrawable(int width, int height);
 

@@ -107,7 +107,7 @@ static void retrace_CGLFlushDrawable(Trace::Call &call) {
             glFlush();
         }
 
-        frame_complete(call.no);
+        frame_complete(call);
     }
 }
 

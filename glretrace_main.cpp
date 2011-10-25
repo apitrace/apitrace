@@ -110,7 +110,8 @@ updateDrawable(int width, int height) {
         return;
     }
 
-    if (width  <= glretrace::drawable->width &&
+    if (drawable->visible &&
+        width  <= glretrace::drawable->width &&
         height <= glretrace::drawable->height) {
         return;
     }
@@ -178,12 +179,20 @@ void snapshot(unsigned call_no) {
 }
 
 
-void frame_complete(unsigned call_no) {
+void frame_complete(Trace::Call &call) {
     ++frame;
+
+    if (!drawable) {
+        return;
+    }
+
+    if (!drawable->visible) {
+        retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
+    }
 
     if (snapshot_frequency == FREQUENCY_FRAME ||
         snapshot_frequency == FREQUENCY_FRAMEBUFFER) {
-        snapshot(call_no);
+        snapshot(call.no);
     }
 }
 

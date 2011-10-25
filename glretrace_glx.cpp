@@ -95,7 +95,7 @@ static void retrace_glXMakeCurrent(Trace::Call &call) {
     if (drawable && context) {
         glFlush();
         if (!double_buffer) {
-            frame_complete(call.no);
+            frame_complete(call);
         }
     }
 
@@ -122,7 +122,7 @@ static void retrace_glXDestroyContext(Trace::Call &call) {
 }
 
 static void retrace_glXSwapBuffers(Trace::Call &call) {
-    frame_complete(call.no);
+    frame_complete(call);
     if (double_buffer) {
         drawable->swapBuffers();
     } else {
@@ -149,7 +149,7 @@ static void retrace_glXMakeContextCurrent(Trace::Call &call) {
     if (drawable && context) {
         glFlush();
         if (!double_buffer) {
-            frame_complete(call.no);
+            frame_complete(call);
         }
     }
 

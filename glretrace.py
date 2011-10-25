@@ -209,7 +209,7 @@ class GlRetracer(Retracer):
             print '        glretrace::snapshot(call.no - 1);'
             print '    }'
         if function.name == 'glFrameTerminatorGREMEDY':
-            print '    glretrace::frame_complete(call.no);'
+            print '    glretrace::frame_complete(call);'
             return
 
         Retracer.retrace_function_body(self, function)
@@ -217,7 +217,7 @@ class GlRetracer(Retracer):
         # Post-snapshots
         if function.name in ('glFlush', 'glFinish'):
             print '    if (!glretrace::double_buffer) {'
-            print '        glretrace::frame_complete(call.no);'
+            print '        glretrace::frame_complete(call);'
             print '    }'
         if is_draw_array or is_draw_elements or is_misc_draw:
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_DRAW) {'
