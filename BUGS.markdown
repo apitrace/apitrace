@@ -1,14 +1,87 @@
 Reporting bugs
 ==============
 
-Please report any issues on
-[github](https://github.com/apitrace/apitrace/issues).
+Before reporting, please skim through the known issues below.
 
-Always include the following information:
+Report any issues on [github](https://github.com/apitrace/apitrace/issues),
+always including the following information:
 
 * operating system name and version
 
 * OpenGL/D3D driver name and version
+
+
+Known issues
+============
+
+These are issues that the developers are already aware of, but for which there
+is no immediate plan to address them, because either:
+
+* they stem from architectural limitations that are difficult to overcome
+  and/or time-consuming;
+
+* they are corners cases that are thought to be of very little practical use;
+
+* merely lack of time/opportunity.
+
+That said, feel free to file an issue and/or send an email to the mailing list
+if:
+
+* send an email to the mailing list if you want discuss the rationale, propose
+  your ideas on how to address it, or volunteer to work on it;
+
+* file the issue in the issue tracker (or comment to it if it already exists)
+  if it is important for you and you would like to see it addressed sooner
+  rather than later.
+
+
+Tracing
+-------
+
+* Fake calls may be emitted in the trace, in order to provide complete
+  information for retracing.  The typical case is OpenGL vertex arrays in user
+  memory (as opposed to VBOs): where glXxxPointer calls will be deferred,
+  glInterleavedArrays will be decomposed, etc.
+
+  This should not affect the rendered output, but it may use different paths in
+  the OpenGL driver, exercising different paths and with different performance
+  characteristics.
+
+  There is no way to distinguish the fake calls from those actually
+  made by the application yet.
+
+* On MacOSX, the internal OpenGL calls done by GLU are not traced yet.
+
+
+Retracing
+---------
+
+* glretrace needs to infer window sizes from glViewport calls, because calls
+  that create/resize windows happen outside of OpenGL and are not traced.
+  Therefore window will be missing if the application relies on the default
+  viewport instead of explicitly invoking glViewport; or it will to too big if
+  the window is shrunk.  Most apps call glViewport before rendering.
+
+* OS specific OpenGL APIs (WGL, GLX, CGL, etc), are not retraced literally, but
+  instead partially emulated.  This is by design, to allow traces to be
+  retraced on any OS, as the focus is on the OS-independent parts of OpenGL API.
+
+* There is no guarantee that the same visual that was used on tracing will be
+  used for retracing OpenGL.  Actually currently, glretrace will always choose
+  a standard 32bit RGBA, 24bit depth, 8bit alpha, double buffer visual.  Unless
+  overridden on command line.
+
+* Multi-threaded OpenGL is not yet supported.
+
+* OpenGL context sharing is not fully respected -- all contexts are expected to
+  share state, and most likely there
+
+
+GUI
+---
+
+* Not all types of arguments can be edited.
+
 
 
 Proprietary/confidential applications

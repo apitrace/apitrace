@@ -42,7 +42,7 @@ Retracing
 
 * Support multiple threads
 
-* Leverage ARB_debug_output where available.
+* Leverage `ARB_debug_output` where available.
 
 * D3D support.
 
@@ -71,4 +71,10 @@ Other
     of the frame.
 
 
-See also FIXME, TODO, and XXX comments on the source code.
+See also:
+
+* open issues on [github](https://github.com/apitrace/apitrace/issues)
+
+* _Known issues_ section in BUGS.markdown
+
+* FIXME, TODO, and XXX comments on the source code.
