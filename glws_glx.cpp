@@ -87,17 +87,6 @@ static void describeEvent(const XEvent &event) {
     }
 }
 
-static void waitForEvent(Window window, int type) {
-    XFlush(display);
-    XEvent event;
-    do {
-        XNextEvent(display, &event);
-        describeEvent(event);
-    } while (event.type != type ||
-             event.xany.window != window);
-}
-
-
 class GlxDrawable : public Drawable
 {
 public:
@@ -115,7 +104,7 @@ public:
         attr.background_pixel = 0;
         attr.border_pixel = 0;
         attr.colormap = XCreateColormap(display, root, visinfo->visual, AllocNone);
-        attr.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
+        attr.event_mask = StructureNotifyMask;
 
         unsigned long mask;
         mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
@@ -148,12 +137,24 @@ public:
         glXWaitX();
     }
 
+    void waitForEvent(int type) {
+        XEvent event;
+        do {
+            XWindowEvent(display, window, StructureNotifyMask, &event);
+            describeEvent(event);
+        } while (event.type != type);
+    }
+
     ~GlxDrawable() {
         XDestroyWindow(display, window);
     }
 
     void
     resize(int w, int h) {
+        if (w == width && h == height) {
+            return;
+        }
+
         glXWaitGL();
 
         // We need to ensure that pending events are processed here, and XSync
@@ -166,27 +167,31 @@ public:
         XResizeWindow(display, window, w, h);
 
         // Tell the window manager to respect the requested size
-        XSizeHints *size_hints;
-        size_hints = XAllocSizeHints();
-        size_hints->max_width  = size_hints->min_width  = w;
-        size_hints->max_height = size_hints->min_height = h;
-        size_hints->flags = PMinSize | PMaxSize;
-        XSetWMNormalHints(display, window, size_hints);
-        XFree(size_hints);
+        XSizeHints size_hints;
+        size_hints.max_width  = size_hints.min_width  = w;
+        size_hints.max_height = size_hints.min_height = h;
+        size_hints.flags = PMinSize | PMaxSize;
+        XSetWMNormalHints(display, window, &size_hints);
 
-        waitForEvent(window, ConfigureNotify);
+        waitForEvent(ConfigureNotify);
 
         glXWaitX();
     }
 
     void show(void) {
-        if (!visible) {
-            XMapWindow(display, window);
-
-            waitForEvent(window, Expose);
-
-            Drawable::show();
+        if (visible) {
+            return;
         }
+
+        glXWaitGL();
+
+        XMapWindow(display, window);
+
+        waitForEvent(MapNotify);
+
+        glXWaitX();
+
+        Drawable::show();
     }
 
     void swapBuffers(void) {
@@ -332,7 +337,6 @@ makeCurrent(Drawable *drawable, Context *context)
 
 bool
 processEvents(void) {
-    XFlush(display);
     while (XPending(display) > 0) {
         XEvent event;
         XNextEvent(display, &event);

@@ -111,8 +111,8 @@ updateDrawable(int width, int height) {
     }
 
     if (drawable->visible &&
-        width  <= glretrace::drawable->width &&
-        height <= glretrace::drawable->height) {
+        width  <= drawable->width &&
+        height <= drawable->height) {
         return;
     }
 
@@ -123,10 +123,9 @@ updateDrawable(int width, int height) {
         return;
     }
 
-    glretrace::drawable->resize(width, height);
-    if (!drawable->visible) {
-        drawable->show();
-    }
+    drawable->resize(width, height);
+    drawable->show();
+
     glScissor(0, 0, width, height);
 }
 

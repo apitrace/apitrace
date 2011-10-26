@@ -184,6 +184,7 @@ static void retrace_wglCreatePbufferARB(Trace::Call &call) {
     glws::Drawable *drawable = glws::createDrawable(glretrace::visual);
 
     drawable->resize(iWidth, iHeight);
+    drawable->show();
 
     pbuffer_map[orig_pbuffer] = drawable;
 }
