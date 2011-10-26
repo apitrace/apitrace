@@ -213,8 +213,8 @@ add_library (common STATIC
     common/trace_model.cpp
     common/trace_parser.cpp
     common/trace_writer.cpp
-    common/trace_local_writer.cpp
-    common/trace_model_writer.cpp
+    common/trace_writer_local.cpp
+    common/trace_writer_model.cpp
     common/trace_loader.cpp
     common/image.cpp
     common/image_bmp.cpp
