@@ -29,7 +29,6 @@
 #include <stdlib.h>
 
 #include "trace_file.hpp"
-#include "trace_snappyfile.hpp"
 #include "trace_parser.hpp"
 
 
@@ -54,9 +53,9 @@ Parser::~Parser() {
 bool Parser::open(const char *filename) {
     assert(!file);
     if (File::isZLibCompressed(filename)) {
-        file = new ZLibFile;
+        file = File::createZLib();
     } else {
-        file = new SnappyFile;
+        file = File::createSnappy();
     }
 
     if (!file->open(filename, File::Read)) {

@@ -31,8 +31,8 @@
 #include <string.h>
 
 #include "os.hpp"
+#include "trace_file.hpp"
 #include "trace_writer.hpp"
-#include "trace_snappyfile.hpp"
 #include "trace_format.hpp"
 
 
@@ -42,7 +42,7 @@ namespace Trace {
 Writer::Writer() :
     call_no(0)
 {
-    m_file = new Trace::SnappyFile;
+    m_file = File::createSnappy();
     close();
 }
 
