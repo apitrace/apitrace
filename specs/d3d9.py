@@ -254,7 +254,7 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "DrawPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "PrimitiveCount"), (OpaquePointer(Const(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     Method(HRESULT, "DrawIndexedPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "MinVertexIndex"), (UINT, "NumVertices"), (UINT, "PrimitiveCount"), (OpaquePointer(Const(Void)), "pIndexData"), (D3DFORMAT, "IndexDataFormat"), (OpaquePointer(Const(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     Method(HRESULT, "ProcessVertices", [(UINT, "SrcStartIndex"), (UINT, "DestIndex"), (UINT, "VertexCount"), (PDIRECT3DVERTEXBUFFER9, "pDestBuffer"), (PDIRECT3DVERTEXDECLARATION9, "pVertexDecl"), (D3DPV, "Flags")]),
-    Method(HRESULT, "CreateVertexDeclaration", [(ConstPointer(D3DVERTEXELEMENT9), "pVertexElements"), Out(Pointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
+    Method(HRESULT, "CreateVertexDeclaration", [(Array(Const(D3DVERTEXELEMENT9), "_declCount(pVertexElements)"), "pVertexElements"), Out(Pointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
     Method(HRESULT, "SetVertexDeclaration", [(PDIRECT3DVERTEXDECLARATION9, "pDecl")]),
     Method(HRESULT, "GetVertexDeclaration", [Out(Pointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
     Method(HRESULT, "SetFVF", [(D3DFVF, "FVF")]),
