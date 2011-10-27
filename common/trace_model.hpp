@@ -38,7 +38,7 @@
 #include <iostream>
 
 
-namespace Trace {
+namespace trace {
 
 
 typedef unsigned Id;
@@ -352,6 +352,6 @@ inline std::ostream & operator <<(std::ostream &os, Call &call) {
 }
 
 
-} /* namespace Trace */
+} /* namespace trace */
 
 #endif /* _TRACE_MODEL_HPP_ */

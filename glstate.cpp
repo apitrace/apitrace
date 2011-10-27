@@ -591,7 +591,7 @@ dumpTextureImage(JSONWriter &json, GLenum target, GLint level)
         json.beginMember("__data__");
         char *pngBuffer;
         int pngBufferSize;
-        Image::writePixelsToBuffer(pixels, width, height, 4, true, &pngBuffer, &pngBufferSize);
+        image::writePixelsToBuffer(pixels, width, height, 4, true, &pngBuffer, &pngBufferSize);
         json.writeBase64(pngBuffer, pngBufferSize);
         free(pngBuffer);
         json.endMember(); // __data__
@@ -844,7 +844,7 @@ getFramebufferAttachmentSize(GLenum target, GLenum attachment, GLint *width, GLi
 }
 
 
-Image::Image *
+image::Image *
 getDrawBufferImage(GLenum format) {
     GLint channels = __gl_format_channels(format);
     if (channels > 4) {
@@ -876,7 +876,7 @@ getDrawBufferImage(GLenum format) {
         }
     }
 
-    Image::Image *image = new Image::Image(width, height, channels, true);
+    image::Image *image = new image::Image(width, height, channels, true);
     if (!image) {
         return NULL;
     }
@@ -949,7 +949,7 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format)
     json.beginMember("__data__");
     char *pngBuffer;
     int pngBufferSize;
-    Image::writePixelsToBuffer(pixels, width, height, channels, true, &pngBuffer, &pngBufferSize);
+    image::writePixelsToBuffer(pixels, width, height, channels, true, &pngBuffer, &pngBufferSize);
     //std::cerr <<" Before = "<<(width * height * channels * sizeof *pixels)
     //          <<", after = "<<pngBufferSize << ", ratio = " << double(width * height * channels * sizeof *pixels)/pngBufferSize;
     json.writeBase64(pngBuffer, pngBufferSize);

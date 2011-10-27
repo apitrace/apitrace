@@ -87,7 +87,7 @@ void
 delRegionByPointer(void *ptr);
 
 void *
-toPointer(Trace::Value &value, bool bind = false);
+toPointer(trace::Value &value, bool bind = false);
 
 
 /**
@@ -96,14 +96,14 @@ toPointer(Trace::Value &value, bool bind = false);
 extern int verbosity;
 
 
-std::ostream &warning(Trace::Call &call);
+std::ostream &warning(trace::Call &call);
 
 
-void ignore(Trace::Call &call);
-void unsupported(Trace::Call &call);
+void ignore(trace::Call &call);
+void unsupported(trace::Call &call);
 
 
-typedef void (*Callback)(Trace::Call &call);
+typedef void (*Callback)(trace::Call &call);
 
 struct Entry {
     const char *name;
@@ -138,7 +138,7 @@ public:
     void addCallback(const Entry *entry);
     void addCallbacks(const Entry *entries);
 
-    void retrace(Trace::Call &call);
+    void retrace(trace::Call &call);
 };
 
 

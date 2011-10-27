@@ -36,7 +36,7 @@
 #include "trace_format.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 static const char *memcpy_args[3] = {"dest", "src", "n"};
@@ -63,12 +63,12 @@ LocalWriter::LocalWriter() :
 {
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
-    OS::SetExceptionCallback(exceptionCallback);
+    os::SetExceptionCallback(exceptionCallback);
 }
 
 LocalWriter::~LocalWriter()
 {
-    OS::ResetExceptionCallback();
+    os::ResetExceptionCallback();
 }
 
 void
@@ -87,8 +87,8 @@ LocalWriter::open(void) {
     else {
         char szProcessName[PATH_MAX];
         char szCurrentDir[PATH_MAX];
-        OS::GetProcessName(szProcessName, PATH_MAX);
-        OS::GetCurrentDir(szCurrentDir, PATH_MAX);
+        os::GetProcessName(szProcessName, PATH_MAX);
+        os::GetCurrentDir(szCurrentDir, PATH_MAX);
 
         for (;;) {
             FILE *file;
@@ -108,7 +108,7 @@ LocalWriter::open(void) {
         }
     }
 
-    OS::DebugMessage("apitrace: tracing to %s\n", szFileName);
+    os::DebugMessage("apitrace: tracing to %s\n", szFileName);
 
     Writer::open(szFileName);
 
@@ -119,7 +119,7 @@ LocalWriter::open(void) {
 }
 
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
-    OS::AcquireMutex();
+    os::AcquireMutex();
     ++acquired;
 
     if (!m_file->isOpened()) {
@@ -132,11 +132,11 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
 void LocalWriter::endEnter(void) {
     Writer::endEnter();
     --acquired;
-    OS::ReleaseMutex();
+    os::ReleaseMutex();
 }
 
 void LocalWriter::beginLeave(unsigned call) {
-    OS::AcquireMutex();
+    os::AcquireMutex();
     ++acquired;
     Writer::beginLeave(call);
 }
@@ -144,7 +144,7 @@ void LocalWriter::beginLeave(unsigned call) {
 void LocalWriter::endLeave(void) {
     Writer::endLeave();
     --acquired;
-    OS::ReleaseMutex();
+    os::ReleaseMutex();
 }
 
 void LocalWriter::flush(void) {
@@ -154,12 +154,12 @@ void LocalWriter::flush(void) {
      */
 
     if (!acquired) {
-        OS::AcquireMutex();
+        os::AcquireMutex();
         if (m_file->isOpened()) {
-            OS::DebugMessage("apitrace: flushing trace due to an exception\n");
+            os::DebugMessage("apitrace: flushing trace due to an exception\n");
             m_file->flush();
         }
-        OS::ReleaseMutex();
+        os::ReleaseMutex();
     }
 }
 
@@ -167,5 +167,5 @@ void LocalWriter::flush(void) {
 LocalWriter localWriter;
 
 
-} /* namespace Trace */
+} /* namespace trace */
 

@@ -31,7 +31,7 @@
 #include <fstream>
 #include <stdint.h>
 
-namespace Trace {
+namespace trace {
 
 class File {
 public:

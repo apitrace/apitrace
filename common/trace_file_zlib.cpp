@@ -38,7 +38,7 @@
 #include <iostream>
 
 
-using namespace Trace;
+using namespace trace;
 
 
 class ZLibFile : public File {

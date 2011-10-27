@@ -7,7 +7,7 @@
 #define FRAMES_TO_CACHE 100
 
 static ApiTraceCall *
-apiCallFromTraceCall(const Trace::Call *call,
+apiCallFromTraceCall(const trace::Call *call,
                      const QHash<QString, QUrl> &helpHash,
                      ApiTraceFrame *frame,
                      TraceLoader *loader)
@@ -74,7 +74,7 @@ void TraceLoader::setFrameMarker(ApiTrace::FrameMarker marker)
     m_frameMarker = marker;
 }
 
-bool TraceLoader::isCallAFrameMarker(const Trace::Call *call) const
+bool TraceLoader::isCallAFrameMarker(const trace::Call *call) const
 {
     std::string name = call->name();
 
@@ -136,8 +136,8 @@ void TraceLoader::scanTrace()
     QList<ApiTraceFrame*> frames;
     ApiTraceFrame *currentFrame = 0;
 
-    Trace::Call *call;
-    Trace::ParseBookmark startBookmark;
+    trace::Call *call;
+    trace::ParseBookmark startBookmark;
     int numOfFrames = 0;
     int numOfCalls = 0;
     int lastPercentReport = 0;
@@ -172,7 +172,7 @@ void TraceLoader::scanTrace()
     }
 
     if (numOfCalls) {
-        //Trace::File::Bookmark endBookmark = m_parser.currentBookmark();
+        //trace::File::Bookmark endBookmark = m_parser.currentBookmark();
         FrameBookmark frameBookmark(startBookmark);
         frameBookmark.numberOfCalls = numOfCalls;
 
@@ -201,7 +201,7 @@ void TraceLoader::parseTrace()
 
     int lastPercentReport = 0;
 
-    Trace::Call *call = m_parser.parse_call();
+    trace::Call *call = m_parser.parse_call();
     while (call) {
         //std::cout << *call;
         if (!currentFrame) {
@@ -290,7 +290,7 @@ void TraceLoader::searchNext(const ApiTrace::SearchRequest &request)
         int startFrame = m_createdFrames.indexOf(request.frame);
         const FrameBookmark &frameBookmark = m_frameBookmarks[startFrame];
         m_parser.setBookmark(frameBookmark.start);
-        Trace::Call *call = 0;
+        trace::Call *call = 0;
         while ((call = m_parser.parse_call())) {
 
             if (callContains(call, request.text, request.cs)) {
@@ -320,8 +320,8 @@ void TraceLoader::searchPrev(const ApiTrace::SearchRequest &request)
     Q_ASSERT(m_parser.supportsOffsets());
     if (m_parser.supportsOffsets()) {
         int startFrame = m_createdFrames.indexOf(request.frame);
-        Trace::Call *call = 0;
-        QList<Trace::Call*> frameCalls;
+        trace::Call *call = 0;
+        QList<trace::Call*> frameCalls;
         int frameIdx = startFrame;
 
         const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
@@ -358,12 +358,12 @@ void TraceLoader::searchPrev(const ApiTrace::SearchRequest &request)
     emit searchResult(request, ApiTrace::SearchResult_NotFound, 0);
 }
 
-bool TraceLoader::searchCallsBackwards(const QList<Trace::Call*> &calls,
+bool TraceLoader::searchCallsBackwards(const QList<trace::Call*> &calls,
                                        int frameIdx,
                                        const ApiTrace::SearchRequest &request)
 {
     for (int i = calls.count() - 1; i >= 0; --i) {
-        Trace::Call *call = calls[i];
+        trace::Call *call = calls[i];
         if (callContains(call, request.text, request.cs)) {
             ApiTraceFrame *frame = m_createdFrames[frameIdx];
             const QVector<ApiTraceCall*> apiCalls =
@@ -399,12 +399,12 @@ int TraceLoader::callInFrame(int callIdx) const
     return 0;
 }
 
-bool TraceLoader::callContains(Trace::Call *call,
+bool TraceLoader::callContains(trace::Call *call,
                                const QString &str,
                                Qt::CaseSensitivity sensitivity)
 {
     /*
-     * FIXME: do string comparison directly on Trace::Call
+     * FIXME: do string comparison directly on trace::Call
      */
     ApiTraceCall *apiCall = apiCallFromTraceCall(call, m_helpHash,
                                                  0, this);
@@ -433,7 +433,7 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
 
             m_parser.setBookmark(frameBookmark.start);
 
-            Trace::Call *call;
+            trace::Call *call;
             int parsedCalls = 0;
             while ((call = m_parser.parse_call())) {
                 ApiTraceCall *apiCall =

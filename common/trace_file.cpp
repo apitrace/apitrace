@@ -36,7 +36,7 @@
 
 #include <iostream>
 
-using namespace Trace;
+using namespace trace;
 
 
 File::File(const std::string &filename,

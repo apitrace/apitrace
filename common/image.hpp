@@ -34,7 +34,7 @@
 #include <fstream>
 
 
-namespace Image {
+namespace image {
 
 
 class Image {
@@ -109,7 +109,7 @@ Image *
 readPNG(const char *filename);
 
 
-} /* namespace Image */
+} /* namespace image */
 
 
 #endif /* _IMAGE_HPP_ */

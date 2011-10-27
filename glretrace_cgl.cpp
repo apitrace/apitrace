@@ -81,7 +81,7 @@ getContext(unsigned long long ctx) {
 }
 
 
-static void retrace_CGLSetCurrentContext(Trace::Call &call) {
+static void retrace_CGLSetCurrentContext(trace::Call &call) {
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
     glws::Drawable *new_drawable = getDrawable(ctx);
@@ -99,7 +99,7 @@ static void retrace_CGLSetCurrentContext(Trace::Call &call) {
 }
 
 
-static void retrace_CGLFlushDrawable(Trace::Call &call) {
+static void retrace_CGLFlushDrawable(trace::Call &call) {
     if (drawable && context) {
         if (double_buffer) {
             drawable->swapBuffers();

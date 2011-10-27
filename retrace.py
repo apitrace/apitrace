@@ -68,7 +68,7 @@ class ValueExtractor(stdapi.Visitor):
         self.visit(bitmask.type, lvalue, rvalue)
 
     def visit_array(self, array, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.tag, rvalue)
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
         print '    if (__a%s) {' % (array.tag)
         length = '__a%s->values.size()' % array.tag
         print '        %s = new %s[%s];' % (lvalue, array.type, length)
@@ -83,7 +83,7 @@ class ValueExtractor(stdapi.Visitor):
             print '    }'
     
     def visit_pointer(self, pointer, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (pointer.tag, rvalue)
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
         print '    if (__a%s) {' % (pointer.tag)
         print '        %s = new %s;' % (lvalue, pointer.type)
         try:
@@ -133,7 +133,7 @@ class ValueWrapper(stdapi.Visitor):
         pass
 
     def visit_array(self, array, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.tag, rvalue)
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
         print '    if (__a%s) {' % (array.tag)
         length = '__a%s->values.size()' % array.tag
         index = '__j' + array.tag
@@ -145,7 +145,7 @@ class ValueWrapper(stdapi.Visitor):
             print '    }'
     
     def visit_pointer(self, pointer, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (pointer.tag, rvalue)
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
         print '    if (__a%s) {' % (pointer.tag)
         try:
             self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.tag,))
@@ -184,7 +184,7 @@ class ValueWrapper(stdapi.Visitor):
 class Retracer:
 
     def retrace_function(self, function):
-        print 'static void retrace_%s(Trace::Call &call) {' % function.name
+        print 'static void retrace_%s(trace::Call &call) {' % function.name
         self.retrace_function_body(function)
         print '}'
         print

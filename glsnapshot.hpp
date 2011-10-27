@@ -30,7 +30,7 @@
 class JSONWriter;
 
 
-namespace Image {
+namespace image {
     class Image;
 }
 
@@ -38,7 +38,7 @@ namespace Image {
 namespace glsnapshot {
 
 
-Image::Image *
+image::Image *
 getDrawableImage(void);
 
 void snapshot(unsigned call_no);

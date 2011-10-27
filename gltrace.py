@@ -238,7 +238,7 @@ class GlTracer(Tracer):
             print '    case GL_%s:' % target
             print '        return & __%s_mapping;' % target.lower()
         print '    default:'
-        print '        OS::DebugMessage("apitrace: warning: unknown buffer target 0x%04X\\n", target);'
+        print '        os::DebugMessage("apitrace: warning: unknown buffer target 0x%04X\\n", target);'
         print '        return NULL;'
         print '    }'
         print '}'
@@ -282,7 +282,7 @@ class GlTracer(Tracer):
         print '            return num_compressed_texture_formats;'
         print '        }'
         print '    default:'
-        print r'        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);'
+        print r'        os::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);'
         print '        return 1;'
         print '    }'
         print '}'
@@ -411,14 +411,14 @@ class GlTracer(Tracer):
 
                     # Emit a fake function
                     print '        {'
-                    print '            static const Trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
-                    print '            unsigned __call = Trace::localWriter.beginEnter(&__sig);'
-                    print '            Trace::localWriter.beginArg(0);'
+                    print '            static const trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
+                    print '            unsigned __call = trace::localWriter.beginEnter(&__sig);'
+                    print '            trace::localWriter.beginArg(0);'
                     dump_instance(glapi.GLenum, enable_name)
-                    print '            Trace::localWriter.endArg();'
-                    print '            Trace::localWriter.endEnter();'
-                    print '            Trace::localWriter.beginLeave(__call);'
-                    print '            Trace::localWriter.endLeave();'
+                    print '            trace::localWriter.endArg();'
+                    print '            trace::localWriter.endEnter();'
+                    print '            trace::localWriter.beginLeave(__call);'
+                    print '            trace::localWriter.endLeave();'
                     print '        }'
 
             print '        return;'
@@ -527,19 +527,19 @@ class GlTracer(Tracer):
         Tracer.dispatch_function(self, function)
 
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned __call = Trace::localWriter.beginEnter(&Trace::memcpy_sig);'
-        print '        Trace::localWriter.beginArg(0);'
-        print '        Trace::localWriter.writeOpaque(%s);' % dest
-        print '        Trace::localWriter.endArg();'
-        print '        Trace::localWriter.beginArg(1);'
-        print '        Trace::localWriter.writeBlob(%s, %s);' % (src, length)
-        print '        Trace::localWriter.endArg();'
-        print '        Trace::localWriter.beginArg(2);'
-        print '        Trace::localWriter.writeUInt(%s);' % length
-        print '        Trace::localWriter.endArg();'
-        print '        Trace::localWriter.endEnter();'
-        print '        Trace::localWriter.beginLeave(__call);'
-        print '        Trace::localWriter.endLeave();'
+        print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
+        print '        trace::localWriter.beginArg(0);'
+        print '        trace::localWriter.writeOpaque(%s);' % dest
+        print '        trace::localWriter.endArg();'
+        print '        trace::localWriter.beginArg(1);'
+        print '        trace::localWriter.writeBlob(%s, %s);' % (src, length)
+        print '        trace::localWriter.endArg();'
+        print '        trace::localWriter.beginArg(2);'
+        print '        trace::localWriter.writeUInt(%s);' % length
+        print '        trace::localWriter.endArg();'
+        print '        trace::localWriter.endEnter();'
+        print '        trace::localWriter.beginLeave(__call);'
+        print '        trace::localWriter.endLeave();'
        
     buffer_targets = [
         'ARRAY_BUFFER',
@@ -631,15 +631,15 @@ class GlTracer(Tracer):
             print '    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
             print '    if (!__element_array_buffer) {'
             if isinstance(arg.type, stdapi.Array):
-                print '        Trace::localWriter.beginArray(%s);' % arg.type.length
+                print '        trace::localWriter.beginArray(%s);' % arg.type.length
                 print '        for(GLsizei i = 0; i < %s; ++i) {' % arg.type.length
-                print '            Trace::localWriter.beginElement();'
-                print '            Trace::localWriter.writeBlob(%s[i], count[i]*__gl_type_size(type));' % (arg.name)
-                print '            Trace::localWriter.endElement();'
+                print '            trace::localWriter.beginElement();'
+                print '            trace::localWriter.writeBlob(%s[i], count[i]*__gl_type_size(type));' % (arg.name)
+                print '            trace::localWriter.endElement();'
                 print '        }'
-                print '        Trace::localWriter.endArray();'
+                print '        trace::localWriter.endArray();'
             else:
-                print '        Trace::localWriter.writeBlob(%s, count*__gl_type_size(type));' % (arg.name)
+                print '        trace::localWriter.writeBlob(%s, count*__gl_type_size(type));' % (arg.name)
             print '    } else {'
             Tracer.dump_arg_instance(self, function, arg)
             print '    }'
@@ -654,7 +654,7 @@ class GlTracer(Tracer):
             print '        GLint __unpack_buffer = 0;'
             print '        __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
             print '        if (__unpack_buffer) {'
-            print '            Trace::localWriter.writeOpaque(%s);' % arg.name
+            print '            trace::localWriter.writeOpaque(%s);' % arg.name
             print '        } else {'
             Tracer.dump_arg_instance(self, function, arg)
             print '        }'
@@ -712,19 +712,19 @@ class GlTracer(Tracer):
 
             # Emit a fake function
             self.array_trace_intermezzo(api, uppercase_name)
-            print '            unsigned __call = Trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
+            print '            unsigned __call = trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
-                print '            Trace::localWriter.beginArg(%u);' % (arg.index,)
+                print '            trace::localWriter.beginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
                     dump_instance(arg.type, arg.name)
                 else:
-                    print '            Trace::localWriter.writeBlob((const void *)%s, __size);' % (arg.name)
-                print '            Trace::localWriter.endArg();'
+                    print '            trace::localWriter.writeBlob((const void *)%s, __size);' % (arg.name)
+                print '            trace::localWriter.endArg();'
             
-            print '            Trace::localWriter.endEnter();'
-            print '            Trace::localWriter.beginLeave(__call);'
-            print '            Trace::localWriter.endLeave();'
+            print '            trace::localWriter.endEnter();'
+            print '            trace::localWriter.beginLeave(__call);'
+            print '            trace::localWriter.endLeave();'
             print '        }'
             print '    }'
             self.array_epilog(api, uppercase_name)
@@ -785,19 +785,19 @@ class GlTracer(Tracer):
             print '                    size_t __size = __%s_size(%s, maxindex);' % (function.name, arg_names)
 
             # Emit a fake function
-            print '                    unsigned __call = Trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
+            print '                    unsigned __call = trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
-                print '                    Trace::localWriter.beginArg(%u);' % (arg.index,)
+                print '                    trace::localWriter.beginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
                     dump_instance(arg.type, arg.name)
                 else:
-                    print '                    Trace::localWriter.writeBlob((const void *)%s, __size);' % (arg.name)
-                print '                    Trace::localWriter.endArg();'
+                    print '                    trace::localWriter.writeBlob((const void *)%s, __size);' % (arg.name)
+                print '                    trace::localWriter.endArg();'
             
-            print '                    Trace::localWriter.endEnter();'
-            print '                    Trace::localWriter.beginLeave(__call);'
-            print '                    Trace::localWriter.endLeave();'
+            print '                    trace::localWriter.endEnter();'
+            print '                    trace::localWriter.beginLeave(__call);'
+            print '                    trace::localWriter.endLeave();'
             print '                }'
             print '            }'
             print '        }'
@@ -853,15 +853,15 @@ class GlTracer(Tracer):
         self.fake_call(function, [texture])
 
     def fake_call(self, function, args):
-        print '            unsigned __fake_call = Trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
+        print '            unsigned __fake_call = trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
         for arg, instance in zip(function.args, args):
             assert not arg.output
-            print '            Trace::localWriter.beginArg(%u);' % (arg.index,)
+            print '            trace::localWriter.beginArg(%u);' % (arg.index,)
             dump_instance(arg.type, instance)
-            print '            Trace::localWriter.endArg();'
-        print '            Trace::localWriter.endEnter();'
-        print '            Trace::localWriter.beginLeave(__fake_call);'
-        print '            Trace::localWriter.endLeave();'
+            print '            trace::localWriter.endArg();'
+        print '            trace::localWriter.endEnter();'
+        print '            trace::localWriter.beginLeave(__fake_call);'
+        print '            trace::localWriter.endLeave();'
 
 
 

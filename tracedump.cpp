@@ -101,14 +101,14 @@ int main(int argc, char **argv)
     }
 
     for (; i < argc; ++i) {
-        Trace::Parser p;
+        trace::Parser p;
 
         if (!p.open(argv[i])) {
             std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
         }
 
-        Trace::Call *call;
+        trace::Call *call;
         while ((call = p.parse_call())) {
             call->dump(std::cout, color);
             delete call;

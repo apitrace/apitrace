@@ -28,7 +28,7 @@
 #include "trace_model.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 Call::~Call() {
@@ -185,23 +185,23 @@ class Dumper : public Visitor
 {
 protected:
     std::ostream &os;
-    Formatter::Formatter *formatter;
-    Formatter::Attribute *normal;
-    Formatter::Attribute *bold;
-    Formatter::Attribute *italic;
-    Formatter::Attribute *red;
-    Formatter::Attribute *pointer;
-    Formatter::Attribute *literal;
+    formatter::Formatter *formatter;
+    formatter::Attribute *normal;
+    formatter::Attribute *bold;
+    formatter::Attribute *italic;
+    formatter::Attribute *red;
+    formatter::Attribute *pointer;
+    formatter::Attribute *literal;
 
 public:
     Dumper(std::ostream &_os, bool color) : os(_os) {
-        formatter = Formatter::defaultFormatter(color);
+        formatter = formatter::defaultFormatter(color);
         normal = formatter->normal();
         bold = formatter->bold();
         italic = formatter->italic();
-        red = formatter->color(Formatter::RED);
-        pointer = formatter->color(Formatter::GREEN);
-        literal = formatter->color(Formatter::BLUE);
+        red = formatter->color(formatter::RED);
+        pointer = formatter->color(formatter::GREEN);
+        literal = formatter->color(formatter::BLUE);
     }
 
     ~Dumper() {
@@ -376,4 +376,4 @@ void Call::dump(std::ostream &os, bool color) {
 }
 
 
-} /* namespace Trace */
+} /* namespace trace */

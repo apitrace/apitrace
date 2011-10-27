@@ -32,7 +32,7 @@
 #include "os.hpp"
 
 
-namespace OS {
+namespace os {
 
 
 /* 
@@ -178,4 +178,4 @@ ResetExceptionCallback(void)
 }
 
 
-} /* namespace OS */
+} /* namespace os */

@@ -142,37 +142,37 @@ apiVariantToString(const QVariant &variant, bool multiLine)
 }
 
 
-void VariantVisitor::visit(Trace::Null *)
+void VariantVisitor::visit(trace::Null *)
 {
     m_variant = QVariant::fromValue(ApiPointer(0));
 }
 
-void VariantVisitor::visit(Trace::Bool *node)
+void VariantVisitor::visit(trace::Bool *node)
 {
     m_variant = QVariant(node->value);
 }
 
-void VariantVisitor::visit(Trace::SInt *node)
+void VariantVisitor::visit(trace::SInt *node)
 {
     m_variant = QVariant(node->value);
 }
 
-void VariantVisitor::visit(Trace::UInt *node)
+void VariantVisitor::visit(trace::UInt *node)
 {
     m_variant = QVariant(node->value);
 }
 
-void VariantVisitor::visit(Trace::Float *node)
+void VariantVisitor::visit(trace::Float *node)
 {
     m_variant = QVariant(node->value);
 }
 
-void VariantVisitor::visit(Trace::String *node)
+void VariantVisitor::visit(trace::String *node)
 {
     m_variant = QVariant(QString::fromStdString(node->value));
 }
 
-void VariantVisitor::visit(Trace::Enum *e)
+void VariantVisitor::visit(trace::Enum *e)
 {
     ApiTraceEnumSignature *sig = 0;
 
@@ -191,28 +191,28 @@ void VariantVisitor::visit(Trace::Enum *e)
     m_variant = QVariant::fromValue(ApiEnum(sig));
 }
 
-void VariantVisitor::visit(Trace::Bitmask *bitmask)
+void VariantVisitor::visit(trace::Bitmask *bitmask)
 {
     m_variant = QVariant::fromValue(ApiBitmask(bitmask));
 }
 
-void VariantVisitor::visit(Trace::Struct *str)
+void VariantVisitor::visit(trace::Struct *str)
 {
     m_variant = QVariant::fromValue(ApiStruct(str));
 }
 
-void VariantVisitor::visit(Trace::Array *array)
+void VariantVisitor::visit(trace::Array *array)
 {
     m_variant = QVariant::fromValue(ApiArray(array));
 }
 
-void VariantVisitor::visit(Trace::Blob *blob)
+void VariantVisitor::visit(trace::Blob *blob)
 {
     QByteArray barray = QByteArray(blob->buf, blob->size);
     m_variant = QVariant(barray);
 }
 
-void VariantVisitor::visit(Trace::Pointer *ptr)
+void VariantVisitor::visit(trace::Pointer *ptr)
 {
     m_variant = QVariant::fromValue(ApiPointer(ptr->value));
 }
@@ -289,19 +289,19 @@ QString ApiPointer::toString() const
         return QLatin1String("NULL");
 }
 
-ApiBitmask::ApiBitmask(const Trace::Bitmask *bitmask)
+ApiBitmask::ApiBitmask(const trace::Bitmask *bitmask)
     : m_value(0)
 {
     init(bitmask);
 }
 
-void ApiBitmask::init(const Trace::Bitmask *bitmask)
+void ApiBitmask::init(const trace::Bitmask *bitmask)
 {
     if (!bitmask)
         return;
 
     m_value = bitmask->value;
-    for (const Trace::BitmaskFlag *it = bitmask->sig->flags;
+    for (const trace::BitmaskFlag *it = bitmask->sig->flags;
          it != bitmask->sig->flags + bitmask->sig->num_flags; ++it) {
         assert(it->value);
         QPair<QString, unsigned long long> pair;
@@ -339,7 +339,7 @@ QString ApiBitmask::toString() const
     return str;
 }
 
-ApiStruct::ApiStruct(const Trace::Struct *s)
+ApiStruct::ApiStruct(const trace::Struct *s)
 {
     init(s);
 }
@@ -361,7 +361,7 @@ QString ApiStruct::toString(bool multiLine) const
     return str;
 }
 
-void ApiStruct::init(const Trace::Struct *s)
+void ApiStruct::init(const trace::Struct *s)
 {
     if (!s)
         return;
@@ -376,7 +376,7 @@ void ApiStruct::init(const Trace::Struct *s)
     }
 }
 
-ApiArray::ApiArray(const Trace::Array *arr)
+ApiArray::ApiArray(const trace::Array *arr)
 {
     init(arr);
 }
@@ -406,7 +406,7 @@ QString ApiArray::toString(bool multiLine) const
     return str;
 }
 
-void ApiArray::init(const Trace::Array *arr)
+void ApiArray::init(const trace::Array *arr)
 {
     if (!arr)
         return;
@@ -610,7 +610,7 @@ void ApiTraceEvent::setState(ApiTraceState *state)
 
 ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
                            TraceLoader *loader,
-                           const Trace::Call *call)
+                           const trace::Call *call)
     : ApiTraceEvent(ApiTraceEvent::Call),
       m_parentFrame(parentFrame)
 {

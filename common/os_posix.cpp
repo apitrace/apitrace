@@ -43,7 +43,7 @@
 #include "os.hpp"
 
 
-namespace OS {
+namespace os {
 
 
 static pthread_mutex_t 
@@ -232,5 +232,5 @@ ResetExceptionCallback(void)
     gCallback = NULL;
 }
 
-} /* namespace OS */
+} /* namespace os */
 

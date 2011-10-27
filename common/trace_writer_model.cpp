@@ -27,7 +27,7 @@
 #include "trace_writer.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 class ModelWriter : public Visitor
@@ -123,5 +123,5 @@ void Writer::writeCall(Call *call) {
 }
 
 
-} /* namespace Trace */
+} /* namespace trace */
 

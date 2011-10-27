@@ -67,7 +67,7 @@
 #define SNAPPY_BYTE2 't'
 
 
-using namespace Trace;
+using namespace trace;
 
 
 class SnappyFile : public File {

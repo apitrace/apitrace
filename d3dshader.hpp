@@ -32,7 +32,7 @@
 
 #include "trace_writer.hpp"
 
-void DumpShader(Trace::Writer &writer, const DWORD *tokens);
+void DumpShader(trace::Writer &writer, const DWORD *tokens);
 
 
 #endif /* _D3DSHADER_HPP_ */

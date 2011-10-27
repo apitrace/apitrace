@@ -31,7 +31,7 @@
 #include "image.hpp"
 
 
-namespace Image {
+namespace image {
 
 
 #pragma pack(push,2)
@@ -136,4 +136,4 @@ Image::writeBMP(const char *filename) const {
 }
 
 
-} /* namespace Image */
+} /* namespace image */

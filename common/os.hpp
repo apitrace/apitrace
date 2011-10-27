@@ -50,7 +50,7 @@
 #define PATH_MAX 1024
 #endif
 
-namespace OS {
+namespace os {
 
 void AcquireMutex(void);
 
@@ -93,6 +93,6 @@ void Abort(void);
 void SetExceptionCallback(void (*callback)(void));
 void ResetExceptionCallback(void);
 
-} /* namespace OS */
+} /* namespace os */
 
 #endif /* _OS_HPP_ */

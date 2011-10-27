@@ -57,13 +57,13 @@ class DumpDeclarator(stdapi.OnceVisitor):
         for type, name,  in struct.members:
             print '        "%s",' % (name,)
         print '    };'
-        print '    static const Trace::StructSig sig = {'
+        print '    static const trace::StructSig sig = {'
         print '       %u, "%s", %u, members' % (struct.id, struct.name, len(struct.members))
         print '    };'
-        print '    Trace::localWriter.beginStruct(&sig);'
+        print '    trace::localWriter.beginStruct(&sig);'
         for type, name in struct.members:
             dump_instance(type, 'value.%s' % (name,))
-        print '    Trace::localWriter.endStruct();'
+        print '    trace::localWriter.endStruct();'
         print '}'
         print
 
@@ -80,9 +80,9 @@ class DumpDeclarator(stdapi.OnceVisitor):
         n = len(enum.values)
         for i in range(n):
             value = enum.values[i]
-            print '    static const Trace::EnumSig sig%u = {%u, "%s", %s};' % (i, DumpDeclarator.__enum_id, value, value)
+            print '    static const trace::EnumSig sig%u = {%u, "%s", %s};' % (i, DumpDeclarator.__enum_id, value, value)
             DumpDeclarator.__enum_id += 1
-        print '    const Trace::EnumSig *sig;'
+        print '    const trace::EnumSig *sig;'
         print '    switch (value) {'
         for i in range(n):
             value = enum.values[i]
@@ -90,20 +90,20 @@ class DumpDeclarator(stdapi.OnceVisitor):
             print '        sig = &sig%u;' % i
             print '        break;'
         print '    default:'
-        print '        Trace::localWriter.writeSInt(value);'
+        print '        trace::localWriter.writeSInt(value);'
         print '        return;'
         print '    }'
-        print '    Trace::localWriter.writeEnum(sig);'
+        print '    trace::localWriter.writeEnum(sig);'
         print '}'
         print
 
     def visit_bitmask(self, bitmask):
-        print 'static const Trace::BitmaskFlag __bitmask%s_flags[] = {' % (bitmask.tag)
+        print 'static const trace::BitmaskFlag __bitmask%s_flags[] = {' % (bitmask.tag)
         for value in bitmask.values:
             print '   {"%s", %s},' % (value, value)
         print '};'
         print
-        print 'static const Trace::BitmaskSig __bitmask%s_sig = {' % (bitmask.tag)
+        print 'static const trace::BitmaskSig __bitmask%s_sig = {' % (bitmask.tag)
         print '   %u, %u, __bitmask%s_flags' % (bitmask.id, len(bitmask.values), bitmask.tag)
         print '};'
         print
@@ -152,13 +152,13 @@ class DumpImplementer(stdapi.Visitor):
     '''Dump an instance.'''
 
     def visit_literal(self, literal, instance):
-        print '    Trace::localWriter.write%s(%s);' % (literal.kind, instance)
+        print '    trace::localWriter.write%s(%s);' % (literal.kind, instance)
 
     def visit_string(self, string, instance):
         if string.length is not None:
-            print '    Trace::localWriter.writeString((const char *)%s, %s);' % (instance, string.length)
+            print '    trace::localWriter.writeString((const char *)%s, %s);' % (instance, string.length)
         else:
-            print '    Trace::localWriter.writeString((const char *)%s);' % instance
+            print '    trace::localWriter.writeString((const char *)%s);' % instance
 
     def visit_const(self, const, instance):
         self.visit(const.type, instance)
@@ -171,35 +171,35 @@ class DumpImplementer(stdapi.Visitor):
         index = '__i' + array.type.tag
         print '    if (%s) {' % instance
         print '        size_t %s = %s;' % (length, array.length)
-        print '        Trace::localWriter.beginArray(%s);' % length
+        print '        trace::localWriter.beginArray(%s);' % length
         print '        for (size_t %s = 0; %s < %s; ++%s) {' % (index, index, length, index)
-        print '            Trace::localWriter.beginElement();'
+        print '            trace::localWriter.beginElement();'
         self.visit(array.type, '(%s)[%s]' % (instance, index))
-        print '            Trace::localWriter.endElement();'
+        print '            trace::localWriter.endElement();'
         print '        }'
-        print '        Trace::localWriter.endArray();'
+        print '        trace::localWriter.endArray();'
         print '    } else {'
-        print '        Trace::localWriter.writeNull();'
+        print '        trace::localWriter.writeNull();'
         print '    }'
 
     def visit_blob(self, blob, instance):
-        print '    Trace::localWriter.writeBlob(%s, %s);' % (instance, blob.size)
+        print '    trace::localWriter.writeBlob(%s, %s);' % (instance, blob.size)
 
     def visit_enum(self, enum, instance):
         print '    _write__%s(%s);' % (enum.tag, instance)
 
     def visit_bitmask(self, bitmask, instance):
-        print '    Trace::localWriter.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.tag, instance)
+        print '    trace::localWriter.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.tag, instance)
 
     def visit_pointer(self, pointer, instance):
         print '    if (%s) {' % instance
-        print '        Trace::localWriter.beginArray(1);'
-        print '        Trace::localWriter.beginElement();'
+        print '        trace::localWriter.beginArray(1);'
+        print '        trace::localWriter.beginElement();'
         dump_instance(pointer.type, "*" + instance)
-        print '        Trace::localWriter.endElement();'
-        print '        Trace::localWriter.endArray();'
+        print '        trace::localWriter.endElement();'
+        print '        trace::localWriter.endArray();'
         print '    } else {'
-        print '        Trace::localWriter.writeNull();'
+        print '        trace::localWriter.writeNull();'
         print '    }'
 
     def visit_handle(self, handle, instance):
@@ -209,10 +209,10 @@ class DumpImplementer(stdapi.Visitor):
         self.visit(alias.type, instance)
 
     def visit_opaque(self, opaque, instance):
-        print '    Trace::localWriter.writeOpaque((const void *)%s);' % instance
+        print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
 
     def visit_interface(self, interface, instance):
-        print '    Trace::localWriter.writeOpaque((const void *)&%s);' % instance
+        print '    trace::localWriter.writeOpaque((const void *)&%s);' % instance
 
     def visit_polymorphic(self, polymorphic, instance):
         print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switch_expr, instance)
@@ -340,7 +340,7 @@ class Tracer:
             print 'static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
         else:
             print 'static const char ** __%s_args = NULL;' % (function.name,)
-        print 'static const Trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
+        print 'static const trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
         print
 
     def is_public_function(self, function):
@@ -362,21 +362,21 @@ class Tracer:
         print
 
     def trace_function_impl_body(self, function):
-        print '    unsigned __call = Trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
+        print '    unsigned __call = trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrap_arg(function, arg)
                 self.dump_arg(function, arg)
-        print '    Trace::localWriter.endEnter();'
+        print '    trace::localWriter.endEnter();'
         self.dispatch_function(function)
-        print '    Trace::localWriter.beginLeave(__call);'
+        print '    trace::localWriter.beginLeave(__call);'
         for arg in function.args:
             if arg.output:
                 self.dump_arg(function, arg)
                 self.wrap_arg(function, arg)
         if function.type is not stdapi.Void:
             self.dump_ret(function, "__result")
-        print '    Trace::localWriter.endLeave();'
+        print '    trace::localWriter.endLeave();'
 
     def dispatch_function(self, function, prefix='__', suffix=''):
         if function.type is stdapi.Void:
@@ -387,9 +387,9 @@ class Tracer:
         print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
 
     def dump_arg(self, function, arg):
-        print '    Trace::localWriter.beginArg(%u);' % (arg.index,)
+        print '    trace::localWriter.beginArg(%u);' % (arg.index,)
         self.dump_arg_instance(function, arg)
-        print '    Trace::localWriter.endArg();'
+        print '    trace::localWriter.endArg();'
 
     def dump_arg_instance(self, function, arg):
         dump_instance(arg.type, arg.name)
@@ -401,9 +401,9 @@ class Tracer:
         unwrap_instance(arg.type, arg.name)
 
     def dump_ret(self, function, instance):
-        print '    Trace::localWriter.beginReturn();'
+        print '    trace::localWriter.beginReturn();'
         dump_instance(function.type, instance)
-        print '    Trace::localWriter.endReturn();'
+        print '    trace::localWriter.endReturn();'
 
     def wrap_ret(self, function, instance):
         wrap_instance(function.type, instance)
@@ -426,11 +426,11 @@ class Tracer:
     def trace_method(self, interface, method):
         print method.prototype(interface_wrap_name(interface) + '::' + method.name) + ' {'
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
-        print '    static const Trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
-        print '    unsigned __call = Trace::localWriter.beginEnter(&__sig);'
-        print '    Trace::localWriter.beginArg(0);'
-        print '    Trace::localWriter.writeOpaque((const void *)m_pInstance);'
-        print '    Trace::localWriter.endArg();'
+        print '    static const trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
+        print '    unsigned __call = trace::localWriter.beginEnter(&__sig);'
+        print '    trace::localWriter.beginArg(0);'
+        print '    trace::localWriter.writeOpaque((const void *)m_pInstance);'
+        print '    trace::localWriter.endArg();'
         for arg in method.args:
             if not arg.output:
                 self.unwrap_arg(method, arg)
@@ -440,19 +440,19 @@ class Tracer:
         else:
             print '    %s __result;' % method.type
             result = '__result = '
-        print '    Trace::localWriter.endEnter();'
+        print '    trace::localWriter.endEnter();'
         print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
-        print '    Trace::localWriter.beginLeave(__call);'
+        print '    trace::localWriter.beginLeave(__call);'
         for arg in method.args:
             if arg.output:
                 self.dump_arg(method, arg)
                 self.wrap_arg(method, arg)
         if method.type is not stdapi.Void:
-            print '    Trace::localWriter.beginReturn();'
+            print '    trace::localWriter.beginReturn();'
             dump_instance(method.type, "__result")
-            print '    Trace::localWriter.endReturn();'
+            print '    trace::localWriter.endReturn();'
             wrap_instance(method.type, '__result')
-        print '    Trace::localWriter.endLeave();'
+        print '    trace::localWriter.endLeave();'
         if method.name == 'QueryInterface':
             print '    if (ppvObj && *ppvObj) {'
             print '        if (*ppvObj == m_pInstance) {'
