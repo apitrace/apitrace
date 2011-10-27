@@ -204,7 +204,7 @@ static void display(void) {
     retracer.addCallbacks(wgl_callbacks);
     retracer.addCallbacks(cgl_callbacks);
 
-    startTime = os::GetTime();
+    startTime = os::getTime();
     trace::Call *call;
 
     while ((call = parser.parse_call())) {
@@ -223,7 +223,7 @@ static void display(void) {
     // Reached the end of trace
     glFlush();
 
-    long long endTime = os::GetTime();
+    long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * 1.0E-6;
 
     if (retrace::verbosity >= -1) { 

@@ -106,8 +106,8 @@ void * __libgl_sym(const char *symbol)
         }
 
         if (!libgl_handle) {
-            os::DebugMessage("apitrace: error: couldn't load %s\n", libgl_filename);
-            os::Abort();
+            os::log("apitrace: error: couldn't load %s\n", libgl_filename);
+            os::abort();
             return NULL;
         }
     }
@@ -115,8 +115,8 @@ void * __libgl_sym(const char *symbol)
     result = dlsym(libgl_handle, symbol);
 
     if (result == dlsym(RTLD_SELF, symbol)) {
-        os::DebugMessage("apitrace: error: symbol lookup recursion\n");
-        os::Abort();
+        os::log("apitrace: error: symbol lookup recursion\n");
+        os::abort();
         return NULL;
     }
 

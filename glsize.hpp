@@ -64,7 +64,7 @@ __gl_type_size(GLenum type)
     case GL_DOUBLE:
         return 8;
     default:
-        os::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         return 0;
     }
 }
@@ -268,7 +268,7 @@ __gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
         numElems = 1;
         break;
     default:
-        os::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         elemType = GL_NONE;
         numElems = 0;
         return;
@@ -360,7 +360,7 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
             }
         }
     } else {
-        os::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
     }
 
     if (__element_array_buffer) {
@@ -396,13 +396,13 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
 
 static inline GLuint
 __glDrawArraysIndirect_maxindex(const GLvoid *indirect) {
-    os::DebugMessage("apitrace: warning: %s: unsupported\n", __FUNCTION__);
+    os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
     return 0;
 }
 
 static inline GLuint
 __glDrawElementsIndirect_maxindex(GLenum type, const GLvoid *indirect) {
-    os::DebugMessage("apitrace: warning: %s: unsupported\n", __FUNCTION__);
+    os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
     return 0;
 }
 
@@ -476,7 +476,7 @@ __glMap1d_size(GLenum target, GLint stride, GLint order)
         channels = 4;
         break;
     default:
-        os::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
         return 0;
     }
 
@@ -516,7 +516,7 @@ __glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint 
         channels = 4;
         break;
     default:
-        os::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
         return 0;
     }
 
@@ -563,7 +563,7 @@ __gl_format_channels(GLenum format) {
     case GL_CMYKA_EXT:
         return 5;
     default:
-        os::DebugMessage("apitrace: warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
+        os::log("apitrace: warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
         return 0;
     }
 }
@@ -632,7 +632,7 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
         bits_per_pixel = 64;
         break;
     default:
-        os::DebugMessage("apitrace: warning: %s: unexpected type GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unexpected type GLenum 0x%04X\n", __FUNCTION__, type);
         bits_per_pixel = 0;
         break;
     }
@@ -734,7 +734,7 @@ __glClearBuffer_size(GLenum buffer)
     case GL_STENCIL:
         return 1;
     default:
-        os::DebugMessage("apitrace: warning: %s: unexpected buffer GLenum 0x%04X\n", __FUNCTION__, buffer);
+        os::log("apitrace: warning: %s: unexpected buffer GLenum 0x%04X\n", __FUNCTION__, buffer);
         return 0;
     }
 }

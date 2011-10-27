@@ -53,7 +53,7 @@ class WglTracer(GlTracer):
                 print '    %s = (%s)&%s;' % (instance, function.type, f.name);
         
             def handle_default():
-                print '    os::DebugMessage("apitrace: warning: unknown function \\"%s\\"\\n", lpszProc);'
+                print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", lpszProc);'
 
             string_switch('lpszProc', func_dict.keys(), handle_case, handle_default)
             print '    }'

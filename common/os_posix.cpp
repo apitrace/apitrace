@@ -51,21 +51,21 @@ mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 void
-AcquireMutex(void)
+acquireMutex(void)
 {
     pthread_mutex_lock(&mutex);
 }
 
 
 void
-ReleaseMutex(void)
+releaseMutex(void)
 {
     pthread_mutex_unlock(&mutex);
 }
 
 
 bool
-GetProcessName(char *str, size_t size)
+getProcessName(char *str, size_t size)
 {
     char szProcessPath[PATH_MAX + 1];
     char *lpProcessName;
@@ -107,7 +107,7 @@ GetProcessName(char *str, size_t size)
 }
 
 bool
-GetCurrentDir(char *str, size_t size)
+getCurrentDir(char *str, size_t size)
 {
     char *ret;
     ret = getcwd(str, size);
@@ -116,7 +116,7 @@ GetCurrentDir(char *str, size_t size)
 }
 
 void
-DebugMessage(const char *format, ...)
+log(const char *format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -125,7 +125,8 @@ DebugMessage(const char *format, ...)
     va_end(ap);
 }
 
-long long GetTime(void)
+long long
+getTime(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -133,7 +134,7 @@ long long GetTime(void)
 }
 
 void
-Abort(void)
+abort(void)
 {
     exit(0);
 }
@@ -151,14 +152,15 @@ struct sigaction old_actions[NUM_SIGNALS];
  * - http://sourceware.org/git/?p=glibc.git;a=blob;f=debug/segfault.c
  * - http://ggi.cvs.sourceforge.net/viewvc/ggi/ggi-core/libgg/gg/cleanup.c?view=markup
  */
-static void signal_handler(int sig, siginfo_t *info, void *context)
+static void
+signalHandler(int sig, siginfo_t *info, void *context)
 {
     static int recursion_count = 0;
 
-    fprintf(stderr, "signal_handler: sig = %i\n", sig);
+    fprintf(stderr, "apitrace: warning: caught signal %i\n", sig);
 
     if (recursion_count) {
-        fprintf(stderr, "recursion with sig %i\n", sig);
+        fprintf(stderr, "apitrace: warning: recursion handling signal %i\n", sig);
     } else {
         if (gCallback) {
             ++recursion_count;
@@ -170,7 +172,7 @@ static void signal_handler(int sig, siginfo_t *info, void *context)
     struct sigaction *old_action;
     if (sig >= NUM_SIGNALS) {
         /* This should never happen */
-        fprintf(stderr, "Unexpected signal %i\n", sig);
+        fprintf(stderr, "error: unexpected signal %i\n", sig);
         raise(SIGKILL);
     }
     old_action = &old_actions[sig];
@@ -180,7 +182,7 @@ static void signal_handler(int sig, siginfo_t *info, void *context)
         old_action->sa_sigaction(sig, info, context);
     } else {
         if (old_action->sa_handler == SIG_DFL) {
-            fprintf(stderr, "taking default action for signal %i\n", sig);
+            fprintf(stderr, "apitrace: info: taking default action for signal %i\n", sig);
 
 #if 1
             struct sigaction dfl_action;
@@ -203,14 +205,14 @@ static void signal_handler(int sig, siginfo_t *info, void *context)
 }
 
 void
-SetExceptionCallback(void (*callback)(void))
+setExceptionCallback(void (*callback)(void))
 {
     assert(!gCallback);
     if (!gCallback) {
         gCallback = callback;
 
         struct sigaction new_action;
-        new_action.sa_sigaction = signal_handler;
+        new_action.sa_sigaction = signalHandler;
         sigemptyset(&new_action.sa_mask);
         new_action.sa_flags = SA_SIGINFO | SA_RESTART;
 
@@ -227,7 +229,7 @@ SetExceptionCallback(void (*callback)(void))
 }
 
 void
-ResetExceptionCallback(void)
+resetExceptionCallback(void)
 {
     gCallback = NULL;
 }

@@ -160,7 +160,7 @@ getDrawableImage(void) {
             }
         }
     } else {
-        os::DebugMessage("apitrace: unexpected XImage: "
+        os::log("apitrace: unexpected XImage: "
                          "bits_per_pixel = %i, "
                          "depth = %i, "
                          "red_mask = 0x%08lx, "
@@ -208,7 +208,7 @@ void snapshot(unsigned call_no) {
             char filename[PATH_MAX];
             snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
             if (src->writePNG(filename)) {
-                os::DebugMessage("apitrace: wrote %s\n", filename);
+                os::log("apitrace: wrote %s\n", filename);
             }
 
             delete src;

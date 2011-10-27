@@ -63,12 +63,12 @@ LocalWriter::LocalWriter() :
 {
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
-    os::SetExceptionCallback(exceptionCallback);
+    os::setExceptionCallback(exceptionCallback);
 }
 
 LocalWriter::~LocalWriter()
 {
-    os::ResetExceptionCallback();
+    os::resetExceptionCallback();
 }
 
 void
@@ -87,8 +87,8 @@ LocalWriter::open(void) {
     else {
         char szProcessName[PATH_MAX];
         char szCurrentDir[PATH_MAX];
-        os::GetProcessName(szProcessName, PATH_MAX);
-        os::GetCurrentDir(szCurrentDir, PATH_MAX);
+        os::getProcessName(szProcessName, PATH_MAX);
+        os::getCurrentDir(szCurrentDir, PATH_MAX);
 
         for (;;) {
             FILE *file;
@@ -108,7 +108,7 @@ LocalWriter::open(void) {
         }
     }
 
-    os::DebugMessage("apitrace: tracing to %s\n", szFileName);
+    os::log("apitrace: tracing to %s\n", szFileName);
 
     Writer::open(szFileName);
 
@@ -119,7 +119,7 @@ LocalWriter::open(void) {
 }
 
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
-    os::AcquireMutex();
+    os::acquireMutex();
     ++acquired;
 
     if (!m_file->isOpened()) {
@@ -132,11 +132,11 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
 void LocalWriter::endEnter(void) {
     Writer::endEnter();
     --acquired;
-    os::ReleaseMutex();
+    os::releaseMutex();
 }
 
 void LocalWriter::beginLeave(unsigned call) {
-    os::AcquireMutex();
+    os::acquireMutex();
     ++acquired;
     Writer::beginLeave(call);
 }
@@ -144,7 +144,7 @@ void LocalWriter::beginLeave(unsigned call) {
 void LocalWriter::endLeave(void) {
     Writer::endLeave();
     --acquired;
-    os::ReleaseMutex();
+    os::releaseMutex();
 }
 
 void LocalWriter::flush(void) {
@@ -154,12 +154,12 @@ void LocalWriter::flush(void) {
      */
 
     if (!acquired) {
-        os::AcquireMutex();
+        os::acquireMutex();
         if (m_file->isOpened()) {
-            os::DebugMessage("apitrace: flushing trace due to an exception\n");
+            os::log("apitrace: flushing trace due to an exception\n");
             m_file->flush();
         }
-        os::ReleaseMutex();
+        os::releaseMutex();
     }
 }
 

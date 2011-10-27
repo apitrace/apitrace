@@ -105,7 +105,7 @@ if __name__ == '__main__':
         print '        %s = (%s)procPtr;' % (pvalue, ptype)
         print '        return (__GLXextFuncPtr)&%s;' % (f.name,)
         print '    }'
-    print '    os::DebugMessage("apitrace: warning: unknown function \\"%s\\"\\n", (const char *)procName);'
+    print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", (const char *)procName);'
     print '    return procPtr;'
     print '}'
     print
@@ -129,7 +129,7 @@ static void *__dlopen(const char *filename, int flag)
     if (!dlopen_ptr) {
         dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
         if (!dlopen_ptr) {
-            os::DebugMessage("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
+            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
             return NULL;
         }
     }
@@ -155,7 +155,7 @@ void * dlopen(const char *filename, int flag)
 
     if (filename && handle && !libgl_filename) {
         if (0) {
-            os::DebugMessage("apitrace: warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
+            os::log("apitrace: warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
         }
 
         // FIXME: handle absolute paths and other versions
@@ -169,10 +169,10 @@ void * dlopen(const char *filename, int flag)
             static int dummy = 0xdeedbeef;
             Dl_info info;
             if (dladdr(&dummy, &info)) {
-                os::DebugMessage("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
+                os::log("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
                 handle = __dlopen(info.dli_fname, flag);
             } else {
-                os::DebugMessage("apitrace: warning: dladdr() failed\n");
+                os::log("apitrace: warning: dladdr() failed\n");
             }
         }
     }
@@ -219,7 +219,7 @@ void * __libgl_sym(const char *symbol)
 
         libgl_handle = __dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
         if (!libgl_handle) {
-            os::DebugMessage("apitrace: error: couldn't find libGL.so\n");
+            os::log("apitrace: error: couldn't find libGL.so\n");
             return NULL;
         }
     }
