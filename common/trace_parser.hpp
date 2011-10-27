@@ -35,7 +35,7 @@
 #include "trace_model.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 struct ParseBookmark
@@ -192,6 +192,6 @@ protected:
 };
 
 
-} /* namespace Trace */
+} /* namespace trace */
 
 #endif /* _TRACE_PARSER_HPP_ */

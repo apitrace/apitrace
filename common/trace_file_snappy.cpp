@@ -24,17 +24,6 @@
  **************************************************************************/
 
 
-#include "trace_snappyfile.hpp"
-
-#include <snappy.h>
-
-#include <iostream>
-
-#include <assert.h>
-#include <string.h>
-
-using namespace Trace;
-
 /*
  * Snappy file format.
  * -------------------
@@ -60,6 +49,81 @@ using namespace Trace;
  * but that might change.
  *
  */
+
+
+#include <snappy.h>
+
+#include <iostream>
+
+#include <assert.h>
+#include <string.h>
+
+#include "trace_file.hpp"
+
+
+#define SNAPPY_CHUNK_SIZE (1 * 1024 * 1024)
+
+#define SNAPPY_BYTE1 'a'
+#define SNAPPY_BYTE2 't'
+
+
+using namespace trace;
+
+
+class SnappyFile : public File {
+public:
+    SnappyFile(const std::string &filename = std::string(),
+               File::Mode mode = File::Read);
+    virtual ~SnappyFile();
+
+    virtual bool supportsOffsets() const;
+    virtual File::Offset currentOffset();
+    virtual void setCurrentOffset(const File::Offset &offset);
+protected:
+    virtual bool rawOpen(const std::string &filename, File::Mode mode);
+    virtual bool rawWrite(const void *buffer, size_t length);
+    virtual bool rawRead(void *buffer, size_t length);
+    virtual int rawGetc();
+    virtual void rawClose();
+    virtual void rawFlush();
+    virtual bool rawSkip(size_t length);
+    virtual int rawPercentRead();
+
+private:
+    inline size_t usedCacheSize() const
+    {
+        assert(m_cachePtr >= m_cache);
+        return m_cachePtr - m_cache;
+    }
+    inline size_t freeCacheSize() const
+    {
+        assert(m_cacheSize >= usedCacheSize());
+        if (m_cacheSize > 0) {
+            return m_cacheSize - usedCacheSize();
+        } else {
+            return 0;
+        }
+    }
+    inline bool endOfData() const
+    {
+        return m_stream.eof() && freeCacheSize() == 0;
+    }
+    void flushWriteCache();
+    void flushReadCache(size_t skipLength = 0);
+    void createCache(size_t size);
+    void writeCompressedLength(size_t length);
+    size_t readCompressedLength();
+private:
+    std::fstream m_stream;
+    char *m_cache;
+    char *m_cachePtr;
+    size_t m_cacheSize;
+
+    char *m_compressedCache;
+
+    File::Offset m_currentOffset;
+    std::streampos m_endPos;
+};
 
 SnappyFile::SnappyFile(const std::string &filename,
                               File::Mode mode)
@@ -335,4 +399,24 @@ bool SnappyFile::rawSkip(size_t length)
 int SnappyFile::rawPercentRead()
 {
     return 100 * (double(m_stream.tellg()) / double(m_endPos));
+}
+
+
+File* File::createSnappy(void) {
+    return new SnappyFile;
+}
+
+bool File::isSnappyCompressed(const std::string &filename)
+{
+    std::fstream stream(filename.c_str(),
+                        std::fstream::binary | std::fstream::in);
+    if (!stream.is_open())
+        return false;
+
+    unsigned char byte1, byte2;
+    stream >> byte1;
+    stream >> byte2;
+    stream.close();
+
+    return (byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
 }

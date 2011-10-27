@@ -42,7 +42,7 @@
 #include "trace_format.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 static const char *memcpy_args[3] = {"dest", "src", "n"};
@@ -69,12 +69,12 @@ LocalWriter::LocalWriter() :
 {
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
-    OS::SetExceptionCallback(exceptionCallback);
+    os::setExceptionCallback(exceptionCallback);
 }
 
 LocalWriter::~LocalWriter()
 {
-    OS::ResetExceptionCallback();
+    os::resetExceptionCallback();
 }
 
 void
@@ -93,8 +93,8 @@ LocalWriter::open(void) {
     else {
         char szProcessName[PATH_MAX];
         char szCurrentDir[PATH_MAX];
-        OS::GetProcessName(szProcessName, PATH_MAX);
-        OS::GetCurrentDir(szCurrentDir, PATH_MAX);
+        os::getProcessName(szProcessName, PATH_MAX);
+        os::getCurrentDir(szCurrentDir, PATH_MAX);
 
         for (;;) {
             FILE *file;
@@ -114,7 +114,7 @@ LocalWriter::open(void) {
         }
     }
 
-    OS::DebugMessage("apitrace: tracing to %s\n", szFileName);
+    os::log("apitrace: tracing to %s\n", szFileName);
 
     Writer::open(szFileName);
 
@@ -125,7 +125,7 @@ LocalWriter::open(void) {
 }
 
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
-    OS::AcquireMutex();
+    os::acquireMutex();
     ++acquired;
 
     if (!m_file->isOpened()) {
@@ -138,11 +138,11 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
 void LocalWriter::endEnter(void) {
     Writer::endEnter();
     --acquired;
-    OS::ReleaseMutex();
+    os::releaseMutex();
 }
 
 void LocalWriter::beginLeave(unsigned call) {
-    OS::AcquireMutex();
+    os::acquireMutex();
     ++acquired;
     Writer::beginLeave(call);
 }
@@ -150,7 +150,7 @@ void LocalWriter::beginLeave(unsigned call) {
 void LocalWriter::endLeave(void) {
     Writer::endLeave();
     --acquired;
-    OS::ReleaseMutex();
+    os::releaseMutex();
 }
 
 void LocalWriter::flush(void) {
@@ -160,12 +160,12 @@ void LocalWriter::flush(void) {
      */
 
     if (!acquired) {
-        OS::AcquireMutex();
+        os::acquireMutex();
         if (m_file->isOpened()) {
-            OS::DebugMessage("apitrace: flushing trace due to an exception\n");
+            os::log("apitrace: flushing trace due to an exception\n");
             m_file->flush();
         }
-        OS::ReleaseMutex();
+        os::releaseMutex();
     }
 }
 
@@ -189,15 +189,15 @@ static RegionInfoList regionInfoList;
 
 
 static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
-    OS::MemoryInfo info;
+    os::MemoryInfo info;
 
-    if (!OS::queryVirtualAddress(ptr, &info)) {
-        OS::DebugMessage("apitrace: warning: failed to query virtual address %p\n", ptr);
+    if (!os::queryVirtualAddress(ptr, &info)) {
+        os::log("apitrace: warning: failed to query virtual address %p\n", ptr);
         return NULL;
     }
 
     if (0) {
-        OS::DebugMessage("apitrace: %p => %p..%p\n", ptr, info.start, info.stop);
+        os::log("apitrace: %p => %p..%p\n", ptr, info.start, info.stop);
     }
 
     for (RegionInfoList::iterator it = regionInfoList.begin(); it != regionInfoList.end(); ) {
@@ -208,7 +208,7 @@ static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
             if (info.start == start && info.stop == stop) {
                 return &*it;
             } else {
-                OS::DebugMessage("apitrace: warning: range %p-%p changed to %p-%p\n", start, stop, info.start, info.stop);
+                os::log("apitrace: warning: range %p-%p changed to %p-%p\n", start, stop, info.start, info.stop);
                 // XXX: Emit a realloc
                 it = regionInfoList.erase(it);
             }
@@ -244,19 +244,19 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
         return;
     }
 
-    OS::AcquireMutex();
+    os::acquireMutex();
 
     RegionInfo * regionInfo = lookupRegionInfo(*this, ptr);
 
     if (!regionInfo || !size) {
-        OS::ReleaseMutex();
+        os::releaseMutex();
         return;
     }
 
     if ((char *)ptr + size > regionInfo->start + regionInfo->size) {
-        OS::DebugMessage("apitrace: warning: range %p-%p exceeds region %p-%p\n", 
-                         ptr, (char *)ptr + size,
-                         regionInfo->start, regionInfo->start + regionInfo->size);
+        os::log("apitrace: warning: range %p-%p exceeds region %p-%p\n", 
+                ptr, (char *)ptr + size,
+                regionInfo->start, regionInfo->start + regionInfo->size);
 
     }
 
@@ -291,7 +291,7 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
     range::range_set<size_t> copy(update);
 
     if (0) {
-        OS::DebugMessage("  %p..%p\n", ptr, (const char *)ptr + size);
+        os::log("  %p..%p\n", ptr, (const char *)ptr + size);
     }
 
     // Go through the all ranges that intersect the update range, checking for redundancy,
@@ -304,7 +304,7 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
             crc = crc32(crc, p, length);
 
             if (0) {
-                OS::DebugMessage("    %p+0x%04lx: %08lx %s %08lx\n",
+                os::log("    %p+0x%04lx: %08lx %s %08lx\n",
                     p, (unsigned long)length,
                     it->crc, it->crc == crc ? "==" : "->", crc);
             }
@@ -352,12 +352,12 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
 
 #endif
 
-    OS::ReleaseMutex();
+    os::releaseMutex();
 }
 
 
 LocalWriter localWriter;
 
 
-} /* namespace Trace */
+} /* namespace trace */
 

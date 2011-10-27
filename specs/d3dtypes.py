@@ -664,8 +664,8 @@ D3DSTATE = Struct("D3DSTATE", [
     (D3DTRANSFORMSTATETYPE, "dtstTransformStateType"),
     (D3DLIGHTSTATETYPE, "dlstLightStateType"),
     (D3DRENDERSTATETYPE, "drstRenderStateType"),
-    (Array(DWORD, "1"), "dwArg"),
-    (Array(D3DVALUE, "1"), "dvArg"),
+    (Array(DWORD, 1), "dwArg"),
+    (Array(D3DVALUE, 1), "dvArg"),
 ])
 
 D3DMATRIXLOAD = Struct("D3DMATRIXLOAD", [

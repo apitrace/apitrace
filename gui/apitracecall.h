@@ -14,24 +14,24 @@
 class ApiTrace;
 class TraceLoader;
 
-class VariantVisitor : public Trace::Visitor
+class VariantVisitor : public trace::Visitor
 {
 public:
     VariantVisitor(TraceLoader *loader)
         : m_loader(loader)
     {}
-    virtual void visit(Trace::Null *);
-    virtual void visit(Trace::Bool *node);
-    virtual void visit(Trace::SInt *node);
-    virtual void visit(Trace::UInt *node);
-    virtual void visit(Trace::Float *node);
-    virtual void visit(Trace::String *node);
-    virtual void visit(Trace::Enum *e);
-    virtual void visit(Trace::Bitmask *bitmask);
-    virtual void visit(Trace::Struct *str);
-    virtual void visit(Trace::Array *array);
-    virtual void visit(Trace::Blob *blob);
-    virtual void visit(Trace::Pointer *ptr);
+    virtual void visit(trace::Null *);
+    virtual void visit(trace::Bool *node);
+    virtual void visit(trace::SInt *node);
+    virtual void visit(trace::UInt *node);
+    virtual void visit(trace::Float *node);
+    virtual void visit(trace::String *node);
+    virtual void visit(trace::Enum *e);
+    virtual void visit(trace::Bitmask *bitmask);
+    virtual void visit(trace::Struct *str);
+    virtual void visit(trace::Array *array);
+    virtual void visit(trace::Blob *blob);
+    virtual void visit(trace::Pointer *ptr);
 
     QVariant variant() const
     {
@@ -99,7 +99,7 @@ class ApiBitmask
 public:
     typedef QList<QPair<QString, unsigned long long> > Signature;
 
-    ApiBitmask(const Trace::Bitmask *bitmask = 0);
+    ApiBitmask(const trace::Bitmask *bitmask = 0);
 
     QString toString() const;
 
@@ -107,7 +107,7 @@ public:
     Signature signature() const;
 
 private:
-    void init(const Trace::Bitmask *bitmask);
+    void init(const trace::Bitmask *bitmask);
 private:
     Signature m_sig;
     unsigned long long m_value;
@@ -122,14 +122,14 @@ public:
         QStringList memberNames;
     };
 
-    ApiStruct(const Trace::Struct *s = 0);
+    ApiStruct(const trace::Struct *s = 0);
 
     QString toString(bool multiLine = false) const;
     Signature signature() const;
     QList<QVariant> values() const;
 
 private:
-    void init(const Trace::Struct *bitmask);
+    void init(const trace::Struct *bitmask);
 private:
     Signature m_sig;
     QList<QVariant> m_members;
@@ -139,14 +139,14 @@ Q_DECLARE_METATYPE(ApiStruct);
 class ApiArray
 {
 public:
-    ApiArray(const Trace::Array *arr = 0);
+    ApiArray(const trace::Array *arr = 0);
     ApiArray(const QVector<QVariant> &vals);
 
     QString toString(bool multiLine = false) const;
 
     QVector<QVariant> values() const;
 private:
-    void init(const Trace::Array *arr);
+    void init(const trace::Array *arr);
 private:
     QVector<QVariant> m_array;
 };
@@ -244,7 +244,7 @@ class ApiTraceCall : public ApiTraceEvent
 {
 public:
     ApiTraceCall(ApiTraceFrame *parentFrame, TraceLoader *loader,
-                 const Trace::Call *tcall);
+                 const trace::Call *tcall);
     ~ApiTraceCall();
 
     int index() const;

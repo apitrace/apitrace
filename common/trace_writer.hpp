@@ -38,7 +38,7 @@
 #include "trace_model.hpp"
 
 
-namespace Trace {
+namespace trace {
     class File;
 
     class Writer {

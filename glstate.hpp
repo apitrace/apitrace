@@ -35,7 +35,7 @@
 class JSONWriter;
 
 
-namespace Image {
+namespace image {
     class Image;
 }
 
@@ -51,7 +51,7 @@ void dumpParameters(JSONWriter &json);
 
 void dumpCurrentContext(std::ostream &os);
 
-Image::Image *
+image::Image *
 getDrawBufferImage(GLenum format);
 
 

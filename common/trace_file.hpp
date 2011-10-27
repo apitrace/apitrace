@@ -31,7 +31,7 @@
 #include <fstream>
 #include <stdint.h>
 
-namespace Trace {
+namespace trace {
 
 class File {
 public:
@@ -51,6 +51,8 @@ public:
 public:
     static bool isZLibCompressed(const std::string &filename);
     static bool isSnappyCompressed(const std::string &filename);
+    static File *createZLib(void);
+    static File *createSnappy(void);
 public:
     File(const std::string &filename = std::string(),
          File::Mode mode = File::Read);
@@ -162,28 +164,6 @@ inline bool File::skip(size_t length)
     return rawSkip(length);
 }
 
-class ZLibFile : public File {
-public:
-    ZLibFile(const std::string &filename = std::string(),
-             File::Mode mode = File::Read);
-    virtual ~ZLibFile();
-
-
-    virtual bool supportsOffsets() const;
-    virtual File::Offset currentOffset();
-protected:
-    virtual bool rawOpen(const std::string &filename, File::Mode mode);
-    virtual bool rawWrite(const void *buffer, size_t length);
-    virtual bool rawRead(void *buffer, size_t length);
-    virtual int rawGetc();
-    virtual void rawClose();
-    virtual void rawFlush();
-    virtual bool rawSkip(size_t length);
-    virtual int  rawPercentRead();
-private:
-    void *m_gzFile;
-    double m_endOffset;
-};
 
 inline bool
 operator<(const File::Offset &one, const File::Offset &two)

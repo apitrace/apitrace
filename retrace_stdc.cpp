@@ -153,22 +153,22 @@ lookupAddress(unsigned long long address) {
 }
 
 
-class Translator : protected Trace::Visitor
+class Translator : protected trace::Visitor
 {
 protected:
     bool bind;
 
     void *result;
 
-    void visit(Trace::Null *) {
+    void visit(trace::Null *) {
         result = NULL;
     }
 
-    void visit(Trace::Blob *blob) {
+    void visit(trace::Blob *blob) {
         result = blob->toPointer(bind);
     }
 
-    void visit(Trace::Pointer *p) {
+    void visit(trace::Pointer *p) {
         result = lookupAddress(p->value);
     }
 
@@ -178,7 +178,7 @@ public:
         result(NULL)
     {}
 
-    void * operator() (Trace::Value *node) {
+    void * operator() (trace::Value *node) {
         _visit(node);
         return result;
     }
@@ -186,12 +186,12 @@ public:
 
 
 void *
-toPointer(Trace::Value &value, bool bind) {
+toPointer(trace::Value &value, bool bind) {
     return Translator(bind) (&value);
 }
 
 
-static void retrace_malloc(Trace::Call &call) {
+static void retrace_malloc(trace::Call &call) {
     size_t size = call.arg(0).toUInt();
     unsigned long long address = call.ret->toUIntPtr();
 
@@ -209,7 +209,7 @@ static void retrace_malloc(Trace::Call &call) {
 }
 
 
-static void retrace_memcpy(Trace::Call &call) {
+static void retrace_memcpy(trace::Call &call) {
     void * dest = toPointer(call.arg(0));
     void * src  = toPointer(call.arg(1));
     size_t n    = call.arg(2).toUInt();

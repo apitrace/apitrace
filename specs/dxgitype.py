@@ -34,7 +34,7 @@ DXGI_RGB = Struct("DXGI_RGB", [
 DXGI_GAMMA_CONTROL = Struct("DXGI_GAMMA_CONTROL", [
     (DXGI_RGB, "Scale"),
     (DXGI_RGB, "Offset"),
-    (Array(DXGI_RGB, "1025"), "GammaCurve"),
+    (Array(DXGI_RGB, 1025), "GammaCurve"),
 ])
 
 DXGI_GAMMA_CONTROL_CAPABILITIES = Struct("DXGI_GAMMA_CONTROL_CAPABILITIES", [
@@ -42,7 +42,7 @@ DXGI_GAMMA_CONTROL_CAPABILITIES = Struct("DXGI_GAMMA_CONTROL_CAPABILITIES", [
     (Float, "MaxConvertedValue"),
     (Float, "MinConvertedValue"),
     (UINT, "NumGammaControlPoints"),
-    (Array(Float, "1025"), "ControlPointPositions"),
+    (Array(Float, 1025), "ControlPointPositions"),
 ])
 
 DXGI_RATIONAL = Struct("DXGI_RATIONAL", [

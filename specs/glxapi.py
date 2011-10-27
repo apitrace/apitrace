@@ -35,6 +35,7 @@ Visual = Opaque("Visual *")
 Font = Alias("Font", UInt32)
 Pixmap = Alias("Pixmap", UInt32)
 Window = Alias("Window", UInt32)
+Colormap = Alias("Colormap", UInt32)
 
 GLXContext = Opaque("GLXContext")
 GLXPixmap = Alias("GLXPixmap", UInt32)
@@ -374,7 +375,7 @@ glxapi.add_functions([
     Function(Void, "glXCopySubBufferMESA", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int, "x"), (Int, "y"), (Int, "width"), (Int, "height")]),
 
     # GLX_MESA_pixmap_colormap
-    #Function(GLXPixmap, "glXCreateGLXPixmapMESA", [(Display, "dpy"), (OpaquePointer(XVisualInfo), "visual"), (Pixmap, "pixmap"), (Colormap, "cmap")]),
+    Function(GLXPixmap, "glXCreateGLXPixmapMESA", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"), (Pixmap, "pixmap"), (Colormap, "cmap")]),
 
     # GLX_MESA_release_buffers
     Function(Bool, "glXReleaseBuffersMESA", [(Display, "dpy"), (GLXDrawable, "drawable")]),

@@ -37,7 +37,7 @@ namespace glretrace {
 
 bool double_buffer = true;
 bool insideGlBeginEnd = false;
-Trace::Parser parser;
+trace::Parser parser;
 glws::Visual *visual = NULL;
 glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
@@ -54,7 +54,7 @@ enum frequency snapshot_frequency = FREQUENCY_NEVER;
 unsigned dump_state = ~0;
 
 void
-checkGlError(Trace::Call &call) {
+checkGlError(trace::Call &call) {
     GLenum error = glGetError();
     if (error == GL_NO_ERROR) {
         return;
@@ -110,8 +110,9 @@ updateDrawable(int width, int height) {
         return;
     }
 
-    if (width  <= glretrace::drawable->width &&
-        height <= glretrace::drawable->height) {
+    if (drawable->visible &&
+        width  <= drawable->width &&
+        height <= drawable->height) {
         return;
     }
 
@@ -122,10 +123,9 @@ updateDrawable(int width, int height) {
         return;
     }
 
-    glretrace::drawable->resize(width, height);
-    if (!drawable->visible) {
-        drawable->show();
-    }
+    drawable->resize(width, height);
+    drawable->show();
+
     glScissor(0, 0, width, height);
 }
 
@@ -136,12 +136,12 @@ void snapshot(unsigned call_no) {
         return;
     }
 
-    Image::Image *ref = NULL;
+    image::Image *ref = NULL;
 
     if (compare_prefix) {
         char filename[PATH_MAX];
         snprintf(filename, sizeof filename, "%s%010u.png", compare_prefix, call_no);
-        ref = Image::readPNG(filename);
+        ref = image::readPNG(filename);
         if (!ref) {
             return;
         }
@@ -150,7 +150,7 @@ void snapshot(unsigned call_no) {
         }
     }
 
-    Image::Image *src = glstate::getDrawBufferImage(GL_RGBA);
+    image::Image *src = glstate::getDrawBufferImage(GL_RGBA);
     if (!src) {
         return;
     }
@@ -178,12 +178,20 @@ void snapshot(unsigned call_no) {
 }
 
 
-void frame_complete(unsigned call_no) {
+void frame_complete(trace::Call &call) {
     ++frame;
+
+    if (!drawable) {
+        return;
+    }
+
+    if (!drawable->visible) {
+        retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
+    }
 
     if (snapshot_frequency == FREQUENCY_FRAME ||
         snapshot_frequency == FREQUENCY_FRAMEBUFFER) {
-        snapshot(call_no);
+        snapshot(call.no);
     }
 }
 
@@ -196,8 +204,8 @@ static void display(void) {
     retracer.addCallbacks(wgl_callbacks);
     retracer.addCallbacks(cgl_callbacks);
 
-    startTime = OS::GetTime();
-    Trace::Call *call;
+    startTime = os::getTime();
+    trace::Call *call;
 
     while ((call = parser.parse_call())) {
         retracer.retrace(*call);
@@ -215,7 +223,7 @@ static void display(void) {
     // Reached the end of trace
     glFlush();
 
-    long long endTime = OS::GetTime();
+    long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * 1.0E-6;
 
     if (retrace::verbosity >= -1) { 

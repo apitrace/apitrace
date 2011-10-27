@@ -275,7 +275,11 @@ class Parser:
             self.consume()
             length = self.consume()
             self.consume(']')
-            type = 'Array(%s, "%s")' % (type, length)
+            try:
+                int(length)
+            except ValueError:
+                length = "%s" % length
+            type = 'Array(%s, %s)' % (type, length)
         return type, name
 
     int_tokens = ('unsigned', 'signed', 'int', 'long', 'short', 'char')

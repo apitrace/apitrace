@@ -29,14 +29,13 @@
 #include <stdlib.h>
 
 #include "trace_file.hpp"
-#include "trace_snappyfile.hpp"
 #include "trace_parser.hpp"
 
 
 #define TRACE_VERBOSE 0
 
 
-namespace Trace {
+namespace trace {
 
 
 Parser::Parser() {
@@ -54,9 +53,9 @@ Parser::~Parser() {
 bool Parser::open(const char *filename) {
     assert(!file);
     if (File::isZLibCompressed(filename)) {
-        file = new ZLibFile;
+        file = File::createZLib();
     } else {
-        file = new SnappyFile;
+        file = File::createSnappy();
     }
 
     if (!file->open(filename, File::Read)) {
@@ -171,11 +170,11 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
 Call *Parser::parse_call(Mode mode) {
     do {
         int c = read_byte();
-        switch(c) {
-        case Trace::EVENT_ENTER:
+        switch (c) {
+        case trace::EVENT_ENTER:
             parse_enter(mode);
             break;
-        case Trace::EVENT_LEAVE:
+        case trace::EVENT_LEAVE:
             return parse_leave(mode);
         default:
             std::cerr << "error: unknown event " << c << "\n";
@@ -373,13 +372,13 @@ Call *Parser::parse_leave(Mode mode) {
 bool Parser::parse_call_details(Call *call, Mode mode) {
     do {
         int c = read_byte();
-        switch(c) {
-        case Trace::CALL_END:
+        switch (c) {
+        case trace::CALL_END:
             return true;
-        case Trace::CALL_ARG:
+        case trace::CALL_ARG:
             parse_arg(call, mode);
             break;
-        case Trace::CALL_RET:
+        case trace::CALL_RET:
             call->ret = parse_value(mode);
             break;
         default:
@@ -409,47 +408,47 @@ Value *Parser::parse_value(void) {
     int c;
     Value *value;
     c = read_byte();
-    switch(c) {
-    case Trace::TYPE_NULL:
+    switch (c) {
+    case trace::TYPE_NULL:
         value = new Null;
         break;
-    case Trace::TYPE_FALSE:
+    case trace::TYPE_FALSE:
         value = new Bool(false);
         break;
-    case Trace::TYPE_TRUE:
+    case trace::TYPE_TRUE:
         value = new Bool(true);
         break;
-    case Trace::TYPE_SINT:
+    case trace::TYPE_SINT:
         value = parse_sint();
         break;
-    case Trace::TYPE_UINT:
+    case trace::TYPE_UINT:
         value = parse_uint();
         break;
-    case Trace::TYPE_FLOAT:
+    case trace::TYPE_FLOAT:
         value = parse_float();
         break;
-    case Trace::TYPE_DOUBLE:
+    case trace::TYPE_DOUBLE:
         value = parse_double();
         break;
-    case Trace::TYPE_STRING:
+    case trace::TYPE_STRING:
         value = parse_string();
         break;
-    case Trace::TYPE_ENUM:
+    case trace::TYPE_ENUM:
         value = parse_enum();
         break;
-    case Trace::TYPE_BITMASK:
+    case trace::TYPE_BITMASK:
         value = parse_bitmask();
         break;
-    case Trace::TYPE_ARRAY:
+    case trace::TYPE_ARRAY:
         value = parse_array();
         break;
-    case Trace::TYPE_STRUCT:
+    case trace::TYPE_STRUCT:
         value = parse_struct();
         break;
-    case Trace::TYPE_BLOB:
+    case trace::TYPE_BLOB:
         value = parse_blob();
         break;
-    case Trace::TYPE_OPAQUE:
+    case trace::TYPE_OPAQUE:
         value = parse_opaque();
         break;
     default:
@@ -470,42 +469,42 @@ Value *Parser::parse_value(void) {
 
 void Parser::scan_value(void) {
     int c = read_byte();
-    switch(c) {
-    case Trace::TYPE_NULL:
-    case Trace::TYPE_FALSE:
-    case Trace::TYPE_TRUE:
+    switch (c) {
+    case trace::TYPE_NULL:
+    case trace::TYPE_FALSE:
+    case trace::TYPE_TRUE:
         break;
-    case Trace::TYPE_SINT:
+    case trace::TYPE_SINT:
         scan_sint();
         break;
-    case Trace::TYPE_UINT:
+    case trace::TYPE_UINT:
         scan_uint();
         break;
-    case Trace::TYPE_FLOAT:
+    case trace::TYPE_FLOAT:
         scan_float();
         break;
-    case Trace::TYPE_DOUBLE:
+    case trace::TYPE_DOUBLE:
         scan_double();
         break;
-    case Trace::TYPE_STRING:
+    case trace::TYPE_STRING:
         scan_string();
         break;
-    case Trace::TYPE_ENUM:
+    case trace::TYPE_ENUM:
         scan_enum();
         break;
-    case Trace::TYPE_BITMASK:
+    case trace::TYPE_BITMASK:
         scan_bitmask();
         break;
-    case Trace::TYPE_ARRAY:
+    case trace::TYPE_ARRAY:
         scan_array();
         break;
-    case Trace::TYPE_STRUCT:
+    case trace::TYPE_STRUCT:
         scan_struct();
         break;
-    case Trace::TYPE_BLOB:
+    case trace::TYPE_BLOB:
         scan_blob();
         break;
-    case Trace::TYPE_OPAQUE:
+    case trace::TYPE_OPAQUE:
         scan_opaque();
         break;
     default:
@@ -732,4 +731,4 @@ inline void Parser::skip_byte(void) {
 }
 
 
-} /* namespace Trace */
+} /* namespace trace */

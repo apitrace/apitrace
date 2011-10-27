@@ -34,16 +34,24 @@
 #include "trace_parser.hpp"
 
 
-static bool color = true;
+enum ColorOption {
+    COLOR_OPTION_NEVER = 0,
+    COLOR_OPTION_ALWAYS = 1,
+    COLOR_OPTION_AUTO = -1
+};
+
+static ColorOption color = COLOR_OPTION_AUTO;
 
 
 static void usage(void) {
     std::cout <<
-        "Usage: tracedump [OPTION] [TRACE...]\n"
+        "Usage: tracedump [OPTION] [TRACE]...\n"
         "Dump TRACE to standard output.\n"
         "\n"
-        "  --no-color   no colored syntax highlightint\n"
-        "  --no-colour  alias for --no-color\n"
+        "  --help               display this help and exit\n"
+        "  --color[=WHEN]\n"
+        "  --colour[=WHEN]      colored syntax highlighting;\n"
+        "                       WHEN is 'always', 'never', or 'auto'\n"
     ;
 }
 
@@ -61,9 +69,22 @@ int main(int argc, char **argv)
 
         if (!strcmp(arg, "--")) {
             break;
-        } else if (!strcmp(arg, "--no-color") ||
+        } else if (!strcmp(arg, "--help")) {
+            usage();
+            return 0;
+        } else if (!strcmp(arg, "--color=auto") ||
+                   !strcmp(arg, "--colour=auto")) {
+            color = COLOR_OPTION_AUTO;
+        } else if (!strcmp(arg, "--color") ||
+                   !strcmp(arg, "--colour") ||
+                   !strcmp(arg, "--color=always") ||
+                   !strcmp(arg, "--colour=always")) {
+            color = COLOR_OPTION_ALWAYS;
+        } else if (!strcmp(arg, "--color=never") ||
+                   !strcmp(arg, "--colour=never") ||
+                   !strcmp(arg, "--no-color") ||
                    !strcmp(arg, "--no-colour")) {
-            color = false;
+            color = COLOR_OPTION_NEVER;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage();
@@ -71,15 +92,23 @@ int main(int argc, char **argv)
         }
     }
 
+    if (color == COLOR_OPTION_AUTO) {
+#ifdef _WIN32
+        color = COLOR_OPTION_ALWAYS;
+#else
+        color = isatty(1) ? COLOR_OPTION_ALWAYS : COLOR_OPTION_NEVER;
+#endif
+    }
+
     for (; i < argc; ++i) {
-        Trace::Parser p;
+        trace::Parser p;
 
         if (!p.open(argv[i])) {
             std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
         }
 
-        Trace::Call *call;
+        trace::Call *call;
         while ((call = p.parse_call())) {
             call->dump(std::cout, color);
             delete call;

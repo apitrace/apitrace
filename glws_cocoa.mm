@@ -104,7 +104,9 @@ public:
 
     void
     resize(int w, int h) {
-        Drawable::resize(w, h);
+        if (w == width && h == height) {
+            return;
+        }
 
         [window setContentSize:NSMakeSize(w, h)];
 
@@ -114,13 +116,18 @@ public:
             [currentContext setView:[window contentView]];
             [currentContext makeCurrentContext];
         }
+
+        Drawable::resize(w, h);
     }
 
     void show(void) {
-        if (!visible) {
-            // TODO
-            Drawable::show();
+        if (visible) {
+            return;
         }
+
+        // TODO
+
+        Drawable::show();
     }
 
     void swapBuffers(void) {

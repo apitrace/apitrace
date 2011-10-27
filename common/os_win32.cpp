@@ -32,34 +32,34 @@
 #include "os.hpp"
 
 
-namespace OS {
+namespace os {
 
 
 /* 
  * Trick from http://locklessinc.com/articles/pthreads_on_windows/
  */
 static CRITICAL_SECTION
-CriticalSection = {
+criticalSection = {
     (PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0
 };
 
 
 void
-AcquireMutex(void)
+acquireMutex(void)
 {
-    EnterCriticalSection(&CriticalSection); 
+    EnterCriticalSection(&criticalSection);
 }
 
 
 void
-ReleaseMutex(void)
+releaseMutex(void)
 {
-    LeaveCriticalSection(&CriticalSection); 
+    LeaveCriticalSection(&criticalSection);
 }
 
 
 bool
-GetProcessName(char *str, size_t size)
+getProcessName(char *str, size_t size)
 {
     char szProcessPath[PATH_MAX];
     char *lpProcessName;
@@ -81,7 +81,7 @@ GetProcessName(char *str, size_t size)
 }
 
 bool
-GetCurrentDir(char *str, size_t size)
+getCurrentDir(char *str, size_t size)
 {
     DWORD ret;
     ret = GetCurrentDirectoryA(size, str);
@@ -90,7 +90,7 @@ GetCurrentDir(char *str, size_t size)
 }
 
 void
-DebugMessage(const char *format, ...)
+log(const char *format, ...)
 {
     char buf[4096];
 
@@ -115,7 +115,8 @@ DebugMessage(const char *format, ...)
 #endif
 }
 
-long long GetTime(void)
+long long
+getTime(void)
 {
     static LARGE_INTEGER frequency;
     LARGE_INTEGER counter;
@@ -126,7 +127,7 @@ long long GetTime(void)
 }
 
 void
-Abort(void)
+abort(void)
 {
 #ifndef NDEBUG
     DebugBreak();
@@ -139,7 +140,8 @@ Abort(void)
 static LPTOP_LEVEL_EXCEPTION_FILTER prevExceptionFilter = NULL;
 static void (*gCallback)(void) = NULL;
 
-static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
+static LONG WINAPI
+unhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
 {
     if (gCallback) {
         gCallback();
@@ -153,7 +155,7 @@ static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
 }
 
 void
-SetExceptionCallback(void (*callback)(void))
+setExceptionCallback(void (*callback)(void))
 {
     assert(!gCallback);
 
@@ -167,12 +169,12 @@ SetExceptionCallback(void (*callback)(void))
          * handler in certain circumnstances.  See
          * http://www.codeproject.com/KB/winsdk/crash_hook.aspx
          */
-        prevExceptionFilter = SetUnhandledExceptionFilter(UnhandledExceptionFilter);
+        prevExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
     }
 }
 
 void
-ResetExceptionCallback(void)
+resetExceptionCallback(void)
 {
     gCallback = NULL;
 }
@@ -221,4 +223,4 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info)
 }
 
 
-} /* namespace OS */
+} /* namespace os */

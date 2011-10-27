@@ -63,7 +63,7 @@ namespace glsnapshot {
 /**
  * Get the contents of the current drawable into an image.
  */
-static Image::Image *
+static image::Image *
 getDrawableImage(void) {
 #if defined(_WIN32)
 
@@ -133,7 +133,7 @@ getDrawableImage(void) {
         return NULL;
     }
 
-    Image::Image *image = NULL;
+    image::Image *image = NULL;
 
     if (ximage->depth          == 24 &&
         ximage->bits_per_pixel == 32 &&
@@ -141,7 +141,7 @@ getDrawableImage(void) {
         ximage->green_mask     == 0x0000ff00 &&
         ximage->blue_mask      == 0x000000ff) {
 
-        image = new Image::Image(w, h, 4);
+        image = new image::Image(w, h, 4);
 
         if (image) {
             const uint32_t *src = (const uint32_t *)ximage->data;
@@ -160,7 +160,7 @@ getDrawableImage(void) {
             }
         }
     } else {
-        OS::DebugMessage("apitrace: unexpected XImage: "
+        os::log("apitrace: unexpected XImage: "
                          "bits_per_pixel = %i, "
                          "depth = %i, "
                          "red_mask = 0x%08lx, "
@@ -203,12 +203,12 @@ void snapshot(unsigned call_no) {
     ++frame_no;
 
     if (snapshot_prefix) {
-        Image::Image *src = getDrawableImage();
+        image::Image *src = getDrawableImage();
         if (src) {
             char filename[PATH_MAX];
             snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
             if (src->writePNG(filename)) {
-                OS::DebugMessage("apitrace: wrote %s\n", filename);
+                os::log("apitrace: wrote %s\n", filename);
             }
 
             delete src;

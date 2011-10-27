@@ -70,7 +70,7 @@
 #ifndef _TRACE_FORMAT_HPP_
 #define _TRACE_FORMAT_HPP_
 
-namespace Trace {
+namespace trace {
 
 /*
  * Trace file version number.
@@ -133,6 +133,6 @@ enum Type {
 };
 
 
-} /* namespace Trace */
+} /* namespace trace */
 
 #endif /* _TRACE_FORMAT_HPP_ */

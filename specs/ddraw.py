@@ -496,9 +496,9 @@ DDBLTBATCH = Struct("DDBLTBATCH", [
 LPDDBLTBATCH = Pointer(DDBLTBATCH)
 
 DDGAMMARAMP = Struct("DDGAMMARAMP", [
-    (Array(WORD, "256"), "red"),
-    (Array(WORD, "256"), "green"),
-    (Array(WORD, "256"), "blue"),
+    (Array(WORD, 256), "red"),
+    (Array(WORD, 256), "green"),
+    (Array(WORD, 256), "blue"),
 ])
 LPDDGAMMARAMP = Pointer(DDGAMMARAMP)
 

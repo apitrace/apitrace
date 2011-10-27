@@ -53,8 +53,7 @@ def handle_entry(handle, value):
 class ValueExtractor(stdapi.Visitor):
 
     def visit_literal(self, literal, lvalue, rvalue):
-        #if literal.format in ('Bool', 'UInt'):
-        print '    %s = (%s).to%s();' % (lvalue, rvalue, literal.format)
+        print '    %s = (%s).to%s();' % (lvalue, rvalue, literal.kind)
 
     def visit_const(self, const, lvalue, rvalue):
         self.visit(const.type, lvalue, rvalue)
@@ -69,14 +68,14 @@ class ValueExtractor(stdapi.Visitor):
         self.visit(bitmask.type, lvalue, rvalue)
 
     def visit_array(self, array, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.id, rvalue)
-        print '    if (__a%s) {' % (array.id)
-        length = '__a%s->values.size()' % array.id
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
+        print '    if (__a%s) {' % (array.tag)
+        length = '__a%s->values.size()' % array.tag
         print '        %s = new %s[%s];' % (lvalue, array.type, length)
-        index = '__j' + array.id
+        index = '__j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
-            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
+            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.tag, index))
         finally:
             print '        }'
             print '    } else {'
@@ -84,11 +83,11 @@ class ValueExtractor(stdapi.Visitor):
             print '    }'
     
     def visit_pointer(self, pointer, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (pointer.id, rvalue)
-        print '    if (__a%s) {' % (pointer.id)
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
+        print '    if (__a%s) {' % (pointer.tag)
         print '        %s = new %s;' % (lvalue, pointer.type)
         try:
-            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.id,))
+            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.tag,))
         finally:
             print '    } else {'
             print '        %s = NULL;' % lvalue
@@ -134,22 +133,22 @@ class ValueWrapper(stdapi.Visitor):
         pass
 
     def visit_array(self, array, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (array.id, rvalue)
-        print '    if (__a%s) {' % (array.id)
-        length = '__a%s->values.size()' % array.id
-        index = '__j' + array.id
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
+        print '    if (__a%s) {' % (array.tag)
+        length = '__a%s->values.size()' % array.tag
+        index = '__j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
-            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.id, index))
+            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.tag, index))
         finally:
             print '        }'
             print '    }'
     
     def visit_pointer(self, pointer, lvalue, rvalue):
-        print '    const Trace::Array *__a%s = dynamic_cast<const Trace::Array *>(&%s);' % (pointer.id, rvalue)
-        print '    if (__a%s) {' % (pointer.id)
+        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
+        print '    if (__a%s) {' % (pointer.tag)
         try:
-            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.id,))
+            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.tag,))
         finally:
             print '    }'
     
@@ -164,7 +163,7 @@ class ValueWrapper(stdapi.Visitor):
             print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
             print '    }'
         else:
-            i = '__h' + handle.id
+            i = '__h' + handle.tag
             lvalue = "%s + %s" % (lvalue, i)
             rvalue = "__orig_result + %s" % (i,)
             entry = handle_entry(handle, rvalue) 
@@ -185,7 +184,7 @@ class ValueWrapper(stdapi.Visitor):
 class Retracer:
 
     def retrace_function(self, function):
-        print 'static void retrace_%s(Trace::Call &call) {' % function.name
+        print 'static void retrace_%s(trace::Call &call) {' % function.name
         self.retrace_function_body(function)
         print '}'
         print

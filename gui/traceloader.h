@@ -54,15 +54,15 @@ private:
         FrameBookmark()
             : numberOfCalls(0)
         {}
-        FrameBookmark(const Trace::ParseBookmark &s)
+        FrameBookmark(const trace::ParseBookmark &s)
             : start(s),
               numberOfCalls(0)
         {}
 
-        Trace::ParseBookmark start;
+        trace::ParseBookmark start;
         int numberOfCalls;
     };
-    bool isCallAFrameMarker(const Trace::Call *call) const;
+    bool isCallAFrameMarker(const trace::Call *call) const;
     int numberOfFrames() const;
     int numberOfCallsInFrame(int frameIdx) const;
 
@@ -74,16 +74,16 @@ private:
     void searchPrev(const ApiTrace::SearchRequest &request);
 
     int callInFrame(int callIdx) const;
-    bool callContains(Trace::Call *call,
+    bool callContains(trace::Call *call,
                       const QString &str,
                       Qt::CaseSensitivity sensitivity);
      QVector<ApiTraceCall*> fetchFrameContents(ApiTraceFrame *frame);
-     bool searchCallsBackwards(const QList<Trace::Call*> &calls,
+     bool searchCallsBackwards(const QList<trace::Call*> &calls,
                                int frameIdx,
                                const ApiTrace::SearchRequest &request);
 
 private:
-    Trace::Parser m_parser;
+    trace::Parser m_parser;
     ApiTrace::FrameMarker m_frameMarker;
 
     typedef QMap<int, FrameBookmark> FrameBookmarks;

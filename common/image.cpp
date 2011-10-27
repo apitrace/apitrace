@@ -31,7 +31,7 @@
 #include "image.hpp"
 
 
-namespace Image {
+namespace image {
 
 
 double Image::compare(Image &ref)
@@ -73,4 +73,4 @@ double Image::compare(Image &ref)
 }
 
 
-} /* namespace Image */
+} /* namespace image */

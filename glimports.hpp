@@ -131,7 +131,7 @@ CGLError CGLUpdateContext(CGLContextObj ctx);
 #include <GL/glx.h>
 #include "glext/glxext.h"
 
-/* Prevent collision with Trace::Bool */
+/* Prevent collision with trace::Bool */
 #undef Bool
 
 #endif

@@ -54,20 +54,20 @@ getDrawable(unsigned long long hdc) {
     return it->second;
 }
 
-static void retrace_wglCreateContext(Trace::Call &call) {
+static void retrace_wglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *context = glws::createContext(glretrace::visual);
     context_map[orig_context] = context;
 }
 
-static void retrace_wglDeleteContext(Trace::Call &call) {
+static void retrace_wglDeleteContext(trace::Call &call) {
 }
 
-static void retrace_wglMakeCurrent(Trace::Call &call) {
+static void retrace_wglMakeCurrent(trace::Call &call) {
     if (drawable && context) {
         glFlush();
         if (!double_buffer) {
-            frame_complete(call.no);
+            frame_complete(call);
         }
     }
     
@@ -85,20 +85,20 @@ static void retrace_wglMakeCurrent(Trace::Call &call) {
     }
 }
 
-static void retrace_wglCopyContext(Trace::Call &call) {
+static void retrace_wglCopyContext(trace::Call &call) {
 }
 
-static void retrace_wglChoosePixelFormat(Trace::Call &call) {
+static void retrace_wglChoosePixelFormat(trace::Call &call) {
 }
 
-static void retrace_wglDescribePixelFormat(Trace::Call &call) {
+static void retrace_wglDescribePixelFormat(trace::Call &call) {
 }
 
-static void retrace_wglSetPixelFormat(Trace::Call &call) {
+static void retrace_wglSetPixelFormat(trace::Call &call) {
 }
 
-static void retrace_wglSwapBuffers(Trace::Call &call) {
-    frame_complete(call.no);
+static void retrace_wglSwapBuffers(trace::Call &call) {
+    frame_complete(call);
     if (double_buffer) {
         drawable->swapBuffers();
     } else {
@@ -106,7 +106,7 @@ static void retrace_wglSwapBuffers(Trace::Call &call) {
     }
 }
 
-static void retrace_wglShareLists(Trace::Call &call) {
+static void retrace_wglShareLists(trace::Call &call) {
     unsigned long long hglrc1 = call.arg(0).toUIntPtr();
     unsigned long long hglrc2 = call.arg(1).toUIntPtr();
 
@@ -126,57 +126,57 @@ static void retrace_wglShareLists(Trace::Call &call) {
     }
 }
 
-static void retrace_wglCreateLayerContext(Trace::Call &call) {
+static void retrace_wglCreateLayerContext(trace::Call &call) {
     retrace_wglCreateContext(call);
 }
 
-static void retrace_wglDescribeLayerPlane(Trace::Call &call) {
+static void retrace_wglDescribeLayerPlane(trace::Call &call) {
 }
 
-static void retrace_wglSetLayerPaletteEntries(Trace::Call &call) {
+static void retrace_wglSetLayerPaletteEntries(trace::Call &call) {
 }
 
-static void retrace_wglRealizeLayerPalette(Trace::Call &call) {
+static void retrace_wglRealizeLayerPalette(trace::Call &call) {
 }
 
-static void retrace_wglSwapLayerBuffers(Trace::Call &call) {
+static void retrace_wglSwapLayerBuffers(trace::Call &call) {
     retrace_wglSwapBuffers(call);
 }
 
-static void retrace_wglUseFontBitmapsA(Trace::Call &call) {
+static void retrace_wglUseFontBitmapsA(trace::Call &call) {
 }
 
-static void retrace_wglUseFontBitmapsW(Trace::Call &call) {
+static void retrace_wglUseFontBitmapsW(trace::Call &call) {
 }
 
-static void retrace_wglSwapMultipleBuffers(Trace::Call &call) {
+static void retrace_wglSwapMultipleBuffers(trace::Call &call) {
 }
 
-static void retrace_wglUseFontOutlinesA(Trace::Call &call) {
+static void retrace_wglUseFontOutlinesA(trace::Call &call) {
 }
 
-static void retrace_wglUseFontOutlinesW(Trace::Call &call) {
+static void retrace_wglUseFontOutlinesW(trace::Call &call) {
 }
 
-static void retrace_wglCreateBufferRegionARB(Trace::Call &call) {
+static void retrace_wglCreateBufferRegionARB(trace::Call &call) {
 }
 
-static void retrace_wglDeleteBufferRegionARB(Trace::Call &call) {
+static void retrace_wglDeleteBufferRegionARB(trace::Call &call) {
 }
 
-static void retrace_wglSaveBufferRegionARB(Trace::Call &call) {
+static void retrace_wglSaveBufferRegionARB(trace::Call &call) {
 }
 
-static void retrace_wglRestoreBufferRegionARB(Trace::Call &call) {
+static void retrace_wglRestoreBufferRegionARB(trace::Call &call) {
 }
 
-static void retrace_wglChoosePixelFormatARB(Trace::Call &call) {
+static void retrace_wglChoosePixelFormatARB(trace::Call &call) {
 }
 
-static void retrace_wglMakeContextCurrentARB(Trace::Call &call) {
+static void retrace_wglMakeContextCurrentARB(trace::Call &call) {
 }
 
-static void retrace_wglCreatePbufferARB(Trace::Call &call) {
+static void retrace_wglCreatePbufferARB(trace::Call &call) {
     int iWidth = call.arg(2).toUInt();
     int iHeight = call.arg(3).toUInt();
 
@@ -184,11 +184,12 @@ static void retrace_wglCreatePbufferARB(Trace::Call &call) {
     glws::Drawable *drawable = glws::createDrawable(glretrace::visual);
 
     drawable->resize(iWidth, iHeight);
+    drawable->show();
 
     pbuffer_map[orig_pbuffer] = drawable;
 }
 
-static void retrace_wglGetPbufferDCARB(Trace::Call &call) {
+static void retrace_wglGetPbufferDCARB(trace::Call &call) {
     glws::Drawable *pbuffer = pbuffer_map[call.arg(0).toUIntPtr()];
 
     unsigned long long orig_hdc = call.ret->toUIntPtr();
@@ -196,25 +197,25 @@ static void retrace_wglGetPbufferDCARB(Trace::Call &call) {
     drawable_map[orig_hdc] = pbuffer;
 }
 
-static void retrace_wglReleasePbufferDCARB(Trace::Call &call) {
+static void retrace_wglReleasePbufferDCARB(trace::Call &call) {
 }
 
-static void retrace_wglDestroyPbufferARB(Trace::Call &call) {
+static void retrace_wglDestroyPbufferARB(trace::Call &call) {
 }
 
-static void retrace_wglQueryPbufferARB(Trace::Call &call) {
+static void retrace_wglQueryPbufferARB(trace::Call &call) {
 }
 
-static void retrace_wglBindTexImageARB(Trace::Call &call) {
+static void retrace_wglBindTexImageARB(trace::Call &call) {
 }
 
-static void retrace_wglReleaseTexImageARB(Trace::Call &call) {
+static void retrace_wglReleaseTexImageARB(trace::Call &call) {
 }
 
-static void retrace_wglSetPbufferAttribARB(Trace::Call &call) {
+static void retrace_wglSetPbufferAttribARB(trace::Call &call) {
 }
 
-static void retrace_wglCreateContextAttribsARB(Trace::Call &call) {
+static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = NULL;
 
@@ -226,25 +227,25 @@ static void retrace_wglCreateContextAttribsARB(Trace::Call &call) {
     context_map[orig_context] = context;
 }
 
-static void retrace_wglMakeContextCurrentEXT(Trace::Call &call) {
+static void retrace_wglMakeContextCurrentEXT(trace::Call &call) {
 }
 
-static void retrace_wglChoosePixelFormatEXT(Trace::Call &call) {
+static void retrace_wglChoosePixelFormatEXT(trace::Call &call) {
 }
 
-static void retrace_wglSwapIntervalEXT(Trace::Call &call) {
+static void retrace_wglSwapIntervalEXT(trace::Call &call) {
 }
 
-static void retrace_wglAllocateMemoryNV(Trace::Call &call) {
+static void retrace_wglAllocateMemoryNV(trace::Call &call) {
 }
 
-static void retrace_wglFreeMemoryNV(Trace::Call &call) {
+static void retrace_wglFreeMemoryNV(trace::Call &call) {
 }
 
-static void retrace_glAddSwapHintRectWIN(Trace::Call &call) {
+static void retrace_glAddSwapHintRectWIN(trace::Call &call) {
 }
 
-static void retrace_wglGetProcAddress(Trace::Call &call) {
+static void retrace_wglGetProcAddress(trace::Call &call) {
 }
 
 const retrace::Entry glretrace::wgl_callbacks[] = {

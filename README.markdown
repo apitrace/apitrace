@@ -29,7 +29,7 @@ directory.  You can specify the written trace filename by setting the
 
 View the trace with
 
-    /path/to/tracedump application.trace | less -R
+    /path/to/tracedump --color application.trace | less -R
 
 Replay the trace with
 

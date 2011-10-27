@@ -34,7 +34,7 @@
 #include <iostream>
 
 
-namespace Formatter {
+namespace formatter {
 
 /*
  * See also http://bytes.com/topic/c/answers/63822-design-question-little-c-header-colorizing-text-linux-comments-ideas
@@ -168,7 +168,7 @@ inline Formatter *defaultFormatter(bool color = true) {
 }
 
 
-} /* namespace Formatter */
+} /* namespace formatter */
 
 
 #endif /* _FORMATTER_HPP_ */

@@ -9,7 +9,7 @@
 #include <queue>
 #include <vector>
 
-namespace Trace  {
+namespace trace  {
 
 class Frame;
 
@@ -35,7 +35,7 @@ public:
     bool open(const char *filename);
     void close();
 
-    std::vector<Trace::Call*> frame(unsigned idx);
+    std::vector<trace::Call*> frame(unsigned idx);
 
 private:
     struct FrameBookmark {
@@ -50,10 +50,10 @@ private:
         ParseBookmark start;
         unsigned numberOfCalls;
     };
-    bool isCallAFrameMarker(const Trace::Call *call) const;
+    bool isCallAFrameMarker(const trace::Call *call) const;
 
 private:
-    Trace::Parser m_parser;
+    trace::Parser m_parser;
     FrameMarker m_frameMarker;
 
     typedef std::map<int, FrameBookmark> FrameBookmarks;
