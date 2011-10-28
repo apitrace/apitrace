@@ -30,9 +30,13 @@
 #ifndef _OS_HPP_
 #define _OS_HPP_
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
+
+#include <vector>
 
 #ifdef _WIN32
 #ifndef snprintf
@@ -56,8 +60,93 @@ void acquireMutex(void);
 
 void releaseMutex(void);
 
-bool getProcessName(char *str, size_t size);
-bool getCurrentDir(char *str, size_t size);
+
+class Path {
+protected:
+    typedef std::vector<char> Buffer;
+    Buffer buffer;
+
+    Buffer::iterator rfind(char c) {
+        Buffer::iterator it = buffer.end();
+        while (it != buffer.begin()) {
+            --it;
+            if (*it == c) {
+                return it;
+            }
+        }
+        return buffer.end();
+    }
+
+public:
+    Path() {
+        buffer.push_back(0);
+    }
+
+    Path(const char *s) :
+        buffer(s, s + strlen(s) + 1)
+    {}
+
+    template <class InputIterator>
+    Path(InputIterator first, InputIterator last) :
+        buffer(first, last)
+    {
+        buffer.push_back(0);
+    }
+
+    char *buf(size_t size) {
+        buffer.resize(size);
+        return &buffer[0];
+    }
+
+    void trimDirectory(void) {
+        Buffer::iterator sep = rfind(PATH_SEP);
+        if (sep != buffer.end()) {
+            buffer.erase(buffer.begin(), sep + 1);
+        }
+    }
+
+    void trimExtension(void) {
+        Buffer::iterator dot = rfind('.');
+        if (dot != buffer.end()) {
+            buffer.erase(dot, buffer.end());
+        }
+    }
+
+    size_t length(void) const {
+        size_t size = buffer.size();
+        assert(size > 0);
+        assert(buffer[size - 1] == 0);
+        return size - 1;
+    }
+
+    void truncate(size_t size) {
+        assert(size > 0);
+        assert(size <= buffer.size());
+        assert(buffer[size - 1] == 0);
+        buffer.resize(size);
+    }
+
+    void truncate(void) {
+        truncate(strlen(str()));
+    }
+
+    const char *str(void) const {
+        assert(buffer[buffer.size() - 1] == 0);
+        return &buffer[0];
+    }
+
+    void join(const Path & other) {
+        size_t len = length();
+        if (len > 0 && buffer[len - 1] != PATH_SEP) {
+            buffer.insert(buffer.begin() + len, PATH_SEP);
+        }
+        buffer.insert(buffer.begin() + len, other.buffer.begin(), other.buffer.end() - 1);
+    }
+
+};
+
+Path getProcessName();
+Path getCurrentDir();
 
 void log(const char *format, ...)
 #ifdef __GNUC__

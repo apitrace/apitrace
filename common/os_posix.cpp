@@ -64,55 +64,53 @@ releaseMutex(void)
 }
 
 
-bool
-getProcessName(char *str, size_t size)
+Path
+getProcessName(void)
 {
-    char szProcessPath[PATH_MAX + 1];
-    char *lpProcessName;
+    Path path;
+
+    char *szProcessPath = path.buf(PATH_MAX);
 
     // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
 #ifdef __APPLE__
-    uint32_t len = sizeof szProcessPath;
+    uint32_t len = PATH_MAX;
     if (_NSGetExecutablePath(szProcessPath, &len) != 0) {
-        *str = 0;
-        return false;
+        *szProcessPath = 0;
+        return path;
     }
 #else
     ssize_t len;
-    len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
+    len = readlink("/proc/self/exe", szProcessPath, PATH_MAX - 1);
     if (len == -1) {
         // /proc/self/exe is not available on setuid processes, so fallback to
         // /proc/self/cmdline.
         int fd = open("/proc/self/cmdline", O_RDONLY);
         if (fd >= 0) {
-            len = read(fd, szProcessPath, sizeof(szProcessPath) - 1);
+            len = read(fd, szProcessPath, PATH_MAX - 1);
             close(fd);
         }
     }
     if (len <= 0) {
-        snprintf(str, size, "%i", (int)getpid());
-        return true;
+        snprintf(szProcessPath, PATH_MAX, "%i", (int)getpid());
+        return path;
     }
 #endif
     szProcessPath[len] = 0;
+    path.truncate(len);
 
-    lpProcessName = strrchr(szProcessPath, '/');
-    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
-
-    strncpy(str, lpProcessName, size);
-    if (size)
-        str[size - 1] = 0;
-
-    return true;
+    return path;
 }
 
-bool
-getCurrentDir(char *str, size_t size)
+Path
+getCurrentDir(void)
 {
-    char *ret;
-    ret = getcwd(str, size);
+    Path path;
+    size_t size = PATH_MAX;
+    char *str = path.buf(size);
+    getcwd(str, size);
     str[size - 1] = 0;
-    return ret ? true : false;
+    path.truncate();
+    return path;
 }
 
 void

@@ -58,26 +58,20 @@ releaseMutex(void)
 }
 
 
-bool
-getProcessName(char *str, size_t size)
+Path
+getProcessName(void)
 {
-    char szProcessPath[PATH_MAX];
-    char *lpProcessName;
-    char *lpProcessExt;
+    Path path;
 
-    GetModuleFileNameA(NULL, szProcessPath, sizeof(szProcessPath)/sizeof(szProcessPath[0]));
+    char *szProcessPath = path.buf(PATH_MAX);
 
-    lpProcessName = strrchr(szProcessPath, '\\');
-    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
+    DWORD nWritten = GetModuleFileNameA(NULL, szProcessPath, PATH_MAX);
 
-    lpProcessExt = strrchr(lpProcessName, '.');
-    if (lpProcessExt) {
-        *lpProcessExt = '\0';
-    }
+    path.truncate();
+    path.trimExtension();
+    path.trimDirectory();
 
-    strncpy(str, lpProcessName, size);
-
-    return true;
+    return path;
 }
 
 bool

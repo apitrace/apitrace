@@ -85,18 +85,16 @@ LocalWriter::open(void) {
         strncpy(szFileName, lpFileName, PATH_MAX);
     }
     else {
-        char szProcessName[PATH_MAX];
-        char szCurrentDir[PATH_MAX];
-        os::getProcessName(szProcessName, PATH_MAX);
-        os::getCurrentDir(szCurrentDir, PATH_MAX);
+        os::Path szProcessName = os::getProcessName();
+        os::Path szCurrentDir = os::getCurrentDir();
 
         for (;;) {
             FILE *file;
 
             if (dwCounter)
-                snprintf(szFileName, PATH_MAX, "%s%c%s.%u.%s", szCurrentDir, PATH_SEP, szProcessName, dwCounter, szExtension);
+                snprintf(szFileName, PATH_MAX, "%s%c%s.%u.%s", szCurrentDir.str(), PATH_SEP, szProcessName.str(), dwCounter, szExtension);
             else
-                snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir, PATH_SEP, szProcessName, szExtension);
+                snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir.str(), PATH_SEP, szProcessName.str(), szExtension);
 
             file = fopen(szFileName, "rb");
             if (file == NULL)
