@@ -40,42 +40,34 @@
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
-typedef void (*command_usage_t) (void);
-typedef int (*command_function_t) (int argc, char *argv[], int first_command_arg);
-
-typedef struct {
-    const char *name;
-    const char *synopsis;
-    command_usage_t usage;
-    command_function_t function;
-} Command;
-
-#define APITRACE_HELP_SYNOPSIS "Print detailed help for the given command."
+static const char *help_synopsis = "Print detailed help for the given command.";
 
 static void list_commands(void);
 
 static void
-apitrace_help_usage()
+help_usage()
 {
-    std::cout << "usage: apitrace help [<command>]\n"
-        APITRACE_HELP_SYNOPSIS "\n"
+    std::cout
+        << "usage: apitrace help [<command>]\n"
+        << help_synopsis << "\n"
         "\n";
 
     list_commands();
 }
 
 static int
-apitrace_help_command(int argc, char *argv[], int first_command_arg);
+help_command(int argc, char *argv[], int first_command_arg);
 
-static Command commands[] = {
-    { "dump",
-      APITRACE_DUMP_SYNOPSIS,
-      apitrace_dump_usage,
-      apitrace_dump_command },
-    { "help",
-      APITRACE_HELP_SYNOPSIS,
-      apitrace_help_usage,
-      apitrace_help_command }
+const Command help = {
+    "help",
+    help_synopsis,
+    help_usage,
+    help_command
+};
+
+static const Command * commands[] = {
+    &dump,
+    &help,
 };
 
 static void
@@ -91,7 +83,7 @@ usage(void)
 
 static void
 list_commands(void) {
-    Command *command;
+    const Command *command;
     int i, max_width = 0;
 
     std::cout << "The available commands are as follows:\n\n";
@@ -99,15 +91,16 @@ list_commands(void) {
     std::cout << std::setiosflags(std::ios::left);
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
-        command = &commands[i];
-        if (strlen(command->name) > max_width)
+        command = commands[i];
+        if (strlen(command->name) > max_width) {
             max_width = strlen(command->name);
+        }
     }
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
-        command = &commands[i];
+        command = commands[i];
 
-        std::cout << "    " << std::setw(max_width+2) << command->name
+        std::cout << "    " << std::setw(max_width + 2) << command->name
                   << " " << command->synopsis << "\n";
     }
 
@@ -117,20 +110,20 @@ list_commands(void) {
 
 
 static int
-apitrace_help_command(int argc, char *argv[], int first_arg_command)
+help_command(int argc, char *argv[], int first_arg_command)
 {
-    Command *command;
+    const Command *command;
     int i;
 
     if (first_arg_command == argc) {
-        apitrace_help_usage();
+        help_usage();
         return 0;
     }
 
     char *command_name = argv[first_arg_command];
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
-        command = &commands[i];
+        command = commands[i];
 
         if (strcmp(command_name, command->name) == 0) {
             (command->usage) ();
@@ -148,7 +141,7 @@ int
 main(int argc, char **argv)
 {
     const char *command_name = "trace";
-    Command *command;
+    const Command *command;
     int i, first_command_arg;
 
     if (argc == 1) {
@@ -164,7 +157,7 @@ main(int argc, char **argv)
         }
 
         if (strcmp(arg, "--help") == 0) {
-            return apitrace_help_command (0, NULL, 0);
+            return help_command (0, NULL, 0);
         } else {
             std::cerr << "Error: unknown option " << arg << "\n";
             usage();
@@ -179,7 +172,7 @@ main(int argc, char **argv)
     }
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
-        command = &commands[i];
+        command = commands[i];
 
         if (strcmp(command_name, command->name) == 0)
             return (command->function) (argc, argv, first_command_arg);

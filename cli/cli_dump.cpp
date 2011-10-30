@@ -37,19 +37,22 @@ enum ColorOption {
 
 static ColorOption color = COLOR_OPTION_AUTO;
 
-void
-apitrace_dump_usage(void)
+static const char *synopsis = "Dump given trace(s) to standard output.";
+
+static void
+usage(void)
 {
-    std::cout << "usage: apitrace dump [OPTIONS] <trace-file>...\n"
-        APITRACE_DUMP_SYNOPSIS "\n"
+    std::cout
+        << "usage: apitrace dump [OPTIONS] <trace-file>...\n"
+        << synopsis << "\n"
         "\n"
         "    --color=<WHEN>\n"
         "    --colour=<WHEN>     Colored syntax highlighting\n"
         "                        WHEN is 'auto', 'always', or 'never'\n";
 }
 
-int
-apitrace_dump_command(int argc, char *argv[], int first_arg_command)
+static int
+command(int argc, char *argv[], int first_arg_command)
 {
     int i;
 
@@ -63,7 +66,7 @@ apitrace_dump_command(int argc, char *argv[], int first_arg_command)
         if (!strcmp(arg, "--")) {
             break;
         } else if (!strcmp(arg, "--help")) {
-            apitrace_dump_usage();
+            usage();
             return 0;
         } else if (!strcmp(arg, "--color=auto") ||
                    !strcmp(arg, "--colour=auto")) {
@@ -80,7 +83,7 @@ apitrace_dump_command(int argc, char *argv[], int first_arg_command)
             color = COLOR_OPTION_NEVER;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
-            apitrace_dump_usage();
+            usage();
             return 1;
         }
     }
@@ -110,3 +113,10 @@ apitrace_dump_command(int argc, char *argv[], int first_arg_command)
 
     return 0;
 }
+
+const Command dump = {
+    "dump",
+    synopsis,
+    usage,
+    command
+};

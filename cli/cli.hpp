@@ -28,12 +28,20 @@
 #ifndef _APITRACE_CLI_HPP_
 #define _APITRACE_CLI_HPP_
 
-#define APITRACE_DUMP_SYNOPSIS "Dump given trace(s) to standard output."
 
-void
-apitrace_dump_usage(void);
+struct Command {
+    const char *name;
+    const char *synopsis;
 
-int
-apitrace_dump_command(int argc, char *argv[], int first_command_arg);
+    typedef void (*Usage) (void);
+    Usage usage;
+
+    typedef int (*Function) (int argc, char *argv[], int first_command_arg);
+    Function function;
+};
+
+
+extern const Command dump;
+
 
 #endif /* _APITRACE_CLI_HPP_ */
