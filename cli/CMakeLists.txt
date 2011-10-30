@@ -1,5 +1,6 @@
 add_executable (apitrace
-  apitrace.cpp
-  apitrace_dump.cpp)
+    cli_main.cpp
+    cli_dump.cpp
+)
 
 install (TARGETS apitrace RUNTIME DESTINATION bin)
