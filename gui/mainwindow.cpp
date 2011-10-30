@@ -760,7 +760,7 @@ void MainWindow::initConnections()
     connect(m_ui.actionOptions, SIGNAL(triggered()),
             this, SLOT(showSettings()));
 
-    connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
+    connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
     connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(customContextMenuRequested(QPoint)));
