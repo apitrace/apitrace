@@ -36,11 +36,21 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#if defined(__linux__)
+#include <linux/limits.h> // PATH_MAX
+#endif
+
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
 
+#ifndef PATH_MAX
+#warning PATH_MAX undefined
+#define PATH_MAX 4096
+#endif
+
 #include "os.hpp"
+#include "os_path.hpp"
 
 
 namespace os {
@@ -68,30 +78,30 @@ Path
 getProcessName(void)
 {
     Path path;
-
-    char *szProcessPath = path.buf(PATH_MAX);
+    size_t size = PATH_MAX;
+    char *buf = path.buf(size);
 
     // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
 #ifdef __APPLE__
-    uint32_t len = PATH_MAX;
-    if (_NSGetExecutablePath(szProcessPath, &len) != 0) {
-        *szProcessPath = 0;
+    uint32_t len = size;
+    if (_NSGetExecutablePath(buf, &len) != 0) {
+        *buf = 0;
         return path;
     }
 #else
     ssize_t len;
-    len = readlink("/proc/self/exe", szProcessPath, PATH_MAX - 1);
+    len = readlink("/proc/self/exe", buf, size - 1);
     if (len == -1) {
         // /proc/self/exe is not available on setuid processes, so fallback to
         // /proc/self/cmdline.
         int fd = open("/proc/self/cmdline", O_RDONLY);
         if (fd >= 0) {
-            len = read(fd, szProcessPath, PATH_MAX - 1);
+            len = read(fd, buf, size - 1);
             close(fd);
         }
     }
     if (len <= 0) {
-        snprintf(szProcessPath, PATH_MAX, "%i", (int)getpid());
+        snprintf(buf, size, "%i", (int)getpid());
         return path;
     }
 #endif
@@ -105,9 +115,11 @@ getCurrentDir(void)
 {
     Path path;
     size_t size = PATH_MAX;
-    char *str = path.buf(size);
-    getcwd(str, size);
-    str[size - 1] = 0;
+    char *buf = path.buf(size);
+
+    getcwd(buf, size);
+    buf[size - 1] = 0;
+    
     path.truncate();
     return path;
 }

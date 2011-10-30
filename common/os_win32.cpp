@@ -30,6 +30,7 @@
 #include <stdio.h>
 
 #include "os.hpp"
+#include "os_path.hpp"
 
 
 namespace os {
@@ -62,23 +63,31 @@ Path
 getProcessName(void)
 {
     Path path;
+    size_t size = MAX_PATH;
+    char *buf = path.buf(size);
 
-    char *szProcessPath = path.buf(PATH_MAX);
-
-    DWORD nWritten = GetModuleFileNameA(NULL, szProcessPath, PATH_MAX);
+    DWORD nWritten = GetModuleFileNameA(NULL, buf, size);
+    (void)nWritten;
 
     path.truncate();
 
     return path;
 }
 
-bool
-getCurrentDir(char *str, size_t size)
+Path
+getCurrentDir(void)
 {
-    DWORD ret;
-    ret = GetCurrentDirectoryA(size, str);
-    str[size - 1] = 0;
-    return ret == 0 ? false : true;
+    Path path;
+    size_t size = MAX_PATH;
+    char *buf = path.buf(size);
+    
+    DWORD ret = GetCurrentDirectoryA(size, buf);
+    (void)ret;
+    
+    buf[size - 1] = 0;
+    path.truncate();
+
+    return path;
 }
 
 void

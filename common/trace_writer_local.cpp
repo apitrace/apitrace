@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include "os.hpp"
+#include "os_path.hpp"
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
@@ -75,11 +76,10 @@ void
 LocalWriter::open(void) {
     os::Path szFileName;
 
-    char *lpFileName;
+    const char *lpFileName;
 
-    lpFileName = const_cast<char *>(getenv("TRACE_FILE"));
+    lpFileName = getenv("TRACE_FILE");
     if (!lpFileName) {
-        lpFileName = szFileName.buf(PATH_MAX);
         static unsigned dwCounter = 0;
 
         os::Path process = os::getProcessName();
@@ -95,9 +95,9 @@ LocalWriter::open(void) {
             FILE *file;
 
             if (dwCounter)
-                snprintf(lpFileName, PATH_MAX, "%s.%u.trace", prefix.str(), dwCounter);
+                szFileName = os::Path::format("%s.%u.trace", prefix.str(), dwCounter);
             else
-                snprintf(lpFileName, PATH_MAX, "%s.trace", prefix.str());
+                szFileName = os::Path::format("%s.trace", prefix.str());
 
             file = fopen(lpFileName, "rb");
             if (file == NULL)
@@ -107,6 +107,8 @@ LocalWriter::open(void) {
 
             ++dwCounter;
         }
+        
+        lpFileName = szFileName;
     }
 
     os::log("apitrace: tracing to %s\n", lpFileName);
