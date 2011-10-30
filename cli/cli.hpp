@@ -31,12 +31,9 @@
 #define APITRACE_DUMP_SYNOPSIS "Dump given trace(s) to standard output."
 
 void
-apitrace_dump_usage(const char *argv0);
+apitrace_dump_usage(void);
 
 int
 apitrace_dump_command(int argc, char *argv[], int first_command_arg);
-
-void
-usage(void);
 
 #endif /* _APITRACE_CLI_HPP_ */

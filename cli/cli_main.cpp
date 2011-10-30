@@ -27,7 +27,7 @@
 
 
 /*
- * Top-level application for accessing most all apitrace
+ * Top-level application for accessing almost of apitrace
  * functionality.
  */
 
@@ -40,7 +40,7 @@
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
-typedef void (*command_usage_t) (const char *argv0);
+typedef void (*command_usage_t) (void);
 typedef int (*command_function_t) (int argc, char *argv[], int first_command_arg);
 
 typedef struct {
@@ -52,15 +52,16 @@ typedef struct {
 
 #define APITRACE_HELP_SYNOPSIS "Print detailed help for the given command."
 
+static void list_commands(void);
+
 static void
-apitrace_help_usage(const char *argv0)
+apitrace_help_usage()
 {
-    std::cout << argv0 << " [<command>]"
-        "\n\n\t"
-        APITRACE_HELP_SYNOPSIS
-        "\n\n\t"
-        "Except in this case, where this is all the help you will get."
-        "\n\n";
+    std::cout << "usage: apitrace help [<command>]\n"
+        APITRACE_HELP_SYNOPSIS "\n"
+        "\n";
+
+    list_commands();
 }
 
 static int
@@ -77,15 +78,23 @@ static Command commands[] = {
       apitrace_help_command }
 };
 
-void
+static void
 usage(void)
 {
+    std::cout <<
+        "Usage: apitrace <command> [<args> ...]\n"
+        "Top-level command line frontend to apitrace.\n"
+        "\n";
+
+    list_commands();
+}
+
+static void
+list_commands(void) {
     Command *command;
     int i, max_width = 0;
 
-    std::cout <<
-        "Usage: apitrace <command> [<args> ...]\n\n"
-        "The available commands are as follows:\n\n";
+    std::cout << "The available commands are as follows:\n\n";
 
     std::cout << std::setiosflags(std::ios::left);
 
@@ -98,7 +107,7 @@ usage(void)
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
         command = &commands[i];
 
-        std::cout << " " << std::setw(max_width+2) << command->name
+        std::cout << "    " << std::setw(max_width+2) << command->name
                   << " " << command->synopsis << "\n";
     }
 
@@ -106,14 +115,15 @@ usage(void)
         "Use \"apitrace help <command>\" for more details on each command.\n";
 }
 
+
 static int
 apitrace_help_command(int argc, char *argv[], int first_arg_command)
 {
     Command *command;
     int i;
 
-    if(first_arg_command == argc) {
-        usage();
+    if (first_arg_command == argc) {
+        apitrace_help_usage();
         return 0;
     }
 
@@ -123,9 +133,7 @@ apitrace_help_command(int argc, char *argv[], int first_arg_command)
         command = &commands[i];
 
         if (strcmp(command_name, command->name) == 0) {
-            std::cout << "Help for \"apitrace " << command_name << "\":\n\n";
-            (command->usage) ("apitrace");
-
+            (command->usage) ();
             return 0;
         }
     }
