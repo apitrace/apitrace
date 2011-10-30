@@ -23,6 +23,8 @@
  *
  **************************************************************************/
 
+#include <string.h>
+
 #include "apitrace_cli.hpp"
 
 #include "trace_parser.hpp"

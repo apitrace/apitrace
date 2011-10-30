@@ -31,6 +31,11 @@
  * functionality.
  */
 
+#include <string.h>
+
+#include <iomanip>
+#include <iostream>
+
 #include "apitrace_cli.hpp"
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))

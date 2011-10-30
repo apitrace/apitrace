@@ -28,14 +28,6 @@
 #ifndef _APITRACE_CLI_HPP_
 #define _APITRACE_CLI_HPP_
 
-#include <iostream>
-#include <iomanip>
-
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
 #define APITRACE_DUMP_SYNOPSIS "Dump given trace(s) to standard output."
 
 void
