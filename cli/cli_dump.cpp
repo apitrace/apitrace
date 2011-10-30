@@ -52,11 +52,11 @@ usage(void)
 }
 
 static int
-command(int argc, char *argv[], int first_arg_command)
+command(int argc, char *argv[])
 {
     int i;
 
-    for (i = first_arg_command; i < argc; ++i) {
+    for (i = 0; i < argc; ++i) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {

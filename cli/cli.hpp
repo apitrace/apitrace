@@ -36,7 +36,7 @@ struct Command {
     typedef void (*Usage) (void);
     Usage usage;
 
-    typedef int (*Function) (int argc, char *argv[], int first_command_arg);
+    typedef int (*Function) (int argc, char *argv[]);
     Function function;
 };
 

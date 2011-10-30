@@ -56,7 +56,7 @@ help_usage()
 }
 
 static int
-help_command(int argc, char *argv[], int first_command_arg);
+help_command(int argc, char *argv[]);
 
 const Command help = {
     "help",
@@ -110,17 +110,17 @@ list_commands(void) {
 
 
 static int
-help_command(int argc, char *argv[], int first_arg_command)
+help_command(int argc, char *argv[])
 {
     const Command *command;
     int i;
 
-    if (first_arg_command == argc) {
+    if (argc != 1) {
         help_usage();
         return 0;
     }
 
-    char *command_name = argv[first_arg_command];
+    char *command_name = argv[0];
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
         command = commands[i];
@@ -140,14 +140,9 @@ help_command(int argc, char *argv[], int first_arg_command)
 int
 main(int argc, char **argv)
 {
-    const char *command_name = "trace";
+    const char *command_name;
     const Command *command;
-    int i, first_command_arg;
-
-    if (argc == 1) {
-        usage();
-        return 1;
-    }
+    int i;
 
     for (i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -157,25 +152,29 @@ main(int argc, char **argv)
         }
 
         if (strcmp(arg, "--help") == 0) {
-            return help_command (0, NULL, 0);
+            return help_command(0, NULL);
         } else {
             std::cerr << "Error: unknown option " << arg << "\n";
             usage();
             return 1;
         }
     }
-    first_command_arg = i;
 
-    if (first_command_arg < argc) {
-        command_name = argv[first_command_arg];
-        first_command_arg++;
+    if (i == argc) {
+        usage();
+        return 1;
     }
+
+    command_name = argv[i++];
+
+    argc -= i;
+    argv = &argv[i];
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
         command = commands[i];
 
         if (strcmp(command_name, command->name) == 0)
-            return (command->function) (argc, argv, first_command_arg);
+            return (command->function) (argc, argv);
     }
 
     std::cerr << "Error: unknown command " << command_name
