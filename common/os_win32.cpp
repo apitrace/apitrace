@@ -68,8 +68,6 @@ getProcessName(void)
     DWORD nWritten = GetModuleFileNameA(NULL, szProcessPath, PATH_MAX);
 
     path.truncate();
-    path.trimExtension();
-    path.trimDirectory();
 
     return path;
 }

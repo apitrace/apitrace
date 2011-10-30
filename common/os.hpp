@@ -119,11 +119,10 @@ public:
         return size - 1;
     }
 
-    void truncate(size_t size) {
-        assert(size > 0);
-        assert(size <= buffer.size());
-        assert(buffer[size - 1] == 0);
-        buffer.resize(size);
+    void truncate(size_t length) {
+        assert(length < buffer.size());
+        buffer[length] = 0;
+        buffer.resize(length + 1);
     }
 
     void truncate(void) {
@@ -138,7 +137,7 @@ public:
     void join(const Path & other) {
         size_t len = length();
         if (len > 0 && buffer[len - 1] != PATH_SEP) {
-            buffer.insert(buffer.begin() + len, PATH_SEP);
+            buffer.insert(buffer.begin() + len++, PATH_SEP);
         }
         buffer.insert(buffer.begin() + len, other.buffer.begin(), other.buffer.end() - 1);
     }

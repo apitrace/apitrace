@@ -95,7 +95,6 @@ getProcessName(void)
         return path;
     }
 #endif
-    szProcessPath[len] = 0;
     path.truncate(len);
 
     return path;
