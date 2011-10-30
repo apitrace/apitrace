@@ -29,7 +29,7 @@ directory.  You can specify the written trace filename by setting the
 
 View the trace with
 
-    /path/to/tracedump --color application.trace | less -R
+    /path/to/apitrace dump --color application.trace | less -R
 
 Replay the trace with
 
@@ -88,7 +88,7 @@ Windows
 
 * View the trace with
 
-        \path\to\tracedump application.trace
+        \path\to\apitrace dump application.trace
 
 * Replay the trace with
 

@@ -43,6 +43,5 @@ glstate_params.cpp
 glxtrace.cpp
 install_manifest.txt
 qapitrace
-tracedump
 traces
 wgltrace.cpp
