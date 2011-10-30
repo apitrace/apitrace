@@ -798,7 +798,7 @@ void MainWindow::initConnections()
     connect(m_ui.actionShowErrorsDock, SIGNAL(triggered(bool)),
             m_ui.errorsDock, SLOT(setVisible(bool)));
     connect(m_ui.errorsTreeWidget,
-            SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
+            SIGNAL(itemActivated(QTreeWidgetItem*, int)),
             this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
 }
 
