@@ -148,6 +148,10 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     }
 }
 
+void MainWindow::callItemActivated(const QModelIndex &index) {
+    lookupState();
+}
+
 void MainWindow::replayStart()
 {
     if (m_trace->isSaving()) {
@@ -779,6 +783,8 @@ void MainWindow::initConnections()
 
     connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
+    connect(m_ui.callView, SIGNAL(doubleClicked(const QModelIndex &)),
+            this, SLOT(callItemActivated(const QModelIndex &)));
     connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(customContextMenuRequested(QPoint)));
 
