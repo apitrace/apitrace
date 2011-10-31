@@ -41,6 +41,7 @@
 #endif
 
 #ifdef __APPLE__
+#include <sys/syslimits.h> // PATH_MAX
 #include <mach-o/dyld.h>
 #endif
 
