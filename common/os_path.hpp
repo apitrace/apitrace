@@ -72,6 +72,8 @@ protected:
 
     Buffer::iterator rfind(char c) {
         Buffer::iterator it = buffer.end();
+        assert(it != buffer.begin());
+        --it; // skill null
         while (it != buffer.begin()) {
             --it;
             if (*it == c) {
@@ -120,7 +122,7 @@ public:
     void trimExtension(void) {
         Buffer::iterator dot = rfind('.');
         if (dot != buffer.end()) {
-            buffer.erase(dot, buffer.end());
+            buffer.erase(dot, buffer.end() - 1);
         }
     }
 

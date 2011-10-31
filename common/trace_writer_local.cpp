@@ -99,6 +99,7 @@ LocalWriter::open(void) {
             else
                 szFileName = os::Path::format("%s.trace", prefix.str());
 
+            lpFileName = szFileName;
             file = fopen(lpFileName, "rb");
             if (file == NULL)
                 break;
@@ -107,8 +108,6 @@ LocalWriter::open(void) {
 
             ++dwCounter;
         }
-        
-        lpFileName = szFileName;
     }
 
     os::log("apitrace: tracing to %s\n", lpFileName);
