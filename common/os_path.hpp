@@ -32,6 +32,23 @@
 
 
 #include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stddef.h>
+
+#ifdef __MINGW32__
+// Some versions of are missing _vscprintf's decleration, although still
+// provide the symbol in the import library.
+extern "C" _CRTIMP int _vscprintf(const char *format, va_list argptr);
+#endif
+
+#ifndef va_copy
+#ifdef __va_copy
+#define va_copy(dest, src) __va_copy((dest), (src))
+#else
+#define va_copy(dest, src) (dest) = (src)
+#endif
+#endif
 
 #include <vector>
 
@@ -158,7 +175,7 @@ public:
         int length;
         va_list args_copy;
         va_copy(args_copy, args);
-#ifdef _MSC_VER
+#ifdef _WIN32
         /* We need to use _vcsprintf to calculate the length as vsnprintf returns -1
          * if the number of characters to write is greater than count.
          */
