@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include "os_path.hpp"
 #include "image.hpp"
 #include "retrace.hpp"
 #include "glproc.hpp"
@@ -139,8 +140,7 @@ void snapshot(unsigned call_no) {
     image::Image *ref = NULL;
 
     if (compare_prefix) {
-        char filename[PATH_MAX];
-        snprintf(filename, sizeof filename, "%s%010u.png", compare_prefix, call_no);
+        os::Path filename = os::Path::format("%s%010u.png", compare_prefix, call_no);
         ref = image::readPNG(filename);
         if (!ref) {
             return;
@@ -161,8 +161,7 @@ void snapshot(unsigned call_no) {
             snprintf(comment, sizeof comment, "%u", call_no);
             src->writePNM(std::cout, comment);
         } else {
-            char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
+            os::Path filename = os::Path::format("%s%010u.png", snapshot_prefix, call_no);
             if (src->writePNG(filename) && retrace::verbosity >= 0) {
                 std::cout << "Wrote " << filename << "\n";
             }

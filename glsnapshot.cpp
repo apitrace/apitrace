@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include "os_path.hpp"
 #include "image.hpp"
 #include "glproc.hpp"
 #include "glsize.hpp"
@@ -205,10 +206,9 @@ void snapshot(unsigned call_no) {
     if (snapshot_prefix) {
         image::Image *src = getDrawableImage();
         if (src) {
-            char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
+            os::Path filename = os::Path::format("%s%010u.png", snapshot_prefix, call_no);
             if (src->writePNG(filename)) {
-                os::log("apitrace: wrote %s\n", filename);
+                os::log("apitrace: wrote %s\n", filename.str());
             }
 
             delete src;

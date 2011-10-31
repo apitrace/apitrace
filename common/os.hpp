@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifdef _WIN32
 #ifndef snprintf
@@ -41,23 +42,13 @@
 #ifndef vsnprintf
 #define vsnprintf _vsnprintf
 #endif
-#define PATH_SEP '\\'
-#else /* !_WIN32 */
-#define PATH_SEP '/'
 #endif /* !_WIN32 */
-
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
 
 namespace os {
 
 void acquireMutex(void);
 
 void releaseMutex(void);
-
-bool getProcessName(char *str, size_t size);
-bool getCurrentDir(char *str, size_t size);
 
 void log(const char *format, ...)
 #ifdef __GNUC__
