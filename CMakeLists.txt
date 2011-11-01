@@ -181,6 +181,37 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 
 
 ##############################################################################
+# Installation directories
+
+if (WIN32 OR APPLE)
+    # On Windows/MacOSX, applications are usually installed on a directory of
+    # their own
+    set (DOC_INSTALL_DIR doc)
+else ()
+    set (DOC_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
+endif ()
+
+if (APPLE)
+    # MacOSX uses fat binaries, so no need to have per-architecture wrapper
+    # directories
+    set (WRAPPER_INSTALL_DIR lib/apitrace)
+else ()
+    set (WRAPPER_INSTALL_DIR lib/apitrace/${CMAKE_SYSTEM_PROCESSOR})
+endif ()
+
+# Expose the binary/install directories to source
+#
+# TODO: Use the same directory layout, for both build and install directories,
+# so that binaries can find each other using just relative paths.
+#
+add_definitions(
+    -DAPITRACE_BINARY_DIR="${CMAKE_BINARY_DIR}"
+    -DAPITRACE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+    -DAPITRACE_WRAPPER_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
+)
+
+
+##############################################################################
 # Common libraries / utilities
 
 include_directories (
@@ -230,6 +261,7 @@ set_target_properties (common PROPERTIES
 
 link_libraries (common)
 
+
 ##############################################################################
 # API tracers
 
@@ -253,7 +285,7 @@ if (WIN32)
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
-        install (TARGETS ddraw LIBRARY DESTINATION wrappers)
+        install (TARGETS ddraw LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D3D_INCLUDE_DIR)
 
     # d3d8.dll
@@ -270,7 +302,7 @@ if (WIN32)
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
-        install (TARGETS d3d8 LIBRARY DESTINATION wrappers)
+        install (TARGETS d3d8 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
 
     # d3d9.dll
@@ -287,7 +319,7 @@ if (WIN32)
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
-        install (TARGETS d3d9 LIBRARY DESTINATION wrappers)
+        install (TARGETS d3d9 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D3DX9_INCLUDE_DIR)
 
     # d3d10.dll
@@ -304,7 +336,7 @@ if (WIN32)
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
-        install (TARGETS d3d10 LIBRARY DESTINATION wrappers)
+        install (TARGETS d3d10 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D3D10_INCLUDE_DIR)
 
     # opengl32.dll
@@ -324,7 +356,7 @@ if (WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
-    install (TARGETS wgltrace LIBRARY DESTINATION wrappers)
+    install (TARGETS wgltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 
 elseif (APPLE)
     # OpenGL framework
@@ -351,7 +383,7 @@ elseif (APPLE)
 
     target_link_libraries (cgltrace dl)
 
-    install (TARGETS cgltrace LIBRARY DESTINATION wrappers)
+    install (TARGETS cgltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 else ()
     # libGL.so
     add_custom_command (
@@ -380,7 +412,7 @@ else ()
 
     target_link_libraries (glxtrace dl ${X11_X11_LIB})
 
-    install (TARGETS glxtrace LIBRARY DESTINATION lib/apitrace)
+    install (TARGETS glxtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
 
 
@@ -459,12 +491,6 @@ endif ()
 ##############################################################################
 # Packaging
 
-if (WIN32 OR APPLE)
-    set (INSTALL_DOC_DESTINATION doc)
-else ()
-    set (INSTALL_DOC_DESTINATION share/doc/${CMAKE_PROJECT_NAME})
-endif ()
-
 install (
     FILES
         BUGS.markdown
@@ -472,7 +498,7 @@ install (
         NEWS.markdown
         README.markdown
         TODO.markdown
-    DESTINATION ${INSTALL_DOC_DESTINATION}
+    DESTINATION ${DOC_INSTALL_DIR}
 )
 
 set (CPACK_PACKAGE_VERSION_MAJOR "2")
