@@ -70,10 +70,23 @@ protected:
     typedef std::vector<char> Buffer;
     Buffer buffer;
 
+    Buffer::iterator find(char c) {
+        Buffer::iterator it = buffer.begin();
+        /* Why do we make these functions fail on empty paths? */
+        assert(it != buffer.end());
+        while (it != buffer.end()) {
+            if (*it == c) {
+                return it;
+            }
+            ++it;
+        }
+        return buffer.end();
+    }
+
     Buffer::iterator rfind(char c) {
         Buffer::iterator it = buffer.end();
         assert(it != buffer.begin());
-        --it; // skill null
+        --it; // skip null
         while (it != buffer.begin()) {
             --it;
             if (*it == c) {
@@ -116,6 +129,31 @@ public:
         Buffer::iterator sep = rfind(OS_DIR_SEP);
         if (sep != buffer.end()) {
             buffer.erase(buffer.begin(), sep + 1);
+        }
+    }
+
+    /* Trim filename component (leaving containing directory).
+     *
+     * This function removes everything after the final path
+     * separator, as well as that separator itself if it is not the
+     * only remaining separator.
+     *
+     * Some specific consequences of the above:
+     *
+     * 1. A path with no separator at all is unchanged.
+     * 2. A path with a trailing separator has only that separator removed
+     * 3. A path of just the root directory is unchaged.
+     */
+    void trimFilename(void) {
+        Buffer::iterator first = find(OS_DIR_SEP);
+        Buffer::iterator last = rfind(OS_DIR_SEP);
+        if (last == buffer.end()) {
+            return;
+        }
+        if (last == first) {
+            buffer.erase(first + 1, buffer.end() - 1);
+        } else {
+            buffer.erase(last, buffer.end() - 1);
         }
     }
 
