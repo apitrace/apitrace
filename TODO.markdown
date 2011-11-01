@@ -56,6 +56,63 @@ GUI
 
 * Breakpointing and step-by-step debugging.
 
+CLI
+---
+
+* Add trace:      Generate a new trace by executing the given program
+* Add retrace     Replay all the calls in a trace
+* Add trim        Trim a trace by including only the specified calls/frames
+* Add dump-state  Output the OpenGL state in JSON format
+* Add dump-images Create image files for each frame/drawing operation of a trace
+* Add diff        Identify differences between a trace dump and another trace
+* Add diff-state  Identify differences between a state dump and another trace
+* Add diff-images Identify differences between images and another trace
+
+* Add some common command-line options:
+
+  Most commands acting on a trace accept the following common options:
+
+   --calls=[RANGE]       Operate only on calls with index numbers within
+			 the specified range.
+
+   --frames=[RANGE]      Operate only on frames with index numbers within
+			 the specified range.
+
+   --functions=[REGEXP]  Operate only on function calls which have a
+			 name that matches the given regular expression.
+
+   A [RANGE] can be any of the following:
+
+     Example    Description        
+     -------    -----------        
+     4          A single number specifying a single call or frame.
+
+     10-20      Two numbers separated by '-' (FIRST-LAST) specifying a
+		range of consecutive calls/frames from FIRST to LAST. If
+		either of FIRST or LAST is omitted, the first or last
+		call/frame index in the trace will be used.
+
+     1-100/5    Either of the above range specifications followed by '@'
+		and a number (INTERVAL). This specifies the inclusion of
+		only each INTERVAL call/frame within the range. For
+		example, 1-100@5 species frame 1, frame 5, frame 10,
+		... up to frame 100.
+
+     4,10-20/2  A comma separated list of any of the above range
+		specifications, specifying the union of the ranges.
+
+* Add some retrace-specific options (-b, -db, -sb, -v)
+
+* Add some trime-specific options (--every={draw,framebuffer,frame})
+
+* Accept a filename for --calls or --functions (to use the same calls
+  or functions as present in a trace dump).
+
+* Add an "apitrace bisect" for trimming down a trace based on user
+  input at each stage.
+
+* Add an "apitrace git-bisect-helper" for calling from git-bisect.
+
 
 Other
 -----
