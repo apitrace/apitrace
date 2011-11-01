@@ -27,7 +27,7 @@
 
 
 /*
- * Top-level application for accessing almost of apitrace
+ * Top-level application for accessing almost all of apitrace
  * functionality.
  */
 
