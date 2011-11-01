@@ -56,18 +56,18 @@ help_usage()
 }
 
 static int
-help_command(int argc, char *argv[]);
+do_help_command(int argc, char *argv[]);
 
-const Command help = {
+const Command help_command = {
     "help",
     help_synopsis,
     help_usage,
-    help_command
+    do_help_command
 };
 
 static const Command * commands[] = {
-    &dump,
-    &help,
+    &dump_command,
+    &help_command
 };
 
 static void
@@ -110,7 +110,7 @@ list_commands(void) {
 
 
 static int
-help_command(int argc, char *argv[])
+do_help_command(int argc, char *argv[])
 {
     const Command *command;
     int i;
@@ -152,7 +152,7 @@ main(int argc, char **argv)
         }
 
         if (strcmp(arg, "--help") == 0) {
-            return help_command(0, NULL);
+            return do_help_command(0, NULL);
         } else {
             std::cerr << "Error: unknown option " << arg << "\n";
             usage();

@@ -114,7 +114,7 @@ command(int argc, char *argv[])
     return 0;
 }
 
-const Command dump = {
+const Command dump_command = {
     "dump",
     synopsis,
     usage,

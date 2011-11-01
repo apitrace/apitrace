@@ -40,8 +40,6 @@ struct Command {
     Function function;
 };
 
-
-extern const Command dump;
-
+extern const Command dump_command;
 
 #endif /* _APITRACE_CLI_HPP_ */
