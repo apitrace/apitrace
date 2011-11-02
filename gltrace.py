@@ -109,10 +109,11 @@ class GlTracer(Tracer):
 
         print '#include "gltrace.hpp"'
         print
-        print '// Whether user arrays were used'
-        print 'static bool __user_arrays = false;'
-        print 'static bool __user_arrays_arb = false;'
-        print 'static bool __user_arrays_nv = false;'
+        print 'struct tracer_context {'
+        print '    bool user_arrays;'
+        print '    bool user_arrays_arb;'
+        print '    bool user_arrays_nv;'
+        print '};'
         print
         
         # Which glVertexAttrib* variant to use
@@ -122,12 +123,20 @@ class GlTracer(Tracer):
         print '    VERTEX_ATTRIB_NV,'
         print '};'
         print
+        print 'static tracer_context *__get_context(void)'
+        print '{'
+        print '    // TODO return the context set by other APIs (GLX, EGL, and etc.)'
+        print '    static tracer_context __ctx = { false, false, false };'
+        print '    return &__ctx;'
+        print '}'
+        print
         print 'static vertex_attrib __get_vertex_attrib(void) {'
-        print '    if (__user_arrays_arb || __user_arrays_nv) {'
+        print '    tracer_context *ctx = __get_context();'
+        print '    if (ctx->user_arrays_arb || ctx->user_arrays_nv) {'
         print '        GLboolean __vertex_program = GL_FALSE;'
         print '        __glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &__vertex_program);'
         print '        if (__vertex_program) {'
-        print '            if (__user_arrays_nv) {'
+        print '            if (ctx->user_arrays_nv) {'
         print '                GLint __vertex_program_binding_nv = 0;'
         print '                __glGetIntegerv(GL_VERTEX_PROGRAM_BINDING_NV, &__vertex_program_binding_nv);'
         print '                if (__vertex_program_binding_nv) {'
@@ -144,7 +153,8 @@ class GlTracer(Tracer):
         # Whether we need user arrays
         print 'static inline bool __need_user_arrays(void)'
         print '{'
-        print '    if (!__user_arrays) {'
+        print '    tracer_context *ctx = __get_context();'
+        print '    if (!ctx->user_arrays) {'
         print '        return false;'
         print '    }'
         print
@@ -373,11 +383,12 @@ class GlTracer(Tracer):
             print '    GLint __array_buffer = 0;'
             print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
-            print '        __user_arrays = true;'
+            print '        tracer_context *ctx = __get_context();'
+            print '        ctx->user_arrays = true;'
             if function.name == "glVertexAttribPointerARB":
-                print '        __user_arrays_arb = true;'
+                print '        ctx->user_arrays_arb = true;'
             if function.name == "glVertexAttribPointerNV":
-                print '        __user_arrays_nv = true;'
+                print '        ctx->user_arrays_nv = true;'
             self.dispatch_function(function)
 
             # And also break down glInterleavedArrays into the individual calls
