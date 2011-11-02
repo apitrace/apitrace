@@ -319,6 +319,14 @@ class GlTracer(Tracer):
         print '}'
         print
 
+        # states such as GL_UNPACK_ROW_LENGTH are not available in GLES
+        print 'static inline bool'
+        print 'can_unpack_subimage(void) {'
+        print '    tracer_context *ctx = __get_context();'
+        print '    return (ctx->profile == PROFILE_COMPAT);'
+        print '}'
+        print
+
     array_pointer_function_names = set((
         "glVertexPointer",
         "glNormalPointer",
