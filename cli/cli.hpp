@@ -41,5 +41,6 @@ struct Command {
 };
 
 extern const Command dump_command;
+extern const Command trace_command;
 
 #endif /* _APITRACE_CLI_HPP_ */

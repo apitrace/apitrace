@@ -59,7 +59,6 @@ GUI
 CLI
 ---
 
-* Add trace:      Generate a new trace by executing the given program
 * Add retrace     Replay all the calls in a trace
 * Add trim        Trim a trace by including only the specified calls/frames
 * Add dump-state  Output the OpenGL state in JSON format

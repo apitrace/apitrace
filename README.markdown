@@ -16,12 +16,12 @@ Basic usage
 ===========
 
 
-Linux
------
+Linux and Mac OS X
+------------------
 
 Run the application you want to trace as
 
-     LD_PRELOAD=/path/to/glxtrace.so /path/to/application
+    apitrace trace application [args...]
 
 and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
@@ -42,15 +42,18 @@ Start the GUI as
 
     /path/to/qapitrace application.trace
 
+Special notes on "apitrace trace" for Linux
+-------------------------------------------
+The "apitrace trace" command uses the `LD_PRELOAD` mechanism which
+should work with most applications.  There are some applications,
+e.g., Unigine Heaven, which global function pointers with the same
+name as GL entrypoints, living in a shared object that wasn't linked
+with `-Bsymbolic` flag, so relocations to those globals function
+pointers get overwritten with the address to our wrapper library, and
+the application will segfault when trying to write to them.
 
-The `LD_PRELOAD` mechanism should work with most applications.  There are some
-applications, e.g., Unigine Heaven, which global function pointers with the
-same name as GL entrypoints, living in a shared object that wasn't linked with
-`-Bsymbolic` flag, so relocations to those globals function pointers get
-overwritten with the address to our wrapper library, and the application will
-segfault when trying to write to them.  For these applications it is possible
-to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
-`LD_LIBRARY_PATH`:
+For these applications it is possible to trace by using `glxtrace.so`
+as an ordinary `libGL.so` and injecting into `LD_LIBRARY_PATH`:
 
     ln -s glxtrace.so libGL.so
     ln -s glxtrace.so libGL.so.1
@@ -63,19 +66,18 @@ See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
 
+Special notes on "apitrace trace" for Mac OS X
+----------------------------------------------
+On Mac OS X the "apitrace trace" command sets the following
+environment variable before executing the program:
 
-Mac OS X
---------
-
-Usage on Mac OS X is similar to Linux above, except for the tracing procedure,
-which is instead:
-
-    DYLD_LIBRARY_PATH=/path/to/apitrace/wrappers /path/to/application
+    DYLD_LIBRARY_PATH=/path/to/apitrace/wrappers
 
 Note that although Mac OS X has an `LD_PRELOAD` equivalent,
-`DYLD_INSERT_LIBRARIES`, it is mostly useless because it only works with
-`DYLD_FORCE_FLAT_NAMESPACE=1` which breaks most applications.  See the `dyld` man
-page for more details about these environment flags.
+`DYLD_INSERT_LIBRARIES`, it is mostly useless because it only works
+with `DYLD_FORCE_FLAT_NAMESPACE=1` which breaks most applications.
+See the `dyld` man page for more details about these environment
+flags.
 
 
 Windows
