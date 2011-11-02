@@ -758,4 +758,24 @@ __AttribList_size(const T *pAttribList)
 }
 
 
+/*
+ * (key, value) attribute list, terminated by the given terminator.
+ */
+template<class T>
+static inline size_t
+__AttribList_size(const T *pAttribList, T terminator)
+{
+    size_t size = 0;
+
+    if (pAttribList) {
+        while (pAttribList[size] != terminator)
+            size += 2;
+        // terminator also counts
+        size++;
+    }
+
+    return size;
+}
+
+
 #endif /* _GL_SIZE_HPP_ */
