@@ -109,7 +109,12 @@ class GlTracer(Tracer):
 
         print '#include "gltrace.hpp"'
         print
+        print 'enum gl_context_profile {'
+        print '    PROFILE_COMPAT,'
+        print '};'
+        print
         print 'struct tracer_context {'
+        print '    enum gl_context_profile profile;'
         print '    bool user_arrays;'
         print '    bool user_arrays_arb;'
         print '    bool user_arrays_nv;'
@@ -126,7 +131,7 @@ class GlTracer(Tracer):
         print 'static tracer_context *__get_context(void)'
         print '{'
         print '    // TODO return the context set by other APIs (GLX, EGL, and etc.)'
-        print '    static tracer_context __ctx = { false, false, false };'
+        print '    static tracer_context __ctx = { PROFILE_COMPAT, false, false, false };'
         print '    return &__ctx;'
         print '}'
         print
