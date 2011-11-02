@@ -89,6 +89,7 @@ getProcessName(void)
         *buf = 0;
         return path;
     }
+    len = strlen(buf);
 #else
     ssize_t len;
     len = readlink("/proc/self/exe", buf, size - 1);
