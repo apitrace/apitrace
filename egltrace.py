@@ -35,6 +35,7 @@
 from specs.stdapi import API
 from specs.glapi import glapi
 from specs.eglapi import eglapi
+from specs.glesapi import glesapi
 from gltrace import GlTracer
 from dispatch import function_pointer_type, function_pointer_value
 
@@ -52,14 +53,29 @@ class EglTracer(GlTracer):
         if function.name == 'eglSwapBuffers':
             print '    glsnapshot::snapshot(__call);'
         if function.name in ('glFinish', 'glFlush'):
+            print '    tracer_context *ctx = __get_context();'
             print '    GLint __draw_framebuffer = 0;'
             print '    __glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &__draw_framebuffer);'
-            print '    if (__draw_framebuffer == 0) {'
+            print '    if (__draw_framebuffer == 0 && ctx->profile == PROFILE_COMPAT) {'
             print '        GLint __draw_buffer = GL_NONE;'
             print '        __glGetIntegerv(GL_DRAW_BUFFER, &__draw_buffer);'
             print '        if (__draw_buffer == GL_FRONT) {'
             print '             glsnapshot::snapshot(__call);'
             print '        }'
+            print '    }'
+        if function.name == 'eglMakeCurrent':
+            print '    // update the profile'
+            print '    if (ctx != EGL_NO_CONTEXT) {'
+            print '        EGLint api = EGL_OPENGL_ES_API, version = 1;'
+            print '        tracer_context *tr = __get_context();'
+            print '        __eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
+            print '        __eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
+            print '        if (api == EGL_OPENGL_API)'
+            print '            tr->profile = PROFILE_COMPAT;'
+            print '        else if (version == 1)'
+            print '            tr->profile = PROFILE_ES1;'
+            print '        else'
+            print '            tr->profile = PROFILE_ES2;'
             print '    }'
 
     def wrap_ret(self, function, instance):
@@ -90,6 +106,7 @@ if __name__ == '__main__':
     api = API()
     api.add_api(eglapi)
     api.add_api(glapi)
+    api.add_api(glesapi)
     tracer = EglTracer()
     tracer.trace_api(api)
 
