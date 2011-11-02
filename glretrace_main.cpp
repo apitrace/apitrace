@@ -202,6 +202,7 @@ static void display(void) {
     retracer.addCallbacks(glx_callbacks);
     retracer.addCallbacks(wgl_callbacks);
     retracer.addCallbacks(cgl_callbacks);
+    retracer.addCallbacks(egl_callbacks);
 
     startTime = os::getTime();
     trace::Call *call;

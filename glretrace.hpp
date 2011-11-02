@@ -66,6 +66,7 @@ extern const retrace::Entry gl_callbacks[];
 extern const retrace::Entry cgl_callbacks[];
 extern const retrace::Entry glx_callbacks[];
 extern const retrace::Entry wgl_callbacks[];
+extern const retrace::Entry egl_callbacks[];
 
 void snapshot(unsigned call_no);
 void frame_complete(trace::Call &call);

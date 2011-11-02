@@ -494,6 +494,7 @@ add_executable (glretrace
     glretrace_cgl.cpp
     glretrace_glx.cpp
     glretrace_wgl.cpp
+    glretrace_egl.cpp
     glretrace_main.cpp
     glstate.cpp
     glstate_params.cpp
