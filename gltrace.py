@@ -104,17 +104,22 @@ class GlTracer(Tracer):
     ]
     arrays.reverse()
 
+    # arrays available in PROFILE_ES1
+    arrays_es1 = ("Vertex", "Normal", "Color", "TexCoord")
+
     def header(self, api):
         Tracer.header(self, api)
 
         print '#include "gltrace.hpp"'
         print
-        print 'enum gl_context_profile {'
+        print 'enum tracer_context_profile {'
         print '    PROFILE_COMPAT,'
+        print '    PROFILE_ES1,'
+        print '    PROFILE_ES2,'
         print '};'
         print
         print 'struct tracer_context {'
-        print '    enum gl_context_profile profile;'
+        print '    enum tracer_context_profile profile;'
         print '    bool user_arrays;'
         print '    bool user_arrays_arb;'
         print '    bool user_arrays_nv;'
@@ -165,10 +170,16 @@ class GlTracer(Tracer):
         print
 
         for camelcase_name, uppercase_name in self.arrays:
+            # in which profile is the array available?
+            profile_check = 'ctx->profile == PROFILE_COMPAT'
+            if camelcase_name in self.arrays_es1:
+                profile_check = '(' + profile_check + ' || ctx->profile == PROFILE_ES1)';
+
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
             binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
             print '    // %s' % function_name
+            print '  if (%s) {' % profile_check
             self.array_prolog(api, uppercase_name)
             print '    if (__glIsEnabled(%s)) {' % enable_name
             print '        GLint __binding = 0;'
@@ -179,8 +190,13 @@ class GlTracer(Tracer):
             print '        }'
             print '    }'
             self.array_epilog(api, uppercase_name)
+            print '  }'
             print
 
+        print '    // ES1 does not support generic vertex attributes'
+        print '    if (ctx->profile == PROFILE_ES1)'
+        print '        return false;'
+        print
         print '    vertex_attrib __vertex_attrib = __get_vertex_attrib();'
         print
         print '    // glVertexAttribPointer'
@@ -667,8 +683,10 @@ class GlTracer(Tracer):
                 or (isinstance(arg.type, stdapi.Const) \
                     and isinstance(arg.type.type, stdapi.Blob))):
             print '    {'
+            print '        tracer_context *ctx = __get_context();'
             print '        GLint __unpack_buffer = 0;'
-            print '        __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
+            print '        if (ctx->profile == PROFILE_COMPAT)'
+            print '            __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
             print '        if (__unpack_buffer) {'
             print '            trace::localWriter.writeOpaque(%s);' % arg.name
             print '        } else {'
@@ -701,14 +719,21 @@ class GlTracer(Tracer):
         # update the state
         print 'static void __trace_user_arrays(GLuint maxindex)'
         print '{'
+        print '    tracer_context *ctx = __get_context();'
 
         for camelcase_name, uppercase_name in self.arrays:
+            # in which profile is the array available?
+            profile_check = 'ctx->profile == PROFILE_COMPAT'
+            if camelcase_name in self.arrays_es1:
+                profile_check = '(' + profile_check + ' || ctx->profile == PROFILE_ES1)';
+
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
             binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
             function = api.get_function_by_name(function_name)
 
             print '    // %s' % function.prototype()
+            print '  if (%s) {' % profile_check
             self.array_trace_prolog(api, uppercase_name)
             self.array_prolog(api, uppercase_name)
             print '    if (__glIsEnabled(%s)) {' % enable_name
@@ -745,6 +770,7 @@ class GlTracer(Tracer):
             print '    }'
             self.array_epilog(api, uppercase_name)
             self.array_trace_epilog(api, uppercase_name)
+            print '  }'
             print
 
         # Samething, but for glVertexAttribPointer*
@@ -757,6 +783,10 @@ class GlTracer(Tracer):
         # This means that the implementations of these functions do not always
         # alias, and they need to be considered independently.
         #
+        print '    // ES1 does not support generic vertex attributes'
+        print '    if (ctx->profile == PROFILE_ES1)'
+        print '        return;'
+        print
         print '    vertex_attrib __vertex_attrib = __get_vertex_attrib();'
         print
         for suffix in ['', 'ARB', 'NV']:
@@ -833,7 +863,10 @@ class GlTracer(Tracer):
             print '    GLint client_active_texture = 0;'
             print '    __glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &client_active_texture);'
             print '    GLint max_texture_coords = 0;'
-            print '    __glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+            print '    if (ctx->profile == PROFILE_COMPAT)'
+            print '        __glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+            print '    else'
+            print '        __glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_coords);'
             print '    for (GLint unit = 0; unit < max_texture_coords; ++unit) {'
             print '        GLint texture = GL_TEXTURE0 + unit;'
             print '        __glClientActiveTexture(texture);'
