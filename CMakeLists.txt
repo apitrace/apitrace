@@ -48,6 +48,12 @@ else ()
     set (X11_GL_LIB ${OPENGL_gl_LIBRARY})
 
     include_directories (${X11_INCLUDE_DIR})
+
+    pkg_check_modules (EGL egl)
+    if (EGL_FOUND)
+        include_directories (${EGL_INCLUDE_DIR})
+        add_definitions (-DHAVE_EGL)
+    endif ()
 endif ()
 
 
@@ -425,6 +431,43 @@ else ()
     install (TARGETS glxtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
 
+
+if (EGL_FOUND)
+    # libEGL.so/libGL.so
+    add_custom_command (
+        OUTPUT egltrace.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
+        DEPENDS egltrace.py gltrace.py trace.py specs/eglapi.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/stdapi.py
+    )
+
+    add_library (egltrace SHARED
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+        egltrace.cpp
+        glcaps.cpp
+        glsnapshot.cpp
+    )
+
+    set_property (
+        TARGET egltrace
+        APPEND
+        PROPERTY COMPILE_DEFINITIONS "TRACE_EGL"
+    )
+
+    set_target_properties (egltrace PROPERTIES
+        # avoid the default "lib" prefix
+        PREFIX ""
+    )
+
+    # Prevent symbol relocations internal to our wrapper library to be
+    # overwritten by the application.
+    set_target_properties (egltrace PROPERTIES
+        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+    )
+
+    target_link_libraries (egltrace dl)
+
+    install (TARGETS egltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+endif ()
 
 ##############################################################################
 # API retracers

@@ -33,7 +33,7 @@
 #include "glsize.hpp"
 
 
-#if !defined(_WIN32) && !defined(__APPLE__)
+#if !defined(TRACE_EGL) && !defined(_WIN32) && !defined(__APPLE__)
 
 
 #include <X11/Xproto.h>
@@ -66,7 +66,12 @@ namespace glsnapshot {
  */
 static image::Image *
 getDrawableImage(void) {
-#if defined(_WIN32)
+#if defined(TRACE_EGL)
+
+    // TODO
+    return NULL;
+
+#elif defined(_WIN32)
 
     HDC hDC = __wglGetCurrentDC();
     if (!hDC) {
