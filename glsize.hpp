@@ -60,6 +60,7 @@ __gl_type_size(GLenum type)
     case GL_UNSIGNED_INT:
     case GL_FLOAT:
     case GL_4_BYTES:
+    case GL_FIXED:
         return 4;
     case GL_DOUBLE:
         return 8;
