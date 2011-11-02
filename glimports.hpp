@@ -137,4 +137,7 @@ CGLError CGLUpdateContext(CGLContextObj ctx);
 #endif
 
 
+#include "eglimports.hpp"
+
+
 #endif /* _GLIMPORTS_HPP_ */

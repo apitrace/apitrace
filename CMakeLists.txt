@@ -179,6 +179,8 @@ endif ()
 # For glext headers
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 
+# For EGL headers
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khr)
 
 ##############################################################################
 # Installation directories
