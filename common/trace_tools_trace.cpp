@@ -106,7 +106,7 @@ traceProgram(char * const *argv,
 
 #else
 
-#if defined(__APPLE)
+#if defined(__APPLE__)
     /* On Mac OS X, using DYLD_LIBRARY_PATH, we actually set the
      * directory, not the file. */
     wrapper.trimFilename();
