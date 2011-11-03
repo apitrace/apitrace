@@ -71,7 +71,7 @@ Tracing manually
 
 Run the application you want to trace as
 
-     LD_PRELOAD=/path/to/glxtrace.so /path/to/application
+     LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
 
 and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
@@ -86,10 +86,10 @@ segfault when trying to write to them.  For these applications it is possible
 to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
 `LD_LIBRARY_PATH`:
 
-    ln -s glxtrace.so libGL.so
-    ln -s glxtrace.so libGL.so.1
-    ln -s glxtrace.so libGL.so.1.2
-    export LD_LIBRARY_PATH=/path/to/directory/where/glxtrace/is:$LD_LIBRARY_PATH
+    ln -s glxtrace.so wrappers/libGL.so
+    ln -s glxtrace.so wrappers/libGL.so.1
+    ln -s glxtrace.so wrappers/libGL.so.1.2
+    export LD_LIBRARY_PATH=/path/to/apitrace/wrappers:$LD_LIBRARY_PATH
     export TRACE_LIBGL=/path/to/real/libGL.so.1
     /path/to/application
 
