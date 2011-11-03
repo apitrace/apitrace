@@ -26,12 +26,12 @@
 
 set -e
 
-TRACEDUMP=${TRACEDUMP:-`dirname "$0"`/../tracedump}
+APITRACE=${APITRACE:-`dirname "$0"`/../apitrace}
 
-$TRACEDUMP
+$APITRACE dump
 
 stripdump () {
-    $TRACEDUMP --color=never "$1" \
+    $APITRACE dump --color=never "$1" \
     | sed \
         -e 's/\r$//g' \
         -e 's/^[0-9]\+ //' \

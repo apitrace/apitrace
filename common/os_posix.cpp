@@ -38,16 +38,24 @@
 #include <signal.h>
 
 #ifdef __linux__
+#include <linux/limits.h> // PATH_MAX
 #include <malloc.h>
 #endif /* __linux__ */
 
 #ifdef __APPLE__
+#include <sys/syslimits.h> // PATH_MAX
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
 #include <mach-o/dyld.h>
 #endif /* __APPLE__ */
 
+#ifndef PATH_MAX
+#warning PATH_MAX undefined
+#define PATH_MAX 4096
+#endif
+
 #include "os.hpp"
+#include "os_path.hpp"
 
 
 namespace os {
@@ -78,55 +86,54 @@ releaseMutex(void)
 }
 
 
-bool
-getProcessName(char *str, size_t size)
+Path
+getProcessName(void)
 {
-    char szProcessPath[PATH_MAX + 1];
-    char *lpProcessName;
+    Path path;
+    size_t size = PATH_MAX;
+    char *buf = path.buf(size);
 
     // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
 #ifdef __APPLE__
-    uint32_t len = sizeof szProcessPath;
-    if (_NSGetExecutablePath(szProcessPath, &len) != 0) {
-        *str = 0;
-        return false;
+    uint32_t len = size;
+    if (_NSGetExecutablePath(buf, &len) != 0) {
+        *buf = 0;
+        return path;
     }
 #else
     ssize_t len;
-    len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
+    len = readlink("/proc/self/exe", buf, size - 1);
     if (len == -1) {
         // /proc/self/exe is not available on setuid processes, so fallback to
         // /proc/self/cmdline.
         int fd = open("/proc/self/cmdline", O_RDONLY);
         if (fd >= 0) {
-            len = read(fd, szProcessPath, sizeof(szProcessPath) - 1);
+            len = read(fd, buf, size - 1);
             close(fd);
         }
     }
     if (len <= 0) {
-        snprintf(str, size, "%i", (int)getpid());
-        return true;
+        snprintf(buf, size, "%i", (int)getpid());
+        return path;
     }
 #endif
-    szProcessPath[len] = 0;
+    path.truncate(len);
 
-    lpProcessName = strrchr(szProcessPath, '/');
-    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
-
-    strncpy(str, lpProcessName, size);
-    if (size)
-        str[size - 1] = 0;
-
-    return true;
+    return path;
 }
 
-bool
-getCurrentDir(char *str, size_t size)
+Path
+getCurrentDir(void)
 {
-    char *ret;
-    ret = getcwd(str, size);
-    str[size - 1] = 0;
-    return ret ? true : false;
+    Path path;
+    size_t size = PATH_MAX;
+    char *buf = path.buf(size);
+
+    getcwd(buf, size);
+    buf[size - 1] = 0;
+    
+    path.truncate();
+    return path;
 }
 
 void

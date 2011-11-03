@@ -46,6 +46,17 @@ if __name__ == '__main__':
     print '#include "d3d9imports.hpp"'
     print '#include "d3dshader.hpp"'
     print
+    print '''
+static inline size_t
+_declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
+    size_t count = 0;
+    if (pVertexElements) {
+        while (pVertexElements[count++].Stream != 0xff)
+            ;
+    }
+    return count;
+}
+'''
     tracer = D3D9Tracer('d3d9.dll')
     tracer.trace_api(d3d9)
 

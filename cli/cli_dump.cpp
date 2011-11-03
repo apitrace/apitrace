@@ -23,16 +23,11 @@
  *
  **************************************************************************/
 
-
-/*
- * Simple utility to dump a trace to standard output.
- */
-
-
 #include <string.h>
 
-#include "trace_parser.hpp"
+#include "cli.hpp"
 
+#include "trace_parser.hpp"
 
 enum ColorOption {
     COLOR_OPTION_NEVER = 0,
@@ -42,25 +37,26 @@ enum ColorOption {
 
 static ColorOption color = COLOR_OPTION_AUTO;
 
+static const char *synopsis = "Dump given trace(s) to standard output.";
 
-static void usage(void) {
-    std::cout <<
-        "Usage: tracedump [OPTION] [TRACE]...\n"
-        "Dump TRACE to standard output.\n"
+static void
+usage(void)
+{
+    std::cout
+        << "usage: apitrace dump [OPTIONS] <trace-file>...\n"
+        << synopsis << "\n"
         "\n"
-        "  --help               display this help and exit\n"
-        "  --color[=WHEN]\n"
-        "  --colour[=WHEN]      colored syntax highlighting;\n"
-        "                       WHEN is 'always', 'never', or 'auto'\n"
-    ;
+        "    --color=<WHEN>\n"
+        "    --colour=<WHEN>     Colored syntax highlighting\n"
+        "                        WHEN is 'auto', 'always', or 'never'\n";
 }
 
-
-int main(int argc, char **argv)
+static int
+command(int argc, char *argv[])
 {
     int i;
 
-    for (i = 1; i < argc; ++i) {
+    for (i = 0; i < argc; ++i) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {
@@ -117,3 +113,10 @@ int main(int argc, char **argv)
 
     return 0;
 }
+
+const Command dump = {
+    "dump",
+    synopsis,
+    usage,
+    command
+};

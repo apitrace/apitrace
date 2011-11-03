@@ -760,7 +760,7 @@ void MainWindow::initConnections()
     connect(m_ui.actionOptions, SIGNAL(triggered()),
             this, SLOT(showSettings()));
 
-    connect(m_ui.callView, SIGNAL(activated(const QModelIndex &)),
+    connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
     connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(customContextMenuRequested(QPoint)));
@@ -798,7 +798,7 @@ void MainWindow::initConnections()
     connect(m_ui.actionShowErrorsDock, SIGNAL(triggered(bool)),
             m_ui.errorsDock, SLOT(setVisible(bool)));
     connect(m_ui.errorsTreeWidget,
-            SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
+            SIGNAL(itemActivated(QTreeWidgetItem*, int)),
             this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
 }
 

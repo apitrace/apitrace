@@ -28,6 +28,7 @@ _CPack_Packages
 CMakeCache.txt
 CMakeFiles
 Makefile
+apitrace
 build
 cgltrace.cpp
 d3d10trace.cpp
@@ -42,6 +43,5 @@ glstate_params.cpp
 glxtrace.cpp
 install_manifest.txt
 qapitrace
-tracedump
 traces
 wgltrace.cpp

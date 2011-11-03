@@ -36,6 +36,7 @@
 #include <list>
 
 #include "os.hpp"
+#include "os_path.hpp"
 #include "range.hpp"
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
@@ -79,32 +80,33 @@ LocalWriter::~LocalWriter()
 
 void
 LocalWriter::open(void) {
+    os::Path szFileName;
 
-    static unsigned dwCounter = 0;
-
-    const char *szExtension = "trace";
-    char szFileName[PATH_MAX];
     const char *lpFileName;
 
     lpFileName = getenv("TRACE_FILE");
-    if (lpFileName) {
-        strncpy(szFileName, lpFileName, PATH_MAX);
-    }
-    else {
-        char szProcessName[PATH_MAX];
-        char szCurrentDir[PATH_MAX];
-        os::getProcessName(szProcessName, PATH_MAX);
-        os::getCurrentDir(szCurrentDir, PATH_MAX);
+    if (!lpFileName) {
+        static unsigned dwCounter = 0;
+
+        os::Path process = os::getProcessName();
+#ifdef _WIN32
+        process.trimExtension();
+#endif
+        process.trimDirectory();
+
+        os::Path prefix = os::getCurrentDir();
+        prefix.join(process);
 
         for (;;) {
             FILE *file;
 
             if (dwCounter)
-                snprintf(szFileName, PATH_MAX, "%s%c%s.%u.%s", szCurrentDir, PATH_SEP, szProcessName, dwCounter, szExtension);
+                szFileName = os::Path::format("%s.%u.trace", prefix.str(), dwCounter);
             else
-                snprintf(szFileName, PATH_MAX, "%s%c%s.%s", szCurrentDir, PATH_SEP, szProcessName, szExtension);
+                szFileName = os::Path::format("%s.trace", prefix.str());
 
-            file = fopen(szFileName, "rb");
+            lpFileName = szFileName;
+            file = fopen(lpFileName, "rb");
             if (file == NULL)
                 break;
 
@@ -114,9 +116,9 @@ LocalWriter::open(void) {
         }
     }
 
-    os::log("apitrace: tracing to %s\n", szFileName);
+    os::log("apitrace: tracing to %s\n", lpFileName);
 
-    Writer::open(szFileName);
+    Writer::open(lpFileName);
 
 #if 0
     // For debugging the exception handler

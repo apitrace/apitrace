@@ -30,6 +30,7 @@
 #include <stdio.h>
 
 #include "os.hpp"
+#include "os_path.hpp"
 
 
 namespace os {
@@ -58,35 +59,35 @@ releaseMutex(void)
 }
 
 
-bool
-getProcessName(char *str, size_t size)
+Path
+getProcessName(void)
 {
-    char szProcessPath[PATH_MAX];
-    char *lpProcessName;
-    char *lpProcessExt;
+    Path path;
+    size_t size = MAX_PATH;
+    char *buf = path.buf(size);
 
-    GetModuleFileNameA(NULL, szProcessPath, sizeof(szProcessPath)/sizeof(szProcessPath[0]));
+    DWORD nWritten = GetModuleFileNameA(NULL, buf, size);
+    (void)nWritten;
 
-    lpProcessName = strrchr(szProcessPath, '\\');
-    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
+    path.truncate();
 
-    lpProcessExt = strrchr(lpProcessName, '.');
-    if (lpProcessExt) {
-        *lpProcessExt = '\0';
-    }
-
-    strncpy(str, lpProcessName, size);
-
-    return true;
+    return path;
 }
 
-bool
-getCurrentDir(char *str, size_t size)
+Path
+getCurrentDir(void)
 {
-    DWORD ret;
-    ret = GetCurrentDirectoryA(size, str);
-    str[size - 1] = 0;
-    return ret == 0 ? false : true;
+    Path path;
+    size_t size = MAX_PATH;
+    char *buf = path.buf(size);
+    
+    DWORD ret = GetCurrentDirectoryA(size, buf);
+    (void)ret;
+    
+    buf[size - 1] = 0;
+    path.truncate();
+
+    return path;
 }
 
 void

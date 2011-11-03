@@ -19,7 +19,7 @@ Retracer::Retracer(QObject *parent)
 #else
     QString format = QLatin1String("%1:");
 #endif
-    QString buildPath = format.arg(BUILD_DIR);
+    QString buildPath = format.arg(APITRACE_BINARY_DIR);
     m_processEnvironment = QProcessEnvironment::systemEnvironment();
     m_processEnvironment.insert("PATH", buildPath +
                                 m_processEnvironment.value("PATH"));
