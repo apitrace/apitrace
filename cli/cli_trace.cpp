@@ -25,14 +25,16 @@
  *
  *********************************************************************/
 
+
+#include <assert.h>
+#include <string.h>
+
 #include <iostream>
 
 #include "cli.hpp"
 
-#include "os_path.hpp"
+#include "trace_tools.hpp"
 
-
-static int verbose = 1;
 
 static const char *synopsis = "Generate a new trace by executing the given program.";
 
@@ -45,124 +47,39 @@ usage(void)
         "    The given program will be executed with the given arguments.\n"
         "    During execution, all OpenGL calls will be captured to a trace\n"
         "    file named <program>.trace. That trace file can then be used\n"
-        "    with other apitrace utilities for replay or analysis.\n";
+        "    with other apitrace utilities for replay or analysis.\n"
+        "\n"
+        "    -v, --verbose       verbose output\n"
+        "    -o, --output TRACE  specify output trace file\n";
 }
-
-/* We only support "apitrace trace" on POSIX-like systems (not WIN32) */
-#ifndef _WIN32
-
-
-#ifdef __APPLE__
-#define CLI_TRACE_VARIABLE "DYLD_LIBRARY_PATH"
-#define CLI_TRACE_WRAPPER  "OpenGL"
-#else
-#define CLI_TRACE_VARIABLE "LD_PRELOAD"
-#define CLI_TRACE_WRAPPER  "glxtrace.so"
-#endif
-
-static os::Path
-find_wrapper(const char *filename)
-{
-    os::Path complete;
-
-    /* First look in the same directory from which this process is
-     * running, (to support developers running a compiled program that
-     * has not been installed. */
-#if 1
-    os::Path process_dir = os::getProcessName();
-
-    process_dir.trimFilename();
-
-    complete = process_dir;
-    complete.join("wrappers");
-    complete.join(filename);
-#else
-    complete = APITRACE_BINARY_DIR "/wrappers";
-    complete.join(filename);
-#endif
-
-    if (complete.exists())
-        return complete;
-
-    /* Second, look in the directory for installed wrappers. */
-    complete = APITRACE_WRAPPER_INSTALL_DIR;
-    complete.join(filename);
-
-    if (complete.exists())
-        return complete;
-
-    std::cerr << "error: cannot find " << filename << " (looked in " <<
-        APITRACE_WRAPPER_INSTALL_DIR << ")\n";
-    exit(1);
-
-    return "";
-}
-
-static int
-do_trace_posix(int argc, char *argv[])
-{
-    os::Path binary = find_wrapper(CLI_TRACE_WRAPPER);
-
-    /* On Mac OS X, using DYLD_LIBRARY_PATH, we actually set the
-     * directory, not the file. */
-#ifdef __APPLE__
-    binary.trimFilename();
-#endif
-
-    if (verbose) {
-        std::cerr << CLI_TRACE_VARIABLE << "=" << binary.str() << "\n";
-    }
-
-    setenv(CLI_TRACE_VARIABLE, binary.str(), 1);
-
-    if (verbose) {
-        const char *sep = "";
-        for (char **arg = argv; *arg; ++arg) {
-            std::cerr << *arg << sep;
-            sep = " ";
-        }
-        std::cerr << "\n";
-    }
-
-    execvp(argv[0], argv);
-
-    std::cerr << "Error: Failed to execute " << argv[0] << "\n";
-
-    return 1;
-}
-
-#endif
 
 static int
 command(int argc, char *argv[])
 {
-
-#ifdef _WIN32
-
-    std::cerr <<
-        "The 'apitrace trace' command is not supported for this operating system.\n"
-        "Instead, you will need to copy opengl32.dll, d3d8.dll, or d3d9.dll from\n"
-        APITRACE_WRAPPER_INSTALL_DIR "\n"
-        "to the directory with the application to trace, then run the application.\n";
-    return 1;
-
-#else
-
+    bool verbose = false;
+    const char *output = NULL;
     int i;
 
-    for (i = 0; i < argc; ++i) {
+    for (i = 0; i < argc; ) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {
             break;
         }
 
-        if (!strcmp(arg, "--")) {
-            i++;
+        ++i;
+
+        if (strcmp(arg, "--") == 0) {
             break;
-        } else if (!strcmp(arg, "--help")) {
+        } else if (strcmp(arg, "--help") == 0) {
             usage();
             return 0;
+        } else if (strcmp(arg, "-v") == 0 ||
+                   strcmp(arg, "--verbose") == 0) {
+            verbose = true;
+        } else if (strcmp(arg, "-o") == 0 ||
+                   strcmp(arg, "--output") == 0) {
+            output = argv[i++];
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage();
@@ -171,13 +88,13 @@ command(int argc, char *argv[])
     }
 
     if (i == argc) {
-        std::cerr << "Error: Need a command name to execute (see 'apitrace trace --help')\n";
+        std::cerr << "error: no command specified\n";
+        usage();
         return 1;
     }
 
-    return do_trace_posix(argc - i, argv + i);
-
-#endif
+    assert(argv[argc] == 0);
+    return trace::traceProgram(argv + i, output, verbose);
 }
 
 const Command trace_command = {
