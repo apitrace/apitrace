@@ -402,12 +402,11 @@ else ()
     set_target_properties (glxtrace PROPERTIES
         # avoid the default "lib" prefix
         PREFIX ""
-    )
-
-    # Prevent symbol relocations internal to our wrapper library to be
-    # overwritten by the application.
-    set_target_properties (glxtrace PROPERTIES
+        # Prevent symbol relocations internal to our wrapper library to be
+        # overwritten by the application.
         LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
 
     target_link_libraries (glxtrace dl ${X11_X11_LIB})

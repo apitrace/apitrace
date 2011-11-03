@@ -12,7 +12,7 @@ findPreloader()
     QFileInfo fi;
 
 #ifdef APITRACE_BINARY_DIR
-    libPath = QString::fromLatin1(APITRACE_BINARY_DIR "/glxtrace.so");
+    libPath = QString::fromLatin1(APITRACE_BINARY_DIR "/wrappers/glxtrace.so");
     fi = QFileInfo(libPath);
     if (fi.exists())
         return libPath;
