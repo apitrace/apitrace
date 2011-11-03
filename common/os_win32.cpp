@@ -90,6 +90,13 @@ getCurrentDir(void)
     return path;
 }
 
+bool
+Path::exists(void) const
+{
+    DWORD attrs = GetFileAttributesA(str());
+    return attrs != INVALID_FILE_ATTRIBUTES;
+}
+
 void
 log(const char *format, ...)
 {

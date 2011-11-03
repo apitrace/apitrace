@@ -51,7 +51,6 @@ usage(void)
 /* We only support "apitrace trace" on POSIX-like systems (not WIN32) */
 #ifndef _WIN32
 
-#include <sys/stat.h>
 
 #ifdef __APPLE__
 #define CLI_TRACE_VARIABLE "DYLD_LIBRARY_PATH"
@@ -60,22 +59,6 @@ usage(void)
 #define CLI_TRACE_VARIABLE "LD_PRELOAD"
 #define CLI_TRACE_WRAPPER  "glxtrace.so"
 #endif
-
-static int
-file_exists(const char *path)
-{
-    struct stat st;
-    int err;
-
-    err = stat(path, &st);
-    if (err)
-        return 0;
-
-    if (! S_ISREG(st.st_mode))
-        return 0;
-
-    return 1;
-}
 
 static os::Path
 find_wrapper(const char *filename)
@@ -98,14 +81,14 @@ find_wrapper(const char *filename)
     complete.join(filename);
 #endif
 
-    if (file_exists(complete))
+    if (complete.exists())
         return complete;
 
     /* Second, look in the directory for installed wrappers. */
     complete = APITRACE_WRAPPER_INSTALL_DIR;
     complete.join(filename);
 
-    if (file_exists(complete))
+    if (complete.exists())
         return complete;
 
     std::cerr << "error: cannot find " << filename << " (looked in " <<

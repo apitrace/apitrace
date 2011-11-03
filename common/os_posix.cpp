@@ -126,6 +126,23 @@ getCurrentDir(void)
     return path;
 }
 
+bool
+Path::exists(void) const
+{
+    struct stat st;
+    int err;
+
+    err = stat(str(), &st);
+    if (err) {
+        return false;
+    }
+
+    if (!S_ISREG(st.st_mode))
+        return false;
+
+    return true;
+}
+
 void
 log(const char *format, ...)
 {

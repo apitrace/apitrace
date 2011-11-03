@@ -237,6 +237,8 @@ public:
 
         return path;
     }
+
+    bool exists(void) const;
 };
 
 
