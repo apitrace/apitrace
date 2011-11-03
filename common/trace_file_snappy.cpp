@@ -115,9 +115,10 @@ private:
     size_t readCompressedLength();
 private:
     std::fstream m_stream;
+    size_t m_cacheMaxSize;
+    size_t m_cacheSize;
     char *m_cache;
     char *m_cachePtr;
-    size_t m_cacheSize;
 
     char *m_compressedCache;
 
@@ -128,9 +129,10 @@ private:
 SnappyFile::SnappyFile(const std::string &filename,
                               File::Mode mode)
     : File(),
-      m_cache(0),
-      m_cachePtr(0),
-      m_cacheSize(0)
+      m_cacheMaxSize(SNAPPY_CHUNK_SIZE),
+      m_cacheSize(m_cacheMaxSize),
+      m_cache(new char [m_cacheMaxSize]),
+      m_cachePtr(m_cache)
 {
     size_t maxCompressedLength =
         snappy::MaxCompressedLength(SNAPPY_CHUNK_SIZE);
@@ -302,16 +304,14 @@ void SnappyFile::flushReadCache(size_t skipLength)
 
 void SnappyFile::createCache(size_t size)
 {
-    // TODO: only re-allocate if the current buffer is not big enough
+    if (size > m_cacheMaxSize) {
+        do {
+            m_cacheMaxSize <<= 1;
+        } while (size > m_cacheMaxSize);
 
-    if (m_cache) {
         delete [] m_cache;
-    }
-
-    if (size) {
         m_cache = new char[size];
-    } else {
-        m_cache = NULL;
+        m_cacheMaxSize = size;
     }
 
     m_cachePtr = m_cache;
