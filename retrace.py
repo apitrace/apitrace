@@ -72,7 +72,7 @@ class ValueDeserializer(stdapi.Visitor):
         print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
         print '    if (__a%s) {' % (array.tag)
         length = '__a%s->values.size()' % array.tag
-        print '        %s = new %s[%s];' % (lvalue, array.type, length)
+        print '        %s = _allocator.alloc<%s>(%s);' % (lvalue, array.type, length)
         index = '__j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
@@ -86,7 +86,7 @@ class ValueDeserializer(stdapi.Visitor):
     def visitPointer(self, pointer, lvalue, rvalue):
         print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
         print '    if (__a%s) {' % (pointer.tag)
-        print '        %s = new %s;' % (lvalue, pointer.type)
+        print '        %s = _allocator.alloc<%s>();' % (lvalue, pointer.type)
         try:
             self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.tag,))
         finally:
@@ -212,6 +212,8 @@ class Retracer:
             print '    (void)call;'
             return
 
+        print '    retrace::ScopedAllocator _allocator;'
+        print '    (void)_allocator;'
         success = True
         for arg in function.args:
             arg_type = ConstRemover().visit(arg.type)

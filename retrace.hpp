@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2011-2012 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -76,6 +76,53 @@ public:
             return (base[key] = key);
         }
         return it->second;
+    }
+};
+
+
+/**
+ * Similar to alloca(), but implemented with malloc.
+ */
+class ScopedAllocator
+{
+private:
+    void *next;
+
+public:
+    ScopedAllocator() :
+        next(NULL) {
+    }
+
+    inline void *
+    alloc(size_t size) {
+        if (!size) {
+            return NULL;
+        }
+
+        void * * buf = static_cast<void **>(malloc(sizeof(void *) + size));
+        if (!buf) {
+            return NULL;
+        }
+
+        *buf = next;
+        next = buf;
+
+        return &buf[1];
+    }
+
+    template< class T >
+    inline T *
+    alloc(size_t n = 1) {
+        return static_cast<T *>(alloc(sizeof(T) * n));
+    }
+
+    inline
+    ~ScopedAllocator() {
+        while (next) {
+            void *temp = *static_cast<void **>(next);
+            free(next);
+            next = temp;
+        }
     }
 };
 
