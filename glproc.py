@@ -35,6 +35,7 @@ from specs.glapi import glapi
 from specs.glxapi import glxapi
 from specs.wglapi import wglapi
 from specs.cglapi import cglapi
+from specs.eglapi import eglapi
 
 
 # See http://www.opengl.org/registry/ABI/
@@ -449,6 +450,43 @@ public_symbols = set([
 
 ])
 
+# EGL 1.4
+public_symbols.update([
+   "eglBindAPI",
+   "eglBindTexImage",
+   "eglChooseConfig",
+   "eglCopyBuffers",
+   "eglCreateContext",
+   "eglCreatePbufferFromClientBuffer",
+   "eglCreatePbufferSurface",
+   "eglCreatePixmapSurface",
+   "eglCreateWindowSurface",
+   "eglDestroyContext",
+   "eglDestroySurface",
+   "eglGetConfigAttrib",
+   "eglGetConfigs",
+   "eglGetCurrentContext",
+   "eglGetCurrentDisplay",
+   "eglGetCurrentSurface",
+   "eglGetDisplay",
+   "eglGetError",
+   "eglGetProcAddress",
+   "eglInitialize",
+   "eglMakeCurrent",
+   "eglQueryAPI",
+   "eglQueryContext",
+   "eglQueryString",
+   "eglQuerySurface",
+   "eglReleaseTexImage",
+   "eglReleaseThread",
+   "eglSurfaceAttrib",
+   "eglSwapBuffers",
+   "eglSwapInterval",
+   "eglTerminate",
+   "eglWaitClient",
+   "eglWaitGL",
+   "eglWaitNative",
+])
 
 class GlDispatcher(Dispatcher):
 
@@ -463,7 +501,11 @@ class GlDispatcher(Dispatcher):
         print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
         print '#  endif'
         print '#else /* !RETRACE */'
-        print '#  ifdef _WIN32'
+        print '#  if defined(TRACE_EGL)'
+        print '#    define __getPublicProcAddress(name) __libegl_sym(name, true)'
+        print '#    define __getPrivateProcAddress(name) __libegl_sym(name, false)'
+        print '     void * __libegl_sym(const char *symbol, bool pub);'
+        print '#  elif defined(_WIN32)'
         print '     PROC __getPublicProcAddress(LPCSTR lpProcName);'
         print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
         print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
@@ -495,7 +537,10 @@ if __name__ == '__main__':
     print
     dispatcher = GlDispatcher()
     dispatcher.header()
-    print '#if defined(_WIN32)'
+    print '#if defined(TRACE_EGL)'
+    print
+    dispatcher.dispatch_api(eglapi)
+    print '#elif defined(_WIN32)'
     print
     dispatcher.dispatch_api(wglapi)
     print '#elif defined(__APPLE__)'
