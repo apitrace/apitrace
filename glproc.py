@@ -36,6 +36,7 @@ from specs.glxapi import glxapi
 from specs.wglapi import wglapi
 from specs.cglapi import cglapi
 from specs.eglapi import eglapi
+from specs.glesapi import glesapi
 
 
 # See http://www.opengl.org/registry/ABI/
@@ -552,5 +553,8 @@ if __name__ == '__main__':
     print
     dispatcher.dispatch_api(glapi)
     print
+    dispatcher.dispatch_api(glesapi)
+    print
+
     print '#endif /* !_GLPROC_HPP_ */'
     print
