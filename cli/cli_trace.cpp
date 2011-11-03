@@ -41,16 +41,17 @@ static const char *synopsis = "Generate a new trace by executing the given progr
 static void
 usage(void)
 {
-    std::cout << "usage: apitrace trace <program> [<args> ...]\n"
+    std::cout << "usage: apitrace trace PROGRAM [ARGS ...]\n"
         << synopsis << "\n"
         "\n"
         "    The given program will be executed with the given arguments.\n"
         "    During execution, all OpenGL calls will be captured to a trace\n"
-        "    file named <program>.trace. That trace file can then be used\n"
+        "    file. That trace file can then be used\n"
         "    with other apitrace utilities for replay or analysis.\n"
         "\n"
         "    -v, --verbose       verbose output\n"
-        "    -o, --output TRACE  specify output trace file\n";
+        "    -o, --output TRACE  specify output trace file;\n"
+        "                        default is `PROGRAM.trace`\n";
 }
 
 static int

@@ -30,8 +30,18 @@
 #include <stdlib.h>
 
 
+namespace os {
+    class Path;
+};
+
+
 namespace trace {
 
+
+os::Path
+findFile(const char *relPath, // path relative to the current program
+         const char *absPath, // absolute path
+         bool verbose);
 
 int
 traceProgram(char * const *argv,
