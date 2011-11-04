@@ -191,13 +191,18 @@ else ()
     set (DOC_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
 endif ()
 
+set (LIB_INSTALL_DIR lib/apitrace)
+
 if (APPLE)
     # MacOSX uses fat binaries, so no need to have per-architecture wrapper
     # directories
-    set (WRAPPER_INSTALL_DIR lib/apitrace)
+    set (LIB_ARCH_INSTALL_DIR ${LIB_INSTALL_DIR})
 else ()
-    set (WRAPPER_INSTALL_DIR lib/apitrace/${CMAKE_SYSTEM_PROCESSOR})
+    set (LIB_ARCH_INSTALL_DIR ${LIB_INSTALL_DIR}/${CMAKE_SYSTEM_PROCESSOR})
 endif ()
+
+set(SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
+set(WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 
 # Expose the binary/install directories to source
 #
@@ -207,6 +212,7 @@ endif ()
 add_definitions(
     -DAPITRACE_BINARY_DIR="${CMAKE_BINARY_DIR}"
     -DAPITRACE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+    -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
     -DAPITRACE_WRAPPER_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
 )
 
