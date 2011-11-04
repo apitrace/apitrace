@@ -487,6 +487,11 @@ install (TARGETS glretrace RUNTIME DESTINATION bin)
 add_subdirectory(cli)
 
 ##############################################################################
+# Scripts (to support the CLI)
+
+install (PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tracediff.sh DESTINATION ${LIB_INSTALL_DIR}/scripts)
+
+##############################################################################
 # GUI
 
 if (ENABLE_GUI AND QT4_FOUND AND QJSON_FOUND)

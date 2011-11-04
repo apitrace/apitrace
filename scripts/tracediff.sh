@@ -26,7 +26,7 @@
 
 set -e
 
-APITRACE=${APITRACE:-`dirname "$0"`/../apitrace}
+APITRACE=${APITRACE:-apitrace}
 
 $APITRACE dump
 
