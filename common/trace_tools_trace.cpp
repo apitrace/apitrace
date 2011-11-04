@@ -90,7 +90,7 @@ traceProgram(char * const *argv,
 {
     os::Path wrapper;
 
-    wrapper = findFile("wrappers/" CLI_TRACE_WRAPPER, APITRACE_WRAPPER_INSTALL_DIR CLI_TRACE_WRAPPER, verbose);
+    wrapper = findFile("wrappers/" CLI_TRACE_WRAPPER, APITRACE_WRAPPER_INSTALL_DIR "/" CLI_TRACE_WRAPPER, verbose);
 
     if (!wrapper.length()) {
         return 1;
