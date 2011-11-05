@@ -101,6 +101,10 @@ plainTextToHTML(const QString & plain, bool multiLine)
 QString
 apiVariantToString(const QVariant &variant, bool multiLine)
 {
+    if (variant.isNull()) {
+        return QLatin1String("?");
+    }
+
     if (variant.userType() == QVariant::Double) {
         return QString::number(variant.toFloat());
     }
@@ -635,12 +639,16 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
     }
     m_argValues.reserve(call->args.size());
     for (int i = 0; i < call->args.size(); ++i) {
-        VariantVisitor argVisitor(loader);
-        call->args[i]->visit(argVisitor);
-        m_argValues.append(argVisitor.variant());
-        if (m_argValues[i].type() == QVariant::ByteArray) {
-            m_hasBinaryData = true;
-            m_binaryDataIndex = i;
+        if (call->args[i]) {
+            VariantVisitor argVisitor(loader);
+            call->args[i]->visit(argVisitor);
+            m_argValues.append(argVisitor.variant());
+            if (m_argValues[i].type() == QVariant::ByteArray) {
+                m_hasBinaryData = true;
+                m_binaryDataIndex = i;
+            }
+        } else {
+            m_argValues.append(QVariant());
         }
     }
     m_argValues.squeeze();
