@@ -490,6 +490,7 @@ add_subdirectory(cli)
 # Scripts (to support the CLI)
 
 install (PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tracediff.sh DESTINATION ${LIB_INSTALL_DIR}/scripts)
+install (PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/scripts/jsondiff.py DESTINATION ${LIB_INSTALL_DIR}/scripts)
 
 ##############################################################################
 # GUI

@@ -63,7 +63,6 @@ CLI
 * Add trim        Trim a trace by including only the specified calls/frames
 * Add dump-state  Output the OpenGL state in JSON format
 * Add dump-images Create image files for each frame/drawing operation of a trace
-* Add diff-state  Identify differences between a state dump and another trace
 * Add diff-images Identify differences between images and another trace
 
 * Add some common command-line options:
