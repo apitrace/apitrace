@@ -21,6 +21,8 @@ set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 ##############################################################################
 # Find dependencies
 
+include (FindPkgConfig)
+
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
