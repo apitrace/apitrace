@@ -158,7 +158,7 @@ You can compare two state dumps with the jsondiff.py script:
 Comparing two traces side by side
 ---------------------------------
 
-    ./scripts/tracediff.sh trace1.trace trace2.trace
+    apitrace diff trace1.trace trace2.trace
 
 This works only on Unices, and it will truncate the traces due to performance
 limitations.
