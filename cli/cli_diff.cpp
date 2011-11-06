@@ -96,6 +96,9 @@ command(int argc, char *argv[])
 #ifdef _WIN32
     std::cerr << "The 'apitrace diff' command is not yet supported on this O/S.\n";
 #else
+    os::Path apitrace = os::getProcessName();
+    setenv("APITRACE", apitrace.str(), 1);
+
     execv(command.str(), args);
 #endif
 
