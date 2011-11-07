@@ -29,6 +29,7 @@
 
 import specs.stdapi as stdapi
 import specs.glapi as glapi
+import specs.glesapi as glesapi
 from retrace import Retracer
 
 
@@ -395,5 +396,6 @@ if __name__ == '__main__':
 
 '''
     api = glapi.glapi
+    api.add_api(glesapi.glesapi)
     retracer = GlRetracer()
     retracer.retrace_api(api)
