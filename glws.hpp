@@ -37,6 +37,13 @@
 namespace glws {
 
 
+enum Profile {
+    PROFILE_COMPAT,
+    PROFILE_ES1,
+    PROFILE_ES2,
+};
+
+
 extern bool debug;
 
 
@@ -144,7 +151,7 @@ Drawable *
 createDrawable(const Visual *visual, int width = 32, int height = 32);
 
 Context *
-createContext(const Visual *visual, Context *shareContext = 0);
+createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT);
 
 bool
 makeCurrent(Drawable *drawable, Context *context);

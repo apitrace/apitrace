@@ -210,8 +210,12 @@ createDrawable(const Visual *visual, int width, int height)
 }
 
 Context *
-createContext(const Visual *visual, Context *shareContext)
+createContext(const Visual *visual, Context *shareContext, Profile profile)
 {
+    if (profile != PROFILE_COMPAT) {
+        return NULL;
+    }
+
     return new WglContext(visual, dynamic_cast<WglContext *>(shareContext));
 }
 

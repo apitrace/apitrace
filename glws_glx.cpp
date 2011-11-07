@@ -293,11 +293,15 @@ createDrawable(const Visual *visual, int width, int height)
 }
 
 Context *
-createContext(const Visual *_visual, Context *shareContext)
+createContext(const Visual *_visual, Context *shareContext, Profile profile)
 {
     const GlxVisual *visual = dynamic_cast<const GlxVisual *>(_visual);
     GLXContext share_context = NULL;
     GLXContext context;
+
+    if (profile != PROFILE_COMPAT) {
+        return NULL;
+    }
 
     if (shareContext) {
         share_context = dynamic_cast<GlxContext*>(shareContext)->context;

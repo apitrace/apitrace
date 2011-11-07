@@ -204,11 +204,15 @@ createDrawable(const Visual *visual, int width, int height)
 }
 
 Context *
-createContext(const Visual *visual, Context *shareContext)
+createContext(const Visual *visual, Context *shareContext, Profile profile)
 {
     NSOpenGLPixelFormat *pixelFormat = dynamic_cast<const CocoaVisual *>(visual)->pixelFormat;
     NSOpenGLContext *share_context = nil;
     NSOpenGLContext *context;
+
+    if (profile != PROFILE_COMPAT) {
+        return nil;
+    }
 
     if (shareContext) {
         share_context = dynamic_cast<CocoaContext*>(shareContext)->context;
