@@ -59,8 +59,8 @@ public:
         add(pvalue);
     }
 
-    void end(void) {
-        add(0);
+    void end(T terminator = 0) {
+        add(terminator);
     }
 
     operator T * (void) {
