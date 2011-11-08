@@ -493,7 +493,9 @@ class GlDispatcher(Dispatcher):
 
     def header(self):
         print '#ifdef RETRACE'
-        print '#  if defined(_WIN32)'
+        print '#  if defined(TRACE_EGL)'
+        print '#    define __getPrivateProcAddress(name) eglGetProcAddress(name)'
+        print '#  elif defined(_WIN32)'
         print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
         print '#  elif defined(__APPLE__)'
         print '#    include <dlfcn.h>'

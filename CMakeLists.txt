@@ -488,7 +488,7 @@ include_directories (
     ${OPENGL_INCLUDE_PATH}
 )
 
-add_executable (glretrace
+set (retrace_sources
     glretrace_gl.cpp
     glretrace_cgl.cpp
     glretrace_glx.cpp
@@ -500,8 +500,12 @@ add_executable (glretrace
     retrace.cpp
     retrace_stdc.cpp
     glws.cpp
-    ${glws_os}
     ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
+)
+
+add_executable (glretrace
+    ${retrace_sources}
+    ${glws_os}
 )
 
 set_property (
@@ -527,6 +531,29 @@ else ()
 endif ()
 
 install (TARGETS glretrace RUNTIME DESTINATION bin) 
+
+if (EGL_FOUND AND NOT WIN32 AND NOT APPLE)
+    add_executable (eglretrace
+        ${retrace_sources}
+        glws_egl_xlib.cpp
+    )
+
+    set_property (
+        TARGET eglretrace
+        APPEND
+        PROPERTY COMPILE_DEFINITIONS "RETRACE"
+        PROPERTY COMPILE_DEFINITIONS "TRACE_EGL"
+    )
+
+    target_link_libraries (eglretrace
+        common
+    )
+
+    target_link_libraries (eglretrace
+            ${EGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${X11_X11_LIB})
+
+    install (TARGETS eglretrace RUNTIME DESTINATION bin) 
+endif ()
 
 ##############################################################################
 # CLI
