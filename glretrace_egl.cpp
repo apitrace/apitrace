@@ -37,6 +37,7 @@
 #define EGL_OPENGL_ES_API		0x30A0
 #define EGL_OPENVG_API			0x30A1
 #define EGL_OPENGL_API			0x30A2
+#define EGL_CONTEXT_CLIENT_VERSION	0x3098
 #endif
 
 
@@ -98,16 +99,55 @@ static void retrace_eglBindAPI(trace::Call &call) {
 }
 
 static void retrace_eglCreateContext(trace::Call &call) {
-    if (current_api != EGL_OPENGL_API) {
-        retrace::warning(call) << "only OpenGL is supported.  Aborting...\n";
-        os::abort();
-        return;
-    }
-
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
+    trace::Array *attrib_array = dynamic_cast<trace::Array *>(&call.arg(3));
+    glws::Profile profile;
 
-    glws::Context *context = glws::createContext(glretrace::visual, share_context);
+    switch (current_api) {
+    case EGL_OPENGL_API:
+        profile = glws::PROFILE_COMPAT;
+        break;
+    case EGL_OPENGL_ES_API:
+    default:
+        profile = glws::PROFILE_ES1;
+        if (attrib_array) {
+            for (int i = 0; i < attrib_array->values.size(); i += 2) {
+                int v = attrib_array->values[i]->toSInt();
+                if (v == EGL_CONTEXT_CLIENT_VERSION) {
+                    v = attrib_array->values[i + 1]->toSInt();
+                    if (v == 2)
+                        profile = glws::PROFILE_ES2;
+                    break;
+                }
+            }
+        }
+        break;
+    }
+
+
+    glws::Context *context = glws::createContext(glretrace::visual, share_context, profile);
+    if (!context) {
+        const char *name;
+        switch (profile) {
+        case glws::PROFILE_COMPAT:
+            name = "OpenGL";
+            break;
+        case glws::PROFILE_ES1:
+            name = "OpenGL ES 1.1";
+            break;
+        case glws::PROFILE_ES2:
+            name = "OpenGL ES 2.0";
+            break;
+        default:
+            name = "unknown";
+            break;
+        }
+
+        retrace::warning(call) << "Failed to create " << name << " context.\n";
+        os::abort();
+    }
+
     context_map[orig_context] = context;
 }
 
