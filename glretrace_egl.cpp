@@ -195,4 +195,5 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglSwapBuffers", &retrace_eglSwapBuffers},
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
+    {NULL, NULL},
 };
