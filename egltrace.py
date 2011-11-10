@@ -115,24 +115,17 @@ if __name__ == '__main__':
 /*
  * Lookup a EGL or GLES symbol
  */
-void * __libegl_sym(const char *symbol, bool pub)
+void * __libegl_sym(const char *symbol)
 {
     void *proc;
 
-    /*
-     * Public symbols are EGL core functions and those defined in dekstop GL
-     * ABI.  Troubles come from the latter.
+    /* Always try dlsym before eglGetProcAddress as spec 3.10 says
+     * implementation may choose to also export extension functions
+     * publicly.
      */
-    if (pub) {
-        proc = dlsym(RTLD_NEXT, symbol);
-        if (!proc && symbol[0] == 'g' && symbol[1] == 'l')
-            proc = (void *) __eglGetProcAddress(symbol);
-    }
-    else {
+    proc = dlsym(RTLD_NEXT, symbol);
+    if (!proc && symbol[0] == 'g' && symbol[1] == 'l')
         proc = (void *) __eglGetProcAddress(symbol);
-        if (!proc && symbol[0] == 'g' && symbol[1] == 'l')
-            proc = dlsym(RTLD_NEXT, symbol);
-    }
 
     return proc;
 }
