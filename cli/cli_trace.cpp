@@ -50,6 +50,8 @@ usage(void)
         "    with other apitrace utilities for replay or analysis.\n"
         "\n"
         "    -v, --verbose       verbose output\n"
+        "    -a, --api API       specify API to trace (gl or egl);\n"
+        "                        default is `gl`\n"
         "    -o, --output TRACE  specify output trace file;\n"
         "                        default is `PROGRAM.trace`\n";
 }
@@ -58,6 +60,7 @@ static int
 command(int argc, char *argv[])
 {
     bool verbose = false;
+    trace::API api = trace::API_GL;
     const char *output = NULL;
     int i;
 
@@ -78,6 +81,18 @@ command(int argc, char *argv[])
         } else if (strcmp(arg, "-v") == 0 ||
                    strcmp(arg, "--verbose") == 0) {
             verbose = true;
+        } else if (strcmp(arg, "-a") == 0 ||
+                   strcmp(arg, "--api") == 0) {
+            arg = argv[i++];
+            if (strcmp(arg, "gl") == 0) {
+                api = trace::API_GL;
+            } else if (strcmp(arg, "egl") == 0) {
+                api = trace::API_EGL;
+            } else {
+                std::cerr << "error: unknown API `" << arg << "`\n";
+                usage();
+                return 1;
+            }
         } else if (strcmp(arg, "-o") == 0 ||
                    strcmp(arg, "--output") == 0) {
             output = argv[i++];
@@ -95,7 +110,7 @@ command(int argc, char *argv[])
     }
 
     assert(argv[argc] == 0);
-    return trace::traceProgram(argv + i, output, verbose);
+    return trace::traceProgram(api, argv + i, output, verbose);
 }
 
 const Command trace_command = {

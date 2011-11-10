@@ -39,14 +39,15 @@ namespace trace {
 
 
 #if defined(__APPLE__)
-#define CLI_TRACE_VARIABLE "DYLD_LIBRARY_PATH"
-#define CLI_TRACE_WRAPPER  "OpenGL"
+#define TRACE_VARIABLE "DYLD_LIBRARY_PATH"
+#define GL_TRACE_WRAPPER  "OpenGL"
 #elif defined(_WIN32)
-#define CLI_TRACE_VARIABLE ""
-#define CLI_TRACE_WRAPPER  "opengl32.dll"
+#define TRACE_VARIABLE ""
+#define GL_TRACE_WRAPPER  "opengl32.dll"
 #else
-#define CLI_TRACE_VARIABLE "LD_PRELOAD"
-#define CLI_TRACE_WRAPPER  "glxtrace.so"
+#define TRACE_VARIABLE "LD_PRELOAD"
+#define GL_TRACE_WRAPPER  "glxtrace.so"
+#define EGL_TRACE_WRAPPER  "egltrace.so"
 #endif
 
 
@@ -84,13 +85,35 @@ findFile(const char *relPath,
 
 
 int
-traceProgram(char * const *argv,
+traceProgram(API api,
+             char * const *argv,
              const char *output,
              bool verbose)
 {
-    os::Path wrapper;
+    const char *relPath;
+    const char *absPath;
 
-    wrapper = findFile("wrappers/" CLI_TRACE_WRAPPER, APITRACE_WRAPPER_INSTALL_DIR "/" CLI_TRACE_WRAPPER, verbose);
+    switch (api) {
+    case API_GL:
+        relPath = "wrappers/" GL_TRACE_WRAPPER;
+        absPath = APITRACE_WRAPPER_INSTALL_DIR "/" GL_TRACE_WRAPPER;
+        break;
+    case API_EGL:
+#ifndef EGL_TRACE_WRAPPER
+        std::cerr << "error: unsupported API\n";
+        return 1;
+#else
+        relPath = "wrappers/" EGL_TRACE_WRAPPER;
+        absPath = APITRACE_WRAPPER_INSTALL_DIR "/" EGL_TRACE_WRAPPER;
+        break;
+#endif
+    default:
+        std::cerr << "error: invalid API\n";
+        return 1;
+    }
+
+    os::Path wrapper;
+    wrapper = findFile(relPath, absPath, verbose);
 
     if (!wrapper.length()) {
         return 1;
@@ -113,11 +136,11 @@ traceProgram(char * const *argv,
 #endif
 
     if (verbose) {
-        std::cerr << CLI_TRACE_VARIABLE << "=" << wrapper.str() << "\n";
+        std::cerr << TRACE_VARIABLE << "=" << wrapper.str() << "\n";
     }
 
     /* FIXME: Don't modify the current environment */
-    setenv(CLI_TRACE_VARIABLE, wrapper.str(), 1);
+    setenv(TRACE_VARIABLE, wrapper.str(), 1);
 
     if (output) {
         setenv("TRACE_FILE", output, 1);
@@ -134,7 +157,7 @@ traceProgram(char * const *argv,
 
     execvp(argv[0], argv);
 
-    unsetenv(CLI_TRACE_VARIABLE);
+    unsetenv(TRACE_VARIABLE);
     if (output) {
         unsetenv("TRACE_FILE");
     }

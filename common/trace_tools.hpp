@@ -38,13 +38,20 @@ namespace os {
 namespace trace {
 
 
+enum API {
+    API_GL, // GL + GLX/WGL/CGL
+    API_EGL, // GL/GLES1/GLES2/VG + EGL
+};
+
+
 os::Path
 findFile(const char *relPath, // path relative to the current program
          const char *absPath, // absolute path
          bool verbose);
 
 int
-traceProgram(char * const *argv,
+traceProgram(API api,
+             char * const *argv,
              const char *output = NULL,
              bool verbose = false);
 
