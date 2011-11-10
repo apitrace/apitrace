@@ -456,12 +456,11 @@ if (EGL_FOUND)
     set_target_properties (egltrace PROPERTIES
         # avoid the default "lib" prefix
         PREFIX ""
-    )
-
-    # Prevent symbol relocations internal to our wrapper library to be
-    # overwritten by the application.
-    set_target_properties (egltrace PROPERTIES
         LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+        # Prevent symbol relocations internal to our wrapper library to be
+        # overwritten by the application.
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
 
     target_link_libraries (egltrace dl)
