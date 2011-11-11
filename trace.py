@@ -459,9 +459,21 @@ class Tracer:
             print '            *ppvObj = this;'
             print '        }'
             for iface in self.api.interfaces:
-                print '        else if (riid == IID_%s) {' % iface.name
-                print '            *ppvObj = new Wrap%s((%s *) *ppvObj);' % (iface.name, iface.name)
-                print '        }'
+                print r'        else if (riid == IID_%s) {' % iface.name
+                print r'            *ppvObj = new Wrap%s((%s *) *ppvObj);' % (iface.name, iface.name)
+                print r'        }'
+            print r'        else {'
+            print r'            os::log("apitrace: warning: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+            print r'                    riid.Data1, riid.Data2, riid.Data3,'
+            print r'                    riid.Data4[0],'
+            print r'                    riid.Data4[1],'
+            print r'                    riid.Data4[2],'
+            print r'                    riid.Data4[3],'
+            print r'                    riid.Data4[4],'
+            print r'                    riid.Data4[5],'
+            print r'                    riid.Data4[6],'
+            print r'                    riid.Data4[7]);'
+            print r'        }'
             print '    }'
         if method.name == 'Release':
             assert method.type is not stdapi.Void
