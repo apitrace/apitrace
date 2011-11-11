@@ -31,6 +31,7 @@
 #include <iostream>
 
 #include "os_path.hpp"
+#include "os_process.hpp"
 #include "trace_tools.hpp"
 
 
@@ -127,6 +128,8 @@ traceProgram(API api,
         APITRACE_WRAPPER_INSTALL_DIR "\n"
         "to the directory with the application to trace, then run the application.\n";
 
+    return 1;
+
 #else
 
 #if defined(__APPLE__)
@@ -155,17 +158,16 @@ traceProgram(API api,
         std::cerr << "\n";
     }
 
-    execvp(argv[0], argv);
+    int status = os::execute(argv);
 
     unsetenv(TRACE_VARIABLE);
     if (output) {
         unsetenv("TRACE_FILE");
     }
-
-    std::cerr << "error: Failed to execute " << argv[0] << "\n";
+    
+    return status;
 #endif
 
-    return 1;
 }
 
 

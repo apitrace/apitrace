@@ -30,6 +30,7 @@
 
 #include "cli.hpp"
 #include "os_path.hpp"
+#include "os_process.hpp"
 #include "trace_tools.hpp"
 
 static const char *synopsis = "Identify differences between two state dumps.";
@@ -86,22 +87,15 @@ command(int argc, char *argv[])
                  APITRACE_SCRIPTS_INSTALL_DIR "/" CLI_DIFF_STATE_COMMAND,
                                        true);
 
-    char* args[4];
+    char *args[5];
 
-    args[0] = (char *) command.str();
-    args[1] = file1;
-    args[2] = file2;
-    args[3] = NULL;
+    args[0] = const_cast<char *>("python");
+    args[1] = const_cast<char *>(command.str());
+    args[2] = file1;
+    args[3] = file2;
+    args[4] = NULL;
 
-#ifdef _WIN32
-    std::cerr << "The 'apitrace diff-state' command is not yet supported on this O/S.\n";
-#else
-    execv(command.str(), args);
-#endif
-
-    std::cerr << "Error: Failed to execute " << argv[0] << "\n";
-
-    return 1;
+    return os::execute(args);
 }
 
 const Command diff_state_command = {

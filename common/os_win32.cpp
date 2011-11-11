@@ -29,6 +29,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <string>
+
 #include "os.hpp"
 #include "os_path.hpp"
 
@@ -95,6 +97,116 @@ Path::exists(void) const
 {
     DWORD attrs = GetFileAttributesA(str());
     return attrs != INVALID_FILE_ATTRIBUTES;
+}
+
+/**
+ * Determine whether an argument should be quoted.
+ */
+static bool
+needsQuote(const char *arg)
+{
+    char c;
+    while (true) {
+        c = *arg++;
+        if (c == '\0') {
+            break;
+        }
+        if (c == ' ' || c == '\t' || c == '\"') {
+            return true;
+        }
+        if (c == '\\') {
+            c = *arg++;
+            if (c == '\0') {
+                break;
+            }
+            if (c == '"') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static void
+quoteArg(std::string &s, const char *arg)
+{
+    char c;
+    unsigned backslashes = 0;
+    
+    s.push_back('"');
+    while (true) {
+        c = *arg++;
+        switch (c)
+        if (c == '\0') {
+            break;
+        } else if (c == '"') {
+            while (backslashes) {
+                s.push_back('\\');
+                --backslashes;
+            }
+            s.push_back('\\');
+        } else {
+            if (c == '\\') {
+                ++backslashes;
+            } else {
+                backslashes = 0;
+            }
+        }
+        s.push_back(c);
+    }
+    s.push_back('"');
+}
+
+int execute(char * const * args)
+{
+    std::string commandLine;
+   
+    const char *arg0 = *args;
+    const char *arg;
+    char sep = 0;
+    while ((arg = *args++) != NULL) {
+        if (sep) {
+            commandLine.push_back(sep);
+        }
+
+        if (needsQuote(arg)) {
+            quoteArg(commandLine, arg);
+        } else {
+            commandLine.append(arg);
+        }
+
+        sep = ' ';
+    }
+
+    STARTUPINFO startupInfo;
+    memset(&startupInfo, 0, sizeof(startupInfo));
+    startupInfo.cb = sizeof(startupInfo);
+
+    PROCESS_INFORMATION processInformation;
+
+    if (!CreateProcessA(NULL,
+                        const_cast<char *>(commandLine.c_str()), // only modified by CreateProcessW
+                        0, // process attributes
+                        0, // thread attributes
+                        FALSE, // inherit handles
+                        0, // creation flags,
+                        NULL, // environment
+                        NULL, // current directory
+                        &startupInfo,
+                        &processInformation
+                        )) {
+        log("error: failed to execute %s\n", arg0);
+    }
+
+    WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+    DWORD exitCode = ~0;
+    GetExitCodeProcess(processInformation.hProcess, &exitCode);
+
+    CloseHandle(processInformation.hProcess);
+    CloseHandle(processInformation.hThread);
+
+    return (int)exitCode;
 }
 
 void

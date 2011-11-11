@@ -31,6 +31,7 @@
 
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -141,6 +142,26 @@ Path::exists(void) const
         return false;
 
     return true;
+}
+
+int execute(char * const * args)
+{
+    pid_t pid = fork();
+    if (pid == 0) {
+        // child
+        execvp(args[0], args);
+        fprintf(stderr, "error: failed to execute %s\n", args[0]);
+        exit(-1);
+    } else {
+        // parent
+        if (pid == -1) {
+            fprintf(stderr, "error: failed to fork\n");
+            return -1;
+        }
+        int status = -1;
+        waitpid(pid, &status, 0);
+        return status;
+    }
 }
 
 void

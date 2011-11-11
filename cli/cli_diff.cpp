@@ -30,6 +30,7 @@
 
 #include "cli.hpp"
 #include "os_path.hpp"
+#include "os_process.hpp"
 #include "trace_tools.hpp"
 
 static const char *synopsis = "Identify differences between two traces.";
@@ -95,16 +96,13 @@ command(int argc, char *argv[])
 
 #ifdef _WIN32
     std::cerr << "The 'apitrace diff' command is not yet supported on this O/S.\n";
+    return 1;
 #else
     os::Path apitrace = os::getProcessName();
     setenv("APITRACE", apitrace.str(), 1);
 
-    execv(command.str(), args);
+    return os::execute(args);
 #endif
-
-    std::cerr << "Error: Failed to execute " << argv[0] << "\n";
-
-    return 1;
 }
 
 const Command diff_command = {
