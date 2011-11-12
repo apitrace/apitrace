@@ -68,6 +68,7 @@ const Command help_command = {
 static const Command * commands[] = {
     &diff_command,
     &diff_state_command,
+    &diff_images_command,
     &dump_command,
     &trace_command,
     &help_command
