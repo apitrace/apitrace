@@ -25,28 +25,38 @@
  *
  *********************************************************************/
 
-#ifndef _APITRACE_CLI_HPP_
-#define _APITRACE_CLI_HPP_
+#ifndef _TRACE_COPIER_HPP_
+#define _TRACE_COPIER_HPP_
+
+#include "trace_writer.hpp"
 
 
-struct Command {
-    const char *name;
-    const char *synopsis;
+namespace trace {
 
-    typedef void (*Usage) (void);
-    Usage usage;
+class Copier: public Visitor
+{
+protected:
+    trace::Writer writer;
 
-    typedef int (*Function) (int argc, char *argv[]);
-    Function function;
+public:
+    Copier(const char *);
+    ~Copier();
+    virtual void visit(Null *);
+    virtual void visit(Bool *);
+    virtual void visit(SInt *);
+    virtual void visit(UInt *);
+    virtual void visit(Float *);
+    virtual void visit(Double *);
+    virtual void visit(String *);
+    virtual void visit(Enum *);
+    virtual void visit(Bitmask *);
+    virtual void visit(Struct *);
+    virtual void visit(Array *);
+    virtual void visit(Blob *);
+    virtual void visit(Pointer *);
+    virtual void visit(Call *call);
 };
 
-extern const Command diff_command;
-extern const Command diff_state_command;
-extern const Command diff_images_command;
-extern const Command dump_command;
-extern const Command pickle_command;
-extern const Command repack_command;
-extern const Command trace_command;
-extern const Command trim_command;
+}
 
-#endif /* _APITRACE_CLI_HPP_ */
+#endif /* _TRACE_COPIER_HPP_ */

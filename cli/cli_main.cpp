@@ -73,6 +73,7 @@ static const Command * commands[] = {
     &pickle_command,
     &repack_command,
     &trace_command,
+    &trim_command,
     &help_command
 };
 
