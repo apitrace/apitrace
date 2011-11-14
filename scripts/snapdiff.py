@@ -138,8 +138,7 @@ def main():
     global options
 
     optparser = optparse.OptionParser(
-        usage="\n\t%prog [options] <ref_prefix> <src_prefix>",
-        version="%%prog")
+        usage="\n\t%prog [options] <ref_prefix> <src_prefix>")
     optparser.add_option(
         '-o', '--output', metavar='FILE',
         type="string", dest="output", default='index.html',
