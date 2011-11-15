@@ -550,7 +550,10 @@ if (EGL_FOUND AND NOT WIN32 AND NOT APPLE)
     )
 
     target_link_libraries (eglretrace
-            ${EGL_LIBRARIES} ${OPENGL_gl_LIBRARY} ${X11_X11_LIB})
+        ${EGL_LIBRARIES}
+        ${OPENGL_gl_LIBRARY}
+        ${X11_X11_LIB}
+    )
 
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
