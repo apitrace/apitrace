@@ -84,7 +84,7 @@
 #define GL_APIENTRY APIENTRY
 #endif
 
-#endif // HAVE_EGL
+#endif //! HAVE_EGL
 
 
 // OpenGL ES 1.1
@@ -110,7 +110,6 @@ typedef int32_t  GLclampx;
 #define GL_POINT_SIZE_ARRAY_STRIDE_OES                          0x898B
 #define GL_POINT_SIZE_ARRAY_POINTER_OES                         0x898C
 #define GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES                  0x8B9F
-extern "C" GL_API void GL_APIENTRY glPointSizePointerOES (GLenum type, GLsizei stride, const GLvoid *pointer);
 #endif
 
 #undef __glext_h_
