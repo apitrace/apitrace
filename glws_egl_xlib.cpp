@@ -1,11 +1,8 @@
 /**************************************************************************
  *
  * Copyright 2011 LunarG, Inc.
+ * Copyright 2011 Jose Fonseca
  * All Rights Reserved.
- *
- * Based on glws_glx.cpp, which has
- *
- *   Copyright 2011 Jose Fonseca
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
