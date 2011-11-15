@@ -36,6 +36,8 @@ d3d8trace.cpp
 d3d9trace.cpp
 ddrawtrace.cpp
 dxsdk
+egltrace.cpp
+eglretrace
 glproc.hpp
 glretrace
 glretrace_gl.cpp
