@@ -89,10 +89,10 @@ CLI
 		either of FIRST or LAST is omitted, the first or last
 		call/frame index in the trace will be used.
 
-     1-100/5    Either of the above range specifications followed by '@'
+     1-100/5    Either of the above range specifications followed by '/'
 		and a number (INTERVAL). This specifies the inclusion of
 		only each INTERVAL call/frame within the range. For
-		example, 1-100@5 species frame 1, frame 5, frame 10,
+		example, 1-100/5 species frame 1, frame 5, frame 10,
 		... up to frame 100.
 
      4,10-20/2  A comma separated list of any of the above range
