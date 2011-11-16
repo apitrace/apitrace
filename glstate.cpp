@@ -205,10 +205,33 @@ dumpProgramObj(JSONWriter &json, GLhandleARB programObj)
     }
 }
 
+/*
+ * When fetching the uniform name of an array we usually get name[0]
+ * so we need to cut the trailing "[0]" in order to properly construct
+ * array names later. Otherwise we endup with stuff like
+ * uniformArray[0][0],
+ * uniformArray[0][1],
+ * instead of
+ * uniformArray[0],
+ * uniformArray[1].
+ */
+static std::string
+resolveUniformName(const GLchar *name,  GLint size)
+{
+    std::string qualifiedName(name);
+    if (size > 1) {
+        std::string::size_type nameLength = qualifiedName.length();
+        static const char * const arrayStart = "[0]";
+        static const int arrayStartLen = 3;
+        if (qualifiedName.rfind(arrayStart) == (nameLength - arrayStartLen)) {
+            qualifiedName = qualifiedName.substr(0, nameLength - 3);
+        }
+    }
+    return qualifiedName;
+}
 
 static void
 dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLchar *name) {
-    
     GLenum elemType;
     GLint numElems;
     __gl_uniform_size(type, elemType, numElems);
@@ -223,9 +246,11 @@ dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLch
 
     GLint i, j;
 
+    std::string qualifiedName = resolveUniformName(name, size);
+
     for (i = 0; i < size; ++i) {
         std::stringstream ss;
-        ss << name;
+        ss << qualifiedName;
 
         if (size > 1) {
             ss << '[' << i << ']';
@@ -301,9 +326,11 @@ dumpUniformARB(JSONWriter &json, GLhandleARB programObj, GLint size, GLenum type
 
     GLint i, j;
 
+    std::string qualifiedName = resolveUniformName(name, size);
+
     for (i = 0; i < size; ++i) {
         std::stringstream ss;
-        ss << name;
+        ss << qualifiedName;
 
         if (size > 1) {
             ss << '[' << i << ']';
