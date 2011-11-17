@@ -49,9 +49,13 @@
 #define __field_ecount_full(x) /**/
 #define __inline static __inline__
 
+#ifndef DECLSPEC_DEPRECATED
 #define DECLSPEC_DEPRECATED /**/
+#endif
 
-#define UINT8 uint8_t
+#ifndef __MINGW64_VERSION_MAJOR
+#define UINT8 unsigned char
+#endif
 
 #endif /* __MINGW32__ */
 
