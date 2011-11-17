@@ -568,6 +568,9 @@ static inline void
 dumpTextureImage(JSONWriter &json, GLenum target, GLint level)
 {
     GLint width, height = 1, depth = 1;
+    GLint format;
+
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &format);
 
     width = 0;
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
@@ -588,7 +591,8 @@ dumpTextureImage(JSONWriter &json, GLenum target, GLint level)
 
         GLint active_texture = GL_TEXTURE0;
         glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
-        snprintf(label, sizeof label, "%s, %s, level = %i", enumToString(active_texture), enumToString(target), level);
+        snprintf(label, sizeof label, "%s, %s, %s, %d level",
+                 enumToString(active_texture), enumToString(target), enumToString(format), level);
 
         json.beginMember(label);
 
@@ -819,6 +823,25 @@ getTextureLevelSize(GLint texture, GLint level, GLint *width, GLint *height)
 }
 
 
+static GLint
+getTextureLevelFormat(GLint texture, GLint level)
+{
+    GLenum target;
+    GLint bound_texture = 0;
+    if (!bindTexture(texture, target, bound_texture)) {
+        return GL_NONE;
+    }
+
+    GLint format = GL_NONE;
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &format);
+
+    glBindTexture(target, bound_texture);
+
+    return format;
+}
+
+
+
 static bool
 getRenderbufferSize(GLint renderbuffer, GLint *width, GLint *height)
 {
@@ -869,6 +892,47 @@ getFramebufferAttachmentSize(GLenum target, GLenum attachment, GLint *width, GLi
         return false;
     }
 }
+
+
+
+static GLint
+getFramebufferAttachmentFormat(GLenum target, GLenum attachment)
+{
+    GLint object_type = GL_NONE;
+    glGetFramebufferAttachmentParameteriv(target, attachment,
+                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
+                                          &object_type);
+    if (object_type == GL_NONE) {
+        return GL_NONE;
+    }
+
+    GLint object_name = 0;
+    glGetFramebufferAttachmentParameteriv(target, attachment,
+                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+                                          &object_name);
+    if (object_name == 0) {
+        return GL_NONE;
+    }
+
+    if (object_type == GL_RENDERBUFFER) {
+        GLint format = GL_NONE;
+        glGetRenderbufferParameteriv(object_name, GL_RENDERBUFFER_INTERNAL_FORMAT,
+                                     &format);
+        return format;
+    } else if (object_type == GL_TEXTURE) {
+        GLint texture_level = 0;
+        glGetFramebufferAttachmentParameteriv(target, attachment,
+                                              GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
+                                              &texture_level);
+
+        GLint format = getTextureLevelFormat(object_name, texture_level);
+        return format;
+    } else {
+        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
+        return GL_NONE;
+    }
+}
+
 
 
 image::Image *
@@ -1158,7 +1222,15 @@ dumpFramebufferAttachment(JSONWriter &json, GLenum target, GLenum attachment, GL
         return;
     }
 
-    json.beginMember(enumToString(attachment));
+    GLint internalFormat = getFramebufferAttachmentFormat(target, attachment);
+    std::stringstream ss;
+    ss << enumToString(attachment);
+    if (internalFormat != GL_NONE) {
+        ss << ", ";
+        ss << enumToString(internalFormat);
+    }
+
+    json.beginMember(ss.str());
     dumpReadBufferImage(json, width, height, format);
     json.endMember();
 }
