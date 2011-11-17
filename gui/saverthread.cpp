@@ -243,6 +243,11 @@ public:
         m_editedValue = new trace::Float(m_variant.toFloat());
     }
 
+    virtual void visit(trace::Double *node)
+    {
+        m_editedValue = new trace::Double(m_variant.toDouble());
+    }
+
     virtual void visit(trace::String *node)
     {
         QString str = m_variant.toString();

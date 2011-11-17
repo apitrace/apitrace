@@ -551,7 +551,7 @@ void Parser::scan_float() {
 Value *Parser::parse_double() {
     double value;
     file->read(&value, sizeof value);
-    return new Float(value);
+    return new Double(value);
 }
 
 

@@ -25,6 +25,7 @@ public:
     virtual void visit(trace::SInt *node);
     virtual void visit(trace::UInt *node);
     virtual void visit(trace::Float *node);
+    virtual void visit(trace::Double *node);
     virtual void visit(trace::String *node);
     virtual void visit(trace::Enum *e);
     virtual void visit(trace::Bitmask *bitmask);

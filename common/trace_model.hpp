@@ -173,7 +173,23 @@ public:
 class Float : public Value
 {
 public:
-    Float(double _value) : value(_value) {}
+    Float(float _value) : value(_value) {}
+
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
+    void visit(Visitor &visitor);
+
+    float value;
+};
+
+
+class Double : public Value
+{
+public:
+    Double(double _value) : value(_value) {}
 
     bool toBool(void) const;
     signed long long toSInt(void) const;
@@ -297,6 +313,7 @@ public:
     virtual void visit(SInt *);
     virtual void visit(UInt *);
     virtual void visit(Float *);
+    virtual void visit(Double *);
     virtual void visit(String *);
     virtual void visit(Enum *);
     virtual void visit(Bitmask *);

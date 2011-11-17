@@ -60,6 +60,10 @@ public:
         writer.writeFloat(node->value);
     }
 
+    void visit(Double *node) {
+        writer.writeDouble(node->value);
+    }
+
     void visit(String *node) {
         writer.writeString(node->value);
     }

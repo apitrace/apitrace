@@ -171,6 +171,11 @@ void VariantVisitor::visit(trace::Float *node)
     m_variant = QVariant(node->value);
 }
 
+void VariantVisitor::visit(trace::Double *node)
+{
+    m_variant = QVariant(node->value);
+}
+
 void VariantVisitor::visit(trace::String *node)
 {
     m_variant = QVariant(QString::fromStdString(node->value));
