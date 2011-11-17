@@ -458,6 +458,8 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
             image[QLatin1String("__normalized__")].toBool();
         int numChannels =
             image[QLatin1String("__channels__")].toInt();
+        int depth =
+            image[QLatin1String("__depth__")].toInt();
 
         Q_ASSERT(type == QLatin1String("uint8"));
         Q_ASSERT(normalized == true);
@@ -468,6 +470,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
         ApiTexture tex;
         tex.setSize(size);
+        tex.setDepth(depth);
         tex.setNumChannels(numChannels);
         tex.setLabel(itr.key());
         tex.contentsFromBase64(dataArray);
@@ -485,6 +488,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         QString type = buffer[QLatin1String("__type__")].toString();
         bool normalized = buffer[QLatin1String("__normalized__")].toBool();
         int numChannels = buffer[QLatin1String("__channels__")].toInt();
+        int depth = buffer[QLatin1String("__depth__")].toInt();
 
         Q_ASSERT(type == QLatin1String("uint8"));
         Q_ASSERT(normalized == true);
@@ -495,6 +499,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
 
         ApiFramebuffer fbo;
         fbo.setSize(size);
+        fbo.setDepth(depth);
         fbo.setNumChannels(numChannels);
         fbo.setType(itr.key());
         fbo.contentsFromBase64(dataArray);

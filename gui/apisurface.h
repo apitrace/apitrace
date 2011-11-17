@@ -16,6 +16,9 @@ public:
     int numChannels() const;
     void setNumChannels(int numChannels);
 
+    int depth() const;
+    void setDepth(int depth);
+
     void contentsFromBase64(const QByteArray &base64);
 
     QImage image() const;
@@ -26,6 +29,7 @@ private:
     int m_numChannels;
     QImage m_image;
     QImage m_thumb;
+    int m_depth;
 };
 
 

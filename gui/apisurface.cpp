@@ -44,6 +44,17 @@ QImage ApiSurface::thumb() const
     return m_thumb;
 }
 
+
+int ApiSurface::depth() const
+{
+    return m_depth;
+}
+
+void ApiSurface::setDepth(int depth)
+{
+    m_depth = depth;
+}
+
 ApiTexture::ApiTexture()
     : ApiSurface()
 {
@@ -73,3 +84,4 @@ void ApiFramebuffer::setType(const QString &str)
 {
     m_type = str;
 }
+
