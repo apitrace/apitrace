@@ -462,8 +462,9 @@ static void addSurfaceItem(const ApiSurface &surface,
     int width = surface.size().width();
     int height = surface.size().height();
     QString descr =
-        QString::fromLatin1("%1, %2 x %3")
+        QString::fromLatin1("%1, %2, %3 x %4")
         .arg(label)
+        .arg(surface.formatName())
         .arg(width)
         .arg(height);
 

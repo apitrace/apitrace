@@ -591,8 +591,8 @@ dumpTextureImage(JSONWriter &json, GLenum target, GLint level)
 
         GLint active_texture = GL_TEXTURE0;
         glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
-        snprintf(label, sizeof label, "%s, %s, %s, %d level",
-                 enumToString(active_texture), enumToString(target), enumToString(format), level);
+        snprintf(label, sizeof label, "%s, %s, level = %d",
+                 enumToString(active_texture), enumToString(target), level);
 
         json.beginMember(label);
 
@@ -604,6 +604,8 @@ dumpTextureImage(JSONWriter &json, GLenum target, GLint level)
         json.writeNumberMember("__width__", width);
         json.writeNumberMember("__height__", height);
         json.writeNumberMember("__depth__", depth);
+
+        json.writeStringMember("__format__", enumToString(format));
 
         // Hardcoded for now, but we could chose types more adequate to the
         // texture internal format
@@ -1009,7 +1011,8 @@ getDrawBufferImage(GLenum format) {
  * Dump the image of the currently bound read buffer.
  */
 static inline void
-dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format)
+dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
+                    GLint internalFormat = GL_NONE)
 {
     GLint channels = __gl_format_channels(format);
 
@@ -1021,6 +1024,8 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format)
     json.writeNumberMember("__width__", width);
     json.writeNumberMember("__height__", height);
     json.writeNumberMember("__depth__", 1);
+
+    json.writeStringMember("__format__", enumToString(internalFormat));
 
     // Hardcoded for now, but we could chose types more adequate to the
     // texture internal format
@@ -1223,15 +1228,9 @@ dumpFramebufferAttachment(JSONWriter &json, GLenum target, GLenum attachment, GL
     }
 
     GLint internalFormat = getFramebufferAttachmentFormat(target, attachment);
-    std::stringstream ss;
-    ss << enumToString(attachment);
-    if (internalFormat != GL_NONE) {
-        ss << ", ";
-        ss << enumToString(internalFormat);
-    }
 
-    json.beginMember(ss.str());
-    dumpReadBufferImage(json, width, height, format);
+    json.beginMember(enumToString(attachment));
+    dumpReadBufferImage(json, width, height, format, internalFormat);
     json.endMember();
 }
 

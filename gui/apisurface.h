@@ -19,6 +19,9 @@ public:
     int depth() const;
     void setDepth(int depth);
 
+    QString formatName() const;
+    void setFormatName(const QString &str);
+
     void contentsFromBase64(const QByteArray &base64);
 
     QImage image() const;
@@ -30,6 +33,7 @@ private:
     QImage m_image;
     QImage m_thumb;
     int m_depth;
+    QString m_formatName;
 };
 
 
