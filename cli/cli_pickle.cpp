@@ -127,8 +127,8 @@ public:
 
         writer.beginList();
         for (unsigned i = 0; i < call->args.size(); ++i) {
-            if (call->args[i]) {
-                _visit(call->args[i]);
+            if (call->args[i].value) {
+                _visit(call->args[i].value);
             } else {
                 writer.writeNone();
             }

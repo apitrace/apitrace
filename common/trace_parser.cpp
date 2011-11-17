@@ -480,7 +480,7 @@ void Parser::parse_arg(Call *call, Mode mode) {
         if (index >= call->args.size()) {
             call->args.resize(index + 1);
         }
-        call->args[index] = value;
+        call->args[index].value = value;
     }
 }
 

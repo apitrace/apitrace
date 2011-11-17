@@ -217,8 +217,8 @@ public:
             if (!(dumpFlags & DUMP_FLAG_NO_ARG_NAMES)) {
                 os << italic << call->sig->arg_names[i] << normal << " = ";
             }
-            if (call->args[i]) {
-                _visit(call->args[i]);
+            if (call->args[i].value) {
+                _visit(call->args[i].value);
             } else {
                os << "?";
             }
