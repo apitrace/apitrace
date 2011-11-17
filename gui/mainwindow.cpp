@@ -97,6 +97,10 @@ void MainWindow::callItemSelected(const QModelIndex &index)
 
     if (event && event->type() == ApiTraceEvent::Call) {
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+        m_ui.detailsDock->setWindowTitle(
+            tr("Details View. Frame %1, Call %2")
+            .arg(call->parentFrame() ? call->parentFrame()->number : 0)
+            .arg(call->index()));
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
         if (call->hasBinaryData()) {

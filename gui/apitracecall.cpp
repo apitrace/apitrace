@@ -16,7 +16,7 @@ const char * const styleSheet =
     "    font-weight:bold;\n"
     // text shadow looks great but doesn't work well in qtwebkit 4.7
     "    /*text-shadow: 0px 2px 3px #555;*/\n"
-    "    font-size: 1.2em;\n"
+    "    font-size: 1.1em;\n"
     "}\n"
     ".arg-name {\n"
     "    border: 1px solid rgb(238,206,0);\n"
@@ -845,18 +845,28 @@ QString ApiTraceCall::toHtml() const
     if (!m_richText.isEmpty())
         return m_richText;
 
-    m_richText = QLatin1String("<div class=\"call\">");
+    m_richText += QLatin1String("<div class=\"call\">");
 
+
+    m_richText +=
+        QString::fromLatin1("%1) ")
+        .arg(m_index);
+    QString parentTip;
+    if (m_parentFrame) {
+        parentTip =
+            QString::fromLatin1("Frame %1")
+            .arg(m_parentFrame->number);
+    }
     QUrl helpUrl = m_signature->helpUrl();
     if (helpUrl.isEmpty()) {
         m_richText += QString::fromLatin1(
-            "%1) <span class=\"callName\">%2</span>(")
-                      .arg(m_index)
+            "<span class=\"callName\" title=\"%1\">%2</span>(")
+                      .arg(parentTip)
                       .arg(m_signature->name());
     } else {
         m_richText += QString::fromLatin1(
-            "%1) <span class=\"callName\"><a href=\"%2\">%3</a></span>(")
-                      .arg(m_index)
+         "<span class=\"callName\" title=\"%1\"><a href=\"%2\">%3</a></span>(")
+                      .arg(parentTip)
                       .arg(helpUrl.toString())
                       .arg(m_signature->name());
     }
