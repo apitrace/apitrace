@@ -17,6 +17,8 @@ endif ()
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
+set (ENABLE_EGL "AUTO" CACHE STRING "Enable EGL support.")
+
 
 ##############################################################################
 # Find dependencies
@@ -49,10 +51,17 @@ else ()
 
     include_directories (${X11_INCLUDE_DIR})
 
-    pkg_check_modules (EGL egl)
-    if (EGL_FOUND)
-        include_directories (${EGL_INCLUDE_DIR})
-        add_definitions (-DHAVE_EGL)
+    if (ENABLE_EGL)
+        if (NOT ENABLE_EGL STREQUAL "AUTO")
+            set (REQUIRE_EGL REQUIRED)
+        endif ()
+        pkg_check_modules (EGL egl ${REQUIRE_EGL})
+        if (EGL_FOUND)
+            include_directories (${EGL_INCLUDE_DIR})
+            add_definitions (-DHAVE_EGL)
+        endif ()
+    else ()
+        set (EGL_FOUND 0)
     endif ()
 endif ()
 
