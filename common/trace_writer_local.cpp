@@ -112,7 +112,10 @@ LocalWriter::open(void) {
 
     os::log("apitrace: tracing to %s\n", lpFileName);
 
-    Writer::open(lpFileName);
+    if (!Writer::open(lpFileName)) {
+        os::log("apitrace: error: failed to open %s\n", lpFileName);
+        os::abort();
+    }
 
 #if 0
     // For debugging the exception handler
