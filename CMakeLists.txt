@@ -422,7 +422,6 @@ else ()
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         glxtrace.cpp
         glcaps.cpp
-        glsnapshot.cpp
     )
 
     set_target_properties (glxtrace PROPERTIES
@@ -453,7 +452,6 @@ if (EGL_FOUND)
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         egltrace.cpp
         glcaps.cpp
-        glsnapshot.cpp
     )
 
     set_property (

@@ -49,20 +49,6 @@ class EglTracer(GlTracer):
     def trace_function_impl_body(self, function):
         GlTracer.trace_function_impl_body(self, function)
 
-        # Take snapshots
-        if function.name == 'eglSwapBuffers':
-            print '    glsnapshot::snapshot(__call);'
-        if function.name in ('glFinish', 'glFlush'):
-            print '    tracer_context *ctx = __get_context();'
-            print '    GLint __draw_framebuffer = 0;'
-            print '    __glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &__draw_framebuffer);'
-            print '    if (__draw_framebuffer == 0 && ctx->profile == PROFILE_COMPAT) {'
-            print '        GLint __draw_buffer = GL_NONE;'
-            print '        __glGetIntegerv(GL_DRAW_BUFFER, &__draw_buffer);'
-            print '        if (__draw_buffer == GL_FRONT) {'
-            print '             glsnapshot::snapshot(__call);'
-            print '        }'
-            print '    }'
         if function.name == 'eglMakeCurrent':
             print '    // update the profile'
             print '    if (ctx != EGL_NO_CONTEXT) {'
@@ -98,7 +84,6 @@ if __name__ == '__main__':
     print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
-    print '#include "glsnapshot.hpp"'
     print
     print 'static __eglMustCastToProperFunctionPointerType __unwrap_proc_addr(const char * procname, __eglMustCastToProperFunctionPointerType procPtr);'
     print
