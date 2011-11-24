@@ -29,7 +29,7 @@
 #include <iostream>
 
 #include "cli.hpp"
-#include "os_path.hpp"
+#include "os_string.hpp"
 #include "os_process.hpp"
 #include "trace_tools.hpp"
 
@@ -83,7 +83,7 @@ command(int argc, char *argv[])
 
 #define CLI_DIFF_STATE_COMMAND "jsondiff.py"
 
-    os::Path command = trace::findFile("scripts/" CLI_DIFF_STATE_COMMAND,
+    os::String command = trace::findFile("scripts/" CLI_DIFF_STATE_COMMAND,
                  APITRACE_SCRIPTS_INSTALL_DIR "/" CLI_DIFF_STATE_COMMAND,
                                        true);
 

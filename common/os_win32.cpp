@@ -32,7 +32,7 @@
 #include <string>
 
 #include "os.hpp"
-#include "os_path.hpp"
+#include "os_string.hpp"
 
 
 namespace os {
@@ -61,10 +61,10 @@ releaseMutex(void)
 }
 
 
-Path
+String
 getProcessName(void)
 {
-    Path path;
+    String path;
     size_t size = MAX_PATH;
     char *buf = path.buf(size);
 
@@ -76,10 +76,10 @@ getProcessName(void)
     return path;
 }
 
-Path
+String
 getCurrentDir(void)
 {
-    Path path;
+    String path;
     size_t size = MAX_PATH;
     char *buf = path.buf(size);
     
@@ -93,7 +93,7 @@ getCurrentDir(void)
 }
 
 bool
-Path::exists(void) const
+String::exists(void) const
 {
     DWORD attrs = GetFileAttributesA(str());
     return attrs != INVALID_FILE_ATTRIBUTES;

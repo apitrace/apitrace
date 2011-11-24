@@ -30,7 +30,7 @@
 
 #include <iostream>
 
-#include "os_path.hpp"
+#include "os_string.hpp"
 #include "os_process.hpp"
 #include "trace_tools.hpp"
 
@@ -52,17 +52,17 @@ namespace trace {
 #endif
 
 
-os::Path
+os::String
 findFile(const char *relPath,
          const char *absPath,
          bool verbose)
 {
-    os::Path complete;
+    os::String complete;
 
     /* First look in the same directory from which this process is
      * running, (to support developers running a compiled program that
      * has not been installed. */
-    os::Path process_dir = os::getProcessName();
+    os::String process_dir = os::getProcessName();
 
     process_dir.trimFilename();
 
@@ -113,7 +113,7 @@ traceProgram(API api,
         return 1;
     }
 
-    os::Path wrapper;
+    os::String wrapper;
     wrapper = findFile(relPath, absPath, verbose);
 
     if (!wrapper.length()) {

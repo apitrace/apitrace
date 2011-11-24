@@ -31,7 +31,7 @@
 #include <string.h>
 
 #include "os.hpp"
-#include "os_path.hpp"
+#include "os_string.hpp"
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
@@ -74,7 +74,7 @@ LocalWriter::~LocalWriter()
 
 void
 LocalWriter::open(void) {
-    os::Path szFileName;
+    os::String szFileName;
 
     const char *lpFileName;
 
@@ -82,22 +82,22 @@ LocalWriter::open(void) {
     if (!lpFileName) {
         static unsigned dwCounter = 0;
 
-        os::Path process = os::getProcessName();
+        os::String process = os::getProcessName();
 #ifdef _WIN32
         process.trimExtension();
 #endif
         process.trimDirectory();
 
-        os::Path prefix = os::getCurrentDir();
+        os::String prefix = os::getCurrentDir();
         prefix.join(process);
 
         for (;;) {
             FILE *file;
 
             if (dwCounter)
-                szFileName = os::Path::format("%s.%u.trace", prefix.str(), dwCounter);
+                szFileName = os::String::format("%s.%u.trace", prefix.str(), dwCounter);
             else
-                szFileName = os::Path::format("%s.trace", prefix.str());
+                szFileName = os::String::format("%s.trace", prefix.str());
 
             lpFileName = szFileName;
             file = fopen(lpFileName, "rb");

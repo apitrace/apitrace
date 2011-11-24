@@ -29,12 +29,12 @@
 #include <iostream>
 
 #include "cli.hpp"
-#include "os_path.hpp"
+#include "os_string.hpp"
 #include "trace_tools.hpp"
 
 static const char *synopsis = "Identify differences between two image dumps.";
 
-static os::Path
+static os::String
 find_command(void)
 {
 #define CLI_DIFF_IMAGES_COMMAND "snapdiff.py"
@@ -50,7 +50,7 @@ usage(void)
 {
     char *args[3];
 
-    os::Path command = find_command();
+    os::String command = find_command();
 
     args[0] = (char *) command.str();
     args[1] = (char *) "--help";
@@ -71,7 +71,7 @@ command(int argc, char *argv[])
     int i;
     char **args = new char* [argc+2];
 
-    os::Path command = find_command();
+    os::String command = find_command();
 
     args[0] = (char *) command.str();
 

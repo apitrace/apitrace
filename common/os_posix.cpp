@@ -52,7 +52,7 @@
 #endif
 
 #include "os.hpp"
-#include "os_path.hpp"
+#include "os_string.hpp"
 
 
 namespace os {
@@ -76,10 +76,10 @@ releaseMutex(void)
 }
 
 
-Path
+String
 getProcessName(void)
 {
-    Path path;
+    String path;
     size_t size = PATH_MAX;
     char *buf = path.buf(size);
 
@@ -113,10 +113,10 @@ getProcessName(void)
     return path;
 }
 
-Path
+String
 getCurrentDir(void)
 {
-    Path path;
+    String path;
     size_t size = PATH_MAX;
     char *buf = path.buf(size);
 
@@ -128,7 +128,7 @@ getCurrentDir(void)
 }
 
 bool
-Path::exists(void) const
+String::exists(void) const
 {
     struct stat st;
     int err;

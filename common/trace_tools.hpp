@@ -29,10 +29,7 @@
 
 #include <stdlib.h>
 
-
-namespace os {
-    class Path;
-};
+#include "os_string.hpp"
 
 
 namespace trace {
@@ -44,7 +41,7 @@ enum API {
 };
 
 
-os::Path
+os::String
 findFile(const char *relPath, // path relative to the current program
          const char *absPath, // absolute path
          bool verbose);

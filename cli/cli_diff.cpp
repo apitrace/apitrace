@@ -29,7 +29,7 @@
 #include <iostream>
 
 #include "cli.hpp"
-#include "os_path.hpp"
+#include "os_string.hpp"
 #include "os_process.hpp"
 #include "trace_tools.hpp"
 
@@ -83,7 +83,7 @@ command(int argc, char *argv[])
 
 #define CLI_DIFF_TRACEDIFF_COMMAND "tracediff.sh"
 
-    os::Path command = trace::findFile("scripts/" CLI_DIFF_TRACEDIFF_COMMAND,
+    os::String command = trace::findFile("scripts/" CLI_DIFF_TRACEDIFF_COMMAND,
                  APITRACE_SCRIPTS_INSTALL_DIR "/" CLI_DIFF_TRACEDIFF_COMMAND,
                                        true);
 
@@ -98,7 +98,7 @@ command(int argc, char *argv[])
     std::cerr << "The 'apitrace diff' command is not yet supported on this O/S.\n";
     return 1;
 #else
-    os::Path apitrace = os::getProcessName();
+    os::String apitrace = os::getProcessName();
     setenv("APITRACE", apitrace.str(), 1);
 
     return os::execute(args);
