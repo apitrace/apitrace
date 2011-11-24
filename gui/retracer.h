@@ -48,7 +48,7 @@ signals:
     void retraceErrors(const QList<ApiTraceError> &errors);
 
 private slots:
-    void replayFinished();
+    void replayFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void replayError(QProcess::ProcessError err);
 
 private:

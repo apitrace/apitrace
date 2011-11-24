@@ -141,7 +141,7 @@ void RetraceProcess::start()
 }
 
 
-void RetraceProcess::replayFinished()
+void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     QByteArray output = m_process->readAllStandardOutput();
     QString msg;
@@ -152,14 +152,21 @@ void RetraceProcess::replayFinished()
     qDebug()<<"\terr = "<<errStr;
     qDebug()<<"\tout = "<<output;
 #endif
-    if (m_captureState) {
-        bool ok = false;
-        QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
-        ApiTraceState *state = new ApiTraceState(parsedJson);
-        emit foundState(state);
-        msg = tr("State fetched.");
+
+    if (exitStatus != QProcess::NormalExit) {
+        msg = QLatin1String("Process crashed");
+    } else if (exitCode != 0) {
+        msg = QLatin1String("Process exited with non zero exit code");
     } else {
-        msg = QString::fromUtf8(output);
+        if (m_captureState) {
+            bool ok = false;
+            QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
+            ApiTraceState *state = new ApiTraceState(parsedJson);
+            emit foundState(state);
+            msg = tr("State fetched.");
+        } else {
+            msg = QString::fromUtf8(output);
+        }
     }
 
     QStringList errorLines = errStr.split('\n');
@@ -182,9 +189,16 @@ void RetraceProcess::replayFinished()
 
 void RetraceProcess::replayError(QProcess::ProcessError err)
 {
+    /*
+     * XXX: this function is likely unnecessary and should be eliminated given
+     * that replayFinished is always called, even on errors.
+     */
+
+#if 0
     qDebug()<<"Process error = "<<err;
     qDebug()<<"\terr = "<<m_process->readAllStandardError();
     qDebug()<<"\tout = "<<m_process->readAllStandardOutput();
+#endif
 
     emit error(
         tr("Couldn't execute the replay file '%1'").arg(m_fileName));
@@ -200,7 +214,7 @@ RetraceProcess::RetraceProcess(QObject *parent)
     qRegisterMetaType<QList<ApiTraceError> >();
 
     connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)),
-            this, SLOT(replayFinished()));
+            this, SLOT(replayFinished(int, QProcess::ExitStatus)));
     connect(m_process, SIGNAL(error(QProcess::ProcessError)),
             this, SLOT(replayError(QProcess::ProcessError)));
 }
