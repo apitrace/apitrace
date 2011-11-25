@@ -27,14 +27,6 @@
 #include "trace_file.hpp"
 
 #include <assert.h>
-#include <string.h>
-
-#include <zlib.h>
-#include <gzguts.h>
-
-#include "os.hpp"
-
-#include <iostream>
 
 using namespace trace;
 
