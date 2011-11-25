@@ -825,7 +825,7 @@ getTextureLevelSize(GLint texture, GLint level, GLint *width, GLint *height)
 }
 
 
-static GLint
+static GLenum
 getTextureLevelFormat(GLint texture, GLint level)
 {
     GLenum target;
@@ -859,6 +859,22 @@ getRenderbufferSize(GLint renderbuffer, GLint *width, GLint *height)
     glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
     
     return *width > 0 && *height > 0;
+}
+
+
+static GLenum
+getRenderbufferFormat(GLint renderbuffer)
+{
+    GLint bound_renderbuffer = 0;
+    glGetIntegerv(GL_RENDERBUFFER_BINDING, &bound_renderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+
+    GLint format = GL_NONE;
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
+    
+    return format;
 }
 
 
@@ -917,18 +933,13 @@ getFramebufferAttachmentFormat(GLenum target, GLenum attachment)
     }
 
     if (object_type == GL_RENDERBUFFER) {
-        GLint format = GL_NONE;
-        glGetRenderbufferParameteriv(object_name, GL_RENDERBUFFER_INTERNAL_FORMAT,
-                                     &format);
-        return format;
+        return getRenderbufferFormat(object_name);
     } else if (object_type == GL_TEXTURE) {
         GLint texture_level = 0;
         glGetFramebufferAttachmentParameteriv(target, attachment,
                                               GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
                                               &texture_level);
-
-        GLint format = getTextureLevelFormat(object_name, texture_level);
-        return format;
+        return getTextureLevelFormat(object_name, texture_level);
     } else {
         std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
         return GL_NONE;
