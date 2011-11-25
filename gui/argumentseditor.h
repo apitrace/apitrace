@@ -25,8 +25,8 @@ class ArgumentsItemEditorFactory : public QItemEditorFactory
 {
 public:
     ArgumentsItemEditorFactory();
-    QWidget *createEditor(QVariant::Type type, QWidget *parent) const;
-    QByteArray valuePropertyName(QVariant::Type) const;
+    QWidget *createEditor(QMetaType::Type type, QWidget *parent) const;
+    QByteArray valuePropertyName(QMetaType::Type) const;
 };
 
 class ArgumentsEditor : public QDialog

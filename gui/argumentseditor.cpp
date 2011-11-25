@@ -28,6 +28,7 @@ isVariantEditable(const QVariant &var)
     case QVariant::UInt:
     case QVariant::LongLong:
     case QVariant::ULongLong:
+    case QMetaType::Float:
     case QVariant::Double:
         return true;
     default:
@@ -55,7 +56,7 @@ ArgumentsItemEditorFactory::ArgumentsItemEditorFactory()
 {
 }
 
-QWidget * ArgumentsItemEditorFactory::createEditor(QVariant::Type type,
+QWidget * ArgumentsItemEditorFactory::createEditor(QMetaType::Type type,
                                                    QWidget *parent) const
 {
     switch (type) {
@@ -90,6 +91,14 @@ QWidget * ArgumentsItemEditorFactory::createEditor(QVariant::Type type,
     }
     case QVariant::Pixmap:
         return new QLabel(parent);
+    case QMetaType::Float: {
+        QDoubleSpinBox *sb = new QDoubleSpinBox(parent);
+        sb->setFrame(false);
+        sb->setMinimum(-FLT_MAX);
+        sb->setMaximum(FLT_MAX);
+        sb->setDecimals(8);
+        return sb;
+    }
     case QVariant::Double: {
         QDoubleSpinBox *sb = new QDoubleSpinBox(parent);
         sb->setFrame(false);
@@ -105,7 +114,7 @@ QWidget * ArgumentsItemEditorFactory::createEditor(QVariant::Type type,
 }
 
 QByteArray
-ArgumentsItemEditorFactory::valuePropertyName(QVariant::Type type) const
+ArgumentsItemEditorFactory::valuePropertyName(QMetaType::Type type) const
 {
     switch (type) {
     case QVariant::Bool:
@@ -114,6 +123,7 @@ ArgumentsItemEditorFactory::valuePropertyName(QVariant::Type type) const
     case QVariant::Int:
     case QVariant::LongLong:
     case QVariant::ULongLong:
+    case QMetaType::Float:
     case QVariant::Double:
         return "value";
 #if 0

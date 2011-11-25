@@ -105,8 +105,11 @@ apiVariantToString(const QVariant &variant, bool multiLine)
         return QLatin1String("?");
     }
 
-    if (variant.userType() == QVariant::Double) {
+    if (variant.userType() == QMetaType::Float) {
         return QString::number(variant.toFloat());
+    }
+    if (variant.userType() == QVariant::Double) {
+        return QString::number(variant.toDouble());
     }
     if (variant.userType() == QVariant::ByteArray) {
         if (variant.toByteArray().size() < 1024) {
