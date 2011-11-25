@@ -44,6 +44,7 @@ glBindFragDataLocationIndexed	http://www.opengl.org/sdk/docs/man4/xhtml/glBindFr
 glBindFramebuffer	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glBindFramebuffer	http://www.opengl.org/sdk/docs/man3/xhtml/glBindFramebuffer.xml
 glBindFramebuffer	http://www.opengl.org/sdk/docs/man4/xhtml/glBindFramebuffer.xml
+glBindFramebufferEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glBindProgramARB	http://www.opengl.org/registry/specs/ARB/fragment_program.txt
 glBindProgramARB	http://www.opengl.org/registry/specs/ARB/vertex_program.txt
 glBindProgramPipeline	http://www.opengl.org/registry/specs/ARB/separate_shader_objects.txt
@@ -51,6 +52,7 @@ glBindProgramPipeline	http://www.opengl.org/sdk/docs/man4/xhtml/glBindProgramPip
 glBindRenderbuffer	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glBindRenderbuffer	http://www.opengl.org/sdk/docs/man3/xhtml/glBindRenderbuffer.xml
 glBindRenderbuffer	http://www.opengl.org/sdk/docs/man4/xhtml/glBindRenderbuffer.xml
+glBindRenderbufferEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glBindSampler	http://www.opengl.org/registry/specs/ARB/sampler_objects.txt
 glBindSampler	http://www.opengl.org/sdk/docs/man3/xhtml/glBindSampler.xml
 glBindSampler	http://www.opengl.org/sdk/docs/man4/xhtml/glBindSampler.xml
@@ -102,6 +104,7 @@ glCallLists	http://www.opengl.org/sdk/docs/man/xhtml/glCallLists.xml
 glCheckFramebufferStatus	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glCheckFramebufferStatus	http://www.opengl.org/sdk/docs/man3/xhtml/glCheckFramebufferStatus.xml
 glCheckFramebufferStatus	http://www.opengl.org/sdk/docs/man4/xhtml/glCheckFramebufferStatus.xml
+glCheckFramebufferStatusEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glClampColor	http://www.opengl.org/sdk/docs/man3/xhtml/glClampColor.xml
 glClampColor	http://www.opengl.org/sdk/docs/man4/xhtml/glClampColor.xml
 glClampColorARB	http://www.opengl.org/registry/specs/ARB/color_buffer_float.txt
@@ -263,6 +266,7 @@ glDeleteBuffersARB	http://www.opengl.org/registry/specs/ARB/vertex_buffer_object
 glDeleteFramebuffers	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glDeleteFramebuffers	http://www.opengl.org/sdk/docs/man3/xhtml/glDeleteFramebuffers.xml
 glDeleteFramebuffers	http://www.opengl.org/sdk/docs/man4/xhtml/glDeleteFramebuffers.xml
+glDeleteFramebuffersEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glDeleteLists	http://www.opengl.org/sdk/docs/man/xhtml/glDeleteLists.xml
 glDeleteNamedStringARB	http://www.opengl.org/registry/specs/ARB/shading_language_include.txt
 glDeleteObjectARB	http://www.opengl.org/registry/specs/ARB/shader_objects.txt
@@ -280,6 +284,7 @@ glDeleteQueriesARB	http://www.opengl.org/registry/specs/ARB/occlusion_query.txt
 glDeleteRenderbuffers	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glDeleteRenderbuffers	http://www.opengl.org/sdk/docs/man3/xhtml/glDeleteRenderbuffers.xml
 glDeleteRenderbuffers	http://www.opengl.org/sdk/docs/man4/xhtml/glDeleteRenderbuffers.xml
+glDeleteRenderbuffersEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glDeleteSamplers	http://www.opengl.org/registry/specs/ARB/sampler_objects.txt
 glDeleteSamplers	http://www.opengl.org/sdk/docs/man3/xhtml/glDeleteSamplers.xml
 glDeleteSamplers	http://www.opengl.org/sdk/docs/man4/xhtml/glDeleteSamplers.xml
@@ -432,17 +437,21 @@ glFogiv	http://www.opengl.org/sdk/docs/man/xhtml/glFog.xml
 glFramebufferRenderbuffer	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glFramebufferRenderbuffer	http://www.opengl.org/sdk/docs/man3/xhtml/glFramebufferRenderbuffer.xml
 glFramebufferRenderbuffer	http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferRenderbuffer.xml
+glFramebufferRenderbufferEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glFramebufferTexture	http://www.opengl.org/sdk/docs/man3/xhtml/glFramebufferTexture.xml
 glFramebufferTexture	http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferTexture.xml
 glFramebufferTexture1D	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glFramebufferTexture1D	http://www.opengl.org/sdk/docs/man3/xhtml/glFramebufferTexture.xml
 glFramebufferTexture1D	http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferTexture.xml
+glFramebufferTexture1DEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glFramebufferTexture2D	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glFramebufferTexture2D	http://www.opengl.org/sdk/docs/man3/xhtml/glFramebufferTexture.xml
 glFramebufferTexture2D	http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferTexture.xml
+glFramebufferTexture2DEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glFramebufferTexture3D	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glFramebufferTexture3D	http://www.opengl.org/sdk/docs/man3/xhtml/glFramebufferTexture.xml
 glFramebufferTexture3D	http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferTexture.xml
+glFramebufferTexture3DEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glFramebufferTextureARB	http://www.opengl.org/registry/specs/ARB/geometry_shader4.txt
 glFramebufferTextureFaceARB	http://www.opengl.org/registry/specs/ARB/geometry_shader4.txt
 glFramebufferTextureLayer	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
@@ -460,6 +469,7 @@ glGenBuffersARB	http://www.opengl.org/registry/specs/ARB/vertex_buffer_object.tx
 glGenFramebuffers	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glGenFramebuffers	http://www.opengl.org/sdk/docs/man3/xhtml/glGenFramebuffers.xml
 glGenFramebuffers	http://www.opengl.org/sdk/docs/man4/xhtml/glGenFramebuffers.xml
+glGenFramebuffersEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glGenLists	http://www.opengl.org/sdk/docs/man/xhtml/glGenLists.xml
 glGenProgramPipelines	http://www.opengl.org/registry/specs/ARB/separate_shader_objects.txt
 glGenProgramPipelines	http://www.opengl.org/sdk/docs/man4/xhtml/glGenProgramPipelines.xml
@@ -472,6 +482,7 @@ glGenQueriesARB	http://www.opengl.org/registry/specs/ARB/occlusion_query.txt
 glGenRenderbuffers	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glGenRenderbuffers	http://www.opengl.org/sdk/docs/man3/xhtml/glGenRenderbuffers.xml
 glGenRenderbuffers	http://www.opengl.org/sdk/docs/man4/xhtml/glGenRenderbuffers.xml
+glGenRenderbuffersEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glGenSamplers	http://www.opengl.org/registry/specs/ARB/sampler_objects.txt
 glGenSamplers	http://www.opengl.org/sdk/docs/man3/xhtml/glGenSamplers.xml
 glGenSamplers	http://www.opengl.org/sdk/docs/man4/xhtml/glGenSamplers.xml
@@ -486,6 +497,7 @@ glGenVertexArrays	http://www.opengl.org/sdk/docs/man4/xhtml/glGenVertexArrays.xm
 glGenerateMipmap	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glGenerateMipmap	http://www.opengl.org/sdk/docs/man3/xhtml/glGenerateMipmap.xml
 glGenerateMipmap	http://www.opengl.org/sdk/docs/man4/xhtml/glGenerateMipmap.xml
+glGenerateMipmapEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glGetActiveAttrib	http://www.opengl.org/sdk/docs/man/xhtml/glGetActiveAttrib.xml
 glGetActiveAttrib	http://www.opengl.org/sdk/docs/man3/xhtml/glGetActiveAttrib.xml
 glGetActiveAttrib	http://www.opengl.org/sdk/docs/man4/xhtml/glGetActiveAttrib.xml
@@ -568,6 +580,7 @@ glGetFragDataLocation	http://www.opengl.org/sdk/docs/man4/xhtml/glGetFragDataLoc
 glGetFramebufferAttachmentParameter	http://www.opengl.org/sdk/docs/man3/xhtml/glGetFramebufferAttachmentParameter.xml
 glGetFramebufferAttachmentParameter	http://www.opengl.org/sdk/docs/man4/xhtml/glGetFramebufferAttachmentParameter.xml
 glGetFramebufferAttachmentParameteriv	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
+glGetFramebufferAttachmentParameterivEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glGetGraphicsResetStatusARB	http://www.opengl.org/registry/specs/ARB/robustness.txt
 glGetHandleARB	http://www.opengl.org/registry/specs/ARB/shader_objects.txt
 glGetHistogram	http://www.opengl.org/sdk/docs/man/xhtml/glGetHistogram.xml
@@ -657,6 +670,7 @@ glGetQueryivARB	http://www.opengl.org/registry/specs/ARB/occlusion_query.txt
 glGetRenderbufferParameteriv	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glGetRenderbufferParameteriv	http://www.opengl.org/sdk/docs/man3/xhtml/glGetRenderbufferParameter.xml
 glGetRenderbufferParameteriv	http://www.opengl.org/sdk/docs/man4/xhtml/glGetRenderbufferParameter.xml
+glGetRenderbufferParameterivEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glGetSamplerParameterIiv	http://www.opengl.org/registry/specs/ARB/sampler_objects.txt
 glGetSamplerParameterIuiv	http://www.opengl.org/registry/specs/ARB/sampler_objects.txt
 glGetSamplerParameterfv	http://www.opengl.org/registry/specs/ARB/sampler_objects.txt
@@ -806,6 +820,7 @@ glIsEnabledIndexedEXT	http://www.opengl.org/registry/specs/ARB/viewport_array.tx
 glIsFramebuffer	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glIsFramebuffer	http://www.opengl.org/sdk/docs/man3/xhtml/glIsFramebuffer.xml
 glIsFramebuffer	http://www.opengl.org/sdk/docs/man4/xhtml/glIsFramebuffer.xml
+glIsFramebufferEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glIsList	http://www.opengl.org/sdk/docs/man/xhtml/glIsList.xml
 glIsNamedStringARB	http://www.opengl.org/registry/specs/ARB/shading_language_include.txt
 glIsProgram	http://www.opengl.org/sdk/docs/man/xhtml/glIsProgram.xml
@@ -822,6 +837,7 @@ glIsQueryARB	http://www.opengl.org/registry/specs/ARB/occlusion_query.txt
 glIsRenderbuffer	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glIsRenderbuffer	http://www.opengl.org/sdk/docs/man3/xhtml/glIsRenderbuffer.xml
 glIsRenderbuffer	http://www.opengl.org/sdk/docs/man4/xhtml/glIsRenderbuffer.xml
+glIsRenderbufferEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glIsSampler	http://www.opengl.org/registry/specs/ARB/sampler_objects.txt
 glIsSampler	http://www.opengl.org/sdk/docs/man3/xhtml/glIsSampler.xml
 glIsSampler	http://www.opengl.org/sdk/docs/man4/xhtml/glIsSampler.xml
@@ -1185,6 +1201,7 @@ glRenderMode	http://www.opengl.org/sdk/docs/man/xhtml/glRenderMode.xml
 glRenderbufferStorage	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glRenderbufferStorage	http://www.opengl.org/sdk/docs/man3/xhtml/glRenderbufferStorage.xml
 glRenderbufferStorage	http://www.opengl.org/sdk/docs/man4/xhtml/glRenderbufferStorage.xml
+glRenderbufferStorageEXT	http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 glRenderbufferStorageMultisample	http://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
 glRenderbufferStorageMultisample	http://www.opengl.org/sdk/docs/man3/xhtml/glRenderbufferStorageMultisample.xml
 glRenderbufferStorageMultisample	http://www.opengl.org/sdk/docs/man4/xhtml/glRenderbufferStorageMultisample.xml
