@@ -73,6 +73,7 @@ ZLibFile::ZLibFile(const std::string &filename,
 
 ZLibFile::~ZLibFile()
 {
+    close();
 }
 
 bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)

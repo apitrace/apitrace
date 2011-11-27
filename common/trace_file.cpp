@@ -28,6 +28,7 @@
 
 #include <assert.h>
 
+
 using namespace trace;
 
 
@@ -43,7 +44,8 @@ File::File(const std::string &filename,
 
 File::~File()
 {
-    close();
+    // We can't invoke any overriden virtual method here anymore
+    assert(!m_isOpened);
 }
 
 

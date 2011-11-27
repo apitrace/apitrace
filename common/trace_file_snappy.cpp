@@ -141,6 +141,7 @@ SnappyFile::SnappyFile(const std::string &filename,
 
 SnappyFile::~SnappyFile()
 {
+    close();
     delete [] m_compressedCache;
     delete [] m_cache;
 }
