@@ -36,7 +36,7 @@ public:
     ~MainWindow();
 
 public slots:
-    void loadTrace(const QString &fileName);
+    void loadTrace(const QString &fileName, int callNum = -1);
 
 private slots:
     void callItemSelected(const QModelIndex &index);
@@ -104,6 +104,7 @@ private:
     ApiTrace *m_trace;
     ApiTraceModel *m_model;
     ApiTraceFilter *m_proxyModel;
+    int m_initalCallNum;
 
     QProgressBar *m_progressBar;
 

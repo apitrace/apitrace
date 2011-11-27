@@ -36,6 +36,7 @@
 
 MainWindow::MainWindow()
     : QMainWindow(),
+      m_initalCallNum(-1),
       m_selectedEvent(0),
       m_stateEvent(0),
       m_nonDefaultsLookupEvent(0)
@@ -79,7 +80,7 @@ void MainWindow::openTrace()
     }
 }
 
-void MainWindow::loadTrace(const QString &fileName)
+void MainWindow::loadTrace(const QString &fileName, int callNum)
 {
     if (!QFile::exists(fileName)) {
         QMessageBox::warning(this, tr("File Missing"),
@@ -87,6 +88,7 @@ void MainWindow::loadTrace(const QString &fileName)
         return;
     }
 
+    m_initalCallNum = callNum;
     newTraceFile(fileName);
 }
 
@@ -254,6 +256,10 @@ void MainWindow::finishedLoadingTrace()
     QFileInfo info(m_trace->fileName());
     statusBar()->showMessage(
         tr("Loaded %1").arg(info.fileName()), 3000);
+    if (m_initalCallNum >= 0) {
+        m_trace->findCallIndex(m_initalCallNum);
+        m_initalCallNum = -1;
+    }
 }
 
 void MainWindow::replayTrace(bool dumpState)
