@@ -36,6 +36,7 @@
 
 MainWindow::MainWindow()
     : QMainWindow(),
+      m_api(trace::API_GL),
       m_initalCallNum(-1),
       m_selectedEvent(0),
       m_stateEvent(0),
@@ -269,6 +270,7 @@ void MainWindow::replayTrace(bool dumpState)
     }
 
     m_retracer->setFileName(m_trace->fileName());
+    m_retracer->setAPI(m_api);
     m_retracer->setCaptureState(dumpState);
     if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
@@ -569,9 +571,12 @@ void MainWindow::fillStateForFrame()
 void MainWindow::showSettings()
 {
     SettingsDialog dialog;
+    dialog.setAPI(m_api);
     dialog.setFilterModel(m_proxyModel);
 
     dialog.exec();
+
+    m_api = dialog.getAPI();
 }
 
 void MainWindow::openHelp(const QUrl &url)

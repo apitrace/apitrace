@@ -3,6 +3,7 @@
 
 #include "ui_mainwindow.h"
 
+#include "trace_api.hpp"
 #include "apitrace.h"
 
 #include <QMainWindow>
@@ -100,6 +101,8 @@ private:
 private:
     Ui_MainWindow m_ui;
     ShadersSourceWidget *m_sourcesWidget;
+
+    trace::API m_api;
 
     ApiTrace *m_trace;
     ApiTraceModel *m_model;

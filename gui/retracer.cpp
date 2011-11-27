@@ -38,6 +38,11 @@ void Retracer::setFileName(const QString &name)
     m_fileName = name;
 }
 
+void Retracer::setAPI(trace::API api)
+{
+    m_api = api;
+}
+
 bool Retracer::isBenchmarking() const
 {
     return m_benchmarking;
@@ -85,6 +90,7 @@ void Retracer::run()
     retrace->process()->setProcessEnvironment(m_processEnvironment);
 
     retrace->setFileName(m_fileName);
+    retrace->setAPI(m_api);
     retrace->setBenchmarking(m_benchmarking);
     retrace->setDoubleBuffered(m_doubleBuffered);
     retrace->setCaptureState(m_captureState);
@@ -118,7 +124,17 @@ void Retracer::run()
 
 void RetraceProcess::start()
 {
+    QString prog;
     QStringList arguments;
+
+    if (m_api == trace::API_GL) {
+        prog = QLatin1String("glretrace");
+    } else if (m_api == trace::API_EGL) {
+        prog = QLatin1String("eglretrace");
+    } else {
+        assert(0);
+        return;
+    }
 
     if (m_doubleBuffered) {
         arguments << QLatin1String("-db");
@@ -137,7 +153,7 @@ void RetraceProcess::start()
 
     arguments << m_fileName;
 
-    m_process->start(QLatin1String("glretrace"), arguments);
+    m_process->start(prog, arguments);
 }
 
 
@@ -232,6 +248,11 @@ QString RetraceProcess::fileName() const
 void RetraceProcess::setFileName(const QString &name)
 {
     m_fileName = name;
+}
+
+void RetraceProcess::setAPI(trace::API api)
+{
+    m_api = api;
 }
 
 bool RetraceProcess::isBenchmarking() const

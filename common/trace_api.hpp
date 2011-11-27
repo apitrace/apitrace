@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 VMware, Inc.
+ * Copyright 2011 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,32 +23,24 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_TOOLS_HPP_
-#define _TRACE_TOOLS_HPP_
+#ifndef _TRACE_API_HPP_
+#define _TRACE_API_HPP_
 
 
 #include <stdlib.h>
 
 #include "os_string.hpp"
-#include "trace_api.hpp"
 
 
 namespace trace {
 
 
-os::String
-findFile(const char *relPath, // path relative to the current program
-         const char *absPath, // absolute path
-         bool verbose);
-
-int
-traceProgram(API api,
-             char * const *argv,
-             const char *output = NULL,
-             bool verbose = false);
-
+enum API {
+    API_GL, // GL + GLX/WGL/CGL
+    API_EGL, // GL/GLES1/GLES2/VG + EGL
+};
 
 
 } /* namespace trace */
 
-#endif /* _TRACE_TOOLS_HPP_ */
+#endif /* _TRACE_API_HPP_ */
