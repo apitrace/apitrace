@@ -53,7 +53,7 @@ public:
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, size_t length);
-    virtual bool rawRead(void *buffer, size_t length);
+    virtual size_t rawRead(void *buffer, size_t length);
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
@@ -100,9 +100,10 @@ bool ZLibFile::rawWrite(const void *buffer, size_t length)
     return gzwrite(m_gzFile, buffer, length) != -1;
 }
 
-bool ZLibFile::rawRead(void *buffer, size_t length)
+size_t ZLibFile::rawRead(void *buffer, size_t length)
 {
-    return gzread(m_gzFile, buffer, length) != -1;
+    int ret = gzread(m_gzFile, buffer, length);
+    return ret < 0 ? 0 : ret;
 }
 
 int ZLibFile::rawGetc()

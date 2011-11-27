@@ -82,7 +82,7 @@ public:
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, size_t length);
-    virtual bool rawRead(void *buffer, size_t length);
+    virtual size_t rawRead(void *buffer, size_t length);
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
@@ -209,10 +209,10 @@ bool SnappyFile::rawWrite(const void *buffer, size_t length)
     return true;
 }
 
-bool SnappyFile::rawRead(void *buffer, size_t length)
+size_t SnappyFile::rawRead(void *buffer, size_t length)
 {
     if (endOfData()) {
-        return false;
+        return 0;
     }
 
     if (freeCacheSize() >= length) {
@@ -231,18 +231,18 @@ bool SnappyFile::rawRead(void *buffer, size_t length)
                 flushReadCache();
             }
             if (!m_cacheSize) {
-                break;
+                return length - sizeToRead;
             }
         }
     }
 
-    return true;
+    return length;
 }
 
 int SnappyFile::rawGetc()
 {
     int c = 0;
-    if (!rawRead(&c, 1))
+    if (rawRead(&c, 1) != 1)
         return -1;
     return c;
 }
