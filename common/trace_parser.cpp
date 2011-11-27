@@ -52,13 +52,8 @@ Parser::~Parser() {
 
 bool Parser::open(const char *filename) {
     assert(!file);
-    if (File::isZLibCompressed(filename)) {
-        file = File::createZLib();
-    } else {
-        file = File::createSnappy();
-    }
-
-    if (!file->open(filename, File::Read)) {
+    file = File::createForRead(filename);
+    if (!file) {
         return false;
     }
 

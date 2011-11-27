@@ -53,6 +53,8 @@ public:
     static bool isSnappyCompressed(const std::string &filename);
     static File *createZLib(void);
     static File *createSnappy(void);
+    static File *createForRead(const char *filename);
+    static File *createForWrite(const char *filename);
 public:
     File(const std::string &filename = std::string(),
          File::Mode mode = File::Read);

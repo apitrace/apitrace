@@ -70,6 +70,7 @@ static const Command * commands[] = {
     &diff_state_command,
     &diff_images_command,
     &dump_command,
+    &repack_command,
     &trace_command,
     &help_command
 };
@@ -184,5 +185,5 @@ main(int argc, char **argv)
     std::cerr << "Error: unknown command " << command_name
               << " (see \"apitrace help\").\n";
 
-    return 1;
+   return 1;
 }

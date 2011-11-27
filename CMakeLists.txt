@@ -264,6 +264,8 @@ endif ()
 
 add_library (common STATIC
     common/trace_file.cpp
+    common/trace_file_read.cpp
+    common/trace_file_write.cpp
     common/trace_file_zlib.cpp
     common/trace_file_snappy.cpp
     common/trace_model.cpp
