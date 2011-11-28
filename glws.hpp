@@ -129,9 +129,11 @@ class Context
 {
 public:
     const Visual *visual;
+    Profile profile;
     
-    Context(const Visual *vis) :
-        visual(vis)
+    Context(const Visual *vis, Profile prof) :
+        visual(vis),
+        profile(prof)
     {}
 
     virtual ~Context() {}

@@ -205,8 +205,8 @@ class GlxContext : public Context
 public:
     GLXContext context;
 
-    GlxContext(const Visual *vis, GLXContext ctx) :
-        Context(vis),
+    GlxContext(const Visual *vis, Profile prof, GLXContext ctx) :
+        Context(vis, prof),
         context(ctx)
     {}
 
@@ -323,7 +323,7 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
         context = glXCreateContext(display, visual->visinfo, share_context, True);
     }
 
-    return new GlxContext(visual, context);
+    return new GlxContext(visual, profile, context);
 }
 
 bool

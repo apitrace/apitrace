@@ -172,8 +172,8 @@ public:
     HGLRC hglrc;
     WglContext *shareContext;
 
-    WglContext(const Visual *vis, WglContext *share) :
-        Context(vis),
+    WglContext(const Visual *vis, Profile prof, WglContext *share) :
+        Context(vis, prof),
         hglrc(0),
         shareContext(share)
     {}
@@ -216,7 +216,7 @@ createContext(const Visual *visual, Context *shareContext, Profile profile)
         return NULL;
     }
 
-    return new WglContext(visual, dynamic_cast<WglContext *>(shareContext));
+    return new WglContext(visual, profile, dynamic_cast<WglContext *>(shareContext));
 }
 
 bool

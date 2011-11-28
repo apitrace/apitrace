@@ -209,8 +209,8 @@ class EglContext : public Context
 public:
     EGLContext context;
 
-    EglContext(const Visual *vis, EGLContext ctx) :
-        Context(vis),
+    EglContext(const Visual *vis, Profile prof, EGLContext ctx) :
+        Context(vis, prof),
         context(ctx)
     {}
 
@@ -339,7 +339,7 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
 
     eglBindAPI(api);
 
-    return new EglContext(visual, context);
+    return new EglContext(visual, profile, context);
 }
 
 bool
