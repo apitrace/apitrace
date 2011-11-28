@@ -255,6 +255,77 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 }
 
 
+/**
+ * OpenGL ES does not support glGetTexImage. Obtain the pixels by attaching the
+ * texture to a framebuffer.
+ */
+static inline void
+getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
+{
+    memset(pixels, 0x80, desc.height * desc.width * 4);
+
+    GLenum texture_binding = GL_NONE;
+    switch (target) {
+    case GL_TEXTURE_2D:
+        texture_binding = GL_TEXTURE_BINDING_2D;
+        break;
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        texture_binding = GL_TEXTURE_BINDING_CUBE_MAP;
+        break;
+    case GL_TEXTURE_3D_OES:
+        texture_binding = GL_TEXTURE_BINDING_3D_OES;
+    default:
+        return;
+    }
+
+    GLint texture = 0;
+    glGetIntegerv(texture_binding, &texture);
+    if (!texture) {
+        return;
+    }
+
+    GLint prev_fbo = 0;
+    GLuint fbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    GLenum status;
+
+    switch (target) {
+    case GL_TEXTURE_2D:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, level);
+        status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << __FUNCTION__ << ": " << enumToString(status) << "\n";
+        }
+        glReadPixels(0, 0, desc.width, desc.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        break;
+    case GL_TEXTURE_3D_OES:
+        for (int i = 0; i < desc.depth; i++) {
+            glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, texture, level, i);
+            glReadPixels(0, 0, desc.width, desc.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels + 4 * i * desc.width * desc.height);
+        }
+        break;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
+
+    glDeleteFramebuffers(1, &fbo);
+}
+
+
 static inline void
 dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint level)
 {
@@ -293,7 +364,11 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
 
     context.resetPixelPackState();
 
-    glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    if (context.ES) {
+        getTexImageOES(target, level, desc, pixels);
+    } else {
+        glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    }
 
     context.restorePixelPackState();
 
