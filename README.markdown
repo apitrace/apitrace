@@ -3,9 +3,9 @@ About **apitrace**
 
 **apitrace** consists of a set of tools to:
 
-* trace OpenGL, D3D9, D3D8, D3D7, and DDRAW APIs calls to a file;
+* trace OpenGL, OpenGL ES, D3D9, D3D8, D3D7, and DDRAW APIs calls to a file;
 
-* retrace OpenGL calls from a file;
+* retrace OpenGL and OpenGL ES calls from a file;
 
 * inspect OpenGL state at any call while retracing;
 
@@ -21,7 +21,7 @@ Linux and Mac OS X
 
 Run the application you want to trace as
 
-    /path/to/apitrace trace /path/to/application [args...]
+    apitrace trace /path/to/application [args...]
 
 and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
@@ -29,18 +29,18 @@ directory.  You can specify the written trace filename by setting the
 
 View the trace with
 
-    /path/to/apitrace dump --color application.trace | less -R
+    apitrace dump --color application.trace | less -R
 
-Replay the trace with
+Replay an OpenGL trace with
 
-    /path/to/glretrace application.trace
+    glretrace application.trace
 
 Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
 glretrace for more options.
 
 Start the GUI as
 
-    /path/to/qapitrace application.trace
+    qapitrace application.trace
 
 
 Windows
@@ -146,13 +146,13 @@ Dump GL state at a particular call
 
 You can get a dump of the bound GL state at call 12345 by doing:
 
-    /path/to/glretrace -D 12345 application.trace > 12345.json
+    glretrace -D 12345 application.trace > 12345.json
 
 This is precisely the mechanism the GUI obtains its own state.
 
-You can compare two state dumps with the jsondiff.py script:
+You can compare two state dumps by doing:
 
-    ./scripts/jsondiff.py 12345.json 67890.json
+    apitrace diff-state 12345.json 67890.json
 
 
 Comparing two traces side by side
@@ -169,7 +169,7 @@ Recording a video with FFmpeg
 
 You can make a video of the output by doing
 
-    /path/to/glretrace -s - application.trace \
+    glretrace -s - application.trace \
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
 
@@ -189,7 +189,7 @@ These are the steps to create a regression test-suite around **apitrace**:
 * obtain reference snapshots, by doing:
 
         mkdir /path/to/snapshots/
-        /path/to/glretrace -s /path/to/reference/snapshots/ application.trace
+        glretrace -s /path/to/reference/snapshots/ application.trace
 
   on reference system.
 
@@ -197,12 +197,12 @@ These are the steps to create a regression test-suite around **apitrace**:
 
 * to do a regression test, do:
 
-        /path/to/glretrace -c /path/to/reference/snapshots/ application.trace
+        glretrace -c /path/to/reference/snapshots/ application.trace
 
-  Alternatively, for a HTML summary, use the snapdiff script:
+  Alternatively, for a HTML summary, use `apitrace diff-images`:
 
-        /path/to/glretrace -s /path/to/current/snapshots/ application.trace
-        ./scripts/snapdiff.py --output summary.html /path/to/reference/snapshots/ /path/to/current/snapshots/
+        glretrace -s /path/to/current/snapshots/ application.trace
+        apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/current/snapshots/
 
 
 Automated git-bisection

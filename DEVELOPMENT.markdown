@@ -1,8 +1,8 @@
 Coding Style
 ============
 
-XXX: These are guidelines for new code. Some of existing hasn't been updated
-to these conventions yet.
+XXX: These are mostly guidelines for new code, as some of existing hasn't been
+updated to these conventions yet.
 
 Whitespace (all languages):
 
@@ -75,4 +75,6 @@ Backwards compatibility:
 Regression testing
 ==================
 
-Not standardized yet.  Work in progress.
+There is a regression test suite under development in
+https://github.com/apitrace/apitrace-tests .
+
