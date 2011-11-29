@@ -30,6 +30,7 @@
 
 #include "cli.hpp"
 #include "os_string.hpp"
+#include "os_process.hpp"
 #include "trace_resource.hpp"
 
 static const char *synopsis = "Identify differences between two image dumps.";
@@ -43,48 +44,42 @@ find_command(void)
 static void
 usage(void)
 {
-    char *args[3];
-
     os::String command = find_command();
+    if (!command.length()) {
+        exit(1);
+    }
 
+    char *args[3];
     args[0] = (char *) command.str();
     args[1] = (char *) "--help";
     args[2] = NULL;
 
-#ifdef _WIN32
-    std::cerr << "The 'apitrace diff-images' command is not yet supported on this O/S.\n";
-#else
-    execv(command.str(), args);
-#endif
-
-    std::cerr << "Error: Failed to execute " << args[0] << "\n";
+    os::execute(args);
 }
 
 static int
 command(int argc, char *argv[])
 {
     int i;
-    char **args = new char* [argc+2];
+    int ret;
 
     os::String command = find_command();
-
-    args[0] = (char *) command.str();
-
-    for (i = 0; i < argc; i++) {
-        args[i+1] = argv[i];
+    if (!command.length()) {
+        return 1;
     }
 
-    args[i+1] = NULL;
+    char **args = new char* [argc + 2];
+    args[0] = (char *) command.str();
+    for (i = 0; i < argc; i++) {
+        args[i + 1] = argv[i];
+    }
+    args[i + 1] = NULL;
 
-#ifdef _WIN32
-    std::cerr << "The 'apitrace diff-images' command is not yet supported on this O/S.\n";
-#else
-    execv(command.str(), args);
-#endif
+    ret = os::execute(args);
 
-    std::cerr << "Error: Failed to execute " << args[0] << "\n";
+    delete [] args;
 
-    return 1;
+    return ret;
 }
 
 const Command diff_images_command = {

@@ -105,7 +105,7 @@ findScript(const char *name)
     }
 #endif
 
-    std::cerr << "error: cannot find " << name << "script\n";
+    std::cerr << "error: cannot find " << name << " script\n";
 
     return "";
 }
