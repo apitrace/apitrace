@@ -32,6 +32,7 @@
 
 #include "os_string.hpp"
 #include "os_process.hpp"
+#include "trace_resource.hpp"
 #include "trace_tools.hpp"
 
 
@@ -50,39 +51,6 @@ namespace trace {
 #define GL_TRACE_WRAPPER  "glxtrace.so"
 #define EGL_TRACE_WRAPPER  "egltrace.so"
 #endif
-
-
-os::String
-findFile(const char *relPath,
-         const char *absPath,
-         bool verbose)
-{
-    os::String complete;
-
-    /* First look in the same directory from which this process is
-     * running, (to support developers running a compiled program that
-     * has not been installed. */
-    os::String process_dir = os::getProcessName();
-
-    process_dir.trimFilename();
-
-    complete = process_dir;
-    complete.join(relPath);
-
-    if (complete.exists())
-        return complete;
-
-    /* Second, look in the directory for installed wrappers. */
-    complete = absPath;
-    if (complete.exists())
-        return complete;
-
-    if (verbose) {
-        std::cerr << "error: cannot find " << relPath << " or " << absPath << "\n";
-    }
-
-    return "";
-}
 
 
 int

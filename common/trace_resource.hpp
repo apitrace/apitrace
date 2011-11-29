@@ -23,26 +23,28 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_TOOLS_HPP_
-#define _TRACE_TOOLS_HPP_
+#ifndef _TRACE_RESOURCE_HPP_
+#define _TRACE_RESOURCE_HPP_
 
 
 #include <stdlib.h>
 
+#include "os_string.hpp"
 #include "trace_api.hpp"
 
 
 namespace trace {
 
 
-int
-traceProgram(API api,
-             char * const *argv,
-             const char *output = NULL,
-             bool verbose = false);
+os::String
+findFile(const char *relPath, // path relative to the current program
+         const char *absPath, // absolute path
+         bool verbose);
 
+os::String
+findScript(const char *name);
 
 
 } /* namespace trace */
 
-#endif /* _TRACE_TOOLS_HPP_ */
+#endif /* _TRACE_RESOURCE_HPP_ */

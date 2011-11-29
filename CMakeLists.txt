@@ -231,7 +231,6 @@ set(WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 add_definitions(
     -DAPITRACE_BINARY_DIR="${CMAKE_BINARY_DIR}"
     -DAPITRACE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
-    -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
     -DAPITRACE_WRAPPER_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
 )
 
@@ -274,6 +273,7 @@ add_library (common STATIC
     common/trace_writer_local.cpp
     common/trace_writer_model.cpp
     common/trace_loader.cpp
+    common/trace_resource.cpp
     common/trace_tools_trace.cpp
     common/image.cpp
     common/image_bmp.cpp
@@ -283,6 +283,7 @@ add_library (common STATIC
 )
 
 set_target_properties (common PROPERTIES
+    COMPILE_DEFINITIONS APITRACE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
     # Ensure it can be statically linked in shared libraries
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )

@@ -30,19 +30,14 @@
 
 #include "cli.hpp"
 #include "os_string.hpp"
-#include "trace_tools.hpp"
+#include "trace_resource.hpp"
 
 static const char *synopsis = "Identify differences between two image dumps.";
 
 static os::String
 find_command(void)
 {
-#define CLI_DIFF_IMAGES_COMMAND "snapdiff.py"
-
-    return trace::findFile("scripts/" CLI_DIFF_IMAGES_COMMAND,
-     APITRACE_SCRIPTS_INSTALL_DIR "/" CLI_DIFF_IMAGES_COMMAND,
-                           true);
-
+    return trace::findScript("snapdiff.py");
 }
 
 static void

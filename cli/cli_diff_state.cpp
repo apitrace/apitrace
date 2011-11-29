@@ -31,7 +31,7 @@
 #include "cli.hpp"
 #include "os_string.hpp"
 #include "os_process.hpp"
-#include "trace_tools.hpp"
+#include "trace_resource.hpp"
 
 static const char *synopsis = "Identify differences between two state dumps.";
 
@@ -81,11 +81,7 @@ command(int argc, char *argv[])
     file1 = argv[i];
     file2 = argv[i+1];
 
-#define CLI_DIFF_STATE_COMMAND "jsondiff.py"
-
-    os::String command = trace::findFile("scripts/" CLI_DIFF_STATE_COMMAND,
-                 APITRACE_SCRIPTS_INSTALL_DIR "/" CLI_DIFF_STATE_COMMAND,
-                                       true);
+    os::String command = trace::findScript("jsondiff.py");
 
     char *args[5];
 
