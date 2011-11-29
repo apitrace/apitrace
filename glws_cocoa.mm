@@ -143,8 +143,8 @@ class CocoaContext : public Context
 public:
     NSOpenGLContext *context;
 
-    CocoaContext(const Visual *vis, NSOpenGLContext *ctx) :
-        Context(vis),
+    CocoaContext(const Visual *vis, Profile prof, NSOpenGLContext *ctx) :
+        Context(vis, prof),
         context(ctx)
     {}
 
@@ -223,7 +223,7 @@ createContext(const Visual *visual, Context *shareContext, Profile profile)
                shareContext:share_context];
     assert(context != nil);
 
-    return new CocoaContext(visual, context);
+    return new CocoaContext(visual, profile, context);
 }
 
 bool
