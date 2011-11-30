@@ -104,6 +104,10 @@ EGLConfigAttrib = FakeEnum(EGLint, [
 
     # EGL_KHR_lock_surface
     "EGL_MATCH_FORMAT_KHR",         # 0x3043
+
+    # EGL_NV_coverage_sample
+    "EGL_COVERAGE_BUFFERS_NV",      # 0x30E0
+    "EGL_COVERAGE_SAMPLES_NV",      # 0x30E1
 ])
 
 EGLName = FakeEnum(EGLint, [
