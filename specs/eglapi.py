@@ -101,6 +101,9 @@ EGLConfigAttrib = FakeEnum(EGLint, [
     "EGL_RENDERABLE_TYPE",          # 0x3040
     "EGL_MATCH_NATIVE_PIXMAP",      # 0x3041  /* Pseudo-attribute (not queryable) */
     "EGL_CONFORMANT",               # 0x3042
+
+    # EGL_KHR_lock_surface
+    "EGL_MATCH_FORMAT_KHR",         # 0x3043
 ])
 
 EGLName = FakeEnum(EGLint, [
@@ -127,6 +130,18 @@ EGLSurfaceAttrib = FakeEnum(EGLint, [
     "EGL_SWAP_BEHAVIOR",            # 0x3093
     "EGL_MULTISAMPLE_RESOLVE",      # 0x3099
     "EGL_NONE",
+
+    # EGL_KHR_lock_surface
+    "EGL_BITMAP_POINTER_KHR",                   # 0x30C6
+    "EGL_BITMAP_PITCH_KHR",                     # 0x30C7
+    "EGL_BITMAP_ORIGIN_KHR",                    # 0x30C8
+    "EGL_BITMAP_PIXEL_RED_OFFSET_KHR",          # 0x30C9
+    "EGL_BITMAP_PIXEL_GREEN_OFFSET_KHR",        # 0x30CA
+    "EGL_BITMAP_PIXEL_BLUE_OFFSET_KHR",         # 0x30CB
+    "EGL_BITMAP_PIXEL_ALPHA_OFFSET_KHR",        # 0x30CC
+    "EGL_BITMAP_PIXEL_LUMINANCE_OFFSET_KHR",    # 0x30CD
+    # EGL_KHR_lock_surface2
+    "EGL_BITMAP_PIXEL_SIZE_KHR",                # 0x3110
 ])
 
 EGLContextAttrib = FakeEnum(EGLint, [
@@ -152,6 +167,12 @@ EGLBufferType = FakeEnum(EGLint, [
 
 EGLEngine = FakeEnum(EGLint, [
     "EGL_CORE_NATIVE_ENGINE",       # 0x305B
+])
+
+# EGL_KHR_lock_surface
+EGLLockSurfaceAttrib = FakeEnum(EGLint, [
+    "EGL_MAP_PRESERVE_PIXELS_KHR",  # 0x30C4
+    "EGL_LOCK_USAGE_HINT_KHR",      # 0x30C5
 ])
 
 eglapi = API("EGL")
@@ -209,4 +230,8 @@ eglapi.add_functions([
     Function(EGLBoolean, "eglCopyBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLNativePixmapType, "target")]),
 
     Function(PROC, "eglGetProcAddress", [(Const(CString), "procname")]),
+
+    # EGL_KHR_lock_surface
+    Function(EGLBoolean, "eglLockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface"), (Array(Const(EGLLockSurfaceAttrib), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
+    Function(EGLBoolean, "eglUnlockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface")]),
 ])
