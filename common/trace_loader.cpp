@@ -95,9 +95,7 @@ bool Loader::isCallAFrameMarker(const trace::Call *call) const
 
     switch (m_frameMarker) {
     case FrameMarker_SwapBuffers:
-        return  name.find("SwapBuffers") != std::string::npos ||
-                name == "CGLFlushDrawable" ||
-                name == "glFrameTerminatorGREMEDY";
+        return call->flags & trace::CALL_FLAG_END_FRAME;
         break;
     case FrameMarker_Flush:
         return name == "glFlush";

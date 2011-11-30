@@ -253,6 +253,7 @@ public:
     QStringList argNames() const;
     QVector<QVariant> arguments() const;
     QVariant returnValue() const;
+    trace::CallFlags flags() const;
     QUrl helpUrl() const;
     void setHelpUrl(const QUrl &url);
     ApiTraceFrame *parentFrame()const;
@@ -285,6 +286,7 @@ private:
     ApiTraceCallSignature *m_signature;
     QVector<QVariant> m_argValues;
     QVariant m_returnValue;
+    trace::CallFlags m_flags;
     ApiTraceFrame *m_parentFrame;
 
     QVector<QVariant> m_editedValues;

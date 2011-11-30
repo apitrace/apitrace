@@ -196,6 +196,7 @@ protected:
     formatter::Attribute *normal;
     formatter::Attribute *bold;
     formatter::Attribute *italic;
+    formatter::Attribute *strike;
     formatter::Attribute *red;
     formatter::Attribute *pointer;
     formatter::Attribute *literal;
@@ -206,6 +207,7 @@ public:
         normal = formatter->normal();
         bold = formatter->bold();
         italic = formatter->italic();
+        strike = formatter->strike();
         red = formatter->color(formatter::RED);
         pointer = formatter->color(formatter::GREEN);
         literal = formatter->color(formatter::BLUE);
@@ -341,8 +343,19 @@ public:
     }
 
     void visit(Call *call) {
+        CallFlags flags = call->flags;
+
+        if (flags & CALL_FLAG_NON_REPRODUCIBLE) {
+            os << strike;
+        } else if (flags & (CALL_FLAG_FAKE | CALL_FLAG_NO_SIDE_EFFECTS)) {
+            os << normal;
+        } else {
+            os << bold;
+        }
+        os << call->sig->name << normal;
+
+        os << "(";
         const char *sep = "";
-        os << bold << call->sig->name << normal << "(";
         for (unsigned i = 0; i < call->args.size(); ++i) {
             os << sep << italic << call->sig->arg_names[i] << normal << " = ";
             if (call->args[i]) {
@@ -353,11 +366,21 @@ public:
             sep = ", ";
         }
         os << ")";
+
         if (call->ret) {
             os << " = ";
             _visit(call->ret);
         }
+        
+        if (flags & CALL_FLAG_INCOMPLETE) {
+            os << " // " << red << "incomplete" << normal;
+        }
+        
         os << "\n";
+
+        if (flags & CALL_FLAG_END_FRAME) {
+            os << "\n";
+        }
     }
 };
 

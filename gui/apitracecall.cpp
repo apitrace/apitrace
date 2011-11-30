@@ -670,6 +670,7 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
         }
     }
     m_argValues.squeeze();
+    m_flags = call->flags;
 }
 
 ApiTraceCall::~ApiTraceCall()
@@ -783,6 +784,11 @@ QVector<QVariant> ApiTraceCall::arguments() const
 QVariant ApiTraceCall::returnValue() const
 {
     return m_returnValue;
+}
+
+trace::CallFlags ApiTraceCall::flags() const
+{
+    return m_flags;
 }
 
 QUrl ApiTraceCall::helpUrl() const

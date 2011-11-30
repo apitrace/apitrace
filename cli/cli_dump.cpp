@@ -37,6 +37,8 @@ enum ColorOption {
 
 static ColorOption color = COLOR_OPTION_AUTO;
 
+static bool verbose = false;
+
 static const char *synopsis = "Dump given trace(s) to standard output.";
 
 static void
@@ -46,6 +48,7 @@ usage(void)
         << "usage: apitrace dump [OPTIONS] <trace-file>...\n"
         << synopsis << "\n"
         "\n"
+        "    -v, --verbose       verbose output\n"
         "    --color=<WHEN>\n"
         "    --colour=<WHEN>     Colored syntax highlighting\n"
         "                        WHEN is 'auto', 'always', or 'never'\n";
@@ -68,6 +71,9 @@ command(int argc, char *argv[])
         } else if (!strcmp(arg, "--help")) {
             usage();
             return 0;
+        } else if (strcmp(arg, "-v") == 0 ||
+                   strcmp(arg, "--verbose") == 0) {
+            verbose = true;
         } else if (!strcmp(arg, "--color=auto") ||
                    !strcmp(arg, "--colour=auto")) {
             color = COLOR_OPTION_AUTO;
@@ -106,7 +112,10 @@ command(int argc, char *argv[])
 
         trace::Call *call;
         while ((call = p.parse_call())) {
-            call->dump(std::cout, color);
+            if (verbose ||
+                !(call->flags & trace::CALL_FLAG_VERBOSE)) {
+                call->dump(std::cout, color);
+            }
             delete call;
         }
     }

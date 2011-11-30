@@ -62,6 +62,7 @@ public:
     virtual Attribute *normal(void) const { return new Attribute; }
     virtual Attribute *bold(void) const { return new Attribute; }
     virtual Attribute *italic(void) const { return new Attribute; }
+    virtual Attribute *strike(void) const { return new Attribute; }
     virtual Attribute *color(Color) const { return new Attribute; }
 };
 
@@ -88,6 +89,7 @@ public:
     virtual Attribute *normal(void) const { return new AnsiAttribute("0m"); }
     virtual Attribute *bold(void) const { return new AnsiAttribute("1m"); }
     virtual Attribute *italic(void) const { return new AnsiAttribute("3m"); }
+    virtual Attribute *strike(void) const { return new AnsiAttribute("9m"); }
     virtual Attribute *color(Color c) const { 
         static const char *color_escapes[] = {
             "31m", /* red */
@@ -142,6 +144,7 @@ public:
     virtual Attribute *normal(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
     virtual Attribute *bold(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY); }
     virtual Attribute *italic(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
+    virtual Attribute *strike(void) const { return new WindowsAttribute(COMMON_LVB_REVERSE_VIDEO | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
     virtual Attribute *color(Color c) const { 
         static const WORD color_escapes[] = {
             FOREGROUND_RED | FOREGROUND_INTENSITY,

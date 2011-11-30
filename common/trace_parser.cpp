@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "trace_file.hpp"
 #include "trace_parser.hpp"
@@ -42,6 +43,8 @@ Parser::Parser() {
     file = NULL;
     next_call_no = 0;
     version = 0;
+
+    glGetErrorSig = NULL;
 }
 
 
@@ -164,21 +167,25 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
 
 Call *Parser::parse_call(Mode mode) {
     do {
+        Call *call;
         int c = read_byte();
         switch (c) {
         case trace::EVENT_ENTER:
             parse_enter(mode);
             break;
         case trace::EVENT_LEAVE:
-            return parse_leave(mode);
+            call = parse_leave(mode);
+            adjust_call_flags(call);
+            return call;
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
         case -1:
             if (!calls.empty()) {
-                Call *call = calls.front();
-                std::cerr << call->no << ": warning: incomplete call " << call->name() << "\n";
+                call = calls.front();
+                call->flags |= CALL_FLAG_INCOMPLETE;
                 calls.pop_front();
+                adjust_call_flags(call);
                 return call;
             }
             return NULL;
@@ -201,7 +208,8 @@ T *lookup(std::vector<T *> &map, size_t index) {
 }
 
 
-FunctionSig *Parser::parse_function_sig(void) {
+Parser::FunctionSigFlags *
+Parser::parse_function_sig(void) {
     size_t id = read_uint();
 
     FunctionSigState *sig = lookup(functions, id);
@@ -217,8 +225,21 @@ FunctionSig *Parser::parse_function_sig(void) {
             arg_names[i] = read_string();
         }
         sig->arg_names = arg_names;
+        sig->flags = lookupCallFlags(sig->name);
         sig->offset = file->currentOffset();
         functions[id] = sig;
+
+        /**
+         * Note down the signature of special functions for future reference.
+         *
+         * NOTE: If the number of comparisons increases we should move this to a
+         * separate function and use bisection.
+         */
+        if (sig->num_args == 0 &&
+            strcmp(sig->name, "glGetError") == 0) {
+            glGetErrorSig = sig;
+        }
+
     } else if (file->currentOffset() < sig->offset) {
         /* skip over the signature */
         skip_string(); /* name */
@@ -327,9 +348,9 @@ BitmaskSig *Parser::parse_bitmask_sig() {
 
 
 void Parser::parse_enter(Mode mode) {
-    FunctionSig *sig = parse_function_sig();
+    FunctionSigFlags *sig = parse_function_sig();
 
-    Call *call = new Call(sig);
+    Call *call = new Call(sig, sig->flags);
 
     call->no = next_call_no++;
 
@@ -386,6 +407,21 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
     } while(true);
 }
 
+
+/**
+ * Make adjustments to this particular call flags.
+ *
+ * NOTE: This is called per-call so no string comparisons should be done here.
+ * All name comparisons should be done when the signature is parsed instead.
+ */
+void Parser::adjust_call_flags(Call *call) {
+    // Mark glGetError() = GL_NO_ERROR as verbose
+    if (call->sig == glGetErrorSig &&
+        call->ret &&
+        call->ret->toSInt() == 0) {
+        call->flags |= CALL_FLAG_VERBOSE;
+    }
+}
 
 void Parser::parse_arg(Call *call, Mode mode) {
     unsigned index = read_uint();

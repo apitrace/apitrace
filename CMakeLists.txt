@@ -269,6 +269,7 @@ add_library (common STATIC
     common/trace_file_snappy.cpp
     common/trace_model.cpp
     common/trace_parser.cpp
+    common/trace_parser_flags.cpp
     common/trace_writer.cpp
     common/trace_writer_local.cpp
     common/trace_writer_model.cpp
