@@ -175,6 +175,38 @@ EGLLockSurfaceAttrib = FakeEnum(EGLint, [
     "EGL_LOCK_USAGE_HINT_KHR",      # 0x30C5
 ])
 
+# EGL_KHR_image_base
+EGLImageKHR = Opaque("EGLImageKHR")
+
+EGLImageKHRAttrib = FakeEnum(EGLint, [
+    "EGL_IMAGE_PRESERVED_KHR",      # 0x30D2
+
+    # EGL_KHR_gl_*_image
+    "EGL_GL_TEXTURE_LEVEL_KHR",     # 0x30BC
+    "EGL_GL_TEXTURE_ZOFFSET_KHR",   # 0x30BD
+
+    "EGL_NONE",
+])
+
+EGLImageKHRTarget = FakeEnum(EGLenum, [
+    # EGL_KHR_image_pixmap
+    "EGL_NATIVE_PIXMAP_KHR",                    # 0x30B0
+
+    # EGL_KHR_vg_parent_image
+    "EGL_VG_PARENT_IMAGE_KHR",                  # 0x30BA
+
+    # EGL_KHR_gl_*_image
+    "EGL_GL_TEXTURE_2D_KHR",                    # 0x30B1
+    "EGL_GL_TEXTURE_3D_KHR",                    # 0x30B2
+    "EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR",   # 0x30B3
+    "EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X_KHR",   # 0x30B4
+    "EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y_KHR",   # 0x30B5
+    "EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_KHR",   # 0x30B6
+    "EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z_KHR",   # 0x30B7
+    "EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR",   # 0x30B8
+    "EGL_GL_RENDERBUFFER_KHR",                  # 0x30B9
+])
+
 eglapi = API("EGL")
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
@@ -234,4 +266,8 @@ eglapi.add_functions([
     # EGL_KHR_lock_surface
     Function(EGLBoolean, "eglLockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface"), (Array(Const(EGLLockSurfaceAttrib), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
     Function(EGLBoolean, "eglUnlockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface")]),
+
+    # EGL_KHR_image_base
+    Function(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLImageKHRTarget, "target"), (EGLClientBuffer, "buffer"), (Array(Const(EGLImageKHRAttrib), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
+    Function(EGLBoolean, "eglDestroyImageKHR", [(EGLDisplay, "dpy"), (EGLImageKHR, "image")]),
 ])
