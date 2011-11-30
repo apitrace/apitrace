@@ -207,6 +207,32 @@ EGLImageKHRTarget = FakeEnum(EGLenum, [
     "EGL_GL_RENDERBUFFER_KHR",                  # 0x30B9
 ])
 
+# EGL_KHR_reusable_sync
+EGLSyncKHR = Opaque("EGLSyncKHR")
+EGLTimeKHR = Alias("EGLTimeKHR", UInt64)
+
+EGLSyncKHRType = FakeEnum(EGLenum, [
+    "EGL_SYNC_REUSABLE_KHR",        # 0x30FA
+
+    # EGL_KHR_fence_sync
+    "EGL_SYNC_FENCE_KHR",           # 0x30F9
+])
+
+EGLSyncKHRAttrib = FakeEnum(EGLint, [
+    "EGL_SYNC_STATUS_KHR",          # 0x30F1
+    "EGL_SYNC_TYPE_KHR",            # 0x30F7
+
+    # EGL_KHR_fence_sync
+    "EGL_SYNC_CONDITION_KHR",       # 0x30F8
+
+    "EGL_NONE",
+])
+
+EGLSyncKHRMode = FakeEnum(EGLenum, [
+    "EGL_SIGNALED_KHR",             # 0x30F2
+    "EGL_UNSIGNALED_KHR",           # 0x30F3
+])
+
 eglapi = API("EGL")
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
@@ -270,4 +296,11 @@ eglapi.add_functions([
     # EGL_KHR_image_base
     Function(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLImageKHRTarget, "target"), (EGLClientBuffer, "buffer"), (Array(Const(EGLImageKHRAttrib), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
     Function(EGLBoolean, "eglDestroyImageKHR", [(EGLDisplay, "dpy"), (EGLImageKHR, "image")]),
+
+    # EGL_KHR_reusable_sync
+    Function(EGLSyncKHR, "eglCreateSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHRType, "type"), (Array(Const(EGLSyncKHRAttrib), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
+    Function(EGLBoolean, "eglDestroySyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync")]),
+    Function(EGLint, "eglClientWaitSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint, "flags"), (EGLTimeKHR, "timeout")]),
+    Function(EGLBoolean, "eglSignalSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLSyncKHRMode, "mode")]),
+    Function(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLSyncKHRAttrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 ])
