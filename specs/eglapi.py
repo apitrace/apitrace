@@ -147,6 +147,10 @@ EGLSurfaceAttrib = FakeEnum(EGLint, [
 EGLContextAttrib = FakeEnum(EGLint, [
     "EGL_CONTEXT_CLIENT_TYPE",      # 0x3097
     "EGL_CONTEXT_CLIENT_VERSION",   # 0x3098
+
+    # EGL_IMG_context_priority
+    "EGL_CONTEXT_PRIORITY_LEVEL_IMG",   # 0x3100
+
     "EGL_NONE",
 ])
 
