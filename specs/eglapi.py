@@ -244,6 +244,10 @@ EGLSyncKHRMode = FakeEnum(EGLenum, [
     "EGL_UNSIGNALED_KHR",           # 0x30F3
 ])
 
+# EGL_NV_sync
+EGLSyncNV = Alias("EGLSyncNV", EGLSyncKHR)
+EGLTimeNV = Alias("EGLTimeKHR", EGLTimeKHR)
+
 eglapi = API("EGL")
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
@@ -314,4 +318,12 @@ eglapi.add_functions([
     Function(EGLint, "eglClientWaitSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint, "flags"), (EGLTimeKHR, "timeout")]),
     Function(EGLBoolean, "eglSignalSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLSyncKHRMode, "mode")]),
     Function(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLSyncKHRAttrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+
+    # EGL_NV_sync
+    Function(EGLSyncNV, "eglCreateFenceSyncNV", [(EGLDisplay, "dpy"), (EGLenum, "condition"), (Array(Const(EGLint), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
+    Function(EGLBoolean, "eglDestroySyncNV", [(EGLSyncNV, "sync")]),
+    Function(EGLBoolean, "eglFenceNV", [(EGLSyncNV, "sync")]),
+    Function(EGLint, "eglClientWaitSyncNV", [(EGLSyncNV, "sync"), (EGLint, "flags"), (EGLTimeNV, "timeout")]),
+    Function(EGLBoolean, "eglSignalSyncNV", [(EGLSyncNV, "sync"), (EGLenum, "mode")]),
+    Function(EGLBoolean, "eglGetSyncAttribNV", [(EGLSyncNV, "sync"), (EGLint, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 ])
