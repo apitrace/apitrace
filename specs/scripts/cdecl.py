@@ -34,7 +34,7 @@ import re
 import optparse
 
 
-class Parser:
+class DeclParser:
 
     token_re = re.compile(r'(\d[x0-9a-fA-F.UL]*|\w+|\s+|.)')
 
@@ -354,14 +354,15 @@ class Parser:
         return type
 
 
-
-        
-
-
 def main():
-    parser = Parser()
-    for arg in sys.argv[1:]:
-        parser.parse(open(arg, 'rt').read())
+    args = sys.argv[1:]
+
+    parser = DeclParser()
+    if args:
+        for arg in args:
+            parser.parse(open(arg, 'rt').read())
+    else:
+        parser.parse(sys.stdin.read())
     
 
 if __name__ == '__main__':

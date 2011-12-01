@@ -196,6 +196,7 @@ int execute(char * const * args)
                         &processInformation
                         )) {
         log("error: failed to execute %s\n", arg0);
+        return -1;
     }
 
     WaitForSingleObject(processInformation.hProcess, INFINITE);
