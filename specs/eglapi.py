@@ -158,6 +158,9 @@ EGLSurfaceAttrib = FakeEnum(EGLint, [
 
     # EGL_NV_post_sub_buffer
     "EGL_POST_SUB_BUFFER_SUPPORTED_NV",         # 0x30BE
+
+    # EGL_NV_coverage_sample_resolve
+    "EGL_COVERAGE_SAMPLE_RESOLVE_NV",           # 0x3131
 ])
 
 EGLContextAttrib = FakeEnum(EGLint, [
