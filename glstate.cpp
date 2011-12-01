@@ -738,6 +738,7 @@ getDrawableBounds(GLint *width, GLint *height) {
 
 #else
 
+#if !TRACE_EGL
     Display *display;
     Drawable drawable;
     Window root;
@@ -760,6 +761,9 @@ getDrawableBounds(GLint *width, GLint *height) {
 
     *width = w;
     *height = h;
+#else
+    return false;
+#endif
 
 #endif
 
