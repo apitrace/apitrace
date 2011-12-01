@@ -29,9 +29,10 @@
 
 #include <iostream>
 
-#include "glws.hpp"
+#include <dlfcn.h>
 
 #include "glproc.hpp"
+#include "glws.hpp"
 
 
 namespace glws {
@@ -228,6 +229,13 @@ init(void) {
     }
 
     screen = DefaultScreen(display);
+
+    __libGlHandle = dlopen("libEGL.so", RTLD_GLOBAL | RTLD_LAZY);
+    if (!__libGlHandle) {
+        std::cerr << "error: unable to open libEGL.so\n";
+        XCloseDisplay(display);
+        exit(1);
+    }
 
     eglDisplay = eglGetDisplay(display);
     if (eglDisplay == EGL_NO_DISPLAY) {

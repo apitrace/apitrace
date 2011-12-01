@@ -95,12 +95,6 @@ if __name__ == '__main__':
 
 
 /*
- * Handle to the true libGL.so
- */
-static void *libgl_handle = NULL;
-
-
-/*
  * Invoke the true dlopen() function.
  */
 static void *__dlopen(const char *filename, int flag)
@@ -145,7 +139,7 @@ void * dlopen(const char *filename, int flag)
             strcmp(filename, "libGL.so.1") == 0) {
 
             // Use the true libGL.so handle instead of RTLD_NEXT from now on
-            libgl_handle = handle;
+            __libGlHandle = handle;
 
             // Get the file path for our shared object, and use it instead
             static int dummy = 0xdeedbeef;
@@ -162,52 +156,6 @@ void * dlopen(const char *filename, int flag)
     return handle;
 }
 
-
-/*
- * Lookup a libGL symbol
- */
-void * __libgl_sym(const char *symbol)
-{
-    void *result;
-
-    if (!libgl_handle) {
-        /*
-         * The app doesn't directly link against libGL.so, nor does it directly
-         * dlopen it.  So we have to load it ourselves.
-         */
-
-        const char * libgl_filename = getenv("TRACE_LIBGL");
-
-        if (!libgl_filename) {
-            /*
-             * Try to use whatever libGL.so the library is linked against.
-             */
-
-            result = dlsym(RTLD_NEXT, symbol);
-            if (result) {
-                libgl_handle = RTLD_NEXT;
-                return result;
-            }
-
-            libgl_filename = "libGL.so.1";
-        }
-
-        /*
-         * It would have been preferable to use RTLD_LOCAL to ensure that the
-         * application can never access libGL.so symbols directly, but this
-         * won't work, given libGL.so often loads a driver specific SO and
-         * exposes symbols to it.
-         */
-
-        libgl_handle = __dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
-        if (!libgl_handle) {
-            os::log("apitrace: error: couldn't find libGL.so\n");
-            return NULL;
-        }
-    }
-
-    return dlsym(libgl_handle, symbol);
-}
 
 
 '''

@@ -28,9 +28,8 @@
 
 #include <iostream>
 
-#include "glws.hpp"
-
 #include "glproc.hpp"
+#include "glws.hpp"
 
 
 namespace glws {

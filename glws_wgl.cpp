@@ -23,7 +23,7 @@
  *
  **************************************************************************/
 
-#include "glimports.hpp"
+#include "glproc.hpp"
 #include "glws.hpp"
 
 
@@ -188,6 +188,10 @@ public:
 
 void
 init(void) {
+    /*
+     * OpenGL library must be loaded by the time we call GDI.
+     */
+    __libGlHandle = LoadLibraryA("OPENGL32");
 }
 
 void

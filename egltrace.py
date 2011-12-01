@@ -110,23 +110,3 @@ if __name__ == '__main__':
     print '    return procPtr;'
     print '}'
     print
-    print r'''
-
-/*
- * Lookup a EGL or GLES symbol
- */
-void * __libegl_sym(const char *symbol)
-{
-    void *proc;
-
-    /* Always try dlsym before eglGetProcAddress as spec 3.10 says
-     * implementation may choose to also export extension functions
-     * publicly.
-     */
-    proc = dlsym(RTLD_NEXT, symbol);
-    if (!proc && symbol[0] == 'g' && symbol[1] == 'l')
-        proc = (void *) __eglGetProcAddress(symbol);
-
-    return proc;
-}
-'''
