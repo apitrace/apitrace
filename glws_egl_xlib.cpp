@@ -94,7 +94,7 @@ public:
     EglDrawable(const Visual *vis, int w, int h) :
         Drawable(vis, w, h), api(EGL_OPENGL_ES_API)
     {
-        XVisualInfo *visinfo = dynamic_cast<const EglVisual *>(visual)->visinfo;
+        XVisualInfo *visinfo = static_cast<const EglVisual *>(visual)->visinfo;
 
         Window root = RootWindow(display, screen);
 
@@ -135,7 +135,7 @@ public:
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
-        EGLConfig config = dynamic_cast<const EglVisual *>(visual)->config;
+        EGLConfig config = static_cast<const EglVisual *>(visual)->config;
         surface = eglCreateWindowSurface(eglDisplay, config, window, NULL);
     }
 
@@ -307,13 +307,13 @@ createDrawable(const Visual *visual, int width, int height)
 Context *
 createContext(const Visual *_visual, Context *shareContext, Profile profile)
 {
-    const EglVisual *visual = dynamic_cast<const EglVisual *>(_visual);
+    const EglVisual *visual = static_cast<const EglVisual *>(_visual);
     EGLContext share_context = EGL_NO_CONTEXT;
     EGLContext context;
     Attributes<EGLint> attribs;
 
     if (shareContext) {
-        share_context = dynamic_cast<EglContext*>(shareContext)->context;
+        share_context = static_cast<EglContext*>(shareContext)->context;
     }
 
     EGLint api = eglQueryAPI();
@@ -348,8 +348,8 @@ makeCurrent(Drawable *drawable, Context *context)
     if (!drawable || !context) {
         return eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     } else {
-        EglDrawable *eglDrawable = dynamic_cast<EglDrawable *>(drawable);
-        EglContext *eglContext = dynamic_cast<EglContext *>(context);
+        EglDrawable *eglDrawable = static_cast<EglDrawable *>(drawable);
+        EglContext *eglContext = static_cast<EglContext *>(context);
         EGLBoolean ok;
 
         ok = eglMakeCurrent(eglDisplay, eglDrawable->surface,

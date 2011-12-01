@@ -75,7 +75,7 @@ public:
         Drawable(vis, w, h),
         currentContext(nil)
     {
-        NSOpenGLPixelFormat *pixelFormat = dynamic_cast<const CocoaVisual *>(visual)->pixelFormat;
+        NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
 
         NSRect winRect = NSMakeRect(0, 0, w, h);
 
@@ -206,7 +206,7 @@ createDrawable(const Visual *visual, int width, int height)
 Context *
 createContext(const Visual *visual, Context *shareContext, Profile profile)
 {
-    NSOpenGLPixelFormat *pixelFormat = dynamic_cast<const CocoaVisual *>(visual)->pixelFormat;
+    NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
     NSOpenGLContext *share_context = nil;
     NSOpenGLContext *context;
 
@@ -215,7 +215,7 @@ createContext(const Visual *visual, Context *shareContext, Profile profile)
     }
 
     if (shareContext) {
-        share_context = dynamic_cast<CocoaContext*>(shareContext)->context;
+        share_context = static_cast<CocoaContext*>(shareContext)->context;
     }
 
     context = [[NSOpenGLContext alloc]
@@ -232,8 +232,8 @@ makeCurrent(Drawable *drawable, Context *context)
     if (!drawable || !context) {
         [NSOpenGLContext clearCurrentContext];
     } else {
-        CocoaDrawable *cocoaDrawable = dynamic_cast<CocoaDrawable *>(drawable);
-        CocoaContext *cocoaContext = dynamic_cast<CocoaContext *>(context);
+        CocoaDrawable *cocoaDrawable = static_cast<CocoaDrawable *>(drawable);
+        CocoaContext *cocoaContext = static_cast<CocoaContext *>(context);
 
         [cocoaDrawable->window makeKeyAndOrderFront:nil];
         [cocoaContext->context setView:[cocoaDrawable->window contentView]];

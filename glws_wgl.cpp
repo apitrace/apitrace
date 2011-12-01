@@ -216,7 +216,7 @@ createContext(const Visual *visual, Context *shareContext, Profile profile)
         return NULL;
     }
 
-    return new WglContext(visual, profile, dynamic_cast<WglContext *>(shareContext));
+    return new WglContext(visual, profile, static_cast<WglContext *>(shareContext));
 }
 
 bool
@@ -225,8 +225,8 @@ makeCurrent(Drawable *drawable, Context *context)
     if (!drawable || !context) {
         return wglMakeCurrent(NULL, NULL);
     } else {
-        WglDrawable *wglDrawable = dynamic_cast<WglDrawable *>(drawable);
-        WglContext *wglContext = dynamic_cast<WglContext *>(context);
+        WglDrawable *wglDrawable = static_cast<WglDrawable *>(drawable);
+        WglContext *wglContext = static_cast<WglContext *>(context);
 
         if (!wglContext->hglrc) {
             wglContext->hglrc = wglCreateContext(wglDrawable->hDC);

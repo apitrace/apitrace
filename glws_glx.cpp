@@ -95,7 +95,7 @@ public:
     GlxDrawable(const Visual *vis, int w, int h) :
         Drawable(vis, w, h)
     {
-        XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
+        XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
 
         Window root = RootWindow(display, screen);
 
@@ -295,7 +295,7 @@ createDrawable(const Visual *visual, int width, int height)
 Context *
 createContext(const Visual *_visual, Context *shareContext, Profile profile)
 {
-    const GlxVisual *visual = dynamic_cast<const GlxVisual *>(_visual);
+    const GlxVisual *visual = static_cast<const GlxVisual *>(_visual);
     GLXContext share_context = NULL;
     GLXContext context;
 
@@ -304,7 +304,7 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
     }
 
     if (shareContext) {
-        share_context = dynamic_cast<GlxContext*>(shareContext)->context;
+        share_context = static_cast<GlxContext*>(shareContext)->context;
     }
 
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
@@ -332,8 +332,8 @@ makeCurrent(Drawable *drawable, Context *context)
     if (!drawable || !context) {
         return glXMakeCurrent(display, None, NULL);
     } else {
-        GlxDrawable *glxDrawable = dynamic_cast<GlxDrawable *>(drawable);
-        GlxContext *glxContext = dynamic_cast<GlxContext *>(context);
+        GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
+        GlxContext *glxContext = static_cast<GlxContext *>(context);
 
         return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
     }
