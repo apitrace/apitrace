@@ -288,6 +288,9 @@ EGLSurfacePointer = FakeEnum(EGLint, [
     "EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE",    # 0x3200
 ])
 
+# EGL_NV_system_time
+EGLuint64NV = Alias("EGLuint64NV", UInt64)
+
 eglapi = API("EGL")
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
@@ -379,4 +382,8 @@ eglapi.add_functions([
 
     # EGL_ANGLE_query_surface_pointer
     Function(EGLBoolean, "eglQuerySurfacePointerANGLE", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLSurfacePointer, "attribute"), Out(Pointer(OpaquePointer(Void)), "value")], sideeffects=False),
+
+    # EGL_NV_system_time
+    Function(EGLuint64NV, "eglGetSystemTimeFrequencyNV", [], sideeffects=False),
+    Function(EGLuint64NV, "eglGetSystemTimeNV", [], sideeffects=False),
 ])
