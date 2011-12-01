@@ -61,17 +61,11 @@ class Dispatcher:
         # functions
         print '#ifdef RETRACE'
         for function in api.functions:
-            if self.is_public_function(function):
-                print '#define __%s %s' % (function.name, function.name)
-            else:
-                print '#define %s __%s' % (function.name, function.name)
+            print '#define %s __%s' % (function.name, function.name)
         print '#endif /* RETRACE */'
         print
 
     def dispatch_function(self, function):
-        if self.is_public_function(function):
-            print '#ifndef RETRACE'
-            print
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
@@ -87,9 +81,6 @@ class Dispatcher:
         print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
         print '}'
         print
-        if self.is_public_function(function):
-            print '#endif /* !RETRACE */'
-            print
 
     def is_public_function(self, function):
         return True
