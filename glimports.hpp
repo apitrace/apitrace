@@ -34,13 +34,19 @@
 // Prevent including system's glext.h
 #define __glext_h_
 
+
 // Some functions take GLenum disguised as GLint.  Apple noticed and fixed it
 // in the Mac OS X 10.6.x gl.h headers.  Regardless, C++ typechecking rules
 // force the wrappers to match the prototype precisely.
-#if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_7)
-#define GLenum_int GLenum
+#if defined(__APPLE__)
+#  include <AvailabilityMacros.h> // for MAC_OS_X_VERSION_10_7
+#  if defined(MAC_OS_X_VERSION_10_7)
+#    define GLenum_int GLint
+#  else
+#    define GLenum_int GLenum
+#  endif
 #else
-#define GLenum_int GLint
+#  define GLenum_int GLint
 #endif
 
 
