@@ -279,6 +279,12 @@ EGLCreateDRMImageAttrib = FakeEnum(EGLint, [
     "EGL_NONE",
 ])
 
+# EGL_ANGLE_query_surface_pointer
+EGLSurfacePointer = FakeEnum(EGLint, [
+    # EGL_ANGLE_surface_d3d_texture_2d_share_handle
+    "EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE",    # 0x3200
+])
+
 eglapi = API("EGL")
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
@@ -367,4 +373,7 @@ eglapi.add_functions([
 
     # EGL_NV_post_sub_buffer
     Function(EGLBoolean, "eglPostSubBufferNV", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint, "x"), (EGLint, "y"), (EGLint, "width"), (EGLint, "height")]),
+
+    # EGL_ANGLE_query_surface_pointer
+    Function(EGLBoolean, "eglQuerySurfacePointerANGLE", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLSurfacePointer, "attribute"), Out(Pointer(OpaquePointer(Void)), "value")], sideeffects=False),
 ])
