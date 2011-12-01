@@ -222,6 +222,9 @@ EGLImageKHRTarget = FakeEnum(EGLenum, [
     "EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z_KHR",   # 0x30B7
     "EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR",   # 0x30B8
     "EGL_GL_RENDERBUFFER_KHR",                  # 0x30B9
+
+    # EGL_MESA_drm_image
+    "EGL_DRM_BUFFER_MESA",                      # 0x31D3
 ])
 
 # EGL_KHR_reusable_sync
@@ -260,6 +263,17 @@ EGLClientPixmapHI = Struct("struct EGLClientPixmapHI", [
   (EGLint, "iWidth"),
   (EGLint, "iHeight"),
   (EGLint, "iStride"),
+])
+
+# EGL_MESA_drm_image
+EGLCreateDRMImageAttrib = FakeEnum(EGLint, [
+    "EGL_DRM_BUFFER_FORMAT_MESA",   # 0x31D1
+    "EGL_DRM_BUFFER_USE_MESA",      # 0x31D2
+    "EGL_DRM_BUFFER_STRIDE_MESA",   # 0x31D4
+
+    "EGL_WIDTH",
+    "EGL_HEIGHT",
+    "EGL_NONE",
 ])
 
 eglapi = API("EGL")
@@ -343,4 +357,8 @@ eglapi.add_functions([
 
     # EGL_HI_clientpixmap
     Function(EGLSurface, "eglCreatePixmapSurfaceHI", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (Pointer(EGLClientPixmapHI), "pixmap")]),
+
+    # EGL_MESA_drm_image
+    Function(EGLImageKHR, "eglCreateDRMImageMESA", [(EGLDisplay, "dpy"), (Array(Const(EGLCreateDRMImageAttrib), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
+    Function(EGLBoolean, "eglExportDRMImageMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "name"), Out(Pointer(EGLint), "handle"), Out(Pointer(EGLint), "stride")]),
 ])
