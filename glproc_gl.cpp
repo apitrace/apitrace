@@ -119,11 +119,13 @@ void * __libgl_sym(const char *symbol)
 
     result = dlsym(__libGlHandle, symbol);
 
+#ifndef RETRACE
     if (result == dlsym(RTLD_SELF, symbol)) {
         os::log("apitrace: error: symbol lookup recursion\n");
         os::abort();
         return NULL;
     }
+#endif
 
     return result;
 }
