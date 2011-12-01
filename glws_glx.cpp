@@ -57,7 +57,6 @@ public:
 
     ~GlxVisual() {
         XFree(visinfo);
-        XFree(fbconfig);
     }
 };
 
