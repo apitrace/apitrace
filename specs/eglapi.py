@@ -111,6 +111,9 @@ EGLConfigAttrib = FakeEnum(EGLint, [
 
     # EGL_NV_depth_nonlinear
     "EGL_DEPTH_ENCODING_NV",        # 0x30E2
+
+    # EGL_HI_colorformats
+    "EGL_COLOR_FORMAT_HI",          # 0x8F70
 ])
 
 EGLName = FakeEnum(EGLint, [
@@ -149,6 +152,9 @@ EGLSurfaceAttrib = FakeEnum(EGLint, [
     "EGL_BITMAP_PIXEL_LUMINANCE_OFFSET_KHR",    # 0x30CD
     # EGL_KHR_lock_surface2
     "EGL_BITMAP_PIXEL_SIZE_KHR",                # 0x3110
+
+    # EGL_HI_clientpixmap
+    "EGL_CLIENT_PIXMAP_POINTER_HI",             # 0x8F74
 ])
 
 EGLContextAttrib = FakeEnum(EGLint, [
@@ -248,6 +254,14 @@ EGLSyncKHRMode = FakeEnum(EGLenum, [
 EGLSyncNV = Alias("EGLSyncNV", EGLSyncKHR)
 EGLTimeNV = Alias("EGLTimeKHR", EGLTimeKHR)
 
+# EGL_HI_clientpixmap
+EGLClientPixmapHI = Struct("struct EGLClientPixmapHI", [
+  (OpaquePointer(Void), "pData"),
+  (EGLint, "iWidth"),
+  (EGLint, "iHeight"),
+  (EGLint, "iStride"),
+])
+
 eglapi = API("EGL")
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
@@ -326,4 +340,7 @@ eglapi.add_functions([
     Function(EGLint, "eglClientWaitSyncNV", [(EGLSyncNV, "sync"), (EGLint, "flags"), (EGLTimeNV, "timeout")]),
     Function(EGLBoolean, "eglSignalSyncNV", [(EGLSyncNV, "sync"), (EGLenum, "mode")]),
     Function(EGLBoolean, "eglGetSyncAttribNV", [(EGLSyncNV, "sync"), (EGLint, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
+
+    # EGL_HI_clientpixmap
+    Function(EGLSurface, "eglCreatePixmapSurfaceHI", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (Pointer(EGLClientPixmapHI), "pixmap")]),
 ])
