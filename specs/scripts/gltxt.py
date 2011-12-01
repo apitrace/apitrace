@@ -187,7 +187,7 @@ class TxtParser(LineParser):
         if token == 'void':
             type = 'Void'
         else:
-            type = 'GL' + token
+            type = self.prefix.upper() + token
         while self.tokens[0] == '*':
             type = 'OpaquePointer(%s)' % type
             self.tokens.pop(0)
