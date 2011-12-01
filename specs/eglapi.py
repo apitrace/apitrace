@@ -155,6 +155,9 @@ EGLSurfaceAttrib = FakeEnum(EGLint, [
 
     # EGL_HI_clientpixmap
     "EGL_CLIENT_PIXMAP_POINTER_HI",             # 0x8F74
+
+    # EGL_NV_post_sub_buffer
+    "EGL_POST_SUB_BUFFER_SUPPORTED_NV",         # 0x30BE
 ])
 
 EGLContextAttrib = FakeEnum(EGLint, [
@@ -361,4 +364,7 @@ eglapi.add_functions([
     # EGL_MESA_drm_image
     Function(EGLImageKHR, "eglCreateDRMImageMESA", [(EGLDisplay, "dpy"), (Array(Const(EGLCreateDRMImageAttrib), "__AttribList_size(attrib_list, EGL_NONE)"), "attrib_list")]),
     Function(EGLBoolean, "eglExportDRMImageMESA", [(EGLDisplay, "dpy"), (EGLImageKHR, "image"), Out(Pointer(EGLint), "name"), Out(Pointer(EGLint), "handle"), Out(Pointer(EGLint), "stride")]),
+
+    # EGL_NV_post_sub_buffer
+    Function(EGLBoolean, "eglPostSubBufferNV", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLint, "x"), (EGLint, "y"), (EGLint, "width"), (EGLint, "height")]),
 ])
