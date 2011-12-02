@@ -344,7 +344,7 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
         eglBindAPI(EGL_OPENGL_ES_API);
         break;
     case PROFILE_ES2:
-        load("libGLESv2.so.1");
+        load("libGLESv2.so.2");
         eglBindAPI(EGL_OPENGL_ES_API);
         attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
         break;
