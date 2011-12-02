@@ -273,14 +273,47 @@ Visual *
 createVisual(bool doubleBuffer, Profile profile) {
     EglVisual *visual = new EglVisual();
     // possible combinations
-    const EGLint api_bits[7] = {
+    const EGLint api_bits_gl[7] = {
+        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
+        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_BIT,
+        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_ES_BIT,
+    };
+    const EGLint api_bits_gles1[7] = {
         EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
         EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
         EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
         EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
         EGL_OPENGL_BIT,
+        EGL_OPENGL_ES2_BIT,
+    };
+    const EGLint api_bits_gles2[7] = {
+        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_ES2_BIT,
+        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
+        EGL_OPENGL_BIT,
+        EGL_OPENGL_ES_BIT,
+    };
+    const EGLint *api_bits;
+
+    switch(profile) {
+    case PROFILE_COMPAT:
+        api_bits = api_bits_gl;
+        break;
+    case PROFILE_ES1:
+        api_bits = api_bits_gles1;
+        break;
+    case PROFILE_ES2:
+        api_bits = api_bits_gles2;
+        break;
+    default:
+        return NULL;
     };
 
     for (int i = 0; i < 7; i++) {
