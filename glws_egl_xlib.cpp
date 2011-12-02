@@ -220,8 +220,23 @@ public:
     }
 };
 
+/**
+ * Load the symbols from the specified shared object into global namespace, so
+ * that they can be later found by dlsym(RTLD_NEXT, ...);
+ */
+static void
+load(const char *filename)
+{
+    if (!dlopen(filename, RTLD_GLOBAL | RTLD_LAZY)) {
+        std::cerr << "error: unable to open " << filename << "\n";
+        exit(1);
+    }
+}
+
 void
 init(void) {
+    load("libEGL.so.1");
+
     display = XOpenDisplay(NULL);
     if (!display) {
         std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
@@ -229,13 +244,6 @@ init(void) {
     }
 
     screen = DefaultScreen(display);
-
-    __libGlHandle = dlopen("libEGL.so", RTLD_GLOBAL | RTLD_LAZY);
-    if (!__libGlHandle) {
-        std::cerr << "error: unable to open libEGL.so\n";
-        XCloseDisplay(display);
-        exit(1);
-    }
 
     eglDisplay = eglGetDisplay(display);
     if (eglDisplay == EGL_NO_DISPLAY) {
@@ -328,12 +336,15 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
 
     switch (profile) {
     case PROFILE_COMPAT:
+        load("libGL.so.1");
         eglBindAPI(EGL_OPENGL_API);
         break;
     case PROFILE_ES1:
+        load("libGLESv1_CM.so.1");
         eglBindAPI(EGL_OPENGL_ES_API);
         break;
     case PROFILE_ES2:
+        load("libGLESv2.so.1");
         eglBindAPI(EGL_OPENGL_ES_API);
         attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
         break;

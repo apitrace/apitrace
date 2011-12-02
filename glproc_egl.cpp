@@ -41,7 +41,7 @@
 #if defined(_WIN32)
 HINSTANCE __libGlHandle = NULL;
 #else
-void *__libGlHandle = RTLD_NEXT;
+void *__libGlHandle = NULL;
 #endif
 
 
@@ -57,34 +57,44 @@ void *__libGlHandle = RTLD_NEXT;
 #else
 
 /*
- * Lookup a EGL or GLES symbol
+ * Lookup a public EGL/GL/GLES symbol
+ *
+ * The spec states that eglGetProcAddress should only be used for non-core
+ * (extensions) entry-points.  Core entry-points should be taken directly from
+ * the API specific libraries.
+ *
+ * We cannot tell here which API a symbol is meant for here (as some are
+ * exported by many).  So this code assumes that the appropriate shared
+ * libraries have been loaded previously (either dlopened with RTLD_GLOBAL, or
+ * as part of the executable dependencies), and that their symbols available
+ * for quering via dlsym(RTLD_NEXT, ...).
  */
-static inline void *
-__libegl_sym(const char *symbol)
-{
-    void *proc;
-
-    /* Always try dlsym before eglGetProcAddress as spec 3.10 says
-     * implementation may choose to also export extension functions
-     * publicly.
-     */
-    proc = dlsym(__libGlHandle, symbol);
-    if (!proc && symbol[0] == 'g' && symbol[1] == 'l')
-        proc = (void *) __eglGetProcAddress(symbol);
-
-    return proc;
-}
-
 void *
 __getPublicProcAddress(const char *procName)
 {
-    return __libegl_sym(procName);
+    return dlsym(RTLD_NEXT, procName);
 }
 
+/*
+ * Lookup a private EGL/GL/GLES symbol
+ *
+ * Private symbols should always be available through eglGetProcAddress, and
+ * they are guaranteed to work with any context bound (regardless of the API).
+ *
+ * However, per issue#57, eglGetProcAddress returns garbage on some
+ * implementations, and the spec states that implementations may choose to also
+ * export extension functions publicly, so we always attempt dlsym before
+ * eglGetProcAddress to mitigate that.
+ */
 void *
 __getPrivateProcAddress(const char *procName)
 {
-    return __libegl_sym(procName);
+    void *proc;
+    proc = dlsym(RTLD_NEXT, procName);
+    if (!proc && procName[0] == 'g' && procName[1] == 'l')
+        proc = (void *) __eglGetProcAddress(procName);
+
+    return proc;
 }
 
 #endif
