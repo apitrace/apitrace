@@ -171,7 +171,7 @@ cleanup(void) {
 
 
 Visual *
-createVisual(bool doubleBuffer) {
+createVisual(bool doubleBuffer, Profile profile) {
     NSOpenGLPixelFormatAttribute single_attribs[] = {
         NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1,
         NSOpenGLPFAColorSize, (NSOpenGLPixelFormatAttribute)24,
@@ -188,6 +188,10 @@ createVisual(bool doubleBuffer) {
         NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1,
         (NSOpenGLPixelFormatAttribute)0
     };
+
+    if (profile != PROFILE_COMPAT) {
+        return nil;
+    }
 
     NSOpenGLPixelFormatAttribute *attribs = doubleBuffer ? double_attribs : single_attribs;
 

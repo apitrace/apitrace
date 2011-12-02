@@ -240,7 +240,12 @@ cleanup(void) {
 }
 
 Visual *
-createVisual(bool doubleBuffer) {
+createVisual(bool doubleBuffer, Profile profile) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
+        return NULL;
+    }
+
     GlxVisual *visual = new GlxVisual;
 
     if (glxVersion >= 0x0103) {

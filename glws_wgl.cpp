@@ -199,7 +199,11 @@ cleanup(void) {
 }
 
 Visual *
-createVisual(bool doubleBuffer) {
+createVisual(bool doubleBuffer, Profile profile) {
+    if (profile != PROFILE_COMPAT) {
+        return NULL;
+    }
+
     Visual *visual = new Visual();
 
     visual->doubleBuffer = doubleBuffer;

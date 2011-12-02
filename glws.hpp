@@ -148,7 +148,7 @@ void
 cleanup(void);
 
 Visual *
-createVisual(bool doubleBuffer = false);
+createVisual(bool doubleBuffer = false, Profile profile = PROFILE_COMPAT);
 
 Drawable *
 createDrawable(const Visual *visual, int width = 32, int height = 32);

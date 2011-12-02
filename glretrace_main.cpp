@@ -330,7 +330,7 @@ int main(int argc, char **argv)
     }
 
     glws::init();
-    visual = glws::createVisual(double_buffer);
+    visual = glws::createVisual(double_buffer, defaultProfile);
 
     for ( ; i < argc; ++i) {
         if (!parser.open(argv[i])) {

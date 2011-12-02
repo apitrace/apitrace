@@ -270,7 +270,7 @@ cleanup(void) {
 }
 
 Visual *
-createVisual(bool doubleBuffer) {
+createVisual(bool doubleBuffer, Profile profile) {
     EglVisual *visual = new EglVisual();
     // possible combinations
     const EGLint api_bits[7] = {
