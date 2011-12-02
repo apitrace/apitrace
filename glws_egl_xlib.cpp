@@ -137,7 +137,7 @@ public:
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
         EGLConfig config = static_cast<const EglVisual *>(visual)->config;
-        surface = eglCreateWindowSurface(eglDisplay, config, window, NULL);
+        surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
     }
 
     void waitForEvent(int type) {
@@ -245,7 +245,7 @@ init(void) {
 
     screen = DefaultScreen(display);
 
-    eglDisplay = eglGetDisplay(display);
+    eglDisplay = eglGetDisplay((EGLNativeDisplayType)display);
     if (eglDisplay == EGL_NO_DISPLAY) {
         std::cerr << "error: unable to get EGL display\n";
         XCloseDisplay(display);
