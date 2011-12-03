@@ -40,14 +40,13 @@ if (ENABLE_GUI)
     find_package (QJSON ${REQUIRE_GUI})
 endif ()
 
+include_directories (${OPENGL_INCLUDE_DIR})
+
 if (WIN32)
     find_package (DirectX)
 elseif (APPLE)
 else ()
     find_package (X11 REQUIRED)
-
-    set (X11_INCLUDE_DIR ${X11_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
-    set (X11_GL_LIB ${OPENGL_gl_LIBRARY})
 
     include_directories (${X11_INCLUDE_DIR})
 
@@ -378,6 +377,7 @@ if (WIN32)
     add_library (wgltrace MODULE specs/opengl32.def
         wgltrace.cpp
         glcaps.cpp
+        glproc_gl.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     )
     set_target_properties (wgltrace PROPERTIES
@@ -399,6 +399,7 @@ elseif (APPLE)
     add_library (cgltrace SHARED
         cgltrace.cpp
         glcaps.cpp
+        glproc_gl.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     )
 
@@ -426,6 +427,7 @@ else ()
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         glxtrace.cpp
         glcaps.cpp
+        glproc_gl.cpp
     )
 
     set_target_properties (glxtrace PROPERTIES
@@ -456,6 +458,7 @@ if (EGL_FOUND)
         ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         egltrace.cpp
         glcaps.cpp
+        glproc_egl.cpp
     )
 
     set_property (
@@ -517,6 +520,7 @@ set (retrace_sources
 add_executable (glretrace
     ${retrace_sources}
     ${glws_os}
+    glproc_gl.cpp
 )
 
 set_property (
@@ -530,7 +534,6 @@ target_link_libraries (glretrace
 )
 
 if (WIN32)
-    target_link_libraries (glretrace ${OPENGL_gl_LIBRARY})
 elseif (APPLE)
     target_link_libraries (glretrace
         "-framework Cocoa"
@@ -538,7 +541,7 @@ elseif (APPLE)
         ${OPENGL_gl_LIBRARY} # CGL*
     )
 else ()
-    target_link_libraries (glretrace ${OPENGL_gl_LIBRARY} ${X11_X11_LIB})
+    target_link_libraries (glretrace ${X11_X11_LIB})
 endif ()
 
 install (TARGETS glretrace RUNTIME DESTINATION bin) 
@@ -547,6 +550,7 @@ if (EGL_FOUND AND NOT WIN32 AND NOT APPLE)
     add_executable (eglretrace
         ${retrace_sources}
         glws_egl_xlib.cpp
+        glproc_egl.cpp
     )
 
     set_property (
@@ -561,8 +565,6 @@ if (EGL_FOUND AND NOT WIN32 AND NOT APPLE)
     )
 
     target_link_libraries (eglretrace
-        ${EGL_LIBRARIES}
-        ${OPENGL_gl_LIBRARY}
         ${X11_X11_LIB}
     )
 

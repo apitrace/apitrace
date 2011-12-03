@@ -69,31 +69,6 @@ if __name__ == '__main__':
     print '#include "trace_writer.hpp"'
     print '#include "os.hpp"'
     print
-    print '''
-static HINSTANCE g_hDll = NULL;
-
-PROC
-__getPublicProcAddress(LPCSTR lpProcName)
-{
-    if (!g_hDll) {
-        char szDll[MAX_PATH] = {0};
-        
-        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
-            return NULL;
-        }
-        
-        strcat(szDll, "\\\\opengl32.dll");
-        
-        g_hDll = LoadLibraryA(szDll);
-        if (!g_hDll) {
-            return NULL;
-        }
-    }
-        
-    return GetProcAddress(g_hDll, lpProcName);
-}
-
-    '''
     print '// To validate our prototypes'
     print '#define GL_GLEXT_PROTOTYPES'
     print '#define WGL_GLXEXT_PROTOTYPES'

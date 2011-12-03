@@ -29,9 +29,10 @@
 
 #include <iostream>
 
-#include "glws.hpp"
+#include <dlfcn.h>
 
 #include "glproc.hpp"
+#include "glws.hpp"
 
 
 namespace glws {
@@ -136,7 +137,7 @@ public:
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
         EGLConfig config = static_cast<const EglVisual *>(visual)->config;
-        surface = eglCreateWindowSurface(eglDisplay, config, window, NULL);
+        surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
     }
 
     void waitForEvent(int type) {
@@ -219,8 +220,23 @@ public:
     }
 };
 
+/**
+ * Load the symbols from the specified shared object into global namespace, so
+ * that they can be later found by dlsym(RTLD_NEXT, ...);
+ */
+static void
+load(const char *filename)
+{
+    if (!dlopen(filename, RTLD_GLOBAL | RTLD_LAZY)) {
+        std::cerr << "error: unable to open " << filename << "\n";
+        exit(1);
+    }
+}
+
 void
 init(void) {
+    load("libEGL.so.1");
+
     display = XOpenDisplay(NULL);
     if (!display) {
         std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
@@ -229,7 +245,7 @@ init(void) {
 
     screen = DefaultScreen(display);
 
-    eglDisplay = eglGetDisplay(display);
+    eglDisplay = eglGetDisplay((EGLNativeDisplayType)display);
     if (eglDisplay == EGL_NO_DISPLAY) {
         std::cerr << "error: unable to get EGL display\n";
         XCloseDisplay(display);
@@ -320,12 +336,15 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
 
     switch (profile) {
     case PROFILE_COMPAT:
+        load("libGL.so.1");
         eglBindAPI(EGL_OPENGL_API);
         break;
     case PROFILE_ES1:
+        load("libGLESv1_CM.so.1");
         eglBindAPI(EGL_OPENGL_ES_API);
         break;
     case PROFILE_ES2:
+        load("libGLESv2.so.2");
         eglBindAPI(EGL_OPENGL_ES_API);
         attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
         break;

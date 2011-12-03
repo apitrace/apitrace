@@ -492,38 +492,16 @@ public_symbols.update([
 class GlDispatcher(Dispatcher):
 
     def header(self):
-        print '#ifdef RETRACE'
-        print '#  if defined(TRACE_EGL)'
-        print '#    define __getPrivateProcAddress(name) eglGetProcAddress(name)'
-        print '#  elif defined(_WIN32)'
-        print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
-        print '#  elif defined(__APPLE__)'
-        print '#    include <dlfcn.h>'
-        print '#    define __getPrivateProcAddress(name) dlsym(RTLD_DEFAULT, name)'
-        print '#  else'
-        print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
-        print '#  endif'
-        print '#else /* !RETRACE */'
-        print '#  if defined(TRACE_EGL)'
-        print '#    define __getPublicProcAddress(name) __libegl_sym(name)'
-        print '#    define __getPrivateProcAddress(name) __libegl_sym(name)'
-        print '     void * __libegl_sym(const char *symbol);'
-        print '#  elif defined(_WIN32)'
-        print '     PROC __getPublicProcAddress(LPCSTR lpProcName);'
-        print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
-        print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
-        print '#  else'
-        print '#    define __getPublicProcAddress(name) __libgl_sym(name)'
-        print '     void * __libgl_sym(const char *symbol);'
-        print '#    ifdef __APPLE__'
-        print '#      define __getPrivateProcAddress(name) __getPublicProcAddress(name)'
-        print '#    else'
-        print '#      define __getPrivateProcAddress(name) __glXGetProcAddressARB((const GLubyte *)(name))'
-        print '       static inline __GLXextFuncPtr __glXGetProcAddressARB(const GLubyte * procName);'
-        print '#    endif'
-        print '#  endif'
-        print '#endif /* !RETRACE */'
-        print
+        print '''
+#if defined(_WIN32)
+extern HINSTANCE __libGlHandle;
+#else
+extern void * __libGlHandle;
+#endif
+
+void * __getPublicProcAddress(const char *procName);
+void * __getPrivateProcAddress(const char *procName);
+'''
         
     def is_public_function(self, function):
         return function.name in public_symbols or function.name.startswith('CGL')

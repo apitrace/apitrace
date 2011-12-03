@@ -46,11 +46,6 @@ if __name__ == '__main__':
     print '#include <string.h>'
     print '#include <unistd.h>'
     print
-    print '#ifndef _GNU_SOURCE'
-    print '#define _GNU_SOURCE // for dladdr'
-    print '#endif'
-    print '#include <dlfcn.h>'
-    print
     print '#include "trace_writer.hpp"'
     print
     print '// To validate our prototypes'
@@ -67,62 +62,6 @@ if __name__ == '__main__':
     tracer.trace_api(api)
 
     print r'''
-
-
-/*
- * Path to the true OpenGL framework
- */
-static const char *libgl_filename = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
-
-
-/*
- * Handle to the true OpenGL framework.
- */
-static void *libgl_handle = NULL;
-
-
-/*
- * Lookup a libGL symbol
- */
-void * __libgl_sym(const char *symbol)
-{
-    void *result;
-
-    if (!libgl_handle) {
-        /* 
-	 * Unfortunately we can't just dlopen the true dynamic library because
-	 * DYLD_LIBRARY_PATH/DYLD_FRAMEWORK_PATH take precedence, even for
-	 * absolute paths.  So we create a temporary symlink, and dlopen that
-	 * instead.
-         */
-
-        char temp_filename[] = "/tmp/tmp.XXXXXX";
-
-        if (mktemp(temp_filename) != NULL) {
-	    if (symlink(libgl_filename, temp_filename) == 0) {
-                libgl_handle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
-                remove(temp_filename);
-            }
-        }
-
-        if (!libgl_handle) {
-            os::log("apitrace: error: couldn't load %s\n", libgl_filename);
-            os::abort();
-            return NULL;
-        }
-    }
-
-    result = dlsym(libgl_handle, symbol);
-
-    if (result == dlsym(RTLD_SELF, symbol)) {
-        os::log("apitrace: error: symbol lookup recursion\n");
-        os::abort();
-        return NULL;
-    }
-
-    return result;
-}
-
 
 PUBLIC
 void * gll_noop = 0;
