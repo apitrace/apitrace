@@ -28,9 +28,7 @@
 
 
 #if !defined(_WIN32)
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE // for dladdr
-#endif
+#include <unistd.h> // for symlink
 #include <dlfcn.h>
 #endif
 
