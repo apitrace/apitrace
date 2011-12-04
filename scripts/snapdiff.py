@@ -87,7 +87,7 @@ class Comparer:
         bits = -math.log(rel_error)/math.log(2.0)
         return bits
 
-    def ae(self):
+    def ae(self, fuzz = 0.05):
         # Compute absolute error
         # TODO: this is approximate due to the grayscale conversion
         h = self.diff.convert('L').histogram()
