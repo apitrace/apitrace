@@ -29,7 +29,7 @@ import json
 import sys
 
 
-def object_hook(obj):
+def strip_object_hook(obj):
     if '__class__' in obj:
         return None
     for name in obj.keys():
@@ -62,7 +62,7 @@ class Dumper(Visitor):
 
     def __init__(self, stream = sys.stdout):
         self.stream = stream
-        self.level = 0;
+        self.level = 0
 
     def _write(self, s):
         self.stream.write(s)
@@ -133,19 +133,27 @@ class Dumper(Visitor):
 
 class Comparer(Visitor):
 
+    def __init__(self, ignore_added = False):
+        self.ignore_added = ignore_added
+
     def visit_object(self, a, b):
         if not isinstance(b, dict):
             return False
-        if len(a) != len(b):
+        if len(a) != len(b) and not self.ignore_added:
             return False
         ak = a.keys()
         bk = b.keys()
         ak.sort()
         bk.sort()
-        if ak != bk:
+        if ak != bk and not self.ignore_added:
             return False
         for k in ak:
-            if not self.visit(a[k], b[k]):
+            ae = a[k]
+            try:
+                be = b[k]
+            except KeyError:
+                return False
+            if not self.visit(ae, be):
                 return False
         return True
 
@@ -162,16 +170,16 @@ class Comparer(Visitor):
     def visit_value(self, a, b):
         return a == b
 
-comparer = Comparer()
 
 
 class Differ(Visitor):
 
-    def __init__(self, stream = sys.stdout):
+    def __init__(self, stream = sys.stdout, ignore_added = False):
         self.dumper = Dumper(stream)
+        self.comparer = Comparer(ignore_added = ignore_added)
 
     def visit(self, a, b):
-        if comparer.visit(a, b):
+        if self.comparer.visit(a, b):
             return
         Visitor.visit(self, a, b)
 
@@ -186,9 +194,15 @@ class Differ(Visitor):
             names.sort()
 
             for name in names:
-                ae = a.get(name, None)
+                try:
+                    ae = a[name]
+                except KeyError:
+                    if self.comparer.ignore_added:
+                        continue
+                    else:
+                        ae = None
                 be = b.get(name, None)
-                if not comparer.visit(ae, be):
+                if not self.comparer.visit(ae, be):
                     self.dumper.enter_member(name)
                     self.visit(ae, be)
                     self.dumper.leave_member()
@@ -210,7 +224,7 @@ class Differ(Visitor):
                 except IndexError:
                     be = None
                 self.dumper._indent()
-                if comparer.visit(ae, be):
+                if self.comparer.visit(ae, be):
                     self.dumper.visit(ae)
                 else:
                     self.visit(ae, be)
@@ -228,7 +242,11 @@ class Differ(Visitor):
         self.dumper.visit(b)
 
 
-def load(stream):
+def load(stream, strip = True):
+    if strip:
+        object_hook = strip_object_hook
+    else:
+        object_hook = None
     return json.load(stream, strict=False, object_hook = object_hook)
 
 
