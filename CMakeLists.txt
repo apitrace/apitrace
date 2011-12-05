@@ -542,7 +542,7 @@ else ()
             ${OPENGL_gl_LIBRARY} # CGL*
         )
     else ()
-        target_link_libraries (glretrace ${X11_X11_LIB} pthread)
+        target_link_libraries (glretrace ${X11_X11_LIB})
     endif ()
 
     # gdb doesn't like when pthreads is loaded through dlopen (which happens
