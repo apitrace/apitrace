@@ -46,10 +46,13 @@ using namespace glretrace;
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, glws::Context *> ContextMap;
+typedef std::map<unsigned long long, glws::Profile> ProfileMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
+static ProfileMap profile_map;
 
 static unsigned int current_api = EGL_OPENGL_ES_API;
+static glws::Profile last_profile = glws::PROFILE_COMPAT;
 
 static glws::Drawable *
 getDrawable(unsigned long long surface_ptr) {
@@ -77,8 +80,20 @@ getContext(unsigned long long context_ptr) {
 
 static void retrace_eglCreateWindowSurface(trace::Call &call) {
     unsigned long long orig_surface = call.ret->toUIntPtr();
+    unsigned long long orig_config = call.arg(1).toUIntPtr();
+    ProfileMap::iterator it = profile_map.find(orig_config);
+    glws::Profile profile;
 
-    glws::Drawable *drawable = glws::createDrawable(glretrace::visual[glws::PROFILE_COMPAT]);
+    // If the requested config is associated with a profile, use that
+    // profile. Otherwise, assume that the last used profile is what
+    // the user wants.
+    if (it != profile_map.end()) {
+        profile = it->second;
+    } else {
+        profile = last_profile;
+    }
+
+    glws::Drawable *drawable = glws::createDrawable(glretrace::visual[profile]);
     drawable_map[orig_surface] = drawable;
 }
 
@@ -100,6 +115,7 @@ static void retrace_eglBindAPI(trace::Call &call) {
 
 static void retrace_eglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
+    unsigned long long orig_config = call.arg(1).toUIntPtr();
     glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
     trace::Array *attrib_array = dynamic_cast<trace::Array *>(&call.arg(3));
     glws::Profile profile;
@@ -126,7 +142,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
     }
 
 
-    glws::Context *context = glws::createContext(glretrace::visual[glws::PROFILE_COMPAT], share_context, profile);
+    glws::Context *context = glws::createContext(glretrace::visual[profile], share_context, profile);
     if (!context) {
         const char *name;
         switch (profile) {
@@ -149,6 +165,8 @@ static void retrace_eglCreateContext(trace::Call &call) {
     }
 
     context_map[orig_context] = context;
+    profile_map[orig_config] = profile;
+    last_profile = profile;
 }
 
 static void retrace_eglDestroyContext(trace::Call &call) {
