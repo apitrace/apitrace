@@ -42,6 +42,7 @@ enum Profile {
     PROFILE_CORE,
     PROFILE_ES1,
     PROFILE_ES2,
+    PROFILE_MAX
 };
 
 

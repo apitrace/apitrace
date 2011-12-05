@@ -53,7 +53,7 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = glws::createDrawable(visual));
+        return (drawable_map[drawable_id] = glws::createDrawable(visual[glretrace::defaultProfile]));
     }
 
     return it->second;
@@ -70,7 +70,7 @@ getContext(unsigned long long ctx) {
     it = context_map.find(ctx);
     if (it == context_map.end()) {
         glws::Context *context;
-        context_map[ctx] = context = glws::createContext(visual, sharedContext, glretrace::defaultProfile);
+        context_map[ctx] = context = glws::createContext(visual[glretrace::defaultProfile], sharedContext, glretrace::defaultProfile);
         if (!sharedContext) {
             sharedContext = context;
         }

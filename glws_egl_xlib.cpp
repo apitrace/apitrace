@@ -384,6 +384,8 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
         eglBindAPI(EGL_OPENGL_ES_API);
         attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
         break;
+    default:
+        return NULL;
     }
 
     attribs.end(EGL_NONE);

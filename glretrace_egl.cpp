@@ -78,7 +78,7 @@ getContext(unsigned long long context_ptr) {
 static void retrace_eglCreateWindowSurface(trace::Call &call) {
     unsigned long long orig_surface = call.ret->toUIntPtr();
 
-    glws::Drawable *drawable = glws::createDrawable(glretrace::visual);
+    glws::Drawable *drawable = glws::createDrawable(glretrace::visual[glws::PROFILE_COMPAT]);
     drawable_map[orig_surface] = drawable;
 }
 
@@ -126,7 +126,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
     }
 
 
-    glws::Context *context = glws::createContext(glretrace::visual, share_context, profile);
+    glws::Context *context = glws::createContext(glretrace::visual[glws::PROFILE_COMPAT], share_context, profile);
     if (!context) {
         const char *name;
         switch (profile) {

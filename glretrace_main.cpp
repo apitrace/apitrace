@@ -40,7 +40,7 @@ bool double_buffer = true;
 bool insideGlBeginEnd = false;
 trace::Parser parser;
 glws::Profile defaultProfile = glws::PROFILE_COMPAT;
-glws::Visual *visual = NULL;
+glws::Visual *visual[glws::PROFILE_MAX];
 glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
 
@@ -330,7 +330,10 @@ int main(int argc, char **argv)
     }
 
     glws::init();
-    visual = glws::createVisual(double_buffer, defaultProfile);
+    visual[glws::PROFILE_COMPAT] = glws::createVisual(double_buffer, glws::PROFILE_COMPAT);
+    visual[glws::PROFILE_CORE] = glws::createVisual(double_buffer, glws::PROFILE_CORE);
+    visual[glws::PROFILE_ES1] = glws::createVisual(double_buffer, glws::PROFILE_ES1);
+    visual[glws::PROFILE_ES2] = glws::createVisual(double_buffer, glws::PROFILE_ES2);
 
     for ( ; i < argc; ++i) {
         if (!parser.open(argv[i])) {
@@ -342,8 +345,11 @@ int main(int argc, char **argv)
 
         parser.close();
     }
-    
-    delete visual;
+
+    for (int n = 0; n < glws::PROFILE_MAX; n++) {
+        delete visual[n];
+    }
+
     glws::cleanup();
 
     return 0;
