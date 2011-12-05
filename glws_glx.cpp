@@ -297,28 +297,49 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile)
     GLXContext share_context = NULL;
     GLXContext context;
 
-    if (profile != PROFILE_COMPAT) {
-        return NULL;
-    }
-
     if (shareContext) {
         share_context = static_cast<GlxContext*>(shareContext)->context;
     }
 
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
         Attributes<int> attribs;
+        
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
         if (debug) {
             attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
         }
+
+        switch (profile) {
+        case PROFILE_COMPAT:
+            break;
+        case PROFILE_CORE:
+            // XXX: This will invariable return a 3.2 context, when supported.
+            // We probably should have a PROFILE_CORE_XX per version.
+            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 3);
+            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 2);
+            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
+            break;
+        default:
+            return NULL;
+        }
+        
         attribs.end();
 
         context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
-    } else 
-           if (glxVersion >= 0x103) {
-        context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
     } else {
-        context = glXCreateContext(display, visual->visinfo, share_context, True);
+        if (profile != PROFILE_COMPAT) {
+            return NULL;
+        }
+
+        if (glxVersion >= 0x103) {
+            context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
+        } else {
+            context = glXCreateContext(display, visual->visinfo, share_context, True);
+        }
+    }
+
+    if (!context) {
+        return NULL;
     }
 
     return new GlxContext(visual, profile, context);

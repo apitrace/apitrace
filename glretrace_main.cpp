@@ -39,6 +39,7 @@ namespace glretrace {
 bool double_buffer = true;
 bool insideGlBeginEnd = false;
 trace::Parser parser;
+glws::Profile defaultProfile = glws::PROFILE_COMPAT;
 glws::Visual *visual = NULL;
 glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
@@ -248,6 +249,7 @@ static void usage(void) {
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
         "  -c PREFIX    compare against snapshots\n"
+        "  -core        use core profile\n"
         "  -db          use a double buffer visual (default)\n"
         "  -sb          use a single buffer visual\n"
         "  -s PREFIX    take snapshots; `-` for PNM stdout output\n"
@@ -283,6 +285,8 @@ int main(int argc, char **argv)
         } else if (!strcmp(arg, "-D")) {
             dump_state = atoi(argv[++i]);
             retrace::verbosity = -2;
+        } else if (!strcmp(arg, "-core")) {
+            defaultProfile = glws::PROFILE_CORE;
         } else if (!strcmp(arg, "-db")) {
             double_buffer = true;
         } else if (!strcmp(arg, "-sb")) {

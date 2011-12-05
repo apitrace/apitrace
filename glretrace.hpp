@@ -37,6 +37,7 @@ namespace glretrace {
 extern bool double_buffer;
 extern bool insideGlBeginEnd;
 extern trace::Parser parser;
+extern glws::Profile defaultProfile;
 extern glws::Visual *visual;
 extern glws::Drawable *drawable;
 extern glws::Context *context;

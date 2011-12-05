@@ -38,7 +38,8 @@ namespace glws {
 
 
 enum Profile {
-    PROFILE_COMPAT,
+    PROFILE_COMPAT = 0,
+    PROFILE_CORE,
     PROFILE_ES1,
     PROFILE_ES2,
 };

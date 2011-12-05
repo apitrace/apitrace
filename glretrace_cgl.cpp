@@ -70,7 +70,7 @@ getContext(unsigned long long ctx) {
     it = context_map.find(ctx);
     if (it == context_map.end()) {
         glws::Context *context;
-        context_map[ctx] = context = glws::createContext(visual, sharedContext);
+        context_map[ctx] = context = glws::createContext(visual, sharedContext, glretrace::defaultProfile);
         if (!sharedContext) {
             sharedContext = context;
         }

@@ -56,7 +56,7 @@ getDrawable(unsigned long long hdc) {
 
 static void retrace_wglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *context = glws::createContext(glretrace::visual);
+    glws::Context *context = glws::createContext(glretrace::visual, NULL, glretrace::defaultProfile);
     context_map[orig_context] = context;
 }
 
@@ -114,7 +114,7 @@ static void retrace_wglShareLists(trace::Call &call) {
     glws::Context *old_context = context_map[hglrc2];
 
     glws::Context *new_context =
-        glws::createContext(old_context->visual, share_context);
+        glws::createContext(old_context->visual, share_context, glretrace::defaultProfile);
     if (new_context) {
         if (context == old_context) {
             glws::makeCurrent(drawable, new_context);
@@ -223,7 +223,7 @@ static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
         share_context = context_map[call.arg(1).toUIntPtr()];
     }
 
-    glws::Context *context = glws::createContext(glretrace::visual, share_context);
+    glws::Context *context = glws::createContext(glretrace::visual, share_context, glretrace::defaultProfile);
     context_map[orig_context] = context;
 }
 
