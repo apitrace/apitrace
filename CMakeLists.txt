@@ -534,14 +534,21 @@ target_link_libraries (glretrace
 )
 
 if (WIN32)
-elseif (APPLE)
-    target_link_libraries (glretrace
-        "-framework Cocoa"
-        "-framework ApplicationServices" # CGS*
-        ${OPENGL_gl_LIBRARY} # CGL*
-    )
 else ()
-    target_link_libraries (glretrace ${X11_X11_LIB})
+    if (APPLE)
+        target_link_libraries (glretrace
+            "-framework Cocoa"
+            "-framework ApplicationServices" # CGS*
+            ${OPENGL_gl_LIBRARY} # CGL*
+        )
+    else ()
+        target_link_libraries (glretrace ${X11_X11_LIB} pthread)
+    endif ()
+
+    # gdb doesn't like when pthreads is loaded through dlopen (which happens
+    # when dlopen'ing libGL), so link pthreads to avoid this issue.  See also
+    # http://stackoverflow.com/questions/2702628/gdb-cannot-find-new-threads-generic-error
+    target_link_libraries (glretrace pthread)
 endif ()
 
 install (TARGETS glretrace RUNTIME DESTINATION bin) 
@@ -562,10 +569,8 @@ if (EGL_FOUND AND NOT WIN32 AND NOT APPLE)
 
     target_link_libraries (eglretrace
         common
-    )
-
-    target_link_libraries (eglretrace
         ${X11_X11_LIB}
+        pthread
     )
 
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
