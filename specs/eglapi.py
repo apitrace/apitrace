@@ -39,8 +39,7 @@ EGLSurface = Opaque("EGLSurface")
 
 EGLClientBuffer = Opaque("EGLClientBuffer")
 
-_EGLBoolean = Alias("EGLBoolean", UInt)
-EGLBoolean = FakeEnum(_EGLBoolean, [
+EGLBoolean = Enum("EGLBoolean", [
     "EGL_FALSE",
     "EGL_TRUE",
 ])
