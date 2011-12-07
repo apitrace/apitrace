@@ -127,7 +127,7 @@ class Dumper(Visitor):
         self._write(']')
 
     def visit_value(self, node):
-        self._write(repr(node))
+        self._write(json.dumps(node))
 
 
 
