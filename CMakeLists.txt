@@ -249,6 +249,11 @@ add_custom_command (
     DEPENDS glproc.py dispatch.py specs/wglapi.py specs/glxapi.py specs/cglapi.py specs/eglapi.py specs/glesapi.py specs/glapi.py specs/gltypes.py specs/stdapi.py
 )
 
+# Wrap glproc.hpp as a target to prevent the command from being executed
+# multiple times simulatenously, when the targets that depend on it are built
+# in parallel.
+add_custom_target (glproc DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
+
 if (WIN32)
     set (os os_win32.cpp)
     set (glws_os glws_wgl.cpp)
@@ -376,11 +381,11 @@ if (WIN32)
         DEPENDS wgltrace.py gltrace.py trace.py specs/wglapi.py specs/wglenum.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/winapi.py specs/stdapi.py
     )
     add_library (wgltrace MODULE specs/opengl32.def
-        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         wgltrace.cpp
         glcaps.cpp
         glproc_gl.cpp
     )
+    add_dependencies (wgltrace glproc)
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32
@@ -398,11 +403,12 @@ elseif (APPLE)
     )
 
     add_library (cgltrace SHARED
-        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         cgltrace.cpp
         glcaps.cpp
         glproc_gl.cpp
     )
+
+    add_dependencies (cgltrace glproc)
 
     set_target_properties (cgltrace PROPERTIES
         # OpenGL framework name
@@ -425,11 +431,12 @@ else ()
     )
 
     add_library (glxtrace SHARED
-        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         glxtrace.cpp
         glcaps.cpp
         glproc_gl.cpp
     )
+
+    add_dependencies (glxtrace glproc)
 
     set_target_properties (glxtrace PROPERTIES
         # avoid the default "lib" prefix
@@ -456,11 +463,12 @@ if (EGL_FOUND)
     )
 
     add_library (egltrace SHARED
-        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         egltrace.cpp
         glcaps.cpp
         glproc_egl.cpp
     )
+
+    add_dependencies (egltrace glproc)
 
     set_property (
         TARGET egltrace
@@ -499,7 +507,6 @@ add_custom_command (
 )
 
 set (retrace_sources
-    ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     glretrace_gl.cpp
     glretrace_cgl.cpp
     glretrace_glx.cpp
@@ -518,6 +525,8 @@ add_executable (glretrace
     ${glws_os}
     glproc_gl.cpp
 )
+
+add_dependencies (glretrace glproc)
 
 set_property (
     TARGET glretrace
@@ -555,6 +564,8 @@ if (EGL_FOUND AND NOT WIN32 AND NOT APPLE)
         glws_egl_xlib.cpp
         glproc_egl.cpp
     )
+
+    add_dependencies (eglretrace glproc)
 
     set_property (
         TARGET eglretrace
