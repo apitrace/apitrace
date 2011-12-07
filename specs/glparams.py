@@ -1118,7 +1118,7 @@ parameters = [
     ("",	X,	1,	"GL_FOG_COORD_ARRAY_POINTER"),	# 0x8456
     ("glGet",	B,	1,	"GL_FOG_COORD_ARRAY"),	# 0x8457
     ("glGet",	B,	1,	"GL_COLOR_SUM"),	# 0x8458
-    ("glGet",	F,	3,	"GL_CURRENT_SECONDARY_COLOR"),	# 0x8459
+    ("glGet",	F,	4,	"GL_CURRENT_SECONDARY_COLOR"),	# 0x8459
     ("glGet",	I,	1,	"GL_SECONDARY_COLOR_ARRAY_SIZE"),	# 0x845A
     ("glGet",	E,	1,	"GL_SECONDARY_COLOR_ARRAY_TYPE"),	# 0x845B
     ("glGet",	I,	1,	"GL_SECONDARY_COLOR_ARRAY_STRIDE"),	# 0x845C
@@ -1927,7 +1927,7 @@ parameters = [
     ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB"),	# 0x88B4
     ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_ENV_PARAMETERS_ARB"),	# 0x88B5
     ("glGetProgramARB",	B,	1,	"GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB"),	# 0x88B6
-    ("glGet",	E,	1,	"GL_TRANSPOSE_CURRENT_MATRIX_ARB"),	# 0x88B7
+    ("glGet",	F,	16,	"GL_TRANSPOSE_CURRENT_MATRIX_ARB"),	# 0x88B7
     ("",	X,	1,	"GL_READ_ONLY"),	# 0x88B8
     ("",	X,	1,	"GL_WRITE_ONLY"),	# 0x88B9
     ("",	X,	1,	"GL_READ_WRITE"),	# 0x88BA
