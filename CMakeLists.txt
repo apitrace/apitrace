@@ -238,6 +238,7 @@ add_definitions(
 # Common libraries / utilities
 
 include_directories (
+    ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/common
 )
@@ -375,10 +376,10 @@ if (WIN32)
         DEPENDS wgltrace.py gltrace.py trace.py specs/wglapi.py specs/wglenum.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/winapi.py specs/stdapi.py
     )
     add_library (wgltrace MODULE specs/opengl32.def
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         wgltrace.cpp
         glcaps.cpp
         glproc_gl.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
@@ -397,10 +398,10 @@ elseif (APPLE)
     )
 
     add_library (cgltrace SHARED
+        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
         cgltrace.cpp
         glcaps.cpp
         glproc_gl.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     )
 
     set_target_properties (cgltrace PROPERTIES
@@ -497,12 +498,8 @@ add_custom_command (
     DEPENDS glstate.py specs/glparams.py specs/gltypes.py specs/stdapi.py
 )
 
-include_directories (
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${OPENGL_INCLUDE_PATH}
-)
-
 set (retrace_sources
+    ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
     glretrace_gl.cpp
     glretrace_cgl.cpp
     glretrace_glx.cpp
@@ -514,7 +511,6 @@ set (retrace_sources
     retrace.cpp
     retrace_stdc.cpp
     glws.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
 )
 
 add_executable (glretrace
