@@ -110,6 +110,13 @@ EGLenum = Enum("EGLenum", [
     "EGL_MATCH_NATIVE_PIXMAP",      # 0x3041  /* Pseudo-attribute (not queryable) */
     "EGL_CONFORMANT",               # 0x3042
 
+    # config attribute values
+    "EGL_SLOW_CONFIG",              # 0x3050  /* EGL_CONFIG_CAVEAT value */
+    "EGL_NON_CONFORMANT_CONFIG",    # 0x3051  /* EGL_CONFIG_CAVEAT value */
+    "EGL_TRANSPARENT_RGB",          # 0x3052  /* EGL_TRANSPARENT_TYPE value */
+    "EGL_RGB_BUFFER",               # 0x308E  /* EGL_COLOR_BUFFER_TYPE value */
+    "EGL_LUMINANCE_BUFFER",         # 0x308F  /* EGL_COLOR_BUFFER_TYPE value */
+
     # surface attributes
     "EGL_HEIGHT",                   # 0x3056
     "EGL_WIDTH",                    # 0x3057
@@ -127,11 +134,27 @@ EGLenum = Enum("EGLenum", [
     "EGL_SWAP_BEHAVIOR",            # 0x3093
     "EGL_MULTISAMPLE_RESOLVE",      # 0x3099
 
+    # surface attribute values
+    "EGL_NO_TEXTURE",               # 0x305C
+    "EGL_TEXTURE_RGB",              # 0x305D
+    "EGL_TEXTURE_RGBA",             # 0x305E
+    "EGL_TEXTURE_2D",               # 0x305F
+    "EGL_VG_COLORSPACE_sRGB",       # 0x3089  /* EGL_VG_COLORSPACE value */
+    "EGL_VG_COLORSPACE_LINEAR",     # 0x308A  /* EGL_VG_COLORSPACE value */
+    "EGL_VG_ALPHA_FORMAT_NONPRE",   # 0x308B  /* EGL_ALPHA_FORMAT value */
+    "EGL_VG_ALPHA_FORMAT_PRE",      # 0x308C  /* EGL_ALPHA_FORMAT value */
+    "EGL_BUFFER_PRESERVED",         # 0x3094  /* EGL_SWAP_BEHAVIOR value */
+    "EGL_BUFFER_DESTROYED",         # 0x3095  /* EGL_SWAP_BEHAVIOR value */
+    "EGL_MULTISAMPLE_RESOLVE_DEFAULT", # 0x309A  /* EGL_MULTISAMPLE_RESOLVE value */
+    "EGL_MULTISAMPLE_RESOLVE_BOX",     # 0x309B  /* EGL_MULTISAMPLE_RESOLVE value */
+
     # context attributes
     "EGL_CONTEXT_CLIENT_TYPE",      # 0x3097
     "EGL_CONTEXT_CLIENT_VERSION",   # 0x3098
 
     # misc
+    "EGL_DRAW",                     # 0x3059
+    "EGL_READ",                     # 0x305A
     "EGL_CORE_NATIVE_ENGINE",       # 0x305B
     "EGL_BACK_BUFFER",              # 0x3084
     "EGL_SINGLE_BUFFER",            # 0x3085
@@ -163,14 +186,21 @@ EGLenum = Enum("EGLenum", [
     "EGL_SYNC_REUSABLE_KHR",                    # 0x30FA
 
     # sync attributes
+    "EGL_SYNC_PRIOR_COMMANDS_COMPLETE_KHR",     # 0x30F0
     "EGL_SYNC_STATUS_KHR",                      # 0x30F1
     "EGL_SIGNALED_KHR",                         # 0x30F2
     "EGL_UNSIGNALED_KHR",                       # 0x30F3
+    "EGL_TIMEOUT_EXPIRED_KHR",                  # 0x30F5
+    "EGL_CONDITION_SATISFIED_KHR",              # 0x30F6
     "EGL_SYNC_TYPE_KHR",                        # 0x30F7
     "EGL_SYNC_CONDITION_KHR",                   # 0x30F8
 
     # EGL_KHR_lock_surface / EGL_KHR_lock_surface2
     "EGL_MATCH_FORMAT_KHR",                     # 0x3043
+    "EGL_FORMAT_RGB_565_EXACT_KHR",             # 0x30C0  /* EGL_MATCH_FORMAT_KHR value */
+    "EGL_FORMAT_RGB_565_KHR",                   # 0x30C1  /* EGL_MATCH_FORMAT_KHR value */
+    "EGL_FORMAT_RGBA_8888_EXACT_KHR",           # 0x30C2  /* EGL_MATCH_FORMAT_KHR value */
+    "EGL_FORMAT_RGBA_8888_KHR",                 # 0x30C3  /* EGL_MATCH_FORMAT_KHR value */
     "EGL_MAP_PRESERVE_PIXELS_KHR",              # 0x30C4
     "EGL_LOCK_USAGE_HINT_KHR",                  # 0x30C5
     "EGL_BITMAP_POINTER_KHR",                   # 0x30C6
@@ -181,6 +211,8 @@ EGLenum = Enum("EGLenum", [
     "EGL_BITMAP_PIXEL_BLUE_OFFSET_KHR",         # 0x30CB
     "EGL_BITMAP_PIXEL_ALPHA_OFFSET_KHR",        # 0x30CC
     "EGL_BITMAP_PIXEL_LUMINANCE_OFFSET_KHR",    # 0x30CD
+    "EGL_LOWER_LEFT_KHR",                       # 0x30CE  /* EGL_BITMAP_ORIGIN_KHR value */
+    "EGL_UPPER_LEFT_KHR",                       # 0x30CF  /* EGL_BITMAP_ORIGIN_KHR value */
     "EGL_BITMAP_PIXEL_SIZE_KHR",                # 0x3110
 
     # EGL_ANGLE_surface_d3d_texture_2d_share_handle
@@ -189,9 +221,15 @@ EGLenum = Enum("EGLenum", [
     # EGL_HI_clientpixmap / EGL_HI_colorformats
     "EGL_CLIENT_PIXMAP_POINTER_HI",             # 0x8F74
     "EGL_COLOR_FORMAT_HI",                      # 0x8F70
+    "EGL_COLOR_RGB_HI",                         # 0x8F71
+    "EGL_COLOR_RGBA_HI",                        # 0x8F72
+    "EGL_COLOR_ARGB_HI",                        # 0x8F73
 
     # EGL_IMG_context_priority
     "EGL_CONTEXT_PRIORITY_LEVEL_IMG",           # 0x3100
+    "EGL_CONTEXT_PRIORITY_HIGH_IMG",            # 0x3101
+    "EGL_CONTEXT_PRIORITY_MEDIUM_IMG",          # 0x3102
+    "EGL_CONTEXT_PRIORITY_LOW_IMG",             # 0x3103
 
     # EGL_MESA_drm_image
     "EGL_DRM_BUFFER_MESA",                      # 0x31D3
@@ -208,9 +246,22 @@ EGLenum = Enum("EGLenum", [
 
     # EGL_NV_depth_nonlinear
     "EGL_DEPTH_ENCODING_NV",                    # 0x30E2
+    "EGL_DEPTH_ENCODING_NONLINEAR_NV",          # 0x30E3
 
     # EGL_NV_post_sub_buffer
     "EGL_POST_SUB_BUFFER_SUPPORTED_NV",         # 0x30BE
+
+    # EGL_NV_sync
+    "EGL_SYNC_PRIOR_COMMANDS_COMPLETE_NV",      # 0x30E6
+    "EGL_SYNC_STATUS_NV",                       # 0x30E7
+    "EGL_SIGNALED_NV",                          # 0x30E8
+    "EGL_UNSIGNALED_NV",                        # 0x30E9
+    "EGL_ALREADY_SIGNALED_NV",                  # 0x30EA
+    "EGL_TIMEOUT_EXPIRED_NV",                   # 0x30EB
+    "EGL_CONDITION_SATISFIED_NV",               # 0x30EC
+    "EGL_SYNC_TYPE_NV",                         # 0x30ED
+    "EGL_SYNC_CONDITION_NV",                    # 0x30EE
+    "EGL_SYNC_FENCE_NV",                        # 0x30EF
 ])
 
 # an alias of EGLenum
