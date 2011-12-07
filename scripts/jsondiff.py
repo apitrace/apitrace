@@ -83,9 +83,7 @@ class Dumper(Visitor):
             value = node[name]
             self.enter_member(name)
             self.visit(value)
-            if i:
-                self._write(',')
-            self.leave_member()
+            self.leave_member(i == len(members) - 1)
         self.leave_object()
 
     def enter_object(self):
@@ -97,13 +95,17 @@ class Dumper(Visitor):
         self._indent()
         self._write('%s: ' % name)
 
-    def leave_member(self):
+    def leave_member(self, last):
+        if not last:
+            self._write(',')
         self._newline()
 
     def leave_object(self):
         self.level -= 1
         self._indent()
         self._write('}')
+        if self.level <= 0:
+            self._newline()
 
     def visit_array(self, node):
         self.enter_array()
@@ -111,7 +113,7 @@ class Dumper(Visitor):
             value = node[i]
             self._indent()
             self.visit(value)
-            if i:
+            if i != len(node) - 1:
                 self._write(',')
             self._newline()
         self.leave_array()
@@ -189,23 +191,19 @@ class Differ(Visitor):
         else:
             self.dumper.enter_object()
             names = set(a.keys())
-            names.update(b.keys())
+            if not self.comparer.ignore_added:
+                names.update(b.keys())
             names = list(names)
             names.sort()
 
-            for name in names:
-                try:
-                    ae = a[name]
-                except KeyError:
-                    if self.comparer.ignore_added:
-                        continue
-                    else:
-                        ae = None
+            for i in range(len(names)):
+                name = names[i]
+                ae = a.get(name, None)
                 be = b.get(name, None)
                 if not self.comparer.visit(ae, be):
                     self.dumper.enter_member(name)
                     self.visit(ae, be)
-                    self.dumper.leave_member()
+                    self.dumper.leave_member(i == len(names) - 1)
 
             self.dumper.leave_object()
 
@@ -214,7 +212,8 @@ class Differ(Visitor):
             self.replace(a, b)
         else:
             self.dumper.enter_array()
-            for i in range(max(len(a), len(b))):
+            max_len = max(len(a), len(b))
+            for i in range(max_len):
                 try:
                     ae = a[i]
                 except IndexError:
@@ -228,6 +227,8 @@ class Differ(Visitor):
                     self.dumper.visit(ae)
                 else:
                     self.visit(ae, be)
+                if i != max_len - 1:
+                    self.dumper._write(',')
                 self.dumper._newline()
 
             self.dumper.leave_array()
@@ -254,8 +255,9 @@ def main():
     a = load(open(sys.argv[1], 'rt'))
     b = load(open(sys.argv[2], 'rt'))
 
-    #dumper = Dumper()
-    #dumper.visit(a)
+    if False:
+        dumper = Dumper()
+        dumper.visit(a)
 
     differ = Differ()
     differ.visit(a, b)
