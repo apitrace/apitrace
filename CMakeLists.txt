@@ -550,10 +550,13 @@ else ()
         target_link_libraries (glretrace ${X11_X11_LIB})
     endif ()
 
-    # gdb doesn't like when pthreads is loaded through dlopen (which happens
-    # when dlopen'ing libGL), so link pthreads to avoid this issue.  See also
-    # http://stackoverflow.com/questions/2702628/gdb-cannot-find-new-threads-generic-error
-    target_link_libraries (glretrace pthread)
+    target_link_libraries (glretrace
+        # gdb doesn't like when pthreads is loaded through dlopen (which happens
+        # when dlopen'ing libGL), so link pthreads to avoid this issue.  See also
+        # http://stackoverflow.com/questions/2702628/gdb-cannot-find-new-threads-generic-error
+        pthread
+        dl
+    )
 endif ()
 
 install (TARGETS glretrace RUNTIME DESTINATION bin) 
@@ -578,6 +581,7 @@ if (EGL_FOUND AND NOT WIN32 AND NOT APPLE)
         common
         ${X11_X11_LIB}
         pthread
+        dl
     )
 
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
