@@ -172,28 +172,28 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
-    NSOpenGLPixelFormatAttribute single_attribs[] = {
-        NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1,
-        NSOpenGLPFAColorSize, (NSOpenGLPixelFormatAttribute)24,
-        NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1,
-        NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1,
-        (NSOpenGLPixelFormatAttribute)0
-    };
-
-    NSOpenGLPixelFormatAttribute double_attribs[] = {
-        NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1,
-        NSOpenGLPFAColorSize, (NSOpenGLPixelFormatAttribute)24,
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1,
-        NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1,
-        (NSOpenGLPixelFormatAttribute)0
-    };
-
-    if (profile != PROFILE_COMPAT) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
         return nil;
     }
 
-    NSOpenGLPixelFormatAttribute *attribs = doubleBuffer ? double_attribs : single_attribs;
+    Attributes<NSOpenGLPixelFormatAttribute> attribs;
+
+    attribs.add(NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1);
+    attribs.add(NSOpenGLPFAColorSize, (NSOpenGLPixelFormatAttribute)24);
+    if (doubleBuffer) {
+        attribs.add(NSOpenGLPFADoubleBuffer);
+    }
+    attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
+    attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
+    if (profile == PROFILE_CORE) {
+#if CGL_VERSION_1_3
+        attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
+#else
+	return NULL;
+#endif
+    }
+    attribs.end();
 
     NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc]
                                      initWithAttributes:attribs];
@@ -214,7 +214,8 @@ createContext(const Visual *visual, Context *shareContext, Profile profile)
     NSOpenGLContext *share_context = nil;
     NSOpenGLContext *context;
 
-    if (profile != PROFILE_COMPAT) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
         return nil;
     }
 
