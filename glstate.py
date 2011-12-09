@@ -467,21 +467,28 @@ class StateDumper:
             self.dump_atom(getter, *(args + (name,))) 
 
     def dump_atom(self, getter, *args):
-            name = args[-1]
-            print '        // %s' % name
-            print '        {'
-            #print '            assert(glGetError() == GL_NO_ERROR);'
-            type, value = getter(*args)
-            print '            if (glGetError() != GL_NO_ERROR) {'
-            #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
-            print '                while (glGetError() != GL_NO_ERROR) {}'
-            print '            } else {'
-            print '                json.beginMember("%s");' % name
-            JsonWriter().visit(type, value)
-            print '                json.endMember();'
-            print '            }'
-            print '        }'
-            print
+        name = args[-1]
+
+        # Avoid crash on MacOSX
+        # XXX: The right fix would be to look at the support extensions..
+        import platform
+        if name == 'GL_SAMPLER_BINDING' and platform.system() == 'Darwin':
+            return
+
+        print '        // %s' % name
+        print '        {'
+        #print '            assert(glGetError() == GL_NO_ERROR);'
+        type, value = getter(*args)
+        print '            if (glGetError() != GL_NO_ERROR) {'
+        #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
+        print '                while (glGetError() != GL_NO_ERROR) {}'
+        print '            } else {'
+        print '                json.beginMember("%s");' % name
+        JsonWriter().visit(type, value)
+        print '                json.endMember();'
+        print '            }'
+        print '        }'
+        print
 
 
 if __name__ == '__main__':
