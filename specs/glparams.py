@@ -462,7 +462,7 @@ parameters = [
     ("",	X,	1,	"GL_DECAL"),	# 0x2101
     ("glGetTexEnv",	E,	1,	"GL_TEXTURE_ENV_MODE"),	# 0x2200
     ("glGetTexEnv",	F,	4,	"GL_TEXTURE_ENV_COLOR"),	# 0x2201
-    ("_glGet",	X,	1,	"GL_TEXTURE_ENV"),	# 0x2300
+    ("",	X,	1,	"GL_TEXTURE_ENV"),	# 0x2300
     ("",	X,	1,	"GL_EYE_LINEAR"),	# 0x2400
     ("",	X,	1,	"GL_OBJECT_LINEAR"),	# 0x2401
     ("",	X,	1,	"GL_SPHERE_MAP"),	# 0x2402
@@ -1191,7 +1191,7 @@ parameters = [
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_LOD_BIAS"),	# 0x84FD
     ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FF
-    ("glGetTexEnv",	E,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
+    ("",	X,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
     ("glGetTexParameter,glGetTexEnv",	F,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
     ("",	X,	1,	"GL_MODELVIEW1_STACK_DEPTH_EXT"),	# 0x8502
     ("",	X,	1,	"GL_COMBINE4_NV"),	# 0x8503
@@ -1844,7 +1844,7 @@ parameters = [
     ("",	X,	1,	"GL_HILO8_NV"),	# 0x885E
     ("",	X,	1,	"GL_SIGNED_HILO8_NV"),	# 0x885F
     ("",	X,	1,	"GL_FORCE_BLUE_TO_ONE_NV"),	# 0x8860
-    ("_glGet",	B,	1,	"GL_POINT_SPRITE"),	# 0x8861
+    ("glGet",	B,	1,	"GL_POINT_SPRITE"),	# 0x8861
     ("glGetTexEnv",	B,	1,	"GL_COORD_REPLACE"),	# 0x8862
     ("glGet",	E,	1,	"GL_POINT_SPRITE_R_MODE_NV"),	# 0x8863
     ("glGetQuery",	I,	1,	"GL_QUERY_COUNTER_BITS"),	# 0x8864

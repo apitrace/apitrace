@@ -90,12 +90,19 @@ class StateGetter(Visitor):
         self.inflector = GetInflector(radical, inflections)
         self.suffix = suffix
 
+    def iter(self):
+        for function, type, count, name in parameters:
+            inflection = self.inflector.radical + self.suffix
+            if inflection not in function.split(','):
+                continue
+            if type is X:
+                continue
+            yield type, count, name
+
     def __call__(self, *args):
         pname = args[-1]
 
-        for function, type, count, name in parameters:
-            if type is X:
-                continue
+        for type, count, name in self.iter():
             if name == pname:
                 if count != 1:
                     type = Array(type, str(count))
@@ -288,7 +295,6 @@ class StateDumper:
         self.dump_material_params()
         self.dump_light_params()
         self.dump_vertex_attribs()
-        self.dump_texenv_params()
         self.dump_program_params()
         self.dump_texture_parameters()
         self.dump_framebuffer_parameters()
@@ -325,15 +331,22 @@ class StateDumper:
         print '    }'
         print
 
+    def texenv_param_target(self, name):
+        if name == 'GL_TEXTURE_LOD_BIAS':
+           return 'GL_TEXTURE_FILTER_CONTROL'
+        elif name == 'GL_COORD_REPLACE':
+           return 'GL_POINT_SPRITE'
+        else:
+           return 'GL_TEXTURE_ENV'
+
     def dump_texenv_params(self):
         for target in ['GL_TEXTURE_ENV', 'GL_TEXTURE_FILTER_CONTROL', 'GL_POINT_SPRITE']:
-            if target != 'GL_TEXTURE_FILTER_CONTROL':
-                print '    if (glIsEnabled(%s)) {' % target
-            else:
-                print '    {'
+            print '    {'
             print '        json.beginMember("%s");' % target
             print '        json.beginObject();'
-            self.dump_atoms(glGetTexEnv, target)
+            for _, _, name in glGetTexEnv.iter():
+                if self.texenv_param_target(name) == target:
+                    self.dump_atom(glGetTexEnv, target, name) 
             print '        json.endObject();'
             print '    }'
 
@@ -401,6 +414,9 @@ class StateDumper:
             print '                json.endMember(); // %s' % target
             print '            }'
             print
+        print '            if (unit < max_texture_coords) {'
+        self.dump_texenv_params()
+        print '            }'
         print '            json.endObject();'
         print '            json.endMember(); // GL_TEXTUREi'
         print '        }'
@@ -447,17 +463,18 @@ class StateDumper:
         print '            }'
 
     def dump_atoms(self, getter, *args):
-        for function, type, count, name in parameters:
-            inflection = getter.inflector.radical + getter.suffix
-            if inflection not in function.split(','):
-                continue
-            if type is X:
-                continue
+        for _, _, name in getter.iter():
+            self.dump_atom(getter, *(args + (name,))) 
+
+    def dump_atom(self, getter, *args):
+            name = args[-1]
             print '        // %s' % name
             print '        {'
-            type, value = getter(*(args + (name,)))
+            #print '            assert(glGetError() == GL_NO_ERROR);'
+            type, value = getter(*args)
             print '            if (glGetError() != GL_NO_ERROR) {'
             #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
+            print '                while (glGetError() != GL_NO_ERROR) {}'
             print '            } else {'
             print '                json.beginMember("%s");' % name
             JsonWriter().visit(type, value)
