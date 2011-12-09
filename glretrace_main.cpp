@@ -118,6 +118,11 @@ updateDrawable(int width, int height) {
         return;
     }
 
+    // Ignore zero area viewports
+    if (width == 0 || height == 0) {
+        return;
+    }
+
     // Check for bound framebuffer last, as this may have a performance impact.
     GLint draw_framebuffer = 0;
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_framebuffer);
