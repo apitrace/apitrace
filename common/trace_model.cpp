@@ -217,6 +217,7 @@ public:
         delete normal;
         delete bold;
         delete italic;
+        delete strike;
         delete red;
         delete pointer;
         delete literal;
