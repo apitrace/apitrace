@@ -84,7 +84,10 @@ void Retracer::retrace(trace::Call &call) {
     call_dumped = false;
 
     if (verbosity >= 1) {
-        dumpCall(call);
+        if (verbosity >= 2 ||
+            !(call.flags & trace::CALL_FLAG_VERBOSE)) {
+            dumpCall(call);
+        }
     }
 
     Callback callback = 0;

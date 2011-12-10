@@ -259,7 +259,7 @@ static void usage(void) {
         "  -sb          use a single buffer visual\n"
         "  -s PREFIX    take snapshots; `-` for PNM stdout output\n"
         "  -S FREQUENCY snapshot frequency: frame (default), framebuffer, or draw\n"
-        "  -v           verbose output\n"
+        "  -v           increase output verbosity\n"
         "  -D CALLNO    dump state at specific call no\n"
         "  -w           wait on final frame\n";
 }
