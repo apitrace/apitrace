@@ -29,7 +29,7 @@ directory.  You can specify the written trace filename by setting the
 
 View the trace with
 
-    apitrace dump --color application.trace | less -R
+    apitrace dump --color application.trace
 
 Replay an OpenGL trace with
 

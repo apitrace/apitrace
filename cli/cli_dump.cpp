@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "cli.hpp"
+#include "cli_pager.hpp"
 
 #include "trace_parser.hpp"
 
@@ -99,6 +100,7 @@ command(int argc, char *argv[])
         color = COLOR_OPTION_ALWAYS;
 #else
         color = isatty(1) ? COLOR_OPTION_ALWAYS : COLOR_OPTION_NEVER;
+        pipepager();
 #endif
     }
 
