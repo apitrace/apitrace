@@ -2,6 +2,14 @@ This file lists the major user visible improvments.  For a full list of changes
 and their authors see the git history.
 
 
+Development
+===========
+
+* Top-level `apitrace` command.
+
+* Trace and retrace support for EGL, GLES1, and GLES2 APIs.
+
+
 Version 2.0
 ===========
 
