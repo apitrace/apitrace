@@ -15,7 +15,7 @@ Tracing
 
   * `pthread_self()`
 
-* Put zlib (de)compression in a separate thread.
+* Put (de)compression in a separate thread.
 
 * Trace TSCs
 
@@ -55,6 +55,7 @@ GUI
 * Visualize meshes in draw commands.
 
 * Breakpointing and step-by-step debugging.
+
 
 CLI
 ---
