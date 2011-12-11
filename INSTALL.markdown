@@ -9,6 +9,8 @@ Requirements common for all platforms:
 
 * Python version 2.6 or 2.7
 
+  * Python Image Library
+
 * CMake version 2.8 or higher (tested with version 2.8)
 
 
