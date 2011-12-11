@@ -26,45 +26,8 @@
 /*
  * Trace binary format.
  *
- * Grammar:
- *
- *   trace = event* EOF
- *
- *   event = EVENT_ENTER call_sig call_detail+
- *         | EVENT_LEAVE call_no call_detail+
- *
- *   call_sig = sig_id ( name arg_names )?
- *
- *   call_detail = ARG index value
- *               | RET value
- *               | END
- *
- *   value = NULL
- *         | FALSE
- *         | TRUE
- *         | SINT int
- *         | UINT int
- *         | FLOAT float
- *         | DOUBLE double
- *         | STRING string
- *         | BLOB string
- *         | ENUM enum_sig
- *         | BITMASK bitmask_sig value
- *         | ARRAY length value+
- *         | STRUCT struct_sig value+
- *         | OPAQUE int
- *
- *   call_sig = id name arg_name*
- *            | id
- *
- *   enum_sig = id name value
- *            | id
- *
- *   bitmask_sig = id count (name value)+
- *               | id
- *
- *   string = length (BYTE)*
- *
+ * This file defines the trace binary stream, which is then compressed by
+ * snappy or gzip.
  */
 
 #ifndef _TRACE_FORMAT_HPP_
@@ -100,8 +63,55 @@ namespace trace {
  *   as opposed to blobs
  *   - glFlushMappedBufferRange will emit a memcpy only for the flushed range
  *   (whereas previously it would emit a memcpy for the whole mapped range)
+ *
+ * - version 3:
+ *   - enums signatures are recorded for the a whole set of values (not as individual values)
  */
-#define TRACE_VERSION 2
+#define TRACE_VERSION 3
+
+
+/*
+ * Grammar:
+ *
+ *   trace = event* EOF
+ *
+ *   event = EVENT_ENTER call_sig call_detail+
+ *         | EVENT_LEAVE call_no call_detail+
+ *
+ *   call_sig = sig_id ( name arg_names )?
+ *
+ *   call_detail = ARG index value
+ *               | RET value
+ *               | END
+ *
+ *   value = NULL
+ *         | FALSE
+ *         | TRUE
+ *         | SINT int
+ *         | UINT int
+ *         | FLOAT float
+ *         | DOUBLE double
+ *         | STRING string
+ *         | BLOB string
+ *         | ENUM enum_sig
+ *         | BITMASK bitmask_sig value
+ *         | ARRAY length value+
+ *         | STRUCT struct_sig value+
+ *         | OPAQUE int
+ *
+ *   call_sig = id name arg_name*
+ *            | id
+ *
+ *   enum_sig = id count (name value)+
+ *            | id
+ *
+ *   bitmask_sig = id count (name value)+
+ *               | id
+ *
+ *   string = length (BYTE)*
+ *
+ */
+
 
 enum Event {
     EVENT_ENTER = 0,

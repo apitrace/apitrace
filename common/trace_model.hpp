@@ -60,10 +60,16 @@ struct StructSig {
 };
 
 
-struct EnumSig {
-    Id id;
+struct EnumValue {
     const char *name;
     signed long long value;
+};
+
+
+struct EnumSig {
+    Id id;
+    unsigned num_values;
+    const EnumValue *values;
 };
 
 
@@ -216,16 +222,11 @@ public:
 };
 
 
-class Enum : public Value
+class Enum : public SInt
 {
 public:
-    Enum(const EnumSig *_sig) : sig(_sig) {}
+    Enum(const EnumSig *_sig, signed long long _value) : SInt(_value), sig(_sig) {}
 
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
     const EnumSig *sig;

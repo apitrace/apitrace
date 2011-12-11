@@ -76,25 +76,14 @@ class DumpDeclarator(stdapi.OnceVisitor):
     __enum_id = 0
 
     def visit_enum(self, enum):
-        print 'static void _write__%s(const %s value) {' % (enum.tag, enum.expr)
-        n = len(enum.values)
-        for i in range(n):
-            value = enum.values[i]
-            print '    static const trace::EnumSig sig%u = {%u, "%s", %s};' % (i, DumpDeclarator.__enum_id, value, value)
-            DumpDeclarator.__enum_id += 1
-        print '    const trace::EnumSig *sig;'
-        print '    switch (value) {'
-        for i in range(n):
-            value = enum.values[i]
-            print '    case %s:' % value
-            print '        sig = &sig%u;' % i
-            print '        break;'
-        print '    default:'
-        print '        trace::localWriter.writeSInt(value);'
-        print '        return;'
-        print '    }'
-        print '    trace::localWriter.writeEnum(sig);'
-        print '}'
+        print 'static const trace::EnumValue __enum%s_values[] = {' % (enum.tag)
+        for value in enum.values:
+            print '   {"%s", %s},' % (value, value)
+        print '};'
+        print
+        print 'static const trace::EnumSig __enum%s_sig = {' % (enum.tag)
+        print '   %u, %u, __enum%s_values' % (enum.id, len(enum.values), enum.tag)
+        print '};'
         print
 
     def visit_bitmask(self, bitmask):
@@ -186,7 +175,7 @@ class DumpImplementer(stdapi.Visitor):
         print '    trace::localWriter.writeBlob(%s, %s);' % (instance, blob.size)
 
     def visit_enum(self, enum, instance):
-        print '    _write__%s(%s);' % (enum.tag, instance)
+        print '    trace::localWriter.writeEnum(&__enum%s_sig, %s);' % (enum.tag, instance)
 
     def visit_bitmask(self, bitmask, instance):
         print '    trace::localWriter.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.tag, instance)

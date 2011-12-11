@@ -130,6 +130,7 @@ protected:
 
     FunctionSigFlags *parse_function_sig(void);
     StructSig *parse_struct_sig();
+    EnumSig *parse_old_enum_sig();
     EnumSig *parse_enum_sig();
     BitmaskSig *parse_bitmask_sig();
     
@@ -194,6 +195,9 @@ protected:
 
     const char * read_string(void);
     void skip_string(void);
+
+    signed long long read_sint(void);
+    void skip_sint(void);
 
     unsigned long long read_uint(void);
     void skip_uint(void);

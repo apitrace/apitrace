@@ -54,23 +54,19 @@ struct ApiTraceError
 class ApiTraceEnumSignature
 {
 public:
-    ApiTraceEnumSignature(const QString &name = QString(),
-                          const QVariant &val=QVariant())\
-        : m_name(name),
-          m_value(val)
-    {}
+    ApiTraceEnumSignature(const trace::EnumSig *sig);
 
-    QVariant value() const { return m_value; }
-    QString name() const { return m_name; }
+    QString name(signed long long value) const;
+
 private:
-    QString m_name;
-    QVariant m_value;
+    typedef QList<QPair<QString, signed long long> > ValueList;
+    ValueList m_names;
 };
 
 class ApiEnum
 {
 public:
-    ApiEnum(ApiTraceEnumSignature *sig=0);
+    ApiEnum(ApiTraceEnumSignature *sig=0, signed long long value = 0);
 
     QString toString() const;
 
@@ -78,6 +74,7 @@ public:
     QString name() const;
 private:
     ApiTraceEnumSignature *m_sig;
+    signed long long m_value;
 };
 Q_DECLARE_METATYPE(ApiEnum);
 

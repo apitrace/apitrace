@@ -69,7 +69,7 @@ public:
     }
 
     void visit(Enum *node) {
-        writer.writeEnum(node->sig);
+        writer.writeEnum(node->sig, node->value);
     }
 
     void visit(Bitmask *node) {

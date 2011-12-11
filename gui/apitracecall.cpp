@@ -192,15 +192,13 @@ void VariantVisitor::visit(trace::Enum *e)
         sig = m_loader->enumSignature(e->sig->id);
     }
     if (!sig) {
-        sig = new ApiTraceEnumSignature(
-            QString::fromStdString(e->sig->name),
-            QVariant(e->sig->value));
+        sig = new ApiTraceEnumSignature(e->sig);
         if (m_loader) {
             m_loader->addEnumSignature(e->sig->id, sig);
         }
     }
 
-    m_variant = QVariant::fromValue(ApiEnum(sig));
+    m_variant = QVariant::fromValue(ApiEnum(sig, e->value));
 }
 
 void VariantVisitor::visit(trace::Bitmask *bitmask)
@@ -229,16 +227,39 @@ void VariantVisitor::visit(trace::Pointer *ptr)
     m_variant = QVariant::fromValue(ApiPointer(ptr->value));
 }
 
+ApiTraceEnumSignature::ApiTraceEnumSignature(const trace::EnumSig *sig)
+{
+    for (const trace::EnumValue *it = sig->values;
+         it != sig->values + sig->num_values; ++it) {
+        QPair<QString, signed long long> pair;
 
-ApiEnum::ApiEnum(ApiTraceEnumSignature *sig)
-    : m_sig(sig)
+        pair.first = QString::fromStdString(it->name);
+        pair.second = it->value;
+
+        m_names.append(pair);
+    }
+}
+
+QString ApiTraceEnumSignature::name(signed long long value) const
+{
+    for (ValueList::const_iterator it = m_names.begin();
+         it != m_names.end(); ++it) {
+        if (value == it->second) {
+            return it->first;
+        }
+    }
+    return QString::fromLatin1("%1").arg(value);
+}
+
+ApiEnum::ApiEnum(ApiTraceEnumSignature *sig, signed long long value)
+    : m_sig(sig), m_value(value)
 {
 }
 
 QString ApiEnum::toString() const
 {
     if (m_sig) {
-        return m_sig->name();
+        return m_sig->name(m_value);
     }
     Q_ASSERT(!"should never happen");
     return QString();
@@ -247,7 +268,7 @@ QString ApiEnum::toString() const
 QVariant ApiEnum::value() const
 {
     if (m_sig) {
-        return m_sig->value();
+        return QVariant::fromValue(m_value);
     }
     Q_ASSERT(!"should never happen");
     return QVariant();
@@ -256,7 +277,7 @@ QVariant ApiEnum::value() const
 QString ApiEnum::name() const
 {
     if (m_sig) {
-        return m_sig->name();
+        return m_sig->name(m_value);
     }
     Q_ASSERT(!"should never happen");
     return QString();
