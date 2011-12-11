@@ -154,9 +154,12 @@ class StateGetter(Visitor):
         elem_type = self.inflector.reduced_type(array.type)
         inflection = self.inflector.inflect(array.type)
         assert inflection.endswith('v')
-        print '    %s %s[%s];' % (elem_type, temp_name, array.length)
+        print '    %s %s[%s + 1];' % (elem_type, temp_name, array.length)
         print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
+        print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array.length, elem_type)
         print '    %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
+        # Simple buffer overflow detection
+        print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array.length, elem_type)
         return temp_name
 
     def visit_opaque(self, pointer, args):
