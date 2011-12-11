@@ -65,6 +65,9 @@ class Comparer:
 
         self.diff = ImageChops.difference(self.src_im, self.ref_im)
 
+    def size_mismatch(self):
+        return self.ref_im.size != self.src_im.size
+
     def write_diff(self, diff_image, fuzz = 0.05):
         # make a difference image similar to ImageMagick's compare utility
         mask = ImageEnhance.Brightness(self.diff).enhance(1.0/fuzz)
@@ -78,6 +81,9 @@ class Comparer:
         diff_im.save(diff_image)
 
     def precision(self):
+        if self.size_mismatch():
+            return 0.0
+
         # See also http://effbot.org/zone/pil-comparing-images.htm
         h = self.diff.histogram()
         square_error = 0
@@ -89,6 +95,10 @@ class Comparer:
 
     def ae(self, fuzz = 0.05):
         # Compute absolute error
+
+        if self.size_mismatch():
+            return sys.maxint
+
         # TODO: this is approximate due to the grayscale conversion
         h = self.diff.convert('L').histogram()
         ae = sum(h[int(255 * fuzz) + 1 : 256])
