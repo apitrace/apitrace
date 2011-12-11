@@ -26,6 +26,8 @@
 
 
 import json
+import optparse
+import re
 import sys
 
 
@@ -243,17 +245,66 @@ class Differ(Visitor):
         self.dumper.visit(b)
 
 
-def load(stream, strip = True):
-    if strip:
+#
+# Unfortunately JSON standard does not include comments, but this is a quite
+# useful feature to have on regressions tests
+#
+
+_token_res = [
+    r'//[^\r\n]*', # comment
+    r'"[^"\\]*(\\.[^"\\]*)*"', # string
+]
+
+_tokens_re = re.compile(r'|'.join(['(' + token_re + ')' for token_re in _token_res]), re.DOTALL)
+
+
+def _strip_comment(mo):
+    if mo.group(1):
+        return ''
+    else:
+        return mo.group(0)
+
+
+def _strip_comments(data):
+    '''Strip (non-standard) JSON comments.'''
+    return _tokens_re.sub(_strip_comment, data)
+
+
+assert _strip_comments('''// a comment
+"// a comment in a string
+"''') == '''
+"// a comment in a string
+"'''
+
+
+def load(stream, strip_images = True, strip_comments = True):
+    if strip_images:
         object_hook = strip_object_hook
     else:
         object_hook = None
-    return json.load(stream, strict=False, object_hook = object_hook)
+    if strip_comments:
+        data = stream.read()
+        data = _strip_comments(data)
+        return json.loads(data, strict=False, object_hook = object_hook)
+    else:
+        return json.load(stream, strict=False, object_hook = object_hook)
 
 
 def main():
-    a = load(open(sys.argv[1], 'rt'))
-    b = load(open(sys.argv[2], 'rt'))
+    optparser = optparse.OptionParser(
+        usage="\n\t%prog [options] <ref_json> <src_json>")
+    optparser.add_option(
+        '--keep-images',
+        action="store_false", dest="strip_images", default=True,
+        help="compare images")
+
+    (options, args) = optparser.parse_args(sys.argv[1:])
+
+    if len(args) != 2:
+        optparser.error('incorrect number of arguments')
+
+    a = load(open(sys.argv[1], 'rt'), options.strip_images)
+    b = load(open(sys.argv[2], 'rt'), options.strip_images)
 
     if False:
         dumper = Dumper()
