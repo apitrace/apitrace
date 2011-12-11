@@ -27,6 +27,7 @@
 #include <string.h>
 #include <iostream>
 
+#include "trace_dump.hpp"
 #include "retrace.hpp"
 
 

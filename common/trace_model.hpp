@@ -32,10 +32,10 @@
 
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <map>
 #include <vector>
-#include <iostream>
 
 
 namespace trace {
@@ -107,8 +107,6 @@ public:
     virtual const char *toString(void) const;
 
     const Value & operator[](size_t index) const;
-
-    void dump(std::ostream &os, bool color=true);
 };
 
 
@@ -332,14 +330,6 @@ protected:
 };
 
 
-inline std::ostream & operator <<(std::ostream &os, Value *value) {
-    if (value) {
-        value->dump(os);
-    }
-    return os;
-}
-
-
 typedef unsigned CallFlags;
 
 /**
@@ -444,15 +434,7 @@ public:
         assert(index < args.size());
         return *(args[index]);
     }
-
-    void dump(std::ostream &os, bool color=true);
 };
-
-
-inline std::ostream & operator <<(std::ostream &os, Call &call) {
-    call.dump(os);
-    return os;
-}
 
 
 } /* namespace trace */

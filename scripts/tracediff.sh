@@ -31,7 +31,7 @@ APITRACE=${APITRACE:-apitrace}
 $APITRACE dump
 
 stripdump () {
-    $APITRACE dump --color=never "$1" \
+    $APITRACE dump --color=never --no-arg-names "$1" \
     | sed \
         -e 's/\r$//g' \
         -e 's/^[0-9]\+ //' \

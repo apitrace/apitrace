@@ -1,5 +1,6 @@
 /**************************************************************************
  *
+ * Copyright 2011 Jose Fonseca
  * Copyright 2010 VMware, Inc.
  * All Rights Reserved.
  *
@@ -23,12 +24,15 @@
  *
  **************************************************************************/
 
+
 #include <string.h>
 
 #include "cli.hpp"
 #include "cli_pager.hpp"
 
 #include "trace_parser.hpp"
+#include "trace_dump.hpp"
+
 
 enum ColorOption {
     COLOR_OPTION_NEVER = 0,
@@ -52,12 +56,16 @@ usage(void)
         "    -v, --verbose       verbose output\n"
         "    --color=<WHEN>\n"
         "    --colour=<WHEN>     Colored syntax highlighting\n"
-        "                        WHEN is 'auto', 'always', or 'never'\n";
+        "                        WHEN is 'auto', 'always', or 'never'\n"
+        "    --no-arg-names      Don't dump argument names\n"
+    ;
 }
 
 static int
 command(int argc, char *argv[])
 {
+    trace::DumpFlags dumpFlags = 0;
+
     int i;
 
     for (i = 0; i < argc; ++i) {
@@ -88,6 +96,8 @@ command(int argc, char *argv[])
                    !strcmp(arg, "--no-color") ||
                    !strcmp(arg, "--no-colour")) {
             color = COLOR_OPTION_NEVER;
+        } else if (!strcmp(arg, "--no-arg-names")) {
+            dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage();
@@ -104,6 +114,10 @@ command(int argc, char *argv[])
 #endif
     }
 
+    if (color == COLOR_OPTION_NEVER) {
+        dumpFlags |= trace::DUMP_FLAG_NO_COLOR;
+    }
+
     for (; i < argc; ++i) {
         trace::Parser p;
 
@@ -116,7 +130,7 @@ command(int argc, char *argv[])
         while ((call = p.parse_call())) {
             if (verbose ||
                 !(call->flags & trace::CALL_FLAG_VERBOSE)) {
-                call->dump(std::cout, color);
+                trace::dump(*call, std::cout, dumpFlags);
             }
             delete call;
         }
