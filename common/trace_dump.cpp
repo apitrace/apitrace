@@ -35,7 +35,7 @@ class Dumper : public Visitor
 {
 protected:
     std::ostream &os;
-    DumpFlags flags;
+    DumpFlags dumpFlags;
     formatter::Formatter *formatter;
     formatter::Attribute *normal;
     formatter::Attribute *bold;
@@ -48,9 +48,9 @@ protected:
 public:
     Dumper(std::ostream &_os, DumpFlags _flags) : 
         os(_os),
-        flags(_flags)
+        dumpFlags(_flags)
     {
-        bool color = !(flags & DUMP_FLAG_NO_COLOR);
+        bool color = !(dumpFlags & DUMP_FLAG_NO_COLOR);
         formatter = formatter::defaultFormatter(color);
         normal = formatter->normal();
         bold = formatter->bold();
@@ -199,11 +199,11 @@ public:
     }
 
     void visit(Call *call) {
-        CallFlags flags = call->flags;
+        CallFlags callFlags = call->flags;
 
-        if (flags & CALL_FLAG_NON_REPRODUCIBLE) {
+        if (callFlags & CALL_FLAG_NON_REPRODUCIBLE) {
             os << strike;
-        } else if (flags & (CALL_FLAG_FAKE | CALL_FLAG_NO_SIDE_EFFECTS)) {
+        } else if (callFlags & (CALL_FLAG_FAKE | CALL_FLAG_NO_SIDE_EFFECTS)) {
             os << normal;
         } else {
             os << bold;
@@ -214,7 +214,7 @@ public:
         const char *sep = "";
         for (unsigned i = 0; i < call->args.size(); ++i) {
             os << sep;
-            if (!(flags = DUMP_FLAG_NO_ARG_NAMES)) {
+            if (!(dumpFlags & DUMP_FLAG_NO_ARG_NAMES)) {
                 os << italic << call->sig->arg_names[i] << normal << " = ";
             }
             if (call->args[i]) {
@@ -231,13 +231,13 @@ public:
             _visit(call->ret);
         }
         
-        if (flags & CALL_FLAG_INCOMPLETE) {
+        if (callFlags & CALL_FLAG_INCOMPLETE) {
             os << " // " << red << "incomplete" << normal;
         }
         
         os << "\n";
 
-        if (flags & CALL_FLAG_END_FRAME) {
+        if (callFlags & CALL_FLAG_END_FRAME) {
             os << "\n";
         }
     }
