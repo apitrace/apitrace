@@ -158,9 +158,13 @@ def main():
         type="float", dest="fuzz", default=0.05,
         help="fuzz ratio [default: %default]")
     optparser.add_option(
+        '-a', '--alpha',
+        action="store_true", dest="alpha", default=False,
+        help="take alpha channel in consideration")
+    optparser.add_option(
         '--overwrite',
         action="store_true", dest="overwrite", default=False,
-        help="overwrite")
+        help="overwrite images")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
 
@@ -194,7 +198,7 @@ def main():
                or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
                    and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
 
-                comparer = Comparer(ref_image, src_image)
+                comparer = Comparer(ref_image, src_image, options.alpha)
                 comparer.write_diff(delta_image, fuzz=options.fuzz)
 
             html.write('      <tr>\n')
