@@ -137,8 +137,9 @@ class Dumper(Visitor):
 
 class Comparer(Visitor):
 
-    def __init__(self, ignore_added = False):
+    def __init__(self, ignore_added = False, tolerance = 2.0 ** -24):
         self.ignore_added = ignore_added
+        self.tolerance = tolerance
 
     def visit_object(self, a, b):
         if not isinstance(b, dict):
@@ -172,8 +173,13 @@ class Comparer(Visitor):
         return True
 
     def visit_value(self, a, b):
-        return a == b
-
+        if isinstance(a, float) or isinstance(b, float):
+            if a == 0:
+                return abs(b) < self.tolerance
+            else:
+                return abs((b - a)/a) < self.tolerance
+        else:
+            return a == b
 
 
 class Differ(Visitor):
