@@ -39,10 +39,12 @@ import operator
 from PIL import Image
 from PIL import ImageChops
 from PIL import ImageEnhance
+from PIL import ImageFilter
 
 
 thumb_size = 320, 320
 
+gaussian_kernel = ImageFilter.Kernel((3, 3), [1, 2, 1, 2, 4, 2, 1, 2, 1], 16)
 
 class Comparer:
     '''Image comparer.'''
@@ -80,12 +82,16 @@ class Comparer:
         diff_im = Image.blend(self.src_im, diff_im, 0xcc/255.0)
         diff_im.save(diff_image)
 
-    def precision(self):
+    def precision(self, filter=False):
         if self.size_mismatch():
             return 0.0
 
+        diff = self.diff
+        if filter:
+            diff = diff.filter(gaussian_kernel)
+
         # See also http://effbot.org/zone/pil-comparing-images.htm
-        h = self.diff.histogram()
+        h = diff.histogram()
         square_error = 0
         for i in range(1, 256):
             square_error += sum(h[i : 3*256: 256])*i*i
