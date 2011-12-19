@@ -198,6 +198,11 @@ class TxtParser(LineParser):
             assert type == 'Void'
             return ''
         name = self.tokens.pop(0)
+        if self.tokens[0] == '[':
+            self.tokens.pop(0)
+            n = int(self.tokens.pop(0))
+            assert self.tokens.pop(0) == ']'
+            type = 'Array(%s, %d)' % (type, n)
         return '(%s, "%s")' % (type, name)
 
     def parse_type(self):
