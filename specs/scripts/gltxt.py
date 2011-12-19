@@ -97,6 +97,9 @@ class TxtParser(LineParser):
     property_re = re.compile(r'^\w+:')
     prototype_re = re.compile(r'^(\w+)\((.*)\)$')
 
+    comment_start_re = re.compile(r'^/\*')
+    comment_end_re = re.compile(r'.*\*/$')
+
     def __init__(self, stream, prefix=''):
         LineParser.__init__(self, stream)
         self.prefix = prefix
@@ -133,9 +136,23 @@ class TxtParser(LineParser):
             name = line.strip()
             print '    # %s' % name
 
+    def skip_c_comments(self):
+        while not self.eof():
+            line = self.lookahead().strip()
+            mo = self.comment_start_re.match(line)
+            if not mo:
+                return
+            while not self.eof():
+                self.consume()
+                mo = self.comment_end_re.match(line)
+                if mo:
+                    return
+                line = self.lookahead().strip()
+
     def parse_procs(self):
         lines = []
         while not self.eof():
+            self.skip_c_comments()
             line = self.lookahead()
             if not line.strip():
                 self.consume()
