@@ -27,6 +27,7 @@
 
 
 from stdapi import *
+from gltypes import *
 
 EGLNativeDisplayType = Opaque("EGLNativeDisplayType")
 EGLNativeWindowType = Opaque("EGLNativeWindowType")
@@ -294,6 +295,10 @@ EGLAttribList = Array(Const(EGLattrib), "__AttribList_size(attrib_list, EGL_NONE
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
 
+def GlFunction(*args, **kwargs):
+    kwargs.setdefault('call', 'GL_APIENTRY')
+    return Function(*args, **kwargs)
+
 eglapi.add_functions([
     # EGL 1.4
     Function(EGLError, "eglGetError", [], sideeffects=False),
@@ -385,4 +390,8 @@ eglapi.add_functions([
     # EGL_NV_system_time
     Function(EGLuint64NV, "eglGetSystemTimeFrequencyNV", [], sideeffects=False),
     Function(EGLuint64NV, "eglGetSystemTimeNV", [], sideeffects=False),
+
+    # GL_OES_EGL_image
+    GlFunction(Void, "glEGLImageTargetTexture2DOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
+    GlFunction(Void, "glEGLImageTargetRenderbufferStorageOES", [(GLenum, "target"), (EGLImageKHR, "image")]),
 ])
