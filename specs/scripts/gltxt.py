@@ -194,6 +194,9 @@ class TxtParser(LineParser):
 
     def parse_arg(self):
         type = self.parse_type()
+        if self.tokens[0] == ')':
+            assert type == 'Void'
+            return ''
         name = self.tokens.pop(0)
         return '(%s, "%s")' % (type, name)
 
