@@ -463,7 +463,7 @@ if (EGL_FOUND)
     add_custom_command (
         OUTPUT egltrace.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.py > ${CMAKE_CURRENT_BINARY_DIR}/egltrace.cpp
-        DEPENDS egltrace.py gltrace.py trace.py specs/eglapi.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/stdapi.py
+        DEPENDS egltrace.py gltrace.py trace.py specs/eglapi.py specs/glesapi.py specs/glapi.py specs/glparams.py specs/gltypes.py specs/stdapi.py
     )
 
     add_library (egltrace SHARED
