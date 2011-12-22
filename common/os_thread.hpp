@@ -41,38 +41,69 @@
 namespace os {
 
 
-    namespace thread {
-
-        /**
-         * Thread ID
-         *
-         * XXX: Actually C++11 thread::id is not an integral type, but we rely on that.
-         */
+    template <typename T>
+    class thread_specific_ptr
+    {
+    private:
 #ifdef _WIN32
-        typedef DWORD id;
+        DWORD dwTlsIndex;
 #else
-        typedef pthread_t id;
+        pthread_key_t key;
+
+        static void destructor(void *ptr) {
+            delete static_cast<T *>(ptr);
+        }
 #endif
 
-    } /* namespace thread */
-
-
-    namespace this_thread {
-
-        /**
-         * Get current thread ID.
-         */
-        inline thread::id
-        get_id(void) {
+    public:
+        thread_specific_ptr(void) {
 #ifdef _WIN32
-            return GetCurrentThreadId();
+            dwTlsIndex = TlsAlloc();
 #else
-            return pthread_self();
+            pthread_key_create(&key, &destructor);
 #endif
         }
 
-    } /* namespace this_thread */
+        ~thread_specific_ptr() {
+#ifdef _WIN32
+            TlsFree(dwTlsIndex);
+#else
+            pthread_key_delete(key);
+#endif
+        }
 
+        T* get(void) const {
+            void *ptr;
+#ifdef _WIN32
+            ptr = TlsGetValue(dwTlsIndex);
+#else
+            ptr = pthread_getspecific(key);
+#endif
+            return static_cast<T*>(ptr);
+        }
+
+        T* operator -> (void) const
+        {
+            return get();
+        }
+
+        T& operator * (void) const
+        {
+            return *get();
+        }
+
+        void reset(T* new_value=0) {
+            T * old_value = get();
+#ifdef _WIN32
+            TlsSetValue(dwTlsIndex, new_value);
+#else
+            pthread_setspecific(key, new_value);
+#endif
+            if (old_value) {
+                delete old_value;
+            }
+        }
+    };
 
 } /* namespace os */
 

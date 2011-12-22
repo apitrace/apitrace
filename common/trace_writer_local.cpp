@@ -124,6 +124,9 @@ LocalWriter::open(void) {
 #endif
 }
 
+static unsigned next_thread_id = 0;
+static os::thread_specific_ptr<unsigned> thread_id_specific_ptr;
+
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
     os::acquireMutex();
     ++acquired;
@@ -132,9 +135,18 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
         open();
     }
 
-    os::thread::id id = os::this_thread::get_id();
+    unsigned *thread_id_ptr = thread_id_specific_ptr.get();
+    unsigned thread_id;
+    if (thread_id_ptr) {
+        thread_id = *thread_id_ptr;
+    } else {
+        thread_id = next_thread_id++;
+        thread_id_ptr = new unsigned;
+        *thread_id_ptr = thread_id;
+        thread_id_specific_ptr.reset(thread_id_ptr);
+    }
 
-    return Writer::beginEnter(sig, static_cast<unsigned>(id));
+    return Writer::beginEnter(sig, thread_id);
 }
 
 void LocalWriter::endEnter(void) {
