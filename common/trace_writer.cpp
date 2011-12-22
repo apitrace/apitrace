@@ -134,8 +134,9 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
     }
 }
 
-unsigned Writer::beginEnter(const FunctionSig *sig) {
+unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
     _writeByte(trace::EVENT_ENTER);
+    _writeUInt(thread_id);
     _writeUInt(sig->id);
     if (!lookup(functions, sig->id)) {
         _writeString(sig->name);

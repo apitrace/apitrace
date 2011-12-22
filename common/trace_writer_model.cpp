@@ -101,7 +101,7 @@ public:
     }
 
     void visit(Call *call) {
-        unsigned call_no = writer.beginEnter(call->sig);
+        unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
         for (unsigned i = 0; i < call->args.size(); ++i) {
             if (call->args[i]) {
                 writer.beginArg(i);

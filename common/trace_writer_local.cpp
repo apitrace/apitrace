@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include "os.hpp"
+#include "os_thread.hpp"
 #include "os_string.hpp"
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
@@ -131,7 +132,9 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
         open();
     }
 
-    return Writer::beginEnter(sig);
+    os::thread::id id = os::this_thread::get_id();
+
+    return Writer::beginEnter(sig, static_cast<unsigned>(id));
 }
 
 void LocalWriter::endEnter(void) {

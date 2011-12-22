@@ -58,7 +58,7 @@ namespace trace {
         bool open(const char *filename);
         void close(void);
 
-        unsigned beginEnter(const FunctionSig *sig);
+        unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
 
         void beginLeave(unsigned call);

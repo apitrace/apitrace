@@ -9,12 +9,6 @@ Tracing
 
 * Allow clamping to a GL version or a number of extensions.
 
-* Trace multiple threads:
-
-  * `GetCurrentThreadId()`
-
-  * `pthread_self()`
-
 * Put (de)compression in a separate thread.
 
 * Trace TSCs
