@@ -423,7 +423,10 @@ elseif (APPLE)
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
 
-    target_link_libraries (cgltrace dl)
+    target_link_libraries (cgltrace
+        pthread
+        dl
+    )
 
     install (TARGETS cgltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 elseif (X11_FOUND)
@@ -452,7 +455,11 @@ elseif (X11_FOUND)
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
 
-    target_link_libraries (glxtrace dl ${X11_X11_LIB})
+    target_link_libraries (glxtrace
+        ${X11_X11_LIB}
+        pthread
+        dl
+    )
 
     install (TARGETS glxtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
@@ -490,7 +497,10 @@ if (EGL_FOUND)
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
     )
 
-    target_link_libraries (egltrace dl)
+    target_link_libraries (egltrace
+        pthread
+        dl
+    )
 
     install (TARGETS egltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
