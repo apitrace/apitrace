@@ -258,21 +258,54 @@ abort(void)
 }
 
 
-static LPTOP_LEVEL_EXCEPTION_FILTER prevExceptionFilter = NULL;
+static PVOID prevExceptionFilter = NULL;
 static void (*gCallback)(void) = NULL;
 
-static LONG WINAPI
-unhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
+static LONG CALLBACK
+unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
-    if (gCallback) {
-        gCallback();
+    PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+
+    /*
+     * Ignore OutputDebugStringA exception.
+     */
+    if (pExceptionRecord->ExceptionCode == DBG_PRINTEXCEPTION_C) {
+        return EXCEPTION_CONTINUE_SEARCH;
     }
 
-	if (prevExceptionFilter) {
-		return prevExceptionFilter(pExceptionInfo);
-    } else {
-		return EXCEPTION_CONTINUE_SEARCH;
+    /*
+     * Ignore C++ exceptions
+     *
+     * http://support.microsoft.com/kb/185294
+     * http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
+     */
+    if (pExceptionRecord->ExceptionCode == 0xe06d7363) {
+        return EXCEPTION_CONTINUE_SEARCH;
     }
+
+    // Clear direction flag
+#ifdef _MSC_VER
+    __asm {
+        cld
+    };
+#else
+    asm("cld");
+#endif
+
+    log("apitrace: warning: caught exception 0x%08lx\n", pExceptionRecord->ExceptionCode);
+
+    static int recursion_count = 0;
+    if (recursion_count) {
+        fprintf(stderr, "apitrace: warning: recursion handling exception\n");
+    } else {
+        if (gCallback) {
+            ++recursion_count;
+            gCallback();
+            --recursion_count;
+        }
+    }
+
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 
 void
@@ -285,19 +318,17 @@ setExceptionCallback(void (*callback)(void))
 
         assert(!prevExceptionFilter);
 
-        /*
-         * TODO: Unfortunately it seems that the CRT will reset the exception
-         * handler in certain circumnstances.  See
-         * http://www.codeproject.com/KB/winsdk/crash_hook.aspx
-         */
-        prevExceptionFilter = SetUnhandledExceptionFilter(unhandledExceptionFilter);
+        prevExceptionFilter = AddVectoredExceptionHandler(0, unhandledExceptionHandler);
     }
 }
 
 void
 resetExceptionCallback(void)
 {
-    gCallback = NULL;
+    if (gCallback) {
+        RemoveVectoredExceptionHandler(prevExceptionFilter);
+        gCallback = NULL;
+    }
 }
 
 
