@@ -173,14 +173,18 @@ void LocalWriter::flush(void) {
      * while writing the file) to prevent dead-lock.
      */
 
-    if (!acquired) {
-        os::acquireMutex();
+    os::acquireMutex();
+    if (acquired) {
+        os::log("apitrace: ignoring exception while tracing\n");
+    } else {
+        ++acquired;
         if (m_file->isOpened()) {
             os::log("apitrace: flushing trace due to an exception\n");
             m_file->flush();
         }
-        os::releaseMutex();
+        --acquired;
     }
+    os::releaseMutex();
 }
 
 
