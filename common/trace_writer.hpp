@@ -105,46 +105,6 @@ namespace trace {
 
     };
 
-    extern const FunctionSig memcpy_sig;
-    extern const FunctionSig malloc_sig;
-    extern const FunctionSig free_sig;
-    extern const FunctionSig realloc_sig;
-
-    /**
-     * A specialized Writer class, mean to trace the current process.
-     *
-     * In particular:
-     * - it creates a trace file based on the current process name
-     * - uses mutexes to allow tracing from multiple threades
-     * - flushes the output to ensure the last call is traced in event of
-     *   abnormal termination
-     */
-    class LocalWriter : public Writer {
-    protected:
-        int acquired;
-
-    public:
-        /**
-         * Should never called directly -- use localWriter singleton below instead.
-         */
-        LocalWriter();
-        ~LocalWriter();
-
-        void open(void);
-
-        unsigned beginEnter(const FunctionSig *sig);
-        void endEnter(void);
-
-        void beginLeave(unsigned call);
-        void endLeave(void);
-
-        void flush(void);
-    };
-
-    /**
-     * Singleton.
-     */
-    extern LocalWriter localWriter;
-}
+} /* namespace trace */
 
 #endif /* _TRACE_WRITER_HPP_ */

@@ -44,7 +44,7 @@ if __name__ == '__main__':
     print '#include <d3d8.h>'
     print '#include "d3dshader.hpp"'
     print
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
     tracer = D3D8Tracer('d3d8.dll')

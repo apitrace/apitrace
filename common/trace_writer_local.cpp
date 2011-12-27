@@ -34,7 +34,7 @@
 #include "os_thread.hpp"
 #include "os_string.hpp"
 #include "trace_file.hpp"
-#include "trace_writer.hpp"
+#include "trace_writer_local.hpp"
 #include "trace_format.hpp"
 
 
