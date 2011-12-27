@@ -128,7 +128,7 @@ static unsigned next_thread_id = 0;
 static os::thread_specific_ptr<unsigned> thread_id_specific_ptr;
 
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
-    os::acquireMutex();
+    mutex.lock();
     ++acquired;
 
     if (!m_file->isOpened()) {
@@ -152,11 +152,11 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
 void LocalWriter::endEnter(void) {
     Writer::endEnter();
     --acquired;
-    os::releaseMutex();
+    mutex.unlock();
 }
 
 void LocalWriter::beginLeave(unsigned call) {
-    os::acquireMutex();
+    mutex.lock();
     ++acquired;
     Writer::beginLeave(call);
 }
@@ -164,16 +164,17 @@ void LocalWriter::beginLeave(unsigned call) {
 void LocalWriter::endLeave(void) {
     Writer::endLeave();
     --acquired;
-    os::releaseMutex();
+    mutex.unlock();
 }
 
 void LocalWriter::flush(void) {
     /*
      * Do nothing if the mutex is already acquired (e.g., if a segfault happen
-     * while writing the file) to prevent dead-lock.
+     * while writing the file) as state could be inconsistent, therefore yield
+     * inconsistent trace files and/or repeated segfaults till infinity.
      */
 
-    os::acquireMutex();
+    mutex.lock();
     if (acquired) {
         os::log("apitrace: ignoring exception while tracing\n");
     } else {
@@ -184,7 +185,7 @@ void LocalWriter::flush(void) {
         }
         --acquired;
     }
-    os::releaseMutex();
+    mutex.unlock();
 }
 
 

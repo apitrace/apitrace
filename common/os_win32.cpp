@@ -38,29 +38,6 @@
 namespace os {
 
 
-/* 
- * Trick from http://locklessinc.com/articles/pthreads_on_windows/
- */
-static CRITICAL_SECTION
-criticalSection = {
-    (PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0
-};
-
-
-void
-acquireMutex(void)
-{
-    EnterCriticalSection(&criticalSection);
-}
-
-
-void
-releaseMutex(void)
-{
-    LeaveCriticalSection(&criticalSection);
-}
-
-
 String
 getProcessName(void)
 {

@@ -32,6 +32,7 @@
 #ifndef _OS_THREAD_HPP_
 #define _OS_THREAD_HPP_
 
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -39,6 +40,58 @@
 #endif
 
 namespace os {
+
+
+    class recursive_mutex
+    {
+    public:
+#ifdef _WIN32
+        typedef CRITICAL_SECTION native_handle_type;
+#else
+        typedef pthread_mutex_t native_handle_type;
+#endif
+
+        recursive_mutex(void) {
+#ifdef _WIN32
+            InitializeCriticalSection(&_native_handle);
+#else
+            pthread_mutexattr_t attr;
+            pthread_mutexattr_init(&attr);
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+            pthread_mutex_init(&_native_handle, NULL);
+            pthread_mutexattr_destroy(&attr);
+#endif
+        }
+
+        ~recursive_mutex() {
+#ifdef _WIN32
+            DeleteCriticalSection(&_native_handle);
+#else
+            pthread_mutex_destroy(&_native_handle);
+#endif
+        }
+
+        inline void
+        lock(void) {
+#ifdef _WIN32
+            EnterCriticalSection(&_native_handle);
+#else
+            pthread_mutex_lock(&_native_handle);
+#endif
+        }
+
+        inline void
+        unlock(void) {
+#ifdef _WIN32
+            LeaveCriticalSection(&_native_handle);
+#else
+            pthread_mutex_unlock(&_native_handle);
+#endif
+        }
+
+    private:
+        native_handle_type _native_handle;
+    };
 
 
     template <typename T>

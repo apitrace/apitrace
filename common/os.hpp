@@ -46,10 +46,6 @@
 
 namespace os {
 
-void acquireMutex(void);
-
-void releaseMutex(void);
-
 void log(const char *format, ...)
 #ifdef __GNUC__
     __attribute__ ((format (printf, 1, 2)))

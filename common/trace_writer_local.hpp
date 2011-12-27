@@ -31,6 +31,7 @@
 #define _TRACE_WRITER_LOCAL_HPP_
 
 
+#include "os_thread.hpp"
 #include "trace_writer.hpp"
 
 
@@ -52,6 +53,10 @@ namespace trace {
      */
     class LocalWriter : public Writer {
     protected:
+        /**
+         * We need a recursive mutex so that it doesn't dead lock when a segfault happens when the mutex is held.
+         */
+        os::recursive_mutex mutex;
         int acquired;
 
     public:
