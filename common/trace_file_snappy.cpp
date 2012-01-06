@@ -241,7 +241,7 @@ size_t SnappyFile::rawRead(void *buffer, size_t length)
 
 int SnappyFile::rawGetc()
 {
-    int c = 0;
+    unsigned char c = 0;
     if (rawRead(&c, 1) != 1)
         return -1;
     return c;
