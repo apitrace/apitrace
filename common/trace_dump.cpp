@@ -200,6 +200,10 @@ public:
 
     void visit(Call *call) {
         CallFlags callFlags = call->flags;
+        
+        if (!(dumpFlags & DUMP_FLAG_NO_CALL_NO)) {
+            os << call->no << " ";
+        }
 
         if (callFlags & CALL_FLAG_NON_REPRODUCIBLE) {
             os << strike;
@@ -252,7 +256,6 @@ void dump(Value *value, std::ostream &os, DumpFlags flags) {
 
 void dump(Call &call, std::ostream &os, DumpFlags flags) {
     Dumper d(os, flags);
-    os << call.no << " ";
     d.visit(&call);
 }
 

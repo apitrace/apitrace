@@ -27,6 +27,7 @@
 #include <string.h>
 #include <iostream>
 
+#include "os_time.hpp"
 #include "trace_dump.hpp"
 #include "retrace.hpp"
 
@@ -35,6 +36,7 @@ namespace retrace {
 
 
 int verbosity = 0;
+bool profiling = false;
 
 
 static bool call_dumped = false;
@@ -114,7 +116,20 @@ void Retracer::retrace(trace::Call &call) {
     assert(callback);
     assert(callbacks[id] == callback);
 
-    callback(call);
+    if (retrace::profiling) {
+        long long startTime = os::getTime();
+        callback(call);
+        long long stopTime = os::getTime();
+        float timeInterval = (stopTime - startTime) * (1.0E6 / os::timeFrequency);
+
+        std::cout
+            << call.no << " "
+            << "[" << timeInterval << " usec] "
+        ;
+        trace::dump(call, std::cout, trace::DUMP_FLAG_NO_CALL_NO | trace::DUMP_FLAG_NO_COLOR);
+    } else {
+        callback(call);
+    }
 }
 
 

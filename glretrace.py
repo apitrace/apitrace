@@ -240,7 +240,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = true;'
         elif function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    if (!glretrace::benchmark && !glretrace::insideGlBeginEnd) {'
+            print '    if (!glretrace::benchmark && !retrace::profiling && !glretrace::insideGlBeginEnd) {'
             print '        glretrace::checkGlError(call);'
             if function.name in ('glProgramStringARB', 'glProgramStringNV'):
                 print r'        GLint error_position = -1;'

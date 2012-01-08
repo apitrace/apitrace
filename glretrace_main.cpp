@@ -256,7 +256,7 @@ static void display(void) {
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
 
-    if (retrace::verbosity >= -1) { 
+    if ((retrace::verbosity >= -1) || (retrace::profiling)) {
         std::cout << 
             "Rendered " << frame << " frames"
             " in " <<  timeInterval << " secs,"
@@ -277,6 +277,7 @@ static void usage(void) {
         "Replay TRACE.\n"
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
+        "  -p           profiling mode (run whole trace, dump profiling info)\n"
         "  -c PREFIX    compare against snapshots\n"
         "  -C CALLSET   calls to compare (default is every frame)\n"
         "  -core        use core profile\n"
@@ -307,6 +308,10 @@ int main(int argc, char **argv)
             break;
         } else if (!strcmp(arg, "-b")) {
             benchmark = true;
+            retrace::verbosity = -1;
+            glws::debug = false;
+        } else if (!strcmp(arg, "-p")) {
+            retrace::profiling = true;
             retrace::verbosity = -1;
             glws::debug = false;
         } else if (!strcmp(arg, "-c")) {
