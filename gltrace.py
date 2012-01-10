@@ -586,6 +586,13 @@ class GlTracer(Tracer):
         'ELEMENT_ARRAY_BUFFER',
         'PIXEL_PACK_BUFFER',
         'PIXEL_UNPACK_BUFFER',
+        'UNIFORM_BUFFER',
+        'TEXTURE_BUFFER',
+        'TRANSFORM_FEEDBACK_BUFFER',
+        'COPY_READ_BUFFER',
+        'COPY_WRITE_BUFFER',
+        'DRAW_INDIRECT_BUFFER',
+        'ATOMIC_COUNTER_BUFFER',
     ]
 
     def wrap_ret(self, function, instance):
