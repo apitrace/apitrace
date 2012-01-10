@@ -1446,9 +1446,9 @@ parameters = [
     ("",	X,	1,	"GL_MAP2_VERTEX_ATTRIB13_4_NV"),	# 0x867D
     ("",	X,	1,	"GL_MAP2_VERTEX_ATTRIB14_4_NV"),	# 0x867E
     ("",	X,	1,	"GL_MAP2_VERTEX_ATTRIB15_4_NV"),	# 0x867F
-    ("",	X,	1,	"GL_TEXTURE_COMPRESSED_IMAGE_SIZE"),	# 0x86A0
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_COMPRESSED_IMAGE_SIZE"),	# 0x86A0
     ("glGetTexLevelParameter",	B,	1,	"GL_TEXTURE_COMPRESSED"),	# 0x86A1
-    ("",	X,	1,	"GL_NUM_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A2
+    ("glGet",	I,	1,	"GL_NUM_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A2
     #XXX: the list is GL_NUM_COMPRESSED_TEXTURES
     #("glGet",	E,	1,	"GL_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A3
     ("glGet",	I,	1,	"GL_MAX_VERTEX_UNITS_ARB"),	# 0x86A4
