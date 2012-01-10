@@ -262,9 +262,11 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 
     // Clear direction flag
 #ifdef _MSC_VER
+#ifndef _WIN64
     __asm {
         cld
     };
+#endif
 #else
     asm("cld");
 #endif
