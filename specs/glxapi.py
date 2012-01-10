@@ -383,6 +383,10 @@ glxapi.add_functions([
     # GLX_MESA_set_3dfx_mode
     Function(Bool, "glXSet3DfxModeMESA", [(Int, "mode")]),
 
+    # GLX_MESA_swap_control
+    Function(Int, "glXSwapIntervalMESA", [(UInt, "interval")]),
+    Function(Int, "glXGetSwapIntervalMESA", []),
+
     # GLX_OML_sync_control
     Function(Bool, "glXGetSyncValuesOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(Int64), "ust"), (OpaquePointer(Int64), "msc"), (OpaquePointer(Int64), "sbc")]),
     Function(Bool, "glXGetMscRateOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(Int32), "numerator"), (OpaquePointer(Int32), "denominator")]),
