@@ -410,6 +410,7 @@ enum {
 class Call
 {
 public:
+    unsigned thread_id;
     unsigned no;
     const FunctionSig *sig;
     std::vector<Value *> args;
@@ -417,7 +418,8 @@ public:
 
     CallFlags flags;
 
-    Call(FunctionSig *_sig, const CallFlags &_flags) :
+    Call(FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
+        thread_id(_thread_id), 
         sig(_sig), 
         args(_sig->num_args), 
         ret(0),

@@ -66,8 +66,11 @@ namespace trace {
  *
  * - version 3:
  *   - enums signatures are recorded for the a whole set of values (not as individual values)
+ *
+ * - version 4:
+ *   - call enter events include thread ID
  */
-#define TRACE_VERSION 3
+#define TRACE_VERSION 4
 
 
 /*
@@ -75,7 +78,7 @@ namespace trace {
  *
  *   trace = event* EOF
  *
- *   event = EVENT_ENTER call_sig call_detail+
+ *   event = EVENT_ENTER thread_id call_sig call_detail+
  *         | EVENT_LEAVE call_no call_detail+
  *
  *   call_sig = sig_id ( name arg_names )?

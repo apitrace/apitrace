@@ -32,7 +32,6 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/wait.h>
-#include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -56,24 +55,6 @@
 
 
 namespace os {
-
-
-static pthread_mutex_t 
-mutex = PTHREAD_MUTEX_INITIALIZER;
-
-
-void
-acquireMutex(void)
-{
-    pthread_mutex_lock(&mutex);
-}
-
-
-void
-releaseMutex(void)
-{
-    pthread_mutex_unlock(&mutex);
-}
 
 
 String

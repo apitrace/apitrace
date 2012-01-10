@@ -74,7 +74,7 @@ if __name__ == '__main__':
 #endif
 
 '''
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
     tracer = DDrawTracer('ddraw.dll')

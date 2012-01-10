@@ -45,7 +45,7 @@ if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
     print
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print
     print '// To validate our prototypes'
     print '#define GL_GLEXT_PROTOTYPES'

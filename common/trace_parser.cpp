@@ -390,9 +390,17 @@ BitmaskSig *Parser::parse_bitmask_sig() {
 
 
 void Parser::parse_enter(Mode mode) {
+    unsigned thread_id;
+
+    if (version >= 4) {
+        thread_id = read_uint();
+    } else {
+        thread_id = 0;
+    }
+
     FunctionSigFlags *sig = parse_function_sig();
 
-    Call *call = new Call(sig, sig->flags);
+    Call *call = new Call(sig, sig->flags, thread_id);
 
     call->no = next_call_no++;
 

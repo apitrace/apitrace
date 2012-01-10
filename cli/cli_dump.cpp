@@ -58,6 +58,7 @@ usage(void)
         "    --colour=<WHEN>     Colored syntax highlighting\n"
         "                        WHEN is 'auto', 'always', or 'never'\n"
         "    --no-arg-names      Don't dump argument names\n"
+        "    --thread-ids        Dump thread ids\n"
     ;
 }
 
@@ -65,6 +66,7 @@ static int
 command(int argc, char *argv[])
 {
     trace::DumpFlags dumpFlags = 0;
+    bool dumpThreadIds = false;
 
     int i;
 
@@ -98,6 +100,8 @@ command(int argc, char *argv[])
             color = COLOR_OPTION_NEVER;
         } else if (!strcmp(arg, "--no-arg-names")) {
             dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
+        } else if (!strcmp(arg, "--thread-ids")) {
+            dumpThreadIds = true;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage();
@@ -130,6 +134,9 @@ command(int argc, char *argv[])
         while ((call = p.parse_call())) {
             if (verbose ||
                 !(call->flags & trace::CALL_FLAG_VERBOSE)) {
+                if (dumpThreadIds) {
+                    std::cout << std::hex << call->thread_id << std::dec << " ";
+                }
                 trace::dump(*call, std::cout, dumpFlags);
             }
             delete call;
