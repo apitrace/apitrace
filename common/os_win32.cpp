@@ -235,6 +235,10 @@ abort(void)
 }
 
 
+#ifndef DBG_PRINTEXCEPTION_C
+#define DBG_PRINTEXCEPTION_C 0x40010006
+#endif
+
 static PVOID prevExceptionFilter = NULL;
 static void (*gCallback)(void) = NULL;
 
