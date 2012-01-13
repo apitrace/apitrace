@@ -238,7 +238,7 @@ static void retrace_eglMakeCurrent(trace::Call &call) {
 static void retrace_eglSwapBuffers(trace::Call &call) {
     frame_complete(call);
 
-    if (double_buffer) {
+    if (double_buffer && drawable) {
         drawable->swapBuffers();
     } else {
         glFlush();
