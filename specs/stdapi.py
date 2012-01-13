@@ -399,6 +399,7 @@ class Polymorphic(Type):
 
 
 class Visitor:
+    '''Abstract visitor for the type hierarchy.'''
 
     def visit(self, type, *args, **kwargs):
         return type.visit(self, *args, **kwargs)
@@ -451,6 +452,7 @@ class Visitor:
 
 
 class OnceVisitor(Visitor):
+    '''Visitor that guarantees that each type is visited only once.'''
 
     def __init__(self):
         self.__visited = set()
@@ -463,6 +465,10 @@ class OnceVisitor(Visitor):
 
 
 class Rebuilder(Visitor):
+    '''Visitor which rebuild types as it visits them.
+
+    By itself it is a no-op -- it is intended to be overwritten.
+    '''
 
     def visit_void(self, void):
         return void
@@ -518,7 +524,7 @@ class Rebuilder(Visitor):
 
 
 class Collector(Visitor):
-    '''Collect.'''
+    '''Visitor which collects all unique types as it traverses them.'''
 
     def __init__(self):
         self.__visited = set()
@@ -586,6 +592,10 @@ class Collector(Visitor):
 
 
 class API:
+    '''API abstraction.
+
+    Essentially, a collection of types, functions, and interfaces.
+    '''
 
     def __init__(self, name = None):
         self.name = name
