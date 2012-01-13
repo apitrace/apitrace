@@ -78,9 +78,8 @@ getContext(unsigned long long context_ptr) {
     return (it != context_map.end()) ? it->second : NULL;
 }
 
-static void retrace_eglCreateWindowSurface(trace::Call &call) {
-    unsigned long long orig_surface = call.ret->toUIntPtr();
-    unsigned long long orig_config = call.arg(1).toUIntPtr();
+static void createDrawable(unsigned long long orig_config, unsigned long long orig_surface)
+{
     ProfileMap::iterator it = profile_map.find(orig_config);
     glws::Profile profile;
 
@@ -93,8 +92,23 @@ static void retrace_eglCreateWindowSurface(trace::Call &call) {
         profile = last_profile;
     }
 
-    glws::Drawable *drawable = glws::createDrawable(glretrace::visual[profile]);
+    glws::Visual *visual = glretrace::visual[profile];
+
+    glws::Drawable *drawable = glws::createDrawable(visual);
     drawable_map[orig_surface] = drawable;
+}
+
+static void retrace_eglCreateWindowSurface(trace::Call &call) {
+    unsigned long long orig_config = call.arg(1).toUIntPtr();
+    unsigned long long orig_surface = call.ret->toUIntPtr();
+    createDrawable(orig_config, orig_surface);
+}
+
+static void retrace_eglCreatePbufferSurface(trace::Call &call) {
+    unsigned long long orig_config = call.arg(1).toUIntPtr();
+    unsigned long long orig_surface = call.ret->toUIntPtr();
+    createDrawable(orig_config, orig_surface);
+    // TODO: Respect the pbuffer dimensions too
 }
 
 static void retrace_eglDestroySurface(trace::Call &call) {
@@ -104,7 +118,10 @@ static void retrace_eglDestroySurface(trace::Call &call) {
     it = drawable_map.find(orig_surface);
 
     if (it != drawable_map.end()) {
-        delete it->second;
+        if (it->second != drawable) {
+            // TODO: reference count
+            delete it->second;
+        }
         drawable_map.erase(it);
     }
 }
@@ -228,7 +245,7 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglChooseConfig", &retrace::ignore},
     {"eglGetConfigAttrib", &retrace::ignore},
     {"eglCreateWindowSurface", &retrace_eglCreateWindowSurface},
-    //{"eglCreatePbufferSurface", &retrace::ignore},
+    {"eglCreatePbufferSurface", &retrace_eglCreatePbufferSurface},
     //{"eglCreatePixmapSurface", &retrace::ignore},
     {"eglDestroySurface", &retrace_eglDestroySurface},
     {"eglQuerySurface", &retrace::ignore},

@@ -150,7 +150,9 @@ public:
 
     ~EglDrawable() {
         eglDestroySurface(eglDisplay, surface);
+        eglWaitClient();
         XDestroyWindow(display, window);
+        eglWaitNative(EGL_CORE_NATIVE_ENGINE);
     }
 
     void
