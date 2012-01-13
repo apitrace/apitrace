@@ -110,3 +110,81 @@ if __name__ == '__main__':
     print '    return procPtr;'
     print '}'
     print
+    print r'''
+
+
+/*
+ * Invoke the true dlopen() function.
+ */
+static void *__dlopen(const char *filename, int flag)
+{
+    typedef void * (*PFNDLOPEN)(const char *, int);
+    static PFNDLOPEN dlopen_ptr = NULL;
+
+    if (!dlopen_ptr) {
+        dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
+        if (!dlopen_ptr) {
+            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
+            return NULL;
+        }
+    }
+
+    return dlopen_ptr(filename, flag);
+}
+
+
+/*
+ * Several applications, such as Quake3, use dlopen("libGL.so.1"), but
+ * LD_PRELOAD does not intercept symbols obtained via dlopen/dlsym, therefore
+ * we need to intercept the dlopen() call here, and redirect to our wrapper
+ * shared object.
+ */
+extern "C" PUBLIC
+void * dlopen(const char *filename, int flag)
+{
+    bool intercept = false;
+
+    if (filename) {
+        intercept =
+            strcmp(filename, "libEGL.so") == 0 ||
+            strcmp(filename, "libEGL.so.1") == 0 ||
+            strcmp(filename, "libGLESv1_CM.so") == 0 ||
+            strcmp(filename, "libGLESv1_CM.so.1") == 0 ||
+            strcmp(filename, "libGLESv2.so") == 0 ||
+            strcmp(filename, "libGLESv2.so.2") == 0 ||
+            strcmp(filename, "libGL.so") == 0 ||
+            strcmp(filename, "libGL.so.1") == 0;
+
+        if (intercept) {
+            os::log("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
+
+            /* The current dispatch implementation relies on core entry-points to be globally available, so force this.
+             *
+             * TODO: A better approach would be note down the entry points here and
+             * use them latter. Another alternative would be to reopen the library
+             * with RTLD_NOLOAD | RTLD_GLOBAL.
+             */
+            flag &= ~RTLD_LOCAL;
+            flag |= RTLD_GLOBAL;
+        }
+    }
+
+    void *handle = __dlopen(filename, flag);
+
+    if (intercept) {
+        // Get the file path for our shared object, and use it instead
+        static int dummy = 0xdeedbeef;
+        Dl_info info;
+        if (dladdr(&dummy, &info)) {
+            handle = __dlopen(info.dli_fname, flag);
+        } else {
+            os::log("apitrace: warning: dladdr() failed\n");
+        }
+    }
+
+    return handle;
+}
+
+
+
+'''

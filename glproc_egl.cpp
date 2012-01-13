@@ -37,6 +37,7 @@
 
 /*
  * Handle to the true OpenGL library.
+ * XXX: Not really used yet.
  */
 #if defined(_WIN32)
 HINSTANCE __libGlHandle = NULL;
