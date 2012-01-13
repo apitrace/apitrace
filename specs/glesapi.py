@@ -162,11 +162,11 @@ glesapi.add_functions([
     GlFunction(Void, "glFramebufferTexture3DOES", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level"), (GLint, "zoffset")]),
 
     # GL_OES_get_program_binary
-    GlFunction(Void, "glGetProgramBinaryOES", [(GLprogram, "program"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLenum), "binaryFormat"), Out(OpaqueArray(GLvoid, "__glGetProgramBinary_size(length)"), "binary")], sideeffects=False),
+    GlFunction(Void, "glGetProgramBinaryOES", [(GLprogram, "program"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLenum), "binaryFormat"), Out(OpaqueBlob(GLvoid, "length ? *length : bufSize"), "binary")], sideeffects=False),
     GlFunction(Void, "glProgramBinaryOES", [(GLprogram, "program"), (GLenum, "binaryFormat"), (Blob(Const(GLvoid), "length"), "binary"), (GLsizei, "length")]),
 
     # GL_EXT_discard_framebuffer
-    GlFunction(Void, "glDiscardFramebufferEXT", [(GLenum, "target"), (GLsizei, "numAttachments"), (OpaquePointer(Const(GLenum)), "attachments")]),
+    GlFunction(Void, "glDiscardFramebufferEXT", [(GLenum, "target"), (GLsizei, "numAttachments"), (Array(Const(GLenum), "numAttachments"), "attachments")]),
 
     # GL_OES_vertex_array_object
     GlFunction(Void, "glBindVertexArrayOES", [(GLarray, "array")]),
@@ -208,13 +208,13 @@ glesapi.add_functions([
     GlFunction(Void, "glPopGroupMarkerEXT", []),
 
     # GL_EXT_occlusion_query_boolean
-    GlFunction(Void, "glGenQueriesEXT", [(GLsizei, "n"), (OpaquePointer(GLuint), "ids")]),
-    GlFunction(Void, "glDeleteQueriesEXT", [(GLsizei, "n"), (OpaquePointer(Const(GLuint)), "ids")]),
-    GlFunction(GLboolean, "glIsQueryEXT", [(GLuint, "id")]),
-    GlFunction(Void, "glBeginQueryEXT", [(GLenum, "target"), (GLuint, "id")]),
+    GlFunction(Void, "glGenQueriesEXT", [(GLsizei, "n"), Out(Array(GLquery, "n"), "ids")]),
+    GlFunction(Void, "glDeleteQueriesEXT", [(GLsizei, "n"), (Array(Const(GLquery), "n"), "ids")]),
+    GlFunction(GLboolean, "glIsQueryEXT", [(GLquery, "id")], sideeffects=False),
+    GlFunction(Void, "glBeginQueryEXT", [(GLenum, "target"), (GLquery, "id")]),
     GlFunction(Void, "glEndQueryEXT", [(GLenum, "target")]),
-    GlFunction(Void, "glGetQueryivEXT", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(GLint), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectuivEXT", [(GLuint, "id"), (GLenum, "pname"), (OpaquePointer(GLuint), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "__gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectuivEXT", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint, "__gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_EXT_separate_shader_objects
     GlFunction(Void, "glUseProgramStagesEXT", [(GLpipeline, "pipeline"), (GLbitfield_shader, "stages"), (GLprogram, "program")]),
