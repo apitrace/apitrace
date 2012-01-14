@@ -73,8 +73,6 @@ class DumpDeclarator(stdapi.OnceVisitor):
     def visit_blob(self, array):
         pass
 
-    __enum_id = 0
-
     def visit_enum(self, enum):
         print 'static const trace::EnumValue __enum%s_values[] = {' % (enum.tag)
         for value in enum.values:
