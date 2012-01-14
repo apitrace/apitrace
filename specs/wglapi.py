@@ -141,7 +141,7 @@ WGLSWAP = Struct("WGLSWAP", [
 HPBUFFERARB = Alias("HPBUFFERARB", HANDLE)
 
 
-wglapi.add_functions([
+wglapi.addFunctions([
     # WGL
     StdFunction(HGLRC, "wglCreateContext", [(HDC, "hdc")]),
     StdFunction(BOOL, "wglDeleteContext", [(HGLRC, "hglrc")]),

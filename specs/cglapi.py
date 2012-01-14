@@ -182,7 +182,7 @@ CGLContextObj = Opaque("CGLContextObj")
 
 cglapi = API("CGL")
 
-cglapi.add_functions([
+cglapi.addFunctions([
     # CGLCurrent.h, libGL.dylib
     Function(CGLError, "CGLSetCurrentContext", [(CGLContextObj, "ctx")]),
     Function(CGLContextObj, "CGLGetCurrentContext", []),

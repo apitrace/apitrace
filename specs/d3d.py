@@ -471,5 +471,5 @@ interfaces = [
     IDirect3D7,
 ]
 
-ddraw.add_interfaces(interfaces)
+ddraw.addInterfaces(interfaces)
 

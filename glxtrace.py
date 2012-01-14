@@ -37,12 +37,12 @@ from dispatch import function_pointer_type, function_pointer_value
 
 class GlxTracer(GlTracer):
 
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         # The symbols visible in libGL.so can vary, so expose them all
         return True
 
-    def wrap_ret(self, function, instance):
-        GlTracer.wrap_ret(self, function, instance)
+    def wrapRet(self, function, instance):
+        GlTracer.wrapRet(self, function, instance)
 
         if function.name in ("glXGetProcAddress", "glXGetProcAddressARB"):
             print '    %s = __unwrap_proc_addr(procName, %s);' % (instance, instance)
@@ -71,8 +71,8 @@ if __name__ == '__main__':
     print
 
     api = API()
-    api.add_api(glxapi)
-    api.add_api(glapi)
+    api.addApi(glxapi)
+    api.addApi(glapi)
     tracer = GlxTracer()
     tracer.trace_api(api)
 

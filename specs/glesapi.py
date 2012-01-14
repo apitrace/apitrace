@@ -44,7 +44,7 @@ glesapi = API('GLES')
 
 
 # OpenGL ES specific functions
-glesapi.add_functions([
+glesapi.addFunctions([
     # GL_VERSION_ES_CM_1_1: GL_OES_single_precision
     GlFunction(Void, "glFrustumf", [(GLfloat, "left"), (GLfloat, "right"), (GLfloat, "bottom"), (GLfloat, "top"), (GLfloat, "zNear"), (GLfloat, "zFar")]),
     GlFunction(Void, "glOrthof", [(GLfloat, "left"), (GLfloat, "right"), (GLfloat, "bottom"), (GLfloat, "top"), (GLfloat, "zNear"), (GLfloat, "zFar")]),

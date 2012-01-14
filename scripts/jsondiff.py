@@ -44,19 +44,19 @@ class Visitor:
 
     def visit(self, node, *args, **kwargs):
         if isinstance(node, dict):
-            return self.visit_object(node, *args, **kwargs)
+            return self.visitObject(node, *args, **kwargs)
         elif isinstance(node, list):
-            return self.visit_array(node, *args, **kwargs)
+            return self.visitArray(node, *args, **kwargs)
         else:
-            return self.visit_value(node, *args, **kwargs)
+            return self.visitValue(node, *args, **kwargs)
 
-    def visit_object(self, node, *args, **kwargs):
+    def visitObject(self, node, *args, **kwargs):
         pass
 
-    def visit_array(self, node, *args, **kwargs):
+    def visitArray(self, node, *args, **kwargs):
         pass
 
-    def visit_value(self, node, *args, **kwargs):
+    def visitValue(self, node, *args, **kwargs):
         pass
 
 
@@ -75,7 +75,7 @@ class Dumper(Visitor):
     def _newline(self):
         self._write('\n')
 
-    def visit_object(self, node):
+    def visitObject(self, node):
         self.enter_object()
 
         members = node.keys()
@@ -109,7 +109,7 @@ class Dumper(Visitor):
         if self.level <= 0:
             self._newline()
 
-    def visit_array(self, node):
+    def visitArray(self, node):
         self.enter_array()
         for i in range(len(node)):
             value = node[i]
@@ -130,7 +130,7 @@ class Dumper(Visitor):
         self._indent()
         self._write(']')
 
-    def visit_value(self, node):
+    def visitValue(self, node):
         self._write(json.dumps(node))
 
 
@@ -141,7 +141,7 @@ class Comparer(Visitor):
         self.ignore_added = ignore_added
         self.tolerance = tolerance
 
-    def visit_object(self, a, b):
+    def visitObject(self, a, b):
         if not isinstance(b, dict):
             return False
         if len(a) != len(b) and not self.ignore_added:
@@ -162,7 +162,7 @@ class Comparer(Visitor):
                 return False
         return True
 
-    def visit_array(self, a, b):
+    def visitArray(self, a, b):
         if not isinstance(b, list):
             return False
         if len(a) != len(b):
@@ -172,7 +172,7 @@ class Comparer(Visitor):
                 return False
         return True
 
-    def visit_value(self, a, b):
+    def visitValue(self, a, b):
         if isinstance(a, float) or isinstance(b, float):
             if a == 0:
                 return abs(b) < self.tolerance
@@ -193,7 +193,7 @@ class Differ(Visitor):
             return
         Visitor.visit(self, a, b)
 
-    def visit_object(self, a, b):
+    def visitObject(self, a, b):
         if not isinstance(b, dict):
             self.replace(a, b)
         else:
@@ -215,7 +215,7 @@ class Differ(Visitor):
 
             self.dumper.leave_object()
 
-    def visit_array(self, a, b):
+    def visitArray(self, a, b):
         if not isinstance(b, list):
             self.replace(a, b)
         else:
@@ -241,7 +241,7 @@ class Differ(Visitor):
 
             self.dumper.leave_array()
 
-    def visit_value(self, a, b):
+    def visitValue(self, a, b):
         if a != b:
             self.replace(a, b)
 

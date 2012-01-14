@@ -503,7 +503,7 @@ void * __getPublicProcAddress(const char *procName);
 void * __getPrivateProcAddress(const char *procName);
 '''
         
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         return function.name in public_symbols or function.name.startswith('CGL')
 
 

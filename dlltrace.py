@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2011 VMware, Inc.
+# Copyright 2008-2010 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,46 +23,47 @@
 #
 ##########################################################################/
 
-
-"""Cgl tracing generator."""
-
-
-from specs.stdapi import API
-from specs.glapi import glapi
-from specs.cglapi import cglapi
-from gltrace import GlTracer
+"""Trace code generation for Windows DLLs."""
 
 
-class CglTracer(GlTracer):
-
-    def isFunctionPublic(self, function):
-        # The symbols visible in libGL.dylib can vary, so expose them all
-        return True
+from dispatch import Dispatcher
+from trace import Tracer
 
 
-if __name__ == '__main__':
-    print
-    print '#include <stdlib.h>'
-    print '#include <string.h>'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print
-    print '// To validate our prototypes'
-    print '#define GL_GLEXT_PROTOTYPES'
-    print
-    print '#include "glproc.hpp"'
-    print '#include "glsize.hpp"'
-    print
+class DllTracer(Tracer):
 
-    api = API()
-    api.addApi(cglapi)
-    api.addApi(glapi)
-    tracer = CglTracer()
-    tracer.trace_api(api)
+    def __init__(self, dllname):
+        self.dllname = dllname
+    
+    def header(self, api):
+        print '''
+static HINSTANCE g_hDll = NULL;
 
-    print r'''
+static PROC
+__getPublicProcAddress(LPCSTR lpProcName)
+{
+    if (!g_hDll) {
+        char szDll[MAX_PATH] = {0};
+        
+        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
+            return NULL;
+        }
+        
+        strcat(szDll, "\\\\%s");
+        
+        g_hDll = LoadLibraryA(szDll);
+        if (!g_hDll) {
+            return NULL;
+        }
+    }
+        
+    return GetProcAddress(g_hDll, lpProcName);
+}
 
-PUBLIC
-void * gll_noop = 0;
+''' % self.dllname
 
-'''
+        dispatcher = Dispatcher()
+        dispatcher.dispatch_api(api)
+
+        Tracer.header(self, api)
+

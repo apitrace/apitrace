@@ -42,12 +42,12 @@ from dispatch import function_pointer_type, function_pointer_value
 
 class EglTracer(GlTracer):
 
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         # The symbols visible in libEGL.so can vary, so expose them all
         return True
 
-    def trace_function_impl_body(self, function):
-        GlTracer.trace_function_impl_body(self, function)
+    def traceFunctionImplBody(self, function):
+        GlTracer.traceFunctionImplBody(self, function)
 
         if function.name == 'eglMakeCurrent':
             print '    // update the profile'
@@ -64,8 +64,8 @@ class EglTracer(GlTracer):
             print '            tr->profile = PROFILE_ES2;'
             print '    }'
 
-    def wrap_ret(self, function, instance):
-        GlTracer.wrap_ret(self, function, instance)
+    def wrapRet(self, function, instance):
+        GlTracer.wrapRet(self, function, instance)
 
         if function.name == "eglGetProcAddress":
             print '    %s = __unwrap_proc_addr(procname, %s);' % (instance, instance)
@@ -89,9 +89,9 @@ if __name__ == '__main__':
     print
 
     api = API()
-    api.add_api(eglapi)
-    api.add_api(glapi)
-    api.add_api(glesapi)
+    api.addApi(eglapi)
+    api.addApi(glapi)
+    api.addApi(glesapi)
     tracer = EglTracer()
     tracer.trace_api(api)
 

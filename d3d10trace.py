@@ -25,7 +25,7 @@
 
 
 from specs.d3d10misc import d3d10
-from trace import DllTracer
+from dlltrace import DllTracer
 
 
 if __name__ == '__main__':

@@ -25,18 +25,18 @@
 
 
 from specs.d3d8 import d3d8
-from trace import DllTracer
+from dlltrace import DllTracer
 
 
 class D3D8Tracer(DllTracer):
 
-    def dump_arg_instance(self, function, arg):
+    def serializeArgValue(self, function, arg):
         # Dump shaders as strings
         if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
             print '    DumpShader(trace::localWriter, %s);' % (arg.name)
             return
 
-        DllTracer.dump_arg_instance(self, function, arg)
+        DllTracer.serializeArgValue(self, function, arg)
 
 
 if __name__ == '__main__':

@@ -37,8 +37,8 @@ from codegen import *
 
 class WglTracer(GlTracer):
 
-    def wrap_ret(self, function, instance):
-        GlTracer.wrap_ret(self, function, instance)
+    def wrapRet(self, function, instance):
+        GlTracer.wrapRet(self, function, instance)
 
         if function.name == "wglGetProcAddress":
             print '    if (%s) {' % instance
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     print '#include "glsize.hpp"'
     print
     api = API()
-    api.add_api(glapi)
-    api.add_api(wglapi)
+    api.addApi(glapi)
+    api.addApi(wglapi)
     tracer = WglTracer()
     tracer.trace_api(api)

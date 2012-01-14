@@ -54,7 +54,7 @@ class Dispatcher:
 
     def dispatch_api(self, api):
         for function in api.functions:
-            self.dispatch_function(function)
+            self.invokeFunction(function)
         
         # define standard name aliases for convenience, but only when not
         # tracing, as that would cause symbol clashing with the tracing
@@ -65,7 +65,7 @@ class Dispatcher:
         print '#endif /* RETRACE */'
         print
 
-    def dispatch_function(self, function):
+    def invokeFunction(self, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
@@ -82,24 +82,24 @@ class Dispatcher:
         print '}'
         print
 
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         return True
 
     def get_true_pointer(self, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
-        if self.is_public_function(function):
+        if self.isFunctionPublic(function):
             get_proc_address = '__getPublicProcAddress'
         else:
             get_proc_address = '__getPrivateProcAddress'
         print '    if (!%s) {' % (pvalue,)
         print '        %s = (%s)%s(__name);' % (pvalue, ptype, get_proc_address)
         print '        if (!%s) {' % (pvalue,)
-        self.fail_function(function)
+        self.failFunction(function)
         print '        }'
         print '    }'
 
-    def fail_function(self, function):
+    def failFunction(self, function):
         if function.type is stdapi.Void or function.fail is not None:
             print r'            os::log("warning: ignoring call to unavailable function %s\n", __name);'
             if function.type is stdapi.Void:

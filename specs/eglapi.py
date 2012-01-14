@@ -299,7 +299,7 @@ def GlFunction(*args, **kwargs):
     kwargs.setdefault('call', 'GL_APIENTRY')
     return Function(*args, **kwargs)
 
-eglapi.add_functions([
+eglapi.addFunctions([
     # EGL 1.4
     Function(EGLError, "eglGetError", [], sideeffects=False),
 

@@ -31,7 +31,7 @@ import specs.stdapi as stdapi
 import specs.glapi as glapi
 import specs.glparams as glparams
 from specs.glxapi import glxapi
-from trace import Tracer, dump_instance
+from trace import Tracer
 
 
 class TypeGetter(stdapi.Visitor):
@@ -42,10 +42,10 @@ class TypeGetter(stdapi.Visitor):
         self.long_suffix = long_suffix
         self.ext_suffix = ext_suffix
 
-    def visit_const(self, const):
+    def visitConst(self, const):
         return self.visit(const.type)
 
-    def visit_alias(self, alias):
+    def visitAlias(self, alias):
         if alias.expr == 'GLboolean':
             if self.long_suffix:
                 suffix = 'Booleanv'
@@ -80,13 +80,13 @@ class TypeGetter(stdapi.Visitor):
         function_name = self.prefix + suffix + self.ext_suffix
         return function_name, arg_type
     
-    def visit_enum(self, enum):
+    def visitEnum(self, enum):
         return self.visit(glapi.GLint)
 
-    def visit_bitmask(self, bitmask):
+    def visitBitmask(self, bitmask):
         return self.visit(glapi.GLint)
 
-    def visit_opaque(self, pointer):
+    def visitOpaque(self, pointer):
         return self.prefix + 'Pointerv' + self.ext_suffix, 'GLvoid *'
 
 
@@ -406,7 +406,7 @@ class GlTracer(Tracer):
          'GL_T4F_C4F_N3F_V4F',
     ]
 
-    def trace_function_impl_body(self, function):
+    def traceFunctionImplBody(self, function):
         # Defer tracing of user array pointers...
         if function.name in self.array_pointer_function_names:
             print '    GLint __array_buffer = 0;'
@@ -418,7 +418,7 @@ class GlTracer(Tracer):
                 print '        ctx->user_arrays_arb = true;'
             if function.name == "glVertexAttribPointerNV":
                 print '        ctx->user_arrays_nv = true;'
-            self.dispatch_function(function)
+            self.invokeFunction(function)
 
             # And also break down glInterleavedArrays into the individual calls
             if function.name == 'glInterleavedArrays':
@@ -454,7 +454,7 @@ class GlTracer(Tracer):
                     print '            static const trace::FunctionSig &__sig = %s ? __glEnableClientState_sig : __glDisableClientState_sig;' % flag_name
                     print '            unsigned __call = trace::localWriter.beginEnter(&__sig);'
                     print '            trace::localWriter.beginArg(0);'
-                    dump_instance(glapi.GLenum, enable_name)
+                    self.serializeValue(glapi.GLenum, enable_name)
                     print '            trace::localWriter.endArg();'
                     print '            trace::localWriter.endEnter();'
                     print '            trace::localWriter.beginLeave(__call);'
@@ -495,7 +495,7 @@ class GlTracer(Tracer):
         # be an herculian task given that vertex attrib locations appear in
         # many entry-points, including non-shader related ones.
         if function.name == 'glLinkProgram':
-            Tracer.dispatch_function(self, function)
+            Tracer.invokeFunction(self, function)
             print '    GLint active_attributes = 0;'
             print '    __glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &active_attributes);'
             print '    for (GLint attrib = 0; attrib < active_attributes; ++attrib) {'
@@ -513,7 +513,7 @@ class GlTracer(Tracer):
             print '        }'
             print '    }'
         if function.name == 'glLinkProgramARB':
-            Tracer.dispatch_function(self, function)
+            Tracer.invokeFunction(self, function)
             print '    GLint active_attributes = 0;'
             print '    __glGetObjectParameterivARB(programObj, GL_OBJECT_ACTIVE_ATTRIBUTES_ARB, &active_attributes);'
             print '    for (GLint attrib = 0; attrib < active_attributes; ++attrib) {'
@@ -531,14 +531,14 @@ class GlTracer(Tracer):
             print '        }'
             print '    }'
 
-        Tracer.trace_function_impl_body(self, function)
+        Tracer.traceFunctionImplBody(self, function)
 
     gremedy_functions = [
         'glStringMarkerGREMEDY',
         'glFrameTerminatorGREMEDY',
     ]
 
-    def dispatch_function(self, function):
+    def invokeFunction(self, function):
         if function.name in ('glLinkProgram', 'glLinkProgramARB'):
             # These functions have been dispatched already
             return
@@ -555,16 +555,16 @@ class GlTracer(Tracer):
                 print '    }'
                 if_ = 'else if'
             print '    else {'
-            Tracer.dispatch_function(self, function)
+            Tracer.invokeFunction(self, function)
             print '    }'
             return
 
         # Override GL extensions
         if function.name in ('glGetString', 'glGetIntegerv', 'glGetStringi'):
-            Tracer.dispatch_function(self, function, prefix = 'gltrace::__', suffix = '_override')
+            Tracer.invokeFunction(self, function, prefix = 'gltrace::__', suffix = '_override')
             return
 
-        Tracer.dispatch_function(self, function)
+        Tracer.invokeFunction(self, function)
 
     def emit_memcpy(self, dest, src, length):
         print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
@@ -595,8 +595,8 @@ class GlTracer(Tracer):
         'ATOMIC_COUNTER_BUFFER',
     ]
 
-    def wrap_ret(self, function, instance):
-        Tracer.wrap_ret(self, function, instance)
+    def wrapRet(self, function, instance):
+        Tracer.wrapRet(self, function, instance)
 
             
         if function.name in ('glMapBuffer', 'glMapBufferARB'):
@@ -672,7 +672,7 @@ class GlTracer(Tracer):
         'glTextureSubImage3DEXT',
     ])
 
-    def dump_arg_instance(self, function, arg):
+    def serializeArgValue(self, function, arg):
         if function.name in self.draw_function_names and arg.name == 'indices':
             print '    GLint __element_array_buffer = 0;'
             print '    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
@@ -688,7 +688,7 @@ class GlTracer(Tracer):
             else:
                 print '        trace::localWriter.writeBlob(%s, count*__gl_type_size(type));' % (arg.name)
             print '    } else {'
-            Tracer.dump_arg_instance(self, function, arg)
+            Tracer.serializeArgValue(self, function, arg)
             print '    }'
             return
 
@@ -705,7 +705,7 @@ class GlTracer(Tracer):
             print '        if (__unpack_buffer) {'
             print '            trace::localWriter.writeOpaque(%s);' % arg.name
             print '        } else {'
-            Tracer.dump_arg_instance(self, function, arg)
+            Tracer.serializeArgValue(self, function, arg)
             print '        }'
             print '    }'
             return
@@ -719,13 +719,13 @@ class GlTracer(Tracer):
             assert function.args[arg.index - 1].name == 'pname'
             assert function.args[arg.index - 1].type == glapi.GLenum
             print '    if (is_symbolic_pname(pname) && is_symbolic_param(%s)) {' % arg.name
-            dump_instance(glapi.GLenum, arg.name)
+            self.serializeValue(glapi.GLenum, arg.name)
             print '    } else {'
-            Tracer.dump_arg_instance(self, function, arg)
+            Tracer.serializeArgValue(self, function, arg)
             print '    }'
             return
 
-        Tracer.dump_arg_instance(self, function, arg)
+        Tracer.serializeArgValue(self, function, arg)
 
     def footer(self, api):
         Tracer.footer(self, api)
@@ -773,7 +773,7 @@ class GlTracer(Tracer):
                 assert not arg.output
                 print '            trace::localWriter.beginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
-                    dump_instance(arg.type, arg.name)
+                    self.serializeValue(arg.type, arg.name)
                 else:
                     print '            trace::localWriter.writeBlob((const void *)%s, __size);' % (arg.name)
                 print '            trace::localWriter.endArg();'
@@ -851,7 +851,7 @@ class GlTracer(Tracer):
                 assert not arg.output
                 print '                    trace::localWriter.beginArg(%u);' % (arg.index,)
                 if arg.name != 'pointer':
-                    dump_instance(arg.type, arg.name)
+                    self.serializeValue(arg.type, arg.name)
                 else:
                     print '                    trace::localWriter.writeBlob((const void *)%s, __size);' % (arg.name)
                 print '                    trace::localWriter.endArg();'
@@ -921,7 +921,7 @@ class GlTracer(Tracer):
         for arg, instance in zip(function.args, args):
             assert not arg.output
             print '            trace::localWriter.beginArg(%u);' % (arg.index,)
-            dump_instance(arg.type, instance)
+            self.serializeValue(arg.type, instance)
             print '            trace::localWriter.endArg();'
         print '            trace::localWriter.endEnter();'
         print '            trace::localWriter.beginLeave(__fake_call);'

@@ -117,10 +117,10 @@ class StateGetter(Visitor):
 
         return pname[3:].lower()
 
-    def visit_const(self, const, args):
+    def visitConst(self, const, args):
         return self.visit(const.type, args)
 
-    def visit_scalar(self, type, args):
+    def visitScalar(self, type, args):
         temp_name = self.temp_name(args)
         elem_type = self.inflector.reduced_type(type)
         inflection = self.inflector.inflect(type)
@@ -131,23 +131,23 @@ class StateGetter(Visitor):
             print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection + self.suffix, ', '.join(args))
         return temp_name
 
-    def visit_string(self, string, args):
+    def visitString(self, string, args):
         temp_name = self.temp_name(args)
         inflection = self.inflector.inflect(string)
         assert not inflection.endswith('v')
         print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection + self.suffix, ', '.join(args))
         return temp_name
 
-    def visit_alias(self, alias, args):
-        return self.visit_scalar(alias, args)
+    def visitAlias(self, alias, args):
+        return self.visitScalar(alias, args)
 
-    def visit_enum(self, enum, args):
+    def visitEnum(self, enum, args):
         return self.visit(GLint, args)
 
-    def visit_bitmask(self, bitmask, args):
+    def visitBitmask(self, bitmask, args):
         return self.visit(GLint, args)
 
-    def visit_array(self, array, args):
+    def visitArray(self, array, args):
         temp_name = self.temp_name(args)
         if array.length == '1':
             return self.visit(array.type)
@@ -162,7 +162,7 @@ class StateGetter(Visitor):
         print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array.length, elem_type)
         return temp_name
 
-    def visit_opaque(self, pointer, args):
+    def visitOpaque(self, pointer, args):
         temp_name = self.temp_name(args)
         inflection = self.inflector.inflect(pointer)
         assert inflection.endswith('v')
@@ -198,7 +198,7 @@ class JsonWriter(Visitor):
     
     It expects a previously declared JSONWriter instance named "json".'''
 
-    def visit_literal(self, literal, instance):
+    def visitLiteral(self, literal, instance):
         if literal.kind == 'Bool':
             print '    json.writeBool(%s);' % instance
         elif literal.kind in ('SInt', 'Uint', 'Float', 'Double'):
@@ -206,28 +206,28 @@ class JsonWriter(Visitor):
         else:
             raise NotImplementedError
 
-    def visit_string(self, string, instance):
+    def visitString(self, string, instance):
         assert string.length is None
         print '    json.writeString((const char *)%s);' % instance
 
-    def visit_enum(self, enum, instance):
+    def visitEnum(self, enum, instance):
         if enum.expr == 'GLenum':
             print '    dumpEnum(json, %s);' % instance
         else:
             print '    json.writeNumber(%s);' % instance
 
-    def visit_bitmask(self, bitmask, instance):
+    def visitBitmask(self, bitmask, instance):
         raise NotImplementedError
 
-    def visit_alias(self, alias, instance):
+    def visitAlias(self, alias, instance):
         self.visit(alias.type, instance)
 
-    def visit_opaque(self, opaque, instance):
+    def visitOpaque(self, opaque, instance):
         print '    json.writeNumber((size_t)%s);' % instance
 
     __index = 0
 
-    def visit_array(self, array, instance):
+    def visitArray(self, array, instance):
         index = '__i%u' % JsonWriter.__index
         JsonWriter.__index += 1
         print '    json.beginArray();'

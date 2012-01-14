@@ -405,7 +405,7 @@ D3DRENDERSTATEVALUE = Polymorphic(DWORD, "State", [
 ])
 
 D3DRENDERSTATETYPE = Enum("D3DRENDERSTATETYPE", [
-    expr for expr, types in D3DRENDERSTATEVALUE.switch_types
+    expr for expr, types in D3DRENDERSTATEVALUE.switchTypes
 ])
 
 D3DTSS_TCI = Flags(DWORD, [
@@ -490,7 +490,7 @@ D3DTEXTURESTAGESTATEVALUE = Polymorphic(DWORD, "Type", [
 ])
 
 D3DTEXTURESTAGESTATETYPE = Enum("D3DTEXTURESTAGESTATETYPE", [
-    expr for expr, types in D3DTEXTURESTAGESTATEVALUE.switch_types
+    expr for expr, types in D3DTEXTURESTAGESTATEVALUE.switchTypes
 ])
 
 D3DTEXTUREFILTERTYPE = Enum("D3DTEXTUREFILTERTYPE", [
@@ -520,7 +520,7 @@ D3DSAMPLERSTATEVALUE = Polymorphic(DWORD, "Type", [
 ])
 
 D3DSAMPLERSTATETYPE = Enum("D3DSAMPLERSTATETYPE", [
-    expr for expr, types in D3DSAMPLERSTATEVALUE.switch_types
+    expr for expr, types in D3DSAMPLERSTATEVALUE.switchTypes
 ])
 
 D3DPV = Flags(DWORD, [
