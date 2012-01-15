@@ -478,6 +478,16 @@ class GlTracer(Tracer):
             print '    if (mapping && mapping->write && !mapping->explicit_flush) {'
             self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
             print '    }'
+        if function.name == 'glUnmapNamedBufferEXT':
+            print '    GLint access = 0;'
+            print '    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS, &access);'
+            print '    if ((access & GL_MAP_WRITE_BIT) & !(access & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
+            print '        GLvoid *map = NULL;'
+            print '        glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '        GLint length = 0;'
+            print '        glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_MAP_LENGTH, &length);'
+            self.emit_memcpy('map', 'map', 'length')
+            print '    }'
         if function.name in ('glFlushMappedBufferRange', 'glFlushMappedBufferRangeAPPLE'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
@@ -487,7 +497,12 @@ class GlTracer(Tracer):
             print '        //assert(offset + length <= mapping->length);'
             self.emit_memcpy('(char *)mapping->map + offset', '(const char *)mapping->map + offset', 'length')
             print '    }'
-        # FIXME: glFlushMappedNamedBufferRangeEXT
+        if function.name == 'glFlushMappedNamedBufferRangeEXT':
+            print '    GLvoid *map = NULL;'
+            print '    glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '    if (map) {'
+            self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'length')
+            print '    }'
 
         # Don't leave vertex attrib locations to chance.  Instead emit fake
         # glBindAttribLocation calls to ensure that the same locations will be
