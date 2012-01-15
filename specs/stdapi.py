@@ -298,6 +298,9 @@ class Function:
         s += ")"
         return s
 
+    def argNames(self):
+        return [arg.name for arg in self.args]
+
 
 def StdFunction(*args, **kwargs):
     kwargs.setdefault('call', '__stdcall')

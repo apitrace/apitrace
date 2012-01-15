@@ -369,12 +369,12 @@ class GlRetracer(Retracer):
             return
 
         if arg.type is glapi.GLlocation \
-           and 'program' not in [arg.name for arg in function.args]:
+           and 'program' not in function.argNames():
             print '    GLint program = -1;'
             print '    glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
         
         if arg.type is glapi.GLlocationARB \
-           and 'programObj' not in [arg.name for arg in function.args]:
+           and 'programObj' not in function.argNames():
             print '    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);'
 
         Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
