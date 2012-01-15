@@ -77,6 +77,12 @@ upperBound(unsigned long long address) {
 void
 addRegion(unsigned long long address, void *buffer, unsigned long long size)
 {
+    if (!address) {
+        // Ignore NULL pointer
+        assert(!buffer);
+        return;
+    }
+
     // Forget all regions that intersect this new one.
     if (0) {
         RegionMap::iterator start = lowerBound(address);

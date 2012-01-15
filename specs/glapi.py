@@ -2142,7 +2142,7 @@ glapi.addFunctions([
     GlFunction(Void, "glPrimitiveRestartIndexNV", [(GLuint, "index")]),
 
     # GL_ATI_map_object_buffer
-    GlFunction(GLmap, "glMapObjectBufferATI", [(GLbuffer, "buffer")]),
+    GlFunction(GLpointer, "glMapObjectBufferATI", [(GLbuffer, "buffer")]),
     GlFunction(Void, "glUnmapObjectBufferATI", [(GLbuffer, "buffer")]),
 
     # GL_ATI_separate_stencil

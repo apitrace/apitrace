@@ -320,22 +320,22 @@ class GlRetracer(Retracer):
                 print r'    }'
             print '    }'
 
-            # Update buffer mappings
+            # Query the buffer length for whole buffer mappings
             if function.name in self.map_function_names:
-                print r'        if (__result) {'
-                print r'            unsigned long long __address = call.ret->toUIntPtr();'
-                if 'BufferRange' not in function.name:
-                    print r'            GLint length = 0;'
+                if 'length' in function.argNames():
+                    assert 'BufferRange' in function.name
+                else:
+                    assert 'BufferRange' not in function.name
+                    print r'    GLint length = 0;'
                     if function.name in ('glMapBuffer', 'glMapBufferOES'):
                         print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
                     elif function.name == 'glMapBufferARB':
-                        print r'            glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
+                        print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
                     elif function.name == 'glMapNamedBufferEXT':
-                        print r'            glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
+                        print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
                     else:
                         assert False
-                print r'             retrace::addRegion(__address, __result, length);'
-                print r'        }'
+            # Destroy the buffer mapping
             if function.name in self.unmap_function_names:
                 print r'        GLvoid *ptr = NULL;'
                 if function.name == 'glUnmapBuffer':

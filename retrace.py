@@ -94,8 +94,15 @@ class ValueDeserializer(stdapi.Visitor):
             print '        %s = NULL;' % lvalue
             print '    }'
 
+    def visitIntPointer(self, pointer, lvalue, rvalue):
+        print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
+
+    def visitLinearPointer(self, pointer, lvalue, rvalue):
+        print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
+
     def visitHandle(self, handle, lvalue, rvalue):
-        OpaqueValueDeserializer().visit(handle.type, lvalue, rvalue);
+        #OpaqueValueDeserializer().visit(handle.type, lvalue, rvalue);
+        self.visit(handle.type, lvalue, rvalue);
         new_lvalue = lookupHandle(handle, lvalue)
         print '    if (retrace::verbosity >= 2) {'
         print '        std::cout << "%s " << size_t(%s) << " <- " << size_t(%s) << "\\n";' % (handle.name, lvalue, new_lvalue)
@@ -155,6 +162,14 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         finally:
             print '    }'
     
+    def visitIntPointer(self, pointer, lvalue, rvalue):
+        pass
+    
+    def visitLinearPointer(self, pointer, lvalue, rvalue):
+        assert pointer.size is not None
+        if pointer.size is not None:
+            print r'    retrace::addRegion((%s).toUIntPtr(), %s, %s);' % (rvalue, lvalue, pointer.size)
+
     def visitHandle(self, handle, lvalue, rvalue):
         print '    %s __orig_result;' % handle.type
         OpaqueValueDeserializer().visit(handle.type, '__orig_result', rvalue);
@@ -251,7 +266,7 @@ class Retracer:
         visitor.visit(type, lvalue, rvalue)
 
     def invokeFunction(self, function):
-        arg_names = ", ".join([arg.name for arg in function.args])
+        arg_names = ", ".join(function.argNames())
         if function.type is not stdapi.Void:
             print '    %s __result;' % (function.type)
             print '    __result = %s(%s);' % (function.name, arg_names)

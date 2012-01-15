@@ -98,12 +98,17 @@ GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
 GLarray = Handle("array", GLuint)
 GLregion = Handle("region", GLuint)
-GLmap = GLpointer
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)
 
-GLsync_ = Opaque("GLsync")
+# GL mappings are pointers to linear memory regions.
+#
+# The map length is not always available in the function prototype, and must be
+# reconstructed from other state.
+GLmap = LinearPointer(GLvoid, "length")
+
+GLsync_ = IntPointer("GLsync")
 GLsync = Handle("sync", GLsync_)
 
 GLenum = Enum("GLenum", [

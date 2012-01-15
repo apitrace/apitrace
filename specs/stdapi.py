@@ -127,6 +127,25 @@ class Pointer(Type):
         return visitor.visitPointer(self, *args, **kwargs)
 
 
+class IntPointer(Type):
+    '''Integer encoded as a pointer.'''
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitIntPointer(self, *args, **kwargs)
+
+
+class LinearPointer(Type):
+    '''Integer encoded as a pointer.'''
+
+    def __init__(self, type, size = None):
+        Type.__init__(self, type.expr + " *", 'P' + type.tag)
+        self.type = type
+        self.size = size
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitLinearPointer(self, *args, **kwargs)
+
+
 class Handle(Type):
 
     def __init__(self, name, type, range=None, key=None):
@@ -437,6 +456,12 @@ class Visitor:
     def visitPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
+    def visitIntPointer(self, pointer, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitLinearPointer(self, pointer, *args, **kwargs):
+        raise NotImplementedError
+
     def visitHandle(self, handle, *args, **kwargs):
         raise NotImplementedError
 
@@ -508,6 +533,13 @@ class Rebuilder(Visitor):
         type = self.visit(pointer.type)
         return Pointer(type)
 
+    def visitIntPointer(self, pointer):
+        return pointer
+
+    def visitLinearPointer(self, pointer):
+        type = self.visit(pointer.type)
+        return LinearPointer(type, pointer.size)
+
     def visitHandle(self, handle):
         type = self.visit(handle.type)
         return Handle(handle.name, type, range=handle.range, key=handle.key)
@@ -569,6 +601,12 @@ class Collector(Visitor):
         self.visit(bitmask.type)
 
     def visitPointer(self, pointer):
+        self.visit(pointer.type)
+
+    def visitIntPointer(self, pointer):
+        pass
+
+    def visitLinearPointer(self, pointer):
         self.visit(pointer.type)
 
     def visitHandle(self, handle):
