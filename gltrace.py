@@ -473,7 +473,7 @@ class GlTracer(Tracer):
             print '    }'
         
         # Emit a fake memcpy on buffer uploads
-        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB', ):
+        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB', 'glUnmapBufferOES'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping && mapping->write && !mapping->explicit_flush) {'
             self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
@@ -599,7 +599,7 @@ class GlTracer(Tracer):
         Tracer.wrapRet(self, function, instance)
 
             
-        if function.name in ('glMapBuffer', 'glMapBufferARB'):
+        if function.name in ('glMapBuffer', 'glMapBufferARB', 'glMapBufferOES'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
             print '        mapping->map = %s;' % (instance)

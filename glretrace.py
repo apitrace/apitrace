@@ -154,6 +154,7 @@ class GlRetracer(Retracer):
     map_function_names = set([
         'glMapBuffer',
         'glMapBufferARB',
+        'glMapBufferOES',
         'glMapBufferRange',
         'glMapNamedBufferEXT',
         'glMapNamedBufferRangeEXT'
@@ -162,6 +163,7 @@ class GlRetracer(Retracer):
     unmap_function_names = set([
         'glUnmapBuffer',
         'glUnmapBufferARB',
+        'glUnmapBufferOES',
         'glUnmapNamedBufferEXT',
     ])
 
@@ -324,8 +326,8 @@ class GlRetracer(Retracer):
                 print r'            unsigned long long __address = call.ret->toUIntPtr();'
                 if 'BufferRange' not in function.name:
                     print r'            GLint length = 0;'
-                    if function.name == 'glMapBuffer':
-                        print r'            glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
+                    if function.name in ('glMapBuffer', 'glMapBufferOES'):
+                        print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
                     elif function.name == 'glMapBufferARB':
                         print r'            glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
                     elif function.name == 'glMapNamedBufferEXT':
@@ -340,6 +342,8 @@ class GlRetracer(Retracer):
                     print r'            glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &ptr);'
                 elif function.name == 'glUnmapBufferARB':
                     print r'            glGetBufferPointervARB(target, GL_BUFFER_MAP_POINTER_ARB, &ptr);'
+                elif function.name == 'glUnmapBufferOES':
+                    print r'            glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &ptr);'
                 elif function.name == 'glUnmapNamedBufferEXT':
                     print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
                 else:
