@@ -96,6 +96,10 @@ to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
 See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
+To trace the application inside gdb, invoke gdb as:
+
+    gdb --ex 'set exec-wrapper env LD_PRELOAD=/path/to/glxtrace.so' --args /path/to/application
+
 ### Mac OS X ###
 
 Run the application you want to trace as
