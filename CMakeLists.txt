@@ -195,8 +195,9 @@ if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
     set (QJSON_FOUND TRUE)
 endif ()
 
-# For glext headers
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
+# For glext headers.  Needs to be before system includes as often system's GL
+# headers bundle and include glext.h and glxext.h
+include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glext)
 
 # For EGL headers
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khr)

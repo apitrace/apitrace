@@ -31,7 +31,8 @@
 #define _GLIMPORTS_HPP_
 
 
-// Prevent including system's glext.h
+// Prevent including MacOSX's glext.h which lives in OpenGL/glext.h and not
+// GL/glext.h
 #define __glext_h_
 
 
@@ -76,7 +77,7 @@
 
 // Include our own glext.h
 #undef __glext_h_
-#include "glext/glext.h"
+#include <GL/glext.h>
 
 
 #ifndef GL_TEXTURE_INDEX_SIZE_EXT
@@ -86,7 +87,7 @@
 
 #if defined(_WIN32)
 
-#include "glext/wglext.h"
+#include <GL/wglext.h>
 
 #define GLAPIENTRY __stdcall
 
@@ -139,7 +140,7 @@ CGLError CGLUpdateContext(CGLContextObj ctx);
 
 #ifdef HAVE_X11
 #include <GL/glx.h>
-#include "glext/glxext.h"
+#include <GL/glxext.h>
 #endif
 
 /* Prevent collision with trace::Bool */
