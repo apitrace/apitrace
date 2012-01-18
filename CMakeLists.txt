@@ -189,7 +189,7 @@ link_libraries (${PNG_LIBRARIES})
 # AUTO.
 if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
     add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
-    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/qjson)
+    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
     set (QJSON_LIBRARY_DIRS)
     set (QJSON_LIBRARIES qjson_bundled)
     set (QJSON_FOUND TRUE)
