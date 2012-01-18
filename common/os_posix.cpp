@@ -145,14 +145,18 @@ int execute(char * const * args)
     }
 }
 
+static volatile bool logging = false;
+
 void
 log(const char *format, ...)
 {
+    logging = true;
     va_list ap;
     va_start(ap, format);
     fflush(stdout);
     vfprintf(stderr, format, ap);
     va_end(ap);
+    logging = false;
 }
 
 long long
@@ -185,12 +189,22 @@ struct sigaction old_actions[NUM_SIGNALS];
 static void
 signalHandler(int sig, siginfo_t *info, void *context)
 {
+    /*
+     * There are several signals that can happen when logging to stdout/stderr.
+     * For example, SIGPIPE will be emitted if stderr is a pipe with no
+     * readers.  Therefore ignore any signal while logging by returning
+     * immediately, to prevent deadlocks.
+     */
+    if (logging) {
+        return;
+    }
+
     static int recursion_count = 0;
 
-    fprintf(stderr, "apitrace: warning: caught signal %i\n", sig);
+    log("apitrace: warning: caught signal %i\n", sig);
 
     if (recursion_count) {
-        fprintf(stderr, "apitrace: warning: recursion handling signal %i\n", sig);
+        log("apitrace: warning: recursion handling signal %i\n", sig);
     } else {
         if (gCallback) {
             ++recursion_count;
@@ -202,7 +216,7 @@ signalHandler(int sig, siginfo_t *info, void *context)
     struct sigaction *old_action;
     if (sig >= NUM_SIGNALS) {
         /* This should never happen */
-        fprintf(stderr, "error: unexpected signal %i\n", sig);
+        log("error: unexpected signal %i\n", sig);
         raise(SIGKILL);
     }
     old_action = &old_actions[sig];
@@ -212,7 +226,7 @@ signalHandler(int sig, siginfo_t *info, void *context)
         old_action->sa_sigaction(sig, info, context);
     } else {
         if (old_action->sa_handler == SIG_DFL) {
-            fprintf(stderr, "apitrace: info: taking default action for signal %i\n", sig);
+            log("apitrace: info: taking default action for signal %i\n", sig);
 
 #if 1
             struct sigaction dfl_action;
@@ -248,11 +262,26 @@ setExceptionCallback(void (*callback)(void))
 
 
         for (int sig = 1; sig < NUM_SIGNALS; ++sig) {
-            // SIGKILL and SIGSTOP can't be handled
-            if (sig != SIGKILL && sig != SIGSTOP) {
-                if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
-                    sigaction(sig,  &new_action, NULL);
-                }
+            // SIGKILL and SIGSTOP can't be handled.
+            if (sig == SIGKILL || sig == SIGSTOP) {
+                continue;
+            }
+
+            /*
+             * SIGPIPE can be emitted when writing to stderr that is redirected
+             * to a pipe without readers.  It is also very unlikely to ocurr
+             * inside graphics APIs, and most applications where it can occur
+             * normally already ignore it.  In summary, it is unlikely that a
+             * SIGPIPE will cause abnormal termination, which it is likely that
+             * intercepting here will cause problems, so simple don't intercept
+             * it here.
+             */
+            if (sig == SIGPIPE) {
+                continue;
+            }
+
+            if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
+                sigaction(sig,  &new_action, NULL);
             }
         }
     }
