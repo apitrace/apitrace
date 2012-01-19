@@ -23,11 +23,9 @@
  *
  **************************************************************************/
 
-#ifndef _GLSTATE_HPP_
-#define _GLSTATE_HPP_
+#ifndef _GLSTATE_INTERNAL_HPP_
+#define _GLSTATE_INTERNAL_HPP_
 
-
-#include <ostream>
 
 #include "glimports.hpp"
 
@@ -35,23 +33,36 @@
 class JSONWriter;
 
 
-namespace image {
-    class Image;
-}
-
-
 namespace glstate {
 
 
-const char *enumToString(GLenum pname);
+struct Context
+{
+    bool ES;
+
+    bool ARB_draw_buffers;
+
+    inline
+    Context(void);
+
+    GLint packAlignment;
+
+    void
+    resetPixelPackState(void);
+
+    void
+    restorePixelPackState(void);
+};
+
+
+void dumpEnum(JSONWriter &json, GLenum pname);
+
+void dumpParameters(JSONWriter &json, Context &context);
 
 void dumpCurrentContext(std::ostream &os);
-
-image::Image *
-getDrawBufferImage(void);
 
 
 } /* namespace glstate */
 
 
-#endif /* _GLSTATE_HPP_ */
+#endif /* _GLSTATE_INTERNAL_HPP_ */
