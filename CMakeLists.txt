@@ -573,6 +573,11 @@ if (WIN32 OR APPLE OR X11_FOUND)
             pthread
             dl
         )
+
+        if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+            target_link_libraries (glretrace rt)
+        endif ()
+
     endif ()
 
     install (TARGETS glretrace RUNTIME DESTINATION bin) 
@@ -600,6 +605,10 @@ if (EGL_FOUND AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
         pthread
         dl
     )
+
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        target_link_libraries (eglretrace rt)
+    endif ()
 
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()

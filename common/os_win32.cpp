@@ -213,16 +213,7 @@ log(const char *format, ...)
 #endif
 }
 
-long long
-getTime(void)
-{
-    static LARGE_INTEGER frequency;
-    LARGE_INTEGER counter;
-    if (!frequency.QuadPart)
-        QueryPerformanceFrequency(&frequency);
-    QueryPerformanceCounter(&counter);
-    return counter.QuadPart*1000000LL/frequency.QuadPart;
-}
+long long timeFrequency = 0LL;
 
 void
 abort(void)

@@ -30,7 +30,6 @@
 #include <stdlib.h>
 
 #include <unistd.h>
-#include <sys/time.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -157,14 +156,6 @@ log(const char *format, ...)
     vfprintf(stderr, format, ap);
     va_end(ap);
     logging = false;
-}
-
-long long
-getTime(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_usec + tv.tv_sec*1000000LL;
 }
 
 void

@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "os_string.hpp"
+#include "os_time.hpp"
 #include "image.hpp"
 #include "retrace.hpp"
 #include "glproc.hpp"
@@ -230,7 +231,7 @@ static void display(void) {
     glFlush();
 
     long long endTime = os::getTime();
-    float timeInterval = (endTime - startTime) * 1.0E-6;
+    float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
 
     if (retrace::verbosity >= -1) { 
         std::cout << 
