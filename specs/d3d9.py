@@ -401,7 +401,7 @@ IDirect3DQuery9.methods += [
     Method(D3DQUERYTYPE, "GetType", []),
     Method(DWORD, "GetDataSize", []),
     Method(HRESULT, "Issue", [(D3DISSUE, "dwIssueFlags")]),
-    Method(HRESULT, "GetData", [Out(OpaquePointer(Void), "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")]),
+    Method(HRESULT, "GetData", [Out(Blob(Void, "dwSize"), "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")]),
 ]
 
 IDirect3D9Ex.methods += [
