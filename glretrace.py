@@ -120,8 +120,8 @@ class GlRetracer(Retracer):
 
     bind_framebuffer_function_names = set([
         "glBindFramebuffer",
-        "glBindFramebufferARB",
         "glBindFramebufferEXT",
+        "glBindFramebufferOES",
     ])
 
     # Names of the functions that can pack into the current pixel buffer
