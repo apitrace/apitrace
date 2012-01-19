@@ -208,6 +208,7 @@ class GlRetracer(Retracer):
 
         # Pre-snapshots
         if function.name in self.bind_framebuffer_function_names:
+            print '    assert(call.flags & trace::CALL_FLAG_SWAP_RENDERTARGET);'
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
             print '        glretrace::snapshot(call.no - 1);'
             print '    }'
@@ -223,6 +224,7 @@ class GlRetracer(Retracer):
             print '        glretrace::frame_complete(call);'
             print '    }'
         if is_draw_array or is_draw_elements or is_misc_draw:
+            print '    assert(call.flags & trace::CALL_FLAG_RENDER);'
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_DRAW) {'
             print '        glretrace::snapshot(call.no);'
             print '    }'
