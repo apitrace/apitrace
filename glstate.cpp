@@ -695,7 +695,31 @@ dumpTextures(JSONWriter &json)
 
 static bool
 getDrawableBounds(GLint *width, GLint *height) {
-#if defined(_WIN32)
+#if defined(TRACE_EGL)
+
+    EGLContext currentContext = eglGetCurrentContext();
+    if (currentContext == EGL_NO_CONTEXT) {
+        return false;
+    }
+
+    EGLSurface currentSurface = eglGetCurrentSurface(EGL_DRAW);
+    if (currentSurface == EGL_NO_SURFACE) {
+        return false;
+    }
+
+    EGLDisplay currentDisplay = eglGetCurrentDisplay();
+    if (currentDisplay == EGL_NO_DISPLAY) {
+        return false;
+    }
+
+    if (!eglQuerySurface(currentDisplay, currentSurface, EGL_WIDTH, width) ||
+        !eglQuerySurface(currentDisplay, currentSurface, EGL_HEIGHT, height)) {
+        return false;
+    }
+
+    return true;
+
+#elif defined(_WIN32)
 
     HDC hDC = wglGetCurrentDC();
     if (!hDC) {
@@ -735,10 +759,10 @@ getDrawableBounds(GLint *width, GLint *height) {
 
     *width = rect.size.width;
     *height = rect.size.height;
+    return true;
 
-#else
+#elif defined(HAVE_X11)
 
-#if !TRACE_EGL
     Display *display;
     Drawable drawable;
     Window root;
@@ -761,13 +785,13 @@ getDrawableBounds(GLint *width, GLint *height) {
 
     *width = w;
     *height = h;
-#else
-    return false;
-#endif
-
-#endif
-
     return true;
+
+#else
+
+    return false;
+
+#endif
 }
 
 
