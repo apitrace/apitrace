@@ -29,7 +29,7 @@
 import specs.stdapi as stdapi
 
 
-def interface_wrap_name(interface):
+def getWrapperInterfaceName(interface):
     return "Wrap" + interface.expr
 
 
@@ -121,19 +121,7 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         pass
 
     def visitInterface(self, interface):
-        print "class %s : public %s " % (interface_wrap_name(interface), interface.name)
-        print "{"
-        print "public:"
-        print "    %s(%s * pInstance);" % (interface_wrap_name(interface), interface.name)
-        print "    virtual ~%s();" % interface_wrap_name(interface)
-        print
-        for method in interface.iterMethods():
-            print "    " + method.prototype() + ";"
-        print
-        #print "private:"
-        print "    %s * m_pInstance;" % (interface.name,)
-        print "};"
-        print
+        pass
 
     def visitPolymorphic(self, polymorphic):
         print 'static void _write__%s(int selector, const %s & value) {' % (polymorphic.tag, polymorphic.expr)
@@ -289,7 +277,7 @@ class ValueWrapper(stdapi.Visitor):
         assert instance.startswith('*')
         instance = instance[1:]
         print "    if (%s) {" % instance
-        print "        %s = new %s(%s);" % (instance, interface_wrap_name(interface), instance)
+        print "        %s = new %s(%s);" % (instance, getWrapperInterfaceName(interface), instance)
         print "    }"
     
     def visitPolymorphic(self, type, instance):
@@ -304,7 +292,7 @@ class ValueUnwrapper(ValueWrapper):
         assert instance.startswith('*')
         instance = instance[1:]
         print "    if (%s) {" % instance
-        print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, interface_wrap_name(interface), instance)
+        print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, getWrapperInterfaceName(interface), instance)
         print "    }"
 
 
@@ -340,7 +328,8 @@ class Tracer:
 
         # Interfaces wrapers
         interfaces = [type for type in types if isinstance(type, stdapi.Interface)]
-        map(self.traceInterfaceImpl, interfaces)
+        map(self.declareWrapperInterface, interfaces)
+        map(self.implementWrapperInterface, interfaces)
         print
 
         # Function wrappers
@@ -446,20 +435,49 @@ class Tracer:
         visitor = ValueUnwrapper()
         visitor.visit(type, instance)
 
-    def traceInterfaceImpl(self, interface):
-        print '%s::%s(%s * pInstance) {' % (interface_wrap_name(interface), interface_wrap_name(interface), interface.name)
+    def declareWrapperInterface(self, interface):
+        print "class %s : public %s " % (getWrapperInterfaceName(interface), interface.name)
+        print "{"
+        print "public:"
+        print "    %s(%s * pInstance);" % (getWrapperInterfaceName(interface), interface.name)
+        print "    virtual ~%s();" % getWrapperInterfaceName(interface)
+        print
+        for method in interface.iterMethods():
+            print "    " + method.prototype() + ";"
+        print
+        self.declareWrapperInterfaceVariables(interface)
+        print "};"
+        print
+
+    def declareWrapperInterfaceVariables(self, interface):
+        #print "private:"
+        print "    %s * m_pInstance;" % (interface.name,)
+
+    def implementWrapperInterface(self, interface):
+        print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
         print '    m_pInstance = pInstance;'
         print '}'
         print
-        print '%s::~%s() {' % (interface_wrap_name(interface), interface_wrap_name(interface))
+        print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))
         print '}'
         print
         for method in interface.iterMethods():
-            self.traceMethod(interface, method)
+            self.implementWrapperInterfaceMethod(interface, method)
         print
 
-    def traceMethod(self, interface, method):
-        print method.prototype(interface_wrap_name(interface) + '::' + method.name) + ' {'
+    def implementWrapperInterfaceMethod(self, interface, method):
+        print method.prototype(getWrapperInterfaceName(interface) + '::' + method.name) + ' {'
+        if method.type is not stdapi.Void:
+            print '    %s __result;' % method.type
+    
+        self.implementWrapperInterfaceMethodBody(interface, method)
+    
+        if method.type is not stdapi.Void:
+            print '    return __result;'
+        print '}'
+        print
+
+    def implementWrapperInterfaceMethodBody(self, interface, method):
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
         print '    unsigned __call = trace::localWriter.beginEnter(&__sig);'
@@ -470,13 +488,10 @@ class Tracer:
             if not arg.output:
                 self.unwrapArg(method, arg)
                 self.serializeArg(method, arg)
-        if method.type is stdapi.Void:
-            result = ''
-        else:
-            print '    %s __result;' % method.type
-            result = '__result = '
         print '    trace::localWriter.endEnter();'
-        print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
+        
+        self.invokeMethod(interface, method)
+
         print '    trace::localWriter.beginLeave(__call);'
         for arg in method.args:
             if arg.output:
@@ -514,8 +529,26 @@ class Tracer:
             assert method.type is not stdapi.Void
             print '    if (!__result)'
             print '        delete this;'
-        if method.type is not stdapi.Void:
-            print '    return __result;'
-        print '}'
-        print
 
+    def invokeMethod(self, interface, method):
+        if method.type is stdapi.Void:
+            result = ''
+        else:
+            result = '__result = '
+        print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
+    
+    def emit_memcpy(self, dest, src, length):
+        print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
+        print '        trace::localWriter.beginArg(0);'
+        print '        trace::localWriter.writeOpaque(%s);' % dest
+        print '        trace::localWriter.endArg();'
+        print '        trace::localWriter.beginArg(1);'
+        print '        trace::localWriter.writeBlob(%s, %s);' % (src, length)
+        print '        trace::localWriter.endArg();'
+        print '        trace::localWriter.beginArg(2);'
+        print '        trace::localWriter.writeUInt(%s);' % length
+        print '        trace::localWriter.endArg();'
+        print '        trace::localWriter.endEnter();'
+        print '        trace::localWriter.beginLeave(__call);'
+        print '        trace::localWriter.endLeave();'
+       

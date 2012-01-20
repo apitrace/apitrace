@@ -581,21 +581,6 @@ class GlTracer(Tracer):
 
         Tracer.invokeFunction(self, function)
 
-    def emit_memcpy(self, dest, src, length):
-        print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
-        print '        trace::localWriter.beginArg(0);'
-        print '        trace::localWriter.writeOpaque(%s);' % dest
-        print '        trace::localWriter.endArg();'
-        print '        trace::localWriter.beginArg(1);'
-        print '        trace::localWriter.writeBlob(%s, %s);' % (src, length)
-        print '        trace::localWriter.endArg();'
-        print '        trace::localWriter.beginArg(2);'
-        print '        trace::localWriter.writeUInt(%s);' % length
-        print '        trace::localWriter.endArg();'
-        print '        trace::localWriter.endEnter();'
-        print '        trace::localWriter.beginLeave(__call);'
-        print '        trace::localWriter.endLeave();'
-       
     buffer_targets = [
         'ARRAY_BUFFER',
         'ELEMENT_ARRAY_BUFFER',
