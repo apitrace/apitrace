@@ -953,7 +953,8 @@ getFramebufferAttachmentFormat(GLenum target, GLenum attachment)
 
 
 image::Image *
-getDrawBufferImage(GLenum format) {
+getDrawBufferImage() {
+    GLenum format = GL_RGB;
     GLint channels = __gl_format_channels(format);
     if (channels > 4) {
         return NULL;
@@ -1204,7 +1205,10 @@ dumpDrawableImages(JSONWriter &json)
         glGetIntegerv(GL_READ_BUFFER, &read_buffer);
 
         GLint alpha_bits = 0;
+#if 0
+        // XXX: Ignore alpha until we are able to match the traced visual
         glGetIntegerv(GL_ALPHA_BITS, &alpha_bits);
+#endif
         GLenum format = alpha_bits ? GL_RGBA : GL_RGB;
         json.beginMember(enumToString(draw_buffer));
         dumpReadBufferImage(json, width, height, format);
@@ -1229,6 +1233,8 @@ dumpDrawableImages(JSONWriter &json)
         json.endMember();
     }
 }
+
+
 /**
  * Dump the specified framebuffer attachment.
  *

@@ -28,6 +28,8 @@
 #include <assert.h>
 #include <math.h>
 
+#include <algorithm>
+
 #include "image.hpp"
 
 
@@ -38,22 +40,28 @@ double Image::compare(Image &ref)
 {
     if (width != ref.width ||
         height != ref.height ||
-        channels != ref.channels) {
+        channels < 3 ||
+        ref.channels < 3) {
+        return 0.0;
+    }
+
+    // Ignore missing alpha when comparing RGB w/ RGBA, but enforce an equal
+    // number of channels otherwise.
+    unsigned minChannels = std::min(channels, ref.channels);
+    if (channels != ref.channels && minChannels < 3) {
         return 0.0;
     }
 
     const unsigned char *pSrc = start();
     const unsigned char *pRef = ref.start();
 
-    assert(channels >= 3);
-
     unsigned long long error = 0;
     for (unsigned y = 0; y < height; ++y) {
         for (unsigned  x = 0; x < width; ++x) {
             // FIXME: Ignore alpha channel until we are able to pick a visual
             // that matches the traces
-            for (unsigned  c = 0; c < 3; ++c) {
-                int delta = pSrc[x*channels + c] - pRef[x*channels + c];
+            for (unsigned  c = 0; c < minChannels; ++c) {
+                int delta = pSrc[x*channels + c] - pRef[x*ref.channels + c];
                 error += delta*delta;
             }
         }
@@ -63,7 +71,7 @@ double Image::compare(Image &ref)
     }
 
     double numerator = error*2 + 1;
-    double denominator = height*width*3ULL*255ULL*255ULL*2;
+    double denominator = height*width*minChannels*255ULL*255ULL*2;
     double quotient = numerator/denominator;
 
     // Precision in bits

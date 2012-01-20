@@ -157,7 +157,7 @@ void snapshot(unsigned call_no) {
         }
     }
 
-    image::Image *src = glstate::getDrawBufferImage(GL_RGBA);
+    image::Image *src = glstate::getDrawBufferImage();
     if (!src) {
         return;
     }

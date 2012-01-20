@@ -52,7 +52,7 @@ void dumpParameters(JSONWriter &json);
 void dumpCurrentContext(std::ostream &os);
 
 image::Image *
-getDrawBufferImage(GLenum format);
+getDrawBufferImage(void);
 
 
 } /* namespace glstate */
