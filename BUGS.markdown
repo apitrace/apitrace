@@ -120,9 +120,8 @@ Please attach long logs to https://gist.github.com/ and paste the URL into the
 issue description.
 
 For big attachments, such as traces, please upload it temporarily to a web
-server you control, or use a file upload service such as
-http://www.megaupload.com/ or http://dropbox.com/ and paste the URL into the
-issue description.
+server you control, or use a file upload service such as http://dropbox.com/
+and paste the URL into the issue description.
 
 Trace files are only slightly compressed (for performance reasons).  You can
 further reduce their size when attaching/uploading by compressing with
