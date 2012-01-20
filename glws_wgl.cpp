@@ -162,6 +162,14 @@ public:
 
     void swapBuffers(void) {
         SwapBuffers(hDC);
+
+        // Drain message queue to prevent window from being considered
+        // non-responsive
+        MSG msg;
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 };
 
