@@ -40,7 +40,7 @@ typedef HRESULT
 );
 
 
-void DumpShader(Trace::Writer &writer, const DWORD *tokens)
+void DumpShader(trace::Writer &writer, const DWORD *tokens)
 {
     static BOOL firsttime = TRUE;
     static HMODULE hD3DXModule = NULL;

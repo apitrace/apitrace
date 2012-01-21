@@ -74,20 +74,41 @@ GLquery = Handle("query", GLuint)
 GLfenceNV = Handle("fenceNV", GLuint)
 GLprogram = Handle("program", GLuint)
 GLshader = Handle("shader", GLuint)
-GLlocation = Handle("location", GLint, key=('program', GLuint))
-GLlocationARB = Handle("locationARB", GLint, key=('programObj', GLhandleARB))
+
+# Share the same mapping table for uniform locations of both core and
+# GL_ARB_shader_objects programs.  For a combination of reasons:
+#
+# - all OpenGL implementations appear to alias the names for both kind of
+#   programs;
+#
+# - most applications will use only one kind of shader programs;
+#
+# - some applications actually mix glUniformXxx calls with
+#   GL_ARB_shader_objects programs and glUniformXxxARB calls with core
+#   programs, and therefore, rely on a joint implementation.
+#
+# We use GLhandleARB as program key, since it is wider (void *) on MacOSX.
+#
+GLlocation = Handle("location", GLint, key=('program', GLhandleARB))
+GLlocationARB = Handle("location", GLint, key=('programObj', GLhandleARB))
+
 GLprogramARB = Handle("programARB", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
 GLarray = Handle("array", GLuint)
 GLregion = Handle("region", GLuint)
-GLmap = Handle("map", GLpointer)
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)
 
-GLsync_ = Opaque("GLsync")
+# GL mappings are pointers to linear memory regions.
+#
+# The map length is not always available in the function prototype, and must be
+# reconstructed from other state.
+GLmap = LinearPointer(GLvoid, "length")
+
+GLsync_ = IntPointer("GLsync")
 GLsync = Handle("sync", GLsync_)
 
 GLenum = Enum("GLenum", [

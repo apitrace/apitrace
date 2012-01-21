@@ -29,68 +29,166 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <string>
+
 #include "os.hpp"
+#include "os_string.hpp"
 
 
-namespace OS {
+namespace os {
 
 
-/* 
- * Trick from http://locklessinc.com/articles/pthreads_on_windows/
- */
-static CRITICAL_SECTION
-CriticalSection = {
-    (PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0
-};
-
-
-void
-AcquireMutex(void)
+String
+getProcessName(void)
 {
-    EnterCriticalSection(&CriticalSection); 
+    String path;
+    size_t size = MAX_PATH;
+    char *buf = path.buf(size);
+
+    DWORD nWritten = GetModuleFileNameA(NULL, buf, size);
+    (void)nWritten;
+
+    path.truncate();
+
+    return path;
 }
 
-
-void
-ReleaseMutex(void)
+String
+getCurrentDir(void)
 {
-    LeaveCriticalSection(&CriticalSection); 
-}
+    String path;
+    size_t size = MAX_PATH;
+    char *buf = path.buf(size);
+    
+    DWORD ret = GetCurrentDirectoryA(size, buf);
+    (void)ret;
+    
+    buf[size - 1] = 0;
+    path.truncate();
 
+    return path;
+}
 
 bool
-GetProcessName(char *str, size_t size)
+String::exists(void) const
 {
-    char szProcessPath[PATH_MAX];
-    char *lpProcessName;
-    char *lpProcessExt;
+    DWORD attrs = GetFileAttributesA(str());
+    return attrs != INVALID_FILE_ATTRIBUTES;
+}
 
-    GetModuleFileNameA(NULL, szProcessPath, sizeof(szProcessPath)/sizeof(szProcessPath[0]));
+/**
+ * Determine whether an argument should be quoted.
+ */
+static bool
+needsQuote(const char *arg)
+{
+    char c;
+    while (true) {
+        c = *arg++;
+        if (c == '\0') {
+            break;
+        }
+        if (c == ' ' || c == '\t' || c == '\"') {
+            return true;
+        }
+        if (c == '\\') {
+            c = *arg++;
+            if (c == '\0') {
+                break;
+            }
+            if (c == '"') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
-    lpProcessName = strrchr(szProcessPath, '\\');
-    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
+static void
+quoteArg(std::string &s, const char *arg)
+{
+    char c;
+    unsigned backslashes = 0;
+    
+    s.push_back('"');
+    while (true) {
+        c = *arg++;
+        switch (c)
+        if (c == '\0') {
+            break;
+        } else if (c == '"') {
+            while (backslashes) {
+                s.push_back('\\');
+                --backslashes;
+            }
+            s.push_back('\\');
+        } else {
+            if (c == '\\') {
+                ++backslashes;
+            } else {
+                backslashes = 0;
+            }
+        }
+        s.push_back(c);
+    }
+    s.push_back('"');
+}
 
-    lpProcessExt = strrchr(lpProcessName, '.');
-    if (lpProcessExt) {
-        *lpProcessExt = '\0';
+int execute(char * const * args)
+{
+    std::string commandLine;
+   
+    const char *arg0 = *args;
+    const char *arg;
+    char sep = 0;
+    while ((arg = *args++) != NULL) {
+        if (sep) {
+            commandLine.push_back(sep);
+        }
+
+        if (needsQuote(arg)) {
+            quoteArg(commandLine, arg);
+        } else {
+            commandLine.append(arg);
+        }
+
+        sep = ' ';
     }
 
-    strncpy(str, lpProcessName, size);
+    STARTUPINFO startupInfo;
+    memset(&startupInfo, 0, sizeof(startupInfo));
+    startupInfo.cb = sizeof(startupInfo);
 
-    return true;
-}
+    PROCESS_INFORMATION processInformation;
 
-bool
-GetCurrentDir(char *str, size_t size)
-{
-    DWORD ret;
-    ret = GetCurrentDirectoryA(size, str);
-    str[size - 1] = 0;
-    return ret == 0 ? false : true;
+    if (!CreateProcessA(NULL,
+                        const_cast<char *>(commandLine.c_str()), // only modified by CreateProcessW
+                        0, // process attributes
+                        0, // thread attributes
+                        FALSE, // inherit handles
+                        0, // creation flags,
+                        NULL, // environment
+                        NULL, // current directory
+                        &startupInfo,
+                        &processInformation
+                        )) {
+        log("error: failed to execute %s\n", arg0);
+        return -1;
+    }
+
+    WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+    DWORD exitCode = ~0;
+    GetExitCodeProcess(processInformation.hProcess, &exitCode);
+
+    CloseHandle(processInformation.hProcess);
+    CloseHandle(processInformation.hThread);
+
+    return (int)exitCode;
 }
 
 void
-DebugMessage(const char *format, ...)
+log(const char *format, ...)
 {
     char buf[4096];
 
@@ -115,18 +213,10 @@ DebugMessage(const char *format, ...)
 #endif
 }
 
-long long GetTime(void)
-{
-    static LARGE_INTEGER frequency;
-    LARGE_INTEGER counter;
-    if (!frequency.QuadPart)
-        QueryPerformanceFrequency(&frequency);
-    QueryPerformanceCounter(&counter);
-    return counter.QuadPart*1000000LL/frequency.QuadPart;
-}
+long long timeFrequency = 0LL;
 
 void
-Abort(void)
+abort(void)
 {
 #ifndef NDEBUG
     DebugBreak();
@@ -136,24 +226,64 @@ Abort(void)
 }
 
 
-static LPTOP_LEVEL_EXCEPTION_FILTER prevExceptionFilter = NULL;
+#ifndef DBG_PRINTEXCEPTION_C
+#define DBG_PRINTEXCEPTION_C 0x40010006
+#endif
+
+static PVOID prevExceptionFilter = NULL;
 static void (*gCallback)(void) = NULL;
 
-static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
+static LONG CALLBACK
+unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
-    if (gCallback) {
-        gCallback();
+    PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+
+    /*
+     * Ignore OutputDebugStringA exception.
+     */
+    if (pExceptionRecord->ExceptionCode == DBG_PRINTEXCEPTION_C) {
+        return EXCEPTION_CONTINUE_SEARCH;
     }
 
-	if (prevExceptionFilter) {
-		return prevExceptionFilter(pExceptionInfo);
-    } else {
-		return EXCEPTION_CONTINUE_SEARCH;
+    /*
+     * Ignore C++ exceptions
+     *
+     * http://support.microsoft.com/kb/185294
+     * http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
+     */
+    if (pExceptionRecord->ExceptionCode == 0xe06d7363) {
+        return EXCEPTION_CONTINUE_SEARCH;
     }
+
+    // Clear direction flag
+#ifdef _MSC_VER
+#ifndef _WIN64
+    __asm {
+        cld
+    };
+#endif
+#else
+    asm("cld");
+#endif
+
+    log("apitrace: warning: caught exception 0x%08lx\n", pExceptionRecord->ExceptionCode);
+
+    static int recursion_count = 0;
+    if (recursion_count) {
+        fprintf(stderr, "apitrace: warning: recursion handling exception\n");
+    } else {
+        if (gCallback) {
+            ++recursion_count;
+            gCallback();
+            --recursion_count;
+        }
+    }
+
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 
 void
-SetExceptionCallback(void (*callback)(void))
+setExceptionCallback(void (*callback)(void))
 {
     assert(!gCallback);
 
@@ -161,15 +291,19 @@ SetExceptionCallback(void (*callback)(void))
         gCallback = callback;
 
         assert(!prevExceptionFilter);
-        prevExceptionFilter = SetUnhandledExceptionFilter(UnhandledExceptionFilter);
+
+        prevExceptionFilter = AddVectoredExceptionHandler(0, unhandledExceptionHandler);
     }
 }
 
 void
-ResetExceptionCallback(void)
+resetExceptionCallback(void)
 {
-    gCallback = NULL;
+    if (gCallback) {
+        RemoveVectoredExceptionHandler(prevExceptionFilter);
+        gCallback = NULL;
+    }
 }
 
 
-} /* namespace OS */
+} /* namespace os */

@@ -37,6 +37,15 @@
 namespace glws {
 
 
+enum Profile {
+    PROFILE_COMPAT = 0,
+    PROFILE_CORE,
+    PROFILE_ES1,
+    PROFILE_ES2,
+    PROFILE_MAX
+};
+
+
 extern bool debug;
 
 
@@ -59,8 +68,8 @@ public:
         add(pvalue);
     }
 
-    void end(void) {
-        add(0);
+    void end(T terminator = 0) {
+        add(terminator);
     }
 
     operator T * (void) {
@@ -122,9 +131,11 @@ class Context
 {
 public:
     const Visual *visual;
+    Profile profile;
     
-    Context(const Visual *vis) :
-        visual(vis)
+    Context(const Visual *vis, Profile prof) :
+        visual(vis),
+        profile(prof)
     {}
 
     virtual ~Context() {}
@@ -138,13 +149,13 @@ void
 cleanup(void);
 
 Visual *
-createVisual(bool doubleBuffer = false);
+createVisual(bool doubleBuffer = false, Profile profile = PROFILE_COMPAT);
 
 Drawable *
 createDrawable(const Visual *visual, int width = 32, int height = 32);
 
 Context *
-createContext(const Visual *visual, Context *shareContext = 0);
+createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT);
 
 bool
 makeCurrent(Drawable *drawable, Context *context);

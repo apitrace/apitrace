@@ -26,6 +26,8 @@
 
 #include <string.h>
 
+#include "os_string.hpp"
+#include "os_time.hpp"
 #include "image.hpp"
 #include "retrace.hpp"
 #include "glproc.hpp"
@@ -37,8 +39,9 @@ namespace glretrace {
 
 bool double_buffer = true;
 bool insideGlBeginEnd = false;
-Trace::Parser parser;
-glws::Visual *visual = NULL;
+trace::Parser parser;
+glws::Profile defaultProfile = glws::PROFILE_COMPAT;
+glws::Visual *visual[glws::PROFILE_MAX];
 glws::Drawable *drawable = NULL;
 glws::Context *context = NULL;
 
@@ -54,7 +57,7 @@ enum frequency snapshot_frequency = FREQUENCY_NEVER;
 unsigned dump_state = ~0;
 
 void
-checkGlError(Trace::Call &call) {
+checkGlError(trace::Call &call) {
     GLenum error = glGetError();
     if (error == GL_NO_ERROR) {
         return;
@@ -110,8 +113,14 @@ updateDrawable(int width, int height) {
         return;
     }
 
-    if (width  <= glretrace::drawable->width &&
-        height <= glretrace::drawable->height) {
+    if (drawable->visible &&
+        width  <= drawable->width &&
+        height <= drawable->height) {
+        return;
+    }
+
+    // Ignore zero area viewports
+    if (width == 0 || height == 0) {
         return;
     }
 
@@ -122,10 +131,9 @@ updateDrawable(int width, int height) {
         return;
     }
 
-    glretrace::drawable->resize(width, height);
-    if (!drawable->visible) {
-        drawable->show();
-    }
+    drawable->resize(width, height);
+    drawable->show();
+
     glScissor(0, 0, width, height);
 }
 
@@ -136,12 +144,11 @@ void snapshot(unsigned call_no) {
         return;
     }
 
-    Image::Image *ref = NULL;
+    image::Image *ref = NULL;
 
     if (compare_prefix) {
-        char filename[PATH_MAX];
-        snprintf(filename, sizeof filename, "%s%010u.png", compare_prefix, call_no);
-        ref = Image::readPNG(filename);
+        os::String filename = os::String::format("%s%010u.png", compare_prefix, call_no);
+        ref = image::readPNG(filename);
         if (!ref) {
             return;
         }
@@ -150,7 +157,7 @@ void snapshot(unsigned call_no) {
         }
     }
 
-    Image::Image *src = glstate::getDrawBufferImage(GL_RGBA);
+    image::Image *src = glstate::getDrawBufferImage();
     if (!src) {
         return;
     }
@@ -161,8 +168,7 @@ void snapshot(unsigned call_no) {
             snprintf(comment, sizeof comment, "%u", call_no);
             src->writePNM(std::cout, comment);
         } else {
-            char filename[PATH_MAX];
-            snprintf(filename, sizeof filename, "%s%010u.png", snapshot_prefix, call_no);
+            os::String filename = os::String::format("%s%010u.png", snapshot_prefix, call_no);
             if (src->writePNG(filename) && retrace::verbosity >= 0) {
                 std::cout << "Wrote " << filename << "\n";
             }
@@ -178,12 +184,20 @@ void snapshot(unsigned call_no) {
 }
 
 
-void frame_complete(unsigned call_no) {
+void frame_complete(trace::Call &call) {
     ++frame;
+
+    if (!drawable) {
+        return;
+    }
+
+    if (!drawable->visible) {
+        retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
+    }
 
     if (snapshot_frequency == FREQUENCY_FRAME ||
         snapshot_frequency == FREQUENCY_FRAMEBUFFER) {
-        snapshot(call_no);
+        snapshot(call.no);
     }
 }
 
@@ -195,9 +209,10 @@ static void display(void) {
     retracer.addCallbacks(glx_callbacks);
     retracer.addCallbacks(wgl_callbacks);
     retracer.addCallbacks(cgl_callbacks);
+    retracer.addCallbacks(egl_callbacks);
 
-    startTime = OS::GetTime();
-    Trace::Call *call;
+    startTime = os::getTime();
+    trace::Call *call;
 
     while ((call = parser.parse_call())) {
         retracer.retrace(*call);
@@ -215,8 +230,8 @@ static void display(void) {
     // Reached the end of trace
     glFlush();
 
-    long long endTime = OS::GetTime();
-    float timeInterval = (endTime - startTime) * 1.0E-6;
+    long long endTime = os::getTime();
+    float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
 
     if (retrace::verbosity >= -1) { 
         std::cout << 
@@ -240,11 +255,12 @@ static void usage(void) {
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
         "  -c PREFIX    compare against snapshots\n"
+        "  -core        use core profile\n"
         "  -db          use a double buffer visual (default)\n"
         "  -sb          use a single buffer visual\n"
         "  -s PREFIX    take snapshots; `-` for PNM stdout output\n"
         "  -S FREQUENCY snapshot frequency: frame (default), framebuffer, or draw\n"
-        "  -v           verbose output\n"
+        "  -v           increase output verbosity\n"
         "  -D CALLNO    dump state at specific call no\n"
         "  -w           wait on final frame\n";
 }
@@ -275,6 +291,8 @@ int main(int argc, char **argv)
         } else if (!strcmp(arg, "-D")) {
             dump_state = atoi(argv[++i]);
             retrace::verbosity = -2;
+        } else if (!strcmp(arg, "-core")) {
+            defaultProfile = glws::PROFILE_CORE;
         } else if (!strcmp(arg, "-db")) {
             double_buffer = true;
         } else if (!strcmp(arg, "-sb")) {
@@ -318,7 +336,10 @@ int main(int argc, char **argv)
     }
 
     glws::init();
-    visual = glws::createVisual(double_buffer);
+    visual[glws::PROFILE_COMPAT] = glws::createVisual(double_buffer, glws::PROFILE_COMPAT);
+    visual[glws::PROFILE_CORE] = glws::createVisual(double_buffer, glws::PROFILE_CORE);
+    visual[glws::PROFILE_ES1] = glws::createVisual(double_buffer, glws::PROFILE_ES1);
+    visual[glws::PROFILE_ES2] = glws::createVisual(double_buffer, glws::PROFILE_ES2);
 
     for ( ; i < argc; ++i) {
         if (!parser.open(argv[i])) {
@@ -330,8 +351,11 @@ int main(int argc, char **argv)
 
         parser.close();
     }
-    
-    delete visual;
+
+    for (int n = 0; n < glws::PROFILE_MAX; n++) {
+        delete visual[n];
+    }
+
     glws::cleanup();
 
     return 0;

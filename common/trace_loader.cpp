@@ -1,7 +1,7 @@
 #include "trace_loader.hpp"
 
 
-using namespace Trace;
+using namespace trace;
 
 Loader::Loader()
     : m_frameMarker(FrameMarker_SwapBuffers)
@@ -50,7 +50,7 @@ bool Loader::open(const char *filename)
         return false;
     }
 
-    Trace::Call *call;
+    trace::Call *call;
     ParseBookmark startBookmark;
     unsigned numOfFrames = 0;
     unsigned numOfCalls = 0;
@@ -89,15 +89,13 @@ void Loader::close()
     m_parser.close();
 }
 
-bool Loader::isCallAFrameMarker(const Trace::Call *call) const
+bool Loader::isCallAFrameMarker(const trace::Call *call) const
 {
     std::string name = call->name();
 
     switch (m_frameMarker) {
     case FrameMarker_SwapBuffers:
-        return  name.find("SwapBuffers") != std::string::npos ||
-                name == "CGLFlushDrawable" ||
-                name == "glFrameTerminatorGREMEDY";
+        return call->flags & trace::CALL_FLAG_END_FRAME;
         break;
     case FrameMarker_Flush:
         return name == "glFlush";
@@ -112,15 +110,15 @@ bool Loader::isCallAFrameMarker(const Trace::Call *call) const
     return false;
 }
 
-std::vector<Trace::Call *> Loader::frame(unsigned idx)
+std::vector<trace::Call *> Loader::frame(unsigned idx)
 {
     unsigned numOfCalls = numberOfCallsInFrame(idx);
     if (numOfCalls) {
         const FrameBookmark &frameBookmark = m_frameBookmarks[idx];
-        std::vector<Trace::Call*> calls(numOfCalls);
+        std::vector<trace::Call*> calls(numOfCalls);
         m_parser.setBookmark(frameBookmark.start);
 
-        Trace::Call *call;
+        trace::Call *call;
         unsigned parsedCalls = 0;
         while ((call = m_parser.parse_call())) {
 
@@ -135,5 +133,5 @@ std::vector<Trace::Call *> Loader::frame(unsigned idx)
         assert(parsedCalls == numOfCalls);
         return calls;
     }
-    return std::vector<Trace::Call*>();
+    return std::vector<trace::Call*>();
 }

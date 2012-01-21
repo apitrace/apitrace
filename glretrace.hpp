@@ -36,8 +36,9 @@ namespace glretrace {
 
 extern bool double_buffer;
 extern bool insideGlBeginEnd;
-extern Trace::Parser parser;
-extern glws::Visual *visual;
+extern trace::Parser parser;
+extern glws::Profile defaultProfile;
+extern glws::Visual *visual[glws::PROFILE_MAX];
 extern glws::Drawable *drawable;
 extern glws::Context *context;
 
@@ -60,15 +61,16 @@ extern enum frequency snapshot_frequency;
 extern unsigned dump_state;
 
 void
-checkGlError(Trace::Call &call);
+checkGlError(trace::Call &call);
 
 extern const retrace::Entry gl_callbacks[];
 extern const retrace::Entry cgl_callbacks[];
 extern const retrace::Entry glx_callbacks[];
 extern const retrace::Entry wgl_callbacks[];
+extern const retrace::Entry egl_callbacks[];
 
 void snapshot(unsigned call_no);
-void frame_complete(unsigned call_no);
+void frame_complete(trace::Call &call);
 
 void updateDrawable(int width, int height);
 

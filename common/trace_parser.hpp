@@ -35,7 +35,7 @@
 #include "trace_model.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 struct ParseBookmark
@@ -59,6 +59,10 @@ protected:
     typedef std::list<Call *> CallList;
     CallList calls;
 
+    struct FunctionSigFlags : public FunctionSig {
+        CallFlags flags;
+    };
+
     // Helper template that extends a base signature structure, with additional
     // parsing information.
     template< class T >
@@ -69,7 +73,7 @@ protected:
         File::Offset offset;
     };
 
-    typedef SigState<FunctionSig> FunctionSigState;
+    typedef SigState<FunctionSigFlags> FunctionSigState;
     typedef SigState<StructSig> StructSigState;
     typedef SigState<EnumSig> EnumSigState;
     typedef SigState<BitmaskSig> BitmaskSigState;
@@ -83,6 +87,8 @@ protected:
     StructMap structs;
     EnumMap enums;
     BitmaskMap bitmasks;
+
+    FunctionSig *glGetErrorSig;
 
     unsigned next_call_no;
 
@@ -122,11 +128,15 @@ public:
 protected:
     Call *parse_call(Mode mode);
 
-    FunctionSig *parse_function_sig(void);
+    FunctionSigFlags *parse_function_sig(void);
     StructSig *parse_struct_sig();
+    EnumSig *parse_old_enum_sig();
     EnumSig *parse_enum_sig();
     BitmaskSig *parse_bitmask_sig();
     
+    static CallFlags
+    lookupCallFlags(const char *name);
+
     Call *parse_Call(Mode mode);
 
     void parse_enter(Mode mode);
@@ -134,6 +144,8 @@ protected:
     Call *parse_leave(Mode mode);
 
     bool parse_call_details(Call *call, Mode mode);
+
+    void adjust_call_flags(Call *call);
 
     void parse_arg(Call *call, Mode mode);
 
@@ -184,6 +196,9 @@ protected:
     const char * read_string(void);
     void skip_string(void);
 
+    signed long long read_sint(void);
+    void skip_sint(void);
+
     unsigned long long read_uint(void);
     void skip_uint(void);
 
@@ -192,6 +207,6 @@ protected:
 };
 
 
-} /* namespace Trace */
+} /* namespace trace */
 
 #endif /* _TRACE_PARSER_HPP_ */

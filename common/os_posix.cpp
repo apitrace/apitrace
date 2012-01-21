@@ -30,110 +30,136 @@
 #include <stdlib.h>
 
 #include <unistd.h>
-#include <sys/time.h>
-#include <pthread.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
 
+#if defined(__linux__)
+#include <linux/limits.h> // PATH_MAX
+#endif
+
 #ifdef __APPLE__
+#include <sys/syslimits.h> // PATH_MAX
 #include <mach-o/dyld.h>
 #endif
 
+#ifndef PATH_MAX
+#warning PATH_MAX undefined
+#define PATH_MAX 4096
+#endif
+
 #include "os.hpp"
+#include "os_string.hpp"
 
 
-namespace OS {
+namespace os {
 
 
-static pthread_mutex_t 
-mutex = PTHREAD_MUTEX_INITIALIZER;
-
-
-void
-AcquireMutex(void)
+String
+getProcessName(void)
 {
-    pthread_mutex_lock(&mutex);
-}
-
-
-void
-ReleaseMutex(void)
-{
-    pthread_mutex_unlock(&mutex);
-}
-
-
-bool
-GetProcessName(char *str, size_t size)
-{
-    char szProcessPath[PATH_MAX + 1];
-    char *lpProcessName;
+    String path;
+    size_t size = PATH_MAX;
+    char *buf = path.buf(size);
 
     // http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
 #ifdef __APPLE__
-    uint32_t len = sizeof szProcessPath;
-    if (_NSGetExecutablePath(szProcessPath, &len) != 0) {
-        *str = 0;
-        return false;
+    uint32_t len = size;
+    if (_NSGetExecutablePath(buf, &len) != 0) {
+        *buf = 0;
+        return path;
     }
+    len = strlen(buf);
 #else
     ssize_t len;
-    len = readlink("/proc/self/exe", szProcessPath, sizeof(szProcessPath) - 1);
+    len = readlink("/proc/self/exe", buf, size - 1);
     if (len == -1) {
         // /proc/self/exe is not available on setuid processes, so fallback to
         // /proc/self/cmdline.
         int fd = open("/proc/self/cmdline", O_RDONLY);
         if (fd >= 0) {
-            len = read(fd, szProcessPath, sizeof(szProcessPath) - 1);
+            len = read(fd, buf, size - 1);
             close(fd);
         }
     }
     if (len <= 0) {
-        snprintf(str, size, "%i", (int)getpid());
-        return true;
+        snprintf(buf, size, "%i", (int)getpid());
+        return path;
     }
 #endif
-    szProcessPath[len] = 0;
+    path.truncate(len);
 
-    lpProcessName = strrchr(szProcessPath, '/');
-    lpProcessName = lpProcessName ? lpProcessName + 1 : szProcessPath;
+    return path;
+}
 
-    strncpy(str, lpProcessName, size);
-    if (size)
-        str[size - 1] = 0;
+String
+getCurrentDir(void)
+{
+    String path;
+    size_t size = PATH_MAX;
+    char *buf = path.buf(size);
+
+    getcwd(buf, size);
+    buf[size - 1] = 0;
+    
+    path.truncate();
+    return path;
+}
+
+bool
+String::exists(void) const
+{
+    struct stat st;
+    int err;
+
+    err = stat(str(), &st);
+    if (err) {
+        return false;
+    }
+
+    if (!S_ISREG(st.st_mode))
+        return false;
 
     return true;
 }
 
-bool
-GetCurrentDir(char *str, size_t size)
+int execute(char * const * args)
 {
-    char *ret;
-    ret = getcwd(str, size);
-    str[size - 1] = 0;
-    return ret ? true : false;
+    pid_t pid = fork();
+    if (pid == 0) {
+        // child
+        execvp(args[0], args);
+        fprintf(stderr, "error: failed to execute %s\n", args[0]);
+        exit(-1);
+    } else {
+        // parent
+        if (pid == -1) {
+            fprintf(stderr, "error: failed to fork\n");
+            return -1;
+        }
+        int status = -1;
+        waitpid(pid, &status, 0);
+        return status;
+    }
 }
 
+static volatile bool logging = false;
+
 void
-DebugMessage(const char *format, ...)
+log(const char *format, ...)
 {
+    logging = true;
     va_list ap;
     va_start(ap, format);
     fflush(stdout);
     vfprintf(stderr, format, ap);
     va_end(ap);
-}
-
-long long GetTime(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_usec + tv.tv_sec*1000000LL;
+    logging = false;
 }
 
 void
-Abort(void)
+abort(void)
 {
     exit(0);
 }
@@ -151,14 +177,25 @@ struct sigaction old_actions[NUM_SIGNALS];
  * - http://sourceware.org/git/?p=glibc.git;a=blob;f=debug/segfault.c
  * - http://ggi.cvs.sourceforge.net/viewvc/ggi/ggi-core/libgg/gg/cleanup.c?view=markup
  */
-static void signal_handler(int sig, siginfo_t *info, void *context)
+static void
+signalHandler(int sig, siginfo_t *info, void *context)
 {
+    /*
+     * There are several signals that can happen when logging to stdout/stderr.
+     * For example, SIGPIPE will be emitted if stderr is a pipe with no
+     * readers.  Therefore ignore any signal while logging by returning
+     * immediately, to prevent deadlocks.
+     */
+    if (logging) {
+        return;
+    }
+
     static int recursion_count = 0;
 
-    fprintf(stderr, "signal_handler: sig = %i\n", sig);
+    log("apitrace: warning: caught signal %i\n", sig);
 
     if (recursion_count) {
-        fprintf(stderr, "recursion with sig %i\n", sig);
+        log("apitrace: warning: recursion handling signal %i\n", sig);
     } else {
         if (gCallback) {
             ++recursion_count;
@@ -170,7 +207,7 @@ static void signal_handler(int sig, siginfo_t *info, void *context)
     struct sigaction *old_action;
     if (sig >= NUM_SIGNALS) {
         /* This should never happen */
-        fprintf(stderr, "Unexpected signal %i\n", sig);
+        log("error: unexpected signal %i\n", sig);
         raise(SIGKILL);
     }
     old_action = &old_actions[sig];
@@ -180,7 +217,7 @@ static void signal_handler(int sig, siginfo_t *info, void *context)
         old_action->sa_sigaction(sig, info, context);
     } else {
         if (old_action->sa_handler == SIG_DFL) {
-            fprintf(stderr, "taking default action for signal %i\n", sig);
+            log("apitrace: info: taking default action for signal %i\n", sig);
 
 #if 1
             struct sigaction dfl_action;
@@ -203,34 +240,49 @@ static void signal_handler(int sig, siginfo_t *info, void *context)
 }
 
 void
-SetExceptionCallback(void (*callback)(void))
+setExceptionCallback(void (*callback)(void))
 {
     assert(!gCallback);
     if (!gCallback) {
         gCallback = callback;
 
         struct sigaction new_action;
-        new_action.sa_sigaction = signal_handler;
+        new_action.sa_sigaction = signalHandler;
         sigemptyset(&new_action.sa_mask);
         new_action.sa_flags = SA_SIGINFO | SA_RESTART;
 
 
         for (int sig = 1; sig < NUM_SIGNALS; ++sig) {
-            // SIGKILL and SIGSTOP can't be handled
-            if (sig != SIGKILL && sig != SIGSTOP) {
-                if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
-                    sigaction(sig,  &new_action, NULL);
-                }
+            // SIGKILL and SIGSTOP can't be handled.
+            if (sig == SIGKILL || sig == SIGSTOP) {
+                continue;
+            }
+
+            /*
+             * SIGPIPE can be emitted when writing to stderr that is redirected
+             * to a pipe without readers.  It is also very unlikely to ocurr
+             * inside graphics APIs, and most applications where it can occur
+             * normally already ignore it.  In summary, it is unlikely that a
+             * SIGPIPE will cause abnormal termination, which it is likely that
+             * intercepting here will cause problems, so simple don't intercept
+             * it here.
+             */
+            if (sig == SIGPIPE) {
+                continue;
+            }
+
+            if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
+                sigaction(sig,  &new_action, NULL);
             }
         }
     }
 }
 
 void
-ResetExceptionCallback(void)
+resetExceptionCallback(void)
 {
     gCallback = NULL;
 }
 
-} /* namespace OS */
+} /* namespace os */
 

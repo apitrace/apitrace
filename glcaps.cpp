@@ -32,6 +32,7 @@
  */
 
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -81,7 +82,11 @@ overrideExtensionsString(const char *extensions)
         extra_extensions_len += extra_extension_len + 1;
     }
 
-    char *new_extensions = (char *)malloc(extensions_len + 1 + extra_extensions_len);
+    // We use malloc memory instead of a std::string because we need to ensure
+    // that extensions strings will not move in memory as the extensionsMap is
+    // updated.
+    size_t new_extensions_len = extensions_len + 1 + extra_extensions_len + 1;
+    char *new_extensions = (char *)malloc(new_extensions_len);
     if (!new_extensions) {
         return extensions;
     }
@@ -102,7 +107,8 @@ overrideExtensionsString(const char *extensions)
         extensions_len += extra_extension_len;
         new_extensions[extensions_len++] = ' ';
     }
-    new_extensions[extensions_len] = '\0';
+    new_extensions[extensions_len++] = '\0';
+    assert(extensions_len <= new_extensions_len);
 
     extensionsMap[extensions] = new_extensions;
 

@@ -39,10 +39,12 @@ import operator
 from PIL import Image
 from PIL import ImageChops
 from PIL import ImageEnhance
+from PIL import ImageFilter
 
 
 thumb_size = 320, 320
 
+gaussian_kernel = ImageFilter.Kernel((3, 3), [1, 2, 1, 2, 4, 2, 1, 2, 1], 16)
 
 class Comparer:
     '''Image comparer.'''
@@ -65,6 +67,9 @@ class Comparer:
 
         self.diff = ImageChops.difference(self.src_im, self.ref_im)
 
+    def size_mismatch(self):
+        return self.ref_im.size != self.src_im.size
+
     def write_diff(self, diff_image, fuzz = 0.05):
         # make a difference image similar to ImageMagick's compare utility
         mask = ImageEnhance.Brightness(self.diff).enhance(1.0/fuzz)
@@ -77,9 +82,16 @@ class Comparer:
         diff_im = Image.blend(self.src_im, diff_im, 0xcc/255.0)
         diff_im.save(diff_image)
 
-    def precision(self):
+    def precision(self, filter=False):
+        if self.size_mismatch():
+            return 0.0
+
+        diff = self.diff
+        if filter:
+            diff = diff.filter(gaussian_kernel)
+
         # See also http://effbot.org/zone/pil-comparing-images.htm
-        h = self.diff.histogram()
+        h = diff.histogram()
         square_error = 0
         for i in range(1, 256):
             square_error += sum(h[i : 3*256: 256])*i*i
@@ -87,8 +99,12 @@ class Comparer:
         bits = -math.log(rel_error)/math.log(2.0)
         return bits
 
-    def ae(self):
+    def ae(self, fuzz = 0.05):
         # Compute absolute error
+
+        if self.size_mismatch():
+            return sys.maxint
+
         # TODO: this is approximate due to the grayscale conversion
         h = self.diff.convert('L').histogram()
         ae = sum(h[int(255 * fuzz) + 1 : 256])
@@ -111,10 +127,11 @@ def surface(html, image):
 
 
 def is_image(path):
-    return \
-        path.endswith('.png') \
-        and not path.endswith('.diff.png') \
-        and not path.endswith('.thumb.png')
+    name = os.path.basename(path)
+    name, ext1 = os.path.splitext(name)
+    name, ext2 = os.path.splitext(name)
+    print name, ext1, ext2
+    return ext1 in ('.png', '.bmp') and ext2 not in ('.diff', '.thumb')
 
 
 def find_images(prefix):
@@ -138,8 +155,7 @@ def main():
     global options
 
     optparser = optparse.OptionParser(
-        usage="\n\t%prog [options] <ref_prefix> <src_prefix>",
-        version="%%prog")
+        usage="\n\t%prog [options] <ref_prefix> <src_prefix>")
     optparser.add_option(
         '-o', '--output', metavar='FILE',
         type="string", dest="output", default='index.html',
@@ -149,9 +165,13 @@ def main():
         type="float", dest="fuzz", default=0.05,
         help="fuzz ratio [default: %default]")
     optparser.add_option(
+        '-a', '--alpha',
+        action="store_true", dest="alpha", default=False,
+        help="take alpha channel in consideration")
+    optparser.add_option(
         '--overwrite',
         action="store_true", dest="overwrite", default=False,
-        help="overwrite")
+        help="overwrite images")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
 
@@ -185,7 +205,7 @@ def main():
                or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
                    and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
 
-                comparer = Comparer(ref_image, src_image)
+                comparer = Comparer(ref_image, src_image, options.alpha)
                 comparer.write_diff(delta_image, fuzz=options.fuzz)
 
             html.write('      <tr>\n')

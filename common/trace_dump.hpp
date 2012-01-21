@@ -23,68 +23,50 @@
  *
  **************************************************************************/
 
-
 /*
- * Simple utility to dump a trace to standard output.
+ * Human-readible dumping.
  */
 
-
-#include <string.h>
-
-#include "trace_parser.hpp"
+#ifndef _TRACE_DUMP_HPP_
+#define _TRACE_DUMP_HPP_
 
 
-static bool color = true;
+#include <iostream>
+
+#include "trace_model.hpp"
 
 
-static void usage(void) {
-    std::cout <<
-        "Usage: tracedump [OPTION] [TRACE...]\n"
-        "Dump TRACE to standard output.\n"
-        "\n"
-        "  --no-color   no colored syntax highlightint\n"
-        "  --no-colour  alias for --no-color\n"
-    ;
+namespace trace {
+
+
+typedef unsigned DumpFlags;
+
+enum {
+    DUMP_FLAG_NO_COLOR                 = (1 << 0),
+    DUMP_FLAG_NO_ARG_NAMES             = (1 << 1),
+};
+
+
+void dump(Value *value, std::ostream &os, DumpFlags flags = 0);
+
+
+inline std::ostream & operator <<(std::ostream &os, Value *value) {
+    if (value) {
+        dump(value, os);
+    }
+    return os;
 }
 
 
-int main(int argc, char **argv)
-{
-    int i;
+void dump(Call &call, std::ostream &os, DumpFlags flags = 0);
 
-    for (i = 1; i < argc; ++i) {
-        const char *arg = argv[i];
 
-        if (arg[0] != '-') {
-            break;
-        }
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "--no-color") ||
-                   !strcmp(arg, "--no-colour")) {
-            color = false;
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
-            usage();
-            return 1;
-        }
-    }
-
-    for (; i < argc; ++i) {
-        Trace::Parser p;
-
-        if (!p.open(argv[i])) {
-            std::cerr << "error: failed to open " << argv[i] << "\n";
-            return 1;
-        }
-
-        Trace::Call *call;
-        while ((call = p.parse_call())) {
-            call->dump(std::cout, color);
-            delete call;
-        }
-    }
-
-    return 0;
+inline std::ostream & operator <<(std::ostream &os, Call &call) {
+    dump(call, os);
+    return os;
 }
+
+
+} /* namespace trace */
+
+#endif /* _TRACE_DUMP_HPP_ */

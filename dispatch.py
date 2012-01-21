@@ -54,24 +54,18 @@ class Dispatcher:
 
     def dispatch_api(self, api):
         for function in api.functions:
-            self.dispatch_function(function)
+            self.invokeFunction(function)
         
         # define standard name aliases for convenience, but only when not
         # tracing, as that would cause symbol clashing with the tracing
         # functions
         print '#ifdef RETRACE'
         for function in api.functions:
-            if self.is_public_function(function):
-                print '#define __%s %s' % (function.name, function.name)
-            else:
-                print '#define %s __%s' % (function.name, function.name)
+            print '#define %s __%s' % (function.name, function.name)
         print '#endif /* RETRACE */'
         print
 
-    def dispatch_function(self, function):
-        if self.is_public_function(function):
-            print '#ifndef RETRACE'
-            print
+    def invokeFunction(self, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
@@ -87,30 +81,27 @@ class Dispatcher:
         print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
         print '}'
         print
-        if self.is_public_function(function):
-            print '#endif /* !RETRACE */'
-            print
 
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         return True
 
     def get_true_pointer(self, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
-        if self.is_public_function(function):
+        if self.isFunctionPublic(function):
             get_proc_address = '__getPublicProcAddress'
         else:
             get_proc_address = '__getPrivateProcAddress'
         print '    if (!%s) {' % (pvalue,)
         print '        %s = (%s)%s(__name);' % (pvalue, ptype, get_proc_address)
         print '        if (!%s) {' % (pvalue,)
-        self.fail_function(function)
+        self.failFunction(function)
         print '        }'
         print '    }'
 
-    def fail_function(self, function):
+    def failFunction(self, function):
         if function.type is stdapi.Void or function.fail is not None:
-            print r'            OS::DebugMessage("warning: ignoring call to unavailable function %s\n", __name);'
+            print r'            os::log("warning: ignoring call to unavailable function %s\n", __name);'
             if function.type is stdapi.Void:
                 assert function.fail is None
                 print '            return;' 
@@ -118,7 +109,7 @@ class Dispatcher:
                 assert function.fail is not None
                 print '            return %s;' % function.fail
         else:
-            print r'            OS::DebugMessage("error: unavailable function %s\n", __name);'
-            print r'            OS::Abort();'
+            print r'            os::log("error: unavailable function %s\n", __name);'
+            print r'            os::abort();'
 
 

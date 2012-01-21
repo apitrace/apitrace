@@ -37,29 +37,12 @@ from dispatch import function_pointer_type, function_pointer_value
 
 class GlxTracer(GlTracer):
 
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         # The symbols visible in libGL.so can vary, so expose them all
         return True
 
-    def trace_function_impl_body(self, function):
-        GlTracer.trace_function_impl_body(self, function)
-
-        # Take snapshots
-        if function.name == 'glXSwapBuffers':
-            print '    glsnapshot::snapshot(__call);'
-        if function.name in ('glFinish', 'glFlush'):
-            print '    GLint __draw_framebuffer = 0;'
-            print '    __glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &__draw_framebuffer);'
-            print '    if (__draw_framebuffer == 0) {'
-            print '        GLint __draw_buffer = GL_NONE;'
-            print '        __glGetIntegerv(GL_DRAW_BUFFER, &__draw_buffer);'
-            print '        if (__draw_buffer == GL_FRONT) {'
-            print '             glsnapshot::snapshot(__call);'
-            print '        }'
-            print '    }'
-
-    def wrap_ret(self, function, instance):
-        GlTracer.wrap_ret(self, function, instance)
+    def wrapRet(self, function, instance):
+        GlTracer.wrapRet(self, function, instance)
 
         if function.name in ("glXGetProcAddress", "glXGetProcAddressARB"):
             print '    %s = __unwrap_proc_addr(procName, %s);' % (instance, instance)
@@ -75,7 +58,7 @@ if __name__ == '__main__':
     print '#endif'
     print '#include <dlfcn.h>'
     print
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print
     print '// To validate our prototypes'
     print '#define GL_GLEXT_PROTOTYPES'
@@ -83,14 +66,13 @@ if __name__ == '__main__':
     print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
-    print '#include "glsnapshot.hpp"'
     print
     print 'static __GLXextFuncPtr __unwrap_proc_addr(const GLubyte * procName, __GLXextFuncPtr procPtr);'
     print
 
     api = API()
-    api.add_api(glxapi)
-    api.add_api(glapi)
+    api.addApi(glxapi)
+    api.addApi(glapi)
     tracer = GlxTracer()
     tracer.trace_api(api)
 
@@ -105,17 +87,11 @@ if __name__ == '__main__':
         print '        %s = (%s)procPtr;' % (pvalue, ptype)
         print '        return (__GLXextFuncPtr)&%s;' % (f.name,)
         print '    }'
-    print '    OS::DebugMessage("apitrace: warning: unknown function \\"%s\\"\\n", (const char *)procName);'
+    print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", (const char *)procName);'
     print '    return procPtr;'
     print '}'
     print
     print r'''
-
-
-/*
- * Handle to the true libGL.so
- */
-static void *libgl_handle = NULL;
 
 
 /*
@@ -129,7 +105,7 @@ static void *__dlopen(const char *filename, int flag)
     if (!dlopen_ptr) {
         dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
         if (!dlopen_ptr) {
-            OS::DebugMessage("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
+            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
             return NULL;
         }
     }
@@ -155,7 +131,7 @@ void * dlopen(const char *filename, int flag)
 
     if (filename && handle && !libgl_filename) {
         if (0) {
-            OS::DebugMessage("apitrace: warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
+            os::log("apitrace: warning: dlopen(\"%s\", 0x%x)\n", filename, flag);
         }
 
         // FIXME: handle absolute paths and other versions
@@ -163,16 +139,16 @@ void * dlopen(const char *filename, int flag)
             strcmp(filename, "libGL.so.1") == 0) {
 
             // Use the true libGL.so handle instead of RTLD_NEXT from now on
-            libgl_handle = handle;
+            __libGlHandle = handle;
 
             // Get the file path for our shared object, and use it instead
             static int dummy = 0xdeedbeef;
             Dl_info info;
             if (dladdr(&dummy, &info)) {
-                OS::DebugMessage("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
+                os::log("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
                 handle = __dlopen(info.dli_fname, flag);
             } else {
-                OS::DebugMessage("apitrace: warning: dladdr() failed\n");
+                os::log("apitrace: warning: dladdr() failed\n");
             }
         }
     }
@@ -180,52 +156,6 @@ void * dlopen(const char *filename, int flag)
     return handle;
 }
 
-
-/*
- * Lookup a libGL symbol
- */
-void * __libgl_sym(const char *symbol)
-{
-    void *result;
-
-    if (!libgl_handle) {
-        /*
-         * The app doesn't directly link against libGL.so, nor does it directly
-         * dlopen it.  So we have to load it ourselves.
-         */
-
-        const char * libgl_filename = getenv("TRACE_LIBGL");
-
-        if (!libgl_filename) {
-            /*
-             * Try to use whatever libGL.so the library is linked against.
-             */
-
-            result = dlsym(RTLD_NEXT, symbol);
-            if (result) {
-                libgl_handle = RTLD_NEXT;
-                return result;
-            }
-
-            libgl_filename = "libGL.so.1";
-        }
-
-        /*
-         * It would have been preferable to use RTLD_LOCAL to ensure that the
-         * application can never access libGL.so symbols directly, but this
-         * won't work, given libGL.so often loads a driver specific SO and
-         * exposes symbols to it.
-         */
-
-        libgl_handle = __dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
-        if (!libgl_handle) {
-            OS::DebugMessage("apitrace: error: couldn't find libGL.so\n");
-            return NULL;
-        }
-    }
-
-    return dlsym(libgl_handle, symbol);
-}
 
 
 '''

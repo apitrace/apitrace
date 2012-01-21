@@ -770,7 +770,7 @@ IDWriteFactory.methods += [
 ]
 
 dwrite = API("dwrite")
-dwrite.add_interface(IDWriteFactory)
-dwrite.add_functions([
+dwrite.addInterface(IDWriteFactory)
+dwrite.addFunctions([
     StdFunction(HRESULT, "DWriteCreateFactory", [(DWRITE_FACTORY_TYPE, "factoryType"), (REFIID, "iid"), Out(Pointer(Pointer(IUnknown)), "factory")]),
 ])

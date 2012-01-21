@@ -24,11 +24,10 @@
  **************************************************************************/
 
 
-#include "formatter.hpp"
 #include "trace_model.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 Call::~Call() {
@@ -80,8 +79,8 @@ bool Bool   ::toBool(void) const { return value; }
 bool SInt   ::toBool(void) const { return value != 0; }
 bool UInt   ::toBool(void) const { return value != 0; }
 bool Float  ::toBool(void) const { return value != 0; }
+bool Double ::toBool(void) const { return value != 0; }
 bool String ::toBool(void) const { return true; }
-bool Enum   ::toBool(void) const { return sig->value != 0; }
 bool Struct ::toBool(void) const { return true; }
 bool Array  ::toBool(void) const { return true; }
 bool Blob   ::toBool(void) const { return true; }
@@ -95,7 +94,7 @@ signed long long Bool   ::toSInt(void) const { return static_cast<signed long lo
 signed long long SInt   ::toSInt(void) const { return value; }
 signed long long UInt   ::toSInt(void) const { assert(static_cast<signed long long>(value) >= 0); return static_cast<signed long long>(value); }
 signed long long Float  ::toSInt(void) const { return static_cast<signed long long>(value); }
-signed long long Enum   ::toSInt(void) const { return sig->value; }
+signed long long Double ::toSInt(void) const { return static_cast<signed long long>(value); }
 
 
 // unsigned integer cast
@@ -105,7 +104,7 @@ unsigned long long Bool   ::toUInt(void) const { return static_cast<unsigned lon
 unsigned long long SInt   ::toUInt(void) const { assert(value >= 0); return static_cast<signed long long>(value); }
 unsigned long long UInt   ::toUInt(void) const { return value; }
 unsigned long long Float  ::toUInt(void) const { return static_cast<unsigned long long>(value); }
-unsigned long long Enum   ::toUInt(void) const { assert(sig->value >= 0); return sig->value; }
+unsigned long long Double ::toUInt(void) const { return static_cast<unsigned long long>(value); }
 
 
 // floating point cast
@@ -115,7 +114,7 @@ float Bool   ::toFloat(void) const { return static_cast<float>(value); }
 float SInt   ::toFloat(void) const { return static_cast<float>(value); }
 float UInt   ::toFloat(void) const { return static_cast<float>(value); }
 float Float  ::toFloat(void) const { return value; }
-float Enum   ::toFloat(void) const { return static_cast<float>(sig->value); }
+float Double ::toFloat(void) const { return value; }
 
 
 // floating point cast
@@ -125,7 +124,7 @@ double Bool   ::toDouble(void) const { return static_cast<double>(value); }
 double SInt   ::toDouble(void) const { return static_cast<double>(value); }
 double UInt   ::toDouble(void) const { return static_cast<double>(value); }
 double Float  ::toDouble(void) const { return value; }
-double Enum   ::toDouble(void) const { return static_cast<double>(sig->value); }
+double Double ::toDouble(void) const { return value; }
 
 
 // pointer cast
@@ -158,6 +157,7 @@ void Bool   ::visit(Visitor &visitor) { visitor.visit(this); }
 void SInt   ::visit(Visitor &visitor) { visitor.visit(this); }
 void UInt   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Float  ::visit(Visitor &visitor) { visitor.visit(this); }
+void Double ::visit(Visitor &visitor) { visitor.visit(this); }
 void String ::visit(Visitor &visitor) { visitor.visit(this); }
 void Enum   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Bitmask::visit(Visitor &visitor) { visitor.visit(this); }
@@ -172,6 +172,7 @@ void Visitor::visit(Bool *) { assert(0); }
 void Visitor::visit(SInt *) { assert(0); }
 void Visitor::visit(UInt *) { assert(0); }
 void Visitor::visit(Float *) { assert(0); }
+void Visitor::visit(Double *) { assert(0); }
 void Visitor::visit(String *) { assert(0); }
 void Visitor::visit(Enum *node) { assert(0); }
 void Visitor::visit(Bitmask *node) { visit(static_cast<UInt *>(node)); }
@@ -179,182 +180,6 @@ void Visitor::visit(Struct *) { assert(0); }
 void Visitor::visit(Array *) { assert(0); }
 void Visitor::visit(Blob *) { assert(0); }
 void Visitor::visit(Pointer *) { assert(0); }
-
-
-class Dumper : public Visitor
-{
-protected:
-    std::ostream &os;
-    Formatter::Formatter *formatter;
-    Formatter::Attribute *normal;
-    Formatter::Attribute *bold;
-    Formatter::Attribute *italic;
-    Formatter::Attribute *red;
-    Formatter::Attribute *pointer;
-    Formatter::Attribute *literal;
-
-public:
-    Dumper(std::ostream &_os, bool color) : os(_os) {
-        formatter = Formatter::defaultFormatter(color);
-        normal = formatter->normal();
-        bold = formatter->bold();
-        italic = formatter->italic();
-        red = formatter->color(Formatter::RED);
-        pointer = formatter->color(Formatter::GREEN);
-        literal = formatter->color(Formatter::BLUE);
-    }
-
-    ~Dumper() {
-        delete normal;
-        delete bold;
-        delete italic;
-        delete red;
-        delete pointer;
-        delete literal;
-        delete formatter;
-    }
-
-    void visit(Null *) {
-        os << "NULL";
-    }
-
-    void visit(Bool *node) {
-        os << literal << (node->value ? "true" : "false") << normal;
-    }
-
-    void visit(SInt *node) {
-        os << literal << node->value << normal;
-    }
-
-    void visit(UInt *node) {
-        os << literal << node->value << normal;
-    }
-
-    void visit(Float *node) {
-        os << literal << node->value << normal;
-    }
-
-    void visit(String *node) {
-        os << literal << "\"";
-        for (const char *it = node->value; *it; ++it) {
-            unsigned char c = (unsigned char) *it;
-            if (c == '\"')
-                os << "\\\"";
-            else if (c == '\\')
-                os << "\\\\";
-            else if (c >= 0x20 && c <= 0x7e)
-                os << c;
-            else if (c == '\t') {
-                os << "\t";
-            } else if (c == '\r') {
-                // Ignore carriage-return
-            } else if (c == '\n') {
-                // Reset formatting so that it looks correct with 'less -R'
-                os << normal << '\n' << literal;
-            } else {
-                unsigned octal0 = c & 0x7;
-                unsigned octal1 = (c >> 3) & 0x7;
-                unsigned octal2 = (c >> 3) & 0x7;
-                os << "\\";
-                if (octal2)
-                    os << octal2;
-                if (octal1)
-                    os << octal1;
-                os << octal0;
-            }
-        }
-        os << "\"" << normal;
-    }
-
-    void visit(Enum *node) {
-        os << literal << node->sig->name << normal;
-    }
-
-    void visit(Bitmask *bitmask) {
-        unsigned long long value = bitmask->value;
-        const BitmaskSig *sig = bitmask->sig;
-        bool first = true;
-        for (const BitmaskFlag *it = sig->flags; value != 0 && it != sig->flags + sig->num_flags; ++it) {
-            if ((it->value && (value & it->value) == it->value) ||
-                (!it->value && value == 0)) {
-                if (!first) {
-                    os << " | ";
-                }
-                os << literal << it->name << normal;
-                value &= ~it->value;
-                first = false;
-            }
-        }
-        if (value || first) {
-            if (!first) {
-                os << " | ";
-            }
-            os << literal << "0x" << std::hex << value << std::dec << normal;
-        }
-    }
-
-    void visit(Struct *s) {
-        const char *sep = "";
-        os << "{";
-        for (unsigned i = 0; i < s->members.size(); ++i) {
-            os << sep << italic << s->sig->member_names[i] << normal << " = ";
-            _visit(s->members[i]);
-            sep = ", ";
-        }
-        os << "}";
-    }
-
-    void visit(Array *array) {
-        if (array->values.size() == 1) {
-            os << "&";
-            _visit(array->values[0]);
-        }
-        else {
-            const char *sep = "";
-            os << "{";
-            for (std::vector<Value *>::iterator it = array->values.begin(); it != array->values.end(); ++it) {
-                os << sep;
-                _visit(*it);
-                sep = ", ";
-            }
-            os << "}";
-        }
-    }
-
-    void visit(Blob *blob) {
-        os << pointer << "blob(" << blob->size << ")" << normal;
-    }
-
-    void visit(Pointer *p) {
-        os << pointer << "0x" << std::hex << p->value << std::dec << normal;
-    }
-
-    void visit(Call *call) {
-        const char *sep = "";
-        os << bold << call->sig->name << normal << "(";
-        for (unsigned i = 0; i < call->args.size(); ++i) {
-            os << sep << italic << call->sig->arg_names[i] << normal << " = ";
-            if (call->args[i]) {
-                _visit(call->args[i]);
-            } else {
-               os << "?";
-            }
-            sep = ", ";
-        }
-        os << ")";
-        if (call->ret) {
-            os << " = ";
-            _visit(call->ret);
-        }
-        os << "\n";
-    }
-};
-
-
-void Value::dump(std::ostream &os, bool color) {
-    Dumper d(os, color);
-    visit(d);
-}
 
 
 static Null null;
@@ -369,11 +194,4 @@ const Value & Value::operator[](size_t index) const {
     return null;
 }
 
-void Call::dump(std::ostream &os, bool color) {
-    Dumper d(os, color);
-    os << no << " ";
-    d.visit(this);
-}
-
-
-} /* namespace Trace */
+} /* namespace trace */

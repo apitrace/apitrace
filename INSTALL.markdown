@@ -9,6 +9,8 @@ Requirements common for all platforms:
 
 * Python version 2.6 or 2.7
 
+  * Python Image Library
+
 * CMake version 2.8 or higher (tested with version 2.8)
 
 
@@ -52,7 +54,14 @@ Additional requirements:
 
 * Microsoft Visual Studio (tested with 2008 version) or MinGW (tested with gcc version 4.4)
 
-* Microsoft DirectX SDK (tested with August 2007 release)
+* Microsoft DirectX SDK:
+
+  * for D3D10 support the [latest](http://msdn.microsoft.com/en-us/directx/default.aspx) is
+    recommended.
+
+  * for DDRAW, D3D7, D3D8 support the [August 2007 release](http://www.microsoft.com/downloads/details.aspx?familyid=529F03BE-1339-48C4-BD5A-8506E5ACF571)
+    or earlier is required, as later releases do not include the necessary
+    headers.
 
 To build with Visual Studio first invoke CMake GUI as:
 
@@ -64,7 +73,7 @@ It will try to detect most required/optional dependencies automatically.  When
 not found automatically, you can manually specify the location of the
 dependencies from the CMake GUI.
 
-After you've succesfully configured, you can start the build by opening the
+After you've successfully configured, you can start the build by opening the
 generated `build\apitrace.sln` solution file, or invoking `cmake` as:
 
     cmake --build build --config MinSizeRel

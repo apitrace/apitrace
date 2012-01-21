@@ -1,6 +1,7 @@
 #ifndef RETRACER_H
 #define RETRACER_H
 
+#include "trace_api.hpp"
 #include "apitracecall.h"
 
 #include <QThread>
@@ -25,6 +26,8 @@ public:
     QString fileName() const;
     void setFileName(const QString &name);
 
+    void setAPI(trace::API api);
+
     bool isBenchmarking() const;
     void setBenchmarking(bool bench);
 
@@ -48,11 +51,12 @@ signals:
     void retraceErrors(const QList<ApiTraceError> &errors);
 
 private slots:
-    void replayFinished();
+    void replayFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void replayError(QProcess::ProcessError err);
 
 private:
     QString m_fileName;
+    trace::API m_api;
     bool m_benchmarking;
     bool m_doubleBuffered;
     bool m_captureState;
@@ -70,6 +74,8 @@ public:
 
     QString fileName() const;
     void setFileName(const QString &name);
+
+    void setAPI(trace::API api);
 
     bool isBenchmarking() const;
     void setBenchmarking(bool bench);
@@ -96,6 +102,7 @@ private slots:
     void cleanup();
 private:
     QString m_fileName;
+    trace::API m_api;
     bool m_benchmarking;
     bool m_doubleBuffered;
     bool m_captureState;

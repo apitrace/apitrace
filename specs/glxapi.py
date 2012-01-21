@@ -35,6 +35,7 @@ Visual = Opaque("Visual *")
 Font = Alias("Font", UInt32)
 Pixmap = Alias("Pixmap", UInt32)
 Window = Alias("Window", UInt32)
+Colormap = Alias("Colormap", UInt32)
 
 GLXContext = Opaque("GLXContext")
 GLXPixmap = Alias("GLXPixmap", UInt32)
@@ -245,7 +246,7 @@ glxapi = API("GLX")
 
 PROC = Opaque("__GLXextFuncPtr")
 
-glxapi.add_functions([
+glxapi.addFunctions([
     # GLX
     Function(Pointer(XVisualInfo), "glXChooseVisual", [(Display, "dpy"), (Int, "screen"), (Array(GLXAttrib, "__AttribList_size(attribList)"), "attribList")]),
     Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool, "direct")]),
@@ -374,13 +375,17 @@ glxapi.add_functions([
     Function(Void, "glXCopySubBufferMESA", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int, "x"), (Int, "y"), (Int, "width"), (Int, "height")]),
 
     # GLX_MESA_pixmap_colormap
-    #Function(GLXPixmap, "glXCreateGLXPixmapMESA", [(Display, "dpy"), (OpaquePointer(XVisualInfo), "visual"), (Pixmap, "pixmap"), (Colormap, "cmap")]),
+    Function(GLXPixmap, "glXCreateGLXPixmapMESA", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"), (Pixmap, "pixmap"), (Colormap, "cmap")]),
 
     # GLX_MESA_release_buffers
     Function(Bool, "glXReleaseBuffersMESA", [(Display, "dpy"), (GLXDrawable, "drawable")]),
 
     # GLX_MESA_set_3dfx_mode
     Function(Bool, "glXSet3DfxModeMESA", [(Int, "mode")]),
+
+    # GLX_MESA_swap_control
+    Function(Int, "glXSwapIntervalMESA", [(UInt, "interval")]),
+    Function(Int, "glXGetSwapIntervalMESA", []),
 
     # GLX_OML_sync_control
     Function(Bool, "glXGetSyncValuesOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(Int64), "ust"), (OpaquePointer(Int64), "msc"), (OpaquePointer(Int64), "sbc")]),

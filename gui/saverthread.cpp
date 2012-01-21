@@ -11,10 +11,10 @@
 #include <QDebug>
 
 #if 0
-static Trace::FunctionSig *
+static trace::FunctionSig *
 createFunctionSig(ApiTraceCall *call, unsigned id)
 {
-    Trace::FunctionSig *sig = new Trace::FunctionSig();
+    trace::FunctionSig *sig = new trace::FunctionSig();
 
     sig->id = id;
     sig->name = qstrdup(call->name().toLocal8Bit());
@@ -30,7 +30,7 @@ createFunctionSig(ApiTraceCall *call, unsigned id)
 }
 
 static void
-deleteFunctionSig(Trace::FunctionSig *sig)
+deleteFunctionSig(trace::FunctionSig *sig)
 {
     for (int i = 0; i < sig->num_args; ++i) {
         delete [] sig->arg_names[i];
@@ -40,12 +40,12 @@ deleteFunctionSig(Trace::FunctionSig *sig)
     delete sig;
 }
 
-static Trace::StructSig *
+static trace::StructSig *
 createStructSig(const ApiStruct &str, unsigned id)
 {
     ApiStruct::Signature aSig = str.signature();
 
-    Trace::StructSig *sig = new Trace::StructSig();
+    trace::StructSig *sig = new trace::StructSig();
     sig->id = id;
     sig->name = qstrdup(aSig.name.toLocal8Bit());
     sig->num_members = aSig.memberNames.count();
@@ -58,7 +58,7 @@ createStructSig(const ApiStruct &str, unsigned id)
 }
 
 static void
-deleteStructSig(Trace::StructSig *sig)
+deleteStructSig(trace::StructSig *sig)
 {
     for (int i = 0; i < sig->num_members; ++i) {
         delete [] sig->member_names[i];
@@ -68,10 +68,10 @@ deleteStructSig(Trace::StructSig *sig)
     delete sig;
 }
 
-static Trace::EnumSig *
+static trace::EnumSig *
 createEnumSig(const ApiEnum &en, unsigned id)
 {
-    Trace::EnumSig *sig = new Trace::EnumSig();
+    trace::EnumSig *sig = new trace::EnumSig();
 
     sig->id = id;
     sig->name = qstrdup(en.name().toLocal8Bit());
@@ -81,20 +81,20 @@ createEnumSig(const ApiEnum &en, unsigned id)
 }
 
 static void
-deleteEnumSig(Trace::EnumSig *sig)
+deleteEnumSig(trace::EnumSig *sig)
 {
     delete [] sig->name;
     delete sig;
 }
 
-static Trace::BitmaskSig *
+static trace::BitmaskSig *
 createBitmaskSig(const ApiBitmask &bt, unsigned id)
 {
     ApiBitmask::Signature bsig = bt.signature();
     ApiBitmask::Signature::const_iterator itr;
 
-    Trace::BitmaskSig *sig = new Trace::BitmaskSig();
-    Trace::BitmaskFlag *flags = new Trace::BitmaskFlag[bsig.count()];
+    trace::BitmaskSig *sig = new trace::BitmaskSig();
+    trace::BitmaskFlag *flags = new trace::BitmaskFlag[bsig.count()];
 
     sig->id = id;
     sig->num_flags = bsig.count();
@@ -110,7 +110,7 @@ createBitmaskSig(const ApiBitmask &bt, unsigned id)
 }
 
 static void
-deleteBitmaskSig(Trace::BitmaskSig *sig)
+deleteBitmaskSig(trace::BitmaskSig *sig)
 {
     for (int i = 0; i < sig->num_flags; ++i) {
         delete [] sig->flags[i].name;
@@ -120,7 +120,7 @@ deleteBitmaskSig(Trace::BitmaskSig *sig)
 }
 
 static void
-writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
+writeValue(trace::Writer &writer, const QVariant &var, unsigned &id)
 {
     int arrayType   = QMetaType::type("ApiArray");
     int bitmaskType = QMetaType::type("ApiBitmask");
@@ -174,13 +174,13 @@ writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
             writer.endArray();
         } else if (type == bitmaskType) {
             ApiBitmask bm = var.value<ApiBitmask>();
-            Trace::BitmaskSig *sig = createBitmaskSig(bm, ++id);
+            trace::BitmaskSig *sig = createBitmaskSig(bm, ++id);
             writer.writeBitmask(sig, bm.value());
             deleteBitmaskSig(sig);
         } else if (type == structType) {
             ApiStruct apiStr = var.value<ApiStruct>();
             QList<QVariant> vals = apiStr.values();
-            Trace::StructSig *str = createStructSig(apiStr, ++id);
+            trace::StructSig *str = createStructSig(apiStr, ++id);
             writer.beginStruct(str);
             foreach(QVariant val, vals) {
                 writeValue(writer, val, ++id);
@@ -196,7 +196,7 @@ writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
             //writer.endArray();
         } else if (type == enumType) {
             ApiEnum apiEnum = var.value<ApiEnum>();
-            Trace::EnumSig *sig = createEnumSig(apiEnum, ++id);
+            trace::EnumSig *sig = createEnumSig(apiEnum, ++id);
             writer.writeEnum(sig);
             deleteEnumSig(sig);
         } else {
@@ -207,69 +207,74 @@ writeValue(Trace::Writer &writer, const QVariant &var, unsigned &id)
 }
 #endif
 
-class EditVisitor : public Trace::Visitor
+class EditVisitor : public trace::Visitor
 {
 public:
     EditVisitor(const QVariant &variant)
         : m_variant(variant),
           m_editedValue(0)
     {}
-    virtual void visit(Trace::Null *val)
+    virtual void visit(trace::Null *val)
     {
         m_editedValue = val;
     }
 
-    virtual void visit(Trace::Bool *node)
+    virtual void visit(trace::Bool *node)
     {
 //        Q_ASSERT(m_variant.userType() == QVariant::Bool);
         bool var = m_variant.toBool();
-        m_editedValue = new Trace::Bool(var);
+        m_editedValue = new trace::Bool(var);
     }
 
-    virtual void visit(Trace::SInt *node)
+    virtual void visit(trace::SInt *node)
     {
 //        Q_ASSERT(m_variant.userType() == QVariant::Int);
-        m_editedValue = new Trace::SInt(m_variant.toInt());
+        m_editedValue = new trace::SInt(m_variant.toInt());
     }
 
-    virtual void visit(Trace::UInt *node)
+    virtual void visit(trace::UInt *node)
     {
 //        Q_ASSERT(m_variant.userType() == QVariant::UInt);
-        m_editedValue = new Trace::SInt(m_variant.toUInt());
+        m_editedValue = new trace::SInt(m_variant.toUInt());
     }
 
-    virtual void visit(Trace::Float *node)
+    virtual void visit(trace::Float *node)
     {
-        m_editedValue = new Trace::Float(m_variant.toFloat());
+        m_editedValue = new trace::Float(m_variant.toFloat());
     }
 
-    virtual void visit(Trace::String *node)
+    virtual void visit(trace::Double *node)
+    {
+        m_editedValue = new trace::Double(m_variant.toDouble());
+    }
+
+    virtual void visit(trace::String *node)
     {
         QString str = m_variant.toString();
-        m_editedValue = new Trace::String(str.toLocal8Bit().constData());
+        m_editedValue = new trace::String(str.toLocal8Bit().constData());
     }
 
-    virtual void visit(Trace::Enum *e)
+    virtual void visit(trace::Enum *e)
     {
         m_editedValue = e;
     }
 
-    virtual void visit(Trace::Bitmask *bitmask)
+    virtual void visit(trace::Bitmask *bitmask)
     {
         m_editedValue = bitmask;
     }
 
-    virtual void visit(Trace::Struct *str)
+    virtual void visit(trace::Struct *str)
     {
         m_editedValue = str;
     }
 
-    virtual void visit(Trace::Array *array)
+    virtual void visit(trace::Array *array)
     {
         ApiArray apiArray = m_variant.value<ApiArray>();
         QVector<QVariant> vals = apiArray.values();
 
-        Trace::Array *newArray = new Trace::Array(vals.count());
+        trace::Array *newArray = new trace::Array(vals.count());
         for (int i = 0; i < vals.count(); ++i) {
             EditVisitor visitor(vals[i]);
 
@@ -286,30 +291,30 @@ public:
         m_editedValue = newArray;
     }
 
-    virtual void visit(Trace::Blob *blob)
+    virtual void visit(trace::Blob *blob)
     {
         m_editedValue = blob;
     }
 
-    virtual void visit(Trace::Pointer *ptr)
+    virtual void visit(trace::Pointer *ptr)
     {
         m_editedValue = ptr;
     }
 
-    Trace::Value *value() const
+    trace::Value *value() const
     {
         return m_editedValue;
     }
 private:
     QVariant m_variant;
-    Trace::Value *m_editedValue;
+    trace::Value *m_editedValue;
 };
 
 static void
-overwriteValue(Trace::Call *call, const QVariant &val, int index)
+overwriteValue(trace::Call *call, const QVariant &val, int index)
 {
     EditVisitor visitor(val);
-    Trace::Value *origValue = call->args[index];
+    trace::Value *origValue = call->args[index];
     origValue->visit(visitor);
 
     if (visitor.value() && origValue != visitor.value()) {
@@ -343,13 +348,13 @@ void SaverThread::run()
         callIndexMap.insert(call->index(), call);
     }
 
-    Trace::Writer writer;
+    trace::Writer writer;
     writer.open(m_writeFileName.toLocal8Bit());
 
-    Trace::Parser parser;
+    trace::Parser parser;
     parser.open(m_readFileName.toLocal8Bit());
 
-    Trace::Call *call;
+    trace::Call *call;
     while ((call = parser.parse_call())) {
         if (callIndexMap.contains(call->no)) {
             QVector<QVariant> values = callIndexMap[call->no]->editedValues();

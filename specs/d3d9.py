@@ -225,8 +225,8 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "GetLightEnable", [(DWORD, "Index"), Out(Pointer(BOOL), "pEnable")]),
     Method(HRESULT, "SetClipPlane", [(DWORD, "Index"), (ConstPointer(Float), "pPlane")]),
     Method(HRESULT, "GetClipPlane", [(DWORD, "Index"), Out(Pointer(Float), "pPlane")]),
-    Method(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "State"), (DWORD, "Value")]),
-    Method(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "State"), Out(Pointer(DWORD), "pValue")]),
+    Method(HRESULT, "SetRenderState", [(D3DRENDERSTATETYPE, "State"), (D3DRENDERSTATEVALUE, "Value")]),
+    Method(HRESULT, "GetRenderState", [(D3DRENDERSTATETYPE, "State"), Out(Pointer(D3DRENDERSTATEVALUE), "pValue")]),
     Method(HRESULT, "CreateStateBlock", [(D3DSTATEBLOCKTYPE, "Type"), Out(Pointer(PDIRECT3DSTATEBLOCK9), "ppSB")]),
     Method(HRESULT, "BeginStateBlock", []),
     Method(HRESULT, "EndStateBlock", [Out(Pointer(PDIRECT3DSTATEBLOCK9), "ppSB")]),
@@ -234,10 +234,10 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "GetClipStatus", [Out(Pointer(D3DCLIPSTATUS9), "pClipStatus")]),
     Method(HRESULT, "GetTexture", [(DWORD, "Stage"), Out(Pointer(PDIRECT3DBASETEXTURE9), "ppTexture")]),
     Method(HRESULT, "SetTexture", [(DWORD, "Stage"), (PDIRECT3DBASETEXTURE9, "pTexture")]),
-    Method(HRESULT, "GetTextureStageState", [(DWORD, "Stage"), (D3DTEXTURESTAGESTATETYPE, "Type"), Out(Pointer(DWORD), "pValue")]),
-    Method(HRESULT, "SetTextureStageState", [(DWORD, "Stage"), (D3DTEXTURESTAGESTATETYPE, "Type"), (DWORD, "Value")]),
-    Method(HRESULT, "GetSamplerState", [(DWORD, "Sampler"), (D3DSAMPLERSTATETYPE, "Type"), Out(Pointer(DWORD), "pValue")]),
-    Method(HRESULT, "SetSamplerState", [(DWORD, "Sampler"), (D3DSAMPLERSTATETYPE, "Type"), (DWORD, "Value")]),
+    Method(HRESULT, "GetTextureStageState", [(DWORD, "Stage"), (D3DTEXTURESTAGESTATETYPE, "Type"), Out(Pointer(D3DTEXTURESTAGESTATEVALUE), "pValue")]),
+    Method(HRESULT, "SetTextureStageState", [(DWORD, "Stage"), (D3DTEXTURESTAGESTATETYPE, "Type"), (D3DTEXTURESTAGESTATEVALUE, "Value")]),
+    Method(HRESULT, "GetSamplerState", [(DWORD, "Sampler"), (D3DSAMPLERSTATETYPE, "Type"), Out(Pointer(D3DSAMPLERSTATEVALUE), "pValue")]),
+    Method(HRESULT, "SetSamplerState", [(DWORD, "Sampler"), (D3DSAMPLERSTATETYPE, "Type"), (D3DSAMPLERSTATEVALUE, "Value")]),
     Method(HRESULT, "ValidateDevice", [Out(Pointer(DWORD), "pNumPasses")]),
     Method(HRESULT, "SetPaletteEntries", [(UINT, "PaletteNumber"), (ConstPointer(PALETTEENTRY), "pEntries")]),
     Method(HRESULT, "GetPaletteEntries", [(UINT, "PaletteNumber"), Out(Pointer(PALETTEENTRY), "pEntries")]),
@@ -254,7 +254,7 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "DrawPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "PrimitiveCount"), (OpaquePointer(Const(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     Method(HRESULT, "DrawIndexedPrimitiveUP", [(D3DPRIMITIVETYPE, "PrimitiveType"), (UINT, "MinVertexIndex"), (UINT, "NumVertices"), (UINT, "PrimitiveCount"), (OpaquePointer(Const(Void)), "pIndexData"), (D3DFORMAT, "IndexDataFormat"), (OpaquePointer(Const(Void)), "pVertexStreamZeroData"), (UINT, "VertexStreamZeroStride")]),
     Method(HRESULT, "ProcessVertices", [(UINT, "SrcStartIndex"), (UINT, "DestIndex"), (UINT, "VertexCount"), (PDIRECT3DVERTEXBUFFER9, "pDestBuffer"), (PDIRECT3DVERTEXDECLARATION9, "pVertexDecl"), (D3DPV, "Flags")]),
-    Method(HRESULT, "CreateVertexDeclaration", [(ConstPointer(D3DVERTEXELEMENT9), "pVertexElements"), Out(Pointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
+    Method(HRESULT, "CreateVertexDeclaration", [(Array(Const(D3DVERTEXELEMENT9), "_declCount(pVertexElements)"), "pVertexElements"), Out(Pointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
     Method(HRESULT, "SetVertexDeclaration", [(PDIRECT3DVERTEXDECLARATION9, "pDecl")]),
     Method(HRESULT, "GetVertexDeclaration", [Out(Pointer(PDIRECT3DVERTEXDECLARATION9), "ppDecl")]),
     Method(HRESULT, "SetFVF", [(D3DFVF, "FVF")]),
@@ -401,7 +401,7 @@ IDirect3DQuery9.methods += [
     Method(D3DQUERYTYPE, "GetType", []),
     Method(DWORD, "GetDataSize", []),
     Method(HRESULT, "Issue", [(D3DISSUE, "dwIssueFlags")]),
-    Method(HRESULT, "GetData", [Out(OpaquePointer(Void), "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")]),
+    Method(HRESULT, "GetData", [Out(Blob(Void, "dwSize"), "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")]),
 ]
 
 IDirect3D9Ex.methods += [
@@ -437,7 +437,7 @@ IDirect3DSwapChain9Ex.methods += [
 ]
 
 d3d9 = API("d3d9")
-d3d9.add_functions([
+d3d9.addFunctions([
     StdFunction(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
     StdFunction(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), Out(Pointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),
     StdFunction(Int, "D3DPERF_BeginEvent", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail='-1'),

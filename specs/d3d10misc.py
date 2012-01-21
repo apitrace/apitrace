@@ -47,7 +47,7 @@ D3D10_DRIVER_TYPE = Enum("D3D10_DRIVER_TYPE", [
 
 
 d3d10 = API("d3d10")
-d3d10.add_functions([
+d3d10.addFunctions([
     StdFunction(HRESULT, "D3D10CreateDevice", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (UINT, "SDKVersion"), Out(Pointer(Pointer(ID3D10Device)), "ppDevice")]),
     StdFunction(HRESULT, "D3D10CreateDeviceAndSwapChain", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (UINT, "Flags"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), Out(Pointer(Pointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(Pointer(ID3D10Device)), "ppDevice")]),
     StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), Out(Pointer(LPD3D10BLOB), "ppBuffer")]),

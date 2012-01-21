@@ -24,14 +24,14 @@
 ##########################################################################/
 
 
-from trace import DllTracer
+from dlltrace import DllTracer
 from specs.dwrite import dwrite
 from specs.d2d1 import d2d1 # cyclic dependency
 
 
 class D2D1Tracer(DllTracer):
 
-    def wrap_arg(self, function, arg):
+    def wrapArg(self, function, arg):
         if function.name == 'D2D1CreateFactory' and arg.output:
             print '    if (*%s) {' % arg.name
             for iface in d2d1.interfaces:
@@ -40,13 +40,13 @@ class D2D1Tracer(DllTracer):
                 print '        }'
             print '    }'
 
-        DllTracer.wrap_arg(self, function, arg)
+        DllTracer.wrapArg(self, function, arg)
 
 
 if __name__ == '__main__':
     print '#define INITGUID'
     print
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
     print '#include <windows.h>'

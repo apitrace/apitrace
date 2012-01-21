@@ -25,9 +25,13 @@
 ##########################################################################/
 
 
+"""Parser for OpenGL .txt extensions specification."""
+
+
 import sys
 import re
 import optparse
+from urllib2 import urlopen
 
 
 def stderr(x):
@@ -88,30 +92,78 @@ class LineParser:
 
 class TxtParser(LineParser):
 
+    section_re = re.compile(r'^([A-Z]\w+)( \w+)*$')
+
     property_re = re.compile(r'^\w+:')
     prototype_re = re.compile(r'^(\w+)\((.*)\)$')
+
+    comment_start_re = re.compile(r'^/\*')
+    comment_end_re = re.compile(r'.*\*/$')
 
     def __init__(self, stream, prefix=''):
         LineParser.__init__(self, stream)
         self.prefix = prefix
 
     def parse(self):
-        line = self.consume()
-        while not line.startswith("New Procedures and Functions"):
+        while  not self.eof():
+            while not self.eof():
+                line = self.lookahead()
+                if self.eof():
+                    return
+                mo = self.section_re.match(line)
+                if mo:
+                    break
+                self.consume()
             line = self.consume()
-        self.parse_procs()
+            self.parse_section(line)
+        print
 
-    def parse_procs(self):
-        lines = []
-        while True:
-            line = self.consume()
+    def parse_section(self, name):
+        if name == 'Name Strings':
+            self.parse_strings()
+        if name == 'New Procedures and Functions':
+            self.parse_procs()
+
+    def parse_strings(self):
+        while not self.eof():
+            line = self.lookahead()
             if not line.strip():
+                self.consume()
                 continue
             if not line.startswith(' '):
                 break
+            self.consume()
+            name = line.strip()
+            print '    # %s' % name
+
+    def skip_c_comments(self):
+        while not self.eof():
+            line = self.lookahead().strip()
+            mo = self.comment_start_re.match(line)
+            if not mo:
+                return
+            while not self.eof():
+                self.consume()
+                mo = self.comment_end_re.match(line)
+                if mo:
+                    return
+                line = self.lookahead().strip()
+
+    def parse_procs(self):
+        lines = []
+        while not self.eof():
+            self.skip_c_comments()
+            line = self.lookahead()
+            if not line.strip():
+                self.consume()
+                continue
+            if not line.startswith(' '):
+                break
+            self.consume()
             lines.append(line.strip())
-            if line.endswith(';'):
-                self.parse_proc(' '.join(lines))
+            if line[-1] in (';', ')'):
+                prototype = ' '.join(lines)
+                self.parse_proc(prototype)
                 lines = []
 
     token_re = re.compile(r'(\w+|\s+|.)')
@@ -142,7 +194,15 @@ class TxtParser(LineParser):
 
     def parse_arg(self):
         type = self.parse_type()
+        if self.tokens[0] == ')':
+            assert type == 'Void'
+            return ''
         name = self.tokens.pop(0)
+        if self.tokens[0] == '[':
+            self.tokens.pop(0)
+            n = int(self.tokens.pop(0))
+            assert self.tokens.pop(0) == ']'
+            type = 'Array(%s, %d)' % (type, n)
         return '(%s, "%s")' % (type, name)
 
     def parse_type(self):
@@ -152,7 +212,7 @@ class TxtParser(LineParser):
         if token == 'void':
             type = 'Void'
         else:
-            type = 'GL' + token
+            type = self.prefix.upper() + token
         while self.tokens[0] == '*':
             type = 'OpaquePointer(%s)' % type
             self.tokens.pop(0)
@@ -160,8 +220,21 @@ class TxtParser(LineParser):
 
 
 def main():
-    for arg in sys.argv[1:]:
-        parser = TxtParser(open(arg, 'rt'), prefix='gl')
+    optparser = optparse.OptionParser(
+        usage="\n\t%prog [options] [SPEC] ")
+    optparser.add_option(
+        '-p', '--prefix', metavar='STRING',
+        type="string", dest="prefix", default='gl',
+        help="function prefix [default: %default]")
+
+    (options, args) = optparser.parse_args(sys.argv[1:])
+
+    for arg in args:
+        if arg.startswith('http://'):
+            stream = urlopen(arg, 'rt')
+        else:
+            stream = open(arg, 'rt')
+        parser = TxtParser(stream, prefix = options.prefix)
         parser.parse()
     
 

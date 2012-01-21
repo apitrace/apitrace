@@ -27,6 +27,7 @@
 #include <string.h>
 #include <iostream>
 
+#include "trace_dump.hpp"
 #include "retrace.hpp"
 
 
@@ -39,7 +40,7 @@ int verbosity = 0;
 static bool call_dumped = false;
 
 
-static void dumpCall(Trace::Call &call) {
+static void dumpCall(trace::Call &call) {
     if (verbosity >= 0 && !call_dumped) {
         std::cout << call;
         std::cout.flush();
@@ -48,7 +49,7 @@ static void dumpCall(Trace::Call &call) {
 }
 
 
-std::ostream &warning(Trace::Call &call) {
+std::ostream &warning(trace::Call &call) {
     dumpCall(call);
 
     std::cerr << call.no << ": ";
@@ -58,11 +59,11 @@ std::ostream &warning(Trace::Call &call) {
 }
 
 
-void ignore(Trace::Call &call) {
+void ignore(trace::Call &call) {
     (void)call;
 }
 
-void unsupported(Trace::Call &call) {
+void unsupported(trace::Call &call) {
     warning(call) << "unsupported " << call.name() << " call\n";
 }
 
@@ -80,16 +81,19 @@ void Retracer::addCallbacks(const Entry *entries) {
 }
 
 
-void Retracer::retrace(Trace::Call &call) {
+void Retracer::retrace(trace::Call &call) {
     call_dumped = false;
 
     if (verbosity >= 1) {
-        dumpCall(call);
+        if (verbosity >= 2 ||
+            !(call.flags & trace::CALL_FLAG_VERBOSE)) {
+            dumpCall(call);
+        }
     }
 
     Callback callback = 0;
 
-    Trace::Id id = call.sig->id;
+    trace::Id id = call.sig->id;
     if (id >= callbacks.size()) {
         callbacks.resize(id + 1);
         callback = 0;

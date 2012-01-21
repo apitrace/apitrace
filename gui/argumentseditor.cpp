@@ -28,6 +28,7 @@ isVariantEditable(const QVariant &var)
     case QVariant::UInt:
     case QVariant::LongLong:
     case QVariant::ULongLong:
+    case QMetaType::Float:
     case QVariant::Double:
         return true;
     default:
@@ -50,78 +51,45 @@ isVariantStringArray(const QVariant &var)
     return true;
 }
 
-ArgumentsItemEditorFactory::ArgumentsItemEditorFactory()
-    : QItemEditorFactory()
-{
-}
 
-QWidget * ArgumentsItemEditorFactory::createEditor(QVariant::Type type,
-                                                   QWidget *parent) const
-{
-    switch (type) {
-    case QVariant::Bool: {
-        BooleanComboBox *cb = new BooleanComboBox(parent);
-        cb->setFrame(false);
-        return cb;
-    }
-    case QVariant::UInt: {
-        QSpinBox *sb = new QSpinBox(parent);
-        sb->setFrame(false);
-        sb->setMaximum(INT_MAX);
-        return sb; }
-    case QVariant::Int: {
-        QSpinBox *sb = new QSpinBox(parent);
-        sb->setFrame(false);
-        sb->setMinimum(INT_MIN);
-        sb->setMaximum(INT_MAX);
-        return sb;
-    }
-    case QVariant::ULongLong: {
-        QSpinBox *sb = new QSpinBox(parent);
-        sb->setFrame(false);
-        sb->setMaximum(INT_MAX);
-        return sb; }
-    case QVariant::LongLong: {
-        QSpinBox *sb = new QSpinBox(parent);
-        sb->setFrame(false);
-        sb->setMinimum(INT_MIN);
-        sb->setMaximum(INT_MAX);
-        return sb;
-    }
-    case QVariant::Pixmap:
-        return new QLabel(parent);
-    case QVariant::Double: {
-        QDoubleSpinBox *sb = new QDoubleSpinBox(parent);
-        sb->setFrame(false);
-        sb->setMinimum(-DBL_MAX);
-        sb->setMaximum(DBL_MAX);
-        sb->setDecimals(8);
-        return sb;
-    }
-    default:
-        break;
-    }
-    return 0;
-}
 
-QByteArray
-ArgumentsItemEditorFactory::valuePropertyName(QVariant::Type type) const
+void setArgumentsItemEditorFactory ()
 {
-    switch (type) {
-    case QVariant::Bool:
-        return "currentIndex";
-    case QVariant::UInt:
-    case QVariant::Int:
-    case QVariant::LongLong:
-    case QVariant::ULongLong:
-    case QVariant::Double:
-        return "value";
-#if 0
-    case QVariant::String:
-#endif
-    default:
-        return "text";
-    }
+    QItemEditorCreatorBase *booleanComboBoxEditorCreator =
+    new QStandardItemEditorCreator<BooleanComboBoxEditorCreator>();
+    QItemEditorCreatorBase *uIntEditorCreator =
+    new QStandardItemEditorCreator<UIntEditorCreator>();
+    QItemEditorCreatorBase *intEditorCreator =
+    new QStandardItemEditorCreator<IntEditorCreator>();
+    QItemEditorCreatorBase *uLongLongEditorCreator =
+    new QStandardItemEditorCreator<ULongLongEditorCreator>();
+    QItemEditorCreatorBase *longLongEditorCreator =
+    new QStandardItemEditorCreator<LongLongEditorCreator>();
+    QItemEditorCreatorBase *pixmapEditorCreator =
+    new QStandardItemEditorCreator<PixmapEditorCreator>();
+    QItemEditorCreatorBase *floatEditorCreator =
+    new QStandardItemEditorCreator<FloatEditorCreator>();
+    QItemEditorCreatorBase *doubleEditorCreator =
+    new QStandardItemEditorCreator<DoubleEditorCreator>();
+    QItemEditorCreatorBase *invalidEditorCreator =
+    new QStandardItemEditorCreator<InvalidEditorCreator>();
+
+    QItemEditorFactory *factory =
+        new QItemEditorFactory();
+
+    QVariant::Type typeFloat = static_cast<QVariant::Type> (qMetaTypeId<float>());
+
+    factory->registerEditor(QVariant::Bool, booleanComboBoxEditorCreator);
+    factory->registerEditor(QVariant::UInt, uIntEditorCreator);
+    factory->registerEditor(QVariant::Int, intEditorCreator);
+    factory->registerEditor(QVariant::ULongLong, uLongLongEditorCreator);
+    factory->registerEditor(QVariant::LongLong, longLongEditorCreator);
+    factory->registerEditor(QVariant::Pixmap, pixmapEditorCreator);
+    factory->registerEditor(typeFloat, floatEditorCreator);
+    factory->registerEditor(QVariant::Double, doubleEditorCreator);
+    factory->registerEditor(QVariant::Invalid, invalidEditorCreator);
+
+    QItemEditorFactory::setDefaultFactory(factory);
 }
 
 BooleanComboBox::BooleanComboBox(QWidget *parent)
@@ -176,11 +144,10 @@ void ArgumentsEditor::init()
     connect(m_ui.revertButton, SIGNAL(clicked()),
             SLOT(revert()));
 
-    m_ui.argsTree->setModel(m_model);
-    QItemEditorFactory *factory =
-        new ArgumentsItemEditorFactory();
+    setArgumentsItemEditorFactory ();
 
-    QItemEditorFactory::setDefaultFactory(factory);
+    m_ui.argsTree->setModel(m_model);
+
 }
 
 void ArgumentsEditor::setupCall()
@@ -229,7 +196,7 @@ void ArgumentsEditor::setupCall()
 
                     QStandardItem *col = new QStandardItem();
                     col->setFlags(col->flags() | Qt::ItemIsEditable);
-                    col->setData(vals[i], Qt::DisplayRole);
+                    col->setData(vals[i], Qt::EditRole);
                     row.append(idx);
                     row.append(col);
                     nameItem->appendRow(row);
@@ -297,7 +264,7 @@ void ArgumentsEditor::setupCall()
                 item->setFlags(item->flags() ^ Qt::ItemIsEditable);
                 item->setToolTip(tr("Argument is read-only"));
             }
-            item->setData(val, Qt::DisplayRole);
+            item->setData(val, Qt::EditRole);
             topRow.append(item);
         }
         rootItem->appendRow(topRow);

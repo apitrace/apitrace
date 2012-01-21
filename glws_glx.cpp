@@ -28,15 +28,8 @@
 
 #include <iostream>
 
-#include "glws.hpp"
-
-#ifdef __APPLE__
-#include <X11/Xlib.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#else
 #include "glproc.hpp"
-#endif
+#include "glws.hpp"
 
 
 namespace glws {
@@ -63,7 +56,6 @@ public:
 
     ~GlxVisual() {
         XFree(visinfo);
-        XFree(fbconfig);
     }
 };
 
@@ -93,17 +85,6 @@ static void describeEvent(const XEvent &event) {
     }
 }
 
-static void waitForEvent(Window window, int type) {
-    XFlush(display);
-    XEvent event;
-    do {
-        XNextEvent(display, &event);
-        describeEvent(event);
-    } while (event.type != type ||
-             event.xany.window != window);
-}
-
-
 class GlxDrawable : public Drawable
 {
 public:
@@ -112,7 +93,7 @@ public:
     GlxDrawable(const Visual *vis, int w, int h) :
         Drawable(vis, w, h)
     {
-        XVisualInfo *visinfo = dynamic_cast<const GlxVisual *>(visual)->visinfo;
+        XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
 
         Window root = RootWindow(display, screen);
 
@@ -121,7 +102,7 @@ public:
         attr.background_pixel = 0;
         attr.border_pixel = 0;
         attr.colormap = XCreateColormap(display, root, visinfo->visual, AllocNone);
-        attr.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
+        attr.event_mask = StructureNotifyMask;
 
         unsigned long mask;
         mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
@@ -154,12 +135,24 @@ public:
         glXWaitX();
     }
 
+    void waitForEvent(int type) {
+        XEvent event;
+        do {
+            XWindowEvent(display, window, StructureNotifyMask, &event);
+            describeEvent(event);
+        } while (event.type != type);
+    }
+
     ~GlxDrawable() {
         XDestroyWindow(display, window);
     }
 
     void
     resize(int w, int h) {
+        if (w == width && h == height) {
+            return;
+        }
+
         glXWaitGL();
 
         // We need to ensure that pending events are processed here, and XSync
@@ -172,27 +165,31 @@ public:
         XResizeWindow(display, window, w, h);
 
         // Tell the window manager to respect the requested size
-        XSizeHints *size_hints;
-        size_hints = XAllocSizeHints();
-        size_hints->max_width  = size_hints->min_width  = w;
-        size_hints->max_height = size_hints->min_height = h;
-        size_hints->flags = PMinSize | PMaxSize;
-        XSetWMNormalHints(display, window, size_hints);
-        XFree(size_hints);
+        XSizeHints size_hints;
+        size_hints.max_width  = size_hints.min_width  = w;
+        size_hints.max_height = size_hints.min_height = h;
+        size_hints.flags = PMinSize | PMaxSize;
+        XSetWMNormalHints(display, window, &size_hints);
 
-        waitForEvent(window, ConfigureNotify);
+        waitForEvent(ConfigureNotify);
 
         glXWaitX();
     }
 
     void show(void) {
-        if (!visible) {
-            XMapWindow(display, window);
-
-            waitForEvent(window, Expose);
-
-            Drawable::show();
+        if (visible) {
+            return;
         }
+
+        glXWaitGL();
+
+        XMapWindow(display, window);
+
+        waitForEvent(MapNotify);
+
+        glXWaitX();
+
+        Drawable::show();
     }
 
     void swapBuffers(void) {
@@ -206,8 +203,8 @@ class GlxContext : public Context
 public:
     GLXContext context;
 
-    GlxContext(const Visual *vis, GLXContext ctx) :
-        Context(vis),
+    GlxContext(const Visual *vis, Profile prof, GLXContext ctx) :
+        Context(vis, prof),
         context(ctx)
     {}
 
@@ -243,7 +240,12 @@ cleanup(void) {
 }
 
 Visual *
-createVisual(bool doubleBuffer) {
+createVisual(bool doubleBuffer, Profile profile) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
+        return NULL;
+    }
+
     GlxVisual *visual = new GlxVisual;
 
     if (glxVersion >= 0x0103) {
@@ -294,35 +296,58 @@ createDrawable(const Visual *visual, int width, int height)
 }
 
 Context *
-createContext(const Visual *_visual, Context *shareContext)
+createContext(const Visual *_visual, Context *shareContext, Profile profile)
 {
-    const GlxVisual *visual = dynamic_cast<const GlxVisual *>(_visual);
+    const GlxVisual *visual = static_cast<const GlxVisual *>(_visual);
     GLXContext share_context = NULL;
     GLXContext context;
 
     if (shareContext) {
-        share_context = dynamic_cast<GlxContext*>(shareContext)->context;
+        share_context = static_cast<GlxContext*>(shareContext)->context;
     }
 
-#ifndef __APPLE__
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
         Attributes<int> attribs;
+        
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
         if (debug) {
             attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
         }
+
+        switch (profile) {
+        case PROFILE_COMPAT:
+            break;
+        case PROFILE_CORE:
+            // XXX: This will invariable return a 3.2 context, when supported.
+            // We probably should have a PROFILE_CORE_XX per version.
+            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 3);
+            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 2);
+            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
+            break;
+        default:
+            return NULL;
+        }
+        
         attribs.end();
 
         context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
-    } else 
-#endif
-           if (glxVersion >= 0x103) {
-        context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
     } else {
-        context = glXCreateContext(display, visual->visinfo, share_context, True);
+        if (profile != PROFILE_COMPAT) {
+            return NULL;
+        }
+
+        if (glxVersion >= 0x103) {
+            context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
+        } else {
+            context = glXCreateContext(display, visual->visinfo, share_context, True);
+        }
     }
 
-    return new GlxContext(visual, context);
+    if (!context) {
+        return NULL;
+    }
+
+    return new GlxContext(visual, profile, context);
 }
 
 bool
@@ -331,8 +356,8 @@ makeCurrent(Drawable *drawable, Context *context)
     if (!drawable || !context) {
         return glXMakeCurrent(display, None, NULL);
     } else {
-        GlxDrawable *glxDrawable = dynamic_cast<GlxDrawable *>(drawable);
-        GlxContext *glxContext = dynamic_cast<GlxContext *>(context);
+        GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
+        GlxContext *glxContext = static_cast<GlxContext *>(context);
 
         return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
     }
@@ -340,7 +365,6 @@ makeCurrent(Drawable *drawable, Context *context)
 
 bool
 processEvents(void) {
-    XFlush(display);
     while (XPending(display) > 0) {
         XEvent event;
         XNextEvent(display, &event);

@@ -5,29 +5,6 @@
 #include <QFile>
 #include <QFileInfo>
 
-static QString
-findPreloader()
-{
-    QString libPath = QString::fromLatin1("%1/glxtrace.so")
-                      .arg(BUILD_DIR);
-
-    QFileInfo fi(libPath);
-    if (fi.exists())
-        return libPath;
-
-    libPath = QString::fromLatin1("/usr/local/lib/glxtrace.so");
-    fi = QFileInfo(libPath);
-    if (fi.exists())
-        return libPath;
-
-    libPath = QString::fromLatin1("/usr/lib/glxtrace.so");
-    fi = QFileInfo(libPath);
-    if (fi.exists())
-        return libPath;
-
-    return QString();
-}
-
 TraceProcess::TraceProcess(QObject *parent)
     : QObject(parent),
       m_canTrace(true)
@@ -43,18 +20,15 @@ TraceProcess::TraceProcess(QObject *parent)
     qWarning()<<"Windows tracing isn't supported right now!";
     m_canTrace = false;
 #else
-    QString var = QLatin1String("LD_PRELOAD");
-    QString libPath = findPreloader();
+#ifdef Q_OS_WIN
+    QString format = QLatin1String("%1;");
+#else
+    QString format = QLatin1String("%1:");
+#endif
+    QString buildPath = format.arg(APITRACE_BINARY_DIR);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-
-    if (libPath.isEmpty()) {
-        m_canTrace = false;
-    }
-
-    env.insert("LD_PRELOAD", libPath);
-    qputenv("LD_PRELOAD", env.value("LD_PRELOAD").toLatin1());
-
-    m_process->setProcessEnvironment(env);
+    env.insert("PATH", buildPath + env.value("PATH"));
+    qputenv("PATH", env.value("PATH").toLatin1());
 #endif
 }
 
@@ -67,23 +41,18 @@ void TraceProcess::setExecutablePath(const QString &str)
     m_execPath = str;
 
     QFileInfo fi(m_execPath);
+    QString baseName = fi.baseName();
 
-    m_process->setWorkingDirectory(fi.absolutePath());
-
-    QString format = QString::fromLatin1("%1%2%3.trace");
+    QString format = QString::fromLatin1("%1.trace");
 
     m_tracePath = format
-                  .arg(fi.absolutePath())
-                  .arg(QDir::separator())
-                  .arg(fi.baseName());
+                  .arg(baseName);
 
     int i = 1;
     while (QFile::exists(m_tracePath)) {
-        QString format = QString::fromLatin1("%1%2%3.%4.trace");
+        format = QString::fromLatin1("%1.%2.trace");
         m_tracePath = format
-                      .arg(fi.absolutePath())
-                      .arg(QDir::separator())
-                      .arg(fi.baseName())
+                      .arg(baseName)
                       .arg(i++);
     }
 }
@@ -126,7 +95,16 @@ void TraceProcess::traceError(QProcess::ProcessError err)
 
 void TraceProcess::start()
 {
-    m_process->start(m_execPath, m_args);
+    QStringList arguments;
+
+    arguments << QLatin1String("trace");
+    arguments << QLatin1String("--output");
+    arguments << m_tracePath;
+    arguments << QLatin1String("--");
+    arguments << m_execPath;
+    arguments << m_args;
+
+    m_process->start(QLatin1String("apitrace"), arguments);
 }
 
 bool TraceProcess::canTrace() const

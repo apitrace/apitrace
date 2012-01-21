@@ -50,7 +50,7 @@ D3DRECT = Struct("D3DRECT", [
 ])
 
 D3DMATRIX = Struct("D3DMATRIX", [
-    (Array(Array(Float, "4"), "4"), "m"),
+    (Array(Array(Float, 4), "4"), "m"),
 ])
 
 D3DVIEWPORT8 = Struct("D3DVIEWPORT8", [
@@ -828,9 +828,9 @@ D3DPRESENTFLAG = Flags(DWORD, [
 ])
 
 D3DGAMMARAMP = Struct("D3DGAMMARAMP", [
-    (Array(WORD, "256"), "red"),
-    (Array(WORD, "256"), "green"),
-    (Array(WORD, "256"), "blue"),
+    (Array(WORD, 256), "red"),
+    (Array(WORD, 256), "green"),
+    (Array(WORD, 256), "blue"),
 ])
 
 D3DBACKBUFFER_TYPE = Enum("D3DBACKBUFFER_TYPE", [

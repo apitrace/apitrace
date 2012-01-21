@@ -35,6 +35,8 @@ from specs.glapi import glapi
 from specs.glxapi import glxapi
 from specs.wglapi import wglapi
 from specs.cglapi import cglapi
+from specs.eglapi import eglapi
+from specs.glesapi import glesapi
 
 
 # See http://www.opengl.org/registry/ABI/
@@ -449,38 +451,59 @@ public_symbols = set([
 
 ])
 
+# EGL 1.4
+public_symbols.update([
+   "eglBindAPI",
+   "eglBindTexImage",
+   "eglChooseConfig",
+   "eglCopyBuffers",
+   "eglCreateContext",
+   "eglCreatePbufferFromClientBuffer",
+   "eglCreatePbufferSurface",
+   "eglCreatePixmapSurface",
+   "eglCreateWindowSurface",
+   "eglDestroyContext",
+   "eglDestroySurface",
+   "eglGetConfigAttrib",
+   "eglGetConfigs",
+   "eglGetCurrentContext",
+   "eglGetCurrentDisplay",
+   "eglGetCurrentSurface",
+   "eglGetDisplay",
+   "eglGetError",
+   "eglGetProcAddress",
+   "eglInitialize",
+   "eglMakeCurrent",
+   "eglQueryAPI",
+   "eglQueryContext",
+   "eglQueryString",
+   "eglQuerySurface",
+   "eglReleaseTexImage",
+   "eglReleaseThread",
+   "eglSurfaceAttrib",
+   "eglSwapBuffers",
+   "eglSwapInterval",
+   "eglTerminate",
+   "eglWaitClient",
+   "eglWaitGL",
+   "eglWaitNative",
+])
 
 class GlDispatcher(Dispatcher):
 
     def header(self):
-        print '#ifdef RETRACE'
-        print '#  if defined(_WIN32)'
-        print '#    define __getPrivateProcAddress(name) wglGetProcAddress(name)'
-        print '#  elif defined(__APPLE__)'
-        print '#    include <dlfcn.h>'
-        print '#    define __getPrivateProcAddress(name) dlsym(RTLD_DEFAULT, name)'
-        print '#  else'
-        print '#    define __getPrivateProcAddress(name) glXGetProcAddressARB((const GLubyte *)(name))'
-        print '#  endif'
-        print '#else /* !RETRACE */'
-        print '#  ifdef _WIN32'
-        print '     PROC __getPublicProcAddress(LPCSTR lpProcName);'
-        print '#    define __getPrivateProcAddress(name) __wglGetProcAddress(name)'
-        print '     static inline PROC __stdcall __wglGetProcAddress(const char * lpszProc);'
-        print '#  else'
-        print '#    define __getPublicProcAddress(name) __libgl_sym(name)'
-        print '     void * __libgl_sym(const char *symbol);'
-        print '#    ifdef __APPLE__'
-        print '#      define __getPrivateProcAddress(name) __getPublicProcAddress(name)'
-        print '#    else'
-        print '#      define __getPrivateProcAddress(name) __glXGetProcAddressARB((const GLubyte *)(name))'
-        print '       static inline __GLXextFuncPtr __glXGetProcAddressARB(const GLubyte * procName);'
-        print '#    endif'
-        print '#  endif'
-        print '#endif /* !RETRACE */'
-        print
+        print '''
+#if defined(_WIN32)
+extern HINSTANCE __libGlHandle;
+#else
+extern void * __libGlHandle;
+#endif
+
+void * __getPublicProcAddress(const char *procName);
+void * __getPrivateProcAddress(const char *procName);
+'''
         
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         return function.name in public_symbols or function.name.startswith('CGL')
 
 
@@ -495,7 +518,10 @@ if __name__ == '__main__':
     print
     dispatcher = GlDispatcher()
     dispatcher.header()
-    print '#if defined(_WIN32)'
+    print '#if defined(TRACE_EGL)'
+    print
+    dispatcher.dispatch_api(eglapi)
+    print '#elif defined(_WIN32)'
     print
     dispatcher.dispatch_api(wglapi)
     print '#elif defined(__APPLE__)'
@@ -507,5 +533,8 @@ if __name__ == '__main__':
     print
     dispatcher.dispatch_api(glapi)
     print
+    dispatcher.dispatch_api(glesapi)
+    print
+
     print '#endif /* !_GLPROC_HPP_ */'
     print

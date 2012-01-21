@@ -38,7 +38,7 @@
 #include "trace_model.hpp"
 
 
-namespace Trace {
+namespace trace {
     class File;
 
     class Writer {
@@ -58,7 +58,7 @@ namespace Trace {
         bool open(const char *filename);
         void close(void);
 
-        unsigned beginEnter(const FunctionSig *sig);
+        unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
 
         void beginLeave(unsigned call);
@@ -88,7 +88,7 @@ namespace Trace {
         void writeString(const char *str, size_t size);
         void writeWString(const wchar_t *str);
         void writeBlob(const void *data, size_t size);
-        void writeEnum(const EnumSig *sig);
+        void writeEnum(const EnumSig *sig, signed long long value);
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
         void writeNull(void);
         void writeOpaque(const void *ptr);
@@ -105,41 +105,6 @@ namespace Trace {
 
     };
 
-    /**
-     * A specialized Writer class, mean to trace the current process.
-     *
-     * In particular:
-     * - it creates a trace file based on the current process name
-     * - uses mutexes to allow tracing from multiple threades
-     * - flushes the output to ensure the last call is traced in event of
-     *   abnormal termination
-     */
-    class LocalWriter : public Writer {
-    protected:
-        int acquired;
-
-    public:
-        /**
-         * Should never called directly -- use localWriter singleton below instead.
-         */
-        LocalWriter();
-        ~LocalWriter();
-
-        void open(void);
-
-        unsigned beginEnter(const FunctionSig *sig);
-        void endEnter(void);
-
-        void beginLeave(unsigned call);
-        void endLeave(void);
-
-        void flush(void);
-    };
-
-    /**
-     * Singleton.
-     */
-    extern LocalWriter localWriter;
-}
+} /* namespace trace */
 
 #endif /* _TRACE_WRITER_HPP_ */

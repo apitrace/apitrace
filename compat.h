@@ -47,7 +47,7 @@
 #define __field_bcount(x) /**/
 #define __field_ecount(x) /**/
 #define __field_ecount_full(x) /**/
-#define __inline __inline__
+#define __inline static __inline__
 #define __deref_out /**/
 #define __deref_out_opt /**/
 #define __deref_out_bcount(x)
@@ -67,13 +67,12 @@
 #define DECLSPEC_NOVTABLE
 #endif
 
-#include <stdint.h>
-
-#define INT8 int8_t
-#define UINT8 uint8_t
-#define INT16 int16_t
-#define UINT16 uint16_t
-
+#ifndef __MINGW64_VERSION_MAJOR
+#define INT8 signed char
+#define UINT8 unsigned char
+#define INT16 signed short
+#define UINT16 unsigned short
+#endif
 
 #endif /* __MINGW32__ */
 

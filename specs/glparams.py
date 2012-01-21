@@ -462,7 +462,7 @@ parameters = [
     ("",	X,	1,	"GL_DECAL"),	# 0x2101
     ("glGetTexEnv",	E,	1,	"GL_TEXTURE_ENV_MODE"),	# 0x2200
     ("glGetTexEnv",	F,	4,	"GL_TEXTURE_ENV_COLOR"),	# 0x2201
-    ("_glGet",	X,	1,	"GL_TEXTURE_ENV"),	# 0x2300
+    ("",	X,	1,	"GL_TEXTURE_ENV"),	# 0x2300
     ("",	X,	1,	"GL_EYE_LINEAR"),	# 0x2400
     ("",	X,	1,	"GL_OBJECT_LINEAR"),	# 0x2401
     ("",	X,	1,	"GL_SPHERE_MAP"),	# 0x2402
@@ -1118,7 +1118,7 @@ parameters = [
     ("",	X,	1,	"GL_FOG_COORD_ARRAY_POINTER"),	# 0x8456
     ("glGet",	B,	1,	"GL_FOG_COORD_ARRAY"),	# 0x8457
     ("glGet",	B,	1,	"GL_COLOR_SUM"),	# 0x8458
-    ("glGet",	F,	3,	"GL_CURRENT_SECONDARY_COLOR"),	# 0x8459
+    ("glGet",	F,	4,	"GL_CURRENT_SECONDARY_COLOR"),	# 0x8459
     ("glGet",	I,	1,	"GL_SECONDARY_COLOR_ARRAY_SIZE"),	# 0x845A
     ("glGet",	E,	1,	"GL_SECONDARY_COLOR_ARRAY_TYPE"),	# 0x845B
     ("glGet",	I,	1,	"GL_SECONDARY_COLOR_ARRAY_STRIDE"),	# 0x845C
@@ -1191,7 +1191,7 @@ parameters = [
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_LOD_BIAS"),	# 0x84FD
     ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FF
-    ("glGetTexEnv",	E,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
+    ("",	X,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
     ("glGetTexParameter,glGetTexEnv",	F,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
     ("",	X,	1,	"GL_MODELVIEW1_STACK_DEPTH_EXT"),	# 0x8502
     ("",	X,	1,	"GL_COMBINE4_NV"),	# 0x8503
@@ -1446,9 +1446,9 @@ parameters = [
     ("",	X,	1,	"GL_MAP2_VERTEX_ATTRIB13_4_NV"),	# 0x867D
     ("",	X,	1,	"GL_MAP2_VERTEX_ATTRIB14_4_NV"),	# 0x867E
     ("",	X,	1,	"GL_MAP2_VERTEX_ATTRIB15_4_NV"),	# 0x867F
-    ("",	X,	1,	"GL_TEXTURE_COMPRESSED_IMAGE_SIZE"),	# 0x86A0
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_COMPRESSED_IMAGE_SIZE"),	# 0x86A0
     ("glGetTexLevelParameter",	B,	1,	"GL_TEXTURE_COMPRESSED"),	# 0x86A1
-    ("",	X,	1,	"GL_NUM_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A2
+    ("glGet",	I,	1,	"GL_NUM_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A2
     #XXX: the list is GL_NUM_COMPRESSED_TEXTURES
     #("glGet",	E,	1,	"GL_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A3
     ("glGet",	I,	1,	"GL_MAX_VERTEX_UNITS_ARB"),	# 0x86A4
@@ -1844,7 +1844,7 @@ parameters = [
     ("",	X,	1,	"GL_HILO8_NV"),	# 0x885E
     ("",	X,	1,	"GL_SIGNED_HILO8_NV"),	# 0x885F
     ("",	X,	1,	"GL_FORCE_BLUE_TO_ONE_NV"),	# 0x8860
-    ("_glGet",	B,	1,	"GL_POINT_SPRITE"),	# 0x8861
+    ("glGet",	B,	1,	"GL_POINT_SPRITE"),	# 0x8861
     ("glGetTexEnv",	B,	1,	"GL_COORD_REPLACE"),	# 0x8862
     ("glGet",	E,	1,	"GL_POINT_SPRITE_R_MODE_NV"),	# 0x8863
     ("glGetQuery",	I,	1,	"GL_QUERY_COUNTER_BITS"),	# 0x8864
@@ -1927,7 +1927,7 @@ parameters = [
     ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB"),	# 0x88B4
     ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_ENV_PARAMETERS_ARB"),	# 0x88B5
     ("glGetProgramARB",	B,	1,	"GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB"),	# 0x88B6
-    ("glGet",	E,	1,	"GL_TRANSPOSE_CURRENT_MATRIX_ARB"),	# 0x88B7
+    ("glGet",	F,	16,	"GL_TRANSPOSE_CURRENT_MATRIX_ARB"),	# 0x88B7
     ("",	X,	1,	"GL_READ_ONLY"),	# 0x88B8
     ("",	X,	1,	"GL_WRITE_ONLY"),	# 0x88B9
     ("",	X,	1,	"GL_READ_WRITE"),	# 0x88BA
@@ -2248,8 +2248,8 @@ parameters = [
     #("",	X,	1,	"GL_PALETTE8_R5_G6_B5_OES"),	# 0x8B97
     #("",	X,	1,	"GL_PALETTE8_RGBA4_OES"),	# 0x8B98
     #("",	X,	1,	"GL_PALETTE8_RGB5_A1_OES"),	# 0x8B99
-    ("",	X,	1,	"GL_IMPLEMENTATION_COLOR_READ_TYPE"),	# 0x8B9A
-    ("",	X,	1,	"GL_IMPLEMENTATION_COLOR_READ_FORMAT"),	# 0x8B9B
+    ("glGet",	I,	1,	"GL_IMPLEMENTATION_COLOR_READ_TYPE"),	# 0x8B9A
+    ("glGet",	I,	1,	"GL_IMPLEMENTATION_COLOR_READ_FORMAT"),	# 0x8B9B
     #("",	X,	1,	"GL_POINT_SIZE_ARRAY_OES"),	# 0x8B9C
     #("",	X,	1,	"GL_TEXTURE_CROP_RECT_OES"),	# 0x8B9D
     #("",	X,	1,	"GL_MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9E
@@ -2566,11 +2566,11 @@ parameters = [
     ("",	X,	1,	"GL_LOW_INT"),	# 0x8DF3
     ("",	X,	1,	"GL_MEDIUM_INT"),	# 0x8DF4
     ("",	X,	1,	"GL_HIGH_INT"),	# 0x8DF5
-    ("",	X,	1,	"GL_NUM_SHADER_BINARY_FORMATS"),	# 0x8DF9
-    ("",	X,	1,	"GL_SHADER_COMPILER"),	# 0x8DFA
-    ("",	X,	1,	"GL_MAX_VERTEX_UNIFORM_VECTORS"),	# 0x8DFB
-    ("",	X,	1,	"GL_MAX_VARYING_VECTORS"),	# 0x8DFC
-    ("",	X,	1,	"GL_MAX_FRAGMENT_UNIFORM_VECTORS"),	# 0x8DFD
+    ("glGet",	I,	1,	"GL_NUM_SHADER_BINARY_FORMATS"),	# 0x8DF9
+    ("glGet",	B,	1,	"GL_SHADER_COMPILER"),	# 0x8DFA
+    ("glGet",	I,	1,	"GL_MAX_VERTEX_UNIFORM_VECTORS"),	# 0x8DFB
+    ("glGet",	I,	1,	"GL_MAX_VARYING_VECTORS"),	# 0x8DFC
+    ("glGet",	I,	1,	"GL_MAX_FRAGMENT_UNIFORM_VECTORS"),	# 0x8DFD
     ("",	X,	1,	"GL_RENDERBUFFER_COLOR_SAMPLES_NV"),	# 0x8E10
     ("",	X,	1,	"GL_MAX_MULTISAMPLE_COVERAGE_MODES_NV"),	# 0x8E11
     ("",	X,	1,	"GL_MULTISAMPLE_COVERAGE_MODES_NV"),	# 0x8E12
@@ -2822,6 +2822,11 @@ parameters = [
     ("",	X,	1,	"GL_VIDEO_CAPTURE_SURFACE_ORIGIN_NV"),	# 0x903C
     ("",	X,	1,	"GL_TEXTURE_COVERAGE_SAMPLES_NV"),	# 0x9045
     ("",	X,	1,	"GL_TEXTURE_COLOR_SAMPLES_NV"),	# 0x9046
+    ("glGet",	I,	1,	"GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX"), # 0x9047
+    ("glGet",	I,	1,	"GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX"), # 0x9048
+    ("glGet",	I,	1,	"GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX"), # 0x9049
+    ("glGet",	I,	1,	"GL_GPU_MEMORY_INFO_EVICTION_COUNT_NVX"), # 0x904A
+    ("glGet",	I,	1,	"GL_GPU_MEMORY_INFO_EVICTED_MEMORY_NVX"), # 0x904B
     ("",	X,	1,	"GL_IMAGE_1D"),	# 0x904C
     ("",	X,	1,	"GL_IMAGE_2D"),	# 0x904D
     ("",	X,	1,	"GL_IMAGE_3D"),	# 0x904E

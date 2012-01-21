@@ -24,6 +24,8 @@
 #
 ##########################################################################/
 
+"""Parser for OpenGL .spec files in http://www.opengl.org/registry/."""
+
 
 import sys
 import re
@@ -230,11 +232,15 @@ class SpecParser(LineParser):
                 elif length == '1':
                     arg_type = 'Pointer(%s)' % base_type
                 elif length.find("COMPSIZE") == -1:
-                    arg_type = '%s(%s, "%s")' % (constructor, base_type, length)
+                    try:
+                        int(length)
+                    except ValueError:
+                        length = "%s" % length
+                    arg_type = '%s(%s, %s)' % (constructor, base_type, length)
                 else:
                     length = length.replace("COMPSIZE", "__%s_size" % function_name)
                     length = length.replace("/", ", ")
-                    arg_type = 'Opaque%s(%s, "%s")' % (constructor, base_type, length)
+                    arg_type = 'Opaque%s(%s, %s)' % (constructor, base_type, length)
         else:
             assert False
         

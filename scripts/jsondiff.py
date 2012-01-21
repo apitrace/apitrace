@@ -26,10 +26,12 @@
 
 
 import json
+import optparse
+import re
 import sys
 
 
-def object_hook(obj):
+def strip_object_hook(obj):
     if '__class__' in obj:
         return None
     for name in obj.keys():
@@ -42,19 +44,19 @@ class Visitor:
 
     def visit(self, node, *args, **kwargs):
         if isinstance(node, dict):
-            return self.visit_object(node, *args, **kwargs)
+            return self.visitObject(node, *args, **kwargs)
         elif isinstance(node, list):
-            return self.visit_array(node, *args, **kwargs)
+            return self.visitArray(node, *args, **kwargs)
         else:
-            return self.visit_value(node, *args, **kwargs)
+            return self.visitValue(node, *args, **kwargs)
 
-    def visit_object(self, node, *args, **kwargs):
+    def visitObject(self, node, *args, **kwargs):
         pass
 
-    def visit_array(self, node, *args, **kwargs):
+    def visitArray(self, node, *args, **kwargs):
         pass
 
-    def visit_value(self, node, *args, **kwargs):
+    def visitValue(self, node, *args, **kwargs):
         pass
 
 
@@ -62,7 +64,7 @@ class Dumper(Visitor):
 
     def __init__(self, stream = sys.stdout):
         self.stream = stream
-        self.level = 0;
+        self.level = 0
 
     def _write(self, s):
         self.stream.write(s)
@@ -73,7 +75,7 @@ class Dumper(Visitor):
     def _newline(self):
         self._write('\n')
 
-    def visit_object(self, node):
+    def visitObject(self, node):
         self.enter_object()
 
         members = node.keys()
@@ -83,9 +85,7 @@ class Dumper(Visitor):
             value = node[name]
             self.enter_member(name)
             self.visit(value)
-            if i:
-                self._write(',')
-            self.leave_member()
+            self.leave_member(i == len(members) - 1)
         self.leave_object()
 
     def enter_object(self):
@@ -97,21 +97,25 @@ class Dumper(Visitor):
         self._indent()
         self._write('%s: ' % name)
 
-    def leave_member(self):
+    def leave_member(self, last):
+        if not last:
+            self._write(',')
         self._newline()
 
     def leave_object(self):
         self.level -= 1
         self._indent()
         self._write('}')
+        if self.level <= 0:
+            self._newline()
 
-    def visit_array(self, node):
+    def visitArray(self, node):
         self.enter_array()
         for i in range(len(node)):
             value = node[i]
             self._indent()
             self.visit(value)
-            if i:
+            if i != len(node) - 1:
                 self._write(',')
             self._newline()
         self.leave_array()
@@ -126,30 +130,39 @@ class Dumper(Visitor):
         self._indent()
         self._write(']')
 
-    def visit_value(self, node):
-        self._write(repr(node))
+    def visitValue(self, node):
+        self._write(json.dumps(node))
 
 
 
 class Comparer(Visitor):
 
-    def visit_object(self, a, b):
+    def __init__(self, ignore_added = False, tolerance = 2.0 ** -24):
+        self.ignore_added = ignore_added
+        self.tolerance = tolerance
+
+    def visitObject(self, a, b):
         if not isinstance(b, dict):
             return False
-        if len(a) != len(b):
+        if len(a) != len(b) and not self.ignore_added:
             return False
         ak = a.keys()
         bk = b.keys()
         ak.sort()
         bk.sort()
-        if ak != bk:
+        if ak != bk and not self.ignore_added:
             return False
         for k in ak:
-            if not self.visit(a[k], b[k]):
+            ae = a[k]
+            try:
+                be = b[k]
+            except KeyError:
+                return False
+            if not self.visit(ae, be):
                 return False
         return True
 
-    def visit_array(self, a, b):
+    def visitArray(self, a, b):
         if not isinstance(b, list):
             return False
         if len(a) != len(b):
@@ -159,48 +172,56 @@ class Comparer(Visitor):
                 return False
         return True
 
-    def visit_value(self, a, b):
-        return a == b
-
-comparer = Comparer()
+    def visitValue(self, a, b):
+        if isinstance(a, float) or isinstance(b, float):
+            if a == 0:
+                return abs(b) < self.tolerance
+            else:
+                return abs((b - a)/a) < self.tolerance
+        else:
+            return a == b
 
 
 class Differ(Visitor):
 
-    def __init__(self, stream = sys.stdout):
+    def __init__(self, stream = sys.stdout, ignore_added = False):
         self.dumper = Dumper(stream)
+        self.comparer = Comparer(ignore_added = ignore_added)
 
     def visit(self, a, b):
-        if comparer.visit(a, b):
+        if self.comparer.visit(a, b):
             return
         Visitor.visit(self, a, b)
 
-    def visit_object(self, a, b):
+    def visitObject(self, a, b):
         if not isinstance(b, dict):
             self.replace(a, b)
         else:
             self.dumper.enter_object()
             names = set(a.keys())
-            names.update(b.keys())
+            if not self.comparer.ignore_added:
+                names.update(b.keys())
             names = list(names)
             names.sort()
 
-            for name in names:
+            for i in range(len(names)):
+                name = names[i]
                 ae = a.get(name, None)
                 be = b.get(name, None)
-                if not comparer.visit(ae, be):
+                if not self.comparer.visit(ae, be):
                     self.dumper.enter_member(name)
                     self.visit(ae, be)
-                    self.dumper.leave_member()
+                    self.dumper.leave_member(i == len(names) - 1)
 
             self.dumper.leave_object()
 
-    def visit_array(self, a, b):
+    def visitArray(self, a, b):
         if not isinstance(b, list):
             self.replace(a, b)
         else:
             self.dumper.enter_array()
-            for i in range(max(len(a), len(b))):
+            max_len = max(len(a), len(b))
+            for i in range(max_len):
                 try:
                     ae = a[i]
                 except IndexError:
@@ -210,15 +231,17 @@ class Differ(Visitor):
                 except IndexError:
                     be = None
                 self.dumper._indent()
-                if comparer.visit(ae, be):
+                if self.comparer.visit(ae, be):
                     self.dumper.visit(ae)
                 else:
                     self.visit(ae, be)
+                if i != max_len - 1:
+                    self.dumper._write(',')
                 self.dumper._newline()
 
             self.dumper.leave_array()
 
-    def visit_value(self, a, b):
+    def visitValue(self, a, b):
         if a != b:
             self.replace(a, b)
 
@@ -228,16 +251,70 @@ class Differ(Visitor):
         self.dumper.visit(b)
 
 
-def load(stream):
-    return json.load(stream, strict=False, object_hook = object_hook)
+#
+# Unfortunately JSON standard does not include comments, but this is a quite
+# useful feature to have on regressions tests
+#
+
+_token_res = [
+    r'//[^\r\n]*', # comment
+    r'"[^"\\]*(\\.[^"\\]*)*"', # string
+]
+
+_tokens_re = re.compile(r'|'.join(['(' + token_re + ')' for token_re in _token_res]), re.DOTALL)
+
+
+def _strip_comment(mo):
+    if mo.group(1):
+        return ''
+    else:
+        return mo.group(0)
+
+
+def _strip_comments(data):
+    '''Strip (non-standard) JSON comments.'''
+    return _tokens_re.sub(_strip_comment, data)
+
+
+assert _strip_comments('''// a comment
+"// a comment in a string
+"''') == '''
+"// a comment in a string
+"'''
+
+
+def load(stream, strip_images = True, strip_comments = True):
+    if strip_images:
+        object_hook = strip_object_hook
+    else:
+        object_hook = None
+    if strip_comments:
+        data = stream.read()
+        data = _strip_comments(data)
+        return json.loads(data, strict=False, object_hook = object_hook)
+    else:
+        return json.load(stream, strict=False, object_hook = object_hook)
 
 
 def main():
-    a = load(open(sys.argv[1], 'rt'))
-    b = load(open(sys.argv[2], 'rt'))
+    optparser = optparse.OptionParser(
+        usage="\n\t%prog [options] <ref_json> <src_json>")
+    optparser.add_option(
+        '--keep-images',
+        action="store_false", dest="strip_images", default=True,
+        help="compare images")
 
-    #dumper = Dumper()
-    #dumper.visit(a)
+    (options, args) = optparser.parse_args(sys.argv[1:])
+
+    if len(args) != 2:
+        optparser.error('incorrect number of arguments')
+
+    a = load(open(sys.argv[1], 'rt'), options.strip_images)
+    b = load(open(sys.argv[2], 'rt'), options.strip_images)
+
+    if False:
+        dumper = Dumper()
+        dumper.visit(a)
 
     differ = Differ()
     differ.visit(a, b)

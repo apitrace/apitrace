@@ -34,7 +34,7 @@ import re
 import optparse
 
 
-class Parser:
+class DeclParser:
 
     token_re = re.compile(r'(\d[x0-9a-fA-F.UL]*|\w+|\s+|.)')
 
@@ -291,7 +291,11 @@ class Parser:
             self.consume()
             length = self.consume()
             self.consume(']')
-            type = 'Array(%s, "%s")' % (type, length)
+            try:
+                int(length)
+            except ValueError:
+                length = "%s" % length
+            type = 'Array(%s, %s)' % (type, length)
         return type, name
 
     int_tokens = ('unsigned', 'signed', 'int', 'long', 'short', 'char')
@@ -366,14 +370,15 @@ class Parser:
         return type
 
 
-
-        
-
-
 def main():
-    parser = Parser()
-    for arg in sys.argv[1:]:
-        parser.parse(open(arg, 'rt').read())
+    args = sys.argv[1:]
+
+    parser = DeclParser()
+    if args:
+        for arg in args:
+            parser.parse(open(arg, 'rt').read())
+    else:
+        parser.parse(sys.stdin.read())
     
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@
 #include "image.hpp"
 
 
-namespace Image {
+namespace image {
 
 
 bool
@@ -309,4 +309,4 @@ no_png:
     return false;
 }
 
-} /* namespace Image */
+} /* namespace image */

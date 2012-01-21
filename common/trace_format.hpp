@@ -26,11 +26,59 @@
 /*
  * Trace binary format.
  *
+ * This file defines the trace binary stream, which is then compressed by
+ * snappy or gzip.
+ */
+
+#ifndef _TRACE_FORMAT_HPP_
+#define _TRACE_FORMAT_HPP_
+
+namespace trace {
+
+/*
+ * Trace file version number.
+ *
+ * We keep backwards compatability reading old traces, i.e., it should always be
+ * possible to parse and retrace old trace files.
+ *
+ * So the trace version number refers not only to changes in the binary format
+ * representation, but also semantic changes in the way certain functions
+ * should be retraced.
+ *
+ * Writing/editing old traces will not be supported however.  An older version
+ * of apitrace should be used in such circunstances.
+ *
+ * Changelog:
+ *
+ * - version 0:
+ *   - initial implementation
+ *
+ * - version 1:
+ *   - support for GL user arrays -- a blob is provided whenever an user memory
+ *   is referred (whereas before calls that operate wit user memory instead of
+ *   VBOs should be ignore)
+ *
+ * - version 2:
+ *   - malloc/free memory calls -- allow to pass user memory as malloc memory
+ *   as opposed to blobs
+ *   - glFlushMappedBufferRange will emit a memcpy only for the flushed range
+ *   (whereas previously it would emit a memcpy for the whole mapped range)
+ *
+ * - version 3:
+ *   - enums signatures are recorded for the a whole set of values (not as individual values)
+ *
+ * - version 4:
+ *   - call enter events include thread ID
+ */
+#define TRACE_VERSION 4
+
+
+/*
  * Grammar:
  *
  *   trace = event* EOF
  *
- *   event = EVENT_ENTER call_sig call_detail+
+ *   event = EVENT_ENTER thread_id call_sig call_detail+
  *         | EVENT_LEAVE call_no call_detail+
  *
  *   call_sig = sig_id ( name arg_names )?
@@ -57,7 +105,7 @@
  *   call_sig = id name arg_name*
  *            | id
  *
- *   enum_sig = id name value
+ *   enum_sig = id count (name value)+
  *            | id
  *
  *   bitmask_sig = id count (name value)+
@@ -67,12 +115,6 @@
  *
  */
 
-#ifndef _TRACE_FORMAT_HPP_
-#define _TRACE_FORMAT_HPP_
-
-namespace Trace {
-
-#define TRACE_VERSION 1
 
 enum Event {
     EVENT_ENTER = 0,
@@ -104,6 +146,6 @@ enum Type {
 };
 
 
-} /* namespace Trace */
+} /* namespace trace */
 
 #endif /* _TRACE_FORMAT_HPP_ */

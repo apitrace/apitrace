@@ -145,4 +145,15 @@ void SettingsDialog::setFilterModel(ApiTraceFilter *filter)
     filtersFromModel(m_filter);
 }
 
+void SettingsDialog::setAPI(trace::API api)
+{
+    apiComboBox->setCurrentIndex(static_cast<int>(api));
+}
+
+trace::API SettingsDialog::getAPI(void)
+{
+    return static_cast<trace::API>(apiComboBox->currentIndex());
+
+}
+
 #include "settingsdialog.moc"

@@ -23,27 +23,28 @@
  *
  **************************************************************************/
 
-#ifndef _GLSNAPSHOT_HPP_
-#define _GLSNAPSHOT_HPP_
+
+#include "os.hpp"
+#include "trace_file.hpp"
 
 
-class JSONWriter;
+using namespace trace;
 
 
-namespace Image {
-    class Image;
+File *
+File::createForWrite(const char *filename)
+{
+    File *file;
+    file = File::createSnappy();
+    if (!file) {
+        return NULL;
+    }
+
+    if (!file->open(filename, File::Write)) {
+        os::log("error: could not open %s for writing\n", filename);
+        delete file;
+        return NULL;
+    }
+
+    return file;
 }
-
-
-namespace glsnapshot {
-
-
-Image::Image *
-getDrawableImage(void);
-
-void snapshot(unsigned call_no);
-
-} /* namespace glsnapshot */
-
-
-#endif /* _GLSNAPSHOT_HPP_ */

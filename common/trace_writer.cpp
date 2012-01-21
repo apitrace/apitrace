@@ -31,18 +31,18 @@
 #include <string.h>
 
 #include "os.hpp"
+#include "trace_file.hpp"
 #include "trace_writer.hpp"
-#include "trace_snappyfile.hpp"
 #include "trace_format.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 Writer::Writer() :
     call_no(0)
 {
-    m_file = new Trace::SnappyFile;
+    m_file = File::createSnappy();
     close();
 }
 
@@ -134,8 +134,9 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
     }
 }
 
-unsigned Writer::beginEnter(const FunctionSig *sig) {
-    _writeByte(Trace::EVENT_ENTER);
+unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
+    _writeByte(trace::EVENT_ENTER);
+    _writeUInt(thread_id);
     _writeUInt(sig->id);
     if (!lookup(functions, sig->id)) {
         _writeString(sig->name);
@@ -150,34 +151,34 @@ unsigned Writer::beginEnter(const FunctionSig *sig) {
 }
 
 void Writer::endEnter(void) {
-    _writeByte(Trace::CALL_END);
+    _writeByte(trace::CALL_END);
 }
 
 void Writer::beginLeave(unsigned call) {
-    _writeByte(Trace::EVENT_LEAVE);
+    _writeByte(trace::EVENT_LEAVE);
     _writeUInt(call);
 }
 
 void Writer::endLeave(void) {
-    _writeByte(Trace::CALL_END);
+    _writeByte(trace::CALL_END);
 }
 
 void Writer::beginArg(unsigned index) {
-    _writeByte(Trace::CALL_ARG);
+    _writeByte(trace::CALL_ARG);
     _writeUInt(index);
 }
 
 void Writer::beginReturn(void) {
-    _writeByte(Trace::CALL_RET);
+    _writeByte(trace::CALL_RET);
 }
 
 void Writer::beginArray(size_t length) {
-    _writeByte(Trace::TYPE_ARRAY);
+    _writeByte(trace::TYPE_ARRAY);
     _writeUInt(length);
 }
 
 void Writer::beginStruct(const StructSig *sig) {
-    _writeByte(Trace::TYPE_STRUCT);
+    _writeByte(trace::TYPE_STRUCT);
     _writeUInt(sig->id);
     if (!lookup(structs, sig->id)) {
         _writeString(sig->name);
@@ -190,31 +191,31 @@ void Writer::beginStruct(const StructSig *sig) {
 }
 
 void Writer::writeBool(bool value) {
-    _writeByte(value ? Trace::TYPE_TRUE : Trace::TYPE_FALSE);
+    _writeByte(value ? trace::TYPE_TRUE : trace::TYPE_FALSE);
 }
 
 void Writer::writeSInt(signed long long value) {
     if (value < 0) {
-        _writeByte(Trace::TYPE_SINT);
+        _writeByte(trace::TYPE_SINT);
         _writeUInt(-value);
     } else {
-        _writeByte(Trace::TYPE_UINT);
+        _writeByte(trace::TYPE_UINT);
         _writeUInt(value);
     }
 }
 
 void Writer::writeUInt(unsigned long long value) {
-    _writeByte(Trace::TYPE_UINT);
+    _writeByte(trace::TYPE_UINT);
     _writeUInt(value);
 }
 
 void Writer::writeFloat(float value) {
-    _writeByte(Trace::TYPE_FLOAT);
+    _writeByte(trace::TYPE_FLOAT);
     _writeFloat(value);
 }
 
 void Writer::writeDouble(double value) {
-    _writeByte(Trace::TYPE_DOUBLE);
+    _writeByte(trace::TYPE_DOUBLE);
     _writeDouble(value);
 }
 
@@ -223,7 +224,7 @@ void Writer::writeString(const char *str) {
         Writer::writeNull();
         return;
     }
-    _writeByte(Trace::TYPE_STRING);
+    _writeByte(trace::TYPE_STRING);
     _writeString(str);
 }
 
@@ -232,7 +233,7 @@ void Writer::writeString(const char *str, size_t len) {
         Writer::writeNull();
         return;
     }
-    _writeByte(Trace::TYPE_STRING);
+    _writeByte(trace::TYPE_STRING);
     _writeUInt(len);
     _write(str, len);
 }
@@ -242,7 +243,7 @@ void Writer::writeWString(const wchar_t *str) {
         Writer::writeNull();
         return;
     }
-    _writeByte(Trace::TYPE_STRING);
+    _writeByte(trace::TYPE_STRING);
     _writeString("<wide-string>");
 }
 
@@ -251,31 +252,35 @@ void Writer::writeBlob(const void *data, size_t size) {
         Writer::writeNull();
         return;
     }
-    _writeByte(Trace::TYPE_BLOB);
+    _writeByte(trace::TYPE_BLOB);
     _writeUInt(size);
     if (size) {
         _write(data, size);
     }
 }
 
-void Writer::writeEnum(const EnumSig *sig) {
-    _writeByte(Trace::TYPE_ENUM);
+void Writer::writeEnum(const EnumSig *sig, signed long long value) {
+    _writeByte(trace::TYPE_ENUM);
     _writeUInt(sig->id);
     if (!lookup(enums, sig->id)) {
-        _writeString(sig->name);
-        Writer::writeSInt(sig->value);
+        _writeUInt(sig->num_values);
+        for (unsigned i = 0; i < sig->num_values; ++i) {
+            _writeString(sig->values[i].name);
+            writeSInt(sig->values[i].value);
+        }
         enums[sig->id] = true;
     }
+    writeSInt(value);
 }
 
 void Writer::writeBitmask(const BitmaskSig *sig, unsigned long long value) {
-    _writeByte(Trace::TYPE_BITMASK);
+    _writeByte(trace::TYPE_BITMASK);
     _writeUInt(sig->id);
     if (!lookup(bitmasks, sig->id)) {
         _writeUInt(sig->num_flags);
         for (unsigned i = 0; i < sig->num_flags; ++i) {
             if (i != 0 && sig->flags[i].value == 0) {
-                OS::DebugMessage("apitrace: warning: sig %s is zero but is not first flag\n", sig->flags[i].name);
+                os::log("apitrace: warning: sig %s is zero but is not first flag\n", sig->flags[i].name);
             }
             _writeString(sig->flags[i].name);
             _writeUInt(sig->flags[i].value);
@@ -286,7 +291,7 @@ void Writer::writeBitmask(const BitmaskSig *sig, unsigned long long value) {
 }
 
 void Writer::writeNull(void) {
-    _writeByte(Trace::TYPE_NULL);
+    _writeByte(trace::TYPE_NULL);
 }
 
 void Writer::writeOpaque(const void *addr) {
@@ -294,10 +299,10 @@ void Writer::writeOpaque(const void *addr) {
         Writer::writeNull();
         return;
     }
-    _writeByte(Trace::TYPE_OPAQUE);
+    _writeByte(trace::TYPE_OPAQUE);
     _writeUInt((size_t)addr);
 }
 
 
-} /* namespace Trace */
+} /* namespace trace */
 

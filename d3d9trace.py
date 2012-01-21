@@ -24,28 +24,69 @@
 ##########################################################################/
 
 
-from trace import DllTracer
+from dlltrace import DllTracer
 from specs.d3d9 import d3d9
 
 
 class D3D9Tracer(DllTracer):
 
-    def dump_arg_instance(self, function, arg):
+    def serializeArgValue(self, function, arg):
         # Dump shaders as strings
         if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
-            print '    DumpShader(Trace::localWriter, %s);' % (arg.name)
+            print '    DumpShader(trace::localWriter, %s);' % (arg.name)
             return
 
-        DllTracer.dump_arg_instance(self, function, arg)
+        DllTracer.serializeArgValue(self, function, arg)
+
+    def declareWrapperInterfaceVariables(self, interface):
+        DllTracer.declareWrapperInterfaceVariables(self, interface)
+        
+        if interface.name == 'IDirect3DVertexBuffer9':
+            print '    UINT m_OffsetToLock;'
+            print '    UINT m_SizeToLock;'
+            print '    VOID *m_pbData;'
+
+    def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Unlock':
+            print '    if (m_pbData) {'
+            print '        if (!m_SizeToLock) {'
+            print '            D3DVERTEXBUFFER_DESC Desc;'
+            print '            m_pInstance->GetDesc(&Desc);'
+            print '            m_SizeToLock = Desc.Size;'
+            print '        }'
+            self.emit_memcpy('(LPBYTE)m_pbData + m_OffsetToLock', '(LPBYTE)m_pbData + m_OffsetToLock', 'm_SizeToLock')
+            print '    }'
+
+        DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
+
+        if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Lock':
+            print '    if (__result == D3D_OK && !(Flags & D3DLOCK_READONLY)) {'
+            print '        m_OffsetToLock = OffsetToLock;'
+            print '        m_SizeToLock = SizeToLock;'
+            print '        m_pbData = *ppbData;'
+            print '    } else {'
+            print '        m_pbData = NULL;'
+            print '    }'
 
 
 if __name__ == '__main__':
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
     print '#include "d3d9imports.hpp"'
     print '#include "d3dshader.hpp"'
     print
+    print '''
+static inline size_t
+_declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
+    size_t count = 0;
+    if (pVertexElements) {
+        while (pVertexElements[count++].Stream != 0xff)
+            ;
+    }
+    return count;
+}
+'''
     tracer = D3D9Tracer('d3d9.dll')
     tracer.trace_api(d3d9)
 

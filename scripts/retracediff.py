@@ -54,23 +54,28 @@ class Setup:
         self.args = args
         self.env = env
 
-    def retrace(self):
+    def _retrace(self, args):
         cmd = [
             options.retrace,
+        ] + args + self.args
+        try:
+            return subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
+        except OSError, ex:
+            sys.stderr.write('error: failed to execute %s: %s\n' % (cmd[0], ex.strerror))
+            sys.exit(1)
+
+    def retrace(self):
+        return self._retrace([
             '-s', '-',
             '-S', options.snapshot_frequency,
-        ] + self.args
-        p = subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
-        return p
+        ])
 
     def dump_state(self, call_no):
         '''Get the state dump at the specified call no.'''
 
-        cmd = [
-            options.retrace,
+        p = self._retrace([
             '-D', str(call_no),
-        ] + self.args
-        p = subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
+        ])
         state = jsondiff.load(p.stdout)
         p.wait()
         return state.get('parameters', {})

@@ -27,7 +27,7 @@
 #include "trace_writer.hpp"
 
 
-namespace Trace {
+namespace trace {
 
 
 class ModelWriter : public Visitor
@@ -60,12 +60,16 @@ public:
         writer.writeFloat(node->value);
     }
 
+    void visit(Double *node) {
+        writer.writeDouble(node->value);
+    }
+
     void visit(String *node) {
         writer.writeString(node->value);
     }
 
     void visit(Enum *node) {
-        writer.writeEnum(node->sig);
+        writer.writeEnum(node->sig, node->value);
     }
 
     void visit(Bitmask *node) {
@@ -97,7 +101,7 @@ public:
     }
 
     void visit(Call *call) {
-        unsigned call_no = writer.beginEnter(call->sig);
+        unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
         for (unsigned i = 0; i < call->args.size(); ++i) {
             if (call->args[i]) {
                 writer.beginArg(i);
@@ -123,5 +127,5 @@ void Writer::writeCall(Call *call) {
 }
 
 
-} /* namespace Trace */
+} /* namespace trace */
 

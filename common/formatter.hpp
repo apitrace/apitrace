@@ -34,7 +34,7 @@
 #include <iostream>
 
 
-namespace Formatter {
+namespace formatter {
 
 /*
  * See also http://bytes.com/topic/c/answers/63822-design-question-little-c-header-colorizing-text-linux-comments-ideas
@@ -62,6 +62,7 @@ public:
     virtual Attribute *normal(void) const { return new Attribute; }
     virtual Attribute *bold(void) const { return new Attribute; }
     virtual Attribute *italic(void) const { return new Attribute; }
+    virtual Attribute *strike(void) const { return new Attribute; }
     virtual Attribute *color(Color) const { return new Attribute; }
 };
 
@@ -88,6 +89,7 @@ public:
     virtual Attribute *normal(void) const { return new AnsiAttribute("0m"); }
     virtual Attribute *bold(void) const { return new AnsiAttribute("1m"); }
     virtual Attribute *italic(void) const { return new AnsiAttribute("3m"); }
+    virtual Attribute *strike(void) const { return new AnsiAttribute("9m"); }
     virtual Attribute *color(Color c) const { 
         static const char *color_escapes[] = {
             "31m", /* red */
@@ -107,7 +109,38 @@ inline std::ostream& operator<<(std::ostream& os, const Attribute *attr) {
 
 #ifdef _WIN32
 
+
 #include <windows.h>
+
+
+#ifndef COMMON_LVB_LEADING_BYTE
+#define COMMON_LVB_LEADING_BYTE    0x0100
+#endif
+
+#ifndef COMMON_LVB_TRAILING_BYTE
+#define COMMON_LVB_TRAILING_BYTE   0x0200
+#endif
+
+#ifndef COMMON_LVB_GRID_HORIZONTAL
+#define COMMON_LVB_GRID_HORIZONTAL 0x0400
+#endif
+
+#ifndef COMMON_LVB_GRID_LVERTICAL
+#define COMMON_LVB_GRID_LVERTICAL  0x0800
+#endif
+
+#ifndef COMMON_LVB_GRID_RVERTICAL
+#define COMMON_LVB_GRID_RVERTICAL  0x1000
+#endif
+
+#ifndef COMMON_LVB_REVERSE_VIDEO
+#define COMMON_LVB_REVERSE_VIDEO   0x4000
+#endif
+
+#ifndef COMMON_LVB_UNDERSCORE
+#define COMMON_LVB_UNDERSCORE      0x8000
+#endif
+
 
 class WindowsAttribute : public Attribute {
 protected:
@@ -142,6 +175,7 @@ public:
     virtual Attribute *normal(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
     virtual Attribute *bold(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY); }
     virtual Attribute *italic(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
+    virtual Attribute *strike(void) const { return new WindowsAttribute(COMMON_LVB_REVERSE_VIDEO | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
     virtual Attribute *color(Color c) const { 
         static const WORD color_escapes[] = {
             FOREGROUND_RED | FOREGROUND_INTENSITY,
@@ -168,7 +202,7 @@ inline Formatter *defaultFormatter(bool color = true) {
 }
 
 
-} /* namespace Formatter */
+} /* namespace formatter */
 
 
 #endif /* _FORMATTER_HPP_ */

@@ -60,11 +60,12 @@ __gl_type_size(GLenum type)
     case GL_UNSIGNED_INT:
     case GL_FLOAT:
     case GL_4_BYTES:
+    case GL_FIXED:
         return 4;
     case GL_DOUBLE:
         return 8;
     default:
-        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         return 0;
     }
 }
@@ -268,7 +269,7 @@ __gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
         numElems = 1;
         break;
     default:
-        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         elemType = GL_NONE;
         numElems = 0;
         return;
@@ -360,7 +361,7 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
             }
         }
     } else {
-        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
     }
 
     if (__element_array_buffer) {
@@ -396,13 +397,13 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
 
 static inline GLuint
 __glDrawArraysIndirect_maxindex(const GLvoid *indirect) {
-    OS::DebugMessage("apitrace: warning: %s: unsupported\n", __FUNCTION__);
+    os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
     return 0;
 }
 
 static inline GLuint
 __glDrawElementsIndirect_maxindex(GLenum type, const GLvoid *indirect) {
-    OS::DebugMessage("apitrace: warning: %s: unsupported\n", __FUNCTION__);
+    os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
     return 0;
 }
 
@@ -476,7 +477,7 @@ __glMap1d_size(GLenum target, GLint stride, GLint order)
         channels = 4;
         break;
     default:
-        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
         return 0;
     }
 
@@ -516,7 +517,7 @@ __glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint 
         channels = 4;
         break;
     default:
-        OS::DebugMessage("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
+        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, target);
         return 0;
     }
 
@@ -563,7 +564,7 @@ __gl_format_channels(GLenum format) {
     case GL_CMYKA_EXT:
         return 5;
     default:
-        OS::DebugMessage("apitrace: warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
+        os::log("apitrace: warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
         return 0;
     }
 }
@@ -581,7 +582,7 @@ _align(X x, Y y) {
 }
 
 static inline size_t
-__gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth) {
+__gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLboolean has_unpack_subimage) {
     unsigned num_channels = __gl_format_channels(format);
 
     unsigned bits_per_pixel;
@@ -632,7 +633,7 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
         bits_per_pixel = 64;
         break;
     default:
-        OS::DebugMessage("apitrace: warning: %s: unexpected type GLenum 0x%04X\n", __FUNCTION__, type);
+        os::log("apitrace: warning: %s: unexpected type GLenum 0x%04X\n", __FUNCTION__, type);
         bits_per_pixel = 0;
         break;
     }
@@ -644,12 +645,14 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
     GLint skip_pixels = 0;
     GLint skip_images = 0;
 
-    __glGetIntegerv(GL_UNPACK_ALIGNMENT,    &alignment);
-    __glGetIntegerv(GL_UNPACK_ROW_LENGTH,   &row_length);
-    __glGetIntegerv(GL_UNPACK_IMAGE_HEIGHT, &image_height);
-    __glGetIntegerv(GL_UNPACK_SKIP_ROWS,    &skip_rows);
-    __glGetIntegerv(GL_UNPACK_SKIP_PIXELS,  &skip_pixels);
-    __glGetIntegerv(GL_UNPACK_SKIP_IMAGES,  &skip_images);
+    __glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+    if (has_unpack_subimage) {
+        __glGetIntegerv(GL_UNPACK_ROW_LENGTH,   &row_length);
+        __glGetIntegerv(GL_UNPACK_IMAGE_HEIGHT, &image_height);
+        __glGetIntegerv(GL_UNPACK_SKIP_ROWS,    &skip_rows);
+        __glGetIntegerv(GL_UNPACK_SKIP_PIXELS,  &skip_pixels);
+        __glGetIntegerv(GL_UNPACK_SKIP_IMAGES,  &skip_images);
+    }
 
     if (row_length <= 0) {
         row_length = width;
@@ -681,9 +684,10 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
     return size;
 }
 
-#define __glTexImage3D_size(format, type, width, height, depth) __gl_image_size(format, type, width, height, depth)
-#define __glTexImage2D_size(format, type, width, height)        __gl_image_size(format, type, width, height, 1)
-#define __glTexImage1D_size(format, type, width)                __gl_image_size(format, type, width, 1, 1)
+// note that can_unpack_subimage() is generated by gltrace.py
+#define __glTexImage3D_size(format, type, width, height, depth) __gl_image_size(format, type, width, height, depth, can_unpack_subimage())
+#define __glTexImage2D_size(format, type, width, height)        __gl_image_size(format, type, width, height, 1, can_unpack_subimage())
+#define __glTexImage1D_size(format, type, width)                __gl_image_size(format, type, width, 1, 1, can_unpack_subimage())
 
 #define __glTexSubImage3D_size(format, type, width, height, depth) __glTexImage3D_size(format, type, width, height, depth)
 #define __glTexSubImage2D_size(format, type, width, height)        __glTexImage2D_size(format, type, width, height)
@@ -734,7 +738,7 @@ __glClearBuffer_size(GLenum buffer)
     case GL_STENCIL:
         return 1;
     default:
-        OS::DebugMessage("apitrace: warning: %s: unexpected buffer GLenum 0x%04X\n", __FUNCTION__, buffer);
+        os::log("apitrace: warning: %s: unexpected buffer GLenum 0x%04X\n", __FUNCTION__, buffer);
         return 0;
     }
 }
@@ -752,6 +756,26 @@ __AttribList_size(const T *pAttribList)
         do {
             ++size;
         } while (*pAttribList++);
+    }
+
+    return size;
+}
+
+
+/*
+ * (key, value) attribute list, terminated by the given terminator.
+ */
+template<class T>
+static inline size_t
+__AttribList_size(const T *pAttribList, T terminator)
+{
+    size_t size = 0;
+
+    if (pAttribList) {
+        while (pAttribList[size] != terminator)
+            size += 2;
+        // terminator also counts
+        size++;
     }
 
     return size;

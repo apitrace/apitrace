@@ -8,6 +8,11 @@
 #include <QDialog>
 #include <QItemEditorFactory>
 #include <QStandardItemModel>
+#include <QSpinBox>
+
+#include <limits.h>
+#include <float.h>
+
 
 class ApiTraceCall;
 
@@ -21,12 +26,114 @@ public:
     bool value() const;
 };
 
-class ArgumentsItemEditorFactory : public QItemEditorFactory
+
+class BooleanComboBoxEditorCreator : public BooleanComboBox
 {
+    Q_OBJECT
+    Q_PROPERTY(bool value READ value WRITE setValue USER true)
 public:
-    ArgumentsItemEditorFactory();
-    QWidget *createEditor(QVariant::Type type, QWidget *parent) const;
-    QByteArray valuePropertyName(QVariant::Type) const;
+    BooleanComboBoxEditorCreator(QWidget *widget = 0) : BooleanComboBox(widget)
+    {
+	this->setFrame(false);
+    };
+};
+
+class UIntEditorCreator : public QSpinBox
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue USER true)
+public:
+    UIntEditorCreator(QWidget *widget = 0) : QSpinBox(widget)
+    {
+	this->setFrame(false);
+        this->setMaximum(INT_MAX);
+    };
+};
+
+class IntEditorCreator : public QSpinBox
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue USER true)
+public:
+    IntEditorCreator(QWidget *widget = 0) : QSpinBox(widget)
+    {
+	this->setFrame(false);
+        this->setMinimum(INT_MIN);
+        this->setMaximum(INT_MAX);
+    };
+};
+
+class ULongLongEditorCreator : public QSpinBox
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue USER true)
+public:
+    ULongLongEditorCreator(QWidget *widget = 0) : QSpinBox(widget)
+    {
+	this->setFrame(false);
+        this->setMaximum(INT_MAX);
+    };
+};
+
+class LongLongEditorCreator : public QSpinBox
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue USER true)
+public:
+    LongLongEditorCreator(QWidget *widget = 0) : QSpinBox(widget)
+    {
+	this->setFrame(false);
+        this->setMinimum(INT_MIN);
+        this->setMaximum(INT_MAX);
+    };
+};
+
+class PixmapEditorCreator : public QLabel
+{
+    Q_OBJECT
+    Q_PROPERTY(QString text READ text WRITE setText USER true)
+public:
+    PixmapEditorCreator(QWidget *widget = 0) : QLabel (widget)
+    {
+    };
+};
+
+class FloatEditorCreator : public QDoubleSpinBox
+{
+    Q_OBJECT
+    Q_PROPERTY(double value READ value WRITE setValue USER true)
+public:
+    FloatEditorCreator(QWidget *widget = 0) : QDoubleSpinBox(widget)
+    {
+	this->setFrame(false);
+        this->setMinimum(-FLT_MAX);
+        this->setMaximum(FLT_MAX);
+        this->setDecimals(8);
+    };
+};
+
+class DoubleEditorCreator : public QDoubleSpinBox
+{
+    Q_OBJECT
+    Q_PROPERTY(double value READ value WRITE setValue USER true)
+public:
+    DoubleEditorCreator(QWidget *widget = 0) : QDoubleSpinBox(widget)
+    {
+	this->setFrame(false);
+        this->setMinimum(-DBL_MAX);
+        this->setMaximum(DBL_MAX);
+        this->setDecimals(8);
+    };
+};
+
+class InvalidEditorCreator : public QLabel
+{
+    Q_OBJECT
+    Q_PROPERTY(QString text READ text WRITE setText USER true)
+public:
+    InvalidEditorCreator(QWidget *widget = 0) :  QLabel(widget)
+    {
+    };
 };
 
 class ArgumentsEditor : public QDialog

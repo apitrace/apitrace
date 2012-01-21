@@ -30,28 +30,36 @@ import debug
 
 
 class Type:
+    """Base class for all types."""
 
-    __all = {}
-    __seq = 0
+    __tags = set()
 
-    def __init__(self, expr, id = ''):
+    def __init__(self, expr, tag = None):
         self.expr = expr
-        
-        for char in id:
-            assert char.isalnum() or char in '_ '
 
-        id = id.replace(' ', '_')
-        
-        if id in Type.__all:
-            Type.__seq += 1
-            id += str(Type.__seq)
-        
-        assert id not in Type.__all
-        Type.__all[id] = self
+        # Generate a default tag, used when naming functions that will operate
+        # on this type, so it should preferrably be something representative of
+        # the type.
+        if tag is None:
+            tag = ''.join([c for c in expr if c.isalnum() or c in '_'])
+        else:
+            for c in tag:
+                assert c.isalnum() or c in '_'
 
-        self.id = id
+        # Ensure it is unique.
+        if tag in Type.__tags:
+            suffix = 1
+            while tag + str(suffix) in Type.__tags:
+                suffix += 1
+            tag += str(suffix)
+
+        assert tag not in Type.__tags
+        Type.__tags.add(tag)
+
+        self.tag = tag
 
     def __str__(self):
+        """Return the C/C++ type expression for this type."""
         return self.expr
 
     def visit(self, visitor, *args, **kwargs):
@@ -60,24 +68,29 @@ class Type:
 
 
 class _Void(Type):
+    """Singleton void type."""
 
     def __init__(self):
         Type.__init__(self, "void")
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_void(self, *args, **kwargs)
+        return visitor.visitVoid(self, *args, **kwargs)
 
 Void = _Void()
 
 
 class Literal(Type):
+    """Class to describe literal types.
 
-    def __init__(self, expr, format, base=10):
+    Types which are not defined in terms of other types, such as integers and
+    floats."""
+
+    def __init__(self, expr, kind):
         Type.__init__(self, expr)
-        self.format = format
+        self.kind = kind
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_literal(self, *args, **kwargs)
+        return visitor.visitLiteral(self, *args, **kwargs)
 
 
 class Const(Type):
@@ -96,35 +109,54 @@ class Const(Type):
             # The most legible
             expr = "const " + type.expr
 
-        Type.__init__(self, expr, 'C' + type.id)
+        Type.__init__(self, expr, 'C' + type.tag)
 
         self.type = type
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_const(self, *args, **kwargs)
+        return visitor.visitConst(self, *args, **kwargs)
 
 
 class Pointer(Type):
 
     def __init__(self, type):
-        Type.__init__(self, type.expr + " *", 'P' + type.id)
+        Type.__init__(self, type.expr + " *", 'P' + type.tag)
         self.type = type
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_pointer(self, *args, **kwargs)
+        return visitor.visitPointer(self, *args, **kwargs)
+
+
+class IntPointer(Type):
+    '''Integer encoded as a pointer.'''
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitIntPointer(self, *args, **kwargs)
+
+
+class LinearPointer(Type):
+    '''Integer encoded as a pointer.'''
+
+    def __init__(self, type, size = None):
+        Type.__init__(self, type.expr + " *", 'P' + type.tag)
+        self.type = type
+        self.size = size
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitLinearPointer(self, *args, **kwargs)
 
 
 class Handle(Type):
 
     def __init__(self, name, type, range=None, key=None):
-        Type.__init__(self, type.expr, 'P' + type.id)
+        Type.__init__(self, type.expr, 'P' + type.tag)
         self.name = name
         self.type = type
         self.range = range
         self.key = key
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_handle(self, *args, **kwargs)
+        return visitor.visitHandle(self, *args, **kwargs)
 
 
 def ConstPointer(type):
@@ -133,12 +165,18 @@ def ConstPointer(type):
 
 class Enum(Type):
 
+    __id = 0
+
     def __init__(self, name, values):
         Type.__init__(self, name)
+
+        self.id = Enum.__id
+        Enum.__id += 1
+
         self.values = list(values)
-    
+
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_enum(self, *args, **kwargs)
+        return visitor.visitEnum(self, *args, **kwargs)
 
 
 def FakeEnum(type, values):
@@ -147,13 +185,19 @@ def FakeEnum(type, values):
 
 class Bitmask(Type):
 
+    __id = 0
+
     def __init__(self, type, values):
         Type.__init__(self, type.expr)
+
+        self.id = Bitmask.__id
+        Bitmask.__id += 1
+
         self.type = type
         self.values = values
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_bitmask(self, *args, **kwargs)
+        return visitor.visitBitmask(self, *args, **kwargs)
 
 Flags = Bitmask
 
@@ -166,7 +210,7 @@ class Array(Type):
         self.length = length
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_array(self, *args, **kwargs)
+        return visitor.visitArray(self, *args, **kwargs)
 
 
 class Blob(Type):
@@ -177,18 +221,24 @@ class Blob(Type):
         self.size = size
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_blob(self, *args, **kwargs)
+        return visitor.visitBlob(self, *args, **kwargs)
 
 
 class Struct(Type):
 
+    __id = 0
+
     def __init__(self, name, members):
         Type.__init__(self, name)
+
+        self.id = Struct.__id
+        Struct.__id += 1
+
         self.name = name
         self.members = members
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_struct(self, *args, **kwargs)
+        return visitor.visitStruct(self, *args, **kwargs)
 
 
 class Alias(Type):
@@ -198,7 +248,7 @@ class Alias(Type):
         self.type = type
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_alias(self, *args, **kwargs)
+        return visitor.visitAlias(self, *args, **kwargs)
 
 
 def Out(type, name):
@@ -220,7 +270,8 @@ class Arg:
 
 class Function:
 
-    __id = 0
+    # 0-3 are reserved to memcpy, malloc, free, and realloc
+    __id = 4
 
     def __init__(self, type, name, args, call = '', fail = None, sideeffects=True):
         self.id = Function.__id
@@ -266,6 +317,9 @@ class Function:
         s += ")"
         return s
 
+    def argNames(self):
+        return [arg.name for arg in self.args]
+
 
 def StdFunction(*args, **kwargs):
     kwargs.setdefault('call', '__stdcall')
@@ -286,19 +340,19 @@ class Interface(Type):
         self.methods = []
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_interface(self, *args, **kwargs)
+        return visitor.visitInterface(self, *args, **kwargs)
 
-    def itermethods(self):
+    def iterMethods(self):
         if self.base is not None:
-            for method in self.base.itermethods():
+            for method in self.base.iterMethods():
                 yield method
         for method in self.methods:
             yield method
         raise StopIteration
     
-    def itermethods2(self):
+    def iterBaseMethods(self):
         if self.base is not None:
-            for iface, method in self.base.itermethods2():
+            for iface, method in self.base.iterBaseMethods():
                 yield iface, method
         for method in self.methods:
             yield self, method
@@ -327,7 +381,7 @@ class String(Type):
         self.length = length
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_string(self, *args, **kwargs)
+        return visitor.visitString(self, *args, **kwargs)
 
 # C string (i.e., zero terminated)
 CString = String()
@@ -340,7 +394,7 @@ class Opaque(Type):
         Type.__init__(self, expr)
 
     def visit(self, visitor, *args, **kwargs):
-        return visitor.visit_opaque(self, *args, **kwargs)
+        return visitor.visitOpaque(self, *args, **kwargs)
 
 
 def OpaquePointer(type, *args):
@@ -353,55 +407,95 @@ def OpaqueBlob(type, size):
     return Opaque(type.expr + ' *')
 
 
+class Polymorphic(Type):
+
+    def __init__(self, defaultType, switchExpr, switchTypes):
+        Type.__init__(self, defaultType.expr)
+        self.defaultType = defaultType
+        self.switchExpr = switchExpr
+        self.switchTypes = switchTypes
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitPolymorphic(self, *args, **kwargs)
+
+    def iterSwitch(self):
+        cases = [['default']]
+        types = [self.defaultType]
+
+        for expr, type in self.switchTypes:
+            case = 'case %s' % expr
+            try:
+                i = types.index(type)
+            except ValueError:
+                cases.append([case])
+                types.append(type)
+            else:
+                cases[i].append(case)
+
+        return zip(cases, types)
+
+
 class Visitor:
+    '''Abstract visitor for the type hierarchy.'''
 
     def visit(self, type, *args, **kwargs):
         return type.visit(self, *args, **kwargs)
 
-    def visit_void(self, void, *args, **kwargs):
+    def visitVoid(self, void, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_literal(self, literal, *args, **kwargs):
+    def visitLiteral(self, literal, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_string(self, string, *args, **kwargs):
+    def visitString(self, string, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_const(self, const, *args, **kwargs):
+    def visitConst(self, const, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_struct(self, struct, *args, **kwargs):
+    def visitStruct(self, struct, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_array(self, array, *args, **kwargs):
+    def visitArray(self, array, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_blob(self, blob, *args, **kwargs):
+    def visitBlob(self, blob, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_enum(self, enum, *args, **kwargs):
+    def visitEnum(self, enum, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_bitmask(self, bitmask, *args, **kwargs):
+    def visitBitmask(self, bitmask, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_pointer(self, pointer, *args, **kwargs):
+    def visitPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_handle(self, handle, *args, **kwargs):
+    def visitIntPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_alias(self, alias, *args, **kwargs):
+    def visitLinearPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_opaque(self, opaque, *args, **kwargs):
+    def visitHandle(self, handle, *args, **kwargs):
         raise NotImplementedError
 
-    def visit_interface(self, interface, *args, **kwargs):
+    def visitAlias(self, alias, *args, **kwargs):
         raise NotImplementedError
+
+    def visitOpaque(self, opaque, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitInterface(self, interface, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitPolymorphic(self, polymorphic, *args, **kwargs):
+        raise NotImplementedError
+        #return self.visit(polymorphic.defaultType, *args, **kwargs)
 
 
 class OnceVisitor(Visitor):
+    '''Visitor that guarantees that each type is visited only once.'''
 
     def __init__(self):
         self.__visited = set()
@@ -414,56 +508,73 @@ class OnceVisitor(Visitor):
 
 
 class Rebuilder(Visitor):
+    '''Visitor which rebuild types as it visits them.
 
-    def visit_void(self, void):
+    By itself it is a no-op -- it is intended to be overwritten.
+    '''
+
+    def visitVoid(self, void):
         return void
 
-    def visit_literal(self, literal):
+    def visitLiteral(self, literal):
         return literal
 
-    def visit_string(self, string):
+    def visitString(self, string):
         return string
 
-    def visit_const(self, const):
+    def visitConst(self, const):
         return Const(const.type)
 
-    def visit_struct(self, struct):
+    def visitStruct(self, struct):
         members = [(self.visit(type), name) for type, name in struct.members]
         return Struct(struct.name, members)
 
-    def visit_array(self, array):
+    def visitArray(self, array):
         type = self.visit(array.type)
         return Array(type, array.length)
 
-    def visit_blob(self, blob):
+    def visitBlob(self, blob):
         type = self.visit(blob.type)
         return Blob(type, blob.size)
 
-    def visit_enum(self, enum):
+    def visitEnum(self, enum):
         return enum
 
-    def visit_bitmask(self, bitmask):
+    def visitBitmask(self, bitmask):
         type = self.visit(bitmask.type)
         return Bitmask(type, bitmask.values)
 
-    def visit_pointer(self, pointer):
+    def visitPointer(self, pointer):
         type = self.visit(pointer.type)
         return Pointer(type)
 
-    def visit_handle(self, handle):
+    def visitIntPointer(self, pointer):
+        return pointer
+
+    def visitLinearPointer(self, pointer):
+        type = self.visit(pointer.type)
+        return LinearPointer(type, pointer.size)
+
+    def visitHandle(self, handle):
         type = self.visit(handle.type)
         return Handle(handle.name, type, range=handle.range, key=handle.key)
 
-    def visit_alias(self, alias):
+    def visitAlias(self, alias):
         type = self.visit(alias.type)
         return Alias(alias.expr, type)
 
-    def visit_opaque(self, opaque):
+    def visitOpaque(self, opaque):
         return opaque
+
+    def visitPolymorphic(self, polymorphic):
+        defaultType = self.visit(polymorphic.defaultType)
+        switchExpr = polymorphic.switchExpr
+        switchTypes = [(expr, self.visit(type)) for expr, type in polymorphic.switchTypes]
+        return Polymorphic(defaultType, switchExpr, switchTypes)
 
 
 class Collector(Visitor):
-    '''Collect.'''
+    '''Visitor which collects all unique types as it traverses them.'''
 
     def __init__(self):
         self.__visited = set()
@@ -476,56 +587,71 @@ class Collector(Visitor):
         Visitor.visit(self, type)
         self.types.append(type)
 
-    def visit_void(self, literal):
+    def visitVoid(self, literal):
         pass
 
-    def visit_literal(self, literal):
+    def visitLiteral(self, literal):
         pass
 
-    def visit_string(self, string):
+    def visitString(self, string):
         pass
 
-    def visit_const(self, const):
+    def visitConst(self, const):
         self.visit(const.type)
 
-    def visit_struct(self, struct):
+    def visitStruct(self, struct):
         for type, name in struct.members:
             self.visit(type)
 
-    def visit_array(self, array):
+    def visitArray(self, array):
         self.visit(array.type)
 
-    def visit_blob(self, array):
+    def visitBlob(self, array):
         pass
 
-    def visit_enum(self, enum):
+    def visitEnum(self, enum):
         pass
 
-    def visit_bitmask(self, bitmask):
+    def visitBitmask(self, bitmask):
         self.visit(bitmask.type)
 
-    def visit_pointer(self, pointer):
+    def visitPointer(self, pointer):
         self.visit(pointer.type)
 
-    def visit_handle(self, handle):
-        self.visit(handle.type)
-
-    def visit_alias(self, alias):
-        self.visit(alias.type)
-
-    def visit_opaque(self, opaque):
+    def visitIntPointer(self, pointer):
         pass
 
-    def visit_interface(self, interface):
+    def visitLinearPointer(self, pointer):
+        self.visit(pointer.type)
+
+    def visitHandle(self, handle):
+        self.visit(handle.type)
+
+    def visitAlias(self, alias):
+        self.visit(alias.type)
+
+    def visitOpaque(self, opaque):
+        pass
+
+    def visitInterface(self, interface):
         if interface.base is not None:
             self.visit(interface.base)
-        for method in interface.itermethods():
+        for method in interface.iterMethods():
             for arg in method.args:
                 self.visit(arg.type)
             self.visit(method.type)
 
+    def visitPolymorphic(self, polymorphic):
+        self.visit(polymorphic.defaultType)
+        for expr, type in polymorphic.switchTypes:
+            self.visit(type)
+
 
 class API:
+    '''API abstraction.
+
+    Essentially, a collection of types, functions, and interfaces.
+    '''
 
     def __init__(self, name = None):
         self.name = name
@@ -541,29 +667,29 @@ class API:
             collector.visit(function.type)
         for interface in self.interfaces:
             collector.visit(interface)
-            for method in interface.itermethods():
+            for method in interface.iterMethods():
                 for arg in method.args:
                     collector.visit(arg.type)
                 collector.visit(method.type)
         return collector.types
 
-    def add_function(self, function):
+    def addFunction(self, function):
         self.functions.append(function)
 
-    def add_functions(self, functions):
+    def addFunctions(self, functions):
         for function in functions:
-            self.add_function(function)
+            self.addFunction(function)
 
-    def add_interface(self, interface):
+    def addInterface(self, interface):
         self.interfaces.append(interface)
 
-    def add_interfaces(self, interfaces):
+    def addInterfaces(self, interfaces):
         self.interfaces.extend(interfaces)
 
-    def add_api(self, api):
+    def addApi(self, api):
         self.headers.extend(api.headers)
-        self.add_functions(api.functions)
-        self.add_interfaces(api.interfaces)
+        self.addFunctions(api.functions)
+        self.addInterfaces(api.interfaces)
 
     def get_function_by_name(self, name):
         for function in self.functions:

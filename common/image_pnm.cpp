@@ -32,7 +32,7 @@
 #include "image.hpp"
 
 
-namespace Image {
+namespace image {
 
 /**
  * http://en.wikipedia.org/wiki/Netpbm_format
@@ -109,4 +109,4 @@ Image::writePNM(std::ostream &os, const char *comment) const {
 }
 
 
-} /* namespace Image */
+} /* namespace image */

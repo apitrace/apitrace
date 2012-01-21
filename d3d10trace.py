@@ -25,11 +25,11 @@
 
 
 from specs.d3d10misc import d3d10
-from trace import DllTracer
+from dlltrace import DllTracer
 
 
 if __name__ == '__main__':
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
     print '#include <windows.h>'

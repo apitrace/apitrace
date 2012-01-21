@@ -14,7 +14,7 @@ extract_functions () {
 }
 
 extract_urls http://www.opengl.org/registry/ \
-| grep '^http://www\.opengl\.org/registry/specs/ARB/.*\.txt$' \
+| grep '^http://www\.opengl\.org/registry/specs/\w\+/.*\.txt$' \
 | sort -u \
 | while read URL
 do
@@ -22,7 +22,7 @@ do
     | extract_functions \
     | while read FUNCTION
     do
-        echo "$FUNCTION  $URL"
+        echo "$FUNCTION	$URL"
     done
 done
     

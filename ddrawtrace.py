@@ -25,19 +25,19 @@
 
 
 from specs.d3d import ddraw, interfaces
-from trace import DllTracer
+from dlltrace import DllTracer
 
 
 class DDrawTracer(DllTracer):
 
-    def trace_function_impl_body(self, function):
+    def traceFunctionImplBody(self, function):
         if function.name in ('AcquireDDThreadLock', 'ReleaseDDThreadLock'):
-            self.dispatch_function(function)
+            self.invokeFunction(function)
             return
 
-        DllTracer.trace_function_impl_body(self, function)
+        DllTracer.traceFunctionImplBody(self, function)
 
-    def wrap_arg(self, function, arg):
+    def serializeArg(self, function, arg):
         if function.name == 'DirectDrawCreateEx' and arg.name == 'lplpDD':
             print '    if (*lplpDD) {'
             for iface in interfaces:
@@ -46,7 +46,7 @@ class DDrawTracer(DllTracer):
                 print '        }'
             print '    }'
 
-        DllTracer.wrap_arg(self, function, arg)
+        DllTracer.serializeArg(self, function, arg)
 
 
 if __name__ == '__main__':
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 #endif
 
 '''
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
     tracer = DDrawTracer('ddraw.dll')

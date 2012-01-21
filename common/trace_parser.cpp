@@ -27,22 +27,24 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "trace_file.hpp"
-#include "trace_snappyfile.hpp"
 #include "trace_parser.hpp"
 
 
 #define TRACE_VERBOSE 0
 
 
-namespace Trace {
+namespace trace {
 
 
 Parser::Parser() {
     file = NULL;
     next_call_no = 0;
     version = 0;
+
+    glGetErrorSig = NULL;
 }
 
 
@@ -53,13 +55,8 @@ Parser::~Parser() {
 
 bool Parser::open(const char *filename) {
     assert(!file);
-    if (File::isZLibCompressed(filename)) {
-        file = new ZLibFile;
-    } else {
-        file = new SnappyFile;
-    }
-
-    if (!file->open(filename, File::Read)) {
+    file = File::createForRead(filename);
+    if (!file) {
         return false;
     }
 
@@ -131,7 +128,10 @@ void Parser::close(void) {
     for (EnumMap::iterator it = enums.begin(); it != enums.end(); ++it) {
         EnumSigState *sig = *it;
         if (sig) {
-            delete [] sig->name;
+            for (unsigned value = 0; value < sig->num_values; ++value) {
+                delete [] sig->values[value].name;
+            }
+            delete [] sig->values;
             delete sig;
         }
     }
@@ -170,21 +170,25 @@ void Parser::setBookmark(const ParseBookmark &bookmark) {
 
 Call *Parser::parse_call(Mode mode) {
     do {
+        Call *call;
         int c = read_byte();
-        switch(c) {
-        case Trace::EVENT_ENTER:
+        switch (c) {
+        case trace::EVENT_ENTER:
             parse_enter(mode);
             break;
-        case Trace::EVENT_LEAVE:
-            return parse_leave(mode);
+        case trace::EVENT_LEAVE:
+            call = parse_leave(mode);
+            adjust_call_flags(call);
+            return call;
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
         case -1:
             if (!calls.empty()) {
-                Call *call = calls.front();
-                std::cerr << call->no << ": warning: incomplete call " << call->name() << "\n";
+                call = calls.front();
+                call->flags |= CALL_FLAG_INCOMPLETE;
                 calls.pop_front();
+                adjust_call_flags(call);
                 return call;
             }
             return NULL;
@@ -207,7 +211,8 @@ T *lookup(std::vector<T *> &map, size_t index) {
 }
 
 
-FunctionSig *Parser::parse_function_sig(void) {
+Parser::FunctionSigFlags *
+Parser::parse_function_sig(void) {
     size_t id = read_uint();
 
     FunctionSigState *sig = lookup(functions, id);
@@ -223,8 +228,21 @@ FunctionSig *Parser::parse_function_sig(void) {
             arg_names[i] = read_string();
         }
         sig->arg_names = arg_names;
+        sig->flags = lookupCallFlags(sig->name);
         sig->offset = file->currentOffset();
         functions[id] = sig;
+
+        /**
+         * Note down the signature of special functions for future reference.
+         *
+         * NOTE: If the number of comparisons increases we should move this to a
+         * separate function and use bisection.
+         */
+        if (sig->num_args == 0 &&
+            strcmp(sig->name, "glGetError") == 0) {
+            glGetErrorSig = sig;
+        }
+
     } else if (file->currentOffset() < sig->offset) {
         /* skip over the signature */
         skip_string(); /* name */
@@ -271,6 +289,39 @@ StructSig *Parser::parse_struct_sig() {
 }
 
 
+/*
+ * Old enum signatures would cover a single name/value only:
+ *
+ *   enum_sig = id name value
+ *            | id
+ */
+EnumSig *Parser::parse_old_enum_sig() {
+    size_t id = read_uint();
+
+    EnumSigState *sig = lookup(enums, id);
+
+    if (!sig) {
+        /* parse the signature */
+        sig = new EnumSigState;
+        sig->id = id;
+        sig->num_values = 1;
+        EnumValue *values = new EnumValue[sig->num_values];
+        values->name = read_string();
+        values->value = read_sint();
+        sig->values = values;
+        sig->offset = file->currentOffset();
+        enums[id] = sig;
+    } else if (file->currentOffset() < sig->offset) {
+        /* skip over the signature */
+        skip_string(); /*name*/
+        scan_value();
+    }
+
+    assert(sig);
+    return sig;
+}
+
+
 EnumSig *Parser::parse_enum_sig() {
     size_t id = read_uint();
 
@@ -280,16 +331,22 @@ EnumSig *Parser::parse_enum_sig() {
         /* parse the signature */
         sig = new EnumSigState;
         sig->id = id;
-        sig->name = read_string();
-        Value *value = parse_value();
-        sig->value = value->toSInt();
-        delete value;
+        sig->num_values = read_uint();
+        EnumValue *values = new EnumValue[sig->num_values];
+        for (EnumValue *it = values; it != values + sig->num_values; ++it) {
+            it->name = read_string();
+            it->value = read_sint();
+        }
+        sig->values = values;
         sig->offset = file->currentOffset();
         enums[id] = sig;
     } else if (file->currentOffset() < sig->offset) {
         /* skip over the signature */
-        skip_string(); /*name*/
-        scan_value();
+        int num_values = read_uint();
+        for (int i = 0; i < num_values; ++i) {
+            skip_string(); /*name */
+            skip_sint(); /* value */
+        }
     }
 
     assert(sig);
@@ -333,9 +390,17 @@ BitmaskSig *Parser::parse_bitmask_sig() {
 
 
 void Parser::parse_enter(Mode mode) {
-    FunctionSig *sig = parse_function_sig();
+    unsigned thread_id;
 
-    Call *call = new Call(sig);
+    if (version >= 4) {
+        thread_id = read_uint();
+    } else {
+        thread_id = 0;
+    }
+
+    FunctionSigFlags *sig = parse_function_sig();
+
+    Call *call = new Call(sig, sig->flags, thread_id);
 
     call->no = next_call_no++;
 
@@ -373,13 +438,13 @@ Call *Parser::parse_leave(Mode mode) {
 bool Parser::parse_call_details(Call *call, Mode mode) {
     do {
         int c = read_byte();
-        switch(c) {
-        case Trace::CALL_END:
+        switch (c) {
+        case trace::CALL_END:
             return true;
-        case Trace::CALL_ARG:
+        case trace::CALL_ARG:
             parse_arg(call, mode);
             break;
-        case Trace::CALL_RET:
+        case trace::CALL_RET:
             call->ret = parse_value(mode);
             break;
         default:
@@ -392,6 +457,21 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
     } while(true);
 }
 
+
+/**
+ * Make adjustments to this particular call flags.
+ *
+ * NOTE: This is called per-call so no string comparisons should be done here.
+ * All name comparisons should be done when the signature is parsed instead.
+ */
+void Parser::adjust_call_flags(Call *call) {
+    // Mark glGetError() = GL_NO_ERROR as verbose
+    if (call->sig == glGetErrorSig &&
+        call->ret &&
+        call->ret->toSInt() == 0) {
+        call->flags |= CALL_FLAG_VERBOSE;
+    }
+}
 
 void Parser::parse_arg(Call *call, Mode mode) {
     unsigned index = read_uint();
@@ -409,47 +489,47 @@ Value *Parser::parse_value(void) {
     int c;
     Value *value;
     c = read_byte();
-    switch(c) {
-    case Trace::TYPE_NULL:
+    switch (c) {
+    case trace::TYPE_NULL:
         value = new Null;
         break;
-    case Trace::TYPE_FALSE:
+    case trace::TYPE_FALSE:
         value = new Bool(false);
         break;
-    case Trace::TYPE_TRUE:
+    case trace::TYPE_TRUE:
         value = new Bool(true);
         break;
-    case Trace::TYPE_SINT:
+    case trace::TYPE_SINT:
         value = parse_sint();
         break;
-    case Trace::TYPE_UINT:
+    case trace::TYPE_UINT:
         value = parse_uint();
         break;
-    case Trace::TYPE_FLOAT:
+    case trace::TYPE_FLOAT:
         value = parse_float();
         break;
-    case Trace::TYPE_DOUBLE:
+    case trace::TYPE_DOUBLE:
         value = parse_double();
         break;
-    case Trace::TYPE_STRING:
+    case trace::TYPE_STRING:
         value = parse_string();
         break;
-    case Trace::TYPE_ENUM:
+    case trace::TYPE_ENUM:
         value = parse_enum();
         break;
-    case Trace::TYPE_BITMASK:
+    case trace::TYPE_BITMASK:
         value = parse_bitmask();
         break;
-    case Trace::TYPE_ARRAY:
+    case trace::TYPE_ARRAY:
         value = parse_array();
         break;
-    case Trace::TYPE_STRUCT:
+    case trace::TYPE_STRUCT:
         value = parse_struct();
         break;
-    case Trace::TYPE_BLOB:
+    case trace::TYPE_BLOB:
         value = parse_blob();
         break;
-    case Trace::TYPE_OPAQUE:
+    case trace::TYPE_OPAQUE:
         value = parse_opaque();
         break;
     default:
@@ -470,42 +550,42 @@ Value *Parser::parse_value(void) {
 
 void Parser::scan_value(void) {
     int c = read_byte();
-    switch(c) {
-    case Trace::TYPE_NULL:
-    case Trace::TYPE_FALSE:
-    case Trace::TYPE_TRUE:
+    switch (c) {
+    case trace::TYPE_NULL:
+    case trace::TYPE_FALSE:
+    case trace::TYPE_TRUE:
         break;
-    case Trace::TYPE_SINT:
+    case trace::TYPE_SINT:
         scan_sint();
         break;
-    case Trace::TYPE_UINT:
+    case trace::TYPE_UINT:
         scan_uint();
         break;
-    case Trace::TYPE_FLOAT:
+    case trace::TYPE_FLOAT:
         scan_float();
         break;
-    case Trace::TYPE_DOUBLE:
+    case trace::TYPE_DOUBLE:
         scan_double();
         break;
-    case Trace::TYPE_STRING:
+    case trace::TYPE_STRING:
         scan_string();
         break;
-    case Trace::TYPE_ENUM:
+    case trace::TYPE_ENUM:
         scan_enum();
         break;
-    case Trace::TYPE_BITMASK:
+    case trace::TYPE_BITMASK:
         scan_bitmask();
         break;
-    case Trace::TYPE_ARRAY:
+    case trace::TYPE_ARRAY:
         scan_array();
         break;
-    case Trace::TYPE_STRUCT:
+    case trace::TYPE_STRUCT:
         scan_struct();
         break;
-    case Trace::TYPE_BLOB:
+    case trace::TYPE_BLOB:
         scan_blob();
         break;
-    case Trace::TYPE_OPAQUE:
+    case trace::TYPE_OPAQUE:
         scan_opaque();
         break;
     default:
@@ -552,7 +632,7 @@ void Parser::scan_float() {
 Value *Parser::parse_double() {
     double value;
     file->read(&value, sizeof value);
-    return new Float(value);
+    return new Double(value);
 }
 
 
@@ -572,13 +652,27 @@ void Parser::scan_string() {
 
 
 Value *Parser::parse_enum() {
-    EnumSig *sig = parse_enum_sig();
-    return new Enum(sig);
+    EnumSig *sig;
+    signed long long value;
+    if (version >= 3) {
+        sig = parse_enum_sig();
+        value = read_sint();
+    } else {
+        sig = parse_old_enum_sig();
+        assert(sig->num_values == 1);
+        value = sig->values->value;
+    }
+    return new Enum(sig, value);
 }
 
 
 void Parser::scan_enum() {
-    parse_enum_sig();
+    if (version >= 3) {
+        parse_enum_sig();
+        skip_sint();
+    } else {
+        parse_old_enum_sig();
+    }
 }
 
 
@@ -685,6 +779,33 @@ void Parser::skip_string(void) {
 }
 
 
+/*
+ * For the time being, a signed int is encoded as any other value, but we here parse
+ * it without the extra baggage of the Value class.
+ */
+signed long long
+Parser::read_sint(void) {
+    int c;
+    c = read_byte();
+    switch (c) {
+    case trace::TYPE_SINT:
+        return -read_uint();
+    case trace::TYPE_UINT:
+        return read_uint();
+    default:
+        std::cerr << "error: unexpected type " << c << "\n";
+        exit(1);
+    case -1:
+        return 0;
+    }
+}
+
+void
+Parser::skip_sint(void) {
+    skip_byte();
+    skip_uint();
+}
+
 unsigned long long Parser::read_uint(void) {
     unsigned long long value = 0;
     int c;
@@ -732,4 +853,4 @@ inline void Parser::skip_byte(void) {
 }
 
 
-} /* namespace Trace */
+} /* namespace trace */

@@ -623,8 +623,8 @@ ID2D1Factory.methods += [
 ]
 
 d2d1 = API("d2d1")
-d2d1.add_interface(ID2D1Factory)
-d2d1.add_functions([
+d2d1.addInterface(ID2D1Factory)
+d2d1.addFunctions([
     StdFunction(HRESULT, "D2D1CreateFactory", [(D2D1_FACTORY_TYPE, "factoryType"), (REFIID, "riid"), (Pointer(Const(D2D1_FACTORY_OPTIONS)), "pFactoryOptions"), Out(Pointer(OpaquePointer(Void)), "ppIFactory")]),
     StdFunction(Void, "D2D1MakeRotateMatrix", [(FLOAT, "angle"), (D2D1_POINT_2F, "center"), Out(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),
     StdFunction(Void, "D2D1MakeSkewMatrix", [(FLOAT, "angleX"), (FLOAT, "angleY"), (D2D1_POINT_2F, "center"), Out(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),

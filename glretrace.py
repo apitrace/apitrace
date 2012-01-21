@@ -29,6 +29,7 @@
 
 import specs.stdapi as stdapi
 import specs.glapi as glapi
+import specs.glesapi as glesapi
 from retrace import Retracer
 
 
@@ -36,8 +37,8 @@ class GlRetracer(Retracer):
 
     table_name = 'glretrace::gl_callbacks'
 
-    def retrace_function(self, function):
-        Retracer.retrace_function(self, function)
+    def retraceFunction(self, function):
+        Retracer.retraceFunction(self, function)
 
     array_pointer_function_names = set((
         "glVertexPointer",
@@ -119,8 +120,8 @@ class GlRetracer(Retracer):
 
     bind_framebuffer_function_names = set([
         "glBindFramebuffer",
-        "glBindFramebufferARB",
         "glBindFramebufferEXT",
+        "glBindFramebufferOES",
     ])
 
     # Names of the functions that can pack into the current pixel buffer
@@ -150,7 +151,23 @@ class GlRetracer(Retracer):
         'glReadnPixelsARB',
     ])
 
-    def retrace_function_body(self, function):
+    map_function_names = set([
+        'glMapBuffer',
+        'glMapBufferARB',
+        'glMapBufferOES',
+        'glMapBufferRange',
+        'glMapNamedBufferEXT',
+        'glMapNamedBufferRangeEXT'
+    ])
+
+    unmap_function_names = set([
+        'glUnmapBuffer',
+        'glUnmapBufferARB',
+        'glUnmapBufferOES',
+        'glUnmapNamedBufferEXT',
+    ])
+
+    def retraceFunctionBody(self, function):
         is_array_pointer = function.name in self.array_pointer_function_names
         is_draw_array = function.name in self.draw_array_function_names
         is_draw_elements = function.name in self.draw_elements_function_names
@@ -163,14 +180,14 @@ class GlRetracer(Retracer):
                 print '        GLint __array_buffer = 0;'
                 print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
                 print '        if (!__array_buffer) {'
-                self.fail_function(function)
+                self.failFunction(function)
                 print '        }'
 
             if is_draw_elements:
                 print '        GLint __element_array_buffer = 0;'
                 print '        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
                 print '        if (!__element_array_buffer) {'
-                self.fail_function(function)
+                self.failFunction(function)
                 print '        }'
             
             print '    }'
@@ -191,27 +208,29 @@ class GlRetracer(Retracer):
 
         # Pre-snapshots
         if function.name in self.bind_framebuffer_function_names:
+            print '    assert(call.flags & trace::CALL_FLAG_SWAP_RENDERTARGET);'
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_FRAMEBUFFER) {'
             print '        glretrace::snapshot(call.no - 1);'
             print '    }'
         if function.name == 'glFrameTerminatorGREMEDY':
-            print '    glretrace::frame_complete(call.no);'
+            print '    glretrace::frame_complete(call);'
             return
 
-        Retracer.retrace_function_body(self, function)
+        Retracer.retraceFunctionBody(self, function)
 
         # Post-snapshots
         if function.name in ('glFlush', 'glFinish'):
             print '    if (!glretrace::double_buffer) {'
-            print '        glretrace::frame_complete(call.no);'
+            print '        glretrace::frame_complete(call);'
             print '    }'
         if is_draw_array or is_draw_elements or is_misc_draw:
+            print '    assert(call.flags & trace::CALL_FLAG_RENDER);'
             print '    if (glretrace::snapshot_frequency == glretrace::FREQUENCY_DRAW) {'
             print '        glretrace::snapshot(call.no);'
             print '    }'
 
 
-    def call_function(self, function):
+    def invokeFunction(self, function):
         # Infer the drawable size from GL calls
         if function.name == "glViewport":
             print '    glretrace::updateDrawable(x + width, y + height);'
@@ -226,7 +245,7 @@ class GlRetracer(Retracer):
         if function.name == 'memcpy':
             print '    if (!dest || !src || !n) return;'
         
-        Retracer.call_function(self, function)
+        Retracer.invokeFunction(self, function)
 
         # Error checking
         if function.name == "glBegin":
@@ -286,7 +305,7 @@ class GlRetracer(Retracer):
                 print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
-            if function.name in ('glMapBuffer', 'glMapBufferARB', 'glMapBufferRange', 'glMapNamedBufferEXT', 'glMapNamedBufferRangeEXT'):
+            if function.name in self.map_function_names:
                 print r'        if (!__result) {'
                 print r'             retrace::warning(call) << "failed to map buffer\n";'
                 print r'        }'
@@ -303,32 +322,64 @@ class GlRetracer(Retracer):
                 print r'    }'
             print '    }'
 
-    def extract_arg(self, function, arg, arg_type, lvalue, rvalue):
+            # Query the buffer length for whole buffer mappings
+            if function.name in self.map_function_names:
+                if 'length' in function.argNames():
+                    assert 'BufferRange' in function.name
+                else:
+                    assert 'BufferRange' not in function.name
+                    print r'    GLint length = 0;'
+                    if function.name in ('glMapBuffer', 'glMapBufferOES'):
+                        print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
+                    elif function.name == 'glMapBufferARB':
+                        print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
+                    elif function.name == 'glMapNamedBufferEXT':
+                        print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
+                    else:
+                        assert False
+            # Destroy the buffer mapping
+            if function.name in self.unmap_function_names:
+                print r'        GLvoid *ptr = NULL;'
+                if function.name == 'glUnmapBuffer':
+                    print r'            glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &ptr);'
+                elif function.name == 'glUnmapBufferARB':
+                    print r'            glGetBufferPointervARB(target, GL_BUFFER_MAP_POINTER_ARB, &ptr);'
+                elif function.name == 'glUnmapBufferOES':
+                    print r'            glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &ptr);'
+                elif function.name == 'glUnmapNamedBufferEXT':
+                    print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
+                else:
+                    assert False
+                print r'        if (ptr) {'
+                print r'            retrace::delRegionByPointer(ptr);'
+                print r'        }'
+
+    def extractArg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
-            print '    %s = static_cast<%s>(%s.toPointer(true));' % (lvalue, arg_type, rvalue)
+            print '    %s = static_cast<%s>(retrace::toPointer(%s, true));' % (lvalue, arg_type, rvalue)
             return
 
         if function.name in self.draw_elements_function_names and arg.name == 'indices' or\
            function.name in self.draw_indirect_function_names and arg.name == 'indirect':
-            self.extract_opaque_arg(function, arg, arg_type, lvalue, rvalue)
+            self.extractOpaqueArg(function, arg, arg_type, lvalue, rvalue)
             return
 
         # Handle pointer with offsets into the current pack pixel buffer
         # object.
         if function.name in self.pack_function_names and arg.output:
-            self.extract_opaque_arg(function, arg, arg_type, lvalue, rvalue)
+            self.extractOpaqueArg(function, arg, arg_type, lvalue, rvalue)
             return
 
         if arg.type is glapi.GLlocation \
-           and 'program' not in [arg.name for arg in function.args]:
+           and 'program' not in function.argNames():
             print '    GLint program = -1;'
             print '    glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
         
         if arg.type is glapi.GLlocationARB \
-           and 'programObj' not in [arg.name for arg in function.args]:
+           and 'programObj' not in function.argNames():
             print '    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);'
 
-        Retracer.extract_arg(self, function, arg, arg_type, lvalue, rvalue)
+        Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
 
         # Don't try to use more samples than the implementation supports
         if arg.name == 'samples':
@@ -351,6 +402,6 @@ if __name__ == '__main__':
 
 '''
     api = glapi.glapi
-    api.add_function(glapi.memcpy)
+    api.addApi(glesapi.glesapi)
     retracer = GlRetracer()
-    retracer.retrace_api(api)
+    retracer.retraceApi(api)

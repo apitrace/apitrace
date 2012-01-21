@@ -277,6 +277,6 @@ IDirect3DVolume8.methods += [
 ]
 
 d3d8 = API("d3d8")
-d3d8.add_functions([
+d3d8.addFunctions([
     StdFunction(PDIRECT3D8, "Direct3DCreate8", [(UINT, "SDKVersion")]),
 ])

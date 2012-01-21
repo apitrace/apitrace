@@ -90,12 +90,19 @@ class StateGetter(Visitor):
         self.inflector = GetInflector(radical, inflections)
         self.suffix = suffix
 
+    def iter(self):
+        for function, type, count, name in parameters:
+            inflection = self.inflector.radical + self.suffix
+            if inflection not in function.split(','):
+                continue
+            if type is X:
+                continue
+            yield type, count, name
+
     def __call__(self, *args):
         pname = args[-1]
 
-        for function, type, count, name in parameters:
-            if type is X:
-                continue
+        for type, count, name in self.iter():
             if name == pname:
                 if count != 1:
                     type = Array(type, str(count))
@@ -110,10 +117,10 @@ class StateGetter(Visitor):
 
         return pname[3:].lower()
 
-    def visit_const(self, const, args):
+    def visitConst(self, const, args):
         return self.visit(const.type, args)
 
-    def visit_scalar(self, type, args):
+    def visitScalar(self, type, args):
         temp_name = self.temp_name(args)
         elem_type = self.inflector.reduced_type(type)
         inflection = self.inflector.inflect(type)
@@ -124,35 +131,38 @@ class StateGetter(Visitor):
             print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection + self.suffix, ', '.join(args))
         return temp_name
 
-    def visit_string(self, string, args):
+    def visitString(self, string, args):
         temp_name = self.temp_name(args)
         inflection = self.inflector.inflect(string)
         assert not inflection.endswith('v')
         print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection + self.suffix, ', '.join(args))
         return temp_name
 
-    def visit_alias(self, alias, args):
-        return self.visit_scalar(alias, args)
+    def visitAlias(self, alias, args):
+        return self.visitScalar(alias, args)
 
-    def visit_enum(self, enum, args):
+    def visitEnum(self, enum, args):
         return self.visit(GLint, args)
 
-    def visit_bitmask(self, bitmask, args):
+    def visitBitmask(self, bitmask, args):
         return self.visit(GLint, args)
 
-    def visit_array(self, array, args):
+    def visitArray(self, array, args):
         temp_name = self.temp_name(args)
         if array.length == '1':
             return self.visit(array.type)
         elem_type = self.inflector.reduced_type(array.type)
         inflection = self.inflector.inflect(array.type)
         assert inflection.endswith('v')
-        print '    %s %s[%s];' % (elem_type, temp_name, array.length)
+        print '    %s %s[%s + 1];' % (elem_type, temp_name, array.length)
         print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
+        print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array.length, elem_type)
         print '    %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
+        # Simple buffer overflow detection
+        print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array.length, elem_type)
         return temp_name
 
-    def visit_opaque(self, pointer, args):
+    def visitOpaque(self, pointer, args):
         temp_name = self.temp_name(args)
         inflection = self.inflector.inflect(pointer)
         assert inflection.endswith('v')
@@ -188,36 +198,36 @@ class JsonWriter(Visitor):
     
     It expects a previously declared JSONWriter instance named "json".'''
 
-    def visit_literal(self, literal, instance):
-        if literal.format == 'Bool':
+    def visitLiteral(self, literal, instance):
+        if literal.kind == 'Bool':
             print '    json.writeBool(%s);' % instance
-        elif literal.format in ('SInt', 'Uint', 'Float', 'Double'):
+        elif literal.kind in ('SInt', 'Uint', 'Float', 'Double'):
             print '    json.writeNumber(%s);' % instance
         else:
             raise NotImplementedError
 
-    def visit_string(self, string, instance):
+    def visitString(self, string, instance):
         assert string.length is None
         print '    json.writeString((const char *)%s);' % instance
 
-    def visit_enum(self, enum, instance):
+    def visitEnum(self, enum, instance):
         if enum.expr == 'GLenum':
             print '    dumpEnum(json, %s);' % instance
         else:
             print '    json.writeNumber(%s);' % instance
 
-    def visit_bitmask(self, bitmask, instance):
+    def visitBitmask(self, bitmask, instance):
         raise NotImplementedError
 
-    def visit_alias(self, alias, instance):
+    def visitAlias(self, alias, instance):
         self.visit(alias.type, instance)
 
-    def visit_opaque(self, opaque, instance):
+    def visitOpaque(self, opaque, instance):
         print '    json.writeNumber((size_t)%s);' % instance
 
     __index = 0
 
-    def visit_array(self, array, instance):
+    def visitArray(self, array, instance):
         index = '__i%u' % JsonWriter.__index
         JsonWriter.__index += 1
         print '    json.beginArray();'
@@ -249,7 +259,7 @@ class StateDumper:
         print 'const char *'
         print 'enumToString(GLenum pname)'
         print '{'
-        print '    switch(pname) {'
+        print '    switch (pname) {'
         for name in GLenum.values:
             print '    case %s:' % name
             print '        return "%s";' % name
@@ -288,7 +298,6 @@ class StateDumper:
         self.dump_material_params()
         self.dump_light_params()
         self.dump_vertex_attribs()
-        self.dump_texenv_params()
         self.dump_program_params()
         self.dump_texture_parameters()
         self.dump_framebuffer_parameters()
@@ -325,15 +334,22 @@ class StateDumper:
         print '    }'
         print
 
+    def texenv_param_target(self, name):
+        if name == 'GL_TEXTURE_LOD_BIAS':
+           return 'GL_TEXTURE_FILTER_CONTROL'
+        elif name == 'GL_COORD_REPLACE':
+           return 'GL_POINT_SPRITE'
+        else:
+           return 'GL_TEXTURE_ENV'
+
     def dump_texenv_params(self):
         for target in ['GL_TEXTURE_ENV', 'GL_TEXTURE_FILTER_CONTROL', 'GL_POINT_SPRITE']:
-            if target != 'GL_TEXTURE_FILTER_CONTROL':
-                print '    if (glIsEnabled(%s)) {' % target
-            else:
-                print '    {'
+            print '    {'
             print '        json.beginMember("%s");' % target
             print '        json.beginObject();'
-            self.dump_atoms(glGetTexEnv, target)
+            for _, _, name in glGetTexEnv.iter():
+                if self.texenv_param_target(name) == target:
+                    self.dump_atom(glGetTexEnv, target, name) 
             print '        json.endObject();'
             print '    }'
 
@@ -401,6 +417,9 @@ class StateDumper:
             print '                json.endMember(); // %s' % target
             print '            }'
             print
+        print '            if (unit < max_texture_coords) {'
+        self.dump_texenv_params()
+        print '            }'
         print '            json.endObject();'
         print '            json.endMember(); // GL_TEXTUREi'
         print '        }'
@@ -447,24 +466,32 @@ class StateDumper:
         print '            }'
 
     def dump_atoms(self, getter, *args):
-        for function, type, count, name in parameters:
-            inflection = getter.inflector.radical + getter.suffix
-            if inflection not in function.split(','):
-                continue
-            if type is X:
-                continue
-            print '        // %s' % name
-            print '        {'
-            type, value = getter(*(args + (name,)))
-            print '            if (glGetError() != GL_NO_ERROR) {'
-            #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
-            print '            } else {'
-            print '                json.beginMember("%s");' % name
-            JsonWriter().visit(type, value)
-            print '                json.endMember();'
-            print '            }'
-            print '        }'
-            print
+        for _, _, name in getter.iter():
+            self.dump_atom(getter, *(args + (name,))) 
+
+    def dump_atom(self, getter, *args):
+        name = args[-1]
+
+        # Avoid crash on MacOSX
+        # XXX: The right fix would be to look at the support extensions..
+        import platform
+        if name == 'GL_SAMPLER_BINDING' and platform.system() == 'Darwin':
+            return
+
+        print '        // %s' % name
+        print '        {'
+        #print '            assert(glGetError() == GL_NO_ERROR);'
+        type, value = getter(*args)
+        print '            if (glGetError() != GL_NO_ERROR) {'
+        #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
+        print '                while (glGetError() != GL_NO_ERROR) {}'
+        print '            } else {'
+        print '                json.beginMember("%s");' % name
+        JsonWriter().visit(type, value)
+        print '                json.endMember();'
+        print '            }'
+        print '        }'
+        print
 
 
 if __name__ == '__main__':

@@ -3,9 +3,9 @@ About **apitrace**
 
 **apitrace** consists of a set of tools to:
 
-* trace OpenGL, D3D9, D3D8, D3D7, and DDRAW APIs calls to a file;
+* trace OpenGL, OpenGL ES, D3D9, D3D8, D3D7, and DDRAW APIs calls to a file;
 
-* retrace OpenGL calls from a file;
+* retrace OpenGL and OpenGL ES calls from a file;
 
 * inspect OpenGL state at any call while retracing;
 
@@ -16,12 +16,12 @@ Basic usage
 ===========
 
 
-Linux
------
+Linux and Mac OS X
+------------------
 
 Run the application you want to trace as
 
-     LD_PRELOAD=/path/to/glxtrace.so /path/to/application
+    apitrace trace /path/to/application [args...]
 
 and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
@@ -29,53 +29,18 @@ directory.  You can specify the written trace filename by setting the
 
 View the trace with
 
-    /path/to/tracedump application.trace | less -R
+    apitrace dump --color application.trace
 
-Replay the trace with
+Replay an OpenGL trace with
 
-    /path/to/glretrace application.trace
+    glretrace application.trace
 
 Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
 glretrace for more options.
 
 Start the GUI as
 
-    /path/to/qapitrace application.trace
-
-
-The `LD_PRELOAD` mechanism should work with most applications.  There are some
-applications, e.g., Unigine Heaven, which global function pointers with the
-same name as GL entrypoints, living in a shared object that wasn't linked with
-`-Bsymbolic` flag, so relocations to those globals function pointers get
-overwritten with the address to our wrapper library, and the application will
-segfault when trying to write to them.  For these applications it is possible
-to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
-`LD_LIBRARY_PATH`:
-
-    ln -s glxtrace.so libGL.so
-    ln -s glxtrace.so libGL.so.1
-    ln -s glxtrace.so libGL.so.1.2
-    export LD_LIBRARY_PATH=/path/to/directory/where/glxtrace/is:$LD_LIBRARY_PATH
-    export TRACE_LIBGL=/path/to/real/libGL.so.1
-    /path/to/application
-
-See the `ld.so` man page for more information about `LD_PRELOAD` and
-`LD_LIBRARY_PATH` environment flags.
-
-
-
-Mac OS X
---------
-
-Usage on Mac OS X is similar to Linux above, except for the tracing procedure,
-which is instead:
-
-    DYLD_LIBRARY_PATH=/path/to/apitrace/wrappers /path/to/application
-
-Note that although Mac OS X has an `LD_PRELOAD` equivalent,
-`DYLD_INSERT_LIBRARIES`, it is mostly useless because it only works with
-`DYLD_FORCE_FLAT_NAMESPACE=1` which breaks most applications.  See the `dyld` man
-page for more details about these environment flags.
+    qapitrace application.trace
 
 
 Windows
@@ -88,7 +53,7 @@ Windows
 
 * View the trace with
 
-        \path\to\tracedump application.trace
+        \path\to\apitrace dump application.trace
 
 * Replay the trace with
 
@@ -97,6 +62,54 @@ Windows
 
 Advanced command line usage
 ===========================
+
+
+Tracing manually
+----------------
+
+### Linux ###
+
+Run the application you want to trace as
+
+     LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
+
+and it will generate a trace named `application.trace` in the current
+directory.  You can specify the written trace filename by setting the
+`TRACE_FILE` environment variable before running.
+
+The `LD_PRELOAD` mechanism should work with most applications.  There are some
+applications, e.g., Unigine Heaven, which global function pointers with the
+same name as GL entrypoints, living in a shared object that wasn't linked with
+`-Bsymbolic` flag, so relocations to those globals function pointers get
+overwritten with the address to our wrapper library, and the application will
+segfault when trying to write to them.  For these applications it is possible
+to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
+`LD_LIBRARY_PATH`:
+
+    ln -s glxtrace.so wrappers/libGL.so
+    ln -s glxtrace.so wrappers/libGL.so.1
+    ln -s glxtrace.so wrappers/libGL.so.1.2
+    export LD_LIBRARY_PATH=/path/to/apitrace/wrappers:$LD_LIBRARY_PATH
+    export TRACE_LIBGL=/path/to/real/libGL.so.1
+    /path/to/application
+
+See the `ld.so` man page for more information about `LD_PRELOAD` and
+`LD_LIBRARY_PATH` environment flags.
+
+To trace the application inside gdb, invoke gdb as:
+
+    gdb --ex 'set exec-wrapper env LD_PRELOAD=/path/to/glxtrace.so' --args /path/to/application
+
+### Mac OS X ###
+
+Run the application you want to trace as
+
+    DYLD_LIBRARY_PATH=/path/to/apitrace/wrappers /path/to/application
+
+Note that although Mac OS X has an `LD_PRELOAD` equivalent,
+`DYLD_INSERT_LIBRARIES`, it is mostly useless because it only works with
+`DYLD_FORCE_FLAT_NAMESPACE=1` which breaks most applications.  See the `dyld` man
+page for more details about these environment flags.
 
 
 Emitting annotations to the trace from GL applications
@@ -137,19 +150,19 @@ Dump GL state at a particular call
 
 You can get a dump of the bound GL state at call 12345 by doing:
 
-    /path/to/glretrace -D 12345 application.trace > 12345.json
+    glretrace -D 12345 application.trace > 12345.json
 
 This is precisely the mechanism the GUI obtains its own state.
 
-You can compare two state dumps with the jsondiff.py script:
+You can compare two state dumps by doing:
 
-    ./scripts/jsondiff.py 12345.json 67890.json
+    apitrace diff-state 12345.json 67890.json
 
 
 Comparing two traces side by side
 ---------------------------------
 
-    ./scripts/tracediff.sh trace1.trace trace2.trace
+    apitrace diff trace1.trace trace2.trace
 
 This works only on Unices, and it will truncate the traces due to performance
 limitations.
@@ -160,7 +173,7 @@ Recording a video with FFmpeg
 
 You can make a video of the output by doing
 
-    /path/to/glretrace -s - application.trace \
+    glretrace -s - application.trace \
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
 
@@ -180,7 +193,7 @@ These are the steps to create a regression test-suite around **apitrace**:
 * obtain reference snapshots, by doing:
 
         mkdir /path/to/snapshots/
-        /path/to/glretrace -s /path/to/reference/snapshots/ application.trace
+        glretrace -s /path/to/reference/snapshots/ application.trace
 
   on reference system.
 
@@ -188,12 +201,12 @@ These are the steps to create a regression test-suite around **apitrace**:
 
 * to do a regression test, do:
 
-        /path/to/glretrace -c /path/to/reference/snapshots/ application.trace
+        glretrace -c /path/to/reference/snapshots/ application.trace
 
-  Alternatively, for a HTML summary, use the snapdiff script:
+  Alternatively, for a HTML summary, use `apitrace diff-images`:
 
-        /path/to/glretrace -s /path/to/current/snapshots/ application.trace
-        ./scripts/snapdiff.py --output summary.html /path/to/reference/snapshots/ /path/to/current/snapshots/
+        glretrace -s /path/to/current/snapshots/ application.trace
+        apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/current/snapshots/
 
 
 Automated git-bisection

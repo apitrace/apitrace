@@ -35,7 +35,7 @@ from gltrace import GlTracer
 
 class CglTracer(GlTracer):
 
-    def is_public_function(self, function):
+    def isFunctionPublic(self, function):
         # The symbols visible in libGL.dylib can vary, so expose them all
         return True
 
@@ -44,14 +44,8 @@ if __name__ == '__main__':
     print
     print '#include <stdlib.h>'
     print '#include <string.h>'
-    print '#include <unistd.h>'
     print
-    print '#ifndef _GNU_SOURCE'
-    print '#define _GNU_SOURCE // for dladdr'
-    print '#endif'
-    print '#include <dlfcn.h>'
-    print
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print
     print '// To validate our prototypes'
     print '#define GL_GLEXT_PROTOTYPES'
@@ -61,68 +55,12 @@ if __name__ == '__main__':
     print
 
     api = API()
-    api.add_api(cglapi)
-    api.add_api(glapi)
+    api.addApi(cglapi)
+    api.addApi(glapi)
     tracer = CglTracer()
     tracer.trace_api(api)
 
     print r'''
-
-
-/*
- * Path to the true OpenGL framework
- */
-static const char *libgl_filename = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
-
-
-/*
- * Handle to the true OpenGL framework.
- */
-static void *libgl_handle = NULL;
-
-
-/*
- * Lookup a libGL symbol
- */
-void * __libgl_sym(const char *symbol)
-{
-    void *result;
-
-    if (!libgl_handle) {
-        /* 
-	 * Unfortunately we can't just dlopen the true dynamic library because
-	 * DYLD_LIBRARY_PATH/DYLD_FRAMEWORK_PATH take precedence, even for
-	 * absolute paths.  So we create a temporary symlink, and dlopen that
-	 * instead.
-         */
-
-        char temp_filename[] = "/tmp/tmp.XXXXXX";
-
-        if (mktemp(temp_filename) != NULL) {
-	    if (symlink(libgl_filename, temp_filename) == 0) {
-                libgl_handle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
-                remove(temp_filename);
-            }
-        }
-
-        if (!libgl_handle) {
-            OS::DebugMessage("apitrace: error: couldn't load %s\n", libgl_filename);
-            OS::Abort();
-            return NULL;
-        }
-    }
-
-    result = dlsym(libgl_handle, symbol);
-
-    if (result == dlsym(RTLD_SELF, symbol)) {
-        OS::DebugMessage("apitrace: error: symbol lookup recursion\n");
-        OS::Abort();
-        return NULL;
-    }
-
-    return result;
-}
-
 
 PUBLIC
 void * gll_noop = 0;

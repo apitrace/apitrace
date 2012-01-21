@@ -37,8 +37,8 @@ from codegen import *
 
 class WglTracer(GlTracer):
 
-    def wrap_ret(self, function, instance):
-        GlTracer.wrap_ret(self, function, instance)
+    def wrapRet(self, function, instance):
+        GlTracer.wrapRet(self, function, instance)
 
         if function.name == "wglGetProcAddress":
             print '    if (%s) {' % instance
@@ -53,7 +53,7 @@ class WglTracer(GlTracer):
                 print '    %s = (%s)&%s;' % (instance, function.type, f.name);
         
             def handle_default():
-                print '    OS::DebugMessage("apitrace: warning: unknown function \\"%s\\"\\n", lpszProc);'
+                print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", lpszProc);'
 
             string_switch('lpszProc', func_dict.keys(), handle_case, handle_default)
             print '    }'
@@ -66,34 +66,9 @@ if __name__ == '__main__':
     print '#include <string.h>'
     print '#include <windows.h>'
     print
-    print '#include "trace_writer.hpp"'
+    print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    print '''
-static HINSTANCE g_hDll = NULL;
-
-PROC
-__getPublicProcAddress(LPCSTR lpProcName)
-{
-    if (!g_hDll) {
-        char szDll[MAX_PATH] = {0};
-        
-        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
-            return NULL;
-        }
-        
-        strcat(szDll, "\\\\opengl32.dll");
-        
-        g_hDll = LoadLibraryA(szDll);
-        if (!g_hDll) {
-            return NULL;
-        }
-    }
-        
-    return GetProcAddress(g_hDll, lpProcName);
-}
-
-    '''
     print '// To validate our prototypes'
     print '#define GL_GLEXT_PROTOTYPES'
     print '#define WGL_GLXEXT_PROTOTYPES'
@@ -102,7 +77,7 @@ __getPublicProcAddress(LPCSTR lpProcName)
     print '#include "glsize.hpp"'
     print
     api = API()
-    api.add_api(glapi)
-    api.add_api(wglapi)
+    api.addApi(glapi)
+    api.addApi(wglapi)
     tracer = WglTracer()
     tracer.trace_api(api)
