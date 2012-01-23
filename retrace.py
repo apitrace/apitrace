@@ -207,11 +207,41 @@ class Retracer:
         print '}'
         print
 
+    def retraceInterfaceMethod(self, interface, method):
+        print 'static void retrace_%s__%s(trace::Call &call) {' % (interface.name, method.name)
+        self.retraceInterfaceMethodBody(interface, method)
+        print '}'
+        print
+
     def retraceFunctionBody(self, function):
         if not function.sideeffects:
             print '    (void)call;'
             return
 
+        self.deserializeArgs(function)
+        
+        self.invokeFunction(function)
+
+        self.swizzleValues(function)
+
+    def retraceInterfaceMethodBody(self, interface, method):
+        if not method.sideeffects:
+            print '    (void)call;'
+            return
+
+        self.deserializeThisPointer(interface)
+
+        self.deserializeArgs(method)
+        
+        self.invokeInterfaceMethod(interface, method)
+
+        self.swizzleValues(method)
+
+    def deserializeThisPointer(self, interface):
+        print '    %s *_this;' % (interface.name,)
+        # FIXME
+
+    def deserializeArgs(self, function):
         success = True
         for arg in function.args:
             arg_type = ConstRemover().visit(arg.type)
@@ -222,13 +252,17 @@ class Retracer:
             try:
                 self.extractArg(function, arg, arg_type, lvalue, rvalue)
             except NotImplementedError:
-                success = False
+                success =  False
                 print '    %s = 0; // FIXME' % arg.name
+
         if not success:
             print '    if (1) {'
             self.failFunction(function)
+            if function.name[-1].islower():
+                sys.stderr.write('warning: unsupported %s call\n' % function.name)
             print '    }'
-        self.invokeFunction(function)
+
+    def swizzleValues(self, function):
         for arg in function.args:
             if arg.output:
                 arg_type = ConstRemover().visit(arg.type)
@@ -245,9 +279,6 @@ class Retracer:
                 self.regiterSwizzledValue(function.type, lvalue, rvalue)
             except NotImplementedError:
                 print '    // XXX: result'
-        if not success:
-            if function.name[-1].islower():
-                sys.stderr.write('warning: unsupported %s call\n' % function.name)
 
     def failFunction(self, function):
         print '    if (retrace::verbosity >= 0) {'
@@ -274,24 +305,19 @@ class Retracer:
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
+    def invokeInterfaceMethod(self, interface, method):
+        arg_names = ", ".join(method.argNames())
+        if method.type is not stdapi.Void:
+            print '    %s __result;' % (method.type)
+            print '    __result = _this->%s(%s);' % (method.name, arg_names)
+            print '    (void)__result;'
+        else:
+            print '    _this->%s(%s);' % (method.name, arg_names)
+
     def filterFunction(self, function):
         return True
 
     table_name = 'retrace::callbacks'
-
-    def retraceFunctions(self, functions):
-        functions = filter(self.filterFunction, functions)
-
-        for function in functions:
-            self.retraceFunction(function)
-
-        print 'const retrace::Entry %s[] = {' % self.table_name
-        for function in functions:
-            print '    {"%s", &retrace_%s},' % (function.name, function.name)
-        print '    {NULL, NULL}'
-        print '};'
-        print
-
 
     def retraceApi(self, api):
 
@@ -299,7 +325,7 @@ class Retracer:
         print '#include "retrace.hpp"'
         print
 
-        types = api.all_types()
+        types = api.getAllTypes()
         handles = [type for type in types if isinstance(type, stdapi.Handle)]
         handle_names = set()
         for handle in handles:
@@ -312,5 +338,21 @@ class Retracer:
                 handle_names.add(handle.name)
         print
 
-        self.retraceFunctions(api.functions)
+        functions = filter(self.filterFunction, api.functions)
+        for function in functions:
+            self.retraceFunction(function)
+        interfaces = api.getAllInterfaces()
+        for interface in interfaces:
+            for method in interface.iterMethods():
+                self.retraceInterfaceMethod(interface, method)
+
+        print 'const retrace::Entry %s[] = {' % self.table_name
+        for function in functions:
+            print '    {"%s", &retrace_%s},' % (function.name, function.name)
+        for interface in interfaces:
+            for method in interface.iterMethods():
+                print '    {"%s::%s", &retrace_%s__%s},' % (interface.name, method.name, interface.name, method.name)
+        print '    {NULL, NULL}'
+        print '};'
+        print
 

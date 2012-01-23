@@ -321,13 +321,13 @@ class Tracer:
         print
 
         # Generate the serializer functions
-        types = api.all_types()
+        types = api.getAllTypes()
         visitor = ComplexValueSerializer(self.serializerFactory())
         map(visitor.visit, types)
         print
 
         # Interfaces wrapers
-        interfaces = [type for type in types if isinstance(type, stdapi.Interface)]
+        interfaces = api.getAllInterfaces()
         map(self.declareWrapperInterface, interfaces)
         map(self.implementWrapperInterface, interfaces)
         print

@@ -551,6 +551,9 @@ class Rebuilder(Visitor):
     def visitOpaque(self, opaque):
         return opaque
 
+    def visitInterface(self, interface, *args, **kwargs):
+        return interface
+
     def visitPolymorphic(self, polymorphic):
         defaultType = self.visit(polymorphic.defaultType)
         switchExpr = polymorphic.switchExpr
@@ -644,7 +647,7 @@ class API:
         self.functions = []
         self.interfaces = []
 
-    def all_types(self):
+    def getAllTypes(self):
         collector = Collector()
         for function in self.functions:
             for arg in function.args:
@@ -657,6 +660,14 @@ class API:
                     collector.visit(arg.type)
                 collector.visit(method.type)
         return collector.types
+
+    def getAllInterfaces(self):
+        types = self.getAllTypes()
+        interfaces = [type for type in types if isinstance(type, Interface)]
+        for interface in self.interfaces:
+            if interface not in interfaces:
+                interfaces.append(interface)
+        return interfaces
 
     def addFunction(self, function):
         self.functions.append(function)

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2012 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,56 +23,19 @@
  *
  **************************************************************************/
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
+#ifndef _D3DRETRACE_HPP_
+#define _D3DRETRACE_HPP_
 
-#include "glws.hpp"
 #include "retrace.hpp"
 
 
-namespace glretrace {
+namespace d3dretrace {
 
 
-extern bool double_buffer;
-extern bool insideGlBeginEnd;
-extern glws::Profile defaultProfile;
-extern glws::Visual *visual[glws::PROFILE_MAX];
-extern glws::Drawable *drawable;
-extern glws::Context *context;
-
-extern unsigned frame;
-extern long long startTime;
-extern bool wait;
-
-enum frequency {
-    FREQUENCY_NEVER = 0,
-    FREQUENCY_FRAME,
-    FREQUENCY_FRAMEBUFFER,
-    FREQUENCY_DRAW,
-};
-
-extern bool benchmark;
-extern const char *compare_prefix;
-extern const char *snapshot_prefix;
-extern enum frequency snapshot_frequency;
-
-extern unsigned dump_state;
-
-void
-checkGlError(trace::Call &call);
-
-extern const retrace::Entry gl_callbacks[];
-extern const retrace::Entry cgl_callbacks[];
-extern const retrace::Entry glx_callbacks[];
-extern const retrace::Entry wgl_callbacks[];
-extern const retrace::Entry egl_callbacks[];
-
-void snapshot(unsigned call_no);
-void frame_complete(trace::Call &call);
-
-void updateDrawable(int width, int height);
-
-} /* namespace glretrace */
+extern const retrace::Entry d3d9_callbacks[];
 
 
-#endif /* _GLRETRACE_HPP_ */
+} /* namespace d3dretrace */
+
+
+#endif /* _D3DRETRACE_HPP_ */

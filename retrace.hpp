@@ -33,9 +33,13 @@
 #include <ostream>
 
 #include "trace_model.hpp"
+#include "trace_parser.hpp"
 
 
 namespace retrace {
+
+
+extern trace::Parser parser;
 
 
 /**

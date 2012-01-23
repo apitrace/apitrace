@@ -39,7 +39,6 @@ namespace glretrace {
 
 bool double_buffer = true;
 bool insideGlBeginEnd = false;
-trace::Parser parser;
 glws::Profile defaultProfile = glws::PROFILE_COMPAT;
 glws::Visual *visual[glws::PROFILE_MAX];
 glws::Drawable *drawable = NULL;
