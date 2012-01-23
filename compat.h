@@ -58,6 +58,9 @@
 #define __out_ecount_z(x)
 #define __nullterminated
 #define __notnull
+#define __field_ecount_opt(x)
+#define __range(x,y)
+#define __out_ecount_part_opt(x,y)
 
 #ifndef DECLSPEC_DEPRECATED
 #define DECLSPEC_DEPRECATED /**/
