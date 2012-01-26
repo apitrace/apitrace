@@ -5,6 +5,7 @@ add_executable (apitrace
     cli_diff_images.cpp
     cli_dump.cpp
     cli_pager.cpp
+    cli_pickle.cpp
     cli_repack.cpp
     cli_trace.cpp
 )
