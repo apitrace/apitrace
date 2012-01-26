@@ -30,6 +30,7 @@
 #include "os_time.hpp"
 #include "image.hpp"
 #include "retrace.hpp"
+#include "trace_callset.hpp"
 #include "glproc.hpp"
 #include "glstate.hpp"
 #include "glretrace.hpp"
@@ -50,9 +51,10 @@ long long startTime = 0;
 bool wait = false;
 
 bool benchmark = false;
-const char *compare_prefix = NULL;
-const char *snapshot_prefix = NULL;
-enum frequency snapshot_frequency = FREQUENCY_NEVER;
+static const char *compare_prefix = NULL;
+static const char *snapshot_prefix = NULL;
+static trace::CallSet snapshot_frequency;
+static trace::CallSet compare_frequency;
 
 unsigned dump_state = ~0;
 
@@ -138,9 +140,11 @@ updateDrawable(int width, int height) {
 }
 
 
-void snapshot(unsigned call_no) {
-    if (!drawable ||
-        (!snapshot_prefix && !compare_prefix)) {
+static void
+snapshot(unsigned call_no) {
+    assert(snapshot_prefix || compare_prefix);
+
+    if (!drawable) {
         return;
     }
 
@@ -194,11 +198,6 @@ void frame_complete(trace::Call &call) {
     if (!drawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
-
-    if (snapshot_frequency == FREQUENCY_FRAME ||
-        snapshot_frequency == FREQUENCY_FRAMEBUFFER) {
-        snapshot(call.no);
-    }
 }
 
 
@@ -215,7 +214,31 @@ static void display(void) {
     trace::Call *call;
 
     while ((call = parser.parse_call())) {
+        bool swapRenderTarget = call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET;
+        bool doSnapshot =
+            snapshot_frequency.contains(*call) ||
+            compare_frequency.contains(*call)
+        ;
+
+        // For calls which cause rendertargets to be swaped, we take the
+        // snapshot _before_ swapping the rendertargets.
+        if (doSnapshot && swapRenderTarget) {
+            if (call->flags & trace::CALL_FLAG_END_FRAME) {
+                // For swapbuffers/presents we still use this call number,
+                // spite not have been executed yet.
+                snapshot(call->no);
+            } else {
+                // Whereas for ordinate fbo/rendertarget changes we use the
+                // previous call's number.
+                snapshot(call->no - 1);
+            }
+        }
+
         retracer.retrace(*call);
+
+        if (doSnapshot && !swapRenderTarget) {
+            snapshot(call->no);
+        }
 
         if (!insideGlBeginEnd &&
             drawable && context &&
@@ -255,11 +278,12 @@ static void usage(void) {
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
         "  -c PREFIX    compare against snapshots\n"
+        "  -C CALLSET   calls to compare (default is every frame)\n"
         "  -core        use core profile\n"
         "  -db          use a double buffer visual (default)\n"
         "  -sb          use a single buffer visual\n"
         "  -s PREFIX    take snapshots; `-` for PNM stdout output\n"
-        "  -S FREQUENCY snapshot frequency: frame (default), framebuffer, or draw\n"
+        "  -S CALLSET   calls to snapshot (default is every frame)\n"
         "  -v           increase output verbosity\n"
         "  -D CALLNO    dump state at specific call no\n"
         "  -w           wait on final frame\n";
@@ -268,6 +292,8 @@ static void usage(void) {
 extern "C"
 int main(int argc, char **argv)
 {
+    assert(compare_frequency.empty());
+    assert(snapshot_frequency.empty());
 
     int i;
     for (i = 1; i < argc; ++i) {
@@ -285,8 +311,13 @@ int main(int argc, char **argv)
             glws::debug = false;
         } else if (!strcmp(arg, "-c")) {
             compare_prefix = argv[++i];
-            if (snapshot_frequency == FREQUENCY_NEVER) {
-                snapshot_frequency = FREQUENCY_FRAME;
+            if (compare_frequency.empty()) {
+                compare_frequency = trace::CallSet(trace::FREQUENCY_FRAME);
+            }
+        } else if (!strcmp(arg, "-C")) {
+            compare_frequency = trace::CallSet(argv[++i]);
+            if (compare_prefix == NULL) {
+                compare_prefix = "";
             }
         } else if (!strcmp(arg, "-D")) {
             dump_state = atoi(argv[++i]);
@@ -302,25 +333,14 @@ int main(int argc, char **argv)
             return 0;
         } else if (!strcmp(arg, "-s")) {
             snapshot_prefix = argv[++i];
-            if (snapshot_frequency == FREQUENCY_NEVER) {
-                snapshot_frequency = FREQUENCY_FRAME;
+            if (snapshot_frequency.empty()) {
+                snapshot_frequency = trace::CallSet(trace::FREQUENCY_FRAME);
             }
             if (snapshot_prefix[0] == '-' && snapshot_prefix[1] == 0) {
                 retrace::verbosity = -2;
             }
         } else if (!strcmp(arg, "-S")) {
-            arg = argv[++i];
-            if (!strcmp(arg, "frame")) {
-                snapshot_frequency = FREQUENCY_FRAME;
-            } else if (!strcmp(arg, "framebuffer")) {
-                snapshot_frequency = FREQUENCY_FRAMEBUFFER;
-            } else if (!strcmp(arg, "draw")) {
-                snapshot_frequency = FREQUENCY_DRAW;
-            } else {
-                std::cerr << "error: unknown frequency " << arg << "\n";
-                usage();
-                return 1;
-            }
+            snapshot_frequency = trace::CallSet(argv[++i]);
             if (snapshot_prefix == NULL) {
                 snapshot_prefix = "";
             }

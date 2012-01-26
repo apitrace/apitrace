@@ -32,6 +32,7 @@
 
 #include "trace_parser.hpp"
 #include "trace_dump.hpp"
+#include "trace_callset.hpp"
 
 
 enum ColorOption {
@@ -44,6 +45,8 @@ static ColorOption color = COLOR_OPTION_AUTO;
 
 static bool verbose = false;
 
+static trace::CallSet calls(trace::FREQUENCY_ALL);
+
 static const char *synopsis = "Dump given trace(s) to standard output.";
 
 static void
@@ -54,6 +57,7 @@ usage(void)
         << synopsis << "\n"
         "\n"
         "    -v, --verbose       verbose output\n"
+        "    --calls <CALLSET>   Only dump specified calls\n"
         "    --color=<WHEN>\n"
         "    --colour=<WHEN>     Colored syntax highlighting\n"
         "                        WHEN is 'auto', 'always', or 'never'\n"
@@ -70,12 +74,14 @@ command(int argc, char *argv[])
 
     int i;
 
-    for (i = 0; i < argc; ++i) {
+    for (i = 0; i < argc;) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {
             break;
         }
+
+        ++i;
 
         if (!strcmp(arg, "--")) {
             break;
@@ -85,6 +91,8 @@ command(int argc, char *argv[])
         } else if (strcmp(arg, "-v") == 0 ||
                    strcmp(arg, "--verbose") == 0) {
             verbose = true;
+        } else if (!strcmp(arg, "--calls")) {
+            calls = trace::CallSet(argv[i++]);
         } else if (!strcmp(arg, "--color=auto") ||
                    !strcmp(arg, "--colour=auto")) {
             color = COLOR_OPTION_AUTO;
@@ -132,12 +140,14 @@ command(int argc, char *argv[])
 
         trace::Call *call;
         while ((call = p.parse_call())) {
-            if (verbose ||
-                !(call->flags & trace::CALL_FLAG_VERBOSE)) {
-                if (dumpThreadIds) {
-                    std::cout << std::hex << call->thread_id << std::dec << " ";
+            if (calls.contains(*call)) {
+                if (verbose ||
+                    !(call->flags & trace::CALL_FLAG_VERBOSE)) {
+                    if (dumpThreadIds) {
+                        std::cout << std::hex << call->thread_id << std::dec << " ";
+                    }
+                    trace::dump(*call, std::cout, dumpFlags);
                 }
-                trace::dump(*call, std::cout, dumpFlags);
             }
             delete call;
         }

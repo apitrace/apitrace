@@ -156,9 +156,9 @@ def main():
         type="float", dest="threshold", default=12.0,
         help="threshold precision  [default: %default]")
     optparser.add_option(
-        '-S', '--snapshot-frequency', metavar='FREQUENCY',
+        '-S', '--snapshot-frequency', metavar='CALLSET',
         type="string", dest="snapshot_frequency", default='draw',
-        help="snapshot frequency: frame, framebuffer, or draw  [default: %default]")
+        help="calls to compare [default: %default]")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
     ref_env = parse_env(optparser, options.ref_env)
