@@ -52,6 +52,15 @@ def main():
     if args:
         optparser.error('unexpected arguments')
 
+    # Change stdin to binary mode
+    try:
+        import msvcrt
+    except ImportError:
+        pass
+    else:
+        import os
+        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+
     calls = 0
     startTime = time.time()
     while True:

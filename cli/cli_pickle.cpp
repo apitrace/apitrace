@@ -26,6 +26,11 @@
 
 #include <string.h>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 #include "pickle.hpp"
 
 #include "cli.hpp"
@@ -183,7 +188,15 @@ command(int argc, char *argv[])
             return 1;
         }
     }
-        
+
+#ifdef _WIN32
+    // Set stdout in binary mode
+    fflush(stdout);
+    int mode = _setmode(_fileno(stdout), _O_BINARY);
+    if (mode == -1) {
+        std::cerr << "warning: failed to set stdout in binary mode\n";
+    }
+#endif
 
     for (; i < argc; ++i) {
         trace::Parser parser;
@@ -204,6 +217,14 @@ command(int argc, char *argv[])
             delete call;
         }
     }
+
+#ifdef _WIN32
+    std::cout.flush();
+    fflush(stdout);
+    if (mode != -1) {
+        _setmode(_fileno(stdout), mode);
+    }
+#endif
 
     return 0;
 }
