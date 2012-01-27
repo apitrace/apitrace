@@ -30,6 +30,7 @@
 
 #include "os_string.hpp"
 
+#include "trace_callset.hpp"
 #include "trace_parser.hpp"
 #include "trace_writer.hpp"
 
@@ -39,27 +40,41 @@ static void
 usage(void)
 {
     std::cout
-        << "usage: apitrace trim <trace-file>\n"
-        << synopsis << "\n";
+        << "usage: apitrace trim [OPTIONS] <trace-file>...\n"
+        << synopsis << "\n"
+        "\n"
+        "       --calls <CALLSET>     Only trim specified calls\n"
+        "    -o --output <TRACEFILE>  Output trace file\n"
+        "\n"
+    ;
 }
 
 static int
 command(int argc, char *argv[])
 {
+    std::string output;
+    trace::CallSet calls(trace::FREQUENCY_ALL);
     int i;
 
-    for (i = 0; i < argc; ++i) {
+    for (i = 0; i < argc;) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {
             break;
         }
 
+        ++i;
+
         if (!strcmp(arg, "--")) {
             break;
         } else if (!strcmp(arg, "--help")) {
             usage();
             return 0;
+        } else if (!strcmp(arg, "--calls")) {
+            calls = trace::CallSet(argv[i++]);
+        } else if (!strcmp(arg, "-o") ||
+                   !strcmp(arg, "--output")) {
+            output = argv[i++];
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage();
@@ -73,28 +88,36 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    trace::Parser p;
+    for ( ; i < argc; ++i) {
+        trace::Parser p;
+        if (!p.open(argv[i])) {
+            std::cerr << "error: failed to open " << argv[i] << "\n";
+            return 1;
+        }
 
-    if (!p.open(argv[i])) {
-        std::cerr << "error: failed to open " << argv[i] << "\n";
-        return 1;
+        if (output.empty()) {
+            os::String base(argv[i]);
+            base.trimExtension();
+
+            output = std::string(base.str()) + std::string("-trim.trace");
+        }
+
+        trace::Writer writer;
+        if (!writer.open(output.c_str())) {
+            std::cerr << "error: failed to create " << argv[i] << "\n";
+            return 1;
+        }
+
+        trace::Call *call;
+        while ((call = p.parse_call())) {
+            if (calls.contains(*call)) {
+                writer.writeCall(call);
+            }
+            delete call;
+        }
+
+        std::cout << "Trimmed trace is available as " << output << "\n";
     }
-
-    os::String base(argv[i]);
-    base.trimExtension();
-
-    std::string output = std::string(base.str()) + std::string("-trim.trace");
-
-    trace::Writer writer;
-    writer.open(output.c_str());
-
-    trace::Call *call;
-    while ((call = p.parse_call())) {
-        writer.writeCall(call);
-        delete call;
-    }
-
-    std::cout << "Trimmed trace is available as " << output << "\n";
 
     return 0;
 }
