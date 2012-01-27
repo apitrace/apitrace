@@ -33,12 +33,25 @@ Run as:
 '''
 
 
+import optparse
 import cPickle as pickle
 import sys
 import time
 
 
 def main():
+    optparser = optparse.OptionParser(
+        usage="\n\tapitrace pickle trace. %prog [options]")
+    optparser.add_option(
+        '--quiet',
+        action="store_true", dest="quiet", default=False,
+        help="don't dump calls to stdout")
+
+    (options, args) = optparser.parse_args(sys.argv[1:])
+
+    if args:
+        optparser.error('unexpected arguments')
+
     calls = 0
     startTime = time.time()
     while True:
@@ -48,12 +61,18 @@ def main():
             break
         else:
             callNo, functionName, args, ret = call
-            if False:
-                sys.stdout.write('%u %s%r = %r\n' % (callNo, functionName, tuple(args), ret))
+            if not options.quiet:
+                sys.stdout.write('%u ' % callNo)
+                sys.stdout.write(functionName)
+                sys.stdout.write('(' + ', '.join(map(repr, args)) + ')')
+                if ret is not None:
+                    sys.stdout.write(' = ')
+                    sys.stdout.write(repr(ret))
+                sys.stdout.write('\n')
             calls += 1
     stopTime = time.time()
     duration = stopTime - startTime
-    sys.stderr.write('%u calls, %.03f secs, %u class/sec\n' % (calls, duration, calls/duration))
+    sys.stderr.write('%u calls, %.03f secs, %u calls/sec\n' % (calls, duration, calls/duration))
 
 
 if __name__ == '__main__':

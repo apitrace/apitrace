@@ -32,6 +32,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <ostream>
 #include <string>
@@ -89,22 +90,22 @@ private:
         SETITEMS        = 'u',
         BINFLOAT        = 'G',
 
-        PROTO           = 0x80,
-        NEWOBJ          = 0x81,
-        EXT1            = 0x82,
-        EXT2            = 0x83,
-        EXT4            = 0x84,
-        TUPLE1          = 0x85,
-        TUPLE2          = 0x86,
-        TUPLE3          = 0x87,
-        NEWTRUE         = 0x88,
-        NEWFALSE        = 0x89,
-        LONG1           = 0x8a,
-        LONG4           = 0x8b,
+        PROTO           = '\x80',
+        NEWOBJ          = '\x81',
+        EXT1            = '\x82',
+        EXT2            = '\x83',
+        EXT4            = '\x84',
+        TUPLE1          = '\x85',
+        TUPLE2          = '\x86',
+        TUPLE3          = '\x87',
+        NEWTRUE         = '\x88',
+        NEWFALSE        = '\x89',
+        LONG1           = '\x8a',
+        LONG4           = '\x8b',
     };
 
 public:
-    PickleWriter(std::ostream &_os) : 
+    PickleWriter(std::ostream &_os) :
         os(_os)
     {
         os.put(PROTO);
@@ -158,13 +159,6 @@ public:
         os.put(TUPLE);
     }
 
-    inline void putInt(int i) {
-        os.put( i        & 0xff);
-        os.put((i >>  8) & 0xff);
-        os.put((i >> 16) & 0xff);
-        os.put((i >> 24) & 0xff);
-    }
-
     inline void writeString(const char *s, size_t length) {
         if (!s) {
             writeNone();
@@ -176,7 +170,7 @@ public:
             os.put(length);
         } else {
             os.put(BINSTRING);
-            putInt(length);
+            putInt32(length);
         }
         os.write(s, length);
 
@@ -205,16 +199,111 @@ public:
         os.put(b ? NEWTRUE : NEWFALSE);
     }
 
-    inline void writeInt(long i) {
-        // TODO: binary
-        os.put(INT);
-        os << i << '\n'; 
+    inline void writeInt(uint8_t i) {
+        os.put(BININT1);
+        os.put(i);
     }
 
-    inline void writeFloat(float f) {
-        // TODO: binary
-        os.put(FLOAT);
-        os << f << '\n';
+    inline void writeInt(uint16_t i) {
+        if (i < 0x100) {
+            writeInt((uint8_t)i);
+        } else {
+            os.put(BININT2);
+            putInt16(i);
+        }
+    }
+
+    inline void writeInt(int32_t i) {
+        if (0 <= i && i < 0x10000) {
+            writeInt((uint16_t)i);
+        } else {
+            os.put(BININT);
+            putInt32(i);
+        }
+    }
+
+    inline void writeInt(uint32_t i) {
+        if (i < 0x8000000) {
+            writeInt((int32_t)i);
+        } else {
+            writeLong(i);
+        }
+    }
+
+    inline void writeInt(long long i) {
+        if (-0x8000000 <= i && i < 0x8000000) {
+            writeInt((int32_t)i);
+        } else {
+            writeLong(i);
+        }
+    }
+
+    inline void writeInt(unsigned long long i) {
+        if (i < 0x8000000) {
+            writeInt((int32_t)i);
+        } else {
+            writeLong(i);
+        }
+    }
+
+    inline void writeFloat(double f) {
+        union {
+            double f;
+            char c[8];
+        } u;
+
+        assert(sizeof u.f == sizeof u.c);
+        u.f = f;
+
+        os.put(BINFLOAT);
+        os.put(u.c[7]);
+        os.put(u.c[6]);
+        os.put(u.c[5]);
+        os.put(u.c[4]);
+        os.put(u.c[3]);
+        os.put(u.c[2]);
+        os.put(u.c[1]);
+        os.put(u.c[0]);
+    }
+
+protected:
+    inline void putInt16(uint16_t i) {
+        os.put( i        & 0xff);
+        os.put( i >>  8        );
+    }
+
+    inline void putInt32(uint32_t i) {
+        os.put( i        & 0xff);
+        os.put((i >>  8) & 0xff);
+        os.put((i >> 16) & 0xff);
+        os.put( i >> 24        );
+    }
+
+    template< class T >
+    inline void writeLong(T l) {
+        os.put(LONG1);
+
+        if (l == 0) {
+            os.put(0);
+            return;
+        }
+
+        unsigned c = 1;
+        // Same as l >> (8 * sizeof l), but without the warnings
+        T sign = l < 0 ? ~0 : 0;
+        while ((l >> (8 * c)) != sign) {
+            ++c;
+        }
+        // Add an extra byte if sign bit doesn't match
+        if (((l >> (8 * c - 1)) & 1) != ((l >> (8 * sizeof l - 1)) & 1)) {
+            ++c;
+        }
+        os.put(c);
+
+        for (unsigned i = 0; i < c; ++ i) {
+            os.put(l & 0xff);
+            l >>= 8;
+        }
     }
 };
 
