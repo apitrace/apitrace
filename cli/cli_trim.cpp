@@ -31,7 +31,7 @@
 #include "os_string.hpp"
 
 #include "trace_parser.hpp"
-#include "trace_copier.hpp"
+#include "trace_writer.hpp"
 
 static const char *synopsis = "Create a new trace by trimming an existing trace.";
 
@@ -85,11 +85,12 @@ command(int argc, char *argv[])
 
     std::string output = std::string(base.str()) + std::string("-trim.trace");
 
-    trace::Copier copier(output.c_str());
+    trace::Writer writer;
+    writer.open(output.c_str());
 
     trace::Call *call;
     while ((call = p.parse_call())) {
-        copier.visit(call);
+        writer.writeCall(call);
         delete call;
     }
 
