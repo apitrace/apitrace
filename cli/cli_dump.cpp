@@ -26,6 +26,8 @@
 
 
 #include <string.h>
+#include <limits.h> // for CHAR_MAX
+#include <getopt.h>
 
 #include "cli.hpp"
 #include "cli_pager.hpp"
@@ -53,17 +55,60 @@ static void
 usage(void)
 {
     std::cout
-        << "usage: apitrace dump [OPTIONS] <trace-file>...\n"
+        << "usage: apitrace dump [OPTIONS] TRACE_FILE...\n"
         << synopsis << "\n"
         "\n"
-        "    -v, --verbose       verbose output\n"
-        "    --calls <CALLSET>   Only dump specified calls\n"
-        "    --color=<WHEN>\n"
-        "    --colour=<WHEN>     Colored syntax highlighting\n"
-        "                        WHEN is 'auto', 'always', or 'never'\n"
-        "    --no-arg-names      Don't dump argument names\n"
-        "    --thread-ids        Dump thread ids\n"
+        "    -h, --help           show this help message and exit\n"
+        "    -v, --verbose        verbose output\n"
+        "    --calls=CALLSET      only dump specified calls\n"
+        "    --color[=WHEN]\n"
+        "    --colour[=WHEN]      colored syntax highlighting\n"
+        "                         WHEN is 'auto', 'always', or 'never'\n"
+        "    --arg-names[=BOOL]   dump argument names [default: yes]\n"
+        "    --thread-ids=[=BOOL] dump thread ids [default: no]\n"
+        "\n"
     ;
+}
+
+enum {
+	CALLS_OPT = CHAR_MAX + 1,
+	COLOR_OPT,
+    ARG_NAMES_OPT,
+    THREAD_IDS_OPT,
+};
+
+const static char *
+shortOptions = "hv";
+
+const static struct option
+longOptions[] = {
+    {"help", no_argument, 0, 'h'},
+    {"verbose", no_argument, 0, 'v'},
+    {"calls", required_argument, 0, CALLS_OPT},
+    {"colour", optional_argument, 0, COLOR_OPT},
+    {"color", optional_argument, 0, COLOR_OPT},
+    {"arg-names", optional_argument, 0, ARG_NAMES_OPT},
+    {"thread-ids", optional_argument, 0, THREAD_IDS_OPT},
+    {0, 0, 0, 0}
+};
+
+static bool
+boolOption(const char *option, bool default_ = true) {
+    if (!option) {
+        return default_;
+    }
+    if (strcmp(option, "0") == 0 ||
+        strcmp(option, "no") == 0 ||
+        strcmp(option, "false") == 0) {
+        return false;
+    }
+    if (strcmp(option, "0") == 0 ||
+        strcmp(option, "yes") == 0 ||
+        strcmp(option, "true") == 0) {
+        return true;
+    }
+    std::cerr << "error: unexpected bool " << option << "\n";
+    return default_;
 }
 
 static int
@@ -71,47 +116,48 @@ command(int argc, char *argv[])
 {
     trace::DumpFlags dumpFlags = 0;
     bool dumpThreadIds = false;
+    
+    // FIXME: avoid hacking around argc / argv
+    argc += 1;
+    argv = &argv[-1];
 
-    int i;
-
-    for (i = 0; i < argc;) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        ++i;
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "--help")) {
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
             usage();
             return 0;
-        } else if (strcmp(arg, "-v") == 0 ||
-                   strcmp(arg, "--verbose") == 0) {
+        case 'v':
             verbose = true;
-        } else if (!strcmp(arg, "--calls")) {
-            calls = trace::CallSet(argv[i++]);
-        } else if (!strcmp(arg, "--color=auto") ||
-                   !strcmp(arg, "--colour=auto")) {
-            color = COLOR_OPTION_AUTO;
-        } else if (!strcmp(arg, "--color") ||
-                   !strcmp(arg, "--colour") ||
-                   !strcmp(arg, "--color=always") ||
-                   !strcmp(arg, "--colour=always")) {
-            color = COLOR_OPTION_ALWAYS;
-        } else if (!strcmp(arg, "--color=never") ||
-                   !strcmp(arg, "--colour=never") ||
-                   !strcmp(arg, "--no-color") ||
-                   !strcmp(arg, "--no-colour")) {
-            color = COLOR_OPTION_NEVER;
-        } else if (!strcmp(arg, "--no-arg-names")) {
-            dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
-        } else if (!strcmp(arg, "--thread-ids")) {
-            dumpThreadIds = true;
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+            break;
+        case CALLS_OPT:
+            calls = trace::CallSet(optarg);
+            break;
+        case COLOR_OPT:
+            if (!optarg ||
+                !strcmp(optarg, "always")) {
+                color = COLOR_OPTION_ALWAYS;
+            } else if (!strcmp(optarg, "auto")) {
+                color = COLOR_OPTION_AUTO;
+            } else if (!strcmp(optarg, "never")) {
+                color = COLOR_OPTION_NEVER;
+            } else {
+                std::cerr << "error: unknown color argument " << optarg << "\n";
+                return 1;
+            }
+            break;
+        case ARG_NAMES_OPT:
+            if (boolOption(optarg)) {
+                dumpFlags &= ~trace::DUMP_FLAG_NO_ARG_NAMES;
+            } else {
+                dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
+            }
+            break;
+        case THREAD_IDS_OPT:
+            dumpThreadIds = boolOption(optarg, true);
+            break;
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
             usage();
             return 1;
         }
@@ -130,7 +176,7 @@ command(int argc, char *argv[])
         dumpFlags |= trace::DUMP_FLAG_NO_COLOR;
     }
 
-    for (; i < argc; ++i) {
+    for (int i = optind; i < argc; ++i) {
         trace::Parser p;
 
         if (!p.open(argv[i])) {
