@@ -496,7 +496,7 @@ class Tracer:
         print '    trace::localWriter.endArg();'
 
         from specs.winapi import REFIID
-        from specs.stdapi import Pointer, Opaque
+        from specs.stdapi import Pointer, Opaque, Interface
 
         riid = None
         for arg in method.args:
@@ -515,8 +515,11 @@ class Tracer:
                 self.serializeArg(method, arg)
                 self.wrapArg(method, arg)
                 if riid is not None and isinstance(arg.type, Pointer):
-                    assert isinstance(arg.type.type, Opaque)
-                    self.wrapIid(interface, method, riid, arg)
+                    if isinstance(arg.type.type, Opaque):
+                        self.wrapIid(riid, arg)
+                    else:
+                        assert isinstance(arg.type.type, Pointer)
+                        assert isinstance(arg.type.type.type, Interface)
 
         if method.type is not stdapi.Void:
             print '    trace::localWriter.beginReturn();'
