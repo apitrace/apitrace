@@ -551,6 +551,9 @@ class Rebuilder(Visitor):
     def visitOpaque(self, opaque):
         return opaque
 
+    def visitInterface(self, interface, *args, **kwargs):
+        return interface
+
     def visitPolymorphic(self, polymorphic):
         defaultType = self.visit(polymorphic.defaultType)
         switchExpr = polymorphic.switchExpr
