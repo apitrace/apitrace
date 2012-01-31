@@ -117,10 +117,6 @@ command(int argc, char *argv[])
     trace::DumpFlags dumpFlags = 0;
     bool dumpThreadIds = false;
     
-    // FIXME: avoid hacking around argc / argv
-    argc += 1;
-    argv = &argv[-1];
-
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
@@ -154,7 +150,7 @@ command(int argc, char *argv[])
             }
             break;
         case THREAD_IDS_OPT:
-            dumpThreadIds = boolOption(optarg, true);
+            dumpThreadIds = boolOption(optarg);
             break;
         default:
             std::cerr << "error: unexpected option `" << opt << "`\n";

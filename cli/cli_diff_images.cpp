@@ -68,12 +68,12 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    char **args = new char* [argc + 2];
+    char **args = new char* [argc + 1];
     args[0] = (char *) command.str();
-    for (i = 0; i < argc; i++) {
-        args[i + 1] = argv[i];
+    for (i = 1; i < argc; i++) {
+        args[i] = argv[i];
     }
-    args[i + 1] = NULL;
+    args[argc] = NULL;
 
     ret = os::execute(args);
 

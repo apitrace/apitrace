@@ -122,12 +122,12 @@ do_help_command(int argc, char *argv[])
     const Command *command;
     int i;
 
-    if (argc != 1) {
+    if (argc != 2) {
         help_usage();
         return 0;
     }
 
-    char *command_name = argv[0];
+    char *command_name = argv[1];
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
         command = commands[i];
@@ -172,7 +172,7 @@ main(int argc, char **argv)
         return 1;
     }
 
-    command_name = argv[i++];
+    command_name = argv[i];
 
     argc -= i;
     argv = &argv[i];
