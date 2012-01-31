@@ -38,8 +38,8 @@ class D2D1Tracer(DllTracer):
                 print '            *%s = (LPVOID) new Wrap%s((%s *)*%s);' % (arg.name, iface.name, iface.name, arg.name)
                 print '        }'
             print '    }'
-
-        DllTracer.wrapArg(self, function, arg)
+        else:
+            DllTracer.wrapArg(self, function, arg)
 
 
 if __name__ == '__main__':

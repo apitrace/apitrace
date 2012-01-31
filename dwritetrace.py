@@ -29,18 +29,18 @@ from specs.dwrite import dwrite
 from specs.d2d1 import d2d1 # cyclic dependency
 
 
-class D2D1Tracer(DllTracer):
+class DWriteTracer(DllTracer):
 
     def wrapArg(self, function, arg):
-        if function.name == 'D2D1CreateFactory' and arg.output:
+        if function.name == 'DWriteCreateFactory' and arg.output:
             print '    if (*%s) {' % arg.name
-            for iface in d2d1.interfaces:
-                print '        if (riid == IID_%s) {' % iface.name
-                print '            *%s = (%s) new Wrap%s((%s *)*%s);' % (arg.name, arg.type, iface.name, iface.name, arg.name)
+            for iface in dwrite.interfaces:
+                print '        if (iid == IID_%s) {' % iface.name
+                print '            *%s = new Wrap%s(static_cast<%s *>(*%s));' % (arg.name, iface.name, iface.name, arg.name)
                 print '        }'
             print '    }'
-
-        DllTracer.wrapArg(self, function, arg)
+        else:
+            DllTracer.wrapArg(self, function, arg)
 
 
 if __name__ == '__main__':
@@ -61,5 +61,5 @@ if __name__ == '__main__':
     print 'DEFINE_GUID(IID_IDWriteFactory,0xb859ee5a,0xd838,0x4b5b,0xa2,0xe8,0x1a,0xdc,0x7d,0x93,0xdb,0x48);'
     print
 
-    tracer = D2D1Tracer('dwrite.dll')
+    tracer = DWriteTracer('dwrite.dll')
     tracer.trace_api(dwrite)
