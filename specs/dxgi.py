@@ -56,7 +56,7 @@ DXGI_MAPPED_RECT = Struct("DXGI_MAPPED_RECT", [
 ])
 
 DXGI_OUTPUT_DESC = Struct("DXGI_OUTPUT_DESC", [
-    (Array(WCHAR, 32), "DeviceName"),
+    (WString, "DeviceName"),
     (RECT, "DesktopCoordinates"),
     (BOOL, "AttachedToDesktop"),
     (DXGI_MODE_ROTATION, "Rotation"),
@@ -72,7 +72,7 @@ DXGI_FRAME_STATISTICS = Struct("DXGI_FRAME_STATISTICS", [
 ])
 
 DXGI_ADAPTER_DESC = Struct("DXGI_ADAPTER_DESC", [
-    (Array(WCHAR, 128), "Description"),
+    (WString, "Description"),
     (UINT, "VendorId"),
     (UINT, "DeviceId"),
     (UINT, "SubSysId"),

@@ -148,10 +148,20 @@ class ValueSerializer(stdapi.Visitor):
         print '    trace::localWriter.write%s(%s);' % (literal.kind, instance)
 
     def visitString(self, string, instance):
-        if string.length is not None:
-            print '    trace::localWriter.writeString((const char *)%s, %s);' % (instance, string.length)
+        if string.kind == 'String':
+            cast = 'const char *'
+        elif string.kind == 'WString':
+            cast = 'const wchar_t *'
         else:
-            print '    trace::localWriter.writeString((const char *)%s);' % instance
+            assert False
+        if cast != string.expr:
+            # reinterpret_cast is necessary for GLubyte * <=> char *
+            instance = 'reinterpret_cast<%s>(%s)' % (cast, instance)
+        if string.length is not None:
+            length = ', %s' % string.length
+        else:
+            length = ''
+        print '    trace::localWriter.write%s(%s%s);' % (string.kind, instance, length)
 
     def visitConst(self, const, instance):
         self.visit(const.type, instance)
