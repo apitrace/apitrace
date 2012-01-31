@@ -255,6 +255,15 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
+    /*
+     * Ignore thread naming exception.
+     *
+     * http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
+     */
+    if (pExceptionRecord->ExceptionCode == 0x406d1388) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
     // Clear direction flag
 #ifdef _MSC_VER
 #ifndef _WIN64
