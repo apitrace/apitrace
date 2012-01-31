@@ -661,6 +661,14 @@ class API:
                 collector.visit(method.type)
         return collector.types
 
+    def getAllInterfaces(self):
+        types = self.getAllTypes()
+        interfaces = [type for type in types if isinstance(type, Interface)]
+        for interface in self.interfaces:
+            if interface not in interfaces:
+                interfaces.append(interface)
+        return interfaces
+
     def addFunction(self, function):
         self.functions.append(function)
 

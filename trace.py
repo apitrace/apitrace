@@ -327,7 +327,7 @@ class Tracer:
         print
 
         # Interfaces wrapers
-        interfaces = [type for type in types if isinstance(type, stdapi.Interface)]
+        interfaces = api.getAllInterfaces()
         map(self.declareWrapperInterface, interfaces)
         map(self.implementWrapperInterface, interfaces)
         print
