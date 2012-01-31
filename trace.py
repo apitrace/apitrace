@@ -484,10 +484,17 @@ class Tracer:
         print '    trace::localWriter.beginArg(0);'
         print '    trace::localWriter.writeOpaque((const void *)m_pInstance);'
         print '    trace::localWriter.endArg();'
+
+        from specs.winapi import REFIID
+        from specs.stdapi import Pointer, Opaque
+
+        riid = None
         for arg in method.args:
             if not arg.output:
                 self.unwrapArg(method, arg)
                 self.serializeArg(method, arg)
+                if arg.type is REFIID:
+                    riid = arg
         print '    trace::localWriter.endEnter();'
         
         self.invokeMethod(interface, method)
@@ -497,38 +504,43 @@ class Tracer:
             if arg.output:
                 self.serializeArg(method, arg)
                 self.wrapArg(method, arg)
+                if riid is not None and isinstance(arg.type, Pointer):
+                    assert isinstance(arg.type.type, Opaque)
+                    self.wrapIid(interface, method, riid, arg)
+
         if method.type is not stdapi.Void:
             print '    trace::localWriter.beginReturn();'
             self.serializeValue(method.type, "__result")
             print '    trace::localWriter.endReturn();'
             self.wrapValue(method.type, '__result')
         print '    trace::localWriter.endLeave();'
-        if method.name == 'QueryInterface':
-            print '    if (ppvObj && *ppvObj) {'
-            print '        if (*ppvObj == m_pInstance) {'
-            print '            *ppvObj = this;'
-            print '        }'
-            for iface in self.api.interfaces:
-                print r'        else if (riid == IID_%s) {' % iface.name
-                print r'            *ppvObj = new Wrap%s((%s *) *ppvObj);' % (iface.name, iface.name)
-                print r'        }'
-            print r'        else {'
-            print r'            os::log("apitrace: warning: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
-            print r'                    riid.Data1, riid.Data2, riid.Data3,'
-            print r'                    riid.Data4[0],'
-            print r'                    riid.Data4[1],'
-            print r'                    riid.Data4[2],'
-            print r'                    riid.Data4[3],'
-            print r'                    riid.Data4[4],'
-            print r'                    riid.Data4[5],'
-            print r'                    riid.Data4[6],'
-            print r'                    riid.Data4[7]);'
-            print r'        }'
-            print '    }'
         if method.name == 'Release':
             assert method.type is not stdapi.Void
             print '    if (!__result)'
             print '        delete this;'
+
+    def wrapIid(self, interface, method, riid, out):
+            print '    if (%s && *%s) {' % (out.name, out.name)
+            print '        if (*%s == m_pInstance) {' % (out.name,)
+            print '            *%s = this;' % (out.name,)
+            print '        }'
+            for iface in self.api.interfaces:
+                print r'        else if (%s == IID_%s) {' % (riid.name, iface.name)
+                print r'            *%s = new Wrap%s((%s *) *%s);' % (out.name, iface.name, iface.name, out.name)
+                print r'        }'
+            print r'        else {'
+            print r'            os::log("apitrace: warning: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+            print r'                    %s.Data1, %s.Data2, %s.Data3,' % (riid.name, riid.name, riid.name)
+            print r'                    %s.Data4[0],' % (riid.name,)
+            print r'                    %s.Data4[1],' % (riid.name,)
+            print r'                    %s.Data4[2],' % (riid.name,)
+            print r'                    %s.Data4[3],' % (riid.name,)
+            print r'                    %s.Data4[4],' % (riid.name,)
+            print r'                    %s.Data4[5],' % (riid.name,)
+            print r'                    %s.Data4[6],' % (riid.name,)
+            print r'                    %s.Data4[7]);' % (riid.name,)
+            print r'        }'
+            print '    }'
 
     def invokeMethod(self, interface, method):
         if method.type is stdapi.Void:

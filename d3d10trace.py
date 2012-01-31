@@ -29,6 +29,8 @@ from dlltrace import DllTracer
 
 
 if __name__ == '__main__':
+    print '#define INITGUID'
+    print
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
