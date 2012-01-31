@@ -644,7 +644,7 @@ class API:
         self.functions = []
         self.interfaces = []
 
-    def all_types(self):
+    def getAllTypes(self):
         collector = Collector()
         for function in self.functions:
             for arg in function.args:

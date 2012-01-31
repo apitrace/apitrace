@@ -299,7 +299,7 @@ class Retracer:
         print '#include "retrace.hpp"'
         print
 
-        types = api.all_types()
+        types = api.getAllTypes()
         handles = [type for type in types if isinstance(type, stdapi.Handle)]
         handle_names = set()
         for handle in handles:

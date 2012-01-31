@@ -321,7 +321,7 @@ class Tracer:
         print
 
         # Generate the serializer functions
-        types = api.all_types()
+        types = api.getAllTypes()
         visitor = ComplexValueSerializer(self.serializerFactory())
         map(visitor.visit, types)
         print
