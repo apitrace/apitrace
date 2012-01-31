@@ -406,6 +406,11 @@ enum {
 };
 
 
+struct Arg
+{
+    Value *value;
+};
+
 
 class Call
 {
@@ -413,7 +418,7 @@ public:
     unsigned thread_id;
     unsigned no;
     const FunctionSig *sig;
-    std::vector<Value *> args;
+    std::vector<Arg> args;
     Value *ret;
 
     CallFlags flags;
@@ -434,7 +439,7 @@ public:
 
     inline Value & arg(unsigned index) {
         assert(index < args.size());
-        return *(args[index]);
+        return *(args[index].value);
     }
 };
 

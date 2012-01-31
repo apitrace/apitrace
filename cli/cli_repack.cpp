@@ -80,7 +80,7 @@ command(int argc, char *argv[])
 {
     int i;
 
-    for (i = 0; i < argc; ++i) {
+    for (i = 1; i < argc; ++i) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {

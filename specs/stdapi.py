@@ -376,15 +376,13 @@ class Method(Function):
 
 class String(Type):
 
-    def __init__(self, expr = "char *", length = None):
+    def __init__(self, expr = "char *", length = None, kind = 'String'):
         Type.__init__(self, expr)
         self.length = length
+        self.kind = kind
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitString(self, *args, **kwargs)
-
-# C string (i.e., zero terminated)
-CString = String()
 
 
 class Opaque(Type):
@@ -566,6 +564,9 @@ class Rebuilder(Visitor):
     def visitOpaque(self, opaque):
         return opaque
 
+    def visitInterface(self, interface, *args, **kwargs):
+        return interface
+
     def visitPolymorphic(self, polymorphic):
         defaultType = self.visit(polymorphic.defaultType)
         switchExpr = polymorphic.switchExpr
@@ -659,7 +660,7 @@ class API:
         self.functions = []
         self.interfaces = []
 
-    def all_types(self):
+    def getAllTypes(self):
         collector = Collector()
         for function in self.functions:
             for arg in function.args:
@@ -672,6 +673,14 @@ class API:
                     collector.visit(arg.type)
                 collector.visit(method.type)
         return collector.types
+
+    def getAllInterfaces(self):
+        types = self.getAllTypes()
+        interfaces = [type for type in types if isinstance(type, Interface)]
+        for interface in self.interfaces:
+            if interface not in interfaces:
+                interfaces.append(interface)
+        return interfaces
 
     def addFunction(self, function):
         self.functions.append(function)
@@ -712,7 +721,10 @@ ULongLong = Literal("unsigned long long", "UInt")
 Float = Literal("float", "Float")
 Double = Literal("double", "Double")
 SizeT = Literal("size_t", "UInt")
-WString = Literal("wchar_t *", "WString")
+
+# C string (i.e., zero terminated)
+CString = String()
+WString = String("wchar_t *", kind="WString")
 
 Int8 = Literal("int8_t", "SInt")
 UInt8 = Literal("uint8_t", "UInt")

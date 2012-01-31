@@ -64,6 +64,34 @@ Advanced command line usage
 ===========================
 
 
+Call sets
+---------
+
+Several tools take `CALLSET` arguments, e.g:
+
+    apitrace dump --calls CALLSET foo.trace
+    glretrace -S CALLSET foo.trace
+
+The call syntax is very flexible. Here are a few examples:
+
+ * `4`             one call
+
+ * `1,2,4,5`       set of calls
+
+ * `"1 2 4 5"`     set of calls (commas are optional and can be replaced with whitespace)
+
+ * `1-100/2`       calls 1, 3, 5, ...,  99
+
+ * `1-1000/draw`   all draw calls between 1 and 1000
+
+ * `1-1000/fbo`    all fbo changes between calls 1 and 1000
+
+ * `frame`         all calls at end of frames
+
+ * `@foo.txt`      read call numbers from `foo.txt`, using the same syntax as above
+
+
+
 Tracing manually
 ----------------
 

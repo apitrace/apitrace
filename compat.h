@@ -50,24 +50,24 @@
 #define __inline static __inline__
 #define __deref_out /**/
 #define __deref_out_opt /**/
-#define __deref_out_bcount(x)
-#define __maybenull
-#define __in_z
-#define __in_z_opt
-#define __out_z
-#define __out_ecount_z(x)
-#define __nullterminated
-#define __notnull
-#define __field_ecount_opt(x)
-#define __range(x,y)
-#define __out_ecount_part_opt(x,y)
+#define __deref_out_bcount(x) /**/
+#define __maybenull /**/
+#define __in_z /**/
+#define __in_z_opt /**/
+#define __out_z /**/
+#define __out_ecount_z(x) /**/
+#define __nullterminated /**/
+#define __notnull /**/
+#define __field_ecount_opt(x) /**/
+#define __range(x,y) /**/
+#define __out_ecount_part_opt(x,y) /**/
 
 #ifndef DECLSPEC_DEPRECATED
 #define DECLSPEC_DEPRECATED /**/
 #endif
 
 #ifndef DECLSPEC_NOVTABLE
-#define DECLSPEC_NOVTABLE
+#define DECLSPEC_NOVTABLE /**/
 #endif
 
 #ifndef __MINGW64_VERSION_MAJOR

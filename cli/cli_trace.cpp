@@ -64,7 +64,7 @@ command(int argc, char *argv[])
     const char *output = NULL;
     int i;
 
-    for (i = 0; i < argc; ) {
+    for (i = 1; i < argc; ) {
         const char *arg = argv[i];
 
         if (arg[0] != '-') {
