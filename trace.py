@@ -301,9 +301,14 @@ class ValueUnwrapper(ValueWrapper):
     def visitInterface(self, interface, instance):
         assert instance.startswith('*')
         instance = instance[1:]
-        print "    if (%s) {" % instance
-        print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, getWrapperInterfaceName(interface), instance)
-        print "    }"
+        print r'    if (%s) {' % instance
+        print r'        %s *pWrapper = static_cast<%s*>(%s);' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), instance)
+        print r'        if (pWrapper && pWrapper->m_dwMagic == 0xd8365d6c) {'
+        print r'            %s = pWrapper->m_pInstance;' % (instance,)
+        print r'        } else {'
+        print r'            os::log("apitrace: warning: %%s: unexpected %%s pointer\n", __FUNCTION__, "%s");' % interface.name
+        print r'        }'
+        print r'    }'
 
 
 class Tracer:
@@ -461,10 +466,12 @@ class Tracer:
 
     def declareWrapperInterfaceVariables(self, interface):
         #print "private:"
+        print "    DWORD m_dwMagic;"
         print "    %s * m_pInstance;" % (interface.name,)
 
     def implementWrapperInterface(self, interface):
         print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
+        print '    m_dwMagic = 0xd8365d6c;'
         print '    m_pInstance = pInstance;'
         print '}'
         print
@@ -532,7 +539,7 @@ class Tracer:
             print '    if (!__result)'
             print '        delete this;'
 
-    def wrapIid(self, interface, method, riid, out):
+    def wrapIid(self, riid, out):
             print '    if (%s && *%s) {' % (out.name, out.name)
             print '        if (*%s == m_pInstance) {' % (out.name,)
             print '            *%s = this;' % (out.name,)
@@ -542,7 +549,8 @@ class Tracer:
                 print r'            *%s = new Wrap%s((%s *) *%s);' % (out.name, iface.name, iface.name, out.name)
                 print r'        }'
             print r'        else {'
-            print r'            os::log("apitrace: warning: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+            print r'            os::log("apitrace: warning: %s: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+            print r'                    __FUNCTION__,'
             print r'                    %s.Data1, %s.Data2, %s.Data3,' % (riid.name, riid.name, riid.name)
             print r'                    %s.Data4[0],' % (riid.name,)
             print r'                    %s.Data4[1],' % (riid.name,)
