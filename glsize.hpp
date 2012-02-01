@@ -748,7 +748,7 @@ __glClearBuffer_size(GLenum buffer)
  */
 template<class T>
 static inline size_t
-__AttribList_size(const T *pAttribList, const T terminator = 0)
+__AttribList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
 {
     size_t size = 0;
 
@@ -767,7 +767,7 @@ __AttribList_size(const T *pAttribList, const T terminator = 0)
  */
 template<class T>
 static inline size_t
-__AttribPairList_size(const T *pAttribList, const T terminator = 0)
+__AttribPairList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
 {
     size_t size = 0;
 
