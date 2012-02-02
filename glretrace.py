@@ -230,6 +230,11 @@ class GlRetracer(Retracer):
         if function.name == "glEnd":
             print '    glretrace::insideGlBeginEnd = false;'
 
+        if function.name.startswith('gl') and not function.name.startswith('glX'):
+            print r'    if (!glretrace::context && !glretrace::benchmark && !retrace::profiling) {'
+            print r'        retrace::warning(call) << "no current context\n";'
+            print r'    }'
+
         if function.name == 'memcpy':
             print '    if (!dest || !src || !n) return;'
         

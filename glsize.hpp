@@ -744,18 +744,18 @@ __glClearBuffer_size(GLenum buffer)
 }
 
 /* 
- * 0 terminated integer/float attribute list.
+ * attribute list, terminated by the given terminator.
  */
 template<class T>
 static inline size_t
-__AttribList_size(const T *pAttribList)
+__AttribList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
 {
     size_t size = 0;
 
     if (pAttribList) {
         do {
             ++size;
-        } while (*pAttribList++);
+        } while (*pAttribList++ != terminator);
     }
 
     return size;
@@ -767,15 +767,16 @@ __AttribList_size(const T *pAttribList)
  */
 template<class T>
 static inline size_t
-__AttribList_size(const T *pAttribList, T terminator)
+__AttribPairList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
 {
     size_t size = 0;
 
     if (pAttribList) {
-        while (pAttribList[size] != terminator)
+        while (pAttribList[size] != terminator) {
             size += 2;
+        }
         // terminator also counts
-        size++;
+        ++size;
     }
 
     return size;
