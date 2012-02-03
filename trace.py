@@ -542,9 +542,11 @@ class Tracer:
     def wrapIid(self, riid, out):
             print '    if (%s && *%s) {' % (out.name, out.name)
             print '        if (*%s == m_pInstance) {' % (out.name,)
+            print '            AddRef();'
+            print '            m_pInstance->Release();'
             print '            *%s = this;' % (out.name,)
             print '        }'
-            for iface in self.api.interfaces:
+            for iface in self.api.getAllInterfaces():
                 print r'        else if (%s == IID_%s) {' % (riid.name, iface.name)
                 print r'            *%s = new Wrap%s((%s *) *%s);' % (out.name, iface.name, iface.name, out.name)
                 print r'        }'
