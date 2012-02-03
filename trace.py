@@ -478,23 +478,23 @@ class Tracer:
         print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))
         print '}'
         print
-        for method in interface.iterMethods():
-            self.implementWrapperInterfaceMethod(interface, method)
+        for base, method in interface.iterBaseMethods():
+            self.implementWrapperInterfaceMethod(interface, base, method)
         print
 
-    def implementWrapperInterfaceMethod(self, interface, method):
+    def implementWrapperInterfaceMethod(self, interface, base, method):
         print method.prototype(getWrapperInterfaceName(interface) + '::' + method.name) + ' {'
         if method.type is not stdapi.Void:
             print '    %s __result;' % method.type
     
-        self.implementWrapperInterfaceMethodBody(interface, method)
+        self.implementWrapperInterfaceMethodBody(interface, base, method)
     
         if method.type is not stdapi.Void:
             print '    return __result;'
         print '}'
         print
 
-    def implementWrapperInterfaceMethodBody(self, interface, method):
+    def implementWrapperInterfaceMethodBody(self, interface, base, method):
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
         print '    unsigned __call = trace::localWriter.beginEnter(&__sig);'
@@ -514,7 +514,7 @@ class Tracer:
                     riid = arg
         print '    trace::localWriter.endEnter();'
         
-        self.invokeMethod(interface, method)
+        self.invokeMethod(interface, base, method)
 
         print '    trace::localWriter.beginLeave(__call);'
         for arg in method.args:
@@ -563,12 +563,12 @@ class Tracer:
             print r'        }'
             print '    }'
 
-    def invokeMethod(self, interface, method):
+    def invokeMethod(self, interface, base, method):
         if method.type is stdapi.Void:
             result = ''
         else:
             result = '__result = '
-        print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
+        print '    %sstatic_cast<%s *>(m_pInstance)->%s(%s);' % (result, base, method.name, ', '.join([str(arg.name) for arg in method.args]))
     
     def emit_memcpy(self, dest, src, length):
         print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'

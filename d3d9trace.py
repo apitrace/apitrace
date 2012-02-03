@@ -45,13 +45,13 @@ class D3D9Tracer(DllTracer):
             print '    UINT m_SizeToLock;'
             print '    VOID *m_pbData;'
 
-    def implementWrapperInterfaceMethodBody(self, interface, method):
+    def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Unlock':
             print '    if (m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', 'm_SizeToLock')
             print '    }'
 
-        DllTracer.implementWrapperInterfaceMethodBody(self, interface, method)
+        DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Lock':
             # FIXME: handle recursive locks
