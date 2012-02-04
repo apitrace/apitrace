@@ -39,6 +39,10 @@
 #include <d3dx9.h>
 
 
+#ifndef D3DFMT_A2B10G10R10_XR_BIAS
+#define D3DFMT_A2B10G10R10_XR_BIAS 119
+#endif
+
 #ifndef D3DFMT_ATI1
 #define D3DFMT_ATI1 ((D3DFORMAT)MAKEFOURCC('A','T','I','1'))
 #endif
