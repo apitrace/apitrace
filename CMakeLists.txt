@@ -193,7 +193,7 @@ endif ()
 # By bundling the QJSON source, we make it much more easier to build the GUI on
 # Windows and MacOSX.  But we only use the bundled sources when ENABLE_GUI is
 # AUTO.
-if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
+if (Qt4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
     add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
     set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
     set (QJSON_LIBRARY_DIRS)
@@ -639,7 +639,7 @@ install (
 ##############################################################################
 # GUI
 
-if (ENABLE_GUI AND QT4_FOUND AND QJSON_FOUND)
+if (ENABLE_GUI AND Qt4_FOUND AND QJSON_FOUND)
     add_subdirectory(gui)
 endif ()
 
