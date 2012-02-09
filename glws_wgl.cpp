@@ -23,6 +23,8 @@
  *
  **************************************************************************/
 
+#include <iostream>
+
 #include "glproc.hpp"
 #include "glws.hpp"
 
@@ -199,7 +201,18 @@ init(void) {
     /*
      * OpenGL library must be loaded by the time we call GDI.
      */
-    __libGlHandle = LoadLibraryA("OPENGL32");
+
+    const char * libgl_filename = getenv("TRACE_LIBGL");
+
+    if (!libgl_filename) {
+        libgl_filename = "OPENGL32";
+    }
+
+    __libGlHandle = LoadLibraryA(libgl_filename);
+    if (!__libGlHandle) {
+        std::cerr << "error: unable to open " << libgl_filename << "\n";
+        exit(1);
+    }
 }
 
 void
