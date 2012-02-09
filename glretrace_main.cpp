@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include "os_binary.hpp"
 #include "os_string.hpp"
 #include "os_time.hpp"
 #include "image.hpp"
@@ -342,6 +343,7 @@ int main(int argc, char **argv)
                 snapshot_frequency = trace::CallSet(trace::FREQUENCY_FRAME);
             }
             if (snapshot_prefix[0] == '-' && snapshot_prefix[1] == 0) {
+                os::setBinaryMode(stdout);
                 retrace::verbosity = -2;
             }
         } else if (!strcmp(arg, "-S")) {
