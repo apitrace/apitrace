@@ -158,12 +158,12 @@ class WindowsConsoleHighlighter(PlainHighlighter):
             import ctypes
             self._handle = ctypes.windll.kernel32.GetStdHandle(nStdHandle)
         else:
-            self._handle = INVALID_HANDLE_VALUE
+            self._handle = self.INVALID_HANDLE_VALUE
 
         self._attribute = self.white
 
     def _setAttribute(self, attr):
-        if self._handle != INVALID_HANDLE_VALUE:
+        if self._handle != self.INVALID_HANDLE_VALUE:
             import ctypes
             ctypes.windll.kernel32.SetConsoleTextAttribute(self._handle, attr)
         self._attribute = attr
@@ -172,11 +172,11 @@ class WindowsConsoleHighlighter(PlainHighlighter):
         self._setAttribute(self._normal)
 
     def color(self, color):
-        intensity = self._attribute & FOREGROUND_INTENSITY
+        intensity = self._attribute & self.FOREGROUND_INTENSITY
         self._setAttribute(color | intensity)
 
     def bold(self):
-        self._setAttribute(self._attribute | FOREGROUND_INTENSITY)
+        self._setAttribute(self._attribute | self.FOREGROUND_INTENSITY)
 
     def italic(self):
         pass
