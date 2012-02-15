@@ -55,7 +55,6 @@ CLI
 ---
 
 * Add retrace     Replay all the calls in a trace
-* Add trim        Trim a trace by including only the specified calls/frames
 * Add dump-state  Output the OpenGL state in JSON format
 * Add dump-images Create image files for each frame/drawing operation of a trace
 

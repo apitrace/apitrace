@@ -205,6 +205,18 @@ You can make a video of the output by doing
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
 
+Triming a trace
+---------------
+
+You can make a smaller trace by doing:
+
+    apitrace trim --callset 100-1000 -o trimed.trace applicated.trace
+
+If you need precise control over which calls to trim you can specify the
+individual call numbers a plaintext file, as described in the 'Call sets'
+section above.
+
+
 Advanced usage for OpenGL implementors
 ======================================
 

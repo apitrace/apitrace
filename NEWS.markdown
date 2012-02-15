@@ -9,6 +9,8 @@ Development
 
 * Trace and retrace support for EGL, GLES1, and GLES2 APIs.
 
+* Ability to trim traces.
+
 
 Version 2.0
 ===========
