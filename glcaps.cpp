@@ -53,11 +53,55 @@ static ExtensionsMap extensionsMap;
 
 
 // Additional extensions to be advertised
-static const char *extra_extensions[] = {
+static const char *
+extraExtension_stringsFull[] = {
     "GL_GREMEDY_string_marker",
     "GL_GREMEDY_frame_terminator",
 };
-#define NUM_EXTRA_EXTENSIONS (sizeof(extra_extensions)/sizeof(extra_extensions[0]))
+
+static const char *
+extraExtension_stringsES[] = {
+    "GL_EXT_debug_marker",
+};
+
+// Description of additional extensions we want to advertise
+struct ExtensionsDesc
+{
+    unsigned numStrings;
+    const char **strings;
+};
+
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
+
+const struct ExtensionsDesc
+extraExtensionsFull = {
+    ARRAY_SIZE(extraExtension_stringsFull),
+    extraExtension_stringsFull
+};
+
+const struct ExtensionsDesc
+extraExtensionsES = {
+    ARRAY_SIZE(extraExtension_stringsES),
+    extraExtension_stringsES
+};
+
+
+const struct ExtensionsDesc *
+getExtraExtensions(void)
+{
+    Context *ctx = getContext();
+
+    switch (ctx->profile) {
+    case PROFILE_COMPAT:
+        return &extraExtensionsFull;
+    case PROFILE_ES1:
+    case PROFILE_ES2:
+        return &extraExtensionsES;
+    default:
+        assert(0);
+        return &extraExtensionsFull;
+    }
+}
 
 
 /**
@@ -66,6 +110,7 @@ static const char *extra_extensions[] = {
 static const char *
 overrideExtensionsString(const char *extensions)
 {
+    const ExtensionsDesc *desc = getExtraExtensions();
     size_t i;
 
     ExtensionsMap::const_iterator it = extensionsMap.find(extensions);
@@ -73,46 +118,46 @@ overrideExtensionsString(const char *extensions)
         return it->second;
     }
 
-    size_t extensions_len = strlen(extensions);
+    size_t extensionsLen = strlen(extensions);
 
-    size_t extra_extensions_len = 0;
-    for (i = 0; i < NUM_EXTRA_EXTENSIONS; ++i) {
-        const char * extra_extension = extra_extensions[i];
-        size_t extra_extension_len = strlen(extra_extension);
-        extra_extensions_len += extra_extension_len + 1;
+    size_t extraExtensionsLen = 0;
+    for (i = 0; i < desc->numStrings; ++i) {
+        const char * extraExtension = desc->strings[i];
+        size_t extraExtensionLen = strlen(extraExtension);
+        extraExtensionsLen += extraExtensionLen + 1;
     }
 
     // We use malloc memory instead of a std::string because we need to ensure
     // that extensions strings will not move in memory as the extensionsMap is
     // updated.
-    size_t new_extensions_len = extensions_len + 1 + extra_extensions_len + 1;
-    char *new_extensions = (char *)malloc(new_extensions_len);
-    if (!new_extensions) {
+    size_t newExtensionsLen = extensionsLen + 1 + extraExtensionsLen + 1;
+    char *newExtensions = (char *)malloc(newExtensionsLen);
+    if (!newExtensions) {
         return extensions;
     }
 
-    if (extensions_len) {
-        memcpy(new_extensions, extensions, extensions_len);
+    if (extensionsLen) {
+        memcpy(newExtensions, extensions, extensionsLen);
 
         // Add space separator if necessary
-        if (new_extensions[extensions_len - 1] != ' ') {
-            new_extensions[extensions_len++] = ' ';
+        if (newExtensions[extensionsLen - 1] != ' ') {
+            newExtensions[extensionsLen++] = ' ';
         }
     }
 
-    for (i = 0; i < NUM_EXTRA_EXTENSIONS; ++i) {
-        const char * extra_extension = extra_extensions[i];
-        size_t extra_extension_len = strlen(extra_extension);
-        memcpy(new_extensions + extensions_len, extra_extension, extra_extension_len);
-        extensions_len += extra_extension_len;
-        new_extensions[extensions_len++] = ' ';
+    for (i = 0; i < desc->numStrings; ++i) {
+        const char * extraExtension = desc->strings[i];
+        size_t extraExtensionLen = strlen(extraExtension);
+        memcpy(newExtensions + extensionsLen, extraExtension, extraExtensionLen);
+        extensionsLen += extraExtensionLen;
+        newExtensions[extensionsLen++] = ' ';
     }
-    new_extensions[extensions_len++] = '\0';
-    assert(extensions_len <= new_extensions_len);
+    newExtensions[extensionsLen++] = '\0';
+    assert(extensionsLen <= newExtensionsLen);
 
-    extensionsMap[extensions] = new_extensions;
+    extensionsMap[extensions] = newExtensions;
 
-    return new_extensions;
+    return newExtensions;
 }
 
 
@@ -143,7 +188,10 @@ __glGetIntegerv_override(GLenum pname, GLint *params)
     if (params) {
         switch (pname) {
         case GL_NUM_EXTENSIONS:
-            *params += NUM_EXTRA_EXTENSIONS;
+            {
+                const ExtensionsDesc *desc = getExtraExtensions();
+                *params += desc->numStrings;
+            }
             break;
         default:
             break;
@@ -158,10 +206,11 @@ __glGetStringi_override(GLenum name, GLuint index)
     switch (name) {
     case GL_EXTENSIONS:
         {
-            GLint num_extensions = 0;
-            __glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-            if ((GLuint)num_extensions <= index && index < (GLuint)num_extensions + NUM_EXTRA_EXTENSIONS) {
-                return (const GLubyte *)extra_extensions[index - (GLuint)num_extensions];
+            const ExtensionsDesc *desc = getExtraExtensions();
+            GLint numExtensions = 0;
+            __glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+            if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
+                return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
             }
         }
         break;

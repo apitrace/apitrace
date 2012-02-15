@@ -140,10 +140,10 @@ Note that although Mac OS X has an `LD_PRELOAD` equivalent,
 page for more details about these environment flags.
 
 
-Emitting annotations to the trace from GL applications
-------------------------------------------------------
+Emitting annotations to the trace
+---------------------------------
 
-You can emit string and frame annotations through the
+From OpenGL applications you can embed annotations in the trace file through the
 [`GL_GREMEDY_string_marker`](http://www.opengl.org/registry/specs/GREMEDY/string_marker.txt)
 and
 [`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
@@ -171,6 +171,15 @@ detect and use GL extensions, you could easily accomplish this by doing:
     }
 
 This has the added advantage of working equally well with gDEBugger.
+
+
+From OpenGL ES applications you can embed annotations in the trace file through the
+[`GL_EXT_debug_marker`](http://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
+extension.
+
+
+For Direct3D applications you can follow the same procedure used for 
+[instrumenting an application for PIX](http://technet.microsoft.com/en-us/query/ee417250)
 
 
 Dump GL state at a particular call

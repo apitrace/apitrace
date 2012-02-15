@@ -33,6 +33,22 @@
 namespace gltrace {
 
 
+enum Profile {
+    PROFILE_COMPAT,
+    PROFILE_ES1,
+    PROFILE_ES2,
+};
+
+struct Context {
+    enum Profile profile;
+    bool user_arrays;
+    bool user_arrays_arb;
+    bool user_arrays_nv;
+};
+    
+Context *
+getContext(void);
+
 const GLubyte *
 __glGetString_override(GLenum name);
 

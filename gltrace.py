@@ -112,19 +112,6 @@ class GlTracer(Tracer):
 
         print '#include "gltrace.hpp"'
         print
-        print 'enum tracer_context_profile {'
-        print '    PROFILE_COMPAT,'
-        print '    PROFILE_ES1,'
-        print '    PROFILE_ES2,'
-        print '};'
-        print
-        print 'struct tracer_context {'
-        print '    enum tracer_context_profile profile;'
-        print '    bool user_arrays;'
-        print '    bool user_arrays_arb;'
-        print '    bool user_arrays_nv;'
-        print '};'
-        print
         
         # Which glVertexAttrib* variant to use
         print 'enum vertex_attrib {'
@@ -133,15 +120,16 @@ class GlTracer(Tracer):
         print '    VERTEX_ATTRIB_NV,'
         print '};'
         print
-        print 'static tracer_context *__get_context(void)'
+        print 'gltrace::Context *'
+        print 'gltrace::getContext(void)'
         print '{'
         print '    // TODO return the context set by other APIs (GLX, EGL, and etc.)'
-        print '    static tracer_context __ctx = { PROFILE_COMPAT, false, false, false };'
+        print '    static gltrace::Context __ctx = { gltrace::PROFILE_COMPAT, false, false, false };'
         print '    return &__ctx;'
         print '}'
         print
         print 'static vertex_attrib __get_vertex_attrib(void) {'
-        print '    tracer_context *ctx = __get_context();'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (ctx->user_arrays_arb || ctx->user_arrays_nv) {'
         print '        GLboolean __vertex_program = GL_FALSE;'
         print '        __glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &__vertex_program);'
@@ -163,7 +151,7 @@ class GlTracer(Tracer):
         # Whether we need user arrays
         print 'static inline bool __need_user_arrays(void)'
         print '{'
-        print '    tracer_context *ctx = __get_context();'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (!ctx->user_arrays) {'
         print '        return false;'
         print '    }'
@@ -171,9 +159,9 @@ class GlTracer(Tracer):
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == PROFILE_COMPAT'
+            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -194,7 +182,7 @@ class GlTracer(Tracer):
             print
 
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == PROFILE_ES1)'
+        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
         print '        return false;'
         print
         print '    vertex_attrib __vertex_attrib = __get_vertex_attrib();'
@@ -322,8 +310,8 @@ class GlTracer(Tracer):
         # states such as GL_UNPACK_ROW_LENGTH are not available in GLES
         print 'static inline bool'
         print 'can_unpack_subimage(void) {'
-        print '    tracer_context *ctx = __get_context();'
-        print '    return (ctx->profile == PROFILE_COMPAT);'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
+        print '    return (ctx->profile == gltrace::PROFILE_COMPAT);'
         print '}'
         print
 
@@ -412,7 +400,7 @@ class GlTracer(Tracer):
             print '    GLint __array_buffer = 0;'
             print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
-            print '        tracer_context *ctx = __get_context();'
+            print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        ctx->user_arrays = true;'
             if function.name == "glVertexAttribPointerARB":
                 print '        ctx->user_arrays_arb = true;'
@@ -548,9 +536,15 @@ class GlTracer(Tracer):
 
         Tracer.traceFunctionImplBody(self, function)
 
-    gremedy_functions = [
+    marker_functions = [
+        # GL_GREMEDY_string_marker
         'glStringMarkerGREMEDY',
+        # GL_GREMEDY_frame_terminator
         'glFrameTerminatorGREMEDY',
+        # GL_EXT_debug_marker
+        'glInsertEventMarkerEXT',
+        'glPushGroupMarkerEXT',
+        'glPopGroupMarkerEXT',
     ]
 
     def invokeFunction(self, function):
@@ -558,18 +552,20 @@ class GlTracer(Tracer):
             # These functions have been dispatched already
             return
 
-        # We implement the GREMEDY extensions, not the driver
-        if function.name in self.gremedy_functions:
+        # We implement GL_EXT_debug_marker, GL_GREMEDY_*, etc., and not the
+        # driver
+        if function.name in self.marker_functions:
             return
 
         if function.name in ('glXGetProcAddress', 'glXGetProcAddressARB', 'wglGetProcAddress'):
-            if_ = 'if'
-            for gremedy_function in self.gremedy_functions:
-                print '    %s (strcmp("%s", (const char *)%s) == 0) {' % (if_, gremedy_function, function.args[0].name)
-                print '        __result = (%s)&%s;' % (function.type, gremedy_function)
-                print '    }'
-                if_ = 'else if'
-            print '    else {'
+            else_ = ''
+            for marker_function in self.marker_functions:
+                if self.api.get_function_by_name(marker_function):
+                    print '    %sif (strcmp("%s", (const char *)%s) == 0) {' % (else_, marker_function, function.args[0].name)
+                    print '        __result = (%s)&%s;' % (function.type, marker_function)
+                    print '    }'
+                else_ = 'else '
+            print '    %s{' % else_
             Tracer.invokeFunction(self, function)
             print '    }'
             return
@@ -698,9 +694,9 @@ class GlTracer(Tracer):
                 or (isinstance(arg.type, stdapi.Const) \
                     and isinstance(arg.type.type, stdapi.Blob))):
             print '    {'
-            print '        tracer_context *ctx = __get_context();'
+            print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        GLint __unpack_buffer = 0;'
-            print '        if (ctx->profile == PROFILE_COMPAT)'
+            print '        if (ctx->profile == gltrace::PROFILE_COMPAT)'
             print '            __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
             print '        if (__unpack_buffer) {'
             print '            trace::localWriter.writeOpaque(%s);' % arg.name
@@ -734,13 +730,13 @@ class GlTracer(Tracer):
         # update the state
         print 'static void __trace_user_arrays(GLuint maxindex)'
         print '{'
-        print '    tracer_context *ctx = __get_context();'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == PROFILE_COMPAT'
+            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -799,7 +795,7 @@ class GlTracer(Tracer):
         # alias, and they need to be considered independently.
         #
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == PROFILE_ES1)'
+        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
         print '        return;'
         print
         print '    vertex_attrib __vertex_attrib = __get_vertex_attrib();'
@@ -878,7 +874,7 @@ class GlTracer(Tracer):
             print '    GLint client_active_texture = 0;'
             print '    __glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &client_active_texture);'
             print '    GLint max_texture_coords = 0;'
-            print '    if (ctx->profile == PROFILE_COMPAT)'
+            print '    if (ctx->profile == gltrace::PROFILE_COMPAT)'
             print '        __glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
             print '    else'
             print '        __glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_coords);'
