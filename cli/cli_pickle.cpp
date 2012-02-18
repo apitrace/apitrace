@@ -25,6 +25,8 @@
 
 
 #include <string.h>
+#include <limits.h> // for CHAR_MAX
+#include <getopt.h>
 
 #include "pickle.hpp"
 
@@ -151,36 +153,42 @@ static void
 usage(void)
 {
     std::cout
-        << "usage: apitrace pickle [OPTIONS] <trace-file>...\n"
+        << "usage: apitrace pickle [OPTIONS] TRACE_FILE...\n"
         << synopsis << "\n"
         "\n"
-        "    --calls <CALLSET>   Only pickle specified calls\n"
+        "    -h, --help           show this help message and exit\n"
+        "    --calls=CALLSET      only dump specified calls\n"
     ;
 }
+
+enum {
+	CALLS_OPT = CHAR_MAX + 1,
+};
+
+const static char *
+shortOptions = "h";
+
+const static struct option
+longOptions[] = {
+    {"help", no_argument, 0, 'h'},
+    {"calls", required_argument, 0, CALLS_OPT},
+    {0, 0, 0, 0}
+};
 
 static int
 command(int argc, char *argv[])
 {
-    int i;
-
-    for (i = 1; i < argc;) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        ++i;
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "--help")) {
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
             usage();
             return 0;
-        } else if (!strcmp(arg, "--calls")) {
-            calls = trace::CallSet(argv[i++]);
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+        case CALLS_OPT:
+            calls = trace::CallSet(optarg);
+            break;
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
             usage();
             return 1;
         }
@@ -188,7 +196,7 @@ command(int argc, char *argv[])
 
     os::setBinaryMode(stdout);
 
-    for (; i < argc; ++i) {
+    for (int i = optind; i < argc; ++i) {
         trace::Parser parser;
 
         if (!parser.open(argv[i])) {
