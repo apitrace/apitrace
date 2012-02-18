@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <getopt.h>
 
 #include <iostream>
 
@@ -41,7 +42,7 @@ static const char *synopsis = "Generate a new trace by executing the given progr
 static void
 usage(void)
 {
-    std::cout << "usage: apitrace trace PROGRAM [ARGS ...]\n"
+    std::cout << "usage: apitrace trace [OPTIONS] PROGRAM [ARGS ...]\n"
         << synopsis << "\n"
         "\n"
         "    The given program will be executed with the given arguments.\n"
@@ -50,11 +51,23 @@ usage(void)
         "    with other apitrace utilities for replay or analysis.\n"
         "\n"
         "    -v, --verbose       verbose output\n"
-        "    -a, --api API       specify API to trace (gl or egl);\n"
+        "    -a, --api=API       specify API to trace (gl or egl);\n"
         "                        default is `gl`\n"
-        "    -o, --output TRACE  specify output trace file;\n"
+        "    -o, --output=TRACE  specify output trace file;\n"
         "                        default is `PROGRAM.trace`\n";
 }
+
+const static char *
+shortOptions = "+hva:o:";
+
+const static struct option
+longOptions[] = {
+    {"help", no_argument, 0, 'h'},
+    {"verbose", no_argument, 0, 'v'},
+    {"api", required_argument, 0, 'a'},
+    {"output", required_argument, 0, 'o'},
+    {0, 0, 0, 0}
+};
 
 static int
 command(int argc, char *argv[])
@@ -62,55 +75,45 @@ command(int argc, char *argv[])
     bool verbose = false;
     trace::API api = trace::API_GL;
     const char *output = NULL;
-    int i;
 
-    for (i = 1; i < argc; ) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        ++i;
-
-        if (strcmp(arg, "--") == 0) {
-            break;
-        } else if (strcmp(arg, "--help") == 0) {
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
             usage();
             return 0;
-        } else if (strcmp(arg, "-v") == 0 ||
-                   strcmp(arg, "--verbose") == 0) {
+        case 'v':
             verbose = true;
-        } else if (strcmp(arg, "-a") == 0 ||
-                   strcmp(arg, "--api") == 0) {
-            arg = argv[i++];
-            if (strcmp(arg, "gl") == 0) {
+            break;
+        case 'a':
+            if (strcmp(optarg, "gl") == 0) {
                 api = trace::API_GL;
-            } else if (strcmp(arg, "egl") == 0) {
+            } else if (strcmp(optarg, "egl") == 0) {
                 api = trace::API_EGL;
             } else {
-                std::cerr << "error: unknown API `" << arg << "`\n";
+                std::cerr << "error: unknown API `" << optarg << "`\n";
                 usage();
                 return 1;
             }
-        } else if (strcmp(arg, "-o") == 0 ||
-                   strcmp(arg, "--output") == 0) {
-            output = argv[i++];
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+            break;
+        case 'o':
+            output = optarg;
+            break;
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
             usage();
             return 1;
         }
     }
 
-    if (i == argc) {
+    if (optind == argc) {
         std::cerr << "error: no command specified\n";
         usage();
         return 1;
     }
 
     assert(argv[argc] == 0);
-    return trace::traceProgram(api, argv + i, output, verbose);
+    return trace::traceProgram(api, argv + optind, output, verbose);
 }
 
 const Command trace_command = {
