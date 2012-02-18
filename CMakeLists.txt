@@ -630,7 +630,7 @@ add_subdirectory(cli)
 
 install (
     PROGRAMS
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tracediff.sh
+        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tracediff.py
         ${CMAKE_CURRENT_SOURCE_DIR}/scripts/jsondiff.py
         ${CMAKE_CURRENT_SOURCE_DIR}/scripts/snapdiff.py
     DESTINATION ${SCRIPTS_INSTALL_DIR}
