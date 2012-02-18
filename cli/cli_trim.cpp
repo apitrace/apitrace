@@ -46,9 +46,9 @@ usage(void)
         << "usage: apitrace trim [OPTIONS] TRACE_FILE...\n"
         << synopsis << "\n"
         "\n"
-        "    -h, --help             show this help message and exit\n"
-        "    --calls=CALLSET        only trim specified calls\n"
-        "    -o --output=TRACE_FILE output trace file\n"
+        "    -h, --help               show this help message and exit\n"
+        "        --calls=CALLSET      only trim specified calls\n"
+        "    -o, --output=TRACE_FILE  output trace file\n"
         "\n"
     ;
 }
@@ -63,7 +63,6 @@ shortOptions = "ho";
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
-    {"calls", required_argument, 0, CALLS_OPT},
     {"calls", required_argument, 0, CALLS_OPT},
     {"output", optional_argument, 0, 'o'},
     {0, 0, 0, 0}
