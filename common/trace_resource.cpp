@@ -68,8 +68,6 @@ findFile(const char *relPath,
 }
 
 
-#define SCRIPTS_SUBDIR "lib/apitrace/scripts"
-
 os::String
 findScript(const char *name)
 {
