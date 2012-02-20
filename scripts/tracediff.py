@@ -56,7 +56,7 @@ def stripdump(trace, fifo):
             '-e', r's/hdc = \w\+/hdc/g',
         ],
         stdin = dump.stdout,
-        stdout = open(fifo, 'wt')
+        stdout = open(fifo, 'wt'),
         universal_newlines = True,
     )
 
@@ -78,7 +78,7 @@ def diff(traces):
                 '--width=%u' % options.width,
                 '--speed-large-files',
             ] + fifos,
-            stdout = subprocess.PIPE
+            stdout = subprocess.PIPE,
             universal_newlines = True,
         )
 
