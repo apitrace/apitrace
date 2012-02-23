@@ -29,7 +29,16 @@ set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
-find_package (PythonInterp REQUIRED)
+if (ANDROID)
+    set (ENABLE_GUI false)
+    set (ENABLE_CLI false)
+else ()
+    macro (find_host_package)
+        find_package (${ARGN})
+    endmacro()
+endif ()
+
+find_host_package (PythonInterp REQUIRED)
 find_package (Threads)
 
 if (ENABLE_GUI)
