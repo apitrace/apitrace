@@ -373,6 +373,9 @@ public:
 String getProcessName();
 String getCurrentDir();
 
+bool copyFile(const String &srcFileName, const String &dstFileName, bool override = true);
+
+bool removeFile(const String &fileName);
 
 } /* namespace os */
 

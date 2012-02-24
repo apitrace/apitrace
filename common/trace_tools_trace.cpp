@@ -89,16 +89,25 @@ traceProgram(API api,
     }
 
 #if defined(_WIN32)
+    /* On Windows copt the wrapper to the program directory.
+     */
+    os::String wrapperName (wrapper);
+    wrapperName.trimDirectory();
 
-    std::cerr <<
-        "The 'apitrace trace' command is not supported for this operating system.\n"
-        "Instead, you will need to copy opengl32.dll, d3d8.dll, or d3d9.dll from\n"
-        APITRACE_WRAPPER_INSTALL_DIR "\n"
-        "to the directory with the application to trace, then run the application.\n";
+    os::String tmpWrapper(argv[0]);
+    tmpWrapper.trimFilename();
+    tmpWrapper.join(wrapperName);
 
-    return 1;
+    if (tmpWrapper.exists()) {
+        std::cerr << "error: not overwriting " << tmpWrapper << "\n";
+        return 1;
+    }
 
-#else
+    if (!os::copyFile(wrapper, tmpWrapper, false)) {
+        std::cerr << "error: failed to copy " << wrapper << " into " << tmpWrapper << "\n";
+        return 1;
+    }
+#endif /* _WIN32 */
 
 #if defined(__APPLE__)
     /* On Mac OS X, using DYLD_LIBRARY_PATH, we actually set the
@@ -106,12 +115,16 @@ traceProgram(API api,
     wrapper.trimFilename();
 #endif
 
+#if defined(TRACE_VARIABLE)
+
     if (verbose) {
         std::cerr << TRACE_VARIABLE << "=" << wrapper.str() << "\n";
     }
 
     /* FIXME: Don't modify the current environment */
     os::setEnvironment(TRACE_VARIABLE, wrapper.str());
+
+#endif /* TRACE_VARIABLE */
 
     if (output) {
         os::setEnvironment("TRACE_FILE", output);
@@ -128,13 +141,18 @@ traceProgram(API api,
 
     int status = os::execute(argv);
 
+#if defined(TRACE_VARIABLE)
     os::unsetEnvironment(TRACE_VARIABLE);
+#endif
+#if defined(_WIN32)
+    os::removeFile(tmpWrapper);
+#endif
+
     if (output) {
         os::unsetEnvironment("TRACE_FILE");
     }
     
     return status;
-#endif
 
 }
 

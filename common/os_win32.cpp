@@ -76,6 +76,18 @@ String::exists(void) const
     return attrs != INVALID_FILE_ATTRIBUTES;
 }
 
+bool
+copyFile(const String &srcFileName, const String &dstFileName, bool override)
+{
+    return CopyFileA(srcFileName, dstFileName, !override);
+}
+
+bool
+removeFile(const String &srcFilename)
+{
+    return DeleteFileA(srcFilename);
+}
+
 /**
  * Determine whether an argument should be quoted.
  */
