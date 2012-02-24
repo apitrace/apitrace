@@ -54,6 +54,9 @@ static ProfileMap profile_map;
 static unsigned int current_api = EGL_OPENGL_ES_API;
 static glws::Profile last_profile = glws::PROFILE_COMPAT;
 
+static void
+createDrawable(unsigned long long orig_config, unsigned long long orig_surface);
+
 static glws::Drawable *
 getDrawable(unsigned long long surface_ptr) {
     if (surface_ptr == 0) {
@@ -62,6 +65,13 @@ getDrawable(unsigned long long surface_ptr) {
 
     DrawableMap::const_iterator it;
     it = drawable_map.find(surface_ptr);
+    if (it == drawable_map.end()) {
+        // In Fennec we get the egl window surface from Java which isn't
+        // traced, so just create a drawable if it doesn't exist in here
+        createDrawable(0, surface_ptr);
+        it = drawable_map.find(surface_ptr);
+        assert(it != drawable_map.end());
+    }
 
     return (it != drawable_map.end()) ? it->second : NULL;
 }
