@@ -111,10 +111,10 @@ traceProgram(API api,
     }
 
     /* FIXME: Don't modify the current environment */
-    setenv(TRACE_VARIABLE, wrapper.str(), 1);
+    os::setEnvironment(TRACE_VARIABLE, wrapper.str());
 
     if (output) {
-        setenv("TRACE_FILE", output, 1);
+        os::setEnvironment("TRACE_FILE", output);
     }
 
     if (verbose) {
@@ -128,9 +128,9 @@ traceProgram(API api,
 
     int status = os::execute(argv);
 
-    unsetenv(TRACE_VARIABLE);
+    os::unsetEnvironment(TRACE_VARIABLE);
     if (output) {
-        unsetenv("TRACE_FILE");
+        os::unsetEnvironment("TRACE_FILE");
     }
     
     return status;

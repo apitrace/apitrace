@@ -31,10 +31,34 @@
 #define _OS_PROCESS_HPP_
 
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "os.hpp"
 
 
 namespace os {
+
+
+inline void
+setEnvironment(const char *name, const char *value) {
+#ifdef _WIN32
+    SetEnvironmentVariableA(name, value);
+#else
+    setenv(name, value, 1);
+#endif
+}
+
+
+inline void
+unsetEnvironment(const char *name) {
+#ifdef _WIN32
+    SetEnvironmentVariableA(name, NULL);
+#else
+    unsetenv(name);
+#endif
+}
 
 
 int execute(char * const * args);
