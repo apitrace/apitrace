@@ -294,6 +294,10 @@ set_target_properties (common PROPERTIES
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
 
+if (ANDROID)
+    target_link_libraries (common log)
+endif ()
+
 
 ##############################################################################
 # API tracers

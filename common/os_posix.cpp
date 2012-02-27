@@ -44,6 +44,10 @@
 #include <mach-o/dyld.h>
 #endif
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #ifndef PATH_MAX
 #warning PATH_MAX undefined
 #define PATH_MAX 4096
@@ -153,7 +157,11 @@ log(const char *format, ...)
     va_list ap;
     va_start(ap, format);
     fflush(stdout);
+#ifdef ANDROID
+    __android_log_vprint(ANDROID_LOG_DEBUG, "apitrace", format, ap);
+#else
     vfprintf(stderr, format, ap);
+#endif
     va_end(ap);
     logging = false;
 }
