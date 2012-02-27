@@ -15,21 +15,17 @@ About **apitrace**
 Basic usage
 ===========
 
-
-Linux and Mac OS X
-------------------
-
 Run the application you want to trace as
 
-    apitrace trace /path/to/application [args...]
+    apitrace trace --api API /path/to/application [args...]
 
 and it will generate a trace named `application.trace` in the current
-directory.  You can specify the written trace filename by setting the
-`TRACE_FILE` environment variable before running.
+directory.  You can specify the written trace filename by passing the
+`--output` command line option.
 
 View the trace with
 
-    apitrace dump --color application.trace
+    apitrace dump application.trace
 
 Replay an OpenGL trace with
 
@@ -41,23 +37,6 @@ glretrace for more options.
 Start the GUI as
 
     qapitrace application.trace
-
-
-Windows
--------
-
-* Copy `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from build/wrappers directory
-  to the directory with the application you want to trace.
-
-* Run the application.
-
-* View the trace with
-
-        \path\to\apitrace dump application.trace
-
-* Replay the trace with
-
-        \path\to\glretrace application.trace
 
 
 Advanced command line usage
@@ -138,6 +117,15 @@ Note that although Mac OS X has an `LD_PRELOAD` equivalent,
 `DYLD_INSERT_LIBRARIES`, it is mostly useless because it only works with
 `DYLD_FORCE_FLAT_NAMESPACE=1` which breaks most applications.  See the `dyld` man
 page for more details about these environment flags.
+
+### Windows ###
+
+Copy `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from the wrappers directory
+to the directory with the application you want to trace.  Then run the
+application.
+
+You can specify the written trace filename by setting the `TRACE_FILE`
+environment variable before running.
 
 
 Emitting annotations to the trace
