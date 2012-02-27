@@ -62,6 +62,10 @@ traceProgram(API api,
     const char *relPath;
     const char *absPath;
 
+    /*
+     * TODO: simplify code
+     */
+
     switch (api) {
     case API_GL:
         relPath = "wrappers/" GL_TRACE_WRAPPER;
@@ -76,8 +80,26 @@ traceProgram(API api,
         absPath = APITRACE_WRAPPER_INSTALL_DIR "/" EGL_TRACE_WRAPPER;
         break;
 #endif
+#ifdef _WIN32
+    case API_D3D7:
+        relPath = "wrappers\\ddraw.dll";
+        absPath = APITRACE_WRAPPER_INSTALL_DIR "\\ddraw.dll";
+        break;
+    case API_D3D8:
+        relPath = "wrappers\\d3d8.dll";
+        absPath = APITRACE_WRAPPER_INSTALL_DIR "\\d3d8.dll";
+        break;
+    case API_D3D9:
+        relPath = "wrappers\\d3d9.dll";
+        absPath = APITRACE_WRAPPER_INSTALL_DIR "\\d3d9.dll";
+        break;
+    case API_D3D10:
+        relPath = "wrappers\\d3d10.dll";
+        absPath = APITRACE_WRAPPER_INSTALL_DIR "\\d3d10.dll";
+        break;
+#endif
     default:
-        std::cerr << "error: invalid API\n";
+        std::cerr << "error: unsupported API\n";
         return 1;
     }
 

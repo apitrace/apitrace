@@ -51,7 +51,13 @@ usage(void)
         "    with other apitrace utilities for replay or analysis.\n"
         "\n"
         "    -v, --verbose       verbose output\n"
-        "    -a, --api=API       specify API to trace (gl or egl);\n"
+        "    -a, --api=API       specify API to trace ("
+#ifdef _WIN32
+                                                      "gl, d3d7, d3d8, d3d9, or d3d10"
+#else
+                                                      "gl or egl"
+#endif
+                                                      ");\n"
         "                        default is `gl`\n"
         "    -o, --output=TRACE  specify output trace file;\n"
         "                        default is `PROGRAM.trace`\n";
@@ -90,6 +96,14 @@ command(int argc, char *argv[])
                 api = trace::API_GL;
             } else if (strcmp(optarg, "egl") == 0) {
                 api = trace::API_EGL;
+            } else if (strcmp(optarg, "d3d7") == 0) {
+                api = trace::API_D3D7;
+            } else if (strcmp(optarg, "d3d8") == 0) {
+                api = trace::API_D3D8;
+            } else if (strcmp(optarg, "d3d9") == 0) {
+                api = trace::API_D3D9;
+            } else if (strcmp(optarg, "d3d10") == 0) {
+                api = trace::API_D3D10;
             } else {
                 std::cerr << "error: unknown API `" << optarg << "`\n";
                 usage();

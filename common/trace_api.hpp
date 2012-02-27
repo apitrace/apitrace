@@ -38,6 +38,10 @@ namespace trace {
 enum API {
     API_GL, // GL + GLX/WGL/CGL
     API_EGL, // GL/GLES1/GLES2/VG + EGL
+    API_D3D7,
+    API_D3D8,
+    API_D3D9,
+    API_D3D10,
 };
 
 
