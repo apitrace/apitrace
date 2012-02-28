@@ -61,6 +61,7 @@ void MainWindow::createTrace()
     if (dialog.exec() == QDialog::Accepted) {
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
+        m_traceProcess->setApi(dialog.api());
         m_traceProcess->setExecutablePath(dialog.applicationPath());
         m_traceProcess->setArguments(dialog.arguments());
         m_traceProcess->start();

@@ -12,6 +12,7 @@ public:
 
     void accept();
 
+    QString api() const;
     QString applicationPath() const;
     QStringList arguments() const;
 

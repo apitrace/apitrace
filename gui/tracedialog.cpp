@@ -9,8 +9,23 @@ TraceDialog::TraceDialog(QWidget *parent)
 {
     setupUi(this);
 
+    apiComboBox->addItem("GL");
+#ifdef Q_OS_WIN
+    apiComboBox->addItem("D3D7");
+    apiComboBox->addItem("D3D8");
+    apiComboBox->addItem("D3D9");
+    apiComboBox->addItem("D3D10");
+#else
+    apiComboBox->addItem("EGL");
+#endif
+
     connect(browseButton, SIGNAL(clicked()),
             this, SLOT(browse()));
+}
+
+QString TraceDialog::api() const
+{
+    return apiComboBox->currentText().toLower();
 }
 
 QString TraceDialog::applicationPath() const

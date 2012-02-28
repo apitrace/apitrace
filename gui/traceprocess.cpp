@@ -31,6 +31,11 @@ TraceProcess::~TraceProcess()
 {
 }
 
+void TraceProcess::setApi(const QString &str)
+{
+    m_api = str;
+}
+
 void TraceProcess::setExecutablePath(const QString &str)
 {
     m_execPath = str;
@@ -93,6 +98,8 @@ void TraceProcess::start()
     QStringList arguments;
 
     arguments << QLatin1String("trace");
+    arguments << QLatin1String("--api");
+    arguments << m_api;
     arguments << QLatin1String("--output");
     arguments << m_tracePath;
     arguments << QLatin1String("--");
