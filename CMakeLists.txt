@@ -657,7 +657,7 @@ install (
     DESTINATION ${DOC_INSTALL_DIR}
 )
 
-set (CPACK_PACKAGE_VERSION_MAJOR "2")
+set (CPACK_PACKAGE_VERSION_MAJOR "3")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
 
 # Use current date in YYYYMMDD format as patch number 
@@ -665,6 +665,13 @@ execute_process (
     COMMAND ${PYTHON_EXECUTABLE} -c "import time, sys; sys.stdout.write(time.strftime('%Y%m%d'))"
     OUTPUT_VARIABLE CPACK_PACKAGE_VERSION_PATCH
 )
+
+# cpack mistakenly detects Mingw-w64 as win32
+if (MINGW)
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set (CPACK_SYSTEM_NAME win64)
+    endif ()
+endif ()
 
 # See http://www.vtk.org/Wiki/CMake:CPackPackageGenerators
 if (WIN32)
