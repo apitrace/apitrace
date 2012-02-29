@@ -158,6 +158,10 @@ log(const char *format, ...)
     logging = false;
 }
 
+#if defined(__APPLE__)
+long long timeFrequency = 0LL;
+#endif
+
 void
 abort(void)
 {
