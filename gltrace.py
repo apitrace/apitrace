@@ -240,6 +240,15 @@ class GlTracer(Tracer):
         print 'static void __trace_user_arrays(GLuint maxindex);'
         print
 
+        # Buffer mappings
+        print '// whether glMapBufferRange(GL_MAP_WRITE_BIT) has ever been called'
+        print 'static bool __checkBufferMapRange = false;'
+        print
+        print '// whether glBufferParameteriAPPLE(GL_BUFFER_FLUSHING_UNMAP_APPLE, GL_FALSE) has ever been called'
+        print 'static bool __checkBufferFlushingUnmapAPPLE = false;'
+        print
+        # Buffer mapping information, necessary for old Mesa 2.1 drivers which
+        # do not support glGetBufferParameteriv(GL_BUFFER_ACCESS_FLAGS/GL_BUFFER_MAP_LENGTH)
         print 'struct buffer_mapping {'
         print '    void *map;'
         print '    GLint length;'
@@ -461,10 +470,54 @@ class GlTracer(Tracer):
             print '    }'
         
         # Emit a fake memcpy on buffer uploads
+        if function.name == 'glBufferParameteriAPPLE':
+            print '    if (pname == GL_BUFFER_FLUSHING_UNMAP_APPLE && param == GL_FALSE) {'
+            print '        __checkBufferFlushingUnmapAPPLE = true;'
+            print '    }'
         if function.name in ('glUnmapBuffer', 'glUnmapBufferARB'):
-            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
-            print '    if (mapping && mapping->write && !mapping->explicit_flush) {'
-            self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
+            if function.name.endswith('ARB'):
+                suffix = 'ARB'
+            else:
+                suffix = ''
+            print '    GLint access = 0;'
+            print '    __glGetBufferParameteriv%s(target, GL_BUFFER_ACCESS, &access);' % suffix
+            print '    if (access != GL_READ_ONLY) {'
+            print '        GLvoid *map = NULL;'
+            print '        __glGetBufferPointerv%s(target, GL_BUFFER_MAP_POINTER, &map);'  % suffix
+            print '        if (map) {'
+            print '            GLint length = -1;'
+            print '            bool flush = true;'
+            print '            if (__checkBufferMapRange) {'
+            print '                __glGetBufferParameteriv%s(target, GL_BUFFER_MAP_LENGTH, &length);' % suffix
+            print '                GLint access_flags = 0;'
+            print '                __glGetBufferParameteriv(target, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
+            print '                flush = flush && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT);'
+            print '                if (length == -1) {'
+            print '                    // Mesa drivers refuse GL_BUFFER_MAP_LENGTH without GL 3.0'
+            print '                    os::log("apitrace: warning: glGetBufferParameteriv%s(GL_BUFFER_MAP_LENGTH) failed\\n");' % suffix
+            print '                    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '                    if (mapping) {'
+            print '                        length = mapping->length;'
+            print '                        flush = flush && !mapping->explicit_flush;'
+            print '                    } else {'
+            print '                        length = 0;'
+            print '                        flush = false;'
+            print '                    }'
+            print '                }'
+            print '            } else {'
+            print '                length = 0;'
+            print '                __glGetBufferParameteriv%s(target, GL_BUFFER_SIZE, &length);' % suffix
+            print '            }'
+            print '            if (__checkBufferFlushingUnmapAPPLE) {'
+            print '                GLint flushing_unmap = GL_TRUE;'
+            print '                __glGetBufferParameteriv%s(target, GL_BUFFER_FLUSHING_UNMAP_APPLE, &flushing_unmap);' % suffix
+            print '                flush = flush && flushing_unmap;'
+            print '            }'
+            print '            if (flush && length > 0) {'
+            self.emit_memcpy('map', 'map', 'length')
+            print '            }'
+            print '        }'
+            print '    }'
         if function.name == 'glUnmapBufferOES':
             print '    GLint access = 0;'
             print '    __glGetBufferParameteriv(target, GL_BUFFER_ACCESS_OES, &access);'
@@ -621,6 +674,9 @@ class GlTracer(Tracer):
             print '        mapping->explicit_flush = false;'
             print '    }'
         if function.name == 'glMapBufferRange':
+            print '    if (access & GL_MAP_WRITE_BIT) {'
+            print '        __checkBufferMapRange = true;'
+            print '    }'
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
             print '        mapping->map = %s;' % (instance)
