@@ -18,7 +18,8 @@ Basic usage
 To obtain apitrace either [download the latest
 binaries](https://github.com/apitrace/apitrace/downloads) for your platform if
 available, or follow the (build instructions)[INSTALL.markdown] to build it
-yourself.
+yourself.  On 64bits Linux and Windows platforms you'll need apitrace binaries
+that match the architecture (32bits or 64bits) of the application being traced.
 
 Run the application you want to trace as
 
@@ -33,6 +34,8 @@ unsupported by apitrace) will be reported via stderr output on Unices.  On
 Windows you'll need to run
 [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647) to view
 these messages.
+
+Follow the "Tracing manually" instructions below if you cannot obtain a trace.
 
 View the trace with
 
@@ -87,6 +90,14 @@ Tracing manually
 
 ### Linux ###
 
+On 64 bits systems, you'll need to determine ether the application is 64 bits
+or 32 bits.  This can be done by doing
+
+    file /path/to/application
+
+But beware of wrapper shell scripts -- what matters is the architecture of the
+main process.
+
 Run the application you want to trace as
 
      LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
@@ -131,9 +142,24 @@ page for more details about these environment flags.
 
 ### Windows ###
 
-Copy `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from the wrappers directory
-to the directory with the application you want to trace.  Then run the
-application.
+When tracing third-party applications, you can identify the target
+application's main executable, either by:
+
+* right clicking on the application's icon in the _Start Menu_, choose
+  _Properties_, and see the _Target_ field;
+
+* or by starting the application, run Windows Task Manager (taskmgr.exe), right
+  click on the application name in the _Applications_ tab, choose _Go To Process_,
+  note the highlighted _Image Name_, and search it on `C:\Program Files` or
+  `C:\Program Files (x86)`.
+
+On 64 bits Windows, you'll need to determine ether the application is a 64 bits
+or 32 bits. 32 bits applications will have a `*32` suffix in the _Image Name_
+column of the _Processes_ tab of _Windows Task Manager_ window.
+
+Copy the appropriate `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from the
+wrappers directory to the directory with the application you want to trace.
+Then run the application as usual.
 
 You can specify the written trace filename by setting the `TRACE_FILE`
 environment variable before running.
