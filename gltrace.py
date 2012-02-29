@@ -467,14 +467,16 @@ class GlTracer(Tracer):
             self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
             print '    }'
         if function.name == 'glUnmapNamedBufferEXT':
-            print '    GLint access = 0;'
-            print '    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS, &access);'
-            print '    if ((access & GL_MAP_WRITE_BIT) & !(access & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
+            print '    GLint access_flags = 0;'
+            print '    __glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
+            print '    if ((access_flags & GL_MAP_WRITE_BIT) && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
             print '        GLvoid *map = NULL;'
-            print '        glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '        __glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
             print '        GLint length = 0;'
-            print '        glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_MAP_LENGTH, &length);'
+            print '        __glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_MAP_LENGTH, &length);'
+            print '        if (map && length > 0) {'
             self.emit_memcpy('map', 'map', 'length')
+            print '        }'
             print '    }'
         if function.name in ('glFlushMappedBufferRange', 'glFlushMappedBufferRangeAPPLE'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
@@ -487,8 +489,8 @@ class GlTracer(Tracer):
             print '    }'
         if function.name == 'glFlushMappedNamedBufferRangeEXT':
             print '    GLvoid *map = NULL;'
-            print '    glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
-            print '    if (map) {'
+            print '    __glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '    if (map && length > 0) {'
             self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'length')
             print '    }'
 
