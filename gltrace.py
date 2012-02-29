@@ -461,10 +461,21 @@ class GlTracer(Tracer):
             print '    }'
         
         # Emit a fake memcpy on buffer uploads
-        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB', 'glUnmapBufferOES'):
+        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping && mapping->write && !mapping->explicit_flush) {'
             self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
+        if function.name == 'glUnmapBufferOES':
+            print '    GLint access = 0;'
+            print '    __glGetBufferParameteriv(target, GL_BUFFER_ACCESS_OES, &access);'
+            print '    if (access == GL_WRITE_ONLY_OES) {'
+            print '        GLvoid *map = NULL;'
+            print '        __glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &map);'
+            print '        GLint size = 0;'
+            print '        __glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);'
+            print '        if (map && size > 0) {'
+            self.emit_memcpy('map', 'map', 'size')
+            print '        }'
             print '    }'
         if function.name == 'glUnmapNamedBufferEXT':
             print '    GLint access_flags = 0;'
@@ -599,8 +610,8 @@ class GlTracer(Tracer):
     def wrapRet(self, function, instance):
         Tracer.wrapRet(self, function, instance)
 
-            
-        if function.name in ('glMapBuffer', 'glMapBufferARB', 'glMapBufferOES'):
+        # Keep track of buffer mappings
+        if function.name in ('glMapBuffer', 'glMapBufferARB'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
             print '        mapping->map = %s;' % (instance)
@@ -609,7 +620,6 @@ class GlTracer(Tracer):
             print '        mapping->write = (access != GL_READ_ONLY);'
             print '        mapping->explicit_flush = false;'
             print '    }'
-
         if function.name == 'glMapBufferRange':
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
