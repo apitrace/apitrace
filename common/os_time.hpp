@@ -35,6 +35,8 @@
 #include <windows.h>
 #elif defined(__linux__)
 #include <time.h>
+#elif defined(__APPLE__)
+#include <mach/mach_time.h>
 #else
 #include <sys/time.h>
 #endif
@@ -72,6 +74,10 @@ namespace os {
             return 0;
         }
         return tp.tv_sec * 1000000000LL + tp.tv_nsec;
+#elif defined(__APPLE__)
+        mach_timebase_info_data_t timebaseInfo;
+        mach_timebase_info(&timebaseInfo);
+        return mach_absolute_time() * timebaseInfo.numer / timebaseInfo.denom;
 #else
         struct timeval tv;
         gettimeofday(&tv, NULL);
