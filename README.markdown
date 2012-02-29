@@ -15,6 +15,11 @@ About **apitrace**
 Basic usage
 ===========
 
+To obtain apitrace either [download the latest
+binaries](https://github.com/apitrace/apitrace/downloads) for your platform if
+available, or follow the (build instructions)[INSTALL.markdown] to build it
+yourself.
+
 Run the application you want to trace as
 
     apitrace trace --api API /path/to/application [args...]
