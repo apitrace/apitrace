@@ -23,6 +23,12 @@ and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by passing the
 `--output` command line option.
 
+Problems while tracing (e.g, if the application uses calls/parameters
+unsupported by apitrace) will be reported via stderr output on Unices.  On
+Windows you'll need to run
+[DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647) to view
+these messages.
+
 View the trace with
 
     apitrace dump application.trace
