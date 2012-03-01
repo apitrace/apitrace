@@ -321,6 +321,10 @@ class GlRetracer(Retracer):
                 print r'        if (!__result) {'
                 print r'             retrace::warning(call) << "failed to map buffer\n";'
                 print r'        }'
+            if function.name in self.unmap_function_names:
+                print r'        if (!__result) {'
+                print r'             retrace::warning(call) << "failed to unmap buffer\n";'
+                print r'        }'
             if function.name in ('glGetAttribLocation', 'glGetAttribLocationARB'):
                 print r'    GLint __orig_result = call.ret->toSInt();'
                 print r'    if (__result != __orig_result) {'
