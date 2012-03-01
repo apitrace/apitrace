@@ -237,6 +237,25 @@ class GlRetracer(Retracer):
 
         if function.name == 'memcpy':
             print '    if (!dest || !src || !n) return;'
+
+        # Destroy the buffer mapping
+        if function.name in self.unmap_function_names:
+            print r'        GLvoid *ptr = NULL;'
+            if function.name == 'glUnmapBuffer':
+                print r'            glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &ptr);'
+            elif function.name == 'glUnmapBufferARB':
+                print r'            glGetBufferPointervARB(target, GL_BUFFER_MAP_POINTER_ARB, &ptr);'
+            elif function.name == 'glUnmapBufferOES':
+                print r'            glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &ptr);'
+            elif function.name == 'glUnmapNamedBufferEXT':
+                print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
+            else:
+                assert False
+            print r'        if (ptr) {'
+            print r'            retrace::delRegionByPointer(ptr);'
+            print r'        } else {'
+            print r'            retrace::warning(call) << "no current context\n";'
+            print r'        }'
         
         Retracer.invokeFunction(self, function)
 
@@ -330,22 +349,6 @@ class GlRetracer(Retracer):
                         print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
                     else:
                         assert False
-            # Destroy the buffer mapping
-            if function.name in self.unmap_function_names:
-                print r'        GLvoid *ptr = NULL;'
-                if function.name == 'glUnmapBuffer':
-                    print r'            glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &ptr);'
-                elif function.name == 'glUnmapBufferARB':
-                    print r'            glGetBufferPointervARB(target, GL_BUFFER_MAP_POINTER_ARB, &ptr);'
-                elif function.name == 'glUnmapBufferOES':
-                    print r'            glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &ptr);'
-                elif function.name == 'glUnmapNamedBufferEXT':
-                    print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
-                else:
-                    assert False
-                print r'        if (ptr) {'
-                print r'            retrace::delRegionByPointer(ptr);'
-                print r'        }'
 
     def extractArg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
