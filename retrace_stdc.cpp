@@ -132,8 +132,7 @@ delRegion(unsigned long long address) {
 
 void
 delRegionByPointer(void *ptr) {
-    RegionMap::iterator it = regionMap.begin();
-    while (it != regionMap.end()) {
+    for (RegionMap::iterator it = regionMap.begin(); it != regionMap.end(); ++it) {
         if (it->second.buffer == ptr) {
             regionMap.erase(it);
             return;
