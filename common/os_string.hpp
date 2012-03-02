@@ -93,12 +93,19 @@ protected:
 
     Buffer::iterator rfind(char c) {
         Buffer::iterator it = buffer.end();
+
+        // Skip trailing '\0'
+        assert(it != buffer.begin());
+        --it;
+        assert(*it == '\0');
+
         while (it != buffer.begin()) {
             --it;
             if (*it == c) {
                 return it;
             }
         }
+
         return buffer.end();
     }
 
@@ -126,17 +133,30 @@ protected:
     Buffer::iterator rfindSep(void) {
         Buffer::iterator it = buffer.end();
 
+        // Skip trailing '\0'
+        assert(it != buffer.begin());
+        --it;
+        assert(*it == '\0');
+
         // Skip trailing separators
-        while (it != buffer.begin() && isSep(*it)) {
+        while (it != buffer.begin()) {
             --it;
+            if (isSep(*it)) {
+                // Halt if find the root
+                if (it == buffer.begin()) {
+                    return it;
+                }
+            } else {
+                break;
+            }
         }
 
         // Advance to the last separator
         while (it != buffer.begin()) {
+            --it;
             if (isSep(*it)) {
                 return it;
             }
-            --it;
         }
 
         return buffer.end();
