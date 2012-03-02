@@ -7,6 +7,9 @@ Things To Do
 Tracing
 -------
 
+* Better multi-arch support on Windows/Linux -- allow one set of binaries to
+  trace both 32/64 bits applications.
+
 * Allow clamping to a GL version or a number of extensions.
 
 * Put (de)compression in a separate thread.

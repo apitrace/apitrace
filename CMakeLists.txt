@@ -215,22 +215,14 @@ if (WIN32 OR APPLE)
     # On Windows/MacOSX, applications are usually installed on a directory of
     # their own
     set (DOC_INSTALL_DIR doc)
+    set (LIB_INSTALL_DIR lib)
 else ()
     set (DOC_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
-endif ()
-
-set (LIB_INSTALL_DIR lib/apitrace)
-
-if (APPLE)
-    # MacOSX uses fat binaries, so no need to have per-architecture wrapper
-    # directories
-    set (LIB_ARCH_INSTALL_DIR ${LIB_INSTALL_DIR})
-else ()
-    set (LIB_ARCH_INSTALL_DIR ${LIB_INSTALL_DIR}/${CMAKE_SYSTEM_PROCESSOR})
+    set (LIB_INSTALL_DIR lib/${CMAKE_PROJECT_NAME})
 endif ()
 
 set(SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
-set(WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
+set(WRAPPER_INSTALL_DIR ${LIB_INSTALL_DIR}/wrappers)
 
 # Expose the binary/install directories to source
 #
