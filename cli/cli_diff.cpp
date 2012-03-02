@@ -49,10 +49,11 @@ usage(void)
         exit(1);
     }
 
-    char *args[3];
-    args[0] = (char *) command.str();
-    args[1] = (char *) "--help";
-    args[2] = NULL;
+    char *args[4];
+    args[0] = (char *) "python";
+    args[1] = (char *) command.str();
+    args[2] = (char *) "--help";
+    args[3] = NULL;
 
     os::execute(args);
 }
@@ -69,7 +70,8 @@ command(int argc, char *argv[])
 
     os::String apitracePath = os::getProcessName();
 
-    std::vector<const char *>args;
+    std::vector<const char *> args;
+    args.push_back("python");
     args.push_back(command.str());
     args.push_back("--apitrace");
     args.push_back(apitracePath.str());
