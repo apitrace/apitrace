@@ -69,41 +69,46 @@ findFile(const char *relPath,
 
 
 os::String
-findScript(const char *name)
+findScript(const char *scriptFilename)
 {
-    os::String path;
+    os::String scriptPath;
 
-#if defined(APITRACE_SOURCE_DIR)
-    // Try the absolute source  path -- useful for development or quick
-    // experiment.  Relative paths don't quite work here due to out of source
-    // trees.
-    path = APITRACE_SOURCE_DIR "/scripts";
-    path.join(name);
-    if (path.exists()) {
-        return path;
+    os::String processDir = os::getProcessName();
+    processDir.trimFilename();
+
+    // Try relative build directory
+    // XXX: Just make build and install directory layout match
+    scriptPath = processDir;
+    scriptPath.join("scripts");
+    scriptPath.join(scriptFilename);
+    if (scriptPath.exists()) {
+        return scriptPath;
     }
-#endif
 
+    // Try relative install directory
+    scriptPath = processDir;
 #if defined(_WIN32)
-    // Windows has no standard installation path, so find it relatively to the
-    // process name, which is assumed to be in a bin subdirectory.
-    path = os::getProcessName();
-    path.trimFilename();
-    path.join("..\\lib\\apitrace\\scripts");
-    path.join(name);
-    if (path.exists()) {
-        return path;
-    }
+    scriptPath.join("..\\lib\\scripts");
+#elif defined(__APPLE__)
+    scriptPath.join("../lib/scripts");
 #else
-    // Assume a predefined installation path on Unices
-    path = APITRACE_INSTALL_PREFIX "/lib/apitrace/scripts";
-    path.join(name);
-    if (path.exists()) {
-        return path;
+    scriptPath.join("../lib/apitrace/scripts");
+#endif
+    scriptPath.join(scriptFilename);
+    if (scriptPath.exists()) {
+        return scriptPath;
+    }
+
+#ifndef _WIN32
+    // Try absolute install directory
+    scriptPath = APITRACE_WRAPPER_INSTALL_DIR;
+    scriptPath.join(scriptFilename);
+    if (scriptPath.exists()) {
+        return scriptPath;
     }
 #endif
 
-    std::cerr << "error: cannot find " << name << " script\n";
+    std::cerr << "error: cannot find " << scriptFilename << " script\n";
 
     return "";
 }

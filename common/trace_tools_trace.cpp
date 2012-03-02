@@ -70,8 +70,10 @@ findWrapper(const char *wrapperFilename)
 
     // Try relative install directory
     wrapperPath = processDir;
-#ifdef _WIN32
-    wrapperPath.join("..\\lib\\apitrace\\wrappers");
+#if defined(_WIN32)
+    wrapperPath.join("..\\lib\\wrappers");
+#elif defined(__APPLE__)
+    wrapperPath.join("../lib/wrappers");
 #else
     wrapperPath.join("../lib/apitrace/wrappers");
 #endif
