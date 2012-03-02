@@ -143,12 +143,9 @@ traceProgram(API api,
 #if defined(_WIN32)
     /* On Windows copy the wrapper to the program directory.
      */
-    os::String wrapperName (wrapperPath);
-    wrapperName.trimDirectory();
-
     os::String tmpWrapper(argv[0]);
     tmpWrapper.trimFilename();
-    tmpWrapper.join(wrapperName);
+    tmpWrapper.join(wrapperFilename);
 
     if (verbose) {
         std::cerr << wrapperPath << " -> " << tmpWrapper << "\n";
