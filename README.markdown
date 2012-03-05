@@ -401,6 +401,8 @@ Open-source:
 
 * [tracy](https://gitorious.org/tracy): OpenGL ES and OpenVG trace, retrace, and state inspection
 
+* [WebGL-Inspector](http://benvanik.github.com/WebGL-Inspector/)
+
 Closed-source:
 
 * [gDEBugger](http://www.gremedy.com/products.php)
