@@ -8,6 +8,8 @@
 
 #include <QMainWindow>
 #include <QProcess>
+#include <QList>
+#include <QImage>
 
 class ApiTrace;
 class ApiTraceCall;
@@ -47,6 +49,7 @@ private slots:
     void replayStop();
     void replayFinished(const QString &output);
     void replayStateFound(ApiTraceState *state);
+    void replayThumbnailsFound(const QList<QImage> &thumbnails);
     void replayError(const QString &msg);
     void startedLoadingTrace();
     void loadProgess(int percent);
@@ -85,7 +88,7 @@ private:
     void initObjects();
     void initConnections();
     void newTraceFile(const QString &fileName);
-    void replayTrace(bool dumpState);
+    void replayTrace(bool dumpState, bool dumpThumbnails);
     void fillStateForFrame();
 
     /* there's a difference between selected frame/call and
@@ -114,6 +117,8 @@ private:
     ApiTraceEvent *m_selectedEvent;
 
     ApiTraceEvent *m_stateEvent;
+
+    QList<QImage> m_thumbnails;
 
     Retracer *m_retracer;
 

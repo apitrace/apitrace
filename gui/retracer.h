@@ -40,6 +40,9 @@ public:
     bool captureState() const;
     void setCaptureState(bool enable);
 
+    bool captureThumbnails() const;
+    void setCaptureThumbnails(bool enable);
+
 public slots:
     void start();
     void terminate();
@@ -48,6 +51,7 @@ signals:
     void finished(const QString &output);
     void error(const QString &msg);
     void foundState(ApiTraceState *state);
+    void foundThumbnails(const QList<QImage> &thumbnails);
     void retraceErrors(const QList<ApiTraceError> &errors);
 
 private slots:
@@ -60,6 +64,7 @@ private:
     bool m_benchmarking;
     bool m_doubleBuffered;
     bool m_captureState;
+    bool m_captureThumbnails;
     qlonglong m_captureCall;
 
     QProcess *m_process;
@@ -89,9 +94,13 @@ public:
     bool captureState() const;
     void setCaptureState(bool enable);
 
+    bool captureThumbnails() const;
+    void setCaptureThumbnails(bool enable);
+
 signals:
     void finished(const QString &output);
     void foundState(ApiTraceState *state);
+    void foundThumbnails(const QList<QImage> &humbnails);
     void error(const QString &msg);
     void retraceErrors(const QList<ApiTraceError> &errors);
 
@@ -106,6 +115,7 @@ private:
     bool m_benchmarking;
     bool m_doubleBuffered;
     bool m_captureState;
+    bool m_captureThumbnails;
     qlonglong m_captureCall;
 
     QProcessEnvironment m_processEnvironment;
