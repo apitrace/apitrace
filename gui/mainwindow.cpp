@@ -732,8 +732,8 @@ void MainWindow::initConnections()
             this, SLOT(slotStartedSaving()));
     connect(m_trace, SIGNAL(saved()),
             this, SLOT(slotSaved()));
-    connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
-            this, SLOT(slotTraceChanged(ApiTraceCall*)));
+    connect(m_trace, SIGNAL(changed(ApiTraceEvent*)),
+            this, SLOT(slotTraceChanged(ApiTraceEvent*)));
     connect(m_trace, SIGNAL(findResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)),
             this, SLOT(slotSearchResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)));
     connect(m_trace, SIGNAL(foundFrameStart(ApiTraceFrame*)),
@@ -849,6 +849,8 @@ void MainWindow::replayStateFound(ApiTraceState *state)
 void MainWindow::replayThumbnailsFound(const QList<QImage> &thumbnails)
 {
     m_thumbnails = thumbnails;
+
+    m_trace->bindThumbnailsToFrames(thumbnails);
 }
 
 void MainWindow::slotGoTo()
@@ -1026,11 +1028,14 @@ ApiTraceFrame * MainWindow::selectedFrame() const
     return NULL;
 }
 
-void MainWindow::slotTraceChanged(ApiTraceCall *call)
+void MainWindow::slotTraceChanged(ApiTraceEvent *event)
 {
-    Q_ASSERT(call);
-    if (call == m_selectedEvent) {
-        m_ui.detailsWebView->setHtml(call->toHtml());
+    Q_ASSERT(event);
+    if (event == m_selectedEvent) {
+        if (event->type() == ApiTraceEvent::Call) {
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+            m_ui.detailsWebView->setHtml(call->toHtml());
+        }
     }
 }
 

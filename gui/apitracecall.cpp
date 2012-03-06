@@ -1197,3 +1197,13 @@ unsigned ApiTraceFrame::lastCallIndex() const
         return m_lastCallIndex;
     }
 }
+
+void ApiTraceFrame::setThumbnail(QImage thumbnail)
+{
+    m_thumbnail = thumbnail;
+}
+
+QImage ApiTraceFrame::thumbnail() const
+{
+    return m_thumbnail;
+}

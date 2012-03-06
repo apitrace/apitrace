@@ -100,6 +100,7 @@ public slots:
     void findCallIndex(int index);
     void setCallError(const ApiTraceError &error);
 
+    void bindThumbnailsToFrames(const QList<QImage> &thumbnails);
 
 signals:
     void loadTrace(const QString &name);
@@ -109,7 +110,7 @@ signals:
     void finishedLoadingTrace();
     void invalidated();
     void framesInvalidated();
-    void changed(ApiTraceCall *call);
+    void changed(ApiTraceEvent *event);
     void startedSaving();
     void saved();
     void findResult(const ApiTrace::SearchRequest &request,

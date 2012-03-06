@@ -248,8 +248,8 @@ void ApiTraceModel::setApiTrace(ApiTrace *trace)
             this, SLOT(beginAddingFrames(int, int)));
     connect(m_trace, SIGNAL(endAddingFrames()),
             this, SLOT(endAddingFrames()));
-    connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
-            this, SLOT(callChanged(ApiTraceCall*)));
+    connect(m_trace, SIGNAL(changed(ApiTraceEvent*)),
+            this, SLOT(changed(ApiTraceEvent*)));
     connect(m_trace, SIGNAL(beginLoadingFrame(ApiTraceFrame*,int)),
             this, SLOT(beginLoadingFrame(ApiTraceFrame*,int)));
     connect(m_trace, SIGNAL(endLoadingFrame(ApiTraceFrame*)),
@@ -318,6 +318,15 @@ QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
     return createIndex(row, 0, call);
 }
 
+void ApiTraceModel::changed(ApiTraceEvent *event)
+{
+    if (event->type() == ApiTraceEvent::Call) {
+        callChanged(static_cast<ApiTraceCall*>(event));
+    } else if (event->type() == ApiTraceEvent::Frame) {
+        frameChanged(static_cast<ApiTraceFrame*>(event));
+    }
+}
+
 void ApiTraceModel::callChanged(ApiTraceCall *call)
 {
     ApiTrace *trace = call->parentFrame()->parentTrace();
@@ -336,6 +345,14 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
     ApiTraceFrame *frame = call->parentFrame();
     int row = frame->callIndex(call);
     QModelIndex index = createIndex(row, 0, call);
+    emit dataChanged(index, index);
+}
+
+void ApiTraceModel::frameChanged(ApiTraceFrame *frame)
+{
+    const QList<ApiTraceFrame*> frames = m_trace->frames();
+    int row = frames.indexOf(frame);
+    QModelIndex index = createIndex(row, 0, frame);
     emit dataChanged(index, index);
 }
 

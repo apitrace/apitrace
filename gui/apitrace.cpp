@@ -496,4 +496,21 @@ bool ApiTrace::isFrameLoading(ApiTraceFrame *frame) const
     return m_loadingFrames.contains(frame);
 }
 
+void ApiTrace::bindThumbnailsToFrames(const QList<QImage> &thumbnails)
+{
+    QList<ApiTraceFrame *> frames = m_frames;
+
+    QList<QImage>::const_iterator thumbnail = thumbnails.begin();
+
+    foreach (ApiTraceFrame *frame, frames) {
+        if (thumbnail != thumbnails.end()) {
+            frame->setThumbnail(*thumbnail);
+
+            ++thumbnail;
+
+            emit changed(frame);
+        }
+    }
+}
+
 #include "apitrace.moc"

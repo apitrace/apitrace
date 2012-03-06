@@ -74,7 +74,7 @@ private slots:
     void slotSaved();
     void slotGoFrameStart();
     void slotGoFrameEnd();
-    void slotTraceChanged(ApiTraceCall *call);
+    void slotTraceChanged(ApiTraceEvent *event);
     void slotRetraceErrors(const QList<ApiTraceError> &errors);
     void slotErrorSelected(QTreeWidgetItem *current);
     void slotSearchResult(const ApiTrace::SearchRequest &request,
