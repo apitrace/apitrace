@@ -12,14 +12,18 @@ About **apitrace**
 * visualize and edit trace files.
 
 
-Basic usage
-===========
+Obtaining **apitrace**
+======================
 
 To obtain apitrace either [download the latest
 binaries](https://github.com/apitrace/apitrace/downloads) for your platform if
 available, or follow the [build instructions](INSTALL.markdown) to build it
 yourself.  On 64bits Linux and Windows platforms you'll need apitrace binaries
 that match the architecture (32bits or 64bits) of the application being traced.
+
+
+Basic usage
+===========
 
 Run the application you want to trace as
 
@@ -48,9 +52,17 @@ Replay an OpenGL trace with
 Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
 glretrace for more options.
 
+
+Basic GUI usage
+===============
+
 Start the GUI as
 
     qapitrace application.trace
+
+You can also tell the GUI to go directly to a specific call
+
+    qapitrace application.trace 12345
 
 
 Advanced command line usage
