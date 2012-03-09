@@ -1,4 +1,4 @@
-This file lists the major user visible improvments.  For a full list of changes
+This file lists the major user visible improvements.  For a full list of changes
 and their authors see the git history.
 
 
