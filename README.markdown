@@ -399,7 +399,11 @@ Closed-source:
 
   * [D3DSpy](http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm): the predecessor of PIX
 
+* [NVIDIA PerfKit](http://developer.nvidia.com/nvidia-perfkit)
+
 * [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
+
+* [Intel Graphics Performance Analyzers](http://www.intel.com/software/gpa/)
 
 
 OpenGL
@@ -417,7 +421,7 @@ Open-source:
 
 Closed-source:
 
-* [gDEBugger](http://www.gremedy.com/products.php)
+* [gDEBugger](http://www.gremedy.com/products.php) and [AMD gDEBugger](http://developer.amd.com/tools/gDEBugger/Pages/default.aspx)
 
 * [glslDevil](http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html)
 
