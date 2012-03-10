@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2007-2010 The Khronos Group Inc.
+** Copyright (c) 2007-2012 The Khronos Group Inc.
 ** 
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -48,9 +48,9 @@ extern "C" {
 /*************************************************************/
 
 /* Header file version number */
-/* wglext.h last updated 2011/04/13 */
+/* wglext.h last updated 2012/01/04 */
 /* Current version at http://www.opengl.org/registry/ */
-#define WGL_WGLEXT_VERSION 23
+#define WGL_WGLEXT_VERSION 24
 
 #ifndef WGL_ARB_buffer_region
 #define WGL_FRONT_COLOR_BUFFER_BIT_ARB 0x00000001
@@ -420,6 +420,12 @@ extern "C" {
 #define WGL_ACCESS_READ_ONLY_NV        0x00000000
 #define WGL_ACCESS_READ_WRITE_NV       0x00000001
 #define WGL_ACCESS_WRITE_DISCARD_NV    0x00000002
+#endif
+
+#ifndef WGL_NV_DX_interop2
+#endif
+
+#ifndef WGL_EXT_swap_control_tear
 #endif
 
 
@@ -919,6 +925,14 @@ typedef BOOL (WINAPI * PFNWGLDXUNREGISTEROBJECTNVPROC) (HANDLE hDevice, HANDLE h
 typedef BOOL (WINAPI * PFNWGLDXOBJECTACCESSNVPROC) (HANDLE hObject, GLenum access);
 typedef BOOL (WINAPI * PFNWGLDXLOCKOBJECTSNVPROC) (HANDLE hDevice, GLint count, HANDLE *hObjects);
 typedef BOOL (WINAPI * PFNWGLDXUNLOCKOBJECTSNVPROC) (HANDLE hDevice, GLint count, HANDLE *hObjects);
+#endif
+
+#ifndef WGL_NV_DX_interop2
+#define WGL_NV_DX_interop2 1
+#endif
+
+#ifndef WGL_EXT_swap_control_tear
+#define WGL_EXT_swap_control_tear 1
 #endif
 
 

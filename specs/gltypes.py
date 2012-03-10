@@ -116,11 +116,8 @@ GLenum = Enum("GLenum", [
 ])
 
 # Some functions take GLenum disguised as GLint, and need special treatment so
-# that symbolic names are traced correctly.  Apple noticed and fixed it in the
-# gl.h header, which further complicates things.  C++ typechecking rules force
-# the wrappers to match the prototype precisely, so the precise type is defined
-# in glimports.hpp
-GLenum_int = Alias("GLenum_int", GLenum)
+# that symbolic names are traced correctly.
+GLenum_int = Alias("GLint", GLenum)
 
 GLenum_mode = FakeEnum(GLenum, [
     "GL_POINTS",                         # 0x0000

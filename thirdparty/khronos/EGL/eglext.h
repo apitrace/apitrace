@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2007-2010 The Khronos Group Inc.
+** Copyright (c) 2007-2012 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -34,8 +34,8 @@ extern "C" {
 
 /* Header file version number */
 /* Current version at http://www.khronos.org/registry/egl/ */
-/* $Revision: 15052 $ on $Date: 2011-07-06 17:43:46 -0700 (Wed, 06 Jul 2011) $ */
-#define EGL_EGLEXT_VERSION 10
+/* $Revision: 16996 $ on $Date: 2012-02-29 18:38:19 -0800 (Wed, 29 Feb 2012) $ */
+#define EGL_EGLEXT_VERSION 11
 
 #ifndef EGL_KHR_config_attribs
 #define EGL_KHR_config_attribs 1
@@ -178,15 +178,15 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLGETSYNCATTRIBKHRPROC) (EGLDisplay dpy, EG
 
 #ifndef EGL_NV_coverage_sample
 #define EGL_NV_coverage_sample 1
-#define EGL_COVERAGE_BUFFERS_NV 0x30E0
-#define EGL_COVERAGE_SAMPLES_NV 0x30E1
+#define EGL_COVERAGE_BUFFERS_NV			0x30E0
+#define EGL_COVERAGE_SAMPLES_NV			0x30E1
 #endif
 
 #ifndef EGL_NV_depth_nonlinear
 #define EGL_NV_depth_nonlinear 1
-#define EGL_DEPTH_ENCODING_NV 0x30E2
+#define EGL_DEPTH_ENCODING_NV			0x30E2
 #define EGL_DEPTH_ENCODING_NONE_NV 0
-#define EGL_DEPTH_ENCODING_NONLINEAR_NV 0x30E3
+#define EGL_DEPTH_ENCODING_NONLINEAR_NV		0x30E3
 #endif
 
 #if KHRONOS_SUPPORT_INT64   /* EGLTimeNV requires 64-bit uint support */
@@ -326,6 +326,19 @@ EGLAPI EGLuint64NV EGLAPIENTRY eglGetSystemTimeNV(void);
 typedef EGLuint64NV (EGLAPIENTRYP PFNEGLGETSYSTEMTIMEFREQUENCYNVPROC) (void);
 typedef EGLuint64NV (EGLAPIENTRYP PFNEGLGETSYSTEMTIMENVPROC) (void);
 #endif
+#endif
+
+#ifndef EGL_EXT_create_context_robustness
+#define EGL_EXT_create_context_robustness 1
+#define EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT	0x30BF
+#define EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT 0x3138
+#define EGL_NO_RESET_NOTIFICATION_EXT		0x31BE
+#define EGL_LOSE_CONTEXT_ON_RESET_EXT		0x31BF
+#endif
+
+#ifndef EGL_ANGLE_d3d_share_handle_client_buffer
+#define EGL_ANGLE_d3d_share_handle_client_buffer 1
+/* reuse EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE */
 #endif
 
 #ifdef __cplusplus

@@ -31,58 +31,20 @@
 #define _GLIMPORTS_HPP_
 
 
-// Prevent including MacOSX's glext.h which lives in OpenGL/glext.h and not
-// GL/glext.h
-#define __glext_h_
-
-
-// Some functions take GLenum disguised as GLint.  Apple noticed and fixed it
-// in the Mac OS X 10.6.x gl.h headers.  Regardless, C++ typechecking rules
-// force the wrappers to match the prototype precisely.
-#if defined(__APPLE__)
-#  include <AvailabilityMacros.h> // for MAC_OS_X_VERSION_10_7
-#  if defined(MAC_OS_X_VERSION_10_7)
-#    define GLenum_int GLint
-#  else
-#    define GLenum_int GLenum
-#  endif
-#else
-#  define GLenum_int GLint
-#endif
-
-
 #if defined(_WIN32)
-
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN 1
-#endif
-
-#include <windows.h>
-#include <GL/gl.h>
-
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN 1
+#  endif
+#  include <windows.h>
 #elif defined(__APPLE__)
-
-#include <OpenGL/gl.h>
-
-#else
-
-#ifdef HAVE_X11
-#include <X11/Xlib.h>
-#endif
-
-#include <GL/gl.h>
-
+#elif defined(HAVE_X11)
+#  include <X11/Xlib.h>
 #endif /* !_WIN32 */
 
 
-// Include our own glext.h
-#undef __glext_h_
+#include <GL/gl.h>
 #include <GL/glext.h>
 
-
-#ifndef GL_TEXTURE_INDEX_SIZE_EXT
-#define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
-#endif
 
 // GL_NVX_gpu_memory_info
 #define GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX          0x9047

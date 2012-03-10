@@ -19,20 +19,17 @@ set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
 set (ENABLE_CLI true CACHE BOOL "Enable command Line interface.")
 
-set (ENABLE_EGL "AUTO" CACHE STRING "Enable EGL support.")
+set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 
 
 ##############################################################################
 # Find dependencies
-
-include (FindPkgConfig)
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 find_package (PythonInterp REQUIRED)
-find_package (OpenGL REQUIRED)
 
 find_package (Threads)
 
@@ -44,11 +41,11 @@ if (ENABLE_GUI)
     find_package (QJSON ${REQUIRE_GUI})
 endif ()
 
-include_directories (${OPENGL_INCLUDE_DIR})
-
 if (WIN32)
     find_package (DirectX)
+    set (ENABLE_EGL false)
 elseif (APPLE)
+    set (ENABLE_EGL false)
 else ()
     find_package (X11)
 
@@ -58,16 +55,7 @@ else ()
     endif ()
 
     if (ENABLE_EGL)
-        if (NOT ENABLE_EGL STREQUAL "AUTO")
-            set (REQUIRE_EGL REQUIRED)
-        endif ()
-        pkg_check_modules (EGL egl glesv1_cm glesv2 ${REQUIRE_EGL})
-        if (EGL_FOUND)
-            include_directories (${EGL_INCLUDE_DIR})
-            add_definitions (-DHAVE_EGL)
-        endif ()
-    else ()
-        set (EGL_FOUND 0)
+        add_definitions (-DHAVE_EGL)
     endif ()
 endif ()
 
@@ -205,12 +193,11 @@ if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
     set (QJSON_FOUND TRUE)
 endif ()
 
-# For glext headers.  Needs to be before system includes as often system's GL
-# headers bundle and include glext.h and glxext.h
-include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glext)
-
-# For EGL headers
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khr)
+# We use bundled headers for all Khronos APIs, to guarantee support for both
+# OpenGL and OpenGL ES at build time, because the OpenGL and OpenGL ES 1 APIs
+# are so intertwined that conditional compilation extremely difficult. This
+# also avoids missing/inconsistent declarations in system headers.
+include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
 ##############################################################################
 # Installation directories
@@ -469,7 +456,7 @@ elseif (X11_FOUND)
 endif ()
 
 
-if (EGL_FOUND)
+if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     # libEGL.so/libGL.so
     add_custom_command (
         OUTPUT egltrace.cpp
@@ -563,7 +550,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
             target_link_libraries (glretrace
                 "-framework Cocoa"
                 "-framework ApplicationServices" # CGS*
-                ${OPENGL_gl_LIBRARY} # CGL*
+                #"-framework OpenGL" # CGL*
             )
         else ()
             target_link_libraries (glretrace ${X11_X11_LIB})
@@ -586,7 +573,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
     install (TARGETS glretrace RUNTIME DESTINATION bin) 
 endif ()
 
-if (EGL_FOUND AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
+if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     add_executable (eglretrace
         ${retrace_sources}
         glws_egl_xlib.cpp

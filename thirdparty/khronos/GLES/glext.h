@@ -1,7 +1,7 @@
 #ifndef __glext_h_
 #define __glext_h_
 
-/* $Revision: 13240 $ on $Date:: 2010-12-17 15:16:00 -0800 #$ */
+/* $Revision: 16481 $ on $Date:: 2012-01-04 10:43:56 -0800 #$ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -288,6 +288,14 @@ typedef void* GLeglImageOES;
 #define GL_STENCIL_EXT                                          0x1802
 #endif
 
+/* GL_EXT_multisampled_render_to_texture */
+#ifndef GL_EXT_multisampled_render_to_texture
+#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_SAMPLES_EXT           0x8D6C
+#define GL_RENDERBUFFER_SAMPLES_EXT                             0x9133
+#define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT               0x9134
+#define GL_MAX_SAMPLES_EXT                                      0x9135
+#endif
+
 /* GL_EXT_multi_draw_arrays */
 /* No new tokens introduced by this extension. */
 
@@ -296,6 +304,32 @@ typedef void* GLeglImageOES;
 #define GL_BGRA_EXT                                             0x80E1
 #define GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT                       0x8365
 #define GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT                       0x8366
+#endif
+
+/* GL_EXT_robustness */
+#ifndef GL_EXT_robustness
+/* reuse GL_NO_ERROR */
+#define GL_GUILTY_CONTEXT_RESET_EXT                             0x8253
+#define GL_INNOCENT_CONTEXT_RESET_EXT                           0x8254
+#define GL_UNKNOWN_CONTEXT_RESET_EXT                            0x8255
+#define GL_CONTEXT_ROBUST_ACCESS_EXT                            0x90F3
+#define GL_RESET_NOTIFICATION_STRATEGY_EXT                      0x8256
+#define GL_LOSE_CONTEXT_ON_RESET_EXT                            0x8252
+#define GL_NO_RESET_NOTIFICATION_EXT                            0x8261
+#endif
+
+/* GL_EXT_sRGB */
+#ifndef GL_EXT_sRGB
+#define GL_SRGB_EXT                                             0x8C40
+#define GL_SRGB_ALPHA_EXT                                       0x8C42
+#define GL_SRGB8_ALPHA8_EXT                                     0x8C43
+#define GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT            0x8210
+#endif
+
+/* GL_EXT_texture_compression_dxt1 */
+#ifndef GL_EXT_texture_compression_dxt1
+#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT                         0x83F0
+#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT                        0x83F1
 #endif
 
 /* GL_EXT_texture_filter_anisotropic */
@@ -314,6 +348,27 @@ typedef void* GLeglImageOES;
 #define GL_MAX_TEXTURE_LOD_BIAS_EXT                             0x84FD
 #define GL_TEXTURE_FILTER_CONTROL_EXT                           0x8500
 #define GL_TEXTURE_LOD_BIAS_EXT                                 0x8501
+#endif
+
+/* GL_EXT_texture_storage */
+#ifndef GL_EXT_texture_storage
+#define GL_TEXTURE_IMMUTABLE_FORMAT_EXT                         0x912F
+#define GL_ALPHA8_EXT                                           0x803C  
+#define GL_LUMINANCE8_EXT                                       0x8040
+#define GL_LUMINANCE8_ALPHA8_EXT                                0x8045
+#define GL_RGBA32F_EXT                                          0x8814  
+#define GL_RGB32F_EXT                                           0x8815
+#define GL_ALPHA32F_EXT                                         0x8816
+#define GL_LUMINANCE32F_EXT                                     0x8818
+#define GL_LUMINANCE_ALPHA32F_EXT                               0x8819
+/* reuse GL_RGBA16F_EXT */
+#define GL_RGB16F_EXT                                           0x881B
+#define GL_ALPHA16F_EXT                                         0x881C
+#define GL_LUMINANCE16F_EXT                                     0x881E
+#define GL_LUMINANCE_ALPHA16F_EXT                               0x881F
+#define GL_RGB10_A2_EXT                                         0x8059  
+#define GL_RGB10_EXT                                            0x8052
+#define GL_BGRA8_EXT                                            0x93A1
 #endif
 
 /*------------------------------------------------------------------------*
@@ -890,6 +945,17 @@ GL_API void GL_APIENTRY glDiscardFramebufferEXT (GLenum target, GLsizei numAttac
 typedef void (GL_APIENTRYP PFNGLDISCARDFRAMEBUFFEREXTPROC) (GLenum target, GLsizei numAttachments, const GLenum *attachments);
 #endif
 
+/* GL_EXT_multisampled_render_to_texture */
+#ifndef GL_EXT_multisampled_render_to_texture
+#define GL_EXT_multisampled_render_to_texture 1
+#ifdef GL_GLEXT_PROTOTYPES
+GL_API void GL_APIENTRY glRenderbufferStorageMultisampleEXT (GLenum, GLsizei, GLenum, GLsizei, GLsizei);
+GL_API void GL_APIENTRY glFramebufferTexture2DMultisampleEXT (GLenum, GLenum, GLenum, GLuint, GLint, GLsizei);
+#endif
+typedef void (GL_APIENTRYP PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (GL_APIENTRYP PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples);
+#endif
+
 /* GL_EXT_multi_draw_arrays */
 #ifndef GL_EXT_multi_draw_arrays
 #define GL_EXT_multi_draw_arrays 1
@@ -906,6 +972,31 @@ typedef void (GL_APIENTRYP PFNGLMULTIDRAWELEMENTSEXTPROC) (GLenum mode, const GL
 #define GL_EXT_read_format_bgra 1
 #endif
 
+/* GL_EXT_robustness */
+#ifndef GL_EXT_robustness
+#define GL_EXT_robustness 1
+#ifdef GL_GLEXT_PROTOTYPES
+GL_API GLenum GL_APIENTRY glGetGraphicsResetStatusEXT (void);
+GL_API void GL_APIENTRY glReadnPixelsEXT (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, void *data);
+GL_API void GL_APIENTRY glGetnUniformfvEXT (GLuint program, GLint location, GLsizei bufSize, float *params);
+GL_API void GL_APIENTRY glGetnUniformivEXT (GLuint program, GLint location, GLsizei bufSize, GLint *params);
+#endif
+typedef GLenum (GL_APIENTRYP PFNGLGETGRAPHICSRESETSTATUSEXTPROC) (void);
+typedef void (GL_APIENTRYP PFNGLREADNPIXELSEXTPROC) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, void *data);
+typedef void (GL_APIENTRYP PFNGLGETNUNIFORMFVEXTPROC) (GLuint program, GLint location, GLsizei bufSize, float *params);
+typedef void (GL_APIENTRYP PFNGLGETNUNIFORMIVEXTPROC) (GLuint program, GLint location, GLsizei bufSize, GLint *params);
+#endif
+
+/* GL_EXT_sRGB */
+#ifndef GL_EXT_sRGB
+#define GL_EXT_sRGB 1
+#endif
+
+/* GL_EXT_texture_compression_dxt1 */
+#ifndef GL_EXT_texture_compression_dxt1
+#define GL_EXT_texture_compression_dxt1 1
+#endif
+
 /* GL_EXT_texture_filter_anisotropic */
 #ifndef GL_EXT_texture_filter_anisotropic
 #define GL_EXT_texture_filter_anisotropic 1
@@ -919,6 +1010,25 @@ typedef void (GL_APIENTRYP PFNGLMULTIDRAWELEMENTSEXTPROC) (GLenum mode, const GL
 /* GL_EXT_texture_lod_bias */
 #ifndef GL_EXT_texture_lod_bias
 #define GL_EXT_texture_lod_bias 1
+#endif
+
+/* GL_EXT_texture_storage */
+#ifndef GL_EXT_texture_storage
+#define GL_EXT_texture_storage 1
+#ifdef GL_GLEXT_PROTOTYPES
+GL_API void GL_APIENTRY glTexStorage1DEXT (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width);
+GL_API void GL_APIENTRY glTexStorage2DEXT (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
+GL_API void GL_APIENTRY glTexStorage3DEXT (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
+GL_API void GL_APIENTRY glTextureStorage1DEXT (GLuint texture, GLenum target, GLsizei levels, GLenum internalformat, GLsizei width);
+GL_API void GL_APIENTRY glTextureStorage2DEXT (GLuint texture, GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
+GL_API void GL_APIENTRY glTextureStorage3DEXT (GLuint texture, GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
+#endif
+typedef void (GL_APIENTRYP PFNGLTEXSTORAGE1DEXTPROC) (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width);
+typedef void (GL_APIENTRYP PFNGLTEXSTORAGE2DEXTPROC) (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (GL_APIENTRYP PFNGLTEXSTORAGE3DEXTPROC) (GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
+typedef void (GL_APIENTRYP PFNGLTEXTURESTORAGE1DEXTPROC) (GLuint texture, GLenum target, GLsizei levels, GLenum internalformat, GLsizei width);
+typedef void (GL_APIENTRYP PFNGLTEXTURESTORAGE2DEXTPROC) (GLuint texture, GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (GL_APIENTRYP PFNGLTEXTURESTORAGE3DEXTPROC) (GLuint texture, GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth);
 #endif
 
 /*------------------------------------------------------------------------*
