@@ -32,6 +32,8 @@ set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 find_package (PythonInterp REQUIRED)
 find_package (OpenGL REQUIRED)
 
+find_package (Threads)
+
 if (ENABLE_GUI)
     if (NOT (ENABLE_GUI STREQUAL "AUTO"))
         set (REQUIRE_GUI REQUIRED)
@@ -424,7 +426,7 @@ elseif (APPLE)
     )
 
     target_link_libraries (cgltrace
-        pthread
+        ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
 
@@ -457,7 +459,7 @@ elseif (X11_FOUND)
 
     target_link_libraries (glxtrace
         ${X11_X11_LIB}
-        pthread
+        ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
 
@@ -498,7 +500,7 @@ if (EGL_FOUND)
     )
 
     target_link_libraries (egltrace
-        pthread
+        ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
 
@@ -569,7 +571,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
             # gdb doesn't like when pthreads is loaded through dlopen (which happens
             # when dlopen'ing libGL), so link pthreads to avoid this issue.  See also
             # http://stackoverflow.com/questions/2702628/gdb-cannot-find-new-threads-generic-error
-            pthread
+            ${CMAKE_THREAD_LIBS_INIT}
             dl
         )
 
@@ -601,7 +603,7 @@ if (EGL_FOUND AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     target_link_libraries (eglretrace
         common
         ${X11_X11_LIB}
-        pthread
+        ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
 
