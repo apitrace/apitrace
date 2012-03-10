@@ -17,9 +17,9 @@ Obtaining **apitrace**
 
 To obtain apitrace either [download the latest
 binaries](https://github.com/apitrace/apitrace/downloads) for your platform if
-available, or follow the [build instructions](INSTALL.markdown) to build it
-yourself.  On 64bits Linux and Windows platforms you'll need apitrace binaries
-that match the architecture (32bits or 64bits) of the application being traced.
+available, or follow the instructions in INSTALL.markdown to build it yourself.
+On 64bits Linux and Windows platforms you'll need apitrace binaries that match
+the architecture (32bits or 64bits) of the application being traced.
 
 
 Basic usage
