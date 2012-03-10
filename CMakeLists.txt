@@ -17,6 +17,8 @@ endif ()
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
+set (ENABLE_CLI true CACHE BOOL "Enable command Line interface.")
+
 set (ENABLE_EGL "AUTO" CACHE STRING "Enable EGL support.")
 
 
@@ -617,7 +619,9 @@ endif ()
 ##############################################################################
 # CLI
 
-add_subdirectory(cli)
+if (ENABLE_CLI)
+    add_subdirectory(cli)
+endif ()
 
 ##############################################################################
 # Scripts (to support the CLI)
