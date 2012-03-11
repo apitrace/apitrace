@@ -31,7 +31,6 @@ set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 if (ANDROID)
     set (ENABLE_GUI false)
-    set (ENABLE_CLI false)
 else ()
     macro (find_host_package)
         find_package (${ARGN})

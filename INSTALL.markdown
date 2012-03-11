@@ -59,8 +59,6 @@ Build as:
     cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake -DANDROID_API_LEVEL=9 -H. -Bbuild
     make -C build
 
-This will generate a libapitrace.so in your `libs/armeabi-v7a/` directory that can be used.
-
 Windows
 -------
 
