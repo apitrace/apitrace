@@ -73,7 +73,33 @@ void *__libGlHandle = NULL;
 void *
 __getPublicProcAddress(const char *procName)
 {
+#if defined(ANDROID)
+    /*
+     * Android does not support LD_PRELOAD.  It is assumed that applications
+     * are explicitely loading egltrace.so.
+     */
+    void *lib = NULL;
+    if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
+        static void *libEGL = NULL;
+        if (!libEGL) {
+            libEGL = dlopen("libEGL.so", RTLD_LOCAL | RTLD_LAZY);
+        }
+        lib = libEGL;
+    } else if (procName[0] == 'g' && procName[1] == 'l') {
+        /* TODO: Support libGLESv1_CM.so too somehow. */
+        static void *libGLESv2 = NULL;
+        if (!libGLESv2) {
+            libGLESv2 = dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
+        }
+        lib = libGLESv2;
+    }
+    if (lib) {
+        return dlsym(lib, procName);
+    }
+    return NULL;
+#else
     return dlsym(RTLD_NEXT, procName);
+#endif
 }
 
 /*

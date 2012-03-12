@@ -114,6 +114,12 @@ if __name__ == '__main__':
 
 
 /*
+ * Android does not support LD_PRELOAD.
+ */
+#if !defined(ANDROID)
+
+
+/*
  * Invoke the true dlopen() function.
  */
 static void *__dlopen(const char *filename, int flag)
@@ -184,6 +190,9 @@ void * dlopen(const char *filename, int flag)
 
     return handle;
 }
+
+
+#endif /* !ANDROID */
 
 
 
