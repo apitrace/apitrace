@@ -58,8 +58,6 @@
 
 #include <GL/wglext.h>
 
-#define GLAPIENTRY __stdcall
-
 #ifndef PFD_SUPPORT_DIRECTDRAW
 #define PFD_SUPPORT_DIRECTDRAW 0x00002000
 #endif

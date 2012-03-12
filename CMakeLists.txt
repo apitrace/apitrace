@@ -66,9 +66,6 @@ endif ()
 include (CheckCXXCompilerFlag)
 
 if (WIN32)
-    # MSVC & MinGW only define & use APIENTRY
-    add_definitions (-DGLAPIENTRY=__stdcall)
-
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
     add_definitions (-D_WIN32_WINNT=0x0500 -DWINVER=0x0500)
 else (WIN32)
