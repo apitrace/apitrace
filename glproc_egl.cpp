@@ -91,9 +91,12 @@ void *
 __getPrivateProcAddress(const char *procName)
 {
     void *proc;
-    proc = dlsym(RTLD_NEXT, procName);
-    if (!proc && procName[0] == 'g' && procName[1] == 'l')
+    proc = __getPublicProcAddress(procName);
+    if (!proc &&
+        ((procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') ||
+         (procName[0] == 'g' && procName[1] == 'l'))) {
         proc = (void *) __eglGetProcAddress(procName);
+    }
 
     return proc;
 }
