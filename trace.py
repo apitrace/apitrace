@@ -542,8 +542,6 @@ class Tracer:
     def wrapIid(self, riid, out):
             print '    if (%s && *%s) {' % (out.name, out.name)
             print '        if (*%s == m_pInstance) {' % (out.name,)
-            print '            AddRef();'
-            print '            m_pInstance->Release();'
             print '            *%s = this;' % (out.name,)
             print '        }'
             for iface in self.api.getAllInterfaces():
