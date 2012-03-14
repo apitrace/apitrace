@@ -32,6 +32,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 
 def stripdump(trace, fifo):
@@ -59,6 +60,9 @@ def stripdump(trace, fifo):
         stdout = open(fifo, 'wt'),
         universal_newlines = True,
     )
+
+    # XXX: Avoid a weird race condition
+    time.sleep(0.01)
 
 
 def diff(traces):
