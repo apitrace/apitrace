@@ -651,7 +651,6 @@ install (
         LICENSE
         NEWS.markdown
         README.markdown
-        TODO.markdown
     DESTINATION ${DOC_INSTALL_DIR}
 )
 
