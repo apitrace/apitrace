@@ -16,15 +16,16 @@ update: \
 GL/wglext.h GL/glxext.h: FORCE
 	wget -O $@ "http://www.opengl.org/registry/api/$(@F)"
 
-GL/glext.h: GL/glext.sed FORCE
-	wget -O - "http://www.opengl.org/registry/api/$(@F)" | sed -f $*.sed > $@
+GL/glext.h: GL/glext.patch FORCE
+	wget -O $@ "http://www.opengl.org/registry/api/$(@F)"
+	patch $@ $<
 
 EGL/egl.h EGL/eglext.h KHR/khrplatform.h: FORCE
 	wget -O $@ "http://www.khronos.org/registry/egl/api/$@"
 
 EGL/eglplatform.h: EGL/eglplatform.patch FORCE
 	wget -O $@ "http://www.khronos.org/registry/egl/api/$@"
-	patch $@ EGL/eglplatform.patch
+	patch $@ $<
 
 GLES/gl.h GLES/glext.h GLES/glplatform.h: FORCE
 	wget -O $@ "http://www.khronos.org/registry/gles/api/1.1/$(@F)"
