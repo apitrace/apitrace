@@ -39,6 +39,73 @@ import sys
 import time
 
 
+class Call:
+
+    def __init__(self, callTuple):
+        self.no, self.functionName, self.args, self.ret = callTuple
+
+    def __str__(self):
+        s = self.functionName
+        if self.no is not None:
+            s = str(self.no) + ' ' + s
+        s += '(' + ', '.join(map(repr, self.args)) + ')'
+        if self.ret is not None:
+            s += ' = '
+            s += repr(self.ret)
+        return s
+
+    def __eq__(self, other):
+        return \
+            self.functionName == other.functionName and \
+            self.args == other.args and \
+            self.ret == other.ret
+
+    def __hash__(self):
+        # XXX: hack due to unhashable types
+        #return hash(self.functionName) ^ hash(tuple(self.args)) ^ hash(self.ret)
+        return hash(self.functionName) ^ hash(repr(self.args)) ^ hash(repr(self.ret))
+
+
+
+class Unpickler:
+
+    callFactory = Call
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def parse(self):
+        while self.parseCall():
+            pass
+
+    def parseCall(self):
+        try:
+            callTuple = pickle.load(self.stream)
+        except EOFError:
+            return False
+        else:
+            call = self.callFactory(callTuple)
+            self.handleCall(call)
+            return True
+
+    def handleCall(self, call):
+        pass
+
+
+class Counter(Unpickler):
+
+    def __init__(self, stream, quiet):
+        Unpickler.__init__(self, stream)
+        self.quiet = quiet
+        self.calls = 0
+
+    def handleCall(self, call):
+        if not self.quiet:
+            sys.stdout.write(str(call))
+            sys.stdout.write('\n')
+        self.calls += 1
+
+
 def main():
     optparser = optparse.OptionParser(
         usage="\n\tapitrace pickle trace. %prog [options]")
@@ -61,27 +128,12 @@ def main():
         import os
         msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
 
-    calls = 0
     startTime = time.time()
-    while True:
-        try:
-            call = pickle.load(sys.stdin)
-        except EOFError:
-            break
-        else:
-            callNo, functionName, args, ret = call
-            if not options.quiet:
-                sys.stdout.write('%u ' % callNo)
-                sys.stdout.write(functionName)
-                sys.stdout.write('(' + ', '.join(map(repr, args)) + ')')
-                if ret is not None:
-                    sys.stdout.write(' = ')
-                    sys.stdout.write(repr(ret))
-                sys.stdout.write('\n')
-            calls += 1
+    parser = Counter(sys.stdin, options.quiet)
+    parser.parse()
     stopTime = time.time()
     duration = stopTime - startTime
-    sys.stderr.write('%u calls, %.03f secs, %u calls/sec\n' % (calls, duration, calls/duration))
+    sys.stderr.write('%u calls, %.03f secs, %u calls/sec\n' % (parser.calls, duration, parser.calls/duration))
 
 
 if __name__ == '__main__':
