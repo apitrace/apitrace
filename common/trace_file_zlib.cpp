@@ -60,7 +60,7 @@ protected:
     virtual bool rawSkip(size_t length);
     virtual int  rawPercentRead();
 private:
-    void *m_gzFile;
+    gzFile m_gzFile;
     double m_endOffset;
 };
 
