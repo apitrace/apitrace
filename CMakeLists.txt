@@ -169,6 +169,10 @@ if (MSVC)
     set (GETOPT_LIBRARIES getopt_bundled)
 endif ()
 
+if (WIN32)
+    add_subdirectory (thirdparty/less)
+endif ()
+
 # The Qt website provides binaries for Windows and MacOSX, and they are
 # automatically found by cmake without any manual intervention.  The situation
 # for QJSON is substantially different: there are no binaries for QJSON
