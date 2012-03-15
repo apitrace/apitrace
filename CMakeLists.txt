@@ -30,7 +30,6 @@ set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
 
 find_package (PythonInterp REQUIRED)
-
 find_package (Threads)
 
 if (ENABLE_GUI)
@@ -149,14 +148,12 @@ set (ZLIB_LIBRARIES z_bundled)
 add_subdirectory (thirdparty/zlib EXCLUDE_FROM_ALL)
 
 include_directories (${ZLIB_INCLUDE_DIRS})
-link_libraries (${ZLIB_LIBRARIES})
 
 set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
 set (SNAPPY_LIBRARIES snappy_bundled)
 add_subdirectory (thirdparty/snappy EXCLUDE_FROM_ALL)
 
 include_directories (${SNAPPY_INCLUDE_DIRS})
-link_libraries (${SNAPPY_LIBRARIES})
 
 set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
 set (PNG_DEFINITIONS "")
@@ -165,7 +162,6 @@ set (PNG_LIBRARIES png_bundled)
 add_subdirectory (thirdparty/libpng EXCLUDE_FROM_ALL)
 include_directories (${PNG_INCLUDE_DIR})
 add_definitions (${PNG_DEFINITIONS})
-link_libraries (${PNG_LIBRARIES})
 
 if (MSVC)
     add_subdirectory (thirdparty/getopt EXCLUDE_FROM_ALL)
@@ -286,8 +282,6 @@ set_target_properties (common PROPERTIES
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
 
-link_libraries (common)
-
 
 ##############################################################################
 # API tracers
@@ -307,6 +301,11 @@ if (WIN32)
             DEPENDS ddrawtrace.py trace.py specs/d3d.py specs/d3dtypes.py specs/d3dcaps.py specs/ddraw.py specs/winapi.py specs/stdapi.py
         )
         add_library (ddraw MODULE specs/ddraw.def ddrawtrace.cpp)
+        target_link_libraries (ddraw
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
         set_target_properties (ddraw
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -324,6 +323,11 @@ if (WIN32)
             DEPENDS d3d8trace.py trace.py specs/d3d8.py specs/d3d8types.py specs/d3d8caps.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d8 MODULE specs/d3d8.def d3d8trace.cpp d3dshader.cpp)
+        target_link_libraries (d3d8
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
         set_target_properties (d3d8
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -341,6 +345,11 @@ if (WIN32)
             DEPENDS d3d9trace.py trace.py specs/d3d9.py specs/d3d9types.py specs/d3d9caps.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d9 MODULE specs/d3d9.def d3d9trace.cpp d3dshader.cpp)
+        target_link_libraries (d3d9
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
         set_target_properties (d3d9
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -358,6 +367,11 @@ if (WIN32)
             DEPENDS d3d10trace.py trace.py specs/d3d10misc.py specs/d3d10.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d10 MODULE specs/d3d10.def d3d10trace.cpp)
+        target_link_libraries (d3d10
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
         set_target_properties (d3d10
             PROPERTIES PREFIX ""
             RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
@@ -378,6 +392,11 @@ if (WIN32)
         glproc_gl.cpp
     )
     add_dependencies (wgltrace glproc)
+    target_link_libraries (wgltrace
+        common
+        ${ZLIB_LIBRARIES}
+        ${SNAPPY_LIBRARIES}
+    )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
         OUTPUT_NAME opengl32
@@ -412,6 +431,9 @@ elseif (APPLE)
     )
 
     target_link_libraries (cgltrace
+        common
+        ${ZLIB_LIBRARIES}
+        ${SNAPPY_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
@@ -444,6 +466,9 @@ elseif (X11_FOUND)
     )
 
     target_link_libraries (glxtrace
+        common
+        ${ZLIB_LIBRARIES}
+        ${SNAPPY_LIBRARIES}
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
@@ -486,6 +511,9 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     )
 
     target_link_libraries (egltrace
+        common
+        ${ZLIB_LIBRARIES}
+        ${SNAPPY_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
@@ -539,6 +567,9 @@ if (WIN32 OR APPLE OR X11_FOUND)
 
     target_link_libraries (glretrace
         common
+        ${PNG_LIBRARIES}
+        ${ZLIB_LIBRARIES}
+        ${SNAPPY_LIBRARIES}
     )
 
     if (WIN32)
@@ -588,6 +619,9 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
 
     target_link_libraries (eglretrace
         common
+        ${PNG_LIBRARIES}
+        ${ZLIB_LIBRARIES}
+        ${SNAPPY_LIBRARIES}
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
         dl

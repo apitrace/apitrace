@@ -49,7 +49,14 @@ include_directories(${QT_INCLUDES} ${QJSON_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_D
 
 add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-target_link_libraries(qapitrace common ${QJSON_LIBRARIES} ${QT_LIBRARIES} )
+target_link_libraries (qapitrace
+    common
+    ${PNG_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+    ${SNAPPY_LIBRARIES}
+    ${QJSON_LIBRARIES}
+    ${QT_LIBRARIES}
+)
 
 ########### install files ###############
 
