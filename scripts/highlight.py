@@ -86,11 +86,9 @@ class AnsiHighlighter(PlainHighlighter):
 
     def __init__(self, stream):
         PlainHighlighter.__init__(self, stream)
-        self.isatty = stream.isatty()
 
     def _escape(self, code):
-        if self.isatty:
-            self.stream.write(self._csi + code)
+        self.stream.write(self._csi + code)
 
     def normal(self):
         self._escape(self._normal)
@@ -182,11 +180,14 @@ class WindowsConsoleHighlighter(PlainHighlighter):
         pass
 
 
-def Highlighter(stream = sys.stdout):
-    if platform.system() == 'Windows':
-        return WindowsConsoleHighlighter(stream)
+def Highlighter(stream = sys.stdout, force = False):
+    if force or stream.isatty():
+        if platform.system() == 'Windows':
+            return WindowsConsoleHighlighter(stream)
+        else:
+            return AnsiHighlighter(stream)
     else:
-        return AnsiHighlighter(stream)
+        return PlainHighlighter(stream)
 
 
 __all__ = [

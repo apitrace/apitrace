@@ -32,6 +32,7 @@ import subprocess
 import sys
 
 from unpickle import Unpickler
+from highlight import Highlighter
 
 
 ignoredFunctionNames = set([
@@ -76,9 +77,12 @@ def readtrace(trace):
 
 class SDiffer:
 
-    def __init__(self, a, b):
+    def __init__(self, a, b, highlighter):
         self.a = a
         self.b = b
+        self.highlighter = highlighter
+        self.delete_color = highlighter.red
+        self.insert_color = highlighter.green
 
     def diff(self):
         matcher = difflib.SequenceMatcher(None, self.a, self.b)
@@ -125,17 +129,17 @@ class SDiffer:
             b_call = self.b[blo + i]
             assert a_call.functionName == b_call.functionName
             assert len(a_call.args) == len(b_call.args)
-            sys.stdout.write('  ' + b_call.functionName + '(')
+            self.highlighter.write('  ' + b_call.functionName + '(')
             sep = ''
             for j in xrange(len(b_call.args)):
-                sys.stdout.write(sep)
+                self.highlighter.write(sep)
                 self.replace_value(a_call.args[j], b_call.args[j])
                 sep = ', '
-            sys.stdout.write(')')
+            self.highlighter.write(')')
             if a_call.ret is not None or b_call.ret is not None:
-                sys.stdout.write(' = ')
+                self.highlighter.write(' = ')
                 self.replace_value(a_call.ret, b_call.ret)
-            sys.stdout.write('\n')
+            self.highlighter.write('\n')
 
     def replace_dissimilar(self, alo, ahi, blo, bhi):
         assert alo < ahi and blo < bhi
@@ -152,24 +156,47 @@ class SDiffer:
 
     def replace_value(self, a, b):
         if b == a:
-            sys.stdout.write(str(b))
+            self.highlighter.write(str(b))
         else:
-            sys.stdout.write('%s -> %s' % (a, b))
+            self.highlighter.color(self.delete_color)
+            self.highlighter.write(str(b))
+            self.highlighter.normal()
+            self.highlighter.write(" -> ")
+            self.highlighter.color(self.insert_color)
+            self.highlighter.write(str(b))
+            self.highlighter.normal()
 
     escape = "\33["
 
     def delete(self, alo, ahi):
-        self.dump('- ' + self.escape + '9m', self.a, alo, ahi, self.escape + '0m')
+        self.dump(self.delete_prefix, self.a, alo, ahi, self.normal_suffix)
 
     def insert(self, blo, bhi):
-        self.dump('+ ', self.b, blo, bhi)
+        self.dump(self.insert_prefix, self.b, blo, bhi, self.normal_suffix)
 
     def equal(self, alo, ahi):
-        self.dump('  ' + self.escape + '2m', self.a, alo, ahi, self.escape + '0m')
+        self.dump(self.equal_prefix, self.a, alo, ahi, self.normal_suffix)
 
-    def dump(self, prefix, x, lo, hi, suffix=""):
+    def dump(self, prefix, x, lo, hi, suffix):
         for i in xrange(lo, hi):
-            sys.stdout.write(prefix + str(x[i]) + suffix + '\n')
+            prefix()
+            self.highlighter.write(str(x[i]))
+            suffix()
+            self.highlighter.write('\n')
+
+    def delete_prefix(self):
+        self.highlighter.write('- ')
+        self.highlighter.color(self.delete_color)
+    
+    def insert_prefix(self):
+        self.highlighter.write('+ ')
+        self.highlighter.color(self.insert_color)
+
+    def equal_prefix(self):
+        self.highlighter.write('  ')
+
+    def normal_suffix(self):
+        self.highlighter.normal()
 
 
 def main():
@@ -197,8 +224,20 @@ def main():
     ref_calls = readtrace(args[0])
     src_calls = readtrace(args[1])
 
-    differ = SDiffer(ref_calls, src_calls)
+    if sys.stdout.isatty():
+        less = subprocess.Popen(
+            args = ['less', '-FRXn'],
+            stdin = subprocess.PIPE
+        )
+        highlighter = Highlighter(less.stdin, True)
+    else:
+        highlighter = Highlighter(sys.stdout)
+
+    differ = SDiffer(ref_calls, src_calls, highlighter)
     differ.diff()
+    less.stdin.close()
+
+    less.wait()
 
 
 if __name__ == '__main__':
