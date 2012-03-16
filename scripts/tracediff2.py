@@ -32,7 +32,7 @@ import subprocess
 import sys
 
 from unpickle import Unpickler
-from highlight import Highlighter
+from highlight import LessHighlighter
 
 
 ignoredFunctionNames = set([
@@ -238,20 +238,10 @@ def main():
     ref_calls = readtrace(args[0])
     src_calls = readtrace(args[1])
 
-    if sys.stdout.isatty():
-        less = subprocess.Popen(
-            args = ['less', '-FRXn'],
-            stdin = subprocess.PIPE
-        )
-        highlighter = Highlighter(less.stdin, True)
-    else:
-        highlighter = Highlighter(sys.stdout)
+    highlighter = LessHighlighter()
 
     differ = SDiffer(ref_calls, src_calls, highlighter)
     differ.diff()
-    less.stdin.close()
-
-    less.wait()
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2011 Jose Fonseca
+# Copyright 2011-2012 Jose Fonseca
 # Copyright 2008-2009 VMware, Inc.
 # All Rights Reserved.
 #
@@ -25,8 +25,9 @@
 ##########################################################################/
 
 
-import sys
 import platform
+import subprocess
+import sys
 
 
 class PlainHighlighter:
@@ -41,7 +42,7 @@ class PlainHighlighter:
     cyan = None
     white = None
 
-    def __init__(self, stream):
+    def __init__(self, stream = sys.stdout):
         self.stream = stream
 
     def write(self, text):
@@ -56,7 +57,7 @@ class PlainHighlighter:
     def color(self, color):
         pass
 
-    def bold(self):
+    def bold(self, enable):
         pass
 
     def italic(self):
@@ -72,7 +73,6 @@ class AnsiHighlighter(PlainHighlighter):
     _csi = '\33['
 
     _normal = '0m'
-    _bold = '1m'
     _italic = '3m'
 
     black = 0
@@ -84,7 +84,7 @@ class AnsiHighlighter(PlainHighlighter):
     cyan = 6
     white = 7
 
-    def __init__(self, stream):
+    def __init__(self, stream = sys.stdout):
         PlainHighlighter.__init__(self, stream)
 
     def _escape(self, code):
@@ -134,7 +134,6 @@ class WindowsConsoleHighlighter(PlainHighlighter):
     COMMON_LVB_UNDERSCORE = 0x8000
 
     _normal = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
-    _bold   = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY
     _italic = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
 
     black   = 0
@@ -143,7 +142,7 @@ class WindowsConsoleHighlighter(PlainHighlighter):
     blue    = FOREGROUND_BLUE                                    
     white   = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
 
-    def __init__(self, stream):
+    def __init__(self, stream = sys.stdout):
         PlainHighlighter.__init__(self, stream)
 
         if stream is sys.stdin:
@@ -176,23 +175,51 @@ class WindowsConsoleHighlighter(PlainHighlighter):
         intensity = self._attribute & self.FOREGROUND_INTENSITY
         self._setAttribute(color | intensity)
 
-    def bold(self):
-        self._setAttribute(self._attribute | self.FOREGROUND_INTENSITY)
+    def bold(self, enable):
+        if enable:
+            attribute = self._attribute | self.FOREGROUND_INTENSITY
+        else:
+            attribute = self._attribute & ~self.FOREGROUND_INTENSITY
+        self._setAttribute(attribute)
 
     def italic(self):
         pass
 
 
-def Highlighter(stream = sys.stdout, force = False):
-    if force or stream.isatty():
-        if platform.system() == 'Windows':
-            return WindowsConsoleHighlighter(stream)
-        else:
-            return AnsiHighlighter(stream)
+if platform.system() == 'Windows':
+    ColorHighlighter = WindowsConsoleHighlighter
+else:
+    ColorHighlighter = AnsiHighlighter
+
+
+def AutoHighlighter(stream = sys.stdout):
+    if stream.isatty():
+        return ColorHighlighter(stream)
     else:
         return PlainHighlighter(stream)
 
 
-__all__ = [
-    'Highlighter',
-]
+class _LessHighlighter(AnsiHighlighter):
+
+    def __init__(self, less):
+        AnsiHighlighter.__init__(self, less.stdin)
+        self.less = less
+
+    def __del__(self):
+        self.less.stdin.close()
+        self.less.wait()
+
+
+def LessHighlighter():
+    if sys.stdout.isatty():
+        try:
+            less = subprocess.Popen(
+                args = ['less', '-FRXn'],
+                stdin = subprocess.PIPE
+            )
+        except OSError:
+            return ColorHighlighter()
+        else:
+            return _LessHighlighter(less)
+    return PlainHighlighter(sys.stdout)
+

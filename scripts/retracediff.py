@@ -37,7 +37,7 @@ import sys
 from PIL import Image
 
 from snapdiff import Comparer
-from highlight import Highlighter
+from highlight import AutoHighlighter
 import jsondiff
 
 
@@ -178,7 +178,7 @@ def main():
     else:
         output = sys.stdout
 
-    highligher = Highlighter(output)
+    highligher = AutoHighlighter(output)
 
     highligher.write('call\tprecision\n')
 
