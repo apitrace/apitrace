@@ -43,6 +43,7 @@ class Call:
 
     def __init__(self, callTuple):
         self.no, self.functionName, self.args, self.ret = callTuple
+        self._hash = None
 
     def __str__(self):
         s = self.functionName
@@ -61,10 +62,11 @@ class Call:
             self.ret == other.ret
 
     def __hash__(self):
-        # XXX: hack due to unhashable types
-        #return hash(self.functionName) ^ hash(tuple(self.args)) ^ hash(self.ret)
-        return hash(self.functionName) ^ hash(repr(self.args)) ^ hash(repr(self.ret))
-
+        if self._hash is None:
+            # XXX: hack due to unhashable types
+            #self._hash = hash(self.functionName) ^ hash(tuple(self.args)) ^ hash(self.ret)
+            self._hash = hash(self.functionName) ^ hash(repr(self.args)) ^ hash(repr(self.ret))
+        return self._hash
 
 
 class Unpickler:
