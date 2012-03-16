@@ -64,8 +64,9 @@ usage(void)
         "    --color[=WHEN]\n"
         "    --colour[=WHEN]      colored syntax highlighting\n"
         "                         WHEN is 'auto', 'always', or 'never'\n"
-        "    --arg-names[=BOOL]   dump argument names [default: yes]\n"
         "    --thread-ids=[=BOOL] dump thread ids [default: no]\n"
+        "    --call-nos[=BOOL]    dump call numbers[default: yes]\n"
+        "    --arg-names[=BOOL]   dump argument names [default: yes]\n"
         "\n"
     ;
 }
@@ -73,8 +74,9 @@ usage(void)
 enum {
 	CALLS_OPT = CHAR_MAX + 1,
 	COLOR_OPT,
-    ARG_NAMES_OPT,
     THREAD_IDS_OPT,
+    CALL_NOS_OPT,
+    ARG_NAMES_OPT,
 };
 
 const static char *
@@ -87,8 +89,9 @@ longOptions[] = {
     {"calls", required_argument, 0, CALLS_OPT},
     {"colour", optional_argument, 0, COLOR_OPT},
     {"color", optional_argument, 0, COLOR_OPT},
-    {"arg-names", optional_argument, 0, ARG_NAMES_OPT},
     {"thread-ids", optional_argument, 0, THREAD_IDS_OPT},
+    {"call-nos", optional_argument, 0, CALL_NOS_OPT},
+    {"arg-names", optional_argument, 0, ARG_NAMES_OPT},
     {0, 0, 0, 0}
 };
 
@@ -142,15 +145,22 @@ command(int argc, char *argv[])
                 return 1;
             }
             break;
+        case THREAD_IDS_OPT:
+            dumpThreadIds = boolOption(optarg);
+            break;
+        case CALL_NOS_OPT:
+            if (boolOption(optarg)) {
+                dumpFlags &= ~trace::DUMP_FLAG_NO_CALL_NO;
+            } else {
+                dumpFlags |= trace::DUMP_FLAG_NO_CALL_NO;
+            }
+            break;
         case ARG_NAMES_OPT:
             if (boolOption(optarg)) {
                 dumpFlags &= ~trace::DUMP_FLAG_NO_ARG_NAMES;
             } else {
                 dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
             }
-            break;
-        case THREAD_IDS_OPT:
-            dumpThreadIds = boolOption(optarg);
             break;
         default:
             std::cerr << "error: unexpected option `" << opt << "`\n";
