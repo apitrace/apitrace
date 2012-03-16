@@ -47,10 +47,12 @@ class PickleVisitor : public trace::Visitor
 {
 protected:
     PickleWriter &writer;
+    bool symbolic;
 
 public:
-    PickleVisitor(PickleWriter &_writer) :
-        writer(_writer) {
+    PickleVisitor(PickleWriter &_writer, bool _symbolic) :
+        writer(_writer),
+        symbolic(_symbolic) {
     }
 
     void visit(Null *node) {
@@ -82,23 +84,56 @@ public:
     }
 
     void visit(Enum *node) {
-        // TODO: keep symbolic name
+        if (symbolic) {
+            const EnumValue *it = node->lookup();
+            if (it) {
+                writer.writeString(it->name);
+                return;
+            }
+        }
         writer.writeInt(node->value);
     }
 
     void visit(Bitmask *node) {
-        // TODO: keep symbolic name
-        writer.writeInt(node->value);
+        if (symbolic) {
+            unsigned long long value = node->value;
+            const BitmaskSig *sig = node->sig;
+            writer.beginList();
+            for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
+                if ((it->value && (value & it->value) == it->value) ||
+                    (!it->value && value == 0)) {
+                    writer.writeString(it->name);
+                    value &= ~it->value;
+                }
+                if (value == 0) {
+                    break;
+                }
+            }
+            if (value) {
+                writer.writeInt(value);
+            }
+            writer.endList();
+        } else {
+            writer.writeInt(node->value);
+        }
     }
 
     void visit(Struct *node) {
-        writer.beginDict();
-        for (unsigned i = 0; i < node->sig->num_members; ++i) {
-            writer.beginItem(node->sig->member_names[i]);
-            _visit(node->members[i]);
-            writer.endItem();
+        if (false) {
+            writer.beginDict();
+            for (unsigned i = 0; i < node->sig->num_members; ++i) {
+                writer.beginItem(node->sig->member_names[i]);
+                _visit(node->members[i]);
+                writer.endItem();
+            }
+            writer.endDict();
+        } else {
+            writer.beginTuple();
+            for (unsigned i = 0; i < node->sig->num_members; ++i) {
+                _visit(node->members[i]);
+            }
+            writer.endTuple();
         }
-        writer.endDict();
     }
 
     void visit(Array *node) {
@@ -157,6 +192,7 @@ usage(void)
         << synopsis << "\n"
         "\n"
         "    -h, --help           show this help message and exit\n"
+        "    -s, --symbolic       dump symbolic names\n"
         "    --calls=CALLSET      only dump specified calls\n"
     ;
 }
@@ -166,11 +202,12 @@ enum {
 };
 
 const static char *
-shortOptions = "h";
+shortOptions = "hs";
 
 const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
+    {"symbolic", no_argument, 0, 's'},
     {"calls", required_argument, 0, CALLS_OPT},
     {0, 0, 0, 0}
 };
@@ -178,12 +215,17 @@ longOptions[] = {
 static int
 command(int argc, char *argv[])
 {
+    bool symbolic;
+
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
         case 'h':
             usage();
             return 0;
+        case 's':
+            symbolic = true;
+            break;
         case CALLS_OPT:
             calls = trace::CallSet(optarg);
             break;
@@ -195,6 +237,9 @@ command(int argc, char *argv[])
     }
 
     os::setBinaryMode(stdout);
+    
+    PickleWriter writer(std::cout);
+    PickleVisitor visitor(writer, symbolic);
 
     for (int i = optind; i < argc; ++i) {
         trace::Parser parser;
@@ -207,10 +252,9 @@ command(int argc, char *argv[])
         trace::Call *call;
         while ((call = parser.parse_call())) {
             if (calls.contains(*call)) {
-                PickleWriter writer(std::cout);
-                PickleVisitor visitor(writer);
-                
+                writer.begin();
                 visitor.visit(call);
+                writer.end();
             }
             delete call;
         }

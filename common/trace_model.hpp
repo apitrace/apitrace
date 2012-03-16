@@ -228,6 +228,17 @@ public:
     void visit(Visitor &visitor);
 
     const EnumSig *sig;
+
+    const EnumValue *
+    lookup() {
+        // TODO: use a std::map
+        for (const EnumValue *it = sig->values; it != sig->values + sig->num_values; ++it) {
+            if (it->value == value) {
+                return it;
+            }
+        }
+        return NULL;
+    }
 };
 
 

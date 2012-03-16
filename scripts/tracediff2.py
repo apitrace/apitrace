@@ -63,6 +63,7 @@ def readtrace(trace):
         args = [
             options.apitrace,
             'pickle',
+            '--symbolic',
             '--calls=' + options.calls,
             trace
         ],
@@ -129,10 +130,11 @@ class SDiffer:
             b_call = self.b[blo + i]
             assert a_call.functionName == b_call.functionName
             assert len(a_call.args) == len(b_call.args)
-            self.equal_prefix()
+            self.replace_prefix()
             self.highlighter.bold(True)
             self.highlighter.write(b_call.functionName)
             self.highlighter.bold(False)
+            self.highlighter.write('(')
             sep = ''
             for j in xrange(len(b_call.args)):
                 self.highlighter.write(sep)
@@ -206,6 +208,9 @@ class SDiffer:
 
     def normal_suffix(self):
         self.highlighter.normal()
+    
+    def replace_prefix(self):
+        self.highlighter.write('| ')
 
 
 def main():

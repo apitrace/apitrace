@@ -106,13 +106,15 @@ private:
 
 public:
     PickleWriter(std::ostream &_os) :
-        os(_os)
-    {
+        os(_os) {
+    }
+
+    inline void begin() {
         os.put(PROTO);
         os.put(2);
     }
 
-    ~PickleWriter() {
+    inline void end() {
         os.put(STOP);
     }
 
