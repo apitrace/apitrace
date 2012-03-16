@@ -125,15 +125,17 @@ class SDiffer:
             else:
                 raise ValueError, 'unknown tag %s' % (tag,)
 
-    def replace_similar(self, alo, ahi, blo, bhi):
+    def replace_similar(self, alo, ahi, blo, bhi, prefix = None):
         assert alo < ahi and blo < bhi
         assert ahi - alo == bhi - blo
+        if prefix is None:
+            prefix = self.replace_prefix
         for i in xrange(0, bhi - blo):
             a_call = self.a[alo + i]
             b_call = self.b[blo + i]
             assert a_call.functionName == b_call.functionName
             assert len(a_call.args) == len(b_call.args)
-            self.replace_prefix()
+            prefix()
             if self.callNos:
                 self.replace_value(a_call.no, b_call.no)
                 self.highlighter.write(' ')
@@ -189,7 +191,7 @@ class SDiffer:
 
     def equal(self, alo, ahi, blo, bhi):
         if self.callNos:
-            self.replace_similar(alo, ahi, blo, bhi)
+            self.replace_similar(alo, ahi, blo, bhi, prefix=self.equal_prefix)
         else:
             self.dump(self.equal_prefix, self.b, blo, bhi, self.normal_suffix)
 
