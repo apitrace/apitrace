@@ -96,8 +96,11 @@ class AnsiHighlighter(PlainHighlighter):
     def color(self, color):
         self._escape(str(30 + color) + 'm')
 
-    def bold(self):
-        self._escape(self._bold)
+    def bold(self, enable = True):
+        if enable:
+            self._escape('1m')
+        else:
+            self._escape('21m')
 
     def italic(self):
         self._escape(self._italic)

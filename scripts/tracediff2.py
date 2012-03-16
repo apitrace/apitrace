@@ -129,7 +129,10 @@ class SDiffer:
             b_call = self.b[blo + i]
             assert a_call.functionName == b_call.functionName
             assert len(a_call.args) == len(b_call.args)
-            self.highlighter.write('  ' + b_call.functionName + '(')
+            self.equal_prefix()
+            self.highlighter.bold(True)
+            self.highlighter.write(b_call.functionName)
+            self.highlighter.bold(False)
             sep = ''
             for j in xrange(len(b_call.args)):
                 self.highlighter.write(sep)
@@ -179,8 +182,14 @@ class SDiffer:
 
     def dump(self, prefix, x, lo, hi, suffix):
         for i in xrange(lo, hi):
+            call = x[i]
             prefix()
-            self.highlighter.write(str(x[i]))
+            self.highlighter.bold(True)
+            self.highlighter.write(call.functionName)
+            self.highlighter.bold(False)
+            self.highlighter.write('(' + ', '.join(map(repr, call.args)) + ')')
+            if call.ret is not None:
+                self.highlighter.write(' = ' + repr(call.ret))
             suffix()
             self.highlighter.write('\n')
 
