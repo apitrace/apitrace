@@ -164,7 +164,7 @@ class SDiffer:
             self.highlighter.write(str(b))
         else:
             self.highlighter.color(self.delete_color)
-            self.highlighter.write(str(b))
+            self.highlighter.write(str(a))
             self.highlighter.normal()
             self.highlighter.write(" -> ")
             self.highlighter.color(self.insert_color)
