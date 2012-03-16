@@ -57,7 +57,10 @@ class PlainHighlighter:
     def color(self, color):
         pass
 
-    def bold(self, enable):
+    def bold(self, enable = True):
+        pass
+
+    def strike(self):
         pass
 
     def italic(self):
@@ -101,6 +104,9 @@ class AnsiHighlighter(PlainHighlighter):
             self._escape('1m')
         else:
             self._escape('21m')
+
+    def strike(self):
+        self._escape('9m')
 
     def italic(self):
         self._escape(self._italic)
@@ -175,7 +181,7 @@ class WindowsConsoleHighlighter(PlainHighlighter):
         intensity = self._attribute & self.FOREGROUND_INTENSITY
         self._setAttribute(color | intensity)
 
-    def bold(self, enable):
+    def bold(self, enable = True):
         if enable:
             attribute = self._attribute | self.FOREGROUND_INTENSITY
         else:
