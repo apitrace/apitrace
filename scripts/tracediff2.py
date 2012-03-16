@@ -32,7 +32,7 @@ import subprocess
 import sys
 
 from unpickle import Unpickler
-from highlight import LessHighlighter
+from highlight import ColorHighlighter, LessHighlighter
 
 
 ignoredFunctionNames = set([
@@ -52,19 +52,18 @@ class Loader(Unpickler):
         self.calls = []
 
     def handleCall(self, call):
-        call.no = None
-        hash(call)
         if call.functionName not in ignoredFunctionNames:
             self.calls.append(call)
+            hash(call)
 
 
-def readtrace(trace):
+def readtrace(trace, calls):
     p = subprocess.Popen(
         args = [
             options.apitrace,
             'pickle',
             '--symbolic',
-            '--calls=' + options.calls,
+            '--calls=' + calls,
             trace
         ],
         stdout = subprocess.PIPE,
@@ -78,15 +77,16 @@ def readtrace(trace):
 
 class SDiffer:
 
-    def __init__(self, a, b, highlighter):
+    def __init__(self, a, b, highlighter, callNos = False):
         self.a = a
         self.b = b
         self.highlighter = highlighter
         self.delete_color = highlighter.red
         self.insert_color = highlighter.green
+        self.callNos = callNos
 
     def diff(self):
-        matcher = difflib.SequenceMatcher(None, self.a, self.b)
+        matcher = difflib.SequenceMatcher(self.isjunk, self.a, self.b)
         for tag, alo, ahi, blo, bhi in matcher.get_opcodes():
             if tag == 'replace':
                 self.replace(alo, ahi, blo, bhi)
@@ -95,9 +95,12 @@ class SDiffer:
             elif tag == 'insert':
                 self.insert(blo, bhi)
             elif tag == 'equal':
-                self.equal(alo, ahi)
+                self.equal(alo, ahi, blo, bhi)
             else:
                 raise ValueError, 'unknown tag %s' % (tag,)
+
+    def isjunk(self, call):
+        return call.functionName == 'glGetError' and call.ret in ('GL_NO_ERROR', 0)
 
     def replace(self, alo, ahi, blo, bhi):
         assert alo < ahi and blo < bhi
@@ -131,6 +134,9 @@ class SDiffer:
             assert a_call.functionName == b_call.functionName
             assert len(a_call.args) == len(b_call.args)
             self.replace_prefix()
+            if self.callNos:
+                self.replace_value(a_call.no, b_call.no)
+                self.highlighter.write(' ')
             self.highlighter.bold(True)
             self.highlighter.write(b_call.functionName)
             self.highlighter.bold(False)
@@ -163,10 +169,12 @@ class SDiffer:
         if b == a:
             self.highlighter.write(str(b))
         else:
+            self.highlighter.strike()
             self.highlighter.color(self.delete_color)
             self.highlighter.write(str(a))
             self.highlighter.normal()
-            self.highlighter.write(" -> ")
+            #self.highlighter.write(" -> ")
+            self.highlighter.write(" ")
             self.highlighter.color(self.insert_color)
             self.highlighter.write(str(b))
             self.highlighter.normal()
@@ -179,13 +187,18 @@ class SDiffer:
     def insert(self, blo, bhi):
         self.dump(self.insert_prefix, self.b, blo, bhi, self.normal_suffix)
 
-    def equal(self, alo, ahi):
-        self.dump(self.equal_prefix, self.a, alo, ahi, self.normal_suffix)
+    def equal(self, alo, ahi, blo, bhi):
+        if self.callNos:
+            self.replace_similar(alo, ahi, blo, bhi)
+        else:
+            self.dump(self.equal_prefix, self.b, blo, bhi, self.normal_suffix)
 
     def dump(self, prefix, x, lo, hi, suffix):
         for i in xrange(lo, hi):
             call = x[i]
             prefix()
+            if self.callNos:
+                self.highlighter.write(str(call.no) + ' ')
             self.highlighter.bold(True)
             self.highlighter.write(call.functionName)
             self.highlighter.bold(False)
@@ -197,6 +210,7 @@ class SDiffer:
 
     def delete_prefix(self):
         self.highlighter.write('- ')
+        self.highlighter.strike()
         self.highlighter.color(self.delete_color)
     
     def insert_prefix(self):
@@ -229,18 +243,38 @@ def main():
         '-c', '--calls', metavar='CALLSET',
         type="string", dest="calls", default='1-10000',
         help="calls to compare [default: %default]")
-
+    optparser.add_option(
+        '--ref-calls', metavar='CALLSET',
+        type="string", dest="ref_calls", default=None,
+        help="calls to compare from reference trace")
+    optparser.add_option(
+        '--src-calls', metavar='CALLSET',
+        type="string", dest="src_calls", default=None,
+        help="calls to compare from source trace")
+    optparser.add_option(
+        '--call-nos',
+        action="store_true",
+        dest="call_nos", default=False,
+        help="dump call numbers")
     global options
     (options, args) = optparser.parse_args(sys.argv[1:])
     if len(args) != 2:
         optparser.error("incorrect number of arguments")
 
-    ref_calls = readtrace(args[0])
-    src_calls = readtrace(args[1])
+    if options.ref_calls is None:
+        options.ref_calls = options.calls
+    if options.src_calls is None:
+        options.src_calls = options.calls
 
-    highlighter = LessHighlighter()
+    ref_calls = readtrace(args[0], options.ref_calls)
+    src_calls = readtrace(args[1], options.src_calls)
 
-    differ = SDiffer(ref_calls, src_calls, highlighter)
+    if sys.stdout.isatty():
+        highlighter = LessHighlighter()
+    else:
+        highlighter = ColorHighlighter()
+
+    differ = SDiffer(ref_calls, src_calls, highlighter, options.call_nos)
     differ.diff()
 
 
