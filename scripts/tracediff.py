@@ -65,6 +65,18 @@ def stripdump(trace, fifo):
     time.sleep(0.01)
 
 
+if platform.system() == 'Windows':
+    start_delete = ''
+    end_delete   = ''
+    start_insert = ''
+    end_insert   = ''
+else:
+    start_delete = '\33[9m\33[31m'
+    end_delete   = '\33[0m'
+    start_insert = '\33[32m'
+    end_insert   = '\33[0m'
+
+
 def diff(traces):
     fifodir = tempfile.mkdtemp()
     try:
@@ -76,25 +88,64 @@ def diff(traces):
             fifos.append(fifo)
 
         # TODO use difflib instead
-        sdiff = subprocess.Popen(
-            args = [
-                'sdiff',
-                '--width=%u' % options.width,
-                '--speed-large-files',
-            ] + fifos,
+        if options.diff == 'diff':
+            diff_args = [
+                    'diff',
+                    '--speed-large-files',
+                    '--old-line-format=' + start_delete + '%l' + end_delete + '\n',
+                    '--new-line-format=' + start_insert + '%l' + end_insert + '\n',
+                ]
+        elif options.diff == 'sdiff':
+            diff_args = [
+                    'sdiff',
+                    '--width=%u' % options.width,
+                    '--speed-large-files',
+                ]
+        elif options.diff == 'wdiff':
+            diff_args = [
+                    'wdiff',
+                    #'--terminal',
+                    '--avoid-wraps',
+                    '--start-delete=' + start_delete,
+                    '--end-delete=' + end_delete,
+                    '--start-insert=' + start_insert,
+                    '--end-insert=' + end_insert,
+                ]
+        else:
+            assert False
+        diff_args += fifos
+            
+        diff = subprocess.Popen(
+            args = diff_args,
             stdout = subprocess.PIPE,
             universal_newlines = True,
         )
 
         less = subprocess.Popen(
             args = ['less', '-FRXn'],
-            stdin = sdiff.stdout
+            stdin = diff.stdout
         )
 
         less.wait()
 
     finally:
         shutil.rmtree(fifodir)
+
+
+def which(executable):
+    '''Search for the executable on the PATH.'''
+
+    if platform.system() == 'Windows':
+        exts = ['.exe']
+    else:
+        exts = ['']
+    dirs = os.environ['PATH'].split(os.path.pathsep)
+    for dir in dirs:
+        path = os.path.join(dir, executable)
+        for ext in exts:
+            if os.path.exists(path + ext):
+                return True
+    return False
 
 
 def columns():
@@ -107,6 +158,13 @@ def main():
     '''Main program.
     '''
 
+    if which('wdiff'):
+        default_diff = 'wdiff'
+    elif which('sdiff'):
+        default_diff = 'sdiff'
+    else:
+        default_diff = 'diff'
+
     default_width = columns()
 
     # Parse command line options
@@ -117,6 +175,11 @@ def main():
         '-a', '--apitrace', metavar='PROGRAM',
         type='string', dest='apitrace', default='apitrace',
         help='apitrace command [default: %default]')
+    optparser.add_option(
+        '-d', '--diff',
+        type="choice", choices=('diff', 'sdiff', 'wdiff'),
+        dest="diff", default=default_diff,
+        help="diff program: diff, sdiff, or wdiff [default: %default]")
     optparser.add_option(
         '-c', '--calls', metavar='CALLSET',
         type="string", dest="calls", default='1-10000',
