@@ -238,6 +238,8 @@ command(int argc, char *argv[])
 
     os::setBinaryMode(stdout);
     
+    std::cout.sync_with_stdio(false);
+
     PickleWriter writer(std::cout);
     PickleVisitor visitor(writer, symbolic);
 
