@@ -145,7 +145,7 @@ public:
     }
 
     void visit(Blob *node) {
-        writer.writeString((const char *)node->buf, node->size);
+        writer.writeByteArray(node->buf, node->size);
     }
 
     void visit(Pointer *node) {

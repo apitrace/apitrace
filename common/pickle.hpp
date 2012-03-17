@@ -268,6 +268,16 @@ public:
         os.put(u.c[0]);
     }
 
+    inline void writeByteArray(const void *buf, size_t length) {
+        os.put(GLOBAL);
+        os << "__builtin__\nbytearray\n";
+        os.put(BINPUT);
+        os.put(1);
+        writeString(static_cast<const char *>(buf), length);
+        os.put(TUPLE1);
+        os.put(REDUCE);
+    }
+
 protected:
     inline void putInt16(uint16_t i) {
         os.put( i        & 0xff);
