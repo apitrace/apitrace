@@ -33,10 +33,100 @@ Run as:
 '''
 
 
+import itertools
 import optparse
-import cPickle as pickle
 import sys
 import time
+import re
+import cPickle as pickle
+
+
+class Visitor:
+
+    def __init__(self):
+        self.dispatch = {}
+        self.dispatch[type(None)] = self.visitNone
+        self.dispatch[bool] = self.visitBool
+        self.dispatch[int] = self.visitInt
+        self.dispatch[long] = self.visitInt
+        self.dispatch[float] = self.visitFloat
+        self.dispatch[str] = self.visitStr
+        self.dispatch[tuple] = self.visitTuple
+        self.dispatch[list] = self.visitList
+        self.dispatch[dict] = self.visitDict
+        self.dispatch[bytearray] = self.visitByteArray
+
+    def visit(self, obj, *args, **kwargs):
+        return self.dispatch[type(obj)](obj, *args, **kwargs)
+
+    def visitAtom(self, obj, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitNone(self, obj, *args, **kwargs):
+        return self.visitAtom(obj, *args, **kwargs)
+
+    def visitBool(self, obj, *args, **kwargs):
+        return self.visitAtom(obj, *args, **kwargs)
+
+    def visitInt(self, obj, *args, **kwargs):
+        return self.visitAtom(obj, *args, **kwargs)
+
+    def visitFloat(self, obj, *args, **kwargs):
+        return self.visitAtom(obj, *args, **kwargs)
+
+    def visitStr(self, obj, *args, **kwargs):
+        return self.visitAtom(obj, *args, **kwargs)
+
+    def visitIterable(self, obj, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitTuple(self, obj, *args, **kwargs):
+        return self.visitIterable(obj, *args, **kwargs)
+
+    def visitList(self, obj, *args, **kwargs):
+        return self.visitIterable(obj, *args, **kwargs)
+
+    def visitDict(self, obj, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitByteArray(self, obj, *args, **kwargs):
+        raise NotImplementedError
+
+
+class Dumper(Visitor):
+
+    id_re = re.compile('^[_A-Za-z][_A-Za-z0-9]*$')
+
+    def visitAtom(self, obj, *args, **kwargs):
+        return repr(obj)
+
+    def visitStr(self, obj, *args, **kwargs):
+        if self.id_re.match(obj):
+            return obj
+        else:
+            return repr(obj)
+
+    def visitTuple(self, obj, *args, **kwargs):
+        return '[' + ', '.join(itertools.imap(self.visit, obj)) + ']'
+
+    def visitList(self, obj, *args, **kwargs):
+        return '(' + ', '.join(itertools.imap(self.visit, obj)) + ')'
+
+    def visitByteArray(self, obj, *args, **kwargs):
+        return 'blob(%u)' % len(obj)
+
+
+class Hasher(Visitor):
+    '''Returns a hashable version of the objtree.'''
+
+    def visitAtom(self, obj, *args, **kwargs):
+        return obj
+
+    def visitIterable(self, obj, *args, **kwargs):
+        return tuple(itertools.imap(self.visit, obj))
+
+    def visitByteArray(self, obj, *args, **kwargs):
+        return str(obj)
 
 
 class Call:
@@ -49,10 +139,11 @@ class Call:
         s = self.functionName
         if self.no is not None:
             s = str(self.no) + ' ' + s
-        s += '(' + ', '.join(map(repr, self.args)) + ')'
+        dumper = Dumper()
+        s += '(' + ', '.join(itertools.imap(dumper.visit, self.args)) + ')'
         if self.ret is not None:
             s += ' = '
-            s += repr(self.ret)
+            s += dumper.visit(self.ret)
         return s
 
     def __eq__(self, other):
@@ -63,9 +154,9 @@ class Call:
 
     def __hash__(self):
         if self._hash is None:
-            # XXX: hack due to unhashable types
-            #self._hash = hash(self.functionName) ^ hash(tuple(self.args)) ^ hash(self.ret)
-            self._hash = hash(self.functionName) ^ hash(repr(self.args)) ^ hash(repr(self.ret))
+            hasher = Hasher()
+            hashable = hasher.visit(self.functionName), hasher.visit(self.args), hasher.visit(self.ret)
+            self._hash = hash(hashable)
         return self._hash
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ##########################################################################
 #
-# Copyright 2011 Jose Fonseca
+# Copyright 2011-2012 Jose Fonseca
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,12 +26,13 @@
 
 
 import difflib
+import itertools
 import optparse
 import os.path
 import subprocess
 import sys
 
-from unpickle import Unpickler
+from unpickle import Unpickler, Dumper
 from highlight import ColorHighlighter, LessHighlighter
 
 
@@ -86,6 +87,7 @@ class SDiffer:
         self.callNos = callNos
         self.aSpace = 0
         self.bSpace = 0
+        self.dumper = Dumper()
 
     def diff(self):
         matcher = difflib.SequenceMatcher(self.isjunk, self.a, self.b)
@@ -167,15 +169,15 @@ class SDiffer:
 
     def replace_value(self, a, b):
         if b == a:
-            self.highlighter.write(str(b))
+            self.highlighter.write(self.dumper.visit(b))
         else:
             self.highlighter.strike()
             self.highlighter.color(self.delete_color)
-            self.highlighter.write(str(a))
+            self.highlighter.write(self.dumper.visit(a))
             self.highlighter.normal()
             self.highlighter.write(" ")
             self.highlighter.color(self.insert_color)
-            self.highlighter.write(str(b))
+            self.highlighter.write(self.dumper.visit(b))
             self.highlighter.normal()
 
     escape = "\33["
@@ -235,9 +237,9 @@ class SDiffer:
         self.highlighter.bold(True)
         self.highlighter.write(call.functionName)
         self.highlighter.bold(False)
-        self.highlighter.write('(' + ', '.join(map(repr, call.args)) + ')')
+        self.highlighter.write('(' + ', '.join(itertools.imap(self.dumper.visit, call.args)) + ')')
         if call.ret is not None:
-            self.highlighter.write(' = ' + repr(call.ret))
+            self.highlighter.write(' = ' + self.dumper.visit(call.ret))
         self.highlighter.normal()
         self.highlighter.write('\n')
 
