@@ -46,6 +46,18 @@ doing:
     cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32 -DENABLE_GUI=FALSE
     make -C build32 glxtrace
 
+Android
+-------
+
+Additional requirements:
+
+* [Android NDK](http://developer.android.com/sdk/ndk/index.html)
+
+Build as:
+
+    export ANDROID_NDK=/path/to/your/ndk
+    cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake -DANDROID_API_LEVEL=9 -H. -Bbuild
+    make -C build
 
 Windows
 -------

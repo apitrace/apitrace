@@ -252,6 +252,7 @@ class StateDumper:
         print '#include "glproc.hpp"'
         print '#include "glsize.hpp"'
         print '#include "glstate.hpp"'
+        print '#include "glstate_internal.hpp"'
         print
         print 'namespace glstate {'
         print
@@ -288,7 +289,7 @@ class StateDumper:
         print '}'
         print
 
-        print 'void dumpParameters(JSONWriter &json)'
+        print 'void dumpParameters(JSONWriter &json, Context &context)'
         print '{'
         print '    json.beginMember("parameters");'
         print '    json.beginObject();'
@@ -310,11 +311,13 @@ class StateDumper:
         print '} /*namespace glstate */'
 
     def dump_material_params(self):
+        print '    if (!context.ES) {'
         for face in ['GL_FRONT', 'GL_BACK']:
             print '    json.beginMember("%s");' % face
             print '    json.beginObject();'
             self.dump_atoms(glGetMaterial, face)
             print '    json.endObject();'
+        print '    }'
         print
 
     def dump_light_params(self):
@@ -344,7 +347,7 @@ class StateDumper:
 
     def dump_texenv_params(self):
         for target in ['GL_TEXTURE_ENV', 'GL_TEXTURE_FILTER_CONTROL', 'GL_POINT_SPRITE']:
-            print '    {'
+            print '    if (!context.ES) {'
             print '        json.beginMember("%s");' % target
             print '        json.beginObject();'
             for _, _, name in glGetTexEnv.iter():
@@ -411,8 +414,10 @@ class StateDumper:
             print '                json.beginMember("%s");' % target
             print '                json.beginObject();'
             self.dump_atoms(glGetTexParameter, target)
+            print '                if (!context.ES) {'
             # We only dump the first level parameters
             self.dump_atoms(glGetTexLevelParameter, target, "0")
+            print '                }'
             print '                json.endObject();'
             print '                json.endMember(); // %s' % target
             print '            }'

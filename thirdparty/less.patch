@@ -1,0 +1,100 @@
+diff -du less.orig/defines.wn less/defines.wn
+--- less.orig/defines.wn	2011-04-10 06:59:14.000000000 +0100
++++ less/defines.wn	2012-03-15 08:32:53.848812020 +0000
+@@ -223,7 +223,11 @@
+ /* Define MUST_DEFINE_ERRNO if you have errno but it is not define 
+  * in errno.h */
+ #define HAVE_ERRNO 1
++#if defined(__MINGW32__) 
++#define MUST_DEFINE_ERRNO 0
++#else
+ #define MUST_DEFINE_ERRNO 1
++#endif
+ 
+ /* Define HAVE_SYS_ERRLIST if you have the sys_errlist[] variable */
+ #define HAVE_SYS_ERRLIST 1
+@@ -326,14 +330,18 @@
+ #define HAVE_UNISTD_H 0
+ 
+ /* Define if you have the <values.h> header file.  */
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ #define HAVE_VALUES_H 0
+ #else
+ #define HAVE_VALUES_H 1
+ #endif
+ 
++#if !defined(__MINGW32__)
+ #define	popen	_popen
+ #define	pclose	_pclose
+ #define snprintf	_snprintf
++#endif
+ 
++#if defined(_MSC_VER)
+ #pragma warning(disable:4996)
++#endif
+diff -du less.orig/filename.c less/filename.c
+--- less.orig/filename.c	2011-04-11 23:04:22.000000000 +0100
++++ less/filename.c	2012-03-15 08:23:13.949936491 +0000
+@@ -18,7 +18,7 @@
+ #include "lglob.h"
+ #if MSDOS_COMPILER
+ #include <dos.h>
+-#if MSDOS_COMPILER==WIN32C && !defined(_MSC_VER)
++#if MSDOS_COMPILER==WIN32C && defined(__BORLANDC__)
+ #include <dir.h>
+ #endif
+ #if MSDOS_COMPILER==DJGPPC
+@@ -563,7 +563,9 @@
+ 
+ #if HAVE_POPEN
+ 
++#if MSDOS_COMPILER && MSDOS_COMPILER!=WIN32C
+ FILE *popen();
++#endif
+ 
+ /*
+  * Execute a shell command.
+diff -du less.orig/lglob.h less/lglob.h
+--- less.orig/lglob.h	2011-01-06 00:30:14.000000000 +0000
++++ less/lglob.h	2012-03-15 08:22:10.401621327 +0000
+@@ -57,7 +57,7 @@
+ 					char ext[_MAX_EXT];	\
+ 					int handle;
+ #else
+-#if MSDOS_COMPILER==WIN32C && defined(_MSC_VER)
++#if MSDOS_COMPILER==WIN32C && (defined(_MSC_VER) || defined(__MINGW2__))
+ 
+ #define	GLOB_FIRST_NAME(filename,fndp,h) h = _findfirst(filename, fndp)
+ #define	GLOB_FIRST_FAILED(handle)	((handle) == -1)
+@@ -73,7 +73,7 @@
+ 					long handle;
+ 
+ #else
+-#if MSDOS_COMPILER==WIN32C && !defined(_MSC_VER) /* Borland C for Windows */
++#if MSDOS_COMPILER==WIN32C && defined(__BORLANDC__) /* Borland C for Windows */
+ 
+ #define	GLOB_FIRST_NAME(filename,fndp,h) h = findfirst(filename, fndp, ~FA_LABEL)
+ #define	GLOB_FIRST_FAILED(handle)	((handle) != 0)
+diff -du less.orig/lsystem.c less/lsystem.c
+--- less.orig/lsystem.c	2011-04-11 23:04:22.000000000 +0100
++++ less/lsystem.c	2012-03-15 08:23:56.518147471 +0000
+@@ -20,7 +20,7 @@
+ 
+ #if MSDOS_COMPILER
+ #include <dos.h>
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ #include <direct.h>
+ #define setdisk(n) _chdrive((n)+1)
+ #else
+@@ -292,7 +292,9 @@
+ {
+ 	register FILE *f;
+ 	register int c;
++#if MSDOS_COMPILER && MSDOS_COMPILER!=WIN32C
+ 	extern FILE *popen();
++#endif
+ 
+ 	/*
+ 	 * This is structured much like lsystem().

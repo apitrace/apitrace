@@ -1,13 +1,21 @@
-This file lists the major user visible improvments.  For a full list of changes
+This file lists the major user visible improvements.  For a full list of changes
 and their authors see the git history.
 
 
-Development
+Version 3.0
 ===========
 
 * Top-level `apitrace` command.
 
-* Trace and retrace support for EGL, GLES1, and GLES2 APIs.
+* Trace and retrace support for EGL, GLES1, and GLES2 APIs on Linux.
+
+* Ability to trim traces.
+
+* Basic CPU profiling when retracing.
+
+* Basic D3D10 trace support.
+
+* Many bugfixes.
 
 
 Version 2.0

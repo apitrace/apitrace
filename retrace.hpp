@@ -99,6 +99,11 @@ toPointer(trace::Value &value, bool bind = false);
  */
 extern int verbosity;
 
+/**
+ * Add profiling data to the dump when retracing.
+ */
+extern bool profiling;
+
 
 std::ostream &warning(trace::Call &call);
 

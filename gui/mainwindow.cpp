@@ -61,6 +61,7 @@ void MainWindow::createTrace()
     if (dialog.exec() == QDialog::Accepted) {
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
+        m_traceProcess->setApi(dialog.api());
         m_traceProcess->setExecutablePath(dialog.applicationPath());
         m_traceProcess->setArguments(dialog.arguments());
         m_traceProcess->start();
@@ -145,6 +146,10 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     } else {
         m_ui.stateDock->hide();
     }
+}
+
+void MainWindow::callItemActivated(const QModelIndex &index) {
+    lookupState();
 }
 
 void MainWindow::replayStart()
@@ -778,6 +783,8 @@ void MainWindow::initConnections()
 
     connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
+    connect(m_ui.callView, SIGNAL(doubleClicked(const QModelIndex &)),
+            this, SLOT(callItemActivated(const QModelIndex &)));
     connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(customContextMenuRequested(QPoint)));
 

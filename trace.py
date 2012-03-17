@@ -148,10 +148,20 @@ class ValueSerializer(stdapi.Visitor):
         print '    trace::localWriter.write%s(%s);' % (literal.kind, instance)
 
     def visitString(self, string, instance):
-        if string.length is not None:
-            print '    trace::localWriter.writeString((const char *)%s, %s);' % (instance, string.length)
+        if string.kind == 'String':
+            cast = 'const char *'
+        elif string.kind == 'WString':
+            cast = 'const wchar_t *'
         else:
-            print '    trace::localWriter.writeString((const char *)%s);' % instance
+            assert False
+        if cast != string.expr:
+            # reinterpret_cast is necessary for GLubyte * <=> char *
+            instance = 'reinterpret_cast<%s>(%s)' % (cast, instance)
+        if string.length is not None:
+            length = ', %s' % string.length
+        else:
+            length = ''
+        print '    trace::localWriter.write%s(%s%s);' % (string.kind, instance, length)
 
     def visitConst(self, const, instance):
         self.visit(const.type, instance)
@@ -291,9 +301,14 @@ class ValueUnwrapper(ValueWrapper):
     def visitInterface(self, interface, instance):
         assert instance.startswith('*')
         instance = instance[1:]
-        print "    if (%s) {" % instance
-        print "        %s = static_cast<%s *>(%s)->m_pInstance;" % (instance, getWrapperInterfaceName(interface), instance)
-        print "    }"
+        print r'    if (%s) {' % instance
+        print r'        %s *pWrapper = static_cast<%s*>(%s);' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), instance)
+        print r'        if (pWrapper && pWrapper->m_dwMagic == 0xd8365d6c) {'
+        print r'            %s = pWrapper->m_pInstance;' % (instance,)
+        print r'        } else {'
+        print r'            os::log("apitrace: warning: %%s: unexpected %%s pointer\n", __FUNCTION__, "%s");' % interface.name
+        print r'        }'
+        print r'    }'
 
 
 class Tracer:
@@ -451,91 +466,109 @@ class Tracer:
 
     def declareWrapperInterfaceVariables(self, interface):
         #print "private:"
+        print "    DWORD m_dwMagic;"
         print "    %s * m_pInstance;" % (interface.name,)
 
     def implementWrapperInterface(self, interface):
         print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
+        print '    m_dwMagic = 0xd8365d6c;'
         print '    m_pInstance = pInstance;'
         print '}'
         print
         print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))
         print '}'
         print
-        for method in interface.iterMethods():
-            self.implementWrapperInterfaceMethod(interface, method)
+        for base, method in interface.iterBaseMethods():
+            self.implementWrapperInterfaceMethod(interface, base, method)
         print
 
-    def implementWrapperInterfaceMethod(self, interface, method):
+    def implementWrapperInterfaceMethod(self, interface, base, method):
         print method.prototype(getWrapperInterfaceName(interface) + '::' + method.name) + ' {'
         if method.type is not stdapi.Void:
             print '    %s __result;' % method.type
     
-        self.implementWrapperInterfaceMethodBody(interface, method)
+        self.implementWrapperInterfaceMethodBody(interface, base, method)
     
         if method.type is not stdapi.Void:
             print '    return __result;'
         print '}'
         print
 
-    def implementWrapperInterfaceMethodBody(self, interface, method):
+    def implementWrapperInterfaceMethodBody(self, interface, base, method):
         print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
         print '    unsigned __call = trace::localWriter.beginEnter(&__sig);'
         print '    trace::localWriter.beginArg(0);'
         print '    trace::localWriter.writeOpaque((const void *)m_pInstance);'
         print '    trace::localWriter.endArg();'
+
+        from specs.winapi import REFIID
+        from specs.stdapi import Pointer, Opaque, Interface
+
+        riid = None
         for arg in method.args:
             if not arg.output:
                 self.unwrapArg(method, arg)
                 self.serializeArg(method, arg)
+                if arg.type is REFIID:
+                    riid = arg
         print '    trace::localWriter.endEnter();'
         
-        self.invokeMethod(interface, method)
+        self.invokeMethod(interface, base, method)
 
         print '    trace::localWriter.beginLeave(__call);'
         for arg in method.args:
             if arg.output:
                 self.serializeArg(method, arg)
                 self.wrapArg(method, arg)
+                if riid is not None and isinstance(arg.type, Pointer):
+                    if isinstance(arg.type.type, Opaque):
+                        self.wrapIid(riid, arg)
+                    else:
+                        assert isinstance(arg.type.type, Pointer)
+                        assert isinstance(arg.type.type.type, Interface)
+
         if method.type is not stdapi.Void:
             print '    trace::localWriter.beginReturn();'
             self.serializeValue(method.type, "__result")
             print '    trace::localWriter.endReturn();'
             self.wrapValue(method.type, '__result')
         print '    trace::localWriter.endLeave();'
-        if method.name == 'QueryInterface':
-            print '    if (ppvObj && *ppvObj) {'
-            print '        if (*ppvObj == m_pInstance) {'
-            print '            *ppvObj = this;'
-            print '        }'
-            for iface in self.api.interfaces:
-                print r'        else if (riid == IID_%s) {' % iface.name
-                print r'            *ppvObj = new Wrap%s((%s *) *ppvObj);' % (iface.name, iface.name)
-                print r'        }'
-            print r'        else {'
-            print r'            os::log("apitrace: warning: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
-            print r'                    riid.Data1, riid.Data2, riid.Data3,'
-            print r'                    riid.Data4[0],'
-            print r'                    riid.Data4[1],'
-            print r'                    riid.Data4[2],'
-            print r'                    riid.Data4[3],'
-            print r'                    riid.Data4[4],'
-            print r'                    riid.Data4[5],'
-            print r'                    riid.Data4[6],'
-            print r'                    riid.Data4[7]);'
-            print r'        }'
-            print '    }'
         if method.name == 'Release':
             assert method.type is not stdapi.Void
             print '    if (!__result)'
             print '        delete this;'
 
-    def invokeMethod(self, interface, method):
+    def wrapIid(self, riid, out):
+            print '    if (%s && *%s) {' % (out.name, out.name)
+            print '        if (*%s == m_pInstance) {' % (out.name,)
+            print '            *%s = this;' % (out.name,)
+            print '        }'
+            for iface in self.api.getAllInterfaces():
+                print r'        else if (%s == IID_%s) {' % (riid.name, iface.name)
+                print r'            *%s = new Wrap%s((%s *) *%s);' % (out.name, iface.name, iface.name, out.name)
+                print r'        }'
+            print r'        else {'
+            print r'            os::log("apitrace: warning: %s: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+            print r'                    __FUNCTION__,'
+            print r'                    %s.Data1, %s.Data2, %s.Data3,' % (riid.name, riid.name, riid.name)
+            print r'                    %s.Data4[0],' % (riid.name,)
+            print r'                    %s.Data4[1],' % (riid.name,)
+            print r'                    %s.Data4[2],' % (riid.name,)
+            print r'                    %s.Data4[3],' % (riid.name,)
+            print r'                    %s.Data4[4],' % (riid.name,)
+            print r'                    %s.Data4[5],' % (riid.name,)
+            print r'                    %s.Data4[6],' % (riid.name,)
+            print r'                    %s.Data4[7]);' % (riid.name,)
+            print r'        }'
+            print '    }'
+
+    def invokeMethod(self, interface, base, method):
         if method.type is stdapi.Void:
             result = ''
         else:
             result = '__result = '
-        print '    %sm_pInstance->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
+        print '    %sstatic_cast<%s *>(m_pInstance)->%s(%s);' % (result, base, method.name, ', '.join([str(arg.name) for arg in method.args]))
     
     def emit_memcpy(self, dest, src, length):
         print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'

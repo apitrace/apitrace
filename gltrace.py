@@ -112,19 +112,6 @@ class GlTracer(Tracer):
 
         print '#include "gltrace.hpp"'
         print
-        print 'enum tracer_context_profile {'
-        print '    PROFILE_COMPAT,'
-        print '    PROFILE_ES1,'
-        print '    PROFILE_ES2,'
-        print '};'
-        print
-        print 'struct tracer_context {'
-        print '    enum tracer_context_profile profile;'
-        print '    bool user_arrays;'
-        print '    bool user_arrays_arb;'
-        print '    bool user_arrays_nv;'
-        print '};'
-        print
         
         # Which glVertexAttrib* variant to use
         print 'enum vertex_attrib {'
@@ -133,15 +120,16 @@ class GlTracer(Tracer):
         print '    VERTEX_ATTRIB_NV,'
         print '};'
         print
-        print 'static tracer_context *__get_context(void)'
+        print 'gltrace::Context *'
+        print 'gltrace::getContext(void)'
         print '{'
         print '    // TODO return the context set by other APIs (GLX, EGL, and etc.)'
-        print '    static tracer_context __ctx = { PROFILE_COMPAT, false, false, false };'
+        print '    static gltrace::Context __ctx = { gltrace::PROFILE_COMPAT, false, false, false };'
         print '    return &__ctx;'
         print '}'
         print
         print 'static vertex_attrib __get_vertex_attrib(void) {'
-        print '    tracer_context *ctx = __get_context();'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (ctx->user_arrays_arb || ctx->user_arrays_nv) {'
         print '        GLboolean __vertex_program = GL_FALSE;'
         print '        __glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &__vertex_program);'
@@ -163,7 +151,7 @@ class GlTracer(Tracer):
         # Whether we need user arrays
         print 'static inline bool __need_user_arrays(void)'
         print '{'
-        print '    tracer_context *ctx = __get_context();'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (!ctx->user_arrays) {'
         print '        return false;'
         print '    }'
@@ -171,9 +159,9 @@ class GlTracer(Tracer):
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == PROFILE_COMPAT'
+            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -194,7 +182,7 @@ class GlTracer(Tracer):
             print
 
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == PROFILE_ES1)'
+        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
         print '        return false;'
         print
         print '    vertex_attrib __vertex_attrib = __get_vertex_attrib();'
@@ -252,6 +240,15 @@ class GlTracer(Tracer):
         print 'static void __trace_user_arrays(GLuint maxindex);'
         print
 
+        # Buffer mappings
+        print '// whether glMapBufferRange(GL_MAP_WRITE_BIT) has ever been called'
+        print 'static bool __checkBufferMapRange = false;'
+        print
+        print '// whether glBufferParameteriAPPLE(GL_BUFFER_FLUSHING_UNMAP_APPLE, GL_FALSE) has ever been called'
+        print 'static bool __checkBufferFlushingUnmapAPPLE = false;'
+        print
+        # Buffer mapping information, necessary for old Mesa 2.1 drivers which
+        # do not support glGetBufferParameteriv(GL_BUFFER_ACCESS_FLAGS/GL_BUFFER_MAP_LENGTH)
         print 'struct buffer_mapping {'
         print '    void *map;'
         print '    GLint length;'
@@ -322,8 +319,8 @@ class GlTracer(Tracer):
         # states such as GL_UNPACK_ROW_LENGTH are not available in GLES
         print 'static inline bool'
         print 'can_unpack_subimage(void) {'
-        print '    tracer_context *ctx = __get_context();'
-        print '    return (ctx->profile == PROFILE_COMPAT);'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
+        print '    return (ctx->profile == gltrace::PROFILE_COMPAT);'
         print '}'
         print
 
@@ -412,7 +409,7 @@ class GlTracer(Tracer):
             print '    GLint __array_buffer = 0;'
             print '    __glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
             print '    if (!__array_buffer) {'
-            print '        tracer_context *ctx = __get_context();'
+            print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        ctx->user_arrays = true;'
             if function.name == "glVertexAttribPointerARB":
                 print '        ctx->user_arrays_arb = true;'
@@ -473,34 +470,98 @@ class GlTracer(Tracer):
             print '    }'
         
         # Emit a fake memcpy on buffer uploads
-        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB', 'glUnmapBufferOES'):
-            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
-            print '    if (mapping && mapping->write && !mapping->explicit_flush) {'
-            self.emit_memcpy('mapping->map', 'mapping->map', 'mapping->length')
+        if function.name == 'glBufferParameteriAPPLE':
+            print '    if (pname == GL_BUFFER_FLUSHING_UNMAP_APPLE && param == GL_FALSE) {'
+            print '        __checkBufferFlushingUnmapAPPLE = true;'
+            print '    }'
+        if function.name in ('glUnmapBuffer', 'glUnmapBufferARB'):
+            if function.name.endswith('ARB'):
+                suffix = 'ARB'
+            else:
+                suffix = ''
+            print '    GLint access = 0;'
+            print '    __glGetBufferParameteriv%s(target, GL_BUFFER_ACCESS, &access);' % suffix
+            print '    if (access != GL_READ_ONLY) {'
+            print '        GLvoid *map = NULL;'
+            print '        __glGetBufferPointerv%s(target, GL_BUFFER_MAP_POINTER, &map);'  % suffix
+            print '        if (map) {'
+            print '            GLint length = -1;'
+            print '            bool flush = true;'
+            print '            if (__checkBufferMapRange) {'
+            print '                __glGetBufferParameteriv%s(target, GL_BUFFER_MAP_LENGTH, &length);' % suffix
+            print '                GLint access_flags = 0;'
+            print '                __glGetBufferParameteriv(target, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
+            print '                flush = flush && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT);'
+            print '                if (length == -1) {'
+            print '                    // Mesa drivers refuse GL_BUFFER_MAP_LENGTH without GL 3.0'
+            print '                    static bool warned = false;'
+            print '                    if (!warned) {'
+            print '                        os::log("apitrace: warning: glGetBufferParameteriv%s(GL_BUFFER_MAP_LENGTH) failed\\n");' % suffix
+            print '                        warned = true;'
+            print '                    }'
+            print '                    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '                    if (mapping) {'
+            print '                        length = mapping->length;'
+            print '                        flush = flush && !mapping->explicit_flush;'
+            print '                    } else {'
+            print '                        length = 0;'
+            print '                        flush = false;'
+            print '                    }'
+            print '                }'
+            print '            } else {'
+            print '                length = 0;'
+            print '                __glGetBufferParameteriv%s(target, GL_BUFFER_SIZE, &length);' % suffix
+            print '            }'
+            print '            if (__checkBufferFlushingUnmapAPPLE) {'
+            print '                GLint flushing_unmap = GL_TRUE;'
+            print '                __glGetBufferParameteriv%s(target, GL_BUFFER_FLUSHING_UNMAP_APPLE, &flushing_unmap);' % suffix
+            print '                flush = flush && flushing_unmap;'
+            print '            }'
+            print '            if (flush && length > 0) {'
+            self.emit_memcpy('map', 'map', 'length')
+            print '            }'
+            print '        }'
+            print '    }'
+        if function.name == 'glUnmapBufferOES':
+            print '    GLint access = 0;'
+            print '    __glGetBufferParameteriv(target, GL_BUFFER_ACCESS_OES, &access);'
+            print '    if (access == GL_WRITE_ONLY_OES) {'
+            print '        GLvoid *map = NULL;'
+            print '        __glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &map);'
+            print '        GLint size = 0;'
+            print '        __glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);'
+            print '        if (map && size > 0) {'
+            self.emit_memcpy('map', 'map', 'size')
+            print '        }'
             print '    }'
         if function.name == 'glUnmapNamedBufferEXT':
-            print '    GLint access = 0;'
-            print '    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS, &access);'
-            print '    if ((access & GL_MAP_WRITE_BIT) & !(access & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
+            print '    GLint access_flags = 0;'
+            print '    __glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
+            print '    if ((access_flags & GL_MAP_WRITE_BIT) && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
             print '        GLvoid *map = NULL;'
-            print '        glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '        __glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
             print '        GLint length = 0;'
-            print '        glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_MAP_LENGTH, &length);'
+            print '        __glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_MAP_LENGTH, &length);'
+            print '        if (map && length > 0) {'
             self.emit_memcpy('map', 'map', 'length')
+            print '        }'
             print '    }'
-        if function.name in ('glFlushMappedBufferRange', 'glFlushMappedBufferRangeAPPLE'):
-            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
-            print '    if (mapping) {'
-            if function.name.endswith('APPLE'):
-                 print '        GLsizeiptr length = size;'
-                 print '        mapping->explicit_flush = true;'
-            print '        //assert(offset + length <= mapping->length);'
-            self.emit_memcpy('(char *)mapping->map + offset', '(const char *)mapping->map + offset', 'length')
+        if function.name == 'glFlushMappedBufferRange':
+            print '    GLvoid *map = NULL;'
+            print '    __glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map);'
+            print '    if (map && length > 0) {'
+            self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'length')
+            print '    }'
+        if function.name == 'glFlushMappedBufferRangeAPPLE':
+            print '    GLvoid *map = NULL;'
+            print '    __glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map);'
+            print '    if (map && size > 0) {'
+            self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'size')
             print '    }'
         if function.name == 'glFlushMappedNamedBufferRangeEXT':
             print '    GLvoid *map = NULL;'
-            print '    glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
-            print '    if (map) {'
+            print '    __glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '    if (map && length > 0) {'
             self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'length')
             print '    }'
 
@@ -548,9 +609,15 @@ class GlTracer(Tracer):
 
         Tracer.traceFunctionImplBody(self, function)
 
-    gremedy_functions = [
+    marker_functions = [
+        # GL_GREMEDY_string_marker
         'glStringMarkerGREMEDY',
+        # GL_GREMEDY_frame_terminator
         'glFrameTerminatorGREMEDY',
+        # GL_EXT_debug_marker
+        'glInsertEventMarkerEXT',
+        'glPushGroupMarkerEXT',
+        'glPopGroupMarkerEXT',
     ]
 
     def invokeFunction(self, function):
@@ -558,18 +625,20 @@ class GlTracer(Tracer):
             # These functions have been dispatched already
             return
 
-        # We implement the GREMEDY extensions, not the driver
-        if function.name in self.gremedy_functions:
+        # We implement GL_EXT_debug_marker, GL_GREMEDY_*, etc., and not the
+        # driver
+        if function.name in self.marker_functions:
             return
 
         if function.name in ('glXGetProcAddress', 'glXGetProcAddressARB', 'wglGetProcAddress'):
-            if_ = 'if'
-            for gremedy_function in self.gremedy_functions:
-                print '    %s (strcmp("%s", (const char *)%s) == 0) {' % (if_, gremedy_function, function.args[0].name)
-                print '        __result = (%s)&%s;' % (function.type, gremedy_function)
-                print '    }'
-                if_ = 'else if'
-            print '    else {'
+            else_ = ''
+            for marker_function in self.marker_functions:
+                if self.api.get_function_by_name(marker_function):
+                    print '    %sif (strcmp("%s", (const char *)%s) == 0) {' % (else_, marker_function, function.args[0].name)
+                    print '        __result = (%s)&%s;' % (function.type, marker_function)
+                    print '    }'
+                else_ = 'else '
+            print '    %s{' % else_
             Tracer.invokeFunction(self, function)
             print '    }'
             return
@@ -598,8 +667,8 @@ class GlTracer(Tracer):
     def wrapRet(self, function, instance):
         Tracer.wrapRet(self, function, instance)
 
-            
-        if function.name in ('glMapBuffer', 'glMapBufferARB', 'glMapBufferOES'):
+        # Keep track of buffer mappings
+        if function.name in ('glMapBuffer', 'glMapBufferARB'):
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
             print '        mapping->map = %s;' % (instance)
@@ -608,8 +677,10 @@ class GlTracer(Tracer):
             print '        mapping->write = (access != GL_READ_ONLY);'
             print '        mapping->explicit_flush = false;'
             print '    }'
-
         if function.name == 'glMapBufferRange':
+            print '    if (access & GL_MAP_WRITE_BIT) {'
+            print '        __checkBufferMapRange = true;'
+            print '    }'
             print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
             print '    if (mapping) {'
             print '        mapping->map = %s;' % (instance)
@@ -698,9 +769,9 @@ class GlTracer(Tracer):
                 or (isinstance(arg.type, stdapi.Const) \
                     and isinstance(arg.type.type, stdapi.Blob))):
             print '    {'
-            print '        tracer_context *ctx = __get_context();'
+            print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        GLint __unpack_buffer = 0;'
-            print '        if (ctx->profile == PROFILE_COMPAT)'
+            print '        if (ctx->profile == gltrace::PROFILE_COMPAT)'
             print '            __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
             print '        if (__unpack_buffer) {'
             print '            trace::localWriter.writeOpaque(%s);' % arg.name
@@ -734,13 +805,13 @@ class GlTracer(Tracer):
         # update the state
         print 'static void __trace_user_arrays(GLuint maxindex)'
         print '{'
-        print '    tracer_context *ctx = __get_context();'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == PROFILE_COMPAT'
+            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -799,7 +870,7 @@ class GlTracer(Tracer):
         # alias, and they need to be considered independently.
         #
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == PROFILE_ES1)'
+        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
         print '        return;'
         print
         print '    vertex_attrib __vertex_attrib = __get_vertex_attrib();'
@@ -878,7 +949,7 @@ class GlTracer(Tracer):
             print '    GLint client_active_texture = 0;'
             print '    __glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &client_active_texture);'
             print '    GLint max_texture_coords = 0;'
-            print '    if (ctx->profile == PROFILE_COMPAT)'
+            print '    if (ctx->profile == gltrace::PROFILE_COMPAT)'
             print '        __glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
             print '    else'
             print '        __glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_coords);'

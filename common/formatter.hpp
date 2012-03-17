@@ -88,7 +88,10 @@ protected:
 public:
     virtual Attribute *normal(void) const { return new AnsiAttribute("0m"); }
     virtual Attribute *bold(void) const { return new AnsiAttribute("1m"); }
+    /* Italic is not widely supported, or worse, implemented with a reverse */
+#if 0
     virtual Attribute *italic(void) const { return new AnsiAttribute("3m"); }
+#endif
     virtual Attribute *strike(void) const { return new AnsiAttribute("9m"); }
     virtual Attribute *color(Color c) const { 
         static const char *color_escapes[] = {

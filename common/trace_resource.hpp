@@ -37,11 +37,6 @@ namespace trace {
 
 
 os::String
-findFile(const char *relPath, // path relative to the current program
-         const char *absPath, // absolute path
-         bool verbose);
-
-os::String
 findScript(const char *name);
 
 

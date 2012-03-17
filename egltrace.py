@@ -53,15 +53,15 @@ class EglTracer(GlTracer):
             print '    // update the profile'
             print '    if (ctx != EGL_NO_CONTEXT) {'
             print '        EGLint api = EGL_OPENGL_ES_API, version = 1;'
-            print '        tracer_context *tr = __get_context();'
+            print '        gltrace::Context *tr = gltrace::getContext();'
             print '        __eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
             print '        __eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
             print '        if (api == EGL_OPENGL_API)'
-            print '            tr->profile = PROFILE_COMPAT;'
+            print '            tr->profile = gltrace::PROFILE_COMPAT;'
             print '        else if (version == 1)'
-            print '            tr->profile = PROFILE_ES1;'
+            print '            tr->profile = gltrace::PROFILE_ES1;'
             print '        else'
-            print '            tr->profile = PROFILE_ES2;'
+            print '            tr->profile = gltrace::PROFILE_ES2;'
             print '    }'
 
     def wrapRet(self, function, instance):
@@ -111,6 +111,12 @@ if __name__ == '__main__':
     print '}'
     print
     print r'''
+
+
+/*
+ * Android does not support LD_PRELOAD.
+ */
+#if !defined(ANDROID)
 
 
 /*
@@ -184,6 +190,9 @@ void * dlopen(const char *filename, int flag)
 
     return handle;
 }
+
+
+#endif /* !ANDROID */
 
 
 

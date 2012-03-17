@@ -76,6 +76,18 @@ String::exists(void) const
     return attrs != INVALID_FILE_ATTRIBUTES;
 }
 
+bool
+copyFile(const String &srcFileName, const String &dstFileName, bool override)
+{
+    return CopyFileA(srcFileName, dstFileName, !override);
+}
+
+bool
+removeFile(const String &srcFilename)
+{
+    return DeleteFileA(srcFilename);
+}
+
 /**
  * Determine whether an argument should be quoted.
  */
@@ -252,6 +264,15 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
      * http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
      */
     if (pExceptionRecord->ExceptionCode == 0xe06d7363) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    /*
+     * Ignore thread naming exception.
+     *
+     * http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
+     */
+    if (pExceptionRecord->ExceptionCode == 0x406d1388) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

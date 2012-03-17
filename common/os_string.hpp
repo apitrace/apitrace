@@ -93,12 +93,19 @@ protected:
 
     Buffer::iterator rfind(char c) {
         Buffer::iterator it = buffer.end();
+
+        // Skip trailing '\0'
+        assert(it != buffer.begin());
+        --it;
+        assert(*it == '\0');
+
         while (it != buffer.begin()) {
             --it;
             if (*it == c) {
                 return it;
             }
         }
+
         return buffer.end();
     }
 
@@ -109,6 +116,52 @@ protected:
     char *buf(void) {
         return &buffer[0];
     }
+
+    inline bool
+    isSep(char c) {
+        if (c == '/') {
+            return true;
+        }
+#ifdef _WIN32
+        if (c == '\\') {
+            return true;
+        }
+#endif
+        return false;
+    }
+
+    Buffer::iterator rfindSep(void) {
+        Buffer::iterator it = buffer.end();
+
+        // Skip trailing '\0'
+        assert(it != buffer.begin());
+        --it;
+        assert(*it == '\0');
+
+        // Skip trailing separators
+        while (it != buffer.begin()) {
+            --it;
+            if (isSep(*it)) {
+                // Halt if find the root
+                if (it == buffer.begin()) {
+                    return it;
+                }
+            } else {
+                break;
+            }
+        }
+
+        // Advance to the last separator
+        while (it != buffer.begin()) {
+            --it;
+            if (isSep(*it)) {
+                return it;
+            }
+        }
+
+        return buffer.end();
+    }
+
 
 public:
 
@@ -280,14 +333,16 @@ public:
 
 
     /*
-     * String manipulation
+     * Path manipulation
      */
 
     bool
     exists(void) const;
 
+    /* Trim directory (leaving base filename).
+     */
     void trimDirectory(void) {
-        iterator sep = rfind(OS_DIR_SEP);
+        iterator sep = rfindSep();
         if (sep != buffer.end()) {
             buffer.erase(buffer.begin(), sep + 1);
         }
@@ -295,27 +350,28 @@ public:
 
     /* Trim filename component (leaving containing directory).
      *
-     * This function removes everything after the final path
-     * separator, as well as that separator itself if it is not the
-     * only remaining separator.
-     *
-     * Some specific consequences of the above:
-     *
-     * 1. A path with no separator at all is unchanged.
-     * 2. A path with a trailing separator has only that separator removed
-     * 3. A path of just the root directory is unchaged.
+     * - trailing separators are ignored
+     * - a path with no separator at all yields "."
+     * - a path consisting of just the root directory is left unchanged
      */
     void trimFilename(void) {
-        iterator first = find(OS_DIR_SEP);
-        iterator last = rfind(OS_DIR_SEP);
-        if (last == buffer.end()) {
+        iterator sep = rfindSep();
+
+        // No separator found, so return '.'
+        if (sep == buffer.end()) {
+            buffer.resize(2);
+            buffer[0] = '.';
+            buffer[1] = 0;
             return;
         }
-        if (last == first) {
-            buffer.erase(first + 1, end());
-        } else {
-            buffer.erase(last, end());
+
+        // Root. Nothing to do.
+        if (sep == buffer.begin()) {
+            return;
         }
+
+        // Trim filename
+        buffer.erase(sep, end());
     }
 
     void trimExtension(void) {
@@ -337,6 +393,9 @@ public:
 String getProcessName();
 String getCurrentDir();
 
+bool copyFile(const String &srcFileName, const String &dstFileName, bool override = true);
+
+bool removeFile(const String &fileName);
 
 } /* namespace os */
 

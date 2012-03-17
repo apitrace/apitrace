@@ -17,10 +17,6 @@ TraceProcess::TraceProcess(QObject *parent)
             this, SLOT(traceError(QProcess::ProcessError)));
 
 #ifdef Q_OS_WIN
-    qWarning()<<"Windows tracing isn't supported right now!";
-    m_canTrace = false;
-#else
-#ifdef Q_OS_WIN
     QString format = QLatin1String("%1;");
 #else
     QString format = QLatin1String("%1:");
@@ -29,11 +25,15 @@ TraceProcess::TraceProcess(QObject *parent)
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("PATH", buildPath + env.value("PATH"));
     qputenv("PATH", env.value("PATH").toLatin1());
-#endif
 }
 
 TraceProcess::~TraceProcess()
 {
+}
+
+void TraceProcess::setApi(const QString &str)
+{
+    m_api = str;
 }
 
 void TraceProcess::setExecutablePath(const QString &str)
@@ -98,6 +98,8 @@ void TraceProcess::start()
     QStringList arguments;
 
     arguments << QLatin1String("trace");
+    arguments << QLatin1String("--api");
+    arguments << m_api;
     arguments << QLatin1String("--output");
     arguments << m_tracePath;
     arguments << QLatin1String("--");

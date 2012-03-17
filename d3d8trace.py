@@ -40,6 +40,8 @@ class D3D8Tracer(DllTracer):
 
 
 if __name__ == '__main__':
+    print '#define INITGUID'
+    print
     print '#include <windows.h>'
     print '#include <d3d8.h>'
     print '#include "d3dshader.hpp"'

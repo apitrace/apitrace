@@ -35,14 +35,27 @@
 
 static const char *synopsis = "Identify differences between two traces.";
 
+static os::String
+find_command(void)
+{
+    return trace::findScript("tracediff.py");
+}
+
 static void
 usage(void)
 {
-    std::cout
-        << "usage: apitrace diff <trace-1> <trace-2>\n"
-        << synopsis << "\n"
-        "\n"
-        "    Both input files should be the result of running 'apitrace trace'.\n";
+    os::String command = find_command();
+    if (!command.length()) {
+        exit(1);
+    }
+
+    char *args[4];
+    args[0] = (char *) "python";
+    args[1] = (char *) command.str();
+    args[2] = (char *) "--help";
+    args[3] = NULL;
+
+    os::execute(args);
 }
 
 static int
@@ -50,55 +63,24 @@ command(int argc, char *argv[])
 {
     int i;
 
-    for (i = 0; i < argc; ++i) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        if (!strcmp(arg, "--")) {
-            i++;
-            break;
-        } else if (!strcmp(arg, "--help")) {
-            usage();
-            return 0;
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
-            usage();
-            return 1;
-        }
-    }
-
-    if (argc - i != 2) {
-        std::cerr << "Error: diff requires exactly two trace files as arguments.\n";
-        usage();
+    os::String command = find_command();
+    if (!command.length()) {
         return 1;
     }
 
-    char *file1, *file2;
+    os::String apitracePath = os::getProcessName();
 
-    file1 = argv[i];
-    file2 = argv[i+1];
+    std::vector<const char *> args;
+    args.push_back("python");
+    args.push_back(command.str());
+    args.push_back("--apitrace");
+    args.push_back(apitracePath.str());
+    for (i = 1; i < argc; i++) {
+        args.push_back(argv[i]);
+    }
+    args.push_back(NULL);
 
-    os::String command = trace::findScript("tracediff.sh");
-
-    char* args[4];
-
-    args[0] = (char *) command.str();
-    args[1] = file1;
-    args[2] = file2;
-    args[3] = NULL;
-
-#ifdef _WIN32
-    std::cerr << "The 'apitrace diff' command is not yet supported on this O/S.\n";
-    return 1;
-#else
-    os::String apitrace = os::getProcessName();
-    setenv("APITRACE", apitrace.str(), 1);
-
-    return os::execute(args);
-#endif
+    return os::execute((char * const *)&args[0]);
 }
 
 const Command diff_command = {

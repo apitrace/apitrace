@@ -350,26 +350,39 @@ class Interface(Type):
             yield method
         raise StopIteration
 
+    def iterBaseMethods(self):
+        if self.base is not None:
+            for iface, method in self.base.iterBaseMethods():
+                yield iface, method
+        for method in self.methods:
+            yield self, method
+        raise StopIteration
+
 
 class Method(Function):
 
-    def __init__(self, type, name, args):
+    def __init__(self, type, name, args, const=False):
         Function.__init__(self, type, name, args, call = '__stdcall')
         for index in range(len(self.args)):
             self.args[index].index = index + 1
+        self.const = const
+
+    def prototype(self, name=None):
+        s = Function.prototype(self, name)
+        if self.const:
+            s += ' const'
+        return s
 
 
 class String(Type):
 
-    def __init__(self, expr = "char *", length = None):
+    def __init__(self, expr = "char *", length = None, kind = 'String'):
         Type.__init__(self, expr)
         self.length = length
+        self.kind = kind
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitString(self, *args, **kwargs)
-
-# C string (i.e., zero terminated)
-CString = String()
 
 
 class Opaque(Type):
@@ -708,7 +721,10 @@ ULongLong = Literal("unsigned long long", "UInt")
 Float = Literal("float", "Float")
 Double = Literal("double", "Double")
 SizeT = Literal("size_t", "UInt")
-WString = Literal("wchar_t *", "WString")
+
+# C string (i.e., zero terminated)
+CString = String()
+WString = String("wchar_t *", kind="WString")
 
 Int8 = Literal("int8_t", "SInt")
 UInt8 = Literal("uint8_t", "UInt")

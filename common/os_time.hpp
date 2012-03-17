@@ -35,6 +35,8 @@
 #include <windows.h>
 #elif defined(__linux__)
 #include <time.h>
+#elif defined(__APPLE__)
+#include <mach/mach_time.h>
 #else
 #include <sys/time.h>
 #endif
@@ -43,15 +45,15 @@
 namespace os {
 
     // OS dependent time frequency
-#if defined(_WIN32)
-    // runtime variable on Windows
+#if defined(_WIN32) || defined(__APPLE__)
+    // runtime variable on Windows and MacOSX
     extern long long timeFrequency;
 #elif defined(__linux__)
-    // nanoseconds
-    static const long long timeFrequency = 1000000000;
+    // nanoseconds on Linux
+    static const long long timeFrequency = 1000000000LL;
 #else
-    // microseconds on
-    static const long long timeFrequency = 1000000;
+    // microseconds on Unices
+    static const long long timeFrequency = 1000000LL;
 #endif
 
     // Time from an unknown base in a unit determined by timeFrequency
@@ -72,6 +74,13 @@ namespace os {
             return 0;
         }
         return tp.tv_sec * 1000000000LL + tp.tv_nsec;
+#elif defined(__APPLE__)
+        if (!timeFrequency) {
+            mach_timebase_info_data_t timebaseInfo;
+            mach_timebase_info(&timebaseInfo);
+            timeFrequency = 1000000000LL * timebaseInfo.denom / timebaseInfo.numer;
+        }
+        return mach_absolute_time();
 #else
         struct timeval tv;
         gettimeofday(&tv, NULL);

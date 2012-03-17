@@ -49,10 +49,11 @@ usage(void)
         exit(1);
     }
 
-    char *args[3];
-    args[0] = (char *) command.str();
-    args[1] = (char *) "--help";
-    args[2] = NULL;
+    char *args[4];
+    args[0] = (char *) "python";
+    args[1] = (char *) command.str();
+    args[2] = (char *) "--help";
+    args[3] = NULL;
 
     os::execute(args);
 }
@@ -61,25 +62,21 @@ static int
 command(int argc, char *argv[])
 {
     int i;
-    int ret;
 
     os::String command = find_command();
     if (!command.length()) {
         return 1;
     }
 
-    char **args = new char* [argc + 2];
-    args[0] = (char *) command.str();
-    for (i = 0; i < argc; i++) {
-        args[i + 1] = argv[i];
+    std::vector<const char *> args;
+    args.push_back("python");
+    args.push_back(command.str());
+    for (i = 1; i < argc; i++) {
+        args.push_back(argv[i]);
     }
-    args[i + 1] = NULL;
+    args.push_back(NULL);
 
-    ret = os::execute(args);
-
-    delete [] args;
-
-    return ret;
+    return os::execute((char * const *)&args[0]);
 }
 
 const Command diff_images_command = {

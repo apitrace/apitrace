@@ -32,30 +32,11 @@
 #define _EGLIMPORTS_HPP_
 
 
-// OpenGL
-#ifndef __gl_h_
-
-// Prevent including system's glext.h
-#define __glext_h_
-
-#include <GL/gl.h>
-
-// Include our own glext.h
-#undef __glext_h_
-#include "glext/glext.h"
-
-#ifndef GL_TEXTURE_INDEX_SIZE_EXT
-#define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
-#endif
-
-#endif /* __gl_h_ */
-
-
 #ifdef HAVE_EGL
 
 // EGL
-#include "EGL/egl.h"
-#include "EGL/eglext.h"
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 /* Prevent collision with Trace::Bool */
 #undef Bool
 
@@ -111,6 +92,9 @@ typedef int32_t  GLclampx;
 #define GL_POINT_SIZE_ARRAY_POINTER_OES                         0x898C
 #define GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES                  0x8B9F
 #endif
+
+// avoid conflict with GL_EXT_framebuffer_multisample
+#define GL_EXT_multisampled_render_to_texture
 
 #undef __glext_h_
 #include "GLES/glext.h"

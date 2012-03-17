@@ -5,6 +5,8 @@ add_definitions (-DNO_VIZ)
 # adjust warnings
 if (MSVC)
     add_definitions (-wd4131) # uses old-style declarator
+else ()
+    add_definitions (-DHAVE_UNISTD_H)
 endif ()
 
 add_library (z_bundled STATIC

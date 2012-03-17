@@ -150,6 +150,30 @@ HMODULE = Opaque("HMODULE")
 
 IUnknown = Interface("IUnknown")
 
+FILETIME = Struct("FILETIME", [
+    (DWORD, "dwLowDateTime"),
+    (DWORD, "dwHighDateTime"),
+])
+
+COLORREF = Alias("COLORREF", DWORD)
+
+LOGFONTW = Struct("LOGFONTW", [
+    (LONG, "lfHeight"),
+    (LONG, "lfWidth"),
+    (LONG, "lfEscapement"),
+    (LONG, "lfOrientation"),
+    (LONG, "lfWeight"),
+    (BYTE, "lfItalic"),
+    (BYTE, "lfUnderline"),
+    (BYTE, "lfStrikeOut"),
+    (BYTE, "lfCharSet"),
+    (BYTE, "lfOutPrecision"),
+    (BYTE, "lfClipPrecision"),
+    (BYTE, "lfQuality"),
+    (BYTE, "lfPitchAndFamily"),
+    (WString, "lfFaceName"),
+])
+
 HRESULT_com = FakeEnum(HRESULT, [
     "S_OK",
     "E_NOINTERFACE",

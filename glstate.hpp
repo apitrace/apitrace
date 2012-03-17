@@ -45,10 +45,6 @@ namespace glstate {
 
 const char *enumToString(GLenum pname);
 
-void dumpEnum(JSONWriter &json, GLenum pname);
-
-void dumpParameters(JSONWriter &json);
-
 void dumpCurrentContext(std::ostream &os);
 
 image::Image *

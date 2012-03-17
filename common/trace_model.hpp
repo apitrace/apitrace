@@ -228,6 +228,17 @@ public:
     void visit(Visitor &visitor);
 
     const EnumSig *sig;
+
+    const EnumValue *
+    lookup() {
+        // TODO: use a std::map
+        for (const EnumValue *it = sig->values; it != sig->values + sig->num_values; ++it) {
+            if (it->value == value) {
+                return it;
+            }
+        }
+        return NULL;
+    }
 };
 
 
@@ -406,6 +417,11 @@ enum {
 };
 
 
+struct Arg
+{
+    Value *value;
+};
+
 
 class Call
 {
@@ -413,7 +429,7 @@ public:
     unsigned thread_id;
     unsigned no;
     const FunctionSig *sig;
-    std::vector<Value *> args;
+    std::vector<Arg> args;
     Value *ret;
 
     CallFlags flags;
@@ -434,7 +450,7 @@ public:
 
     inline Value & arg(unsigned index) {
         assert(index < args.size());
-        return *(args[index]);
+        return *(args[index].value);
     }
 };
 

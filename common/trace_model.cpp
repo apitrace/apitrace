@@ -32,7 +32,7 @@ namespace trace {
 
 Call::~Call() {
     for (unsigned i = 0; i < args.size(); ++i) {
-        delete args[i];
+        delete args[i].value;
     }
 
     if (ret) {

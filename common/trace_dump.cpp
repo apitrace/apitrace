@@ -129,12 +129,10 @@ public:
     }
 
     void visit(Enum *node) {
-        const EnumSig *sig = node->sig;
-        for (const EnumValue *it = sig->values; it != sig->values + sig->num_values; ++it) {
-            if (it->value == node->value) {
-                os << literal << it->name << normal;
-                return;
-            }
+        const EnumValue *it = node->lookup();
+        if (it) {
+            os << literal << it->name << normal;
+            return;
         }
         os << literal << node->value << normal;
     }
@@ -143,7 +141,7 @@ public:
         unsigned long long value = bitmask->value;
         const BitmaskSig *sig = bitmask->sig;
         bool first = true;
-        for (const BitmaskFlag *it = sig->flags; value != 0 && it != sig->flags + sig->num_flags; ++it) {
+        for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
             if ((it->value && (value & it->value) == it->value) ||
                 (!it->value && value == 0)) {
                 if (!first) {
@@ -152,6 +150,9 @@ public:
                 os << literal << it->name << normal;
                 value &= ~it->value;
                 first = false;
+            }
+            if (value == 0) {
+                break;
             }
         }
         if (value || first) {
@@ -200,6 +201,10 @@ public:
 
     void visit(Call *call) {
         CallFlags callFlags = call->flags;
+        
+        if (!(dumpFlags & DUMP_FLAG_NO_CALL_NO)) {
+            os << call->no << " ";
+        }
 
         if (callFlags & CALL_FLAG_NON_REPRODUCIBLE) {
             os << strike;
@@ -217,8 +222,8 @@ public:
             if (!(dumpFlags & DUMP_FLAG_NO_ARG_NAMES)) {
                 os << italic << call->sig->arg_names[i] << normal << " = ";
             }
-            if (call->args[i]) {
-                _visit(call->args[i]);
+            if (call->args[i].value) {
+                _visit(call->args[i].value);
             } else {
                os << "?";
             }
@@ -252,7 +257,6 @@ void dump(Value *value, std::ostream &os, DumpFlags flags) {
 
 void dump(Call &call, std::ostream &os, DumpFlags flags) {
     Dumper d(os, flags);
-    os << call.no << " ";
     d.visit(&call);
 }
 

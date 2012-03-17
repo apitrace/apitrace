@@ -37,7 +37,7 @@ import sys
 from PIL import Image
 
 from snapdiff import Comparer
-from highlight import Highlighter
+from highlight import AutoHighlighter
 import jsondiff
 
 
@@ -80,16 +80,16 @@ class Setup:
         p.wait()
         return state.get('parameters', {})
 
-    def diff_state(self, ref_call_no, src_call_no):
+    def diff_state(self, ref_call_no, src_call_no, stream):
         '''Compare the state between two calls.'''
 
         ref_state = self.dump_state(ref_call_no)
         src_state = self.dump_state(src_call_no)
 
-        sys.stdout.flush()
-        differ = jsondiff.Differ(sys.stdout)
+        stream.flush()
+        differ = jsondiff.Differ(stream)
         differ.visit(ref_state, src_state)
-        sys.stdout.write('\n')
+        stream.write('\n')
 
 
 def read_pnm(stream):
@@ -156,9 +156,13 @@ def main():
         type="float", dest="threshold", default=12.0,
         help="threshold precision  [default: %default]")
     optparser.add_option(
-        '-S', '--snapshot-frequency', metavar='FREQUENCY',
+        '-S', '--snapshot-frequency', metavar='CALLSET',
         type="string", dest="snapshot_frequency", default='draw',
-        help="snapshot frequency: frame, framebuffer, or draw  [default: %default]")
+        help="calls to compare [default: %default]")
+    optparser.add_option(
+        '-o', '--output', metavar='FILE',
+        type="string", dest="output",
+        help="output file [default: stdout]")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
     ref_env = parse_env(optparser, options.ref_env)
@@ -169,7 +173,12 @@ def main():
     ref_setup = Setup(args, ref_env)
     src_setup = Setup(args, src_env)
 
-    highligher = Highlighter(sys.stdout)
+    if options.output:
+        output = open(options.output, 'wt')
+    else:
+        output = sys.stdout
+
+    highligher = AutoHighlighter(output)
 
     highligher.write('call\tprecision\n')
 
@@ -217,7 +226,7 @@ def main():
                         src_image.save(prefix + '.src.png')
                         comparer.write_diff(prefix + '.diff.png')
                     if last_bad < last_good:
-                        src_setup.diff_state(last_good, call_no)
+                        src_setup.diff_state(last_good, call_no, output)
                     last_bad = call_no
                 else:
                     last_good = call_no
