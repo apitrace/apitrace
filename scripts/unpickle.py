@@ -56,40 +56,44 @@ class Visitor:
         self.dispatch[dict] = self.visitDict
         self.dispatch[bytearray] = self.visitByteArray
 
-    def visit(self, obj, *args, **kwargs):
-        return self.dispatch[type(obj)](obj, *args, **kwargs)
+    def visit(self, obj):
+        method = self.dispatch.get(type(obj), self.visitObj)
+        return method(obj)
 
-    def visitAtom(self, obj, *args, **kwargs):
+    def visitObj(self, obj):
         raise NotImplementedError
 
-    def visitNone(self, obj, *args, **kwargs):
-        return self.visitAtom(obj, *args, **kwargs)
+    def visitAtom(self, obj):
+        return self.visitObj(obj)
 
-    def visitBool(self, obj, *args, **kwargs):
-        return self.visitAtom(obj, *args, **kwargs)
+    def visitNone(self, obj):
+        return self.visitAtom(obj)
 
-    def visitInt(self, obj, *args, **kwargs):
-        return self.visitAtom(obj, *args, **kwargs)
+    def visitBool(self, obj):
+        return self.visitAtom(obj)
 
-    def visitFloat(self, obj, *args, **kwargs):
-        return self.visitAtom(obj, *args, **kwargs)
+    def visitInt(self, obj):
+        return self.visitAtom(obj)
 
-    def visitStr(self, obj, *args, **kwargs):
-        return self.visitAtom(obj, *args, **kwargs)
+    def visitFloat(self, obj):
+        return self.visitAtom(obj)
 
-    def visitIterable(self, obj, *args, **kwargs):
+    def visitStr(self, obj):
+        return self.visitAtom(obj)
+
+    def visitIterable(self, obj):
+        return self.visitObj(obj)
+
+    def visitTuple(self, obj):
+        return self.visitIterable(obj)
+
+    def visitList(self, obj):
+        return self.visitIterable(obj)
+
+    def visitDict(self, obj):
         raise NotImplementedError
 
-    def visitTuple(self, obj, *args, **kwargs):
-        return self.visitIterable(obj, *args, **kwargs)
-
-    def visitList(self, obj, *args, **kwargs):
-        return self.visitIterable(obj, *args, **kwargs)
-
-    def visitDict(self, obj, *args, **kwargs):
-        raise NotImplementedError
-
-    def visitByteArray(self, obj, *args, **kwargs):
+    def visitByteArray(self, obj):
         raise NotImplementedError
 
 
@@ -97,36 +101,63 @@ class Dumper(Visitor):
 
     id_re = re.compile('^[_A-Za-z][_A-Za-z0-9]*$')
 
-    def visitAtom(self, obj, *args, **kwargs):
+    def visitObj(self, obj):
         return repr(obj)
 
-    def visitStr(self, obj, *args, **kwargs):
+    def visitStr(self, obj):
         if self.id_re.match(obj):
             return obj
         else:
             return repr(obj)
 
-    def visitTuple(self, obj, *args, **kwargs):
+    def visitTuple(self, obj):
         return '[' + ', '.join(itertools.imap(self.visit, obj)) + ']'
 
-    def visitList(self, obj, *args, **kwargs):
+    def visitList(self, obj):
         return '(' + ', '.join(itertools.imap(self.visit, obj)) + ')'
 
-    def visitByteArray(self, obj, *args, **kwargs):
+    def visitByteArray(self, obj):
         return 'blob(%u)' % len(obj)
 
 
 class Hasher(Visitor):
     '''Returns a hashable version of the objtree.'''
 
-    def visitAtom(self, obj, *args, **kwargs):
+    def visitObj(self, obj):
         return obj
 
-    def visitIterable(self, obj, *args, **kwargs):
+    def visitAtom(self, obj):
+        return obj
+
+    def visitIterable(self, obj):
         return tuple(itertools.imap(self.visit, obj))
 
-    def visitByteArray(self, obj, *args, **kwargs):
+    def visitByteArray(self, obj):
         return str(obj)
+
+
+class Rebuilder(Visitor):
+    '''Returns a hashable version of the objtree.'''
+
+    def visitAtom(self, obj):
+        return obj
+
+    def visitIterable(self, obj):
+        changed = False
+        newItems = []
+        for oldItem in obj:
+            newItem = self.visit(oldItem)
+            if newItem is not oldItem:
+                changed = True
+            newItems.append(newItem)
+        if changed:
+            klass = type(obj)
+            return klass(changed)
+        else:
+            return obj
+
+    def visitByteArray(self, obj):
+        return obj
 
 
 class Call:
@@ -203,7 +234,7 @@ def main():
     optparser = optparse.OptionParser(
         usage="\n\tapitrace pickle trace. %prog [options]")
     optparser.add_option(
-        '--quiet',
+        '-q', '--quiet',
         action="store_true", dest="quiet", default=False,
         help="don't dump calls to stdout")
 

@@ -32,7 +32,7 @@ import os.path
 import subprocess
 import sys
 
-from unpickle import Unpickler, Dumper
+from unpickle import Unpickler, Dumper, Rebuilder
 from highlight import ColorHighlighter, LessHighlighter
 
 
@@ -46,16 +46,45 @@ ignoredFunctionNames = set([
 ])
 
 
+class Blob:
+    '''Data-less proxy for bytearrays, to save memory.'''
+
+    def __init__(self, size, hash):
+        self.size = size
+        self.hash = hash
+
+    def __repr__(self):
+        return 'blob(%u)' % self.size
+
+    def __eq__(self, other):
+        return self.size == other.size and self.hash == other.hash
+
+    def __hash__(self):
+        return self.hash
+
+
+class BlobReplacer(Rebuilder):
+    '''Replace blobs with proxys.'''
+
+    def visitByteArray(self, obj):
+        return Blob(len(obj), hash(str(obj)))
+
+    def visitCall(self, call):
+        call.args = map(self.visit, call.args)
+        call.ret = self.visit(call.ret)
+
+
 class Loader(Unpickler):
 
     def __init__(self, stream):
         Unpickler.__init__(self, stream)
         self.calls = []
+        self.rebuilder = BlobReplacer()
 
     def handleCall(self, call):
         if call.functionName not in ignoredFunctionNames:
+            self.rebuilder.visitCall(call)
             self.calls.append(call)
-            hash(call)
 
 
 def readtrace(trace, calls):
@@ -258,7 +287,7 @@ def main():
         help='apitrace command [default: %default]')
     optparser.add_option(
         '-c', '--calls', metavar='CALLSET',
-        type="string", dest="calls", default='1-10000',
+        type="string", dest="calls", default='*',
         help="calls to compare [default: %default]")
     optparser.add_option(
         '--ref-calls', metavar='CALLSET',
@@ -292,7 +321,10 @@ def main():
         highlighter = ColorHighlighter()
 
     differ = SDiffer(ref_calls, src_calls, highlighter, options.call_nos)
-    differ.diff()
+    try:
+        differ.diff()
+    except IOError:
+        pass
 
 
 if __name__ == '__main__':
