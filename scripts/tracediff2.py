@@ -84,6 +84,8 @@ class SDiffer:
         self.delete_color = highlighter.red
         self.insert_color = highlighter.green
         self.callNos = callNos
+        self.aSpace = 0
+        self.bSpace = 0
 
     def diff(self):
         matcher = difflib.SequenceMatcher(self.isjunk, self.a, self.b)
@@ -91,9 +93,9 @@ class SDiffer:
             if tag == 'replace':
                 self.replace(alo, ahi, blo, bhi)
             elif tag == 'delete':
-                self.delete(alo, ahi)
+                self.delete(alo, ahi, blo, bhi)
             elif tag == 'insert':
-                self.insert(blo, bhi)
+                self.insert(alo, ahi, blo, bhi)
             elif tag == 'equal':
                 self.equal(alo, ahi, blo, bhi)
             else:
@@ -117,28 +119,24 @@ class SDiffer:
             if tag == 'replace':
                 self.replace_dissimilar(_alo, _ahi, _blo, _bhi)
             elif tag == 'delete':
-                self.delete(_alo, _ahi)
+                self.delete(_alo, _ahi, _blo, _bhi)
             elif tag == 'insert':
-                self.insert(_blo, _bhi)
+                self.insert(_alo, _ahi, _blo, _bhi)
             elif tag == 'equal':
                 self.replace_similar(_alo, _ahi, _blo, _bhi)
             else:
                 raise ValueError, 'unknown tag %s' % (tag,)
 
-    def replace_similar(self, alo, ahi, blo, bhi, prefix = None):
+    def replace_similar(self, alo, ahi, blo, bhi):
         assert alo < ahi and blo < bhi
         assert ahi - alo == bhi - blo
-        if prefix is None:
-            prefix = self.replace_prefix
         for i in xrange(0, bhi - blo):
+            self.highlighter.write('| ')
             a_call = self.a[alo + i]
             b_call = self.b[blo + i]
             assert a_call.functionName == b_call.functionName
             assert len(a_call.args) == len(b_call.args)
-            prefix()
-            if self.callNos:
-                self.replace_value(a_call.no, b_call.no)
-                self.highlighter.write(' ')
+            self.dumpCallNos(a_call.no, b_call.no)
             self.highlighter.bold(True)
             self.highlighter.write(b_call.functionName)
             self.highlighter.bold(False)
@@ -175,7 +173,6 @@ class SDiffer:
             self.highlighter.color(self.delete_color)
             self.highlighter.write(str(a))
             self.highlighter.normal()
-            #self.highlighter.write(" -> ")
             self.highlighter.write(" ")
             self.highlighter.color(self.insert_color)
             self.highlighter.write(str(b))
@@ -183,50 +180,66 @@ class SDiffer:
 
     escape = "\33["
 
-    def delete(self, alo, ahi):
-        self.dump(self.delete_prefix, self.a, alo, ahi, self.normal_suffix)
+    def delete(self, alo, ahi, blo, bhi):
+        for i in xrange(alo, ahi):
+            call = self.a[i]
+            self.highlighter.write('- ')
+            self.dumpCallNos(call.no, None)
+            self.highlighter.strike()
+            self.highlighter.color(self.delete_color)
+            self.dumpCall(call)
 
-    def insert(self, blo, bhi):
-        self.dump(self.insert_prefix, self.b, blo, bhi, self.normal_suffix)
+    def insert(self, alo, ahi, blo, bhi):
+        for i in xrange(blo, bhi):
+            call = self.b[i]
+            self.highlighter.write('+ ')
+            self.dumpCallNos(None, call.no)
+            self.highlighter.color(self.insert_color)
+            self.dumpCall(call)
 
     def equal(self, alo, ahi, blo, bhi):
-        if self.callNos:
-            self.replace_similar(alo, ahi, blo, bhi, prefix=self.equal_prefix)
+        for i in xrange(0, bhi - blo):
+            self.highlighter.write('  ')
+            a_call = self.a[alo + i]
+            b_call = self.b[blo + i]
+            assert a_call.functionName == b_call.functionName
+            assert len(a_call.args) == len(b_call.args)
+            self.dumpCallNos(a_call.no, b_call.no)
+            self.dumpCall(b_call)
+
+    def dumpCallNos(self, aNo, bNo):
+        if not self.callNos:
+            return
+
+        if aNo is None:
+            self.highlighter.write(' '*self.aSpace)
         else:
-            self.dump(self.equal_prefix, self.b, blo, bhi, self.normal_suffix)
+            aStr = str(aNo)
+            self.highlighter.strike()
+            self.highlighter.color(self.delete_color)
+            self.highlighter.write(str(aNo))
+            self.highlighter.normal()
+            self.aSpace = len(aStr)
+        self.highlighter.write(' ')
+        if bNo is None:
+            self.highlighter.write(' '*self.aSpace)
+        else:
+            bStr = str(bNo)
+            self.highlighter.color(self.insert_color)
+            self.highlighter.write(str(bNo))
+            self.highlighter.normal()
+            self.bSpace = len(bStr)
+        self.highlighter.write(' ')
 
-    def dump(self, prefix, x, lo, hi, suffix):
-        for i in xrange(lo, hi):
-            call = x[i]
-            prefix()
-            if self.callNos:
-                self.highlighter.write(str(call.no) + ' ')
-            self.highlighter.bold(True)
-            self.highlighter.write(call.functionName)
-            self.highlighter.bold(False)
-            self.highlighter.write('(' + ', '.join(map(repr, call.args)) + ')')
-            if call.ret is not None:
-                self.highlighter.write(' = ' + repr(call.ret))
-            suffix()
-            self.highlighter.write('\n')
-
-    def delete_prefix(self):
-        self.highlighter.write('- ')
-        self.highlighter.strike()
-        self.highlighter.color(self.delete_color)
-    
-    def insert_prefix(self):
-        self.highlighter.write('+ ')
-        self.highlighter.color(self.insert_color)
-
-    def equal_prefix(self):
-        self.highlighter.write('  ')
-
-    def normal_suffix(self):
+    def dumpCall(self, call):
+        self.highlighter.bold(True)
+        self.highlighter.write(call.functionName)
+        self.highlighter.bold(False)
+        self.highlighter.write('(' + ', '.join(map(repr, call.args)) + ')')
+        if call.ret is not None:
+            self.highlighter.write(' = ' + repr(call.ret))
         self.highlighter.normal()
-    
-    def replace_prefix(self):
-        self.highlighter.write('| ')
+        self.highlighter.write('\n')
 
 
 def main():
