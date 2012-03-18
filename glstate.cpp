@@ -1130,12 +1130,23 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     json.writeBoolMember("__normalized__", true);
     json.writeNumberMember("__channels__", channels);
 
+    GLenum type = GL_UNSIGNED_BYTE;
+
+#if 0
+    /* XXX: Hack to force interpreting depth buffers as RGBA to visualize full
+     * dynamic range, until we can transmit HDR images to the GUI */
+    if (format == GL_DEPTH_COMPONENT) {
+        type = GL_UNSIGNED_INT;
+        channels = 4;
+    }
+#endif
+
     GLubyte *pixels = new GLubyte[width*height*channels];
 
     // TODO: reset imaging state too
     context.resetPixelPackState();
 
-    glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, pixels);
+    glReadPixels(0, 0, width, height, format, type, pixels);
 
     context.restorePixelPackState();
 
