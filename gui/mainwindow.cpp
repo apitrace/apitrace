@@ -14,6 +14,7 @@
 #include "shaderssourcewidget.h"
 #include "tracedialog.h"
 #include "traceprocess.h"
+#include "trimprocess.h"
 #include "thumbnail.h"
 #include "ui_retracerdialog.h"
 #include "vertexdatainterpreter.h"
@@ -207,6 +208,7 @@ void MainWindow::newTraceFile(const QString &fileName)
         m_ui.actionReplay->setEnabled(true);
         m_ui.actionLookupState->setEnabled(true);
         m_ui.actionShowThumbnails->setEnabled(true);
+        m_ui.actionTrim->setEnabled(true);
         setWindowTitle(
             tr("QApiTrace - %1").arg(info.fileName()));
     }
@@ -320,6 +322,25 @@ void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
     }
 }
 
+void MainWindow::trimEvent()
+{
+
+    int trimIndex;
+    if (m_trimEvent->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(m_trimEvent);
+        trimIndex = call->index();
+    } else if (m_trimEvent->type() == ApiTraceEvent::Frame) {
+        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(m_trimEvent);
+        const QList<ApiTraceFrame*> frames = m_trace->frames();
+        trimIndex = frame->lastCallIndex();
+    }
+
+    m_trimProcess->setTracePath(m_trace->fileName());
+    m_trimProcess->setTrimIndex(trimIndex);
+
+    m_trimProcess->start();
+}
+
 void MainWindow::lookupState()
 {
     if (!m_selectedEvent) {
@@ -343,6 +364,18 @@ void MainWindow::lookupState()
 void MainWindow::showThumbnails()
 {
     replayTrace(false, true);
+}
+
+void MainWindow::trim()
+{
+    if (!m_selectedEvent) {
+        QMessageBox::warning(
+            this, tr("Unknown Event"),
+            tr("To trim select a frame or an event in the event list."));
+        return;
+    }
+    m_trimEvent = m_selectedEvent;
+    trimEvent();
 }
 
 MainWindow::~MainWindow()
@@ -726,6 +759,7 @@ void MainWindow::initObjects()
     m_searchWidget->hide();
 
     m_traceProcess = new TraceProcess(this);
+    m_trimProcess = new TrimProcess(this);
 }
 
 void MainWindow::initConnections()
@@ -796,6 +830,8 @@ void MainWindow::initConnections()
             this, SLOT(replayStop()));
     connect(m_ui.actionLookupState, SIGNAL(triggered()),
             this, SLOT(lookupState()));
+    connect(m_ui.actionTrim, SIGNAL(triggered()),
+            this, SLOT(trim()));
     connect(m_ui.actionShowThumbnails, SIGNAL(triggered()),
             this, SLOT(showThumbnails()));
     connect(m_ui.actionOptions, SIGNAL(triggered()),
@@ -835,6 +871,11 @@ void MainWindow::initConnections()
             SLOT(createdTrace(const QString&)));
     connect(m_traceProcess, SIGNAL(error(const QString&)),
             SLOT(traceError(const QString&)));
+
+    connect(m_trimProcess, SIGNAL(trimmedFile(const QString&)),
+            SLOT(createdTrim(const QString&)));
+    connect(m_trimProcess, SIGNAL(error(const QString&)),
+            SLOT(trimError(const QString&)));
 
     connect(m_ui.errorsDock, SIGNAL(visibilityChanged(bool)),
             m_ui.actionShowErrorsDock, SLOT(setChecked(bool)));
@@ -886,6 +927,21 @@ void MainWindow::traceError(const QString &msg)
     QMessageBox::warning(
             this,
             tr("Tracing Error"),
+            msg);
+}
+
+void MainWindow::createdTrim(const QString &path)
+{
+    qDebug()<<"Done trimming "<<path;
+
+    newTraceFile(path);
+}
+
+void MainWindow::trimError(const QString &msg)
+{
+    QMessageBox::warning(
+            this,
+            tr("Trim Error"),
             msg);
 }
 

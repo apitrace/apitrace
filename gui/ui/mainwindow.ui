@@ -76,6 +76,7 @@
     <addaction name="actionStop"/>
     <addaction name="actionLookupState"/>
     <addaction name="actionShowThumbnails"/>
+    <addaction name="actionTrim"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
    </widget>
@@ -535,6 +536,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actionTrim">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Tr&amp;im</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
    </property>
   </action>
   <action name="actionOptions">

@@ -29,6 +29,7 @@ class Retracer;
 class SearchWidget;
 class ShadersSourceWidget;
 class TraceProcess;
+class TrimProcess;
 class VertexDataInterpreter;
 
 class MainWindow : public QMainWindow
@@ -57,6 +58,7 @@ private slots:
     void finishedLoadingTrace();
     void lookupState();
     void showThumbnails();
+    void trim();
     void showSettings();
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
@@ -66,6 +68,8 @@ private slots:
     void slotJumpTo(int callNum);
     void createdTrace(const QString &path);
     void traceError(const QString &msg);
+    void createdTrim(const QString &path);
+    void trimError(const QString &msg);
     void slotSearch();
     void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity);
     void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity);
@@ -91,6 +95,7 @@ private:
     void initConnections();
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState, bool dumpThumbnails);
+    void trimEvent();
     void fillStateForFrame();
 
     /* there's a difference between selected frame/call and
@@ -120,6 +125,8 @@ private:
 
     ApiTraceEvent *m_stateEvent;
 
+    ApiTraceEvent *m_trimEvent;
+
     Retracer *m_retracer;
 
     VertexDataInterpreter *m_vdataInterpreter;
@@ -128,6 +135,8 @@ private:
     SearchWidget *m_searchWidget;
 
     TraceProcess *m_traceProcess;
+
+    TrimProcess *m_trimProcess;
 
     ArgumentsEditor *m_argsEditor;
 

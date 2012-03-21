@@ -22,6 +22,7 @@ set(qapitrace_SRCS
    tracedialog.cpp
    traceloader.cpp
    traceprocess.cpp
+   trimprocess.cpp
    vertexdatainterpreter.cpp
  )
 
