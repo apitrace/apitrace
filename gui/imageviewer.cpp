@@ -17,6 +17,8 @@ ImageViewer::ImageViewer(QWidget *parent)
             SLOT(slotUpdate()));
     connect(flipCheckBox, SIGNAL(stateChanged(int)),
             SLOT(slotUpdate()));
+    connect(opaqueCheckBox, SIGNAL(stateChanged(int)),
+            SLOT(slotUpdate()));
 
     QPixmap px(32, 32);
     QPainter p(&px);
@@ -59,7 +61,9 @@ void ImageViewer::slotUpdate()
     double lowerValue = lowerSpinBox->value();
     double upperValue = upperSpinBox->value();
 
-    if (lowerValue != 0.0 || upperValue != 1.0) {
+    bool opaque = opaqueCheckBox->isChecked();
+
+    if (lowerValue != 0.0 || upperValue != 1.0 || opaque) {
         /*
          * Rescale the image.
          *
@@ -81,6 +85,8 @@ void ImageViewer::slotUpdate()
         int width = m_temp.width();
         int height = m_temp.height();
 
+        int aMask = opaque ? 0xff : 0;
+
         for (int y = 0; y < height; ++y) {
             QRgb *scanline = (QRgb *)m_temp.scanLine(y);
             for (int x = 0; x < width; ++x) {
@@ -88,10 +94,11 @@ void ImageViewer::slotUpdate()
                 int r = qRed(pixel);
                 int g = qGreen(pixel);
                 int b = qBlue(pixel);
+                int a = qAlpha(pixel);
                 r = clamp(((r + offset) * scale) >> 8);
                 g = clamp(((g + offset) * scale) >> 8);
                 b = clamp(((b + offset) * scale) >> 8);
-                int a = 255;
+                a |= aMask;
                 scanline[x] = qRgba(r, g, b, a);
             }
         }
