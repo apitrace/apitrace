@@ -340,21 +340,21 @@ class GlRetracer(Retracer):
                 print r'    }'
             print '    }'
 
-            # Query the buffer length for whole buffer mappings
-            if function.name in self.map_function_names:
-                if 'length' in function.argNames():
-                    assert 'BufferRange' in function.name
+        # Query the buffer length for whole buffer mappings
+        if function.name in self.map_function_names:
+            if 'length' in function.argNames():
+                assert 'BufferRange' in function.name
+            else:
+                assert 'BufferRange' not in function.name
+                print r'    GLint length = 0;'
+                if function.name in ('glMapBuffer', 'glMapBufferOES'):
+                    print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
+                elif function.name == 'glMapBufferARB':
+                    print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
+                elif function.name == 'glMapNamedBufferEXT':
+                    print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
                 else:
-                    assert 'BufferRange' not in function.name
-                    print r'    GLint length = 0;'
-                    if function.name in ('glMapBuffer', 'glMapBufferOES'):
-                        print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
-                    elif function.name == 'glMapBufferARB':
-                        print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
-                    elif function.name == 'glMapNamedBufferEXT':
-                        print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
-                    else:
-                        assert False
+                    assert False
 
     def extractArg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':
