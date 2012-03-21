@@ -56,6 +56,11 @@ OSStatus CGSGetSurfaceBounds(CGSConnectionID, CGWindowID, CGSSurfaceID, CGRect *
 #endif /* __APPLE__ */
 
 
+/* Change thi to one to force interpreting depth buffers as RGBA, which enables
+ * visualizing full dynamic range, until we can transmit HDR images to the GUI */
+#define DEPTH_AS_RGBA 0
+
+
 namespace glstate {
 
 
@@ -1059,6 +1064,15 @@ getDrawBufferImage() {
         }
     }
 
+    GLenum type = GL_UNSIGNED_BYTE;
+
+#if DEPTH_AS_RGBA
+    if (format == GL_DEPTH_COMPONENT) {
+        type = GL_UNSIGNED_INT;
+        channels = 4;
+    }
+#endif
+
     image::Image *image = new image::Image(width, height, channels, true);
     if (!image) {
         return NULL;
@@ -1067,7 +1081,7 @@ getDrawBufferImage() {
     while (glGetError() != GL_NO_ERROR) {}
 
     GLint read_framebuffer = 0;
-    GLint read_buffer = 0;
+    GLint read_buffer = GL_NONE;
     if (!context.ES) {
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, draw_framebuffer);
@@ -1079,7 +1093,7 @@ getDrawBufferImage() {
     // TODO: reset imaging state too
     context.resetPixelPackState();
 
-    glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, image->pixels);
+    glReadPixels(0, 0, width, height, format, type, image->pixels);
 
     context.restorePixelPackState();
 
@@ -1132,9 +1146,7 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 
     GLenum type = GL_UNSIGNED_BYTE;
 
-#if 0
-    /* XXX: Hack to force interpreting depth buffers as RGBA to visualize full
-     * dynamic range, until we can transmit HDR images to the GUI */
+#if DEPTH_AS_RGBA
     if (format == GL_DEPTH_COMPONENT) {
         type = GL_UNSIGNED_INT;
         channels = 4;
