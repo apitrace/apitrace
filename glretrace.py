@@ -111,6 +111,8 @@ class GlRetracer(Retracer):
     ])
 
     misc_draw_function_names = set([
+        "glCallList",
+        "glCallLists",
         "glClear",
         "glEnd",
         "glDrawPixels",

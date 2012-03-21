@@ -64,6 +64,8 @@ callFlagTable[] = {
     { "glBindFramebufferOES",                          CALL_FLAG_SWAP_RENDERTARGET },
     { "glBlitFramebuffer",                             CALL_FLAG_RENDER },
     { "glBlitFramebufferEXT",                          CALL_FLAG_RENDER },
+    { "glCallList",                                    CALL_FLAG_RENDER },
+    { "glCallLists",                                   CALL_FLAG_RENDER },
     { "glClear",                                       CALL_FLAG_RENDER },
     { "glDrawArrays",                                  CALL_FLAG_RENDER },
     { "glDrawArraysEXT",                               CALL_FLAG_RENDER },
