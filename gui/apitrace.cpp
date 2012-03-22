@@ -271,9 +271,11 @@ void ApiTrace::loadFrame(ApiTraceFrame *frame)
 
 void ApiTrace::finishedParsing()
 {
-    ApiTraceFrame *firstFrame = m_frames[0];
-    if (firstFrame && !firstFrame->isLoaded()) {
-        loadFrame(firstFrame);
+    if (!m_frames.isEmpty()) {
+        ApiTraceFrame *firstFrame = m_frames[0];
+        if (firstFrame && !firstFrame->isLoaded()) {
+            loadFrame(firstFrame);
+        }
     }
 }
 
