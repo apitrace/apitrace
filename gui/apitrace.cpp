@@ -450,7 +450,7 @@ int ApiTrace::callInFrame(int callIdx) const
 {
     unsigned numCalls = 0;
 
-    for (int frameIdx = 0; frameIdx <= m_frames.size(); ++frameIdx) {
+    for (int frameIdx = 0; frameIdx < m_frames.size(); ++frameIdx) {
         const ApiTraceFrame *frame = m_frames[frameIdx];
         unsigned numCallsInFrame =  frame->isLoaded()
                 ? frame->numChildren()
