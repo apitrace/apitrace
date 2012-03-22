@@ -104,7 +104,7 @@ int TraceLoader::numberOfFrames() const
 
 int TraceLoader::numberOfCallsInFrame(int frameIdx) const
 {
-    if (frameIdx > m_frameBookmarks.size()) {
+    if (frameIdx >= m_frameBookmarks.size()) {
         return 0;
     }
     FrameBookmarks::const_iterator itr =
@@ -386,7 +386,7 @@ int TraceLoader::callInFrame(int callIdx) const
 {
     unsigned numCalls = 0;
 
-    for (int frameIdx = 0; frameIdx <= m_frameBookmarks.size(); ++frameIdx) {
+    for (int frameIdx = 0; frameIdx < m_frameBookmarks.size(); ++frameIdx) {
         const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
         unsigned firstCall = numCalls;
         unsigned endCall = numCalls + frameBookmark.numberOfCalls;
