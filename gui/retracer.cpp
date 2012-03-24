@@ -182,7 +182,6 @@ void RetraceProcess::start()
 
 void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    QByteArray output;
     QString msg;
 
     if (exitStatus != QProcess::NormalExit) {
@@ -193,8 +192,8 @@ void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatu
         if (m_captureState || m_captureThumbnails) {
             if (m_captureState) {
                 bool ok = false;
-                output = m_process->readAllStandardOutput();
-                QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
+                m_process->setReadChannel(QProcess::StandardOutput);
+                QVariantMap parsedJson = m_jsonParser->parse(m_process, &ok).toMap();
                 ApiTraceState *state = new ApiTraceState(parsedJson);
                 emit foundState(state);
                 msg = tr("State fetched.");
@@ -250,6 +249,7 @@ void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatu
                 msg = tr("Thumbnails fetched.");
             }
         } else {
+            QByteArray output;
             output = m_process->readAllStandardOutput();
             msg = QString::fromUtf8(output);
         }
