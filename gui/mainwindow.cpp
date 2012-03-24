@@ -202,9 +202,6 @@ void MainWindow::newTraceFile(const QString &fileName)
         setWindowTitle(
             tr("QApiTrace - %1").arg(info.fileName()));
     }
-
-    // force initial capture of thumbnails
-    replayTrace(false, true);
 }
 
 void MainWindow::replayFinished(const QString &output)
@@ -265,6 +262,9 @@ void MainWindow::finishedLoadingTrace()
         m_trace->findCallIndex(m_initalCallNum);
         m_initalCallNum = -1;
     }
+
+    // force initial capture of thumbnails
+    replayTrace(false, true);
 }
 
 void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
