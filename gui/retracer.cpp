@@ -184,13 +184,6 @@ void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatu
 {
     QByteArray output;
     QString msg;
-    QString errStr = m_process->readAllStandardError();
-
-#if 0
-    qDebug()<<"Process finished = ";
-    qDebug()<<"\terr = "<<errStr;
-    qDebug()<<"\tout = "<<output;
-#endif
 
     if (exitStatus != QProcess::NormalExit) {
         msg = QLatin1String("Process crashed");
@@ -262,6 +255,7 @@ void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatu
         }
     }
 
+    QString errStr = m_process->readAllStandardError();
     QStringList errorLines = errStr.split('\n');
     QList<ApiTraceError> errors;
     QRegExp regexp("(^\\d+): +(\\b\\w+\\b): (.+$)");
