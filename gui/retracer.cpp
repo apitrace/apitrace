@@ -255,11 +255,11 @@ void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatu
         }
     }
 
-    QString errStr = m_process->readAllStandardError();
-    QStringList errorLines = errStr.split('\n');
+    m_process->setReadChannel(QProcess::StandardError);
     QList<ApiTraceError> errors;
-    QRegExp regexp("(^\\d+): +(\\b\\w+\\b): (.+$)");
-    foreach(QString line, errorLines) {
+    QRegExp regexp("(^\\d+): +(\\b\\w+\\b): ([^\\r\\n]+)[\\r\\n]*$");
+    while (!m_process->atEnd()) {
+        QString line = m_process->readLine();
         if (regexp.indexIn(line) != -1) {
             ApiTraceError error;
             error.callIndex = regexp.cap(1).toInt();
