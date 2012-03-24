@@ -108,6 +108,8 @@ bool writePixelsToBuffer(unsigned char *pixels,
 Image *
 readPNG(const char *filename);
 
+const char *
+readPNMHeader(const char *buffer, size_t size, unsigned *channels, unsigned *width, unsigned *height);
 
 } /* namespace image */
 

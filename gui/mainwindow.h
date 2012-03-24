@@ -8,6 +8,8 @@
 
 #include <QMainWindow>
 #include <QProcess>
+#include <QList>
+#include <QImage>
 
 class ApiTrace;
 class ApiTraceCall;
@@ -48,11 +50,13 @@ private slots:
     void replayStop();
     void replayFinished(const QString &output);
     void replayStateFound(ApiTraceState *state);
+    void replayThumbnailsFound(const QList<QImage> &thumbnails);
     void replayError(const QString &msg);
     void startedLoadingTrace();
     void loadProgess(int percent);
     void finishedLoadingTrace();
     void lookupState();
+    void showThumbnails();
     void showSettings();
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
@@ -72,7 +76,7 @@ private slots:
     void slotSaved();
     void slotGoFrameStart();
     void slotGoFrameEnd();
-    void slotTraceChanged(ApiTraceCall *call);
+    void slotTraceChanged(ApiTraceEvent *event);
     void slotRetraceErrors(const QList<ApiTraceError> &errors);
     void slotErrorSelected(QTreeWidgetItem *current);
     void slotSearchResult(const ApiTrace::SearchRequest &request,
@@ -86,7 +90,7 @@ private:
     void initObjects();
     void initConnections();
     void newTraceFile(const QString &fileName);
-    void replayTrace(bool dumpState);
+    void replayTrace(bool dumpState, bool dumpThumbnails);
     void fillStateForFrame();
 
     /* there's a difference between selected frame/call and

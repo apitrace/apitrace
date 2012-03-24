@@ -2,8 +2,12 @@
 
 #include "apitracecall.h"
 
+#include "image.hpp"
+
 #include <QDebug>
 #include <QVariant>
+#include <QList>
+#include <QImage>
 
 #include <qjson/parser.h>
 
@@ -83,6 +87,16 @@ void Retracer::setCaptureState(bool enable)
     m_captureState = enable;
 }
 
+bool Retracer::captureThumbnails() const
+{
+    return m_captureThumbnails;
+}
+
+void Retracer::setCaptureThumbnails(bool enable)
+{
+    m_captureThumbnails = enable;
+}
+
 
 void Retracer::run()
 {
@@ -94,6 +108,7 @@ void Retracer::run()
     retrace->setBenchmarking(m_benchmarking);
     retrace->setDoubleBuffered(m_doubleBuffered);
     retrace->setCaptureState(m_captureState);
+    retrace->setCaptureThumbnails(m_captureThumbnails);
     retrace->setCaptureAtCallNumber(m_captureCall);
 
     connect(retrace, SIGNAL(finished(const QString&)),
@@ -106,6 +121,8 @@ void Retracer::run()
             this, SIGNAL(error(const QString&)));
     connect(retrace, SIGNAL(foundState(ApiTraceState*)),
             this, SIGNAL(foundState(ApiTraceState*)));
+    connect(retrace, SIGNAL(foundThumbnails(const QList<QImage>&)),
+            this, SIGNAL(foundThumbnails(const QList<QImage>&)));
     connect(retrace, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
             this, SIGNAL(retraceErrors(const QList<ApiTraceError>&)));
 
@@ -142,9 +159,15 @@ void RetraceProcess::start()
         arguments << QLatin1String("-sb");
     }
 
-    if (m_captureState) {
-        arguments << QLatin1String("-D");
-        arguments << QString::number(m_captureCall);
+    if (m_captureState || m_captureThumbnails) {
+        if (m_captureState) {
+            arguments << QLatin1String("-D");
+            arguments << QString::number(m_captureCall);
+        }
+        if (m_captureThumbnails) {
+            arguments << QLatin1String("-s"); // emit snapshots
+            arguments << QLatin1String("-"); // emit to stdout
+        }
     } else {
         if (m_benchmarking) {
             arguments << QLatin1String("-b");
@@ -159,32 +182,80 @@ void RetraceProcess::start()
 
 void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    QByteArray output = m_process->readAllStandardOutput();
+    QByteArray output;
     QString msg;
-    QString errStr = m_process->readAllStandardError();
-
-#if 0
-    qDebug()<<"Process finished = ";
-    qDebug()<<"\terr = "<<errStr;
-    qDebug()<<"\tout = "<<output;
-#endif
 
     if (exitStatus != QProcess::NormalExit) {
         msg = QLatin1String("Process crashed");
     } else if (exitCode != 0) {
         msg = QLatin1String("Process exited with non zero exit code");
     } else {
-        if (m_captureState) {
-            bool ok = false;
-            QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
-            ApiTraceState *state = new ApiTraceState(parsedJson);
-            emit foundState(state);
-            msg = tr("State fetched.");
+        if (m_captureState || m_captureThumbnails) {
+            if (m_captureState) {
+                bool ok = false;
+                output = m_process->readAllStandardOutput();
+                QVariantMap parsedJson = m_jsonParser->parse(output, &ok).toMap();
+                ApiTraceState *state = new ApiTraceState(parsedJson);
+                emit foundState(state);
+                msg = tr("State fetched.");
+            }
+            if (m_captureThumbnails) {
+                m_process->setReadChannel(QProcess::StandardOutput);
+
+                QList<QImage> thumbnails;
+
+                while (!m_process->atEnd()) {
+                    unsigned channels = 0;
+                    unsigned width = 0;
+                    unsigned height = 0;
+
+                    char header[512];
+                    qint64 headerSize = 0;
+                    int headerLines = 3; // assume no optional comment line
+
+                    for (int headerLine = 0; headerLine < headerLines; ++headerLine) {
+                        qint64 headerRead = m_process->readLine(&header[headerSize], sizeof(header) - headerSize);
+
+                        // if header actually contains optional comment line, ...
+                        if (headerLine == 1 && header[headerSize] == '#') {
+                            ++headerLines;
+                        }
+
+                        headerSize += headerRead;
+                    }
+
+                    const char *headerEnd = image::readPNMHeader(header, headerSize, &channels, &width, &height);
+
+                    // if invalid PNM header was encountered, ...
+                    if (header == headerEnd) {
+                        qDebug() << "error: invalid snapshot stream encountered\n";
+                        break;
+                    }
+
+                    //qDebug() << "channels: " << channels << ", width: " << width << ", height: " << height << "\n";
+
+                    QImage snapshot = QImage(width, height, channels == 1 ? QImage::Format_Mono : QImage::Format_RGB888);
+
+                    int rowBytes = channels * width;
+                    for (int y = 0; y < height; ++y) {
+                        unsigned char *scanLine = snapshot.scanLine(y);
+                        m_process->read((char *) scanLine, rowBytes);
+                    }
+
+                    QImage thumbnail = snapshot.scaled(16, 16, Qt::KeepAspectRatio, Qt::FastTransformation);
+                    thumbnails.append(thumbnail);
+                }
+
+                emit foundThumbnails(thumbnails);
+                msg = tr("Thumbnails fetched.");
+            }
         } else {
+            output = m_process->readAllStandardOutput();
             msg = QString::fromUtf8(output);
         }
     }
 
+    QString errStr = m_process->readAllStandardError();
     QStringList errorLines = errStr.split('\n');
     QList<ApiTraceError> errors;
     QRegExp regexp("(^\\d+): +(\\b\\w+\\b): (.+$)");
@@ -293,6 +364,16 @@ bool RetraceProcess::captureState() const
 void RetraceProcess::setCaptureState(bool enable)
 {
     m_captureState = enable;
+}
+
+bool RetraceProcess::captureThumbnails() const
+{
+    return m_captureThumbnails;
+}
+
+void RetraceProcess::setCaptureThumbnails(bool enable)
+{
+    m_captureThumbnails = enable;
 }
 
 void RetraceProcess::terminate()
