@@ -848,8 +848,6 @@ void MainWindow::replayStateFound(ApiTraceState *state)
 
 void MainWindow::replayThumbnailsFound(const QList<QImage> &thumbnails)
 {
-    m_thumbnails = thumbnails;
-
     m_trace->bindThumbnailsToFrames(thumbnails);
 }
 

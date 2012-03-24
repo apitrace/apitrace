@@ -118,8 +118,6 @@ private:
 
     ApiTraceEvent *m_stateEvent;
 
-    QList<QImage> m_thumbnails;
-
     Retracer *m_retracer;
 
     VertexDataInterpreter *m_vdataInterpreter;
