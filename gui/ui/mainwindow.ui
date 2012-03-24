@@ -75,6 +75,7 @@
     <addaction name="actionReplay"/>
     <addaction name="actionStop"/>
     <addaction name="actionLookupState"/>
+    <addaction name="actionShowThumbnails"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
    </widget>
@@ -523,6 +524,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionShowThumbnails">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Show &amp;Thumbnails</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actionOptions">

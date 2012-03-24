@@ -182,6 +182,7 @@ void MainWindow::replayStop()
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
+    m_ui.actionShowThumbnails->setEnabled(true);
 }
 
 void MainWindow::newTraceFile(const QString &fileName)
@@ -194,11 +195,13 @@ void MainWindow::newTraceFile(const QString &fileName)
     if (fileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);
         m_ui.actionLookupState->setEnabled(false);
+        m_ui.actionShowThumbnails->setEnabled(false);
         setWindowTitle(tr("QApiTrace"));
     } else {
         QFileInfo info(fileName);
         m_ui.actionReplay->setEnabled(true);
         m_ui.actionLookupState->setEnabled(true);
+        m_ui.actionShowThumbnails->setEnabled(true);
         setWindowTitle(
             tr("QApiTrace - %1").arg(info.fileName()));
     }
@@ -209,6 +212,7 @@ void MainWindow::replayFinished(const QString &output)
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
+    m_ui.actionShowThumbnails->setEnabled(true);
 
     m_progressBar->hide();
     if (output.length() < 80) {
@@ -230,6 +234,7 @@ void MainWindow::replayError(const QString &message)
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
+    m_ui.actionShowThumbnails->setEnabled(true);
     m_stateEvent = 0;
     m_nonDefaultsLookupEvent = 0;
 
@@ -262,9 +267,6 @@ void MainWindow::finishedLoadingTrace()
         m_trace->findCallIndex(m_initalCallNum);
         m_initalCallNum = -1;
     }
-
-    // force initial capture of thumbnails
-    replayTrace(false, true);
 }
 
 void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
@@ -335,6 +337,11 @@ void MainWindow::lookupState()
     }
     m_stateEvent = m_selectedEvent;
     replayTrace(true, false);
+}
+
+void MainWindow::showThumbnails()
+{
+    replayTrace(false, true);
 }
 
 MainWindow::~MainWindow()
@@ -788,6 +795,8 @@ void MainWindow::initConnections()
             this, SLOT(replayStop()));
     connect(m_ui.actionLookupState, SIGNAL(triggered()),
             this, SLOT(lookupState()));
+    connect(m_ui.actionShowThumbnails, SIGNAL(triggered()),
+            this, SLOT(showThumbnails()));
     connect(m_ui.actionOptions, SIGNAL(triggered()),
             this, SLOT(showSettings()));
 

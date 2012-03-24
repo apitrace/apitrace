@@ -55,6 +55,7 @@ private slots:
     void loadProgess(int percent);
     void finishedLoadingTrace();
     void lookupState();
+    void showThumbnails();
     void showSettings();
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
