@@ -37,7 +37,7 @@ void ApiCallDelegate::paint(QPainter *painter,
         // draw thumbnail of frame
         if(event->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-            QImage thumbnail = frame->thumbnail();
+            const QImage & thumbnail = frame->thumbnail();
             if (!thumbnail.isNull()) {
                 painter->drawImage(option.rect.topLeft() + offset, thumbnail);
                 offset += QPoint(option.rect.height() + 16, 0);

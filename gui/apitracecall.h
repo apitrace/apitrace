@@ -336,8 +336,8 @@ public:
     void setLastCallIndex(unsigned index);
     unsigned lastCallIndex() const;
 
-    void setThumbnail(QImage thumbnail);
-    QImage thumbnail() const;
+    void setThumbnail(const QImage & thumbnail);
+    const QImage & thumbnail() const;
 
 private:
     ApiTrace *m_parentTrace;

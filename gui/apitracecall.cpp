@@ -1198,12 +1198,12 @@ unsigned ApiTraceFrame::lastCallIndex() const
     }
 }
 
-void ApiTraceFrame::setThumbnail(QImage thumbnail)
+void ApiTraceFrame::setThumbnail(const QImage & thumbnail)
 {
     m_thumbnail = thumbnail;
 }
 
-QImage ApiTraceFrame::thumbnail() const
+const QImage & ApiTraceFrame::thumbnail() const
 {
     return m_thumbnail;
 }

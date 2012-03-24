@@ -100,7 +100,7 @@ public:
 signals:
     void finished(const QString &output);
     void foundState(ApiTraceState *state);
-    void foundThumbnails(const QList<QImage> &humbnails);
+    void foundThumbnails(const QList<QImage> &thumbnails);
     void error(const QString &msg);
     void retraceErrors(const QList<ApiTraceError> &errors);
 
