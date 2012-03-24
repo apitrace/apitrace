@@ -67,7 +67,7 @@ public:
 
     ApiTraceCall *callWithIndex(int idx) const;
 
-    QList<ApiTraceFrame*> frames() const;
+    const QList<ApiTraceFrame*> & frames() const;
     ApiTraceFrame *frameAt(int idx) const;
     int numFrames() const;
     int numCallsInFrame(int idx) const;

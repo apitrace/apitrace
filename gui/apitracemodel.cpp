@@ -294,7 +294,7 @@ void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
         emit dataChanged(index, index);
     } else if (event->type() == ApiTraceEvent::Frame) {
         ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        const QList<ApiTraceFrame*> frames = m_trace->frames();
+        const QList<ApiTraceFrame*> & frames = m_trace->frames();
         int row = frames.indexOf(frame);
         QModelIndex index = createIndex(row, 0, frame);
         emit dataChanged(index, index);
@@ -350,7 +350,7 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
 
 void ApiTraceModel::frameChanged(ApiTraceFrame *frame)
 {
-    const QList<ApiTraceFrame*> frames = m_trace->frames();
+    const QList<ApiTraceFrame*> & frames = m_trace->frames();
     int row = frames.indexOf(frame);
     QModelIndex index = createIndex(row, 0, frame);
     emit dataChanged(index, index);

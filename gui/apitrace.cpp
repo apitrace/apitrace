@@ -115,7 +115,7 @@ ApiTrace::FrameMarker ApiTrace::frameMarker() const
     return m_frameMarker;
 }
 
-QList<ApiTraceFrame*> ApiTrace::frames() const
+const QList<ApiTraceFrame*> & ApiTrace::frames() const
 {
     return m_frames;
 }
