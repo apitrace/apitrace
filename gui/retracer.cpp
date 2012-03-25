@@ -1,6 +1,7 @@
 #include "retracer.h"
 
 #include "apitracecall.h"
+#include "thumbnail.h"
 
 #include "image.hpp"
 
@@ -241,8 +242,8 @@ void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatu
                         m_process->read((char *) scanLine, rowBytes);
                     }
 
-                    QImage thumbnail = snapshot.scaled(16, 16, Qt::KeepAspectRatio, Qt::FastTransformation);
-                    thumbnails.append(thumbnail);
+                    QImage thumb = thumbnail(snapshot);
+                    thumbnails.append(thumb);
                 }
 
                 emit foundThumbnails(thumbnails);

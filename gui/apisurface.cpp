@@ -1,4 +1,5 @@
 #include "apisurface.h"
+#include "thumbnail.h"
 
 #include <QDebug>
 #include <QSysInfo>
@@ -31,7 +32,7 @@ void ApiSurface::contentsFromBase64(const QByteArray &base64)
 {
     QByteArray dataArray = QByteArray::fromBase64(base64);
     m_image.loadFromData(dataArray, "png");
-    m_thumb = m_image.scaled(64, 64, Qt::KeepAspectRatio);
+    m_thumb = thumbnail(m_image);
 }
 
 QImage ApiSurface::image() const

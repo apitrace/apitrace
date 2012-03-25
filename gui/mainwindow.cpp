@@ -14,6 +14,7 @@
 #include "shaderssourcewidget.h"
 #include "tracedialog.h"
 #include "traceprocess.h"
+#include "thumbnail.h"
 #include "ui_retracerdialog.h"
 #include "vertexdatainterpreter.h"
 
@@ -554,7 +555,7 @@ void MainWindow::fillStateForFrame()
     if (textures.isEmpty() && fbos.isEmpty()) {
         m_ui.surfacesTab->setDisabled(false);
     } else {
-        m_ui.surfacesTreeWidget->setIconSize(QSize(64, 64));
+        m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
         if (!textures.isEmpty()) {
             QTreeWidgetItem *textureItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
@@ -863,6 +864,7 @@ void MainWindow::replayStateFound(ApiTraceState *state)
 
 void MainWindow::replayThumbnailsFound(const QList<QImage> &thumbnails)
 {
+    m_ui.callView->setUniformRowHeights(false);
     m_trace->bindThumbnailsToFrames(thumbnails);
 }
 
