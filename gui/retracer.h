@@ -5,7 +5,6 @@
 #include "apitracecall.h"
 
 #include <QThread>
-#include <QProcess>
 
 class ApiTraceState;
 

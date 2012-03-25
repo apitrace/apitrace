@@ -1,5 +1,4 @@
 #include "retracer.h"
-#include <iostream>
 
 #include "apitracecall.h"
 
@@ -9,8 +8,119 @@
 #include <QVariant>
 #include <QList>
 #include <QImage>
+#include <QProcess>
 
 #include <qjson/parser.h>
+
+/**
+ * Wrapper around a QProcess which enforces IO to block .
+ *
+ * Several QIODevice users (notably QJSON) expect blocking semantics, e.g.,
+ * they expect that QIODevice::read() will blocked until the requested ammount
+ * of bytes is read or end of file is reached. But by default QProcess, does
+ * not block.  And passing QIODevice::Unbuffered mitigates but does not fully
+ * address the problem either.
+ *
+ * This class wraps around QProcess, providing QIODevice interface, while
+ * ensuring that all reads block.
+ *
+ * This class also works around a bug in QProcess::atEnd() implementation.
+ *
+ * See also:
+ * - http://qt-project.org/wiki/Simple_Crypt_IO_Device
+ * - http://qt-project.org/wiki/Custom_IO_Device
+ */
+class BlockingIODevice : public QIODevice
+{
+    /* We don't use the Q_OBJECT in this class given we don't declare any
+     * signals and slots or use any other services provided by Qt's meta-object
+     * system. */
+public:
+    BlockingIODevice(QProcess * io);
+    bool isSequential() const;
+    bool atEnd() const;
+    bool waitForReadyRead(int msecs = -1);
+
+protected:
+    qint64 readData(char * data, qint64 maxSize);
+    qint64 writeData(const char * data, qint64 maxSize);
+
+private:
+    QProcess *m_device;
+};
+
+BlockingIODevice::BlockingIODevice(QProcess * io) :
+    m_device(io)
+{
+    /*
+     * We pass QIODevice::Unbuffered to prevent the base QIODevice class to do
+     * its own buffering on top of the overridden readData() method.
+     *
+     * The only buffering used will be to satisfy QIODevice::peek() and
+     * QIODevice::ungetChar().
+     */
+    setOpenMode(ReadOnly | Unbuffered);
+}
+
+bool BlockingIODevice::isSequential() const
+{
+    return true;
+}
+
+bool BlockingIODevice::atEnd() const
+{
+    /*
+     * XXX: QProcess::atEnd() documentation is wrong -- it will return true
+     * even when the process is running --, so we try to workaround that here.
+     */
+    if (m_device->atEnd()) {
+        if (m_device->state() == QProcess::Running) {
+            if (!m_device->waitForReadyRead(-1)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool BlockingIODevice::waitForReadyRead(int msecs)
+{
+    Q_UNUSED(msecs);
+    return true;
+}
+
+qint64 BlockingIODevice::readData(char * data, qint64 maxSize)
+{
+    qint64 bytesToRead = maxSize;
+    qint64 readSoFar = 0;
+    do {
+        qint64 chunkSize = m_device->read(data + readSoFar, bytesToRead);
+        if (chunkSize < 0) {
+            if (readSoFar) {
+                return readSoFar;
+            } else {
+                return chunkSize;
+            }
+        }
+        Q_ASSERT(chunkSize <= bytesToRead);
+        bytesToRead -= chunkSize;
+        readSoFar += chunkSize;
+        if (bytesToRead) {
+            if (!m_device->waitForReadyRead(-1)) {
+                qDebug() << "waitForReadyRead failed\n";
+                break;
+            }
+        }
+    } while(bytesToRead);
+
+    return readSoFar;
+}
+
+qint64 BlockingIODevice::writeData(const char * data, qint64 maxSize)
+{
+    Q_ASSERT(false);
+    return -1;
+}
 
 Q_DECLARE_METATYPE(QList<ApiTraceError>);
 
@@ -152,7 +262,7 @@ void Retracer::run()
 
     QProcess process;
 
-    process.start(prog, arguments);
+    process.start(prog, arguments, QIODevice::ReadOnly);
     if (!process.waitForStarted(-1)) {
         emit finished(QLatin1String("Could not start process"));
         return;
@@ -167,25 +277,22 @@ void Retracer::run()
 
     process.setReadChannel(QProcess::StandardOutput);
     if (process.waitForReadyRead(-1)) {
+        BlockingIODevice io(&process);
+
         if (m_captureState) {
             /*
              * Parse JSON from the output.
              *
-             * XXX: QJSON does not wait for QIODevice::waitForReadyRead so we
-             * need to buffer all stdout.
+             * XXX: QJSON expects blocking IO.
              *
              * XXX: QJSON's scanner is inneficient as it abuses single
              * character QIODevice::peek (not cheap), instead of maintaining a
              * lookahead character on its own.
              */
 
-            if (!process.waitForFinished(-1)) {
-                return;
-            }
-
             bool ok = false;
             QJson::Parser jsonParser;
-            parsedJson = jsonParser.parse(&process, &ok).toMap();
+            parsedJson = jsonParser.parse(&io, &ok).toMap();
             if (!ok) {
                 msg = QLatin1String("failed to parse JSON");
             }
@@ -194,20 +301,7 @@ void Retracer::run()
              * Parse concatenated PNM images from output.
              */
 
-            while (true) {
-                /*
-                 * QProcess::atEnd() documentation is wrong -- it will return
-                 * true even when the process is running --, so try to handle
-                 * that here.
-                 */
-                if (process.atEnd()) {
-                    if (process.state() == QProcess::Running) {
-                        if (!process.waitForReadyRead(-1)) {
-                            break;
-                        }
-                    }
-                }
-
+            while (!io.atEnd()) {
                 unsigned channels = 0;
                 unsigned width = 0;
                 unsigned height = 0;
@@ -217,14 +311,7 @@ void Retracer::run()
                 int headerLines = 3; // assume no optional comment line
 
                 for (int headerLine = 0; headerLine < headerLines; ++headerLine) {
-                    while (!process.canReadLine()) {
-                        if (!process.waitForReadyRead(-1)) {
-                            qDebug() << "QProcess::waitForReadyRead failed";
-                            break;
-                        }
-                    }
-
-                    qint64 headerRead = process.readLine(&header[headerSize], sizeof(header) - headerSize);
+                    qint64 headerRead = io.readLine(&header[headerSize], sizeof(header) - headerSize);
 
                     // if header actually contains optional comment line, ...
                     if (headerLine == 1 && header[headerSize] == '#') {
@@ -249,16 +336,8 @@ void Retracer::run()
                 int rowBytes = channels * width;
                 for (int y = 0; y < height; ++y) {
                     unsigned char *scanLine = snapshot.scanLine(y);
-
-                    while (process.bytesAvailable() < rowBytes) {
-                        if (!process.waitForReadyRead(-1)) {
-                            qDebug() << "QProcess::waitForReadyRead failed";
-                            break;
-                        }
-                    }
-
-                    qint64 read = process.read((char *) scanLine, rowBytes);
-                    Q_ASSERT(read == rowBytes);
+                    qint64 readBytes = io.read((char *) scanLine, rowBytes);
+                    Q_ASSERT(readBytes == rowBytes);
                 }
 
                 QImage thumbnail = snapshot.scaled(16, 16, Qt::KeepAspectRatio, Qt::FastTransformation);
