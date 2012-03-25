@@ -1,4 +1,5 @@
 #include "retracer.h"
+#include <iostream>
 
 #include "apitracecall.h"
 
@@ -11,6 +12,8 @@
 
 #include <qjson/parser.h>
 
+Q_DECLARE_METATYPE(QList<ApiTraceError>);
+
 Retracer::Retracer(QObject *parent)
     : QThread(parent),
       m_benchmarking(false),
@@ -18,6 +21,8 @@ Retracer::Retracer(QObject *parent)
       m_captureState(false),
       m_captureCall(0)
 {
+    qRegisterMetaType<QList<ApiTraceError> >();
+
 #ifdef Q_OS_WIN
     QString format = QLatin1String("%1;");
 #else
@@ -98,49 +103,19 @@ void Retracer::setCaptureThumbnails(bool enable)
 }
 
 
+/**
+ * Starting point for the retracing thread.
+ *
+ * Overrides QThread::run().
+ */
 void Retracer::run()
 {
-    RetraceProcess *retrace = new RetraceProcess();
-    retrace->process()->setProcessEnvironment(m_processEnvironment);
+    QString msg;
 
-    retrace->setFileName(m_fileName);
-    retrace->setAPI(m_api);
-    retrace->setBenchmarking(m_benchmarking);
-    retrace->setDoubleBuffered(m_doubleBuffered);
-    retrace->setCaptureState(m_captureState);
-    retrace->setCaptureThumbnails(m_captureThumbnails);
-    retrace->setCaptureAtCallNumber(m_captureCall);
+    /*
+     * Construct command line
+     */
 
-    connect(retrace, SIGNAL(finished(const QString&)),
-            this, SLOT(cleanup()));
-    connect(retrace, SIGNAL(error(const QString&)),
-            this, SLOT(cleanup()));
-    connect(retrace, SIGNAL(finished(const QString&)),
-            this, SIGNAL(finished(const QString&)));
-    connect(retrace, SIGNAL(error(const QString&)),
-            this, SIGNAL(error(const QString&)));
-    connect(retrace, SIGNAL(foundState(ApiTraceState*)),
-            this, SIGNAL(foundState(ApiTraceState*)));
-    connect(retrace, SIGNAL(foundThumbnails(const QList<QImage>&)),
-            this, SIGNAL(foundThumbnails(const QList<QImage>&)));
-    connect(retrace, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
-            this, SIGNAL(retraceErrors(const QList<ApiTraceError>&)));
-
-    retrace->start();
-
-    exec();
-
-    /* means we need to kill the process */
-    if (retrace->process()->state() != QProcess::NotRunning) {
-        retrace->terminate();
-    }
-
-    delete retrace;
-}
-
-
-void RetraceProcess::start()
-{
     QString prog;
     QStringList arguments;
 
@@ -149,7 +124,7 @@ void RetraceProcess::start()
     } else if (m_api == trace::API_EGL) {
         prog = QLatin1String("eglretrace");
     } else {
-        assert(0);
+        Q_ASSERT(0);
         return;
     }
 
@@ -159,107 +134,167 @@ void RetraceProcess::start()
         arguments << QLatin1String("-sb");
     }
 
-    if (m_captureState || m_captureThumbnails) {
-        if (m_captureState) {
-            arguments << QLatin1String("-D");
-            arguments << QString::number(m_captureCall);
-        }
-        if (m_captureThumbnails) {
-            arguments << QLatin1String("-s"); // emit snapshots
-            arguments << QLatin1String("-"); // emit to stdout
-        }
-    } else {
-        if (m_benchmarking) {
-            arguments << QLatin1String("-b");
-        }
+    if (m_captureState) {
+        arguments << QLatin1String("-D");
+        arguments << QString::number(m_captureCall);
+    } else if (m_captureThumbnails) {
+        arguments << QLatin1String("-s"); // emit snapshots
+        arguments << QLatin1String("-"); // emit to stdout
+    } else if (m_benchmarking) {
+        arguments << QLatin1String("-b");
     }
 
     arguments << m_fileName;
 
-    m_process->start(prog, arguments);
-}
+    /*
+     * Start the process.
+     */
 
+    QProcess process;
 
-void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatus)
-{
-    QString msg;
+    process.start(prog, arguments);
+    if (!process.waitForStarted(-1)) {
+        emit finished(QLatin1String("Could not start process"));
+        return;
+    }
 
-    if (exitStatus != QProcess::NormalExit) {
-        msg = QLatin1String("Process crashed");
-    } else if (exitCode != 0) {
-        msg = QLatin1String("Process exited with non zero exit code");
-    } else {
-        if (m_captureState || m_captureThumbnails) {
-            if (m_captureState) {
-                bool ok = false;
-                m_process->setReadChannel(QProcess::StandardOutput);
-                QVariantMap parsedJson = m_jsonParser->parse(m_process, &ok).toMap();
-                ApiTraceState *state = new ApiTraceState(parsedJson);
-                emit foundState(state);
-                msg = tr("State fetched.");
+    /*
+     * Process standard output
+     */
+
+    QList<QImage> thumbnails;
+    QVariantMap parsedJson;
+
+    process.setReadChannel(QProcess::StandardOutput);
+    if (process.waitForReadyRead(-1)) {
+        if (m_captureState) {
+            /*
+             * Parse JSON from the output.
+             *
+             * XXX: QJSON does not wait for QIODevice::waitForReadyRead so we
+             * need to buffer all stdout.
+             *
+             * XXX: QJSON's scanner is inneficient as it abuses single
+             * character QIODevice::peek (not cheap), instead of maintaining a
+             * lookahead character on its own.
+             */
+
+            if (!process.waitForFinished(-1)) {
+                return;
             }
-            if (m_captureThumbnails) {
-                m_process->setReadChannel(QProcess::StandardOutput);
 
-                QList<QImage> thumbnails;
+            bool ok = false;
+            QJson::Parser jsonParser;
+            parsedJson = jsonParser.parse(&process, &ok).toMap();
+            if (!ok) {
+                msg = QLatin1String("failed to parse JSON");
+            }
+        } else if (m_captureThumbnails) {
+            /*
+             * Parse concatenated PNM images from output.
+             */
 
-                while (!m_process->atEnd()) {
-                    unsigned channels = 0;
-                    unsigned width = 0;
-                    unsigned height = 0;
-
-                    char header[512];
-                    qint64 headerSize = 0;
-                    int headerLines = 3; // assume no optional comment line
-
-                    for (int headerLine = 0; headerLine < headerLines; ++headerLine) {
-                        qint64 headerRead = m_process->readLine(&header[headerSize], sizeof(header) - headerSize);
-
-                        // if header actually contains optional comment line, ...
-                        if (headerLine == 1 && header[headerSize] == '#') {
-                            ++headerLines;
+            while (true) {
+                /*
+                 * QProcess::atEnd() documentation is wrong -- it will return
+                 * true even when the process is running --, so try to handle
+                 * that here.
+                 */
+                if (process.atEnd()) {
+                    if (process.state() == QProcess::Running) {
+                        if (!process.waitForReadyRead(-1)) {
+                            break;
                         }
-
-                        headerSize += headerRead;
                     }
-
-                    const char *headerEnd = image::readPNMHeader(header, headerSize, &channels, &width, &height);
-
-                    // if invalid PNM header was encountered, ...
-                    if (header == headerEnd) {
-                        qDebug() << "error: invalid snapshot stream encountered\n";
-                        break;
-                    }
-
-                    //qDebug() << "channels: " << channels << ", width: " << width << ", height: " << height << "\n";
-
-                    QImage snapshot = QImage(width, height, channels == 1 ? QImage::Format_Mono : QImage::Format_RGB888);
-
-                    int rowBytes = channels * width;
-                    for (int y = 0; y < height; ++y) {
-                        unsigned char *scanLine = snapshot.scanLine(y);
-                        m_process->read((char *) scanLine, rowBytes);
-                    }
-
-                    QImage thumbnail = snapshot.scaled(16, 16, Qt::KeepAspectRatio, Qt::FastTransformation);
-                    thumbnails.append(thumbnail);
                 }
 
-                emit foundThumbnails(thumbnails);
-                msg = tr("Thumbnails fetched.");
+                unsigned channels = 0;
+                unsigned width = 0;
+                unsigned height = 0;
+
+                char header[512];
+                qint64 headerSize = 0;
+                int headerLines = 3; // assume no optional comment line
+
+                for (int headerLine = 0; headerLine < headerLines; ++headerLine) {
+                    while (!process.canReadLine()) {
+                        if (!process.waitForReadyRead(-1)) {
+                            qDebug() << "QProcess::waitForReadyRead failed";
+                            break;
+                        }
+                    }
+
+                    qint64 headerRead = process.readLine(&header[headerSize], sizeof(header) - headerSize);
+
+                    // if header actually contains optional comment line, ...
+                    if (headerLine == 1 && header[headerSize] == '#') {
+                        ++headerLines;
+                    }
+
+                    headerSize += headerRead;
+                }
+
+                const char *headerEnd = image::readPNMHeader(header, headerSize, &channels, &width, &height);
+
+                // if invalid PNM header was encountered, ...
+                if (header == headerEnd) {
+                    qDebug() << "error: invalid snapshot stream encountered";
+                    break;
+                }
+
+                // qDebug() << "channels: " << channels << ", width: " << width << ", height: " << height";
+
+                QImage snapshot = QImage(width, height, channels == 1 ? QImage::Format_Mono : QImage::Format_RGB888);
+
+                int rowBytes = channels * width;
+                for (int y = 0; y < height; ++y) {
+                    unsigned char *scanLine = snapshot.scanLine(y);
+
+                    while (process.bytesAvailable() < rowBytes) {
+                        if (!process.waitForReadyRead(-1)) {
+                            qDebug() << "QProcess::waitForReadyRead failed";
+                            break;
+                        }
+                    }
+
+                    qint64 read = process.read((char *) scanLine, rowBytes);
+                    Q_ASSERT(read == rowBytes);
+                }
+
+                QImage thumbnail = snapshot.scaled(16, 16, Qt::KeepAspectRatio, Qt::FastTransformation);
+                thumbnails.append(thumbnail);
             }
+
+            Q_ASSERT(process.state() != QProcess::Running);
+
         } else {
             QByteArray output;
-            output = m_process->readAllStandardOutput();
+            output = process.readAllStandardOutput();
             msg = QString::fromUtf8(output);
         }
     }
 
-    m_process->setReadChannel(QProcess::StandardError);
+    /*
+     * Wait for process termination
+     */
+
+    process.waitForFinished(-1);
+
+    if (process.exitStatus() != QProcess::NormalExit) {
+        msg = QLatin1String("Process crashed");
+    } else if (process.exitCode() != 0) {
+        msg = QLatin1String("Process exited with non zero exit code");
+    }
+
+    /*
+     * Parse errors.
+     */
+
     QList<ApiTraceError> errors;
+    process.setReadChannel(QProcess::StandardError);
     QRegExp regexp("(^\\d+): +(\\b\\w+\\b): ([^\\r\\n]+)[\\r\\n]*$");
-    while (!m_process->atEnd()) {
-        QString line = m_process->readLine();
+    while (!process.atEnd()) {
+        QString line = process.readLine();
         if (regexp.indexIn(line) != -1) {
             ApiTraceError error;
             error.callIndex = regexp.cap(1).toInt();
@@ -268,130 +303,26 @@ void RetraceProcess::replayFinished(int exitCode, QProcess::ExitStatus exitStatu
             errors.append(error);
         }
     }
+
+    /*
+     * Emit signals
+     */
+
+    if (m_captureState) {
+        ApiTraceState *state = new ApiTraceState(parsedJson);
+        emit foundState(state);
+        msg = QLatin1String("State fetched.");
+    }
+
+    if (m_captureThumbnails && !thumbnails.isEmpty()) {
+        emit foundThumbnails(thumbnails);
+    }
+
     if (!errors.isEmpty()) {
         emit retraceErrors(errors);
     }
+
     emit finished(msg);
-}
-
-void RetraceProcess::replayError(QProcess::ProcessError err)
-{
-    /*
-     * XXX: this function is likely unnecessary and should be eliminated given
-     * that replayFinished is always called, even on errors.
-     */
-
-#if 0
-    qDebug()<<"Process error = "<<err;
-    qDebug()<<"\terr = "<<m_process->readAllStandardError();
-    qDebug()<<"\tout = "<<m_process->readAllStandardOutput();
-#endif
-
-    emit error(
-        tr("Couldn't execute the replay file '%1'").arg(m_fileName));
-}
-
-Q_DECLARE_METATYPE(QList<ApiTraceError>);
-RetraceProcess::RetraceProcess(QObject *parent)
-    : QObject(parent)
-{
-    m_process = new QProcess(this);
-    m_jsonParser = new QJson::Parser();
-
-    qRegisterMetaType<QList<ApiTraceError> >();
-
-    connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)),
-            this, SLOT(replayFinished(int, QProcess::ExitStatus)));
-    connect(m_process, SIGNAL(error(QProcess::ProcessError)),
-            this, SLOT(replayError(QProcess::ProcessError)));
-}
-
-QProcess * RetraceProcess::process() const
-{
-    return m_process;
-}
-
-QString RetraceProcess::fileName() const
-{
-    return m_fileName;
-}
-
-void RetraceProcess::setFileName(const QString &name)
-{
-    m_fileName = name;
-}
-
-void RetraceProcess::setAPI(trace::API api)
-{
-    m_api = api;
-}
-
-bool RetraceProcess::isBenchmarking() const
-{
-    return m_benchmarking;
-}
-
-void RetraceProcess::setBenchmarking(bool bench)
-{
-    m_benchmarking = bench;
-}
-
-bool RetraceProcess::isDoubleBuffered() const
-{
-    return m_doubleBuffered;
-}
-
-void RetraceProcess::setDoubleBuffered(bool db)
-{
-    m_doubleBuffered = db;
-}
-
-void RetraceProcess::setCaptureAtCallNumber(qlonglong num)
-{
-    m_captureCall = num;
-}
-
-qlonglong RetraceProcess::captureAtCallNumber() const
-{
-    return m_captureCall;
-}
-
-bool RetraceProcess::captureState() const
-{
-    return m_captureState;
-}
-
-void RetraceProcess::setCaptureState(bool enable)
-{
-    m_captureState = enable;
-}
-
-bool RetraceProcess::captureThumbnails() const
-{
-    return m_captureThumbnails;
-}
-
-void RetraceProcess::setCaptureThumbnails(bool enable)
-{
-    m_captureThumbnails = enable;
-}
-
-void RetraceProcess::terminate()
-{
-    if (m_process) {
-        m_process->terminate();
-        emit finished(tr("Process terminated."));
-    }
-}
-
-void Retracer::cleanup()
-{
-    quit();
-}
-
-RetraceProcess::~RetraceProcess()
-{
-    delete m_jsonParser;
 }
 
 #include "retracer.moc"
