@@ -8,7 +8,6 @@
 #include <QVariant>
 #include <QList>
 #include <QImage>
-#include <QProcess>
 
 #include <qjson/parser.h>
 
