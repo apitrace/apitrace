@@ -28,6 +28,9 @@
 #include <string.h>
 #include <limits.h> // for CHAR_MAX
 #include <getopt.h>
+#ifndef _WIN32
+#include <unistd.h> // for isatty()
+#endif
 
 #include "cli.hpp"
 #include "cli_pager.hpp"
