@@ -1,6 +1,7 @@
 #include "retracer.h"
 
 #include "apitracecall.h"
+#include "thumbnail.h"
 
 #include "image.hpp"
 
@@ -339,8 +340,8 @@ void Retracer::run()
                     Q_ASSERT(readBytes == rowBytes);
                 }
 
-                QImage thumbnail = snapshot.scaled(16, 16, Qt::KeepAspectRatio, Qt::FastTransformation);
-                thumbnails.append(thumbnail);
+                QImage thumb = thumbnail(snapshot);
+                thumbnails.append(thumb);
             }
 
             Q_ASSERT(process.state() != QProcess::Running);

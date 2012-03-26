@@ -27,7 +27,6 @@ public:
 public slots:
     void loadTrace(const QString &filename);
     void loadFrame(ApiTraceFrame *frame);
-    void setFrameMarker(ApiTrace::FrameMarker marker);
     void findFrameStart(ApiTraceFrame *frame);
     void findFrameEnd(ApiTraceFrame *frame);
     void findCallIndex(int index);
@@ -62,7 +61,6 @@ private:
         trace::ParseBookmark start;
         int numberOfCalls;
     };
-    bool isCallAFrameMarker(const trace::Call *call) const;
     int numberOfFrames() const;
     int numberOfCallsInFrame(int frameIdx) const;
 
@@ -84,7 +82,6 @@ private:
 
 private:
     trace::Parser m_parser;
-    ApiTrace::FrameMarker m_frameMarker;
 
     typedef QMap<int, FrameBookmark> FrameBookmarks;
     FrameBookmarks m_frameBookmarks;

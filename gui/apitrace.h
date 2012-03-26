@@ -14,12 +14,6 @@ class ApiTrace : public QObject
 {
     Q_OBJECT
 public:
-    enum FrameMarker {
-        FrameMarker_SwapBuffers,
-        FrameMarker_Flush,
-        FrameMarker_Finish,
-        FrameMarker_Clear
-    };
     enum SearchResult {
         SearchResult_NotFound,
         SearchResult_Found,
@@ -51,8 +45,6 @@ public:
         Qt::CaseSensitivity cs;
     };
 
-    static bool isCallAFrameMarker(const ApiTraceCall *call,
-                                   FrameMarker marker);
 public:
     ApiTrace();
     ~ApiTrace();
@@ -60,8 +52,6 @@ public:
     bool isEmpty() const;
 
     QString fileName() const;
-
-    FrameMarker frameMarker() const;
 
     ApiTraceState defaultState() const;
 
@@ -150,8 +140,6 @@ private:
     QString m_tempFileName;
 
     QList<ApiTraceFrame*> m_frames;
-
-    FrameMarker m_frameMarker;
 
     TraceLoader *m_loader;
     QThread     *m_loaderThread;

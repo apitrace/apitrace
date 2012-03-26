@@ -20,8 +20,7 @@ apiCallFromTraceCall(const trace::Call *call,
 }
 
 TraceLoader::TraceLoader(QObject *parent)
-    : QObject(parent),
-      m_frameMarker(ApiTrace::FrameMarker_SwapBuffers)
+    : QObject(parent)
 {
 }
 
@@ -67,34 +66,6 @@ void TraceLoader::loadTrace(const QString &filename)
 void TraceLoader::loadFrame(ApiTraceFrame *currentFrame)
 {
     fetchFrameContents(currentFrame);
-}
-
-void TraceLoader::setFrameMarker(ApiTrace::FrameMarker marker)
-{
-    m_frameMarker = marker;
-}
-
-bool TraceLoader::isCallAFrameMarker(const trace::Call *call) const
-{
-    std::string name = call->name();
-
-    switch (m_frameMarker) {
-    case ApiTrace::FrameMarker_SwapBuffers:
-        return  name.find("SwapBuffers") != std::string::npos ||
-                name == "CGLFlushDrawable" ||
-                name == "glFrameTerminatorGREMEDY";
-        break;
-    case ApiTrace::FrameMarker_Flush:
-        return name == "glFlush";
-        break;
-    case ApiTrace::FrameMarker_Finish:
-        return name == "glFinish";
-        break;
-    case ApiTrace::FrameMarker_Clear:
-        return name == "glClear";
-        break;
-    }
-    return false;
 }
 
 int TraceLoader::numberOfFrames() const
@@ -147,7 +118,7 @@ void TraceLoader::scanTrace()
     while ((call = m_parser.scan_call())) {
         ++numOfCalls;
 
-        if (isCallAFrameMarker(call)) {
+        if (call->flags & trace::CALL_FLAG_END_FRAME) {
             FrameBookmark frameBookmark(startBookmark);
             frameBookmark.numberOfCalls = numOfCalls;
 
@@ -217,8 +188,7 @@ void TraceLoader::parseTrace()
                     apiCall->arguments()[apiCall->binaryDataIndex()].toByteArray();
             binaryDataSize += data.size();
         }
-        if (ApiTrace::isCallAFrameMarker(apiCall,
-                                         m_frameMarker)) {
+        if (call->flags & trace::CALL_FLAG_END_FRAME) {
             calls.squeeze();
             currentFrame->setCalls(calls, binaryDataSize);
             calls.clear();
@@ -452,7 +422,7 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
 
                 delete call;
 
-                if (ApiTrace::isCallAFrameMarker(apiCall, m_frameMarker)) {
+                if (apiCall->flags() & trace::CALL_FLAG_END_FRAME) {
                     break;
                 }
 

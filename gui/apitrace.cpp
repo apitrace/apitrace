@@ -8,8 +8,7 @@
 #include <QThread>
 
 ApiTrace::ApiTrace()
-    : m_frameMarker(ApiTrace::FrameMarker_SwapBuffers),
-      m_needsSaving(false)
+    : m_needsSaving(false)
 {
     m_loader = new TraceLoader();
 
@@ -73,29 +72,6 @@ ApiTrace::~ApiTrace()
     delete m_saver;
 }
 
-bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
-                                  ApiTrace::FrameMarker marker)
-{
-    if (!call) {
-        return false;
-    }
-
-    switch (marker) {
-    case FrameMarker_SwapBuffers:
-        return call->flags() & trace::CALL_FLAG_END_FRAME;
-    case FrameMarker_Flush:
-        return call->name() == QLatin1String("glFlush");
-    case FrameMarker_Finish:
-        return call->name() == QLatin1String("glFinish");
-    case FrameMarker_Clear:
-        return call->name() == QLatin1String("glClear");
-    }
-
-    Q_ASSERT(!"unknown frame marker");
-
-    return false;
-}
-
 bool ApiTrace::isEmpty() const
 {
     return m_frames.isEmpty();
@@ -108,11 +84,6 @@ QString ApiTrace::fileName() const
     }
 
     return m_fileName;
-}
-
-ApiTrace::FrameMarker ApiTrace::frameMarker() const
-{
-    return m_frameMarker;
 }
 
 const QList<ApiTraceFrame*> & ApiTrace::frames() const
