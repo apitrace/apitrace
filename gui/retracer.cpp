@@ -220,7 +220,7 @@ void Retracer::setCaptureThumbnails(bool enable)
  */
 void Retracer::run()
 {
-    QString msg;
+    QString msg = QLatin1String("Replay finished!");
 
     /*
      * Construct command line
@@ -349,7 +349,9 @@ void Retracer::run()
         } else {
             QByteArray output;
             output = process.readAllStandardOutput();
-            msg = QString::fromUtf8(output);
+            if (output.length() < 80) {
+                msg = QString::fromUtf8(output);
+            }
         }
     }
 

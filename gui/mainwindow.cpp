@@ -212,7 +212,7 @@ void MainWindow::newTraceFile(const QString &fileName)
     }
 }
 
-void MainWindow::replayFinished(const QString &output)
+void MainWindow::replayFinished(const QString &message)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
@@ -220,18 +220,13 @@ void MainWindow::replayFinished(const QString &output)
     m_ui.actionShowThumbnails->setEnabled(true);
 
     m_progressBar->hide();
-    if (output.length() < 80) {
-        statusBar()->showMessage(output);
-    }
+    statusBar()->showMessage(message, 2000);
     m_stateEvent = 0;
     m_ui.actionShowErrorsDock->setEnabled(m_trace->hasErrors());
     m_ui.errorsDock->setVisible(m_trace->hasErrors());
     if (!m_trace->hasErrors()) {
         m_ui.errorsTreeWidget->clear();
     }
-
-    statusBar()->showMessage(
-        tr("Replaying finished!"), 2000);
 }
 
 void MainWindow::replayError(const QString &message)

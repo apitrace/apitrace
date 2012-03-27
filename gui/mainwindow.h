@@ -48,7 +48,7 @@ private slots:
     void openTrace();
     void replayStart();
     void replayStop();
-    void replayFinished(const QString &output);
+    void replayFinished(const QString &message);
     void replayStateFound(ApiTraceState *state);
     void replayThumbnailsFound(const QList<QImage> &thumbnails);
     void replayError(const QString &msg);
