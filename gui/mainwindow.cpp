@@ -265,6 +265,7 @@ void MainWindow::finishedLoadingTrace()
     if (!m_trace) {
         return;
     }
+    m_api = m_trace->api();
     QFileInfo info(m_trace->fileName());
     statusBar()->showMessage(
         tr("Loaded %1").arg(info.fileName()), 3000);

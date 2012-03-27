@@ -3,6 +3,8 @@
 
 #include "apitracecall.h"
 
+#include "trace_api.hpp"
+
 #include <QObject>
 #include <QSet>
 
@@ -73,6 +75,8 @@ public:
 
     bool hasErrors() const;
 
+    trace::API api() const;
+
 public slots:
     void setFileName(const QString &name);
     void save();
@@ -124,6 +128,7 @@ signals:
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
     void slotSaved();
+    void guessedApi(int api);
     void finishedParsing();
     void loaderFrameLoaded(ApiTraceFrame *frame,
                            const QVector<ApiTraceCall*> &calls,
@@ -140,6 +145,7 @@ private:
     QString m_tempFileName;
 
     QList<ApiTraceFrame*> m_frames;
+    trace::API m_api;
 
     TraceLoader *m_loader;
     QThread     *m_loaderThread;

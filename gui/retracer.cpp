@@ -234,7 +234,7 @@ void Retracer::run()
     } else if (m_api == trace::API_EGL) {
         prog = QLatin1String("eglretrace");
     } else {
-        Q_ASSERT(0);
+        emit finished(QLatin1String("Unsupported API"));
         return;
     }
 

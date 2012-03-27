@@ -22,6 +22,8 @@ ApiTrace::ApiTrace()
             SIGNAL(frameContentsLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)),
             this,
             SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)));
+    connect(m_loader, SIGNAL(guessedApi(int)),
+            this, SLOT(guessedApi(int)));
     connect(m_loader, SIGNAL(finishedParsing()),
             this, SLOT(finishedParsing()));
     connect(this, SIGNAL(loaderSearch(ApiTrace::SearchRequest)),
@@ -238,6 +240,16 @@ void ApiTrace::loadFrame(ApiTraceFrame *frame)
         m_loadingFrames.insert(frame);
         emit requestFrame(frame);
     }
+}
+
+void ApiTrace::guessedApi(int api)
+{
+    m_api = static_cast<trace::API>(api);
+}
+
+trace::API ApiTrace::api() const
+{
+    return m_api;
 }
 
 void ApiTrace::finishedParsing()

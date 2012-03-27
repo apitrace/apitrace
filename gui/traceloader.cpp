@@ -60,6 +60,7 @@ void TraceLoader::loadTrace(const QString &filename)
         //Load the entire file into memory
         parseTrace();
     }
+    emit guessedApi(static_cast<int>(m_parser.api));
     emit finishedParsing();
 }
 

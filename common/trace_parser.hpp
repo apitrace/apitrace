@@ -33,6 +33,7 @@
 #include "trace_file.hpp"
 #include "trace_format.hpp"
 #include "trace_model.hpp"
+#include "trace_api.hpp"
 
 
 namespace trace {
@@ -94,6 +95,7 @@ protected:
 
 public:
     unsigned long long version;
+    API api;
 
     Parser();
 

@@ -35,6 +35,7 @@ public slots:
 signals:
     void startedParsing();
     void parsed(int percent);
+    void guessedApi(int api);
     void finishedParsing();
 
     void framesLoaded(const QList<ApiTraceFrame*> &frames);
@@ -65,6 +66,7 @@ private:
     int numberOfCallsInFrame(int frameIdx) const;
 
     void loadHelpFile();
+    void guessApi(const trace::Call *call);
     void scanTrace();
     void parseTrace();
 
