@@ -44,6 +44,7 @@ extern const Command diff_command;
 extern const Command diff_state_command;
 extern const Command diff_images_command;
 extern const Command dump_command;
+extern const Command dump_images_command;
 extern const Command pickle_command;
 extern const Command repack_command;
 extern const Command trace_command;

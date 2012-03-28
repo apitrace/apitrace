@@ -70,6 +70,7 @@ static const Command * commands[] = {
     &diff_state_command,
     &diff_images_command,
     &dump_command,
+    &dump_images_command,
     &pickle_command,
     &repack_command,
     &trace_command,
