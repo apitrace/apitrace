@@ -560,6 +560,7 @@ set (retrace_sources
     glretrace_egl.cpp
     glretrace_main.cpp
     glstate.cpp
+    glstate_images.cpp
     glstate_params.cpp
     glstate_shaders.cpp
     retrace.cpp

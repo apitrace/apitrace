@@ -42,7 +42,6 @@ struct Context
 
     bool ARB_draw_buffers;
 
-    inline
     Context(void);
 
     GLint packAlignment;
@@ -61,7 +60,9 @@ void dumpParameters(JSONWriter &json, Context &context);
 
 void dumpShadersUniforms(JSONWriter &json);
 
-void dumpCurrentContext(std::ostream &os);
+void dumpTextures(JSONWriter &json, Context &context);
+
+void dumpFramebuffer(JSONWriter &json, Context &context);
 
 
 } /* namespace glstate */
