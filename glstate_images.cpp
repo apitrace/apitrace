@@ -62,74 +62,111 @@ OSStatus CGSGetSurfaceBounds(CGSConnectionID, CGWindowID, CGSSurfaceID, CGRect *
 namespace glstate {
 
 
-static inline void
-dumpTextureImage(JSONWriter &json, Context &context, GLenum target, GLint level)
+struct ImageDesc
 {
-    GLint width, height = 1, depth = 1;
-    GLint format;
+    GLint width;
+    GLint height;
+    GLint depth;
+    GLint internalFormat;
 
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &format);
+    inline
+    ImageDesc() :
+        width(0),
+        height(0),
+        depth(0),
+        internalFormat(GL_NONE)
+    {}
 
-    width = 0;
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
+    inline bool
+    valid(void) const {
+        return width > 0 && height > 0 && depth > 0;
+    }
+};
 
-    if (target != GL_TEXTURE_1D) {
-        height = 0;
-        glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
-        if (target == GL_TEXTURE_3D) {
-            depth = 0;
-            glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH, &depth);
+
+static inline bool
+getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDesc &desc)
+{
+    if (context.ES) {
+        // XXX: OpenGL ES does not support glGetTexLevelParameteriv
+        return false;
+    }
+
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &desc.internalFormat);
+
+    desc.width = 0;
+    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &desc.width);
+
+    if (target == GL_TEXTURE_1D) {
+        desc.height = 1;
+        desc.depth = 1;
+    } else {
+        desc.height = 0;
+        glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &desc.height);
+        if (target != GL_TEXTURE_3D) {
+            desc.depth = 1;
+        } else {
+            desc.depth = 0;
+            glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH, &desc.depth);
         }
     }
 
-    if (width <= 0 || height <= 0 || depth <= 0) {
+    return desc.valid();
+}
+
+
+static inline void
+dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint level)
+{
+    ImageDesc desc;
+    if (!getActiveTextureLevelDesc(context, target, level, desc)) {
         return;
-    } else {
-        char label[512];
-
-        GLint active_texture = GL_TEXTURE0;
-        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
-        snprintf(label, sizeof label, "%s, %s, level = %d",
-                 enumToString(active_texture), enumToString(target), level);
-
-        json.beginMember(label);
-
-        json.beginObject();
-
-        // Tell the GUI this is no ordinary object, but an image
-        json.writeStringMember("__class__", "image");
-
-        json.writeNumberMember("__width__", width);
-        json.writeNumberMember("__height__", height);
-        json.writeNumberMember("__depth__", depth);
-
-        json.writeStringMember("__format__", enumToString(format));
-
-        // Hardcoded for now, but we could chose types more adequate to the
-        // texture internal format
-        json.writeStringMember("__type__", "uint8");
-        json.writeBoolMember("__normalized__", true);
-        json.writeNumberMember("__channels__", 4);
-
-        GLubyte *pixels = new GLubyte[depth*width*height*4];
-
-        context.resetPixelPackState();
-
-        glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-        context.restorePixelPackState();
-
-        json.beginMember("__data__");
-        char *pngBuffer;
-        int pngBufferSize;
-        image::writePixelsToBuffer(pixels, width, height, 4, true, &pngBuffer, &pngBufferSize);
-        json.writeBase64(pngBuffer, pngBufferSize);
-        free(pngBuffer);
-        json.endMember(); // __data__
-
-        delete [] pixels;
-        json.endObject();
     }
+
+    char label[512];
+
+    GLint active_texture = GL_TEXTURE0;
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+    snprintf(label, sizeof label, "%s, %s, level = %d",
+             enumToString(active_texture), enumToString(target), level);
+
+    json.beginMember(label);
+
+    json.beginObject();
+
+    // Tell the GUI this is no ordinary object, but an image
+    json.writeStringMember("__class__", "image");
+
+    json.writeNumberMember("__width__", desc.width);
+    json.writeNumberMember("__height__", desc.height);
+    json.writeNumberMember("__depth__", desc.depth);
+
+    json.writeStringMember("__format__", enumToString(desc.internalFormat));
+
+    // Hardcoded for now, but we could chose types more adequate to the
+    // texture internal format
+    json.writeStringMember("__type__", "uint8");
+    json.writeBoolMember("__normalized__", true);
+    json.writeNumberMember("__channels__", 4);
+
+    GLubyte *pixels = new GLubyte[desc.depth*desc.width*desc.height*4];
+
+    context.resetPixelPackState();
+
+    glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    context.restorePixelPackState();
+
+    json.beginMember("__data__");
+    char *pngBuffer;
+    int pngBufferSize;
+    image::writePixelsToBuffer(pixels, desc.width, desc.height, 4, true, &pngBuffer, &pngBufferSize);
+    json.writeBase64(pngBuffer, pngBufferSize);
+    free(pngBuffer);
+    json.endMember(); // __data__
+
+    delete [] pixels;
+    json.endObject();
 }
 
 
@@ -144,19 +181,17 @@ dumpTexture(JSONWriter &json, Context &context, GLenum target, GLenum binding)
 
     GLint level = 0;
     do {
-        GLint width = 0, height = 0;
-        glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
-        glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
-        if (!width || !height) {
+        ImageDesc desc;
+        if (!getActiveTextureLevelDesc(context, target, level, desc)) {
             break;
         }
 
         if (target == GL_TEXTURE_CUBE_MAP) {
             for (int face = 0; face < 6; ++face) {
-                dumpTextureImage(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level);
+                dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level);
             }
         } else {
-            dumpTextureImage(json, context, target, level);
+            dumpActiveTextureLevel(json, context, target, level);
         }
 
         ++level;
@@ -332,81 +367,43 @@ bindTexture(GLint texture, GLenum &target, GLint &bound_texture)
 
 
 static bool
-getTextureLevelSize(GLint texture, GLint level, GLint *width, GLint *height)
+getTextureLevelDesc(Context &context, GLint texture, GLint level, ImageDesc &desc)
 {
-    *width = 0;
-    *height = 0;
-
     GLenum target;
     GLint bound_texture = 0;
     if (!bindTexture(texture, target, bound_texture)) {
         return false;
     }
 
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, width);
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, height);
+    getActiveTextureLevelDesc(context, target, level, desc);
 
     glBindTexture(target, bound_texture);
 
-    return *width > 0 && *height > 0;
+    return desc.valid();
 }
-
-
-static GLenum
-getTextureLevelFormat(GLint texture, GLint level)
-{
-    GLenum target;
-    GLint bound_texture = 0;
-    if (!bindTexture(texture, target, bound_texture)) {
-        return GL_NONE;
-    }
-
-    GLint format = GL_NONE;
-    glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &format);
-
-    glBindTexture(target, bound_texture);
-
-    return format;
-}
-
 
 
 static bool
-getRenderbufferSize(GLint renderbuffer, GLint *width, GLint *height)
+getRenderbufferDesc(Context &context, GLint renderbuffer, ImageDesc &desc)
 {
     GLint bound_renderbuffer = 0;
     glGetIntegerv(GL_RENDERBUFFER_BINDING, &bound_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
 
-    *width = 0;
-    *height = 0;
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, width);
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, height);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &desc.width);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &desc.height);
+    desc.depth = 1;
+    
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &desc.internalFormat);
 
     glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
     
-    return *width > 0 && *height > 0;
-}
-
-
-static GLenum
-getRenderbufferFormat(GLint renderbuffer)
-{
-    GLint bound_renderbuffer = 0;
-    glGetIntegerv(GL_RENDERBUFFER_BINDING, &bound_renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-
-    GLint format = GL_NONE;
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
-    
-    return format;
+    return desc.valid();
 }
 
 
 static bool
-getFramebufferAttachmentSize(GLenum target, GLenum attachment, GLint *width, GLint *height)
+getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment, ImageDesc &desc)
 {
     GLint object_type = GL_NONE;
     glGetFramebufferAttachmentParameteriv(target, attachment,
@@ -425,51 +422,16 @@ getFramebufferAttachmentSize(GLenum target, GLenum attachment, GLint *width, GLi
     }
 
     if (object_type == GL_RENDERBUFFER) {
-        return getRenderbufferSize(object_name, width, height);
+        return getRenderbufferDesc(context, object_name, desc);
     } else if (object_type == GL_TEXTURE) {
         GLint texture_level = 0;
         glGetFramebufferAttachmentParameteriv(target, attachment,
                                               GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
                                               &texture_level);
-        return getTextureLevelSize(object_name, texture_level, width, height);
+        return getTextureLevelDesc(context, object_name, texture_level, desc);
     } else {
         std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
         return false;
-    }
-}
-
-
-
-static GLint
-getFramebufferAttachmentFormat(GLenum target, GLenum attachment)
-{
-    GLint object_type = GL_NONE;
-    glGetFramebufferAttachmentParameteriv(target, attachment,
-                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
-                                          &object_type);
-    if (object_type == GL_NONE) {
-        return GL_NONE;
-    }
-
-    GLint object_name = 0;
-    glGetFramebufferAttachmentParameteriv(target, attachment,
-                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
-                                          &object_name);
-    if (object_name == 0) {
-        return GL_NONE;
-    }
-
-    if (object_type == GL_RENDERBUFFER) {
-        return getRenderbufferFormat(object_name);
-    } else if (object_type == GL_TEXTURE) {
-        GLint texture_level = 0;
-        glGetFramebufferAttachmentParameteriv(target, attachment,
-                                              GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
-                                              &texture_level);
-        return getTextureLevelFormat(object_name, texture_level);
-    } else {
-        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
-        return GL_NONE;
     }
 }
 
@@ -499,7 +461,7 @@ getDrawBufferImage() {
     glGetIntegerv(framebuffer_binding, &draw_framebuffer);
 
     GLint draw_buffer = GL_NONE;
-    GLint width, height;
+    ImageDesc desc;
     if (draw_framebuffer) {
         if (context.ARB_draw_buffers) {
             glGetIntegerv(GL_DRAW_BUFFER0, &draw_buffer);
@@ -508,7 +470,7 @@ getDrawBufferImage() {
             }
         }
 
-        if (!getFramebufferAttachmentSize(framebuffer_target, draw_buffer, &width, &height)) {
+        if (!getFramebufferAttachmentDesc(context, framebuffer_target, draw_buffer, desc)) {
             return NULL;
         }
     } else {
@@ -519,9 +481,11 @@ getDrawBufferImage() {
             }
         }
 
-        if (!getDrawableBounds(&width, &height)) {
+        if (!getDrawableBounds(&desc.width, &desc.height)) {
             return NULL;
         }
+
+        desc.depth = 1;
     }
 
     GLenum type = GL_UNSIGNED_BYTE;
@@ -533,7 +497,7 @@ getDrawBufferImage() {
     }
 #endif
 
-    image::Image *image = new image::Image(width, height, channels, true);
+    image::Image *image = new image::Image(desc.width, desc.height, channels, true);
     if (!image) {
         return NULL;
     }
@@ -553,7 +517,7 @@ getDrawBufferImage() {
     // TODO: reset imaging state too
     context.resetPixelPackState();
 
-    glReadPixels(0, 0, width, height, format, type, image->pixels);
+    glReadPixels(0, 0, desc.width, desc.height, format, type, image->pixels);
 
     context.restorePixelPackState();
 
@@ -815,17 +779,15 @@ dumpDrawableImages(JSONWriter &json, Context &context)
  * In the case of a color attachment, it assumes it is already bound for read.
  */
 static void
-dumpFramebufferAttachment(JSONWriter &json, GLenum target, GLenum attachment, GLenum format)
+dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLenum attachment, GLenum format)
 {
-    GLint width = 0, height = 0;
-    if (!getFramebufferAttachmentSize(target, attachment, &width, &height)) {
+    ImageDesc desc;
+    if (!getFramebufferAttachmentDesc(context, target, attachment, desc)) {
         return;
     }
 
-    GLint internalFormat = getFramebufferAttachmentFormat(target, attachment);
-
     json.beginMember(enumToString(attachment));
-    dumpReadBufferImage(json, width, height, format, internalFormat);
+    dumpReadBufferImage(json, desc.width, desc.height, format, desc.internalFormat);
     json.endMember();
 }
 
@@ -861,15 +823,15 @@ dumpFramebufferAttachments(JSONWriter &json, Context &context, GLenum target)
                                                   GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE,
                                                   &alpha_size);
             GLenum format = alpha_size ? GL_RGBA : GL_RGB;
-            dumpFramebufferAttachment(json, target, attachment, format);
+            dumpFramebufferAttachment(json, context, target, attachment, format);
         }
     }
 
     glReadBuffer(read_buffer);
 
     if (!context.ES) {
-        dumpFramebufferAttachment(json, target, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT);
-        dumpFramebufferAttachment(json, target, GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX);
+        dumpFramebufferAttachment(json, context, target, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT);
+        dumpFramebufferAttachment(json, context, target, GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX);
     }
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
