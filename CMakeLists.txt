@@ -561,6 +561,7 @@ set (retrace_sources
     glretrace_main.cpp
     glstate.cpp
     glstate_params.cpp
+    glstate_shaders.cpp
     retrace.cpp
     retrace_stdc.cpp
     glws.cpp
