@@ -384,17 +384,26 @@ getTextureLevelDesc(Context &context, GLint texture, GLint level, ImageDesc &des
 
 
 static bool
+getBoundRenderbufferDesc(Context &context, ImageDesc &desc)
+{
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &desc.width);
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &desc.height);
+    desc.depth = 1;
+    
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &desc.internalFormat);
+    
+    return desc.valid();
+}
+
+
+static bool
 getRenderbufferDesc(Context &context, GLint renderbuffer, ImageDesc &desc)
 {
     GLint bound_renderbuffer = 0;
     glGetIntegerv(GL_RENDERBUFFER_BINDING, &bound_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
 
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &desc.width);
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &desc.height);
-    desc.depth = 1;
-    
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &desc.internalFormat);
+    getBoundRenderbufferDesc(context, desc);
 
     glBindRenderbuffer(GL_RENDERBUFFER, bound_renderbuffer);
     
@@ -602,76 +611,67 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 
 
 static inline GLuint
-downsampledFramebuffer(GLuint oldFbo, GLint drawbuffer,
+downsampledFramebuffer(Context &context,
+                       GLuint oldFbo, GLint drawbuffer,
                        GLint colorRb, GLint depthRb, GLint stencilRb,
                        GLuint *rbs, GLint *numRbs)
 {
     GLuint fbo;
-    GLint format;
-    GLint w, h;
+
 
     *numRbs = 0;
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    glBindRenderbuffer(GL_RENDERBUFFER, colorRb);
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                 GL_RENDERBUFFER_WIDTH, &w);
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                 GL_RENDERBUFFER_HEIGHT, &h);
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                 GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
-
-    glGenRenderbuffers(1, &rbs[*numRbs]);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-    glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, drawbuffer,
-                              GL_RENDERBUFFER, rbs[*numRbs]);
-
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-    glDrawBuffer(drawbuffer);
-    glReadBuffer(drawbuffer);
-    glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    ++*numRbs;
-
-    if (stencilRb == depthRb && stencilRb) {
-        //combined depth and stencil buffer
-        glBindRenderbuffer(GL_RENDERBUFFER, depthRb);
-        glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                     GL_RENDERBUFFER_WIDTH, &w);
-        glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                     GL_RENDERBUFFER_HEIGHT, &h);
-        glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                     GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+    {
+        // color buffer
+        ImageDesc desc;
+        glBindRenderbuffer(GL_RENDERBUFFER, colorRb);
+        getBoundRenderbufferDesc(context, desc);
 
         glGenRenderbuffers(1, &rbs[*numRbs]);
         glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-        glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
+        glRenderbufferStorage(GL_RENDERBUFFER, desc.internalFormat, desc.width, desc.height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, drawbuffer,
+                                  GL_RENDERBUFFER, rbs[*numRbs]);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+        glDrawBuffer(drawbuffer);
+        glReadBuffer(drawbuffer);
+        glBlitFramebuffer(0, 0, desc.width, desc.height, 0, 0, desc.width, desc.height,
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        ++*numRbs;
+    }
+
+    if (stencilRb == depthRb && stencilRb) {
+        //combined depth and stencil buffer
+        ImageDesc desc;
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRb);
+        getBoundRenderbufferDesc(context, desc);
+
+        glGenRenderbuffers(1, &rbs[*numRbs]);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
+        glRenderbufferStorage(GL_RENDERBUFFER, desc.internalFormat, desc.width, desc.height);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                                   GL_RENDERBUFFER, rbs[*numRbs]);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-        glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+        glBlitFramebuffer(0, 0, desc.width, desc.height, 0, 0, desc.width, desc.height,
                           GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         ++*numRbs;
     } else {
         if (depthRb) {
+            ImageDesc desc;
             glBindRenderbuffer(GL_RENDERBUFFER, depthRb);
-            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                         GL_RENDERBUFFER_WIDTH, &w);
-            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                         GL_RENDERBUFFER_HEIGHT, &h);
-            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                         GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+            getBoundRenderbufferDesc(context, desc);
 
             glGenRenderbuffers(1, &rbs[*numRbs]);
             glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-            glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
+            glRenderbufferStorage(GL_RENDERBUFFER, desc.internalFormat, desc.width, desc.height);
             glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                                       GL_DEPTH_ATTACHMENT,
                                       GL_RENDERBUFFER, rbs[*numRbs]);
@@ -679,22 +679,18 @@ downsampledFramebuffer(GLuint oldFbo, GLint drawbuffer,
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
             glDrawBuffer(GL_DEPTH_ATTACHMENT);
             glReadBuffer(GL_DEPTH_ATTACHMENT);
-            glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+            glBlitFramebuffer(0, 0, desc.width, desc.height, 0, 0, desc.width, desc.height,
                               GL_DEPTH_BUFFER_BIT, GL_NEAREST);
             ++*numRbs;
         }
         if (stencilRb) {
+            ImageDesc desc;
             glBindRenderbuffer(GL_RENDERBUFFER, stencilRb);
-            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                         GL_RENDERBUFFER_WIDTH, &w);
-            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                         GL_RENDERBUFFER_HEIGHT, &h);
-            glGetRenderbufferParameteriv(GL_RENDERBUFFER,
-                                     GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+            getBoundRenderbufferDesc(context, desc);
 
             glGenRenderbuffers(1, &rbs[*numRbs]);
             glBindRenderbuffer(GL_RENDERBUFFER, rbs[*numRbs]);
-            glRenderbufferStorage(GL_RENDERBUFFER, format, w, h);
+            glRenderbufferStorage(GL_RENDERBUFFER, desc.internalFormat, desc.width, desc.height);
             glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                                       GL_STENCIL_ATTACHMENT,
                                       GL_RENDERBUFFER, rbs[*numRbs]);
@@ -702,7 +698,7 @@ downsampledFramebuffer(GLuint oldFbo, GLint drawbuffer,
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
             glDrawBuffer(GL_STENCIL_ATTACHMENT);
             glReadBuffer(GL_STENCIL_ATTACHMENT);
-            glBlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+            glBlitFramebuffer(0, 0, desc.width, desc.height, 0, 0, desc.width, desc.height,
                               GL_STENCIL_BUFFER_BIT, GL_NEAREST);
             ++*numRbs;
         }
@@ -903,7 +899,8 @@ dumpFramebuffer(JSONWriter &json, Context &context)
         if (multisample) {
             // glReadPixels doesnt support multisampled buffers so we need
             // to blit the fbo to a temporary one
-            fboCopy = downsampledFramebuffer(boundDrawFbo, draw_buffer0,
+            fboCopy = downsampledFramebuffer(context,
+                                             boundDrawFbo, draw_buffer0,
                                              colorRb, depthRb, stencilRb,
                                              rbs, &numRbs);
         }
