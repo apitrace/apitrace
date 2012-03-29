@@ -37,6 +37,10 @@
 #include "glstate_internal.hpp"
 
 
+#ifdef __linux__
+#include <dlfcn.h>
+#endif
+
 #ifdef __APPLE__
 
 #include <Carbon/Carbon.h>
@@ -443,31 +447,33 @@ dumpTextures(JSONWriter &json, Context &context)
 
 static bool
 getDrawableBounds(GLint *width, GLint *height) {
-#if defined(TRACE_EGL)
+#if defined(__linux__)
+    if (dlsym(RTLD_DEFAULT, "eglGetCurrentContext")) {
+        EGLContext currentContext = eglGetCurrentContext();
+        if (currentContext == EGL_NO_CONTEXT) {
+            return false;
+        }
 
-    EGLContext currentContext = eglGetCurrentContext();
-    if (currentContext == EGL_NO_CONTEXT) {
-        return false;
+        EGLSurface currentSurface = eglGetCurrentSurface(EGL_DRAW);
+        if (currentSurface == EGL_NO_SURFACE) {
+            return false;
+        }
+
+        EGLDisplay currentDisplay = eglGetCurrentDisplay();
+        if (currentDisplay == EGL_NO_DISPLAY) {
+            return false;
+        }
+
+        if (!eglQuerySurface(currentDisplay, currentSurface, EGL_WIDTH, width) ||
+            !eglQuerySurface(currentDisplay, currentSurface, EGL_HEIGHT, height)) {
+            return false;
+        }
+
+        return true;
     }
+#endif
 
-    EGLSurface currentSurface = eglGetCurrentSurface(EGL_DRAW);
-    if (currentSurface == EGL_NO_SURFACE) {
-        return false;
-    }
-
-    EGLDisplay currentDisplay = eglGetCurrentDisplay();
-    if (currentDisplay == EGL_NO_DISPLAY) {
-        return false;
-    }
-
-    if (!eglQuerySurface(currentDisplay, currentSurface, EGL_WIDTH, width) ||
-        !eglQuerySurface(currentDisplay, currentSurface, EGL_HEIGHT, height)) {
-        return false;
-    }
-
-    return true;
-
-#elif defined(_WIN32)
+#if defined(_WIN32)
 
     HDC hDC = wglGetCurrentDC();
     if (!hDC) {

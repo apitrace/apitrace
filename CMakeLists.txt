@@ -506,12 +506,6 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
 
     add_dependencies (egltrace glproc)
 
-    set_property (
-        TARGET egltrace
-        APPEND
-        PROPERTY COMPILE_DEFINITIONS "TRACE_EGL"
-    )
-
     set_target_properties (egltrace PROPERTIES
         # avoid the default "lib" prefix
         PREFIX ""
@@ -628,7 +622,6 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
         TARGET eglretrace
         APPEND
         PROPERTY COMPILE_DEFINITIONS "RETRACE"
-        PROPERTY COMPILE_DEFINITIONS "TRACE_EGL"
     )
 
     target_link_libraries (eglretrace
