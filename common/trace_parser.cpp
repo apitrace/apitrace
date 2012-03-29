@@ -243,7 +243,7 @@ Parser::parse_function_sig(void) {
         if (api == API_UNKNOWN) {
             const char *n = sig->name;
             if ((n[0] == 'g' && n[1] == 'l' && n[2] == 'X') || // glX
-                (n[0] == 'w' && n[1] == 'g' && n[2] == 'g' && n[3] >= 'A' && n[3] <= 'Z') || // wgl[A-Z]
+                (n[0] == 'w' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') || // wgl[A-Z]
                 (n[0] == 'C' && n[1] == 'G' && n[2] == 'L')) { // CGL
                 api = trace::API_GL;
             } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl
