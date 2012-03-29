@@ -548,8 +548,8 @@ add_custom_command (
 
 add_custom_command (
     OUTPUT glstate_params.cpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
-    DEPENDS glstate.py specs/glparams.py specs/gltypes.py specs/stdapi.py
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glstate_params.py > ${CMAKE_CURRENT_BINARY_DIR}/glstate_params.cpp
+    DEPENDS glstate_params.py specs/glparams.py specs/gltypes.py specs/stdapi.py
 )
 
 set (retrace_sources
