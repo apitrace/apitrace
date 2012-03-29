@@ -32,7 +32,13 @@
 #define _EGLIMPORTS_HPP_
 
 
-#ifdef HAVE_EGL
+#include <KHR/khrplatform.h>
+
+#ifdef _GDI32_
+/* Prevent __declspec(dllimport) attribute */
+#undef KHRONOS_APICALL
+#define KHRONOS_APICALL
+#endif
 
 // EGL
 #include <EGL/egl.h>
@@ -44,28 +50,6 @@
 // OpenGL ES
 #include <GLES/glplatform.h>
 #include <GLES2/gl2platform.h>
-
-#else // HAVE_EGL
-
-// We always include GLES headers below to have the types and enums defined.
-// For that to work without GLES platform headers, we need to define GL_API,
-// GL_APICALL, and GL_APIENTRY.  It does not matter what they are defined to.
-// When we hit here, EGL/GLES support is disabled and all we need from the
-// headers are the types and enums.
-
-#ifndef GL_API
-#define GL_API GLAPI
-#endif
-
-#ifndef GL_APICALL
-#define GL_APICALL GLAPI
-#endif
-
-#ifndef GL_APIENTRY
-#define GL_APIENTRY APIENTRY
-#endif
-
-#endif //! HAVE_EGL
 
 
 // OpenGL ES 1.1

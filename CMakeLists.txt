@@ -60,10 +60,6 @@ else ()
         include_directories (${X11_INCLUDE_DIR})
         add_definitions (-DHAVE_X11)
     endif ()
-
-    if (ENABLE_EGL)
-        add_definitions (-DHAVE_EGL)
-    endif ()
 endif ()
 
 
