@@ -84,12 +84,152 @@ struct ImageDesc
 };
 
 
+/**
+ * OpenGL ES does not support glGetTexLevelParameteriv, but it is possible to
+ * probe whether a texture has a given size by crafting a dummy glTexSubImage()
+ * call.
+ */
+static bool
+probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
+    while (glGetError() != GL_NO_ERROR)
+        ;
+
+    GLenum internalFormat = GL_RGBA;
+    GLenum type = GL_UNSIGNED_BYTE;
+    GLint dummy = 0;
+
+    switch (target) {
+    case GL_TEXTURE_2D:
+    case GL_TEXTURE_CUBE_MAP:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        glTexSubImage2D(target, level, size[0], size[1], 0, 0, internalFormat, type, &dummy);
+        break;
+    case GL_TEXTURE_3D_OES:
+        glTexSubImage3DOES(target, level, size[0], size[1], size[2], 0, 0, 0, internalFormat, type, &dummy);
+    default:
+        assert(0);
+        return false;
+    }
+
+    GLenum error = glGetError();
+
+    if (0) {
+        std::cerr << "(" << size[0] << ", " << size[1] << ", " << size[2] << ") = " << enumToString(error) << "\n";
+    }
+
+    if (error == GL_NO_ERROR) {
+        return true;
+    }
+
+    while (glGetError() != GL_NO_ERROR)
+        ;
+
+    return false;
+}
+
+
+/**
+ * Bisect the texture size along an axis.
+ *
+ * It is assumed that the texture exists.
+ */
+static GLint
+bisectTextureLevelSizeOES(GLenum target, GLint level, GLint axis, GLint max) {
+    GLint size[3] = {0, 0, 0};
+
+    assert(axis < 3);
+    assert(max >= 0);
+
+    GLint min = 0;
+    while (true) {
+        GLint test = (min + max) / 2;
+        if (test == min) {
+            return min;
+        }
+
+        size[axis] = test;
+
+        if (probeTextureLevelSizeOES(target, level, size)) {
+            min = test;
+        } else {
+            max = test;
+        }
+    }
+}
+
+
+/**
+ * Special path to obtain texture size on OpenGL ES, that does not rely on
+ * glGetTexLevelParameteriv
+ */
+static bool
+getActiveTextureLevelDescOES(Context &context, GLenum target, GLint level, ImageDesc &desc)
+{
+    if (target == GL_TEXTURE_1D) {
+        // OpenGL ES does not support 1D textures
+        return false;
+    }
+
+    const GLint size[3] = {1, 1, 1}; 
+    if (!probeTextureLevelSizeOES(target, level, size)) {
+        return false;
+    }
+
+    // XXX: mere guess
+    desc.internalFormat = GL_RGBA;
+
+    GLint maxSize = 0;
+    switch (target) {
+    case GL_TEXTURE_2D:
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize);
+        desc.height = bisectTextureLevelSizeOES(target, level, 1, maxSize);
+        desc.depth = 1;
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, &maxSize);
+        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize);
+        desc.height = desc.width;
+        desc.depth = 1;
+        break;
+    case GL_TEXTURE_3D_OES:
+        glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE_OES, &maxSize);
+        desc.width = bisectTextureLevelSizeOES(target, level, 0, maxSize);
+        desc.width = bisectTextureLevelSizeOES(target, level, 1, maxSize);
+        desc.depth = bisectTextureLevelSizeOES(target, level, 2, maxSize);
+        break;
+    default:
+        return false;
+    }
+
+    if (0) {
+        std::cerr
+            << enumToString(target) << " "
+            << level << " "
+            << desc.width << "x" << desc.height << "x" << desc.depth
+            << "\n";
+    }
+
+    return desc.valid();
+}
+
+
 static inline bool
 getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDesc &desc)
 {
     if (context.ES) {
-        // XXX: OpenGL ES does not support glGetTexLevelParameteriv
-        return false;
+        return getActiveTextureLevelDescOES(context, target, level, desc);
     }
 
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &desc.internalFormat);
