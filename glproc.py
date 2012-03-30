@@ -529,7 +529,7 @@ if __name__ == '__main__':
     print
     dispatcher.dispatch_api(cglapi)
     print
-    print '#else'
+    print '#elif defined(HAVE_X11)'
     print
     dispatcher.dispatch_api(glxapi)
     print
