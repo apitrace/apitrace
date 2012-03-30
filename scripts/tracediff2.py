@@ -40,6 +40,7 @@ ignoredFunctionNames = set([
     'glGetString',
     'glXGetClientString',
     'glXGetCurrentDisplay',
+    'glXGetCurrentContext',
     'glXGetProcAddress',
     'glXGetProcAddressARB',
     'wglGetProcAddress',
@@ -99,7 +100,6 @@ def readtrace(trace, calls):
         stdout = subprocess.PIPE,
     )
 
-    calls = []
     parser = Loader(p.stdout)
     parser.parse()
     return parser.calls
@@ -186,15 +186,11 @@ class SDiffer:
     def replace_dissimilar(self, alo, ahi, blo, bhi):
         assert alo < ahi and blo < bhi
         if bhi - blo < ahi - alo:
-            first  = self.insert(blo, bhi)
-            second = self.delete(alo, ahi)
+            self.insert(alo, alo, blo, bhi)
+            self.delete(alo, ahi, bhi, bhi)
         else:
-            first  = self.delete(alo, ahi)
-            second = self.insert(blo, bhi)
-
-        for g in first, second:
-            for line in g:
-                yield line
+            self.delete(alo, ahi, blo, blo)
+            self.insert(ahi, ahi, blo, bhi)
 
     def replace_value(self, a, b):
         if b == a:
@@ -212,6 +208,8 @@ class SDiffer:
     escape = "\33["
 
     def delete(self, alo, ahi, blo, bhi):
+        assert alo < ahi
+        assert blo == bhi
         for i in xrange(alo, ahi):
             call = self.a[i]
             self.highlighter.write('- ')
@@ -221,6 +219,8 @@ class SDiffer:
             self.dumpCall(call)
 
     def insert(self, alo, ahi, blo, bhi):
+        assert alo == ahi
+        assert blo < bhi
         for i in xrange(blo, bhi):
             call = self.b[i]
             self.highlighter.write('+ ')
@@ -229,6 +229,8 @@ class SDiffer:
             self.dumpCall(call)
 
     def equal(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+        assert ahi - alo == bhi - blo
         for i in xrange(0, bhi - blo):
             self.highlighter.write('  ')
             a_call = self.a[alo + i]
@@ -245,21 +247,21 @@ class SDiffer:
         if aNo is None:
             self.highlighter.write(' '*self.aSpace)
         else:
-            aStr = str(aNo)
+            aNoStr = str(aNo)
             self.highlighter.strike()
             self.highlighter.color(self.delete_color)
-            self.highlighter.write(str(aNo))
+            self.highlighter.write(aNoStr)
             self.highlighter.normal()
-            self.aSpace = len(aStr)
+            self.aSpace = len(aNoStr)
         self.highlighter.write(' ')
         if bNo is None:
-            self.highlighter.write(' '*self.aSpace)
+            self.highlighter.write(' '*self.bSpace)
         else:
-            bStr = str(bNo)
+            bNoStr = str(bNo)
             self.highlighter.color(self.insert_color)
-            self.highlighter.write(str(bNo))
+            self.highlighter.write(bNoStr)
             self.highlighter.normal()
-            self.bSpace = len(bStr)
+            self.bSpace = len(bNoStr)
         self.highlighter.write(' ')
 
     def dumpCall(self, call):

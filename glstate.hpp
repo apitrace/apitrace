@@ -32,9 +32,6 @@
 #include "glimports.hpp"
 
 
-class JSONWriter;
-
-
 namespace image {
     class Image;
 }

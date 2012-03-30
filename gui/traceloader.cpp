@@ -20,8 +20,7 @@ apiCallFromTraceCall(const trace::Call *call,
 }
 
 TraceLoader::TraceLoader(QObject *parent)
-    : QObject(parent),
-      m_frameMarker(ApiTrace::FrameMarker_SwapBuffers)
+    : QObject(parent)
 {
 }
 
@@ -61,40 +60,13 @@ void TraceLoader::loadTrace(const QString &filename)
         //Load the entire file into memory
         parseTrace();
     }
+    emit guessedApi(static_cast<int>(m_parser.api));
     emit finishedParsing();
 }
 
 void TraceLoader::loadFrame(ApiTraceFrame *currentFrame)
 {
     fetchFrameContents(currentFrame);
-}
-
-void TraceLoader::setFrameMarker(ApiTrace::FrameMarker marker)
-{
-    m_frameMarker = marker;
-}
-
-bool TraceLoader::isCallAFrameMarker(const trace::Call *call) const
-{
-    std::string name = call->name();
-
-    switch (m_frameMarker) {
-    case ApiTrace::FrameMarker_SwapBuffers:
-        return  name.find("SwapBuffers") != std::string::npos ||
-                name == "CGLFlushDrawable" ||
-                name == "glFrameTerminatorGREMEDY";
-        break;
-    case ApiTrace::FrameMarker_Flush:
-        return name == "glFlush";
-        break;
-    case ApiTrace::FrameMarker_Finish:
-        return name == "glFinish";
-        break;
-    case ApiTrace::FrameMarker_Clear:
-        return name == "glClear";
-        break;
-    }
-    return false;
 }
 
 int TraceLoader::numberOfFrames() const
@@ -104,7 +76,7 @@ int TraceLoader::numberOfFrames() const
 
 int TraceLoader::numberOfCallsInFrame(int frameIdx) const
 {
-    if (frameIdx > m_frameBookmarks.size()) {
+    if (frameIdx >= m_frameBookmarks.size()) {
         return 0;
     }
     FrameBookmarks::const_iterator itr =
@@ -147,7 +119,7 @@ void TraceLoader::scanTrace()
     while ((call = m_parser.scan_call())) {
         ++numOfCalls;
 
-        if (isCallAFrameMarker(call)) {
+        if (call->flags & trace::CALL_FLAG_END_FRAME) {
             FrameBookmark frameBookmark(startBookmark);
             frameBookmark.numberOfCalls = numOfCalls;
 
@@ -217,8 +189,7 @@ void TraceLoader::parseTrace()
                     apiCall->arguments()[apiCall->binaryDataIndex()].toByteArray();
             binaryDataSize += data.size();
         }
-        if (ApiTrace::isCallAFrameMarker(apiCall,
-                                         m_frameMarker)) {
+        if (call->flags & trace::CALL_FLAG_END_FRAME) {
             calls.squeeze();
             currentFrame->setCalls(calls, binaryDataSize);
             calls.clear();
@@ -386,7 +357,7 @@ int TraceLoader::callInFrame(int callIdx) const
 {
     unsigned numCalls = 0;
 
-    for (int frameIdx = 0; frameIdx <= m_frameBookmarks.size(); ++frameIdx) {
+    for (int frameIdx = 0; frameIdx < m_frameBookmarks.size(); ++frameIdx) {
         const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
         unsigned firstCall = numCalls;
         unsigned endCall = numCalls + frameBookmark.numberOfCalls;
@@ -452,7 +423,7 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
 
                 delete call;
 
-                if (ApiTrace::isCallAFrameMarker(apiCall, m_frameMarker)) {
+                if (apiCall->flags() & trace::CALL_FLAG_END_FRAME) {
                     break;
                 }
 

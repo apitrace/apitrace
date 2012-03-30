@@ -27,6 +27,11 @@
        <widget class="QComboBox" name="apiComboBox">
         <item>
          <property name="text">
+          <string>Unknown</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>GL</string>
          </property>
         </item>

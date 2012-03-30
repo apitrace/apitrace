@@ -23,6 +23,12 @@
  *
  **************************************************************************/
 
+
+/*
+ * WGL bindings.
+ */
+
+
 #include <iostream>
 
 #include "glproc.hpp"
@@ -30,6 +36,27 @@
 
 
 namespace glws {
+
+
+/*
+ * Several WGL functions come in two flavors:
+ * - GDI (ChoosePixelFormat, SetPixelFormat, SwapBuffers, etc)
+ * - WGL (wglChoosePixelFormat, wglSetPixelFormat, wglSwapBuffers, etc)
+ *
+ * The GDI entrypoints will inevitably dispatch to the first module named
+ * "OPENGL32", loading "C:\Windows\System32\opengl32.dll" if none was loaded so
+ * far.
+ *
+ * In order to use a implementation other than the one installed in the system
+ * (when specified via the TRACE_LIBGL environment variable), we need to use
+ * WGL entrypoints.
+ *
+ * See also:
+ * - http://www.opengl.org/archives/resources/faq/technical/mswindows.htm
+ */
+static __PFNWGLCHOOSEPIXELFORMAT pfnChoosePixelFormat = &ChoosePixelFormat;
+static __PFNWGLSETPIXELFORMAT pfnSetPixelFormat = &SetPixelFormat;
+static __PFNWGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
 
 
 static LRESULT CALLBACK
@@ -68,6 +95,7 @@ public:
     {
         static bool first = TRUE;
         RECT rect;
+        BOOL bRet;
 
         if (first) {
             WNDCLASS wc;
@@ -126,9 +154,17 @@ public:
            pfd.dwFlags |= PFD_DOUBLEBUFFER;
         }
 
-        iPixelFormat = ChoosePixelFormat(hDC, &pfd);
+        iPixelFormat = pfnChoosePixelFormat(hDC, &pfd);
+        if (iPixelFormat <= 0) {
+            std::cerr << "error: ChoosePixelFormat failed\n";
+            exit(1);
+        }
 
-        SetPixelFormat(hDC, iPixelFormat, &pfd);
+        bRet = pfnSetPixelFormat(hDC, iPixelFormat, &pfd);
+        if (!bRet) {
+            std::cerr << "error: SetPixelFormat failed\n";
+            exit(1);
+        }
     }
 
     ~WglDrawable() {
@@ -163,7 +199,11 @@ public:
     }
 
     void swapBuffers(void) {
-        SwapBuffers(hDC);
+        BOOL bRet;
+        bRet = pfnSwapBuffers(hDC);
+        if (!bRet) {
+            std::cerr << "warning: SwapBuffers failed\n";
+        }
 
         // Drain message queue to prevent window from being considered
         // non-responsive
@@ -204,7 +244,11 @@ init(void) {
 
     const char * libgl_filename = getenv("TRACE_LIBGL");
 
-    if (!libgl_filename) {
+    if (libgl_filename) {
+        pfnChoosePixelFormat = &wglChoosePixelFormat;
+        pfnSetPixelFormat = &wglSetPixelFormat;
+        pfnSwapBuffers = &wglSwapBuffers;
+    } else {
         libgl_filename = "OPENGL32";
     }
 
@@ -260,11 +304,17 @@ makeCurrent(Drawable *drawable, Context *context)
         if (!wglContext->hglrc) {
             wglContext->hglrc = wglCreateContext(wglDrawable->hDC);
             if (!wglContext->hglrc) {
+                std::cerr << "error: wglCreateContext failed\n";
+                exit(1);
                 return false;
             }
             if (wglContext->shareContext) {
-                wglShareLists(wglContext->shareContext->hglrc,
-                              wglContext->hglrc);
+                BOOL bRet;
+                bRet = wglShareLists(wglContext->shareContext->hglrc,
+                                     wglContext->hglrc);
+                if (!bRet) {
+                    std::cerr << "warning: wglShareLists failed\n";
+                }
             }
         }
 

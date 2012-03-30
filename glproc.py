@@ -515,20 +515,24 @@ if __name__ == '__main__':
     print '#include "glimports.hpp"'
     print '#include "os.hpp"'
     print
-    print
     dispatcher = GlDispatcher()
+    print
     dispatcher.header()
-    print '#if defined(TRACE_EGL)'
     print
     dispatcher.dispatch_api(eglapi)
-    print '#elif defined(_WIN32)'
+    print
+    print '#if defined(_WIN32)'
     print
     dispatcher.dispatch_api(wglapi)
+    print
     print '#elif defined(__APPLE__)'
+    print
     dispatcher.dispatch_api(cglapi)
-    print '#else'
+    print
+    print '#elif defined(HAVE_X11)'
     print
     dispatcher.dispatch_api(glxapi)
+    print
     print '#endif'
     print
     dispatcher.dispatch_api(glapi)

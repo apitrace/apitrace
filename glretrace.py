@@ -111,6 +111,8 @@ class GlRetracer(Retracer):
     ])
 
     misc_draw_function_names = set([
+        "glCallList",
+        "glCallLists",
         "glClear",
         "glEnd",
         "glDrawPixels",
@@ -222,6 +224,21 @@ class GlRetracer(Retracer):
         # Infer the drawable size from GL calls
         if function.name == "glViewport":
             print '    glretrace::updateDrawable(x + width, y + height);'
+        if function.name == "glViewportArray":
+            # We are concerned about drawables so only care for the first viewport
+            print '    if (first == 0 && count > 0) {'
+            print '        GLfloat x = v[0], y = v[1], w = v[2], h = v[3];'
+            print '        glretrace::updateDrawable(x + w, y + h);'
+            print '    }'
+        if function.name == "glViewportIndexedf":
+            print '    if (index == 0) {'
+            print '        glretrace::updateDrawable(x + w, y + h);'
+            print '    }'
+        if function.name == "glViewportIndexedfv":
+            print '    if (index == 0) {'
+            print '        GLfloat x = v[0], y = v[1], w = v[2], h = v[3];'
+            print '        glretrace::updateDrawable(x + w, y + h);'
+            print '    }'
         if function.name in ('glBlitFramebuffer', 'glBlitFramebufferEXT'):
             # Some applications do all their rendering in a framebuffer, and
             # then just blit to the drawable without ever calling glViewport.
@@ -338,21 +355,21 @@ class GlRetracer(Retracer):
                 print r'    }'
             print '    }'
 
-            # Query the buffer length for whole buffer mappings
-            if function.name in self.map_function_names:
-                if 'length' in function.argNames():
-                    assert 'BufferRange' in function.name
+        # Query the buffer length for whole buffer mappings
+        if function.name in self.map_function_names:
+            if 'length' in function.argNames():
+                assert 'BufferRange' in function.name
+            else:
+                assert 'BufferRange' not in function.name
+                print r'    GLint length = 0;'
+                if function.name in ('glMapBuffer', 'glMapBufferOES'):
+                    print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
+                elif function.name == 'glMapBufferARB':
+                    print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
+                elif function.name == 'glMapNamedBufferEXT':
+                    print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
                 else:
-                    assert 'BufferRange' not in function.name
-                    print r'    GLint length = 0;'
-                    if function.name in ('glMapBuffer', 'glMapBufferOES'):
-                        print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
-                    elif function.name == 'glMapBufferARB':
-                        print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
-                    elif function.name == 'glMapNamedBufferEXT':
-                        print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
-                    else:
-                        assert False
+                    assert False
 
     def extractArg(self, function, arg, arg_type, lvalue, rvalue):
         if function.name in self.array_pointer_function_names and arg.name == 'pointer':

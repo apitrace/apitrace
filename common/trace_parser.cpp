@@ -43,6 +43,7 @@ Parser::Parser() {
     file = NULL;
     next_call_no = 0;
     version = 0;
+    api = API_UNKNOWN;
 
     glGetErrorSig = NULL;
 }
@@ -65,6 +66,7 @@ bool Parser::open(const char *filename) {
         std::cerr << "error: unsupported trace format version " << version << "\n";
         return false;
     }
+    api = API_UNKNOWN;
 
     return true;
 }
@@ -231,6 +233,25 @@ Parser::parse_function_sig(void) {
         sig->flags = lookupCallFlags(sig->name);
         sig->offset = file->currentOffset();
         functions[id] = sig;
+
+        /**
+         * Try to autodetect the API.
+         *
+         * XXX: Ideally we would allow to mix multiple APIs in a single trace,
+         * but as it stands today, retrace is done separately for each API.
+         */
+        if (api == API_UNKNOWN) {
+            const char *n = sig->name;
+            if ((n[0] == 'g' && n[1] == 'l' && n[2] == 'X') || // glX
+                (n[0] == 'w' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') || // wgl[A-Z]
+                (n[0] == 'C' && n[1] == 'G' && n[2] == 'L')) { // CGL
+                api = trace::API_GL;
+            } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl
+                api = trace::API_EGL;
+            } else {
+                /* TODO */
+            }
+        }
 
         /**
          * Note down the signature of special functions for future reference.

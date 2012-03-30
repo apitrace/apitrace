@@ -358,16 +358,20 @@ reference software renderer.
 
 This can be achieved with retracediff.py script, which invokes glretrace with
 different environments, allowing to choose the desired GL driver by
-manipulating variables such as `LD_LIBRARY_PATH` or `LIBGL_DRIVERS_DIR`.
+manipulating variables such as `LD_LIBRARY_PATH`, `LIBGL_DRIVERS_DIR`, or
+`TRACE_LIBGL`.
 
-For example:
+For example, on Linux:
 
     ./scripts/retracediff.py \
         --ref-env LD_LIBRARY_PATH=/path/to/reference/GL/implementation \
-        -r ./glretrace \
+        --retrace /path/to/glretrace \
         --diff-prefix=/path/to/output/diffs \
         application.trace
 
+Or on Windows:
+
+    python scripts\retracediff.py --retrace \path\to\glretrace.exe --ref-env TRACE_LIBGL=\path\to\reference\opengl32.dll application.trace
 
 
 Links
