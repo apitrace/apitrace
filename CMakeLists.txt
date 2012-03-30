@@ -542,7 +542,7 @@ add_custom_command (
     DEPENDS glstate_params.py specs/glparams.py specs/gltypes.py specs/stdapi.py
 )
 
-set (retrace_sources
+add_library (retrace_common
     glretrace_gl.cpp
     glretrace_cgl.cpp
     glretrace_glx.cpp
@@ -558,9 +558,14 @@ set (retrace_sources
     glws.cpp
 )
 
+set_property (
+    TARGET retrace_common
+    APPEND
+    PROPERTY COMPILE_DEFINITIONS "RETRACE"
+)
+
 if (WIN32 OR APPLE OR X11_FOUND)
     add_executable (glretrace
-        ${retrace_sources}
         ${glws_os}
         glproc_gl.cpp
     )
@@ -574,6 +579,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
     )
 
     target_link_libraries (glretrace
+        retrace_common
         common
         ${PNG_LIBRARIES}
         ${ZLIB_LIBRARIES}
@@ -611,7 +617,6 @@ endif ()
 
 if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     add_executable (eglretrace
-        ${retrace_sources}
         glws_egl_xlib.cpp
         glproc_egl.cpp
     )
@@ -625,6 +630,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     )
 
     target_link_libraries (eglretrace
+        retrace_common
         common
         ${PNG_LIBRARIES}
         ${ZLIB_LIBRARIES}
