@@ -2,7 +2,7 @@ diff --git a/thirdparty/khronos/EGL/eglplatform.h b/thirdparty/khronos/EGL/eglpl
 index 6d34ab5..5f30ef1 100644
 --- a/thirdparty/khronos/EGL/eglplatform.h
 +++ b/thirdparty/khronos/EGL/eglplatform.h
-@@ -83,6 +83,16 @@ typedef int   EGLNativeDisplayType;
+@@ -83,6 +83,22 @@ typedef int   EGLNativeDisplayType;
  typedef void *EGLNativeWindowType;
  typedef void *EGLNativePixmapType;
  
@@ -15,6 +15,12 @@ index 6d34ab5..5f30ef1 100644
 +typedef struct ANativeWindow*           EGLNativeWindowType;
 +typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
 +typedef void*                           EGLNativeDisplayType;
++
++#elif defined(__APPLE__)
++
++typedef void *EGLNativeDisplayType;
++typedef void *EGLNativePixmapType;
++typedef void *EGLNativeWindowType;
 +
  #elif defined(__unix__)
  

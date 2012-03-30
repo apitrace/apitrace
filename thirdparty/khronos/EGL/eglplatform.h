@@ -93,6 +93,12 @@ typedef struct ANativeWindow*           EGLNativeWindowType;
 typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
 typedef void*                           EGLNativeDisplayType;
 
+#elif defined(__APPLE__)
+
+typedef void *EGLNativeDisplayType;
+typedef void *EGLNativePixmapType;
+typedef void *EGLNativeWindowType;
+
 #elif defined(__unix__)
 
 /* X11 (tentative)  */
