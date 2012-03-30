@@ -422,6 +422,14 @@ class Tracer:
         print function.prototype() + ' {'
         if function.type is not stdapi.Void:
             print '    %s _result;' % function.type
+        print '    if (!os::apitrace_enabled()) {'
+        Tracer.invokeFunction(self, function)
+        if function.type is not stdapi.Void:
+            print '        return _result;'
+        else:
+            print '        return;'
+        print '    }'
+        print
         self.traceFunctionImplBody(function)
         if function.type is not stdapi.Void:
             print '    return _result;'

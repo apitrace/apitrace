@@ -70,6 +70,15 @@ void log(const char *format, ...)
   #endif
 #endif
 
+#ifdef ANDROID
+bool apitrace_enabled(void);
+#else
+static inline bool apitrace_enabled(void)
+{
+    return true;
+}
+#endif
+
 void abort(void);
 
 void setExceptionCallback(void (*callback)(void));

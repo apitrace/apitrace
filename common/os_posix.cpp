@@ -46,6 +46,10 @@
 
 #ifdef ANDROID
 #include <android/log.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/system_properties.h>
 #endif
 
 #ifndef PATH_MAX
@@ -96,6 +100,68 @@ getProcessName(void)
 
     return path;
 }
+
+#ifdef ANDROID
+static String
+getZygoteProcessName(void)
+{
+    String path;
+    size_t size = PATH_MAX;
+    char *buf = path.buf(size);
+    ssize_t len;
+
+    int fd = open("/proc/self/cmdline", O_RDONLY);
+
+    assert(fd >= 0);
+    len = read(fd, buf, size - 1);
+    close(fd);
+    path.truncate(len);
+
+    return path;
+}
+
+static bool isZygoteProcess(void)
+{
+    os::String proc_name;
+
+    proc_name = getProcessName();
+    proc_name.trimDirectory();
+
+    return strcmp(proc_name, "app_process") == 0;
+}
+
+bool apitrace_enabled(void)
+{
+    static pid_t cached_pid;
+    static bool enabled;
+    pid_t pid;
+
+    pid = getpid();
+    if (cached_pid == pid)
+        return enabled;
+    cached_pid = pid;
+
+    if (!isZygoteProcess()) {
+        os::log("apitrace[%d]: enabled for standalone %s", pid,
+                (const char *)getProcessName());
+        enabled = true;
+        return true;
+    }
+
+    char target_proc_name[PROP_VALUE_MAX] = "";
+    os::String proc_name;
+
+    proc_name = getZygoteProcessName();
+    proc_name.trimDirectory();
+
+    __system_property_get("debug.apitrace.procname", target_proc_name);
+    enabled = !strcmp(target_proc_name, proc_name);
+    os::log("apitrace[%d]: %s for %s",
+            pid, enabled ? "enabled" : "disabled", (const char *)proc_name);
+
+    return enabled;
+}
+#endif
 
 String
 getCurrentDir(void)
