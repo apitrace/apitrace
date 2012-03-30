@@ -58,7 +58,7 @@ void dumpEnum(JSONWriter &json, GLenum pname);
 
 void dumpParameters(JSONWriter &json, Context &context);
 
-void dumpShadersUniforms(JSONWriter &json);
+void dumpShadersUniforms(JSONWriter &json, Context &context);
 
 void dumpTextures(JSONWriter &json, Context &context);
 

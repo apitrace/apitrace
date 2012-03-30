@@ -491,12 +491,15 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
 
 
 void
-dumpShadersUniforms(JSONWriter &json)
+dumpShadersUniforms(JSONWriter &json, Context &context)
 {
     GLint program = 0;
     glGetIntegerv(GL_CURRENT_PROGRAM, &program);
 
-    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+    GLhandleARB programObj = 0;
+    if (!context.ES && !program) {
+        programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+    }
 
     json.beginMember("shaders");
     json.beginObject();

@@ -135,7 +135,7 @@ void dumpCurrentContext(std::ostream &os)
     Context context;
 
     dumpParameters(json, context);
-    dumpShadersUniforms(json);
+    dumpShadersUniforms(json, context);
     dumpTextures(json, context);
     dumpFramebuffer(json, context);
 
