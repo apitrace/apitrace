@@ -270,7 +270,7 @@ class Retracer:
                 self.extractArg(function, arg, arg_type, lvalue, rvalue)
             except NotImplementedError:
                 success =  False
-                print '    %s = 0; // FIXME' % arg.name
+                print '    memset(&%s, 0, sizeof %s); // FIXME' % (arg.name, arg.name)
 
         if not success:
             print '    if (1) {'
