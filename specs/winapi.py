@@ -87,16 +87,13 @@ GUID = Struct("GUID", [
 ])
 LPGUID = Pointer(GUID)
 
-#REFGUID = Alias("REFGUID", Pointer(GUID))
-REFGUID = Alias("REFGUID", GUID)
+REFGUID = Alias("REFGUID", Reference(GUID))
 
 IID = Alias("IID", GUID)
-#REFIID = Alias("REFIID", Pointer(IID))
-REFIID = Alias("REFIID", IID)
+REFIID = Alias("REFIID", Reference(IID))
 
 CLSID = Alias("CLSID", GUID)
-#REFCLSID = Alias("REFCLSID", Pointer(CLSID))
-REFCLSID = Alias("REFCLSID", CLSID)
+REFCLSID = Alias("REFCLSID", Reference(CLSID))
 
 LUID = Struct("LUID", [
     (DWORD, "LowPart"),

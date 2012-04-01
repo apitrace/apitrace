@@ -146,6 +146,17 @@ class LinearPointer(Type):
         return visitor.visitLinearPointer(self, *args, **kwargs)
 
 
+class Reference(Type):
+    '''C++ references.'''
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr + " &", 'R' + type.tag)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitReference(self, *args, **kwargs)
+
+
 class Handle(Type):
 
     def __init__(self, name, type, range=None, key=None):
@@ -475,6 +486,9 @@ class Visitor:
     def visitLinearPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
+    def visitReference(self, reference, *args, **kwargs):
+        raise NotImplementedError
+
     def visitHandle(self, handle, *args, **kwargs):
         raise NotImplementedError
 
@@ -553,6 +567,10 @@ class Rebuilder(Visitor):
         type = self.visit(pointer.type)
         return LinearPointer(type, pointer.size)
 
+    def visitReference(self, reference):
+        type = self.visit(reference.type)
+        return Reference(type)
+
     def visitHandle(self, handle):
         type = self.visit(handle.type)
         return Handle(handle.name, type, range=handle.range, key=handle.key)
@@ -624,6 +642,9 @@ class Collector(Visitor):
 
     def visitLinearPointer(self, pointer):
         self.visit(pointer.type)
+
+    def visitReference(self, reference):
+        self.visit(reference.type)
 
     def visitHandle(self, handle):
         self.visit(handle.type)

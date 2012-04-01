@@ -39,6 +39,15 @@ class ConstRemover(stdapi.Rebuilder):
     def visitConst(self, const):
         return const.type
 
+    def visitAlias(self, alias):
+        type = self.visit(alias.type)
+        if type is alias.type:
+            return alias
+        return type
+
+    def visitReference(self, reference):
+        return reference.type
+
     def visitOpaque(self, opaque):
         return opaque
 
@@ -99,6 +108,9 @@ class ValueDeserializer(stdapi.Visitor):
 
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
+
+    def visitReference(self, reference, lvalue, rvalue):
+        self.visit(reference.type, lvalue, rvalue);
 
     def visitHandle(self, handle, lvalue, rvalue):
         #OpaqueValueDeserializer().visit(handle.type, lvalue, rvalue);
@@ -170,6 +182,9 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         if pointer.size is not None:
             print r'    retrace::addRegion((%s).toUIntPtr(), %s, %s);' % (rvalue, lvalue, pointer.size)
 
+    def visitReference(self, reference, lvalue, rvalue):
+        pass
+    
     def visitHandle(self, handle, lvalue, rvalue):
         print '    %s __orig_result;' % handle.type
         OpaqueValueDeserializer().visit(handle.type, '__orig_result', rvalue);
