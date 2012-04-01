@@ -361,8 +361,8 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args, const=False):
-        Function.__init__(self, type, name, args, call = '__stdcall')
+    def __init__(self, type, name, args, const=False, sideeffects=True):
+        Function.__init__(self, type, name, args, call = '__stdcall', sideeffects=sideeffects)
         for index in range(len(self.args)):
             self.args[index].index = index + 1
         self.const = const
