@@ -338,6 +338,7 @@ class Retracer:
 
     def retraceApi(self, api):
 
+        print '#include "os_time.hpp"'
         print '#include "trace_parser.hpp"'
         print '#include "retrace.hpp"'
         print
