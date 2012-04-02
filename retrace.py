@@ -81,31 +81,41 @@ class ValueDeserializer(stdapi.Visitor):
     def visitBitmask(self, bitmask, lvalue, rvalue):
         self.visit(bitmask.type, lvalue, rvalue)
 
+    allocated = False
+
     def visitArray(self, array, lvalue, rvalue):
         print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
-        print '    if (__a%s) {' % (array.tag)
         length = '__a%s->values.size()' % array.tag
-        print '        %s = _allocator.alloc<%s>(%s);' % (lvalue, array.type, length)
+        allocated = self.allocated
+        if not allocated:
+            print '    if (__a%s) {' % (array.tag)
+            print '        %s = _allocator.alloc<%s>(%s);' % (lvalue, array.type, length)
+            self.allocated = True
         index = '__j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.tag, index))
         finally:
             print '        }'
-            print '    } else {'
-            print '        %s = NULL;' % lvalue
-            print '    }'
+            if not allocated:
+                print '    } else {'
+                print '        %s = NULL;' % lvalue
+                print '    }'
     
     def visitPointer(self, pointer, lvalue, rvalue):
         print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
-        print '    if (__a%s) {' % (pointer.tag)
-        print '        %s = _allocator.alloc<%s>();' % (lvalue, pointer.type)
+        allocated = self.allocated
+        if not allocated:
+            print '    if (__a%s) {' % (pointer.tag)
+            print '        %s = _allocator.alloc<%s>();' % (lvalue, pointer.type)
+            self.allocated = True
         try:
             self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.tag,))
         finally:
-            print '    } else {'
-            print '        %s = NULL;' % lvalue
-            print '    }'
+            if not allocated:
+                print '    } else {'
+                print '        %s = NULL;' % lvalue
+                print '    }'
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
@@ -130,6 +140,19 @@ class ValueDeserializer(stdapi.Visitor):
     
     def visitString(self, string, lvalue, rvalue):
         print '    %s = (%s)((%s).toString());' % (lvalue, string.expr, rvalue)
+
+    seq = 0
+
+    def visitStruct(self, struct, lvalue, rvalue):
+        tmp = '__s_' + struct.tag + '_' + str(self.seq)
+        self.seq += 1
+
+        print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
+        print '    assert(%s);' % (tmp)
+        self.allocated = True
+        for i in range(len(struct.members)):
+            member_type, member_name = struct.members[i]
+            self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
 
 
 class OpaqueValueDeserializer(ValueDeserializer):
