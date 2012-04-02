@@ -213,7 +213,7 @@ static void display(void) {
     startTime = os::getTime();
     trace::Call *call;
 
-    while ((call = parser.parse_call())) {
+    while ((call = retrace::parser.parse_call())) {
         bool swapRenderTarget = call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET;
         bool doSnapshot =
             snapshot_frequency.contains(*call) ||
@@ -368,14 +368,14 @@ int main(int argc, char **argv)
     visual[glws::PROFILE_ES2] = glws::createVisual(double_buffer, glws::PROFILE_ES2);
 
     for ( ; i < argc; ++i) {
-        if (!parser.open(argv[i])) {
+        if (!retrace::parser.open(argv[i])) {
             std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
         }
 
         display();
 
-        parser.close();
+        retrace::parser.close();
     }
 
     for (int n = 0; n < glws::PROFILE_MAX; n++) {

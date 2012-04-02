@@ -176,7 +176,7 @@ class GlRetracer(Retracer):
         is_misc_draw = function.name in self.misc_draw_function_names
 
         if is_array_pointer or is_draw_array or is_draw_elements:
-            print '    if (glretrace::parser.version < 1) {'
+            print '    if (retrace::parser.version < 1) {'
 
             if is_array_pointer or is_draw_array:
                 print '        GLint __array_buffer = 0;'
