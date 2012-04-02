@@ -78,24 +78,45 @@ __getPublicProcAddress(const char *procName)
      * Android does not support LD_PRELOAD.  It is assumed that applications
      * are explicitely loading egltrace.so.
      */
-    void *lib = NULL;
+
     if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
         static void *libEGL = NULL;
         if (!libEGL) {
             libEGL = dlopen("libEGL.so", RTLD_LOCAL | RTLD_LAZY);
+            if (!libEGL) {
+                return NULL;
+            }
         }
-        lib = libEGL;
-    } else if (procName[0] == 'g' && procName[1] == 'l') {
-        /* TODO: Support libGLESv1_CM.so too somehow. */
+        return dlsym(libEGL, procName);
+    }
+
+    if (procName[0] == 'g' && procName[1] == 'l') {
+        /* TODO: Use GLESv1/GLESv2 on a per-context basis. */
+        static void *sym = NULL;
+
         static void *libGLESv2 = NULL;
         if (!libGLESv2) {
             libGLESv2 = dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
         }
-        lib = libGLESv2;
+        if (libGLESv2) {
+            sym = dlsym(libGLESv2, procName);
+        }
+        if (sym) {
+            return sym;
+        }
+
+        static void *libGLESv1 = NULL;
+        if (!libGLESv1) {
+            libGLESv1 = dlopen("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
+        }
+        if (libGLESv1) {
+            sym = dlsym(libGLESv1, procName);
+        }
+        if (sym) {
+            return sym;
+        }
     }
-    if (lib) {
-        return dlsym(lib, procName);
-    }
+
     return NULL;
 #else
     return dlsym(RTLD_NEXT, procName);
