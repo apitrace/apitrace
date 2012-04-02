@@ -76,7 +76,7 @@ class ValueDeserializer(stdapi.Visitor):
         self.visit(alias.type, lvalue, rvalue)
     
     def visitEnum(self, enum, lvalue, rvalue):
-        print '    %s = (%s).toSInt();' % (lvalue, rvalue)
+        print '    %s = static_cast<%s>((%s).toSInt());' % (lvalue, enum, rvalue)
 
     def visitBitmask(self, bitmask, lvalue, rvalue):
         self.visit(bitmask.type, lvalue, rvalue)
