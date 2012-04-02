@@ -33,22 +33,26 @@ import specs.stdapi as stdapi
 import specs.glapi as glapi
 
 
-class ConstRemover(stdapi.Rebuilder):
-    '''Type visitor which strips out const qualifiers from types.'''
+class MutableRebuilder(stdapi.Rebuilder):
+    '''Type visitor which derives a mutable type.'''
 
     def visitConst(self, const):
+        # Strip out const qualifier
         return const.type
 
     def visitAlias(self, alias):
+        # Tear the alias on type changes
         type = self.visit(alias.type)
         if type is alias.type:
             return alias
         return type
 
     def visitReference(self, reference):
+        # Strip out references
         return reference.type
 
     def visitOpaque(self, opaque):
+        # Don't recursule
         return opaque
 
 
@@ -261,7 +265,7 @@ class Retracer:
         print '    (void)_allocator;'
         success = True
         for arg in function.args:
-            arg_type = ConstRemover().visit(arg.type)
+            arg_type = MutableRebuilder().visit(arg.type)
             #print '    // %s ->  %s' % (arg.type, arg_type)
             print '    %s %s;' % (arg_type, arg.name)
             rvalue = 'call.arg(%u)' % (arg.index,)
@@ -282,7 +286,7 @@ class Retracer:
     def swizzleValues(self, function):
         for arg in function.args:
             if arg.output:
-                arg_type = ConstRemover().visit(arg.type)
+                arg_type = MutableRebuilder().visit(arg.type)
                 rvalue = 'call.arg(%u)' % (arg.index,)
                 lvalue = arg.name
                 try:
