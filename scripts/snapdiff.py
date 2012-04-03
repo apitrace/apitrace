@@ -134,7 +134,6 @@ def is_image(path):
 
 
 def find_images(prefix):
-    prefix = os.path.abspath(prefix)
     if os.path.isdir(prefix):
         prefix_dir = prefix
     else:
@@ -192,7 +191,7 @@ def main():
     html.write('<html>\n')
     html.write('  <body>\n')
     html.write('    <table border="1">\n')
-    html.write('      <tr><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
+    html.write('      <tr><th>File</th><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
     for image in images:
         ref_image = ref_prefix + image
         src_image = src_prefix + image
@@ -208,6 +207,7 @@ def main():
                 comparer.write_diff(delta_image, fuzz=options.fuzz)
 
             html.write('      <tr>\n')
+            html.write('        <td>%s</td>\n' % (image,))
             surface(html, ref_image)
             surface(html, src_image)
             surface(html, delta_image)
