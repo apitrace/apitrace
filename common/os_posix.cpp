@@ -143,8 +143,17 @@ int execute(char * const * args)
             return -1;
         }
         int status = -1;
+        int ret;
         waitpid(pid, &status, 0);
-        return status;
+        if (WIFEXITED(status)) {
+            ret = WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            // match shell return code
+            ret = WTERMSIG(status) + 128;
+        } else {
+            ret = 128;
+        }
+        return ret;
     }
 }
 
