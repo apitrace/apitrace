@@ -192,22 +192,27 @@ def main():
     html.write('  <body>\n')
     html.write('    <table border="1">\n')
     html.write('      <tr><th>File</th><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
+    failures = 0
     for image in images:
         ref_image = ref_prefix + image
         src_image = src_prefix + image
         root, ext = os.path.splitext(src_image)
         delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
+            comparer = Comparer(ref_image, src_image, options.alpha)
             if options.overwrite \
                or not os.path.exists(delta_image) \
                or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
                    and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
 
-                comparer = Comparer(ref_image, src_image, options.alpha)
                 comparer.write_diff(delta_image, fuzz=options.fuzz)
-
+            if comparer.ae(fuzz=options.fuzz) == 0:
+                bgcolor = '#20ff20'
+            else:
+                failures += 1
+                bgcolor = '#ff2020'
             html.write('      <tr>\n')
-            html.write('        <td>%s</td>\n' % (image,))
+            html.write('        <td bgcolor="%s">%s</td>\n' % (bgcolor, image))
             surface(html, ref_image)
             surface(html, src_image)
             surface(html, delta_image)
@@ -217,6 +222,8 @@ def main():
     html.write('  </body>\n')
     html.write('</html>\n')
 
+    if failures:
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
