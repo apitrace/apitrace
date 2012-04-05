@@ -74,10 +74,14 @@ HRESULT = Alias("HRESULT", Int)
 VOID = Void
 PVOID = Opaque("PVOID")
 LPVOID = PVOID
-HANDLE = Opaque("HANDLE")
-HWND = Opaque("HWND")
-HDC = Opaque("HDC")
-HMONITOR = Opaque("HMONITOR")
+
+def DECLARE_HANDLE(expr):
+    return Handle(expr, IntPointer(expr))
+
+HANDLE = DECLARE_HANDLE("HANDLE")
+HWND = DECLARE_HANDLE("HWND")
+HDC = DECLARE_HANDLE("HDC")
+HMONITOR = DECLARE_HANDLE("HMONITOR")
 
 GUID = Struct("GUID", [
     (DWORD, "Data1"),
@@ -143,7 +147,7 @@ RGNDATA = Struct("RGNDATA", [
 ])
 LPRGNDATA = Pointer(RGNDATA)
 
-HMODULE = Opaque("HMODULE")
+HMODULE = DECLARE_HANDLE("HMODULE")
 
 IUnknown = Interface("IUnknown")
 
