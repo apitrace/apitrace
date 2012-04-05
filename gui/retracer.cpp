@@ -283,8 +283,6 @@ void Retracer::run()
             /*
              * Parse JSON from the output.
              *
-             * XXX: QJSON expects blocking IO.
-             *
              * XXX: QJSON's scanner is inneficient as it abuses single
              * character QIODevice::peek (not cheap), instead of maintaining a
              * lookahead character on its own.
@@ -292,7 +290,16 @@ void Retracer::run()
 
             bool ok = false;
             QJson::Parser jsonParser;
+#if 0
             parsedJson = jsonParser.parse(&io, &ok).toMap();
+#else
+            /*
+             * XXX: QJSON expects blocking IO, and it looks like
+             * BlockingIODevice does not work reliably in all cases.
+             */
+            process.waitForFinished(-1);
+            parsedJson = jsonParser.parse(&process, &ok).toMap();
+#endif
             if (!ok) {
                 msg = QLatin1String("failed to parse JSON");
             }
