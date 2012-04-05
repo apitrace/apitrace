@@ -84,17 +84,20 @@ class ValueDeserializer(stdapi.Visitor):
     allocated = False
 
     def visitArray(self, array, lvalue, rvalue):
-        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
-        length = '__a%s->values.size()' % array.tag
+        tmp = '__a_' + array.tag + '_' + str(self.seq)
+        self.seq += 1
+
+        print '    const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
+        length = '%s->values.size()' % (tmp,)
         allocated = self.allocated
         if not allocated:
-            print '    if (__a%s) {' % (array.tag)
+            print '    if (%s) {' % (tmp,)
             print '        %s = _allocator.alloc<%s>(%s);' % (lvalue, array.type, length)
             self.allocated = True
         index = '__j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
-            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.tag, index))
+            self.visit(array.type, '%s[%s]' % (lvalue, index), '*%s->values[%s]' % (tmp, index))
         finally:
             print '        }'
             if not allocated:
@@ -103,14 +106,17 @@ class ValueDeserializer(stdapi.Visitor):
                 print '    }'
     
     def visitPointer(self, pointer, lvalue, rvalue):
-        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
+        tmp = '__a_' + pointer.tag + '_' + str(self.seq)
+        self.seq += 1
+
+        print '    const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
         allocated = self.allocated
         if not allocated:
-            print '    if (__a%s) {' % (pointer.tag)
+            print '    if (%s) {' % (tmp)
             print '        %s = _allocator.alloc<%s>();' % (lvalue, pointer.type)
             self.allocated = True
         try:
-            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.tag,))
+            self.visit(pointer.type, '%s[0]' % (lvalue,), '*%s->values[0]' % (tmp,))
         finally:
             if not allocated:
                 print '    } else {'
