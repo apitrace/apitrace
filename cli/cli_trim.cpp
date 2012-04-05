@@ -58,7 +58,7 @@ enum {
 };
 
 const static char *
-shortOptions = "ho";
+shortOptions = "ho:";
 
 const static struct option
 longOptions[] = {
