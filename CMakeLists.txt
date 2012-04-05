@@ -558,6 +558,8 @@ add_library (retrace_common
     glws.cpp
 )
 
+add_dependencies (retrace_common glproc)
+
 set_property (
     TARGET retrace_common
     APPEND
