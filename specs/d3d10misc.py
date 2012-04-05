@@ -26,6 +26,7 @@
 """d3d10misc.h"""
 
 from winapi import *
+from d3d10sdklayers import *
 from d3d10 import *
 
 
@@ -55,6 +56,10 @@ d3d10.addFunctions([
 ])
 
 d3d10.addInterfaces([
+    IDXGIDevice,
+    ID3D10Debug,
+    ID3D10SwitchToRef,
+    ID3D10InfoQueue,
     ID3D10DeviceChild,
     ID3D10Resource,
     ID3D10Buffer,
