@@ -40,6 +40,7 @@ if __name__ == '__main__':
     print '#include "compat.h"'
     print
     print '#include <d3d10.h>'
+    print '#include <d3dx10.h>'
     print
     tracer = DllTracer('d3d10.dll')
     tracer.trace_api(d3d10)

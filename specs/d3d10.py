@@ -25,6 +25,18 @@
 
 from dxgi import *
 
+HRESULT = FakeEnum(HRESULT, [
+    "D3D10_ERROR_FILE_NOT_FOUND",
+    "D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS",
+    "D3DERR_INVALIDCALL",
+    "D3DERR_WASSTILLDRAWING",
+    "E_FAIL",
+    "E_INVALIDARG",
+    "E_OUTOFMEMORY",
+    "S_FALSE",
+    "S_OK",
+])
+
 D3D10_BLEND = Enum("D3D10_BLEND", [
     "D3D10_BLEND_ZERO",
     "D3D10_BLEND_ONE",
@@ -662,7 +674,7 @@ D3D10_QUERY_DATA_SO_STATISTICS = Struct("D3D10_QUERY_DATA_SO_STATISTICS", [
     (UINT64, "PrimitivesStorageNeeded"),
 ])
 
-D3D10_CREATE_DEVICE_FLAG = Enum("D3D10_CREATE_DEVICE_FLAG", [
+D3D10_CREATE_DEVICE_FLAG = Flags(UINT, [
     "D3D10_CREATE_DEVICE_SINGLETHREADED",
     "D3D10_CREATE_DEVICE_DEBUG",
     "D3D10_CREATE_DEVICE_SWITCH_TO_REF",
@@ -670,6 +682,10 @@ D3D10_CREATE_DEVICE_FLAG = Enum("D3D10_CREATE_DEVICE_FLAG", [
     "D3D10_CREATE_DEVICE_ALLOW_NULL_FROM_MAP",
     "D3D10_CREATE_DEVICE_BGRA_SUPPORT",
     "D3D10_CREATE_DEVICE_STRICT_VALIDATION",
+])
+
+D3D10_RAISE_FLAG = Flags(UINT, [
+    "D3D10_RAISE_FLAG_DRIVER_INTERNAL_ERROR",
 ])
 
 ID3D10DeviceChild = Interface("ID3D10DeviceChild", IUnknown)
@@ -858,8 +874,8 @@ ID3D10Device.methods += [
     Method(Void, "RSGetViewports", [Out(Pointer(UINT), "NumViewports"), Out(Array(D3D10_VIEWPORT, "*NumViewports"), "pViewports")]),
     Method(Void, "RSGetScissorRects", [Out(Pointer(UINT), "NumRects"), Out(Array(D3D10_RECT, "*NumRects"), "pRects")]),
     Method(HRESULT, "GetDeviceRemovedReason", []),
-    Method(HRESULT, "SetExceptionMode", [(UINT, "RaiseFlags")]),
-    Method(UINT, "GetExceptionMode", []),
+    Method(HRESULT, "SetExceptionMode", [(D3D10_RAISE_FLAG, "RaiseFlags")]),
+    Method(D3D10_RAISE_FLAG, "GetExceptionMode", []),
     Method(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")]),
     Method(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaquePointer(Const(Void)), "pData")]),
     Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")]),
