@@ -28,8 +28,6 @@
 
 #include <string.h>
 
-#include "glproc.hpp"
-
 
 
 #include "trace_parser.hpp"
