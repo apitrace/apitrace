@@ -523,7 +523,7 @@ class Tracer:
                 self.wrapArg(method, arg)
                 if riid is not None and isinstance(arg.type, Pointer):
                     if isinstance(arg.type.type, Opaque):
-                        self.wrapIid(riid, arg)
+                        self.wrapIid(interface, method, riid, arg)
                     else:
                         assert isinstance(arg.type.type, Pointer)
                         assert isinstance(arg.type.type.type, Interface)
@@ -539,7 +539,7 @@ class Tracer:
             print '    if (!__result)'
             print '        delete this;'
 
-    def wrapIid(self, riid, out):
+    def wrapIid(self, interface, method, riid, out):
             print '    if (%s && *%s) {' % (out.name, out.name)
             print '        if (*%s == m_pInstance) {' % (out.name,)
             print '            *%s = this;' % (out.name,)
@@ -549,8 +549,8 @@ class Tracer:
                 print r'            *%s = new Wrap%s((%s *) *%s);' % (out.name, iface.name, iface.name, out.name)
                 print r'        }'
             print r'        else {'
-            print r'            os::log("apitrace: warning: %s: unknown REFIID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
-            print r'                    __FUNCTION__,'
+            print r'            os::log("apitrace: warning: %s::%s: unknown IID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+            print r'                    "%s", "%s",' % (interface.name, method.name)
             print r'                    %s.Data1, %s.Data2, %s.Data3,' % (riid.name, riid.name, riid.name)
             print r'                    %s.Data4[0],' % (riid.name,)
             print r'                    %s.Data4[1],' % (riid.name,)
