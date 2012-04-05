@@ -134,8 +134,19 @@ class IntPointer(Type):
         return visitor.visitIntPointer(self, *args, **kwargs)
 
 
+class ObjPointer(Type):
+    '''Pointer to an object.'''
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr + " *", 'P' + type.tag)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitObjPointer(self, *args, **kwargs)
+
+
 class LinearPointer(Type):
-    '''Integer encoded as a pointer.'''
+    '''Pointer to a linear range of memory.'''
 
     def __init__(self, type, size = None):
         Type.__init__(self, type.expr + " *", 'P' + type.tag)
@@ -483,6 +494,9 @@ class Visitor:
     def visitIntPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
+    def visitObjPointer(self, pointer, *args, **kwargs):
+        raise NotImplementedError
+
     def visitLinearPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
@@ -563,6 +577,10 @@ class Rebuilder(Visitor):
     def visitIntPointer(self, pointer):
         return pointer
 
+    def visitObjPointer(self, pointer):
+        type = self.visit(pointer.type)
+        return ObjPointer(type)
+
     def visitLinearPointer(self, pointer):
         type = self.visit(pointer.type)
         return LinearPointer(type, pointer.size)
@@ -639,6 +657,9 @@ class Collector(Visitor):
 
     def visitIntPointer(self, pointer):
         pass
+
+    def visitObjPointer(self, pointer):
+        self.visit(pointer.type)
 
     def visitLinearPointer(self, pointer):
         self.visit(pointer.type)

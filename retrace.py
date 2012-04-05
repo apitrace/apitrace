@@ -120,6 +120,9 @@ class ValueDeserializer(stdapi.Visitor):
     def visitIntPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
 
+    def visitObjPointer(self, pointer, lvalue, rvalue):
+        print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
+
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
 
@@ -204,6 +207,9 @@ class SwizzledValueRegistrator(stdapi.Visitor):
     def visitIntPointer(self, pointer, lvalue, rvalue):
         pass
     
+    def visitObjPointer(self, pointer, lvalue, rvalue):
+        print r'    _obj_map[(%s).toUIntPtr()] = %s;' % (rvalue, lvalue)
+    
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         assert pointer.size is not None
         if pointer.size is not None:
@@ -281,7 +287,7 @@ class Retracer:
 
     def deserializeThisPointer(self, interface):
         print '    %s *_this;' % (interface.name,)
-        # FIXME
+        print '    _this = static_cast<%s *>(_obj_map[call.arg(0).toUIntPtr()]);' % (interface.name,)
 
     def deserializeArgs(self, function):
         print '    retrace::ScopedAllocator _allocator;'
@@ -322,6 +328,7 @@ class Retracer:
             try:
                 self.regiterSwizzledValue(function.type, lvalue, rvalue)
             except NotImplementedError:
+                raise
                 print '    // XXX: result'
 
     def failFunction(self, function):
@@ -381,6 +388,9 @@ class Retracer:
                     key_name, key_type = handle.key
                     print 'static std::map<%s, retrace::map<%s> > __%s_map;' % (key_type, handle.type, handle.name)
                 handle_names.add(handle.name)
+        print
+
+        print 'static std::map<unsigned long long, void *> _obj_map;'
         print
 
         functions = filter(self.filterFunction, api.functions)
