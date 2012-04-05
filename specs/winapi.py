@@ -182,7 +182,7 @@ HRESULT_com = FakeEnum(HRESULT, [
 ])
 
 IUnknown.methods = (
-	Method(HRESULT_com, "QueryInterface", ((REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppvObj"))),
+	Method(HRESULT_com, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
 	Method(ULONG, "AddRef", ()),
 	Method(ULONG, "Release", ()),
 )
