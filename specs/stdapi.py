@@ -549,7 +549,11 @@ class Rebuilder(Visitor):
         return string
 
     def visitConst(self, const):
-        return Const(const.type)
+        const_type = self.visit(const.type)
+        if const_type is const.type:
+            return const
+        else:
+            return Const(const_type)
 
     def visitStruct(self, struct):
         members = [(self.visit(type), name) for type, name in struct.members]
@@ -571,31 +575,49 @@ class Rebuilder(Visitor):
         return Bitmask(type, bitmask.values)
 
     def visitPointer(self, pointer):
-        type = self.visit(pointer.type)
-        return Pointer(type)
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return Pointer(pointer_type)
 
     def visitIntPointer(self, pointer):
         return pointer
 
     def visitObjPointer(self, pointer):
-        type = self.visit(pointer.type)
-        return ObjPointer(type)
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return ObjPointer(pointer_type)
 
     def visitLinearPointer(self, pointer):
-        type = self.visit(pointer.type)
-        return LinearPointer(type, pointer.size)
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return LinearPointer(pointer_type)
 
     def visitReference(self, reference):
-        type = self.visit(reference.type)
-        return Reference(type)
+        reference_type = self.visit(reference.type)
+        if reference_type is reference.type:
+            return reference
+        else:
+            return Reference(reference_type)
 
     def visitHandle(self, handle):
-        type = self.visit(handle.type)
-        return Handle(handle.name, type, range=handle.range, key=handle.key)
+        handle_type = self.visit(handle.type)
+        if handle_type is handle.type:
+            return handle
+        else:
+            return Handle(handle.name, handle_type, range=handle.range, key=handle.key)
 
     def visitAlias(self, alias):
-        type = self.visit(alias.type)
-        return Alias(alias.expr, type)
+        alias_type = self.visit(alias.type)
+        if alias_type is alias.type:
+            return alias
+        else:
+            return Alias(alias.expr, alias_type)
 
     def visitOpaque(self, opaque):
         return opaque
