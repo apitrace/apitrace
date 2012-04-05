@@ -191,20 +191,20 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "SetDialogBoxMode", [(BOOL, "bEnableDialogs")]),
     Method(Void, "SetGammaRamp", [(UINT, "iSwapChain"), (D3DSGR, "Flags"), (ConstPointer(D3DGAMMARAMP), "pRamp")]),
     Method(Void, "GetGammaRamp", [(UINT, "iSwapChain"), Out(Pointer(D3DGAMMARAMP), "pRamp")], sideeffects=False),
-    Method(HRESULT, "CreateTexture", [(UINT, "Width"), (UINT, "Height"), (UINT, "Levels"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DTEXTURE9), "ppTexture"), Out(Pointer(HANDLE), "pSharedHandle")]),
-    Method(HRESULT, "CreateVolumeTexture", [(UINT, "Width"), (UINT, "Height"), (UINT, "Depth"), (UINT, "Levels"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DVOLUMETEXTURE9), "ppVolumeTexture"), Out(Pointer(HANDLE), "pSharedHandle")]),
-    Method(HRESULT, "CreateCubeTexture", [(UINT, "EdgeLength"), (UINT, "Levels"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DCUBETEXTURE9), "ppCubeTexture"), Out(Pointer(HANDLE), "pSharedHandle")]),
-    Method(HRESULT, "CreateVertexBuffer", [(UINT, "Length"), (D3DUSAGE, "Usage"), (D3DFVF, "FVF"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DVERTEXBUFFER9), "ppVertexBuffer"), Out(Pointer(HANDLE), "pSharedHandle")]),
-    Method(HRESULT, "CreateIndexBuffer", [(UINT, "Length"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DINDEXBUFFER9), "ppIndexBuffer"), Out(Pointer(HANDLE), "pSharedHandle")]),
-    Method(HRESULT, "CreateRenderTarget", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Lockable"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle")]),
-    Method(HRESULT, "CreateDepthStencilSurface", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Discard"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateTexture", [(UINT, "Width"), (UINT, "Height"), (UINT, "Levels"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DTEXTURE9), "ppTexture"), (Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateVolumeTexture", [(UINT, "Width"), (UINT, "Height"), (UINT, "Depth"), (UINT, "Levels"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DVOLUMETEXTURE9), "ppVolumeTexture"), (Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateCubeTexture", [(UINT, "EdgeLength"), (UINT, "Levels"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DCUBETEXTURE9), "ppCubeTexture"), (Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateVertexBuffer", [(UINT, "Length"), (D3DUSAGE, "Usage"), (D3DFVF, "FVF"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DVERTEXBUFFER9), "ppVertexBuffer"), (Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateIndexBuffer", [(UINT, "Length"), (D3DUSAGE, "Usage"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DINDEXBUFFER9), "ppIndexBuffer"), (Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateRenderTarget", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Lockable"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), (Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateDepthStencilSurface", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Discard"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), (Pointer(HANDLE), "pSharedHandle")]),
     Method(HRESULT, "UpdateSurface", [(PDIRECT3DSURFACE9, "pSourceSurface"), (ConstPointer(RECT), "pSourceRect"), (PDIRECT3DSURFACE9, "pDestinationSurface"), (ConstPointer(POINT), "pDestPoint")]),
     Method(HRESULT, "UpdateTexture", [(PDIRECT3DBASETEXTURE9, "pSourceTexture"), (PDIRECT3DBASETEXTURE9, "pDestinationTexture")]),
     Method(HRESULT, "GetRenderTargetData", [(PDIRECT3DSURFACE9, "pRenderTarget"), (PDIRECT3DSURFACE9, "pDestSurface")], sideeffects=False),
     Method(HRESULT, "GetFrontBufferData", [(UINT, "iSwapChain"), (PDIRECT3DSURFACE9, "pDestSurface")], sideeffects=False),
     Method(HRESULT, "StretchRect", [(PDIRECT3DSURFACE9, "pSourceSurface"), (ConstPointer(RECT), "pSourceRect"), (PDIRECT3DSURFACE9, "pDestSurface"), (ConstPointer(RECT), "pDestRect"), (D3DTEXTUREFILTERTYPE, "Filter")]),
     Method(HRESULT, "ColorFill", [(PDIRECT3DSURFACE9, "pSurface"), (ConstPointer(RECT), "pRect"), (D3DCOLOR, "color")]),
-    Method(HRESULT, "CreateOffscreenPlainSurface", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle")]),
+    Method(HRESULT, "CreateOffscreenPlainSurface", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), (Pointer(HANDLE), "pSharedHandle")]),
     Method(HRESULT, "SetRenderTarget", [(DWORD, "RenderTargetIndex"), (PDIRECT3DSURFACE9, "pRenderTarget")]),
     Method(HRESULT, "GetRenderTarget", [(DWORD, "RenderTargetIndex"), Out(Pointer(PDIRECT3DSURFACE9), "ppRenderTarget")], sideeffects=False),
     Method(HRESULT, "SetDepthStencilSurface", [(PDIRECT3DSURFACE9, "pNewZStencil")]),
@@ -365,13 +365,13 @@ IDirect3DCubeTexture9.methods += [
 ]
 
 IDirect3DVertexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (D3DLOCK, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "SizeToLock")), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 IDirect3DIndexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(OpaquePointer(Void)), "ppbData"), (D3DLOCK, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "SizeToLock")), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DINDEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
@@ -423,9 +423,9 @@ IDirect3DDevice9Ex.methods += [
     Method(HRESULT, "SetMaximumFrameLatency", [(UINT, "MaxLatency")]),
     Method(HRESULT, "GetMaximumFrameLatency", [Out(Pointer(UINT), "pMaxLatency")], sideeffects=False),
     Method(HRESULT, "CheckDeviceState", [(HWND, "hDestinationWindow")], sideeffects=False),
-    Method(HRESULT, "CreateRenderTargetEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Lockable"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
+    Method(HRESULT, "CreateRenderTargetEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Lockable"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), (Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
     Method(HRESULT, "CreateOffscreenPlainSurfaceEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
-    Method(HRESULT, "CreateDepthStencilSurfaceEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Discard"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
+    Method(HRESULT, "CreateDepthStencilSurfaceEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Discard"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), (Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
     Method(HRESULT, "ResetEx", [Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode")]),
     Method(HRESULT, "GetDisplayModeEx", [(UINT, "iSwapChain"), Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
 ]
