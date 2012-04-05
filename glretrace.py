@@ -159,7 +159,8 @@ class GlRetracer(Retracer):
         'glMapBufferOES',
         'glMapBufferRange',
         'glMapNamedBufferEXT',
-        'glMapNamedBufferRangeEXT'
+        'glMapNamedBufferRangeEXT',
+        'glMapObjectBufferATI',
     ])
 
     unmap_function_names = set([
@@ -167,6 +168,7 @@ class GlRetracer(Retracer):
         'glUnmapBufferARB',
         'glUnmapBufferOES',
         'glUnmapNamedBufferEXT',
+        'glUnmapObjectBufferATI',
     ])
 
     def retraceFunctionBody(self, function):
@@ -266,6 +268,9 @@ class GlRetracer(Retracer):
                 print r'            glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &ptr);'
             elif function.name == 'glUnmapNamedBufferEXT':
                 print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
+            elif function.name == 'glUnmapObjectBufferATI':
+                # TODO
+                pass
             else:
                 assert False
             print r'        if (ptr) {'
@@ -338,7 +343,7 @@ class GlRetracer(Retracer):
                 print r'        if (!__result) {'
                 print r'             retrace::warning(call) << "failed to map buffer\n";'
                 print r'        }'
-            if function.name in self.unmap_function_names:
+            if function.name in self.unmap_function_names and function.type is not stdapi.Void:
                 print r'        if (!__result) {'
                 print r'             retrace::warning(call) << "failed to unmap buffer\n";'
                 print r'        }'
@@ -368,6 +373,8 @@ class GlRetracer(Retracer):
                     print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
                 elif function.name == 'glMapNamedBufferEXT':
                     print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
+                elif function.name == 'glMapObjectBufferATI':
+                    print r'    glGetObjectBufferivATI(buffer, GL_OBJECT_BUFFER_SIZE_ATI, &length);'
                 else:
                     assert False
 
