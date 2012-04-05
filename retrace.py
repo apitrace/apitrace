@@ -286,8 +286,12 @@ class Retracer:
         self.swizzleValues(method)
 
     def deserializeThisPointer(self, interface):
-        print '    %s *_this;' % (interface.name,)
-        print '    _this = static_cast<%s *>(_obj_map[call.arg(0).toUIntPtr()]);' % (interface.name,)
+        print r'    %s *_this;' % (interface.name,)
+        print r'    _this = static_cast<%s *>(_obj_map[call.arg(0).toUIntPtr()]);' % (interface.name,)
+        print r'    if (!_this) {'
+        print r'        retrace::warning(call) << "NULL this pointer\n";'
+        print r'        return;'
+        print r'    }'
 
     def deserializeArgs(self, function):
         print '    retrace::ScopedAllocator _allocator;'
