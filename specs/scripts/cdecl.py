@@ -97,8 +97,8 @@ class DeclParser:
             self.parse_define()
         elif self.match('enum'):
             self.parse_enum()
-        elif self.match('interface'):
-            self.parse_interface()
+        elif self.match('class', 'interface'):
+            self.parse_interface(self.lookahead())
         elif self.match('mask'):
             self.parse_value('mask', 'Flags')
         elif self.match('struct'):
@@ -204,8 +204,8 @@ class DeclParser:
         print '])'
         print
 
-    def parse_interface(self):
-        self.consume('interface')
+    def parse_interface(self, ref_token):
+        self.consume(ref_token)
         name = self.consume()
         if self.match(';'):
             return
@@ -219,22 +219,26 @@ class DeclParser:
         print '%s.methods += [' % (name,)
 
         while self.lookahead() != '}':
-            self.parse_prototype('Method')
-            self.consume(';')
+            if self.lookahead() in ('public', 'private'):
+                self.consume()
+                self.consume(':')
+            else:
+                self.parse_prototype('Method')
+                self.consume(';')
         self.consume('}')
 
         print ']'
         print
 
     def parse_prototype(self, creator = 'Function'):
-        if self.match('extern'):
+        if self.match('extern', 'virtual'):
             self.consume()
 
         ret = self.parse_type()
 
         if self.match('__stdcall', 'WINAPI'):
             self.consume()
-            creator = 'StdFunction'
+            creator = 'Std' + creator
 
         name = self.consume()
         extra = ''
@@ -255,6 +259,10 @@ class DeclParser:
         if self.lookahead() == 'const':
             self.consume()
             extra = ', const=True' + extra
+
+        if self.lookahead() == '=':
+            self.consume()
+            self.consume('0')
         
         print '    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
 
@@ -264,7 +272,7 @@ class DeclParser:
         type, name = self.parse_named_type()
 
         arg = '(%s, "%s")' % (type, name)
-        if 'out' in tags:
+        if 'out' in tags or 'inout' in tags:
             arg = 'Out' + arg
 
         if self.match('='):
@@ -282,6 +290,15 @@ class DeclParser:
                 tag = self.consume()
                 tags.append(tag)
             self.consume(']')
+        if self.lookahead().startswith('__'):
+            # Parse __in, __out, etc tags
+            tag = self.consume()[2:]
+            if self.match('('):
+                self.consume()
+                while not self.match(')'):
+                    self.consume()
+                self.consume(')')
+            tags.extend(tag.split('_'))
         return tags
 
     def parse_named_type(self):
@@ -361,7 +378,7 @@ class DeclParser:
         while True:
             if self.match('*'):
                 self.consume('*')
-                type = 'OpaquePointer(%s)' % type
+                type = 'Pointer(%s)' % type
             elif self.match('const'):
                 self.consume('const')
                 type = 'Const(%s)' % type
