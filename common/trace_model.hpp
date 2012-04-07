@@ -277,6 +277,11 @@ public:
     void visit(Visitor &visitor);
 
     std::vector<Value *> values;
+
+    inline size_t
+    size(void) const {
+        return values.size();
+    }
 };
 
 

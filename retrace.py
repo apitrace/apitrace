@@ -64,6 +64,57 @@ def lookupHandle(handle, value):
         return "__%s_map[%s][%s]" % (handle.name, key_name, value)
 
 
+class ValueAllocator(stdapi.Visitor):
+
+    def visitLiteral(self, literal, lvalue, rvalue):
+        pass
+
+    def visitConst(self, const, lvalue, rvalue):
+        self.visit(const.type, lvalue, rvalue)
+
+    def visitAlias(self, alias, lvalue, rvalue):
+        self.visit(alias.type, lvalue, rvalue)
+
+    def visitEnum(self, enum, lvalue, rvalue):
+        pass
+
+    def visitBitmask(self, bitmask, lvalue, rvalue):
+        pass
+
+    def visitArray(self, array, lvalue, rvalue):
+        print '    %s = _allocator.alloc<%s>(&%s);' % (lvalue, array.type, rvalue)
+
+    def visitPointer(self, pointer, lvalue, rvalue):
+        print '    %s = _allocator.alloc<%s>(&%s);' % (lvalue, pointer.type, rvalue)
+
+    def visitIntPointer(self, pointer, lvalue, rvalue):
+        pass
+
+    def visitObjPointer(self, pointer, lvalue, rvalue):
+        pass
+
+    def visitLinearPointer(self, pointer, lvalue, rvalue):
+        pass
+
+    def visitReference(self, reference, lvalue, rvalue):
+        self.visit(reference.type, lvalue, rvalue);
+
+    def visitHandle(self, handle, lvalue, rvalue):
+        pass
+
+    def visitBlob(self, blob, lvalue, rvalue):
+        pass
+
+    def visitString(self, string, lvalue, rvalue):
+        pass
+
+    def visitStruct(self, struct, lvalue, rvalue):
+        pass
+
+    def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        self.visit(polymorphic.defaultType, lvalue, rvalue)
+
+
 class ValueDeserializer(stdapi.Visitor):
 
     def visitLiteral(self, literal, lvalue, rvalue):
@@ -81,53 +132,43 @@ class ValueDeserializer(stdapi.Visitor):
     def visitBitmask(self, bitmask, lvalue, rvalue):
         self.visit(bitmask.type, lvalue, rvalue)
 
-    allocated = False
-
     def visitArray(self, array, lvalue, rvalue):
+
         tmp = '__a_' + array.tag + '_' + str(self.seq)
         self.seq += 1
 
-        print '    const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
+        print '    if (%s) {' % (lvalue,)
+        print '        const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
         length = '%s->values.size()' % (tmp,)
-        allocated = self.allocated
-        if not allocated:
-            print '    if (%s) {' % (tmp,)
-            print '        %s = _allocator.alloc<%s>(%s);' % (lvalue, array.type, length)
-            self.allocated = True
         index = '__j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*%s->values[%s]' % (tmp, index))
         finally:
             print '        }'
-            if not allocated:
-                print '    } else {'
-                print '        %s = NULL;' % lvalue
-                print '    }'
+            print '    }'
     
     def visitPointer(self, pointer, lvalue, rvalue):
         tmp = '__a_' + pointer.tag + '_' + str(self.seq)
         self.seq += 1
 
-        print '    const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
-        allocated = self.allocated
-        if not allocated:
-            print '    if (%s) {' % (tmp)
-            print '        %s = _allocator.alloc<%s>();' % (lvalue, pointer.type)
-            self.allocated = True
+        print '    if (%s) {' % (lvalue,)
+        print '        const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
         try:
             self.visit(pointer.type, '%s[0]' % (lvalue,), '*%s->values[0]' % (tmp,))
         finally:
-            if not allocated:
-                print '    } else {'
-                print '        %s = NULL;' % lvalue
-                print '    }'
+            print '    }'
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
 
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
+        old_lvalue = '(%s).toUIntPtr()' % (rvalue,)
+        new_lvalue = '_obj_map[%s]' % (old_lvalue,)
+        print '    if (retrace::verbosity >= 2) {'
+        print '        std::cout << std::hex << "obj 0x" << size_t(%s) << " <- 0x" << size_t(%s) << std::dec <<"\\n";' % (old_lvalue, new_lvalue)
+        print '    }'
+        print '    %s = static_cast<%s>(%s);' % (lvalue, pointer, new_lvalue)
 
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
@@ -158,10 +199,12 @@ class ValueDeserializer(stdapi.Visitor):
 
         print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
         print '    assert(%s);' % (tmp)
-        self.allocated = True
         for i in range(len(struct.members)):
             member_type, member_name = struct.members[i]
             self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
+
+    def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        self.visit(polymorphic.defaultType, lvalue, rvalue)
 
 
 class OpaqueValueDeserializer(ValueDeserializer):
@@ -252,6 +295,22 @@ class SwizzledValueRegistrator(stdapi.Visitor):
     def visitString(self, string, lvalue, rvalue):
         pass
 
+    seq = 0
+
+    def visitStruct(self, struct, lvalue, rvalue):
+        tmp = '__s_' + struct.tag + '_' + str(self.seq)
+        self.seq += 1
+
+        print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
+        print '    assert(%s);' % (tmp,)
+        print '    (void)%s;' % (tmp,)
+        for i in range(len(struct.members)):
+            member_type, member_name = struct.members[i]
+            self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
+    
+    def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        self.visit(polymorphic.defaultType, lvalue, rvalue)
+
 
 class Retracer:
 
@@ -305,7 +364,6 @@ class Retracer:
         success = True
         for arg in function.args:
             arg_type = MutableRebuilder().visit(arg.type)
-            #print '    // %s ->  %s' % (arg.type, arg_type)
             print '    %s %s;' % (arg_type, arg.name)
             rvalue = 'call.arg(%u)' % (arg.index,)
             lvalue = arg.name
@@ -314,6 +372,7 @@ class Retracer:
             except NotImplementedError:
                 success =  False
                 print '    memset(&%s, 0, sizeof %s); // FIXME' % (arg.name, arg.name)
+            print
 
         if not success:
             print '    if (1) {'
@@ -348,9 +407,15 @@ class Retracer:
         print '    return;'
 
     def extractArg(self, function, arg, arg_type, lvalue, rvalue):
-        ValueDeserializer().visit(arg_type, lvalue, rvalue)
+        ValueAllocator().visit(arg_type, lvalue, rvalue)
+        if arg.input:
+            ValueDeserializer().visit(arg_type, lvalue, rvalue)
     
     def extractOpaqueArg(self, function, arg, arg_type, lvalue, rvalue):
+        try:
+            ValueAllocator().visit(arg_type, lvalue, rvalue)
+        except NotImplementedError:
+            pass
         OpaqueValueDeserializer().visit(arg_type, lvalue, rvalue)
 
     def regiterSwizzledValue(self, type, lvalue, rvalue):

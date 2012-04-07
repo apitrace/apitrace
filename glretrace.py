@@ -391,7 +391,8 @@ class GlRetracer(Retracer):
         # Handle pointer with offsets into the current pack pixel buffer
         # object.
         if function.name in self.pack_function_names and arg.output:
-            self.extractOpaqueArg(function, arg, arg_type, lvalue, rvalue)
+            assert isinstance(arg_type, (stdapi.Pointer, stdapi.Array, stdapi.Blob, stdapi.Opaque))
+            print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue)
             return
 
         if arg.type is glapi.GLlocation \
