@@ -272,22 +272,27 @@ class Alias(Type):
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitAlias(self, *args, **kwargs)
 
-
-def Out(type, name):
-    arg = Arg(type, name, output=True)
-    return arg
-
-
 class Arg:
 
-    def __init__(self, type, name, output=False):
+    def __init__(self, type, name, input=True, output=False):
         self.type = type
         self.name = name
+        self.input = input
         self.output = output
         self.index = None
 
     def __str__(self):
         return '%s %s' % (self.type, self.name)
+
+
+def In(type, name):
+    return Arg(type, name, input=True, output=False)
+
+def Out(type, name):
+    return Arg(type, name, input=False, output=True)
+
+def InOut(type, name):
+    return Arg(type, name, input=True, output=True)
 
 
 class Function:
