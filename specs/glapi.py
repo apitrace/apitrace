@@ -548,7 +548,7 @@ glapi.addFunctions([
     GlFunction(GLboolean, "glIsBuffer", [(GLbuffer, "buffer")], sideeffects=False),
     GlFunction(Void, "glBufferData", [(GLenum, "target"), (GLsizeiptr, "size"), (Blob(Const(GLvoid), "size"), "data"), (GLenum, "usage")]),
     GlFunction(Void, "glBufferSubData", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "size"), (Blob(Const(GLvoid), "size"), "data")]),
-    GlFunction(Void, "glGetBufferSubData", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "size"), Out(Blob(GLvoid, "size"), "data")], sideeffects=False),
+    GlFunction(Void, "glGetBufferSubData", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "size"), Out(OpaqueBlob(GLvoid, "size"), "data")], sideeffects=False),
     GlFunction(GLmap, "glMapBuffer", [(GLenum, "target"), (GLenum, "access")]),
     GlFunction(GLboolean, "glUnmapBuffer", [(GLenum, "target")]),
     GlFunction(Void, "glGetBufferParameteriv", [(GLenum, "target"), (GLenum, "pname"), (Array(GLint, "__gl_param_size(pname)"), "params")], sideeffects=False),
@@ -904,7 +904,7 @@ glapi.addFunctions([
     GlFunction(GLboolean, "glIsBufferARB", [(GLbuffer, "buffer")], sideeffects=False),
     GlFunction(Void, "glBufferDataARB", [(GLenum, "target"), (GLsizeiptrARB, "size"), (Blob(Const(GLvoid), "size"), "data"), (GLenum, "usage")]),
     GlFunction(Void, "glBufferSubDataARB", [(GLenum, "target"), (GLintptrARB, "offset"), (GLsizeiptrARB, "size"), (Blob(Const(GLvoid), "size"), "data")]),
-    GlFunction(Void, "glGetBufferSubDataARB", [(GLenum, "target"), (GLintptrARB, "offset"), (GLsizeiptrARB, "size"), Out(Blob(GLvoid, "size"), "data")], sideeffects=False),
+    GlFunction(Void, "glGetBufferSubDataARB", [(GLenum, "target"), (GLintptrARB, "offset"), (GLsizeiptrARB, "size"), Out(OpaqueBlob(GLvoid, "size"), "data")], sideeffects=False),
     GlFunction(GLmap, "glMapBufferARB", [(GLenum, "target"), (GLenum, "access")]),
     GlFunction(GLboolean, "glUnmapBufferARB", [(GLenum, "target")]),
     GlFunction(Void, "glGetBufferParameterivARB", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "__gl_param_size(pname)"), "params")], sideeffects=False),
@@ -1303,15 +1303,15 @@ glapi.addFunctions([
     GlFunction(Void, "glGetnPixelMapfvARB", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "values")]),
     GlFunction(Void, "glGetnPixelMapuivARB", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLuint, "bufSize"), "values")]),
     GlFunction(Void, "glGetnPixelMapusvARB", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLushort, "bufSize"), "values")]),
-    GlFunction(Void, "glGetnPolygonStippleARB", [(GLsizei, "bufSize"), Out(Blob(GLubyte, "bufSize"), "pattern")]),
-    GlFunction(Void, "glGetnColorTableARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "table")], sideeffects=False),
-    GlFunction(Void, "glGetnConvolutionFilterARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "image")]),
-    GlFunction(Void, "glGetnSeparableFilterARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "rowBufSize"), Out(Blob(GLvoid, "rowBufSize"), "row"), (GLsizei, "columnBufSize"), Out(Blob(GLvoid, "columnBufSize"), "column"), Out(GLpointer, "span")]),
-    GlFunction(Void, "glGetnHistogramARB", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "values")]),
-    GlFunction(Void, "glGetnMinmaxARB", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "values")]),
-    GlFunction(Void, "glGetnTexImageARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "img")]),
-    GlFunction(Void, "glReadnPixelsARB", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "data")]),
-    GlFunction(Void, "glGetnCompressedTexImageARB", [(GLenum, "target"), (GLint, "lod"), (GLsizei, "bufSize"), Out(Blob(GLvoid, "bufSize"), "img")], sideeffects=False),
+    GlFunction(Void, "glGetnPolygonStippleARB", [(GLsizei, "bufSize"), Out(OpaqueBlob(GLubyte, "bufSize"), "pattern")]),
+    GlFunction(Void, "glGetnColorTableARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "table")], sideeffects=False),
+    GlFunction(Void, "glGetnConvolutionFilterARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "image")]),
+    GlFunction(Void, "glGetnSeparableFilterARB", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "rowBufSize"), Out(OpaqueBlob(GLvoid, "rowBufSize"), "row"), (GLsizei, "columnBufSize"), Out(OpaqueBlob(GLvoid, "columnBufSize"), "column"), Out(GLpointer, "span")]),
+    GlFunction(Void, "glGetnHistogramARB", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "values")]),
+    GlFunction(Void, "glGetnMinmaxARB", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "values")]),
+    GlFunction(Void, "glGetnTexImageARB", [(GLenum, "target"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "img")]),
+    GlFunction(Void, "glReadnPixelsARB", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "data")]),
+    GlFunction(Void, "glGetnCompressedTexImageARB", [(GLenum, "target"), (GLint, "lod"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "img")], sideeffects=False),
     GlFunction(Void, "glGetnUniformfvARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "params")], sideeffects=False),
     GlFunction(Void, "glGetnUniformivARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLint, "bufSize"), "params")], sideeffects=False),
     GlFunction(Void, "glGetnUniformuivARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLuint, "bufSize"), "params")], sideeffects=False),
@@ -2065,8 +2065,8 @@ glapi.addFunctions([
     GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLuint, "array")], sideeffects=False),
 
     # GL_APPLE_vertex_array_range
-    GlFunction(Void, "glVertexArrayRangeAPPLE", [(GLsizei, "length"), Out(Blob(GLvoid, "length"), "pointer")]),
-    GlFunction(Void, "glFlushVertexArrayRangeAPPLE", [(GLsizei, "length"), Out(Blob(GLvoid, "length"), "pointer")]),
+    GlFunction(Void, "glVertexArrayRangeAPPLE", [(GLsizei, "length"), (GLpointer, "pointer")]),
+    GlFunction(Void, "glFlushVertexArrayRangeAPPLE", [(GLsizei, "length"), (GLpointer, "pointer")]),
     GlFunction(Void, "glVertexArrayParameteriAPPLE", [(GLenum, "pname"), (GLint, "param")]),
 
     # GL_APPLE_flush_render
@@ -2134,7 +2134,7 @@ glapi.addFunctions([
     GlFunction(Void, "glVertexAttribs4hvNV", [(GLuint, "index"), (GLsizei, "n"), (Array(Const(GLhalfNV), "n"), "v")]),
 
     # GL_NV_pixel_data_range
-    GlFunction(Void, "glPixelDataRangeNV", [(GLenum, "target"), (GLsizei, "length"), Out(Blob(GLvoid, "length"), "pointer")]),
+    GlFunction(Void, "glPixelDataRangeNV", [(GLenum, "target"), (GLsizei, "length"), (OpaqueBlob(GLvoid, "length"), "pointer")]),
     GlFunction(Void, "glFlushPixelDataRangeNV", [(GLenum, "target")]),
 
     # GL_NV_primitive_restart
