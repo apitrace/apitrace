@@ -49,6 +49,13 @@ class D3DRetracer(Retracer):
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 
+        if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Lock':
+            print '        if (!SizeToLock) {'
+            print '            D3DVERTEXBUFFER_DESC Desc;'
+            print '            _this->GetDesc(&Desc);'
+            print '            SizeToLock = Desc.Size;'
+            print '        }'
+
 
 if __name__ == '__main__':
     print r'''
