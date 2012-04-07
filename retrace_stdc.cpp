@@ -90,6 +90,17 @@ upperBound(unsigned long long address) {
 void
 addRegion(unsigned long long address, void *buffer, unsigned long long size)
 {
+    if (retrace::verbosity >= 2) {
+        std::cout
+            << "region "
+            << std::hex
+            << "0x" << address << "-0x" << (address + size)
+            << " -> "
+            << "0x" << (uintptr_t)buffer << "-0x" << ((uintptr_t)buffer + size)
+            << std::dec
+            << "\n";
+    }
+
     if (!address) {
         // Ignore NULL pointer
         assert(!buffer);
@@ -166,7 +177,20 @@ lookupAddress(unsigned long long address) {
     if (it != regionMap.end()) {
         unsigned long long offset = address - it->first;
         assert(offset < it->second.size);
-        return (char *)it->second.buffer + offset;
+        void *addr = (char *)it->second.buffer + offset;
+
+        if (retrace::verbosity >= 2) {
+            std::cout
+                << "region "
+                << std::hex
+                << "0x" << address
+                << " <- "
+                << "0x" << (uintptr_t)addr
+                << std::dec
+                << "\n";
+        }
+
+        return addr;
     }
 
     if (address >= 0x00400000) {
