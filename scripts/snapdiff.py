@@ -130,7 +130,6 @@ def is_image(path):
     name = os.path.basename(path)
     name, ext1 = os.path.splitext(name)
     name, ext2 = os.path.splitext(name)
-    print name, ext1, ext2
     return ext1 in ('.png', '.bmp') and ext2 not in ('.diff', '.thumb')
 
 
