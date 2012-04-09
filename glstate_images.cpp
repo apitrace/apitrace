@@ -425,11 +425,20 @@ dumpTextures(JSONWriter &json, Context &context)
     json.beginObject();
     GLint active_texture = GL_TEXTURE0;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+
     GLint max_texture_coords = 0;
     glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);
     GLint max_combined_texture_image_units = 0;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);
     GLint max_units = std::max(max_combined_texture_image_units, max_texture_coords);
+
+    /*
+     * At least the Android software GL implementation doesn't return the
+     * proper value for this, but rather returns 0. The GL(ES) specification
+     * mandates a minimum value of 2, so use this as a fall-back value.
+     */
+    max_units = std::min(max_units, 2);
+
     for (GLint unit = 0; unit < max_units; ++unit) {
         GLenum texture = GL_TEXTURE0 + unit;
         glActiveTexture(texture);
