@@ -203,6 +203,7 @@ def main():
         root, ext = os.path.splitext(src_image)
         delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
+            print "Comparing %s and %s\n" % (ref_image, src_image)
             comparer = Comparer(ref_image, src_image, options.alpha)
             match = comparer.ae(fuzz=options.fuzz) == 0
             if match:
