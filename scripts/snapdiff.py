@@ -155,6 +155,10 @@ def main():
     optparser = optparse.OptionParser(
         usage="\n\t%prog [options] <ref_prefix> <src_prefix>")
     optparser.add_option(
+        '-v', '--verbose',
+        action="store_true", dest="verbose", default=False,
+        help="verbose output")
+    optparser.add_option(
         '-o', '--output', metavar='FILE',
         type="string", dest="output", default='index.html',
         help="output filename [default: %default]")
@@ -203,14 +207,19 @@ def main():
         root, ext = os.path.splitext(src_image)
         delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
-            print "Comparing %s and %s\n" % (ref_image, src_image)
+            if options.verbose:
+                sys.stdout.write('Comparing %s and %s ...' % (ref_image, src_image))
             comparer = Comparer(ref_image, src_image, options.alpha)
             match = comparer.ae(fuzz=options.fuzz) == 0
             if match:
+                result = 'MATCH'
                 bgcolor = '#20ff20'
             else:
+                result = 'MISMATCH'
                 failures += 1
                 bgcolor = '#ff2020'
+            if options.verbose:
+                sys.stdout.write(' %s\n' % (result,))
             html.write('      <tr>\n')
             html.write('        <td bgcolor="%s"><a href="%s">%s<a/></td>\n' % (bgcolor, ref_image, image))
             if not match or options.show_all:
