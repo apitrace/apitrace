@@ -170,6 +170,10 @@ def main():
         '--overwrite',
         action="store_true", dest="overwrite", default=False,
         help="overwrite images")
+    optparser.add_option(
+        '--show-all',
+        action="store_true", dest="show_all", default=False,
+        help="show all images, including similar ones")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
 
@@ -200,22 +204,23 @@ def main():
         delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
             comparer = Comparer(ref_image, src_image, options.alpha)
-            if options.overwrite \
-               or not os.path.exists(delta_image) \
-               or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
-                   and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
-
-                comparer.write_diff(delta_image, fuzz=options.fuzz)
-            if comparer.ae(fuzz=options.fuzz) == 0:
+            match = comparer.ae(fuzz=options.fuzz) == 0
+            if match:
                 bgcolor = '#20ff20'
             else:
                 failures += 1
                 bgcolor = '#ff2020'
             html.write('      <tr>\n')
-            html.write('        <td bgcolor="%s">%s</td>\n' % (bgcolor, image))
-            surface(html, ref_image)
-            surface(html, src_image)
-            surface(html, delta_image)
+            html.write('        <td bgcolor="%s"><a href="%s">%s<a/></td>\n' % (bgcolor, ref_image, image))
+            if not match or options.show_all:
+                if options.overwrite \
+                   or not os.path.exists(delta_image) \
+                   or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
+                       and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
+                    comparer.write_diff(delta_image, fuzz=options.fuzz)
+                surface(html, ref_image)
+                surface(html, src_image)
+                surface(html, delta_image)
             html.write('      </tr>\n')
             html.flush()
     html.write('    </table>\n')
