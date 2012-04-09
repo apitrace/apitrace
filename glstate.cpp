@@ -54,7 +54,7 @@ Context::Context(void) {
             version[6] == ' ' &&
             version[7] == 'E' &&
             version[8] == 'S' &&
-            version[9] == ' ') {
+            (version[9] == ' ' || version[9] == '-')) {
             ES = true;
         }
     }
