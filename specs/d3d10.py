@@ -244,7 +244,7 @@ D3D10_USAGE = Enum("D3D10_USAGE", [
     "D3D10_USAGE_STAGING",
 ])
 
-D3D10_BIND_FLAG = Enum("D3D10_BIND_FLAG", [
+D3D10_BIND_FLAG = Flags(UINT, [
     "D3D10_BIND_VERTEX_BUFFER",
     "D3D10_BIND_INDEX_BUFFER",
     "D3D10_BIND_CONSTANT_BUFFER",
@@ -254,12 +254,25 @@ D3D10_BIND_FLAG = Enum("D3D10_BIND_FLAG", [
     "D3D10_BIND_DEPTH_STENCIL",
 ])
 
+D3D10_CPU_ACCESS_FLAG = Flags(UINT, [
+    "D3D10_CPU_ACCESS_WRITE",
+    "D3D10_CPU_ACCESS_READ",
+])
+
+D3D10_RESOURCE_MISC_FLAG = Flags(UINT, [
+    "D3D10_RESOURCE_MISC_GENERATE_MIPS",
+    "D3D10_RESOURCE_MISC_SHARED",
+    "D3D10_RESOURCE_MISC_TEXTURECUBE",
+    "D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX",
+    "D3D10_RESOURCE_MISC_GDI_COMPATIBLE",
+])
+
 D3D10_BUFFER_DESC = Struct("D3D10_BUFFER_DESC", [
     (UINT, "ByteWidth"),
     (D3D10_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D10_BIND_FLAG, "BindFlags"),
+    (D3D10_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D10_RESOURCE_MISC_FLAG, "MiscFlags"),
 ])
 
 D3D10_MAP = Enum("D3D10_MAP", [
@@ -276,9 +289,9 @@ D3D10_TEXTURE1D_DESC = Struct("D3D10_TEXTURE1D_DESC", [
     (UINT, "ArraySize"),
     (DXGI_FORMAT, "Format"),
     (D3D10_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D10_BIND_FLAG, "BindFlags"),
+    (D3D10_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D10_RESOURCE_MISC_FLAG, "MiscFlags"),
 ])
 
 D3D10_TEXTURE2D_DESC = Struct("D3D10_TEXTURE2D_DESC", [
@@ -289,9 +302,9 @@ D3D10_TEXTURE2D_DESC = Struct("D3D10_TEXTURE2D_DESC", [
     (DXGI_FORMAT, "Format"),
     (DXGI_SAMPLE_DESC, "SampleDesc"),
     (D3D10_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D10_BIND_FLAG, "BindFlags"),
+    (D3D10_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D10_RESOURCE_MISC_FLAG, "MiscFlags"),
 ])
 
 D3D10_TEXTURE3D_DESC = Struct("D3D10_TEXTURE3D_DESC", [
@@ -301,9 +314,9 @@ D3D10_TEXTURE3D_DESC = Struct("D3D10_TEXTURE3D_DESC", [
     (UINT, "MipLevels"),
     (DXGI_FORMAT, "Format"),
     (D3D10_USAGE, "Usage"),
-    (UINT, "BindFlags"),
-    (UINT, "CPUAccessFlags"),
-    (UINT, "MiscFlags"),
+    (D3D10_BIND_FLAG, "BindFlags"),
+    (D3D10_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+    (D3D10_RESOURCE_MISC_FLAG, "MiscFlags"),
 ])
 
 D3D10_DSV_DIMENSION = Enum("D3D10_DSV_DIMENSION", [
@@ -545,9 +558,13 @@ D3D10_QUERY = Enum("D3D10_QUERY", [
     "D3D10_QUERY_SO_OVERFLOW_PREDICATE",
 ])
 
+D3D10_QUERY_MISC_FLAG = Flags(UINT, [
+    "D3D10_QUERY_MISC_PREDICATEHINT",
+])
+
 D3D10_QUERY_DESC = Struct("D3D10_QUERY_DESC", [
     (D3D10_QUERY, "Query"),
-    (UINT, "MiscFlags"),
+    (D3D10_QUERY_MISC_FLAG, "MiscFlags"),
 ])
 
 D3D10_PRIMITIVE_TOPOLOGY = Enum("D3D10_PRIMITIVE_TOPOLOGY", [
@@ -593,42 +610,21 @@ D3D10_MAPPED_TEXTURE3D = Struct("D3D10_MAPPED_TEXTURE3D", [
     (UINT, "DepthPitch"),
 ])
 
-D3D10_CPU_ACCESS_FLAG = Enum("D3D10_CPU_ACCESS_FLAG", [
-    "D3D10_CPU_ACCESS_WRITE",
-    "D3D10_CPU_ACCESS_READ",
-])
-
-D3D10_RESOURCE_MISC_FLAG = Enum("D3D10_RESOURCE_MISC_FLAG", [
-    "D3D10_RESOURCE_MISC_GENERATE_MIPS",
-    "D3D10_RESOURCE_MISC_SHARED",
-    "D3D10_RESOURCE_MISC_TEXTURECUBE",
-    "D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX",
-    "D3D10_RESOURCE_MISC_GDI_COMPATIBLE",
-])
-
-D3D10_MAP_FLAG = Enum("D3D10_MAP_FLAG", [
+D3D10_MAP_FLAG = Flags(UINT, [
     "D3D10_MAP_FLAG_DO_NOT_WAIT",
 ])
 
-D3D10_CLEAR_FLAG = Enum("D3D10_CLEAR_FLAG", [
+D3D10_CLEAR_FLAG = Flags(UINT, [
     "D3D10_CLEAR_DEPTH",
     "D3D10_CLEAR_STENCIL",
 ])
 
-D3D10_COLOR_WRITE_ENABLE = Enum("D3D10_COLOR_WRITE_ENABLE", [
-    "D3D10_COLOR_WRITE_ENABLE_RED",
-    "D3D10_COLOR_WRITE_ENABLE_GREEN",
-    "D3D10_COLOR_WRITE_ENABLE_BLUE",
-    "D3D10_COLOR_WRITE_ENABLE_ALPHA",
+D3D10_COLOR_WRITE_ENABLE = Flags(UINT, [
     "D3D10_COLOR_WRITE_ENABLE_ALL",
     "D3D10_COLOR_WRITE_ENABLE_RED",
-    "|",
     "D3D10_COLOR_WRITE_ENABLE_GREEN",
-    "|",
     "D3D10_COLOR_WRITE_ENABLE_BLUE",
-    "|",
     "D3D10_COLOR_WRITE_ENABLE_ALPHA",
-    ")",
 ])
 
 D3D10_TEXTURECUBE_FACE = Enum("D3D10_TEXTURECUBE_FACE", [
@@ -640,17 +636,13 @@ D3D10_TEXTURECUBE_FACE = Enum("D3D10_TEXTURECUBE_FACE", [
     "D3D10_TEXTURECUBE_FACE_NEGATIVE_Z",
 ])
 
-D3D10_ASYNC_GETDATA_FLAG = Enum("D3D10_ASYNC_GETDATA_FLAG", [
+D3D10_ASYNC_GETDATA_FLAG = Flags(UINT, [
     "D3D10_ASYNC_GETDATA_DONOTFLUSH",
 ])
 
 D3D10_FILTER_TYPE = Enum("D3D10_FILTER_TYPE", [
     "D3D10_FILTER_TYPE_POINT",
     "D3D10_FILTER_TYPE_LINEAR",
-])
-
-D3D10_QUERY_MISC_FLAG = Enum("D3D10_QUERY_MISC_FLAG", [
-    "D3D10_QUERY_MISC_PREDICATEHINT",
 ])
 
 D3D10_QUERY_DATA_TIMESTAMP_DISJOINT = Struct("D3D10_QUERY_DATA_TIMESTAMP_DISJOINT", [
@@ -727,25 +719,25 @@ ID3D10Resource.methods += [
 ]
 
 ID3D10Buffer.methods += [
-    Method(HRESULT, "Map", [(D3D10_MAP, "MapType"), (UINT, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
+    Method(HRESULT, "Map", [(D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
     Method(Void, "Unmap", []),
     Method(Void, "GetDesc", [Out(Pointer(D3D10_BUFFER_DESC), "pDesc")]),
 ]
 
 ID3D10Texture1D.methods += [
-    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (UINT, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
+    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
     Method(Void, "Unmap", [(UINT, "Subresource")]),
     Method(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE1D_DESC), "pDesc")]),
 ]
 
 ID3D10Texture2D.methods += [
-    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (UINT, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE2D), "pMappedTex2D")]),
+    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE2D), "pMappedTex2D")]),
     Method(Void, "Unmap", [(UINT, "Subresource")]),
     Method(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE2D_DESC), "pDesc")]),
 ]
 
 ID3D10Texture3D.methods += [
-    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (UINT, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE3D), "pMappedTex3D")]),
+    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE3D), "pMappedTex3D")]),
     Method(Void, "Unmap", [(UINT, "Subresource")]),
     Method(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE3D_DESC), "pDesc")]),
 ]
@@ -797,7 +789,7 @@ ID3D10VertexShader.methods += [
 ID3D10Asynchronous.methods += [
     Method(Void, "Begin", []),
     Method(Void, "End", []),
-    Method(HRESULT, "GetData", [Out(Blob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (UINT, "GetDataFlags")]),
+    Method(HRESULT, "GetData", [Out(Blob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D10_ASYNC_GETDATA_FLAG, "GetDataFlags")]),
     Method(UINT, "GetDataSize", []),
 ]
 
@@ -846,7 +838,7 @@ ID3D10Device.methods += [
     Method(Void, "CopyResource", [(Pointer(ID3D10Resource), "pDstResource"), (Pointer(ID3D10Resource), "pSrcResource")]),
     Method(Void, "UpdateSubresource", [(Pointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D10_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
     Method(Void, "ClearRenderTargetView", [(OpaquePointer(ID3D10RenderTargetView), "pRenderTargetView"), (Array(Const(FLOAT), 4), "ColorRGBA")]),
-    Method(Void, "ClearDepthStencilView", [(Pointer(ID3D10DepthStencilView), "pDepthStencilView"), (UINT, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
+    Method(Void, "ClearDepthStencilView", [(Pointer(ID3D10DepthStencilView), "pDepthStencilView"), (D3D10_CLEAR_FLAG, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
     Method(Void, "GenerateMips", [(OpaquePointer(ID3D10ShaderResourceView), "pShaderResourceView")]),
     Method(Void, "ResolveSubresource", [(Pointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(ID3D10Resource), "pSrcResource"), (UINT, "SrcSubresource"), (DXGI_FORMAT, "Format")]),
     Method(Void, "VSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(OpaquePointer(ID3D10Buffer), "NumBuffers"), "ppConstantBuffers")]),
@@ -904,7 +896,7 @@ ID3D10Device.methods += [
     Method(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")]),
     Method(Void, "CheckCounterInfo", [Out(Pointer(D3D10_COUNTER_INFO), "pCounterInfo")]),
     Method(HRESULT, "CheckCounter", [(Pointer(Const(D3D10_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D10_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")]),
-    Method(UINT, "GetCreationFlags", []),
+    Method(D3D10_CREATE_DEVICE_FLAG, "GetCreationFlags", []),
     Method(HRESULT, "OpenSharedResource", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(OpaquePointer(Void)), "ppResource")]),
     Method(Void, "SetTextFilterSize", [(UINT, "Width"), (UINT, "Height")]),
     Method(Void, "GetTextFilterSize", [Out(Pointer(UINT), "pWidth"), Out(Pointer(UINT), "pHeight")]),
