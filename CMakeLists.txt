@@ -392,6 +392,28 @@ if (WIN32)
         install (TARGETS d3d10 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D3D10_INCLUDE_DIR)
 
+    # d3d10_1.dll
+    if (DirectX_D3D10_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+        add_custom_command (
+            OUTPUT d3d10_1trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10_1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10_1trace.cpp
+            DEPENDS d3d10_1trace.py trace.py specs/d3d10_1.py specs/d3d10.py specs/d3d10sdklayers.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
+        )
+        add_library (d3d10_1 MODULE specs/d3d10_1.def d3d10_1trace.cpp)
+        target_link_libraries (d3d10_1
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
+        set_target_properties (d3d10_1
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        )
+        install (TARGETS d3d10_1 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+    endif (DirectX_D3D10_INCLUDE_DIR)
+
     # opengl32.dll
     add_custom_command (
         OUTPUT wgltrace.cpp
