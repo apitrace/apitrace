@@ -1421,7 +1421,7 @@ glapi.addFunctions([
     GlFunction(Void, "glTexSubImage4DSGIS", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLint, "woffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLsizei, "size4d"), (GLenum, "format"), (GLenum, "type"), (OpaqueBlob(Const(GLvoid), "__glTexSubImage4DSGIS_size(format, type, width, height, depth, size4d)"), "pixels")]),
 
     # GL_EXT_texture_object
-    GlFunction(GLboolean, "glAreTexturesResidentEXT", [(GLsizei, "n"), (Array(Const(GLtexture), "n"), "textures"), Out(Array(GLboolean, "n"), "residences")]),
+    GlFunction(GLboolean, "glAreTexturesResidentEXT", [(GLsizei, "n"), (Array(Const(GLtexture), "n"), "textures"), Out(Array(GLboolean, "n"), "residences")], sideeffects=False),
     GlFunction(Void, "glBindTextureEXT", [(GLenum, "target"), (GLtexture, "texture")]),
     GlFunction(Void, "glDeleteTexturesEXT", [(GLsizei, "n"), (Array(Const(GLtexture), "n"), "textures")]),
     GlFunction(Void, "glGenTexturesEXT", [(GLsizei, "n"), Out(Array(GLtexture, "n"), "textures")]),
@@ -1538,8 +1538,8 @@ glapi.addFunctions([
     GlFunction(Void, "glUnlockArraysEXT", []),
 
     # GL_EXT_cull_vertex
-    GlFunction(Void, "glCullParameterdvEXT", [(GLenum, "pname"), Out(Array(GLdouble, 4), "params")]),
-    GlFunction(Void, "glCullParameterfvEXT", [(GLenum, "pname"), Out(Array(GLfloat, 4), "params")]),
+    GlFunction(Void, "glCullParameterdvEXT", [(GLenum, "pname"), (Array(GLdouble, 4), "params")]),
+    GlFunction(Void, "glCullParameterfvEXT", [(GLenum, "pname"), (Array(GLfloat, 4), "params")]),
 
     # GL_SGIX_fragment_lighting
     GlFunction(Void, "glFragmentColorMaterialSGIX", [(GLenum, "face"), (GLenum, "mode")]),
@@ -1821,7 +1821,7 @@ glapi.addFunctions([
     GlFunction(Void, "glGetCombinerStageParameterfvNV", [(GLenum, "stage"), (GLenum, "pname"), Out(Array(GLfloat, "__gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_NV_vertex_program
-    GlFunction(GLboolean, "glAreProgramsResidentNV", [(GLsizei, "n"), (Array(Const(GLprogramARB), "n"), "ids"), Out(Array(GLboolean, "n"), "residences")]),
+    GlFunction(GLboolean, "glAreProgramsResidentNV", [(GLsizei, "n"), (Array(Const(GLprogramARB), "n"), "ids"), Out(Array(GLboolean, "n"), "residences")], sideeffects=False),
     GlFunction(Void, "glBindProgramNV", [(GLenum, "target"), (GLprogramARB, "program")]),
     GlFunction(Void, "glDeleteProgramsNV", [(GLsizei, "n"), (Array(Const(GLprogramARB), "n"), "programs")]),
     GlFunction(Void, "glExecuteProgramNV", [(GLenum, "target"), (GLprogramARB, "id"), (Array(Const(GLfloat), 4), "params")]),
@@ -2569,10 +2569,10 @@ glapi.addFunctions([
     GlFunction(Void, "glDisableVertexArrayEXT", [(GLarray, "vaobj"), (GLenum, "array")]),
     GlFunction(Void, "glEnableVertexArrayAttribEXT", [(GLarray, "vaobj"), (GLuint, "index")]),
     GlFunction(Void, "glDisableVertexArrayAttribEXT", [(GLarray, "vaobj"), (GLuint, "index")]),
-    GlFunction(Void, "glGetVertexArrayIntegervEXT", [(GLarray, "vaobj"), (GLenum, "pname"), Out(Pointer(GLint), "param")]),
-    GlFunction(Void, "glGetVertexArrayPointervEXT", [(GLarray, "vaobj"), (GLenum, "pname"), Out(Pointer(GLpointer), "param")]),
-    GlFunction(Void, "glGetVertexArrayIntegeri_vEXT", [(GLarray, "vaobj"), (GLuint, "index"), (GLenum, "pname"), Out(Pointer(GLint), "param")]),
-    GlFunction(Void, "glGetVertexArrayPointeri_vEXT", [(GLarray, "vaobj"), (GLuint, "index"), (GLenum, "pname"), Out(Pointer(GLpointer), "param")]),
+    GlFunction(Void, "glGetVertexArrayIntegervEXT", [(GLarray, "vaobj"), (GLenum, "pname"), Out(Pointer(GLint), "param")], sideeffects=False),
+    GlFunction(Void, "glGetVertexArrayPointervEXT", [(GLarray, "vaobj"), (GLenum, "pname"), Out(Pointer(GLpointer), "param")], sideeffects=False),
+    GlFunction(Void, "glGetVertexArrayIntegeri_vEXT", [(GLarray, "vaobj"), (GLuint, "index"), (GLenum, "pname"), Out(Pointer(GLint), "param")], sideeffects=False),
+    GlFunction(Void, "glGetVertexArrayPointeri_vEXT", [(GLarray, "vaobj"), (GLuint, "index"), (GLenum, "pname"), Out(Pointer(GLpointer), "param")], sideeffects=False),
 
     # GL_NV_explicit_multisample
     GlFunction(Void, "glGetMultisamplefvNV", [(GLenum, "pname"), (GLuint, "index"), Out(Array(GLfloat, 2), "val")], sideeffects=False),
@@ -2595,8 +2595,8 @@ glapi.addFunctions([
     GlFunction(Void, "glGetPerfMonitorCounterStringAMD", [(GLuint, "group"), (GLuint, "counter"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLchar, "bufSize"), "counterString")], sideeffects=False),
     GlFunction(Void, "glGetPerfMonitorCounterInfoAMD", [(GLuint, "group"), (GLuint, "counter"), (GLenum, "pname"), Out(OpaqueBlob(GLvoid, "__glGetPerfMonitorCounterInfoAMD_size(pname)"), "data")], sideeffects=False),
     GlFunction(Void, "glGenPerfMonitorsAMD", [(GLsizei, "n"), Out(Array(GLuint, "n"), "monitors")]),
-    GlFunction(Void, "glDeletePerfMonitorsAMD", [(GLsizei, "n"), Out(Array(GLuint, "n"), "monitors")]),
-    GlFunction(Void, "glSelectPerfMonitorCountersAMD", [(GLuint, "monitor"), (GLboolean, "enable"), (GLuint, "group"), (GLint, "numCounters"), Out(Array(GLuint, "numCounters"), "counterList")]),
+    GlFunction(Void, "glDeletePerfMonitorsAMD", [(GLsizei, "n"), (Array(GLuint, "n"), "monitors")]),
+    GlFunction(Void, "glSelectPerfMonitorCountersAMD", [(GLuint, "monitor"), (GLboolean, "enable"), (GLuint, "group"), (GLint, "numCounters"), (Array(GLuint, "numCounters"), "counterList")]),
     GlFunction(Void, "glBeginPerfMonitorAMD", [(GLuint, "monitor")]),
     GlFunction(Void, "glEndPerfMonitorAMD", [(GLuint, "monitor")]),
     GlFunction(Void, "glGetPerfMonitorCounterDataAMD", [(GLuint, "monitor"), (GLenum, "pname"), (GLsizei, "dataSize"), Out(Array(GLuint, "dataSize"), "data"), Out(Pointer(GLint), "bytesWritten")], sideeffects=False),
