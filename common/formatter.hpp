@@ -195,6 +195,18 @@ public:
 inline Formatter *defaultFormatter(bool color = true) {
     if (color) {
 #ifdef _WIN32
+        // http://wiki.winehq.org/DeveloperFaq#detect-wine
+        static HMODULE hNtDll = NULL;
+        static bool bWine = false;
+        if (!hNtDll) {
+            hNtDll = LoadLibraryA("ntdll");
+            if (hNtDll) {
+                bWine = GetProcAddress(hNtDll, "wine_get_version") != NULL;
+            }
+        }
+        if (bWine) {
+            return new AnsiFormatter;
+        }
         return new WindowsFormatter;
 #else
         return new AnsiFormatter;

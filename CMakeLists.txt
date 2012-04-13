@@ -671,6 +671,28 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
 
+if (WIN32 AND DirectX_D3DX9_FOUND)
+    add_custom_command (
+        OUTPUT d3dretrace_d3d9.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3dretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
+        DEPENDS d3dretrace.py retrace.py specs/d3d9.py specs/d3d9types.py specs/d3d9caps.py specs/winapi.py specs/stdapi.py
+    )
+
+    include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
+    add_executable (d3dretrace
+        retrace.cpp
+        retrace_stdc.cpp
+        d3dretrace_main.cpp
+        d3dretrace_d3d9.cpp
+    )
+    target_link_libraries (d3dretrace
+        common
+        ${ZLIB_LIBRARIES}
+        ${SNAPPY_LIBRARIES}
+        ${DirectX_D3D9_LIBRARY}
+    )
+endif ()
+
 ##############################################################################
 # CLI
 

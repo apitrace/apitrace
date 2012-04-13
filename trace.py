@@ -108,11 +108,17 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitIntPointer(self, pointer):
         pass
 
+    def visitObjPointer(self, pointer):
+        self.visit(pointer.type)
+
     def visitLinearPointer(self, pointer):
         self.visit(pointer.type)
 
     def visitHandle(self, handle):
         self.visit(handle.type)
+
+    def visitReference(self, reference):
+        self.visit(reference.type)
 
     def visitAlias(self, alias):
         self.visit(alias.type)
@@ -208,8 +214,14 @@ class ValueSerializer(stdapi.Visitor):
     def visitIntPointer(self, pointer, instance):
         print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
 
+    def visitObjPointer(self, pointer, instance):
+        print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
+
     def visitLinearPointer(self, pointer, instance):
         print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
+
+    def visitReference(self, reference, instance):
+        self.visit(reference.type, instance)
 
     def visitHandle(self, handle, instance):
         self.visit(handle.type, instance)
@@ -271,9 +283,17 @@ class ValueWrapper(stdapi.Visitor):
     def visitIntPointer(self, pointer, instance):
         pass
 
+    def visitObjPointer(self, pointer, instance):
+        print "    if (%s) {" % instance
+        self.visit(pointer.type, "*" + instance)
+        print "    }"
+    
     def visitLinearPointer(self, pointer, instance):
         pass
 
+    def visitReference(self, reference, instance):
+        self.visit(reference.type, instance)
+    
     def visitHandle(self, handle, instance):
         self.visit(handle.type, instance)
 

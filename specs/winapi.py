@@ -74,10 +74,14 @@ HRESULT = Alias("HRESULT", Int)
 VOID = Void
 PVOID = Opaque("PVOID")
 LPVOID = PVOID
-HANDLE = Opaque("HANDLE")
-HWND = Opaque("HWND")
-HDC = Opaque("HDC")
-HMONITOR = Opaque("HMONITOR")
+
+def DECLARE_HANDLE(expr):
+    return Handle(expr, IntPointer(expr))
+
+HANDLE = DECLARE_HANDLE("HANDLE")
+HWND = DECLARE_HANDLE("HWND")
+HDC = DECLARE_HANDLE("HDC")
+HMONITOR = DECLARE_HANDLE("HMONITOR")
 
 GUID = Struct("GUID", [
     (DWORD, "Data1"),
@@ -87,16 +91,13 @@ GUID = Struct("GUID", [
 ])
 LPGUID = Pointer(GUID)
 
-#REFGUID = Alias("REFGUID", Pointer(GUID))
-REFGUID = Alias("REFGUID", GUID)
+REFGUID = Alias("REFGUID", Reference(GUID))
 
 IID = Alias("IID", GUID)
-#REFIID = Alias("REFIID", Pointer(IID))
-REFIID = Alias("REFIID", IID)
+REFIID = Alias("REFIID", Reference(IID))
 
 CLSID = Alias("CLSID", GUID)
-#REFCLSID = Alias("REFCLSID", Pointer(CLSID))
-REFCLSID = Alias("REFCLSID", CLSID)
+REFCLSID = Alias("REFCLSID", Reference(CLSID))
 
 LUID = Struct("LUID", [
     (DWORD, "LowPart"),
@@ -146,7 +147,7 @@ RGNDATA = Struct("RGNDATA", [
 ])
 LPRGNDATA = Pointer(RGNDATA)
 
-HMODULE = Opaque("HMODULE")
+HMODULE = DECLARE_HANDLE("HMODULE")
 
 IUnknown = Interface("IUnknown")
 

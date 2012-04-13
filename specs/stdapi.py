@@ -134,8 +134,19 @@ class IntPointer(Type):
         return visitor.visitIntPointer(self, *args, **kwargs)
 
 
+class ObjPointer(Type):
+    '''Pointer to an object.'''
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr + " *", 'P' + type.tag)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitObjPointer(self, *args, **kwargs)
+
+
 class LinearPointer(Type):
-    '''Integer encoded as a pointer.'''
+    '''Pointer to a linear range of memory.'''
 
     def __init__(self, type, size = None):
         Type.__init__(self, type.expr + " *", 'P' + type.tag)
@@ -144,6 +155,17 @@ class LinearPointer(Type):
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitLinearPointer(self, *args, **kwargs)
+
+
+class Reference(Type):
+    '''C++ references.'''
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr + " &", 'R' + type.tag)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitReference(self, *args, **kwargs)
 
 
 class Handle(Type):
@@ -250,22 +272,27 @@ class Alias(Type):
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitAlias(self, *args, **kwargs)
 
-
-def Out(type, name):
-    arg = Arg(type, name, output=True)
-    return arg
-
-
 class Arg:
 
-    def __init__(self, type, name, output=False):
+    def __init__(self, type, name, input=True, output=False):
         self.type = type
         self.name = name
+        self.input = input
         self.output = output
         self.index = None
 
     def __str__(self):
         return '%s %s' % (self.type, self.name)
+
+
+def In(type, name):
+    return Arg(type, name, input=True, output=False)
+
+def Out(type, name):
+    return Arg(type, name, input=False, output=True)
+
+def InOut(type, name):
+    return Arg(type, name, input=True, output=True)
 
 
 class Function:
@@ -361,8 +388,8 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args, const=False):
-        Function.__init__(self, type, name, args, call = '__stdcall')
+    def __init__(self, type, name, args, const=False, sideeffects=True):
+        Function.__init__(self, type, name, args, call = '__stdcall', sideeffects=sideeffects)
         for index in range(len(self.args)):
             self.args[index].index = index + 1
         self.const = const
@@ -472,7 +499,13 @@ class Visitor:
     def visitIntPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
+    def visitObjPointer(self, pointer, *args, **kwargs):
+        raise NotImplementedError
+
     def visitLinearPointer(self, pointer, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitReference(self, reference, *args, **kwargs):
         raise NotImplementedError
 
     def visitHandle(self, handle, *args, **kwargs):
@@ -521,7 +554,11 @@ class Rebuilder(Visitor):
         return string
 
     def visitConst(self, const):
-        return Const(const.type)
+        const_type = self.visit(const.type)
+        if const_type is const.type:
+            return const
+        else:
+            return Const(const_type)
 
     def visitStruct(self, struct):
         members = [(self.visit(type), name) for type, name in struct.members]
@@ -543,23 +580,49 @@ class Rebuilder(Visitor):
         return Bitmask(type, bitmask.values)
 
     def visitPointer(self, pointer):
-        type = self.visit(pointer.type)
-        return Pointer(type)
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return Pointer(pointer_type)
 
     def visitIntPointer(self, pointer):
         return pointer
 
+    def visitObjPointer(self, pointer):
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return ObjPointer(pointer_type)
+
     def visitLinearPointer(self, pointer):
-        type = self.visit(pointer.type)
-        return LinearPointer(type, pointer.size)
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return LinearPointer(pointer_type)
+
+    def visitReference(self, reference):
+        reference_type = self.visit(reference.type)
+        if reference_type is reference.type:
+            return reference
+        else:
+            return Reference(reference_type)
 
     def visitHandle(self, handle):
-        type = self.visit(handle.type)
-        return Handle(handle.name, type, range=handle.range, key=handle.key)
+        handle_type = self.visit(handle.type)
+        if handle_type is handle.type:
+            return handle
+        else:
+            return Handle(handle.name, handle_type, range=handle.range, key=handle.key)
 
     def visitAlias(self, alias):
-        type = self.visit(alias.type)
-        return Alias(alias.expr, type)
+        alias_type = self.visit(alias.type)
+        if alias_type is alias.type:
+            return alias
+        else:
+            return Alias(alias.expr, alias_type)
 
     def visitOpaque(self, opaque):
         return opaque
@@ -622,8 +685,14 @@ class Collector(Visitor):
     def visitIntPointer(self, pointer):
         pass
 
+    def visitObjPointer(self, pointer):
+        self.visit(pointer.type)
+
     def visitLinearPointer(self, pointer):
         self.visit(pointer.type)
+
+    def visitReference(self, reference):
+        self.visit(reference.type)
 
     def visitHandle(self, handle):
         self.visit(handle.type)

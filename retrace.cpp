@@ -35,6 +35,9 @@
 namespace retrace {
 
 
+trace::Parser parser;
+
+
 int verbosity = 0;
 bool profiling = false;
 

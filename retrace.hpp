@@ -35,9 +35,13 @@
 #include <ostream>
 
 #include "trace_model.hpp"
+#include "trace_parser.hpp"
 
 
 namespace retrace {
+
+
+extern trace::Parser parser;
 
 
 /**
@@ -117,6 +121,24 @@ public:
     inline T *
     alloc(size_t n = 1) {
         return static_cast<T *>(alloc(sizeof(T) * n));
+    }
+
+    /**
+     * Allocate an array with the same dimensions as the specified value.
+     */
+    template< class T >
+    inline T *
+    alloc(const trace::Value *value) {
+        const trace::Array *array = dynamic_cast<const trace::Array *>(value);
+        if (array) {
+            return alloc<T>(array->size());
+        }
+        const trace::Null *null = dynamic_cast<const trace::Null *>(value);
+        if (null) {
+            return NULL;
+        }
+        assert(0);
+        return NULL;
     }
 
     /**
