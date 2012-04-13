@@ -26,7 +26,9 @@
 #ifndef _RETRACE_HPP_
 #define _RETRACE_HPP_
 
+#include <assert.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <list>
 #include <map>
@@ -86,11 +88,11 @@ public:
 class ScopedAllocator
 {
 private:
-    void *next;
+    uintptr_t next;
 
 public:
     ScopedAllocator() :
-        next(NULL) {
+        next(0) {
     }
 
     inline void *
@@ -99,15 +101,16 @@ public:
             return NULL;
         }
 
-        void * * buf = static_cast<void **>(malloc(sizeof(void *) + size));
+        uintptr_t * buf = static_cast<uintptr_t *>(malloc(sizeof(uintptr_t) + size));
         if (!buf) {
             return NULL;
         }
 
         *buf = next;
-        next = buf;
+        next = reinterpret_cast<uintptr_t>(buf);
+        assert((next & 1) == 0);
 
-        return &buf[1];
+        return static_cast<void *>(&buf[1]);
     }
 
     template< class T >
@@ -116,11 +119,29 @@ public:
         return static_cast<T *>(alloc(sizeof(T) * n));
     }
 
+    /**
+     * Prevent this pointer from being automatically freed.
+     */
+    template< class T >
+    inline void
+    bind(T *ptr) {
+        if (ptr) {
+            reinterpret_cast<uintptr_t *>(ptr)[-1] |= 1;
+        }
+    }
+
     inline
     ~ScopedAllocator() {
         while (next) {
-            void *temp = *static_cast<void **>(next);
-            free(next);
+            uintptr_t temp = *reinterpret_cast<uintptr_t *>(next);
+
+            bool bind = temp & 1;
+            temp &= ~1;
+
+            if (!bind) {
+                free(reinterpret_cast<void *>(next));
+            }
+
             next = temp;
         }
     }

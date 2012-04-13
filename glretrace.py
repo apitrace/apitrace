@@ -414,6 +414,12 @@ class GlRetracer(Retracer):
             print '        samples = max_samples;'
             print '    }'
 
+        # These parameters are referred beyond the call life-time
+        # TODO: Replace ad-hoc solution for bindable parameters with general one
+        if function.name in ('glFeedbackBuffer', 'glSelectBuffer') and arg.output:
+            print '    _allocator.bind(%s);' % arg.name
+
+
 
 if __name__ == '__main__':
     print r'''
