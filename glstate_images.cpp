@@ -330,6 +330,26 @@ getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
 }
 
 
+static inline GLboolean
+isDepthFormat(GLenum internalFormat)
+{
+   switch (internalFormat) {
+   case GL_DEPTH_COMPONENT:
+   case GL_DEPTH_COMPONENT16:
+   case GL_DEPTH_COMPONENT24:
+   case GL_DEPTH_COMPONENT32:
+   case GL_DEPTH_COMPONENT32F:
+   case GL_DEPTH_COMPONENT32F_NV:
+   case GL_DEPTH_STENCIL:
+   case GL_DEPTH24_STENCIL8:
+   case GL_DEPTH32F_STENCIL8:
+   case GL_DEPTH32F_STENCIL8_NV:
+      return GL_TRUE;
+   }
+   return GL_FALSE;
+}
+
+
 static inline void
 dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint level)
 {
@@ -349,6 +369,16 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
 
     json.beginObject();
 
+    GLuint channels;
+    GLenum format;
+    if (!context.ES && isDepthFormat(desc.internalFormat)) {
+       format = GL_DEPTH_COMPONENT;
+       channels = 1;
+    } else {
+       format = GL_RGBA;
+       channels = 4;
+    }
+
     // Tell the GUI this is no ordinary object, but an image
     json.writeStringMember("__class__", "image");
 
@@ -362,16 +392,16 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     // texture internal format
     json.writeStringMember("__type__", "uint8");
     json.writeBoolMember("__normalized__", true);
-    json.writeNumberMember("__channels__", 4);
+    json.writeNumberMember("__channels__", channels);
 
-    GLubyte *pixels = new GLubyte[desc.depth*desc.width*desc.height*4];
+    GLubyte *pixels = new GLubyte[desc.depth*desc.width*desc.height*channels];
 
     context.resetPixelPackState();
 
     if (context.ES) {
         getTexImageOES(target, level, desc, pixels);
     } else {
-        glGetTexImage(target, level, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, pixels);
     }
 
     context.restorePixelPackState();
@@ -379,7 +409,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     json.beginMember("__data__");
     char *pngBuffer;
     int pngBufferSize;
-    image::writePixelsToBuffer(pixels, desc.width, desc.height, 4, true, &pngBuffer, &pngBufferSize);
+    image::writePixelsToBuffer(pixels, desc.width, desc.height, channels, true, &pngBuffer, &pngBufferSize);
     json.writeBase64(pngBuffer, pngBufferSize);
     free(pngBuffer);
     json.endMember(); // __data__
