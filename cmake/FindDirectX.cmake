@@ -26,6 +26,13 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		DOC "DirectX SDK root directory")
 
 
+	if (CMAKE_CL_64)
+		set (DirectX_ARCHITECTURE x64)
+	else ()
+		set (DirectX_ARCHITECTURE x86)
+	endif ()
+
+
 	find_path (DirectX_D3D_INCLUDE_DIR d3d.h
 		PATHS
 			"${DirectX_ROOT_DIR}/Include"
@@ -38,12 +45,12 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	find_library (DirectX_DDRAW_LIBRARY ddraw
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where ddraw resides")
 
 	find_library (DirectX_D3DX_LIBRARY d3dx
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where d3dx resides")
 
 	if (DirectX_D3D_INCLUDE_DIR AND DirectX_DDRAW_LIBRARY)
@@ -66,12 +73,12 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	find_library (DirectX_D3D8_LIBRARY d3d8
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where d3d8 resides")
 
 	find_library (DirectX_D3DX8_LIBRARY d3dx8
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where d3dx8 resides")
 
 	if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3D8_LIBRARY)
@@ -94,12 +101,12 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	find_library (DirectX_D3D9_LIBRARY d3d9
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where d3d9 resides")
 
 	find_library (DirectX_D3DX9_LIBRARY d3dx9
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where d3dx9 resides")
 
 	if (DirectX_D3D9_INCLUDE_DIR AND DirectX_D3D9_LIBRARY)
@@ -122,12 +129,12 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	find_library (DirectX_D3D10_LIBRARY d3d10
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where d3d10 resides")
 
 	find_library (DirectX_D3DX10_LIBRARY d3dx10
 		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
 		DOC "The directory where d3dx10 resides")
 
 	if (DirectX_D3D10_INCLUDE_DIR AND DirectX_D3D10_LIBRARY)
