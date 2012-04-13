@@ -208,9 +208,7 @@ class Retracer:
         print
 
     def retraceFunctionBody(self, function):
-        if not function.sideeffects:
-            print '    (void)call;'
-            return
+        assert function.sideeffects
 
         print '    retrace::ScopedAllocator _allocator;'
         print '    (void)_allocator;'
@@ -285,11 +283,15 @@ class Retracer:
         functions = filter(self.filterFunction, functions)
 
         for function in functions:
-            self.retraceFunction(function)
+            if function.sideeffects:
+                self.retraceFunction(function)
 
         print 'const retrace::Entry %s[] = {' % self.table_name
         for function in functions:
-            print '    {"%s", &retrace_%s},' % (function.name, function.name)
+            if function.sideeffects:
+                print '    {"%s", &retrace_%s},' % (function.name, function.name)
+            else:
+                print '    {"%s", &retrace::ignore},' % (function.name,)
         print '    {NULL, NULL}'
         print '};'
         print
