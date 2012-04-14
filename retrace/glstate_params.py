@@ -394,7 +394,7 @@ class StateDumper:
         print '        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
         print '        GLint max_combined_texture_image_units = 0;'
         print '        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);'
-        print '        GLint max_units = std::min(std::max(max_combined_texture_image_units, max_texture_coords), 2);'
+        print '        GLint max_units = std::max(std::max(max_combined_texture_image_units, max_texture_coords), 2);'
         print '        for (GLint unit = 0; unit < max_units; ++unit) {'
         print '            char name[32];'
         print '            snprintf(name, sizeof name, "GL_TEXTURE%i", unit);'
