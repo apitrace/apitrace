@@ -27,10 +27,10 @@
 """GL retracer generator."""
 
 
+from retrace import Retracer
 import specs.stdapi as stdapi
 import specs.glapi as glapi
 import specs.glesapi as glesapi
-from retrace import Retracer
 
 
 class GlRetracer(Retracer):

@@ -27,6 +27,8 @@
 '''Generate code to dump most GL state into JSON.'''
 
 
+import retrace # to adjust sys.path
+
 from specs.stdapi import *
 
 from specs.gltypes import *

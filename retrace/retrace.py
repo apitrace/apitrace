@@ -27,7 +27,11 @@
 """Generic retracing code generator."""
 
 
+# Adjust path
+import os.path
 import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 
 import specs.stdapi as stdapi
 import specs.glapi as glapi
