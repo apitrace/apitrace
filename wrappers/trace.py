@@ -245,69 +245,52 @@ class ValueSerializer(stdapi.Visitor):
         print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance)
 
 
-class ValueWrapper(stdapi.Visitor):
+class WrapDecider(stdapi.Traverser):
+    '''Type visitor which will decide wheter this type will need wrapping or not.
+    
+    For complex types (arrays, structures), we need to know this before hand.
+    '''
+
+    def __init__(self):
+        self.needsWrapping = False
+
+    def visitVoid(self, void):
+        raise NotImplementedError
+
+    def visitLinearPointer(self, void):
+        pass
+
+    def visitInterface(self, interface):
+        self.needsWrapping = True
+
+
+class ValueWrapper(stdapi.Traverser):
     '''Type visitor which will generate the code to wrap an instance.
     
     Wrapping is necessary mostly for interfaces, however interface pointers can
     appear anywhere inside complex types.
     '''
 
-    def visitVoid(self, type, instance):
-        raise NotImplementedError
-
-    def visitLiteral(self, type, instance):
-        pass
-
-    def visitString(self, type, instance):
-        pass
-
-    def visitConst(self, type, instance):
-        pass
-
     def visitStruct(self, struct, instance):
         for type, name in struct.members:
             self.visit(type, "(%s).%s" % (instance, name))
 
     def visitArray(self, array, instance):
-        # XXX: actually it is possible to return an array of pointers
-        pass
-
-    def visitBlob(self, blob, instance):
-        pass
-
-    def visitEnum(self, enum, instance):
-        pass
-
-    def visitBitmask(self, bitmask, instance):
-        pass
+        print "    if (%s) {" % instance
+        print "        for (size_t _i = 0, _s = %s; _i < _s; ++_i) {" % array.length
+        self.visit(array.type, instance + "[_i]")
+        print "        }"
+        print "    }"
 
     def visitPointer(self, pointer, instance):
         print "    if (%s) {" % instance
         self.visit(pointer.type, "*" + instance)
         print "    }"
     
-    def visitIntPointer(self, pointer, instance):
-        pass
-
     def visitObjPointer(self, pointer, instance):
         print "    if (%s) {" % instance
         self.visit(pointer.type, "*" + instance)
         print "    }"
-    
-    def visitLinearPointer(self, pointer, instance):
-        pass
-
-    def visitReference(self, reference, instance):
-        self.visit(reference.type, instance)
-    
-    def visitHandle(self, handle, instance):
-        self.visit(handle.type, instance)
-
-    def visitAlias(self, alias, instance):
-        self.visit(alias.type, instance)
-
-    def visitOpaque(self, opaque, instance):
-        pass
     
     def visitInterface(self, interface, instance):
         assert instance.startswith('*')
@@ -318,17 +301,33 @@ class ValueWrapper(stdapi.Visitor):
     
     def visitPolymorphic(self, type, instance):
         # XXX: There might be polymorphic values that need wrapping in the future
-        pass
+        raise NotImplementedError
 
 
 class ValueUnwrapper(ValueWrapper):
     '''Reverse of ValueWrapper.'''
 
+    allocated = False
+
+    def visitArray(self, array, instance):
+        if self.allocated or isinstance(instance, stdapi.Interface):
+            return ValueWrapper.visitArray(self, array, instance)
+        elem_type = array.type.mutable()
+        print "    if (%s && %s) {" % (instance, array.length)
+        print "        %s * _t = static_cast<%s *>(alloca(%s * sizeof *_t));" % (elem_type, elem_type, array.length)
+        print "        for (size_t _i = 0, _s = %s; _i < _s; ++_i) {" % array.length
+        print "            _t[_i] = %s[_i];" % instance 
+        self.allocated = True
+        self.visit(array.type, "_t[_i]")
+        print "        }"
+        print "        %s = _t;" % instance
+        print "    }"
+
     def visitInterface(self, interface, instance):
         assert instance.startswith('*')
         instance = instance[1:]
         print r'    if (%s) {' % instance
-        print r'        %s *pWrapper = static_cast<%s*>(%s);' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), instance)
+        print r'        const %s *pWrapper = static_cast<const %s*>(%s);' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), instance)
         print r'        if (pWrapper && pWrapper->m_dwMagic == 0xd8365d6c) {'
         print r'            %s = pWrapper->m_pInstance;' % (instance,)
         print r'        } else {'
@@ -468,13 +467,20 @@ class Tracer:
     def unwrapRet(self, function, instance):
         self.unwrapValue(function.type, instance)
 
+    def needsWrapping(self, type):
+        visitor = WrapDecider()
+        visitor.visit(type)
+        return visitor.needsWrapping
+
     def wrapValue(self, type, instance):
-        visitor = ValueWrapper()
-        visitor.visit(type, instance)
+        if self.needsWrapping(type):
+            visitor = ValueWrapper()
+            visitor.visit(type, instance)
 
     def unwrapValue(self, type, instance):
-        visitor = ValueUnwrapper()
-        visitor.visit(type, instance)
+        if self.needsWrapping(type):
+            visitor = ValueUnwrapper()
+            visitor.visit(type, instance)
 
     def declareWrapperInterface(self, interface):
         print "class %s : public %s " % (getWrapperInterfaceName(interface), interface.name)
