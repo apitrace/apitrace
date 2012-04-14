@@ -318,7 +318,7 @@ IDirect3DResource9.methods += [
 
 IDirect3DVertexDeclaration9.methods += [
     Method(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE9), "ppDevice")], sideeffects=False),
-    Method(HRESULT, "GetDeclaration", [Out(Pointer(D3DVERTEXELEMENT9), "pElement"), Out(Pointer(UINT), "pNumElements")], sideeffects=False),
+    Method(HRESULT, "GetDeclaration", [Out(Array(D3DVERTEXELEMENT9, "*pNumElements"), "pElement"), Out(Pointer(UINT), "pNumElements")], sideeffects=False),
 ]
 
 IDirect3DVertexShader9.methods += [
