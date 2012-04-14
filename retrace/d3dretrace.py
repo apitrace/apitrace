@@ -27,7 +27,7 @@
 """GL retracer generator."""
 
 
-from retrace import Retracer
+from dllretrace import DllRetracer as Retracer
 import specs.stdapi as stdapi
 from specs.d3d9 import d3d9
 
