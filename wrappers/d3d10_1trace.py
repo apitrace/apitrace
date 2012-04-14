@@ -24,8 +24,8 @@
 ##########################################################################/
 
 
-from specs.d3d10_1 import d3d10_1
 from dlltrace import DllTracer
+from specs.d3d10_1 import d3d10_1
 
 
 if __name__ == '__main__':

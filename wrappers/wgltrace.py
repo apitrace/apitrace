@@ -27,12 +27,12 @@
 """WGL tracing code generator."""
 
 
+from gltrace import GlTracer
+from dispatch import function_pointer_type, function_pointer_value
+from codegen import *
 from specs.stdapi import API
 from specs.glapi import glapi
 from specs.wglapi import wglapi
-from dispatch import function_pointer_type, function_pointer_value
-from gltrace import GlTracer
-from codegen import *
 
 
 class WglTracer(GlTracer):

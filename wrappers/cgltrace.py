@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2008-2012 VMware, Inc.
+# Copyright 2011 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,23 +24,45 @@
 ##########################################################################/
 
 
-from specs.d3d11 import d3d11
-from dlltrace import DllTracer
+"""Cgl tracing generator."""
+
+
+from gltrace import GlTracer
+from specs.stdapi import API
+from specs.glapi import glapi
+from specs.cglapi import cglapi
+
+
+class CglTracer(GlTracer):
+
+    def isFunctionPublic(self, function):
+        # The symbols visible in libGL.dylib can vary, so expose them all
+        return True
 
 
 if __name__ == '__main__':
-    print '#define INITGUID'
+    print
+    print '#include <stdlib.h>'
+    print '#include <string.h>'
     print
     print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
     print
-    print '#include <windows.h>'
-    print '#include <tchar.h>'
+    print '// To validate our prototypes'
+    print '#define GL_GLEXT_PROTOTYPES'
     print
-    print '#include "compat.h"'
+    print '#include "glproc.hpp"'
+    print '#include "glsize.hpp"'
     print
-    print '#include <d3d11.h>'
-    print '#include <d3dx11.h>'
-    print
-    tracer = DllTracer('d3d11.dll')
-    tracer.trace_api(d3d11)
+
+    api = API()
+    api.addApi(cglapi)
+    api.addApi(glapi)
+    tracer = CglTracer()
+    tracer.trace_api(api)
+
+    print r'''
+
+PUBLIC
+void * gll_noop = 0;
+
+'''

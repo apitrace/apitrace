@@ -27,11 +27,11 @@
 """GL tracing generator."""
 
 
+from trace import Tracer
 import specs.stdapi as stdapi
 import specs.glapi as glapi
 import specs.glparams as glparams
 from specs.glxapi import glxapi
-from trace import Tracer
 
 
 class TypeGetter(stdapi.Visitor):

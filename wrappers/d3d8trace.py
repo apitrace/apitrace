@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2011 VMware, Inc.
+# Copyright 2008-2009 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,45 +24,31 @@
 ##########################################################################/
 
 
-"""Cgl tracing generator."""
+from dlltrace import DllTracer
+from specs.d3d8 import d3d8
 
 
-from specs.stdapi import API
-from specs.glapi import glapi
-from specs.cglapi import cglapi
-from gltrace import GlTracer
+class D3D8Tracer(DllTracer):
 
+    def serializeArgValue(self, function, arg):
+        # Dump shaders as strings
+        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
+            print '    DumpShader(trace::localWriter, %s);' % (arg.name)
+            return
 
-class CglTracer(GlTracer):
-
-    def isFunctionPublic(self, function):
-        # The symbols visible in libGL.dylib can vary, so expose them all
-        return True
+        DllTracer.serializeArgValue(self, function, arg)
 
 
 if __name__ == '__main__':
+    print '#define INITGUID'
     print
-    print '#include <stdlib.h>'
-    print '#include <string.h>'
+    print '#include <windows.h>'
+    print '#include <d3d8.h>'
+    print '#include "d3dshader.hpp"'
     print
     print '#include "trace_writer_local.hpp"'
+    print '#include "os.hpp"'
     print
-    print '// To validate our prototypes'
-    print '#define GL_GLEXT_PROTOTYPES'
-    print
-    print '#include "glproc.hpp"'
-    print '#include "glsize.hpp"'
-    print
+    tracer = D3D8Tracer('d3d8.dll')
+    tracer.trace_api(d3d8)
 
-    api = API()
-    api.addApi(cglapi)
-    api.addApi(glapi)
-    tracer = CglTracer()
-    tracer.trace_api(api)
-
-    print r'''
-
-PUBLIC
-void * gll_noop = 0;
-
-'''

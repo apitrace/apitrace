@@ -24,58 +24,23 @@
 ##########################################################################/
 
 
-from specs.d3d import ddraw, interfaces
 from dlltrace import DllTracer
-
-
-class DDrawTracer(DllTracer):
-
-    def traceFunctionImplBody(self, function):
-        if function.name in ('AcquireDDThreadLock', 'ReleaseDDThreadLock'):
-            self.invokeFunction(function)
-            return
-
-        DllTracer.traceFunctionImplBody(self, function)
-
-    def serializeArg(self, function, arg):
-        if function.name == 'DirectDrawCreateEx' and arg.name == 'lplpDD':
-            print '    if (*lplpDD) {'
-            for iface in interfaces:
-                print '        if (iid == IID_%s) {' % iface.name
-                print '            *lplpDD = (LPVOID) new Wrap%s((%s *)*lplpDD);' % (iface.name, iface.name)
-                print '        }'
-            print '    }'
-
-        DllTracer.serializeArg(self, function, arg)
+from specs.d3d10misc import d3d10
 
 
 if __name__ == '__main__':
     print '#define INITGUID'
-    print '#include <windows.h>'
-    print '#include <ddraw.h>'
-    print '#include <d3d.h>'
     print
-    print '''
-
-#ifndef DDBLT_EXTENDED_FLAGS
-#define DDBLT_EXTENDED_FLAGS 0x40000000l
-#endif
-
-#ifndef DDBLT_EXTENDED_LINEAR_CONTENT
-#define DDBLT_EXTENDED_LINEAR_CONTENT 0x00000004l
-#endif
-
-#ifndef D3DLIGHT_PARALLELPOINT
-#define D3DLIGHT_PARALLELPOINT (D3DLIGHTTYPE)4
-#endif
-
-#ifndef D3DLIGHT_GLSPOT
-#define D3DLIGHT_GLSPOT (D3DLIGHTTYPE)5
-#endif
-
-'''
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    tracer = DDrawTracer('ddraw.dll')
-    tracer.trace_api(ddraw)
+    print '#include <windows.h>'
+    print '#include <tchar.h>'
+    print
+    print '#include "compat.h"'
+    print
+    print '#include <d3d10.h>'
+    print '#include <d3dx10.h>'
+    print
+    tracer = DllTracer('d3d10.dll')
+    tracer.trace_api(d3d10)

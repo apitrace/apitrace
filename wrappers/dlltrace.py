@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2008-2009 VMware, Inc.
+# Copyright 2008-2010 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,24 +23,47 @@
 #
 ##########################################################################/
 
-
-from specs.d3d10misc import d3d10
-from dlltrace import DllTracer
+"""Trace code generation for Windows DLLs."""
 
 
-if __name__ == '__main__':
-    print '#define INITGUID'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
-    print
-    print '#include <windows.h>'
-    print '#include <tchar.h>'
-    print
-    print '#include "compat.h"'
-    print
-    print '#include <d3d10.h>'
-    print '#include <d3dx10.h>'
-    print
-    tracer = DllTracer('d3d10.dll')
-    tracer.trace_api(d3d10)
+from trace import Tracer
+from dispatch import Dispatcher
+
+
+class DllTracer(Tracer):
+
+    def __init__(self, dllname):
+        self.dllname = dllname
+    
+    def header(self, api):
+        print '''
+static HINSTANCE g_hDll = NULL;
+
+static PROC
+__getPublicProcAddress(LPCSTR lpProcName)
+{
+    if (!g_hDll) {
+        char szDll[MAX_PATH] = {0};
+        
+        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
+            return NULL;
+        }
+        
+        strcat(szDll, "\\\\%s");
+        
+        g_hDll = LoadLibraryA(szDll);
+        if (!g_hDll) {
+            return NULL;
+        }
+    }
+        
+    return GetProcAddress(g_hDll, lpProcName);
+}
+
+''' % self.dllname
+
+        dispatcher = Dispatcher()
+        dispatcher.dispatch_api(api)
+
+        Tracer.header(self, api)
+

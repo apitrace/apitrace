@@ -24,31 +24,58 @@
 ##########################################################################/
 
 
-from specs.d3d8 import d3d8
 from dlltrace import DllTracer
+from specs.d3d import ddraw, interfaces
 
 
-class D3D8Tracer(DllTracer):
+class DDrawTracer(DllTracer):
 
-    def serializeArgValue(self, function, arg):
-        # Dump shaders as strings
-        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
-            print '    DumpShader(trace::localWriter, %s);' % (arg.name)
+    def traceFunctionImplBody(self, function):
+        if function.name in ('AcquireDDThreadLock', 'ReleaseDDThreadLock'):
+            self.invokeFunction(function)
             return
 
-        DllTracer.serializeArgValue(self, function, arg)
+        DllTracer.traceFunctionImplBody(self, function)
+
+    def serializeArg(self, function, arg):
+        if function.name == 'DirectDrawCreateEx' and arg.name == 'lplpDD':
+            print '    if (*lplpDD) {'
+            for iface in interfaces:
+                print '        if (iid == IID_%s) {' % iface.name
+                print '            *lplpDD = (LPVOID) new Wrap%s((%s *)*lplpDD);' % (iface.name, iface.name)
+                print '        }'
+            print '    }'
+
+        DllTracer.serializeArg(self, function, arg)
 
 
 if __name__ == '__main__':
     print '#define INITGUID'
-    print
     print '#include <windows.h>'
-    print '#include <d3d8.h>'
-    print '#include "d3dshader.hpp"'
+    print '#include <ddraw.h>'
+    print '#include <d3d.h>'
     print
+    print '''
+
+#ifndef DDBLT_EXTENDED_FLAGS
+#define DDBLT_EXTENDED_FLAGS 0x40000000l
+#endif
+
+#ifndef DDBLT_EXTENDED_LINEAR_CONTENT
+#define DDBLT_EXTENDED_LINEAR_CONTENT 0x00000004l
+#endif
+
+#ifndef D3DLIGHT_PARALLELPOINT
+#define D3DLIGHT_PARALLELPOINT (D3DLIGHTTYPE)4
+#endif
+
+#ifndef D3DLIGHT_GLSPOT
+#define D3DLIGHT_GLSPOT (D3DLIGHTTYPE)5
+#endif
+
+'''
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    tracer = D3D8Tracer('d3d8.dll')
-    tracer.trace_api(d3d8)
-
+    tracer = DDrawTracer('ddraw.dll')
+    tracer.trace_api(ddraw)

@@ -28,11 +28,11 @@
 """GLX tracing generator."""
 
 
+from gltrace import GlTracer
+from dispatch import function_pointer_type, function_pointer_value
 from specs.stdapi import API
 from specs.glapi import glapi
 from specs.glxapi import glxapi
-from gltrace import GlTracer
-from dispatch import function_pointer_type, function_pointer_value
 
 
 class GlxTracer(GlTracer):
