@@ -122,7 +122,7 @@ class DeclParser:
                     self.consume()
                     type = 'Pointer(%s)' % type
                 name = self.consume()
-                print '%s = Alias("%s", %s)' % (name, name, type)
+                print '%s = Alias(%r, %s)' % (name, name, type)
                 if self.match(','):
                     self.consume()
                 else:
@@ -136,7 +136,7 @@ class DeclParser:
         name = self.consume()
         self.consume('{')
 
-        print '%s = Enum("%s", [' % (name, name)
+        print '%s = Enum(%r, [' % (name, name)
 
         #value = 0
         while self.lookahead() != '}':
@@ -147,8 +147,8 @@ class DeclParser:
             if self.match(','):
                 self.consume(',')
             tags = self.parse_tags()
-            #print '    "%s",\t# %s' % (name, value) 
-            print '    "%s",' % (name,) 
+            #print '    %r,\t# %s' % (name, value) 
+            print '    %r,' % (name,) 
             #value += 1
         self.consume('}')
 
@@ -175,18 +175,32 @@ class DeclParser:
         self.consume('define')
         name = self.consume()
         value = self.consume()
-        #print '    "%s",\t# %s' % (name, value) 
-        print '    "%s",' % (name,) 
+        #print '    %r,\t# %s' % (name, value) 
+        print '    %r,' % (name,) 
         return name, value
 
     def parse_struct(self):
         self.consume('struct')
         name = self.consume()
+
+        print '%s = Struct(%r, [' % (name, name)
+        for type, name in self.parse_members():
+            print '    (%s, %r),' % (type, name)
+        print '])'
+        print
+
+    def parse_union(self):
+        self.consume('union')
+        if not self.match('{'):
+            name = self.consume()
+        else:
+            name = None
+        members = self.parse_members()
+        return 'Union(%r, [%s])' % (name, ', '.join('%s, %r' % member for member in members))
+
+    def parse_members(self):
+        members = []
         self.consume('{')
-
-        print '%s = Struct("%s", [' % (name, name)
-
-        value = 0
         while self.lookahead() != '}':
             type, name = self.parse_named_type()
 
@@ -197,12 +211,9 @@ class DeclParser:
             if self.match(','):
                 self.consume(',')
             self.consume(';')
-            print '    (%s, "%s"),' % (type, name) 
-            value += 1
+            members.append((type, name))
         self.consume('}')
-
-        print '])'
-        print
+        return members
 
     def parse_interface(self, ref_token):
         self.consume(ref_token)
@@ -215,7 +226,7 @@ class DeclParser:
         base = self.consume()
         self.consume('{')
 
-        print '%s = Interface("%s", %s)' % (name, name, base)
+        print '%s = Interface(%r, %s)' % (name, name, base)
         print '%s.methods += [' % (name,)
 
         while self.lookahead() != '}':
@@ -256,7 +267,7 @@ class DeclParser:
             if self.match(','):
                 self.consume()
         self.consume(')')
-        if self.lookahead() == 'const':
+        if self.match('const', 'CONST'):
             self.consume()
             extra = ', const=True' + extra
 
@@ -264,14 +275,14 @@ class DeclParser:
             self.consume()
             self.consume('0')
         
-        print '    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
+        print '    %s(%s, %r, [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
 
     def parse_arg(self):
         tags = self.parse_tags()
 
         type, name = self.parse_named_type()
 
-        arg = '(%s, "%s")' % (type, name)
+        arg = '(%s, %r)' % (type, name)
         if 'out' in tags or 'inout' in tags:
             arg = 'Out' + arg
 
@@ -293,6 +304,7 @@ class DeclParser:
         if self.lookahead().startswith('__'):
             # Parse __in, __out, etc tags
             tag = self.consume()[2:]
+            args = []
             if self.match('('):
                 self.consume()
                 while not self.match(')'):
@@ -303,16 +315,20 @@ class DeclParser:
 
     def parse_named_type(self):
         type = self.parse_type()
-        name = self.consume()
-        if self.match('['):
-            self.consume()
-            length = self.consume()
-            self.consume(']')
-            try:
-                int(length)
-            except ValueError:
-                length = "%s" % length
-            type = 'Array(%s, %s)' % (type, length)
+        
+        if self.match(',', ';', '}', ')'):
+            name = None
+        else:
+            name = self.consume()
+            if self.match('['):
+                self.consume()
+                length = self.consume()
+                self.consume(']')
+                try:
+                    int(length)
+                except ValueError:
+                    length = repr(length)
+                type = 'Array(%s, %s)' % (type, length)
         return type, name
 
     int_tokens = ('unsigned', 'signed', 'int', 'long', 'short', 'char')
@@ -332,19 +348,22 @@ class DeclParser:
 
     def parse_type(self):
         const = False
-        token = self.consume()
-        if token == 'const':
-            token = self.consume()
+        if self.match('const', 'CONST'):
+            self.consume()
             const = True
-        if token == 'void':
+        if self.match('void'):
+            self.consume()
             type = 'Void'
-        elif token in self.int_tokens:
+        elif self.match('union'):
+            type = self.parse_union()
+        elif self.match(*self.int_tokens):
             unsigned = False
             signed = False
             long = 0
             short = 0
             char = False
-            while token in self.int_tokens:
+            while self.match(*self.int_tokens):
+                token = self.consume()
                 if token == 'unsigned':
                     unsigned = True
                 if token == 'signed':
@@ -355,10 +374,6 @@ class DeclParser:
                     short += 1
                 if token == 'char':
                     char = False
-                if self.lookahead() in self.int_tokens:
-                    token = self.consume()
-                else:
-                    token = None
             if char:
                 type = 'Char'
                 if signed:
@@ -372,6 +387,7 @@ class DeclParser:
             if unsigned:
                 type = 'U' + type
         else:
+            token = self.consume()
             type = self.type_table.get(token, token)
         if const:
             type = 'Const(%s)' % type
@@ -379,8 +395,8 @@ class DeclParser:
             if self.match('*'):
                 self.consume('*')
                 type = 'Pointer(%s)' % type
-            elif self.match('const'):
-                self.consume('const')
+            elif self.match('const', 'CONST'):
+                self.consume()
                 type = 'Const(%s)' % type
             else:
                 break

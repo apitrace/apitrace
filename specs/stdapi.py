@@ -41,7 +41,10 @@ class Type:
         # on this type, so it should preferrably be something representative of
         # the type.
         if tag is None:
-            tag = ''.join([c for c in expr if c.isalnum() or c in '_'])
+            if expr is not None:
+                tag = ''.join([c for c in expr if c.isalnum() or c in '_'])
+            else:
+                tag = 'anonynoums'
         else:
             for c in tag:
                 assert c.isalnum() or c in '_'
@@ -257,10 +260,33 @@ class Struct(Type):
         Struct.__id += 1
 
         self.name = name
-        self.members = members
+        self.members = []
+
+        # Eliminate anonymous unions
+        for type, name in members:
+            if name is not None:
+                self.members.append((type, name))
+            else:
+                assert isinstance(type, Union)
+                assert type.name is None
+                self.members.extend(type.members)
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitStruct(self, *args, **kwargs)
+
+
+class Union(Type):
+
+    __id = 0
+
+    def __init__(self, name, members):
+        Type.__init__(self, name)
+
+        self.id = Union.__id
+        Union.__id += 1
+
+        self.name = name
+        self.members = members
 
 
 class Alias(Type):
@@ -388,8 +414,8 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args, const=False, sideeffects=True):
-        Function.__init__(self, type, name, args, call = '__stdcall', sideeffects=sideeffects)
+    def __init__(self, type, name, args, call = '__stdcall', const=False, sideeffects=True):
+        Function.__init__(self, type, name, args, call = call, sideeffects=sideeffects)
         for index in range(len(self.args)):
             self.args[index].index = index + 1
         self.const = const
@@ -399,6 +425,10 @@ class Method(Function):
         if self.const:
             s += ' const'
         return s
+
+def StdMethod(*args, **kwargs):
+    kwargs.setdefault('call', '__stdcall')
+    return Method(*args, **kwargs)
 
 
 class String(Type):

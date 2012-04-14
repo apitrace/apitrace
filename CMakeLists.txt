@@ -75,8 +75,8 @@ else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
         add_definitions ("-fvisibility=hidden")
-    endif (CXX_COMPILER_FLAG_VISIBILITY)
-endif (WIN32)
+    endif ()
+endif ()
 
 if (MSVC)
     # C99 includes for msvc
@@ -108,7 +108,7 @@ if (MSVC)
     )
         if (${flag_var} MATCHES "/MD")
             string (REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-        endif (${flag_var} MATCHES "/MD")
+        endif ()
     endforeach (flag_var)
 else ()
     # Adjust warnings
@@ -302,7 +302,7 @@ if (WIN32)
     if (MINGW)
         # Silence warnings about @nn suffix mismatch
         set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--enable-stdcall-fixup")
-    endif (MINGW)
+    endif ()
 
     # ddraw.dll
     if (DirectX_D3D_INCLUDE_DIR)
@@ -324,7 +324,7 @@ if (WIN32)
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
         install (TARGETS ddraw LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D3D_INCLUDE_DIR)
+    endif ()
 
     # d3d8.dll
     if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
@@ -346,7 +346,7 @@ if (WIN32)
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
         install (TARGETS d3d8 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
+    endif ()
 
     # d3d9.dll
     if (DirectX_D3DX9_INCLUDE_DIR)
@@ -368,15 +368,15 @@ if (WIN32)
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
         install (TARGETS d3d9 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D3DX9_INCLUDE_DIR)
+    endif ()
 
     # d3d10.dll
-    if (DirectX_D3D10_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+    if (DirectX_D3DX10_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3DX10_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d10trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
-            DEPENDS d3d10trace.py trace.py specs/d3d10misc.py specs/d3d10.py specs/d3d10sdklayers.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
+            DEPENDS d3d10trace.py trace.py specs/d3d10misc.py specs/d3d10.py specs/d3d10sdklayers.py specs/d3dcommon.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d10 MODULE specs/d3d10.def d3d10trace.cpp)
         target_link_libraries (d3d10
@@ -390,15 +390,15 @@ if (WIN32)
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
         install (TARGETS d3d10 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D3D10_INCLUDE_DIR)
+    endif ()
 
     # d3d10_1.dll
-    if (DirectX_D3D10_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+    if (DirectX_D3DX10_INCLUDE_DIR AND DirectX_D3D10_1_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d10_1trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10_1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10_1trace.cpp
-            DEPENDS d3d10_1trace.py trace.py specs/d3d10_1.py specs/d3d10.py specs/d3d10sdklayers.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
+            DEPENDS d3d10_1trace.py trace.py specs/d3d10_1.py specs/d3d10.py specs/d3d10sdklayers.py specs/d3dcommon.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
         )
         add_library (d3d10_1 MODULE specs/d3d10_1.def d3d10_1trace.cpp)
         target_link_libraries (d3d10_1
@@ -412,7 +412,29 @@ if (WIN32)
             LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
         )
         install (TARGETS d3d10_1 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D3D10_INCLUDE_DIR)
+    endif ()
+
+    # d3d11.dll
+    if (DirectX_D3DX11_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3DX11_INCLUDE_DIR})
+        add_custom_command (
+            OUTPUT d3d11trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d11trace.cpp
+            DEPENDS d3d11trace.py trace.py specs/d3d11.py specs/d3d11sdklayers.py specs/d3dcommon.py specs/dxgi.py specs/dxgitype.py specs/dxgiformat.py specs/winapi.py specs/stdapi.py
+        )
+        add_library (d3d11 MODULE specs/d3d11.def d3d11trace.cpp)
+        target_link_libraries (d3d11
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
+        set_target_properties (d3d11
+            PROPERTIES PREFIX ""
+            RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+            LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/wrappers
+        )
+        install (TARGETS d3d11 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+    endif ()
 
     # opengl32.dll
     add_custom_command (

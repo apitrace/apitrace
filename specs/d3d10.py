@@ -23,7 +23,10 @@
 #
 ##########################################################################/
 
+
 from dxgi import *
+from d3dcommon import *
+
 
 HRESULT = FakeEnum(HRESULT, [
     "D3D10_ERROR_FILE_NOT_FOUND",
@@ -567,28 +570,6 @@ D3D10_QUERY_DESC = Struct("D3D10_QUERY_DESC", [
     (D3D10_QUERY_MISC_FLAG, "MiscFlags"),
 ])
 
-D3D10_PRIMITIVE_TOPOLOGY = Enum("D3D10_PRIMITIVE_TOPOLOGY", [
-	"D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED",
-	"D3D10_PRIMITIVE_TOPOLOGY_POINTLIST",
-	"D3D10_PRIMITIVE_TOPOLOGY_LINELIST",
-	"D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP",
-	"D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST",
-	"D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP",
-	"D3D10_PRIMITIVE_TOPOLOGY_LINELIST_ADJ",
-	"D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ",
-	"D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ",
-	"D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ",
-])
-
-D3D10_PRIMITIVE = Enum("D3D10_PRIMITIVE", [
-	"D3D10_PRIMITIVE_UNDEFINED",
-	"D3D10_PRIMITIVE_POINT",
-	"D3D10_PRIMITIVE_LINE",
-	"D3D10_PRIMITIVE_TRIANGLE",
-	"D3D10_PRIMITIVE_LINE_ADJ",
-	"D3D10_PRIMITIVE_TRIANGLE_ADJ",
-])
-
 D3D10_RECT = Alias("D3D10_RECT", RECT)
 D3D10_VIEWPORT = Struct("D3D10_VIEWPORT", [
     (INT, "TopLeftX"),
@@ -766,24 +747,12 @@ ID3D10DepthStencilState.methods += [
     Method(Void, "GetDesc", [Out(Pointer(D3D10_DEPTH_STENCIL_DESC), "pDesc")]),
 ]
 
-ID3D10GeometryShader.methods += [
-]
-
-ID3D10InputLayout.methods += [
-]
-
-ID3D10PixelShader.methods += [
-]
-
 ID3D10RasterizerState.methods += [
     Method(Void, "GetDesc", [Out(Pointer(D3D10_RASTERIZER_DESC), "pDesc")]),
 ]
 
 ID3D10SamplerState.methods += [
     Method(Void, "GetDesc", [Out(Pointer(D3D10_SAMPLER_DESC), "pDesc")]),
-]
-
-ID3D10VertexShader.methods += [
 ]
 
 ID3D10Asynchronous.methods += [
@@ -799,9 +768,6 @@ ID3D10Counter.methods += [
 
 ID3D10Query.methods += [
     Method(Void, "GetDesc", [Out(Pointer(D3D10_QUERY_DESC), "pDesc")]),
-]
-
-ID3D10Predicate.methods += [
 ]
 
 ID3D10Device.methods += [
