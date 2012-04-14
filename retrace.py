@@ -33,6 +33,10 @@ import specs.stdapi as stdapi
 import specs.glapi as glapi
 
 
+class UnsupportedType(Exception):
+    pass
+
+
 class MutableRebuilder(stdapi.Rebuilder):
     '''Type visitor which derives a mutable type.'''
 
@@ -50,10 +54,6 @@ class MutableRebuilder(stdapi.Rebuilder):
     def visitReference(self, reference):
         # Strip out references
         return reference.type
-
-    def visitOpaque(self, opaque):
-        # Don't recursule
-        return opaque
 
 
 def lookupHandle(handle, value):
@@ -113,6 +113,9 @@ class ValueAllocator(stdapi.Visitor):
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
         self.visit(polymorphic.defaultType, lvalue, rvalue)
+
+    def visitOpaque(self, opaque, lvalue, rvalue):
+        pass
 
 
 class ValueDeserializer(stdapi.Visitor):
@@ -205,6 +208,9 @@ class ValueDeserializer(stdapi.Visitor):
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
         self.visit(polymorphic.defaultType, lvalue, rvalue)
+    
+    def visitOpaque(self, opaque, lvalue, rvalue):
+        raise UnsupportedType
 
 
 class OpaqueValueDeserializer(ValueDeserializer):
@@ -310,6 +316,9 @@ class SwizzledValueRegistrator(stdapi.Visitor):
     
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
         self.visit(polymorphic.defaultType, lvalue, rvalue)
+    
+    def visitOpaque(self, opaque, lvalue, rvalue):
+        pass
 
 
 class Retracer:
@@ -365,7 +374,7 @@ class Retracer:
             lvalue = arg.name
             try:
                 self.extractArg(function, arg, arg_type, lvalue, rvalue)
-            except NotImplementedError:
+            except UnsupportedType:
                 success =  False
                 print '    memset(&%s, 0, sizeof %s); // FIXME' % (arg.name, arg.name)
             print
@@ -385,14 +394,14 @@ class Retracer:
                 lvalue = arg.name
                 try:
                     self.regiterSwizzledValue(arg_type, lvalue, rvalue)
-                except NotImplementedError:
+                except UnsupportedType:
                     print '    // XXX: %s' % arg.name
         if function.type is not stdapi.Void:
             rvalue = '*call.ret'
             lvalue = '__result'
             try:
                 self.regiterSwizzledValue(function.type, lvalue, rvalue)
-            except NotImplementedError:
+            except UnsupportedType:
                 raise
                 print '    // XXX: result'
 
@@ -410,7 +419,7 @@ class Retracer:
     def extractOpaqueArg(self, function, arg, arg_type, lvalue, rvalue):
         try:
             ValueAllocator().visit(arg_type, lvalue, rvalue)
-        except NotImplementedError:
+        except UnsupportedType:
             pass
         OpaqueValueDeserializer().visit(arg_type, lvalue, rvalue)
 
