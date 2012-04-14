@@ -2,7 +2,10 @@
 # API tracers
 
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/dispatch
+)
 
 
 if (WIN32)
@@ -19,7 +22,9 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
             DEPENDS
                 ddrawtrace.py
+                dlltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dtypes.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcaps.py
@@ -47,7 +52,9 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
             DEPENDS
                 d3d8trace.py
+                dlltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d8.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d8types.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d8caps.py
@@ -74,7 +81,9 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
             DEPENDS
                 d3d9trace.py
+                dlltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py
@@ -101,7 +110,9 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
             DEPENDS
                 d3d10trace.py
+                dlltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
@@ -132,7 +143,9 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10_1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10_1trace.cpp
             DEPENDS
                 d3d10_1trace.py
+                dlltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
@@ -163,6 +176,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d11trace.cpp
             DEPENDS
                 d3d11trace.py
+                dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
@@ -193,6 +207,7 @@ if (WIN32)
                 wgltrace.py
                 gltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/wglapi.py
                 ${CMAKE_SOURCE_DIR}/specs/wglenum.py
                 ${CMAKE_SOURCE_DIR}/specs/glapi.py
@@ -204,10 +219,10 @@ if (WIN32)
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
         glcaps.cpp
-        ${CMAKE_SOURCE_DIR}/glproc_gl.cpp
     )
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
+        glproc_gl
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
@@ -237,7 +252,6 @@ elseif (APPLE)
     add_library (cgltrace SHARED
         cgltrace.cpp
         glcaps.cpp
-        ${CMAKE_SOURCE_DIR}/glproc_gl.cpp
     )
 
     add_dependencies (cgltrace glproc)
@@ -250,6 +264,7 @@ elseif (APPLE)
     )
 
     target_link_libraries (cgltrace
+        glproc_gl
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
@@ -277,7 +292,6 @@ elseif (X11_FOUND)
     add_library (glxtrace SHARED
         glxtrace.cpp
         glcaps.cpp
-        ${CMAKE_SOURCE_DIR}/glproc_gl.cpp
     )
 
     add_dependencies (glxtrace glproc)
@@ -291,6 +305,7 @@ elseif (X11_FOUND)
     )
 
     target_link_libraries (glxtrace
+        glproc_gl
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
@@ -323,7 +338,6 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     add_library (egltrace SHARED
         egltrace.cpp
         glcaps.cpp
-        ${CMAKE_SOURCE_DIR}/glproc_egl.cpp
     )
 
     add_dependencies (egltrace glproc)
@@ -337,6 +351,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     )
 
     target_link_libraries (egltrace
+        glproc_egl
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}

@@ -1,7 +1,10 @@
 ##############################################################################
 # API retracers
 
-include_directories (${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/dispatch
+)
 
 add_definitions (-DRETRACE)
 
@@ -47,13 +50,13 @@ add_dependencies (retrace_common glproc)
 if (WIN32 OR APPLE OR X11_FOUND)
     add_executable (glretrace
         ${glws_os}
-        ${CMAKE_SOURCE_DIR}/glproc_gl.cpp
     )
 
     add_dependencies (glretrace glproc)
 
     target_link_libraries (glretrace
         retrace_common
+        glproc_gl
         common
         ${PNG_LIBRARIES}
         ${ZLIB_LIBRARIES}
@@ -92,13 +95,13 @@ endif ()
 if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     add_executable (eglretrace
         glws_egl_xlib.cpp
-        ${CMAKE_SOURCE_DIR}/glproc_egl.cpp
     )
 
     add_dependencies (eglretrace glproc)
 
     target_link_libraries (eglretrace
         retrace_common
+        glproc_egl
         common
         ${PNG_LIBRARIES}
         ${ZLIB_LIBRARIES}
@@ -121,7 +124,9 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3dretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
         DEPENDS
                 d3dretrace.py
+                dllretrace.py
                 retrace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py

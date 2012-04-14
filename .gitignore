@@ -32,7 +32,6 @@ apitrace
 build
 dxsdk
 eglretrace
-glproc.hpp
 glretrace
 install_manifest.txt
 qapitrace

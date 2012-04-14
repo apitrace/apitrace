@@ -237,17 +237,6 @@ include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}/common
 )
 
-add_custom_command (
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/glproc.py > ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp
-    DEPENDS glproc.py dispatch.py specs/wglapi.py specs/glxapi.py specs/cglapi.py specs/eglapi.py specs/glesapi.py specs/glapi.py specs/gltypes.py specs/stdapi.py
-)
-
-# Wrap glproc.hpp as a target to prevent the command from being executed
-# multiple times simulatenously, when the targets that depend on it are built
-# in parallel.
-add_custom_target (glproc DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
-
 if (WIN32)
     set (os os_win32.cpp)
     set (glws_os glws_wgl.cpp)
@@ -296,14 +285,10 @@ endif ()
 
 
 ##############################################################################
-# API tracers
+# Sub-directories
 
+add_subdirectory (dispatch)
 add_subdirectory (wrappers)
-
-
-##############################################################################
-# API retracers
-
 add_subdirectory (retrace)
 
 

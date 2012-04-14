@@ -29,8 +29,8 @@ covers all the functions we support.
 """ 
 
 
-import specs.stdapi as stdapi
 from dispatch import Dispatcher
+import specs.stdapi as stdapi
 from specs.glapi import glapi
 from specs.glxapi import glxapi
 from specs.wglapi import wglapi
