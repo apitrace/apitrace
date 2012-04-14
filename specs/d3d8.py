@@ -67,18 +67,18 @@ IDirect3DIndexBuffer8 = Interface("IDirect3DIndexBuffer8", IDirect3DResource8)
 IDirect3DSurface8 = Interface("IDirect3DSurface8", IUnknown)
 IDirect3DVolume8 = Interface("IDirect3DVolume8", IUnknown)
 
-PDIRECT3D8 = Pointer(IDirect3D8)
-PDIRECT3DDEVICE8 = Pointer(IDirect3DDevice8)
-PDIRECT3DSWAPCHAIN8 = Pointer(IDirect3DSwapChain8)
-PDIRECT3DRESOURCE8 = Pointer(IDirect3DResource8)
-PDIRECT3DBASETEXTURE8 = Pointer(IDirect3DBaseTexture8)
-PDIRECT3DTEXTURE8 = Pointer(IDirect3DTexture8)
-PDIRECT3DVOLUMETEXTURE8 = Pointer(IDirect3DVolumeTexture8)
-PDIRECT3DCUBETEXTURE8 = Pointer(IDirect3DCubeTexture8)
-PDIRECT3DVERTEXBUFFER8 = Pointer(IDirect3DVertexBuffer8)
-PDIRECT3DINDEXBUFFER8 = Pointer(IDirect3DIndexBuffer8)
-PDIRECT3DSURFACE8 = Pointer(IDirect3DSurface8)
-PDIRECT3DVOLUME8 = Pointer(IDirect3DVolume8)
+PDIRECT3D8 = ObjPointer(IDirect3D8)
+PDIRECT3DDEVICE8 = ObjPointer(IDirect3DDevice8)
+PDIRECT3DSWAPCHAIN8 = ObjPointer(IDirect3DSwapChain8)
+PDIRECT3DRESOURCE8 = ObjPointer(IDirect3DResource8)
+PDIRECT3DBASETEXTURE8 = ObjPointer(IDirect3DBaseTexture8)
+PDIRECT3DTEXTURE8 = ObjPointer(IDirect3DTexture8)
+PDIRECT3DVOLUMETEXTURE8 = ObjPointer(IDirect3DVolumeTexture8)
+PDIRECT3DCUBETEXTURE8 = ObjPointer(IDirect3DCubeTexture8)
+PDIRECT3DVERTEXBUFFER8 = ObjPointer(IDirect3DVertexBuffer8)
+PDIRECT3DINDEXBUFFER8 = ObjPointer(IDirect3DIndexBuffer8)
+PDIRECT3DSURFACE8 = ObjPointer(IDirect3DSurface8)
+PDIRECT3DVOLUME8 = ObjPointer(IDirect3DVolume8)
 
 IDirect3D8.methods += [
     Method(HRESULT, "RegisterSoftwareDevice", [(OpaquePointer(Void), "pInitializeFunction")]),
@@ -259,7 +259,7 @@ IDirect3DSurface8.methods += [
     Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaquePointer(Const(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
     Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaquePointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
     Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
-    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
+    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")]),
     Method(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (DWORD, "Flags")]),
     Method(HRESULT, "UnlockRect", []),
@@ -270,7 +270,7 @@ IDirect3DVolume8.methods += [
     Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaquePointer(Const(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
     Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaquePointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
     Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
-    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
+    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVOLUME_DESC), "pDesc")]),
     Method(HRESULT, "LockBox", [Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (DWORD, "Flags")]),
     Method(HRESULT, "UnlockBox", []),

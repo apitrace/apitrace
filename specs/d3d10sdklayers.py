@@ -38,8 +38,8 @@ ID3D10Debug.methods += [
     Method(UINT, "GetFeatureMask", []),
     Method(HRESULT, "SetPresentPerRenderOpDelay", [(UINT, "Milliseconds")]),
     Method(UINT, "GetPresentPerRenderOpDelay", []),
-    Method(HRESULT, "SetSwapChain", [(Pointer(IDXGISwapChain), "pSwapChain")]),
-    Method(HRESULT, "GetSwapChain", [Out(Pointer(Pointer(IDXGISwapChain)), "ppSwapChain")]),
+    Method(HRESULT, "SetSwapChain", [(ObjPointer(IDXGISwapChain), "pSwapChain")]),
+    Method(HRESULT, "GetSwapChain", [Out(Pointer(ObjPointer(IDXGISwapChain)), "ppSwapChain")]),
     Method(HRESULT, "Validate", []),
 ]
 

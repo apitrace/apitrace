@@ -138,40 +138,40 @@ D3D11_SHADER_INPUT_BIND_DESC = Struct('D3D11_SHADER_INPUT_BIND_DESC', [
 
 ID3D11ShaderReflectionType.methods += [
     StdMethod(HRESULT, 'GetDesc', [Out(Pointer(D3D11_SHADER_TYPE_DESC), 'pDesc')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionType), 'GetMemberTypeByIndex', [(UINT, 'Index')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionType), 'GetMemberTypeByName', [(LPCSTR, 'Name')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionType), 'GetMemberTypeByIndex', [(UINT, 'Index')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionType), 'GetMemberTypeByName', [(LPCSTR, 'Name')]),
     StdMethod(LPCSTR, 'GetMemberTypeName', [(UINT, 'Index')]),
-    StdMethod(HRESULT, 'IsEqual', [(Pointer(ID3D11ShaderReflectionType), 'pType')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionType), 'GetSubType', []),
-    StdMethod(Pointer(ID3D11ShaderReflectionType), 'GetBaseClass', []),
+    StdMethod(HRESULT, 'IsEqual', [(ObjPointer(ID3D11ShaderReflectionType), 'pType')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionType), 'GetSubType', []),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionType), 'GetBaseClass', []),
     StdMethod(UINT, 'GetNumInterfaces', []),
-    StdMethod(Pointer(ID3D11ShaderReflectionType), 'GetInterfaceByIndex', [(UINT, 'uIndex')]),
-    StdMethod(HRESULT, 'IsOfType', [(Pointer(ID3D11ShaderReflectionType), 'pType')]),
-    StdMethod(HRESULT, 'ImplementsInterface', [(Pointer(ID3D11ShaderReflectionType), 'pBase')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionType), 'GetInterfaceByIndex', [(UINT, 'uIndex')]),
+    StdMethod(HRESULT, 'IsOfType', [(ObjPointer(ID3D11ShaderReflectionType), 'pType')]),
+    StdMethod(HRESULT, 'ImplementsInterface', [(ObjPointer(ID3D11ShaderReflectionType), 'pBase')]),
 ]
 
 ID3D11ShaderReflectionVariable.methods += [
     StdMethod(HRESULT, 'GetDesc', [Out(Pointer(D3D11_SHADER_VARIABLE_DESC), 'pDesc')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionType), 'GetType', []),
-    StdMethod(Pointer(ID3D11ShaderReflectionConstantBuffer), 'GetBuffer', []),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionType), 'GetType', []),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionConstantBuffer), 'GetBuffer', []),
     StdMethod(UINT, 'GetInterfaceSlot', [(UINT, 'uArrayIndex')]),
 ]
 
 ID3D11ShaderReflectionConstantBuffer.methods += [
     StdMethod(HRESULT, 'GetDesc', [(Pointer(D3D11_SHADER_BUFFER_DESC), 'pDesc')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionVariable), 'GetVariableByIndex', [(UINT, 'Index')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionVariable), 'GetVariableByName', [(LPCSTR, 'Name')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), 'GetVariableByIndex', [(UINT, 'Index')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), 'GetVariableByName', [(LPCSTR, 'Name')]),
 ]
 
 ID3D11ShaderReflection.methods += [
     StdMethod(HRESULT, 'GetDesc', [Out(Pointer(D3D11_SHADER_DESC), 'pDesc')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionConstantBuffer), 'GetConstantBufferByIndex', [(UINT, 'Index')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionConstantBuffer), 'GetConstantBufferByName', [(LPCSTR, 'Name')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionConstantBuffer), 'GetConstantBufferByIndex', [(UINT, 'Index')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionConstantBuffer), 'GetConstantBufferByName', [(LPCSTR, 'Name')]),
     StdMethod(HRESULT, 'GetResourceBindingDesc', [(UINT, 'ResourceIndex'), Out(Pointer(D3D11_SHADER_INPUT_BIND_DESC), 'pDesc')]),
     StdMethod(HRESULT, 'GetInputParameterDesc', [(UINT, 'ParameterIndex'), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), 'pDesc')]),
     StdMethod(HRESULT, 'GetOutputParameterDesc', [(UINT, 'ParameterIndex'), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), 'pDesc')]),
     StdMethod(HRESULT, 'GetPatchConstantParameterDesc', [(UINT, 'ParameterIndex'), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), 'pDesc')]),
-    StdMethod(Pointer(ID3D11ShaderReflectionVariable), 'GetVariableByName', [(LPCSTR, 'Name')]),
+    StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), 'GetVariableByName', [(LPCSTR, 'Name')]),
     StdMethod(HRESULT, 'GetResourceBindingDescByName', [(LPCSTR, 'Name'), Out(Pointer(D3D11_SHADER_INPUT_BIND_DESC), 'pDesc')]),
     StdMethod(UINT, 'GetMovInstructionCount', []),
     StdMethod(UINT, 'GetMovcInstructionCount', []),

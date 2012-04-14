@@ -254,9 +254,6 @@ class WrapDecider(stdapi.Traverser):
     def __init__(self):
         self.needsWrapping = False
 
-    def visitVoid(self, void):
-        raise NotImplementedError
-
     def visitLinearPointer(self, void):
         pass
 
@@ -288,13 +285,16 @@ class ValueWrapper(stdapi.Traverser):
         print "    }"
     
     def visitObjPointer(self, pointer, instance):
-        print "    if (%s) {" % instance
-        self.visit(pointer.type, "*" + instance)
-        print "    }"
+        elem_type = pointer.type.mutable()
+        if isinstance(elem_type, stdapi.Interface):
+            self.visitInterfacePointer(elem_type, instance)
+        else:
+            self.visitPointer(self, pointer, instance)
     
     def visitInterface(self, interface, instance):
-        assert instance.startswith('*')
-        instance = instance[1:]
+        raise NotImplementedError
+
+    def visitInterfacePointer(self, interface, instance):
         print "    if (%s) {" % instance
         print "        %s = new %s(%s);" % (instance, getWrapperInterfaceName(interface), instance)
         print "    }"
@@ -323,9 +323,7 @@ class ValueUnwrapper(ValueWrapper):
         print "        %s = _t;" % instance
         print "    }"
 
-    def visitInterface(self, interface, instance):
-        assert instance.startswith('*')
-        instance = instance[1:]
+    def visitInterfacePointer(self, interface, instance):
         print r'    if (%s) {' % instance
         print r'        const %s *pWrapper = static_cast<const %s*>(%s);' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), instance)
         print r'        if (pWrapper && pWrapper->m_dwMagic == 0xd8365d6c) {'
@@ -447,6 +445,7 @@ class Tracer:
         self.serializeValue(arg.type, arg.name)
 
     def wrapArg(self, function, arg):
+        assert not isinstance(arg.type, stdapi.ObjPointer)
         self.wrapValue(arg.type, arg.name)
 
     def unwrapArg(self, function, arg):
@@ -535,7 +534,6 @@ class Tracer:
         print '    trace::localWriter.endArg();'
 
         from specs.winapi import REFIID
-        from specs.stdapi import Pointer, Opaque, Interface
 
         riid = None
         for arg in method.args:
@@ -553,12 +551,13 @@ class Tracer:
             if arg.output:
                 self.serializeArg(method, arg)
                 self.wrapArg(method, arg)
-                if riid is not None and isinstance(arg.type, Pointer):
-                    if isinstance(arg.type.type, Opaque):
-                        self.wrapIid(interface, method, riid, arg)
-                    else:
-                        assert isinstance(arg.type.type, Pointer)
-                        assert isinstance(arg.type.type.type, Interface)
+                if riid is not None and isinstance(arg.type, stdapi.Pointer):
+                    assert isinstance(arg.type.type, stdapi.ObjPointer)
+                    obj_type = arg.type.type.type
+                    assert obj_type is stdapi.Void
+                    self.wrapIid(interface, method, riid, arg)
+                    riid = None
+        assert riid is None
 
         if method.type is not stdapi.Void:
             print '    trace::localWriter.beginReturn();'

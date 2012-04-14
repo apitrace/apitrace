@@ -48,11 +48,11 @@ ID3D11Debug.methods += [
     StdMethod(D3D11_DEBUG_FEATURE, 'GetFeatureMask', []),
     StdMethod(HRESULT, 'SetPresentPerRenderOpDelay', [(UINT, 'Milliseconds')]),
     StdMethod(UINT, 'GetPresentPerRenderOpDelay', []),
-    StdMethod(HRESULT, 'SetSwapChain', [(Pointer(IDXGISwapChain), 'pSwapChain')]),
-    StdMethod(HRESULT, 'GetSwapChain', [Out(Pointer(Pointer(IDXGISwapChain)), 'ppSwapChain')]),
-    StdMethod(HRESULT, 'ValidateContext', [(Pointer(ID3D11DeviceContext), 'pContext')]),
+    StdMethod(HRESULT, 'SetSwapChain', [(ObjPointer(IDXGISwapChain), 'pSwapChain')]),
+    StdMethod(HRESULT, 'GetSwapChain', [Out(Pointer(ObjPointer(IDXGISwapChain)), 'ppSwapChain')]),
+    StdMethod(HRESULT, 'ValidateContext', [(ObjPointer(ID3D11DeviceContext), 'pContext')]),
     StdMethod(HRESULT, 'ReportLiveDeviceObjects', [(D3D11_RLDO_FLAGS, 'Flags')]),
-    StdMethod(HRESULT, 'ValidateContextForDispatch', [(Pointer(ID3D11DeviceContext), 'pContext')]),
+    StdMethod(HRESULT, 'ValidateContextForDispatch', [(ObjPointer(ID3D11DeviceContext), 'pContext')]),
 ]
 
 ID3D11SwitchToRef = Interface('ID3D11SwitchToRef', IUnknown)

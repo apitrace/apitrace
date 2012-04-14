@@ -30,9 +30,6 @@ from ddraw import *
 from d3dtypes import *
 from d3dcaps import *
 
-def OutPointer(type):
-    return Out(Pointer(type), "out")
-
 d3dnextFlags = Flags(DWORD, [
     "D3DNEXT_NEXT",
     "D3DNEXT_HEAD",
@@ -155,31 +152,31 @@ IDirect3DViewport3 = Interface("IDirect3DViewport3", IDirect3DViewport2)
 IDirect3DVertexBuffer = Interface("IDirect3DVertexBuffer", IUnknown)
 IDirect3DVertexBuffer7 = Interface("IDirect3DVertexBuffer7", IUnknown)
 
-LPUNKNOWN = Pointer(IUnknown)
+LPUNKNOWN = ObjPointer(IUnknown)
 
-LPDIRECT3D = Pointer(IDirect3D)
-LPDIRECT3DDEVICE = Pointer(IDirect3DDevice)
-LPDIRECT3DEXECUTEBUFFER = Pointer(IDirect3DExecuteBuffer)
-LPDIRECT3DLIGHT = Pointer(IDirect3DLight)
-LPDIRECT3DMATERIAL = Pointer(IDirect3DMaterial)
-LPDIRECT3DTEXTURE = Pointer(IDirect3DTexture)
-LPDIRECT3DVIEWPORT = Pointer(IDirect3DViewport)
+LPDIRECT3D = ObjPointer(IDirect3D)
+LPDIRECT3DDEVICE = ObjPointer(IDirect3DDevice)
+LPDIRECT3DEXECUTEBUFFER = ObjPointer(IDirect3DExecuteBuffer)
+LPDIRECT3DLIGHT = ObjPointer(IDirect3DLight)
+LPDIRECT3DMATERIAL = ObjPointer(IDirect3DMaterial)
+LPDIRECT3DTEXTURE = ObjPointer(IDirect3DTexture)
+LPDIRECT3DVIEWPORT = ObjPointer(IDirect3DViewport)
 
-LPDIRECT3D2 = Pointer(IDirect3D2)
-LPDIRECT3DDEVICE2 = Pointer(IDirect3DDevice2)
-LPDIRECT3DMATERIAL2 = Pointer(IDirect3DMaterial2)
-LPDIRECT3DTEXTURE2 = Pointer(IDirect3DTexture2)
-LPDIRECT3DVIEWPORT2 = Pointer(IDirect3DViewport2)
+LPDIRECT3D2 = ObjPointer(IDirect3D2)
+LPDIRECT3DDEVICE2 = ObjPointer(IDirect3DDevice2)
+LPDIRECT3DMATERIAL2 = ObjPointer(IDirect3DMaterial2)
+LPDIRECT3DTEXTURE2 = ObjPointer(IDirect3DTexture2)
+LPDIRECT3DVIEWPORT2 = ObjPointer(IDirect3DViewport2)
 
-LPDIRECT3D3 = Pointer(IDirect3D3)
-LPDIRECT3DDEVICE3 = Pointer(IDirect3DDevice3)
-LPDIRECT3DMATERIAL3 = Pointer(IDirect3DMaterial3)
-LPDIRECT3DVIEWPORT3 = Pointer(IDirect3DViewport3)
-LPDIRECT3DVERTEXBUFFER = Pointer(IDirect3DVertexBuffer)
+LPDIRECT3D3 = ObjPointer(IDirect3D3)
+LPDIRECT3DDEVICE3 = ObjPointer(IDirect3DDevice3)
+LPDIRECT3DMATERIAL3 = ObjPointer(IDirect3DMaterial3)
+LPDIRECT3DVIEWPORT3 = ObjPointer(IDirect3DViewport3)
+LPDIRECT3DVERTEXBUFFER = ObjPointer(IDirect3DVertexBuffer)
 
-LPDIRECT3D7 = Pointer(IDirect3D7)
-LPDIRECT3DDEVICE7 = Pointer(IDirect3DDevice7)
-LPDIRECT3DVERTEXBUFFER7 = Pointer(IDirect3DVertexBuffer7)
+LPDIRECT3D7 = ObjPointer(IDirect3D7)
+LPDIRECT3DDEVICE7 = ObjPointer(IDirect3DDevice7)
+LPDIRECT3DVERTEXBUFFER7 = ObjPointer(IDirect3DVertexBuffer7)
 
 IDirect3D.methods += [
     Method(HRESULT, "Initialize", [(REFCLSID, "riid")]),

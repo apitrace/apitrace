@@ -106,15 +106,15 @@ DXGI_SHARED_RESOURCE = Struct("DXGI_SHARED_RESOURCE", [
 
 IDXGIObject = Interface("IDXGIObject", IUnknown)
 IDXGIObject.methods += [
-    Method(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "data_size"), (OpaquePointer(Const(Void)), "data")]),
+    Method(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "data_size"), (OpaqueBlob(Const(Void), "data_size"), "data")]),
     Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "object")]),
     Method(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "data_size"), Out(OpaquePointer(Void), "data")]),
-    Method(HRESULT, "GetParent", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "parent")]),
+    Method(HRESULT, "GetParent", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "parent")]),
 ]
 
 IDXGIDeviceSubObject = Interface("IDXGIDeviceSubObject", IDXGIObject)
 IDXGIDeviceSubObject.methods += [
-    Method(HRESULT, "GetDevice", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "device")]),
+    Method(HRESULT, "GetDevice", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "device")]),
 ]
 
 IDXGISurface = Interface("IDXGISurface", IDXGIDeviceSubObject)
@@ -128,21 +128,21 @@ IDXGIOutput = Interface("IDXGIOutput", IDXGIObject)
 IDXGIOutput.methods += [
     Method(HRESULT, "GetDesc", [Out(Pointer(DXGI_OUTPUT_DESC), "desc")]),
     Method(HRESULT, "GetDisplayModeList", [(DXGI_FORMAT, "format"), (UINT, "flags"), Out(Pointer(UINT), "mode_count"), Out(Array(DXGI_MODE_DESC, "*mode_count"), "desc")]),
-    Method(HRESULT, "FindClosestMatchingMode", [(Pointer(Const(DXGI_MODE_DESC)), "mode"), Out(Pointer(DXGI_MODE_DESC), "closest_match"), (Pointer(IUnknown), "device")]),
+    Method(HRESULT, "FindClosestMatchingMode", [(Pointer(Const(DXGI_MODE_DESC)), "mode"), Out(Pointer(DXGI_MODE_DESC), "closest_match"), (ObjPointer(IUnknown), "device")]),
     Method(HRESULT, "WaitForVBlank", []),
-    Method(HRESULT, "TakeOwnership", [(Pointer(IUnknown), "device"), (BOOL, "exclusive")]),
+    Method(HRESULT, "TakeOwnership", [(ObjPointer(IUnknown), "device"), (BOOL, "exclusive")]),
     Method(Void, "ReleaseOwnership", []),
     Method(HRESULT, "GetGammaControlCapabilities", [Out(Pointer(DXGI_GAMMA_CONTROL_CAPABILITIES), "gamma_caps")]),
     Method(HRESULT, "SetGammaControl", [(Pointer(Const(DXGI_GAMMA_CONTROL)), "gamma_control")]),
     Method(HRESULT, "GetGammaControl", [Out(Pointer(DXGI_GAMMA_CONTROL), "gamma_control")]),
-    Method(HRESULT, "SetDisplaySurface", [(Pointer(IDXGISurface), "surface")]),
-    Method(HRESULT, "GetDisplaySurfaceData", [(Pointer(IDXGISurface), "surface")]),
+    Method(HRESULT, "SetDisplaySurface", [(ObjPointer(IDXGISurface), "surface")]),
+    Method(HRESULT, "GetDisplaySurfaceData", [(ObjPointer(IDXGISurface), "surface")]),
     Method(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "stats")]),
 ]
 
 IDXGIAdapter = Interface("IDXGIAdapter", IDXGIObject)
 IDXGIAdapter.methods += [
-    Method(HRESULT, "EnumOutputs", [(UINT, "output_idx"), Out(Pointer(Pointer(IDXGIOutput)), "output")]),
+    Method(HRESULT, "EnumOutputs", [(UINT, "output_idx"), Out(Pointer(ObjPointer(IDXGIOutput)), "output")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(DXGI_ADAPTER_DESC), "desc")]),
     Method(HRESULT, "CheckInterfaceSupport", [(REFGUID, "guid"), Out(Pointer(LARGE_INTEGER), "umd_version")]),
 ]
@@ -150,33 +150,33 @@ IDXGIAdapter.methods += [
 IDXGISwapChain = Interface("IDXGISwapChain", IDXGIDeviceSubObject)
 IDXGISwapChain.methods += [
     Method(HRESULT, "Present", [(UINT, "sync_interval"), (UINT, "flags")]),
-    Method(HRESULT, "GetBuffer", [(UINT, "buffer_idx"), (REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "surface")]),
-    Method(HRESULT, "SetFullscreenState", [(BOOL, "fullscreen"), (Pointer(IDXGIOutput), "target")]),
-    Method(HRESULT, "GetFullscreenState", [Out(Pointer(BOOL), "fullscreen"), Out(Pointer(Pointer(IDXGIOutput)), "target")]),
+    Method(HRESULT, "GetBuffer", [(UINT, "buffer_idx"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "surface")]),
+    Method(HRESULT, "SetFullscreenState", [(BOOL, "fullscreen"), (ObjPointer(IDXGIOutput), "target")]),
+    Method(HRESULT, "GetFullscreenState", [Out(Pointer(BOOL), "fullscreen"), Out(Pointer(ObjPointer(IDXGIOutput)), "target")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(DXGI_SWAP_CHAIN_DESC), "desc")]),
     Method(HRESULT, "ResizeBuffers", [(UINT, "buffer_count"), (UINT, "width"), (UINT, "height"), (DXGI_FORMAT, "format"), (UINT, "flags")]),
     Method(HRESULT, "ResizeTarget", [(Pointer(Const(DXGI_MODE_DESC)), "target_mode_desc")]),
-    Method(HRESULT, "GetContainingOutput", [Out(Pointer(Pointer(IDXGIOutput)), "output")]),
+    Method(HRESULT, "GetContainingOutput", [Out(Pointer(ObjPointer(IDXGIOutput)), "output")]),
     Method(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "stats")]),
     Method(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "last_present_count")]),
 ]
 
 IDXGIFactory = Interface("IDXGIFactory", IDXGIObject)
 IDXGIFactory.methods += [
-    Method(HRESULT, "EnumAdapters", [(UINT, "adapter_idx"), Out(Pointer(Pointer(IDXGIAdapter)), "adapter")]),
+    Method(HRESULT, "EnumAdapters", [(UINT, "adapter_idx"), Out(Pointer(ObjPointer(IDXGIAdapter)), "adapter")]),
     Method(HRESULT, "MakeWindowAssociation", [(HWND, "window"), (UINT, "flags")]),
     Method(HRESULT, "GetWindowAssociation", [Out(Pointer(HWND), "window")]),
-    Method(HRESULT, "CreateSwapChain", [(Pointer(IUnknown), "device"), (Pointer(DXGI_SWAP_CHAIN_DESC), "desc"), Out(Pointer(Pointer(IDXGISwapChain)), "swapchain")]),
-    Method(HRESULT, "CreateSoftwareAdapter", [(HMODULE, "swrast"), Out(Pointer(Pointer(IDXGIAdapter)), "adapter")]),
+    Method(HRESULT, "CreateSwapChain", [(ObjPointer(IUnknown), "device"), (Pointer(DXGI_SWAP_CHAIN_DESC), "desc"), Out(Pointer(ObjPointer(IDXGISwapChain)), "swapchain")]),
+    Method(HRESULT, "CreateSoftwareAdapter", [(HMODULE, "swrast"), Out(Pointer(ObjPointer(IDXGIAdapter)), "adapter")]),
 ]
 
-#StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), (Pointer(OpaquePointer(Void)), "factory")]),
+#StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "factory")]),
 
 IDXGIDevice = Interface("IDXGIDevice", IDXGIObject)
 IDXGIDevice.methods += [
-    Method(HRESULT, "GetAdapter", [Out(Pointer(Pointer(IDXGIAdapter)), "adapter")]),
-    Method(HRESULT, "CreateSurface", [(Pointer(Const(DXGI_SURFACE_DESC)), "desc"), (UINT, "surface_count"), (DXGI_USAGE, "usage"), (Pointer(Const(DXGI_SHARED_RESOURCE)), "shared_resource"), Out(Pointer(Pointer(IDXGISurface)), "surface")]),
-    Method(HRESULT, "QueryResourceResidency", [(Array(Const(OpaquePointer(IUnknown)), "resource_count"), "resources"), Out(Array(DXGI_RESIDENCY, "resource_count"), "residency"), (UINT, "resource_count")]),
+    Method(HRESULT, "GetAdapter", [Out(Pointer(ObjPointer(IDXGIAdapter)), "adapter")]),
+    Method(HRESULT, "CreateSurface", [(Pointer(Const(DXGI_SURFACE_DESC)), "desc"), (UINT, "surface_count"), (DXGI_USAGE, "usage"), (Pointer(Const(DXGI_SHARED_RESOURCE)), "shared_resource"), Out(Pointer(ObjPointer(IDXGISurface)), "surface")]),
+    Method(HRESULT, "QueryResourceResidency", [(Array(Const(ObjPointer(IUnknown)), "resource_count"), "resources"), Out(Array(DXGI_RESIDENCY, "resource_count"), "residency"), (UINT, "resource_count")]),
     Method(HRESULT, "SetGPUThreadPriority", [(INT, "priority")]),
     Method(HRESULT, "GetGPUThreadPriority", [Out(Pointer(INT), "priority")]),
 ]

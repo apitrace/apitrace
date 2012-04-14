@@ -30,7 +30,7 @@ from d3d10sdklayers import *
 from d3d10 import *
 
 ID3D10Blob = Interface("ID3D10Blob", IUnknown)
-LPD3D10BLOB = Pointer(ID3D10Blob)
+LPD3D10BLOB = ObjPointer(ID3D10Blob)
 
 ID3D10Blob.methods += [
     Method(LPVOID, "GetBufferPointer", []),
@@ -104,15 +104,15 @@ ID3D10ShaderResourceView1.methods += [
 
 ID3D10Device1 = Interface("ID3D10Device1", ID3D10Device)
 ID3D10Device1.methods += [
-    Method(HRESULT, "CreateShaderResourceView1", [(Pointer(ID3D10Resource), "pResource"), Out(Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC1)), "pDesc"), Out(Pointer(Pointer(ID3D10ShaderResourceView1)), "ppSRView")]),
-    Method(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D10_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(Pointer(ID3D10BlendState1)), "ppBlendState")]),
+    Method(HRESULT, "CreateShaderResourceView1", [(ObjPointer(ID3D10Resource), "pResource"), Out(Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC1)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView1)), "ppSRView")]),
+    Method(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D10_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D10BlendState1)), "ppBlendState")]),
     Method(D3D10_FEATURE_LEVEL1, "GetFeatureLevel", []),
 ]
 
 d3d10_1 = API("d3d10_1")
 d3d10_1.addFunctions([
-    StdFunction(HRESULT, "D3D10CreateDevice1", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D10_CREATE_DEVICE_FLAG, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), Out(Pointer(Pointer(ID3D10Device1)), "ppDevice")]),
-    StdFunction(HRESULT, "D3D10CreateDeviceAndSwapChain1", [(Pointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D10_CREATE_DEVICE_FLAG, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), Out(Pointer(Pointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(Pointer(ID3D10Device1)), "ppDevice")]),
+    StdFunction(HRESULT, "D3D10CreateDevice1", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D10_CREATE_DEVICE_FLAG, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), Out(Pointer(ObjPointer(ID3D10Device1)), "ppDevice")]),
+    StdFunction(HRESULT, "D3D10CreateDeviceAndSwapChain1", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D10_CREATE_DEVICE_FLAG, "Flags"), (D3D10_FEATURE_LEVEL1, "HardwareLevel"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), Out(Pointer(ObjPointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(ObjPointer(ID3D10Device1)), "ppDevice")]),
     StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), Out(Pointer(LPD3D10BLOB), "ppBuffer")]),
 ])
 
