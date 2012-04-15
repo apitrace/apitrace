@@ -108,8 +108,7 @@ GLfeedback = Handle("feedback", GLuint)
 # reconstructed from other state.
 GLmap = LinearPointer(GLvoid, "length")
 
-GLsync_ = IntPointer("GLsync")
-GLsync = Handle("sync", GLsync_)
+GLsync = Handle("sync", IntPointer("GLsync"))
 
 GLenum = Enum("GLenum", [
     # Parameters are added later from glparams.py's parameter table
