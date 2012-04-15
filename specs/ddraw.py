@@ -1641,7 +1641,7 @@ ddraw.addFunctions([
     StdFunction(HRESULT, "DirectDrawEnumerateExW", [(LPDDENUMCALLBACKEXW, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
     StdFunction(HRESULT, "DirectDrawEnumerateExA", [(LPDDENUMCALLBACKEXA, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
     StdFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (LPUNKNOWN, "pUnkOuter")]),
-    StdFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(LPVOID), "lplpDD"), (REFIID, "iid"), (LPUNKNOWN, "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(ObjPointer(Void)), "lplpDD"), (REFIID, "iid"), (LPUNKNOWN, "pUnkOuter")]),
     StdFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
     StdFunction(Void, "AcquireDDThreadLock", []),
     StdFunction(Void, "ReleaseDDThreadLock", []),

@@ -432,6 +432,7 @@ class Method(Function):
             s += ' const'
         return s
 
+
 def StdMethod(*args, **kwargs):
     kwargs.setdefault('call', '__stdcall')
     return Method(*args, **kwargs)

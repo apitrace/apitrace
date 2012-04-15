@@ -37,17 +37,6 @@ class DDrawTracer(DllTracer):
 
         DllTracer.traceFunctionImplBody(self, function)
 
-    def serializeArg(self, function, arg):
-        if function.name == 'DirectDrawCreateEx' and arg.name == 'lplpDD':
-            print '    if (*lplpDD) {'
-            for iface in interfaces:
-                print '        if (iid == IID_%s) {' % iface.name
-                print '            *lplpDD = (LPVOID) new Wrap%s((%s *)*lplpDD);' % (iface.name, iface.name)
-                print '        }'
-            print '    }'
-
-        DllTracer.serializeArg(self, function, arg)
-
 
 if __name__ == '__main__':
     print '#define INITGUID'
