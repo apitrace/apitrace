@@ -32,16 +32,17 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (ddraw MODULE ddraw.def ddrawtrace.cpp)
-        target_link_libraries (ddraw
+        add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
+        target_link_libraries (ddrawtrace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
-        set_target_properties (ddraw
-            PROPERTIES PREFIX ""
+        set_target_properties (ddrawtrace PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME ddraw
         )
-        install (TARGETS ddraw LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS ddrawtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d8.dll
@@ -61,16 +62,17 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d8 MODULE d3d8.def d3d8trace.cpp d3dshader.cpp)
-        target_link_libraries (d3d8
+        add_library (d3d8trace MODULE d3d8.def d3d8trace.cpp d3dshader.cpp)
+        target_link_libraries (d3d8trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
-        set_target_properties (d3d8
-            PROPERTIES PREFIX ""
+        set_target_properties (d3d8trace PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME d3d8
         )
-        install (TARGETS d3d8 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS d3d8trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d9.dll
@@ -90,16 +92,17 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d9 MODULE d3d9.def d3d9trace.cpp d3dshader.cpp)
-        target_link_libraries (d3d9
+        add_library (d3d9trace MODULE d3d9.def d3d9trace.cpp d3dshader.cpp)
+        target_link_libraries (d3d9trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
-        set_target_properties (d3d9
-            PROPERTIES PREFIX ""
+        set_target_properties (d3d9trace PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME d3d9
         )
-        install (TARGETS d3d9 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS d3d9trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d10.dll
@@ -123,16 +126,17 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d10 MODULE d3d10.def d3d10trace.cpp)
-        target_link_libraries (d3d10
+        add_library (d3d10trace MODULE d3d10.def d3d10trace.cpp)
+        target_link_libraries (d3d10trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
-        set_target_properties (d3d10
-            PROPERTIES PREFIX ""
+        set_target_properties (d3d10trace PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME d3d10
         )
-        install (TARGETS d3d10 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS d3d10trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d10_1.dll
@@ -156,16 +160,17 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d10_1 MODULE d3d10_1.def d3d10_1trace.cpp)
-        target_link_libraries (d3d10_1
+        add_library (d3d10_1trace MODULE d3d10_1.def d3d10_1trace.cpp)
+        target_link_libraries (d3d10_1trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
-        set_target_properties (d3d10_1
+        set_target_properties (d3d10_1trace
             PROPERTIES PREFIX ""
+            OUTPUT_NAME d3d10_1
         )
-        install (TARGETS d3d10_1 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS d3d10_1trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d11.dll
@@ -187,16 +192,17 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d11 MODULE d3d11.def d3d11trace.cpp)
-        target_link_libraries (d3d11
+        add_library (d3d11trace MODULE d3d11.def d3d11trace.cpp)
+        target_link_libraries (d3d11trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
-        set_target_properties (d3d11
+        set_target_properties (d3d11trace
             PROPERTIES PREFIX ""
+            OUTPUT_NAME d3d11
         )
-        install (TARGETS d3d11 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS d3d11trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # opengl32.dll
