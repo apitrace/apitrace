@@ -365,10 +365,7 @@ class Tracer:
         print
 
         # Interfaces wrapers
-        interfaces = api.getAllInterfaces()
-        map(self.declareWrapperInterface, interfaces)
-        map(self.implementWrapperInterface, interfaces)
-        print
+        self.traceInterfaces(api)
 
         # Function wrappers
         self.interface = None
@@ -496,6 +493,15 @@ class Tracer:
             visitor = ValueUnwrapper()
             visitor.visit(type, instance)
 
+    def traceInterfaces(self, api):
+        interfaces = api.getAllInterfaces()
+        if not interfaces:
+            return
+        map(self.declareWrapperInterface, interfaces)
+        self.implementIidWrapper(api)
+        map(self.implementWrapperInterface, interfaces)
+        print
+
     def declareWrapperInterface(self, interface):
         print "class %s : public %s " % (getWrapperInterfaceName(interface), interface.name)
         print "{"
@@ -577,33 +583,47 @@ class Tracer:
             print '    if (!__result)'
             print '        delete this;'
 
+    def implementIidWrapper(self, api):
+        print r'static void'
+        print r'warnIID(const char *functionName, REFIID riid, const char *reason) {'
+        print r'    os::log("apitrace: warning: %s: %s IID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+        print r'            functionName, reason,'
+        print r'            riid.Data1, riid.Data2, riid.Data3,'
+        print r'            riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6], riid.Data4[7]);'
+        print r'}'
+        print 
+        print r'static void'
+        print r'wrapIID(const char *functionName, REFIID riid, void * * ppvObj) {'
+        print r'    if (!ppvObj || !*ppvObj) {'
+        print r'        return;'
+        print r'    }'
+        else_ = ''
+        for iface in api.getAllInterfaces():
+            print r'    %sif (riid == IID_%s) {' % (else_, iface.name)
+            print r'        *ppvObj = new Wrap%s((%s *) *ppvObj);' % (iface.name, iface.name)
+            print r'    }'
+            else_ = 'else '
+        print r'    %s{' % else_
+        print r'        warnIID(functionName, riid, "unknown");'
+        print r'    }'
+        print r'}'
+        print
+
     def wrapIid(self, function, riid, out):
         print r'    if (%s && *%s) {' % (out.name, out.name)
-        function_name = function.name
+        functionName = function.name
         else_ = ''
         if self.interface is not None:
-            function_name = self.interface.name + '::' + function_name
+            functionName = self.interface.name + '::' + functionName
             print r'        %sif (*%s == m_pInstance) {' % (else_, out.name,)
             print r'            *%s = this;' % (out.name,)
-            print r'        }'
-            else_ = 'else '
-        for iface in self.api.getAllInterfaces():
-            print r'        %sif (%s == IID_%s) {' % (else_, riid.name, iface.name)
-            print r'            *%s = new Wrap%s((%s *) *%s);' % (out.name, iface.name, iface.name, out.name)
+            print r'            if (%s) {' % ' && '.join('%s != IID_%s' % (riid.name, iface.name) for iface in self.interface.iterBases()) 
+            print r'                warnIID("%s", %s, "unexpected");' % (functionName, riid.name)
+            print r'            }'
             print r'        }'
             else_ = 'else '
         print r'        %s{' % else_
-        print r'            os::log("apitrace: warning: %s: unknown IID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
-        print r'                    "%s",' % (function_name)
-        print r'                    %s.Data1, %s.Data2, %s.Data3,' % (riid.name, riid.name, riid.name)
-        print r'                    %s.Data4[0],' % (riid.name,)
-        print r'                    %s.Data4[1],' % (riid.name,)
-        print r'                    %s.Data4[2],' % (riid.name,)
-        print r'                    %s.Data4[3],' % (riid.name,)
-        print r'                    %s.Data4[4],' % (riid.name,)
-        print r'                    %s.Data4[5],' % (riid.name,)
-        print r'                    %s.Data4[6],' % (riid.name,)
-        print r'                    %s.Data4[7]);' % (riid.name,)
+        print r'             wrapIID("%s", %s, %s);' % (functionName, riid.name, out.name) 
         print r'        }'
         print r'    }'
 
