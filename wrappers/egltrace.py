@@ -33,7 +33,6 @@
 
 
 from gltrace import GlTracer
-from dispatch import function_pointer_type, function_pointer_value
 from specs.stdapi import API
 from specs.glapi import glapi
 from specs.eglapi import eglapi
@@ -45,6 +44,10 @@ class EglTracer(GlTracer):
     def isFunctionPublic(self, function):
         # The symbols visible in libEGL.so can vary, so expose them all
         return True
+
+    getProcAddressFunctionNames = [
+        "eglGetProcAddress",
+    ]
 
     def traceFunctionImplBody(self, function):
         GlTracer.traceFunctionImplBody(self, function)
@@ -64,12 +67,6 @@ class EglTracer(GlTracer):
             print '            tr->profile = gltrace::PROFILE_ES2;'
             print '    }'
 
-    def wrapRet(self, function, instance):
-        GlTracer.wrapRet(self, function, instance)
-
-        if function.name == "eglGetProcAddress":
-            print '    %s = __unwrap_proc_addr(procname, %s);' % (instance, instance)
-
 
 if __name__ == '__main__':
     print '#include <stdlib.h>'
@@ -85,31 +82,14 @@ if __name__ == '__main__':
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
-    print 'static __eglMustCastToProperFunctionPointerType __unwrap_proc_addr(const char * procname, __eglMustCastToProperFunctionPointerType procPtr);'
-    print
-
+    
     api = API()
     api.addApi(eglapi)
     api.addApi(glapi)
     api.addApi(glesapi)
     tracer = EglTracer()
-    tracer.trace_api(api)
+    tracer.traceApi(api)
 
-    print 'static __eglMustCastToProperFunctionPointerType __unwrap_proc_addr(const char * procname, __eglMustCastToProperFunctionPointerType procPtr) {'
-    print '    if (!procPtr) {'
-    print '        return procPtr;'
-    print '    }'
-    for f in api.functions:
-        ptype = function_pointer_type(f)
-        pvalue = function_pointer_value(f)
-        print '    if (!strcmp("%s", procname)) {' % f.name
-        print '        %s = (%s)procPtr;' % (pvalue, ptype)
-        print '        return (__eglMustCastToProperFunctionPointerType)&%s;' % (f.name,)
-        print '    }'
-    print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", procname);'
-    print '    return procPtr;'
-    print '}'
-    print
     print r'''
 
 

@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-"""Cgl tracing generator."""
+"""CGL tracing generator."""
 
 
 from gltrace import GlTracer
@@ -36,7 +36,7 @@ from specs.cglapi import cglapi
 class CglTracer(GlTracer):
 
     def isFunctionPublic(self, function):
-        # The symbols visible in libGL.dylib can vary, so expose them all
+        # all OpenGL symbols are visible on MacOSX
         return True
 
 
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     api.addApi(cglapi)
     api.addApi(glapi)
     tracer = CglTracer()
-    tracer.trace_api(api)
+    tracer.traceApi(api)
 
     print r'''
 

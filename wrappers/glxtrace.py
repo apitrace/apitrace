@@ -29,7 +29,6 @@
 
 
 from gltrace import GlTracer
-from dispatch import function_pointer_type, function_pointer_value
 from specs.stdapi import API
 from specs.glapi import glapi
 from specs.glxapi import glxapi
@@ -41,11 +40,10 @@ class GlxTracer(GlTracer):
         # The symbols visible in libGL.so can vary, so expose them all
         return True
 
-    def wrapRet(self, function, instance):
-        GlTracer.wrapRet(self, function, instance)
-
-        if function.name in ("glXGetProcAddress", "glXGetProcAddressARB"):
-            print '    %s = __unwrap_proc_addr(procName, %s);' % (instance, instance)
+    getProcAddressFunctionNames = [
+        "glXGetProcAddress",
+        "glXGetProcAddressARB",
+    ]
 
 
 if __name__ == '__main__':
@@ -67,30 +65,13 @@ if __name__ == '__main__':
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
-    print 'static __GLXextFuncPtr __unwrap_proc_addr(const GLubyte * procName, __GLXextFuncPtr procPtr);'
-    print
 
     api = API()
     api.addApi(glxapi)
     api.addApi(glapi)
     tracer = GlxTracer()
-    tracer.trace_api(api)
+    tracer.traceApi(api)
 
-    print 'static __GLXextFuncPtr __unwrap_proc_addr(const GLubyte * procName, __GLXextFuncPtr procPtr) {'
-    print '    if (!procPtr) {'
-    print '        return procPtr;'
-    print '    }'
-    for f in api.functions:
-        ptype = function_pointer_type(f)
-        pvalue = function_pointer_value(f)
-        print '    if (strcmp("%s", (const char *)procName) == 0) {' % f.name
-        print '        %s = (%s)procPtr;' % (pvalue, ptype)
-        print '        return (__GLXextFuncPtr)&%s;' % (f.name,)
-        print '    }'
-    print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", (const char *)procName);'
-    print '    return procPtr;'
-    print '}'
-    print
     print r'''
 
 

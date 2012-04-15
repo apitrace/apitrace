@@ -348,7 +348,7 @@ class Tracer:
 
         return ValueSerializer()
 
-    def trace_api(self, api):
+    def traceApi(self, api):
         self.api = api
 
         self.header(api)

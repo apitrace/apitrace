@@ -28,8 +28,6 @@
 
 
 from gltrace import GlTracer
-from dispatch import function_pointer_type, function_pointer_value
-from codegen import *
 from specs.stdapi import API
 from specs.glapi import glapi
 from specs.wglapi import wglapi
@@ -37,26 +35,9 @@ from specs.wglapi import wglapi
 
 class WglTracer(GlTracer):
 
-    def wrapRet(self, function, instance):
-        GlTracer.wrapRet(self, function, instance)
-
-        if function.name == "wglGetProcAddress":
-            print '    if (%s) {' % instance
-        
-            func_dict = dict([(f.name, f) for f in glapi.functions + wglapi.functions])
-
-            def handle_case(function_name):
-                f = func_dict[function_name]
-                ptype = function_pointer_type(f)
-                pvalue = function_pointer_value(f)
-                print '    %s = (%s)%s;' % (pvalue, ptype, instance)
-                print '    %s = (%s)&%s;' % (instance, function.type, f.name);
-        
-            def handle_default():
-                print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", lpszProc);'
-
-            string_switch('lpszProc', func_dict.keys(), handle_case, handle_default)
-            print '    }'
+    getProcAddressFunctionNames = [
+        "wglGetProcAddress",
+    ]
 
 
 if __name__ == '__main__':
@@ -80,4 +61,4 @@ if __name__ == '__main__':
     api.addApi(glapi)
     api.addApi(wglapi)
     tracer = WglTracer()
-    tracer.trace_api(api)
+    tracer.traceApi(api)

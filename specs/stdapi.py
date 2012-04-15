@@ -837,7 +837,7 @@ class API:
         self.addFunctions(api.functions)
         self.addInterfaces(api.interfaces)
 
-    def get_function_by_name(self, name):
+    def getFunctionByName(self, name):
         for function in self.functions:
             if function.name == name:
                 return function

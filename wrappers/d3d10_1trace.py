@@ -43,4 +43,4 @@ if __name__ == '__main__':
     print '#include <d3dx10.h>'
     print
     tracer = DllTracer('d3d10_1.dll')
-    tracer.trace_api(d3d10_1)
+    tracer.traceApi(d3d10_1)

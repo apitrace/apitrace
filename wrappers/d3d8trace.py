@@ -50,5 +50,5 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     tracer = D3D8Tracer('d3d8.dll')
-    tracer.trace_api(d3d8)
+    tracer.traceApi(d3d8)
 

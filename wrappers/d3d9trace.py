@@ -90,5 +90,5 @@ _declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
 }
 '''
     tracer = D3D9Tracer('d3d9.dll')
-    tracer.trace_api(d3d9)
+    tracer.traceApi(d3d9)
 

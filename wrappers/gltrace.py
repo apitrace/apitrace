@@ -28,6 +28,7 @@
 
 
 from trace import Tracer
+from dispatch import function_pointer_type, function_pointer_value
 import specs.stdapi as stdapi
 import specs.glapi as glapi
 import specs.glparams as glparams
@@ -324,6 +325,38 @@ class GlTracer(Tracer):
         print '}'
         print
 
+    getProcAddressFunctionNames = []
+
+    def traceApi(self, api):
+        if self.getProcAddressFunctionNames:
+            # Generate a function to wrap proc addresses
+            getProcAddressFunction = api.getFunctionByName(self.getProcAddressFunctionNames[0])
+            argType = getProcAddressFunction.args[0].type
+            retType = getProcAddressFunction.type
+            
+            print 'static %s _wrapProcAddress(%s procName, %s procPtr);' % (retType, argType, retType)
+            print
+            
+            Tracer.traceApi(self, api)
+            
+            print 'static %s _wrapProcAddress(%s procName, %s procPtr) {' % (retType, argType, retType)
+            print '    if (!procPtr) {'
+            print '        return procPtr;'
+            print '    }'
+            for function in api.functions:
+                ptype = function_pointer_type(function)
+                pvalue = function_pointer_value(function)
+                print '    if (strcmp("%s", (const char *)procName) == 0) {' % function.name
+                print '        %s = (%s)procPtr;' % (pvalue, ptype)
+                print '        return (%s)&%s;' % (retType, function.name,)
+                print '    }'
+            print '    os::log("apitrace: warning: unknown function \\"%s\\"\\n", (const char *)procName);'
+            print '    return procPtr;'
+            print '}'
+            print
+        else:
+            Tracer.traceApi(self, api)
+
     array_pointer_function_names = set((
         "glVertexPointer",
         "glNormalPointer",
@@ -583,7 +616,7 @@ class GlTracer(Tracer):
             print "        if (name[0] != 'g' || name[1] != 'l' || name[2] != '_') {"
             print '            GLint location = __glGetAttribLocation(program, name);'
             print '            if (location >= 0) {'
-            bind_function = glapi.glapi.get_function_by_name('glBindAttribLocation')
+            bind_function = glapi.glapi.getFunctionByName('glBindAttribLocation')
             self.fake_call(bind_function, ['program', 'location', 'name'])
             print '            }'
             print '        }'
@@ -601,7 +634,7 @@ class GlTracer(Tracer):
             print "        if (name[0] != 'g' || name[1] != 'l' || name[2] != '_') {"
             print '            GLint location = __glGetAttribLocationARB(programObj, name);'
             print '            if (location >= 0) {'
-            bind_function = glapi.glapi.get_function_by_name('glBindAttribLocationARB')
+            bind_function = glapi.glapi.getFunctionByName('glBindAttribLocationARB')
             self.fake_call(bind_function, ['programObj', 'location', 'name'])
             print '            }'
             print '        }'
@@ -633,7 +666,7 @@ class GlTracer(Tracer):
         if function.name in ('glXGetProcAddress', 'glXGetProcAddressARB', 'wglGetProcAddress'):
             else_ = ''
             for marker_function in self.marker_functions:
-                if self.api.get_function_by_name(marker_function):
+                if self.api.getFunctionByName(marker_function):
                     print '    %sif (strcmp("%s", (const char *)%s) == 0) {' % (else_, marker_function, function.args[0].name)
                     print '        __result = (%s)&%s;' % (function.type, marker_function)
                     print '    }'
@@ -666,6 +699,10 @@ class GlTracer(Tracer):
 
     def wrapRet(self, function, instance):
         Tracer.wrapRet(self, function, instance)
+
+        # Replace function addresses with ours
+        if function.name in self.getProcAddressFunctionNames:
+            print '    %s = _wrapProcAddress(%s, %s);' % (instance, function.args[0].name, instance)
 
         # Keep track of buffer mappings
         if function.name in ('glMapBuffer', 'glMapBufferARB'):
@@ -816,7 +853,7 @@ class GlTracer(Tracer):
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
             binding_name = 'GL_%s_ARRAY_BUFFER_BINDING' % uppercase_name
-            function = api.get_function_by_name(function_name)
+            function = api.getFunctionByName(function_name)
 
             print '    // %s' % function.prototype()
             print '  if (%s) {' % profile_check
@@ -881,7 +918,7 @@ class GlTracer(Tracer):
             else:
                 SUFFIX = suffix
             function_name = 'glVertexAttribPointer' + suffix
-            function = api.get_function_by_name(function_name)
+            function = api.getFunctionByName(function_name)
 
             print '    // %s' % function.prototype()
             print '    if (__vertex_attrib == VERTEX_ATTRIB%s) {' % SUFFIX
@@ -984,7 +1021,7 @@ class GlTracer(Tracer):
             print '    }'
 
     def fake_glClientActiveTexture_call(self, api, texture):
-        function = api.get_function_by_name('glClientActiveTexture')
+        function = api.getFunctionByName('glClientActiveTexture')
         self.fake_call(function, [texture])
 
     def fake_call(self, function, args):
