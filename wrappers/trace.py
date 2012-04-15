@@ -218,13 +218,13 @@ class ValueSerializer(stdapi.Visitor):
         print '    }'
 
     def visitIntPointer(self, pointer, instance):
-        print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
+        print '    trace::localWriter.writePointer((uintptr_t)%s);' % instance
 
     def visitObjPointer(self, pointer, instance):
-        print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
+        print '    trace::localWriter.writePointer((uintptr_t)%s);' % instance
 
     def visitLinearPointer(self, pointer, instance):
-        print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
+        print '    trace::localWriter.writePointer((uintptr_t)%s);' % instance
 
     def visitReference(self, reference, instance):
         self.visit(reference.type, instance)
@@ -236,10 +236,10 @@ class ValueSerializer(stdapi.Visitor):
         self.visit(alias.type, instance)
 
     def visitOpaque(self, opaque, instance):
-        print '    trace::localWriter.writeOpaque((const void *)%s);' % instance
+        print '    trace::localWriter.writePointer((uintptr_t)%s);' % instance
 
     def visitInterface(self, interface, instance):
-        print '    trace::localWriter.writeOpaque((const void *)&%s);' % instance
+        assert False
 
     def visitPolymorphic(self, polymorphic, instance):
         print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance)
@@ -556,7 +556,7 @@ class Tracer:
         print '    static const trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
         print '    unsigned __call = trace::localWriter.beginEnter(&__sig);'
         print '    trace::localWriter.beginArg(0);'
-        print '    trace::localWriter.writeOpaque((const void *)m_pInstance);'
+        print '    trace::localWriter.writePointer((uintptr_t)m_pInstance);'
         print '    trace::localWriter.endArg();'
         for arg in method.args:
             if not arg.output:
@@ -637,7 +637,7 @@ class Tracer:
     def emit_memcpy(self, dest, src, length):
         print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
         print '        trace::localWriter.beginArg(0);'
-        print '        trace::localWriter.writeOpaque(%s);' % dest
+        print '        trace::localWriter.writePointer((uintptr_t)%s);' % dest
         print '        trace::localWriter.endArg();'
         print '        trace::localWriter.beginArg(1);'
         print '        trace::localWriter.writeBlob(%s, %s);' % (src, length)

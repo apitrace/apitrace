@@ -294,13 +294,13 @@ void Writer::writeNull(void) {
     _writeByte(trace::TYPE_NULL);
 }
 
-void Writer::writeOpaque(const void *addr) {
+void Writer::writePointer(unsigned long long addr) {
     if (!addr) {
         Writer::writeNull();
         return;
     }
     _writeByte(trace::TYPE_OPAQUE);
-    _writeUInt((size_t)addr);
+    _writeUInt(addr);
 }
 
 

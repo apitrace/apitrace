@@ -91,7 +91,7 @@ namespace trace {
         void writeEnum(const EnumSig *sig, signed long long value);
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
         void writeNull(void);
-        void writeOpaque(const void *ptr);
+        void writePointer(unsigned long long addr);
 
         void writeCall(Call *call);
 

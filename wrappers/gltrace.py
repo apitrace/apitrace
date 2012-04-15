@@ -811,7 +811,7 @@ class GlTracer(Tracer):
             print '        if (ctx->profile == gltrace::PROFILE_COMPAT)'
             print '            __glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &__unpack_buffer);'
             print '        if (__unpack_buffer) {'
-            print '            trace::localWriter.writeOpaque(%s);' % arg.name
+            print '            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name
             print '        } else {'
             Tracer.serializeArgValue(self, function, arg)
             print '        }'

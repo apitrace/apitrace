@@ -31,6 +31,8 @@
 #define _TRACE_WRITER_LOCAL_HPP_
 
 
+#include <stdint.h>
+
 #include "os_thread.hpp"
 #include "trace_writer.hpp"
 

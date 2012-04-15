@@ -78,7 +78,7 @@ found:
         LPD3DXBUFFER pDisassembly = NULL;
         HRESULT hr;
 
-        hr = pfnD3DXDisassembleShader( (DWORD *)tokens, FALSE, NULL, &pDisassembly);
+        hr = pfnD3DXDisassembleShader(tokens, FALSE, NULL, &pDisassembly);
         if (hr == D3D_OK) {
             writer.writeString((const char *)pDisassembly->GetBufferPointer());
         }
@@ -92,5 +92,5 @@ found:
         }
     }
 
-    writer.writeOpaque(tokens);
+    writer.writePointer((UINT_PTR)tokens);
 }
