@@ -1221,7 +1221,9 @@ d3d11.addFunctions([
 ])
 
 d3d11.addInterfaces([
+    IDXGIAdapter1,
     IDXGIDevice1,
+    IDXGIResource,
     ID3D11Debug,
     ID3D11InfoQueue,
     ID3D11SwitchToRef,

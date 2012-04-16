@@ -56,7 +56,9 @@ d3d10.addFunctions([
 ])
 
 d3d10.addInterfaces([
+    IDXGIAdapter1,
     IDXGIDevice1,
+    IDXGIResource,
     ID3D10Debug,
     ID3D10InfoQueue,
     ID3D10Multithread,
