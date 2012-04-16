@@ -306,6 +306,25 @@ public:
         space = ' ';
     }
 
+
+    /**
+     * Special case for char to prevent it to be written as a literal
+     * character.
+     */
+    inline void writeNumber(char n) {
+        separator();
+        os << std::dec << static_cast<int>(n);
+        value = true;
+        space = ' ';
+    }
+
+    inline void writeNumber(unsigned char n) {
+        separator();
+        os << std::dec << static_cast<unsigned>(n);
+        value = true;
+        space = ' ';
+    }
+
     template<class T>
     inline void writeNumber(T n) {
         if (n != n) {

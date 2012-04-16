@@ -144,7 +144,7 @@ class StateGetter(Visitor):
         return self.visitScalar(alias, args)
 
     def visitEnum(self, enum, args):
-        return self.visit(GLint, args)
+        return self.visitScalar(enum, args)
 
     def visitBitmask(self, bitmask, args):
         return self.visit(GLint, args)
@@ -213,9 +213,12 @@ class JsonWriter(Visitor):
         print '    json.writeString((const char *)%s);' % instance
 
     def visitEnum(self, enum, instance):
-        if enum.expr == 'GLenum':
+        if enum is GLboolean:
+            print '    dumpBoolean(json, %s);' % instance
+        elif enum is GLenum:
             print '    dumpEnum(json, %s);' % instance
         else:
+            assert False
             print '    json.writeNumber(%s);' % instance
 
     def visitBitmask(self, bitmask, instance):
@@ -259,6 +262,23 @@ class StateDumper:
         print 'namespace glstate {'
         print
 
+        print 'void'
+        print 'dumpBoolean(JSONWriter &json, GLboolean value)'
+        print '{'
+        print '    switch (value) {'
+        print '    case GL_FALSE:'
+        print '        json.writeString("GL_FALSE");'
+        print '        break;'
+        print '    case GL_TRUE:'
+        print '        json.writeString("GL_TRUE");'
+        print '        break;'
+        print '    default:'
+        print '        json.writeNumber(static_cast<GLint>(value));'
+        print '        break;'
+        print '    }'
+        print '}'
+        print
+
         print 'const char *'
         print 'enumToString(GLenum pname)'
         print '{'
@@ -272,13 +292,6 @@ class StateDumper:
         print '}'
         print
 
-        print 'static void'
-        print 'dumpFramebufferAttachementParameters(JSONWriter &json, GLenum target, GLenum attachment)'
-        print '{'
-        self.dump_attachment_parameters('target', 'attachment')
-        print '}'
-        print
-
         print 'void'
         print 'dumpEnum(JSONWriter &json, GLenum pname)'
         print '{'
@@ -288,6 +301,13 @@ class StateDumper:
         print '    } else {'
         print '        json.writeNumber(pname);'
         print '    }'
+        print '}'
+        print
+
+        print 'static void'
+        print 'dumpFramebufferAttachementParameters(JSONWriter &json, GLenum target, GLenum attachment)'
+        print '{'
+        self.dump_attachment_parameters('target', 'attachment')
         print '}'
         print
 
@@ -408,7 +428,9 @@ class StateDumper:
             print '            // %s' % target
             print '            enabled = GL_FALSE;'
             print '            glGetBooleanv(%s, &enabled);' % target
-            print '            json.writeBoolMember("%s", enabled);' % target
+            print '            json.beginMember("%s");' % target
+            print '            dumpBoolean(json, enabled);'
+            print '            json.endMember();'
             print '            binding = 0;'
             print '            glGetIntegerv(%s, &binding);' % binding
             print '            json.writeNumberMember("%s", binding);' % binding

@@ -32,7 +32,11 @@ import platform
 from stdapi import *
 
 
-GLboolean = Alias("GLboolean", Bool)
+GLboolean = Enum("GLboolean", [
+    "GL_TRUE",
+    "GL_FALSE",
+])
+
 GLvoid = Alias("GLvoid", Void)
 GLbyte = Alias("GLbyte", SChar)
 GLshort = Alias("GLshort", Short)

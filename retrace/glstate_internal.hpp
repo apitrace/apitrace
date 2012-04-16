@@ -54,6 +54,8 @@ struct Context
 };
 
 
+void dumpBoolean(JSONWriter &json, GLboolean value);
+
 void dumpEnum(JSONWriter &json, GLenum pname);
 
 void dumpParameters(JSONWriter &json, Context &context);

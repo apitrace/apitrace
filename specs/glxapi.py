@@ -454,3 +454,5 @@ glxapi.addFunctions([
 ])
 
 
+# To prevent collision with stdapi.Bool
+del Bool
