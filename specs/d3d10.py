@@ -187,6 +187,33 @@ D3D10_SAMPLER_DESC = Struct("D3D10_SAMPLER_DESC", [
     (FLOAT, "MaxLOD"),
 ])
 
+D3D10_FORMAT_SUPPORT = Flags(UINT, [
+    "D3D10_FORMAT_SUPPORT_BUFFER",
+    "D3D10_FORMAT_SUPPORT_IA_VERTEX_BUFFER",
+    "D3D10_FORMAT_SUPPORT_IA_INDEX_BUFFER",
+    "D3D10_FORMAT_SUPPORT_SO_BUFFER",
+    "D3D10_FORMAT_SUPPORT_TEXTURE1D",
+    "D3D10_FORMAT_SUPPORT_TEXTURE2D",
+    "D3D10_FORMAT_SUPPORT_TEXTURE3D",
+    "D3D10_FORMAT_SUPPORT_TEXTURECUBE",
+    "D3D10_FORMAT_SUPPORT_SHADER_LOAD",
+    "D3D10_FORMAT_SUPPORT_SHADER_SAMPLE",
+    "D3D10_FORMAT_SUPPORT_SHADER_SAMPLE_COMPARISON",
+    "D3D10_FORMAT_SUPPORT_SHADER_SAMPLE_MONO_TEXT",
+    "D3D10_FORMAT_SUPPORT_MIP",
+    "D3D10_FORMAT_SUPPORT_MIP_AUTOGEN",
+    "D3D10_FORMAT_SUPPORT_RENDER_TARGET",
+    "D3D10_FORMAT_SUPPORT_BLENDABLE",
+    "D3D10_FORMAT_SUPPORT_DEPTH_STENCIL",
+    "D3D10_FORMAT_SUPPORT_CPU_LOCKABLE",
+    "D3D10_FORMAT_SUPPORT_MULTISAMPLE_RESOLVE",
+    "D3D10_FORMAT_SUPPORT_DISPLAY",
+    "D3D10_FORMAT_SUPPORT_CAST_WITHIN_BIT_LAYOUT",
+    "D3D10_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET",
+    "D3D10_FORMAT_SUPPORT_MULTISAMPLE_LOAD",
+    "D3D10_FORMAT_SUPPORT_SHADER_GATHER",
+])
+
 D3D10_COUNTER = Enum("D3D10_COUNTER", [
     "D3D10_COUNTER_GPU_IDLE",
     "D3D10_COUNTER_VERTEX_PROCESSING",
@@ -853,7 +880,7 @@ ID3D10Device.methods += [
     Method(HRESULT, "CreateQuery", [(Pointer(Const(D3D10_QUERY_DESC)), "pQueryDesc"), Out(Pointer(ObjPointer(ID3D10Query)), "ppQuery")]),
     Method(HRESULT, "CreatePredicate", [(Pointer(Const(D3D10_QUERY_DESC)), "pPredicateDesc"), Out(Pointer(ObjPointer(ID3D10Predicate)), "ppPredicate")]),
     Method(HRESULT, "CreateCounter", [(Pointer(Const(D3D10_COUNTER_DESC)), "pCounterDesc"), Out(Pointer(ObjPointer(ID3D10Counter)), "ppCounter")]),
-    Method(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(UINT), "pFormatSupport")]),
+    Method(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D10_FORMAT_SUPPORT), "pFormatSupport")]),
     Method(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")]),
     Method(Void, "CheckCounterInfo", [Out(Pointer(D3D10_COUNTER_INFO), "pCounterInfo")]),
     Method(HRESULT, "CheckCounter", [(Pointer(Const(D3D10_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D10_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")]),
