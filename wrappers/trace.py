@@ -626,11 +626,9 @@ class Tracer:
         else_ = ''
         if self.interface is not None:
             functionName = self.interface.name + '::' + functionName
-            print r'        %sif (*%s == m_pInstance) {' % (else_, out.name,)
+            print r'        if (*%s == m_pInstance &&' % (out.name,)
+            print r'            (%s)) {' % ' || '.join('%s == IID_%s' % (riid.name, iface.name) for iface in self.interface.iterBases())
             print r'            *%s = this;' % (out.name,)
-            print r'            if (%s) {' % ' && '.join('%s != IID_%s' % (riid.name, iface.name) for iface in self.interface.iterBases()) 
-            print r'                warnIID("%s", %s, "unexpected");' % (functionName, riid.name)
-            print r'            }'
             print r'        }'
             else_ = 'else '
         print r'        %s{' % else_
