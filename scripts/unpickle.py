@@ -152,7 +152,7 @@ class Rebuilder(Visitor):
             newItems.append(newItem)
         if changed:
             klass = type(obj)
-            return klass(changed)
+            return klass(newItems)
         else:
             return obj
 
