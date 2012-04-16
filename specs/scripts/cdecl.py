@@ -122,7 +122,7 @@ class DeclParser:
                     self.consume()
                     type = 'Pointer(%s)' % type
                 name = self.consume()
-                print '%s = Alias(%r, %s)' % (name, name, type)
+                print '%s = Alias("%s", %s)' % (name, name, type)
                 if self.match(','):
                     self.consume()
                 else:
@@ -136,7 +136,7 @@ class DeclParser:
         name = self.consume()
         self.consume('{')
 
-        print '%s = Enum(%r, [' % (name, name)
+        print '%s = Enum("%s", [' % (name, name)
 
         #value = 0
         while self.lookahead() != '}':
@@ -147,8 +147,8 @@ class DeclParser:
             if self.match(','):
                 self.consume(',')
             tags = self.parse_tags()
-            #print '    %r,\t# %s' % (name, value) 
-            print '    %r,' % (name,) 
+            #print '    "%s",\t# %s' % (name, value) 
+            print '    "%s",' % (name,) 
             #value += 1
         self.consume('}')
 
@@ -175,17 +175,17 @@ class DeclParser:
         self.consume('define')
         name = self.consume()
         value = self.consume()
-        #print '    %r,\t# %s' % (name, value) 
-        print '    %r,' % (name,) 
+        #print '    "%s",\t# %s' % (name, value) 
+        print '    "%s",' % (name,) 
         return name, value
 
     def parse_struct(self):
         self.consume('struct')
         name = self.consume()
 
-        print '%s = Struct(%r, [' % (name, name)
+        print '%s = Struct("%s", [' % (name, name)
         for type, name in self.parse_members():
-            print '    (%s, %r),' % (type, name)
+            print '    (%s, "%s"),' % (type, name)
         print '])'
         print
 
@@ -196,7 +196,7 @@ class DeclParser:
         else:
             name = None
         members = self.parse_members()
-        return 'Union(%r, [%s])' % (name, ', '.join('%s, %r' % member for member in members))
+        return 'Union("%s", [%s])' % (name, ', '.join('%s, "%s"' % member for member in members))
 
     def parse_members(self):
         members = []
@@ -226,7 +226,7 @@ class DeclParser:
         base = self.consume()
         self.consume('{')
 
-        print '%s = Interface(%r, %s)' % (name, name, base)
+        print '%s = Interface("%s", %s)' % (name, name, base)
         print '%s.methods += [' % (name,)
 
         while self.lookahead() != '}':
@@ -275,14 +275,14 @@ class DeclParser:
             self.consume()
             self.consume('0')
         
-        print '    %s(%s, %r, [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
+        print '    %s(%s, "%s", [%s]%s),' % (creator, ret, name, ', '.join(args), extra)
 
     def parse_arg(self):
         tags = self.parse_tags()
 
         type, name = self.parse_named_type()
 
-        arg = '(%s, %r)' % (type, name)
+        arg = '(%s, "%s")' % (type, name)
         if 'out' in tags or 'inout' in tags:
             arg = 'Out' + arg
 
@@ -327,7 +327,7 @@ class DeclParser:
                 try:
                     int(length)
                 except ValueError:
-                    length = repr(length)
+                    length = '"%s"' % length
                 type = 'Array(%s, %s)' % (type, length)
         return type, name
 
