@@ -1221,6 +1221,6 @@ d3d11.addFunctions([
 ])
 
 d3d11.addInterfaces([
-    IDXGIDevice,
+    IDXGIDevice1,
     ID3D11Debug,
 ])
