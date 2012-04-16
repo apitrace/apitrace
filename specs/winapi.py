@@ -53,7 +53,10 @@ DWORD = Alias("DWORD", UInt32)
 
 WCHAR = Alias("WCHAR", Short)
 
-BOOL = Alias("BOOL", Bool)
+BOOL = Enum("BOOL", [
+    "FALSE",
+    "TRUE",
+])
 
 LPLONG = Pointer(LONG)
 LPWORD = Pointer(WORD)
