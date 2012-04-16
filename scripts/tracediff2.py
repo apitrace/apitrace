@@ -166,16 +166,24 @@ class SDiffer:
             a_call = self.a[alo + i]
             b_call = self.b[blo + i]
             assert a_call.functionName == b_call.functionName
-            assert len(a_call.args) == len(b_call.args)
             self.dumpCallNos(a_call.no, b_call.no)
             self.highlighter.bold(True)
             self.highlighter.write(b_call.functionName)
             self.highlighter.bold(False)
             self.highlighter.write('(')
             sep = ''
-            for j in xrange(len(b_call.args)):
+            numArgs = max(len(a_call.args), len(b_call.args))
+            for j in xrange(numArgs):
                 self.highlighter.write(sep)
-                self.replace_value(a_call.args[j], b_call.args[j])
+                try:
+                    a_arg = a_call.args[j]
+                except IndexError:
+                    pass
+                try:
+                    b_arg = b_call.args[j]
+                except IndexError:
+                    pass
+                self.replace_value(a_arg, b_arg)
                 sep = ', '
             self.highlighter.write(')')
             if a_call.ret is not None or b_call.ret is not None:
