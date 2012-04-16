@@ -478,11 +478,12 @@ def OpaqueBlob(type, size):
 
 class Polymorphic(Type):
 
-    def __init__(self, defaultType, switchExpr, switchTypes):
+    def __init__(self, switchExpr, switchTypes, defaultType, contextLess=True):
         Type.__init__(self, defaultType.expr)
-        self.defaultType = defaultType
         self.switchExpr = switchExpr
         self.switchTypes = switchTypes
+        self.defaultType = defaultType
+        self.contextLess = contextLess
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitPolymorphic(self, *args, **kwargs)
@@ -502,6 +503,13 @@ class Polymorphic(Type):
                 cases[i].append(case)
 
         return zip(cases, types)
+
+
+def EnumPolymorphic(enumName, switchExpr, switchTypes, defaultType, contextLess=True):
+    enumValues = [expr for expr, type in switchTypes]
+    enum = Enum(enumName, enumValues)
+    polymorphic = Polymorphic(switchExpr, switchTypes, defaultType, contextLess)
+    return enum, polymorphic
 
 
 class Visitor:
@@ -675,10 +683,10 @@ class Rebuilder(Visitor):
         return interface
 
     def visitPolymorphic(self, polymorphic):
-        defaultType = self.visit(polymorphic.defaultType)
         switchExpr = polymorphic.switchExpr
         switchTypes = [(expr, self.visit(type)) for expr, type in polymorphic.switchTypes]
-        return Polymorphic(defaultType, switchExpr, switchTypes)
+        defaultType = self.visit(polymorphic.defaultType)
+        return Polymorphic(switchExpr, switchTypes, defaultType, polymorphic.contextLess)
 
 
 class MutableRebuilder(Rebuilder):

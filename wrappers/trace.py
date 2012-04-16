@@ -136,6 +136,8 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         pass
 
     def visitPolymorphic(self, polymorphic):
+        if not polymorphic.contextLess:
+            return
         print 'static void _write__%s(int selector, const %s & value) {' % (polymorphic.tag, polymorphic.expr)
         print '    switch (selector) {'
         for cases, type in polymorphic.iterSwitch():
@@ -242,7 +244,16 @@ class ValueSerializer(stdapi.Visitor):
         assert False
 
     def visitPolymorphic(self, polymorphic, instance):
-        print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance)
+        if polymorphic.contextLess:
+            print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance)
+        else:
+            print '    switch (%s) {' % polymorphic.switchExpr
+            for cases, type in polymorphic.iterSwitch():
+                for case in cases:
+                    print '    %s:' % case
+                self.visit(type, 'static_cast<%s>(%s)' % (type, instance))
+                print '        break;'
+            print '    }'
 
 
 class WrapDecider(stdapi.Traverser):

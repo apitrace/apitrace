@@ -1020,14 +1020,6 @@ ID3D11CommandList.methods += [
     StdMethod(UINT, "GetContextFlags", []),
 ]
 
-D3D11_FEATURE = Enum("D3D11_FEATURE", [
-    "D3D11_FEATURE_THREADING",
-    "D3D11_FEATURE_DOUBLES",
-    "D3D11_FEATURE_FORMAT_SUPPORT",
-    "D3D11_FEATURE_FORMAT_SUPPORT2",
-    "D3D11_FEATURE_D3D10_X_HARDWARE_OPTIONS",
-])
-
 D3D11_FEATURE_DATA_THREADING = Struct("D3D11_FEATURE_DATA_THREADING", [
     (BOOL, "DriverConcurrentCreates"),
     (BOOL, "DriverCommandLists"),
@@ -1050,6 +1042,14 @@ D3D11_FEATURE_DATA_FORMAT_SUPPORT2 = Struct("D3D11_FEATURE_DATA_FORMAT_SUPPORT2"
 D3D11_FEATURE_DATA_D3D10_X_HARDWARE_OPTIONS = Struct("D3D11_FEATURE_DATA_D3D10_X_HARDWARE_OPTIONS", [
     (BOOL, "ComputeShaders_Plus_RawAndStructuredBuffers_Via_Shader_4_x"),
 ])
+
+D3D11_FEATURE, D3D11_FEATURE_DATA = EnumPolymorphic("D3D11_FEATURE", "Feature", [
+    ("D3D11_FEATURE_THREADING", Pointer(D3D11_FEATURE_DATA_THREADING)),
+    ("D3D11_FEATURE_DOUBLES", Pointer(D3D11_FEATURE_DATA_DOUBLES)),
+    ("D3D11_FEATURE_FORMAT_SUPPORT", Pointer(D3D11_FEATURE_DATA_FORMAT_SUPPORT)),
+    ("D3D11_FEATURE_FORMAT_SUPPORT2", Pointer(D3D11_FEATURE_DATA_FORMAT_SUPPORT2)),
+    ("D3D11_FEATURE_D3D10_X_HARDWARE_OPTIONS", Pointer(D3D11_FEATURE_DATA_D3D10_X_HARDWARE_OPTIONS)),
+], Blob(Void, "FeatureSupportDataSize"), False)
 
 ID3D11DeviceContext.methods += [
     StdMethod(Void, "VSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers")]),
@@ -1201,7 +1201,7 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")]),
     StdMethod(Void, "CheckCounterInfo", [Out(Pointer(D3D11_COUNTER_INFO), "pCounterInfo")]),
     StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D11_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")]),
-    StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(OpaqueBlob(Void, "FeatureSupportDataSize"), "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")]),
+    StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(D3D11_FEATURE_DATA, "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")]),
     StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")]),
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
     StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")]),
