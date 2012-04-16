@@ -29,7 +29,7 @@ from winapi import *
 from d3d8types import *
 from d3d8caps import *
 
-HRESULT = Enum("HRESULT", [
+HRESULT = FakeEnum(HRESULT, [
     "D3D_OK",
     "D3DERR_WRONGTEXTUREFORMAT",
     "D3DERR_UNSUPPORTEDCOLOROPERATION",

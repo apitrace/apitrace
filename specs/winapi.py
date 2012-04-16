@@ -25,7 +25,9 @@
 
 """Win32 API type description."""
 
+
 from stdapi import *
+
 
 SHORT = Alias("SHORT", Short)
 USHORT = Alias("USHORT", UShort)
@@ -68,8 +70,6 @@ LARGE_INTEGER = Struct("LARGE_INTEGER", [
 ])
 
 SIZE_T = Alias("SIZE_T", SizeT)
-
-HRESULT = Alias("HRESULT", Int)
 
 VOID = Void
 PVOID = Opaque("PVOID")
@@ -149,8 +149,6 @@ LPRGNDATA = Pointer(RGNDATA)
 
 HMODULE = DECLARE_HANDLE("HMODULE")
 
-IUnknown = Interface("IUnknown")
-
 FILETIME = Struct("FILETIME", [
     (DWORD, "dwLowDateTime"),
     (DWORD, "dwHighDateTime"),
@@ -175,14 +173,30 @@ LOGFONTW = Struct("LOGFONTW", [
     (WString, "lfFaceName"),
 ])
 
-HRESULT_com = FakeEnum(HRESULT, [
-    "S_OK",
-    "E_NOINTERFACE",
-    "E_POINTER",
+
+# http://msdn.microsoft.com/en-us/library/ff485842.aspx
+# http://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx
+HRESULT = Enum("HRESULT", [
+    "S_OK", # 0x0
+    "S_FALSE", # 0x1
+    "E_PENDING", # 0x8000000A
+    "E_NOTIMPL", # 0x80004001
+    "E_NOINTERFACE", # 0x80004002
+    "E_POINTER", # 0x80004003
+    "E_ABORT", # 0x80004004
+    "E_FAIL", # 0x80004005
+    "E_UNEXPECTED", # 0x8000FFFF
+    "E_ACCESSDENIED", # 0x80070005
+    "E_HANDLE", # 0x80070006
+    "E_OUTOFMEMORY", # 0x8007000E
+    "E_INVALIDARG", # 0x80070057
 ])
 
+
+IUnknown = Interface("IUnknown")
+
 IUnknown.methods = (
-	Method(HRESULT_com, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
+	Method(HRESULT, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
 	Method(ULONG, "AddRef", ()),
 	Method(ULONG, "Release", ()),
 )

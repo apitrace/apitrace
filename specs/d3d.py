@@ -48,7 +48,7 @@ d3ddpFlags = Flags(DWORD, [
     "D3DDP_DONOTLIGHT",
 ])
 
-HRESULT = Enum("HRESULT", [
+HRESULT = FakeEnum(HRESULT, [
     "D3D_OK",
     "D3DERR_BADMAJORVERSION",
     "D3DERR_BADMINORVERSION",
