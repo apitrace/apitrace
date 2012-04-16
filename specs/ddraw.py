@@ -1147,9 +1147,7 @@ DirectDrawEvaluateModeFlags = Flags(DWORD, [
     "DDEM_MODEFAILED",
 ])
 
-DDRESULT = FakeEnum(HRESULT, [
-    "DD_OK",
-    "DD_FALSE",
+DDRESULT = MAKE_HRESULT(ok = "DD_OK", false = "DD_FALSE", errors = [
     "DDERR_ALREADYINITIALIZED",
     "DDERR_CANNOTATTACHSURFACE",
     "DDERR_CANNOTDETACHSURFACE",

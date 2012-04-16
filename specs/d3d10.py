@@ -28,7 +28,7 @@ from dxgi import *
 from d3dcommon import *
 
 
-HRESULT = FakeEnum(HRESULT, [
+HRESULT = MAKE_HRESULT([
     "D3D10_ERROR_FILE_NOT_FOUND",
     "D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS",
     "D3DERR_INVALIDCALL",

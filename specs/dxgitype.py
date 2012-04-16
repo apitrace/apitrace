@@ -27,7 +27,7 @@
 from dxgiformat import *
 
 
-HRESULT = FakeEnum(HRESULT, [
+HRESULT = MAKE_HRESULT([
     "DXGI_STATUS_OCCLUDED",
     "DXGI_STATUS_CLIPPED",
     "DXGI_STATUS_NO_REDIRECTION",
