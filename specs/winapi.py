@@ -204,7 +204,7 @@ IUnknown = Interface("IUnknown")
 
 IUnknown.methods = (
 	Method(HRESULT, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
-	Method(ULONG, "AddRef", ()),
+	Method(ULONG, "AddRef", (), sideeffects=False),
 	Method(ULONG, "Release", ()),
 )
 

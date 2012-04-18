@@ -422,6 +422,14 @@ class Retracer:
             print '    %s(%s);' % (function.name, arg_names)
 
     def invokeInterfaceMethod(self, interface, method):
+        # On release our reference when we reach Release() == 0 call in the
+        # trace.
+        if method.name == 'Release':
+            print '    if (call.ret->toUInt()) {'
+            print '        return;'
+            print '    }'
+            print '    _obj_map.erase(call.arg(0).toUIntPtr());'
+
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
             print '    %s __result;' % (method.type)
