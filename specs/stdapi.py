@@ -401,6 +401,12 @@ class Interface(Type):
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitInterface(self, *args, **kwargs)
 
+    def getMethodByName(self, name):
+        for methods in self.methods:
+            if methods.name == name:
+                return methods
+        return None
+
     def iterMethods(self):
         if self.base is not None:
             for method in self.base.iterMethods():

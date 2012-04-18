@@ -36,6 +36,11 @@ class D3DRetracer(Retracer):
 
     table_name = 'd3dretrace::d3d9_callbacks'
 
+    bufferInterfaceNames = [
+        'IDirect3DVertexBuffer9',
+        'IDirect3DIndexBuffer9',
+    ]
+
     def invokeInterfaceMethod(self, interface, method):
         if interface.name == 'IDirect3D9' and method.name == 'CreateDevice':
             print 'HWND hWnd = createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
@@ -49,9 +54,14 @@ class D3DRetracer(Retracer):
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 
-        if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Lock':
+        if interface.name in self.bufferInterfaceNames and method.name == 'Lock':
+            getDescMethod = interface.getMethodByName('GetDesc')
+            descArg = getDescMethod.args[0]
+            assert descArg.output
+            descType = getDescMethod.args[0].type.type
+
             print '        if (!SizeToLock) {'
-            print '            D3DVERTEXBUFFER_DESC Desc;'
+            print '            %s Desc;' % descType
             print '            _this->GetDesc(&Desc);'
             print '            SizeToLock = Desc.Size;'
             print '        }'

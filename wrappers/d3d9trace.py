@@ -38,28 +38,39 @@ class D3D9Tracer(DllTracer):
 
         DllTracer.serializeArgValue(self, function, arg)
 
+    bufferInterfaceNames = [
+        'IDirect3DVertexBuffer9',
+        'IDirect3DIndexBuffer9',
+    ]
+
     def declareWrapperInterfaceVariables(self, interface):
         DllTracer.declareWrapperInterfaceVariables(self, interface)
         
-        if interface.name == 'IDirect3DVertexBuffer9':
+        if interface.name in self.bufferInterfaceNames:
             print '    UINT m_SizeToLock;'
             print '    VOID *m_pbData;'
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Unlock':
+        if interface.name in self.bufferInterfaceNames and method.name == 'Unlock':
             print '    if (m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', 'm_SizeToLock')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if interface.name == 'IDirect3DVertexBuffer9' and method.name == 'Lock':
+        if interface.name in self.bufferInterfaceNames and method.name == 'Lock':
             # FIXME: handle recursive locks
+
+            getDescMethod = interface.getMethodByName('GetDesc')
+            descArg = getDescMethod.args[0]
+            assert descArg.output
+            descType = getDescMethod.args[0].type.type
+
             print '    if (__result == D3D_OK && !(Flags & D3DLOCK_READONLY)) {'
             print '        if (SizeToLock) {'
             print '            m_SizeToLock = SizeToLock;'
             print '        } else {'
-            print '            D3DVERTEXBUFFER_DESC Desc;'
+            print '            %s Desc;' % descType
             print '            m_pInstance->GetDesc(&Desc);'
             print '            m_SizeToLock = Desc.Size;'
             print '        }'
