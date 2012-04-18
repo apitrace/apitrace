@@ -87,6 +87,7 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     print '#include "d3d9imports.hpp"'
+    print '#include "d3dsize.hpp"'
     print '#include "d3dshader.hpp"'
     print
     print '''
