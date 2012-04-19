@@ -101,9 +101,8 @@ public:
 
     inline void *
     alloc(size_t size) {
-        if (!size) {
-            return NULL;
-        }
+        /* Always return valid address, even when size is zero */
+        size = std::max(size, sizeof(uintptr_t));
 
         uintptr_t * buf = static_cast<uintptr_t *>(malloc(sizeof(uintptr_t) + size));
         if (!buf) {
