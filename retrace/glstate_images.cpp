@@ -709,7 +709,7 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
 image::Image *
 getDrawBufferImage() {
     GLenum format = GL_RGB;
-    GLint channels = __gl_format_channels(format);
+    GLint channels = _gl_format_channels(format);
     if (channels > 4) {
         return NULL;
     }
@@ -816,7 +816,7 @@ static inline void
 dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
                     GLint internalFormat = GL_NONE)
 {
-    GLint channels = __gl_format_channels(format);
+    GLint channels = _gl_format_channels(format);
 
     Context context;
 

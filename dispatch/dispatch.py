@@ -38,11 +38,11 @@ import specs.stdapi as stdapi
 
 
 def function_pointer_type(function):
-    return '__PFN' + function.name.upper()
+    return 'PFN_' + function.name.upper()
 
 
 def function_pointer_value(function):
-    return '__' + function.name + '_ptr'
+    return '_' + function.name + '_ptr'
 
 
 class Dispatcher:
@@ -51,10 +51,10 @@ class Dispatcher:
         # Must be implemented by derived classes, which should define, declare,
         # or implement something like:
         #
-        #  typedef void (*__PROC)(void);
+        #  typedef void (*_PROC)(void);
         #
-        #  static __PROC __getPublicProcAddress(const char *name);
-        #  static __PROC __getPrivateProcAddress(const char *name);
+        #  static _PROC _getPublicProcAddress(const char *name);
+        #  static _PROC _getPrivateProcAddress(const char *name);
         #
         raise NotImplementedError
 
@@ -67,7 +67,7 @@ class Dispatcher:
         # functions
         print '#ifdef RETRACE'
         for function in api.functions:
-            print '#define %s __%s' % (function.name, function.name)
+            print '#define %s _%s' % (function.name, function.name)
         print '#endif /* RETRACE */'
         print
 
@@ -77,8 +77,8 @@ class Dispatcher:
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
         print 'static %s %s = NULL;' % (ptype, pvalue)
         print
-        print 'static inline ' + function.prototype('__' + function.name) + ' {'
-        print '    const char *__name = "%s";' % function.name
+        print 'static inline ' + function.prototype('_' + function.name) + ' {'
+        print '    const char *_name = "%s";' % function.name
         if function.type is stdapi.Void:
             ret = ''
         else:
@@ -95,11 +95,11 @@ class Dispatcher:
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         if self.isFunctionPublic(function):
-            get_proc_address = '__getPublicProcAddress'
+            get_proc_address = '_getPublicProcAddress'
         else:
-            get_proc_address = '__getPrivateProcAddress'
+            get_proc_address = '_getPrivateProcAddress'
         print '    if (!%s) {' % (pvalue,)
-        print '        %s = (%s)%s(__name);' % (pvalue, ptype, get_proc_address)
+        print '        %s = (%s)%s(_name);' % (pvalue, ptype, get_proc_address)
         print '        if (!%s) {' % (pvalue,)
         self.failFunction(function)
         print '        }'
@@ -107,7 +107,7 @@ class Dispatcher:
 
     def failFunction(self, function):
         if function.type is stdapi.Void or function.fail is not None:
-            print r'            os::log("warning: ignoring call to unavailable function %s\n", __name);'
+            print r'            os::log("warning: ignoring call to unavailable function %s\n", _name);'
             if function.type is stdapi.Void:
                 assert function.fail is None
                 print '            return;' 
@@ -115,7 +115,7 @@ class Dispatcher:
                 assert function.fail is not None
                 print '            return %s;' % function.fail
         else:
-            print r'            os::log("error: unavailable function %s\n", __name);'
+            print r'            os::log("error: unavailable function %s\n", _name);'
             print r'            os::abort();'
 
 

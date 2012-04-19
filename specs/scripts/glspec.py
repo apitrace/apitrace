@@ -238,7 +238,7 @@ class SpecParser(LineParser):
                         length = "%s" % length
                     arg_type = '%s(%s, %s)' % (constructor, base_type, length)
                 else:
-                    length = length.replace("COMPSIZE", "__%s_size" % function_name)
+                    length = length.replace("COMPSIZE", "_%s_size" % function_name)
                     length = length.replace("/", ", ")
                     arg_type = 'Opaque%s(%s, %s)' % (constructor, base_type, length)
         else:

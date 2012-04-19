@@ -43,10 +43,10 @@ class UnsupportedType(Exception):
 
 def lookupHandle(handle, value):
     if handle.key is None:
-        return "__%s_map[%s]" % (handle.name, value)
+        return "_%s_map[%s]" % (handle.name, value)
     else:
         key_name, key_type = handle.key
-        return "__%s_map[%s][%s]" % (handle.name, key_name, value)
+        return "_%s_map[%s][%s]" % (handle.name, key_name, value)
 
 
 class ValueAllocator(stdapi.Visitor):
@@ -122,13 +122,13 @@ class ValueDeserializer(stdapi.Visitor):
 
     def visitArray(self, array, lvalue, rvalue):
 
-        tmp = '__a_' + array.tag + '_' + str(self.seq)
+        tmp = '_a_' + array.tag + '_' + str(self.seq)
         self.seq += 1
 
         print '    if (%s) {' % (lvalue,)
         print '        const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
         length = '%s->values.size()' % (tmp,)
-        index = '__j' + array.tag
+        index = '_j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
             self.visit(array.type, '%s[%s]' % (lvalue, index), '*%s->values[%s]' % (tmp, index))
@@ -137,7 +137,7 @@ class ValueDeserializer(stdapi.Visitor):
             print '    }'
     
     def visitPointer(self, pointer, lvalue, rvalue):
-        tmp = '__a_' + pointer.tag + '_' + str(self.seq)
+        tmp = '_a_' + pointer.tag + '_' + str(self.seq)
         self.seq += 1
 
         print '    if (%s) {' % (lvalue,)
@@ -182,7 +182,7 @@ class ValueDeserializer(stdapi.Visitor):
     seq = 0
 
     def visitStruct(self, struct, lvalue, rvalue):
-        tmp = '__s_' + struct.tag + '_' + str(self.seq)
+        tmp = '_s_' + struct.tag + '_' + str(self.seq)
         self.seq += 1
 
         print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
@@ -225,22 +225,22 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         pass
 
     def visitArray(self, array, lvalue, rvalue):
-        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
-        print '    if (__a%s) {' % (array.tag)
-        length = '__a%s->values.size()' % array.tag
-        index = '__j' + array.tag
+        print '    const trace::Array *_a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
+        print '    if (_a%s) {' % (array.tag)
+        length = '_a%s->values.size()' % array.tag
+        index = '_j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
         try:
-            self.visit(array.type, '%s[%s]' % (lvalue, index), '*__a%s->values[%s]' % (array.tag, index))
+            self.visit(array.type, '%s[%s]' % (lvalue, index), '*_a%s->values[%s]' % (array.tag, index))
         finally:
             print '        }'
             print '    }'
     
     def visitPointer(self, pointer, lvalue, rvalue):
-        print '    const trace::Array *__a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
-        print '    if (__a%s) {' % (pointer.tag)
+        print '    const trace::Array *_a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
+        print '    if (_a%s) {' % (pointer.tag)
         try:
-            self.visit(pointer.type, '%s[0]' % (lvalue,), '*__a%s->values[0]' % (pointer.tag,))
+            self.visit(pointer.type, '%s[0]' % (lvalue,), '*_a%s->values[0]' % (pointer.tag,))
         finally:
             print '    }'
     
@@ -259,19 +259,19 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         pass
     
     def visitHandle(self, handle, lvalue, rvalue):
-        print '    %s __orig_result;' % handle.type
-        OpaqueValueDeserializer().visit(handle.type, '__orig_result', rvalue);
+        print '    %s _origResult;' % handle.type
+        OpaqueValueDeserializer().visit(handle.type, '_origResult', rvalue);
         if handle.range is None:
-            rvalue = "__orig_result"
+            rvalue = "_origResult"
             entry = lookupHandle(handle, rvalue) 
             print "    %s = %s;" % (entry, lvalue)
             print '    if (retrace::verbosity >= 2) {'
             print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
             print '    }'
         else:
-            i = '__h' + handle.tag
+            i = '_h' + handle.tag
             lvalue = "%s + %s" % (lvalue, i)
-            rvalue = "__orig_result + %s" % (i,)
+            rvalue = "_origResult + %s" % (i,)
             entry = lookupHandle(handle, rvalue) 
             print '    for ({handle.type} {i} = 0; {i} < {handle.range}; ++{i}) {{'.format(**locals())
             print '        {entry} = {lvalue};'.format(**locals())
@@ -289,7 +289,7 @@ class SwizzledValueRegistrator(stdapi.Visitor):
     seq = 0
 
     def visitStruct(self, struct, lvalue, rvalue):
-        tmp = '__s_' + struct.tag + '_' + str(self.seq)
+        tmp = '_s_' + struct.tag + '_' + str(self.seq)
         self.seq += 1
 
         print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
@@ -383,7 +383,7 @@ class Retracer:
                     print '    // XXX: %s' % arg.name
         if function.type is not stdapi.Void:
             rvalue = '*call.ret'
-            lvalue = '__result'
+            lvalue = '_result'
             try:
                 self.regiterSwizzledValue(function.type, lvalue, rvalue)
             except UnsupportedType:
@@ -415,9 +415,9 @@ class Retracer:
     def invokeFunction(self, function):
         arg_names = ", ".join(function.argNames())
         if function.type is not stdapi.Void:
-            print '    %s __result;' % (function.type)
-            print '    __result = %s(%s);' % (function.name, arg_names)
-            print '    (void)__result;'
+            print '    %s _result;' % (function.type)
+            print '    _result = %s(%s);' % (function.name, arg_names)
+            print '    (void)_result;'
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
@@ -432,9 +432,9 @@ class Retracer:
 
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
-            print '    %s __result;' % (method.type)
-            print '    __result = _this->%s(%s);' % (method.name, arg_names)
-            print '    (void)__result;'
+            print '    %s _result;' % (method.type)
+            print '    _result = _this->%s(%s);' % (method.name, arg_names)
+            print '    (void)_result;'
         else:
             print '    _this->%s(%s);' % (method.name, arg_names)
 
@@ -456,10 +456,10 @@ class Retracer:
         for handle in handles:
             if handle.name not in handle_names:
                 if handle.key is None:
-                    print 'static retrace::map<%s> __%s_map;' % (handle.type, handle.name)
+                    print 'static retrace::map<%s> _%s_map;' % (handle.type, handle.name)
                 else:
                     key_name, key_type = handle.key
-                    print 'static std::map<%s, retrace::map<%s> > __%s_map;' % (key_type, handle.type, handle.name)
+                    print 'static std::map<%s, retrace::map<%s> > _%s_map;' % (key_type, handle.type, handle.name)
                 handle_names.add(handle.name)
         print
 

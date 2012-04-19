@@ -87,24 +87,24 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         pass
 
     def visitEnum(self, enum):
-        print 'static const trace::EnumValue __enum%s_values[] = {' % (enum.tag)
+        print 'static const trace::EnumValue _enum%s_values[] = {' % (enum.tag)
         for value in enum.values:
             print '   {"%s", %s},' % (value, value)
         print '};'
         print
-        print 'static const trace::EnumSig __enum%s_sig = {' % (enum.tag)
-        print '   %u, %u, __enum%s_values' % (enum.id, len(enum.values), enum.tag)
+        print 'static const trace::EnumSig _enum%s_sig = {' % (enum.tag)
+        print '   %u, %u, _enum%s_values' % (enum.id, len(enum.values), enum.tag)
         print '};'
         print
 
     def visitBitmask(self, bitmask):
-        print 'static const trace::BitmaskFlag __bitmask%s_flags[] = {' % (bitmask.tag)
+        print 'static const trace::BitmaskFlag _bitmask%s_flags[] = {' % (bitmask.tag)
         for value in bitmask.values:
             print '   {"%s", %s},' % (value, value)
         print '};'
         print
-        print 'static const trace::BitmaskSig __bitmask%s_sig = {' % (bitmask.tag)
-        print '   %u, %u, __bitmask%s_flags' % (bitmask.id, len(bitmask.values), bitmask.tag)
+        print 'static const trace::BitmaskSig _bitmask%s_sig = {' % (bitmask.tag)
+        print '   %u, %u, _bitmask%s_flags' % (bitmask.id, len(bitmask.values), bitmask.tag)
         print '};'
         print
 
@@ -184,8 +184,8 @@ class ValueSerializer(stdapi.Visitor):
         print '    _write__%s(%s);' % (struct.tag, instance)
 
     def visitArray(self, array, instance):
-        length = '__c' + array.type.tag
-        index = '__i' + array.type.tag
+        length = '_c' + array.type.tag
+        index = '_i' + array.type.tag
         print '    if (%s) {' % instance
         print '        size_t %s = %s;' % (length, array.length)
         print '        trace::localWriter.beginArray(%s);' % length
@@ -203,10 +203,10 @@ class ValueSerializer(stdapi.Visitor):
         print '    trace::localWriter.writeBlob(%s, %s);' % (instance, blob.size)
 
     def visitEnum(self, enum, instance):
-        print '    trace::localWriter.writeEnum(&__enum%s_sig, %s);' % (enum.tag, instance)
+        print '    trace::localWriter.writeEnum(&_enum%s_sig, %s);' % (enum.tag, instance)
 
     def visitBitmask(self, bitmask, instance):
-        print '    trace::localWriter.writeBitmask(&__bitmask%s_sig, %s);' % (bitmask.tag, instance)
+        print '    trace::localWriter.writeBitmask(&_bitmask%s_sig, %s);' % (bitmask.tag, instance)
 
     def visitPointer(self, pointer, instance):
         print '    if (%s) {' % instance
@@ -397,10 +397,10 @@ class Tracer:
         # Per-function declarations
 
         if function.args:
-            print 'static const char * __%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
+            print 'static const char * _%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
         else:
-            print 'static const char ** __%s_args = NULL;' % (function.name,)
-        print 'static const trace::FunctionSig __%s_sig = {%u, "%s", %u, __%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
+            print 'static const char ** _%s_args = NULL;' % (function.name,)
+        print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
         print
 
     def isFunctionPublic(self, function):
@@ -413,36 +413,36 @@ class Tracer:
             print 'extern "C" PRIVATE'
         print function.prototype() + ' {'
         if function.type is not stdapi.Void:
-            print '    %s __result;' % function.type
+            print '    %s _result;' % function.type
         self.traceFunctionImplBody(function)
         if function.type is not stdapi.Void:
-            self.wrapRet(function, "__result")
-            print '    return __result;'
+            self.wrapRet(function, "_result")
+            print '    return _result;'
         print '}'
         print
 
     def traceFunctionImplBody(self, function):
-        print '    unsigned __call = trace::localWriter.beginEnter(&__%s_sig);' % (function.name,)
+        print '    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
         for arg in function.args:
             if not arg.output:
                 self.unwrapArg(function, arg)
                 self.serializeArg(function, arg)
         print '    trace::localWriter.endEnter();'
         self.invokeFunction(function)
-        print '    trace::localWriter.beginLeave(__call);'
+        print '    trace::localWriter.beginLeave(_call);'
         for arg in function.args:
             if arg.output:
                 self.serializeArg(function, arg)
                 self.wrapArg(function, arg)
         if function.type is not stdapi.Void:
-            self.serializeRet(function, "__result")
+            self.serializeRet(function, "_result")
         print '    trace::localWriter.endLeave();'
 
-    def invokeFunction(self, function, prefix='__', suffix=''):
+    def invokeFunction(self, function, prefix='_', suffix=''):
         if function.type is stdapi.Void:
             result = ''
         else:
-            result = '__result = '
+            result = '_result = '
         dispatch = prefix + function.name + suffix
         print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
 
@@ -553,19 +553,19 @@ class Tracer:
     def implementWrapperInterfaceMethod(self, interface, base, method):
         print method.prototype(getWrapperInterfaceName(interface) + '::' + method.name) + ' {'
         if method.type is not stdapi.Void:
-            print '    %s __result;' % method.type
+            print '    %s _result;' % method.type
     
         self.implementWrapperInterfaceMethodBody(interface, base, method)
     
         if method.type is not stdapi.Void:
-            print '    return __result;'
+            print '    return _result;'
         print '}'
         print
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        print '    static const char * __args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
-        print '    static const trace::FunctionSig __sig = {%u, "%s", %u, __args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
-        print '    unsigned __call = trace::localWriter.beginEnter(&__sig);'
+        print '    static const char * _args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
+        print '    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
+        print '    unsigned _call = trace::localWriter.beginEnter(&_sig);'
         print '    trace::localWriter.beginArg(0);'
         print '    trace::localWriter.writePointer((uintptr_t)m_pInstance);'
         print '    trace::localWriter.endArg();'
@@ -577,7 +577,7 @@ class Tracer:
         
         self.invokeMethod(interface, base, method)
 
-        print '    trace::localWriter.beginLeave(__call);'
+        print '    trace::localWriter.beginLeave(_call);'
         for arg in method.args:
             if arg.output:
                 self.serializeArg(method, arg)
@@ -585,13 +585,13 @@ class Tracer:
 
         if method.type is not stdapi.Void:
             print '    trace::localWriter.beginReturn();'
-            self.serializeValue(method.type, "__result")
+            self.serializeValue(method.type, "_result")
             print '    trace::localWriter.endReturn();'
-            self.wrapValue(method.type, '__result')
+            self.wrapValue(method.type, '_result')
         print '    trace::localWriter.endLeave();'
         if method.name == 'Release':
             assert method.type is not stdapi.Void
-            print '    if (!__result)'
+            print '    if (!_result)'
             print '        delete this;'
 
     def implementIidWrapper(self, api):
@@ -640,11 +640,11 @@ class Tracer:
         if method.type is stdapi.Void:
             result = ''
         else:
-            result = '__result = '
+            result = '_result = '
         print '    %sstatic_cast<%s *>(m_pInstance)->%s(%s);' % (result, base, method.name, ', '.join([str(arg.name) for arg in method.args]))
     
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned __call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
+        print '        unsigned _call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
         print '        trace::localWriter.beginArg(0);'
         print '        trace::localWriter.writePointer((uintptr_t)%s);' % dest
         print '        trace::localWriter.endArg();'
@@ -655,6 +655,6 @@ class Tracer:
         print '        trace::localWriter.writeUInt(%s);' % length
         print '        trace::localWriter.endArg();'
         print '        trace::localWriter.endEnter();'
-        print '        trace::localWriter.beginLeave(__call);'
+        print '        trace::localWriter.beginLeave(_call);'
         print '        trace::localWriter.endLeave();'
        

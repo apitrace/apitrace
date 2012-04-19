@@ -494,13 +494,13 @@ class GlDispatcher(Dispatcher):
     def header(self):
         print '''
 #if defined(_WIN32)
-extern HINSTANCE __libGlHandle;
+extern HINSTANCE _libGlHandle;
 #else
-extern void * __libGlHandle;
+extern void * _libGlHandle;
 #endif
 
-void * __getPublicProcAddress(const char *procName);
-void * __getPrivateProcAddress(const char *procName);
+void * _getPublicProcAddress(const char *procName);
+void * _getPrivateProcAddress(const char *procName);
 '''
         
     def isFunctionPublic(self, function):

@@ -162,9 +162,9 @@ overrideExtensionsString(const char *extensions)
 
 
 const GLubyte *
-__glGetString_override(GLenum name)
+_glGetString_override(GLenum name)
 {
-    const GLubyte *result = __glGetString(name);
+    const GLubyte *result = _glGetString(name);
 
     if (result) {
         switch (name) {
@@ -181,9 +181,9 @@ __glGetString_override(GLenum name)
 
 
 void
-__glGetIntegerv_override(GLenum pname, GLint *params)
+_glGetIntegerv_override(GLenum pname, GLint *params)
 {
-    __glGetIntegerv(pname, params);
+    _glGetIntegerv(pname, params);
 
     if (params) {
         switch (pname) {
@@ -201,14 +201,14 @@ __glGetIntegerv_override(GLenum pname, GLint *params)
 
 
 const GLubyte *
-__glGetStringi_override(GLenum name, GLuint index)
+_glGetStringi_override(GLenum name, GLuint index)
 {
     switch (name) {
     case GL_EXTENSIONS:
         {
             const ExtensionsDesc *desc = getExtraExtensions();
             GLint numExtensions = 0;
-            __glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+            _glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
             if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
                 return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
             }
@@ -218,7 +218,7 @@ __glGetStringi_override(GLenum name, GLuint index)
         break;
     }
 
-    return __glGetStringi(name, index);
+    return _glGetStringi(name, index);
 }
 
 

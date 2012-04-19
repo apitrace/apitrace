@@ -42,7 +42,7 @@
 
 
 static inline size_t
-__gl_type_size(GLenum type)
+_gl_type_size(GLenum type)
 {
     switch (type) {
     case GL_BOOL:
@@ -71,7 +71,7 @@ __gl_type_size(GLenum type)
 }
 
 static inline void
-__gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
+_gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
     switch (type) {
     case GL_FLOAT:
         elemType = GL_FLOAT;
@@ -277,29 +277,29 @@ __gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
 }
     
 static inline size_t
-__glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
+_glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei maxIndex)
 {
-    size_t elementSize = size*__gl_type_size(type);
+    size_t elementSize = size*_gl_type_size(type);
     if (!stride) {
         stride = (GLsizei)elementSize;
     }
     return stride*maxIndex + elementSize;
 }
 
-#define __glVertexPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
-#define __glNormalPointer_size(type, stride, maxIndex) __glArrayPointer_size(3, type, stride, maxIndex)
-#define __glColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
-#define __glIndexPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
-#define __glTexCoordPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
-#define __glEdgeFlagPointer_size(stride, maxIndex) __glArrayPointer_size(1, GL_BOOL, stride, maxIndex)
-#define __glFogCoordPointer_size(type, stride, maxIndex) __glArrayPointer_size(1, type, stride, maxIndex)
-#define __glSecondaryColorPointer_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
-#define __glVertexAttribPointer_size(size, type, normalized, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
-#define __glVertexAttribPointerARB_size(size, type, normalized, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
-#define __glVertexAttribPointerNV_size(size, type, stride, maxIndex) __glArrayPointer_size(size, type, stride, maxIndex)
+#define _glVertexPointer_size(size, type, stride, maxIndex) _glArrayPointer_size(size, type, stride, maxIndex)
+#define _glNormalPointer_size(type, stride, maxIndex) _glArrayPointer_size(3, type, stride, maxIndex)
+#define _glColorPointer_size(size, type, stride, maxIndex) _glArrayPointer_size(size, type, stride, maxIndex)
+#define _glIndexPointer_size(type, stride, maxIndex) _glArrayPointer_size(1, type, stride, maxIndex)
+#define _glTexCoordPointer_size(size, type, stride, maxIndex) _glArrayPointer_size(size, type, stride, maxIndex)
+#define _glEdgeFlagPointer_size(stride, maxIndex) _glArrayPointer_size(1, GL_BOOL, stride, maxIndex)
+#define _glFogCoordPointer_size(type, stride, maxIndex) _glArrayPointer_size(1, type, stride, maxIndex)
+#define _glSecondaryColorPointer_size(size, type, stride, maxIndex) _glArrayPointer_size(size, type, stride, maxIndex)
+#define _glVertexAttribPointer_size(size, type, normalized, stride, maxIndex) _glArrayPointer_size(size, type, stride, maxIndex)
+#define _glVertexAttribPointerARB_size(size, type, normalized, stride, maxIndex) _glArrayPointer_size(size, type, stride, maxIndex)
+#define _glVertexAttribPointerNV_size(size, type, stride, maxIndex) _glArrayPointer_size(size, type, stride, maxIndex)
 
 static inline GLuint
-__glDrawArrays_maxindex(GLint first, GLsizei count)
+_glDrawArrays_maxindex(GLint first, GLsizei count)
 {
     if (!count) {
         return 0;
@@ -307,29 +307,29 @@ __glDrawArrays_maxindex(GLint first, GLsizei count)
     return first + count - 1;
 }
 
-#define __glDrawArraysEXT_maxindex __glDrawArrays_maxindex
+#define _glDrawArraysEXT_maxindex _glDrawArrays_maxindex
 
 static inline GLuint
-__glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
+_glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
 {
     GLvoid *temp = 0;
-    GLint __element_array_buffer = 0;
+    GLint element_array_buffer = 0;
 
     if (!count) {
         return 0;
     }
 
-    __glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);
-    if (__element_array_buffer) {
+    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &element_array_buffer);
+    if (element_array_buffer) {
         // Read indices from index buffer object
         GLintptr offset = (GLintptr)indices;
-        GLsizeiptr size = count*__gl_type_size(type);
+        GLsizeiptr size = count*_gl_type_size(type);
         GLvoid *temp = malloc(size);
         if (!temp) {
             return 0;
         }
         memset(temp, 0, size);
-        __glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, temp);
+        _glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, temp);
         indices = temp;
     } else {
         if (!indices) {
@@ -364,7 +364,7 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
         os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
     }
 
-    if (__element_array_buffer) {
+    if (element_array_buffer) {
         free(temp);
     }
 
@@ -373,85 +373,85 @@ __glDrawElementsBaseVertex_maxindex(GLsizei count, GLenum type, const GLvoid *in
     return maxindex;
 }
 
-#define __glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
+#define _glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex) _glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
 
-#define __glDrawElements_maxindex(count, type, indices) __glDrawElementsBaseVertex_maxindex(count, type, indices, 0);
-#define __glDrawRangeElements_maxindex(start, end, count, type, indices) __glDrawElements_maxindex(count, type, indices)
-#define __glDrawRangeElementsEXT_maxindex __glDrawRangeElements_maxindex
+#define _glDrawElements_maxindex(count, type, indices) _glDrawElementsBaseVertex_maxindex(count, type, indices, 0);
+#define _glDrawRangeElements_maxindex(start, end, count, type, indices) _glDrawElements_maxindex(count, type, indices)
+#define _glDrawRangeElementsEXT_maxindex _glDrawRangeElements_maxindex
 
 /* FIXME take in consideration instancing */
-#define __glDrawArraysInstanced_maxindex(first, count, primcount) __glDrawArrays_maxindex(first, count)
-#define __glDrawElementsInstanced_maxindex(count, type, indices, primcount) __glDrawElements_maxindex(count, type, indices)
-#define __glDrawElementsInstancedBaseVertex_maxindex(count, type, indices, primcount, basevertex) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
-#define __glDrawRangeElementsInstanced_maxindex(start, end, count, type, indices, primcount) __glDrawRangeElements_maxindex(start, end, count, type, indices)
-#define __glDrawRangeElementsInstancedBaseVertex_maxindex(start, end, count, type, indices, primcount, basevertex) __glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex)
+#define _glDrawArraysInstanced_maxindex(first, count, primcount) _glDrawArrays_maxindex(first, count)
+#define _glDrawElementsInstanced_maxindex(count, type, indices, primcount) _glDrawElements_maxindex(count, type, indices)
+#define _glDrawElementsInstancedBaseVertex_maxindex(count, type, indices, primcount, basevertex) _glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
+#define _glDrawRangeElementsInstanced_maxindex(start, end, count, type, indices, primcount) _glDrawRangeElements_maxindex(start, end, count, type, indices)
+#define _glDrawRangeElementsInstancedBaseVertex_maxindex(start, end, count, type, indices, primcount, basevertex) _glDrawRangeElementsBaseVertex_maxindex(start, end, count, type, indices, basevertex)
 
-#define __glDrawArraysInstancedBaseInstance_maxindex(first, count, primcount, baseinstance) __glDrawArrays_maxindex(first, count)
-#define __glDrawElementsInstancedBaseInstance_maxindex(count, type, indices, primcount, baseinstance) __glDrawElements_maxindex(count, type, indices)
-#define __glDrawElementsInstancedBaseVertexBaseInstance_maxindex(count, type, indices, primcount, basevertex, baseinstance) __glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
+#define _glDrawArraysInstancedBaseInstance_maxindex(first, count, primcount, baseinstance) _glDrawArrays_maxindex(first, count)
+#define _glDrawElementsInstancedBaseInstance_maxindex(count, type, indices, primcount, baseinstance) _glDrawElements_maxindex(count, type, indices)
+#define _glDrawElementsInstancedBaseVertexBaseInstance_maxindex(count, type, indices, primcount, basevertex, baseinstance) _glDrawElementsBaseVertex_maxindex(count, type, indices, basevertex)
 
-#define __glDrawArraysInstancedARB_maxindex __glDrawArraysInstanced_maxindex
-#define __glDrawElementsInstancedARB_maxindex __glDrawElementsInstanced_maxindex
-#define __glDrawArraysInstancedEXT_maxindex __glDrawArraysInstanced_maxindex
-#define __glDrawElementsInstancedEXT_maxindex __glDrawElementsInstanced_maxindex
+#define _glDrawArraysInstancedARB_maxindex _glDrawArraysInstanced_maxindex
+#define _glDrawElementsInstancedARB_maxindex _glDrawElementsInstanced_maxindex
+#define _glDrawArraysInstancedEXT_maxindex _glDrawArraysInstanced_maxindex
+#define _glDrawElementsInstancedEXT_maxindex _glDrawElementsInstanced_maxindex
 
 static inline GLuint
-__glDrawArraysIndirect_maxindex(const GLvoid *indirect) {
+_glDrawArraysIndirect_maxindex(const GLvoid *indirect) {
     os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
     return 0;
 }
 
 static inline GLuint
-__glDrawElementsIndirect_maxindex(GLenum type, const GLvoid *indirect) {
+_glDrawElementsIndirect_maxindex(GLenum type, const GLvoid *indirect) {
     os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
     return 0;
 }
 
 static inline GLuint
-__glMultiDrawArrays_maxindex(const GLint *first, const GLsizei *count, GLsizei primcount) {
+_glMultiDrawArrays_maxindex(const GLint *first, const GLsizei *count, GLsizei primcount) {
     GLuint maxindex = 0;
     for (GLsizei prim = 0; prim < primcount; ++prim) {
-        GLuint maxindex_prim = __glDrawArrays_maxindex(first[prim], count[prim]);
+        GLuint maxindex_prim = _glDrawArrays_maxindex(first[prim], count[prim]);
         maxindex = std::max(maxindex, maxindex_prim);
     }
     return maxindex;
 }
 
 static inline GLuint
-__glMultiDrawElements_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount) {
+_glMultiDrawElements_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount) {
     GLuint maxindex = 0;
     for (GLsizei prim = 0; prim < primcount; ++prim) {
-        GLuint maxindex_prim = __glDrawElements_maxindex(count[prim], type, indices[prim]);
+        GLuint maxindex_prim = _glDrawElements_maxindex(count[prim], type, indices[prim]);
         maxindex = std::max(maxindex, maxindex_prim);
     }
     return maxindex;
 }
 
 static inline GLuint
-__glMultiDrawElementsBaseVertex_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount, const GLint * basevertex) {
+_glMultiDrawElementsBaseVertex_maxindex(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount, const GLint * basevertex) {
     GLuint maxindex = 0;
     for (GLsizei prim = 0; prim < primcount; ++prim) {
-        GLuint maxindex_prim = __glDrawElementsBaseVertex_maxindex(count[prim], type, indices[prim], basevertex[prim]);
+        GLuint maxindex_prim = _glDrawElementsBaseVertex_maxindex(count[prim], type, indices[prim], basevertex[prim]);
         maxindex = std::max(maxindex, maxindex_prim);
     }
     return maxindex;
 }
 
-#define __glMultiDrawArraysEXT_maxindex __glMultiDrawArrays_maxindex
-#define __glMultiDrawElementsEXT_maxindex __glMultiDrawElements_maxindex
+#define _glMultiDrawArraysEXT_maxindex _glMultiDrawArrays_maxindex
+#define _glMultiDrawElementsEXT_maxindex _glMultiDrawElements_maxindex
 
-#define __glMultiModeDrawArraysIBM_maxindex(first, count, primcount, modestride) __glMultiDrawArrays_maxindex(first, count, primcount)
-#define __glMultiModeDrawElementsIBM_maxindex(count, type, indices, primcount, modestride) __glMultiDrawElements_maxindex(count, type, (const GLvoid **)indices, primcount)
+#define _glMultiModeDrawArraysIBM_maxindex(first, count, primcount, modestride) _glMultiDrawArrays_maxindex(first, count, primcount)
+#define _glMultiModeDrawElementsIBM_maxindex(count, type, indices, primcount, modestride) _glMultiDrawElements_maxindex(count, type, (const GLvoid **)indices, primcount)
 
 
 static inline size_t
-__glCallLists_size(GLsizei n, GLenum type)
+_glCallLists_size(GLsizei n, GLenum type)
 {
-    return n*__gl_type_size(type);
+    return n*_gl_type_size(type);
 }
 
 static inline size_t
-__glMap1d_size(GLenum target, GLint stride, GLint order)
+_glMap1d_size(GLenum target, GLint stride, GLint order)
 {
     if (order < 1) {
         return 0;
@@ -488,10 +488,10 @@ __glMap1d_size(GLenum target, GLint stride, GLint order)
     return channels + stride * (order - 1);
 }
 
-#define __glMap1f_size __glMap1d_size
+#define _glMap1f_size _glMap1d_size
 
 static inline size_t
-__glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint vorder)
+_glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint vorder)
 {
     if (uorder < 1 || vorder < 1) {
         return 0;
@@ -530,10 +530,10 @@ __glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint 
            vstride * (vorder - 1);
 }
 
-#define __glMap2f_size __glMap2d_size
+#define _glMap2f_size _glMap2d_size
 
 static inline unsigned
-__gl_format_channels(GLenum format) {
+_gl_format_channels(GLenum format) {
     switch (format) {
     case GL_COLOR_INDEX:
     case GL_RED:
@@ -582,8 +582,8 @@ _align(X x, Y y) {
 }
 
 static inline size_t
-__gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLboolean has_unpack_subimage) {
-    unsigned num_channels = __gl_format_channels(format);
+_gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLboolean has_unpack_subimage) {
+    unsigned num_channels = _gl_format_channels(format);
 
     unsigned bits_per_pixel;
     switch (type) {
@@ -645,13 +645,13 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
     GLint skip_pixels = 0;
     GLint skip_images = 0;
 
-    __glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+    _glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
     if (has_unpack_subimage) {
-        __glGetIntegerv(GL_UNPACK_ROW_LENGTH,   &row_length);
-        __glGetIntegerv(GL_UNPACK_IMAGE_HEIGHT, &image_height);
-        __glGetIntegerv(GL_UNPACK_SKIP_ROWS,    &skip_rows);
-        __glGetIntegerv(GL_UNPACK_SKIP_PIXELS,  &skip_pixels);
-        __glGetIntegerv(GL_UNPACK_SKIP_IMAGES,  &skip_images);
+        _glGetIntegerv(GL_UNPACK_ROW_LENGTH,   &row_length);
+        _glGetIntegerv(GL_UNPACK_IMAGE_HEIGHT, &image_height);
+        _glGetIntegerv(GL_UNPACK_SKIP_ROWS,    &skip_rows);
+        _glGetIntegerv(GL_UNPACK_SKIP_PIXELS,  &skip_pixels);
+        _glGetIntegerv(GL_UNPACK_SKIP_IMAGES,  &skip_images);
     }
 
     if (row_length <= 0) {
@@ -685,46 +685,46 @@ __gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsiz
 }
 
 // note that can_unpack_subimage() is generated by gltrace.py
-#define __glTexImage3D_size(format, type, width, height, depth) __gl_image_size(format, type, width, height, depth, can_unpack_subimage())
-#define __glTexImage2D_size(format, type, width, height)        __gl_image_size(format, type, width, height, 1, can_unpack_subimage())
-#define __glTexImage1D_size(format, type, width)                __gl_image_size(format, type, width, 1, 1, can_unpack_subimage())
+#define _glTexImage3D_size(format, type, width, height, depth) _gl_image_size(format, type, width, height, depth, can_unpack_subimage())
+#define _glTexImage2D_size(format, type, width, height)        _gl_image_size(format, type, width, height, 1, can_unpack_subimage())
+#define _glTexImage1D_size(format, type, width)                _gl_image_size(format, type, width, 1, 1, can_unpack_subimage())
 
-#define __glTexSubImage3D_size(format, type, width, height, depth) __glTexImage3D_size(format, type, width, height, depth)
-#define __glTexSubImage2D_size(format, type, width, height)        __glTexImage2D_size(format, type, width, height)
-#define __glTexSubImage1D_size(format, type, width)                __glTexImage1D_size(format, type, width)
+#define _glTexSubImage3D_size(format, type, width, height, depth) _glTexImage3D_size(format, type, width, height, depth)
+#define _glTexSubImage2D_size(format, type, width, height)        _glTexImage2D_size(format, type, width, height)
+#define _glTexSubImage1D_size(format, type, width)                _glTexImage1D_size(format, type, width)
 
-#define __glTexImage3DEXT_size __glTexImage3D_size
-#define __glTexImage2DEXT_size __glTexImage2D_size
-#define __glTexImage1DEXT_size __glTexImage1D_size
-#define __glTexSubImage3DEXT_size __glTexSubImage3D_size
-#define __glTexSubImage2DEXT_size __glTexSubImage2D_size
-#define __glTexSubImage1DEXT_size __glTexSubImage1D_size
+#define _glTexImage3DEXT_size _glTexImage3D_size
+#define _glTexImage2DEXT_size _glTexImage2D_size
+#define _glTexImage1DEXT_size _glTexImage1D_size
+#define _glTexSubImage3DEXT_size _glTexSubImage3D_size
+#define _glTexSubImage2DEXT_size _glTexSubImage2D_size
+#define _glTexSubImage1DEXT_size _glTexSubImage1D_size
 
-#define __glTextureImage3DEXT_size __glTexImage3D_size
-#define __glTextureImage2DEXT_size __glTexImage2D_size
-#define __glTextureImage1DEXT_size __glTexImage1D_size
-#define __glTextureSubImage3DEXT_size __glTexSubImage3D_size
-#define __glTextureSubImage2DEXT_size __glTexSubImage2D_size
-#define __glTextureSubImage1DEXT_size __glTexSubImage1D_size
+#define _glTextureImage3DEXT_size _glTexImage3D_size
+#define _glTextureImage2DEXT_size _glTexImage2D_size
+#define _glTextureImage1DEXT_size _glTexImage1D_size
+#define _glTextureSubImage3DEXT_size _glTexSubImage3D_size
+#define _glTextureSubImage2DEXT_size _glTexSubImage2D_size
+#define _glTextureSubImage1DEXT_size _glTexSubImage1D_size
 
-#define __glMultiTexImage3DEXT_size __glTexImage3D_size
-#define __glMultiTexImage2DEXT_size __glTexImage2D_size
-#define __glMultiTexImage1DEXT_size __glTexImage1D_size
-#define __glMultiTexSubImage3DEXT_size __glTexSubImage3D_size
-#define __glMultiTexSubImage2DEXT_size __glTexSubImage2D_size
-#define __glMultiTexSubImage1DEXT_size __glTexSubImage1D_size
+#define _glMultiTexImage3DEXT_size _glTexImage3D_size
+#define _glMultiTexImage2DEXT_size _glTexImage2D_size
+#define _glMultiTexImage1DEXT_size _glTexImage1D_size
+#define _glMultiTexSubImage3DEXT_size _glTexSubImage3D_size
+#define _glMultiTexSubImage2DEXT_size _glTexSubImage2D_size
+#define _glMultiTexSubImage1DEXT_size _glTexSubImage1D_size
 
-#define __glDrawPixels_size(format, type, width, height) __glTexImage2D_size(format, type, width, height)
-#define __glConvolutionFilter1D_size(format, type, width) __glTexImage1D_size(format, type, width)
-#define __glConvolutionFilter2D_size(format, type, width, height) __glTexImage2D_size(format, type, width, height)
-#define __glColorTable_size(format, type, width) __glTexImage1D_size(format, type, width)
-#define __glColorSubTable_size(format, type, count) __glColorTable_size(format, type, count)
+#define _glDrawPixels_size(format, type, width, height) _glTexImage2D_size(format, type, width, height)
+#define _glConvolutionFilter1D_size(format, type, width) _glTexImage1D_size(format, type, width)
+#define _glConvolutionFilter2D_size(format, type, width, height) _glTexImage2D_size(format, type, width, height)
+#define _glColorTable_size(format, type, width) _glTexImage1D_size(format, type, width)
+#define _glColorSubTable_size(format, type, count) _glColorTable_size(format, type, count)
 
-#define __glBitmap_size(width, height) __glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height)
-#define __glPolygonStipple_size() __glBitmap_size(32, 32)
+#define _glBitmap_size(width, height) _glTexImage2D_size(GL_COLOR_INDEX, GL_BITMAP, width, height)
+#define _glPolygonStipple_size() _glBitmap_size(32, 32)
 
 static inline size_t
-__glClearBuffer_size(GLenum buffer)
+_glClearBuffer_size(GLenum buffer)
 {
     switch (buffer) {
     case GL_COLOR:
@@ -748,7 +748,7 @@ __glClearBuffer_size(GLenum buffer)
  */
 template<class T>
 static inline size_t
-__AttribList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
+_AttribList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
 {
     size_t size = 0;
 
@@ -767,7 +767,7 @@ __AttribList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
  */
 template<class T>
 static inline size_t
-__AttribPairList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
+_AttribPairList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
 {
     size_t size = 0;
 

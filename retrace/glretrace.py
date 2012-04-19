@@ -181,16 +181,16 @@ class GlRetracer(Retracer):
             print '    if (retrace::parser.version < 1) {'
 
             if is_array_pointer or is_draw_array:
-                print '        GLint __array_buffer = 0;'
-                print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &__array_buffer);'
-                print '        if (!__array_buffer) {'
+                print '        GLint _array_buffer = 0;'
+                print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &_array_buffer);'
+                print '        if (!_array_buffer) {'
                 self.failFunction(function)
                 print '        }'
 
             if is_draw_elements:
-                print '        GLint __element_array_buffer = 0;'
-                print '        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &__element_array_buffer);'
-                print '        if (!__element_array_buffer) {'
+                print '        GLint _element_array_buffer = 0;'
+                print '        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &_element_array_buffer);'
+                print '        if (!_element_array_buffer) {'
                 self.failFunction(function)
                 print '        }'
             
@@ -198,9 +198,9 @@ class GlRetracer(Retracer):
 
         # When no pack buffer object is bound, the pack functions are no-ops.
         if function.name in self.pack_function_names:
-            print '    GLint __pack_buffer = 0;'
-            print '    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &__pack_buffer);'
-            print '    if (!__pack_buffer) {'
+            print '    GLint _pack_buffer = 0;'
+            print '    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);'
+            print '    if (!_pack_buffer) {'
             print '        return;'
             print '    }'
 
@@ -340,23 +340,23 @@ class GlRetracer(Retracer):
                 print r'             delete [] infoLog;'
                 print r'        }'
             if function.name in self.map_function_names:
-                print r'        if (!__result) {'
+                print r'        if (!_result) {'
                 print r'             retrace::warning(call) << "failed to map buffer\n";'
                 print r'        }'
             if function.name in self.unmap_function_names and function.type is not stdapi.Void:
-                print r'        if (!__result) {'
+                print r'        if (!_result) {'
                 print r'             retrace::warning(call) << "failed to unmap buffer\n";'
                 print r'        }'
             if function.name in ('glGetAttribLocation', 'glGetAttribLocationARB'):
-                print r'    GLint __orig_result = call.ret->toSInt();'
-                print r'    if (__result != __orig_result) {'
-                print r'        retrace::warning(call) << "vertex attrib location mismatch " << __orig_result << " -> " << __result << "\n";'
+                print r'    GLint _origResult = call.ret->toSInt();'
+                print r'    if (_result != _origResult) {'
+                print r'        retrace::warning(call) << "vertex attrib location mismatch " << _origResult << " -> " << _result << "\n";'
                 print r'    }'
             if function.name in ('glCheckFramebufferStatus', 'glCheckFramebufferStatusEXT', 'glCheckNamedFramebufferStatusEXT'):
-                print r'    GLint __orig_result = call.ret->toSInt();'
-                print r'    if (__orig_result == GL_FRAMEBUFFER_COMPLETE &&'
-                print r'        __result != GL_FRAMEBUFFER_COMPLETE) {'
-                print r'        retrace::warning(call) << "incomplete framebuffer (" << glstate::enumToString(__result) << ")\n";'
+                print r'    GLint _origResult = call.ret->toSInt();'
+                print r'    if (_origResult == GL_FRAMEBUFFER_COMPLETE &&'
+                print r'        _result != GL_FRAMEBUFFER_COMPLETE) {'
+                print r'        retrace::warning(call) << "incomplete framebuffer (" << glstate::enumToString(_result) << ")\n";'
                 print r'    }'
             print '    }'
 

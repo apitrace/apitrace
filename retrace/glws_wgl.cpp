@@ -54,9 +54,9 @@ namespace glws {
  * See also:
  * - http://www.opengl.org/archives/resources/faq/technical/mswindows.htm
  */
-static __PFNWGLCHOOSEPIXELFORMAT pfnChoosePixelFormat = &ChoosePixelFormat;
-static __PFNWGLSETPIXELFORMAT pfnSetPixelFormat = &SetPixelFormat;
-static __PFNWGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
+static PFN_WGLCHOOSEPIXELFORMAT pfnChoosePixelFormat = &ChoosePixelFormat;
+static PFN_WGLSETPIXELFORMAT pfnSetPixelFormat = &SetPixelFormat;
+static PFN_WGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
 
 
 static LRESULT CALLBACK
@@ -252,8 +252,8 @@ init(void) {
         libgl_filename = "OPENGL32";
     }
 
-    __libGlHandle = LoadLibraryA(libgl_filename);
-    if (!__libGlHandle) {
+    _libGlHandle = LoadLibraryA(libgl_filename);
+    if (!_libGlHandle) {
         std::cerr << "error: unable to open " << libgl_filename << "\n";
         exit(1);
     }

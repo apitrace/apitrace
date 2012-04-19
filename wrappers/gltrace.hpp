@@ -50,13 +50,13 @@ Context *
 getContext(void);
 
 const GLubyte *
-__glGetString_override(GLenum name);
+_glGetString_override(GLenum name);
 
 void
-__glGetIntegerv_override(GLenum pname, GLint *params);
+_glGetIntegerv_override(GLenum pname, GLint *params);
 
 const GLubyte *
-__glGetStringi_override(GLenum name, GLuint index);
+_glGetStringi_override(GLenum name, GLuint index);
 
 
 } /* namespace gltrace */

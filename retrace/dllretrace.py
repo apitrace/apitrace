@@ -35,7 +35,7 @@ class DllRetracer(Retracer):
 static HINSTANCE g_hDll = NULL;
 
 static PROC
-__getPublicProcAddress(LPCSTR lpProcName)
+_getPublicProcAddress(LPCSTR lpProcName)
 {
     if (!g_hDll) {
         char szDll[MAX_PATH] = {0};

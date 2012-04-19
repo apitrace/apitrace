@@ -80,7 +80,7 @@ typedef int32_t  GLclampx;
 // avoid conflict with GL_EXT_framebuffer_multisample
 #define GL_EXT_multisampled_render_to_texture
 
-#undef __glext_h_
+#undef _glext_h_
 #include "GLES/glext.h"
 
 

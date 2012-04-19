@@ -188,7 +188,7 @@ cglapi.addFunctions([
     Function(CGLContextObj, "CGLGetCurrentContext", []),
 
     # OpenGL.h, OpenGL framework
-    Function(CGLError, "CGLChoosePixelFormat", [(Array(Const(CGLPixelFormatAttribute), "__AttribList_size(attribs)"), "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
+    Function(CGLError, "CGLChoosePixelFormat", [(Array(Const(CGLPixelFormatAttribute), "_AttribList_size(attribs)"), "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
     Function(CGLError, "CGLDestroyPixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")]),
     Function(Void, "CGLReleasePixelFormat", [(CGLPixelFormatObj, "pix")]),

@@ -37,9 +37,9 @@
  * Handle to the true OpenGL library.
  */
 #if defined(_WIN32)
-HINSTANCE __libGlHandle = NULL;
+HINSTANCE _libGlHandle = NULL;
 #else
-void *__libGlHandle = NULL;
+void *_libGlHandle = NULL;
 #endif
 
 
@@ -47,9 +47,9 @@ void *__libGlHandle = NULL;
 #if defined(_WIN32)
 
 void *
-__getPublicProcAddress(const char *procName)
+_getPublicProcAddress(const char *procName)
 {
-    if (!__libGlHandle) {
+    if (!_libGlHandle) {
         char szDll[MAX_PATH] = {0};
         
         if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
@@ -58,20 +58,20 @@ __getPublicProcAddress(const char *procName)
         
         strcat(szDll, "\\\\opengl32.dll");
         
-        __libGlHandle = LoadLibraryA(szDll);
-        if (!__libGlHandle) {
+        _libGlHandle = LoadLibraryA(szDll);
+        if (!_libGlHandle) {
             os::log("apitrace: error: couldn't load %s\n", szDll);
             return NULL;
         }
     }
         
-    return (void *)GetProcAddress(__libGlHandle, procName);
+    return (void *)GetProcAddress(_libGlHandle, procName);
 }
 
 
 void *
-__getPrivateProcAddress(const char *procName) {
-    return (void *)__wglGetProcAddress(procName);
+_getPrivateProcAddress(const char *procName) {
+    return (void *)_wglGetProcAddress(procName);
 }
 
 
@@ -87,11 +87,11 @@ static const char *libgl_filename = "/System/Library/Frameworks/OpenGL.framework
 /*
  * Lookup a libGL symbol
  */
-void * __libgl_sym(const char *symbol)
+void * _libgl_sym(const char *symbol)
 {
     void *result;
 
-    if (!__libGlHandle) {
+    if (!_libGlHandle) {
         /* 
          * Unfortunately we can't just dlopen the true dynamic library because
          * DYLD_LIBRARY_PATH/DYLD_FRAMEWORK_PATH take precedence, even for
@@ -103,19 +103,19 @@ void * __libgl_sym(const char *symbol)
 
         if (mktemp(temp_filename) != NULL) {
             if (symlink(libgl_filename, temp_filename) == 0) {
-                __libGlHandle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+                _libGlHandle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
                 remove(temp_filename);
             }
         }
 
-        if (!__libGlHandle) {
+        if (!_libGlHandle) {
             os::log("apitrace: error: couldn't load %s\n", libgl_filename);
             os::abort();
             return NULL;
         }
     }
 
-    result = dlsym(__libGlHandle, symbol);
+    result = dlsym(_libGlHandle, symbol);
 
 #if 0
     if (result && result == dlsym(RTLD_SELF, symbol)) {
@@ -130,15 +130,15 @@ void * __libgl_sym(const char *symbol)
 
 
 void *
-__getPublicProcAddress(const char *procName)
+_getPublicProcAddress(const char *procName)
 {
-    return __libgl_sym(procName);
+    return _libgl_sym(procName);
 }
 
 void *
-__getPrivateProcAddress(const char *procName)
+_getPrivateProcAddress(const char *procName)
 {
-    return __libgl_sym(procName);
+    return _libgl_sym(procName);
 }
 
 
@@ -149,7 +149,7 @@ __getPrivateProcAddress(const char *procName)
  * Invoke the true dlopen() function.
  */
 static void *
-__dlopen(const char *filename, int flag)
+_dlopen(const char *filename, int flag)
 {
     typedef void * (*PFNDLOPEN)(const char *, int);
     static PFNDLOPEN dlopen_ptr = NULL;
@@ -169,11 +169,11 @@ __dlopen(const char *filename, int flag)
 /*
  * Lookup a libGL symbol
  */
-void * __libgl_sym(const char *symbol)
+void * _libgl_sym(const char *symbol)
 {
     void *result;
 
-    if (!__libGlHandle) {
+    if (!_libGlHandle) {
         /*
          * The app doesn't directly link against libGL.so, nor does it directly
          * dlopen it.  So we have to load it ourselves.
@@ -188,7 +188,7 @@ void * __libgl_sym(const char *symbol)
 
             result = dlsym(RTLD_NEXT, symbol);
             if (result) {
-                __libGlHandle = RTLD_NEXT;
+                _libGlHandle = RTLD_NEXT;
                 return result;
             }
 
@@ -202,27 +202,27 @@ void * __libgl_sym(const char *symbol)
          * exposes symbols to it.
          */
 
-        __libGlHandle = __dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
-        if (!__libGlHandle) {
+        _libGlHandle = _dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
+        if (!_libGlHandle) {
             os::log("apitrace: error: couldn't find libGL.so\n");
             return NULL;
         }
     }
 
-    return dlsym(__libGlHandle, symbol);
+    return dlsym(_libGlHandle, symbol);
 }
 
 
 void *
-__getPublicProcAddress(const char *procName)
+_getPublicProcAddress(const char *procName)
 {
-    return __libgl_sym(procName);
+    return _libgl_sym(procName);
 }
 
 void *
-__getPrivateProcAddress(const char *procName)
+_getPrivateProcAddress(const char *procName)
 {
-    return (void *)__glXGetProcAddressARB((const GLubyte *)procName);
+    return (void *)_glXGetProcAddressARB((const GLubyte *)procName);
 }
 
 

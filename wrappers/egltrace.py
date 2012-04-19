@@ -57,8 +57,8 @@ class EglTracer(GlTracer):
             print '    if (ctx != EGL_NO_CONTEXT) {'
             print '        EGLint api = EGL_OPENGL_ES_API, version = 1;'
             print '        gltrace::Context *tr = gltrace::getContext();'
-            print '        __eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
-            print '        __eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
+            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
+            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
             print '        if (api == EGL_OPENGL_API)'
             print '            tr->profile = gltrace::PROFILE_COMPAT;'
             print '        else if (version == 1)'
@@ -102,13 +102,13 @@ if __name__ == '__main__':
 /*
  * Invoke the true dlopen() function.
  */
-static void *__dlopen(const char *filename, int flag)
+static void *_dlopen(const char *filename, int flag)
 {
-    typedef void * (*PFNDLOPEN)(const char *, int);
-    static PFNDLOPEN dlopen_ptr = NULL;
+    typedef void * (*PFN_DLOPEN)(const char *, int);
+    static PFN_DLOPEN dlopen_ptr = NULL;
 
     if (!dlopen_ptr) {
-        dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
+        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_NEXT, "dlopen");
         if (!dlopen_ptr) {
             os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
             return NULL;
@@ -155,14 +155,14 @@ void * dlopen(const char *filename, int flag)
         }
     }
 
-    void *handle = __dlopen(filename, flag);
+    void *handle = _dlopen(filename, flag);
 
     if (intercept) {
         // Get the file path for our shared object, and use it instead
         static int dummy = 0xdeedbeef;
         Dl_info info;
         if (dladdr(&dummy, &info)) {
-            handle = __dlopen(info.dli_fname, flag);
+            handle = _dlopen(info.dli_fname, flag);
         } else {
             os::log("apitrace: warning: dladdr() failed\n");
         }

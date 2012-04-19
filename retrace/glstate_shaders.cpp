@@ -196,7 +196,7 @@ static void
 dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLchar *name) {
     GLenum elemType;
     GLint numElems;
-    __gl_uniform_size(type, elemType, numElems);
+    _gl_uniform_size(type, elemType, numElems);
     if (elemType == GL_NONE) {
         return;
     }
@@ -278,7 +278,7 @@ dumpUniformARB(JSONWriter &json, GLhandleARB programObj, GLint size, GLenum type
 
     GLenum elemType;
     GLint numElems;
-    __gl_uniform_size(type, elemType, numElems);
+    _gl_uniform_size(type, elemType, numElems);
     if (elemType == GL_NONE) {
         return;
     }

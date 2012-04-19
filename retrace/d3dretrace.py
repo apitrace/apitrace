@@ -50,7 +50,7 @@ class D3DRetracer(Retracer):
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         if str(method.type) == 'HRESULT':
-            print r'    if (__result != S_OK) {'
+            print r'    if (_result != S_OK) {'
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 

@@ -291,7 +291,7 @@ EGLuint64NV = Alias("EGLuint64NV", UInt64)
 
 eglapi = API("EGL")
 
-EGLAttribList = Array(Const(EGLattrib), "__AttribPairList_size(attrib_list, EGL_NONE)")
+EGLAttribList = Array(Const(EGLattrib), "_AttribPairList_size(attrib_list, EGL_NONE)")
 
 PROC = Opaque("__eglMustCastToProperFunctionPointerType")
 

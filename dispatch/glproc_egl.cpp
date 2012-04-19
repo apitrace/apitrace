@@ -40,9 +40,9 @@
  * XXX: Not really used yet.
  */
 #if defined(_WIN32)
-HINSTANCE __libGlHandle = NULL;
+HINSTANCE _libGlHandle = NULL;
 #else
-void *__libGlHandle = NULL;
+void *_libGlHandle = NULL;
 #endif
 
 
@@ -71,7 +71,7 @@ void *__libGlHandle = NULL;
  * for quering via dlsym(RTLD_NEXT, ...).
  */
 void *
-__getPublicProcAddress(const char *procName)
+_getPublicProcAddress(const char *procName)
 {
 #if defined(ANDROID)
     /*
@@ -135,14 +135,14 @@ __getPublicProcAddress(const char *procName)
  * eglGetProcAddress to mitigate that.
  */
 void *
-__getPrivateProcAddress(const char *procName)
+_getPrivateProcAddress(const char *procName)
 {
     void *proc;
-    proc = __getPublicProcAddress(procName);
+    proc = _getPublicProcAddress(procName);
     if (!proc &&
         ((procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') ||
          (procName[0] == 'g' && procName[1] == 'l'))) {
-        proc = (void *) __eglGetProcAddress(procName);
+        proc = (void *) _eglGetProcAddress(procName);
     }
 
     return proc;

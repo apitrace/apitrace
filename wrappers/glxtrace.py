@@ -78,13 +78,13 @@ if __name__ == '__main__':
 /*
  * Invoke the true dlopen() function.
  */
-static void *__dlopen(const char *filename, int flag)
+static void *_dlopen(const char *filename, int flag)
 {
-    typedef void * (*PFNDLOPEN)(const char *, int);
-    static PFNDLOPEN dlopen_ptr = NULL;
+    typedef void * (*PFN_DLOPEN)(const char *, int);
+    static PFN_DLOPEN dlopen_ptr = NULL;
 
     if (!dlopen_ptr) {
-        dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
+        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_NEXT, "dlopen");
         if (!dlopen_ptr) {
             os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
             return NULL;
@@ -106,7 +106,7 @@ void * dlopen(const char *filename, int flag)
 {
     void *handle;
 
-    handle = __dlopen(filename, flag);
+    handle = _dlopen(filename, flag);
 
     const char * libgl_filename = getenv("TRACE_LIBGL");
 
@@ -120,14 +120,14 @@ void * dlopen(const char *filename, int flag)
             strcmp(filename, "libGL.so.1") == 0) {
 
             // Use the true libGL.so handle instead of RTLD_NEXT from now on
-            __libGlHandle = handle;
+            _libGlHandle = handle;
 
             // Get the file path for our shared object, and use it instead
             static int dummy = 0xdeedbeef;
             Dl_info info;
             if (dladdr(&dummy, &info)) {
                 os::log("apitrace: redirecting dlopen(\"%s\", 0x%x)\n", filename, flag);
-                handle = __dlopen(info.dli_fname, flag);
+                handle = _dlopen(info.dli_fname, flag);
             } else {
                 os::log("apitrace: warning: dladdr() failed\n");
             }

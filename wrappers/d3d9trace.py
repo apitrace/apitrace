@@ -66,7 +66,7 @@ class D3D9Tracer(DllTracer):
             assert descArg.output
             descType = getDescMethod.args[0].type.type
 
-            print '    if (__result == D3D_OK && !(Flags & D3DLOCK_READONLY)) {'
+            print '    if (_result == D3D_OK && !(Flags & D3DLOCK_READONLY)) {'
             print '        if (SizeToLock) {'
             print '            m_SizeToLock = SizeToLock;'
             print '        } else {'

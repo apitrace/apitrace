@@ -233,7 +233,7 @@ class JsonWriter(Visitor):
     __index = 0
 
     def visitArray(self, array, instance):
-        index = '__i%u' % JsonWriter.__index
+        index = '_i%u' % JsonWriter.__index
         JsonWriter.__index += 1
         print '    json.beginArray();'
         print '    for (unsigned %s = 0; %s < %s; ++%s) {' % (index, index, array.length, index)
@@ -344,7 +344,7 @@ class StateDumper:
 
     def dump_light_params(self):
         print '    GLint max_lights = 0;'
-        print '    __glGetIntegerv(GL_MAX_LIGHTS, &max_lights);'
+        print '    _glGetIntegerv(GL_MAX_LIGHTS, &max_lights);'
         print '    for (GLint index = 0; index < max_lights; ++index) {'
         print '        GLenum light = GL_LIGHT0 + index;'
         print '        if (glIsEnabled(light)) {'
@@ -380,7 +380,7 @@ class StateDumper:
 
     def dump_vertex_attribs(self):
         print '    GLint max_vertex_attribs = 0;'
-        print '    __glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_vertex_attribs);'
+        print '    _glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_vertex_attribs);'
         print '    for (GLint index = 0; index < max_vertex_attribs; ++index) {'
         print '        char name[32];'
         print '        snprintf(name, sizeof name, "GL_VERTEX_ATTRIB_ARRAY%i", index);'
