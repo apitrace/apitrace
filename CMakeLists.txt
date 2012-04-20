@@ -117,6 +117,16 @@ else ()
     add_definitions (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+
+    # Use GDB extensions if available
+    if (CMAKE_COMPILER_IS_GNUC)
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb -O0")
+        set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -ggdb")
+    endif ()
+    if (CMAKE_COMPILER_IS_GNUCXX)
+        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -O0")
+        set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -ggdb")
+    endif ()
 endif ()
 
 if (MINGW)
