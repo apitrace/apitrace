@@ -31,23 +31,18 @@ from dispatch import Dispatcher
 class DllRetracer(Retracer):
 
     def retraceApi(self, api):
-        print '''
+        print r'''
+static LPCSTR g_szDll = "%s";
 static HMODULE g_hDll = NULL;
 
 static PROC
 _getPublicProcAddress(LPCSTR lpProcName)
 {
     if (!g_hDll) {
-        char szDll[MAX_PATH] = {0};
-        
-        if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
-            return NULL;
-        }
-        
-        strcat(szDll, "\\\\%s");
-        
-        g_hDll = LoadLibraryA(szDll);
+        g_hDll = LoadLibraryA(g_szDll);
         if (!g_hDll) {
+            os::log("error: failed to load %%s\n", g_szDll);
+            exit(1);
             return NULL;
         }
     }
@@ -55,7 +50,7 @@ _getPublicProcAddress(LPCSTR lpProcName)
     return GetProcAddress(g_hDll, lpProcName);
 }
 
-''' % api.name
+''' % api.name.upper()
 
         dispatcher = Dispatcher()
         dispatcher.dispatch_api(api)
