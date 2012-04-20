@@ -734,7 +734,7 @@ Value *Parser::parse_blob(void) {
     size_t size = read_uint();
     Blob *blob = new Blob(size);
     if (size) {
-        file->read(blob->buf, (unsigned)size);
+        file->read(blob->buf, size);
     }
     return blob;
 }
@@ -784,7 +784,7 @@ const char * Parser::read_string(void) {
     size_t len = read_uint();
     char * value = new char[len + 1];
     if (len) {
-        file->read(value, (unsigned)len);
+        file->read(value, len);
     }
     value[len] = 0;
 #if TRACE_VERBOSE
