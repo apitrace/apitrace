@@ -26,6 +26,8 @@
  *********************************************************************/
 
 #include <string.h>
+#include <getopt.h>
+
 #include <iostream>
 
 #include "cli.hpp"
@@ -45,32 +47,32 @@ usage(void)
         "    Both input files should be the result of running 'glretrace -D XYZ <trace>'.\n";
 }
 
+const static char *
+shortOptions = "h";
+
+const static struct option
+longOptions[] = {
+    {"help", no_argument, 0, 'h'},
+    {0, 0, 0, 0}
+};
+
 static int
 command(int argc, char *argv[])
 {
-    int i;
-
-    for (i = 1; i < argc; ++i) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        if (!strcmp(arg, "--")) {
-            i++;
-            break;
-        } else if (!strcmp(arg, "--help")) {
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
             usage();
             return 0;
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
             usage();
             return 1;
         }
     }
 
-    if (argc - i != 2) {
+    if (argc != optind + 2) {
         std::cerr << "Error: diff-state requires exactly two state-dump files as arguments.\n";
         usage();
         return 1;
@@ -78,8 +80,8 @@ command(int argc, char *argv[])
 
     char *file1, *file2;
 
-    file1 = argv[i];
-    file2 = argv[i+1];
+    file1 = argv[optind];
+    file2 = argv[optind + 1];
 
     os::String command = trace::findScript("jsondiff.py");
 
