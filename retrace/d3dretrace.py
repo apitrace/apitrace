@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-"""GL retracer generator."""
+"""D3D retracer generator."""
 
 
 from dllretrace import DllRetracer as Retracer
@@ -44,6 +44,10 @@ class D3DRetracer(Retracer):
     def extractArg(self, function, arg, arg_type, lvalue, rvalue):
         if arg.type is D3DSHADER9:
             print r'    %s = extractShader((%s).toString());' % (lvalue, rvalue)
+            print r'    if (!%s) {' % lvalue
+            print r'        retrace::warning(call) << "failed to assemble shader\n";'
+            print r'        return;'
+            print r'    }'
             return
             
         Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
