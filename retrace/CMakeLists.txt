@@ -148,5 +148,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
     )
+    
+    install (TARGETS d3dretrace RUNTIME DESTINATION bin) 
 endif ()
 
