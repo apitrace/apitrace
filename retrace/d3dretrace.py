@@ -220,5 +220,7 @@ found:
     return NULL;
 }
 '''
+
+    d3d9.name = 'd3d9d'
     retracer = D3DRetracer()
     retracer.retraceApi(d3d9)
