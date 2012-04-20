@@ -53,10 +53,10 @@ class D3DRetracer(Retracer):
         Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
 
     def invokeInterfaceMethod(self, interface, method):
-        if interface.name == 'IDirect3D9' and method.name == 'CreateDevice':
+        if method.name in ('CreateDevice', 'CreateDeviceEx'):
             print r'    HWND hWnd = createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
-            print r'    pPresentationParameters->hDeviceWindow = hWnd;'
             print r'    hFocusWindow = hWnd;'
+            print r'    pPresentationParameters->hDeviceWindow = hWnd;'
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
