@@ -75,7 +75,7 @@ LARGE_INTEGER = Struct("LARGE_INTEGER", [
 SIZE_T = Alias("SIZE_T", SizeT)
 
 VOID = Void
-PVOID = Opaque("PVOID")
+PVOID = OpaquePointer(VOID)
 LPVOID = PVOID
 
 def DECLARE_HANDLE(expr):

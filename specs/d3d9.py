@@ -30,7 +30,7 @@ from d3d9types import *
 from d3d9caps import *
 
 
-D3DSHADER9 = Opaque("const DWORD *")
+D3DSHADER9 = OpaquePointer(Const(DWORD))
 
 D3DSPD = Flags(DWORD, [
     "D3DSPD_IUNKNOWN",

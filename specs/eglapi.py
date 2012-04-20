@@ -293,7 +293,7 @@ eglapi = API("EGL")
 
 EGLAttribList = Array(Const(EGLattrib), "_AttribPairList_size(attrib_list, EGL_NONE)")
 
-PROC = Opaque("__eglMustCastToProperFunctionPointerType")
+EGLProc = Opaque("__eglMustCastToProperFunctionPointerType")
 
 def GlFunction(*args, **kwargs):
     kwargs.setdefault('call', 'GL_APIENTRY')
@@ -349,7 +349,7 @@ eglapi.addFunctions([
     Function(EGLBoolean, "eglSwapBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface")]),
     Function(EGLBoolean, "eglCopyBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLNativePixmapType, "target")]),
 
-    Function(PROC, "eglGetProcAddress", [(Const(CString), "procname")]),
+    Function(EGLProc, "eglGetProcAddress", [(Const(CString), "procname")]),
 
     # EGL_KHR_lock_surface
     Function(EGLBoolean, "eglLockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface"), (EGLAttribList, "attrib_list")]),
