@@ -37,7 +37,7 @@ class DllTracer(Tracer):
     
     def header(self, api):
         print '''
-static HINSTANCE g_hDll = NULL;
+static HMODULE g_hDll = NULL;
 
 static PROC
 _getPublicProcAddress(LPCSTR lpProcName)

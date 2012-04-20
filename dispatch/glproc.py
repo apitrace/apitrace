@@ -494,7 +494,7 @@ class GlDispatcher(Dispatcher):
     def header(self):
         print '''
 #if defined(_WIN32)
-extern HINSTANCE _libGlHandle;
+extern HMODULE _libGlHandle;
 #else
 extern void * _libGlHandle;
 #endif

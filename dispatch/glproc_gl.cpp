@@ -37,7 +37,7 @@
  * Handle to the true OpenGL library.
  */
 #if defined(_WIN32)
-HINSTANCE _libGlHandle = NULL;
+HMODULE _libGlHandle = NULL;
 #else
 void *_libGlHandle = NULL;
 #endif

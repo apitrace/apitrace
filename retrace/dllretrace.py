@@ -32,7 +32,7 @@ class DllRetracer(Retracer):
 
     def retraceApi(self, api):
         print '''
-static HINSTANCE g_hDll = NULL;
+static HMODULE g_hDll = NULL;
 
 static PROC
 _getPublicProcAddress(LPCSTR lpProcName)
