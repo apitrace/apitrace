@@ -29,7 +29,7 @@
 
 from dllretrace import DllRetracer as Retracer
 import specs.stdapi as stdapi
-from specs.d3d9 import d3d9
+from specs.d3d9 import *
 
 
 class D3DRetracer(Retracer):
@@ -41,11 +41,18 @@ class D3DRetracer(Retracer):
         'IDirect3DIndexBuffer9',
     ]
 
+    def extractArg(self, function, arg, arg_type, lvalue, rvalue):
+        if arg.type is D3DSHADER9:
+            print r'    %s = extractShader((%s).toString());' % (lvalue, rvalue)
+            return
+            
+        Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
+
     def invokeInterfaceMethod(self, interface, method):
         if interface.name == 'IDirect3D9' and method.name == 'CreateDevice':
-            print 'HWND hWnd = createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
-            print 'pPresentationParameters->hDeviceWindow = hWnd;'
-            print 'hFocusWindow = hWnd;'
+            print r'    HWND hWnd = createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
+            print r'    pPresentationParameters->hDeviceWindow = hWnd;'
+            print r'    hFocusWindow = hWnd;'
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
@@ -150,6 +157,68 @@ createWindow(int width, int height) {
     return hWnd;
 }
 
+
+
+typedef HRESULT
+(WINAPI *PD3DXASSEMBLESHADER)(
+    LPCSTR pSrcData,
+    UINT SrcDataLen,
+    const D3DXMACRO *pDefines,
+    LPD3DXINCLUDE pInclude,
+    DWORD Flags,
+    LPD3DXBUFFER *ppShader,
+    LPD3DXBUFFER *ppErrorMsgs
+);
+
+DWORD *
+extractShader(LPCSTR pSrcData)
+{
+    static BOOL firsttime = TRUE;
+    static HMODULE hD3DXModule = NULL;
+    static PD3DXASSEMBLESHADER pfnD3DXAssembleShader = NULL;
+
+    if (firsttime) {
+        if (!hD3DXModule) {
+            unsigned release;
+            int version;
+            for (release = 0; release <= 1; ++release) {
+                /* Version 41 corresponds to Mar 2009 version of DirectX Runtime / SDK */
+                for (version = 41; version >= 0; --version) {
+                    char filename[256];
+                    _snprintf(filename, sizeof(filename),
+                              "d3dx9%s%s%u.dll", release ? "" : "d", version ? "_" : "", version);
+                    hD3DXModule = LoadLibraryA(filename);
+                    if (hD3DXModule)
+                        goto found;
+                }
+            }
+found:
+            ;
+        }
+
+        if (hD3DXModule) {
+            if (!pfnD3DXAssembleShader) {
+                pfnD3DXAssembleShader = (PD3DXASSEMBLESHADER)GetProcAddress(hD3DXModule, "D3DXAssembleShader");
+            }
+        }
+
+        firsttime = FALSE;
+    }
+
+    if (pfnD3DXAssembleShader) {
+        LPD3DXBUFFER pTokens = NULL;
+        HRESULT hr;
+
+        hr = pfnD3DXAssembleShader(pSrcData, strlen(pSrcData), NULL, NULL, 0, &pTokens, NULL);
+        if (hr == D3D_OK) {
+            return (DWORD *)pTokens->GetBufferPointer();
+        }
+
+        // FIXME: Don't leak pTokens
+    }
+
+    return NULL;
+}
 '''
     retracer = D3DRetracer()
     retracer.retraceApi(d3d9)
