@@ -250,7 +250,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = false;'
 
         if function.name.startswith('gl') and not function.name.startswith('glX'):
-            print r'    if (!glretrace::context && !glretrace::benchmark && !retrace::profiling) {'
+            print r'    if (!glretrace::context && !retrace::benchmark && !retrace::profiling) {'
             print r'        retrace::warning(call) << "no current context\n";'
             print r'    }'
 
@@ -286,7 +286,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = true;'
         elif function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    if (!glretrace::benchmark && !retrace::profiling && !glretrace::insideGlBeginEnd) {'
+            print '    if (!retrace::benchmark && !retrace::profiling && !glretrace::insideGlBeginEnd) {'
             print '        glretrace::checkGlError(call);'
             if function.name in ('glProgramStringARB', 'glProgramStringNV'):
                 print r'        GLint error_position = -1;'

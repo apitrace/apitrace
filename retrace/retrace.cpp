@@ -39,6 +39,7 @@ trace::Parser parser;
 
 
 int verbosity = 0;
+bool benchmark = false;
 bool profiling = false;
 
 

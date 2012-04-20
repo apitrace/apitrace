@@ -50,7 +50,6 @@ unsigned frame = 0;
 long long startTime = 0;
 bool wait = false;
 
-bool benchmark = false;
 static const char *compare_prefix = NULL;
 static const char *snapshot_prefix = NULL;
 static trace::CallSet snapshot_frequency;
@@ -307,7 +306,7 @@ int main(int argc, char **argv)
         if (!strcmp(arg, "--")) {
             break;
         } else if (!strcmp(arg, "-b")) {
-            benchmark = true;
+            retrace::benchmark = true;
             retrace::verbosity = -1;
             glws::debug = false;
         } else if (!strcmp(arg, "-p")) {

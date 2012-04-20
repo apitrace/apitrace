@@ -185,6 +185,11 @@ toPointer(trace::Value &value, bool bind = false);
 extern int verbosity;
 
 /**
+ * Avoid expensive checks when benchmarking.
+ */
+extern bool benchmark;
+
+/**
  * Add profiling data to the dump when retracing.
  */
 extern bool profiling;
