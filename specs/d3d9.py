@@ -163,10 +163,10 @@ IDirect3DDevice9.methods += [
     Method(HRESULT, "SetCursorProperties", [(UINT, "XHotSpot"), (UINT, "YHotSpot"), (PDIRECT3DSURFACE9, "pCursorBitmap")]),
     Method(Void, "SetCursorPosition", [(Int, "X"), (Int, "Y"), (D3DCURSOR, "Flags")]),
     Method(BOOL, "ShowCursor", [(BOOL, "bShow")]),
-    Method(HRESULT, "CreateAdditionalSwapChain", [Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DSWAPCHAIN9), "pSwapChain")]),
+    Method(HRESULT, "CreateAdditionalSwapChain", [InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DSWAPCHAIN9), "pSwapChain")]),
     Method(HRESULT, "GetSwapChain", [(UINT, "iSwapChain"), Out(Pointer(PDIRECT3DSWAPCHAIN9), "pSwapChain")], sideeffects=False),
     Method(UINT, "GetNumberOfSwapChains", [], sideeffects=False),
-    Method(HRESULT, "Reset", [Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters")]),
+    Method(HRESULT, "Reset", [InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters")]),
     Method(HRESULT, "Present", [(ConstPointer(RECT), "pSourceRect"), (ConstPointer(RECT), "pDestRect"), (HWND, "hDestWindowOverride"), (ConstPointer(RGNDATA), "pDirtyRegion")]),
     Method(HRESULT, "GetBackBuffer", [(UINT, "iSwapChain"), (UINT, "iBackBuffer"), (D3DBACKBUFFER_TYPE, "Type"), Out(Pointer(PDIRECT3DSURFACE9), "ppBackBuffer")]),
     Method(HRESULT, "GetRasterStatus", [(UINT, "iSwapChain"), Out(Pointer(D3DRASTER_STATUS), "pRasterStatus")], sideeffects=False),
@@ -390,7 +390,7 @@ IDirect3D9Ex.methods += [
     Method(UINT, "GetAdapterModeCountEx", [(UINT, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter") ], sideeffects=False),
     Method(HRESULT, "EnumAdapterModesEx", [(UINT, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODEEX), "pMode")], sideeffects=False),
     Method(HRESULT, "GetAdapterDisplayModeEx", [(UINT, "Adapter"), Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
-    Method(HRESULT, "CreateDeviceEx", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode"), Out(Pointer(PDIRECT3DDEVICE9EX), "ppReturnedDeviceInterface")]),
+    Method(HRESULT, "CreateDeviceEx", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode"), Out(Pointer(PDIRECT3DDEVICE9EX), "ppReturnedDeviceInterface")]),
     Method(HRESULT, "GetAdapterLUID", [(UINT, "Adapter"), Out(Pointer(LUID), "pLUID")], sideeffects=False),
 ]
 
@@ -408,7 +408,7 @@ IDirect3DDevice9Ex.methods += [
     Method(HRESULT, "CreateRenderTargetEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Lockable"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), (Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
     Method(HRESULT, "CreateOffscreenPlainSurfaceEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), Out(Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
     Method(HRESULT, "CreateDepthStencilSurfaceEx", [(UINT, "Width"), (UINT, "Height"), (D3DFORMAT, "Format"), (D3DMULTISAMPLE_TYPE, "MultiSample"), (DWORD, "MultisampleQuality"), (BOOL, "Discard"), Out(Pointer(PDIRECT3DSURFACE9), "ppSurface"), (Pointer(HANDLE), "pSharedHandle"), (D3DUSAGE, "Usage")]),
-    Method(HRESULT, "ResetEx", [Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode")]),
+    Method(HRESULT, "ResetEx", [InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode")]),
     Method(HRESULT, "GetDisplayModeEx", [(UINT, "iSwapChain"), Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
 ]
 
