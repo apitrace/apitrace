@@ -61,8 +61,9 @@ class D3DRetracer(Retracer):
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         if str(method.type) == 'HRESULT':
-            print r'    if (_result != S_OK) {'
-            print r'        retrace::warning(call) << "failed\n";'
+            print r'    if (FAILED(_result)) {'
+            print r'        retrace::warning(call) << DXGetErrorString9(_result) << ": " << DXGetErrorDescription9(_result) << "\n";'
+            print r'        return;'
             print r'    }'
 
         if interface.name in self.bufferInterfaceNames and method.name == 'Lock':
@@ -85,6 +86,7 @@ if __name__ == '__main__':
 #include <iostream>
 
 #include "d3d9imports.hpp"
+#include <dxerr9.h>
 #include "d3dretrace.hpp"
 
 

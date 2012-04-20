@@ -147,6 +147,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
+        dxerr9
     )
     
     install (TARGETS d3dretrace RUNTIME DESTINATION bin) 
