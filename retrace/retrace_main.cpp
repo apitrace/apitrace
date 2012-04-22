@@ -35,7 +35,7 @@
 #include "retrace.hpp"
 
 
-static bool wait = false;
+static bool waitOnFinish = false;
 
 static const char *comparePrefix = NULL;
 static const char *snapshotPrefix = NULL;
@@ -174,7 +174,7 @@ mainLoop() {
             " average of " << (frameNo/timeInterval) << " fps\n";
     }
 
-    if (wait) {
+    if (waitOnFinish) {
         waitForInput();
     } else {
         exit(0);
@@ -202,7 +202,7 @@ usage(const char *argv0) {
         "  -S CALLSET   calls to snapshot (default is every frame)\n"
         "  -v           increase output verbosity\n"
         "  -D CALLNO    dump state at specific call no\n"
-        "  -w           wait on final frame\n";
+        "  -w           waitOnFinish on final frame\n";
 }
 
 
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
         } else if (!strcmp(arg, "-v")) {
             ++retrace::verbosity;
         } else if (!strcmp(arg, "-w")) {
-            wait = true;
+            waitOnFinish = true;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage(argv[0]);
