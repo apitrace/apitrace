@@ -56,6 +56,7 @@ defaultCallFlags = 0;
 const Entry<CallFlags>
 callFlagTable[] = {
     { "CGLFlushDrawable",                              CALL_FLAG_END_FRAME },
+    { "IDirect3DDevice9::Present",                     CALL_FLAG_END_FRAME },
     { "eglGetProcAddress",                             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglQueryString",                                CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglSwapBuffers",                                CALL_FLAG_SWAPBUFFERS },

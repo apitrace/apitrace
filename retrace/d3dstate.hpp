@@ -23,60 +23,26 @@
  *
  **************************************************************************/
 
-
-#include <string.h>
-
-#include "os_string.hpp"
-
-#include "d3dstate.hpp"
-#include "retrace.hpp"
-#include "d3dretrace.hpp"
+#ifndef _D3DSTATE_HPP_
+#define _D3DSTATE_HPP_
 
 
-IDirect3DDevice9 *
-d3dretrace::pLastDirect3DDevice9 = NULL;
+class IDirect3DDevice9;
 
 
-void
-retrace::setUp(void) {
-    if (retrace::debug) {
-        g_szD3D9DllName = "d3d9d.dll";
-    }
+namespace image {
+    class Image;
 }
 
 
-void
-retrace::addCallbacks(retrace::Retracer &retracer)
-{
-    retracer.addCallbacks(d3dretrace::d3d9_callbacks);
-}
+namespace d3dstate {
 
 
 image::Image *
-retrace::getSnapshot(void) {
-    if (!d3dretrace::pLastDirect3DDevice9) {
-        return NULL;
-    }
-
-    return d3dstate::getRenderTargetImage(d3dretrace::pLastDirect3DDevice9);
-}
+getRenderTargetImage(IDirect3DDevice9 *pDevice);
 
 
-bool
-retrace::dumpState(std::ostream &os)
-{
-    return false;
-}
+} /* namespace d3dstate */
 
 
-void
-retrace::flushRendering(void) {
-}
-
-void
-retrace::waitForInput(void) {
-}
-
-void
-retrace::cleanUp(void) {
-}
+#endif /* _D3DSTATE_HPP_ */

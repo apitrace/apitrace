@@ -206,7 +206,7 @@ public:
         va_list args_copy;
         va_copy(args_copy, args);
 #ifdef _WIN32
-        /* We need to use _vcsprintf to calculate the length as vsnprintf returns -1
+        /* We need to use _vscprintf to calculate the length as vsnprintf returns -1
          * if the number of characters to write is greater than count.
          */
         length = _vscprintf(format, args_copy);

@@ -53,6 +53,11 @@ class D3DRetracer(Retracer):
         Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
 
     def invokeInterfaceMethod(self, interface, method):
+        # keep track of the last used device for state dumping
+        if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):
+            print r'    d3dretrace::pLastDirect3DDevice9 = _this;'
+
+        # create windows as neccessary
         if method.name in ('CreateDevice', 'CreateDeviceEx'):
             print r'    HWND hWnd = createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
             print r'    hFocusWindow = hWnd;'
@@ -60,6 +65,7 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
+        # check errors
         if str(method.type) == 'HRESULT':
             print r'    if (_result != S_OK) {'
             print r'        retrace::warning(call) << "failed\n";'
