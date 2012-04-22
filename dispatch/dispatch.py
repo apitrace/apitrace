@@ -58,9 +58,9 @@ class Dispatcher:
         #
         raise NotImplementedError
 
-    def dispatch_api(self, api):
+    def dispatchApi(self, api):
         for function in api.functions:
-            self.invokeFunction(function)
+            self.dispatchFunction(api, function)
         
         # define standard name aliases for convenience, but only when not
         # tracing, as that would cause symbol clashing with the tracing
@@ -71,7 +71,7 @@ class Dispatcher:
         print '#endif /* RETRACE */'
         print
 
-    def invokeFunction(self, function):
+    def dispatchFunction(self, api, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
@@ -83,23 +83,26 @@ class Dispatcher:
             ret = ''
         else:
             ret = 'return '
-        self.get_true_pointer(function)
+        self.invokeGetProcAddress(api, function)
         print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
         print '}'
         print
 
-    def isFunctionPublic(self, function):
+    def isFunctionPublic(self, api, function):
         return True
 
-    def get_true_pointer(self, function):
+    def getProcAddressName(self, api, function):
+        if self.isFunctionPublic(api, function):
+            return '_getPublicProcAddress'
+        else:
+            return '_getPrivateProcAddress'
+
+    def invokeGetProcAddress(self, api, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
-        if self.isFunctionPublic(function):
-            get_proc_address = '_getPublicProcAddress'
-        else:
-            get_proc_address = '_getPrivateProcAddress'
+        getProcAddressName = self.getProcAddressName(api, function)
         print '    if (!%s) {' % (pvalue,)
-        print '        %s = (%s)%s(_name);' % (pvalue, ptype, get_proc_address)
+        print '        %s = (%s)%s(_name);' % (pvalue, ptype, getProcAddressName)
         print '        if (!%s) {' % (pvalue,)
         self.failFunction(function)
         print '        }'

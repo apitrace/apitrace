@@ -503,7 +503,7 @@ void * _getPublicProcAddress(const char *procName);
 void * _getPrivateProcAddress(const char *procName);
 '''
         
-    def isFunctionPublic(self, function):
+    def isFunctionPublic(self, api, function):
         return function.name in public_symbols or function.name.startswith('CGL')
 
 
@@ -519,25 +519,25 @@ if __name__ == '__main__':
     print
     dispatcher.header()
     print
-    dispatcher.dispatch_api(eglapi)
+    dispatcher.dispatchApi(eglapi)
     print
     print '#if defined(_WIN32)'
     print
-    dispatcher.dispatch_api(wglapi)
+    dispatcher.dispatchApi(wglapi)
     print
     print '#elif defined(__APPLE__)'
     print
-    dispatcher.dispatch_api(cglapi)
+    dispatcher.dispatchApi(cglapi)
     print
     print '#elif defined(HAVE_X11)'
     print
-    dispatcher.dispatch_api(glxapi)
+    dispatcher.dispatchApi(glxapi)
     print
     print '#endif'
     print
-    dispatcher.dispatch_api(glapi)
+    dispatcher.dispatchApi(glapi)
     print
-    dispatcher.dispatch_api(glesapi)
+    dispatcher.dispatchApi(glesapi)
     print
 
     print '#endif /* !_GLPROC_HPP_ */'

@@ -31,8 +31,14 @@
 #include "d3dretrace.hpp"
 
 
+extern const char *g_szD3D9DllName;
+
+
 void
 retrace::setUp(void) {
+    if (retrace::debug) {
+        g_szD3D9DllName = "d3d9d.dll";
+    }
 }
 
 

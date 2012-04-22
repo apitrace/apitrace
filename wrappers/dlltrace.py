@@ -63,7 +63,7 @@ _getPublicProcAddress(LPCSTR lpProcName)
 ''' % self.dllname
 
         dispatcher = Dispatcher()
-        dispatcher.dispatch_api(api)
+        dispatcher.dispatchApi(api)
 
         Tracer.header(self, api)
 
