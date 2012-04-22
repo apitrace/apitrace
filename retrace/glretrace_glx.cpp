@@ -62,7 +62,7 @@ getContext(unsigned long long context_ptr) {
     ContextMap::const_iterator it;
     it = context_map.find(context_ptr);
     if (it == context_map.end()) {
-        return (context_map[context_ptr] = glws::createContext(visual[glretrace::defaultProfile], NULL, glretrace::defaultProfile));
+        return (context_map[context_ptr] = glws::createContext(visual[glretrace::defaultProfile], NULL, glretrace::defaultProfile, retrace::debug));
     }
 
     return it->second;
@@ -72,7 +72,7 @@ static void retrace_glXCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
 
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile);
+    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile, retrace::debug);
     context_map[orig_context] = context;
 }
 
@@ -80,7 +80,7 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
 
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile);
+    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile, retrace::debug);
     context_map[orig_context] = context;
 }
 
@@ -94,7 +94,7 @@ static void retrace_glXMakeCurrent(trace::Call &call) {
 
     if (drawable && context) {
         glFlush();
-        if (!double_buffer) {
+        if (!retrace::doubleBuffer) {
             frame_complete(call);
         }
     }
@@ -123,7 +123,7 @@ static void retrace_glXDestroyContext(trace::Call &call) {
 
 static void retrace_glXSwapBuffers(trace::Call &call) {
     frame_complete(call);
-    if (double_buffer) {
+    if (retrace::doubleBuffer) {
         drawable->swapBuffers();
     } else {
         glFlush();
@@ -134,7 +134,7 @@ static void retrace_glXCreateNewContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = getContext(call.arg(3).toUIntPtr());
 
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile);
+    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile, retrace::debug);
     context_map[orig_context] = context;
 }
 
@@ -148,7 +148,7 @@ static void retrace_glXMakeContextCurrent(trace::Call &call) {
 
     if (drawable && context) {
         glFlush();
-        if (!double_buffer) {
+        if (!retrace::doubleBuffer) {
             frame_complete(call);
         }
     }

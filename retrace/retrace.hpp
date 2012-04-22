@@ -38,6 +38,11 @@
 #include "trace_parser.hpp"
 
 
+namespace image {
+    class Image;
+}
+
+
 namespace retrace {
 
 
@@ -185,14 +190,18 @@ toPointer(trace::Value &value, bool bind = false);
 extern int verbosity;
 
 /**
- * Avoid expensive checks when benchmarking.
+ * Debugging checks.
  */
-extern bool benchmark;
+extern bool debug;
 
 /**
  * Add profiling data to the dump when retracing.
  */
 extern bool profiling;
+
+
+extern bool doubleBuffer;
+extern bool coreProfile;
 
 
 std::ostream &warning(trace::Call &call);
@@ -239,6 +248,31 @@ public:
 
     void retrace(trace::Call &call);
 };
+
+
+void
+setUp(void);
+
+void
+addCallbacks(retrace::Retracer &retracer);
+
+void
+frameComplete(trace::Call &call);
+
+image::Image *
+getSnapshot(void);
+
+bool
+dumpState(std::ostream &os);
+
+void
+flushRendering(void);
+
+void
+waitForInput(void);
+
+void
+cleanUp(void);
 
 
 } /* namespace retrace */

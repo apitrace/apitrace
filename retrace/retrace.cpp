@@ -35,14 +35,6 @@
 namespace retrace {
 
 
-trace::Parser parser;
-
-
-int verbosity = 0;
-bool benchmark = false;
-bool profiling = false;
-
-
 static bool call_dumped = false;
 
 

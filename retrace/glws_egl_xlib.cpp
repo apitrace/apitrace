@@ -356,7 +356,7 @@ createDrawable(const Visual *visual, int width, int height)
 }
 
 Context *
-createContext(const Visual *_visual, Context *shareContext, Profile profile)
+createContext(const Visual *_visual, Context *shareContext, Profile profile, bool debug)
 {
     const EglVisual *visual = static_cast<const EglVisual *>(_visual);
     EGLContext share_context = EGL_NO_CONTEXT;

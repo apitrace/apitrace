@@ -56,7 +56,7 @@ getDrawable(unsigned long long hdc) {
 
 static void retrace_wglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], NULL, glretrace::defaultProfile);
+    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], NULL, glretrace::defaultProfile, retrace::debug);
     context_map[orig_context] = context;
 }
 
@@ -66,7 +66,7 @@ static void retrace_wglDeleteContext(trace::Call &call) {
 static void retrace_wglMakeCurrent(trace::Call &call) {
     if (drawable && context) {
         glFlush();
-        if (!double_buffer) {
+        if (!retrace::doubleBuffer) {
             frame_complete(call);
         }
     }
@@ -99,7 +99,7 @@ static void retrace_wglSetPixelFormat(trace::Call &call) {
 
 static void retrace_wglSwapBuffers(trace::Call &call) {
     frame_complete(call);
-    if (double_buffer) {
+    if (retrace::doubleBuffer) {
         drawable->swapBuffers();
     } else {
         glFlush();
@@ -114,7 +114,7 @@ static void retrace_wglShareLists(trace::Call &call) {
     glws::Context *old_context = context_map[hglrc2];
 
     glws::Context *new_context =
-        glws::createContext(old_context->visual, share_context, glretrace::defaultProfile);
+        glws::createContext(old_context->visual, share_context, glretrace::defaultProfile, retrace::debug);
     if (new_context) {
         if (context == old_context) {
             glws::makeCurrent(drawable, new_context);
@@ -223,7 +223,7 @@ static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
         share_context = context_map[call.arg(1).toUIntPtr()];
     }
 
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile);
+    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile, retrace::debug);
     context_map[orig_context] = context;
 }
 

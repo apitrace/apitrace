@@ -33,20 +33,11 @@
 namespace glretrace {
 
 
-extern bool double_buffer;
 extern bool insideGlBeginEnd;
 extern glws::Profile defaultProfile;
 extern glws::Visual *visual[glws::PROFILE_MAX];
 extern glws::Drawable *drawable;
 extern glws::Context *context;
-
-extern unsigned frame;
-extern long long startTime;
-extern bool wait;
-
-extern bool benchmark;
-
-extern unsigned dump_state;
 
 void
 checkGlError(trace::Call &call);

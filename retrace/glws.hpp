@@ -46,9 +46,6 @@ enum Profile {
 };
 
 
-extern bool debug;
-
-
 bool
 checkExtension(const char *extName, const char *extString);
 
@@ -155,7 +152,7 @@ Drawable *
 createDrawable(const Visual *visual, int width = 32, int height = 32);
 
 Context *
-createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT);
+createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT, bool debug = false);
 
 bool
 makeCurrent(Drawable *drawable, Context *context);

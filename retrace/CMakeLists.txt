@@ -32,6 +32,19 @@ add_custom_command (
 )
 
 add_library (retrace_common
+    retrace.cpp
+    retrace_main.cpp
+    retrace_stdc.cpp
+)
+
+target_link_libraries (retrace_common
+    common
+    ${PNG_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+    ${SNAPPY_LIBRARIES}
+)
+
+add_library (glretrace_common
     glretrace_gl.cpp
     glretrace_cgl.cpp
     glretrace_glx.cpp
@@ -42,12 +55,11 @@ add_library (retrace_common
     glstate_images.cpp
     glstate_params.cpp
     glstate_shaders.cpp
-    retrace.cpp
-    retrace_stdc.cpp
     glws.cpp
 )
 
-add_dependencies (retrace_common glproc)
+add_dependencies (glretrace_common glproc)
+
 
 if (WIN32 OR APPLE OR X11_FOUND)
     add_executable (glretrace
@@ -58,11 +70,8 @@ if (WIN32 OR APPLE OR X11_FOUND)
 
     target_link_libraries (glretrace
         retrace_common
+        glretrace_common
         glproc_gl
-        common
-        ${PNG_LIBRARIES}
-        ${ZLIB_LIBRARIES}
-        ${SNAPPY_LIBRARIES}
     )
 
     if (WIN32)
@@ -103,11 +112,8 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
 
     target_link_libraries (eglretrace
         retrace_common
+        glretrace_common
         glproc_egl
-        common
-        ${PNG_LIBRARIES}
-        ${ZLIB_LIBRARIES}
-        ${SNAPPY_LIBRARIES}
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
@@ -144,9 +150,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
         d3dretrace_d3d9.cpp
     )
     target_link_libraries (d3dretrace
-        common
-        ${ZLIB_LIBRARIES}
-        ${SNAPPY_LIBRARIES}
+        retrace_common
     )
     
     install (TARGETS d3dretrace RUNTIME DESTINATION bin) 

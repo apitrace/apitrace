@@ -283,7 +283,7 @@ createDrawable(const Visual *visual, int width, int height)
 }
 
 Context *
-createContext(const Visual *visual, Context *shareContext, Profile profile)
+createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
 {
     if (profile != PROFILE_COMPAT) {
         return NULL;

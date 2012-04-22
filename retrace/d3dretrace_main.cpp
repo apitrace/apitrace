@@ -31,73 +31,39 @@
 #include "d3dretrace.hpp"
 
 
-namespace d3dretrace {
-
-static void display(void) {
-    retrace::Retracer retracer;
-
-    retracer.addCallbacks(d3d9_callbacks);
-
-    trace::Call *call;
-
-    while ((call = retrace::parser.parse_call())) {
-        retracer.retrace(*call);
-
-        delete call;
-    }
-
-    exit(0);
+void
+retrace::setUp(void) {
 }
 
 
-static void usage(void) {
-    std::cout << 
-        "Usage: d3dretrace [OPTION] TRACE\n"
-        "Replay TRACE.\n"
-        "\n"
-        "  -v           increase output verbosity\n"
-    ;
-}
-
-
-extern "C"
-int main(int argc, char **argv)
+void
+retrace::addCallbacks(retrace::Retracer &retracer)
 {
-
-    int i;
-    for (i = 1; i < argc; ++i) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "--help")) {
-            usage();
-            return 0;
-        } else if (!strcmp(arg, "-v")) {
-            ++retrace::verbosity;
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
-            usage();
-            return 1;
-        }
-    }
-
-    for ( ; i < argc; ++i) {
-        if (!retrace::parser.open(argv[i])) {
-            std::cerr << "error: failed to open " << argv[i] << "\n";
-            return 1;
-        }
-
-        display();
-
-        retrace::parser.close();
-    }
-
-    return 0;
+    retracer.addCallbacks(d3dretrace::d3d9_callbacks);
 }
 
-} /* namespace glretrace */
+
+image::Image *
+retrace::getSnapshot(void) {
+    return NULL;
+}
+
+
+bool
+retrace::dumpState(std::ostream &os)
+{
+    return false;
+}
+
+
+void
+retrace::flushRendering(void) {
+}
+
+void
+retrace::waitForInput(void) {
+}
+
+void
+retrace::cleanUp(void) {
+}

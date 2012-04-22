@@ -169,7 +169,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
     }
 
 
-    glws::Context *context = glws::createContext(glretrace::visual[profile], share_context, profile);
+    glws::Context *context = glws::createContext(glretrace::visual[profile], share_context, profile, retrace::debug);
     if (!context) {
         const char *name;
         switch (profile) {
@@ -218,7 +218,7 @@ static void retrace_eglMakeCurrent(trace::Call &call) {
 
     if (drawable && context) {
         glFlush();
-        if (!double_buffer) {
+        if (!retrace::doubleBuffer) {
             frame_complete(call);
         }
     }
@@ -238,7 +238,7 @@ static void retrace_eglMakeCurrent(trace::Call &call) {
 static void retrace_eglSwapBuffers(trace::Call &call) {
     frame_complete(call);
 
-    if (double_buffer && drawable) {
+    if (retrace::doubleBuffer && drawable) {
         drawable->swapBuffers();
     } else {
         glFlush();

@@ -70,7 +70,7 @@ getContext(unsigned long long ctx) {
     it = context_map.find(ctx);
     if (it == context_map.end()) {
         glws::Context *context;
-        context_map[ctx] = context = glws::createContext(visual[glretrace::defaultProfile], sharedContext, glretrace::defaultProfile);
+        context_map[ctx] = context = glws::createContext(visual[glretrace::defaultProfile], sharedContext, glretrace::defaultProfile, retrace::debug);
         if (!sharedContext) {
             sharedContext = context;
         }
@@ -101,7 +101,7 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
 
 static void retrace_CGLFlushDrawable(trace::Call &call) {
     if (drawable && context) {
-        if (double_buffer) {
+        if (retrace::doubleBuffer) {
             drawable->swapBuffers();
         } else {
             glFlush();

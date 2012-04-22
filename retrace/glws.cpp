@@ -30,9 +30,6 @@
 namespace glws {
 
 
-bool debug = true;
-
-
 bool
 checkExtension(const char *extName, const char *extString)
 {

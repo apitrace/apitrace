@@ -215,7 +215,7 @@ class GlRetracer(Retracer):
 
         # Post-snapshots
         if function.name in ('glFlush', 'glFinish'):
-            print '    if (!glretrace::double_buffer) {'
+            print '    if (!retrace::doubleBuffer) {'
             print '        glretrace::frame_complete(call);'
             print '    }'
         if is_draw_array or is_draw_elements or is_misc_draw:
@@ -250,7 +250,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = false;'
 
         if function.name.startswith('gl') and not function.name.startswith('glX'):
-            print r'    if (!glretrace::context && !retrace::benchmark && !retrace::profiling) {'
+            print r'    if (retrace::debug && !glretrace::context) {'
             print r'        retrace::warning(call) << "no current context\n";'
             print r'    }'
 
@@ -286,7 +286,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = true;'
         elif function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    if (!retrace::benchmark && !retrace::profiling && !glretrace::insideGlBeginEnd) {'
+            print '    if (retrace::debug && !glretrace::insideGlBeginEnd) {'
             print '        glretrace::checkGlError(call);'
             if function.name in ('glProgramStringARB', 'glProgramStringNV'):
                 print r'        GLint error_position = -1;'
