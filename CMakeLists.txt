@@ -92,13 +92,15 @@ if (MSVC)
     add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
     add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
     add_definitions (-W4)
+    # XXX: it's safer to use ssize_t everywhere instead of disabling warning
+    add_definitions (-wd4018) # signed/unsigned mismatch
     add_definitions (-wd4063) # not a valid value for switch of enum
+    add_definitions (-wd4100) # unreferenced formal parameter
     add_definitions (-wd4127) # conditional expression is constant
     add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
     add_definitions (-wd4505) # unreferenced local function has been removed
+    add_definitions (-wd4512) # assignment operator could not be generated
     add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
-    # XXX: it's safer to use ssize_t everywhere instead of disabling warning
-    add_definitions (-wd4018) # signed/unsigned mismatch
     
     # Use static runtime
     # http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F

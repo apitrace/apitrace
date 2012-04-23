@@ -49,6 +49,7 @@ void setBinaryMode(FILE *fp) {
     fflush(fp);
     int mode = _setmode(_fileno(fp), _O_BINARY);
     assert(mode != -1);
+    (void)mode;
 #else
     (void)fp;
 #endif
