@@ -104,6 +104,10 @@ command(int argc, char *argv[])
                 api = trace::API_D3D9;
             } else if (strcmp(optarg, "d3d10") == 0) {
                 api = trace::API_D3D10;
+            } else if (strcmp(optarg, "d3d10_1") == 0) {
+                api = trace::API_D3D10_1;
+            } else if (strcmp(optarg, "d3d11") == 0) {
+                api = trace::API_D3D11;
             } else {
                 std::cerr << "error: unknown API `" << optarg << "`\n";
                 usage();

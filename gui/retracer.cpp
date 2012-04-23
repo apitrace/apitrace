@@ -229,11 +229,28 @@ void Retracer::run()
     QString prog;
     QStringList arguments;
 
-    if (m_api == trace::API_GL) {
+    switch (m_api) {
+    case trace::API_GL:
         prog = QLatin1String("glretrace");
-    } else if (m_api == trace::API_EGL) {
+        break;
+    case trace::API_EGL:
         prog = QLatin1String("eglretrace");
-    } else {
+        break;
+    case trace::API_DX:
+    case trace::API_D3D7:
+    case trace::API_D3D8:
+    case trace::API_D3D9:
+    case trace::API_D3D10:
+    case trace::API_D3D10_1:
+    case trace::API_D3D11:
+#ifdef Q_OS_WIN
+        prog = QLatin1String("d3dretrace");
+#else
+        prog = QLatin1String("wine");
+        arguments << QLatin1String("d3dretrace.exe");
+#endif
+        break;
+    default:
         emit finished(QLatin1String("Unsupported API"));
         return;
     }

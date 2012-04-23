@@ -129,6 +129,12 @@ traceProgram(API api,
     case API_D3D10:
         wrapperFilename = "d3d10.dll";
         break;
+    case API_D3D10_1:
+        wrapperFilename = "d3d10_1.dll";
+        break;
+    case API_D3D11:
+        wrapperFilename = "d3d11.dll";
+        break;
 #endif
     default:
         std::cerr << "error: unsupported API\n";

@@ -242,12 +242,16 @@ Parser::parse_function_sig(void) {
          */
         if (api == API_UNKNOWN) {
             const char *n = sig->name;
-            if ((n[0] == 'g' && n[1] == 'l' && n[2] == 'X') || // glX
-                (n[0] == 'w' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') || // wgl[A-Z]
-                (n[0] == 'C' && n[1] == 'G' && n[2] == 'L')) { // CGL
+            if ((n[0] == 'g' && n[1] == 'l' && n[2] == 'X') || // glX*
+                (n[0] == 'w' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') || // wgl[A-Z]*
+                (n[0] == 'C' && n[1] == 'G' && n[2] == 'L')) { // CGL*
                 api = trace::API_GL;
-            } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl
+            } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl[A-Z]*
                 api = trace::API_EGL;
+            } else if (n[0] == 'D' &&
+                       ((n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
+                        (n[1] == '3' && n[2] == 'D'))) { // D3D*
+                api = trace::API_DX;
             } else {
                 /* TODO */
             }

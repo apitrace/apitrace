@@ -15,6 +15,8 @@ TraceDialog::TraceDialog(QWidget *parent)
     apiComboBox->addItem("D3D8");
     apiComboBox->addItem("D3D9");
     apiComboBox->addItem("D3D10");
+    apiComboBox->addItem("D3D10_1");
+    apiComboBox->addItem("D3D11");
 #else
     apiComboBox->addItem("EGL");
 #endif
