@@ -78,7 +78,7 @@ public:
     }
 
     inline signed stride(void) const {
-        return flipped ? -width*channels : width*channels;
+        return flipped ? -(signed)(width*channels) : width*channels;
     }
 
     bool writeBMP(const char *filename) const;
