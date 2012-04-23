@@ -625,12 +625,9 @@ void MainWindow::fillStateForFrame()
 void MainWindow::showSettings()
 {
     SettingsDialog dialog;
-    dialog.setAPI(m_api);
     dialog.setFilterModel(m_proxyModel);
 
     dialog.exec();
-
-    m_api = dialog.getAPI();
 }
 
 void MainWindow::openHelp(const QUrl &url)
