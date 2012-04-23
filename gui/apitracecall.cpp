@@ -336,7 +336,6 @@ void ApiBitmask::init(const trace::Bitmask *bitmask)
     m_value = bitmask->value;
     for (const trace::BitmaskFlag *it = bitmask->sig->flags;
          it != bitmask->sig->flags + bitmask->sig->num_flags; ++it) {
-        assert(it->value);
         QPair<QString, unsigned long long> pair;
 
         pair.first = QString::fromStdString(it->name);
@@ -351,16 +350,19 @@ QString ApiBitmask::toString() const
     QString str;
     unsigned long long value = m_value;
     bool first = true;
-    for (Signature::const_iterator it = m_sig.begin();
-         value != 0 && it != m_sig.end(); ++it) {
-        Q_ASSERT(it->second);
-        if ((value & it->second) == it->second) {
+    for (Signature::const_iterator it = m_sig.begin(); it != m_sig.end(); ++it) {
+        Q_ASSERT(it->second || first);
+        if ((it->second && (value & it->second) == it->second) ||
+            (!it->second && value == 0)) {
             if (!first) {
                 str += QLatin1String(" | ");
             }
             str += it->first;
             value &= ~it->second;
             first = false;
+        }
+        if (value == 0) {
+            break;
         }
     }
     if (value || first) {
