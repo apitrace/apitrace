@@ -29,7 +29,7 @@
 #include "retrace.hpp"
 
 
-class IDirect3DDevice9;
+struct IDirect3DDevice9;
 
 
 extern const char *g_szD3D9DllName;

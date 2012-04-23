@@ -27,7 +27,7 @@
 #define _D3DSTATE_HPP_
 
 
-class IDirect3DDevice9;
+struct IDirect3DDevice9;
 
 
 namespace image {
