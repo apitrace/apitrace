@@ -141,6 +141,8 @@ class GlTracer(Tracer):
         print '}'
         print
 
+        self.defineShadowBufferHelper()
+
         # Whether we need user arrays
         print 'static inline bool _need_user_arrays(void)'
         print '{'
@@ -348,6 +350,81 @@ class GlTracer(Tracer):
             print
         else:
             Tracer.traceApi(self, api)
+
+    def defineShadowBufferHelper(self):
+        print 'void _shadow_glGetBufferSubData(GLenum target, GLintptr offset,'
+        print '                                GLsizeiptr size, GLvoid *data)'
+        print '{'
+        print '    struct gltrace::Context *ctx = gltrace::getContext();'
+        print '    if (!ctx->needsShadowBuffers() || target != GL_ELEMENT_ARRAY_BUFFER) {'
+        print '        glGetBufferSubData(target, offset, size, data);'
+        print '        return;'
+        print '    }'
+        print
+        print '    struct gltrace::Buffer *buf;'
+        print '    GLint buf_id;'
+        print
+        print '    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buf_id);'
+        print '    buf = ctx->buffers[buf_id];'
+        print '    assert(size + offset <= buf->size);'
+        print '    memcpy(data, (uint8_t *)buf->data + offset, size);'
+        print '}'
+
+    def shadowBufferProlog(self, function):
+        if function.name == 'glBufferData':
+            print '    gltrace::Context *ctx = gltrace::getContext();'
+            print '    if (ctx->needsShadowBuffers() && target == GL_ELEMENT_ARRAY_BUFFER) {'
+            print '        struct gltrace::Buffer *buf;'
+            print '        GLint buf_id;'
+            print
+            print '        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buf_id);'
+            print '        buf = ctx->buffers[buf_id];'
+            print '        buf->resetData(data, size);'
+            print '    }'
+            print
+
+        if function.name == 'glBufferSubData':
+            print '    gltrace::Context *ctx = gltrace::getContext();'
+            print '    if (ctx->needsShadowBuffers() && target == GL_ELEMENT_ARRAY_BUFFER) {'
+            print '        struct gltrace::Buffer *buf;'
+            print '        GLint buf_id;'
+            print
+            print '        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buf_id);'
+            print '        buf = ctx->buffers[buf_id];'
+            print '        memcpy((uint8_t *)buf->data + offset, data, size);'
+            print '    }'
+            print
+
+        if function.name == 'glDeleteBuffers':
+            print '    gltrace::Context *ctx = gltrace::getContext();'
+            print '    if (ctx->needsShadowBuffers()) {'
+            print '        int i;'
+            print
+            print '        for (i = 0; i < n; i++) {'
+            print '            unsigned long buf_id;'
+            print '            struct gltrace::Buffer *buf;'
+            print
+            print '            buf_id = buffer[i];'
+            print '            buf = ctx->buffers[buf_id];'
+            print '            if (buf) {'
+            print '                ctx->buffers.erase(buf_id);'
+            print '                delete buf;'
+            print '            }'
+            print '        }'
+            print '    }'
+
+    def shadowBufferEpilog(self, function):
+        if function.name == 'glGenBuffers':
+            print '    gltrace::Context *ctx = gltrace::getContext();'
+            print '    if (ctx->needsShadowBuffers()) {'
+            print '        int i;'
+            print '        for (i = 0; i < n; i++) {'
+            print '            GLuint buf_id = buffer[i];'
+            print '            ctx->buffers[buf_id] = new gltrace::Buffer;'
+            print '        }'
+            print '    }'
+            print
+
 
     array_pointer_function_names = set((
         "glVertexPointer",
@@ -632,7 +709,11 @@ class GlTracer(Tracer):
             print '        }'
             print '    }'
 
+        self.shadowBufferProlog(function)
+
         Tracer.traceFunctionImplBody(self, function)
+
+        self.shadowBufferEpilog(function)
 
     marker_functions = [
         # GL_GREMEDY_string_marker

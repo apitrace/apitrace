@@ -28,6 +28,9 @@
 
 
 #include "glimports.hpp"
+#include <string.h>
+#include <stdlib.h>
+#include <map>
 
 
 namespace gltrace {
@@ -39,6 +42,25 @@ enum Profile {
     PROFILE_ES2,
 };
 
+class Buffer {
+public:
+    ~Buffer()
+    {
+        free(data);
+    }
+
+    void resetData(const void *new_data, size_t new_size)
+    {
+        data = realloc(data, new_size);
+        size = new_size;
+        if (size)
+            memcpy(data, new_data, size);
+    }
+
+	size_t size;
+	void *data;
+};
+
 class Context {
 public:
     enum Profile profile;
@@ -46,6 +68,7 @@ public:
     bool user_arrays_arb;
     bool user_arrays_nv;
     unsigned retain_count;
+    std::map <GLuint, class Buffer *> buffers;
 
     Context(void) :
         profile(PROFILE_COMPAT),
@@ -54,6 +77,12 @@ public:
         user_arrays_nv(false),
         retain_count(0)
     { }
+
+    inline bool
+    needsShadowBuffers(void)
+    {
+        return profile == PROFILE_ES1 || profile == PROFILE_ES2;
+    }
 };
 
 void
