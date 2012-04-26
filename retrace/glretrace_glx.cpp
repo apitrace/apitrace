@@ -47,7 +47,7 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = glws::createDrawable(visual[glretrace::defaultProfile]));
+        return (drawable_map[drawable_id] = glretrace::createDrawable());
     }
 
     return it->second;
@@ -62,7 +62,7 @@ getContext(unsigned long long context_ptr) {
     ContextMap::const_iterator it;
     it = context_map.find(context_ptr);
     if (it == context_map.end()) {
-        return (context_map[context_ptr] = glws::createContext(visual[glretrace::defaultProfile], NULL, glretrace::defaultProfile, retrace::debug));
+        return (context_map[context_ptr] = glretrace::createContext());
     }
 
     return it->second;
@@ -72,7 +72,7 @@ static void retrace_glXCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
 
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile, retrace::debug);
+    glws::Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 
@@ -80,7 +80,7 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
 
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile, retrace::debug);
+    glws::Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 
@@ -88,26 +88,7 @@ static void retrace_glXMakeCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
     glws::Context *new_context = getContext(call.arg(2).toUIntPtr());
 
-    if (new_drawable == drawable && new_context == context) {
-        return;
-    }
-
-    if (drawable && context) {
-        glFlush();
-        if (!retrace::doubleBuffer) {
-            frame_complete(call);
-        }
-    }
-
-    bool result = glws::makeCurrent(new_drawable, new_context);
-
-    if (new_drawable && new_context && result) {
-        drawable = new_drawable;
-        context = new_context;
-    } else {
-        drawable = NULL;
-        context = NULL;
-    }
+    glretrace::makeCurrent(call, new_drawable, new_context);
 }
 
 
@@ -124,7 +105,7 @@ static void retrace_glXDestroyContext(trace::Call &call) {
 static void retrace_glXSwapBuffers(trace::Call &call) {
     frame_complete(call);
     if (retrace::doubleBuffer) {
-        drawable->swapBuffers();
+        currentDrawable->swapBuffers();
     } else {
         glFlush();
     }
@@ -134,7 +115,7 @@ static void retrace_glXCreateNewContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     glws::Context *share_context = getContext(call.arg(3).toUIntPtr());
 
-    glws::Context *context = glws::createContext(glretrace::visual[glretrace::defaultProfile], share_context, glretrace::defaultProfile, retrace::debug);
+    glws::Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 
@@ -142,26 +123,7 @@ static void retrace_glXMakeContextCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
     glws::Context *new_context = getContext(call.arg(3).toUIntPtr());
 
-    if (new_drawable == drawable && new_context == context) {
-        return;
-    }
-
-    if (drawable && context) {
-        glFlush();
-        if (!retrace::doubleBuffer) {
-            frame_complete(call);
-        }
-    }
-
-    bool result = glws::makeCurrent(new_drawable, new_context);
-
-    if (new_drawable && new_context && result) {
-        drawable = new_drawable;
-        context = new_context;
-    } else {
-        drawable = NULL;
-        context = NULL;
-    }
+    glretrace::makeCurrent(call, new_drawable, new_context);
 }
 
 const retrace::Entry glretrace::glx_callbacks[] = {

@@ -250,7 +250,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = false;'
 
         if function.name.startswith('gl') and not function.name.startswith('glX'):
-            print r'    if (retrace::debug && !glretrace::context) {'
+            print r'    if (retrace::debug && !glretrace::currentContext) {'
             print r'        retrace::warning(call) << "no current context\n";'
             print r'    }'
 

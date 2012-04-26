@@ -53,7 +53,7 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = glws::createDrawable(visual[glretrace::defaultProfile]));
+        return (drawable_map[drawable_id] = glretrace::createDrawable());
     }
 
     return it->second;
@@ -70,7 +70,7 @@ getContext(unsigned long long ctx) {
     it = context_map.find(ctx);
     if (it == context_map.end()) {
         glws::Context *context;
-        context_map[ctx] = context = glws::createContext(visual[glretrace::defaultProfile], sharedContext, glretrace::defaultProfile, retrace::debug);
+        context_map[ctx] = context = glretrace::createContext(sharedContext);
         if (!sharedContext) {
             sharedContext = context;
         }
@@ -87,22 +87,14 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(ctx);
     glws::Context *new_context = getContext(ctx);
 
-    bool result = glws::makeCurrent(new_drawable, new_context);
-
-    if (new_drawable && new_context && result) {
-        drawable = new_drawable;
-        context = new_context;
-    } else {
-        drawable = NULL;
-        context = NULL;
-    }
+    glretrace::makeCurrent(call, new_drawable, new_context);
 }
 
 
 static void retrace_CGLFlushDrawable(trace::Call &call) {
-    if (drawable && context) {
+    if (currentDrawable && currentContext) {
         if (retrace::doubleBuffer) {
-            drawable->swapBuffers();
+            currentDrawable->swapBuffers();
         } else {
             glFlush();
         }

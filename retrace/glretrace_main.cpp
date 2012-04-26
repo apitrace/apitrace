@@ -35,10 +35,7 @@
 namespace glretrace {
 
 bool insideGlBeginEnd = false;
-glws::Profile defaultProfile = glws::PROFILE_COMPAT;
-glws::Visual *visual[glws::PROFILE_MAX];
-glws::Drawable *drawable = NULL;
-glws::Context *context = NULL;
+
 
 void
 checkGlError(trace::Call &call) {
@@ -85,51 +82,15 @@ checkGlError(trace::Call &call) {
     os << "\n";
 }
 
-/**
- * Grow the current drawble.
- *
- * We need to infer the drawable size from GL calls because the drawable sizes
- * are specified by OS specific calls which we do not trace.
- */
-void
-updateDrawable(int width, int height) {
-    if (!drawable) {
-        return;
-    }
-
-    if (drawable->visible &&
-        width  <= drawable->width &&
-        height <= drawable->height) {
-        return;
-    }
-
-    // Ignore zero area viewports
-    if (width == 0 || height == 0) {
-        return;
-    }
-
-    // Check for bound framebuffer last, as this may have a performance impact.
-    GLint draw_framebuffer = 0;
-    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_framebuffer);
-    if (draw_framebuffer != 0) {
-        return;
-    }
-
-    drawable->resize(width, height);
-    drawable->show();
-
-    glScissor(0, 0, width, height);
-}
-
 
 void frame_complete(trace::Call &call) {
     retrace::frameComplete(call);
 
-    if (!drawable) {
+    if (!currentDrawable) {
         return;
     }
 
-    if (!drawable->visible) {
+    if (!currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
 }
@@ -140,16 +101,7 @@ void frame_complete(trace::Call &call) {
 
 void
 retrace::setUp(void) {
-    if (retrace::coreProfile) {
-        glretrace::defaultProfile = glws::PROFILE_CORE;
-    }
-
     glws::init();
-
-    glretrace::visual[glws::PROFILE_COMPAT] = glws::createVisual(retrace::doubleBuffer, glws::PROFILE_COMPAT);
-    glretrace::visual[glws::PROFILE_CORE] = glws::createVisual(retrace::doubleBuffer, glws::PROFILE_CORE);
-    glretrace::visual[glws::PROFILE_ES1] = glws::createVisual(retrace::doubleBuffer, glws::PROFILE_ES1);
-    glretrace::visual[glws::PROFILE_ES2] = glws::createVisual(retrace::doubleBuffer, glws::PROFILE_ES2);
 }
 
 
@@ -166,7 +118,7 @@ retrace::addCallbacks(retrace::Retracer &retracer)
 
 image::Image *
 retrace::getSnapshot(void) {
-    if (!glretrace::drawable) {
+    if (!glretrace::currentDrawable) {
         return NULL;
     }
 
@@ -178,8 +130,8 @@ bool
 retrace::dumpState(std::ostream &os)
 {
     if (glretrace::insideGlBeginEnd ||
-        !glretrace::drawable ||
-        !glretrace::context) {
+        !glretrace::currentDrawable ||
+        !glretrace::currentContext) {
         return false;
     }
 
@@ -201,9 +153,5 @@ retrace::waitForInput(void) {
 
 void
 retrace::cleanUp(void) {
-    for (int n = 0; n < glws::PROFILE_MAX; n++) {
-        delete glretrace::visual[n];
-    }
-
     glws::cleanup();
 }

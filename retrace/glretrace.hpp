@@ -34,10 +34,26 @@ namespace glretrace {
 
 
 extern bool insideGlBeginEnd;
-extern glws::Profile defaultProfile;
-extern glws::Visual *visual[glws::PROFILE_MAX];
-extern glws::Drawable *drawable;
-extern glws::Context *context;
+
+
+extern glws::Drawable *currentDrawable;
+extern glws::Context *currentContext;
+
+glws::Drawable *
+createDrawable(glws::Profile profile);
+
+glws::Drawable *
+createDrawable(void);
+
+glws::Context *
+createContext(glws::Context *shareContext, glws::Profile profile);
+
+glws::Context *
+createContext(glws::Context *shareContext = 0);
+
+bool
+makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context);
+
 
 void
 checkGlError(trace::Call &call);

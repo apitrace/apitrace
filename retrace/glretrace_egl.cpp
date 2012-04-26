@@ -102,9 +102,7 @@ static void createDrawable(unsigned long long orig_config, unsigned long long or
         profile = last_profile;
     }
 
-    glws::Visual *visual = glretrace::visual[profile];
-
-    glws::Drawable *drawable = glws::createDrawable(visual);
+    glws::Drawable *drawable = glretrace::createDrawable(profile);
     drawable_map[orig_surface] = drawable;
 }
 
@@ -128,7 +126,7 @@ static void retrace_eglDestroySurface(trace::Call &call) {
     it = drawable_map.find(orig_surface);
 
     if (it != drawable_map.end()) {
-        if (it->second != drawable) {
+        if (it->second != currentDrawable) {
             // TODO: reference count
             delete it->second;
         }
@@ -169,7 +167,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
     }
 
 
-    glws::Context *context = glws::createContext(glretrace::visual[profile], share_context, profile, retrace::debug);
+    glws::Context *context = glretrace::createContext(share_context, profile);
     if (!context) {
         const char *name;
         switch (profile) {
@@ -212,34 +210,15 @@ static void retrace_eglMakeCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUIntPtr());
     glws::Context *new_context = getContext(call.arg(3).toUIntPtr());
 
-    if (new_drawable == drawable && new_context == context) {
-        return;
-    }
-
-    if (drawable && context) {
-        glFlush();
-        if (!retrace::doubleBuffer) {
-            frame_complete(call);
-        }
-    }
-
-    bool result = glws::makeCurrent(new_drawable, new_context);
-
-    if (new_drawable && new_context && result) {
-        drawable = new_drawable;
-        context = new_context;
-    } else {
-        drawable = NULL;
-        context = NULL;
-    }
+    glretrace::makeCurrent(call, new_drawable, new_context);
 }
 
 
 static void retrace_eglSwapBuffers(trace::Call &call) {
     frame_complete(call);
 
-    if (retrace::doubleBuffer && drawable) {
-        drawable->swapBuffers();
+    if (retrace::doubleBuffer && currentDrawable) {
+        currentDrawable->swapBuffers();
     } else {
         glFlush();
     }
