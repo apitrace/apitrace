@@ -101,7 +101,6 @@ void frame_complete(trace::Call &call) {
 
 void
 retrace::setUp(void) {
-    glws::init();
 }
 
 

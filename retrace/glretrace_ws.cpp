@@ -40,6 +40,17 @@
 namespace glretrace {
 
 
+static bool initialized = false;
+
+
+static inline void
+init(void) {
+    if (!initialized) {
+        glws::init();
+        initialized = true;
+    }
+}
+
 glws::Drawable *currentDrawable = NULL;
 glws::Context *currentContext = NULL;
 
@@ -59,8 +70,7 @@ getVisual(glws::Profile profile) {
 
 
 inline glws::Profile
-getDefaultProfile(void)
-{
+getDefaultProfile(void) {
     if (retrace::coreProfile) {
         return glws::PROFILE_CORE;
     } else {
@@ -71,6 +81,8 @@ getDefaultProfile(void)
 
 glws::Drawable *
 createDrawable(glws::Profile profile) {
+    init();
+
     glws::Drawable *draw = glws::createDrawable(getVisual(profile));
     if (!draw) {
         std::cerr << "error: failed to create OpenGL drawable\n";
@@ -90,6 +102,8 @@ createDrawable(void) {
 
 glws::Context *
 createContext(glws::Context *shareContext, glws::Profile profile) {
+    init();
+
     glws::Context *ctx = glws::createContext(getVisual(profile), shareContext, profile, retrace::debug);
     if (!ctx) {
         std::cerr << "error: failed to create OpenGL context\n";
@@ -108,8 +122,9 @@ createContext(glws::Context *shareContext) {
 
 
 bool
-makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context)
-{
+makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context) {
+    init();
+
     if (drawable == currentDrawable && context == currentContext) {
         return true;
     }
