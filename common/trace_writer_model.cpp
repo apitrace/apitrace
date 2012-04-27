@@ -100,6 +100,13 @@ public:
         writer.writePointer(node->value);
     }
 
+    void visit(Repr *node) {
+        writer.beginRepr();
+        _visit(node->humanValue);
+        _visit(node->machineValue);
+        writer.endRepr();
+    }
+
     void visit(Call *call) {
         unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
         for (unsigned i = 0; i < call->args.size(); ++i) {

@@ -200,6 +200,10 @@ public:
         os << pointer << "0x" << std::hex << p->value << std::dec << normal;
     }
 
+    void visit(Repr *r) {
+        _visit(r->humanValue);
+    }
+
     void visit(Call *call) {
         CallFlags callFlags = call->flags;
         

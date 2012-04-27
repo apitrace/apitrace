@@ -37,6 +37,8 @@
 /* We purposedly don't include any D3D header, so that this header can be used
  * with all D3D versions. */
 
+#include <assert.h>
+
 #include "os.hpp"
 
 
@@ -85,6 +87,36 @@ _indexDataSize(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, D3DFORMAT In
     }
     return _vertexCount(PrimitiveType, PrimitiveCount) * IndexStride;
 }
+
+
+#if DIRECT3D_VERSION >= 0x0800
+
+/*
+ * Return the number of tokens for a given shader.
+ */
+static inline size_t
+_shaderSize(const DWORD *pFunction)
+{
+    DWORD dwLength = 0;
+
+    while (true) {
+        DWORD dwToken = pFunction[dwLength++];
+
+        switch (dwToken & D3DSI_OPCODE_MASK) {
+        case D3DSIO_COMMENT:
+            dwLength += (dwToken & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+            break;
+
+        case D3DSIO_END:
+            if (dwToken != D3DSIO_END) {
+                os::log("apitrace: warning: %s: malformed END token\n", __FUNCTION__);
+            }
+            return dwLength * sizeof *pFunction;
+        }
+    }
+}
+
+#endif /* DIRECT3D_VERSION >= 0x0800 */
 
 
 #endif /* _D3D_SIZE_HPP_ */

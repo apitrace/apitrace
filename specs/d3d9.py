@@ -30,7 +30,7 @@ from d3d9types import *
 from d3d9caps import *
 
 
-D3DSHADER9 = OpaquePointer(Const(DWORD))
+D3DSHADER9 = Blob(Const(DWORD), "_shaderSize(pFunction)")
 
 D3DSPD = Flags(DWORD, [
     "D3DSPD_IUNKNOWN",

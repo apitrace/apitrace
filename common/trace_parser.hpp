@@ -195,6 +195,9 @@ protected:
     Value *parse_opaque();
     void scan_opaque();
 
+    Value *parse_repr();
+    void scan_repr();
+
     const char * read_string(void);
     void skip_string(void);
 

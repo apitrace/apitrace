@@ -25,14 +25,14 @@
 
 
 from dlltrace import DllTracer
-from specs.d3d9 import d3d9
+from specs.d3d9 import d3d9, D3DSHADER9
 
 
 class D3D9Tracer(DllTracer):
 
     def serializeArgValue(self, function, arg):
         # Dump shaders as strings
-        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
+        if arg.type is D3DSHADER9:
             print '    DumpShader(trace::localWriter, %s);' % (arg.name)
             return
 

@@ -557,6 +557,9 @@ Value *Parser::parse_value(void) {
     case trace::TYPE_OPAQUE:
         value = parse_opaque();
         break;
+    case trace::TYPE_REPR:
+        value = parse_repr();
+        break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
         exit(1);
@@ -612,6 +615,9 @@ void Parser::scan_value(void) {
         break;
     case trace::TYPE_OPAQUE:
         scan_opaque();
+        break;
+    case trace::TYPE_REPR:
+        scan_repr();
         break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
@@ -781,6 +787,19 @@ Value *Parser::parse_opaque() {
 
 void Parser::scan_opaque() {
     skip_uint();
+}
+
+
+Value *Parser::parse_repr() {
+    Value *humanValue = parse_value();
+    Value *machineValue = parse_value();
+    return new Repr(humanValue, machineValue);
+}
+
+
+void Parser::scan_repr() {
+    scan_value();
+    scan_value();
 }
 
 

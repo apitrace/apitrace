@@ -190,6 +190,10 @@ void Writer::beginStruct(const StructSig *sig) {
     }
 }
 
+void Writer::beginRepr(void) {
+    _writeByte(trace::TYPE_REPR);
+}
+
 void Writer::writeBool(bool value) {
     _writeByte(value ? trace::TYPE_TRUE : trace::TYPE_FALSE);
 }
