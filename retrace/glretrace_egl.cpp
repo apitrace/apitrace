@@ -39,13 +39,13 @@ using namespace glretrace;
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, glws::Context *> ContextMap;
-typedef std::map<unsigned long long, glws::Profile> ProfileMap;
+typedef std::map<unsigned long long, gldispatch::Profile> ProfileMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
 static ProfileMap profile_map;
 
 static unsigned int current_api = EGL_OPENGL_ES_API;
-static glws::Profile last_profile = glws::PROFILE_ES1;
+static gldispatch::Profile last_profile = gldispatch::PROFILE_ES1;
 
 static void
 createDrawable(unsigned long long orig_config, unsigned long long orig_surface);
@@ -84,7 +84,7 @@ getContext(unsigned long long context_ptr) {
 static void createDrawable(unsigned long long orig_config, unsigned long long orig_surface)
 {
     ProfileMap::iterator it = profile_map.find(orig_config);
-    glws::Profile profile;
+    gldispatch::Profile profile;
 
     // If the requested config is associated with a profile, use that
     // profile. Otherwise, assume that the last used profile is what
@@ -136,22 +136,22 @@ static void retrace_eglCreateContext(trace::Call &call) {
     unsigned long long orig_config = call.arg(1).toUIntPtr();
     glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
     trace::Array *attrib_array = dynamic_cast<trace::Array *>(&call.arg(3));
-    glws::Profile profile;
+    gldispatch::Profile profile;
 
     switch (current_api) {
     case EGL_OPENGL_API:
-        profile = glws::PROFILE_COMPAT;
+        profile = gldispatch::PROFILE_COMPAT;
         break;
     case EGL_OPENGL_ES_API:
     default:
-        profile = glws::PROFILE_ES1;
+        profile = gldispatch::PROFILE_ES1;
         if (attrib_array) {
             for (int i = 0; i < attrib_array->values.size(); i += 2) {
                 int v = attrib_array->values[i]->toSInt();
                 if (v == EGL_CONTEXT_CLIENT_VERSION) {
                     v = attrib_array->values[i + 1]->toSInt();
                     if (v == 2)
-                        profile = glws::PROFILE_ES2;
+                        profile = gldispatch::PROFILE_ES2;
                     break;
                 }
             }
@@ -164,13 +164,13 @@ static void retrace_eglCreateContext(trace::Call &call) {
     if (!context) {
         const char *name;
         switch (profile) {
-        case glws::PROFILE_COMPAT:
+        case gldispatch::PROFILE_COMPAT:
             name = "OpenGL";
             break;
-        case glws::PROFILE_ES1:
+        case gldispatch::PROFILE_ES1:
             name = "OpenGL ES 1.1";
             break;
-        case glws::PROFILE_ES2:
+        case gldispatch::PROFILE_ES2:
             name = "OpenGL ES 2.0";
             break;
         default:

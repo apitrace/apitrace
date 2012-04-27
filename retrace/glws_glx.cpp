@@ -203,7 +203,7 @@ class GlxContext : public Context
 public:
     GLXContext context;
 
-    GlxContext(const Visual *vis, Profile prof, GLXContext ctx) :
+    GlxContext(const Visual *vis, gldispatch::Profile prof, GLXContext ctx) :
         Context(vis, prof),
         context(ctx)
     {}
@@ -242,9 +242,9 @@ public:
     }
 
     Visual *
-    createVisual(bool doubleBuffer, Profile profile) {
-        if (profile != PROFILE_COMPAT &&
-            profile != PROFILE_CORE) {
+    createVisual(bool doubleBuffer, gldispatch::Profile profile) {
+        if (profile != gldispatch::PROFILE_COMPAT &&
+            profile != gldispatch::PROFILE_CORE) {
             return NULL;
         }
 
@@ -298,7 +298,7 @@ public:
     }
 
     Context *
-    createContext(const Visual *_visual, Context *shareContext, Profile profile, bool debug)
+    createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug)
     {
         const GlxVisual *visual = static_cast<const GlxVisual *>(_visual);
         GLXContext share_context = NULL;
@@ -317,9 +317,9 @@ public:
             }
 
             switch (profile) {
-            case PROFILE_COMPAT:
+            case gldispatch::PROFILE_COMPAT:
                 break;
-            case PROFILE_CORE:
+            case gldispatch::PROFILE_CORE:
                 // XXX: This will invariable return a 3.2 context, when supported.
                 // We probably should have a PROFILE_CORE_XX per version.
                 attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 3);
@@ -334,7 +334,7 @@ public:
 
             context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
         } else {
-            if (profile != PROFILE_COMPAT) {
+            if (profile != gldispatch::PROFILE_COMPAT) {
                 return NULL;
             }
 

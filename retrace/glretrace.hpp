@@ -40,13 +40,13 @@ extern glws::Drawable *currentDrawable;
 extern glws::Context *currentContext;
 
 glws::Drawable *
-createDrawable(glws::Profile profile);
+createDrawable(gldispatch::Profile profile);
 
 glws::Drawable *
 createDrawable(void);
 
 glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile);
+createContext(glws::Context *shareContext, gldispatch::Profile profile);
 
 glws::Context *
 createContext(glws::Context *shareContext = 0);

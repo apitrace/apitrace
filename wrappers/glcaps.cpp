@@ -92,10 +92,11 @@ getExtraExtensions(void)
     Context *ctx = getContext();
 
     switch (ctx->profile) {
-    case PROFILE_COMPAT:
+    case gldispatch::PROFILE_COMPAT:
+    case gldispatch::PROFILE_CORE:
         return &extraExtensionsFull;
-    case PROFILE_ES1:
-    case PROFILE_ES2:
+    case gldispatch::PROFILE_ES1:
+    case gldispatch::PROFILE_ES2:
         return &extraExtensionsES;
     default:
         assert(0);

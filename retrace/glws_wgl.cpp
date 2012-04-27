@@ -222,7 +222,7 @@ public:
     HGLRC hglrc;
     WglContext *shareContext;
 
-    WglContext(const Visual *vis, Profile prof, WglContext *share) :
+    WglContext(const Visual *vis, gldispatch::Profile prof, WglContext *share) :
         Context(vis, prof),
         hglrc(0),
         shareContext(share)
@@ -265,8 +265,8 @@ public:
     }
 
     Visual *
-    createVisual(bool doubleBuffer, Profile profile) {
-        if (profile != PROFILE_COMPAT) {
+    createVisual(bool doubleBuffer, gldispatch::Profile profile) {
+        if (profile != gldispatch::PROFILE_COMPAT) {
             return NULL;
         }
 
@@ -284,9 +284,9 @@ public:
     }
 
     Context *
-    createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
+    createContext(const Visual *visual, Context *shareContext, gldispatch::Profile profile, bool debug)
     {
-        if (profile != PROFILE_COMPAT) {
+        if (profile != gldispatch::PROFILE_COMPAT) {
             return NULL;
         }
 

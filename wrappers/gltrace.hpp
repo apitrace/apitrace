@@ -27,20 +27,14 @@
 #define _GLTRACE_HPP_
 
 
-#include "glimports.hpp"
+#include "glproc.hpp"
 
 
 namespace gltrace {
 
 
-enum Profile {
-    PROFILE_COMPAT,
-    PROFILE_ES1,
-    PROFILE_ES2,
-};
-
 struct Context {
-    enum Profile profile;
+    enum gldispatch::Profile profile;
     bool user_arrays;
     bool user_arrays_arb;
     bool user_arrays_nv;

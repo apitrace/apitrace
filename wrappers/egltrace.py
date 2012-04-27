@@ -60,11 +60,11 @@ class EglTracer(GlTracer):
             print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
             print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
             print '        if (api == EGL_OPENGL_API)'
-            print '            tr->profile = gltrace::PROFILE_COMPAT;'
+            print '            tr->profile = gldispatch::PROFILE_COMPAT;'
             print '        else if (version == 1)'
-            print '            tr->profile = gltrace::PROFILE_ES1;'
+            print '            tr->profile = gldispatch::PROFILE_ES1;'
             print '        else'
-            print '            tr->profile = gltrace::PROFILE_ES2;'
+            print '            tr->profile = gldispatch::PROFILE_ES2;'
             print '    }'
 
 

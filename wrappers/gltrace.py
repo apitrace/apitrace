@@ -125,7 +125,7 @@ class GlTracer(Tracer):
         print 'gltrace::getContext(void)'
         print '{'
         print '    // TODO return the context set by other APIs (GLX, EGL, and etc.)'
-        print '    static gltrace::Context _ctx = { gltrace::PROFILE_COMPAT, false, false, false };'
+        print '    static gltrace::Context _ctx = { gldispatch::PROFILE_COMPAT, false, false, false };'
         print '    return &_ctx;'
         print '}'
         print
@@ -160,9 +160,9 @@ class GlTracer(Tracer):
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
+            profile_check = 'ctx->profile == gldispatch::PROFILE_COMPAT'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || ctx->profile == gldispatch::PROFILE_ES1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -183,7 +183,7 @@ class GlTracer(Tracer):
             print
 
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
+        print '    if (ctx->profile == gldispatch::PROFILE_ES1)'
         print '        return false;'
         print
         print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
@@ -321,7 +321,7 @@ class GlTracer(Tracer):
         print 'static inline bool'
         print 'can_unpack_subimage(void) {'
         print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    return (ctx->profile == gltrace::PROFILE_COMPAT);'
+        print '    return (ctx->profile == gldispatch::PROFILE_COMPAT);'
         print '}'
         print
 
@@ -808,7 +808,7 @@ class GlTracer(Tracer):
             print '    {'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        GLint _unpack_buffer = 0;'
-            print '        if (ctx->profile == gltrace::PROFILE_COMPAT)'
+            print '        if (ctx->profile == gldispatch::PROFILE_COMPAT)'
             print '            _glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &_unpack_buffer);'
             print '        if (_unpack_buffer) {'
             print '            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name
@@ -846,9 +846,9 @@ class GlTracer(Tracer):
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
+            profile_check = 'ctx->profile == gldispatch::PROFILE_COMPAT'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || ctx->profile == gldispatch::PROFILE_ES1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -907,7 +907,7 @@ class GlTracer(Tracer):
         # alias, and they need to be considered independently.
         #
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
+        print '    if (ctx->profile == gldispatch::PROFILE_ES1)'
         print '        return;'
         print
         print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
@@ -986,7 +986,7 @@ class GlTracer(Tracer):
             print '    GLint client_active_texture = 0;'
             print '    _glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &client_active_texture);'
             print '    GLint max_texture_coords = 0;'
-            print '    if (ctx->profile == gltrace::PROFILE_COMPAT)'
+            print '    if (ctx->profile == gldispatch::PROFILE_COMPAT)'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
             print '    else'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_coords);'

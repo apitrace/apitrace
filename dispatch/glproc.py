@@ -493,6 +493,20 @@ class GlDispatcher(Dispatcher):
 
     def header(self):
         print '''
+
+namespace gldispatch {
+
+    enum Profile {
+        PROFILE_COMPAT = 0,
+        PROFILE_CORE,
+        PROFILE_ES1,
+        PROFILE_ES2,
+        PROFILE_MAX
+    };
+
+} /* namespace gldispatch */
+
+
 #if defined(_WIN32)
 extern HMODULE _libGlHandle;
 #else

@@ -212,7 +212,7 @@ class EglContext : public Context
 public:
     EGLContext context;
 
-    EglContext(const Visual *vis, Profile prof, EGLContext ctx) :
+    EglContext(const Visual *vis, gldispatch::Profile prof, EGLContext ctx) :
         Context(vis, prof),
         context(ctx)
     {}
@@ -274,7 +274,7 @@ public:
     }
 
     Visual *
-    createVisual(bool doubleBuffer, Profile profile) {
+    createVisual(bool doubleBuffer, gldispatch::Profile profile) {
         EglVisual *visual = new EglVisual();
         // possible combinations
         const EGLint api_bits_gl[7] = {
@@ -307,13 +307,13 @@ public:
         const EGLint *api_bits;
 
         switch(profile) {
-        case PROFILE_COMPAT:
+        case gldispatch::PROFILE_COMPAT:
             api_bits = api_bits_gl;
             break;
-        case PROFILE_ES1:
+        case gldispatch::PROFILE_ES1:
             api_bits = api_bits_gles1;
             break;
-        case PROFILE_ES2:
+        case gldispatch::PROFILE_ES2:
             api_bits = api_bits_gles2;
             break;
         default:
@@ -358,7 +358,7 @@ public:
     }
 
     Context *
-    createContext(const Visual *_visual, Context *shareContext, Profile profile, bool debug)
+    createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug)
     {
         const EglVisual *visual = static_cast<const EglVisual *>(_visual);
         EGLContext share_context = EGL_NO_CONTEXT;
@@ -372,18 +372,18 @@ public:
         EGLint api = eglQueryAPI();
 
         switch (profile) {
-        case PROFILE_COMPAT:
+        case gldispatch::PROFILE_COMPAT:
             load("libGL.so.1");
             eglBindAPI(EGL_OPENGL_API);
             break;
-        case PROFILE_CORE:
+        case gldispatch::PROFILE_CORE:
             assert(0);
             return NULL;
-        case PROFILE_ES1:
+        case gldispatch::PROFILE_ES1:
             load("libGLESv1_CM.so.1");
             eglBindAPI(EGL_OPENGL_ES_API);
             break;
-        case PROFILE_ES2:
+        case gldispatch::PROFILE_ES2:
             load("libGLESv2.so.2");
             eglBindAPI(EGL_OPENGL_ES_API);
             attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);

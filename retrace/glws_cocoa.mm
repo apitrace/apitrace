@@ -143,7 +143,7 @@ class CocoaContext : public Context
 public:
     NSOpenGLContext *context;
 
-    CocoaContext(const Visual *vis, Profile prof, NSOpenGLContext *ctx) :
+    CocoaContext(const Visual *vis, gldispatch::Profile prof, NSOpenGLContext *ctx) :
         Context(vis, prof),
         context(ctx)
     {}
@@ -173,9 +173,9 @@ public:
 
 
     Visual *
-    createVisual(bool doubleBuffer, Profile profile) {
-        if (profile != PROFILE_COMPAT &&
-            profile != PROFILE_CORE) {
+    createVisual(bool doubleBuffer, gldispatch::Profile profile) {
+        if (profile != gldispatch::PROFILE_COMPAT &&
+            profile != gldispatch::PROFILE_CORE) {
             return nil;
         }
 
@@ -188,7 +188,7 @@ public:
         }
         attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
         attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
-        if (profile == PROFILE_CORE) {
+        if (profile == gldispatch::PROFILE_CORE) {
 #if CGL_VERSION_1_3
             attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
 #else
@@ -210,14 +210,14 @@ public:
     }
 
     Context *
-    createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
+    createContext(const Visual *visual, Context *shareContext, gldispatch::Profile profile, bool debug)
     {
         NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
         NSOpenGLContext *share_context = nil;
         NSOpenGLContext *context;
 
-        if (profile != PROFILE_COMPAT &&
-            profile != PROFILE_CORE) {
+        if (profile != gldispatch::PROFILE_COMPAT &&
+            profile != gldispatch::PROFILE_CORE) {
             return nil;
         }
 

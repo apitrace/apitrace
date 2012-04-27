@@ -44,12 +44,12 @@ static glws::WindowSystem *winsys = NULL;
 
 
 static inline void
-init(glws::Profile profile) {
+init(gldispatch::Profile profile) {
     if (!winsys) {
         const char *description;
         switch (profile) {
-        case glws::PROFILE_ES1:
-        case glws::PROFILE_ES2:
+        case gldispatch::PROFILE_ES1:
+        case gldispatch::PROFILE_ES2:
             description = "EGL";
             winsys = glws::createEglWindowSystem();
             break;
@@ -70,11 +70,11 @@ glws::Context *currentContext = NULL;
 
 
 static glws::Visual *
-visuals[glws::PROFILE_MAX];
+visuals[gldispatch::PROFILE_MAX];
 
 
 inline glws::Visual *
-getVisual(glws::Profile profile) {
+getVisual(gldispatch::Profile profile) {
     init(profile);
 
     glws::Visual * & visual = visuals[profile];
@@ -85,18 +85,18 @@ getVisual(glws::Profile profile) {
 }
 
 
-inline glws::Profile
+inline gldispatch::Profile
 getDefaultProfile(void) {
     if (retrace::coreProfile) {
-        return glws::PROFILE_CORE;
+        return gldispatch::PROFILE_CORE;
     } else {
-        return glws::PROFILE_COMPAT;
+        return gldispatch::PROFILE_COMPAT;
     }
 }
 
 
 glws::Drawable *
-createDrawable(glws::Profile profile) {
+createDrawable(gldispatch::Profile profile) {
     init(profile);
 
     glws::Drawable *draw = winsys->createDrawable(getVisual(profile));
@@ -117,7 +117,7 @@ createDrawable(void) {
 
 
 glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile) {
+createContext(glws::Context *shareContext, gldispatch::Profile profile) {
     init(profile);
 
     glws::Context *ctx = winsys->createContext(getVisual(profile), shareContext, profile, retrace::debug);

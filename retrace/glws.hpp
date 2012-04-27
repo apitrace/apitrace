@@ -33,17 +33,10 @@
 
 #include <vector>
 
+#include "glproc.hpp"
+
 
 namespace glws {
-
-
-enum Profile {
-    PROFILE_COMPAT = 0,
-    PROFILE_CORE,
-    PROFILE_ES1,
-    PROFILE_ES2,
-    PROFILE_MAX
-};
 
 
 bool
@@ -128,9 +121,9 @@ class Context
 {
 public:
     const Visual *visual;
-    Profile profile;
+    gldispatch::Profile profile;
     
-    Context(const Visual *vis, Profile prof) :
+    Context(const Visual *vis, gldispatch::Profile prof) :
         visual(vis),
         profile(prof)
     {}
@@ -145,13 +138,13 @@ public:
     ~WindowSystem() {}
 
     virtual Visual *
-    createVisual(bool doubleBuffer = false, Profile profile = PROFILE_COMPAT) = 0;
+    createVisual(bool doubleBuffer = false, gldispatch::Profile profile = gldispatch::PROFILE_COMPAT) = 0;
 
     virtual Drawable *
     createDrawable(const Visual *visual, int width = 32, int height = 32) = 0;
 
     virtual Context *
-    createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT, bool debug = false) = 0;
+    createContext(const Visual *visual, Context *shareContext = 0, gldispatch::Profile profile = gldispatch::PROFILE_COMPAT, bool debug = false) = 0;
 
     virtual bool
     makeCurrent(Drawable *drawable, Context *context) = 0;
