@@ -33,7 +33,7 @@
 
 #include <vector>
 
-#include "glproc.hpp"
+#include "glproc_core.hpp"
 
 
 namespace glws {

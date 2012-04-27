@@ -502,26 +502,9 @@ if __name__ == '__main__':
     print 
     print '#include "glimports.hpp"'
     print '#include "os.hpp"'
-    print '#include "os_dl.hpp"'
+    print '#include "glproc_core.hpp"'
     print
     print '''
-
-namespace gldispatch {
-
-    enum Profile {
-        PROFILE_COMPAT = 0,
-        PROFILE_CORE,
-        PROFILE_ES1,
-        PROFILE_ES2,
-        PROFILE_MAX
-    };
-
-    extern Profile currentProfile;
-
-    extern os::Library libGL;
-
-} /* namespace gldispatch */
-
 
 void * _getPublicProcAddress(const char *procName);
 void * _getPrivateProcAddress(const char *procName);
