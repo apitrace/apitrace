@@ -235,206 +235,216 @@ load(const char *filename)
     }
 }
 
-void
-init(void) {
-    load("libEGL.so.1");
 
-    display = XOpenDisplay(NULL);
-    if (!display) {
-        std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
-        exit(1);
+class EglXlibWindowSystem : public WindowSystem
+{
+public:
+    EglXlibWindowSystem() {
+        load("libEGL.so.1");
+
+        display = XOpenDisplay(NULL);
+        if (!display) {
+            std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
+            exit(1);
+        }
+
+        screen = DefaultScreen(display);
+
+        eglDisplay = eglGetDisplay((EGLNativeDisplayType)display);
+        if (eglDisplay == EGL_NO_DISPLAY) {
+            std::cerr << "error: unable to get EGL display\n";
+            XCloseDisplay(display);
+            exit(1);
+        }
+
+        EGLint major, minor;
+        if (!eglInitialize(eglDisplay, &major, &minor)) {
+            std::cerr << "error: unable to initialize EGL display\n";
+            XCloseDisplay(display);
+            exit(1);
+        }
     }
 
-    screen = DefaultScreen(display);
-
-    eglDisplay = eglGetDisplay((EGLNativeDisplayType)display);
-    if (eglDisplay == EGL_NO_DISPLAY) {
-        std::cerr << "error: unable to get EGL display\n";
-        XCloseDisplay(display);
-        exit(1);
+    ~EglXlibWindowSystem() {
+        if (display) {
+            eglTerminate(eglDisplay);
+            XCloseDisplay(display);
+            display = NULL;
+        }
     }
 
-    EGLint major, minor;
-    if (!eglInitialize(eglDisplay, &major, &minor)) {
-        std::cerr << "error: unable to initialize EGL display\n";
-        XCloseDisplay(display);
-        exit(1);
+    Visual *
+    createVisual(bool doubleBuffer, Profile profile) {
+        EglVisual *visual = new EglVisual();
+        // possible combinations
+        const EGLint api_bits_gl[7] = {
+            EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
+            EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_BIT,
+            EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_ES_BIT,
+        };
+        const EGLint api_bits_gles1[7] = {
+            EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
+            EGL_OPENGL_ES_BIT,
+            EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_BIT,
+            EGL_OPENGL_ES2_BIT,
+        };
+        const EGLint api_bits_gles2[7] = {
+            EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_ES2_BIT,
+            EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
+            EGL_OPENGL_BIT,
+            EGL_OPENGL_ES_BIT,
+        };
+        const EGLint *api_bits;
+
+        switch(profile) {
+        case PROFILE_COMPAT:
+            api_bits = api_bits_gl;
+            break;
+        case PROFILE_ES1:
+            api_bits = api_bits_gles1;
+            break;
+        case PROFILE_ES2:
+            api_bits = api_bits_gles2;
+            break;
+        default:
+            return NULL;
+        };
+
+        for (int i = 0; i < 7; i++) {
+            Attributes<EGLint> attribs;
+
+            attribs.add(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
+            attribs.add(EGL_RED_SIZE, 1);
+            attribs.add(EGL_GREEN_SIZE, 1);
+            attribs.add(EGL_BLUE_SIZE, 1);
+            attribs.add(EGL_ALPHA_SIZE, 1);
+            attribs.add(EGL_DEPTH_SIZE, 1);
+            attribs.add(EGL_STENCIL_SIZE, 1);
+            attribs.add(EGL_RENDERABLE_TYPE, api_bits[i]);
+            attribs.end(EGL_NONE);
+
+            EGLint num_configs, vid;
+            if (eglChooseConfig(eglDisplay, attribs, &visual->config, 1, &num_configs) &&
+                num_configs == 1 &&
+                eglGetConfigAttrib(eglDisplay, visual->config, EGL_NATIVE_VISUAL_ID, &vid)) {
+                XVisualInfo templ;
+                int num_visuals;
+
+                templ.visualid = vid;
+                visual->visinfo = XGetVisualInfo(display, VisualIDMask, &templ, &num_visuals);
+                break;
+            }
+        }
+
+        assert(visual->visinfo);
+
+        return visual;
     }
-}
 
-void
-cleanup(void) {
-    if (display) {
-        eglTerminate(eglDisplay);
-        XCloseDisplay(display);
-        display = NULL;
+    Drawable *
+    createDrawable(const Visual *visual, int width, int height)
+    {
+        return new EglDrawable(visual, width, height);
     }
-}
 
-Visual *
-createVisual(bool doubleBuffer, Profile profile) {
-    EglVisual *visual = new EglVisual();
-    // possible combinations
-    const EGLint api_bits_gl[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT,
-    };
-    const EGLint api_bits_gles1[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES2_BIT,
-    };
-    const EGLint api_bits_gles2[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES_BIT,
-    };
-    const EGLint *api_bits;
-
-    switch(profile) {
-    case PROFILE_COMPAT:
-        api_bits = api_bits_gl;
-        break;
-    case PROFILE_ES1:
-        api_bits = api_bits_gles1;
-        break;
-    case PROFILE_ES2:
-        api_bits = api_bits_gles2;
-        break;
-    default:
-        return NULL;
-    };
-
-    for (int i = 0; i < 7; i++) {
+    Context *
+    createContext(const Visual *_visual, Context *shareContext, Profile profile, bool debug)
+    {
+        const EglVisual *visual = static_cast<const EglVisual *>(_visual);
+        EGLContext share_context = EGL_NO_CONTEXT;
+        EGLContext context;
         Attributes<EGLint> attribs;
 
-        attribs.add(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
-        attribs.add(EGL_RED_SIZE, 1);
-        attribs.add(EGL_GREEN_SIZE, 1);
-        attribs.add(EGL_BLUE_SIZE, 1);
-        attribs.add(EGL_ALPHA_SIZE, 1);
-        attribs.add(EGL_DEPTH_SIZE, 1);
-        attribs.add(EGL_STENCIL_SIZE, 1);
-        attribs.add(EGL_RENDERABLE_TYPE, api_bits[i]);
+        if (shareContext) {
+            share_context = static_cast<EglContext*>(shareContext)->context;
+        }
+
+        EGLint api = eglQueryAPI();
+
+        switch (profile) {
+        case PROFILE_COMPAT:
+            load("libGL.so.1");
+            eglBindAPI(EGL_OPENGL_API);
+            break;
+        case PROFILE_CORE:
+            assert(0);
+            return NULL;
+        case PROFILE_ES1:
+            load("libGLESv1_CM.so.1");
+            eglBindAPI(EGL_OPENGL_ES_API);
+            break;
+        case PROFILE_ES2:
+            load("libGLESv2.so.2");
+            eglBindAPI(EGL_OPENGL_ES_API);
+            attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
+            break;
+        default:
+            return NULL;
+        }
+
         attribs.end(EGL_NONE);
 
-        EGLint num_configs, vid;
-        if (eglChooseConfig(eglDisplay, attribs, &visual->config, 1, &num_configs) &&
-            num_configs == 1 &&
-            eglGetConfigAttrib(eglDisplay, visual->config, EGL_NATIVE_VISUAL_ID, &vid)) {
-            XVisualInfo templ;
-            int num_visuals;
+        context = eglCreateContext(eglDisplay, visual->config, share_context, attribs);
+        if (!context)
+            return NULL;
 
-            templ.visualid = vid;
-            visual->visinfo = XGetVisualInfo(display, VisualIDMask, &templ, &num_visuals);
-            break;
+        eglBindAPI(api);
+
+        return new EglContext(visual, profile, context);
+    }
+
+    bool
+    makeCurrent(Drawable *drawable, Context *context)
+    {
+        if (!drawable || !context) {
+            return eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        } else {
+            EglDrawable *eglDrawable = static_cast<EglDrawable *>(drawable);
+            EglContext *eglContext = static_cast<EglContext *>(context);
+            EGLBoolean ok;
+
+            ok = eglMakeCurrent(eglDisplay, eglDrawable->surface,
+                                eglDrawable->surface, eglContext->context);
+
+            if (ok) {
+                EGLint api;
+
+                eglQueryContext(eglDisplay, eglContext->context,
+                                EGL_CONTEXT_CLIENT_TYPE, &api);
+
+                eglDrawable->api = api;
+            }
+
+            return ok;
         }
     }
 
-    assert(visual->visinfo);
-
-    return visual;
-}
-
-Drawable *
-createDrawable(const Visual *visual, int width, int height)
-{
-    return new EglDrawable(visual, width, height);
-}
-
-Context *
-createContext(const Visual *_visual, Context *shareContext, Profile profile, bool debug)
-{
-    const EglVisual *visual = static_cast<const EglVisual *>(_visual);
-    EGLContext share_context = EGL_NO_CONTEXT;
-    EGLContext context;
-    Attributes<EGLint> attribs;
-
-    if (shareContext) {
-        share_context = static_cast<EglContext*>(shareContext)->context;
-    }
-
-    EGLint api = eglQueryAPI();
-
-    switch (profile) {
-    case PROFILE_COMPAT:
-        load("libGL.so.1");
-        eglBindAPI(EGL_OPENGL_API);
-        break;
-    case PROFILE_CORE:
-        assert(0);
-        return NULL;
-    case PROFILE_ES1:
-        load("libGLESv1_CM.so.1");
-        eglBindAPI(EGL_OPENGL_ES_API);
-        break;
-    case PROFILE_ES2:
-        load("libGLESv2.so.2");
-        eglBindAPI(EGL_OPENGL_ES_API);
-        attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
-        break;
-    default:
-        return NULL;
-    }
-
-    attribs.end(EGL_NONE);
-
-    context = eglCreateContext(eglDisplay, visual->config, share_context, attribs);
-    if (!context)
-        return NULL;
-
-    eglBindAPI(api);
-
-    return new EglContext(visual, profile, context);
-}
-
-bool
-makeCurrent(Drawable *drawable, Context *context)
-{
-    if (!drawable || !context) {
-        return eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    } else {
-        EglDrawable *eglDrawable = static_cast<EglDrawable *>(drawable);
-        EglContext *eglContext = static_cast<EglContext *>(context);
-        EGLBoolean ok;
-
-        ok = eglMakeCurrent(eglDisplay, eglDrawable->surface,
-                            eglDrawable->surface, eglContext->context);
-
-        if (ok) {
-            EGLint api;
-
-            eglQueryContext(eglDisplay, eglContext->context,
-                            EGL_CONTEXT_CLIENT_TYPE, &api);
-
-            eglDrawable->api = api;
+    bool
+    processEvents(void) {
+        while (XPending(display) > 0) {
+            XEvent event;
+            XNextEvent(display, &event);
+            describeEvent(event);
         }
-
-        return ok;
+        return true;
     }
-}
 
-bool
-processEvents(void) {
-    while (XPending(display) > 0) {
-        XEvent event;
-        XNextEvent(display, &event);
-        describeEvent(event);
-    }
-    return true;
+};
+
+
+WindowSystem *
+createNativeWindowSystem(void) {
+    return new EglXlibWindowSystem;
 }
 
 

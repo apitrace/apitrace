@@ -139,26 +139,30 @@ public:
 };
 
 
-void
-init(void);
+class WindowSystem
+{
+public:
+    ~WindowSystem() {}
 
-void
-cleanup(void);
+    virtual Visual *
+    createVisual(bool doubleBuffer = false, Profile profile = PROFILE_COMPAT) = 0;
 
-Visual *
-createVisual(bool doubleBuffer = false, Profile profile = PROFILE_COMPAT);
+    virtual Drawable *
+    createDrawable(const Visual *visual, int width = 32, int height = 32) = 0;
 
-Drawable *
-createDrawable(const Visual *visual, int width = 32, int height = 32);
+    virtual Context *
+    createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT, bool debug = false) = 0;
 
-Context *
-createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT, bool debug = false);
+    virtual bool
+    makeCurrent(Drawable *drawable, Context *context) = 0;
 
-bool
-makeCurrent(Drawable *drawable, Context *context);
+    virtual bool
+    processEvents(void) = 0;
+};
 
-bool
-processEvents(void);
+
+WindowSystem *
+createNativeWindowSystem(void);
 
 
 } /* namespace glws */

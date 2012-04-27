@@ -40,16 +40,16 @@
 namespace glretrace {
 
 
-static bool initialized = false;
+static glws::WindowSystem *winsys = NULL;
 
 
 static inline void
 init(void) {
-    if (!initialized) {
-        glws::init();
-        initialized = true;
+    if (!winsys) {
+        winsys = glws::createNativeWindowSystem();
     }
 }
+
 
 glws::Drawable *currentDrawable = NULL;
 glws::Context *currentContext = NULL;
@@ -61,9 +61,11 @@ visuals[glws::PROFILE_MAX];
 
 inline glws::Visual *
 getVisual(glws::Profile profile) {
+    init();
+
     glws::Visual * & visual = visuals[profile];
     if (!visual) {
-        visual = glws::createVisual(retrace::doubleBuffer, profile);
+        visual = winsys->createVisual(retrace::doubleBuffer, profile);
     }
     return visual;
 }
@@ -83,7 +85,7 @@ glws::Drawable *
 createDrawable(glws::Profile profile) {
     init();
 
-    glws::Drawable *draw = glws::createDrawable(getVisual(profile));
+    glws::Drawable *draw = winsys->createDrawable(getVisual(profile));
     if (!draw) {
         std::cerr << "error: failed to create OpenGL drawable\n";
         exit(1);
@@ -104,7 +106,7 @@ glws::Context *
 createContext(glws::Context *shareContext, glws::Profile profile) {
     init();
 
-    glws::Context *ctx = glws::createContext(getVisual(profile), shareContext, profile, retrace::debug);
+    glws::Context *ctx = winsys->createContext(getVisual(profile), shareContext, profile, retrace::debug);
     if (!ctx) {
         std::cerr << "error: failed to create OpenGL context\n";
         exit(1);
@@ -136,7 +138,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context)
         }
     }
 
-    bool success = glws::makeCurrent(drawable, context);
+    bool success = winsys->makeCurrent(drawable, context);
 
     if (!success) {
         std::cerr << "error: failed to make current OpenGL context and drawable\n";
@@ -196,3 +198,28 @@ updateDrawable(int width, int height) {
 
 
 } /* namespace glretrace */
+
+
+void
+retrace::waitForInput(void) {
+    using namespace glretrace;
+
+    while (winsys->processEvents()) {
+    }
+}
+
+void
+retrace::cleanUp(void) {
+    using namespace glretrace;
+
+    if (winsys) {
+        winsys->makeCurrent(NULL, NULL);
+
+        currentDrawable = NULL;
+        currentContext = NULL;
+
+        delete winsys;
+
+        winsys = NULL;
+    }
+}

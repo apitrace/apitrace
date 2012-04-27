@@ -144,13 +144,3 @@ retrace::flushRendering(void) {
     glFlush();
 }
 
-void
-retrace::waitForInput(void) {
-    while (glws::processEvents()) {
-    }
-}
-
-void
-retrace::cleanUp(void) {
-    glws::cleanup();
-}
