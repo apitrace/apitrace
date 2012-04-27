@@ -120,7 +120,7 @@ void * dlopen(const char *filename, int flag)
             strcmp(filename, "libGL.so.1") == 0) {
 
             // Use the true libGL.so handle instead of RTLD_NEXT from now on
-            _libGlHandle = handle;
+            gldispatch::libGL = handle;
 
             // Get the file path for our shared object, and use it instead
             static int dummy = 0xdeedbeef;

@@ -491,32 +491,6 @@ public_symbols.update([
 
 class GlDispatcher(Dispatcher):
 
-    def header(self):
-        print '''
-
-namespace gldispatch {
-
-    enum Profile {
-        PROFILE_COMPAT = 0,
-        PROFILE_CORE,
-        PROFILE_ES1,
-        PROFILE_ES2,
-        PROFILE_MAX
-    };
-
-} /* namespace gldispatch */
-
-
-#if defined(_WIN32)
-extern HMODULE _libGlHandle;
-#else
-extern void * _libGlHandle;
-#endif
-
-void * _getPublicProcAddress(const char *procName);
-void * _getPrivateProcAddress(const char *procName);
-'''
-        
     def isFunctionPublic(self, api, function):
         return function.name in public_symbols or function.name.startswith('CGL')
 
@@ -528,10 +502,31 @@ if __name__ == '__main__':
     print 
     print '#include "glimports.hpp"'
     print '#include "os.hpp"'
+    print '#include "os_dl.hpp"'
     print
+    print '''
+
+namespace gldispatch {
+
+    enum Profile {
+        PROFILE_COMPAT = 0,
+        PROFILE_CORE,
+        PROFILE_ES1,
+        PROFILE_ES2,
+        PROFILE_MAX
+    };
+
+    extern Profile currentProfile;
+
+    extern os::Library libGL;
+
+} /* namespace gldispatch */
+
+
+void * _getPublicProcAddress(const char *procName);
+void * _getPrivateProcAddress(const char *procName);
+'''
     dispatcher = GlDispatcher()
-    print
-    dispatcher.header()
     print
     dispatcher.dispatchApi(eglapi)
     print

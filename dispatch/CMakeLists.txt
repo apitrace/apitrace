@@ -30,6 +30,7 @@ add_custom_target (glproc DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
 
 add_library (glproc_gl STATIC EXCLUDE_FROM_ALL
+    glproc.cpp
     glproc_gl.cpp
 )
 
@@ -42,6 +43,7 @@ set_target_properties (glproc_gl PROPERTIES
 
 if (ENABLE_EGL)
     add_library (glproc_egl STATIC EXCLUDE_FROM_ALL
+        glproc.cpp
         glproc_egl.cpp
     )
 

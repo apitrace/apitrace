@@ -254,8 +254,8 @@ public:
             libgl_filename = "OPENGL32";
         }
 
-        _libGlHandle = LoadLibraryA(libgl_filename);
-        if (!_libGlHandle) {
+        gldispatch::libGL = LoadLibraryA(libgl_filename);
+        if (!gldispatch::libGL) {
             std::cerr << "error: unable to open " << libgl_filename << "\n";
             exit(1);
         }

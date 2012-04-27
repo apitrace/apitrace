@@ -33,23 +33,12 @@
 #endif
 
 
-/*
- * Handle to the true OpenGL library.
- */
-#if defined(_WIN32)
-HMODULE _libGlHandle = NULL;
-#else
-void *_libGlHandle = NULL;
-#endif
-
-
-
 #if defined(_WIN32)
 
 void *
 _getPublicProcAddress(const char *procName)
 {
-    if (!_libGlHandle) {
+    if (!gldispatch::libGL) {
         char szDll[MAX_PATH] = {0};
         
         if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
@@ -58,14 +47,14 @@ _getPublicProcAddress(const char *procName)
         
         strcat(szDll, "\\\\opengl32.dll");
         
-        _libGlHandle = LoadLibraryA(szDll);
-        if (!_libGlHandle) {
+        gldispatch::libGL = LoadLibraryA(szDll);
+        if (!gldispatch::libGL) {
             os::log("apitrace: error: couldn't load %s\n", szDll);
             return NULL;
         }
     }
         
-    return (void *)GetProcAddress(_libGlHandle, procName);
+    return (void *)GetProcAddress(gldispatch::libGL, procName);
 }
 
 
@@ -91,7 +80,7 @@ void * _libgl_sym(const char *symbol)
 {
     void *result;
 
-    if (!_libGlHandle) {
+    if (!gldispatch::libGL) {
         /* 
          * Unfortunately we can't just dlopen the true dynamic library because
          * DYLD_LIBRARY_PATH/DYLD_FRAMEWORK_PATH take precedence, even for
@@ -103,19 +92,19 @@ void * _libgl_sym(const char *symbol)
 
         if (mktemp(temp_filename) != NULL) {
             if (symlink(libgl_filename, temp_filename) == 0) {
-                _libGlHandle = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+                gldispatch::libGL = dlopen(temp_filename, RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
                 remove(temp_filename);
             }
         }
 
-        if (!_libGlHandle) {
+        if (!gldispatch::libGL) {
             os::log("apitrace: error: couldn't load %s\n", libgl_filename);
             os::abort();
             return NULL;
         }
     }
 
-    result = dlsym(_libGlHandle, symbol);
+    result = dlsym(gldispatch::libGL, symbol);
 
 #if 0
     if (result && result == dlsym(RTLD_SELF, symbol)) {
@@ -173,7 +162,7 @@ void * _libgl_sym(const char *symbol)
 {
     void *result;
 
-    if (!_libGlHandle) {
+    if (!gldispatch::libGL) {
         /*
          * The app doesn't directly link against libGL.so, nor does it directly
          * dlopen it.  So we have to load it ourselves.
@@ -188,7 +177,7 @@ void * _libgl_sym(const char *symbol)
 
             result = dlsym(RTLD_NEXT, symbol);
             if (result) {
-                _libGlHandle = RTLD_NEXT;
+                gldispatch::libGL = RTLD_NEXT;
                 return result;
             }
 
@@ -202,14 +191,14 @@ void * _libgl_sym(const char *symbol)
          * exposes symbols to it.
          */
 
-        _libGlHandle = _dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
-        if (!_libGlHandle) {
+        gldispatch::libGL = _dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
+        if (!gldispatch::libGL) {
             os::log("apitrace: error: couldn't find libGL.so\n");
             return NULL;
         }
     }
 
-    return dlsym(_libGlHandle, symbol);
+    return dlsym(gldispatch::libGL, symbol);
 }
 
 

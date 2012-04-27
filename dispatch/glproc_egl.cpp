@@ -24,9 +24,6 @@
  **************************************************************************/
 
 
-#include "glproc.hpp"
-
-
 #if !defined(_WIN32)
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE // for dladdr
@@ -35,16 +32,7 @@
 #endif
 
 
-/*
- * Handle to the true OpenGL library.
- * XXX: Not really used yet.
- */
-#if defined(_WIN32)
-HMODULE _libGlHandle = NULL;
-#else
-void *_libGlHandle = NULL;
-#endif
-
+#include "glproc.hpp"
 
 
 #if defined(_WIN32)
