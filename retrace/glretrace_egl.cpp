@@ -33,13 +33,6 @@
 #include "glretrace.hpp"
 #include "os.hpp"
 
-#ifndef EGL_OPENGL_ES_API
-#define EGL_OPENGL_ES_API		0x30A0
-#define EGL_OPENVG_API			0x30A1
-#define EGL_OPENGL_API			0x30A2
-#define EGL_CONTEXT_CLIENT_VERSION	0x3098
-#endif
-
 
 using namespace glretrace;
 
@@ -52,7 +45,7 @@ static ContextMap context_map;
 static ProfileMap profile_map;
 
 static unsigned int current_api = EGL_OPENGL_ES_API;
-static glws::Profile last_profile = glws::PROFILE_COMPAT;
+static glws::Profile last_profile = glws::PROFILE_ES1;
 
 static void
 createDrawable(unsigned long long orig_config, unsigned long long orig_surface);

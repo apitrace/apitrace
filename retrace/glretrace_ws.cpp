@@ -44,9 +44,23 @@ static glws::WindowSystem *winsys = NULL;
 
 
 static inline void
-init(void) {
+init(glws::Profile profile) {
     if (!winsys) {
-        winsys = glws::createNativeWindowSystem();
+        const char *description;
+        switch (profile) {
+        case glws::PROFILE_ES1:
+        case glws::PROFILE_ES2:
+            description = "EGL";
+            winsys = glws::createEglWindowSystem();
+            break;
+        default:
+            description = "native";
+            winsys = glws::createNativeWindowSystem();
+        }
+        if (!winsys) {
+            std::cerr << "error: failed to initialze " << description << " windowing system\n";
+            exit(1);
+        }
     }
 }
 
@@ -61,7 +75,7 @@ visuals[glws::PROFILE_MAX];
 
 inline glws::Visual *
 getVisual(glws::Profile profile) {
-    init();
+    init(profile);
 
     glws::Visual * & visual = visuals[profile];
     if (!visual) {
@@ -83,7 +97,7 @@ getDefaultProfile(void) {
 
 glws::Drawable *
 createDrawable(glws::Profile profile) {
-    init();
+    init(profile);
 
     glws::Drawable *draw = winsys->createDrawable(getVisual(profile));
     if (!draw) {
@@ -104,7 +118,7 @@ createDrawable(void) {
 
 glws::Context *
 createContext(glws::Context *shareContext, glws::Profile profile) {
-    init();
+    init(profile);
 
     glws::Context *ctx = winsys->createContext(getVisual(profile), shareContext, profile, retrace::debug);
     if (!ctx) {
@@ -125,20 +139,25 @@ createContext(glws::Context *shareContext) {
 
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context) {
-    init();
-
+    assert(winsys);
+    
     if (drawable == currentDrawable && context == currentContext) {
         return true;
     }
 
-    if (currentDrawable && currentContext) {
-        glFlush();
-        if (!retrace::doubleBuffer) {
-            frame_complete(call);
+    bool success;
+    if (winsys) {
+        if (currentDrawable && currentContext) {
+            glFlush();
+            if (!retrace::doubleBuffer) {
+                frame_complete(call);
+            }
         }
-    }
 
-    bool success = winsys->makeCurrent(drawable, context);
+        success = winsys->makeCurrent(drawable, context);
+    } else {
+        success = false;
+    }
 
     if (!success) {
         std::cerr << "error: failed to make current OpenGL context and drawable\n";

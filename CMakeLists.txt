@@ -241,14 +241,8 @@ include_directories (
 
 if (WIN32)
     set (os os_win32.cpp)
-    set (glws_os glws_wgl.cpp)
 else ()
     set (os os_posix.cpp)
-    if (APPLE)
-        set (glws_os glws_cocoa.mm)
-    else ()
-        set (glws_os glws_glx.cpp)
-    endif ()
 endif ()
 
 add_library (common STATIC

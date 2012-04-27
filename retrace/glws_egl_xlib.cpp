@@ -443,7 +443,7 @@ public:
 
 
 WindowSystem *
-createNativeWindowSystem(void) {
+createEglWindowSystem(void) {
     return new EglXlibWindowSystem;
 }
 

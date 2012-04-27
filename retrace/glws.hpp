@@ -164,6 +164,9 @@ public:
 WindowSystem *
 createNativeWindowSystem(void);
 
+WindowSystem *
+createEglWindowSystem(void);
+
 
 } /* namespace glws */
 

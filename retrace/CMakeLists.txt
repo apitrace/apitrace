@@ -44,6 +44,20 @@ target_link_libraries (retrace_common
     ${SNAPPY_LIBRARIES}
 )
 
+if (WIN32)
+    set (glws_native glws_wgl.cpp)
+    set (glws_egl glws_egl_null.cpp)
+else ()
+    if (APPLE)
+        set (glws_native glws_cocoa.mm)
+        set (glws_egl glws_egl_null.cpp)
+    else ()
+        set (glws_native glws_glx.cpp)
+        set (glws_egl glws_egl_xlib.cpp)
+    endif ()
+endif ()
+
+
 add_library (glretrace_common
     glretrace_gl.cpp
     glretrace_cgl.cpp
@@ -57,6 +71,8 @@ add_library (glretrace_common
     glstate_params.cpp
     glstate_shaders.cpp
     glws.cpp
+    ${glws_native}
+    ${glws_egl}
 )
 
 add_dependencies (glretrace_common glproc)
@@ -64,7 +80,7 @@ add_dependencies (glretrace_common glproc)
 
 if (WIN32 OR APPLE OR X11_FOUND)
     add_executable (glretrace
-        ${glws_os}
+        dummy.cpp
     )
 
     add_dependencies (glretrace glproc)
@@ -106,7 +122,7 @@ endif ()
 
 if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     add_executable (eglretrace
-        glws_egl_xlib.cpp
+        dummy.cpp
     )
 
     add_dependencies (eglretrace glproc)
