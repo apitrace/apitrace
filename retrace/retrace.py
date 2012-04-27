@@ -323,6 +323,9 @@ class Retracer:
     def retraceFunctionBody(self, function):
         assert function.sideeffects
 
+        if function.type is not stdapi.Void:
+            self.checkOrigResult(function)
+
         self.deserializeArgs(function)
         
         self.invokeFunction(function)
@@ -332,6 +335,9 @@ class Retracer:
     def retraceInterfaceMethodBody(self, interface, method):
         assert method.sideeffects
 
+        if method.type is not stdapi.Void:
+            self.checkOrigResult(method)
+
         self.deserializeThisPointer(interface)
 
         self.deserializeArgs(method)
@@ -339,6 +345,18 @@ class Retracer:
         self.invokeInterfaceMethod(interface, method)
 
         self.swizzleValues(method)
+
+    def checkOrigResult(self, function):
+        '''Hook for checking the original result, to prevent succeeding now
+        where the original did not, which would cause diversion and potentially
+        unpredictable results.'''
+
+        assert function.type is not stdapi.Void
+
+        if str(function.type) == 'HRESULT':
+            print r'    if (call.ret && FAILED(call.ret->toSInt())) {'
+            print r'        return;'
+            print r'    }'
 
     def deserializeThisPointer(self, interface):
         print r'    %s *_this;' % (interface.name,)

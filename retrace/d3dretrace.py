@@ -67,7 +67,7 @@ class D3DRetracer(Retracer):
 
         # check errors
         if str(method.type) == 'HRESULT':
-            print r'    if (_result != S_OK) {'
+            print r'    if (FAILED(_result)) {'
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 
