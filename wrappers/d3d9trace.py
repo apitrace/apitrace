@@ -46,19 +46,22 @@ class D3D9Tracer(DllTracer):
     def declareWrapperInterfaceVariables(self, interface):
         DllTracer.declareWrapperInterfaceVariables(self, interface)
         
-        if interface.name in self.bufferInterfaceNames:
+        if interface.name in self.bufferInterfaceNames or \
+           interface.name == 'IDirect3DSurface9':
             print '    UINT m_SizeToLock;'
             print '    VOID *m_pbData;'
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        if interface.name in self.bufferInterfaceNames and method.name == 'Unlock':
+        if interface.name in self.bufferInterfaceNames and method.name == 'Unlock' or \
+           interface.name == 'IDirect3DSurface9' and method.name == 'UnlockRect':
             print '    if (m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', 'm_SizeToLock')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if interface.name in self.bufferInterfaceNames and method.name == 'Lock':
+        if interface.name in self.bufferInterfaceNames and method.name == 'Lock' or \
+           interface.name == 'IDirect3DSurface9' and method.name == 'LockRect':
             # FIXME: handle recursive locks
 
             getDescMethod = interface.getMethodByName('GetDesc')
@@ -67,14 +70,33 @@ class D3D9Tracer(DllTracer):
             descType = getDescMethod.args[0].type.type
 
             print '    if (_result == D3D_OK && !(Flags & D3DLOCK_READONLY)) {'
-            print '        if (SizeToLock) {'
-            print '            m_SizeToLock = SizeToLock;'
-            print '        } else {'
-            print '            %s Desc;' % descType
-            print '            m_pInstance->GetDesc(&Desc);'
-            print '            m_SizeToLock = Desc.Size;'
-            print '        }'
-            print '        m_pbData = *ppbData;'
+            if interface.name in self.bufferInterfaceNames:
+                print '        if (SizeToLock) {'
+                print '            m_SizeToLock = SizeToLock;'
+                print '        } else {'
+                print '            %s Desc;' % descType
+                print '            m_pInstance->GetDesc(&Desc);'
+                print '            m_SizeToLock = Desc.Size;'
+                print '        }'
+                print '        m_pbData = *ppbData;'
+            elif interface.name == 'IDirect3DSurface9':
+                print '        UINT Width;'
+                print '        UINT Height;'
+                print '        if (pRect) {'
+                print '            Width  = pRect->right  - pRect->left;'
+                print '            Height = pRect->bottom - pRect->top;'
+                print '        } else {'
+                print '            %s Desc;' % descType
+                print '            m_pInstance->GetDesc(&Desc);'
+                print '            Width  = Desc.Width;'
+                print '            Height = Desc.Height;'
+                print '        }'
+                print '        m_SizeToLock = Height * pLockedRect->Pitch;'
+                # TODO: take in consideration the width and pixels and blocks
+                print '        (void)Width;'
+                print '        m_pbData = pLockedRect->pBits;'
+            else:
+                raise NotImplementedError
             print '    } else {'
             print '        m_pbData = NULL;'
             print '    }'

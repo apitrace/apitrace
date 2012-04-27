@@ -929,6 +929,11 @@ D3DLOCKED_RECT = Struct("D3DLOCKED_RECT", [
     (OpaquePointer(Void), "pBits"),
 ])
 
+D3DLOCKED_RECT_ = Struct("D3DLOCKED_RECT", [
+    (INT, "Pitch"),
+    (LinearPointer(Void, "m_SizeToLock"), "pBits"),
+])
+
 D3DBOX = Struct("D3DBOX", [
     (UINT, "Left"),
     (UINT, "Top"),

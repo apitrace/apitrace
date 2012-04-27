@@ -60,17 +60,34 @@ class D3DRetracer(Retracer):
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 
-        if interface.name in self.bufferInterfaceNames and method.name == 'Lock':
+        if interface.name in self.bufferInterfaceNames and method.name == 'Lock' or \
+           interface.name == 'IDirect3DSurface9' and method.name == 'LockRect':
             getDescMethod = interface.getMethodByName('GetDesc')
             descArg = getDescMethod.args[0]
             assert descArg.output
             descType = getDescMethod.args[0].type.type
 
-            print '        if (!SizeToLock) {'
-            print '            %s Desc;' % descType
-            print '            _this->GetDesc(&Desc);'
-            print '            SizeToLock = Desc.Size;'
-            print '        }'
+            if interface.name in self.bufferInterfaceNames:
+                print '        if (!SizeToLock) {'
+                print '            %s Desc;' % descType
+                print '            _this->GetDesc(&Desc);'
+                print '            SizeToLock = Desc.Size;'
+                print '        }'
+            elif interface.name == 'IDirect3DSurface9':
+                print '        UINT Width;'
+                print '        UINT Height;'
+                print '        if (pRect) {'
+                print '            Width  = pRect->right  - pRect->left;'
+                print '            Height = pRect->bottom - pRect->top;'
+                print '        } else {'
+                print '            %s Desc;' % descType
+                print '            _this->GetDesc(&Desc);'
+                print '            Width  = Desc.Width;'
+                print '            Height = Desc.Height;'
+                print '        }'
+                print '        UINT m_SizeToLock = Height * pLockedRect->Pitch;'
+                # TODO: take in consideration the width and pixels and blocks
+                print '        (void)Width;'
 
 
 if __name__ == '__main__':
