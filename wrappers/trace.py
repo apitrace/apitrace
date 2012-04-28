@@ -462,10 +462,9 @@ class Tracer:
         for other_arg in function.args:
             if not other_arg.output and other_arg.type is REFIID:
                 riid = other_arg
-        if riid is not None and isinstance(arg.type, stdapi.Pointer):
-            assert isinstance(arg.type.type, stdapi.ObjPointer)
-            obj_type = arg.type.type.type
-            assert obj_type is stdapi.Void
+        if riid is not None \
+           and isinstance(arg.type, stdapi.Pointer) \
+           and isinstance(arg.type.type, stdapi.ObjPointer):
             self.wrapIid(function, riid, arg)
             return
 
@@ -621,18 +620,25 @@ class Tracer:
         print
 
     def wrapIid(self, function, riid, out):
+        # Cast output arg to `void **` if necessary
+        out_name = out.name
+        obj_type = out.type.type.type
+        if not obj_type is stdapi.Void:
+            assert isinstance(obj_type, stdapi.Interface)
+            out_name = 'reinterpret_cast<void * *>(%s)' % out_name
+
         print r'    if (%s && *%s) {' % (out.name, out.name)
         functionName = function.name
         else_ = ''
         if self.interface is not None:
             functionName = self.interface.name + '::' + functionName
-            print r'        if (*%s == m_pInstance &&' % (out.name,)
+            print r'        if (*%s == m_pInstance &&' % (out_name,)
             print r'            (%s)) {' % ' || '.join('%s == IID_%s' % (riid.name, iface.name) for iface in self.interface.iterBases())
-            print r'            *%s = this;' % (out.name,)
+            print r'            *%s = this;' % (out_name,)
             print r'        }'
             else_ = 'else '
         print r'        %s{' % else_
-        print r'             wrapIID("%s", %s, %s);' % (functionName, riid.name, out.name) 
+        print r'             wrapIID("%s", %s, %s);' % (functionName, riid.name, out_name)
         print r'        }'
         print r'    }'
 
