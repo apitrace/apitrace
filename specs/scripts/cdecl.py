@@ -36,7 +36,7 @@ import optparse
 
 class DeclParser:
 
-    token_re = re.compile(r'(\d[x0-9a-fA-F.UL]*|\w+|\s+|.)')
+    token_re = re.compile(r'(\d[x0-9a-fA-F.UL]*|\w+|\s+|"[^"]*"|.)')
 
     multi_comment_re = re.compile(r'/\*.*?\*/', flags = re.DOTALL)
     single_comment_re = re.compile(r'//.*',)
@@ -301,6 +301,22 @@ class DeclParser:
                 tag = self.consume()
                 tags.append(tag)
             self.consume(']')
+            if tags[0] == 'annotation':
+                assert tags[1] == '('
+                assert tags[3] == ')'
+                tags = tags[2]
+                assert tags[0] == '"'
+                assert tags[-1] == '"'
+                tags = tags[1:-1]
+                try:
+                    tags, args = tags.split('(')
+                except ValueError:
+                    pass
+                assert tags[0] == '_'
+                assert tags[-1] == '_'
+                tags = tags[1:-1]
+                tags = tags.lower()
+                tags = tags.split('_')
         if self.lookahead().startswith('__'):
             # Parse __in, __out, etc tags
             tag = self.consume()[2:]
