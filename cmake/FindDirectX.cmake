@@ -188,6 +188,21 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	endif ()
 
 
+	find_path (DirectX_D3D11_1_INCLUDE_DIR d3d11_1.h
+		PATHS
+			"${DirectX_ROOT_DIR}/Include"
+		DOC "The directory where d3d11_1.h resides")
+
+	find_library (DirectX_D3D11_1_LIBRARY d3d11_1
+		PATHS
+			"${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}"
+		DOC "The directory where d3d11_1 resides")
+
+	if (DirectX_D3D11_1_INCLUDE_DIR AND DirectX_D3D11_1_LIBRARY)
+		set (DirectX_D3D11_1_FOUND 1)
+	endif ()
+
+
 	mark_as_advanced(
 		DirectX_D3D_INCLUDE_DIR
 		DirectX_D3D_INCLUDE_DIR
@@ -219,6 +234,8 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		DirectX_D3D11_LIBRARY
 		DirectX_D3DX11_INCLUDE_DIR
 		DirectX_D3DX11_LIBRARY
+		DirectX_D3D11_1_INCLUDE_DIR
+		DirectX_D3D11_1_LIBRARY
 	)
 
 endif ()
@@ -235,4 +252,5 @@ mark_as_advanced (
 	DirectX_D3D10_1_FOUND
 	DirectX_D3D11_FOUND
 	DirectX_D3DX11_FOUND
+	DirectX_D3D11_1_FOUND
 )
