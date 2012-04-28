@@ -24,6 +24,8 @@
 ##########################################################################/
 
 
+import sys
+
 from dlltrace import DllTracer
 from specs.d3d11 import d3d11
 
@@ -40,6 +42,11 @@ if __name__ == '__main__':
     print '#include "compat.h"'
     print
     print '#include <d3d11.h>'
+
+    if int(sys.argv[1]):
+        import specs.d3d11_1
+        print '#include <d3d11_1.h>'
+
     print '#include <d3dx11.h>'
     print
     tracer = DllTracer('d3d11.dll')

@@ -177,14 +177,21 @@ if (WIN32)
 
     # d3d11.dll
     if (DirectX_D3DX11_INCLUDE_DIR)
+        if (DirectX_D3D11_1_INCLUDE_DIR)
+            set (HAVE_D3D11_1 1)
+        else ()
+            set (HAVE_D3D11_1 0)
+        endif ()
+
         include_directories (SYSTEM ${DirectX_D3DX11_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d11trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d11trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11trace.py ${HAVE_D3D11_1} > ${CMAKE_CURRENT_BINARY_DIR}/d3d11trace.cpp
             DEPENDS
                 d3d11trace.py
                 dlltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11_1.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
