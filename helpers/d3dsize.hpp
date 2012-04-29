@@ -116,7 +116,69 @@ _shaderSize(const DWORD *pFunction)
     }
 }
 
+
+static size_t
+_formatSize(D3DFORMAT Format, UINT Width, UINT Height, INT Pitch) {
+    switch ((DWORD)Format) {
+    case D3DFMT_DXT1:
+    case D3DFMT_DXT2:
+    case D3DFMT_DXT3:
+    case D3DFMT_DXT4:
+    case D3DFMT_DXT5:
+    case D3DFMT_ATI1:
+    case D3DFMT_ATI2:
+        Width /= 4;
+        Height /= 4;
+        break;
+
+    case D3DFMT_UYVY:
+    case D3DFMT_R8G8_B8G8:
+    case D3DFMT_YUY2:
+    case D3DFMT_G8R8_G8B8:
+        Width /= 2;
+        break;
+
+    case D3DFMT_NV12:
+        return (Height + ((Height + 1) / 2)) * Pitch;
+
+    case D3DFMT_NULL:
+        return 0;
+
+    default:
+        break;
+    }
+
+    (void)Width;
+
+    return Height * Pitch;
+}
+
+
 #endif /* DIRECT3D_VERSION >= 0x0800 */
+
+
+#if DIRECT3D_VERSION >= 0x0900
+
+static inline size_t
+_lockSize(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+    D3DSURFACE_DESC Desc;
+    pSurface->GetDesc(&Desc);
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width  = pRect->right  - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    } else {
+        Width  = Desc.Width;
+        Height = Desc.Height;
+    }
+
+    return _formatSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+}
+
+
+#endif /* DIRECT3D_VERSION >= 0x0900 */
 
 
 #endif /* _D3D_SIZE_HPP_ */

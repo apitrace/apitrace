@@ -74,20 +74,7 @@ class D3DRetracer(Retracer):
                 print '            SizeToLock = Desc.Size;'
                 print '        }'
             elif interface.name == 'IDirect3DSurface9':
-                print '        UINT Width;'
-                print '        UINT Height;'
-                print '        if (pRect) {'
-                print '            Width  = pRect->right  - pRect->left;'
-                print '            Height = pRect->bottom - pRect->top;'
-                print '        } else {'
-                print '            %s Desc;' % descType
-                print '            _this->GetDesc(&Desc);'
-                print '            Width  = Desc.Width;'
-                print '            Height = Desc.Height;'
-                print '        }'
-                print '        UINT m_SizeToLock = Height * pLockedRect->Pitch;'
-                # TODO: take in consideration the width and pixels and blocks
-                print '        (void)Width;'
+                print '        size_t m_SizeToLock = _lockSize(_this, pLockedRect, pRect);'
 
 
 if __name__ == '__main__':
@@ -97,6 +84,7 @@ if __name__ == '__main__':
 #include <iostream>
 
 #include "d3d9imports.hpp"
+#include "d3dsize.hpp"
 #include "d3dretrace.hpp"
 
 
