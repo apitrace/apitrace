@@ -34,12 +34,7 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    print '#include <windows.h>'
-    print
-    print '#include "compat.h"'
-    print
-    print '#include <d3d10.h>'
-    print '#include <d3dx10.h>'
+    print '#include "d3d10imports.hpp"'
     print
     tracer = DllTracer('d3d10.dll')
     tracer.traceApi(d3d10)

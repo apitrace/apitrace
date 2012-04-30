@@ -36,17 +36,13 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    print '#include <windows.h>'
+    print '#include "d3d11imports.hpp"'
     print
-    print '#include "compat.h"'
-    print
-    print '#include <d3d11.h>'
 
     if int(sys.argv[1]):
         import specs.d3d11_1
         print '#include <d3d11_1.h>'
+        print
 
-    print '#include <d3dx11.h>'
-    print
     tracer = DllTracer('d3d11.dll')
     tracer.traceApi(d3d11)
