@@ -125,7 +125,6 @@ quoteArg(std::string &s, const char *arg)
     s.push_back('"');
     while (true) {
         c = *arg++;
-        switch (c)
         if (c == '\0') {
             break;
         } else if (c == '"') {
@@ -190,7 +189,7 @@ int execute(char * const * args)
 
     WaitForSingleObject(processInformation.hProcess, INFINITE);
 
-    DWORD exitCode = ~0;
+    DWORD exitCode = ~0UL;
     GetExitCodeProcess(processInformation.hProcess, &exitCode);
 
     CloseHandle(processInformation.hProcess);
