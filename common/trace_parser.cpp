@@ -833,7 +833,7 @@ Parser::read_sint(void) {
     c = read_byte();
     switch (c) {
     case trace::TYPE_SINT:
-        return -read_uint();
+        return -(signed long long)read_uint();
     case trace::TYPE_UINT:
         return read_uint();
     default:
