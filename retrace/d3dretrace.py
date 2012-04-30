@@ -60,23 +60,8 @@ class D3DRetracer(Retracer):
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 
-        if interface.name in self.bufferInterfaceNames and method.name == 'Lock' or \
-           method.name == 'LockRect':
-
-            if interface.name in self.bufferInterfaceNames:
-                getDescMethod = interface.getMethodByName('GetDesc')
-                descArg = getDescMethod.args[0]
-                assert descArg.output
-                descType = getDescMethod.args[0].type.type
-                print '        if (!SizeToLock) {'
-                print '            %s Desc;' % descType
-                print '            _this->GetDesc(&Desc);'
-                print '            SizeToLock = Desc.Size;'
-                print '        }'
-            elif method.name == 'LockRect':
-                print '        size_t _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
-            else:
-                raise NotImplementedError
+        if method.name in ('Lock', 'LockRect'):
+            print '        size_t _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
 
 
 if __name__ == '__main__':

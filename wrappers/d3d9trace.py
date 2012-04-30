@@ -38,49 +38,30 @@ class D3D9Tracer(DllTracer):
 
         DllTracer.serializeArgValue(self, function, arg)
 
-    bufferInterfaceNames = [
-        'IDirect3DVertexBuffer9',
-        'IDirect3DIndexBuffer9',
-    ]
-
     def declareWrapperInterfaceVariables(self, interface):
         DllTracer.declareWrapperInterfaceVariables(self, interface)
         
-        if interface.name in self.bufferInterfaceNames or \
+        if interface.getMethodByName('Lock') is not None or \
            interface.getMethodByName('LockRect') is not None:
             print '    size_t _LockedSize;'
             print '    VOID *m_pbData;'
 
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        if interface.name in self.bufferInterfaceNames and method.name == 'Unlock' or \
-           method.name == 'UnlockRect':
+        if method.name in ('Unlock', 'UnlockRect'):
             print '    if (m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if interface.name in self.bufferInterfaceNames and method.name == 'Lock' or \
-           method.name == 'LockRect':
-
+        if method.name in ('Lock', 'LockRect'):
             print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-            if interface.name in self.bufferInterfaceNames:
+            print '        _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
+            if method.name == 'Lock':
                 # FIXME: handle recursive locks
-                getDescMethod = interface.getMethodByName('GetDesc')
-                descArg = getDescMethod.args[0]
-                assert descArg.output
-                descType = getDescMethod.args[0].type.type
-                print '        if (SizeToLock) {'
-                print '            _LockedSize = SizeToLock;'
-                print '        } else {'
-                print '            %s Desc;' % descType
-                print '            m_pInstance->GetDesc(&Desc);'
-                print '            _LockedSize = Desc.Size;'
-                print '        }'
                 print '        m_pbData = *ppbData;'
             elif method.name == 'LockRect':
-                print '        _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
                 print '        m_pbData = pLockedRect->pBits;'
             else:
                 raise NotImplementedError

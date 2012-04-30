@@ -161,6 +161,36 @@ _formatSize(D3DFORMAT Format, UINT Width, UINT Height, INT Pitch) {
 
 
 static inline size_t
+_getLockSize(IDirect3DVertexBuffer9 *pBuffer, UINT OffsetToLock, UINT SizeToLock, void ** ppbData) {
+    if (SizeToLock == 0) {
+        D3DVERTEXBUFFER_DESC Desc;
+        HRESULT hr = pBuffer->GetDesc(&Desc);
+        if (FAILED(hr)) {
+            return 0;
+        } 
+        SizeToLock = Desc.Size;
+    }
+
+    return SizeToLock;
+}
+
+
+static inline size_t
+_getLockSize(IDirect3DIndexBuffer9 *pBuffer, UINT OffsetToLock, UINT SizeToLock, void ** ppbData) {
+    if (SizeToLock == 0) {
+        D3DINDEXBUFFER_DESC Desc;
+        HRESULT hr = pBuffer->GetDesc(&Desc);
+        if (FAILED(hr)) {
+            return 0;
+        } 
+        SizeToLock = Desc.Size;
+    }
+
+    return SizeToLock;
+}
+
+
+static inline size_t
 _getLockSize(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
     HRESULT hr;
 

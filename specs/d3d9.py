@@ -347,13 +347,13 @@ IDirect3DCubeTexture9.methods += [
 ]
 
 IDirect3DVertexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "SizeToLock")), "ppbData"), (D3DLOCK, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_LockedSize")), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 IDirect3DIndexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "SizeToLock")), "ppbData"), (D3DLOCK, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_LockedSize")), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DINDEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
