@@ -159,10 +159,66 @@ _formatSize(D3DFORMAT Format, UINT Width, UINT Height, INT Pitch) {
 
 #if DIRECT3D_VERSION >= 0x0900
 
+
 static inline size_t
-_lockSize(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+_getLockSize(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+    HRESULT hr;
+
     D3DSURFACE_DESC Desc;
-    pSurface->GetDesc(&Desc);
+    hr = pSurface->GetDesc(&Desc);
+    if (FAILED(hr)) {
+        return 0;
+    } 
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width  = pRect->right  - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    } else {
+        Width  = Desc.Width;
+        Height = Desc.Height;
+    }
+
+    return _formatSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+}
+
+
+static inline size_t
+_getLockSize(IDirect3DTexture9 *pTexture, UINT Level, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+    HRESULT hr;
+
+    D3DSURFACE_DESC Desc;
+    hr = pTexture->GetLevelDesc(Level, &Desc);
+    if (FAILED(hr)) {
+        return 0;
+    }
+
+    UINT Width;
+    UINT Height;
+    if (pRect) {
+        Width  = pRect->right  - pRect->left;
+        Height = pRect->bottom - pRect->top;
+    } else {
+        Width  = Desc.Width;
+        Height = Desc.Height;
+    }
+
+    return _formatSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+}
+
+
+static inline size_t
+_getLockSize(IDirect3DCubeTexture9 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Level, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+    HRESULT hr;
+
+    (void)FaceType;
+
+    D3DSURFACE_DESC Desc;
+    hr = pTexture->GetLevelDesc(Level, &Desc);
+    if (FAILED(hr)) {
+        return 0;
+    }
 
     UINT Width;
     UINT Height;

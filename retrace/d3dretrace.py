@@ -61,20 +61,22 @@ class D3DRetracer(Retracer):
             print r'    }'
 
         if interface.name in self.bufferInterfaceNames and method.name == 'Lock' or \
-           interface.name == 'IDirect3DSurface9' and method.name == 'LockRect':
-            getDescMethod = interface.getMethodByName('GetDesc')
-            descArg = getDescMethod.args[0]
-            assert descArg.output
-            descType = getDescMethod.args[0].type.type
+           method.name == 'LockRect':
 
             if interface.name in self.bufferInterfaceNames:
+                getDescMethod = interface.getMethodByName('GetDesc')
+                descArg = getDescMethod.args[0]
+                assert descArg.output
+                descType = getDescMethod.args[0].type.type
                 print '        if (!SizeToLock) {'
                 print '            %s Desc;' % descType
                 print '            _this->GetDesc(&Desc);'
                 print '            SizeToLock = Desc.Size;'
                 print '        }'
-            elif interface.name == 'IDirect3DSurface9':
-                print '        size_t m_SizeToLock = _lockSize(_this, pLockedRect, pRect);'
+            elif method.name == 'LockRect':
+                print '        size_t _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
+            else:
+                raise NotImplementedError
 
 
 if __name__ == '__main__':
@@ -214,7 +216,7 @@ found:
         HRESULT hr;
 
         hr = pfnD3DXAssembleShader(pSrcData, strlen(pSrcData), NULL, NULL, 0, &pTokens, NULL);
-        if (hr == D3D_OK) {
+        if (SUCCEEDED(hr)) {
             return (DWORD *)pTokens->GetBufferPointer();
         }
 

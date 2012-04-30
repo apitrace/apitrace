@@ -926,12 +926,7 @@ D3DVOLUME_DESC = Struct("D3DVOLUME_DESC", [
 
 D3DLOCKED_RECT = Struct("D3DLOCKED_RECT", [
     (INT, "Pitch"),
-    (OpaquePointer(Void), "pBits"),
-])
-
-D3DLOCKED_RECT_ = Struct("D3DLOCKED_RECT", [
-    (INT, "Pitch"),
-    (LinearPointer(Void, "m_SizeToLock"), "pBits"),
+    (LinearPointer(Void, "_LockedSize"), "pBits"),
 ])
 
 D3DBOX = Struct("D3DBOX", [

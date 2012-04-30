@@ -361,7 +361,7 @@ IDirect3DIndexBuffer9.methods += [
 IDirect3DSurface9.methods += [
     Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")], sideeffects=False),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")], sideeffects=False),
-    Method(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT_), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
+    Method(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "UnlockRect", []),
     Method(HRESULT, "GetDC", [Out(Pointer(HDC), "phdc")]),
     Method(HRESULT, "ReleaseDC", [(HDC, "hdc")]),

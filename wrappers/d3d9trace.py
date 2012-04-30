@@ -47,40 +47,40 @@ class D3D9Tracer(DllTracer):
         DllTracer.declareWrapperInterfaceVariables(self, interface)
         
         if interface.name in self.bufferInterfaceNames or \
-           interface.name == 'IDirect3DSurface9':
-            print '    UINT m_SizeToLock;'
+           interface.getMethodByName('LockRect') is not None:
+            print '    size_t _LockedSize;'
             print '    VOID *m_pbData;'
+
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if interface.name in self.bufferInterfaceNames and method.name == 'Unlock' or \
-           interface.name == 'IDirect3DSurface9' and method.name == 'UnlockRect':
+           method.name == 'UnlockRect':
             print '    if (m_pbData) {'
-            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', 'm_SizeToLock')
+            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if interface.name in self.bufferInterfaceNames and method.name == 'Lock' or \
-           interface.name == 'IDirect3DSurface9' and method.name == 'LockRect':
-            # FIXME: handle recursive locks
+           method.name == 'LockRect':
 
-            getDescMethod = interface.getMethodByName('GetDesc')
-            descArg = getDescMethod.args[0]
-            assert descArg.output
-            descType = getDescMethod.args[0].type.type
-
-            print '    if (_result == D3D_OK && !(Flags & D3DLOCK_READONLY)) {'
+            print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
             if interface.name in self.bufferInterfaceNames:
+                # FIXME: handle recursive locks
+                getDescMethod = interface.getMethodByName('GetDesc')
+                descArg = getDescMethod.args[0]
+                assert descArg.output
+                descType = getDescMethod.args[0].type.type
                 print '        if (SizeToLock) {'
-                print '            m_SizeToLock = SizeToLock;'
+                print '            _LockedSize = SizeToLock;'
                 print '        } else {'
                 print '            %s Desc;' % descType
                 print '            m_pInstance->GetDesc(&Desc);'
-                print '            m_SizeToLock = Desc.Size;'
+                print '            _LockedSize = Desc.Size;'
                 print '        }'
                 print '        m_pbData = *ppbData;'
-            elif interface.name == 'IDirect3DSurface9':
-                print '        m_SizeToLock = _lockSize(_this, pLockedRect, pRect);'
+            elif method.name == 'LockRect':
+                print '        _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
                 print '        m_pbData = pLockedRect->pBits;'
             else:
                 raise NotImplementedError

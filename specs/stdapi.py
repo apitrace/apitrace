@@ -402,9 +402,9 @@ class Interface(Type):
         return visitor.visitInterface(self, *args, **kwargs)
 
     def getMethodByName(self, name):
-        for methods in self.methods:
-            if methods.name == name:
-                return methods
+        for method in self.iterMethods():
+            if method.name == name:
+                return method
         return None
 
     def iterMethods(self):
