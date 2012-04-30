@@ -70,7 +70,7 @@ include (CheckCXXCompilerFlag)
 
 if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
-    add_definitions (-D_WIN32_WINNT=0x0500 -DWINVER=0x0500)
+    add_definitions (-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
