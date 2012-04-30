@@ -31,7 +31,6 @@
 #define _D3D9IMPORTS_HPP_
 
 #include <windows.h>
-#include <tchar.h>
 
 #include "compat.h"
 

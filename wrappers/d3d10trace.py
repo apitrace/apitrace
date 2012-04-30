@@ -35,7 +35,6 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     print '#include <windows.h>'
-    print '#include <tchar.h>'
     print
     print '#include "compat.h"'
     print
