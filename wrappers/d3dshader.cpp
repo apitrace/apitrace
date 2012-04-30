@@ -88,7 +88,7 @@ found:
         hr = pfnD3DXDisassembleShader(tokens, FALSE, NULL, &pDisassembly);
     }
 
-    if (hr == D3D_OK) {
+    if (SUCCEEDED(hr)) {
         writer.beginRepr();
         writer.writeString((const char *)pDisassembly->GetBufferPointer(), pDisassembly->GetBufferSize());
     }
@@ -99,7 +99,7 @@ found:
         pDisassembly->Release();
     }
     
-    if (hr == D3D_OK) {
+    if (SUCCEEDED(hr)) {
         writer.endRepr();
     }
 }
