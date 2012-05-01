@@ -89,9 +89,7 @@ extraExtensionsES = {
 const struct ExtensionsDesc *
 getExtraExtensions(void)
 {
-    Context *ctx = getContext();
-
-    switch (ctx->profile) {
+    switch (gldispatch::currentProfile) {
     case gldispatch::PROFILE_COMPAT:
     case gldispatch::PROFILE_CORE:
         return &extraExtensionsFull;

@@ -34,7 +34,6 @@ namespace gltrace {
 
 
 struct Context {
-    enum gldispatch::Profile profile;
     bool user_arrays;
     bool user_arrays_arb;
     bool user_arrays_nv;
