@@ -941,7 +941,7 @@ D3DBOX = Struct("D3DBOX", [
 D3DLOCKED_BOX = Struct("D3DLOCKED_BOX", [
     (INT, "RowPitch"),
     (INT, "SlicePitch"),
-    (OpaquePointer(Void), "pBits"),
+    (LinearPointer(Void, "_LockedSize"), "pBits"),
 ])
 
 D3DRANGE = Struct("D3DRANGE", [

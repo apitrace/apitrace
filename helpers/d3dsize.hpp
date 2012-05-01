@@ -118,7 +118,21 @@ _shaderSize(const DWORD *pFunction)
 
 
 static size_t
-_formatSize(D3DFORMAT Format, UINT Width, UINT Height, INT Pitch) {
+_getLockSize(D3DFORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT SlicePitch = 0) {
+    if (Width == 0 || Height == 0 || Depth == 0) {
+        return 0;
+    }
+
+    if (RowPitch < 0) {
+        os::log("apitrace: warning: %s: negative row pitch %i\n", __FUNCTION__, RowPitch);
+        return 0;
+    }
+
+    if (SlicePitch < 0) {
+        os::log("apitrace: warning: %s: negative slice pitch %i\n", __FUNCTION__, SlicePitch);
+        return 0;
+    }
+
     switch ((DWORD)Format) {
     case D3DFMT_DXT1:
     case D3DFMT_DXT2:
@@ -139,7 +153,7 @@ _formatSize(D3DFORMAT Format, UINT Width, UINT Height, INT Pitch) {
         break;
 
     case D3DFMT_NV12:
-        return (Height + ((Height + 1) / 2)) * Pitch;
+        return (Height + ((Height + 1) / 2)) * RowPitch;
 
     case D3DFMT_NULL:
         return 0;
@@ -150,7 +164,13 @@ _formatSize(D3DFORMAT Format, UINT Width, UINT Height, INT Pitch) {
 
     (void)Width;
 
-    return Height * Pitch;
+    size_t size = Height * RowPitch;
+
+    if (Depth > 1) {
+        size += (Depth - 1) * SlicePitch;
+    }
+
+    return size;
 }
 
 
@@ -210,7 +230,7 @@ _getLockSize(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, con
         Height = Desc.Height;
     }
 
-    return _formatSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    return _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
 }
 
 
@@ -234,7 +254,7 @@ _getLockSize(IDirect3DTexture9 *pTexture, UINT Level, const D3DLOCKED_RECT *pLoc
         Height = Desc.Height;
     }
 
-    return _formatSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    return _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
 }
 
 
@@ -260,7 +280,61 @@ _getLockSize(IDirect3DCubeTexture9 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Le
         Height = Desc.Height;
     }
 
-    return _formatSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    return _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+}
+
+
+static inline size_t
+_getLockSize(IDirect3DVolume9 *pVolume, const D3DLOCKED_BOX *pLockedBox, const D3DBOX *pBox) {
+    HRESULT hr;
+
+    D3DVOLUME_DESC Desc;
+    hr = pVolume->GetDesc(&Desc);
+    if (FAILED(hr)) {
+        return 0;
+    }
+
+    UINT Width;
+    UINT Height;
+    UINT Depth;
+    if (pBox) {
+        Width  = pBox->Right  - pBox->Left;
+        Height = pBox->Bottom - pBox->Top;
+        Depth  = pBox->Back   - pBox->Front;
+    } else {
+        Width  = Desc.Width;
+        Height = Desc.Height;
+        Depth  = Desc.Depth;
+    }
+
+    return _getLockSize(Desc.Format, Width, Height, pLockedBox->RowPitch, Depth, pLockedBox->SlicePitch);
+}
+
+
+static inline size_t
+_getLockSize(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX *pLockedBox, const D3DBOX *pBox) {
+    HRESULT hr;
+
+    D3DVOLUME_DESC Desc;
+    hr = pTexture->GetLevelDesc(Level, &Desc);
+    if (FAILED(hr)) {
+        return 0;
+    }
+
+    UINT Width;
+    UINT Height;
+    UINT Depth;
+    if (pBox) {
+        Width  = pBox->Right  - pBox->Left;
+        Height = pBox->Bottom - pBox->Top;
+        Depth  = pBox->Back   - pBox->Front;
+    } else {
+        Width  = Desc.Width;
+        Height = Desc.Height;
+        Depth  = Desc.Depth;
+    }
+
+    return _getLockSize(Desc.Format, Width, Height, pLockedBox->RowPitch, Depth, pLockedBox->SlicePitch);
 }
 
 

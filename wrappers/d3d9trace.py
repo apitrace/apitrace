@@ -42,20 +42,21 @@ class D3D9Tracer(DllTracer):
         DllTracer.declareWrapperInterfaceVariables(self, interface)
         
         if interface.getMethodByName('Lock') is not None or \
-           interface.getMethodByName('LockRect') is not None:
+           interface.getMethodByName('LockRect') is not None or \
+           interface.getMethodByName('LockBox') is not None:
             print '    size_t _LockedSize;'
             print '    VOID *m_pbData;'
 
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        if method.name in ('Unlock', 'UnlockRect'):
+        if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    if (m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if method.name in ('Lock', 'LockRect'):
+        if method.name in ('Lock', 'LockRect', 'LockedBox'):
             print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
             print '        _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
             if method.name == 'Lock':
@@ -63,6 +64,8 @@ class D3D9Tracer(DllTracer):
                 print '        m_pbData = *ppbData;'
             elif method.name == 'LockRect':
                 print '        m_pbData = pLockedRect->pBits;'
+            elif method.name == 'LockBox':
+                print '        m_pbData = pLockedBox->pBits;'
             else:
                 raise NotImplementedError
             print '    } else {'

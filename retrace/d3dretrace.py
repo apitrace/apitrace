@@ -60,7 +60,7 @@ class D3DRetracer(Retracer):
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 
-        if method.name in ('Lock', 'LockRect'):
+        if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '        size_t _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
 
 
