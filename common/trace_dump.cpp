@@ -73,7 +73,7 @@ public:
     }
 
     void visit(Null *) {
-        os << "NULL";
+        os << literal << "NULL" << normal;
     }
 
     void visit(Bool *node) {
