@@ -62,10 +62,30 @@ class D3DRetracer(Retracer):
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '        size_t _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
+            if method.name == 'Lock':
+                # FIXME: handle recursive locks
+                print '        VOID *_pbData = *ppbData;'
+            elif method.name == 'LockRect':
+                print '        VOID *_pbData = pLockedRect->pBits;'
+            elif method.name == 'LockBox':
+                print '        VOID *_pbData = pLockedVolume->pBits;'
+            else:
+                raise NotImplementedError
+            print '        _this->SetPrivateData(GUID_APITRACE, &_pbData, sizeof _pbData, 0);'
+        
+        if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
+            print '        VOID *_pbData = 0;'
+            print '        DWORD dwSizeOfData = sizeof _pbData;'
+            print '        _this->GetPrivateData(GUID_APITRACE, &_pbData, &dwSizeOfData);'
+            print '        if (_pbData) {'
+            print '            retrace::delRegionByPointer(_pbData);'
+            print '        }'
 
 
 if __name__ == '__main__':
     print r'''
+#define INITGUID
+
 #include <string.h>
 
 #include <iostream>
@@ -96,6 +116,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
+
+
+DEFINE_GUID(GUID_APITRACE,0X7D71CAC9,0X7F58,0X432C,0XA9,0X75,0XA1,0X9F,0XCF,0XCE,0XFD,0X14);
 
 
 static HWND
