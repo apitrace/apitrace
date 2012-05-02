@@ -139,17 +139,24 @@ _getLockSize(D3DFORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth
     case D3DFMT_DXT3:
     case D3DFMT_DXT4:
     case D3DFMT_DXT5:
-    case D3DFMT_ATI1:
-    case D3DFMT_ATI2:
-        Width /= 4;
-        Height /= 4;
+        Width  = (Width  + 3) / 4;
+        Height = (Height + 3) / 4;
+        break;
+
+    case D3DFMT_ATI1N:
+    case D3DFMT_ATI2N:
+        /*
+         * Because these are unsupported formats, RowPitch is not set to the
+         * number of bytes between row of blocks, but instead in such way that
+         * Height * RowPitch will match the expected size.
+         */
         break;
 
     case D3DFMT_UYVY:
     case D3DFMT_R8G8_B8G8:
     case D3DFMT_YUY2:
     case D3DFMT_G8R8_G8B8:
-        Width /= 2;
+        Width = (Width + 1) / 2;
         break;
 
     case D3DFMT_NV12:

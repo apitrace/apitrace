@@ -53,7 +53,7 @@ class D3D9Tracer(DllTracer):
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '    if (m_pbData) {'
+            print '    if (_LockedSize && m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
             print '    }'
 

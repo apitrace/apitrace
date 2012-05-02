@@ -729,8 +729,8 @@ D3DFORMAT = Enum("D3DFORMAT", [
     "D3DFMT_BINARYBUFFER",
 
     # Unofficial formats
-    "D3DFMT_ATI1",
-    "D3DFMT_ATI2",
+    "D3DFMT_ATI1N",
+    "D3DFMT_ATI2N",
     "D3DFMT_AYUV",
     "D3DFMT_DF16",
     "D3DFMT_DF24",

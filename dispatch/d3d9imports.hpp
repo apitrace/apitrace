@@ -42,12 +42,12 @@
 #define D3DFMT_A2B10G10R10_XR_BIAS 119
 #endif
 
-#ifndef D3DFMT_ATI1
-#define D3DFMT_ATI1 ((D3DFORMAT)MAKEFOURCC('A','T','I','1'))
+#ifndef D3DFMT_ATI1N
+#define D3DFMT_ATI1N ((D3DFORMAT)MAKEFOURCC('A','T','I','1'))
 #endif
 
-#ifndef D3DFMT_ATI2
-#define D3DFMT_ATI2 ((D3DFORMAT)MAKEFOURCC('A','T','I','2'))
+#ifndef D3DFMT_ATI2N
+#define D3DFMT_ATI2N ((D3DFORMAT)MAKEFOURCC('A','T','I','2'))
 #endif
 
 #ifndef D3DFMT_AYUV
