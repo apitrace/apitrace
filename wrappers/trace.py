@@ -522,21 +522,24 @@ class Tracer:
         for method in interface.iterMethods():
             print "    " + method.prototype() + ";"
         print
-        self.declareWrapperInterfaceVariables(interface)
+        #print "private:"
+        for type, name, value in self.enumWrapperInterfaceVariables(interface):
+            print '    %s %s;' % (type, name)
         print "};"
         print
 
-    def declareWrapperInterfaceVariables(self, interface):
-        #print "private:"
-        print "    DWORD m_dwMagic;"
-        print "    %s * m_pInstance;" % (interface.name,)
+    def enumWrapperInterfaceVariables(self, interface):
+        return [
+            ("DWORD", "m_dwMagic", "0xd8365d6c"),
+            ("%s *" % interface.name, "m_pInstance", "pInstance"),
+        ] 
 
     def implementWrapperInterface(self, interface):
         self.interface = interface
 
         print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
-        print '    m_dwMagic = 0xd8365d6c;'
-        print '    m_pInstance = pInstance;'
+        for type, name, value in self.enumWrapperInterfaceVariables(interface):
+            print '    %s = %s;' % (name, value)
         print '}'
         print
         print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))

@@ -38,15 +38,18 @@ class D3D9Tracer(DllTracer):
 
         DllTracer.serializeArgValue(self, function, arg)
 
-    def declareWrapperInterfaceVariables(self, interface):
-        DllTracer.declareWrapperInterfaceVariables(self, interface)
+    def enumWrapperInterfaceVariables(self, interface):
+        variables = DllTracer.enumWrapperInterfaceVariables(self, interface)
         
         if interface.getMethodByName('Lock') is not None or \
            interface.getMethodByName('LockRect') is not None or \
            interface.getMethodByName('LockBox') is not None:
-            print '    size_t _LockedSize;'
-            print '    VOID *m_pbData;'
+            variables += [
+                ('size_t', '_LockedSize', '0'),
+                ('VOID *', 'm_pbData', '0'),
+            ]
 
+        return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
