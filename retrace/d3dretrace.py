@@ -52,6 +52,7 @@ class D3DRetracer(Retracer):
             print r'    hFocusWindow = hWnd;'
             print r'    pPresentationParameters->hDeviceWindow = hWnd;'
 
+        # notify frame has been completed
         if method.name == 'Present':
             print r'    retrace::frameComplete(call);'
 
