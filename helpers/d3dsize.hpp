@@ -292,7 +292,7 @@ _getLockSize(IDirect3DCubeTexture9 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Le
 
 
 static inline size_t
-_getLockSize(IDirect3DVolume9 *pVolume, const D3DLOCKED_BOX *pLockedBox, const D3DBOX *pBox) {
+_getLockSize(IDirect3DVolume9 *pVolume, const D3DLOCKED_BOX *pLockedVolume, const D3DBOX *pBox) {
     HRESULT hr;
 
     D3DVOLUME_DESC Desc;
@@ -314,12 +314,12 @@ _getLockSize(IDirect3DVolume9 *pVolume, const D3DLOCKED_BOX *pLockedBox, const D
         Depth  = Desc.Depth;
     }
 
-    return _getLockSize(Desc.Format, Width, Height, pLockedBox->RowPitch, Depth, pLockedBox->SlicePitch);
+    return _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
 }
 
 
 static inline size_t
-_getLockSize(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX *pLockedBox, const D3DBOX *pBox) {
+_getLockSize(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX *pLockedVolume, const D3DBOX *pBox) {
     HRESULT hr;
 
     D3DVOLUME_DESC Desc;
@@ -341,7 +341,7 @@ _getLockSize(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX 
         Depth  = Desc.Depth;
     }
 
-    return _getLockSize(Desc.Format, Width, Height, pLockedBox->RowPitch, Depth, pLockedBox->SlicePitch);
+    return _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
 }
 
 

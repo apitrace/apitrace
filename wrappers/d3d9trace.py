@@ -59,7 +59,7 @@ class D3D9Tracer(DllTracer):
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if method.name in ('Lock', 'LockRect', 'LockedBox'):
+        if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
             print '        _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
             if method.name == 'Lock':
@@ -68,7 +68,7 @@ class D3D9Tracer(DllTracer):
             elif method.name == 'LockRect':
                 print '        m_pbData = pLockedRect->pBits;'
             elif method.name == 'LockBox':
-                print '        m_pbData = pLockedBox->pBits;'
+                print '        m_pbData = pLockedVolume->pBits;'
             else:
                 raise NotImplementedError
             print '    } else {'
