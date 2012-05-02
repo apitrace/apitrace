@@ -52,6 +52,9 @@ class D3DRetracer(Retracer):
             print r'    hFocusWindow = hWnd;'
             print r'    pPresentationParameters->hDeviceWindow = hWnd;'
 
+        if method.name == 'Present':
+            print r'    retrace::frameComplete(call);'
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         # check errors
