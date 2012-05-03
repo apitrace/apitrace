@@ -29,8 +29,6 @@
 
 #include <iostream>
 
-#include <dlfcn.h>
-
 #include "glproc.hpp"
 #include "glws.hpp"
 
@@ -222,26 +220,11 @@ public:
     }
 };
 
-/**
- * Load the symbols from the specified shared object into global namespace, so
- * that they can be later found by dlsym(RTLD_NEXT, ...);
- */
-static void
-load(const char *filename)
-{
-    if (!dlopen(filename, RTLD_GLOBAL | RTLD_LAZY)) {
-        std::cerr << "error: unable to open " << filename << "\n";
-        exit(1);
-    }
-}
-
 
 class EglXlibWindowSystem : public WindowSystem
 {
 public:
     EglXlibWindowSystem() {
-        load("libEGL.so.1");
-
         display = XOpenDisplay(NULL);
         if (!display) {
             std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
@@ -373,18 +356,15 @@ public:
 
         switch (profile) {
         case gldispatch::PROFILE_COMPAT:
-            load("libGL.so.1");
             eglBindAPI(EGL_OPENGL_API);
             break;
         case gldispatch::PROFILE_CORE:
             assert(0);
             return NULL;
         case gldispatch::PROFILE_ES1:
-            load("libGLESv1_CM.so.1");
             eglBindAPI(EGL_OPENGL_ES_API);
             break;
         case gldispatch::PROFILE_ES2:
-            load("libGLESv2.so.2");
             eglBindAPI(EGL_OPENGL_ES_API);
             attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
             break;
@@ -406,6 +386,10 @@ public:
     bool
     makeCurrent(Drawable *drawable, Context *context)
     {
+        if (context) {
+            gldispatch::currentProfile = context->profile;
+        }
+
         if (!drawable || !context) {
             return eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         } else {

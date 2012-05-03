@@ -35,13 +35,22 @@ namespace gldispatch {
  *
  * TODO: Use TLS.
  */
-Profile currentProfile = PROFILE_COMPAT;
+Profile currentProfile =
+#if defined(ANDROID)
+    PROFILE_ES1
+#else
+    PROFILE_COMPAT
+#endif
+;
 
 
 /**
- * Handle to the true OpenGL library.
+ * Handles to the true libraries.
  */
 os::Library libGL = 0;
+os::Library libEGL = 0;
+os::Library libGLESv1 = 0;
+os::Library libGLESv2 = 0;
 
 
 

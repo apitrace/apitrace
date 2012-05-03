@@ -45,7 +45,11 @@ enum Profile {
 
 extern Profile currentProfile;
 
+
 extern os::Library libGL;
+extern os::Library libEGL;
+extern os::Library libGLESv1;
+extern os::Library libGLESv2;
 
 
 } /* namespace gldispatch */

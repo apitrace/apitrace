@@ -38,6 +38,15 @@
 #endif
 
 
+#if defined(_WIN32)
+#define OS_LIBRARY_EXTENSION ".dll"
+#elif defined(__APPLE__)
+#define OS_LIBRARY_EXTENSION ".dylib"
+#else
+#define OS_LIBRARY_EXTENSION ".so"
+#endif
+
+
 namespace os {
 
     // TODO: Wrap in a class

@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <assert.h>
+
 #if !defined(_WIN32)
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE // for dladdr
@@ -45,6 +47,91 @@
 
 #else
 
+#if defined(_WIN32)
+#define LIBGL_FILENAME "opengl32.dll"
+#elif defined(__APPLE__)
+// FIXME
+#else
+#define LIBGL_FILENAME "libGL.so.1"
+#endif
+
+
+static void *
+_openLibrary(const char *filename)
+{
+#if defined(_WIN32) || defined(__APPLE__) || defined(ANDROID)
+
+    return os::openLibrary(filename);
+
+#else
+
+    /*
+     * Invoke the true dlopen() function.
+     */
+
+    typedef void * (*PFNDLOPEN)(const char *, int);
+    static PFNDLOPEN dlopen_ptr = NULL;
+
+    if (!dlopen_ptr) {
+        dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
+        if (!dlopen_ptr) {
+            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
+            return NULL;
+        }
+    }
+
+    return dlopen_ptr(filename, RTLD_LOCAL | RTLD_LAZY);
+
+#endif
+}
+
+
+static os::Library
+_getPublicProcLibrary(const char *procName)
+{
+    using namespace gldispatch;
+
+    if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
+        if (!gldispatch::libEGL) {
+            libEGL = _openLibrary("libEGL" OS_LIBRARY_EXTENSION);
+        }
+        return libEGL;
+    }
+
+    Profile profile = currentProfile;
+
+    if ((procName[0] == 'g' && procName[1] == 'l' && procName[2] == 'X') ||
+        (procName[0] == 'w' && procName[1] == 'g' && procName[2] == 'l') ||
+        (procName[0] == 'C' && procName[1] == 'G' && procName[2] == 'L')) {
+        profile = PROFILE_COMPAT;
+    }
+
+    switch (profile) {
+    case PROFILE_COMPAT:
+    case PROFILE_CORE:
+        if (!libGL) {
+            libGL = _openLibrary(LIBGL_FILENAME);
+        }
+        return libGL;
+    case PROFILE_ES1:
+        if (!libGLESv1) {
+            libGLESv1 = _openLibrary("libGLESv1_CM" OS_LIBRARY_EXTENSION);
+        }
+        return libGLESv1;
+    case PROFILE_ES2:
+        if (!libGLESv2) {
+            libGLESv2 = _openLibrary("libGLESv2" OS_LIBRARY_EXTENSION);
+        }
+        return libGLESv2;
+    default:
+        assert(0);
+        return NULL;
+    }
+
+    return NULL;
+}
+
+
 /*
  * Lookup a public EGL/GL/GLES symbol
  *
@@ -57,58 +144,22 @@
  * libraries have been loaded previously (either dlopened with RTLD_GLOBAL, or
  * as part of the executable dependencies), and that their symbols available
  * for quering via dlsym(RTLD_NEXT, ...).
+ *
+ * Android does not support LD_PRELOAD.  It is assumed that applications
+ * are explicitely loading egltrace.so.
  */
 void *
 _getPublicProcAddress(const char *procName)
 {
-#if defined(ANDROID)
-    /*
-     * Android does not support LD_PRELOAD.  It is assumed that applications
-     * are explicitely loading egltrace.so.
-     */
+    os::Library lib;
+    void *sym = NULL;
 
-    if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
-        static void *libEGL = NULL;
-        if (!libEGL) {
-            libEGL = dlopen("libEGL.so", RTLD_LOCAL | RTLD_LAZY);
-            if (!libEGL) {
-                return NULL;
-            }
-        }
-        return dlsym(libEGL, procName);
+    lib = _getPublicProcLibrary(procName);
+    if (lib) {
+        sym = os::getLibrarySymbol(lib, procName);
     }
 
-    if (procName[0] == 'g' && procName[1] == 'l') {
-        /* TODO: Use GLESv1/GLESv2 on a per-context basis. */
-        static void *sym = NULL;
-
-        static void *libGLESv2 = NULL;
-        if (!libGLESv2) {
-            libGLESv2 = dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
-        }
-        if (libGLESv2) {
-            sym = dlsym(libGLESv2, procName);
-        }
-        if (sym) {
-            return sym;
-        }
-
-        static void *libGLESv1 = NULL;
-        if (!libGLESv1) {
-            libGLESv1 = dlopen("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
-        }
-        if (libGLESv1) {
-            sym = dlsym(libGLESv1, procName);
-        }
-        if (sym) {
-            return sym;
-        }
-    }
-
-    return NULL;
-#else
-    return dlsym(RTLD_NEXT, procName);
-#endif
+    return sym;
 }
 
 /*
