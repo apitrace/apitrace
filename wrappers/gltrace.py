@@ -121,14 +121,6 @@ class GlTracer(Tracer):
         print '    VERTEX_ATTRIB_NV,'
         print '};'
         print
-        print 'gltrace::Context *'
-        print 'gltrace::getContext(void)'
-        print '{'
-        print '    // TODO return the context set by other APIs (GLX, EGL, and etc.)'
-        print '    static gltrace::Context _ctx = { gltrace::PROFILE_COMPAT, false, false, false };'
-        print '    return &_ctx;'
-        print '}'
-        print
         print 'static vertex_attrib _get_vertex_attrib(void) {'
         print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (ctx->user_arrays_arb || ctx->user_arrays_nv) {'
