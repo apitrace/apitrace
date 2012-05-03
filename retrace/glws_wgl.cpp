@@ -64,6 +64,13 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     MINMAXINFO *pMMI;
     switch (uMsg) {
+    case WM_KEYDOWN:
+        switch (wParam) {
+        case VK_ESCAPE:
+            PostMessage(hWnd, WM_CLOSE, 0, 0);
+            break;
+        }
+        break;
     case WM_GETMINMAXINFO:
         // Allow to create a window bigger than the desktop
         pMMI = (MINMAXINFO *)lParam;
@@ -71,6 +78,9 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         pMMI->ptMaxSize.y = 60000;
         pMMI->ptMaxTrackSize.x = 60000;
         pMMI->ptMaxTrackSize.y = 60000;
+        break;
+    case WM_CLOSE:
+        exit(0);
         break;
     default:
         break;
@@ -324,7 +334,17 @@ makeCurrent(Drawable *drawable, Context *context)
 
 bool
 processEvents(void) {
-    // TODO
+    MSG uMsg;
+    while (PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE)) {
+        if (uMsg.message == WM_QUIT) {
+            return false;
+        }
+
+        if (!TranslateAccelerator(uMsg.hwnd, NULL, &uMsg)) {
+            TranslateMessage(&uMsg);
+            DispatchMessage(&uMsg);
+        }
+    }
     return true;
 }
 
