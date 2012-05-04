@@ -56,6 +56,12 @@ class D3DRetracer(Retracer):
         if method.name == 'Present':
             print r'    retrace::frameComplete(call);'
 
+        if 'pSharedHandle' in method.argNames():
+            print r'    if (pSharedHandle) {'
+            print r'        retrace::warning(call) << "shared surfaces unsupported\n";'
+            print r'        pSharedHandle = NULL;'
+            print r'    }'
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         # check errors
