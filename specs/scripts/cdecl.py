@@ -308,25 +308,31 @@ class DeclParser:
                 assert tags[0] == '"'
                 assert tags[-1] == '"'
                 tags = tags[1:-1]
-                try:
-                    tags, args = tags.split('(')
-                except ValueError:
-                    pass
-                assert tags[0] == '_'
-                assert tags[-1] == '_'
-                tags = tags[1:-1]
-                tags = tags.lower()
-                tags = tags.split('_')
-        if self.lookahead().startswith('__'):
+                tags = parse_sal_annotation(tags)
+        token = self.lookahead()
+        if token[0] == '_' and (token[1] == '_' or token[-1] == '_'):
             # Parse __in, __out, etc tags
-            tag = self.consume()[2:]
-            args = []
+            tag = self.consume()
             if self.match('('):
-                self.consume()
+                tag += self.consume()
                 while not self.match(')'):
-                    self.consume()
-                self.consume(')')
-            tags.extend(tag.split('_'))
+                    tag += self.consume()
+                tag += self.consume(')')
+            tags.extend(self.parse_sal_annotation(tag))
+        return tags
+
+    def parse_sal_annotation(self, tags):
+        try:
+            tags, args = tags.split('(')
+        except ValueError:
+            pass
+        assert tags[0] == '_'
+        if tags[1] == '_':
+            tags = tags[2:]
+        if tags[-1] == '_':
+            tags = tags[1:-1]
+        tags = tags.lower()
+        tags = tags.split('_')
         return tags
 
     def parse_named_type(self):
@@ -338,7 +344,9 @@ class DeclParser:
             name = self.consume()
             if self.match('['):
                 self.consume()
-                length = self.consume()
+                length = ''
+                while not self.match(']'):
+                    length += self.consume()
                 self.consume(']')
                 try:
                     int(length)

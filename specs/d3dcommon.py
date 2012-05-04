@@ -296,7 +296,7 @@ D3D11_SRV_DIMENSION = Enum('D3D11_SRV_DIMENSION', [
     'D3D11_SRV_DIMENSION_BUFFEREX',
 ])
 
-D3D_SHADER_MACRO = Struct('D3D_SHADER_MACRO', [
+D3D10_SHADER_MACRO = Struct('D3D10_SHADER_MACRO', [
     (LPCSTR, 'Name'),
     (LPCSTR, 'Definition'),
 ])
@@ -306,6 +306,7 @@ ID3D10Blob.methods += [
     StdMethod(LPVOID, 'GetBufferPointer', []),
     StdMethod(SIZE_T, 'GetBufferSize', []),
 ]
+LPD3D10BLOB = ObjPointer(ID3D10Blob)
 
 D3D_INCLUDE_TYPE = Enum('D3D_INCLUDE_TYPE', [
     'D3D_INCLUDE_LOCAL',
@@ -316,6 +317,13 @@ D3D10_INCLUDE_TYPE = Enum('D3D10_INCLUDE_TYPE', [
     'D3D10_INCLUDE_LOCAL',
     'D3D10_INCLUDE_SYSTEM',
 ])
+
+ID3D10Include = Interface("ID3D10Include", IUnknown)
+ID3D10Include.methods += [
+    StdMethod(HRESULT, "Open", [(D3D10_INCLUDE_TYPE, "IncludeType"), (LPCSTR, "pFileName"), (LPCVOID, "pParentData"), (Pointer(LPCVOID), "ppData"), (Pointer(UINT), "pBytes")]),
+    StdMethod(HRESULT, "Close", [(LPCVOID, "pData")]),
+]
+LPD3D10INCLUDE = OpaquePointer(ID3D10Include)
 
 D3D_SHADER_VARIABLE_CLASS = Enum('D3D_SHADER_VARIABLE_CLASS', [
     'D3D_SVC_SCALAR',

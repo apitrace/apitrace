@@ -77,6 +77,7 @@ SIZE_T = Alias("SIZE_T", SizeT)
 VOID = Void
 PVOID = OpaquePointer(VOID)
 LPVOID = PVOID
+LPCVOID = OpaquePointer(Const(VOID))
 
 def DECLARE_HANDLE(expr):
     return Handle(expr, IntPointer(expr))
@@ -203,9 +204,9 @@ HRESULT = MAKE_HRESULT([])
 IUnknown = Interface("IUnknown")
 
 IUnknown.methods = (
-	Method(HRESULT, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
-	Method(ULONG, "AddRef", (), sideeffects=False),
-	Method(ULONG, "Release", ()),
+	StdMethod(HRESULT, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
+	StdMethod(ULONG, "AddRef", (), sideeffects=False),
+	StdMethod(ULONG, "Release", ()),
 )
 
 

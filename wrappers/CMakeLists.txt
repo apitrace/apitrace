@@ -118,9 +118,11 @@ if (WIN32)
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10shader.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10effect.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgitype.py

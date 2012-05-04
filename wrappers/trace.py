@@ -300,7 +300,7 @@ class ValueWrapper(stdapi.Traverser):
         if isinstance(elem_type, stdapi.Interface):
             self.visitInterfacePointer(elem_type, instance)
         else:
-            self.visitPointer(self, pointer, instance)
+            self.visitPointer(pointer, instance)
     
     def visitInterface(self, interface, instance):
         raise NotImplementedError

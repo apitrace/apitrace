@@ -897,3 +897,11 @@ ID3D10Multithread.methods += [
     Method(BOOL, "GetMultithreadProtected", []),
 ]
 
+
+d3d10 = API("d3d10")
+
+
+from d3d10sdklayers import *
+import d3d10misc
+import d3d10shader
+import d3d10effect
