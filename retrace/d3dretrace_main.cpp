@@ -40,7 +40,13 @@ d3dretrace::pLastDirect3DDevice9 = NULL;
 void
 retrace::setUp(void) {
     if (retrace::debug) {
-        g_szD3D9DllName = "d3d9d.dll";
+        /* 
+         * XXX: D3D9D only works for simple things, it often introduces errors
+         * on complex traces, or traces which use unofficial D3D9 features.
+         */
+        if (0) {
+            g_szD3D9DllName = "d3d9d.dll";
+        }
     }
 }
 
