@@ -39,14 +39,38 @@ enum Profile {
     PROFILE_ES2,
 };
 
-struct Context {
+class Context {
+public:
     enum Profile profile;
     bool user_arrays;
     bool user_arrays_arb;
     bool user_arrays_nv;
+    unsigned retain_count;
+
+    Context(void) : profile(PROFILE_COMPAT), user_arrays(false),
+                    user_arrays_arb(false), user_arrays_nv(false),
+                    retain_count(0) { }
 };
-    
-Context *
+
+void
+createContext(uintptr_t context_id);
+
+bool
+destroyContext(uintptr_t context_id);
+
+void
+retainContext(uintptr_t context_id);
+
+bool
+releaseContext(uintptr_t context_id);
+
+void
+setContext(uintptr_t context_id);
+
+void
+clearContext(void);
+
+gltrace::Context *
 getContext(void);
 
 const GLubyte *
