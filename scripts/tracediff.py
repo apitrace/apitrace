@@ -184,7 +184,7 @@ def main():
         help="calls to compare from source trace")
     optparser.add_option(
         '-w', '--width', metavar='NUM',
-        type="string", dest="width", default=default_width,
+        type="int", dest="width", default=default_width,
         help="columns [default: %default]")
 
     global options
