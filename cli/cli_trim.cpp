@@ -47,14 +47,16 @@ usage(void)
         << synopsis << "\n"
         "\n"
         "    -h, --help               show this help message and exit\n"
-        "        --calls=CALLSET      only trim specified calls\n"
+        "        --calls=CALLSET      only retain specified calls\n"
+        "        --thread=THREAD_ID   only retain calls from specified thread\n"
         "    -o, --output=TRACE_FILE  output trace file\n"
         "\n"
     ;
 }
 
 enum {
-	CALLS_OPT = CHAR_MAX + 1,
+    CALLS_OPT = CHAR_MAX + 1,
+    THREAD_OPT,
 };
 
 const static char *
@@ -64,7 +66,8 @@ const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"calls", required_argument, 0, CALLS_OPT},
-    {"output", optional_argument, 0, 'o'},
+    {"thread", required_argument, 0, THREAD_OPT},
+    {"output", required_argument, 0, 'o'},
     {0, 0, 0, 0}
 };
 
@@ -73,6 +76,7 @@ command(int argc, char *argv[])
 {
     std::string output;
     trace::CallSet calls(trace::FREQUENCY_ALL);
+    int thread = -1;
     int i;
 
     int opt;
@@ -83,6 +87,9 @@ command(int argc, char *argv[])
             return 0;
         case CALLS_OPT:
             calls = trace::CallSet(optarg);
+            break;
+        case THREAD_OPT:
+            thread = atoi(optarg);
             break;
         case 'o':
             output = optarg;
@@ -122,7 +129,8 @@ command(int argc, char *argv[])
 
         trace::Call *call;
         while ((call = p.parse_call())) {
-            if (calls.contains(*call)) {
+            if (calls.contains(*call) &&
+                (thread == -1 || call->thread_id == thread)) {
                 writer.writeCall(call);
             }
             delete call;
