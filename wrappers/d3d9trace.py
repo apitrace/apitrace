@@ -60,19 +60,12 @@ class D3D9Tracer(DllTracer):
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
+            # FIXME: handle recursive locks
             print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-            print '        _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
-            if method.name == 'Lock':
-                # FIXME: handle recursive locks
-                print '        m_pbData = *ppbData;'
-            elif method.name == 'LockRect':
-                print '        m_pbData = pLockedRect->pBits;'
-            elif method.name == 'LockBox':
-                print '        m_pbData = pLockedVolume->pBits;'
-            else:
-                raise NotImplementedError
+            print '        _getLockInfo(_this, %s, m_pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
             print '    } else {'
             print '        m_pbData = NULL;'
+            print '        _LockedSize = 0;'
             print '    }'
 
 

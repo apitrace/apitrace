@@ -187,45 +187,57 @@ _getLockSize(D3DFORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth
 #if DIRECT3D_VERSION >= 0x0900
 
 
-static inline size_t
-_getLockSize(IDirect3DVertexBuffer9 *pBuffer, UINT OffsetToLock, UINT SizeToLock, void ** ppbData) {
+static inline void
+_getLockInfo(IDirect3DVertexBuffer9 *pBuffer, UINT OffsetToLock, UINT SizeToLock, void ** ppbData,
+             void * & pLockedData, size_t & LockedSize) {
+    pLockedData = *ppbData;
+    LockedSize = 0;
+
     if (SizeToLock == 0) {
         D3DVERTEXBUFFER_DESC Desc;
         HRESULT hr = pBuffer->GetDesc(&Desc);
         if (FAILED(hr)) {
-            return 0;
-        } 
-        SizeToLock = Desc.Size;
+            return;
+        }
+        LockedSize = Desc.Size;
+    } else {
+        LockedSize = SizeToLock;
     }
-
-    return SizeToLock;
 }
 
 
-static inline size_t
-_getLockSize(IDirect3DIndexBuffer9 *pBuffer, UINT OffsetToLock, UINT SizeToLock, void ** ppbData) {
+static inline void
+_getLockInfo(IDirect3DIndexBuffer9 *pBuffer, UINT OffsetToLock, UINT SizeToLock, void ** ppbData,
+             void * & pLockedData, size_t & LockedSize) {
+    pLockedData = *ppbData;
+    LockedSize = 0;
+
     if (SizeToLock == 0) {
         D3DINDEXBUFFER_DESC Desc;
         HRESULT hr = pBuffer->GetDesc(&Desc);
         if (FAILED(hr)) {
-            return 0;
-        } 
-        SizeToLock = Desc.Size;
+            return;
+        }
+        LockedSize = Desc.Size;
+    } else {
+        LockedSize = SizeToLock;
     }
-
-    return SizeToLock;
 }
 
 
-static inline size_t
-_getLockSize(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+static inline void
+_getLockInfo(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect,
+             void * & pLockedData, size_t & LockedSize) {
+    pLockedData = pLockedRect->pBits;
+    LockedSize = 0;
+
     HRESULT hr;
 
     D3DSURFACE_DESC Desc;
     hr = pSurface->GetDesc(&Desc);
     if (FAILED(hr)) {
-        return 0;
-    } 
+        return;
+    }
 
     UINT Width;
     UINT Height;
@@ -237,18 +249,22 @@ _getLockSize(IDirect3DSurface9 *pSurface, const D3DLOCKED_RECT *pLockedRect, con
         Height = Desc.Height;
     }
 
-    return _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    LockedSize = _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
 }
 
 
-static inline size_t
-_getLockSize(IDirect3DTexture9 *pTexture, UINT Level, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+static inline void
+_getLockInfo(IDirect3DTexture9 *pTexture, UINT Level, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect,
+             void * & pLockedData, size_t & LockedSize) {
+    pLockedData = pLockedRect->pBits;
+    LockedSize = 0;
+
     HRESULT hr;
 
     D3DSURFACE_DESC Desc;
     hr = pTexture->GetLevelDesc(Level, &Desc);
     if (FAILED(hr)) {
-        return 0;
+        return;
     }
 
     UINT Width;
@@ -261,12 +277,16 @@ _getLockSize(IDirect3DTexture9 *pTexture, UINT Level, const D3DLOCKED_RECT *pLoc
         Height = Desc.Height;
     }
 
-    return _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    LockedSize = _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
 }
 
 
-static inline size_t
-_getLockSize(IDirect3DCubeTexture9 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Level, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect) {
+static inline void
+_getLockInfo(IDirect3DCubeTexture9 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Level, const D3DLOCKED_RECT *pLockedRect, const RECT *pRect,
+             void * & pLockedData, size_t & LockedSize) {
+    pLockedData = pLockedRect->pBits;
+    LockedSize = 0;
+
     HRESULT hr;
 
     (void)FaceType;
@@ -274,7 +294,7 @@ _getLockSize(IDirect3DCubeTexture9 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Le
     D3DSURFACE_DESC Desc;
     hr = pTexture->GetLevelDesc(Level, &Desc);
     if (FAILED(hr)) {
-        return 0;
+        return;
     }
 
     UINT Width;
@@ -287,18 +307,22 @@ _getLockSize(IDirect3DCubeTexture9 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Le
         Height = Desc.Height;
     }
 
-    return _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    LockedSize = _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
 }
 
 
-static inline size_t
-_getLockSize(IDirect3DVolume9 *pVolume, const D3DLOCKED_BOX *pLockedVolume, const D3DBOX *pBox) {
+static inline void
+_getLockInfo(IDirect3DVolume9 *pVolume, const D3DLOCKED_BOX *pLockedVolume, const D3DBOX *pBox,
+             void * & pLockedData, size_t & LockedSize) {
+    pLockedData = pLockedVolume->pBits;
+    LockedSize = 0;
+
     HRESULT hr;
 
     D3DVOLUME_DESC Desc;
     hr = pVolume->GetDesc(&Desc);
     if (FAILED(hr)) {
-        return 0;
+        return;
     }
 
     UINT Width;
@@ -314,18 +338,22 @@ _getLockSize(IDirect3DVolume9 *pVolume, const D3DLOCKED_BOX *pLockedVolume, cons
         Depth  = Desc.Depth;
     }
 
-    return _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
+    LockedSize = _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
 }
 
 
-static inline size_t
-_getLockSize(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX *pLockedVolume, const D3DBOX *pBox) {
+static inline void
+_getLockInfo(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX *pLockedVolume, const D3DBOX *pBox,
+             void * & pLockedData, size_t & LockedSize) {
+    pLockedData = pLockedVolume->pBits;
+    LockedSize = 0;
+
     HRESULT hr;
 
     D3DVOLUME_DESC Desc;
     hr = pTexture->GetLevelDesc(Level, &Desc);
     if (FAILED(hr)) {
-        return 0;
+        return;
     }
 
     UINT Width;
@@ -341,7 +369,7 @@ _getLockSize(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX 
         Depth  = Desc.Depth;
     }
 
-    return _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
+    LockedSize = _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
 }
 
 

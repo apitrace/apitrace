@@ -71,25 +71,18 @@ class D3DRetracer(Retracer):
             print r'    }'
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
-            print '        size_t _LockedSize = _getLockSize(_this, %s);' % ', '.join(method.argNames()[:-1])
-            if method.name == 'Lock':
-                # FIXME: handle recursive locks
-                print '        VOID *_pbData = *ppbData;'
-            elif method.name == 'LockRect':
-                print '        VOID *_pbData = pLockedRect->pBits;'
-            elif method.name == 'LockBox':
-                print '        VOID *_pbData = pLockedVolume->pBits;'
-            else:
-                raise NotImplementedError
-            print '        _this->SetPrivateData(GUID_APITRACE, &_pbData, sizeof _pbData, 0);'
+            print '    VOID *_pbData = NULL;'
+            print '    size_t _LockedSize = 0;'
+            print '    _getLockInfo(_this, %s, _pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
+            print '    _this->SetPrivateData(GUID_APITRACE, &_pbData, sizeof _pbData, 0);'
         
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '        VOID *_pbData = 0;'
-            print '        DWORD dwSizeOfData = sizeof _pbData;'
-            print '        _this->GetPrivateData(GUID_APITRACE, &_pbData, &dwSizeOfData);'
-            print '        if (_pbData) {'
-            print '            retrace::delRegionByPointer(_pbData);'
-            print '        }'
+            print '    VOID *_pbData = 0;'
+            print '    DWORD dwSizeOfData = sizeof _pbData;'
+            print '    _this->GetPrivateData(GUID_APITRACE, &_pbData, &dwSizeOfData);'
+            print '    if (_pbData) {'
+            print '        retrace::delRegionByPointer(_pbData);'
+            print '    }'
 
 
 if __name__ == '__main__':
