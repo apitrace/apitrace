@@ -84,7 +84,7 @@ findWrapper(const char *wrapperFilename)
 
 #ifndef _WIN32
     // Try absolute install directory
-    wrapperPath = APITRACE_WRAPPER_INSTALL_DIR;
+    wrapperPath = APITRACE_LIB_INSTALL_DIR "/wrappers";
     wrapperPath.join(wrapperFilename);
     if (wrapperPath.exists()) {
         return wrapperPath;
