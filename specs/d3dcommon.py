@@ -303,8 +303,8 @@ D3D10_SHADER_MACRO = Struct('D3D10_SHADER_MACRO', [
 
 ID3D10Blob = Interface('ID3D10Blob', IUnknown)
 ID3D10Blob.methods += [
-    StdMethod(LPVOID, 'GetBufferPointer', []),
-    StdMethod(SIZE_T, 'GetBufferSize', []),
+    StdMethod(LPVOID, 'GetBufferPointer', [], sideeffects=False),
+    StdMethod(SIZE_T, 'GetBufferSize', []), sideeffects=False,
 ]
 LPD3D10BLOB = ObjPointer(ID3D10Blob)
 
@@ -320,9 +320,11 @@ D3D10_INCLUDE_TYPE = Enum('D3D10_INCLUDE_TYPE', [
 
 ID3D10Include = Interface("ID3D10Include", IUnknown)
 ID3D10Include.methods += [
-    StdMethod(HRESULT, "Open", [(D3D10_INCLUDE_TYPE, "IncludeType"), (LPCSTR, "pFileName"), (LPCVOID, "pParentData"), (Pointer(LPCVOID), "ppData"), (Pointer(UINT), "pBytes")]),
+    StdMethod(HRESULT, "Open", [(D3D10_INCLUDE_TYPE, "IncludeType"), (LPCSTR, "pFileName"), (LPCVOID, "pParentData"), Out(Pointer(LPCVOID), "ppData"), Out(Pointer(UINT), "pBytes")]),
     StdMethod(HRESULT, "Close", [(LPCVOID, "pData")]),
 ]
+# It is implemented by applications, not D3D runtime, so treat as opaque for
+# now.
 LPD3D10INCLUDE = OpaquePointer(ID3D10Include)
 
 D3D_SHADER_VARIABLE_CLASS = Enum('D3D_SHADER_VARIABLE_CLASS', [
