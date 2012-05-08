@@ -304,7 +304,7 @@ D3D10_SHADER_MACRO = Struct('D3D10_SHADER_MACRO', [
 ID3D10Blob = Interface('ID3D10Blob', IUnknown)
 ID3D10Blob.methods += [
     StdMethod(LPVOID, 'GetBufferPointer', [], sideeffects=False),
-    StdMethod(SIZE_T, 'GetBufferSize', []), sideeffects=False,
+    StdMethod(SIZE_T, 'GetBufferSize', [], sideeffects=False),
 ]
 LPD3D10BLOB = ObjPointer(ID3D10Blob)
 

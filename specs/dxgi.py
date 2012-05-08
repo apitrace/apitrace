@@ -167,7 +167,7 @@ DXGI_MAP = Flags(UINT, [
 ])
 
 IDXGISurface.methods += [
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SURFACE_DESC), "pDesc")]), sideeffects=False,
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SURFACE_DESC), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "Map", [Out(Pointer(DXGI_MAPPED_RECT), "pLockedRect"), (DXGI_MAP, "MapFlags")]),
     StdMethod(HRESULT, "Unmap", []),
 ]
