@@ -124,6 +124,7 @@ def diff(ref_trace, src_trace):
     diff.wait()
 
     if less is not None:
+        less.stdin.close()
         less.wait()
 
 
