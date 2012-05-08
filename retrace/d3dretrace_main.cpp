@@ -71,7 +71,13 @@ retrace::getSnapshot(void) {
 bool
 retrace::dumpState(std::ostream &os)
 {
-    return false;
+    if (!d3dretrace::pLastDirect3DDevice9) {
+        return false;
+    }
+
+    d3dstate::dumpDevice(os, d3dretrace::pLastDirect3DDevice9);
+
+    return true;
 }
 
 
