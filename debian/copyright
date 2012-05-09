@@ -1,0 +1,27 @@
+This work was packaged for Debian by:
+
+    Michal Suchanek <hramrach@centrum.cz>  on Tue, 19 Jul 2011 13:43:59 +0200
+
+It was downloaded from:
+
+    git://github.com/apitrace/apitrace.git
+
+Upstream Author(s):
+
+    Jose Fonseca
+    Zack Rusin
+    VMware, Inc.
+
+Copyright:
+
+    Copyright 2011 Jose Fonseca, Zack Rusin
+    Copyright 2008-2010 VMware, Inc.
+
+License:
+
+    BSD (2-clause)
+
+The Debian packaging is:
+
+    Copyright (C) 2011 Michal Suchanek <hramrach@centrum.cz>
+    see the LICENSE file for details.

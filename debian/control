@@ -1,0 +1,44 @@
+Source: apitrace
+Section: devel
+Priority: extra
+Maintainer: Michal Suchanek <hramrach@centrum.cz> <hramrach@IPX7A-ION.ruk.cuni.cz>
+Build-Depends: debhelper (>= 7.0.50~), g++ (>= 4:4.6), cmake (>= 2.8.5), python (>= 2.6), libqjson-dev, libqt4-dev, libqtwebkit-dev
+Standards-Version: 3.8.4
+Homepage: https://github.com/apitrace/apitrace
+Vcs-Git: git://github.com/apitrace/apitrace.git
+Vcs-Browser: https://github.com/apitrace/apitrace
+
+Package: apitrace
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: glxtrace| egltrace
+Description: OpenGL api call tracer/recorder
+ Records and replays OpenGL api calls.
+
+Package: egltrace
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: apitrace (= ${binary:Version})
+Multi-Arch: same
+Description: OpenGL api call tracer/recorder
+ Records and replays OpenGL api calls.
+ .
+ EGL recording library.
+
+Package: glxtrace
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: apitrace (= ${binary:Version})
+Multi-Arch: same
+Description: OpenGL api call tracer/recorder
+ Records and replays OpenGL api calls.
+ .
+ GLX recording library.
+
+Package: qapitrace
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, apitrace (= ${binary:Version})
+Description: OpenGL api call tracer/recorder
+ Records and replays OpenGL api calls.
+ .
+ Qt GUI.
