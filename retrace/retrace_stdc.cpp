@@ -193,8 +193,9 @@ lookupAddress(unsigned long long address) {
         return addr;
     }
 
-    if (retrace::debug && address >= 0x00400000) {
-        std::cerr << "warning: could not translate address 0x" << std::hex << address << std::dec << "\n";
+    if (retrace::debug && address >= 64 * 1024 * 1024) {
+        /* Likely not an offset, but an address that should had been swizzled */
+        std::cerr << "warning: passing high address 0x" << std::hex << address << std::dec << " as uintptr_t\n";
     }
 
     return (void *)(uintptr_t)address;
