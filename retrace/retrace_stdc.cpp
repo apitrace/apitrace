@@ -193,7 +193,7 @@ lookupAddress(unsigned long long address) {
         return addr;
     }
 
-    if (address >= 0x00400000) {
+    if (retrace::debug && address >= 0x00400000) {
         std::cerr << "warning: could not translate address 0x" << std::hex << address << std::dec << "\n";
     }
 
