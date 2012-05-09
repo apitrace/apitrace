@@ -290,7 +290,8 @@ int main(int argc, char **argv)
         retrace::parser.close();
     }
 
-    retrace::cleanUp();
+    // XXX: X often hangs on XCloseDisplay
+    //retrace::cleanUp();
 
     return 0;
 }
