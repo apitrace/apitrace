@@ -416,7 +416,6 @@ class Tracer:
             print '    %s _result;' % function.type
         self.traceFunctionImplBody(function)
         if function.type is not stdapi.Void:
-            self.wrapRet(function, "_result")
             print '    return _result;'
         print '}'
         print
@@ -437,6 +436,8 @@ class Tracer:
         if function.type is not stdapi.Void:
             self.serializeRet(function, "_result")
         print '    trace::localWriter.endLeave();'
+        if function.type is not stdapi.Void:
+            self.wrapRet(function, "_result")
 
     def invokeFunction(self, function, prefix='_', suffix=''):
         if function.type is stdapi.Void:
@@ -589,11 +590,11 @@ class Tracer:
                 self.wrapArg(method, arg)
 
         if method.type is not stdapi.Void:
-            print '    trace::localWriter.beginReturn();'
-            self.serializeValue(method.type, "_result")
-            print '    trace::localWriter.endReturn();'
-            self.wrapValue(method.type, '_result')
+            self.serializeRet(method, '_result')
         print '    trace::localWriter.endLeave();'
+        if method.type is not stdapi.Void:
+            self.wrapRet(method, '_result')
+
         if method.name == 'Release':
             assert method.type is not stdapi.Void
             print '    if (!_result)'
