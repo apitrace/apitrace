@@ -39,6 +39,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	if (DirectX_ROOT_DIR)
 		set (DirectX_INC_SEARCH_PATH "${DirectX_ROOT_DIR}/Include")
 		set (DirectX_LIB_SEARCH_PATH "${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}")
+		set (DirectX_BIN_SEARCH_PATH "${DirectX_ROOT_DIR}/Utilities/bin/x86")
 	endif ()
 
 
@@ -60,6 +61,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		if (WIN8_SDK_ROOT_DIR)
 			set (DirectX_INC_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/Include/um" "${WIN8_SDK_ROOT_DIR}/Include/shared")
 			set (DirectX_LIB_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/Lib/Win8/um/${DirectX_ARCHITECTURE}")
+			set (DirectX_BIN_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/bin/x86")
 		endif ()
 	endif ()
 
@@ -204,6 +206,11 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	if (DirectX_D3D11_1_INCLUDE_DIR AND DirectX_D3D11_LIBRARY)
 		set (DirectX_D3D11_1_FOUND 1)
 	endif ()
+
+
+	find_program (DirectX_FXC_EXECUTABLE fxc
+		PATHS ${DirectX_BIN_SEARCH_PATH}
+		DOC "Path to fxc.exe executable.")
 
 
 	mark_as_advanced (
