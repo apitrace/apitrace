@@ -122,6 +122,7 @@ mainLoop() {
     addCallbacks(retracer);
 
     long long startTime = 0; 
+    frameNo = 0;
 
     startTime = os::getTime();
     trace::Call *call;
@@ -177,7 +178,7 @@ mainLoop() {
     if (waitOnFinish) {
         waitForInput();
     } else {
-        exit(0);
+        return;
     }
 }
 
@@ -188,7 +189,7 @@ mainLoop() {
 static void
 usage(const char *argv0) {
     std::cout << 
-        "Usage: " << argv0 << " [OPTION] TRACE\n"
+        "Usage: " << argv0 << " [OPTION] TRACE [...]\n"
         "Replay TRACE.\n"
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
