@@ -1218,6 +1218,12 @@ d3d11 = API("d3d11")
 d3d11.addFunctions([
     StdFunction(HRESULT, "D3D11CreateDevice", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D11_CREATE_DEVICE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice"), Out(Pointer(D3D_FEATURE_LEVEL), "pFeatureLevel"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
     StdFunction(HRESULT, "D3D11CreateDeviceAndSwapChain", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D11_CREATE_DEVICE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC)), "pSwapChainDesc"), Out(Pointer(ObjPointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice"), Out(Pointer(D3D_FEATURE_LEVEL), "pFeatureLevel"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
+
+    # XXX: Undocumented functions, called by d3d11sdklayers.dll when D3D11_CREATE_DEVICE_DEBUG is set
+    StdFunction(HRESULT, "D3D11CoreRegisterLayers", [LPCVOID, DWORD], internal=True),
+    StdFunction(SIZE_T, "D3D11CoreGetLayeredDeviceSize", [LPCVOID, DWORD], internal=True),
+    StdFunction(HRESULT, "D3D11CoreCreateLayeredDevice", [LPCVOID, DWORD, LPCVOID, (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj")], internal=True),
+    StdFunction(HRESULT, "D3D11CoreCreateDevice", [DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD], internal=True),
 ])
 
 d3d11.addInterfaces([

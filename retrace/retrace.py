@@ -486,20 +486,21 @@ class Retracer:
 
         functions = filter(self.filterFunction, api.functions)
         for function in functions:
-            if function.sideeffects:
+            if function.sideeffects and not function.internal:
                 self.retraceFunction(function)
         interfaces = api.getAllInterfaces()
         for interface in interfaces:
             for method in interface.iterMethods():
-                if method.sideeffects:
+                if method.sideeffects and not method.internal:
                     self.retraceInterfaceMethod(interface, method)
 
         print 'const retrace::Entry %s[] = {' % self.table_name
         for function in functions:
-            if function.sideeffects:
-                print '    {"%s", &retrace_%s},' % (function.name, function.name)
-            else:
-                print '    {"%s", &retrace::ignore},' % (function.name,)
+            if not function.internal:
+                if function.sideeffects:
+                    print '    {"%s", &retrace_%s},' % (function.name, function.name)
+                else:
+                    print '    {"%s", &retrace::ignore},' % (function.name,)
         for interface in interfaces:
             for method in interface.iterMethods():                
                 if method.sideeffects:

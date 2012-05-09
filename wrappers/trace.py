@@ -396,12 +396,13 @@ class Tracer:
     def traceFunctionDecl(self, function):
         # Per-function declarations
 
-        if function.args:
-            print 'static const char * _%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
-        else:
-            print 'static const char ** _%s_args = NULL;' % (function.name,)
-        print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
-        print
+        if not function.internal:
+            if function.args:
+                print 'static const char * _%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
+            else:
+                print 'static const char ** _%s_args = NULL;' % (function.name,)
+            print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
+            print
 
     def isFunctionPublic(self, function):
         return True
@@ -421,23 +422,25 @@ class Tracer:
         print
 
     def traceFunctionImplBody(self, function):
-        print '    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
-        for arg in function.args:
-            if not arg.output:
-                self.unwrapArg(function, arg)
-                self.serializeArg(function, arg)
-        print '    trace::localWriter.endEnter();'
+        if not function.internal:
+            print '    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+            for arg in function.args:
+                if not arg.output:
+                    self.unwrapArg(function, arg)
+                    self.serializeArg(function, arg)
+            print '    trace::localWriter.endEnter();'
         self.invokeFunction(function)
-        print '    trace::localWriter.beginLeave(_call);'
-        for arg in function.args:
-            if arg.output:
-                self.serializeArg(function, arg)
-                self.wrapArg(function, arg)
-        if function.type is not stdapi.Void:
-            self.serializeRet(function, "_result")
-        print '    trace::localWriter.endLeave();'
-        if function.type is not stdapi.Void:
-            self.wrapRet(function, "_result")
+        if not function.internal:
+            print '    trace::localWriter.beginLeave(_call);'
+            for arg in function.args:
+                if arg.output:
+                    self.serializeArg(function, arg)
+                    self.wrapArg(function, arg)
+            if function.type is not stdapi.Void:
+                self.serializeRet(function, "_result")
+            print '    trace::localWriter.endLeave();'
+            if function.type is not stdapi.Void:
+                self.wrapRet(function, "_result")
 
     def invokeFunction(self, function, prefix='_', suffix=''):
         if function.type is stdapi.Void:
@@ -566,6 +569,8 @@ class Tracer:
         print
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        assert not method.internal
+
         print '    static const char * _args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
 
