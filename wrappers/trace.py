@@ -388,7 +388,14 @@ class Tracer:
         self.footer(api)
 
     def header(self, api):
-        pass
+        print '#ifdef _WIN32'
+        print '#  include <malloc.h> // alloca'
+        print '#  ifndef alloca'
+        print '#    define alloca _alloca'
+        print '#  endif'
+        print '#else'
+        print '#  include <alloca.h> // alloca'
+        print '#endif'
 
     def footer(self, api):
         pass
