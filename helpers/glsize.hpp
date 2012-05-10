@@ -71,159 +71,175 @@ _gl_type_size(GLenum type)
 }
 
 static inline void
-_gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
+_gl_uniform_size(GLenum type, GLenum &elemType, GLint &numCols, GLint &numRows) {
+    numCols = 1;
+    numRows = 1;
+
     switch (type) {
     case GL_FLOAT:
         elemType = GL_FLOAT;
-        numElems = 1;
         break;
     case GL_FLOAT_VEC2:
         elemType = GL_FLOAT;
-        numElems = 2;
+        numCols = 2;
         break;
     case GL_FLOAT_VEC3:
         elemType = GL_FLOAT;
-        numElems = 3;
+        numCols = 3;
         break;
     case GL_FLOAT_VEC4:
         elemType = GL_FLOAT;
-        numElems = 4;
+        numCols = 4;
         break;
     case GL_DOUBLE:
         elemType = GL_DOUBLE;
-        numElems = 1;
         break;
     case GL_DOUBLE_VEC2:
         elemType = GL_DOUBLE;
-        numElems = 2;
+        numCols = 2;
         break;
     case GL_DOUBLE_VEC3:
         elemType = GL_DOUBLE;
-        numElems = 3;
+        numCols = 3;
         break;
     case GL_DOUBLE_VEC4:
         elemType = GL_DOUBLE;
-        numElems = 4;
+        numCols = 4;
         break;
     case GL_INT:
         elemType = GL_INT;
-        numElems = 1;
         break;
     case GL_INT_VEC2:
         elemType = GL_INT;
-        numElems = 2;
+        numCols = 2;
         break;
     case GL_INT_VEC3:
         elemType = GL_INT;
-        numElems = 3;
+        numCols = 3;
         break;
     case GL_INT_VEC4:
         elemType = GL_INT;
-        numElems = 4;
+        numCols = 4;
         break;
     case GL_UNSIGNED_INT:
         elemType = GL_UNSIGNED_INT;
-        numElems = 1;
         break;
     case GL_UNSIGNED_INT_VEC2:
         elemType = GL_UNSIGNED_INT;
-        numElems = 2;
+        numCols = 2;
         break;
     case GL_UNSIGNED_INT_VEC3:
         elemType = GL_UNSIGNED_INT;
-        numElems = 3;
+        numCols = 3;
         break;
     case GL_UNSIGNED_INT_VEC4:
         elemType = GL_UNSIGNED_INT;
-        numElems = 4;
+        numCols = 4;
         break;
     case GL_BOOL:
         elemType = GL_BOOL;
-        numElems = 1;
         break;
     case GL_BOOL_VEC2:
         elemType = GL_BOOL;
-        numElems = 2;
+        numCols = 2;
         break;
     case GL_BOOL_VEC3:
         elemType = GL_BOOL;
-        numElems = 3;
+        numCols = 3;
         break;
     case GL_BOOL_VEC4:
         elemType = GL_BOOL;
-        numElems = 4;
+        numCols = 4;
         break;
     case GL_FLOAT_MAT2:
         elemType = GL_FLOAT;
-        numElems = 2*2;
+        numCols = 2;
+        numRows = 2;
         break;
     case GL_FLOAT_MAT3:
         elemType = GL_FLOAT;
-        numElems = 3*3;
+        numCols = 3;
+        numRows = 3;
         break;
     case GL_FLOAT_MAT4:
         elemType = GL_FLOAT;
-        numElems = 4*4;
+        numCols = 4;
+        numRows = 4;
         break;
     case GL_FLOAT_MAT2x3:
         elemType = GL_FLOAT;
-        numElems = 2*3;
+        numCols = 2;
+        numRows = 3;
         break;
     case GL_FLOAT_MAT2x4:
         elemType = GL_FLOAT;
-        numElems = 2*4;
+        numCols = 2;
+        numRows = 4;
         break;
     case GL_FLOAT_MAT3x2:
         elemType = GL_FLOAT;
-        numElems = 3*2;
+        numCols = 3;
+        numRows = 2;
         break;
     case GL_FLOAT_MAT3x4:
         elemType = GL_FLOAT;
-        numElems = 3*4;
+        numCols = 3;
+        numRows = 4;
         break;
     case GL_FLOAT_MAT4x2:
         elemType = GL_FLOAT;
-        numElems = 4*2;
+        numCols = 4;
+        numRows = 2;
         break;
     case GL_FLOAT_MAT4x3:
         elemType = GL_FLOAT;
-        numElems = 4*3;
+        numCols = 4;
+        numRows = 3;
         break;
     case GL_DOUBLE_MAT2:
         elemType = GL_DOUBLE;
-        numElems = 2*2;
+        numCols = 2;
+        numRows = 2;
         break;
     case GL_DOUBLE_MAT3:
         elemType = GL_DOUBLE;
-        numElems = 3*3;
+        numCols = 3;
+        numRows = 3;
         break;
     case GL_DOUBLE_MAT4:
         elemType = GL_DOUBLE;
-        numElems = 4*4;
+        numCols = 4;
+        numRows = 4;
         break;
     case GL_DOUBLE_MAT2x3:
         elemType = GL_DOUBLE;
-        numElems = 2*3;
+        numCols = 2;
+        numRows = 3;
         break;
     case GL_DOUBLE_MAT2x4:
         elemType = GL_DOUBLE;
-        numElems = 2*4;
+        numCols = 2;
+        numRows = 4;
         break;
     case GL_DOUBLE_MAT3x2:
         elemType = GL_DOUBLE;
-        numElems = 3*2;
+        numCols = 3;
+        numRows = 2;
         break;
     case GL_DOUBLE_MAT3x4:
         elemType = GL_DOUBLE;
-        numElems = 3*4;
+        numCols = 3;
+        numRows = 4;
         break;
     case GL_DOUBLE_MAT4x2:
         elemType = GL_DOUBLE;
-        numElems = 4*2;
+        numCols = 4;
+        numRows = 2;
         break;
     case GL_DOUBLE_MAT4x3:
         elemType = GL_DOUBLE;
-        numElems = 4*3;
+        numCols = 4;
+        numRows = 3;
         break;
     case GL_SAMPLER_1D:
     case GL_SAMPLER_2D:
@@ -266,12 +282,12 @@ _gl_uniform_size(GLenum type, GLenum &elemType, GLint &numElems) {
     case GL_UNSIGNED_INT_SAMPLER_BUFFER:
     case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
         elemType = GL_INT;
-        numElems = 1;
         break;
     default:
         os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         elemType = GL_NONE;
-        numElems = 0;
+        numCols = 0;
+        numRows = 0;
         return;
     }
 }
