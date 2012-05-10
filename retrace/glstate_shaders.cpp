@@ -167,6 +167,15 @@ dumpProgramObj(JSONWriter &json, GLhandleARB programObj)
     }
 }
 
+/**
+ * Built-in uniforms can't be queried through glGetUniform*.
+ */
+static inline bool
+isBuiltinUniform(const GLchar *name)
+{
+    return name[0] == 'g' && name[1] == 'l' && name[2] == '_';
+}
+
 /*
  * When fetching the uniform name of an array we usually get name[0]
  * so we need to cut the trailing "[0]" in order to properly construct
@@ -223,49 +232,55 @@ dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLch
         json.beginMember(elemName);
 
         GLint location = glGetUniformLocation(program, elemName.c_str());
+        if (location >= 0) {
+            if (numElems > 1) {
+                json.beginArray();
+            }
 
-        if (numElems > 1) {
-            json.beginArray();
-        }
+            switch (elemType) {
+            case GL_FLOAT:
+                glGetUniformfv(program, location, fvalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNumber(fvalues[j]);
+                }
+                break;
+            case GL_DOUBLE:
+                glGetUniformdv(program, location, dvalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNumber(dvalues[j]);
+                }
+                break;
+            case GL_INT:
+                glGetUniformiv(program, location, ivalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNumber(ivalues[j]);
+                }
+                break;
+            case GL_UNSIGNED_INT:
+                glGetUniformuiv(program, location, uivalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNumber(uivalues[j]);
+                }
+                break;
+            case GL_BOOL:
+                glGetUniformiv(program, location, ivalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeBool(ivalues[j]);
+                }
+                break;
+            default:
+                assert(0);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNull();
+                }
+                break;
+            }
 
-        switch (elemType) {
-        case GL_FLOAT:
-            glGetUniformfv(program, location, fvalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(fvalues[j]);
+            if (numElems > 1) {
+                json.endArray();
             }
-            break;
-        case GL_DOUBLE:
-            glGetUniformdv(program, location, dvalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(dvalues[j]);
-            }
-            break;
-        case GL_INT:
-            glGetUniformiv(program, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(ivalues[j]);
-            }
-            break;
-        case GL_UNSIGNED_INT:
-            glGetUniformuiv(program, location, uivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(uivalues[j]);
-            }
-            break;
-        case GL_BOOL:
-            glGetUniformiv(program, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeBool(ivalues[j]);
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-
-        if (numElems > 1) {
-            json.endArray();
+        } else {
+            json.writeNull();
         }
 
         json.endMember();
@@ -303,41 +318,47 @@ dumpUniformARB(JSONWriter &json, GLhandleARB programObj, GLint size, GLenum type
         json.beginMember(elemName);
 
         GLint location = glGetUniformLocationARB(programObj, elemName.c_str());
-
-        if (numElems > 1) {
-            json.beginArray();
-        }
-
-        switch (elemType) {
-        case GL_DOUBLE:
-            // glGetUniformdvARB does not exists
-        case GL_FLOAT:
-            glGetUniformfvARB(programObj, location, fvalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(fvalues[j]);
+        if (location >= 0) {
+            if (numElems > 1) {
+                json.beginArray();
             }
-            break;
-        case GL_UNSIGNED_INT:
-            // glGetUniformuivARB does not exists
-        case GL_INT:
-            glGetUniformivARB(programObj, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(ivalues[j]);
-            }
-            break;
-        case GL_BOOL:
-            glGetUniformivARB(programObj, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeBool(ivalues[j]);
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
 
-        if (numElems > 1) {
-            json.endArray();
+            switch (elemType) {
+            case GL_DOUBLE:
+                // glGetUniformdvARB does not exists
+            case GL_FLOAT:
+                glGetUniformfvARB(programObj, location, fvalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNumber(fvalues[j]);
+                }
+                break;
+            case GL_UNSIGNED_INT:
+                // glGetUniformuivARB does not exists
+            case GL_INT:
+                glGetUniformivARB(programObj, location, ivalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNumber(ivalues[j]);
+                }
+                break;
+            case GL_BOOL:
+                glGetUniformivARB(programObj, location, ivalues);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeBool(ivalues[j]);
+                }
+                break;
+            default:
+                assert(0);
+                for (j = 0; j < numElems; ++j) {
+                    json.writeNull();
+                }
+                break;
+            }
+
+            if (numElems > 1) {
+                json.endArray();
+            }
+        } else {
+            json.writeNull();
         }
 
         json.endMember();
@@ -367,7 +388,9 @@ dumpProgramUniforms(JSONWriter &json, GLint program)
         GLenum type = GL_NONE;
         glGetActiveUniform(program, index, active_uniform_max_length, &length, &size, &type, name);
 
-        dumpUniform(json, program, size, type, name);
+        if (!isBuiltinUniform(name)) {
+            dumpUniform(json, program, size, type, name);
+        }
     }
 
     delete [] name;
@@ -396,7 +419,9 @@ dumpProgramObjUniforms(JSONWriter &json, GLhandleARB programObj)
         GLenum type = GL_NONE;
         glGetActiveUniformARB(programObj, index, active_uniform_max_length, &length, &size, &type, name);
 
-        dumpUniformARB(json, programObj, size, type, name);
+        if (!isBuiltinUniform(name)) {
+            dumpUniformARB(json, programObj, size, type, name);
+        }
     }
 
     delete [] name;
