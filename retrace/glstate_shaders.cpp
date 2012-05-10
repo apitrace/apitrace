@@ -350,7 +350,7 @@ dumpUniformBlock(JSONWriter &json, GLint program, GLint size, GLenum type, const
             json.endMember();
         }
 
-        glUnmapBuffer(GL_UNIFORM_BUFFER_BINDING);
+        glUnmapBuffer(GL_UNIFORM_BUFFER);
     }
 
     glBindBuffer(GL_UNIFORM_BUFFER, previous_ubo);
