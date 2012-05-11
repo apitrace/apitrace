@@ -278,6 +278,12 @@ class GlRetracer(Retracer):
             print r'        } else {'
             print r'            retrace::warning(call) << "no current context\n";'
             print r'        }'
+
+        if function.name in ('glBindProgramPipeline', 'glBindProgramPipelineEXT'):
+            # Note if glBindProgramPipeline has ever been called
+            print r'    if (pipeline) {'
+            print r'        _pipelineHasBeenBound = true;'
+            print r'    }'
         
         Retracer.invokeFunction(self, function)
 
@@ -399,9 +405,19 @@ class GlRetracer(Retracer):
 
         if arg.type is glapi.GLlocation \
            and 'program' not in function.argNames():
+            # Determine the active program for uniforms swizzling
             print '    GLint program = -1;'
-            print '    glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
-        
+            print '    GLint pipeline = 0;'
+            print '    if (_pipelineHasBeenBound) {'
+            print '        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);'
+            print '    }'
+            print '    if (pipeline) {'
+            print '        glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);'
+            print '    } else {'
+            print '        glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+            print '    }'
+            print
+
         if arg.type is glapi.GLlocationARB \
            and 'programObj' not in function.argNames():
             print '    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);'
@@ -433,6 +449,7 @@ if __name__ == '__main__':
 #include "glstate.hpp"
 
 
+static bool _pipelineHasBeenBound = false;
 '''
     api = glapi.glapi
     api.addApi(glesapi.glesapi)
