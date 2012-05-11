@@ -199,6 +199,11 @@ extern bool debug;
  */
 extern bool profiling;
 
+/**
+ * State dumping.
+ */
+extern bool dumpingState;
+
 
 extern bool doubleBuffer;
 extern bool coreProfile;

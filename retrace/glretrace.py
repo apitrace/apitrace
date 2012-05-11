@@ -285,7 +285,36 @@ class GlRetracer(Retracer):
             print r'        _pipelineHasBeenBound = true;'
             print r'    }'
         
-        Retracer.invokeFunction(self, function)
+        if function.name == 'glCreateShaderProgramv':
+            # When dumping state, break down glCreateShaderProgramv so that the
+            # shader source can be recovered.
+            print r'    if (retrace::dumpingState) {'
+            print r'        GLuint _shader = glCreateShader(type);'
+            print r'        if (_shader) {'
+            print r'            glShaderSource(_shader, count, strings, NULL);'
+            print r'            glCompileShader(_shader);'
+            print r'            const GLuint _program = glCreateProgram();'
+            print r'            if (_program) {'
+            print r'                GLint compiled = GL_FALSE;'
+            print r'                glGetShaderiv(_shader, GL_COMPILE_STATUS, &compiled);'
+            print r'                glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);'
+            print r'                if (compiled) {'
+            print r'                    glAttachShader(_program, _shader);'
+            print r'                    glLinkProgram(_program);'
+            print r'                    //glDetachShader(_program, _shader);'
+            print r'                }'
+            print r'                //append-shader-info-log-to-program-info-log'
+            print r'            }'
+            print r'            //glDeleteShader(_shader);'
+            print r'            _result = _program;'
+            print r'        } else {'
+            print r'            _result = 0;'
+            print r'        }'
+            print r'    } else {'
+            Retracer.invokeFunction(self, function)
+            print r'    }'
+        else:
+            Retracer.invokeFunction(self, function)
 
         # Error checking
         if function.name == "glBegin":

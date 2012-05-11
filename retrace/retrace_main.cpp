@@ -54,6 +54,7 @@ trace::Parser parser;
 int verbosity = 0;
 bool debug = true;
 bool profiling = false;
+bool dumpingState = false;
 
 
 bool doubleBuffer = true;
@@ -210,6 +211,8 @@ usage(const char *argv0) {
 extern "C"
 int main(int argc, char **argv)
 {
+    using namespace retrace;
+
     assert(compareFrequency.empty());
     assert(snapshotFrequency.empty());
 
@@ -242,6 +245,7 @@ int main(int argc, char **argv)
             }
         } else if (!strcmp(arg, "-D")) {
             dumpStateCallNo = atoi(argv[++i]);
+            dumpingState = true;
             retrace::verbosity = -2;
         } else if (!strcmp(arg, "-core")) {
             retrace::coreProfile = true;

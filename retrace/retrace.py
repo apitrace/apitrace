@@ -328,6 +328,7 @@ class Retracer:
 
         self.deserializeArgs(function)
         
+        self.declareRet(function)
         self.invokeFunction(function)
 
         self.swizzleValues(function)
@@ -342,6 +343,7 @@ class Retracer:
 
         self.deserializeArgs(method)
         
+        self.declareRet(method)
         self.invokeInterfaceMethod(interface, method)
 
         self.swizzleValues(method)
@@ -430,10 +432,13 @@ class Retracer:
         visitor = SwizzledValueRegistrator()
         visitor.visit(type, lvalue, rvalue)
 
+    def declareRet(self, function):
+        if function.type is not stdapi.Void:
+            print '    %s _result;' % (function.type)
+
     def invokeFunction(self, function):
         arg_names = ", ".join(function.argNames())
         if function.type is not stdapi.Void:
-            print '    %s _result;' % (function.type)
             print '    _result = %s(%s);' % (function.name, arg_names)
             print '    (void)_result;'
         else:
@@ -450,7 +455,6 @@ class Retracer:
 
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
-            print '    %s _result;' % (method.type)
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
             print '    (void)_result;'
         else:
