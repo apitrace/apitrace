@@ -1,0 +1,19 @@
+diff --git a/thirdparty/khronos/GLES/glext.h b/thirdparty/khronos/GLES/glext.h
+index d591832..90fd2c3 100644
+--- a/thirdparty/khronos/GLES/glext.h
++++ b/thirdparty/khronos/GLES/glext.h
+@@ -1,5 +1,5 @@
+-#ifndef __glext_h_
+-#define __glext_h_
++#ifndef __gles_glext_h_
++#define __gles_glext_h_
+ 
+ /* $Revision: 16481 $ on $Date:: 2012-01-04 10:43:56 -0800 #$ */
+ 
+@@ -1179,5 +1179,5 @@ typedef void (GL_APIENTRYP PFNGLENDTILINGQCOMPROC) (GLbitfield preserveMask);
+ }
+ #endif
+ 
+-#endif /* __glext_h_ */
++#endif /* __gles_glext_h_ */
+ 
