@@ -128,7 +128,7 @@ dumpProgram(JSONWriter &json, GLint program)
     glGetAttachedShaders(program, attached_shaders, &count, shaders);
     std::sort(shaders, shaders + count);
     for (GLsizei i = 0; i < count; ++ i) {
-       getShaderSource(shaderMap, shaders[i]);
+        getShaderSource(shaderMap, shaders[i]);
     }
     delete [] shaders;
 
@@ -657,21 +657,57 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
     }
 }
 
+static void
+dumpProgramUniformsStage(JSONWriter &json, GLint program, const char *stage)
+{
+    if (program) {
+        json.beginMember(stage);
+        json.beginObject();
+        dumpProgramUniforms(json, program);
+        json.endObject();
+        json.endMember();
+    }
+}
 
 void
 dumpShadersUniforms(JSONWriter &json, Context &context)
 {
-    GLint program = 0;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    GLint pipeline = 0;
+    GLint vertex_program = 0;
+    GLint fragment_program = 0;
+    GLint geometry_program = 0;
+    GLint tess_control_program = 0;
+    GLint tess_evaluation_program = 0;
 
+    if (!context.ES) {
+        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
+        if (pipeline) {
+            glGetProgramPipelineiv(pipeline, GL_VERTEX_SHADER, &vertex_program);
+            glGetProgramPipelineiv(pipeline, GL_FRAGMENT_SHADER, &fragment_program);
+            glGetProgramPipelineiv(pipeline, GL_GEOMETRY_SHADER, &geometry_program);
+            glGetProgramPipelineiv(pipeline, GL_TESS_CONTROL_SHADER, &tess_control_program);
+            glGetProgramPipelineiv(pipeline, GL_TESS_EVALUATION_SHADER, &tess_evaluation_program);
+        }
+    }
+
+    GLint program = 0;
     GLhandleARB programObj = 0;
-    if (!context.ES && !program) {
-        programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+    if (!pipeline) {
+        glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+        if (!context.ES && !program) {
+            programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+        }
     }
 
     json.beginMember("shaders");
     json.beginObject();
-    if (program) {
+    if (pipeline) {
+        dumpProgram(json, vertex_program);
+        dumpProgram(json, fragment_program);
+        dumpProgram(json, geometry_program);
+        dumpProgram(json, tess_control_program);
+        dumpProgram(json, tess_evaluation_program);
+    } else if (program) {
         dumpProgram(json, program);
     } else if (programObj) {
         dumpProgramObj(json, programObj);
@@ -684,7 +720,13 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
 
     json.beginMember("uniforms");
     json.beginObject();
-    if (program) {
+    if (pipeline) {
+        dumpProgramUniformsStage(json, vertex_program, "GL_VERTEX_SHADER");
+        dumpProgramUniformsStage(json, fragment_program, "GL_FRAGMENT_SHADER");
+        dumpProgramUniformsStage(json, geometry_program, "GL_GEOMETRY_SHADER");
+        dumpProgramUniformsStage(json, tess_control_program, "GL_TESS_CONTROL_SHADER");
+        dumpProgramUniformsStage(json, tess_evaluation_program, "GL_TESS_EVALUATION_SHADER");
+    } else if (program) {
         dumpProgramUniforms(json, program);
     } else if (programObj) {
         dumpProgramObjUniforms(json, programObj);
