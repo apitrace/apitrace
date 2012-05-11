@@ -202,6 +202,22 @@ endif ()
 # also avoids missing/inconsistent declarations in system headers.
 include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
+if (WIN32 OR APPLE)
+  set (ARCH_SUBDIR)
+else ()
+  execute_process(COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
+    RESULT_VARIABLE DA_RESULT
+    OUTPUT_VARIABLE ARCH_SUBDIR
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  if (DA_RESULT EQUAL 0)
+    if (NOT (ARCH_SUBDIR STREQUAL ""))
+      set (ARCH_SUBDIR ${ARCH_SUBDIR}/)
+    endif()
+  endif()
+endif()
+
 ##############################################################################
 # Installation directories
 
@@ -210,12 +226,14 @@ if (WIN32 OR APPLE)
     # their own
     set (DOC_INSTALL_DIR doc)
     set (LIB_INSTALL_DIR lib)
+    set (SHR_INSTALL_DIR lib)
 else ()
+    set (SHR_INSTALL_DIR share/${CMAKE_PROJECT_NAME})
     set (DOC_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
-    set (LIB_INSTALL_DIR lib/${CMAKE_PROJECT_NAME})
+    set (LIB_INSTALL_DIR lib/${ARCH_SUBDIR}${CMAKE_PROJECT_NAME})
 endif ()
 
-set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
+set (SCRIPTS_INSTALL_DIR ${SHR_INSTALL_DIR}/scripts)
 set (WRAPPER_INSTALL_DIR ${LIB_INSTALL_DIR}/wrappers)
 
 # Expose the binary/install directories to source
