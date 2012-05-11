@@ -306,7 +306,9 @@ class GlRetracer(Retracer):
                 print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
-            if function.name == 'glLinkProgram':
+            if function.name in ('glLinkProgram', 'glCreateShaderProgramv', 'glCreateShaderProgramEXT'):
+                if function.name != 'glLinkProgram':
+                    print r'        GLuint program = _result;'
                 print r'        GLint link_status = 0;'
                 print r'        glGetProgramiv(program, GL_LINK_STATUS, &link_status);'
                 print r'        if (!link_status) {'
