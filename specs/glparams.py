@@ -2248,8 +2248,8 @@ parameters = [
     #("",	X,	1,	"GL_PALETTE8_R5_G6_B5_OES"),	# 0x8B97
     #("",	X,	1,	"GL_PALETTE8_RGBA4_OES"),	# 0x8B98
     #("",	X,	1,	"GL_PALETTE8_RGB5_A1_OES"),	# 0x8B99
-    ("glGet",	I,	1,	"GL_IMPLEMENTATION_COLOR_READ_TYPE"),	# 0x8B9A
-    ("glGet",	I,	1,	"GL_IMPLEMENTATION_COLOR_READ_FORMAT"),	# 0x8B9B
+    ("glGet",	E,	1,	"GL_IMPLEMENTATION_COLOR_READ_TYPE"),	# 0x8B9A
+    ("glGet",	E,	1,	"GL_IMPLEMENTATION_COLOR_READ_FORMAT"),	# 0x8B9B
     #("",	X,	1,	"GL_POINT_SIZE_ARRAY_OES"),	# 0x8B9C
     #("",	X,	1,	"GL_TEXTURE_CROP_RECT_OES"),	# 0x8B9D
     #("",	X,	1,	"GL_MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9E
@@ -2291,13 +2291,13 @@ parameters = [
     #("",	X,	1,	"GL_FRAGMENT_ALPHA_MODULATE_IMG"),	# 0x8C08
     #("",	X,	1,	"GL_ADD_BLEND_IMG"),	# 0x8C09
     #("",	X,	1,	"GL_SGX_BINARY_IMG"),	# 0x8C0A
-    ("",	X,	1,	"GL_TEXTURE_RED_TYPE"),	# 0x8C10
-    ("",	X,	1,	"GL_TEXTURE_GREEN_TYPE"),	# 0x8C11
-    ("",	X,	1,	"GL_TEXTURE_BLUE_TYPE"),	# 0x8C12
-    ("",	X,	1,	"GL_TEXTURE_ALPHA_TYPE"),	# 0x8C13
-    ("",	X,	1,	"GL_TEXTURE_LUMINANCE_TYPE"),	# 0x8C14
-    ("",	X,	1,	"GL_TEXTURE_INTENSITY_TYPE"),	# 0x8C15
-    ("",	X,	1,	"GL_TEXTURE_DEPTH_TYPE"),	# 0x8C16
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_RED_TYPE"),	# 0x8C10
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_GREEN_TYPE"),	# 0x8C11
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_BLUE_TYPE"),	# 0x8C12
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_ALPHA_TYPE"),	# 0x8C13
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_LUMINANCE_TYPE"),	# 0x8C14
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_INTENSITY_TYPE"),	# 0x8C15
+    ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_DEPTH_TYPE"),	# 0x8C16
     ("",	X,	1,	"GL_UNSIGNED_NORMALIZED"),	# 0x8C17
     ("",	X,	1,	"GL_TEXTURE_1D_ARRAY"),	# 0x8C18
     ("",	X,	1,	"GL_PROXY_TEXTURE_1D_ARRAY"),	# 0x8C19
