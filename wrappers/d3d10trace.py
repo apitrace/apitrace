@@ -25,8 +25,19 @@
 
 
 from dlltrace import DllTracer
+from specs import stdapi
 from specs.d3d10misc import d3d10
 
+
+class D3D10Tracer(DllTracer):
+
+    def serializeArgValue(self, function, arg):
+        # Dump shaders as strings
+        if isinstance(arg.type, stdapi.Blob) and arg.name.startswith('pShaderBytecode'):
+            print '    DumpShader(trace::localWriter, %s, %s);' % (arg.name, arg.type.size)
+            return
+
+        DllTracer.serializeArgValue(self, function, arg)
 
 if __name__ == '__main__':
     print '#define INITGUID'
@@ -35,6 +46,7 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     print '#include "d3d10imports.hpp"'
+    print '#include "d3d10shader.hpp"'
     print
-    tracer = DllTracer('d3d10.dll')
+    tracer = D3D10Tracer('d3d10.dll')
     tracer.traceApi(d3d10)

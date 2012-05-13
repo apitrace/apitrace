@@ -130,7 +130,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d10trace MODULE d3d10.def d3d10trace.cpp)
+        add_library (d3d10trace MODULE d3d10.def d3d10trace.cpp d3d10shader.cpp)
         target_link_libraries (d3d10trace
             common
             ${ZLIB_LIBRARIES}
