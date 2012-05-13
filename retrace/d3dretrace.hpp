@@ -26,6 +26,9 @@
 #ifndef _D3DRETRACE_HPP_
 #define _D3DRETRACE_HPP_
 
+
+#include <windows.h>
+
 #include "retrace.hpp"
 
 
@@ -42,6 +45,10 @@ extern IDirect3DDevice9 *pLastDirect3DDevice9;
 
 
 extern const retrace::Entry d3d9_callbacks[];
+
+
+HWND
+createWindow(int width, int height);
 
 
 } /* namespace d3dretrace */

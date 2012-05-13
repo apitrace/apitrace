@@ -149,6 +149,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
         retrace_stdc.cpp
         d3dretrace_main.cpp
         d3dretrace_d3d9.cpp
+        d3dretrace_ws.cpp
         d3dstate.cpp
         d3dstate_images.cpp
     )
