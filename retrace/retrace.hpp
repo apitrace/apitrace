@@ -50,48 +50,6 @@ extern trace::Parser parser;
 
 
 /**
- * Handle map.
- *
- * It is just like a regular std::map<T, T> container, but lookups of missing
- * keys return the key instead of default constructor.
- *
- * This is necessary for several GL named objects, where one can either request
- * the implementation to generate an unique name, or pick a value never used
- * before.
- *
- * XXX: In some cases, instead of returning the key, it would make more sense
- * to return an unused data value (e.g., container count).
- */
-template <class T>
-class map
-{
-private:
-    typedef std::map<T, T> base_type;
-    base_type base;
-
-public:
-
-    T & operator[] (const T &key) {
-        typename base_type::iterator it;
-        it = base.find(key);
-        if (it == base.end()) {
-            return (base[key] = key);
-        }
-        return it->second;
-    }
-    
-    const T & operator[] (const T &key) const {
-        typename base_type::const_iterator it;
-        it = base.find(key);
-        if (it == base.end()) {
-            return (base[key] = key);
-        }
-        return it->second;
-    }
-};
-
-
-/**
  * Similar to alloca(), but implemented with malloc.
  */
 class ScopedAllocator
@@ -172,16 +130,6 @@ public:
         }
     }
 };
-
-
-void
-addRegion(unsigned long long address, void *buffer, unsigned long long size);
-
-void
-delRegionByPointer(void *ptr);
-
-void *
-toPointer(trace::Value &value, bool bind = false);
 
 
 /**

@@ -35,6 +35,7 @@ add_library (retrace_common
     retrace.cpp
     retrace_main.cpp
     retrace_stdc.cpp
+    retrace_swizzle.cpp
 )
 
 target_link_libraries (retrace_common
@@ -145,8 +146,6 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
 
     include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
     add_executable (d3dretrace
-        retrace.cpp
-        retrace_stdc.cpp
         d3dretrace_main.cpp
         d3dretrace_d3d9.cpp
         d3dretrace_ws.cpp

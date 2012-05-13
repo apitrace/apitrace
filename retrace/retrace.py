@@ -470,6 +470,7 @@ class Retracer:
         print '#include "os_time.hpp"'
         print '#include "trace_parser.hpp"'
         print '#include "retrace.hpp"'
+        print '#include "retrace_swizzle.hpp"'
         print
 
         types = api.getAllTypes()

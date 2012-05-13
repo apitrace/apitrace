@@ -25,219 +25,12 @@
 
 
 #include <assert.h>
-
 #include <string.h>
 
+#include <iostream>
 
-
-#include "trace_parser.hpp"
 #include "retrace.hpp"
-
-
-namespace retrace {
-
-struct Region
-{
-    void *buffer;
-    unsigned long long size;
-};
-
-typedef std::map<unsigned long long, Region> RegionMap;
-static RegionMap regionMap;
-
-
-static inline bool
-contains(RegionMap::iterator &it, unsigned long long address) {
-    return it->first <= address && (it->first + it->second.size) > address;
-}
-
-
-static inline bool
-intersects(RegionMap::iterator &it, unsigned long long start, unsigned long long size) {
-    unsigned long it_start = it->first;
-    unsigned long it_stop  = it->first + it->second.size;
-    unsigned long stop = start + size;
-    return it_start < stop && start < it_stop;
-}
-
-
-// Iterator to the first region that contains the address, or the first after
-static RegionMap::iterator
-lowerBound(unsigned long long address) {
-    RegionMap::iterator it = regionMap.lower_bound(address);
-
-    while (it != regionMap.begin()) {
-        RegionMap::iterator pred = it;
-        --pred;
-        if (contains(pred, address)) {
-            it = pred;
-        } else {
-            break;
-        }
-    }
-
-    return it;
-}
-
-// Iterator to the first region that starts after the address
-static RegionMap::iterator
-upperBound(unsigned long long address) {
-    RegionMap::iterator it = regionMap.upper_bound(address);
-
-    return it;
-}
-
-void
-addRegion(unsigned long long address, void *buffer, unsigned long long size)
-{
-    if (retrace::verbosity >= 2) {
-        std::cout
-            << "region "
-            << std::hex
-            << "0x" << address << "-0x" << (address + size)
-            << " -> "
-            << "0x" << (uintptr_t)buffer << "-0x" << ((uintptr_t)buffer + size)
-            << std::dec
-            << "\n";
-    }
-
-    if (!address) {
-        // Ignore NULL pointer
-        assert(!buffer);
-        return;
-    }
-
-#ifndef NDEBUG
-    RegionMap::iterator start = lowerBound(address);
-    RegionMap::iterator stop = upperBound(address + size);
-    if (0) {
-        // Forget all regions that intersect this new one.
-        regionMap.erase(start, stop);
-    } else {
-        for (RegionMap::iterator it = start; it != stop; ++it) {
-            std::cerr << std::hex << "warning: "
-                "region 0x" << address << "-0x" << (address + size) << " "
-                "intersects existing region 0x" << it->first << "-0x" << (it->first + it->second.size) << "\n" << std::dec;
-            assert(intersects(it, address, size));
-        }
-    }
-#endif
-
-    assert(buffer);
-
-    Region region;
-    region.buffer = buffer;
-    region.size = size;
-
-    regionMap[address] = region;
-}
-
-static RegionMap::iterator
-lookupRegion(unsigned long long address) {
-    RegionMap::iterator it = regionMap.lower_bound(address);
-
-    if (it == regionMap.end() ||
-        it->first > address) {
-        if (it == regionMap.begin()) {
-            return regionMap.end();
-        } else {
-            --it;
-        }
-    }
-
-    assert(contains(it, address));
-    return it;
-}
-
-void
-delRegion(unsigned long long address) {
-    RegionMap::iterator it = lookupRegion(address);
-    if (it != regionMap.end()) {
-        regionMap.erase(it);
-    } else {
-        assert(0);
-    }
-}
-
-
-void
-delRegionByPointer(void *ptr) {
-    for (RegionMap::iterator it = regionMap.begin(); it != regionMap.end(); ++it) {
-        if (it->second.buffer == ptr) {
-            regionMap.erase(it);
-            return;
-        }
-    }
-    assert(0);
-}
-
-void *
-lookupAddress(unsigned long long address) {
-    RegionMap::iterator it = lookupRegion(address);
-    if (it != regionMap.end()) {
-        unsigned long long offset = address - it->first;
-        assert(offset < it->second.size);
-        void *addr = (char *)it->second.buffer + offset;
-
-        if (retrace::verbosity >= 2) {
-            std::cout
-                << "region "
-                << std::hex
-                << "0x" << address
-                << " <- "
-                << "0x" << (uintptr_t)addr
-                << std::dec
-                << "\n";
-        }
-
-        return addr;
-    }
-
-    if (retrace::debug && address >= 64 * 1024 * 1024) {
-        /* Likely not an offset, but an address that should had been swizzled */
-        std::cerr << "warning: passing high address 0x" << std::hex << address << std::dec << " as uintptr_t\n";
-    }
-
-    return (void *)(uintptr_t)address;
-}
-
-
-class Translator : protected trace::Visitor
-{
-protected:
-    bool bind;
-
-    void *result;
-
-    void visit(trace::Null *) {
-        result = NULL;
-    }
-
-    void visit(trace::Blob *blob) {
-        result = blob->toPointer(bind);
-    }
-
-    void visit(trace::Pointer *p) {
-        result = lookupAddress(p->value);
-    }
-
-public:
-    Translator(bool _bind) :
-        bind(_bind),
-        result(NULL)
-    {}
-
-    void * operator() (trace::Value *node) {
-        _visit(node);
-        return result;
-    }
-};
-
-
-void *
-toPointer(trace::Value &value, bool bind) {
-    return Translator(bind) (&value);
-}
+#include "retrace_swizzle.hpp"
 
 
 static void retrace_malloc(trace::Call &call) {
@@ -250,17 +43,17 @@ static void retrace_malloc(trace::Call &call) {
 
     void *buffer = malloc(size);
     if (!buffer) {
-        std::cerr << "error: failed to allocated " << size << " bytes.";
+        std::cerr << "error: failed to allocate " << size << " bytes.";
         return;
     }
 
-    addRegion(address, buffer, size);
+    retrace::addRegion(address, buffer, size);
 }
 
 
 static void retrace_memcpy(trace::Call &call) {
-    void * dest = toPointer(call.arg(0));
-    void * src  = toPointer(call.arg(1));
+    void * dest = retrace::toPointer(call.arg(0));
+    void * src  = retrace::toPointer(call.arg(1));
     size_t n    = call.arg(2).toUInt();
 
     if (!dest || !src || !n) {
@@ -271,11 +64,8 @@ static void retrace_memcpy(trace::Call &call) {
 }
 
 
-const retrace::Entry stdc_callbacks[] = {
+const retrace::Entry retrace::stdc_callbacks[] = {
     {"malloc", &retrace_malloc},
     {"memcpy", &retrace_memcpy},
     {NULL, NULL}
 };
-
-
-} /* retrace */
