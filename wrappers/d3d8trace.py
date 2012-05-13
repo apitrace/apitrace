@@ -44,7 +44,7 @@ if __name__ == '__main__':
     print
     print '#include <windows.h>'
     print '#include <d3d8.h>'
-    print '#include "d3dshader.hpp"'
+    print '#include "d3d9shader.hpp"'
     print
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'

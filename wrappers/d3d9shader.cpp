@@ -27,7 +27,7 @@
 
 #include <stdio.h>
 
-#include "d3dshader.hpp"
+#include "d3d9shader.hpp"
 #include "d3d9imports.hpp"
 #include "d3dsize.hpp"
 

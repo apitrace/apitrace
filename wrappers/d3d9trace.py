@@ -77,7 +77,7 @@ if __name__ == '__main__':
     print
     print '#include "d3d9imports.hpp"'
     print '#include "d3dsize.hpp"'
-    print '#include "d3dshader.hpp"'
+    print '#include "d3d9shader.hpp"'
     print
     print '''
 static inline size_t
