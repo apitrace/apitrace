@@ -151,12 +151,7 @@ class ValueDeserializer(stdapi.Visitor):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
 
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        old_lvalue = '(%s).toUIntPtr()' % (rvalue,)
-        new_lvalue = '_obj_map[%s]' % (old_lvalue,)
-        print '    if (retrace::verbosity >= 2) {'
-        print '        std::cout << std::hex << "obj 0x" << size_t(%s) << " <- 0x" << size_t(%s) << std::dec <<"\\n";' % (old_lvalue, new_lvalue)
-        print '    }'
-        print '    %s = static_cast<%s>(%s);' % (lvalue, pointer, new_lvalue)
+        print '    %s = static_cast<%s>(retrace::toObjPointer(%s));' % (lvalue, pointer, rvalue)
 
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
@@ -248,7 +243,7 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         pass
     
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        print r'    _obj_map[(%s).toUIntPtr()] = %s;' % (rvalue, lvalue)
+        print r'    retrace::addObj(%s, %s);' % (rvalue, lvalue)
     
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         assert pointer.size is not None
@@ -362,7 +357,7 @@ class Retracer:
 
     def deserializeThisPointer(self, interface):
         print r'    %s *_this;' % (interface.name,)
-        print r'    _this = static_cast<%s *>(_obj_map[call.arg(0).toUIntPtr()]);' % (interface.name,)
+        print r'    _this = static_cast<%s *>(retrace::toObjPointer(call.arg(0)));' % (interface.name,)
         print r'    if (!_this) {'
         print r'        retrace::warning(call) << "NULL this pointer\n";'
         print r'        return;'
@@ -451,7 +446,7 @@ class Retracer:
             print '    if (call.ret->toUInt()) {'
             print '        return;'
             print '    }'
-            print '    _obj_map.erase(call.arg(0).toUIntPtr());'
+            print '    retrace::delObj(call.arg(0));'
 
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
@@ -484,9 +479,6 @@ class Retracer:
                     key_name, key_type = handle.key
                     print 'static std::map<%s, retrace::map<%s> > _%s_map;' % (key_type, handle.type, handle.name)
                 handle_names.add(handle.name)
-        print
-
-        print 'static std::map<unsigned long long, void *> _obj_map;'
         print
 
         functions = filter(self.filterFunction, api.functions)

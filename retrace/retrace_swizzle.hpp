@@ -87,6 +87,16 @@ void *
 toPointer(trace::Value &value, bool bind = false);
 
 
+void
+addObj(trace::Value &value, void *obj);
+
+void
+delObj(trace::Value &value);
+
+void *
+toObjPointer(trace::Value &value);
+
+
 } /* namespace retrace */
 
 #endif /* _RETRACE_SWIZZLE_HPP_ */

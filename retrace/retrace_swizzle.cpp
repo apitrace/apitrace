@@ -239,4 +239,36 @@ toPointer(trace::Value &value, bool bind) {
 }
 
 
+
+static std::map<unsigned long long, void *> _obj_map;
+
+void
+addObj(trace::Value &value, void *obj) {
+    unsigned long long address = value.toUIntPtr();
+    _obj_map[address] = obj;
+    
+    if (retrace::verbosity >= 2) {
+        std::cout << std::hex << "obj 0x" << address << " -> 0x" << size_t(obj) << std::dec << "\n";
+    }
+}
+
+void
+delObj(trace::Value &value) {
+    unsigned long long address = value.toUIntPtr();
+    _obj_map.erase(address);
+}
+
+void *
+toObjPointer(trace::Value &value) {
+    unsigned long long address = value.toUIntPtr();
+    void *obj = address ? _obj_map[address] : NULL;
+
+    if (retrace::verbosity >= 2) {
+        std::cout << std::hex << "obj 0x" << address << " <- 0x" << size_t(obj) << std::dec << "\n";
+    }
+
+    return obj;
+}
+
+
 } /* retrace */
