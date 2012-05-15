@@ -272,8 +272,10 @@ include_directories (
 if (WIN32)
     set (os os_win32.cpp)
     set (glws_os glws_wgl.cpp)
+    set (workqueue workqueue_win32.cpp)
 else ()
     set (os os_posix.cpp)
+    set (workqueue workqueue_posix.cpp)
     if (APPLE)
         set (glws_os glws_cocoa.mm)
     else ()
@@ -304,6 +306,7 @@ add_library (common STATIC
     common/image_pnm.cpp
     common/image_png.cpp
     common/${os}
+    common/${workqueue}
 )
 
 set_target_properties (common PROPERTIES
