@@ -27,8 +27,10 @@
 #include <string.h>
 #include <iostream>
 
+#include "glws.hpp"
 #include "os_binary.hpp"
 #include "os_time.hpp"
+#include "os_workqueue.hpp"
 #include "image.hpp"
 #include "trace_callset.hpp"
 #include "trace_dump.hpp"
@@ -36,6 +38,7 @@
 
 
 static bool waitOnFinish = false;
+static bool use_threads;
 
 static const char *comparePrefix = NULL;
 static const char *snapshotPrefix = NULL;
@@ -44,6 +47,8 @@ static trace::CallSet compareFrequency;
 
 static unsigned dumpStateCallNo = ~0;
 
+retrace::Retracer retracer;
+
 
 namespace retrace {
 
@@ -51,6 +56,7 @@ namespace retrace {
 trace::Parser parser;
 trace::Profiler profiler;
 
+static std::map<unsigned long, os::WorkQueue *> thread_wq_map;
 
 int verbosity = 0;
 bool debug = true;
@@ -66,7 +72,22 @@ bool profilingPixelsDrawn = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
+static bool state_dumped;
 
+class RenderWork : public os::WorkQueueWork
+{
+	trace::Call *call;
+public:
+	void run(void);
+	RenderWork(trace::Call *_call) { call = _call; }
+	~RenderWork(void) { delete call; }
+};
+
+class FlushGLWork : public os::WorkQueueWork
+{
+public:
+    void run(void) { flushRendering(); }
+};
 
 void
 frameComplete(trace::Call &call) {
@@ -119,57 +140,119 @@ takeSnapshot(unsigned call_no) {
     return;
 }
 
+void RenderWork::run(void)
+{
+    bool swapRenderTarget = call->flags &
+        trace::CALL_FLAG_SWAP_RENDERTARGET;
+    bool doSnapshot = snapshotFrequency.contains(*call) ||
+        compareFrequency.contains(*call);
+
+    if (state_dumped)
+        return;
+
+    // For calls which cause rendertargets to be swaped, we take the
+    // snapshot _before_ swapping the rendertargets.
+    if (doSnapshot && swapRenderTarget) {
+        if (call->flags & trace::CALL_FLAG_END_FRAME) {
+            // For swapbuffers/presents we still use this
+            // call number, spite not have been executed yet.
+            takeSnapshot(call->no);
+        } else {
+            // Whereas for ordinate fbo/rendertarget changes we
+            // use the previous call's number.
+            takeSnapshot(call->no - 1);
+        }
+    }
+
+    callNo = call->no;
+    retracer.retrace(*call);
+
+    if (doSnapshot && !swapRenderTarget)
+        takeSnapshot(call->no);
+
+    if (call->no >= dumpStateCallNo && dumpState(std::cout))
+        state_dumped = true;
+}
+
+static os::WorkQueue *get_work_queue(unsigned long thread_id)
+{
+    os::WorkQueue *thread;
+    std::map<unsigned long, os::WorkQueue *>::iterator it;
+
+    it = thread_wq_map.find(thread_id);
+    if (it == thread_wq_map.end()) {
+        thread = new os::WorkQueue();
+        thread_wq_map[thread_id] = thread;
+    } else {
+        thread = it->second;
+    }
+
+    return thread;
+}
+
+static void exit_work_queues(void)
+{
+    std::map<unsigned long, os::WorkQueue *>::iterator it;
+
+    it = thread_wq_map.begin();
+    while (it != thread_wq_map.end()) {
+        os::WorkQueue *thread_wq = it->second;
+
+        thread_wq->queue_work(new FlushGLWork);
+        thread_wq->flush();
+        thread_wq->destroy();
+        thread_wq_map.erase(it++);
+    }
+}
+
+static void do_all_calls(void)
+{
+    trace::Call *call;
+    int prev_thread_id = -1;
+    os::WorkQueue *thread_wq = NULL;
+
+    while ((call = parser.parse_call())) {
+        RenderWork *render_work = new RenderWork(call);
+
+        if (use_threads) {
+            if (prev_thread_id != call->thread_id) {
+                if (thread_wq)
+                    thread_wq->flush();
+                thread_wq = get_work_queue(call->thread_id);
+                prev_thread_id = call->thread_id;
+            }
+
+            thread_wq->queue_work(render_work);
+        } else {
+            render_work->run();
+            delete render_work;
+        }
+
+        if (state_dumped)
+            break;
+    }
+
+    exit_work_queues();
+}
+
 
 static void
 mainLoop() {
-    retrace::Retracer retracer;
-
     addCallbacks(retracer);
 
     long long startTime = 0; 
     frameNo = 0;
 
     startTime = os::getTime();
-    trace::Call *call;
 
-    while ((call = retrace::parser.parse_call())) {
-        bool swapRenderTarget = call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET;
-        bool doSnapshot =
-            snapshotFrequency.contains(*call) ||
-            compareFrequency.contains(*call)
-        ;
+    do_all_calls();
 
-        // For calls which cause rendertargets to be swaped, we take the
-        // snapshot _before_ swapping the rendertargets.
-        if (doSnapshot && swapRenderTarget) {
-            if (call->flags & trace::CALL_FLAG_END_FRAME) {
-                // For swapbuffers/presents we still use this call number,
-                // spite not have been executed yet.
-                takeSnapshot(call->no);
-            } else {
-                // Whereas for ordinate fbo/rendertarget changes we use the
-                // previous call's number.
-                takeSnapshot(call->no - 1);
-            }
-        }
-
-        callNo = call->no;
-        retracer.retrace(*call);
-
-        if (doSnapshot && !swapRenderTarget) {
-            takeSnapshot(call->no);
-        }
-
-        if (call->no >= dumpStateCallNo &&
-            dumpState(std::cout)) {
-            exit(0);
-        }
-
-        delete call;
-    }
-
-    // Reached the end of trace
-    flushRendering();
+    if (!use_threads)
+        /*
+         * Reached the end of trace; if using threads we do the flush
+         * when exiting the threads.
+         */
+        flushRendering();
 
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
@@ -211,7 +294,8 @@ usage(const char *argv0) {
         "  -S CALLSET   calls to snapshot (default is every frame)\n"
         "  -v           increase output verbosity\n"
         "  -D CALLNO    dump state at specific call no\n"
-        "  -w           waitOnFinish on final frame\n";
+        "  -w           waitOnFinish on final frame\n"
+        "  -t           enable threading\n";
 }
 
 
@@ -289,6 +373,8 @@ int main(int argc, char **argv)
             } else if (!strcmp(arg, "-ppd")) {
                 retrace::profilingPixelsDrawn = true;
             }
+        } else if (!strcmp(arg, "-t")) {
+            use_threads = true;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage(argv[0]);
