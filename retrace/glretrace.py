@@ -363,7 +363,7 @@ class GlRetracer(Retracer):
         # Error checking
         if function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    if (retrace::debug && !glretrace::insideGlBeginEnd) {'
+            print '    if (retrace::debug && !glretrace::insideGlBeginEnd && glretrace::getCurrentContext()) {'
             print '        glretrace::checkGlError(call);'
             if function.name in ('glProgramStringARB', 'glProgramStringNV'):
                 print r'        GLint error_position = -1;'
