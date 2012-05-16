@@ -135,7 +135,7 @@ public:
 class WindowSystem
 {
 public:
-    ~WindowSystem() {}
+    virtual ~WindowSystem() {}
 
     virtual Visual *
     createVisual(bool doubleBuffer = false, gldispatch::Profile profile = gldispatch::PROFILE_COMPAT) = 0;
