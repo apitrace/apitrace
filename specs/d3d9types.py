@@ -729,8 +729,8 @@ D3DFORMAT = Enum("D3DFORMAT", [
     "D3DFMT_BINARYBUFFER",
 
     # Unofficial formats
-    "D3DFMT_ATI1",
-    "D3DFMT_ATI2",
+    "D3DFMT_ATI1N",
+    "D3DFMT_ATI2N",
     "D3DFMT_AYUV",
     "D3DFMT_DF16",
     "D3DFMT_DF24",
@@ -926,7 +926,7 @@ D3DVOLUME_DESC = Struct("D3DVOLUME_DESC", [
 
 D3DLOCKED_RECT = Struct("D3DLOCKED_RECT", [
     (INT, "Pitch"),
-    (OpaquePointer(Void), "pBits"),
+    (LinearPointer(Void, "_LockedSize"), "pBits"),
 ])
 
 D3DBOX = Struct("D3DBOX", [
@@ -941,7 +941,7 @@ D3DBOX = Struct("D3DBOX", [
 D3DLOCKED_BOX = Struct("D3DLOCKED_BOX", [
     (INT, "RowPitch"),
     (INT, "SlicePitch"),
-    (OpaquePointer(Void), "pBits"),
+    (LinearPointer(Void, "_LockedSize"), "pBits"),
 ])
 
 D3DRANGE = Struct("D3DRANGE", [

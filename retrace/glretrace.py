@@ -278,8 +278,43 @@ class GlRetracer(Retracer):
             print r'        } else {'
             print r'            retrace::warning(call) << "no current context\n";'
             print r'        }'
+
+        if function.name in ('glBindProgramPipeline', 'glBindProgramPipelineEXT'):
+            # Note if glBindProgramPipeline has ever been called
+            print r'    if (pipeline) {'
+            print r'        _pipelineHasBeenBound = true;'
+            print r'    }'
         
-        Retracer.invokeFunction(self, function)
+        if function.name == 'glCreateShaderProgramv':
+            # When dumping state, break down glCreateShaderProgramv so that the
+            # shader source can be recovered.
+            print r'    if (retrace::dumpingState) {'
+            print r'        GLuint _shader = glCreateShader(type);'
+            print r'        if (_shader) {'
+            print r'            glShaderSource(_shader, count, strings, NULL);'
+            print r'            glCompileShader(_shader);'
+            print r'            const GLuint _program = glCreateProgram();'
+            print r'            if (_program) {'
+            print r'                GLint compiled = GL_FALSE;'
+            print r'                glGetShaderiv(_shader, GL_COMPILE_STATUS, &compiled);'
+            print r'                glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);'
+            print r'                if (compiled) {'
+            print r'                    glAttachShader(_program, _shader);'
+            print r'                    glLinkProgram(_program);'
+            print r'                    //glDetachShader(_program, _shader);'
+            print r'                }'
+            print r'                //append-shader-info-log-to-program-info-log'
+            print r'            }'
+            print r'            //glDeleteShader(_shader);'
+            print r'            _result = _program;'
+            print r'        } else {'
+            print r'            _result = 0;'
+            print r'        }'
+            print r'    } else {'
+            Retracer.invokeFunction(self, function)
+            print r'    }'
+        else:
+            Retracer.invokeFunction(self, function)
 
         # Error checking
         if function.name == "glBegin":
@@ -306,7 +341,9 @@ class GlRetracer(Retracer):
                 print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
-            if function.name == 'glLinkProgram':
+            if function.name in ('glLinkProgram', 'glCreateShaderProgramv', 'glCreateShaderProgramEXT'):
+                if function.name != 'glLinkProgram':
+                    print r'        GLuint program = _result;'
                 print r'        GLint link_status = 0;'
                 print r'        glGetProgramiv(program, GL_LINK_STATUS, &link_status);'
                 print r'        if (!link_status) {'
@@ -397,9 +434,19 @@ class GlRetracer(Retracer):
 
         if arg.type is glapi.GLlocation \
            and 'program' not in function.argNames():
+            # Determine the active program for uniforms swizzling
             print '    GLint program = -1;'
-            print '    glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
-        
+            print '    GLint pipeline = 0;'
+            print '    if (_pipelineHasBeenBound) {'
+            print '        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);'
+            print '    }'
+            print '    if (pipeline) {'
+            print '        glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);'
+            print '    } else {'
+            print '        glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+            print '    }'
+            print
+
         if arg.type is glapi.GLlocationARB \
            and 'programObj' not in function.argNames():
             print '    GLhandleARB programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);'
@@ -431,6 +478,7 @@ if __name__ == '__main__':
 #include "glstate.hpp"
 
 
+static bool _pipelineHasBeenBound = false;
 '''
     api = glapi.glapi
     api.addApi(glesapi.glesapi)

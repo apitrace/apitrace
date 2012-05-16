@@ -69,7 +69,7 @@ findScript(const char *scriptFilename)
 
 #ifndef _WIN32
     // Try absolute install directory
-    scriptPath = APITRACE_WRAPPER_INSTALL_DIR;
+    scriptPath = APITRACE_SCRIPTS_INSTALL_DIR;
     scriptPath.join(scriptFilename);
     if (scriptPath.exists()) {
         return scriptPath;

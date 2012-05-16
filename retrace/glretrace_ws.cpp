@@ -191,7 +191,7 @@ updateDrawable(int width, int height) {
         return;
     }
 
-    if (!currentDrawable->visible &&
+    if (currentDrawable->visible &&
         width  <= currentDrawable->width &&
         height <= currentDrawable->height) {
         return;

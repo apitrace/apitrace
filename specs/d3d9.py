@@ -30,13 +30,13 @@ from d3d9types import *
 from d3d9caps import *
 
 
-D3DSHADER9 = OpaquePointer(Const(DWORD))
+D3DSHADER9 = Blob(Const(DWORD), "_shaderSize(pFunction)")
 
 D3DSPD = Flags(DWORD, [
     "D3DSPD_IUNKNOWN",
 ])
 
-D3DADAPTER = FakeEnum(DWORD, [
+D3DADAPTER = FakeEnum(UINT, [
     "D3DADAPTER_DEFAULT",
 ])
 
@@ -138,18 +138,18 @@ PDIRECT3DSWAPCHAIN9EX = ObjPointer(IDirect3DSwapChain9Ex)
 IDirect3D9.methods += [
     Method(HRESULT, "RegisterSoftwareDevice", [(OpaquePointer(Void), "pInitializeFunction")], sideeffects=False),
     Method(UINT, "GetAdapterCount", [], sideeffects=False),
-    Method(HRESULT, "GetAdapterIdentifier", [(UINT, "Adapter"), (D3DENUM, "Flags"), Out(Pointer(D3DADAPTER_IDENTIFIER9), "pIdentifier")], sideeffects=False),
-    Method(UINT, "GetAdapterModeCount", [(UINT, "Adapter"), (D3DFORMAT, "Format")], sideeffects=False),
-    Method(HRESULT, "EnumAdapterModes", [(UINT, "Adapter"), (D3DFORMAT, "Format"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODE), "pMode")], sideeffects=False),
-    Method(HRESULT, "GetAdapterDisplayMode", [(UINT, "Adapter"), Out(Pointer(D3DDISPLAYMODE), "pMode")], sideeffects=False),
-    Method(HRESULT, "CheckDeviceType", [(UINT, "Adapter"), (D3DDEVTYPE, "DevType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "BackBufferFormat"), (BOOL, "bWindowed")], sideeffects=False),
-    Method(HRESULT, "CheckDeviceFormat", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DUSAGE, "Usage"), (D3DRESOURCETYPE, "RType"), (D3DFORMAT, "CheckFormat")], sideeffects=False),
-    Method(HRESULT, "CheckDeviceMultiSampleType", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "SurfaceFormat"), (BOOL, "Windowed"), (D3DMULTISAMPLE_TYPE, "MultiSampleType"), Out(Pointer(DWORD), "pQualityLevels")], sideeffects=False),
-    Method(HRESULT, "CheckDepthStencilMatch", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "RenderTargetFormat"), (D3DFORMAT, "DepthStencilFormat")], sideeffects=False),
-    Method(HRESULT, "CheckDeviceFormatConversion", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "SourceFormat"), (D3DFORMAT, "TargetFormat")], sideeffects=False),
-    Method(HRESULT, "GetDeviceCaps", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), Out(Pointer(D3DCAPS9), "pCaps")], sideeffects=False),
-    Method(HMONITOR, "GetAdapterMonitor", [(UINT, "Adapter")], sideeffects=False),
-    Method(HRESULT, "CreateDevice", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DDEVICE9), "ppReturnedDeviceInterface")]),
+    Method(HRESULT, "GetAdapterIdentifier", [(D3DADAPTER, "Adapter"), (D3DENUM, "Flags"), Out(Pointer(D3DADAPTER_IDENTIFIER9), "pIdentifier")], sideeffects=False),
+    Method(UINT, "GetAdapterModeCount", [(D3DADAPTER, "Adapter"), (D3DFORMAT, "Format")], sideeffects=False),
+    Method(HRESULT, "EnumAdapterModes", [(D3DADAPTER, "Adapter"), (D3DFORMAT, "Format"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODE), "pMode")], sideeffects=False),
+    Method(HRESULT, "GetAdapterDisplayMode", [(D3DADAPTER, "Adapter"), Out(Pointer(D3DDISPLAYMODE), "pMode")], sideeffects=False),
+    Method(HRESULT, "CheckDeviceType", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DevType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "BackBufferFormat"), (BOOL, "bWindowed")], sideeffects=False),
+    Method(HRESULT, "CheckDeviceFormat", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DUSAGE, "Usage"), (D3DRESOURCETYPE, "RType"), (D3DFORMAT, "CheckFormat")], sideeffects=False),
+    Method(HRESULT, "CheckDeviceMultiSampleType", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "SurfaceFormat"), (BOOL, "Windowed"), (D3DMULTISAMPLE_TYPE, "MultiSampleType"), Out(Pointer(DWORD), "pQualityLevels")], sideeffects=False),
+    Method(HRESULT, "CheckDepthStencilMatch", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "RenderTargetFormat"), (D3DFORMAT, "DepthStencilFormat")], sideeffects=False),
+    Method(HRESULT, "CheckDeviceFormatConversion", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "SourceFormat"), (D3DFORMAT, "TargetFormat")], sideeffects=False),
+    Method(HRESULT, "GetDeviceCaps", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), Out(Pointer(D3DCAPS9), "pCaps")], sideeffects=False),
+    Method(HMONITOR, "GetAdapterMonitor", [(D3DADAPTER, "Adapter")], sideeffects=False),
+    Method(HRESULT, "CreateDevice", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DDEVICE9), "ppReturnedDeviceInterface")]),
 ]
 
 IDirect3DDevice9.methods += [
@@ -347,13 +347,13 @@ IDirect3DCubeTexture9.methods += [
 ]
 
 IDirect3DVertexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "SizeToLock")), "ppbData"), (D3DLOCK, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_LockedSize")), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 IDirect3DIndexBuffer9.methods += [
-    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "SizeToLock")), "ppbData"), (D3DLOCK, "Flags")]),
+    Method(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_LockedSize")), "ppbData"), (D3DLOCK, "Flags")]),
     Method(HRESULT, "Unlock", []),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DINDEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
@@ -383,15 +383,15 @@ IDirect3DQuery9.methods += [
     Method(D3DQUERYTYPE, "GetType", [], sideeffects=False),
     Method(DWORD, "GetDataSize", [], sideeffects=False),
     Method(HRESULT, "Issue", [(D3DISSUE, "dwIssueFlags")]),
-    Method(HRESULT, "GetData", [Out(Blob(Void, "dwSize"), "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")]),
+    Method(HRESULT, "GetData", [Out(Blob(Void, "dwSize"), "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")], sideeffects=False),
 ]
 
 IDirect3D9Ex.methods += [
-    Method(UINT, "GetAdapterModeCountEx", [(UINT, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter") ], sideeffects=False),
-    Method(HRESULT, "EnumAdapterModesEx", [(UINT, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODEEX), "pMode")], sideeffects=False),
-    Method(HRESULT, "GetAdapterDisplayModeEx", [(UINT, "Adapter"), Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
-    Method(HRESULT, "CreateDeviceEx", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode"), Out(Pointer(PDIRECT3DDEVICE9EX), "ppReturnedDeviceInterface")]),
-    Method(HRESULT, "GetAdapterLUID", [(UINT, "Adapter"), Out(Pointer(LUID), "pLUID")], sideeffects=False),
+    Method(UINT, "GetAdapterModeCountEx", [(D3DADAPTER, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter") ], sideeffects=False),
+    Method(HRESULT, "EnumAdapterModesEx", [(D3DADAPTER, "Adapter"), (ConstPointer(D3DDISPLAYMODEFILTER), "pFilter"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODEEX), "pMode")], sideeffects=False),
+    Method(HRESULT, "GetAdapterDisplayModeEx", [(D3DADAPTER, "Adapter"), Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
+    Method(HRESULT, "CreateDeviceEx", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(D3DDISPLAYMODEEX), "pFullscreenDisplayMode"), Out(Pointer(PDIRECT3DDEVICE9EX), "ppReturnedDeviceInterface")]),
+    Method(HRESULT, "GetAdapterLUID", [(D3DADAPTER, "Adapter"), Out(Pointer(LUID), "pLUID")], sideeffects=False),
 ]
 
 IDirect3DDevice9Ex.methods += [

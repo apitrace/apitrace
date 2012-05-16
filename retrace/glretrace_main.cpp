@@ -90,7 +90,7 @@ void frame_complete(trace::Call &call) {
         return;
     }
 
-    if (!currentDrawable->visible) {
+    if (retrace::debug && !currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
 }

@@ -54,6 +54,7 @@ trace::Parser parser;
 int verbosity = 0;
 bool debug = true;
 bool profiling = false;
+bool dumpingState = false;
 
 
 bool doubleBuffer = true;
@@ -122,6 +123,7 @@ mainLoop() {
     addCallbacks(retracer);
 
     long long startTime = 0; 
+    frameNo = 0;
 
     startTime = os::getTime();
     trace::Call *call;
@@ -177,7 +179,7 @@ mainLoop() {
     if (waitOnFinish) {
         waitForInput();
     } else {
-        exit(0);
+        return;
     }
 }
 
@@ -188,7 +190,7 @@ mainLoop() {
 static void
 usage(const char *argv0) {
     std::cout << 
-        "Usage: " << argv0 << " [OPTION] TRACE\n"
+        "Usage: " << argv0 << " [OPTION] TRACE [...]\n"
         "Replay TRACE.\n"
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
@@ -209,6 +211,8 @@ usage(const char *argv0) {
 extern "C"
 int main(int argc, char **argv)
 {
+    using namespace retrace;
+
     assert(compareFrequency.empty());
     assert(snapshotFrequency.empty());
 
@@ -241,6 +245,7 @@ int main(int argc, char **argv)
             }
         } else if (!strcmp(arg, "-D")) {
             dumpStateCallNo = atoi(argv[++i]);
+            dumpingState = true;
             retrace::verbosity = -2;
         } else if (!strcmp(arg, "-core")) {
             retrace::coreProfile = true;
@@ -289,7 +294,8 @@ int main(int argc, char **argv)
         retrace::parser.close();
     }
 
-    retrace::cleanUp();
+    // XXX: X often hangs on XCloseDisplay
+    //retrace::cleanUp();
 
     return 0;
 }

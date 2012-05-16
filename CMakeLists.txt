@@ -70,7 +70,7 @@ include (CheckCXXCompilerFlag)
 
 if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
-    add_definitions (-D_WIN32_WINNT=0x0500 -DWINVER=0x0500)
+    add_definitions (-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
@@ -202,21 +202,37 @@ endif ()
 # also avoids missing/inconsistent declarations in system headers.
 include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
+
 ##############################################################################
 # Installation directories
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    # Debian multiarch support
+    execute_process(COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
+        OUTPUT_VARIABLE ARCH_SUBDIR
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+endif()
 
 if (WIN32 OR APPLE)
     # On Windows/MacOSX, applications are usually installed on a directory of
     # their own
     set (DOC_INSTALL_DIR doc)
     set (LIB_INSTALL_DIR lib)
+    set (LIB_ARCH_INSTALL_DIR lib)
 else ()
     set (DOC_INSTALL_DIR share/doc/${CMAKE_PROJECT_NAME})
     set (LIB_INSTALL_DIR lib/${CMAKE_PROJECT_NAME})
+    if (ARCH_SUBDIR)
+        set (LIB_ARCH_INSTALL_DIR lib/${ARCH_SUBDIR}/${CMAKE_PROJECT_NAME})
+    else ()
+        set (LIB_ARCH_INSTALL_DIR lib/${CMAKE_PROJECT_NAME})
+    endif ()
 endif ()
 
-set(SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
-set(WRAPPER_INSTALL_DIR ${LIB_INSTALL_DIR}/wrappers)
+set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
+set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 
 # Expose the binary/install directories to source
 #
@@ -226,7 +242,8 @@ set(WRAPPER_INSTALL_DIR ${LIB_INSTALL_DIR}/wrappers)
 add_definitions(
     -DAPITRACE_BINARY_DIR="${CMAKE_BINARY_DIR}"
     -DAPITRACE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
-    -DAPITRACE_WRAPPER_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
+    -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
+    -DAPITRACE_WRAPPERS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
 )
 
 

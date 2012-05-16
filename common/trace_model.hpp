@@ -320,6 +320,35 @@ public:
 };
 
 
+class Repr : public Value
+{
+public:
+    Repr(Value *human, Value *machine) :
+        humanValue(human),
+        machineValue(machine)
+    {}
+
+    /** Human-readible value */
+    Value *humanValue;
+
+    /** Machine-readible value */
+    Value *machineValue;
+    
+    virtual bool toBool(void) const;
+    virtual signed long long toSInt(void) const;
+    virtual unsigned long long toUInt(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
+
+    virtual void *toPointer(void) const;
+    virtual void *toPointer(bool bind);
+    virtual unsigned long long toUIntPtr(void) const;
+    virtual const char *toString(void) const;
+
+    void visit(Visitor &visitor);
+};
+
+
 class Visitor
 {
 public:
@@ -336,6 +365,7 @@ public:
     virtual void visit(Array *);
     virtual void visit(Blob *);
     virtual void visit(Pointer *);
+    virtual void visit(Repr *);
 
 protected:
     inline void _visit(Value *value) {

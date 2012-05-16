@@ -5,9 +5,11 @@ and their authors see the git history.
 Development
 ===========
 
-* Support to trace in Android
+* Support to trace in Android.
 
-* Show frame thumbnails in the GUI
+* Show frame thumbnails in the GUI.
+
+* Basic D3D 10.1, 11, and 11.1 trace support.
 
 
 Version 3.0

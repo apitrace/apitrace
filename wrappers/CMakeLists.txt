@@ -64,7 +64,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d8trace MODULE d3d8.def d3d8trace.cpp d3dshader.cpp)
+        add_library (d3d8trace MODULE d3d8.def d3d8trace.cpp d3d9shader.cpp)
         target_link_libraries (d3d8trace
             common
             ${ZLIB_LIBRARIES}
@@ -94,7 +94,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d9trace MODULE d3d9.def d3d9trace.cpp d3dshader.cpp)
+        add_library (d3d9trace MODULE d3d9.def d3d9trace.cpp d3d9shader.cpp)
         target_link_libraries (d3d9trace
             common
             ${ZLIB_LIBRARIES}
@@ -108,8 +108,8 @@ if (WIN32)
     endif ()
 
     # d3d10.dll
-    if (DirectX_D3DX10_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3DX10_INCLUDE_DIR})
+    if (DirectX_D3D10_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d10trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
@@ -118,9 +118,11 @@ if (WIN32)
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10shader.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10effect.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
@@ -128,7 +130,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d10trace MODULE d3d10.def d3d10trace.cpp)
+        add_library (d3d10trace MODULE d3d10.def d3d10trace.cpp d3d10shader.cpp)
         target_link_libraries (d3d10trace
             common
             ${ZLIB_LIBRARIES}
@@ -142,7 +144,7 @@ if (WIN32)
     endif ()
 
     # d3d10_1.dll
-    if (DirectX_D3DX10_INCLUDE_DIR AND DirectX_D3D10_1_INCLUDE_DIR)
+    if (DirectX_D3D10_1_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d10_1trace.cpp
@@ -176,15 +178,22 @@ if (WIN32)
     endif ()
 
     # d3d11.dll
-    if (DirectX_D3DX11_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3DX11_INCLUDE_DIR})
+    if (DirectX_D3D11_INCLUDE_DIR)
+        if (DirectX_D3D11_1_INCLUDE_DIR)
+            set (HAVE_D3D11_1 1)
+        else ()
+            set (HAVE_D3D11_1 0)
+        endif ()
+
+        include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d11trace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d11trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11trace.py ${HAVE_D3D11_1} > ${CMAKE_CURRENT_BINARY_DIR}/d3d11trace.cpp
             DEPENDS
                 d3d11trace.py
                 dlltrace.py
                 trace.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11_1.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py

@@ -1,7 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
- * Copyright 2008-2009 VMware, Inc.
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,15 +23,21 @@
  *
  **************************************************************************/
 
-#ifndef _D3DSHADER_HPP_
-#define _D3DSHADER_HPP_
+/*
+ * Central place for all D3D10 includes, and respective OS dependent headers.
+ */
+
+#ifndef _D3D10_1IMPORTS_HPP_
+#define _D3D10_1IMPORTS_HPP_
 
 
 #include <windows.h>
 
-#include "trace_writer.hpp"
+#include "compat.h"
 
-void DumpShader(trace::Writer &writer, const DWORD *tokens);
+#include <d3d10_1.h>
+
+#include "d3derr.hpp"
 
 
-#endif /* _D3DSHADER_HPP_ */
+#endif /* _D3D10_1IMPORTS_HPP_ */

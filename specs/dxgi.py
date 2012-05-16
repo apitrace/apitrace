@@ -44,11 +44,10 @@ IDXGIDevice1 = Interface("IDXGIDevice1", IDXGIDevice)
 
 
 DXGI_USAGE = Flags(UINT, [
-    "DXGI_CPU_ACCESS_FIELD",
-    "DXGI_CPU_ACCESS_NONE",
-    "DXGI_CPU_ACCESS_DYNAMIC",
-    "DXGI_CPU_ACCESS_READ_WRITE",
-    "DXGI_CPU_ACCESS_SCRATCH",
+    "DXGI_CPU_ACCESS_NONE", # 0
+    "DXGI_CPU_ACCESS_SCRATCH", # 3
+    "DXGI_CPU_ACCESS_DYNAMIC", # 1
+    "DXGI_CPU_ACCESS_READ_WRITE", # 2
     "DXGI_USAGE_SHADER_INPUT",
     "DXGI_USAGE_RENDER_TARGET_OUTPUT",
     "DXGI_USAGE_BACK_BUFFER",
@@ -139,9 +138,9 @@ DXGI_SWAP_CHAIN_DESC = Struct("DXGI_SWAP_CHAIN_DESC", [
 ])
 
 IDXGIObject.methods += [
-    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "Name"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
-    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "Name"), (OpaquePointer(Const(IUnknown)), "pUnknown")]),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "Name"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")]),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "Name"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "Name"), (OpaquePointer(Const(IUnknown)), "pUnknown")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "Name"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
     StdMethod(HRESULT, "GetParent", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppParent")]),
 ]
 
@@ -151,9 +150,9 @@ IDXGIDeviceSubObject.methods += [
 
 IDXGIResource.methods += [
     StdMethod(HRESULT, "GetSharedHandle", [Out(Pointer(HANDLE), "pSharedHandle")]),
-    StdMethod(HRESULT, "GetUsage", [Out(Pointer(DXGI_USAGE), "pUsage")]),
+    StdMethod(HRESULT, "GetUsage", [Out(Pointer(DXGI_USAGE), "pUsage")], sideeffects=False),
     StdMethod(HRESULT, "SetEvictionPriority", [(DXGI_RESOURCE_PRIORITY, "EvictionPriority")]),
-    StdMethod(HRESULT, "GetEvictionPriority", [Out(Pointer(DXGI_RESOURCE_PRIORITY), "pEvictionPriority")]),
+    StdMethod(HRESULT, "GetEvictionPriority", [Out(Pointer(DXGI_RESOURCE_PRIORITY), "pEvictionPriority")], sideeffects=False),
 ]
 
 IDXGIKeyedMutex.methods += [
@@ -168,7 +167,7 @@ DXGI_MAP = Flags(UINT, [
 ])
 
 IDXGISurface.methods += [
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SURFACE_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SURFACE_DESC), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "Map", [Out(Pointer(DXGI_MAPPED_RECT), "pLockedRect"), (DXGI_MAP, "MapFlags")]),
     StdMethod(HRESULT, "Unmap", []),
 ]
@@ -180,8 +179,8 @@ IDXGISurface1.methods += [
 
 IDXGIAdapter.methods += [
     StdMethod(HRESULT, "EnumOutputs", [(UINT, "Output"), Out(Pointer(ObjPointer(IDXGIOutput)), "ppOutput")]),
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_ADAPTER_DESC), "pDesc")]),
-    StdMethod(HRESULT, "CheckInterfaceSupport", [(REFGUID, "InterfaceName"), Out(Pointer(LARGE_INTEGER), "pUMDVersion")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_ADAPTER_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "CheckInterfaceSupport", [(REFGUID, "InterfaceName"), Out(Pointer(LARGE_INTEGER), "pUMDVersion")], sideeffects=False),
 ]
 
 DXGI_ENUM_MODES = Flags(UINT, [
@@ -190,18 +189,18 @@ DXGI_ENUM_MODES = Flags(UINT, [
 ])
 
 IDXGIOutput.methods += [
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_OUTPUT_DESC), "pDesc")]),
-    StdMethod(HRESULT, "GetDisplayModeList", [(DXGI_FORMAT, "EnumFormat"), (DXGI_ENUM_MODES, "Flags"), Out(Pointer(UINT), "pNumModes"), Out(Array(DXGI_MODE_DESC, "*pNumModes"), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_OUTPUT_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "GetDisplayModeList", [(DXGI_FORMAT, "EnumFormat"), (DXGI_ENUM_MODES, "Flags"), Out(Pointer(UINT), "pNumModes"), Out(Array(DXGI_MODE_DESC, "*pNumModes"), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "FindClosestMatchingMode", [(Pointer(Const(DXGI_MODE_DESC)), "pModeToMatch"), Out(Pointer(DXGI_MODE_DESC), "pClosestMatch"), (ObjPointer(IUnknown), "pConcernedDevice")]),
     StdMethod(HRESULT, "WaitForVBlank", []),
     StdMethod(HRESULT, "TakeOwnership", [(ObjPointer(IUnknown), "pDevice"), (BOOL, "Exclusive")]),
     StdMethod(Void, "ReleaseOwnership", []),
     StdMethod(HRESULT, "GetGammaControlCapabilities", [Out(Pointer(DXGI_GAMMA_CONTROL_CAPABILITIES), "pGammaCaps")]),
     StdMethod(HRESULT, "SetGammaControl", [(Pointer(Const(DXGI_GAMMA_CONTROL)), "pArray")]),
-    StdMethod(HRESULT, "GetGammaControl", [Out(Pointer(DXGI_GAMMA_CONTROL), "pArray")]),
+    StdMethod(HRESULT, "GetGammaControl", [Out(Pointer(DXGI_GAMMA_CONTROL), "pArray")], sideeffects=False),
     StdMethod(HRESULT, "SetDisplaySurface", [(ObjPointer(IDXGISurface), "pScanoutSurface")]),
     StdMethod(HRESULT, "GetDisplaySurfaceData", [(ObjPointer(IDXGISurface), "pDestination")]),
-    StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")]),
+    StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
 ]
 
 DXGI_PRESENT = Flags(UINT, [
@@ -215,12 +214,12 @@ IDXGISwapChain.methods += [
     StdMethod(HRESULT, "GetBuffer", [(UINT, "Buffer"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppSurface")]),
     StdMethod(HRESULT, "SetFullscreenState", [(BOOL, "Fullscreen"), (ObjPointer(IDXGIOutput), "pTarget")]),
     StdMethod(HRESULT, "GetFullscreenState", [Out(Pointer(BOOL), "pFullscreen"), Out(Pointer(ObjPointer(IDXGIOutput)), "ppTarget")]),
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "ResizeBuffers", [(UINT, "BufferCount"), (UINT, "Width"), (UINT, "Height"), (DXGI_FORMAT, "NewFormat"), (UINT, "SwapChainFlags")]),
     StdMethod(HRESULT, "ResizeTarget", [(Pointer(Const(DXGI_MODE_DESC)), "pNewTargetParameters")]),
     StdMethod(HRESULT, "GetContainingOutput", [Out(Pointer(ObjPointer(IDXGIOutput)), "ppOutput")]),
-    StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")]),
-    StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")]),
+    StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
+    StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
 ]
 
 DXGI_MWA = Flags(UINT, [
@@ -233,7 +232,7 @@ DXGI_MWA = Flags(UINT, [
 IDXGIFactory.methods += [
     StdMethod(HRESULT, "EnumAdapters", [(UINT, "Adapter"), Out(Pointer(ObjPointer(IDXGIAdapter)), "ppAdapter")]),
     StdMethod(HRESULT, "MakeWindowAssociation", [(HWND, "WindowHandle"), (DXGI_MWA, "Flags")]),
-    StdMethod(HRESULT, "GetWindowAssociation", [Out(Pointer(HWND), "pWindowHandle")]),
+    StdMethod(HRESULT, "GetWindowAssociation", [Out(Pointer(HWND), "pWindowHandle")], sideeffects=False),
     StdMethod(HRESULT, "CreateSwapChain", [(ObjPointer(IUnknown), "pDevice"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc"), Out(Pointer(ObjPointer(IDXGISwapChain)), "ppSwapChain")]),
     StdMethod(HRESULT, "CreateSoftwareAdapter", [(HMODULE, "Module"), Out(Pointer(ObjPointer(IDXGIAdapter)), "ppAdapter")]),
 ]
@@ -241,9 +240,9 @@ IDXGIFactory.methods += [
 IDXGIDevice.methods += [
     StdMethod(HRESULT, "GetAdapter", [Out(Pointer(ObjPointer(IDXGIAdapter)), "pAdapter")]),
     StdMethod(HRESULT, "CreateSurface", [(Pointer(Const(DXGI_SURFACE_DESC)), "pDesc"), (UINT, "NumSurfaces"), (DXGI_USAGE, "Usage"), (Pointer(Const(DXGI_SHARED_RESOURCE)), "pSharedResource"), Out(Pointer(ObjPointer(IDXGISurface)), "ppSurface")]),
-    StdMethod(HRESULT, "QueryResourceResidency", [(Array(Const(ObjPointer(IUnknown)), "NumResources"), "ppResources"), Out(Array(DXGI_RESIDENCY, "NumResources"), "pResidencyStatus"), (UINT, "NumResources")]),
+    StdMethod(HRESULT, "QueryResourceResidency", [(Array(Const(ObjPointer(IUnknown)), "NumResources"), "ppResources"), Out(Array(DXGI_RESIDENCY, "NumResources"), "pResidencyStatus"), (UINT, "NumResources")], sideeffects=False),
     StdMethod(HRESULT, "SetGPUThreadPriority", [(INT, "Priority")]),
-    StdMethod(HRESULT, "GetGPUThreadPriority", [Out(Pointer(INT), "pPriority")]),
+    StdMethod(HRESULT, "GetGPUThreadPriority", [Out(Pointer(INT), "pPriority")], sideeffects=False),
 ]
 
 DXGI_ADAPTER_FLAG = Enum("DXGI_ADAPTER_FLAG", [
@@ -275,12 +274,12 @@ IDXGIFactory1.methods += [
 ]
 
 IDXGIAdapter1.methods += [
-    StdMethod(HRESULT, "GetDesc1", [Out(Pointer(DXGI_ADAPTER_DESC1), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc1", [Out(Pointer(DXGI_ADAPTER_DESC1), "pDesc")], sideeffects=False),
 ]
 
 IDXGIDevice1.methods += [
     StdMethod(HRESULT, "SetMaximumFrameLatency", [(UINT, "MaxLatency")]),
-    StdMethod(HRESULT, "GetMaximumFrameLatency", [Out(Pointer(UINT), "pMaxLatency")]),
+    StdMethod(HRESULT, "GetMaximumFrameLatency", [Out(Pointer(UINT), "pMaxLatency")], sideeffects=False),
 ]
 
 dxgi = API('dxgi')

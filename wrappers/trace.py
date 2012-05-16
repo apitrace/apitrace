@@ -300,7 +300,7 @@ class ValueWrapper(stdapi.Traverser):
         if isinstance(elem_type, stdapi.Interface):
             self.visitInterfacePointer(elem_type, instance)
         else:
-            self.visitPointer(self, pointer, instance)
+            self.visitPointer(pointer, instance)
     
     def visitInterface(self, interface, instance):
         raise NotImplementedError
@@ -388,7 +388,14 @@ class Tracer:
         self.footer(api)
 
     def header(self, api):
-        pass
+        print '#ifdef _WIN32'
+        print '#  include <malloc.h> // alloca'
+        print '#  ifndef alloca'
+        print '#    define alloca _alloca'
+        print '#  endif'
+        print '#else'
+        print '#  include <alloca.h> // alloca'
+        print '#endif'
 
     def footer(self, api):
         pass
@@ -396,12 +403,13 @@ class Tracer:
     def traceFunctionDecl(self, function):
         # Per-function declarations
 
-        if function.args:
-            print 'static const char * _%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
-        else:
-            print 'static const char ** _%s_args = NULL;' % (function.name,)
-        print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
-        print
+        if not function.internal:
+            if function.args:
+                print 'static const char * _%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
+            else:
+                print 'static const char ** _%s_args = NULL;' % (function.name,)
+            print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
+            print
 
     def isFunctionPublic(self, function):
         return True
@@ -416,27 +424,30 @@ class Tracer:
             print '    %s _result;' % function.type
         self.traceFunctionImplBody(function)
         if function.type is not stdapi.Void:
-            self.wrapRet(function, "_result")
             print '    return _result;'
         print '}'
         print
 
     def traceFunctionImplBody(self, function):
-        print '    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
-        for arg in function.args:
-            if not arg.output:
-                self.unwrapArg(function, arg)
-                self.serializeArg(function, arg)
-        print '    trace::localWriter.endEnter();'
+        if not function.internal:
+            print '    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+            for arg in function.args:
+                if not arg.output:
+                    self.unwrapArg(function, arg)
+                    self.serializeArg(function, arg)
+            print '    trace::localWriter.endEnter();'
         self.invokeFunction(function)
-        print '    trace::localWriter.beginLeave(_call);'
-        for arg in function.args:
-            if arg.output:
-                self.serializeArg(function, arg)
-                self.wrapArg(function, arg)
-        if function.type is not stdapi.Void:
-            self.serializeRet(function, "_result")
-        print '    trace::localWriter.endLeave();'
+        if not function.internal:
+            print '    trace::localWriter.beginLeave(_call);'
+            for arg in function.args:
+                if arg.output:
+                    self.serializeArg(function, arg)
+                    self.wrapArg(function, arg)
+            if function.type is not stdapi.Void:
+                self.serializeRet(function, "_result")
+            print '    trace::localWriter.endLeave();'
+            if function.type is not stdapi.Void:
+                self.wrapRet(function, "_result")
 
     def invokeFunction(self, function, prefix='_', suffix=''):
         if function.type is stdapi.Void:
@@ -462,10 +473,9 @@ class Tracer:
         for other_arg in function.args:
             if not other_arg.output and other_arg.type is REFIID:
                 riid = other_arg
-        if riid is not None and isinstance(arg.type, stdapi.Pointer):
-            assert isinstance(arg.type.type, stdapi.ObjPointer)
-            obj_type = arg.type.type.type
-            assert obj_type is stdapi.Void
+        if riid is not None \
+           and isinstance(arg.type, stdapi.Pointer) \
+           and isinstance(arg.type.type, stdapi.ObjPointer):
             self.wrapIid(function, riid, arg)
             return
 
@@ -523,21 +533,24 @@ class Tracer:
         for method in interface.iterMethods():
             print "    " + method.prototype() + ";"
         print
-        self.declareWrapperInterfaceVariables(interface)
+        #print "private:"
+        for type, name, value in self.enumWrapperInterfaceVariables(interface):
+            print '    %s %s;' % (type, name)
         print "};"
         print
 
-    def declareWrapperInterfaceVariables(self, interface):
-        #print "private:"
-        print "    DWORD m_dwMagic;"
-        print "    %s * m_pInstance;" % (interface.name,)
+    def enumWrapperInterfaceVariables(self, interface):
+        return [
+            ("DWORD", "m_dwMagic", "0xd8365d6c"),
+            ("%s *" % interface.name, "m_pInstance", "pInstance"),
+        ] 
 
     def implementWrapperInterface(self, interface):
         self.interface = interface
 
         print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
-        print '    m_dwMagic = 0xd8365d6c;'
-        print '    m_pInstance = pInstance;'
+        for type, name, value in self.enumWrapperInterfaceVariables(interface):
+            print '    %s = %s;' % (name, value)
         print '}'
         print
         print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))
@@ -563,8 +576,13 @@ class Tracer:
         print
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        assert not method.internal
+
         print '    static const char * _args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
+
+        print '    %s *_this = static_cast<%s *>(m_pInstance);' % (base, base)
+
         print '    unsigned _call = trace::localWriter.beginEnter(&_sig);'
         print '    trace::localWriter.beginArg(0);'
         print '    trace::localWriter.writePointer((uintptr_t)m_pInstance);'
@@ -584,11 +602,11 @@ class Tracer:
                 self.wrapArg(method, arg)
 
         if method.type is not stdapi.Void:
-            print '    trace::localWriter.beginReturn();'
-            self.serializeValue(method.type, "_result")
-            print '    trace::localWriter.endReturn();'
-            self.wrapValue(method.type, '_result')
+            self.serializeRet(method, '_result')
         print '    trace::localWriter.endLeave();'
+        if method.type is not stdapi.Void:
+            self.wrapRet(method, '_result')
+
         if method.name == 'Release':
             assert method.type is not stdapi.Void
             print '    if (!_result)'
@@ -621,18 +639,25 @@ class Tracer:
         print
 
     def wrapIid(self, function, riid, out):
+        # Cast output arg to `void **` if necessary
+        out_name = out.name
+        obj_type = out.type.type.type
+        if not obj_type is stdapi.Void:
+            assert isinstance(obj_type, stdapi.Interface)
+            out_name = 'reinterpret_cast<void * *>(%s)' % out_name
+
         print r'    if (%s && *%s) {' % (out.name, out.name)
         functionName = function.name
         else_ = ''
         if self.interface is not None:
             functionName = self.interface.name + '::' + functionName
-            print r'        if (*%s == m_pInstance &&' % (out.name,)
+            print r'        if (*%s == m_pInstance &&' % (out_name,)
             print r'            (%s)) {' % ' || '.join('%s == IID_%s' % (riid.name, iface.name) for iface in self.interface.iterBases())
-            print r'            *%s = this;' % (out.name,)
+            print r'            *%s = this;' % (out_name,)
             print r'        }'
             else_ = 'else '
         print r'        %s{' % else_
-        print r'             wrapIID("%s", %s, %s);' % (functionName, riid.name, out.name) 
+        print r'             wrapIID("%s", %s, %s);' % (functionName, riid.name, out_name)
         print r'        }'
         print r'    }'
 
@@ -641,7 +666,7 @@ class Tracer:
             result = ''
         else:
             result = '_result = '
-        print '    %sstatic_cast<%s *>(m_pInstance)->%s(%s);' % (result, base, method.name, ', '.join([str(arg.name) for arg in method.args]))
+        print '    %s_this->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
     
     def emit_memcpy(self, dest, src, length):
         print '        unsigned _call = trace::localWriter.beginEnter(&trace::memcpy_sig);'

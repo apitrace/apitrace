@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <limits>
+
 #include "formatter.hpp"
 #include "trace_dump.hpp"
 
@@ -73,7 +75,7 @@ public:
     }
 
     void visit(Null *) {
-        os << "NULL";
+        os << literal << "NULL" << normal;
     }
 
     void visit(Bool *node) {
@@ -89,11 +91,15 @@ public:
     }
 
     void visit(Float *node) {
+        std::streamsize oldPrecision = os.precision(std::numeric_limits<float>::digits10 + 1);
         os << literal << node->value << normal;
+        os.precision(oldPrecision);
     }
 
     void visit(Double *node) {
+        std::streamsize oldPrecision = os.precision(std::numeric_limits<double>::digits10 + 1);
         os << literal << node->value << normal;
+        os.precision(oldPrecision);
     }
 
     void visit(String *node) {
@@ -198,6 +204,10 @@ public:
 
     void visit(Pointer *p) {
         os << pointer << "0x" << std::hex << p->value << std::dec << normal;
+    }
+
+    void visit(Repr *r) {
+        _visit(r->humanValue);
     }
 
     void visit(Call *call) {

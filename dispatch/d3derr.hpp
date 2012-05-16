@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 VMware, Inc.
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,59 +24,40 @@
  **************************************************************************/
 
 /*
- * Central place for all D3D9 includes, and respective OS dependent headers.
+ * D3DERR return codes.
+ *
+ * These were defined in d3dx10.h/d3dx11.h on DirectX SDK, and moved to
+ * winerror.h on Windows 8 SDK.
+ *
+ * See also:
+ * - http://msdn.microsoft.com/en-us/library/windows/desktop/ff476174.aspx
+ * - http://msdn.microsoft.com/en-us/library/windows/desktop/bb205278.aspx
+ * - http://msdn.microsoft.com/en-us/library/windows/desktop/bb172554.aspx
  */
 
-#ifndef _D3D9IMPORTS_HPP_
-#define _D3D9IMPORTS_HPP_
-
-#include <windows.h>
-
-#include "compat.h"
-
-#include <d3d9.h>
-#include <d3dx9.h>
+#ifndef _D3DERR_HPP_
+#define _D3DERR_HPP_
 
 
-#ifndef D3DFMT_A2B10G10R10_XR_BIAS
-#define D3DFMT_A2B10G10R10_XR_BIAS 119
+#ifndef _FACD3D
+#define _FACD3D  0x876
 #endif
 
-#ifndef D3DFMT_ATI1N
-#define D3DFMT_ATI1N ((D3DFORMAT)MAKEFOURCC('A','T','I','1'))
+#ifndef MAKE_D3DHRESULT
+#define MAKE_D3DHRESULT(code) MAKE_HRESULT(1, _FACD3D, code)
 #endif
 
-#ifndef D3DFMT_ATI2N
-#define D3DFMT_ATI2N ((D3DFORMAT)MAKEFOURCC('A','T','I','2'))
+#ifndef MAKE_D3DSTATUS
+#define MAKE_D3DSTATUS(code) MAKE_HRESULT(0, _FACD3D, code)
 #endif
 
-#ifndef D3DFMT_AYUV
-#define D3DFMT_AYUV ((D3DFORMAT)MAKEFOURCC('A','Y','U','V'))
+#ifndef D3DERR_INVALIDCALL
+#define D3DERR_INVALIDCALL MAKE_D3DHRESULT(2156)
 #endif
 
-#ifndef D3DFMT_DF16
-#define D3DFMT_DF16 ((D3DFORMAT)MAKEFOURCC('D','F','1','6'))
-#endif
-
-#ifndef D3DFMT_DF24
-#define D3DFMT_DF24 ((D3DFORMAT)MAKEFOURCC('D','F','2','4'))
-#endif
-
-#ifndef D3DFMT_INTZ
-#define D3DFMT_INTZ ((D3DFORMAT)MAKEFOURCC('I','N','T','Z'))
-#endif
-
-#ifndef D3DFMT_NULL
-#define D3DFMT_NULL ((D3DFORMAT)MAKEFOURCC('N','U','L','L'))
-#endif
-
-#ifndef D3DFMT_NV12
-#define D3DFMT_NV12 ((D3DFORMAT)MAKEFOURCC('N','V','1','2'))
-#endif
-
-#ifndef D3DFMT_RAWZ
-#define D3DFMT_RAWZ ((D3DFORMAT)MAKEFOURCC('R','A','W','Z'))
+#ifndef D3DERR_WASSTILLDRAWING
+#define D3DERR_WASSTILLDRAWING MAKE_D3DHRESULT(540)
 #endif
 
 
-#endif /* _D3D9IMPORTS_HPP_ */
+#endif /* _D3DERR_HPP_ */

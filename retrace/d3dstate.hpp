@@ -27,6 +27,9 @@
 #define _D3DSTATE_HPP_
 
 
+#include <iostream>
+
+
 struct IDirect3DDevice9;
 
 
@@ -40,6 +43,10 @@ namespace d3dstate {
 
 image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice);
+
+
+void
+dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
 
 
 } /* namespace d3dstate */

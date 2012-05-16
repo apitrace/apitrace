@@ -35,6 +35,7 @@
 #include <wchar.h>
 
 #include <iomanip>
+#include <limits>
 #include <ostream>
 #include <string>
 
@@ -332,7 +333,7 @@ public:
             writeNull();
         } else {
             separator();
-            os << std::dec << std::setprecision(9) << n;
+            os << std::dec << std::setprecision(std::numeric_limits<T>::digits10 + 1) << n;
             value = true;
             space = ' ';
         }

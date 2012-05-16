@@ -1,6 +1,7 @@
 /**************************************************************************
  *
- * Copyright 2011 VMware, Inc.
+ * Copyright 2011 Jose Fonseca
+ * Copyright 2008-2009 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,60 +24,15 @@
  *
  **************************************************************************/
 
-/*
- * Central place for all D3D9 includes, and respective OS dependent headers.
- */
+#ifndef _D3D9SHADER_HPP_
+#define _D3D9SHADER_HPP_
 
-#ifndef _D3D9IMPORTS_HPP_
-#define _D3D9IMPORTS_HPP_
 
 #include <windows.h>
 
-#include "compat.h"
+#include "trace_writer.hpp"
 
-#include <d3d9.h>
-#include <d3dx9.h>
-
-
-#ifndef D3DFMT_A2B10G10R10_XR_BIAS
-#define D3DFMT_A2B10G10R10_XR_BIAS 119
-#endif
-
-#ifndef D3DFMT_ATI1N
-#define D3DFMT_ATI1N ((D3DFORMAT)MAKEFOURCC('A','T','I','1'))
-#endif
-
-#ifndef D3DFMT_ATI2N
-#define D3DFMT_ATI2N ((D3DFORMAT)MAKEFOURCC('A','T','I','2'))
-#endif
-
-#ifndef D3DFMT_AYUV
-#define D3DFMT_AYUV ((D3DFORMAT)MAKEFOURCC('A','Y','U','V'))
-#endif
-
-#ifndef D3DFMT_DF16
-#define D3DFMT_DF16 ((D3DFORMAT)MAKEFOURCC('D','F','1','6'))
-#endif
-
-#ifndef D3DFMT_DF24
-#define D3DFMT_DF24 ((D3DFORMAT)MAKEFOURCC('D','F','2','4'))
-#endif
-
-#ifndef D3DFMT_INTZ
-#define D3DFMT_INTZ ((D3DFORMAT)MAKEFOURCC('I','N','T','Z'))
-#endif
-
-#ifndef D3DFMT_NULL
-#define D3DFMT_NULL ((D3DFORMAT)MAKEFOURCC('N','U','L','L'))
-#endif
-
-#ifndef D3DFMT_NV12
-#define D3DFMT_NV12 ((D3DFORMAT)MAKEFOURCC('N','V','1','2'))
-#endif
-
-#ifndef D3DFMT_RAWZ
-#define D3DFMT_RAWZ ((D3DFORMAT)MAKEFOURCC('R','A','W','Z'))
-#endif
+void DumpShader(trace::Writer &writer, const DWORD *tokens);
 
 
-#endif /* _D3D9IMPORTS_HPP_ */
+#endif /* _D3D9SHADER_HPP_ */

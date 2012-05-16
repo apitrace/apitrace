@@ -128,7 +128,7 @@ dumpProgram(JSONWriter &json, GLint program)
     glGetAttachedShaders(program, attached_shaders, &count, shaders);
     std::sort(shaders, shaders + count);
     for (GLsizei i = 0; i < count; ++ i) {
-       getShaderSource(shaderMap, shaders[i]);
+        getShaderSource(shaderMap, shaders[i]);
     }
     delete [] shaders;
 
@@ -167,6 +167,15 @@ dumpProgramObj(JSONWriter &json, GLhandleARB programObj)
     }
 }
 
+/**
+ * Built-in uniforms can't be queried through glGetUniform*.
+ */
+static inline bool
+isBuiltinUniform(const GLchar *name)
+{
+    return name[0] == 'g' && name[1] == 'l' && name[2] == '_';
+}
+
 /*
  * When fetching the uniform name of an array we usually get name[0]
  * so we need to cut the trailing "[0]" in order to properly construct
@@ -192,21 +201,179 @@ resolveUniformName(const GLchar *name,  GLint size)
     return qualifiedName;
 }
 
+
+static void
+dumpUniformValues(JSONWriter &json, GLenum type, const void *values, GLint matrix_stride = 0, GLboolean is_row_major = GL_FALSE) {
+    GLenum elemType;
+    GLint numCols, numRows;
+    _gl_uniform_size(type, elemType, numCols, numRows);
+    if (!numCols || !numRows) {
+        json.writeNull();
+    }
+
+    size_t elemSize = _gl_type_size(elemType);
+
+    GLint row_stride = 0;
+    GLint col_stride = 0;
+    if (is_row_major) {
+        row_stride = elemSize;
+        col_stride = matrix_stride ? matrix_stride : numRows * elemSize;
+    } else {
+        col_stride = elemSize;
+        row_stride = matrix_stride ? matrix_stride : numCols * elemSize;
+    }
+
+    if (numRows > 1) {
+        json.beginArray();
+    }
+
+    for (GLint row = 0; row < numRows; ++row) {
+        if (numCols > 1) {
+            json.beginArray();
+        }
+
+        for (GLint col = 0; col < numCols; ++col) {
+            union {
+                const GLbyte *rawvalue;
+                const GLfloat *fvalue;
+                const GLdouble *dvalue;
+                const GLint *ivalue;
+                const GLuint *uivalue;
+            } u;
+
+            u.rawvalue = (const GLbyte *)values + row*row_stride + col*col_stride;
+
+            switch (elemType) {
+            case GL_FLOAT:
+                json.writeNumber(*u.fvalue);
+                break;
+            case GL_DOUBLE:
+                json.writeNumber(*u.dvalue);
+                break;
+            case GL_INT:
+                json.writeNumber(*u.ivalue);
+                break;
+            case GL_UNSIGNED_INT:
+                json.writeNumber(*u.uivalue);
+                break;
+            case GL_BOOL:
+                json.writeBool(*u.uivalue);
+                break;
+            default:
+                assert(0);
+                json.writeNull();
+                break;
+            }
+        }
+
+        if (numCols > 1) {
+            json.endArray();
+        }
+    }
+
+    if (numRows > 1) {
+        json.endArray();
+    }
+}
+
+
+/**
+ * Dump an uniform that belows to an uniform block.
+ */
+static void
+dumpUniformBlock(JSONWriter &json, GLint program, GLint size, GLenum type, const GLchar *name, GLuint index, GLuint block_index) {
+
+    GLint offset = 0;
+    GLint array_stride = 0;
+    GLint matrix_stride = 0;
+    GLint is_row_major = GL_FALSE;
+    glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_OFFSET, &offset);
+    glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_ARRAY_STRIDE, &array_stride);
+    glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_MATRIX_STRIDE, &matrix_stride);
+    glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_IS_ROW_MAJOR, &is_row_major);
+
+    GLint slot = -1;
+    glGetActiveUniformBlockiv(program, block_index, GL_UNIFORM_BLOCK_BINDING, &slot);
+    if (slot == -1) {
+        return;
+    }
+
+    if (0) {
+        GLint active_uniform_block_max_name_length = 0;
+        glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &active_uniform_block_max_name_length);
+
+        GLchar* block_name = new GLchar[active_uniform_block_max_name_length];
+
+        GLint block_data_size = 0;
+        glGetActiveUniformBlockiv(program, index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_data_size);
+
+        GLsizei length = 0;
+        glGetActiveUniformBlockName(program, index, active_uniform_block_max_name_length, &length, block_name);
+
+        std::cerr
+            << "uniform `" << name << "`, size " << size << ", type " << enumToString(type) << "\n"
+            << "  block " << block_index << ", name `" << block_name << "`, size " << block_data_size << "; binding " << slot << "; \n"
+            << "  offset " << offset << ", array stride " << array_stride << ", matrix stride " << matrix_stride << ", row_major " << is_row_major << "\n"
+        ;
+
+        delete block_name;
+    }
+
+    GLint ubo = 0;
+    glGetIntegeri_v(GL_UNIFORM_BUFFER_BINDING, slot, &ubo);
+
+    GLint previous_ubo = 0;
+    glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &previous_ubo);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+
+    const GLbyte *raw_data = (const GLbyte *)glMapBuffer(GL_UNIFORM_BUFFER, GL_READ_ONLY);
+    if (raw_data) {
+        std::string qualifiedName = resolveUniformName(name, size);
+
+        for (GLint i = 0; i < size; ++i) {
+            std::stringstream ss;
+            ss << qualifiedName;
+
+            if (size > 1) {
+                ss << '[' << i << ']';
+            }
+
+            std::string elemName = ss.str();
+
+            json.beginMember(elemName);
+
+            const GLbyte *row = raw_data + offset + array_stride*i;
+
+            dumpUniformValues(json, type, row, matrix_stride, is_row_major);
+
+            json.endMember();
+        }
+
+        glUnmapBuffer(GL_UNIFORM_BUFFER);
+    }
+
+    glBindBuffer(GL_UNIFORM_BUFFER, previous_ubo);
+}
+
+
 static void
 dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLchar *name) {
     GLenum elemType;
-    GLint numElems;
-    _gl_uniform_size(type, elemType, numElems);
+    GLint numCols, numRows;
+    _gl_uniform_size(type, elemType, numCols, numRows);
     if (elemType == GL_NONE) {
         return;
     }
 
-    GLfloat fvalues[4*4];
-    GLdouble dvalues[4*4];
-    GLint ivalues[4*4];
-    GLuint uivalues[4*4];
+    union {
+        GLfloat fvalues[4*4];
+        GLdouble dvalues[4*4];
+        GLint ivalues[4*4];
+        GLuint uivalues[4*4];
+    } u;
 
-    GLint i, j;
+    GLint i;
 
     std::string qualifiedName = resolveUniformName(name, size);
 
@@ -220,53 +387,36 @@ dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLch
 
         std::string elemName = ss.str();
 
-        json.beginMember(elemName);
-
         GLint location = glGetUniformLocation(program, elemName.c_str());
-
-        if (numElems > 1) {
-            json.beginArray();
+        assert(location != -1);
+        if (location == -1) {
+            continue;
         }
+
+        json.beginMember(elemName);
 
         switch (elemType) {
         case GL_FLOAT:
-            glGetUniformfv(program, location, fvalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(fvalues[j]);
-            }
+            glGetUniformfv(program, location, u.fvalues);
             break;
         case GL_DOUBLE:
-            glGetUniformdv(program, location, dvalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(dvalues[j]);
-            }
+            glGetUniformdv(program, location, u.dvalues);
             break;
         case GL_INT:
-            glGetUniformiv(program, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(ivalues[j]);
-            }
+            glGetUniformiv(program, location, u.ivalues);
             break;
         case GL_UNSIGNED_INT:
-            glGetUniformuiv(program, location, uivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(uivalues[j]);
-            }
+            glGetUniformuiv(program, location, u.uivalues);
             break;
         case GL_BOOL:
-            glGetUniformiv(program, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeBool(ivalues[j]);
-            }
+            glGetUniformiv(program, location, u.ivalues);
             break;
         default:
             assert(0);
             break;
         }
 
-        if (numElems > 1) {
-            json.endArray();
-        }
+        dumpUniformValues(json, type, &u);
 
         json.endMember();
     }
@@ -275,16 +425,20 @@ dumpUniform(JSONWriter &json, GLint program, GLint size, GLenum type, const GLch
 
 static void
 dumpUniformARB(JSONWriter &json, GLhandleARB programObj, GLint size, GLenum type, const GLchar *name) {
-
     GLenum elemType;
-    GLint numElems;
-    _gl_uniform_size(type, elemType, numElems);
+    GLint numCols, numRows;
+    _gl_uniform_size(type, elemType, numCols, numRows);
+    GLint numElems = numCols * numRows;
     if (elemType == GL_NONE) {
         return;
     }
 
     GLfloat fvalues[4*4];
-    GLint ivalues[4*4];
+    union {
+        GLdouble dvalues[4*4];
+        GLfloat fvalues[4*4];
+        GLint ivalues[4*4];
+    } u;
 
     GLint i, j;
 
@@ -303,42 +457,35 @@ dumpUniformARB(JSONWriter &json, GLhandleARB programObj, GLint size, GLenum type
         json.beginMember(elemName);
 
         GLint location = glGetUniformLocationARB(programObj, elemName.c_str());
-
-        if (numElems > 1) {
-            json.beginArray();
+        if (location == -1) {
+            continue;
         }
 
         switch (elemType) {
         case GL_DOUBLE:
             // glGetUniformdvARB does not exists
-        case GL_FLOAT:
             glGetUniformfvARB(programObj, location, fvalues);
             for (j = 0; j < numElems; ++j) {
-                json.writeNumber(fvalues[j]);
+                u.dvalues[j] = fvalues[j];
             }
+            break;
+        case GL_FLOAT:
+            glGetUniformfvARB(programObj, location, fvalues);
             break;
         case GL_UNSIGNED_INT:
             // glGetUniformuivARB does not exists
         case GL_INT:
-            glGetUniformivARB(programObj, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeNumber(ivalues[j]);
-            }
+            glGetUniformivARB(programObj, location, u.ivalues);
             break;
         case GL_BOOL:
-            glGetUniformivARB(programObj, location, ivalues);
-            for (j = 0; j < numElems; ++j) {
-                json.writeBool(ivalues[j]);
-            }
+            glGetUniformivARB(programObj, location, u.ivalues);
             break;
         default:
             assert(0);
             break;
         }
 
-        if (numElems > 1) {
-            json.endArray();
-        }
+        dumpUniformValues(json, type, &u);
 
         json.endMember();
     }
@@ -361,13 +508,30 @@ dumpProgramUniforms(JSONWriter &json, GLint program)
         return;
     }
 
-    for (GLint index = 0; index < active_uniforms; ++index) {
+    for (GLuint index = 0; (GLint)index < active_uniforms; ++index) {
         GLsizei length = 0;
         GLint size = 0;
         GLenum type = GL_NONE;
         glGetActiveUniform(program, index, active_uniform_max_length, &length, &size, &type, name);
 
-        dumpUniform(json, program, size, type, name);
+        if (isBuiltinUniform(name)) {
+            continue;
+        }
+
+        GLint location = glGetUniformLocation(program, name);
+        if (location != -1) {
+            dumpUniform(json, program, size, type, name);
+            continue;
+        }
+
+        GLint block_index = -1;
+        glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_BLOCK_INDEX, &block_index);
+        if (block_index != -1) {
+            dumpUniformBlock(json, program, size, type, name, index, block_index);
+            continue;
+        }
+
+        assert(0);
     }
 
     delete [] name;
@@ -395,6 +559,10 @@ dumpProgramObjUniforms(JSONWriter &json, GLhandleARB programObj)
         GLint size = 0;
         GLenum type = GL_NONE;
         glGetActiveUniformARB(programObj, index, active_uniform_max_length, &length, &size, &type, name);
+
+    if (isBuiltinUniform(name)) {
+        continue;
+    }
 
         dumpUniformARB(json, programObj, size, type, name);
     }
@@ -489,21 +657,57 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
     }
 }
 
+static void
+dumpProgramUniformsStage(JSONWriter &json, GLint program, const char *stage)
+{
+    if (program) {
+        json.beginMember(stage);
+        json.beginObject();
+        dumpProgramUniforms(json, program);
+        json.endObject();
+        json.endMember();
+    }
+}
 
 void
 dumpShadersUniforms(JSONWriter &json, Context &context)
 {
-    GLint program = 0;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    GLint pipeline = 0;
+    GLint vertex_program = 0;
+    GLint fragment_program = 0;
+    GLint geometry_program = 0;
+    GLint tess_control_program = 0;
+    GLint tess_evaluation_program = 0;
 
+    if (!context.ES) {
+        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
+        if (pipeline) {
+            glGetProgramPipelineiv(pipeline, GL_VERTEX_SHADER, &vertex_program);
+            glGetProgramPipelineiv(pipeline, GL_FRAGMENT_SHADER, &fragment_program);
+            glGetProgramPipelineiv(pipeline, GL_GEOMETRY_SHADER, &geometry_program);
+            glGetProgramPipelineiv(pipeline, GL_TESS_CONTROL_SHADER, &tess_control_program);
+            glGetProgramPipelineiv(pipeline, GL_TESS_EVALUATION_SHADER, &tess_evaluation_program);
+        }
+    }
+
+    GLint program = 0;
     GLhandleARB programObj = 0;
-    if (!context.ES && !program) {
-        programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+    if (!pipeline) {
+        glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+        if (!context.ES && !program) {
+            programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
+        }
     }
 
     json.beginMember("shaders");
     json.beginObject();
-    if (program) {
+    if (pipeline) {
+        dumpProgram(json, vertex_program);
+        dumpProgram(json, fragment_program);
+        dumpProgram(json, geometry_program);
+        dumpProgram(json, tess_control_program);
+        dumpProgram(json, tess_evaluation_program);
+    } else if (program) {
         dumpProgram(json, program);
     } else if (programObj) {
         dumpProgramObj(json, programObj);
@@ -516,7 +720,13 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
 
     json.beginMember("uniforms");
     json.beginObject();
-    if (program) {
+    if (pipeline) {
+        dumpProgramUniformsStage(json, vertex_program, "GL_VERTEX_SHADER");
+        dumpProgramUniformsStage(json, fragment_program, "GL_FRAGMENT_SHADER");
+        dumpProgramUniformsStage(json, geometry_program, "GL_GEOMETRY_SHADER");
+        dumpProgramUniformsStage(json, tess_control_program, "GL_TESS_CONTROL_SHADER");
+        dumpProgramUniformsStage(json, tess_evaluation_program, "GL_TESS_EVALUATION_SHADER");
+    } else if (program) {
         dumpProgramUniforms(json, program);
     } else if (programObj) {
         dumpProgramObjUniforms(json, programObj);

@@ -3,7 +3,7 @@ About **apitrace**
 
 **apitrace** consists of a set of tools to:
 
-* trace OpenGL, OpenGL ES, D3D9, D3D8, D3D7, and DDRAW APIs calls to a file;
+* trace OpenGL, OpenGL ES, Direct3D, and DirectDraw APIs calls to a file;
 
 * retrace OpenGL and OpenGL ES calls from a file;
 

@@ -26,16 +26,7 @@
 """d3d10_1.h"""
 
 from winapi import *
-from d3d10sdklayers import *
 from d3d10 import *
-
-ID3D10Blob = Interface("ID3D10Blob", IUnknown)
-LPD3D10BLOB = ObjPointer(ID3D10Blob)
-
-ID3D10Blob.methods += [
-    Method(LPVOID, "GetBufferPointer", []),
-    Method(SIZE_T, "GetBufferSize", []),
-]
 
 D3D10_DRIVER_TYPE = Enum("D3D10_DRIVER_TYPE", [
     "D3D10_DRIVER_TYPE_HARDWARE",

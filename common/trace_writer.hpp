@@ -79,6 +79,9 @@ namespace trace {
         void beginStruct(const StructSig *sig);
         inline void endStruct(void) {}
 
+        void beginRepr(void);
+        inline void endRepr(void) {}
+
         void writeBool(bool value);
         void writeSInt(signed long long value);
         void writeUInt(unsigned long long value);

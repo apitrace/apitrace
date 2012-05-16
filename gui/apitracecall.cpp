@@ -227,6 +227,12 @@ void VariantVisitor::visit(trace::Pointer *ptr)
     m_variant = QVariant::fromValue(ApiPointer(ptr->value));
 }
 
+void VariantVisitor::visit(trace::Repr *repr)
+{
+    /* TODO: Preserve both the human and machine value */
+    repr->humanValue->visit(*this);
+}
+
 ApiTraceEnumSignature::ApiTraceEnumSignature(const trace::EnumSig *sig)
 {
     for (const trace::EnumValue *it = sig->values;

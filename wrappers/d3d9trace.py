@@ -25,58 +25,47 @@
 
 
 from dlltrace import DllTracer
-from specs.d3d9 import d3d9
+from specs.d3d9 import d3d9, D3DSHADER9
 
 
 class D3D9Tracer(DllTracer):
 
     def serializeArgValue(self, function, arg):
         # Dump shaders as strings
-        if function.name in ('CreateVertexShader', 'CreatePixelShader') and arg.name == 'pFunction':
+        if arg.type is D3DSHADER9:
             print '    DumpShader(trace::localWriter, %s);' % (arg.name)
             return
 
         DllTracer.serializeArgValue(self, function, arg)
 
-    bufferInterfaceNames = [
-        'IDirect3DVertexBuffer9',
-        'IDirect3DIndexBuffer9',
-    ]
-
-    def declareWrapperInterfaceVariables(self, interface):
-        DllTracer.declareWrapperInterfaceVariables(self, interface)
+    def enumWrapperInterfaceVariables(self, interface):
+        variables = DllTracer.enumWrapperInterfaceVariables(self, interface)
         
-        if interface.name in self.bufferInterfaceNames:
-            print '    UINT m_SizeToLock;'
-            print '    VOID *m_pbData;'
+        if interface.getMethodByName('Lock') is not None or \
+           interface.getMethodByName('LockRect') is not None or \
+           interface.getMethodByName('LockBox') is not None:
+            variables += [
+                ('size_t', '_LockedSize', '0'),
+                ('VOID *', 'm_pbData', '0'),
+            ]
+
+        return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        if interface.name in self.bufferInterfaceNames and method.name == 'Unlock':
-            print '    if (m_pbData) {'
-            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', 'm_SizeToLock')
+        if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
+            print '    if (_LockedSize && m_pbData) {'
+            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if interface.name in self.bufferInterfaceNames and method.name == 'Lock':
+        if method.name in ('Lock', 'LockRect', 'LockBox'):
             # FIXME: handle recursive locks
-
-            getDescMethod = interface.getMethodByName('GetDesc')
-            descArg = getDescMethod.args[0]
-            assert descArg.output
-            descType = getDescMethod.args[0].type.type
-
-            print '    if (_result == D3D_OK && !(Flags & D3DLOCK_READONLY)) {'
-            print '        if (SizeToLock) {'
-            print '            m_SizeToLock = SizeToLock;'
-            print '        } else {'
-            print '            %s Desc;' % descType
-            print '            m_pInstance->GetDesc(&Desc);'
-            print '            m_SizeToLock = Desc.Size;'
-            print '        }'
-            print '        m_pbData = *ppbData;'
+            print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
+            print '        _getLockInfo(_this, %s, m_pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
             print '    } else {'
             print '        m_pbData = NULL;'
+            print '        _LockedSize = 0;'
             print '    }'
 
 
@@ -88,7 +77,7 @@ if __name__ == '__main__':
     print
     print '#include "d3d9imports.hpp"'
     print '#include "d3dsize.hpp"'
-    print '#include "d3dshader.hpp"'
+    print '#include "d3d9shader.hpp"'
     print
     print '''
 static inline size_t

@@ -64,16 +64,23 @@ Windows
 
 Additional requirements:
 
-* Microsoft Visual Studio (tested with 2008 version) or MinGW (tested with gcc version 4.4)
+* For Direct3D 11.1 support:
 
-* Microsoft DirectX SDK:
+  * [Microsoft Visual Studio 11 Ultimate Beta](http://www.microsoft.com/download/en/details.aspx?id=27543)
 
-  * for D3D10 support the [latest](http://msdn.microsoft.com/en-us/directx/default.aspx) is
-    recommended.
+* Other:
 
-  * for DDRAW, D3D7, D3D8 support the [August 2007 release](http://www.microsoft.com/downloads/details.aspx?familyid=529F03BE-1339-48C4-BD5A-8506E5ACF571)
-    or earlier is required, as later releases do not include the necessary
-    headers.
+  * Microsoft Visual Studio (tested with 2010 version) or MinGW (tested with
+    mingw-w64's gcc version 4.6.2)
+
+  * [Microsoft DirectX SDK](http://msdn.microsoft.com/en-us/directx/aa937781):
+
+    * for D3D 10, 10.1, and 11 support the [June 2010 release](http://www.microsoft.com/en-us/download/details.aspx?id=6812) is
+      recommended.
+
+    * for D3D7, D3D8 support the [August 2007 release](http://www.microsoft.com/downloads/details.aspx?familyid=529F03BE-1339-48C4-BD5A-8506E5ACF571)
+      or earlier is required, as later releases do not include the necessary
+      headers.
 
 To build with Visual Studio first invoke CMake GUI as:
 
@@ -90,8 +97,8 @@ generated `build\apitrace.sln` solution file, or invoking `cmake` as:
 
     cmake --build build --config MinSizeRel
 
-The steps to build 64bit version are similar, but choosing _Visual Studio 9
-2008 Win64_ instead of _Visual Studio 9 2008_.
+The steps to build 64bit version are similar, but choosing _Visual Studio 10
+Win64_ instead of _Visual Studio 10_.
 
 It's also possible to instruct `cmake` build Windows binaries on Linux with
 [MinGW cross compilers](http://www.cmake.org/Wiki/CmakeMingw).

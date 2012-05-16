@@ -33,6 +33,7 @@ public:
     virtual void visit(trace::Array *array);
     virtual void visit(trace::Blob *blob);
     virtual void visit(trace::Pointer *ptr);
+    virtual void visit(trace::Repr *ptr);
 
     QVariant variant() const
     {
