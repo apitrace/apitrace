@@ -152,6 +152,14 @@ public:
         writer.writeInt(node->value);
     }
 
+    void visit(Repr *r) {
+        if (symbolic) {
+            _visit(r->humanValue);
+        } else {
+            _visit(r->machineValue);
+        }
+    }
+
     void visit(Call *call) {
         writer.beginTuple();
 
