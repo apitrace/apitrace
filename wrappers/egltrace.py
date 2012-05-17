@@ -175,5 +175,65 @@ void * dlopen(const char *filename, int flag)
 #endif /* !ANDROID */
 
 
+#if defined(ANDROID)
+
+/*
+ * Undocumented Android extensions used by Dalvik which have bound information
+ * passed to it, but is currently ignored, so probably unreliable.
+ *
+ * See:
+ * https://github.com/android/platform_frameworks_base/blob/master/opengl/libs/GLES_CM/gl.cpp
+ */
+
+extern "C" PUBLIC
+void APIENTRY glColorPointerBounds(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glColorPointer(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glNormalPointerBounds(GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glNormalPointer(type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glTexCoordPointerBounds(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glTexCoordPointer(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glVertexPointerBounds(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glVertexPointer(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void GL_APIENTRY glPointSizePointerOESBounds(GLenum type, GLsizei stride, const GLvoid *pointer, GLsizei count) {
+    (void)count;
+    glPointSizePointerOES(type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glMatrixIndexPointerOESBounds(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer, GLsizei count) {
+    (void)count;
+    glMatrixIndexPointerOES(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glWeightPointerOESBounds(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer, GLsizei count) {
+    (void)count;
+    glWeightPointerOES(size, type, stride, pointer);
+}
+
+/*
+ * There is also a glVertexAttribPointerBounds in
+ * https://github.com/android/platform_frameworks_base/blob/master/opengl/tools/glgen/stubs/gles11/GLES20cHeader.cpp
+ * but is it not exported.
+ */
+
+#endif /* ANDROID */
+
 
 '''
