@@ -238,7 +238,7 @@ class GlTracer(Tracer):
         print '}'
         print
 
-        print 'static void _trace_user_arrays(GLuint maxindex);'
+        print 'static void _trace_user_arrays(GLuint count);'
         print
 
         # Buffer mappings
@@ -498,8 +498,8 @@ class GlTracer(Tracer):
         if function.name in self.draw_function_names:
             print '    if (_need_user_arrays()) {'
             arg_names = ', '.join([arg.name for arg in function.args[1:]])
-            print '        GLuint maxindex = _%s_maxindex(%s);' % (function.name, arg_names)
-            print '        _trace_user_arrays(maxindex);'
+            print '        GLuint _count = _%s_count(%s);' % (function.name, arg_names)
+            print '        _trace_user_arrays(_count);'
             print '    }'
         
         # Emit a fake memcpy on buffer uploads
@@ -840,7 +840,7 @@ class GlTracer(Tracer):
 
         # A simple state tracker to track the pointer values
         # update the state
-        print 'static void _trace_user_arrays(GLuint maxindex)'
+        print 'static void _trace_user_arrays(GLuint count)'
         print '{'
         print '    gltrace::Context *ctx = gltrace::getContext();'
 
@@ -872,7 +872,7 @@ class GlTracer(Tracer):
                 print '            _%s(%s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
             
             arg_names = ', '.join([arg.name for arg in function.args[:-1]])
-            print '            size_t _size = _%s_size(%s, maxindex);' % (function.name, arg_names)
+            print '            size_t _size = _%s_size(%s, count);' % (function.name, arg_names)
 
             # Emit a fake function
             self.array_trace_intermezzo(api, uppercase_name)
@@ -951,7 +951,7 @@ class GlTracer(Tracer):
                 print '                    _%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
             
             arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
-            print '                    size_t _size = _%s_size(%s, maxindex);' % (function.name, arg_names)
+            print '                    size_t _size = _%s_size(%s, count);' % (function.name, arg_names)
 
             # Emit a fake function
             print '                    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
