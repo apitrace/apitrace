@@ -53,18 +53,20 @@ class EglTracer(GlTracer):
         GlTracer.traceFunctionImplBody(self, function)
 
         if function.name == 'eglMakeCurrent':
-            print '    // update the profile'
-            print '    if (ctx != EGL_NO_CONTEXT) {'
-            print '        EGLint api = EGL_OPENGL_ES_API, version = 1;'
-            print '        gltrace::Context *tr = gltrace::getContext();'
-            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
-            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
-            print '        if (api == EGL_OPENGL_API)'
-            print '            tr->profile = gltrace::PROFILE_COMPAT;'
-            print '        else if (version == 1)'
-            print '            tr->profile = gltrace::PROFILE_ES1;'
-            print '        else'
-            print '            tr->profile = gltrace::PROFILE_ES2;'
+            print '    if (_result) {'
+            print '        // update the profile'
+            print '        if (ctx != EGL_NO_CONTEXT) {'
+            print '            EGLint api = EGL_OPENGL_ES_API, version = 1;'
+            print '            gltrace::Context *tr = gltrace::getContext();'
+            print '            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
+            print '            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
+            print '            if (api == EGL_OPENGL_API)'
+            print '                tr->profile = gltrace::PROFILE_COMPAT;'
+            print '            else if (version == 1)'
+            print '                tr->profile = gltrace::PROFILE_ES1;'
+            print '            else'
+            print '                tr->profile = gltrace::PROFILE_ES2;'
+            print '        }'
             print '    }'
 
 
