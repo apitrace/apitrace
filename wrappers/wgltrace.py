@@ -39,6 +39,29 @@ class WglTracer(GlTracer):
         "wglGetProcAddress",
     ]
 
+    def traceFunctionImplBody(self, function):
+        GlTracer.traceFunctionImplBody(self, function)
+
+        if function.name == 'wglCreateContext':
+            print '    if (_result)'
+            print '        gltrace::createContext((uintptr_t)_result);'
+
+        if function.name == 'wglMakeCurrent':
+            print '    if (_result) {'
+            print '        if (hglrc != NULL)'
+            print '            gltrace::setContext((uintptr_t)hglrc);'
+            print '        else'
+            print '            gltrace::clearContext();'
+            print '    }'
+
+        if function.name == 'wglDeleteContext':
+            print '    gltrace::Context *current_ctx = gltrace::getContext();'
+            # Unlike other GL APIs like EGL or GLX, WGL will make the context
+            # inactive if it's currently the active context.
+            print '    if (current_ctx == (uintptr_t)hglrc)'
+            print '        gltrace::clearContext();'
+            print '    gltrace::destroyContext((uintptr_t)ctx);'
+
 
 if __name__ == '__main__':
     print
