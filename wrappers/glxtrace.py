@@ -45,6 +45,24 @@ class GlxTracer(GlTracer):
         "glXGetProcAddressARB",
     ]
 
+    def traceFunctionImplBody(self, function):
+        GlTracer.traceFunctionImplBody(self, function)
+
+        if function.name == 'glXCreateContext':
+            print '    if (_result != NULL)'
+            print '        gltrace::createContext((uintptr_t)_result);'
+
+        if function.name == 'glXMakeCurrent':
+            print '    if (_result) {'
+            print '        if (ctx != NULL)'
+            print '            gltrace::setContext((uintptr_t)ctx);'
+            print '        else'
+            print '            gltrace::clearContext();'
+            print '    }'
+
+        if function.name == 'glXDestroyContext':
+            print '    gltrace::destroyContext((uintptr_t)ctx);'
+
 
 if __name__ == '__main__':
     print
