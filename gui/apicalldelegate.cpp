@@ -54,6 +54,11 @@ void ApiCallDelegate::paint(QPainter *painter,
         }
         if (event->type() == ApiTraceEvent::Call) {
             ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+            const QImage & thumbnail = call->thumbnail();
+            if (!thumbnail.isNull()) {
+                painter->drawImage(offset, thumbnail);
+                offset += QPoint(textSize.height() + thumbnail.width(), option.rect.height()/2 - textSize.height()/2);
+            }
             if (call->hasError()) {
                 QPixmap px = m_errorEmblem.pixmap(textSize.height(),
                                                   textSize.height());
@@ -95,6 +100,15 @@ QSize ApiCallDelegate::sizeHint(const QStyleOptionViewItem &option,
         if (event->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
             const QImage & thumbnail = frame->thumbnail();
+            if (!thumbnail.isNull()) {
+                size.rwidth() += thumbnail.width();
+                if (size.height() < thumbnail.height()) {
+                    size.setHeight(thumbnail.height());
+                }
+            }
+        } else if (event->type() == ApiTraceEvent::Call) {
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+            const QImage & thumbnail = call->thumbnail();
             if (!thumbnail.isNull()) {
                 size.rwidth() += thumbnail.width();
                 if (size.height() < thumbnail.height()) {

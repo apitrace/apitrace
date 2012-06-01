@@ -611,6 +611,16 @@ void ApiTraceEvent::setState(ApiTraceState *state)
     m_state = state;
 }
 
+void ApiTraceEvent::setThumbnail(const QImage & thumbnail)
+{
+    m_thumbnail = thumbnail;
+}
+
+const QImage & ApiTraceEvent::thumbnail() const
+{
+    return m_thumbnail;
+}
+
 ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
                            TraceLoader *loader,
                            const trace::Call *call)
@@ -1278,14 +1288,4 @@ unsigned ApiTraceFrame::lastCallIndex() const
     } else {
         return m_lastCallIndex;
     }
-}
-
-void ApiTraceFrame::setThumbnail(const QImage & thumbnail)
-{
-    m_thumbnail = thumbnail;
-}
-
-const QImage & ApiTraceFrame::thumbnail() const
-{
-    return m_thumbnail;
 }
