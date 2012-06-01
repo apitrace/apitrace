@@ -43,6 +43,8 @@ void ApiCallDelegate::paint(QPainter *painter,
             if (!thumbnail.isNull()) {
                 painter->drawImage(offset, thumbnail);
                 offset += QPoint(textSize.height() + thumbnail.width(), option.rect.height()/2 - textSize.height()/2);
+            } else {
+                frame->missingThumbnail();
             }
         }
 
@@ -58,6 +60,8 @@ void ApiCallDelegate::paint(QPainter *painter,
             if (!thumbnail.isNull()) {
                 painter->drawImage(offset, thumbnail);
                 offset += QPoint(textSize.height() + thumbnail.width(), option.rect.height()/2 - textSize.height()/2);
+            } else {
+                call->missingThumbnail();
             }
             if (call->hasError()) {
                 QPixmap px = m_errorEmblem.pixmap(textSize.height(),

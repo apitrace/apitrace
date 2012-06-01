@@ -221,6 +221,8 @@ public:
     void setThumbnail(const QImage & thumbnail);
     const QImage & thumbnail() const;
 
+    virtual void missingThumbnail() = 0;
+
 protected:
     int m_type : 4;
     mutable int m_binaryDataIndex:8;
@@ -286,6 +288,9 @@ public:
 
     QString backtrace() const;
     void setBacktrace(QString backtrace);
+
+    void missingThumbnail();
+
 private:
     void loadData(TraceLoader *loader,
                   const trace::Call *tcall);
@@ -351,6 +356,8 @@ public:
 
     void setLastCallIndex(unsigned index);
     unsigned lastCallIndex() const;
+
+    void missingThumbnail();
 
 private:
     ApiTrace *m_parentTrace;

@@ -508,4 +508,33 @@ void ApiTrace::bindThumbnailsToFrames(const QList<QImage> &thumbnails)
     }
 }
 
+void ApiTrace::missingThumbnail(ApiTraceFrame *frame)
+{
+    missingThumbnail(frame->lastCallIndex());
+}
+
+void ApiTrace::missingThumbnail(ApiTraceCall *call)
+{
+    missingThumbnail(call->index());
+}
+
+void ApiTrace::missingThumbnail(int callIdx)
+{
+    // technically, the contain() test is redundant, since this is a set;
+    // however, it enables debugging techniques to confirm correct behavior
+    if (!m_missingThumbnails.contains(callIdx)) {
+        //qDebug() << QLatin1String("debug: new missing thumbnail: ") << callIdx;
+        m_missingThumbnails.insert(callIdx);
+    }
+}
+
+bool ApiTrace::isMissingThumbnails() const
+{
+	return !m_missingThumbnails.isEmpty();
+}
+void ApiTrace::resetMissingThumbnails()
+{
+    m_missingThumbnails.clear();
+}
+
 #include "apitrace.moc"

@@ -77,6 +77,12 @@ public:
 
     trace::API api() const;
 
+    void missingThumbnail(ApiTraceFrame* frame);
+    void missingThumbnail(ApiTraceCall* call);
+
+    bool isMissingThumbnails() const;
+    void resetMissingThumbnails();
+
 public slots:
     void setFileName(const QString &name);
     void save();
@@ -141,6 +147,8 @@ private slots:
 private:
     int callInFrame(int callIdx) const;
     bool isFrameLoading(ApiTraceFrame *frame) const;
+
+    void missingThumbnail(int callIdx);
 private:
     QString m_fileName;
     QString m_tempFileName;
@@ -159,6 +167,8 @@ private:
     QSet<ApiTraceCall*> m_errors;
     QList< QPair<ApiTraceFrame*, ApiTraceError> > m_queuedErrors;
     QSet<ApiTraceFrame*> m_loadingFrames;
+
+    QSet<int> m_missingThumbnails;
 };
 
 #endif
