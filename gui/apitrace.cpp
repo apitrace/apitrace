@@ -491,19 +491,40 @@ bool ApiTrace::isFrameLoading(ApiTraceFrame *frame) const
     return m_loadingFrames.contains(frame);
 }
 
-void ApiTrace::bindThumbnailsToFrames(const QList<QImage> &thumbnails)
+void ApiTrace::bindThumbnails(const ImageHash &thumbnails)
 {
-    QList<ApiTraceFrame *> frames = m_frames;
+    QHashIterator<int, QImage> i(thumbnails);
 
-    QList<QImage>::const_iterator thumbnail = thumbnails.begin();
+    while (i.hasNext()) {
+        i.next();
 
-    foreach (ApiTraceFrame *frame, frames) {
-        if (thumbnail != thumbnails.end()) {
-            frame->setThumbnail(*thumbnail);
+        if (!m_thumbnails.contains(i.key())) {
+            int callIndex = i.key();
+            const QImage &thumbnail = i.value();
 
-            ++thumbnail;
+            m_thumbnails.insert(callIndex, thumbnail);
 
-            emit changed(frame);
+            // find the frame associated with the call index
+            int frameIndex = 0;
+            while (frameAt(frameIndex)->lastCallIndex() < callIndex) {
+                ++frameIndex;
+            }
+
+            ApiTraceFrame *frame = frameAt(frameIndex);
+
+            // if the call was actually for a frame, ...
+            if (callIndex == frame->lastCallIndex()) {
+                frame->setThumbnail(thumbnail);
+
+                emit changed(frame);
+            } else {
+                ApiTraceCall *call = frame->callWithIndex(callIndex);
+                if (call) {
+                    call->setThumbnail(thumbnail);
+
+                    emit changed(call);
+                }
+            }
         }
     }
 }

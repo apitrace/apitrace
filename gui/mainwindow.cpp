@@ -877,8 +877,8 @@ void MainWindow::initConnections()
             this, SLOT(replayStateFound(ApiTraceState*)));
     connect(m_retracer, SIGNAL(foundProfile(trace::Profile*)),
             this, SLOT(replayProfileFound(trace::Profile*)));
-    connect(m_retracer, SIGNAL(foundThumbnails(const QList<QImage>&)),
-            this, SLOT(replayThumbnailsFound(const QList<QImage>&)));
+    connect(m_retracer, SIGNAL(foundThumbnails(const ImageHash&)),
+            this, SLOT(replayThumbnailsFound(const ImageHash&)));
     connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
             this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
 
@@ -1050,10 +1050,10 @@ void MainWindow::replayStateFound(ApiTraceState *state)
     m_nonDefaultsLookupEvent = 0;
 }
 
-void MainWindow::replayThumbnailsFound(const QList<QImage> &thumbnails)
+void MainWindow::replayThumbnailsFound(const ImageHash &thumbnails)
 {
     m_ui.callView->setUniformRowHeights(false);
-    m_trace->bindThumbnailsToFrames(thumbnails);
+    m_trace->bindThumbnails(thumbnails);
 }
 
 void MainWindow::slotGoTo()

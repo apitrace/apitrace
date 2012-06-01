@@ -138,6 +138,7 @@ struct PNMInfo
     unsigned height;
     unsigned channels;
     ChannelType channelType;
+    int commentNumber;
 };
 
 const char *

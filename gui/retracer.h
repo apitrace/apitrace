@@ -2,6 +2,7 @@
 #define RETRACER_H
 
 #include "trace_api.hpp"
+#include "apitrace.h"
 #include "apitracecall.h"
 
 #include <QThread>
@@ -60,6 +61,7 @@ signals:
     void foundState(ApiTraceState *state);
     void foundProfile(trace::Profile *profile);
     void foundThumbnails(const QList<QImage> &thumbnails);
+    void foundThumbnails(const ImageHash &thumbnails);
     void error(const QString &msg);
     void retraceErrors(const QList<ApiTraceError> &errors);
 
