@@ -56,6 +56,8 @@ public:
     void addThumbnailToCapture(qlonglong num);
     void resetThumbnailsToCapture();
 
+    QString thumbnailCallSet();
+
 signals:
     void finished(const QString &output);
     void foundState(ApiTraceState *state);

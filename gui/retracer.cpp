@@ -275,6 +275,27 @@ void Retracer::resetThumbnailsToCapture()
     m_thumbnailsToCapture.clear();
 }
 
+QString Retracer::thumbnailCallSet()
+{
+    QString callSet;
+
+    bool isFirst = true;
+
+    foreach (qlonglong callIndex, m_thumbnailsToCapture) {
+        // TODO: detect contiguous ranges
+        if (!isFirst) {
+            callSet.append(QLatin1String(","));
+        } else {
+            isFirst = false;
+        }
+
+        //emit "callIndex"
+        callSet.append(QString::number(callIndex));
+    }
+
+    //qDebug() << QLatin1String("debug: call set to capture: ") << callSet;
+    return callSet;
+}
 
 /**
  * Starting point for the retracing thread.
@@ -328,6 +349,10 @@ void Retracer::run()
         arguments << QLatin1String("-D");
         arguments << QString::number(m_captureCall);
     } else if (m_captureThumbnails) {
+        if (!m_thumbnailsToCapture.isEmpty()) {
+            arguments << QLatin1String("-S");
+            arguments << thumbnailCallSet();
+        }
         arguments << QLatin1String("-s"); // emit snapshots
         arguments << QLatin1String("-"); // emit to stdout
     } else if (isProfiling()) {
