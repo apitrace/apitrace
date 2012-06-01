@@ -12,6 +12,8 @@ class TraceLoader;
 class SaverThread;
 class QThread;
 
+typedef void (*ThumbnailCallback)(void *object, int thumbnailIdx);
+
 class ApiTrace : public QObject
 {
     Q_OBJECT
@@ -82,6 +84,8 @@ public:
 
     bool isMissingThumbnails() const;
     void resetMissingThumbnails();
+
+    void iterateMissingThumbnails(void *object, ThumbnailCallback cb);
 
 public slots:
     void setFileName(const QString &name);

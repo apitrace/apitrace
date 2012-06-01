@@ -263,6 +263,19 @@ void Retracer::setCaptureThumbnails(bool enable)
     m_captureThumbnails = enable;
 }
 
+void Retracer::addThumbnailToCapture(qlonglong num)
+{
+    if (!m_thumbnailsToCapture.contains(num)) {
+        m_thumbnailsToCapture.append(num);
+    }
+}
+
+void Retracer::resetThumbnailsToCapture()
+{
+    m_thumbnailsToCapture.clear();
+}
+
+
 /**
  * Starting point for the retracing thread.
  *

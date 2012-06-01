@@ -116,6 +116,8 @@ private:
     ApiTraceFrame *currentFrame() const;
     ApiTraceCall *currentCall() const;
 
+    static void thumbnailCallback(void *object, int thumbnailIdx);
+
 protected:
     virtual void closeEvent(QCloseEvent * event);
 

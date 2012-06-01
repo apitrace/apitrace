@@ -354,6 +354,11 @@ void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
         }
         m_retracer->setCaptureAtCallNumber(index);
     }
+    if (m_trace->isMissingThumbnails()) {
+        m_retracer->resetThumbnailsToCapture();
+        m_trace->iterateMissingThumbnails(this, this->thumbnailCallback);
+        m_trace->resetMissingThumbnails();
+    }
     m_retracer->start();
 
     m_ui.actionStop->setEnabled(true);
@@ -1557,6 +1562,13 @@ void MainWindow::slotJumpToResult(ApiTraceCall *call)
     } else {
         statusBar()->showMessage(tr("Call has been filtered out."));
     }
+}
+
+void MainWindow::thumbnailCallback(void *object, int thumbnailIdx)
+{
+	//qDebug() << QLatin1String("debug: transfer from trace to retracer thumbnail index: ") << thumbnailIdx;
+    MainWindow *mySelf = (MainWindow *) object;
+    mySelf->m_retracer->addThumbnailToCapture(thumbnailIdx);
 }
 
 #include "mainwindow.moc"

@@ -537,4 +537,13 @@ void ApiTrace::resetMissingThumbnails()
     m_missingThumbnails.clear();
 }
 
+void ApiTrace::iterateMissingThumbnails(void *object, ThumbnailCallback cb)
+{
+    //qDebug() << QLatin1String("debug: count of missing thumbnail list") << m_missingThumbnails.count();
+    foreach (int thumbnailIndex, m_missingThumbnails) {
+        //qDebug() << QLatin1String("debug: iterate missing thumbnail list") << thumbnailIndex;
+        (*cb)(object, thumbnailIndex);
+    }
+}
+
 #include "apitrace.moc"
