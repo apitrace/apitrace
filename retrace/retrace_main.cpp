@@ -207,8 +207,14 @@ retraceCall(trace::Call *call) {
 
     retracer.retrace(*call);
 
-    if (doSnapshot && !swapRenderTarget)
-        takeSnapshot(call->no);
+    if (doSnapshot) {
+        if (!swapRenderTarget) {
+            takeSnapshot(call->no);
+        }
+        if (call->no >= snapshotFrequency.getLast()) {
+            exit(0);
+        }
+    }
 
     if (call->no >= dumpStateCallNo &&
         dumper->dumpState(std::cout)) {
