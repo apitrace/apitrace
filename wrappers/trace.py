@@ -187,7 +187,7 @@ class ValueSerializer(stdapi.Visitor):
         length = '_c' + array.type.tag
         index = '_i' + array.type.tag
         print '    if (%s) {' % instance
-        print '        size_t %s = %s;' % (length, array.length)
+        print '        size_t %s = %s > 0 ? %s : 0;' % (length, array.length, array.length)
         print '        trace::localWriter.beginArray(%s);' % length
         print '        for (size_t %s = 0; %s < %s; ++%s) {' % (index, index, length, index)
         print '            trace::localWriter.beginElement();'
