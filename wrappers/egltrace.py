@@ -81,6 +81,27 @@ class EglTracer(GlTracer):
             print '        gltrace::releaseContext((uintptr_t)ctx);'
             print '    }'
 
+        if function.name == 'eglCreateImageKHR':
+            print '    _eglCreateImageKHR_epilog(dpy, ctx, target, buffer,'
+            print '                              attrib_list, _result);'
+
+        if function.name == 'eglDestroyImageKHR':
+            print '    _eglDestroyImageKHR_epilog(image);'
+
+    def serializeArgValue(self, function, arg):
+        if function.name == 'glEGLImageTargetTexture2DOES' and \
+          arg.name == 'image':
+            print '    GLsizei blob_size;'
+            print '    GLvoid *blob_ptr;'
+            print '    blob_size = _glEGLImageTargetTexture2DOES_size(target, image);'
+            print '    blob_ptr = _glEGLImageTargetTexture2DOES_get_ptr(target, image);'
+            print '    trace::localWriter.writeBlob(blob_ptr, blob_size);'
+            print '    _glEGLImageTargetTexture2DOES_put_ptr(blob_ptr);'
+
+            return
+
+        GlTracer.serializeArgValue(self, function, arg)
+
 if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
@@ -94,6 +115,7 @@ if __name__ == '__main__':
     print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
+    print '#include "eglsize.hpp"'
     print
     
     api = API()

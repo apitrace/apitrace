@@ -376,6 +376,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         egltrace.cpp
         glcaps.cpp
         gltrace_state.cpp
+        ${CMAKE_SOURCE_DIR}/helpers/eglsize.cpp
     )
 
     add_dependencies (egltrace glproc)
