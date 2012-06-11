@@ -257,6 +257,11 @@ class GlRetracer(Retracer):
         if function.name == 'memcpy':
             print '    if (!dest || !src || !n) return;'
 
+        # Skip glEnable/Disable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB) as we don't
+        # faithfully set the CONTEXT_DEBUG_BIT_ARB flags on context creation.
+        if function.name in ('glEnable', 'glDisable'):
+            print '    if (cap == GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB) return;'
+
         # Destroy the buffer mapping
         if function.name in self.unmap_function_names:
             print r'        GLvoid *ptr = NULL;'
