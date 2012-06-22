@@ -161,7 +161,7 @@ public:
             return;
         }
 
-        eglWaitClient();
+        eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
         // We need to ensure that pending events are processed here, and XSync
         // with discard = True guarantees that, but it appears the limited
@@ -189,7 +189,7 @@ public:
             return;
         }
 
-        eglWaitClient();
+        eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
         XMapWindow(display, window);
 
