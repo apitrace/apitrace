@@ -430,3 +430,6 @@ d3d9.addFunctions([
     StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], sideeffects=False),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0', sideeffects=False),
 ])
+d3d9.addInterfaces([
+    IDirect3DSwapChain9Ex,
+])
