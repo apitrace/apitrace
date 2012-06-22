@@ -48,14 +48,16 @@ class D3DRetracer(Retracer):
             print r'    d3dretrace::pLastDirect3DDevice9 = _this;'
 
         # create windows as neccessary
-        if method.name in ('CreateDevice', 'CreateDeviceEx'):
+        if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):
             print r'    HWND hWnd = d3dretrace::createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
-            print r'    hFocusWindow = hWnd;'
             print r'    pPresentationParameters->hDeviceWindow = hWnd;'
+            if 'hFocusWindow' in method.argNames():
+                print r'    hFocusWindow = hWnd;'
 
         # notify frame has been completed
         if method.name == 'Present':
             print r'    retrace::frameComplete(call);'
+            print r'    hDestWindowOverride = NULL;'
 
         if 'pSharedHandle' in method.argNames():
             print r'    if (pSharedHandle) {'
