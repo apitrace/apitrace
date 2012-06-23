@@ -156,6 +156,28 @@ public:
     }
 
     void
+    recreate(void) {
+        EGLContext currentContext = eglGetCurrentContext();
+        EGLSurface currentDrawSurface = eglGetCurrentSurface(EGL_DRAW);
+        EGLSurface currentReadSurface = eglGetCurrentSurface(EGL_DRAW);
+        bool rebindDrawSurface = currentDrawSurface == surface;
+        bool rebindReadSurface = currentReadSurface == surface;
+
+        if (rebindDrawSurface || rebindReadSurface) {
+            eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
+
+        eglDestroySurface(eglDisplay, surface);
+
+        EGLConfig config = static_cast<const EglVisual *>(visual)->config;
+        surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
+
+        if (rebindDrawSurface || rebindReadSurface) {
+            eglMakeCurrent(eglDisplay, surface, surface, currentContext);
+        }
+    }
+
+    void
     resize(int w, int h) {
         if (w == width && h == height) {
             return;
@@ -182,6 +204,27 @@ public:
         waitForEvent(ConfigureNotify);
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
+
+        /*
+         * Some implementations won't update the backbuffer unless we recreate
+         * the EGL surface.
+         */
+
+        int eglWidth;
+        int eglHeight;
+
+        eglQuerySurface(eglDisplay, surface, EGL_WIDTH, &eglWidth);
+        eglQuerySurface(eglDisplay, surface, EGL_HEIGHT, &eglHeight);
+
+        if (eglWidth != width || eglHeight != height) {
+            recreate();
+
+            eglQuerySurface(eglDisplay, surface, EGL_WIDTH, &eglWidth);
+            eglQuerySurface(eglDisplay, surface, EGL_HEIGHT, &eglHeight);
+        }
+
+        assert(eglWidth == width);
+        assert(eglHeight == height);
     }
 
     void show(void) {
