@@ -818,6 +818,10 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 {
     GLint channels = _gl_format_channels(format);
 
+    if (internalFormat == GL_NONE) {
+        internalFormat = format;
+    }
+
     Context context;
 
     json.beginObject();
