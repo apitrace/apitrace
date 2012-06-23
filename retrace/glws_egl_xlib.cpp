@@ -40,6 +40,7 @@ namespace glws {
 
 static Display *display = NULL;
 static EGLDisplay eglDisplay = EGL_NO_DISPLAY;
+static EGLContext currentContext = NULL;
 static int screen = 0;
 
 
@@ -90,6 +91,7 @@ class EglDrawable : public Drawable
 public:
     Window window;
     EGLSurface surface;
+    EGLConfig eglConfig;
     EGLint api;
 
     EglDrawable(const Visual *vis, int w, int h) :
@@ -136,8 +138,8 @@ public:
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
-        EGLConfig config = static_cast<const EglVisual *>(visual)->config;
-        surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
+        eglConfig = static_cast<const EglVisual *>(visual)->config;
+        surface = eglCreateWindowSurface(eglDisplay, eglConfig, (EGLNativeWindowType)window, NULL);
     }
 
     void waitForEvent(int type) {
@@ -182,6 +184,12 @@ public:
         waitForEvent(ConfigureNotify);
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
+
+        assert(currentContext);
+        eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglDestroySurface(eglDisplay, surface);
+        surface = eglCreateWindowSurface(eglDisplay, eglConfig, (EGLNativeWindowType)window, NULL);
+        eglMakeCurrent(eglDisplay, surface, surface, currentContext);
     }
 
     void show(void) {
@@ -414,6 +422,7 @@ makeCurrent(Drawable *drawable, Context *context)
         ok = eglMakeCurrent(eglDisplay, eglDrawable->surface,
                             eglDrawable->surface, eglContext->context);
 
+        currentContext = eglContext->context;
         if (ok) {
             EGLint api;
 
