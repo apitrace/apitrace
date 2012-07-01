@@ -308,6 +308,10 @@ class GlRetracer(Retracer):
             print r'    } else {'
             Retracer.invokeFunction(self, function)
             print r'    }'
+        elif function.name in ('glDeleteShader', 'glDetachShader'):
+            print r'    if (!retrace::dumpingState) {'
+            Retracer.invokeFunction(self, function)
+            print r'    }'
         elif function.name == 'glClientWaitSync':
             print r'    _result = glretrace::clientWaitSync(call, sync, flags, timeout);'
             print r'    (void)_result;'
