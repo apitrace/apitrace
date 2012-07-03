@@ -282,7 +282,7 @@ public:
                 return;
             }
 
-            newArray->values.push_back(visitor.value());
+            newArray->values[i] = visitor.value();
         }
         m_editedValue = newArray;
     }
