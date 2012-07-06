@@ -246,8 +246,11 @@ public:
 
     virtual void visit(trace::String *node)
     {
-        QString str = m_variant.toString();
-        m_editedValue = new trace::String(str.toLocal8Bit().constData());
+        const QByteArray data = m_variant.toString().toLocal8Bit();
+        char* new_data = new char[data.length()+1];
+        memcpy(new_data, data.data(), data.length()+1); 
+
+        m_editedValue = new trace::String(new_data);
     }
 
     virtual void visit(trace::Enum *e)
