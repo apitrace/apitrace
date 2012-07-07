@@ -406,6 +406,14 @@ void Retracer::run()
             error.type = regexp.cap(2);
             error.message = regexp.cap(3);
             errors.append(error);
+        } else if (!errors.isEmpty()) {
+            // Probably a multiligne message
+            ApiTraceError &previous = errors.last();
+            if (line.endsWith("\n")) {
+                line.chop(1);
+            }
+            previous.message.append('\n');
+            previous.message.append(line);
         }
     }
 
