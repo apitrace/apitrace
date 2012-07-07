@@ -9,5 +9,4 @@ dlltrace.cpp
 egltrace.cpp
 gltrace.cpp
 glxtrace.cpp
-trace.cpp
 wgltrace.cpp

@@ -9,6 +9,14 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/dispatch
 )
 
+add_library (common_trace STATIC
+    trace.cpp
+)
+
+set_target_properties (common_trace PROPERTIES
+    # Ensure it can be statically linked in shared libraries
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
+)
 
 if (WIN32)
     if (MINGW)
@@ -36,6 +44,7 @@ if (WIN32)
         )
         add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
         target_link_libraries (ddrawtrace
+            common_trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
@@ -66,6 +75,7 @@ if (WIN32)
         )
         add_library (d3d8trace MODULE d3d8.def d3d8trace.cpp d3d9shader.cpp)
         target_link_libraries (d3d8trace
+            common_trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
@@ -96,6 +106,7 @@ if (WIN32)
         )
         add_library (d3d9trace MODULE d3d9.def d3d9trace.cpp d3d9shader.cpp)
         target_link_libraries (d3d9trace
+            common_trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
@@ -132,6 +143,7 @@ if (WIN32)
         )
         add_library (d3d10trace MODULE d3d10.def d3d10trace.cpp d3d10shader.cpp)
         target_link_libraries (d3d10trace
+            common_trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
@@ -166,6 +178,7 @@ if (WIN32)
         )
         add_library (d3d10_1trace MODULE d3d10_1.def d3d10_1trace.cpp)
         target_link_libraries (d3d10_1trace
+            common_trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
@@ -205,6 +218,7 @@ if (WIN32)
         )
         add_library (d3d11trace MODULE d3d11.def d3d11trace.cpp)
         target_link_libraries (d3d11trace
+            common_trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
@@ -240,6 +254,7 @@ if (WIN32)
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
         glproc_gl
+        common_trace
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
@@ -282,6 +297,7 @@ elseif (APPLE)
 
     target_link_libraries (cgltrace
         glproc_gl
+        common_trace
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
@@ -323,6 +339,7 @@ elseif (X11_FOUND)
 
     target_link_libraries (glxtrace
         glproc_gl
+        common_trace
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
@@ -369,6 +386,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
 
     target_link_libraries (egltrace
         glproc_egl
+        common_trace
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}

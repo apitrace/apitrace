@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2010 VMware, Inc.
+ * Copyright 2011 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,58 +23,34 @@
  *
  **************************************************************************/
 
+
 /*
- * Simple OS abstraction layer.
+ * Comon definitions for all tracers.
  */
 
-#ifndef _OS_HPP_
-#define _OS_HPP_
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#ifndef _TRACE_HPP_
+#define _TRACE_HPP_
 
-#ifdef _WIN32
-#ifndef snprintf
-#define snprintf _snprintf
-#endif
-#ifndef vsnprintf
-#define vsnprintf _vsnprintf
-#endif
-#endif /* !_WIN32 */
 
-namespace os {
+namespace trace {
 
-void log(const char *format, ...)
-#ifdef __GNUC__
-    __attribute__ ((format (printf, 1, 2)))
-#endif
-;
 
-#if defined _WIN32 || defined __CYGWIN__
-  /* We always use .def files on windows for now */
-  #if 0
-  #define PUBLIC __declspec(dllexport)
-  #else
-  #define PUBLIC
-  #endif
-  #define PRIVATE
-#else
-  #if __GNUC__ >= 4
-    #define PUBLIC __attribute__ ((visibility("default")))
-    #define PRIVATE __attribute__ ((visibility("hidden")))
-  #else
-    #define PUBLIC
-    #define PRIVATE
-  #endif
-#endif
+#ifdef ANDROID
 
-void abort(void);
+bool isTracingEnabled(void);
 
-void setExceptionCallback(void (*callback)(void));
-void resetExceptionCallback(void);
+#else /* !ANDROID */
 
-} /* namespace os */
+static inline bool
+isTracingEnabled(void) {
+    return true;
+}
 
-#endif /* _OS_HPP_ */
+#endif /* !ANDROID */
+
+
+} /* namespace trace */
+
+
+#endif /* _TRACE_HPP_ */
