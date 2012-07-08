@@ -55,12 +55,12 @@ class WglTracer(GlTracer):
             print '    }'
 
         if function.name == 'wglDeleteContext':
-            print '    gltrace::Context *current_ctx = gltrace::getContext();'
             # Unlike other GL APIs like EGL or GLX, WGL will make the context
             # inactive if it's currently the active context.
-            print '    if (current_ctx == (uintptr_t)hglrc)'
+            print '    if (_wglGetCurrentContext() == hglrc) {'
             print '        gltrace::clearContext();'
-            print '    gltrace::destroyContext((uintptr_t)ctx);'
+            print '    }'
+            print '    gltrace::destroyContext((uintptr_t)hglrc);'
 
 
 if __name__ == '__main__':
