@@ -28,7 +28,11 @@
 #include <assert.h>
 
 #include <map>
+#if defined(_MSC_VER)
+#include <memory>
+#else
 #include <tr1/memory>
+#endif
 
 #include <gltrace.hpp>
 #include <os_thread.hpp>
