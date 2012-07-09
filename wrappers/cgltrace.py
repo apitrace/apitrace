@@ -40,37 +40,43 @@ class CglTracer(GlTracer):
         return True
 
     def traceFunctionImplBody(self, function):
-        GlTracer.traceFunctionImplBody(self, function)
-
-        if function.name == 'CGLCreateContext':
-            print '    if (_result == kCGLNoError)'
-            print '        gltrace::createContext((uintptr_t)*ctx);'
-
-        if function.name == 'CGLSetCurrentContext':
-            print '    if (_result == kCGLNoError) {'
-            print '        if (ctx != NULL)'
-            print '            gltrace::setContext((uintptr_t)ctx);'
-            print '        else'
-            print '            gltrace::clearContext();'
-            print '    }'
-
-        if function.name == 'CGLRetainContext':
-            print '    gltrace::retainContext((uintptr_t)ctx);'
-
         if function.name == 'CGLReleaseContext':
             # Unlike other GL APIs like EGL or GLX, CGL will make the context
             # not current if it's the current context.
-            print '    if (gltrace::releaseContext((uintptr_t)ctx)) {'
-            print '        if ((uintptr_t)ctx == gltrace::getContext())'
-            print '            gltrace::clearContext();'
+            print '    if (_CGLGetContextRetainCount(ctx) == 1) {'
+            print '        if (gltrace::releaseContext((uintptr_t)ctx)) {'
+            print '            if (_CGLGetCurrentContext() == ctx) {'
+            print '                gltrace::clearContext();'
+            print '            }'
+            print '        }'
             print '    }'
 
         if function.name == 'CGLDestroyContext':
             # The same rule applies here about the  as for CGLReleaseContext.
             print '    if (gltrace::destroyContext((uintptr_t)ctx)) {'
-            print '        if ((uintptr_t)ctx == gltrace::getContext())'
+            print '        if (_CGLGetCurrentContext() == ctx) {'
             print '            gltrace::clearContext();'
+            print '        }'
             print '    }'
+
+        GlTracer.traceFunctionImplBody(self, function)
+
+        if function.name == 'CGLCreateContext':
+            print '    if (_result == kCGLNoError) {'
+            print '        gltrace::createContext((uintptr_t)*ctx);'
+            print '    }'
+
+        if function.name == 'CGLSetCurrentContext':
+            print '    if (_result == kCGLNoError) {'
+            print '        if (ctx != NULL) {'
+            print '            gltrace::setContext((uintptr_t)ctx);'
+            print '        } else {'
+            print '            gltrace::clearContext();'
+            print '        }'
+            print '    }'
+
+        if function.name == 'CGLRetainContext':
+            print '    gltrace::retainContext((uintptr_t)ctx);'
 
 
 if __name__ == '__main__':
