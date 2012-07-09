@@ -40,6 +40,14 @@ class WglTracer(GlTracer):
     ]
 
     def traceFunctionImplBody(self, function):
+        if function.name == 'wglDeleteContext':
+            # Unlike other GL APIs like EGL or GLX, WGL will make the context
+            # inactive if it's currently the active context.
+            print '    if (_wglGetCurrentContext() == hglrc) {'
+            print '        gltrace::clearContext();'
+            print '    }'
+            print '    gltrace::destroyContext((uintptr_t)hglrc);'
+
         GlTracer.traceFunctionImplBody(self, function)
 
         if function.name == 'wglCreateContext':
@@ -53,14 +61,6 @@ class WglTracer(GlTracer):
             print '        else'
             print '            gltrace::clearContext();'
             print '    }'
-
-        if function.name == 'wglDeleteContext':
-            # Unlike other GL APIs like EGL or GLX, WGL will make the context
-            # inactive if it's currently the active context.
-            print '    if (_wglGetCurrentContext() == hglrc) {'
-            print '        gltrace::clearContext();'
-            print '    }'
-            print '    gltrace::destroyContext((uintptr_t)hglrc);'
 
 
 if __name__ == '__main__':
