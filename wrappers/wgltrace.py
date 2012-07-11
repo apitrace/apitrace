@@ -46,7 +46,7 @@ class WglTracer(GlTracer):
             print '    if (_wglGetCurrentContext() == hglrc) {'
             print '        gltrace::clearContext();'
             print '    }'
-            print '    gltrace::destroyContext((uintptr_t)hglrc);'
+            print '    gltrace::releaseContext((uintptr_t)hglrc);'
 
         GlTracer.traceFunctionImplBody(self, function)
 

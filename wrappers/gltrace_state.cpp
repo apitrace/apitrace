@@ -126,15 +126,6 @@ void createContext(uintptr_t context_id)
     context_map_mutex.unlock();
 }
 
-/*
- * return true if the context has been destroyed, false otherwise. See
- * the note at releaseContext about the actual ccontext lifetime.
- */
-bool destroyContext(uintptr_t context_id)
-{
-    return releaseContext(context_id);
-}
-
 void setContext(uintptr_t context_id)
 {
     ThreadState *ts = get_ts();

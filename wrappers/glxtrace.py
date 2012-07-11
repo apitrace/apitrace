@@ -46,6 +46,9 @@ class GlxTracer(GlTracer):
     ]
 
     def traceFunctionImplBody(self, function):
+        if function.name == 'glXDestroyContext':
+            print '    gltrace::releaseContext((uintptr_t)ctx);'
+
         GlTracer.traceFunctionImplBody(self, function)
 
         if function.name == 'glXCreateContext':
@@ -59,9 +62,6 @@ class GlxTracer(GlTracer):
             print '        else'
             print '            gltrace::clearContext();'
             print '    }'
-
-        if function.name == 'glXDestroyContext':
-            print '    gltrace::destroyContext((uintptr_t)ctx);'
 
 
 if __name__ == '__main__':

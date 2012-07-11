@@ -77,8 +77,9 @@ class EglTracer(GlTracer):
             print '    }'
 
         if function.name == 'eglDestroyContext':
-            print '    if (_result)'
-            print '        gltrace::destroyContext((uintptr_t)ctx);'
+            print '    if (_result) {'
+            print '        gltrace::releaseContext((uintptr_t)ctx);'
+            print '    }'
 
 if __name__ == '__main__':
     print '#include <stdlib.h>'

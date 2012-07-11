@@ -47,16 +47,17 @@ public:
     bool user_arrays_nv;
     unsigned retain_count;
 
-    Context(void) : profile(PROFILE_COMPAT), user_arrays(false),
-                    user_arrays_arb(false), user_arrays_nv(false),
-                    retain_count(0) { }
+    Context(void) :
+        profile(PROFILE_COMPAT),
+        user_arrays(false),
+        user_arrays_arb(false),
+        user_arrays_nv(false),
+        retain_count(0)
+    { }
 };
 
 void
 createContext(uintptr_t context_id);
-
-bool
-destroyContext(uintptr_t context_id);
 
 void
 retainContext(uintptr_t context_id);

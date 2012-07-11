@@ -53,7 +53,7 @@ class CglTracer(GlTracer):
 
         if function.name == 'CGLDestroyContext':
             # The same rule applies here about the  as for CGLReleaseContext.
-            print '    if (gltrace::destroyContext((uintptr_t)ctx)) {'
+            print '    if (gltrace::releaseContext((uintptr_t)ctx)) {'
             print '        if (_CGLGetCurrentContext() == ctx) {'
             print '            gltrace::clearContext();'
             print '        }'
