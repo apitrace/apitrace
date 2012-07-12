@@ -52,21 +52,34 @@ class EglTracer(GlTracer):
     def traceFunctionImplBody(self, function):
         GlTracer.traceFunctionImplBody(self, function)
 
+        if function.name == 'eglCreateContext':
+            print '    if (_result != EGL_NO_CONTEXT)'
+            print '        gltrace::createContext((uintptr_t)_result);'
+
         if function.name == 'eglMakeCurrent':
-            print '    // update the profile'
-            print '    if (ctx != EGL_NO_CONTEXT) {'
-            print '        EGLint api = EGL_OPENGL_ES_API, version = 1;'
-            print '        gltrace::Context *tr = gltrace::getContext();'
-            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
-            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
-            print '        if (api == EGL_OPENGL_API)'
-            print '            tr->profile = gltrace::PROFILE_COMPAT;'
-            print '        else if (version == 1)'
-            print '            tr->profile = gltrace::PROFILE_ES1;'
-            print '        else'
-            print '            tr->profile = gltrace::PROFILE_ES2;'
+            print '    if (_result) {'
+            print '        // update the profile'
+            print '        if (ctx != EGL_NO_CONTEXT) {'
+            print '            EGLint api = EGL_OPENGL_ES_API, version = 1;'
+            print '            gltrace::setContext((uintptr_t)ctx);'
+            print '            gltrace::Context *tr = gltrace::getContext();'
+            print '            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
+            print '            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
+            print '            if (api == EGL_OPENGL_API)'
+            print '                tr->profile = gltrace::PROFILE_COMPAT;'
+            print '            else if (version == 1)'
+            print '                tr->profile = gltrace::PROFILE_ES1;'
+            print '            else'
+            print '                tr->profile = gltrace::PROFILE_ES2;'
+            print '        } else {'
+            print '            gltrace::clearContext();'
+            print '        }'
             print '    }'
 
+        if function.name == 'eglDestroyContext':
+            print '    if (_result) {'
+            print '        gltrace::releaseContext((uintptr_t)ctx);'
+            print '    }'
 
 if __name__ == '__main__':
     print '#include <stdlib.h>'
