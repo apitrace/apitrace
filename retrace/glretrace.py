@@ -289,7 +289,26 @@ class GlRetracer(Retracer):
             print r'    if (pipeline) {'
             print r'        _pipelineHasBeenBound = true;'
             print r'    }'
-        
+
+        profileDraw = (
+            function.name in self.draw_array_function_names or
+            function.name in self.draw_elements_function_names or
+            function.name in self.draw_indirect_function_names or
+            function.name in self.misc_draw_function_names
+        )
+
+        # Only profile if not inside a list as the queries get inserted into lsit
+        if function.name == 'glNewList':
+            print r'    glretrace::insideList = true;';
+
+        if function.name == 'glEndList':
+            print r'    glretrace::insideList = false;';
+
+        if profileDraw:
+            print r'    if (!glretrace::insideList && retrace::profileGPU) {'
+            print r'        glretrace::beginProfileGPU(call);'
+            print r'    }'
+
         if function.name == 'glCreateShaderProgramv':
             # When dumping state, break down glCreateShaderProgramv so that the
             # shader source can be recovered.
@@ -320,6 +339,11 @@ class GlRetracer(Retracer):
             print r'    }'
         else:
             Retracer.invokeFunction(self, function)
+
+        if profileDraw:
+            print r'    if (!glretrace::insideList && retrace::profileGPU) {'
+            print r'        glretrace::endProfileGPU(call);'
+            print r'    }'
 
         # Error checking
         if function.name == "glBegin":

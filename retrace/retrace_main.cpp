@@ -49,11 +49,13 @@ namespace retrace {
 
 
 trace::Parser parser;
+trace::Profiler profiler;
 
 
 int verbosity = 0;
 bool debug = true;
 bool profiling = false;
+bool profileGPU = false;
 bool dumpingState = false;
 
 
@@ -61,7 +63,7 @@ bool doubleBuffer = true;
 bool coreProfile = false;
 
 
-static unsigned frameNo = 0;
+unsigned frameNo = 0;
 
 
 void
@@ -233,6 +235,8 @@ int main(int argc, char **argv)
             retrace::debug = false;
             retrace::profiling = true;
             retrace::verbosity = -1;
+        } else if (!strcmp(arg, "-pgpu")) {
+            retrace::profileGPU = true;
         } else if (!strcmp(arg, "-c")) {
             comparePrefix = argv[++i];
             if (compareFrequency.empty()) {

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,58 +23,39 @@
  *
  **************************************************************************/
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
+#include "trace_profiler.hpp"
+#include <iostream>
 
-#include "glws.hpp"
-#include "retrace.hpp"
+namespace trace {
+Profiler::Profiler()
+    : baseTime(0)
+{
+}
 
+Profiler::~Profiler()
+{
+}
 
-namespace glretrace {
+void Profiler::addCall(const Call& call)
+{
+    if (baseTime == 0)
+        baseTime = call.gpu.start;
 
+    std::cout << "call "
+              << call.no << " "
+              << (call.gpu.start - baseTime) << " "
+              << call.gpu.duration << " "
+              << call.name << std::endl;
+}
 
-extern bool insideList;
-extern bool insideGlBeginEnd;
+void Profiler::addFrame(const Frame& frame)
+{
+    if (baseTime == 0)
+        baseTime = frame.gpu.start;
 
-
-extern glws::Drawable *currentDrawable;
-extern glws::Context *currentContext;
-
-glws::Drawable *
-createDrawable(glws::Profile profile);
-
-glws::Drawable *
-createDrawable(void);
-
-glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile);
-
-glws::Context *
-createContext(glws::Context *shareContext = 0);
-
-bool
-makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context);
-
-
-void
-checkGlError(trace::Call &call);
-
-extern const retrace::Entry gl_callbacks[];
-extern const retrace::Entry cgl_callbacks[];
-extern const retrace::Entry glx_callbacks[];
-extern const retrace::Entry wgl_callbacks[];
-extern const retrace::Entry egl_callbacks[];
-
-void frame_start();
-void frame_complete(trace::Call &call);
-
-void updateDrawable(int width, int height);
-
-void completeQueries();
-void beginProfileGPU(trace::Call &call);
-void endProfileGPU(trace::Call &call);
-
-} /* namespace glretrace */
-
-
-#endif /* _GLRETRACE_HPP_ */
+    std::cout << "frame "
+              << frame.no << " "
+              << (frame.gpu.start - baseTime) << " "
+              << frame.gpu.duration << std::endl;
+}
+}

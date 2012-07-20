@@ -36,6 +36,7 @@
 
 #include "trace_model.hpp"
 #include "trace_parser.hpp"
+#include "trace_profiler.hpp"
 
 
 namespace image {
@@ -47,6 +48,7 @@ namespace retrace {
 
 
 extern trace::Parser parser;
+extern trace::Profiler profiler;
 
 
 /**
@@ -155,6 +157,10 @@ extern bool dumpingState;
 
 extern bool doubleBuffer;
 extern bool coreProfile;
+
+extern bool profileGPU;
+
+extern unsigned frameNo;
 
 
 std::ostream &warning(trace::Call &call);

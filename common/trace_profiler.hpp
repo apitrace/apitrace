@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,58 +23,77 @@
  *
  **************************************************************************/
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
+#ifndef TRACE_PROFILER_H
+#define TRACE_PROFILER_H
 
-#include "glws.hpp"
-#include "retrace.hpp"
+#include <string>
+#include <stdint.h>
 
+namespace trace
+{
+class Profiler
+{
+public:
+    struct GpuTime
+    {
+        GpuTime()
+            : start(0), duration(0)
+        {
+        }
 
-namespace glretrace {
+        GpuTime(uint64_t start_, uint64_t duration_)
+            : start(start_), duration(duration_)
+        {
+        }
 
+        uint64_t start;
+        uint64_t duration;
+    };
 
-extern bool insideList;
-extern bool insideGlBeginEnd;
+    struct Call
+    {
+        Call()
+            : no(0)
+        {
+        }
 
+        Call(unsigned no_, const char* name_, uint64_t gpu_start, uint64_t gpu_duration)
+            : no(no_), name(name_), gpu(gpu_start, gpu_duration)
+        {
+        }
 
-extern glws::Drawable *currentDrawable;
-extern glws::Context *currentContext;
+        unsigned no;
+        std::string name;
 
-glws::Drawable *
-createDrawable(glws::Profile profile);
+        GpuTime gpu;
+    };
 
-glws::Drawable *
-createDrawable(void);
+    struct Frame
+    {
+        Frame()
+            : no(0)
+        {
+        }
 
-glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile);
+        Frame(unsigned no_, uint64_t gpu_start, uint64_t gpu_duration)
+            : no(no_), gpu(gpu_start, gpu_duration)
+        {
+        }
 
-glws::Context *
-createContext(glws::Context *shareContext = 0);
+        unsigned no;
+        GpuTime gpu;
+    };
 
-bool
-makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context);
+public:
+    Profiler();
+    ~Profiler();
 
+    void addCall(const Call& call);
+    void addFrame(const Frame& frame);
 
-void
-checkGlError(trace::Call &call);
+private:
+    uint64_t baseTime;
+};
+}
 
-extern const retrace::Entry gl_callbacks[];
-extern const retrace::Entry cgl_callbacks[];
-extern const retrace::Entry glx_callbacks[];
-extern const retrace::Entry wgl_callbacks[];
-extern const retrace::Entry egl_callbacks[];
-
-void frame_start();
-void frame_complete(trace::Call &call);
-
-void updateDrawable(int width, int height);
-
-void completeQueries();
-void beginProfileGPU(trace::Call &call);
-void endProfileGPU(trace::Call &call);
-
-} /* namespace glretrace */
-
-
-#endif /* _GLRETRACE_HPP_ */
+#endif // TRACE_PROFILER_H

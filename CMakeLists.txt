@@ -295,6 +295,7 @@ add_library (common STATIC
     common/trace_loader.cpp
     common/trace_resource.cpp
     common/trace_tools_trace.cpp
+    common/trace_profiler.cpp
     common/image.cpp
     common/image_bmp.cpp
     common/image_pnm.cpp
