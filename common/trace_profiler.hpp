@@ -37,7 +37,7 @@ public:
     Profiler();
     ~Profiler();
 
-    void addCall(unsigned no, const char* name, uint64_t gpu_start, uint64_t gpu_duration);
+    void addCall(unsigned no, const char* name, uint64_t gpu_start, uint64_t gpu_duration, uint64_t samples_passed);
 
     void addFrameStart(unsigned no, uint64_t timestamp);
     void addFrameEnd(uint64_t timestamp);

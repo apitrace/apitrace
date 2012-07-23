@@ -39,14 +39,14 @@ bool insideGlBeginEnd = false;
 
 struct CallQuery
 {
-    GLuint ids[2];
+    GLuint ids[3];
     unsigned call;
     const trace::FunctionSig *sig;
 };
 
 static bool firstFrame = true;
 static std::list<CallQuery> callQueries;
-static const int maxActiveCallQueries = 100;
+static const int maxActiveCallQueries = 128;
 
 
 void
@@ -110,13 +110,14 @@ getTimestamp() {
 static void
 completeCallQuery(CallQuery& query) {
     /* Get call start and duration */
-    GLuint64 timestamp = 0, duration = 0;
+    GLuint64 timestamp = 0, duration = 0, samples = 0;
     glGetQueryObjectui64vEXT(query.ids[0], GL_QUERY_RESULT, &timestamp);
     glGetQueryObjectui64vEXT(query.ids[1], GL_QUERY_RESULT, &duration);
-    glDeleteQueries(2, query.ids);
+    glGetQueryObjectui64vEXT(query.ids[2], GL_QUERY_RESULT, &samples);
+    glDeleteQueries(3, query.ids);
 
     /* Add call to profile */
-    retrace::profiler.addCall(query.call, query.sig->name, timestamp, duration);
+    retrace::profiler.addCall(query.call, query.sig->name, timestamp, duration, samples);
 }
 
 void
@@ -145,9 +146,10 @@ beginProfileGPU(trace::Call &call) {
     query.call = call.no;
     query.sig = call.sig;
 
-    glGenQueries(2, query.ids);
+    glGenQueries(3, query.ids);
     glQueryCounter(query.ids[0], GL_TIMESTAMP);
     glBeginQuery(GL_TIME_ELAPSED, query.ids[1]);
+    glBeginQuery(GL_SAMPLES_PASSED, query.ids[2]);
 
     callQueries.push_back(query);
 }
@@ -155,6 +157,7 @@ beginProfileGPU(trace::Call &call) {
 void
 endProfileGPU(trace::Call &call) {
     glEndQuery(GL_TIME_ELAPSED);
+    glEndQuery(GL_SAMPLES_PASSED);
 }
 
 void

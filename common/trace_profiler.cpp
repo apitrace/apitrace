@@ -36,7 +36,7 @@ Profiler::~Profiler()
 {
 }
 
-void Profiler::addCall(unsigned no, const char *name, uint64_t gpu_start, uint64_t gpu_duration)
+void Profiler::addCall(unsigned no, const char *name, uint64_t gpu_start, uint64_t gpu_duration, uint64_t samples_passed)
 {
     if (baseTime == 0)
         baseTime = gpu_start;
@@ -45,6 +45,7 @@ void Profiler::addCall(unsigned no, const char *name, uint64_t gpu_start, uint64
               << no << " "
               << (gpu_start - baseTime) << " "
               << gpu_duration << " "
+              << samples_passed << " "
               << name << std::endl;
 }
 
