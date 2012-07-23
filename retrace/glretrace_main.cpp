@@ -37,6 +37,17 @@ namespace glretrace {
 bool insideList = false;
 bool insideGlBeginEnd = false;
 
+struct CallQuery
+{
+    GLuint ids[2];
+    unsigned call;
+    const trace::FunctionSig *sig;
+};
+
+static bool firstFrame = true;
+static std::list<CallQuery> callQueries;
+static const int maxActiveCallQueries = 100;
+
 
 void
 checkGlError(trace::Call &call) {
@@ -83,27 +94,14 @@ checkGlError(trace::Call &call) {
     os << "\n";
 }
 
-struct CallQuery
-{
-    GLuint ids[2];
-    unsigned call;
-    const trace::FunctionSig *sig;
-};
-
-static const int maxActiveCallQueries = 256;
-static std::list<CallQuery> callQueries;
-static bool firstFrame = true;
-
 static GLuint64
 getTimestamp() {
-    GLuint query;
-    GLuint64 timestamp;
+    GLuint query = 0;
+    GLuint64 timestamp = 0;
 
     glGenQueries(1, &query);
-
     glQueryCounter(query, GL_TIMESTAMP);
     glGetQueryObjectui64vEXT(query, GL_QUERY_RESULT, &timestamp);
-
     glDeleteQueries(1, &query);
 
     return timestamp;
@@ -112,13 +110,22 @@ getTimestamp() {
 static void
 completeCallQuery(CallQuery& query) {
     /* Get call start and duration */
-    GLuint64 timestamp, duration;
+    GLuint64 timestamp = 0, duration = 0;
     glGetQueryObjectui64vEXT(query.ids[0], GL_QUERY_RESULT, &timestamp);
     glGetQueryObjectui64vEXT(query.ids[1], GL_QUERY_RESULT, &duration);
     glDeleteQueries(2, query.ids);
 
     /* Add call to profile */
     retrace::profiler.addCall(query.call, query.sig->name, timestamp, duration);
+}
+
+void
+flushQueries() {
+    for (std::list<CallQuery>::iterator itr = callQueries.begin(); itr != callQueries.end(); ++itr) {
+        completeCallQuery(*itr);
+    }
+
+    callQueries.clear();
 }
 
 void
@@ -163,11 +170,7 @@ void
 frame_complete(trace::Call &call) {
     if (retrace::profileGPU) {
         /* Complete any remaining queries */
-        for (std::list<CallQuery>::iterator itr = callQueries.begin(); itr != callQueries.end(); ++itr) {
-            completeCallQuery(*itr);
-        }
-
-        callQueries.clear();
+        flushQueries();
 
         /* Indicate end of current frame */
         retrace::profiler.addFrameEnd(getTimestamp());
@@ -233,6 +236,7 @@ retrace::dumpState(std::ostream &os)
 
 void
 retrace::flushRendering(void) {
+    glretrace::flushQueries();
     glFlush();
 }
 
