@@ -70,7 +70,6 @@ void frame_complete(trace::Call &call);
 
 void updateDrawable(int width, int height);
 
-void completeQueries();
 void beginProfileGPU(trace::Call &call);
 void endProfileGPU(trace::Call &call);
 

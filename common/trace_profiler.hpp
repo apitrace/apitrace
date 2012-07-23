@@ -34,65 +34,22 @@ namespace trace
 class Profiler
 {
 public:
-    struct GpuTime
-    {
-        GpuTime()
-            : start(0), duration(0)
-        {
-        }
-
-        GpuTime(uint64_t start_, uint64_t duration_)
-            : start(start_), duration(duration_)
-        {
-        }
-
-        uint64_t start;
-        uint64_t duration;
-    };
-
-    struct Call
-    {
-        Call()
-            : no(0)
-        {
-        }
-
-        Call(unsigned no_, const char* name_, uint64_t gpu_start, uint64_t gpu_duration)
-            : no(no_), name(name_), gpu(gpu_start, gpu_duration)
-        {
-        }
-
-        unsigned no;
-        std::string name;
-
-        GpuTime gpu;
-    };
-
-    struct Frame
-    {
-        Frame()
-            : no(0)
-        {
-        }
-
-        Frame(unsigned no_, uint64_t gpu_start, uint64_t gpu_duration)
-            : no(no_), gpu(gpu_start, gpu_duration)
-        {
-        }
-
-        unsigned no;
-        GpuTime gpu;
-    };
-
-public:
     Profiler();
     ~Profiler();
 
-    void addCall(const Call& call);
-    void addFrame(const Frame& frame);
+    void addCall(unsigned no, const char* name, uint64_t gpu_start, uint64_t gpu_duration);
+
+    void addFrameStart(unsigned no, uint64_t timestamp);
+    void addFrameEnd(uint64_t timestamp);
 
 private:
     uint64_t baseTime;
+
+    struct {
+        unsigned no;
+        uint64_t start;
+        uint64_t end;
+    } lastFrame;
 };
 }
 

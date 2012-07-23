@@ -171,7 +171,7 @@ mainLoop() {
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
 
-    if ((retrace::verbosity >= -1) || (retrace::profiling)) {
+    if ((retrace::verbosity >= -1) || (retrace::profiling) || (retrace::profileGPU)) {
         std::cout << 
             "Rendered " << frameNo << " frames"
             " in " <<  timeInterval << " secs,"
@@ -197,6 +197,7 @@ usage(const char *argv0) {
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
         "  -p           profiling mode (run whole trace, dump profiling info)\n"
+        "  -pgpu        gpu profiling mode (run whole trace, dump gpu profiling info)\n"
         "  -c PREFIX    compare against snapshots\n"
         "  -C CALLSET   calls to compare (default is every frame)\n"
         "  -core        use core profile\n"
@@ -237,6 +238,10 @@ int main(int argc, char **argv)
             retrace::verbosity = -1;
         } else if (!strcmp(arg, "-pgpu")) {
             retrace::profileGPU = true;
+
+            retrace::debug = false;
+            retrace::profiling = false;
+            retrace::verbosity = -1;
         } else if (!strcmp(arg, "-c")) {
             comparePrefix = argv[++i];
             if (compareFrequency.empty()) {

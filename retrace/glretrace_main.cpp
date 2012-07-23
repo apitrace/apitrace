@@ -85,29 +85,92 @@ checkGlError(trace::Call &call) {
 
 struct CallQuery
 {
-   GLuint ids[2];
-   unsigned call;
-   const trace::FunctionSig *sig;
+    GLuint ids[2];
+    unsigned call;
+    const trace::FunctionSig *sig;
 };
 
-static std::vector<CallQuery> callQueries;
-static GLuint frameQueries[2] = { 0, 0 };
+static const int maxActiveCallQueries = 256;
+static std::list<CallQuery> callQueries;
+static bool firstFrame = true;
 
-void frame_start() {
-   if (retrace::profileGPU) {
-      glGenQueries(2, frameQueries);
+static GLuint64
+getTimestamp() {
+    GLuint query;
+    GLuint64 timestamp;
 
-      /* Query frame start time */
-      glQueryCounter(frameQueries[0], GL_TIMESTAMP);
-   }
+    glGenQueries(1, &query);
+
+    glQueryCounter(query, GL_TIMESTAMP);
+    glGetQueryObjectui64vEXT(query, GL_QUERY_RESULT, &timestamp);
+
+    glDeleteQueries(1, &query);
+
+    return timestamp;
 }
 
-void frame_complete(trace::Call &call) {
-    if (retrace::profileGPU) {
-        /* Query frame end time */
-       glQueryCounter(frameQueries[1], GL_TIMESTAMP);
+static void
+completeCallQuery(CallQuery& query) {
+    /* Get call start and duration */
+    GLuint64 timestamp, duration;
+    glGetQueryObjectui64vEXT(query.ids[0], GL_QUERY_RESULT, &timestamp);
+    glGetQueryObjectui64vEXT(query.ids[1], GL_QUERY_RESULT, &duration);
+    glDeleteQueries(2, query.ids);
 
-       completeQueries();
+    /* Add call to profile */
+    retrace::profiler.addCall(query.call, query.sig->name, timestamp, duration);
+}
+
+void
+beginProfileGPU(trace::Call &call) {
+    if (firstFrame) {
+        frame_start();
+    }
+
+    /* Ensure we don't have TOO many queries waiting for results */
+    if (callQueries.size() >= maxActiveCallQueries) {
+        completeCallQuery(callQueries.front());
+        callQueries.pop_front();
+    }
+
+    /* Create call query */
+    CallQuery query;
+    query.call = call.no;
+    query.sig = call.sig;
+
+    glGenQueries(2, query.ids);
+    glQueryCounter(query.ids[0], GL_TIMESTAMP);
+    glBeginQuery(GL_TIME_ELAPSED, query.ids[1]);
+
+    callQueries.push_back(query);
+}
+
+void
+endProfileGPU(trace::Call &call) {
+    glEndQuery(GL_TIME_ELAPSED);
+}
+
+void
+frame_start() {
+    firstFrame = false;
+
+    if (retrace::profileGPU) {
+        retrace::profiler.addFrameStart(retrace::frameNo, getTimestamp());
+    }
+}
+
+void
+frame_complete(trace::Call &call) {
+    if (retrace::profileGPU) {
+        /* Complete any remaining queries */
+        for (std::list<CallQuery>::iterator itr = callQueries.begin(); itr != callQueries.end(); ++itr) {
+            completeCallQuery(*itr);
+        }
+
+        callQueries.clear();
+
+        /* Indicate end of current frame */
+        retrace::profiler.addFrameEnd(getTimestamp());
     }
 
     retrace::frameComplete(call);
@@ -122,68 +185,6 @@ void frame_complete(trace::Call &call) {
     if (retrace::debug && !currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
-}
-
-void
-completeQueries()
-{
-   if (callQueries.size() == 0)
-      return;
-
-   GLint available;
-   GLuint64 frameBegin, frameEnd;
-
-   /* Wait for frame to finish */
-   do {
-      glGetQueryObjectiv(frameQueries[1], GL_QUERY_RESULT_AVAILABLE, &available);
-   } while(!available);
-
-   /* Get frame start and end */
-   glGetQueryObjectui64vEXT(frameQueries[0], GL_QUERY_RESULT, &frameBegin);
-   glGetQueryObjectui64vEXT(frameQueries[1], GL_QUERY_RESULT, &frameEnd);
-   glDeleteQueries(2, frameQueries);
-
-   /* Add frame to profile */
-   retrace::profiler.addFrame(trace::Profiler::Frame(retrace::frameNo, frameBegin, frameEnd - frameBegin));
-
-   /* Loop through all active call queries */
-   for (std::vector<CallQuery>::iterator itr = callQueries.begin(); itr != callQueries.end(); ++itr) {
-      CallQuery& query = *itr;
-      GLuint64 timestamp, duration;
-
-      /* Get queue start and duration */
-      glGetQueryObjectui64vEXT(query.ids[0], GL_QUERY_RESULT, &timestamp);
-      glGetQueryObjectui64vEXT(query.ids[1], GL_QUERY_RESULT, &duration);
-      glDeleteQueries(2, query.ids);
-
-      /* Add call to profile */
-      retrace::profiler.addCall(trace::Profiler::Call(query.call, query.sig->name, timestamp, duration));
-   }
-
-   callQueries.clear();
-}
-
-void
-beginProfileGPU(trace::Call &call) {
-   if (frameQueries[0] == 0) {
-      frame_start();
-   }
-
-   CallQuery query;
-   query.call = call.no;
-   query.sig = call.sig;
-
-   /* Create start and duration queries */
-   glGenQueries(2, query.ids);
-   glQueryCounter(query.ids[0], GL_TIMESTAMP);
-   glBeginQuery(GL_TIME_ELAPSED, query.ids[1]);
-
-   callQueries.push_back(query);
-}
-
-void
-endProfileGPU(trace::Call &call) {
-   glEndQuery(GL_TIME_ELAPSED);
 }
 
 } /* namespace glretrace */

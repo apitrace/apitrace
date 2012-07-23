@@ -36,26 +36,41 @@ Profiler::~Profiler()
 {
 }
 
-void Profiler::addCall(const Call& call)
+void Profiler::addCall(unsigned no, const char *name, uint64_t gpu_start, uint64_t gpu_duration)
 {
     if (baseTime == 0)
-        baseTime = call.gpu.start;
+        baseTime = gpu_start;
 
     std::cout << "call "
-              << call.no << " "
-              << (call.gpu.start - baseTime) << " "
-              << call.gpu.duration << " "
-              << call.name << std::endl;
+              << no << " "
+              << (gpu_start - baseTime) << " "
+              << gpu_duration << " "
+              << name << std::endl;
 }
 
-void Profiler::addFrame(const Frame& frame)
+void Profiler::addFrameStart(unsigned no, uint64_t timestamp)
 {
     if (baseTime == 0)
-        baseTime = frame.gpu.start;
+        baseTime = timestamp;
 
-    std::cout << "frame "
-              << frame.no << " "
-              << (frame.gpu.start - baseTime) << " "
-              << frame.gpu.duration << std::endl;
+    lastFrame.no = no;
+    lastFrame.start = timestamp - baseTime;
+
+    std::cout << "frame begin "
+              << lastFrame.no << " "
+              << lastFrame.start << std::endl;
+}
+
+void Profiler::addFrameEnd(uint64_t timestamp)
+{
+    if (baseTime == 0)
+        baseTime = timestamp;
+
+    lastFrame.end = timestamp - baseTime;
+
+    std::cout << "frame end "
+              << lastFrame.no << " "
+              << lastFrame.end << " "
+              << (lastFrame.end - lastFrame.start) << std::endl;
 }
 }
