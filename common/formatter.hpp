@@ -33,6 +33,39 @@
 
 #include <iostream>
 
+#ifdef _WIN32
+#include <windows.h>
+
+#ifndef COMMON_LVB_LEADING_BYTE
+#define COMMON_LVB_LEADING_BYTE    0x0100
+#endif
+
+#ifndef COMMON_LVB_TRAILING_BYTE
+#define COMMON_LVB_TRAILING_BYTE   0x0200
+#endif
+
+#ifndef COMMON_LVB_GRID_HORIZONTAL
+#define COMMON_LVB_GRID_HORIZONTAL 0x0400
+#endif
+
+#ifndef COMMON_LVB_GRID_LVERTICAL
+#define COMMON_LVB_GRID_LVERTICAL  0x0800
+#endif
+
+#ifndef COMMON_LVB_GRID_RVERTICAL
+#define COMMON_LVB_GRID_RVERTICAL  0x1000
+#endif
+
+#ifndef COMMON_LVB_REVERSE_VIDEO
+#define COMMON_LVB_REVERSE_VIDEO   0x4000
+#endif
+
+#ifndef COMMON_LVB_UNDERSCORE
+#define COMMON_LVB_UNDERSCORE      0x8000
+#endif
+
+#endif /* _WIN32 */
+
 
 namespace formatter {
 
@@ -113,38 +146,6 @@ inline std::ostream& operator<<(std::ostream& os, const Attribute *attr) {
 #ifdef _WIN32
 
 
-#include <windows.h>
-
-
-#ifndef COMMON_LVB_LEADING_BYTE
-#define COMMON_LVB_LEADING_BYTE    0x0100
-#endif
-
-#ifndef COMMON_LVB_TRAILING_BYTE
-#define COMMON_LVB_TRAILING_BYTE   0x0200
-#endif
-
-#ifndef COMMON_LVB_GRID_HORIZONTAL
-#define COMMON_LVB_GRID_HORIZONTAL 0x0400
-#endif
-
-#ifndef COMMON_LVB_GRID_LVERTICAL
-#define COMMON_LVB_GRID_LVERTICAL  0x0800
-#endif
-
-#ifndef COMMON_LVB_GRID_RVERTICAL
-#define COMMON_LVB_GRID_RVERTICAL  0x1000
-#endif
-
-#ifndef COMMON_LVB_REVERSE_VIDEO
-#define COMMON_LVB_REVERSE_VIDEO   0x4000
-#endif
-
-#ifndef COMMON_LVB_UNDERSCORE
-#define COMMON_LVB_UNDERSCORE      0x8000
-#endif
-
-
 class WindowsAttribute : public Attribute {
 protected:
     WORD wAttributes;
@@ -189,7 +190,8 @@ public:
     }
 };
 
-#endif
+
+#endif /* _WIN32 */
 
 
 inline Formatter *defaultFormatter(bool color = true) {
