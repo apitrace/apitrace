@@ -27,6 +27,8 @@
 from dlltrace import DllTracer
 from specs.d3d9 import d3d9, D3DSHADER9
 
+import specs.d3d9dxva2
+
 
 class D3D9Tracer(DllTracer):
 
@@ -52,6 +54,12 @@ class D3D9Tracer(DllTracer):
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        if method.name == 'DecodeExecute':
+            print r'    _NumCompBuffers = pExecuteParams->NumCompBuffers;'
+
+        if method.name == 'VideoProcessBlt':
+            print r'    _NumSrcSurfaces = pData->NumSrcSurfaces;'
+
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    if (_LockedSize && m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
@@ -78,6 +86,7 @@ if __name__ == '__main__':
     print '#include "d3d9imports.hpp"'
     print '#include "d3dsize.hpp"'
     print '#include "d3d9shader.hpp"'
+    print '#include "dxvaint.h"'
     print
     print '''
 static inline size_t
@@ -89,6 +98,9 @@ _declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
     }
     return count;
 }
+
+static UINT _NumCompBuffers = 0; /* XXX */
+static UINT _NumSrcSurfaces = 0; /* XXX */
 '''
     tracer = D3D9Tracer('d3d9.dll')
     tracer.traceApi(d3d9)
