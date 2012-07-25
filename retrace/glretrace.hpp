@@ -71,10 +71,12 @@ void frame_complete(trace::Call &call);
 void updateDrawable(int width, int height);
 
 void flushQueries();
-void beginProfileGPU(trace::Call &call);
-void endProfileGPU(trace::Call &call);
+void beginProfile(trace::Call &call);
+void endProfile(trace::Call &call);
 
+void setActiveProgram(GLuint program);
 } /* namespace glretrace */
 
+GLuint retrace_unmap_program(GLuint val);
 
 #endif /* _GLRETRACE_HPP_ */

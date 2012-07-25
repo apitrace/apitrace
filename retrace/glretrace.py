@@ -297,16 +297,19 @@ class GlRetracer(Retracer):
             function.name in self.misc_draw_function_names
         )
 
-        # Only profile if not inside a list as the queries get inserted into lsit
+        if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
+            print r'    glretrace::setActiveProgram((call.arg(0)).toUInt());'
+
+        # Only profile if not inside a list as the queries get inserted into list
         if function.name == 'glNewList':
-            print r'    glretrace::insideList = true;';
+            print r'    glretrace::insideList = true;'
 
         if function.name == 'glEndList':
-            print r'    glretrace::insideList = false;';
+            print r'    glretrace::insideList = false;'
 
         if profileDraw:
-            print r'    if (!glretrace::insideList && retrace::profileGPU) {'
-            print r'        glretrace::beginProfileGPU(call);'
+            print r'    if (!glretrace::insideList && retrace::profiling) {'
+            print r'        glretrace::beginProfile(call);'
             print r'    }'
 
         if function.name == 'glCreateShaderProgramv':
@@ -341,8 +344,8 @@ class GlRetracer(Retracer):
             Retracer.invokeFunction(self, function)
 
         if profileDraw:
-            print r'    if (!glretrace::insideList && retrace::profileGPU) {'
-            print r'        glretrace::endProfileGPU(call);'
+            print r'    if (!glretrace::insideList && retrace::profiling) {'
+            print r'        glretrace::endProfile(call);'
             print r'    }'
 
         # Error checking

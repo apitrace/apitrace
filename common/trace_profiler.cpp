@@ -28,7 +28,12 @@
 
 namespace trace {
 Profiler::Profiler()
-    : baseTime(0)
+    : lastProgram(0),
+      baseGpuTime(0),
+      baseCpuTime(0),
+      cpuTimes(false),
+      gpuTimes(true),
+      pixelsDrawn(false)
 {
 }
 
@@ -36,42 +41,115 @@ Profiler::~Profiler()
 {
 }
 
-void Profiler::addCall(unsigned no, const char *name, uint64_t gpu_start, uint64_t gpu_duration, uint64_t samples_passed)
+void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_)
 {
-    if (baseTime == 0)
-        baseTime = gpu_start;
+    cpuTimes = cpuTimes_;
+    gpuTimes = gpuTimes_;
+    pixelsDrawn = pixelsDrawn_;
 
-    std::cout << "call "
-              << no << " "
-              << (gpu_start - baseTime) << " "
-              << gpu_duration << " "
-              << samples_passed << " "
-              << name << std::endl;
+    std::cout << "# frame begin <no> <gpu_start> <cpu_start>" << std::endl;
+    std::cout << "# frame end <no> <gpu_end> <gpu_dura> <cpu_end> <cpu_dura>" << std::endl;
+    std::cout << "# call <no> <gpu_start> <gpu_dura> <cpu_start> <cpu_dura> <pixels> <function>" << std::endl;
+    std::cout << "# use shader program <no>" << std::endl;
 }
 
-void Profiler::addFrameStart(unsigned no, uint64_t timestamp)
+void Profiler::addCall(unsigned no,
+                       const char *name,
+                       unsigned program,
+                       uint64_t pixels,
+                       uint64_t gpuStart, uint64_t gpuDuration,
+                       uint64_t cpuStart, uint64_t cpuDuration)
 {
-    if (baseTime == 0)
-        baseTime = timestamp;
+    if (baseGpuTime == 0)
+        baseGpuTime = gpuStart;
+
+    if (baseCpuTime == 0)
+        baseCpuTime = cpuStart;
+
+    if (program != lastProgram) {
+        std::cout << "use shader program " << program << std::endl;
+        lastProgram = program;
+    }
+
+    std::cout << "call " << no;
+
+    if (gpuTimes) {
+        std::cout << " "
+                  << (gpuStart - baseGpuTime) << " "
+                  << gpuDuration;
+    } else {
+        std::cout << " _ _";
+    }
+
+    if (cpuTimes) {
+        std::cout << " "
+                  << (cpuStart - baseCpuTime) << " "
+                  << cpuDuration;
+    } else {
+        std::cout << " _ _";
+    }
+
+    if (pixelsDrawn) {
+        std::cout << " " << pixels;
+    } else {
+        std::cout << " _";
+    }
+
+    std::cout << " " << name << std::endl;
+}
+
+void Profiler::addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart)
+{
+    if (baseGpuTime == 0)
+        baseGpuTime = gpuStart;
+
+    if (baseCpuTime == 0)
+        baseCpuTime = cpuStart;
 
     lastFrame.no = no;
-    lastFrame.start = timestamp - baseTime;
+    lastFrame.gpuStart = gpuStart - baseGpuTime;
 
-    std::cout << "frame begin "
-              << lastFrame.no << " "
-              << lastFrame.start << std::endl;
+    std::cout << "frame begin " << lastFrame.no;
+
+    if (gpuTimes) {
+        std::cout << " " << lastFrame.gpuStart;
+    } else {
+        std::cout << " _";
+    }
+
+    if (gpuTimes) {
+        std::cout << " " << lastFrame.cpuStart;
+    } else {
+        std::cout << " _";
+    }
+
+    std::cout << std::endl;
 }
 
-void Profiler::addFrameEnd(uint64_t timestamp)
+void Profiler::addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd)
 {
-    if (baseTime == 0)
-        baseTime = timestamp;
+    if (baseGpuTime == 0)
+        baseGpuTime = gpuEnd;
 
-    lastFrame.end = timestamp - baseTime;
+    if (baseCpuTime == 0)
+        baseCpuTime = cpuEnd;
 
-    std::cout << "frame end "
-              << lastFrame.no << " "
-              << lastFrame.end << " "
-              << (lastFrame.end - lastFrame.start) << std::endl;
+    lastFrame.gpuEnd = gpuEnd - baseGpuTime;
+
+    std::cout << "frame end " << lastFrame.no;
+
+    if (gpuTimes) {
+        std::cout << " " << lastFrame.gpuEnd << " " << (lastFrame.gpuEnd - lastFrame.gpuStart);
+    } else {
+        std::cout << " _ _";
+    }
+
+    if (cpuTimes) {
+        std::cout << " " << lastFrame.cpuEnd << " " << (lastFrame.cpuEnd - lastFrame.cpuStart);
+    } else {
+        std::cout << " _ _";
+    }
+
+    std::cout << std::endl;
 }
 }

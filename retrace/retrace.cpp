@@ -112,20 +112,7 @@ void Retracer::retrace(trace::Call &call) {
     assert(callback);
     assert(callbacks[id] == callback);
 
-    if (retrace::profiling) {
-        long long startTime = os::getTime();
-        callback(call);
-        long long stopTime = os::getTime();
-        float timeInterval = (stopTime - startTime) * (1.0E6 / os::timeFrequency);
-
-        std::cout
-            << call.no << " "
-            << "[" << timeInterval << " usec] "
-        ;
-        trace::dump(call, std::cout, trace::DUMP_FLAG_NO_CALL_NO | trace::DUMP_FLAG_NO_COLOR);
-    } else {
-        callback(call);
-    }
+    callback(call);
 }
 
 

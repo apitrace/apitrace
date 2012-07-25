@@ -37,18 +37,33 @@ public:
     Profiler();
     ~Profiler();
 
-    void addCall(unsigned no, const char* name, uint64_t gpu_start, uint64_t gpu_duration, uint64_t samples_passed);
+    void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_);
 
-    void addFrameStart(unsigned no, uint64_t timestamp);
-    void addFrameEnd(uint64_t timestamp);
+    void addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart);
+    void addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd);
+
+    void addCall(unsigned no,
+                 const char* name,
+                 unsigned program,
+                 uint64_t pixels,
+                 uint64_t gpuStart, uint64_t gpuDuration,
+                 uint64_t cpuStart, uint64_t cpuDuration);
 
 private:
-    uint64_t baseTime;
+    unsigned lastProgram;
+    uint64_t baseGpuTime;
+    uint64_t baseCpuTime;
+
+    bool cpuTimes;
+    bool gpuTimes;
+    bool pixelsDrawn;
 
     struct {
         unsigned no;
-        uint64_t start;
-        uint64_t end;
+        uint64_t gpuStart;
+        uint64_t gpuEnd;
+        uint64_t cpuStart;
+        uint64_t cpuEnd;
     } lastFrame;
 };
 }

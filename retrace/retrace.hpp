@@ -148,6 +148,9 @@ extern bool debug;
  * Add profiling data to the dump when retracing.
  */
 extern bool profiling;
+extern bool profilingCpuTimes;
+extern bool profilingGpuTimes;
+extern bool profilingPixelsDrawn;
 
 /**
  * State dumping.
@@ -157,8 +160,6 @@ extern bool dumpingState;
 
 extern bool doubleBuffer;
 extern bool coreProfile;
-
-extern bool profileGPU;
 
 extern unsigned frameNo;
 
