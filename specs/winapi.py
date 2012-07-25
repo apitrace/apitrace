@@ -51,6 +51,7 @@ BYTE = Alias("BYTE", UInt8)
 WORD = Alias("WORD", UInt16)
 DWORD = Alias("DWORD", UInt32)
 
+UCHAR = Alias("UCHAR", UChar)
 WCHAR = Alias("WCHAR", Short)
 
 BOOL = Enum("BOOL", [
