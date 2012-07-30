@@ -34,6 +34,13 @@
 #include <stddef.h>
 #include <wchar.h>
 
+#ifdef _MSC_VER
+#  include <float.h>
+#  define isfinite _finite
+#else
+#  include <math.h> // isfinite
+#endif
+
 #include <iomanip>
 #include <limits>
 #include <ostream>
@@ -328,8 +335,8 @@ public:
 
     template<class T>
     inline void writeNumber(T n) {
-        if (n != n) {
-            // NaN
+        if (!isfinite(n)) {
+            // NaN/Inf
             writeNull();
         } else {
             separator();
