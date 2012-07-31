@@ -50,7 +50,6 @@ public:
                  uint64_t cpuStart, uint64_t cpuDuration);
 
 private:
-    unsigned lastProgram;
     uint64_t baseGpuTime;
     uint64_t baseCpuTime;
 
@@ -61,9 +60,7 @@ private:
     struct {
         unsigned no;
         uint64_t gpuStart;
-        uint64_t gpuEnd;
         uint64_t cpuStart;
-        uint64_t cpuEnd;
     } lastFrame;
 };
 }

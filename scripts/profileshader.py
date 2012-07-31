@@ -30,8 +30,11 @@ if len(sys.argv) <= 1:
 	print 'Please specify a file to read'
 	sys.exit()
 
-shaderTimes = {}
-activeShader = 0
+times = {}
+
+# frame_begin no gpu_start cpu_start
+# frame_end no gpu_end gpu_dura cpu_end cpu_dura
+# call no gpu_start gpu_dura cpu_start cpu_dura pixels program name
 
 for line in open(sys.argv[1], 'r'):
     words = line.split(' ')
@@ -39,29 +42,29 @@ for line in open(sys.argv[1], 'r'):
     if line.startswith('#'):
         continue
 
-    if words[0:3] == ['use','shader','program']:
-        activeShader = long(words[3])
-    elif words[0] == 'call':
+    if words[0] == 'call':
         id = long(words[1])
-        func = words[-1]
         duration = long(words[3])
+        shader = long(words[7])
+        func = words[8]
 
-        if shaderTimes.has_key(activeShader):
-            shaderTimes[activeShader]['draws'] += 1
-            shaderTimes[activeShader]['duration'] += duration
-            if duration > shaderTimes[activeShader]['longestDuration']:
-                shaderTimes[activeShader]['longest'] = id
-                shaderTimes[activeShader]['longestDuration'] = duration
+        if times.has_key(shader):
+            times[shader]['draws'] += 1
+            times[shader]['duration'] += duration
+
+            if duration > times[shader]['longestDuration']:
+                times[shader]['longest'] = id
+                times[shader]['longestDuration'] = duration
         else:
-            shaderTimes[activeShader] = {'draws': 1, 'duration': duration, 'longest': id, 'longestDuration': duration}
+            times[shader] = {'draws': 1, 'duration': duration, 'longest': id, 'longestDuration': duration}
 
-sortedShaderTimes = sorted(shaderTimes.items(), key=lambda x: x[1]['duration'], reverse=True)
+times = sorted(times.items(), key=lambda x: x[1]['duration'], reverse=True)
 
 print '+------------+--------------+--------------------+--------------+-------------+'
 print '| Shader[id] |   Draws [#]  |   Duration [ns]  v | Per Call[ns] | Longest[id] |'
 print '+------------+--------------+--------------------+--------------+-------------+'
 
-for shader in sortedShaderTimes:
+for shader in times:
     id = str(shader[0]).rjust(10)
     draw = str(shader[1]['draws']).rjust(12)
     dura = str(shader[1]['duration']).rjust(18)
