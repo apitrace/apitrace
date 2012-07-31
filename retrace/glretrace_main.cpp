@@ -171,6 +171,12 @@ getActiveProgram()
 void
 beginProfile(trace::Call &call) {
     if (firstFrame) {
+        const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+        if (!glws::checkExtension("GL_ARB_timer_query", extensions)) {
+            std::cout << "Error: Cannot run profile, GL_ARB_timer_query extension is not supported." << std::endl;
+            exit(-1);
+        }
+
         frame_start();
     }
 
