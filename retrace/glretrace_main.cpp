@@ -203,11 +203,11 @@ beginProfile(trace::Call &call) {
         glBeginQuery(GL_SAMPLES_PASSED, query.ids[2]);
     }
 
-    callQueries.push_back(query);
-
     if (retrace::profilingCpuTimes) {
         query.start = os::getTime();
     }
+
+    callQueries.push_back(query);
 }
 
 void
