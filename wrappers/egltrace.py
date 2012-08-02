@@ -81,26 +81,34 @@ class EglTracer(GlTracer):
             print '        gltrace::releaseContext((uintptr_t)ctx);'
             print '    }'
 
-        if function.name == 'eglCreateImageKHR':
-            print '    _eglCreateImageKHR_epilog(dpy, ctx, target, buffer,'
-            print '                              attrib_list, _result);'
+        if function.name == 'glEGLImageTargetTexture2DOES':
+            print '    image_info *info = _EGLImageKHR_get_image_info(target, image);'
+            print '    if (info) {'
+            print '        GLint level = 0;'
+            print '        GLint internalformat = info->internalformat;'
+            print '        GLsizei width = info->width;'
+            print '        GLsizei height = info->height;'
+            print '        GLint border = 0;'
+            print '        GLenum format = info->format;'
+            print '        GLenum type = info->type;'
+            print '        const GLvoid * pixels = info->pixels;'
+            self.emitFakeTexture2D()
+            print '        _EGLImageKHR_free_image_info(info);'
+            print '    }'
 
-        if function.name == 'eglDestroyImageKHR':
-            print '    _eglDestroyImageKHR_epilog(image);'
+    def emitFakeTexture2D(self):
+        function = glapi.getFunctionByName('glTexImage2D')
+        instances = function.argNames()
+        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+        for arg in function.args:
+            assert not arg.output
+            self.serializeArg(function, arg)
+        print '        trace::localWriter.endEnter();'
+        print '        trace::localWriter.beginLeave(_fake_call);'
+        print '        trace::localWriter.endLeave();'
 
-    def serializeArgValue(self, function, arg):
-        if function.name == 'glEGLImageTargetTexture2DOES' and \
-          arg.name == 'image':
-            print '    GLsizei blob_size;'
-            print '    GLvoid *blob_ptr;'
-            print '    blob_size = _glEGLImageTargetTexture2DOES_size(target, image);'
-            print '    blob_ptr = _glEGLImageTargetTexture2DOES_get_ptr(target, image);'
-            print '    trace::localWriter.writeBlob(blob_ptr, blob_size);'
-            print '    _glEGLImageTargetTexture2DOES_put_ptr(blob_ptr);'
 
-            return
 
-        GlTracer.serializeArgValue(self, function, arg)
 
 if __name__ == '__main__':
     print '#include <stdlib.h>'

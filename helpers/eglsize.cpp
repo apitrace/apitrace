@@ -28,18 +28,16 @@
 /*
  * Auxiliary functions to compute the size of array/blob arguments.
  */
+
 #include <string.h>
-#include <map>
 
 #include "os_thread.hpp"
 #include "glimports.hpp"
 #include "glproc.hpp"
+#include "glsize.hpp"
 #include "eglsize.hpp"
 #include "assert.h"
 
-
-static os::recursive_mutex image_map_mutex;
-static std::map<EGLImageKHR, struct image_info *>image_map;
 
 static int
 bisect_val(int min, int max, bool is_valid_val(int val))
@@ -79,12 +77,12 @@ is_valid_height(int val)
 static int
 detect_size(int *width_ret, int *height_ret)
 {
-    static GLint max_tex_size;
+    GLint max_tex_size;
     int width;
     int height;
 
-    if (!max_tex_size)
-        _glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);
+    max_tex_size = 0;
+    _glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);
 
     width = bisect_val(1, max_tex_size, is_valid_width);
     if (width < 0)
@@ -100,8 +98,14 @@ detect_size(int *width_ret, int *height_ret)
     return 0;
 }
 
-void
-_eglCreateImageKHR_get_image_info(EGLImageKHR image, struct image_info *info)
+/* XXX */
+static inline bool
+can_unpack_subimage(void) {
+    return false;
+}
+
+static void
+_eglCreateImageKHR_get_image_size(EGLImageKHR image, image_info *info)
 {
     GLuint fbo = 0;
     GLuint orig_fbo = 0;
@@ -119,7 +123,8 @@ _eglCreateImageKHR_get_image_info(EGLImageKHR image, struct image_info *info)
 
     _glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
-    memset(info, sizeof *info, 0);
+    info->width = 0;
+    info->height = 0;
 
     _glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                             GL_TEXTURE_2D, texture, 0);
@@ -139,54 +144,10 @@ _eglCreateImageKHR_get_image_info(EGLImageKHR image, struct image_info *info)
 
     _glBindFramebuffer(GL_FRAMEBUFFER, orig_fbo);
     _glDeleteFramebuffers(1, &fbo);
-
-    return;
 }
 
-static struct image_info *
-get_image_info(EGLImageKHR image)
-{
-    struct image_info *info;
-
-    image_map_mutex.lock();
-    info = image_map[image];
-    image_map_mutex.unlock();
-
-    return info;
-}
-
-void
-_eglCreateImageKHR_epilog(EGLDisplay dpy, EGLContext ctx, EGLenum target,
-                            EGLClientBuffer buffer, const EGLint *attrib_list,
-                            EGLImageKHR image)
-{
-    struct image_info *info;
-
-    info = (struct image_info *)malloc(sizeof *info);
-    _eglCreateImageKHR_get_image_info(image, info);
-
-    image_map_mutex.lock();
-    assert(image_map.find(image) == image_map.end());
-    image_map[image] = info;
-    image_map_mutex.unlock();
-}
-
-void
-_eglDestroyImageKHR_epilog(EGLImageKHR image)
-{
-    struct image_info *info;
-
-    info = get_image_info(image);
-
-    image_map_mutex.lock();
-    image_map.erase(image);
-    image_map_mutex.unlock();
-
-    free(info);
-}
-
-void
-get_texture_2d_image(struct image_blob *blob)
+static void
+get_texture_2d_image(image_info *info)
 {
     GLuint fbo = 0;
     GLint prev_fbo = 0;
@@ -206,8 +167,7 @@ get_texture_2d_image(struct image_blob *blob)
     status = _glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
         os::log("%s: error: %d\n", __func__, status);
-    _glReadPixels(0, 0, blob->info.width, blob->info.height, GL_RGBA,
-                  GL_UNSIGNED_BYTE, blob->data);
+    _glReadPixels(0, 0, info->width, info->height, info->format, info->type, info->pixels);
     /* Don't leak errors to the traced application. */
     (void)_glGetError();
 
@@ -215,46 +175,43 @@ get_texture_2d_image(struct image_blob *blob)
     _glDeleteFramebuffers(1, &fbo);
 }
 
-size_t
-_glEGLImageTargetTexture2DOES_size(GLint target, EGLImageKHR image)
-{
-    struct image_info *info;
-    size_t size;
-
-    info = get_image_info(image);
-    size = sizeof(struct image_blob) - 1;
-    /* We always read out the pixels in RGBA format */
-    size += info->width * info->height * 4;
-
-    return size;
-}
-
-void *
-_glEGLImageTargetTexture2DOES_get_ptr(GLenum target, EGLImageKHR image)
+struct image_info *
+_EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image)
 {
     GLuint tex;
     GLuint bound_tex;
-    size_t image_blob_size = _glEGLImageTargetTexture2DOES_size(target, image);
-    struct image_blob *blob;
     struct image_info *info;
+
+    info = new image_info;
+
+    memset(info, 0, sizeof *info);
+
+    info->internalformat = GL_RGBA;
+    info->format = GL_RGBA;
+    info->type = GL_UNSIGNED_BYTE;
+
+    _eglCreateImageKHR_get_image_size(image, info);
 
     _glGenTextures(1, &tex);
     _glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&bound_tex);
     _glBindTexture(GL_TEXTURE_2D, tex);
     _glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-    blob = (struct image_blob *)malloc(image_blob_size);
-    info = get_image_info(image);
-    blob->info = *info;
-    get_texture_2d_image(blob);
+
+    info->size = _glTexImage2D_size(info->format, info->type, info->width, info->height);
+    info->pixels = malloc(info->size);
+
+    get_texture_2d_image(info);
     _glBindTexture(GL_TEXTURE_2D, bound_tex);
     _glDeleteBuffers(1, &tex);
 
-    return (void *)blob;
+    return info;
 }
 
 void
-_glEGLImageTargetTexture2DOES_put_ptr(const void *buffer)
+_EGLImageKHR_free_image_info(struct image_info *info)
 {
-    free((void *)buffer);
+    free(info->pixels);
+    delete info;
 }
+
 

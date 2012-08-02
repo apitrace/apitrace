@@ -225,23 +225,6 @@ static void retrace_eglSwapBuffers(trace::Call &call) {
     }
 }
 
-static void retrace_glEGLImageTargetTexture2DOES(trace::Call &call)
-{
-    EGLenum target = call.arg(0).toUInt();
-    struct image_blob *iblob;
-    struct image_info *info;
-
-    if (target != GL_TEXTURE_2D) {
-        os::log("%s: target %d not supported\n", __func__, target);
-        return;
-    }
-    iblob = static_cast<struct image_blob *>((call.arg(1)).toPointer());
-    info = &iblob->info;
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info->width, info->height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, iblob->data);
-}
-
 const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglGetError", &retrace::ignore},
     {"eglGetDisplay", &retrace::ignore},
@@ -278,6 +261,7 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
     {"eglCreateImageKHR", &retrace::ignore},
-    {"glEGLImageTargetTexture2DOES", &retrace_glEGLImageTargetTexture2DOES},
+    {"eglDestroyImageKHR", &retrace::ignore},
+    {"glEGLImageTargetTexture2DOES", &retrace::ignore},
     {NULL, NULL},
 };

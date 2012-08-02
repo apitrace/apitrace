@@ -32,33 +32,26 @@
 #ifndef _EGLSIZE_HPP_
 #define _EGLSIZE_HPP_
 
+
+#include "glimports.hpp"
+
+
 struct image_info
 {
-    int width;
-    int height;
+    GLint internalformat;
+    GLsizei width;
+    GLsizei height;
+    GLenum format;
+    GLenum type;
+    GLsizei size;
+    GLvoid * pixels;
 };
 
-struct image_blob
-{
-    struct image_info info;
-    char data[1];
-};
+struct image_info *
+_EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image);
 
 void
-_eglDestroyImageKHR_epilog(EGLImageKHR image);
+_EGLImageKHR_free_image_info(struct image_info *info);
 
-void
-_eglCreateImageKHR_epilog(EGLDisplay dpy, EGLContext ctx, EGLenum target,
-                            EGLClientBuffer buffer, const EGLint *attrib_list,
-                            EGLImageKHR image);
-
-size_t
-_glEGLImageTargetTexture2DOES_size(GLint target, EGLImageKHR image);
-
-void *
-_glEGLImageTargetTexture2DOES_get_ptr(GLenum target, EGLImageKHR image);
-
-void
-_glEGLImageTargetTexture2DOES_put_ptr(const void *buffer);
 
 #endif
