@@ -50,7 +50,6 @@ struct CallQuery
 
 static bool firstFrame = true;
 static std::list<CallQuery> callQueries;
-static const int maxActiveCallQueries = 128;
 static std::map<glws::Context*, GLuint> activePrograms;
 
 
@@ -178,12 +177,6 @@ beginProfile(trace::Call &call) {
         }
 
         frame_start();
-    }
-
-    /* Ensure we don't have TOO many queries waiting for results */
-    if (callQueries.size() >= maxActiveCallQueries) {
-        completeCallQuery(callQueries.front());
-        callQueries.pop_front();
     }
 
     /* Create call query */
