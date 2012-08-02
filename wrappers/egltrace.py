@@ -81,6 +81,7 @@ class EglTracer(GlTracer):
             print '        gltrace::releaseContext((uintptr_t)ctx);'
             print '    }'
 
+
 if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
