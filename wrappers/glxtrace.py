@@ -48,7 +48,7 @@ class GlxTracer(GlTracer):
     createContextFunctionNames = [
         'glXCreateContext',
         'glXCreateContextAttribsARB',
-        'glXCreateContextWithConfigSGIX'
+        'glXCreateContextWithConfigSGIX',
         'glXCreateNewContext',
     ]
 
