@@ -54,6 +54,11 @@ class D3DRetracer(Retracer):
             if 'hFocusWindow' in method.argNames():
                 print r'    hFocusWindow = hWnd;'
 
+        if method.name in ('Reset', 'ResetEx'):
+            print r'    if (pPresentationParameters->Windowed) {'
+            print r'        d3dretrace::resizeWindow(pPresentationParameters->hDeviceWindow, pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
+            print r'    }'
+
         # notify frame has been completed
         if method.name == 'Present':
             print r'    retrace::frameComplete(call);'

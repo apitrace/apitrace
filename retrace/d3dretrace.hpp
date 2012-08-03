@@ -50,6 +50,9 @@ extern const retrace::Entry d3d9_callbacks[];
 HWND
 createWindow(int width, int height);
 
+void
+resizeWindow(HWND hWnd, int width, int height);
+
 
 } /* namespace d3dretrace */
 
