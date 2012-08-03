@@ -72,6 +72,10 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
+        # process events after presents
+        if method.name == 'Present':
+            print r'    d3dretrace::processEvents();'
+
         # check errors
         if str(method.type) == 'HRESULT':
             print r'    if (FAILED(_result)) {'
