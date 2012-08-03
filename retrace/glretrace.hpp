@@ -77,6 +77,5 @@ void endProfile(trace::Call &call);
 void setActiveProgram(GLuint program);
 } /* namespace glretrace */
 
-GLuint retrace_unmap_program(GLuint val);
 
 #endif /* _GLRETRACE_HPP_ */
