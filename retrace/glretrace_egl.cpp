@@ -32,6 +32,7 @@
 #include "retrace.hpp"
 #include "glretrace.hpp"
 #include "os.hpp"
+#include "eglsize.hpp"
 
 #ifndef EGL_OPENGL_ES_API
 #define EGL_OPENGL_ES_API		0x30A0
@@ -259,5 +260,8 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglSwapBuffers", &retrace_eglSwapBuffers},
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
+    {"eglCreateImageKHR", &retrace::ignore},
+    {"eglDestroyImageKHR", &retrace::ignore},
+    {"glEGLImageTargetTexture2DOES", &retrace::ignore},
     {NULL, NULL},
 };

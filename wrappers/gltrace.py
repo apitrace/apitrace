@@ -1016,16 +1016,6 @@ class GlTracer(Tracer):
         function = api.getFunctionByName('glClientActiveTexture')
         self.fake_call(function, [texture])
 
-    def fake_call(self, function, args):
-        print '            unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
-        for arg, instance in zip(function.args, args):
-            assert not arg.output
-            print '            trace::localWriter.beginArg(%u);' % (arg.index,)
-            self.serializeValue(arg.type, instance)
-            print '            trace::localWriter.endArg();'
-        print '            trace::localWriter.endEnter();'
-        print '            trace::localWriter.beginLeave(_fake_call);'
-        print '            trace::localWriter.endLeave();'
 
 
 

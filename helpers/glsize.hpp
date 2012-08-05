@@ -37,6 +37,8 @@
 
 #include <string.h>
 
+#include <algorithm>
+
 #include "os.hpp"
 #include "glimports.hpp"
 

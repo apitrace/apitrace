@@ -81,6 +81,33 @@ class EglTracer(GlTracer):
             print '        gltrace::releaseContext((uintptr_t)ctx);'
             print '    }'
 
+        if function.name == 'glEGLImageTargetTexture2DOES':
+            print '    image_info *info = _EGLImageKHR_get_image_info(target, image);'
+            print '    if (info) {'
+            print '        GLint level = 0;'
+            print '        GLint internalformat = info->internalformat;'
+            print '        GLsizei width = info->width;'
+            print '        GLsizei height = info->height;'
+            print '        GLint border = 0;'
+            print '        GLenum format = info->format;'
+            print '        GLenum type = info->type;'
+            print '        const GLvoid * pixels = info->pixels;'
+            self.emitFakeTexture2D()
+            print '        _EGLImageKHR_free_image_info(info);'
+            print '    }'
+
+    def emitFakeTexture2D(self):
+        function = glapi.getFunctionByName('glTexImage2D')
+        instances = function.argNames()
+        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+        for arg in function.args:
+            assert not arg.output
+            self.serializeArg(function, arg)
+        print '        trace::localWriter.endEnter();'
+        print '        trace::localWriter.beginLeave(_fake_call);'
+        print '        trace::localWriter.endLeave();'
+
+
 
 if __name__ == '__main__':
     print '#include <stdlib.h>'
@@ -95,6 +122,7 @@ if __name__ == '__main__':
     print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
+    print '#include "eglsize.hpp"'
     print
     
     api = API()
