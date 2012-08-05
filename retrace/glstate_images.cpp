@@ -817,6 +817,8 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
                     GLint internalFormat = GL_NONE)
 {
     GLint channels = _gl_format_channels(format);
+    if (internalFormat == GL_NONE)
+        internalFormat = format;
 
     if (internalFormat == GL_NONE) {
         internalFormat = format;
