@@ -48,6 +48,10 @@ struct CallQuery
     uint64_t duration;
 };
 
+static bool supportsElapsed = true;
+static bool supportsTimestamp = true;
+static bool supportsOcclusion = true;
+
 static bool firstFrame = true;
 static std::list<CallQuery> callQueries;
 static std::map<glws::Context*, GLuint> activePrograms;
@@ -103,7 +107,7 @@ getGpuTimestamp() {
     GLuint query = 0;
     GLuint64 timestamp = 0;
 
-    if (retrace::profilingGpuTimes) {
+    if (retrace::profilingGpuTimes && supportsTimestamp) {
         glGenQueries(1, &query);
         glQueryCounter(query, GL_TIMESTAMP);
         glGetQueryObjectui64vEXT(query, GL_QUERY_RESULT, &timestamp);
@@ -128,11 +132,16 @@ completeCallQuery(CallQuery& query) {
     GLuint64 timestamp = 0, duration = 0, samples = 0;
 
     if (retrace::profilingGpuTimes) {
-        glGetQueryObjectui64vEXT(query.ids[0], GL_QUERY_RESULT, &timestamp);
-        glGetQueryObjectui64vEXT(query.ids[1], GL_QUERY_RESULT, &duration);
+        if (supportsTimestamp) {
+            glGetQueryObjectui64vEXT(query.ids[0], GL_QUERY_RESULT, &timestamp);
+        }
+
+        if (supportsElapsed) {
+            glGetQueryObjectui64vEXT(query.ids[1], GL_QUERY_RESULT, &duration);
+        }
     }
 
-    if (retrace::profilingPixelsDrawn) {
+    if (retrace::profilingPixelsDrawn && supportsOcclusion) {
         glGetQueryObjectui64vEXT(query.ids[2], GL_QUERY_RESULT, &samples);
     }
 
@@ -170,9 +179,20 @@ getActiveProgram()
 void
 beginProfile(trace::Call &call) {
     if (firstFrame) {
+        /* Check for extension support */
         const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-        if (!glws::checkExtension("GL_ARB_timer_query", extensions)) {
-            std::cout << "Error: Cannot run profile, GL_ARB_timer_query extension is not supported." << std::endl;
+
+        supportsTimestamp = glws::checkExtension("GL_ARB_timer_query", extensions);
+        supportsElapsed   = glws::checkExtension("GL_EXT_timer_query", extensions) || supportsTimestamp;
+        supportsOcclusion = glws::checkExtension("GL_ARB_occlusion_query", extensions);
+
+        if (retrace::profilingGpuTimes && !supportsTimestamp && !supportsElapsed) {
+            std::cout << "Error: Cannot run profile, GL_EXT_timer_query extension is not supported." << std::endl;
+            exit(-1);
+        }
+
+        if (retrace::profilingPixelsDrawn && !supportsOcclusion) {
+            std::cout << "Error: Cannot run profile, GL_ARB_occlusion_query extension is not supported." << std::endl;
             exit(-1);
         }
 
@@ -188,11 +208,16 @@ beginProfile(trace::Call &call) {
     glGenQueries(3, query.ids);
 
     if (retrace::profilingGpuTimes) {
-        glQueryCounter(query.ids[0], GL_TIMESTAMP);
-        glBeginQuery(GL_TIME_ELAPSED, query.ids[1]);
+        if (supportsTimestamp) {
+            glQueryCounter(query.ids[0], GL_TIMESTAMP);
+        }
+
+        if (supportsElapsed) {
+            glBeginQuery(GL_TIME_ELAPSED, query.ids[1]);
+        }
     }
 
-    if (retrace::profilingPixelsDrawn) {
+    if (retrace::profilingPixelsDrawn && supportsOcclusion) {
         glBeginQuery(GL_SAMPLES_PASSED, query.ids[2]);
     }
 
@@ -210,11 +235,11 @@ endProfile(trace::Call &call) {
         query.duration = (os::getTime() - query.start) * (1.0E9 / os::timeFrequency);
     }
 
-    if (retrace::profilingGpuTimes) {
+    if (retrace::profilingGpuTimes && supportsElapsed) {
         glEndQuery(GL_TIME_ELAPSED);
     }
 
-    if (retrace::profilingPixelsDrawn) {
+    if (retrace::profilingPixelsDrawn && supportsOcclusion) {
         glEndQuery(GL_SAMPLES_PASSED);
     }
 }
