@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,59 +23,46 @@
  *
  **************************************************************************/
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
+#ifndef TRACE_PROFILER_H
+#define TRACE_PROFILER_H
 
-#include "glws.hpp"
-#include "retrace.hpp"
+#include <string>
+#include <stdint.h>
 
+namespace trace
+{
+class Profiler
+{
+public:
+    Profiler();
+    ~Profiler();
 
-namespace glretrace {
+    void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_);
 
+    void addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart);
+    void addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd);
 
-extern bool insideList;
-extern bool insideGlBeginEnd;
+    void addCall(unsigned no,
+                 const char* name,
+                 unsigned program,
+                 uint64_t pixels,
+                 uint64_t gpuStart, uint64_t gpuDuration,
+                 uint64_t cpuStart, uint64_t cpuDuration);
 
+private:
+    uint64_t baseGpuTime;
+    uint64_t baseCpuTime;
 
-extern glws::Drawable *currentDrawable;
-extern glws::Context *currentContext;
+    bool cpuTimes;
+    bool gpuTimes;
+    bool pixelsDrawn;
 
-glws::Drawable *
-createDrawable(glws::Profile profile);
+    struct {
+        unsigned no;
+        uint64_t gpuStart;
+        uint64_t cpuStart;
+    } lastFrame;
+};
+}
 
-glws::Drawable *
-createDrawable(void);
-
-glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile);
-
-glws::Context *
-createContext(glws::Context *shareContext = 0);
-
-bool
-makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context);
-
-
-void
-checkGlError(trace::Call &call);
-
-extern const retrace::Entry gl_callbacks[];
-extern const retrace::Entry cgl_callbacks[];
-extern const retrace::Entry glx_callbacks[];
-extern const retrace::Entry wgl_callbacks[];
-extern const retrace::Entry egl_callbacks[];
-
-void frame_start();
-void frame_complete(trace::Call &call);
-
-void updateDrawable(int width, int height);
-
-void flushQueries();
-void beginProfile(trace::Call &call);
-void endProfile(trace::Call &call);
-
-void setActiveProgram(GLuint program);
-} /* namespace glretrace */
-
-
-#endif /* _GLRETRACE_HPP_ */
+#endif // TRACE_PROFILER_H

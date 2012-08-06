@@ -121,6 +121,8 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context)
         }
     }
 
+    flushQueries();
+
     bool success = glws::makeCurrent(drawable, context);
 
     if (!success) {

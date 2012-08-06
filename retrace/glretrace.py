@@ -289,7 +289,30 @@ class GlRetracer(Retracer):
             print r'    if (pipeline) {'
             print r'        _pipelineHasBeenBound = true;'
             print r'    }'
-        
+
+        profileDraw = (
+            function.name in self.draw_array_function_names or
+            function.name in self.draw_elements_function_names or
+            function.name in self.draw_indirect_function_names or
+            function.name in self.misc_draw_function_names or
+            function.name == 'glBegin'
+        )
+
+        if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
+            print r'    glretrace::setActiveProgram((call.arg(0)).toUInt());'
+
+        # Only profile if not inside a list as the queries get inserted into list
+        if function.name == 'glNewList':
+            print r'    glretrace::insideList = true;'
+
+        if function.name == 'glEndList':
+            print r'    glretrace::insideList = false;'
+
+        if profileDraw and function.name != 'glEnd':
+            print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
+            print r'        glretrace::beginProfile(call);'
+            print r'    }'
+
         if function.name == 'glCreateShaderProgramv':
             # When dumping state, break down glCreateShaderProgramv so that the
             # shader source can be recovered.
@@ -320,6 +343,11 @@ class GlRetracer(Retracer):
             print r'    }'
         else:
             Retracer.invokeFunction(self, function)
+
+        if profileDraw or function.name == 'glEnd':
+            print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
+            print r'        glretrace::endProfile(call);'
+            print r'    }'
 
         # Error checking
         if function.name == "glBegin":

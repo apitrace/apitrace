@@ -49,19 +49,22 @@ namespace retrace {
 
 
 trace::Parser parser;
+trace::Profiler profiler;
 
 
 int verbosity = 0;
 bool debug = true;
-bool profiling = false;
 bool dumpingState = false;
-
 
 bool doubleBuffer = true;
 bool coreProfile = false;
 
+bool profiling = false;
+bool profilingGpuTimes = false;
+bool profilingCpuTimes = false;
+bool profilingPixelsDrawn = false;
 
-static unsigned frameNo = 0;
+unsigned frameNo = 0;
 
 
 void
@@ -194,7 +197,9 @@ usage(const char *argv0) {
         "Replay TRACE.\n"
         "\n"
         "  -b           benchmark mode (no error checking or warning messages)\n"
-        "  -p           profiling mode (run whole trace, dump profiling info)\n"
+        "  -pcpu        cpu profiling (cpu times per call)\n"
+        "  -pgpu        gpu profiling (gpu times per draw call)\n"
+        "  -ppd         pixels drawn profiling (pixels drawn per draw call)\n"
         "  -c PREFIX    compare against snapshots\n"
         "  -C CALLSET   calls to compare (default is every frame)\n"
         "  -core        use core profile\n"
@@ -228,10 +233,6 @@ int main(int argc, char **argv)
             break;
         } else if (!strcmp(arg, "-b")) {
             retrace::debug = false;
-            retrace::verbosity = -1;
-        } else if (!strcmp(arg, "-p")) {
-            retrace::debug = false;
-            retrace::profiling = true;
             retrace::verbosity = -1;
         } else if (!strcmp(arg, "-c")) {
             comparePrefix = argv[++i];
@@ -274,6 +275,18 @@ int main(int argc, char **argv)
             ++retrace::verbosity;
         } else if (!strcmp(arg, "-w")) {
             waitOnFinish = true;
+        } else if (arg[1] == 'p') {
+            retrace::debug = false;
+            retrace::profiling = true;
+            retrace::verbosity = -1;
+
+            if (!strcmp(arg, "-pcpu")) {
+                retrace::profilingCpuTimes = true;
+            } else if (!strcmp(arg, "-pgpu")) {
+                retrace::profilingGpuTimes = true;
+            } else if (!strcmp(arg, "-ppd")) {
+                retrace::profilingPixelsDrawn = true;
+            }
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage(argv[0]);
@@ -282,6 +295,9 @@ int main(int argc, char **argv)
     }
 
     retrace::setUp();
+    if (retrace::profiling) {
+        retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn);
+    }
 
     for ( ; i < argc; ++i) {
         if (!retrace::parser.open(argv[i])) {
