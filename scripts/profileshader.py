@@ -24,52 +24,63 @@
 #
 ##########################################################################/
 
+
 import sys
 
-if len(sys.argv) <= 1:
-	print 'Please specify a file to read'
-	sys.exit()
 
-times = {}
+def process(stream):
+    times = {}
 
-# frame_begin no gpu_start cpu_start
-# frame_end no gpu_end gpu_dura cpu_end cpu_dura
-# call no gpu_start gpu_dura cpu_start cpu_dura pixels program name
+    # frame_begin no gpu_start cpu_start
+    # frame_end no gpu_end gpu_dura cpu_end cpu_dura
+    # call no gpu_start gpu_dura cpu_start cpu_dura pixels program name
 
-for line in open(sys.argv[1], 'r'):
-    words = line.split(' ')
+    for line in stream:
+        words = line.split(' ')
 
-    if line.startswith('#'):
-        continue
+        if line.startswith('#'):
+            continue
 
-    if words[0] == 'call':
-        id = long(words[1])
-        duration = long(words[3])
-        shader = long(words[7])
-        func = words[8]
+        if words[0] == 'call':
+            id = long(words[1])
+            duration = long(words[3])
+            shader = long(words[7])
+            func = words[8]
 
-        if times.has_key(shader):
-            times[shader]['draws'] += 1
-            times[shader]['duration'] += duration
+            if times.has_key(shader):
+                times[shader]['draws'] += 1
+                times[shader]['duration'] += duration
 
-            if duration > times[shader]['longestDuration']:
-                times[shader]['longest'] = id
-                times[shader]['longestDuration'] = duration
-        else:
-            times[shader] = {'draws': 1, 'duration': duration, 'longest': id, 'longestDuration': duration}
+                if duration > times[shader]['longestDuration']:
+                    times[shader]['longest'] = id
+                    times[shader]['longestDuration'] = duration
+            else:
+                times[shader] = {'draws': 1, 'duration': duration, 'longest': id, 'longestDuration': duration}
 
-times = sorted(times.items(), key=lambda x: x[1]['duration'], reverse=True)
+    times = sorted(times.items(), key=lambda x: x[1]['duration'], reverse=True)
 
-print '+------------+--------------+--------------------+--------------+-------------+'
-print '| Shader[id] |   Draws [#]  |   Duration [ns]  v | Per Call[ns] | Longest[id] |'
-print '+------------+--------------+--------------------+--------------+-------------+'
+    print '+------------+--------------+--------------------+--------------+-------------+'
+    print '| Shader[id] |   Draws [#]  |   Duration [ns]  v | Per Call[ns] | Longest[id] |'
+    print '+------------+--------------+--------------------+--------------+-------------+'
 
-for shader in times:
-    id = str(shader[0]).rjust(10)
-    draw = str(shader[1]['draws']).rjust(12)
-    dura = str(shader[1]['duration']).rjust(18)
-    perCall = str(shader[1]['duration'] / shader[1]['draws']).rjust(12)
-    longest = str(shader[1]['longest']).rjust(11)
-    print "| %s | %s | %s | %s | %s |" % (id, draw, dura, perCall, longest)
+    for shader in times:
+        id = str(shader[0]).rjust(10)
+        draw = str(shader[1]['draws']).rjust(12)
+        dura = str(shader[1]['duration']).rjust(18)
+        perCall = str(shader[1]['duration'] / shader[1]['draws']).rjust(12)
+        longest = str(shader[1]['longest']).rjust(11)
+        print "| %s | %s | %s | %s | %s |" % (id, draw, dura, perCall, longest)
 
-print '+------------+--------------+--------------------+--------------+-------------+'
+    print '+------------+--------------+--------------------+--------------+-------------+'
+
+
+def main():
+    if len(sys.argv) > 1:
+        for arg in sys.argv[1:]:
+            process(open(arg, 'rt'))
+    else:
+        process(sys.stdin)
+
+
+if __name__ == '__main__':
+    main()
