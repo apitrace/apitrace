@@ -294,7 +294,8 @@ class GlRetracer(Retracer):
             function.name in self.draw_array_function_names or
             function.name in self.draw_elements_function_names or
             function.name in self.draw_indirect_function_names or
-            function.name in self.misc_draw_function_names
+            function.name in self.misc_draw_function_names or
+            function.name == 'glBegin'
         )
 
         if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
@@ -307,8 +308,8 @@ class GlRetracer(Retracer):
         if function.name == 'glEndList':
             print r'    glretrace::insideList = false;'
 
-        if profileDraw:
-            print r'    if (!glretrace::insideList && retrace::profiling) {'
+        if profileDraw and function.name != 'glEnd':
+            print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
             print r'        glretrace::beginProfile(call);'
             print r'    }'
 
@@ -343,8 +344,8 @@ class GlRetracer(Retracer):
         else:
             Retracer.invokeFunction(self, function)
 
-        if profileDraw:
-            print r'    if (!glretrace::insideList && retrace::profiling) {'
+        if profileDraw or function.name == 'glEnd':
+            print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
             print r'        glretrace::endProfile(call);'
             print r'    }'
 
