@@ -181,14 +181,24 @@ beginProfile(trace::Call &call) {
     if (firstFrame) {
         /* Check for extension support */
         const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+        GLint bits;
 
         supportsTimestamp = glws::checkExtension("GL_ARB_timer_query", extensions);
         supportsElapsed   = glws::checkExtension("GL_EXT_timer_query", extensions) || supportsTimestamp;
         supportsOcclusion = glws::checkExtension("GL_ARB_occlusion_query", extensions);
 
-        if (retrace::profilingGpuTimes && !supportsTimestamp && !supportsElapsed) {
-            std::cout << "Error: Cannot run profile, GL_EXT_timer_query extension is not supported." << std::endl;
-            exit(-1);
+        if (retrace::profilingGpuTimes) {
+            if (!supportsTimestamp && !supportsElapsed) {
+                std::cout << "Error: Cannot run profile, GL_EXT_timer_query extension is not supported." << std::endl;
+                exit(-1);
+            }
+
+            glGetQueryiv(GL_TIME_ELAPSED, GL_QUERY_COUNTER_BITS, &bits);
+
+            if (!bits) {
+                std::cout << "Error: Cannot run profile, GL_QUERY_COUNTER_BITS == 0." << std::endl;
+                exit(-1);
+            }
         }
 
         if (retrace::profilingPixelsDrawn && !supportsOcclusion) {
