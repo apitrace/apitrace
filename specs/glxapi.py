@@ -270,9 +270,9 @@ glxapi.addFunctions([
     Function(Void, "glXUseXFont", [(Font, "font"), (Int, "first"), (Int, "count"), (Int, "list")]),
 
     # GLX 1.1 and later
-    Function((Const(String("char *"))), "glXQueryExtensionsString", [(Display, "dpy"), (Int, "screen")]),
-    Function((Const(String("char *"))), "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (GLXname, "name")]),
-    Function((Const(String("char *"))), "glXGetClientString", [(Display, "dpy"), (GLXname, "name")]),
+    Function((Const(CString)), "glXQueryExtensionsString", [(Display, "dpy"), (Int, "screen")]),
+    Function((Const(CString)), "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (GLXname, "name")]),
+    Function((Const(CString)), "glXGetClientString", [(Display, "dpy"), (GLXname, "name")]),
 
     # GLX 1.2 and later
     Function(Display, "glXGetCurrentDisplay", [], sideeffects=False),

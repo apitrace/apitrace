@@ -307,7 +307,7 @@ eglapi.addFunctions([
     Function(EGLBoolean, "eglInitialize", [(EGLDisplay, "dpy"), Out(Pointer(EGLint), "major"), Out(Pointer(EGLint), "minor")]),
     Function(EGLBoolean, "eglTerminate", [(EGLDisplay, "dpy")]),
 
-    Function(Const(String("char *")), "eglQueryString", [(EGLDisplay, "dpy"), (EGLName, "name")], sideeffects=False),
+    Function(Const(CString), "eglQueryString", [(EGLDisplay, "dpy"), (EGLName, "name")], sideeffects=False),
 
     Function(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
     Function(EGLBoolean, "eglChooseConfig", [(EGLDisplay, "dpy"), (EGLAttribList, "attrib_list"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
