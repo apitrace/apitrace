@@ -63,6 +63,7 @@ GLhalfARB = Alias("GLhalfARB", UShort)
 GLhalfNV = Alias("GLhalfNV", UShort)
 GLint64EXT = Alias("GLint64EXT", Int64)
 GLuint64EXT = Alias("GLuint64EXT", UInt64)
+GLDEBUGPROC = Opaque("GLDEBUGPROC")
 GLDEBUGPROCARB = Opaque("GLDEBUGPROCARB")
 GLDEBUGPROCAMD = Opaque("GLDEBUGPROCAMD")
 

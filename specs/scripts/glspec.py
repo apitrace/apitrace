@@ -235,7 +235,7 @@ class SpecParser(LineParser):
                     try:
                         int(length)
                     except ValueError:
-                        length = "%s" % length
+                        length = '"%s"' % length
                     arg_type = '%s(%s, %s)' % (constructor, base_type, length)
                 else:
                     if length == "COMPSIZE(pname)":
