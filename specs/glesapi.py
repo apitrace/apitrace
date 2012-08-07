@@ -207,12 +207,12 @@ glesapi.addFunctions([
     GlFunction(Void, "glReadBufferNV", [(GLenum, "mode")]),
 
     # GL_EXT_debug_label
-    GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "length"), (Const(GLstring), "label")]),
+    GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "length"), (GLstringConst, "label")]),
     GlFunction(Void, "glGetObjectLabelEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(GLstring, "label")], sideeffects=False),
 
     # GL_EXT_debug_marker
-    GlFunction(Void, "glInsertEventMarkerEXT", [(GLsizei, "length"), (Const(String("GLchar *", "length ? length : strlen(marker)")), "marker")], sideeffects=False),
-    GlFunction(Void, "glPushGroupMarkerEXT", [(GLsizei, "length"), (Const(String("GLchar *", "length ? length : strlen(marker)")), "marker")], sideeffects=False),
+    GlFunction(Void, "glInsertEventMarkerEXT", [(GLsizei, "length"), (String(Const(GLchar), "length ? length : strlen(marker)"), "marker")], sideeffects=False),
+    GlFunction(Void, "glPushGroupMarkerEXT", [(GLsizei, "length"), (String(Const(GLchar), "length ? length : strlen(marker)"), "marker")], sideeffects=False),
     GlFunction(Void, "glPopGroupMarkerEXT", [], sideeffects=False),
 
     # GL_EXT_occlusion_query_boolean
@@ -227,7 +227,7 @@ glesapi.addFunctions([
     # GL_EXT_separate_shader_objects
     GlFunction(Void, "glUseProgramStagesEXT", [(GLpipeline, "pipeline"), (GLbitfield_shader, "stages"), (GLprogram, "program")]),
     GlFunction(Void, "glActiveShaderProgramEXT", [(GLpipeline, "pipeline"), (GLprogram, "program")]),
-    GlFunction(GLprogram, "glCreateShaderProgramvEXT", [(GLenum, "type"), (GLsizei, "count"), (Const(Array(Const(GLstring), "count")), "strings")]),
+    GlFunction(GLprogram, "glCreateShaderProgramvEXT", [(GLenum, "type"), (GLsizei, "count"), (Const(Array(GLstringConst, "count")), "strings")]),
     GlFunction(Void, "glBindProgramPipelineEXT", [(GLpipeline, "pipeline")]),
     GlFunction(Void, "glDeleteProgramPipelinesEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "pipelines")]),
     GlFunction(Void, "glGenProgramPipelinesEXT", [(GLsizei, "n"), Out(Array(GLpipeline, "n"), "pipelines")]),
