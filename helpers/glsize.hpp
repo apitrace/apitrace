@@ -431,31 +431,31 @@ _glDrawElementsIndirect_count(GLenum type, const GLvoid *indirect) {
 }
 
 static inline GLuint
-_glMultiDrawArrays_count(const GLint *first, const GLsizei *count, GLsizei primcount) {
+_glMultiDrawArrays_count(const GLint *first, const GLsizei *count, GLsizei drawcount) {
     GLuint _count = 0;
-    for (GLsizei prim = 0; prim < primcount; ++prim) {
-        GLuint _count_prim = _glDrawArrays_count(first[prim], count[prim]);
-        _count = std::max(_count, _count_prim);
+    for (GLsizei draw = 0; draw < drawcount; ++draw) {
+        GLuint _count_draw = _glDrawArrays_count(first[draw], count[draw]);
+        _count = std::max(_count, _count_draw);
     }
     return _count;
 }
 
 static inline GLuint
-_glMultiDrawElements_count(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount) {
+_glMultiDrawElements_count(const GLsizei *count, GLenum type, const GLvoid* const *indices, GLsizei drawcount) {
     GLuint _count = 0;
-    for (GLsizei prim = 0; prim < primcount; ++prim) {
-        GLuint _count_prim = _glDrawElements_count(count[prim], type, indices[prim]);
-        _count = std::max(_count, _count_prim);
+    for (GLsizei draw = 0; draw < drawcount; ++draw) {
+        GLuint _count_draw = _glDrawElements_count(count[draw], type, indices[draw]);
+        _count = std::max(_count, _count_draw);
     }
     return _count;
 }
 
 static inline GLuint
-_glMultiDrawElementsBaseVertex_count(const GLsizei *count, GLenum type, const GLvoid* *indices, GLsizei primcount, const GLint * basevertex) {
+_glMultiDrawElementsBaseVertex_count(const GLsizei *count, GLenum type, const GLvoid* const *indices, GLsizei drawcount, const GLint * basevertex) {
     GLuint _count = 0;
-    for (GLsizei prim = 0; prim < primcount; ++prim) {
-        GLuint _count_prim = _glDrawElementsBaseVertex_count(count[prim], type, indices[prim], basevertex[prim]);
-        _count = std::max(_count, _count_prim);
+    for (GLsizei draw = 0; draw < drawcount; ++draw) {
+        GLuint _count_draw = _glDrawElementsBaseVertex_count(count[draw], type, indices[draw], basevertex[draw]);
+        _count = std::max(_count, _count_draw);
     }
     return _count;
 }
@@ -463,8 +463,8 @@ _glMultiDrawElementsBaseVertex_count(const GLsizei *count, GLenum type, const GL
 #define _glMultiDrawArraysEXT_count _glMultiDrawArrays_count
 #define _glMultiDrawElementsEXT_count _glMultiDrawElements_count
 
-#define _glMultiModeDrawArraysIBM_count(first, count, primcount, modestride) _glMultiDrawArrays_count(first, count, primcount)
-#define _glMultiModeDrawElementsIBM_count(count, type, indices, primcount, modestride) _glMultiDrawElements_count(count, type, (const GLvoid **)indices, primcount)
+#define _glMultiModeDrawArraysIBM_count(first, count, drawcount, modestride) _glMultiDrawArrays_count(first, count, drawcount)
+#define _glMultiModeDrawElementsIBM_count(count, type, indices, drawcount, modestride) _glMultiDrawElements_count(count, type, (const GLvoid **)indices, drawcount)
 
 
 static inline size_t

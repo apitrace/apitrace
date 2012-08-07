@@ -1,7 +1,7 @@
 #ifndef __gl2ext_h_
 #define __gl2ext_h_
 
-/* $Revision: 16994 $ on $Date:: 2012-02-29 18:29:34 -0800 #$ */
+/* $Revision: 18481 $ on $Date:: 2012-07-11 18:07:26 -0700 #$ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -92,6 +92,9 @@ typedef void* GLeglImageOES;
 #define GL_UNSIGNED_INT_24_8_OES                                0x84FA
 #define GL_DEPTH24_STENCIL8_OES                                 0x88F0
 #endif
+
+/* GL_OES_required_internalformat */
+/* No new tokens introduced by this extension. */
 
 /* GL_OES_rgb8_rgba8 */
 #ifndef GL_OES_rgb8_rgba8
@@ -325,9 +328,10 @@ typedef void* GLeglImageOES;
 /* GL_EXT_multisampled_render_to_texture */
 #ifndef GL_EXT_multisampled_render_to_texture
 #define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_SAMPLES_EXT           0x8D6C
-#define GL_RENDERBUFFER_SAMPLES_EXT                             0x9133
-#define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT               0x9134
-#define GL_MAX_SAMPLES_EXT                                      0x9135
+/* reuse values from GL_EXT_framebuffer_multisample (desktop extension) */ 
+#define GL_RENDERBUFFER_SAMPLES_EXT                             0x8CAB
+#define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT               0x8D56
+#define GL_MAX_SAMPLES_EXT                                      0x8D57
 #endif
 
 /* GL_EXT_multi_draw_arrays */
@@ -461,6 +465,15 @@ typedef void* GLeglImageOES;
 /* GL_DMP_shader_binary */
 #ifndef GL_DMP_shader_binary
 #define GL_SHADER_BINARY_DMP                                    0x9250
+#endif
+
+/*------------------------------------------------------------------------*
+ * FJ extension tokens
+ *------------------------------------------------------------------------*/
+
+/* GL_FJ_shader_binary_GCCSO */
+#ifndef GL_FJ_shader_binary_GCCSO
+#define GCCSO_SHADER_BINARY_FJ                                  0x9260
 #endif
 
 /*------------------------------------------------------------------------*
@@ -773,6 +786,11 @@ typedef void (GL_APIENTRYP PFNGLGETBUFFERPOINTERVOESPROC) (GLenum target, GLenum
 /* GL_OES_packed_depth_stencil */
 #ifndef GL_OES_packed_depth_stencil
 #define GL_OES_packed_depth_stencil 1
+#endif
+
+/* GL_OES_required_internalformat */
+#ifndef GL_OES_required_internalformat
+#define GL_OES_required_internalformat 1
 #endif
 
 /* GL_OES_rgb8_rgba8 */
@@ -1267,6 +1285,15 @@ typedef void (GL_APIENTRYP PFNGLTEXTURESTORAGE3DEXTPROC) (GLuint texture, GLenum
 #endif
 
 /*------------------------------------------------------------------------*
+ * FJ extension functions
+ *------------------------------------------------------------------------*/
+
+/* GL_FJ_shader_binary_GCCSO */
+#ifndef GL_FJ_shader_binary_GCCSO
+#define GL_FJ_shader_binary_GCCSO 1
+#endif
+
+/*------------------------------------------------------------------------*
  * IMG extension functions
  *------------------------------------------------------------------------*/
 
@@ -1297,8 +1324,8 @@ typedef void (GL_APIENTRYP PFNGLTEXTURESTORAGE3DEXTPROC) (GLuint texture, GLenum
 GL_APICALL void GL_APIENTRY glRenderbufferStorageMultisampleIMG (GLenum, GLsizei, GLenum, GLsizei, GLsizei);
 GL_APICALL void GL_APIENTRY glFramebufferTexture2DMultisampleIMG (GLenum, GLenum, GLenum, GLuint, GLint, GLsizei);
 #endif
-typedef void (GL_APIENTRYP PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMG) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
-typedef void (GL_APIENTRYP PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples);
+typedef void (GL_APIENTRYP PFNGLRENDERBUFFERSTORAGEMULTISAMPLEIMGPROC) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (GL_APIENTRYP PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMGPROC) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples);
 #endif
 
 /*------------------------------------------------------------------------*
