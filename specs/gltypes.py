@@ -196,6 +196,7 @@ GLbitfield_shader = Flags(GLbitfield, [
     "GL_GEOMETRY_SHADER_BIT",                    # 0x00000004
     "GL_TESS_CONTROL_SHADER_BIT",                # 0x00000008
     "GL_TESS_EVALUATION_SHADER_BIT",             # 0x00000010
+    "GL_COMPUTE_SHADER_BIT",                     # 0x00000020
 ])
 
 GLbitfield_access = Flags(GLbitfield, [
