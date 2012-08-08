@@ -25,6 +25,9 @@
 
 #include "trace_profiler.hpp"
 #include <iostream>
+#include <string.h>
+#include <assert.h>
+#include <stdio.h>
 
 namespace trace {
 Profiler::Profiler()
@@ -154,5 +157,35 @@ void Profiler::addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd)
               << " " << cpuEnd
               << " " << cpuDuration
               << std::endl;
+}
+
+void Profiler::parseLine(const char* line, Profile* profile)
+{
+    char name[64];
+
+    if (line[0] == '#' || strlen(line) < 12)
+        return;
+
+    if (strncmp(line, "call ", 5) == 0) {
+        assert(profile->frames.size());
+
+        Profile::Call call;
+        sscanf(line, "call %u %li %li %li %li %li %u %s", &call.no, &call.gpuStart, &call.gpuDuration, &call.cpuStart, &call.cpuDuration, &call.pixels, &call.program, name);
+        call.name = name;
+        profile->frames.back().calls.push_back(call);
+    } else if (strncmp(line, "frame_begin ", 12) == 0) {
+        Profile::Frame frame;
+        frame.gpuDuration = 0;
+        frame.gpuDuration = 0;
+        sscanf(line, "frame_begin %u %li %li", &frame.no, &frame.gpuStart, &frame.cpuStart);
+        profile->frames.push_back(frame);
+    } else if (strncmp(line, "frame_end ", 10) == 0) {
+        assert(profile->frames.size());
+
+        Profile::Frame& frame = profile->frames.back();
+        unsigned no;
+        sscanf(line, "frame_end %u %*li %li %*li %li", &no, &frame.gpuDuration, &frame.cpuDuration);
+        assert(no == frame.no);
+    }
 }
 }

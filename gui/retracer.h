@@ -9,6 +9,8 @@
 
 class ApiTraceState;
 
+namespace trace { struct Profile; }
+
 class Retracer : public QThread
 {
     Q_OBJECT
@@ -26,6 +28,12 @@ public:
     bool isDoubleBuffered() const;
     void setDoubleBuffered(bool db);
 
+    bool isProfilingGpu() const;
+    bool isProfilingCpu() const;
+    bool isProfilingPixels() const;
+    bool isProfiling() const;
+    void setProfiling(bool gpu, bool cpu, bool pixels);
+
     void setCaptureAtCallNumber(qlonglong num);
     qlonglong captureAtCallNumber() const;
 
@@ -38,6 +46,7 @@ public:
 signals:
     void finished(const QString &output);
     void foundState(ApiTraceState *state);
+    void foundProfile(trace::Profile *profile);
     void foundThumbnails(const QList<QImage> &thumbnails);
     void error(const QString &msg);
     void retraceErrors(const QList<ApiTraceError> &errors);
@@ -53,6 +62,9 @@ private:
     bool m_captureState;
     bool m_captureThumbnails;
     qlonglong m_captureCall;
+    bool m_profileGpu;
+    bool m_profileCpu;
+    bool m_profilePixels;
 
     QProcessEnvironment m_processEnvironment;
 };
