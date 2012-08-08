@@ -626,7 +626,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Show Errors Dock</string>
+    <string>Show &amp;Errors Dock</string>
    </property>
   </action>
   <action name="actionShowProfileDialog">
@@ -634,7 +634,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Show Profile Results</string>
+    <string>Show &amp;Profile Results</string>
    </property>
   </action>
   <action name="actionProfile">
