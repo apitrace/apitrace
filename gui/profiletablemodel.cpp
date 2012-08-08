@@ -249,13 +249,13 @@ public:
             result = p1.pixels < p2.pixels;
             break;
         case COLUMN_GPU_AVERAGE:
-            result = (p1.gpuTime / p1.uses) < (p2.gpuTime / p2.uses);
+            result = ((p1.uses <= 0) ? 0 : (p1.gpuTime / p1.uses)) < ((p2.uses <= 0) ? 0 : (p2.gpuTime / p2.uses));
             break;
         case COLUMN_CPU_AVERAGE:
-            result = (p1.cpuTime / p1.uses) < (p2.cpuTime / p2.uses);
+            result = ((p1.uses <= 0) ? 0 : (p1.cpuTime / p1.uses)) < ((p2.uses <= 0) ? 0 : (p2.cpuTime / p2.uses));
             break;
         case COLUMN_PIXELS_AVERAGE:
-            result = (p1.pixels / p1.uses) < (p2.pixels / p2.uses);
+            result = ((p1.uses <= 0) ? 0 : (p1.pixels / p1.uses)) < ((p2.uses <= 0) ? 0 : (p2.pixels / p2.uses));
             break;
         }
 
