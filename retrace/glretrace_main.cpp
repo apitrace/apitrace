@@ -60,7 +60,7 @@ static bool supportsOcclusion = true;
 static bool firstFrame = true;
 static std::list<CallQuery> callQueries;
 
-static void
+static void APIENTRY
 debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, GLvoid* userParam);
 
 void
