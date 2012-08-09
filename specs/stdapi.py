@@ -102,17 +102,41 @@ class Literal(Type):
         return visitor.visitLiteral(self, *args, **kwargs)
 
 
+Bool = Literal("bool", "Bool")
+SChar = Literal("signed char", "SInt")
+UChar = Literal("unsigned char", "UInt")
+Short = Literal("short", "SInt")
+Int = Literal("int", "SInt")
+Long = Literal("long", "SInt")
+LongLong = Literal("long long", "SInt")
+UShort = Literal("unsigned short", "UInt")
+UInt = Literal("unsigned int", "UInt")
+ULong = Literal("unsigned long", "UInt")
+ULongLong = Literal("unsigned long long", "UInt")
+Float = Literal("float", "Float")
+Double = Literal("double", "Double")
+SizeT = Literal("size_t", "UInt")
+
+Char = Literal("char", "SInt")
+WChar = Literal("wchar_t", "SInt")
+
+Int8 = Literal("int8_t", "SInt")
+UInt8 = Literal("uint8_t", "UInt")
+Int16 = Literal("int16_t", "SInt")
+UInt16 = Literal("uint16_t", "UInt")
+Int32 = Literal("int32_t", "SInt")
+UInt32 = Literal("uint32_t", "UInt")
+Int64 = Literal("int64_t", "SInt")
+UInt64 = Literal("uint64_t", "UInt")
+
+
 class Const(Type):
 
     def __init__(self, type):
         # While "const foo" and "foo const" are synonymous, "const foo *" and
         # "foo * const" are not quite the same, and some compilers do enforce
         # strict const correctness.
-        if isinstance(type, String) or type is WString:
-            # For strings we never intend to say a const pointer to chars, but
-            # rather a point to const chars.
-            expr = "const " + type.expr
-        elif type.expr.startswith("const ") or '*' in type.expr:
+        if type.expr.startswith("const ") or '*' in type.expr:
             expr = type.expr + " const"
         else:
             # The most legible
@@ -453,11 +477,14 @@ def StdMethod(*args, **kwargs):
 
 
 class String(Type):
+    '''Human-legible character string.'''
 
-    def __init__(self, expr = "char *", length = None, kind = 'String'):
-        Type.__init__(self, expr)
+    def __init__(self, type = Char, length = None, wide = False):
+        assert isinstance(type, Type)
+        Type.__init__(self, type.expr + ' *')
+        self.type = type
         self.length = length
-        self.kind = kind
+        self.wide = wide
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitString(self, *args, **kwargs)
@@ -610,7 +637,11 @@ class Rebuilder(Visitor):
         return literal
 
     def visitString(self, string):
-        return string
+        string_type = self.visit(string.type)
+        if string_type is string.type:
+            return string
+        else:
+            return String(string_type, string.length, string.wide)
 
     def visitConst(self, const):
         const_type = self.visit(const.type)
@@ -698,6 +729,9 @@ class Rebuilder(Visitor):
 
 class MutableRebuilder(Rebuilder):
     '''Type visitor which derives a mutable type.'''
+
+    def visitString(self, string):
+        return string
 
     def visitConst(self, const):
         # Strip out const qualifier
@@ -859,30 +893,8 @@ class API:
         return None
 
 
-Bool = Literal("bool", "Bool")
-SChar = Literal("signed char", "SInt")
-UChar = Literal("unsigned char", "UInt")
-Short = Literal("short", "SInt")
-Int = Literal("int", "SInt")
-Long = Literal("long", "SInt")
-LongLong = Literal("long long", "SInt")
-UShort = Literal("unsigned short", "UInt")
-UInt = Literal("unsigned int", "UInt")
-ULong = Literal("unsigned long", "UInt")
-ULongLong = Literal("unsigned long long", "UInt")
-Float = Literal("float", "Float")
-Double = Literal("double", "Double")
-SizeT = Literal("size_t", "UInt")
-
 # C string (i.e., zero terminated)
-CString = String()
-WString = String("wchar_t *", kind="WString")
-
-Int8 = Literal("int8_t", "SInt")
-UInt8 = Literal("uint8_t", "UInt")
-Int16 = Literal("int16_t", "SInt")
-UInt16 = Literal("uint16_t", "UInt")
-Int32 = Literal("int32_t", "SInt")
-UInt32 = Literal("uint32_t", "UInt")
-Int64 = Literal("int64_t", "SInt")
-UInt64 = Literal("uint64_t", "UInt")
+CString = String(Char)
+WString = String(WChar, wide=True)
+ConstCString = String(Const(Char))
+ConstWString = String(Const(WChar), wide=True)

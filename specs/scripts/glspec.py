@@ -235,12 +235,16 @@ class SpecParser(LineParser):
                     try:
                         int(length)
                     except ValueError:
-                        length = "%s" % length
+                        length = '"%s"' % length
                     arg_type = '%s(%s, %s)' % (constructor, base_type, length)
                 else:
-                    length = length.replace("COMPSIZE", "_%s_size" % function_name)
-                    length = length.replace("/", ", ")
-                    arg_type = 'Opaque%s(%s, %s)' % (constructor, base_type, length)
+                    if length == "COMPSIZE(pname)":
+                        length = "_gl_param_size(pname)"
+                        arg_type = '%s(%s, "%s")' % (constructor, base_type, length)
+                    else:
+                        length = length.replace("COMPSIZE", "_%s_size" % function_name)
+                        length = length.replace("/", ", ")
+                        arg_type = 'Opaque%s(%s, "%s")' % (constructor, base_type, length)
         else:
             assert False
         
