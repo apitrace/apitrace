@@ -337,10 +337,11 @@ You can perform gpu and cpu profiling with the command line options:
 
 The results from this can then be read by hand or analysed with a script.
 
-scripts/profileshader.py will read the profile results and format them into a
+`scripts/profileshader.py` will read the profile results and format them into a
 table which displays profiling results per shader.
 
 For example, to record all profiling data and utilise the per shader script:
+
     ./glretrace -pgpu -pcpu -ppd foo.trace | ./scripts/profileshader.py
 
 
