@@ -11,6 +11,8 @@
 #include <QVariant>
 #include <QImage>
 
+#include <stdio.h>
+
 Q_DECLARE_METATYPE(QList<ApiTraceFrame*>);
 Q_DECLARE_METATYPE(QVector<ApiTraceCall*>);
 Q_DECLARE_METATYPE(Qt::CaseSensitivity);
@@ -20,7 +22,10 @@ Q_DECLARE_METATYPE(QList<QImage>);
 
 static void usage(void)
 {
-    qWarning("usage: qapitrace [TRACE] [CALLNO]\n");
+    qWarning("usage: qapitrace [options] [TRACE] [CALLNO]\n"
+             "Valid options include:\n"
+             "    -h, --help            Print this help message\n"
+             "    --remote-target HOST  Replay trace on remote target HOST\n");
 }
 
 int main(int argc, char **argv)
@@ -45,6 +50,7 @@ int main(int argc, char **argv)
 #endif
 
     QStringList args = app.arguments();
+    QString remoteTarget;
 
     int i = 1;
     while (i < args.count()) {
@@ -55,6 +61,13 @@ int main(int argc, char **argv)
         ++i;
         if (arg == QLatin1String("--")) {
             break;
+        } else if (arg == QLatin1String("--remote-target")) {
+            if (i == args.count()) {
+                qWarning("Option --remote-target requires an argument.\n");
+                exit(1);
+            }
+            remoteTarget = args[i];
+            ++i;
         } else if (arg == QLatin1String("-h") ||
                    arg == QLatin1String("--help")) {
             usage();
@@ -76,6 +89,10 @@ int main(int argc, char **argv)
             callNum = args[i++].toInt();
         }
         window.loadTrace(fileName, callNum);
+    }
+
+    if (remoteTarget.length()) {
+        window.setRemoteTarget(remoteTarget);
     }
 
     app.exec();

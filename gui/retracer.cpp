@@ -149,6 +149,16 @@ void Retracer::setFileName(const QString &name)
     m_fileName = name;
 }
 
+QString Retracer::remoteTarget() const
+{
+    return m_remoteTarget;
+}
+
+void Retracer::setRemoteTarget(const QString &host)
+{
+    m_remoteTarget = host;
+}
+
 void Retracer::setAPI(trace::API api)
 {
     m_api = api;
@@ -302,6 +312,16 @@ void Retracer::run()
     }
 
     arguments << m_fileName;
+
+    /*
+     * Support remote execution on a separate target.
+     */
+
+    if (m_remoteTarget.length() != 0) {
+        arguments.prepend(prog);
+        arguments.prepend(m_remoteTarget);
+        prog = QLatin1String("ssh");
+    }
 
     /*
      * Start the process.
@@ -472,7 +492,6 @@ void Retracer::run()
     if (m_captureState) {
         ApiTraceState *state = new ApiTraceState(parsedJson);
         emit foundState(state);
-        msg = QLatin1String("State fetched.");
     }
 
     if (m_captureThumbnails && !thumbnails.isEmpty()) {

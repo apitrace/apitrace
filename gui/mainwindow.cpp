@@ -109,6 +109,11 @@ void MainWindow::loadTrace(const QString &fileName, int callNum)
     newTraceFile(fileName);
 }
 
+void MainWindow::setRemoteTarget(const QString &host)
+{
+    m_retracer->setRemoteTarget(host);
+}
+
 void MainWindow::callItemSelected(const QModelIndex &index)
 {
     ApiTraceEvent *event =

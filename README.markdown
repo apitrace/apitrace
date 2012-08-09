@@ -419,3 +419,54 @@ Or on Windows:
 
 
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1062ad633aa7a458e9d7520021307e4 "githalytics.com")](http://githalytics.com/apitrace/apitrace)
+
+Advanced GUI usage
+==================
+qapitrace has rudimentary support for replaying traces on a remote
+target device. This can be useful, for example, when developing for an
+embedded system. The primary GUI will run on the local host, while any
+replays will be performed on the target device.
+
+In order to target a remote device, use the command-line:
+
+	qapitrace --remote-target <HOST> <trace-file>
+    
+In order for this to work, the following must be available in the
+system configuration:
+    
+1. It must be possible for the current user to initiate an ssh session
+   that has access to the target's window system. The command to be
+   exectuted by qapitrace will be:
+    
+	ssh <HOST> glretrace
+
+   For example, if the target device is using the X window system, one
+   can test whether an ssh session has access to the target X server
+   with:
+
+	ssh <HOST> xdpyinfo
+
+   If this command fails with something like "cannot open display"
+   then the user will have to configure the target to set the DISPLAY
+   environment variable, (for example, setting DISPLAY=:0 in the
+   .bashrc file on the target or similar).
+
+   Also, note that if the ssh session requires a custom username, then
+   this must be configured on the host side so that ssh can be
+   initiated without a username.
+
+   For example, if you normally connect with "ssh user@192.168.0.2"
+   you could configure ~/.ssh/config on the host with a block such as:
+
+	Host target
+	  HostName 192.168.0.2
+	  User user
+
+   And after this you should be able to connect with "ssh target" so
+   that you can also use "qapitrace --remote-target target".
+
+2. The target host must have a functional glretrace binary available
+
+3. The target host must have access to <trace-file> at the same path
+   in the filesystem as the <trace-file> path on the host system being
+   passed to the qapitrace command line.

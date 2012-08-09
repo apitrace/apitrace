@@ -45,6 +45,8 @@ public:
 public slots:
     void loadTrace(const QString &fileName, int callNum = -1);
 
+    void setRemoteTarget(const QString &host);
+
 private slots:
     void callItemSelected(const QModelIndex &index);
     void callItemActivated(const QModelIndex &index);
