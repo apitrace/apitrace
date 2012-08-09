@@ -178,7 +178,7 @@ void MainWindow::replayStart()
             dlgUi.doubleBufferingCB->isChecked());
         m_retracer->setBenchmarking(
             !dlgUi.errorCheckCB->isChecked());
-        replayTrace(false, true);
+        replayTrace(false, false);
     }
 }
 
