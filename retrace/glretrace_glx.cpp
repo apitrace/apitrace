@@ -33,7 +33,7 @@ using namespace glretrace;
 
 
 typedef std::map<unsigned long, glws::Drawable *> DrawableMap;
-typedef std::map<unsigned long long, glws::Context *> ContextMap;
+typedef std::map<unsigned long long, Context *> ContextMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
 
@@ -53,7 +53,7 @@ getDrawable(unsigned long drawable_id) {
     return it->second;
 }
 
-static glws::Context *
+static Context *
 getContext(unsigned long long context_ptr) {
     if (context_ptr == 0) {
         return NULL;
@@ -70,30 +70,30 @@ getContext(unsigned long long context_ptr) {
 
 static void retrace_glXCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
+    Context *share_context = getContext(call.arg(2).toUIntPtr());
 
-    glws::Context *context = glretrace::createContext(share_context);
+    Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 
 static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
+    Context *share_context = getContext(call.arg(2).toUIntPtr());
 
-    glws::Context *context = glretrace::createContext(share_context);
+    Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 
 static void retrace_glXMakeCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
-    glws::Context *new_context = getContext(call.arg(2).toUIntPtr());
+    Context *new_context = getContext(call.arg(2).toUIntPtr());
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
 
 
 static void retrace_glXDestroyContext(trace::Call &call) {
-    glws::Context *context = getContext(call.arg(1).toUIntPtr());
+    Context *context = getContext(call.arg(1).toUIntPtr());
 
     if (!context) {
         return;
@@ -113,15 +113,15 @@ static void retrace_glXSwapBuffers(trace::Call &call) {
 
 static void retrace_glXCreateNewContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *share_context = getContext(call.arg(3).toUIntPtr());
+    Context *share_context = getContext(call.arg(3).toUIntPtr());
 
-    glws::Context *context = glretrace::createContext(share_context);
+    Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 
 static void retrace_glXMakeContextCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
-    glws::Context *new_context = getContext(call.arg(3).toUIntPtr());
+    Context *new_context = getContext(call.arg(3).toUIntPtr());
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }

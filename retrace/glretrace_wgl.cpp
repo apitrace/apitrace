@@ -33,7 +33,7 @@ using namespace glretrace;
 
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
-typedef std::map<unsigned long long, glws::Context *> ContextMap;
+typedef std::map<unsigned long long, Context *> ContextMap;
 static DrawableMap drawable_map;
 static DrawableMap pbuffer_map;
 static ContextMap context_map;
@@ -56,7 +56,7 @@ getDrawable(unsigned long long hdc) {
 
 static void retrace_wglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *context = glretrace::createContext();
+    Context *context = glretrace::createContext();
     context_map[orig_context] = context;
 }
 
@@ -65,7 +65,7 @@ static void retrace_wglDeleteContext(trace::Call &call) {
 
 static void retrace_wglMakeCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(0).toUIntPtr());
-    glws::Context *new_context = context_map[call.arg(1).toUIntPtr()];
+    Context *new_context = context_map[call.arg(1).toUIntPtr()];
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
@@ -95,10 +95,10 @@ static void retrace_wglShareLists(trace::Call &call) {
     unsigned long long hglrc1 = call.arg(0).toUIntPtr();
     unsigned long long hglrc2 = call.arg(1).toUIntPtr();
 
-    glws::Context *share_context = context_map[hglrc1];
-    glws::Context *old_context = context_map[hglrc2];
+    Context *share_context = context_map[hglrc1];
+    Context *old_context = context_map[hglrc2];
 
-    glws::Context *new_context = glretrace::createContext(share_context);
+    Context *new_context = glretrace::createContext(share_context);
     if (new_context) {
         if (currentContext == old_context) {
             glretrace::makeCurrent(call, currentDrawable, new_context);
@@ -201,13 +201,13 @@ static void retrace_wglSetPbufferAttribARB(trace::Call &call) {
 
 static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *share_context = NULL;
+    Context *share_context = NULL;
 
     if (call.arg(1).toPointer()) {
         share_context = context_map[call.arg(1).toUIntPtr()];
     }
 
-    glws::Context *context = glretrace::createContext(share_context);
+    Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 

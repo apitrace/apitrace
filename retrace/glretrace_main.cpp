@@ -54,7 +54,6 @@ static bool supportsOcclusion = true;
 
 static bool firstFrame = true;
 static std::list<CallQuery> callQueries;
-static std::map<glws::Context*, GLuint> activePrograms;
 
 
 void
@@ -160,22 +159,6 @@ flushQueries() {
     callQueries.clear();
 }
 
-void setActiveProgram(GLuint program)
-{
-    activePrograms[glretrace::currentContext] = program;
-}
-
-static GLuint
-getActiveProgram()
-{
-    std::map<glws::Context*, GLuint>::iterator it;
-    it = activePrograms.find(glretrace::currentContext);
-    if (it == activePrograms.end())
-        return 0;
-
-    return it->second;
-}
-
 void
 beginProfile(trace::Call &call) {
     if (firstFrame) {
@@ -213,7 +196,7 @@ beginProfile(trace::Call &call) {
     CallQuery query;
     query.call = call.no;
     query.sig = call.sig;
-    query.program = getActiveProgram();
+    query.program = glretrace::currentContext ? glretrace::currentContext->activeProgram : 0;
 
     glGenQueries(3, query.ids);
 

@@ -41,7 +41,7 @@ namespace glretrace {
 
 
 glws::Drawable *currentDrawable = NULL;
-glws::Context *currentContext = NULL;
+Context *currentContext = NULL;
 
 
 static glws::Visual *
@@ -88,27 +88,28 @@ createDrawable(void) {
 }
 
 
-glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile) {
-    glws::Context *ctx = glws::createContext(getVisual(profile), shareContext, profile, retrace::debug);
+Context *
+createContext(Context *shareContext, glws::Profile profile) {
+    glws::Context *shareWsContext = shareContext ? shareContext->wsContext : NULL;
+    glws::Context *ctx = glws::createContext(getVisual(profile), shareWsContext, profile, retrace::debug);
     if (!ctx) {
         std::cerr << "error: failed to create OpenGL context\n";
         exit(1);
         return NULL;
     }
 
-    return ctx;
+    return new Context(ctx);
 }
 
 
-glws::Context *
-createContext(glws::Context *shareContext) {
+Context *
+createContext(Context *shareContext) {
     return createContext(shareContext, getDefaultProfile());
 }
 
 
 bool
-makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context)
+makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 {
     if (drawable == currentDrawable && context == currentContext) {
         return true;
@@ -123,7 +124,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context)
 
     flushQueries();
 
-    bool success = glws::makeCurrent(drawable, context);
+    bool success = glws::makeCurrent(drawable, context ? context->wsContext : NULL);
 
     if (!success) {
         std::cerr << "error: failed to make current OpenGL context and drawable\n";
