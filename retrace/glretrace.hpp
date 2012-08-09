@@ -35,7 +35,8 @@ namespace glretrace {
 struct Context {
     Context(glws::Context* context)
         : wsContext(context),
-          activeProgram(0)
+          activeProgram(0),
+          used(false)
     {
     }
 
@@ -46,6 +47,7 @@ struct Context {
 
     glws::Context* wsContext;
     GLuint activeProgram;
+    bool used;
 };
 
 extern bool insideList;
@@ -82,6 +84,8 @@ extern const retrace::Entry egl_callbacks[];
 
 void frame_start();
 void frame_complete(trace::Call &call);
+void initContext();
+
 
 void updateDrawable(int width, int height);
 
