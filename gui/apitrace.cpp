@@ -230,7 +230,7 @@ bool ApiTrace::isSaving() const
 
 bool ApiTrace::hasErrors() const
 {
-    return !m_errors.isEmpty();
+    return !m_errors.isEmpty() || !m_queuedErrors.isEmpty();
 }
 
 void ApiTrace::loadFrame(ApiTraceFrame *frame)
