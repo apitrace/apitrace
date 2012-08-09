@@ -65,6 +65,7 @@ bool profilingCpuTimes = false;
 bool profilingPixelsDrawn = false;
 
 unsigned frameNo = 0;
+unsigned callNo = 0;
 
 
 void
@@ -152,6 +153,7 @@ mainLoop() {
             }
         }
 
+        callNo = call->no;
         retracer.retrace(*call);
 
         if (doSnapshot && !swapRenderTarget) {

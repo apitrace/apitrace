@@ -162,6 +162,7 @@ extern bool doubleBuffer;
 extern bool coreProfile;
 
 extern unsigned frameNo;
+extern unsigned callNo;
 
 
 std::ostream &warning(trace::Call &call);
