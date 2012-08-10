@@ -4,7 +4,7 @@
 #include "ui_profiledialog.h"
 #include <QDialog>
 
-namespace trace { class Profile; }
+namespace trace { struct Profile; }
 
 class ProfileDialog : public QDialog, public Ui_ProfileDialog
 {
