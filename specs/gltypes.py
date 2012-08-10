@@ -53,11 +53,9 @@ GLfloat = Alias("GLfloat", Float)
 GLclampf = Alias("GLclampf", Float)
 GLdouble = Alias("GLdouble", Double)
 GLclampd = Alias("GLclampd", Double)
-GLchar = Alias("GLchar", SChar)
-GLstring = String("GLchar *")
+GLchar = Alias("GLchar", Char)
 
 GLcharARB = Alias("GLcharARB", SChar)
-GLstringARB = String("GLcharARB *")
 GLintptrARB = Alias("GLintptrARB", Int)
 GLsizeiptrARB = Alias("GLsizeiptrARB", Int)
 GLhandleARB = Handle("handleARB", Alias("GLhandleARB", UInt))
@@ -65,8 +63,14 @@ GLhalfARB = Alias("GLhalfARB", UShort)
 GLhalfNV = Alias("GLhalfNV", UShort)
 GLint64EXT = Alias("GLint64EXT", Int64)
 GLuint64EXT = Alias("GLuint64EXT", UInt64)
+GLDEBUGPROC = Opaque("GLDEBUGPROC")
 GLDEBUGPROCARB = Opaque("GLDEBUGPROCARB")
 GLDEBUGPROCAMD = Opaque("GLDEBUGPROCAMD")
+
+GLstring = String(GLchar)
+GLstringConst = String(Const(GLchar))
+GLstringARB = String(GLcharARB)
+GLstringConstARB = String(Const(GLcharARB))
 
 GLpointer = OpaquePointer(GLvoid)
 GLpointerConst = OpaquePointer(Const(GLvoid))
@@ -192,6 +196,7 @@ GLbitfield_shader = Flags(GLbitfield, [
     "GL_GEOMETRY_SHADER_BIT",                    # 0x00000004
     "GL_TESS_CONTROL_SHADER_BIT",                # 0x00000008
     "GL_TESS_EVALUATION_SHADER_BIT",             # 0x00000010
+    "GL_COMPUTE_SHADER_BIT",                     # 0x00000020
 ])
 
 GLbitfield_access = Flags(GLbitfield, [

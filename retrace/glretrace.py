@@ -299,7 +299,9 @@ class GlRetracer(Retracer):
         )
 
         if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
-            print r'    glretrace::setActiveProgram((call.arg(0)).toUInt());'
+            print r'    if (glretrace::currentContext) {'
+            print r'        glretrace::currentContext->activeProgram = call.arg(0).toUInt();'
+            print r'    }'
 
         # Only profile if not inside a list as the queries get inserted into list
         if function.name == 'glNewList':

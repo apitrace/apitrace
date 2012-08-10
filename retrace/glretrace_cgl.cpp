@@ -35,10 +35,10 @@ using namespace glretrace;
 
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
-typedef std::map<unsigned long long, glws::Context *> ContextMap;
+typedef std::map<unsigned long long, Context *> ContextMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
-static glws::Context *sharedContext = NULL;
+static Context *sharedContext = NULL;
 
 
 static glws::Drawable *
@@ -60,7 +60,7 @@ getDrawable(unsigned long drawable_id) {
 }
 
 
-static glws::Context *
+static Context *
 getContext(unsigned long long ctx) {
     if (ctx == 0) {
         return NULL;
@@ -69,7 +69,7 @@ getContext(unsigned long long ctx) {
     ContextMap::const_iterator it;
     it = context_map.find(ctx);
     if (it == context_map.end()) {
-        glws::Context *context;
+        Context *context;
         context_map[ctx] = context = glretrace::createContext(sharedContext);
         if (!sharedContext) {
             sharedContext = context;
@@ -85,7 +85,7 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
     glws::Drawable *new_drawable = getDrawable(ctx);
-    glws::Context *new_context = getContext(ctx);
+    Context *new_context = getContext(ctx);
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }

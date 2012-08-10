@@ -312,8 +312,8 @@ You can make a video of the output by doing
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
 
-Triming a trace
----------------
+Trimming a trace
+----------------
 
 You can make a smaller trace by doing:
 
@@ -322,6 +322,27 @@ You can make a smaller trace by doing:
 If you need precise control over which calls to trim you can specify the
 individual call numbers a plaintext file, as described in the 'Call sets'
 section above.
+
+
+Profiling a trace
+-----------------
+
+You can perform gpu and cpu profiling with the command line options:
+
+ * `-pgpu` record gpu times for frames and draw calls.
+
+ * `-pcpu` record cpu times for frames and draw calls.
+
+ * `-ppd` record pixels drawn for each draw call.
+
+The results from this can then be read by hand or analysed with a script.
+
+`scripts/profileshader.py` will read the profile results and format them into a
+table which displays profiling results per shader.
+
+For example, to record all profiling data and utilise the per shader script:
+
+    ./glretrace -pgpu -pcpu -ppd foo.trace | ./scripts/profileshader.py
 
 
 Advanced usage for OpenGL implementors

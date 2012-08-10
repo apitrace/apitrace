@@ -65,9 +65,9 @@ LPDWORD = Pointer(DWORD)
 LPBOOL = Pointer(BOOL)
 
 LPSTR = CString
-LPCSTR = Const(CString)
+LPCSTR = ConstCString
 LPWSTR = WString
-LPCWSTR = Const(WString)
+LPCWSTR = ConstWString
 
 LARGE_INTEGER = Struct("LARGE_INTEGER", [
     (LONGLONG, 'QuadPart'),

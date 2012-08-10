@@ -32,6 +32,11 @@
 #include "glretrace.hpp"
 #include "os_time.hpp"
 
+/* Synchronous debug output may reduce performance however,
+ * without it the callNo in the callback may be inaccurate
+ * as the callback may be called at any time.
+ */
+#define DEBUG_OUTPUT_SYNCHRONOUS 0
 
 namespace glretrace {
 
@@ -54,8 +59,9 @@ static bool supportsOcclusion = true;
 
 static bool firstFrame = true;
 static std::list<CallQuery> callQueries;
-static std::map<glws::Context*, GLuint> activePrograms;
 
+static void APIENTRY
+debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, GLvoid* userParam);
 
 void
 checkGlError(trace::Call &call) {
@@ -160,52 +166,9 @@ flushQueries() {
     callQueries.clear();
 }
 
-void setActiveProgram(GLuint program)
-{
-    activePrograms[glretrace::currentContext] = program;
-}
-
-static GLuint
-getActiveProgram()
-{
-    std::map<glws::Context*, GLuint>::iterator it;
-    it = activePrograms.find(glretrace::currentContext);
-    if (it == activePrograms.end())
-        return 0;
-
-    return it->second;
-}
-
 void
 beginProfile(trace::Call &call) {
     if (firstFrame) {
-        /* Check for extension support */
-        const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-        GLint bits;
-
-        supportsTimestamp = glws::checkExtension("GL_ARB_timer_query", extensions);
-        supportsElapsed   = glws::checkExtension("GL_EXT_timer_query", extensions) || supportsTimestamp;
-        supportsOcclusion = glws::checkExtension("GL_ARB_occlusion_query", extensions);
-
-        if (retrace::profilingGpuTimes) {
-            if (!supportsTimestamp && !supportsElapsed) {
-                std::cout << "Error: Cannot run profile, GL_EXT_timer_query extension is not supported." << std::endl;
-                exit(-1);
-            }
-
-            glGetQueryiv(GL_TIME_ELAPSED, GL_QUERY_COUNTER_BITS, &bits);
-
-            if (!bits) {
-                std::cout << "Error: Cannot run profile, GL_QUERY_COUNTER_BITS == 0." << std::endl;
-                exit(-1);
-            }
-        }
-
-        if (retrace::profilingPixelsDrawn && !supportsOcclusion) {
-            std::cout << "Error: Cannot run profile, GL_ARB_occlusion_query extension is not supported." << std::endl;
-            exit(-1);
-        }
-
         frame_start();
     }
 
@@ -213,7 +176,7 @@ beginProfile(trace::Call &call) {
     CallQuery query;
     query.call = call.no;
     query.sig = call.sig;
-    query.program = getActiveProgram();
+    query.program = glretrace::currentContext ? glretrace::currentContext->activeProgram : 0;
 
     glGenQueries(3, query.ids);
 
@@ -255,6 +218,48 @@ endProfile(trace::Call &call) {
 }
 
 void
+initContext() {
+    /* Check for extension support */
+    const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+    GLint bits;
+
+    supportsTimestamp = glws::checkExtension("GL_ARB_timer_query", extensions);
+    supportsElapsed   = glws::checkExtension("GL_EXT_timer_query", extensions) || supportsTimestamp;
+    supportsOcclusion = glws::checkExtension("GL_ARB_occlusion_query", extensions);
+
+    if (retrace::profilingGpuTimes) {
+        if (!supportsTimestamp && !supportsElapsed) {
+            std::cout << "Error: Cannot run profile, GL_EXT_timer_query extension is not supported." << std::endl;
+            exit(-1);
+        }
+
+        glGetQueryiv(GL_TIME_ELAPSED, GL_QUERY_COUNTER_BITS, &bits);
+
+        if (!bits) {
+            std::cout << "Error: Cannot run profile, GL_QUERY_COUNTER_BITS == 0." << std::endl;
+            exit(-1);
+        }
+    }
+
+    if (retrace::profilingPixelsDrawn && !supportsOcclusion) {
+        std::cout << "Error: Cannot run profile, GL_ARB_occlusion_query extension is not supported." << std::endl;
+        exit(-1);
+    }
+
+    if (retrace::debug) {
+        bool supportsDebugOutput = glws::checkExtension("GL_ARB_debug_output", extensions);
+
+        if (supportsDebugOutput) {
+            glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
+
+            if (DEBUG_OUTPUT_SYNCHRONOUS) {
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+            }
+        }
+    }
+}
+
+void
 frame_start() {
     firstFrame = false;
 
@@ -285,6 +290,69 @@ frame_complete(trace::Call &call) {
     if (retrace::debug && !currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
+}
+
+static const char*
+getDebugOutputSource(GLenum source) {
+    switch(source) {
+    case GL_DEBUG_SOURCE_API_ARB:
+        return "API";
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:
+        return "Window System";
+    case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:
+        return "Shader Compiler";
+    case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:
+        return "Third Party";
+    case GL_DEBUG_SOURCE_APPLICATION_ARB:
+        return "Application";
+    case GL_DEBUG_SOURCE_OTHER_ARB:
+    default:
+        return "";
+    }
+}
+
+static const char*
+getDebugOutputType(GLenum type) {
+    switch(type) {
+    case GL_DEBUG_TYPE_ERROR_ARB:
+        return "error";
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
+        return "deprecated behaviour";
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
+        return "undefined behaviour";
+    case GL_DEBUG_TYPE_PORTABILITY_ARB:
+        return "portability issue";
+    case GL_DEBUG_TYPE_PERFORMANCE_ARB:
+        return "performance issue";
+    case GL_DEBUG_TYPE_OTHER_ARB:
+    default:
+        return "unknown issue";
+    }
+}
+
+static const char*
+getDebugOutputSeverity(GLenum severity) {
+    switch(severity) {
+    case GL_DEBUG_SEVERITY_HIGH_ARB:
+        return "High";
+    case GL_DEBUG_SEVERITY_MEDIUM_ARB:
+        return "Medium";
+    case GL_DEBUG_SEVERITY_LOW_ARB:
+        return "Low";
+    default:
+        return "usnknown";
+    }
+}
+
+static void APIENTRY
+debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, GLvoid* userParam) {
+    std::cerr << retrace::callNo << ": ";
+    std::cerr << "glDebugOutputCallback: ";
+    std::cerr << getDebugOutputSeverity(severity) << " severity ";
+    std::cerr << getDebugOutputSource(source) << " " << getDebugOutputType(type);
+    std::cerr << " " << id;
+    std::cerr << ", " << message;
+    std::cerr << std::endl;
 }
 
 } /* namespace glretrace */

@@ -32,13 +32,30 @@
 
 namespace glretrace {
 
+struct Context {
+    Context(glws::Context* context)
+        : wsContext(context),
+          activeProgram(0),
+          used(false)
+    {
+    }
+
+    ~Context()
+    {
+        delete wsContext;
+    }
+
+    glws::Context* wsContext;
+    GLuint activeProgram;
+    bool used;
+};
 
 extern bool insideList;
 extern bool insideGlBeginEnd;
 
 
 extern glws::Drawable *currentDrawable;
-extern glws::Context *currentContext;
+extern Context *currentContext;
 
 glws::Drawable *
 createDrawable(glws::Profile profile);
@@ -46,14 +63,14 @@ createDrawable(glws::Profile profile);
 glws::Drawable *
 createDrawable(void);
 
-glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile);
+Context *
+createContext(Context *shareContext, glws::Profile profile);
 
-glws::Context *
-createContext(glws::Context *shareContext = 0);
+Context *
+createContext(Context *shareContext = 0);
 
 bool
-makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context);
+makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context);
 
 
 void
@@ -67,6 +84,8 @@ extern const retrace::Entry egl_callbacks[];
 
 void frame_start();
 void frame_complete(trace::Call &call);
+void initContext();
+
 
 void updateDrawable(int width, int height);
 
@@ -74,7 +93,6 @@ void flushQueries();
 void beginProfile(trace::Call &call);
 void endProfile(trace::Call &call);
 
-void setActiveProgram(GLuint program);
 } /* namespace glretrace */
 
 
