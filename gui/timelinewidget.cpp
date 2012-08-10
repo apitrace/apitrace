@@ -25,8 +25,8 @@ TimelineWidget::TimelineWidget(QWidget *parent)
       m_itemBorder(Qt::red),
       m_itemForeground(Qt::cyan),
       m_itemBackground(Qt::red),
-      m_selectionBackground(QColor(245, 245, 255)),
       m_selectionBorder(QColor(50, 50, 255)),
+      m_selectionBackground(QColor(245, 245, 255)),
       m_zoomBorder(Qt::green),
       m_zoomBackground(QColor(100, 255, 100, 80))
 {
