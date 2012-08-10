@@ -28,6 +28,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sstream>
+#include "os_time.hpp"
 
 namespace trace {
 Profiler::Profiler()
@@ -77,7 +78,9 @@ void Profiler::addCall(unsigned no,
     }
 
     if (cpuTimes) {
-        cpuStart -= baseCpuTime;
+        double cpuTimeScale = 1.0E9 / os::timeFrequency;
+        cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
+        cpuDuration = cpuDuration * cpuTimeScale;
     } else {
         cpuStart = 0;
         cpuDuration = 0;
@@ -108,25 +111,28 @@ void Profiler::addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart)
     if (baseCpuTime == 0) {
         baseCpuTime = cpuStart;
     }
+        
+    lastFrame.no = no;
+    lastFrame.gpuStart = gpuStart;
+    lastFrame.cpuStart = cpuStart;
 
     if (gpuTimes) {
-        lastFrame.gpuStart = gpuStart - baseGpuTime;
+        gpuStart = gpuStart - baseGpuTime;
     } else {
-        lastFrame.gpuStart = 0;
+        gpuStart = 0;
     }
 
     if (cpuTimes) {
-        lastFrame.cpuStart = cpuStart - baseCpuTime;
+        double cpuTimeScale = 1.0E9 / os::timeFrequency;
+        cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
     } else {
-        lastFrame.cpuStart = 0;
+        cpuStart = 0;
     }
 
-    lastFrame.no = no;
-
     std::cout << "frame_begin"
-              << " " << lastFrame.no
-              << " " << lastFrame.gpuStart
-              << " " << lastFrame.cpuStart
+              << " " << no
+              << " " << gpuStart
+              << " " << cpuStart
               << std::endl;
 }
 
@@ -135,16 +141,17 @@ void Profiler::addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd)
     uint64_t gpuDuration, cpuDuration;
 
     if (gpuTimes) {
-        gpuEnd -= baseGpuTime;
         gpuDuration = gpuEnd - lastFrame.gpuStart;
+        gpuEnd = gpuEnd - baseGpuTime;
     } else {
         gpuEnd = 0;
         gpuDuration = 0;
     }
 
     if (cpuTimes) {
-        cpuEnd -= baseCpuTime;
-        cpuDuration = cpuEnd - lastFrame.cpuStart;
+        double cpuTimeScale = 1.0E9 / os::timeFrequency;
+        cpuDuration = (cpuEnd - lastFrame.cpuStart) * cpuTimeScale;
+        cpuEnd = (cpuEnd - baseCpuTime) * cpuTimeScale;
     } else {
         cpuEnd = 0;
         cpuDuration = 0;

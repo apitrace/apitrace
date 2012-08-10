@@ -120,7 +120,7 @@ getGpuTimestamp() {
 static GLuint64
 getCpuTimestamp() {
     if (retrace::profilingCpuTimes) {
-        return os::getTime() * (1.0E9 / os::timeFrequency);
+        return os::getTime();
     } else {
         return 0;
     }
@@ -242,7 +242,7 @@ void
 endProfile(trace::Call &call) {
     if (retrace::profilingCpuTimes) {
         CallQuery& query = callQueries.back();
-        query.duration = (os::getTime() - query.start) * (1.0E9 / os::timeFrequency);
+        query.duration = os::getTime() - query.start;
     }
 
     if (retrace::profilingGpuTimes && supportsElapsed) {
