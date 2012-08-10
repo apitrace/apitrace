@@ -221,7 +221,6 @@ void
 initContext() {
     /* Check for extension support */
     const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-    GLint bits;
 
     supportsTimestamp = glws::checkExtension("GL_ARB_timer_query", extensions);
     supportsElapsed   = glws::checkExtension("GL_EXT_timer_query", extensions) || supportsTimestamp;
@@ -233,6 +232,7 @@ initContext() {
             exit(-1);
         }
 
+        GLint bits = 0;
         glGetQueryiv(GL_TIME_ELAPSED, GL_QUERY_COUNTER_BITS, &bits);
 
         if (!bits) {
