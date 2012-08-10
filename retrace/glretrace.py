@@ -344,15 +344,16 @@ class GlRetracer(Retracer):
         else:
             Retracer.invokeFunction(self, function)
 
+        if function.name == "glBegin":
+            print '    glretrace::insideGlBeginEnd = true;'
+
         if profileDraw or function.name == 'glEnd':
             print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
             print r'        glretrace::endProfile(call);'
             print r'    }'
 
         # Error checking
-        if function.name == "glBegin":
-            print '    glretrace::insideGlBeginEnd = true;'
-        elif function.name.startswith('gl'):
+        if function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
             print '    if (retrace::debug && !glretrace::insideGlBeginEnd) {'
             print '        glretrace::checkGlError(call);'
