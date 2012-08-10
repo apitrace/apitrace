@@ -27,7 +27,7 @@
 #include <iostream>
 #include <string.h>
 #include <assert.h>
-#include <stdio.h>
+#include <sstream>
 
 namespace trace {
 Profiler::Profiler()
@@ -159,33 +159,50 @@ void Profiler::addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd)
               << std::endl;
 }
 
-void Profiler::parseLine(const char* line, Profile* profile)
+void Profiler::parseLine(const char* in, Profile* profile)
 {
-    char name[64];
+    std::stringstream line(in, std::ios_base::in);
+    std::string type;
 
-    if (line[0] == '#' || strlen(line) < 12)
+    if (in[0] == '#' || strlen(in) < 12)
         return;
 
-    if (strncmp(line, "call ", 5) == 0) {
-        assert(profile->frames.size());
+    line >> type;
 
+    if (type.compare("call") == 0) {
+        assert(profile->frames.size());
         Profile::Call call;
-        sscanf(line, "call %u %li %li %li %li %li %u %s", &call.no, &call.gpuStart, &call.gpuDuration, &call.cpuStart, &call.cpuDuration, &call.pixels, &call.program, name);
-        call.name = name;
+
+        line >> call.no
+             >> call.gpuStart
+             >> call.gpuDuration
+             >> call.cpuStart
+             >> call.cpuDuration
+             >> call.pixels
+             >> call.program
+             >> call.name;
+
         profile->frames.back().calls.push_back(call);
-    } else if (strncmp(line, "frame_begin ", 12) == 0) {
+    } else if (type.compare("frame_begin") == 0) {
         Profile::Frame frame;
         frame.gpuDuration = 0;
-        frame.gpuDuration = 0;
-        sscanf(line, "frame_begin %u %li %li", &frame.no, &frame.gpuStart, &frame.cpuStart);
-        profile->frames.push_back(frame);
-    } else if (strncmp(line, "frame_end ", 10) == 0) {
-        assert(profile->frames.size());
+        frame.cpuDuration = 0;
 
+        line >> frame.no
+             >> frame.gpuStart
+             >> frame.cpuStart;
+
+        profile->frames.push_back(frame);
+    } else if (type.compare("frame_end") == 0) {
+        assert(profile->frames.size());
         Profile::Frame& frame = profile->frames.back();
-        unsigned no;
-        sscanf(line, "frame_end %u %*li %li %*li %li", &no, &frame.gpuDuration, &frame.cpuDuration);
-        assert(no == frame.no);
+        int64_t skipi64;
+
+        line >> frame.no
+             >> skipi64
+             >> frame.gpuDuration
+             >> skipi64
+             >> frame.cpuDuration;
     }
 }
 }
