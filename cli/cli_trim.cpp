@@ -48,12 +48,37 @@ usage(void)
         << synopsis << "\n"
         "\n"
         "    -h, --help               Show this help message and exit\n"
-        "        --calls=CALLSET      Include specified calls in the trimmed output\n"
+        "\n"
+        "        --calls=CALLSET      Include specified calls in the trimmed output.\n"
+        "                             Note that due to dependency analysis and pruning\n"
+        "                             of uninteresting calls the resulting trace may\n"
+        "                             include more and less calls than specified.\n"
+        "                             See --no-deps, --no-prune, and --exact to change\n"
+        "                             this behavior.\n"
+        "\n"
         "        --deps               Perform dependency analysis and include dependent\n"
-        "                             calls as needed. This is the default behavior.\n"
-        "        --no-deps            Do not perform dependency analysis. Include only\n"
-        "                             those calls explicitly listed in --calls\n"
+        "                             calls as needed, (even if those calls were not\n"
+        "                             explicitly requested with --calls). This is the\n"
+        "                             default behavior. See --no-deps and --exact.\n"
+        "\n"
+        "        --no-deps            Do not perform dependency analysis. In this mode\n"
+        "                             the trimmed trace will never include calls from\n"
+        "                             outside the range specified in --calls.\n"
+        "\n"
+        "        --prune              Omit calls that have no side effects, even if the\n"
+        "                             call is within the range specified by --calls.\n"
+        "                             This is the default behavior. See --no-prune\n"
+        "\n"
+        "        --no-prune           Do not prune uninteresting calls from the trace.\n"
+        "                             In this mode the trimmed trace will never omit\n"
+        "                             any calls within the range specified in --calls.\n"
+        "\n"
+        "    -x, --exact              Trim the trace to exactly the calls specified in\n"
+        "                             --calls. This option is equivalent to passing\n"
+        "                             both --no-deps and --no-prune.\n"
+        "\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
+        "\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
         "\n"
     ;
@@ -63,11 +88,13 @@ enum {
     CALLS_OPT = CHAR_MAX + 1,
     DEPS_OPT,
     NO_DEPS_OPT,
+    PRUNE_OPT,
+    NO_PRUNE_OPT,
     THREAD_OPT,
 };
 
 const static char *
-shortOptions = "ho:";
+shortOptions = "ho:x";
 
 const static struct option
 longOptions[] = {
@@ -75,6 +102,9 @@ longOptions[] = {
     {"calls", required_argument, 0, CALLS_OPT},
     {"deps", no_argument, 0, DEPS_OPT},
     {"no-deps", no_argument, 0, NO_DEPS_OPT},
+    {"prune", no_argument, 0, PRUNE_OPT},
+    {"no-prune", no_argument, 0, NO_PRUNE_OPT},
+    {"exact", no_argument, 0, 'x'},
     {"thread", required_argument, 0, THREAD_OPT},
     {"output", required_argument, 0, 'o'},
     {0, 0, 0, 0}
@@ -136,6 +166,9 @@ struct trim_options {
     /* Whether dependency analysis should be performed. */
     bool dependency_analysis;
 
+    /* Whether uninteresting calls should be pruned.. */
+    bool prune_uninteresting;
+
     /* Output filename */
     std::string output;
 
@@ -165,6 +198,11 @@ trim_trace(const char *filename, struct trim_options *options)
         /* If requested, ignore all calls not belonging to the specified thread. */
         if (options->thread != -1 && call->thread_id != options->thread)
             continue;
+
+        /* Also, prune if uninteresting (unless the user asked for no pruning. */
+        if (options->prune_uninteresting && call->flags & trace::CALL_FLAG_UNINTERESTING) {
+            continue;
+        }
 
         /* If this call is included in the user-specified call
          * set, then we don't need to perform any analysis on
@@ -216,6 +254,7 @@ command(int argc, char *argv[])
 
     options.calls = trace::CallSet(trace::FREQUENCY_ALL);
     options.dependency_analysis = true;
+    options.prune_uninteresting = true;
     options.output = "";
     options.thread = -1;
 
@@ -233,6 +272,16 @@ command(int argc, char *argv[])
             break;
         case NO_DEPS_OPT:
             options.dependency_analysis = false;
+            break;
+        case PRUNE_OPT:
+            options.prune_uninteresting = true;
+            break;
+        case NO_PRUNE_OPT:
+            options.prune_uninteresting = false;
+            break;
+        case 'x':
+            options.dependency_analysis = false;
+            options.prune_uninteresting = false;
             break;
         case THREAD_OPT:
             options.thread = atoi(optarg);
