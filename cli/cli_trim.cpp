@@ -47,6 +47,26 @@ usage(void)
         << "usage: apitrace trim [OPTIONS] TRACE_FILE...\n"
         << synopsis << "\n"
         "\n"
+        "    -h, --help               Show detailed help for trim options and exit\n"
+        "        --calls=CALLSET      Include specified calls in the trimmed output.\n"
+        "        --deps               Include additional calls to satisfy dependencies\n"
+        "        --no-deps            Do not include calls from dependency analysis\n"
+        "        --prune              Omit uninteresting calls from the trace output\n"
+        "        --no-prune           Do not prune uninteresting calls from the trace.\n"
+        "    -x, --exact              Include exactly the calls specified in --calls\n"
+        "                             Equivalent to both --no-deps and --no-prune\n"
+        "        --thread=THREAD_ID   Only retain calls from specified thread\n"
+        "    -o, --output=TRACE_FILE  Output trace file\n"
+    ;
+}
+
+static void
+help()
+{
+    std::cout
+        << "usage: apitrace trim [OPTIONS] TRACE_FILE...\n"
+        << synopsis << "\n"
+        "\n"
         "    -h, --help               Show this help message and exit\n"
         "\n"
         "        --calls=CALLSET      Include specified calls in the trimmed output.\n"
@@ -262,7 +282,7 @@ command(int argc, char *argv[])
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
         switch (opt) {
         case 'h':
-            usage();
+            help();
             return 0;
         case CALLS_OPT:
             options.calls = trace::CallSet(optarg);
@@ -318,6 +338,6 @@ command(int argc, char *argv[])
 const Command trim_command = {
     "trim",
     synopsis,
-    usage,
+    help,
     command
 };
