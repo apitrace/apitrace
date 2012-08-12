@@ -35,6 +35,48 @@
 
 namespace trace {
 
+os::String
+findWrapper(const char *wrapperFilename)
+{
+    os::String wrapperPath;
+
+    os::String processDir = os::getProcessName();
+    processDir.trimFilename();
+
+    // Try relative build directory
+    // XXX: Just make build and install directory layout match
+    wrapperPath = processDir;
+    wrapperPath.join("wrappers");
+    wrapperPath.join(wrapperFilename);
+    if (wrapperPath.exists()) {
+        return wrapperPath;
+    }
+
+    // Try relative install directory
+    wrapperPath = processDir;
+#if defined(_WIN32)
+    wrapperPath.join("..\\lib\\wrappers");
+#elif defined(__APPLE__)
+    wrapperPath.join("../lib/wrappers");
+#else
+    wrapperPath.join("../lib/apitrace/wrappers");
+#endif
+    wrapperPath.join(wrapperFilename);
+    if (wrapperPath.exists()) {
+        return wrapperPath;
+    }
+
+#ifndef _WIN32
+    // Try absolute install directory
+    wrapperPath = APITRACE_WRAPPERS_INSTALL_DIR;
+    wrapperPath.join(wrapperFilename);
+    if (wrapperPath.exists()) {
+        return wrapperPath;
+    }
+#endif
+
+    return "";
+}
 
 os::String
 findScript(const char *scriptFilename)

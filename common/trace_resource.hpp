@@ -39,6 +39,8 @@ namespace trace {
 os::String
 findScript(const char *name);
 
+os::String
+findWrapper(const char *wrapperFilename);
 
 } /* namespace trace */
 
