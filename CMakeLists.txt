@@ -326,6 +326,7 @@ add_library (common STATIC
     common/image_bmp.cpp
     common/image_pnm.cpp
     common/image_png.cpp
+    common/trace_option.cpp
     common/${os}
 )
 
