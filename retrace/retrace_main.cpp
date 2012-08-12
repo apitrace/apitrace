@@ -25,7 +25,9 @@
 
 
 #include <string.h>
+#include <limits.h> // for CHAR_MAX
 #include <iostream>
+#include <getopt.h>
 
 #include "os_binary.hpp"
 #include "os_time.hpp"
@@ -490,69 +492,101 @@ usage(const char *argv0) {
         "Usage: " << argv0 << " [OPTION] TRACE [...]\n"
         "Replay TRACE.\n"
         "\n"
-        "  -b           benchmark mode (no error checking or warning messages)\n"
-        "  -pcpu        cpu profiling (cpu times per call)\n"
-        "  -pgpu        gpu profiling (gpu times per draw call)\n"
-        "  -ppd         pixels drawn profiling (pixels drawn per draw call)\n"
-        "  -c PREFIX    compare against snapshots\n"
-        "  -C CALLSET   calls to compare (default is every frame)\n"
-        "  -core        use core profile\n"
-        "  -db          use a double buffer visual (default)\n"
-        "  -sb          use a single buffer visual\n"
-        "  -s PREFIX    take snapshots; `-` for PNM stdout output\n"
-        "  -S CALLSET   calls to snapshot (default is every frame)\n"
-        "  -v           increase output verbosity\n"
-        "  -D CALLNO    dump state at specific call no\n"
-        "  -w           waitOnFinish on final frame\n";
+        "  -b, --benchmark         benchmark mode (no error checking or warning messages)\n"
+        "      --pcpu              cpu profiling (cpu times per call)\n"
+        "      --pgpu              gpu profiling (gpu times per draw call)\n"
+        "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
+        "  -c, --compare=PREFIX    compare against snapshots with given PREFIX\n"
+        "  -C, --calls=CALLSET     calls to compare (default is every frame)\n"
+        "      --core              use core profile\n"
+        "      --db                use a double buffer visual (default)\n"
+        "      --sb                use a single buffer visual\n"
+        "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
+        "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
+        "  -v, --verbose           increase output verbosity\n"
+        "  -D, --dump-state=CALL   dump state at specific call no\n"
+        "  -w, --wait              waitOnFinish on final frame\n";
 }
 
+enum {
+    CORE_OPT = CHAR_MAX + 1,
+    DB_OPT,
+    PCPU_OPT,
+    PGPU_OPT,
+    PPD_OPT,
+    SB_OPT,
+};
+
+const static char *
+shortOptions = "bc:C:D:hs:S:vw";
+
+const static struct option
+longOptions[] = {
+    {"benchmark", no_argument, 0, 'b'},
+    {"calls", required_argument, 0, 'C'},
+    {"compare", required_argument, 0, 'c'},
+    {"core", no_argument, 0, CORE_OPT},
+    {"db", no_argument, 0, DB_OPT},
+    {"dump-state", required_argument, 0, 'D'},
+    {"help", no_argument, 0, 'h'},
+    {"pcpu", no_argument, 0, PCPU_OPT},
+    {"pgpu", no_argument, 0, PGPU_OPT},
+    {"ppd", no_argument, 0, PPD_OPT},
+    {"sb", no_argument, 0, SB_OPT},
+    {"snapshot-prefix", required_argument, 0, 's'},
+    {"snapshot", required_argument, 0, 'S'},
+    {"verbose", no_argument, 0, 'v'},
+    {"wait", no_argument, 0, 'w'},
+    {0, 0, 0, 0}
+};
 
 extern "C"
 int main(int argc, char **argv)
 {
     using namespace retrace;
+    int i;
 
     assert(compareFrequency.empty());
     assert(snapshotFrequency.empty());
 
-    int i;
-    for (i = 1; i < argc; ++i) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "-b")) {
+    int opt;
+    while  ((opt = getopt_long_only(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
+            usage(argv[0]);
+            return 0;
+        case 'b':
             retrace::debug = false;
             retrace::verbosity = -1;
-        } else if (!strcmp(arg, "-c")) {
-            comparePrefix = argv[++i];
+            break;
+        case 'c':
+            comparePrefix = optarg;
             if (compareFrequency.empty()) {
                 compareFrequency = trace::CallSet(trace::FREQUENCY_FRAME);
             }
-        } else if (!strcmp(arg, "-C")) {
-            compareFrequency = trace::CallSet(argv[++i]);
+            break;
+        case 'C':
+            compareFrequency = trace::CallSet(optarg);
             if (comparePrefix == NULL) {
                 comparePrefix = "";
             }
-        } else if (!strcmp(arg, "-D")) {
-            dumpStateCallNo = atoi(argv[++i]);
+            break;
+        case 'D':
+            dumpStateCallNo = atoi(optarg);
             dumpingState = true;
             retrace::verbosity = -2;
-        } else if (!strcmp(arg, "-core")) {
+            break;
+        case CORE_OPT:
             retrace::coreProfile = true;
-        } else if (!strcmp(arg, "-db")) {
+            break;
+        case DB_OPT:
             retrace::doubleBuffer = true;
-        } else if (!strcmp(arg, "-sb")) {
+            break;
+        case SB_OPT:
             retrace::doubleBuffer = false;
-        } else if (!strcmp(arg, "--help")) {
-            usage(argv[0]);
-            return 0;
-        } else if (!strcmp(arg, "-s")) {
-            snapshotPrefix = argv[++i];
+            break;
+        case 's':
+            snapshotPrefix = optarg;
             if (snapshotFrequency.empty()) {
                 snapshotFrequency = trace::CallSet(trace::FREQUENCY_FRAME);
             }
@@ -560,29 +594,42 @@ int main(int argc, char **argv)
                 os::setBinaryMode(stdout);
                 retrace::verbosity = -2;
             }
-        } else if (!strcmp(arg, "-S")) {
-            snapshotFrequency = trace::CallSet(argv[++i]);
+            break;
+        case 'S':
+            snapshotFrequency = trace::CallSet(optarg);
             if (snapshotPrefix == NULL) {
                 snapshotPrefix = "";
             }
-        } else if (!strcmp(arg, "-v")) {
+            break;
+        case 'v':
             ++retrace::verbosity;
-        } else if (!strcmp(arg, "-w")) {
+            break;
+        case 'w':
             waitOnFinish = true;
-        } else if (arg[1] == 'p') {
+            break;
+        case PGPU_OPT:
             retrace::debug = false;
             retrace::profiling = true;
             retrace::verbosity = -1;
 
-            if (!strcmp(arg, "-pcpu")) {
-                retrace::profilingCpuTimes = true;
-            } else if (!strcmp(arg, "-pgpu")) {
-                retrace::profilingGpuTimes = true;
-            } else if (!strcmp(arg, "-ppd")) {
-                retrace::profilingPixelsDrawn = true;
-            }
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+            retrace::profilingGpuTimes = true;
+            break;
+        case PCPU_OPT:
+            retrace::debug = false;
+            retrace::profiling = true;
+            retrace::verbosity = -1;
+
+            retrace::profilingCpuTimes = true;
+            break;
+        case PPD_OPT:
+            retrace::debug = false;
+            retrace::profiling = true;
+            retrace::verbosity = -1;
+
+            retrace::profilingPixelsDrawn = true;
+            break;
+        default:
+            std::cerr << "error: unknown option " << opt << "\n";
             usage(argv[0]);
             return 1;
         }
@@ -593,7 +640,7 @@ int main(int argc, char **argv)
         retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn);
     }
 
-    for ( ; i < argc; ++i) {
+    for (i = optind; i < argc; ++i) {
         if (!retrace::parser.open(argv[i])) {
             std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
