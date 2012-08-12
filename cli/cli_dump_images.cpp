@@ -36,6 +36,8 @@
 #include "os_string.hpp"
 #include "os_process.hpp"
 
+#include "trace_resource.hpp"
+
 static const char *synopsis = "Dump frame images obtained from a trace.";
 
 static void
@@ -123,7 +125,9 @@ command(int argc, char *argv[])
      * already been pulled in for the "apitrace retrace" (or "apitrace
      * replay") command. */
     std::vector<const char *> command;
-    command.push_back("glretrace");
+
+    os::String glretracePath = trace::findProgram("glretrace");
+    command.push_back(glretracePath);
     command.push_back("-s");
     command.push_back(output);
     command.push_back("-S");

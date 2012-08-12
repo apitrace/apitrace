@@ -37,6 +37,9 @@ namespace trace {
 
 
 os::String
+findProgram(const char*programFilename);
+
+os::String
 findScript(const char *name);
 
 os::String

@@ -36,6 +36,32 @@
 namespace trace {
 
 os::String
+findProgram(const char*programFilename)
+{
+    os::String programPath;
+
+    os::String processDir = os::getProcessName();
+    processDir.trimFilename();
+
+    programPath = processDir;
+    programPath.join(programFilename);
+    if (programPath.exists()) {
+        return programPath;
+    }
+
+#ifndef _WIN32
+    // Try absolute install directory
+    programPath = APITRACE_PROGRAMS_INSTALL_DIR;
+    programPath.join(programFilename);
+    if (programPath.exists()) {
+        return programPath;
+    }
+#endif
+
+    return "";
+}
+
+os::String
 findWrapper(const char *wrapperFilename)
 {
     os::String wrapperPath;
