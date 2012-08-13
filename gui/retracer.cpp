@@ -5,6 +5,8 @@
 
 #include "image.hpp"
 
+#include "trace_profiler.hpp"
+
 #include <QDebug>
 #include <QVariant>
 #include <QList>
@@ -129,7 +131,10 @@ Retracer::Retracer(QObject *parent)
       m_benchmarking(false),
       m_doubleBuffered(true),
       m_captureState(false),
-      m_captureCall(0)
+      m_captureCall(0),
+      m_profileGpu(false),
+      m_profileCpu(false),
+      m_profilePixels(false)
 {
     qRegisterMetaType<QList<ApiTraceError> >();
 
@@ -182,6 +187,33 @@ void Retracer::setDoubleBuffered(bool db)
     m_doubleBuffered = db;
 }
 
+bool Retracer::isProfilingGpu() const
+{
+    return m_profileGpu;
+}
+
+bool Retracer::isProfilingCpu() const
+{
+    return m_profileCpu;
+}
+
+bool Retracer::isProfilingPixels() const
+{
+    return m_profilePixels;
+}
+
+bool Retracer::isProfiling() const
+{
+    return m_profileGpu || m_profileCpu || m_profilePixels;
+}
+
+void Retracer::setProfiling(bool gpu, bool cpu, bool pixels)
+{
+    m_profileGpu = gpu;
+    m_profileCpu = cpu;
+    m_profilePixels = pixels;
+}
+
 void Retracer::setCaptureAtCallNumber(qlonglong num)
 {
     m_captureCall = num;
@@ -211,7 +243,6 @@ void Retracer::setCaptureThumbnails(bool enable)
 {
     m_captureThumbnails = enable;
 }
-
 
 /**
  * Starting point for the retracing thread.
@@ -255,20 +286,34 @@ void Retracer::run()
         return;
     }
 
-    if (m_doubleBuffered) {
-        arguments << QLatin1String("-db");
-    } else {
-        arguments << QLatin1String("-sb");
-    }
-
     if (m_captureState) {
         arguments << QLatin1String("-D");
         arguments << QString::number(m_captureCall);
     } else if (m_captureThumbnails) {
         arguments << QLatin1String("-s"); // emit snapshots
         arguments << QLatin1String("-"); // emit to stdout
-    } else if (m_benchmarking) {
-        arguments << QLatin1String("-b");
+    } else if (isProfiling()) {
+        if (m_profileGpu) {
+            arguments << QLatin1String("-pgpu");
+        }
+
+        if (m_profileCpu) {
+            arguments << QLatin1String("-pcpu");
+        }
+
+        if (m_profilePixels) {
+            arguments << QLatin1String("-ppd");
+        }
+    } else {
+        if (m_doubleBuffered) {
+            arguments << QLatin1String("-db");
+        } else {
+            arguments << QLatin1String("-sb");
+        }
+
+        if (m_benchmarking) {
+            arguments << QLatin1String("-b");
+        }
     }
 
     arguments << m_fileName;
@@ -291,6 +336,7 @@ void Retracer::run()
 
     QList<QImage> thumbnails;
     QVariantMap parsedJson;
+    trace::Profile* profile = NULL;
 
     process.setReadChannel(QProcess::StandardOutput);
     if (process.waitForReadyRead(-1)) {
@@ -369,7 +415,21 @@ void Retracer::run()
             }
 
             Q_ASSERT(process.state() != QProcess::Running);
+        } else if (isProfiling()) {
+            profile = new trace::Profile();
+            process.waitForFinished(-1);
 
+            while (!io.atEnd()) {
+                char line[256];
+                qint64 lineLength;
+
+                lineLength = io.readLine(line, 256);
+
+                if (lineLength == -1)
+                    break;
+
+                trace::Profiler::parseLine(line, profile);
+            }
         } else {
             QByteArray output;
             output = process.readAllStandardOutput();
@@ -429,6 +489,10 @@ void Retracer::run()
 
     if (m_captureThumbnails && !thumbnails.isEmpty()) {
         emit foundThumbnails(thumbnails);
+    }
+
+    if (isProfiling() && profile) {
+        emit foundProfile(profile);
     }
 
     if (!errors.isEmpty()) {

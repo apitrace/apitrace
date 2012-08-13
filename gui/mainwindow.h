@@ -30,7 +30,10 @@ class SearchWidget;
 class ShadersSourceWidget;
 class TraceProcess;
 class TrimProcess;
+class ProfileDialog;
 class VertexDataInterpreter;
+
+namespace trace { struct Profile; }
 
 class MainWindow : public QMainWindow
 {
@@ -48,9 +51,11 @@ private slots:
     void createTrace();
     void openTrace();
     void replayStart();
+    void replayProfile();
     void replayStop();
     void replayFinished(const QString &message);
     void replayStateFound(ApiTraceState *state);
+    void replayProfileFound(trace::Profile *state);
     void replayThumbnailsFound(const QList<QImage> &thumbnails);
     void replayError(const QString &msg);
     void startedLoadingTrace();
@@ -107,6 +112,8 @@ private:
     ApiTraceFrame *currentFrame() const;
     ApiTraceCall *currentCall() const;
 
+protected:
+    virtual void closeEvent(QCloseEvent * event);
 
 private:
     Ui_MainWindow m_ui;
@@ -141,6 +148,8 @@ private:
     ArgumentsEditor *m_argsEditor;
 
     ApiTraceEvent *m_nonDefaultsLookupEvent;
+
+    ProfileDialog* m_profileDialog;
 };
 
 

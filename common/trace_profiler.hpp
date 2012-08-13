@@ -27,10 +27,43 @@
 #define TRACE_PROFILER_H
 
 #include <string>
+#include <vector>
 #include <stdint.h>
 
 namespace trace
 {
+
+struct Profile {
+    struct Call {
+        unsigned no;
+        int64_t gpuStart;
+        int64_t gpuDuration;
+        int64_t cpuStart;
+        int64_t cpuDuration;
+        int64_t pixels;
+        unsigned program;
+        std::string name;
+
+        typedef std::vector<Call>::iterator iterator;
+        typedef std::vector<Call>::const_iterator const_iterator;
+    };
+
+    struct Frame {
+        unsigned no;
+        int64_t gpuStart;
+        int64_t gpuDuration;
+        int64_t cpuStart;
+        int64_t cpuDuration;
+
+        std::vector<Call> calls;
+
+        typedef std::vector<Frame>::iterator iterator;
+        typedef std::vector<Frame>::const_iterator const_iterator;
+    };
+
+    std::vector<Frame> frames;
+};
+
 class Profiler
 {
 public:
@@ -48,6 +81,8 @@ public:
                  uint64_t pixels,
                  uint64_t gpuStart, uint64_t gpuDuration,
                  uint64_t cpuStart, uint64_t cpuDuration);
+
+    static void parseLine(const char* line, Profile* profile);
 
 private:
     uint64_t baseGpuTime;

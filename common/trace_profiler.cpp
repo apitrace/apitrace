@@ -25,6 +25,10 @@
 
 #include "trace_profiler.hpp"
 #include <iostream>
+#include <string.h>
+#include <assert.h>
+#include <sstream>
+#include "os_time.hpp"
 
 namespace trace {
 Profiler::Profiler()
@@ -74,7 +78,9 @@ void Profiler::addCall(unsigned no,
     }
 
     if (cpuTimes) {
-        cpuStart -= baseCpuTime;
+        double cpuTimeScale = 1.0E9 / os::timeFrequency;
+        cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
+        cpuDuration = cpuDuration * cpuTimeScale;
     } else {
         cpuStart = 0;
         cpuDuration = 0;
@@ -105,25 +111,28 @@ void Profiler::addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart)
     if (baseCpuTime == 0) {
         baseCpuTime = cpuStart;
     }
+        
+    lastFrame.no = no;
+    lastFrame.gpuStart = gpuStart;
+    lastFrame.cpuStart = cpuStart;
 
     if (gpuTimes) {
-        lastFrame.gpuStart = gpuStart - baseGpuTime;
+        gpuStart = gpuStart - baseGpuTime;
     } else {
-        lastFrame.gpuStart = 0;
+        gpuStart = 0;
     }
 
     if (cpuTimes) {
-        lastFrame.cpuStart = cpuStart - baseCpuTime;
+        double cpuTimeScale = 1.0E9 / os::timeFrequency;
+        cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
     } else {
-        lastFrame.cpuStart = 0;
+        cpuStart = 0;
     }
 
-    lastFrame.no = no;
-
     std::cout << "frame_begin"
-              << " " << lastFrame.no
-              << " " << lastFrame.gpuStart
-              << " " << lastFrame.cpuStart
+              << " " << no
+              << " " << gpuStart
+              << " " << cpuStart
               << std::endl;
 }
 
@@ -132,16 +141,17 @@ void Profiler::addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd)
     uint64_t gpuDuration, cpuDuration;
 
     if (gpuTimes) {
-        gpuEnd -= baseGpuTime;
         gpuDuration = gpuEnd - lastFrame.gpuStart;
+        gpuEnd = gpuEnd - baseGpuTime;
     } else {
         gpuEnd = 0;
         gpuDuration = 0;
     }
 
     if (cpuTimes) {
-        cpuEnd -= baseCpuTime;
-        cpuDuration = cpuEnd - lastFrame.cpuStart;
+        double cpuTimeScale = 1.0E9 / os::timeFrequency;
+        cpuDuration = (cpuEnd - lastFrame.cpuStart) * cpuTimeScale;
+        cpuEnd = (cpuEnd - baseCpuTime) * cpuTimeScale;
     } else {
         cpuEnd = 0;
         cpuDuration = 0;
@@ -154,5 +164,52 @@ void Profiler::addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd)
               << " " << cpuEnd
               << " " << cpuDuration
               << std::endl;
+}
+
+void Profiler::parseLine(const char* in, Profile* profile)
+{
+    std::stringstream line(in, std::ios_base::in);
+    std::string type;
+
+    if (in[0] == '#' || strlen(in) < 12)
+        return;
+
+    line >> type;
+
+    if (type.compare("call") == 0) {
+        assert(profile->frames.size());
+        Profile::Call call;
+
+        line >> call.no
+             >> call.gpuStart
+             >> call.gpuDuration
+             >> call.cpuStart
+             >> call.cpuDuration
+             >> call.pixels
+             >> call.program
+             >> call.name;
+
+        profile->frames.back().calls.push_back(call);
+    } else if (type.compare("frame_begin") == 0) {
+        Profile::Frame frame;
+        frame.gpuDuration = 0;
+        frame.cpuDuration = 0;
+
+        line >> frame.no
+             >> frame.gpuStart
+             >> frame.cpuStart;
+
+        profile->frames.push_back(frame);
+    } else if (type.compare("frame_end") == 0) {
+        assert(profile->frames.size());
+        Profile::Frame& frame = profile->frames.back();
+        int64_t skipi64;
+
+        line >> frame.no
+             >> skipi64
+             >> frame.gpuDuration
+             >> skipi64
+             >> frame.cpuDuration;
+    }
 }
 }

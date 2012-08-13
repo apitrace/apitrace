@@ -14,6 +14,8 @@ set(qapitrace_SRCS
    jumpwidget.cpp
    mainwindow.cpp
    main.cpp
+   profiledialog.cpp
+   profiletablemodel.cpp
    retracer.cpp
    saverthread.cpp
    searchwidget.cpp
@@ -23,6 +25,7 @@ set(qapitrace_SRCS
    traceloader.cpp
    traceprocess.cpp
    trimprocess.cpp
+   timelinewidget.cpp
    vertexdatainterpreter.cpp
  )
 
@@ -35,6 +38,8 @@ set(qapitrace_UIS
    ui/imageviewer.ui
    ui/jumpwidget.ui
    ui/mainwindow.ui
+   ui/profiledialog.ui
+   ui/profilereplaydialog.ui
    ui/retracerdialog.ui
    ui/settings.ui
    ui/tracedialog.ui
