@@ -28,6 +28,9 @@
 #include <limits.h> // for CHAR_MAX
 #include <getopt.h>
 
+#include <GL/gl.h>
+#include <GL/glext.h>
+
 #include <set>
 
 #include "cli.hpp"
@@ -145,20 +148,116 @@ class TraceAnalyzer {
      * implicitly required by those through resource dependencies. */
     std::set<unsigned> required;
 
-public:
-    TraceAnalyzer() {}
-    ~TraceAnalyzer() {}
+    bool transformFeedbackActive;
+    bool framebufferObjectActive;
+    bool insideBeginEnd;
 
-    /* Compute and record all the resources provided by this call. */
-    void analyze(trace::Call *call) {
-        /* If there are no side effects, this call provides nothing. */
+    /* Rendering often has no side effects, but it can in some cases,
+     * (such as when transform feedback is active, or when rendering
+     * targets a framebuffer object). */
+    bool renderingHasSideEffect() {
+        return transformFeedbackActive || framebufferObjectActive;
+    }
+
+    /* Provide: Record that the given call affects the given resource
+     * as a side effect. */
+    void provide(const char *resource, trace::CallNo call_no) {
+        resources[resource].insert(call_no);
+    }
+
+    /* Consume: Add all calls that provide the given resource to the
+     * required list, then clear the list for this resource. */
+    void consume(const char *resource) {
+
+        std::set<unsigned> *calls;
+        std::set<unsigned>::iterator call;
+
+        /* Insert as required all calls that provide 'resource',
+         * then clear these calls. */
+        if (resources.count(resource)) {
+            calls = &resources[resource];
+            for (call = calls->begin(); call != calls->end(); call++) {
+                required.insert(*call);
+            }
+            resources.erase(resource);
+        }
+    }
+
+    void stateTrackPreCall(trace::Call *call) {
+
+        if (strcmp(call->name(), "glBegin") == 0) {
+            insideBeginEnd = true;
+            return;
+        }
+
+        if (strcmp(call->name(), "glBeginTransformFeedback") == 0) {
+            transformFeedbackActive = true;
+            return;
+        }
+
+        if (strcmp(call->name(), "glBindFramebuffer") == 0) {
+            GLenum target;
+            GLuint framebuffer;
+
+            target = static_cast<GLenum>(call->arg(0).toSInt());
+            framebuffer = call->arg(1).toUInt();
+
+            if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
+                if (framebuffer == 0) {
+                    framebufferObjectActive = false;
+                } else {
+                    framebufferObjectActive = true;
+                }
+            }
+            return;
+        }
+    }
+
+    void stateTrackPostCall(trace::Call *call) {
+
+        if (strcmp(call->name(), "glEnd") == 0) {
+            insideBeginEnd = false;
+            return;
+        }
+
+        if (strcmp(call->name(), "glEndTransformFeedback") == 0) {
+            transformFeedbackActive = false;
+            return;
+        }
+
+        if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
+            call->flags & trace::CALL_FLAG_END_FRAME) {
+            resources.erase("framebuffer");
+            return;
+        }
+    }
+
+    void recordSideEffects(trace::Call *call) {
+        /* If call is flagged as no side effects, then we are done here. */
         if (call->flags & trace::CALL_FLAG_NO_SIDE_EFFECTS) {
             return;
         }
 
-        /* Similarly, calls that swap buffers don't have other side effects. */
+        /* Similarly, swap-buffers calls don't have interesting side effects. */
         if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
             call->flags & trace::CALL_FLAG_END_FRAME) {
+            return;
+        }
+
+        /* Handle all rendering operations, (even though only glEnd is
+         * flagged as a rendering operation we treat everything from
+         * glBegin through glEnd as a rendering operation). */
+        if (call->flags & trace::CALL_FLAG_RENDER ||
+            insideBeginEnd) {
+
+            provide("framebuffer", call->no);
+
+            /* In some cases, rendering has side effects beyond the
+             * framebuffer update. */
+            if (renderingHasSideEffect()) {
+                provide("state", call->no);
+            }
+
             return;
         }
 
@@ -166,18 +265,44 @@ public:
         resources["state"].insert(call->no);
     }
 
+    void requireDependencies(trace::Call *call) {
+
+        /* Swap-buffers calls depend on framebuffer state. */
+        if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
+            call->flags & trace::CALL_FLAG_END_FRAME) {
+            consume("framebuffer");
+        }
+
+        /* By default, just assume this call depends on generic state. */
+        consume("state");
+    }
+
+
+public:
+    TraceAnalyzer(): transformFeedbackActive(false),
+                     framebufferObjectActive(false),
+                     insideBeginEnd(false)
+    {}
+
+    ~TraceAnalyzer() {}
+
+    /* Analyze this call by tracking state and recording all the
+     * resources provided by this call as side effects.. */
+    void analyze(trace::Call *call) {
+
+        stateTrackPreCall(call);
+
+        recordSideEffects(call);
+
+        stateTrackPostCall(call);
+    }
+
     /* Require this call and all of its dependencies to be included in
      * the final trace. */
     void require(trace::Call *call) {
-        std::set<unsigned> *dependencies;
-        std::set<unsigned>::iterator i;
 
         /* First, find and insert all calls that this call depends on. */
-        dependencies = &resources["state"];
-        for (i = dependencies->begin(); i != dependencies->end(); i++) {
-            required.insert(*i);
-        }
-        resources["state"].clear();
+        requireDependencies(call);
 
         /* Then insert this call itself. */
         required.insert(call->no);
@@ -242,14 +367,19 @@ trim_trace(const char *filename, struct trim_options *options)
             continue;
         }
 
-        /* If this call is included in the user-specified call
-         * set, then we don't need to perform any analysis on
-         * it. We know it must be included. */
+        /* If this call is included in the user-specified call set,
+         * then require it (and all dependencies) in the trimmed
+         * output. */
         if (options->calls.contains(*call)) {
             analyzer.require(call);
-        } else {
-            if (options->dependency_analysis)
-                analyzer.analyze(call);
+        }
+
+        /* Regardless of whether we include this call or not, we do
+         * some dependency tracking (unless disabled by the user). We
+         * do this even for calls we have included in the output so
+         * that any state updates get performed. */
+        if (options->dependency_analysis) {
+            analyzer.analyze(call);
         }
     }
 
