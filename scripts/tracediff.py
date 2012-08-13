@@ -70,6 +70,8 @@ else:
 
 def diff(ref_trace, src_trace):
 
+    isatty = sys.stdout.isatty()
+
     ref_dumper = Dumper(ref_trace, options.ref_calls)
     src_dumper = Dumper(src_trace, options.src_calls)
 
@@ -78,6 +80,9 @@ def diff(ref_trace, src_trace):
         diff_args = [
                 'diff',
                 '--speed-large-files',
+            ]
+        if isatty:
+            diff_args += [
                 '--old-line-format=' + start_delete + '%l' + end_delete + '\n',
                 '--new-line-format=' + start_insert + '%l' + end_insert + '\n',
             ]
@@ -92,6 +97,9 @@ def diff(ref_trace, src_trace):
                 'wdiff',
                 #'--terminal',
                 '--avoid-wraps',
+            ]
+        if isatty:
+            diff_args += [
                 '--start-delete=' + start_delete,
                 '--end-delete=' + end_delete,
                 '--start-insert=' + start_insert,
@@ -105,7 +113,7 @@ def diff(ref_trace, src_trace):
     src_dumper.dump.wait()
 
     less = None
-    if sys.stdout.isatty():
+    if isatty:
         less = subprocess.Popen(
             args = ['less', '-FRXn'],
             stdin = subprocess.PIPE
