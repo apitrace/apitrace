@@ -151,6 +151,18 @@ public:
 
     /* Compute and record all the resources provided by this call. */
     void analyze(trace::Call *call) {
+        /* If there are no side effects, this call provides nothing. */
+        if (call->flags & trace::CALL_FLAG_NO_SIDE_EFFECTS) {
+            return;
+        }
+
+        /* Similarly, calls that swap buffers don't have other side effects. */
+        if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
+            call->flags & trace::CALL_FLAG_END_FRAME) {
+            return;
+        }
+
+        /* By default, assume this call affects the state somehow. */
         resources["state"].insert(call->no);
     }
 
@@ -215,6 +227,12 @@ trim_trace(const char *filename, struct trim_options *options)
     /* In pass 1, analyze which calls are needed. */
     trace::Call *call;
     while ((call = p.parse_call())) {
+
+        /* There's no use doing any work past the last call requested
+         * by the user. */
+        if (call->no > options->calls.getLast())
+            break;
+
         /* If requested, ignore all calls not belonging to the specified thread. */
         if (options->thread != -1 && call->thread_id != options->thread)
             continue;
@@ -256,6 +274,12 @@ trim_trace(const char *filename, struct trim_options *options)
     required = analyzer.get_required();
 
     while ((call = p.parse_call())) {
+
+        /* There's no use doing any work past the last call requested
+         * by the user. */
+        if (call->no > options->calls.getLast())
+            break;
+
         if (required->find(call->no) != required->end()) {
             writer.writeCall(call);
         }
