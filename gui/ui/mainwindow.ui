@@ -644,6 +644,9 @@
    <property name="text">
     <string>&amp;Profile</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
   </action>
   <zorder>stateDock</zorder>
   <zorder>vertexDataDock</zorder>
