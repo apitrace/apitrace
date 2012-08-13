@@ -71,6 +71,7 @@ public:
     ~Profiler();
 
     void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_);
+    void setBaseTimes(uint64_t gpuStart, uint64_t cpuStart);
 
     void addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart);
     void addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd);

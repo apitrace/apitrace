@@ -55,6 +55,12 @@ void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_)
     std::cout << "# call no gpu_start gpu_dura cpu_start cpu_dura pixels program name" << std::endl;
 }
 
+void Profiler::setBaseTimes(uint64_t gpuStart, uint64_t cpuStart)
+{
+    baseCpuTime = cpuStart;
+    baseGpuTime = gpuStart;
+}
+
 void Profiler::addCall(unsigned no,
                        const char *name,
                        unsigned program,
@@ -62,14 +68,6 @@ void Profiler::addCall(unsigned no,
                        uint64_t gpuStart, uint64_t gpuDuration,
                        uint64_t cpuStart, uint64_t cpuDuration)
 {
-    if (baseGpuTime == 0) {
-        baseGpuTime = gpuStart;
-    }
-
-    if (baseCpuTime == 0) {
-        baseCpuTime = cpuStart;
-    }
-
     if (gpuTimes) {
         gpuStart -= baseGpuTime;
     } else {
@@ -104,14 +102,6 @@ void Profiler::addCall(unsigned no,
 
 void Profiler::addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart)
 {
-    if (baseGpuTime == 0) {
-        baseGpuTime = gpuStart;
-    }
-
-    if (baseCpuTime == 0) {
-        baseCpuTime = cpuStart;
-    }
-        
     lastFrame.no = no;
     lastFrame.gpuStart = gpuStart;
     lastFrame.cpuStart = cpuStart;
