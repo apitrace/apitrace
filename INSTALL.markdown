@@ -20,7 +20,7 @@ The GUI also dependends on:
 
 * QJSON version 0.5 or higher (tested with version 0.7.1, which is bundled)
 
-Qt and QJSON will be required if `-DENABLE_GUI=TRUE` is passed to `cmake`, and
+Qt and QJSON will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and
 never used if `-DENABLED_GUI=FALSE` is passed instead.  The implicit default is
 `-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available, using the
 bundled QJSON if it is not found on the system.
@@ -43,7 +43,12 @@ Build as:
 You can also build the 32bit GL wrapper on 64bit distro with a multilib gcc by
 doing:
 
-    cmake -H. -Bbuild32 -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_EXE_LINKER_FLAGS=-m32 -DENABLE_GUI=FALSE
+    cmake \
+        -DCMAKE_C_FLAGS=-m32 \
+        -DCMAKE_CXX_FLAGS=-m32 \
+        -DCMAKE_EXE_LINKER_FLAGS=-m32 \
+        -DENABLE_GUI=FALSE \
+        -H. -Bbuild32
     make -C build32 glxtrace
 
 Android
@@ -93,14 +98,14 @@ not found automatically, you can manually specify the location of the
 dependencies from the CMake GUI.
 
 After you've successfully configured, you can start the build by opening the
-generated `build\apitrace.sln` solution file, or invoking `cmake` as:
+generated `build\apitrace.sln` solution file, or invoking CMake as:
 
     cmake --build build --config MinSizeRel
 
 The steps to build 64bit version are similar, but choosing _Visual Studio 10
 Win64_ instead of _Visual Studio 10_.
 
-It's also possible to instruct `cmake` build Windows binaries on Linux with
+It's also possible to instruct CMake build Windows binaries on Linux with
 [MinGW cross compilers](http://www.cmake.org/Wiki/CmakeMingw).
 
 
