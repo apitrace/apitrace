@@ -90,8 +90,8 @@ void initContext();
 void updateDrawable(int width, int height);
 
 void flushQueries();
-void beginProfile(trace::Call &call);
-void endProfile(trace::Call &call);
+void beginProfile(trace::Call &call, bool isDraw);
+void endProfile(trace::Call &call, bool isDraw);
 
 } /* namespace glretrace */
 

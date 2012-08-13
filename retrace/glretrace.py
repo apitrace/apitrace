@@ -310,9 +310,12 @@ class GlRetracer(Retracer):
         if function.name == 'glEndList':
             print r'    glretrace::insideList = false;'
 
-        if profileDraw and function.name != 'glEnd':
+        if function.name != 'glEnd':
             print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
-            print r'        glretrace::beginProfile(call);'
+            if profileDraw:
+                print r'        glretrace::beginProfile(call, true);'
+            else:
+                print r'        glretrace::beginProfile(call, false);'
             print r'    }'
 
         if function.name == 'glCreateShaderProgramv':
@@ -349,10 +352,12 @@ class GlRetracer(Retracer):
         if function.name == "glBegin":
             print '    glretrace::insideGlBeginEnd = true;'
 
-        if profileDraw or function.name == 'glEnd':
-            print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
-            print r'        glretrace::endProfile(call);'
-            print r'    }'
+        print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
+        if profileDraw:
+            print r'        glretrace::endProfile(call, true);'
+        else:
+            print r'        glretrace::endProfile(call, false);'
+        print r'    }'
 
         # Error checking
         if function.name.startswith('gl'):

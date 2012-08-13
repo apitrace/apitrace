@@ -55,27 +55,32 @@ void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_)
     std::cout << "# call no gpu_start gpu_dura cpu_start cpu_dura pixels program name" << std::endl;
 }
 
-void Profiler::setBaseTimes(uint64_t gpuStart, uint64_t cpuStart)
+void Profiler::setBaseTimes(int64_t gpuStart, int64_t cpuStart)
 {
     baseCpuTime = cpuStart;
     baseGpuTime = gpuStart;
 }
 
+bool Profiler::hasBaseTimes()
+{
+    return baseCpuTime != 0 || baseGpuTime != 0;
+}
+
 void Profiler::addCall(unsigned no,
                        const char *name,
                        unsigned program,
-                       uint64_t pixels,
-                       uint64_t gpuStart, uint64_t gpuDuration,
-                       uint64_t cpuStart, uint64_t cpuDuration)
+                       int64_t pixels,
+                       int64_t gpuStart, int64_t gpuDuration,
+                       int64_t cpuStart, int64_t cpuDuration)
 {
-    if (gpuTimes) {
+    if (gpuTimes && gpuStart) {
         gpuStart -= baseGpuTime;
     } else {
         gpuStart = 0;
         gpuDuration = 0;
     }
 
-    if (cpuTimes) {
+    if (cpuTimes && cpuStart) {
         double cpuTimeScale = 1.0E9 / os::timeFrequency;
         cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
         cpuDuration = cpuDuration * cpuTimeScale;
@@ -100,7 +105,7 @@ void Profiler::addCall(unsigned no,
               << std::endl;
 }
 
-void Profiler::addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart)
+void Profiler::addFrameStart(unsigned no, int64_t gpuStart, int64_t cpuStart)
 {
     lastFrame.no = no;
     lastFrame.gpuStart = gpuStart;
@@ -126,9 +131,9 @@ void Profiler::addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart)
               << std::endl;
 }
 
-void Profiler::addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd)
+void Profiler::addFrameEnd(int64_t gpuEnd, int64_t cpuEnd)
 {
-    uint64_t gpuDuration, cpuDuration;
+    int64_t gpuDuration, cpuDuration;
 
     if (gpuTimes) {
         gpuDuration = gpuEnd - lastFrame.gpuStart;
@@ -179,7 +184,9 @@ void Profiler::parseLine(const char* in, Profile* profile)
              >> call.program
              >> call.name;
 
-        profile->frames.back().calls.push_back(call);
+        if (call.pixels >= 0) {
+            profile->frames.back().calls.push_back(call);
+        }
     } else if (type.compare("frame_begin") == 0) {
         Profile::Frame frame;
         frame.gpuDuration = 0;

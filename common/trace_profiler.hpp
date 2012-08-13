@@ -71,23 +71,24 @@ public:
     ~Profiler();
 
     void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_);
-    void setBaseTimes(uint64_t gpuStart, uint64_t cpuStart);
+    void setBaseTimes(int64_t gpuStart, int64_t cpuStart);
+    bool hasBaseTimes();
 
-    void addFrameStart(unsigned no, uint64_t gpuStart, uint64_t cpuStart);
-    void addFrameEnd(uint64_t gpuEnd, uint64_t cpuEnd);
+    void addFrameStart(unsigned no, int64_t gpuStart, int64_t cpuStart);
+    void addFrameEnd(int64_t gpuEnd, int64_t cpuEnd);
 
     void addCall(unsigned no,
                  const char* name,
                  unsigned program,
-                 uint64_t pixels,
-                 uint64_t gpuStart, uint64_t gpuDuration,
-                 uint64_t cpuStart, uint64_t cpuDuration);
+                 int64_t pixels,
+                 int64_t gpuStart, int64_t gpuDuration,
+                 int64_t cpuStart, int64_t cpuDuration);
 
     static void parseLine(const char* line, Profile* profile);
 
 private:
-    uint64_t baseGpuTime;
-    uint64_t baseCpuTime;
+    int64_t baseGpuTime;
+    int64_t baseCpuTime;
 
     bool cpuTimes;
     bool gpuTimes;
@@ -95,8 +96,8 @@ private:
 
     struct {
         unsigned no;
-        uint64_t gpuStart;
-        uint64_t cpuStart;
+        int64_t gpuStart;
+        int64_t cpuStart;
     } lastFrame;
 };
 }
