@@ -148,49 +148,45 @@ Sandwitch:
 
 For standalone applications the instructions above for Linux should
 work. To trace applications started from within the Android VM process
-(app_process aka zygote) you'll have to wrap this process and enable
+(`app_process` aka zygote) you'll have to wrap this process and enable
 tracing dynamically for the application to be traced.
 
 - Wrapping the android main VM process:
 
-  In the Android root /init.rc add the LD_PRELOAD setting to zygote's
+  In the Android root /init.rc add the `LD_PRELOAD` setting to zygote's
   environment in the 'service zygote' section:
 
-  """
-  service zygote ...
-     setenv LD_PRELOAD /data/egltrace.so
-     ...
-  """
+        service zygote ...
+           setenv LD_PRELOAD /data/egltrace.so
+           ...
 
   Note that ICS will overwrite the /init.rc during each boot with the
   version in the recovery image. So you'll have to change the file in
   your ICS source tree, rebuild and reflash the device.
   Rebuilding/reflashing only the recovery image should be sufficient.
 
-
 - Copy egltrace.so to /data
 
   On the host:
-  $ adb push /path/to/apitrace/build/wrappers/egltrace.so /data
 
+        adb push /path/to/apitrace/build/wrappers/egltrace.so /data
 
 - Adjust file permissions to store the trace file:
 
   By default egltrace.so will store the trace in
-  /data/app_process.trace. For this to work for applications running
-  with a uid other than 0, you have to allow writes to the /data
+  `/data/app_process.trace`. For this to work for applications running
+  with a uid other than 0, you have to allow writes to the `/data`
   directory on the device:
 
-  # chmod 0777 /data
-
+        chmod 0777 /data
 
 - Enable tracing for a specific process name:
 
   To trace for example the Settings application:
-  # setprop debug.apitrace.procname com.android.settings
 
-  In general this name will match what 'ps' reports.
+        setprop debug.apitrace.procname com.android.settings
 
+  In general this name will match what `ps` reports.
 
 - Start the application:
 
@@ -198,7 +194,7 @@ tracing dynamically for the application to be traced.
   of pre-starting the apps, you might have to kill the application
   first:
 
-  # kill <pid of app>
+        kill <pid of app>
 
   Launch the application for example from the application menu.
 
