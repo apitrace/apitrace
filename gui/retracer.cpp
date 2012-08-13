@@ -417,7 +417,6 @@ void Retracer::run()
             Q_ASSERT(process.state() != QProcess::Running);
         } else if (isProfiling()) {
             profile = new trace::Profile();
-            process.waitForFinished(-1);
 
             while (!io.atEnd()) {
                 char line[256];
