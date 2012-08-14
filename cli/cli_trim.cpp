@@ -24,6 +24,7 @@
  *
  **************************************************************************/
 
+#include <sstream>
 #include <string.h>
 #include <limits.h> // for CHAR_MAX
 #include <getopt.h>
@@ -40,6 +41,8 @@
 #include "trace_callset.hpp"
 #include "trace_parser.hpp"
 #include "trace_writer.hpp"
+
+#define STRNCMP_LITERAL(var, literal) strncmp((var), (literal), sizeof (literal) -1)
 
 static const char *synopsis = "Create a new trace by trimming an existing trace.";
 
@@ -140,8 +143,12 @@ struct stringCompare {
 };
 
 class TraceAnalyzer {
-    /* Map for tracking resource dependencies between calls. */
-    std::map<const char *, std::set<unsigned>, stringCompare > resources;
+    /* Maps for tracking resource dependencies between calls. */
+    std::map<std::string, std::set<unsigned> > resources;
+    std::map<std::string, std::set<std::string> > dependencies;
+
+    /* Maps for tracking OpenGL state. */
+    std::map<GLenum, unsigned> texture_map;
 
     /* The final set of calls required. This consists of calls added
      * explicitly with the require() method as well as all calls
@@ -161,41 +168,116 @@ class TraceAnalyzer {
 
     /* Provide: Record that the given call affects the given resource
      * as a side effect. */
-    void provide(const char *resource, trace::CallNo call_no) {
+    void provide(std::string resource, trace::CallNo call_no) {
         resources[resource].insert(call_no);
     }
 
-    /* Consume: Add all calls that provide the given resource to the
-     * required list, then clear the list for this resource. */
-    void consume(const char *resource) {
+    /* Link: Establish a dependency between resource 'resource' and
+     * resource 'dependency'. This dependency is captured by name so
+     * that if the list of calls that provide 'dependency' grows
+     * before 'resource' is consumed, those calls will still be
+     * captured. */
+    void link(std::string resource, std::string dependency) {
+        dependencies[resource].insert(dependency);
+    }
+
+    /* Unlink: Remove dependency from 'resource' on 'dependency'. */
+    void unlink(std::string resource, std::string dependency) {
+        dependencies[resource].erase(dependency);
+        if (dependencies[resource].size() == 0) {
+            dependencies.erase(resource);
+        }
+    }
+
+    /* Unlink all: Remove dependencies from 'resource' to all other
+     * resources. */
+    void unlinkAll(std::string resource) {
+        dependencies.erase(resource);
+    }
+
+    /* Resolve: Recursively compute all calls providing 'resource',
+     * (including linked dependencies of 'resource' on other
+     * resources). */
+    std::set<unsigned> resolve(std::string resource) {
+        std::set<std::string> *deps;
+        std::set<std::string>::iterator dep;
 
         std::set<unsigned> *calls;
         std::set<unsigned>::iterator call;
 
-        /* Insert as required all calls that provide 'resource',
-         * then clear these calls. */
+        std::set<unsigned> result, deps_set;
+
+        /* Recursively chase dependencies. */
+        if (dependencies.count(resource)) {
+            deps = &dependencies[resource];
+            for (dep = deps->begin(); dep != deps->end(); dep++) {
+                deps_set = resolve(*dep);
+                for (call = deps_set.begin(); call != deps_set.end(); call++) {
+                    result.insert(*call);
+                }
+            }
+        }
+
+        /* Also look for calls that directly provide 'resource' */
         if (resources.count(resource)) {
             calls = &resources[resource];
             for (call = calls->begin(); call != calls->end(); call++) {
-                required.insert(*call);
+                result.insert(*call);
             }
-            resources.erase(resource);
+        }
+
+        return result;
+    }
+
+    /* Consume: Resolve all calls that provide the given resource, and
+     * add them to the required list. Then clear the call list for
+     * 'resource' along with any dependencies. */
+    void consume(std::string resource) {
+
+        std::set<unsigned> calls;
+        std::set<unsigned>::iterator call;
+
+        calls = resolve(resource);
+
+        dependencies.erase(resource);
+        resources.erase(resource);
+
+        for (call = calls.begin(); call != calls.end(); call++) {
+            required.insert(*call);
         }
     }
 
     void stateTrackPreCall(trace::Call *call) {
 
-        if (strcmp(call->name(), "glBegin") == 0) {
+        const char *name = call->name();
+
+        if (strcmp(name, "glBegin") == 0) {
             insideBeginEnd = true;
             return;
         }
 
-        if (strcmp(call->name(), "glBeginTransformFeedback") == 0) {
+        if (strcmp(name, "glBeginTransformFeedback") == 0) {
             transformFeedbackActive = true;
             return;
         }
 
-        if (strcmp(call->name(), "glBindFramebuffer") == 0) {
+        if (strcmp(name, "glBindTexture") == 0) {
+            GLenum target;
+            GLuint texture;
+
+            target = static_cast<GLenum>(call->arg(0).toSInt());
+            texture = call->arg(1).toUInt();
+
+            if (texture == 0) {
+                texture_map.erase(target);
+            } else {
+                texture_map[target] = texture;
+            }
+
+            return;
+        }
+
+        if (strcmp(name, "glBindFramebuffer") == 0) {
             GLenum target;
             GLuint framebuffer;
 
@@ -215,24 +297,34 @@ class TraceAnalyzer {
 
     void stateTrackPostCall(trace::Call *call) {
 
-        if (strcmp(call->name(), "glEnd") == 0) {
+        const char *name = call->name();
+
+        if (strcmp(name, "glEnd") == 0) {
             insideBeginEnd = false;
             return;
         }
 
-        if (strcmp(call->name(), "glEndTransformFeedback") == 0) {
+        if (strcmp(name, "glEndTransformFeedback") == 0) {
             transformFeedbackActive = false;
             return;
         }
 
+        /* If this swapbuffers was included in the trace then it will
+         * have already consumed all framebuffer dependencies. If not,
+         * then clear them now so that they don't carry over into the
+         * next frame. */
         if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
             call->flags & trace::CALL_FLAG_END_FRAME) {
+            dependencies.erase("framebuffer");
             resources.erase("framebuffer");
             return;
         }
     }
 
     void recordSideEffects(trace::Call *call) {
+
+        const char *name = call->name();
+
         /* If call is flagged as no side effects, then we are done here. */
         if (call->flags & trace::CALL_FLAG_NO_SIDE_EFFECTS) {
             return;
@@ -244,18 +336,146 @@ class TraceAnalyzer {
             return;
         }
 
+        if (strcmp(name, "glGenTextures") == 0) {
+            const trace::Array *textures = dynamic_cast<const trace::Array *>(&call->arg(1));
+            size_t i;
+            GLuint texture;
+
+            if (textures) {
+                for (i = 0; i < textures->size(); i++) {
+                    std::stringstream ss;
+
+                    texture = textures->values[i]->toUInt();
+                    ss << "texture-" << texture;
+
+                    provide(ss.str(), call->no);
+                }
+            }
+            return;
+        }
+
+        if (strcmp(name, "glBindTexture") == 0) {
+            GLenum target;
+            GLuint texture;
+
+            std::stringstream ss_target, ss_texture;
+
+            target = static_cast<GLenum>(call->arg(0).toSInt());
+            texture = call->arg(1).toUInt();
+
+            ss_target << "texture-target-" << target;
+            ss_texture << "texture-" << texture;
+
+            resources.erase(ss_target.str());
+            provide(ss_target.str(), call->no);
+
+            unlinkAll(ss_target.str());
+            link(ss_target.str(), ss_texture.str());
+
+            return;
+        }
+
+        /* FIXME: Need to handle glMultTexImage and friends. */
+        if (STRNCMP_LITERAL(name, "glTexImage") == 0 ||
+            STRNCMP_LITERAL(name, "glTexSubImage") == 0 ||
+            STRNCMP_LITERAL(name, "glCopyTexImage") == 0 ||
+            STRNCMP_LITERAL(name, "glCopyTexSubImage") == 0 ||
+            STRNCMP_LITERAL(name, "glCompressedTexImage") == 0 ||
+            STRNCMP_LITERAL(name, "glCompressedTexSubImage") == 0 ||
+            strcmp(name, "glInvalidateTexImage") == 0 ||
+            strcmp(name, "glInvalidateTexSubImage") == 0) {
+
+            std::set<unsigned> *calls;
+            std::set<unsigned>::iterator c;
+            std::stringstream ss_target, ss_texture;
+
+            GLenum target = static_cast<GLenum>(call->arg(0).toSInt());
+
+            ss_target << "texture-target-" << target;
+            ss_texture << "texture-" << texture_map[target];
+
+            /* The texture resource depends on this call and any calls
+             * providing the given texture target. */
+            provide(ss_texture.str(), call->no);
+
+            if (resources.count(ss_target.str())) {
+                calls = &resources[ss_target.str()];
+                for (c = calls->begin(); c != calls->end(); c++) {
+                    provide(ss_texture.str(), *c);
+                }
+            }
+
+            return;
+        }
+
+        if (strcmp(name, "glEnable") == 0) {
+            GLenum cap;
+
+            cap = static_cast<GLenum>(call->arg(0).toSInt());
+
+            if (cap == GL_TEXTURE_1D ||
+                cap == GL_TEXTURE_2D ||
+                cap == GL_TEXTURE_3D ||
+                cap == GL_TEXTURE_CUBE_MAP)
+            {
+                std::stringstream ss;
+
+                ss << "texture-target-" << cap;
+
+                link("render-state", ss.str());
+            }
+
+            provide("state", call->no);
+
+            return;
+        }
+
+        if (strcmp(name, "glDisable") == 0) {
+            GLenum cap;
+
+            cap = static_cast<GLenum>(call->arg(0).toSInt());
+
+            if (cap == GL_TEXTURE_1D ||
+                cap == GL_TEXTURE_2D ||
+                cap == GL_TEXTURE_3D ||
+                cap == GL_TEXTURE_CUBE_MAP)
+            {
+                std::stringstream ss;
+
+                ss << "texture-target-" << cap;
+
+                unlink("render-state", ss.str());
+            }
+
+            provide("state", call->no);
+
+            return;
+        }
+
         /* Handle all rendering operations, (even though only glEnd is
          * flagged as a rendering operation we treat everything from
          * glBegin through glEnd as a rendering operation). */
         if (call->flags & trace::CALL_FLAG_RENDER ||
             insideBeginEnd) {
 
+            std::set<unsigned> calls;
+            std::set<unsigned>::iterator c;
+
             provide("framebuffer", call->no);
+
+            calls = resolve("render-state");
+
+            for (c = calls.begin(); c != calls.end(); c++) {
+                provide("framebuffer", *c);
+            }
 
             /* In some cases, rendering has side effects beyond the
              * framebuffer update. */
             if (renderingHasSideEffect()) {
                 provide("state", call->no);
+                for (c = calls.begin(); c != calls.end(); c++) {
+                    provide("state", *c);
+                }
             }
 
             return;
