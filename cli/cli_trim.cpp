@@ -355,15 +355,20 @@ trim_trace(const char *filename, struct trim_options *options)
 
         /* There's no use doing any work past the last call requested
          * by the user. */
-        if (call->no > options->calls.getLast())
+        if (call->no > options->calls.getLast()) {
+            delete call;
             break;
+        }
 
         /* If requested, ignore all calls not belonging to the specified thread. */
-        if (options->thread != -1 && call->thread_id != options->thread)
+        if (options->thread != -1 && call->thread_id != options->thread) {
+            delete call;
             continue;
+        }
 
         /* Also, prune if uninteresting (unless the user asked for no pruning. */
         if (options->prune_uninteresting && call->flags & trace::CALL_FLAG_UNINTERESTING) {
+            delete call;
             continue;
         }
 
@@ -381,6 +386,8 @@ trim_trace(const char *filename, struct trim_options *options)
         if (options->dependency_analysis) {
             analyzer.analyze(call);
         }
+
+        delete call;
     }
 
     /* Prepare output file and writer for output. */
