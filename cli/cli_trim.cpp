@@ -149,6 +149,7 @@ class TraceAnalyzer {
 
     /* Maps for tracking OpenGL state. */
     std::map<GLenum, unsigned> texture_map;
+    std::map<GLint, GLuint> location_program_map;
 
     /* The final set of calls required. This consists of calls added
      * explicitly with the require() method as well as all calls
@@ -448,6 +449,189 @@ class TraceAnalyzer {
             }
 
             provide("state", call->no);
+
+            return;
+        }
+
+        if (strcmp(name, "glCreateShader") == 0 ||
+            strcmp(name, "glCreateShaderObjectARB") == 0) {
+
+            GLuint shader;
+            std::stringstream ss;
+
+            shader = call->ret->toUInt();
+
+            ss << "shader-" << shader;
+
+            provide(ss.str(), call->no);
+
+            return;
+        }
+
+        if (strcmp(name, "glShaderSource") == 0 ||
+            strcmp(name, "glShaderSourceARB") == 0 ||
+            strcmp(name, "glCompileShader") == 0 ||
+            strcmp(name, "glCompileShaderARB") == 0 ||
+            strcmp(name, "glGetShaderiv") == 0 ||
+            strcmp(name, "glGetShaderInfoLog") == 0) {
+
+            GLuint shader;
+            std::stringstream ss;
+
+            shader = call->arg(0).toUInt();
+
+            ss << "shader-" << shader;
+
+            provide(ss.str(), call->no);
+
+            return;
+        }
+
+        if (strcmp(name, "glCreateProgram") == 0 ||
+            strcmp(name, "glCreateProgramObjectARB") == 0) {
+
+            GLuint program;
+            std::stringstream ss;
+
+            program = call->ret->toUInt();
+
+            ss << "program-" << program;
+
+            provide(ss.str(), call->no);
+
+            return;
+        }
+
+        if (strcmp(name, "glAttachShader") == 0 ||
+            strcmp(name, "glAttachObjectARB") == 0) {
+
+            GLuint program, shader;
+            std::stringstream ss_program, ss_shader;
+
+            program = call->arg(0).toUInt();
+            shader = call->arg(1).toUInt();
+
+            ss_program << "program-" << program;
+            ss_shader << "shader-" << shader;
+
+            link(ss_program.str(), ss_shader.str());
+            provide(ss_program.str(), call->no);
+
+            return;
+        }
+
+        if (strcmp(name, "glDetachShader") == 0 ||
+            strcmp(name, "glDetachObjectARB") == 0) {
+
+            GLuint program, shader;
+            std::stringstream ss_program, ss_shader;
+
+            program = call->arg(0).toUInt();
+            shader = call->arg(1).toUInt();
+
+            ss_program << "program-" << program;
+            ss_shader << "shader-" << shader;
+
+            unlink(ss_program.str(), ss_shader.str());
+
+            return;
+        }
+
+        if (strcmp(name, "glUseProgram") == 0 ||
+            strcmp(name, "glUseProgramObjectARB") == 0) {
+
+            GLuint program;
+
+            program = call->arg(0).toUInt();
+
+            unlinkAll("render-program-state");
+
+            if (program == 0) {
+                unlink("render-state", "render-program-state");
+                provide("state", call->no);
+            } else {
+                std::stringstream ss;
+
+                ss << "program-" << program;
+
+                link("render-state", "render-program-state");
+                link("render-program-state", ss.str());
+
+                provide(ss.str(), call->no);
+            }
+
+            return;
+        }
+
+        if (strcmp(name, "glGetUniformLocation") == 0 ||
+            strcmp(name, "glGetUniformLocationARB") == 0 ||
+            strcmp(name, "glGetFragDataLocation") == 0 ||
+            strcmp(name, "glGetFragDataLocationEXT") == 0 ||
+            strcmp(name, "glGetSubroutineUniformLocation") == 0 ||
+            strcmp(name, "glGetProgramResourceLocation") == 0 ||
+            strcmp(name, "glGetProgramResourceLocationIndex") == 0 ||
+            strcmp(name, "glGetVaryingLocationNV") == 0) {
+
+            GLuint program;
+            GLint location;
+            std::stringstream ss;
+
+            program = call->arg(0).toUInt();
+            location = call->ret->toSInt();
+
+            location_program_map[location] = program;
+
+            ss << "program-" << program;
+
+            provide(ss.str(), call->no);
+
+            return;
+        }
+
+        /* For any call that accepts 'location' as its first argument,
+         * perform a lookup in our location->program map and add a
+         * dependence on the program we find there. */
+        if (call->sig->num_args > 0 &&
+            strcmp(call->sig->arg_names[0], "location") == 0) {
+
+            GLuint program;
+            GLint location;
+            std::stringstream ss;
+
+            location = call->arg(0).toSInt();
+
+            program = location_program_map[location];
+
+            ss << "program-" << program;
+
+            provide(ss.str(), call->no);
+
+            return;
+        }
+
+        /* FIXME: We cut a huge swath by assuming that any unhandled
+         * call that has a first argument named "program" should not
+         * be included in the trimmed output unless the program of
+         * that number is also included.
+         *
+         * This heuristic is correct for many cases, but we should
+         * actually carefully verify if this includes some calls
+         * inappropriately, or if it misses some.
+         */
+        if (strcmp(name, "glLinkProgram") == 0 ||
+            strcmp(name, "glLinkProgramARB") == 0 ||
+            (call->sig->num_args > 0 &&
+             (strcmp(call->sig->arg_names[0], "program") == 0 ||
+              strcmp(call->sig->arg_names[0], "programObj") == 0))) {
+
+            GLuint program;
+            std::stringstream ss;
+
+            program = call->arg(0).toUInt();
+
+            ss << "program-" << program;
+
+            provide(ss.str(), call->no);
 
             return;
         }
