@@ -173,6 +173,14 @@ class TraceAnalyzer {
         resources[resource].insert(call_no);
     }
 
+    /* Like provide, but with a simply-formatted string, (appending an
+     * integer to the given string). */
+    void providef(std::string resource, int resource_no, trace::CallNo call_no) {
+        std::stringstream ss;
+        ss << resource << resource_no;
+        provide(ss.str(), call_no);
+    }
+
     /* Link: Establish a dependency between resource 'resource' and
      * resource 'dependency'. This dependency is captured by name so
      * that if the list of calls that provide 'dependency' grows
@@ -182,12 +190,30 @@ class TraceAnalyzer {
         dependencies[resource].insert(dependency);
     }
 
+    /* Like link, but with a simply-formatted string, (appending an
+     * integer to the given string). */
+    void linkf(std::string resource, std::string dependency, int dep_no) {
+
+        std::stringstream ss;
+        ss << dependency << dep_no;
+        link(resource, ss.str());
+    }
+
     /* Unlink: Remove dependency from 'resource' on 'dependency'. */
     void unlink(std::string resource, std::string dependency) {
         dependencies[resource].erase(dependency);
         if (dependencies[resource].size() == 0) {
             dependencies.erase(resource);
         }
+    }
+
+    /* Like unlink, but with a simply-formated string, (appending an
+     * integer to the given string). */
+    void unlinkf(std::string resource, std::string dependency, int dep_no) {
+
+        std::stringstream ss;
+        ss << dependency << dep_no;
+        unlink(resource, ss.str());
     }
 
     /* Unlink all: Remove dependencies from 'resource' to all other
@@ -348,12 +374,8 @@ class TraceAnalyzer {
 
             if (textures) {
                 for (i = 0; i < textures->size(); i++) {
-                    std::stringstream ss;
-
                     texture = textures->values[i]->toUInt();
-                    ss << "texture-" << texture;
-
-                    provide(ss.str(), call->no);
+                    providef("texture-", texture, call->no);
                 }
             }
             return;
@@ -423,15 +445,10 @@ class TraceAnalyzer {
                 cap == GL_TEXTURE_3D ||
                 cap == GL_TEXTURE_CUBE_MAP)
             {
-                std::stringstream ss;
-
-                ss << "texture-target-" << cap;
-
-                link("render-state", ss.str());
+                linkf("render-state", "texture-target-", cap);
             }
 
             provide("state", call->no);
-
             return;
         }
 
@@ -445,30 +462,18 @@ class TraceAnalyzer {
                 cap == GL_TEXTURE_3D ||
                 cap == GL_TEXTURE_CUBE_MAP)
             {
-                std::stringstream ss;
-
-                ss << "texture-target-" << cap;
-
-                unlink("render-state", ss.str());
+                unlinkf("render-state", "texture-target-", cap);
             }
 
             provide("state", call->no);
-
             return;
         }
 
         if (strcmp(name, "glCreateShader") == 0 ||
             strcmp(name, "glCreateShaderObjectARB") == 0) {
 
-            GLuint shader;
-            std::stringstream ss;
-
-            shader = call->ret->toUInt();
-
-            ss << "shader-" << shader;
-
-            provide(ss.str(), call->no);
-
+            GLuint shader = call->ret->toUInt();
+            providef("shader-", shader, call->no);
             return;
         }
 
@@ -479,30 +484,16 @@ class TraceAnalyzer {
             strcmp(name, "glGetShaderiv") == 0 ||
             strcmp(name, "glGetShaderInfoLog") == 0) {
 
-            GLuint shader;
-            std::stringstream ss;
-
-            shader = call->arg(0).toUInt();
-
-            ss << "shader-" << shader;
-
-            provide(ss.str(), call->no);
-
+            GLuint shader = call->arg(0).toUInt();
+            providef("shader-", shader, call->no);
             return;
         }
 
         if (strcmp(name, "glCreateProgram") == 0 ||
             strcmp(name, "glCreateProgramObjectARB") == 0) {
 
-            GLuint program;
-            std::stringstream ss;
-
-            program = call->ret->toUInt();
-
-            ss << "program-" << program;
-
-            provide(ss.str(), call->no);
-
+            GLuint program = call->ret->toUInt();
+            providef("program-", program, call->no);
             return;
         }
 
@@ -576,14 +567,9 @@ class TraceAnalyzer {
             strcmp(name, "glGetProgramResourceLocationIndex") == 0 ||
             strcmp(name, "glGetVaryingLocationNV") == 0) {
 
-            GLuint program;
-            std::stringstream ss;
+            GLuint program = call->arg(0).toUInt();
 
-            program = call->arg(0).toUInt();
-
-            ss << "program-" << program;
-
-            provide(ss.str(), call->no);
+            providef("program-", program, call->no);
 
             return;
         }
@@ -594,12 +580,7 @@ class TraceAnalyzer {
         if (call->sig->num_args > 0 &&
             strcmp(call->sig->arg_names[0], "location") == 0) {
 
-            std::stringstream ss;
-
-            ss << "program-" << activeProgram;
-
-            provide(ss.str(), call->no);
-
+            providef("program-", activeProgram, call->no);
             return;
         }
 
@@ -618,15 +599,8 @@ class TraceAnalyzer {
              (strcmp(call->sig->arg_names[0], "program") == 0 ||
               strcmp(call->sig->arg_names[0], "programObj") == 0))) {
 
-            GLuint program;
-            std::stringstream ss;
-
-            program = call->arg(0).toUInt();
-
-            ss << "program-" << program;
-
-            provide(ss.str(), call->no);
-
+            GLuint program = call->arg(0).toUInt();
+            providef("program-", program, call->no);
             return;
         }
 
