@@ -62,6 +62,7 @@ usage(void)
         "        --no-prune           Do not prune uninteresting calls from the trace.\n"
         "    -x, --exact              Trim exactly to calls specified in --calls/--frames\n"
         "                             Equivalent to both --no-deps and --no-prune\n"
+        "        --print-callset      Print the final set of calls included in output\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
     ;
@@ -106,6 +107,12 @@ help()
         "                             --calls and --frames. This option is equivalent\n"
         "                             to passing both --no-deps and --no-prune.\n"
         "\n"
+        "        --print-callset      Print to stdout the final set of calls included\n"
+        "                             in the trim output. This can be useful for\n"
+        "                             debugging trim operations by using a modified\n"
+        "                             callset on the command-line along with --exact.\n"
+        "                             Use --calls=@<file> to read callset from a file.\n"
+        "\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
         "\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
@@ -121,6 +128,7 @@ enum {
     PRUNE_OPT,
     NO_PRUNE_OPT,
     THREAD_OPT,
+    PRINT_CALLSET_OPT,
 };
 
 const static char *
@@ -138,6 +146,7 @@ longOptions[] = {
     {"exact", no_argument, 0, 'x'},
     {"thread", required_argument, 0, THREAD_OPT},
     {"output", required_argument, 0, 'o'},
+    {"print-callset", no_argument, 0, PRINT_CALLSET_OPT},
     {0, 0, 0, 0}
 };
 
@@ -711,6 +720,9 @@ struct trim_options {
 
     /* Emit only calls from this thread (-1 == all threads) */
     int thread;
+
+    /* Print resulting callset */
+    int print_callset;
 };
 
 static int
@@ -721,6 +733,7 @@ trim_trace(const char *filename, struct trim_options *options)
     TraceAnalyzer analyzer;
     std::set<unsigned> *required;
     unsigned frame;
+    int call_range_first, call_range_last;
 
     if (!p.open(filename)) {
         std::cerr << "error: failed to open " << filename << "\n";
@@ -799,6 +812,8 @@ trim_trace(const char *filename, struct trim_options *options)
     required = analyzer.get_required();
 
     frame = 0;
+    call_range_first = -1;
+    call_range_last = -1;
     while ((call = p.parse_call())) {
 
         /* There's no use doing any work past the last call or frame
@@ -811,6 +826,19 @@ trim_trace(const char *filename, struct trim_options *options)
 
         if (required->find(call->no) != required->end()) {
             writer.writeCall(call);
+
+            if (options->print_callset) {
+                if (call_range_first < 0) {
+                    call_range_first = call->no;
+                    printf ("%d", call_range_first);
+                } else if (call->no != call_range_last + 1) {
+                    if (call_range_last != call_range_first)
+                        printf ("-%d", call_range_last);
+                    call_range_first = call->no;
+                    printf (",%d", call_range_first);
+                }
+                call_range_last = call->no;
+            }
         }
 
         if (call->flags & trace::CALL_FLAG_END_FRAME) {
@@ -818,6 +846,11 @@ trim_trace(const char *filename, struct trim_options *options)
         }
 
         delete call;
+    }
+
+    if (options->print_callset) {
+        if (call_range_last != call_range_first)
+            printf ("-%d\n", call_range_last);
     }
 
     std::cout << "Trimmed trace is available as " << options->output << "\n";
@@ -836,6 +869,7 @@ command(int argc, char *argv[])
     options.prune_uninteresting = true;
     options.output = "";
     options.thread = -1;
+    options.print_callset = 0;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -870,6 +904,9 @@ command(int argc, char *argv[])
             break;
         case 'o':
             options.output = optarg;
+            break;
+        case PRINT_CALLSET_OPT:
+            options.print_callset = 1;
             break;
         default:
             std::cerr << "error: unexpected option `" << opt << "`\n";
