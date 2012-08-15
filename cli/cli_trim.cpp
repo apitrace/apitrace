@@ -55,11 +55,12 @@ usage(void)
         "\n"
         "    -h, --help               Show detailed help for trim options and exit\n"
         "        --calls=CALLSET      Include specified calls in the trimmed output.\n"
+        "        --frames=FRAMESET    Include specified frames in the trimmed output.\n"
         "        --deps               Include additional calls to satisfy dependencies\n"
         "        --no-deps            Do not include calls from dependency analysis\n"
         "        --prune              Omit uninteresting calls from the trace output\n"
         "        --no-prune           Do not prune uninteresting calls from the trace.\n"
-        "    -x, --exact              Include exactly the calls specified in --calls\n"
+        "    -x, --exact              Trim exactly to calls specified in --calls/--frames\n"
         "                             Equivalent to both --no-deps and --no-prune\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
@@ -76,6 +77,7 @@ help()
         "    -h, --help               Show this help message and exit\n"
         "\n"
         "        --calls=CALLSET      Include specified calls in the trimmed output.\n"
+        "        --frames=FRAMESET    Include specified frames in the trimmed output.\n"
         "                             Note that due to dependency analysis and pruning\n"
         "                             of uninteresting calls the resulting trace may\n"
         "                             include more and less calls than specified.\n"
@@ -84,24 +86,25 @@ help()
         "\n"
         "        --deps               Perform dependency analysis and include dependent\n"
         "                             calls as needed, (even if those calls were not\n"
-        "                             explicitly requested with --calls). This is the\n"
-        "                             default behavior. See --no-deps and --exact.\n"
+        "                             explicitly requested with --calls or --frames).\n"
+        "                             This is the default behavior. See --no-deps and\n"
+        "                             --exact to change the behavior.\n"
         "\n"
         "        --no-deps            Do not perform dependency analysis. In this mode\n"
         "                             the trimmed trace will never include calls from\n"
-        "                             outside the range specified in --calls.\n"
+        "                             outside what is specified in --calls or --frames.\n"
         "\n"
-        "        --prune              Omit calls that have no side effects, even if the\n"
-        "                             call is within the range specified by --calls.\n"
-        "                             This is the default behavior. See --no-prune\n"
+        "        --prune              Omit calls with no side effects, even if the call\n"
+        "                             is within the range specified by --calls/--frames.\n"
+        "                             This is the default behavior. See --no-prune.\n"
         "\n"
         "        --no-prune           Do not prune uninteresting calls from the trace.\n"
         "                             In this mode the trimmed trace will never omit\n"
-        "                             any calls within the range specified in --calls.\n"
+        "                             any calls within the user-specified range.\n"
         "\n"
         "    -x, --exact              Trim the trace to exactly the calls specified in\n"
-        "                             --calls. This option is equivalent to passing\n"
-        "                             both --no-deps and --no-prune.\n"
+        "                             --calls and --frames. This option is equivalent\n"
+        "                             to passing both --no-deps and --no-prune.\n"
         "\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
         "\n"
@@ -112,6 +115,7 @@ help()
 
 enum {
     CALLS_OPT = CHAR_MAX + 1,
+    FRAMES_OPT,
     DEPS_OPT,
     NO_DEPS_OPT,
     PRUNE_OPT,
@@ -126,6 +130,7 @@ const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"calls", required_argument, 0, CALLS_OPT},
+    {"frames", required_argument, 0, FRAMES_OPT},
     {"deps", no_argument, 0, DEPS_OPT},
     {"no-deps", no_argument, 0, NO_DEPS_OPT},
     {"prune", no_argument, 0, PRUNE_OPT},
@@ -692,6 +697,9 @@ struct trim_options {
     /* Calls to be included in trace. */
     trace::CallSet calls;
 
+    /* Frames to be included in trace. */
+    trace::CallSet frames;
+
     /* Whether dependency analysis should be performed. */
     bool dependency_analysis;
 
@@ -712,6 +720,7 @@ trim_trace(const char *filename, struct trim_options *options)
     trace::Parser p;
     TraceAnalyzer analyzer;
     std::set<unsigned> *required;
+    unsigned frame;
 
     if (!p.open(filename)) {
         std::cerr << "error: failed to open " << filename << "\n";
@@ -722,32 +731,35 @@ trim_trace(const char *filename, struct trim_options *options)
     p.getBookmark(beginning);
 
     /* In pass 1, analyze which calls are needed. */
+    frame = 0;
     trace::Call *call;
     while ((call = p.parse_call())) {
 
-        /* There's no use doing any work past the last call requested
-         * by the user. */
-        if (call->no > options->calls.getLast()) {
+        /* There's no use doing any work past the last call or frame
+         * requested by the user. */
+        if (call->no > options->calls.getLast() ||
+            frame > options->frames.getLast()) {
+            
             delete call;
             break;
         }
 
         /* If requested, ignore all calls not belonging to the specified thread. */
         if (options->thread != -1 && call->thread_id != options->thread) {
-            delete call;
-            continue;
+            goto NEXT;
         }
 
         /* Also, prune if uninteresting (unless the user asked for no pruning. */
         if (options->prune_uninteresting && call->flags & trace::CALL_FLAG_UNINTERESTING) {
-            delete call;
-            continue;
+            goto NEXT;
         }
 
         /* If this call is included in the user-specified call set,
          * then require it (and all dependencies) in the trimmed
          * output. */
-        if (options->calls.contains(*call)) {
+        if (options->calls.contains(*call) ||
+            options->frames.contains(frame, call->flags)) {
+
             analyzer.require(call);
         }
 
@@ -758,6 +770,10 @@ trim_trace(const char *filename, struct trim_options *options)
         if (options->dependency_analysis) {
             analyzer.analyze(call);
         }
+
+    NEXT:
+        if (call->flags & trace::CALL_FLAG_END_FRAME)
+            frame++;
 
         delete call;
     }
@@ -782,16 +798,25 @@ trim_trace(const char *filename, struct trim_options *options)
     /* In pass 2, emit the calls that are required. */
     required = analyzer.get_required();
 
+    frame = 0;
     while ((call = p.parse_call())) {
 
-        /* There's no use doing any work past the last call requested
-         * by the user. */
-        if (call->no > options->calls.getLast())
+        /* There's no use doing any work past the last call or frame
+         * requested by the user. */
+        if (call->no > options->calls.getLast() ||
+            frame > options->frames.getLast()) {
+
             break;
+        }
 
         if (required->find(call->no) != required->end()) {
             writer.writeCall(call);
         }
+
+        if (call->flags & trace::CALL_FLAG_END_FRAME) {
+            frame++;
+        }
+
         delete call;
     }
 
@@ -805,7 +830,8 @@ command(int argc, char *argv[])
 {
     struct trim_options options;
 
-    options.calls = trace::CallSet(trace::FREQUENCY_ALL);
+    options.calls = trace::CallSet(trace::FREQUENCY_NONE);
+    options.frames = trace::CallSet(trace::FREQUENCY_NONE);
     options.dependency_analysis = true;
     options.prune_uninteresting = true;
     options.output = "";
@@ -819,6 +845,9 @@ command(int argc, char *argv[])
             return 0;
         case CALLS_OPT:
             options.calls = trace::CallSet(optarg);
+            break;
+        case FRAMES_OPT:
+            options.frames = trace::CallSet(optarg);
             break;
         case DEPS_OPT:
             options.dependency_analysis = true;
@@ -847,6 +876,12 @@ command(int argc, char *argv[])
             usage();
             return 1;
         }
+    }
+
+    /* If neither of --calls nor --frames was set, default to the
+     * entire set of calls. */
+    if (options.calls.empty() && options.frames.empty()) {
+        options.calls = trace::CallSet(trace::FREQUENCY_ALL);
     }
 
     if (optind >= argc) {
