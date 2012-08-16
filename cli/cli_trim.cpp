@@ -456,6 +456,20 @@ class TraceAnalyzer {
             unlinkAll(ss_target.str());
             link(ss_target.str(), ss_texture.str());
 
+            /* FIXME: This really shouldn't be necessary. The effect
+             * this provide() has is that all glBindTexture calls will
+             * be preserved in the output trace (never trimmed). Carl
+             * has a trace ("btr") where a glBindTexture call should
+             * not be necessary at all, (it's immediately followed
+             * with a glBindTexture to a different texture and no
+             * intervening texture-related calls), yet this 'provide'
+             * makes the difference between a trim_stress test failing
+             * and passing.
+             *
+             * More investigation is necessary, but for now, be
+             * conservative and don't trim. */
+            provide("state", call->no);
+
             return;
         }
 
