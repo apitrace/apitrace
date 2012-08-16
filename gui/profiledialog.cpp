@@ -22,7 +22,7 @@ ProfileDialog::~ProfileDialog()
 void ProfileDialog::tableDoubleClicked(const QModelIndex& index)
 {
     ProfileTableModel* model = (ProfileTableModel*)m_table->model();
-    const trace::Profile::Call* call = model->getJumpCall(index);
+    const trace::Profile::DrawCall* call = model->getJumpCall(index);
 
     if (call) {
         emit jumpToCall(call->no);

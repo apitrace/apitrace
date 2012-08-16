@@ -31,8 +31,6 @@ import sys
 def process(stream):
     times = {}
 
-    # frame_begin no gpu_start cpu_start
-    # frame_end no gpu_end gpu_dura cpu_end cpu_dura
     # call no gpu_start gpu_dura cpu_start cpu_dura pixels program name
 
     for line in stream:

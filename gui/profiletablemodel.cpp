@@ -1,7 +1,9 @@
 #include "profiletablemodel.h"
 
-typedef trace::Profile::Call Call;
 typedef trace::Profile::Frame Frame;
+typedef trace::Profile::Program Program;
+typedef trace::Profile::CpuCall CpuCall;
+typedef trace::Profile::DrawCall DrawCall;
 
 enum {
     COLUMN_PROGRAM,
@@ -38,8 +40,8 @@ ProfileTableModel::ProfileTableModel(QObject *parent)
 void ProfileTableModel::setProfile(trace::Profile* profile)
 {
     m_profile = profile;
-    m_timeMin = m_profile->frames.front().gpuStart;
-    m_timeMax = m_profile->frames.back().gpuStart + m_profile->frames.back().gpuDuration;
+    m_timeMin = m_profile->frames.front().cpuStart;
+    m_timeMax = m_profile->frames.back().cpuStart + m_profile->frames.back().cpuDuration;
     updateModel();
 }
 
@@ -59,8 +61,8 @@ void ProfileTableModel::setTimeSelection(int64_t start, int64_t end)
 void ProfileTableModel::updateModel()
 {
     if (m_timeMin == m_timeMax) {
-        m_timeMin = m_profile->frames.front().gpuStart;
-        m_timeMax = m_profile->frames.back().gpuStart + m_profile->frames.back().gpuDuration;
+        m_timeMin = m_profile->frames.front().cpuStart;
+        m_timeMax = m_profile->frames.back().cpuStart + m_profile->frames.back().cpuDuration;
     }
 
     for (QList<ProfileTableRow>::iterator itr = m_rowData.begin(); itr != m_rowData.end(); ++itr) {
@@ -75,39 +77,25 @@ void ProfileTableModel::updateModel()
         row.longestPixel = NULL;
     }
 
-    for (Frame::const_iterator itr = m_profile->frames.begin(); itr != m_profile->frames.end(); ++itr) {
-        const Frame& frame = *itr;
+    for (std::vector<Program>::const_iterator itr = m_profile->programs.begin(); itr != m_profile->programs.end(); ++itr) {
+        ProfileTableRow* row = getRow(itr - m_profile->programs.begin());
+        const Program& program = *itr;
 
-        if (frame.gpuStart > m_timeMax) {
-            break;
-        }
+        for (std::vector<DrawCall>::const_iterator jtr = program.drawCalls.begin(); jtr != program.drawCalls.end(); ++jtr) {
+            const DrawCall& call = *jtr;
 
-        if ((frame.gpuStart + frame.gpuDuration) < m_timeMin) {
-            continue;
-        }
-
-        for (Call::const_iterator jtr = frame.calls.begin(); jtr != frame.calls.end(); ++jtr) {
-            const Call& call = *jtr;
-
-            if (call.gpuStart > m_timeMax) {
+            if (call.cpuStart > m_timeMax) {
                 break;
             }
 
-            if ((call.gpuStart + call.gpuDuration) < m_timeMin) {
+            if (call.cpuStart + call.cpuDuration < m_timeMin) {
                 continue;
             }
 
-            ProfileTableRow* row = getRow(call.program);
-            if (!row) {
-                m_rowData.append(ProfileTableRow());
-                row = &m_rowData.back();
-            }
-
             row->uses++;
-            row->program  = call.program;
+            row->pixels  += call.pixels;
             row->gpuTime += call.gpuDuration;
             row->cpuTime += call.cpuDuration;
-            row->pixels  += call.pixels;
 
             if (!row->longestGpu || row->longestGpu->gpuDuration < call.gpuDuration) {
                 row->longestGpu = &call;
@@ -128,7 +116,7 @@ void ProfileTableModel::updateModel()
 /**
  * Get the appropriate call associated with an item in the table
  */
-const Call* ProfileTableModel::getJumpCall(const QModelIndex & index) const {
+const DrawCall* ProfileTableModel::getJumpCall(const QModelIndex & index) const {
     const ProfileTableRow& row = m_rowData[index.row()];
 
     switch(index.column()) {
@@ -153,7 +141,8 @@ ProfileTableRow* ProfileTableModel::getRow(unsigned program) {
             return &*itr;
     }
 
-    return NULL;
+    m_rowData.append(ProfileTableRow(program));
+    return &m_rowData.back();
 }
 
 

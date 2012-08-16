@@ -34,34 +34,51 @@ namespace trace
 {
 
 struct Profile {
-    struct Call {
+    struct CpuCall {
         unsigned no;
-        int64_t gpuStart;
-        int64_t gpuDuration;
+
         int64_t cpuStart;
         int64_t cpuDuration;
-        int64_t pixels;
-        unsigned program;
-        std::string name;
 
-        typedef std::vector<Call>::iterator iterator;
-        typedef std::vector<Call>::const_iterator const_iterator;
+        std::string name;
+    };
+
+    struct DrawCall {
+        unsigned no;
+
+        int64_t gpuStart;
+        int64_t gpuDuration;
+
+        int64_t cpuStart;
+        int64_t cpuDuration;
+
+        int64_t pixels;
+
+        std::string name;
     };
 
     struct Frame {
         unsigned no;
+
         int64_t gpuStart;
         int64_t gpuDuration;
+
         int64_t cpuStart;
         int64_t cpuDuration;
+    };
 
-        std::vector<Call> calls;
+    struct Program {
+        Program() : gpuTotal(0), cpuTotal(0), pixelTotal(0) {}
 
-        typedef std::vector<Frame>::iterator iterator;
-        typedef std::vector<Frame>::const_iterator const_iterator;
+        uint64_t gpuTotal;
+        uint64_t cpuTotal;
+        uint64_t pixelTotal;
+        std::vector<DrawCall> drawCalls;
     };
 
     std::vector<Frame> frames;
+    std::vector<Program> programs;
+    std::vector<CpuCall> cpuCalls;
 };
 
 class Profiler
@@ -71,11 +88,6 @@ public:
     ~Profiler();
 
     void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_);
-    void setBaseTimes(int64_t gpuStart, int64_t cpuStart);
-    bool hasBaseTimes();
-
-    void addFrameStart(unsigned no, int64_t gpuStart, int64_t cpuStart);
-    void addFrameEnd(int64_t gpuEnd, int64_t cpuEnd);
 
     void addCall(unsigned no,
                  const char* name,
@@ -84,21 +96,26 @@ public:
                  int64_t gpuStart, int64_t gpuDuration,
                  int64_t cpuStart, int64_t cpuDuration);
 
+    void addFrameEnd();
+
+    bool hasBaseTimes();
+
+    void setBaseCpuTime(int64_t cpuStart);
+    void setBaseGpuTime(int64_t gpuStart);
+
+    int64_t getBaseCpuTime();
+    int64_t getBaseGpuTime();
+
     static void parseLine(const char* line, Profile* profile);
 
 private:
     int64_t baseGpuTime;
     int64_t baseCpuTime;
+    int64_t minCpuTime;
 
     bool cpuTimes;
     bool gpuTimes;
     bool pixelsDrawn;
-
-    struct {
-        unsigned no;
-        int64_t gpuStart;
-        int64_t cpuStart;
-    } lastFrame;
 };
 }
 

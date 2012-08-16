@@ -82,7 +82,6 @@ extern const retrace::Entry glx_callbacks[];
 extern const retrace::Entry wgl_callbacks[];
 extern const retrace::Entry egl_callbacks[];
 
-void frame_start();
 void frame_complete(trace::Call &call);
 void initContext();
 

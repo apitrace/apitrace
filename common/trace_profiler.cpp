@@ -24,16 +24,16 @@
  **************************************************************************/
 
 #include "trace_profiler.hpp"
+#include "os_time.hpp"
 #include <iostream>
 #include <string.h>
-#include <assert.h>
 #include <sstream>
-#include "os_time.hpp"
 
 namespace trace {
 Profiler::Profiler()
     : baseGpuTime(0),
       baseCpuTime(0),
+      minCpuTime(1000),
       cpuTimes(false),
       gpuTimes(true),
       pixelsDrawn(false)
@@ -50,14 +50,26 @@ void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_)
     gpuTimes = gpuTimes_;
     pixelsDrawn = pixelsDrawn_;
 
-    std::cout << "# frame_begin no gpu_start cpu_start" << std::endl;
-    std::cout << "# frame_end no gpu_end gpu_dura cpu_end cpu_dura" << std::endl;
     std::cout << "# call no gpu_start gpu_dura cpu_start cpu_dura pixels program name" << std::endl;
 }
 
-void Profiler::setBaseTimes(int64_t gpuStart, int64_t cpuStart)
+int64_t Profiler::getBaseCpuTime()
+{
+    return baseCpuTime;
+}
+
+int64_t Profiler::getBaseGpuTime()
+{
+    return baseGpuTime;
+}
+
+void Profiler::setBaseCpuTime(int64_t cpuStart)
 {
     baseCpuTime = cpuStart;
+}
+
+void Profiler::setBaseGpuTime(int64_t gpuStart)
+{
     baseGpuTime = gpuStart;
 }
 
@@ -84,6 +96,10 @@ void Profiler::addCall(unsigned no,
         double cpuTimeScale = 1.0E9 / os::timeFrequency;
         cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
         cpuDuration = cpuDuration * cpuTimeScale;
+
+        if (cpuDuration < minCpuTime) {
+            return;
+        }
     } else {
         cpuStart = 0;
         cpuDuration = 0;
@@ -105,108 +121,81 @@ void Profiler::addCall(unsigned no,
               << std::endl;
 }
 
-void Profiler::addFrameStart(unsigned no, int64_t gpuStart, int64_t cpuStart)
+void Profiler::addFrameEnd()
 {
-    lastFrame.no = no;
-    lastFrame.gpuStart = gpuStart;
-    lastFrame.cpuStart = cpuStart;
-
-    if (gpuTimes) {
-        gpuStart = gpuStart - baseGpuTime;
-    } else {
-        gpuStart = 0;
-    }
-
-    if (cpuTimes) {
-        double cpuTimeScale = 1.0E9 / os::timeFrequency;
-        cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
-    } else {
-        cpuStart = 0;
-    }
-
-    std::cout << "frame_begin"
-              << " " << no
-              << " " << gpuStart
-              << " " << cpuStart
-              << std::endl;
-}
-
-void Profiler::addFrameEnd(int64_t gpuEnd, int64_t cpuEnd)
-{
-    int64_t gpuDuration, cpuDuration;
-
-    if (gpuTimes) {
-        gpuDuration = gpuEnd - lastFrame.gpuStart;
-        gpuEnd = gpuEnd - baseGpuTime;
-    } else {
-        gpuEnd = 0;
-        gpuDuration = 0;
-    }
-
-    if (cpuTimes) {
-        double cpuTimeScale = 1.0E9 / os::timeFrequency;
-        cpuDuration = (cpuEnd - lastFrame.cpuStart) * cpuTimeScale;
-        cpuEnd = (cpuEnd - baseCpuTime) * cpuTimeScale;
-    } else {
-        cpuEnd = 0;
-        cpuDuration = 0;
-    }
-
-    std::cout << "frame_end"
-              << " " << lastFrame.no
-              << " " << gpuEnd
-              << " " << gpuDuration
-              << " " << cpuEnd
-              << " " << cpuDuration
-              << std::endl;
+    std::cout << "frame_end" << std::endl;
 }
 
 void Profiler::parseLine(const char* in, Profile* profile)
 {
     std::stringstream line(in, std::ios_base::in);
     std::string type;
+    static int64_t lastGpuTime;
+    static int64_t lastCpuTime;
 
-    if (in[0] == '#' || strlen(in) < 12)
+    if (in[0] == '#' || strlen(in) < 4)
         return;
+
+    if (profile->programs.size() == 0 && profile->cpuCalls.size() == 0 && profile->frames.size() == 0) {
+        lastGpuTime = 0;
+        lastCpuTime = 0;
+    }
 
     line >> type;
 
     if (type.compare("call") == 0) {
-        assert(profile->frames.size());
-        Profile::Call call;
+        Profile::DrawCall draw;
+        unsigned program;
 
-        line >> call.no
-             >> call.gpuStart
-             >> call.gpuDuration
-             >> call.cpuStart
-             >> call.cpuDuration
-             >> call.pixels
-             >> call.program
-             >> call.name;
+        line >> draw.no
+             >> draw.gpuStart
+             >> draw.gpuDuration
+             >> draw.cpuStart
+             >> draw.cpuDuration
+             >> draw.pixels
+             >> program
+             >> draw.name;
 
-        if (call.pixels >= 0) {
-            profile->frames.back().calls.push_back(call);
+        if (lastGpuTime < draw.gpuStart + draw.gpuDuration) {
+            lastGpuTime = draw.gpuStart + draw.gpuDuration;
         }
-    } else if (type.compare("frame_begin") == 0) {
-        Profile::Frame frame;
-        frame.gpuDuration = 0;
-        frame.cpuDuration = 0;
 
-        line >> frame.no
-             >> frame.gpuStart
-             >> frame.cpuStart;
+        if (lastCpuTime < draw.cpuStart + draw.cpuDuration) {
+            lastCpuTime = draw.cpuStart + draw.cpuDuration;
+        }
 
-        profile->frames.push_back(frame);
+        if (draw.pixels >= 0) {
+            if (profile->programs.size() <= program) {
+                profile->programs.resize(program + 1);
+            }
+
+            profile->programs[program].cpuTotal += draw.cpuDuration;
+            profile->programs[program].gpuTotal += draw.gpuDuration;
+            profile->programs[program].pixelTotal += draw.pixels;
+            profile->programs[program].drawCalls.push_back(draw);
+        }
+
+        Profile::CpuCall call;
+        call.no          = draw.no;
+        call.name        = draw.name;
+        call.cpuStart    = draw.cpuStart;
+        call.cpuDuration = draw.cpuDuration;
+        profile->cpuCalls.push_back(call);
     } else if (type.compare("frame_end") == 0) {
-        assert(profile->frames.size());
-        Profile::Frame& frame = profile->frames.back();
-        int64_t skipi64;
+        Profile::Frame frame;
+        frame.no = profile->frames.size();
 
-        line >> frame.no
-             >> skipi64
-             >> frame.gpuDuration
-             >> skipi64
-             >> frame.cpuDuration;
+        if (frame.no == 0) {
+            frame.gpuStart = 0;
+            frame.cpuStart = 0;
+        } else {
+            frame.gpuStart = profile->frames.back().gpuStart + profile->frames.back().gpuDuration;
+            frame.cpuStart = profile->frames.back().cpuStart + profile->frames.back().cpuDuration;
+        }
+
+        frame.gpuDuration = lastGpuTime - frame.gpuStart;
+        frame.cpuDuration = lastCpuTime - frame.cpuStart;
+        profile->frames.push_back(frame);
     }
 }
 }

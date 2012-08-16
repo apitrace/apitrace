@@ -47,6 +47,7 @@ struct CallQuery
 {
     GLuint ids[3];
     unsigned call;
+    bool isDraw;
     GLuint program;
     const trace::FunctionSig *sig;
     int64_t cpuStart;
@@ -58,7 +59,6 @@ static bool supportsTimestamp = true;
 static bool supportsOcclusion = true;
 static bool supportsDebugOutput = true;
 
-static bool firstFrame = true;
 static std::list<CallQuery> callQueries;
 
 static void APIENTRY
@@ -109,55 +109,58 @@ checkGlError(trace::Call &call) {
     os << "\n";
 }
 
-static inline GLint64
-getGpuTimestamp() {
-    GLuint query = 0;
-    GLint64 timestamp = 0;
+static void
+getCurrentTimes(int64_t& cpuTime, int64_t& gpuTime) {
+    GLuint query;
 
     if (retrace::profilingGpuTimes && supportsTimestamp) {
         glGenQueries(1, &query);
         glQueryCounter(query, GL_TIMESTAMP);
-        glGetQueryObjecti64vEXT(query, GL_QUERY_RESULT, &timestamp);
-        glDeleteQueries(1, &query);
+        glGetQueryObjecti64vEXT(query, GL_QUERY_RESULT, &gpuTime);
+    } else {
+        gpuTime = 0;
     }
 
-    return timestamp;
-}
-
-static inline GLint64
-getCpuTimestamp() {
     if (retrace::profilingCpuTimes) {
-        return os::getTime();
+        cpuTime = os::getTime();
     } else {
-        return 0;
+        cpuTime = 0;
+    }
+
+    if (retrace::profilingGpuTimes && supportsTimestamp) {
+        glDeleteQueries(1, &query);
     }
 }
 
 static void
 completeCallQuery(CallQuery& query) {
     /* Get call start and duration */
-    GLint64 gpuStart = 0, gpuDuration = 0, cpuDuration = 0, samples = 0;
+    int64_t gpuStart = 0, gpuDuration = 0, cpuDuration = 0, pixels = 0;
 
-    if (retrace::profilingGpuTimes) {
-        if (supportsTimestamp) {
-            glGetQueryObjecti64vEXT(query.ids[0], GL_QUERY_RESULT, &gpuStart);
+    if (query.isDraw) {
+        if (retrace::profilingGpuTimes) {
+            if (supportsTimestamp) {
+                glGetQueryObjecti64vEXT(query.ids[0], GL_QUERY_RESULT, &gpuStart);
+            }
+
+            glGetQueryObjecti64vEXT(query.ids[1], GL_QUERY_RESULT, &gpuDuration);
         }
 
-        glGetQueryObjecti64vEXT(query.ids[1], GL_QUERY_RESULT, &gpuDuration);
+        if (retrace::profilingPixelsDrawn) {
+            glGetQueryObjecti64vEXT(query.ids[2], GL_QUERY_RESULT, &pixels);
+        }
+
+        glDeleteQueries(3, query.ids);
+    } else {
+        pixels = -1;
     }
 
     if (retrace::profilingCpuTimes) {
         cpuDuration = query.cpuEnd - query.cpuStart;
     }
 
-    if (retrace::profilingPixelsDrawn) {
-        glGetQueryObjecti64vEXT(query.ids[2], GL_QUERY_RESULT, &samples);
-    }
-
-    glDeleteQueries(3, query.ids);
-
     /* Add call to profile */
-    retrace::profiler.addCall(query.call, query.sig->name, query.program, samples, gpuStart, gpuDuration, query.cpuStart, cpuDuration);
+    retrace::profiler.addCall(query.call, query.sig->name, query.program, pixels, gpuStart, gpuDuration, query.cpuStart, cpuDuration);
 }
 
 void
@@ -171,16 +174,14 @@ flushQueries() {
 
 void
 beginProfile(trace::Call &call, bool isDraw) {
-    if (firstFrame) {
-        frame_start();
-    }
-
     /* Create call query */
     CallQuery query;
+    query.isDraw = isDraw;
     query.call = call.no;
     query.sig = call.sig;
     query.program = glretrace::currentContext ? glretrace::currentContext->activeProgram : 0;
 
+    /* GPU profiling only for draw calls */
     if (isDraw) {
         glGenQueries(3, query.ids);
 
@@ -197,25 +198,25 @@ beginProfile(trace::Call &call, bool isDraw) {
         }
     }
 
-    if (retrace::profilingCpuTimes) {
-        query.cpuStart = getCpuTimestamp();
-    }
-
     callQueries.push_back(query);
+
+    /* CPU profiling for all calls */
+    if (retrace::profilingCpuTimes) {
+       callQueries.back().cpuStart = os::getTime();
+    }
 }
 
 void
 endProfile(trace::Call &call, bool isDraw) {
+    GLint64 time = os::getTime();
+
+    /* CPU profiling for all calls */
     if (retrace::profilingCpuTimes) {
         CallQuery& query = callQueries.back();
-        query.cpuEnd = getCpuTimestamp();
-
-        if (!isDraw) {
-            retrace::profiler.addCall(query.call, query.sig->name, query.program, -1, 0, 0, query.cpuStart, query.cpuEnd - query.cpuStart);
-            callQueries.pop_back();
-        }
+        query.cpuEnd = time;
     }
 
+    /* GPU profiling only for draw calls */
     if (isDraw) {
         if (retrace::profilingGpuTimes) {
             glEndQuery(GL_TIME_ELAPSED);
@@ -229,10 +230,7 @@ endProfile(trace::Call &call, bool isDraw) {
 
 void
 initContext() {
-    GLint64 gpuTime = 0, cpuTime = 0;
-    const char* extensions;
-
-    extensions = (const char*)glGetString(GL_EXTENSIONS);
+    const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
 
     /* Ensure we have adequate extension support */
     supportsTimestamp   = glws::checkExtension("GL_ARB_timer_query", extensions);
@@ -240,6 +238,7 @@ initContext() {
     supportsOcclusion   = glws::checkExtension("GL_ARB_occlusion_query", extensions);
     supportsDebugOutput = glws::checkExtension("GL_ARB_debug_output", extensions);
 
+    /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
         if (!supportsTimestamp && !supportsElapsed) {
             std::cout << "Error: Cannot run profile, GL_EXT_timer_query extension is not supported." << std::endl;
@@ -255,11 +254,13 @@ initContext() {
         }
     }
 
+    /* Check for occlusion query support */
     if (retrace::profilingPixelsDrawn && !supportsOcclusion) {
         std::cout << "Error: Cannot run profile, GL_ARB_occlusion_query extension is not supported." << std::endl;
         exit(-1);
     }
 
+    /* Setup debug message call back */
     if (retrace::debug && supportsDebugOutput) {
         glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
 
@@ -269,27 +270,14 @@ initContext() {
     }
 
     /* Sync the gpu and cpu start times */
-    if (!retrace::profiler.hasBaseTimes()) {
-        if (retrace::profilingGpuTimes) {
-            gpuTime = getGpuTimestamp();
+    if (retrace::profilingCpuTimes || retrace::profilingGpuTimes) {
+        if (!retrace::profiler.hasBaseTimes()) {
+            GLint64 gpuTime, cpuTime;
+
+            getCurrentTimes(cpuTime, gpuTime);
+            retrace::profiler.setBaseCpuTime(cpuTime);
+            retrace::profiler.setBaseGpuTime(gpuTime);
         }
-
-        if (retrace::profilingCpuTimes) {
-            cpuTime = getCpuTimestamp();
-        }
-
-        retrace::profiler.setBaseTimes(gpuTime, cpuTime);
-    }
-}
-
-void
-frame_start() {
-    firstFrame = false;
-
-    if (retrace::profiling) {
-        int64_t gpuStart = getGpuTimestamp();
-        int64_t cpuStart = getCpuTimestamp();
-        retrace::profiler.addFrameStart(retrace::frameNo, gpuStart, cpuStart);
     }
 }
 
@@ -299,16 +287,28 @@ frame_complete(trace::Call &call) {
         /* Complete any remaining queries */
         flushQueries();
 
+        /* GPU time drifts due to being relative times, not absolute and can be
+         * affected by the gpu switch between processes.
+         *
+         * To attempt to compensate we resynchronise on frame end however there is
+         * still noticeable drift within a single frame which we do not account for.
+         */
+        if (retrace::profilingCpuTimes || retrace::profilingGpuTimes) {
+            int64_t cpuTime, gpuTime, error;
+
+            getCurrentTimes(cpuTime, gpuTime);
+            cpuTime = cpuTime - retrace::profiler.getBaseCpuTime();
+            gpuTime = gpuTime - retrace::profiler.getBaseGpuTime();
+            error   = gpuTime - cpuTime;
+
+            retrace::profiler.setBaseGpuTime(retrace::profiler.getBaseGpuTime() + error);
+        }
+
         /* Indicate end of current frame */
-        int64_t gpuEnd = getGpuTimestamp();
-        int64_t cpuEnd = getCpuTimestamp();
-        retrace::profiler.addFrameEnd(gpuEnd, cpuEnd);
+        retrace::profiler.addFrameEnd();
     }
 
     retrace::frameComplete(call);
-
-    /* Indicate start of next frame */
-    frame_start();
 
     if (!currentDrawable) {
         return;

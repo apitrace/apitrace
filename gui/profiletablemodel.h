@@ -6,8 +6,8 @@
 
 struct ProfileTableRow
 {
-    ProfileTableRow()
-        : program(0),
+    ProfileTableRow(unsigned no)
+        : program(no),
           uses(0),
           gpuTime(0),
           cpuTime(0),
@@ -24,9 +24,9 @@ struct ProfileTableRow
     qulonglong cpuTime;
     qulonglong pixels;
 
-    const trace::Profile::Call* longestGpu;
-    const trace::Profile::Call* longestCpu;
-    const trace::Profile::Call* longestPixel;
+    const trace::Profile::DrawCall* longestGpu;
+    const trace::Profile::DrawCall* longestCpu;
+    const trace::Profile::DrawCall* longestPixel;
 };
 
 class ProfileTableModel : public QAbstractTableModel
@@ -39,7 +39,7 @@ public:
     void setProfile(trace::Profile* profile);
     void setTimeSelection(int64_t start, int64_t end);
 
-    const trace::Profile::Call* getJumpCall(const QModelIndex & index) const;
+    const trace::Profile::DrawCall* getJumpCall(const QModelIndex & index) const;
 
     virtual int rowCount(const QModelIndex & parent) const;
     virtual int columnCount(const QModelIndex & parent) const;

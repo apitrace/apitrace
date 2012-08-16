@@ -9,8 +9,10 @@
 #include <QWheelEvent>
 #include <QApplication>
 
-typedef trace::Profile::Call Call;
 typedef trace::Profile::Frame Frame;
+typedef trace::Profile::Program Program;
+typedef trace::Profile::CpuCall CpuCall;
+typedef trace::Profile::DrawCall DrawCall;
 
 TimelineWidget::TimelineWidget(QWidget *parent)
     : QWidget(parent),
@@ -19,16 +21,18 @@ TimelineWidget::TimelineWidget(QWidget *parent)
       m_timeSelectionEnd(0),
       m_rowHeight(20),
       m_axisWidth(50),
-      m_axisHeight(20),
+      m_axisHeight(30),
+      m_axisLine(QColor(240, 240, 240)),
       m_axisBorder(Qt::black),
-      m_axisBackground(Qt::lightGray),
+      m_axisForeground(Qt::black),
+      m_axisBackground(QColor(210, 210, 210)),
       m_itemBorder(Qt::red),
       m_itemForeground(Qt::cyan),
       m_itemBackground(Qt::red),
-      m_selectionBorder(QColor(50, 50, 255)),
-      m_selectionBackground(QColor(245, 245, 255)),
-      m_zoomBorder(Qt::green),
-      m_zoomBackground(QColor(100, 255, 100, 80))
+      m_selectionBorder(Qt::green),
+      m_selectionBackground(QColor(100, 255, 100, 8)),
+      m_zoomBorder(QColor(255, 0, 255)),
+      m_zoomBackground(QColor(255, 0, 255, 30))
 {
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);
@@ -111,18 +115,102 @@ int64_t TimelineWidget::positionToTime(int pos)
 
 
 /**
- * Return the item at position
+ * Binary Search for a time in start+durations
  */
-const VisibleItem* TimelineWidget::itemAtPosition(const QPoint& pos)
+template<typename val_ty, int64_t val_ty::* mem_ptr_start, int64_t val_ty::* mem_ptr_dura>
+typename std::vector<val_ty>::const_iterator binarySearchTimespan(
+        typename std::vector<val_ty>::const_iterator begin,
+        typename std::vector<val_ty>::const_iterator end,
+        int64_t time)
 {
-    foreach (const VisibleItem& item, m_visibleItems) {
-        if (pos.x() < item.rect.left() || pos.y() < item.rect.top())
-            continue;
+    int lower = 0;
+    int upper = end - begin;
+    int pos = (lower + upper) / 2;
+    typename std::vector<val_ty>::const_iterator itr = begin + pos;
 
-        if (pos.x() > item.rect.right() || pos.y() > item.rect.bottom())
-            continue;
+    while (!((*itr).*mem_ptr_start <= time && (*itr).*mem_ptr_start + (*itr).*mem_ptr_dura > time) && (lower <= upper)) {
+        if ((*itr).*mem_ptr_start > time) {
+            upper = pos - 1;
+        } else {
+            lower = pos + 1;
+        }
 
-        return &item;
+        pos = (lower + upper) / 2;
+        itr = begin + pos;
+    }
+
+    if (lower <= upper)
+        return itr;
+    else
+        return end;
+}
+
+
+/**
+ * Find the frame at time
+ */
+const Frame* TimelineWidget::frameAtTime(int64_t time) {
+    if (!m_profile) {
+        return NULL;
+    }
+
+    std::vector<Frame>::const_iterator res
+            = binarySearchTimespan<Frame, &Frame::cpuStart, &Frame::cpuDuration>(
+                m_profile->frames.begin(),
+                m_profile->frames.end(),
+                time);
+
+    if (res != m_profile->frames.end()) {
+        const Frame& frame = *res;
+        return &frame;
+    }
+
+    return NULL;
+}
+
+
+/**
+ * Find the CPU call at time
+ */
+const CpuCall* TimelineWidget::cpuCallAtTime(int64_t time) {
+    if (!m_profile) {
+        return NULL;
+    }
+
+    std::vector<CpuCall>::const_iterator res
+            = binarySearchTimespan<CpuCall, &CpuCall::cpuStart, &CpuCall::cpuDuration>(
+                m_profile->cpuCalls.begin(),
+                m_profile->cpuCalls.end(),
+                time);
+
+    if (res != m_profile->cpuCalls.end()) {
+        const CpuCall& call = *res;
+        return &call;
+    }
+
+    return NULL;
+}
+
+
+/**
+ * Find the draw call at time
+ */
+const DrawCall* TimelineWidget::drawCallAtTime(int program, int64_t time) {
+    if (!m_profile) {
+        return NULL;
+    }
+
+    std::vector<DrawCall>& drawCalls = m_profile->programs[program].drawCalls;
+
+    std::vector<DrawCall>::const_iterator res
+            = binarySearchTimespan<DrawCall, &DrawCall::gpuStart, &DrawCall::gpuDuration>(
+                drawCalls.begin(),
+                drawCalls.end(),
+                time);
+
+    if (res != drawCalls.end()) {
+        const DrawCall& call = *res;
+        return &call;
     }
 
     return NULL;
@@ -134,41 +222,30 @@ const VisibleItem* TimelineWidget::itemAtPosition(const QPoint& pos)
  */
 void TimelineWidget::calculateRows()
 {
-    typedef QPair<uint64_t, unsigned> HeatProgram;
-    QList<HeatProgram> heats;
-    int idx;
+    typedef QPair<uint64_t, unsigned> Pair;
+    std::vector<Pair> gpu;
 
-    m_programRowMap.clear();
-    m_rowCount = 0;
+    /* Map shader to visible row */
+    for (std::vector<Program>::const_iterator itr = m_profile->programs.begin(); itr != m_profile->programs.end(); ++itr) {
+        const Program& program = *itr;
+        unsigned no = itr -  m_profile->programs.begin();
 
-    for (Frame::const_iterator itr = m_profile->frames.begin(); itr != m_profile->frames.end(); ++itr) {
-        const Frame& frame = *itr;
-
-        for (Call::const_iterator jtr = frame.calls.begin(); jtr != frame.calls.end(); ++jtr) {
-            const Call& call = *jtr;
-
-            while (call.program >= heats.size()) {
-                heats.append(HeatProgram(0, heats.size()));
-                m_programRowMap.append(m_programRowMap.size());
-            }
-
-            heats[call.program].first += call.gpuDuration;
+        if (program.gpuTotal > 0) {
+            gpu.push_back(Pair(program.gpuTotal, no));
         }
     }
 
-    qSort(heats);
-    idx = heats.size() - 1;
+    /* Sort the shaders by most used gpu */
+    qSort(gpu);
 
-    for (QList<HeatProgram>::iterator itr = heats.begin(); itr != heats.end(); ++itr, --idx) {
-        HeatProgram& pair = *itr;
+    /* Create row order */
+    m_rowPrograms.clear();
 
-        if (pair.first == 0) {
-            m_programRowMap[pair.second] = -1;
-        } else {
-            m_programRowMap[pair.second] = idx;
-            m_rowCount++;
-        }
+    for (std::vector<Pair>::const_reverse_iterator itr = gpu.rbegin(); itr != gpu.rend(); ++itr) {
+        m_rowPrograms.push_back(itr->second);
     }
+
+    m_rowCount = m_rowPrograms.size();
 }
 
 
@@ -183,8 +260,8 @@ void TimelineWidget::setProfile(trace::Profile* profile)
     m_profile = profile;
     calculateRows();
 
-    m_timeMin = m_profile->frames.front().gpuStart;
-    m_timeMax = m_profile->frames.back().gpuStart + m_profile->frames.back().gpuDuration;
+    m_timeMin = m_profile->frames.front().cpuStart;
+    m_timeMax = m_profile->frames.back().cpuStart + m_profile->frames.back().cpuDuration;
 
     m_time = m_timeMin;
     m_timeWidth = m_timeMax - m_timeMin;
@@ -253,8 +330,8 @@ void TimelineWidget::setRowScroll(int position, bool notify)
 void TimelineWidget::resizeEvent(QResizeEvent *e)
 {
     /* Update viewport size */
-    m_viewWidth = width() - m_axisWidth;
-    m_viewHeight = height() - m_axisHeight;
+    m_viewWidth = qMax(0, width() - m_axisWidth);
+    m_viewHeight = qMax(0, height() - m_axisHeight - m_rowHeight);
 
     /* Update vertical scroll bar */
     if (m_profile) {
@@ -267,33 +344,56 @@ void TimelineWidget::resizeEvent(QResizeEvent *e)
 
 void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
 {
+    bool tooltip = false;
+    m_mousePosition = e->pos();
+
     if (!m_profile) {
         return;
     }
 
     /* Display tooltip if necessary */
     if (e->buttons() == Qt::NoButton) {
-        const VisibleItem* item = itemAtPosition(e->pos());
+        if (m_mousePosition.x() > m_axisWidth && m_mousePosition.y() > m_axisHeight) {
+            int64_t time = positionToTime(m_mousePosition.x() - m_axisWidth);
+            int y = m_mousePosition.y() - m_axisHeight;
 
-        if (item) {
-            const trace::Profile::Call* call = item->call;
+            if (y < m_rowHeight) {
+                const CpuCall* call = cpuCallAtTime(time);
 
-            QString text;
-            text  = QString::fromStdString(call->name);
-            text += QString("\nCall: %1").arg(call->no);
-            text += QString("\nGPU Time: %1").arg(call->gpuDuration);
-            text += QString("\nCPU Time: %1").arg(call->cpuDuration);
-            text += QString("\nPixels Drawn: %1").arg(call->pixels);
+                if (call) {
+                    QString text;
+                    text  = QString::fromStdString(call->name);
+                    text += QString("\nCall: %1").arg(call->no);
+                    text += QString("\nCPU Start: %1").arg(call->cpuStart);
+                    text += QString("\nCPU Duration: %1").arg(call->cpuDuration);
 
-            QToolTip::showText(e->globalPos(), text);
+                    QToolTip::showText(e->globalPos(), text);
+                    tooltip = true;
+                }
+            } else {
+                int row = (y - m_rowHeight + m_scrollY) / m_rowHeight;
+
+                if (row < m_rowPrograms.size()) {
+                    int program = m_rowPrograms[row];
+                    const DrawCall* call = drawCallAtTime(program, time);
+
+                    if (call) {
+                        QString text;
+                        text  = QString::fromStdString(call->name);
+                        text += QString("\nCall: %1").arg(call->no);
+                        text += QString("\nGPU Start: %1").arg(call->gpuStart);
+                        text += QString("\nCPU Start: %1").arg(call->cpuStart);
+                        text += QString("\nGPU Duration: %1").arg(call->gpuDuration);
+                        text += QString("\nCPU Duration: %1").arg(call->cpuDuration);
+                        text += QString("\nPixels Drawn: %1").arg(call->pixels);
+
+                        QToolTip::showText(e->globalPos(), text);
+                        tooltip = true;
+                    }
+                }
+            }
         }
-    }
-
-    m_mousePosition = e->pos();
-
-    if (e->buttons().testFlag(Qt::LeftButton)) {
-        QToolTip::hideText();
-
+    } else if (e->buttons().testFlag(Qt::LeftButton)) {
         if (m_mousePressMode == DragView) {
             /* Horizontal scroll */
             double dt = m_timeWidth;
@@ -305,13 +405,18 @@ void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
             int dy = m_mousePressPosition.y() - e->pos().y();
             setRowScroll(m_mousePressRow + dy);
         } else if (m_mousePressMode == RulerSelect) {
+            /* Horizontal selection */
             int64_t down  = positionToTime(m_mousePressPosition.x() - m_axisWidth);
-            int64_t up    = positionToTime(e->pos().x() - m_axisWidth);
+            int64_t up    = positionToTime(qMax(e->pos().x() - m_axisWidth, 0));
 
             setSelection(qMin(down, up), qMax(down, up));
         }
 
         update();
+    }
+
+    if (!tooltip) {
+        QToolTip::hideText();
     }
 }
 
@@ -319,7 +424,7 @@ void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
 void TimelineWidget::mousePressEvent(QMouseEvent *e)
 {
     if (e->buttons() & Qt::LeftButton) {
-        if (e->pos().y() < m_axisHeight) {
+        if (e->pos().y() < m_axisHeight && e->pos().x() >= m_axisWidth) {
             if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
                 m_mousePressMode = RulerZoom;
             } else {
@@ -350,7 +455,7 @@ void TimelineWidget::mouseReleaseEvent(QMouseEvent *e)
 
     /* Calculate new time view based on selected area */
     int64_t down  = positionToTime(m_mousePressPosition.x() - m_axisWidth);
-    int64_t up    = positionToTime(e->pos().x() - m_axisWidth);
+    int64_t up    = positionToTime(qMax(e->pos().x() - m_axisWidth, 0));
 
     int64_t left  = qMin(down, up);
     int64_t right = qMax(down, up);
@@ -371,26 +476,38 @@ void TimelineWidget::mouseDoubleClickEvent(QMouseEvent *e)
 {
     int64_t time = positionToTime(e->pos().x() - m_axisWidth);
 
-    if (e->pos().y() < m_axisHeight) {
-        int64_t time = positionToTime(e->pos().x() - m_axisWidth);
+    if (e->pos().x() > m_axisWidth) {
+        int row = (e->pos().y() - m_axisHeight) / m_rowHeight;
 
-        for (Frame::const_iterator itr = m_profile->frames.begin(); itr != m_profile->frames.end(); ++itr) {
-            const Frame& frame = *itr;
+        if (e->pos().y() < m_axisHeight) {
+            /* Horizontal axis */
+            const Frame* frame = frameAtTime(time);
 
-            if (frame.gpuStart + frame.gpuDuration < time)
-                continue;
+            if (frame) {
+                setSelection(frame->cpuStart, frame->cpuStart + frame->cpuDuration, true);
+                return;
+            }
+        } else if (row == 0) {
+            /* CPU Calls */
+            const CpuCall* call = cpuCallAtTime(time);
 
-            if (frame.gpuStart > time)
-                break;
+            if (call) {
+                emit jumpToCall(call->no);
+                return;
+            }
+        } else if (row > 0) {
+            /* Draw Calls */
+            int program = m_rowPrograms[row - 1 + m_row];
+            const DrawCall* call = drawCallAtTime(program, time);
 
-            setSelection(frame.gpuStart, frame.gpuStart + frame.gpuDuration, true);
-            return;
+            if (call) {
+                emit jumpToCall(call->no);
+                return;
+            }
         }
     }
 
-    if (const VisibleItem* item = itemAtPosition(e->pos())) {
-        emit jumpToCall(item->call->no);
-    } else if (time < m_timeSelectionStart || time > m_timeSelectionEnd) {
+    if (time < m_timeSelectionStart || time > m_timeSelectionEnd) {
         setSelection(0, 0, true);
     }
 }
@@ -404,6 +521,7 @@ void TimelineWidget::wheelEvent(QWheelEvent *e)
 
     int zoomPercent = 10;
 
+    /* If holding Ctrl key then zoom 2x faster */
     if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
         zoomPercent = 20;
     }
@@ -432,27 +550,25 @@ void TimelineWidget::wheelEvent(QWheelEvent *e)
 /**
  * Paints a single pixel column of the heat map
  */
-void TimelineWidget::paintHeatmapColumn(int x, QPainter& painter, QVector<uint64_t>& rows)
+void TimelineWidget::drawHeat(QPainter& painter, int x, int64_t heat, bool isCpu)
 {
+    if (heat == 0) {
+        return;
+    }
+
     double timePerPixel = m_timeWidth;
     timePerPixel /= m_viewWidth;
 
-    for(int i = 0, y = 0; i < rows.size(); ++i, y += m_rowHeight) {
-        if (rows[i] == 0)
-            continue;
+    double colour = heat / timePerPixel;
+    colour = qBound(0.0, colour * 255.0, 255.0);
 
-        if (y > m_viewHeight)
-            continue;
-
-        double heat = rows[i] / timePerPixel;
-        heat = qBound(0.0, heat, 1.0);
-        heat *= 255.0;
-
-        painter.setPen(QColor(255, 255 - heat, 255 - heat));
-        painter.drawLine(x, y, x, y + m_rowHeight);
-
-        rows[i] = 0;
+    if (isCpu) {
+        painter.setPen(QColor(255 - colour, 255 - colour, 255));
+    } else {
+        painter.setPen(QColor(255, 255 - colour, 255 - colour));
     }
+
+    painter.drawLine(x, 0, x, m_rowHeight - 1);
 }
 
 
@@ -464,230 +580,303 @@ void TimelineWidget::paintEvent(QPaintEvent *e)
     if (!m_profile)
         return;
 
-    QVector<uint64_t> heatMap(m_programRowMap.size(), 0);
     QPainter painter(this);
-    int64_t timeEnd;
-    int selectionRight;
-    int selectionLeft;
-    int rowEnd;
-    int lastX;
 
+    int rowEnd = qMin(m_row + (m_viewHeight / m_rowHeight) + 1, m_rowCount);
+    int64_t timeEnd = m_time + m_timeWidth;
+    int64_t heat = 0;
+    int lastX = 0;
+    int widgetHeight = height();
+    int widgetWidth = width();
 
-    /*
-     * Draw the active selection background
-     */
-    if (m_timeSelectionStart != m_timeSelectionEnd) {
-        selectionLeft  = timeToPosition(m_timeSelectionStart) + m_axisWidth;
-        selectionRight = (timeToPosition(m_timeSelectionEnd) + 0.5) + m_axisWidth;
+    /* Draw GPU rows */
+    painter.translate(m_axisWidth, m_axisHeight + m_rowHeight - (m_scrollY % m_rowHeight));
 
-        selectionLeft  = qBound(-1, selectionLeft, width() + 1);
-        selectionRight = qBound(-1, selectionRight, width() + 1);
+    for (int row = m_row; row < rowEnd; ++row) {
+        Program& program = m_profile->programs[m_rowPrograms[row]];
+        lastX = 0;
+        heat = 0;
 
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(m_selectionBackground);
-        painter.drawRect(selectionLeft, m_axisHeight, selectionRight - selectionLeft, m_viewHeight);
-    }
+        for (std::vector<DrawCall>::const_iterator itr = program.drawCalls.begin(); itr != program.drawCalls.end(); ++itr) {
+            const DrawCall& call = *itr;
+            int64_t gpuEnd = call.gpuStart + call.gpuDuration;
 
-
-    /*
-     * Draw profile heatmap
-     */
-    rowEnd = m_row + (m_viewHeight / m_rowHeight) + 1;
-    timeEnd = m_time + m_timeWidth;
-    m_visibleItems.clear();
-    lastX = 0;
-
-    painter.translate(m_axisWidth + 1, m_axisHeight + 1 - (m_scrollY % m_rowHeight));
-    painter.setBrush(m_itemBackground);
-    painter.setPen(m_itemBorder);
-
-    for (Frame::const_iterator itr = m_profile->frames.begin(); itr != m_profile->frames.end(); ++itr) {
-        const Frame& frame = *itr;
-
-        if (frame.gpuStart > timeEnd)
-            break;
-
-        if (frame.gpuStart + frame.gpuDuration < m_time)
-            continue;
-
-        for (Call::const_iterator jtr = frame.calls.begin(); jtr != frame.calls.end(); ++jtr) {
-            const Call& call = *jtr;
-            int row = m_programRowMap[call.program];
-
-            if (call.gpuStart + call.gpuDuration < m_time || call.gpuStart > timeEnd)
-                continue;
-
-            if (row < m_row || row > rowEnd)
-                continue;
-
-            double left = qMax(0.0, timeToPosition(call.gpuStart));
-            double right = timeToPosition(call.gpuStart + call.gpuDuration);
-
-            int leftX = left;
-            int rightX = right;
-
-            if (lastX != leftX) {
-                paintHeatmapColumn(lastX, painter, heatMap);
-                lastX = leftX;
+            if (call.gpuStart > timeEnd) {
+                break;
             }
 
-            row -= m_row;
+            if (gpuEnd < m_time) {
+                continue;
+            }
 
-            if (rightX <= lastX + 1) {
-                if (lastX == rightX) {
+            double left  = timeToPosition(call.gpuStart);
+            double right = timeToPosition(gpuEnd);
+
+            int leftX  = left;
+            int rightX = right;
+
+            /* Draw last heat if needed */
+            if (leftX != lastX) {
+                drawHeat(painter, lastX, heat, false);
+                lastX = leftX;
+                heat = 0;
+            }
+
+            if (rightX <= leftX + 1) {
+                if (rightX == lastX) {
                     /* Fully contained in this X */
-                    heatMap[row] += call.gpuDuration;
+                    heat += call.gpuDuration;
                 } else {
                     /* Split call time between the two pixels it occupies */
                     int64_t time = positionToTime(rightX);
 
-                    heatMap[row] += time - call.gpuStart;
-                    paintHeatmapColumn(lastX, painter, heatMap);
+                    heat += time - call.gpuStart;
+                    drawHeat(painter, lastX, heat, false);
 
-                    heatMap[row] += (call.gpuDuration + call.gpuStart) - time;
+                    heat = gpuEnd - time;
                     lastX = rightX;
                 }
             } else {
-                leftX = (left + 0.5);
-                rightX = (right + 0.5);
-
                 QRect rect;
-                rect.setLeft(leftX);
-                rect.setWidth(rightX - leftX);
-                rect.setTop(row * m_rowHeight);
+                rect.setLeft(left + 0.5);
+                rect.setWidth(right - left);
+                rect.setTop(0);
                 rect.setHeight(m_rowHeight);
 
-                VisibleItem vis;
-                vis.rect = painter.transform().mapRect(rect);
-                vis.frame = &frame;
-                vis.call = &call;
-                m_visibleItems.push_back(vis);
-
-                painter.drawRect(rect);
+                painter.fillRect(rect, m_itemBackground);
 
                 if (rect.width() > 6) {
-                    rect.adjust(1, 0, -1, 0);
+                    rect.adjust(1, 0, -1, -2);
                     painter.setPen(m_itemForeground);
-                    painter.drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, QString::fromStdString(call.name));
-                    painter.setPen(m_itemBorder);
+
+                    painter.drawText(rect,
+                                     Qt::AlignLeft | Qt::AlignVCenter,
+                                     painter.fontMetrics().elidedText(QString::fromStdString(call.name), Qt::ElideRight, rect.width()));
                 }
             }
         }
+
+        painter.translate(0, m_rowHeight);
     }
 
-    /* Paint the last column if needed */
-    paintHeatmapColumn(lastX, painter, heatMap);
-
-
-    /*
-     * Draw the axis border and background
-     */
+    /* Draw CPU row */
     painter.resetTransform();
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(m_axisBackground);
-    painter.drawRect(0, 0, m_viewWidth + m_axisWidth, m_axisHeight);
-    painter.drawRect(0, m_axisHeight, m_axisWidth, m_viewHeight);
+    painter.translate(m_axisWidth, m_axisHeight);
+    painter.fillRect(0, 0, m_viewWidth, m_rowHeight, Qt::white);
 
-    painter.setPen(m_axisBorder);
-    painter.drawLine(0, m_axisHeight, m_axisWidth + m_viewWidth, m_axisHeight);
-    painter.drawLine(m_axisWidth, 0, m_axisWidth, m_viewHeight + m_axisHeight);
+    for (std::vector<CpuCall>::const_iterator itr = m_profile->cpuCalls.begin(); itr != m_profile->cpuCalls.end(); ++itr) {
+        const CpuCall& call = *itr;
+        int64_t cpuEnd = call.cpuStart + call.cpuDuration;
 
-
-    /*
-     * Draw horizontal axis
-     */
-    for (Frame::const_iterator itr = m_profile->frames.begin(); itr != m_profile->frames.end(); ++itr) {
-        const Frame& frame = *itr;
-        int left, right, width;
-        bool drawText = true;
-        QString text;
-
-        if (frame.gpuStart > timeEnd)
-            break;
-
-        if (frame.gpuStart + frame.gpuDuration < m_time)
+        if (call.cpuStart > timeEnd) {
             continue;
+        }
 
-        left = timeToPosition(frame.gpuStart);
-        right = timeToPosition(frame.gpuStart + frame.gpuDuration) + 0.5;
+        if (cpuEnd < m_time) {
+            continue;
+        }
 
-        left = qBound(0, left, m_viewWidth) + m_axisWidth;
-        right = qBound(0, right, m_viewWidth) + m_axisWidth;
+        double left = timeToPosition(call.cpuStart);
+        double right = timeToPosition(cpuEnd);
 
-        width = right - left;
+        int leftX = left;
+        int rightX = right;
 
-        text = QString("Frame %1").arg(frame.no);
+        /* Draw last heat if needed */
+        if (leftX != lastX) {
+            drawHeat(painter, lastX, heat, true);
+            lastX = leftX;
+            heat = 0;
+        }
 
-        if (painter.fontMetrics().width(text) > width) {
-            text =  QString("%1").arg(frame.no);
+        if (rightX <= leftX + 1) {
+            if (rightX == lastX) {
+                /* Fully contained in this X */
+                heat += call.cpuDuration;
+            } else {
+                /* Split call time between the two pixels it occupies */
+                int64_t time = positionToTime(rightX);
 
-            if (painter.fontMetrics().width(text) > width) {
-                drawText = false;
+                heat += time - call.cpuStart;
+                drawHeat(painter, lastX, heat, true);
+
+                heat = cpuEnd - time;
+                lastX = rightX;
+            }
+        } else {
+            QRect rect;
+            rect.setLeft(left + 0.5);
+            rect.setWidth(right - left);
+            rect.setTop(0);
+            rect.setHeight(m_rowHeight);
+
+            painter.fillRect(rect, QColor(0, 0, 255));
+
+            if (rect.width() > 6) {
+                rect.adjust(1, 0, -1, -2);
+                painter.setPen(QColor(255, 255, 0));
+
+                painter.drawText(rect,
+                                 Qt::AlignLeft | Qt::AlignVCenter,
+                                 painter.fontMetrics().elidedText(QString::fromStdString(call.name), Qt::ElideRight, rect.width()));
             }
         }
-
-        if (drawText) {
-            painter.drawText(left, 0, width, m_axisHeight, Qt::AlignHCenter | Qt::AlignVCenter, text);
-        }
-
-        if (width > 5) {
-            painter.drawLine(left, 0, left, m_axisHeight);
-            painter.drawLine(right, 0, right, m_axisHeight);
-        }
     }
 
-
-    /*
-     * Draw vertical axis
-     */
-    painter.translate(0, -(m_scrollY % m_rowHeight));
-
-    for (int i = 0; i < m_programRowMap.size(); ++i) {
-        int y = (m_programRowMap[i] - m_row) * m_rowHeight;
-
-        if (m_programRowMap[i] < 0 || y < -m_rowHeight || y > m_viewHeight)
-            continue;
-
-        y += m_axisHeight + 1;
-        painter.drawText(0, y, m_axisWidth, m_rowHeight, Qt::AlignHCenter | Qt::AlignVCenter, QString("%1").arg(i));
-        painter.drawLine(0, y + m_rowHeight, m_axisWidth, y + m_rowHeight);
-    }
-
-    /* Draw the top left square again to cover up any hanging over text */
+    /* Draw axis */
     painter.resetTransform();
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(m_axisBackground);
-    painter.drawRect(0, 0, m_axisWidth, m_axisHeight);
+    painter.setPen(m_axisBorder);
 
+    /* Top Rect */
+    painter.fillRect(m_axisWidth - 1, 0, widgetWidth, m_axisHeight - 1, m_axisBackground);
+    painter.drawLine(0, m_axisHeight - 1, widgetWidth, m_axisHeight - 1);
 
-    /*
-     * Draw the active selection border
-     */
-    if (m_timeSelectionStart != m_timeSelectionEnd) {
-        painter.setPen(m_selectionBorder);
-        painter.drawLine(selectionLeft, 0, selectionLeft, m_viewHeight + m_axisHeight);
-        painter.drawLine(selectionRight, 0, selectionRight, m_viewHeight + m_axisHeight);
-        painter.drawLine(selectionLeft, m_axisHeight, selectionRight, m_axisHeight);
+    /* Left Rect */
+    painter.fillRect(0, m_axisHeight - 1, m_axisWidth - 1, widgetHeight, m_axisBackground);
+    painter.drawLine(m_axisWidth - 1, 0, m_axisWidth - 1, widgetHeight);
+
+    /* Draw the program numbers */
+    painter.translate(0, m_axisHeight + m_rowHeight);
+
+    for (int row = m_row; row < rowEnd; ++row) {
+        int y = (row - m_row) * m_rowHeight - (m_scrollY % m_rowHeight);
+
+        painter.setPen(m_axisForeground);
+        painter.drawText(0, y, m_axisWidth, m_rowHeight, Qt::AlignHCenter | Qt::AlignVCenter, QString("%1").arg(m_rowPrograms[row]));
+
+        painter.setPen(m_axisBorder);
+        painter.drawLine(0, y + m_rowHeight - 1, m_axisWidth - 1, y + m_rowHeight - 1);
+
+        painter.setPen(m_axisLine);
+        painter.drawLine(m_axisWidth, y + m_rowHeight - 1, widgetWidth, y + m_rowHeight - 1);
     }
 
+    /* Draw the "CPU" axis label */
+    painter.resetTransform();
+    painter.translate(0, m_axisHeight);
 
-    /*
-     * Draw the ruler zoom
-     */
+    painter.setPen(m_axisBorder);
+    painter.setBrush(m_axisBackground);
+    painter.drawRect(-1, -1, m_axisWidth, m_rowHeight);
+
+    painter.setPen(m_axisForeground);
+    painter.drawText(0, 0, m_axisWidth - 1, m_rowHeight - 1, Qt::AlignHCenter | Qt::AlignVCenter, "CPU");
+
+    painter.setPen(m_axisBorder);
+    painter.drawLine(m_axisWidth, m_rowHeight - 1, widgetWidth, m_rowHeight - 1);
+
+
+    /* Draw the frame numbers */
+    painter.resetTransform();
+
+    painter.setPen(m_axisForeground);
+    painter.translate(m_axisWidth, 0);
+
+    int lastLabel = -9999;
+
+    double scroll = m_time;
+    scroll /= m_timeWidth;
+    scroll *= m_viewWidth;
+
+    for (std::vector<Frame>::const_iterator itr = m_profile->frames.begin(); itr != m_profile->frames.end(); ++itr) {
+        static const int padding = 4;
+        const Frame& frame = *itr;
+        bool draw = true;
+        int width;
+
+        if (frame.cpuStart > timeEnd) {
+            break;
+        }
+
+        if (frame.cpuStart + frame.cpuDuration < m_time) {
+            draw = false;
+        }
+
+        double left = frame.cpuStart;
+        left /= m_timeWidth;
+        left *= m_viewWidth;
+
+        double right = frame.cpuStart + frame.cpuDuration;
+        right /= m_timeWidth;
+        right *= m_viewWidth;
+
+        QString text = QString("%1").arg(frame.no);
+
+        width = painter.fontMetrics().width(text) + padding * 2;
+
+        if (left + width > scroll)
+            draw = true;
+
+        /* Draw a frame number if we have space since the last one */
+        if (left - lastLabel > width) {
+            lastLabel = left + width;
+
+            if (draw) {
+                int textX;
+                painter.setPen(m_axisForeground);
+
+                if (left < scroll && right - left > width) {
+                    if (right - scroll > width) {
+                        textX = 0;
+                    } else {
+                        textX = right - scroll - width;
+                    }
+                } else {
+                    textX = left - scroll;
+                }
+
+                /* Draw frame number and major ruler marking */
+                painter.drawText(textX + padding, 0, width - padding, m_axisHeight - 5, Qt::AlignLeft | Qt::AlignVCenter, text);
+                painter.drawLine(left - scroll, m_axisHeight / 2, left - scroll, m_axisHeight - 1);
+            }
+        } else if (draw) {
+            /* Draw a minor ruler marking */
+            painter.drawLine(left - scroll, m_axisHeight - (m_axisHeight / 4), left - scroll, m_axisHeight - 1);
+        }
+    }
+
+    /* Draw "Frame" axis label */
+    painter.resetTransform();
+
+    painter.setPen(m_axisBorder);
+    painter.setBrush(m_axisBackground);
+    painter.drawRect(-1, -1, m_axisWidth, m_axisHeight);
+
+    painter.setPen(m_axisForeground);
+    painter.drawText(0, 0, m_axisWidth - 1, m_axisHeight - 1, Qt::AlignHCenter | Qt::AlignVCenter, "Frame");
+
+    /* Draw the active selection border */
+    if (m_timeSelectionStart != m_timeSelectionEnd) {
+        int selectionLeft  = timeToPosition(m_timeSelectionStart) + m_axisWidth;
+        int selectionRight = (timeToPosition(m_timeSelectionEnd) + 0.5) + m_axisWidth;
+
+        painter.setPen(m_selectionBorder);
+
+        if (selectionLeft >= m_axisWidth && selectionLeft < widgetWidth) {
+            painter.drawLine(selectionLeft, 0, selectionLeft, widgetHeight);
+        }
+
+        if (selectionRight >= m_axisWidth && selectionRight < widgetWidth) {
+            painter.drawLine(selectionRight, 0, selectionRight, widgetHeight);
+        }
+
+        selectionLeft = qBound(m_axisWidth, selectionLeft, widgetWidth);
+        selectionRight = qBound(m_axisWidth, selectionRight, widgetWidth);
+
+        painter.drawLine(selectionLeft, m_axisHeight - 1, selectionRight, m_axisHeight - 1);
+        painter.fillRect(selectionLeft, 0, selectionRight - selectionLeft, widgetHeight, m_selectionBackground);
+    }
+
+    /* Draw the ruler zoom */
     if (m_mousePressMode == RulerZoom) {
         int x1 = m_mousePressPosition.x();
-        int x2 = m_mousePosition.x();
-        int y1 = m_axisHeight;
-        int y2 = height();
+        int x2 = qMax(m_mousePosition.x(), m_axisWidth);
 
         painter.setPen(m_zoomBorder);
-        painter.drawLine(x1, 0, x1, y2);
-        painter.drawLine(x2, 0, x2, y2);
-        painter.drawLine(x1, y1, x2, y1);
-
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(m_zoomBackground);
-        painter.drawRect(x1, y1, x2 - x1, y2);
+        painter.drawLine(x1, 0, x1, widgetHeight);
+        painter.drawLine(x2, 0, x2, widgetHeight);
+        painter.drawLine(x1, m_axisHeight - 1, x2, m_axisHeight - 1);
+        painter.fillRect(x1, m_axisHeight, x2 - x1, widgetHeight, m_zoomBackground);
     }
 }
 
