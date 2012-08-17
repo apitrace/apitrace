@@ -173,6 +173,7 @@ class TraceAnalyzer {
     bool framebufferObjectActive;
     bool insideBeginEnd;
     GLuint activeProgram;
+    GLenum activeTextureUnit;
 
     /* Rendering often has no side effects, but it can in some cases,
      * (such as when transform feedback is active, or when rendering
@@ -302,6 +303,11 @@ class TraceAnalyzer {
             return;
         }
 
+        if (strcmp(name, "glActiveTexture") == 0) {
+            activeTextureUnit = static_cast<GLenum>(call->arg(0).toSInt());
+            return;
+        }
+
         if (strcmp(name, "glBindTexture") == 0) {
             GLenum target;
             GLuint texture;
@@ -404,7 +410,7 @@ class TraceAnalyzer {
             target = static_cast<GLenum>(call->arg(0).toSInt());
             texture = call->arg(1).toUInt();
 
-            ss_target << "texture-target-" << target;
+            ss_target << "texture-unit-" << activeTextureUnit << "-target-" << target;
             ss_texture << "texture-" << texture;
 
             resources.erase(ss_target.str());
@@ -432,7 +438,7 @@ class TraceAnalyzer {
 
             GLenum target = static_cast<GLenum>(call->arg(0).toSInt());
 
-            ss_target << "texture-target-" << target;
+            ss_target << "texture-unit-" << activeTextureUnit << "-target-" << target;
             ss_texture << "texture-" << texture_map[target];
 
             /* The texture resource depends on this call and any calls
@@ -459,7 +465,11 @@ class TraceAnalyzer {
                 cap == GL_TEXTURE_3D ||
                 cap == GL_TEXTURE_CUBE_MAP)
             {
-                linkf("render-state", "texture-target-", cap);
+                std::stringstream ss;
+
+                ss << "texture-unit-" << activeTextureUnit << "-target-" << cap;
+
+                link("render-state", ss.str());
             }
 
             provide("state", call->no);
@@ -476,7 +486,11 @@ class TraceAnalyzer {
                 cap == GL_TEXTURE_3D ||
                 cap == GL_TEXTURE_CUBE_MAP)
             {
-                unlinkf("render-state", "texture-target-", cap);
+                std::stringstream ss;
+
+                ss << "texture-unit-" << activeTextureUnit << "-target-" << cap;
+
+                unlink("render-state", ss.str());
             }
 
             provide("state", call->no);
@@ -667,7 +681,8 @@ class TraceAnalyzer {
 public:
     TraceAnalyzer(): transformFeedbackActive(false),
                      framebufferObjectActive(false),
-                     insideBeginEnd(false)
+                     insideBeginEnd(false),
+                     activeTextureUnit(GL_TEXTURE0)
     {}
 
     ~TraceAnalyzer() {}
