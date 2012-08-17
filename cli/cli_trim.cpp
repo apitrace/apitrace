@@ -401,6 +401,15 @@ class TraceAnalyzer {
          * lists. */
         if (insideNewEndList != 0) {
             provide("state", call->no);
+
+            /* Also, any texture bound inside a display list is
+             * conservatively considered required. */
+            if (strcmp(name, "glBindTexture") == 0) {
+                GLuint texture = call->arg(1).toUInt();
+
+                linkf("state", "texture-", texture);
+            }
+
             return;
         }
 
