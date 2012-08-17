@@ -387,6 +387,14 @@ command(int argc, char *argv[])
         return 1;
     }
 
+    if (options.dependency_analysis) {
+        std::cerr <<
+            "Note: The dependency analysis in \"apitrace trim\" is still experimental.\n"
+            "      We hope that it will be useful, but it may lead to incorrect results.\n"
+            "      If you find a trace that misbehaves while trimming, please share that\n"
+            "      by sending email to apitrace@lists.freedesktop.org, cworth@cworth.org\n";
+    }
+
     return trim_trace(argv[optind], &options);
 }
 
