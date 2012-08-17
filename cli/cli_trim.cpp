@@ -42,6 +42,7 @@
 #include "trace_parser.hpp"
 #include "trace_writer.hpp"
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define STRNCMP_LITERAL(var, literal) strncmp((var), (literal), sizeof (literal) -1)
 
 static const char *synopsis = "Create a new trace by trimming an existing trace.";
@@ -609,6 +610,41 @@ class TraceAnalyzer {
             strcmp(call->sig->arg_names[0], "location") == 0) {
 
             providef("program-", activeProgram, call->no);
+
+            /* We can't easily tell if this uniform is being used to
+             * associate a sampler in the shader with a texture
+             * unit. The conservative option is to assume that it is
+             * and create a link from the active program to any bound
+             * textures for the given unit number.
+             *
+             * FIXME: We should be doing the same thing for calls to
+             * glUniform1iv. */
+            if (strcmp(name, "glUniform1i") == 0 ||
+                strcmp(name, "glUniform1iARB") == 0) {
+
+                GLint max_unit = MAX(GL_MAX_TEXTURE_COORDS, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+
+                GLint unit = call->arg(1).toSInt();
+                std::stringstream ss_program;
+                std::stringstream ss_texture;
+
+                if (unit < max_unit) {
+
+                    ss_program << "program-" << activeProgram;
+
+                    ss_texture << "texture-unit-" << GL_TEXTURE0 + unit << "-target-";
+
+                    /* We don't know what target(s) might get bound to
+                     * this texture unit, so conservatively link to
+                     * all. Only bound textures will actually get inserted
+                     * into the output call stream. */
+                    linkf(ss_program.str(), ss_texture.str(), GL_TEXTURE_1D);
+                    linkf(ss_program.str(), ss_texture.str(), GL_TEXTURE_2D);
+                    linkf(ss_program.str(), ss_texture.str(), GL_TEXTURE_3D);
+                    linkf(ss_program.str(), ss_texture.str(), GL_TEXTURE_CUBE_MAP);
+                }
+            }
+
             return;
         }
 
