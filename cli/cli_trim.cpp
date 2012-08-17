@@ -173,6 +173,7 @@ class TraceAnalyzer {
     bool transformFeedbackActive;
     bool framebufferObjectActive;
     bool insideBeginEnd;
+    GLuint insideNewEndList;
     GLuint activeProgram;
     GLenum activeTextureUnit;
 
@@ -345,6 +346,12 @@ class TraceAnalyzer {
             }
             return;
         }
+
+        if (strcmp(name, "glNewList") == 0) {
+            GLuint list = call->arg(0).toUInt();
+
+            insideNewEndList = list;
+        }
     }
 
     void stateTrackPostCall(trace::Call *call) {
@@ -371,11 +378,31 @@ class TraceAnalyzer {
             resources.erase("framebuffer");
             return;
         }
+
+        if (strcmp(name, "glEndList") == 0) {
+            insideNewEndList = 0;
+        }
     }
 
     void recordSideEffects(trace::Call *call) {
 
         const char *name = call->name();
+
+        /* Handle display lists before any other processing. */
+
+        /* FIXME: If we encode the list of commands that are executed
+         * immediately (as opposed to those that are compiled into a
+         * display list) then we could generate a "display-list-X"
+         * resource just as we do for "texture-X" resources and only
+         * emit it in the trace if a glCallList(X) is emitted. For
+         * now, simply punt and include anything within glNewList and
+         * glEndList in the trim output. This guarantees that display
+         * lists will work, but does not trim out unused display
+         * lists. */
+        if (insideNewEndList != 0) {
+            provide("state", call->no);
+            return;
+        }
 
         /* If call is flagged as no side effects, then we are done here. */
         if (call->flags & trace::CALL_FLAG_NO_SIDE_EFFECTS) {
@@ -718,6 +745,7 @@ public:
     TraceAnalyzer(): transformFeedbackActive(false),
                      framebufferObjectActive(false),
                      insideBeginEnd(false),
+                     insideNewEndList(0),
                      activeTextureUnit(GL_TEXTURE0)
     {}
 
