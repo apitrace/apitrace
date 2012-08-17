@@ -303,7 +303,7 @@ trim_trace(const char *filename, struct trim_options *options)
             printf ("-%d\n", call_range_last);
     }
 
-    std::cout << "Trimmed trace is available as " << options->output << "\n";
+    std::cerr << "Trimmed trace is available as " << options->output << "\n";
 
     return 0;
 }
