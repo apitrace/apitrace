@@ -42,5 +42,7 @@ findScript(const char *name, bool verbose = false);
 os::String
 findWrapper(const char *wrapperFilename, bool verbose = false);
 
+os::String
+findAllWrappers(const char *wrapperFilename, bool verbose = false);
 
 #endif /* _CLI_RESOURCES_HPP_ */
