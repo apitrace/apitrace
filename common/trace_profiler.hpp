@@ -34,16 +34,7 @@ namespace trace
 {
 
 struct Profile {
-    struct CpuCall {
-        unsigned no;
-
-        int64_t cpuStart;
-        int64_t cpuDuration;
-
-        std::string name;
-    };
-
-    struct DrawCall {
+    struct Call {
         unsigned no;
 
         int64_t gpuStart;
@@ -65,6 +56,12 @@ struct Profile {
 
         int64_t cpuStart;
         int64_t cpuDuration;
+
+        /* Indices to profile->calls array */
+        struct {
+            unsigned begin;
+            unsigned end;
+        } calls;
     };
 
     struct Program {
@@ -73,12 +70,14 @@ struct Profile {
         uint64_t gpuTotal;
         uint64_t cpuTotal;
         uint64_t pixelTotal;
-        std::vector<DrawCall> drawCalls;
+
+        /* Indices to profile->calls array */
+        std::vector<unsigned> calls;
     };
 
+    std::vector<Call> calls;
     std::vector<Frame> frames;
     std::vector<Program> programs;
-    std::vector<CpuCall> cpuCalls;
 };
 
 class Profiler

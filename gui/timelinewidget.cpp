@@ -9,10 +9,9 @@
 #include <QWheelEvent>
 #include <QApplication>
 
+typedef trace::Profile::Call Call;
 typedef trace::Profile::Frame Frame;
 typedef trace::Profile::Program Program;
-typedef trace::Profile::CpuCall CpuCall;
-typedef trace::Profile::DrawCall DrawCall;
 
 TimelineWidget::TimelineWidget(QWidget *parent)
     : QWidget(parent),
@@ -139,17 +138,58 @@ typename std::vector<val_ty>::const_iterator binarySearchTimespan(
         itr = begin + pos;
     }
 
-    if (lower <= upper)
+    if (lower <= upper) {
         return itr;
-    else
+    } else {
         return end;
+    }
+}
+
+
+/**
+ * Binary Search for a time in start+durations on an array of indices
+ */
+std::vector<unsigned>::const_iterator binarySearchTimespanIndexed(
+        const std::vector<Call>& calls,
+        std::vector<unsigned>::const_iterator begin,
+        std::vector<unsigned>::const_iterator end,
+        int64_t time)
+{
+    int lower = 0;
+    int upper = end - begin;
+    int pos = (lower + upper) / 2;
+    std::vector<unsigned>::const_iterator itr = begin + pos;
+
+    while (lower <= upper) {
+        const Call& call = calls[*itr];
+
+        if (call.gpuStart <= time && call.gpuStart + call.gpuDuration > time) {
+            break;
+        }
+
+        if (call.gpuStart > time) {
+            upper = pos - 1;
+        } else {
+            lower = pos + 1;
+        }
+
+        pos = (lower + upper) / 2;
+        itr = begin + pos;
+    }
+
+    if (lower <= upper) {
+        return itr;
+    } else {
+        return end;
+    }
 }
 
 
 /**
  * Find the frame at time
  */
-const Frame* TimelineWidget::frameAtTime(int64_t time) {
+const Frame* TimelineWidget::frameAtTime(int64_t time)
+{
     if (!m_profile) {
         return NULL;
     }
@@ -161,8 +201,7 @@ const Frame* TimelineWidget::frameAtTime(int64_t time) {
                 time);
 
     if (res != m_profile->frames.end()) {
-        const Frame& frame = *res;
-        return &frame;
+        return &*res;
     }
 
     return NULL;
@@ -172,20 +211,20 @@ const Frame* TimelineWidget::frameAtTime(int64_t time) {
 /**
  * Find the CPU call at time
  */
-const CpuCall* TimelineWidget::cpuCallAtTime(int64_t time) {
+const Call* TimelineWidget::cpuCallAtTime(int64_t time)
+{
     if (!m_profile) {
         return NULL;
     }
 
-    std::vector<CpuCall>::const_iterator res
-            = binarySearchTimespan<CpuCall, &CpuCall::cpuStart, &CpuCall::cpuDuration>(
-                m_profile->cpuCalls.begin(),
-                m_profile->cpuCalls.end(),
+    std::vector<Call>::const_iterator res
+            = binarySearchTimespan<Call, &Call::cpuStart, &Call::cpuDuration>(
+                m_profile->calls.begin(),
+                m_profile->calls.end(),
                 time);
 
-    if (res != m_profile->cpuCalls.end()) {
-        const CpuCall& call = *res;
-        return &call;
+    if (res != m_profile->calls.end()) {
+        return &*res;
     }
 
     return NULL;
@@ -195,22 +234,21 @@ const CpuCall* TimelineWidget::cpuCallAtTime(int64_t time) {
 /**
  * Find the draw call at time
  */
-const DrawCall* TimelineWidget::drawCallAtTime(int program, int64_t time) {
+const Call* TimelineWidget::drawCallAtTime(int64_t time, int program)
+{
     if (!m_profile) {
         return NULL;
     }
 
-    std::vector<DrawCall>& drawCalls = m_profile->programs[program].drawCalls;
-
-    std::vector<DrawCall>::const_iterator res
-            = binarySearchTimespan<DrawCall, &DrawCall::gpuStart, &DrawCall::gpuDuration>(
-                drawCalls.begin(),
-                drawCalls.end(),
+    std::vector<unsigned>::const_iterator res
+            = binarySearchTimespanIndexed(
+                m_profile->calls,
+                m_profile->programs[program].calls.begin(),
+                m_profile->programs[program].calls.end(),
                 time);
 
-    if (res != drawCalls.end()) {
-        const DrawCall& call = *res;
-        return &call;
+    if (res != m_profile->programs[program].calls.end()) {
+        return &m_profile->calls[*res];
     }
 
     return NULL;
@@ -358,7 +396,7 @@ void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
             int y = m_mousePosition.y() - m_axisHeight;
 
             if (y < m_rowHeight) {
-                const CpuCall* call = cpuCallAtTime(time);
+                const Call* call = cpuCallAtTime(time);
 
                 if (call) {
                     QString text;
@@ -374,8 +412,7 @@ void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
                 int row = (y - m_rowHeight + m_scrollY) / m_rowHeight;
 
                 if (row < m_rowPrograms.size()) {
-                    int program = m_rowPrograms[row];
-                    const DrawCall* call = drawCallAtTime(program, time);
+                    const Call* call = drawCallAtTime(time, m_rowPrograms[row]);
 
                     if (call) {
                         QString text;
@@ -489,7 +526,7 @@ void TimelineWidget::mouseDoubleClickEvent(QMouseEvent *e)
             }
         } else if (row == 0) {
             /* CPU Calls */
-            const CpuCall* call = cpuCallAtTime(time);
+            const Call* call = cpuCallAtTime(time);
 
             if (call) {
                 emit jumpToCall(call->no);
@@ -497,8 +534,7 @@ void TimelineWidget::mouseDoubleClickEvent(QMouseEvent *e)
             }
         } else if (row > 0) {
             /* Draw Calls */
-            int program = m_rowPrograms[row - 1 + m_row];
-            const DrawCall* call = drawCallAtTime(program, time);
+            const Call* call = drawCallAtTime(time, 0);
 
             if (call) {
                 emit jumpToCall(call->no);
@@ -597,8 +633,8 @@ void TimelineWidget::paintEvent(QPaintEvent *e)
         lastX = 0;
         heat = 0;
 
-        for (std::vector<DrawCall>::const_iterator itr = program.drawCalls.begin(); itr != program.drawCalls.end(); ++itr) {
-            const DrawCall& call = *itr;
+        for (std::vector<unsigned>::const_iterator itr = program.calls.begin(); itr != program.calls.end(); ++itr) {
+            const Call& call = m_profile->calls[*itr];
             int64_t gpuEnd = call.gpuStart + call.gpuDuration;
 
             if (call.gpuStart > timeEnd) {
@@ -664,8 +700,8 @@ void TimelineWidget::paintEvent(QPaintEvent *e)
     painter.translate(m_axisWidth, m_axisHeight);
     painter.fillRect(0, 0, m_viewWidth, m_rowHeight, Qt::white);
 
-    for (std::vector<CpuCall>::const_iterator itr = m_profile->cpuCalls.begin(); itr != m_profile->cpuCalls.end(); ++itr) {
-        const CpuCall& call = *itr;
+    for (std::vector<Call>::const_iterator itr = m_profile->calls.begin(); itr != m_profile->calls.end(); ++itr) {
+        const Call& call = *itr;
         int64_t cpuEnd = call.cpuStart + call.cpuDuration;
 
         if (call.cpuStart > timeEnd) {

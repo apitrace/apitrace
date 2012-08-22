@@ -136,7 +136,7 @@ void Profiler::parseLine(const char* in, Profile* profile)
     if (in[0] == '#' || strlen(in) < 4)
         return;
 
-    if (profile->programs.size() == 0 && profile->cpuCalls.size() == 0 && profile->frames.size() == 0) {
+    if (profile->programs.size() == 0 && profile->calls.size() == 0 && profile->frames.size() == 0) {
         lastGpuTime = 0;
         lastCpuTime = 0;
     }
@@ -144,43 +144,39 @@ void Profiler::parseLine(const char* in, Profile* profile)
     line >> type;
 
     if (type.compare("call") == 0) {
-        Profile::DrawCall draw;
-        unsigned program;
+        Profile::Call call;
+        unsigned programNo;
 
-        line >> draw.no
-             >> draw.gpuStart
-             >> draw.gpuDuration
-             >> draw.cpuStart
-             >> draw.cpuDuration
-             >> draw.pixels
-             >> program
-             >> draw.name;
+        line >> call.no
+             >> call.gpuStart
+             >> call.gpuDuration
+             >> call.cpuStart
+             >> call.cpuDuration
+             >> call.pixels
+             >> programNo
+             >> call.name;
 
-        if (lastGpuTime < draw.gpuStart + draw.gpuDuration) {
-            lastGpuTime = draw.gpuStart + draw.gpuDuration;
+        if (lastGpuTime < call.gpuStart + call.gpuDuration) {
+            lastGpuTime = call.gpuStart + call.gpuDuration;
         }
 
-        if (lastCpuTime < draw.cpuStart + draw.cpuDuration) {
-            lastCpuTime = draw.cpuStart + draw.cpuDuration;
+        if (lastCpuTime < call.cpuStart + call.cpuDuration) {
+            lastCpuTime = call.cpuStart + call.cpuDuration;
         }
 
-        if (draw.pixels >= 0) {
-            if (profile->programs.size() <= program) {
-                profile->programs.resize(program + 1);
+        profile->calls.push_back(call);
+
+        if (call.pixels >= 0) {
+            if (profile->programs.size() <= programNo) {
+                profile->programs.resize(programNo + 1);
             }
 
-            profile->programs[program].cpuTotal += draw.cpuDuration;
-            profile->programs[program].gpuTotal += draw.gpuDuration;
-            profile->programs[program].pixelTotal += draw.pixels;
-            profile->programs[program].drawCalls.push_back(draw);
+            Profile::Program& program = profile->programs[programNo];
+            program.cpuTotal += call.cpuDuration;
+            program.gpuTotal += call.gpuDuration;
+            program.pixelTotal += call.pixels;
+            program.calls.push_back(profile->calls.size() - 1);
         }
-
-        Profile::CpuCall call;
-        call.no          = draw.no;
-        call.name        = draw.name;
-        call.cpuStart    = draw.cpuStart;
-        call.cpuDuration = draw.cpuDuration;
-        profile->cpuCalls.push_back(call);
     } else if (type.compare("frame_end") == 0) {
         Profile::Frame frame;
         frame.no = profile->frames.size();
@@ -188,13 +184,17 @@ void Profiler::parseLine(const char* in, Profile* profile)
         if (frame.no == 0) {
             frame.gpuStart = 0;
             frame.cpuStart = 0;
+            frame.calls.begin = 0;
         } else {
             frame.gpuStart = profile->frames.back().gpuStart + profile->frames.back().gpuDuration;
             frame.cpuStart = profile->frames.back().cpuStart + profile->frames.back().cpuDuration;
+            frame.calls.begin = profile->frames.back().calls.end + 1;
         }
 
         frame.gpuDuration = lastGpuTime - frame.gpuStart;
         frame.cpuDuration = lastCpuTime - frame.cpuStart;
+        frame.calls.end = profile->calls.size() - 1;
+
         profile->frames.push_back(frame);
     }
 }

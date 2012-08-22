@@ -60,8 +60,8 @@ private:
     void calculateRows();
 
     const trace::Profile::Frame* frameAtTime(int64_t time);
-    const trace::Profile::CpuCall* cpuCallAtTime(int64_t time);
-    const trace::Profile::DrawCall* drawCallAtTime(int program, int64_t time);
+    const trace::Profile::Call* cpuCallAtTime(int64_t time);
+    const trace::Profile::Call* drawCallAtTime(int64_t time, int program);
 
 private:
     /* Data */

@@ -1,9 +1,8 @@
 #include "profiletablemodel.h"
 
+typedef trace::Profile::Call Call;
 typedef trace::Profile::Frame Frame;
 typedef trace::Profile::Program Program;
-typedef trace::Profile::CpuCall CpuCall;
-typedef trace::Profile::DrawCall DrawCall;
 
 enum {
     COLUMN_PROGRAM,
@@ -78,11 +77,11 @@ void ProfileTableModel::updateModel()
     }
 
     for (std::vector<Program>::const_iterator itr = m_profile->programs.begin(); itr != m_profile->programs.end(); ++itr) {
-        ProfileTableRow* row = getRow(itr - m_profile->programs.begin());
+        ProfileTableRow* row = NULL;
         const Program& program = *itr;
 
-        for (std::vector<DrawCall>::const_iterator jtr = program.drawCalls.begin(); jtr != program.drawCalls.end(); ++jtr) {
-            const DrawCall& call = *jtr;
+        for (std::vector<unsigned>::const_iterator jtr = program.calls.begin(); jtr != program.calls.end(); ++jtr) {
+            const Call& call = m_profile->calls[*jtr];
 
             if (call.cpuStart > m_timeMax) {
                 break;
@@ -90,6 +89,10 @@ void ProfileTableModel::updateModel()
 
             if (call.cpuStart + call.cpuDuration < m_timeMin) {
                 continue;
+            }
+
+            if (!row) {
+                row = getRow(itr - m_profile->programs.begin());
             }
 
             row->uses++;
@@ -116,7 +119,7 @@ void ProfileTableModel::updateModel()
 /**
  * Get the appropriate call associated with an item in the table
  */
-const DrawCall* ProfileTableModel::getJumpCall(const QModelIndex & index) const {
+const trace::Profile::Call *ProfileTableModel::getJumpCall(const QModelIndex & index) const {
     const ProfileTableRow& row = m_rowData[index.row()];
 
     switch(index.column()) {
