@@ -150,7 +150,7 @@
      </widget>
      <widget class="QWidget" name="tabCalls">
       <attribute name="title">
-       <string>Calls</string>
+       <string>Histogram</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <property name="margin">
