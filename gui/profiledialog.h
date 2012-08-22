@@ -31,4 +31,6 @@ private:
     trace::Profile *m_profile;
 };
 
+QString getTimeString(int64_t time, int64_t unitTime = 0);
+
 #endif

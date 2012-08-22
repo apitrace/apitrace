@@ -1,8 +1,10 @@
 #include "timelinewidget.h"
+#include "profiledialog.h"
 #include "trace_profiler.hpp"
 
 #include <math.h>
 #include <QColor>
+#include <QLocale>
 #include <QPainter>
 #include <QToolTip>
 #include <QMouseEvent>
@@ -402,8 +404,8 @@ void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
                     QString text;
                     text  = QString::fromStdString(call->name);
                     text += QString("\nCall: %1").arg(call->no);
-                    text += QString("\nCPU Start: %1").arg(call->cpuStart);
-                    text += QString("\nCPU Duration: %1").arg(call->cpuDuration);
+                    text += QString("\nCPU Start: %1").arg(getTimeString(call->cpuStart));
+                    text += QString("\nCPU Duration: %1").arg(getTimeString(call->cpuDuration));
 
                     QToolTip::showText(e->globalPos(), text);
                     tooltip = true;
@@ -418,11 +420,11 @@ void TimelineWidget::mouseMoveEvent(QMouseEvent *e)
                         QString text;
                         text  = QString::fromStdString(call->name);
                         text += QString("\nCall: %1").arg(call->no);
-                        text += QString("\nGPU Start: %1").arg(call->gpuStart);
-                        text += QString("\nCPU Start: %1").arg(call->cpuStart);
-                        text += QString("\nGPU Duration: %1").arg(call->gpuDuration);
-                        text += QString("\nCPU Duration: %1").arg(call->cpuDuration);
-                        text += QString("\nPixels Drawn: %1").arg(call->pixels);
+                        text += QString("\nCPU Start: %1").arg(getTimeString(call->cpuStart));
+                        text += QString("\nGPU Start: %1").arg(getTimeString(call->gpuStart));
+                        text += QString("\nCPU Duration: %1").arg(getTimeString(call->cpuDuration));
+                        text += QString("\nGPU Duration: %1").arg(getTimeString(call->gpuDuration));
+                        text += QString("\nPixels Drawn: %1").arg(QLocale::system().toString((qlonglong)call->pixels));
 
                         QToolTip::showText(e->globalPos(), text);
                         tooltip = true;

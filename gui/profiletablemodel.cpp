@@ -1,4 +1,7 @@
 #include "profiletablemodel.h"
+#include "profiledialog.h"
+
+#include <QLocale>
 
 typedef trace::Profile::Call Call;
 typedef trace::Profile::Frame Frame;
@@ -178,19 +181,19 @@ QVariant ProfileTableModel::data(const QModelIndex &index, int role) const
         case COLUMN_PROGRAM:
             return row.program;
         case COLUMN_USAGES:
-            return row.uses;
+            return QLocale::system().toString(row.uses);
         case COLUMN_GPU_TIME:
-            return row.gpuTime;
+            return getTimeString(row.gpuTime);
         case COLUMN_CPU_TIME:
-            return row.cpuTime;
+            return getTimeString(row.cpuTime);
         case COLUMN_PIXELS_DRAWN:
-            return row.pixels;
+            return QLocale::system().toString((qlonglong)row.pixels);
         case COLUMN_GPU_AVERAGE:
-            return (row.uses <= 0) ? 0 : (row.gpuTime / row.uses);
+            return getTimeString((row.uses <= 0) ? 0 : (row.gpuTime / row.uses));
         case COLUMN_CPU_AVERAGE:
-            return (row.uses <= 0) ? 0 : (row.cpuTime / row.uses);
+            return getTimeString((row.uses <= 0) ? 0 : (row.cpuTime / row.uses));
         case COLUMN_PIXELS_AVERAGE:
-            return (row.uses <= 0) ? 0 : (row.pixels / row.uses);
+            return QLocale::system().toString((row.uses <= 0) ? 0 : (row.pixels / row.uses));
         }
     } else if (role == Qt::TextAlignmentRole) {
         return Qt::AlignRight;
