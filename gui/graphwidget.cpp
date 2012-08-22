@@ -401,9 +401,15 @@ void GraphWidget::paintEvent(QPaintEvent *e)
     paintHorizontalAxis(painter);
     paintVerticalAxis(painter);
 
-    /* Cover up any overdraw in top left corner */
+    /* Draw the label */
     painter.resetTransform();
     painter.fillRect(0, 0, m_axisWidth - 1, m_axisHeight - 1, Qt::lightGray);
+
+    if (m_type == GraphGpu) {
+        painter.drawText(0, 0, m_axisWidth, m_axisHeight, Qt::AlignHCenter | Qt::AlignVCenter, "GPU");
+    } else {
+        painter.drawText(0, 0, m_axisWidth, m_axisHeight, Qt::AlignHCenter | Qt::AlignVCenter, "CPU");
+    }
 
     /* Draw graph */
     if (m_type == GraphGpu) {
