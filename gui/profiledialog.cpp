@@ -117,7 +117,7 @@ QString getTimeString(int64_t time, int64_t unitTime)
         unit = " ms";
         unitScale = 1e6;
     } else if (unitTime >= 1e3) {
-        unit = " us";
+        unit = QString::fromUtf8(" µs");
         unitScale = 1e3;
     }
 
