@@ -10,6 +10,12 @@ ProfileDialog::ProfileDialog(QWidget *parent)
 
     connect(m_timeline, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
     connect(m_timeline, SIGNAL(selectionChanged(int64_t,int64_t)), SLOT(selectionChanged(int64_t,int64_t)));
+
+    connect(m_gpuGraph, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
+    connect(m_cpuGraph, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
+
+    connect(m_gpuGraph, SIGNAL(viewChanged(int,int)), m_cpuGraph, SLOT(changeView(int,int)));
+    connect(m_cpuGraph, SIGNAL(viewChanged(int,int)), m_gpuGraph, SLOT(changeView(int,int)));
 }
 
 
@@ -38,6 +44,8 @@ void ProfileDialog::setProfile(trace::Profile* profile)
 
     m_profile = profile;
     m_timeline->setProfile(m_profile);
+    m_gpuGraph->setProfile(m_profile, GraphGpu);
+    m_cpuGraph->setProfile(m_profile, GraphCpu);
 
     ProfileTableModel* model = new ProfileTableModel(m_table);
     model->setProfile(m_profile);

@@ -10,6 +10,7 @@ set(qapitrace_SRCS
    apitracemodel.cpp
    argumentseditor.cpp
    glsledit.cpp
+   graphwidget.cpp
    imageviewer.cpp
    jumpwidget.cpp
    mainwindow.cpp
