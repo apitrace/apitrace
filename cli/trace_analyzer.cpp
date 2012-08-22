@@ -162,7 +162,7 @@ TraceAnalyzer::consume(std::string resource)
     resources.erase(resource);
 
     for (call = calls.begin(); call != calls.end(); call++) {
-        required.insert(*call);
+        required.add(*call);
     }
 }
 
@@ -754,13 +754,13 @@ TraceAnalyzer::require(trace::Call *call)
     requireDependencies(call);
 
     /* Then insert this call itself. */
-    required.insert(call->no);
+    required.add(call->no);
 }
 
 /* Return a set of all the required calls, (both those calls added
  * explicitly with require() and those implicitly depended
  * upon. */
-std::set<unsigned>  *
+trim::CallSet *
 TraceAnalyzer::get_required(void)
 {
     return &required;
