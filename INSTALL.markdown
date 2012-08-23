@@ -89,7 +89,7 @@ Additional requirements:
 
 To build with Visual Studio first invoke CMake GUI as:
 
-    cmake-gui -H. -B%cd%\build
+    cmake-gui -H%cd% -B%cd%\build
 
 and press the _Configure_ button.
 
