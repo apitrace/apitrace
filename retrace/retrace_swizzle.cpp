@@ -108,7 +108,7 @@ addRegion(unsigned long long address, void *buffer, unsigned long long size)
 
 #ifndef NDEBUG
     RegionMap::iterator start = lowerBound(address);
-    RegionMap::iterator stop = upperBound(address + size);
+    RegionMap::iterator stop = upperBound(address + size - 1);
     if (0) {
         // Forget all regions that intersect this new one.
         regionMap.erase(start, stop);
