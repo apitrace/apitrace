@@ -61,6 +61,17 @@ static void retrace_wglCreateContext(trace::Call &call) {
 }
 
 static void retrace_wglDeleteContext(trace::Call &call) {
+    unsigned long long hglrc = call.arg(0).toUIntPtr();
+
+    ContextMap::iterator it;
+    it = context_map.find(hglrc);
+    if (it == context_map.end()) {
+        return;
+    }
+
+    delete it->second;
+    
+    context_map.erase(it);
 }
 
 static void retrace_wglMakeCurrent(trace::Call &call) {
