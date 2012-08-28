@@ -42,6 +42,7 @@ namespace glretrace {
 
 bool insideList = false;
 bool insideGlBeginEnd = false;
+bool supportsARBShaderObjects = false;
 
 enum {
     GPU_START = 0,
@@ -246,6 +247,7 @@ initContext() {
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
     supportsOcclusion   = currentContext->hasExtension("GL_ARB_occlusion_query");
     supportsDebugOutput = currentContext->hasExtension("GL_ARB_debug_output");
+    supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
 
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {

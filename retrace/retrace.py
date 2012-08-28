@@ -166,7 +166,14 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    if (retrace::verbosity >= 2) {'
         print '        std::cout << "%s " << size_t(%s) << " <- " << size_t(%s) << "\\n";' % (handle.name, lvalue, new_lvalue)
         print '    }'
-        print '    %s = %s;' % (lvalue, new_lvalue)
+        if (new_lvalue.startswith('_program_map') or new_lvalue.startswith('_shader_map')):
+            print 'if (glretrace::supportsARBShaderObjects) {'
+            print '    %s = _handleARB_map[%s];' % (lvalue, lvalue)
+            print '} else {'
+            print '    %s = %s;' % (lvalue, new_lvalue)
+            print '}'
+        else:
+            print '    %s = %s;' % (lvalue, new_lvalue)
     
     def visitBlob(self, blob, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, blob, rvalue)
@@ -279,8 +286,15 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
         OpaqueValueDeserializer().visit(handle.type, '_origResult', rvalue);
         if handle.range is None:
             rvalue = "_origResult"
-            entry = lookupHandle(handle, rvalue) 
-            print "    %s = %s;" % (entry, lvalue)
+            entry = lookupHandle(handle, rvalue)
+            if (entry.startswith('_program_map') or entry.startswith('_shader_map')):
+                print 'if (glretrace::supportsARBShaderObjects) {'
+                print '    _handleARB_map[%s] = %s;' % (rvalue, lvalue)
+                print '} else {'
+                print '    %s = %s;' % (entry, lvalue)
+                print '}'
+            else:
+                print "    %s = %s;" % (entry, lvalue)
             print '    if (retrace::verbosity >= 2) {'
             print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
             print '    }'
