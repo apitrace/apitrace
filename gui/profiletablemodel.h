@@ -37,8 +37,13 @@ public:
     ProfileTableModel(QObject *parent = NULL);
 
     void setProfile(trace::Profile* profile);
-    void setTimeSelection(int64_t start, int64_t end);
 
+    void selectNone();
+    void selectProgram(unsigned program);
+    void selectTime(int64_t start, int64_t end);
+
+    int getRowIndex(unsigned program) const;
+    unsigned getProgram(const QModelIndex & index) const;
     const trace::Profile::Call* getJumpCall(const QModelIndex & index) const;
 
     virtual int rowCount(const QModelIndex & parent) const;

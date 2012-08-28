@@ -17,10 +17,20 @@ class TimelineWidget : public QWidget
         RulerSelect
     };
 
+    enum SelectType {
+        SelectNone,
+        SelectTime,
+        SelectProgram
+    };
+
 public:
     TimelineWidget(QWidget *parent = 0);
 
     void setProfile(trace::Profile* profile);
+
+    void selectNone(bool notify = false);
+    void selectProgram(unsigned program, bool notify = false);
+    void selectTime(int64_t start, int64_t end, bool notify = false);
 
 protected:
     virtual void wheelEvent(QWheelEvent *e);
@@ -45,14 +55,16 @@ signals:
 
     void jumpToCall(int call);
 
-    void selectionChanged(int64_t start, int64_t end);
+    void selectedNone();
+    void selectedProgram(unsigned program);
+    void selectedTime(int64_t start, int64_t end);
 
 private:
-    void setSelection(int64_t start, int64_t end, bool notify = false);
     void setRowScroll(int position, bool notify = true);
     void setTimeScroll(int64_t time, bool notify = true);
 
-    void drawHeat(QPainter& painter, int x, int64_t heat, bool isCpu);
+    bool drawCall(QPainter& painter, const trace::Profile::Call& call, int &lastX, int64_t &heat, bool gpu);
+    void drawHeat(QPainter& painter, int x, int64_t heat, bool gpu, bool selected);
 
     double timeToPosition(int64_t time);
     int64_t positionToTime(int pos);
@@ -61,6 +73,7 @@ private:
 
     const trace::Profile::Frame* frameAtTime(int64_t time);
     const trace::Profile::Call* cpuCallAtTime(int64_t time);
+    const trace::Profile::Call* drawCallAtTime(int64_t time);
     const trace::Profile::Call* drawCallAtTime(int64_t time, int program);
 
 private:
@@ -80,13 +93,15 @@ private:
 
     /* Visible Times */
     int64_t m_time;
+    int64_t m_timeEnd;
     int64_t m_timeMin;
     int64_t m_timeMax;
     int64_t m_timeWidth;
     int64_t m_timeWidthMin;
     int64_t m_timeWidthMax;
-    int64_t m_timeSelectionStart;
-    int64_t m_timeSelectionEnd;
+
+    int m_selectionLeft;
+    int m_selectionRight;
 
     /* Visible Rows */
     int m_row;
@@ -108,12 +123,26 @@ private:
     QPen m_axisForeground;
     QBrush m_axisBackground;
     QPen m_itemBorder;
-    QPen m_itemForeground;
-    QBrush m_itemBackground;
+    QPen m_itemGpuForeground;
+    QBrush m_itemGpuBackground;
+    QPen m_itemCpuForeground;
+    QBrush m_itemCpuBackground;
+    QPen m_itemDeselectedForeground;
+    QBrush m_itemDeselectedBackground;
     QPen m_selectionBorder;
     QBrush m_selectionBackground;
     QPen m_zoomBorder;
     QBrush m_zoomBackground;
+
+    /* Selection */
+    struct {
+        SelectType type;
+
+        unsigned program;
+
+        int64_t timeStart;
+        int64_t timeEnd;
+    } m_selection;
 };
 
 #endif // TIMELINEWIDGET_H

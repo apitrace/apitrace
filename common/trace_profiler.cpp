@@ -145,7 +145,6 @@ void Profiler::parseLine(const char* in, Profile* profile)
 
     if (type.compare("call") == 0) {
         Profile::Call call;
-        unsigned programNo;
 
         line >> call.no
              >> call.gpuStart
@@ -153,7 +152,7 @@ void Profiler::parseLine(const char* in, Profile* profile)
              >> call.cpuStart
              >> call.cpuDuration
              >> call.pixels
-             >> programNo
+             >> call.program
              >> call.name;
 
         if (lastGpuTime < call.gpuStart + call.gpuDuration) {
@@ -167,11 +166,11 @@ void Profiler::parseLine(const char* in, Profile* profile)
         profile->calls.push_back(call);
 
         if (call.pixels >= 0) {
-            if (profile->programs.size() <= programNo) {
-                profile->programs.resize(programNo + 1);
+            if (profile->programs.size() <= call.program) {
+                profile->programs.resize(call.program + 1);
             }
 
-            Profile::Program& program = profile->programs[programNo];
+            Profile::Program& program = profile->programs[call.program];
             program.cpuTotal += call.cpuDuration;
             program.gpuTotal += call.gpuDuration;
             program.pixelTotal += call.pixels;

@@ -48,10 +48,35 @@ void ProfileTableModel::setProfile(trace::Profile* profile)
 }
 
 
-void ProfileTableModel::setTimeSelection(int64_t start, int64_t end)
+/**
+ * Set selection to nothing
+ */
+void ProfileTableModel::selectNone()
+{
+    m_timeMin = m_timeMax = 0;
+    updateModel();
+    sort(m_sortColumn, m_sortOrder);
+}
+
+
+/**
+ * Set selection to program
+ */
+void ProfileTableModel::selectProgram(unsigned /*program*/)
+{
+    /* We have no program based selection for table */
+    selectNone();
+}
+
+
+/**
+ * Set selection to a period of time
+ */
+void ProfileTableModel::selectTime(int64_t start, int64_t end)
 {
     m_timeMin = start;
     m_timeMax = end;
+
     updateModel();
     sort(m_sortColumn, m_sortOrder);
 }
@@ -141,6 +166,33 @@ const trace::Profile::Call *ProfileTableModel::getJumpCall(const QModelIndex & i
 }
 
 
+/**
+ * Get the shader program associated with an item in the table
+ */
+unsigned ProfileTableModel::getProgram(const QModelIndex & index) const
+{
+    const ProfileTableRow& row = m_rowData[index.row()];
+    return row.program;
+}
+
+
+/**
+ * Get the row index for a shader program
+ */
+int ProfileTableModel::getRowIndex(unsigned program) const
+{
+    for (int i = 0; i < m_rowData.size(); ++i) {
+        if (m_rowData[i].program == program)
+            return i;
+    }
+
+    return -1;
+}
+
+
+/**
+ * Get the row data for a shader program
+ */
 ProfileTableRow* ProfileTableModel::getRow(unsigned program) {
     for (QList<ProfileTableRow>::iterator itr = m_rowData.begin(); itr != m_rowData.end(); ++itr) {
         if (itr->program == program)

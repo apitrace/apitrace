@@ -9,13 +9,8 @@ ProfileDialog::ProfileDialog(QWidget *parent)
     setupUi(this);
 
     connect(m_timeline, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
-    connect(m_timeline, SIGNAL(selectionChanged(int64_t,int64_t)), SLOT(selectionChanged(int64_t,int64_t)));
-
     connect(m_gpuGraph, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
     connect(m_cpuGraph, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
-
-    connect(m_gpuGraph, SIGNAL(viewChanged(int,int)), m_cpuGraph, SLOT(changeView(int,int)));
-    connect(m_cpuGraph, SIGNAL(viewChanged(int,int)), m_gpuGraph, SLOT(changeView(int,int)));
 }
 
 
@@ -32,36 +27,113 @@ void ProfileDialog::tableDoubleClicked(const QModelIndex& index)
 
     if (call) {
         emit jumpToCall(call->no);
+    } else {
+        unsigned program = model->getProgram(index);
+        m_timeline->selectProgram(program);
+        m_cpuGraph->selectProgram(program);
+        m_gpuGraph->selectProgram(program);
     }
 }
 
 
 void ProfileDialog::setProfile(trace::Profile* profile)
 {
-    if (m_profile) {
-        delete m_profile;
+    delete m_profile;
+
+    if (profile->frames.size() == 0) {
+        m_profile = NULL;
+    } else {
+        m_profile = profile;
+        m_timeline->setProfile(m_profile);
+        m_gpuGraph->setProfile(m_profile, GraphGpu);
+        m_cpuGraph->setProfile(m_profile, GraphCpu);
+
+        ProfileTableModel* model = new ProfileTableModel(m_table);
+        model->setProfile(m_profile);
+
+        delete m_table->model();
+        m_table->setModel(model);
+        m_table->update(QModelIndex());
+        m_table->sortByColumn(1, Qt::DescendingOrder);
+        m_table->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+        m_table->resizeColumnsToContents();
     }
-
-    m_profile = profile;
-    m_timeline->setProfile(m_profile);
-    m_gpuGraph->setProfile(m_profile, GraphGpu);
-    m_cpuGraph->setProfile(m_profile, GraphCpu);
-
-    ProfileTableModel* model = new ProfileTableModel(m_table);
-    model->setProfile(m_profile);
-
-    delete m_table->model();
-    m_table->setModel(model);
-    m_table->resizeColumnsToContents();
-    m_table->sortByColumn(2, Qt::DescendingOrder);
 }
 
 
-void ProfileDialog::selectionChanged(int64_t start, int64_t end)
+void ProfileDialog::selectNone()
 {
+    QObject* src = QObject::sender();
+
+    /* Update table model */
     ProfileTableModel* model = (ProfileTableModel*)m_table->model();
-    model->setTimeSelection(start, end);
+    model->selectNone();
     m_table->reset();
+
+    /* Update graphs */
+    if (src != m_gpuGraph) {
+        m_gpuGraph->selectNone();
+    }
+
+    if (src != m_cpuGraph) {
+        m_cpuGraph->selectNone();
+    }
+
+    /* Update timeline */
+    if (src != m_timeline) {
+        m_timeline->selectNone();
+    }
+}
+
+
+void ProfileDialog::selectProgram(unsigned program)
+{
+    QObject* src = QObject::sender();
+
+    /* Update table model */
+    ProfileTableModel* model = (ProfileTableModel*)m_table->model();
+    model->selectNone();
+    m_table->reset();
+    m_table->selectRow(model->getRowIndex(program));
+
+    /* Update graphs */
+    if (src != m_gpuGraph) {
+        m_gpuGraph->selectProgram(program);
+    }
+
+    if (src != m_cpuGraph) {
+        m_cpuGraph->selectProgram(program);
+    }
+
+    /* Update timeline */
+    if (src != m_timeline) {
+        m_timeline->selectProgram(program);
+    }
+}
+
+
+void ProfileDialog::selectTime(int64_t start, int64_t end)
+{
+    QObject* src = QObject::sender();
+
+    /* Update table model */
+    ProfileTableModel* model = (ProfileTableModel*)m_table->model();
+    model->selectTime(start, end);
+    m_table->reset();
+
+    /* Update graphs */
+    if (src != m_gpuGraph) {
+        m_gpuGraph->selectTime(start, end);
+    }
+
+    if (src != m_cpuGraph) {
+        m_cpuGraph->selectTime(start, end);
+    }
+
+    /* Update timeline */
+    if (src != m_timeline) {
+        m_timeline->selectTime(start, end);
+    }
 }
 
 

@@ -22,7 +22,9 @@ public slots:
 
     void tableDoubleClicked(const QModelIndex& index);
 
-    void selectionChanged(int64_t start, int64_t end);
+    void selectNone();
+    void selectProgram(unsigned program);
+    void selectTime(int64_t start, int64_t end);
 
 signals:
     void jumpToCall(int call);

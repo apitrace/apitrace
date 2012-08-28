@@ -21,15 +21,20 @@ GraphWidget::GraphWidget(QWidget *parent)
       m_axisForeground(Qt::black),
       m_axisBackground(Qt::lightGray)
 {
-    setBackgroundRole(QPalette::Base);
-    setAutoFillBackground(true);
+    m_selection.type = SelectNone;
+
+    m_graphGradientGpu.setColorAt(0.9, QColor(210, 0, 0));
+    m_graphGradientGpu.setColorAt(0.0, QColor(255, 130, 130));
+
+    m_graphGradientCpu.setColorAt(0.9, QColor(0, 0, 210));
+    m_graphGradientCpu.setColorAt(0.0, QColor(130, 130, 255));
+
+    m_graphGradientDeselected.setColorAt(0.9, QColor(200, 200, 200));
+    m_graphGradientDeselected.setColorAt(0.0, QColor(220, 220, 220));
+
     setMouseTracking(true);
-
-    m_graphGradientGpu.setColorAt(0.9, QColor(255, 0, 0));
-    m_graphGradientGpu.setColorAt(0.0, QColor(255, 200, 200));
-
-    m_graphGradientCpu.setColorAt(0.9, QColor(0, 0, 255));
-    m_graphGradientCpu.setColorAt(0.0, QColor(200, 200, 255));
+    setAutoFillBackground(true);
+    setBackgroundRole(QPalette::Base);
 }
 
 
@@ -40,35 +45,84 @@ void GraphWidget::setProfile(trace::Profile* profile, GraphType type)
 {
     m_type = type;
     m_profile = profile;
-    m_maxTime = 0;
+    m_timeMax = 0;
 
     /* Find longest call to use as y axis */
     if (m_type == GraphGpu) {
         for (std::vector<Call>::const_iterator itr = m_profile->calls.begin(); itr != m_profile->calls.end(); ++itr) {
             const Call& call = *itr;
 
-            if (call.gpuDuration > m_maxTime) {
-                m_maxTime = call.gpuDuration;
+            if (call.gpuDuration > m_timeMax) {
+                m_timeMax = call.gpuDuration;
             }
         }
     } else {
         for (std::vector<Call>::const_iterator itr = m_profile->calls.begin(); itr != m_profile->calls.end(); ++itr) {
             const Call& call = *itr;
 
-            if (call.cpuDuration > m_maxTime) {
-                m_maxTime = call.cpuDuration;
+            if (call.cpuDuration > m_timeMax) {
+                m_timeMax = call.cpuDuration;
             }
         }
     }
 
-    m_minCall = 0;
-    m_maxCall = m_profile->calls.size();
+    m_callMin = 0;
+    m_callMax = m_profile->calls.size();
 
-    m_minCallWidth = 10;
-    m_maxCallWidth = m_maxCall - m_minCall;
+    m_callWidthMin = 10;
+    m_callWidthMax = m_callMax - m_callMin;
 
-    m_call = m_minCall;
-    m_callWidth = m_maxCallWidth;
+    m_call = m_callMin;
+    m_callWidth = m_callWidthMax;
+
+    selectNone();
+    update();
+}
+
+
+/**
+ * Set selection to nothing
+ */
+void GraphWidget::selectNone(bool notify)
+{
+    m_selection.type = SelectNone;
+
+    if (notify) {
+        emit selectedNone();
+    }
+
+    update();
+}
+
+
+/**
+ * Set selection to a time period
+ */
+void GraphWidget::selectTime(int64_t start, int64_t end, bool notify)
+{
+    m_selection.timeStart = start;
+    m_selection.timeEnd = end;
+    m_selection.type = (start == end) ? SelectNone : SelectTime;
+
+    if (notify) {
+        emit selectedTime(start, end);
+    }
+
+    update();
+}
+
+
+/**
+ * Set selection to a program
+ */
+void GraphWidget::selectProgram(unsigned program, bool notify)
+{
+    m_selection.program = program;
+    m_selection.type = SelectProgram;
+
+    if (notify) {
+        emit selectedProgram(program);
+    }
 
     update();
 }
@@ -90,22 +144,22 @@ void GraphWidget::changeView(int call, int width)
  */
 void GraphWidget::update()
 {
-    m_maxTime = 0;
+    m_timeMax = 0;
 
     if (m_type == GraphGpu) {
         for (int i = m_call; i < m_call + m_callWidth; ++i) {
             const Call& call =  m_profile->calls[i];
 
-            if (call.gpuDuration > m_maxTime) {
-                m_maxTime = call.gpuDuration;
+            if (call.gpuDuration > m_timeMax) {
+                m_timeMax = call.gpuDuration;
             }
         }
     } else {
         for (int i = m_call; i < m_call + m_callWidth; ++i) {
             const Call& call =  m_profile->calls[i];
 
-            if (call.cpuDuration > m_maxTime) {
-                m_maxTime = call.cpuDuration;
+            if (call.cpuDuration > m_timeMax) {
+                m_timeMax = call.cpuDuration;
             }
         }
     }
@@ -129,15 +183,15 @@ const Call* GraphWidget::callAtPosition(const QPoint& pos)
     int posX = qMax(0, pos.x() - m_axisWidth);
     int posY = qMax(0, pos.y() - m_axisHeight);
 
-    time  = ((m_graphHeight - posY) / (double)m_graphHeight) * m_maxTime;
-    time -= (2 * m_maxTime) / m_graphHeight;
+    time  = ((m_graphHeight - posY) / (double)m_graphHeight) * m_timeMax;
+    time -= (2 * m_timeMax) / m_graphHeight;
 
     size  = m_callWidth / (double)m_graphWidth;
 
     left  = m_call + (posX / (double)m_graphWidth) * m_callWidth;
-    left  = qMax(m_minCall, left - size);
+    left  = qMax(m_callMin, left - size);
 
-    right = qMin(m_maxCall - 1, left + size * 2);
+    right = qMin(m_callMax - 1, left + size * 2);
 
     if (m_type == GraphGpu) {
         const Call* longest = NULL;
@@ -184,26 +238,71 @@ void GraphWidget::mousePressEvent(QMouseEvent *e)
 }
 
 
+void GraphWidget::mouseReleaseEvent(QMouseEvent *e)
+{
+    if (!m_profile) {
+        return;
+    }
+
+    if (e->button() == Qt::LeftButton) {
+        int dxy = qAbs(m_mousePressPosition.x() - e->pos().x()) + qAbs(m_mousePressPosition.y() - e->pos().y());
+
+        if (dxy <= 2) {
+            int x = qMax(m_axisWidth, e->pos().x());
+            double dcdx = m_callWidth / (double)m_graphWidth;
+
+            int call = m_mousePressCall + dcdx * (x - m_axisWidth);
+
+            int64_t start = m_profile->calls[call].cpuStart;
+            int64_t end = m_profile->calls[call].cpuStart + m_profile->calls[call].cpuDuration;
+
+            if (start < m_selection.timeStart || end > m_selection.timeEnd) {
+                selectNone(true);
+            }
+        }
+    }
+}
+
+
+void GraphWidget::mouseDoubleClickEvent(QMouseEvent *e)
+{
+    const Call* call = callAtPosition(e->pos());
+
+    if (call) {
+        emit jumpToCall(call->no);
+    }
+}
+
+
 void GraphWidget::mouseMoveEvent(QMouseEvent *e)
 {
     if (!m_profile) {
         return;
     }
 
-    if (e->pos().x() < m_axisWidth || e->pos().y() < m_axisHeight) {
-        return;
-    }
-
     if (e->buttons().testFlag(Qt::LeftButton)) {
-        /* Horizontal scroll */
         double dcdx = m_callWidth / (double)m_graphWidth;
-        dcdx *= m_mousePressPosition.x() - e->pos().x();
 
-        m_call = m_mousePressCall + dcdx;
-        m_call = qBound(m_minCall, m_call, m_maxCall - m_callWidth);
+        if (m_mousePressPosition.y() > m_axisHeight) {
+            dcdx *= m_mousePressPosition.x() - e->pos().x();
 
-        emit viewChanged(m_call, m_callWidth);
-        update();
+            /* Horizontal scroll */
+            m_call = m_mousePressCall + dcdx;
+            m_call = qBound(m_callMin, m_call, m_callMax - m_callWidth);
+
+            emit viewChanged(m_call, m_callWidth);
+            update();
+        } else {
+            int x = qMax(m_axisWidth, e->pos().x());
+
+            int down = m_mousePressCall + dcdx * (m_mousePressPosition.x() - m_axisWidth);
+            int up = m_mousePressCall + dcdx * (x - m_axisWidth);
+
+            int left = qMax(qMin(down, up), 0);
+            int right = qMin<int>(qMax(down, up), m_profile->calls.size() - 1);
+
+            selectTime(m_profile->calls[left].cpuStart, m_profile->calls[right].cpuStart + m_profile->calls[right].cpuDuration, true);
+        }
     }
 
     const Call* call = callAtPosition(e->pos());
@@ -217,6 +316,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *e)
         if (call->pixels >= 0) {
             text += QString("\nGPU Duration: %1").arg(getTimeString(call->gpuDuration));
             text += QString("\nPixels Drawn: %1").arg(QLocale::system().toString((qlonglong)call->pixels));
+            text += QString("\nProgram: %1").arg(call->program);
         }
 
         QToolTip::showText(e->globalPos(), text);
@@ -232,7 +332,7 @@ void GraphWidget::wheelEvent(QWheelEvent *e)
         return;
     }
 
-    if (e->pos().x() < m_axisWidth || e->pos().y() < m_axisHeight) {
+    if (e->pos().x() < m_axisWidth) {
         return;
     }
 
@@ -251,7 +351,7 @@ void GraphWidget::wheelEvent(QWheelEvent *e)
     size /= 120 * (100 / zoomPercent);
 
     m_callWidth += size;
-    m_callWidth = qBound(m_minCallWidth, m_callWidth, m_maxCallWidth);
+    m_callWidth = qBound(m_callWidthMin, m_callWidth, m_callWidthMax);
 
     /* Scroll view to zoom around mouse */
     dt -= m_callWidth;
@@ -259,20 +359,10 @@ void GraphWidget::wheelEvent(QWheelEvent *e)
     dt /= m_graphWidth;
 
     m_call = dt + m_call;
-    m_call = qBound(m_minCall, m_call, m_maxCall - m_callWidth);
+    m_call = qBound(m_callMin, m_call, m_callMax - m_callWidth);
 
     emit viewChanged(m_call, m_callWidth);
     update();
-}
-
-
-void GraphWidget::mouseDoubleClickEvent(QMouseEvent *e)
-{
-    const Call* call = callAtPosition(e->pos());
-
-    if (call) {
-        emit jumpToCall(call->no);
-    }
 }
 
 
@@ -283,6 +373,7 @@ void GraphWidget::resizeEvent(QResizeEvent *e)
 
     m_graphGradientGpu.setStart(0, m_graphHeight);
     m_graphGradientCpu.setStart(0, m_graphHeight);
+    m_graphGradientDeselected.setStart(0, m_graphHeight);
 }
 
 
@@ -294,16 +385,20 @@ void GraphWidget::paintVerticalAxis(QPainter& painter)
     int height = painter.fontMetrics().height();
     int ticks  = m_graphHeight / (height * 2);
 
-    double step   = m_maxTime / (double)ticks;
+    double step   = m_timeMax / (double)ticks;
     double step10 = qPow(10.0, qFloor(qLn(step) / qLn(10.0)));
     step = qFloor((step / step10) * 2) * (step10 / 2);
+
+    if (step <= 0) {
+        return;
+    }
 
     painter.resetTransform();
     painter.translate(0, m_axisHeight);
     painter.setPen(m_axisForeground);
 
-    for (double tick = 0; tick <= m_maxTime; tick += step) {
-        int y = m_graphHeight - ((tick / m_maxTime) * m_graphHeight);
+    for (double tick = 0; tick <= m_timeMax; tick += step) {
+        int y = m_graphHeight - ((tick / m_timeMax) * m_graphHeight);
 
         painter.drawLine(m_axisWidth - 8, y, m_axisWidth - 1, y);
 
@@ -312,7 +407,7 @@ void GraphWidget::paintVerticalAxis(QPainter& painter)
                          m_axisWidth - 10,
                          height,
                          Qt::AlignRight | Qt::AlignVCenter,
-                         getTimeString(tick, m_maxTime));
+                         getTimeString(tick, m_timeMax));
     }
 }
 
@@ -395,7 +490,10 @@ void GraphWidget::paintEvent(QPaintEvent *e)
     }
 
     QPainter painter(this);
+    QBrush deselectBrush;
+    QPen deselectPen;
     QBrush brush;
+    QPen pen;
 
     /* Draw axes */
     paintHorizontalAxis(painter);
@@ -412,81 +510,156 @@ void GraphWidget::paintEvent(QPaintEvent *e)
     }
 
     /* Draw graph */
+    deselectBrush = QBrush(m_graphGradientDeselected);
+
     if (m_type == GraphGpu) {
         brush = QBrush(m_graphGradientGpu);
     } else {
         brush = QBrush(m_graphGradientCpu);
     }
 
+    pen = QPen(brush, 1);
+    deselectPen = QPen(deselectBrush, 1);
+
     painter.setBrush(brush);
-    painter.setPen(QPen(brush, 1));
+    painter.setPen(pen);
     painter.translate(m_axisWidth, m_axisHeight);
 
     double x = 0;
-    double dydt = m_graphHeight / (double)m_maxTime;
+    double dydt = m_graphHeight / (double)m_timeMax;
     double dxdc = m_graphWidth / (double)m_callWidth;
 
+    int selectLeft = m_call + m_callWidth;
+    int selectRight = -1;
+
+    if (m_selection.type == SelectProgram) {
+        painter.setPen(deselectPen);
+    }
+
     if (dxdc < 1.0) {
-        /* Less than 1 pixel per call, draw the longest call in a pixel */
-        int64_t longest = 0;
+        /* Draw the longest call in a pixel */
+        int64_t selectedLongest = 0;
+        int64_t pixelLongest = 0;
         int lastX = 0;
 
-        if (m_type == GraphGpu) {
-            for (int i = m_call; i < m_call + m_callWidth; ++i) {
-                const Call& call =  m_profile->calls[i];
+        for (int i = m_call; i < m_call + m_callWidth; ++i) {
+            const Call& call =  m_profile->calls[i];
+            int ix;
 
-                if (call.gpuDuration > longest) {
-                    longest = call.gpuDuration;
+            if (m_type == GraphGpu) {
+                if (call.gpuDuration > pixelLongest) {
+                    pixelLongest = call.gpuDuration;
                 }
 
-                x += dxdc;
+                if (m_selection.type == SelectProgram && call.program == m_selection.program) {
+                    if (call.gpuDuration > selectedLongest) {
+                        selectedLongest = call.gpuDuration;
+                    }
+                }
+            } else {
+                if (call.cpuDuration > pixelLongest) {
+                    pixelLongest = call.cpuDuration;
+                }
 
-                if (lastX != (int)x) {
-                    painter.drawLine(lastX, m_graphHeight, lastX, m_graphHeight - (longest * dydt));
-                    longest = 0;
-                    lastX = x;
+                if (m_selection.type == SelectProgram && call.program == m_selection.program) {
+                    if (call.cpuDuration > selectedLongest) {
+                        selectedLongest = call.cpuDuration;
+                    }
                 }
             }
-        } else {
-            for (int i = m_call; i < m_call + m_callWidth; ++i) {
-                const Call& call =  m_profile->calls[i];
 
-                if (call.cpuDuration > longest) {
-                    longest = call.cpuDuration;
+            x += dxdc;
+            ix = (int)x;
+
+            if (lastX != ix) {
+                if (m_selection.type == SelectTime) {
+                    if (call.cpuStart < m_selection.timeStart || call.cpuStart > m_selection.timeEnd) {
+                        painter.setPen(deselectPen);
+                    } else {
+                        if (ix < selectLeft) {
+                            selectLeft = ix;
+                        }
+
+                        if (ix > selectRight) {
+                            selectRight = ix;
+                        }
+
+                        painter.setPen(pen);
+                    }
                 }
 
-                x += dxdc;
+                painter.drawLine(lastX, m_graphHeight, lastX, m_graphHeight - (pixelLongest * dydt));
+                pixelLongest = 0;
 
-                if (lastX != (int)x) {
-                    painter.drawLine(lastX, m_graphHeight, lastX, m_graphHeight - (longest * dydt));
-                    longest = 0;
-                    lastX = x;
+                if (selectedLongest > 0) {
+                    painter.setPen(pen);
+                    painter.drawLine(lastX, m_graphHeight, lastX, m_graphHeight - (selectedLongest * dydt));
+                    painter.setPen(deselectPen);
+                    selectedLongest = 0;
                 }
+
+                lastX = ix;
             }
         }
     } else {
-        /* At least 1 pixel per call, draw rects */
-        if (m_type == GraphGpu) {
-            for (int i = m_call; i < m_call + m_callWidth; ++i) {
-                const Call& call =  m_profile->calls[i];
+        /* Draw rectangles for graph */
+        for (int i = m_call; i < m_call + m_callWidth; ++i, x += dxdc) {
+            const Call& call =  m_profile->calls[i];
+            int y;
 
-                if (call.pixels >= 0) {
-                    int y = qMax<int>(1, call.gpuDuration * dydt);
+            if (m_type == GraphGpu) {
+                y = qMax<int>(1, call.gpuDuration * dydt);
+            } else {
+                y = qMax<int>(1, call.cpuDuration * dydt);
+            }
+
+            if (m_selection.type == SelectTime) {
+                if (call.cpuStart < m_selection.timeStart || call.cpuStart > m_selection.timeEnd) {
+                    if (m_type == GraphCpu || call.pixels >= 0) {
+                        painter.fillRect(QRectF(x, m_graphHeight - y, dxdc, y), deselectBrush);
+                    }
+
+                    continue;
+                } else {
+                    if (x < selectLeft) {
+                        selectLeft = x;
+                    }
+
+                    if (x + dxdc > selectRight) {
+                        selectRight = x + dxdc;
+                    }
+                }
+            }
+
+            if (m_type == GraphCpu || call.pixels >= 0) {
+                if (m_selection.type == SelectProgram && call.program != m_selection.program) {
+                    painter.fillRect(QRectF(x, m_graphHeight - y, dxdc, y), deselectBrush);
+                } else {
                     painter.fillRect(QRectF(x, m_graphHeight - y, dxdc, y), brush);
                 }
-
-                x += dxdc;
-            }
-        } else {
-            for (int i = m_call; i < m_call + m_callWidth; ++i) {
-                const Call& call =  m_profile->calls[i];
-
-                int y = qMax<int>(1, call.cpuDuration * dydt);
-                painter.fillRect(QRectF(x, m_graphHeight - y, dxdc, y), brush);
-
-                x += dxdc;
             }
         }
+    }
+
+    /* Draw the selection borders */
+    if (m_selection.type == SelectTime && selectLeft < selectRight) {
+        selectLeft += m_axisWidth;
+        selectRight += m_axisWidth;
+
+        painter.resetTransform();
+        painter.setPen(Qt::green);
+
+        if (m_profile->calls[m_call].cpuStart <= m_selection.timeStart) {
+            painter.drawLine(selectLeft, 0, selectLeft, height());
+        }
+
+        if (m_profile->calls[m_call + m_callWidth - 1].cpuStart >= m_selection.timeEnd) {
+            painter.drawLine(selectRight, 0, selectRight, height());
+        }
+
+        selectLeft = qBound(m_axisWidth, selectLeft, width());
+        selectRight = qBound(m_axisWidth, selectRight, width());
+        painter.drawLine(selectLeft, m_axisHeight - 1, selectRight, m_axisHeight - 1);
     }
 }
 
