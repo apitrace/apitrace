@@ -299,7 +299,7 @@ frame_complete(trace::Call &call) {
             getCurrentTimes(cpuTime, gpuTime);
             cpuTime = cpuTime - retrace::profiler.getBaseCpuTime();
             gpuTime = gpuTime - retrace::profiler.getBaseGpuTime();
-            error   = gpuTime - cpuTime;
+            error   = gpuTime - cpuTime * (1.0E9 / os::timeFrequency);
 
             retrace::profiler.setBaseGpuTime(retrace::profiler.getBaseGpuTime() + error);
         }
