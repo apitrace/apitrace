@@ -319,6 +319,20 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
         return;
     }
 
+    /* FIXME: When we start tracking framebuffer objects as their own
+     * resources, we will want to link the FBO to the given texture
+     * resource, (and to this call). For now, just link render state
+     * to the texture, and force this call to be required. */
+    if (strcmp(name, "glFramebufferTexture2D") == 0) {
+        GLuint texture;
+
+        texture = call->arg(3).toUInt();
+
+        linkf("render-state", "texture-", texture);
+
+        required.insert(call->no);
+    }
+
     if (strcmp(name, "glBindTexture") == 0) {
         GLenum target;
         GLuint texture;
