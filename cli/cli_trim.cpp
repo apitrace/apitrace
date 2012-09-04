@@ -149,7 +149,6 @@ class TraceAnalyzer {
 
     /* Maps for tracking OpenGL state. */
     std::map<GLenum, unsigned> texture_map;
-    std::map<GLint, GLuint> location_program_map;
 
     /* The final set of calls required. This consists of calls added
      * explicitly with the require() method as well as all calls
@@ -159,6 +158,7 @@ class TraceAnalyzer {
     bool transformFeedbackActive;
     bool framebufferObjectActive;
     bool insideBeginEnd;
+    GLuint activeProgram;
 
     /* Rendering often has no side effects, but it can in some cases,
      * (such as when transform feedback is active, or when rendering
@@ -276,6 +276,10 @@ class TraceAnalyzer {
             }
 
             return;
+        }
+
+        if (strcmp(name, "glUseProgram") == 0) {
+            activeProgram = call->arg(0).toUInt();
         }
 
         if (strcmp(name, "glBindFramebuffer") == 0) {
@@ -573,13 +577,9 @@ class TraceAnalyzer {
             strcmp(name, "glGetVaryingLocationNV") == 0) {
 
             GLuint program;
-            GLint location;
             std::stringstream ss;
 
             program = call->arg(0).toUInt();
-            location = call->ret->toSInt();
-
-            location_program_map[location] = program;
 
             ss << "program-" << program;
 
@@ -594,15 +594,9 @@ class TraceAnalyzer {
         if (call->sig->num_args > 0 &&
             strcmp(call->sig->arg_names[0], "location") == 0) {
 
-            GLuint program;
-            GLint location;
             std::stringstream ss;
 
-            location = call->arg(0).toSInt();
-
-            program = location_program_map[location];
-
-            ss << "program-" << program;
+            ss << "program-" << activeProgram;
 
             provide(ss.str(), call->no);
 
