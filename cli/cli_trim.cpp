@@ -253,6 +253,16 @@ command(int argc, char *argv[])
         return 1;
     }
 
+    if (argc > optind + 1) {
+        std::cerr << "error: extraneous arguments:";
+        for (int i = optind + 1; i < argc; i++) {
+            std::cerr << " " << argv[i];
+        }
+        std::cerr << "\n";
+        usage();
+        return 1;
+    }
+
     return trim_trace(argv[optind], &options);
 }
 
