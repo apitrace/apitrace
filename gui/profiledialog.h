@@ -15,16 +15,11 @@ public:
     ~ProfileDialog();
     
     void setProfile(trace::Profile* profile);
+    void showCall(int call);
 
 public slots:
-    void setVerticalScrollMax(int max);
-    void setHorizontalScrollMax(int max);
-
     void tableDoubleClicked(const QModelIndex& index);
-
-    void selectNone();
-    void selectProgram(unsigned program);
-    void selectTime(int64_t start, int64_t end);
+    void graphSelectionChanged(SelectionState state);
 
 signals:
     void jumpToCall(int call);
@@ -32,7 +27,5 @@ signals:
 private:
     trace::Profile *m_profile;
 };
-
-QString getTimeString(int64_t time, int64_t unitTime = 0);
 
 #endif

@@ -31,7 +31,7 @@
      <property name="opaqueResize">
       <bool>false</bool>
      </property>
-     <widget class="QWidget" name="timelineContainer" native="true">
+     <widget class="GraphWidget" name="m_timeline" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
@@ -48,55 +48,6 @@
        <property name="margin">
         <number>0</number>
        </property>
-       <item>
-        <layout class="QGridLayout" name="gridLayout">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="TimelineWidget" name="m_timeline" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::WheelFocus</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QScrollBar" name="m_verticalScrollBar">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QScrollBar" name="m_horizontalScrollBar">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximum">
-            <number>10000</number>
-           </property>
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="graphContainer" native="true">
@@ -120,7 +71,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="GraphWidget" name="m_gpuGraph" native="true">
+        <widget class="CallDurationGraph" name="m_gpuGraph" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -139,7 +90,7 @@
         </widget>
        </item>
        <item>
-        <widget class="GraphWidget" name="m_cpuGraph" native="true">
+        <widget class="CallDurationGraph" name="m_cpuGraph" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -194,167 +145,20 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>TimelineWidget</class>
-   <extends>QWidget</extends>
-   <header>timelinewidget.h</header>
-   <container>1</container>
-   <slots>
-    <signal>horizontalScrollValueChanged(int)</signal>
-    <signal>verticalScrollValueChanged(int)</signal>
-    <signal>horizontalScrollMaxChanged(int)</signal>
-    <signal>verticalScrollMaxChanged(int)</signal>
-    <signal>jumpToCall(int)</signal>
-    <signal>selectedTime(int64_t,int64_t)</signal>
-    <signal>selectedProgram(unsigned)</signal>
-    <signal>selectedNone()</signal>
-    <slot>setHorizontalScrollValue(int)</slot>
-    <slot>setVerticalScrollValue(int)</slot>
-   </slots>
-  </customwidget>
-  <customwidget>
    <class>GraphWidget</class>
    <extends>QWidget</extends>
-   <header>graphwidget.h</header>
+   <header>graphing/graphwidget.h</header>
    <container>1</container>
-   <slots>
-    <signal>viewChanged(int,int)</signal>
-    <signal>selectedTime(int64_t,int64_t)</signal>
-    <signal>selectedProgram(unsigned)</signal>
-    <signal>selectedNone()</signal>
-    <slot>changeView(int,int)</slot>
-   </slots>
+  </customwidget>
+  <customwidget>
+   <class>CallDurationGraph</class>
+   <extends>QWidget</extends>
+   <header>calldurationgraph.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
  <connections>
-  <connection>
-   <sender>m_horizontalScrollBar</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>m_timeline</receiver>
-   <slot>setHorizontalScrollValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>373</x>
-     <y>434</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>373</x>
-     <y>213</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_verticalScrollBar</sender>
-   <signal>sliderMoved(int)</signal>
-   <receiver>m_timeline</receiver>
-   <slot>setVerticalScrollValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>754</x>
-     <y>213</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>373</x>
-     <y>213</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>horizontalScrollValueChanged(int)</signal>
-   <receiver>m_horizontalScrollBar</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>373</x>
-     <y>213</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>373</x>
-     <y>434</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>verticalScrollValueChanged(int)</signal>
-   <receiver>m_verticalScrollBar</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>373</x>
-     <y>213</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>754</x>
-     <y>213</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>horizontalScrollMaxChanged(int)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>setHorizontalScrollMax(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>373</x>
-     <y>213</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>383</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>verticalScrollMaxChanged(int)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>setVerticalScrollMax(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>373</x>
-     <y>213</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>383</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_cpuGraph</sender>
-   <signal>viewChanged(int,int)</signal>
-   <receiver>m_gpuGraph</receiver>
-   <slot>changeView(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>511</x>
-     <y>687</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>527</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_gpuGraph</sender>
-   <signal>viewChanged(int,int)</signal>
-   <receiver>m_cpuGraph</receiver>
-   <slot>changeView(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>511</x>
-     <y>527</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>687</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>m_table</sender>
    <signal>doubleClicked(QModelIndex)</signal>
@@ -368,150 +172,6 @@
     <hint type="destinationlabel">
      <x>511</x>
      <y>383</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_cpuGraph</sender>
-   <signal>selectedTime(int64_t,int64_t)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectTime(int64_t,int64_t)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>552</x>
-     <y>555</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_gpuGraph</sender>
-   <signal>selectedTime(int64_t,int64_t)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectTime(int64_t,int64_t)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>552</x>
-     <y>455</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>selectedTime(int64_t,int64_t)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectTime(int64_t,int64_t)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>544</x>
-     <y>192</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_cpuGraph</sender>
-   <signal>selectedProgram(unsigned)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectProgram(unsigned)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>552</x>
-     <y>555</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_gpuGraph</sender>
-   <signal>selectedProgram(unsigned)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectProgram(unsigned)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>552</x>
-     <y>455</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>selectedProgram(unsigned)</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectProgram(unsigned)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>544</x>
-     <y>192</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_cpuGraph</sender>
-   <signal>selectedNone()</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectNone()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>552</x>
-     <y>555</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_gpuGraph</sender>
-   <signal>selectedNone()</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectNone()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>552</x>
-     <y>455</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>m_timeline</sender>
-   <signal>selectedNone()</signal>
-   <receiver>ProfileDialog</receiver>
-   <slot>selectNone()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>544</x>
-     <y>192</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>552</x>
-     <y>401</y>
     </hint>
    </hints>
   </connection>

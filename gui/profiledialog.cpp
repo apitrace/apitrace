@@ -2,15 +2,143 @@
 #include "profiletablemodel.h"
 #include <QSortFilterProxyModel>
 
+#include "graphing/histogramview.h"
+#include "graphing/timeaxiswidget.h"
+#include "graphing/frameaxiswidget.h"
+#include "graphing/heatmapverticalaxiswidget.h"
+#include "profileheatmap.h"
+
+/* Handy function to allow selection of a call in main window */
+ProfileDialog* g_profileDialog = 0;
+
+void Profiling::jumpToCall(int index)
+{
+    if (g_profileDialog) {
+        g_profileDialog->showCall(index);
+    }
+}
+
+/* Provides frame numbers based off call index */
+class FrameCallDataProvider : public FrameDataProvider {
+public:
+    FrameCallDataProvider(const trace::Profile* profile)
+    {
+        m_profile = profile;
+    }
+
+    unsigned size() const {
+        return m_profile->frames.size();
+    }
+
+    qint64 frameStart(unsigned index) const {
+        return m_profile->frames[index].calls.begin;
+    }
+
+    qint64 frameEnd(unsigned index) const {
+        return m_profile->frames[index].calls.end;
+    }
+
+private:
+    const trace::Profile* m_profile;
+};
+
+/* Provides frame numbers based off time */
+class FrameTimeDataProvider : public FrameDataProvider {
+public:
+    FrameTimeDataProvider(const trace::Profile* profile)
+    {
+        m_profile = profile;
+    }
+
+    unsigned size() const {
+        return m_profile->frames.size();
+    }
+
+    qint64 frameStart(unsigned index) const {
+        return m_profile->frames[index].cpuStart;
+    }
+
+    qint64 frameEnd(unsigned index) const {
+        return m_profile->frames[index].cpuStart + m_profile->frames[index].cpuDuration;
+    }
+
+private:
+    const trace::Profile* m_profile;
+};
+
 ProfileDialog::ProfileDialog(QWidget *parent)
     : QDialog(parent),
       m_profile(0)
 {
     setupUi(this);
+    g_profileDialog = this;
 
-    connect(m_timeline, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
-    connect(m_gpuGraph, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
-    connect(m_cpuGraph, SIGNAL(jumpToCall(int)), SIGNAL(jumpToCall(int)));
+    /* Gradients for call duration histograms */
+    QLinearGradient cpuGradient;
+    cpuGradient.setColorAt(0.9, QColor(0, 0, 210));
+    cpuGradient.setColorAt(0.0, QColor(130, 130, 255));
+
+    QLinearGradient gpuGradient;
+    gpuGradient.setColorAt(0.9, QColor(210, 0, 0));
+    gpuGradient.setColorAt(0.0, QColor(255, 130, 130));
+
+
+    /* Setup heatmap timeline */
+    m_timeline->setLabel(new GraphLabelWidget("Frames ", m_timeline));
+    m_timeline->label()->setFlags(Qt::AlignVCenter | Qt::AlignRight);
+
+    m_timeline->setView(new HeatmapView(m_timeline));
+
+    m_timeline->setAxis(GraphWidget::AxisTop, new FrameAxisWidget(m_timeline));
+    m_timeline->setAxis(GraphWidget::AxisLeft, new HeatmapVerticalAxisWidget(m_timeline));
+    m_timeline->axis(GraphWidget::AxisLeft)->resize(80, 0);
+
+    m_timeline->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    m_timeline->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+
+    /* Setup Cpu call duration histogram */
+    m_cpuGraph->setLabel(new GraphLabelWidget("CPU", m_cpuGraph));
+
+    m_cpuGraph->setAxis(GraphWidget::AxisTop, new FrameAxisWidget(m_cpuGraph));
+    m_cpuGraph->setAxis(GraphWidget::AxisLeft, new TimeAxisWidget(m_cpuGraph));
+    m_cpuGraph->axis(GraphWidget::AxisLeft)->resize(80, 0);
+
+    HistogramView* cpuView = new HistogramView(m_cpuGraph);
+    cpuView->setSelectedGradient(cpuGradient);
+    m_cpuGraph->setView(cpuView);
+
+
+    /* Setup Gpu call duration histogram */
+    m_gpuGraph->setLabel(new GraphLabelWidget("GPU", m_gpuGraph));
+
+    m_gpuGraph->setAxis(GraphWidget::AxisTop, new FrameAxisWidget(m_gpuGraph));
+    m_gpuGraph->setAxis(GraphWidget::AxisLeft, new TimeAxisWidget(m_gpuGraph));
+    m_gpuGraph->axis(GraphWidget::AxisLeft)->resize(80, 0);
+
+    HistogramView* gpuView = new HistogramView(m_gpuGraph);
+    gpuView->setSelectedGradient(gpuGradient);
+    m_gpuGraph->setView(gpuView);
+
+
+    /* Synchronise selections */
+    connect(m_timeline, SIGNAL(selectionChanged(SelectionState)), m_cpuGraph, SLOT(setSelection(SelectionState)));
+    connect(m_timeline, SIGNAL(selectionChanged(SelectionState)), m_gpuGraph, SLOT(setSelection(SelectionState)));
+
+    connect(m_cpuGraph, SIGNAL(selectionChanged(SelectionState)), m_timeline, SLOT(setSelection(SelectionState)));
+    connect(m_cpuGraph, SIGNAL(selectionChanged(SelectionState)), m_gpuGraph, SLOT(setSelection(SelectionState)));
+
+    connect(m_gpuGraph, SIGNAL(selectionChanged(SelectionState)), m_timeline, SLOT(setSelection(SelectionState)));
+    connect(m_gpuGraph, SIGNAL(selectionChanged(SelectionState)), m_cpuGraph, SLOT(setSelection(SelectionState)));
+
+    connect(m_timeline, SIGNAL(selectionChanged(SelectionState)), this, SLOT(graphSelectionChanged(SelectionState)));
+    connect(m_cpuGraph, SIGNAL(selectionChanged(SelectionState)), this, SLOT(graphSelectionChanged(SelectionState)));
+    connect(m_gpuGraph, SIGNAL(selectionChanged(SelectionState)), this, SLOT(graphSelectionChanged(SelectionState)));
+
+
+    /* Synchronise views between cpuGraph and gpuGraph */
+    connect(m_cpuGraph, SIGNAL(horizontalViewChanged(qint64,qint64)), m_gpuGraph, SLOT(setHorizontalView(qint64,qint64)));
+    connect(m_gpuGraph, SIGNAL(horizontalViewChanged(qint64,qint64)), m_cpuGraph, SLOT(setHorizontalView(qint64,qint64)));
 }
 
 
@@ -20,192 +148,118 @@ ProfileDialog::~ProfileDialog()
 }
 
 
+void ProfileDialog::showCall(int call)
+{
+    emit jumpToCall(call);
+}
+
+
 void ProfileDialog::tableDoubleClicked(const QModelIndex& index)
 {
     ProfileTableModel* model = (ProfileTableModel*)m_table->model();
+
+    if (!model) {
+        return;
+    }
+
     const trace::Profile::Call* call = model->getJumpCall(index);
 
     if (call) {
         emit jumpToCall(call->no);
     } else {
         unsigned program = model->getProgram(index);
-        m_timeline->selectProgram(program);
-        m_cpuGraph->selectProgram(program);
-        m_gpuGraph->selectProgram(program);
+
+        SelectionState state;
+        state.type = SelectionState::Vertical;
+        state.end = state.start = program;
+
+        m_timeline->setSelection(state);
+        m_cpuGraph->setSelection(state);
+        m_gpuGraph->setSelection(state);
     }
 }
 
 
 void ProfileDialog::setProfile(trace::Profile* profile)
 {
-    delete m_profile;
 
-    if (profile->frames.size() == 0) {
-        m_profile = NULL;
-    } else {
-        m_profile = profile;
-        m_timeline->setProfile(m_profile);
-        m_gpuGraph->setProfile(m_profile, GraphGpu);
-        m_cpuGraph->setProfile(m_profile, GraphCpu);
+    if (profile && profile->frames.size()) {
+        HeatmapVerticalAxisWidget* programAxis;
+        FrameAxisWidget* frameAxis;
+        HistogramView* histogram;
+        HeatmapView* heatmap;
 
+
+        /* Setup data providers for Cpu graph */
+        m_cpuGraph->setProfile(profile);
+        histogram = (HistogramView*)m_cpuGraph->view();
+        frameAxis = (FrameAxisWidget*)m_cpuGraph->axis(GraphWidget::AxisTop);
+
+        histogram->setDataProvider(new CallDurationDataProvider(profile, false));
+        frameAxis->setDataProvider(new FrameCallDataProvider(profile));
+
+        /* Setup data provider for Gpu graph */
+        m_gpuGraph->setProfile(profile);
+        histogram = (HistogramView*)m_gpuGraph->view();
+        frameAxis = (FrameAxisWidget*)m_gpuGraph->axis(GraphWidget::AxisTop);
+
+        histogram->setDataProvider(new CallDurationDataProvider(profile, true));
+        frameAxis->setDataProvider(new FrameCallDataProvider(profile));
+
+        /* Setup data provider for heatmap timeline */
+        heatmap = (HeatmapView*)m_timeline->view();
+        frameAxis = (FrameAxisWidget*)m_timeline->axis(GraphWidget::AxisTop);
+        programAxis = (HeatmapVerticalAxisWidget*)m_timeline->axis(GraphWidget::AxisLeft);
+
+        heatmap->setDataProvider(new ProfileHeatmapDataProvider(profile));
+        frameAxis->setDataProvider(new FrameTimeDataProvider(profile));
+        programAxis->setDataProvider(new ProfileHeatmapDataProvider(profile));
+
+        /* Setup data model for table view */
         ProfileTableModel* model = new ProfileTableModel(m_table);
-        model->setProfile(m_profile);
+        model->setProfile(profile);
 
         delete m_table->model();
         m_table->setModel(model);
         m_table->update(QModelIndex());
-        m_table->sortByColumn(1, Qt::DescendingOrder);
+        m_table->sortByColumn(2, Qt::DescendingOrder);
         m_table->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
         m_table->resizeColumnsToContents();
+
+        /* Reset selection */
+        SelectionState emptySelection;
+        emptySelection.type = SelectionState::None;
+        m_cpuGraph->setSelection(emptySelection);
+        m_gpuGraph->setSelection(emptySelection);
+        m_timeline->setSelection(emptySelection);
     }
+
+    delete m_profile;
+    m_profile = profile;
 }
 
 
-void ProfileDialog::selectNone()
+void ProfileDialog::graphSelectionChanged(SelectionState state)
 {
-    QObject* src = QObject::sender();
-
-    /* Update table model */
     ProfileTableModel* model = (ProfileTableModel*)m_table->model();
-    model->selectNone();
+
+    if (!model) {
+        return;
+    }
+
+    if (state.type == SelectionState::None) {
+        model->selectNone();
+    } else if (state.type == SelectionState::Horizontal) {
+        model->selectTime(state.start, state.end);
+    } else if (state.type == SelectionState::Vertical) {
+        model->selectProgram(state.start);
+    }
+
     m_table->reset();
 
-    /* Update graphs */
-    if (src != m_gpuGraph) {
-        m_gpuGraph->selectNone();
-    }
-
-    if (src != m_cpuGraph) {
-        m_cpuGraph->selectNone();
-    }
-
-    /* Update timeline */
-    if (src != m_timeline) {
-        m_timeline->selectNone();
+    if (state.type == SelectionState::Vertical) {
+        m_table->selectRow(model->getRowIndex(state.start));
     }
 }
-
-
-void ProfileDialog::selectProgram(unsigned program)
-{
-    QObject* src = QObject::sender();
-
-    /* Update table model */
-    ProfileTableModel* model = (ProfileTableModel*)m_table->model();
-    model->selectNone();
-    m_table->reset();
-    m_table->selectRow(model->getRowIndex(program));
-
-    /* Update graphs */
-    if (src != m_gpuGraph) {
-        m_gpuGraph->selectProgram(program);
-    }
-
-    if (src != m_cpuGraph) {
-        m_cpuGraph->selectProgram(program);
-    }
-
-    /* Update timeline */
-    if (src != m_timeline) {
-        m_timeline->selectProgram(program);
-    }
-}
-
-
-void ProfileDialog::selectTime(int64_t start, int64_t end)
-{
-    QObject* src = QObject::sender();
-
-    /* Update table model */
-    ProfileTableModel* model = (ProfileTableModel*)m_table->model();
-    model->selectTime(start, end);
-    m_table->reset();
-
-    /* Update graphs */
-    if (src != m_gpuGraph) {
-        m_gpuGraph->selectTime(start, end);
-    }
-
-    if (src != m_cpuGraph) {
-        m_cpuGraph->selectTime(start, end);
-    }
-
-    /* Update timeline */
-    if (src != m_timeline) {
-        m_timeline->selectTime(start, end);
-    }
-}
-
-
-void ProfileDialog::setVerticalScrollMax(int max)
-{
-    if (max <= 0) {
-        m_verticalScrollBar->hide();
-    } else {
-        m_verticalScrollBar->show();
-        m_verticalScrollBar->setMinimum(0);
-        m_verticalScrollBar->setMaximum(max);
-    }
-}
-
-
-void ProfileDialog::setHorizontalScrollMax(int max)
-{
-    if (max <= 0) {
-        m_horizontalScrollBar->hide();
-    } else {
-        m_horizontalScrollBar->show();
-        m_horizontalScrollBar->setMinimum(0);
-        m_horizontalScrollBar->setMaximum(max);
-    }
-}
-
-
-/**
- * Convert a CPU / GPU time to a textual representation.
- * This includes automatic unit selection.
- */
-QString getTimeString(int64_t time, int64_t unitTime)
-{
-    QString text;
-    QString unit = " ns";
-    double unitScale = 1;
-
-    if (unitTime == 0) {
-        unitTime = time;
-    }
-
-    if (unitTime >= 60e9) {
-        int64_t mins = time / 60e9;
-        text += QString("%1 m ").arg(mins);
-
-        time -= mins * 60e9;
-        unit = " s";
-        unitScale = 1e9;
-    } else if (unitTime >= 1e9) {
-        unit = " s";
-        unitScale = 1e9;
-    } else if (unitTime >= 1e6) {
-        unit = " ms";
-        unitScale = 1e6;
-    } else if (unitTime >= 1e3) {
-        unit = QString::fromUtf8(" µs");
-        unitScale = 1e3;
-    }
-
-    /* 3 decimal places */
-    text += QString("%1").arg(time / unitScale, 0, 'f', 3);
-
-    /* Remove trailing 0 */
-    while(text.endsWith('0'))
-        text.truncate(text.length() - 1);
-
-    /* Remove trailing decimal point */
-    if (text.endsWith(QLocale::system().decimalPoint()))
-        text.truncate(text.length() - 1);
-
-    return text + unit;
-}
-
 
 #include "profiledialog.moc"

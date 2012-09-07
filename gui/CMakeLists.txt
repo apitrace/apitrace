@@ -10,7 +10,6 @@ set(qapitrace_SRCS
    apitracemodel.cpp
    argumentseditor.cpp
    glsledit.cpp
-   graphwidget.cpp
    imageviewer.cpp
    jumpwidget.cpp
    mainwindow.cpp
@@ -26,8 +25,15 @@ set(qapitrace_SRCS
    traceloader.cpp
    traceprocess.cpp
    trimprocess.cpp
-   timelinewidget.cpp
    vertexdatainterpreter.cpp
+   graphing/frameaxiswidget.cpp
+   graphing/graphwidget.cpp
+   graphing/graphaxiswidget.cpp
+   graphing/graphview.cpp
+   graphing/heatmapview.cpp
+   graphing/heatmapverticalaxiswidget.cpp
+   graphing/histogramview.cpp
+   graphing/timeaxiswidget.cpp
  )
 
 qt4_automoc(${qapitrace_SRCS})

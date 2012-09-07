@@ -1,5 +1,6 @@
 #include "profiletablemodel.h"
 #include "profiledialog.h"
+#include "profiling.h"
 
 #include <QLocale>
 
@@ -235,15 +236,15 @@ QVariant ProfileTableModel::data(const QModelIndex &index, int role) const
         case COLUMN_USAGES:
             return QLocale::system().toString(row.uses);
         case COLUMN_GPU_TIME:
-            return getTimeString(row.gpuTime);
+            return Profiling::getTimeString(row.gpuTime);
         case COLUMN_CPU_TIME:
-            return getTimeString(row.cpuTime);
+            return Profiling::getTimeString(row.cpuTime);
         case COLUMN_PIXELS_DRAWN:
             return QLocale::system().toString((qlonglong)row.pixels);
         case COLUMN_GPU_AVERAGE:
-            return getTimeString((row.uses <= 0) ? 0 : (row.gpuTime / row.uses));
+            return Profiling::getTimeString((row.uses <= 0) ? 0 : (row.gpuTime / row.uses));
         case COLUMN_CPU_AVERAGE:
-            return getTimeString((row.uses <= 0) ? 0 : (row.cpuTime / row.uses));
+            return Profiling::getTimeString((row.uses <= 0) ? 0 : (row.cpuTime / row.uses));
         case COLUMN_PIXELS_AVERAGE:
             return QLocale::system().toString((row.uses <= 0) ? 0 : (row.pixels / row.uses));
         }
