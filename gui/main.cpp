@@ -22,6 +22,7 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
+    QApplication::setGraphicsSystem("raster");
     QApplication app(argc, argv);
 
     qRegisterMetaType<QList<ApiTraceFrame*> >();
