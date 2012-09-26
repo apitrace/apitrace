@@ -21,7 +21,7 @@ The GUI also dependends on:
 * QJSON version 0.5 or higher (tested with version 0.7.1, which is bundled)
 
 Qt and QJSON will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and
-never used if `-DENABLED_GUI=FALSE` is passed instead.  The implicit default is
+never used if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
 `-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available, using the
 bundled QJSON if it is not found on the system.
 
@@ -47,6 +47,7 @@ doing:
         -DCMAKE_C_FLAGS=-m32 \
         -DCMAKE_CXX_FLAGS=-m32 \
         -DCMAKE_EXE_LINKER_FLAGS=-m32 \
+        -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 \
         -DENABLE_GUI=FALSE \
         -H. -Bbuild32
     make -C build32 glxtrace
