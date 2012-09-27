@@ -275,6 +275,15 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
+    /*
+     * Ignore .NET exception.
+     *
+     * http://ig2600.blogspot.co.uk/2011/01/why-do-i-keep-getting-exception-code.html
+     */
+    if (pExceptionRecord->ExceptionCode == 0xe0434352) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
     // Clear direction flag
 #ifdef _MSC_VER
 #ifndef _WIN64
