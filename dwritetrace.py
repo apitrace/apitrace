@@ -49,16 +49,9 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    print '#include <windows.h>'
-    print
-    print '#include "compat.h"'
-    print
     print '#define DWRITE_EXPORT WINAPI'
     print
-    print '#include <d2d1.h>'
-    print '#include <dwrite.h>'
-    print
-    print 'DEFINE_GUID(IID_IDWriteFactory,0xb859ee5a,0xd838,0x4b5b,0xa2,0xe8,0x1a,0xdc,0x7d,0x93,0xdb,0x48);'
+    print '#include "d2dimports.hpp"'
     print
 
     tracer = DWriteTracer('dwrite.dll')

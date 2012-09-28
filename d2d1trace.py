@@ -48,14 +48,7 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    print '#include <windows.h>'
-    print
-    print '#include "compat.h"'
-    print
-    print '#include <d2d1.h>'
-    print '#include <dwrite.h>'
-    print
-    print 'DEFINE_GUID(IID_ID2D1Factory,0x06152247,0x6f50,0x465a,0x92,0x45,0x11,0x8b,0xfd,0x3b,0x60,0x07);'
+    print '#include "d2dimports.hpp"'
     print
 
     tracer = D2D1Tracer('d2d1.dll')

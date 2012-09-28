@@ -349,7 +349,7 @@ class Interface(Type):
         for method in self.methods:
             yield method
         raise StopIteration
-    
+
     def iterBaseMethods(self):
         if self.base is not None:
             for iface, method in self.base.iterBaseMethods():
