@@ -37,75 +37,46 @@ namespace trace {
 
 
 os::String
-findFile(const char *relPath,
-         const char *absPath,
-         bool verbose)
+findScript(const char *scriptFilename)
 {
-    os::String complete;
+    os::String scriptPath;
 
-    /* First look in the same directory from which this process is
-     * running, (to support developers running a compiled program that
-     * has not been installed. */
-    os::String process_dir = os::getProcessName();
-    process_dir.trimFilename();
+    os::String processDir = os::getProcessName();
+    processDir.trimFilename();
 
-    complete = process_dir;
-    complete.join(relPath);
-
-    if (complete.exists())
-        return complete;
-
-    /* Second, look in the directory for installed wrappers. */
-    complete = absPath;
-    if (complete.exists())
-        return complete;
-
-    if (verbose) {
-        std::cerr << "error: cannot find " << relPath << " or " << absPath << "\n";
+    // Try relative build directory
+    // XXX: Just make build and install directory layout match
+    scriptPath = processDir;
+    scriptPath.join("scripts");
+    scriptPath.join(scriptFilename);
+    if (scriptPath.exists()) {
+        return scriptPath;
     }
 
-    return "";
-}
-
-
-#define SCRIPTS_SUBDIR "lib/apitrace/scripts"
-
-os::String
-findScript(const char *name)
-{
-    os::String path;
-
-#if defined(APITRACE_SOURCE_DIR)
-    // Try the absolute source  path -- useful for development or quick
-    // experiment.  Relative paths don't quite work here due to out of source
-    // trees.
-    path = APITRACE_SOURCE_DIR "/scripts";
-    path.join(name);
-    if (path.exists()) {
-        return path;
-    }
-#endif
-
+    // Try relative install directory
+    scriptPath = processDir;
 #if defined(_WIN32)
-    // Windows has no standard installation path, so find it relatively to the
-    // process name, which is assumed to be in a bin subdirectory.
-    path = os::getProcessName();
-    path.trimFilename();
-    path.join("..\\lib\\apitrace\\scripts");
-    path.join(name);
-    if (path.exists()) {
-        return path;
-    }
+    scriptPath.join("..\\lib\\scripts");
+#elif defined(__APPLE__)
+    scriptPath.join("../lib/scripts");
 #else
-    // Assume a predefined installation path on Unices
-    path = APITRACE_INSTALL_PREFIX "/lib/apitrace/scripts";
-    path.join(name);
-    if (path.exists()) {
-        return path;
+    scriptPath.join("../lib/apitrace/scripts");
+#endif
+    scriptPath.join(scriptFilename);
+    if (scriptPath.exists()) {
+        return scriptPath;
+    }
+
+#ifndef _WIN32
+    // Try absolute install directory
+    scriptPath = APITRACE_SCRIPTS_INSTALL_DIR;
+    scriptPath.join(scriptFilename);
+    if (scriptPath.exists()) {
+        return scriptPath;
     }
 #endif
 
-    std::cerr << "error: cannot find " << name << " script\n";
+    std::cerr << "error: cannot find " << scriptFilename << " script\n";
 
     return "";
 }

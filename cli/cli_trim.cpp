@@ -24,7 +24,10 @@
  *
  **************************************************************************/
 
+
 #include <string.h>
+#include <limits.h> // for CHAR_MAX
+#include <getopt.h>
 
 #include "cli.hpp"
 
@@ -40,55 +43,71 @@ static void
 usage(void)
 {
     std::cout
-        << "usage: apitrace trim [OPTIONS] <trace-file>...\n"
+        << "usage: apitrace trim [OPTIONS] TRACE_FILE...\n"
         << synopsis << "\n"
         "\n"
-        "       --calls <CALLSET>     Only trim specified calls\n"
-        "    -o --output <TRACEFILE>  Output trace file\n"
+        "    -h, --help               show this help message and exit\n"
+        "        --calls=CALLSET      only retain specified calls\n"
+        "        --thread=THREAD_ID   only retain calls from specified thread\n"
+        "    -o, --output=TRACE_FILE  output trace file\n"
         "\n"
     ;
 }
+
+enum {
+    CALLS_OPT = CHAR_MAX + 1,
+    THREAD_OPT,
+};
+
+const static char *
+shortOptions = "ho:";
+
+const static struct option
+longOptions[] = {
+    {"help", no_argument, 0, 'h'},
+    {"calls", required_argument, 0, CALLS_OPT},
+    {"thread", required_argument, 0, THREAD_OPT},
+    {"output", required_argument, 0, 'o'},
+    {0, 0, 0, 0}
+};
 
 static int
 command(int argc, char *argv[])
 {
     std::string output;
     trace::CallSet calls(trace::FREQUENCY_ALL);
+    int thread = -1;
     int i;
 
-    for (i = 1; i < argc;) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        ++i;
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "--help")) {
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
             usage();
             return 0;
-        } else if (!strcmp(arg, "--calls")) {
-            calls = trace::CallSet(argv[i++]);
-        } else if (!strcmp(arg, "-o") ||
-                   !strcmp(arg, "--output")) {
-            output = argv[i++];
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+        case CALLS_OPT:
+            calls = trace::CallSet(optarg);
+            break;
+        case THREAD_OPT:
+            thread = atoi(optarg);
+            break;
+        case 'o':
+            output = optarg;
+            break;
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
             usage();
             return 1;
         }
     }
 
-    if (i >= argc) {
-        std::cerr << "Error: apitrace trim requires a trace file as an argument.\n";
+    if (optind >= argc) {
+        std::cerr << "error: apitrace trim requires a trace file as an argument.\n";
         usage();
         return 1;
     }
 
-    for ( ; i < argc; ++i) {
+    for (i = optind; i < argc; ++i) {
         trace::Parser p;
         if (!p.open(argv[i])) {
             std::cerr << "error: failed to open " << argv[i] << "\n";
@@ -110,7 +129,8 @@ command(int argc, char *argv[])
 
         trace::Call *call;
         while ((call = p.parse_call())) {
-            if (calls.contains(*call)) {
+            if (calls.contains(*call) &&
+                (thread == -1 || call->thread_id == thread)) {
                 writer.writeCall(call);
             }
             delete call;

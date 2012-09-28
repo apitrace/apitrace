@@ -190,6 +190,10 @@ void Writer::beginStruct(const StructSig *sig) {
     }
 }
 
+void Writer::beginRepr(void) {
+    _writeByte(trace::TYPE_REPR);
+}
+
 void Writer::writeBool(bool value) {
     _writeByte(value ? trace::TYPE_TRUE : trace::TYPE_FALSE);
 }
@@ -294,13 +298,13 @@ void Writer::writeNull(void) {
     _writeByte(trace::TYPE_NULL);
 }
 
-void Writer::writeOpaque(const void *addr) {
+void Writer::writePointer(unsigned long long addr) {
     if (!addr) {
         Writer::writeNull();
         return;
     }
     _writeByte(trace::TYPE_OPAQUE);
-    _writeUInt((size_t)addr);
+    _writeUInt(addr);
 }
 
 

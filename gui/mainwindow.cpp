@@ -8,14 +8,19 @@
 #include "argumentseditor.h"
 #include "imageviewer.h"
 #include "jumpwidget.h"
+#include "profiledialog.h"
 #include "retracer.h"
 #include "searchwidget.h"
 #include "settingsdialog.h"
 #include "shaderssourcewidget.h"
 #include "tracedialog.h"
 #include "traceprocess.h"
+#include "trimprocess.h"
+#include "thumbnail.h"
 #include "ui_retracerdialog.h"
+#include "ui_profilereplaydialog.h"
 #include "vertexdatainterpreter.h"
+#include "trace_profiler.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -47,6 +52,15 @@ MainWindow::MainWindow()
     initConnections();
 }
 
+MainWindow::~MainWindow()
+{
+    delete m_trace;
+    m_trace = 0;
+
+    delete m_proxyModel;
+    delete m_model;
+}
+
 void MainWindow::createTrace()
 {
     if (!m_traceProcess->canTrace()) {
@@ -61,6 +75,7 @@ void MainWindow::createTrace()
     if (dialog.exec() == QDialog::Accepted) {
         qDebug()<< "App : " <<dialog.applicationPath();
         qDebug()<< "  Arguments: "<<dialog.arguments();
+        m_traceProcess->setApi(dialog.api());
         m_traceProcess->setExecutablePath(dialog.applicationPath());
         m_traceProcess->setArguments(dialog.arguments());
         m_traceProcess->start();
@@ -147,6 +162,10 @@ void MainWindow::callItemSelected(const QModelIndex &index)
     }
 }
 
+void MainWindow::callItemActivated(const QModelIndex &index) {
+    lookupState();
+}
+
 void MainWindow::replayStart()
 {
     if (m_trace->isSaving()) {
@@ -157,21 +176,52 @@ void MainWindow::replayStart()
                "Please wait until it finishes and try again."));
         return;
     }
+
     QDialog dlg;
     Ui_RetracerDialog dlgUi;
     dlgUi.setupUi(&dlg);
 
     dlgUi.doubleBufferingCB->setChecked(
         m_retracer->isDoubleBuffered());
+
     dlgUi.errorCheckCB->setChecked(
         !m_retracer->isBenchmarking());
 
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setDoubleBuffered(
             dlgUi.doubleBufferingCB->isChecked());
+
         m_retracer->setBenchmarking(
             !dlgUi.errorCheckCB->isChecked());
-        replayTrace(false);
+
+        m_retracer->setProfiling(false, false, false);
+
+        replayTrace(false, false);
+    }
+}
+
+void MainWindow::replayProfile()
+{
+    if (m_trace->isSaving()) {
+        QMessageBox::warning(
+            this,
+            tr("Trace Saving"),
+            tr("QApiTrace is currently saving the edited trace file. "
+               "Please wait until it finishes and try again."));
+        return;
+    }
+
+    QDialog dlg;
+    Ui_ProfileReplayDialog dlgUi;
+    dlgUi.setupUi(&dlg);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        m_retracer->setProfiling(
+            dlgUi.gpuTimesCB->isChecked(),
+            dlgUi.cpuTimesCB->isChecked(),
+            dlgUi.pixelsDrawnCB->isChecked());
+
+        replayTrace(false, false);
     }
 }
 
@@ -180,7 +230,9 @@ void MainWindow::replayStop()
     m_retracer->quit();
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
+    m_ui.actionProfile->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
+    m_ui.actionShowThumbnails->setEnabled(true);
 }
 
 void MainWindow::newTraceFile(const QString &fileName)
@@ -192,43 +244,47 @@ void MainWindow::newTraceFile(const QString &fileName)
 
     if (fileName.isEmpty()) {
         m_ui.actionReplay->setEnabled(false);
+        m_ui.actionProfile->setEnabled(false);
         m_ui.actionLookupState->setEnabled(false);
+        m_ui.actionShowThumbnails->setEnabled(false);
         setWindowTitle(tr("QApiTrace"));
     } else {
         QFileInfo info(fileName);
         m_ui.actionReplay->setEnabled(true);
+        m_ui.actionProfile->setEnabled(true);
         m_ui.actionLookupState->setEnabled(true);
+        m_ui.actionShowThumbnails->setEnabled(true);
+        m_ui.actionTrim->setEnabled(true);
         setWindowTitle(
             tr("QApiTrace - %1").arg(info.fileName()));
     }
 }
 
-void MainWindow::replayFinished(const QString &output)
+void MainWindow::replayFinished(const QString &message)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
+    m_ui.actionProfile->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
+    m_ui.actionShowThumbnails->setEnabled(true);
 
     m_progressBar->hide();
-    if (output.length() < 80) {
-        statusBar()->showMessage(output);
-    }
+    statusBar()->showMessage(message, 2000);
     m_stateEvent = 0;
     m_ui.actionShowErrorsDock->setEnabled(m_trace->hasErrors());
     m_ui.errorsDock->setVisible(m_trace->hasErrors());
     if (!m_trace->hasErrors()) {
         m_ui.errorsTreeWidget->clear();
     }
-
-    statusBar()->showMessage(
-        tr("Replaying finished!"), 2000);
 }
 
 void MainWindow::replayError(const QString &message)
 {
     m_ui.actionStop->setEnabled(false);
     m_ui.actionReplay->setEnabled(true);
+    m_ui.actionProfile->setEnabled(true);
     m_ui.actionLookupState->setEnabled(true);
+    m_ui.actionShowThumbnails->setEnabled(true);
     m_stateEvent = 0;
     m_nonDefaultsLookupEvent = 0;
 
@@ -254,6 +310,7 @@ void MainWindow::finishedLoadingTrace()
     if (!m_trace) {
         return;
     }
+    m_api = m_trace->api();
     QFileInfo info(m_trace->fileName());
     statusBar()->showMessage(
         tr("Loaded %1").arg(info.fileName()), 3000);
@@ -263,7 +320,7 @@ void MainWindow::finishedLoadingTrace()
     }
 }
 
-void MainWindow::replayTrace(bool dumpState)
+void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
 {
     if (m_trace->fileName().isEmpty()) {
         return;
@@ -272,6 +329,7 @@ void MainWindow::replayTrace(bool dumpState)
     m_retracer->setFileName(m_trace->fileName());
     m_retracer->setAPI(m_api);
     m_retracer->setCaptureState(dumpState);
+    m_retracer->setCaptureThumbnails(dumpThumbnails);
     if (m_retracer->captureState() && m_selectedEvent) {
         int index = 0;
         if (m_selectedEvent->type() == ApiTraceEvent::Call) {
@@ -295,13 +353,43 @@ void MainWindow::replayTrace(bool dumpState)
 
     m_ui.actionStop->setEnabled(true);
     m_progressBar->show();
-    if (dumpState) {
+    if (dumpState || dumpThumbnails) {
+        if (dumpState && dumpThumbnails) {
+            statusBar()->showMessage(
+                tr("Looking up the state and capturing thumbnails..."));
+        } else if (dumpState) {
+            statusBar()->showMessage(
+                tr("Looking up the state..."));
+        } else if (dumpThumbnails) {
+            statusBar()->showMessage(
+                tr("Capturing thumbnails..."));
+        }
+    } else if (m_retracer->isProfiling()) {
         statusBar()->showMessage(
-            tr("Looking up the state..."));
+                    tr("Profiling draw calls in trace file..."));
     } else {
         statusBar()->showMessage(
             tr("Replaying the trace file..."));
     }
+}
+
+void MainWindow::trimEvent()
+{
+
+    int trimIndex;
+    if (m_trimEvent->type() == ApiTraceEvent::Call) {
+        ApiTraceCall *call = static_cast<ApiTraceCall*>(m_trimEvent);
+        trimIndex = call->index();
+    } else if (m_trimEvent->type() == ApiTraceEvent::Frame) {
+        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(m_trimEvent);
+        const QList<ApiTraceFrame*> frames = m_trace->frames();
+        trimIndex = frame->lastCallIndex();
+    }
+
+    m_trimProcess->setTracePath(m_trace->fileName());
+    m_trimProcess->setTrimIndex(trimIndex);
+
+    m_trimProcess->start();
 }
 
 void MainWindow::lookupState()
@@ -321,16 +409,24 @@ void MainWindow::lookupState()
         return;
     }
     m_stateEvent = m_selectedEvent;
-    replayTrace(true);
+    replayTrace(true, false);
 }
 
-MainWindow::~MainWindow()
+void MainWindow::showThumbnails()
 {
-    delete m_trace;
-    m_trace = 0;
+    replayTrace(false, true);
+}
 
-    delete m_proxyModel;
-    delete m_model;
+void MainWindow::trim()
+{
+    if (!m_selectedEvent) {
+        QMessageBox::warning(
+            this, tr("Unknown Event"),
+            tr("To trim select a frame or an event in the event list."));
+        return;
+    }
+    m_trimEvent = m_selectedEvent;
+    trimEvent();
 }
 
 static void
@@ -530,7 +626,7 @@ void MainWindow::fillStateForFrame()
     if (textures.isEmpty() && fbos.isEmpty()) {
         m_ui.surfacesTab->setDisabled(false);
     } else {
-        m_ui.surfacesTreeWidget->setIconSize(QSize(64, 64));
+        m_ui.surfacesTreeWidget->setIconSize(QSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE));
         if (!textures.isEmpty()) {
             QTreeWidgetItem *textureItem =
                 new QTreeWidgetItem(m_ui.surfacesTreeWidget);
@@ -571,12 +667,9 @@ void MainWindow::fillStateForFrame()
 void MainWindow::showSettings()
 {
     SettingsDialog dialog;
-    dialog.setAPI(m_api);
     dialog.setFilterModel(m_proxyModel);
 
     dialog.exec();
-
-    m_api = dialog.getAPI();
 }
 
 void MainWindow::openHelp(const QUrl &url)
@@ -705,6 +798,9 @@ void MainWindow::initObjects()
     m_searchWidget->hide();
 
     m_traceProcess = new TraceProcess(this);
+    m_trimProcess = new TrimProcess(this);
+
+    m_profileDialog = new ProfileDialog();
 }
 
 void MainWindow::initConnections()
@@ -719,8 +815,8 @@ void MainWindow::initConnections()
             this, SLOT(slotStartedSaving()));
     connect(m_trace, SIGNAL(saved()),
             this, SLOT(slotSaved()));
-    connect(m_trace, SIGNAL(changed(ApiTraceCall*)),
-            this, SLOT(slotTraceChanged(ApiTraceCall*)));
+    connect(m_trace, SIGNAL(changed(ApiTraceEvent*)),
+            this, SLOT(slotTraceChanged(ApiTraceEvent*)));
     connect(m_trace, SIGNAL(findResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)),
             this, SLOT(slotSearchResult(ApiTrace::SearchRequest,ApiTrace::SearchResult,ApiTraceCall*)));
     connect(m_trace, SIGNAL(foundFrameStart(ApiTraceFrame*)),
@@ -736,6 +832,10 @@ void MainWindow::initConnections()
             this, SLOT(replayError(const QString&)));
     connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
             this, SLOT(replayStateFound(ApiTraceState*)));
+    connect(m_retracer, SIGNAL(foundProfile(trace::Profile*)),
+            this, SLOT(replayProfileFound(trace::Profile*)));
+    connect(m_retracer, SIGNAL(foundThumbnails(const QList<QImage>&)),
+            this, SLOT(replayThumbnailsFound(const QList<QImage>&)));
     connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
             this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
 
@@ -769,15 +869,23 @@ void MainWindow::initConnections()
 
     connect(m_ui.actionReplay, SIGNAL(triggered()),
             this, SLOT(replayStart()));
+    connect(m_ui.actionProfile, SIGNAL(triggered()),
+            this, SLOT(replayProfile()));
     connect(m_ui.actionStop, SIGNAL(triggered()),
             this, SLOT(replayStop()));
     connect(m_ui.actionLookupState, SIGNAL(triggered()),
             this, SLOT(lookupState()));
+    connect(m_ui.actionTrim, SIGNAL(triggered()),
+            this, SLOT(trim()));
+    connect(m_ui.actionShowThumbnails, SIGNAL(triggered()),
+            this, SLOT(showThumbnails()));
     connect(m_ui.actionOptions, SIGNAL(triggered()),
             this, SLOT(showSettings()));
 
     connect(m_ui.callView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
             this, SLOT(callItemSelected(const QModelIndex &)));
+    connect(m_ui.callView, SIGNAL(doubleClicked(const QModelIndex &)),
+            this, SLOT(callItemActivated(const QModelIndex &)));
     connect(m_ui.callView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(customContextMenuRequested(QPoint)));
 
@@ -809,6 +917,11 @@ void MainWindow::initConnections()
     connect(m_traceProcess, SIGNAL(error(const QString&)),
             SLOT(traceError(const QString&)));
 
+    connect(m_trimProcess, SIGNAL(trimmedFile(const QString&)),
+            SLOT(createdTrim(const QString&)));
+    connect(m_trimProcess, SIGNAL(error(const QString&)),
+            SLOT(trimError(const QString&)));
+
     connect(m_ui.errorsDock, SIGNAL(visibilityChanged(bool)),
             m_ui.actionShowErrorsDock, SLOT(setChecked(bool)));
     connect(m_ui.actionShowErrorsDock, SIGNAL(triggered(bool)),
@@ -816,6 +929,26 @@ void MainWindow::initConnections()
     connect(m_ui.errorsTreeWidget,
             SIGNAL(itemActivated(QTreeWidgetItem*, int)),
             this, SLOT(slotErrorSelected(QTreeWidgetItem*)));
+
+    connect(m_ui.actionShowProfileDialog, SIGNAL(triggered(bool)),
+            m_profileDialog, SLOT(show()));
+    connect(m_profileDialog, SIGNAL(jumpToCall(int)),
+            this, SLOT(slotJumpTo(int)));
+}
+
+void MainWindow::closeEvent(QCloseEvent * event)
+{
+    m_profileDialog->close();
+    QMainWindow::closeEvent(event);
+}
+
+void MainWindow::replayProfileFound(trace::Profile *profile)
+{
+    m_ui.actionShowProfileDialog->setEnabled(true);
+    m_profileDialog->setProfile(profile);
+    m_profileDialog->show();
+    m_profileDialog->activateWindow();
+    m_profileDialog->setFocus();
 }
 
 void MainWindow::replayStateFound(ApiTraceState *state)
@@ -829,6 +962,12 @@ void MainWindow::replayStateFound(ApiTraceState *state)
         m_ui.stateDock->hide();
     }
     m_nonDefaultsLookupEvent = 0;
+}
+
+void MainWindow::replayThumbnailsFound(const QList<QImage> &thumbnails)
+{
+    m_ui.callView->setUniformRowHeights(false);
+    m_trace->bindThumbnailsToFrames(thumbnails);
 }
 
 void MainWindow::slotGoTo()
@@ -853,6 +992,21 @@ void MainWindow::traceError(const QString &msg)
     QMessageBox::warning(
             this,
             tr("Tracing Error"),
+            msg);
+}
+
+void MainWindow::createdTrim(const QString &path)
+{
+    qDebug()<<"Done trimming "<<path;
+
+    newTraceFile(path);
+}
+
+void MainWindow::trimError(const QString &msg)
+{
+    QMessageBox::warning(
+            this,
+            tr("Trim Error"),
             msg);
 }
 
@@ -1006,11 +1160,14 @@ ApiTraceFrame * MainWindow::selectedFrame() const
     return NULL;
 }
 
-void MainWindow::slotTraceChanged(ApiTraceCall *call)
+void MainWindow::slotTraceChanged(ApiTraceEvent *event)
 {
-    Q_ASSERT(call);
-    if (call == m_selectedEvent) {
-        m_ui.detailsWebView->setHtml(call->toHtml());
+    Q_ASSERT(event);
+    if (event == m_selectedEvent) {
+        if (event->type() == ApiTraceEvent::Call) {
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+            m_ui.detailsWebView->setHtml(call->toHtml());
+        }
     }
 }
 
@@ -1219,6 +1376,7 @@ void MainWindow::slotFoundFrameStart(ApiTraceFrame *frame)
         QModelIndex idx = m_proxyModel->indexForCall(call);
         if (idx.isValid()) {
             m_ui.callView->setCurrentIndex(idx);
+            m_ui.callView->scrollTo(idx, QAbstractItemView::PositionAtTop);
             break;
         }
         ++itr;
@@ -1241,6 +1399,7 @@ void MainWindow::slotFoundFrameEnd(ApiTraceFrame *frame)
         QModelIndex idx = m_proxyModel->indexForCall(call);
         if (idx.isValid()) {
             m_ui.callView->setCurrentIndex(idx);
+            m_ui.callView->scrollTo(idx, QAbstractItemView::PositionAtBottom);
             break;
         }
     } while (itr != calls.constBegin());
@@ -1248,9 +1407,12 @@ void MainWindow::slotFoundFrameEnd(ApiTraceFrame *frame)
 
 void MainWindow::slotJumpToResult(ApiTraceCall *call)
 {
-    QModelIndex index = m_proxyModel->indexForCall(call);
-    if (index.isValid()) {
-        m_ui.callView->setCurrentIndex(index);
+    QModelIndex idx = m_proxyModel->indexForCall(call);
+    if (idx.isValid()) {
+        activateWindow();
+        m_ui.callView->setFocus();
+        m_ui.callView->setCurrentIndex(idx);
+        m_ui.callView->scrollTo(idx, QAbstractItemView::PositionAtCenter);
     } else {
         statusBar()->showMessage(tr("Call has been filtered out."));
     }

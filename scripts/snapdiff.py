@@ -130,12 +130,10 @@ def is_image(path):
     name = os.path.basename(path)
     name, ext1 = os.path.splitext(name)
     name, ext2 = os.path.splitext(name)
-    print name, ext1, ext2
     return ext1 in ('.png', '.bmp') and ext2 not in ('.diff', '.thumb')
 
 
 def find_images(prefix):
-    prefix = os.path.abspath(prefix)
     if os.path.isdir(prefix):
         prefix_dir = prefix
     else:
@@ -157,6 +155,10 @@ def main():
     optparser = optparse.OptionParser(
         usage="\n\t%prog [options] <ref_prefix> <src_prefix>")
     optparser.add_option(
+        '-v', '--verbose',
+        action="store_true", dest="verbose", default=False,
+        help="verbose output")
+    optparser.add_option(
         '-o', '--output', metavar='FILE',
         type="string", dest="output", default='index.html',
         help="output filename [default: %default]")
@@ -172,6 +174,10 @@ def main():
         '--overwrite',
         action="store_true", dest="overwrite", default=False,
         help="overwrite images")
+    optparser.add_option(
+        '--show-all',
+        action="store_true", dest="show_all", default=False,
+        help="show all images, including similar ones")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
 
@@ -193,31 +199,46 @@ def main():
     html.write('<html>\n')
     html.write('  <body>\n')
     html.write('    <table border="1">\n')
-    html.write('      <tr><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
+    html.write('      <tr><th>File</th><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
+    failures = 0
     for image in images:
         ref_image = ref_prefix + image
         src_image = src_prefix + image
         root, ext = os.path.splitext(src_image)
         delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
-            if options.overwrite \
-               or not os.path.exists(delta_image) \
-               or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
-                   and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
-
-                comparer = Comparer(ref_image, src_image, options.alpha)
-                comparer.write_diff(delta_image, fuzz=options.fuzz)
-
+            if options.verbose:
+                sys.stdout.write('Comparing %s and %s ...' % (ref_image, src_image))
+            comparer = Comparer(ref_image, src_image, options.alpha)
+            match = comparer.ae(fuzz=options.fuzz) == 0
+            if match:
+                result = 'MATCH'
+                bgcolor = '#20ff20'
+            else:
+                result = 'MISMATCH'
+                failures += 1
+                bgcolor = '#ff2020'
+            if options.verbose:
+                sys.stdout.write(' %s\n' % (result,))
             html.write('      <tr>\n')
-            surface(html, ref_image)
-            surface(html, src_image)
-            surface(html, delta_image)
+            html.write('        <td bgcolor="%s"><a href="%s">%s<a/></td>\n' % (bgcolor, ref_image, image))
+            if not match or options.show_all:
+                if options.overwrite \
+                   or not os.path.exists(delta_image) \
+                   or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
+                       and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
+                    comparer.write_diff(delta_image, fuzz=options.fuzz)
+                surface(html, ref_image)
+                surface(html, src_image)
+                surface(html, delta_image)
             html.write('      </tr>\n')
             html.flush()
     html.write('    </table>\n')
     html.write('  </body>\n')
     html.write('</html>\n')
 
+    if failures:
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

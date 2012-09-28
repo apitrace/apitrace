@@ -3,6 +3,8 @@
 
 #include "apitracecall.h"
 
+#include "trace_api.hpp"
+
 #include <QObject>
 #include <QSet>
 
@@ -14,12 +16,6 @@ class ApiTrace : public QObject
 {
     Q_OBJECT
 public:
-    enum FrameMarker {
-        FrameMarker_SwapBuffers,
-        FrameMarker_Flush,
-        FrameMarker_Finish,
-        FrameMarker_Clear
-    };
     enum SearchResult {
         SearchResult_NotFound,
         SearchResult_Found,
@@ -51,8 +47,6 @@ public:
         Qt::CaseSensitivity cs;
     };
 
-    static bool isCallAFrameMarker(const ApiTraceCall *call,
-                                   FrameMarker marker);
 public:
     ApiTrace();
     ~ApiTrace();
@@ -61,13 +55,11 @@ public:
 
     QString fileName() const;
 
-    FrameMarker frameMarker() const;
-
     ApiTraceState defaultState() const;
 
     ApiTraceCall *callWithIndex(int idx) const;
 
-    QList<ApiTraceFrame*> frames() const;
+    const QList<ApiTraceFrame*> & frames() const;
     ApiTraceFrame *frameAt(int idx) const;
     int numFrames() const;
     int numCallsInFrame(int idx) const;
@@ -82,6 +74,8 @@ public:
     bool isSaving() const;
 
     bool hasErrors() const;
+
+    trace::API api() const;
 
 public slots:
     void setFileName(const QString &name);
@@ -100,6 +94,7 @@ public slots:
     void findCallIndex(int index);
     void setCallError(const ApiTraceError &error);
 
+    void bindThumbnailsToFrames(const QList<QImage> &thumbnails);
 
 signals:
     void loadTrace(const QString &name);
@@ -109,7 +104,7 @@ signals:
     void finishedLoadingTrace();
     void invalidated();
     void framesInvalidated();
-    void changed(ApiTraceCall *call);
+    void changed(ApiTraceEvent *event);
     void startedSaving();
     void saved();
     void findResult(const ApiTrace::SearchRequest &request,
@@ -133,6 +128,7 @@ signals:
 private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
     void slotSaved();
+    void guessedApi(int api);
     void finishedParsing();
     void loaderFrameLoaded(ApiTraceFrame *frame,
                            const QVector<ApiTraceCall*> &calls,
@@ -149,8 +145,7 @@ private:
     QString m_tempFileName;
 
     QList<ApiTraceFrame*> m_frames;
-
-    FrameMarker m_frameMarker;
+    trace::API m_api;
 
     TraceLoader *m_loader;
     QThread     *m_loaderThread;

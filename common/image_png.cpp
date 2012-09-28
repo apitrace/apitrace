@@ -40,6 +40,9 @@
 namespace image {
 
 
+static const int png_compression_level = Z_BEST_SPEED;
+
+
 bool
 Image::writePNG(const char *filename) const {
     FILE *fp;
@@ -89,7 +92,7 @@ Image::writePNG(const char *filename) const {
     png_set_IHDR(png_ptr, info_ptr, width, height, 8, color_type,
         PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-    png_set_compression_level(png_ptr, Z_DEFAULT_COMPRESSION);
+    png_set_compression_level(png_ptr, png_compression_level);
 
     png_write_info(png_ptr, info_ptr);
 
@@ -275,7 +278,7 @@ bool writePixelsToBuffer(unsigned char *pixels,
                  type, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-    png_set_compression_level(png_ptr, Z_DEFAULT_COMPRESSION);
+    png_set_compression_level(png_ptr, png_compression_level);
 
     png_write_info(png_ptr, info_ptr);
 

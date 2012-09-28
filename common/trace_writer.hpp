@@ -79,6 +79,9 @@ namespace trace {
         void beginStruct(const StructSig *sig);
         inline void endStruct(void) {}
 
+        void beginRepr(void);
+        inline void endRepr(void) {}
+
         void writeBool(bool value);
         void writeSInt(signed long long value);
         void writeUInt(unsigned long long value);
@@ -91,7 +94,7 @@ namespace trace {
         void writeEnum(const EnumSig *sig, signed long long value);
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
         void writeNull(void);
-        void writeOpaque(const void *ptr);
+        void writePointer(unsigned long long addr);
 
         void writeCall(Call *call);
 

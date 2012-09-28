@@ -188,7 +188,7 @@ cglapi.addFunctions([
     Function(CGLContextObj, "CGLGetCurrentContext", []),
 
     # OpenGL.h, OpenGL framework
-    Function(CGLError, "CGLChoosePixelFormat", [(Array(Const(CGLPixelFormatAttribute), "__AttribList_size(attribs)"), "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
+    Function(CGLError, "CGLChoosePixelFormat", [(Array(Const(CGLPixelFormatAttribute), "_AttribList_size(attribs)"), "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
     Function(CGLError, "CGLDestroyPixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")]),
     Function(Void, "CGLReleasePixelFormat", [(CGLPixelFormatObj, "pix")]),
@@ -233,7 +233,7 @@ cglapi.addFunctions([
     Function(CGLError, "CGLLockContext", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLUnlockContext", [(CGLContextObj, "ctx")]),
     Function(Void, "CGLGetVersion", [Out(Pointer(GLint), "majorvers"), Out(Pointer(GLint), "minorvers")]),
-    Function(Const(CString), "CGLErrorString", [(CGLError, "error")]),
+    Function(ConstCString, "CGLErrorString", [(CGLError, "error")]),
 
     # CGLIOSurface.h, OpenGL framework
     Function(CGLError, "CGLTexImageIOSurface2D", [(CGLContextObj, "ctx"), (GLenum, "target"), (GLenum, "internal_format"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (IOSurfaceRef, "ioSurface"), (GLuint, "plane")]),

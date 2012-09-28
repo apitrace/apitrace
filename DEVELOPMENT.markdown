@@ -1,8 +1,8 @@
 Coding Style
 ============
 
-XXX: These are mostly guidelines for new code, as some of existing hasn't been
-updated to these conventions yet.
+These are guidelines for new code.  Some of existing hasn't been updated to
+these conventions yet.
 
 Whitespace (all languages):
 
@@ -24,6 +24,9 @@ Naming convention:
 
  * `UPPER_CASE` for #defines
 
+ * single underscore prefix for variables/functions in automatically generated
+   code
+
 C++:
 
  * enclose single statement `if` clauses in { }, specially for automatically
@@ -35,7 +38,7 @@ C++:
 
 CMake:
 
- * `lower_case`
+ * `lower_case` commands
 
  * space between ( and precedent name
 

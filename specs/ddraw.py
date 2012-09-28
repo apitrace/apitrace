@@ -59,19 +59,20 @@ IDirectDrawSurface7 = Interface("IDirectDrawSurface7", IUnknown)
 IDirectDrawColorControl = Interface("IDirectDrawColorControl", IUnknown)
 IDirectDrawGammaControl = Interface("IDirectDrawGammaControl", IUnknown)
 
-LPDIRECTDRAW = Pointer(IDirectDraw)
-LPDIRECTDRAW2 = Pointer(IDirectDraw2)
-LPDIRECTDRAW4 = Pointer(IDirectDraw4)
-LPDIRECTDRAW7 = Pointer(IDirectDraw7)
-LPDIRECTDRAWSURFACE = Pointer(IDirectDrawSurface)
-LPDIRECTDRAWSURFACE2 = Pointer(IDirectDrawSurface2)
-LPDIRECTDRAWSURFACE3 = Pointer(IDirectDrawSurface3)
-LPDIRECTDRAWSURFACE4 = Pointer(IDirectDrawSurface4)
-LPDIRECTDRAWSURFACE7 = Pointer(IDirectDrawSurface7)
-LPDIRECTDRAWPALETTE = Pointer(IDirectDrawPalette)
-LPDIRECTDRAWCLIPPER = Pointer(IDirectDrawClipper)
-LPDIRECTDRAWCOLORCONTROL = Pointer(IDirectDrawColorControl)
-LPDIRECTDRAWGAMMACONTROL = Pointer(IDirectDrawGammaControl)
+LPUNKNOWN = ObjPointer(IUnknown)
+LPDIRECTDRAW = ObjPointer(IDirectDraw)
+LPDIRECTDRAW2 = ObjPointer(IDirectDraw2)
+LPDIRECTDRAW4 = ObjPointer(IDirectDraw4)
+LPDIRECTDRAW7 = ObjPointer(IDirectDraw7)
+LPDIRECTDRAWSURFACE = ObjPointer(IDirectDrawSurface)
+LPDIRECTDRAWSURFACE2 = ObjPointer(IDirectDrawSurface2)
+LPDIRECTDRAWSURFACE3 = ObjPointer(IDirectDrawSurface3)
+LPDIRECTDRAWSURFACE4 = ObjPointer(IDirectDrawSurface4)
+LPDIRECTDRAWSURFACE7 = ObjPointer(IDirectDrawSurface7)
+LPDIRECTDRAWPALETTE = ObjPointer(IDirectDrawPalette)
+LPDIRECTDRAWCLIPPER = ObjPointer(IDirectDrawClipper)
+LPDIRECTDRAWCOLORCONTROL = ObjPointer(IDirectDrawColorControl)
+LPDIRECTDRAWGAMMACONTROL = ObjPointer(IDirectDrawGammaControl)
 
 DDARGB = Struct("DDARGB", [
     (BYTE, "blue"),
@@ -1146,9 +1147,7 @@ DirectDrawEvaluateModeFlags = Flags(DWORD, [
     "DDEM_MODEFAILED",
 ])
 
-DDRESULT = FakeEnum(HRESULT, [
-    "DD_OK",
-    "DD_FALSE",
+DDRESULT = MAKE_HRESULT(ok = "DD_OK", false = "DD_FALSE", errors = [
     "DDERR_ALREADYINITIALIZED",
     "DDERR_CANNOTATTACHSURFACE",
     "DDERR_CANNOTDETACHSURFACE",
@@ -1278,9 +1277,9 @@ LPDDENUMSURFACESCALLBACK7 = FunctionPointer(HRESULT, "LPDDENUMSURFACESCALLBACK7"
 
 IDirectDraw.methods += [
     Method(DDRESULT, "Compact", []),
-    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (ObjPointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), (LPUNKNOWN, "pUnkOuter")]),
     Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDupDDSurface")]),
     Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK, "lpEnumModesCallback")]),
     Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpEnumSurfacesCallback")]),
@@ -1301,9 +1300,9 @@ IDirectDraw.methods += [
 
 IDirectDraw2.methods += [
     Method(DDRESULT, "Compact", []),
-    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (LPUNKNOWN, "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), (LPUNKNOWN, "pUnkOuter")]),
     Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDupDDSurface")]),
     Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK, "lpEnumModesCallback")]),
     Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK, "lpEnumSurfacesCallback")]),
@@ -1325,9 +1324,9 @@ IDirectDraw2.methods += [
 
 IDirectDraw4.methods += [
     Method(DDRESULT, "Compact", []),
-    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (ObjPointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDDSurface"), (LPUNKNOWN, "pUnkOuter")]),
     Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE4, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDupDDSurface")]),
     Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK2, "lpEnumModesCallback")]),
     Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK2, "lpEnumSurfacesCallback")]),
@@ -1353,9 +1352,9 @@ IDirectDraw4.methods += [
 
 IDirectDraw7.methods += [
     Method(DDRESULT, "Compact", []),
-    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (Pointer(IUnknown), "pUnkOuter")]),
-    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpDDSurface"), (Pointer(IUnknown), "pUnkOuter")]),
+    Method(DDRESULT, "CreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
+    Method(DDRESULT, "CreatePalette", [(DirectDrawPaletteCapsFlags, "dwFlags"), (LPPALETTEENTRY, "lpDDColorArray"), Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette"), (LPUNKNOWN, "pUnkOuter")]),
+    Method(DDRESULT, "CreateSurface", [(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpDDSurface"), (LPUNKNOWN, "pUnkOuter")]),
     Method(DDRESULT, "DuplicateSurface", [(LPDIRECTDRAWSURFACE7, "lpDDSurface"), Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpDupDDSurface")]),
     Method(DDRESULT, "EnumDisplayModes", [(DirectDrawEnumDisplayModesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMMODESCALLBACK2, "lpEnumModesCallback")]),
     Method(DDRESULT, "EnumSurfaces", [(DirectDrawEnumSurfacesFlags, "dwFlags"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (LPVOID, "lpContext"), (LPDDENUMSURFACESCALLBACK7, "lpEnumSurfacesCallback")]),
@@ -1468,7 +1467,7 @@ IDirectDrawSurface2.methods += [
     Method(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE2, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     Method(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     Method(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE2, "lpDDSReference")]),
-    Method(DDRESULT, "GetDDInterface", [Out(Pointer(IUnknown), "lplpDD")]),
+    Method(DDRESULT, "GetDDInterface", [Out(LPUNKNOWN, "lplpDD")]),
     Method(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
     Method(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
 ]
@@ -1507,7 +1506,7 @@ IDirectDrawSurface3.methods += [
     Method(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE3, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     Method(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     Method(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE3, "lpDDSReference")]),
-    Method(DDRESULT, "GetDDInterface", [Out(Pointer(IUnknown), "lplpDD")]),
+    Method(DDRESULT, "GetDDInterface", [Out(LPUNKNOWN, "lplpDD")]),
     Method(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
     Method(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
     Method(DDRESULT, "SetSurfaceDesc", [(LPDDSURFACEDESC, "lpDDSD"), (DWORD, "dwFlags")]),
@@ -1639,14 +1638,14 @@ ddraw.addFunctions([
     StdFunction(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")]),
     StdFunction(HRESULT, "DirectDrawEnumerateExW", [(LPDDENUMCALLBACKEXW, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
     StdFunction(HRESULT, "DirectDrawEnumerateExA", [(LPDDENUMCALLBACKEXA, "lpCallback"), (LPVOID, "lpContext"), (DDENUM, "dwFlags")]),
-    StdFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (Pointer(IUnknown), "pUnkOuter")]),
-    StdFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(LPVOID), "lplpDD"), (REFIID, "iid"), (Pointer(IUnknown), "pUnkOuter")]),
-    StdFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (Pointer(IUnknown), "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (LPUNKNOWN, "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(ObjPointer(Void)), "lplpDD"), (REFIID, "iid"), (LPUNKNOWN, "pUnkOuter")]),
+    StdFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
     StdFunction(Void, "AcquireDDThreadLock", []),
     StdFunction(Void, "ReleaseDDThreadLock", []),
     StdFunction(DWORD, "D3DParseUnknownCommand", [(LPVOID, "lpCmd"), Out(Pointer(LPVOID), "lpRetCmd")]),
     StdFunction(HRESULT, "DllCanUnloadNow", []),
-    StdFunction(HRESULT, "DllGetClassObject", [(REFCLSID, "rclsid"), (REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppv")]),
+    StdFunction(HRESULT, "DllGetClassObject", [(REFCLSID, "rclsid"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppv")]),
 
     # XXX
     StdFunction(HRESULT, "CompleteCreateSysmemSurface", [Int, Int]),

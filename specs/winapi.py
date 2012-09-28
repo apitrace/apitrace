@@ -25,7 +25,9 @@
 
 """Win32 API type description."""
 
+
 from stdapi import *
+
 
 SHORT = Alias("SHORT", Short)
 USHORT = Alias("USHORT", UShort)
@@ -49,9 +51,13 @@ BYTE = Alias("BYTE", UInt8)
 WORD = Alias("WORD", UInt16)
 DWORD = Alias("DWORD", UInt32)
 
+UCHAR = Alias("UCHAR", UChar)
 WCHAR = Alias("WCHAR", Short)
 
-BOOL = Alias("BOOL", Bool)
+BOOL = Enum("BOOL", [
+    "FALSE",
+    "TRUE",
+])
 
 LPLONG = Pointer(LONG)
 LPWORD = Pointer(WORD)
@@ -59,9 +65,9 @@ LPDWORD = Pointer(DWORD)
 LPBOOL = Pointer(BOOL)
 
 LPSTR = CString
-LPCSTR = Const(CString)
+LPCSTR = ConstCString
 LPWSTR = WString
-LPCWSTR = Const(WString)
+LPCWSTR = ConstWString
 
 LARGE_INTEGER = Struct("LARGE_INTEGER", [
     (LONGLONG, 'QuadPart'),
@@ -69,15 +75,18 @@ LARGE_INTEGER = Struct("LARGE_INTEGER", [
 
 SIZE_T = Alias("SIZE_T", SizeT)
 
-HRESULT = Alias("HRESULT", Int)
-
 VOID = Void
-PVOID = Opaque("PVOID")
+PVOID = OpaquePointer(VOID)
 LPVOID = PVOID
-HANDLE = Opaque("HANDLE")
-HWND = Opaque("HWND")
-HDC = Opaque("HDC")
-HMONITOR = Opaque("HMONITOR")
+LPCVOID = OpaquePointer(Const(VOID))
+
+def DECLARE_HANDLE(expr):
+    return Handle(expr, IntPointer(expr))
+
+HANDLE = DECLARE_HANDLE("HANDLE")
+HWND = DECLARE_HANDLE("HWND")
+HDC = DECLARE_HANDLE("HDC")
+HMONITOR = DECLARE_HANDLE("HMONITOR")
 
 GUID = Struct("GUID", [
     (DWORD, "Data1"),
@@ -87,16 +96,13 @@ GUID = Struct("GUID", [
 ])
 LPGUID = Pointer(GUID)
 
-#REFGUID = Alias("REFGUID", Pointer(GUID))
-REFGUID = Alias("REFGUID", GUID)
+REFGUID = Alias("REFGUID", Reference(GUID))
 
 IID = Alias("IID", GUID)
-#REFIID = Alias("REFIID", Pointer(IID))
-REFIID = Alias("REFIID", IID)
+REFIID = Alias("REFIID", Reference(IID))
 
 CLSID = Alias("CLSID", GUID)
-#REFCLSID = Alias("REFCLSID", Pointer(CLSID))
-REFCLSID = Alias("REFCLSID", CLSID)
+REFCLSID = Alias("REFCLSID", Reference(CLSID))
 
 LUID = Struct("LUID", [
     (DWORD, "LowPart"),
@@ -146,9 +152,7 @@ RGNDATA = Struct("RGNDATA", [
 ])
 LPRGNDATA = Pointer(RGNDATA)
 
-HMODULE = Opaque("HMODULE")
-
-IUnknown = Interface("IUnknown")
+HMODULE = DECLARE_HANDLE("HMODULE")
 
 FILETIME = Struct("FILETIME", [
     (DWORD, "dwLowDateTime"),
@@ -174,16 +178,36 @@ LOGFONTW = Struct("LOGFONTW", [
     (WString, "lfFaceName"),
 ])
 
-HRESULT_com = FakeEnum(HRESULT, [
-    "S_OK",
-    "E_NOINTERFACE",
-    "E_POINTER",
-])
+
+# http://msdn.microsoft.com/en-us/library/ff485842.aspx
+# http://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx
+def MAKE_HRESULT(errors, ok = "S_OK", false = "S_FALSE"):
+    values = [ok, false]
+    values.extend(errors)
+    values.extend([
+        "E_PENDING", # 0x8000000A
+        "E_NOTIMPL", # 0x80004001
+        "E_NOINTERFACE", # 0x80004002
+        "E_POINTER", # 0x80004003
+        "E_ABORT", # 0x80004004
+        "E_FAIL", # 0x80004005
+        "E_UNEXPECTED", # 0x8000FFFF
+        "E_ACCESSDENIED", # 0x80070005
+        "E_HANDLE", # 0x80070006
+        "E_OUTOFMEMORY", # 0x8007000E
+        "E_INVALIDARG", # 0x80070057
+    ])
+    return Enum("HRESULT", values)
+
+HRESULT = MAKE_HRESULT([])
+
+
+IUnknown = Interface("IUnknown")
 
 IUnknown.methods = (
-	Method(HRESULT_com, "QueryInterface", ((REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppvObj"))),
-	Method(ULONG, "AddRef", ()),
-	Method(ULONG, "Release", ()),
+	StdMethod(HRESULT, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
+	StdMethod(ULONG, "AddRef", (), sideeffects=False),
+	StdMethod(ULONG, "Release", ()),
 )
 
 

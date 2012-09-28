@@ -76,6 +76,18 @@ String::exists(void) const
     return attrs != INVALID_FILE_ATTRIBUTES;
 }
 
+bool
+copyFile(const String &srcFileName, const String &dstFileName, bool override)
+{
+    return CopyFileA(srcFileName, dstFileName, !override);
+}
+
+bool
+removeFile(const String &srcFilename)
+{
+    return DeleteFileA(srcFilename);
+}
+
 /**
  * Determine whether an argument should be quoted.
  */
@@ -113,7 +125,6 @@ quoteArg(std::string &s, const char *arg)
     s.push_back('"');
     while (true) {
         c = *arg++;
-        switch (c)
         if (c == '\0') {
             break;
         } else if (c == '"') {
@@ -178,7 +189,7 @@ int execute(char * const * args)
 
     WaitForSingleObject(processInformation.hProcess, INFINITE);
 
-    DWORD exitCode = ~0;
+    DWORD exitCode = ~0UL;
     GetExitCodeProcess(processInformation.hProcess, &exitCode);
 
     CloseHandle(processInformation.hProcess);
@@ -261,6 +272,15 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
      * http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
      */
     if (pExceptionRecord->ExceptionCode == 0x406d1388) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    /*
+     * Ignore .NET exception.
+     *
+     * http://ig2600.blogspot.co.uk/2011/01/why-do-i-keep-getting-exception-code.html
+     */
+    if (pExceptionRecord->ExceptionCode == 0xe0434352) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

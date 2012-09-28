@@ -1,0 +1,9 @@
+LIBRARY	"d3d11"
+
+EXPORTS
+        D3D11CoreCreateDevice
+        D3D11CoreCreateLayeredDevice
+        D3D11CoreGetLayeredDeviceSize
+        D3D11CoreRegisterLayers
+        D3D11CreateDevice
+        D3D11CreateDeviceAndSwapChain

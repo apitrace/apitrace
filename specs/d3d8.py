@@ -29,8 +29,7 @@ from winapi import *
 from d3d8types import *
 from d3d8caps import *
 
-HRESULT = Enum("HRESULT", [
-    "D3D_OK",
+HRESULT = MAKE_HRESULT(ok = "D3D_OK", errors = [
     "D3DERR_WRONGTEXTUREFORMAT",
     "D3DERR_UNSUPPORTEDCOLOROPERATION",
     "D3DERR_UNSUPPORTEDCOLORARG",
@@ -54,6 +53,20 @@ HRESULT = Enum("HRESULT", [
     "D3DERR_DRIVERINVALIDCALL",
 ])
 
+D3DADAPTER = FakeEnum(UINT, [
+    "D3DADAPTER_DEFAULT",
+])
+
+D3DCREATE = Flags(DWORD, [
+   "D3DCREATE_FPU_PRESERVE",
+   "D3DCREATE_MULTITHREADED",
+   "D3DCREATE_PUREDEVICE",
+   "D3DCREATE_SOFTWARE_VERTEXPROCESSING",
+   "D3DCREATE_HARDWARE_VERTEXPROCESSING",
+   "D3DCREATE_MIXED_VERTEXPROCESSING",
+   "D3DCREATE_DISABLE_DRIVER_MANAGEMENT",
+])
+
 IDirect3D8 = Interface("IDirect3D8", IUnknown)
 IDirect3DDevice8 = Interface("IDirect3DDevice8", IUnknown)
 IDirect3DSwapChain8 = Interface("IDirect3DSwapChain8", IUnknown)
@@ -67,33 +80,33 @@ IDirect3DIndexBuffer8 = Interface("IDirect3DIndexBuffer8", IDirect3DResource8)
 IDirect3DSurface8 = Interface("IDirect3DSurface8", IUnknown)
 IDirect3DVolume8 = Interface("IDirect3DVolume8", IUnknown)
 
-PDIRECT3D8 = Pointer(IDirect3D8)
-PDIRECT3DDEVICE8 = Pointer(IDirect3DDevice8)
-PDIRECT3DSWAPCHAIN8 = Pointer(IDirect3DSwapChain8)
-PDIRECT3DRESOURCE8 = Pointer(IDirect3DResource8)
-PDIRECT3DBASETEXTURE8 = Pointer(IDirect3DBaseTexture8)
-PDIRECT3DTEXTURE8 = Pointer(IDirect3DTexture8)
-PDIRECT3DVOLUMETEXTURE8 = Pointer(IDirect3DVolumeTexture8)
-PDIRECT3DCUBETEXTURE8 = Pointer(IDirect3DCubeTexture8)
-PDIRECT3DVERTEXBUFFER8 = Pointer(IDirect3DVertexBuffer8)
-PDIRECT3DINDEXBUFFER8 = Pointer(IDirect3DIndexBuffer8)
-PDIRECT3DSURFACE8 = Pointer(IDirect3DSurface8)
-PDIRECT3DVOLUME8 = Pointer(IDirect3DVolume8)
+PDIRECT3D8 = ObjPointer(IDirect3D8)
+PDIRECT3DDEVICE8 = ObjPointer(IDirect3DDevice8)
+PDIRECT3DSWAPCHAIN8 = ObjPointer(IDirect3DSwapChain8)
+PDIRECT3DRESOURCE8 = ObjPointer(IDirect3DResource8)
+PDIRECT3DBASETEXTURE8 = ObjPointer(IDirect3DBaseTexture8)
+PDIRECT3DTEXTURE8 = ObjPointer(IDirect3DTexture8)
+PDIRECT3DVOLUMETEXTURE8 = ObjPointer(IDirect3DVolumeTexture8)
+PDIRECT3DCUBETEXTURE8 = ObjPointer(IDirect3DCubeTexture8)
+PDIRECT3DVERTEXBUFFER8 = ObjPointer(IDirect3DVertexBuffer8)
+PDIRECT3DINDEXBUFFER8 = ObjPointer(IDirect3DIndexBuffer8)
+PDIRECT3DSURFACE8 = ObjPointer(IDirect3DSurface8)
+PDIRECT3DVOLUME8 = ObjPointer(IDirect3DVolume8)
 
 IDirect3D8.methods += [
     Method(HRESULT, "RegisterSoftwareDevice", [(OpaquePointer(Void), "pInitializeFunction")]),
     Method(UINT, "GetAdapterCount", []),
-    Method(HRESULT, "GetAdapterIdentifier", [(UINT, "Adapter"), (DWORD, "Flags"), Out(Pointer(D3DADAPTER_IDENTIFIER8), "pIdentifier")]),
-    Method(UINT, "GetAdapterModeCount", [(UINT, "Adapter")]),
-    Method(HRESULT, "EnumAdapterModes", [(UINT, "Adapter"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODE), "pMode")]),
-    Method(HRESULT, "GetAdapterDisplayMode", [(UINT, "Adapter"), Out(Pointer(D3DDISPLAYMODE), "pMode")]),
-    Method(HRESULT, "CheckDeviceType", [(UINT, "Adapter"), (D3DDEVTYPE, "CheckType"), (D3DFORMAT, "DisplayFormat"), (D3DFORMAT, "BackBufferFormat"), (BOOL, "Windowed")]),
-    Method(HRESULT, "CheckDeviceFormat", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (DWORD, "Usage"), (D3DRESOURCETYPE, "RType"), (D3DFORMAT, "CheckFormat")]),
-    Method(HRESULT, "CheckDeviceMultiSampleType", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "SurfaceFormat"), (BOOL, "Windowed"), (D3DMULTISAMPLE_TYPE, "MultiSampleType")]),
-    Method(HRESULT, "CheckDepthStencilMatch", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "RenderTargetFormat"), (D3DFORMAT, "DepthStencilFormat")]),
-    Method(HRESULT, "GetDeviceCaps", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), Out(Pointer(D3DCAPS8), "pCaps")]),
-    Method(HMONITOR, "GetAdapterMonitor", [(UINT, "Adapter")]),
-    Method(HRESULT, "CreateDevice", [(UINT, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (DWORD, "BehaviorFlags"), Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DDEVICE8), "ppReturnedDeviceInterface")]),
+    Method(HRESULT, "GetAdapterIdentifier", [(D3DADAPTER, "Adapter"), (DWORD, "Flags"), Out(Pointer(D3DADAPTER_IDENTIFIER8), "pIdentifier")]),
+    Method(UINT, "GetAdapterModeCount", [(D3DADAPTER, "Adapter")]),
+    Method(HRESULT, "EnumAdapterModes", [(D3DADAPTER, "Adapter"), (UINT, "Mode"), Out(Pointer(D3DDISPLAYMODE), "pMode")]),
+    Method(HRESULT, "GetAdapterDisplayMode", [(D3DADAPTER, "Adapter"), Out(Pointer(D3DDISPLAYMODE), "pMode")]),
+    Method(HRESULT, "CheckDeviceType", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "CheckType"), (D3DFORMAT, "DisplayFormat"), (D3DFORMAT, "BackBufferFormat"), (BOOL, "Windowed")]),
+    Method(HRESULT, "CheckDeviceFormat", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (DWORD, "Usage"), (D3DRESOURCETYPE, "RType"), (D3DFORMAT, "CheckFormat")]),
+    Method(HRESULT, "CheckDeviceMultiSampleType", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "SurfaceFormat"), (BOOL, "Windowed"), (D3DMULTISAMPLE_TYPE, "MultiSampleType")]),
+    Method(HRESULT, "CheckDepthStencilMatch", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "RenderTargetFormat"), (D3DFORMAT, "DepthStencilFormat")]),
+    Method(HRESULT, "GetDeviceCaps", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), Out(Pointer(D3DCAPS8), "pCaps")]),
+    Method(HMONITOR, "GetAdapterMonitor", [(D3DADAPTER, "Adapter")]),
+    Method(HRESULT, "CreateDevice", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DDEVICE8), "ppReturnedDeviceInterface")]),
 ]
 
 IDirect3DDevice8.methods += [
@@ -259,7 +272,7 @@ IDirect3DSurface8.methods += [
     Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaquePointer(Const(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
     Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaquePointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
     Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
-    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
+    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")]),
     Method(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (DWORD, "Flags")]),
     Method(HRESULT, "UnlockRect", []),
@@ -270,7 +283,7 @@ IDirect3DVolume8.methods += [
     Method(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaquePointer(Const(Void)), "pData"), (DWORD, "SizeOfData"), (DWORD, "Flags")]),
     Method(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaquePointer(Void), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
     Method(HRESULT, "FreePrivateData", [(REFGUID, "refguid")]),
-    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(OpaquePointer(Void)), "ppContainer")]),
+    Method(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     Method(HRESULT, "GetDesc", [Out(Pointer(D3DVOLUME_DESC), "pDesc")]),
     Method(HRESULT, "LockBox", [Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (DWORD, "Flags")]),
     Method(HRESULT, "UnlockBox", []),

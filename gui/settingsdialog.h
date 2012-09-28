@@ -16,8 +16,6 @@ public:
     void accept();
 
     void setFilterModel(ApiTraceFilter *filter);
-    void setAPI(trace::API api);
-    trace::API getAPI(void);
 private slots:
     void changeRegexp(const QString &name);
     void regexpChanged(const QString &pattern);

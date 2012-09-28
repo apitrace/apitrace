@@ -25,6 +25,8 @@
 
 
 #include <string.h>
+#include <getopt.h>
+
 #include <iostream>
 
 #include "cli.hpp"
@@ -45,6 +47,15 @@ usage(void)
         << "at the expense of a slightly smaller compression ratio than zlib\n"
         << "\n";
 }
+
+const static char *
+shortOptions = "h";
+
+const static struct option
+longOptions[] = {
+    {"help", no_argument, 0, 'h'},
+    {0, 0, 0, 0}
+};
 
 static int
 repack(const char *inFileName, const char *outFileName)
@@ -78,34 +89,26 @@ repack(const char *inFileName, const char *outFileName)
 static int
 command(int argc, char *argv[])
 {
-    int i;
-
-    for (i = 1; i < argc; ++i) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (strcmp(arg, "--help") == 0) {
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
             usage();
             return 0;
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
             usage();
             return 1;
         }
     }
 
-    if (argc != i + 2) {
+    if (argc != optind + 2) {
         std::cerr << "error: insufficient number of arguments\n";
         usage();
         return 1;
     }
 
-    return repack(argv[i], argv[i + 1]);
+    return repack(argv[optind], argv[optind + 1]);
 }
 
 const Command repack_command = {

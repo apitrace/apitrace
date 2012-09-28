@@ -13,8 +13,13 @@ public:
     void setImage(const QImage &image);
 
     QSize sizeHint() const;
+
+private slots:
+    void slotUpdate();
+
 private:
     QImage m_image;
+    QImage m_temp;
 };
 
 

@@ -33,6 +33,7 @@
 #include "trace_file.hpp"
 #include "trace_format.hpp"
 #include "trace_model.hpp"
+#include "trace_api.hpp"
 
 
 namespace trace {
@@ -94,6 +95,7 @@ protected:
 
 public:
     unsigned long long version;
+    API api;
 
     Parser();
 
@@ -192,6 +194,9 @@ protected:
 
     Value *parse_opaque();
     void scan_opaque();
+
+    Value *parse_repr();
+    void scan_repr();
 
     const char * read_string(void);
     void skip_string(void);

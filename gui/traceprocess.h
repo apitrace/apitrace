@@ -13,6 +13,7 @@ public:
 
     bool canTrace() const;
 
+    void setApi(const QString &str);
     void setExecutablePath(const QString &str);
     QString executablePath() const;
 
@@ -31,6 +32,7 @@ private slots:
     void traceError(QProcess::ProcessError err);
 
 private:
+    QString m_api;
     QString m_execPath;
     QStringList m_args;
     QString m_tracePath;

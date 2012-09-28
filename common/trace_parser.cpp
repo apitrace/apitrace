@@ -43,6 +43,7 @@ Parser::Parser() {
     file = NULL;
     next_call_no = 0;
     version = 0;
+    api = API_UNKNOWN;
 
     glGetErrorSig = NULL;
 }
@@ -65,6 +66,7 @@ bool Parser::open(const char *filename) {
         std::cerr << "error: unsupported trace format version " << version << "\n";
         return false;
     }
+    api = API_UNKNOWN;
 
     return true;
 }
@@ -231,6 +233,29 @@ Parser::parse_function_sig(void) {
         sig->flags = lookupCallFlags(sig->name);
         sig->offset = file->currentOffset();
         functions[id] = sig;
+
+        /**
+         * Try to autodetect the API.
+         *
+         * XXX: Ideally we would allow to mix multiple APIs in a single trace,
+         * but as it stands today, retrace is done separately for each API.
+         */
+        if (api == API_UNKNOWN) {
+            const char *n = sig->name;
+            if ((n[0] == 'g' && n[1] == 'l' && n[2] == 'X') || // glX*
+                (n[0] == 'w' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') || // wgl[A-Z]*
+                (n[0] == 'C' && n[1] == 'G' && n[2] == 'L')) { // CGL*
+                api = trace::API_GL;
+            } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl[A-Z]*
+                api = trace::API_EGL;
+            } else if (n[0] == 'D' &&
+                       ((n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
+                        (n[1] == '3' && n[2] == 'D'))) { // D3D*
+                api = trace::API_DX;
+            } else {
+                /* TODO */
+            }
+        }
 
         /**
          * Note down the signature of special functions for future reference.
@@ -532,6 +557,9 @@ Value *Parser::parse_value(void) {
     case trace::TYPE_OPAQUE:
         value = parse_opaque();
         break;
+    case trace::TYPE_REPR:
+        value = parse_repr();
+        break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
         exit(1);
@@ -587,6 +615,9 @@ void Parser::scan_value(void) {
         break;
     case trace::TYPE_OPAQUE:
         scan_opaque();
+        break;
+    case trace::TYPE_REPR:
+        scan_repr();
         break;
     default:
         std::cerr << "error: unknown type " << c << "\n";
@@ -713,7 +744,7 @@ Value *Parser::parse_blob(void) {
     size_t size = read_uint();
     Blob *blob = new Blob(size);
     if (size) {
-        file->read(blob->buf, (unsigned)size);
+        file->read(blob->buf, size);
     }
     return blob;
 }
@@ -759,11 +790,24 @@ void Parser::scan_opaque() {
 }
 
 
+Value *Parser::parse_repr() {
+    Value *humanValue = parse_value();
+    Value *machineValue = parse_value();
+    return new Repr(humanValue, machineValue);
+}
+
+
+void Parser::scan_repr() {
+    scan_value();
+    scan_value();
+}
+
+
 const char * Parser::read_string(void) {
     size_t len = read_uint();
     char * value = new char[len + 1];
     if (len) {
-        file->read(value, (unsigned)len);
+        file->read(value, len);
     }
     value[len] = 0;
 #if TRACE_VERBOSE
@@ -789,7 +833,7 @@ Parser::read_sint(void) {
     c = read_byte();
     switch (c) {
     case trace::TYPE_SINT:
-        return -read_uint();
+        return -(signed long long)read_uint();
     case trace::TYPE_UINT:
         return read_uint();
     default:

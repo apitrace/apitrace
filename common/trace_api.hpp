@@ -35,9 +35,22 @@
 namespace trace {
 
 
+/**
+ * Enum to distuinguish the API for tools.
+ *
+ * It should never be embedded in the trace file.
+ */
 enum API {
+    API_UNKNOWN = 0,
     API_GL, // GL + GLX/WGL/CGL
     API_EGL, // GL/GLES1/GLES2/VG + EGL
+    API_DX, // All DirectX
+    API_D3D7,
+    API_D3D8,
+    API_D3D9,
+    API_D3D10,
+    API_D3D10_1,
+    API_D3D11,
 };
 
 

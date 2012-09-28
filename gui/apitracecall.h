@@ -33,6 +33,7 @@ public:
     virtual void visit(trace::Array *array);
     virtual void visit(trace::Blob *blob);
     virtual void visit(trace::Pointer *ptr);
+    virtual void visit(trace::Repr *ptr);
 
     QVariant variant() const
     {
@@ -335,6 +336,10 @@ public:
 
     void setLastCallIndex(unsigned index);
     unsigned lastCallIndex() const;
+
+    void setThumbnail(const QImage & thumbnail);
+    const QImage & thumbnail() const;
+
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;
@@ -342,6 +347,7 @@ private:
     bool m_loaded;
     unsigned m_callsToLoad;
     unsigned m_lastCallIndex;
+    QImage m_thumbnail;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
 

@@ -78,7 +78,7 @@ public:
     }
 
     inline signed stride(void) const {
-        return flipped ? -width*channels : width*channels;
+        return flipped ? -(signed)(width*channels) : width*channels;
     }
 
     bool writeBMP(const char *filename) const;
@@ -108,6 +108,8 @@ bool writePixelsToBuffer(unsigned char *pixels,
 Image *
 readPNG(const char *filename);
 
+const char *
+readPNMHeader(const char *buffer, size_t size, unsigned *channels, unsigned *width, unsigned *height);
 
 } /* namespace image */
 

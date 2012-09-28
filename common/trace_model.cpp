@@ -85,6 +85,7 @@ bool Struct ::toBool(void) const { return true; }
 bool Array  ::toBool(void) const { return true; }
 bool Blob   ::toBool(void) const { return true; }
 bool Pointer::toBool(void) const { return value != 0; }
+bool Repr   ::toBool(void) const { return static_cast<bool>(machineValue); }
 
 
 // signed integer cast
@@ -95,6 +96,7 @@ signed long long SInt   ::toSInt(void) const { return value; }
 signed long long UInt   ::toSInt(void) const { assert(static_cast<signed long long>(value) >= 0); return static_cast<signed long long>(value); }
 signed long long Float  ::toSInt(void) const { return static_cast<signed long long>(value); }
 signed long long Double ::toSInt(void) const { return static_cast<signed long long>(value); }
+signed long long Repr   ::toSInt(void) const { return machineValue->toSInt(); }
 
 
 // unsigned integer cast
@@ -105,6 +107,7 @@ unsigned long long SInt   ::toUInt(void) const { assert(value >= 0); return stat
 unsigned long long UInt   ::toUInt(void) const { return value; }
 unsigned long long Float  ::toUInt(void) const { return static_cast<unsigned long long>(value); }
 unsigned long long Double ::toUInt(void) const { return static_cast<unsigned long long>(value); }
+unsigned long long Repr   ::toUInt(void) const { return machineValue->toUInt(); }
 
 
 // floating point cast
@@ -115,6 +118,7 @@ float SInt   ::toFloat(void) const { return static_cast<float>(value); }
 float UInt   ::toFloat(void) const { return static_cast<float>(value); }
 float Float  ::toFloat(void) const { return value; }
 float Double ::toFloat(void) const { return value; }
+float Repr   ::toFloat(void) const { return machineValue->toFloat(); }
 
 
 // floating point cast
@@ -125,6 +129,7 @@ double SInt   ::toDouble(void) const { return static_cast<double>(value); }
 double UInt   ::toDouble(void) const { return static_cast<double>(value); }
 double Float  ::toDouble(void) const { return value; }
 double Double ::toDouble(void) const { return value; }
+double Repr   ::toDouble(void) const { return machineValue->toDouble(); }
 
 
 // pointer cast
@@ -132,23 +137,27 @@ void * Value  ::toPointer(void) const { assert(0); return NULL; }
 void * Null   ::toPointer(void) const { return NULL; }
 void * Blob   ::toPointer(void) const { return buf; }
 void * Pointer::toPointer(void) const { return (void *)value; }
+void * Repr   ::toPointer(void) const { return machineValue->toPointer(); }
 
 void * Value  ::toPointer(bool bind) { assert(0); return NULL; }
 void * Null   ::toPointer(bool bind) { return NULL; }
 void * Blob   ::toPointer(bool bind) { if (bind) bound = true; return buf; }
 void * Pointer::toPointer(bool bind) { return (void *)value; }
+void * Repr   ::toPointer(bool bind) { return machineValue->toPointer(bind); }
 
 
-// pointer cast
+// unsigned int pointer cast
 unsigned long long Value  ::toUIntPtr(void) const { assert(0); return 0; }
 unsigned long long Null   ::toUIntPtr(void) const { return 0; }
 unsigned long long Pointer::toUIntPtr(void) const { return value; }
+unsigned long long Repr   ::toUIntPtr(void) const { return machineValue->toUIntPtr(); }
 
 
 // string cast
 const char * Value ::toString(void) const { assert(0); return NULL; }
 const char * Null  ::toString(void) const { return NULL; }
 const char * String::toString(void) const { return value; }
+const char * Repr  ::toString(void) const { return machineValue->toString(); }
 
 
 // virtual Value::visit()
@@ -165,6 +174,7 @@ void Struct ::visit(Visitor &visitor) { visitor.visit(this); }
 void Array  ::visit(Visitor &visitor) { visitor.visit(this); }
 void Blob   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
+void Repr   ::visit(Visitor &visitor) { visitor.visit(this); }
 
 
 void Visitor::visit(Null *) { assert(0); }
@@ -180,6 +190,7 @@ void Visitor::visit(Struct *) { assert(0); }
 void Visitor::visit(Array *) { assert(0); }
 void Visitor::visit(Blob *) { assert(0); }
 void Visitor::visit(Pointer *) { assert(0); }
+void Visitor::visit(Repr *node) { node->machineValue->visit(*this); }
 
 
 static Null null;

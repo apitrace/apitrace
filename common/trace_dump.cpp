@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <limits>
+
 #include "formatter.hpp"
 #include "trace_dump.hpp"
 
@@ -73,7 +75,7 @@ public:
     }
 
     void visit(Null *) {
-        os << "NULL";
+        os << literal << "NULL" << normal;
     }
 
     void visit(Bool *node) {
@@ -89,11 +91,15 @@ public:
     }
 
     void visit(Float *node) {
+        std::streamsize oldPrecision = os.precision(std::numeric_limits<float>::digits10 + 1);
         os << literal << node->value << normal;
+        os.precision(oldPrecision);
     }
 
     void visit(Double *node) {
+        std::streamsize oldPrecision = os.precision(std::numeric_limits<double>::digits10 + 1);
         os << literal << node->value << normal;
+        os.precision(oldPrecision);
     }
 
     void visit(String *node) {
@@ -129,12 +135,10 @@ public:
     }
 
     void visit(Enum *node) {
-        const EnumSig *sig = node->sig;
-        for (const EnumValue *it = sig->values; it != sig->values + sig->num_values; ++it) {
-            if (it->value == node->value) {
-                os << literal << it->name << normal;
-                return;
-            }
+        const EnumValue *it = node->lookup();
+        if (it) {
+            os << literal << it->name << normal;
+            return;
         }
         os << literal << node->value << normal;
     }
@@ -143,7 +147,8 @@ public:
         unsigned long long value = bitmask->value;
         const BitmaskSig *sig = bitmask->sig;
         bool first = true;
-        for (const BitmaskFlag *it = sig->flags; value != 0 && it != sig->flags + sig->num_flags; ++it) {
+        for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
+            assert(it->value || first);
             if ((it->value && (value & it->value) == it->value) ||
                 (!it->value && value == 0)) {
                 if (!first) {
@@ -152,6 +157,9 @@ public:
                 os << literal << it->name << normal;
                 value &= ~it->value;
                 first = false;
+            }
+            if (value == 0) {
+                break;
             }
         }
         if (value || first) {
@@ -196,6 +204,10 @@ public:
 
     void visit(Pointer *p) {
         os << pointer << "0x" << std::hex << p->value << std::dec << normal;
+    }
+
+    void visit(Repr *r) {
+        _visit(r->humanValue);
     }
 
     void visit(Call *call) {

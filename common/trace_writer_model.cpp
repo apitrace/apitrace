@@ -97,7 +97,14 @@ public:
     }
 
     void visit(Pointer *node) {
-        writer.writeOpaque((const void *) (size_t) node->value);
+        writer.writePointer(node->value);
+    }
+
+    void visit(Repr *node) {
+        writer.beginRepr();
+        _visit(node->humanValue);
+        _visit(node->machineValue);
+        writer.endRepr();
     }
 
     void visit(Call *call) {

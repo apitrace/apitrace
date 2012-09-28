@@ -96,11 +96,12 @@ namespace trace {
  *         | DOUBLE double
  *         | STRING string
  *         | BLOB string
- *         | ENUM enum_sig
+ *         | ENUM enum_sig value
  *         | BITMASK bitmask_sig value
  *         | ARRAY length value+
  *         | STRUCT struct_sig value+
  *         | OPAQUE int
+ *         | REPR value value
  *
  *   call_sig = id name arg_name*
  *            | id
@@ -143,6 +144,7 @@ enum Type {
     TYPE_ARRAY,
     TYPE_STRUCT,
     TYPE_OPAQUE,
+    TYPE_REPR,
 };
 
 

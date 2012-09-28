@@ -25,13 +25,12 @@
 
 
 #include <string.h>
-
-#ifdef _WIN32
-#include <fcntl.h>
-#include <io.h>
-#endif
+#include <limits.h> // for CHAR_MAX
+#include <getopt.h>
 
 #include "pickle.hpp"
+
+#include "os_binary.hpp"
 
 #include "cli.hpp"
 #include "cli_pager.hpp"
@@ -48,10 +47,12 @@ class PickleVisitor : public trace::Visitor
 {
 protected:
     PickleWriter &writer;
+    bool symbolic;
 
 public:
-    PickleVisitor(PickleWriter &_writer) :
-        writer(_writer) {
+    PickleVisitor(PickleWriter &_writer, bool _symbolic) :
+        writer(_writer),
+        symbolic(_symbolic) {
     }
 
     void visit(Null *node) {
@@ -83,23 +84,56 @@ public:
     }
 
     void visit(Enum *node) {
-        // TODO: keep symbolic name
+        if (symbolic) {
+            const EnumValue *it = node->lookup();
+            if (it) {
+                writer.writeString(it->name);
+                return;
+            }
+        }
         writer.writeInt(node->value);
     }
 
     void visit(Bitmask *node) {
-        // TODO: keep symbolic name
-        writer.writeInt(node->value);
+        if (symbolic) {
+            unsigned long long value = node->value;
+            const BitmaskSig *sig = node->sig;
+            writer.beginList();
+            for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
+                if ((it->value && (value & it->value) == it->value) ||
+                    (!it->value && value == 0)) {
+                    writer.writeString(it->name);
+                    value &= ~it->value;
+                }
+                if (value == 0) {
+                    break;
+                }
+            }
+            if (value) {
+                writer.writeInt(value);
+            }
+            writer.endList();
+        } else {
+            writer.writeInt(node->value);
+        }
     }
 
     void visit(Struct *node) {
-        writer.beginDict();
-        for (unsigned i = 0; i < node->sig->num_members; ++i) {
-            writer.beginItem(node->sig->member_names[i]);
-            _visit(node->members[i]);
-            writer.endItem();
+        if (false) {
+            writer.beginDict();
+            for (unsigned i = 0; i < node->sig->num_members; ++i) {
+                writer.beginItem(node->sig->member_names[i]);
+                _visit(node->members[i]);
+                writer.endItem();
+            }
+            writer.endDict();
+        } else {
+            writer.beginTuple();
+            for (unsigned i = 0; i < node->sig->num_members; ++i) {
+                _visit(node->members[i]);
+            }
+            writer.endTuple();
         }
-        writer.endDict();
     }
 
     void visit(Array *node) {
@@ -111,11 +145,19 @@ public:
     }
 
     void visit(Blob *node) {
-        writer.writeString((const char *)node->buf, node->size);
+        writer.writeByteArray(node->buf, node->size);
     }
 
     void visit(Pointer *node) {
         writer.writeInt(node->value);
+    }
+
+    void visit(Repr *r) {
+        if (symbolic) {
+            _visit(r->humanValue);
+        } else {
+            _visit(r->machineValue);
+        }
     }
 
     void visit(Call *call) {
@@ -154,51 +196,62 @@ static void
 usage(void)
 {
     std::cout
-        << "usage: apitrace pickle [OPTIONS] <trace-file>...\n"
+        << "usage: apitrace pickle [OPTIONS] TRACE_FILE...\n"
         << synopsis << "\n"
         "\n"
-        "    --calls <CALLSET>   Only pickle specified calls\n"
+        "    -h, --help           show this help message and exit\n"
+        "    -s, --symbolic       dump symbolic names\n"
+        "    --calls=CALLSET      only dump specified calls\n"
     ;
 }
+
+enum {
+	CALLS_OPT = CHAR_MAX + 1,
+};
+
+const static char *
+shortOptions = "hs";
+
+const static struct option
+longOptions[] = {
+    {"help", no_argument, 0, 'h'},
+    {"symbolic", no_argument, 0, 's'},
+    {"calls", required_argument, 0, CALLS_OPT},
+    {0, 0, 0, 0}
+};
 
 static int
 command(int argc, char *argv[])
 {
-    int i;
+    bool symbolic;
 
-    for (i = 1; i < argc;) {
-        const char *arg = argv[i];
-
-        if (arg[0] != '-') {
-            break;
-        }
-
-        ++i;
-
-        if (!strcmp(arg, "--")) {
-            break;
-        } else if (!strcmp(arg, "--help")) {
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
             usage();
             return 0;
-        } else if (!strcmp(arg, "--calls")) {
-            calls = trace::CallSet(argv[i++]);
-        } else {
-            std::cerr << "error: unknown option " << arg << "\n";
+        case 's':
+            symbolic = true;
+            break;
+        case CALLS_OPT:
+            calls = trace::CallSet(optarg);
+            break;
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
             usage();
             return 1;
         }
     }
 
-#ifdef _WIN32
-    // Set stdout in binary mode
-    fflush(stdout);
-    int mode = _setmode(_fileno(stdout), _O_BINARY);
-    if (mode == -1) {
-        std::cerr << "warning: failed to set stdout in binary mode\n";
-    }
-#endif
+    os::setBinaryMode(stdout);
+    
+    std::cout.sync_with_stdio(false);
 
-    for (; i < argc; ++i) {
+    PickleWriter writer(std::cout);
+    PickleVisitor visitor(writer, symbolic);
+
+    for (int i = optind; i < argc; ++i) {
         trace::Parser parser;
 
         if (!parser.open(argv[i])) {
@@ -209,22 +262,13 @@ command(int argc, char *argv[])
         trace::Call *call;
         while ((call = parser.parse_call())) {
             if (calls.contains(*call)) {
-                PickleWriter writer(std::cout);
-                PickleVisitor visitor(writer);
-                
+                writer.begin();
                 visitor.visit(call);
+                writer.end();
             }
             delete call;
         }
     }
-
-#ifdef _WIN32
-    std::cout.flush();
-    fflush(stdout);
-    if (mode != -1) {
-        _setmode(_fileno(stdout), mode);
-    }
-#endif
 
     return 0;
 }

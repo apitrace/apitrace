@@ -41,7 +41,10 @@ class Type:
         # on this type, so it should preferrably be something representative of
         # the type.
         if tag is None:
-            tag = ''.join([c for c in expr if c.isalnum() or c in '_'])
+            if expr is not None:
+                tag = ''.join([c for c in expr if c.isalnum() or c in '_'])
+            else:
+                tag = 'anonynoums'
         else:
             for c in tag:
                 assert c.isalnum() or c in '_'
@@ -65,6 +68,12 @@ class Type:
     def visit(self, visitor, *args, **kwargs):
         raise NotImplementedError
 
+    def mutable(self):
+        '''Return a mutable version of this type.
+
+        Convenience wrapper around MutableRebuilder.'''
+        visitor = MutableRebuilder()
+        return visitor.visit(self)
 
 
 class _Void(Type):
@@ -93,17 +102,41 @@ class Literal(Type):
         return visitor.visitLiteral(self, *args, **kwargs)
 
 
+Bool = Literal("bool", "Bool")
+SChar = Literal("signed char", "SInt")
+UChar = Literal("unsigned char", "UInt")
+Short = Literal("short", "SInt")
+Int = Literal("int", "SInt")
+Long = Literal("long", "SInt")
+LongLong = Literal("long long", "SInt")
+UShort = Literal("unsigned short", "UInt")
+UInt = Literal("unsigned int", "UInt")
+ULong = Literal("unsigned long", "UInt")
+ULongLong = Literal("unsigned long long", "UInt")
+Float = Literal("float", "Float")
+Double = Literal("double", "Double")
+SizeT = Literal("size_t", "UInt")
+
+Char = Literal("char", "SInt")
+WChar = Literal("wchar_t", "SInt")
+
+Int8 = Literal("int8_t", "SInt")
+UInt8 = Literal("uint8_t", "UInt")
+Int16 = Literal("int16_t", "SInt")
+UInt16 = Literal("uint16_t", "UInt")
+Int32 = Literal("int32_t", "SInt")
+UInt32 = Literal("uint32_t", "UInt")
+Int64 = Literal("int64_t", "SInt")
+UInt64 = Literal("uint64_t", "UInt")
+
+
 class Const(Type):
 
     def __init__(self, type):
         # While "const foo" and "foo const" are synonymous, "const foo *" and
         # "foo * const" are not quite the same, and some compilers do enforce
         # strict const correctness.
-        if isinstance(type, String) or type is WString:
-            # For strings we never intend to say a const pointer to chars, but
-            # rather a point to const chars.
-            expr = "const " + type.expr
-        elif type.expr.startswith("const ") or '*' in type.expr:
+        if type.expr.startswith("const ") or '*' in type.expr:
             expr = type.expr + " const"
         else:
             # The most legible
@@ -134,8 +167,19 @@ class IntPointer(Type):
         return visitor.visitIntPointer(self, *args, **kwargs)
 
 
+class ObjPointer(Type):
+    '''Pointer to an object.'''
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr + " *", 'P' + type.tag)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitObjPointer(self, *args, **kwargs)
+
+
 class LinearPointer(Type):
-    '''Integer encoded as a pointer.'''
+    '''Pointer to a linear range of memory.'''
 
     def __init__(self, type, size = None):
         Type.__init__(self, type.expr + " *", 'P' + type.tag)
@@ -144,6 +188,17 @@ class LinearPointer(Type):
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitLinearPointer(self, *args, **kwargs)
+
+
+class Reference(Type):
+    '''C++ references.'''
+
+    def __init__(self, type):
+        Type.__init__(self, type.expr + " &", 'R' + type.tag)
+        self.type = type
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitReference(self, *args, **kwargs)
 
 
 class Handle(Type):
@@ -235,10 +290,33 @@ class Struct(Type):
         Struct.__id += 1
 
         self.name = name
-        self.members = members
+        self.members = []
+
+        # Eliminate anonymous unions
+        for type, name in members:
+            if name is not None:
+                self.members.append((type, name))
+            else:
+                assert isinstance(type, Union)
+                assert type.name is None
+                self.members.extend(type.members)
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitStruct(self, *args, **kwargs)
+
+
+class Union(Type):
+
+    __id = 0
+
+    def __init__(self, name, members):
+        Type.__init__(self, name)
+
+        self.id = Union.__id
+        Union.__id += 1
+
+        self.name = name
+        self.members = members
 
 
 class Alias(Type):
@@ -250,17 +328,12 @@ class Alias(Type):
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitAlias(self, *args, **kwargs)
 
-
-def Out(type, name):
-    arg = Arg(type, name, output=True)
-    return arg
-
-
 class Arg:
 
-    def __init__(self, type, name, output=False):
+    def __init__(self, type, name, input=True, output=False):
         self.type = type
         self.name = name
+        self.input = input
         self.output = output
         self.index = None
 
@@ -268,12 +341,22 @@ class Arg:
         return '%s %s' % (self.type, self.name)
 
 
+def In(type, name):
+    return Arg(type, name, input=True, output=False)
+
+def Out(type, name):
+    return Arg(type, name, input=False, output=True)
+
+def InOut(type, name):
+    return Arg(type, name, input=True, output=True)
+
+
 class Function:
 
     # 0-3 are reserved to memcpy, malloc, free, and realloc
     __id = 4
 
-    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True):
+    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False):
         self.id = Function.__id
         Function.__id += 1
 
@@ -297,6 +380,7 @@ class Function:
         self.call = call
         self.fail = fail
         self.sideeffects = sideeffects
+        self.internal = internal
 
     def prototype(self, name=None):
         if name is not None:
@@ -342,12 +426,25 @@ class Interface(Type):
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitInterface(self, *args, **kwargs)
 
+    def getMethodByName(self, name):
+        for method in self.iterMethods():
+            if method.name == name:
+                return method
+        return None
+
     def iterMethods(self):
         if self.base is not None:
             for method in self.base.iterMethods():
                 yield method
         for method in self.methods:
             yield method
+        raise StopIteration
+
+    def iterBases(self):
+        iface = self
+        while iface is not None:
+            yield iface
+            iface = iface.base
         raise StopIteration
 
     def iterBaseMethods(self):
@@ -361,8 +458,8 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args, const=False):
-        Function.__init__(self, type, name, args, call = '__stdcall')
+    def __init__(self, type, name, args, call = '__stdcall', const=False, sideeffects=True):
+        Function.__init__(self, type, name, args, call = call, sideeffects=sideeffects)
         for index in range(len(self.args)):
             self.args[index].index = index + 1
         self.const = const
@@ -374,12 +471,20 @@ class Method(Function):
         return s
 
 
-class String(Type):
+def StdMethod(*args, **kwargs):
+    kwargs.setdefault('call', '__stdcall')
+    return Method(*args, **kwargs)
 
-    def __init__(self, expr = "char *", length = None, kind = 'String'):
-        Type.__init__(self, expr)
+
+class String(Type):
+    '''Human-legible character string.'''
+
+    def __init__(self, type = Char, length = None, wide = False):
+        assert isinstance(type, Type)
+        Type.__init__(self, type.expr + ' *')
+        self.type = type
         self.length = length
-        self.kind = kind
+        self.wide = wide
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitString(self, *args, **kwargs)
@@ -407,11 +512,12 @@ def OpaqueBlob(type, size):
 
 class Polymorphic(Type):
 
-    def __init__(self, defaultType, switchExpr, switchTypes):
+    def __init__(self, switchExpr, switchTypes, defaultType, contextLess=True):
         Type.__init__(self, defaultType.expr)
-        self.defaultType = defaultType
         self.switchExpr = switchExpr
         self.switchTypes = switchTypes
+        self.defaultType = defaultType
+        self.contextLess = contextLess
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitPolymorphic(self, *args, **kwargs)
@@ -431,6 +537,13 @@ class Polymorphic(Type):
                 cases[i].append(case)
 
         return zip(cases, types)
+
+
+def EnumPolymorphic(enumName, switchExpr, switchTypes, defaultType, contextLess=True):
+    enumValues = [expr for expr, type in switchTypes]
+    enum = Enum(enumName, enumValues)
+    polymorphic = Polymorphic(switchExpr, switchTypes, defaultType, contextLess)
+    return enum, polymorphic
 
 
 class Visitor:
@@ -472,7 +585,13 @@ class Visitor:
     def visitIntPointer(self, pointer, *args, **kwargs):
         raise NotImplementedError
 
+    def visitObjPointer(self, pointer, *args, **kwargs):
+        raise NotImplementedError
+
     def visitLinearPointer(self, pointer, *args, **kwargs):
+        raise NotImplementedError
+
+    def visitReference(self, reference, *args, **kwargs):
         raise NotImplementedError
 
     def visitHandle(self, handle, *args, **kwargs):
@@ -518,10 +637,18 @@ class Rebuilder(Visitor):
         return literal
 
     def visitString(self, string):
-        return string
+        string_type = self.visit(string.type)
+        if string_type is string.type:
+            return string
+        else:
+            return String(string_type, string.length, string.wide)
 
     def visitConst(self, const):
-        return Const(const.type)
+        const_type = self.visit(const.type)
+        if const_type is const.type:
+            return const
+        else:
+            return Const(const_type)
 
     def visitStruct(self, struct):
         members = [(self.visit(type), name) for type, name in struct.members]
@@ -543,23 +670,49 @@ class Rebuilder(Visitor):
         return Bitmask(type, bitmask.values)
 
     def visitPointer(self, pointer):
-        type = self.visit(pointer.type)
-        return Pointer(type)
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return Pointer(pointer_type)
 
     def visitIntPointer(self, pointer):
         return pointer
 
+    def visitObjPointer(self, pointer):
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return ObjPointer(pointer_type)
+
     def visitLinearPointer(self, pointer):
-        type = self.visit(pointer.type)
-        return LinearPointer(type, pointer.size)
+        pointer_type = self.visit(pointer.type)
+        if pointer_type is pointer.type:
+            return pointer
+        else:
+            return LinearPointer(pointer_type)
+
+    def visitReference(self, reference):
+        reference_type = self.visit(reference.type)
+        if reference_type is reference.type:
+            return reference
+        else:
+            return Reference(reference_type)
 
     def visitHandle(self, handle):
-        type = self.visit(handle.type)
-        return Handle(handle.name, type, range=handle.range, key=handle.key)
+        handle_type = self.visit(handle.type)
+        if handle_type is handle.type:
+            return handle
+        else:
+            return Handle(handle.name, handle_type, range=handle.range, key=handle.key)
 
     def visitAlias(self, alias):
-        type = self.visit(alias.type)
-        return Alias(alias.expr, type)
+        alias_type = self.visit(alias.type)
+        if alias_type is alias.type:
+            return alias
+        else:
+            return Alias(alias.expr, alias_type)
 
     def visitOpaque(self, opaque):
         return opaque
@@ -568,13 +721,104 @@ class Rebuilder(Visitor):
         return interface
 
     def visitPolymorphic(self, polymorphic):
-        defaultType = self.visit(polymorphic.defaultType)
         switchExpr = polymorphic.switchExpr
         switchTypes = [(expr, self.visit(type)) for expr, type in polymorphic.switchTypes]
-        return Polymorphic(defaultType, switchExpr, switchTypes)
+        defaultType = self.visit(polymorphic.defaultType)
+        return Polymorphic(switchExpr, switchTypes, defaultType, polymorphic.contextLess)
 
 
-class Collector(Visitor):
+class MutableRebuilder(Rebuilder):
+    '''Type visitor which derives a mutable type.'''
+
+    def visitString(self, string):
+        return string
+
+    def visitConst(self, const):
+        # Strip out const qualifier
+        return const.type
+
+    def visitAlias(self, alias):
+        # Tear the alias on type changes
+        type = self.visit(alias.type)
+        if type is alias.type:
+            return alias
+        return type
+
+    def visitReference(self, reference):
+        # Strip out references
+        return reference.type
+
+
+class Traverser(Visitor):
+    '''Visitor which all types.'''
+
+    def visitVoid(self, void, *args, **kwargs):
+        pass
+
+    def visitLiteral(self, literal, *args, **kwargs):
+        pass
+
+    def visitString(self, string, *args, **kwargs):
+        pass
+
+    def visitConst(self, const, *args, **kwargs):
+        self.visit(const.type, *args, **kwargs)
+
+    def visitStruct(self, struct, *args, **kwargs):
+        for type, name in struct.members:
+            self.visit(type, *args, **kwargs)
+
+    def visitArray(self, array, *args, **kwargs):
+        self.visit(array.type, *args, **kwargs)
+
+    def visitBlob(self, array, *args, **kwargs):
+        pass
+
+    def visitEnum(self, enum, *args, **kwargs):
+        pass
+
+    def visitBitmask(self, bitmask, *args, **kwargs):
+        self.visit(bitmask.type, *args, **kwargs)
+
+    def visitPointer(self, pointer, *args, **kwargs):
+        self.visit(pointer.type, *args, **kwargs)
+
+    def visitIntPointer(self, pointer, *args, **kwargs):
+        pass
+
+    def visitObjPointer(self, pointer, *args, **kwargs):
+        self.visit(pointer.type, *args, **kwargs)
+
+    def visitLinearPointer(self, pointer, *args, **kwargs):
+        self.visit(pointer.type, *args, **kwargs)
+
+    def visitReference(self, reference, *args, **kwargs):
+        self.visit(reference.type, *args, **kwargs)
+
+    def visitHandle(self, handle, *args, **kwargs):
+        self.visit(handle.type, *args, **kwargs)
+
+    def visitAlias(self, alias, *args, **kwargs):
+        self.visit(alias.type, *args, **kwargs)
+
+    def visitOpaque(self, opaque, *args, **kwargs):
+        pass
+
+    def visitInterface(self, interface, *args, **kwargs):
+        if interface.base is not None:
+            self.visit(interface.base, *args, **kwargs)
+        for method in interface.iterMethods():
+            for arg in method.args:
+                self.visit(arg.type, *args, **kwargs)
+            self.visit(method.type, *args, **kwargs)
+
+    def visitPolymorphic(self, polymorphic, *args, **kwargs):
+        self.visit(polymorphic.defaultType, *args, **kwargs)
+        for expr, type in polymorphic.switchTypes:
+            self.visit(type, *args, **kwargs)
+
+
+class Collector(Traverser):
     '''Visitor which collects all unique types as it traverses them.'''
 
     def __init__(self):
@@ -588,64 +832,6 @@ class Collector(Visitor):
         Visitor.visit(self, type)
         self.types.append(type)
 
-    def visitVoid(self, literal):
-        pass
-
-    def visitLiteral(self, literal):
-        pass
-
-    def visitString(self, string):
-        pass
-
-    def visitConst(self, const):
-        self.visit(const.type)
-
-    def visitStruct(self, struct):
-        for type, name in struct.members:
-            self.visit(type)
-
-    def visitArray(self, array):
-        self.visit(array.type)
-
-    def visitBlob(self, array):
-        pass
-
-    def visitEnum(self, enum):
-        pass
-
-    def visitBitmask(self, bitmask):
-        self.visit(bitmask.type)
-
-    def visitPointer(self, pointer):
-        self.visit(pointer.type)
-
-    def visitIntPointer(self, pointer):
-        pass
-
-    def visitLinearPointer(self, pointer):
-        self.visit(pointer.type)
-
-    def visitHandle(self, handle):
-        self.visit(handle.type)
-
-    def visitAlias(self, alias):
-        self.visit(alias.type)
-
-    def visitOpaque(self, opaque):
-        pass
-
-    def visitInterface(self, interface):
-        if interface.base is not None:
-            self.visit(interface.base)
-        for method in interface.iterMethods():
-            for arg in method.args:
-                self.visit(arg.type)
-            self.visit(method.type)
-
-    def visitPolymorphic(self, polymorphic):
-        self.visit(polymorphic.defaultType)
-        for expr, type in polymorphic.switchTypes:
-            self.visit(type)
 
 
 class API:
@@ -700,37 +886,15 @@ class API:
         self.addFunctions(api.functions)
         self.addInterfaces(api.interfaces)
 
-    def get_function_by_name(self, name):
+    def getFunctionByName(self, name):
         for function in self.functions:
             if function.name == name:
                 return function
         return None
 
 
-Bool = Literal("bool", "Bool")
-SChar = Literal("signed char", "SInt")
-UChar = Literal("unsigned char", "UInt")
-Short = Literal("short", "SInt")
-Int = Literal("int", "SInt")
-Long = Literal("long", "SInt")
-LongLong = Literal("long long", "SInt")
-UShort = Literal("unsigned short", "UInt")
-UInt = Literal("unsigned int", "UInt")
-ULong = Literal("unsigned long", "UInt")
-ULongLong = Literal("unsigned long long", "UInt")
-Float = Literal("float", "Float")
-Double = Literal("double", "Double")
-SizeT = Literal("size_t", "UInt")
-
 # C string (i.e., zero terminated)
-CString = String()
-WString = String("wchar_t *", kind="WString")
-
-Int8 = Literal("int8_t", "SInt")
-UInt8 = Literal("uint8_t", "UInt")
-Int16 = Literal("int16_t", "SInt")
-UInt16 = Literal("uint16_t", "UInt")
-Int32 = Literal("int32_t", "SInt")
-UInt32 = Literal("uint32_t", "UInt")
-Int64 = Literal("int64_t", "SInt")
-UInt64 = Literal("uint64_t", "UInt")
+CString = String(Char)
+WString = String(WChar, wide=True)
+ConstCString = String(Const(Char))
+ConstWString = String(Const(WChar), wide=True)

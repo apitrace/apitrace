@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2011 Jose Fonseca
+# Copyright 2011-2012 Jose Fonseca
 # Copyright 2008-2009 VMware, Inc.
 # All Rights Reserved.
 #
@@ -25,8 +25,9 @@
 ##########################################################################/
 
 
-import sys
 import platform
+import subprocess
+import sys
 
 
 class PlainHighlighter:
@@ -41,7 +42,7 @@ class PlainHighlighter:
     cyan = None
     white = None
 
-    def __init__(self, stream):
+    def __init__(self, stream = sys.stdout):
         self.stream = stream
 
     def write(self, text):
@@ -56,7 +57,10 @@ class PlainHighlighter:
     def color(self, color):
         pass
 
-    def bold(self):
+    def bold(self, enable = True):
+        pass
+
+    def strike(self):
         pass
 
     def italic(self):
@@ -72,7 +76,6 @@ class AnsiHighlighter(PlainHighlighter):
     _csi = '\33['
 
     _normal = '0m'
-    _bold = '1m'
     _italic = '3m'
 
     black = 0
@@ -84,13 +87,11 @@ class AnsiHighlighter(PlainHighlighter):
     cyan = 6
     white = 7
 
-    def __init__(self, stream):
+    def __init__(self, stream = sys.stdout):
         PlainHighlighter.__init__(self, stream)
-        self.isatty = stream.isatty()
 
     def _escape(self, code):
-        if self.isatty:
-            self.stream.write(self._csi + code)
+        self.stream.write(self._csi + code)
 
     def normal(self):
         self._escape(self._normal)
@@ -98,8 +99,14 @@ class AnsiHighlighter(PlainHighlighter):
     def color(self, color):
         self._escape(str(30 + color) + 'm')
 
-    def bold(self):
-        self._escape(self._bold)
+    def bold(self, enable = True):
+        if enable:
+            self._escape('1m')
+        else:
+            self._escape('21m')
+
+    def strike(self):
+        self._escape('9m')
 
     def italic(self):
         self._escape(self._italic)
@@ -133,7 +140,6 @@ class WindowsConsoleHighlighter(PlainHighlighter):
     COMMON_LVB_UNDERSCORE = 0x8000
 
     _normal = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
-    _bold   = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY
     _italic = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
 
     black   = 0
@@ -142,7 +148,7 @@ class WindowsConsoleHighlighter(PlainHighlighter):
     blue    = FOREGROUND_BLUE                                    
     white   = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
 
-    def __init__(self, stream):
+    def __init__(self, stream = sys.stdout):
         PlainHighlighter.__init__(self, stream)
 
         if stream is sys.stdin:
@@ -158,12 +164,12 @@ class WindowsConsoleHighlighter(PlainHighlighter):
             import ctypes
             self._handle = ctypes.windll.kernel32.GetStdHandle(nStdHandle)
         else:
-            self._handle = INVALID_HANDLE_VALUE
+            self._handle = self.INVALID_HANDLE_VALUE
 
         self._attribute = self.white
 
     def _setAttribute(self, attr):
-        if self._handle != INVALID_HANDLE_VALUE:
+        if self._handle != self.INVALID_HANDLE_VALUE:
             import ctypes
             ctypes.windll.kernel32.SetConsoleTextAttribute(self._handle, attr)
         self._attribute = attr
@@ -172,23 +178,54 @@ class WindowsConsoleHighlighter(PlainHighlighter):
         self._setAttribute(self._normal)
 
     def color(self, color):
-        intensity = self._attribute & FOREGROUND_INTENSITY
+        intensity = self._attribute & self.FOREGROUND_INTENSITY
         self._setAttribute(color | intensity)
 
-    def bold(self):
-        self._setAttribute(self._attribute | FOREGROUND_INTENSITY)
+    def bold(self, enable = True):
+        if enable:
+            attribute = self._attribute | self.FOREGROUND_INTENSITY
+        else:
+            attribute = self._attribute & ~self.FOREGROUND_INTENSITY
+        self._setAttribute(attribute)
 
     def italic(self):
         pass
 
 
-def Highlighter(stream = sys.stdout):
-    if platform.system() == 'Windows':
-        return WindowsConsoleHighlighter(stream)
+if platform.system() == 'Windows':
+    ColorHighlighter = WindowsConsoleHighlighter
+else:
+    ColorHighlighter = AnsiHighlighter
+
+
+def AutoHighlighter(stream = sys.stdout):
+    if stream.isatty():
+        return ColorHighlighter(stream)
     else:
-        return AnsiHighlighter(stream)
+        return PlainHighlighter(stream)
 
 
-__all__ = [
-    'Highlighter',
-]
+class _LessHighlighter(AnsiHighlighter):
+
+    def __init__(self, less):
+        AnsiHighlighter.__init__(self, less.stdin)
+        self.less = less
+
+    def __del__(self):
+        self.less.stdin.close()
+        self.less.wait()
+
+
+def LessHighlighter():
+    if sys.stdout.isatty():
+        try:
+            less = subprocess.Popen(
+                args = ['less', '-FRXn'],
+                stdin = subprocess.PIPE
+            )
+        except OSError:
+            return ColorHighlighter()
+        else:
+            return _LessHighlighter(less)
+    return PlainHighlighter(sys.stdout)
+

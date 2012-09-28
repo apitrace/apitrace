@@ -284,11 +284,11 @@ D2D1_LAYER_OPTIONS = EnumFlag("D2D1_LAYER_OPTIONS", [
 
 D2D1_LAYER_PARAMETERS = Struct("D2D1_LAYER_PARAMETERS", [
     (D2D1_RECT_F, "contentBounds"),
-    (Pointer(ID2D1Geometry), "geometricMask"),
+    (ObjPointer(ID2D1Geometry), "geometricMask"),
     (D2D1_ANTIALIAS_MODE, "maskAntialiasMode"),
     (D2D1_MATRIX_3X2_F, "maskTransform"),
     (FLOAT, "opacity"),
-    (Pointer(ID2D1Brush), "opacityBrush"),
+    (ObjPointer(ID2D1Brush), "opacityBrush"),
     (D2D1_LAYER_OPTIONS, "layerOptions"),
 ])
 
@@ -371,7 +371,7 @@ D2D1_FACTORY_OPTIONS = Struct("D2D1_FACTORY_OPTIONS", [
 ])
 
 ID2D1Resource.methods += [
-    Method(Void, "GetFactory", [Out(Pointer(Pointer(ID2D1Factory)), "factory")], const=True),
+    Method(Void, "GetFactory", [Out(Pointer(ObjPointer(ID2D1Factory)), "factory")], const=True),
 ]
 
 ID2D1Bitmap.methods += [
@@ -379,8 +379,8 @@ ID2D1Bitmap.methods += [
     Method(D2D1_SIZE_U, "GetPixelSize", [], const=True),
     Method(D2D1_PIXEL_FORMAT, "GetPixelFormat", [], const=True),
     Method(Void, "GetDpi", [Out(Pointer(FLOAT), "dpiX"), Out(Pointer(FLOAT), "dpiY")], const=True),
-    Method(HRESULT, "CopyFromBitmap", [(Pointer(Const(D2D1_POINT_2U)), "destPoint"), (Pointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_RECT_U)), "srcRect")]),
-    Method(HRESULT, "CopyFromRenderTarget", [(Pointer(Const(D2D1_POINT_2U)), "destPoint"), (Pointer(ID2D1RenderTarget), "renderTarget"), (Pointer(Const(D2D1_RECT_U)), "srcRect")]),
+    Method(HRESULT, "CopyFromBitmap", [(Pointer(Const(D2D1_POINT_2U)), "destPoint"), (ObjPointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_RECT_U)), "srcRect")]),
+    Method(HRESULT, "CopyFromRenderTarget", [(Pointer(Const(D2D1_POINT_2U)), "destPoint"), (ObjPointer(ID2D1RenderTarget), "renderTarget"), (Pointer(Const(D2D1_RECT_U)), "srcRect")]),
     Method(HRESULT, "CopyFromMemory", [(Pointer(Const(D2D1_RECT_U)), "dstRect"), (OpaquePointer(Const(Void)), "srcData"), (UINT32, "pitch")]),
 ]
 
@@ -402,11 +402,11 @@ ID2D1BitmapBrush.methods += [
     Method(Void, "SetExtendModeX", [(D2D1_EXTEND_MODE, "extendModeX")]),
     Method(Void, "SetExtendModeY", [(D2D1_EXTEND_MODE, "extendModeY")]),
     Method(Void, "SetInterpolationMode", [(D2D1_BITMAP_INTERPOLATION_MODE, "interpolationMode")]),
-    Method(Void, "SetBitmap", [(Pointer(ID2D1Bitmap), "bitmap")]),
+    Method(Void, "SetBitmap", [(ObjPointer(ID2D1Bitmap), "bitmap")]),
     Method(D2D1_EXTEND_MODE, "GetExtendModeX", [], const=True),
     Method(D2D1_EXTEND_MODE, "GetExtendModeY", [], const=True),
     Method(D2D1_BITMAP_INTERPOLATION_MODE, "GetInterpolationMode", [], const=True),
-    Method(Void, "GetBitmap", [Out(Pointer(Pointer(ID2D1Bitmap)), "bitmap")], const=True),
+    Method(Void, "GetBitmap", [Out(Pointer(ObjPointer(ID2D1Bitmap)), "bitmap")], const=True),
 ]
 
 ID2D1SolidColorBrush.methods += [
@@ -419,7 +419,7 @@ ID2D1LinearGradientBrush.methods += [
     Method(Void, "SetEndPoint", [(D2D1_POINT_2F, "endPoint")]),
     Method(D2D1_POINT_2F, "GetStartPoint", [], const=True),
     Method(D2D1_POINT_2F, "GetEndPoint", [], const=True),
-    Method(Void, "GetGradientStopCollection", [Out(Pointer(Pointer(ID2D1GradientStopCollection)), "gradientStopCollection")], const=True),
+    Method(Void, "GetGradientStopCollection", [Out(Pointer(ObjPointer(ID2D1GradientStopCollection)), "gradientStopCollection")], const=True),
 ]
 
 ID2D1RadialGradientBrush.methods += [
@@ -431,7 +431,7 @@ ID2D1RadialGradientBrush.methods += [
     Method(D2D1_POINT_2F, "GetGradientOriginOffset", [], const=True),
     Method(FLOAT, "GetRadiusX", [], const=True),
     Method(FLOAT, "GetRadiusY", [], const=True),
-    Method(Void, "GetGradientStopCollection", [Out(Pointer(Pointer(ID2D1GradientStopCollection)), "gradientStopCollection")], const=True),
+    Method(Void, "GetGradientStopCollection", [Out(Pointer(ObjPointer(ID2D1GradientStopCollection)), "gradientStopCollection")], const=True),
 ]
 
 ID2D1StrokeStyle.methods += [
@@ -448,18 +448,18 @@ ID2D1StrokeStyle.methods += [
 
 ID2D1Geometry.methods += [
     Method(HRESULT, "GetBounds", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), Out(Pointer(D2D1_RECT_F), "bounds")], const=True),
-    Method(HRESULT, "GetWidenedBounds", [(FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(D2D1_RECT_F), "bounds")], const=True),
-    Method(HRESULT, "StrokeContainsPoint", [(D2D1_POINT_2F, "point"), (FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(BOOL), "contains")], const=True),
+    Method(HRESULT, "GetWidenedBounds", [(FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(D2D1_RECT_F), "bounds")], const=True),
+    Method(HRESULT, "StrokeContainsPoint", [(D2D1_POINT_2F, "point"), (FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(BOOL), "contains")], const=True),
     Method(HRESULT, "FillContainsPoint", [(D2D1_POINT_2F, "point"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(BOOL), "contains")], const=True),
-    Method(HRESULT, "CompareWithGeometry", [(Pointer(ID2D1Geometry), "inputGeometry"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "inputGeometryTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(D2D1_GEOMETRY_RELATION), "relation")], const=True),
-    Method(HRESULT, "Simplify", [(D2D1_GEOMETRY_SIMPLIFICATION_OPTION, "simplificationOption"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (Pointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
-    Method(HRESULT, "Tessellate", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (Pointer(ID2D1TessellationSink), "tessellationSink")], const=True),
-    Method(HRESULT, "CombineWithGeometry", [(Pointer(ID2D1Geometry), "inputGeometry"), (D2D1_COMBINE_MODE, "combineMode"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "inputGeometryTransform"), (FLOAT, "flatteningTolerance"), (Pointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
-    Method(HRESULT, "Outline", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (Pointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
+    Method(HRESULT, "CompareWithGeometry", [(ObjPointer(ID2D1Geometry), "inputGeometry"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "inputGeometryTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(D2D1_GEOMETRY_RELATION), "relation")], const=True),
+    Method(HRESULT, "Simplify", [(D2D1_GEOMETRY_SIMPLIFICATION_OPTION, "simplificationOption"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (ObjPointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
+    Method(HRESULT, "Tessellate", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (ObjPointer(ID2D1TessellationSink), "tessellationSink")], const=True),
+    Method(HRESULT, "CombineWithGeometry", [(ObjPointer(ID2D1Geometry), "inputGeometry"), (D2D1_COMBINE_MODE, "combineMode"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "inputGeometryTransform"), (FLOAT, "flatteningTolerance"), (ObjPointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
+    Method(HRESULT, "Outline", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (ObjPointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
     Method(HRESULT, "ComputeArea", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(FLOAT), "area")], const=True),
     Method(HRESULT, "ComputeLength", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(FLOAT), "length")], const=True),
     Method(HRESULT, "ComputePointAtLength", [(FLOAT, "length"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), Out(Pointer(D2D1_POINT_2F), "point"), Out(Pointer(D2D1_POINT_2F), "unitTangentVector")], const=True),
-    Method(HRESULT, "Widen", [(FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (Pointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
+    Method(HRESULT, "Widen", [(FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "worldTransform"), (FLOAT, "flatteningTolerance"), (ObjPointer(ID2D1SimplifiedGeometrySink), "geometrySink")], const=True),
 ]
 
 ID2D1RectangleGeometry.methods += [
@@ -477,11 +477,11 @@ ID2D1EllipseGeometry.methods += [
 ID2D1GeometryGroup.methods += [
     Method(D2D1_FILL_MODE, "GetFillMode", [], const=True),
     Method(UINT32, "GetSourceGeometryCount", [], const=True),
-    Method(Void, "GetSourceGeometries", [Out(Array(Pointer(ID2D1Geometry), "geometriesCount"), "geometries"), (UINT, "geometriesCount")], const=True),
+    Method(Void, "GetSourceGeometries", [Out(Array(ObjPointer(ID2D1Geometry), "geometriesCount"), "geometries"), (UINT, "geometriesCount")], const=True),
 ]
 
 ID2D1TransformedGeometry.methods += [
-    Method(Void, "GetSourceGeometry", [Out(Pointer(Pointer(ID2D1Geometry)), "sourceGeometry")], const=True),
+    Method(Void, "GetSourceGeometry", [Out(Pointer(ObjPointer(ID2D1Geometry)), "sourceGeometry")], const=True),
     Method(Void, "GetTransform", [Out(Pointer(D2D1_MATRIX_3X2_F), "transform")], const=True),
 ]
 
@@ -509,14 +509,14 @@ ID2D1TessellationSink.methods += [
 ]
 
 ID2D1PathGeometry.methods += [
-    Method(HRESULT, "Open", [Out(Pointer(Pointer(ID2D1GeometrySink)), "geometrySink")]),
-    Method(HRESULT, "Stream", [(Pointer(ID2D1GeometrySink), "geometrySink")], const=True),
+    Method(HRESULT, "Open", [Out(Pointer(ObjPointer(ID2D1GeometrySink)), "geometrySink")]),
+    Method(HRESULT, "Stream", [(ObjPointer(ID2D1GeometrySink), "geometrySink")], const=True),
     Method(HRESULT, "GetSegmentCount", [Out(Pointer(UINT32), "count")], const=True),
     Method(HRESULT, "GetFigureCount", [Out(Pointer(UINT32), "count")], const=True),
 ]
 
 ID2D1Mesh.methods += [
-    Method(HRESULT, "Open", [Out(Pointer(Pointer(ID2D1TessellationSink)), "tessellationSink")]),
+    Method(HRESULT, "Open", [Out(Pointer(ObjPointer(ID2D1TessellationSink)), "tessellationSink")]),
 ]
 
 ID2D1Layer.methods += [
@@ -526,52 +526,52 @@ ID2D1Layer.methods += [
 ID2D1DrawingStateBlock.methods += [
     Method(Void, "GetDescription", [Out(Pointer(D2D1_DRAWING_STATE_DESCRIPTION), "stateDescription")], const=True),
     Method(Void, "SetDescription", [(Pointer(Const(D2D1_DRAWING_STATE_DESCRIPTION)), "stateDescription")]),
-    Method(Void, "SetTextRenderingParams", [(Pointer(IDWriteRenderingParams), "textRenderingParams")]),
-    Method(Void, "GetTextRenderingParams", [Out(Pointer(Pointer(IDWriteRenderingParams)), "textRenderingParams")], const=True),
+    Method(Void, "SetTextRenderingParams", [(ObjPointer(IDWriteRenderingParams), "textRenderingParams")]),
+    Method(Void, "GetTextRenderingParams", [Out(Pointer(ObjPointer(IDWriteRenderingParams)), "textRenderingParams")], const=True),
 ]
 
 ID2D1RenderTarget.methods += [
-    Method(HRESULT, "CreateBitmap", [(D2D1_SIZE_U, "size"), (OpaquePointer(Const(Void)), "srcData"), (UINT32, "pitch"), (Pointer(Const(D2D1_BITMAP_PROPERTIES)), "bitmapProperties"), Out(Pointer(Pointer(ID2D1Bitmap)), "bitmap")]),
-    Method(HRESULT, "CreateBitmapFromWicBitmap", [(Opaque("IWICBitmapSource *"), "wicBitmapSource"), (Pointer(Const(D2D1_BITMAP_PROPERTIES)), "bitmapProperties"), Out(Pointer(Pointer(ID2D1Bitmap)), "bitmap")]),
-    Method(HRESULT, "CreateSharedBitmap", [(REFIID, "riid"), Out(OpaquePointer(Void), "data"), (Pointer(Const(D2D1_BITMAP_PROPERTIES)), "bitmapProperties"), Out(Pointer(Pointer(ID2D1Bitmap)), "bitmap")]),
-    Method(HRESULT, "CreateBitmapBrush", [(Pointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_BITMAP_BRUSH_PROPERTIES)), "bitmapBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(Pointer(ID2D1BitmapBrush)), "bitmapBrush")]),
-    Method(HRESULT, "CreateSolidColorBrush", [(Pointer(Const(D2D1_COLOR_F)), "color"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(Pointer(ID2D1SolidColorBrush)), "solidColorBrush")]),
-    Method(HRESULT, "CreateGradientStopCollection", [(Array(Const(D2D1_GRADIENT_STOP), "gradientStopsCount"), "gradientStops"), (UINT, "gradientStopsCount"), (D2D1_GAMMA, "colorInterpolationGamma"), (D2D1_EXTEND_MODE, "extendMode"), Out(Pointer(Pointer(ID2D1GradientStopCollection)), "gradientStopCollection")]),
-    Method(HRESULT, "CreateLinearGradientBrush", [(Pointer(Const(D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES)), "linearGradientBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), (Pointer(ID2D1GradientStopCollection), "gradientStopCollection"), Out(Pointer(Pointer(ID2D1LinearGradientBrush)), "linearGradientBrush")]),
-    Method(HRESULT, "CreateRadialGradientBrush", [(Pointer(Const(D2D1_RADIAL_GRADIENT_BRUSH_PROPERTIES)), "radialGradientBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), (Pointer(ID2D1GradientStopCollection), "gradientStopCollection"), Out(Pointer(Pointer(ID2D1RadialGradientBrush)), "radialGradientBrush")]),
-    Method(HRESULT, "CreateCompatibleRenderTarget", [(Pointer(Const(D2D1_SIZE_F)), "desiredSize"), (Pointer(Const(D2D1_SIZE_U)), "desiredPixelSize"), (Pointer(Const(D2D1_PIXEL_FORMAT)), "desiredFormat"), (D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS, "options"), Out(Pointer(Pointer(ID2D1BitmapRenderTarget)), "bitmapRenderTarget")]),
-    Method(HRESULT, "CreateLayer", [(Pointer(Const(D2D1_SIZE_F)), "size"), Out(Pointer(Pointer(ID2D1Layer)), "layer")]),
-    Method(HRESULT, "CreateMesh", [Out(Pointer(Pointer(ID2D1Mesh)), "mesh")]),
-    Method(Void, "DrawLine", [(D2D1_POINT_2F, "point0"), (D2D1_POINT_2F, "point1"), (Pointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle")]),
-    Method(Void, "DrawRectangle", [(Pointer(Const(D2D1_RECT_F)), "rect"), (Pointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle")]),
-    Method(Void, "FillRectangle", [(Pointer(Const(D2D1_RECT_F)), "rect"), (Pointer(ID2D1Brush), "brush")]),
-    Method(Void, "DrawRoundedRectangle", [(Pointer(Const(D2D1_ROUNDED_RECT)), "roundedRect"), (Pointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle")]),
-    Method(Void, "FillRoundedRectangle", [(Pointer(Const(D2D1_ROUNDED_RECT)), "roundedRect"), (Pointer(ID2D1Brush), "brush")]),
-    Method(Void, "DrawEllipse", [(Pointer(Const(D2D1_ELLIPSE)), "ellipse"), (Pointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle")]),
-    Method(Void, "FillEllipse", [(Pointer(Const(D2D1_ELLIPSE)), "ellipse"), (Pointer(ID2D1Brush), "brush")]),
-    Method(Void, "DrawGeometry", [(Pointer(ID2D1Geometry), "geometry"), (Pointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (Pointer(ID2D1StrokeStyle), "strokeStyle")]),
-    Method(Void, "FillGeometry", [(Pointer(ID2D1Geometry), "geometry"), (Pointer(ID2D1Brush), "brush"), (Pointer(ID2D1Brush), "opacityBrush")]),
-    Method(Void, "FillMesh", [(Pointer(ID2D1Mesh), "mesh"), (Pointer(ID2D1Brush), "brush")]),
-    Method(Void, "FillOpacityMask", [(Pointer(ID2D1Bitmap), "opacityMask"), (Pointer(ID2D1Brush), "brush"), (D2D1_OPACITY_MASK_CONTENT, "content"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle")]),
-    Method(Void, "DrawBitmap", [(Pointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (FLOAT, "opacity"), (D2D1_BITMAP_INTERPOLATION_MODE, "interpolationMode"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle")]),
-    Method(Void, "DrawText", [(Pointer(Const(WCHAR)), "string"), (UINT, "stringLength"), (Pointer(IDWriteTextFormat), "textFormat"), (Pointer(Const(D2D1_RECT_F)), "layoutRect"), (Pointer(ID2D1Brush), "defaultForegroundBrush"), (D2D1_DRAW_TEXT_OPTIONS, "options"), (DWRITE_MEASURING_MODE, "measuringMode")]),
-    Method(Void, "DrawTextLayout", [(D2D1_POINT_2F, "origin"), (Pointer(IDWriteTextLayout), "textLayout"), (Pointer(ID2D1Brush), "defaultForegroundBrush"), (D2D1_DRAW_TEXT_OPTIONS, "options")]),
-    Method(Void, "DrawGlyphRun", [(D2D1_POINT_2F, "baselineOrigin"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (Pointer(ID2D1Brush), "foregroundBrush"), (DWRITE_MEASURING_MODE, "measuringMode")]),
+    Method(HRESULT, "CreateBitmap", [(D2D1_SIZE_U, "size"), (OpaquePointer(Const(Void)), "srcData"), (UINT32, "pitch"), (Pointer(Const(D2D1_BITMAP_PROPERTIES)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap)), "bitmap")]),
+    Method(HRESULT, "CreateBitmapFromWicBitmap", [(Opaque("IWICBitmapSource *"), "wicBitmapSource"), (Pointer(Const(D2D1_BITMAP_PROPERTIES)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap)), "bitmap")]),
+    Method(HRESULT, "CreateSharedBitmap", [(REFIID, "riid"), Out(OpaquePointer(Void), "data"), (Pointer(Const(D2D1_BITMAP_PROPERTIES)), "bitmapProperties"), Out(Pointer(ObjPointer(ID2D1Bitmap)), "bitmap")]),
+    Method(HRESULT, "CreateBitmapBrush", [(ObjPointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_BITMAP_BRUSH_PROPERTIES)), "bitmapBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(ObjPointer(ID2D1BitmapBrush)), "bitmapBrush")]),
+    Method(HRESULT, "CreateSolidColorBrush", [(Pointer(Const(D2D1_COLOR_F)), "color"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), Out(Pointer(ObjPointer(ID2D1SolidColorBrush)), "solidColorBrush")]),
+    Method(HRESULT, "CreateGradientStopCollection", [(Array(Const(D2D1_GRADIENT_STOP), "gradientStopsCount"), "gradientStops"), (UINT, "gradientStopsCount"), (D2D1_GAMMA, "colorInterpolationGamma"), (D2D1_EXTEND_MODE, "extendMode"), Out(Pointer(ObjPointer(ID2D1GradientStopCollection)), "gradientStopCollection")]),
+    Method(HRESULT, "CreateLinearGradientBrush", [(Pointer(Const(D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES)), "linearGradientBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), (ObjPointer(ID2D1GradientStopCollection), "gradientStopCollection"), Out(Pointer(ObjPointer(ID2D1LinearGradientBrush)), "linearGradientBrush")]),
+    Method(HRESULT, "CreateRadialGradientBrush", [(Pointer(Const(D2D1_RADIAL_GRADIENT_BRUSH_PROPERTIES)), "radialGradientBrushProperties"), (Pointer(Const(D2D1_BRUSH_PROPERTIES)), "brushProperties"), (ObjPointer(ID2D1GradientStopCollection), "gradientStopCollection"), Out(Pointer(ObjPointer(ID2D1RadialGradientBrush)), "radialGradientBrush")]),
+    Method(HRESULT, "CreateCompatibleRenderTarget", [(Pointer(Const(D2D1_SIZE_F)), "desiredSize"), (Pointer(Const(D2D1_SIZE_U)), "desiredPixelSize"), (Pointer(Const(D2D1_PIXEL_FORMAT)), "desiredFormat"), (D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS, "options"), Out(Pointer(ObjPointer(ID2D1BitmapRenderTarget)), "bitmapRenderTarget")]),
+    Method(HRESULT, "CreateLayer", [(Pointer(Const(D2D1_SIZE_F)), "size"), Out(Pointer(ObjPointer(ID2D1Layer)), "layer")]),
+    Method(HRESULT, "CreateMesh", [Out(Pointer(ObjPointer(ID2D1Mesh)), "mesh")]),
+    Method(Void, "DrawLine", [(D2D1_POINT_2F, "point0"), (D2D1_POINT_2F, "point1"), (ObjPointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle")]),
+    Method(Void, "DrawRectangle", [(Pointer(Const(D2D1_RECT_F)), "rect"), (ObjPointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle")]),
+    Method(Void, "FillRectangle", [(Pointer(Const(D2D1_RECT_F)), "rect"), (ObjPointer(ID2D1Brush), "brush")]),
+    Method(Void, "DrawRoundedRectangle", [(Pointer(Const(D2D1_ROUNDED_RECT)), "roundedRect"), (ObjPointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle")]),
+    Method(Void, "FillRoundedRectangle", [(Pointer(Const(D2D1_ROUNDED_RECT)), "roundedRect"), (ObjPointer(ID2D1Brush), "brush")]),
+    Method(Void, "DrawEllipse", [(Pointer(Const(D2D1_ELLIPSE)), "ellipse"), (ObjPointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle")]),
+    Method(Void, "FillEllipse", [(Pointer(Const(D2D1_ELLIPSE)), "ellipse"), (ObjPointer(ID2D1Brush), "brush")]),
+    Method(Void, "DrawGeometry", [(ObjPointer(ID2D1Geometry), "geometry"), (ObjPointer(ID2D1Brush), "brush"), (FLOAT, "strokeWidth"), (ObjPointer(ID2D1StrokeStyle), "strokeStyle")]),
+    Method(Void, "FillGeometry", [(ObjPointer(ID2D1Geometry), "geometry"), (ObjPointer(ID2D1Brush), "brush"), (ObjPointer(ID2D1Brush), "opacityBrush")]),
+    Method(Void, "FillMesh", [(ObjPointer(ID2D1Mesh), "mesh"), (ObjPointer(ID2D1Brush), "brush")]),
+    Method(Void, "FillOpacityMask", [(ObjPointer(ID2D1Bitmap), "opacityMask"), (ObjPointer(ID2D1Brush), "brush"), (D2D1_OPACITY_MASK_CONTENT, "content"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle")]),
+    Method(Void, "DrawBitmap", [(ObjPointer(ID2D1Bitmap), "bitmap"), (Pointer(Const(D2D1_RECT_F)), "destinationRectangle"), (FLOAT, "opacity"), (D2D1_BITMAP_INTERPOLATION_MODE, "interpolationMode"), (Pointer(Const(D2D1_RECT_F)), "sourceRectangle")]),
+    Method(Void, "DrawText", [(Pointer(Const(WCHAR)), "string"), (UINT, "stringLength"), (ObjPointer(IDWriteTextFormat), "textFormat"), (Pointer(Const(D2D1_RECT_F)), "layoutRect"), (ObjPointer(ID2D1Brush), "defaultForegroundBrush"), (D2D1_DRAW_TEXT_OPTIONS, "options"), (DWRITE_MEASURING_MODE, "measuringMode")]),
+    Method(Void, "DrawTextLayout", [(D2D1_POINT_2F, "origin"), (ObjPointer(IDWriteTextLayout), "textLayout"), (ObjPointer(ID2D1Brush), "defaultForegroundBrush"), (D2D1_DRAW_TEXT_OPTIONS, "options")]),
+    Method(Void, "DrawGlyphRun", [(D2D1_POINT_2F, "baselineOrigin"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (ObjPointer(ID2D1Brush), "foregroundBrush"), (DWRITE_MEASURING_MODE, "measuringMode")]),
     Method(Void, "SetTransform", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "transform")]),
     Method(Void, "GetTransform", [Out(Pointer(D2D1_MATRIX_3X2_F), "transform")], const=True),
     Method(Void, "SetAntialiasMode", [(D2D1_ANTIALIAS_MODE, "antialiasMode")]),
     Method(D2D1_ANTIALIAS_MODE, "GetAntialiasMode", [], const=True),
     Method(Void, "SetTextAntialiasMode", [(D2D1_TEXT_ANTIALIAS_MODE, "textAntialiasMode")]),
     Method(D2D1_TEXT_ANTIALIAS_MODE, "GetTextAntialiasMode", [], const=True),
-    Method(Void, "SetTextRenderingParams", [(Pointer(IDWriteRenderingParams), "textRenderingParams")]),
-    Method(Void, "GetTextRenderingParams", [Out(Pointer(Pointer(IDWriteRenderingParams)), "textRenderingParams")], const=True),
+    Method(Void, "SetTextRenderingParams", [(ObjPointer(IDWriteRenderingParams), "textRenderingParams")]),
+    Method(Void, "GetTextRenderingParams", [Out(Pointer(ObjPointer(IDWriteRenderingParams)), "textRenderingParams")], const=True),
     Method(Void, "SetTags", [(D2D1_TAG, "tag1"), (D2D1_TAG, "tag2")]),
     Method(Void, "GetTags", [Out(Pointer(D2D1_TAG), "tag1"), Out(Pointer(D2D1_TAG), "tag2")], const=True),
-    Method(Void, "PushLayer", [(Pointer(Const(D2D1_LAYER_PARAMETERS)), "layerParameters"), (Pointer(ID2D1Layer), "layer")]),
+    Method(Void, "PushLayer", [(Pointer(Const(D2D1_LAYER_PARAMETERS)), "layerParameters"), (ObjPointer(ID2D1Layer), "layer")]),
     Method(Void, "PopLayer", []),
     Method(HRESULT, "Flush", [Out(Pointer(D2D1_TAG), "tag1"), Out(Pointer(D2D1_TAG), "tag2")]),
-    Method(Void, "SaveDrawingState", [Out(Pointer(ID2D1DrawingStateBlock), "drawingStateBlock")], const=True),
-    Method(Void, "RestoreDrawingState", [(Pointer(ID2D1DrawingStateBlock), "drawingStateBlock")]),
+    Method(Void, "SaveDrawingState", [(ObjPointer(ID2D1DrawingStateBlock), "drawingStateBlock")], const=True),
+    Method(Void, "RestoreDrawingState", [(ObjPointer(ID2D1DrawingStateBlock), "drawingStateBlock")]),
     Method(Void, "PushAxisAlignedClip", [(Pointer(Const(D2D1_RECT_F)), "clipRect"), (D2D1_ANTIALIAS_MODE, "antialiasMode")]),
     Method(Void, "PopAxisAlignedClip", []),
     Method(Void, "Clear", [(Pointer(Const(D2D1_COLOR_F)), "clearColor")]),
@@ -587,7 +587,7 @@ ID2D1RenderTarget.methods += [
 ]
 
 ID2D1BitmapRenderTarget.methods += [
-    Method(HRESULT, "GetBitmap", [Out(Pointer(Pointer(ID2D1Bitmap)), "bitmap")]),
+    Method(HRESULT, "GetBitmap", [Out(Pointer(ObjPointer(ID2D1Bitmap)), "bitmap")]),
 ]
 
 ID2D1HwndRenderTarget.methods += [
@@ -608,18 +608,18 @@ ID2D1DCRenderTarget.methods += [
 ID2D1Factory.methods += [
     Method(HRESULT, "ReloadSystemMetrics", []),
     Method(Void, "GetDesktopDpi", [Out(Pointer(FLOAT), "dpiX"), Out(Pointer(FLOAT), "dpiY")]),
-    Method(HRESULT, "CreateRectangleGeometry", [(Pointer(Const(D2D1_RECT_F)), "rectangle"), Out(Pointer(Pointer(ID2D1RectangleGeometry)), "rectangleGeometry")]),
-    Method(HRESULT, "CreateRoundedRectangleGeometry", [(Pointer(Const(D2D1_ROUNDED_RECT)), "roundedRectangle"), Out(Pointer(Pointer(ID2D1RoundedRectangleGeometry)), "roundedRectangleGeometry")]),
-    Method(HRESULT, "CreateEllipseGeometry", [(Pointer(Const(D2D1_ELLIPSE)), "ellipse"), Out(Pointer(Pointer(ID2D1EllipseGeometry)), "ellipseGeometry")]),
-    Method(HRESULT, "CreateGeometryGroup", [(D2D1_FILL_MODE, "fillMode"), (Pointer(Pointer(ID2D1Geometry)), "geometries"), (UINT, "geometriesCount"), Out(Pointer(Pointer(ID2D1GeometryGroup)), "geometryGroup")]),
-    Method(HRESULT, "CreateTransformedGeometry", [(Pointer(ID2D1Geometry), "sourceGeometry"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "transform"), Out(Pointer(Pointer(ID2D1TransformedGeometry)), "transformedGeometry")]),
-    Method(HRESULT, "CreatePathGeometry", [Out(Pointer(Pointer(ID2D1PathGeometry)), "pathGeometry")]),
-    Method(HRESULT, "CreateStrokeStyle", [(Pointer(Const(D2D1_STROKE_STYLE_PROPERTIES)), "strokeStyleProperties"), (Pointer(Const(FLOAT)), "dashes"), (UINT, "dashesCount"), Out(Pointer(Pointer(ID2D1StrokeStyle)), "strokeStyle")]),
-    Method(HRESULT, "CreateDrawingStateBlock", [(Pointer(Const(D2D1_DRAWING_STATE_DESCRIPTION)), "drawingStateDescription"), (Pointer(IDWriteRenderingParams), "textRenderingParams"), Out(Pointer(Pointer(ID2D1DrawingStateBlock)), "drawingStateBlock")]),
-    Method(HRESULT, "CreateWicBitmapRenderTarget", [(Opaque("IWICBitmap *"), "target"), (Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), Out(Pointer(Pointer(ID2D1RenderTarget)), "renderTarget")]),
-    Method(HRESULT, "CreateHwndRenderTarget", [(Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), (Pointer(Const(D2D1_HWND_RENDER_TARGET_PROPERTIES)), "hwndRenderTargetProperties"), Out(Pointer(Pointer(ID2D1HwndRenderTarget)), "hwndRenderTarget")]),
-    Method(HRESULT, "CreateDxgiSurfaceRenderTarget", [(Pointer(IDXGISurface), "dxgiSurface"), (Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), Out(Pointer(Pointer(ID2D1RenderTarget)), "renderTarget")]),
-    Method(HRESULT, "CreateDCRenderTarget", [(Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), Out(Pointer(Pointer(ID2D1DCRenderTarget)), "dcRenderTarget")]),
+    Method(HRESULT, "CreateRectangleGeometry", [(Pointer(Const(D2D1_RECT_F)), "rectangle"), Out(Pointer(ObjPointer(ID2D1RectangleGeometry)), "rectangleGeometry")]),
+    Method(HRESULT, "CreateRoundedRectangleGeometry", [(Pointer(Const(D2D1_ROUNDED_RECT)), "roundedRectangle"), Out(Pointer(ObjPointer(ID2D1RoundedRectangleGeometry)), "roundedRectangleGeometry")]),
+    Method(HRESULT, "CreateEllipseGeometry", [(Pointer(Const(D2D1_ELLIPSE)), "ellipse"), Out(Pointer(ObjPointer(ID2D1EllipseGeometry)), "ellipseGeometry")]),
+    Method(HRESULT, "CreateGeometryGroup", [(D2D1_FILL_MODE, "fillMode"), (Pointer(ObjPointer(ID2D1Geometry)), "geometries"), (UINT, "geometriesCount"), Out(Pointer(ObjPointer(ID2D1GeometryGroup)), "geometryGroup")]),
+    Method(HRESULT, "CreateTransformedGeometry", [(ObjPointer(ID2D1Geometry), "sourceGeometry"), (Pointer(Const(D2D1_MATRIX_3X2_F)), "transform"), Out(Pointer(ObjPointer(ID2D1TransformedGeometry)), "transformedGeometry")]),
+    Method(HRESULT, "CreatePathGeometry", [Out(Pointer(ObjPointer(ID2D1PathGeometry)), "pathGeometry")]),
+    Method(HRESULT, "CreateStrokeStyle", [(Pointer(Const(D2D1_STROKE_STYLE_PROPERTIES)), "strokeStyleProperties"), (Pointer(Const(FLOAT)), "dashes"), (UINT, "dashesCount"), Out(Pointer(ObjPointer(ID2D1StrokeStyle)), "strokeStyle")]),
+    Method(HRESULT, "CreateDrawingStateBlock", [(Pointer(Const(D2D1_DRAWING_STATE_DESCRIPTION)), "drawingStateDescription"), (ObjPointer(IDWriteRenderingParams), "textRenderingParams"), Out(Pointer(ObjPointer(ID2D1DrawingStateBlock)), "drawingStateBlock")]),
+    Method(HRESULT, "CreateWicBitmapRenderTarget", [(Opaque("IWICBitmap *"), "target"), (Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), Out(Pointer(ObjPointer(ID2D1RenderTarget)), "renderTarget")]),
+    Method(HRESULT, "CreateHwndRenderTarget", [(Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), (Pointer(Const(D2D1_HWND_RENDER_TARGET_PROPERTIES)), "hwndRenderTargetProperties"), Out(Pointer(ObjPointer(ID2D1HwndRenderTarget)), "hwndRenderTarget")]),
+    Method(HRESULT, "CreateDxgiSurfaceRenderTarget", [(ObjPointer(IDXGISurface), "dxgiSurface"), (Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), Out(Pointer(ObjPointer(ID2D1RenderTarget)), "renderTarget")]),
+    Method(HRESULT, "CreateDCRenderTarget", [(Pointer(Const(D2D1_RENDER_TARGET_PROPERTIES)), "renderTargetProperties"), Out(Pointer(ObjPointer(ID2D1DCRenderTarget)), "dcRenderTarget")]),
 ]
 
 d2d1 = API("d2d1")

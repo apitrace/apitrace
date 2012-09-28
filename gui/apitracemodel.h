@@ -54,7 +54,9 @@ private slots:
     void invalidateFrames();
     void beginAddingFrames(int oldCount, int numAdded);
     void endAddingFrames();
+    void changed(ApiTraceEvent *event);
     void callChanged(ApiTraceCall *call);
+    void frameChanged(ApiTraceFrame *frame);
     void beginLoadingFrame(ApiTraceFrame *frame, int numAdded);
     void endLoadingFrame(ApiTraceFrame *frame);
 

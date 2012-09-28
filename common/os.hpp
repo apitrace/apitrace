@@ -70,11 +70,6 @@ void log(const char *format, ...)
   #endif
 #endif
 
-/**
- * Get the current time in microseconds from an unknown base.
- */
-long long getTime(void);
-
 void abort(void);
 
 void setExceptionCallback(void (*callback)(void));

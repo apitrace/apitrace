@@ -106,13 +106,15 @@ private:
 
 public:
     PickleWriter(std::ostream &_os) :
-        os(_os)
-    {
+        os(_os) {
+    }
+
+    inline void begin() {
         os.put(PROTO);
         os.put(2);
     }
 
-    ~PickleWriter() {
+    inline void end() {
         os.put(STOP);
     }
 
@@ -264,6 +266,16 @@ public:
         os.put(u.c[2]);
         os.put(u.c[1]);
         os.put(u.c[0]);
+    }
+
+    inline void writeByteArray(const void *buf, size_t length) {
+        os.put(GLOBAL);
+        os << "__builtin__\nbytearray\n";
+        os.put(BINPUT);
+        os.put(1);
+        writeString(static_cast<const char *>(buf), length);
+        os.put(TUPLE1);
+        os.put(REDUCE);
     }
 
 protected:

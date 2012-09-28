@@ -14,6 +14,8 @@ set(qapitrace_SRCS
    jumpwidget.cpp
    mainwindow.cpp
    main.cpp
+   profiledialog.cpp
+   profiletablemodel.cpp
    retracer.cpp
    saverthread.cpp
    searchwidget.cpp
@@ -22,7 +24,16 @@ set(qapitrace_SRCS
    tracedialog.cpp
    traceloader.cpp
    traceprocess.cpp
+   trimprocess.cpp
    vertexdatainterpreter.cpp
+   graphing/frameaxiswidget.cpp
+   graphing/graphwidget.cpp
+   graphing/graphaxiswidget.cpp
+   graphing/graphview.cpp
+   graphing/heatmapview.cpp
+   graphing/heatmapverticalaxiswidget.cpp
+   graphing/histogramview.cpp
+   graphing/timeaxiswidget.cpp
  )
 
 qt4_automoc(${qapitrace_SRCS})
@@ -34,6 +45,8 @@ set(qapitrace_UIS
    ui/imageviewer.ui
    ui/jumpwidget.ui
    ui/mainwindow.ui
+   ui/profiledialog.ui
+   ui/profilereplaydialog.ui
    ui/retracerdialog.ui
    ui/settings.ui
    ui/tracedialog.ui
@@ -49,7 +62,14 @@ include_directories(${QT_INCLUDES} ${QJSON_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_D
 
 add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-target_link_libraries(qapitrace common ${QJSON_LIBRARIES} ${QT_LIBRARIES} )
+target_link_libraries (qapitrace
+    common
+    ${PNG_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+    ${SNAPPY_LIBRARIES}
+    ${QJSON_LIBRARIES}
+    ${QT_LIBRARIES}
+)
 
 ########### install files ###############
 

@@ -3,7 +3,7 @@ About **apitrace**
 
 **apitrace** consists of a set of tools to:
 
-* trace OpenGL, OpenGL ES, D3D9, D3D8, D3D7, and DDRAW APIs calls to a file;
+* trace OpenGL, OpenGL ES, Direct3D, and DirectDraw APIs calls to a file;
 
 * retrace OpenGL and OpenGL ES calls from a file;
 
@@ -12,24 +12,38 @@ About **apitrace**
 * visualize and edit trace files.
 
 
+Obtaining **apitrace**
+======================
+
+To obtain apitrace either [download the latest
+binaries](https://github.com/apitrace/apitrace/downloads) for your platform if
+available, or follow the instructions in INSTALL.markdown to build it yourself.
+On 64bits Linux and Windows platforms you'll need apitrace binaries that match
+the architecture (32bits or 64bits) of the application being traced.
+
+
 Basic usage
 ===========
 
-
-Linux and Mac OS X
-------------------
-
 Run the application you want to trace as
 
-    apitrace trace /path/to/application [args...]
+    apitrace trace --api API /path/to/application [args...]
 
 and it will generate a trace named `application.trace` in the current
-directory.  You can specify the written trace filename by setting the
-`TRACE_FILE` environment variable before running.
+directory.  You can specify the written trace filename by passing the
+`--output` command line option.
+
+Problems while tracing (e.g, if the application uses calls/parameters
+unsupported by apitrace) will be reported via stderr output on Unices.  On
+Windows you'll need to run
+[DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647) to view
+these messages.
+
+Follow the "Tracing manually" instructions below if you cannot obtain a trace.
 
 View the trace with
 
-    apitrace dump --color application.trace
+    apitrace dump application.trace
 
 Replay an OpenGL trace with
 
@@ -38,26 +52,17 @@ Replay an OpenGL trace with
 Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
 glretrace for more options.
 
+
+Basic GUI usage
+===============
+
 Start the GUI as
 
     qapitrace application.trace
 
+You can also tell the GUI to go directly to a specific call
 
-Windows
--------
-
-* Copy `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from build/wrappers directory
-  to the directory with the application you want to trace.
-
-* Run the application.
-
-* View the trace with
-
-        \path\to\apitrace dump application.trace
-
-* Replay the trace with
-
-        \path\to\glretrace application.trace
+    qapitrace application.trace 12345
 
 
 Advanced command line usage
@@ -97,6 +102,14 @@ Tracing manually
 
 ### Linux ###
 
+On 64 bits systems, you'll need to determine ether the application is 64 bits
+or 32 bits.  This can be done by doing
+
+    file /path/to/application
+
+But beware of wrapper shell scripts -- what matters is the architecture of the
+main process.
+
 Run the application you want to trace as
 
      LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
@@ -128,6 +141,63 @@ To trace the application inside gdb, invoke gdb as:
 
     gdb --ex 'set exec-wrapper env LD_PRELOAD=/path/to/glxtrace.so' --args /path/to/application
 
+### Android ###
+
+The following instructions should work at least for Android Ice Scream
+Sandwitch:
+
+For standalone applications the instructions above for Linux should
+work. To trace applications started from within the Android VM process
+(`app_process` aka zygote) you'll have to wrap this process and enable
+tracing dynamically for the application to be traced.
+
+- Wrapping the android main VM process:
+
+  In the Android root /init.rc add the `LD_PRELOAD` setting to zygote's
+  environment in the 'service zygote' section:
+
+        service zygote ...
+           setenv LD_PRELOAD /data/egltrace.so
+           ...
+
+  Note that ICS will overwrite the /init.rc during each boot with the
+  version in the recovery image. So you'll have to change the file in
+  your ICS source tree, rebuild and reflash the device.
+  Rebuilding/reflashing only the recovery image should be sufficient.
+
+- Copy egltrace.so to /data
+
+  On the host:
+
+        adb push /path/to/apitrace/build/wrappers/egltrace.so /data
+
+- Adjust file permissions to store the trace file:
+
+  By default egltrace.so will store the trace in
+  `/data/app_process.trace`. For this to work for applications running
+  with a uid other than 0, you have to allow writes to the `/data`
+  directory on the device:
+
+        chmod 0777 /data
+
+- Enable tracing for a specific process name:
+
+  To trace for example the Settings application:
+
+        setprop debug.apitrace.procname com.android.settings
+
+  In general this name will match what `ps` reports.
+
+- Start the application:
+
+  If the application was already running, for example due to ICS's way
+  of pre-starting the apps, you might have to kill the application
+  first:
+
+        kill <pid of app>
+
+  Launch the application for example from the application menu.
+
 ### Mac OS X ###
 
 Run the application you want to trace as
@@ -139,11 +209,35 @@ Note that although Mac OS X has an `LD_PRELOAD` equivalent,
 `DYLD_FORCE_FLAT_NAMESPACE=1` which breaks most applications.  See the `dyld` man
 page for more details about these environment flags.
 
+### Windows ###
 
-Emitting annotations to the trace from GL applications
-------------------------------------------------------
+When tracing third-party applications, you can identify the target
+application's main executable, either by:
 
-You can emit string and frame annotations through the
+* right clicking on the application's icon in the _Start Menu_, choose
+  _Properties_, and see the _Target_ field;
+
+* or by starting the application, run Windows Task Manager (taskmgr.exe), right
+  click on the application name in the _Applications_ tab, choose _Go To Process_,
+  note the highlighted _Image Name_, and search it on `C:\Program Files` or
+  `C:\Program Files (x86)`.
+
+On 64 bits Windows, you'll need to determine ether the application is a 64 bits
+or 32 bits. 32 bits applications will have a `*32` suffix in the _Image Name_
+column of the _Processes_ tab of _Windows Task Manager_ window.
+
+Copy the appropriate `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from the
+wrappers directory to the directory with the application you want to trace.
+Then run the application as usual.
+
+You can specify the written trace filename by setting the `TRACE_FILE`
+environment variable before running.
+
+
+Emitting annotations to the trace
+---------------------------------
+
+From OpenGL applications you can embed annotations in the trace file through the
 [`GL_GREMEDY_string_marker`](http://www.opengl.org/registry/specs/GREMEDY/string_marker.txt)
 and
 [`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
@@ -171,6 +265,15 @@ detect and use GL extensions, you could easily accomplish this by doing:
     }
 
 This has the added advantage of working equally well with gDEBugger.
+
+
+From OpenGL ES applications you can embed annotations in the trace file through the
+[`GL_EXT_debug_marker`](http://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
+extension.
+
+
+For Direct3D applications you can follow the same procedure used for 
+[instrumenting an application for PIX](http://technet.microsoft.com/en-us/query/ee417250)
 
 
 Dump GL state at a particular call
@@ -205,6 +308,39 @@ You can make a video of the output by doing
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
 
+Trimming a trace
+----------------
+
+You can make a smaller trace by doing:
+
+    apitrace trim --callset 100-1000 -o trimed.trace applicated.trace
+
+If you need precise control over which calls to trim you can specify the
+individual call numbers a plaintext file, as described in the 'Call sets'
+section above.
+
+
+Profiling a trace
+-----------------
+
+You can perform gpu and cpu profiling with the command line options:
+
+ * `-pgpu` record gpu times for frames and draw calls.
+
+ * `-pcpu` record cpu times for frames and draw calls.
+
+ * `-ppd` record pixels drawn for each draw call.
+
+The results from this can then be read by hand or analysed with a script.
+
+`scripts/profileshader.py` will read the profile results and format them into a
+table which displays profiling results per shader.
+
+For example, to record all profiling data and utilise the per shader script:
+
+    ./glretrace -pgpu -pcpu -ppd foo.trace | ./scripts/profileshader.py
+
+
 Advanced usage for OpenGL implementors
 ======================================
 
@@ -218,12 +354,10 @@ These are the steps to create a regression test-suite around **apitrace**:
 
 * obtain a trace
 
-* obtain reference snapshots, by doing:
+* obtain reference snapshots, by doing on a reference system:
 
-        mkdir /path/to/snapshots/
+        mkdir /path/to/reference/snapshots/
         glretrace -s /path/to/reference/snapshots/ application.trace
-
-  on reference system.
 
 * prune the snapshots which are not interesting
 
@@ -233,8 +367,8 @@ These are the steps to create a regression test-suite around **apitrace**:
 
   Alternatively, for a HTML summary, use `apitrace diff-images`:
 
-        glretrace -s /path/to/current/snapshots/ application.trace
-        apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/current/snapshots/
+        glretrace -s /path/to/test/snapshots/ application.trace
+        apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/test/snapshots/
 
 
 Automated git-bisection
@@ -302,16 +436,20 @@ reference software renderer.
 
 This can be achieved with retracediff.py script, which invokes glretrace with
 different environments, allowing to choose the desired GL driver by
-manipulating variables such as `LD_LIBRARY_PATH` or `LIBGL_DRIVERS_DIR`.
+manipulating variables such as `LD_LIBRARY_PATH`, `LIBGL_DRIVERS_DIR`, or
+`TRACE_LIBGL`.
 
-For example:
+For example, on Linux:
 
     ./scripts/retracediff.py \
         --ref-env LD_LIBRARY_PATH=/path/to/reference/GL/implementation \
-        -r ./glretrace \
+        --retrace /path/to/glretrace \
         --diff-prefix=/path/to/output/diffs \
         application.trace
 
+Or on Windows:
+
+    python scripts\retracediff.py --retrace \path\to\glretrace.exe --ref-env TRACE_LIBGL=\path\to\reference\opengl32.dll application.trace
 
 
 Links
@@ -343,7 +481,11 @@ Closed-source:
 
   * [D3DSpy](http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm): the predecessor of PIX
 
+* [NVIDIA PerfKit](http://developer.nvidia.com/nvidia-perfkit)
+
 * [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
+
+* [Intel Graphics Performance Analyzers](http://www.intel.com/software/gpa/)
 
 
 OpenGL
@@ -357,9 +499,11 @@ Open-source:
 
 * [tracy](https://gitorious.org/tracy): OpenGL ES and OpenVG trace, retrace, and state inspection
 
+* [WebGL-Inspector](http://benvanik.github.com/WebGL-Inspector/)
+
 Closed-source:
 
-* [gDEBugger](http://www.gremedy.com/products.php)
+* [gDEBugger](http://www.gremedy.com/products.php) and [AMD gDEBugger](http://developer.amd.com/tools/gDEBugger/Pages/default.aspx)
 
 * [glslDevil](http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html)
 

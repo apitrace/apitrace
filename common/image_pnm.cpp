@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "image.hpp"
 
@@ -108,5 +109,55 @@ Image::writePNM(std::ostream &os, const char *comment) const {
     }
 }
 
+const char *
+readPNMHeader(const char *buffer, size_t bufferSize, unsigned *channels, unsigned *width, unsigned *height)
+{
+    *channels = 0;
+    *width = 0;
+    *height = 0;
+
+    const char *currentBuffer = buffer;
+    const char *nextBuffer;
+
+    // parse number of channels
+    int scannedChannels = sscanf(currentBuffer, "P%d\n", channels);
+    if (scannedChannels != 1) { // validate scanning of channels
+        // invalid channel line
+        return buffer;
+    }
+    // convert channel token to number of channels
+    *channels = (*channels == 5) ? 1 : 3;
+
+    // advance past channel line
+    nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
+    bufferSize -= nextBuffer - currentBuffer;
+    currentBuffer = nextBuffer;
+
+    // skip over optional comment
+    if (*currentBuffer == '#') {
+        // advance past comment line
+        nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
+        bufferSize -= nextBuffer - currentBuffer;
+        currentBuffer = nextBuffer;
+    }
+
+    // parse dimensions of image
+    int scannedDimensions = sscanf(currentBuffer, "%d %d\n", width, height);
+    if (scannedDimensions != 2) { // validate scanning of dimensions
+        // invalid dimension line
+        return buffer;
+    }
+
+    // advance past dimension line
+    nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
+    bufferSize -= nextBuffer - currentBuffer;
+    currentBuffer = nextBuffer;
+
+    // skip over "255\n" at end of header
+    nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
+
+    // return start of image data
+    return nextBuffer;
+}
 
 } /* namespace image */
