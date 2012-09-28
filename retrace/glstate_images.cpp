@@ -232,6 +232,8 @@ getActiveTextureLevelDescOES(Context &context, GLenum target, GLint level, Image
 static inline bool
 getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDesc &desc)
 {
+    assert(target != GL_TEXTURE_CUBE_MAP);
+
     if (context.ES) {
         return getActiveTextureLevelDescOES(context, target, level, desc);
     }
@@ -431,15 +433,18 @@ dumpTexture(JSONWriter &json, Context &context, GLenum target, GLenum binding)
     GLint level = 0;
     do {
         ImageDesc desc;
-        if (!getActiveTextureLevelDesc(context, target, level, desc)) {
-            break;
-        }
 
         if (target == GL_TEXTURE_CUBE_MAP) {
             for (int face = 0; face < 6; ++face) {
+                if (!getActiveTextureLevelDesc(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, desc)) {
+                    return;
+                }
                 dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level);
             }
         } else {
+            if (!getActiveTextureLevelDesc(context, target, level, desc)) {
+                return;
+            }
             dumpActiveTextureLevel(json, context, target, level);
         }
 
