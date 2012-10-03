@@ -71,6 +71,11 @@ target_link_libraries (qapitrace
     ${QT_LIBRARIES}
 )
 
+# Recent builds of Qt no longer support i386 architecture
+if (APPLE)
+    set_target_properties (qapitrace PROPERTIES OSX_ARCHITECTURES x86_64)
+endif ()
+
 ########### install files ###############
 
 install (TARGETS qapitrace RUNTIME DESTINATION bin)
