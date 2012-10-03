@@ -80,6 +80,32 @@ getContext(unsigned long long ctx) {
     return it->second;
 }
 
+static void retrace_CGLCreateContext(trace::Call &call) {
+    unsigned long long share = call.arg(1).toUIntPtr();
+    Context *sharedContext = getContext(share);
+
+    const trace::Array *ctx_ptr = dynamic_cast<const trace::Array *>(&call.arg(2));
+    unsigned long long ctx = ctx_ptr->values[0]->toUIntPtr();
+
+    Context *context = glretrace::createContext(sharedContext);
+    context_map[ctx] = context;
+}
+
+
+static void retrace_CGLDestroyContext(trace::Call &call) {
+    unsigned long long ctx = call.arg(0).toUIntPtr();
+
+    ContextMap::iterator it;
+    it = context_map.find(ctx);
+    if (it == context_map.end()) {
+        return;
+    }
+
+    delete it->second;
+
+    context_map.erase(it);
+}
+
 
 static void retrace_CGLSetCurrentContext(trace::Call &call) {
     unsigned long long ctx = call.arg(0).toUIntPtr();
@@ -105,6 +131,8 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
 
 
 const retrace::Entry glretrace::cgl_callbacks[] = {
+    {"CGLCreateContext", &retrace_CGLCreateContext},
+    {"CGLDestroyContext", &retrace_CGLDestroyContext},
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
     {"CGLGetCurrentContext", &retrace::ignore},
     {"CGLEnable", &retrace::ignore},
