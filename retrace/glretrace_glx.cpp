@@ -29,6 +29,15 @@
 #include "glretrace.hpp"
 
 
+#ifndef GLX_PBUFFER_HEIGHT
+#define GLX_PBUFFER_HEIGHT 0x8040
+#endif
+
+#ifndef GLX_PBUFFER_WIDTH
+#define GLX_PBUFFER_WIDTH 0x8041
+#endif
+
+
 using namespace glretrace;
 
 
@@ -119,6 +128,51 @@ static void retrace_glXCreateNewContext(trace::Call &call) {
     context_map[orig_context] = context;
 }
 
+static void retrace_glXCreatePbuffer(trace::Call &call) {
+    int width = 0;
+    int height = 0;
+
+    const trace::Array *attrib_list = dynamic_cast<const trace::Array *>(&call.arg(2));
+    if (attrib_list) {
+        for (size_t i = 0; i + 1 < attrib_list->values.size(); i += 2) {
+            int param = attrib_list->values[i]->toSInt();
+            if (param == 0) {
+                break;
+            }
+
+            int value = attrib_list->values[i + 1]->toSInt();
+
+            switch (param) {
+            case GLX_PBUFFER_WIDTH:
+                width = value;
+                break;
+            case GLX_PBUFFER_HEIGHT:
+                height = value;
+                break;
+            }
+        }
+    }
+
+    unsigned long long orig_drawable = call.ret->toUInt();
+
+    glws::Drawable *drawable = glretrace::createDrawable();
+    
+    drawable->resize(width, height);
+    drawable->show();
+
+    drawable_map[orig_drawable] = drawable;
+}
+
+static void retrace_glXDestroyPbuffer(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+
+    if (!drawable) {
+        return;
+    }
+
+    delete drawable;
+}
+
 static void retrace_glXMakeContextCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
     Context *new_context = getContext(call.arg(3).toUIntPtr());
@@ -146,14 +200,14 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     //{"glXCreateGLXPixmap", &retrace_glXCreateGLXPixmap},
     //{"glXCreateGLXPixmapWithConfigSGIX", &retrace_glXCreateGLXPixmapWithConfigSGIX},
     {"glXCreateNewContext", &retrace_glXCreateNewContext},
-    //{"glXCreatePbuffer", &retrace_glXCreatePbuffer},
+    {"glXCreatePbuffer", &retrace_glXCreatePbuffer},
     //{"glXCreatePixmap", &retrace_glXCreatePixmap},
     //{"glXCreateWindow", &retrace_glXCreateWindow},
     //{"glXCushionSGI", &retrace_glXCushionSGI},
     {"glXDestroyContext", &retrace_glXDestroyContext},
     //{"glXDestroyGLXPbufferSGIX", &retrace_glXDestroyGLXPbufferSGIX},
     //{"glXDestroyGLXPixmap", &retrace_glXDestroyGLXPixmap},
-    //{"glXDestroyPbuffer", &retrace_glXDestroyPbuffer},
+    {"glXDestroyPbuffer", &retrace_glXDestroyPbuffer},
     //{"glXDestroyPixmap", &retrace_glXDestroyPixmap},
     //{"glXDestroyWindow", &retrace_glXDestroyWindow},
     //{"glXFreeContextEXT", &retrace_glXFreeContextEXT},
