@@ -245,7 +245,7 @@ class Counter(Unpickler):
 
 def main():
     optparser = optparse.OptionParser(
-        usage="\n\tapitrace pickle trace. %prog [options]")
+        usage="\n\tapitrace pickle <trace> | %prog [options]")
     optparser.add_option(
         '-p', '--profile',
         action="store_true", dest="profile", default=False,
