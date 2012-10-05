@@ -115,12 +115,17 @@ bool releaseContext(uintptr_t context_id)
 
 void createContext(uintptr_t context_id)
 {
+    // wglCreateContextAttribsARB causes internal calls to wglCreateContext to be
+    // traced, causing context to be defined twice.
+    if (context_map.find(context_id) != context_map.end()) {
+        return;
+    }
+
     context_ptr_t ctx(new Context);
 
     context_map_mutex.lock();
 
     _retainContext(ctx);
-    assert(context_map.find(context_id) == context_map.end());
     context_map[context_id] = ctx;
 
     context_map_mutex.unlock();
