@@ -477,14 +477,19 @@ class GlRetracer(Retracer):
            and 'program' not in function.argNames():
             # Determine the active program for uniforms swizzling
             print '    GLint program = -1;'
-            print '    GLint pipeline = 0;'
-            print '    if (_pipelineHasBeenBound) {'
-            print '        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);'
-            print '    }'
-            print '    if (pipeline) {'
-            print '        glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);'
+            print '    if (glretrace::insideList) {'
+            print '        // glUseProgram & glUseProgramObjectARB are display-list-able'
+            print '        program = _program_map[glretrace::currentContext->activeProgram];'
             print '    } else {'
-            print '        glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+            print '        GLint pipeline = 0;'
+            print '        if (_pipelineHasBeenBound) {'
+            print '            glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);'
+            print '        }'
+            print '        if (pipeline) {'
+            print '            glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);'
+            print '        } else {'
+            print '            glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+            print '        }'
             print '    }'
             print
 
