@@ -300,12 +300,15 @@ protected:
             return;
         }
 
-        unsigned c = 1;
         // Same as l >> (8 * sizeof l), but without the warnings
         T sign = l < 0 ? ~0 : 0;
-        while ((l >> (8 * c)) != sign) {
+
+        T sl = l;
+        unsigned c = 0;
+        do {
             ++c;
-        }
+        } while (sl >>= 8 != sign);
+
         // Add an extra byte if sign bit doesn't match
         if (((l >> (8 * c - 1)) & 1) != ((l >> (8 * sizeof l - 1)) & 1)) {
             ++c;
