@@ -75,6 +75,12 @@ lowerBound(unsigned long long address) {
         }
     }
 
+#ifndef NDEBUG
+    if (it != regionMap.end()) {
+        assert(contains(it, address) || it->first > address);
+    }
+#endif
+
     return it;
 }
 
@@ -82,6 +88,12 @@ lowerBound(unsigned long long address) {
 static RegionMap::iterator
 upperBound(unsigned long long address) {
     RegionMap::iterator it = regionMap.upper_bound(address);
+
+#ifndef NDEBUG
+    if (it != regionMap.end()) {
+        assert(it->first >= address);
+    }
+#endif
 
     return it;
 }
