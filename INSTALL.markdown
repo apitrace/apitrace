@@ -16,7 +16,7 @@ Requirements common for all platforms:
 
 The GUI also dependends on:
 
-* Qt version 4.7
+* Qt version 4.7 or higher (tested with version 4.8)
 
 * QJSON version 0.5 or higher (tested with version 0.7.1, which is bundled)
 
