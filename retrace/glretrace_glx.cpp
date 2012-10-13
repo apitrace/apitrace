@@ -230,6 +230,7 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     {"glXGetProcAddress", &retrace::ignore},
     {"glXGetSelectedEvent", &retrace::ignore},
     {"glXGetSelectedEventSGIX", &retrace::ignore},
+    {"glXGetSwapIntervalMESA", &retrace::ignore},
     {"glXGetSyncValuesOML", &retrace::ignore},
     {"glXGetVideoSyncSGI", &retrace::ignore},
     {"glXGetVisualFromFBConfig", &retrace::ignore},
