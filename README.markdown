@@ -503,9 +503,11 @@ Open-source:
 
 Closed-source:
 
+* [AMD CodeXL](http://developer.amd.com/tools/hc/CodeXL/Pages/default.aspx)
+
+* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
+
 * [gDEBugger](http://www.gremedy.com/products.php) and [AMD gDEBugger](http://developer.amd.com/tools/gDEBugger/Pages/default.aspx)
 
 * [glslDevil](http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html)
-
-* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
 
