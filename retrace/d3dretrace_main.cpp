@@ -87,6 +87,7 @@ retrace::flushRendering(void) {
 
 void
 retrace::waitForInput(void) {
+    /* TODO */
 }
 
 void

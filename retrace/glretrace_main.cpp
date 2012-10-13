@@ -435,6 +435,7 @@ retrace::flushRendering(void) {
 void
 retrace::waitForInput(void) {
     while (glws::processEvents()) {
+        os::sleep(100*1000);
     }
 }
 
