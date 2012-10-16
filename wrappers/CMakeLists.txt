@@ -346,7 +346,6 @@ elseif (X11_FOUND)
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
-        ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
