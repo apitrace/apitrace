@@ -130,6 +130,60 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
 }
 
 
+/**
+ * We can't fully reimplement CGLTexImageIOSurface2D, as external IOSurface are
+ * no longer present.  Simply emit a glTexImage2D to ensure the texture storage
+ * is present.
+ *
+ * See also:
+ * - /System/Library/Frameworks/OpenGL.framework/Headers/CGLIOSurface.h
+ */
+static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
+    if (retrace::debug) {
+        retrace::warning(call) << "external IOSurface not supported\n";
+    }
+
+    unsigned long long ctx = call.arg(0).toUIntPtr();
+    Context *context = getContext(ctx);
+
+    GLenum target;
+    target = static_cast<GLenum>((call.arg(1)).toSInt());
+
+    GLint level = 0;
+
+    GLint internalformat;
+    internalformat = static_cast<GLenum>((call.arg(2)).toSInt());
+
+    GLsizei width;
+    width = (call.arg(3)).toSInt();
+
+    GLsizei height;
+    height = (call.arg(4)).toSInt();
+
+    GLint border = 0;
+
+    GLenum format;
+    format = static_cast<GLenum>((call.arg(5)).toSInt());
+
+    GLenum type;
+    type = static_cast<GLenum>((call.arg(6)).toSInt());
+
+    GLvoid * pixels = NULL;
+
+    if (glretrace::currentContext != context) {
+        if (retrace::debug) {
+            retrace::warning(call) << "current context mismatch\n";
+        }
+    }
+
+    glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+
+    if (retrace::debug && !glretrace::insideGlBeginEnd) {
+        glretrace::checkGlError(call);
+    }
+}
+
+
 const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLCreateContext", &retrace_CGLCreateContext},
     {"CGLDestroyContext", &retrace_CGLDestroyContext},
@@ -140,6 +194,7 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLSetParameter", &retrace::ignore},
     {"CGLGetParameter", &retrace::ignore},
     {"CGLFlushDrawable", &retrace_CGLFlushDrawable},
+    {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
     {NULL, NULL},
 };
 
