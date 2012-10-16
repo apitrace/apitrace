@@ -185,6 +185,8 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
 
 
 const retrace::Entry glretrace::cgl_callbacks[] = {
+    {"CGLChoosePixelFormat", &retrace::ignore},
+    {"CGLDestroyPixelFormat", &retrace::ignore},
     {"CGLCreateContext", &retrace_CGLCreateContext},
     {"CGLDestroyContext", &retrace_CGLDestroyContext},
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
