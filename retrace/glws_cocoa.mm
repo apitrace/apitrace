@@ -193,6 +193,12 @@ createVisual(bool doubleBuffer, Profile profile) {
 	return NULL;
 #endif
     }
+    
+    // Use Apple software rendering for debugging purposes.
+    if (0) {
+        attribs.add(NSOpenGLPFARendererID, 0x00020200); // kCGLRendererGenericID
+    }
+
     attribs.end();
 
     NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc]
