@@ -55,8 +55,8 @@ defaultCallFlags = 0;
  */
 const Entry<CallFlags>
 callFlagTable[] = {
-    { "CGLGetCurrentContext",                          CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "CGLFlushDrawable",                              CALL_FLAG_END_FRAME },
+    { "CGLGetCurrentContext",                          CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3D9::CheckDeviceFormat",                 CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3D9::EnumAdapterModes",                  CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3D9::GetAdapterModeCount",               CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
