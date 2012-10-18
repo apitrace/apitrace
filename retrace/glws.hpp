@@ -32,6 +32,8 @@
 
 
 #include <vector>
+#include <set>
+#include <string>
 
 
 namespace glws {
@@ -130,12 +132,18 @@ public:
     const Visual *visual;
     Profile profile;
     
+    std::set<std::string> extensions;
+
     Context(const Visual *vis, Profile prof) :
         visual(vis),
         profile(prof)
     {}
 
     virtual ~Context() {}
+
+    // Context must be current
+    bool
+    hasExtension(const char *extension);
 };
 
 

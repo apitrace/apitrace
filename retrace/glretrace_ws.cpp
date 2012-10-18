@@ -132,16 +132,14 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
         return false;
     }
 
-    if (context) {
+    if (drawable && context) {
+        currentDrawable = drawable;
+        currentContext = context;
+        
         if (!context->used) {
             initContext();
             context->used = true;
         }
-    }
-
-    if (drawable && context) {
-        currentDrawable = drawable;
-        currentContext = context;
     } else {
         currentDrawable = NULL;
         currentContext = NULL;

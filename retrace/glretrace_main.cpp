@@ -230,13 +230,12 @@ endProfile(trace::Call &call, bool isDraw) {
 
 void
 initContext() {
-    const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-
     /* Ensure we have adequate extension support */
-    supportsTimestamp   = glws::checkExtension("GL_ARB_timer_query", extensions);
-    supportsElapsed     = glws::checkExtension("GL_EXT_timer_query", extensions) || supportsTimestamp;
-    supportsOcclusion   = glws::checkExtension("GL_ARB_occlusion_query", extensions);
-    supportsDebugOutput = glws::checkExtension("GL_ARB_debug_output", extensions);
+    assert(currentContext);
+    supportsTimestamp   = currentContext->hasExtension("GL_ARB_timer_query");
+    supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
+    supportsOcclusion   = currentContext->hasExtension("GL_ARB_occlusion_query");
+    supportsDebugOutput = currentContext->hasExtension("GL_ARB_debug_output");
 
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
