@@ -118,14 +118,14 @@ and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
 `TRACE_FILE` environment variable before running.
 
-The `LD_PRELOAD` mechanism should work with most applications.  There are some
-applications, e.g., Unigine Heaven, which global function pointers with the
-same name as GL entrypoints, living in a shared object that wasn't linked with
-`-Bsymbolic` flag, so relocations to those globals function pointers get
-overwritten with the address to our wrapper library, and the application will
-segfault when trying to write to them.  For these applications it is possible
-to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
-`LD_LIBRARY_PATH`:
+The `LD_PRELOAD` mechanism should work with the majority applications.  There
+are some applications (e.g., Unigine Heaven, Android GPU emulator, etc.), that
+have global function pointers with the same name as GL entrypoints, living in a
+shared object that wasn't linked with `-Bsymbolic` flag, so relocations to
+those globals function pointers get overwritten with the address to our wrapper
+library, and the application will segfault when trying to write to them.  For
+these applications it is possible to trace by using `glxtrace.so` as an
+ordinary `libGL.so` and injecting it via `LD_LIBRARY_PATH`:
 
     ln -s glxtrace.so wrappers/libGL.so
     ln -s glxtrace.so wrappers/libGL.so.1
@@ -133,6 +133,9 @@ to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
     export LD_LIBRARY_PATH=/path/to/apitrace/wrappers:$LD_LIBRARY_PATH
     export TRACE_LIBGL=/path/to/real/libGL.so.1
     /path/to/application
+
+If you are an application developer, you can avoid this either by linking with
+`-Bsymbolic` flag, or by using some unique prefix for your function pointers.
 
 See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
