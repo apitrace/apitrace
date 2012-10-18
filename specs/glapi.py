@@ -1881,13 +1881,13 @@ glapi.addFunctions([
     GlFunction(Void, "glIglooInterfaceSGIX", [(GLenum, "pname"), (OpaqueBlob(Const(GLvoid), "_glIglooInterfaceSGIX_size(pname)"), "params")]),
 
     # GL_NV_fence
-    GlFunction(Void, "glDeleteFencesNV", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "fences")]),
-    GlFunction(Void, "glGenFencesNV", [(GLsizei, "n"), Out(Array(GLuint, "n"), "fences")]),
-    GlFunction(GLboolean, "glIsFenceNV", [(GLuint, "fence")], sideeffects=False),
-    GlFunction(GLboolean, "glTestFenceNV", [(GLuint, "fence")]),
-    GlFunction(Void, "glGetFenceivNV", [(GLuint, "fence"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glFinishFenceNV", [(GLuint, "fence")]),
-    GlFunction(Void, "glSetFenceNV", [(GLuint, "fence"), (GLenum, "condition")]),
+    GlFunction(Void, "glDeleteFencesNV", [(GLsizei, "n"), (Array(Const(GLfence), "n"), "fences")]),
+    GlFunction(Void, "glGenFencesNV", [(GLsizei, "n"), Out(Array(GLfence, "n"), "fences")]),
+    GlFunction(GLboolean, "glIsFenceNV", [(GLfence, "fence")], sideeffects=False),
+    GlFunction(GLboolean, "glTestFenceNV", [(GLfence, "fence")]),
+    GlFunction(Void, "glGetFenceivNV", [(GLfence, "fence"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glFinishFenceNV", [(GLfence, "fence")]),
+    GlFunction(Void, "glSetFenceNV", [(GLfence, "fence"), (GLenum, "condition")]),
 
     # GL_NV_evaluators
     GlFunction(Void, "glMapControlPointsNV", [(GLenum, "target"), (GLuint, "index"), (GLenum, "type"), (GLsizei, "ustride"), (GLsizei, "vstride"), (GLint, "uorder"), (GLint, "vorder"), (GLboolean, "packed"), (OpaqueBlob(Const(GLvoid), "_glMapControlPointsNV_size(target, uorder, vorder)"), "points")]),
@@ -2133,14 +2133,14 @@ glapi.addFunctions([
     GlFunction(Void, "glMultiDrawRangeElementArrayAPPLE", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (Array(Const(GLint), "primcount"), "first"), (Array(Const(GLsizei), "primcount"), "count"), (GLsizei, "primcount")]),
 
     # GL_APPLE_fence
-    GlFunction(Void, "glGenFencesAPPLE", [(GLsizei, "n"), Out(Array(GLuint, "n"), "fences")]),
-    GlFunction(Void, "glDeleteFencesAPPLE", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "fences")]),
-    GlFunction(Void, "glSetFenceAPPLE", [(GLuint, "fence")]),
-    GlFunction(GLboolean, "glIsFenceAPPLE", [(GLuint, "fence")], sideeffects=False),
-    GlFunction(GLboolean, "glTestFenceAPPLE", [(GLuint, "fence")]),
-    GlFunction(Void, "glFinishFenceAPPLE", [(GLuint, "fence")]),
-    GlFunction(GLboolean, "glTestObjectAPPLE", [(GLenum, "object"), (GLuint, "name")]),
-    GlFunction(Void, "glFinishObjectAPPLE", [(GLenum, "object"), (GLint, "name")]),
+    GlFunction(Void, "glGenFencesAPPLE", [(GLsizei, "n"), Out(Array(GLfence, "n"), "fences")]),
+    GlFunction(Void, "glDeleteFencesAPPLE", [(GLsizei, "n"), (Array(Const(GLfence), "n"), "fences")]),
+    GlFunction(Void, "glSetFenceAPPLE", [(GLfence, "fence")]),
+    GlFunction(GLboolean, "glIsFenceAPPLE", [(GLfence, "fence")], sideeffects=False),
+    GlFunction(GLboolean, "glTestFenceAPPLE", [(GLfence, "fence")]),
+    GlFunction(Void, "glFinishFenceAPPLE", [(GLfence, "fence")]),
+    GlFunction(GLboolean, "glTestObjectAPPLE", [(GLenum, "object"), (GLuint, "name")]), # XXX: name needs swizzling
+    GlFunction(Void, "glFinishObjectAPPLE", [(GLenum, "object"), (GLint, "name")]), # XXX: name needs swizzling
 
     # GL_APPLE_vertex_array_object
     GlFunction(Void, "glBindVertexArrayAPPLE", [(GLarray, "array")]),

@@ -109,6 +109,7 @@ GLregion = Handle("region", GLuint)
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)
+GLfence = Handle("fence", GLuint)
 
 # GL mappings are pointers to linear memory regions.
 #
