@@ -309,11 +309,11 @@ frame_complete(trace::Call &call) {
 
     retrace::frameComplete(call);
 
-    if (!currentDrawable) {
+    if (!currentContext) {
         return;
     }
 
-    if (retrace::debug && !currentDrawable->visible) {
+    if (retrace::debug && !currentContext->drawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
 }
@@ -403,7 +403,7 @@ retrace::addCallbacks(retrace::Retracer &retracer)
 
 image::Image *
 retrace::getSnapshot(void) {
-    if (!glretrace::currentDrawable) {
+    if (!glretrace::currentContext) {
         return NULL;
     }
 
@@ -415,7 +415,6 @@ bool
 retrace::dumpState(std::ostream &os)
 {
     if (glretrace::insideGlBeginEnd ||
-        !glretrace::currentDrawable ||
         !glretrace::currentContext) {
         return false;
     }

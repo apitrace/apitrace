@@ -235,9 +235,12 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
 
 
 static void retrace_CGLFlushDrawable(trace::Call &call) {
-    if (currentDrawable && currentContext) {
+    unsigned long long ctx = call.arg(0).toUIntPtr();
+    Context *context = getContext(ctx);
+
+    if (context) {
         if (retrace::doubleBuffer) {
-            currentDrawable->swapBuffers();
+            context->drawable->swapBuffers();
         } else {
             glFlush();
         }

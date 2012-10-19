@@ -112,9 +112,13 @@ static void retrace_glXDestroyContext(trace::Call &call) {
 }
 
 static void retrace_glXSwapBuffers(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+
     frame_complete(call);
     if (retrace::doubleBuffer) {
-        currentDrawable->swapBuffers();
+        if (drawable) {
+            drawable->swapBuffers();
+        }
     } else {
         glFlush();
     }

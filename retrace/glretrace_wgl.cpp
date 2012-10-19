@@ -94,9 +94,15 @@ static void retrace_wglSetPixelFormat(trace::Call &call) {
 }
 
 static void retrace_wglSwapBuffers(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(0).toUIntPtr());
+
     frame_complete(call);
     if (retrace::doubleBuffer) {
-        currentDrawable->swapBuffers();
+        if (drawable) {
+            drawable->swapBuffers();
+        } else if (currentContext) {
+            currentContext->drawable->swapBuffers();
+        }
     } else {
         glFlush();
     }
@@ -112,7 +118,7 @@ static void retrace_wglShareLists(trace::Call &call) {
     Context *new_context = glretrace::createContext(share_context);
     if (new_context) {
         if (currentContext == old_context) {
-            glretrace::makeCurrent(call, currentDrawable, new_context);
+            glretrace::makeCurrent(call, currentContext->drawable, new_context);
         }
 
         context_map[hglrc2] = new_context;

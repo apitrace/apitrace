@@ -35,6 +35,7 @@ namespace glretrace {
 struct Context {
     Context(glws::Context* context)
         : wsContext(context),
+          drawable(0),
           activeProgram(0),
           used(false)
     {
@@ -46,6 +47,10 @@ struct Context {
     }
 
     glws::Context* wsContext;
+
+    // Bound drawable
+    glws::Drawable *drawable;
+
     GLuint activeProgram;
     bool used;
     
@@ -60,7 +65,6 @@ extern bool insideList;
 extern bool insideGlBeginEnd;
 
 
-extern glws::Drawable *currentDrawable;
 extern Context *currentContext;
 
 

@@ -40,7 +40,6 @@
 namespace glretrace {
 
 
-glws::Drawable *currentDrawable = NULL;
 Context *currentContext = NULL;
 
 
@@ -111,11 +110,13 @@ createContext(Context *shareContext) {
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 {
+    glws::Drawable *currentDrawable = currentContext ? currentContext->drawable : NULL;
+
     if (drawable == currentDrawable && context == currentContext) {
         return true;
     }
 
-    if (currentDrawable && currentContext) {
+    if (currentContext) {
         glFlush();
         if (!retrace::doubleBuffer) {
             frame_complete(call);
@@ -132,16 +133,19 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
         return false;
     }
 
+    if (currentContext) {
+        currentContext->drawable = NULL;
+    }
+
     if (drawable && context) {
-        currentDrawable = drawable;
         currentContext = context;
+        currentContext->drawable = drawable;
         
         if (!context->used) {
             initContext();
             context->used = true;
         }
     } else {
-        currentDrawable = NULL;
         currentContext = NULL;
     }
 
@@ -159,9 +163,12 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
  */
 void
 updateDrawable(int width, int height) {
-    if (!currentDrawable) {
+    if (!currentContext) {
         return;
     }
+
+    glws::Drawable *currentDrawable = currentContext->drawable;
+    assert(currentDrawable);
 
     if (currentDrawable->visible &&
         width  <= currentDrawable->width &&
