@@ -289,14 +289,25 @@ namespace os {
 
         void reset(T* new_value=0) {
             T * old_value = get();
+            set(new_value);
+            if (old_value) {
+                delete old_value;
+            }
+        }
+
+        T* release (void) {
+            T * old_value = get();
+            set(0);
+            return old_value;
+        }
+
+private:
+        void set(T* new_value) {
 #ifdef _WIN32
             TlsSetValue(dwTlsIndex, new_value);
 #else
             pthread_setspecific(key, new_value);
 #endif
-            if (old_value) {
-                delete old_value;
-            }
         }
     };
 

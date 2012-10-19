@@ -41,8 +41,6 @@
 namespace glretrace {
 
 
-
-
 static glws::Visual *
 visuals[glws::PROFILE_MAX];
 
@@ -119,14 +117,14 @@ createContext(Context *shareContext) {
 }
 
 
-typedef Context * CurrentData;
-static os::thread_specific_ptr<CurrentData> currentData;
+static os::thread_specific_ptr<Context>
+currentContextPtr;
 
 
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 {
-    Context *currentContext = getCurrentContext();
+    Context *currentContext = currentContextPtr.release();
     glws::Drawable *currentDrawable = currentContext ? currentContext->drawable : NULL;
 
     if (drawable == currentDrawable && context == currentContext) {
@@ -154,22 +152,14 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
         currentContext->drawable = NULL;
     }
 
-    CurrentData *currentDataPtr = currentData.get();
-    if (!currentDataPtr) {
-        currentDataPtr = new CurrentData;
-        currentData.reset(currentDataPtr);
-    }
-
     if (drawable && context) {
         context->drawable = drawable;
-        *currentData = context;
+        currentContextPtr.reset(context);
         
         if (!context->used) {
             initContext();
             context->used = true;
         }
-    } else {
-        *currentData = NULL;
     }
 
     return true;
@@ -178,14 +168,8 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
 Context *
 getCurrentContext(void) {
-    CurrentData *currentDataPtr = currentData.get();
-    if (!currentDataPtr) {
-        return NULL;
-    }
-    return *currentDataPtr;
+    return currentContextPtr.get();
 }
-
-
 
 
 /**
