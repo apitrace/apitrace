@@ -125,9 +125,70 @@ getContext(unsigned long long ctx) {
 
 
 static void retrace_CGLChoosePixelFormat(trace::Call &call) {
-    trace::Value *attribs = &call.arg(0);
+    int profile = kCGLOGLPVersion_Legacy;
 
-    int profile = glretrace::parseAttrib(attribs, kCGLPFAOpenGLProfile, kCGLOGLPVersion_Legacy);
+    const trace::Array * attribs = dynamic_cast<const trace::Array *>(&call.arg(0));
+    if (attribs) {
+        size_t i = 0;
+        while (i < attribs->values.size()) {
+            int param = attribs->values[i++]->toSInt();
+            if (param == 0) {
+                break;
+            }
+
+            switch (param) {
+            case kCGLPFAAllRenderers:
+            case kCGLPFADoubleBuffer:
+            case kCGLPFAStereo:
+            case kCGLPFAAuxBuffers:
+            case kCGLPFAMinimumPolicy:
+            case kCGLPFAMaximumPolicy:
+            case kCGLPFAOffScreen:
+            case kCGLPFAFullScreen:
+            case kCGLPFAAuxDepthStencil:
+            case kCGLPFAColorFloat:
+            case kCGLPFAMultisample:
+            case kCGLPFASupersample:
+            case kCGLPFASampleAlpha:
+            case kCGLPFASingleRenderer:
+            case kCGLPFANoRecovery:
+            case kCGLPFAAccelerated:
+            case kCGLPFAClosestPolicy:
+            case kCGLPFARobust:
+            case kCGLPFABackingStore:
+            case kCGLPFAMPSafe:
+            case kCGLPFAWindow:
+            case kCGLPFAMultiScreen:
+            case kCGLPFACompliant:
+            case kCGLPFAPBuffer:
+            case kCGLPFARemotePBuffer:
+            case kCGLPFAAllowOfflineRenderers:
+            case kCGLPFAAcceleratedCompute:
+                break;
+
+            case kCGLPFAColorSize:
+            case kCGLPFAAlphaSize:
+            case kCGLPFADepthSize:
+            case kCGLPFAStencilSize:
+            case kCGLPFAAccumSize:
+            case kCGLPFASampleBuffers:
+            case kCGLPFASamples:
+            case kCGLPFARendererID:
+            case kCGLPFADisplayMask:
+            case kCGLPFAVirtualScreenCount:
+                ++i;
+                break;
+
+            case kCGLPFAOpenGLProfile:
+                profile = attribs->values[i++]->toSInt();
+                break;
+
+            default:
+                retrace::warning(call) << "unexpected attribute " << param << "\n";
+                break;
+            }
+        }
+    }
 
     if (profile == kCGLOGLPVersion_3_2_Core) {
         // TODO: Do this on a per visual basis
