@@ -36,8 +36,12 @@
  */
 
 
+#include "glproc.hpp"
+
 #include <stdlib.h>
 #include <iostream>
+
+#include <dlfcn.h>
 
 #include <Cocoa/Cocoa.h>
 
@@ -156,6 +160,9 @@ public:
 
 void
 init(void) {
+    // Prevent glproc to load system's OpenGL, so that we can trace glretrace.
+    _libGlHandle = dlopen("OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+
     [NSApplication sharedApplication];
 
     autoreleasePool = [[NSAutoreleasePool alloc] init];
