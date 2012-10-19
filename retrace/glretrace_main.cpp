@@ -67,46 +67,46 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
 void
 checkGlError(trace::Call &call) {
     GLenum error = glGetError();
-    if (error == GL_NO_ERROR) {
-        return;
+    while (error != GL_NO_ERROR) {
+        std::ostream & os = retrace::warning(call);
+
+        os << "glGetError(";
+        os << call.name();
+        os << ") = ";
+
+        switch (error) {
+        case GL_INVALID_ENUM:
+            os << "GL_INVALID_ENUM";
+            break;
+        case GL_INVALID_VALUE:
+            os << "GL_INVALID_VALUE";
+            break;
+        case GL_INVALID_OPERATION:
+            os << "GL_INVALID_OPERATION";
+            break;
+        case GL_STACK_OVERFLOW:
+            os << "GL_STACK_OVERFLOW";
+            break;
+        case GL_STACK_UNDERFLOW:
+            os << "GL_STACK_UNDERFLOW";
+            break;
+        case GL_OUT_OF_MEMORY:
+            os << "GL_OUT_OF_MEMORY";
+            break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            os << "GL_INVALID_FRAMEBUFFER_OPERATION";
+            break;
+        case GL_TABLE_TOO_LARGE:
+            os << "GL_TABLE_TOO_LARGE";
+            break;
+        default:
+            os << error;
+            break;
+        }
+        os << "\n";
+    
+        error = glGetError();
     }
-
-    std::ostream & os = retrace::warning(call);
-
-    os << "glGetError(";
-    os << call.name();
-    os << ") = ";
-
-    switch (error) {
-    case GL_INVALID_ENUM:
-        os << "GL_INVALID_ENUM";
-        break;
-    case GL_INVALID_VALUE:
-        os << "GL_INVALID_VALUE";
-        break;
-    case GL_INVALID_OPERATION:
-        os << "GL_INVALID_OPERATION";
-        break;
-    case GL_STACK_OVERFLOW:
-        os << "GL_STACK_OVERFLOW";
-        break;
-    case GL_STACK_UNDERFLOW:
-        os << "GL_STACK_UNDERFLOW";
-        break;
-    case GL_OUT_OF_MEMORY:
-        os << "GL_OUT_OF_MEMORY";
-        break;
-    case GL_INVALID_FRAMEBUFFER_OPERATION:
-        os << "GL_INVALID_FRAMEBUFFER_OPERATION";
-        break;
-    case GL_TABLE_TOO_LARGE:
-        os << "GL_TABLE_TOO_LARGE";
-        break;
-    default:
-        os << error;
-        break;
-    }
-    os << "\n";
 }
 
 static void
