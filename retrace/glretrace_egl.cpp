@@ -127,6 +127,7 @@ static void retrace_eglDestroySurface(trace::Call &call) {
     it = drawable_map.find(orig_surface);
 
     if (it != drawable_map.end()) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (!currentContext || it->second != currentContext->drawable) {
             // TODO: reference count
             delete it->second;

@@ -65,7 +65,8 @@ extern bool insideList;
 extern bool insideGlBeginEnd;
 
 
-extern Context *currentContext;
+Context *
+getCurrentContext(void);
 
 
 int

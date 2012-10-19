@@ -290,7 +290,7 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
 
     GLvoid * pixels = NULL;
 
-    if (glretrace::currentContext != context) {
+    if (glretrace::getCurrentContext() != context) {
         if (retrace::debug) {
             retrace::warning(call) << "current context mismatch\n";
         }

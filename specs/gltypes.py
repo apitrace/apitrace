@@ -100,7 +100,7 @@ GLshader = Handle("shader", GLuint)
 GLlocation = Handle("location", GLint, key=('program', GLhandleARB))
 GLlocationARB = Handle("location", GLint, key=('programObj', GLhandleARB))
 
-contextKey = ('reinterpret_cast<uintptr_t>(glretrace::currentContext)', UIntPtr)
+contextKey = ('reinterpret_cast<uintptr_t>(glretrace::getCurrentContext())', UIntPtr)
 
 GLprogramARB = Handle("programARB", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)

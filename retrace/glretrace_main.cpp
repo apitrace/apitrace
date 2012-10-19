@@ -174,12 +174,14 @@ flushQueries() {
 
 void
 beginProfile(trace::Call &call, bool isDraw) {
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+
     /* Create call query */
     CallQuery query;
     query.isDraw = isDraw;
     query.call = call.no;
     query.sig = call.sig;
-    query.program = glretrace::currentContext ? glretrace::currentContext->activeProgram : 0;
+    query.program = currentContext ? currentContext->activeProgram : 0;
 
     /* GPU profiling only for draw calls */
     if (isDraw) {
@@ -230,6 +232,8 @@ endProfile(trace::Call &call, bool isDraw) {
 
 void
 initContext() {
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+
     /* Ensure we have adequate extension support */
     assert(currentContext);
     supportsTimestamp   = currentContext->hasExtension("GL_ARB_timer_query");
@@ -261,6 +265,7 @@ initContext() {
 
     /* Setup debug message call back */
     if (retrace::debug && supportsDebugOutput) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
         glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
 
         if (DEBUG_OUTPUT_SYNCHRONOUS) {
@@ -309,6 +314,7 @@ frame_complete(trace::Call &call) {
 
     retrace::frameComplete(call);
 
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
     if (!currentContext) {
         return;
     }
@@ -403,7 +409,7 @@ retrace::addCallbacks(retrace::Retracer &retracer)
 
 image::Image *
 retrace::getSnapshot(void) {
-    if (!glretrace::currentContext) {
+    if (!glretrace::getCurrentContext()) {
         return NULL;
     }
 
@@ -414,8 +420,10 @@ retrace::getSnapshot(void) {
 bool
 retrace::dumpState(std::ostream &os)
 {
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+
     if (glretrace::insideGlBeginEnd ||
-        !glretrace::currentContext) {
+        !currentContext) {
         return false;
     }
 

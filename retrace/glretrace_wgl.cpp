@@ -100,8 +100,11 @@ static void retrace_wglSwapBuffers(trace::Call &call) {
     if (retrace::doubleBuffer) {
         if (drawable) {
             drawable->swapBuffers();
-        } else if (currentContext) {
-            currentContext->drawable->swapBuffers();
+        } else {
+            glretrace::Context *currentContext = glretrace::getCurrentContext();
+            if (currentContext) {
+                currentContext->drawable->swapBuffers();
+            }
         }
     } else {
         glFlush();
@@ -117,6 +120,7 @@ static void retrace_wglShareLists(trace::Call &call) {
 
     Context *new_context = glretrace::createContext(share_context);
     if (new_context) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (currentContext == old_context) {
             glretrace::makeCurrent(call, currentContext->drawable, new_context);
         }

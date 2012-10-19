@@ -250,7 +250,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = false;'
 
         if function.name.startswith('gl') and not function.name.startswith('glX'):
-            print r'    if (retrace::debug && !glretrace::currentContext) {'
+            print r'    if (retrace::debug && !glretrace::getCurrentContext()) {'
             print r'        retrace::warning(call) << "no current context\n";'
             print r'    }'
 
@@ -299,8 +299,9 @@ class GlRetracer(Retracer):
         )
 
         if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
-            print r'    if (glretrace::currentContext) {'
-            print r'        glretrace::currentContext->activeProgram = call.arg(0).toUInt();'
+            print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
+            print r'    if (currentContext) {'
+            print r'        currentContext->activeProgram = call.arg(0).toUInt();'
             print r'    }'
 
         # Only profile if not inside a list as the queries get inserted into list
@@ -479,7 +480,8 @@ class GlRetracer(Retracer):
             print '    GLint program = -1;'
             print '    if (glretrace::insideList) {'
             print '        // glUseProgram & glUseProgramObjectARB are display-list-able'
-            print '        program = _program_map[glretrace::currentContext->activeProgram];'
+            print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
+            print '        program = _program_map[currentContext->activeProgram];'
             print '    } else {'
             print '        GLint pipeline = 0;'
             print '        if (_pipelineHasBeenBound) {'

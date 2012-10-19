@@ -31,6 +31,7 @@
 
 #include <string.h>
 
+#include "os_thread.hpp"
 #include "retrace.hpp"
 #include "glproc.hpp"
 #include "glstate.hpp"
@@ -40,7 +41,6 @@
 namespace glretrace {
 
 
-Context *currentContext = NULL;
 
 
 static glws::Visual *
@@ -107,9 +107,14 @@ createContext(Context *shareContext) {
 }
 
 
+typedef Context * CurrentData;
+static os::thread_specific_ptr<CurrentData> currentData;
+
+
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 {
+    Context *currentContext = getCurrentContext();
     glws::Drawable *currentDrawable = currentContext ? currentContext->drawable : NULL;
 
     if (drawable == currentDrawable && context == currentContext) {
@@ -137,19 +142,35 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
         currentContext->drawable = NULL;
     }
 
+    CurrentData *currentDataPtr = currentData.get();
+    if (!currentDataPtr) {
+        currentDataPtr = new CurrentData;
+        currentData.reset(currentDataPtr);
+    }
+
     if (drawable && context) {
-        currentContext = context;
-        currentContext->drawable = drawable;
+        context->drawable = drawable;
+        *currentData = context;
         
         if (!context->used) {
             initContext();
             context->used = true;
         }
     } else {
-        currentContext = NULL;
+        *currentData = NULL;
     }
 
     return true;
+}
+
+
+Context *
+getCurrentContext(void) {
+    CurrentData *currentDataPtr = currentData.get();
+    if (!currentDataPtr) {
+        return NULL;
+    }
+    return *currentDataPtr;
 }
 
 
@@ -163,6 +184,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
  */
 void
 updateDrawable(int width, int height) {
+    Context *currentContext = getCurrentContext();
     if (!currentContext) {
         return;
     }
