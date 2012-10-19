@@ -63,6 +63,11 @@ extern bool insideGlBeginEnd;
 extern glws::Drawable *currentDrawable;
 extern Context *currentContext;
 
+
+int
+parseAttrib(const trace::Value *attribs, int param, int default_);
+
+
 glws::Drawable *
 createDrawable(glws::Profile profile);
 

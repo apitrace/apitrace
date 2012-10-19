@@ -129,29 +129,9 @@ static void retrace_glXCreateNewContext(trace::Call &call) {
 }
 
 static void retrace_glXCreatePbuffer(trace::Call &call) {
-    int width = 0;
-    int height = 0;
-
-    const trace::Array *attrib_list = dynamic_cast<const trace::Array *>(&call.arg(2));
-    if (attrib_list) {
-        for (size_t i = 0; i + 1 < attrib_list->values.size(); i += 2) {
-            int param = attrib_list->values[i]->toSInt();
-            if (param == 0) {
-                break;
-            }
-
-            int value = attrib_list->values[i + 1]->toSInt();
-
-            switch (param) {
-            case GLX_PBUFFER_WIDTH:
-                width = value;
-                break;
-            case GLX_PBUFFER_HEIGHT:
-                height = value;
-                break;
-            }
-        }
-    }
+    const trace::Value *attrib_list = dynamic_cast<const trace::Array *>(&call.arg(2));
+    int width = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_WIDTH, 0);
+    int height = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_HEIGHT, 0);
 
     unsigned long long orig_drawable = call.ret->toUInt();
 

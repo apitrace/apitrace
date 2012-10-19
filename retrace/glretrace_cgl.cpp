@@ -31,6 +31,49 @@
 #include "glretrace.hpp"
 
 
+#define kCGLPFAAllRenderers            1
+#define kCGLPFADoubleBuffer            5
+#define kCGLPFAStereo                  6
+#define kCGLPFAAuxBuffers              7
+#define kCGLPFAColorSize               8
+#define kCGLPFAAlphaSize              11
+#define kCGLPFADepthSize              12
+#define kCGLPFAStencilSize            13
+#define kCGLPFAAccumSize              14
+#define kCGLPFAMinimumPolicy          51
+#define kCGLPFAMaximumPolicy          52
+#define kCGLPFAOffScreen              53
+#define kCGLPFAFullScreen             54
+#define kCGLPFASampleBuffers          55
+#define kCGLPFASamples                56
+#define kCGLPFAAuxDepthStencil        57
+#define kCGLPFAColorFloat             58
+#define kCGLPFAMultisample            59
+#define kCGLPFASupersample            60
+#define kCGLPFASampleAlpha            61
+#define kCGLPFARendererID             70
+#define kCGLPFASingleRenderer         71
+#define kCGLPFANoRecovery             72
+#define kCGLPFAAccelerated            73
+#define kCGLPFAClosestPolicy          74
+#define kCGLPFARobust                 75
+#define kCGLPFABackingStore           76
+#define kCGLPFAMPSafe                 78
+#define kCGLPFAWindow                 80
+#define kCGLPFAMultiScreen            81
+#define kCGLPFACompliant              83
+#define kCGLPFADisplayMask            84
+#define kCGLPFAPBuffer                90
+#define kCGLPFARemotePBuffer          91
+#define kCGLPFAAllowOfflineRenderers  96
+#define kCGLPFAAcceleratedCompute     97
+#define kCGLPFAOpenGLProfile          99
+#define kCGLPFAVirtualScreenCount    128
+
+#define kCGLOGLPVersion_Legacy   0x1000
+#define kCGLOGLPVersion_3_2_Core 0x3200
+
+
 using namespace glretrace;
 
 
@@ -79,6 +122,19 @@ getContext(unsigned long long ctx) {
 
     return it->second;
 }
+
+
+static void retrace_CGLChoosePixelFormat(trace::Call &call) {
+    trace::Value *attribs = &call.arg(0);
+
+    int profile = glretrace::parseAttrib(attribs, kCGLPFAOpenGLProfile, kCGLOGLPVersion_Legacy);
+
+    if (profile == kCGLOGLPVersion_3_2_Core) {
+        // TODO: Do this on a per visual basis
+        retrace::coreProfile = true;
+    }
+}
+
 
 static void retrace_CGLCreateContext(trace::Call &call) {
     unsigned long long share = call.arg(1).toUIntPtr();
@@ -185,7 +241,7 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
 
 
 const retrace::Entry glretrace::cgl_callbacks[] = {
-    {"CGLChoosePixelFormat", &retrace::ignore},
+    {"CGLChoosePixelFormat", &retrace_CGLChoosePixelFormat},
     {"CGLDestroyPixelFormat", &retrace::ignore},
     {"CGLCreateContext", &retrace_CGLCreateContext},
     {"CGLDestroyContext", &retrace_CGLDestroyContext},
