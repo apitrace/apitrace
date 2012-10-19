@@ -301,6 +301,14 @@ _glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei count)
         return 0;
     }
 
+    if (size == GL_BGRA) {
+        size = 4; 
+    }
+
+    if (size > 4) {
+        os::log("apitrace: warning: %s: unexpected size 0x%04X\n", __FUNCTION__, size);
+    }
+
     size_t elementSize = size*_gl_type_size(type);
     if (!stride) {
         stride = (GLsizei)elementSize;

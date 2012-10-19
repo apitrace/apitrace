@@ -230,3 +230,7 @@ GLbitfield_barrier = Flags(GLbitfield, [
     "GL_ATOMIC_COUNTER_BARRIER_BIT",            # 0x00001000
 ])
 
+# GL_ARB_vertex_array_bgra
+size_bgra = FakeEnum(GLint, [
+    "GL_BGRA",
+])
