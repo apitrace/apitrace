@@ -129,6 +129,8 @@ UInt32 = Literal("uint32_t", "UInt")
 Int64 = Literal("int64_t", "SInt")
 UInt64 = Literal("uint64_t", "UInt")
 
+IntPtr = Literal("intptr_t", "SInt")
+UIntPtr = Literal("uintptr_t", "UInt")
 
 class Const(Type):
 

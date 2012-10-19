@@ -100,11 +100,14 @@ GLshader = Handle("shader", GLuint)
 GLlocation = Handle("location", GLint, key=('program', GLhandleARB))
 GLlocationARB = Handle("location", GLint, key=('programObj', GLhandleARB))
 
+contextKey = ('reinterpret_cast<uintptr_t>(glretrace::currentContext)', UIntPtr)
+
 GLprogramARB = Handle("programARB", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
-GLarray = Handle("array", GLuint)
+GLarray = Handle("array", GLuint, key=contextKey) # per-context
+GLarrayAPPLE = Handle("arrayAPPLE", GLuint) # shared
 GLregion = Handle("region", GLuint)
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)

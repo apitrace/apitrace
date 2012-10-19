@@ -2143,10 +2143,10 @@ glapi.addFunctions([
     GlFunction(Void, "glFinishObjectAPPLE", [(GLenum, "object"), (GLint, "name")]), # XXX: name needs swizzling
 
     # GL_APPLE_vertex_array_object
-    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLarray, "array")]),
-    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Array(Const(GLarray), "n"), "arrays")]),
-    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLarray, "n"), "arrays")]),
-    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLarray, "array")], sideeffects=False),
+    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLarrayAPPLE, "array")]),
+    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Array(Const(GLarrayAPPLE), "n"), "arrays")]),
+    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLarrayAPPLE, "n"), "arrays")]),
+    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLarrayAPPLE, "array")], sideeffects=False),
 
     # GL_APPLE_vertex_array_range
     GlFunction(Void, "glVertexArrayRangeAPPLE", [(GLsizei, "length"), (GLpointer, "pointer")]),
