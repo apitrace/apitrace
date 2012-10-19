@@ -127,6 +127,9 @@ else ()
         set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -O0")
         set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -ggdb")
     endif ()
+
+    # Be nice to Eclipse
+    add_definitions (-fmessage-length=0)
 endif ()
 
 if (MINGW)
