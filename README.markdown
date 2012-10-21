@@ -11,6 +11,8 @@ About **apitrace**
 
 * visualize and edit trace files.
 
+See the [apitrace homepage](http://apitrace.github.com/) for more details.
+
 
 Obtaining **apitrace**
 ======================
