@@ -28,10 +28,10 @@ class WorkQueue {
 
 	bool busy;
 	bool exit_workqueue;
-	pthread_cond_t wake_cond;
-	pthread_cond_t complete_cond;
+	os::condition_variable wake_cond;
+	os::condition_variable complete_cond;
 
-	os::mutex lock;
+	os::mutex mutex;
 
 	void wake_up_thread(void);
 	void thread_entry(void);

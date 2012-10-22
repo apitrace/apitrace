@@ -12,13 +12,13 @@ namespace os
  */
 int WorkQueue::run_tasks(void)
 {
-    lock.lock();
+    os::unique_lock<os::mutex> lock(mutex);
 
-    while (work_queue.empty() && !exit_workqueue)
-        pthread_cond_wait(&wake_cond, &lock.native_handle());
+    while (work_queue.empty() && !exit_workqueue) {
+        wake_cond.wait(lock);
+    }
 
     if (exit_workqueue) {
-        lock.unlock();
         return -1;
     }
 
@@ -41,9 +41,7 @@ int WorkQueue::run_tasks(void)
     lock.lock();
 
     busy = false;
-    pthread_cond_signal(&complete_cond);
-
-    lock.unlock();
+    complete_cond.signal();
 
     return 0;
 }
@@ -51,23 +49,23 @@ int WorkQueue::run_tasks(void)
 /* Must be called with WorkQueue::lock held */
 void WorkQueue::wake_up_thread(void)
 {
-    pthread_cond_signal(&wake_cond);
+    wake_cond.signal();
 }
 
 void WorkQueue::queue_work(WorkQueueWork *task)
 {
-    lock.lock();
+    mutex.lock();
     work_queue.push(task);
     wake_up_thread();
-    lock.unlock();
+    mutex.unlock();
 }
 
 void WorkQueue::flush(void)
 {
-    lock.lock();
-    while (!work_queue.empty() || busy)
-        pthread_cond_wait(&complete_cond, &lock.native_handle());
-    lock.unlock();
+    os::unique_lock<os::mutex> lock(mutex);
+    while (!work_queue.empty() || busy) {
+        complete_cond.wait(lock);
+    }
 }
 
 void WorkQueue::thread_entry(void)
@@ -81,10 +79,10 @@ void WorkQueue::thread_entry(void)
 
 void WorkQueue::destroy(void)
 {
-    lock.lock();
+    mutex.lock();
     exit_workqueue = true;
     wake_up_thread();
-    lock.unlock();
+    mutex.unlock();
 }
 
 extern "C"
@@ -102,8 +100,6 @@ WorkQueue::WorkQueue(void) :
 {
     int err;
 
-    pthread_cond_init(&wake_cond, NULL);
-    pthread_cond_init(&complete_cond, NULL);
     err = pthread_create(&handle, NULL, WorkQueue__entry_thunk, this);
     assert(!err);
 }

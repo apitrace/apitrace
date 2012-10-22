@@ -140,6 +140,98 @@ namespace os {
 
 
     /**
+     * Same interface as std::unique_lock;
+     */
+    template< class Mutex >
+    class unique_lock
+    {
+    public:
+        typedef Mutex mutex_type;
+
+        inline explicit
+        unique_lock(mutex_type & mutex) :
+            _mutex(&mutex)
+        {
+            _mutex->lock();
+        }
+
+        inline
+        ~unique_lock() {
+            _mutex->unlock();
+        }
+
+        inline void
+        lock() {
+            _mutex->lock();
+        }
+
+        inline void
+        unlock() {
+            _mutex->unlock();
+        }
+
+        mutex_type *
+        mutex() const {
+            return _mutex;
+        }
+
+    protected:
+        mutex_type *_mutex;
+    };
+
+
+    /**
+     * Same interface as std::condition_variable
+     */
+    class condition_variable
+    {
+    public:
+#ifdef _WIN32
+        /* FIXME */
+#else
+        typedef pthread_cond_t native_handle_type;
+#endif
+
+        condition_variable() {
+#ifdef _WIN32
+            /* FIXME */
+#else
+            pthread_cond_init(&_native_handle, NULL);
+#endif
+        }
+
+        ~condition_variable() {
+#ifdef _WIN32
+            /* FIXME */
+#else
+            pthread_cond_destroy(&_native_handle);
+#endif
+        }
+
+        inline void
+        signal(void) {
+#ifdef _WIN32
+            /* FIXME */
+#else
+            pthread_cond_signal(&_native_handle);
+#endif
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock) {
+#ifdef _WIN32
+            /* FIXME */
+#else
+            pthread_cond_wait(&_native_handle, &lock.mutex()->native_handle());
+#endif
+        }
+
+    protected:
+        native_handle_type _native_handle;
+    };
+
+
+    /**
      * Same interface as boost::thread_specific_ptr.
      */
     template <typename T>
