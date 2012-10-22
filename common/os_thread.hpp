@@ -42,7 +42,10 @@
 namespace os {
 
 
-    class recursive_mutex
+    /**
+     * Base class for mutex and recursive_mutex.
+     */
+    class _base_mutex
     {
     public:
 #ifdef _WIN32
@@ -51,7 +54,7 @@ namespace os {
         typedef pthread_mutex_t native_handle_type;
 #endif
 
-        recursive_mutex(void) {
+        _base_mutex(void) {
 #ifdef _WIN32
             InitializeCriticalSection(&_native_handle);
 #else
@@ -63,7 +66,7 @@ namespace os {
 #endif
         }
 
-        ~recursive_mutex() {
+        ~_base_mutex() {
 #ifdef _WIN32
             DeleteCriticalSection(&_native_handle);
 #else
@@ -89,11 +92,56 @@ namespace os {
 #endif
         }
 
-    private:
+        native_handle_type & native_handle() {
+            return _native_handle;
+        }
+
+    protected:
         native_handle_type _native_handle;
     };
 
 
+    /**
+     * Same interface as std::mutex.
+     */
+    class mutex : public _base_mutex
+    {
+    public:
+        inline
+        mutex(void) {
+#ifdef _WIN32
+            InitializeCriticalSection(&_native_handle);
+#else
+            pthread_mutex_init(&_native_handle, NULL);
+#endif
+        }
+    };
+
+
+    /**
+     * Same interface as std::recursive_mutex.
+     */
+    class recursive_mutex : public _base_mutex
+    {
+    public:
+        inline
+        recursive_mutex(void) {
+#ifdef _WIN32
+            InitializeCriticalSection(&_native_handle);
+#else
+            pthread_mutexattr_t attr;
+            pthread_mutexattr_init(&attr);
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+            pthread_mutex_init(&_native_handle, &attr);
+            pthread_mutexattr_destroy(&attr);
+#endif
+        }
+    };
+
+
+    /**
+     * Same interface as boost::thread_specific_ptr.
+     */
     template <typename T>
     class thread_specific_ptr
     {
@@ -157,6 +205,7 @@ namespace os {
             }
         }
     };
+
 
 } /* namespace os */
 

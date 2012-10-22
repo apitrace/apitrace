@@ -12,13 +12,13 @@ namespace os
  */
 int WorkQueue::run_tasks(void)
 {
-    pthread_mutex_lock(&lock);
+    lock.lock();
 
     while (work_queue.empty() && !exit_workqueue)
-        pthread_cond_wait(&wake_cond, &lock);
+        pthread_cond_wait(&wake_cond, &lock.native_handle());
 
     if (exit_workqueue) {
-        pthread_mutex_unlock(&lock);
+        lock.unlock();
         return -1;
     }
 
@@ -26,7 +26,7 @@ int WorkQueue::run_tasks(void)
     std::swap(work_queue, batch);
     busy = true;
 
-    pthread_mutex_unlock(&lock);
+    lock.unlock();
 
     assert(!batch.empty());
     while (!batch.empty()) {
@@ -38,12 +38,12 @@ int WorkQueue::run_tasks(void)
         delete task;
     }
 
-    pthread_mutex_lock(&lock);
+    lock.lock();
 
     busy = false;
     pthread_cond_signal(&complete_cond);
 
-    pthread_mutex_unlock(&lock);
+    lock.unlock();
 
     return 0;
 }
@@ -56,18 +56,18 @@ void WorkQueue::wake_up_thread(void)
 
 void WorkQueue::queue_work(WorkQueueWork *task)
 {
-    pthread_mutex_lock(&lock);
+    lock.lock();
     work_queue.push(task);
     wake_up_thread();
-    pthread_mutex_unlock(&lock);
+    lock.unlock();
 }
 
 void WorkQueue::flush(void)
 {
-    pthread_mutex_lock(&lock);
+    lock.lock();
     while (!work_queue.empty() || busy)
-        pthread_cond_wait(&complete_cond, &lock);
-    pthread_mutex_unlock(&lock);
+        pthread_cond_wait(&complete_cond, &lock.native_handle());
+    lock.unlock();
 }
 
 void WorkQueue::thread_entry(void)
@@ -81,10 +81,10 @@ void WorkQueue::thread_entry(void)
 
 void WorkQueue::destroy(void)
 {
-    pthread_mutex_lock(&lock);
+    lock.lock();
     exit_workqueue = true;
     wake_up_thread();
-    pthread_mutex_unlock(&lock);
+    lock.unlock();
 }
 
 extern "C"
@@ -104,7 +104,6 @@ WorkQueue::WorkQueue(void) :
 
     pthread_cond_init(&wake_cond, NULL);
     pthread_cond_init(&complete_cond, NULL);
-    pthread_mutex_init(&lock, NULL);
     err = pthread_create(&handle, NULL, WorkQueue__entry_thunk, this);
     assert(!err);
 }

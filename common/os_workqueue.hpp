@@ -3,8 +3,10 @@
 
 #include <queue>
 
-namespace os
-{
+#include "os_thread.hpp"
+
+namespace os {
+
 
 class WorkQueue;
 
@@ -29,7 +31,7 @@ class WorkQueue {
 	pthread_cond_t wake_cond;
 	pthread_cond_t complete_cond;
 
-	pthread_mutex_t lock;
+	os::mutex lock;
 
 	void wake_up_thread(void);
 	void thread_entry(void);
