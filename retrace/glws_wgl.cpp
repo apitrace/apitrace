@@ -100,8 +100,8 @@ public:
     PIXELFORMATDESCRIPTOR pfd;
     int iPixelFormat;
 
-    WglDrawable(const Visual *vis, int width, int height) :
-        Drawable(vis, width, height)
+    WglDrawable(const Visual *vis, int width, int height, bool pbuffer) :
+        Drawable(vis, width, height, pbuffer)
     {
         static bool first = TRUE;
         RECT rect;
@@ -287,9 +287,9 @@ createVisual(bool doubleBuffer, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height)
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new WglDrawable(visual, width, height);
+    return new WglDrawable(visual, width, height, pbuffer);
 }
 
 Context *

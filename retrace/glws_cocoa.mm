@@ -75,8 +75,8 @@ public:
     NSWindow *window;
     NSOpenGLContext *currentContext;
 
-    CocoaDrawable(const Visual *vis, int w, int h) :
-        Drawable(vis, w, h),
+    CocoaDrawable(const Visual *vis, int w, int h, bool pbuffer) :
+        Drawable(vis, w, h, pbuffer),
         currentContext(nil)
     {
         NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
@@ -215,9 +215,9 @@ createVisual(bool doubleBuffer, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height)
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new CocoaDrawable(visual, width, height);
+    return new CocoaDrawable(visual, width, height, pbuffer);
 }
 
 Context *
