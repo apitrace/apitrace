@@ -68,9 +68,9 @@ getDefaultProfile(void)
 }
 
 
-glws::Drawable *
-createDrawable(glws::Profile profile) {
-    glws::Drawable *draw = glws::createDrawable(getVisual(profile));
+static glws::Drawable *
+createDrawableHelper(glws::Profile profile, int width = 32, int height = 32, bool pbuffer = false) {
+    glws::Drawable *draw = glws::createDrawable(getVisual(profile), width, height, pbuffer);
     if (!draw) {
         std::cerr << "error: failed to create OpenGL drawable\n";
         exit(1);
@@ -82,8 +82,20 @@ createDrawable(glws::Profile profile) {
 
 
 glws::Drawable *
+createDrawable(glws::Profile profile) {
+    return createDrawableHelper(profile);
+}
+
+
+glws::Drawable *
 createDrawable(void) {
-    return glretrace::createDrawable(getDefaultProfile());
+    return createDrawable(getDefaultProfile());
+}
+
+
+glws::Drawable *
+createPbuffer(int width, int height) {
+    return createDrawableHelper(getDefaultProfile(), width, height, true);
 }
 
 
@@ -191,6 +203,10 @@ updateDrawable(int width, int height) {
 
     glws::Drawable *currentDrawable = currentContext->drawable;
     assert(currentDrawable);
+
+    if (currentDrawable->pbuffer) {
+        return;
+    }
 
     if (currentDrawable->visible &&
         width  <= currentDrawable->width &&

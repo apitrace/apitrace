@@ -79,6 +79,9 @@ createDrawable(glws::Profile profile);
 glws::Drawable *
 createDrawable(void);
 
+glws::Drawable *
+createPbuffer(int width, int height);
+
 Context *
 createContext(Context *shareContext, glws::Profile profile);
 

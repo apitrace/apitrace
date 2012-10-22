@@ -31,6 +31,8 @@
 #define _GLWS_HPP_
 
 
+#include <assert.h>
+
 #include <vector>
 #include <set>
 #include <string>
@@ -100,12 +102,14 @@ public:
     const Visual *visual;
     int width;
     int height;
+    bool pbuffer;
     bool visible;
 
-    Drawable(const Visual *vis, int w, int h) :
+    Drawable(const Visual *vis, int w, int h, bool pb) :
         visual(vis),
         width(w),
         height(h),
+        pbuffer(pb),
         visible(false)
     {}
 
@@ -119,6 +123,7 @@ public:
 
     virtual void
     show(void) {
+        assert(!pbuffer);
         visible = true;
     }
 
@@ -157,7 +162,7 @@ Visual *
 createVisual(bool doubleBuffer = false, Profile profile = PROFILE_COMPAT);
 
 Drawable *
-createDrawable(const Visual *visual, int width = 32, int height = 32);
+createDrawable(const Visual *visual, int width, int height, bool pbuffer = false);
 
 Context *
 createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT, bool debug = false);

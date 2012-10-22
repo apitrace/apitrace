@@ -139,11 +139,8 @@ static void retrace_glXCreatePbuffer(trace::Call &call) {
 
     unsigned long long orig_drawable = call.ret->toUInt();
 
-    glws::Drawable *drawable = glretrace::createDrawable();
+    glws::Drawable *drawable = glretrace::createPbuffer(width, height);
     
-    drawable->resize(width, height);
-    drawable->show();
-
     drawable_map[orig_drawable] = drawable;
 }
 

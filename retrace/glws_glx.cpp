@@ -104,8 +104,8 @@ class GlxDrawable : public Drawable
 public:
     Window window;
 
-    GlxDrawable(const Visual *vis, int w, int h) :
-        Drawable(vis, w, h)
+    GlxDrawable(const Visual *vis, int w, int h, bool pbuffer) :
+        Drawable(vis, w, h, pbuffer)
     {
         XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
 
@@ -313,9 +313,9 @@ createVisual(bool doubleBuffer, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height)
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new GlxDrawable(visual, width, height);
+    return new GlxDrawable(visual, width, height, pbuffer);
 }
 
 Context *
