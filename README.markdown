@@ -457,3 +457,4 @@ Or on Windows:
     python scripts\retracediff.py --retrace \path\to\glretrace.exe --ref-env TRACE_LIBGL=\path\to\reference\opengl32.dll application.trace
 
 
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1062ad633aa7a458e9d7520021307e4 "githalytics.com")](http://githalytics.com/apitrace/apitrace)
