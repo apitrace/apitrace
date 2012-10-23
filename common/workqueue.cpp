@@ -84,13 +84,23 @@ void WorkQueue::destroy(void)
     mutex.unlock();
 }
 
-void *WorkQueue__entry_thunk(void *data)
+static
+#ifdef _WIN32
+DWORD WINAPI
+#else
+void *
+#endif
+WorkQueue__entry_thunk(void *data)
 {
     WorkQueue *thread = static_cast<WorkQueue *>(data);
 
     thread->thread_entry();
 
+#ifdef _WIN32
+    return 0;
+#else
     return NULL;
+#endif
 }
 
 WorkQueue::WorkQueue(void) :

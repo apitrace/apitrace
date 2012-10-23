@@ -187,14 +187,14 @@ namespace os {
     {
     public:
 #ifdef _WIN32
-        /* FIXME */
+        typedef CONDITION_VARIABLE native_handle_type;
 #else
         typedef pthread_cond_t native_handle_type;
 #endif
 
         condition_variable() {
 #ifdef _WIN32
-            /* FIXME */
+            InitializeConditionVariable(&_native_handle);
 #else
             pthread_cond_init(&_native_handle, NULL);
 #endif
@@ -202,7 +202,7 @@ namespace os {
 
         ~condition_variable() {
 #ifdef _WIN32
-            /* FIXME */
+            /* No-op */
 #else
             pthread_cond_destroy(&_native_handle);
 #endif
@@ -211,7 +211,7 @@ namespace os {
         inline void
         signal(void) {
 #ifdef _WIN32
-            /* FIXME */
+            WakeConditionVariable(&_native_handle);
 #else
             pthread_cond_signal(&_native_handle);
 #endif
@@ -219,10 +219,12 @@ namespace os {
 
         inline void
         wait(unique_lock<mutex> & lock) {
+            mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
 #ifdef _WIN32
             /* FIXME */
+            SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
 #else
-            pthread_cond_wait(&_native_handle, &lock.mutex()->native_handle());
+            pthread_cond_wait(&_native_handle, &mutex_native_handle);
 #endif
         }
 
@@ -305,7 +307,7 @@ namespace os {
     class thread {
     public:
 #ifdef _WIN32
-        /* FIXME */
+        typedef HANDLE native_handle_type;
 #else
         typedef pthread_t native_handle_type;
 #endif
@@ -314,6 +316,8 @@ namespace os {
         explicit thread( Function& f, Arg & arg ) {
 #ifdef _WIN32
             /* FIXME */
+            DWORD id = 0;
+            _native_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)f, (LPVOID)arg, 0, &id);
 #else
             pthread_create(&_native_handle, NULL, f, arg);
 #endif
@@ -322,7 +326,7 @@ namespace os {
         inline void
         join() {
 #ifdef _WIN32
-            /* FIXME */
+            WaitForSingleObject(_native_handle, INFINITE);
 #else
             pthread_join(_native_handle, NULL);
 #endif
@@ -330,6 +334,16 @@ namespace os {
 
     private:
         native_handle_type _native_handle;
+
+#if 0
+#ifdef _WIN32
+        template< class Function, class Arg >
+        static DWORD WINAPI
+        ThreadProc(LPVOID lpParameter) {
+
+        );
+#endif
+#endif
     };
 
 } /* namespace os */
