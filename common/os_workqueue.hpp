@@ -12,38 +12,39 @@ class WorkQueue;
 
 class WorkQueueWork {
 protected:
-	friend class WorkQueue;
+    friend class WorkQueue;
 
 public:
-	virtual void run(void) = 0;
-	virtual ~WorkQueueWork(void) { }
+    virtual void run(void) = 0;
+    virtual ~WorkQueueWork(void) { }
 };
 
 extern "C"
 void *WorkQueue__entry_thunk(void *data);
 
 class WorkQueue {
-	pthread_t handle;
-	std::queue<WorkQueueWork *> work_queue;
+    std::queue<WorkQueueWork *> work_queue;
 
-	bool busy;
-	bool exit_workqueue;
-	os::condition_variable wake_cond;
-	os::condition_variable complete_cond;
+    bool busy;
+    bool exit_workqueue;
+    os::condition_variable wake_cond;
+    os::condition_variable complete_cond;
 
-	os::mutex mutex;
+    os::mutex mutex;
 
-	void wake_up_thread(void);
-	void thread_entry(void);
-	int run_tasks(void);
-	friend void *WorkQueue__entry_thunk(void *data);
+    os::thread thread;
+
+    void wake_up_thread(void);
+    void thread_entry(void);
+    int run_tasks(void);
+    friend void *WorkQueue__entry_thunk(void *data);
 public:
-	void queue_work(WorkQueueWork *work);
-	void flush(void);
-	void destroy(void);
+    void queue_work(WorkQueueWork *work);
+    void flush(void);
+    void destroy(void);
 
-	WorkQueue(void);
-	~WorkQueue();
+    WorkQueue(void);
+    ~WorkQueue();
 };
 
 }

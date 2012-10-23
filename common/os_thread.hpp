@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2011-2012 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -298,6 +298,39 @@ namespace os {
         }
     };
 
+
+    /**
+     * Same interface as std::thread
+     */
+    class thread {
+    public:
+#ifdef _WIN32
+        /* FIXME */
+#else
+        typedef pthread_t native_handle_type;
+#endif
+
+        template< class Function, class Arg >
+        explicit thread( Function& f, Arg & arg ) {
+#ifdef _WIN32
+            /* FIXME */
+#else
+            pthread_create(&_native_handle, NULL, f, arg);
+#endif
+        }
+
+        inline void
+        join() {
+#ifdef _WIN32
+            /* FIXME */
+#else
+            pthread_join(_native_handle, NULL);
+#endif
+        }
+
+    private:
+        native_handle_type _native_handle;
+    };
 
 } /* namespace os */
 

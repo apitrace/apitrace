@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <queue>
 #include <assert.h>
 
@@ -85,7 +84,6 @@ void WorkQueue::destroy(void)
     mutex.unlock();
 }
 
-extern "C"
 void *WorkQueue__entry_thunk(void *data)
 {
     WorkQueue *thread = static_cast<WorkQueue *>(data);
@@ -96,17 +94,15 @@ void *WorkQueue__entry_thunk(void *data)
 }
 
 WorkQueue::WorkQueue(void) :
-    busy(false), exit_workqueue(false)
+    busy(false),
+    exit_workqueue(false),
+    thread(WorkQueue__entry_thunk, this)
 {
-    int err;
-
-    err = pthread_create(&handle, NULL, WorkQueue__entry_thunk, this);
-    assert(!err);
 }
 
 WorkQueue::~WorkQueue(void)
 {
-    pthread_join(handle, NULL);
+    thread.join();
 }
 
 }
