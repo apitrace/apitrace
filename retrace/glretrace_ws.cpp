@@ -50,6 +50,10 @@ getVisual(glws::Profile profile) {
     glws::Visual * & visual = visuals[profile];
     if (!visual) {
         visual = glws::createVisual(retrace::doubleBuffer, profile);
+        if (!visual) {
+            std::cerr << "error: failed to create OpenGL visual\n";
+            exit(1);
+        }
     }
     return visual;
 }
@@ -68,11 +72,11 @@ getDefaultProfile(void)
 
 static glws::Drawable *
 createDrawableHelper(glws::Profile profile, int width = 32, int height = 32, bool pbuffer = false) {
-    glws::Drawable *draw = glws::createDrawable(getVisual(profile), width, height, pbuffer);
+    glws::Visual *visual = getVisual(profile);
+    glws::Drawable *draw = glws::createDrawable(visual, width, height, pbuffer);
     if (!draw) {
         std::cerr << "error: failed to create OpenGL drawable\n";
         exit(1);
-        return NULL;
     }
 
     return draw;
@@ -99,8 +103,9 @@ createPbuffer(int width, int height) {
 
 Context *
 createContext(Context *shareContext, glws::Profile profile) {
+    glws::Visual *visual = getVisual(profile);
     glws::Context *shareWsContext = shareContext ? shareContext->wsContext : NULL;
-    glws::Context *ctx = glws::createContext(getVisual(profile), shareWsContext, profile, retrace::debug);
+    glws::Context *ctx = glws::createContext(visual, shareWsContext, profile, retrace::debug);
     if (!ctx) {
         std::cerr << "error: failed to create OpenGL context\n";
         exit(1);
