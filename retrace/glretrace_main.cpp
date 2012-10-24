@@ -319,6 +319,7 @@ frame_complete(trace::Call &call) {
         return;
     }
 
+    assert(currentContext->drawable);
     if (retrace::debug && !currentContext->drawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
@@ -434,8 +435,11 @@ retrace::dumpState(std::ostream &os)
 
 void
 retrace::flushRendering(void) {
-    glretrace::flushQueries();
-    glFlush();
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+    if (currentContext) {
+        glretrace::flushQueries();
+        glFlush();
+    }
 }
 
 void
