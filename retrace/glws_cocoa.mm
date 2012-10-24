@@ -33,6 +33,8 @@
  * - http://developer.apple.com/library/mac/#samplecode/glut/Introduction/Intro.html
  * - http://developer.apple.com/library/mac/#samplecode/GLEssentials/Introduction/Intro.html
  * - http://www.glfw.org/
+ * - http://cocoasamurai.blogspot.co.uk/2008/04/guide-to-threading-on-leopard.html
+ * - http://developer.apple.com/library/ios/#documentation/Cocoa/Conceptual/Multithreading/Introduction/Introduction.html
  */
 
 
@@ -46,6 +48,27 @@
 #include <Cocoa/Cocoa.h>
 
 #include "glws.hpp"
+
+
+/**
+ * Dummy thread to force Cocoa to enter multithreading mode.
+ */
+@interface DummyThread : NSObject
+    + (void)enterMultiThreaded;
+    + (void)dummyThreadMethod:(id)unused;
+@end
+
+@implementation DummyThread
+    + (void)dummyThreadMethod:(id)unused {
+        (void)unused;
+    }
+
+    + (void)enterMultiThreaded {
+        [NSThread detachNewThreadSelector:@selector(dummyThreadMethod:)
+                  toTarget:self
+                  withObject:nil];
+    }
+@end
 
 
 namespace glws {
@@ -173,6 +196,14 @@ init(void) {
     _libGlHandle = dlopen("OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
 
     initThread();
+
+    [DummyThread enterMultiThreaded];
+
+    bool isMultiThreaded = [NSThread isMultiThreaded];
+    if (!isMultiThreaded) {
+        std::cerr << "error: failed to enable Cocoa multi-threading\n";
+	exit(1);
+    }
 
     [NSApplication sharedApplication];
 
