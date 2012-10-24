@@ -173,6 +173,8 @@ callFlagTable[] = {
     { "glXGetCurrentContext",                          CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "glXGetCurrentDisplay",                          CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "glXGetCurrentDrawable",                         CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
+    { "glXGetFBConfigAttrib",                          CALL_FLAG_VERBOSE },
+    { "glXGetFBConfigAttribSGIX",                      CALL_FLAG_VERBOSE },
     { "glXGetProcAddress",                             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "glXGetProcAddressARB",                          CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "glXIsDirect",                                   CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
