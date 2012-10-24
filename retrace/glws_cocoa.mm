@@ -73,6 +73,7 @@ class CocoaDrawable : public Drawable
 {
 public:
     NSWindow *window;
+    NSOpenGLView *view;
     NSOpenGLContext *currentContext;
 
     CocoaDrawable(const Visual *vis, int w, int h, bool pbuffer) :
@@ -92,9 +93,9 @@ public:
                                        defer:NO];
         assert(window != nil);
 
-        NSOpenGLView *view = [[NSOpenGLView alloc]
-                              initWithFrame:winRect
-                                pixelFormat:pixelFormat];
+        view = [[NSOpenGLView alloc]
+                initWithFrame:winRect
+                  pixelFormat:pixelFormat];
         assert(view != nil);
 
         [window setContentView:view];
@@ -117,7 +118,7 @@ public:
         if (currentContext != nil) {
             [currentContext update];
             [window makeKeyAndOrderFront:nil];
-            [currentContext setView:[window contentView]];
+            [currentContext setView:view];
             [currentContext makeCurrentContext];
         }
 
