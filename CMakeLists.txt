@@ -1,5 +1,14 @@
 cmake_minimum_required (VERSION 2.8)
 
+
+# Use clang on MacOSX. gcc doesn't support __thread key, and Apple has
+# abandoned it for clang.  This must be done before the project is defined.
+if (APPLE)
+    set (CMAKE_C_COMPILER "clang")
+    set (CMAKE_CXX_COMPILER "clang++")
+endif ()
+
+
 project (apitrace)
 
 
@@ -24,6 +33,15 @@ set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 
 ##############################################################################
 # Find dependencies
+
+# Ensure __thread is support
+if (APPLE)
+    include (CheckCXXSourceCompiles)
+    check_cxx_source_compiles("__thread int i; int main() { return 0; }" HAVE_COMPILER_TLS)
+    if (NOT HAVE_COMPILER_TLS)
+        message (FATAL_ERROR "C++ compiler does not support __thread keyword. Please install XCode 4.5 or higher.")
+    endif ()
+endif ()
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
