@@ -57,7 +57,7 @@ public:
     }
 };
 
-static os::thread_specific_ptr<struct ThreadState> thread_state;
+static os::thread_specific_ptr<ThreadState> thread_state;
 
 static ThreadState *get_ts(void)
 {
