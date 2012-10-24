@@ -57,15 +57,13 @@ public:
     }
 };
 
-static os::thread_specific_ptr<ThreadState> thread_state;
+static thread_specific ThreadState *thread_state;
 
 static ThreadState *get_ts(void)
 {
-    ThreadState *ts = thread_state.get();
-
+    ThreadState *ts = thread_state;
     if (!ts) {
-        ts = new ThreadState;
-        thread_state.reset(ts);
+        thread_state = ts = new ThreadState;
     }
 
     return ts;
