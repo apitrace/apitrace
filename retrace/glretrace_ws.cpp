@@ -122,6 +122,15 @@ createContext(Context *shareContext) {
 }
 
 
+Context::~Context()
+{
+    //assert(this != getCurrentContext());
+    if (this != getCurrentContext()) {
+        delete wsContext;
+    }
+}
+
+
 static thread_specific Context *
 currentContextPtr;
 
@@ -153,9 +162,6 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
         return false;
     }
 
-    if (currentContext) {
-        currentContext->drawable = NULL;
-    }
     currentContextPtr = context;
 
     if (drawable && context) {

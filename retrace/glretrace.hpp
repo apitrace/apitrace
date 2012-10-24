@@ -41,10 +41,7 @@ struct Context {
     {
     }
 
-    ~Context()
-    {
-        delete wsContext;
-    }
+    ~Context();
 
     glws::Context* wsContext;
 

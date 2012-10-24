@@ -239,13 +239,18 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
     Context *context = getContext(ctx);
 
     if (context) {
-        if (retrace::doubleBuffer) {
-            context->drawable->swapBuffers();
+        if (context->drawable) {
+            if (retrace::doubleBuffer) {
+                context->drawable->swapBuffers();
+            } else {
+                glFlush();
+            }
+            frame_complete(call);
         } else {
-            glFlush();
+            if (retrace::debug) {
+                retrace::warning(call) << "context has no drawable\n";
+            }
         }
-
-        frame_complete(call);
     }
 }
 
