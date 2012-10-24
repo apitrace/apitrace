@@ -223,6 +223,10 @@ static void do_all_calls(void)
             }
 
             thread_wq->queue_work(render_work);
+
+            // XXX: Flush immediately to avoid race conditions on unprotected
+            // static/global variables.
+            thread_wq->flush();
         } else {
             render_work->run();
             delete render_work;
