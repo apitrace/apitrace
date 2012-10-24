@@ -324,7 +324,7 @@ private:
 #endif
 
         template< class Function, class Arg >
-        explicit thread( Function& f, Arg & arg ) {
+        explicit thread( Function& f, Arg arg ) {
 #ifdef _WIN32
             /* FIXME */
             DWORD id = 0;
