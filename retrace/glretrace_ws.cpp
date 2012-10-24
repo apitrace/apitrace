@@ -122,14 +122,14 @@ createContext(Context *shareContext) {
 }
 
 
-static os::thread_specific_ptr<Context>
+static thread_specific Context *
 currentContextPtr;
 
 
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 {
-    Context *currentContext = currentContextPtr.release();
+    Context *currentContext = currentContextPtr;
     glws::Drawable *currentDrawable = currentContext ? currentContext->drawable : NULL;
 
     if (drawable == currentDrawable && context == currentContext) {
@@ -159,7 +159,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
     if (drawable && context) {
         context->drawable = drawable;
-        currentContextPtr.reset(context);
+        currentContextPtr = context;
         
         if (!context->used) {
             initContext();
@@ -173,7 +173,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
 Context *
 getCurrentContext(void) {
-    return currentContextPtr.get();
+    return currentContextPtr;
 }
 
 
