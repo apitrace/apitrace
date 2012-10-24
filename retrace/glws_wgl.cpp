@@ -303,7 +303,8 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
-    if (profile != PROFILE_COMPAT) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
         return NULL;
     }
 
@@ -323,8 +324,13 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 Context *
 createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
 {
-    if (profile != PROFILE_COMPAT) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
         return NULL;
+    }
+
+    if (profile == PROFILE_CORE) {
+        std::cerr << "warning: ignoring OpenGL core profile request\n";
     }
 
     return new WglContext(visual, profile, static_cast<WglContext *>(shareContext));
