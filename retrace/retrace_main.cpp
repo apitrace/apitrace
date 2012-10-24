@@ -27,7 +27,6 @@
 #include <string.h>
 #include <iostream>
 
-#include "glws.hpp"
 #include "os_binary.hpp"
 #include "os_time.hpp"
 #include "os_workqueue.hpp"
