@@ -238,6 +238,8 @@ public:
 
 void
 init(void) {
+    XInitThreads();
+
     display = XOpenDisplay(NULL);
     if (!display) {
         std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
