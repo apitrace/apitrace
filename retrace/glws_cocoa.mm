@@ -51,7 +51,8 @@
 namespace glws {
 
 
-NSAutoreleasePool *autoreleasePool = nil;
+static __thread NSAutoreleasePool *
+autoreleasePool = nil;
 
 
 class CocoaVisual : public Visual
@@ -158,14 +159,21 @@ public:
 };
 
 
+static inline void
+initThread(void) {
+    if (autoreleasePool == nil) {
+        autoreleasePool = [[NSAutoreleasePool alloc] init];
+    }
+}
+
 void
 init(void) {
     // Prevent glproc to load system's OpenGL, so that we can trace glretrace.
     _libGlHandle = dlopen("OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
 
-    [NSApplication sharedApplication];
+    initThread();
 
-    autoreleasePool = [[NSAutoreleasePool alloc] init];
+    [NSApplication sharedApplication];
 
     [NSApp finishLaunching];
 }
@@ -179,6 +187,9 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
+
+    initThread();
+
     if (profile != PROFILE_COMPAT &&
         profile != PROFILE_CORE) {
         return nil;
@@ -217,12 +228,16 @@ createVisual(bool doubleBuffer, Profile profile) {
 Drawable *
 createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
+    initThread();
+
     return new CocoaDrawable(visual, width, height, pbuffer);
 }
 
 Context *
 createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
 {
+    initThread();
+
     NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
     NSOpenGLContext *share_context = nil;
     NSOpenGLContext *context;
@@ -247,6 +262,8 @@ createContext(const Visual *visual, Context *shareContext, Profile profile, bool
 bool
 makeCurrent(Drawable *drawable, Context *context)
 {
+    initThread();
+
     if (!drawable || !context) {
         [NSOpenGLContext clearCurrentContext];
     } else {
@@ -265,8 +282,9 @@ makeCurrent(Drawable *drawable, Context *context)
 
 bool
 processEvents(void) {
-   NSEvent* event;
+    initThread();
 
+    NSEvent* event;
     do {
         event = [NSApp nextEventMatchingMask:NSAnyEventMask
                                    untilDate:[NSDate distantPast]
