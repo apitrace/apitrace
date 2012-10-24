@@ -316,6 +316,7 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLSetParameter", &retrace::ignore},
     {"CGLGetParameter", &retrace::ignore},
     {"CGLFlushDrawable", &retrace_CGLFlushDrawable},
+    {"CGLUpdateContext", &retrace::ignore},
     {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
     {NULL, NULL},
 };
