@@ -24,18 +24,16 @@
 ##########################################################################/
 
 
-from d3dcommontrace import D3DCommonTracer
-from specs.d3d10_1 import d3d10_1
+from dlltrace import DllTracer
+from specs import stdapi
 
 
-if __name__ == '__main__':
-    print '#define INITGUID'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
-    print
-    print '#include "d3d10_1imports.hpp"'
-    print '#include "d3d10shader.hpp"'
-    print
-    tracer = D3DCommonTracer('d3d10_1.dll')
-    tracer.traceApi(d3d10_1)
+class D3DCommonTracer(DllTracer):
+
+    def serializeArgValue(self, function, arg):
+        # Dump shaders as strings
+        if isinstance(arg.type, stdapi.Blob) and arg.name.startswith('pShaderBytecode'):
+            print '    DumpShader(trace::localWriter, %s, %s);' % (arg.name, arg.type.size)
+            return
+
+        DllTracer.serializeArgValue(self, function, arg)
