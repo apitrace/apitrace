@@ -11,6 +11,8 @@ About **apitrace**
 
 * visualize and edit trace files.
 
+See the [apitrace homepage](http://apitrace.github.com/) for more details.
+
 
 Obtaining **apitrace**
 ======================
@@ -455,62 +457,4 @@ Or on Windows:
     python scripts\retracediff.py --retrace \path\to\glretrace.exe --ref-env TRACE_LIBGL=\path\to\reference\opengl32.dll application.trace
 
 
-Links
-=====
-
-About **apitrace**:
-
-* [Official mailing list](http://lists.freedesktop.org/mailman/listinfo/apitrace)
-
-* [Zack Rusin's blog introducing the GUI](http://zrusin.blogspot.com/2011/04/apitrace.html)
-
-* [Jose's Fonseca blog introducing the tool](http://jrfonseca.blogspot.com/2008/07/tracing-d3d-applications.html)
-
-
-Direct3D
---------
-
-Open-source:
-
-* [Proxy DLL](http://www.mikoweb.eu/index.php?node=21)
-
-  * [Intercept Calls to DirectX with a Proxy DLL](http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/)
-
-* [Direct3D 9 API Interceptor](http://graphics.stanford.edu/~mdfisher/D3D9Interceptor.html)
-
-Closed-source:
-
-* [Microsoft PIX](http://msdn.microsoft.com/en-us/library/ee417062.aspx)
-
-  * [D3DSpy](http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm): the predecessor of PIX
-
-* [NVIDIA PerfKit](http://developer.nvidia.com/nvidia-perfkit)
-
-* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
-
-* [Intel Graphics Performance Analyzers](http://www.intel.com/software/gpa/)
-
-
-OpenGL
-------
-
-Open-source:
-
-* [BuGLe](http://www.opengl.org/sdk/tools/BuGLe/)
-
-* [GLIntercept](http://code.google.com/p/glintercept/)
-
-* [tracy](https://gitorious.org/tracy): OpenGL ES and OpenVG trace, retrace, and state inspection
-
-* [WebGL-Inspector](http://benvanik.github.com/WebGL-Inspector/)
-
-Closed-source:
-
-* [AMD CodeXL](http://developer.amd.com/tools/hc/CodeXL/Pages/default.aspx)
-
-* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
-
-* [gDEBugger](http://www.gremedy.com/products.php) and [AMD gDEBugger](http://developer.amd.com/tools/gDEBugger/Pages/default.aspx)
-
-* [glslDevil](http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html)
-
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1062ad633aa7a458e9d7520021307e4 "githalytics.com")](http://githalytics.com/apitrace/apitrace)
