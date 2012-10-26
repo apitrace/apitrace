@@ -2115,7 +2115,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_PIXEL_PACK_BUFFER_BINDING"),	# 0x88ED
     ("glGet",	I,	1,	"GL_PIXEL_UNPACK_BUFFER_BINDING"),	# 0x88EF
     ("",	X,	1,	"GL_DEPTH24_STENCIL8"),	# 0x88F0
-    ("",	X,	1,	"GL_TEXTURE_STENCIL_SIZE"),	# 0x88F1
+    ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_STENCIL_SIZE"),	# 0x88F1
     ("",	X,	1,	"GL_STENCIL_TAG_BITS_EXT"),	# 0x88F2
     ("",	X,	1,	"GL_STENCIL_CLEAR_TAG_VALUE_EXT"),	# 0x88F3
     ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_EXEC_INSTRUCTIONS_NV"),	# 0x88F4
