@@ -29,7 +29,7 @@
 
 #include "os_binary.hpp"
 #include "os_time.hpp"
-#include "os_workqueue.hpp"
+#include "os_thread.hpp"
 #include "image.hpp"
 #include "trace_callset.hpp"
 #include "trace_dump.hpp"
@@ -37,7 +37,6 @@
 
 
 static bool waitOnFinish = false;
-static bool use_threads;
 
 static const char *comparePrefix = NULL;
 static const char *snapshotPrefix = NULL;
@@ -55,7 +54,6 @@ namespace retrace {
 trace::Parser parser;
 trace::Profiler profiler;
 
-static std::map<unsigned long, os::WorkQueue *> thread_wq_map;
 
 int verbosity = 0;
 bool debug = true;
@@ -71,22 +69,7 @@ bool profilingPixelsDrawn = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
-static bool state_dumped;
 
-class RenderWork : public os::WorkQueueWork
-{
-	trace::Call *call;
-public:
-	void run(void);
-	RenderWork(trace::Call *_call) { call = _call; }
-	~RenderWork(void) { delete call; }
-};
-
-class FlushGLWork : public os::WorkQueueWork
-{
-public:
-    void run(void) { flushRendering(); }
-};
 
 void
 frameComplete(trace::Call &call) {
@@ -139,15 +122,16 @@ takeSnapshot(unsigned call_no) {
     return;
 }
 
-void RenderWork::run(void)
-{
+
+class RelayRunner;
+
+
+static void
+retraceCall(trace::Call *call) {
     bool swapRenderTarget = call->flags &
         trace::CALL_FLAG_SWAP_RENDERTARGET;
     bool doSnapshot = snapshotFrequency.contains(*call) ||
         compareFrequency.contains(*call);
-
-    if (state_dumped)
-        return;
 
     // For calls which cause rendertargets to be swaped, we take the
     // snapshot _before_ swapping the rendertargets.
@@ -169,73 +153,196 @@ void RenderWork::run(void)
     if (doSnapshot && !swapRenderTarget)
         takeSnapshot(call->no);
 
-    if (call->no >= dumpStateCallNo && dumpState(std::cout))
-        state_dumped = true;
-}
-
-static os::WorkQueue *get_work_queue(unsigned long thread_id)
-{
-    os::WorkQueue *thread;
-    std::map<unsigned long, os::WorkQueue *>::iterator it;
-
-    it = thread_wq_map.find(thread_id);
-    if (it == thread_wq_map.end()) {
-        thread = new os::WorkQueue();
-        thread_wq_map[thread_id] = thread;
-    } else {
-        thread = it->second;
-    }
-
-    return thread;
-}
-
-static void exit_work_queues(void)
-{
-    std::map<unsigned long, os::WorkQueue *>::iterator it;
-
-    it = thread_wq_map.begin();
-    while (it != thread_wq_map.end()) {
-        os::WorkQueue *thread_wq = it->second;
-
-        thread_wq->queue_work(new FlushGLWork);
-        thread_wq->flush();
-        thread_wq->destroy();
-        thread_wq_map.erase(it++);
+    if (call->no >= dumpStateCallNo &&
+        dumpState(std::cout)) {
+        exit(0);
     }
 }
 
-static void do_all_calls(void)
+
+class RelayRace
 {
-    trace::Call *call;
-    int prev_thread_id = -1;
-    os::WorkQueue *thread_wq = NULL;
+public:
+    std::vector<RelayRunner*> runners;
 
-    while ((call = parser.parse_call())) {
-        RenderWork *render_work = new RenderWork(call);
+    RelayRace();
 
-        if (use_threads) {
-            if (prev_thread_id != call->thread_id) {
-                if (thread_wq)
-                    thread_wq->flush();
-                thread_wq = get_work_queue(call->thread_id);
-                prev_thread_id = call->thread_id;
+    RelayRunner *
+    getRunner(unsigned leg);
+
+    void
+    startRace(void);
+
+    void
+    passBaton(trace::Call *call);
+
+    void
+    finishRace();
+};
+
+
+class RelayRunner
+{
+public:
+    RelayRace *race;
+    unsigned leg;
+    os::mutex mutex;
+    os::condition_variable wake_cond;
+
+    bool finished;
+    trace::Call *baton;
+    os::thread *thread;
+
+    static void *
+    runnerThread(RelayRunner *_this);
+
+    RelayRunner(RelayRace *race, unsigned _leg) :
+        race(race),
+        leg(_leg),
+        finished(false),
+        baton(0),
+        thread(0)
+    {
+        if (leg) {
+            thread = new os::thread(runnerThread, this);
+        }
+    }
+
+    void
+    runRace(void) {
+        os::unique_lock<os::mutex> lock(mutex);
+
+        while (1) {
+            while (!finished && !baton) {
+                wake_cond.wait(lock);
             }
 
-            thread_wq->queue_work(render_work);
+            if (finished) {
+                break;
+            }
 
-            // XXX: Flush immediately to avoid race conditions on unprotected
-            // static/global variables.
-            thread_wq->flush();
-        } else {
-            render_work->run();
-            delete render_work;
+            assert(baton);
+            trace::Call *call = baton;
+            baton = 0;
+
+            runLeg(call);
         }
 
-        if (state_dumped)
-            break;
+        if (0) std::cerr << "leg " << leg << " actually finishing\n";
+
+        if (leg == 0) {
+            std::vector<RelayRunner*>::iterator it;
+            for (it = race->runners.begin() + 1; it != race->runners.end(); ++it) {
+                RelayRunner* runner = *it;
+                runner->finishRace();
+            }
+        }
     }
 
-    exit_work_queues();
+    void runLeg(trace::Call *call) {
+        do {
+            assert(call);
+            assert(call->thread_id == leg);
+            retraceCall(call);
+            delete call;
+            call = parser.parse_call();
+        } while (call && call->thread_id == leg);
+
+        if (call) {
+            assert(call->thread_id != leg);
+            flushRendering();
+            race->passBaton(call);
+        } else {
+            if (0) std::cerr << "finished on leg " << leg << "\n";
+            if (leg) {
+                race->finishRace();
+            } else {
+                finished = true;
+            }
+        }
+    }
+
+    void receiveBaton(trace::Call *call) {
+        assert (call->thread_id == leg);
+
+        mutex.lock();
+        baton = call;
+        mutex.unlock();
+
+        wake_cond.signal();
+    }
+
+    void finishRace() {
+        if (0) std::cerr << "notify finish to leg " << leg << "\n";
+
+        mutex.lock();
+        finished = true;
+        mutex.unlock();
+
+        wake_cond.signal();
+    }
+};
+
+void *
+RelayRunner::runnerThread(RelayRunner *_this) {
+    _this->runRace();
+    return 0;
+}
+
+
+RelayRace::RelayRace() {
+    runners.push_back(new RelayRunner(this, 0));
+}
+
+RelayRunner *
+RelayRace::getRunner(unsigned leg) {
+    RelayRunner *runner;
+
+    if (leg >= runners.size()) {
+        runners.resize(leg + 1);
+        runner = 0;
+    } else {
+        runner = runners[leg];
+    }
+    if (!runner) {
+        runner = new RelayRunner(this, leg);
+        runners[leg] = runner;
+    }
+    return runner;
+}
+
+void
+RelayRace::startRace(void) {
+    trace::Call *call;
+    call = parser.parse_call();
+
+    if (!call) {
+        return;
+    }
+
+    assert(call->thread_id == 0);
+
+    RelayRunner *foreRunner = getRunner(0);
+    if (call->thread_id == 0) {
+        foreRunner->baton = call;
+    } else {
+        passBaton(call);
+    }
+
+    foreRunner->runRace();
+}
+
+void
+RelayRace::passBaton(trace::Call *call) {
+    if (0) std::cerr << "switching to thread " << call->thread_id << "\n";
+    RelayRunner *runner = getRunner(call->thread_id);
+    runner->receiveBaton(call);
+}
+
+void
+RelayRace::finishRace(void) {
+    RelayRunner *runner = getRunner(0);
+    runner->finishRace();
 }
 
 
@@ -248,14 +355,8 @@ mainLoop() {
 
     startTime = os::getTime();
 
-    do_all_calls();
-
-    if (!use_threads)
-        /*
-         * Reached the end of trace; if using threads we do the flush
-         * when exiting the threads.
-         */
-        flushRendering();
+    RelayRace race;
+    race.startRace();
 
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
@@ -297,8 +398,7 @@ usage(const char *argv0) {
         "  -S CALLSET   calls to snapshot (default is every frame)\n"
         "  -v           increase output verbosity\n"
         "  -D CALLNO    dump state at specific call no\n"
-        "  -w           waitOnFinish on final frame\n"
-        "  -t           enable threading\n";
+        "  -w           waitOnFinish on final frame\n";
 }
 
 
@@ -376,8 +476,6 @@ int main(int argc, char **argv)
             } else if (!strcmp(arg, "-ppd")) {
                 retrace::profilingPixelsDrawn = true;
             }
-        } else if (!strcmp(arg, "-t")) {
-            use_threads = true;
         } else {
             std::cerr << "error: unknown option " << arg << "\n";
             usage(argv[0]);

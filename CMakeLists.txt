@@ -328,7 +328,6 @@ add_library (common STATIC
     common/image_pnm.cpp
     common/image_png.cpp
     common/${os}
-    common/workqueue.cpp
 )
 
 set_target_properties (common PROPERTIES
