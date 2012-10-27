@@ -45,7 +45,6 @@ if (ENABLE_GUI)
         set (REQUIRE_GUI REQUIRED)
     endif ()
     find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit ${REQUIRE_GUI})
-    find_package (QJSON ${REQUIRE_GUI})
 endif ()
 
 if (WIN32)
@@ -192,16 +191,11 @@ if (WIN32)
     add_subdirectory (thirdparty/less)
 endif ()
 
-# The Qt website provides binaries for Windows and MacOSX, and they are
-# automatically found by cmake without any manual intervention.  The situation
-# for QJSON is substantially different: there are no binaries for QJSON
-# available, and there is no standard installation directory that is detected
-# by cmake.
-#
-# By bundling the QJSON source, we make it much more easier to build the GUI on
-# Windows and MacOSX.  But we only use the bundled sources when ENABLE_GUI is
-# AUTO.
-if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
+# Always use bundled QJSon.
+# - The packaged versions QJson are very old, and do not support NaN/Infinity.
+# - To make it easier to build the GUI on Windows and MacOSX, as there are no
+# binaries at all.
+if (QT4_FOUND)
     add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
     set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
     set (QJSON_LIBRARY_DIRS)
