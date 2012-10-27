@@ -202,7 +202,10 @@ static void retrace_eglDestroyContext(trace::Call &call) {
     it = context_map.find(orig_context);
 
     if (it != context_map.end()) {
-        delete it->second;
+        if (it->second != currentContext) {
+            // TODO: reference count
+            delete it->second;
+        }
         context_map.erase(it);
     }
 }
