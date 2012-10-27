@@ -89,6 +89,31 @@ struct ImageDesc
 
 
 /**
+ * Sames as enumToString, but with special provision to handle formatsLUMINANCE_ALPHA.
+ *
+ * OpenGL 2.1 specification states that "internalFormat may (for backwards
+ * compatibility with the 1.0 version of the GL) also take on the integer
+ * values 1, 2, 3, and 4, which are equivalent to symbolic constants LUMINANCE,
+ * LUMINANCE ALPHA, RGB, and RGBA respectively". 
+ */
+const char *
+formatToString(GLenum internalFormat) {
+    switch (internalFormat) {
+    case 1:
+        return "GL_LUMINANCE";
+    case 2:
+        return "GL_LUMINANCE_ALPHA";
+    case 3:
+        return "GL_RGB";
+    case 4:
+        return "GL_RGBA";
+    default:
+        return enumToString(internalFormat);
+    }
+}
+
+
+/**
  * OpenGL ES does not support glGetTexLevelParameteriv, but it is possible to
  * probe whether a texture has a given size by crafting a dummy glTexSubImage()
  * call.
@@ -388,7 +413,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     json.writeNumberMember("__height__", desc.height);
     json.writeNumberMember("__depth__", desc.depth);
 
-    json.writeStringMember("__format__", enumToString(desc.internalFormat));
+    json.writeStringMember("__format__", formatToString(desc.internalFormat));
 
     // Hardcoded for now, but we could chose types more adequate to the
     // texture internal format
@@ -838,7 +863,7 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     json.writeNumberMember("__height__", height);
     json.writeNumberMember("__depth__", 1);
 
-    json.writeStringMember("__format__", enumToString(internalFormat));
+    json.writeStringMember("__format__", formatToString(internalFormat));
 
     // Hardcoded for now, but we could chose types more adequate to the
     // texture internal format
