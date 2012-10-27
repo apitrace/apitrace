@@ -341,6 +341,18 @@ private:
         typedef pthread_t native_handle_type;
 #endif
 
+        inline
+        thread() :
+            _native_handle(0)
+        {
+        }
+
+        inline
+        thread(thread &other) :
+            _native_handle(other._native_handle)
+        {
+        }
+
         template< class Function, class Arg >
         explicit thread( Function& f, Arg arg ) {
 #ifdef _WIN32
@@ -350,6 +362,11 @@ private:
 #else
             pthread_create(&_native_handle, NULL, ( void *(*) (void *))f, arg);
 #endif
+        }
+
+        inline bool
+        joinable(void) const {
+            return _native_handle != 0;
         }
 
         inline void

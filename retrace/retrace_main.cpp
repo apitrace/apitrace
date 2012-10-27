@@ -77,6 +77,9 @@ frameComplete(trace::Call &call) {
 }
 
 
+/**
+ * Take/compare snapshots.
+ */
 static void
 takeSnapshot(unsigned call_no) {
     assert(snapshotPrefix || comparePrefix);
@@ -123,9 +126,12 @@ takeSnapshot(unsigned call_no) {
 }
 
 
-class RelayRunner;
-
-
+/**
+ * Retrace one call.
+ *
+ * Take snapshots before/after retracing (as appropriate) and dispatch it to
+ * the respective handler.
+ */
 static void
 retraceCall(trace::Call *call) {
     bool swapRenderTarget = call->flags &
@@ -160,54 +166,93 @@ retraceCall(trace::Call *call) {
 }
 
 
+class RelayRunner;
+
+
+/**
+ * Implement multi-threading by mimicking a relay race.
+ */
 class RelayRace
 {
-public:
+private:
+    /**
+     * Runners indexed by the leg they run (i.e, the thread_ids from the
+     * trace).
+     */
     std::vector<RelayRunner*> runners;
 
+public:
     RelayRace();
+
+    ~RelayRace();
 
     RelayRunner *
     getRunner(unsigned leg);
 
+    inline RelayRunner *
+    getForeRunner() {
+        return getRunner(0);
+    }
+
     void
-    startRace(void);
+    run(void);
 
     void
     passBaton(trace::Call *call);
 
     void
-    finishRace();
+    finishLine();
+
+    void
+    stopRunners();
 };
 
 
+/**
+ * Each runner is a thread.
+ *
+ * The fore runner doesn't have its own thread, but instead uses the thread
+ * where the race started.
+ */
 class RelayRunner
 {
-public:
+private:
+    friend class RelayRace;
+
     RelayRace *race;
+
     unsigned leg;
+    
     os::mutex mutex;
     os::condition_variable wake_cond;
 
+    /**
+     * There are protected by the mutex.
+     */
     bool finished;
     trace::Call *baton;
-    os::thread *thread;
+
+    os::thread thread;
 
     static void *
     runnerThread(RelayRunner *_this);
 
+public:
     RelayRunner(RelayRace *race, unsigned _leg) :
         race(race),
         leg(_leg),
         finished(false),
-        baton(0),
-        thread(0)
+        baton(0)
     {
+        /* The fore runner does not need a new thread */
         if (leg) {
-            thread = new os::thread(runnerThread, this);
+            thread = os::thread(runnerThread, this);
         }
     }
 
+    /**
+     * Thread main loop.
+     */
     void
     runRace(void) {
         os::unique_lock<os::mutex> lock(mutex);
@@ -231,15 +276,16 @@ public:
         if (0) std::cerr << "leg " << leg << " actually finishing\n";
 
         if (leg == 0) {
-            std::vector<RelayRunner*>::iterator it;
-            for (it = race->runners.begin() + 1; it != race->runners.end(); ++it) {
-                RelayRunner* runner = *it;
-                runner->finishRace();
-            }
+            race->stopRunners();
         }
     }
 
-    void runLeg(trace::Call *call) {
+    /**
+     * Interpret successive calls.
+     */
+    void
+    runLeg(trace::Call *call) {
+        /* Consume successive calls for this thread. */
         do {
             assert(call);
             assert(call->thread_id == leg);
@@ -249,20 +295,28 @@ public:
         } while (call && call->thread_id == leg);
 
         if (call) {
+            /* Pass the baton */
             assert(call->thread_id != leg);
             flushRendering();
             race->passBaton(call);
         } else {
+            /* Reached the finish line */
             if (0) std::cerr << "finished on leg " << leg << "\n";
             if (leg) {
-                race->finishRace();
+                /* Notify the fore runner */
+                race->finishLine();
             } else {
+                /* We are the fore runner */
                 finished = true;
             }
         }
     }
 
-    void receiveBaton(trace::Call *call) {
+    /**
+     * Called by other threads when relinquishing the baton.
+     */
+    void
+    receiveBaton(trace::Call *call) {
         assert (call->thread_id == leg);
 
         mutex.lock();
@@ -272,7 +326,11 @@ public:
         wake_cond.signal();
     }
 
-    void finishRace() {
+    /**
+     * Called by the fore runner when the race is over.
+     */
+    void
+    finishRace() {
         if (0) std::cerr << "notify finish to leg " << leg << "\n";
 
         mutex.lock();
@@ -282,6 +340,7 @@ public:
         wake_cond.signal();
     }
 };
+
 
 void *
 RelayRunner::runnerThread(RelayRunner *_this) {
@@ -294,6 +353,22 @@ RelayRace::RelayRace() {
     runners.push_back(new RelayRunner(this, 0));
 }
 
+
+RelayRace::~RelayRace() {
+    assert(runners.size() >= 1);
+    std::vector<RelayRunner*>::const_iterator it;
+    for (it = runners.begin(); it != runners.end(); ++it) {
+        RelayRunner* runner = *it;
+        if (runner) {
+            delete runner;
+        }
+    }
+}
+
+
+/**
+ * Get (or instantiate) a runner for the specified leg.
+ */
 RelayRunner *
 RelayRace::getRunner(unsigned leg) {
     RelayRunner *runner;
@@ -311,27 +386,35 @@ RelayRace::getRunner(unsigned leg) {
     return runner;
 }
 
+
+/**
+ * Start the race.
+ */
 void
-RelayRace::startRace(void) {
+RelayRace::run(void) {
     trace::Call *call;
     call = parser.parse_call();
-
     if (!call) {
+        /* Nothing to do */
         return;
     }
 
-    assert(call->thread_id == 0);
-
-    RelayRunner *foreRunner = getRunner(0);
+    RelayRunner *foreRunner = getForeRunner();
     if (call->thread_id == 0) {
+        /* We are the forerunner thread, so no need to pass baton */
         foreRunner->baton = call;
     } else {
         passBaton(call);
     }
 
+    /* Start the forerunner thread */
     foreRunner->runRace();
 }
 
+
+/**
+ * Pass the baton (i.e., the call) to the appropriate thread.
+ */
 void
 RelayRace::passBaton(trace::Call *call) {
     if (0) std::cerr << "switching to thread " << call->thread_id << "\n";
@@ -339,10 +422,32 @@ RelayRace::passBaton(trace::Call *call) {
     runner->receiveBaton(call);
 }
 
+
+/**
+ * Called when a runner other than the forerunner reaches the finish line.
+ *
+ * Only the fore runner can finish the race, so inform him that the race is
+ * finished.
+ */
 void
-RelayRace::finishRace(void) {
-    RelayRunner *runner = getRunner(0);
-    runner->finishRace();
+RelayRace::finishLine(void) {
+    RelayRunner *foreRunner = getForeRunner();
+    foreRunner->finishRace();
+}
+
+
+/**
+ * Called by the fore runner after finish line to stop all other runners.
+ */
+void
+RelayRace::stopRunners(void) {
+    std::vector<RelayRunner*>::const_iterator it;
+    for (it = runners.begin() + 1; it != runners.end(); ++it) {
+        RelayRunner* runner = *it;
+        if (runner) {
+            runner->finishRace();
+        }
+    }
 }
 
 
@@ -356,7 +461,7 @@ mainLoop() {
     startTime = os::getTime();
 
     RelayRace race;
-    race.startRace();
+    race.run();
 
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
