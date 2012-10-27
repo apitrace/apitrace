@@ -1,6 +1,5 @@
-QJson version 0.5.0
+QJson
 -------------------------------------------------
-Date: April 3rd, 2009
 Website: http://qjson.sourceforge.net/
 Mailing List: https://lists.sourceforge.net/mailman/listinfo/qjson-devel
 
@@ -13,8 +12,8 @@ Install
 
 License
 -------
-  This library is licensed under the Lesser GNU General Public License.  See
-  the COPYING file for more information.
+  This library is licensed under the Lesser GNU General Public License version 2.1.
+  See the COPYING.lib file for more information.
 
 Description
 -----------
