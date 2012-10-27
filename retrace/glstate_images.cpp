@@ -436,7 +436,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     json.beginMember("__data__");
     char *pngBuffer;
     int pngBufferSize;
-    image::writePixelsToBuffer(pixels, desc.width, desc.height, channels, true, &pngBuffer, &pngBufferSize);
+    image::writePixelsToBuffer(pixels, desc.width, desc.depth * desc.height, channels, true, &pngBuffer, &pngBufferSize);
     json.writeBase64(pngBuffer, pngBufferSize);
     free(pngBuffer);
     json.endMember(); // __data__
