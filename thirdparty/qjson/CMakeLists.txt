@@ -2,7 +2,6 @@ add_definitions (
     -DQT_NO_CAST_FROM_ASCII
     -DQT_NO_CAST_TO_ASCII
     -DQT_NO_DEBUG_OUTPUT
-    -DQJSON_EXPORT=
 )
 
 set (QT_DONT_USE_QTGUI TRUE)
