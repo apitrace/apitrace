@@ -40,6 +40,7 @@ static bool call_dumped = false;
 
 static void dumpCall(trace::Call &call) {
     if (verbosity >= 0 && !call_dumped) {
+        std::cout << std::hex << call.thread_id << std::dec << " ";
         std::cout << call;
         std::cout.flush();
         call_dumped = true;
