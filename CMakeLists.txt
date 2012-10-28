@@ -82,6 +82,10 @@ else ()
     if (X11_FOUND)
         include_directories (${X11_INCLUDE_DIR})
         add_definitions (-DHAVE_X11)
+    else ()
+        # Print a clear message when X11 is not found
+        include (FindPackageMessage)
+        find_package_message (X11 "Could not find X11" "")
     endif ()
 endif ()
 
