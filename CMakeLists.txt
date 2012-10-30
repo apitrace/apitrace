@@ -224,6 +224,7 @@ endif ()
 # - To make it easier to build the GUI on Windows and MacOSX, as there are no
 # binaries at all.
 if (QT4_FOUND)
+    add_definitions (-DQJSON_EXPORT=)
     add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
     set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
     set (QJSON_LIBRARY_DIRS)
