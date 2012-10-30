@@ -282,8 +282,14 @@ From OpenGL ES applications you can embed annotations in the trace file through 
 extension.
 
 
-For Direct3D applications you can follow the same procedure used for 
-[instrumenting an application for PIX](http://technet.microsoft.com/en-us/query/ee417250)
+For Direct3D applications you can follow the standard procedure for
+[adding user defined events to Visual Studio Graphics Debugger / PIX](http://msdn.microsoft.com/en-us/library/vstudio/hh873200.aspx):
+
+- `D3DPERF_BeginEvent`, `D3DPERF_EndEvent`, and `D3DPERF_SetMarker` for D3D9 applications.
+
+- `ID3DUserDefinedAnnotation::BeginEvent`,
+  `ID3DUserDefinedAnnotation::EndEvent`, and
+  `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
 
 Dump GL state at a particular call
