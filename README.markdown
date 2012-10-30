@@ -52,7 +52,9 @@ Replay an OpenGL trace with
     glretrace application.trace
 
 Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
-glretrace for more options.
+`glretrace` for more options.
+
+EGL traces must be replayed with `eglretrace` instead of `glretrace`.
 
 
 Basic GUI usage
@@ -112,13 +114,16 @@ or 32 bits.  This can be done by doing
 But beware of wrapper shell scripts -- what matters is the architecture of the
 main process.
 
-Run the application you want to trace as
+Run the GLX application you want to trace as
 
-     LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
+    LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
 
 and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
 `TRACE_FILE` environment variable before running.
+
+For EGL applications you will need to use `egltrace.so` instead of
+`glxtrace.so`.
 
 The `LD_PRELOAD` mechanism should work with the majority applications.  There
 are some applications (e.g., Unigine Heaven, Android GPU emulator, etc.), that
