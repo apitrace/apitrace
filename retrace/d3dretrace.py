@@ -104,7 +104,7 @@ if __name__ == '__main__':
 #include <iostream>
 
 #include "d3d9imports.hpp"
-#include "d3dsize.hpp"
+#include "d3d9size.hpp"
 #include "d3dretrace.hpp"
 
 '''

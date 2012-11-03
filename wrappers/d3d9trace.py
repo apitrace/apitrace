@@ -41,6 +41,7 @@ class D3D9Tracer(DllTracer):
     def enumWrapperInterfaceVariables(self, interface):
         variables = DllTracer.enumWrapperInterfaceVariables(self, interface)
         
+        # Add additional members to track locks
         if interface.getMethodByName('Lock') is not None or \
            interface.getMethodByName('LockRect') is not None or \
            interface.getMethodByName('LockBox') is not None:
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     print '#include "d3d9imports.hpp"'
-    print '#include "d3dsize.hpp"'
+    print '#include "d3d9size.hpp"'
     print '#include "d3d9shader.hpp"'
     print
     print '''
