@@ -27,10 +27,11 @@
 #define _GLTRACE_HPP_
 
 
-#include "glimports.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <map>
+
+#include "glimports.hpp"
 
 
 namespace gltrace {
@@ -42,23 +43,50 @@ enum Profile {
     PROFILE_ES2,
 };
 
+
+/**
+ * OpenGL ES buffers cannot be read. This class is used to track index buffer
+ * contents.
+ */
 class Buffer {
 public:
-    ~Buffer()
-    {
+    GLsizeiptr size;
+    GLvoid *data;
+
+    Buffer() :
+        size(0),
+        data(0)
+    {}
+
+    ~Buffer() {
         free(data);
     }
 
-    void resetData(const void *new_data, size_t new_size)
-    {
-        data = realloc(data, new_size);
+    void
+    bufferData(GLsizeiptr new_size, const void *new_data) {
+        if (new_size < 0) {
+            new_size = 0;
+        }
         size = new_size;
-        if (size)
+        data = realloc(data, new_size);
+        if (new_size && new_data) {
             memcpy(data, new_data, size);
+        }
     }
 
-	size_t size;
-	void *data;
+    void
+    bufferSubData(GLsizeiptr offset, GLsizeiptr length, const void *new_data) {
+        if (offset >= 0 && offset < size && length > 0 && offset + length <= size && new_data) {
+            memcpy((uint8_t *)data + offset, new_data, length);
+        }
+    }
+
+    void
+    getSubData(GLsizeiptr offset, GLsizeiptr length, void *out_data) {
+        if (offset >= 0 && offset < size && length > 0 && offset + length <= size && out_data) {
+            memcpy(out_data, (uint8_t *)data + offset, length);
+        }
+    }
 };
 
 class Context {
@@ -68,7 +96,9 @@ public:
     bool user_arrays_arb;
     bool user_arrays_nv;
     unsigned retain_count;
-    std::map <GLuint, class Buffer *> buffers;
+
+    // TODO: This will fail for buffers shared by multiple contexts.
+    std::map <GLuint, Buffer> buffers;
 
     Context(void) :
         profile(PROFILE_COMPAT),
