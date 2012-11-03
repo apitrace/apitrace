@@ -35,7 +35,8 @@ from specs.d3d9 import *
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
-        print 'static const GUID GUID_D3DRETRACE = {0x7D71CAC9,0x7F58,0x432C,{0xA9,0x75,0xA1,0x9F,0xCF,0xCE,0xFD,0x14}};'
+        print '// Swizzling mapping for lock addresses'
+        print 'static std::map<void *, void *> _locks;'
         print
 
         self.table_name = 'd3dretrace::%s_callbacks' % api.name.lower()
@@ -86,12 +87,11 @@ class D3DRetracer(Retracer):
             print '    VOID *_pbData = NULL;'
             print '    size_t _LockedSize = 0;'
             print '    _getLockInfo(_this, %s, _pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
-            print '    _this->SetPrivateData(GUID_D3DRETRACE, &_pbData, sizeof _pbData, 0);'
+            print '    _locks[_this] = _pbData;'
         
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    VOID *_pbData = 0;'
-            print '    DWORD dwSizeOfData = sizeof _pbData;'
-            print '    _this->GetPrivateData(GUID_D3DRETRACE, &_pbData, &dwSizeOfData);'
+            print '    _pbData = _locks[_this];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
             print '    }'
