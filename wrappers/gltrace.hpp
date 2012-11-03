@@ -77,14 +77,14 @@ public:
     void
     bufferSubData(GLsizeiptr offset, GLsizeiptr length, const void *new_data) {
         if (offset >= 0 && offset < size && length > 0 && offset + length <= size && new_data) {
-            memcpy((uint8_t *)data + offset, new_data, length);
+            memcpy((GLubyte *)data + offset, new_data, length);
         }
     }
 
     void
     getSubData(GLsizeiptr offset, GLsizeiptr length, void *out_data) {
         if (offset >= 0 && offset < size && length > 0 && offset + length <= size && out_data) {
-            memcpy(out_data, (uint8_t *)data + offset, length);
+            memcpy(out_data, (GLubyte *)data + offset, length);
         }
     }
 };
