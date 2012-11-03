@@ -24,9 +24,9 @@
  **************************************************************************/
 
 /*
- * Simple OS abstraction.
+ * OS native thread abstraction.
  *
- * Mimics C++11 / boost threads.
+ * Mimics C++11 threads.
  */
 
 #ifndef _OS_THREAD_HPP_
@@ -239,7 +239,6 @@ namespace os {
         wait(unique_lock<mutex> & lock) {
             mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
 #ifdef _WIN32
-            /* FIXME */
             SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
 #else
             pthread_cond_wait(&_native_handle, &mutex_native_handle);
@@ -248,85 +247,6 @@ namespace os {
 
     protected:
         native_handle_type _native_handle;
-    };
-
-
-    /**
-     * Same interface as boost::thread_specific_ptr.
-     */
-    template <typename T>
-    class thread_specific_ptr
-    {
-    private:
-#ifdef _WIN32
-        DWORD dwTlsIndex;
-#else
-        pthread_key_t key;
-
-        static void destructor(void *ptr) {
-            delete static_cast<T *>(ptr);
-        }
-#endif
-
-    public:
-        thread_specific_ptr(void) {
-#ifdef _WIN32
-            dwTlsIndex = TlsAlloc();
-#else
-            pthread_key_create(&key, &destructor);
-#endif
-        }
-
-        ~thread_specific_ptr() {
-#ifdef _WIN32
-            TlsFree(dwTlsIndex);
-#else
-            pthread_key_delete(key);
-#endif
-        }
-
-        T* get(void) const {
-            void *ptr;
-#ifdef _WIN32
-            ptr = TlsGetValue(dwTlsIndex);
-#else
-            ptr = pthread_getspecific(key);
-#endif
-            return static_cast<T*>(ptr);
-        }
-
-        T* operator -> (void) const
-        {
-            return get();
-        }
-
-        T& operator * (void) const
-        {
-            return *get();
-        }
-
-        void reset(T* new_value=0) {
-            T * old_value = get();
-            set(new_value);
-            if (old_value) {
-                delete old_value;
-            }
-        }
-
-        T* release (void) {
-            T * old_value = get();
-            set(0);
-            return old_value;
-        }
-
-private:
-        void set(T* new_value) {
-#ifdef _WIN32
-            TlsSetValue(dwTlsIndex, new_value);
-#else
-            pthread_setspecific(key, new_value);
-#endif
-        }
     };
 
 
@@ -356,7 +276,6 @@ private:
         template< class Function, class Arg >
         explicit thread( Function& f, Arg arg ) {
 #ifdef _WIN32
-            /* FIXME */
             DWORD id = 0;
             _native_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)f, (LPVOID)arg, 0, &id);
 #else
