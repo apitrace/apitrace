@@ -40,6 +40,9 @@
 #endif
 
 
+#define USE_WIN32_CONDITION_VARIABLES 0
+
+
 /**
  * Compiler TLS.
  *
@@ -203,16 +206,31 @@ namespace os {
      */
     class condition_variable
     {
-    public:
+    private:
 #ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
+        // XXX: Only supported on Vista an higher. Not yet supported by WINE.
         typedef CONDITION_VARIABLE native_handle_type;
+        native_handle_type _native_handle;
+#else
+        // http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+        LONG cWaiters;
+        HANDLE hEvent;
+#endif
 #else
         typedef pthread_cond_t native_handle_type;
+        native_handle_type _native_handle;
 #endif
 
+    public:
         condition_variable() {
 #ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
             InitializeConditionVariable(&_native_handle);
+#  else
+            cWaiters = 0;
+            hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+#  endif
 #else
             pthread_cond_init(&_native_handle, NULL);
 #endif
@@ -220,7 +238,11 @@ namespace os {
 
         ~condition_variable() {
 #ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
             /* No-op */
+#  else
+            CloseHandle(hEvent);
+#  endif
 #else
             pthread_cond_destroy(&_native_handle);
 #endif
@@ -229,7 +251,13 @@ namespace os {
         inline void
         signal(void) {
 #ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
             WakeConditionVariable(&_native_handle);
+#  else
+            if (cWaiters) {
+                SetEvent(hEvent);
+            }
+#  endif
 #else
             pthread_cond_signal(&_native_handle);
 #endif
@@ -239,14 +267,19 @@ namespace os {
         wait(unique_lock<mutex> & lock) {
             mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
 #ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
             SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
+#  else
+            InterlockedIncrement(&cWaiters);
+            LeaveCriticalSection(&mutex_native_handle);
+            WaitForSingleObject(hEvent, INFINITE);
+            EnterCriticalSection(&mutex_native_handle);
+            InterlockedDecrement(&cWaiters);
+#  endif
 #else
             pthread_cond_wait(&_native_handle, &mutex_native_handle);
 #endif
         }
-
-    protected:
-        native_handle_type _native_handle;
     };
 
 
