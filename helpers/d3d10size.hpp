@@ -39,9 +39,11 @@
 
 #include <assert.h>
 
+#include <algorithm>
+
 
 static size_t
-_getMapSize(DXGI_FORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT DepthPitch = 0) {
+_calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT DepthPitch = 0) {
     if (Width == 0 || Height == 0 || Depth == 0) {
         return 0;
     }
@@ -100,6 +102,72 @@ _getMapSize(DXGI_FORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Dept
     return size;
 }
 
+static size_t
+_calcMipDataSize(UINT MipLevel, DXGI_FORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT DepthPitch = 0) {
+    if (Width == 0 || Height == 0 || Depth == 0) {
+        return 0;
+    }
+
+    Width  = std::max(Width  >> MipLevel, UINT(1));
+    Height = std::max(Height >> MipLevel, UINT(1));
+    Depth  = std::max(Depth  >> MipLevel, UINT(1));
+
+    return _calcDataSize(Format, Width, Height, RowPitch, Depth, DepthPitch);
+}
+
+
+inline UINT
+_getNumMipLevels(UINT Width, UINT Height = 1, UINT Depth = 1) {
+    UINT MipLevels = 0;
+    do {
+        ++MipLevels;
+        Width  >>= 1;
+        Height >>= 1;
+        Depth  >>= 1;
+    } while (Width || Height || Depth);
+    return MipLevels;
+}
+
+inline UINT
+_getNumMipLevels(const D3D10_BUFFER_DESC *pDesc) {
+    return 1;
+}
+
+inline UINT
+_getNumMipLevels(const D3D10_TEXTURE1D_DESC *pDesc) {
+    return pDesc->MipLevels != 0 ? pDesc->MipLevels : _getNumMipLevels(pDesc->Width);
+}
+
+inline UINT
+_getNumMipLevels(const D3D10_TEXTURE2D_DESC *pDesc) {
+    return pDesc->MipLevels != 0 ? pDesc->MipLevels : _getNumMipLevels(pDesc->Width, pDesc->Height);
+}
+
+inline UINT
+_getNumMipLevels(const D3D10_TEXTURE3D_DESC *pDesc) {
+    return pDesc->MipLevels != 0 ? pDesc->MipLevels : _getNumMipLevels(pDesc->Width, pDesc->Height, pDesc->Depth);
+}
+
+inline UINT
+_getNumSubResources(const D3D10_BUFFER_DESC *pDesc) {
+    return 1;
+}
+
+inline UINT
+_getNumSubResources(const D3D10_TEXTURE1D_DESC *pDesc) {
+    return _getNumMipLevels(pDesc) * pDesc->ArraySize;
+}
+
+inline UINT
+_getNumSubResources(const D3D10_TEXTURE2D_DESC *pDesc) {
+    return _getNumMipLevels(pDesc) * pDesc->ArraySize;
+}
+
+inline UINT
+_getNumSubResources(const D3D10_TEXTURE3D_DESC *pDesc) {
+    return _getNumMipLevels(pDesc);
+}
+
 static inline void
 _getMapInfo(ID3D10Buffer *pResource, D3D10_MAP MapType, UINT MapFlags, void * * ppData,
             void * & pMappedData, size_t & MappedSize) {
@@ -130,8 +198,10 @@ _getMapInfo(ID3D10Texture1D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE1D_DESC Desc;
     pResource->GetDesc(&Desc);
 
+    UINT MipLevel = Subresource % _getNumMipLevels(&Desc);
+
     pMappedData = *ppData;
-    MappedSize = _getMapSize(Desc.Format, Desc.Width, 1, 0);
+    MappedSize = _calcMipDataSize(MipLevel, Desc.Format, Desc.Width, 1, 0);
 }
 
 static inline void
@@ -147,8 +217,10 @@ _getMapInfo(ID3D10Texture2D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE2D_DESC Desc;
     pResource->GetDesc(&Desc);
 
+    UINT MipLevel = Subresource % _getNumMipLevels(&Desc);
+
     pMappedData = pMappedTex2D->pData;
-    MappedSize = _getMapSize(Desc.Format, Desc.Width, Desc.Height, pMappedTex2D->RowPitch);
+    MappedSize = _calcMipDataSize(MipLevel, Desc.Format, Desc.Width, Desc.Height, pMappedTex2D->RowPitch);
 }
 
 static inline void
@@ -164,8 +236,10 @@ _getMapInfo(ID3D10Texture3D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE3D_DESC Desc;
     pResource->GetDesc(&Desc);
 
+    UINT MipLevel = Subresource;
+
     pMappedData = pMappedTex3D->pData;
-    MappedSize = _getMapSize(Desc.Format, Desc.Width, Desc.Height, pMappedTex3D->RowPitch, Desc.Depth, pMappedTex3D->DepthPitch);
+    MappedSize = _calcMipDataSize(MipLevel, Desc.Format, Desc.Width, Desc.Height, pMappedTex3D->RowPitch, Desc.Depth, pMappedTex3D->DepthPitch);
 }
 
 
@@ -186,7 +260,7 @@ _getMapInfo(IDXGISurface *pResource, DXGI_MAPPED_RECT * pLockedRect, UINT MapFla
     }
 
     pMappedData = pLockedRect->pBits;
-    MappedSize = _getMapSize(Desc.Format, Desc.Width, Desc.Height, pLockedRect->Pitch);
+    MappedSize = _calcDataSize(Desc.Format, Desc.Width, Desc.Height, pLockedRect->Pitch);
 }
 
 
