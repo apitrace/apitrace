@@ -824,7 +824,7 @@ ID3D10Device.methods += [
     Method(Void, "RSSetScissorRects", [(UINT, "NumRects"), (Array(Const(D3D10_RECT), "NumRects"), "pRects")]),
     Method(Void, "CopySubresourceRegion", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D10Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D10_BOX)), "pSrcBox")]),
     Method(Void, "CopyResource", [(ObjPointer(ID3D10Resource), "pDstResource"), (ObjPointer(ID3D10Resource), "pSrcResource")]),
-    Method(Void, "UpdateSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D10_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
+    Method(Void, "UpdateSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D10_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
     Method(Void, "ClearRenderTargetView", [(ObjPointer(ID3D10RenderTargetView), "pRenderTargetView"), (Array(Const(FLOAT), 4), "ColorRGBA")]),
     Method(Void, "ClearDepthStencilView", [(ObjPointer(ID3D10DepthStencilView), "pDepthStencilView"), (D3D10_CLEAR_FLAG, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
     Method(Void, "GenerateMips", [(ObjPointer(ID3D10ShaderResourceView), "pShaderResourceView")]),

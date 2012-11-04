@@ -378,4 +378,70 @@ _getMapInfo(IDXGISurface *pResource, DXGI_MAPPED_RECT * pLockedRect, UINT MapFla
 }
 
 
+static inline size_t
+_calcSubresourceSize(ID3D10Resource *pDstResource, UINT DstSubresource, const D3D10_BOX *pDstBox, UINT SrcRowPitch, UINT SrcDepthPitch) {
+    if (pDstBox &&
+        (pDstBox->left  >= pDstBox->right ||
+         pDstBox->top   >= pDstBox->bottom ||
+         pDstBox->front >= pDstBox->back)) {
+        return 0;
+    }
+
+    D3D10_RESOURCE_DIMENSION Type = D3D10_RESOURCE_DIMENSION_UNKNOWN;
+    pDstResource->GetType(&Type);
+
+    DXGI_FORMAT Format;
+    UINT Width;
+    UINT Height = 1;
+    UINT Depth = 1;
+    UINT MipLevel = 0;
+
+    switch (Type) {
+    case D3D10_RESOURCE_DIMENSION_BUFFER:
+        if (pDstBox) {
+            return pDstBox->right - pDstBox->left;
+        } else {
+            D3D10_BUFFER_DESC Desc;
+            static_cast<ID3D10Buffer *>(pDstResource)->GetDesc(&Desc);
+            return Desc.ByteWidth;
+        }
+    case D3D10_RESOURCE_DIMENSION_TEXTURE1D:
+        {
+            D3D10_TEXTURE1D_DESC Desc;
+            static_cast<ID3D10Texture1D *>(pDstResource)->GetDesc(&Desc);
+            Format = Desc.Format;
+            Width = Desc.Width;
+            MipLevel = DstSubresource % Desc.MipLevels;
+        }
+        break;
+    case D3D10_RESOURCE_DIMENSION_TEXTURE2D:
+        {
+            D3D10_TEXTURE2D_DESC Desc;
+            static_cast<ID3D10Texture2D *>(pDstResource)->GetDesc(&Desc);
+            Format = Desc.Format;
+            Width = Desc.Width;
+            Height = Desc.Height;
+            MipLevel = DstSubresource % Desc.MipLevels;
+        }
+        break;
+    case D3D10_RESOURCE_DIMENSION_TEXTURE3D:
+        {
+            D3D10_TEXTURE3D_DESC Desc;
+            static_cast<ID3D10Texture3D *>(pDstResource)->GetDesc(&Desc);
+            Format = Desc.Format;
+            Width = Desc.Width;
+            Height = Desc.Height;
+            Depth = Desc.Depth;
+        }
+        break;
+    case D3D10_RESOURCE_DIMENSION_UNKNOWN:
+    default:
+        assert(0);
+        return 0;
+    }
+
+    return _calcMipDataSize(MipLevel, Format, Width, Height, SrcRowPitch, Depth, SrcDepthPitch);
+}
+
+
 #endif /* _D3D10SIZE_HPP_ */
