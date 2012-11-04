@@ -63,21 +63,13 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         self.visit(const.type)
 
     def visitStruct(self, struct):
-        for type, name in struct.members:
-            self.visit(type)
-        print 'static void _write__%s(const %s &value) {' % (struct.tag, struct.expr)
-        print '    static const char * members[%u] = {' % (len(struct.members),)
+        print 'static const char * _struct%s_members[%u] = {' % (struct.tag, len(struct.members))
         for type, name,  in struct.members:
-            print '        "%s",' % (name,)
-        print '    };'
-        print '    static const trace::StructSig sig = {'
-        print '       %u, "%s", %u, members' % (struct.id, struct.name, len(struct.members))
-        print '    };'
-        print '    trace::localWriter.beginStruct(&sig);'
-        for type, name in struct.members:
-            self.serializer.visit(type, 'value.%s' % (name,))
-        print '    trace::localWriter.endStruct();'
-        print '}'
+            print '    "%s",' % (name,)
+        print '};'
+        print 'static const trace::StructSig _struct%s_sig = {' % (struct.tag,)
+        print '   %u, "%s", %u, _struct%s_members' % (struct.id, struct.name, len(struct.members), struct.tag)
+        print '};'
         print
 
     def visitArray(self, array):
@@ -158,6 +150,27 @@ class ValueSerializer(stdapi.Visitor):
     ComplexValueSerializer visitor above.
     '''
 
+    def __init__(self):
+        #stdapi.Visitor.__init__(self)
+        self.indices = []
+        self.instances = []
+
+    def expand(self, expr):
+        # Expand a C expression, replacing certain variables
+        variables = {}
+        try:
+            variables['self'] = self.instances[-1]
+        except IndexError:
+            pass
+        try:
+            variables['i'] = self.indices[-1]
+        except IndexError:
+            pass
+        expandedExpr = expr.format(**variables)
+        if expandedExpr != expr:
+            sys.stderr.write("  %r -> %r\n" % (expr, expandedExpr))
+        return expandedExpr
+
     def visitLiteral(self, literal, instance):
         print '    trace::localWriter.write%s(%s);' % (literal.kind, instance)
 
@@ -181,7 +194,14 @@ class ValueSerializer(stdapi.Visitor):
         self.visit(const.type, instance)
 
     def visitStruct(self, struct, instance):
-        print '    _write__%s(%s);' % (struct.tag, instance)
+        print '    trace::localWriter.beginStruct(&_struct%s_sig);' % (struct.tag,)
+        self.instances.append(instance)
+        try:
+            for type, name in struct.members:
+                self.visit(type, '(%s).%s' % (instance, name,))
+        finally:
+            self.instances.pop()
+        print '    trace::localWriter.endStruct();'
 
     def visitArray(self, array, instance):
         length = '_c' + array.type.tag
@@ -191,7 +211,11 @@ class ValueSerializer(stdapi.Visitor):
         print '        trace::localWriter.beginArray(%s);' % length
         print '        for (size_t %s = 0; %s < %s; ++%s) {' % (index, index, length, index)
         print '            trace::localWriter.beginElement();'
-        self.visit(array.type, '(%s)[%s]' % (instance, index))
+        self.indices.append(index)
+        try:
+            self.visit(array.type, '(%s)[%s]' % (instance, index))
+        finally:
+            self.indices.pop()
         print '            trace::localWriter.endElement();'
         print '        }'
         print '        trace::localWriter.endArray();'
@@ -200,7 +224,7 @@ class ValueSerializer(stdapi.Visitor):
         print '    }'
 
     def visitBlob(self, blob, instance):
-        print '    trace::localWriter.writeBlob(%s, %s);' % (instance, blob.size)
+        print '    trace::localWriter.writeBlob(%s, %s);' % (instance, self.expand(blob.size))
 
     def visitEnum(self, enum, instance):
         print '    trace::localWriter.writeEnum(&_enum%s_sig, %s);' % (enum.tag, instance)

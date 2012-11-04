@@ -544,7 +544,7 @@ D3D10_BOX = Struct("D3D10_BOX", [
 ])
 
 D3D10_SUBRESOURCE_DATA = Struct("D3D10_SUBRESOURCE_DATA", [
-    (OpaquePointer(Const(Void)), "pSysMem"),
+    (Blob(Const(Void), "_calcSubresourceSize(pDesc, {i}, {self}.SysMemPitch, {self}.SysMemSlicePitch)"), "pSysMem"),
     (UINT, "SysMemPitch"),
     (UINT, "SysMemSlicePitch"),
 ])
@@ -861,7 +861,7 @@ ID3D10Device.methods += [
     Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
     Method(Void, "ClearState", []),
     Method(Void, "Flush", []),
-    Method(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
+    Method(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "1"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
     Method(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D10_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture1D)), "ppTexture1D")]),
     Method(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D10_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture2D)), "ppTexture2D")]),
     Method(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D10_TEXTURE3D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture3D)), "ppTexture3D")]),

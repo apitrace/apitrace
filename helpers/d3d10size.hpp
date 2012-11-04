@@ -43,18 +43,8 @@
 
 
 static size_t
-_calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT DepthPitch = 0) {
+_calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT Depth = 1, UINT DepthPitch = 0) {
     if (Width == 0 || Height == 0 || Depth == 0) {
-        return 0;
-    }
-
-    if (RowPitch < 0) {
-        os::log("apitrace: warning: %s: negative row pitch %i\n", __FUNCTION__, RowPitch);
-        return 0;
-    }
-
-    if (DepthPitch < 0) {
-        os::log("apitrace: warning: %s: negative slice pitch %i\n", __FUNCTION__, DepthPitch);
         return 0;
     }
 
@@ -103,7 +93,7 @@ _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT De
 }
 
 static size_t
-_calcMipDataSize(UINT MipLevel, DXGI_FORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT DepthPitch = 0) {
+_calcMipDataSize(UINT MipLevel, DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT Depth = 1, UINT DepthPitch = 0) {
     if (Width == 0 || Height == 0 || Depth == 0) {
         return 0;
     }
@@ -168,6 +158,29 @@ _getNumSubResources(const D3D10_TEXTURE3D_DESC *pDesc) {
     return _getNumMipLevels(pDesc);
 }
 
+static inline size_t
+_calcSubresourceSize(const D3D10_BUFFER_DESC *pDesc, UINT Subresource, UINT RowPitch = 0, UINT SlicePitch = 0) {
+    return pDesc->ByteWidth;
+}
+
+static inline size_t
+_calcSubresourceSize(const D3D10_TEXTURE1D_DESC *pDesc, UINT Subresource, UINT RowPitch = 0, UINT SlicePitch = 0) {
+    UINT MipLevel = Subresource % _getNumMipLevels(pDesc);
+    return _calcMipDataSize(MipLevel, pDesc->Format, pDesc->Width, 1, RowPitch, 1, SlicePitch);
+}
+
+static inline size_t
+_calcSubresourceSize(const D3D10_TEXTURE2D_DESC *pDesc, UINT Subresource, UINT RowPitch, UINT SlicePitch = 0) {
+    UINT MipLevel = Subresource % _getNumMipLevels(pDesc);
+    return _calcMipDataSize(MipLevel, pDesc->Format, pDesc->Width, pDesc->Height, RowPitch, 1, SlicePitch);
+}
+
+static inline size_t
+_calcSubresourceSize(const D3D10_TEXTURE3D_DESC *pDesc, UINT Subresource, UINT RowPitch, UINT SlicePitch) {
+    UINT MipLevel = Subresource;
+    return _calcMipDataSize(MipLevel, pDesc->Format, pDesc->Width, pDesc->Height, RowPitch, pDesc->Depth, SlicePitch);
+}
+
 static inline void
 _getMapInfo(ID3D10Buffer *pResource, D3D10_MAP MapType, UINT MapFlags, void * * ppData,
             void * & pMappedData, size_t & MappedSize) {
@@ -198,10 +211,8 @@ _getMapInfo(ID3D10Texture1D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE1D_DESC Desc;
     pResource->GetDesc(&Desc);
 
-    UINT MipLevel = Subresource % _getNumMipLevels(&Desc);
-
     pMappedData = *ppData;
-    MappedSize = _calcMipDataSize(MipLevel, Desc.Format, Desc.Width, 1, 0);
+    MappedSize = _calcSubresourceSize(&Desc, Subresource);
 }
 
 static inline void
@@ -217,10 +228,8 @@ _getMapInfo(ID3D10Texture2D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE2D_DESC Desc;
     pResource->GetDesc(&Desc);
 
-    UINT MipLevel = Subresource % _getNumMipLevels(&Desc);
-
     pMappedData = pMappedTex2D->pData;
-    MappedSize = _calcMipDataSize(MipLevel, Desc.Format, Desc.Width, Desc.Height, pMappedTex2D->RowPitch);
+    MappedSize = _calcSubresourceSize(&Desc, Subresource, pMappedTex2D->RowPitch);
 }
 
 static inline void
@@ -236,10 +245,8 @@ _getMapInfo(ID3D10Texture3D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE3D_DESC Desc;
     pResource->GetDesc(&Desc);
 
-    UINT MipLevel = Subresource;
-
     pMappedData = pMappedTex3D->pData;
-    MappedSize = _calcMipDataSize(MipLevel, Desc.Format, Desc.Width, Desc.Height, pMappedTex3D->RowPitch, Desc.Depth, pMappedTex3D->DepthPitch);
+    MappedSize = _calcSubresourceSize(&Desc, Subresource, pMappedTex3D->RowPitch, pMappedTex3D->DepthPitch);
 }
 
 
