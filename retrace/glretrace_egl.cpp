@@ -32,6 +32,7 @@
 #include "retrace.hpp"
 #include "glretrace.hpp"
 #include "os.hpp"
+#include "eglsize.hpp"
 
 #ifndef EGL_OPENGL_ES_API
 #define EGL_OPENGL_ES_API		0x30A0
@@ -45,7 +46,7 @@ using namespace glretrace;
 
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
-typedef std::map<unsigned long long, glws::Context *> ContextMap;
+typedef std::map<unsigned long long, Context *> ContextMap;
 typedef std::map<unsigned long long, glws::Profile> ProfileMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
@@ -76,7 +77,7 @@ getDrawable(unsigned long long surface_ptr) {
     return (it != drawable_map.end()) ? it->second : NULL;
 }
 
-static glws::Context *
+static Context *
 getContext(unsigned long long context_ptr) {
     if (context_ptr == 0) {
         return NULL;
@@ -126,7 +127,8 @@ static void retrace_eglDestroySurface(trace::Call &call) {
     it = drawable_map.find(orig_surface);
 
     if (it != drawable_map.end()) {
-        if (it->second != currentDrawable) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
+        if (!currentContext || it->second != currentContext->drawable) {
             // TODO: reference count
             delete it->second;
         }
@@ -141,7 +143,7 @@ static void retrace_eglBindAPI(trace::Call &call) {
 static void retrace_eglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     unsigned long long orig_config = call.arg(1).toUIntPtr();
-    glws::Context *share_context = getContext(call.arg(2).toUIntPtr());
+    Context *share_context = getContext(call.arg(2).toUIntPtr());
     trace::Array *attrib_array = dynamic_cast<trace::Array *>(&call.arg(3));
     glws::Profile profile;
 
@@ -167,7 +169,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
     }
 
 
-    glws::Context *context = glretrace::createContext(share_context, profile);
+    Context *context = glretrace::createContext(share_context, profile);
     if (!context) {
         const char *name;
         switch (profile) {
@@ -201,24 +203,32 @@ static void retrace_eglDestroyContext(trace::Call &call) {
     it = context_map.find(orig_context);
 
     if (it != context_map.end()) {
-        delete it->second;
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
+        if (it->second != currentContext) {
+            // TODO: reference count
+            delete it->second;
+        }
         context_map.erase(it);
     }
 }
 
 static void retrace_eglMakeCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUIntPtr());
-    glws::Context *new_context = getContext(call.arg(3).toUIntPtr());
+    Context *new_context = getContext(call.arg(3).toUIntPtr());
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
 
 
 static void retrace_eglSwapBuffers(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUIntPtr());
+
     frame_complete(call);
 
-    if (retrace::doubleBuffer && currentDrawable) {
-        currentDrawable->swapBuffers();
+    if (retrace::doubleBuffer) {
+        if (drawable) {
+            drawable->swapBuffers();
+        }
     } else {
         glFlush();
     }
@@ -259,5 +269,8 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglSwapBuffers", &retrace_eglSwapBuffers},
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
+    {"eglCreateImageKHR", &retrace::ignore},
+    {"eglDestroyImageKHR", &retrace::ignore},
+    {"glEGLImageTargetTexture2DOES", &retrace::ignore},
     {NULL, NULL},
 };

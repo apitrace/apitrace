@@ -284,6 +284,6 @@ IDXGIDevice1.methods += [
 
 dxgi = API('dxgi')
 dxgi.addFunctions([
-    StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), (Pointer(ObjPointer(Void)), "ppFactory")]),
-    StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), (Pointer(ObjPointer(Void)), "ppFactory")]),
+    StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
+    StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
 ])

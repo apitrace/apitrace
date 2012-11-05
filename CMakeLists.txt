@@ -1,5 +1,14 @@
 cmake_minimum_required (VERSION 2.8)
 
+
+# Use clang on MacOSX. gcc doesn't support __thread key, and Apple has
+# abandoned it for clang.  This must be done before the project is defined.
+if (APPLE)
+    set (CMAKE_C_COMPILER "clang")
+    set (CMAKE_CXX_COMPILER "clang++")
+endif ()
+
+
 project (apitrace)
 
 
@@ -25,6 +34,21 @@ set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 ##############################################################################
 # Find dependencies
 
+# Ensure __thread is support
+if (NOT MSVC)
+    include (CheckCXXSourceCompiles)
+    check_cxx_source_compiles("__thread int i; int main() { return 0; }" HAVE_COMPILER_TLS)
+    if (NOT HAVE_COMPILER_TLS)
+        if (APPLE)
+            message (FATAL_ERROR "C++ compiler does not support __thread keyword. Please install XCode 4.5 or higher.")
+        else (MINGW32)
+            message (FATAL_ERROR "C++ compiler does not support __thread keyword. Please use MinGW g++ version 4.4 or higher")
+        else ()
+            message (FATAL_ERROR "C++ compiler does not support __thread keyword.")
+        endif ()
+    endif ()
+endif ()
+
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
@@ -45,7 +69,6 @@ if (ENABLE_GUI)
         set (REQUIRE_GUI REQUIRED)
     endif ()
     find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit ${REQUIRE_GUI})
-    find_package (QJSON ${REQUIRE_GUI})
 endif ()
 
 if (WIN32)
@@ -59,6 +82,10 @@ else ()
     if (X11_FOUND)
         include_directories (${X11_INCLUDE_DIR})
         add_definitions (-DHAVE_X11)
+    else ()
+        # Print a clear message when X11 is not found
+        include (FindPackageMessage)
+        find_package_message (X11 "Could not find X11" "")
     endif ()
 endif ()
 
@@ -127,6 +154,9 @@ else ()
         set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -O0")
         set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -ggdb")
     endif ()
+
+    # Be nice to Eclipse
+    add_definitions (-fmessage-length=0)
 endif ()
 
 if (MINGW)
@@ -189,16 +219,12 @@ if (WIN32)
     add_subdirectory (thirdparty/less)
 endif ()
 
-# The Qt website provides binaries for Windows and MacOSX, and they are
-# automatically found by cmake without any manual intervention.  The situation
-# for QJSON is substantially different: there are no binaries for QJSON
-# available, and there is no standard installation directory that is detected
-# by cmake.
-#
-# By bundling the QJSON source, we make it much more easier to build the GUI on
-# Windows and MacOSX.  But we only use the bundled sources when ENABLE_GUI is
-# AUTO.
-if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
+# Always use bundled QJSon.
+# - The packaged versions QJson are very old, and do not support NaN/Infinity.
+# - To make it easier to build the GUI on Windows and MacOSX, as there are no
+# binaries at all.
+if (QT4_FOUND)
+    add_definitions (-DQJSON_EXPORT=)
     add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
     set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
     set (QJSON_LIBRARY_DIRS)
@@ -295,6 +321,7 @@ add_library (common STATIC
     common/trace_loader.cpp
     common/trace_resource.cpp
     common/trace_tools_trace.cpp
+    common/trace_profiler.cpp
     common/image.cpp
     common/image_bmp.cpp
     common/image_pnm.cpp

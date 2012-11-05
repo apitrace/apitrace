@@ -24,7 +24,7 @@
 ##########################################################################/
 
 
-from dlltrace import DllTracer
+from d3dcommontrace import D3DCommonTracer
 from specs.d3d10_1 import d3d10_1
 
 
@@ -35,6 +35,8 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     print '#include "d3d10_1imports.hpp"'
+    print '#include "d3d10shader.hpp"'
+    print '#include "d3d10size.hpp"'
     print
-    tracer = DllTracer('d3d10_1.dll')
+    tracer = D3DCommonTracer('d3d10_1.dll')
     tracer.traceApi(d3d10_1)

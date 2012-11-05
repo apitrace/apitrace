@@ -34,6 +34,14 @@
 #include <stddef.h>
 #include <wchar.h>
 
+#ifdef _MSC_VER
+#  include <float.h>
+#  define isfinite _finite
+#  define isnan _isnan
+#else
+#  include <math.h> // isfinite, isnan
+#endif
+
 #include <iomanip>
 #include <limits>
 #include <ostream>
@@ -328,15 +336,21 @@ public:
 
     template<class T>
     inline void writeNumber(T n) {
-        if (n != n) {
-            // NaN
-            writeNull();
+        separator();
+        if (isnan(n)) {
+            // NaN is non-standard but widely supported
+            os << "NaN";
+        } else if (!isfinite(n)) {
+            // Infinite is non-standard but widely supported
+            if (n < 0) {
+                os << '-';
+            }
+            os << "Infinity";
         } else {
-            separator();
             os << std::dec << std::setprecision(std::numeric_limits<T>::digits10 + 1) << n;
-            value = true;
-            space = ' ';
         }
+        value = true;
+        space = ' ';
     }
     
     inline void writeStringMember(const char *name, const char *s) {

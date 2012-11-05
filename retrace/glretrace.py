@@ -250,7 +250,7 @@ class GlRetracer(Retracer):
             print '    glretrace::insideGlBeginEnd = false;'
 
         if function.name.startswith('gl') and not function.name.startswith('glX'):
-            print r'    if (retrace::debug && !glretrace::currentContext) {'
+            print r'    if (retrace::debug && !glretrace::getCurrentContext()) {'
             print r'        retrace::warning(call) << "no current context\n";'
             print r'    }'
 
@@ -289,7 +289,36 @@ class GlRetracer(Retracer):
             print r'    if (pipeline) {'
             print r'        _pipelineHasBeenBound = true;'
             print r'    }'
-        
+
+        profileDraw = (
+            function.name in self.draw_array_function_names or
+            function.name in self.draw_elements_function_names or
+            function.name in self.draw_indirect_function_names or
+            function.name in self.misc_draw_function_names or
+            function.name == 'glBegin'
+        )
+
+        if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
+            print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
+            print r'    if (currentContext) {'
+            print r'        currentContext->activeProgram = call.arg(0).toUInt();'
+            print r'    }'
+
+        # Only profile if not inside a list as the queries get inserted into list
+        if function.name == 'glNewList':
+            print r'    glretrace::insideList = true;'
+
+        if function.name == 'glEndList':
+            print r'    glretrace::insideList = false;'
+
+        if function.name != 'glEnd':
+            print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
+            if profileDraw:
+                print r'        glretrace::beginProfile(call, true);'
+            else:
+                print r'        glretrace::beginProfile(call, false);'
+            print r'    }'
+
         if function.name == 'glCreateShaderProgramv':
             # When dumping state, break down glCreateShaderProgramv so that the
             # shader source can be recovered.
@@ -321,12 +350,20 @@ class GlRetracer(Retracer):
         else:
             Retracer.invokeFunction(self, function)
 
-        # Error checking
         if function.name == "glBegin":
             print '    glretrace::insideGlBeginEnd = true;'
-        elif function.name.startswith('gl'):
+
+        print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
+        if profileDraw:
+            print r'        glretrace::endProfile(call, true);'
+        else:
+            print r'        glretrace::endProfile(call, false);'
+        print r'    }'
+
+        # Error checking
+        if function.name.startswith('gl'):
             # glGetError is not allowed inside glBegin/glEnd
-            print '    if (retrace::debug && !glretrace::insideGlBeginEnd) {'
+            print '    if (retrace::debug && !glretrace::insideGlBeginEnd && glretrace::getCurrentContext()) {'
             print '        glretrace::checkGlError(call);'
             if function.name in ('glProgramStringARB', 'glProgramStringNV'):
                 print r'        GLint error_position = -1;'
@@ -441,14 +478,20 @@ class GlRetracer(Retracer):
            and 'program' not in function.argNames():
             # Determine the active program for uniforms swizzling
             print '    GLint program = -1;'
-            print '    GLint pipeline = 0;'
-            print '    if (_pipelineHasBeenBound) {'
-            print '        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);'
-            print '    }'
-            print '    if (pipeline) {'
-            print '        glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);'
+            print '    if (glretrace::insideList) {'
+            print '        // glUseProgram & glUseProgramObjectARB are display-list-able'
+            print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
+            print '        program = _program_map[currentContext->activeProgram];'
             print '    } else {'
-            print '        glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+            print '        GLint pipeline = 0;'
+            print '        if (_pipelineHasBeenBound) {'
+            print '            glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);'
+            print '        }'
+            print '        if (pipeline) {'
+            print '            glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);'
+            print '        } else {'
+            print '            glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
+            print '        }'
             print '    }'
             print
 

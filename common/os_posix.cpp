@@ -134,7 +134,11 @@ int execute(char * const * args)
     if (pid == 0) {
         // child
         execvp(args[0], args);
-        fprintf(stderr, "error: failed to execute %s\n", args[0]);
+        fprintf(stderr, "error: failed to execute:");
+        for (unsigned i = 0; args[i]; ++i) {
+            fprintf(stderr, " %s", args[i]);
+        }
+        fprintf(stderr, "\n");
         exit(-1);
     } else {
         // parent

@@ -33,7 +33,7 @@ using namespace glretrace;
 
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
-typedef std::map<unsigned long long, glws::Context *> ContextMap;
+typedef std::map<unsigned long long, Context *> ContextMap;
 static DrawableMap drawable_map;
 static DrawableMap pbuffer_map;
 static ContextMap context_map;
@@ -56,16 +56,27 @@ getDrawable(unsigned long long hdc) {
 
 static void retrace_wglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *context = glretrace::createContext();
+    Context *context = glretrace::createContext();
     context_map[orig_context] = context;
 }
 
 static void retrace_wglDeleteContext(trace::Call &call) {
+    unsigned long long hglrc = call.arg(0).toUIntPtr();
+
+    ContextMap::iterator it;
+    it = context_map.find(hglrc);
+    if (it == context_map.end()) {
+        return;
+    }
+
+    delete it->second;
+    
+    context_map.erase(it);
 }
 
 static void retrace_wglMakeCurrent(trace::Call &call) {
     glws::Drawable *new_drawable = getDrawable(call.arg(0).toUIntPtr());
-    glws::Context *new_context = context_map[call.arg(1).toUIntPtr()];
+    Context *new_context = context_map[call.arg(1).toUIntPtr()];
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
@@ -83,9 +94,18 @@ static void retrace_wglSetPixelFormat(trace::Call &call) {
 }
 
 static void retrace_wglSwapBuffers(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(0).toUIntPtr());
+
     frame_complete(call);
     if (retrace::doubleBuffer) {
-        currentDrawable->swapBuffers();
+        if (drawable) {
+            drawable->swapBuffers();
+        } else {
+            glretrace::Context *currentContext = glretrace::getCurrentContext();
+            if (currentContext) {
+                currentContext->drawable->swapBuffers();
+            }
+        }
     } else {
         glFlush();
     }
@@ -95,13 +115,14 @@ static void retrace_wglShareLists(trace::Call &call) {
     unsigned long long hglrc1 = call.arg(0).toUIntPtr();
     unsigned long long hglrc2 = call.arg(1).toUIntPtr();
 
-    glws::Context *share_context = context_map[hglrc1];
-    glws::Context *old_context = context_map[hglrc2];
+    Context *share_context = context_map[hglrc1];
+    Context *old_context = context_map[hglrc2];
 
-    glws::Context *new_context = glretrace::createContext(share_context);
+    Context *new_context = glretrace::createContext(share_context);
     if (new_context) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (currentContext == old_context) {
-            glretrace::makeCurrent(call, currentDrawable, new_context);
+            glretrace::makeCurrent(call, currentContext->drawable, new_context);
         }
 
         context_map[hglrc2] = new_context;
@@ -165,10 +186,7 @@ static void retrace_wglCreatePbufferARB(trace::Call &call) {
     int iHeight = call.arg(3).toUInt();
 
     unsigned long long orig_pbuffer = call.ret->toUIntPtr();
-    glws::Drawable *drawable = glretrace::createDrawable();
-
-    drawable->resize(iWidth, iHeight);
-    drawable->show();
+    glws::Drawable *drawable = glretrace::createPbuffer(iWidth, iHeight);
 
     pbuffer_map[orig_pbuffer] = drawable;
 }
@@ -201,13 +219,13 @@ static void retrace_wglSetPbufferAttribARB(trace::Call &call) {
 
 static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
-    glws::Context *share_context = NULL;
+    Context *share_context = NULL;
 
     if (call.arg(1).toPointer()) {
         share_context = context_map[call.arg(1).toUIntPtr()];
     }
 
-    glws::Context *context = glretrace::createContext(share_context);
+    Context *context = glretrace::createContext(share_context);
     context_map[orig_context] = context;
 }
 

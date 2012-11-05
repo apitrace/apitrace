@@ -544,7 +544,7 @@ D3D10_BOX = Struct("D3D10_BOX", [
 ])
 
 D3D10_SUBRESOURCE_DATA = Struct("D3D10_SUBRESOURCE_DATA", [
-    (OpaquePointer(Const(Void)), "pSysMem"),
+    (Blob(Const(Void), "_calcSubresourceSize(pDesc, {i}, {self}.SysMemPitch, {self}.SysMemSlicePitch)"), "pSysMem"),
     (UINT, "SysMemPitch"),
     (UINT, "SysMemSlicePitch"),
 ])
@@ -824,7 +824,7 @@ ID3D10Device.methods += [
     Method(Void, "RSSetScissorRects", [(UINT, "NumRects"), (Array(Const(D3D10_RECT), "NumRects"), "pRects")]),
     Method(Void, "CopySubresourceRegion", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D10Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D10_BOX)), "pSrcBox")]),
     Method(Void, "CopyResource", [(ObjPointer(ID3D10Resource), "pDstResource"), (ObjPointer(ID3D10Resource), "pSrcResource")]),
-    Method(Void, "UpdateSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D10_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
+    Method(Void, "UpdateSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D10_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
     Method(Void, "ClearRenderTargetView", [(ObjPointer(ID3D10RenderTargetView), "pRenderTargetView"), (Array(Const(FLOAT), 4), "ColorRGBA")]),
     Method(Void, "ClearDepthStencilView", [(ObjPointer(ID3D10DepthStencilView), "pDepthStencilView"), (D3D10_CLEAR_FLAG, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
     Method(Void, "GenerateMips", [(ObjPointer(ID3D10ShaderResourceView), "pShaderResourceView")]),
@@ -861,10 +861,10 @@ ID3D10Device.methods += [
     Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
     Method(Void, "ClearState", []),
     Method(Void, "Flush", []),
-    Method(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
-    Method(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D10_TEXTURE1D_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture1D)), "ppTexture1D")]),
-    Method(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D10_TEXTURE2D_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture2D)), "ppTexture2D")]),
-    Method(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D10_TEXTURE3D_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture3D)), "ppTexture3D")]),
+    Method(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "1"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
+    Method(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D10_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture1D)), "ppTexture1D")]),
+    Method(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D10_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture2D)), "ppTexture2D")]),
+    Method(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D10_TEXTURE3D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture3D)), "ppTexture3D")]),
     Method(HRESULT, "CreateShaderResourceView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView)), "ppSRView")]),
     Method(HRESULT, "CreateRenderTargetView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_RENDER_TARGET_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10RenderTargetView)), "ppRTView")]),
     Method(HRESULT, "CreateDepthStencilView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_DEPTH_STENCIL_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10DepthStencilView)), "ppDepthStencilView")]),

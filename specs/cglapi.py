@@ -233,7 +233,7 @@ cglapi.addFunctions([
     Function(CGLError, "CGLLockContext", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLUnlockContext", [(CGLContextObj, "ctx")]),
     Function(Void, "CGLGetVersion", [Out(Pointer(GLint), "majorvers"), Out(Pointer(GLint), "minorvers")]),
-    Function(Const(CString), "CGLErrorString", [(CGLError, "error")]),
+    Function(ConstCString, "CGLErrorString", [(CGLError, "error")]),
 
     # CGLIOSurface.h, OpenGL framework
     Function(CGLError, "CGLTexImageIOSurface2D", [(CGLContextObj, "ctx"), (GLenum, "target"), (GLenum, "internal_format"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (IOSurfaceRef, "ioSurface"), (GLuint, "plane")]),

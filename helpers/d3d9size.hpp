@@ -30,8 +30,8 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
-#ifndef _D3D_SIZE_HPP_
-#define _D3D_SIZE_HPP_
+#ifndef _D3D9SIZE_HPP_
+#define _D3D9SIZE_HPP_
 
 
 /* We purposedly don't include any D3D header, so that this header can be used
@@ -376,4 +376,4 @@ _getLockInfo(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX 
 #endif /* DIRECT3D_VERSION >= 0x0900 */
 
 
-#endif /* _D3D_SIZE_HPP_ */
+#endif /* _D3D9SIZE_HPP_ */

@@ -14,6 +14,8 @@ set(qapitrace_SRCS
    jumpwidget.cpp
    mainwindow.cpp
    main.cpp
+   profiledialog.cpp
+   profiletablemodel.cpp
    retracer.cpp
    saverthread.cpp
    searchwidget.cpp
@@ -24,6 +26,14 @@ set(qapitrace_SRCS
    traceprocess.cpp
    trimprocess.cpp
    vertexdatainterpreter.cpp
+   graphing/frameaxiswidget.cpp
+   graphing/graphwidget.cpp
+   graphing/graphaxiswidget.cpp
+   graphing/graphview.cpp
+   graphing/heatmapview.cpp
+   graphing/heatmapverticalaxiswidget.cpp
+   graphing/histogramview.cpp
+   graphing/timeaxiswidget.cpp
  )
 
 qt4_automoc(${qapitrace_SRCS})
@@ -35,6 +45,8 @@ set(qapitrace_UIS
    ui/imageviewer.ui
    ui/jumpwidget.ui
    ui/mainwindow.ui
+   ui/profiledialog.ui
+   ui/profilereplaydialog.ui
    ui/retracerdialog.ui
    ui/settings.ui
    ui/tracedialog.ui
@@ -58,6 +70,11 @@ target_link_libraries (qapitrace
     ${QJSON_LIBRARIES}
     ${QT_LIBRARIES}
 )
+
+# Recent builds of Qt no longer support i386 architecture
+if (APPLE)
+    set_target_properties (qapitrace PROPERTIES OSX_ARCHITECTURES x86_64)
+endif ()
 
 ########### install files ###############
 

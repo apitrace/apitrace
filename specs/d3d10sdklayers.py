@@ -561,7 +561,7 @@ D3D10_MESSAGE = Struct("D3D10_MESSAGE", [
     (D3D10_MESSAGE_CATEGORY, "Category"),
     (D3D10_MESSAGE_SEVERITY, "Severity"),
     (D3D10_MESSAGE_ID, "ID"),
-    (Const(CString), "pDescription"),
+    (ConstCString, "pDescription"),
     (SIZE_T, "DescriptionByteLength"),
 ])
 

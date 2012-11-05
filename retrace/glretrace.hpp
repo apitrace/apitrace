@@ -32,12 +32,43 @@
 
 namespace glretrace {
 
+struct Context {
+    Context(glws::Context* context)
+        : wsContext(context),
+          drawable(0),
+          activeProgram(0),
+          used(false)
+    {
+    }
 
+    ~Context();
+
+    glws::Context* wsContext;
+
+    // Bound drawable
+    glws::Drawable *drawable;
+
+    GLuint activeProgram;
+    bool used;
+    
+    // Context must be current
+    inline bool
+    hasExtension(const char *extension) const {
+        return wsContext->hasExtension(extension);
+    }
+};
+
+extern bool insideList;
 extern bool insideGlBeginEnd;
 
 
-extern glws::Drawable *currentDrawable;
-extern glws::Context *currentContext;
+Context *
+getCurrentContext(void);
+
+
+int
+parseAttrib(const trace::Value *attribs, int param, int default_);
+
 
 glws::Drawable *
 createDrawable(glws::Profile profile);
@@ -45,14 +76,17 @@ createDrawable(glws::Profile profile);
 glws::Drawable *
 createDrawable(void);
 
-glws::Context *
-createContext(glws::Context *shareContext, glws::Profile profile);
+glws::Drawable *
+createPbuffer(int width, int height);
 
-glws::Context *
-createContext(glws::Context *shareContext = 0);
+Context *
+createContext(Context *shareContext, glws::Profile profile);
+
+Context *
+createContext(Context *shareContext = 0);
 
 bool
-makeCurrent(trace::Call &call, glws::Drawable *drawable, glws::Context *context);
+makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context);
 
 
 void
@@ -65,8 +99,14 @@ extern const retrace::Entry wgl_callbacks[];
 extern const retrace::Entry egl_callbacks[];
 
 void frame_complete(trace::Call &call);
+void initContext();
+
 
 void updateDrawable(int width, int height);
+
+void flushQueries();
+void beginProfile(trace::Call &call, bool isDraw);
+void endProfile(trace::Call &call, bool isDraw);
 
 } /* namespace glretrace */
 

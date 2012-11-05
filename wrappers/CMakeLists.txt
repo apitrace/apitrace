@@ -127,6 +127,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10trace.cpp
             DEPENDS
                 d3d10trace.py
+                d3dcommontrace.py
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
@@ -164,6 +165,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10_1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d10_1trace.cpp
             DEPENDS
                 d3d10_1trace.py
+                d3dcommontrace.py
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
@@ -177,7 +179,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d10_1trace MODULE d3d10_1.def d3d10_1trace.cpp)
+        add_library (d3d10_1trace MODULE d3d10_1.def d3d10_1trace.cpp d3d10shader.cpp)
         target_link_libraries (d3d10_1trace
             common_trace
             common
@@ -347,7 +349,6 @@ elseif (X11_FOUND)
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
-        ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
@@ -377,6 +378,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         egltrace.cpp
         glcaps.cpp
         gltrace_state.cpp
+        ${CMAKE_SOURCE_DIR}/helpers/eglsize.cpp
     )
 
     add_dependencies (egltrace glproc)

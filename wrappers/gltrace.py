@@ -141,6 +141,8 @@ class GlTracer(Tracer):
         print '}'
         print
 
+        self.defineShadowBufferHelper()
+
         # Whether we need user arrays
         print 'static inline bool _need_user_arrays(void)'
         print '{'
@@ -348,6 +350,52 @@ class GlTracer(Tracer):
             print
         else:
             Tracer.traceApi(self, api)
+
+    def defineShadowBufferHelper(self):
+        print 'void _shadow_glGetBufferSubData(GLenum target, GLintptr offset,'
+        print '                                GLsizeiptr size, GLvoid *data)'
+        print '{'
+        print '    struct gltrace::Context *ctx = gltrace::getContext();'
+        print '    if (!ctx->needsShadowBuffers() || target != GL_ELEMENT_ARRAY_BUFFER) {'
+        print '        _glGetBufferSubData(target, offset, size, data);'
+        print '        return;'
+        print '    }'
+        print
+        print '    GLint buffer_binding = 0;'
+        print '    _glGetIntegerv(target, &buffer_binding);'
+        print '    if (buffer_binding > 0) {'
+        print '        gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
+        print '        buf.getSubData(offset, size, data);'
+        print '    }'
+        print '}'
+
+    def shadowBufferMethod(self, method):
+        # Emit code to fetch the shadow buffer, and invoke a method
+        print '    gltrace::Context *ctx = gltrace::getContext();'
+        print '    if (ctx->needsShadowBuffers() && target == GL_ELEMENT_ARRAY_BUFFER) {'
+        print '        GLint buffer_binding = 0;'
+        print '        _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buffer_binding);'
+        print '        if (buffer_binding > 0) {'
+        print '            gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
+        print '            buf.' + method + ';'
+        print '        }'
+        print '    }'
+        print
+
+    def shadowBufferProlog(self, function):
+        if function.name == 'glBufferData':
+            self.shadowBufferMethod('bufferData(size, data)')
+
+        if function.name == 'glBufferSubData':
+            self.shadowBufferMethod('bufferSubData(offset, size, data)')
+
+        if function.name == 'glDeleteBuffers':
+            print '    gltrace::Context *ctx = gltrace::getContext();'
+            print '    if (ctx->needsShadowBuffers()) {'
+            print '        for (GLsizei i = 0; i < n; i++) {'
+            print '            ctx->buffers.erase(buffer[i]);'
+            print '        }'
+            print '    }'
 
     array_pointer_function_names = set((
         "glVertexPointer",
@@ -557,6 +605,7 @@ class GlTracer(Tracer):
             print '        _glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);'
             print '        if (map && size > 0) {'
             self.emit_memcpy('map', 'map', 'size')
+            self.shadowBufferMethod('bufferSubData(0, size, map)')
             print '        }'
             print '    }'
         if function.name == 'glUnmapNamedBufferEXT':
@@ -631,6 +680,8 @@ class GlTracer(Tracer):
             print '            }'
             print '        }'
             print '    }'
+
+        self.shadowBufferProlog(function)
 
         Tracer.traceFunctionImplBody(self, function)
 
@@ -1016,16 +1067,6 @@ class GlTracer(Tracer):
         function = api.getFunctionByName('glClientActiveTexture')
         self.fake_call(function, [texture])
 
-    def fake_call(self, function, args):
-        print '            unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
-        for arg, instance in zip(function.args, args):
-            assert not arg.output
-            print '            trace::localWriter.beginArg(%u);' % (arg.index,)
-            self.serializeValue(arg.type, instance)
-            print '            trace::localWriter.endArg();'
-        print '            trace::localWriter.endEnter();'
-        print '            trace::localWriter.beginLeave(_fake_call);'
-        print '            trace::localWriter.endLeave();'
 
 
 

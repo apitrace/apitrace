@@ -11,6 +11,8 @@ About **apitrace**
 
 * visualize and edit trace files.
 
+See the [apitrace homepage](http://apitrace.github.com/) for more details.
+
 
 Obtaining **apitrace**
 ======================
@@ -50,7 +52,9 @@ Replay an OpenGL trace with
     glretrace application.trace
 
 Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
-glretrace for more options.
+`glretrace` for more options.
+
+EGL traces must be replayed with `eglretrace` instead of `glretrace`.
 
 
 Basic GUI usage
@@ -110,22 +114,25 @@ or 32 bits.  This can be done by doing
 But beware of wrapper shell scripts -- what matters is the architecture of the
 main process.
 
-Run the application you want to trace as
+Run the GLX application you want to trace as
 
-     LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
+    LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
 
 and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
 `TRACE_FILE` environment variable before running.
 
-The `LD_PRELOAD` mechanism should work with most applications.  There are some
-applications, e.g., Unigine Heaven, which global function pointers with the
-same name as GL entrypoints, living in a shared object that wasn't linked with
-`-Bsymbolic` flag, so relocations to those globals function pointers get
-overwritten with the address to our wrapper library, and the application will
-segfault when trying to write to them.  For these applications it is possible
-to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
-`LD_LIBRARY_PATH`:
+For EGL applications you will need to use `egltrace.so` instead of
+`glxtrace.so`.
+
+The `LD_PRELOAD` mechanism should work with the majority applications.  There
+are some applications (e.g., Unigine Heaven, Android GPU emulator, etc.), that
+have global function pointers with the same name as GL entrypoints, living in a
+shared object that wasn't linked with `-Bsymbolic` flag, so relocations to
+those globals function pointers get overwritten with the address to our wrapper
+library, and the application will segfault when trying to write to them.  For
+these applications it is possible to trace by using `glxtrace.so` as an
+ordinary `libGL.so` and injecting it via `LD_LIBRARY_PATH`:
 
     ln -s glxtrace.so wrappers/libGL.so
     ln -s glxtrace.so wrappers/libGL.so.1
@@ -133,6 +140,9 @@ to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
     export LD_LIBRARY_PATH=/path/to/apitrace/wrappers:$LD_LIBRARY_PATH
     export TRACE_LIBGL=/path/to/real/libGL.so.1
     /path/to/application
+
+If you are an application developer, you can avoid this either by linking with
+`-Bsymbolic` flag, or by using some unique prefix for your function pointers.
 
 See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
@@ -148,49 +158,45 @@ Sandwitch:
 
 For standalone applications the instructions above for Linux should
 work. To trace applications started from within the Android VM process
-(app_process aka zygote) you'll have to wrap this process and enable
+(`app_process` aka zygote) you'll have to wrap this process and enable
 tracing dynamically for the application to be traced.
 
 - Wrapping the android main VM process:
 
-  In the Android root /init.rc add the LD_PRELOAD setting to zygote's
+  In the Android root /init.rc add the `LD_PRELOAD` setting to zygote's
   environment in the 'service zygote' section:
 
-  """
-  service zygote ...
-     setenv LD_PRELOAD /data/egltrace.so
-     ...
-  """
+        service zygote ...
+           setenv LD_PRELOAD /data/egltrace.so
+           ...
 
   Note that ICS will overwrite the /init.rc during each boot with the
   version in the recovery image. So you'll have to change the file in
   your ICS source tree, rebuild and reflash the device.
   Rebuilding/reflashing only the recovery image should be sufficient.
 
-
 - Copy egltrace.so to /data
 
   On the host:
-  $ adb push /path/to/apitrace/build/wrappers/egltrace.so /data
 
+        adb push /path/to/apitrace/build/wrappers/egltrace.so /data
 
 - Adjust file permissions to store the trace file:
 
   By default egltrace.so will store the trace in
-  /data/app_process.trace. For this to work for applications running
-  with a uid other than 0, you have to allow writes to the /data
+  `/data/app_process.trace`. For this to work for applications running
+  with a uid other than 0, you have to allow writes to the `/data`
   directory on the device:
 
-  # chmod 0777 /data
-
+        chmod 0777 /data
 
 - Enable tracing for a specific process name:
 
   To trace for example the Settings application:
-  # setprop debug.apitrace.procname com.android.settings
 
-  In general this name will match what 'ps' reports.
+        setprop debug.apitrace.procname com.android.settings
 
+  In general this name will match what `ps` reports.
 
 - Start the application:
 
@@ -198,7 +204,7 @@ tracing dynamically for the application to be traced.
   of pre-starting the apps, you might have to kill the application
   first:
 
-  # kill <pid of app>
+        kill <pid of app>
 
   Launch the application for example from the application menu.
 
@@ -276,8 +282,14 @@ From OpenGL ES applications you can embed annotations in the trace file through 
 extension.
 
 
-For Direct3D applications you can follow the same procedure used for 
-[instrumenting an application for PIX](http://technet.microsoft.com/en-us/query/ee417250)
+For Direct3D applications you can follow the standard procedure for
+[adding user defined events to Visual Studio Graphics Debugger / PIX](http://msdn.microsoft.com/en-us/library/vstudio/hh873200.aspx):
+
+- `D3DPERF_BeginEvent`, `D3DPERF_EndEvent`, and `D3DPERF_SetMarker` for D3D9 applications.
+
+- `ID3DUserDefinedAnnotation::BeginEvent`,
+  `ID3DUserDefinedAnnotation::EndEvent`, and
+  `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
 
 Dump GL state at a particular call
@@ -312,8 +324,8 @@ You can make a video of the output by doing
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
 
-Triming a trace
----------------
+Trimming a trace
+----------------
 
 You can make a smaller trace by doing:
 
@@ -322,6 +334,27 @@ You can make a smaller trace by doing:
 If you need precise control over which calls to trim you can specify the
 individual call numbers a plaintext file, as described in the 'Call sets'
 section above.
+
+
+Profiling a trace
+-----------------
+
+You can perform gpu and cpu profiling with the command line options:
+
+ * `-pgpu` record gpu times for frames and draw calls.
+
+ * `-pcpu` record cpu times for frames and draw calls.
+
+ * `-ppd` record pixels drawn for each draw call.
+
+The results from this can then be read by hand or analysed with a script.
+
+`scripts/profileshader.py` will read the profile results and format them into a
+table which displays profiling results per shader.
+
+For example, to record all profiling data and utilise the per shader script:
+
+    ./glretrace -pgpu -pcpu -ppd foo.trace | ./scripts/profileshader.py
 
 
 Advanced usage for OpenGL implementors
@@ -435,60 +468,4 @@ Or on Windows:
     python scripts\retracediff.py --retrace \path\to\glretrace.exe --ref-env TRACE_LIBGL=\path\to\reference\opengl32.dll application.trace
 
 
-Links
-=====
-
-About **apitrace**:
-
-* [Official mailing list](http://lists.freedesktop.org/mailman/listinfo/apitrace)
-
-* [Zack Rusin's blog introducing the GUI](http://zrusin.blogspot.com/2011/04/apitrace.html)
-
-* [Jose's Fonseca blog introducing the tool](http://jrfonseca.blogspot.com/2008/07/tracing-d3d-applications.html)
-
-
-Direct3D
---------
-
-Open-source:
-
-* [Proxy DLL](http://www.mikoweb.eu/index.php?node=21)
-
-  * [Intercept Calls to DirectX with a Proxy DLL](http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/)
-
-* [Direct3D 9 API Interceptor](http://graphics.stanford.edu/~mdfisher/D3D9Interceptor.html)
-
-Closed-source:
-
-* [Microsoft PIX](http://msdn.microsoft.com/en-us/library/ee417062.aspx)
-
-  * [D3DSpy](http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm): the predecessor of PIX
-
-* [NVIDIA PerfKit](http://developer.nvidia.com/nvidia-perfkit)
-
-* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
-
-* [Intel Graphics Performance Analyzers](http://www.intel.com/software/gpa/)
-
-
-OpenGL
-------
-
-Open-source:
-
-* [BuGLe](http://www.opengl.org/sdk/tools/BuGLe/)
-
-* [GLIntercept](http://code.google.com/p/glintercept/)
-
-* [tracy](https://gitorious.org/tracy): OpenGL ES and OpenVG trace, retrace, and state inspection
-
-* [WebGL-Inspector](http://benvanik.github.com/WebGL-Inspector/)
-
-Closed-source:
-
-* [gDEBugger](http://www.gremedy.com/products.php) and [AMD gDEBugger](http://developer.amd.com/tools/gDEBugger/Pages/default.aspx)
-
-* [glslDevil](http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html)
-
-* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
-
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1062ad633aa7a458e9d7520021307e4 "githalytics.com")](http://githalytics.com/apitrace/apitrace)

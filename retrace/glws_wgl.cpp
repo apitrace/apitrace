@@ -100,8 +100,8 @@ public:
     PIXELFORMATDESCRIPTOR pfd;
     int iPixelFormat;
 
-    WglDrawable(const Visual *vis, int width, int height) :
-        Drawable(vis, width, height)
+    WglDrawable(const Visual *vis, int width, int height, bool pbuffer) :
+        Drawable(vis, width, height, pbuffer)
     {
         static bool first = TRUE;
         RECT rect;
@@ -243,6 +243,34 @@ public:
             wglDeleteContext(hglrc);
         }
     }
+
+    bool
+    create(WglDrawable *wglDrawable) {
+        if (!hglrc) {
+            hglrc = wglCreateContext(wglDrawable->hDC);
+            if (!hglrc) {
+                std::cerr << "error: wglCreateContext failed\n";
+                exit(1);
+                return false;
+            }
+            if (shareContext) {
+                if (shareContext->create(wglDrawable)) {
+                    BOOL bRet;
+                    bRet = wglShareLists(shareContext->hglrc,
+                                         hglrc);
+                    if (!bRet) {
+                        std::cerr
+                            << "warning: wglShareLists failed: "
+                            << std::hex << GetLastError() << std::dec
+                            << "\n";
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
 };
 
 
@@ -275,7 +303,8 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
-    if (profile != PROFILE_COMPAT) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
         return NULL;
     }
 
@@ -287,16 +316,21 @@ createVisual(bool doubleBuffer, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height)
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new WglDrawable(visual, width, height);
+    return new WglDrawable(visual, width, height, pbuffer);
 }
 
 Context *
 createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
 {
-    if (profile != PROFILE_COMPAT) {
+    if (profile != PROFILE_COMPAT &&
+        profile != PROFILE_CORE) {
         return NULL;
+    }
+
+    if (profile == PROFILE_CORE) {
+        std::cerr << "warning: ignoring OpenGL core profile request\n";
     }
 
     return new WglContext(visual, profile, static_cast<WglContext *>(shareContext));
@@ -311,22 +345,7 @@ makeCurrent(Drawable *drawable, Context *context)
         WglDrawable *wglDrawable = static_cast<WglDrawable *>(drawable);
         WglContext *wglContext = static_cast<WglContext *>(context);
 
-        if (!wglContext->hglrc) {
-            wglContext->hglrc = wglCreateContext(wglDrawable->hDC);
-            if (!wglContext->hglrc) {
-                std::cerr << "error: wglCreateContext failed\n";
-                exit(1);
-                return false;
-            }
-            if (wglContext->shareContext) {
-                BOOL bRet;
-                bRet = wglShareLists(wglContext->shareContext->hglrc,
-                                     wglContext->hglrc);
-                if (!bRet) {
-                    std::cerr << "warning: wglShareLists failed\n";
-                }
-            }
-        }
+        wglContext->create(wglDrawable);
 
         return wglMakeCurrent(wglDrawable->hDC, wglContext->hglrc);
     }

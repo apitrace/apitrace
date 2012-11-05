@@ -270,9 +270,9 @@ glxapi.addFunctions([
     Function(Void, "glXUseXFont", [(Font, "font"), (Int, "first"), (Int, "count"), (Int, "list")]),
 
     # GLX 1.1 and later
-    Function((Const(String("char *"))), "glXQueryExtensionsString", [(Display, "dpy"), (Int, "screen")]),
-    Function((Const(String("char *"))), "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (GLXname, "name")]),
-    Function((Const(String("char *"))), "glXGetClientString", [(Display, "dpy"), (GLXname, "name")]),
+    Function((ConstCString), "glXQueryExtensionsString", [(Display, "dpy"), (Int, "screen")], sideeffects=False),
+    Function((ConstCString), "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (GLXname, "name")], sideeffects=False),
+    Function((ConstCString), "glXGetClientString", [(Display, "dpy"), (GLXname, "name")], sideeffects=False),
 
     # GLX 1.2 and later
     Function(Display, "glXGetCurrentDisplay", [], sideeffects=False),
@@ -385,7 +385,7 @@ glxapi.addFunctions([
 
     # GLX_MESA_swap_control
     Function(Int, "glXSwapIntervalMESA", [(UInt, "interval")]),
-    Function(Int, "glXGetSwapIntervalMESA", []),
+    Function(Int, "glXGetSwapIntervalMESA", [], sideeffects=False),
 
     # GLX_OML_sync_control
     Function(Bool, "glXGetSyncValuesOML", [(Display, "dpy"), (GLXDrawable, "drawable"), (OpaquePointer(Int64), "ust"), (OpaquePointer(Int64), "msc"), (OpaquePointer(Int64), "sbc")]),
@@ -449,8 +449,8 @@ glxapi.addFunctions([
     Function(Void, "glXFreeMemoryNV", [(OpaquePointer(Void), "pointer")]),
 
     # Must be last
-    Function(PROC, "glXGetProcAddressARB", [(Alias("const GLubyte *", CString), "procName")]),
-    Function(PROC, "glXGetProcAddress", [(Alias("const GLubyte *", CString), "procName")]),
+    Function(PROC, "glXGetProcAddressARB", [(String(Const(GLubyte)), "procName")]),
+    Function(PROC, "glXGetProcAddress", [(String(Const(GLubyte)), "procName")]),
 ])
 
 
