@@ -158,7 +158,7 @@ ID3D11ShaderReflectionVariable.methods += [
 ]
 
 ID3D11ShaderReflectionConstantBuffer.methods += [
-    StdMethod(HRESULT, "GetDesc", [(Pointer(D3D11_SHADER_BUFFER_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_BUFFER_DESC), "pDesc")]),
     StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), "GetVariableByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), "GetVariableByName", [(LPCSTR, "Name")]),
 ]

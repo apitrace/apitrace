@@ -130,7 +130,7 @@ D3D10_SIGNATURE_PARAMETER_DESC = Struct("D3D10_SIGNATURE_PARAMETER_DESC", [
 
 ID3D10ShaderReflectionType = Interface("ID3D10ShaderReflectionType")
 ID3D10ShaderReflectionType.methods += [
-    StdMethod(HRESULT, "GetDesc", [(Pointer(D3D10_SHADER_TYPE_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D10_SHADER_TYPE_DESC), "pDesc")]),
     StdMethod(ObjPointer(ID3D10ShaderReflectionType), "GetMemberTypeByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D10ShaderReflectionType), "GetMemberTypeByName", [(LPCSTR, "Name")]),
     StdMethod(LPCSTR, "GetMemberTypeName", [(UINT, "Index")]),

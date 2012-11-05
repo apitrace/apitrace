@@ -136,7 +136,7 @@ D3D10_EFFECT_TYPE_DESC = Struct("D3D10_EFFECT_TYPE_DESC", [
 
 ID3D10EffectType.methods += [
     StdMethod(BOOL, "IsValid", []),
-    StdMethod(HRESULT, "GetDesc", [(Pointer(D3D10_EFFECT_TYPE_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D10_EFFECT_TYPE_DESC), "pDesc")]),
     StdMethod(ObjPointer(ID3D10EffectType), "GetMemberTypeByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D10EffectType), "GetMemberTypeByName", [(LPCSTR, "Name")]),
     StdMethod(ObjPointer(ID3D10EffectType), "GetMemberTypeBySemantic", [(LPCSTR, "Semantic")]),
@@ -200,26 +200,26 @@ ID3D10EffectVectorVariable.methods += [
     StdMethod(HRESULT, "SetBoolVector", [(Pointer(BOOL), "pData")]),
     StdMethod(HRESULT, "SetIntVector", [(Pointer(Int), "pData")]),
     StdMethod(HRESULT, "SetFloatVector", [(Pointer(Float), "pData")]),
-    StdMethod(HRESULT, "GetBoolVector", [(Pointer(BOOL), "pData")]),
-    StdMethod(HRESULT, "GetIntVector", [(Pointer(Int), "pData")]),
-    StdMethod(HRESULT, "GetFloatVector", [(Pointer(Float), "pData")]),
+    StdMethod(HRESULT, "GetBoolVector", [Out(Pointer(BOOL), "pData")]),
+    StdMethod(HRESULT, "GetIntVector", [Out(Pointer(Int), "pData")]),
+    StdMethod(HRESULT, "GetFloatVector", [Out(Pointer(Float), "pData")]),
     StdMethod(HRESULT, "SetBoolVectorArray", [(Pointer(BOOL), "pData"), (UINT, "Offset"), (UINT, "Count")]),
     StdMethod(HRESULT, "SetIntVectorArray", [(Pointer(Int), "pData"), (UINT, "Offset"), (UINT, "Count")]),
     StdMethod(HRESULT, "SetFloatVectorArray", [(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
-    StdMethod(HRESULT, "GetBoolVectorArray", [(Pointer(BOOL), "pData"), (UINT, "Offset"), (UINT, "Count")]),
-    StdMethod(HRESULT, "GetIntVectorArray", [(Pointer(Int), "pData"), (UINT, "Offset"), (UINT, "Count")]),
-    StdMethod(HRESULT, "GetFloatVectorArray", [(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
+    StdMethod(HRESULT, "GetBoolVectorArray", [Out(Pointer(BOOL), "pData"), (UINT, "Offset"), (UINT, "Count")]),
+    StdMethod(HRESULT, "GetIntVectorArray", [Out(Pointer(Int), "pData"), (UINT, "Offset"), (UINT, "Count")]),
+    StdMethod(HRESULT, "GetFloatVectorArray", [Out(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
 ]
 
 ID3D10EffectMatrixVariable.methods += [
     StdMethod(HRESULT, "SetMatrix", [(Pointer(Float), "pData")]),
-    StdMethod(HRESULT, "GetMatrix", [(Pointer(Float), "pData")]),
+    StdMethod(HRESULT, "GetMatrix", [Out(Pointer(Float), "pData")]),
     StdMethod(HRESULT, "SetMatrixArray", [(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
-    StdMethod(HRESULT, "GetMatrixArray", [(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
+    StdMethod(HRESULT, "GetMatrixArray", [Out(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
     StdMethod(HRESULT, "SetMatrixTranspose", [(Pointer(Float), "pData")]),
-    StdMethod(HRESULT, "GetMatrixTranspose", [(Pointer(Float), "pData")]),
+    StdMethod(HRESULT, "GetMatrixTranspose", [Out(Pointer(Float), "pData")]),
     StdMethod(HRESULT, "SetMatrixTransposeArray", [(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
-    StdMethod(HRESULT, "GetMatrixTransposeArray", [(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
+    StdMethod(HRESULT, "GetMatrixTransposeArray", [Out(Pointer(Float), "pData"), (UINT, "Offset"), (UINT, "Count")]),
 ]
 
 ID3D10EffectStringVariable.methods += [
@@ -275,8 +275,8 @@ ID3D10EffectShaderVariable.methods += [
 ]
 
 ID3D10EffectBlendVariable.methods += [
-    StdMethod(HRESULT, "GetBlendState", [(UINT, "Index"), (Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState")]),
-    StdMethod(HRESULT, "GetBackingStore", [(UINT, "Index"), (Pointer(D3D10_BLEND_DESC), "pBlendDesc")]),
+    StdMethod(HRESULT, "GetBlendState", [(UINT, "Index"), Out(Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState")]),
+    StdMethod(HRESULT, "GetBackingStore", [(UINT, "Index"), Out(Pointer(D3D10_BLEND_DESC), "pBlendDesc")]),
 ]
 
 ID3D10EffectDepthStencilVariable.methods += [
@@ -311,10 +311,10 @@ D3D10_PASS_SHADER_DESC = Struct("D3D10_PASS_SHADER_DESC", [
 
 ID3D10EffectPass.methods += [
     StdMethod(BOOL, "IsValid", []),
-    StdMethod(HRESULT, "GetDesc", [(Pointer(D3D10_PASS_DESC), "pDesc")]),
-    StdMethod(HRESULT, "GetVertexShaderDesc", [(Pointer(D3D10_PASS_SHADER_DESC), "pDesc")]),
-    StdMethod(HRESULT, "GetGeometryShaderDesc", [(Pointer(D3D10_PASS_SHADER_DESC), "pDesc")]),
-    StdMethod(HRESULT, "GetPixelShaderDesc", [(Pointer(D3D10_PASS_SHADER_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D10_PASS_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetVertexShaderDesc", [Out(Pointer(D3D10_PASS_SHADER_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetGeometryShaderDesc", [Out(Pointer(D3D10_PASS_SHADER_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetPixelShaderDesc", [Out(Pointer(D3D10_PASS_SHADER_DESC), "pDesc")]),
     StdMethod(ObjPointer(ID3D10EffectVariable), "GetAnnotationByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D10EffectVariable), "GetAnnotationByName", [(LPCSTR, "Name")]),
     StdMethod(HRESULT, "Apply", [(UINT, "Flags")]),
@@ -329,7 +329,7 @@ D3D10_TECHNIQUE_DESC = Struct("D3D10_TECHNIQUE_DESC", [
 
 ID3D10EffectTechnique.methods += [
     StdMethod(BOOL, "IsValid", []),
-    StdMethod(HRESULT, "GetDesc", [(Pointer(D3D10_TECHNIQUE_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D10_TECHNIQUE_DESC), "pDesc")]),
     StdMethod(ObjPointer(ID3D10EffectVariable), "GetAnnotationByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D10EffectVariable), "GetAnnotationByName", [(LPCSTR, "Name")]),
     StdMethod(ObjPointer(ID3D10EffectPass), "GetPassByIndex", [(UINT, "Index")]),
