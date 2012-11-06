@@ -282,7 +282,7 @@ DXVA2_DECODEBUFFERDESC = Struct("DXVA2_DECODEBUFFERDESC", [
 
 DXVA2_DECODEEXECUTE = Struct("DXVA2_DECODEEXECUTE", [
     (UINT, "NumCompBuffers"),
-    (Array(DXVA2_DECODEBUFFERDESC, "_NumCompBuffers"), "pCompressedBuffers"),
+    (Array(DXVA2_DECODEBUFFERDESC, "{self}.NumCompBuffers"), "pCompressedBuffers"),
 ])
 
 DXVA2_VIDEOSAMPLE = Struct("DXVA2_VIDEOSAMPLE", [
@@ -311,7 +311,7 @@ DXVA2_VIDEOPROCESSBLT = Struct("DXVA2_VIDEOPROCESSBLT", [
     (DXVA2_FilterValues, "NoiseFilterChroma"),
     (DXVA2_FilterValues, "DetailFilterLuma"),
     (DXVA2_FilterValues, "DetailFilterChroma"),
-    (Array(DXVA2_VIDEOSAMPLE, "_NumSrcSurfaces"), "pSrcSurfaces"),
+    (Array(DXVA2_VIDEOSAMPLE, "{self}.NumSrcSurfaces"), "pSrcSurfaces"),
     (UINT, "NumSrcSurfaces"),
 ])
 

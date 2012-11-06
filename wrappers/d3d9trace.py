@@ -55,12 +55,6 @@ class D3D9Tracer(DllTracer):
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        if method.name == 'DecodeExecute':
-            print r'    _NumCompBuffers = pExecuteParams->NumCompBuffers;'
-
-        if method.name == 'VideoProcessBlt':
-            print r'    _NumSrcSurfaces = pData->NumSrcSurfaces;'
-
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    if (_LockedSize && m_pbData) {'
             self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
@@ -99,9 +93,6 @@ _declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
     }
     return count;
 }
-
-static UINT _NumCompBuffers = 0; /* XXX */
-static UINT _NumSrcSurfaces = 0; /* XXX */
 '''
     tracer = D3D9Tracer('d3d9.dll')
     tracer.traceApi(d3d9)
