@@ -56,46 +56,64 @@ typedef HRESULT
     ID3DBlob **ppDisassembly
 );
 
-
-static HMODULE hD3DCompilerModule = NULL;
 static PFND3DDISASSEMBLE pfnD3DDisassemble = NULL;
 
+typedef HRESULT
+(WINAPI *PFND3D10DISASSEMBLESHADER)(
+    const void *pShader,
+    SIZE_T BytecodeLength,
+    BOOL EnableColorCode,
+    LPCSTR pComments,
+    ID3D10Blob **ppDisassembly
+);
+
+static PFND3D10DISASSEMBLESHADER pfnD3D10DisassembleShader = NULL;
 
 void DumpShader(trace::Writer &writer, const void *pShaderBytecode, SIZE_T BytecodeLength)
 {
-    static BOOL firsttime = TRUE;
+    static bool firsttime = true;
 
     if (firsttime) {
-        if (!hD3DCompilerModule) {
-            int version;
-            for (version = 44; version >= 33; --version) {
-                char filename[256];
-                _snprintf(filename, sizeof(filename), "d3dcompiler_%u.dll", version);
-                hD3DCompilerModule = LoadLibraryA(filename);
-                if (hD3DCompilerModule) {
+        char szFilename[MAX_PATH];
+        HMODULE hModule = NULL;
+
+        int version;
+        for (version = 44; version >= 33; --version) {
+            _snprintf(szFilename, sizeof(szFilename), "d3dcompiler_%i.dll", version);
+            hModule = LoadLibraryA(szFilename);
+            if (hModule) {
+                pfnD3DDisassemble = (PFND3DDISASSEMBLE)
+                    GetProcAddress(hModule, "D3DDisassemble");
+                if (pfnD3DDisassemble) {
                     break;
                 }
             }
         }
 
-        if (hD3DCompilerModule) {
-            if (!pfnD3DDisassemble) {
-                pfnD3DDisassemble = (PFND3DDISASSEMBLE)GetProcAddress(hD3DCompilerModule, "D3DDisassemble");
+        if (!pfnD3DDisassemble) {
+            /*
+             * Fallback to D3D10DisassembleShader, which should be always present.
+             */
+            if (GetSystemDirectoryA(szFilename, MAX_PATH)) {
+                strcat(szFilename, "\\d3d10.dll");
+                hModule = LoadLibraryA(szFilename);
+                if (hModule) {
+                    pfnD3D10DisassembleShader = (PFND3D10DISASSEMBLESHADER)
+                        GetProcAddress(hModule, "D3D10DisassembleShader");
+                }
             }
         }
 
-        firsttime = FALSE;
+        firsttime = false;
     }
-
-    /*
-     * TODO: Fallback to D3D10DisassembleShader, which should be always present.
-     */
 
     LPD3DBLOB pDisassembly = NULL;
     HRESULT hr = E_FAIL;
 
     if (pfnD3DDisassemble) {
         hr = pfnD3DDisassemble(pShaderBytecode, BytecodeLength, 0, NULL, &pDisassembly);
+    } else if (pfnD3D10DisassembleShader) {
+        hr = pfnD3D10DisassembleShader(pShaderBytecode, BytecodeLength, 0, NULL, &pDisassembly);
     }
 
     if (SUCCEEDED(hr)) {
