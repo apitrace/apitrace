@@ -456,7 +456,7 @@ ID3D11RasterizerState.methods += [
 ]
 
 D3D11_SUBRESOURCE_DATA = Struct("D3D11_SUBRESOURCE_DATA", [
-    (OpaquePointer(Const(Void)), "pSysMem"),
+    (Blob(Const(Void), "_calcSubresourceSize(pDesc, {i}, {self}.SysMemPitch, {self}.SysMemSlicePitch)"), "pSysMem"),
     (UINT, "SysMemPitch"),
     (UINT, "SysMemSlicePitch"),
 ])
@@ -1171,10 +1171,10 @@ D3D11_CREATE_DEVICE_FLAG = Flags(UINT, [
 ])
 
 ID3D11Device.methods += [
-    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D11_BUFFER_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Buffer)), "ppBuffer")]),
-    StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D11_TEXTURE1D_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture1D)), "ppTexture1D")]),
-    StdMethod(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D11_TEXTURE2D_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D)), "ppTexture2D")]),
-    StdMethod(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D11_TEXTURE3D_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture3D)), "ppTexture3D")]),
+    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D11_BUFFER_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "1"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Buffer)), "ppBuffer")]),
+    StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D11_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture1D)), "ppTexture1D")]),
+    StdMethod(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D11_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D)), "ppTexture2D")]),
+    StdMethod(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D11_TEXTURE3D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture3D)), "ppTexture3D")]),
     StdMethod(HRESULT, "CreateShaderResourceView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_SHADER_RESOURCE_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11ShaderResourceView)), "ppSRView")]),
     StdMethod(HRESULT, "CreateUnorderedAccessView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_UNORDERED_ACCESS_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11UnorderedAccessView)), "ppUAView")]),
     StdMethod(HRESULT, "CreateRenderTargetView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_RENDER_TARGET_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11RenderTargetView)), "ppRTView")]),
