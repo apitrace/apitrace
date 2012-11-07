@@ -353,6 +353,9 @@ void Retracer::run()
 
             bool ok = false;
             QJson::Parser jsonParser;
+
+            // Allow Nan/Infinity
+            jsonParser.allowSpecialNumbers(true);
 #if 0
             parsedJson = jsonParser.parse(&io, &ok).toMap();
 #else

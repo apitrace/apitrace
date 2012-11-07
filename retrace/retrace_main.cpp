@@ -29,6 +29,7 @@
 
 #include "os_binary.hpp"
 #include "os_time.hpp"
+#include "os_thread.hpp"
 #include "image.hpp"
 #include "trace_callset.hpp"
 #include "trace_dump.hpp"
@@ -43,6 +44,8 @@ static trace::CallSet snapshotFrequency;
 static trace::CallSet compareFrequency;
 
 static unsigned dumpStateCallNo = ~0;
+
+retrace::Retracer retracer;
 
 
 namespace retrace {
@@ -74,6 +77,9 @@ frameComplete(trace::Call &call) {
 }
 
 
+/**
+ * Take/compare snapshots.
+ */
 static void
 takeSnapshot(unsigned call_no) {
     assert(snapshotPrefix || comparePrefix);
@@ -120,56 +126,342 @@ takeSnapshot(unsigned call_no) {
 }
 
 
+/**
+ * Retrace one call.
+ *
+ * Take snapshots before/after retracing (as appropriate) and dispatch it to
+ * the respective handler.
+ */
+static void
+retraceCall(trace::Call *call) {
+    bool swapRenderTarget = call->flags &
+        trace::CALL_FLAG_SWAP_RENDERTARGET;
+    bool doSnapshot = snapshotFrequency.contains(*call) ||
+        compareFrequency.contains(*call);
+
+    // For calls which cause rendertargets to be swaped, we take the
+    // snapshot _before_ swapping the rendertargets.
+    if (doSnapshot && swapRenderTarget) {
+        if (call->flags & trace::CALL_FLAG_END_FRAME) {
+            // For swapbuffers/presents we still use this
+            // call number, spite not have been executed yet.
+            takeSnapshot(call->no);
+        } else {
+            // Whereas for ordinate fbo/rendertarget changes we
+            // use the previous call's number.
+            takeSnapshot(call->no - 1);
+        }
+    }
+
+    callNo = call->no;
+    retracer.retrace(*call);
+
+    if (doSnapshot && !swapRenderTarget)
+        takeSnapshot(call->no);
+
+    if (call->no >= dumpStateCallNo &&
+        dumpState(std::cout)) {
+        exit(0);
+    }
+}
+
+
+class RelayRunner;
+
+
+/**
+ * Implement multi-threading by mimicking a relay race.
+ */
+class RelayRace
+{
+private:
+    /**
+     * Runners indexed by the leg they run (i.e, the thread_ids from the
+     * trace).
+     */
+    std::vector<RelayRunner*> runners;
+
+public:
+    RelayRace();
+
+    ~RelayRace();
+
+    RelayRunner *
+    getRunner(unsigned leg);
+
+    inline RelayRunner *
+    getForeRunner() {
+        return getRunner(0);
+    }
+
+    void
+    run(void);
+
+    void
+    passBaton(trace::Call *call);
+
+    void
+    finishLine();
+
+    void
+    stopRunners();
+};
+
+
+/**
+ * Each runner is a thread.
+ *
+ * The fore runner doesn't have its own thread, but instead uses the thread
+ * where the race started.
+ */
+class RelayRunner
+{
+private:
+    friend class RelayRace;
+
+    RelayRace *race;
+
+    unsigned leg;
+    
+    os::mutex mutex;
+    os::condition_variable wake_cond;
+
+    /**
+     * There are protected by the mutex.
+     */
+    bool finished;
+    trace::Call *baton;
+
+    os::thread thread;
+
+    static void *
+    runnerThread(RelayRunner *_this);
+
+public:
+    RelayRunner(RelayRace *race, unsigned _leg) :
+        race(race),
+        leg(_leg),
+        finished(false),
+        baton(0)
+    {
+        /* The fore runner does not need a new thread */
+        if (leg) {
+            thread = os::thread(runnerThread, this);
+        }
+    }
+
+    /**
+     * Thread main loop.
+     */
+    void
+    runRace(void) {
+        os::unique_lock<os::mutex> lock(mutex);
+
+        while (1) {
+            while (!finished && !baton) {
+                wake_cond.wait(lock);
+            }
+
+            if (finished) {
+                break;
+            }
+
+            assert(baton);
+            trace::Call *call = baton;
+            baton = 0;
+
+            runLeg(call);
+        }
+
+        if (0) std::cerr << "leg " << leg << " actually finishing\n";
+
+        if (leg == 0) {
+            race->stopRunners();
+        }
+    }
+
+    /**
+     * Interpret successive calls.
+     */
+    void
+    runLeg(trace::Call *call) {
+        /* Consume successive calls for this thread. */
+        do {
+            assert(call);
+            assert(call->thread_id == leg);
+            retraceCall(call);
+            delete call;
+            call = parser.parse_call();
+        } while (call && call->thread_id == leg);
+
+        if (call) {
+            /* Pass the baton */
+            assert(call->thread_id != leg);
+            flushRendering();
+            race->passBaton(call);
+        } else {
+            /* Reached the finish line */
+            if (0) std::cerr << "finished on leg " << leg << "\n";
+            if (leg) {
+                /* Notify the fore runner */
+                race->finishLine();
+            } else {
+                /* We are the fore runner */
+                finished = true;
+            }
+        }
+    }
+
+    /**
+     * Called by other threads when relinquishing the baton.
+     */
+    void
+    receiveBaton(trace::Call *call) {
+        assert (call->thread_id == leg);
+
+        mutex.lock();
+        baton = call;
+        mutex.unlock();
+
+        wake_cond.signal();
+    }
+
+    /**
+     * Called by the fore runner when the race is over.
+     */
+    void
+    finishRace() {
+        if (0) std::cerr << "notify finish to leg " << leg << "\n";
+
+        mutex.lock();
+        finished = true;
+        mutex.unlock();
+
+        wake_cond.signal();
+    }
+};
+
+
+void *
+RelayRunner::runnerThread(RelayRunner *_this) {
+    _this->runRace();
+    return 0;
+}
+
+
+RelayRace::RelayRace() {
+    runners.push_back(new RelayRunner(this, 0));
+}
+
+
+RelayRace::~RelayRace() {
+    assert(runners.size() >= 1);
+    std::vector<RelayRunner*>::const_iterator it;
+    for (it = runners.begin(); it != runners.end(); ++it) {
+        RelayRunner* runner = *it;
+        if (runner) {
+            delete runner;
+        }
+    }
+}
+
+
+/**
+ * Get (or instantiate) a runner for the specified leg.
+ */
+RelayRunner *
+RelayRace::getRunner(unsigned leg) {
+    RelayRunner *runner;
+
+    if (leg >= runners.size()) {
+        runners.resize(leg + 1);
+        runner = 0;
+    } else {
+        runner = runners[leg];
+    }
+    if (!runner) {
+        runner = new RelayRunner(this, leg);
+        runners[leg] = runner;
+    }
+    return runner;
+}
+
+
+/**
+ * Start the race.
+ */
+void
+RelayRace::run(void) {
+    trace::Call *call;
+    call = parser.parse_call();
+    if (!call) {
+        /* Nothing to do */
+        return;
+    }
+
+    RelayRunner *foreRunner = getForeRunner();
+    if (call->thread_id == 0) {
+        /* We are the forerunner thread, so no need to pass baton */
+        foreRunner->baton = call;
+    } else {
+        passBaton(call);
+    }
+
+    /* Start the forerunner thread */
+    foreRunner->runRace();
+}
+
+
+/**
+ * Pass the baton (i.e., the call) to the appropriate thread.
+ */
+void
+RelayRace::passBaton(trace::Call *call) {
+    if (0) std::cerr << "switching to thread " << call->thread_id << "\n";
+    RelayRunner *runner = getRunner(call->thread_id);
+    runner->receiveBaton(call);
+}
+
+
+/**
+ * Called when a runner other than the forerunner reaches the finish line.
+ *
+ * Only the fore runner can finish the race, so inform him that the race is
+ * finished.
+ */
+void
+RelayRace::finishLine(void) {
+    RelayRunner *foreRunner = getForeRunner();
+    foreRunner->finishRace();
+}
+
+
+/**
+ * Called by the fore runner after finish line to stop all other runners.
+ */
+void
+RelayRace::stopRunners(void) {
+    std::vector<RelayRunner*>::const_iterator it;
+    for (it = runners.begin() + 1; it != runners.end(); ++it) {
+        RelayRunner* runner = *it;
+        if (runner) {
+            runner->finishRace();
+        }
+    }
+}
+
+
 static void
 mainLoop() {
-    retrace::Retracer retracer;
-
     addCallbacks(retracer);
 
     long long startTime = 0; 
     frameNo = 0;
 
     startTime = os::getTime();
-    trace::Call *call;
 
-    while ((call = retrace::parser.parse_call())) {
-        bool swapRenderTarget = call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET;
-        bool doSnapshot =
-            snapshotFrequency.contains(*call) ||
-            compareFrequency.contains(*call)
-        ;
-
-        // For calls which cause rendertargets to be swaped, we take the
-        // snapshot _before_ swapping the rendertargets.
-        if (doSnapshot && swapRenderTarget) {
-            if (call->flags & trace::CALL_FLAG_END_FRAME) {
-                // For swapbuffers/presents we still use this call number,
-                // spite not have been executed yet.
-                takeSnapshot(call->no);
-            } else {
-                // Whereas for ordinate fbo/rendertarget changes we use the
-                // previous call's number.
-                takeSnapshot(call->no - 1);
-            }
-        }
-
-        callNo = call->no;
-        retracer.retrace(*call);
-
-        if (doSnapshot && !swapRenderTarget) {
-            takeSnapshot(call->no);
-        }
-
-        if (call->no >= dumpStateCallNo &&
-            dumpState(std::cout)) {
-            exit(0);
-        }
-
-        delete call;
-    }
-
-    // Reached the end of trace
-    flushRendering();
+    RelayRace race;
+    race.run();
 
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);

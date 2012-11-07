@@ -33,21 +33,49 @@
  * - http://developer.apple.com/library/mac/#samplecode/glut/Introduction/Intro.html
  * - http://developer.apple.com/library/mac/#samplecode/GLEssentials/Introduction/Intro.html
  * - http://www.glfw.org/
+ * - http://cocoasamurai.blogspot.co.uk/2008/04/guide-to-threading-on-leopard.html
+ * - http://developer.apple.com/library/ios/#documentation/Cocoa/Conceptual/Multithreading/Introduction/Introduction.html
  */
 
 
+#include "glproc.hpp"
+
 #include <stdlib.h>
 #include <iostream>
+
+#include <dlfcn.h>
 
 #include <Cocoa/Cocoa.h>
 
 #include "glws.hpp"
 
 
+/**
+ * Dummy thread to force Cocoa to enter multithreading mode.
+ */
+@interface DummyThread : NSObject
+    + (void)enterMultiThreaded;
+    + (void)dummyThreadMethod:(id)unused;
+@end
+
+@implementation DummyThread
+    + (void)dummyThreadMethod:(id)unused {
+        (void)unused;
+    }
+
+    + (void)enterMultiThreaded {
+        [NSThread detachNewThreadSelector:@selector(dummyThreadMethod:)
+                  toTarget:self
+                  withObject:nil];
+    }
+@end
+
+
 namespace glws {
 
 
-NSAutoreleasePool *autoreleasePool = nil;
+static __thread NSAutoreleasePool *
+autoreleasePool = nil;
 
 
 class CocoaVisual : public Visual
@@ -69,10 +97,11 @@ class CocoaDrawable : public Drawable
 {
 public:
     NSWindow *window;
+    NSOpenGLView *view;
     NSOpenGLContext *currentContext;
 
-    CocoaDrawable(const Visual *vis, int w, int h) :
-        Drawable(vis, w, h),
+    CocoaDrawable(const Visual *vis, int w, int h, bool pbuffer) :
+        Drawable(vis, w, h, pbuffer),
         currentContext(nil)
     {
         NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
@@ -88,9 +117,9 @@ public:
                                        defer:NO];
         assert(window != nil);
 
-        NSOpenGLView *view = [[NSOpenGLView alloc]
-                              initWithFrame:winRect
-                                pixelFormat:pixelFormat];
+        view = [[NSOpenGLView alloc]
+                initWithFrame:winRect
+                  pixelFormat:pixelFormat];
         assert(view != nil);
 
         [window setContentView:view];
@@ -113,7 +142,7 @@ public:
         if (currentContext != nil) {
             [currentContext update];
             [window makeKeyAndOrderFront:nil];
-            [currentContext setView:[window contentView]];
+            [currentContext setView:view];
             [currentContext makeCurrentContext];
         }
 
@@ -154,11 +183,29 @@ public:
 };
 
 
+static inline void
+initThread(void) {
+    if (autoreleasePool == nil) {
+        autoreleasePool = [[NSAutoreleasePool alloc] init];
+    }
+}
+
 void
 init(void) {
-    [NSApplication sharedApplication];
+    // Prevent glproc to load system's OpenGL, so that we can trace glretrace.
+    _libGlHandle = dlopen("OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
 
-    autoreleasePool = [[NSAutoreleasePool alloc] init];
+    initThread();
+
+    [DummyThread enterMultiThreaded];
+
+    bool isMultiThreaded = [NSThread isMultiThreaded];
+    if (!isMultiThreaded) {
+        std::cerr << "error: failed to enable Cocoa multi-threading\n";
+	exit(1);
+    }
+
+    [NSApplication sharedApplication];
 
     [NSApp finishLaunching];
 }
@@ -172,6 +219,9 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
+
+    initThread();
+
     if (profile != PROFILE_COMPAT &&
         profile != PROFILE_CORE) {
         return nil;
@@ -193,6 +243,12 @@ createVisual(bool doubleBuffer, Profile profile) {
 	return NULL;
 #endif
     }
+    
+    // Use Apple software rendering for debugging purposes.
+    if (0) {
+        attribs.add(NSOpenGLPFARendererID, 0x00020200); // kCGLRendererGenericID
+    }
+
     attribs.end();
 
     NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc]
@@ -202,14 +258,18 @@ createVisual(bool doubleBuffer, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height)
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new CocoaDrawable(visual, width, height);
+    initThread();
+
+    return new CocoaDrawable(visual, width, height, pbuffer);
 }
 
 Context *
 createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
 {
+    initThread();
+
     NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
     NSOpenGLContext *share_context = nil;
     NSOpenGLContext *context;
@@ -234,6 +294,8 @@ createContext(const Visual *visual, Context *shareContext, Profile profile, bool
 bool
 makeCurrent(Drawable *drawable, Context *context)
 {
+    initThread();
+
     if (!drawable || !context) {
         [NSOpenGLContext clearCurrentContext];
     } else {
@@ -252,8 +314,9 @@ makeCurrent(Drawable *drawable, Context *context)
 
 bool
 processEvents(void) {
-   NSEvent* event;
+    initThread();
 
+    NSEvent* event;
     do {
         event = [NSApp nextEventMatchingMask:NSAnyEventMask
                                    untilDate:[NSDate distantPast]

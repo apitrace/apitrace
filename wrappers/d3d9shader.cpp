@@ -29,7 +29,7 @@
 
 #include "d3d9shader.hpp"
 #include "d3d9imports.hpp"
-#include "d3dsize.hpp"
+#include "d3d9size.hpp"
 
 
 typedef HRESULT

@@ -35,33 +35,49 @@ namespace glretrace {
 struct Context {
     Context(glws::Context* context)
         : wsContext(context),
+          drawable(0),
           activeProgram(0),
           used(false)
     {
     }
 
-    ~Context()
-    {
-        delete wsContext;
-    }
+    ~Context();
 
     glws::Context* wsContext;
+
+    // Bound drawable
+    glws::Drawable *drawable;
+
     GLuint activeProgram;
     bool used;
+    
+    // Context must be current
+    inline bool
+    hasExtension(const char *extension) const {
+        return wsContext->hasExtension(extension);
+    }
 };
 
 extern bool insideList;
 extern bool insideGlBeginEnd;
 
 
-extern glws::Drawable *currentDrawable;
-extern Context *currentContext;
+Context *
+getCurrentContext(void);
+
+
+int
+parseAttrib(const trace::Value *attribs, int param, int default_);
+
 
 glws::Drawable *
 createDrawable(glws::Profile profile);
 
 glws::Drawable *
 createDrawable(void);
+
+glws::Drawable *
+createPbuffer(int width, int height);
 
 Context *
 createContext(Context *shareContext, glws::Profile profile);

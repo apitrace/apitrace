@@ -16,7 +16,7 @@ Requirements common for all platforms:
 
 The GUI also dependends on:
 
-* Qt version 4.7
+* Qt version 4.7 or higher (tested with version 4.8)
 
 * QJSON version 0.5 or higher (tested with version 0.7.1, which is bundled)
 
@@ -40,8 +40,9 @@ Build as:
     cmake -H. -Bbuild
     make -C build
 
-You can also build the 32bit GL wrapper on 64bit distro with a multilib gcc by
-doing:
+
+You can also build the 32-bits GL wrapper on a 64-bits distribution, provided
+you have a multilib gcc and 32-bits X11 libraries, by doing:
 
     cmake \
         -DCMAKE_C_FLAGS=-m32 \
@@ -51,6 +52,10 @@ doing:
         -DENABLE_GUI=FALSE \
         -H. -Bbuild32
     make -C build32 glxtrace
+
+The `/usr/lib32` refers to the path where the 32-bits shared objects are may
+differ depending on the actual Linux distribution.
+
 
 Android
 -------

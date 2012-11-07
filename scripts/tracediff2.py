@@ -58,7 +58,7 @@ class Blob:
         return 'blob(%u)' % self.size
 
     def __eq__(self, other):
-        return self.size == other.size and self.hash == other.hash
+        return isinstance(other, Blob) and self.size == other.size and self.hash == other.hash
 
     def __hash__(self):
         return self.hash

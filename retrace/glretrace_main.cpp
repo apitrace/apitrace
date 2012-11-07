@@ -67,46 +67,46 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
 void
 checkGlError(trace::Call &call) {
     GLenum error = glGetError();
-    if (error == GL_NO_ERROR) {
-        return;
+    while (error != GL_NO_ERROR) {
+        std::ostream & os = retrace::warning(call);
+
+        os << "glGetError(";
+        os << call.name();
+        os << ") = ";
+
+        switch (error) {
+        case GL_INVALID_ENUM:
+            os << "GL_INVALID_ENUM";
+            break;
+        case GL_INVALID_VALUE:
+            os << "GL_INVALID_VALUE";
+            break;
+        case GL_INVALID_OPERATION:
+            os << "GL_INVALID_OPERATION";
+            break;
+        case GL_STACK_OVERFLOW:
+            os << "GL_STACK_OVERFLOW";
+            break;
+        case GL_STACK_UNDERFLOW:
+            os << "GL_STACK_UNDERFLOW";
+            break;
+        case GL_OUT_OF_MEMORY:
+            os << "GL_OUT_OF_MEMORY";
+            break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            os << "GL_INVALID_FRAMEBUFFER_OPERATION";
+            break;
+        case GL_TABLE_TOO_LARGE:
+            os << "GL_TABLE_TOO_LARGE";
+            break;
+        default:
+            os << error;
+            break;
+        }
+        os << "\n";
+    
+        error = glGetError();
     }
-
-    std::ostream & os = retrace::warning(call);
-
-    os << "glGetError(";
-    os << call.name();
-    os << ") = ";
-
-    switch (error) {
-    case GL_INVALID_ENUM:
-        os << "GL_INVALID_ENUM";
-        break;
-    case GL_INVALID_VALUE:
-        os << "GL_INVALID_VALUE";
-        break;
-    case GL_INVALID_OPERATION:
-        os << "GL_INVALID_OPERATION";
-        break;
-    case GL_STACK_OVERFLOW:
-        os << "GL_STACK_OVERFLOW";
-        break;
-    case GL_STACK_UNDERFLOW:
-        os << "GL_STACK_UNDERFLOW";
-        break;
-    case GL_OUT_OF_MEMORY:
-        os << "GL_OUT_OF_MEMORY";
-        break;
-    case GL_INVALID_FRAMEBUFFER_OPERATION:
-        os << "GL_INVALID_FRAMEBUFFER_OPERATION";
-        break;
-    case GL_TABLE_TOO_LARGE:
-        os << "GL_TABLE_TOO_LARGE";
-        break;
-    default:
-        os << error;
-        break;
-    }
-    os << "\n";
 }
 
 static void
@@ -174,12 +174,14 @@ flushQueries() {
 
 void
 beginProfile(trace::Call &call, bool isDraw) {
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+
     /* Create call query */
     CallQuery query;
     query.isDraw = isDraw;
     query.call = call.no;
     query.sig = call.sig;
-    query.program = glretrace::currentContext ? glretrace::currentContext->activeProgram : 0;
+    query.program = currentContext ? currentContext->activeProgram : 0;
 
     /* GPU profiling only for draw calls */
     if (isDraw) {
@@ -230,13 +232,14 @@ endProfile(trace::Call &call, bool isDraw) {
 
 void
 initContext() {
-    const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
 
     /* Ensure we have adequate extension support */
-    supportsTimestamp   = glws::checkExtension("GL_ARB_timer_query", extensions);
-    supportsElapsed     = glws::checkExtension("GL_EXT_timer_query", extensions) || supportsTimestamp;
-    supportsOcclusion   = glws::checkExtension("GL_ARB_occlusion_query", extensions);
-    supportsDebugOutput = glws::checkExtension("GL_ARB_debug_output", extensions);
+    assert(currentContext);
+    supportsTimestamp   = currentContext->hasExtension("GL_ARB_timer_query");
+    supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
+    supportsOcclusion   = currentContext->hasExtension("GL_ARB_occlusion_query");
+    supportsDebugOutput = currentContext->hasExtension("GL_ARB_debug_output");
 
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
@@ -262,6 +265,7 @@ initContext() {
 
     /* Setup debug message call back */
     if (retrace::debug && supportsDebugOutput) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
         glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
 
         if (DEBUG_OUTPUT_SYNCHRONOUS) {
@@ -310,11 +314,13 @@ frame_complete(trace::Call &call) {
 
     retrace::frameComplete(call);
 
-    if (!currentDrawable) {
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+    if (!currentContext) {
         return;
     }
 
-    if (retrace::debug && !currentDrawable->visible) {
+    assert(currentContext->drawable);
+    if (retrace::debug && !currentContext->drawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
 }
@@ -404,7 +410,7 @@ retrace::addCallbacks(retrace::Retracer &retracer)
 
 image::Image *
 retrace::getSnapshot(void) {
-    if (!glretrace::currentDrawable) {
+    if (!glretrace::getCurrentContext()) {
         return NULL;
     }
 
@@ -415,9 +421,10 @@ retrace::getSnapshot(void) {
 bool
 retrace::dumpState(std::ostream &os)
 {
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+
     if (glretrace::insideGlBeginEnd ||
-        !glretrace::currentDrawable ||
-        !glretrace::currentContext) {
+        !currentContext) {
         return false;
     }
 
@@ -428,13 +435,17 @@ retrace::dumpState(std::ostream &os)
 
 void
 retrace::flushRendering(void) {
-    glretrace::flushQueries();
-    glFlush();
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+    if (currentContext) {
+        glretrace::flushQueries();
+        glFlush();
+    }
 }
 
 void
 retrace::waitForInput(void) {
     while (glws::processEvents()) {
+        os::sleep(100*1000);
     }
 }
 

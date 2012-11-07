@@ -60,7 +60,8 @@ public:
 };
 
 
-static void describeEvent(const XEvent &event) {
+static void
+processEvent(XEvent &event) {
     if (0) {
         switch (event.type) {
         case ConfigureNotify:
@@ -83,6 +84,19 @@ static void describeEvent(const XEvent &event) {
         }
         std::cerr << " " << event.xany.window << "\n";
     }
+
+    switch (event.type) {
+    case KeyPress:
+        {
+            char buffer[32];
+            KeySym keysym;
+            XLookupString(&event.xkey, buffer, sizeof buffer - 1, &keysym, NULL);
+            if (keysym == XK_Escape) {
+                exit(0);
+            }
+        }
+        break;
+    }
 }
 
 class GlxDrawable : public Drawable
@@ -90,8 +104,8 @@ class GlxDrawable : public Drawable
 public:
     Window window;
 
-    GlxDrawable(const Visual *vis, int w, int h) :
-        Drawable(vis, w, h)
+    GlxDrawable(const Visual *vis, int w, int h, bool pbuffer) :
+        Drawable(vis, w, h, pbuffer)
     {
         XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
 
@@ -102,7 +116,7 @@ public:
         attr.background_pixel = 0;
         attr.border_pixel = 0;
         attr.colormap = XCreateColormap(display, root, visinfo->visual, AllocNone);
-        attr.event_mask = StructureNotifyMask;
+        attr.event_mask = StructureNotifyMask | KeyPressMask;
 
         unsigned long mask;
         mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
@@ -135,11 +149,18 @@ public:
         glXWaitX();
     }
 
+    void processKeys(void) {
+        XEvent event;
+        while (XCheckWindowEvent(display, window, StructureNotifyMask | KeyPressMask, &event)) {
+            processEvent(event);
+        }
+    }
+
     void waitForEvent(int type) {
         XEvent event;
         do {
-            XWindowEvent(display, window, StructureNotifyMask, &event);
-            describeEvent(event);
+            XWindowEvent(display, window, StructureNotifyMask | KeyPressMask, &event);
+            processEvent(event);
         } while (event.type != type);
     }
 
@@ -194,6 +215,8 @@ public:
 
     void swapBuffers(void) {
         glXSwapBuffers(display, window);
+
+        processKeys();
     }
 };
 
@@ -215,6 +238,8 @@ public:
 
 void
 init(void) {
+    XInitThreads();
+
     display = XOpenDisplay(NULL);
     if (!display) {
         std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
@@ -290,9 +315,9 @@ createVisual(bool doubleBuffer, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height)
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new GlxDrawable(visual, width, height);
+    return new GlxDrawable(visual, width, height, pbuffer);
 }
 
 Context *
@@ -368,7 +393,7 @@ processEvents(void) {
     while (XPending(display) > 0) {
         XEvent event;
         XNextEvent(display, &event);
-        describeEvent(event);
+        processEvent(event);
     }
     return true;
 }

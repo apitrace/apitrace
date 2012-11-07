@@ -5,7 +5,6 @@
 
 GraphView::GraphView(QWidget* parent) :
     QWidget(parent),
-    m_selectionState(NULL),
     m_viewLeft(0),
     m_viewRight(0),
     m_viewBottom(0),
@@ -19,7 +18,8 @@ GraphView::GraphView(QWidget* parent) :
     m_viewWidthMax(0),
     m_viewHeight(0),
     m_viewHeightMin(0),
-    m_viewHeightMax(0)
+    m_viewHeightMax(0),
+    m_selectionState(NULL)
 {
     memset(&m_previous, -1, sizeof(m_previous));
 }

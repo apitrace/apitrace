@@ -57,15 +57,13 @@ public:
     }
 };
 
-static os::thread_specific_ptr<struct ThreadState> thread_state;
+static thread_specific ThreadState *thread_state;
 
 static ThreadState *get_ts(void)
 {
-    ThreadState *ts = thread_state.get();
-
+    ThreadState *ts = thread_state;
     if (!ts) {
-        ts = new ThreadState;
-        thread_state.reset(ts);
+        thread_state = ts = new ThreadState;
     }
 
     return ts;
@@ -115,12 +113,17 @@ bool releaseContext(uintptr_t context_id)
 
 void createContext(uintptr_t context_id)
 {
+    // wglCreateContextAttribsARB causes internal calls to wglCreateContext to be
+    // traced, causing context to be defined twice.
+    if (context_map.find(context_id) != context_map.end()) {
+        return;
+    }
+
     context_ptr_t ctx(new Context);
 
     context_map_mutex.lock();
 
     _retainContext(ctx);
-    assert(context_map.find(context_id) == context_map.end());
     context_map[context_id] = ctx;
 
     context_map_mutex.unlock();

@@ -89,6 +89,31 @@ struct ImageDesc
 
 
 /**
+ * Sames as enumToString, but with special provision to handle formatsLUMINANCE_ALPHA.
+ *
+ * OpenGL 2.1 specification states that "internalFormat may (for backwards
+ * compatibility with the 1.0 version of the GL) also take on the integer
+ * values 1, 2, 3, and 4, which are equivalent to symbolic constants LUMINANCE,
+ * LUMINANCE ALPHA, RGB, and RGBA respectively". 
+ */
+const char *
+formatToString(GLenum internalFormat) {
+    switch (internalFormat) {
+    case 1:
+        return "GL_LUMINANCE";
+    case 2:
+        return "GL_LUMINANCE_ALPHA";
+    case 3:
+        return "GL_RGB";
+    case 4:
+        return "GL_RGBA";
+    default:
+        return enumToString(internalFormat);
+    }
+}
+
+
+/**
  * OpenGL ES does not support glGetTexLevelParameteriv, but it is possible to
  * probe whether a texture has a given size by crafting a dummy glTexSubImage()
  * call.
@@ -232,6 +257,8 @@ getActiveTextureLevelDescOES(Context &context, GLenum target, GLint level, Image
 static inline bool
 getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDesc &desc)
 {
+    assert(target != GL_TEXTURE_CUBE_MAP);
+
     if (context.ES) {
         return getActiveTextureLevelDescOES(context, target, level, desc);
     }
@@ -386,7 +413,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     json.writeNumberMember("__height__", desc.height);
     json.writeNumberMember("__depth__", desc.depth);
 
-    json.writeStringMember("__format__", enumToString(desc.internalFormat));
+    json.writeStringMember("__format__", formatToString(desc.internalFormat));
 
     // Hardcoded for now, but we could chose types more adequate to the
     // texture internal format
@@ -409,7 +436,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     json.beginMember("__data__");
     char *pngBuffer;
     int pngBufferSize;
-    image::writePixelsToBuffer(pixels, desc.width, desc.height, channels, true, &pngBuffer, &pngBufferSize);
+    image::writePixelsToBuffer(pixels, desc.width, desc.depth * desc.height, channels, true, &pngBuffer, &pngBufferSize);
     json.writeBase64(pngBuffer, pngBufferSize);
     free(pngBuffer);
     json.endMember(); // __data__
@@ -431,15 +458,18 @@ dumpTexture(JSONWriter &json, Context &context, GLenum target, GLenum binding)
     GLint level = 0;
     do {
         ImageDesc desc;
-        if (!getActiveTextureLevelDesc(context, target, level, desc)) {
-            break;
-        }
 
         if (target == GL_TEXTURE_CUBE_MAP) {
             for (int face = 0; face < 6; ++face) {
+                if (!getActiveTextureLevelDesc(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, desc)) {
+                    return;
+                }
                 dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level);
             }
         } else {
+            if (!getActiveTextureLevelDesc(context, target, level, desc)) {
+                return;
+            }
             dumpActiveTextureLevel(json, context, target, level);
         }
 
@@ -833,7 +863,7 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     json.writeNumberMember("__height__", height);
     json.writeNumberMember("__depth__", 1);
 
-    json.writeStringMember("__format__", enumToString(internalFormat));
+    json.writeStringMember("__format__", formatToString(internalFormat));
 
     // Hardcoded for now, but we could chose types more adequate to the
     // texture internal format

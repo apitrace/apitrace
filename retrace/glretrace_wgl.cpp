@@ -94,9 +94,18 @@ static void retrace_wglSetPixelFormat(trace::Call &call) {
 }
 
 static void retrace_wglSwapBuffers(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(0).toUIntPtr());
+
     frame_complete(call);
     if (retrace::doubleBuffer) {
-        currentDrawable->swapBuffers();
+        if (drawable) {
+            drawable->swapBuffers();
+        } else {
+            glretrace::Context *currentContext = glretrace::getCurrentContext();
+            if (currentContext) {
+                currentContext->drawable->swapBuffers();
+            }
+        }
     } else {
         glFlush();
     }
@@ -111,8 +120,9 @@ static void retrace_wglShareLists(trace::Call &call) {
 
     Context *new_context = glretrace::createContext(share_context);
     if (new_context) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (currentContext == old_context) {
-            glretrace::makeCurrent(call, currentDrawable, new_context);
+            glretrace::makeCurrent(call, currentContext->drawable, new_context);
         }
 
         context_map[hglrc2] = new_context;
@@ -176,10 +186,7 @@ static void retrace_wglCreatePbufferARB(trace::Call &call) {
     int iHeight = call.arg(3).toUInt();
 
     unsigned long long orig_pbuffer = call.ret->toUIntPtr();
-    glws::Drawable *drawable = glretrace::createDrawable();
-
-    drawable->resize(iWidth, iHeight);
-    drawable->show();
+    glws::Drawable *drawable = glretrace::createPbuffer(iWidth, iHeight);
 
     pbuffer_map[orig_pbuffer] = drawable;
 }

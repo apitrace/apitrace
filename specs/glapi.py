@@ -376,7 +376,7 @@ glapi.addFunctions([
 
     # GL_VERSION_1_1_DEPRECATED
     GlFunction(Void, "glArrayElement", [(GLint, "i")]),
-    GlFunction(Void, "glColorPointer", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glColorPointer", [(size_bgra, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
     GlFunction(Void, "glDisableClientState", [(GLenum, "array")]),
     GlFunction(Void, "glEdgeFlagPointer", [(GLsizei, "stride"), (GLpointerConst, "pointer")]),
     GlFunction(Void, "glEnableClientState", [(GLenum, "array")]),
@@ -515,7 +515,7 @@ glapi.addFunctions([
     GlFunction(Void, "glSecondaryColor3uiv", [(Array(Const(GLuint), 3), "v")]),
     GlFunction(Void, "glSecondaryColor3us", [(GLushort, "red"), (GLushort, "green"), (GLushort, "blue")]),
     GlFunction(Void, "glSecondaryColor3usv", [(Array(Const(GLushort), 3), "v")]),
-    GlFunction(Void, "glSecondaryColorPointer", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glSecondaryColorPointer", [(size_bgra, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
     GlFunction(Void, "glWindowPos2d", [(GLdouble, "x"), (GLdouble, "y")]),
     GlFunction(Void, "glWindowPos2dv", [(Array(Const(GLdouble), 2), "v")]),
     GlFunction(Void, "glWindowPos2f", [(GLfloat, "x"), (GLfloat, "y")]),
@@ -647,7 +647,7 @@ glapi.addFunctions([
     GlFunction(Void, "glVertexAttrib4ubv", [(GLuint, "index"), (Array(Const(GLubyte), 4), "v")]),
     GlFunction(Void, "glVertexAttrib4uiv", [(GLuint, "index"), (Array(Const(GLuint), 4), "v")]),
     GlFunction(Void, "glVertexAttrib4usv", [(GLuint, "index"), (Array(Const(GLushort), 4), "v")]),
-    GlFunction(Void, "glVertexAttribPointer", [(GLuint, "index"), (GLint, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glVertexAttribPointer", [(GLuint, "index"), (size_bgra, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
 
     # GL_VERSION_2_1
     GlFunction(Void, "glUniformMatrix2x3fv", [(GLlocation, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Array(Const(GLfloat), "count*2*3"), "value")]),
@@ -870,7 +870,7 @@ glapi.addFunctions([
     GlFunction(Void, "glVertexAttrib4ubvARB", [(GLuint, "index"), (Array(Const(GLubyte), 4), "v")]),
     GlFunction(Void, "glVertexAttrib4uivARB", [(GLuint, "index"), (Array(Const(GLuint), 4), "v")]),
     GlFunction(Void, "glVertexAttrib4usvARB", [(GLuint, "index"), (Array(Const(GLushort), 4), "v")]),
-    GlFunction(Void, "glVertexAttribPointerARB", [(GLuint, "index"), (GLint, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glVertexAttribPointerARB", [(GLuint, "index"), (size_bgra, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
     GlFunction(Void, "glEnableVertexAttribArrayARB", [(GLuint, "index")]),
     GlFunction(Void, "glDisableVertexAttribArrayARB", [(GLuint, "index")]),
     GlFunction(Void, "glProgramStringARB", [(GLenum, "target"), (GLenum, "format"), (GLsizei, "len"), (String(Const(Void), "len"), "string")]),
@@ -1526,7 +1526,7 @@ glapi.addFunctions([
 
     # GL_EXT_vertex_array
     GlFunction(Void, "glArrayElementEXT", [(GLint, "i")]),
-    GlFunction(Void, "glColorPointerEXT", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLsizei, "count"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glColorPointerEXT", [(size_bgra, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLsizei, "count"), (GLpointerConst, "pointer")]),
     GlFunction(Void, "glDrawArraysEXT", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count")]),
     GlFunction(Void, "glEdgeFlagPointerEXT", [(GLsizei, "stride"), (GLsizei, "count"), (OpaquePointer(Const(GLboolean)), "pointer")]),
     GlFunction(Void, "glGetPointervEXT", [(GLenum, "pname"), Out(Pointer(GLpointer), "params")], sideeffects=False),
@@ -1664,7 +1664,7 @@ glapi.addFunctions([
     # GL_INTEL_parallel_arrays
     GlFunction(Void, "glVertexPointervINTEL", [(GLint, "size"), (GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
     GlFunction(Void, "glNormalPointervINTEL", [(GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
-    GlFunction(Void, "glColorPointervINTEL", [(GLint, "size"), (GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
+    GlFunction(Void, "glColorPointervINTEL", [(size_bgra, "size"), (GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
     GlFunction(Void, "glTexCoordPointervINTEL", [(GLint, "size"), (GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
 
     # GL_EXT_pixel_transform
@@ -1690,7 +1690,7 @@ glapi.addFunctions([
     GlFunction(Void, "glSecondaryColor3uivEXT", [(Array(Const(GLuint), 3), "v")]),
     GlFunction(Void, "glSecondaryColor3usEXT", [(GLushort, "red"), (GLushort, "green"), (GLushort, "blue")]),
     GlFunction(Void, "glSecondaryColor3usvEXT", [(Array(Const(GLushort), 3), "v")]),
-    GlFunction(Void, "glSecondaryColorPointerEXT", [(GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glSecondaryColorPointerEXT", [(size_bgra, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
 
     # GL_EXT_texture_perturb_normal
     GlFunction(Void, "glTextureNormalEXT", [(GLenum, "mode")]),
@@ -1858,8 +1858,8 @@ glapi.addFunctions([
     GlFunction(Void, "glMultiModeDrawElementsIBM", [(Array(Const(GLenum), "primcount"), "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(Const(GLpointerConst), "primcount"), "indices"), (GLsizei, "primcount"), (GLint, "modestride")]),
 
     # GL_IBM_vertex_array_lists
-    GlFunction(Void, "glColorPointerListIBM", [(GLint, "size"), (GLenum, "type"), (GLint, "stride"), (OpaquePointer(GLpointerConst), "pointer"), (GLint, "ptrstride")]),
-    GlFunction(Void, "glSecondaryColorPointerListIBM", [(GLint, "size"), (GLenum, "type"), (GLint, "stride"), (OpaquePointer(GLpointerConst), "pointer"), (GLint, "ptrstride")]),
+    GlFunction(Void, "glColorPointerListIBM", [(size_bgra, "size"), (GLenum, "type"), (GLint, "stride"), (OpaquePointer(GLpointerConst), "pointer"), (GLint, "ptrstride")]),
+    GlFunction(Void, "glSecondaryColorPointerListIBM", [(size_bgra, "size"), (GLenum, "type"), (GLint, "stride"), (OpaquePointer(GLpointerConst), "pointer"), (GLint, "ptrstride")]),
     GlFunction(Void, "glEdgeFlagPointerListIBM", [(GLint, "stride"), (OpaquePointer(Opaque("const GLboolean *")), "pointer"), (GLint, "ptrstride")]),
     GlFunction(Void, "glFogCoordPointerListIBM", [(GLenum, "type"), (GLint, "stride"), (OpaquePointer(GLpointerConst), "pointer"), (GLint, "ptrstride")]),
     GlFunction(Void, "glIndexPointerListIBM", [(GLenum, "type"), (GLint, "stride"), (OpaquePointer(GLpointerConst), "pointer"), (GLint, "ptrstride")]),
@@ -1881,13 +1881,13 @@ glapi.addFunctions([
     GlFunction(Void, "glIglooInterfaceSGIX", [(GLenum, "pname"), (OpaqueBlob(Const(GLvoid), "_glIglooInterfaceSGIX_size(pname)"), "params")]),
 
     # GL_NV_fence
-    GlFunction(Void, "glDeleteFencesNV", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "fences")]),
-    GlFunction(Void, "glGenFencesNV", [(GLsizei, "n"), Out(Array(GLuint, "n"), "fences")]),
-    GlFunction(GLboolean, "glIsFenceNV", [(GLuint, "fence")], sideeffects=False),
-    GlFunction(GLboolean, "glTestFenceNV", [(GLuint, "fence")]),
-    GlFunction(Void, "glGetFenceivNV", [(GLuint, "fence"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glFinishFenceNV", [(GLuint, "fence")]),
-    GlFunction(Void, "glSetFenceNV", [(GLuint, "fence"), (GLenum, "condition")]),
+    GlFunction(Void, "glDeleteFencesNV", [(GLsizei, "n"), (Array(Const(GLfence), "n"), "fences")]),
+    GlFunction(Void, "glGenFencesNV", [(GLsizei, "n"), Out(Array(GLfence, "n"), "fences")]),
+    GlFunction(GLboolean, "glIsFenceNV", [(GLfence, "fence")], sideeffects=False),
+    GlFunction(GLboolean, "glTestFenceNV", [(GLfence, "fence")]),
+    GlFunction(Void, "glGetFenceivNV", [(GLfence, "fence"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glFinishFenceNV", [(GLfence, "fence")]),
+    GlFunction(Void, "glSetFenceNV", [(GLfence, "fence"), (GLenum, "condition")]),
 
     # GL_NV_evaluators
     GlFunction(Void, "glMapControlPointsNV", [(GLenum, "target"), (GLuint, "index"), (GLenum, "type"), (GLsizei, "ustride"), (GLsizei, "vstride"), (GLint, "uorder"), (GLint, "vorder"), (GLboolean, "packed"), (OpaqueBlob(Const(GLvoid), "_glMapControlPointsNV_size(target, uorder, vorder)"), "points")]),
@@ -1929,7 +1929,7 @@ glapi.addFunctions([
     GlFunction(Void, "glProgramParameters4fvNV", [(GLenum, "target"), (GLuint, "index"), (GLsizei, "count"), (Array(Const(GLfloat), "count*4"), "v")]),
     GlFunction(Void, "glRequestResidentProgramsNV", [(GLsizei, "n"), (Array(Const(GLprogramARB), "n"), "programs")]),
     GlFunction(Void, "glTrackMatrixNV", [(GLenum, "target"), (GLuint, "address"), (GLenum, "matrix"), (GLenum, "transform")]),
-    GlFunction(Void, "glVertexAttribPointerNV", [(GLuint, "index"), (GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
+    GlFunction(Void, "glVertexAttribPointerNV", [(GLuint, "index"), (size_bgra, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
     GlFunction(Void, "glVertexAttrib1dNV", [(GLuint, "index"), (GLdouble, "x")]),
     GlFunction(Void, "glVertexAttrib1dvNV", [(GLuint, "index"), (Pointer(Const(GLdouble)), "v")]),
     GlFunction(Void, "glVertexAttrib1fNV", [(GLuint, "index"), (GLfloat, "x")]),
@@ -2133,20 +2133,20 @@ glapi.addFunctions([
     GlFunction(Void, "glMultiDrawRangeElementArrayAPPLE", [(GLenum_mode, "mode"), (GLuint, "start"), (GLuint, "end"), (Array(Const(GLint), "primcount"), "first"), (Array(Const(GLsizei), "primcount"), "count"), (GLsizei, "primcount")]),
 
     # GL_APPLE_fence
-    GlFunction(Void, "glGenFencesAPPLE", [(GLsizei, "n"), Out(Array(GLuint, "n"), "fences")]),
-    GlFunction(Void, "glDeleteFencesAPPLE", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "fences")]),
-    GlFunction(Void, "glSetFenceAPPLE", [(GLuint, "fence")]),
-    GlFunction(GLboolean, "glIsFenceAPPLE", [(GLuint, "fence")], sideeffects=False),
-    GlFunction(GLboolean, "glTestFenceAPPLE", [(GLuint, "fence")]),
-    GlFunction(Void, "glFinishFenceAPPLE", [(GLuint, "fence")]),
-    GlFunction(GLboolean, "glTestObjectAPPLE", [(GLenum, "object"), (GLuint, "name")]),
-    GlFunction(Void, "glFinishObjectAPPLE", [(GLenum, "object"), (GLint, "name")]),
+    GlFunction(Void, "glGenFencesAPPLE", [(GLsizei, "n"), Out(Array(GLfence, "n"), "fences")]),
+    GlFunction(Void, "glDeleteFencesAPPLE", [(GLsizei, "n"), (Array(Const(GLfence), "n"), "fences")]),
+    GlFunction(Void, "glSetFenceAPPLE", [(GLfence, "fence")]),
+    GlFunction(GLboolean, "glIsFenceAPPLE", [(GLfence, "fence")], sideeffects=False),
+    GlFunction(GLboolean, "glTestFenceAPPLE", [(GLfence, "fence")]),
+    GlFunction(Void, "glFinishFenceAPPLE", [(GLfence, "fence")]),
+    GlFunction(GLboolean, "glTestObjectAPPLE", [(GLenum, "object"), (GLuint, "name")]), # XXX: name needs swizzling
+    GlFunction(Void, "glFinishObjectAPPLE", [(GLenum, "object"), (GLint, "name")]), # XXX: name needs swizzling
 
     # GL_APPLE_vertex_array_object
-    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLuint, "array")]),
-    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "arrays")]),
-    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLuint, "n"), "arrays")]),
-    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLuint, "array")], sideeffects=False),
+    GlFunction(Void, "glBindVertexArrayAPPLE", [(GLarrayAPPLE, "array")]),
+    GlFunction(Void, "glDeleteVertexArraysAPPLE", [(GLsizei, "n"), (Array(Const(GLarrayAPPLE), "n"), "arrays")]),
+    GlFunction(Void, "glGenVertexArraysAPPLE", [(GLsizei, "n"), Out(Array(GLarrayAPPLE, "n"), "arrays")]),
+    GlFunction(GLboolean, "glIsVertexArrayAPPLE", [(GLarrayAPPLE, "array")], sideeffects=False),
 
     # GL_APPLE_vertex_array_range
     GlFunction(Void, "glVertexArrayRangeAPPLE", [(GLsizei, "length"), (GLpointer, "pointer")]),

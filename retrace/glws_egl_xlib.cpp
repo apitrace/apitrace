@@ -92,8 +92,9 @@ public:
     EGLSurface surface;
     EGLint api;
 
-    EglDrawable(const Visual *vis, int w, int h) :
-        Drawable(vis, w, h), api(EGL_OPENGL_ES_API)
+    EglDrawable(const Visual *vis, int w, int h, bool pbuffer) :
+        Drawable(vis, w, h, pbuffer),
+        api(EGL_OPENGL_ES_API)
     {
         XVisualInfo *visinfo = static_cast<const EglVisual *>(visual)->visinfo;
 
@@ -393,9 +394,9 @@ createVisual(bool doubleBuffer, Profile profile) {
 }
 
 Drawable *
-createDrawable(const Visual *visual, int width, int height)
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new EglDrawable(visual, width, height);
+    return new EglDrawable(visual, width, height, pbuffer);
 }
 
 Context *

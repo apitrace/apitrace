@@ -98,7 +98,15 @@ def read_pnm(stream):
     magic = stream.readline()
     if not magic:
         return None, None
-    assert magic.rstrip() == 'P6'
+    magic = magic.rstrip()
+    if magic == 'P5':
+        channels = 1
+        mode = 'L'
+    elif magic == 'P6':
+        channels = 3
+        mode = 'RGB'
+    else:
+        raise Exception('Unsupported magic `%s`' % magic)
     comment = ''
     line = stream.readline()
     while line.startswith('#'):
@@ -107,8 +115,8 @@ def read_pnm(stream):
     width, height = map(int, line.strip().split())
     maximum = int(stream.readline().strip())
     assert maximum == 255
-    data = stream.read(height * width * 3)
-    image = Image.frombuffer('RGB', (width, height), data, 'raw', 'RGB', 0, 1)
+    data = stream.read(height * width * channels)
+    image = Image.frombuffer(mode, (width, height), data, 'raw', mode, 0, 1)
     return image, comment
 
 

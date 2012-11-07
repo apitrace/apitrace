@@ -25,75 +25,46 @@
 
 
 from dlltrace import DllTracer
-from specs.d3d9 import d3d9, D3DSHADER9
-
-import specs.d3d9dxva2
+from specs import stdapi
 
 
-class D3D9Tracer(DllTracer):
+class D3DCommonTracer(DllTracer):
 
     def serializeArgValue(self, function, arg):
         # Dump shaders as strings
-        if arg.type is D3DSHADER9:
-            print '    DumpShader(trace::localWriter, %s);' % (arg.name)
+        if isinstance(arg.type, stdapi.Blob) and arg.name.startswith('pShaderBytecode'):
+            print '    DumpShader(trace::localWriter, %s, %s);' % (arg.name, arg.type.size)
             return
 
         DllTracer.serializeArgValue(self, function, arg)
-
+    
     def enumWrapperInterfaceVariables(self, interface):
         variables = DllTracer.enumWrapperInterfaceVariables(self, interface)
         
-        # Add additional members to track locks
-        if interface.getMethodByName('Lock') is not None or \
-           interface.getMethodByName('LockRect') is not None or \
-           interface.getMethodByName('LockBox') is not None:
+        # Add additional members to track maps
+        if interface.getMethodByName('Map') is not None:
             variables += [
-                ('size_t', '_LockedSize', '0'),
-                ('VOID *', 'm_pbData', '0'),
+                ('VOID *', '_pMappedData', '0'),
+                ('size_t', '_MappedSize', '0'),
             ]
 
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
-        if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '    if (_LockedSize && m_pbData) {'
-            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
+        if method.name == 'Unmap':
+            print '    if (_MappedSize && _pMappedData) {'
+            self.emit_memcpy('_pMappedData', '_pMappedData', '_MappedSize')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
-        if method.name in ('Lock', 'LockRect', 'LockBox'):
-            # FIXME: handle recursive locks
-            print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-            print '        _getLockInfo(_this, %s, m_pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
+        if method.name == 'Map':
+            # NOTE: recursive locks are explicitely forbidden
+            print '    if (SUCCEEDED(_result)) {'
+            print '        _getMapInfo(_this, %s, _pMappedData, _MappedSize);' % ', '.join(method.argNames())
             print '    } else {'
-            print '        m_pbData = NULL;'
-            print '        _LockedSize = 0;'
+            print '        _pMappedData = NULL;'
+            print '        _MappedSize = 0;'
             print '    }'
 
-
-if __name__ == '__main__':
-    print '#define INITGUID'
-    print
-    print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
-    print
-    print '#include "d3d9imports.hpp"'
-    print '#include "d3d9size.hpp"'
-    print '#include "d3d9shader.hpp"'
-    print '#include "dxvaint.h"'
-    print
-    print '''
-static inline size_t
-_declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
-    size_t count = 0;
-    if (pVertexElements) {
-        while (pVertexElements[count++].Stream != 0xff)
-            ;
-    }
-    return count;
-}
-'''
-    tracer = D3D9Tracer('d3d9.dll')
-    tracer.traceApi(d3d9)
 

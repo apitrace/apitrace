@@ -127,7 +127,8 @@ static void retrace_eglDestroySurface(trace::Call &call) {
     it = drawable_map.find(orig_surface);
 
     if (it != drawable_map.end()) {
-        if (it->second != currentDrawable) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
+        if (!currentContext || it->second != currentContext->drawable) {
             // TODO: reference count
             delete it->second;
         }
@@ -202,7 +203,11 @@ static void retrace_eglDestroyContext(trace::Call &call) {
     it = context_map.find(orig_context);
 
     if (it != context_map.end()) {
-        delete it->second;
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
+        if (it->second != currentContext) {
+            // TODO: reference count
+            delete it->second;
+        }
         context_map.erase(it);
     }
 }
@@ -216,10 +221,14 @@ static void retrace_eglMakeCurrent(trace::Call &call) {
 
 
 static void retrace_eglSwapBuffers(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUIntPtr());
+
     frame_complete(call);
 
-    if (retrace::doubleBuffer && currentDrawable) {
-        currentDrawable->swapBuffers();
+    if (retrace::doubleBuffer) {
+        if (drawable) {
+            drawable->swapBuffers();
+        }
     } else {
         glFlush();
     }

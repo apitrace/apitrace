@@ -100,15 +100,19 @@ GLshader = Handle("shader", GLuint)
 GLlocation = Handle("location", GLint, key=('program', GLhandleARB))
 GLlocationARB = Handle("location", GLint, key=('programObj', GLhandleARB))
 
+contextKey = ('reinterpret_cast<uintptr_t>(glretrace::getCurrentContext())', UIntPtr)
+
 GLprogramARB = Handle("programARB", GLuint)
 GLframebuffer = Handle("framebuffer", GLuint)
 GLrenderbuffer = Handle("renderbuffer", GLuint)
 GLfragmentShaderATI = Handle("fragmentShaderATI", GLuint)
-GLarray = Handle("array", GLuint)
+GLarray = Handle("array", GLuint, key=contextKey) # per-context
+GLarrayAPPLE = Handle("arrayAPPLE", GLuint) # shared
 GLregion = Handle("region", GLuint)
 GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)
+GLfence = Handle("fence", GLuint)
 
 # GL mappings are pointers to linear memory regions.
 #
@@ -229,3 +233,7 @@ GLbitfield_barrier = Flags(GLbitfield, [
     "GL_ATOMIC_COUNTER_BARRIER_BIT",            # 0x00001000
 ])
 
+# GL_ARB_vertex_array_bgra
+size_bgra = FakeEnum(GLint, [
+    "GL_BGRA",
+])
