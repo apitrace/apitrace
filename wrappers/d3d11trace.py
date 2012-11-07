@@ -26,7 +26,7 @@
 
 import sys
 
-from dlltrace import DllTracer
+from d3dcommontrace import D3DCommonTracer
 from specs.d3d11 import d3d11
 
 
@@ -44,5 +44,8 @@ if __name__ == '__main__':
         print '#include <d3d11_1.h>'
         print
 
-    tracer = DllTracer('d3d11.dll')
+    print '#include "d3d10shader.hpp"'
+    print '#include "d3d11size.hpp"'
+    print
+    tracer = D3DCommonTracer('d3d11.dll')
     tracer.traceApi(d3d11)

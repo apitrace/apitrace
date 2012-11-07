@@ -143,7 +143,11 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d10trace MODULE d3d10.def d3d10trace.cpp d3d10shader.cpp)
+        add_library (d3d10trace MODULE
+            d3d10.def
+            d3d10trace.cpp
+            d3d10shader.cpp
+        )
         target_link_libraries (d3d10trace
             common_trace
             common
@@ -179,7 +183,11 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d10_1trace MODULE d3d10_1.def d3d10_1trace.cpp d3d10shader.cpp)
+        add_library (d3d10_1trace MODULE
+            d3d10_1.def
+            d3d10_1trace.cpp
+            d3d10shader.cpp
+        )
         target_link_libraries (d3d10_1trace
             common_trace
             common
@@ -207,6 +215,7 @@ if (WIN32)
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11trace.py ${HAVE_D3D11_1} > ${CMAKE_CURRENT_BINARY_DIR}/d3d11trace.cpp
             DEPENDS
                 d3d11trace.py
+                d3dcommontrace.py
                 dlltrace.py
                 trace.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11_1.py
@@ -219,7 +228,11 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d11trace MODULE d3d11.def d3d11trace.cpp)
+        add_library (d3d11trace MODULE
+            d3d11.def
+            d3d11trace.cpp
+            d3d10shader.cpp
+        )
         target_link_libraries (d3d11trace
             common_trace
             common
