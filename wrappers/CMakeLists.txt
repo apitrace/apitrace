@@ -146,7 +146,7 @@ if (WIN32)
         add_library (d3d10trace MODULE
             d3d10.def
             d3d10trace.cpp
-            d3d10shader.cpp
+            d3dcommonshader.cpp
         )
         target_link_libraries (d3d10trace
             common_trace
@@ -186,7 +186,7 @@ if (WIN32)
         add_library (d3d10_1trace MODULE
             d3d10_1.def
             d3d10_1trace.cpp
-            d3d10shader.cpp
+            d3dcommonshader.cpp
         )
         target_link_libraries (d3d10_1trace
             common_trace
@@ -231,7 +231,7 @@ if (WIN32)
         add_library (d3d11trace MODULE
             d3d11.def
             d3d11trace.cpp
-            d3d10shader.cpp
+            d3dcommonshader.cpp
         )
         target_link_libraries (d3d11trace
             common_trace

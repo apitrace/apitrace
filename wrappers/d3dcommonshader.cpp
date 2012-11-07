@@ -27,7 +27,7 @@
 
 #include <stdio.h>
 
-#include "d3d10shader.hpp"
+#include "d3dcommonshader.hpp"
 
 
 struct ID3D10Blob : public IUnknown {

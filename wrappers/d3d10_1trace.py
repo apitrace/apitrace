@@ -35,7 +35,7 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     print '#include "d3d10_1imports.hpp"'
-    print '#include "d3d10shader.hpp"'
+    print '#include "d3dcommonshader.hpp"'
     print '#include "d3d10size.hpp"'
     print
     tracer = D3DCommonTracer('d3d10_1.dll')
