@@ -23,8 +23,8 @@
  *
  **************************************************************************/
 
-#ifndef _D3DSTATE_HPP_
-#define _D3DSTATE_HPP_
+#ifndef _D3D9STATE_HPP_
+#define _D3D9STATE_HPP_
 
 
 #include <iostream>
