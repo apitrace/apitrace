@@ -45,6 +45,7 @@ extern IDirect3DDevice9 *pLastDirect3DDevice9;
 
 
 extern const retrace::Entry d3d9_callbacks[];
+extern const retrace::Entry d3d10_callbacks[];
 
 
 HWND

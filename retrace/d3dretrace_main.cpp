@@ -55,6 +55,7 @@ void
 retrace::addCallbacks(retrace::Retracer &retracer)
 {
     retracer.addCallbacks(d3dretrace::d3d9_callbacks);
+    retracer.addCallbacks(d3dretrace::d3d10_callbacks);
 }
 
 

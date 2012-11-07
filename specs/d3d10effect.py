@@ -177,8 +177,8 @@ ID3D10EffectVariable.methods += [
     StdMethod(ObjPointer(ID3D10EffectDepthStencilVariable), "AsDepthStencil", []),
     StdMethod(ObjPointer(ID3D10EffectRasterizerVariable), "AsRasterizer", []),
     StdMethod(ObjPointer(ID3D10EffectSamplerVariable), "AsSampler", []),
-    StdMethod(HRESULT, "SetRawValue", [(OpaquePointer(Void), "pData"), (UINT, "Offset"), (UINT, "ByteCount")]),
-    StdMethod(HRESULT, "GetRawValue", [Out(OpaquePointer(Void), "pData"), (UINT, "Offset"), (UINT, "ByteCount")]),
+    StdMethod(HRESULT, "SetRawValue", [(Blob(Void, "ByteCount"), "pData"), (UINT, "Offset"), (UINT, "ByteCount")]),
+    StdMethod(HRESULT, "GetRawValue", [Out(OpaqueBlob(Void, "ByteCount"), "pData"), (UINT, "Offset"), (UINT, "ByteCount")], sideeffects=False),
 ]
 
 ID3D10EffectScalarVariable.methods += [

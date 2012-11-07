@@ -603,12 +603,12 @@ D3D10_VIEWPORT = Struct("D3D10_VIEWPORT", [
 ])
 
 D3D10_MAPPED_TEXTURE2D = Struct("D3D10_MAPPED_TEXTURE2D", [
-    (OpaquePointer(Void), "pData"),
+    (LinearPointer(Void, "_MappedSize"), "pData"),
     (UINT, "RowPitch"),
 ])
 
 D3D10_MAPPED_TEXTURE3D = Struct("D3D10_MAPPED_TEXTURE3D", [
-    (OpaquePointer(Void), "pData"),
+    (LinearPointer(Void, "_MappedSize"), "pData"),
     (UINT, "RowPitch"),
     (UINT, "DepthPitch"),
 ])
@@ -722,13 +722,13 @@ ID3D10Resource.methods += [
 ]
 
 ID3D10Buffer.methods += [
-    Method(HRESULT, "Map", [(D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
+    Method(HRESULT, "Map", [(D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "ppData")]),
     Method(Void, "Unmap", []),
     Method(Void, "GetDesc", [Out(Pointer(D3D10_BUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10Texture1D.methods += [
-    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
+    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "ppData")]),
     Method(Void, "Unmap", [(UINT, "Subresource")]),
     Method(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE1D_DESC), "pDesc")], sideeffects=False),
 ]

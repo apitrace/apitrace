@@ -128,7 +128,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
 
-if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
+if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR AND DirectX_D3D10_INCLUDE_DIR)
     add_custom_command (
         OUTPUT d3dretrace_d3d9.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
@@ -144,10 +144,32 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
+    add_custom_command (
+        OUTPUT d3dretrace_d3d10.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10retrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d10.cpp
+        DEPENDS
+                d3d10retrace.py
+                dllretrace.py
+                retrace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10shader.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10effect.py
+                ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+    )
+
     include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
     add_executable (d3dretrace
         d3dretrace_main.cpp
         d3dretrace_d3d9.cpp
+        d3dretrace_d3d10.cpp
         d3dretrace_ws.cpp
         d3d9state.cpp
         d3d9state_images.cpp

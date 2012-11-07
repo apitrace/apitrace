@@ -41,6 +41,8 @@
 
 #include <algorithm>
 
+#include "os.hpp"
+
 
 static size_t
 _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT Depth = 1, UINT DepthPitch = 0) {
