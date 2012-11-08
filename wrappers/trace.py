@@ -494,10 +494,12 @@ class Tracer:
         self.invokeFunction(function)
         if not function.internal:
             print '    trace::localWriter.beginLeave(_call);'
+            print '    if (%s) {' % self.wasFunctionSuccessful(function)
             for arg in function.args:
                 if arg.output:
                     self.serializeArg(function, arg)
                     self.wrapArg(function, arg)
+            print '    }'
             if function.type is not stdapi.Void:
                 self.serializeRet(function, "_result")
             print '    trace::localWriter.endLeave();'
@@ -511,6 +513,13 @@ class Tracer:
             result = '_result = '
         dispatch = prefix + function.name + suffix
         print '    %s%s(%s);' % (result, dispatch, ', '.join([str(arg.name) for arg in function.args]))
+
+    def wasFunctionSuccessful(self, function):
+        if function.type is stdapi.Void:
+            return 'true'
+        if str(function.type) == 'HRESULT':
+            return 'SUCCEEDED(_result)'
+        return 'false'
 
     def serializeArg(self, function, arg):
         print '    trace::localWriter.beginArg(%u);' % (arg.index,)
@@ -651,10 +660,13 @@ class Tracer:
         self.invokeMethod(interface, base, method)
 
         print '    trace::localWriter.beginLeave(_call);'
+
+        print '    if (%s) {' % self.wasFunctionSuccessful(method)
         for arg in method.args:
             if arg.output:
                 self.serializeArg(method, arg)
                 self.wrapArg(method, arg)
+        print '    }'
 
         if method.type is not stdapi.Void:
             self.serializeRet(method, '_result')
