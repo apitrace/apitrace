@@ -1093,7 +1093,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "RSSetScissorRects", [(UINT, "NumRects"), (Array(Const(D3D11_RECT), "NumRects"), "pRects")]),
     StdMethod(Void, "CopySubresourceRegion", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D11_BOX)), "pSrcBox")]),
     StdMethod(Void, "CopyResource", [(ObjPointer(ID3D11Resource), "pDstResource"), (ObjPointer(ID3D11Resource), "pSrcResource")]),
-    StdMethod(Void, "UpdateSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
+    StdMethod(Void, "UpdateSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
     StdMethod(Void, "CopyStructureCount", [(ObjPointer(ID3D11Buffer), "pDstBuffer"), (UINT, "DstAlignedByteOffset"), (ObjPointer(ID3D11UnorderedAccessView), "pSrcView")]),
     StdMethod(Void, "ClearRenderTargetView", [(ObjPointer(ID3D11RenderTargetView), "pRenderTargetView"), (Array(Const(FLOAT), 4), "ColorRGBA")]),
     StdMethod(Void, "ClearUnorderedAccessViewUint", [(ObjPointer(ID3D11UnorderedAccessView), "pUnorderedAccessView"), (Array(Const(UINT), 4), "Values")]),
