@@ -271,9 +271,18 @@ delObj(trace::Value &value) {
 }
 
 void *
-toObjPointer(trace::Value &value) {
+toObjPointer(trace::Call &call, trace::Value &value) {
     unsigned long long address = value.toUIntPtr();
-    void *obj = address ? _obj_map[address] : NULL;
+
+    void *obj;
+    if (address) {
+        obj = _obj_map[address];
+        if (!obj) {
+            warning(call) << "unknown object 0x" << std::hex << address << std::dec << " call\n";
+        }
+    } else {
+        obj = NULL;
+    }
 
     if (retrace::verbosity >= 2) {
         std::cout << std::hex << "obj 0x" << address << " <- 0x" << size_t(obj) << std::dec << "\n";

@@ -94,7 +94,7 @@ void
 delObj(trace::Value &value);
 
 void *
-toObjPointer(trace::Value &value);
+toObjPointer(trace::Call &call, trace::Value &value);
 
 
 } /* namespace retrace */
