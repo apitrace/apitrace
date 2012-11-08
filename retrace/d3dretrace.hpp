@@ -35,9 +35,6 @@
 struct IDirect3DDevice9;
 
 
-extern const char *g_szD3D9DllName;
-
-
 namespace d3dretrace {
 
 

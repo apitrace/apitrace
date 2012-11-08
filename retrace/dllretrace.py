@@ -50,7 +50,6 @@ class DllDispatcher(Dispatcher):
         print r'        if (!g_h%sModule) {' % tag
         print r'            os::log("error: failed to load %s.dll\n");' % api.name
         print r'            exit(1);'
-        print r'            return NULL;'
         print r'        }'
         print r'    }'
         print r'    return GetProcAddress(g_h%sModule, lpProcName);' % tag
