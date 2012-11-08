@@ -29,46 +29,43 @@
 
 from dllretrace import DllRetracer as Retracer
 import specs.stdapi as stdapi
-from specs.d3d9 import *
 
 
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
         print '// Swizzling mapping for lock addresses'
-        print 'static std::map<void *, void *> _locks;'
+        print 'static std::map<void *, void *> _maps;'
         print
 
         self.table_name = 'd3dretrace::d3d_callbacks'
 
         Retracer.retraceApi(self, api)
 
+    def invokeFunction(self, function):
+        # create windows as neccessary
+        if function.name in ('D3D10CreateDeviceAndSwapChain', 'D3D10CreateDeviceAndSwapChain1', 'D3D11CreateDeviceAndSwapChain'):
+            print r'    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
+
+        Retracer.invokeFunction(self, function)
+
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
-        if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):
-            print r'    d3dretrace::pLastDirect3DDevice9 = _this;'
+        #if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):
+        #    print r'    d3dretrace::pLastDirect3DDevice9 = _this;'
 
         # create windows as neccessary
-        if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):
-            print r'    HWND hWnd = d3dretrace::createWindow(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
-            print r'    pPresentationParameters->hDeviceWindow = hWnd;'
-            if 'hFocusWindow' in method.argNames():
-                print r'    hFocusWindow = hWnd;'
-
-        if method.name in ('Reset', 'ResetEx'):
-            print r'    if (pPresentationParameters->Windowed) {'
-            print r'        d3dretrace::resizeWindow(pPresentationParameters->hDeviceWindow, pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight);'
-            print r'    }'
+        if method.name == 'CreateSwapChain':
+            print r'    pDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
 
         # notify frame has been completed
         if method.name == 'Present':
             print r'    retrace::frameComplete(call);'
-            print r'    hDestWindowOverride = NULL;'
 
-        if 'pSharedHandle' in method.argNames():
-            print r'    if (pSharedHandle) {'
+        if 'pSharedResource' in method.argNames():
+            print r'    if (pSharedResource) {'
             print r'        retrace::warning(call) << "shared surfaces unsupported\n";'
-            print r'        pSharedHandle = NULL;'
+            print r'        pSharedResource = NULL;'
             print r'    }'
 
         Retracer.invokeInterfaceMethod(self, interface, method)
@@ -83,31 +80,15 @@ class D3DRetracer(Retracer):
             print r'        retrace::warning(call) << "failed\n";'
             print r'    }'
 
-        if method.name in ('Lock', 'LockRect', 'LockBox'):
+        if method.name == 'Map':
             print '    VOID *_pbData = NULL;'
-            print '    size_t _LockedSize = 0;'
-            print '    _getLockInfo(_this, %s, _pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
-            print '    _locks[_this] = _pbData;'
+            print '    size_t _MappedSize = 0;'
+            print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames())
+            print '    _maps[_this] = _pbData;'
         
-        if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
+        if method.name == 'Unmap':
             print '    VOID *_pbData = 0;'
-            print '    _pbData = _locks[_this];'
+            print '    _pbData = _maps[_this];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
             print '    }'
-
-
-if __name__ == '__main__':
-    print r'''
-#include <string.h>
-
-#include <iostream>
-
-#include "d3d9imports.hpp"
-#include "d3d9size.hpp"
-#include "d3dretrace.hpp"
-
-'''
-
-    retracer = D3DRetracer()
-    retracer.retraceApi(d3d9)

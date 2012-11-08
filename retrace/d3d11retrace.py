@@ -29,7 +29,7 @@
 
 from d3dcommonretrace import D3DRetracer
 import specs.stdapi as stdapi
-from specs.d3d10 import d3d10
+from specs.d3d11 import d3d11
 
 
 if __name__ == '__main__':
@@ -38,11 +38,11 @@ if __name__ == '__main__':
 
 #include <iostream>
 
-#include "d3d10imports.hpp"
-#include "d3d10size.hpp"
+#include "d3d11imports.hpp"
+#include "d3d11size.hpp"
 #include "d3dretrace.hpp"
 
 '''
 
     retracer = D3DRetracer()
-    retracer.retraceApi(d3d10)
+    retracer.retraceApi(d3d11)

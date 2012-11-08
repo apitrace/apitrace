@@ -34,7 +34,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 import specs.stdapi as stdapi
-import specs.glapi as glapi
 
 
 class UnsupportedType(Exception):
