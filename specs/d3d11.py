@@ -327,9 +327,9 @@ D3D11_BOX = Struct("D3D11_BOX", [
 
 ID3D11DeviceChild.methods += [
     StdMethod(Void, "GetDevice", [Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice")]),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")]),
-    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
-    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")]),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
 ]
 
 D3D11_COMPARISON_FUNC = Enum("D3D11_COMPARISON_FUNC", [
@@ -893,7 +893,7 @@ D3D11_FORMAT_SUPPORT2 = Enum("D3D11_FORMAT_SUPPORT2", [
 ])
 
 ID3D11Asynchronous.methods += [
-    StdMethod(UINT, "GetDataSize", []),
+    StdMethod(UINT, "GetDataSize", [], sideeffects=False),
 ]
 
 D3D11_ASYNC_GETDATA_FLAG = Flags(UINT, [
@@ -1006,9 +1006,9 @@ D3D11_CLASS_INSTANCE_DESC = Struct("D3D11_CLASS_INSTANCE_DESC", [
 
 ID3D11ClassInstance.methods += [
     StdMethod(Void, "GetClassLinkage", [Out(Pointer(ObjPointer(ID3D11ClassLinkage)), "ppLinkage")]),
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_CLASS_INSTANCE_DESC), "pDesc")]),
-    StdMethod(Void, "GetInstanceName", [Out(LPSTR, "pInstanceName"), Out(Pointer(SIZE_T), "pBufferLength")]),
-    StdMethod(Void, "GetTypeName", [Out(LPSTR, "pTypeName"), Out(Pointer(SIZE_T), "pBufferLength")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_CLASS_INSTANCE_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetInstanceName", [Out(LPSTR, "pInstanceName"), Out(Pointer(SIZE_T), "pBufferLength")], sideeffects=False),
+    StdMethod(Void, "GetTypeName", [Out(LPSTR, "pTypeName"), Out(Pointer(SIZE_T), "pBufferLength")], sideeffects=False),
 ]
 
 ID3D11ClassLinkage.methods += [
@@ -1074,7 +1074,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "VSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "Begin", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
     StdMethod(Void, "End", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
-    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(OpaqueBlob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")]),
+    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(OpaqueBlob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
     StdMethod(Void, "SetPredication", [(ObjPointer(ID3D11Predicate), "pPredicate"), (BOOL, "PredicateValue")]),
     StdMethod(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
@@ -1200,11 +1200,11 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D11_FORMAT_SUPPORT), "pFormatSupport")]),
     StdMethod(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")]),
     StdMethod(Void, "CheckCounterInfo", [Out(Pointer(D3D11_COUNTER_INFO), "pCounterInfo")]),
-    StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D11_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")]),
-    StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(D3D11_FEATURE_DATA, "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")]),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")]),
-    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
-    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")]),
+    StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D11_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")], sideeffects=False),
+    StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(D3D11_FEATURE_DATA, "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
     StdMethod(D3D_FEATURE_LEVEL, "GetFeatureLevel", []),
     StdMethod(D3D11_CREATE_DEVICE_FLAG, "GetCreationFlags", []),
     StdMethod(HRESULT, "GetDeviceRemovedReason", []),

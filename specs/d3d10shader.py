@@ -162,14 +162,14 @@ ID3D10ShaderReflection.methods += [
 
 d3d10.addFunctions([
     StdFunction(HRESULT, "D3D10CompileShader", [(LPCSTR, "pSrcData"), (SIZE_T, "SrcDataSize"), (LPCSTR, "pFileName"), (Pointer(Const(D3D10_SHADER_MACRO)), "pDefines"), (LPD3D10INCLUDE, "pInclude"), (LPCSTR, "pFunctionName"), (LPCSTR, "pProfile"), (UINT, "Flags"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppShader"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppErrorMsgs")]),
-    StdFunction(HRESULT, "D3D10DisassembleShader", [(OpaquePointer(Const(Void)), "pShader"), (SIZE_T, "BytecodeLength"), (BOOL, "EnableColorCode"), (LPCSTR, "pComments"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppDisassembly")]),
+    StdFunction(HRESULT, "D3D10DisassembleShader", [(Blob(Const(Void), "BytecodeLength"), "pShader"), (SIZE_T, "BytecodeLength"), (BOOL, "EnableColorCode"), (LPCSTR, "pComments"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppDisassembly")]),
     StdFunction(LPCSTR, "D3D10GetPixelShaderProfile", [(ObjPointer(ID3D10Device), "pDevice")]),
     StdFunction(LPCSTR, "D3D10GetVertexShaderProfile", [(ObjPointer(ID3D10Device), "pDevice")]),
     StdFunction(LPCSTR, "D3D10GetGeometryShaderProfile", [(ObjPointer(ID3D10Device), "pDevice")]),
-    StdFunction(HRESULT, "D3D10ReflectShader", [(OpaquePointer(Const(Void)), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10ShaderReflection)), "ppReflector")]),
+    StdFunction(HRESULT, "D3D10ReflectShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10ShaderReflection)), "ppReflector")]),
     StdFunction(HRESULT, "D3D10PreprocessShader", [(LPCSTR, "pSrcData"), (SIZE_T, "SrcDataSize"), (LPCSTR, "pFileName"), (Pointer(Const(D3D10_SHADER_MACRO)), "pDefines"), (LPD3D10INCLUDE, "pInclude"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppShaderText"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppErrorMsgs")]),
-    StdFunction(HRESULT, "D3D10GetInputSignatureBlob", [(OpaquePointer(Const(Void)), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppSignatureBlob")]),
-    StdFunction(HRESULT, "D3D10GetOutputSignatureBlob", [(OpaquePointer(Const(Void)), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppSignatureBlob")]),
-    StdFunction(HRESULT, "D3D10GetInputAndOutputSignatureBlob", [(OpaquePointer(Const(Void)), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppSignatureBlob")]),
-    StdFunction(HRESULT, "D3D10GetShaderDebugInfo", [(OpaquePointer(Const(Void)), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppDebugInfo")]),
+    StdFunction(HRESULT, "D3D10GetInputSignatureBlob", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppSignatureBlob")]),
+    StdFunction(HRESULT, "D3D10GetOutputSignatureBlob", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppSignatureBlob")]),
+    StdFunction(HRESULT, "D3D10GetInputAndOutputSignatureBlob", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppSignatureBlob")]),
+    StdFunction(HRESULT, "D3D10GetShaderDebugInfo", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10Blob)), "ppDebugInfo")]),
 ])

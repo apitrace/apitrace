@@ -44,8 +44,8 @@ d3d10.addFunctions([
     StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), Out(Pointer(LPD3D10BLOB), "ppBuffer")]),
 
     # Undocumented
-    StdFunction(DWORD, "D3D10GetVersion", []),
-    StdFunction(DWORD, "D3D10RegisterLayers", []),
+    StdFunction(DWORD, "D3D10GetVersion", [], internal=True),
+    StdFunction(DWORD, "D3D10RegisterLayers", [], internal=True),
 ])
 
 d3d10.addInterfaces([
