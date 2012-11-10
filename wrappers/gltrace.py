@@ -355,7 +355,7 @@ class GlTracer(Tracer):
         print 'void _shadow_glGetBufferSubData(GLenum target, GLintptr offset,'
         print '                                GLsizeiptr size, GLvoid *data)'
         print '{'
-        print '    struct gltrace::Context *ctx = gltrace::getContext();'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (!ctx->needsShadowBuffers() || target != GL_ELEMENT_ARRAY_BUFFER) {'
         print '        _glGetBufferSubData(target, offset, size, data);'
         print '        return;'
