@@ -460,7 +460,8 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args, call = '__stdcall', const=False, sideeffects=True):
+    def __init__(self, type, name, args, call = '', const=False, sideeffects=True):
+        assert call == '__stdcall'
         Function.__init__(self, type, name, args, call = call, sideeffects=sideeffects)
         for index in range(len(self.args)):
             self.args[index].index = index + 1

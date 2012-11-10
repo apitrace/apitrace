@@ -183,26 +183,26 @@ DWRITE_FACTORY_TYPE = Enum("DWRITE_FACTORY_TYPE", [
 ])
 
 IDWriteFontFileLoader.methods += [
-    Method(HRESULT, "CreateStreamFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(ObjPointer(IDWriteFontFileStream)), "fontFileStream")]),
+    StdMethod(HRESULT, "CreateStreamFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(ObjPointer(IDWriteFontFileStream)), "fontFileStream")]),
 ]
 
 IDWriteLocalFontFileLoader.methods += [
-    Method(HRESULT, "GetFilePathLengthFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(UINT32), "filePathLength")]),
-    Method(HRESULT, "GetFilePathFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(WCHAR), "filePath"), (UINT32, "filePathSize")]),
-    Method(HRESULT, "GetLastWriteTimeFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(FILETIME), "lastWriteTime")]),
+    StdMethod(HRESULT, "GetFilePathLengthFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(UINT32), "filePathLength")]),
+    StdMethod(HRESULT, "GetFilePathFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(WCHAR), "filePath"), (UINT32, "filePathSize")]),
+    StdMethod(HRESULT, "GetLastWriteTimeFromKey", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), Out(Pointer(FILETIME), "lastWriteTime")]),
 ]
 
 IDWriteFontFileStream.methods += [
-    Method(HRESULT, "ReadFileFragment", [Out(Pointer(OpaquePointer(Const(Void))), "fragmentStart"), (UINT64, "fileOffset"), (UINT64, "fragmentSize"), Out(Pointer(OpaquePointer(Void)), "fragmentContext")]),
-    Method(Void, "ReleaseFileFragment", [(OpaquePointer(Void), "fragmentContext")]),
-    Method(HRESULT, "GetFileSize", [Out(Pointer(UINT64), "fileSize")]),
-    Method(HRESULT, "GetLastWriteTime", [Out(Pointer(UINT64), "lastWriteTime")]),
+    StdMethod(HRESULT, "ReadFileFragment", [Out(Pointer(OpaquePointer(Const(Void))), "fragmentStart"), (UINT64, "fileOffset"), (UINT64, "fragmentSize"), Out(Pointer(OpaquePointer(Void)), "fragmentContext")]),
+    StdMethod(Void, "ReleaseFileFragment", [(OpaquePointer(Void), "fragmentContext")]),
+    StdMethod(HRESULT, "GetFileSize", [Out(Pointer(UINT64), "fileSize")]),
+    StdMethod(HRESULT, "GetLastWriteTime", [Out(Pointer(UINT64), "lastWriteTime")]),
 ]
 
 IDWriteFontFile.methods += [
-    Method(HRESULT, "GetReferenceKey", [Out(Pointer(OpaquePointer(Const(Void))), "fontFileReferenceKey"), Out(Pointer(UINT32), "fontFileReferenceKeySize")]),
-    Method(HRESULT, "GetLoader", [Out(Pointer(ObjPointer(IDWriteFontFileLoader)), "fontFileLoader")]),
-    Method(HRESULT, "Analyze", [Out(Pointer(BOOL), "isSupportedFontType"), Out(Pointer(DWRITE_FONT_FILE_TYPE), "fontFileType"), Out(Pointer(DWRITE_FONT_FACE_TYPE), "fontFaceType"), Out(Pointer(UINT32), "numberOfFaces")]),
+    StdMethod(HRESULT, "GetReferenceKey", [Out(Pointer(OpaquePointer(Const(Void))), "fontFileReferenceKey"), Out(Pointer(UINT32), "fontFileReferenceKeySize")]),
+    StdMethod(HRESULT, "GetLoader", [Out(Pointer(ObjPointer(IDWriteFontFileLoader)), "fontFileLoader")]),
+    StdMethod(HRESULT, "Analyze", [Out(Pointer(BOOL), "isSupportedFontType"), Out(Pointer(DWRITE_FONT_FILE_TYPE), "fontFileType"), Out(Pointer(DWRITE_FONT_FACE_TYPE), "fontFaceType"), Out(Pointer(UINT32), "numberOfFaces")]),
 ]
 
 DWRITE_PIXEL_GEOMETRY = Enum("DWRITE_PIXEL_GEOMETRY", [
@@ -231,80 +231,80 @@ DWRITE_MATRIX = Struct("DWRITE_MATRIX", [
 ])
 
 IDWriteRenderingParams.methods += [
-    Method(FLOAT, "GetGamma", []),
-    Method(FLOAT, "GetEnhancedContrast", []),
-    Method(FLOAT, "GetClearTypeLevel", []),
-    Method(DWRITE_PIXEL_GEOMETRY, "GetPixelGeometry", []),
-    Method(DWRITE_RENDERING_MODE, "GetRenderingMode", []),
+    StdMethod(FLOAT, "GetGamma", []),
+    StdMethod(FLOAT, "GetEnhancedContrast", []),
+    StdMethod(FLOAT, "GetClearTypeLevel", []),
+    StdMethod(DWRITE_PIXEL_GEOMETRY, "GetPixelGeometry", []),
+    StdMethod(DWRITE_RENDERING_MODE, "GetRenderingMode", []),
 ]
 
 IDWriteFontFace.methods += [
-    Method(DWRITE_FONT_FACE_TYPE, "GetType", []),
-    Method(HRESULT, "GetFiles", [(OpaquePointer(UINT32), "numberOfFiles"), Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFiles")]),
-    Method(UINT32, "GetIndex", []),
-    Method(DWRITE_FONT_SIMULATIONS, "GetSimulations", []),
-    Method(BOOL, "IsSymbolFont", []),
-    Method(Void, "GetMetrics", [Out(Pointer(DWRITE_FONT_METRICS), "fontFaceMetrics")]),
-    Method(UINT16, "GetGlyphCount", []),
-    Method(HRESULT, "GetDesignGlyphMetrics", [(Pointer(Const(UINT16)), "glyphIndices"), (UINT32, "glyphCount"), Out(Pointer(DWRITE_GLYPH_METRICS), "glyphMetrics"), (BOOL, "isSideways")]),
-    Method(HRESULT, "GetGlyphIndices", [(Pointer(Const(UINT32)), "codePoints"), (UINT32, "codePointCount"), Out(Pointer(UINT16), "glyphIndices")]),
-    Method(HRESULT, "TryGetFontTable", [(UINT32, "openTypeTableTag"), Out(Pointer(OpaquePointer(Const(Void))), "tableData"), Out(Pointer(UINT32), "tableSize"), Out(Pointer(OpaquePointer(Void)), "tableContext"), Out(Pointer(BOOL), "exists")]),
-    Method(Void, "ReleaseFontTable", [(OpaquePointer(Void), "tableContext")]),
-    Method(HRESULT, "GetGlyphRunOutline", [(FLOAT, "emSize"), (Pointer(Const(UINT16)), "glyphIndices"), (Pointer(Const(FLOAT)), "glyphAdvances"), (Pointer(Const(DWRITE_GLYPH_OFFSET)), "glyphOffsets"), (UINT32, "glyphCount"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IDWriteGeometrySink), "geometrySink")]),
-    Method(HRESULT, "GetRecommendedRenderingMode", [(FLOAT, "emSize"), (FLOAT, "pixelsPerDip"), (DWRITE_MEASURING_MODE, "measuringMode"), (ObjPointer(IDWriteRenderingParams), "renderingParams"), Out(Pointer(DWRITE_RENDERING_MODE), "renderingMode")]),
-    Method(HRESULT, "GetGdiCompatibleMetrics", [(FLOAT, "emSize"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), Out(Pointer(DWRITE_FONT_METRICS), "fontFaceMetrics")]),
-    Method(HRESULT, "GetGdiCompatibleGlyphMetrics", [(FLOAT, "emSize"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (BOOL, "useGdiNatural"), (Array(Const(UINT16), "glyphCount"), "glyphIndices"), (UINT32, "glyphCount"), Out(Array(DWRITE_GLYPH_METRICS, "glyphCount"), "glyphMetrics"), (BOOL, "isSideways")]),
+    StdMethod(DWRITE_FONT_FACE_TYPE, "GetType", []),
+    StdMethod(HRESULT, "GetFiles", [(OpaquePointer(UINT32), "numberOfFiles"), Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFiles")]),
+    StdMethod(UINT32, "GetIndex", []),
+    StdMethod(DWRITE_FONT_SIMULATIONS, "GetSimulations", []),
+    StdMethod(BOOL, "IsSymbolFont", []),
+    StdMethod(Void, "GetMetrics", [Out(Pointer(DWRITE_FONT_METRICS), "fontFaceMetrics")]),
+    StdMethod(UINT16, "GetGlyphCount", []),
+    StdMethod(HRESULT, "GetDesignGlyphMetrics", [(Pointer(Const(UINT16)), "glyphIndices"), (UINT32, "glyphCount"), Out(Pointer(DWRITE_GLYPH_METRICS), "glyphMetrics"), (BOOL, "isSideways")]),
+    StdMethod(HRESULT, "GetGlyphIndices", [(Pointer(Const(UINT32)), "codePoints"), (UINT32, "codePointCount"), Out(Pointer(UINT16), "glyphIndices")]),
+    StdMethod(HRESULT, "TryGetFontTable", [(UINT32, "openTypeTableTag"), Out(Pointer(OpaquePointer(Const(Void))), "tableData"), Out(Pointer(UINT32), "tableSize"), Out(Pointer(OpaquePointer(Void)), "tableContext"), Out(Pointer(BOOL), "exists")]),
+    StdMethod(Void, "ReleaseFontTable", [(OpaquePointer(Void), "tableContext")]),
+    StdMethod(HRESULT, "GetGlyphRunOutline", [(FLOAT, "emSize"), (Pointer(Const(UINT16)), "glyphIndices"), (Pointer(Const(FLOAT)), "glyphAdvances"), (Pointer(Const(DWRITE_GLYPH_OFFSET)), "glyphOffsets"), (UINT32, "glyphCount"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IDWriteGeometrySink), "geometrySink")]),
+    StdMethod(HRESULT, "GetRecommendedRenderingMode", [(FLOAT, "emSize"), (FLOAT, "pixelsPerDip"), (DWRITE_MEASURING_MODE, "measuringMode"), (ObjPointer(IDWriteRenderingParams), "renderingParams"), Out(Pointer(DWRITE_RENDERING_MODE), "renderingMode")]),
+    StdMethod(HRESULT, "GetGdiCompatibleMetrics", [(FLOAT, "emSize"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), Out(Pointer(DWRITE_FONT_METRICS), "fontFaceMetrics")]),
+    StdMethod(HRESULT, "GetGdiCompatibleGlyphMetrics", [(FLOAT, "emSize"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (BOOL, "useGdiNatural"), (Array(Const(UINT16), "glyphCount"), "glyphIndices"), (UINT32, "glyphCount"), Out(Array(DWRITE_GLYPH_METRICS, "glyphCount"), "glyphMetrics"), (BOOL, "isSideways")]),
 ]
 
 IDWriteFontCollectionLoader.methods += [
-    Method(HRESULT, "CreateEnumeratorFromKey", [(ObjPointer(IDWriteFactory), "factory"), (OpaquePointer(Const(Void)), "collectionKey"), (UINT32, "collectionKeySize"), Out(Pointer(ObjPointer(IDWriteFontFileEnumerator)), "fontFileEnumerator")]),
+    StdMethod(HRESULT, "CreateEnumeratorFromKey", [(ObjPointer(IDWriteFactory), "factory"), (OpaquePointer(Const(Void)), "collectionKey"), (UINT32, "collectionKeySize"), Out(Pointer(ObjPointer(IDWriteFontFileEnumerator)), "fontFileEnumerator")]),
 ]
 
 IDWriteFontFileEnumerator.methods += [
-    Method(HRESULT, "MoveNext", [Out(Pointer(BOOL), "hasCurrentFile")]),
-    Method(HRESULT, "GetCurrentFontFile", [Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFile")]),
+    StdMethod(HRESULT, "MoveNext", [Out(Pointer(BOOL), "hasCurrentFile")]),
+    StdMethod(HRESULT, "GetCurrentFontFile", [Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFile")]),
 ]
 
 IDWriteLocalizedStrings.methods += [
-    Method(UINT32, "GetCount", []),
-    Method(HRESULT, "FindLocaleName", [(Pointer(Const(WCHAR)), "localeName"), Out(Pointer(UINT32), "index"), Out(Pointer(BOOL), "exists")]),
-    Method(HRESULT, "GetLocaleNameLength", [(UINT32, "index"), Out(Pointer(UINT32), "length")]),
-    Method(HRESULT, "GetLocaleName", [(UINT32, "index"), Out(Pointer(WCHAR), "localeName"), (UINT32, "size")]),
-    Method(HRESULT, "GetStringLength", [(UINT32, "index"), Out(Pointer(UINT32), "length")]),
-    Method(HRESULT, "GetString", [(UINT32, "index"), Out(Pointer(WCHAR), "stringBuffer"), (UINT32, "size")]),
+    StdMethod(UINT32, "GetCount", []),
+    StdMethod(HRESULT, "FindLocaleName", [(Pointer(Const(WCHAR)), "localeName"), Out(Pointer(UINT32), "index"), Out(Pointer(BOOL), "exists")]),
+    StdMethod(HRESULT, "GetLocaleNameLength", [(UINT32, "index"), Out(Pointer(UINT32), "length")]),
+    StdMethod(HRESULT, "GetLocaleName", [(UINT32, "index"), Out(Pointer(WCHAR), "localeName"), (UINT32, "size")]),
+    StdMethod(HRESULT, "GetStringLength", [(UINT32, "index"), Out(Pointer(UINT32), "length")]),
+    StdMethod(HRESULT, "GetString", [(UINT32, "index"), Out(Pointer(WCHAR), "stringBuffer"), (UINT32, "size")]),
 ]
 
 IDWriteFontCollection.methods += [
-    Method(UINT32, "GetFontFamilyCount", []),
-    Method(HRESULT, "GetFontFamily", [(UINT32, "index"), Out(Pointer(ObjPointer(IDWriteFontFamily)), "fontFamily")]),
-    Method(HRESULT, "FindFamilyName", [(Pointer(Const(WCHAR)), "familyName"), Out(Pointer(UINT32), "index"), Out(Pointer(BOOL), "exists")]),
-    Method(HRESULT, "GetFontFromFontFace", [(ObjPointer(IDWriteFontFace), "fontFace"), Out(Pointer(ObjPointer(IDWriteFont)), "font")]),
+    StdMethod(UINT32, "GetFontFamilyCount", []),
+    StdMethod(HRESULT, "GetFontFamily", [(UINT32, "index"), Out(Pointer(ObjPointer(IDWriteFontFamily)), "fontFamily")]),
+    StdMethod(HRESULT, "FindFamilyName", [(Pointer(Const(WCHAR)), "familyName"), Out(Pointer(UINT32), "index"), Out(Pointer(BOOL), "exists")]),
+    StdMethod(HRESULT, "GetFontFromFontFace", [(ObjPointer(IDWriteFontFace), "fontFace"), Out(Pointer(ObjPointer(IDWriteFont)), "font")]),
 ]
 
 IDWriteFontList.methods += [
-    Method(HRESULT, "GetFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection")]),
-    Method(UINT32, "GetFontCount", []),
-    Method(HRESULT, "GetFont", [(UINT32, "index"), Out(Pointer(ObjPointer(IDWriteFont)), "font")]),
+    StdMethod(HRESULT, "GetFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection")]),
+    StdMethod(UINT32, "GetFontCount", []),
+    StdMethod(HRESULT, "GetFont", [(UINT32, "index"), Out(Pointer(ObjPointer(IDWriteFont)), "font")]),
 ]
 
 IDWriteFontFamily.methods += [
-    Method(HRESULT, "GetFamilyNames", [Out(Pointer(ObjPointer(IDWriteLocalizedStrings)), "names")]),
-    Method(HRESULT, "GetFirstMatchingFont", [(DWRITE_FONT_WEIGHT, "weight"), (DWRITE_FONT_STRETCH, "stretch"), (DWRITE_FONT_STYLE, "style"), Out(Pointer(ObjPointer(IDWriteFont)), "matchingFont")]),
-    Method(HRESULT, "GetMatchingFonts", [(DWRITE_FONT_WEIGHT, "weight"), (DWRITE_FONT_STRETCH, "stretch"), (DWRITE_FONT_STYLE, "style"), Out(Pointer(ObjPointer(IDWriteFontList)), "matchingFonts")]),
+    StdMethod(HRESULT, "GetFamilyNames", [Out(Pointer(ObjPointer(IDWriteLocalizedStrings)), "names")]),
+    StdMethod(HRESULT, "GetFirstMatchingFont", [(DWRITE_FONT_WEIGHT, "weight"), (DWRITE_FONT_STRETCH, "stretch"), (DWRITE_FONT_STYLE, "style"), Out(Pointer(ObjPointer(IDWriteFont)), "matchingFont")]),
+    StdMethod(HRESULT, "GetMatchingFonts", [(DWRITE_FONT_WEIGHT, "weight"), (DWRITE_FONT_STRETCH, "stretch"), (DWRITE_FONT_STYLE, "style"), Out(Pointer(ObjPointer(IDWriteFontList)), "matchingFonts")]),
 ]
 
 IDWriteFont.methods += [
-    Method(HRESULT, "GetFontFamily", [Out(Pointer(ObjPointer(IDWriteFontFamily)), "fontFamily")]),
-    Method(DWRITE_FONT_WEIGHT, "GetWeight", []),
-    Method(DWRITE_FONT_STRETCH, "GetStretch", []),
-    Method(DWRITE_FONT_STYLE, "GetStyle", []),
-    Method(BOOL, "IsSymbolFont", []),
-    Method(HRESULT, "GetFaceNames", [Out(Pointer(ObjPointer(IDWriteLocalizedStrings)), "names")]),
-    Method(HRESULT, "GetInformationalStrings", [(DWRITE_INFORMATIONAL_STRING_ID, "informationalStringID"), Out(Pointer(ObjPointer(IDWriteLocalizedStrings)), "informationalStrings"), Out(Pointer(BOOL), "exists")]),
-    Method(DWRITE_FONT_SIMULATIONS, "GetSimulations", []),
-    Method(Void, "GetMetrics", [Out(Pointer(DWRITE_FONT_METRICS), "fontMetrics")]),
-    Method(HRESULT, "HasCharacter", [(UINT32, "unicodeValue"), Out(Pointer(BOOL), "exists")]),
-    Method(HRESULT, "CreateFontFace", [Out(Pointer(ObjPointer(IDWriteFontFace)), "fontFace")]),
+    StdMethod(HRESULT, "GetFontFamily", [Out(Pointer(ObjPointer(IDWriteFontFamily)), "fontFamily")]),
+    StdMethod(DWRITE_FONT_WEIGHT, "GetWeight", []),
+    StdMethod(DWRITE_FONT_STRETCH, "GetStretch", []),
+    StdMethod(DWRITE_FONT_STYLE, "GetStyle", []),
+    StdMethod(BOOL, "IsSymbolFont", []),
+    StdMethod(HRESULT, "GetFaceNames", [Out(Pointer(ObjPointer(IDWriteLocalizedStrings)), "names")]),
+    StdMethod(HRESULT, "GetInformationalStrings", [(DWRITE_INFORMATIONAL_STRING_ID, "informationalStringID"), Out(Pointer(ObjPointer(IDWriteLocalizedStrings)), "informationalStrings"), Out(Pointer(BOOL), "exists")]),
+    StdMethod(DWRITE_FONT_SIMULATIONS, "GetSimulations", []),
+    StdMethod(Void, "GetMetrics", [Out(Pointer(DWRITE_FONT_METRICS), "fontMetrics")]),
+    StdMethod(HRESULT, "HasCharacter", [(UINT32, "unicodeValue"), Out(Pointer(BOOL), "exists")]),
+    StdMethod(HRESULT, "CreateFontFace", [Out(Pointer(ObjPointer(IDWriteFontFace)), "fontFace")]),
 ]
 
 DWRITE_READING_DIRECTION = Enum("DWRITE_READING_DIRECTION", [
@@ -448,37 +448,37 @@ DWRITE_TRIMMING = Struct("DWRITE_TRIMMING", [
 ])
 
 IDWriteTextFormat.methods += [
-    Method(HRESULT, "SetTextAlignment", [(DWRITE_TEXT_ALIGNMENT, "textAlignment")]),
-    Method(HRESULT, "SetParagraphAlignment", [(DWRITE_PARAGRAPH_ALIGNMENT, "paragraphAlignment")]),
-    Method(HRESULT, "SetWordWrapping", [(DWRITE_WORD_WRAPPING, "wordWrapping")]),
-    Method(HRESULT, "SetReadingDirection", [(DWRITE_READING_DIRECTION, "readingDirection")]),
-    Method(HRESULT, "SetFlowDirection", [(DWRITE_FLOW_DIRECTION, "flowDirection")]),
-    Method(HRESULT, "SetIncrementalTabStop", [(FLOAT, "incrementalTabStop")]),
-    Method(HRESULT, "SetTrimming", [(Pointer(Const(DWRITE_TRIMMING)), "trimmingOptions"), (ObjPointer(IDWriteInlineObject), "trimmingSign")]),
-    Method(HRESULT, "SetLineSpacing", [(DWRITE_LINE_SPACING_METHOD, "lineSpacingMethod"), (FLOAT, "lineSpacing"), (FLOAT, "baseline")]),
-    Method(DWRITE_TEXT_ALIGNMENT, "GetTextAlignment", []),
-    Method(DWRITE_PARAGRAPH_ALIGNMENT, "GetParagraphAlignment", []),
-    Method(DWRITE_WORD_WRAPPING, "GetWordWrapping", []),
-    Method(DWRITE_READING_DIRECTION, "GetReadingDirection", []),
-    Method(DWRITE_FLOW_DIRECTION, "GetFlowDirection", []),
-    Method(FLOAT, "GetIncrementalTabStop", []),
-    Method(HRESULT, "GetTrimming", [Out(Pointer(DWRITE_TRIMMING), "trimmingOptions"), Out(Pointer(ObjPointer(IDWriteInlineObject)), "trimmingSign")]),
-    Method(HRESULT, "GetLineSpacing", [Out(Pointer(DWRITE_LINE_SPACING_METHOD), "lineSpacingMethod"), Out(Pointer(FLOAT), "lineSpacing"), Out(Pointer(FLOAT), "baseline")]),
-    Method(HRESULT, "GetFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection")]),
-    Method(UINT32, "GetFontFamilyNameLength", []),
-    Method(HRESULT, "GetFontFamilyName", [Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize")]),
-    Method(DWRITE_FONT_WEIGHT, "GetFontWeight", []),
-    Method(DWRITE_FONT_STYLE, "GetFontStyle", []),
-    Method(DWRITE_FONT_STRETCH, "GetFontStretch", []),
-    Method(FLOAT, "GetFontSize", []),
-    Method(UINT32, "GetLocaleNameLength", []),
-    Method(HRESULT, "GetLocaleName", [Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize")]),
+    StdMethod(HRESULT, "SetTextAlignment", [(DWRITE_TEXT_ALIGNMENT, "textAlignment")]),
+    StdMethod(HRESULT, "SetParagraphAlignment", [(DWRITE_PARAGRAPH_ALIGNMENT, "paragraphAlignment")]),
+    StdMethod(HRESULT, "SetWordWrapping", [(DWRITE_WORD_WRAPPING, "wordWrapping")]),
+    StdMethod(HRESULT, "SetReadingDirection", [(DWRITE_READING_DIRECTION, "readingDirection")]),
+    StdMethod(HRESULT, "SetFlowDirection", [(DWRITE_FLOW_DIRECTION, "flowDirection")]),
+    StdMethod(HRESULT, "SetIncrementalTabStop", [(FLOAT, "incrementalTabStop")]),
+    StdMethod(HRESULT, "SetTrimming", [(Pointer(Const(DWRITE_TRIMMING)), "trimmingOptions"), (ObjPointer(IDWriteInlineObject), "trimmingSign")]),
+    StdMethod(HRESULT, "SetLineSpacing", [(DWRITE_LINE_SPACING_METHOD, "lineSpacingMethod"), (FLOAT, "lineSpacing"), (FLOAT, "baseline")]),
+    StdMethod(DWRITE_TEXT_ALIGNMENT, "GetTextAlignment", []),
+    StdMethod(DWRITE_PARAGRAPH_ALIGNMENT, "GetParagraphAlignment", []),
+    StdMethod(DWRITE_WORD_WRAPPING, "GetWordWrapping", []),
+    StdMethod(DWRITE_READING_DIRECTION, "GetReadingDirection", []),
+    StdMethod(DWRITE_FLOW_DIRECTION, "GetFlowDirection", []),
+    StdMethod(FLOAT, "GetIncrementalTabStop", []),
+    StdMethod(HRESULT, "GetTrimming", [Out(Pointer(DWRITE_TRIMMING), "trimmingOptions"), Out(Pointer(ObjPointer(IDWriteInlineObject)), "trimmingSign")]),
+    StdMethod(HRESULT, "GetLineSpacing", [Out(Pointer(DWRITE_LINE_SPACING_METHOD), "lineSpacingMethod"), Out(Pointer(FLOAT), "lineSpacing"), Out(Pointer(FLOAT), "baseline")]),
+    StdMethod(HRESULT, "GetFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection")]),
+    StdMethod(UINT32, "GetFontFamilyNameLength", []),
+    StdMethod(HRESULT, "GetFontFamilyName", [Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize")]),
+    StdMethod(DWRITE_FONT_WEIGHT, "GetFontWeight", []),
+    StdMethod(DWRITE_FONT_STYLE, "GetFontStyle", []),
+    StdMethod(DWRITE_FONT_STRETCH, "GetFontStretch", []),
+    StdMethod(FLOAT, "GetFontSize", []),
+    StdMethod(UINT32, "GetLocaleNameLength", []),
+    StdMethod(HRESULT, "GetLocaleName", [Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize")]),
 ]
 
 IDWriteTypography.methods += [
-    Method(HRESULT, "AddFontFeature", [(DWRITE_FONT_FEATURE, "fontFeature")]),
-    Method(UINT32, "GetFontFeatureCount", []),
-    Method(HRESULT, "GetFontFeature", [(UINT32, "fontFeatureIndex"), Out(Pointer(DWRITE_FONT_FEATURE), "fontFeature")]),
+    StdMethod(HRESULT, "AddFontFeature", [(DWRITE_FONT_FEATURE, "fontFeature")]),
+    StdMethod(UINT32, "GetFontFeatureCount", []),
+    StdMethod(HRESULT, "GetFontFeature", [(UINT32, "fontFeatureIndex"), Out(Pointer(DWRITE_FONT_FEATURE), "fontFeature")]),
 ]
 
 DWRITE_SCRIPT_SHAPES = EnumFlag("DWRITE_SCRIPT_SHAPES", [
@@ -531,28 +531,28 @@ DWRITE_SHAPING_GLYPH_PROPERTIES = Struct("DWRITE_SHAPING_GLYPH_PROPERTIES", [
 ])
 
 IDWriteTextAnalysisSource.methods += [
-    Method(HRESULT, "GetTextAtPosition", [(UINT32, "textPosition"), Out(Pointer(Pointer(Const(WCHAR))), "textString"), Out(Pointer(UINT32), "textLength")]),
-    Method(HRESULT, "GetTextBeforePosition", [(UINT32, "textPosition"), Out(Pointer(Pointer(Const(WCHAR))), "textString"), Out(Pointer(UINT32), "textLength")]),
-    Method(DWRITE_READING_DIRECTION, "GetParagraphReadingDirection", []),
-    Method(HRESULT, "GetLocaleName", [(UINT32, "textPosition"), Out(Pointer(UINT32), "textLength"), Out(Pointer(Pointer(Const(WCHAR))), "localeName")]),
-    Method(HRESULT, "GetNumberSubstitution", [(UINT32, "textPosition"), Out(Pointer(UINT32), "textLength"), Out(Pointer(ObjPointer(IDWriteNumberSubstitution)), "numberSubstitution")]),
+    StdMethod(HRESULT, "GetTextAtPosition", [(UINT32, "textPosition"), Out(Pointer(Pointer(Const(WCHAR))), "textString"), Out(Pointer(UINT32), "textLength")]),
+    StdMethod(HRESULT, "GetTextBeforePosition", [(UINT32, "textPosition"), Out(Pointer(Pointer(Const(WCHAR))), "textString"), Out(Pointer(UINT32), "textLength")]),
+    StdMethod(DWRITE_READING_DIRECTION, "GetParagraphReadingDirection", []),
+    StdMethod(HRESULT, "GetLocaleName", [(UINT32, "textPosition"), Out(Pointer(UINT32), "textLength"), Out(Pointer(Pointer(Const(WCHAR))), "localeName")]),
+    StdMethod(HRESULT, "GetNumberSubstitution", [(UINT32, "textPosition"), Out(Pointer(UINT32), "textLength"), Out(Pointer(ObjPointer(IDWriteNumberSubstitution)), "numberSubstitution")]),
 ]
 
 IDWriteTextAnalysisSink.methods += [
-    Method(HRESULT, "SetScriptAnalysis", [(UINT32, "textPosition"), (UINT32, "textLength"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis")]),
-    Method(HRESULT, "SetLineBreakpoints", [(UINT32, "textPosition"), (UINT32, "textLength"), (Pointer(Const(DWRITE_LINE_BREAKPOINT)), "lineBreakpoints")]),
-    Method(HRESULT, "SetBidiLevel", [(UINT32, "textPosition"), (UINT32, "textLength"), (UINT8, "explicitLevel"), (UINT8, "resolvedLevel")]),
-    Method(HRESULT, "SetNumberSubstitution", [(UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteNumberSubstitution), "numberSubstitution")]),
+    StdMethod(HRESULT, "SetScriptAnalysis", [(UINT32, "textPosition"), (UINT32, "textLength"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis")]),
+    StdMethod(HRESULT, "SetLineBreakpoints", [(UINT32, "textPosition"), (UINT32, "textLength"), (Pointer(Const(DWRITE_LINE_BREAKPOINT)), "lineBreakpoints")]),
+    StdMethod(HRESULT, "SetBidiLevel", [(UINT32, "textPosition"), (UINT32, "textLength"), (UINT8, "explicitLevel"), (UINT8, "resolvedLevel")]),
+    StdMethod(HRESULT, "SetNumberSubstitution", [(UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteNumberSubstitution), "numberSubstitution")]),
 ]
 
 IDWriteTextAnalyzer.methods += [
-    Method(HRESULT, "AnalyzeScript", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
-    Method(HRESULT, "AnalyzeBidi", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
-    Method(HRESULT, "AnalyzeNumberSubstitution", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
-    Method(HRESULT, "AnalyzeLineBreakpoints", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
-    Method(HRESULT, "GetGlyphs", [(Pointer(Const(WCHAR)), "textString"), (UINT32, "textLength"), (ObjPointer(IDWriteFontFace), "fontFace"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis"), (Pointer(Const(WCHAR)), "localeName"), (ObjPointer(IDWriteNumberSubstitution), "numberSubstitution"), (OpaquePointer(Pointer(Const(DWRITE_TYPOGRAPHIC_FEATURES))), "features"), (Pointer(Const(UINT32)), "featureRangeLengths"), (UINT32, "featureRanges"), (UINT32, "maxGlyphCount"), Out(Pointer(UINT16), "clusterMap"), Out(Pointer(DWRITE_SHAPING_TEXT_PROPERTIES), "textProps"), Out(Pointer(UINT16), "glyphIndices"), Out(Pointer(DWRITE_SHAPING_GLYPH_PROPERTIES), "glyphProps"), Out(Pointer(UINT32), "actualGlyphCount")]),
-    Method(HRESULT, "GetGlyphPlacements", [(Array(Const(WCHAR), "textLength"), "textString"), (Array(Const(UINT16), "textLength"), "clusterMap"), (Array(DWRITE_SHAPING_TEXT_PROPERTIES, "textLength"), "textProps"), (UINT32, "textLength"), (Array(Const(UINT16), "glyphCount"), "glyphIndices"), (Array(Const(DWRITE_SHAPING_GLYPH_PROPERTIES), "glyphCount"), "glyphProps"), (UINT32, "glyphCount"), (ObjPointer(IDWriteFontFace), "fontFace"), (FLOAT, "fontEmSize"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis"), (LPCWSTR, "localeName"), (Array(Pointer(Const(DWRITE_TYPOGRAPHIC_FEATURES)), "featureRanges"), "features"), (Array(Const(UINT32), "featureRanges"), "featureRangeLengths"), (UINT32, "featureRanges"), Out(Array(FLOAT, "glyphCount"), "glyphAdvances"), Out(Array(DWRITE_GLYPH_OFFSET, "glyphCount"), "glyphOffsets")]), 
-    Method(HRESULT, "GetGdiCompatibleGlyphPlacements", [(Array(Const(WCHAR), "textLength"), "textString"), (Array(Const(UINT16), "textLength"), "clusterMap"), (Array(DWRITE_SHAPING_TEXT_PROPERTIES, "textLength"), "textProps"), (UINT32, "textLength"), (Array(Const(UINT16), "glyphCount"), "glyphIndices"), (Array(Const(DWRITE_SHAPING_GLYPH_PROPERTIES), "glyphCount"), "glyphProps"), (UINT32, "glyphCount"), (ObjPointer(IDWriteFontFace), "fontFace"), (FLOAT, "fontEmSize"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (BOOL, "useGdiNatural"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis"), (LPCWSTR, "localeName"), (Array(Pointer(Const(DWRITE_TYPOGRAPHIC_FEATURES)), "featureRanges"), "features"), (Array(Const(UINT32), "featureRanges"), "featureRangeLengths"), (UINT32, "featureRanges"), Out(Array(FLOAT, "glyphCount"), "glyphAdvances"), Out(Array(DWRITE_GLYPH_OFFSET, "glyphCount"), "glyphOffsets")]),
+    StdMethod(HRESULT, "AnalyzeScript", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
+    StdMethod(HRESULT, "AnalyzeBidi", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
+    StdMethod(HRESULT, "AnalyzeNumberSubstitution", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
+    StdMethod(HRESULT, "AnalyzeLineBreakpoints", [(ObjPointer(IDWriteTextAnalysisSource), "analysisSource"), (UINT32, "textPosition"), (UINT32, "textLength"), (ObjPointer(IDWriteTextAnalysisSink), "analysisSink")]),
+    StdMethod(HRESULT, "GetGlyphs", [(Pointer(Const(WCHAR)), "textString"), (UINT32, "textLength"), (ObjPointer(IDWriteFontFace), "fontFace"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis"), (Pointer(Const(WCHAR)), "localeName"), (ObjPointer(IDWriteNumberSubstitution), "numberSubstitution"), (OpaquePointer(Pointer(Const(DWRITE_TYPOGRAPHIC_FEATURES))), "features"), (Pointer(Const(UINT32)), "featureRangeLengths"), (UINT32, "featureRanges"), (UINT32, "maxGlyphCount"), Out(Pointer(UINT16), "clusterMap"), Out(Pointer(DWRITE_SHAPING_TEXT_PROPERTIES), "textProps"), Out(Pointer(UINT16), "glyphIndices"), Out(Pointer(DWRITE_SHAPING_GLYPH_PROPERTIES), "glyphProps"), Out(Pointer(UINT32), "actualGlyphCount")]),
+    StdMethod(HRESULT, "GetGlyphPlacements", [(Array(Const(WCHAR), "textLength"), "textString"), (Array(Const(UINT16), "textLength"), "clusterMap"), (Array(DWRITE_SHAPING_TEXT_PROPERTIES, "textLength"), "textProps"), (UINT32, "textLength"), (Array(Const(UINT16), "glyphCount"), "glyphIndices"), (Array(Const(DWRITE_SHAPING_GLYPH_PROPERTIES), "glyphCount"), "glyphProps"), (UINT32, "glyphCount"), (ObjPointer(IDWriteFontFace), "fontFace"), (FLOAT, "fontEmSize"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis"), (LPCWSTR, "localeName"), (Array(Pointer(Const(DWRITE_TYPOGRAPHIC_FEATURES)), "featureRanges"), "features"), (Array(Const(UINT32), "featureRanges"), "featureRangeLengths"), (UINT32, "featureRanges"), Out(Array(FLOAT, "glyphCount"), "glyphAdvances"), Out(Array(DWRITE_GLYPH_OFFSET, "glyphCount"), "glyphOffsets")]), 
+    StdMethod(HRESULT, "GetGdiCompatibleGlyphPlacements", [(Array(Const(WCHAR), "textLength"), "textString"), (Array(Const(UINT16), "textLength"), "clusterMap"), (Array(DWRITE_SHAPING_TEXT_PROPERTIES, "textLength"), "textProps"), (UINT32, "textLength"), (Array(Const(UINT16), "glyphCount"), "glyphIndices"), (Array(Const(DWRITE_SHAPING_GLYPH_PROPERTIES), "glyphCount"), "glyphProps"), (UINT32, "glyphCount"), (ObjPointer(IDWriteFontFace), "fontFace"), (FLOAT, "fontEmSize"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (BOOL, "useGdiNatural"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (Pointer(Const(DWRITE_SCRIPT_ANALYSIS)), "scriptAnalysis"), (LPCWSTR, "localeName"), (Array(Pointer(Const(DWRITE_TYPOGRAPHIC_FEATURES)), "featureRanges"), "features"), (Array(Const(UINT32), "featureRanges"), "featureRangeLengths"), (UINT32, "featureRanges"), Out(Array(FLOAT, "glyphCount"), "glyphAdvances"), Out(Array(DWRITE_GLYPH_OFFSET, "glyphCount"), "glyphOffsets")]),
 ]
 
 DWRITE_GLYPH_RUN = Struct("DWRITE_GLYPH_RUN", [
@@ -654,84 +654,84 @@ DWRITE_HIT_TEST_METRICS = Struct("DWRITE_HIT_TEST_METRICS", [
 ])
 
 IDWriteInlineObject.methods += [
-    Method(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (ObjPointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
-    Method(HRESULT, "GetMetrics", [Out(Pointer(DWRITE_INLINE_OBJECT_METRICS), "metrics")]),
-    Method(HRESULT, "GetOverhangMetrics", [Out(Pointer(DWRITE_OVERHANG_METRICS), "overhangs")]),
-    Method(HRESULT, "GetBreakConditions", [Out(Pointer(DWRITE_BREAK_CONDITION), "breakConditionBefore"), Out(Pointer(DWRITE_BREAK_CONDITION), "breakConditionAfter")]),
+    StdMethod(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (ObjPointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
+    StdMethod(HRESULT, "GetMetrics", [Out(Pointer(DWRITE_INLINE_OBJECT_METRICS), "metrics")]),
+    StdMethod(HRESULT, "GetOverhangMetrics", [Out(Pointer(DWRITE_OVERHANG_METRICS), "overhangs")]),
+    StdMethod(HRESULT, "GetBreakConditions", [Out(Pointer(DWRITE_BREAK_CONDITION), "breakConditionBefore"), Out(Pointer(DWRITE_BREAK_CONDITION), "breakConditionAfter")]),
 ]
 
 IDWritePixelSnapping.methods += [
-    Method(HRESULT, "IsPixelSnappingDisabled", [(OpaquePointer(Void), "clientDrawingContext"), Out(Pointer(BOOL), "isDisabled")]),
-    Method(HRESULT, "GetCurrentTransform", [(OpaquePointer(Void), "clientDrawingContext"), Out(Pointer(DWRITE_MATRIX), "transform")]),
-    Method(HRESULT, "GetPixelsPerDip", [(OpaquePointer(Void), "clientDrawingContext"), Out(Pointer(FLOAT), "pixelsPerDip")]),
+    StdMethod(HRESULT, "IsPixelSnappingDisabled", [(OpaquePointer(Void), "clientDrawingContext"), Out(Pointer(BOOL), "isDisabled")]),
+    StdMethod(HRESULT, "GetCurrentTransform", [(OpaquePointer(Void), "clientDrawingContext"), Out(Pointer(DWRITE_MATRIX), "transform")]),
+    StdMethod(HRESULT, "GetPixelsPerDip", [(OpaquePointer(Void), "clientDrawingContext"), Out(Pointer(FLOAT), "pixelsPerDip")]),
 ]
 
 IDWriteTextRenderer.methods += [
-    Method(HRESULT, "DrawGlyphRun", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (DWRITE_MEASURING_MODE, "measuringMode"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (Pointer(Const(DWRITE_GLYPH_RUN_DESCRIPTION)), "glyphRunDescription"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
-    Method(HRESULT, "DrawUnderline", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (Pointer(Const(DWRITE_UNDERLINE)), "underline"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
-    Method(HRESULT, "DrawStrikethrough", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (Pointer(Const(DWRITE_STRIKETHROUGH)), "strikethrough"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
-    Method(HRESULT, "DrawInlineObject", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "originX"), (FLOAT, "originY"), (ObjPointer(IDWriteInlineObject), "inlineObject"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
+    StdMethod(HRESULT, "DrawGlyphRun", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (DWRITE_MEASURING_MODE, "measuringMode"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (Pointer(Const(DWRITE_GLYPH_RUN_DESCRIPTION)), "glyphRunDescription"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
+    StdMethod(HRESULT, "DrawUnderline", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (Pointer(Const(DWRITE_UNDERLINE)), "underline"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
+    StdMethod(HRESULT, "DrawStrikethrough", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (Pointer(Const(DWRITE_STRIKETHROUGH)), "strikethrough"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
+    StdMethod(HRESULT, "DrawInlineObject", [(OpaquePointer(Void), "clientDrawingContext"), (FLOAT, "originX"), (FLOAT, "originY"), (ObjPointer(IDWriteInlineObject), "inlineObject"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
 ]
 
 IDWriteTextLayout.methods += [
-    Method(HRESULT, "SetMaxWidth", [(FLOAT, "maxWidth")]),
-    Method(HRESULT, "SetMaxHeight", [(FLOAT, "maxHeight")]),
-    Method(HRESULT, "SetFontCollection", [(ObjPointer(IDWriteFontCollection), "fontCollection"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetFontFamilyName", [(Pointer(Const(WCHAR)), "fontFamilyName"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetFontWeight", [(DWRITE_FONT_WEIGHT, "fontWeight"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetFontStyle", [(DWRITE_FONT_STYLE, "fontStyle"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetFontStretch", [(DWRITE_FONT_STRETCH, "fontStretch"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetFontSize", [(FLOAT, "fontSize"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetUnderline", [(BOOL, "hasUnderline"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetStrikethrough", [(BOOL, "hasStrikethrough"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetDrawingEffect", [(ObjPointer(IUnknown), "drawingEffect"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetInlineObject", [(ObjPointer(IDWriteInlineObject), "inlineObject"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetTypography", [(ObjPointer(IDWriteTypography), "typography"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(HRESULT, "SetLocaleName", [(Pointer(Const(WCHAR)), "localeName"), (DWRITE_TEXT_RANGE, "textRange")]),
-    Method(FLOAT, "GetMaxWidth", []),
-    Method(FLOAT, "GetMaxHeight", []),
-    Method(HRESULT, "GetFontCollection", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetFontFamilyNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetFontFamilyName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetFontWeight", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_WEIGHT), "fontWeight"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetFontStyle", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STYLE), "fontStyle"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetFontStretch", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STRETCH), "fontStretch"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetFontSize", [(UINT32, "currentPosition"), Out(Pointer(FLOAT), "fontSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetUnderline", [(UINT32, "currentPosition"), Out(Pointer(BOOL), "hasUnderline"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetStrikethrough", [(UINT32, "currentPosition"), Out(Pointer(BOOL), "hasStrikethrough"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetDrawingEffect", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IUnknown)), "drawingEffect"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetInlineObject", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteInlineObject)), "inlineObject"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetTypography", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteTypography)), "typography"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetLocaleNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "GetLocaleName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    Method(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (ObjPointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY")]),
-    Method(HRESULT, "GetLineMetrics", [Out(Pointer(DWRITE_LINE_METRICS), "lineMetrics"), (UINT32, "maxLineCount"), Out(Pointer(UINT32), "actualLineCount")]),
-    Method(HRESULT, "GetMetrics", [Out(Pointer(DWRITE_TEXT_METRICS), "textMetrics")]),
-    Method(HRESULT, "GetOverhangMetrics", [Out(Pointer(DWRITE_OVERHANG_METRICS), "overhangs")]),
-    Method(HRESULT, "GetClusterMetrics", [Out(Pointer(DWRITE_CLUSTER_METRICS), "clusterMetrics"), (UINT32, "maxClusterCount"), Out(Pointer(UINT32), "actualClusterCount")]),
-    Method(HRESULT, "DetermineMinWidth", [Out(Pointer(FLOAT), "minWidth")]),
-    Method(HRESULT, "HitTestPoint", [(FLOAT, "pointX"), (FLOAT, "pointY"), Out(Pointer(BOOL), "isTrailingHit"), Out(Pointer(BOOL), "isInside"), Out(Pointer(DWRITE_HIT_TEST_METRICS), "hitTestMetrics")]),
-    Method(HRESULT, "HitTestTextPosition", [(UINT32, "textPosition"), (BOOL, "isTrailingHit"), Out(Pointer(FLOAT), "pointX"), Out(Pointer(FLOAT), "pointY"), Out(Pointer(DWRITE_HIT_TEST_METRICS), "hitTestMetrics")]),
-    Method(HRESULT, "HitTestTextRange", [(UINT32, "textPosition"), (UINT32, "textLength"), (FLOAT, "originX"), (FLOAT, "originY"), Out(Pointer(DWRITE_HIT_TEST_METRICS), "hitTestMetrics"), (UINT32, "maxHitTestMetricsCount"), Out(Pointer(UINT32), "actualHitTestMetricsCount")]),
+    StdMethod(HRESULT, "SetMaxWidth", [(FLOAT, "maxWidth")]),
+    StdMethod(HRESULT, "SetMaxHeight", [(FLOAT, "maxHeight")]),
+    StdMethod(HRESULT, "SetFontCollection", [(ObjPointer(IDWriteFontCollection), "fontCollection"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetFontFamilyName", [(Pointer(Const(WCHAR)), "fontFamilyName"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetFontWeight", [(DWRITE_FONT_WEIGHT, "fontWeight"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetFontStyle", [(DWRITE_FONT_STYLE, "fontStyle"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetFontStretch", [(DWRITE_FONT_STRETCH, "fontStretch"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetFontSize", [(FLOAT, "fontSize"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetUnderline", [(BOOL, "hasUnderline"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetStrikethrough", [(BOOL, "hasStrikethrough"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetDrawingEffect", [(ObjPointer(IUnknown), "drawingEffect"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetInlineObject", [(ObjPointer(IDWriteInlineObject), "inlineObject"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetTypography", [(ObjPointer(IDWriteTypography), "typography"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(HRESULT, "SetLocaleName", [(Pointer(Const(WCHAR)), "localeName"), (DWRITE_TEXT_RANGE, "textRange")]),
+    StdMethod(FLOAT, "GetMaxWidth", []),
+    StdMethod(FLOAT, "GetMaxHeight", []),
+    StdMethod(HRESULT, "GetFontCollection", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetFontFamilyNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetFontFamilyName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "fontFamilyName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetFontWeight", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_WEIGHT), "fontWeight"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetFontStyle", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STYLE), "fontStyle"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetFontStretch", [(UINT32, "currentPosition"), Out(Pointer(DWRITE_FONT_STRETCH), "fontStretch"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetFontSize", [(UINT32, "currentPosition"), Out(Pointer(FLOAT), "fontSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetUnderline", [(UINT32, "currentPosition"), Out(Pointer(BOOL), "hasUnderline"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetStrikethrough", [(UINT32, "currentPosition"), Out(Pointer(BOOL), "hasStrikethrough"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetDrawingEffect", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IUnknown)), "drawingEffect"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetInlineObject", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteInlineObject)), "inlineObject"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetTypography", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteTypography)), "typography"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetLocaleNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "GetLocaleName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
+    StdMethod(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (ObjPointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY")]),
+    StdMethod(HRESULT, "GetLineMetrics", [Out(Pointer(DWRITE_LINE_METRICS), "lineMetrics"), (UINT32, "maxLineCount"), Out(Pointer(UINT32), "actualLineCount")]),
+    StdMethod(HRESULT, "GetMetrics", [Out(Pointer(DWRITE_TEXT_METRICS), "textMetrics")]),
+    StdMethod(HRESULT, "GetOverhangMetrics", [Out(Pointer(DWRITE_OVERHANG_METRICS), "overhangs")]),
+    StdMethod(HRESULT, "GetClusterMetrics", [Out(Pointer(DWRITE_CLUSTER_METRICS), "clusterMetrics"), (UINT32, "maxClusterCount"), Out(Pointer(UINT32), "actualClusterCount")]),
+    StdMethod(HRESULT, "DetermineMinWidth", [Out(Pointer(FLOAT), "minWidth")]),
+    StdMethod(HRESULT, "HitTestPoint", [(FLOAT, "pointX"), (FLOAT, "pointY"), Out(Pointer(BOOL), "isTrailingHit"), Out(Pointer(BOOL), "isInside"), Out(Pointer(DWRITE_HIT_TEST_METRICS), "hitTestMetrics")]),
+    StdMethod(HRESULT, "HitTestTextPosition", [(UINT32, "textPosition"), (BOOL, "isTrailingHit"), Out(Pointer(FLOAT), "pointX"), Out(Pointer(FLOAT), "pointY"), Out(Pointer(DWRITE_HIT_TEST_METRICS), "hitTestMetrics")]),
+    StdMethod(HRESULT, "HitTestTextRange", [(UINT32, "textPosition"), (UINT32, "textLength"), (FLOAT, "originX"), (FLOAT, "originY"), Out(Pointer(DWRITE_HIT_TEST_METRICS), "hitTestMetrics"), (UINT32, "maxHitTestMetricsCount"), Out(Pointer(UINT32), "actualHitTestMetricsCount")]),
 ]
 
 IDWriteBitmapRenderTarget.methods += [
-    Method(HRESULT, "DrawGlyphRun", [(FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (DWRITE_MEASURING_MODE, "measuringMode"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (ObjPointer(IDWriteRenderingParams), "renderingParams"), (COLORREF, "textColor"), Out(Pointer(RECT), "blackBoxRect")]),
-    Method(HDC, "GetMemoryDC", []),
-    Method(FLOAT, "GetPixelsPerDip", []),
-    Method(HRESULT, "SetPixelsPerDip", [(FLOAT, "pixelsPerDip")]),
-    Method(HRESULT, "GetCurrentTransform", [Out(Pointer(DWRITE_MATRIX), "transform")]),
-    Method(HRESULT, "SetCurrentTransform", [(Pointer(Const(DWRITE_MATRIX)), "transform")]),
-    Method(HRESULT, "GetSize", [Out(Pointer(SIZE), "size")]),
-    Method(HRESULT, "Resize", [(UINT32, "width"), (UINT32, "height")]),
+    StdMethod(HRESULT, "DrawGlyphRun", [(FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), (DWRITE_MEASURING_MODE, "measuringMode"), (Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (ObjPointer(IDWriteRenderingParams), "renderingParams"), (COLORREF, "textColor"), Out(Pointer(RECT), "blackBoxRect")]),
+    StdMethod(HDC, "GetMemoryDC", []),
+    StdMethod(FLOAT, "GetPixelsPerDip", []),
+    StdMethod(HRESULT, "SetPixelsPerDip", [(FLOAT, "pixelsPerDip")]),
+    StdMethod(HRESULT, "GetCurrentTransform", [Out(Pointer(DWRITE_MATRIX), "transform")]),
+    StdMethod(HRESULT, "SetCurrentTransform", [(Pointer(Const(DWRITE_MATRIX)), "transform")]),
+    StdMethod(HRESULT, "GetSize", [Out(Pointer(SIZE), "size")]),
+    StdMethod(HRESULT, "Resize", [(UINT32, "width"), (UINT32, "height")]),
 ]
 
 IDWriteGdiInterop.methods += [
-    Method(HRESULT, "CreateFontFromLOGFONT", [(Pointer(Const(LOGFONTW)), "logFont"), Out(Pointer(ObjPointer(IDWriteFont)), "font")]),
-    Method(HRESULT, "ConvertFontToLOGFONT", [(ObjPointer(IDWriteFont), "font"), Out(Pointer(LOGFONTW), "logFont"), Out(Pointer(BOOL), "isSystemFont")]),
-    Method(HRESULT, "ConvertFontFaceToLOGFONT", [(ObjPointer(IDWriteFontFace), "font"), Out(Pointer(LOGFONTW), "logFont")]),
-    Method(HRESULT, "CreateFontFaceFromHdc", [(HDC, "hdc"), Out(Pointer(ObjPointer(IDWriteFontFace)), "fontFace")]),
-    Method(HRESULT, "CreateBitmapRenderTarget", [(HDC, "hdc"), (UINT32, "width"), (UINT32, "height"), Out(Pointer(ObjPointer(IDWriteBitmapRenderTarget)), "renderTarget")]),
+    StdMethod(HRESULT, "CreateFontFromLOGFONT", [(Pointer(Const(LOGFONTW)), "logFont"), Out(Pointer(ObjPointer(IDWriteFont)), "font")]),
+    StdMethod(HRESULT, "ConvertFontToLOGFONT", [(ObjPointer(IDWriteFont), "font"), Out(Pointer(LOGFONTW), "logFont"), Out(Pointer(BOOL), "isSystemFont")]),
+    StdMethod(HRESULT, "ConvertFontFaceToLOGFONT", [(ObjPointer(IDWriteFontFace), "font"), Out(Pointer(LOGFONTW), "logFont")]),
+    StdMethod(HRESULT, "CreateFontFaceFromHdc", [(HDC, "hdc"), Out(Pointer(ObjPointer(IDWriteFontFace)), "fontFace")]),
+    StdMethod(HRESULT, "CreateBitmapRenderTarget", [(HDC, "hdc"), (UINT32, "width"), (UINT32, "height"), Out(Pointer(ObjPointer(IDWriteBitmapRenderTarget)), "renderTarget")]),
 ]
 
 DWRITE_TEXTURE_TYPE = Enum("DWRITE_TEXTURE_TYPE", [
@@ -740,33 +740,33 @@ DWRITE_TEXTURE_TYPE = Enum("DWRITE_TEXTURE_TYPE", [
 ])
 
 IDWriteGlyphRunAnalysis.methods += [
-    Method(HRESULT, "GetAlphaTextureBounds", [(DWRITE_TEXTURE_TYPE, "textureType"), Out(Pointer(RECT), "textureBounds")]),
-    Method(HRESULT, "CreateAlphaTexture", [(DWRITE_TEXTURE_TYPE, "textureType"), (Pointer(Const(RECT)), "textureBounds"), Out(Pointer(BYTE), "alphaValues"), (UINT32, "bufferSize")]),
-    Method(HRESULT, "GetAlphaBlendParams", [(ObjPointer(IDWriteRenderingParams), "renderingParams"), Out(Pointer(FLOAT), "blendGamma"), Out(Pointer(FLOAT), "blendEnhancedContrast"), Out(Pointer(FLOAT), "blendClearTypeLevel")]),
+    StdMethod(HRESULT, "GetAlphaTextureBounds", [(DWRITE_TEXTURE_TYPE, "textureType"), Out(Pointer(RECT), "textureBounds")]),
+    StdMethod(HRESULT, "CreateAlphaTexture", [(DWRITE_TEXTURE_TYPE, "textureType"), (Pointer(Const(RECT)), "textureBounds"), Out(Pointer(BYTE), "alphaValues"), (UINT32, "bufferSize")]),
+    StdMethod(HRESULT, "GetAlphaBlendParams", [(ObjPointer(IDWriteRenderingParams), "renderingParams"), Out(Pointer(FLOAT), "blendGamma"), Out(Pointer(FLOAT), "blendEnhancedContrast"), Out(Pointer(FLOAT), "blendClearTypeLevel")]),
 ]
 
 IDWriteFactory.methods += [
-    Method(HRESULT, "GetSystemFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), (BOOL, "checkForUpdates")]),
-    Method(HRESULT, "CreateCustomFontCollection", [(ObjPointer(IDWriteFontCollectionLoader), "collectionLoader"), (OpaquePointer(Const(Void)), "collectionKey"), (UINT32, "collectionKeySize"), Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection")]),
-    Method(HRESULT, "RegisterFontCollectionLoader", [(ObjPointer(IDWriteFontCollectionLoader), "fontCollectionLoader")]),
-    Method(HRESULT, "UnregisterFontCollectionLoader", [(ObjPointer(IDWriteFontCollectionLoader), "fontCollectionLoader")]),
-    Method(HRESULT, "CreateFontFileReference", [(Pointer(Const(WCHAR)), "filePath"), (Pointer(Const(FILETIME)), "lastWriteTime"), Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFile")]),
-    Method(HRESULT, "CreateCustomFontFileReference", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), (ObjPointer(IDWriteFontFileLoader), "fontFileLoader"), Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFile")]),
-    Method(HRESULT, "CreateFontFace", [(DWRITE_FONT_FACE_TYPE, "fontFaceType"), (UINT32, "numberOfFiles"), (Array(Const(ObjPointer(IDWriteFontFile)), "numberOfFiles"), "fontFiles"), (UINT32, "faceIndex"), (DWRITE_FONT_SIMULATIONS, "fontFaceSimulationFlags"), Out(Pointer(ObjPointer(IDWriteFontFace)), "fontFace")]),
-    Method(HRESULT, "CreateRenderingParams", [Out(Pointer(ObjPointer(IDWriteRenderingParams)), "renderingParams")]),
-    Method(HRESULT, "CreateMonitorRenderingParams", [(HMONITOR, "monitor"), Out(Pointer(ObjPointer(IDWriteRenderingParams)), "renderingParams")]),
-    Method(HRESULT, "CreateCustomRenderingParams", [(FLOAT, "gamma"), (FLOAT, "enhancedContrast"), (FLOAT, "clearTypeLevel"), (DWRITE_PIXEL_GEOMETRY, "pixelGeometry"), (DWRITE_RENDERING_MODE, "renderingMode"), Out(Pointer(ObjPointer(IDWriteRenderingParams)), "renderingParams")]),
-    Method(HRESULT, "RegisterFontFileLoader", [(ObjPointer(IDWriteFontFileLoader), "fontFileLoader")]),
-    Method(HRESULT, "UnregisterFontFileLoader", [(ObjPointer(IDWriteFontFileLoader), "fontFileLoader")]),
-    Method(HRESULT, "CreateTextFormat", [(Pointer(Const(WCHAR)), "fontFamilyName"), (ObjPointer(IDWriteFontCollection), "fontCollection"), (DWRITE_FONT_WEIGHT, "fontWeight"), (DWRITE_FONT_STYLE, "fontStyle"), (DWRITE_FONT_STRETCH, "fontStretch"), (FLOAT, "fontSize"), (Pointer(Const(WCHAR)), "localeName"), Out(Pointer(ObjPointer(IDWriteTextFormat)), "textFormat")]),
-    Method(HRESULT, "CreateTypography", [Out(Pointer(ObjPointer(IDWriteTypography)), "typography")]),
-    Method(HRESULT, "GetGdiInterop", [Out(Pointer(ObjPointer(IDWriteGdiInterop)), "gdiInterop")]),
-    Method(HRESULT, "CreateTextLayout", [(Pointer(Const(WCHAR)), "string"), (UINT32, "stringLength"), (ObjPointer(IDWriteTextFormat), "textFormat"), (FLOAT, "maxWidth"), (FLOAT, "maxHeight"), Out(Pointer(ObjPointer(IDWriteTextLayout)), "textLayout")]),
-    Method(HRESULT, "CreateGdiCompatibleTextLayout", [(Pointer(Const(WCHAR)), "string"), (UINT32, "stringLength"), (ObjPointer(IDWriteTextFormat), "textFormat"), (FLOAT, "layoutWidth"), (FLOAT, "layoutHeight"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (BOOL, "useGdiNatural"), Out(Pointer(ObjPointer(IDWriteTextLayout)), "textLayout")]),
-    Method(HRESULT, "CreateEllipsisTrimmingSign", [(ObjPointer(IDWriteTextFormat), "textFormat"), Out(Pointer(ObjPointer(IDWriteInlineObject)), "trimmingSign")]),
-    Method(HRESULT, "CreateTextAnalyzer", [Out(Pointer(ObjPointer(IDWriteTextAnalyzer)), "textAnalyzer")]),
-    Method(HRESULT, "CreateNumberSubstitution", [(DWRITE_NUMBER_SUBSTITUTION_METHOD, "substitutionMethod"), (Pointer(Const(WCHAR)), "localeName"), (BOOL, "ignoreUserOverride"), Out(Pointer(ObjPointer(IDWriteNumberSubstitution)), "numberSubstitution")]),
-    Method(HRESULT, "CreateGlyphRunAnalysis", [(Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (DWRITE_RENDERING_MODE, "renderingMode"), (DWRITE_MEASURING_MODE, "measuringMode"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), Out(Pointer(ObjPointer(IDWriteGlyphRunAnalysis)), "glyphRunAnalysis")]),
+    StdMethod(HRESULT, "GetSystemFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection"), (BOOL, "checkForUpdates")]),
+    StdMethod(HRESULT, "CreateCustomFontCollection", [(ObjPointer(IDWriteFontCollectionLoader), "collectionLoader"), (OpaquePointer(Const(Void)), "collectionKey"), (UINT32, "collectionKeySize"), Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection")]),
+    StdMethod(HRESULT, "RegisterFontCollectionLoader", [(ObjPointer(IDWriteFontCollectionLoader), "fontCollectionLoader")]),
+    StdMethod(HRESULT, "UnregisterFontCollectionLoader", [(ObjPointer(IDWriteFontCollectionLoader), "fontCollectionLoader")]),
+    StdMethod(HRESULT, "CreateFontFileReference", [(Pointer(Const(WCHAR)), "filePath"), (Pointer(Const(FILETIME)), "lastWriteTime"), Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFile")]),
+    StdMethod(HRESULT, "CreateCustomFontFileReference", [(OpaquePointer(Const(Void)), "fontFileReferenceKey"), (UINT32, "fontFileReferenceKeySize"), (ObjPointer(IDWriteFontFileLoader), "fontFileLoader"), Out(Pointer(ObjPointer(IDWriteFontFile)), "fontFile")]),
+    StdMethod(HRESULT, "CreateFontFace", [(DWRITE_FONT_FACE_TYPE, "fontFaceType"), (UINT32, "numberOfFiles"), (Array(Const(ObjPointer(IDWriteFontFile)), "numberOfFiles"), "fontFiles"), (UINT32, "faceIndex"), (DWRITE_FONT_SIMULATIONS, "fontFaceSimulationFlags"), Out(Pointer(ObjPointer(IDWriteFontFace)), "fontFace")]),
+    StdMethod(HRESULT, "CreateRenderingParams", [Out(Pointer(ObjPointer(IDWriteRenderingParams)), "renderingParams")]),
+    StdMethod(HRESULT, "CreateMonitorRenderingParams", [(HMONITOR, "monitor"), Out(Pointer(ObjPointer(IDWriteRenderingParams)), "renderingParams")]),
+    StdMethod(HRESULT, "CreateCustomRenderingParams", [(FLOAT, "gamma"), (FLOAT, "enhancedContrast"), (FLOAT, "clearTypeLevel"), (DWRITE_PIXEL_GEOMETRY, "pixelGeometry"), (DWRITE_RENDERING_MODE, "renderingMode"), Out(Pointer(ObjPointer(IDWriteRenderingParams)), "renderingParams")]),
+    StdMethod(HRESULT, "RegisterFontFileLoader", [(ObjPointer(IDWriteFontFileLoader), "fontFileLoader")]),
+    StdMethod(HRESULT, "UnregisterFontFileLoader", [(ObjPointer(IDWriteFontFileLoader), "fontFileLoader")]),
+    StdMethod(HRESULT, "CreateTextFormat", [(Pointer(Const(WCHAR)), "fontFamilyName"), (ObjPointer(IDWriteFontCollection), "fontCollection"), (DWRITE_FONT_WEIGHT, "fontWeight"), (DWRITE_FONT_STYLE, "fontStyle"), (DWRITE_FONT_STRETCH, "fontStretch"), (FLOAT, "fontSize"), (Pointer(Const(WCHAR)), "localeName"), Out(Pointer(ObjPointer(IDWriteTextFormat)), "textFormat")]),
+    StdMethod(HRESULT, "CreateTypography", [Out(Pointer(ObjPointer(IDWriteTypography)), "typography")]),
+    StdMethod(HRESULT, "GetGdiInterop", [Out(Pointer(ObjPointer(IDWriteGdiInterop)), "gdiInterop")]),
+    StdMethod(HRESULT, "CreateTextLayout", [(Pointer(Const(WCHAR)), "string"), (UINT32, "stringLength"), (ObjPointer(IDWriteTextFormat), "textFormat"), (FLOAT, "maxWidth"), (FLOAT, "maxHeight"), Out(Pointer(ObjPointer(IDWriteTextLayout)), "textLayout")]),
+    StdMethod(HRESULT, "CreateGdiCompatibleTextLayout", [(Pointer(Const(WCHAR)), "string"), (UINT32, "stringLength"), (ObjPointer(IDWriteTextFormat), "textFormat"), (FLOAT, "layoutWidth"), (FLOAT, "layoutHeight"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (BOOL, "useGdiNatural"), Out(Pointer(ObjPointer(IDWriteTextLayout)), "textLayout")]),
+    StdMethod(HRESULT, "CreateEllipsisTrimmingSign", [(ObjPointer(IDWriteTextFormat), "textFormat"), Out(Pointer(ObjPointer(IDWriteInlineObject)), "trimmingSign")]),
+    StdMethod(HRESULT, "CreateTextAnalyzer", [Out(Pointer(ObjPointer(IDWriteTextAnalyzer)), "textAnalyzer")]),
+    StdMethod(HRESULT, "CreateNumberSubstitution", [(DWRITE_NUMBER_SUBSTITUTION_METHOD, "substitutionMethod"), (Pointer(Const(WCHAR)), "localeName"), (BOOL, "ignoreUserOverride"), Out(Pointer(ObjPointer(IDWriteNumberSubstitution)), "numberSubstitution")]),
+    StdMethod(HRESULT, "CreateGlyphRunAnalysis", [(Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (DWRITE_RENDERING_MODE, "renderingMode"), (DWRITE_MEASURING_MODE, "measuringMode"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), Out(Pointer(ObjPointer(IDWriteGlyphRunAnalysis)), "glyphRunAnalysis")]),
 ]
 
 dwrite = API("dwrite")

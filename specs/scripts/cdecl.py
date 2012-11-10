@@ -234,7 +234,7 @@ class DeclParser:
                 self.consume()
                 self.consume(':')
             else:
-                self.parse_prototype('Method')
+                self.parse_prototype('StdMethod')
                 self.consume(';')
         self.consume('}')
 

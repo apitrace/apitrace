@@ -63,7 +63,7 @@ D3D10_BLEND_DESC1 = Struct("D3D10_BLEND_DESC1", [
 
 ID3D10BlendState1 = Interface("ID3D10BlendState1", ID3D10BlendState)
 ID3D10BlendState1.methods += [
-    Method(Void, "GetDesc1", [Out(Pointer(D3D10_BLEND_DESC1), "pDesc")]),
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D10_BLEND_DESC1), "pDesc")]),
 ]
 
 D3D10_TEXCUBE_ARRAY_SRV1 = Struct("D3D10_TEXCUBE_ARRAY_SRV1", [
@@ -90,14 +90,14 @@ D3D10_SHADER_RESOURCE_VIEW_DESC1 = Struct("D3D10_SHADER_RESOURCE_VIEW_DESC1", [
 
 ID3D10ShaderResourceView1 = Interface("ID3D10ShaderResourceView1", ID3D10ShaderResourceView)
 ID3D10ShaderResourceView1.methods += [
-    Method(Void, "GetDesc1", [Out(Pointer(D3D10_SHADER_RESOURCE_VIEW_DESC1), "pDesc")]),
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D10_SHADER_RESOURCE_VIEW_DESC1), "pDesc")]),
 ]
 
 ID3D10Device1 = Interface("ID3D10Device1", ID3D10Device)
 ID3D10Device1.methods += [
-    Method(HRESULT, "CreateShaderResourceView1", [(ObjPointer(ID3D10Resource), "pResource"), Out(Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC1)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView1)), "ppSRView")]),
-    Method(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D10_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D10BlendState1)), "ppBlendState")]),
-    Method(D3D10_FEATURE_LEVEL1, "GetFeatureLevel", []),
+    StdMethod(HRESULT, "CreateShaderResourceView1", [(ObjPointer(ID3D10Resource), "pResource"), Out(Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC1)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView1)), "ppSRView")]),
+    StdMethod(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D10_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D10BlendState1)), "ppBlendState")]),
+    StdMethod(D3D10_FEATURE_LEVEL1, "GetFeatureLevel", []),
 ]
 
 d3d10_1 = API("d3d10_1")

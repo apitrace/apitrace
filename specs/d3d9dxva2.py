@@ -321,52 +321,52 @@ DXVA2_DECODEBUFFERINFO = Opaque('DXVA2_DECODEBUFFERINFO')
 
 IDirect3DDecodeDevice9 = Interface("IDirect3DDecodeDevice9", IUnknown)
 IDirect3DDecodeDevice9.methods += [
-    Method(HRESULT, "DecodeBeginFrame", [(OpaquePointer(DXVA2_PVP_SETKEY), "pPVPSetKey")]),
-    Method(HRESULT, "DecodeEndFrame", [(Pointer(HANDLE), "pHandleComplete")]),
-    Method(HRESULT, "DecodeSetRenderTarget", [(ObjPointer(IDirect3DSurface9), "pRenderTarget")]),
-    Method(HRESULT, "DecodeExecute", [(Pointer(DXVA2_DECODEEXECUTE), "pExecuteParams")]),
+    StdMethod(HRESULT, "DecodeBeginFrame", [(OpaquePointer(DXVA2_PVP_SETKEY), "pPVPSetKey")]),
+    StdMethod(HRESULT, "DecodeEndFrame", [(Pointer(HANDLE), "pHandleComplete")]),
+    StdMethod(HRESULT, "DecodeSetRenderTarget", [(ObjPointer(IDirect3DSurface9), "pRenderTarget")]),
+    StdMethod(HRESULT, "DecodeExecute", [(Pointer(DXVA2_DECODEEXECUTE), "pExecuteParams")]),
 ]
 
 IDirect3DVideoProcessDevice9 = Interface("IDirect3DVideoProcessDevice9", IUnknown)
 IDirect3DVideoProcessDevice9.methods += [
-    Method(HRESULT, "VideoProcessBeginFrame", []),
-    Method(HRESULT, "VideoProcessEndFrame", [(Pointer(HANDLE), "pHandleComplete")]),
-    Method(HRESULT, "VideoProcessSetRenderTarget", [(ObjPointer(IDirect3DSurface9), "pRenderTarget")]),
-    Method(HRESULT, "VideoProcessBlt", [(Pointer(DXVA2_VIDEOPROCESSBLT), "pData")]),
+    StdMethod(HRESULT, "VideoProcessBeginFrame", []),
+    StdMethod(HRESULT, "VideoProcessEndFrame", [(Pointer(HANDLE), "pHandleComplete")]),
+    StdMethod(HRESULT, "VideoProcessSetRenderTarget", [(ObjPointer(IDirect3DSurface9), "pRenderTarget")]),
+    StdMethod(HRESULT, "VideoProcessBlt", [(Pointer(DXVA2_VIDEOPROCESSBLT), "pData")]),
 ]
 
 IDirect3DDXVAExtensionDevice9 = Interface("IDirect3DDXVAExtensionDevice9", IUnknown)
 IDirect3DDXVAExtensionDevice9.methods += [
-    Method(HRESULT, "ExtensionExecute", [(OpaquePointer(DXVA2_EXTENSIONEXECUTE), "pData")]),
+    StdMethod(HRESULT, "ExtensionExecute", [(OpaquePointer(DXVA2_EXTENSIONEXECUTE), "pData")]),
 ]
 
 IDirect3DDxva2Container9 = Interface("IDirect3DDxva2Container9", IUnknown)
 IDirect3DDxva2Container9.methods += [
-    Method(HRESULT, "CreateSurface", [(UINT, "Width"), (UINT, "Height"), (UINT, "BackBuffers"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (DWORD, "Usage"), (DXVA2_SurfaceType, "DxvaType"), Out(Array(ObjPointer(IDirect3DSurface9), "1 + BackBuffers"), "ppSurface"), (Pointer(HANDLE), "pSharedHandle")]),
-    Method(HRESULT, "VidToSysBlt", [(ObjPointer(IDirect3DSurface9), "pSourceSurface"), (Pointer(RECT), "pSourceRect"), (ObjPointer(IDirect3DSurface9), "pDestSurface"), (Pointer(RECT), "pDestRect")]),
-    Method(HRESULT, "GetDecodeGuidCount", [Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetDecodeGuids", [(UINT, "Count"), Out(Array(GUID, "Count"), "pGuids")], sideeffects=False),
-    Method(HRESULT, "GetDecodeRenderTargetFormatCount", [(REFGUID, "Guid"), Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetDecodeRenderTargets", [(REFGUID, "Guid"), (UINT, "Count"), Out(Array(D3DFORMAT, "Count"), "pFormats")], sideeffects=False),
-    Method(HRESULT, "GetDecodeCompressedBufferCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetDecodeCompressedBuffers", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(OpaquePointer(DXVA2_DECODEBUFFERINFO), "pBufferInfo")], sideeffects=False),
-    Method(HRESULT, "GetDecodeConfigurationCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetDecodeConfigurations", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(Array(DXVA2_ConfigPictureDecode, "Count"), "pConfigs")], sideeffects=False),
-    Method(HRESULT, "CreateDecodeDevice", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (Pointer(Const(DXVA2_ConfigPictureDecode)), "pConfig"), (Array(ObjPointer(IDirect3DSurface9), "NumSurfaces"), "ppDecoderRenderTargets"), (UINT, "NumSurfaces"), Out(Pointer(ObjPointer(IDirect3DDecodeDevice9)), "ppDecode")]),
-    Method(HRESULT, "GetVideoProcessorDeviceGuidCount", [(Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetVideoProcessorDeviceGuids", [(Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(Pointer(GUID), "pGuids")], sideeffects=False),
-    Method(HRESULT, "GetVideoProcessorCaps", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), Out(Pointer(DXVA2_VideoProcessorCaps), "pCaps")], sideeffects=False),
-    Method(HRESULT, "GetProcAmpRange", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "ProcAmpCap"), Out(Pointer(DXVA2_ValueRange), "pRange")]),
-    Method(HRESULT, "GetFilterPropertyRange", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "FilterSetting"), Out(Pointer(DXVA2_ValueRange), "pRange")], sideeffects=False),
-    Method(HRESULT, "GetVideoProcessorRenderTargetCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetVideoProcessorRenderTargets", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(Array(D3DFORMAT, "Count"), "pFormats")], sideeffects=False),
-    Method(HRESULT, "GetVideoProcessorSubStreamFormatCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetVideoProcessorSubStreamFormats", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "Count"), Out(Array(D3DFORMAT, "Count"), "pFormats")], sideeffects=False),
-    Method(HRESULT, "CreateVideoProcessDevice", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "MaxSubStreams"), Out(Pointer(ObjPointer(IDirect3DVideoProcessDevice9)), "ppVideoProcessDevice")]),
-    Method(HRESULT, "GetExtensionGuidCount", [(DWORD, "Extension"), Out(Pointer(UINT), "pCount")], sideeffects=False),
-    Method(HRESULT, "GetExtensionGuids", [(DWORD, "Extension"), (UINT, "Count"), Out(Array(GUID, "Count"), "pGuids")], sideeffects=False),
-    Method(HRESULT, "GetExtensionCaps", [(REFGUID, "Guid"), (UINT, "arg2"), (OpaquePointer(Void), "arg3"), (UINT, "arg4"), (OpaquePointer(Void), "arg5"), (UINT, "arg6")], sideeffects=False),
-    Method(HRESULT, "CreateExtensionDevice", [(REFGUID, "Guid"), (OpaquePointer(Void), "arg2"), (UINT, "arg3"), Out(Pointer(ObjPointer(IDirect3DDXVAExtensionDevice9)), "ppExtension")]),
+    StdMethod(HRESULT, "CreateSurface", [(UINT, "Width"), (UINT, "Height"), (UINT, "BackBuffers"), (D3DFORMAT, "Format"), (D3DPOOL, "Pool"), (DWORD, "Usage"), (DXVA2_SurfaceType, "DxvaType"), Out(Array(ObjPointer(IDirect3DSurface9), "1 + BackBuffers"), "ppSurface"), (Pointer(HANDLE), "pSharedHandle")]),
+    StdMethod(HRESULT, "VidToSysBlt", [(ObjPointer(IDirect3DSurface9), "pSourceSurface"), (Pointer(RECT), "pSourceRect"), (ObjPointer(IDirect3DSurface9), "pDestSurface"), (Pointer(RECT), "pDestRect")]),
+    StdMethod(HRESULT, "GetDecodeGuidCount", [Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetDecodeGuids", [(UINT, "Count"), Out(Array(GUID, "Count"), "pGuids")], sideeffects=False),
+    StdMethod(HRESULT, "GetDecodeRenderTargetFormatCount", [(REFGUID, "Guid"), Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetDecodeRenderTargets", [(REFGUID, "Guid"), (UINT, "Count"), Out(Array(D3DFORMAT, "Count"), "pFormats")], sideeffects=False),
+    StdMethod(HRESULT, "GetDecodeCompressedBufferCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetDecodeCompressedBuffers", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(OpaquePointer(DXVA2_DECODEBUFFERINFO), "pBufferInfo")], sideeffects=False),
+    StdMethod(HRESULT, "GetDecodeConfigurationCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetDecodeConfigurations", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(Array(DXVA2_ConfigPictureDecode, "Count"), "pConfigs")], sideeffects=False),
+    StdMethod(HRESULT, "CreateDecodeDevice", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (Pointer(Const(DXVA2_ConfigPictureDecode)), "pConfig"), (Array(ObjPointer(IDirect3DSurface9), "NumSurfaces"), "ppDecoderRenderTargets"), (UINT, "NumSurfaces"), Out(Pointer(ObjPointer(IDirect3DDecodeDevice9)), "ppDecode")]),
+    StdMethod(HRESULT, "GetVideoProcessorDeviceGuidCount", [(Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorDeviceGuids", [(Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(Pointer(GUID), "pGuids")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorCaps", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), Out(Pointer(DXVA2_VideoProcessorCaps), "pCaps")], sideeffects=False),
+    StdMethod(HRESULT, "GetProcAmpRange", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "ProcAmpCap"), Out(Pointer(DXVA2_ValueRange), "pRange")]),
+    StdMethod(HRESULT, "GetFilterPropertyRange", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "FilterSetting"), Out(Pointer(DXVA2_ValueRange), "pRange")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorRenderTargetCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorRenderTargets", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (UINT, "Count"), Out(Array(D3DFORMAT, "Count"), "pFormats")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorSubStreamFormatCount", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetVideoProcessorSubStreamFormats", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "Count"), Out(Array(D3DFORMAT, "Count"), "pFormats")], sideeffects=False),
+    StdMethod(HRESULT, "CreateVideoProcessDevice", [(REFGUID, "Guid"), (Pointer(Const(DXVA2_VideoDesc)), "pVideoDesc"), (D3DFORMAT, "Format"), (UINT, "MaxSubStreams"), Out(Pointer(ObjPointer(IDirect3DVideoProcessDevice9)), "ppVideoProcessDevice")]),
+    StdMethod(HRESULT, "GetExtensionGuidCount", [(DWORD, "Extension"), Out(Pointer(UINT), "pCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetExtensionGuids", [(DWORD, "Extension"), (UINT, "Count"), Out(Array(GUID, "Count"), "pGuids")], sideeffects=False),
+    StdMethod(HRESULT, "GetExtensionCaps", [(REFGUID, "Guid"), (UINT, "arg2"), (OpaquePointer(Void), "arg3"), (UINT, "arg4"), (OpaquePointer(Void), "arg5"), (UINT, "arg6")], sideeffects=False),
+    StdMethod(HRESULT, "CreateExtensionDevice", [(REFGUID, "Guid"), (OpaquePointer(Void), "arg2"), (UINT, "arg3"), Out(Pointer(ObjPointer(IDirect3DDXVAExtensionDevice9)), "ppExtension")]),
 ]
 
 d3d9.addInterfaces([
