@@ -5,6 +5,8 @@
 
 class FrameDataProvider {
 public:
+    virtual ~FrameDataProvider() {}
+
     /* Number of frames */
     virtual unsigned size() const = 0;
 
