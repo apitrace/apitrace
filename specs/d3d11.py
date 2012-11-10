@@ -378,7 +378,7 @@ D3D11_DEPTH_STENCIL_DESC = Struct("D3D11_DEPTH_STENCIL_DESC", [
 ])
 
 ID3D11DepthStencilState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_BLEND = Enum("D3D11_BLEND", [
@@ -435,7 +435,7 @@ D3D11_BLEND_DESC = Struct("D3D11_BLEND_DESC", [
 ])
 
 ID3D11BlendState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BLEND_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BLEND_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_RASTERIZER_DESC = Struct("D3D11_RASTERIZER_DESC", [
@@ -452,7 +452,7 @@ D3D11_RASTERIZER_DESC = Struct("D3D11_RASTERIZER_DESC", [
 ])
 
 ID3D11RasterizerState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RASTERIZER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RASTERIZER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_SUBRESOURCE_DATA = Struct("D3D11_SUBRESOURCE_DATA", [
@@ -468,9 +468,9 @@ D3D11_MAPPED_SUBRESOURCE = Struct("D3D11_MAPPED_SUBRESOURCE", [
 ])
 
 ID3D11Resource.methods += [
-    StdMethod(Void, "GetType", [Out(Pointer(D3D11_RESOURCE_DIMENSION), "pResourceDimension")]),
+    StdMethod(Void, "GetType", [Out(Pointer(D3D11_RESOURCE_DIMENSION), "pResourceDimension")], sideeffects=False),
     StdMethod(Void, "SetEvictionPriority", [(UINT, "EvictionPriority")]),
-    StdMethod(UINT, "GetEvictionPriority", []),
+    StdMethod(UINT, "GetEvictionPriority", [], sideeffects=False),
 ]
 
 D3D11_BUFFER_DESC = Struct("D3D11_BUFFER_DESC", [
@@ -483,7 +483,7 @@ D3D11_BUFFER_DESC = Struct("D3D11_BUFFER_DESC", [
 ])
 
 ID3D11Buffer.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BUFFER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURE1D_DESC = Struct("D3D11_TEXTURE1D_DESC", [
@@ -498,7 +498,7 @@ D3D11_TEXTURE1D_DESC = Struct("D3D11_TEXTURE1D_DESC", [
 ])
 
 ID3D11Texture1D.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE1D_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE1D_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURE2D_DESC = Struct("D3D11_TEXTURE2D_DESC", [
@@ -515,7 +515,7 @@ D3D11_TEXTURE2D_DESC = Struct("D3D11_TEXTURE2D_DESC", [
 ])
 
 ID3D11Texture2D.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE2D_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE2D_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURE3D_DESC = Struct("D3D11_TEXTURE3D_DESC", [
@@ -531,7 +531,7 @@ D3D11_TEXTURE3D_DESC = Struct("D3D11_TEXTURE3D_DESC", [
 ])
 
 ID3D11Texture3D.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE3D_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE3D_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURECUBE_FACE = Enum("D3D11_TEXTURECUBE_FACE", [
@@ -631,7 +631,7 @@ D3D11_SHADER_RESOURCE_VIEW_DESC = Struct("D3D11_SHADER_RESOURCE_VIEW_DESC", [
 ])
 
 ID3D11ShaderResourceView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SHADER_RESOURCE_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SHADER_RESOURCE_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_BUFFER_RTV = Struct("D3D11_BUFFER_RTV", [
@@ -690,7 +690,7 @@ D3D11_RENDER_TARGET_VIEW_DESC = Struct("D3D11_RENDER_TARGET_VIEW_DESC", [
 ])
 
 ID3D11RenderTargetView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RENDER_TARGET_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RENDER_TARGET_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEX1D_DSV = Struct("D3D11_TEX1D_DSV", [
@@ -742,7 +742,7 @@ D3D11_DEPTH_STENCIL_VIEW_DESC = Struct("D3D11_DEPTH_STENCIL_VIEW_DESC", [
 ])
 
 ID3D11DepthStencilView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_BUFFER_UAV_FLAG = Flags(UINT, [
@@ -797,7 +797,7 @@ D3D11_UNORDERED_ACCESS_VIEW_DESC = Struct("D3D11_UNORDERED_ACCESS_VIEW_DESC", [
 ])
 
 ID3D11UnorderedAccessView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_UNORDERED_ACCESS_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_UNORDERED_ACCESS_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_FILTER = Enum("D3D11_FILTER", [
@@ -848,7 +848,7 @@ D3D11_SAMPLER_DESC = Struct("D3D11_SAMPLER_DESC", [
 ])
 
 ID3D11SamplerState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SAMPLER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SAMPLER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_FORMAT_SUPPORT = Flags(UINT, [
@@ -929,7 +929,7 @@ D3D11_QUERY_DESC = Struct("D3D11_QUERY_DESC", [
 ])
 
 ID3D11Query.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_QUERY_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_QUERY_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_QUERY_DATA_TIMESTAMP_DISJOINT = Struct("D3D11_QUERY_DATA_TIMESTAMP_DISJOINT", [
@@ -979,7 +979,7 @@ D3D11_COUNTER_INFO = Struct("D3D11_COUNTER_INFO", [
 ])
 
 ID3D11Counter.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_COUNTER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_COUNTER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS = Enum("D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS", [
@@ -1017,7 +1017,7 @@ ID3D11ClassLinkage.methods += [
 ]
 
 ID3D11CommandList.methods += [
-    StdMethod(UINT, "GetContextFlags", []),
+    StdMethod(UINT, "GetContextFlags", [], sideeffects=False),
 ]
 
 D3D11_FEATURE_DATA_THREADING = Struct("D3D11_FEATURE_DATA_THREADING", [
@@ -1101,7 +1101,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "ClearDepthStencilView", [(ObjPointer(ID3D11DepthStencilView), "pDepthStencilView"), (D3D11_CLEAR_FLAG, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
     StdMethod(Void, "GenerateMips", [(ObjPointer(ID3D11ShaderResourceView), "pShaderResourceView")]),
     StdMethod(Void, "SetResourceMinLOD", [(ObjPointer(ID3D11Resource), "pResource"), (FLOAT, "MinLOD")]),
-    StdMethod(FLOAT, "GetResourceMinLOD", [(ObjPointer(ID3D11Resource), "pResource")]),
+    StdMethod(FLOAT, "GetResourceMinLOD", [(ObjPointer(ID3D11Resource), "pResource")], sideeffects=False),
     StdMethod(Void, "ResolveSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (DXGI_FORMAT, "Format")]),
     StdMethod(Void, "ExecuteCommandList", [(ObjPointer(ID3D11CommandList), "pCommandList"), (BOOL, "RestoreContextState")]),
     StdMethod(Void, "HSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
@@ -1128,7 +1128,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "IAGetIndexBuffer", [Out(Pointer(ObjPointer(ID3D11Buffer)), "pIndexBuffer"), Out(Pointer(DXGI_FORMAT), "Format"), Out(Pointer(UINT), "Offset")]),
     StdMethod(Void, "GSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "GSGetShader", [Out(Pointer(ObjPointer(ID3D11GeometryShader)), "ppGeometryShader"), Out(Array(ObjPointer(ID3D11ClassInstance), "*pNumClassInstances"), "ppClassInstances"), Out(Pointer(UINT), "pNumClassInstances")]),
-    StdMethod(Void, "IAGetPrimitiveTopology", [Out(Pointer(D3D11_PRIMITIVE_TOPOLOGY), "pTopology")]),
+    StdMethod(Void, "IAGetPrimitiveTopology", [Out(Pointer(D3D11_PRIMITIVE_TOPOLOGY), "pTopology")], sideeffects=False),
     StdMethod(Void, "VSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "VSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "GetPredication", [Out(Pointer(ObjPointer(ID3D11Predicate)), "ppPredicate"), Out(Pointer(BOOL), "pPredicateValue")]),
@@ -1157,8 +1157,8 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "CSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "ClearState", []),
     StdMethod(Void, "Flush", []),
-    StdMethod(D3D11_DEVICE_CONTEXT_TYPE, "GetType", []),
-    StdMethod(UINT, "GetContextFlags", []),
+    StdMethod(D3D11_DEVICE_CONTEXT_TYPE, "GetType", [], sideeffects=False),
+    StdMethod(UINT, "GetContextFlags", [], sideeffects=False),
     StdMethod(HRESULT, "FinishCommandList", [(BOOL, "RestoreDeferredContextState"), Out(Pointer(ObjPointer(ID3D11CommandList)), "ppCommandList")]),
 ]
 
@@ -1205,12 +1205,12 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
     StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
-    StdMethod(D3D_FEATURE_LEVEL, "GetFeatureLevel", []),
-    StdMethod(D3D11_CREATE_DEVICE_FLAG, "GetCreationFlags", []),
-    StdMethod(HRESULT, "GetDeviceRemovedReason", []),
+    StdMethod(D3D_FEATURE_LEVEL, "GetFeatureLevel", [], sideeffects=False),
+    StdMethod(D3D11_CREATE_DEVICE_FLAG, "GetCreationFlags", [], sideeffects=False),
+    StdMethod(HRESULT, "GetDeviceRemovedReason", [], sideeffects=False),
     StdMethod(Void, "GetImmediateContext", [Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
     StdMethod(HRESULT, "SetExceptionMode", [(D3D11_RAISE_FLAG, "RaiseFlags")]),
-    StdMethod(UINT, "GetExceptionMode", []),
+    StdMethod(UINT, "GetExceptionMode", [], sideeffects=False),
 ]
 
 d3d11 = API("d3d11")

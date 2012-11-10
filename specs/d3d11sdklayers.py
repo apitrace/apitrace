@@ -45,9 +45,9 @@ D3D11_RLDO_FLAGS = Enum("D3D11_RLDO_FLAGS", [
 ID3D11Debug = Interface("ID3D11Debug", IUnknown)
 ID3D11Debug.methods += [
     StdMethod(HRESULT, "SetFeatureMask", [(D3D11_DEBUG_FEATURE, "Mask")]),
-    StdMethod(D3D11_DEBUG_FEATURE, "GetFeatureMask", []),
+    StdMethod(D3D11_DEBUG_FEATURE, "GetFeatureMask", [], sideeffects=False),
     StdMethod(HRESULT, "SetPresentPerRenderOpDelay", [(UINT, "Milliseconds")]),
-    StdMethod(UINT, "GetPresentPerRenderOpDelay", []),
+    StdMethod(UINT, "GetPresentPerRenderOpDelay", [], sideeffects=False),
     StdMethod(HRESULT, "SetSwapChain", [(ObjPointer(IDXGISwapChain), "pSwapChain")]),
     StdMethod(HRESULT, "GetSwapChain", [Out(Pointer(ObjPointer(IDXGISwapChain)), "ppSwapChain")]),
     StdMethod(HRESULT, "ValidateContext", [(ObjPointer(ID3D11DeviceContext), "pContext")]),
@@ -58,7 +58,7 @@ ID3D11Debug.methods += [
 ID3D11SwitchToRef = Interface("ID3D11SwitchToRef", IUnknown)
 ID3D11SwitchToRef.methods += [
     StdMethod(BOOL, "SetUseRef", [(BOOL, "UseRef")]),
-    StdMethod(BOOL, "GetUseRef", []),
+    StdMethod(BOOL, "GetUseRef", [], sideeffects=False),
 ]
 
 D3D11_MESSAGE_CATEGORY = Enum("D3D11_MESSAGE_CATEGORY", [

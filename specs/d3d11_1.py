@@ -104,7 +104,7 @@ D3D11_BLEND_DESC1 = Struct("D3D11_BLEND_DESC1", [
 ])
 
 ID3D11BlendState1.methods += [
-    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_BLEND_DESC1), "pDesc")]),
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_BLEND_DESC1), "pDesc")], sideeffects=False),
 ]
 
 D3D11_RASTERIZER_DESC1 = Struct("D3D11_RASTERIZER_DESC1", [
@@ -122,7 +122,7 @@ D3D11_RASTERIZER_DESC1 = Struct("D3D11_RASTERIZER_DESC1", [
 ])
 
 ID3D11RasterizerState1.methods += [
-    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_RASTERIZER_DESC1), "pDesc")]),
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_RASTERIZER_DESC1), "pDesc")], sideeffects=False),
 ]
 
 D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG = Flags(UINT, [
@@ -131,7 +131,7 @@ D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG = Flags(UINT, [
 
 ID3D11DeviceContext1.methods += [
     StdMethod(Void, "CopySubresourceRegion1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D11_BOX)), "pSrcBox"), (D3D11_COPY_FLAGS, "CopyFlags")]),
-    StdMethod(Void, "UpdateSubresource1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch"), (D3D11_COPY_FLAGS, "CopyFlags")]),
+    StdMethod(Void, "UpdateSubresource1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch"), (D3D11_COPY_FLAGS, "CopyFlags")]),
     StdMethod(Void, "DiscardResource", [(ObjPointer(ID3D11Resource), "pResource")]),
     StdMethod(Void, "DiscardView", [(ObjPointer(ID3D11View), "pResourceView")]),
     StdMethod(Void, "VSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
@@ -171,7 +171,7 @@ ID3DUserDefinedAnnotation.methods += [
     StdMethod(INT, "BeginEvent", [(LPCWSTR, "Name")]),
     StdMethod(INT, "EndEvent", []),
     StdMethod(Void, "SetMarker", [(LPCWSTR, "Name")]),
-    StdMethod(BOOL, "GetStatus", []),
+    StdMethod(BOOL, "GetStatus", [], sideeffects=False),
 ]
 
 d3d11.addInterfaces([
