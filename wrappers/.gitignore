@@ -1,5 +1,6 @@
 OpenGL
 cgltrace.cpp
+d2d1trace.cpp
 d3d10_1trace.cpp
 d3d10trace.cpp
 d3d11trace.cpp
@@ -7,6 +8,7 @@ d3d8trace.cpp
 d3d9trace.cpp
 ddrawtrace.cpp
 dlltrace.cpp
+dwritetrace.cpp
 egltrace.cpp
 gltrace.cpp
 glxtrace.cpp

@@ -340,6 +340,8 @@ class ValueWrapper(stdapi.Traverser, ExpanderMixin):
         elem_type = pointer.type.mutable()
         if isinstance(elem_type, stdapi.Interface):
             self.visitInterfacePointer(elem_type, instance)
+        elif isinstance(elem_type, stdapi.Alias) and isinstance(elem_type.type, stdapi.Interface):
+            self.visitInterfacePointer(elem_type.type, instance)
         else:
             self.visitPointer(pointer, instance)
     
@@ -360,6 +362,23 @@ class ValueUnwrapper(ValueWrapper):
     '''Reverse of ValueWrapper.'''
 
     allocated = False
+
+    def visitStruct(self, struct, instance):
+        if not self.allocated:
+            # Argument is constant. We need to create a non const
+            print '    {'
+            print "        %s * _t = static_cast<%s *>(alloca(sizeof *_t));" % (struct, struct)
+            print '        *_t = %s;' % (instance,)
+            assert instance.startswith('*')
+            print '        %s = _t;' % (instance[1:],)
+            instance = '*_t'
+            self.allocated = True
+            try:
+                return ValueWrapper.visitStruct(self, struct, instance)
+            finally:
+                print '    }'
+        else:
+            return ValueWrapper.visitStruct(self, struct, instance)
 
     def visitArray(self, array, instance):
         if self.allocated or isinstance(instance, stdapi.Interface):

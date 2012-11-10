@@ -246,6 +246,73 @@ if (WIN32)
         install (TARGETS d3d11trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
+    # d2d1.dll, dwrite.dll
+    if (DirectX_D2D1_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
+
+        add_custom_command (
+            OUTPUT d2d1trace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d2d1trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d2d1trace.cpp
+            DEPENDS
+                d2d1trace.py
+                trace.py
+                ${CMAKE_SOURCE_DIR}/specs/d2d1.py
+                ${CMAKE_SOURCE_DIR}/specs/d2d1.py
+                ${CMAKE_SOURCE_DIR}/specs/d2dbasetypes.py
+                ${CMAKE_SOURCE_DIR}/specs/d2derr.py
+                ${CMAKE_SOURCE_DIR}/specs/dwrite.py
+                ${CMAKE_SOURCE_DIR}/specs/dcommon.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+        )
+        add_library (d2d1 MODULE d2d1.def d2d1trace.cpp)
+        target_link_libraries (d2d1
+            common_trace
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
+        set_target_properties (d2d1
+            PROPERTIES PREFIX ""
+            OUTPUT_NAME d2d1
+        )
+        install (TARGETS d2d1 LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+
+        add_custom_command (
+            OUTPUT dwritetrace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dwritetrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dwritetrace.cpp
+            DEPENDS
+                dwritetrace.py
+                trace.py
+                ${CMAKE_SOURCE_DIR}/specs/d2d1.py
+                ${CMAKE_SOURCE_DIR}/specs/d2d1.py
+                ${CMAKE_SOURCE_DIR}/specs/d2dbasetypes.py
+                ${CMAKE_SOURCE_DIR}/specs/d2derr.py
+                ${CMAKE_SOURCE_DIR}/specs/dwrite.py
+                ${CMAKE_SOURCE_DIR}/specs/dcommon.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+        )
+        add_library (dwrite MODULE dwrite.def dwritetrace.cpp)
+        target_link_libraries (dwrite
+            common_trace
+            common
+            ${ZLIB_LIBRARIES}
+            ${SNAPPY_LIBRARIES}
+        )
+        set_target_properties (dwrite
+            PROPERTIES PREFIX ""
+            OUTPUT_NAME dwrite
+        )
+        install (TARGETS dwrite LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+    endif (DirectX_D2D1_INCLUDE_DIR)
+
     # opengl32.dll
     add_custom_command (
         OUTPUT wgltrace.cpp
