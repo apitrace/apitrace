@@ -1,4 +1,7 @@
-add_definitions (-DHAVE_CONFIG_H)
+add_definitions (
+    -DNDEBUG
+    -DHAVE_CONFIG_H
+)
 
 # Adjust warnings
 if (CMAKE_COMPILER_IS_GNUCXX)
