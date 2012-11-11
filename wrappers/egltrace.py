@@ -33,7 +33,7 @@
 
 
 from gltrace import GlTracer
-from specs.stdapi import API
+from specs.stdapi import Module, API
 from specs.glapi import glapi
 from specs.eglapi import eglapi
 from specs.glesapi import glesapi
@@ -125,10 +125,12 @@ if __name__ == '__main__':
     print '#include "eglsize.hpp"'
     print
     
+    module = Module()
+    module.mergeModule(eglapi)
+    module.mergeModule(glapi)
+    module.mergeModule(glesapi)
     api = API()
-    api.addApi(eglapi)
-    api.addApi(glapi)
-    api.addApi(glesapi)
+    api.addModule(module)
     tracer = EglTracer()
     tracer.traceApi(api)
 

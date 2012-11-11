@@ -289,7 +289,7 @@ EGLClientPixmapHI = Struct("struct EGLClientPixmapHI", [
 # EGL_NV_system_time
 EGLuint64NV = Alias("EGLuint64NV", UInt64)
 
-eglapi = API("EGL")
+eglapi = Module("EGL")
 
 EGLAttribList = Array(Const(EGLattrib), "_AttribPairList_size(attrib_list, EGL_NONE)")
 

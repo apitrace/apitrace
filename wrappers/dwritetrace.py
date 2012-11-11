@@ -55,4 +55,4 @@ if __name__ == '__main__':
     print
 
     tracer = DWriteTracer('dwrite.dll')
-    tracer.traceApi(dwrite)
+    tracer.traceModule(dwrite)

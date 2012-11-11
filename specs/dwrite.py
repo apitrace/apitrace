@@ -769,8 +769,10 @@ IDWriteFactory.methods += [
     StdMethod(HRESULT, "CreateGlyphRunAnalysis", [(Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (DWRITE_RENDERING_MODE, "renderingMode"), (DWRITE_MEASURING_MODE, "measuringMode"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), Out(Pointer(ObjPointer(IDWriteGlyphRunAnalysis)), "glyphRunAnalysis")]),
 ]
 
-dwrite = API("dwrite")
-dwrite.addInterface(IDWriteFactory)
+dwrite = Module("dwrite")
+dwrite.addInterfaces([
+    IDWriteFactory
+])
 dwrite.addFunctions([
     StdFunction(HRESULT, "DWriteCreateFactory", [(DWRITE_FACTORY_TYPE, "factoryType"), (REFIID, "iid"), Out(Pointer(ObjPointer(IUnknown)), "factory")]),
 ])

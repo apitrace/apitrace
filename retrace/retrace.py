@@ -479,7 +479,7 @@ class Retracer:
                 handle_names.add(handle.name)
         print
 
-        functions = filter(self.filterFunction, api.functions)
+        functions = filter(self.filterFunction, api.getAllFunctions())
         for function in functions:
             if function.sideeffects and not function.internal:
                 self.retraceFunction(function)

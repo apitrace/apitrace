@@ -28,6 +28,7 @@
 
 from trace import Tracer
 from dispatch import Dispatcher
+from specs.stdapi import API
 
 
 class DllTracer(Tracer):
@@ -62,8 +63,13 @@ _getPublicProcAddress(LPCSTR lpProcName)
 
 ''' % self.dllname
 
-        dispatcher = Dispatcher()
-        dispatcher.dispatchApi(api)
+        for module in api.modules:
+            dispatcher = Dispatcher()
+            dispatcher.dispatchModule(module)
 
         Tracer.header(self, api)
 
+    def traceModule(self, module):
+        api = API()
+        api.addModule(module)
+        self.traceApi(api)

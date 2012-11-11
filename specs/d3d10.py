@@ -898,7 +898,7 @@ ID3D10Multithread.methods += [
 ]
 
 
-d3d10 = API("d3d10")
+d3d10 = Module("d3d10")
 
 
 from d3d10sdklayers import *

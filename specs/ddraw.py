@@ -1632,7 +1632,7 @@ DDCREATE = Flags(DWORD, [
     "DDCREATE_EMULATIONONLY",
 ])
 
-ddraw = API("ddraw")
+ddraw = Module("ddraw")
 ddraw.addFunctions([
     StdFunction(HRESULT, "DirectDrawEnumerateW", [(LPDDENUMCALLBACKW, "lpCallback"), (LPVOID, "lpContext")]),
     StdFunction(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")]),

@@ -26,12 +26,13 @@
 
 from retrace import Retracer
 from dispatch import Dispatcher
+from specs.stdapi import API
 
 
 class DllDispatcher(Dispatcher):
 
-    def dispatchApi(self, api):
-        tag = api.name.upper()
+    def dispatchModule(self, module):
+        tag = module.name.upper()
         print r'const char *g_sz%sDllName = NULL;' % (tag,)
         print r'HMODULE g_h%sModule = NULL;' % (tag,)
         print r''
@@ -45,10 +46,10 @@ class DllDispatcher(Dispatcher):
         print r'            }'
         print r'        }'
         print r'        if (!g_h%sModule) {' % tag
-        print r'            g_h%sModule = LoadLibraryA("%s.dll");' % (tag, api.name)
+        print r'            g_h%sModule = LoadLibraryA("%s.dll");' % (tag, module.name)
         print r'        }'
         print r'        if (!g_h%sModule) {' % tag
-        print r'            os::log("error: failed to load %s.dll\n");' % api.name
+        print r'            os::log("error: failed to load %s.dll\n");' % module.name
         print r'            exit(1);'
         print r'        }'
         print r'    }'
@@ -56,14 +57,19 @@ class DllDispatcher(Dispatcher):
         print r'}'
         print r''
 
-        Dispatcher.dispatchApi(self, api)
+        Dispatcher.dispatchModule(self, module)
 
 
 class DllRetracer(Retracer):
 
     def retraceApi(self, api):
-        dispatcher = DllDispatcher()
-        dispatcher.dispatchApi(api)
+        for module in api.modules:
+            dispatcher = DllDispatcher()
+            dispatcher.dispatchModule(module)
 
         Retracer.retraceApi(self, api)
 
+    def retraceModule(self, module):
+        api = API()
+        api.addModule(module)
+        self.retraceApi(api)

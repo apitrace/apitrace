@@ -67,4 +67,4 @@ if __name__ == '__main__':
     print '#include "os.hpp"'
     print
     tracer = DDrawTracer('ddraw.dll')
-    tracer.traceApi(ddraw)
+    tracer.traceModule(ddraw)

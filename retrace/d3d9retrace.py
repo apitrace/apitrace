@@ -34,14 +34,14 @@ from specs.d3d9 import *
 
 class D3DRetracer(Retracer):
 
-    def retraceApi(self, api):
+    def retraceModule(self, api):
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _locks;'
         print
 
         self.table_name = 'd3dretrace::d3d_callbacks'
 
-        Retracer.retraceApi(self, api)
+        Retracer.retraceModule(self, api)
 
     def invokeFunction(self, function):
         if function.name in ('Direct3DCreate9', 'Direct3DCreate9Ex'):
@@ -124,4 +124,4 @@ if __name__ == '__main__':
 '''
 
     retracer = D3DRetracer()
-    retracer.retraceApi(d3d9)
+    retracer.retraceModule(d3d9)

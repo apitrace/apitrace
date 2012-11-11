@@ -45,4 +45,4 @@ if __name__ == '__main__':
 '''
 
     retracer = D3DRetracer()
-    retracer.retraceApi(d3d10)
+    retracer.retraceModule(d3d10)

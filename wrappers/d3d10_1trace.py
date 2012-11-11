@@ -39,4 +39,4 @@ if __name__ == '__main__':
     print '#include "d3d10size.hpp"'
     print
     tracer = D3DCommonTracer('d3d10_1.dll')
-    tracer.traceApi(d3d10_1)
+    tracer.traceModule(d3d10_1)

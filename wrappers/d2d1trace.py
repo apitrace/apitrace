@@ -52,4 +52,4 @@ if __name__ == '__main__':
     print
 
     tracer = D2D1Tracer('d2d1.dll')
-    tracer.traceApi(d2d1)
+    tracer.traceModule(d2d1)

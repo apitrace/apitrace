@@ -180,7 +180,7 @@ CGLError = Enum("CGLError", [
 
 CGLContextObj = Opaque("CGLContextObj")
 
-cglapi = API("CGL")
+cglapi = Module("CGL")
 
 cglapi.addFunctions([
     # CGLCurrent.h, libGL.dylib

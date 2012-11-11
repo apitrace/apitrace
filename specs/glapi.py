@@ -44,7 +44,7 @@ def GlFunction(*args, **kwargs):
     return Function(*args, **kwargs)
 
 
-glapi = API('GL')
+glapi = Module('GL')
 
 
 glapi.addFunctions([
