@@ -72,8 +72,3 @@ class DllRetracer(Retracer):
             dispatcher.dispatchModule(module)
 
         Retracer.retraceApi(self, api)
-
-    def retraceModule(self, module):
-        api = API()
-        api.addModule(module)
-        self.retraceApi(api)

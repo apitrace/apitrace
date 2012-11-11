@@ -28,7 +28,7 @@
 
 
 from dllretrace import DllRetracer as Retracer
-import specs.stdapi as stdapi
+from specs.stdapi import API
 from specs.d3d9 import *
 
 
@@ -148,5 +148,7 @@ if __name__ == '__main__':
 
 '''
 
+    api = API()
+    api.addModule(d3d9)
     retracer = D3DRetracer()
-    retracer.retraceModule(d3d9)
+    retracer.retraceApi(api)
