@@ -28,16 +28,6 @@ from dlltrace import DllTracer
 from specs.d3d import ddraw, interfaces
 
 
-class DDrawTracer(DllTracer):
-
-    def traceFunctionImplBody(self, function):
-        if function.name in ('AcquireDDThreadLock', 'ReleaseDDThreadLock'):
-            self.invokeFunction(function)
-            return
-
-        DllTracer.traceFunctionImplBody(self, function)
-
-
 if __name__ == '__main__':
     print '#define INITGUID'
     print '#include <windows.h>'
@@ -66,5 +56,5 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    tracer = DDrawTracer('ddraw.dll')
+    tracer = DllTracer('ddraw.dll')
     tracer.traceModule(ddraw)
