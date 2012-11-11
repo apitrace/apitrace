@@ -29,20 +29,6 @@ from specs.dwrite import dwrite
 from specs.d2d1 import d2d1 # cyclic dependency
 
 
-class DWriteTracer(DllTracer):
-
-    def wrapArg(self, function, arg):
-        if function.name == 'DWriteCreateFactory' and arg.output:
-            print '    if (*%s) {' % arg.name
-            for iface in dwrite.interfaces:
-                print '        if (iid == IID_%s) {' % iface.name
-                print '            *%s = new Wrap%s(static_cast<%s *>(*%s));' % (arg.name, iface.name, iface.name, arg.name)
-                print '        }'
-            print '    }'
-        else:
-            DllTracer.wrapArg(self, function, arg)
-
-
 if __name__ == '__main__':
     print '#define INITGUID'
     print
@@ -54,5 +40,5 @@ if __name__ == '__main__':
     print '#include "d2dimports.hpp"'
     print
 
-    tracer = DWriteTracer('dwrite.dll')
+    tracer = DllTracer('dwrite.dll')
     tracer.traceModule(dwrite)

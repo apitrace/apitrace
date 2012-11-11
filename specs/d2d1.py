@@ -627,7 +627,7 @@ d2d1.addInterfaces([
     ID2D1Factory
 ])
 d2d1.addFunctions([
-    StdFunction(HRESULT, "D2D1CreateFactory", [(D2D1_FACTORY_TYPE, "factoryType"), (REFIID, "riid"), (Pointer(Const(D2D1_FACTORY_OPTIONS)), "pFactoryOptions"), Out(Pointer(OpaquePointer(Void)), "ppIFactory")]),
+    StdFunction(HRESULT, "D2D1CreateFactory", [(D2D1_FACTORY_TYPE, "factoryType"), (REFIID, "riid"), (Pointer(Const(D2D1_FACTORY_OPTIONS)), "pFactoryOptions"), Out(Pointer(ObjPointer(Void)), "ppIFactory")]),
     StdFunction(Void, "D2D1MakeRotateMatrix", [(FLOAT, "angle"), (D2D1_POINT_2F, "center"), Out(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),
     StdFunction(Void, "D2D1MakeSkewMatrix", [(FLOAT, "angleX"), (FLOAT, "angleY"), (D2D1_POINT_2F, "center"), Out(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),
     StdFunction(BOOL, "D2D1IsMatrixInvertible", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "matrix")]),
