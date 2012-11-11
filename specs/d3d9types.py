@@ -929,7 +929,7 @@ D3DVOLUME_DESC = Struct("D3DVOLUME_DESC", [
 
 D3DLOCKED_RECT = Struct("D3DLOCKED_RECT", [
     (INT, "Pitch"),
-    (LinearPointer(Void, "_LockedSize"), "pBits"),
+    (LinearPointer(Void, "_MappedSize"), "pBits"),
 ])
 
 D3DBOX = Struct("D3DBOX", [
@@ -944,7 +944,7 @@ D3DBOX = Struct("D3DBOX", [
 D3DLOCKED_BOX = Struct("D3DLOCKED_BOX", [
     (INT, "RowPitch"),
     (INT, "SlicePitch"),
-    (LinearPointer(Void, "_LockedSize"), "pBits"),
+    (LinearPointer(Void, "_MappedSize"), "pBits"),
 ])
 
 D3DRANGE = Struct("D3DRANGE", [

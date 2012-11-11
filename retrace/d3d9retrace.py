@@ -36,7 +36,7 @@ class D3DRetracer(Retracer):
 
     def retraceModule(self, api):
         print '// Swizzling mapping for lock addresses'
-        print 'static std::map<void *, void *> _locks;'
+        print 'static std::map<void *, void *> _maps;'
         print
 
         self.table_name = 'd3dretrace::d3d_callbacks'
@@ -99,13 +99,13 @@ class D3DRetracer(Retracer):
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
-            print '    size_t _LockedSize = 0;'
-            print '    _getLockInfo(_this, %s, _pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
-            print '    _locks[_this] = _pbData;'
+            print '    size_t _MappedSize = 0;'
+            print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
+            print '    _maps[_this] = _pbData;'
         
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    VOID *_pbData = 0;'
-            print '    _pbData = _locks[_this];'
+            print '    _pbData = _maps[_this];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
             print '    }'
