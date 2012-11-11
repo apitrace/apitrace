@@ -37,7 +37,7 @@ class DllDispatcher(Dispatcher):
         print r'HMODULE g_h%sModule = NULL;' % (tag,)
         print r''
         print r'static PROC'
-        print r'_getPublicProcAddress(LPCSTR lpProcName) {'
+        print r'_get%sProcAddress(LPCSTR lpProcName) {' % tag
         print r'    if (!g_h%sModule) {' % tag
         print r'        if (g_sz%sDllName) {' % tag
         print r'            g_h%sModule = LoadLibraryA(g_sz%sDllName);' % (tag, tag)
@@ -58,6 +58,10 @@ class DllDispatcher(Dispatcher):
         print r''
 
         Dispatcher.dispatchModule(self, module)
+
+    def getProcAddressName(self, module, function):
+        assert self.isFunctionPublic(module, function)
+        return '_get%sProcAddress' % (module.name.upper())
 
 
 class DllRetracer(Retracer):
