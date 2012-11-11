@@ -160,15 +160,36 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
 endif ()
 
 if (WIN32 AND DirectX_D3D10_INCLUDE_DIR)
+    include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+    set (MODULES d3d10)
+    
+    if (DirectX_D3D10_1_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
+        set (MODULES ${MODULES} d3d10_1)
+    endif ()
+
+    if (DirectX_D3D11_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
+        set (MODULES ${MODULES} d3d11)
+    endif ()
+
+    if (DirectX_D3D11_1_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
+        set (MODULES ${MODULES} d3d11_1)
+    endif ()
+
     add_custom_command (
         OUTPUT d3dretrace_d3d10.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10retrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d10.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3dcommonretrace.py ${MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d10.cpp
         DEPENDS
-                d3d10retrace.py
                 d3dcommonretrace.py
                 dllretrace.py
                 retrace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11_1.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
@@ -182,7 +203,6 @@ if (WIN32 AND DirectX_D3D10_INCLUDE_DIR)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
     add_executable (d3d10retrace
         d3dretrace_main.cpp
         d3dretrace_d3d10.cpp
@@ -193,72 +213,4 @@ if (WIN32 AND DirectX_D3D10_INCLUDE_DIR)
     )
 
     install (TARGETS d3d10retrace RUNTIME DESTINATION bin)
-endif ()
-
-if (WIN32 AND DirectX_D3D10_1_INCLUDE_DIR)
-    add_custom_command (
-        OUTPUT d3dretrace_d3d10_1.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d10_1retrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d10_1.cpp
-        DEPENDS
-                d3d10retrace.py
-                d3dcommonretrace.py
-                dllretrace.py
-                retrace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
-    )
-
-    include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
-    add_executable (d3d10_1retrace
-        d3dretrace_main.cpp
-        d3dretrace_d3d10_1.cpp
-        d3dretrace_ws.cpp
-    )
-    target_link_libraries (d3d10_1retrace
-        retrace_common
-    )
-
-    install (TARGETS d3d10_1retrace RUNTIME DESTINATION bin)
-endif ()
-
-if (WIN32 AND DirectX_D3D11_INCLUDE_DIR)
-    add_custom_command (
-        OUTPUT d3dretrace_d3d11.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d11retrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d11.cpp
-        DEPENDS
-                d3d11retrace.py
-                d3dcommonretrace.py
-                dllretrace.py
-                retrace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11_1.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
-                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
-    )
-
-    include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
-    add_executable (d3d11retrace
-        d3dretrace_main.cpp
-        d3dretrace_d3d11.cpp
-        d3dretrace_ws.cpp
-    )
-    target_link_libraries (d3d11retrace
-        retrace_common
-    )
-
-    install (TARGETS d3d11retrace RUNTIME DESTINATION bin)
 endif ()

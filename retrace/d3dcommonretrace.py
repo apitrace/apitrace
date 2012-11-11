@@ -27,8 +27,13 @@
 """D3D retracer generator."""
 
 
+import sys
 from dllretrace import DllRetracer as Retracer
-import specs.stdapi as stdapi
+from specs.stdapi import API
+from specs.dxgi import dxgi
+from specs.d3d10 import d3d10
+from specs.d3d10_1 import d3d10_1
+from specs.d3d11 import d3d11
 
 
 class D3DRetracer(Retracer):
@@ -106,3 +111,42 @@ retrace::dumpState(std::ostream &os)
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
             print '    }'
+
+
+def main():
+    print r'''#include <string.h>'''
+    print
+    print r'#include <iostream>'
+    print
+    print r'#include "d3dretrace.hpp"'
+    print
+
+    moduleNames = sys.argv[1:]
+
+    api = API()
+    if moduleNames:
+        api.addModule(dxgi)
+    if 'd3d10' in moduleNames:
+        if 'd3d10_1' in moduleNames:
+            print r'#include "d3d10_1imports.hpp"'
+            # D3D10CreateBlob is duplicated in d3d10 and d3d10_1
+            d3d10_1.functions = [function for function in d3d10_1.functions if function.name != 'D3D10CreateBlob']
+            api.addModule(d3d10_1)
+        else:
+            print r'#include "d3d10imports.hpp"'
+        print r'#include "d3d10size.hpp"'
+        api.addModule(d3d10)
+    if 'd3d11' in moduleNames:
+        print r'#include "d3d11imports.hpp"'
+        if 'd3d11_1' in moduleNames:
+            print '#include <d3d11_1.h>'
+            import specs.d3d11_1
+        print r'#include "d3d11size.hpp"'
+        api.addModule(d3d11)
+
+    retracer = D3DRetracer()
+    retracer.retraceApi(api)
+
+
+if __name__ == '__main__':
+    main()
