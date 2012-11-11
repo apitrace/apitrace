@@ -187,8 +187,6 @@ if (WIN32 AND DirectX_D3D10_INCLUDE_DIR)
         d3dretrace_main.cpp
         d3dretrace_d3d10.cpp
         d3dretrace_ws.cpp
-        d3d9state.cpp
-        d3d9state_images.cpp
     )
     target_link_libraries (d3d10retrace
         retrace_common
@@ -223,8 +221,6 @@ if (WIN32 AND DirectX_D3D10_1_INCLUDE_DIR)
         d3dretrace_main.cpp
         d3dretrace_d3d10_1.cpp
         d3dretrace_ws.cpp
-        d3d9state.cpp
-        d3d9state_images.cpp
     )
     target_link_libraries (d3d10_1retrace
         retrace_common
@@ -259,8 +255,6 @@ if (WIN32 AND DirectX_D3D11_INCLUDE_DIR)
         d3dretrace_main.cpp
         d3dretrace_d3d11.cpp
         d3dretrace_ws.cpp
-        d3d9state.cpp
-        d3d9state_images.cpp
     )
     target_link_libraries (d3d11retrace
         retrace_common

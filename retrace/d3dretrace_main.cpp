@@ -33,10 +33,6 @@
 #include "d3dretrace.hpp"
 
 
-IDirect3DDevice9 *
-d3dretrace::pLastDirect3DDevice9 = NULL;
-
-
 void
 retrace::setUp(void) {
 }
@@ -46,29 +42,6 @@ void
 retrace::addCallbacks(retrace::Retracer &retracer)
 {
     retracer.addCallbacks(d3dretrace::d3d_callbacks);
-}
-
-
-image::Image *
-retrace::getSnapshot(void) {
-    if (!d3dretrace::pLastDirect3DDevice9) {
-        return NULL;
-    }
-
-    return d3dstate::getRenderTargetImage(d3dretrace::pLastDirect3DDevice9);
-}
-
-
-bool
-retrace::dumpState(std::ostream &os)
-{
-    if (!d3dretrace::pLastDirect3DDevice9) {
-        return false;
-    }
-
-    d3dstate::dumpDevice(os, d3dretrace::pLastDirect3DDevice9);
-
-    return true;
 }
 
 

@@ -33,14 +33,28 @@ import specs.stdapi as stdapi
 
 class D3DRetracer(Retracer):
 
-    def retraceModule(self, api):
+    def retraceApi(self, api):
+        print '''
+image::Image *
+retrace::getSnapshot(void) {
+    return NULL;
+}
+
+
+bool
+retrace::dumpState(std::ostream &os)
+{
+    return false;
+}
+'''
+
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
         print
 
         self.table_name = 'd3dretrace::d3d_callbacks'
 
-        Retracer.retraceModule(self, api)
+        Retracer.retraceApi(self, api)
 
     def invokeFunction(self, function):
         # create windows as neccessary

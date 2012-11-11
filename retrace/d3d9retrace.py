@@ -34,14 +34,38 @@ from specs.d3d9 import *
 
 class D3DRetracer(Retracer):
 
-    def retraceModule(self, api):
+    def retraceApi(self, api):
+        print '''
+static IDirect3DDevice9 *
+pLastDirect3DDevice9 = NULL;
+
+image::Image *
+retrace::getSnapshot(void) {
+    if (!pLastDirect3DDevice9) {
+        return NULL;
+    }
+    return d3dstate::getRenderTargetImage(pLastDirect3DDevice9);
+}
+
+
+bool
+retrace::dumpState(std::ostream &os)
+{
+    if (!pLastDirect3DDevice9) {
+        return false;
+    }
+    d3dstate::dumpDevice(os, pLastDirect3DDevice9);
+    return true;
+}
+'''
+
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
         print
 
         self.table_name = 'd3dretrace::d3d_callbacks'
 
-        Retracer.retraceModule(self, api)
+        Retracer.retraceApi(self, api)
 
     def invokeFunction(self, function):
         if function.name in ('Direct3DCreate9', 'Direct3DCreate9Ex'):
@@ -60,7 +84,7 @@ class D3DRetracer(Retracer):
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
         if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):
-            print r'    d3dretrace::pLastDirect3DDevice9 = _this;'
+            print r'    pLastDirect3DDevice9 = _this;'
 
         # create windows as neccessary
         if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):
@@ -120,6 +144,7 @@ if __name__ == '__main__':
 #include "d3d9imports.hpp"
 #include "d3d9size.hpp"
 #include "d3dretrace.hpp"
+#include "d3d9state.hpp"
 
 '''
 
