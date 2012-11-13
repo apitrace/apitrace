@@ -255,8 +255,18 @@ toPointer(trace::Value &value, bool bind) {
 static std::map<unsigned long long, void *> _obj_map;
 
 void
-addObj(trace::Value &value, void *obj) {
+addObj(trace::Call &call, trace::Value &value, void *obj) {
     unsigned long long address = value.toUIntPtr();
+
+    if (!address) {
+        assert(!obj);
+        return;
+    }
+
+    if (!obj) {
+        warning(call) << "got null for object 0x" << std::hex << address << std::dec << "\n";
+    }
+
     _obj_map[address] = obj;
     
     if (retrace::verbosity >= 2) {
@@ -278,7 +288,7 @@ toObjPointer(trace::Call &call, trace::Value &value) {
     if (address) {
         obj = _obj_map[address];
         if (!obj) {
-            warning(call) << "unknown object 0x" << std::hex << address << std::dec << " call\n";
+            warning(call) << "unknown object 0x" << std::hex << address << std::dec << "\n";
         }
     } else {
         obj = NULL;
