@@ -538,7 +538,7 @@ class Tracer:
             return 'true'
         if str(function.type) == 'HRESULT':
             return 'SUCCEEDED(_result)'
-        return 'false'
+        return 'true'
 
     def serializeArg(self, function, arg):
         print '    trace::localWriter.beginArg(%u);' % (arg.index,)
