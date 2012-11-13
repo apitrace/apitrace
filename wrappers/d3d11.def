@@ -7,3 +7,6 @@ EXPORTS
         D3D11CoreRegisterLayers
         D3D11CreateDevice
         D3D11CreateDeviceAndSwapChain
+
+    CreateDXGIFactory
+    CreateDXGIFactory1
