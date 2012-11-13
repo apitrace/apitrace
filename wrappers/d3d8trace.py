@@ -25,6 +25,7 @@
 
 
 from dlltrace import DllTracer
+from specs.stdapi import API
 from specs.d3d8 import d3d8
 
 
@@ -49,6 +50,9 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    tracer = D3D8Tracer('d3d8.dll')
-    tracer.traceModule(d3d8)
 
+
+    api = API()
+    api.addModule(d3d8)
+    tracer = D3D8Tracer()
+    tracer.traceApi(api)

@@ -25,6 +25,8 @@
 
 
 from dlltrace import DllTracer
+from specs.stdapi import API
+from specs.dwrite import dwrite
 from specs.d2d1 import d2d1
 
 
@@ -34,8 +36,13 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
+    print '#define DWRITE_EXPORT WINAPI'
+    print
     print '#include "d2dimports.hpp"'
     print
 
-    tracer = DllTracer('d2d1.dll')
-    tracer.traceModule(d2d1)
+    api = API()
+    api.addModule(d2d1)
+    api.addModule(dwrite)
+    tracer = DllTracer()
+    tracer.traceApi(api)

@@ -25,6 +25,7 @@
 
 
 from dlltrace import DllTracer
+from specs.stdapi import API
 from specs.d3d import ddraw, interfaces
 
 
@@ -56,5 +57,8 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    tracer = DllTracer('ddraw.dll')
-    tracer.traceModule(ddraw)
+
+    api = API()
+    api.addModule(ddraw)
+    tracer = DllTracer()
+    tracer.traceApi(api)

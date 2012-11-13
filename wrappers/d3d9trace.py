@@ -25,6 +25,7 @@
 
 
 from dlltrace import DllTracer
+from specs.stdapi import API
 from specs.d3d9 import d3d9, D3DSHADER9
 
 import specs.d3d9dxva2
@@ -94,6 +95,8 @@ _declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
     return count;
 }
 '''
-    tracer = D3D9Tracer('d3d9.dll')
-    tracer.traceModule(d3d9)
 
+    api = API()
+    api.addModule(d3d9)
+    tracer = D3D9Tracer()
+    tracer.traceApi(api)

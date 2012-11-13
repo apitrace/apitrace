@@ -25,6 +25,7 @@
 
 
 from d3dcommontrace import D3DCommonTracer
+from specs.stdapi import API
 from specs.d3d10_1 import d3d10_1
 
 
@@ -38,5 +39,8 @@ if __name__ == '__main__':
     print '#include "d3dcommonshader.hpp"'
     print '#include "d3d10size.hpp"'
     print
-    tracer = D3DCommonTracer('d3d10_1.dll')
-    tracer.traceModule(d3d10_1)
+
+    api = API()
+    api.addModule(d3d10_1)
+    tracer = D3DCommonTracer()
+    tracer.traceApi(api)

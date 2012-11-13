@@ -8,7 +8,6 @@ d3d8trace.cpp
 d3d9trace.cpp
 ddrawtrace.cpp
 dlltrace.cpp
-dwritetrace.cpp
 egltrace.cpp
 gltrace.cpp
 glxtrace.cpp
