@@ -631,5 +631,5 @@ d2d1.addFunctions([
     StdFunction(Void, "D2D1MakeRotateMatrix", [(FLOAT, "angle"), (D2D1_POINT_2F, "center"), Out(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),
     StdFunction(Void, "D2D1MakeSkewMatrix", [(FLOAT, "angleX"), (FLOAT, "angleY"), (D2D1_POINT_2F, "center"), Out(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),
     StdFunction(BOOL, "D2D1IsMatrixInvertible", [(Pointer(Const(D2D1_MATRIX_3X2_F)), "matrix")]),
-    StdFunction(BOOL, "D2D1InvertMatrix", [Out(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),
+    StdFunction(BOOL, "D2D1InvertMatrix", [InOut(Pointer(D2D1_MATRIX_3X2_F), "matrix")]),
 ])

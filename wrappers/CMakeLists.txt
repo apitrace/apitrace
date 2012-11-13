@@ -18,6 +18,8 @@ set_target_properties (common_trace PROPERTIES
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
 
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 if (WIN32)
     if (MINGW)
         # Silence warnings about @nn suffix mismatch
@@ -268,31 +270,31 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d2d1 SHARED d2d1.def d2d1trace.cpp)
-        target_link_libraries (d2d1
+        add_library (d2d1trace SHARED d2d1.def d2d1trace.cpp)
+        target_link_libraries (d2d1trace
             common_trace
             common
             ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
-        set_target_properties (d2d1
+        set_target_properties (d2d1trace
             PROPERTIES PREFIX ""
             OUTPUT_NAME d2d1
         )
         # http://www.cmake.org/pipermail/cmake/2009-March/028221.html
-        install (TARGETS d2d1
+        install (TARGETS d2d1trace
             RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
             LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
         )
 
         # dwrite.dll is just an empty stub for d2d1.dll
-        add_library (dwrite MODULE dwrite.def)
-        target_link_libraries (dwrite d2d1)
-        set_target_properties (dwrite
+        add_library (dwritetrace MODULE dwrite.def dwritetrace.cpp)
+        target_link_libraries (dwritetrace d2d1trace)
+        set_target_properties (dwritetrace
             PROPERTIES PREFIX ""
             OUTPUT_NAME dwrite
         )
-        install (TARGETS dwrite LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS dwritetrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D2D1_INCLUDE_DIR)
 
     # opengl32.dll
