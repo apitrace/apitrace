@@ -129,6 +129,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
 endif ()
 
 if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
+    include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
     add_custom_command (
         OUTPUT d3dretrace_d3d9.cpp
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
@@ -144,38 +145,22 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
-    add_executable (d3dretrace
-        d3dretrace_main.cpp
-        d3dretrace_d3d9.cpp
-        d3dretrace_ws.cpp
-        d3d9state.cpp
-        d3d9state_images.cpp
-    )
-    target_link_libraries (d3dretrace
-        retrace_common
-    )
-
-    install (TARGETS d3dretrace RUNTIME DESTINATION bin)
-endif ()
-
-if (WIN32 AND DirectX_D3D10_INCLUDE_DIR)
-    include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
-    set (MODULES d3d10)
-    
-    if (DirectX_D3D10_1_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
-        set (MODULES ${MODULES} d3d10_1)
+    if (DirectX_D3D10_INCLUDE_DIR)
+        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+        set (MODULES d3d10)
+        if (DirectX_D3D10_1_INCLUDE_DIR)
+            include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
+            set (MODULES ${MODULES} d3d10_1)
+        endif ()
     endif ()
 
     if (DirectX_D3D11_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
         set (MODULES ${MODULES} d3d11)
-    endif ()
-
-    if (DirectX_D3D11_1_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
-        set (MODULES ${MODULES} d3d11_1)
+        if (DirectX_D3D11_1_INCLUDE_DIR)
+            include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
+            set (MODULES ${MODULES} d3d11_1)
+        endif ()
     endif ()
 
     add_custom_command (
@@ -203,14 +188,17 @@ if (WIN32 AND DirectX_D3D10_INCLUDE_DIR)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    add_executable (d3d10retrace
+    add_executable (d3dretrace
         d3dretrace_main.cpp
+        d3dretrace_d3d9.cpp
         d3dretrace_d3d10.cpp
         d3dretrace_ws.cpp
+        d3d9state.cpp
+        d3d9state_images.cpp
     )
-    target_link_libraries (d3d10retrace
+    target_link_libraries (d3dretrace
         retrace_common
     )
 
-    install (TARGETS d3d10retrace RUNTIME DESTINATION bin)
+    install (TARGETS d3dretrace RUNTIME DESTINATION bin)
 endif ()

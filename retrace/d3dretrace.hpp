@@ -35,7 +35,8 @@
 namespace d3dretrace {
 
 
-extern const retrace::Entry d3d_callbacks[];
+extern const retrace::Entry d3d9_callbacks[];
+extern const retrace::Entry d3d10_callbacks[];
 
 
 HWND

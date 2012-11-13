@@ -39,25 +39,11 @@ from specs.d3d11 import d3d11
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
-        print '''
-image::Image *
-retrace::getSnapshot(void) {
-    return NULL;
-}
-
-
-bool
-retrace::dumpState(std::ostream &os)
-{
-    return false;
-}
-'''
-
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
         print
 
-        self.table_name = 'd3dretrace::d3d_callbacks'
+        self.table_name = 'd3dretrace::d3d10_callbacks'
 
         Retracer.retraceApi(self, api)
 

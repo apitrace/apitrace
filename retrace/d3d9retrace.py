@@ -63,7 +63,7 @@ retrace::dumpState(std::ostream &os)
         print 'static std::map<void *, void *> _maps;'
         print
 
-        self.table_name = 'd3dretrace::d3d_callbacks'
+        self.table_name = 'd3dretrace::d3d9_callbacks'
 
         Retracer.retraceApi(self, api)
 
