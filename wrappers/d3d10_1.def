@@ -1,4 +1,4 @@
-LIBRARY	"d3d10_1"
+LIBRARY "d3d10_1"
 
 EXPORTS
         D3D10CreateDevice1
