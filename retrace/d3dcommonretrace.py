@@ -52,7 +52,14 @@ class D3DRetracer(Retracer):
         if function.name in ('D3D10CreateDeviceAndSwapChain', 'D3D10CreateDeviceAndSwapChain1', 'D3D11CreateDeviceAndSwapChain'):
             print r'    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
 
+        if 'Software' in function.argNames():
+            print r'    if (Software) {'
+            print r'        retrace::warning(call) << "software device\n";'
+            print r'        Software = LoadLibraryA("d3d10warp");'
+            print r'    }'
+
         Retracer.invokeFunction(self, function)
+
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
