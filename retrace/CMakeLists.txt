@@ -43,6 +43,7 @@ target_link_libraries (retrace_common
     ${PNG_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
+    ${GETOPT_LIBRARIES}
 )
 
 add_library (glretrace_common
