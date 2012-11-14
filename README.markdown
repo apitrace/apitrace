@@ -51,7 +51,7 @@ Replay an OpenGL trace with
 
     glretrace application.trace
 
-Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
+Pass the `--sb` option to use a single buffered visual.  Pass `--help` to
 `glretrace` for more options.
 
 EGL traces must be replayed with `eglretrace` instead of `glretrace`.
@@ -341,11 +341,11 @@ Profiling a trace
 
 You can perform gpu and cpu profiling with the command line options:
 
- * `-pgpu` record gpu times for frames and draw calls.
+ * `--pgpu` record gpu times for frames and draw calls.
 
- * `-pcpu` record cpu times for frames and draw calls.
+ * `--pcpu` record cpu times for frames and draw calls.
 
- * `-ppd` record pixels drawn for each draw call.
+ * `--ppd` record pixels drawn for each draw call.
 
 The results from this can then be read by hand or analysed with a script.
 
@@ -354,7 +354,7 @@ table which displays profiling results per shader.
 
 For example, to record all profiling data and utilise the per shader script:
 
-    ./glretrace -pgpu -pcpu -ppd foo.trace | ./scripts/profileshader.py
+    ./glretrace --pgpu --pcpu --ppd foo.trace | ./scripts/profileshader.py
 
 
 Advanced usage for OpenGL implementors

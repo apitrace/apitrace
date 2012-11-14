@@ -294,21 +294,21 @@ void Retracer::run()
         arguments << QLatin1String("-"); // emit to stdout
     } else if (isProfiling()) {
         if (m_profileGpu) {
-            arguments << QLatin1String("-pgpu");
+            arguments << QLatin1String("--pgpu");
         }
 
         if (m_profileCpu) {
-            arguments << QLatin1String("-pcpu");
+            arguments << QLatin1String("--pcpu");
         }
 
         if (m_profilePixels) {
-            arguments << QLatin1String("-ppd");
+            arguments << QLatin1String("--ppd");
         }
     } else {
         if (m_doubleBuffered) {
-            arguments << QLatin1String("-db");
+            arguments << QLatin1String("--db");
         } else {
-            arguments << QLatin1String("-sb");
+            arguments << QLatin1String("--sb");
         }
 
         if (m_benchmarking) {
