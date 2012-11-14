@@ -462,7 +462,7 @@ D3D11_SUBRESOURCE_DATA = Struct("D3D11_SUBRESOURCE_DATA", [
 ])
 
 D3D11_MAPPED_SUBRESOURCE = Struct("D3D11_MAPPED_SUBRESOURCE", [
-    (OpaquePointer(Void), "pData"),
+    (LinearPointer(Void, "_MappedSize"), "pData"),
     (UINT, "RowPitch"),
     (UINT, "DepthPitch"),
 ])
