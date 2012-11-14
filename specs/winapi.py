@@ -152,7 +152,7 @@ RGNDATA = Struct("RGNDATA", [
 ])
 LPRGNDATA = Pointer(RGNDATA)
 
-HMODULE = DECLARE_HANDLE("HMODULE")
+HMODULE = IntPointer("HMODULE")
 
 FILETIME = Struct("FILETIME", [
     (DWORD, "dwLowDateTime"),

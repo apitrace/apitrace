@@ -25,6 +25,7 @@
 
 
 from dlltrace import DllTracer
+from specs.stdapi import API
 from specs.d3d9 import d3d9, D3DSHADER9
 
 import specs.d3d9dxva2
@@ -48,7 +49,7 @@ class D3D9Tracer(DllTracer):
            interface.getMethodByName('LockRect') is not None or \
            interface.getMethodByName('LockBox') is not None:
             variables += [
-                ('size_t', '_LockedSize', '0'),
+                ('size_t', '_MappedSize', '0'),
                 ('VOID *', 'm_pbData', '0'),
             ]
 
@@ -56,8 +57,8 @@ class D3D9Tracer(DllTracer):
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '    if (_LockedSize && m_pbData) {'
-            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_LockedSize')
+            print '    if (_MappedSize && m_pbData) {'
+            self.emit_memcpy('(LPBYTE)m_pbData', '(LPBYTE)m_pbData', '_MappedSize')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
@@ -65,10 +66,10 @@ class D3D9Tracer(DllTracer):
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             # FIXME: handle recursive locks
             print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-            print '        _getLockInfo(_this, %s, m_pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
+            print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
             print '    } else {'
             print '        m_pbData = NULL;'
-            print '        _LockedSize = 0;'
+            print '        _MappedSize = 0;'
             print '    }'
 
 
@@ -94,6 +95,8 @@ _declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
     return count;
 }
 '''
-    tracer = D3D9Tracer('d3d9.dll')
-    tracer.traceApi(d3d9)
 
+    api = API()
+    api.addModule(d3d9)
+    tracer = D3D9Tracer()
+    tracer.traceApi(api)

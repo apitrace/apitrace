@@ -347,13 +347,13 @@ IDirect3DCubeTexture9.methods += [
 ]
 
 IDirect3DVertexBuffer9.methods += [
-    StdMethod(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_LockedSize")), "ppbData"), (D3DLOCK, "Flags")]),
+    StdMethod(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "ppbData"), (D3DLOCK, "Flags")]),
     StdMethod(HRESULT, "Unlock", []),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DVERTEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 IDirect3DIndexBuffer9.methods += [
-    StdMethod(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_LockedSize")), "ppbData"), (D3DLOCK, "Flags")]),
+    StdMethod(HRESULT, "Lock", [(UINT, "OffsetToLock"), (UINT, "SizeToLock"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "ppbData"), (D3DLOCK, "Flags")]),
     StdMethod(HRESULT, "Unlock", []),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DINDEXBUFFER_DESC), "pDesc")], sideeffects=False),
 ]
@@ -418,7 +418,7 @@ IDirect3DSwapChain9Ex.methods += [
     StdMethod(HRESULT, "GetDisplayModeEx", [Out(Pointer(D3DDISPLAYMODEEX), "pMode"), Out(Pointer(D3DDISPLAYROTATION), "pRotation")], sideeffects=False),
 ]
 
-d3d9 = API("d3d9")
+d3d9 = Module("d3d9")
 d3d9.addFunctions([
     StdFunction(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
     StdFunction(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), Out(Pointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),

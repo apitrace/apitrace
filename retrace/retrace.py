@@ -242,7 +242,7 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         pass
     
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        print r'    retrace::addObj(%s, %s);' % (rvalue, lvalue)
+        print r'    retrace::addObj(call, %s, %s);' % (rvalue, lvalue)
     
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         assert pointer.size is not None
@@ -479,7 +479,7 @@ class Retracer:
                 handle_names.add(handle.name)
         print
 
-        functions = filter(self.filterFunction, api.functions)
+        functions = filter(self.filterFunction, api.getAllFunctions())
         for function in functions:
             if function.sideeffects and not function.internal:
                 self.retraceFunction(function)

@@ -528,7 +528,8 @@ if __name__ == '__main__':
 
 static bool _pipelineHasBeenBound = false;
 '''
-    api = glapi.glapi
-    api.addApi(glesapi.glesapi)
+    api = stdapi.API()
+    api.addModule(glapi.glapi)
+    api.addModule(glesapi.glesapi)
     retracer = GlRetracer()
     retracer.retraceApi(api)

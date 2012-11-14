@@ -29,7 +29,7 @@
 
 
 from gltrace import GlTracer
-from specs.stdapi import API
+from specs.stdapi import Module, API
 from specs.glapi import glapi
 from specs.glxapi import glxapi
 
@@ -101,9 +101,11 @@ if __name__ == '__main__':
     print '#include "glsize.hpp"'
     print
 
+    module = Module()
+    module.mergeModule(glxapi)
+    module.mergeModule(glapi)
     api = API()
-    api.addApi(glxapi)
-    api.addApi(glapi)
+    api.addModule(module)
     tracer = GlxTracer()
     tracer.traceApi(api)
 

@@ -617,12 +617,12 @@ _align(X x, Y y) {
     return (x + (y - 1)) & ~(y - 1);
 }
 
-static inline size_t
-_gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLboolean has_unpack_subimage) {
+static inline void
+_gl_format_size(GLenum format, GLenum type,
+                unsigned & bits_per_element, unsigned & bits_per_pixel)
+{
     unsigned num_channels = _gl_format_channels(format);
 
-    unsigned bits_per_element;
-    unsigned bits_per_pixel;
     switch (type) {
     case GL_BITMAP:
         bits_per_pixel = bits_per_element = 1;
@@ -677,6 +677,22 @@ _gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsize
         bits_per_pixel = bits_per_element = 0;
         break;
     }
+}
+
+static inline size_t
+_glClearBufferData_size(GLenum format, GLenum type) {
+    unsigned bits_per_element;
+    unsigned bits_per_pixel;
+    _gl_format_size(format, type, bits_per_element, bits_per_pixel);
+    return (bits_per_pixel + 7)/8;
+}
+
+static inline size_t
+_gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth, GLboolean has_unpack_subimage) {
+
+    unsigned bits_per_element;
+    unsigned bits_per_pixel;
+    _gl_format_size(format, type, bits_per_element, bits_per_pixel);
 
     GLint alignment = 4;
     GLint row_length = 0;

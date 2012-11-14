@@ -25,17 +25,8 @@
 
 
 from dlltrace import DllTracer
+from specs.stdapi import API
 from specs.d3d import ddraw, interfaces
-
-
-class DDrawTracer(DllTracer):
-
-    def traceFunctionImplBody(self, function):
-        if function.name in ('AcquireDDThreadLock', 'ReleaseDDThreadLock'):
-            self.invokeFunction(function)
-            return
-
-        DllTracer.traceFunctionImplBody(self, function)
 
 
 if __name__ == '__main__':
@@ -66,5 +57,8 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    tracer = DDrawTracer('ddraw.dll')
-    tracer.traceApi(ddraw)
+
+    api = API()
+    api.addModule(ddraw)
+    tracer = DllTracer()
+    tracer.traceApi(api)

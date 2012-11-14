@@ -242,7 +242,7 @@ GLXbuffer = Flags(Int, [
     "GLX_PBUFFER_CLOBBER_MASK",
 ])
 
-glxapi = API("GLX")
+glxapi = Module("GLX")
 
 PROC = Opaque("__GLXextFuncPtr")
 

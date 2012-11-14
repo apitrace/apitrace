@@ -28,18 +28,42 @@
 
 
 from dllretrace import DllRetracer as Retracer
-import specs.stdapi as stdapi
+from specs.stdapi import API
 from specs.d3d9 import *
 
 
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
+        print '''
+static IDirect3DDevice9 *
+pLastDirect3DDevice9 = NULL;
+
+image::Image *
+retrace::getSnapshot(void) {
+    if (!pLastDirect3DDevice9) {
+        return NULL;
+    }
+    return d3dstate::getRenderTargetImage(pLastDirect3DDevice9);
+}
+
+
+bool
+retrace::dumpState(std::ostream &os)
+{
+    if (!pLastDirect3DDevice9) {
+        return false;
+    }
+    d3dstate::dumpDevice(os, pLastDirect3DDevice9);
+    return true;
+}
+'''
+
         print '// Swizzling mapping for lock addresses'
-        print 'static std::map<void *, void *> _locks;'
+        print 'static std::map<void *, void *> _maps;'
         print
 
-        self.table_name = 'd3dretrace::d3d_callbacks'
+        self.table_name = 'd3dretrace::d3d9_callbacks'
 
         Retracer.retraceApi(self, api)
 
@@ -60,7 +84,7 @@ class D3DRetracer(Retracer):
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
         if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):
-            print r'    d3dretrace::pLastDirect3DDevice9 = _this;'
+            print r'    pLastDirect3DDevice9 = _this;'
 
         # create windows as neccessary
         if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):
@@ -99,13 +123,13 @@ class D3DRetracer(Retracer):
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
-            print '    size_t _LockedSize = 0;'
-            print '    _getLockInfo(_this, %s, _pbData, _LockedSize);' % ', '.join(method.argNames()[:-1])
-            print '    _locks[_this] = _pbData;'
+            print '    size_t _MappedSize = 0;'
+            print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
+            print '    _maps[_this] = _pbData;'
         
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    VOID *_pbData = 0;'
-            print '    _pbData = _locks[_this];'
+            print '    _pbData = _maps[_this];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
             print '    }'
@@ -120,8 +144,11 @@ if __name__ == '__main__':
 #include "d3d9imports.hpp"
 #include "d3d9size.hpp"
 #include "d3dretrace.hpp"
+#include "d3d9state.hpp"
 
 '''
 
+    api = API()
+    api.addModule(d3d9)
     retracer = D3DRetracer()
-    retracer.retraceApi(d3d9)
+    retracer.retraceApi(api)

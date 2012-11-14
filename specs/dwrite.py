@@ -454,7 +454,7 @@ IDWriteTextFormat.methods += [
     StdMethod(HRESULT, "SetReadingDirection", [(DWRITE_READING_DIRECTION, "readingDirection")]),
     StdMethod(HRESULT, "SetFlowDirection", [(DWRITE_FLOW_DIRECTION, "flowDirection")]),
     StdMethod(HRESULT, "SetIncrementalTabStop", [(FLOAT, "incrementalTabStop")]),
-    StdMethod(HRESULT, "SetTrimming", [(Pointer(Const(DWRITE_TRIMMING)), "trimmingOptions"), (ObjPointer(IDWriteInlineObject), "trimmingSign")]),
+    StdMethod(HRESULT, "SetTrimming", [(Pointer(Const(DWRITE_TRIMMING)), "trimmingOptions"), (OpaquePointer(IDWriteInlineObject), "trimmingSign")]),
     StdMethod(HRESULT, "SetLineSpacing", [(DWRITE_LINE_SPACING_METHOD, "lineSpacingMethod"), (FLOAT, "lineSpacing"), (FLOAT, "baseline")]),
     StdMethod(DWRITE_TEXT_ALIGNMENT, "GetTextAlignment", []),
     StdMethod(DWRITE_PARAGRAPH_ALIGNMENT, "GetParagraphAlignment", []),
@@ -462,7 +462,7 @@ IDWriteTextFormat.methods += [
     StdMethod(DWRITE_READING_DIRECTION, "GetReadingDirection", []),
     StdMethod(DWRITE_FLOW_DIRECTION, "GetFlowDirection", []),
     StdMethod(FLOAT, "GetIncrementalTabStop", []),
-    StdMethod(HRESULT, "GetTrimming", [Out(Pointer(DWRITE_TRIMMING), "trimmingOptions"), Out(Pointer(ObjPointer(IDWriteInlineObject)), "trimmingSign")]),
+    StdMethod(HRESULT, "GetTrimming", [Out(Pointer(DWRITE_TRIMMING), "trimmingOptions"), Out(Pointer(OpaquePointer(IDWriteInlineObject)), "trimmingSign")]),
     StdMethod(HRESULT, "GetLineSpacing", [Out(Pointer(DWRITE_LINE_SPACING_METHOD), "lineSpacingMethod"), Out(Pointer(FLOAT), "lineSpacing"), Out(Pointer(FLOAT), "baseline")]),
     StdMethod(HRESULT, "GetFontCollection", [Out(Pointer(ObjPointer(IDWriteFontCollection)), "fontCollection")]),
     StdMethod(UINT32, "GetFontFamilyNameLength", []),
@@ -654,7 +654,7 @@ DWRITE_HIT_TEST_METRICS = Struct("DWRITE_HIT_TEST_METRICS", [
 ])
 
 IDWriteInlineObject.methods += [
-    StdMethod(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (ObjPointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
+    StdMethod(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (OpaquePointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY"), (BOOL, "isSideways"), (BOOL, "isRightToLeft"), (ObjPointer(IUnknown), "clientDrawingEffect")]),
     StdMethod(HRESULT, "GetMetrics", [Out(Pointer(DWRITE_INLINE_OBJECT_METRICS), "metrics")]),
     StdMethod(HRESULT, "GetOverhangMetrics", [Out(Pointer(DWRITE_OVERHANG_METRICS), "overhangs")]),
     StdMethod(HRESULT, "GetBreakConditions", [Out(Pointer(DWRITE_BREAK_CONDITION), "breakConditionBefore"), Out(Pointer(DWRITE_BREAK_CONDITION), "breakConditionAfter")]),
@@ -704,7 +704,7 @@ IDWriteTextLayout.methods += [
     StdMethod(HRESULT, "GetTypography", [(UINT32, "currentPosition"), Out(Pointer(ObjPointer(IDWriteTypography)), "typography"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
     StdMethod(HRESULT, "GetLocaleNameLength", [(UINT32, "currentPosition"), Out(Pointer(UINT32), "nameLength"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
     StdMethod(HRESULT, "GetLocaleName", [(UINT32, "currentPosition"), Out(Pointer(WCHAR), "localeName"), (UINT32, "nameSize"), Out(Pointer(DWRITE_TEXT_RANGE), "textRange")]),
-    StdMethod(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (ObjPointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY")]),
+    StdMethod(HRESULT, "Draw", [(OpaquePointer(Void), "clientDrawingContext"), (OpaquePointer(IDWriteTextRenderer), "renderer"), (FLOAT, "originX"), (FLOAT, "originY")]),
     StdMethod(HRESULT, "GetLineMetrics", [Out(Pointer(DWRITE_LINE_METRICS), "lineMetrics"), (UINT32, "maxLineCount"), Out(Pointer(UINT32), "actualLineCount")]),
     StdMethod(HRESULT, "GetMetrics", [Out(Pointer(DWRITE_TEXT_METRICS), "textMetrics")]),
     StdMethod(HRESULT, "GetOverhangMetrics", [Out(Pointer(DWRITE_OVERHANG_METRICS), "overhangs")]),
@@ -769,8 +769,10 @@ IDWriteFactory.methods += [
     StdMethod(HRESULT, "CreateGlyphRunAnalysis", [(Pointer(Const(DWRITE_GLYPH_RUN)), "glyphRun"), (FLOAT, "pixelsPerDip"), (Pointer(Const(DWRITE_MATRIX)), "transform"), (DWRITE_RENDERING_MODE, "renderingMode"), (DWRITE_MEASURING_MODE, "measuringMode"), (FLOAT, "baselineOriginX"), (FLOAT, "baselineOriginY"), Out(Pointer(ObjPointer(IDWriteGlyphRunAnalysis)), "glyphRunAnalysis")]),
 ]
 
-dwrite = API("dwrite")
-dwrite.addInterface(IDWriteFactory)
+dwrite = Module("dwrite")
+dwrite.addInterfaces([
+    IDWriteFactory
+])
 dwrite.addFunctions([
     StdFunction(HRESULT, "DWriteCreateFactory", [(DWRITE_FACTORY_TYPE, "factoryType"), (REFIID, "iid"), Out(Pointer(ObjPointer(IUnknown)), "factory")]),
 ])

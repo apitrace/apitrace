@@ -1,8 +1,10 @@
 LIBRARY "d2d1"
 
 EXPORTS
-	D2D1CreateFactory
-	D2D1InvertMatrix
-	D2D1IsMatrixInvertible
-	D2D1MakeRotateMatrix
-	D2D1MakeSkewMatrix
+    D2D1CreateFactory @1
+    D2D1MakeRotateMatrix @2
+    D2D1MakeSkewMatrix @3
+    D2D1IsMatrixInvertible @4
+    D2D1InvertMatrix @5
+
+    DWriteCreateFactory

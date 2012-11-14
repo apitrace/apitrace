@@ -1213,7 +1213,7 @@ ID3D11Device.methods += [
     StdMethod(UINT, "GetExceptionMode", [], sideeffects=False),
 ]
 
-d3d11 = API("d3d11")
+d3d11 = Module("d3d11")
 
 d3d11.addFunctions([
     StdFunction(HRESULT, "D3D11CreateDevice", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D11_CREATE_DEVICE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice"), Out(Pointer(D3D_FEATURE_LEVEL), "pFeatureLevel"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),

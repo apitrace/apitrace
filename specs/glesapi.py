@@ -40,7 +40,7 @@ def GlFunction(*args, **kwargs):
     return Function(*args, **kwargs)
 
 
-glesapi = API('GLES')
+glesapi = Module('GLES')
 
 
 # OpenGL ES specific functions

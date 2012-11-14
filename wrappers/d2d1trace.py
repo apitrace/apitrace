@@ -25,21 +25,9 @@
 
 
 from dlltrace import DllTracer
+from specs.stdapi import API
+from specs.dwrite import dwrite
 from specs.d2d1 import d2d1
-
-
-class D2D1Tracer(DllTracer):
-
-    def wrapArg(self, function, arg):
-        if function.name == 'D2D1CreateFactory' and arg.output:
-            print '    if (*%s) {' % arg.name
-            for iface in d2d1.interfaces:
-                print '        if (riid == IID_%s) {' % iface.name
-                print '            *%s = (LPVOID) new Wrap%s((%s *)*%s);' % (arg.name, iface.name, iface.name, arg.name)
-                print '        }'
-            print '    }'
-        else:
-            DllTracer.wrapArg(self, function, arg)
 
 
 if __name__ == '__main__':
@@ -48,8 +36,13 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
+    print '#define DWRITE_EXPORT WINAPI'
+    print
     print '#include "d2dimports.hpp"'
     print
 
-    tracer = D2D1Tracer('d2d1.dll')
-    tracer.traceApi(d2d1)
+    api = API()
+    api.addModule(d2d1)
+    api.addModule(dwrite)
+    tracer = DllTracer()
+    tracer.traceApi(api)

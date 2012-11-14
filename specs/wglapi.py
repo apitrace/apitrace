@@ -32,7 +32,7 @@ from winapi import *
 from wglenum import *
 
 
-wglapi = API("WGL")
+wglapi = Module("WGL")
 
 
 HGLRC = Alias("HGLRC", HANDLE)

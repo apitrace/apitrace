@@ -130,7 +130,7 @@ QSize ImageViewer::sizeHint() const
                             m_image.height() + hScrollHeight);
 
     QRect screenRect = QApplication::desktop()->availableGeometry();
-    const float maxPercentOfDesktopSpace = 0.8;
+    const float maxPercentOfDesktopSpace = 0.8f;
     QSize maxAvailableSize(maxPercentOfDesktopSpace * screenRect.width(),
                            maxPercentOfDesktopSpace * screenRect.height());
 

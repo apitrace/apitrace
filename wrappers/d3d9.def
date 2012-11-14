@@ -1,4 +1,4 @@
-LIBRARY	"d3d9"
+LIBRARY "d3d9"
 
 EXPORTS
         Direct3DCreate9

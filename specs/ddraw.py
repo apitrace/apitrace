@@ -1632,7 +1632,7 @@ DDCREATE = Flags(DWORD, [
     "DDCREATE_EMULATIONONLY",
 ])
 
-ddraw = API("ddraw")
+ddraw = Module("ddraw")
 ddraw.addFunctions([
     StdFunction(HRESULT, "DirectDrawEnumerateW", [(LPDDENUMCALLBACKW, "lpCallback"), (LPVOID, "lpContext")]),
     StdFunction(HRESULT, "DirectDrawEnumerateA", [(LPDDENUMCALLBACKA, "lpCallback"), (LPVOID, "lpContext")]),
@@ -1641,8 +1641,8 @@ ddraw.addFunctions([
     StdFunction(HRESULT, "DirectDrawCreate", [(Pointer(GUID), "lpGUID"), Out(Pointer(LPDIRECTDRAW), "lplpDD"), (LPUNKNOWN, "pUnkOuter")]),
     StdFunction(HRESULT, "DirectDrawCreateEx", [(Pointer(GUID), "lpGuid"), Out(Pointer(ObjPointer(Void)), "lplpDD"), (REFIID, "iid"), (LPUNKNOWN, "pUnkOuter")]),
     StdFunction(HRESULT, "DirectDrawCreateClipper", [(DWORD, "dwFlags"), Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper"), (LPUNKNOWN, "pUnkOuter")]),
-    StdFunction(Void, "AcquireDDThreadLock", []),
-    StdFunction(Void, "ReleaseDDThreadLock", []),
+    StdFunction(Void, "AcquireDDThreadLock", [], internal=True),
+    StdFunction(Void, "ReleaseDDThreadLock", [], internal=True),
     StdFunction(DWORD, "D3DParseUnknownCommand", [(LPVOID, "lpCmd"), Out(Pointer(LPVOID), "lpRetCmd")]),
     StdFunction(HRESULT, "DllCanUnloadNow", []),
     StdFunction(HRESULT, "DllGetClassObject", [(REFCLSID, "rclsid"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppv")]),

@@ -44,7 +44,7 @@ def GlFunction(*args, **kwargs):
     return Function(*args, **kwargs)
 
 
-glapi = API('GL')
+glapi = Module('GL')
 
 
 glapi.addFunctions([
@@ -1357,10 +1357,10 @@ glapi.addFunctions([
     GlFunction(Void, "glGetObjectPtrLabel", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLchar, "bufSize"), "label")], sideeffects=False),
 
     # GL_ARB_clear_buffer_object
-    GlFunction(Void, "glClearBufferData", [(GLenum, "target"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (OpaqueArray(Const(Void), "_glClearBufferData_size(format, type)"), "data")]),
-    GlFunction(Void, "glClearBufferSubData", [(GLenum, "target"), (GLenum, "internalformat"), (GLintptr, "offset"), (GLsizeiptr, "size"), (GLenum, "format"), (GLenum, "type"), (OpaqueArray(Const(Void), "_glClearBufferSubData_size(format, type)"), "data")]),
-    GlFunction(Void, "glClearNamedBufferDataEXT", [(GLbuffer, "buffer"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (OpaqueArray(Const(Void), "_glClearNamedBufferDataEXT_size(format, type)"), "data")]),
-    GlFunction(Void, "glClearNamedBufferSubDataEXT", [(GLbuffer, "buffer"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (GLsizeiptr, "offset"), (GLsizeiptr, "size"), (OpaqueArray(Const(Void), "_glClearNamedBufferSubDataEXT_size(format, type)"), "data")]),
+    GlFunction(Void, "glClearBufferData", [(GLenum, "target"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(Void), "_glClearBufferData_size(format, type)"), "data")]),
+    GlFunction(Void, "glClearBufferSubData", [(GLenum, "target"), (GLenum, "internalformat"), (GLintptr, "offset"), (GLsizeiptr, "size"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(Void), "_glClearBufferData_size(format, type)"), "data")]),
+    GlFunction(Void, "glClearNamedBufferDataEXT", [(GLbuffer, "buffer"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(Void), "_glClearBufferData_size(format, type)"), "data")]),
+    GlFunction(Void, "glClearNamedBufferSubDataEXT", [(GLbuffer, "buffer"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (GLsizeiptr, "offset"), (GLsizeiptr, "size"), (Blob(Const(Void), "_glClearBufferData_size(format, type)"), "data")]),
 
     # GL_ARB_compute_shader
     GlFunction(Void, "glDispatchCompute", [(GLuint, "num_groups_x"), (GLuint, "num_groups_y"), (GLuint, "num_groups_z")]),

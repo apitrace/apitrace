@@ -88,7 +88,7 @@ toPointer(trace::Value &value, bool bind = false);
 
 
 void
-addObj(trace::Value &value, void *obj);
+addObj(trace::Call &call, trace::Value &value, void *obj);
 
 void
 delObj(trace::Value &value);

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2012 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,38 +23,67 @@
  *
  **************************************************************************/
 
+/*
+ * Dynamic library linking abstraction.
+ */
 
-#include <string.h>
-
-#include "os_string.hpp"
-
-#include "d3d9state.hpp"
-#include "retrace.hpp"
-#include "d3dretrace.hpp"
+#ifndef _OS_DL_HPP_
+#define _OS_DL_HPP_
 
 
-void
-retrace::setUp(void) {
-}
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
 
 
-void
-retrace::addCallbacks(retrace::Retracer &retracer)
-{
-    retracer.addCallbacks(d3dretrace::d3d9_callbacks);
-    retracer.addCallbacks(d3dretrace::d3d10_callbacks);
-}
+#if defined(_WIN32)
+#define OS_LIBRARY_EXTENSION ".dll"
+#elif defined(__APPLE__)
+#define OS_LIBRARY_EXTENSION ".dylib"
+#else
+#define OS_LIBRARY_EXTENSION ".so"
+#endif
 
 
-void
-retrace::flushRendering(void) {
-}
+namespace os {
 
-void
-retrace::waitForInput(void) {
-    /* TODO */
-}
+    // TODO: Wrap in a class
+#if defined(_WIN32)
+    typedef HMODULE Library;
+#else
+    typedef void * Library;
+#endif
 
-void
-retrace::cleanUp(void) {
-}
+    inline Library
+    openLibrary(const char *filename) {
+#if defined(_WIN32)
+        return LoadLibraryA(filename);
+#else
+        return dlopen(filename, RTLD_LOCAL | RTLD_LAZY);
+#endif
+    }
+
+    inline void *
+    getLibrarySymbol(Library library, const char *symbol) {
+#if defined(_WIN32)
+        return (void *)GetProcAddress(library, symbol);
+#else
+        return dlsym(library, symbol);
+#endif
+    }
+
+    inline void
+    closeLibrary(Library library) {
+#if defined(_WIN32)
+        FreeLibrary(library);
+#else
+        dlclose(library);
+#endif
+    }
+
+
+} /* namespace os */
+
+#endif /* _OS_DL_HPP_ */

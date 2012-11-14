@@ -837,11 +837,8 @@ class Collector(Traverser):
 
 
 
-class API:
-    '''API abstraction.
-
-    Essentially, a collection of types, functions, and interfaces.
-    '''
+class Module:
+    '''A collection of functions.'''
 
     def __init__(self, name = None):
         self.name = name
@@ -849,50 +846,73 @@ class API:
         self.functions = []
         self.interfaces = []
 
-    def getAllTypes(self):
-        collector = Collector()
-        for function in self.functions:
-            for arg in function.args:
-                collector.visit(arg.type)
-            collector.visit(function.type)
-        for interface in self.interfaces:
-            collector.visit(interface)
-            for method in interface.iterMethods():
-                for arg in method.args:
-                    collector.visit(arg.type)
-                collector.visit(method.type)
-        return collector.types
-
-    def getAllInterfaces(self):
-        types = self.getAllTypes()
-        interfaces = [type for type in types if isinstance(type, Interface)]
-        for interface in self.interfaces:
-            if interface not in interfaces:
-                interfaces.append(interface)
-        return interfaces
-
-    def addFunction(self, function):
-        self.functions.append(function)
-
     def addFunctions(self, functions):
-        for function in functions:
-            self.addFunction(function)
-
-    def addInterface(self, interface):
-        self.interfaces.append(interface)
+        self.functions.extend(functions)
 
     def addInterfaces(self, interfaces):
         self.interfaces.extend(interfaces)
 
-    def addApi(self, api):
-        self.headers.extend(api.headers)
-        self.addFunctions(api.functions)
-        self.addInterfaces(api.interfaces)
+    def mergeModule(self, module):
+        self.headers.extend(module.headers)
+        self.functions.extend(module.functions)
+        self.interfaces.extend(module.interfaces)
 
     def getFunctionByName(self, name):
         for function in self.functions:
             if function.name == name:
                 return function
+        return None
+
+
+class API:
+    '''API abstraction.
+
+    Essentially, a collection of types, functions, and interfaces.
+    '''
+
+    def __init__(self, modules = None):
+        self.modules = []
+        if modules is not None:
+            self.modules.extend(modules)
+
+    def getAllTypes(self):
+        collector = Collector()
+        for module in self.modules:
+            for function in module.functions:
+                for arg in function.args:
+                    collector.visit(arg.type)
+                collector.visit(function.type)
+            for interface in module.interfaces:
+                collector.visit(interface)
+                for method in interface.iterMethods():
+                    for arg in method.args:
+                        collector.visit(arg.type)
+                    collector.visit(method.type)
+        return collector.types
+
+    def getAllFunctions(self):
+        functions = []
+        for module in self.modules:
+            functions.extend(module.functions)
+        return functions
+
+    def getAllInterfaces(self):
+        types = self.getAllTypes()
+        interfaces = [type for type in types if isinstance(type, Interface)]
+        for module in self.modules:
+            for interface in module.interfaces:
+                if interface not in interfaces:
+                    interfaces.append(interface)
+        return interfaces
+
+    def addModule(self, module):
+        self.modules.append(module)
+
+    def getFunctionByName(self, name):
+        for module in self.modules:
+            for function in module.functions:
+                if function.name == name:
+                    return function
         return None
 
 

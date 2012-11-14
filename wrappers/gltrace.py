@@ -337,7 +337,7 @@ class GlTracer(Tracer):
             print '    if (!procPtr) {'
             print '        return procPtr;'
             print '    }'
-            for function in api.functions:
+            for function in api.getAllFunctions():
                 ptype = function_pointer_type(function)
                 pvalue = function_pointer_value(function)
                 print '    if (strcmp("%s", (const char *)procName) == 0) {' % function.name
