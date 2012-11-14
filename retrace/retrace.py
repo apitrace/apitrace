@@ -434,6 +434,7 @@ class Retracer:
         if function.type is not stdapi.Void:
             print '    _result = %s(%s);' % (function.name, arg_names)
             print '    (void)_result;'
+            self.checkResult(function.type)
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
@@ -450,8 +451,15 @@ class Retracer:
         if method.type is not stdapi.Void:
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
             print '    (void)_result;'
+            self.checkResult(method.type)
         else:
             print '    _this->%s(%s);' % (method.name, arg_names)
+
+    def checkResult(self, resultType):
+        if str(resultType) == 'HRESULT':
+            print r'    if (FAILED(_result)) {'
+            print r'        retrace::warning(call) << "failed\n";'
+            print r'    }'
 
     def filterFunction(self, function):
         return True

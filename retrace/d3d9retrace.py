@@ -97,12 +97,6 @@ class D3DRetracer(Retracer):
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
 
-        # check errors
-        if str(method.type) == 'HRESULT':
-            print r'    if (FAILED(_result)) {'
-            print r'        retrace::warning(call) << "failed\n";'
-            print r'    }'
-
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
             print '    size_t _MappedSize = 0;'

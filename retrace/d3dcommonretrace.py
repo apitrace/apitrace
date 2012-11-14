@@ -47,16 +47,34 @@ class D3DRetracer(Retracer):
 
         Retracer.retraceApi(self, api)
 
-    def invokeFunction(self, function):
-        # create windows as neccessary
-        if function.name in ('D3D10CreateDeviceAndSwapChain', 'D3D10CreateDeviceAndSwapChain1', 'D3D11CreateDeviceAndSwapChain'):
-            print r'    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
+    createDeviceFunctionNames = [
+        "D3D10CreateDevice",
+        "D3D10CreateDeviceAndSwapChain",
+        "D3D10CreateDevice1",
+        "D3D10CreateDeviceAndSwapChain1",
+        "D3D11CreateDevice",
+        "D3D11CreateDeviceAndSwapChain",
+    ]
 
-        if 'Software' in function.argNames():
-            print r'    if (Software) {'
-            print r'        retrace::warning(call) << "software device\n";'
-            print r'        Software = LoadLibraryA("d3d10warp");'
-            print r'    }'
+    def invokeFunction(self, function):
+        if function.name in self.createDeviceFunctionNames:
+            # create windows as neccessary
+            if 'pSwapChainDesc' in function.argNames():
+                print r'    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
+
+            # Compensate for the fact we don't trace the software renderer
+            # module LoadLibrary call
+            if 'Software' in function.argNames():
+                print r'    if (Software) {'
+                print r'        retrace::warning(call) << "using WARP for software device\n";'
+                print r'        Software = LoadLibraryA("d3d10warp");'
+                print r'    }'
+
+            # Compensate for the fact we don't trace DXGI object creation
+            if function.name.startswith('D3D11CreateDevice'):
+                print r'    if (DriverType == D3D_DRIVER_TYPE_UNKNOWN && !pAdapter) {'
+                print r'        DriverType = D3D_DRIVER_TYPE_HARDWARE;'
+                print r'    }'
 
         Retracer.invokeFunction(self, function)
 
@@ -89,23 +107,22 @@ class D3DRetracer(Retracer):
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
 
-        # check errors
-        if str(method.type) == 'HRESULT':
-            print r'    if (FAILED(_result)) {'
-            print r'        retrace::warning(call) << "failed\n";'
-            print r'    }'
-
         if method.name == 'Map':
             print '    VOID *_pbData = NULL;'
             print '    size_t _MappedSize = 0;'
             print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames())
-            print '    _maps[_this] = _pbData;'
+            print '    if (_MappedSize) {'
+            print '        _maps[_this] = _pbData;'
+            print '    } else {'
+            print '        return;'
+            print '    }'
         
         if method.name == 'Unmap':
             print '    VOID *_pbData = 0;'
             print '    _pbData = _maps[_this];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
+            print '        _maps[_this] = 0;'
             print '    }'
 
 
