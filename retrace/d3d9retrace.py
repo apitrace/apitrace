@@ -36,27 +36,47 @@ class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
         print '''
-static IDirect3DDevice9 *
-pLastDirect3DDevice9 = NULL;
 
-image::Image *
-retrace::getSnapshot(void) {
-    if (!pLastDirect3DDevice9) {
-        return NULL;
+class D3D9Dumper : public retrace::Dumper {
+public:
+    IDirect3DDevice9 *pLastDirect3DDevice9;
+
+    D3D9Dumper() :
+        pLastDirect3DDevice9(NULL)
+    {}
+
+    image::Image *
+    getSnapshot(void) {
+        if (!pLastDirect3DDevice9) {
+            return NULL;
+        }
+        return d3dstate::getRenderTargetImage(pLastDirect3DDevice9);
     }
-    return d3dstate::getRenderTargetImage(pLastDirect3DDevice9);
-}
 
-
-bool
-retrace::dumpState(std::ostream &os)
-{
-    if (!pLastDirect3DDevice9) {
-        return false;
+    bool
+    dumpState(std::ostream &os) {
+        if (!pLastDirect3DDevice9) {
+            return false;
+        }
+        d3dstate::dumpDevice(os, pLastDirect3DDevice9);
+        return true;
     }
-    d3dstate::dumpDevice(os, pLastDirect3DDevice9);
-    return true;
-}
+
+    inline void
+    bindDevice(IDirect3DDevice9 *pDevice) {
+        pLastDirect3DDevice9 = pDevice;
+        retrace::dumper = this;
+    }
+    
+    inline void
+    unbindDevice(IDirect3DDevice9 *pDevice) {
+        if (pLastDirect3DDevice9 == pDevice) {
+            pLastDirect3DDevice9 = NULL;
+        }
+    }
+};
+
+static D3D9Dumper d3d9Dumper;
 '''
 
         print '// Swizzling mapping for lock addresses'
@@ -84,7 +104,10 @@ retrace::dumpState(std::ostream &os)
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
         if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):
-            print r'    pLastDirect3DDevice9 = _this;'
+            if method.name == 'Release':
+                print r'    d3d9Dumper.unbindDevice(_this);'
+            else:
+                print r'    d3d9Dumper.bindDevice(_this);'
 
         # create windows as neccessary
         if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):

@@ -391,9 +391,35 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
 } /* namespace glretrace */
 
 
+class GLDumper : public retrace::Dumper {
+public:
+    image::Image *
+    getSnapshot(void) {
+        if (!glretrace::getCurrentContext()) {
+            return NULL;
+        }
+        return glstate::getDrawBufferImage();
+    }
+
+    bool
+    dumpState(std::ostream &os) {
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
+        if (glretrace::insideGlBeginEnd ||
+            !currentContext) {
+            return false;
+        }
+        glstate::dumpCurrentContext(os);
+        return true;
+    }
+};
+
+static GLDumper glDumper;
+
+
 void
 retrace::setUp(void) {
     glws::init();
+    dumper = &glDumper;
 }
 
 
@@ -407,31 +433,6 @@ retrace::addCallbacks(retrace::Retracer &retracer)
     retracer.addCallbacks(glretrace::egl_callbacks);
 }
 
-
-image::Image *
-retrace::getSnapshot(void) {
-    if (!glretrace::getCurrentContext()) {
-        return NULL;
-    }
-
-    return glstate::getDrawBufferImage();
-}
-
-
-bool
-retrace::dumpState(std::ostream &os)
-{
-    glretrace::Context *currentContext = glretrace::getCurrentContext();
-
-    if (glretrace::insideGlBeginEnd ||
-        !currentContext) {
-        return false;
-    }
-
-    glstate::dumpCurrentContext(os);
-
-    return true;
-}
 
 void
 retrace::flushRendering(void) {

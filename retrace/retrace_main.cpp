@@ -79,6 +79,11 @@ frameComplete(trace::Call &call) {
 }
 
 
+static Dumper defaultDumper;
+
+Dumper *dumper = &defaultDumper;
+
+
 /**
  * Take/compare snapshots.
  */
@@ -99,7 +104,7 @@ takeSnapshot(unsigned call_no) {
         }
     }
 
-    image::Image *src = getSnapshot();
+    image::Image *src = dumper->getSnapshot();
     if (!src) {
         return;
     }
@@ -162,7 +167,7 @@ retraceCall(trace::Call *call) {
         takeSnapshot(call->no);
 
     if (call->no >= dumpStateCallNo &&
-        dumpState(std::cout)) {
+        dumper->dumpState(std::cout)) {
         exit(0);
     }
 }

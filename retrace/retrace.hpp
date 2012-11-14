@@ -211,6 +211,24 @@ public:
 };
 
 
+class Dumper
+{
+public:
+    virtual image::Image *
+    getSnapshot(void) {
+        return NULL;
+    }
+
+    virtual bool
+    dumpState(std::ostream &os) {
+        return false;
+    }
+};
+
+
+extern Dumper *dumper;
+
+
 void
 setUp(void);
 
@@ -220,11 +238,7 @@ addCallbacks(retrace::Retracer &retracer);
 void
 frameComplete(trace::Call &call);
 
-image::Image *
-getSnapshot(void);
 
-bool
-dumpState(std::ostream &os);
 
 void
 flushRendering(void);
