@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2012 Jose Fonseca
+ * Copyright 2011 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,75 +23,40 @@
  *
  **************************************************************************/
 
-#ifndef _D3DRETRACE_HPP_
-#define _D3DRETRACE_HPP_
+#ifndef _D3DSTATE_HPP_
+#define _D3DSTATE_HPP_
 
 
-#include <windows.h>
-
-#include "retrace.hpp"
-#include "d3dstate.hpp"
+#include <iostream>
 
 
-namespace d3dretrace {
+struct IDirect3DDevice9;
+struct ID3D11DeviceContext;
 
 
-extern const retrace::Entry d3d9_callbacks[];
-extern const retrace::Entry d3d10_callbacks[];
+namespace image {
+    class Image;
+}
 
 
-template< class Device >
-class D3DDumper : public retrace::Dumper {
-public:
-    Device *pLastDevice;
-
-    D3DDumper() :
-        pLastDevice(NULL)
-    {}
-
-    image::Image *
-    getSnapshot(void) {
-        if (!pLastDevice) {
-            return NULL;
-        }
-        return d3dstate::getRenderTargetImage(pLastDevice);
-    }
-
-    bool
-    dumpState(std::ostream &os) {
-        if (!pLastDevice) {
-            return false;
-        }
-        d3dstate::dumpDevice(os, pLastDevice);
-        return true;
-    }
-
-    inline void
-    bindDevice(Device *pDevice) {
-        pLastDevice = pDevice;
-        retrace::dumper = this;
-    }
-    
-    inline void
-    unbindDevice(Device *pDevice) {
-        if (pLastDevice == pDevice) {
-            pLastDevice = NULL;
-        }
-    }
-};
+namespace d3dstate {
 
 
-HWND
-createWindow(int width, int height);
+image::Image *
+getRenderTargetImage(IDirect3DDevice9 *pDevice);
 
 void
-resizeWindow(HWND hWnd, int width, int height);
-
-bool
-processEvents(void);
+dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
 
 
-} /* namespace d3dretrace */
+image::Image *
+getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
+
+void
+dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext);
 
 
-#endif /* _D3DRETRACE_HPP_ */
+} /* namespace d3dstate */
+
+
+#endif /* _D3DSTATE_HPP_ */

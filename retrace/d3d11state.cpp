@@ -23,33 +23,25 @@
  *
  **************************************************************************/
 
-#ifndef _D3D9STATE_HPP_
-#define _D3D9STATE_HPP_
 
+#include <stdio.h>
 
 #include <iostream>
 
-
-struct IDirect3DDevice9;
-
-
-namespace image {
-    class Image;
-}
+#include "d3d11imports.hpp"
+#include "json.hpp"
 
 
 namespace d3dstate {
 
 
-image::Image *
-getRenderTargetImage(IDirect3DDevice9 *pDevice);
-
-
 void
-dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
+dumpDevice(std::ostream &os, ID3D11DeviceContext *pDevice)
+{
+    JSONWriter json(os);
+
+    /* TODO */
+}
 
 
 } /* namespace d3dstate */
-
-
-#endif /* _D3DSTATE_HPP_ */

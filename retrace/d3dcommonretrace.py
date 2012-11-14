@@ -63,8 +63,11 @@ class D3DRetracer(Retracer):
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
-        #if interface.name in ('IDirect3DDevice9', 'IDirect3DDevice9Ex'):
-        #    print r'    d3dretrace::pLastDirect3DDevice9 = _this;'
+        if interface.name in ('ID3D11DeviceContext',):
+            if method.name == 'Release':
+                print r'    d3d11Dumper.unbindDevice(_this);'
+            else:
+                print r'    d3d11Dumper.bindDevice(_this);'
 
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
@@ -135,7 +138,12 @@ def main():
             print '#include <d3d11_1.h>'
             import specs.d3d11_1
         print r'#include "d3d11size.hpp"'
+        print r'#include "d3dstate.hpp"'
         api.addModule(d3d11)
+        
+        print
+        print '''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;'''
+        print
 
     retracer = D3DRetracer()
     retracer.retraceApi(api)

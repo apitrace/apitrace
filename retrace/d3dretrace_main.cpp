@@ -28,7 +28,7 @@
 
 #include "os_string.hpp"
 
-#include "d3d9state.hpp"
+#include "d3dstate.hpp"
 #include "retrace.hpp"
 #include "d3dretrace.hpp"
 

@@ -35,49 +35,8 @@ from specs.d3d9 import *
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
-        print '''
-
-class D3D9Dumper : public retrace::Dumper {
-public:
-    IDirect3DDevice9 *pLastDirect3DDevice9;
-
-    D3D9Dumper() :
-        pLastDirect3DDevice9(NULL)
-    {}
-
-    image::Image *
-    getSnapshot(void) {
-        if (!pLastDirect3DDevice9) {
-            return NULL;
-        }
-        return d3dstate::getRenderTargetImage(pLastDirect3DDevice9);
-    }
-
-    bool
-    dumpState(std::ostream &os) {
-        if (!pLastDirect3DDevice9) {
-            return false;
-        }
-        d3dstate::dumpDevice(os, pLastDirect3DDevice9);
-        return true;
-    }
-
-    inline void
-    bindDevice(IDirect3DDevice9 *pDevice) {
-        pLastDirect3DDevice9 = pDevice;
-        retrace::dumper = this;
-    }
-    
-    inline void
-    unbindDevice(IDirect3DDevice9 *pDevice) {
-        if (pLastDirect3DDevice9 == pDevice) {
-            pLastDirect3DDevice9 = NULL;
-        }
-    }
-};
-
-static D3D9Dumper d3d9Dumper;
-'''
+        print '''static d3dretrace::D3DDumper<IDirect3DDevice9> d3d9Dumper;'''
+        print
 
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
@@ -167,7 +126,7 @@ if __name__ == '__main__':
 #include "d3d9imports.hpp"
 #include "d3d9size.hpp"
 #include "d3dretrace.hpp"
-#include "d3d9state.hpp"
+#include "d3dstate.hpp"
 
 '''
 
