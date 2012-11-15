@@ -301,7 +301,7 @@ namespace os {
         }
 
         inline
-        thread(thread &other) :
+        thread(const thread &other) :
             _native_handle(other._native_handle)
         {
         }
