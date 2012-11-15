@@ -263,48 +263,27 @@ TraceAnalyzer::stateTrackPostCall(trace::Call *call)
     }
 }
 
-void
-TraceAnalyzer::recordSideEffects(trace::Call *call)
+bool
+TraceAnalyzer::callHasNoSideEffects(trace::Call *call, const char *name)
 {
-
-    const char *name = call->name();
-
-    /* Handle display lists before any other processing. */
-
-    /* FIXME: If we encode the list of commands that are executed
-     * immediately (as opposed to those that are compiled into a
-     * display list) then we could generate a "display-list-X"
-     * resource just as we do for "texture-X" resources and only
-     * emit it in the trace if a glCallList(X) is emitted. For
-     * now, simply punt and include anything within glNewList and
-     * glEndList in the trim output. This guarantees that display
-     * lists will work, but does not trim out unused display
-     * lists. */
-    if (insideNewEndList != 0) {
-        provide("state", call->no);
-
-        /* Also, any texture bound inside a display list is
-         * conservatively considered required. */
-        if (strcmp(name, "glBindTexture") == 0) {
-            GLuint texture = call->arg(1).toUInt();
-
-            linkf("state", "texture-", texture);
-        }
-
-        return;
-    }
-
     /* If call is flagged as no side effects, then we are done here. */
     if (call->flags & trace::CALL_FLAG_NO_SIDE_EFFECTS) {
-        return;
+        return true;
     }
 
     /* Similarly, swap-buffers calls don't have interesting side effects. */
     if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
         call->flags & trace::CALL_FLAG_END_FRAME) {
-        return;
+        return true;
     }
 
+    /* Not known as a no-side-effect call. Return false for more analysis. */
+    return false;
+}
+
+bool
+TraceAnalyzer::recordTextureSideEffects(trace::Call *call, const char *name)
+{
     if (strcmp(name, "glGenTextures") == 0) {
         const trace::Array *textures = dynamic_cast<const trace::Array *>(&call->arg(1));
         size_t i;
@@ -316,7 +295,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
                 providef("texture-", texture, call->no);
             }
         }
-        return;
+        return true;
     }
 
     /* FIXME: When we start tracking framebuffer objects as their own
@@ -330,7 +309,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
 
         linkf("render-state", "texture-", texture);
 
-        required.insert(call->no);
+        provide("state", call->no);
     }
 
     if (strcmp(name, "glBindTexture") == 0) {
@@ -365,10 +344,10 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
          * conservative and don't trim. */
         provide("state", call->no);
 
-        return;
+        return true;
     }
 
-    /* FIXME: Need to handle glMultTetImage and friends. */
+    /* FIXME: Need to handle glMultiTexImage and friends. */
     if (STRNCMP_LITERAL(name, "glTexImage") == 0 ||
         STRNCMP_LITERAL(name, "glTexSubImage") == 0 ||
         STRNCMP_LITERAL(name, "glCopyTexImage") == 0 ||
@@ -398,7 +377,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
             }
         }
 
-        return;
+        return true;
     }
 
     if (strcmp(name, "glEnable") == 0) {
@@ -419,7 +398,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
         }
 
         provide("state", call->no);
-        return;
+        return true;
     }
 
     if (strcmp(name, "glDisable") == 0) {
@@ -440,15 +419,22 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
         }
 
         provide("state", call->no);
-        return;
+        return true;
     }
 
+    /* No known texture-related side effects. Return false for more analysis. */
+    return false;
+}
+
+bool
+TraceAnalyzer::recordShaderSideEffects(trace::Call *call, const char *name)
+{
     if (strcmp(name, "glCreateShader") == 0 ||
         strcmp(name, "glCreateShaderObjectARB") == 0) {
 
         GLuint shader = call->ret->toUInt();
         providef("shader-", shader, call->no);
-        return;
+        return true;
     }
 
     if (strcmp(name, "glShaderSource") == 0 ||
@@ -460,7 +446,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
 
         GLuint shader = call->arg(0).toUInt();
         providef("shader-", shader, call->no);
-        return;
+        return true;
     }
 
     if (strcmp(name, "glCreateProgram") == 0 ||
@@ -468,7 +454,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
 
         GLuint program = call->ret->toUInt();
         providef("program-", program, call->no);
-        return;
+        return true;
     }
 
     if (strcmp(name, "glAttachShader") == 0 ||
@@ -486,7 +472,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
         link(ss_program.str(), ss_shader.str());
         provide(ss_program.str(), call->no);
 
-        return;
+        return true;
     }
 
     if (strcmp(name, "glDetachShader") == 0 ||
@@ -503,7 +489,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
 
         unlink(ss_program.str(), ss_shader.str());
 
-        return;
+        return true;
     }
 
     if (strcmp(name, "glUseProgram") == 0 ||
@@ -529,7 +515,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
             provide(ss.str(), call->no);
         }
 
-        return;
+        return true;
     }
 
     if (strcmp(name, "glGetUniformLocation") == 0 ||
@@ -545,7 +531,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
 
         providef("program-", program, call->no);
 
-        return;
+        return true;
     }
 
     /* For any call that accepts 'location' as its first argument,
@@ -590,7 +576,7 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
             }
         }
 
-        return;
+        return true;
     }
 
     /* FIXME: We cut a huge swath by assuming that any unhandled
@@ -610,9 +596,16 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
 
         GLuint program = call->arg(0).toUInt();
         providef("program-", program, call->no);
-        return;
+        return true;
     }
 
+    /* No known shader-related side effects. Return false for more analysis. */
+    return false;
+}
+
+bool
+TraceAnalyzer::recordDrawingSideEffects(trace::Call *call, const char *name)
+{
     /* Handle all rendering operations, (even though only glEnd is
      * flagged as a rendering operation we treat everything from
      * glBegin through glEnd as a rendering operation). */
@@ -639,7 +632,68 @@ TraceAnalyzer::recordSideEffects(trace::Call *call)
             }
         }
 
+        return true;
+    }
+
+    /* No known drawing-related side effects. Return false for more analysis. */
+    return false;
+}
+
+void
+TraceAnalyzer::recordSideEffects(trace::Call *call)
+{
+
+    const char *name = call->name();
+
+    /* FIXME: If we encode the list of commands that are executed
+     * immediately (as opposed to those that are compiled into a
+     * display list) then we could generate a "display-list-X"
+     * resource just as we do for "texture-X" resources and only
+     * emit it in the trace if a glCallList(X) is emitted. For
+     * now, simply punt and include anything within glNewList and
+     * glEndList in the trim output. This guarantees that display
+     * lists will work, but does not trim out unused display
+     * lists. */
+    if (insideNewEndList != 0) {
+        provide("state", call->no);
+
+        /* Also, any texture bound inside a display list is
+         * conservatively considered required. */
+        if (strcmp(name, "glBindTexture") == 0) {
+            GLuint texture = call->arg(1).toUInt();
+
+            linkf("state", "texture-", texture);
+        }
+
         return;
+    }
+
+    if (trimFlags & TRIM_FLAG_NO_SIDE_EFFECTS) {
+
+        if (callHasNoSideEffects(call, name)) {
+            return;
+        }
+    }
+
+    if (trimFlags & TRIM_FLAG_TEXTURES) {
+        
+        if (recordTextureSideEffects(call, name)) {
+            return;
+        }
+    }
+
+    if (trimFlags & TRIM_FLAG_SHADERS) {
+
+        if (recordShaderSideEffects(call, name)) {
+            return;
+        }
+    }
+
+    if (trimFlags & TRIM_FLAG_DRAWING) {
+
+        if (recordDrawingSideEffects(call, name)) {
+            return;
+        }
     }
 
     /* By default, assume this call affects the state somehow. */
@@ -660,11 +714,13 @@ TraceAnalyzer::requireDependencies(trace::Call *call)
     consume("state");
 }
 
-TraceAnalyzer::TraceAnalyzer(): transformFeedbackActive(false),
-                               framebufferObjectActive(false),
-                               insideBeginEnd(false),
-                               insideNewEndList(0),
-                               activeTextureUnit(GL_TEXTURE0)
+TraceAnalyzer::TraceAnalyzer(TrimFlags trimFlagsOpt = -1):
+    transformFeedbackActive(false),
+    framebufferObjectActive(false),
+    insideBeginEnd(false),
+    insideNewEndList(0),
+    activeTextureUnit(GL_TEXTURE0),
+    trimFlags(trimFlagsOpt)
 {
     /* Nothing needed. */
 }

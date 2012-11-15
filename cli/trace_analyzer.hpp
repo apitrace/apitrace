@@ -31,6 +31,26 @@
 #include "trace_callset.hpp"
 #include "trace_parser.hpp"
 
+typedef unsigned TrimFlags;
+
+/**
+ * Trim flags
+ */
+enum {
+
+    /* Whether to trim calls that have no side effects. */
+    TRIM_FLAG_NO_SIDE_EFFECTS		= (1 << 0),
+
+    /* Whether to trim calls to setup textures that are never used. */
+    TRIM_FLAG_TEXTURES		        = (1 << 1),
+
+    /* Whether to trim calls to setup shaders that are never used. */
+    TRIM_FLAG_SHADERS			= (1 << 2),
+
+    /* Whether to trim drawing operations outside of the desired call-set. */
+    TRIM_FLAG_DRAWING			= (1 << 3),
+};
+
 class TraceAnalyzer {
 private:
     std::map<std::string, std::set<unsigned> > resources;
@@ -46,6 +66,7 @@ private:
     GLuint insideNewEndList;
     GLenum activeTextureUnit;
     GLuint activeProgram;
+    unsigned int trimFlags;
 
     void provide(std::string resource, trace::CallNo call_no);
     void providef(std::string resource, int resource_no, trace::CallNo call_no);
@@ -58,7 +79,13 @@ private:
     void unlinkAll(std::string resource);
 
     void stateTrackPreCall(trace::Call *call);
+
     void recordSideEffects(trace::Call *call);
+    bool callHasNoSideEffects(trace::Call *call, const char *name);
+    bool recordTextureSideEffects(trace::Call *call, const char *name);
+    bool recordShaderSideEffects(trace::Call *call, const char *name);
+    bool recordDrawingSideEffects(trace::Call *call, const char *name);
+
     void stateTrackPostCall(trace::Call *call);
 
     bool renderingHasSideEffect(void);
@@ -68,7 +95,7 @@ private:
     void requireDependencies(trace::Call *call);
 
 public:
-    TraceAnalyzer();
+    TraceAnalyzer(TrimFlags trimFlags);
     ~TraceAnalyzer();
 
     /* Analyze this call by tracking state and recording all the

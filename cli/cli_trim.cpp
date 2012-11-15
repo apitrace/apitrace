@@ -57,6 +57,7 @@ usage(void)
         "    -a, --auto               Trim automatically to calls specified in --calls/--frames\n"
         "                             Equivalent to both --deps and --prune\n"
         "        --print-callset      Print the final set of calls included in output\n"
+        "        --trim-spec=SPEC     Only performing trimming as described in SPEC\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
         "    -o, --output=TRACE_FILE  Output trace file\n"
     ;
@@ -89,9 +90,21 @@ help()
         "\n"
         "        --print-callset      Print to stdout the final set of calls included\n"
         "                             in the trim output. This can be useful for\n"
-        "                             tweaking trimmed callset from --auto on the\n"
+        "                             tweaking the trimmed callset from --auto on the\n"
         "                             command-line.\n"
         "                             Use --calls=@FILE to read callset from a file.\n"
+        "        --trim-spec=SPEC     Specifies which classes of calls will be trimmed.\n"
+        "                             This option only has an effect if dependency\n"
+        "                             analysis is enabled. The argument is a comma-\n"
+        "                             separated list of names from the following:\n"
+        "\n"
+	"                               no-side-effects  Calls with no side effects\n"
+	"                               textures         Calls to setup unused textures\n"
+	"                               shaders          Calls to setup unused shaders\n"
+        "                               drawing          Calls that draw\n"
+        "\n"
+        "                             The default trim specification includes all of\n"
+        "                             the above, (as much as possible will be trimmed).\n"
         "\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
         "\n"
@@ -107,6 +120,7 @@ enum {
     PRUNE_OPT,
     THREAD_OPT,
     PRINT_CALLSET_OPT,
+    TRIM_SPEC_OPT
 };
 
 const static char *
@@ -123,6 +137,7 @@ longOptions[] = {
     {"thread", required_argument, 0, THREAD_OPT},
     {"output", required_argument, 0, 'o'},
     {"print-callset", no_argument, 0, PRINT_CALLSET_OPT},
+    {"trim-spec", required_argument, 0, TRIM_SPEC_OPT},
     {0, 0, 0, 0}
 };
 
@@ -153,6 +168,9 @@ struct trim_options {
 
     /* Print resulting callset */
     int print_callset;
+
+    /* What kind of trimming to perform. */
+    TrimFlags trim_flags;
 };
 
 static int
@@ -160,7 +178,7 @@ trim_trace(const char *filename, struct trim_options *options)
 {
     trace::ParseBookmark beginning;
     trace::Parser p;
-    TraceAnalyzer analyzer;
+    TraceAnalyzer analyzer(options->trim_flags);
     std::set<unsigned> *required;
     unsigned frame;
     int call_range_first, call_range_last;
@@ -289,6 +307,42 @@ trim_trace(const char *filename, struct trim_options *options)
 }
 
 static int
+parse_trim_spec(const char *trim_spec, TrimFlags *flags)
+{
+    std::string spec(trim_spec), word;
+    size_t start = 0, comma = 0;
+    *flags = 0;
+
+    while (start < spec.size()) {
+        comma = spec.find(',', start);
+
+        if (comma == std::string::npos)
+            word = std::string(spec, start);
+        else
+            word = std::string(spec, start, comma - start);
+
+        if (strcmp(word.c_str(), "no-side-effects") == 0)
+            *flags |= TRIM_FLAG_NO_SIDE_EFFECTS;
+        else if (strcmp(word.c_str(), "textures") == 0)
+            *flags |= TRIM_FLAG_TEXTURES;
+        else if (strcmp(word.c_str(), "shaders") == 0)
+            *flags |= TRIM_FLAG_SHADERS;
+        else if (strcmp(word.c_str(), "drawing") == 0)
+            *flags |= TRIM_FLAG_DRAWING;
+        else {
+            return 1;
+        }
+
+        if (comma == std::string::npos)
+            break;
+
+        start = comma + 1;
+    }
+
+    return 0;
+}
+
+static int
 command(int argc, char *argv[])
 {
     struct trim_options options;
@@ -300,6 +354,7 @@ command(int argc, char *argv[])
     options.output = "";
     options.thread = -1;
     options.print_callset = 0;
+    options.trim_flags = -1;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -331,6 +386,13 @@ command(int argc, char *argv[])
             break;
         case PRINT_CALLSET_OPT:
             options.print_callset = 1;
+            break;
+        case TRIM_SPEC_OPT:
+            if (parse_trim_spec(optarg, &options.trim_flags)) {
+                std::cerr << "error: illegal value for trim-spec: " << optarg << "\n";
+                std::cerr << "See \"apitrace help trim\" for help.\n";
+                return 1;
+            }
             break;
         default:
             std::cerr << "error: unexpected option `" << opt << "`\n";
