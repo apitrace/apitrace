@@ -320,14 +320,14 @@ public:
      * Special case for char to prevent it to be written as a literal
      * character.
      */
-    inline void writeNumber(char n) {
+    inline void writeInt(signed char n) {
         separator();
         os << std::dec << static_cast<int>(n);
         value = true;
         space = ' ';
     }
 
-    inline void writeNumber(unsigned char n) {
+    inline void writeInt(unsigned char n) {
         separator();
         os << std::dec << static_cast<unsigned>(n);
         value = true;
@@ -335,7 +335,14 @@ public:
     }
 
     template<class T>
-    inline void writeNumber(T n) {
+    inline void writeInt(T n) {
+        separator();
+        os << std::dec << n;
+        value = true;
+        space = ' ';
+    }
+    template<class T>
+    inline void writeFloat(T n) {
         separator();
         if (isnan(n)) {
             // NaN is non-standard but widely supported
@@ -366,9 +373,9 @@ public:
     }
 
     template<class T>
-    inline void writeNumberMember(const char *name, T n) {
+    inline void writeIntMember(const char *name, T n) {
         beginMember(name);
-        writeNumber(n);
+        writeInt(n);
         endMember();
     }
 };

@@ -409,9 +409,9 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     // Tell the GUI this is no ordinary object, but an image
     json.writeStringMember("__class__", "image");
 
-    json.writeNumberMember("__width__", desc.width);
-    json.writeNumberMember("__height__", desc.height);
-    json.writeNumberMember("__depth__", desc.depth);
+    json.writeIntMember("__width__", desc.width);
+    json.writeIntMember("__height__", desc.height);
+    json.writeIntMember("__depth__", desc.depth);
 
     json.writeStringMember("__format__", formatToString(desc.internalFormat));
 
@@ -419,7 +419,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     // texture internal format
     json.writeStringMember("__type__", "uint8");
     json.writeBoolMember("__normalized__", true);
-    json.writeNumberMember("__channels__", channels);
+    json.writeIntMember("__channels__", channels);
 
     GLubyte *pixels = new GLubyte[desc.depth*desc.width*desc.height*channels];
 
@@ -859,9 +859,9 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     // Tell the GUI this is no ordinary object, but an image
     json.writeStringMember("__class__", "image");
 
-    json.writeNumberMember("__width__", width);
-    json.writeNumberMember("__height__", height);
-    json.writeNumberMember("__depth__", 1);
+    json.writeIntMember("__width__", width);
+    json.writeIntMember("__height__", height);
+    json.writeIntMember("__depth__", 1);
 
     json.writeStringMember("__format__", formatToString(internalFormat));
 
@@ -869,7 +869,7 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     // texture internal format
     json.writeStringMember("__type__", "uint8");
     json.writeBoolMember("__normalized__", true);
-    json.writeNumberMember("__channels__", channels);
+    json.writeIntMember("__channels__", channels);
 
     GLenum type = GL_UNSIGNED_BYTE;
 

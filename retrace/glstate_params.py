@@ -203,8 +203,10 @@ class JsonWriter(Visitor):
     def visitLiteral(self, literal, instance):
         if literal.kind == 'Bool':
             print '    json.writeBool(%s);' % instance
-        elif literal.kind in ('SInt', 'Uint', 'Float', 'Double'):
-            print '    json.writeNumber(%s);' % instance
+        elif literal.kind in ('SInt', 'Uint'):
+            print '    json.writeInt(%s);' % instance
+        elif literal.kind in ('Float', 'Double'):
+            print '    json.writeFloat(%s);' % instance
         else:
             raise NotImplementedError
 
@@ -219,7 +221,7 @@ class JsonWriter(Visitor):
             print '    dumpEnum(json, %s);' % instance
         else:
             assert False
-            print '    json.writeNumber(%s);' % instance
+            print '    json.writeInt(%s);' % instance
 
     def visitBitmask(self, bitmask, instance):
         raise NotImplementedError
@@ -228,7 +230,7 @@ class JsonWriter(Visitor):
         self.visit(alias.type, instance)
 
     def visitOpaque(self, opaque, instance):
-        print '    json.writeNumber((size_t)%s);' % instance
+        print '    json.writeInt((size_t)%s);' % instance
 
     __index = 0
 
@@ -273,7 +275,7 @@ class StateDumper:
         print '        json.writeString("GL_TRUE");'
         print '        break;'
         print '    default:'
-        print '        json.writeNumber(static_cast<GLint>(value));'
+        print '        json.writeInt(static_cast<GLint>(value));'
         print '        break;'
         print '    }'
         print '}'
@@ -299,7 +301,7 @@ class StateDumper:
         print '    if (s) {'
         print '        json.writeString(s);'
         print '    } else {'
-        print '        json.writeNumber(pname);'
+        print '        json.writeInt(pname);'
         print '    }'
         print '}'
         print
@@ -433,7 +435,7 @@ class StateDumper:
             print '            json.endMember();'
             print '            binding = 0;'
             print '            glGetIntegerv(%s, &binding);' % binding
-            print '            json.writeNumberMember("%s", binding);' % binding
+            print '            json.writeIntMember("%s", binding);' % binding
             print '            if (enabled || binding) {'
             print '                json.beginMember("%s");' % target
             print '                json.beginObject();'
