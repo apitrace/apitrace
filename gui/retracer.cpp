@@ -411,6 +411,7 @@ void Retracer::run()
                     unsigned char *scanLine = snapshot.scanLine(y);
                     qint64 readBytes = io.read((char *) scanLine, rowBytes);
                     Q_ASSERT(readBytes == rowBytes);
+                    (void)readBytes;
                 }
 
                 QImage thumb = thumbnail(snapshot);
