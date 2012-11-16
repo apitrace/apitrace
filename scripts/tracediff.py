@@ -25,22 +25,52 @@
 ##########################################################################/
 
 
-import platform
+import difflib
+import itertools
 import optparse
 import os.path
+import platform
 import shutil
 import subprocess
 import sys
 import tempfile
 
 
-class Dumper:
+##########################################################################/
+#
+# Abstract interface
+#
 
-    def __init__(self, trace, calls):
+
+class Differ:
+
+    def __init__(self, apitrace):
+        self.apitrace = apitrace
+        self.isatty = sys.stdout.isatty()
+
+    def setRefTrace(self, ref_trace, ref_calls):
+        raise NotImplementedError
+
+    def setSrcTrace(self, src_trace, src_calls):
+        raise NotImplementedError
+
+    def diff(self):
+        raise NotImplementedError
+
+
+##########################################################################/
+#
+# External diff tool
+#
+
+
+class AsciiDumper:
+
+    def __init__(self, apitrace, trace, calls):
         self.output = tempfile.NamedTemporaryFile()
 
         dump_args = [
-            options.apitrace,
+            apitrace,
             'dump',
             '--color=never',
             '--call-nos=no',
@@ -56,84 +86,370 @@ class Dumper:
         )
 
 
-if platform.system() == 'Windows':
-    start_delete = ''
-    end_delete   = ''
-    start_insert = ''
-    end_insert   = ''
-else:
-    start_delete = '\33[9m\33[31m'
-    end_delete   = '\33[0m'
-    start_insert = '\33[32m'
-    end_insert   = '\33[0m'
+class ExternalDiffer(Differ):
 
+    if platform.system() == 'Windows':
+        start_delete = ''
+        end_delete   = ''
+        start_insert = ''
+        end_insert   = ''
+    else:
+        start_delete = '\33[9m\33[31m'
+        end_delete   = '\33[0m'
+        start_insert = '\33[32m'
+        end_insert   = '\33[0m'
 
-def diff(ref_trace, src_trace):
-
-    isatty = sys.stdout.isatty()
-
-    ref_dumper = Dumper(ref_trace, options.ref_calls)
-    src_dumper = Dumper(src_trace, options.src_calls)
-
-    # TODO use difflib instead
-    if options.diff == 'diff':
-        diff_args = [
-                'diff',
+    def __init__(self, apitrace, tool, width=None):
+        Differ.__init__(self, apitrace)
+        self.diff_args = [tool]
+        if tool == 'diff':
+            self.diff_args += [
                 '--speed-large-files',
             ]
-        if isatty:
-            diff_args += [
-                '--old-line-format=' + start_delete + '%l' + end_delete + '\n',
-                '--new-line-format=' + start_insert + '%l' + end_insert + '\n',
-            ]
-    elif options.diff == 'sdiff':
-        diff_args = [
-                'sdiff',
-                '--width=%u' % options.width,
+            if self.isatty:
+                self.diff_args += [
+                    '--old-line-format=' + self.start_delete + '%l' + self.end_delete + '\n',
+                    '--new-line-format=' + self.start_insert + '%l' + self.end_insert + '\n',
+                ]
+        elif tool == 'sdiff':
+            if width is None:
+                import curses
+                curses.setupterm()
+                width = curses.tigetnum('cols')
+            self.diff_args += [
+                '--width=%u' % width,
                 '--speed-large-files',
             ]
-    elif options.diff == 'wdiff':
-        diff_args = [
-                'wdiff',
+        elif tool == 'wdiff':
+            self.diff_args += [
                 #'--terminal',
                 '--avoid-wraps',
             ]
-        if isatty:
-            diff_args += [
-                '--start-delete=' + start_delete,
-                '--end-delete=' + end_delete,
-                '--start-insert=' + start_insert,
-                '--end-insert=' + end_insert,
-            ]
-    else:
-        assert False
-    diff_args += [ref_dumper.output.name, src_dumper.output.name]
+            if self.isatty:
+                self.diff_args += [
+                    '--start-delete=' + self.start_delete,
+                    '--end-delete=' + self.end_delete,
+                    '--start-insert=' + self.start_insert,
+                    '--end-insert=' + self.end_insert,
+                ]
+        else:
+            assert False
 
-    ref_dumper.dump.wait()
-    src_dumper.dump.wait()
+    def setRefTrace(self, ref_trace, ref_calls):
+        self.ref_dumper = AsciiDumper(self.apitrace, ref_trace, ref_calls)
 
-    less = None
-    if isatty:
-        less = subprocess.Popen(
-            args = ['less', '-FRXn'],
-            stdin = subprocess.PIPE
+    def setSrcTrace(self, src_trace, src_calls):
+        self.src_dumper = AsciiDumper(self.apitrace, src_trace, src_calls)
+
+    def diff(self):
+        diff_args = self.diff_args + [
+            self.ref_dumper.output.name,
+            self.src_dumper.output.name,
+        ]
+
+        self.ref_dumper.dump.wait()
+        self.src_dumper.dump.wait()
+
+        less = None
+        if self.isatty:
+            less = subprocess.Popen(
+                args = ['less', '-FRXn'],
+                stdin = subprocess.PIPE
+            )
+
+            diff_stdout = less.stdin
+        else:
+            diff_stdout = None
+
+        diff = subprocess.Popen(
+            args = diff_args,
+            stdout = diff_stdout,
+            universal_newlines = True,
         )
 
-        diff_stdout = less.stdin
-    else:
-        diff_stdout = None
+        diff.wait()
 
-    diff = subprocess.Popen(
-        args = diff_args,
-        stdout = diff_stdout,
-        universal_newlines = True,
-    )
+        if less is not None:
+            less.stdin.close()
+            less.wait()
 
-    diff.wait()
 
-    if less is not None:
-        less.stdin.close()
-        less.wait()
+##########################################################################/
+#
+# Python diff
+#
+
+from unpickle import Unpickler, Dumper, Rebuilder
+from highlight import ColorHighlighter, LessHighlighter
+
+
+ignoredFunctionNames = set([
+    'glGetString',
+    'glXGetClientString',
+    'glXGetCurrentDisplay',
+    'glXGetCurrentContext',
+    'glXGetProcAddress',
+    'glXGetProcAddressARB',
+    'wglGetProcAddress',
+])
+
+
+class Blob:
+    '''Data-less proxy for bytearrays, to save memory.'''
+
+    def __init__(self, size, hash):
+        self.size = size
+        self.hash = hash
+
+    def __repr__(self):
+        return 'blob(%u)' % self.size
+
+    def __eq__(self, other):
+        return isinstance(other, Blob) and self.size == other.size and self.hash == other.hash
+
+    def __hash__(self):
+        return self.hash
+
+
+class BlobReplacer(Rebuilder):
+    '''Replace blobs with proxys.'''
+
+    def visitByteArray(self, obj):
+        return Blob(len(obj), hash(str(obj)))
+
+    def visitCall(self, call):
+        call.args = map(self.visit, call.args)
+        call.ret = self.visit(call.ret)
+
+
+class Loader(Unpickler):
+
+    def __init__(self, stream):
+        Unpickler.__init__(self, stream)
+        self.calls = []
+        self.rebuilder = BlobReplacer()
+
+    def handleCall(self, call):
+        if call.functionName not in ignoredFunctionNames:
+            self.rebuilder.visitCall(call)
+            self.calls.append(call)
+
+
+class PythonDiffer(Differ):
+
+    def __init__(self, apitrace, callNos = False):
+        Differ.__init__(self, apitrace)
+        self.a = None
+        self.b = None
+        if self.isatty:
+            self.highlighter = LessHighlighter()
+        else:
+            self.highlighter = ColorHighlighter()
+        self.delete_color = self.highlighter.red
+        self.insert_color = self.highlighter.green
+        self.callNos = callNos
+        self.aSpace = 0
+        self.bSpace = 0
+        self.dumper = Dumper()
+
+    def setRefTrace(self, ref_trace, ref_calls):
+        self.a = self.readTrace(ref_trace, ref_calls)
+
+    def setSrcTrace(self, src_trace, src_calls):
+        self.b = self.readTrace(src_trace, src_calls)
+
+    def readTrace(self, trace, calls):
+        p = subprocess.Popen(
+            args = [
+                self.apitrace,
+                'pickle',
+                '--symbolic',
+                '--calls=' + calls,
+                trace
+            ],
+            stdout = subprocess.PIPE,
+        )
+
+        parser = Loader(p.stdout)
+        parser.parse()
+        return parser.calls
+
+    def diff(self):
+        try:
+            self._diff()
+        except IOError:
+            pass
+
+    def _diff(self):
+        matcher = difflib.SequenceMatcher(self.isjunk, self.a, self.b)
+        for tag, alo, ahi, blo, bhi in matcher.get_opcodes():
+            if tag == 'replace':
+                self.replace(alo, ahi, blo, bhi)
+            elif tag == 'delete':
+                self.delete(alo, ahi, blo, bhi)
+            elif tag == 'insert':
+                self.insert(alo, ahi, blo, bhi)
+            elif tag == 'equal':
+                self.equal(alo, ahi, blo, bhi)
+            else:
+                raise ValueError, 'unknown tag %s' % (tag,)
+
+    def isjunk(self, call):
+        return call.functionName == 'glGetError' and call.ret in ('GL_NO_ERROR', 0)
+
+    def replace(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+
+        a_names = [call.functionName for call in self.a[alo:ahi]]
+        b_names = [call.functionName for call in self.b[blo:bhi]]
+
+        matcher = difflib.SequenceMatcher(None, a_names, b_names)
+        for tag, _alo, _ahi, _blo, _bhi in matcher.get_opcodes():
+            _alo += alo
+            _ahi += alo
+            _blo += blo
+            _bhi += blo
+            if tag == 'replace':
+                self.replace_dissimilar(_alo, _ahi, _blo, _bhi)
+            elif tag == 'delete':
+                self.delete(_alo, _ahi, _blo, _bhi)
+            elif tag == 'insert':
+                self.insert(_alo, _ahi, _blo, _bhi)
+            elif tag == 'equal':
+                self.replace_similar(_alo, _ahi, _blo, _bhi)
+            else:
+                raise ValueError, 'unknown tag %s' % (tag,)
+
+    def replace_similar(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+        assert ahi - alo == bhi - blo
+        for i in xrange(0, bhi - blo):
+            self.highlighter.write('| ')
+            a_call = self.a[alo + i]
+            b_call = self.b[blo + i]
+            assert a_call.functionName == b_call.functionName
+            self.dumpCallNos(a_call.no, b_call.no)
+            self.highlighter.bold(True)
+            self.highlighter.write(b_call.functionName)
+            self.highlighter.bold(False)
+            self.highlighter.write('(')
+            sep = ''
+            numArgs = max(len(a_call.args), len(b_call.args))
+            for j in xrange(numArgs):
+                self.highlighter.write(sep)
+                try:
+                    a_arg = a_call.args[j]
+                except IndexError:
+                    pass
+                try:
+                    b_arg = b_call.args[j]
+                except IndexError:
+                    pass
+                self.replace_value(a_arg, b_arg)
+                sep = ', '
+            self.highlighter.write(')')
+            if a_call.ret is not None or b_call.ret is not None:
+                self.highlighter.write(' = ')
+                self.replace_value(a_call.ret, b_call.ret)
+            self.highlighter.write('\n')
+
+    def replace_dissimilar(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+        if bhi - blo < ahi - alo:
+            self.insert(alo, alo, blo, bhi)
+            self.delete(alo, ahi, bhi, bhi)
+        else:
+            self.delete(alo, ahi, blo, blo)
+            self.insert(ahi, ahi, blo, bhi)
+
+    def replace_value(self, a, b):
+        if b == a:
+            self.highlighter.write(self.dumper.visit(b))
+        else:
+            self.highlighter.strike()
+            self.highlighter.color(self.delete_color)
+            self.highlighter.write(self.dumper.visit(a))
+            self.highlighter.normal()
+            self.highlighter.write(" ")
+            self.highlighter.color(self.insert_color)
+            self.highlighter.write(self.dumper.visit(b))
+            self.highlighter.normal()
+
+    escape = "\33["
+
+    def delete(self, alo, ahi, blo, bhi):
+        assert alo < ahi
+        assert blo == bhi
+        for i in xrange(alo, ahi):
+            call = self.a[i]
+            self.highlighter.write('- ')
+            self.dumpCallNos(call.no, None)
+            self.highlighter.strike()
+            self.highlighter.color(self.delete_color)
+            self.dumpCall(call)
+
+    def insert(self, alo, ahi, blo, bhi):
+        assert alo == ahi
+        assert blo < bhi
+        for i in xrange(blo, bhi):
+            call = self.b[i]
+            self.highlighter.write('+ ')
+            self.dumpCallNos(None, call.no)
+            self.highlighter.color(self.insert_color)
+            self.dumpCall(call)
+
+    def equal(self, alo, ahi, blo, bhi):
+        assert alo < ahi and blo < bhi
+        assert ahi - alo == bhi - blo
+        for i in xrange(0, bhi - blo):
+            self.highlighter.write('  ')
+            a_call = self.a[alo + i]
+            b_call = self.b[blo + i]
+            assert a_call.functionName == b_call.functionName
+            assert len(a_call.args) == len(b_call.args)
+            self.dumpCallNos(a_call.no, b_call.no)
+            self.dumpCall(b_call)
+
+    def dumpCallNos(self, aNo, bNo):
+        if not self.callNos:
+            return
+
+        if aNo is None:
+            self.highlighter.write(' '*self.aSpace)
+        else:
+            aNoStr = str(aNo)
+            self.highlighter.strike()
+            self.highlighter.color(self.delete_color)
+            self.highlighter.write(aNoStr)
+            self.highlighter.normal()
+            self.aSpace = len(aNoStr)
+        self.highlighter.write(' ')
+        if bNo is None:
+            self.highlighter.write(' '*self.bSpace)
+        else:
+            bNoStr = str(bNo)
+            self.highlighter.color(self.insert_color)
+            self.highlighter.write(bNoStr)
+            self.highlighter.normal()
+            self.bSpace = len(bNoStr)
+        self.highlighter.write(' ')
+
+    def dumpCall(self, call):
+        self.highlighter.bold(True)
+        self.highlighter.write(call.functionName)
+        self.highlighter.bold(False)
+        self.highlighter.write('(' + ', '.join(itertools.imap(self.dumper.visit, call.args)) + ')')
+        if call.ret is not None:
+            self.highlighter.write(' = ' + self.dumper.visit(call.ret))
+        self.highlighter.normal()
+        self.highlighter.write('\n')
+
+
+
+##########################################################################/
+#
+# Main program
+#
 
 
 def which(executable):
@@ -152,22 +468,13 @@ def which(executable):
     return False
 
 
-def columns():
-    import curses
-    curses.setupterm()
-    return curses.tigetnum('cols')
-
-
 def main():
     '''Main program.
     '''
 
-    # Determine default options
-    default_width = columns()
-
     # Parse command line options
     optparser = optparse.OptionParser(
-        usage='\n\t%prog [options] -- TRACE_FILE TRACE_FILE',
+        usage='\n\t%prog [options] TRACE TRACE',
         version='%%prog')
     optparser.add_option(
         '-a', '--apitrace', metavar='PROGRAM',
@@ -175,12 +482,12 @@ def main():
         help='apitrace command [default: %default]')
     optparser.add_option(
         '-d', '--diff',
-        type="choice", choices=('diff', 'sdiff', 'wdiff'),
+        type="choice", choices=('diff', 'sdiff', 'wdiff', 'python'),
         dest="diff", default=None,
         help="diff program: wdiff, sdiff, or diff [default: auto]")
     optparser.add_option(
         '-c', '--calls', metavar='CALLSET',
-        type="string", dest="calls", default='1-10000',
+        type="string", dest="calls", default='0-10000',
         help="calls to compare [default: %default]")
     optparser.add_option(
         '--ref-calls', metavar='CALLSET',
@@ -191,32 +498,47 @@ def main():
         type="string", dest="src_calls", default=None,
         help="calls to compare from source trace")
     optparser.add_option(
+        '--call-nos',
+        action="store_true",
+        dest="call_nos", default=False,
+        help="dump call numbers")
+    optparser.add_option(
         '-w', '--width', metavar='NUM',
-        type="int", dest="width", default=default_width,
-        help="columns [default: %default]")
+        type="int", dest="width",
+        help="columns [default: auto]")
 
-    global options
     (options, args) = optparser.parse_args(sys.argv[1:])
     if len(args) != 2:
         optparser.error("incorrect number of arguments")
 
     if options.diff is None:
-        if which('wdiff'):
-            options.diff = 'wdiff'
+        if platform.system() == 'Windows':
+            options.diff = 'python'
         else:
-            sys.stderr.write('warning: wdiff not found\n')
-            if which('sdiff'):
-                options.diff = 'sdiff'
+            if which('wdiff'):
+                options.diff = 'wdiff'
             else:
-                sys.stderr.write('warning: sdiff not found\n')
-                options.diff = 'diff'
+                sys.stderr.write('warning: wdiff not found\n')
+                if which('sdiff'):
+                    options.diff = 'sdiff'
+                else:
+                    sys.stderr.write('warning: sdiff not found\n')
+                    options.diff = 'diff'
 
     if options.ref_calls is None:
         options.ref_calls = options.calls
     if options.src_calls is None:
         options.src_calls = options.calls
 
-    diff(*args)
+    ref_trace, src_trace = args
+
+    if options.diff == 'python':
+        differ = PythonDiffer(options.apitrace, options.call_nos)
+    else:
+        differ = ExternalDiffer(options.apitrace, options.diff, options.width)
+    differ.setRefTrace(ref_trace, options.ref_calls)
+    differ.setSrcTrace(src_trace, options.src_calls)
+    differ.diff()
 
 
 if __name__ == '__main__':
