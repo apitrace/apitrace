@@ -635,6 +635,13 @@ TraceAnalyzer::recordDrawingSideEffects(trace::Call *call, const char *name)
         return true;
     }
 
+    /* Though it's not flagged as a "RENDER" operation, we also want
+     * to trim swapbuffers calls when trimming drawing operations. */
+    if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
+        call->flags & trace::CALL_FLAG_END_FRAME) {
+        return true;
+    }
+
     /* No known drawing-related side effects. Return false for more analysis. */
     return false;
 }
