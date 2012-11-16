@@ -85,15 +85,15 @@ The call syntax is very flexible. Here are a few examples:
 
  * `4`             one call
 
- * `1,2,4,5`       set of calls
+ * `0,2,4,5`       set of calls
 
- * `"1 2 4 5"`     set of calls (commas are optional and can be replaced with whitespace)
+ * `"0 2 4 5"`     set of calls (commas are optional and can be replaced with whitespace)
 
- * `1-100/2`       calls 1, 3, 5, ...,  99
+ * `0-100/2`       calls 1, 3, 5, ...,  99
 
- * `1-1000/draw`   all draw calls between 1 and 1000
+ * `0-1000/draw`   all draw calls between 0 and 1000
 
- * `1-1000/fbo`    all fbo changes between calls 1 and 1000
+ * `0-1000/fbo`    all fbo changes between calls 0 and 1000
 
  * `frame`         all calls at end of frames
 
