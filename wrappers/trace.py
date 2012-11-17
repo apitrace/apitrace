@@ -208,7 +208,7 @@ class ValueSerializer(stdapi.Visitor, ExpanderMixin):
             # reinterpret_cast is necessary for GLubyte * <=> char *
             instance = 'reinterpret_cast<%s>(%s)' % (cast, instance)
         if string.length is not None:
-            length = ', %s' % string.length
+            length = ', %s' % self.expand(string.length)
         else:
             length = ''
         print '    trace::localWriter.write%s(%s%s);' % (suffix, instance, length)
