@@ -36,6 +36,7 @@
 
 #include <ostream>
 #include <string>
+#include <limits>
 
 
 class PickleWriter
@@ -301,7 +302,12 @@ protected:
         }
 
         // Same as l >> (8 * sizeof l), but without the warnings
-        T sign = l < 0 ? ~0 : 0;
+        T sign;
+        if (std::numeric_limits<T>::is_signed) {
+            sign = l < 0 ? ~0 : 0;
+        } else {
+            sign = 0;
+        }
 
         T sl = l;
         unsigned c = 0;
