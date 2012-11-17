@@ -824,25 +824,6 @@ class GlTracer(Tracer):
     ])
 
     def serializeArgValue(self, function, arg):
-        if function.name in self.draw_function_names and arg.name == 'indices':
-            print '    GLint _element_array_buffer = 0;'
-            print '    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &_element_array_buffer);'
-            print '    if (!_element_array_buffer) {'
-            if isinstance(arg.type, stdapi.Array):
-                print '        trace::localWriter.beginArray(%s);' % arg.type.length
-                print '        for(GLsizei i = 0; i < %s; ++i) {' % arg.type.length
-                print '            trace::localWriter.beginElement();'
-                print '            trace::localWriter.writeBlob(%s[i], count[i]*_gl_type_size(type));' % (arg.name)
-                print '            trace::localWriter.endElement();'
-                print '        }'
-                print '        trace::localWriter.endArray();'
-            else:
-                print '        trace::localWriter.writeBlob(%s, count*_gl_type_size(type));' % (arg.name)
-            print '    } else {'
-            Tracer.serializeArgValue(self, function, arg)
-            print '    }'
-            return
-
         # Recognize offsets instead of blobs when a PBO is bound
         if function.name in self.unpack_function_names \
            and (isinstance(arg.type, stdapi.Blob) \

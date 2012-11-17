@@ -329,6 +329,13 @@ _glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei count)
 #define _glVertexAttribPointerARB_size(size, type, normalized, stride, count) _glArrayPointer_size(size, type, stride, count)
 #define _glVertexAttribPointerNV_size(size, type, stride, count) _glArrayPointer_size(size, type, stride, count)
 
+static inline GLint
+_element_array_buffer_binding(void) {
+    GLint element_array_buffer = 0;
+    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &element_array_buffer);
+    return element_array_buffer;
+}
+
 static inline GLuint
 _glDrawArrays_count(GLint first, GLsizei count)
 {
@@ -349,13 +356,12 @@ static inline GLuint
 _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
 {
     GLvoid *temp = 0;
-    GLint element_array_buffer = 0;
 
     if (!count) {
         return 0;
     }
 
-    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &element_array_buffer);
+    GLint element_array_buffer = _element_array_buffer_binding();
     if (element_array_buffer) {
         // Read indices from index buffer object
         GLintptr offset = (GLintptr)indices;

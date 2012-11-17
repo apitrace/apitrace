@@ -237,3 +237,16 @@ GLbitfield_barrier = Flags(GLbitfield, [
 size_bgra = FakeEnum(GLint, [
     "GL_BGRA",
 ])
+
+
+def GLindexBuffer(countExpr, typeExpr):
+    # Indices arguments are polymorphic:
+    # - offsets when element array buffer is bound
+    # - or a blob otherwise.
+    sizeExpr = '%s*_gl_type_size(%s)' % (countExpr, typeExpr)
+    return Polymorphic('_element_array_buffer_binding()', [
+            ('0', Blob(Const(GLvoid), sizeExpr)),
+        ],
+        IntPointer("const GLvoid *"), 
+        contextLess=False,
+    )
