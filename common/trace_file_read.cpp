@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <fstream>
+
 #include "os.hpp"
 #include "trace_file.hpp"
 
@@ -34,17 +36,25 @@ using namespace trace;
 File *
 File::createForRead(const char *filename)
 {
-    File *file;
-
-    if (File::isSnappyCompressed(filename)) {
-        file = File::createSnappy();
-    } else if (File::isZLibCompressed(filename)) {
-        file = File::createZLib();
-    } else  {
-        os::log("error: could not determine %s compression type\n", filename);
+    std::ifstream stream(filename, std::ifstream::binary | std::ifstream::in);
+    if (!stream.is_open()) {
+        os::log("error: failed to open %s\n", filename);
         return NULL;
     }
+    unsigned char byte1, byte2;
+    stream >> byte1;
+    stream >> byte2;
+    stream.close();
 
+    File *file;
+    if (byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2) {
+        file = File::createSnappy();
+    } else if (byte1 == 0x1f && byte2 == 0x8b) {
+        file = File::createZLib();
+    } else  {
+        os::log("error: %s: unkwnown compression\n", filename);
+        return NULL;
+    }
     if (!file) {
         return NULL;
     }

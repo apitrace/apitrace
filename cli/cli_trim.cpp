@@ -110,7 +110,6 @@ command(int argc, char *argv[])
     for (i = optind; i < argc; ++i) {
         trace::Parser p;
         if (!p.open(argv[i])) {
-            std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
         }
 

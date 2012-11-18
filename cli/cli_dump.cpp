@@ -171,7 +171,6 @@ command(int argc, char *argv[])
         trace::Parser p;
 
         if (!p.open(argv[i])) {
-            std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
         }
 
