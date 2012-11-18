@@ -359,7 +359,7 @@ IDirect3DIndexBuffer9.methods += [
 ]
 
 IDirect3DSurface9.methods += [
-    StdMethod(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")], sideeffects=False),
+    StdMethod(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
     StdMethod(HRESULT, "UnlockRect", []),
@@ -372,7 +372,7 @@ IDirect3DVolume9.methods += [
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaqueBlob(Const(Void), "SizeOfData"), "pData"), (DWORD, "SizeOfData"), (D3DSPD, "Flags")], sideeffects=False),
     StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "FreePrivateData", [(REFGUID, "refguid")], sideeffects=False),
-    StdMethod(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")], sideeffects=False),
+    StdMethod(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DVOLUME_DESC), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "LockBox", [Out(Pointer(D3DLOCKED_BOX), "pLockedVolume"), (ConstPointer(D3DBOX), "pBox"), (D3DLOCK, "Flags")]),
     StdMethod(HRESULT, "UnlockBox", []),

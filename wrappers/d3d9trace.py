@@ -84,17 +84,6 @@ if __name__ == '__main__':
     print '#include "d3d9shader.hpp"'
     print '#include "dxvaint.h"'
     print
-    print '''
-static inline size_t
-_declCount(const D3DVERTEXELEMENT9 *pVertexElements) {
-    size_t count = 0;
-    if (pVertexElements) {
-        while (pVertexElements[count++].Stream != 0xff)
-            ;
-    }
-    return count;
-}
-'''
 
     api = API()
     api.addModule(d3d9)
