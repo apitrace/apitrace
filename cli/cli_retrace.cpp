@@ -43,7 +43,7 @@ static const char *synopsis = "Replay a trace.";
 static void
 usage(void)
 {
-    std::cout << "usage apitrace replay [OPTIONS] TRACE_FILE\n"
+    std::cout << "usage apitrace retrace [OPTIONS] TRACE_FILE\n"
               << synopsis << "\n"
 	    "\n"
 	    "    -h, --help             Show this help message and exit\n"
@@ -84,24 +84,19 @@ command(int argc, char *argv[])
     }
 
     if (optind >= argc) {
-        std::cerr << "error: apitrace replay requires a trace file as an argument.\n";
+        std::cerr << "error: apitrace retrace requires a trace file as an argument.\n";
         usage();
         return 1;
     }
 
     if (optind < argc - 1) { 
-        std::cerr << "error: apitrace replay can accept only a single trace file argument.\n";
+        std::cerr << "error: apitrace retrace can accept only a single trace file argument.\n";
         usage();
         return 1;
     }
 
     filename = argv[optind];
 
-    /* FIXME: It would be cleaner to pull the replaying of the trace
-     * in-process here and generate the images directly. But that
-     * pulls in a non-trivial amount of the existing 'retrace' code,
-     * along with dependencies on GL, etc.
-     */
     std::vector<const char *> command;
 
     os::String glretracePath = trace::findProgram("glretrace");
@@ -117,8 +112,8 @@ command(int argc, char *argv[])
     return os::execute((char * const *)&command[0]);
 }
 
-const Command replay_command = {
-    "replay",
+const Command retrace_command = {
+    "retrace",
     synopsis,
     usage,
     command

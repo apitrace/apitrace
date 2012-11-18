@@ -116,14 +116,6 @@ command(int argc, char *argv[])
         output = prefix.str();
     }
 
-    /* FIXME: It would be cleaner to pull the replaying of the trace
-     * in-process here and generate the images directly. But that
-     * pulls in a non-trivial amount of the existing 'retrace' code,
-     * along with dependencies on GL, etc.
-     *
-     * It will definitely make sense to do that once all that code has
-     * already been pulled in for the "apitrace retrace" (or "apitrace
-     * replay") command. */
     std::vector<const char *> command;
 
     os::String glretracePath = trace::findProgram("glretrace");

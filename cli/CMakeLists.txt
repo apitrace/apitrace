@@ -8,7 +8,7 @@ add_executable (apitrace
     cli_pager.cpp
     cli_pickle.cpp
     cli_repack.cpp
-    cli_replay.cpp
+    cli_retrace.cpp
     cli_trace.cpp
     cli_trim.cpp
 )
