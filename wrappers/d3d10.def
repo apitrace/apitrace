@@ -29,3 +29,6 @@ EXPORTS
     D3D10StateBlockMaskGetSetting
     D3D10StateBlockMaskIntersect
     D3D10StateBlockMaskUnion
+
+    CreateDXGIFactory
+    CreateDXGIFactory1

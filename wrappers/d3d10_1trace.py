@@ -26,6 +26,7 @@
 
 from d3dcommontrace import D3DCommonTracer
 from specs.stdapi import API
+from specs.dxgi import dxgi
 from specs.d3d10_1 import d3d10_1
 
 
@@ -41,6 +42,7 @@ if __name__ == '__main__':
     print
 
     api = API()
+    api.addModule(dxgi)
     api.addModule(d3d10_1)
     tracer = D3DCommonTracer()
     tracer.traceApi(api)
