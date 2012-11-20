@@ -548,8 +548,8 @@ ID3D11View.methods += [
 ]
 
 D3D11_BUFFER_SRV = Struct("D3D11_BUFFER_SRV", [
-    (Union(None, [(UINT, "FirstElement"), (UINT, "ElementOffset")]), None),
-    (Union(None, [(UINT, "NumElements"), (UINT, "ElementWidth")]), None),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D11_BUFFEREX_SRV_FLAG = Flags(UINT, [
@@ -635,8 +635,8 @@ ID3D11ShaderResourceView.methods += [
 ]
 
 D3D11_BUFFER_RTV = Struct("D3D11_BUFFER_RTV", [
-    (Union(None, [(UINT, "FirstElement"), (UINT, "ElementOffset")]), None),
-    (Union(None, [(UINT, "NumElements"), (UINT, "ElementWidth")]), None),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D11_TEX1D_RTV = Struct("D3D11_TEX1D_RTV", [

@@ -407,8 +407,8 @@ D3D10_RTV_DIMENSION = Enum("D3D10_RTV_DIMENSION", [
 ])
 
 D3D10_BUFFER_RTV = Struct("D3D10_BUFFER_RTV", [
-    (UINT, "ElementOffset"),
-    (UINT, "ElementWidth"),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D10_TEX1D_RTV = Struct("D3D10_TEX1D_RTV", [
@@ -473,8 +473,8 @@ D3D10_SRV_DIMENSION = Enum("D3D10_SRV_DIMENSION", [
 ])
 
 D3D10_BUFFER_SRV = Struct("D3D10_BUFFER_SRV", [
-    (UINT, "ElementOffset"),
-    (UINT, "ElementWidth"),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D10_TEX1D_SRV = Struct("D3D10_TEX1D_SRV", [
