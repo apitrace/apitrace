@@ -24,7 +24,7 @@
  **************************************************************************/
 
 /*
- * Central place for all D3D10 includes, and respective OS dependent headers.
+ * Central place for all D3D10.1 includes, and respective OS dependent headers.
  */
 
 #ifndef _D3D10_1IMPORTS_HPP_
@@ -38,6 +38,8 @@
 #include <d3d10_1.h>
 
 #include "d3derr.hpp"
+
+#include "dxgiint.h"
 
 
 #endif /* _D3D10_1IMPORTS_HPP_ */

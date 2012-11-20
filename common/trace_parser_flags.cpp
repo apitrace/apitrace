@@ -82,6 +82,7 @@ callFlagTable[] = {
     { "ID3D11DeviceContext::OMSetRenderTargets",       CALL_FLAG_SWAP_RENDERTARGET },
     { "ID3D11DeviceContext::OMSetRenderTargetsAndUnorderedAccessViews", CALL_FLAG_SWAP_RENDERTARGET },
     { "IDXGISwapChain::Present",                       CALL_FLAG_END_FRAME },
+    { "IDXGISwapChainDWM::Present",                    CALL_FLAG_END_FRAME },
     { "IDirect3D9::CheckDeviceFormat",                 CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3D9::EnumAdapterModes",                  CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3D9::GetAdapterModeCount",               CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },

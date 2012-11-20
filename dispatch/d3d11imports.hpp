@@ -39,5 +39,7 @@
 
 #include "d3derr.hpp"
 
+#include "dxgiint.h"
+
 
 #endif /* _D3D11IMPORTS_HPP_ */
