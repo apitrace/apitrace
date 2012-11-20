@@ -104,10 +104,17 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitStruct(self, struct):
         print 'static const char * _struct%s_members[%u] = {' % (struct.tag, len(struct.members))
         for type, name,  in struct.members:
-            print '    "%s",' % (name,)
+            if name is None:
+                print '    "",'
+            else:
+                print '    "%s",' % (name,)
         print '};'
         print 'static const trace::StructSig _struct%s_sig = {' % (struct.tag,)
-        print '   %u, "%s", %u, _struct%s_members' % (struct.id, struct.name, len(struct.members), struct.tag)
+        if struct.name is None:
+            structName = '""'
+        else:
+            structName = '"%s"' % struct.name
+        print '    %u, %s, %u, _struct%s_members' % (struct.id, structName, len(struct.members), struct.tag)
         print '};'
         print
 
@@ -120,22 +127,22 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitEnum(self, enum):
         print 'static const trace::EnumValue _enum%s_values[] = {' % (enum.tag)
         for value in enum.values:
-            print '   {"%s", %s},' % (value, value)
+            print '    {"%s", %s},' % (value, value)
         print '};'
         print
         print 'static const trace::EnumSig _enum%s_sig = {' % (enum.tag)
-        print '   %u, %u, _enum%s_values' % (enum.id, len(enum.values), enum.tag)
+        print '    %u, %u, _enum%s_values' % (enum.id, len(enum.values), enum.tag)
         print '};'
         print
 
     def visitBitmask(self, bitmask):
         print 'static const trace::BitmaskFlag _bitmask%s_flags[] = {' % (bitmask.tag)
         for value in bitmask.values:
-            print '   {"%s", %s},' % (value, value)
+            print '    {"%s", %s},' % (value, value)
         print '};'
         print
         print 'static const trace::BitmaskSig _bitmask%s_sig = {' % (bitmask.tag)
-        print '   %u, %u, _bitmask%s_flags' % (bitmask.id, len(bitmask.values), bitmask.tag)
+        print '    %u, %u, _bitmask%s_flags' % (bitmask.id, len(bitmask.values), bitmask.tag)
         print '};'
         print
 
@@ -189,11 +196,6 @@ class ValueSerializer(stdapi.Visitor, ExpanderMixin):
     ComplexValueSerializer visitor above.
     '''
 
-    def __init__(self):
-        #stdapi.Visitor.__init__(self)
-        self.indices = []
-        self.instances = []
-
     def visitLiteral(self, literal, instance):
         print '    trace::localWriter.write%s(%s);' % (literal.kind, instance)
 
@@ -219,7 +221,12 @@ class ValueSerializer(stdapi.Visitor, ExpanderMixin):
     def visitStruct(self, struct, instance):
         print '    trace::localWriter.beginStruct(&_struct%s_sig);' % (struct.tag,)
         for type, name in struct.members:
-            self.visitMember(instance, type, '(%s).%s' % (instance, name,))
+            if name is None:
+                # Anonymous structure/union member
+                memberInstance = instance
+            else:
+                memberInstance = '(%s).%s' % (instance, name)
+            self.visitMember(instance, type, memberInstance)
         print '    trace::localWriter.endStruct();'
 
     def visitArray(self, array, instance):
@@ -287,11 +294,14 @@ class ValueSerializer(stdapi.Visitor, ExpanderMixin):
         if polymorphic.contextLess:
             print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance)
         else:
-            print '    switch (%s) {' % polymorphic.switchExpr
+            print '    switch (%s) {' % self.expand(polymorphic.switchExpr)
             for cases, type in polymorphic.iterSwitch():
                 for case in cases:
                     print '    %s:' % case
-                self.visit(type, 'static_cast<%s>(%s)' % (type, instance))
+                caseInstance = instance
+                if type.expr is not None:
+                    caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+                self.visit(type, caseInstance)
                 print '        break;'
             print '    }'
 
@@ -321,7 +331,12 @@ class ValueWrapper(stdapi.Traverser, ExpanderMixin):
 
     def visitStruct(self, struct, instance):
         for type, name in struct.members:
-            self.visitMember(instance, type, "(%s).%s" % (instance, name))
+            if name is None:
+                # Anonymous structure/union member
+                memberInstance = instance
+            else:
+                memberInstance = '(%s).%s' % (instance, name)
+            self.visitMember(instance, type, memberInstance)
 
     def visitArray(self, array, instance):
         array_length = self.expand(array.length)

@@ -296,7 +296,7 @@ class Struct(Type):
 
         # Eliminate anonymous unions
         for type, name in members:
-            if name is not None:
+            if name is not None or isinstance(type, Polymorphic):
                 self.members.append((type, name))
             else:
                 assert isinstance(type, Union)
@@ -319,6 +319,13 @@ class Union(Type):
 
         self.name = name
         self.members = members
+
+def Union_(kindExpr, kindTypes, contextLess=True):
+    switchTypes = []
+    for kindCase, kindType, kindMemberName in kindTypes:
+        switchType = Struct(None, [(kindType, kindMemberName)])
+        switchTypes.append((kindCase, switchType))
+    return Polymorphic(kindExpr, switchTypes, contextLess=contextLess)
 
 
 class Alias(Type):
@@ -515,8 +522,12 @@ def OpaqueBlob(type, size):
 
 class Polymorphic(Type):
 
-    def __init__(self, switchExpr, switchTypes, defaultType, contextLess=True):
-        Type.__init__(self, defaultType.expr)
+    def __init__(self, switchExpr, switchTypes, defaultType=None, contextLess=True):
+        if defaultType is None:
+            Type.__init__(self, None)
+            contextLess = False
+        else:
+            Type.__init__(self, defaultType.expr)
         self.switchExpr = switchExpr
         self.switchTypes = switchTypes
         self.defaultType = defaultType
@@ -526,8 +537,12 @@ class Polymorphic(Type):
         return visitor.visitPolymorphic(self, *args, **kwargs)
 
     def iterSwitch(self):
-        cases = [['default']]
-        types = [self.defaultType]
+        cases = []
+        types = []
+
+        if self.defaultType is not None:
+            cases.append(['default'])
+            types.append(self.defaultType)
 
         for expr, type in self.switchTypes:
             case = 'case %s' % expr
@@ -726,7 +741,10 @@ class Rebuilder(Visitor):
     def visitPolymorphic(self, polymorphic):
         switchExpr = polymorphic.switchExpr
         switchTypes = [(expr, self.visit(type)) for expr, type in polymorphic.switchTypes]
-        defaultType = self.visit(polymorphic.defaultType)
+        if polymorphic.defaultType is None:
+            defaultType = None
+        else:
+            defaultType = self.visit(polymorphic.defaultType)
         return Polymorphic(switchExpr, switchTypes, defaultType, polymorphic.contextLess)
 
 
@@ -816,9 +834,10 @@ class Traverser(Visitor):
             self.visit(method.type, *args, **kwargs)
 
     def visitPolymorphic(self, polymorphic, *args, **kwargs):
-        self.visit(polymorphic.defaultType, *args, **kwargs)
         for expr, type in polymorphic.switchTypes:
             self.visit(type, *args, **kwargs)
+        if polymorphic.defaultType is not None:
+            self.visit(polymorphic.defaultType, *args, **kwargs)
 
 
 class Collector(Traverser):

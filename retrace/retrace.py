@@ -96,6 +96,9 @@ class ValueAllocator(stdapi.Visitor):
         pass
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        if polymorphic.defaultType is None:
+            # FIXME
+            raise UnsupportedType
         self.visit(polymorphic.defaultType, lvalue, rvalue)
 
     def visitOpaque(self, opaque, lvalue, rvalue):
@@ -186,6 +189,9 @@ class ValueDeserializer(stdapi.Visitor):
             self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        if polymorphic.defaultType is None:
+            # FIXME
+            raise UnsupportedType
         self.visit(polymorphic.defaultType, lvalue, rvalue)
     
     def visitOpaque(self, opaque, lvalue, rvalue):
@@ -294,6 +300,9 @@ class SwizzledValueRegistrator(stdapi.Visitor):
             self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
     
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        if polymorphic.defaultType is None:
+            # FIXME
+            raise UnsupportedType
         self.visit(polymorphic.defaultType, lvalue, rvalue)
     
     def visitOpaque(self, opaque, lvalue, rvalue):
@@ -380,8 +389,7 @@ class Retracer:
         if not success:
             print '    if (1) {'
             self.failFunction(function)
-            if function.name[-1].islower():
-                sys.stderr.write('warning: unsupported %s call\n' % function.name)
+            sys.stderr.write('warning: unsupported %s call\n' % function.name)
             print '    }'
 
     def swizzleValues(self, function):
