@@ -31,6 +31,7 @@
 
 
 struct IDirect3DDevice9;
+struct ID3D10Device;
 struct ID3D11DeviceContext;
 
 
@@ -47,6 +48,13 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice);
 
 void
 dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
+
+
+image::Image *
+getRenderTargetImage(ID3D10Device *pDevice);
+
+void
+dumpDevice(std::ostream &os, ID3D10Device *pDevice);
 
 
 image::Image *

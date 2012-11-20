@@ -81,6 +81,11 @@ class D3DRetracer(Retracer):
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
+        if interface.name in ('ID3D10Device', 'ID3D10Device1'):
+            if method.name == 'Release':
+                print r'    d3d10Dumper.unbindDevice(_this);'
+            else:
+                print r'    d3d10Dumper.bindDevice(_this);'
         if interface.name in ('ID3D11DeviceContext',):
             if method.name == 'Release':
                 print r'    d3d11Dumper.unbindDevice(_this);'
@@ -137,8 +142,10 @@ def main():
     moduleNames = sys.argv[1:]
 
     api = API()
+    
     if moduleNames:
         api.addModule(dxgi)
+    
     if 'd3d10' in moduleNames:
         if 'd3d10_1' in moduleNames:
             print r'#include "d3d10_1imports.hpp"'
@@ -149,6 +156,10 @@ def main():
             print r'#include "d3d10imports.hpp"'
         print r'#include "d3d10size.hpp"'
         api.addModule(d3d10)
+        print
+        print '''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;'''
+        print
+
     if 'd3d11' in moduleNames:
         print r'#include "d3d11imports.hpp"'
         if 'd3d11_1' in moduleNames:

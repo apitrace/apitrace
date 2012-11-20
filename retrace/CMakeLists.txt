@@ -153,6 +153,10 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
             include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
             set (D3D10_MODULES ${D3D10_MODULES} d3d10_1)
         endif ()
+        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
+            d3d10state.cpp
+            d3d10state_images.cpp
+        )
     endif ()
 
     if (DirectX_D3D11_INCLUDE_DIR)
@@ -162,7 +166,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
             include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
             set (D3D10_MODULES ${D3D10_MODULES} d3d11_1)
         endif ()
-        set (D3D11STATE_SOURCES
+        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             d3d11state.cpp
             d3d11state_images.cpp
         )
@@ -200,7 +204,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
         d3dretrace_ws.cpp
         d3d9state.cpp
         d3d9state_images.cpp
-        ${D3D11STATE_SOURCES}
+        ${D3DSTATE_SOURCES}
     )
     target_link_libraries (d3dretrace
         retrace_common

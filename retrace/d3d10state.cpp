@@ -36,7 +36,7 @@ namespace d3dstate {
 
 
 void
-dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext)
+dumpDevice(std::ostream &os, ID3D10Device *pDevice)
 {
     JSONWriter json(os);
 
