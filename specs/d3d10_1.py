@@ -76,16 +76,18 @@ D3D10_TEXCUBE_ARRAY_SRV1 = Struct("D3D10_TEXCUBE_ARRAY_SRV1", [
 D3D10_SHADER_RESOURCE_VIEW_DESC1 = Struct("D3D10_SHADER_RESOURCE_VIEW_DESC1", [
     (DXGI_FORMAT, "Format"),
     (D3D10_SRV_DIMENSION1, "ViewDimension"),
-    (D3D10_BUFFER_SRV, "Buffer"),
-    (D3D10_TEX1D_SRV, "Texture1D"),
-    (D3D10_TEX1D_ARRAY_SRV, "Texture1DArray"),
-    (D3D10_TEX2D_SRV, "Texture2D"),
-    (D3D10_TEX2D_ARRAY_SRV, "Texture2DArray"),
-    (D3D10_TEX2DMS_SRV, "Texture2DMS"),
-    (D3D10_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
-    (D3D10_TEX3D_SRV, "Texture3D"),
-    (D3D10_TEXCUBE_SRV, "TextureCube"),
-    (D3D10_TEXCUBE_ARRAY_SRV1, "TextureCubeArray"),
+    (Union("{self}.ViewDimension", [
+        ("D3D10_1_SRV_DIMENSION_BUFFER", D3D10_BUFFER_SRV, "Buffer"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURE1D", D3D10_TEX1D_SRV, "Texture1D"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURE1DARRAY", D3D10_TEX1D_ARRAY_SRV, "Texture1DArray"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURE2D", D3D10_TEX2D_SRV, "Texture2D"), 
+        ("D3D10_1_SRV_DIMENSION_TEXTURE2DARRAY", D3D10_TEX2D_ARRAY_SRV, "Texture2DArray"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURE2DMS", D3D10_TEX2DMS_SRV, "Texture2DMS"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURE2DMSARRAY", D3D10_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURE3D", D3D10_TEX3D_SRV, "Texture3D"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURECUBE", D3D10_TEXCUBE_SRV, "TextureCube"),
+        ("D3D10_1_SRV_DIMENSION_TEXTURECUBEARRAY", D3D10_TEXCUBE_ARRAY_SRV1, "TextureCubeArray"),
+    ]), None),
 ])
 
 ID3D10ShaderResourceView1 = Interface("ID3D10ShaderResourceView1", ID3D10ShaderResourceView)
@@ -95,7 +97,7 @@ ID3D10ShaderResourceView1.methods += [
 
 ID3D10Device1 = Interface("ID3D10Device1", ID3D10Device)
 ID3D10Device1.methods += [
-    StdMethod(HRESULT, "CreateShaderResourceView1", [(ObjPointer(ID3D10Resource), "pResource"), Out(Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC1)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView1)), "ppSRView")]),
+    StdMethod(HRESULT, "CreateShaderResourceView1", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC1)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView1)), "ppSRView")]),
     StdMethod(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D10_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D10BlendState1)), "ppBlendState")]),
     StdMethod(D3D10_FEATURE_LEVEL1, "GetFeatureLevel", [], sideeffects=False),
 ]

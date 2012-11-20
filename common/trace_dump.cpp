@@ -170,14 +170,32 @@ public:
         }
     }
 
-    void visit(Struct *s) {
-        const char *sep = "";
-        os << "{";
+    const char *
+    visitMembers(Struct *s, const char *sep = "") {
         for (unsigned i = 0; i < s->members.size(); ++i) {
-            os << sep << italic << s->sig->member_names[i] << normal << " = ";
-            _visit(s->members[i]);
+            const char *memberName = s->sig->member_names[i];
+            Value *memberValue = s->members[i];
+
+            if (!memberName || !*memberName) {
+                // Anonymous structure
+                Struct *memberStruct = dynamic_cast<Struct *>(memberValue);
+                assert(memberStruct);
+                if (memberStruct) {
+                    sep = visitMembers(memberStruct, sep);
+                    continue;
+                }
+            }
+
+            os << sep << italic << memberName << normal << " = ",
+            _visit(memberValue);
             sep = ", ";
         }
+        return sep;
+    }
+
+    void visit(Struct *s) {
+        os << "{";
+        visitMembers(s);
         os << "}";
     }
 

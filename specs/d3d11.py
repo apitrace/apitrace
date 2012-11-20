@@ -615,18 +615,18 @@ D3D11_TEX2DMS_ARRAY_SRV = Struct("D3D11_TEX2DMS_ARRAY_SRV", [
 D3D11_SHADER_RESOURCE_VIEW_DESC = Struct("D3D11_SHADER_RESOURCE_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_SRV_DIMENSION, "ViewDimension"),
-    (Union(None, [
-        (D3D11_BUFFER_SRV, "Buffer"),
-        (D3D11_TEX1D_SRV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_SRV, "Texture1DArray"),
-        (D3D11_TEX2D_SRV, "Texture2D"), 
-        (D3D11_TEX2D_ARRAY_SRV, "Texture2DArray"),
-        (D3D11_TEX2DMS_SRV, "Texture2DMS"),
-        (D3D11_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
-        (D3D11_TEX3D_SRV, "Texture3D"),
-        (D3D11_TEXCUBE_SRV, "TextureCube"),
-        (D3D11_TEXCUBE_ARRAY_SRV, "TextureCubeArray"),
-        (D3D11_BUFFEREX_SRV, "BufferEx"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_SRV_DIMENSION_BUFFER", D3D11_BUFFER_SRV, "Buffer"),
+        ("D3D11_SRV_DIMENSION_TEXTURE1D", D3D11_TEX1D_SRV, "Texture1D"),
+        ("D3D11_SRV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_SRV, "Texture1DArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2D", D3D11_TEX2D_SRV, "Texture2D"), 
+        ("D3D11_SRV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_SRV, "Texture2DArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_SRV, "Texture2DMS"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE3D", D3D11_TEX3D_SRV, "Texture3D"),
+        ("D3D11_SRV_DIMENSION_TEXTURECUBE", D3D11_TEXCUBE_SRV, "TextureCube"),
+        ("D3D11_SRV_DIMENSION_TEXTURECUBEARRAY", D3D11_TEXCUBE_ARRAY_SRV, "TextureCubeArray"),
+        ("D3D11_SRV_DIMENSION_BUFFEREX", D3D11_BUFFEREX_SRV, "BufferEx"),
     ]), None),
 ])
 
@@ -677,15 +677,15 @@ D3D11_TEX3D_RTV = Struct("D3D11_TEX3D_RTV", [
 D3D11_RENDER_TARGET_VIEW_DESC = Struct("D3D11_RENDER_TARGET_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_RTV_DIMENSION, "ViewDimension"),
-    (Union(None, [
-        (D3D11_BUFFER_RTV, "Buffer"),
-        (D3D11_TEX1D_RTV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_RTV, "Texture1DArray"),
-        (D3D11_TEX2D_RTV, "Texture2D"),
-        (D3D11_TEX2D_ARRAY_RTV, "Texture2DArray"),
-        (D3D11_TEX2DMS_RTV, "Texture2DMS"),
-        (D3D11_TEX2DMS_ARRAY_RTV, "Texture2DMSArray"),
-        (D3D11_TEX3D_RTV, "Texture3D"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_RTV_DIMENSION_BUFFER", D3D11_BUFFER_RTV, "Buffer"),
+        ("D3D11_RTV_DIMENSION_TEXTURE1D", D3D11_TEX1D_RTV, "Texture1D"),
+        ("D3D11_RTV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_RTV, "Texture1DArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2D", D3D11_TEX2D_RTV, "Texture2D"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_RTV, "Texture2DArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_RTV, "Texture2DMS"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_RTV, "Texture2DMSArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE3D", D3D11_TEX3D_RTV, "Texture3D"),
     ]), None),
 ])
 
@@ -731,13 +731,13 @@ D3D11_DEPTH_STENCIL_VIEW_DESC = Struct("D3D11_DEPTH_STENCIL_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_DSV_DIMENSION, "ViewDimension"),
     (D3D11_DSV_FLAG, "Flags"),
-    (Union(None, [
-        (D3D11_TEX1D_DSV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_DSV, "Texture1DArray"),
-        (D3D11_TEX2D_DSV, "Texture2D"),
-        (D3D11_TEX2D_ARRAY_DSV, "Texture2DArray"),
-        (D3D11_TEX2DMS_DSV, "Texture2DMS"),
-        (D3D11_TEX2DMS_ARRAY_DSV, "Texture2DMSArray"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_DSV_DIMENSION_TEXTURE1D", D3D11_TEX1D_DSV, "Texture1D"),
+        ("D3D11_DSV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_DSV, "Texture1DArray"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2D", D3D11_TEX2D_DSV, "Texture2D"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_DSV, "Texture2DArray"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_DSV, "Texture2DMS"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_DSV, "Texture2DMSArray"),
     ]), None),
 ])
 
@@ -786,13 +786,13 @@ D3D11_TEX3D_UAV = Struct("D3D11_TEX3D_UAV", [
 D3D11_UNORDERED_ACCESS_VIEW_DESC = Struct("D3D11_UNORDERED_ACCESS_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_UAV_DIMENSION, "ViewDimension"),
-    (Union(None, [
-        (D3D11_BUFFER_UAV, "Buffer"),
-        (D3D11_TEX1D_UAV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_UAV, "Texture1DArray"),
-        (D3D11_TEX2D_UAV, "Texture2D"),
-        (D3D11_TEX2D_ARRAY_UAV, "Texture2DArray"),
-        (D3D11_TEX3D_UAV, "Texture3D"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_UAV_DIMENSION_BUFFER", D3D11_BUFFER_UAV, "Buffer"),
+        ("D3D11_UAV_DIMENSION_TEXTURE1D", D3D11_TEX1D_UAV, "Texture1D"),
+        ("D3D11_UAV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_UAV, "Texture1DArray"),
+        ("D3D11_UAV_DIMENSION_TEXTURE2D", D3D11_TEX2D_UAV, "Texture2D"),
+        ("D3D11_UAV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_UAV, "Texture2DArray"),
+        ("D3D11_UAV_DIMENSION_TEXTURE3D", D3D11_TEX3D_UAV, "Texture3D"),
     ]), None),
 ])
 
