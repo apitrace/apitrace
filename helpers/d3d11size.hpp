@@ -169,6 +169,12 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
         return 0;
     }
 
+    if (pDstBox) {
+        Width  = pDstBox->right  - pDstBox->left;
+        Height = pDstBox->bottom - pDstBox->top;
+        Depth  = pDstBox->back   - pDstBox->front;
+    }
+
     return _calcMipDataSize(MipLevel, Format, Width, Height, SrcRowPitch, Depth, SrcDepthPitch);
 }
 
