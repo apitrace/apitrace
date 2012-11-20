@@ -292,35 +292,13 @@ class Struct(Type):
         Struct.__id += 1
 
         self.name = name
-        self.members = []
-
-        # Eliminate anonymous unions
-        for type, name in members:
-            if name is not None or isinstance(type, Polymorphic):
-                self.members.append((type, name))
-            else:
-                assert isinstance(type, Union)
-                assert type.name is None
-                self.members.extend(type.members)
+        self.members = members
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitStruct(self, *args, **kwargs)
 
 
-class Union(Type):
-
-    __id = 0
-
-    def __init__(self, name, members):
-        Type.__init__(self, name)
-
-        self.id = Union.__id
-        Union.__id += 1
-
-        self.name = name
-        self.members = members
-
-def Union_(kindExpr, kindTypes, contextLess=True):
+def Union(kindExpr, kindTypes, contextLess=True):
     switchTypes = []
     for kindCase, kindType, kindMemberName in kindTypes:
         switchType = Struct(None, [(kindType, kindMemberName)])
@@ -854,6 +832,49 @@ class Collector(Traverser):
         Visitor.visit(self, type)
         self.types.append(type)
 
+
+class ExpanderMixin:
+    '''Mixin class that provides a bunch of methods to expand C expressions
+    from the specifications.'''
+
+    __structs = None
+    __indices = None
+
+    def expand(self, expr):
+        # Expand a C expression, replacing certain variables
+        if not isinstance(expr, basestring):
+            return expr
+        variables = {}
+
+        if self.__structs is not None:
+            variables['self'] = '(%s)' % self.__structs[0]
+        if self.__indices is not None:
+            variables['i'] = self.__indices[0]
+
+        expandedExpr = expr.format(**variables)
+        if expandedExpr != expr and 0:
+            sys.stderr.write("  %r -> %r\n" % (expr, expandedExpr))
+        return expandedExpr
+
+    def visitMember(self, member, structInstance, *args, **kwargs):
+        memberType, memberName = member
+        if memberName is None:
+            # Anonymous structure/union member
+            memberInstance = structInstance
+        else:
+            memberInstance = '(%s).%s' % (structInstance, memberName)
+        self.__structs = (structInstance, self.__structs)
+        try:
+            return self.visit(memberType, memberInstance, *args, **kwargs)
+        finally:
+            _, self.__structs = self.__structs
+
+    def visitElement(self, elementIndex, elementType, *args, **kwargs):
+        self.__indices = (elementIndex, self.__indices)
+        try:
+            return self.visit(elementType, *args, **kwargs)
+        finally:
+            _, self.__indices = self.__indices
 
 
 class Module:

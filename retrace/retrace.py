@@ -96,16 +96,14 @@ class ValueAllocator(stdapi.Visitor):
         pass
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
-        if polymorphic.defaultType is None:
-            # FIXME
-            raise UnsupportedType
+        assert polymorphic.defaultType is not None
         self.visit(polymorphic.defaultType, lvalue, rvalue)
 
     def visitOpaque(self, opaque, lvalue, rvalue):
         pass
 
 
-class ValueDeserializer(stdapi.Visitor):
+class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
 
     def visitLiteral(self, literal, lvalue, rvalue):
         print '    %s = (%s).to%s();' % (lvalue, rvalue, literal.kind)
@@ -185,14 +183,32 @@ class ValueDeserializer(stdapi.Visitor):
         print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
         print '    assert(%s);' % (tmp)
         for i in range(len(struct.members)):
-            member_type, member_name = struct.members[i]
-            self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
+            member = struct.members[i]
+            self.visitMember(member, lvalue, '*%s->members[%s]' % (tmp, i))
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
         if polymorphic.defaultType is None:
-            # FIXME
-            raise UnsupportedType
-        self.visit(polymorphic.defaultType, lvalue, rvalue)
+            switchExpr = self.expand(polymorphic.switchExpr)
+            print r'    switch (%s) {' % switchExpr
+            for cases, type in polymorphic.iterSwitch():
+                for case in cases:
+                    print r'    %s:' % case
+                caseLvalue = lvalue
+                if type.expr is not None:
+                    caseLvalue = 'static_cast<%s>(%s)' % (type, caseLvalue)
+                print r'        {'
+                try:
+                    self.visit(type, caseLvalue, rvalue)
+                finally:
+                    print r'        }'
+                print r'        break;'
+            if polymorphic.defaultType is None:
+                print r'    default:'
+                print r'        retrace::warning(call) << "unexpected polymorphic case" << %s << "\n";' % (switchExpr,)
+                print r'        break;'
+            print r'    }'
+        else:
+            self.visit(polymorphic.defaultType, lvalue, rvalue)
     
     def visitOpaque(self, opaque, lvalue, rvalue):
         raise UnsupportedType
@@ -208,7 +224,7 @@ class OpaqueValueDeserializer(ValueDeserializer):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, opaque, rvalue)
 
 
-class SwizzledValueRegistrator(stdapi.Visitor):
+class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
     '''Type visitor which will register (un)swizzled value pairs, to later be
     swizzled.'''
 
@@ -296,13 +312,11 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         print '    assert(%s);' % (tmp,)
         print '    (void)%s;' % (tmp,)
         for i in range(len(struct.members)):
-            member_type, member_name = struct.members[i]
-            self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
+            member = struct.members[i]
+            self.visitMember(member, lvalue, '*%s->members[%s]' % (tmp, i))
     
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
-        if polymorphic.defaultType is None:
-            # FIXME
-            raise UnsupportedType
+        assert polymorphic.defaultType is not None
         self.visit(polymorphic.defaultType, lvalue, rvalue)
     
     def visitOpaque(self, opaque, lvalue, rvalue):

@@ -40,44 +40,6 @@ def getWrapperInterfaceName(interface):
 
 
 
-class ExpanderMixin:
-    '''Mixin class that provides a bunch of methods to expand C expressions
-    from the specifications.'''
-
-    __structs = None
-    __indices = None
-
-    def expand(self, expr):
-        # Expand a C expression, replacing certain variables
-        if not isinstance(expr, basestring):
-            return expr
-        variables = {}
-
-        if self.__structs is not None:
-            variables['self'] = '(%s)' % self.__structs[0]
-        if self.__indices is not None:
-            variables['i'] = self.__indices[0]
-
-        expandedExpr = expr.format(**variables)
-        if expandedExpr != expr and 0:
-            sys.stderr.write("  %r -> %r\n" % (expr, expandedExpr))
-        return expandedExpr
-
-    def visitMember(self, structInstance, member_type, *args, **kwargs):
-        self.__structs = (structInstance, self.__structs)
-        try:
-            return self.visit(member_type, *args, **kwargs)
-        finally:
-            _, self.__structs = self.__structs
-
-    def visitElement(self, element_index, element_type, *args, **kwargs):
-        self.__indices = (element_index, self.__indices)
-        try:
-            return self.visit(element_type, *args, **kwargs)
-        finally:
-            _, self.__indices = self.__indices
-
-
 class ComplexValueSerializer(stdapi.OnceVisitor):
     '''Type visitors which generates serialization functions for
     complex types.
@@ -188,7 +150,7 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         print
 
 
-class ValueSerializer(stdapi.Visitor, ExpanderMixin):
+class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
     '''Visitor which generates code to serialize any type.
     
     Simple types are serialized inline here, whereas the serialization of
@@ -220,13 +182,8 @@ class ValueSerializer(stdapi.Visitor, ExpanderMixin):
 
     def visitStruct(self, struct, instance):
         print '    trace::localWriter.beginStruct(&_struct%s_sig);' % (struct.tag,)
-        for type, name in struct.members:
-            if name is None:
-                # Anonymous structure/union member
-                memberInstance = instance
-            else:
-                memberInstance = '(%s).%s' % (instance, name)
-            self.visitMember(instance, type, memberInstance)
+        for member in struct.members:
+            self.visitMember(member, instance)
         print '    trace::localWriter.endStruct();'
 
     def visitArray(self, array, instance):
@@ -294,7 +251,8 @@ class ValueSerializer(stdapi.Visitor, ExpanderMixin):
         if polymorphic.contextLess:
             print '    _write__%s(%s, %s);' % (polymorphic.tag, polymorphic.switchExpr, instance)
         else:
-            print '    switch (%s) {' % self.expand(polymorphic.switchExpr)
+            switchExpr = self.expand(polymorphic.switchExpr)
+            print '    switch (%s) {' % switchExpr
             for cases, type in polymorphic.iterSwitch():
                 for case in cases:
                     print '    %s:' % case
@@ -303,6 +261,11 @@ class ValueSerializer(stdapi.Visitor, ExpanderMixin):
                     caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
                 self.visit(type, caseInstance)
                 print '        break;'
+            if polymorphic.defaultType is None:
+                print r'    default:'
+                print r'        os::log("apitrace: warning: %%s: unexpected polymorphic case %%i\n", __FUNCTION__, (int)%s);' % (switchExpr,)
+                print r'        trace::localWriter.writeNull();'
+                print r'        break;'
             print '    }'
 
 
@@ -322,7 +285,7 @@ class WrapDecider(stdapi.Traverser):
         self.needsWrapping = True
 
 
-class ValueWrapper(stdapi.Traverser, ExpanderMixin):
+class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
     '''Type visitor which will generate the code to wrap an instance.
     
     Wrapping is necessary mostly for interfaces, however interface pointers can
@@ -330,13 +293,8 @@ class ValueWrapper(stdapi.Traverser, ExpanderMixin):
     '''
 
     def visitStruct(self, struct, instance):
-        for type, name in struct.members:
-            if name is None:
-                # Anonymous structure/union member
-                memberInstance = instance
-            else:
-                memberInstance = '(%s).%s' % (instance, name)
-            self.visitMember(instance, type, memberInstance)
+        for member in struct.members:
+            self.visitMember(member, instance)
 
     def visitArray(self, array, instance):
         array_length = self.expand(array.length)
