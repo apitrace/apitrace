@@ -49,12 +49,10 @@ View the trace with
 
 Replay an OpenGL trace with
 
-    glretrace application.trace
+    apitrace retrace application.trace
 
 Pass the `--sb` option to use a single buffered visual.  Pass `--help` to
-`glretrace` for more options.
-
-EGL traces must be replayed with `eglretrace` instead of `glretrace`.
+`apitrace retrace` for more options.
 
 
 Basic GUI usage
@@ -78,8 +76,8 @@ Call sets
 
 Several tools take `CALLSET` arguments, e.g:
 
-    apitrace dump --calls CALLSET foo.trace
-    glretrace -S CALLSET foo.trace
+    apitrace dump --calls=CALLSET foo.trace
+    apitrace dump-images --calls=CALLSET foo.trace
 
 The call syntax is very flexible. Here are a few examples:
 
@@ -297,7 +295,7 @@ Dump GL state at a particular call
 
 You can get a dump of the bound GL state at call 12345 by doing:
 
-    glretrace -D 12345 application.trace > 12345.json
+    apitrace retrace -D 12345 application.trace > 12345.json
 
 This is precisely the mechanism the GUI obtains its own state.
 
@@ -320,7 +318,7 @@ Recording a video with FFmpeg
 
 You can make a video of the output by doing
 
-    glretrace -s - application.trace \
+    apitrace dump-images -o - application.trace \
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
 
@@ -354,7 +352,7 @@ table which displays profiling results per shader.
 
 For example, to record all profiling data and utilise the per shader script:
 
-    ./glretrace --pgpu --pcpu --ppd foo.trace | ./scripts/profileshader.py
+    apitrace retrace --pgpu --pcpu --ppd foo.trace | ./scripts/profileshader.py
 
 
 Advanced usage for OpenGL implementors
@@ -377,11 +375,7 @@ These are the steps to create a regression test-suite around **apitrace**:
 
 * prune the snapshots which are not interesting
 
-* to do a regression test, do:
-
-        glretrace -c /path/to/reference/snapshots/ application.trace
-
-  Alternatively, for a HTML summary, use `apitrace diff-images`:
+* to do a regression test, use `apitrace diff-images`:
 
         apitrace dump-images -o /path/to/test/snapshots/ application.trace
         apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/test/snapshots/
