@@ -31,20 +31,21 @@
 #include <getopt.h>
 #include <iostream>
 
-#include "cli.hpp"
-
 #include "os_string.hpp"
 #include "os_process.hpp"
 
 #include "trace_parser.hpp"
 #include "trace_resource.hpp"
 
+#include "cli.hpp"
+#include "cli_retrace.hpp"
+
 static const char *synopsis = "Replay a trace.";
 
 static void
 usage(void)
 {
-    std::cout << "usage apitrace retrace [OPTIONS] TRACE_FILE\n"
+    std::cout << "usage: apitrace retrace [OPTIONS] TRACE_FILE\n"
               << synopsis << "\n"
 	    "\n"
 	    "    -h, --help             Show this help message and exit\n"
@@ -81,45 +82,10 @@ guessApi(const char *filename)
     return trace::API_UNKNOWN;
 }
 
-static int
-command(int argc, char *argv[])
-{
-    bool wait = false;
-    const char *traceName;
-
-    int opt;
-    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
-        switch (opt) {
-        case 'h':
-            usage();
-            return 0;
-        case 'w':
-            wait = true;
-            break;
-        default:
-            std::cerr << "error: unexpected option `" << opt << "`\n";
-            usage();
-            return 1;
-        }
-    }
-
-    if (optind >= argc) {
-        std::cerr << "error: apitrace retrace requires a trace file as an argument.\n";
-        usage();
-        return 1;
-    }
-
-    if (optind < argc - 1) { 
-        std::cerr << "error: apitrace retrace can accept only a single trace file argument.\n";
-        usage();
-        return 1;
-    }
-
-    traceName = argv[optind];
-
-    trace::API api = guessApi(traceName);
-
-    std::vector<const char *> command;
+int
+executeRetrace(const std::vector<const char *> & opts,
+               const char *traceName,
+               trace::API api) {
     const char *retraceName;
     switch (api) {
     case trace::API_GL:
@@ -144,21 +110,67 @@ command(int argc, char *argv[])
         break;
     }
 
+    std::vector<const char *> command;
     os::String retracePath = trace::findProgram(retraceName);
-    if (retracePath) {
+    if (retracePath.length()) {
         command.push_back(retracePath);
     } else {
         command.push_back(retraceName);
     }
 
-    if (wait) {
-        command.push_back("--wait");
-    }
+    command.insert(command.end(), opts.begin(), opts.end());
 
     command.push_back(traceName);
     command.push_back(NULL);
 
     return os::execute((char * const *)&command[0]);
+}
+
+int
+executeRetrace(const std::vector<const char *> & opts,
+               const char *traceName) {
+    trace::API api = guessApi(traceName);
+    return executeRetrace(opts, traceName, api);
+}
+
+static int
+command(int argc, char *argv[])
+{
+    std::vector<const char *> opts;
+
+    const char *traceName;
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+        switch (opt) {
+        case 'h':
+            usage();
+            return 0;
+        case 'w':
+            opts.push_back("--wait");
+            break;
+        default:
+            std::cerr << "error: unexpected option `" << opt << "`\n";
+            usage();
+            return 1;
+        }
+    }
+
+    if (optind >= argc) {
+        std::cerr << "error: apitrace retrace requires a trace file as an argument.\n";
+        usage();
+        return 1;
+    }
+
+    if (optind < argc - 1) { 
+        std::cerr << "error: apitrace retrace can accept only a single trace file argument.\n";
+        usage();
+        return 1;
+    }
+
+    traceName = argv[optind];
+
+    return executeRetrace(opts, traceName);
 }
 
 const Command retrace_command = {

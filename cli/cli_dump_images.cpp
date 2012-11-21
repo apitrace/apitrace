@@ -31,12 +31,10 @@
 #include <getopt.h>
 #include <iostream>
 
-#include "cli.hpp"
-
 #include "os_string.hpp"
-#include "os_process.hpp"
 
-#include "trace_resource.hpp"
+#include "cli.hpp"
+#include "cli_retrace.hpp"
 
 static const char *synopsis = "Dump frame images obtained from a trace.";
 
@@ -74,7 +72,9 @@ static int
 command(int argc, char *argv[])
 {
     os::String prefix;
-    const char *calls, *filename, *output = NULL;
+    const char *calls = NULL;
+    const char *traceName = NULL;
+    const char *output = NULL;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -107,30 +107,27 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    filename = argv[optind];
+    traceName = argv[optind];
 
     if (output == NULL) {
-        prefix = filename;
+        prefix = traceName;
         prefix.trimDirectory();
         prefix.trimExtension();
+        prefix.append('.');
         output = prefix.str();
     }
 
-    std::vector<const char *> command;
+    std::vector<const char *> opts;
 
-    os::String glretracePath = trace::findProgram("glretrace");
-    command.push_back(glretracePath);
-    command.push_back("-s");
-    command.push_back(output);
-    command.push_back("-S");
+    opts.push_back("-s");
+    opts.push_back(output);
+    opts.push_back("-S");
     if (calls)
-        command.push_back(calls);
+        opts.push_back(calls);
     else
-        command.push_back("*/frame");
-    command.push_back(filename);
-    command.push_back(NULL);
+        opts.push_back("*/frame");
 
-    return os::execute((char * const *)&command[0]);
+    return executeRetrace(opts, traceName);
 }
 
 const Command dump_images_command = {

@@ -373,7 +373,7 @@ These are the steps to create a regression test-suite around **apitrace**:
 * obtain reference snapshots, by doing on a reference system:
 
         mkdir /path/to/reference/snapshots/
-        glretrace -s /path/to/reference/snapshots/ application.trace
+        apitrace dump-images -o /path/to/reference/snapshots/ application.trace
 
 * prune the snapshots which are not interesting
 
@@ -383,7 +383,7 @@ These are the steps to create a regression test-suite around **apitrace**:
 
   Alternatively, for a HTML summary, use `apitrace diff-images`:
 
-        glretrace -s /path/to/test/snapshots/ application.trace
+        apitrace dump-images -o /path/to/test/snapshots/ application.trace
         apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/test/snapshots/
 
 
