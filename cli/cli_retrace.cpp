@@ -36,6 +36,7 @@
 #include "os_string.hpp"
 #include "os_process.hpp"
 
+#include "trace_parser.hpp"
 #include "trace_resource.hpp"
 
 static const char *synopsis = "Replay a trace.";
@@ -61,11 +62,30 @@ longOptions[] = {
     {0, 0, 0, 0}
 };
 
+static trace::API
+guessApi(const char *filename)
+{
+    trace::Parser p;
+    if (!p.open(filename)) {
+        return trace::API_UNKNOWN;
+    }
+    trace::Call *call;
+    while ((call = p.parse_call())) {
+        delete call;
+
+        if (p.api != trace::API_UNKNOWN) {
+            return p.api;
+        }
+    }
+
+    return trace::API_UNKNOWN;
+}
+
 static int
 command(int argc, char *argv[])
 {
     bool wait = false;
-    const char *filename;
+    const char *traceName;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -95,18 +115,47 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    filename = argv[optind];
+    traceName = argv[optind];
+
+    trace::API api = guessApi(traceName);
 
     std::vector<const char *> command;
+    const char *retraceName;
+    switch (api) {
+    case trace::API_GL:
+        retraceName = "glretrace";
+        break;
+    case trace::API_EGL:
+        retraceName = "eglretrace";
+        break;
+    case trace::API_DX:
+    case trace::API_D3D7:
+    case trace::API_D3D8:
+    case trace::API_D3D9:
+    case trace::API_D3D10:
+    case trace::API_D3D10_1:
+    case trace::API_D3D11:
+        // Can be used with WINE
+        retraceName = "d3dretrace.exe";
+        break;
+    default:
+        std::cerr << "warning: could not guess trace's API\n";
+        retraceName = "glretrace";
+        break;
+    }
 
-    os::String glretracePath = trace::findProgram("glretrace");
-    command.push_back(glretracePath);
+    os::String retracePath = trace::findProgram(retraceName);
+    if (retracePath) {
+        command.push_back(retracePath);
+    } else {
+        command.push_back(retraceName);
+    }
 
     if (wait) {
         command.push_back("--wait");
     }
 
-    command.push_back(filename);
+    command.push_back(traceName);
     command.push_back(NULL);
 
     return os::execute((char * const *)&command[0]);
