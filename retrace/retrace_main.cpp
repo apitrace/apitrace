@@ -545,6 +545,13 @@ longOptions[] = {
     {0, 0, 0, 0}
 };
 
+
+static void exceptionCallback(void)
+{
+    std::cerr << retrace::callNo << ": error: caught an unhandled exception\n";
+}
+
+
 extern "C"
 int main(int argc, char **argv)
 {
@@ -645,6 +652,8 @@ int main(int argc, char **argv)
         retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn);
     }
 
+    os::setExceptionCallback(exceptionCallback);
+
     for (i = optind; i < argc; ++i) {
         if (!retrace::parser.open(argv[i])) {
             return 1;
@@ -654,6 +663,8 @@ int main(int argc, char **argv)
 
         retrace::parser.close();
     }
+    
+    os::resetExceptionCallback();
 
     // XXX: X often hangs on XCloseDisplay
     //retrace::cleanUp();
