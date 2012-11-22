@@ -213,7 +213,7 @@ trim_trace(const char *filename, struct trim_options *options)
         }
 
         /* Also, prune if uninteresting (unless the user asked for no pruning. */
-        if (options->prune_uninteresting && call->flags & trace::CALL_FLAG_UNINTERESTING) {
+        if (options->prune_uninteresting && call->flags & trace::CALL_FLAG_VERBOSE) {
             goto NEXT;
         }
 
