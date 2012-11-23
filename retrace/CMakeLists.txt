@@ -148,10 +148,10 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
 
     if (DirectX_D3D10_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
-        set (D3D10_MODULES d3d10)
+        set (DXGI_MODULES d3d10)
         if (DirectX_D3D10_1_INCLUDE_DIR)
             include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
-            set (D3D10_MODULES ${D3D10_MODULES} d3d10_1)
+            set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
         endif ()
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             d3d10state.cpp
@@ -161,10 +161,10 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
 
     if (DirectX_D3D11_INCLUDE_DIR)
         include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
-        set (D3D10_MODULES ${D3D10_MODULES} d3d11)
+        set (DXGI_MODULES ${DXGI_MODULES} d3d11)
         if (DirectX_D3D11_1_INCLUDE_DIR)
             include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
-            set (D3D10_MODULES ${D3D10_MODULES} d3d11_1)
+            set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
         endif ()
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             d3d11state.cpp
@@ -174,7 +174,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
 
     add_custom_command (
         OUTPUT d3dretrace_d3d10.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3dcommonretrace.py ${D3D10_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d10.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3dcommonretrace.py ${DXGI_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d10.cpp
         DEPENDS
                 d3dcommonretrace.py
                 dllretrace.py
