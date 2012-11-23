@@ -323,7 +323,7 @@ class ValueWrapper(stdapi.Traverser, stdapi.ExpanderMixin):
 
     def visitInterfacePointer(self, interface, instance):
         print "    if (%s) {" % instance
-        print "        %s = new %s(%s);" % (instance, getWrapperInterfaceName(interface), instance)
+        print "        %s = %s::_Create(__FUNCTION__, %s);" % (instance, getWrapperInterfaceName(interface), instance)
         print "    }"
     
     def visitPolymorphic(self, type, instance):
@@ -436,6 +436,7 @@ class Tracer:
         print
         print '#include "trace.hpp"'
         print
+        print 'static std::map<void *, void *> g_WrappedObjects;'
 
     def footer(self, api):
         pass
@@ -497,9 +498,9 @@ class Tracer:
             print '    }'
             if function.type is not stdapi.Void:
                 self.serializeRet(function, "_result")
-            print '    trace::localWriter.endLeave();'
             if function.type is not stdapi.Void:
                 self.wrapRet(function, "_result")
+            print '    trace::localWriter.endLeave();'
 
     def invokeFunction(self, function, prefix='_', suffix=''):
         if function.type is stdapi.Void:
@@ -585,9 +586,11 @@ class Tracer:
     def declareWrapperInterface(self, interface):
         print "class %s : public %s " % (getWrapperInterfaceName(interface), interface.name)
         print "{"
-        print "public:"
+        print "private:"
         print "    %s(%s * pInstance);" % (getWrapperInterfaceName(interface), interface.name)
         print "    virtual ~%s();" % getWrapperInterfaceName(interface)
+        print "public:"
+        print "    static %s* _Create(const char *functionName, %s * pInstance);" % (getWrapperInterfaceName(interface), interface.name)
         print
         for method in interface.iterMethods():
             print "    " + method.prototype() + ";"
@@ -607,17 +610,45 @@ class Tracer:
         return [
             ("DWORD", "m_dwMagic", "0xd8365d6c"),
             ("%s *" % interface.name, "m_pInstance", "pInstance"),
+            ("void *", "m_pVtbl", "*(void **)pInstance"),
+            ("UINT", "m_NumMethods", len(list(interface.iterBaseMethods()))),
         ] 
 
     def implementWrapperInterface(self, interface):
         self.interface = interface
 
+        # Private constructor
         print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
         for type, name, value in self.enumWrapperInterfaceVariables(interface):
             print '    %s = %s;' % (name, value)
         print '}'
         print
+
+        # Public constructor
+        print '%s *%s::_Create(const char *functionName, %s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
+        print r'    std::map<void *, void *>::const_iterator it = g_WrappedObjects.find(pInstance);'
+        print r'    if (it != g_WrappedObjects.end()) {'
+        print r'        Wrap%s *pWrapper = (Wrap%s *)it->second;' % (interface.name, interface.name)
+        print r'        assert(pWrapper);'
+        print r'        assert(pWrapper->m_dwMagic == 0xd8365d6c);'
+        print r'        assert(pWrapper->m_pInstance == pInstance);'
+        print r'        if (pWrapper->m_pVtbl == *(void **)pInstance &&'
+        print r'            pWrapper->m_NumMethods >= %s) {' % len(list(interface.iterBaseMethods()))
+        print r'            os::log("%s: fetched pvObj=%p pWrapper=%p pVtbl=%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);'
+        print r'            return pWrapper;'
+        print r'        }'
+        print r'    }'
+        print r'    Wrap%s *pWrapper = new Wrap%s(pInstance);' % (interface.name, interface.name)
+        print r'    os::log("%%s: created %s pvObj=%%p pWrapper=%%p pVtbl=%%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);' % interface.name
+        print r'    g_WrappedObjects[pInstance] = pWrapper;'
+        print r'    return pWrapper;'
+        print '}'
+        print
+
+        # Destructor
         print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))
+        print r'        os::log("%s::Release: deleted pvObj=%%p pWrapper=%%p pVtbl=%%p\n", m_pInstance, this, m_pVtbl);' % interface.name
+        print r'        g_WrappedObjects.erase(m_pInstance);'
         print '}'
         print
         
@@ -629,6 +660,10 @@ class Tracer:
 
     def implementWrapperInterfaceMethod(self, interface, base, method):
         print method.prototype(getWrapperInterfaceName(interface) + '::' + method.name) + ' {'
+
+        if False:
+            print r'    os::log("# %s #\n", __FUNCTION__);'
+
         if method.type is not stdapi.Void:
             print '    %s _result;' % method.type
     
@@ -670,14 +705,16 @@ class Tracer:
 
         if method.type is not stdapi.Void:
             self.serializeRet(method, '_result')
-        print '    trace::localWriter.endLeave();'
         if method.type is not stdapi.Void:
             self.wrapRet(method, '_result')
 
         if method.name == 'Release':
             assert method.type is not stdapi.Void
-            print '    if (!_result)'
-            print '        delete this;'
+            print r'    if (!_result) {'
+            print r'        delete this;'
+            print r'    }'
+        
+        print '    trace::localWriter.endLeave();'
 
     def implementIidWrapper(self, api):
         print r'static void'
@@ -696,7 +733,7 @@ class Tracer:
         else_ = ''
         for iface in api.getAllInterfaces():
             print r'    %sif (riid == IID_%s) {' % (else_, iface.name)
-            print r'        *ppvObj = new Wrap%s((%s *) *ppvObj);' % (iface.name, iface.name)
+            print r'        *ppvObj = Wrap%s::_Create(functionName, (%s *) *ppvObj);' % (iface.name, iface.name)
             print r'    }'
             else_ = 'else '
         print r'    %s{' % else_
