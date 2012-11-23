@@ -125,11 +125,20 @@ if (WIN32)
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
     set (DXGI_MODULES)
     if (DirectX_D3D10_INCLUDE_DIR)
+        set (DXGITRACE_DEF ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.def)
+        file (WRITE  ${DXGITRACE_DEF} "EXPORTS\n")
+        file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory\n")
+        file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory1\n")
+        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice\n")
+        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain\n")
+
         include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
         set (DXGI_MODULES d3d10)
         if (DirectX_D3D10_1_INCLUDE_DIR)
             include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
             set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
+            file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice1\n")
+            file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain1\n")
         endif ()
         if (DirectX_D3D11_INCLUDE_DIR)
             include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
@@ -138,6 +147,8 @@ if (WIN32)
                 include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
                 set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
             endif ()
+            file (APPEND ${DXGITRACE_DEF} "D3D11CreateDevice\n")
+            file (APPEND ${DXGITRACE_DEF} "D3D11CreateDeviceAndSwapChain\n")
         endif ()
         
         add_custom_command (
@@ -162,7 +173,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (dxgitrace SHARED
-            dxgitrace.def
+            ${DXGITRACE_DEF}
             dxgitrace.cpp
             d3dcommonshader.cpp
         )
