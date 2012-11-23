@@ -634,12 +634,12 @@ class Tracer:
         print r'        assert(pWrapper->m_pInstance == pInstance);'
         print r'        if (pWrapper->m_pVtbl == *(void **)pInstance &&'
         print r'            pWrapper->m_NumMethods >= %s) {' % len(list(interface.iterBaseMethods()))
-        print r'            os::log("%s: fetched pvObj=%p pWrapper=%p pVtbl=%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);'
+        print r'            //os::log("%s: fetched pvObj=%p pWrapper=%p pVtbl=%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);'
         print r'            return pWrapper;'
         print r'        }'
         print r'    }'
         print r'    Wrap%s *pWrapper = new Wrap%s(pInstance);' % (interface.name, interface.name)
-        print r'    os::log("%%s: created %s pvObj=%%p pWrapper=%%p pVtbl=%%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);' % interface.name
+        print r'    //os::log("%%s: created %s pvObj=%%p pWrapper=%%p pVtbl=%%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);' % interface.name
         print r'    g_WrappedObjects[pInstance] = pWrapper;'
         print r'    return pWrapper;'
         print '}'
@@ -647,7 +647,7 @@ class Tracer:
 
         # Destructor
         print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))
-        print r'        os::log("%s::Release: deleted pvObj=%%p pWrapper=%%p pVtbl=%%p\n", m_pInstance, this, m_pVtbl);' % interface.name
+        print r'        //os::log("%s::Release: deleted pvObj=%%p pWrapper=%%p pVtbl=%%p\n", m_pInstance, this, m_pVtbl);' % interface.name
         print r'        g_WrappedObjects.erase(m_pInstance);'
         print '}'
         print
