@@ -42,6 +42,18 @@ class D3DRetracer(Retracer):
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
         print
+        print r'''
+static void 
+createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
+    if (pSwapChainDesc->Windowed) {
+        UINT Width  = pSwapChainDesc->BufferDesc.Width;
+        UINT Height = pSwapChainDesc->BufferDesc.Height;
+        if (!Width)  Width = 1024;
+        if (!Height) Height = 768;
+        pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
+    }
+}
+'''
 
         self.table_name = 'd3dretrace::d3d10_callbacks'
 
@@ -60,7 +72,7 @@ class D3DRetracer(Retracer):
         if function.name in self.createDeviceFunctionNames:
             # create windows as neccessary
             if 'pSwapChainDesc' in function.argNames():
-                print r'    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
+                print r'    createWindow(pSwapChainDesc);'
 
             # Compensate for the fact we don't trace the software renderer
             # module LoadLibrary call
@@ -94,7 +106,7 @@ class D3DRetracer(Retracer):
 
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
-            print r'    pDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
+            print r'    createWindow(pDesc);'
 
         # notify frame has been completed
         if method.name == 'Present':
