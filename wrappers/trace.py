@@ -595,6 +595,11 @@ class Tracer:
         #print "private:"
         for type, name, value in self.enumWrapperInterfaceVariables(interface):
             print '    %s %s;' % (type, name)
+        for i in range(64):
+            print r'    virtual void _dummy%i(void) const {' % i
+            print r'        os::log("error: %s: unexpected virtual method\n");' % interface.name
+            print r'        os::abort();'
+            print r'    }'
         print "};"
         print
 
