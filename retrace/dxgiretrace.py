@@ -55,7 +55,7 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
 }
 '''
 
-        self.table_name = 'd3dretrace::d3d10_callbacks'
+        self.table_name = 'd3dretrace::dxgi_callbacks'
 
         Retracer.retraceApi(self, api)
 
@@ -89,7 +89,6 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 print r'    }'
 
         Retracer.invokeFunction(self, function)
-
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
@@ -144,7 +143,7 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
 
 
 def main():
-    print r'''#include <string.h>'''
+    print r'#include <string.h>'
     print
     print r'#include <iostream>'
     print

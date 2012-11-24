@@ -27,22 +27,17 @@
 """D3D retracer generator."""
 
 
+import sys
 from dllretrace import DllRetracer as Retracer
 from specs.stdapi import API
-from specs.d3d9 import *
 
 
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
-        print '''static d3dretrace::D3DDumper<IDirect3DDevice9> d3d9Dumper;'''
-        print
-
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
         print
-
-        self.table_name = 'd3dretrace::d3d9_callbacks'
 
         Retracer.retraceApi(self, api)
 
@@ -101,30 +96,59 @@ class D3DRetracer(Retracer):
             print '    VOID *_pbData = NULL;'
             print '    size_t _MappedSize = 0;'
             print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
-            print '    _maps[_this] = _pbData;'
+            print '    if (_MappedSize) {'
+            print '        _maps[_this] = _pbData;'
+            print '    } else {'
+            print '        return;'
+            print '    }'
         
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    VOID *_pbData = 0;'
             print '    _pbData = _maps[_this];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
+            print '        _maps[_this] = 0;'
             print '    }'
 
 
-if __name__ == '__main__':
-    print r'''
-#include <string.h>
+def main():
+    print r'#include <string.h>'
+    print
+    print r'#include <iostream>'
+    print
+    print r'#include "d3dretrace.hpp"'
+    print
 
-#include <iostream>
-
-#include "d3d9imports.hpp"
-#include "d3d9size.hpp"
-#include "d3dretrace.hpp"
-#include "d3dstate.hpp"
-
-'''
+    moduleName = sys.argv[1]
+    support = bool(sys.argv[2])
 
     api = API()
-    api.addModule(d3d9)
+    
+    if support:
+        if moduleName == 'd3d9':
+            from specs.d3d9 import d3d9
+            print r'#include "d3d9imports.hpp"'
+            print r'#include "d3d9size.hpp"'
+            api.addModule(d3d9)
+            print
+            print '''static d3dretrace::D3DDumper<IDirect3DDevice9> d3d9Dumper;'''
+            print
+        elif moduleName == 'd3d8':
+            from specs.d3d8 import d3d8
+            print r'#include <windows.h>'
+            print r'#include <d3d8.h>'
+            print r'#include "d3d8size.hpp"'
+            api.addModule(d3d8)
+            print
+            #print '''static d3dretrace::D3DDumper<IDirect3DDevice8> d3d8Dumper;'''
+            print
+        else:
+            assert False
+
     retracer = D3DRetracer()
+    retracer.table_name = 'd3dretrace::%s_callbacks' % moduleName
     retracer.retraceApi(api)
+
+
+if __name__ == '__main__':
+    main()
