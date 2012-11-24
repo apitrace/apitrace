@@ -173,10 +173,10 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
     endif ()
 
     add_custom_command (
-        OUTPUT d3dretrace_d3d10.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3dcommonretrace.py ${DXGI_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d10.cpp
+        OUTPUT d3dretrace_dxgi.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py ${DXGI_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
         DEPENDS
-                d3dcommonretrace.py
+                dxgiretrace.py
                 dllretrace.py
                 retrace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
@@ -200,7 +200,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
     add_executable (d3dretrace
         d3dretrace_main.cpp
         d3dretrace_d3d9.cpp
-        d3dretrace_d3d10.cpp
+        d3dretrace_dxgi.cpp
         d3dretrace_ws.cpp
         d3d9state.cpp
         d3d9state_images.cpp
