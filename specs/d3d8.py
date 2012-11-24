@@ -116,7 +116,7 @@ IDirect3D8.methods += [
     StdMethod(HRESULT, "CheckDepthStencilMatch", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (D3DFORMAT, "AdapterFormat"), (D3DFORMAT, "RenderTargetFormat"), (D3DFORMAT, "DepthStencilFormat")], sideeffects=False),
     StdMethod(HRESULT, "GetDeviceCaps", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), Out(Pointer(D3DCAPS8), "pCaps")], sideeffects=False),
     StdMethod(HMONITOR, "GetAdapterMonitor", [(D3DADAPTER, "Adapter")], sideeffects=False),
-    StdMethod(HRESULT, "CreateDevice", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DDEVICE8), "ppReturnedDeviceInterface")]),
+    StdMethod(HRESULT, "CreateDevice", [(D3DADAPTER, "Adapter"), (D3DDEVTYPE, "DeviceType"), (HWND, "hFocusWindow"), (D3DCREATE, "BehaviorFlags"), InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DDEVICE8), "ppReturnedDeviceInterface")]),
 ]
 
 IDirect3DDevice8.methods += [
@@ -130,11 +130,11 @@ IDirect3DDevice8.methods += [
     StdMethod(HRESULT, "SetCursorProperties", [(UINT, "XHotSpot"), (UINT, "YHotSpot"), (PDIRECT3DSURFACE8, "pCursorBitmap")]),
     # XXX: There are different signatures of
     # IDirect3DDevice8::SetCursorPosition depending on the DXSDK version
-    StdMethod(Void, "SetCursorPosition", [(UINT, "XScreenSpace"), (UINT, "YScreenSpace"), (D3DCURSOR, "Flags")]),
+    #StdMethod(Void, "SetCursorPosition", [(UINT, "XScreenSpace"), (UINT, "YScreenSpace"), (D3DCURSOR, "Flags")]),
     StdMethod(Void, "SetCursorPosition", [(Int, "X"), (Int, "Y"), (D3DCURSOR, "Flags")]),
     StdMethod(BOOL, "ShowCursor", [(BOOL, "bShow")]),
-    StdMethod(HRESULT, "CreateAdditionalSwapChain", [Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DSWAPCHAIN8), "pSwapChain")]),
-    StdMethod(HRESULT, "Reset", [Out(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters")]),
+    StdMethod(HRESULT, "CreateAdditionalSwapChain", [InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters"), Out(Pointer(PDIRECT3DSWAPCHAIN8), "pSwapChain")]),
+    StdMethod(HRESULT, "Reset", [InOut(Pointer(D3DPRESENT_PARAMETERS), "pPresentationParameters")]),
     StdMethod(HRESULT, "Present", [(ConstPointer(RECT), "pSourceRect"), (ConstPointer(RECT), "pDestRect"), (HWND, "hDestWindowOverride"), (ConstPointer(RGNDATA), "pDirtyRegion")]),
     StdMethod(HRESULT, "GetBackBuffer", [(UINT, "BackBuffer"), (D3DBACKBUFFER_TYPE, "Type"), Out(Pointer(PDIRECT3DSURFACE8), "ppBackBuffer")]),
     StdMethod(HRESULT, "GetRasterStatus", [Out(Pointer(D3DRASTER_STATUS), "pRasterStatus")], sideeffects=False),
@@ -201,8 +201,8 @@ IDirect3DDevice8.methods += [
     StdMethod(HRESULT, "DeleteVertexShader", [(DWORD, "Handle")]),
     StdMethod(HRESULT, "SetVertexShaderConstant", [(DWORD, "Register"), (Blob(Const(Void), "ConstantCount*4*sizeof(float)"), "pConstantData"), (DWORD, "ConstantCount")]),
     StdMethod(HRESULT, "GetVertexShaderConstant", [(DWORD, "Register"), Out(OpaqueBlob(Void, "ConstantCount*4*sizeof(float)"), "pConstantData"), (DWORD, "ConstantCount")], sideeffects=False),
-    StdMethod(HRESULT, "GetVertexShaderDeclaration", [(DWORD, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
-    StdMethod(HRESULT, "GetVertexShaderFunction", [(DWORD, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")]),
+    StdMethod(HRESULT, "GetVertexShaderDeclaration", [(DWORD, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetVertexShaderFunction", [(DWORD, "Handle"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "SetStreamSource", [(UINT, "StreamNumber"), (PDIRECT3DVERTEXBUFFER8, "pStreamData"), (UINT, "Stride")]),
     StdMethod(HRESULT, "GetStreamSource", [(UINT, "StreamNumber"), Out(Pointer(PDIRECT3DVERTEXBUFFER8), "ppStreamData"), Out(Pointer(UINT), "pStride")]),
     StdMethod(HRESULT, "SetIndices", [(PDIRECT3DINDEXBUFFER8, "pIndexData"), (UINT, "BaseVertexIndex")]),
