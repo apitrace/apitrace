@@ -455,8 +455,10 @@ DDPIXELFORMAT = Struct("DDPIXELFORMAT", [
     (DWORD, "dwUBitMask"),
     (DWORD, "dwZBitMask"),
     (DWORD, "dwBumpDvBitMask"),
-    (WORD, "MultiSampleCaps.wFlipMSTypes"),
-    (WORD, "MultiSampleCaps.wBltMSTypes"),
+    (Struct(None, [
+        (WORD, "wFlipMSTypes"),
+        (WORD, "wBltMSTypes"),
+    ]), "MultiSampleCaps"),
     (DWORD, "dwBBitMask"),
     (DWORD, "dwVBitMask"),
     (DWORD, "dwStencilBitMask"),
