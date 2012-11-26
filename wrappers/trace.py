@@ -382,6 +382,9 @@ class ValueUnwrapper(ValueWrapper):
 class Tracer:
     '''Base class to orchestrate the code generation of API tracing.'''
 
+    # 0-3 are reserved to memcpy, malloc, free, and realloc
+    __id = 4
+
     def __init__(self):
         self.api = None
 
@@ -449,8 +452,13 @@ class Tracer:
                 print 'static const char * _%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
             else:
                 print 'static const char ** _%s_args = NULL;' % (function.name,)
-            print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, function.id, function.name, len(function.args), function.name)
+            print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, self.getFunctionSigId(), function.name, len(function.args), function.name)
             print
+
+    def getFunctionSigId(self):
+        id = Tracer.__id
+        Tracer.__id += 1
+        return id
 
     def isFunctionPublic(self, function):
         return True
@@ -634,12 +642,12 @@ class Tracer:
         print r'        assert(pWrapper->m_pInstance == pInstance);'
         print r'        if (pWrapper->m_pVtbl == *(void **)pInstance &&'
         print r'            pWrapper->m_NumMethods >= %s) {' % len(list(interface.iterBaseMethods()))
-        print r'            //os::log("%s: fetched pvObj=%p pWrapper=%p pVtbl=%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);'
+        #print r'            os::log("%s: fetched pvObj=%p pWrapper=%p pVtbl=%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);'
         print r'            return pWrapper;'
         print r'        }'
         print r'    }'
         print r'    Wrap%s *pWrapper = new Wrap%s(pInstance);' % (interface.name, interface.name)
-        print r'    //os::log("%%s: created %s pvObj=%%p pWrapper=%%p pVtbl=%%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);' % interface.name
+        #print r'    os::log("%%s: created %s pvObj=%%p pWrapper=%%p pVtbl=%%p\n", functionName, pInstance, pWrapper, pWrapper->m_pVtbl);' % interface.name
         print r'    g_WrappedObjects[pInstance] = pWrapper;'
         print r'    return pWrapper;'
         print '}'
@@ -647,7 +655,7 @@ class Tracer:
 
         # Destructor
         print '%s::~%s() {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface))
-        print r'        //os::log("%s::Release: deleted pvObj=%%p pWrapper=%%p pVtbl=%%p\n", m_pInstance, this, m_pVtbl);' % interface.name
+        #print r'        os::log("%s::Release: deleted pvObj=%%p pWrapper=%%p pVtbl=%%p\n", m_pInstance, this, m_pVtbl);' % interface.name
         print r'        g_WrappedObjects.erase(m_pInstance);'
         print '}'
         print
@@ -662,7 +670,7 @@ class Tracer:
         print method.prototype(getWrapperInterfaceName(interface) + '::' + method.name) + ' {'
 
         if False:
-            print r'    os::log("# %s #\n", __FUNCTION__);'
+            print r'    os::log("%%s(%%p -> %%p)\n", "%s", this, m_pInstance);' % (getWrapperInterfaceName(interface) + '::' + method.name)
 
         if method.type is not stdapi.Void:
             print '    %s _result;' % method.type
@@ -678,7 +686,7 @@ class Tracer:
         assert not method.internal
 
         print '    static const char * _args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
-        print '    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (method.id, interface.name + '::' + method.name, len(method.args) + 1)
+        print '    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (self.getFunctionSigId(), interface.name + '::' + method.name, len(method.args) + 1)
 
         print '    %s *_this = static_cast<%s *>(m_pInstance);' % (base, base)
 
