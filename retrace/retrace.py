@@ -66,10 +66,10 @@ class ValueAllocator(stdapi.Visitor):
         pass
 
     def visitArray(self, array, lvalue, rvalue):
-        print '    %s = _allocator.alloc<%s>(&%s);' % (lvalue, array.type, rvalue)
+        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, array.type, rvalue, lvalue)
 
     def visitPointer(self, pointer, lvalue, rvalue):
-        print '    %s = _allocator.alloc<%s>(&%s);' % (lvalue, pointer.type, rvalue)
+        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, pointer.type, rvalue, lvalue)
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
         pass
