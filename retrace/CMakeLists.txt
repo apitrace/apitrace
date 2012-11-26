@@ -130,25 +130,11 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
 endif ()
 
 if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
-    include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
-    add_custom_command (
-        OUTPUT d3dretrace_d3d9.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 1 > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
-        DEPENDS
-                d3d9retrace.py
-                dllretrace.py
-                retrace.py
-                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py
-                ${CMAKE_SOURCE_DIR}/specs/winapi.py
-                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
-    )
-
     if (DirectX_D3D8_INCLUDE_DIR) 
-        include_directories (SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
         set (HAVE_D3D8 1)
+    else ()
+        set (HAVE_D3D8 0)
     endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d8.cpp
@@ -165,11 +151,27 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
+    include_directories (BEFORE SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
+    add_custom_command (
+        OUTPUT d3dretrace_d3d9.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 1 > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
+        DEPENDS
+                d3d9retrace.py
+                dllretrace.py
+                retrace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d9.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+    )
+
     if (DirectX_D3D10_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
         set (DXGI_MODULES d3d10)
         if (DirectX_D3D10_1_INCLUDE_DIR)
-            include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
+            include_directories (BEFORE SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
             set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
         endif ()
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
@@ -179,10 +181,10 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
     endif ()
 
     if (DirectX_D3D11_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
         set (DXGI_MODULES ${DXGI_MODULES} d3d11)
         if (DirectX_D3D11_1_INCLUDE_DIR)
-            include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
+            include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
             set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
         endif ()
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}

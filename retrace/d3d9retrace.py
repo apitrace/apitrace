@@ -120,7 +120,7 @@ def main():
     print
 
     moduleName = sys.argv[1]
-    support = bool(sys.argv[2])
+    support = int(sys.argv[2])
 
     api = API()
     

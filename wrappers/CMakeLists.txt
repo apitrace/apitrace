@@ -29,7 +29,7 @@ if (WIN32)
 
     # ddraw.dll
     if (DirectX_D3D_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT ddrawtrace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawtrace.py > ${CMAKE_CURRENT_BINARY_DIR}/ddrawtrace.cpp
@@ -61,7 +61,7 @@ if (WIN32)
 
     # d3d8.dll
     if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3DX9_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3D8_INCLUDE_DIR} ${DirectX_D3DX9_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D3DX9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d8trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d8trace.cpp
@@ -92,7 +92,7 @@ if (WIN32)
 
     # d3d9.dll
     if (DirectX_D3DX9_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d9trace.cpp
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9trace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3d9trace.cpp
@@ -132,19 +132,19 @@ if (WIN32)
         file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice\n")
         file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain\n")
 
-        include_directories (SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
         set (DXGI_MODULES d3d10)
         if (DirectX_D3D10_1_INCLUDE_DIR)
-            include_directories (SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
+            include_directories (BEFORE SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
             set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
             file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice1\n")
             file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain1\n")
         endif ()
         if (DirectX_D3D11_INCLUDE_DIR)
-            include_directories (SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
+            include_directories (BEFORE SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
             set (DXGI_MODULES ${DXGI_MODULES} d3d11)
             if (DirectX_D3D11_1_INCLUDE_DIR)
-                include_directories (SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
+                include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
                 set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
             endif ()
             file (APPEND ${DXGITRACE_DEF} "D3D11CreateDevice\n")
@@ -248,7 +248,7 @@ if (WIN32)
 
     # d2d1.dll, dwrite.dll
     if (DirectX_D2D1_INCLUDE_DIR)
-        include_directories (SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
 
         add_custom_command (
             OUTPUT d2d1trace.cpp
