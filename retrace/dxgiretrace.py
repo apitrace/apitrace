@@ -88,7 +88,54 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 print r'        DriverType = D3D_DRIVER_TYPE_HARDWARE;'
                 print r'    }'
 
+            if function.name.startswith('D3D10CreateDevice'):
+                self.forceDriver('D3D10_DRIVER_TYPE')
+            if function.name.startswith('D3D11CreateDevice'):
+                self.forceDriver('D3D_DRIVER_TYPE')
+
         Retracer.invokeFunction(self, function)
+
+    def forceDriver(self, enum):
+        print r'    switch (retrace::driver) {'
+        print r'    case retrace::DRIVER_HARDWARE:'
+        print r'        DriverType = %s_HARDWARE;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_SOFTWARE:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_WARP;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_REFERENCE:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_REFERENCE;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_NULL:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_NULL;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_MODULE:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_SOFTWARE;' % enum
+        print r'        Software = LoadLibraryA(retrace::driverModule);'
+        print r'        if (!Software) {'
+        print r'            retrace::warning(call) << "failed to load " << retrace::driverModule << "\n";'
+        print r'        }'
+        print r'        break;'
+        print r'    default:'
+        print r'        assert(0);'
+        print r'        /* fall-through */'
+        print r'    case retrace::DRIVER_DEFAULT:'
+        print r'        if (DriverType == %s_SOFTWARE) {' % enum
+        print r'            Software = LoadLibraryA("d3d10warp");'
+        print r'            if (!Software) {'
+        print r'                retrace::warning(call) << "failed to load d3d10warp.dll\n";'
+        print r'            }'
+        print r'        }'
+        print r'        break;'
+        print r'    }'
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping

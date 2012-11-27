@@ -152,6 +152,18 @@ extern bool profilingPixelsDrawn;
 extern bool dumpingState;
 
 
+enum Driver {
+    DRIVER_DEFAULT,
+    DRIVER_HARDWARE, // force hardware
+    DRIVER_SOFTWARE,
+    DRIVER_REFERENCE,
+    DRIVER_NULL,
+    DRIVER_MODULE,
+};
+
+extern Driver driver;
+extern const char *driverModule;
+
 extern bool doubleBuffer;
 extern bool coreProfile;
 

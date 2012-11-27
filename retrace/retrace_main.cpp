@@ -61,6 +61,9 @@ int verbosity = 0;
 bool debug = true;
 bool dumpingState = false;
 
+Driver driver = DRIVER_DEFAULT;
+const char *driverModule = NULL;
+
 bool doubleBuffer = true;
 bool coreProfile = false;
 
@@ -106,6 +109,7 @@ takeSnapshot(unsigned call_no) {
 
     image::Image *src = dumper->getSnapshot();
     if (!src) {
+        std::cout << "Failed to get snapshot\n";
         return;
     }
 
@@ -505,6 +509,7 @@ usage(const char *argv0) {
         "  -C, --calls=CALLSET     calls to compare (default is every frame)\n"
         "      --core              use core profile\n"
         "      --db                use a double buffer visual (default)\n"
+        "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
         "      --sb                use a single buffer visual\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
@@ -516,6 +521,7 @@ usage(const char *argv0) {
 enum {
     CORE_OPT = CHAR_MAX + 1,
     DB_OPT,
+    DRIVER_OPT,
     PCPU_OPT,
     PGPU_OPT,
     PPD_OPT,
@@ -532,6 +538,7 @@ longOptions[] = {
     {"compare", required_argument, 0, 'c'},
     {"core", no_argument, 0, CORE_OPT},
     {"db", no_argument, 0, DB_OPT},
+    {"driver", required_argument, 0, DRIVER_OPT},
     {"dump-state", required_argument, 0, 'D'},
     {"help", no_argument, 0, 'h'},
     {"pcpu", no_argument, 0, PCPU_OPT},
@@ -593,6 +600,20 @@ int main(int argc, char **argv)
             break;
         case DB_OPT:
             retrace::doubleBuffer = true;
+            break;
+        case DRIVER_OPT:
+            if (strcasecmp(optarg, "hw") == 0) {
+                driver = DRIVER_HARDWARE;
+            } else if (strcasecmp(optarg, "sw") == 0) {
+                driver = DRIVER_SOFTWARE;
+            } else if (strcasecmp(optarg, "ref") == 0) {
+                driver = DRIVER_REFERENCE;
+            } else if (strcasecmp(optarg, "null") == 0) {
+                driver = DRIVER_NULL;
+            } else {
+                driver = DRIVER_MODULE;
+                driverModule = optarg;
+            }
             break;
         case SB_OPT:
             retrace::doubleBuffer = false;
