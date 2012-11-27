@@ -422,26 +422,26 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     json.writeBoolMember("__normalized__", true);
     json.writeIntMember("__channels__", channels);
 
-    GLubyte *pixels = new GLubyte[desc.depth*desc.width*desc.height*channels];
+    image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
 
     context.resetPixelPackState();
 
     if (context.ES) {
-        getTexImageOES(target, level, desc, pixels);
+        getTexImageOES(target, level, desc, image->pixels);
     } else {
-        glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, pixels);
+        glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, image->pixels);
     }
 
     context.restorePixelPackState();
 
     json.beginMember("__data__");
     std::stringstream ss;
-    image::writePixelsToBuffer(ss, pixels, desc.width, desc.depth * desc.height, channels, true);
+    image->writePNG(ss);
     const std::string & s = ss.str();
     json.writeBase64(s.data(), s.size());
     json.endMember(); // __data__
 
-    delete [] pixels;
+    delete image;
     json.endObject();
 }
 
@@ -880,25 +880,23 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     }
 #endif
 
-    GLubyte *pixels = new GLubyte[width*height*channels];
+    image::Image *image = new image::Image(width, height, channels, true);
 
     // TODO: reset imaging state too
     context.resetPixelPackState();
 
-    glReadPixels(0, 0, width, height, format, type, pixels);
+    glReadPixels(0, 0, width, height, format, type, image->pixels);
 
     context.restorePixelPackState();
 
     json.beginMember("__data__");
     std::stringstream ss;
-    image::writePixelsToBuffer(ss, pixels, width, height, channels, true);
-    //std::cerr <<" Before = "<<(width * height * channels * sizeof *pixels)
-    //          <<", after = "<<pngBufferSize << ", ratio = " << double(width * height * channels * sizeof *pixels)/pngBufferSize;
+    image->writePNG(ss);
     const std::string & s = ss.str();
     json.writeBase64(s.data(), s.size());
     json.endMember(); // __data__
 
-    delete [] pixels;
+    delete image;
     json.endObject();
 }
 

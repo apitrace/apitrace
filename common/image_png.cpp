@@ -43,15 +43,37 @@ namespace image {
 static const int png_compression_level = Z_BEST_SPEED;
 
 
+static void
+pngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+    std::ostream *os = (std::ostream *) png_get_io_ptr(png_ptr);
+    os->write((const char *)data, length);
+}
+
 bool
-Image::writePNG(const char *filename) const {
-    FILE *fp;
+Image::writePNG(std::ostream &os) const
+{
     png_structp png_ptr;
     png_infop info_ptr;
+    int color_type;
 
-    fp = fopen(filename, "wb");
-    if (!fp)
-        goto no_fp;
+    switch (channels) {
+    case 4:
+        color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+        break;
+    case 3:
+        color_type = PNG_COLOR_TYPE_RGB;
+        break;
+    case 2:
+        color_type = PNG_COLOR_TYPE_GRAY_ALPHA;
+        break;
+    case 1:
+        color_type = PNG_COLOR_TYPE_GRAY;
+        break;
+    default:
+        assert(0);
+        goto no_png;
+    }
 
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
@@ -68,29 +90,11 @@ Image::writePNG(const char *filename) const {
         goto no_png;
     }
 
-    png_init_io(png_ptr, fp);
+    png_set_write_fn(png_ptr, &os, pngWriteCallback, NULL);
 
-    int color_type;
-    switch (channels) {
-    case 4:
-        color_type = PNG_COLOR_TYPE_RGB_ALPHA;
-        break;
-    case 3:
-        color_type = PNG_COLOR_TYPE_RGB;
-        break;
-    case 2:
-        color_type = PNG_COLOR_TYPE_GRAY_ALPHA;
-        break;
-    case 1:
-        color_type = PNG_COLOR_TYPE_GRAY;
-        break;
-    default:
-        assert(0);
-        return false;
-    }
-
-    png_set_IHDR(png_ptr, info_ptr, width, height, 8, color_type,
-        PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    png_set_IHDR(png_ptr, info_ptr, width, height, 8,
+                 color_type, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
     png_set_compression_level(png_ptr, png_compression_level);
 
@@ -112,12 +116,9 @@ Image::writePNG(const char *filename) const {
     png_write_end(png_ptr, info_ptr);
     png_destroy_write_struct(&png_ptr, &info_ptr);
 
-    fclose(fp);
     return true;
 
 no_png:
-    fclose(fp);
-no_fp:
     return false;
 }
 
@@ -201,85 +202,5 @@ no_fp:
 }
 
 
-static void
-pngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length)
-{
-    std::ostream *os = (std::ostream *) png_get_io_ptr(png_ptr);
-    os->write((const char *)data, length);
-}
-
-bool
-writePixelsToBuffer(std::ostream &os,
-                    unsigned char *pixels,
-                    unsigned width, unsigned height, unsigned numChannels,
-                    bool flipped)
-{
-    png_structp png_ptr;
-    png_infop info_ptr;
-    int type;
-
-    switch (numChannels) {
-    case 4:
-        type = PNG_COLOR_TYPE_RGB_ALPHA;
-        break;
-    case 3:
-        type = PNG_COLOR_TYPE_RGB;
-        break;
-    case 2:
-        type = PNG_COLOR_TYPE_GRAY_ALPHA;
-        break;
-    case 1:
-        type = PNG_COLOR_TYPE_GRAY;
-        break;
-    default:
-        goto no_png;
-    }
-
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png_ptr)
-        goto no_png;
-
-    info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr) {
-        png_destroy_write_struct(&png_ptr,  NULL);
-        goto no_png;
-    }
-
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        png_destroy_write_struct(&png_ptr, &info_ptr);
-        goto no_png;
-    }
-
-    png_set_write_fn(png_ptr, &os, pngWriteCallback, NULL);
-
-    png_set_IHDR(png_ptr, info_ptr, width, height, 8,
-                 type, PNG_INTERLACE_NONE,
-                 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-    png_set_compression_level(png_ptr, png_compression_level);
-
-    png_write_info(png_ptr, info_ptr);
-
-    if (!flipped) {
-        for (unsigned y = 0; y < height; ++y) {
-            png_bytep row = (png_bytep)(pixels + y*width*numChannels);
-            png_write_rows(png_ptr, &row, 1);
-        }
-    } else {
-        unsigned y = height;
-        while (y--) {
-            png_bytep row = (png_bytep)(pixels + y*width*numChannels);
-            png_write_rows(png_ptr, &row, 1);
-        }
-    }
-
-    png_write_end(png_ptr, info_ptr);
-    png_destroy_write_struct(&png_ptr, &info_ptr);
-
-    return true;
-
-no_png:
-    return false;
-}
 
 } /* namespace image */
