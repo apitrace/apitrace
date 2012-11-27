@@ -67,6 +67,8 @@ dumpShader(JSONWriter &json, const char *name, T *pShader) {
             free(pData);
         }
     }
+
+    pShader->Release();
 }
 
 static void
