@@ -93,8 +93,6 @@ if __name__ == '__main__':
     if 'd3d10' in moduleNames:
         if 'd3d10_1' in moduleNames:
             print r'#include "d3d10_1imports.hpp"'
-            # D3D10CreateBlob is duplicated in d3d10 and d3d10_1
-            d3d10_1.functions = [function for function in d3d10_1.functions if function.name != 'D3D10CreateBlob']
             api.addModule(d3d10_1)
         else:
             print r'#include "d3d10imports.hpp"'
