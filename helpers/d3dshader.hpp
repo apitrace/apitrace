@@ -1,7 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
- * Copyright 2008-2009 VMware, Inc.
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,32 +23,29 @@
  *
  **************************************************************************/
 
-
-#include <stdio.h>
-
-#include "os.hpp"
-#include "d3dshader.hpp"
-
-#include "d3d9shader.hpp"
-#include "d3d9imports.hpp"
-#include "d3d9size.hpp"
+#ifndef _D3DSHADER_HPP_
+#define _D3DSHADER_HPP_
 
 
-void DumpShader(trace::Writer &writer, const DWORD *tokens)
-{
-    IDisassemblyBuffer *pDisassembly = NULL;
-    HRESULT hr = DisassembleShader(tokens, &pDisassembly);
+#include <windows.h>
 
-    if (SUCCEEDED(hr)) {
-        writer.beginRepr();
-        writer.writeString((const char *)pDisassembly->GetBufferPointer(),
-                           pDisassembly->GetBufferSize());
-        pDisassembly->Release();
-    }
+// Matches ID3DXBuffer, ID3D10Blob, ID3DBlob
+struct IDisassemblyBuffer : public IUnknown {
+    virtual LPVOID STDMETHODCALLTYPE GetBufferPointer(void) = 0;
 
-    writer.writeBlob(tokens, _shaderSize(tokens));
+    // XXX: ID3D10Blob, ID3DBlob actually return SIZE_T but DWORD should give
+    // the same results
+    virtual DWORD STDMETHODCALLTYPE GetBufferSize(void) = 0;
+};
 
-    if (SUCCEEDED(hr)) {
-        writer.endRepr();
-    }
-}
+
+// D3D9 and earlier
+HRESULT
+DisassembleShader(const DWORD *tokens, IDisassemblyBuffer **ppDisassembly);
+
+// D3D10 and higher
+HRESULT
+DisassembleShader(const void *pShader, SIZE_T BytecodeLength, IDisassemblyBuffer **ppDisassembly);
+
+
+#endif /* _D3DSHADER_HPP_ */

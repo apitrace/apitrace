@@ -76,8 +76,13 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d8trace MODULE d3d8.def d3d8trace.cpp d3d9shader.cpp)
+        add_library (d3d8trace MODULE
+            d3d8.def
+            d3d8trace.cpp
+            d3d9shader.cpp
+        )
         target_link_libraries (d3d8trace
+            d3dhelpers
             common_trace
             common
             ${ZLIB_LIBRARIES}
@@ -108,8 +113,13 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d3d9trace MODULE d3d9.def d3d9trace.cpp d3d9shader.cpp)
+        add_library (d3d9trace MODULE
+            d3d9.def
+            d3d9trace.cpp
+            d3d9shader.cpp
+        )
         target_link_libraries (d3d9trace
+            d3dhelpers
             common_trace
             common
             ${ZLIB_LIBRARIES}
@@ -176,6 +186,7 @@ if (WIN32)
             d3dcommonshader.cpp
         )
         target_link_libraries (dxgitrace
+            d3dhelpers
             common_trace
             common
             ${ZLIB_LIBRARIES}

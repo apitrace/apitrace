@@ -88,7 +88,9 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 print r'        DriverType = D3D_DRIVER_TYPE_HARDWARE;'
                 print r'    }'
 
+            # Force software renderer
             if function.name.startswith('D3D10CreateDevice'):
+                print r'    Flags |= D3D10_CREATE_DEVICE_DEBUG;'
                 self.forceDriver('D3D10_DRIVER_TYPE')
             if function.name.startswith('D3D11CreateDevice'):
                 self.forceDriver('D3D_DRIVER_TYPE')

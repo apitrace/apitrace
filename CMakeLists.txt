@@ -346,6 +346,7 @@ endif ()
 # Sub-directories
 
 add_subdirectory (dispatch)
+add_subdirectory (helpers)
 add_subdirectory (wrappers)
 add_subdirectory (retrace)
 

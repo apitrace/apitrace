@@ -228,6 +228,7 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
     )
     target_link_libraries (d3dretrace
         retrace_common
+        d3dhelpers
     )
 
     install (TARGETS d3dretrace RUNTIME DESTINATION bin)
