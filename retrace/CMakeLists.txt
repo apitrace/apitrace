@@ -129,7 +129,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
 
-if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
+if (WIN32)
     if (DirectX_D3D8_INCLUDE_DIR) 
         include_directories (BEFORE SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
         set (HAVE_D3D8 1)
@@ -151,10 +151,15 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    include_directories (BEFORE SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
+    if (DirectX_D3D9_INCLUDE_DIR)
+        include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
+        set (HAVE_D3D9 1)
+    else ()
+        set (HAVE_D3D9 0)
+    endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d9.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 1 > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
         DEPENDS
                 d3d9retrace.py
                 dllretrace.py
