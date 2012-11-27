@@ -18,16 +18,6 @@ void ApiSurface::setSize(const QSize &size)
     m_size = size;
 }
 
-int ApiSurface::numChannels() const
-{
-    return m_numChannels;
-}
-
-void ApiSurface::setNumChannels(int numChannels)
-{
-    m_numChannels = numChannels;
-}
-
 void ApiSurface::contentsFromBase64(const QByteArray &base64)
 {
     QByteArray dataArray = QByteArray::fromBase64(base64);

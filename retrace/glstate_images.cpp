@@ -416,12 +416,6 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
 
     json.writeStringMember("__format__", formatToString(desc.internalFormat));
 
-    // Hardcoded for now, but we could chose types more adequate to the
-    // texture internal format
-    json.writeStringMember("__type__", "uint8");
-    json.writeBoolMember("__normalized__", true);
-    json.writeIntMember("__channels__", channels);
-
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
 
     context.resetPixelPackState();
@@ -864,12 +858,6 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     json.writeIntMember("__depth__", 1);
 
     json.writeStringMember("__format__", formatToString(internalFormat));
-
-    // Hardcoded for now, but we could chose types more adequate to the
-    // texture internal format
-    json.writeStringMember("__type__", "uint8");
-    json.writeBoolMember("__normalized__", true);
-    json.writeIntMember("__channels__", channels);
 
     GLenum type = GL_UNSIGNED_BYTE;
 

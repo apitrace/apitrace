@@ -13,9 +13,6 @@ public:
     QSize size() const;
     void setSize(const QSize &size);
 
-    int numChannels() const;
-    void setNumChannels(int numChannels);
-
     int depth() const;
     void setDepth(int depth);
 
