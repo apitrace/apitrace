@@ -98,7 +98,7 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
             Desc.Usage = Usage;
             Desc.BindFlags = BindFlags;
             Desc.CPUAccessFlags = CPUAccessFlags;
-            Desc.MiscFlags &= ~D3D11_RESOURCE_MISC_TEXTURECUBE;
+            Desc.MiscFlags &= D3D11_RESOURCE_MISC_TEXTURECUBE;
 
             *pWidth = Desc.Width;
             *pHeight = Desc.Height;
