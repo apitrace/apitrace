@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 #include "image.hpp"
 #include "json.hpp"
@@ -434,11 +435,10 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     context.restorePixelPackState();
 
     json.beginMember("__data__");
-    char *pngBuffer;
-    int pngBufferSize;
-    image::writePixelsToBuffer(pixels, desc.width, desc.depth * desc.height, channels, true, &pngBuffer, &pngBufferSize);
-    json.writeBase64(pngBuffer, pngBufferSize);
-    free(pngBuffer);
+    std::stringstream ss;
+    image::writePixelsToBuffer(ss, pixels, desc.width, desc.depth * desc.height, channels, true);
+    const std::string & s = ss.str();
+    json.writeBase64(s.data(), s.size());
     json.endMember(); // __data__
 
     delete [] pixels;
@@ -890,13 +890,12 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     context.restorePixelPackState();
 
     json.beginMember("__data__");
-    char *pngBuffer;
-    int pngBufferSize;
-    image::writePixelsToBuffer(pixels, width, height, channels, true, &pngBuffer, &pngBufferSize);
+    std::stringstream ss;
+    image::writePixelsToBuffer(ss, pixels, width, height, channels, true);
     //std::cerr <<" Before = "<<(width * height * channels * sizeof *pixels)
     //          <<", after = "<<pngBufferSize << ", ratio = " << double(width * height * channels * sizeof *pixels)/pngBufferSize;
-    json.writeBase64(pngBuffer, pngBufferSize);
-    free(pngBuffer);
+    const std::string & s = ss.str();
+    json.writeBase64(s.data(), s.size());
     json.endMember(); // __data__
 
     delete [] pixels;

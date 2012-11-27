@@ -201,44 +201,22 @@ no_fp:
 }
 
 
-struct png_tmp_buffer
-{
-    char *buffer;
-    size_t size;
-};
-
 static void
 pngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length)
 {
-    struct png_tmp_buffer *buf = (struct png_tmp_buffer*) png_get_io_ptr(png_ptr);
-    size_t nsize = buf->size + length;
-
-    /* allocate or grow buffer */
-    if (buf->buffer)
-        buf->buffer = (char*)realloc(buf->buffer, nsize);
-    else
-        buf->buffer = (char*)malloc(nsize);
-
-    if (!buf->buffer)
-        png_error(png_ptr, "Buffer allocation error");
-
-    memcpy(buf->buffer + buf->size, data, length);
-    buf->size += length;
+    std::ostream *os = (std::ostream *) png_get_io_ptr(png_ptr);
+    os->write((const char *)data, length);
 }
 
-bool writePixelsToBuffer(unsigned char *pixels,
-                         unsigned width, unsigned height, unsigned numChannels,
-                         bool flipped,
-                         char **buffer,
-                         int *size)
+bool
+writePixelsToBuffer(std::ostream &os,
+                    unsigned char *pixels,
+                    unsigned width, unsigned height, unsigned numChannels,
+                    bool flipped)
 {
-    struct png_tmp_buffer png_mem;
     png_structp png_ptr;
     png_infop info_ptr;
     int type;
-
-    png_mem.buffer = NULL;
-    png_mem.size = 0;
 
     switch (numChannels) {
     case 4:
@@ -272,7 +250,7 @@ bool writePixelsToBuffer(unsigned char *pixels,
         goto no_png;
     }
 
-    png_set_write_fn(png_ptr, &png_mem, pngWriteCallback, NULL);
+    png_set_write_fn(png_ptr, &os, pngWriteCallback, NULL);
 
     png_set_IHDR(png_ptr, info_ptr, width, height, 8,
                  type, PNG_INTERLACE_NONE,
@@ -298,17 +276,9 @@ bool writePixelsToBuffer(unsigned char *pixels,
     png_write_end(png_ptr, info_ptr);
     png_destroy_write_struct(&png_ptr, &info_ptr);
 
-    *buffer = png_mem.buffer;
-    *size = png_mem.size;
-
     return true;
 
 no_png:
-    *buffer = NULL;
-    *size = 0;
-
-    if (png_mem.buffer)
-        free(png_mem.buffer);
     return false;
 }
 

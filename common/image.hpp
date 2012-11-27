@@ -99,11 +99,11 @@ public:
     double compare(Image &ref);
 };
 
-bool writePixelsToBuffer(unsigned char *pixels,
-                         unsigned w, unsigned h, unsigned numChannels,
-                         bool flipped,
-                         char **buffer,
-                         int *size);
+bool
+writePixelsToBuffer(std::ostream &os,
+                    unsigned char *pixels,
+                    unsigned w, unsigned h, unsigned numChannels,
+                    bool flipped);
 
 Image *
 readPNG(const char *filename);
