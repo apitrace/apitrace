@@ -90,14 +90,21 @@ dumpShaders(JSONWriter &json, ID3D10Device *pDevice)
     ID3D10VertexShader *pVertexShader = NULL;
     pDevice->VSGetShader(&pVertexShader);
     if (pVertexShader) {
-        dumpShader(json, "vertex", pVertexShader);
+        dumpShader<ID3D10DeviceChild>(json, "VS", pVertexShader);
         pVertexShader->Release();
+    }
+
+    ID3D10GeometryShader *pGeometryShader = NULL;
+    pDevice->GSGetShader(&pGeometryShader);
+    if (pGeometryShader) {
+        dumpShader<ID3D10DeviceChild>(json, "GS", pGeometryShader);
+        pGeometryShader->Release();
     }
 
     ID3D10PixelShader *pPixelShader = NULL;
     pDevice->PSGetShader(&pPixelShader);
     if (pPixelShader) {
-        dumpShader(json, "pixel", pPixelShader);
+        dumpShader<ID3D10DeviceChild>(json, "PS", pPixelShader);
     }
 
     json.endObject();
