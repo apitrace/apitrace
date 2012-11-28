@@ -188,6 +188,14 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print '        _maps[_this] = 0;'
             print '    }'
 
+        # Attach shader byte code for lookup
+        if 'pShaderBytecode' in method.argNames():
+            ppShader = method.args[-1]
+            assert ppShader.output
+            print r'    if (retrace::dumpingState && SUCCEEDED(_result)) {'
+            print r'        (*%s)->SetPrivateData(d3dstate::GUID_D3DSTATE, BytecodeLength, pShaderBytecode);' % ppShader.name
+            print r'    }'
+
 
 def main():
     print r'#include <string.h>'

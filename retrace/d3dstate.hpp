@@ -29,6 +29,8 @@
 
 #include <iostream>
 
+#include <windows.h>
+
 
 struct IDirect3DDevice9;
 struct ID3D10Device;
@@ -43,6 +45,9 @@ namespace image {
 
 
 namespace d3dstate {
+
+
+extern const GUID GUID_D3DSTATE;
 
 
 image::Image *
