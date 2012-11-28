@@ -253,6 +253,7 @@ class StateDumper:
         pass
 
     def dump(self):
+        print '#include <assert.h>'
         print '#include <string.h>'
         print
         print '#include "json.hpp"'

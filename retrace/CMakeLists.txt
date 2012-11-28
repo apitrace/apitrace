@@ -31,13 +31,13 @@ add_custom_command (
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
 )
 
-add_library (retrace_common
+add_library (retrace_common STATIC
     retrace.cpp
     retrace_main.cpp
     retrace_stdc.cpp
     retrace_swizzle.cpp
+    json.cpp
 )
-
 target_link_libraries (retrace_common
     common
     ${PNG_LIBRARIES}
@@ -46,7 +46,7 @@ target_link_libraries (retrace_common
     ${GETOPT_LIBRARIES}
 )
 
-add_library (glretrace_common
+add_library (glretrace_common STATIC
     glretrace_gl.cpp
     glretrace_cgl.cpp
     glretrace_glx.cpp
@@ -60,8 +60,10 @@ add_library (glretrace_common
     glstate_shaders.cpp
     glws.cpp
 )
-
 add_dependencies (glretrace_common glproc)
+target_link_libraries (glretrace_common
+    retrace_common
+)
 
 
 if (WIN32 OR APPLE OR X11_FOUND)

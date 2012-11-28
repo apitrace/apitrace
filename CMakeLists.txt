@@ -338,7 +338,9 @@ set_target_properties (common PROPERTIES
 )
 
 if (ANDROID)
-    target_link_libraries (common log)
+    target_link_libraries (common
+        log
+    )
 endif ()
 
 
@@ -355,7 +357,7 @@ add_subdirectory (retrace)
 # CLI
 
 if (ENABLE_CLI)
-    add_subdirectory(cli)
+    add_subdirectory (cli)
 endif ()
 
 ##############################################################################
