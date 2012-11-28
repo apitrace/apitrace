@@ -338,7 +338,7 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
         image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i]);
         if (image) {
             char label[64];
-            snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
             json.beginMember(label);
             json.writeImage(image, "UNKNOWN");
             json.endMember(); // RENDER_TARGET_*
