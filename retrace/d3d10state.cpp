@@ -30,6 +30,7 @@
 
 #include "d3d11imports.hpp"
 #include "json.hpp"
+#include "d3dstate.hpp"
 
 
 namespace d3dstate {
@@ -41,6 +42,23 @@ dumpDevice(std::ostream &os, ID3D10Device *pDevice)
     JSONWriter json(os);
 
     /* TODO */
+    json.beginMember("parameters");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // parameters
+
+    json.beginMember("shaders");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // shaders
+
+    json.beginMember("textures");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // textures
+
+    dumpFramebuffer(json, pDevice);
+
 }
 
 

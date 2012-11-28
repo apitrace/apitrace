@@ -30,7 +30,9 @@
 #include <algorithm>
 
 #include "image.hpp"
+#include "json.hpp"
 #include "d3d10imports.hpp"
+#include "d3dstate.hpp"
 
 
 namespace d3dstate {
@@ -179,10 +181,10 @@ unmapResource(ID3D10Resource *pResource, UINT Subresource) {
     }
 }
 
-image::Image *
-getRenderTargetImage(ID3D10Device *pDevice) {
+static image::Image *
+getRenderTargetViewImage(ID3D10Device *pDevice,
+                         ID3D10RenderTargetView *pRenderTargetView) {
     image::Image *image = NULL;
-    ID3D10RenderTargetView *pRenderTargetView = NULL;
     D3D10_RENDER_TARGET_VIEW_DESC Desc;
     ID3D10Resource *pResource = NULL;
     ID3D10Resource *pStagingResource = NULL;
@@ -194,9 +196,8 @@ getRenderTargetImage(ID3D10Device *pDevice) {
     const unsigned char *src;
     unsigned char *dst;
 
-    pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
     if (!pRenderTargetView) {
-        goto no_rendertarget;
+        return NULL;
     }
 
     pRenderTargetView->GetResource(&pResource);
@@ -300,11 +301,54 @@ no_staging:
     if (pResource) {
         pResource->Release();
     }
+    return image;
+}
+
+
+image::Image *
+getRenderTargetImage(ID3D10Device *pDevice) {
+    ID3D10RenderTargetView *pRenderTargetView = NULL;
+    pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
+
+    image::Image *image = NULL;
     if (pRenderTargetView) {
+        image = getRenderTargetViewImage(pDevice, pRenderTargetView);
         pRenderTargetView->Release();
     }
-no_rendertarget:
+
     return image;
+}
+
+
+void
+dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
+{
+    json.beginMember("framebuffer");
+    json.beginObject();
+
+    ID3D10RenderTargetView *pRenderTargetViews[D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT];
+    pDevice->OMGetRenderTargets(D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT, pRenderTargetViews, NULL);
+
+    for (UINT i = 0; i < D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i) {
+        if (!pRenderTargetViews[i]) {
+            continue;
+        }
+
+        image::Image *image;
+        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i]);
+        if (image) {
+            char label[64];
+            snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            json.beginMember(label);
+            json.writeImage(image, "UNKNOWN");
+            json.endMember(); // RENDER_TARGET_*
+        }
+
+        pRenderTargetViews[i]->Release();
+    }
+
+    json.endObject();
+    json.endMember(); // framebuffer
 }
 
 

@@ -304,6 +304,11 @@ JSONWriter::writeBool(bool b) {
 void
 JSONWriter::writeImage(image::Image *image, const char *format, unsigned depth)
 {
+    if (!image) {
+        writeNull();
+        return;
+    }
+
     beginObject();
 
     // Tell the GUI this is no ordinary object, but an image

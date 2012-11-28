@@ -35,6 +35,8 @@ struct ID3D10Device;
 struct ID3D11DeviceContext;
 
 
+class JSONWriter;
+
 namespace image {
     class Image;
 }
@@ -52,6 +54,9 @@ dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
 
 image::Image *
 getRenderTargetImage(ID3D10Device *pDevice);
+
+void
+dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
 
 void
 dumpDevice(std::ostream &os, ID3D10Device *pDevice);
