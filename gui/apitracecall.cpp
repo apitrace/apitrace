@@ -548,7 +548,10 @@ const QVariantMap & ApiTraceState::uniforms() const
 
 bool ApiTraceState::isEmpty() const
 {
-    return m_parameters.isEmpty();
+    return m_parameters.isEmpty() &&
+           m_shaderSources.isEmpty() &&
+           m_textures.isEmpty() &&
+           m_framebuffers.isEmpty();
 }
 
 const QList<ApiTexture> & ApiTraceState::textures() const
