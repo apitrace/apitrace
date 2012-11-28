@@ -47,6 +47,11 @@
 #include <string>
 
 
+namespace image {
+    class Image;
+}
+
+
 class JSONWriter
 {
 private:
@@ -177,6 +182,9 @@ public:
         writeInt(n);
         endMember();
     }
+
+    void
+    writeImage(image::Image *image, const char *format, unsigned depth = 1);
 };
 
 #endif /* _JSON_HPP_ */

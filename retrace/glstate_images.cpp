@@ -29,7 +29,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <sstream>
 
 #include "image.hpp"
 #include "json.hpp"
@@ -388,15 +387,12 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     }
 
     char label[512];
-
     GLint active_texture = GL_TEXTURE0;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
     snprintf(label, sizeof label, "%s, %s, level = %d",
              enumToString(active_texture), enumToString(target), level);
 
     json.beginMember(label);
-
-    json.beginObject();
 
     GLuint channels;
     GLenum format;
@@ -407,15 +403,6 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
        format = GL_RGBA;
        channels = 4;
     }
-
-    // Tell the GUI this is no ordinary object, but an image
-    json.writeStringMember("__class__", "image");
-
-    json.writeIntMember("__width__", desc.width);
-    json.writeIntMember("__height__", desc.height);
-    json.writeIntMember("__depth__", desc.depth);
-
-    json.writeStringMember("__format__", formatToString(desc.internalFormat));
 
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
 
@@ -429,15 +416,11 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
 
     context.restorePixelPackState();
 
-    json.beginMember("__data__");
-    std::stringstream ss;
-    image->writePNG(ss);
-    const std::string & s = ss.str();
-    json.writeBase64(s.data(), s.size());
-    json.endMember(); // __data__
+    json.writeImage(image, formatToString(desc.internalFormat), desc.depth);
 
     delete image;
-    json.endObject();
+
+    json.endMember(); // label
 }
 
 
@@ -849,17 +832,6 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 
     Context context;
 
-    json.beginObject();
-
-    // Tell the GUI this is no ordinary object, but an image
-    json.writeStringMember("__class__", "image");
-
-    json.writeIntMember("__width__", width);
-    json.writeIntMember("__height__", height);
-    json.writeIntMember("__depth__", 1);
-
-    json.writeStringMember("__format__", formatToString(internalFormat));
-
     GLenum type = GL_UNSIGNED_BYTE;
 
 #if DEPTH_AS_RGBA
@@ -878,15 +850,9 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 
     context.restorePixelPackState();
 
-    json.beginMember("__data__");
-    std::stringstream ss;
-    image->writePNG(ss);
-    const std::string & s = ss.str();
-    json.writeBase64(s.data(), s.size());
-    json.endMember(); // __data__
+    json.writeImage(image, formatToString(internalFormat));
 
     delete image;
-    json.endObject();
 }
 
 

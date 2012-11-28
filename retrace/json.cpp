@@ -31,6 +31,9 @@
 #include <assert.h>
 #include <string.h>
 
+#include <sstream>
+
+#include "image.hpp"
 #include "json.hpp"
 
 
@@ -296,4 +299,28 @@ JSONWriter::writeBool(bool b) {
     os << (b ? "true" : "false");
     value = true;
     space = ' ';
+}
+
+void
+JSONWriter::writeImage(image::Image *image, const char *format, unsigned depth)
+{
+    beginObject();
+
+    // Tell the GUI this is no ordinary object, but an image
+    writeStringMember("__class__", "image");
+
+    writeIntMember("__width__", image->width);
+    writeIntMember("__height__", image->height / depth);
+    writeIntMember("__depth__", depth);
+
+    writeStringMember("__format__", format);
+
+    beginMember("__data__");
+    std::stringstream ss;
+    image->writePNG(ss);
+    const std::string & s = ss.str();
+    writeBase64(s.data(), s.size());
+    endMember(); // __data__
+
+    endObject();
 }
