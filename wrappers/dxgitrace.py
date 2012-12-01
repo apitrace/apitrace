@@ -24,8 +24,14 @@
 ##########################################################################/
 
 
+import sys
 from dlltrace import DllTracer
 from specs import stdapi
+from specs.stdapi import API
+from specs.dxgi import dxgi
+from specs.d3d10 import d3d10
+from specs.d3d10_1 import d3d10_1
+from specs.d3d11 import d3d11
 
 
 class D3DCommonTracer(DllTracer):
@@ -68,3 +74,38 @@ class D3DCommonTracer(DllTracer):
             print '    }'
 
 
+if __name__ == '__main__':
+    print '#define INITGUID'
+    print
+    print '#include "trace_writer_local.hpp"'
+    print '#include "os.hpp"'
+    print
+    print '#include "d3dcommonshader.hpp"'
+    print
+
+    moduleNames = sys.argv[1:]
+
+    api = API()
+    
+    if moduleNames:
+        api.addModule(dxgi)
+    
+    if 'd3d10' in moduleNames:
+        if 'd3d10_1' in moduleNames:
+            print r'#include "d3d10_1imports.hpp"'
+            api.addModule(d3d10_1)
+        else:
+            print r'#include "d3d10imports.hpp"'
+        print r'#include "d3d10size.hpp"'
+        api.addModule(d3d10)
+
+    if 'd3d11' in moduleNames:
+        print r'#include "d3d11imports.hpp"'
+        if 'd3d11_1' in moduleNames:
+            print '#include <d3d11_1.h>'
+            import specs.d3d11_1
+        print r'#include "d3d11size.hpp"'
+        api.addModule(d3d11)
+
+    tracer = D3DCommonTracer()
+    tracer.traceApi(api)

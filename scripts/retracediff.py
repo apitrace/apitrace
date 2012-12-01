@@ -58,6 +58,10 @@ class Setup:
         cmd = [
             options.retrace,
         ] + args + self.args
+        if self.env:
+            for name, value in self.env.iteritems():
+                sys.stderr.write('%s=%s ' % (name, value))
+        sys.stderr.write(' '.join(cmd) + '\n')
         try:
             return subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
         except OSError, ex:
@@ -123,6 +127,9 @@ def read_pnm(stream):
 def parse_env(optparser, entries):
     '''Translate a list of NAME=VALUE entries into an environment dictionary.'''
 
+    if not entries:
+        return None
+
     env = os.environ.copy()
     for entry in entries:
         try:
@@ -147,6 +154,22 @@ def main():
         '-r', '--retrace', metavar='PROGRAM',
         type='string', dest='retrace', default='glretrace',
         help='retrace command [default: %default]')
+    optparser.add_option(
+        '--ref-driver', metavar='DRIVER',
+        type='string', dest='ref_driver', default=None,
+        help='force reference driver')
+    optparser.add_option(
+        '--src-driver', metavar='DRIVER',
+        type='string', dest='src_driver', default=None,
+        help='force source driver')
+    optparser.add_option(
+        '--ref-arg', metavar='OPTION',
+        type='string', action='append', dest='ref_args', default=[],
+        help='pass argument to reference retrace')
+    optparser.add_option(
+        '--src-arg', metavar='OPTION',
+        type='string', action='append', dest='src_args', default=[],
+        help='pass argument to source retrace')
     optparser.add_option(
         '--ref-env', metavar='NAME=VALUE',
         type='string', action='append', dest='ref_env', default=[],
@@ -177,9 +200,14 @@ def main():
     src_env = parse_env(optparser, options.src_env)
     if not args:
         optparser.error("incorrect number of arguments")
+    
+    if options.ref_driver:
+        options.ref_args.insert(0, '--driver=' + options.ref_driver)
+    if options.src_driver:
+        options.src_args.insert(0, '--driver=' + options.src_driver)
 
-    ref_setup = Setup(args, ref_env)
-    src_setup = Setup(args, src_env)
+    ref_setup = Setup(options.ref_args + args, ref_env)
+    src_setup = Setup(options.src_args + args, src_env)
 
     if options.output:
         output = open(options.output, 'wt')

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,58 +23,29 @@
  *
  **************************************************************************/
 
-#ifndef _D3DSTATE_HPP_
-#define _D3DSTATE_HPP_
+#ifndef _D3DSHADER_HPP_
+#define _D3DSHADER_HPP_
 
-
-#include <iostream>
 
 #include <windows.h>
 
+// Matches ID3DXBuffer, ID3D10Blob, ID3DBlob
+struct IDisassemblyBuffer : public IUnknown {
+    virtual LPVOID STDMETHODCALLTYPE GetBufferPointer(void) = 0;
 
-struct IDirect3DDevice9;
-struct ID3D10Device;
-struct ID3D11DeviceContext;
-
-
-class JSONWriter;
-
-namespace image {
-    class Image;
-}
+    // XXX: ID3D10Blob, ID3DBlob actually return SIZE_T but DWORD should give
+    // the same results
+    virtual DWORD STDMETHODCALLTYPE GetBufferSize(void) = 0;
+};
 
 
-namespace d3dstate {
+// D3D9 and earlier
+HRESULT
+DisassembleShader(const DWORD *tokens, IDisassemblyBuffer **ppDisassembly);
+
+// D3D10 and higher
+HRESULT
+DisassembleShader(const void *pShader, SIZE_T BytecodeLength, IDisassemblyBuffer **ppDisassembly);
 
 
-extern const GUID GUID_D3DSTATE;
-
-
-image::Image *
-getRenderTargetImage(IDirect3DDevice9 *pDevice);
-
-void
-dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
-
-
-image::Image *
-getRenderTargetImage(ID3D10Device *pDevice);
-
-void
-dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
-
-void
-dumpDevice(std::ostream &os, ID3D10Device *pDevice);
-
-
-image::Image *
-getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
-
-void
-dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext);
-
-
-} /* namespace d3dstate */
-
-
-#endif /* _D3DSTATE_HPP_ */
+#endif /* _D3DSHADER_HPP_ */

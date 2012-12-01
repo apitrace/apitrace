@@ -340,13 +340,7 @@ def InOut(type, name):
 
 class Function:
 
-    # 0-3 are reserved to memcpy, malloc, free, and realloc
-    __id = 4
-
     def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False):
-        self.id = Function.__id
-        Function.__id += 1
-
         self.type = type
         self.name = name
 

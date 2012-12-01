@@ -42,8 +42,20 @@ class D3DRetracer(Retracer):
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
         print
+        print r'''
+static void 
+createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
+    if (pSwapChainDesc->Windowed) {
+        UINT Width  = pSwapChainDesc->BufferDesc.Width;
+        UINT Height = pSwapChainDesc->BufferDesc.Height;
+        if (!Width)  Width = 1024;
+        if (!Height) Height = 768;
+        pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
+    }
+}
+'''
 
-        self.table_name = 'd3dretrace::d3d10_callbacks'
+        self.table_name = 'd3dretrace::dxgi_callbacks'
 
         Retracer.retraceApi(self, api)
 
@@ -60,7 +72,7 @@ class D3DRetracer(Retracer):
         if function.name in self.createDeviceFunctionNames:
             # create windows as neccessary
             if 'pSwapChainDesc' in function.argNames():
-                print r'    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
+                print r'    createWindow(pSwapChainDesc);'
 
             # Compensate for the fact we don't trace the software renderer
             # module LoadLibrary call
@@ -76,8 +88,54 @@ class D3DRetracer(Retracer):
                 print r'        DriverType = D3D_DRIVER_TYPE_HARDWARE;'
                 print r'    }'
 
+            if function.name.startswith('D3D10CreateDevice'):
+                self.forceDriver('D3D10_DRIVER_TYPE')
+            if function.name.startswith('D3D11CreateDevice'):
+                self.forceDriver('D3D_DRIVER_TYPE')
+
         Retracer.invokeFunction(self, function)
 
+    def forceDriver(self, enum):
+        print r'    switch (retrace::driver) {'
+        print r'    case retrace::DRIVER_HARDWARE:'
+        print r'        DriverType = %s_HARDWARE;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_SOFTWARE:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_WARP;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_REFERENCE:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_REFERENCE;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_NULL:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_NULL;' % enum
+        print r'        Software = NULL;'
+        print r'        break;'
+        print r'    case retrace::DRIVER_MODULE:'
+        print r'        pAdapter = NULL;'
+        print r'        DriverType = %s_SOFTWARE;' % enum
+        print r'        Software = LoadLibraryA(retrace::driverModule);'
+        print r'        if (!Software) {'
+        print r'            retrace::warning(call) << "failed to load " << retrace::driverModule << "\n";'
+        print r'        }'
+        print r'        break;'
+        print r'    default:'
+        print r'        assert(0);'
+        print r'        /* fall-through */'
+        print r'    case retrace::DRIVER_DEFAULT:'
+        print r'        if (DriverType == %s_SOFTWARE) {' % enum
+        print r'            Software = LoadLibraryA("d3d10warp");'
+        print r'            if (!Software) {'
+        print r'                retrace::warning(call) << "failed to load d3d10warp.dll\n";'
+        print r'            }'
+        print r'        }'
+        print r'        break;'
+        print r'    }'
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
@@ -94,7 +152,7 @@ class D3DRetracer(Retracer):
 
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
-            print r'    pDesc->OutputWindow = d3dretrace::createWindow(512, 512);'
+            print r'    createWindow(pDesc);'
 
         # notify frame has been completed
         if method.name == 'Present':
@@ -130,9 +188,17 @@ class D3DRetracer(Retracer):
             print '        _maps[_this] = 0;'
             print '    }'
 
+        # Attach shader byte code for lookup
+        if 'pShaderBytecode' in method.argNames():
+            ppShader = method.args[-1]
+            assert ppShader.output
+            print r'    if (retrace::dumpingState && SUCCEEDED(_result)) {'
+            print r'        (*%s)->SetPrivateData(d3dstate::GUID_D3DSTATE, BytecodeLength, pShaderBytecode);' % ppShader.name
+            print r'    }'
+
 
 def main():
-    print r'''#include <string.h>'''
+    print r'#include <string.h>'
     print
     print r'#include <iostream>'
     print
@@ -149,8 +215,6 @@ def main():
     if 'd3d10' in moduleNames:
         if 'd3d10_1' in moduleNames:
             print r'#include "d3d10_1imports.hpp"'
-            # D3D10CreateBlob is duplicated in d3d10 and d3d10_1
-            d3d10_1.functions = [function for function in d3d10_1.functions if function.name != 'D3D10CreateBlob']
             api.addModule(d3d10_1)
         else:
             print r'#include "d3d10imports.hpp"'

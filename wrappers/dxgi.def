@@ -1,6 +1,7 @@
-LIBRARY "d3d11"
+LIBRARY "dxgi"
 
 EXPORTS
+    D3DKMTCloseAdapter
     D3DKMTDestroyAllocation
     D3DKMTDestroyContext
     D3DKMTDestroyDevice
@@ -10,14 +11,11 @@ EXPORTS
     D3DKMTSignalSynchronizationObject
     D3DKMTUnlock
     D3DKMTWaitForSynchronizationObject
+    DXGIDumpJournal
     OpenAdapter10
     OpenAdapter10_2
-    D3D11CoreCreateDevice
-    D3D11CoreCreateLayeredDevice
-    D3D11CoreGetLayeredDeviceSize
-    D3D11CoreRegisterLayers
-    D3D11CreateDevice
-    D3D11CreateDeviceAndSwapChain
+    CreateDXGIFactory1
+    CreateDXGIFactory
     D3DKMTCreateAllocation
     D3DKMTCreateContext
     D3DKMTCreateDevice
@@ -42,3 +40,8 @@ EXPORTS
     D3DKMTSetGammaRamp
     D3DKMTSetVidPnSourceOwner
     D3DKMTWaitForVerticalBlankEvent
+    DXGID3D10CreateDevice
+    DXGID3D10CreateLayeredDevice
+    DXGID3D10GetLayeredDeviceSize
+    DXGID3D10RegisterLayers
+    DXGIReportAdapterConfiguration

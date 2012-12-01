@@ -259,7 +259,9 @@ addObj(trace::Call &call, trace::Value &value, void *obj) {
     unsigned long long address = value.toUIntPtr();
 
     if (!address) {
-        assert(!obj);
+        if (obj) {
+            warning(call) << "unexpected non-null object\n";
+        }
         return;
     }
 

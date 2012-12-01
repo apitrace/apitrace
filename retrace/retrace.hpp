@@ -60,6 +60,7 @@ private:
     uintptr_t next;
 
 public:
+    inline
     ScopedAllocator() :
         next(0) {
     }
@@ -81,21 +82,14 @@ public:
         return static_cast<void *>(&buf[1]);
     }
 
-    template< class T >
-    inline T *
-    alloc(size_t n = 1) {
-        return static_cast<T *>(alloc(sizeof(T) * n));
-    }
-
     /**
      * Allocate an array with the same dimensions as the specified value.
      */
-    template< class T >
-    inline T *
-    alloc(const trace::Value *value) {
+    inline void *
+    alloc(const trace::Value *value, size_t size) {
         const trace::Array *array = dynamic_cast<const trace::Array *>(value);
         if (array) {
-            return alloc<T>(array->size());
+            return alloc(array->size() * size);
         }
         const trace::Null *null = dynamic_cast<const trace::Null *>(value);
         if (null) {
@@ -157,6 +151,18 @@ extern bool profilingPixelsDrawn;
  */
 extern bool dumpingState;
 
+
+enum Driver {
+    DRIVER_DEFAULT,
+    DRIVER_HARDWARE, // force hardware
+    DRIVER_SOFTWARE,
+    DRIVER_REFERENCE,
+    DRIVER_NULL,
+    DRIVER_MODULE,
+};
+
+extern Driver driver;
+extern const char *driverModule;
 
 extern bool doubleBuffer;
 extern bool coreProfile;

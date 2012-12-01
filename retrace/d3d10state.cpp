@@ -30,9 +30,86 @@
 
 #include "d3d11imports.hpp"
 #include "json.hpp"
+#include "d3dshader.hpp"
+#include "d3dstate.hpp"
 
 
 namespace d3dstate {
+
+
+const GUID
+GUID_D3DSTATE = {0x7D71CAC9,0x7F58,0x432C,{0xA9,0x75,0xA1,0x9F,0xCF,0xCE,0xFD,0x14}};
+
+
+template< class T >
+inline void
+dumpShader(JSONWriter &json, const char *name, T *pShader) {
+    if (!pShader) {
+        return;
+    }
+
+    HRESULT hr;
+
+    /*
+     * There is no method to get the shader byte code, so the creator is supposed to
+     * attach it via the SetPrivateData method.
+     */
+    UINT BytecodeLength = 0;
+    char dummy;
+    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, &dummy);
+    if (hr != DXGI_ERROR_MORE_DATA) {
+        return;
+    }
+
+    void *pShaderBytecode = malloc(BytecodeLength);
+    if (!pShaderBytecode) {
+        return;
+    }
+
+    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, pShaderBytecode);
+    if (SUCCEEDED(hr)) {
+        IDisassemblyBuffer *pDisassembly = NULL;
+        hr = DisassembleShader(pShaderBytecode, BytecodeLength, &pDisassembly);
+        if (SUCCEEDED(hr)) {
+            json.beginMember(name);
+            json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+            json.endMember();
+            pDisassembly->Release();
+        }
+    }
+
+    free(pShaderBytecode);
+}
+
+static void
+dumpShaders(JSONWriter &json, ID3D10Device *pDevice)
+{
+    json.beginMember("shaders");
+    json.beginObject();
+
+    ID3D10VertexShader *pVertexShader = NULL;
+    pDevice->VSGetShader(&pVertexShader);
+    if (pVertexShader) {
+        dumpShader<ID3D10DeviceChild>(json, "VS", pVertexShader);
+        pVertexShader->Release();
+    }
+
+    ID3D10GeometryShader *pGeometryShader = NULL;
+    pDevice->GSGetShader(&pGeometryShader);
+    if (pGeometryShader) {
+        dumpShader<ID3D10DeviceChild>(json, "GS", pGeometryShader);
+        pGeometryShader->Release();
+    }
+
+    ID3D10PixelShader *pPixelShader = NULL;
+    pDevice->PSGetShader(&pPixelShader);
+    if (pPixelShader) {
+        dumpShader<ID3D10DeviceChild>(json, "PS", pPixelShader);
+    }
+
+    json.endObject();
+    json.endMember(); // shaders
+}
 
 
 void
@@ -41,6 +118,19 @@ dumpDevice(std::ostream &os, ID3D10Device *pDevice)
     JSONWriter json(os);
 
     /* TODO */
+    json.beginMember("parameters");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // parameters
+
+    dumpShaders(json, pDevice);
+
+    json.beginMember("textures");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // textures
+
+    dumpFramebuffer(json, pDevice);
 }
 
 

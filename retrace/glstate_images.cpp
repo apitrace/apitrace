@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <assert.h>
 #include <string.h>
 
 #include <algorithm>
@@ -386,15 +387,12 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     }
 
     char label[512];
-
     GLint active_texture = GL_TEXTURE0;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
     snprintf(label, sizeof label, "%s, %s, level = %d",
              enumToString(active_texture), enumToString(target), level);
 
     json.beginMember(label);
-
-    json.beginObject();
 
     GLuint channels;
     GLenum format;
@@ -406,43 +404,23 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
        channels = 4;
     }
 
-    // Tell the GUI this is no ordinary object, but an image
-    json.writeStringMember("__class__", "image");
-
-    json.writeIntMember("__width__", desc.width);
-    json.writeIntMember("__height__", desc.height);
-    json.writeIntMember("__depth__", desc.depth);
-
-    json.writeStringMember("__format__", formatToString(desc.internalFormat));
-
-    // Hardcoded for now, but we could chose types more adequate to the
-    // texture internal format
-    json.writeStringMember("__type__", "uint8");
-    json.writeBoolMember("__normalized__", true);
-    json.writeIntMember("__channels__", channels);
-
-    GLubyte *pixels = new GLubyte[desc.depth*desc.width*desc.height*channels];
+    image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
 
     context.resetPixelPackState();
 
     if (context.ES) {
-        getTexImageOES(target, level, desc, pixels);
+        getTexImageOES(target, level, desc, image->pixels);
     } else {
-        glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, pixels);
+        glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, image->pixels);
     }
 
     context.restorePixelPackState();
 
-    json.beginMember("__data__");
-    char *pngBuffer;
-    int pngBufferSize;
-    image::writePixelsToBuffer(pixels, desc.width, desc.depth * desc.height, channels, true, &pngBuffer, &pngBufferSize);
-    json.writeBase64(pngBuffer, pngBufferSize);
-    free(pngBuffer);
-    json.endMember(); // __data__
+    json.writeImage(image, formatToString(desc.internalFormat), desc.depth);
 
-    delete [] pixels;
-    json.endObject();
+    delete image;
+
+    json.endMember(); // label
 }
 
 
@@ -854,23 +832,6 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 
     Context context;
 
-    json.beginObject();
-
-    // Tell the GUI this is no ordinary object, but an image
-    json.writeStringMember("__class__", "image");
-
-    json.writeIntMember("__width__", width);
-    json.writeIntMember("__height__", height);
-    json.writeIntMember("__depth__", 1);
-
-    json.writeStringMember("__format__", formatToString(internalFormat));
-
-    // Hardcoded for now, but we could chose types more adequate to the
-    // texture internal format
-    json.writeStringMember("__type__", "uint8");
-    json.writeBoolMember("__normalized__", true);
-    json.writeIntMember("__channels__", channels);
-
     GLenum type = GL_UNSIGNED_BYTE;
 
 #if DEPTH_AS_RGBA
@@ -880,27 +841,18 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     }
 #endif
 
-    GLubyte *pixels = new GLubyte[width*height*channels];
+    image::Image *image = new image::Image(width, height, channels, true);
 
     // TODO: reset imaging state too
     context.resetPixelPackState();
 
-    glReadPixels(0, 0, width, height, format, type, pixels);
+    glReadPixels(0, 0, width, height, format, type, image->pixels);
 
     context.restorePixelPackState();
 
-    json.beginMember("__data__");
-    char *pngBuffer;
-    int pngBufferSize;
-    image::writePixelsToBuffer(pixels, width, height, channels, true, &pngBuffer, &pngBufferSize);
-    //std::cerr <<" Before = "<<(width * height * channels * sizeof *pixels)
-    //          <<", after = "<<pngBufferSize << ", ratio = " << double(width * height * channels * sizeof *pixels)/pngBufferSize;
-    json.writeBase64(pngBuffer, pngBufferSize);
-    free(pngBuffer);
-    json.endMember(); // __data__
+    json.writeImage(image, formatToString(internalFormat));
 
-    delete [] pixels;
-    json.endObject();
+    delete image;
 }
 
 

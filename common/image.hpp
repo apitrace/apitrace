@@ -94,22 +94,28 @@ public:
         return true;
     }
 
-    bool writePNG(const char *filename) const;
+    bool
+    writePNG(std::ostream &os) const;
+
+    inline bool
+    writePNG(const char *filename) const {
+        std::ofstream os(filename, std::ofstream::binary);
+        if (!os) {
+            return false;
+        }
+        return writePNG(os);
+    }
 
     double compare(Image &ref);
 };
 
-bool writePixelsToBuffer(unsigned char *pixels,
-                         unsigned w, unsigned h, unsigned numChannels,
-                         bool flipped,
-                         char **buffer,
-                         int *size);
 
 Image *
 readPNG(const char *filename);
 
 const char *
 readPNMHeader(const char *buffer, size_t size, unsigned *channels, unsigned *width, unsigned *height);
+
 
 } /* namespace image */
 

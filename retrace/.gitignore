@@ -1,2 +1,4 @@
+d3dretrace_d3d9.cpp
+d3dretrace_dxgi.cpp
 glretrace_gl.cpp
 glstate_params.cpp

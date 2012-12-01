@@ -42,6 +42,9 @@
 #ifndef vsnprintf
 #define vsnprintf _vsnprintf
 #endif
+#ifndef strcasecmp
+#define strcasecmp stricmp
+#endif
 #endif /* !_WIN32 */
 
 namespace os {

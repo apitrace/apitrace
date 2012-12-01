@@ -490,19 +490,10 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         QSize size(image[QLatin1String("__width__")].toInt(),
                    image[QLatin1String("__height__")].toInt());
         QString cls = image[QLatin1String("__class__")].toString();
-        QString type = image[QLatin1String("__type__")].toString();
-        bool normalized =
-            image[QLatin1String("__normalized__")].toBool();
-        int numChannels =
-            image[QLatin1String("__channels__")].toInt();
         int depth =
             image[QLatin1String("__depth__")].toInt();
         QString formatName =
             image[QLatin1String("__format__")].toString();
-
-        Q_ASSERT(type == QLatin1String("uint8"));
-        Q_ASSERT(normalized == true);
-        Q_UNUSED(normalized);
 
         QByteArray dataArray =
             image[QLatin1String("__data__")].toByteArray();
@@ -511,7 +502,6 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         tex.setSize(size);
         tex.setDepth(depth);
         tex.setFormatName(formatName);
-        tex.setNumChannels(numChannels);
         tex.setLabel(itr.key());
         tex.contentsFromBase64(dataArray);
 
@@ -525,15 +515,8 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         QSize size(buffer[QLatin1String("__width__")].toInt(),
                    buffer[QLatin1String("__height__")].toInt());
         QString cls = buffer[QLatin1String("__class__")].toString();
-        QString type = buffer[QLatin1String("__type__")].toString();
-        bool normalized = buffer[QLatin1String("__normalized__")].toBool();
-        int numChannels = buffer[QLatin1String("__channels__")].toInt();
         int depth = buffer[QLatin1String("__depth__")].toInt();
         QString formatName = buffer[QLatin1String("__format__")].toString();
-
-        Q_ASSERT(type == QLatin1String("uint8"));
-        Q_ASSERT(normalized == true);
-        Q_UNUSED(normalized);
 
         QByteArray dataArray =
             buffer[QLatin1String("__data__")].toByteArray();
@@ -542,7 +525,6 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         fbo.setSize(size);
         fbo.setDepth(depth);
         fbo.setFormatName(formatName);
-        fbo.setNumChannels(numChannels);
         fbo.setType(itr.key());
         fbo.contentsFromBase64(dataArray);
         m_framebuffers.append(fbo);
@@ -566,7 +548,10 @@ const QVariantMap & ApiTraceState::uniforms() const
 
 bool ApiTraceState::isEmpty() const
 {
-    return m_parameters.isEmpty();
+    return m_parameters.isEmpty() &&
+           m_shaderSources.isEmpty() &&
+           m_textures.isEmpty() &&
+           m_framebuffers.isEmpty();
 }
 
 const QList<ApiTexture> & ApiTraceState::textures() const

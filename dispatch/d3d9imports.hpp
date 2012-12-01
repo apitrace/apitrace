@@ -35,7 +35,6 @@
 #include "compat.h"
 
 #include <d3d9.h>
-#include <d3dx9.h>
 
 
 #ifndef D3DFMT_A2B10G10R10_XR_BIAS
