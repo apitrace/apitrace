@@ -168,9 +168,9 @@ ID3D11Device1.methods += [
 ]
 
 ID3DUserDefinedAnnotation.methods += [
-    StdMethod(INT, "BeginEvent", [(LPCWSTR, "Name")]),
-    StdMethod(INT, "EndEvent", []),
-    StdMethod(Void, "SetMarker", [(LPCWSTR, "Name")]),
+    StdMethod(INT, "BeginEvent", [(LPCWSTR, "Name")], sideeffects=False),
+    StdMethod(INT, "EndEvent", [], sideeffects=False),
+    StdMethod(Void, "SetMarker", [(LPCWSTR, "Name")], sideeffects=False),
     StdMethod(BOOL, "GetStatus", [], sideeffects=False),
 ]
 
