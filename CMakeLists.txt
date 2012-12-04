@@ -357,6 +357,9 @@ add_subdirectory (retrace)
 # CLI
 
 if (ENABLE_CLI)
+    if (WIN32)
+        add_subdirectory (inject)
+    endif ()
     add_subdirectory (cli)
 endif ()
 

@@ -82,81 +82,45 @@ copyWrapper(const os::String & wrapperPath,
 }
 
 
-static const char *glWrappers[] = {
-    GL_TRACE_WRAPPER,
-    NULL
-};
-
-#ifdef EGL_TRACE_WRAPPER
-static const char *eglWrappers[] = {
-    EGL_TRACE_WRAPPER,
-    NULL
-};
-#endif
-
-#ifdef _WIN32
-static const char *d3d7Wrappers[] = {
-    "ddraw.dll",
-    NULL
-};
-
-static const char *d3d8Wrappers[] = {
-    "d3d8.dll",
-    NULL
-};
-
-static const char *d3d9Wrappers[] = {
-    "d3d9.dll",
-    NULL
-};
-
-static const char *dxgiWrappers[] = {
-    "dxgitrace.dll",
-    //"dxgi.dll",
-    "d3d10.dll",
-    "d3d10_1.dll",
-    "d3d11.dll",
-    NULL
-};
-#endif
-
 int
 traceProgram(API api,
              char * const *argv,
              const char *output,
              bool verbose)
 {
-    const char **wrapperFilenames;
-    unsigned numWrappers;
+    const char *wrapperFilename;
+    std::vector<const char *> args;
     int status = 1;
 
     /*
      * TODO: simplify code
      */
 
+    bool useInject = false;
     switch (api) {
     case API_GL:
-        wrapperFilenames = glWrappers;
+        wrapperFilename = GL_TRACE_WRAPPER;
         break;
 #ifdef EGL_TRACE_WRAPPER
     case API_EGL:
-        wrapperFilenames = eglWrappers;
+        wrapperFilename = EGL_TRACE_WRAPPER;
         break;
 #endif
 #ifdef _WIN32
     case API_D3D7:
-        wrapperFilenames = d3d7Wrappers;
+        wrapperFilename = "ddraw.dll";
         break;
     case API_D3D8:
-        wrapperFilenames = d3d8Wrappers;
+        wrapperFilename = "d3d8.dll";
         break;
     case API_D3D9:
-        wrapperFilenames = d3d9Wrappers;
+        wrapperFilename = "d3d9.dll";
         break;
     case API_D3D10:
     case API_D3D10_1:
     case API_D3D11:
-        wrapperFilenames = dxgiWrappers;
+        wrapperFilename = "dxgitrace.dll";
+        useInject = true;
         break;
 #endif
     default:
@@ -164,68 +128,67 @@ traceProgram(API api,
         return 1;
     }
 
-    numWrappers = 0;
-    while (wrapperFilenames[numWrappers]) {
-        ++numWrappers;
+    os::String wrapperPath = findWrapper(wrapperFilename);
+    if (!wrapperPath.length()) {
+        std::cerr << "error: failed to find " << wrapperFilename << "\n";
+        goto exit;
     }
 
-    unsigned i;
-    for (i = 0; i < numWrappers; ++i) {
-        const char *wrapperFilename = wrapperFilenames[i];
-
-        os::String wrapperPath = findWrapper(wrapperFilename);
-
-        if (!wrapperPath.length()) {
-            std::cerr << "error: failed to find " << wrapperFilename << "\n";
-            goto exit;
-        }
-
 #if defined(_WIN32)
+    if (useInject) {
+        args.push_back("inject");
+        args.push_back(wrapperPath);
+    } else {
         /* On Windows copy the wrapper to the program directory.
          */
         if (!copyWrapper(wrapperPath, argv[0], verbose)) {
             goto exit;
         }
-#endif /* _WIN32 */
+    }
+#else  /* !_WIN32 */
+    (void)useInject;
+#endif /* !_WIN32 */
 
 #if defined(__APPLE__)
-        /* On Mac OS X, using DYLD_LIBRARY_PATH, we actually set the
-         * directory, not the file. */
-        wrapperPath.trimFilename();
+    /* On Mac OS X, using DYLD_LIBRARY_PATH, we actually set the
+     * directory, not the file. */
+    wrapperPath.trimFilename();
 #endif
 
 #if defined(TRACE_VARIABLE)
-        assert(numWrappers == 1);
-        if (verbose) {
-            std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
-        }
-        /* FIXME: Don't modify the current environment */
-        os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
-#endif /* TRACE_VARIABLE */
+    if (verbose) {
+        std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
     }
+    /* FIXME: Don't modify the current environment */
+    os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+#endif /* TRACE_VARIABLE */
 
     if (output) {
         os::setEnvironment("TRACE_FILE", output);
     }
 
+    for (char * const * arg = argv; *arg; ++arg) {
+        args.push_back(*arg);
+    }
+    args.push_back(NULL);
+
     if (verbose) {
         const char *sep = "";
-        for (char * const * arg = argv; *arg; ++arg) {
-            std::cerr << *arg << sep;
+        for (unsigned i = 0; i < args.size(); ++i) {
+            std::cerr << sep << args[i];
             sep = " ";
         }
         std::cerr << "\n";
     }
 
-    status = os::execute(argv);
+    status = os::execute((char * const *)&args[0]);
 
 exit:
 #if defined(TRACE_VARIABLE)
     os::unsetEnvironment(TRACE_VARIABLE);
 #endif
 #if defined(_WIN32)
-    for (unsigned j = 0; j < i; ++j) {
-        const char *wrapperFilename = wrapperFilenames[j];
+    if (!useInject) {
         os::String tmpWrapper(argv[0]);
         tmpWrapper.trimFilename();
         tmpWrapper.join(wrapperFilename);
