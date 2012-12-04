@@ -29,10 +29,41 @@
 #include <iostream>
 
 #include "d3d11imports.hpp"
-#include "json.hpp"
+#include "d3d10state.hpp"
 
 
 namespace d3dstate {
+
+
+static void
+dumpShaders(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+{
+    json.beginMember("shaders");
+    json.beginObject();
+
+    ID3D11VertexShader *pVertexShader = NULL;
+    pDeviceContext->VSGetShader(&pVertexShader, NULL, NULL);
+    if (pVertexShader) {
+        dumpShader<ID3D11DeviceChild>(json, "VS", pVertexShader);
+        pVertexShader->Release();
+    }
+
+    ID3D11GeometryShader *pGeometryShader = NULL;
+    pDeviceContext->GSGetShader(&pGeometryShader, NULL, NULL);
+    if (pGeometryShader) {
+        dumpShader<ID3D11DeviceChild>(json, "GS", pGeometryShader);
+        pGeometryShader->Release();
+    }
+
+    ID3D11PixelShader *pPixelShader = NULL;
+    pDeviceContext->PSGetShader(&pPixelShader, NULL, NULL);
+    if (pPixelShader) {
+        dumpShader<ID3D11DeviceChild>(json, "PS", pPixelShader);
+    }
+
+    json.endObject();
+    json.endMember(); // shaders
+}
 
 
 void
@@ -41,6 +72,19 @@ dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext)
     JSONWriter json(os);
 
     /* TODO */
+    json.beginMember("parameters");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // parameters
+
+    dumpShaders(json, pDeviceContext);
+
+    json.beginMember("textures");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // textures
+
+    dumpFramebuffer(json, pDeviceContext);
 }
 
 

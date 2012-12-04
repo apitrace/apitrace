@@ -23,61 +23,62 @@
  *
  **************************************************************************/
 
-#ifndef _D3DSTATE_HPP_
-#define _D3DSTATE_HPP_
+#ifndef _DXGISTATE_HPP_
+#define _DXGISTATE_HPP_
 
-
-#include <iostream>
 
 #include <windows.h>
 
 
-struct IDirect3DDevice9;
-struct ID3D10Device;
-struct ID3D11DeviceContext;
-
-
-class JSONWriter;
-
-namespace image {
-    class Image;
-}
+#include "json.hpp"
+#include "d3dshader.hpp"
+#include "d3dstate.hpp"
 
 
 namespace d3dstate {
 
 
-extern const GUID GUID_D3DSTATE;
+template< class T >
+inline void
+dumpShader(JSONWriter &json, const char *name, T *pShader) {
+    if (!pShader) {
+        return;
+    }
 
+    HRESULT hr;
 
-image::Image *
-getRenderTargetImage(IDirect3DDevice9 *pDevice);
+    /*
+     * There is no method to get the shader byte code, so the creator is supposed to
+     * attach it via the SetPrivateData method.
+     */
+    UINT BytecodeLength = 0;
+    char dummy;
+    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, &dummy);
+    if (hr != DXGI_ERROR_MORE_DATA) {
+        return;
+    }
 
-void
-dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
+    void *pShaderBytecode = malloc(BytecodeLength);
+    if (!pShaderBytecode) {
+        return;
+    }
 
+    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, pShaderBytecode);
+    if (SUCCEEDED(hr)) {
+        IDisassemblyBuffer *pDisassembly = NULL;
+        hr = DisassembleShader(pShaderBytecode, BytecodeLength, &pDisassembly);
+        if (SUCCEEDED(hr)) {
+            json.beginMember(name);
+            json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+            json.endMember();
+            pDisassembly->Release();
+        }
+    }
 
-image::Image *
-getRenderTargetImage(ID3D10Device *pDevice);
-
-void
-dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
-
-void
-dumpDevice(std::ostream &os, ID3D10Device *pDevice);
-
-
-image::Image *
-getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
-
-void
-dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
-
-void
-dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext);
+    free(pShaderBytecode);
+}
 
 
 } /* namespace d3dstate */
 
-
-#endif /* _D3DSTATE_HPP_ */
+#endif // _DXGISTATE_HPP_

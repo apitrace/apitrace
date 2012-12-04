@@ -31,6 +31,7 @@
 
 #include "image.hpp"
 #include "d3d11imports.hpp"
+#include "d3d10state.hpp"
 
 
 namespace d3dstate {
@@ -140,9 +141,10 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
 }
 
 image::Image *
-getRenderTargetImage(ID3D11DeviceContext *pDevice) {
+getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
+                         ID3D11RenderTargetView *pRenderTargetView) {
     image::Image *image = NULL;
-    ID3D11RenderTargetView *pRenderTargetView = NULL;
+    ;
     D3D11_RENDER_TARGET_VIEW_DESC Desc;
     ID3D11Resource *pResource = NULL;
     ID3D11Resource *pStagingResource = NULL;
@@ -154,9 +156,8 @@ getRenderTargetImage(ID3D11DeviceContext *pDevice) {
     const unsigned char *src;
     unsigned char *dst;
 
-    pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
     if (!pRenderTargetView) {
-        goto no_rendertarget;
+        return NULL;
     }
 
     pRenderTargetView->GetResource(&pResource);
@@ -164,7 +165,8 @@ getRenderTargetImage(ID3D11DeviceContext *pDevice) {
 
     pRenderTargetView->GetDesc(&Desc);
     if (Desc.Format != DXGI_FORMAT_R8G8B8A8_UNORM &&
-        Desc.Format != DXGI_FORMAT_R32G32B32A32_FLOAT) {
+        Desc.Format != DXGI_FORMAT_R32G32B32A32_FLOAT &&
+        Desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM) {
         std::cerr << "warning: unsupported DXGI format " << Desc.Format << "\n";
         goto no_staging;
     }
@@ -235,6 +237,13 @@ getRenderTargetImage(ID3D11DeviceContext *pDevice) {
                 dst[4*x + 2] = ((float *)src)[4*x + 2] * scale;
                 dst[4*x + 3] = ((float *)src)[4*x + 3] * scale;
             }
+        } else if (Desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM) {
+            for (unsigned x = 0; x < Width; ++x) {
+                dst[4*x + 0] = src[4*x + 2];
+                dst[4*x + 1] = src[4*x + 1];
+                dst[4*x + 2] = src[4*x + 0];
+                dst[4*x + 3] = src[4*x + 3];
+            }
         } else {
             assert(0);
         }
@@ -252,11 +261,56 @@ no_staging:
     if (pResource) {
         pResource->Release();
     }
+    return image;
+}
+
+
+
+
+image::Image *
+getRenderTargetImage(ID3D11DeviceContext *pDevice) {
+    ID3D11RenderTargetView *pRenderTargetView = NULL;
+    pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
+
+    image::Image *image = NULL;
     if (pRenderTargetView) {
+        image = getRenderTargetViewImage(pDevice, pRenderTargetView);
         pRenderTargetView->Release();
     }
-no_rendertarget:
+
     return image;
+}
+
+
+void
+dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
+{
+    json.beginMember("framebuffer");
+    json.beginObject();
+
+    ID3D11RenderTargetView *pRenderTargetViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
+    pDevice->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, pRenderTargetViews, NULL);
+
+    for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i) {
+        if (!pRenderTargetViews[i]) {
+            continue;
+        }
+
+        image::Image *image;
+        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i]);
+        if (image) {
+            char label[64];
+            _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            json.beginMember(label);
+            json.writeImage(image, "UNKNOWN");
+            json.endMember(); // RENDER_TARGET_*
+        }
+
+        pRenderTargetViews[i]->Release();
+    }
+
+    json.endObject();
+    json.endMember(); // framebuffer
 }
 
 
