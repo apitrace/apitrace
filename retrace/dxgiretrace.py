@@ -81,8 +81,27 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 print r'    }'
 
             if function.name.startswith('D3D10CreateDevice'):
+                # Toggle debugging
+                print r'    Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
+                print r'    if (retrace::debug) {'
+                print r'        if (LoadLibraryA("d3d10sdklayers")) {'
+                print r'            Flags |= D3D10_CREATE_DEVICE_DEBUG;'
+                print r'        }'
+                print r'    }'
+
+                # Force driver
                 self.forceDriver('D3D10_DRIVER_TYPE')
+
             if function.name.startswith('D3D11CreateDevice'):
+                # Toggle debugging
+                print r'    Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
+                print r'    if (retrace::debug) {'
+                print r'        if (LoadLibraryA("d3d11sdklayers")) {'
+                print r'            Flags |= D3D11_CREATE_DEVICE_DEBUG;'
+                print r'        }'
+                print r'    }'
+
+                # Force driver
                 self.forceDriver('D3D_DRIVER_TYPE')
 
         Retracer.invokeFunction(self, function)
