@@ -60,7 +60,12 @@ QT4_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
 link_directories(${LINK_DIRECTORIES} ${QJSON_LIBRARY_DIRS})
 include_directories(${QT_INCLUDES} ${QJSON_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
+if (WIN32)
+    # Use Windows subsystem (i.e., no console).
+    set (qapitrace_SUBSYSTEM "WIN32")
+endif ()
+
+add_executable(qapitrace ${qapitrace_SUBSYSTEM} ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
 target_link_libraries (qapitrace
     common
@@ -71,10 +76,16 @@ target_link_libraries (qapitrace
     ${QT_LIBRARIES}
 )
 
-# Recent builds of Qt no longer support i386 architecture
 if (APPLE)
+    # Recent builds of Qt no longer support i386 architecture
     set_target_properties (qapitrace PROPERTIES OSX_ARCHITECTURES x86_64)
 endif ()
+if (MSVC)
+    # When the Windows subsystem is chosen by default MSVC expects WinMain()
+    # entry point, but we rather use plain old main() everywhere.
+    set_target_properties (qapitrace PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
+endif ()
+
 
 ########### install files ###############
 
