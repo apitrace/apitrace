@@ -74,14 +74,6 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             if 'pSwapChainDesc' in function.argNames():
                 print r'    createWindow(pSwapChainDesc);'
 
-            # Compensate for the fact we don't trace the software renderer
-            # module LoadLibrary call
-            if 'Software' in function.argNames():
-                print r'    if (Software) {'
-                print r'        retrace::warning(call) << "using WARP for software device\n";'
-                print r'        Software = LoadLibraryA("d3d10warp");'
-                print r'    }'
-
             # Compensate for the fact we don't trace DXGI object creation
             if function.name.startswith('D3D11CreateDevice'):
                 print r'    if (DriverType == D3D_DRIVER_TYPE_UNKNOWN && !pAdapter) {'
