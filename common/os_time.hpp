@@ -73,7 +73,7 @@ namespace os {
         return counter.QuadPart;
 #elif defined(__linux__)
         struct timespec tp;
-        if (clock_gettime(CLOCK_REALTIME, &tp) == -1) {
+        if (clock_gettime(CLOCK_MONOTONIC, &tp) == -1) {
             return 0;
         }
         return tp.tv_sec * 1000000000LL + tp.tv_nsec;
