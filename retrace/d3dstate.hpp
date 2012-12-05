@@ -54,6 +54,9 @@ image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice);
 
 void
+dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice);
+
+void
 dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
 
 

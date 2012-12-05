@@ -30,6 +30,7 @@
 
 #include "d3d9imports.hpp"
 #include "d3dshader.hpp"
+#include "d3dstate.hpp"
 #include "json.hpp"
 
 
@@ -100,9 +101,20 @@ dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice)
 {
     JSONWriter json(os);
 
+    /* TODO */
+    json.beginMember("parameters");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // parameters
+
     dumpShaders(json, pDevice);
 
-    /* TODO */
+    json.beginMember("textures");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // textures
+
+    dumpFramebuffer(json, pDevice);
 }
 
 

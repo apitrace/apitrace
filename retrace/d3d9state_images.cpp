@@ -27,16 +27,18 @@
 #include <assert.h>
 
 #include "image.hpp"
+#include "json.hpp"
 #include "d3d9imports.hpp"
+#include "d3dstate.hpp"
 
 
 namespace d3dstate {
 
 
-image::Image *
-getRenderTargetImage(IDirect3DDevice9 *pDevice) {
+static image::Image *
+getRenderTargetImage(IDirect3DDevice9 *pDevice,
+                     IDirect3DSurface9 *pRenderTarget) {
     image::Image *image = NULL;
-    IDirect3DSurface9 *pRenderTarget = NULL;
     D3DSURFACE_DESC Desc;
     IDirect3DSurface9 *pStagingSurface = NULL;
     D3DLOCKED_RECT LockedRect;
@@ -44,15 +46,17 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice) {
     unsigned char *dst;
     HRESULT hr;
 
-    hr = pDevice->GetRenderTarget(0, &pRenderTarget);
-    if (FAILED(hr)) {
-        goto no_rendertarget;
+    if (!pRenderTarget) {
+        return NULL;
     }
-    assert(pRenderTarget);
 
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
-    assert(Desc.Format == D3DFMT_X8R8G8B8 || Desc.Format == D3DFMT_A8R8G8B8);
+
+    if (Desc.Format != D3DFMT_X8R8G8B8 && Desc.Format != D3DFMT_A8R8G8B8) {
+        std::cerr << "warning: unsupported D3DFORMAT " << Desc.Format << "\n";
+        goto no_staging;
+    }
 
     hr = pDevice->CreateOffscreenPlainSurface(Desc.Width, Desc.Height, Desc.Format, D3DPOOL_SYSTEMMEM, &pStagingSurface, NULL);
     if (FAILED(hr)) {
@@ -91,9 +95,68 @@ no_image:
 no_rendertargetdata:
     pStagingSurface->Release();
 no_staging:
-    pRenderTarget->Release();
-no_rendertarget:
     return image;
+}
+
+
+image::Image *
+getRenderTargetImage(IDirect3DDevice9 *pDevice) {
+    HRESULT hr;
+
+    IDirect3DSurface9 *pRenderTarget = NULL;
+    hr = pDevice->GetRenderTarget(0, &pRenderTarget);
+    if (FAILED(hr)) {
+        return NULL;
+    }
+    assert(pRenderTarget);
+
+    image::Image *image = NULL;
+    if (pRenderTarget) {
+        image = getRenderTargetImage(pDevice, pRenderTarget);
+        pRenderTarget->Release();
+    }
+
+    return image;
+}
+
+
+void
+dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
+{
+    HRESULT hr;
+
+    json.beginMember("framebuffer");
+    json.beginObject();
+
+    D3DCAPS9 Caps;
+    pDevice->GetDeviceCaps(&Caps);
+
+    for (UINT i = 0; i < Caps.NumSimultaneousRTs; ++i) {
+        IDirect3DSurface9 *pRenderTarget = NULL;
+        hr = pDevice->GetRenderTarget(i, &pRenderTarget);
+        if (FAILED(hr)) {
+            continue;
+        }
+
+        if (!pRenderTarget) {
+            continue;
+        }
+
+        image::Image *image;
+        image = getRenderTargetImage(pDevice, pRenderTarget);
+        if (image) {
+            char label[64];
+            _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            json.beginMember(label);
+            json.writeImage(image, "UNKNOWN");
+            json.endMember(); // RENDER_TARGET_*
+        }
+
+        pRenderTarget->Release();
+    }
+
+    json.endObject();
+    json.endMember(); // framebuffer
 }
 
 
