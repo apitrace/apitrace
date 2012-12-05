@@ -107,45 +107,47 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
         Retracer.invokeFunction(self, function)
 
     def forceDriver(self, enum):
-        print r'    switch (retrace::driver) {'
-        print r'    case retrace::DRIVER_HARDWARE:'
-        print r'        DriverType = %s_HARDWARE;' % enum
-        print r'        Software = NULL;'
-        print r'        break;'
-        print r'    case retrace::DRIVER_SOFTWARE:'
-        print r'        pAdapter = NULL;'
-        print r'        DriverType = %s_WARP;' % enum
-        print r'        Software = NULL;'
-        print r'        break;'
-        print r'    case retrace::DRIVER_REFERENCE:'
-        print r'        pAdapter = NULL;'
-        print r'        DriverType = %s_REFERENCE;' % enum
-        print r'        Software = NULL;'
-        print r'        break;'
-        print r'    case retrace::DRIVER_NULL:'
-        print r'        pAdapter = NULL;'
-        print r'        DriverType = %s_NULL;' % enum
-        print r'        Software = NULL;'
-        print r'        break;'
-        print r'    case retrace::DRIVER_MODULE:'
-        print r'        pAdapter = NULL;'
-        print r'        DriverType = %s_SOFTWARE;' % enum
-        print r'        Software = LoadLibraryA(retrace::driverModule);'
-        print r'        if (!Software) {'
-        print r'            retrace::warning(call) << "failed to load " << retrace::driverModule << "\n";'
-        print r'        }'
-        print r'        break;'
-        print r'    default:'
-        print r'        assert(0);'
-        print r'        /* fall-through */'
-        print r'    case retrace::DRIVER_DEFAULT:'
-        print r'        if (DriverType == %s_SOFTWARE) {' % enum
-        print r'            Software = LoadLibraryA("d3d10warp");'
+        # This can only work when pAdapter is NULL. For non-NULL pAdapter we
+        # need to override inside the EnumAdapters call below
+        print r'    if (pAdapter == NULL) {'
+        print r'        switch (retrace::driver) {'
+        print r'        case retrace::DRIVER_HARDWARE:'
+        print r'            DriverType = %s_HARDWARE;' % enum
+        print r'            Software = NULL;'
+        print r'            break;'
+        print r'        case retrace::DRIVER_SOFTWARE:'
+        print r'            DriverType = %s_WARP;' % enum
+        print r'            Software = NULL;'
+        print r'            break;'
+        print r'        case retrace::DRIVER_REFERENCE:'
+        print r'            DriverType = %s_REFERENCE;' % enum
+        print r'            Software = NULL;'
+        print r'            break;'
+        print r'        case retrace::DRIVER_NULL:'
+        print r'            DriverType = %s_NULL;' % enum
+        print r'            Software = NULL;'
+        print r'            break;'
+        print r'        case retrace::DRIVER_MODULE:'
+        print r'            DriverType = %s_SOFTWARE;' % enum
+        print r'            Software = LoadLibraryA(retrace::driverModule);'
         print r'            if (!Software) {'
-        print r'                retrace::warning(call) << "failed to load d3d10warp.dll\n";'
+        print r'                retrace::warning(call) << "failed to load " << retrace::driverModule << "\n";'
         print r'            }'
+        print r'            break;'
+        print r'        default:'
+        print r'            assert(0);'
+        print r'            /* fall-through */'
+        print r'        case retrace::DRIVER_DEFAULT:'
+        print r'            if (DriverType == %s_SOFTWARE) {' % enum
+        print r'                Software = LoadLibraryA("d3d10warp");'
+        print r'                if (!Software) {'
+        print r'                    retrace::warning(call) << "failed to load d3d10warp.dll\n";'
+        print r'                }'
+        print r'            }'
+        print r'            break;'
         print r'        }'
-        print r'        break;'
+        print r'    } else {'
+        print r'        Software = NULL;'
         print r'    }'
 
     def invokeInterfaceMethod(self, interface, method):
@@ -174,6 +176,34 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print r'        retrace::warning(call) << "shared surfaces unsupported\n";'
             print r'        pSharedResource = NULL;'
             print r'    }'
+
+        # Force driver
+        if interface.name.startswith('IDXGIFactory') and method.name == 'EnumAdapters':
+            print r'    const char *szSoftware = NULL;'
+            print r'    switch (retrace::driver) {'
+            print r'    case retrace::DRIVER_REFERENCE:'
+            print r'    case retrace::DRIVER_SOFTWARE:'
+            print r'        szSoftware = "d3d10warp.dll";'
+            print r'        break;'
+            print r'    case retrace::DRIVER_MODULE:'
+            print r'        szSoftware = retrace::driverModule;'
+            print r'        break;'
+            print r'    default:'
+            print r'        break;'
+            print r'    }'
+            print r'    HMODULE hSoftware = NULL;'
+            print r'    if (szSoftware) {'
+            print r'        hSoftware = LoadLibraryA(szSoftware);'
+            print r'        if (!hSoftware) {'
+            print r'            retrace::warning(call) << "failed to load " << szSoftware << "\n";'
+            print r'        }'
+            print r'    }'
+            print r'    if (hSoftware) {'
+            print r'        _result = _this->CreateSoftwareAdapter(hSoftware, ppAdapter);'
+            print r'    } else {'
+            Retracer.invokeInterfaceMethod(self, interface, method)
+            print r'    }'
+            return
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
