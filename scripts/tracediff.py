@@ -180,7 +180,7 @@ class ExternalDiffer(Differ):
 #
 
 from unpickle import Unpickler, Dumper, Rebuilder
-from highlight import ColorHighlighter, LessHighlighter
+from highlight import PlainHighlighter, LessHighlighter
 
 
 ignoredFunctionNames = set([
@@ -244,7 +244,7 @@ class PythonDiffer(Differ):
         if self.isatty:
             self.highlighter = LessHighlighter()
         else:
-            self.highlighter = ColorHighlighter()
+            self.highlighter = PlainHighlighter()
         self.delete_color = self.highlighter.red
         self.insert_color = self.highlighter.green
         self.callNos = callNos
