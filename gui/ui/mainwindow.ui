@@ -567,7 +567,10 @@
      <normaloff>:/resources/document-new.png</normaloff>:/resources/document-new.png</iconset>
    </property>
    <property name="text">
-    <string>New</string>
+    <string>&amp;New...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
   <action name="actionFind">
@@ -576,7 +579,7 @@
      <normaloff>:/resources/edit-find.png</normaloff>:/resources/edit-find.png</iconset>
    </property>
    <property name="text">
-    <string>Find</string>
+    <string>&amp;Find</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
