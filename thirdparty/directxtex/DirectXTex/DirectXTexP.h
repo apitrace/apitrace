@@ -17,7 +17,9 @@
 #pragma once
 #endif
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 
 #ifdef USE_XNAMATH
