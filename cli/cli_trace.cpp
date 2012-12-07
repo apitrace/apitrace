@@ -116,9 +116,7 @@ traceProgram(trace::API api,
     case trace::API_D3D9:
         wrapperFilename = "d3d9.dll";
         break;
-    case trace::API_D3D10:
-    case trace::API_D3D10_1:
-    case trace::API_D3D11:
+    case trace::API_DXGI:
         wrapperFilename = "dxgitrace.dll";
         useInject = true;
         break;
@@ -270,12 +268,12 @@ command(int argc, char *argv[])
                 api = trace::API_D3D8;
             } else if (strcmp(optarg, "d3d9") == 0) {
                 api = trace::API_D3D9;
-            } else if (strcmp(optarg, "d3d10") == 0) {
-                api = trace::API_D3D10;
-            } else if (strcmp(optarg, "d3d10_1") == 0) {
-                api = trace::API_D3D10_1;
-            } else if (strcmp(optarg, "d3d11") == 0) {
-                api = trace::API_D3D11;
+            } else if (strcmp(optarg, "dxgi") == 0 ||
+                       strcmp(optarg, "d3d10") == 0 ||
+                       strcmp(optarg, "d3d10_1") == 0 ||
+                       strcmp(optarg, "d3d11") == 0 ||
+                       strcmp(optarg, "d3d11_1") == 0) {
+                api = trace::API_DXGI;
             } else {
                 std::cerr << "error: unknown API `" << optarg << "`\n";
                 usage();

@@ -76,10 +76,8 @@ executeRetrace(const std::vector<const char *> & opts,
     case trace::API_D3D7:
     case trace::API_D3D8:
     case trace::API_D3D9:
-    case trace::API_D3D10:
-    case trace::API_D3D10_1:
-    case trace::API_D3D11:
-        // Can be used with WINE
+    case trace::API_DXGI:
+        // Use prefix so that it can be used with WINE
         retraceName = "d3dretrace.exe";
         break;
     default:

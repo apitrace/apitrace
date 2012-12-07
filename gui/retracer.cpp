@@ -271,9 +271,7 @@ void Retracer::run()
     case trace::API_D3D7:
     case trace::API_D3D8:
     case trace::API_D3D9:
-    case trace::API_D3D10:
-    case trace::API_D3D10_1:
-    case trace::API_D3D11:
+    case trace::API_DXGI:
 #ifdef Q_OS_WIN
         prog = QLatin1String("d3dretrace");
 #else
