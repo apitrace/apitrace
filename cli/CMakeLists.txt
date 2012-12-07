@@ -11,6 +11,7 @@ add_executable (apitrace
     cli_retrace.cpp
     cli_trace.cpp
     cli_trim.cpp
+    cli_resources.cpp
 )
 
 target_link_libraries (apitrace

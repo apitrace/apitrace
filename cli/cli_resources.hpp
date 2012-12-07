@@ -23,17 +23,14 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_RESOURCE_HPP_
-#define _TRACE_RESOURCE_HPP_
+#ifndef _CLI_RESOURCES_HPP_
+#define _CLI_RESOURCES_HPP_
 
 
 #include <stdlib.h>
 
 #include "os_string.hpp"
 #include "trace_api.hpp"
-
-
-namespace trace {
 
 
 os::String
@@ -45,6 +42,5 @@ findScript(const char *name);
 os::String
 findWrapper(const char *wrapperFilename);
 
-} /* namespace trace */
 
-#endif /* _TRACE_RESOURCE_HPP_ */
+#endif /* _CLI_RESOURCES_HPP_ */

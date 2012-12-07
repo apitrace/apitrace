@@ -35,7 +35,7 @@
 #include "os_process.hpp"
 
 #include "trace_parser.hpp"
-#include "trace_resource.hpp"
+#include "cli_resources.hpp"
 
 #include "cli.hpp"
 #include "cli_retrace.hpp"
@@ -89,7 +89,7 @@ executeRetrace(const std::vector<const char *> & opts,
     }
 
     std::vector<const char *> command;
-    os::String retracePath = trace::findProgram(retraceName);
+    os::String retracePath = findProgram(retraceName);
     if (retracePath.length()) {
         command.push_back(retracePath);
     } else {

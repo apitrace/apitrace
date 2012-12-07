@@ -33,7 +33,7 @@
 #include "cli.hpp"
 #include "os_string.hpp"
 #include "os_process.hpp"
-#include "trace_resource.hpp"
+#include "cli_resources.hpp"
 
 static const char *synopsis = "Identify differences between two state dumps.";
 
@@ -83,7 +83,7 @@ command(int argc, char *argv[])
     file1 = argv[optind];
     file2 = argv[optind + 1];
 
-    os::String command = trace::findScript("jsondiff.py");
+    os::String command = findScript("jsondiff.py");
 
     char *args[5];
 

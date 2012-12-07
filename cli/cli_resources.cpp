@@ -29,11 +29,9 @@
 #include <iostream>
 
 #include "os_string.hpp"
-#include "trace_tools.hpp"
 
+#include "cli_resources.hpp"
 
-
-namespace trace {
 
 os::String
 findProgram(const char*programFilename)
@@ -148,6 +146,3 @@ findScript(const char *scriptFilename)
 
     return "";
 }
-
-
-} /* namespace trace */

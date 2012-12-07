@@ -33,7 +33,7 @@
 #include "os_string.hpp"
 #include "os_process.hpp"
 #include "trace_tools.hpp"
-#include "trace_resource.hpp"
+#include "cli_resources.hpp"
 
 
 
