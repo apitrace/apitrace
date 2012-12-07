@@ -50,7 +50,7 @@ void TraceDialog::browse()
             tr("Find the application"),
             QDir::currentPath());
 
-    if (isFileOk(fileName)) {
+    if (!fileName.isEmpty() && isFileOk(fileName)) {
         applicationEdit->setText(fileName);
     }
 }
