@@ -215,6 +215,7 @@ endif ()
 
 if (WIN32)
     add_subdirectory (thirdparty/less)
+    add_subdirectory (thirdparty/directxtex)
 endif ()
 
 # Always use bundled QJSon.
