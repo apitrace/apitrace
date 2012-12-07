@@ -46,6 +46,7 @@ guessApi(const char *filename)
 {
     trace::Parser p;
     if (!p.open(filename)) {
+        exit(1);
         return trace::API_UNKNOWN;
     }
     trace::Call *call;

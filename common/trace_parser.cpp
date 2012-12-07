@@ -248,9 +248,10 @@ Parser::parse_function_sig(void) {
                 api = trace::API_GL;
             } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl[A-Z]*
                 api = trace::API_EGL;
-            } else if (n[0] == 'D' &&
-                       ((n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
-                        (n[1] == '3' && n[2] == 'D'))) { // D3D*
+            } else if ((n[0] == 'D' &&
+                        ((n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
+                         (n[1] == '3' && n[2] == 'D'))) || // D3D*
+                       (n[0] == 'C' && n[1] == 'r' && n[2] == 'e' && n[3] == 'a' && n[4] == 't' && n[5] == 'e')) { // Create*
                 api = trace::API_DX;
             } else {
                 /* TODO */
