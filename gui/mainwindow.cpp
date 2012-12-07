@@ -48,6 +48,7 @@ MainWindow::MainWindow()
       m_nonDefaultsLookupEvent(0)
 {
     m_ui.setupUi(this);
+    updateActionsState(false);
     initObjects();
     initConnections();
 }
@@ -228,11 +229,7 @@ void MainWindow::replayProfile()
 void MainWindow::replayStop()
 {
     m_retracer->quit();
-    m_ui.actionStop->setEnabled(false);
-    m_ui.actionReplay->setEnabled(true);
-    m_ui.actionProfile->setEnabled(true);
-    m_ui.actionLookupState->setEnabled(true);
-    m_ui.actionShowThumbnails->setEnabled(true);
+    updateActionsState(true, true);
 }
 
 void MainWindow::newTraceFile(const QString &fileName)
@@ -243,18 +240,11 @@ void MainWindow::newTraceFile(const QString &fileName)
     m_trace->setFileName(fileName);
 
     if (fileName.isEmpty()) {
-        m_ui.actionReplay->setEnabled(false);
-        m_ui.actionProfile->setEnabled(false);
-        m_ui.actionLookupState->setEnabled(false);
-        m_ui.actionShowThumbnails->setEnabled(false);
+        updateActionsState(false);
         setWindowTitle(tr("QApiTrace"));
     } else {
+        updateActionsState(true);
         QFileInfo info(fileName);
-        m_ui.actionReplay->setEnabled(true);
-        m_ui.actionProfile->setEnabled(true);
-        m_ui.actionLookupState->setEnabled(true);
-        m_ui.actionShowThumbnails->setEnabled(true);
-        m_ui.actionTrim->setEnabled(true);
         setWindowTitle(
             tr("QApiTrace - %1").arg(info.fileName()));
     }
@@ -262,12 +252,7 @@ void MainWindow::newTraceFile(const QString &fileName)
 
 void MainWindow::replayFinished(const QString &message)
 {
-    m_ui.actionStop->setEnabled(false);
-    m_ui.actionReplay->setEnabled(true);
-    m_ui.actionProfile->setEnabled(true);
-    m_ui.actionLookupState->setEnabled(true);
-    m_ui.actionShowThumbnails->setEnabled(true);
-
+    updateActionsState(true);
     m_progressBar->hide();
     statusBar()->showMessage(message, 2000);
     m_stateEvent = 0;
@@ -280,11 +265,7 @@ void MainWindow::replayFinished(const QString &message)
 
 void MainWindow::replayError(const QString &message)
 {
-    m_ui.actionStop->setEnabled(false);
-    m_ui.actionReplay->setEnabled(true);
-    m_ui.actionProfile->setEnabled(true);
-    m_ui.actionLookupState->setEnabled(true);
-    m_ui.actionShowThumbnails->setEnabled(true);
+    updateActionsState(true);
     m_stateEvent = 0;
     m_nonDefaultsLookupEvent = 0;
 
@@ -934,6 +915,47 @@ void MainWindow::initConnections()
             m_profileDialog, SLOT(show()));
     connect(m_profileDialog, SIGNAL(jumpToCall(int)),
             this, SLOT(slotJumpTo(int)));
+}
+
+void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
+{
+    if (traceLoaded) {
+        /* Edit */
+        m_ui.actionFind          ->setEnabled(true);
+        m_ui.actionGo            ->setEnabled(true);
+        m_ui.actionGoFrameStart  ->setEnabled(true);
+        m_ui.actionGoFrameEnd    ->setEnabled(true);
+
+        /* Trace */
+        if (stopped) {
+            m_ui.actionStop->setEnabled(false);
+            m_ui.actionReplay->setEnabled(true);
+        }
+        else {
+            m_ui.actionStop->setEnabled(true);
+            m_ui.actionReplay->setEnabled(false);
+        }
+
+        m_ui.actionProfile       ->setEnabled(true);
+        m_ui.actionLookupState   ->setEnabled(true);
+        m_ui.actionShowThumbnails->setEnabled(true);
+        m_ui.actionTrim          ->setEnabled(true);
+    }
+    else {
+        /* Edit */
+        m_ui.actionFind          ->setEnabled(false);
+        m_ui.actionGo            ->setEnabled(false);
+        m_ui.actionGoFrameStart  ->setEnabled(false);
+        m_ui.actionGoFrameEnd    ->setEnabled(false);
+
+        /* Trace */
+        m_ui.actionReplay        ->setEnabled(false);
+        m_ui.actionProfile       ->setEnabled(false);
+        m_ui.actionStop          ->setEnabled(false);
+        m_ui.actionLookupState   ->setEnabled(false);
+        m_ui.actionShowThumbnails->setEnabled(false);
+        m_ui.actionTrim          ->setEnabled(false);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent * event)

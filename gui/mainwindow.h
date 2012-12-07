@@ -98,6 +98,7 @@ private slots:
 private:
     void initObjects();
     void initConnections();
+    void updateActionsState(bool traceLoaded, bool stopped = true);
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState, bool dumpThumbnails);
     void trimEvent();

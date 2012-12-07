@@ -124,7 +124,7 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="url" stdset="0">
+       <property name="url">
         <url>
          <string>about:blank</string>
         </url>
@@ -493,9 +493,6 @@
    </property>
   </action>
   <action name="actionReplay">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="icon">
     <iconset resource="../qapitrace.qrc">
      <normaloff>:/resources/media-playback-start.png</normaloff>:/resources/media-playback-start.png</iconset>
@@ -508,9 +505,6 @@
    </property>
   </action>
   <action name="actionStop">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="icon">
     <iconset resource="../qapitrace.qrc">
      <normaloff>:/resources/media-playback-stop.png</normaloff>:/resources/media-playback-stop.png</iconset>
@@ -520,9 +514,6 @@
    </property>
   </action>
   <action name="actionLookupState">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="icon">
     <iconset resource="../qapitrace.qrc">
      <normaloff>:/resources/media-record.png</normaloff>:/resources/media-record.png</iconset>
@@ -535,9 +526,6 @@
    </property>
   </action>
   <action name="actionShowThumbnails">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>Show &amp;Thumbnails</string>
    </property>
@@ -546,9 +534,6 @@
    </property>
   </action>
   <action name="actionTrim">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>Tr&amp;im</string>
    </property>
@@ -641,9 +626,6 @@
    </property>
   </action>
   <action name="actionProfile">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>&amp;Profile</string>
    </property>
