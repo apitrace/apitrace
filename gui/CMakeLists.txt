@@ -58,7 +58,13 @@ QT4_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
 
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
 link_directories(${LINK_DIRECTORIES} ${QJSON_LIBRARY_DIRS})
-include_directories(${QT_INCLUDES} ${QJSON_INCLUDE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}
+    ${QJSON_INCLUDE_DIR}
+    ${QT_INCLUDES}
+)
 
 if (WIN32)
     # Use Windows subsystem (i.e., no console).
@@ -68,8 +74,8 @@ endif ()
 add_executable(qapitrace ${qapitrace_SUBSYSTEM} ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
 target_link_libraries (qapitrace
+    image
     common
-    ${PNG_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
     ${QJSON_LIBRARIES}

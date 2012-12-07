@@ -206,8 +206,6 @@ set (PNG_DEFINITIONS "")
 set (PNG_LIBRARIES png_bundled)
 
 add_subdirectory (thirdparty/libpng EXCLUDE_FROM_ALL)
-include_directories (${PNG_INCLUDE_DIR})
-add_definitions (${PNG_DEFINITIONS})
 
 if (MSVC)
     add_subdirectory (thirdparty/getopt EXCLUDE_FROM_ALL)
@@ -321,10 +319,6 @@ add_library (common STATIC
     common/trace_writer_model.cpp
     common/trace_loader.cpp
     common/trace_profiler.cpp
-    common/image.cpp
-    common/image_bmp.cpp
-    common/image_pnm.cpp
-    common/image_png.cpp
     common/trace_option.cpp
     common/${os}
 )
@@ -348,6 +342,7 @@ endif ()
 add_subdirectory (dispatch)
 add_subdirectory (helpers)
 add_subdirectory (wrappers)
+add_subdirectory (image)
 add_subdirectory (retrace)
 
 

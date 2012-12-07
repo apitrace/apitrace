@@ -16,7 +16,6 @@ add_executable (apitrace
 
 target_link_libraries (apitrace
     common
-    ${PNG_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}

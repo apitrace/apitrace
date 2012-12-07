@@ -6,6 +6,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
+    ${CMAKE_SOURCE_DIR}/image
 )
 
 add_definitions (-DRETRACE)
@@ -39,8 +40,8 @@ add_library (retrace_common STATIC
     json.cpp
 )
 target_link_libraries (retrace_common
+    image
     common
-    ${PNG_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
