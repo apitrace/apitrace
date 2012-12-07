@@ -109,6 +109,8 @@ bool _CalculateMipLevels3D( _In_ size_t width, _In_ size_t height, _In_ size_t d
     return true;
 }
 
+#ifndef __MINGW32__
+
 static HRESULT _EnsureWicBitmapPixelFormat( _In_ IWICImagingFactory* pWIC, _In_ IWICBitmap* src, _In_ DWORD filter,
                                             _In_ const WICPixelFormatGUID& desiredPixelFormat,
                                             _Deref_out_ IWICBitmap** dest )
@@ -1159,5 +1161,7 @@ HRESULT GenerateMipMaps3D( const Image* srcImages, size_t nimages, const TexMeta
         return HRESULT_FROM_WIN32( ERROR_NOT_SUPPORTED );;
     }
 }
+
+#endif /* !__MINGW32__ */
 
 }; // namespace

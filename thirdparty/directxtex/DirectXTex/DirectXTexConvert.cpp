@@ -1806,10 +1806,9 @@ static const ConvertData g_ConvertTable[] = {
 #endif
 };
 
-#pragma prefast( suppress : 25004, "Signature must match bsearch_s" );
-static int __cdecl _ConvertCompare( void *context, const void* ptr1, const void *ptr2 )
+#pragma prefast( suppress : 25004, "Signature must match bsearch" );
+static int __cdecl _ConvertCompare( const void* ptr1, const void *ptr2 )
 {
-    UNREFERENCED_PARAMETER(context);
     const ConvertData *p1 = reinterpret_cast<const ConvertData*>(ptr1);
     const ConvertData *p2 = reinterpret_cast<const ConvertData*>(ptr2);
     if ( p1->format == p2->format ) return 0;
@@ -1830,8 +1829,8 @@ DWORD _GetConvertFlags( DXGI_FORMAT format )
 #endif
 
     ConvertData key = { format, 0 };
-    const ConvertData* in = (const ConvertData*) bsearch_s( &key, g_ConvertTable, _countof(g_ConvertTable), sizeof(ConvertData),
-                                                            _ConvertCompare, 0 );
+    const ConvertData* in = (const ConvertData*) bsearch( &key, g_ConvertTable, _countof(g_ConvertTable), sizeof(ConvertData),
+                                                          _ConvertCompare );
     return (in) ? in->flags : 0;
 }
 
@@ -1857,11 +1856,11 @@ void _ConvertScanline( XMVECTOR* pBuffer, size_t count, DXGI_FORMAT outFormat, D
 
     // Determine conversion details about source and dest formats
     ConvertData key = { inFormat, 0 };
-    const ConvertData* in = (const ConvertData*) bsearch_s( &key, g_ConvertTable, _countof(g_ConvertTable), sizeof(ConvertData),
-                                                            _ConvertCompare, 0 );
+    const ConvertData* in = (const ConvertData*) bsearch( &key, g_ConvertTable, _countof(g_ConvertTable), sizeof(ConvertData),
+                                                          _ConvertCompare );
     key.format = outFormat;
-    const ConvertData* out = (const ConvertData*) bsearch_s( &key, g_ConvertTable, _countof(g_ConvertTable), sizeof(ConvertData),
-                                                            _ConvertCompare, 0 );
+    const ConvertData* out = (const ConvertData*) bsearch( &key, g_ConvertTable, _countof(g_ConvertTable), sizeof(ConvertData),
+                                                           _ConvertCompare );
     if ( !in || !out )
     {
         assert(false);
