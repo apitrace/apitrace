@@ -13,14 +13,14 @@
 // http://go.microsoft.com/fwlink/?LinkId=248926
 //-------------------------------------------------------------------------------------
 
-#include "directxtexp.h"
+#include "DirectXTexP.h"
 
 #ifdef _OPENMP
 #include <omp.h>
 #pragma warning(disable : 4616 6001 6993)
 #endif
 
-#include "bc.h"
+#include "BC.h"
 
 namespace DirectX
 {
