@@ -33,6 +33,61 @@
 #include "d3d11imports.hpp"
 #include "d3d10state.hpp"
 
+#ifdef __MINGW32__
+#define nullptr NULL
+#endif
+#include "DirectXTex.h"
+
+
+/**
+ * Convert between DXGI formats.
+ *
+ */
+static HRESULT
+ConvertFormat(DXGI_FORMAT SrcFormat,
+              void *SrcData,
+              UINT SrcPitch,
+              DXGI_FORMAT DstFormat,
+              void *DstData,
+              UINT DstPitch,
+              UINT Width, UINT Height)
+{
+    HRESULT hr;
+
+    DirectX::Image SrcImage;
+    DirectX::Image DstImage;
+    
+    SrcImage.width = Width;
+    SrcImage.height = Height;
+    SrcImage.format = SrcFormat;
+    SrcImage.rowPitch = SrcPitch;
+    SrcImage.slicePitch = Height * SrcPitch;
+    SrcImage.pixels = (uint8_t*)SrcData;
+    
+    DstImage.width = Width;
+    DstImage.height = Height;
+    DstImage.format = DstFormat;
+    DstImage.rowPitch = DstPitch;
+    DstImage.slicePitch = Height * DstPitch;
+    DstImage.pixels = (uint8_t*)DstData;
+ 
+    DirectX::Rect rect(0, 0, Width, Height);
+ 
+    if (SrcFormat != DstFormat) {
+        DirectX::ScratchImage ScratchImage;
+        ScratchImage.Initialize2D(DstFormat, Width, Height, 1, 1);
+  
+        hr = DirectX::Convert(SrcImage, DstFormat, DirectX::TEX_FILTER_DEFAULT, 0.0f, ScratchImage);
+        if (SUCCEEDED(hr)) {
+            hr = CopyRectangle(*ScratchImage.GetImage(0, 0, 0), rect, DstImage, DirectX::TEX_FILTER_DEFAULT, 0, 0);
+        }
+    } else {
+        hr = CopyRectangle(SrcImage, rect, DstImage, DirectX::TEX_FILTER_DEFAULT, 0, 0);
+    }
+ 
+    return hr;
+}
+
 
 namespace d3dstate {
 
@@ -144,7 +199,6 @@ image::Image *
 getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
                          ID3D11RenderTargetView *pRenderTargetView) {
     image::Image *image = NULL;
-    ;
     D3D11_RENDER_TARGET_VIEW_DESC Desc;
     ID3D11Resource *pResource = NULL;
     ID3D11Resource *pStagingResource = NULL;
@@ -153,8 +207,6 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
     UINT Subresource;
     D3D11_MAPPED_SUBRESOURCE MappedSubresource;
     HRESULT hr;
-    const unsigned char *src;
-    unsigned char *dst;
 
     if (!pRenderTargetView) {
         return NULL;
@@ -164,12 +216,6 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
     assert(pResource);
 
     pRenderTargetView->GetDesc(&Desc);
-    if (Desc.Format != DXGI_FORMAT_R8G8B8A8_UNORM &&
-        Desc.Format != DXGI_FORMAT_R32G32B32A32_FLOAT &&
-        Desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM) {
-        std::cerr << "warning: unsupported DXGI format " << Desc.Format << "\n";
-        goto no_staging;
-    }
 
     hr = stageResource(pDevice, pResource, &pStagingResource, &Width, &Height, &Depth);
     if (FAILED(hr)) {
@@ -219,36 +265,22 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
         goto no_map;
     }
 
-    image = new image::Image(Width, Height, 4, true);
+    image = new image::Image(Width, Height, 4);
     if (!image) {
         goto no_image;
     }
+    assert(image->stride() > 0);
 
-    dst = image->start();
-    src = (const unsigned char *)MappedSubresource.pData;
-    for (unsigned y = 0; y < Height; ++y) {
-        if (Desc.Format == DXGI_FORMAT_R8G8B8A8_UNORM) {
-            memcpy(dst, src, Width * 4);
-        } else if (Desc.Format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
-            float scale = 1.0f/255.0f;
-            for (unsigned x = 0; x < Width; ++x) {
-                dst[4*x + 0] = ((float *)src)[4*x + 0] * scale;
-                dst[4*x + 1] = ((float *)src)[4*x + 1] * scale;
-                dst[4*x + 2] = ((float *)src)[4*x + 2] * scale;
-                dst[4*x + 3] = ((float *)src)[4*x + 3] * scale;
-            }
-        } else if (Desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM) {
-            for (unsigned x = 0; x < Width; ++x) {
-                dst[4*x + 0] = src[4*x + 2];
-                dst[4*x + 1] = src[4*x + 1];
-                dst[4*x + 2] = src[4*x + 0];
-                dst[4*x + 3] = src[4*x + 3];
-            }
-        } else {
-            assert(0);
-        }
-        src += MappedSubresource.RowPitch;
-        dst += image->stride();
+    hr = ConvertFormat(Desc.Format,
+                       MappedSubresource.pData,
+                       MappedSubresource.RowPitch,
+                       DXGI_FORMAT_R8G8B8A8_UNORM,
+                       image->start(),
+                       image->stride(),
+                       Width, Height);
+    if (FAILED(hr)) {
+        delete image;
+        image = NULL;
     }
 
 no_image:
