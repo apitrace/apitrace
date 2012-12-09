@@ -268,18 +268,6 @@ endif ()
 set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
 set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 
-# Expose the binary/install directories to source
-#
-# TODO: Use the same directory layout, for both build and install directories,
-# so that binaries can find each other using just relative paths.
-#
-add_definitions(
-    -DAPITRACE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
-    -DAPITRACE_PROGRAMS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/bin"
-    -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
-    -DAPITRACE_WRAPPERS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
-)
-
 
 ##############################################################################
 # Common libraries / utilities
