@@ -228,8 +228,8 @@ void HistogramView::paintEvent(QPaintEvent *)
 qint64 HistogramView::itemAtPosition(QPoint pos) {
     double dvdx = m_viewWidth / (double)width();
 
-    qint64 left = qFloor(dvdx) * (pos.x() - 1) + m_viewLeft;
-    qint64 right = qCeil(dvdx) * (pos.x() + 1) + m_viewLeft;
+    qint64 left = qFloor(dvdx * (pos.x() - 1)) + m_viewLeft;
+    qint64 right = qCeil(dvdx * (pos.x() + 1)) + m_viewLeft;
 
     qint64 longestIndex = 0;
     qint64 longestValue = 0;
