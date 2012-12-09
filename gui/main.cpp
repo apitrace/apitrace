@@ -3,6 +3,9 @@
 #include "apitrace.h"
 #include "apitracecall.h"
 
+#include "os_string.hpp"
+#include "os_process.hpp"
+
 #include <QApplication>
 #include <QMetaType>
 #include <QVariant>
@@ -34,8 +37,10 @@ int main(int argc, char **argv)
     qRegisterMetaType<QList<QImage> >();
 
 #ifndef Q_OS_WIN
+    os::String currentProcess = os::getProcessName();
+    currentProcess.trimFilename();
     QString path = qgetenv("PATH");
-    path = QLatin1String(APITRACE_BINARY_DIR) + QLatin1String(":") + path;
+    path = QLatin1String(currentProcess.str()) + QLatin1String(":") + path;
     qputenv("PATH", path.toLatin1());
 #endif
 
