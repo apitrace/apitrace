@@ -15,16 +15,6 @@ TraceProcess::TraceProcess(QObject *parent)
             this, SLOT(traceFinished()));
     connect(m_process, SIGNAL(error(QProcess::ProcessError)),
             this, SLOT(traceError(QProcess::ProcessError)));
-
-#ifdef Q_OS_WIN
-    QString format = QLatin1String("%1;");
-#else
-    QString format = QLatin1String("%1:");
-#endif
-    QString buildPath = format.arg(APITRACE_BINARY_DIR);
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("PATH", buildPath + env.value("PATH"));
-    qputenv("PATH", env.value("PATH").toLatin1());
 }
 
 TraceProcess::~TraceProcess()

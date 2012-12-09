@@ -15,16 +15,6 @@ TrimProcess::TrimProcess(QObject *parent)
             this, SLOT(trimFinished()));
     connect(m_process, SIGNAL(error(QProcess::ProcessError)),
             this, SLOT(trimError(QProcess::ProcessError)));
-
-#ifdef Q_OS_WIN
-    QString format = QLatin1String("%1;");
-#else
-    QString format = QLatin1String("%1:");
-#endif
-    QString buildPath = format.arg(APITRACE_BINARY_DIR);
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("PATH", buildPath + env.value("PATH"));
-    qputenv("PATH", env.value("PATH").toLatin1());
 }
 
 TrimProcess::~TrimProcess()

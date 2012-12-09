@@ -65,8 +65,6 @@ private:
     bool m_profileGpu;
     bool m_profileCpu;
     bool m_profilePixels;
-
-    QProcessEnvironment m_processEnvironment;
 };
 
 #endif

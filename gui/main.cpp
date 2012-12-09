@@ -32,6 +32,13 @@ int main(int argc, char **argv)
     qRegisterMetaType<ApiTrace::SearchResult>();
     qRegisterMetaType<ApiTrace::SearchRequest>();
     qRegisterMetaType<QList<QImage> >();
+
+#ifndef Q_OS_WIN
+    QString path = qgetenv("PATH");
+    path = QLatin1String(APITRACE_BINARY_DIR) + QLatin1String(":") + path;
+    qputenv("PATH", path.toLatin1());
+#endif
+
     QStringList args = app.arguments();
 
     int i = 1;

@@ -137,19 +137,6 @@ Retracer::Retracer(QObject *parent)
       m_profilePixels(false)
 {
     qRegisterMetaType<QList<ApiTraceError> >();
-
-#ifdef Q_OS_WIN
-    QString format = QLatin1String("%1;");
-#else
-    QString format = QLatin1String("%1:");
-#endif
-    QString buildPath = format.arg(APITRACE_BINARY_DIR);
-    m_processEnvironment = QProcessEnvironment::systemEnvironment();
-    m_processEnvironment.insert("PATH", buildPath +
-                                m_processEnvironment.value("PATH"));
-
-    qputenv("PATH",
-            m_processEnvironment.value("PATH").toLatin1());
 }
 
 QString Retracer::fileName() const
