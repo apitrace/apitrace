@@ -138,31 +138,6 @@ getTimeFrequency(void) {
 }
 
 static void
-getCurrentTimes(int64_t& cpuTime, int64_t& gpuTime) {
-    GLuint query = 0;
-
-    if (retrace::profilingGpuTimes && supportsTimestamp) {
-        glGenQueries(1, &query);
-        glQueryCounter(query, GL_TIMESTAMP);
-        GLint64 timestamp = 0;
-        glGetQueryObjecti64vEXT(query, GL_QUERY_RESULT, &timestamp);
-        gpuTime = timestamp;
-    } else {
-        gpuTime = 0;
-    }
-
-    if (retrace::profilingCpuTimes) {
-        cpuTime = getCurrentTime();
-    } else {
-        cpuTime = 0;
-    }
-
-    if (retrace::profilingGpuTimes && supportsTimestamp) {
-        glDeleteQueries(1, &query);
-    }
-}
-
-static void
 completeCallQuery(CallQuery& query) {
     /* Get call start and duration */
     int64_t gpuStart = 0, gpuDuration = 0, cpuDuration = 0, pixels = 0;
@@ -307,11 +282,9 @@ initContext() {
     /* Sync the gpu and cpu start times */
     if (retrace::profilingCpuTimes || retrace::profilingGpuTimes) {
         if (!retrace::profiler.hasBaseTimes()) {
-            GLint64 gpuTime, cpuTime;
-
-            getCurrentTimes(cpuTime, gpuTime);
-            retrace::profiler.setBaseCpuTime(cpuTime);
-            retrace::profiler.setBaseGpuTime(gpuTime);
+            GLint64 currentTime = getCurrentTime();
+            retrace::profiler.setBaseCpuTime(currentTime);
+            retrace::profiler.setBaseGpuTime(currentTime);
         }
     }
 }
@@ -321,26 +294,6 @@ frame_complete(trace::Call &call) {
     if (retrace::profiling) {
         /* Complete any remaining queries */
         flushQueries();
-
-        /* GPU time drifts due to being relative times, not absolute and can be
-         * affected by the gpu switch between processes.
-         *
-         * To attempt to compensate we resynchronise on frame end however there is
-         * still noticeable drift within a single frame which we do not account for.
-         */
-        if (retrace::profilingCpuTimes || retrace::profilingGpuTimes) {
-            int64_t cpuTime, gpuTime, error;
-
-            getCurrentTimes(cpuTime, gpuTime);
-            cpuTime = cpuTime - retrace::profiler.getBaseCpuTime();
-            gpuTime = gpuTime - retrace::profiler.getBaseGpuTime();
-            error   = gpuTime - cpuTime * (1.0E9 / getTimeFrequency());
-            std::cerr << "error = " << error << "\n";
-
-            if (0) {
-                retrace::profiler.setBaseGpuTime(retrace::profiler.getBaseGpuTime() + error);
-            }
-        }
 
         /* Indicate end of current frame */
         retrace::profiler.addFrameEnd();
