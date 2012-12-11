@@ -358,6 +358,12 @@ install (
         scripts/unpickle.py
     DESTINATION ${SCRIPTS_INSTALL_DIR}
 )
+if (WIN32)
+    install (
+        PROGRAMS scripts/convert.py
+        DESTINATION ${SCRIPTS_INSTALL_DIR}
+    )
+endif ()
 
 ##############################################################################
 # GUI
