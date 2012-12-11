@@ -37,6 +37,10 @@ import sys
 
 def convert(inTrace, outPixrun):
     try:
+        programFiles = os.environ['ProgramFiles(x86)']
+    except KeyError:
+        programFiles = os.environ['ProgramFiles']
+    try:
         dxsdkDir = os.environ['DXSDK_DIR']
     except KeyError:
         dxsdkDir = os.path.join(programFiles, "Microsoft DirectX SDL (June 2010)")
