@@ -106,8 +106,8 @@ else (WIN32)
 endif ()
 
 if (MSVC)
-    # C99 includes for msvc
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msvc)
+    # C99 includes for MSVC
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msinttypes)
 
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
@@ -182,62 +182,6 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 
 ##############################################################################
-# Bundled dependencies
-#
-# We always use the bundled zlib, libpng, and snappy sources:
-# - on Windows to make it easy to deploy the wrappers DLLs
-# - on unices to prevent symbol collisions when tracing applications that link
-# against other versions of these libraries
-
-set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
-set (ZLIB_LIBRARIES z_bundled)
-add_subdirectory (thirdparty/zlib EXCLUDE_FROM_ALL)
-
-include_directories (${ZLIB_INCLUDE_DIRS})
-
-set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
-set (SNAPPY_LIBRARIES snappy_bundled)
-add_subdirectory (thirdparty/snappy EXCLUDE_FROM_ALL)
-
-include_directories (${SNAPPY_INCLUDE_DIRS})
-
-set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
-set (PNG_DEFINITIONS "")
-set (PNG_LIBRARIES png_bundled)
-
-add_subdirectory (thirdparty/libpng EXCLUDE_FROM_ALL)
-
-if (MSVC)
-    add_subdirectory (thirdparty/getopt EXCLUDE_FROM_ALL)
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/getopt)
-    set (GETOPT_LIBRARIES getopt_bundled)
-endif ()
-
-if (WIN32)
-    add_subdirectory (thirdparty/less)
-endif ()
-
-# Always use bundled QJSon.
-# - The packaged versions QJson are very old, and do not support NaN/Infinity.
-# - To make it easier to build the GUI on Windows and MacOSX, as there are no
-# binaries at all.
-if (QT4_FOUND)
-    add_definitions (-DQJSON_EXPORT=)
-    add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
-    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
-    set (QJSON_LIBRARY_DIRS)
-    set (QJSON_LIBRARIES qjson_bundled)
-    set (QJSON_FOUND TRUE)
-endif ()
-
-# We use bundled headers for all Khronos APIs, to guarantee support for both
-# OpenGL and OpenGL ES at build time, because the OpenGL and OpenGL ES 1 APIs
-# are so intertwined that conditional compilation extremely difficult. This
-# also avoids missing/inconsistent declarations in system headers.
-include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
-
-
-##############################################################################
 # Installation directories
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -267,6 +211,62 @@ endif ()
 
 set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
 set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
+
+
+##############################################################################
+# Bundled dependencies
+#
+# We always use the bundled zlib, libpng, and snappy sources:
+# - on Windows to make it easy to deploy the wrappers DLLs
+# - on unices to prevent symbol collisions when tracing applications that link
+# against other versions of these libraries
+
+set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
+set (ZLIB_LIBRARIES z_bundled)
+add_subdirectory (thirdparty/zlib)
+
+include_directories (${ZLIB_INCLUDE_DIRS})
+
+set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
+set (SNAPPY_LIBRARIES snappy_bundled)
+add_subdirectory (thirdparty/snappy)
+
+include_directories (${SNAPPY_INCLUDE_DIRS})
+
+set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
+set (PNG_DEFINITIONS "")
+set (PNG_LIBRARIES png_bundled)
+
+add_subdirectory (thirdparty/libpng)
+
+if (MSVC)
+    add_subdirectory (thirdparty/getopt)
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/getopt)
+    set (GETOPT_LIBRARIES getopt_bundled)
+endif ()
+
+if (WIN32)
+    add_subdirectory (thirdparty/less)
+endif ()
+
+# Always use bundled QJSon.
+# - The packaged versions QJson are very old, and do not support NaN/Infinity.
+# - To make it easier to build the GUI on Windows and MacOSX, as there are no
+# binaries at all.
+if (QT4_FOUND)
+    add_definitions (-DQJSON_EXPORT=)
+    add_subdirectory (thirdparty/qjson)
+    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
+    set (QJSON_LIBRARY_DIRS)
+    set (QJSON_LIBRARIES qjson_bundled)
+    set (QJSON_FOUND TRUE)
+endif ()
+
+# We use bundled headers for all Khronos APIs, to guarantee support for both
+# OpenGL and OpenGL ES at build time, because the OpenGL and OpenGL ES 1 APIs
+# are so intertwined that conditional compilation extremely difficult. This
+# also avoids missing/inconsistent declarations in system headers.
+include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
 
 ##############################################################################
@@ -368,11 +368,22 @@ endif ()
 install (
     FILES
         BUGS.markdown
-        LICENSE
         NEWS.markdown
         README.markdown
     DESTINATION ${DOC_INSTALL_DIR}
 )
+install (
+    FILES LICENSE
+    DESTINATION ${DOC_INSTALL_DIR}
+    RENAME LICENSE.txt
+)
+if (MSVC)
+    install (
+        FILES thirdparty/msinttypes/LICENSE
+        DESTINATION ${DOC_INSTALL_DIR}
+        RENAME LICENSE-msinttypes.txt
+    )
+endif ()
 
 set (CPACK_PACKAGE_VERSION_MAJOR "3")
 set (CPACK_PACKAGE_VERSION_MINOR "0")

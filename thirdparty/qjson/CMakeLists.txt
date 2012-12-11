@@ -27,4 +27,13 @@ set (qjson_SRCS
     #serializerrunnable.cpp
 )
 
-add_library (qjson_bundled STATIC ${qjson_SRCS} ${qjson_MOC_SRCS})
+add_library (qjson_bundled STATIC EXCLUDE_FROM_ALL
+    ${qjson_SRCS}
+    ${qjson_MOC_SRCS}
+)
+
+install (
+    FILES COPYING.lib
+    DESTINATION ${DOC_INSTALL_DIR}
+    RENAME LICENSE-qjson.txt
+)

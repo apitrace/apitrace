@@ -31,6 +31,6 @@ install (
 
 install (
     FILES LICENSE
-    DESTINATION doc
-    RENAME LICENSE.less
+    DESTINATION ${DOC_INSTALL_DIR}
+    RENAME LICENSE-less.txt
 )
