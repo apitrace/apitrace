@@ -348,9 +348,15 @@ endif ()
 
 install (
     PROGRAMS
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tracediff.py
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/jsondiff.py
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/snapdiff.py
+        scripts/highlight.py
+        scripts/jsondiff.py
+        scripts/profileshader.py
+        scripts/retracediff.py
+        scripts/samples.py
+        scripts/snapdiff.py
+        scripts/tracecheck.py
+        scripts/tracediff.py
+        scripts/unpickle.py
     DESTINATION ${SCRIPTS_INSTALL_DIR}
 )
 
