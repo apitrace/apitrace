@@ -69,6 +69,31 @@ class D3DRetracer(Retracer):
             print r'    pPresentationParameters->hDeviceWindow = hWnd;'
             if 'hFocusWindow' in method.argNames():
                 print r'    hFocusWindow = hWnd;'
+        
+        if method.name in ('CreateDevice', 'CreateDeviceEx'):
+            print r'    switch (retrace::driver) {'
+            print r'    case retrace::DRIVER_HARDWARE:'
+            print r'        DeviceType = D3DDEVTYPE_HAL;'
+            print r'        break;'
+            print r'    case retrace::DRIVER_SOFTWARE:'
+            print r'    case retrace::DRIVER_REFERENCE:'
+            print r'        DeviceType = D3DDEVTYPE_REF;'
+            print r'        break;'
+            print r'    case retrace::DRIVER_NULL:'
+            if interface.name.startswith('IDirect3D9'):
+                print r'        DeviceType = D3DDEVTYPE_NULLREF;'
+            else:
+                print r'        retrace::warning(call) << "null driver not supported\n";'
+            print r'        break;'
+            print r'    case retrace::DRIVER_MODULE:'
+            print r'        retrace::warning(call) << "driver module not supported\n";'
+            print r'        break;'
+            print r'    default:'
+            print r'        assert(0);'
+            print r'        /* fall-through */'
+            print r'    case retrace::DRIVER_DEFAULT:'
+            print r'        break;'
+            print r'    }'
 
         if method.name in ('Reset', 'ResetEx'):
             print r'    if (pPresentationParameters->Windowed) {'
@@ -91,6 +116,7 @@ class D3DRetracer(Retracer):
         # process events after presents
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
+            print r'    Sleep(500);'
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
