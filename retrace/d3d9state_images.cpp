@@ -25,6 +25,7 @@
 
 
 #include <assert.h>
+#include <stdint.h>
 
 #include "image.hpp"
 #include "json.hpp"
@@ -53,7 +54,9 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
-    if (Desc.Format != D3DFMT_X8R8G8B8 && Desc.Format != D3DFMT_A8R8G8B8) {
+    if (Desc.Format != D3DFMT_X8R8G8B8 &&
+        Desc.Format != D3DFMT_A8R8G8B8 &&
+        Desc.Format != D3DFMT_R5G6B5) {
         std::cerr << "warning: unsupported D3DFORMAT " << Desc.Format << "\n";
         goto no_staging;
     }
@@ -81,11 +84,22 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
     dst = image->start();
     src = (const unsigned char *)LockedRect.pBits;
     for (unsigned y = 0; y < Desc.Height; ++y) {
-        for (unsigned x = 0; x < Desc.Width; ++x) {
-            dst[3*x + 0] = src[4*x + 2];
-            dst[3*x + 1] = src[4*x + 1];
-            dst[3*x + 2] = src[4*x + 0];
+        if (Desc.Format == D3DFMT_R5G6B5) {
+            for (unsigned x = 0; x < Desc.Width; ++x) {
+                uint32_t pixel = ((const uint16_t *)src)[x];
+                dst[3*x + 0] = (( pixel        & 0x1f) * (2*0xff) + 0x1f) / (2*0x1f);
+                dst[3*x + 1] = (((pixel >>  5) & 0x3f) * (2*0xff) + 0x3f) / (2*0x3f);
+                dst[3*x + 2] = (( pixel >> 11        ) * (2*0xff) + 0x1f) / (2*0x1f);
+                dst[3*x + 3] = 0xff;
+            }
+        } else {
+            for (unsigned x = 0; x < Desc.Width; ++x) {
+                dst[3*x + 0] = src[4*x + 2];
+                dst[3*x + 1] = src[4*x + 1];
+                dst[3*x + 2] = src[4*x + 0];
+            }
         }
+
         src += LockedRect.Pitch;
         dst += image->stride();
     }
