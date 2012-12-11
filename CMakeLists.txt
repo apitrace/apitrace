@@ -352,7 +352,6 @@ install (
         scripts/jsondiff.py
         scripts/profileshader.py
         scripts/retracediff.py
-        scripts/samples.py
         scripts/snapdiff.py
         scripts/tracecheck.py
         scripts/tracediff.py
