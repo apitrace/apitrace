@@ -35,6 +35,7 @@
 #include "image.hpp"
 #include "trace_callset.hpp"
 #include "trace_dump.hpp"
+#include "trace_option.hpp"
 #include "retrace.hpp"
 
 
@@ -71,6 +72,7 @@ bool profiling = false;
 bool profilingGpuTimes = false;
 bool profilingCpuTimes = false;
 bool profilingPixelsDrawn = false;
+bool useCallNos = true;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
@@ -92,6 +94,8 @@ Dumper *dumper = &defaultDumper;
  */
 static void
 takeSnapshot(unsigned call_no) {
+    static unsigned snapshot_no = 0;
+
     assert(snapshotPrefix || comparePrefix);
 
     image::Image *ref = NULL;
@@ -116,10 +120,13 @@ takeSnapshot(unsigned call_no) {
     if (snapshotPrefix) {
         if (snapshotPrefix[0] == '-' && snapshotPrefix[1] == 0) {
             char comment[21];
-            snprintf(comment, sizeof comment, "%u", call_no);
+            snprintf(comment, sizeof comment, "%u",
+                     useCallNos ? call_no : snapshot_no);
             src->writePNM(std::cout, comment);
         } else {
-            os::String filename = os::String::format("%s%010u.png", snapshotPrefix, call_no);
+            os::String filename = os::String::format("%s%010u.png",
+                                                     snapshotPrefix,
+                                                     useCallNos ? call_no : snapshot_no);
             if (src->writePNG(filename) && retrace::verbosity >= 0) {
                 std::cout << "Wrote " << filename << "\n";
             }
@@ -132,6 +139,8 @@ takeSnapshot(unsigned call_no) {
     }
 
     delete src;
+
+    snapshot_no++;
 
     return;
 }
@@ -507,6 +516,7 @@ usage(const char *argv0) {
         "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
         "  -c, --compare=PREFIX    compare against snapshots with given PREFIX\n"
         "  -C, --calls=CALLSET     calls to compare (default is every frame)\n"
+        "      --call-nos[=BOOL]   use call numbers in snapshot filenames\n"
         "      --core              use core profile\n"
         "      --db                use a double buffer visual (default)\n"
         "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
@@ -519,7 +529,8 @@ usage(const char *argv0) {
 }
 
 enum {
-    CORE_OPT = CHAR_MAX + 1,
+    CALL_NOS_OPT = CHAR_MAX + 1,
+    CORE_OPT,
     DB_OPT,
     DRIVER_OPT,
     PCPU_OPT,
@@ -534,6 +545,7 @@ shortOptions = "bc:C:D:hs:S:vw";
 const static struct option
 longOptions[] = {
     {"benchmark", no_argument, 0, 'b'},
+    {"call-nos", optional_argument, 0, CALL_NOS_OPT },
     {"calls", required_argument, 0, 'C'},
     {"compare", required_argument, 0, 'c'},
     {"core", no_argument, 0, CORE_OPT},
@@ -577,6 +589,9 @@ int main(int argc, char **argv)
         case 'b':
             retrace::debug = false;
             retrace::verbosity = -1;
+            break;
+        case CALL_NOS_OPT:
+            useCallNos = trace::boolOption(optarg);
             break;
         case 'c':
             comparePrefix = optarg;
