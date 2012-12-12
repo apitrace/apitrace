@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2012 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,75 +23,17 @@
  *
  **************************************************************************/
 
-#ifndef _D3DSTATE_HPP_
-#define _D3DSTATE_HPP_
+/*
+ * Central place for all D3D8 includes, and respective OS dependent headers.
+ */
 
-
-#include <iostream>
+#ifndef _D3D8IMPORTS_HPP_
+#define _D3D8IMPORTS_HPP_
 
 #include <windows.h>
 
+#include "compat.h"
 
-struct IDirect3DDevice8;
-struct IDirect3DDevice9;
-struct ID3D10Device;
-struct ID3D11DeviceContext;
+#include <d3d8.h>
 
-
-class JSONWriter;
-
-namespace image {
-    class Image;
-}
-
-
-namespace d3dstate {
-
-
-extern const GUID GUID_D3DSTATE;
-
-
-image::Image *
-getRenderTargetImage(IDirect3DDevice8 *pDevice);
-
-void
-dumpFramebuffer(JSONWriter &json, IDirect3DDevice8 *pDevice);
-
-void
-dumpDevice(std::ostream &os, IDirect3DDevice8 *pDevice);
-
-
-image::Image *
-getRenderTargetImage(IDirect3DDevice9 *pDevice);
-
-void
-dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice);
-
-void
-dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
-
-
-image::Image *
-getRenderTargetImage(ID3D10Device *pDevice);
-
-void
-dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
-
-void
-dumpDevice(std::ostream &os, ID3D10Device *pDevice);
-
-
-image::Image *
-getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
-
-void
-dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
-
-void
-dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext);
-
-
-} /* namespace d3dstate */
-
-
-#endif /* _D3DSTATE_HPP_ */
+#endif /* _D3D8IMPORTS_HPP_ */

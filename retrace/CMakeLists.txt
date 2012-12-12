@@ -136,6 +136,10 @@ if (WIN32)
     if (DirectX_D3D8_INCLUDE_DIR) 
         include_directories (BEFORE SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
         set (HAVE_D3D8 1)
+        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
+            d3d8state.cpp
+            d3d8state_images.cpp
+        )
     else ()
         set (HAVE_D3D8 0)
     endif ()

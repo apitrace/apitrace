@@ -77,8 +77,7 @@ if __name__ == '__main__':
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
-    print '#include <windows.h>'
-    print '#include <d3d8.h>'
+    print '#include "d3d8imports.hpp"'
     print '#include "d3d8size.hpp"'
     print '#include "d3d9shader.hpp"'
     print

@@ -62,6 +62,11 @@ class D3DRetracer(Retracer):
                 print r'    d3d9Dumper.unbindDevice(_this);'
             else:
                 print r'    d3d9Dumper.bindDevice(_this);'
+        if interface.name in ('IDirect3DDevice8', 'IDirect3DDevice8Ex'):
+            if method.name == 'Release':
+                print r'    d3d8Dumper.unbindDevice(_this);'
+            else:
+                print r'    d3d8Dumper.bindDevice(_this);'
 
         # create windows as neccessary
         if method.name in ('CreateDevice', 'CreateDeviceEx', 'CreateAdditionalSwapChain'):
@@ -161,12 +166,11 @@ def main():
             print
         elif moduleName == 'd3d8':
             from specs.d3d8 import d3d8
-            print r'#include <windows.h>'
-            print r'#include <d3d8.h>'
+            print r'#include "d3d8imports.hpp"'
             print r'#include "d3d8size.hpp"'
             api.addModule(d3d8)
             print
-            #print '''static d3dretrace::D3DDumper<IDirect3DDevice8> d3d8Dumper;'''
+            print '''static d3dretrace::D3DDumper<IDirect3DDevice8> d3d8Dumper;'''
             print
         else:
             assert False
