@@ -29,6 +29,8 @@
 #include <string.h>
 #include <limits.h> // for CHAR_MAX
 #include <getopt.h>
+
+#include <string>
 #include <iostream>
 
 #include "os_string.hpp"
@@ -91,7 +93,8 @@ command(int argc, char *argv[])
             calls = optarg;
             break;
         case CALL_NOS_OPT:
-            call_nos = std::string("--call-nos=") + optarg;
+            call_nos = "--call-nos=";
+            call_nos.append(optarg);
             break;
         case 'o':
             output = optarg;
