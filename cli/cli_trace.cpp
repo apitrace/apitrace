@@ -133,6 +133,7 @@ traceProgram(trace::API api,
     }
 
 #if defined(_WIN32)
+    useInject = true;
     if (useInject) {
         args.push_back("inject");
         args.push_back(wrapperPath);
