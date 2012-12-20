@@ -28,7 +28,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <stdint.h>
 
 #include <list>
 #include <map>
@@ -37,6 +36,8 @@
 #include "trace_model.hpp"
 #include "trace_parser.hpp"
 #include "trace_profiler.hpp"
+
+#include "scoped_allocator.hpp"
 
 
 namespace image {
@@ -51,37 +52,9 @@ extern trace::Parser parser;
 extern trace::Profiler profiler;
 
 
-/**
- * Similar to alloca(), but implemented with malloc.
- */
-class ScopedAllocator
+class ScopedAllocator : public ::ScopedAllocator
 {
-private:
-    uintptr_t next;
-
 public:
-    inline
-    ScopedAllocator() :
-        next(0) {
-    }
-
-    inline void *
-    alloc(size_t size) {
-        /* Always return valid address, even when size is zero */
-        size = std::max(size, sizeof(uintptr_t));
-
-        uintptr_t * buf = static_cast<uintptr_t *>(malloc(sizeof(uintptr_t) + size));
-        if (!buf) {
-            return NULL;
-        }
-
-        *buf = next;
-        next = reinterpret_cast<uintptr_t>(buf);
-        assert((next & 1) == 0);
-
-        return static_cast<void *>(&buf[1]);
-    }
-
     /**
      * Allocate an array with the same dimensions as the specified value.
      */
@@ -89,7 +62,7 @@ public:
     alloc(const trace::Value *value, size_t size) {
         const trace::Array *array = dynamic_cast<const trace::Array *>(value);
         if (array) {
-            return alloc(array->size() * size);
+            return ::ScopedAllocator::alloc(array->size() * size);
         }
         const trace::Null *null = dynamic_cast<const trace::Null *>(value);
         if (null) {
@@ -99,32 +72,6 @@ public:
         return NULL;
     }
 
-    /**
-     * Prevent this pointer from being automatically freed.
-     */
-    template< class T >
-    inline void
-    bind(T *ptr) {
-        if (ptr) {
-            reinterpret_cast<uintptr_t *>(ptr)[-1] |= 1;
-        }
-    }
-
-    inline
-    ~ScopedAllocator() {
-        while (next) {
-            uintptr_t temp = *reinterpret_cast<uintptr_t *>(next);
-
-            bool bind = temp & 1;
-            temp &= ~1;
-
-            if (!bind) {
-                free(reinterpret_cast<void *>(next));
-            }
-
-            next = temp;
-        }
-    }
 };
 
 
