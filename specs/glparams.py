@@ -1892,8 +1892,8 @@ parameters = [
     ("",	X,	1,	"GL_VBO_FREE_MEMORY_ATI"),	# 0x87FB
     ("",	X,	1,	"GL_TEXTURE_FREE_MEMORY_ATI"),	# 0x87FC
     ("",	X,	1,	"GL_RENDERBUFFER_FREE_MEMORY_ATI"),	# 0x87FD
-    ("",	X,	1,	"GL_NUM_PROGRAM_BINARY_FORMATS"),	# 0x87FE
-    ("",	X,	1,	"GL_PROGRAM_BINARY_FORMATS"),	# 0x87FF
+    ("glGet",	I,	1,	"GL_NUM_PROGRAM_BINARY_FORMATS"),	# 0x87FE
+    ("glGet",	E,	"_glGetInteger(GL_NUM_PROGRAM_BINARY_FORMATS)",	"GL_PROGRAM_BINARY_FORMATS"),	# 0x87FF
     ("glGet",	E,	1,	"GL_STENCIL_BACK_FUNC"),	# 0x8800
     ("glGet",	E,	1,	"GL_STENCIL_BACK_FAIL"),	# 0x8801
     ("glGet",	E,	1,	"GL_STENCIL_BACK_PASS_DEPTH_FAIL"),	# 0x8802
