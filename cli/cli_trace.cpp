@@ -219,7 +219,7 @@ usage(void)
         "    -v, --verbose       verbose output\n"
         "    -a, --api=API       specify API to trace ("
 #ifdef _WIN32
-                                                      "gl, d3d7, d3d8, d3d9, or d3d10"
+                                                      "gl, d3d7, d3d8, d3d9, or dxgi (for d3d10 and higher) "
 #else
                                                       "gl or egl"
 #endif
