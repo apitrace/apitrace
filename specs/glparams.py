@@ -1582,8 +1582,7 @@ parameters = [
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_COMPRESSED_IMAGE_SIZE"),	# 0x86A0
     ("glGetTexLevelParameter",	B,	1,	"GL_TEXTURE_COMPRESSED"),	# 0x86A1
     ("glGet",	I,	1,	"GL_NUM_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A2
-    #XXX: the list is GL_NUM_COMPRESSED_TEXTURES
-    #("glGet",	E,	1,	"GL_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A3
+    ("glGet",	E,	'_glGetInteger(GL_NUM_COMPRESSED_TEXTURE_FORMATS)',	"GL_COMPRESSED_TEXTURE_FORMATS"),	# 0x86A3
     ("glGet",	I,	1,	"GL_MAX_VERTEX_UNITS_ARB"),	# 0x86A4
     ("glGet",	I,	1,	"GL_ACTIVE_VERTEX_UNITS_ARB"),	# 0x86A5
     ("glGet",	B,	1,	"GL_WEIGHT_SUM_UNITY_ARB"),	# 0x86A6

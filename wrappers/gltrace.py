@@ -298,12 +298,7 @@ class GlTracer(Tracer):
         print '    switch (pname) {'
         for function, type, count, name in glparams.parameters:
             if type is not None:
-                print '    case %s: return %u;' % (name, count)
-        print '    case GL_COMPRESSED_TEXTURE_FORMATS: {'
-        print '            GLint num_compressed_texture_formats = 0;'
-        print '            _glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &num_compressed_texture_formats);'
-        print '            return num_compressed_texture_formats;'
-        print '        }'
+                print '    case %s: return %s;' % (name, count)
         print '    default:'
         print r'        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);'
         print '        return 1;'

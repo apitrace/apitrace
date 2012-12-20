@@ -156,12 +156,21 @@ class StateGetter(Visitor):
         elem_type = self.inflector.reduced_type(array.type)
         inflection = self.inflector.inflect(array.type)
         assert inflection.endswith('v')
-        print '    %s %s[%s + 1];' % (elem_type, temp_name, array.length)
-        print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
-        print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array.length, elem_type)
+        array_length = array.length
+        if array_length.isdigit():
+            # Static integer length
+            print '    %s %s[%s + 1];' % (elem_type, temp_name, array_length)
+        else:
+            # Put the length in a variable to avoid recomputing it every time
+            print '    size_t _%s_length = %s;' % (temp_name, array_length)
+            array_length = '_%s_length' % temp_name
+            # Allocate a dynamic sized array
+            print '    %s *%s = _allocator.alloc<%s>(%s + 1);' % (elem_type, temp_name, elem_type, array_length)
+        print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array_length, temp_name)
+        print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array_length, elem_type)
         print '    %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
         # Simple buffer overflow detection
-        print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array.length, elem_type)
+        print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array_length, elem_type)
         return temp_name
 
     def visitOpaque(self, pointer, args):
@@ -257,6 +266,7 @@ class StateDumper:
         print '#include <string.h>'
         print
         print '#include "json.hpp"'
+        print '#include "scoped_allocator.hpp"'
         print '#include "glproc.hpp"'
         print '#include "glsize.hpp"'
         print '#include "glstate.hpp"'
@@ -316,6 +326,9 @@ class StateDumper:
 
         print 'void dumpParameters(JSONWriter &json, Context &context)'
         print '{'
+        print '    ScopedAllocator _allocator;'
+        print '    (void)_allocator;'
+        print
         print '    json.beginMember("parameters");'
         print '    json.beginObject();'
         

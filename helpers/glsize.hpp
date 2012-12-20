@@ -329,11 +329,19 @@ _glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei count)
 #define _glVertexAttribPointerARB_size(size, type, normalized, stride, count) _glArrayPointer_size(size, type, stride, count)
 #define _glVertexAttribPointerNV_size(size, type, stride, count) _glArrayPointer_size(size, type, stride, count)
 
+/**
+ * Same as glGetIntegerv, but passing the result in the return value.
+ */
+static inline GLint
+_glGetInteger(GLenum pname) {
+    GLint param = 0;
+    _glGetIntegerv(pname, &param);
+    return param;
+}
+
 static inline GLint
 _element_array_buffer_binding(void) {
-    GLint element_array_buffer = 0;
-    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &element_array_buffer);
-    return element_array_buffer;
+    return _glGetInteger(GL_ELEMENT_ARRAY_BUFFER_BINDING);
 }
 
 static inline GLuint
