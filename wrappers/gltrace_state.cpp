@@ -94,7 +94,7 @@ static bool _releaseContext(context_ptr_t ctx)
  */
 bool releaseContext(uintptr_t context_id)
 {
-    bool res;
+    bool res = false;
 
     context_map_mutex.lock();
     /*
