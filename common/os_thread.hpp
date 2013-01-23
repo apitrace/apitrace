@@ -312,7 +312,7 @@ namespace os {
             DWORD id = 0;
             _native_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)f, (LPVOID)arg, 0, &id);
 #else
-            pthread_create(&_native_handle, NULL, ( void *(*) (void *))f, arg);
+            pthread_create(&_native_handle, NULL, (void *(*) (void *))f, (void *)arg);
 #endif
         }
 
