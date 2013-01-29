@@ -745,6 +745,8 @@ getDrawBufferImage() {
             if (draw_buffer == GL_NONE) {
                 return NULL;
             }
+        } else {
+            draw_buffer = GL_COLOR_ATTACHMENT0;
         }
 
         if (!getFramebufferAttachmentDesc(context, framebuffer_target, draw_buffer, desc)) {
@@ -756,6 +758,8 @@ getDrawBufferImage() {
             if (draw_buffer == GL_NONE) {
                 return NULL;
             }
+        } else {
+            draw_buffer = GL_COLOR_ATTACHMENT0;
         }
 
         if (!getDrawableBounds(&desc.width, &desc.height)) {
