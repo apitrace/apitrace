@@ -106,7 +106,7 @@ class D3DRetracer(Retracer):
             print r'    }'
 
         # notify frame has been completed
-        if method.name == 'Present':
+        if method.name in ('Present', 'PresentEx'):
             print r'    retrace::frameComplete(call);'
             print r'    hDestWindowOverride = NULL;'
 

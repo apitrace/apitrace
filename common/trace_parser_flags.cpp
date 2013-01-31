@@ -112,6 +112,7 @@ callFlagTable[] = {
     { "IDirect3DDevice9Ex::GetDeviceCaps",             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "IDirect3DDevice9Ex::GetRenderTargetData",       CALL_FLAG_END_FRAME },
     { "IDirect3DDevice9Ex::Present",                   CALL_FLAG_SWAPBUFFERS },
+    { "IDirect3DDevice9Ex::PresentEx",                 CALL_FLAG_SWAPBUFFERS },
     { "IDirect3DDevice9Ex::SetRenderTarget",           CALL_FLAG_SWAP_RENDERTARGET },
     { "IDirect3DSwapChain9::Present",                  CALL_FLAG_SWAPBUFFERS },
     { "IDirect3DSwapChain9Ex::Present",                CALL_FLAG_SWAPBUFFERS },
