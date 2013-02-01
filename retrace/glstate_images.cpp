@@ -746,6 +746,7 @@ getDrawBufferImage() {
                 return NULL;
             }
         } else {
+            // GL_COLOR_ATTACHMENT0 is implied
             draw_buffer = GL_COLOR_ATTACHMENT0;
         }
 
@@ -753,13 +754,17 @@ getDrawBufferImage() {
             return NULL;
         }
     } else {
-        if (!context.ES) {
+        if (context.ES) {
+            // XXX: Draw buffer is always FRONT for single buffer context, BACK
+            // for double buffered contexts. There is no way to know which (as
+            // GL_DOUBLEBUFFER state is also unavailable), so always assume
+            // double-buffering.
+            draw_buffer = GL_BACK;
+        } else {
             glGetIntegerv(GL_DRAW_BUFFER, &draw_buffer);
             if (draw_buffer == GL_NONE) {
                 return NULL;
             }
-        } else {
-            draw_buffer = GL_COLOR_ATTACHMENT0;
         }
 
         if (!getDrawableBounds(&desc.width, &desc.height)) {
@@ -972,16 +977,21 @@ dumpDrawableImages(JSONWriter &json, Context &context)
 
     GLint draw_buffer = GL_NONE;
     if (context.ES) {
+        // XXX: Draw buffer is always FRONT for single buffer context, BACK for
+        // double buffered contexts. There is no way to know which (as
+        // GL_DOUBLEBUFFER state is also unavailable), so always assume
+        // double-buffering.
         draw_buffer = GL_BACK;
     } else {
         glGetIntegerv(GL_DRAW_BUFFER, &draw_buffer);
-        glReadBuffer(draw_buffer);
     }
 
     if (draw_buffer != GL_NONE) {
+        // Read from current draw buffer
         GLint read_buffer = GL_NONE;
         if (!context.ES) {
             glGetIntegerv(GL_READ_BUFFER, &read_buffer);
+            glReadBuffer(draw_buffer);
         }
 
         GLint alpha_bits = 0;
@@ -994,6 +1004,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         dumpReadBufferImage(json, width, height, format);
         json.endMember();
 
+        // Restore original read buffer
         if (!context.ES) {
             glReadBuffer(read_buffer);
         }
