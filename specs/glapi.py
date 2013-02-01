@@ -1004,7 +1004,7 @@ glapi.addFunctions([
     GlFunction(Void, "glFramebufferTexture1D", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level")]),
     GlFunction(Void, "glFramebufferTexture2D", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level")]),
     GlFunction(Void, "glFramebufferTexture3D", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level"), (GLint, "zoffset")]),
-    GlFunction(Void, "glFramebufferRenderbuffer", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLuint, "renderbuffer")]),
+    GlFunction(Void, "glFramebufferRenderbuffer", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLrenderbuffer, "renderbuffer")]),
     GlFunction(Void, "glGetFramebufferAttachmentParameteriv", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGenerateMipmap", [(GLenum, "target")]),
     GlFunction(Void, "glBlitFramebuffer", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
@@ -2272,7 +2272,7 @@ glapi.addFunctions([
     GlFunction(Void, "glFramebufferTexture1DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level")]),
     GlFunction(Void, "glFramebufferTexture2DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level")]),
     GlFunction(Void, "glFramebufferTexture3DEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level"), (GLint, "zoffset")]),
-    GlFunction(Void, "glFramebufferRenderbufferEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLuint, "renderbuffer")]),
+    GlFunction(Void, "glFramebufferRenderbufferEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLrenderbuffer, "renderbuffer")]),
     GlFunction(Void, "glGetFramebufferAttachmentParameterivEXT", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGenerateMipmapEXT", [(GLenum, "target")]),
 
@@ -2619,7 +2619,7 @@ glapi.addFunctions([
     GlFunction(Void, "glNamedFramebufferTexture1DEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level")]),
     GlFunction(Void, "glNamedFramebufferTexture2DEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level")]),
     GlFunction(Void, "glNamedFramebufferTexture3DEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level"), (GLint, "zoffset")]),
-    GlFunction(Void, "glNamedFramebufferRenderbufferEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLuint, "renderbuffer")]),
+    GlFunction(Void, "glNamedFramebufferRenderbufferEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLenum, "renderbuffertarget"), (GLrenderbuffer, "renderbuffer")]),
     GlFunction(Void, "glGetNamedFramebufferAttachmentParameterivEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGenerateTextureMipmapEXT", [(GLtexture, "texture"), (GLenum, "target")]),
     GlFunction(Void, "glGenerateMultiTexMipmapEXT", [(GLenum, "texunit"), (GLenum, "target")]),
@@ -2632,8 +2632,8 @@ glapi.addFunctions([
     GlFunction(Void, "glNamedFramebufferTextureEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level")]),
     GlFunction(Void, "glNamedFramebufferTextureLayerEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLint, "layer")]),
     GlFunction(Void, "glNamedFramebufferTextureFaceEXT", [(GLframebuffer, "framebuffer"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLenum, "face")]),
-    GlFunction(Void, "glTextureRenderbufferEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLuint, "renderbuffer")]),
-    GlFunction(Void, "glMultiTexRenderbufferEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLuint, "renderbuffer")]),
+    GlFunction(Void, "glTextureRenderbufferEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLrenderbuffer, "renderbuffer")]),
+    GlFunction(Void, "glMultiTexRenderbufferEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLrenderbuffer, "renderbuffer")]),
     GlFunction(Void, "glProgramUniform1dEXT", [(GLprogram, "program"), (GLlocation, "location"), (GLdouble, "x")]),
     GlFunction(Void, "glProgramUniform2dEXT", [(GLprogram, "program"), (GLlocation, "location"), (GLdouble, "x"), (GLdouble, "y")]),
     GlFunction(Void, "glProgramUniform3dEXT", [(GLprogram, "program"), (GLlocation, "location"), (GLdouble, "x"), (GLdouble, "y"), (GLdouble, "z")]),
@@ -2674,7 +2674,7 @@ glapi.addFunctions([
     # GL_NV_explicit_multisample
     GlFunction(Void, "glGetMultisamplefvNV", [(GLenum, "pname"), (GLuint, "index"), Out(Array(GLfloat, 2), "val")], sideeffects=False),
     GlFunction(Void, "glSampleMaskIndexedNV", [(GLuint, "index"), (GLbitfield, "mask")]),
-    GlFunction(Void, "glTexRenderbufferNV", [(GLenum, "target"), (GLuint, "renderbuffer")]),
+    GlFunction(Void, "glTexRenderbufferNV", [(GLenum, "target"), (GLrenderbuffer, "renderbuffer")]),
 
     # GL_NV_transform_feedback2
     GlFunction(Void, "glBindTransformFeedbackNV", [(GLenum, "target"), (GLfeedback, "id")]),
