@@ -152,10 +152,9 @@ To trace the application inside gdb, invoke gdb as:
 ### Android ###
 
 The following instructions should work at least for Android Ice Scream
-Sandwitch:
+Sandwitch.
 
-For standalone applications the instructions above for Linux should
-work. To trace applications started from within the Android VM process
+To trace applications started from within the Android VM process
 (`app_process` aka zygote) you'll have to wrap this process and enable
 tracing dynamically for the application to be traced.
 
@@ -205,6 +204,15 @@ tracing dynamically for the application to be traced.
         kill <pid of app>
 
   Launch the application for example from the application menu.
+
+To trace standalone applications do:
+
+    adb push /path/to/apitrace/build/wrappers/egltrace.so /data
+    adb shell
+    # cd /data/local/tmp
+    # LD_PRELOAD=/data/egltrace.so test-opengl-gl2_basic
+    adb pull /data/local/tmp/test-opengl-gl2_basic.trace
+    eglretrace test-opengl-gl2_basic.trace
 
 ### Mac OS X ###
 

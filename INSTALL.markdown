@@ -70,6 +70,10 @@ Build as:
     cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake -DANDROID_API_LEVEL=9 -H. -Bbuild
     make -C build
 
+You can also choose a particular ABI by passing `ANDROID_ABI` variable to
+cmake, e.g., `-DANDROID_ABI=x86`.
+
+
 Windows
 -------
 
