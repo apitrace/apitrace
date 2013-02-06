@@ -184,7 +184,7 @@ DXVA2_DecodeExtensionData = Struct("DXVA2_DecodeExtensionData", [
 
 DXVA2_DecodeExecuteParams = Struct("DXVA2_DecodeExecuteParams", [
     (UINT, "NumCompBuffers"),
-    (Pointer(DXVA2_DecodeBufferDesc), "pCompressedBuffers"),
+    (Array(DXVA2_DecodeBufferDesc, "{self}.NumCompBuffers"), "pCompressedBuffers"),
     (Pointer(DXVA2_DecodeExtensionData), "pExtensionData"),
 ])
 
