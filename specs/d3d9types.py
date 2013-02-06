@@ -728,6 +728,7 @@ D3DFORMAT = Enum("D3DFORMAT", [
     "D3DFMT_INTZ",
     "D3DFMT_NULL",
     "D3DFMT_NV12",
+    "D3DFMT_YV12",
     "D3DFMT_RAWZ",
 ])
 

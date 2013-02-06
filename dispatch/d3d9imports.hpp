@@ -73,6 +73,10 @@
 #define D3DFMT_NV12 ((D3DFORMAT)MAKEFOURCC('N','V','1','2'))
 #endif
 
+#ifndef D3DFMT_YV12
+#define D3DFMT_YV12 ((D3DFORMAT)MAKEFOURCC('Y','V','1','2'))
+#endif
+
 #ifndef D3DFMT_RAWZ
 #define D3DFMT_RAWZ ((D3DFORMAT)MAKEFOURCC('R','A','W','Z'))
 #endif

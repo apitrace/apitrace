@@ -163,6 +163,7 @@ _getLockSize(D3DFORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth
 
 #if DIRECT3D_VERSION >= 0x900
     case D3DFMT_NV12:
+    case D3DFMT_YV12:
         return (Height + ((Height + 1) / 2)) * RowPitch;
 
     case D3DFMT_NULL:
