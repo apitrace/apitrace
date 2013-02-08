@@ -44,8 +44,6 @@
 #endif
 
 
-typedef struct _DXVA2_PVP_SETKEY DXVA2_PVP_SETKEY; /* XXX */
-
 typedef struct _DXVA2_DECODEBUFFERDESC {
     IDirect3DSurface9 *pRenderTarget;
     DWORD CompressedBufferType;
@@ -111,6 +109,16 @@ static const GUID IID_IDirect3DVideoProcessDevice9 = {0x00000000,0x0000,0x0000,{
 static const GUID IID_IDirect3DDXVAExtensionDevice9 = {0x00000000,0x0000,0x0000,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}}; /* XXX */
 static const GUID IID_IDirect3DDxva2Container9 = {0x126D0349,0x4787,0x4AA6,{0x8E,0x1B,0x40,0xC1,0x77,0xC6,0x0A,0x01}};
 
+
+typedef struct DECLSPEC_ALIGN(16) _DXVA2_PVP_KEY128
+{
+    BYTE Data[16];
+} DXVA2_PVP_KEY128;
+
+typedef struct _DXVA2_PVP_SETKEY
+{
+    DXVA2_PVP_KEY128  ContentKey;
+} DXVA2_PVP_SETKEY;
 
 class IDirect3DDecodeDevice9 : public IUnknown
 {

@@ -263,7 +263,15 @@ DXVA2_VideoProcessorCaps = Struct("DXVA2_VideoProcessorCaps", [
 ])
 
 
-DXVA2_PVP_SETKEY = Opaque('DXVA2_PVP_SETKEY')
+# See also DXVADDI_PVP_KEY128
+DXVA2_PVP_KEY128 = Struct('DXVA2_PVP_KEY128', [
+    (Array(BYTE, 16), 'Data'),
+])
+
+# See also DXVADDI_PVP_SETKEY
+DXVA2_PVP_SETKEY = Struct('DXVA2_PVP_SETKEY', [
+    (DXVA2_PVP_KEY128, 'ContentKey'),
+])
 
 DXVA2_DECODEBUFFERDESC = Struct("DXVA2_DECODEBUFFERDESC", [
     (ObjPointer(IDirect3DSurface9), "pRenderTarget"),
@@ -321,7 +329,7 @@ DXVA2_DECODEBUFFERINFO = Opaque('DXVA2_DECODEBUFFERINFO')
 
 IDirect3DDecodeDevice9 = Interface("IDirect3DDecodeDevice9", IUnknown)
 IDirect3DDecodeDevice9.methods += [
-    StdMethod(HRESULT, "DecodeBeginFrame", [(OpaquePointer(DXVA2_PVP_SETKEY), "pPVPSetKey")]),
+    StdMethod(HRESULT, "DecodeBeginFrame", [(Pointer(DXVA2_PVP_SETKEY), "pPVPSetKey")]),
     StdMethod(HRESULT, "DecodeEndFrame", [(Pointer(HANDLE), "pHandleComplete")]),
     StdMethod(HRESULT, "DecodeSetRenderTarget", [(ObjPointer(IDirect3DSurface9), "pRenderTarget")]),
     StdMethod(HRESULT, "DecodeExecute", [(Pointer(DXVA2_DECODEEXECUTE), "pExecuteParams")]),
