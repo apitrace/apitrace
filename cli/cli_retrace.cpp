@@ -144,7 +144,7 @@ command(int argc, char *argv[])
 }
 
 const Command retrace_command = {
-    "retrace",
+    "replay",
     synopsis,
     usage,
     command

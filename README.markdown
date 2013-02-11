@@ -5,7 +5,7 @@ About **apitrace**
 
 * trace OpenGL, OpenGL ES, Direct3D, and DirectDraw APIs calls to a file;
 
-* retrace OpenGL and OpenGL ES calls from a file;
+* replay OpenGL and OpenGL ES calls from a file;
 
 * inspect OpenGL state at any call while retracing;
 
@@ -49,10 +49,10 @@ View the trace with
 
 Replay an OpenGL trace with
 
-    apitrace retrace application.trace
+    apitrace replay application.trace
 
 Pass the `--sb` option to use a single buffered visual.  Pass `--help` to
-`apitrace retrace` for more options.
+`apitrace replay` for more options.
 
 
 Basic GUI usage
@@ -212,7 +212,7 @@ To trace standalone applications do:
     # cd /data/local/tmp
     # LD_PRELOAD=/data/egltrace.so test-opengl-gl2_basic
     adb pull /data/local/tmp/test-opengl-gl2_basic.trace
-    eglretrace test-opengl-gl2_basic.trace
+    apitrace replay test-opengl-gl2_basic.trace
 
 ### Mac OS X ###
 
@@ -310,7 +310,7 @@ Dump GL state at a particular call
 
 You can get a dump of the bound GL state at call 12345 by doing:
 
-    apitrace retrace -D 12345 application.trace > 12345.json
+    apitrace replay -D 12345 application.trace > 12345.json
 
 This is precisely the mechanism the GUI obtains its own state.
 
@@ -367,7 +367,7 @@ table which displays profiling results per shader.
 
 For example, to record all profiling data and utilise the per shader script:
 
-    apitrace retrace --pgpu --pcpu --ppd foo.trace | ./scripts/profileshader.py
+    apitrace replay --pgpu --pcpu --ppd foo.trace | ./scripts/profileshader.py
 
 
 Advanced usage for OpenGL implementors
