@@ -29,6 +29,7 @@
 
 import sys
 from dllretrace import DllRetracer as Retracer
+import specs.dxgi
 from specs.stdapi import API
 from specs.dxgi import dxgi
 from specs.d3d10 import d3d10
@@ -45,13 +46,11 @@ class D3DRetracer(Retracer):
         print r'''
 static void 
 createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
-    if (pSwapChainDesc->Windowed) {
-        UINT Width  = pSwapChainDesc->BufferDesc.Width;
-        UINT Height = pSwapChainDesc->BufferDesc.Height;
-        if (!Width)  Width = 1024;
-        if (!Height) Height = 768;
-        pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
-    }
+    UINT Width  = pSwapChainDesc->BufferDesc.Width;
+    UINT Height = pSwapChainDesc->BufferDesc.Height;
+    if (!Width)  Width = 1024;
+    if (!Height) Height = 768;
+    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
 }
 '''
 
@@ -163,6 +162,16 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             else:
                 print r'    d3d11Dumper.bindDevice(_this);'
 
+        if interface.name == 'IDXGIFactory' and method.name == 'QueryInterface':
+            print r'    if (riid == IID_IDXGIFactoryDWM) {'
+            print r'        _this->AddRef();'
+            print r'        *ppvObj = new d3dretrace::CDXGIFactoryDWM(_this);'
+            print r'        _result = S_OK;'
+            print r'    } else {'
+            Retracer.invokeInterfaceMethod(self, interface, method)
+            print r'    }'
+            return
+
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
             print r'    createWindow(pDesc);'
@@ -205,7 +214,38 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print r'    }'
             return
 
-        Retracer.invokeInterfaceMethod(self, interface, method)
+        if interface.name.startswith('ID3D10Device') and method.name == 'OpenSharedResource':
+            print r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";'
+            print r'    D3D10_TEXTURE2D_DESC Desc;'
+            print r'    memset(&Desc, 0, sizeof Desc);'
+            print r'    Desc.Width = 8;'
+            print r'    Desc.Height = 8;'
+            print r'    Desc.MipLevels = 1;'
+            print r'    Desc.ArraySize = 1;'
+            print r'    Desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;'
+            print r'    Desc.SampleDesc.Count = 1;'
+            print r'    Desc.SampleDesc.Quality = 0;'
+            print r'    Desc.Usage = D3D10_USAGE_DEFAULT;'
+            print r'    Desc.BindFlags = D3D10_BIND_SHADER_RESOURCE | D3D10_BIND_RENDER_TARGET;'
+            print r'    Desc.CPUAccessFlags = 0x0;'
+            print r'    Desc.MiscFlags = 0 /* D3D10_RESOURCE_MISC_SHARED */;'
+            print r'''
+            const DWORD Checker[8][8] = {
+               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
+               {~0,  0, ~0,  0, ~0,  0, ~0,  0, },
+               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
+               {~0,  0, ~0,  0, ~0,  0, ~0,  0, },
+               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
+               {~0,  0, ~0,  0, ~0,  0, ~0,  0, },
+               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
+               {~0,  0, ~0,  0, ~0,  0, ~0,  0, }
+            };
+            const D3D10_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
+            '''
+            print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, (ID3D10Texture2D**)ppResource);'
+            self.checkResult(method.type)
+        else:
+            Retracer.invokeInterfaceMethod(self, interface, method)
 
         # process events after presents
         if method.name == 'Present':
@@ -239,6 +279,8 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
 
 
 def main():
+    print r'#define INITGUID'
+    print
     print r'#include <string.h>'
     print
     print r'#include <iostream>'
@@ -251,6 +293,7 @@ def main():
     api = API()
     
     if moduleNames:
+        print r'#include "d3dretrace_dxgi.hpp"'
         api.addModule(dxgi)
     
     if 'd3d10' in moduleNames:

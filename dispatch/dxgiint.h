@@ -45,18 +45,18 @@ struct IDXGIFactoryDWM: public IUnknown
     virtual HRESULT STDMETHODCALLTYPE CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain) = 0;
 };
 
-struct IDXGISwapChainDWM: public IDXGIDeviceSubObject 
-{ 
-    virtual HRESULT STDMETHODCALLTYPE Present (UINT SyncInterval, UINT Flags) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE GetBuffer (UINT Buffer, REFIID riid, void **ppSurface) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE GetDesc (DXGI_SWAP_CHAIN_DESC *pDesc) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE ResizeBuffers (UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE ResizeTarget (const DXGI_MODE_DESC *pNewTargetParameters) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE GetContainingOutput (IDXGIOutput **ppOutput) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE GetFrameStatistics (DXGI_FRAME_STATISTICS *pStats) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE GetLastPresentCount (UINT *pLastPresentCount) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE SetFullscreenState (BOOL Fullscreen, IDXGIOutput *pTarget) = 0; 
-    virtual HRESULT STDMETHODCALLTYPE GetFullscreenState (BOOL *pFullscreen, IDXGIOutput **ppTarget) = 0; 
-}; 
+struct IDXGISwapChainDWM: public IDXGIDeviceSubObject
+{
+    virtual HRESULT STDMETHODCALLTYPE Present(UINT SyncInterval, UINT Flags) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetBuffer(UINT Buffer, REFIID riid, void **ppSurface) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetDesc(DXGI_SWAP_CHAIN_DESC *pDesc) = 0;
+    virtual HRESULT STDMETHODCALLTYPE ResizeBuffers(UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags) = 0;
+    virtual HRESULT STDMETHODCALLTYPE ResizeTarget(const DXGI_MODE_DESC *pNewTargetParameters) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetContainingOutput(IDXGIOutput **ppOutput) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetLastPresentCount(UINT *pLastPresentCount) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetFullscreenState(BOOL Fullscreen, IDXGIOutput *pTarget) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetFullscreenState(BOOL *pFullscreen, IDXGIOutput **ppTarget) = 0;
+};
 
 #endif /* _DXGIINT_H_ */
