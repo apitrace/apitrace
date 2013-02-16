@@ -210,8 +210,8 @@ trim_trace(const char *filename, struct trim_options *options)
             goto NEXT;
         }
 
-        /* Also, prune if uninteresting (unless the user asked for no pruning. */
-        if (options->prune_uninteresting && call->flags & trace::CALL_FLAG_VERBOSE) {
+        /* Also, prune if no side effects (unless the user asked for no pruning. */
+        if (options->prune_uninteresting && call->flags & trace::CALL_FLAG_NO_SIDE_EFFECTS) {
             goto NEXT;
         }
 
