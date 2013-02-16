@@ -271,12 +271,6 @@ TraceAnalyzer::callHasNoSideEffects(trace::Call *call, const char *name)
         return true;
     }
 
-    /* Similarly, swap-buffers calls don't have interesting side effects. */
-    if (call->flags & trace::CALL_FLAG_SWAP_RENDERTARGET &&
-        call->flags & trace::CALL_FLAG_END_FRAME) {
-        return true;
-    }
-
     /* Not known as a no-side-effect call. Return false for more analysis. */
     return false;
 }
