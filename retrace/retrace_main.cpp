@@ -76,6 +76,7 @@ bool profilingCpuTimes = false;
 bool profilingPixelsDrawn = false;
 bool profilingMemoryUsage = false;
 bool useCallNos = true;
+bool singleThread = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
@@ -483,8 +484,17 @@ mainLoop() {
 
     startTime = os::getTime();
 
-    RelayRace race;
-    race.run();
+    if (singleThread) {
+        trace::Call *call;
+        while ((call = parser.parse_call())) {
+            retraceCall(call);
+            delete call;
+        };
+        flushRendering();
+    } else {
+        RelayRace race;
+        race.run();
+    }
 
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);
@@ -529,7 +539,8 @@ usage(const char *argv0) {
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
-        "  -w, --wait              waitOnFinish on final frame\n";
+        "  -w, --wait              waitOnFinish on final frame\n"
+        "      --singlethread      use a single thread to replay command stream\n";
 }
 
 enum {
@@ -542,6 +553,7 @@ enum {
     PPD_OPT,
     PMEM_OPT,
     SB_OPT,
+    SINGLETHREAD_OPT,
 };
 
 const static char *
@@ -567,6 +579,7 @@ longOptions[] = {
     {"snapshot", required_argument, 0, 'S'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
+    {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
     {0, 0, 0, 0}
 };
 
@@ -638,6 +651,9 @@ int main(int argc, char **argv)
             break;
         case SB_OPT:
             retrace::doubleBuffer = false;
+            break;
+        case SINGLETHREAD_OPT:
+            retrace::singleThread = true;
             break;
         case 's':
             snapshotPrefix = optarg;
