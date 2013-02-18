@@ -1,6 +1,8 @@
 /**************************************************************************
  *
  * Copyright 2011 Jose Fonseca
+ * Copyright (C) 2013 Intel Corporation. All rights reversed.
+ * Author: Shuang He <shuang.he@intel.com>
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,6 +33,7 @@
 #include "glstate.hpp"
 #include "glretrace.hpp"
 #include "os_time.hpp"
+#include "os_memory.hpp"
 
 /* Synchronous debug output may reduce performance however,
  * without it the callNo in the callback may be inaccurate
@@ -60,6 +63,10 @@ struct CallQuery
     const trace::FunctionSig *sig;
     int64_t cpuStart;
     int64_t cpuEnd;
+    int64_t vsizeStart;
+    int64_t vsizeEnd;
+    int64_t rssStart;
+    int64_t rssEnd;
 };
 
 static bool supportsElapsed = true;
@@ -138,10 +145,20 @@ getTimeFrequency(void) {
     }
 }
 
+static inline void
+getCurrentVsize(int64_t& vsize) {
+    vsize = os::getVsize();
+}
+
+static inline void
+getCurrentRss(int64_t& rss) {
+    rss = os::getRss();
+}
+
 static void
 completeCallQuery(CallQuery& query) {
     /* Get call start and duration */
-    int64_t gpuStart = 0, gpuDuration = 0, cpuDuration = 0, pixels = 0;
+    int64_t gpuStart = 0, gpuDuration = 0, cpuDuration = 0, pixels = 0, vsizeDuration = 0, rssDuration = 0;
 
     if (query.isDraw) {
         if (retrace::profilingGpuTimes) {
@@ -164,10 +181,15 @@ completeCallQuery(CallQuery& query) {
         cpuDuration = query.cpuEnd - query.cpuStart;
     }
 
+    if (retrace::profilingMemoryUsage) {
+        vsizeDuration = query.vsizeEnd - query.vsizeStart;
+        rssDuration = query.rssEnd - query.rssStart;
+    }
+
     glDeleteQueries(NUM_QUERIES, query.ids);
 
     /* Add call to profile */
-    retrace::profiler.addCall(query.call, query.sig->name, query.program, pixels, gpuStart, gpuDuration, query.cpuStart, cpuDuration);
+    retrace::profiler.addCall(query.call, query.sig->name, query.program, pixels, gpuStart, gpuDuration, query.cpuStart, cpuDuration, query.vsizeStart, vsizeDuration, query.rssStart, rssDuration);
 }
 
 void
@@ -214,6 +236,12 @@ beginProfile(trace::Call &call, bool isDraw) {
         CallQuery& query = callQueries.back();
         query.cpuStart = getCurrentTime();
     }
+
+    if (retrace::profilingMemoryUsage) {
+        CallQuery& query = callQueries.back();
+        query.vsizeStart = os::getVsize();
+        query.rssStart = os::getRss();
+    }
 }
 
 void
@@ -234,6 +262,12 @@ endProfile(trace::Call &call, bool isDraw) {
         if (retrace::profilingPixelsDrawn) {
             glEndQuery(GL_SAMPLES_PASSED);
         }
+    }
+
+    if (retrace::profilingMemoryUsage) {
+        CallQuery& query = callQueries.back();
+        query.vsizeEnd = os::getVsize();
+        query.rssEnd = os::getRss();
     }
 }
 
@@ -288,6 +322,14 @@ initContext() {
             retrace::profiler.setBaseCpuTime(currentTime);
             retrace::profiler.setBaseGpuTime(currentTime);
         }
+    }
+
+    if (retrace::profilingMemoryUsage) {
+        GLint64 currentVsize, currentRss;
+        getCurrentVsize(currentVsize);
+        retrace::profiler.setBaseVsizeUsage(currentVsize);
+        getCurrentRss(currentRss);
+        retrace::profiler.setBaseRssUsage(currentRss);
     }
 }
 

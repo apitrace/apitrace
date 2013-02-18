@@ -191,6 +191,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    CHECK_INCLUDE_FILES(proc/readproc.h READPROC_H_FOUND)
+    if (READPROC_H_FOUND)
+        add_definitions (-DHAVE_READPROC_H)
+    endif ()
 endif()
 
 if (WIN32 OR APPLE)

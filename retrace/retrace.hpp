@@ -1,6 +1,8 @@
 /**************************************************************************
  *
  * Copyright 2011-2012 Jose Fonseca
+ * Copyright (C) 2013 Intel Corporation. All rights reversed.
+ * Author: Shuang He <shuang.he@intel.com>
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -92,6 +94,7 @@ extern bool profiling;
 extern bool profilingCpuTimes;
 extern bool profilingGpuTimes;
 extern bool profilingPixelsDrawn;
+extern bool profilingMemoryUsage;
 
 /**
  * State dumping.

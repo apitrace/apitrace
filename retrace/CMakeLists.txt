@@ -102,6 +102,9 @@ if (WIN32 OR APPLE OR X11_FOUND)
 
         if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
             target_link_libraries (glretrace rt)
+            if (READPROC_H_FOUND)
+                target_link_libraries (glretrace proc)
+            endif ()
         endif ()
 
     endif ()
@@ -127,6 +130,9 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
 
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         target_link_libraries (eglretrace rt)
+        if (READPROC_H_FOUND)
+            target_link_libraries (eglretrace proc)
+        endif ()
     endif ()
 
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 

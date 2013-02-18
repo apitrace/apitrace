@@ -1,6 +1,8 @@
 /**************************************************************************
  *
  * Copyright 2011 Jose Fonseca
+ * Copyright (C) 2013 Intel Corporation. All rights reversed.
+ * Author: Shuang He <shuang.he@intel.com>
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -72,6 +74,7 @@ bool profiling = false;
 bool profilingGpuTimes = false;
 bool profilingCpuTimes = false;
 bool profilingPixelsDrawn = false;
+bool profilingMemoryUsage = false;
 bool useCallNos = true;
 
 unsigned frameNo = 0;
@@ -514,6 +517,7 @@ usage(const char *argv0) {
         "      --pcpu              cpu profiling (cpu times per call)\n"
         "      --pgpu              gpu profiling (gpu times per draw call)\n"
         "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
+        "      --pmem              memory usage profiling (vsize rss per call)\n"
         "  -c, --compare=PREFIX    compare against snapshots with given PREFIX\n"
         "  -C, --calls=CALLSET     calls to compare (default is every frame)\n"
         "      --call-nos[=BOOL]   use call numbers in snapshot filenames\n"
@@ -536,6 +540,7 @@ enum {
     PCPU_OPT,
     PGPU_OPT,
     PPD_OPT,
+    PMEM_OPT,
     SB_OPT,
 };
 
@@ -556,6 +561,7 @@ longOptions[] = {
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
     {"ppd", no_argument, 0, PPD_OPT},
+    {"pmem", no_argument, 0, PMEM_OPT},
     {"sb", no_argument, 0, SB_OPT},
     {"snapshot-prefix", required_argument, 0, 's'},
     {"snapshot", required_argument, 0, 'S'},
@@ -676,6 +682,13 @@ int main(int argc, char **argv)
 
             retrace::profilingPixelsDrawn = true;
             break;
+        case PMEM_OPT:
+            retrace::debug = false;
+            retrace::profiling = true;
+            retrace::verbosity = -1;
+
+            retrace::profilingMemoryUsage = true;
+            break;
         default:
             std::cerr << "error: unknown option " << opt << "\n";
             usage(argv[0]);
@@ -685,7 +698,7 @@ int main(int argc, char **argv)
 
     retrace::setUp();
     if (retrace::profiling) {
-        retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn);
+        retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn, retrace::profilingMemoryUsage);
     }
 
     os::setExceptionCallback(exceptionCallback);

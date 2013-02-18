@@ -1,6 +1,7 @@
 /**************************************************************************
  *
  * Copyright 2012 VMware, Inc.
+ * Copyright 2013 Intel, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,9 +35,12 @@ Profiler::Profiler()
     : baseGpuTime(0),
       baseCpuTime(0),
       minCpuTime(1000),
+      baseVsizeUsage(0),
+      baseRssUsage(0),
       cpuTimes(false),
       gpuTimes(true),
-      pixelsDrawn(false)
+      pixelsDrawn(false),
+      memoryUsage(false)
 {
 }
 
@@ -44,13 +48,14 @@ Profiler::~Profiler()
 {
 }
 
-void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_)
+void Profiler::setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_, bool memoryUsage_)
 {
     cpuTimes = cpuTimes_;
     gpuTimes = gpuTimes_;
     pixelsDrawn = pixelsDrawn_;
+    memoryUsage = memoryUsage_;
 
-    std::cout << "# call no gpu_start gpu_dura cpu_start cpu_dura pixels program name" << std::endl;
+    std::cout << "# call no gpu_start gpu_dura cpu_start cpu_dura vsize_start vsize_dura rss_start rss_dura pixels program name" << std::endl;
 }
 
 int64_t Profiler::getBaseCpuTime()
@@ -63,6 +68,16 @@ int64_t Profiler::getBaseGpuTime()
     return baseGpuTime;
 }
 
+int64_t Profiler::getBaseVsizeUsage()
+{
+    return baseVsizeUsage;
+}
+
+int64_t Profiler::getBaseRssUsage()
+{
+    return baseRssUsage;
+}
+
 void Profiler::setBaseCpuTime(int64_t cpuStart)
 {
     baseCpuTime = cpuStart;
@@ -71,6 +86,16 @@ void Profiler::setBaseCpuTime(int64_t cpuStart)
 void Profiler::setBaseGpuTime(int64_t gpuStart)
 {
     baseGpuTime = gpuStart;
+}
+
+void Profiler::setBaseVsizeUsage(int64_t vsizeStart)
+{
+    baseVsizeUsage = vsizeStart;
+}
+
+void Profiler::setBaseRssUsage(int64_t rssStart)
+{
+    baseRssUsage = rssStart;
 }
 
 bool Profiler::hasBaseTimes()
@@ -83,7 +108,9 @@ void Profiler::addCall(unsigned no,
                        unsigned program,
                        int64_t pixels,
                        int64_t gpuStart, int64_t gpuDuration,
-                       int64_t cpuStart, int64_t cpuDuration)
+                       int64_t cpuStart, int64_t cpuDuration,
+                       int64_t vsizeStart, int64_t vsizeDuration,
+                       int64_t rssStart, int64_t rssDuration)
 {
     if (gpuTimes && gpuStart) {
         gpuStart -= baseGpuTime;
@@ -109,12 +136,23 @@ void Profiler::addCall(unsigned no,
         pixels = 0;
     }
 
+    if (!memoryUsage || !vsizeStart || !rssStart) {
+        vsizeStart = 0;
+        vsizeDuration = 0;
+        rssStart = 0;
+        rssDuration = 0;
+    }
+
     std::cout << "call"
               << " " << no
               << " " << gpuStart
               << " " << gpuDuration
               << " " << cpuStart
               << " " << cpuDuration
+              << " " << vsizeStart
+              << " " << vsizeDuration
+              << " " << rssStart
+              << " " << rssDuration
               << " " << pixels
               << " " << program
               << " " << name
@@ -132,6 +170,8 @@ void Profiler::parseLine(const char* in, Profile* profile)
     std::string type;
     static int64_t lastGpuTime;
     static int64_t lastCpuTime;
+    static int64_t lastVsizeUsage;
+    static int64_t lastRssUsage;
 
     if (in[0] == '#' || strlen(in) < 4)
         return;
@@ -139,6 +179,8 @@ void Profiler::parseLine(const char* in, Profile* profile)
     if (profile->programs.size() == 0 && profile->calls.size() == 0 && profile->frames.size() == 0) {
         lastGpuTime = 0;
         lastCpuTime = 0;
+        lastVsizeUsage = 0;
+        lastRssUsage = 0;
     }
 
     line >> type;
@@ -151,6 +193,10 @@ void Profiler::parseLine(const char* in, Profile* profile)
              >> call.gpuDuration
              >> call.cpuStart
              >> call.cpuDuration
+             >> call.vsizeStart
+             >> call.vsizeDuration
+             >> call.rssStart
+             >> call.rssDuration
              >> call.pixels
              >> call.program
              >> call.name;
@@ -161,6 +207,14 @@ void Profiler::parseLine(const char* in, Profile* profile)
 
         if (lastCpuTime < call.cpuStart + call.cpuDuration) {
             lastCpuTime = call.cpuStart + call.cpuDuration;
+        }
+
+        if (lastVsizeUsage < call.vsizeStart + call.vsizeDuration) {
+            lastVsizeUsage = call.vsizeStart + call.vsizeDuration;
+        }
+
+        if (lastRssUsage < call.rssStart + call.rssDuration) {
+            lastRssUsage = call.rssStart + call.rssDuration;
         }
 
         profile->calls.push_back(call);
@@ -174,6 +228,8 @@ void Profiler::parseLine(const char* in, Profile* profile)
             program.cpuTotal += call.cpuDuration;
             program.gpuTotal += call.gpuDuration;
             program.pixelTotal += call.pixels;
+            program.vsizeTotal += call.vsizeDuration;
+            program.rssTotal += call.rssDuration;
             program.calls.push_back(profile->calls.size() - 1);
         }
     } else if (type.compare("frame_end") == 0) {
@@ -183,15 +239,21 @@ void Profiler::parseLine(const char* in, Profile* profile)
         if (frame.no == 0) {
             frame.gpuStart = 0;
             frame.cpuStart = 0;
+            frame.vsizeStart = 0;
+            frame.rssStart = 0;
             frame.calls.begin = 0;
         } else {
             frame.gpuStart = profile->frames.back().gpuStart + profile->frames.back().gpuDuration;
             frame.cpuStart = profile->frames.back().cpuStart + profile->frames.back().cpuDuration;
+            frame.vsizeStart = profile->frames.back().vsizeStart + profile->frames.back().vsizeDuration;
+            frame.rssStart = profile->frames.back().rssStart + profile->frames.back().rssDuration;
             frame.calls.begin = profile->frames.back().calls.end + 1;
         }
 
         frame.gpuDuration = lastGpuTime - frame.gpuStart;
         frame.cpuDuration = lastCpuTime - frame.cpuStart;
+        frame.vsizeDuration = lastVsizeUsage - frame.vsizeStart;
+        frame.rssDuration = lastRssUsage - frame.rssStart;
         frame.calls.end = profile->calls.size() - 1;
 
         profile->frames.push_back(frame);

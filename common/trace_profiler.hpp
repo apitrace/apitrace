@@ -1,6 +1,7 @@
 /**************************************************************************
  *
  * Copyright 2012 VMware, Inc.
+ * Copyright 2013 Intel, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,6 +46,11 @@ struct Profile {
         int64_t cpuStart;
         int64_t cpuDuration;
 
+        int64_t vsizeStart;
+        int64_t vsizeDuration;
+        int64_t rssStart;
+        int64_t rssDuration;
+
         int64_t pixels;
 
         std::string name;
@@ -59,6 +65,11 @@ struct Profile {
         int64_t cpuStart;
         int64_t cpuDuration;
 
+        int64_t vsizeStart;
+        int64_t vsizeDuration;
+        int64_t rssStart;
+        int64_t rssDuration;
+
         /* Indices to profile->calls array */
         struct {
             unsigned begin;
@@ -72,6 +83,8 @@ struct Profile {
         uint64_t gpuTotal;
         uint64_t cpuTotal;
         uint64_t pixelTotal;
+        int64_t vsizeTotal;
+        int64_t rssTotal;
 
         /* Indices to profile->calls array */
         std::vector<unsigned> calls;
@@ -88,14 +101,16 @@ public:
     Profiler();
     ~Profiler();
 
-    void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_);
+    void setup(bool cpuTimes_, bool gpuTimes_, bool pixelsDrawn_, bool memoryUsage_);
 
     void addCall(unsigned no,
                  const char* name,
                  unsigned program,
                  int64_t pixels,
                  int64_t gpuStart, int64_t gpuDuration,
-                 int64_t cpuStart, int64_t cpuDuration);
+                 int64_t cpuStart, int64_t cpuDuration,
+                 int64_t vsizeStart, int64_t vsizeDuration,
+                 int64_t rssStart, int64_t rssDuration);
 
     void addFrameEnd();
 
@@ -103,9 +118,13 @@ public:
 
     void setBaseCpuTime(int64_t cpuStart);
     void setBaseGpuTime(int64_t gpuStart);
+    void setBaseVsizeUsage(int64_t vsizeStart);
+    void setBaseRssUsage(int64_t rssStart);
 
     int64_t getBaseCpuTime();
     int64_t getBaseGpuTime();
+    int64_t getBaseVsizeUsage();
+    int64_t getBaseRssUsage();
 
     static void parseLine(const char* line, Profile* profile);
 
@@ -113,10 +132,13 @@ private:
     int64_t baseGpuTime;
     int64_t baseCpuTime;
     int64_t minCpuTime;
+    int64_t baseVsizeUsage;
+    int64_t baseRssUsage;
 
     bool cpuTimes;
     bool gpuTimes;
     bool pixelsDrawn;
+    bool memoryUsage;
 };
 }
 
