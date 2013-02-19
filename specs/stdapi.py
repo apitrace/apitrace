@@ -385,6 +385,12 @@ class Function:
     def argNames(self):
         return [arg.name for arg in self.args]
 
+    def getArgByName(self, name):
+        for arg in self.args:
+            if arg.name == name:
+                return arg
+        return None
+
 
 def StdFunction(*args, **kwargs):
     kwargs.setdefault('call', '__stdcall')

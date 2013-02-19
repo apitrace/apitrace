@@ -244,8 +244,17 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             '''
             print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, (ID3D10Texture2D**)ppResource);'
             self.checkResult(method.type)
-        else:
-            Retracer.invokeInterfaceMethod(self, interface, method)
+            return
+
+        if method.name == 'Map':
+            # Reset _DO_NOT_WAIT flags. Otherwise they may fail, and we have no
+            # way to cope with it (other than retry).
+            mapFlagsArg = method.getArgByName('MapFlags')
+            for flag in mapFlagsArg.type.values:
+                if flag.endswith('_MAP_FLAG_DO_NOT_WAIT'):
+                    print r'    MapFlags &= ~%s;' % flag
+
+        Retracer.invokeInterfaceMethod(self, interface, method)
 
         # process events after presents
         if method.name == 'Present':
