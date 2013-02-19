@@ -478,10 +478,9 @@ class Retracer:
         # On release our reference when we reach Release() == 0 call in the
         # trace.
         if method.name == 'Release':
-            print '    if (call.ret->toUInt()) {'
-            print '        return;'
+            print '    if (call.ret->toUInt() == 0) {'
+            print '        retrace::delObj(call.arg(0));'
             print '    }'
-            print '    retrace::delObj(call.arg(0));'
 
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
