@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "trace_file.hpp"
+#include "trace_dump.hpp"
 #include "trace_parser.hpp"
 
 
@@ -176,9 +177,15 @@ Call *Parser::parse_call(Mode mode) {
         int c = read_byte();
         switch (c) {
         case trace::EVENT_ENTER:
+#if TRACE_VERBOSE
+            std::cerr << "\tENTER\n";
+#endif
             parse_enter(mode);
             break;
         case trace::EVENT_LEAVE:
+#if TRACE_VERBOSE
+            std::cerr << "\tLEAVE\n";
+#endif
             call = parse_leave(mode);
             adjust_call_flags(call);
             return call;
@@ -466,11 +473,20 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
         int c = read_byte();
         switch (c) {
         case trace::CALL_END:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_END\n";
+#endif
             return true;
         case trace::CALL_ARG:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_ARG\n";
+#endif
             parse_arg(call, mode);
             break;
         case trace::CALL_RET:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_RET\n";
+#endif
             call->ret = parse_value(mode);
             break;
         default:
@@ -570,7 +586,9 @@ Value *Parser::parse_value(void) {
     }
 #if TRACE_VERBOSE
     if (value) {
-        std::cerr << "\tVALUE " << value << "\n";
+        std::cerr << "\tVALUE ";
+        trace::dump(value, std::cerr);
+        std::cerr << "\n";
     }
 #endif
     return value;
