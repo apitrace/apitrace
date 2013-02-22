@@ -57,10 +57,7 @@ static CRITICAL_SECTION Mutex = {(PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0};
 static void
 debugPrintf(const char *format, ...)
 {
-#if VERBOSITY > 0
-    static char buf[4096];
-
-    EnterCriticalSection(&Mutex);
+    char buf[512];
 
     va_list ap;
     va_start(ap, format);
@@ -68,9 +65,6 @@ debugPrintf(const char *format, ...)
     va_end(ap);
 
     OutputDebugStringA(buf);
-
-    LeaveCriticalSection(&Mutex);
-#endif
 }
 
 
@@ -205,13 +199,15 @@ replaceModule(HMODULE hModule,
     while (pOriginalFirstThunk->u1.Function) {
         PIMAGE_IMPORT_BY_NAME pImport = (PIMAGE_IMPORT_BY_NAME)((PBYTE)hModule + pOriginalFirstThunk->u1.AddressOfData);
         const char* szFunctionName = (const char* )pImport->Name;
-        debugPrintf("      hooking %s->%s!%s\n", szModule,
-                getImportDescriptionName(hModule, pImportDescriptor),
-                szFunctionName);
+        if (VERBOSITY > 0) {
+            debugPrintf("      hooking %s->%s!%s\n", szModule,
+                    getImportDescriptionName(hModule, pImportDescriptor),
+                    szFunctionName);
+        }
 
         PROC pNewProc = GetProcAddress(hNewModule, szFunctionName);
         if (!pNewProc) {
-            debugPrintf("  warning: no replacement for %s\n", szFunctionName);
+            debugPrintf("warning: no replacement for %s\n", szFunctionName);
         } else {
             LPVOID *lpOldAddress = (LPVOID *)(&pFirstThunk->u1.Function);
             replaceAddress(lpOldAddress, (LPVOID)pNewProc);
@@ -257,9 +253,9 @@ replaceImport(HMODULE hModule,
               const char *pszDllName,
               HMODULE hNewModule)
 {
-#if NOOP
-    return TRUE;
-#endif
+    if (NOOP) {
+        return TRUE;
+    }
 
     PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = getImportDescriptor(hModule, szModule, pszDllName);
     if (pImportDescriptor == NULL) {
@@ -339,15 +335,17 @@ hookAllModules(void)
     MODULEENTRY32 me32;
     me32.dwSize = sizeof me32;
 
-    static bool first = true;
-    if (first) {
-        if (Module32First(hModuleSnap, &me32)) {
-            debugPrintf("  modules:\n");
-            do  {
-                debugPrintf("     %s\n", me32.szExePath);
-            } while (Module32Next(hModuleSnap, &me32));
+    if (VERBOSITY > 0) {
+        static bool first = true;
+        if (first) {
+            if (Module32First(hModuleSnap, &me32)) {
+                debugPrintf("  modules:\n");
+                do  {
+                    debugPrintf("     %s\n", me32.szExePath);
+                } while (Module32Next(hModuleSnap, &me32));
+            }
+            first = false;
         }
-        first = false;
     }
 
     if (Module32First(hModuleSnap, &me32)) {
@@ -382,24 +380,26 @@ MyLoadLibraryA(LPCSTR lpLibFileName)
         debugPrintf("%s(\"%s\")\n", __FUNCTION__, lpLibFileName);
     }
 
-    const char *szBaseName = getBaseName(lpLibFileName);
-    for (unsigned i = 0; i < numReplacements; ++i) {
-        if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
-            debugPrintf("%s(\"%s\")\n", __FUNCTION__, lpLibFileName);
+    if (VERBOSITY > 0) {
+        const char *szBaseName = getBaseName(lpLibFileName);
+        for (unsigned i = 0; i < numReplacements; ++i) {
+            if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
+                debugPrintf("%s(\"%s\")\n", __FUNCTION__, lpLibFileName);
 #ifdef __GNUC__
-            void *caller = __builtin_return_address (0);
+                void *caller = __builtin_return_address (0);
 
-            HMODULE hModule = 0;
-            BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                                     (LPCTSTR)caller,
-                                     &hModule);
-            assert(bRet);
-            char szCaller[256];
-            DWORD dwRet = GetModuleFileNameA(hModule, szCaller, sizeof szCaller);
-            assert(dwRet);
-            debugPrintf("  called from %s\n", szCaller);
+                HMODULE hModule = 0;
+                BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                                         (LPCTSTR)caller,
+                                         &hModule);
+                assert(bRet);
+                char szCaller[256];
+                DWORD dwRet = GetModuleFileNameA(hModule, szCaller, sizeof szCaller);
+                assert(dwRet);
+                debugPrintf("  called from %s\n", szCaller);
 #endif
-            break;
+                break;
+            }
         }
     }
 
@@ -456,29 +456,33 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
         }
     }
 
-#if !NOOP
-    char szModule[256];
-    DWORD dwRet = GetModuleFileNameA(hModule, szModule, sizeof szModule);
-    assert(dwRet);
-    const char *szBaseName = getBaseName(szModule);
+    if (!NOOP) {
+        char szModule[256];
+        DWORD dwRet = GetModuleFileNameA(hModule, szModule, sizeof szModule);
+        assert(dwRet);
+        const char *szBaseName = getBaseName(szModule);
 
-    for (unsigned i = 0; i < numReplacements; ++i) {
+        for (unsigned i = 0; i < numReplacements; ++i) {
 
-        if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
-            debugPrintf("  %s(\"%s\", \"%s\")\n", __FUNCTION__, szModule, lpProcName);
-            FARPROC pProcAddress = GetProcAddress(replacements[i].hReplaceModule, lpProcName);
-            if (pProcAddress) {
-                if (VERBOSITY >= 2) {
-                    debugPrintf("      replacing %s!%s\n", szBaseName, lpProcName);
+            if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
+                if (VERBOSITY > 0) {
+                    debugPrintf("  %s(\"%s\", \"%s\")\n", __FUNCTION__, szModule, lpProcName);
                 }
-                return pProcAddress;
-            } else {
-                debugPrintf("      ignoring %s!%s\n", szBaseName, lpProcName);
-                break;
+                FARPROC pProcAddress = GetProcAddress(replacements[i].hReplaceModule, lpProcName);
+                if (pProcAddress) {
+                    if (VERBOSITY >= 2) {
+                        debugPrintf("      replacing %s!%s\n", szBaseName, lpProcName);
+                    }
+                    return pProcAddress;
+                } else {
+                    if (VERBOSITY > 0) {
+                        debugPrintf("      ignoring %s!%s\n", szBaseName, lpProcName);
+                    }
+                    break;
+                }
             }
         }
     }
-#endif
 
     return GetProcAddress(hModule, lpProcName);
 }
@@ -493,14 +497,18 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        debugPrintf("DLL_PROCESS_ATTACH\n");
+        if (VERBOSITY > 0) {
+            debugPrintf("DLL_PROCESS_ATTACH\n");
+        }
 
         g_hThisModule = hinstDLL;
 
         {
             char szProcess[MAX_PATH];
             GetModuleFileNameA(NULL, szProcess, sizeof szProcess);
-            debugPrintf("  attached to %s\n", szProcess);
+            if (VERBOSITY > 0) {
+                debugPrintf("  attached to %s\n", szProcess);
+            }
         }
 
         /*
@@ -524,7 +532,9 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
         GetSharedMem(szSharedMemCopy, sizeof szSharedMemCopy);
         szNewDllName = szSharedMemCopy;
 #endif
-        debugPrintf("  injecting %s\n", szNewDllName);
+        if (VERBOSITY > 0) {
+            debugPrintf("  injecting %s\n", szNewDllName);
+        }
 
         hNewModule = LoadLibraryA(szNewDllName);
         if (!hNewModule) {
@@ -565,7 +575,9 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
         break;
 
     case DLL_PROCESS_DETACH:
-        debugPrintf("DLL_PROCESS_DETACH\n");
+        if (VERBOSITY > 0) {
+            debugPrintf("DLL_PROCESS_DETACH\n");
+        }
         break;
     }
     return TRUE;
