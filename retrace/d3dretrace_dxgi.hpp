@@ -39,6 +39,9 @@
  */
 
 
+#define FORCE_WINDOWED 1
+
+
 namespace d3dretrace {
 
 
@@ -225,9 +228,14 @@ ULONG STDMETHODCALLTYPE CDXGIFactoryDWM::Release(void)
 HRESULT STDMETHODCALLTYPE CDXGIFactoryDWM::CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain)
 {
     IDXGISwapChain *pSwapChain = NULL;
+    if (FORCE_WINDOWED) {
+        pDesc->Windowed = TRUE;
+    }
     HRESULT hr = m_pFactory->CreateSwapChain(pDevice, pDesc, &pSwapChain);
     if (SUCCEEDED(hr)) {
-        pSwapChain->SetFullscreenState(TRUE, pOutput);
+        if (!FORCE_WINDOWED) {
+            pSwapChain->SetFullscreenState(TRUE, pOutput);
+        }
         *ppSwapChain = new CDXGISwapChainDWM(pSwapChain);
     }
     return hr;
