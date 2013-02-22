@@ -493,6 +493,8 @@ class Tracer:
             for arg in function.args:
                 if not arg.output:
                     self.unwrapArg(function, arg)
+            for arg in function.args:
+                if not arg.output:
                     self.serializeArg(function, arg)
             print '    trace::localWriter.endEnter();'
         self.invokeFunction(function)
@@ -694,6 +696,8 @@ class Tracer:
         for arg in method.args:
             if not arg.output:
                 self.unwrapArg(method, arg)
+        for arg in method.args:
+            if not arg.output:
                 self.serializeArg(method, arg)
         print '    trace::localWriter.endEnter();'
         
