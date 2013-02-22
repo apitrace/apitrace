@@ -17,7 +17,7 @@ Version 3.0
 
 * Top-level `apitrace` command.
 
-* Trace and retrace support for EGL, GLES1, and GLES2 APIs on Linux.
+* Trace and replay support for EGL, GLES1, and GLES2 APIs on Linux.
 
 * Ability to trim traces.
 
@@ -57,4 +57,4 @@ Version 1.0
 Pre-history
 ===========
 
-* OpenGL retrace support.
+* OpenGL replay support.
