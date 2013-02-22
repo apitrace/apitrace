@@ -91,6 +91,11 @@ getModuleName(char *szModuleName, size_t n, const char *szFilename) {
 }
 
 
+#define USE_SHARED_MEM 1
+
+
+#if USE_SHARED_MEM
+
 #define SHARED_MEM_SIZE 4096
 
 static LPVOID pSharedMem = NULL;
@@ -179,3 +184,5 @@ GetSharedMem(LPSTR lpszDst, size_t n) {
     *lpszDst = '\0';
 }
 
+
+#endif /* USE_SHARED_MEM */

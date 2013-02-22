@@ -513,7 +513,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
          * - http://msdn.microsoft.com/en-us/library/ms682583
          */
 
-#if 0
+#if !USE_SHARED_MEM
         szNewDllName = getenv("INJECT_DLL");
         if (!szNewDllName) {
             debugPrintf("warning: INJECT_DLL not set\n");
