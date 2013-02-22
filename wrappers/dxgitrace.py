@@ -43,32 +43,33 @@ class D3DCommonTracer(DllTracer):
             return
 
         # Serialize the swapchain dimensions
-        if function.name == 'CreateSwapChain' and arg.name == 'pDesc':
-            print r'    DXGI_SWAP_CHAIN_DESC *_pDesc = NULL;'
-            print r'    DXGI_SWAP_CHAIN_DESC _Desc;'
-            print r'    if (pDesc) {'
-            print r'        _Desc = *pDesc;'
-            if not self.interface.name.endswith('DWM'):
+        if function.name == 'CreateSwapChain' and arg.name == 'pDesc' \
+           or arg.name == 'pSwapChainDesc':
+            print r'    DXGI_SWAP_CHAIN_DESC *_pSwapChainDesc = NULL;'
+            print r'    DXGI_SWAP_CHAIN_DESC _SwapChainDesc;'
+            print r'    if (%s) {' % arg.name
+            print r'        _SwapChainDesc = *%s;' % arg.name
+            if function.name != 'CreateSwapChain' or not self.interface.name.endswith('DWM'):
                 # Obtain size from the window
                 print r'        RECT _rect;'
-                print r'        if (GetClientRect(pDesc->OutputWindow, &_rect)) {'
-                print r'            if (pDesc->BufferDesc.Width == 0) {'
-                print r'                _Desc.BufferDesc.Width = _rect.right  - _rect.left;'
+                print r'        if (GetClientRect(%s->OutputWindow, &_rect)) {' % arg.name
+                print r'            if (%s->BufferDesc.Width == 0) {' % arg.name
+                print r'                _SwapChainDesc.BufferDesc.Width = _rect.right  - _rect.left;'
                 print r'            }'
-                print r'            if (pDesc->BufferDesc.Height == 0) {'
-                print r'                _Desc.BufferDesc.Height = _rect.bottom - _rect.top;'
+                print r'            if (%s->BufferDesc.Height == 0) {' % arg.name
+                print r'                _SwapChainDesc.BufferDesc.Height = _rect.bottom - _rect.top;'
                 print r'            }'
                 print r'        }'
             else:
                 # Obtain size from the output
                 print r'        DXGI_OUTPUT_DESC _OutputDesc;'
                 print r'        if (SUCCEEDED(pOutput->GetDesc(&_OutputDesc))) {'
-                print r'            _Desc.BufferDesc.Width  = _OutputDesc.DesktopCoordinates.right  - _OutputDesc.DesktopCoordinates.left;'
-                print r'            _Desc.BufferDesc.Height = _OutputDesc.DesktopCoordinates.bottom - _OutputDesc.DesktopCoordinates.top;'
+                print r'            _SwapChainDesc.BufferDesc.Width  = _OutputDesc.DesktopCoordinates.right  - _OutputDesc.DesktopCoordinates.left;'
+                print r'            _SwapChainDesc.BufferDesc.Height = _OutputDesc.DesktopCoordinates.bottom - _OutputDesc.DesktopCoordinates.top;'
                 print r'        }'
-            print r'        _pDesc = &_Desc;'
+            print r'        _pSwapChainDesc = &_SwapChainDesc;'
             print r'    }'
-            self.serializeValue(arg.type, '_pDesc')
+            self.serializeValue(arg.type, '_pSwapChainDesc')
             return
 
         DllTracer.serializeArgValue(self, function, arg)
