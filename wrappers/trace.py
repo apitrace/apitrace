@@ -564,9 +564,6 @@ class Tracer:
     def wrapRet(self, function, instance):
         self.wrapValue(function.type, instance)
 
-    def unwrapRet(self, function, instance):
-        self.unwrapValue(function.type, instance)
-
     def needsWrapping(self, type):
         visitor = WrapDecider()
         visitor.visit(type)
