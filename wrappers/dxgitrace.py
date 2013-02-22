@@ -42,6 +42,35 @@ class D3DCommonTracer(DllTracer):
             print '    DumpShader(trace::localWriter, %s, %s);' % (arg.name, arg.type.size)
             return
 
+        # Serialize the swapchain dimensions
+        if function.name == 'CreateSwapChain' and arg.name == 'pDesc':
+            print r'    DXGI_SWAP_CHAIN_DESC *_pDesc = NULL;'
+            print r'    DXGI_SWAP_CHAIN_DESC _Desc;'
+            print r'    if (pDesc) {'
+            print r'        _Desc = *pDesc;'
+            if not self.interface.name.endswith('DWM'):
+                # Obtain size from the window
+                print r'        RECT _rect;'
+                print r'        if (GetClientRect(pDesc->OutputWindow, &_rect)) {'
+                print r'            if (pDesc->BufferDesc.Width == 0) {'
+                print r'                _Desc.BufferDesc.Width = _rect.right  - _rect.left;'
+                print r'            }'
+                print r'            if (pDesc->BufferDesc.Height == 0) {'
+                print r'                _Desc.BufferDesc.Height = _rect.bottom - _rect.top;'
+                print r'            }'
+                print r'        }'
+            else:
+                # Obtain size from the output
+                print r'        DXGI_OUTPUT_DESC _OutputDesc;'
+                print r'        if (SUCCEEDED(pOutput->GetDesc(&_OutputDesc))) {'
+                print r'            _Desc.BufferDesc.Width  = _OutputDesc.DesktopCoordinates.right  - _OutputDesc.DesktopCoordinates.left;'
+                print r'            _Desc.BufferDesc.Height = _OutputDesc.DesktopCoordinates.bottom - _OutputDesc.DesktopCoordinates.top;'
+                print r'        }'
+            print r'        _pDesc = &_Desc;'
+            print r'    }'
+            self.serializeValue(arg.type, '_pDesc')
+            return
+
         DllTracer.serializeArgValue(self, function, arg)
     
     def enumWrapperInterfaceVariables(self, interface):
