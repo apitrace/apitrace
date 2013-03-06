@@ -32,61 +32,7 @@
 #include "image.hpp"
 #include "d3d11imports.hpp"
 #include "d3d10state.hpp"
-
-#ifdef __MINGW32__
-#define nullptr NULL
-#endif
-#include "DirectXTex.h"
-
-
-/**
- * Convert between DXGI formats.
- *
- */
-static HRESULT
-ConvertFormat(DXGI_FORMAT SrcFormat,
-              void *SrcData,
-              UINT SrcPitch,
-              DXGI_FORMAT DstFormat,
-              void *DstData,
-              UINT DstPitch,
-              UINT Width, UINT Height)
-{
-    HRESULT hr;
-
-    DirectX::Image SrcImage;
-    DirectX::Image DstImage;
-    
-    SrcImage.width = Width;
-    SrcImage.height = Height;
-    SrcImage.format = SrcFormat;
-    SrcImage.rowPitch = SrcPitch;
-    SrcImage.slicePitch = Height * SrcPitch;
-    SrcImage.pixels = (uint8_t*)SrcData;
-    
-    DstImage.width = Width;
-    DstImage.height = Height;
-    DstImage.format = DstFormat;
-    DstImage.rowPitch = DstPitch;
-    DstImage.slicePitch = Height * DstPitch;
-    DstImage.pixels = (uint8_t*)DstData;
- 
-    DirectX::Rect rect(0, 0, Width, Height);
- 
-    if (SrcFormat != DstFormat) {
-        DirectX::ScratchImage ScratchImage;
-        ScratchImage.Initialize2D(DstFormat, Width, Height, 1, 1);
-  
-        hr = DirectX::Convert(SrcImage, DstFormat, DirectX::TEX_FILTER_DEFAULT, 0.0f, ScratchImage);
-        if (SUCCEEDED(hr)) {
-            hr = CopyRectangle(*ScratchImage.GetImage(0, 0, 0), rect, DstImage, DirectX::TEX_FILTER_DEFAULT, 0, 0);
-        }
-    } else {
-        hr = CopyRectangle(SrcImage, rect, DstImage, DirectX::TEX_FILTER_DEFAULT, 0, 0);
-    }
- 
-    return hr;
-}
+#include "dxgistate.hpp"
 
 
 namespace d3dstate {
@@ -295,8 +241,6 @@ no_staging:
     }
     return image;
 }
-
-
 
 
 image::Image *

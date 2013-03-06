@@ -193,6 +193,7 @@ if (WIN32)
             set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
         endif ()
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
+            dxgistate.cpp
             d3d10state.cpp
             d3d10state_images.cpp
         )

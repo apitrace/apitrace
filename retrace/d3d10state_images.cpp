@@ -33,6 +33,7 @@
 #include "json.hpp"
 #include "d3d10imports.hpp"
 #include "d3dstate.hpp"
+#include "dxgistate.hpp"
 
 
 namespace d3dstate {
@@ -193,8 +194,6 @@ getRenderTargetViewImage(ID3D10Device *pDevice,
     UINT Subresource;
     D3D10_MAPPED_TEXTURE3D MappedSubresource;
     HRESULT hr;
-    const unsigned char *src;
-    unsigned char *dst;
 
     if (!pRenderTargetView) {
         return NULL;
@@ -204,12 +203,6 @@ getRenderTargetViewImage(ID3D10Device *pDevice,
     assert(pResource);
 
     pRenderTargetView->GetDesc(&Desc);
-    if (Desc.Format != DXGI_FORMAT_R8G8B8A8_UNORM &&
-        Desc.Format != DXGI_FORMAT_R32G32B32A32_FLOAT &&
-        Desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM) {
-        std::cerr << "warning: unsupported DXGI format " << Desc.Format << "\n";
-        goto no_staging;
-    }
 
     hr = stageResource(pDevice, pResource, &pStagingResource, &Width, &Height, &Depth);
     if (FAILED(hr)) {
@@ -259,36 +252,22 @@ getRenderTargetViewImage(ID3D10Device *pDevice,
         goto no_map;
     }
 
-    image = new image::Image(Width, Height, 4, true);
+    image = new image::Image(Width, Height, 4);
     if (!image) {
         goto no_image;
     }
+    assert(image->stride() > 0);
 
-    dst = image->start();
-    src = (const unsigned char *)MappedSubresource.pData;
-    for (unsigned y = 0; y < Height; ++y) {
-        if (Desc.Format == DXGI_FORMAT_R8G8B8A8_UNORM) {
-            memcpy(dst, src, Width * 4);
-        } else if (Desc.Format == DXGI_FORMAT_R32G32B32A32_FLOAT) {
-            float scale = 1.0f/255.0f;
-            for (unsigned x = 0; x < Width; ++x) {
-                dst[4*x + 0] = ((float *)src)[4*x + 0] * scale;
-                dst[4*x + 1] = ((float *)src)[4*x + 1] * scale;
-                dst[4*x + 2] = ((float *)src)[4*x + 2] * scale;
-                dst[4*x + 3] = ((float *)src)[4*x + 3] * scale;
-            }
-        } else if (Desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM) {
-            for (unsigned x = 0; x < Width; ++x) {
-                dst[4*x + 0] = src[4*x + 2];
-                dst[4*x + 1] = src[4*x + 1];
-                dst[4*x + 2] = src[4*x + 0];
-                dst[4*x + 3] = src[4*x + 3];
-            }
-        } else {
-            assert(0);
-        }
-        src += MappedSubresource.RowPitch;
-        dst += image->stride();
+    hr = ConvertFormat(Desc.Format,
+                       MappedSubresource.pData,
+                       MappedSubresource.RowPitch,
+                       DXGI_FORMAT_R8G8B8A8_UNORM,
+                       image->start(),
+                       image->stride(),
+                       Width, Height);
+    if (FAILED(hr)) {
+        delete image;
+        image = NULL;
     }
 
 no_image:
