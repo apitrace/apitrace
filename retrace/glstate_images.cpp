@@ -287,6 +287,41 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 }
 
 
+static GLenum
+getTextureBinding(GLenum target)
+{
+    switch (target) {
+    case GL_TEXTURE_1D:
+        return GL_TEXTURE_BINDING_1D;
+    case GL_TEXTURE_1D_ARRAY:
+        return GL_TEXTURE_BINDING_1D_ARRAY;
+    case GL_TEXTURE_2D:
+        return GL_TEXTURE_BINDING_2D;
+    case GL_TEXTURE_2D_MULTISAMPLE:
+        return GL_TEXTURE_BINDING_2D_MULTISAMPLE;
+    case GL_TEXTURE_2D_ARRAY:
+        return GL_TEXTURE_BINDING_2D_ARRAY;
+    case GL_TEXTURE_RECTANGLE:
+        return GL_TEXTURE_BINDING_RECTANGLE;
+    case GL_TEXTURE_CUBE_MAP:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        return GL_TEXTURE_BINDING_CUBE_MAP;
+    case GL_TEXTURE_CUBE_MAP_ARRAY:
+        return GL_TEXTURE_BINDING_CUBE_MAP_ARRAY;
+    case GL_TEXTURE_3D:
+        return GL_TEXTURE_BINDING_3D;
+    default:
+        assert(false);
+        return GL_NONE;
+    }
+}
+
+
 /**
  * OpenGL ES does not support glGetTexImage. Obtain the pixels by attaching the
  * texture to a framebuffer.
@@ -296,22 +331,8 @@ getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
 {
     memset(pixels, 0x80, desc.height * desc.width * 4);
 
-    GLenum texture_binding = GL_NONE;
-    switch (target) {
-    case GL_TEXTURE_2D:
-        texture_binding = GL_TEXTURE_BINDING_2D;
-        break;
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        texture_binding = GL_TEXTURE_BINDING_CUBE_MAP;
-        break;
-    case GL_TEXTURE_3D_OES:
-        texture_binding = GL_TEXTURE_BINDING_3D_OES;
-    default:
+    GLenum texture_binding = getTextureBinding(target);
+    if (texture_binding == GL_NONE) {
         return;
     }
 
@@ -597,57 +618,55 @@ getDrawableBounds(GLint *width, GLint *height) {
 }
 
 
-static const GLenum texture_bindings[][2] = {
-    {GL_TEXTURE_1D, GL_TEXTURE_BINDING_1D},
-    {GL_TEXTURE_2D, GL_TEXTURE_BINDING_2D},
-    {GL_TEXTURE_3D, GL_TEXTURE_BINDING_3D},
-    {GL_TEXTURE_RECTANGLE, GL_TEXTURE_BINDING_RECTANGLE},
-    {GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BINDING_CUBE_MAP}
+struct TextureTargetBinding
+{
+    GLenum target;
+    GLenum binding;
 };
 
 
-static bool
-bindTexture(GLint texture, GLenum &target, GLint &bound_texture)
+static const GLenum
+textureTargets[] = {
+    GL_TEXTURE_1D,
+    GL_TEXTURE_2D,
+    GL_TEXTURE_RECTANGLE,
+    GL_TEXTURE_CUBE_MAP,
+    GL_TEXTURE_3D,
+    GL_TEXTURE_2D_MULTISAMPLE,
+    GL_TEXTURE_1D_ARRAY,
+    GL_TEXTURE_2D_ARRAY,
+    GL_TEXTURE_CUBE_MAP_ARRAY,
+};
+
+
+static GLenum
+getTextureTarget(GLint texture)
 {
+    if (!glIsTexture(texture)) {
+        return GL_NONE;
+    }
 
-    for (unsigned i = 0; i < sizeof(texture_bindings)/sizeof(texture_bindings[0]); ++i) {
-        target  = texture_bindings[i][0];
-
-        GLenum binding = texture_bindings[i][1];
+    for (unsigned i = 0; i < sizeof(textureTargets)/sizeof(textureTargets[0]); ++i) {
+        GLenum target = textureTargets[i];
+        GLenum binding = getTextureBinding(target);
 
         while (glGetError() != GL_NO_ERROR)
             ;
 
+        GLint bound_texture = 0;
         glGetIntegerv(binding, &bound_texture);
         glBindTexture(target, texture);
 
-        if (glGetError() == GL_NO_ERROR) {
-            return true;
-        }
+        bool succeeded = glGetError() == GL_NO_ERROR;
 
         glBindTexture(target, bound_texture);
+
+        if (succeeded) {
+            return target;
+        }
     }
 
-    target = GL_NONE;
-
-    return false;
-}
-
-
-static bool
-getTextureLevelDesc(Context &context, GLint texture, GLint level, ImageDesc &desc)
-{
-    GLenum target;
-    GLint bound_texture = 0;
-    if (!bindTexture(texture, target, bound_texture)) {
-        return false;
-    }
-
-    getActiveTextureLevelDesc(context, target, level, desc);
-
-    glBindTexture(target, bound_texture);
-
-    return desc.valid();
+    return GL_NONE;
 }
 
 
@@ -701,11 +720,31 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
     if (object_type == GL_RENDERBUFFER) {
         return getRenderbufferDesc(context, object_name, desc);
     } else if (object_type == GL_TEXTURE) {
+        GLint texture_face = 0;
+        glGetFramebufferAttachmentParameteriv(target, attachment,
+                                              GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE,
+                                              &texture_face);
+
         GLint texture_level = 0;
         glGetFramebufferAttachmentParameteriv(target, attachment,
                                               GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
                                               &texture_level);
-        return getTextureLevelDesc(context, object_name, texture_level, desc);
+
+        GLint bound_texture = 0;
+        if (texture_face != 0) {
+            glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &bound_texture);
+            getActiveTextureLevelDesc(context, texture_face, texture_level, desc);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, bound_texture);
+        } else {
+            GLenum texture_target = getTextureTarget(object_name);
+            GLenum texture_binding = getTextureBinding(texture_target);
+            glGetIntegerv(texture_binding, &bound_texture);
+            glBindTexture(texture_target, object_name);
+            getActiveTextureLevelDesc(context, texture_face, texture_level, desc);
+            glBindTexture(texture_binding, bound_texture);
+        }
+
+        return desc.valid();
     } else {
         std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
         return false;
