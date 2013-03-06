@@ -199,7 +199,10 @@ if (WIN32)
     endif ()
 
     if (DirectX_D3D11_INCLUDE_DIR)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
+        include_directories (BEFORE SYSTEM
+            ${DirectX_D3D11_INCLUDE_DIR}
+            ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
+        )
         set (DXGI_MODULES ${DXGI_MODULES} d3d11)
         if (DirectX_D3D11_1_INCLUDE_DIR)
             include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
@@ -248,6 +251,9 @@ if (WIN32)
         retrace_common
         d3dhelpers
     )
+    if (DirectX_D3D11_INCLUDE_DIR)
+        target_link_libraries (d3dretrace directxtex)
+    endif ()
 
     install (TARGETS d3dretrace RUNTIME DESTINATION bin)
 endif ()
