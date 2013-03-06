@@ -23,11 +23,18 @@ if (DirectX_D3D11_INCLUDE_DIR)
             -std=c++0x # static_assert, nullptr unique_ptr
             -w #inhibit warnings
 
+            # workaround http://sourceforge.net/tracker/index.php?func=detail&aid=3067012&group_id=202880&atid=983354
+            --include malloc.h
+
             -D_XM_NO_INTRINSICS_
-            -D_XM_X86_
             -DXMINLINE=inline
             -DXM_NO_ALIGNMENT
         )
+        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+            add_definitions (-D_XM_X64_)
+        else ()
+            add_definitions (-D_XM_X86_)
+        endif ()
         set (MINGW_GUID mingw/guid.cpp)
     endif ()
 
