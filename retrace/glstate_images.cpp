@@ -733,6 +733,7 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
         GLint bound_texture = 0;
         if (texture_face != 0) {
             glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &bound_texture);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, object_name);
             getActiveTextureLevelDesc(context, texture_face, texture_level, desc);
             glBindTexture(GL_TEXTURE_CUBE_MAP, bound_texture);
         } else {
@@ -740,8 +741,8 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
             GLenum texture_binding = getTextureBinding(texture_target);
             glGetIntegerv(texture_binding, &bound_texture);
             glBindTexture(texture_target, object_name);
-            getActiveTextureLevelDesc(context, texture_face, texture_level, desc);
-            glBindTexture(texture_binding, bound_texture);
+            getActiveTextureLevelDesc(context, texture_target, texture_level, desc);
+            glBindTexture(texture_target, bound_texture);
         }
 
         return desc.valid();
