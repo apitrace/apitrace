@@ -299,6 +299,7 @@ endif ()
 add_library (common STATIC
     common/trace_callset.cpp
     common/trace_dump.cpp
+    common/trace_fast_callset.cpp
     common/trace_file.cpp
     common/trace_file_read.cpp
     common/trace_file_write.cpp

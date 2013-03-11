@@ -760,7 +760,7 @@ TraceAnalyzer::require(trace::Call *call)
 /* Return a set of all the required calls, (both those calls added
  * explicitly with require() and those implicitly depended
  * upon. */
-trim::CallSet *
+trace::FastCallSet *
 TraceAnalyzer::get_required(void)
 {
     return &required;

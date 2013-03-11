@@ -31,28 +31,28 @@
 #include <stdlib.h>
 #include <limits>
 
-#include "trim_callset.hpp"
+#include "trace_fast_callset.hpp"
 
-using namespace trim;
+using namespace trace;
 
 #define MAX_LEVEL 16
 
-CallRange::CallRange(CallNo first, CallNo last, int level)
+FastCallRange::FastCallRange(CallNo first, CallNo last, int level)
 {
     this->first = first;
     this->last = last;
     this->level = level;
 
-    next = new CallRange*[level];
+    next = new FastCallRange*[level];
 }
 
 bool
-CallRange::contains(CallNo call_no)
+FastCallRange::contains(CallNo call_no)
 {
     return (first <= call_no && last >= call_no);
 }
 
-CallSet::CallSet(): head(0, 0, MAX_LEVEL)
+FastCallSet::FastCallSet(): head(0, 0, MAX_LEVEL)
 {
     head.first = std::numeric_limits<CallNo>::max();
     head.last = std::numeric_limits<CallNo>::min();
@@ -88,10 +88,10 @@ random_level (void)
 }
 
 void
-CallSet::add(CallNo first, CallNo last)
+FastCallSet::add(CallNo first, CallNo last)
 {
-    CallRange **update[MAX_LEVEL];
-    CallRange *node, *next;
+    FastCallRange **update[MAX_LEVEL];
+    FastCallRange *node, *next;
     int i, level;
 
     /* Find node immediately before insertion point. */
@@ -112,7 +112,6 @@ CallSet::add(CallNo first, CallNo last)
     }
 
     /* Current range could not contain first, look at next. */
-
     node = node->next[0];
 
     if (node) {
@@ -146,7 +145,7 @@ CallSet::add(CallNo first, CallNo last)
         max_level = level;
     }
 
-    node = new CallRange(first, last, level);
+    node = new FastCallRange(first, last, level);
 
     /* Perform insertion into all lists. */
     for (i = 0; i < level; i++) {
@@ -176,15 +175,15 @@ MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES:
 }
 
 void
-CallSet::add(CallNo call_no)
+FastCallSet::add(CallNo call_no)
 {
     this->add(call_no, call_no);
 }
 
 bool
-CallSet::contains(CallNo call_no)
+FastCallSet::contains(CallNo call_no)
 {
-    CallRange *node;
+    FastCallRange *node;
     int i;
 
     node = &head;
