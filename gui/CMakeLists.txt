@@ -80,6 +80,7 @@ target_link_libraries (qapitrace
     ${SNAPPY_LIBRARIES}
     ${QJSON_LIBRARIES}
     ${QT_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 if (APPLE)
