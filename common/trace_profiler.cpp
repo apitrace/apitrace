@@ -120,9 +120,7 @@ void Profiler::addCall(unsigned no,
     }
 
     if (cpuTimes && cpuStart) {
-        double cpuTimeScale = 1.0E9 / os::timeFrequency;
-        cpuStart = (cpuStart - baseCpuTime) * cpuTimeScale;
-        cpuDuration = cpuDuration * cpuTimeScale;
+        cpuStart = cpuStart - baseCpuTime;
 
         if (cpuDuration < minCpuTime) {
             return;
