@@ -46,6 +46,14 @@
 #include <GL/glext.h>
 
 
+// Windows 8 GL headers define GL_EXT_paletted_texture but not
+// GL_TEXTURE_INDEX_SIZE_EXT, and due to the way we include DirectX headers, it
+// ends up taking precedence over the ones we bundle...
+#if defined(GL_EXT_paletted_texture) && !defined(GL_TEXTURE_INDEX_SIZE_EXT)
+#define GL_TEXTURE_INDEX_SIZE_EXT 0x80ED
+#endif
+
+
 // GL_NVX_gpu_memory_info
 #define GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX          0x9047
 #define GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX    0x9048
