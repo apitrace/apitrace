@@ -71,7 +71,7 @@ public:
 
     FastCallRange(CallNo first, CallNo last, int level);
 
-    bool contains(CallNo call_no);
+    bool contains(CallNo call_no) const;
 };
 
 class FastCallSet {
@@ -81,11 +81,13 @@ public:
 
     FastCallSet();
 
+    bool empty(void) const;
+
     void add(CallNo first, CallNo last);
 
     void add(CallNo call_no);
 
-    bool contains(CallNo call_no);
+    bool contains(CallNo call_no) const;
 };
 
 } /* namespace trace */

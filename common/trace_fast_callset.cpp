@@ -47,9 +47,15 @@ FastCallRange::FastCallRange(CallNo first, CallNo last, int level)
 }
 
 bool
-FastCallRange::contains(CallNo call_no)
+FastCallRange::contains(CallNo call_no) const
 {
     return (first <= call_no && last >= call_no);
+}
+
+bool
+FastCallSet::empty(void) const
+{
+    return max_level == 0;
 }
 
 FastCallSet::FastCallSet(): head(0, 0, MAX_LEVEL)
@@ -181,9 +187,9 @@ FastCallSet::add(CallNo call_no)
 }
 
 bool
-FastCallSet::contains(CallNo call_no)
+FastCallSet::contains(CallNo call_no) const
 {
-    FastCallRange *node;
+    const FastCallRange *node;
     int i;
 
     node = &head;
