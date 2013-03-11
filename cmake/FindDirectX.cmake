@@ -214,13 +214,11 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 
 	find_path (DirectX_D2D1_INCLUDE_DIR d2d1.h
-		PATHS
-			"${DirectX_ROOT_DIR}/Include"
+		PATHS ${DirectX_INC_SEARCH_PATH}
 		DOC "The directory where d2d1.h resides")
 
 	find_library (DirectX_D2D1_LIBRARY d2d1
-		PATHS
-			"${DirectX_ROOT_DIR}/Lib/x86"
+		PATHS ${DirectX_LIB_SEARCH_PATH}
 		DOC "The directory where d2d1 resides")
 
 	if (DirectX_D2D1_INCLUDE_DIR AND DirectX_D2D1_LIBRARY)
