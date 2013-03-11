@@ -26,15 +26,17 @@
  *
  *********************************************************************/
 
-#ifndef _TRIM_CALLSET_HPP_
-#define _TRIM_CALLSET_HPP_
+#ifndef _TRACE_FAST_CALLSET_HPP_
+#define _TRACE_FAST_CALLSET_HPP_
 
-namespace trim {
+#include "trace_model.hpp"
+
+namespace trace {
 
 /* A set of call numbers.
  *
- * This is designed as a more efficient replacement for
- * std::set<unsigned> which is used heavily within the trim code's
+ * This was originally designed as a more efficient replacement for
+ * std::set<unsigned> which was used heavily within the trim code's
  * TraceAnalyzer. This is quite similar to the trace::CallSet with the
  * following differences:
  *
@@ -52,38 +54,32 @@ namespace trim {
  *	* This callset optimizes the addition of new calls which are
  *        within or adjacent to existing ranges, (by either doing
  *        nothing, expanding the limits of an existing range, or also
- *        merging two ranges). This keeps the length of the list down
- *        when succesively adding individual calls that could be
- *        efficiently expressed with a range.
+ *        merging two or more ranges).
  *
  * It would not be impossible to extend this code to support the
  * missing features of trace::CallSet, (though the 'step' and 'freq'
  * features would prevent some range-extending and merging
- * optimizations in some cases). Currently, trace::CallSet is not used
- * in any performance-critical areas, so it may not be important to
- * provide the performance imrpovements to it.
+ * optimizations in some cases).
  */
 
-typedef unsigned CallNo;
-
-class CallRange {
+class FastCallRange {
 public:
     CallNo first;
     CallNo last;
     int level;
-    CallRange **next;
+    FastCallRange **next;
 
-    CallRange(CallNo first, CallNo last, int level);
+    FastCallRange(CallNo first, CallNo last, int level);
 
     bool contains(CallNo call_no);
 };
 
-class CallSet {
+class FastCallSet {
 public:
-    CallRange head;
+    FastCallRange head;
     int max_level;
 
-    CallSet();
+    FastCallSet();
 
     void add(CallNo first, CallNo last);
 
@@ -92,6 +88,6 @@ public:
     bool contains(CallNo call_no);
 };
 
-} /* namespace trim */
+} /* namespace trace */
 
-#endif /* _TRIM_CALLSET_HPP_ */
+#endif /* _TRACE_FAST_CALLSET_HPP_ */

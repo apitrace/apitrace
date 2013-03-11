@@ -203,7 +203,7 @@ trim_trace(const char *filename, struct trim_options *options)
     trace::ParseBookmark beginning;
     trace::Parser p;
     TraceAnalyzer analyzer(options->trim_flags);
-    trim::CallSet *required;
+    trace::FastCallSet *required;
     unsigned frame;
     int call_range_first, call_range_last;
 

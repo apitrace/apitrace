@@ -56,11 +56,6 @@
 
 namespace trace {
 
-
-    // Should match Call::no
-    typedef unsigned CallNo;
-
-
     // Aliases for call flags
     enum {
         FREQUENCY_NONE         = 0,
