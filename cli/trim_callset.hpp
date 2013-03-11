@@ -40,9 +40,6 @@ namespace trim {
  *
  *   Simplifications:
  *
- *	* This supports only the addition of a single call number, not
- *	  the addition of a range.
- *
  *	* There is no support here for the 'step' and 'freq' features
  *	  supported by trace::CallSet.
  *
@@ -76,7 +73,7 @@ public:
     int level;
     CallRange **next;
 
-    CallRange(CallNo call_no, int level);
+    CallRange(CallNo first, CallNo last, int level);
 
     bool contains(CallNo call_no);
 };
@@ -87,6 +84,8 @@ public:
     int max_level;
 
     CallSet();
+
+    void add(CallNo first, CallNo last);
 
     void add(CallNo call_no);
 
