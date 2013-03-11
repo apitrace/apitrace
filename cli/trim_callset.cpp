@@ -37,10 +37,10 @@ using namespace trim;
 
 #define MAX_LEVEL 16
 
-CallRange::CallRange(CallNo call_no, int level)
+CallRange::CallRange(CallNo first, CallNo last, int level)
 {
-    first = call_no;
-    last = call_no;
+    this->first = first;
+    this->last = last;
     this->level = level;
 
     next = new CallRange*[level];
@@ -52,7 +52,7 @@ CallRange::contains(CallNo call_no)
     return (first <= call_no && last >= call_no);
 }
 
-CallSet::CallSet(): head(0, MAX_LEVEL)
+CallSet::CallSet(): head(0, 0, MAX_LEVEL)
 {
     head.first = std::numeric_limits<CallNo>::max();
     head.last = std::numeric_limits<CallNo>::min();
@@ -88,64 +88,54 @@ random_level (void)
 }
 
 void
-CallSet::add(CallNo call_no)
+CallSet::add(CallNo first, CallNo last)
 {
     CallRange **update[MAX_LEVEL];
-    CallRange *node;
+    CallRange *node, *next;
     int i, level;
 
     /* Find node immediately before insertion point. */
     node = &head;
     for (i = max_level - 1; i >= 0; i--) {
-        while (node->next[i] && call_no > node->next[i]->last) {
+        while (node->next[i] && first > node->next[i]->last) {
             node = node->next[i];
         }
         update[i] = &node->next[i];
     }
 
-    /* Can we contain call_no by expanding tail of current range by 1? */
-    if (node != &head && node->last == call_no - 1) {
+    /* Can we contain first by expanding tail of current range by 1? */
+    if (node != &head && node->last == first - 1) {
 
-        CallRange *next = node->next[0];
+        node->last = last;
+        goto MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES;
 
-        node->last = call_no;
-
-        /* Also merge with next node as needed. */
-        if (next && next->first == call_no + 1) {
-            node->last = next->last;
-
-            /* Delete node 'next' */
-            for (i = 0; i < node->level && i < next->level; i++) {
-                node->next[i] = next->next[i];
-            }
-
-            for (; i < next->level; i++) {
-                *update[i] = next->next[i];
-            }
-
-            delete next;
-        }
-
-        return;
     }
 
-    /* Current range could not contain call_no, look at next. */
+    /* Current range could not contain first, look at next. */
+
     node = node->next[0];
 
     if (node) {
-        /* Do nothing if call_no is already contained. */
-        if (node->first <= call_no) {
+        /* Do nothing if new range is already entirely contained. */
+        if (node->first <= first && node->last >= last) {
             return;
         }
 
-        /* Can we exand head of range by 1? */
-        if (node->first == call_no + 1) {
-            node->first = call_no;
+        /* If last is already included, we can simply expand
+         * node->first to fully include the range. */
+        if (node->first <= last && node->last >= last) {
+            node->first = first;
             return;
+        }
+
+        /* This is our candidate node if first is contained */
+        if (node->first <= first && node->last >= first) {
+            node->last = last;
+            goto MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES;
         }
     }
 
-    /* Not possible to expand any existing node, so create new one. */
+    /* Not possible to expand any existing node, so create a new one. */
 
     level = random_level();
 
@@ -156,13 +146,39 @@ CallSet::add(CallNo call_no)
         max_level = level;
     }
 
-    node = new CallRange(call_no, level);
+    node = new CallRange(first, last, level);
 
     /* Perform insertion into all lists. */
     for (i = 0; i < level; i++) {
         node->next[i] = *update[i];
         *update[i] = node;
     }
+
+MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES:
+    next = node->next[0];
+    while (next && next->first <= node->last + 1) {
+        if (next->last > node->last)
+            node->last = next->last;
+
+        /* Delete node 'next' */
+        for (i = 0; i < node->level && i < next->level; i++) {
+            node->next[i] = next->next[i];
+        }
+
+        for (; i < next->level; i++) {
+            *update[i] = next->next[i];
+        }
+
+        delete next;
+
+        next = node->next[0];
+    }
+}
+
+void
+CallSet::add(CallNo call_no)
+{
+    this->add(call_no, call_no);
 }
 
 bool
