@@ -174,6 +174,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi1_2.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py

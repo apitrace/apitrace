@@ -155,6 +155,12 @@ IDXGIResource.methods += [
     StdMethod(HRESULT, "GetEvictionPriority", [Out(Pointer(DXGI_RESOURCE_PRIORITY), "pEvictionPriority")], sideeffects=False),
 ]
 
+DXGI_SHARED_RESOURCE_FLAG = Flags(DWORD, [
+    "DXGI_SHARED_RESOURCE_READ",
+    "DXGI_SHARED_RESOURCE_WRITE",
+])
+
+
 IDXGIKeyedMutex.methods += [
     StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD, "dwMilliseconds")]),
     StdMethod(HRESULT, "ReleaseSync", [(UINT64, "Key")]),

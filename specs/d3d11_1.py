@@ -30,6 +30,8 @@ from winapi import *
 from d3d11sdklayers import *
 from d3d11 import *
 
+import dxgi1_2
+
 D3D_FEATURE_LEVEL.values += [
     "D3D_FEATURE_LEVEL_11_1",
 ]
@@ -134,6 +136,7 @@ ID3D11DeviceContext1.methods += [
     StdMethod(Void, "UpdateSubresource1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch"), (D3D11_COPY_FLAGS, "CopyFlags")]),
     StdMethod(Void, "DiscardResource", [(ObjPointer(ID3D11Resource), "pResource")]),
     StdMethod(Void, "DiscardView", [(ObjPointer(ID3D11View), "pResourceView")]),
+    StdMethod(Void, "DiscardView1", [(ObjPointer(ID3D11View), "pResourceView"), (Array(Const(D3D11_RECT), "NumRects"), "pRect"), (UINT, "NumRects")]),
     StdMethod(Void, "VSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
     StdMethod(Void, "HSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
     StdMethod(Void, "DSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
@@ -149,12 +152,6 @@ ID3D11DeviceContext1.methods += [
     StdMethod(Void, "SwapDeviceContextState", [(ObjPointer(ID3DDeviceContextState), "pState"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppPreviousState")]),
     StdMethod(Void, "ClearView", [(ObjPointer(ID3D11View), "pView"), (Array(Const(FLOAT), 4), "Color"), (Pointer(Const(D3D11_RECT)), "pRect"), (UINT, "NumRects")]),
 ]
-
-
-DXGI_SHARED_RESOURCE_FLAG = Flags(DWORD, [
-    "DXGI_SHARED_RESOURCE_READ",
-    "DXGI_SHARED_RESOURCE_WRITE",
-])
 
 
 ID3D11Device1.methods += [

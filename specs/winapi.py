@@ -178,6 +178,11 @@ LOGFONTW = Struct("LOGFONTW", [
     (WString, "lfFaceName"),
 ])
 
+SECURITY_ATTRIBUTES = Struct("SECURITY_ATTRIBUTES", [
+    (DWORD, "nLength"),
+    (LPVOID, "lpSecurityDescriptor"),
+    (BOOL, "bInheritHandle"),
+])
 
 # http://msdn.microsoft.com/en-us/library/ff485842.aspx
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx
