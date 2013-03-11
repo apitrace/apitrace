@@ -196,11 +196,11 @@ trim_trace(const char *filename, struct trim_options *options)
     trace::Call *call;
     while ((call = p.parse_call())) {
 
-        /* There's no use doing any work past the last call or frame
+        /* There's no use doing any work past the last call and frame
          * requested by the user. */
-        if (call->no > options->calls.getLast() ||
-            frame > options->frames.getLast()) {
-            
+        if ((options->calls.empty() || call->no > options->calls.getLast()) &&
+            (options->frames.empty() || frame > options->frames.getLast())) {
+
             delete call;
             break;
         }
@@ -264,10 +264,10 @@ trim_trace(const char *filename, struct trim_options *options)
     call_range_last = -1;
     while ((call = p.parse_call())) {
 
-        /* There's no use doing any work past the last call or frame
+        /* There's no use doing any work past the last call and frame
          * requested by the user. */
-        if (call->no > options->calls.getLast() ||
-            frame > options->frames.getLast()) {
+        if ((options->calls.empty() || call->no > options->calls.getLast()) &&
+            (options->frames.empty() || frame > options->frames.getLast())) {
 
             break;
         }
