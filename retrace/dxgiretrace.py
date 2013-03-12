@@ -156,7 +156,7 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 print r'    d3d10Dumper.unbindDevice(_this);'
             else:
                 print r'    d3d10Dumper.bindDevice(_this);'
-        if interface.name in ('ID3D11DeviceContext',):
+        if interface.name in ('ID3D11DeviceContext', 'ID3D11DeviceContext1'):
             if method.name == 'Release':
                 print r'    d3d11Dumper.unbindDevice(_this);'
             else:
