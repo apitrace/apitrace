@@ -194,6 +194,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     CHECK_INCLUDE_FILES(proc/readproc.h READPROC_H_FOUND)
     if (READPROC_H_FOUND)
         add_definitions (-DHAVE_READPROC_H)
+        find_library (proc_LIBRARY NAMES proc procps)
     endif ()
 endif()
 
