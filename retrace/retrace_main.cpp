@@ -42,11 +42,13 @@
 
 
 static bool waitOnFinish = false;
+static bool loopOnFinish = false;
 
 static const char *comparePrefix = NULL;
 static const char *snapshotPrefix = NULL;
 static trace::CallSet snapshotFrequency;
 static trace::CallSet compareFrequency;
+static trace::ParseBookmark lastFrameStart;
 
 static unsigned dumpStateCallNo = ~0;
 
@@ -309,13 +311,34 @@ public:
      */
     void
     runLeg(trace::Call *call) {
+
         /* Consume successive calls for this thread. */
         do {
+            bool callEndsFrame = false;
+            static trace::ParseBookmark frameStart;
+
             assert(call);
             assert(call->thread_id == leg);
+
+            if (loopOnFinish && call->flags & trace::CALL_FLAG_END_FRAME) {
+                callEndsFrame = true;
+                parser.getBookmark(frameStart);
+            }
+
             retraceCall(call);
             delete call;
             call = parser.parse_call();
+
+            /* Restart last frame if looping is requested. */
+            if (loopOnFinish) {
+                if (!call) {
+                    parser.setBookmark(lastFrameStart);
+                    call = parser.parse_call();
+                } else if (callEndsFrame) {
+                    lastFrameStart = frameStart;
+                }
+            }
+
         } while (call && call->thread_id == leg);
 
         if (call) {
@@ -421,6 +444,14 @@ RelayRace::run(void) {
     if (!call) {
         /* Nothing to do */
         return;
+    }
+
+    /* If the user wants to loop we need to get a bookmark target. We
+     * usually get this after replaying a call that ends a frame, but
+     * for a trace that has only one frame we need to get it at the
+     * beginning. */
+    if (loopOnFinish) {
+        parser.getBookmark(lastFrameStart);
     }
 
     RelayRunner *foreRunner = getForeRunner();
@@ -540,6 +571,7 @@ usage(const char *argv0) {
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "  -w, --wait              waitOnFinish on final frame\n"
+        "      --loop              continuously loop, replaying final frame.\n"
         "      --singlethread      use a single thread to replay command stream\n";
 }
 
@@ -553,7 +585,8 @@ enum {
     PPD_OPT,
     PMEM_OPT,
     SB_OPT,
-    SINGLETHREAD_OPT,
+    LOOP_OPT,
+    SINGLETHREAD_OPT
 };
 
 const static char *
@@ -579,6 +612,7 @@ longOptions[] = {
     {"snapshot", required_argument, 0, 'S'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
+    {"loop", no_argument, 0, LOOP_OPT},
     {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
     {0, 0, 0, 0}
 };
@@ -676,6 +710,9 @@ int main(int argc, char **argv)
             break;
         case 'w':
             waitOnFinish = true;
+            break;
+        case LOOP_OPT:
+            loopOnFinish = true;
             break;
         case PGPU_OPT:
             retrace::debug = false;
