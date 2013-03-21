@@ -53,9 +53,13 @@ usage(void)
         "        --calls=CALLSET      Include specified calls in the trimmed output.\n"
         "        --frames=FRAMESET    Include specified frames in the trimmed output.\n"
         "        --deps               Include additional calls to satisfy dependencies\n"
-        "        --prune              Omit uninteresting calls from the trace output\n"
+        "        --no-deps            Do not include any more calls than requestd\n"
+        "        --prune              Omit calls without side effects from the output\n"
+        "        --no-prune           Do not omit any requested calls\n"
         "    -a, --auto               Trim automatically to calls specified in --calls/--frames\n"
         "                             Equivalent to both --deps and --prune\n"
+        "        --exact              Trim to exactly the calls specified in --calls/--frames\n"
+        "                             Equivalent to both --no-deps and --no-prune\n"
         "        --print-callset      Print the final set of calls included in output\n"
         "        --trim-spec=SPEC     Only performing trimming as described in SPEC\n"
         "        --thread=THREAD_ID   Only retain calls from specified thread\n"
@@ -78,15 +82,26 @@ help()
         "        --deps               Perform dependency analysis and include dependent\n"
         "                             calls as needed, (even if those calls were not\n"
         "                             explicitly requested with --calls or --frames).\n"
+        "        --no-deps            Do not perform dependency analysis. Output will\n"
+        "                             not include any additional calls beyond those\n"
+        "                             explicitly requested with --calls or --frames).\n"
         "\n"
         "        --prune              Omit calls with no side effects, even if the call\n"
         "                             is within the range specified by --calls/--frames.\n"
+        "\n"
+        "        --no-prune           Never omit any calls from the range specified\n"
+        "                             --calls/--frames.\n"
         "\n"
         "    -a, --auto               Use dependency analysis and pruning\n"
         "                             of uninteresting calls the resulting trace may\n"
         "                             include more and less calls than specified.\n"
         "                             This option is equivalent\n"
         "                             to passing both --deps and --prune.\n"
+        "\n"
+        "        --exact              Trim output to exact the calls or frames\n"
+        "                             specified with --calls or --frames.\n"
+        "                             This option is equivalent\n"
+        "                             to passing both --no-deps and --no-prune.\n"
         "\n"
         "        --print-callset      Print to stdout the final set of calls included\n"
         "                             in the trim output. This can be useful for\n"
@@ -117,10 +132,13 @@ enum {
     CALLS_OPT = CHAR_MAX + 1,
     FRAMES_OPT,
     DEPS_OPT,
+    NO_DEPS_OPT,
     PRUNE_OPT,
+    NO_PRUNE_OPT,
     THREAD_OPT,
     PRINT_CALLSET_OPT,
-    TRIM_SPEC_OPT
+    TRIM_SPEC_OPT,
+    EXACT_OPT
 };
 
 const static char *
@@ -132,8 +150,11 @@ longOptions[] = {
     {"calls", required_argument, 0, CALLS_OPT},
     {"frames", required_argument, 0, FRAMES_OPT},
     {"deps", no_argument, 0, DEPS_OPT},
+    {"no-deps", no_argument, 0, NO_DEPS_OPT},
     {"prune", no_argument, 0, PRUNE_OPT},
+    {"no-prune", no_argument, 0, NO_PRUNE_OPT},
     {"auto", no_argument, 0, 'a'},
+    {"exact", no_argument, 0, EXACT_OPT},
     {"thread", required_argument, 0, THREAD_OPT},
     {"output", required_argument, 0, 'o'},
     {"print-callset", no_argument, 0, PRINT_CALLSET_OPT},
@@ -371,12 +392,22 @@ command(int argc, char *argv[])
         case DEPS_OPT:
             options.dependency_analysis = true;
             break;
+        case NO_DEPS_OPT:
+            options.dependency_analysis = false;
+            break;
         case PRUNE_OPT:
             options.prune_uninteresting = true;
+            break;
+        case NO_PRUNE_OPT:
+            options.prune_uninteresting = false;
             break;
         case 'a':
             options.dependency_analysis = true;
             options.prune_uninteresting = true;
+            break;
+        case EXACT_OPT:
+            options.dependency_analysis = false;
+            options.prune_uninteresting = false;
             break;
         case THREAD_OPT:
             options.thread = atoi(optarg);
