@@ -82,12 +82,14 @@ help()
         "        --deps               Perform dependency analysis and include dependent\n"
         "                             calls as needed, (even if those calls were not\n"
         "                             explicitly requested with --calls or --frames).\n"
+        "                             (On by default. See --no-deps or --exact)\n"
         "        --no-deps            Do not perform dependency analysis. Output will\n"
         "                             not include any additional calls beyond those\n"
         "                             explicitly requested with --calls or --frames).\n"
         "\n"
         "        --prune              Omit calls with no side effects, even if the call\n"
         "                             is within the range specified by --calls/--frames.\n"
+        "                             (On by default. See --no-prune or --exact)\n"
         "\n"
         "        --no-prune           Never omit any calls from the range specified\n"
         "                             --calls/--frames.\n"
@@ -96,7 +98,8 @@ help()
         "                             of uninteresting calls the resulting trace may\n"
         "                             include more and less calls than specified.\n"
         "                             This option is equivalent\n"
-        "                             to passing both --deps and --prune.\n"
+        "                             to passing both --deps and --prune and is on by\n"
+        "                             default (see --no-deps, --no-prune and --exact)\n"
         "\n"
         "        --exact              Trim output to exact the calls or frames\n"
         "                             specified with --calls or --frames.\n"
@@ -370,8 +373,8 @@ command(int argc, char *argv[])
 
     options.calls = trace::CallSet(trace::FREQUENCY_NONE);
     options.frames = trace::CallSet(trace::FREQUENCY_NONE);
-    options.dependency_analysis = false;
-    options.prune_uninteresting = false;
+    options.dependency_analysis = true;
+    options.prune_uninteresting = true;
     options.output = "";
     options.thread = -1;
     options.print_callset = 0;
