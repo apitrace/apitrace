@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007-2010 VMware, Inc.
+ * Copyright 2007-2013 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +24,7 @@
  **************************************************************************/
 
 /*
- * Trace writing functions.
+ * Trace writing functions, used to trace calls in the current process.
  */
 
 #ifndef _TRACE_WRITER_LOCAL_HPP_
@@ -56,24 +56,48 @@ namespace trace {
     class LocalWriter : public Writer {
     protected:
         /**
-         * We need a recursive mutex so that it doesn't dead lock when a segfault happens when the mutex is held.
+         * This mutex guarantees that only one thread writes to the trace file
+         * at one given instance.
+         *
+         * We need a recursive mutex so that we dont't dead lock in the event
+         * of a segfault happens while the mutex is held.
+         *
+         * To prevent deadlocks, the call for the real function (the one being
+         * traced) should not be done with the mutex held. That is, it should
+         * be done outside the beginEnter/endEnter and beginLeave/endLeave
+         * pairs. Preferably between these two pairs.
          */
         os::recursive_mutex mutex;
         int acquired;
 
     public:
         /**
-         * Should never called directly -- use localWriter singleton below instead.
+         * Should never called directly -- use localWriter singleton below
+         * instead.
          */
         LocalWriter();
         ~LocalWriter();
 
         void open(void);
 
+        /**
+         * It will acquire the mutex.
+         */
         unsigned beginEnter(const FunctionSig *sig);
+        
+        /**
+         * It will release the mutex.
+         */
         void endEnter(void);
 
+        /**
+         * It will acquire the mutex.
+         */
         void beginLeave(unsigned call);
+
+        /**
+         * It will release the mutex.
+         */
         void endLeave(void);
 
         void flush(void);
