@@ -151,68 +151,9 @@ To trace the application inside gdb, invoke gdb as:
 
 ### Android ###
 
-The following instructions should work at least for Android Ice Scream
-Sandwitch.
-
-To trace applications started from within the Android VM process
-(`app_process` aka zygote) you'll have to wrap this process and enable
-tracing dynamically for the application to be traced.
-
-- Wrapping the android main VM process:
-
-  In the Android root /init.rc add the `LD_PRELOAD` setting to zygote's
-  environment in the 'service zygote' section:
-
-        service zygote ...
-           setenv LD_PRELOAD /data/egltrace.so
-           ...
-
-  Note that ICS will overwrite the /init.rc during each boot with the
-  version in the recovery image. So you'll have to change the file in
-  your ICS source tree, rebuild and reflash the device.
-  Rebuilding/reflashing only the recovery image should be sufficient.
-
-- Copy egltrace.so to /data
-
-  On the host:
-
-        adb push /path/to/apitrace/build/wrappers/egltrace.so /data
-
-- Adjust file permissions to store the trace file:
-
-  By default egltrace.so will store the trace in
-  `/data/app_process.trace`. For this to work for applications running
-  with a uid other than 0, you have to allow writes to the `/data`
-  directory on the device:
-
-        chmod 0777 /data
-
-- Enable tracing for a specific process name:
-
-  To trace for example the Settings application:
-
-        setprop debug.apitrace.procname com.android.settings
-
-  In general this name will match what `ps` reports.
-
-- Start the application:
-
-  If the application was already running, for example due to ICS's way
-  of pre-starting the apps, you might have to kill the application
-  first:
-
-        kill <pid of app>
-
-  Launch the application for example from the application menu.
-
-To trace standalone applications do:
-
-    adb push /path/to/apitrace/build/wrappers/egltrace.so /data
-    adb shell
-    # cd /data/local/tmp
-    # LD_PRELOAD=/data/egltrace.so test-opengl-gl2_basic
-    adb pull /data/local/tmp/test-opengl-gl2_basic.trace
-    apitrace replay test-opengl-gl2_basic.trace
+To trace standalone native OpenGL ES applications, use
+`LD_PRELOAD=/path/to/egltrace.so /path/to/application` like described in the
+previous section.  To trace Java applications, refer to Android.markdown.
 
 ### Mac OS X ###
 
