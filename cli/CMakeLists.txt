@@ -33,4 +33,11 @@ target_link_libraries (apitrace
     ${GETOPT_LIBRARIES}
 )
 
+if (NOT CMAKE_CROSSCOMPILING)
+    set_target_properties (apitrace PROPERTIES
+        # On debug builds tell where the source is so that scripts can be found
+        COMPILE_DEFINITIONS_DEBUG APITRACE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    )
+endif ()
+
 install (TARGETS apitrace RUNTIME DESTINATION bin)

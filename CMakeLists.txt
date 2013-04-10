@@ -317,7 +317,6 @@ add_library (common STATIC
 )
 
 set_target_properties (common PROPERTIES
-    COMPILE_DEFINITIONS APITRACE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
     # Ensure it can be statically linked in shared libraries
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )

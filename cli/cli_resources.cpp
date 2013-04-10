@@ -112,12 +112,14 @@ findScript(const char *scriptFilename)
 
     // Try relative build directory
     // XXX: Just make build and install directory layout match
-    scriptPath = processDir;
+#if defined(APITRACE_SOURCE_DIR)
+    scriptPath = APITRACE_SOURCE_DIR;
     scriptPath.join("scripts");
     scriptPath.join(scriptFilename);
     if (scriptPath.exists()) {
         return scriptPath;
     }
+#endif
 
     // Try relative install directory
     scriptPath = processDir;
