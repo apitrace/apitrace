@@ -153,7 +153,7 @@ To trace the application inside gdb, invoke gdb as:
 
 To trace standalone native OpenGL ES applications, use
 `LD_PRELOAD=/path/to/egltrace.so /path/to/application` like described in the
-previous section.  To trace Java applications, refer to Android.markdown.
+previous section.  To trace Java applications, refer to Dalvik.markdown.
 
 ### Mac OS X ###
 
