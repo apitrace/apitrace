@@ -410,16 +410,15 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
                 ApiTraceCall *apiCall =
                     apiCallFromTraceCall(call, m_helpHash,
                                          currentFrame, this);
-                calls[parsedCalls] = apiCall;
-                Q_ASSERT(calls[parsedCalls]);
+                Q_ASSERT(apiCall);
+                Q_ASSERT(parsedCalls < calls.size());
+                calls[parsedCalls++] = apiCall;
                 if (apiCall->hasBinaryData()) {
                     QByteArray data =
                         apiCall->arguments()[
                             apiCall->binaryDataIndex()].toByteArray();
                     binaryDataSize += data.size();
                 }
-
-                ++parsedCalls;
 
                 delete call;
 
@@ -428,11 +427,14 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
                 }
 
             }
-            assert(parsedCalls == numOfCalls);
-            Q_ASSERT(parsedCalls == calls.size());
+            // There can be fewer parsed calls when call in different
+            // threads cross the frame boundary
+            Q_ASSERT(parsedCalls <= numOfCalls);
+            Q_ASSERT(parsedCalls <= calls.size());
+            calls.resize(parsedCalls);
             calls.squeeze();
 
-            Q_ASSERT(parsedCalls == currentFrame->numChildrenToLoad());
+            Q_ASSERT(parsedCalls <= currentFrame->numChildrenToLoad());
             emit frameContentsLoaded(currentFrame,
                                      calls, binaryDataSize);
             return calls;
@@ -469,8 +471,9 @@ void TraceLoader::findCallIndex(int index)
             call = *itr;
         }
     }
-    Q_ASSERT(call);
-    emit foundCallIndex(call);
+    if (call) {
+        emit foundCallIndex(call);
+    }
 }
 
 void TraceLoader::search(const ApiTrace::SearchRequest &request)

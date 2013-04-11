@@ -187,8 +187,11 @@ Call *Parser::parse_call(Mode mode) {
             std::cerr << "\tLEAVE\n";
 #endif
             call = parse_leave(mode);
-            adjust_call_flags(call);
-            return call;
+            if (call) {
+                adjust_call_flags(call);
+                return call;
+            }
+            break;
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
@@ -456,6 +459,14 @@ Call *Parser::parse_leave(Mode mode) {
         }
     }
     if (!call) {
+        /* This might happen on random access, when an asynchronous call is stranded
+         * between two frames.  We won't return this call, but we still need to skip 
+         * over its data.
+         */
+        const FunctionSig sig = {0, NULL, 0, NULL};
+        call = new Call(&sig, 0, 0);
+        parse_call_details(call, SCAN);
+        delete call;
         return NULL;
     }
 

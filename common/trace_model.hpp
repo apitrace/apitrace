@@ -469,7 +469,7 @@ public:
 
     CallFlags flags;
 
-    Call(FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
+    Call(const FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
         thread_id(_thread_id), 
         sig(_sig), 
         args(_sig->num_args), 

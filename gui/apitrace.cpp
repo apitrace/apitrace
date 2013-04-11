@@ -266,7 +266,7 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
                                  const QVector<ApiTraceCall*> &calls,
                                  quint64 binaryDataSize)
 {
-    Q_ASSERT(frame->numChildrenToLoad() == calls.size());
+    Q_ASSERT(frame->numChildrenToLoad() >= calls.size());
 
     if (!frame->isLoaded()) {
         emit beginLoadingFrame(frame, calls.size());
