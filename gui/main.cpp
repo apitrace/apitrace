@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "mainwindow.h"
 
 #include "apitrace.h"
@@ -10,8 +12,6 @@
 #include <QMetaType>
 #include <QVariant>
 #include <QImage>
-
-#include <stdio.h>
 
 Q_DECLARE_METATYPE(QList<ApiTraceFrame*>);
 Q_DECLARE_METATYPE(QVector<ApiTraceCall*>);
