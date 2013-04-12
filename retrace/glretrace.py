@@ -130,6 +130,8 @@ class GlRetracer(Retracer):
     # object.  See also the ARB_pixel_buffer_object specification.
     pack_function_names = set([
         'glGetCompressedTexImage',
+        'glGetCompressedTextureImageEXT',
+        'glGetCompressedMultiTexImageEXT',
         'glGetConvolutionFilter',
         'glGetHistogram',
         'glGetMinmax',
@@ -139,6 +141,8 @@ class GlRetracer(Retracer):
         'glGetPolygonStipple',
         'glGetSeparableFilter',
         'glGetTexImage',
+        'glGetTextureImageEXT',
+        'glGetMultiTexImageEXT',
         'glReadPixels',
         'glGetnCompressedTexImageARB',
         'glGetnConvolutionFilterARB',
