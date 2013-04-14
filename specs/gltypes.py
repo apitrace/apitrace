@@ -250,3 +250,13 @@ def GLindexBuffer(countExpr, typeExpr):
         IntPointer("const GLvoid *"), 
         contextLess=False,
     )
+
+
+# GL_AMD_performance_monitor
+GLperfMonitorCounterInfoAMD = Polymorphic('pname', [
+        ('GL_COUNTER_TYPE_AMD', Pointer(GLenum)),
+        ('GL_PERCENTAGE_AMD', Pointer(Float)),
+        ('GL_COUNTER_RANGE_AMD', Array(Float, 2)),
+    ],
+    OpaquePointer(GLvoid),
+)

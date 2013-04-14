@@ -2690,7 +2690,7 @@ glapi.addFunctions([
     GlFunction(Void, "glGetPerfMonitorCountersAMD", [(GLuint, "group"), Out(Pointer(GLint), "numCounters"), Out(Pointer(GLint), "maxActiveCounters"), (GLsizei, "counterSize"), Out(Array(GLuint, "counterSize"), "counters")], sideeffects=False),
     GlFunction(Void, "glGetPerfMonitorGroupStringAMD", [(GLuint, "group"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "groupString")], sideeffects=False),
     GlFunction(Void, "glGetPerfMonitorCounterStringAMD", [(GLuint, "group"), (GLuint, "counter"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "counterString")], sideeffects=False),
-    GlFunction(Void, "glGetPerfMonitorCounterInfoAMD", [(GLuint, "group"), (GLuint, "counter"), (GLenum, "pname"), Out(OpaqueBlob(GLvoid, "_glGetPerfMonitorCounterInfoAMD_size(pname)"), "data")], sideeffects=False),
+    GlFunction(Void, "glGetPerfMonitorCounterInfoAMD", [(GLuint, "group"), (GLuint, "counter"), (GLenum, "pname"), Out(GLperfMonitorCounterInfoAMD, "data")], sideeffects=False),
     GlFunction(Void, "glGenPerfMonitorsAMD", [(GLsizei, "n"), Out(Array(GLuint, "n"), "monitors")]),
     GlFunction(Void, "glDeletePerfMonitorsAMD", [(GLsizei, "n"), (Array(GLuint, "n"), "monitors")]),
     GlFunction(Void, "glSelectPerfMonitorCountersAMD", [(GLuint, "monitor"), (GLboolean, "enable"), (GLuint, "group"), (GLint, "numCounters"), (Array(GLuint, "numCounters"), "counterList")]),

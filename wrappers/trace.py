@@ -138,7 +138,7 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitPolymorphic(self, polymorphic):
         if not polymorphic.contextLess:
             return
-        print 'static void _write__%s(int selector, const %s & value) {' % (polymorphic.tag, polymorphic.expr)
+        print 'static void _write__%s(int selector, %s const & value) {' % (polymorphic.tag, polymorphic.expr)
         print '    switch (selector) {'
         for cases, type in polymorphic.iterSwitch():
             for case in cases:
