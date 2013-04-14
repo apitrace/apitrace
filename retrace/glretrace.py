@@ -84,6 +84,8 @@ class GlRetracer(Retracer):
         "glMultiDrawArrays",
         "glMultiDrawArraysEXT",
         "glMultiModeDrawArraysIBM",
+        'glMultiDrawArraysIndirect',
+        'glMultiDrawArraysIndirectAMD',
     ])
 
     draw_elements_function_names = set([
@@ -103,11 +105,17 @@ class GlRetracer(Retracer):
         "glMultiDrawElementsBaseVertex",
         "glMultiDrawElementsEXT",
         "glMultiModeDrawElementsIBM",
+        'glMultiDrawElementsIndirect',
+        'glMultiDrawElementsIndirectAMD',
     ])
 
     draw_indirect_function_names = set([
         "glDrawArraysIndirect",
         "glDrawElementsIndirect",
+        'glMultiDrawArraysIndirect',
+        'glMultiDrawArraysIndirectAMD',
+        'glMultiDrawElementsIndirect',
+        'glMultiDrawElementsIndirectAMD',
     ])
 
     misc_draw_function_names = set([

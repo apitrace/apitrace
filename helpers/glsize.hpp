@@ -445,17 +445,141 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
 #define _glDrawArraysInstancedEXT_count _glDrawArraysInstanced_count
 #define _glDrawElementsInstancedEXT_count _glDrawElementsInstanced_count
 
+typedef struct {
+    GLuint count;
+    GLuint primCount;
+    GLuint first;
+    GLuint baseInstance;
+} DrawArraysIndirectCommand;
+
+static inline GLuint
+_glMultiDrawArraysIndirect_count(const GLvoid *indirect, GLsizei drawcount, GLsizei stride) {
+    const DrawArraysIndirectCommand *cmd;
+    GLvoid *temp = 0;
+
+    if (drawcount <= 0) {
+        return 0;
+    }
+
+    if (stride == 0) {
+        stride = sizeof *cmd;
+    }
+
+    GLint draw_indirect_buffer = _glGetInteger(GL_DRAW_INDIRECT_BUFFER_BINDING);
+    if (draw_indirect_buffer) {
+        // Read commands from indirect buffer object
+        GLintptr offset = (GLintptr)indirect;
+        GLsizeiptr size = sizeof *cmd + (drawcount - 1) * stride;
+        GLvoid *temp = malloc(size);
+        if (!temp) {
+            return 0;
+        }
+        memset(temp, 0, size);
+        _glGetBufferSubData(GL_DRAW_INDIRECT_BUFFER, offset, size, temp);
+        indirect = temp;
+    } else {
+        if (!indirect) {
+            return 0;
+        }
+    }
+
+    GLuint count = 0;
+    for (GLsizei i = 0; i < drawcount; ++i) {
+        cmd = (const DrawArraysIndirectCommand *)((const uint8_t *)indirect + i * stride);
+
+        GLuint count_i = _glDrawArraysInstancedBaseInstance_count(
+            cmd->first,
+            cmd->count,
+            cmd->primCount,
+            cmd->baseInstance
+        );
+
+        count = std::max(count, count_i);
+    }
+
+    if (draw_indirect_buffer) {
+        free(temp);
+    }
+
+    return count;
+}
+
 static inline GLuint
 _glDrawArraysIndirect_count(const GLvoid *indirect) {
-    os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
-    return 0;
+    return _glMultiDrawArraysIndirect_count(indirect, 1, 0);
+}
+
+typedef struct {
+    GLuint count;
+    GLuint primCount;
+    GLuint firstIndex;
+    GLuint baseVertex;
+    GLuint baseInstance;
+} DrawElementsIndirectCommand;
+
+static inline GLuint
+_glMultiDrawElementsIndirect_count(GLenum type, const GLvoid *indirect, GLsizei drawcount, GLsizei stride) {
+    const DrawElementsIndirectCommand *cmd;
+    GLvoid *temp = 0;
+
+    if (drawcount <= 0) {
+        return 0;
+    }
+
+    if (stride == 0) {
+        stride = sizeof *cmd;
+    }
+
+    GLint draw_indirect_buffer = _glGetInteger(GL_DRAW_INDIRECT_BUFFER_BINDING);
+    if (draw_indirect_buffer) {
+        // Read commands from indirect buffer object
+        GLintptr offset = (GLintptr)indirect;
+        GLsizeiptr size = sizeof *cmd + (drawcount - 1) * stride;
+        GLvoid *temp = malloc(size);
+        if (!temp) {
+            return 0;
+        }
+        memset(temp, 0, size);
+        _glGetBufferSubData(GL_DRAW_INDIRECT_BUFFER, offset, size, temp);
+        indirect = temp;
+    } else {
+        if (!indirect) {
+            return 0;
+        }
+    }
+
+    cmd = (const DrawElementsIndirectCommand *)indirect;
+
+    GLuint count = 0;
+    for (GLsizei i = 0; i < drawcount; ++i) {
+        cmd = (const DrawElementsIndirectCommand *)((const uint8_t *)indirect + i * stride);
+
+        GLuint count_i = _glDrawElementsInstancedBaseVertexBaseInstance_count(
+            cmd->count,
+            type,
+            (GLvoid *)(uintptr_t)(cmd->firstIndex * _gl_type_size(type)),
+            cmd->primCount,
+            cmd->baseVertex,
+            cmd->baseInstance
+        );
+
+        count = std::max(count, count_i);
+    }
+
+    if (draw_indirect_buffer) {
+        free(temp);
+    }
+
+    return count;
 }
 
 static inline GLuint
 _glDrawElementsIndirect_count(GLenum type, const GLvoid *indirect) {
-    os::log("apitrace: warning: %s: unsupported\n", __FUNCTION__);
-    return 0;
+    return _glMultiDrawElementsIndirect_count(type, indirect, 1, 0);
 }
+
+#define _glMultiDrawArraysIndirectAMD_count _glMultiDrawArraysIndirect_count
+#define _glMultiDrawElementsIndirectAMD_count _glMultiDrawElementsIndirect_count
 
 static inline GLuint
 _glMultiDrawArrays_count(const GLint *first, const GLsizei *count, GLsizei drawcount) {
