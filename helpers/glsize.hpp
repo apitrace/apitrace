@@ -816,31 +816,44 @@ _glClearBuffer_size(GLenum buffer)
 }
 
 
-template<class T>
-static inline size_t
-_glStrLen(const T * string, GLsizei length)
-{
-    if (length >= 0) {
-        return length;
-    } else {
-        return strlen(string);
-    }
-}
-
-
 /**
  * Helper function for determining the string lengths for glShaderSource and
  * glShaderSourceARB, which is a tad too complex to inline in the specs.
  */
-template<class T>
+template<class Char>
 static inline size_t
-_glShaderSource_length(const T * const * string, const GLint *length, GLsizei index)
+_glShaderSource_length(const Char * const * string, const GLint *length, GLsizei index)
 {
     if (length != NULL && length[index] >= 0) {
         return (size_t)length[index];
     } else {
         return strlen(string[index]);
     }
+}
+
+/**
+ * Helper function for determining the string lengths for glGetDebugMessageLog*.
+ */
+template<class Char>
+static inline size_t
+_glGetDebugMessageLog_length(const Char * string, const GLsizei *lengths, GLuint count)
+{
+    size_t size = 0;
+    GLuint index;
+    if (lengths) {
+        for (index = 0; index < count; ++index) {
+            size += lengths[index];
+        }
+    } else {
+        for (index = 0; index < count; ++index) {
+            size += strlen(&string[size]) + 1;
+        }
+    }
+    if (size) {
+        // Remove the last null terminator
+        --size;
+    }
+    return size;
 }
 
 /* 
