@@ -1291,7 +1291,7 @@ glapi.addFunctions([
 
     # GL_ARB_debug_output
     GlFunction(Void, "glDebugMessageControlARB", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=False),
-    GlFunction(Void, "glDebugMessageInsertARB", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), (String(Const(GLchar), "length"), "buf")], sideeffects=False),
+    GlFunction(Void, "glDebugMessageInsertARB", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), (String(Const(GLchar), "_glStrLen(buf, length)"), "buf")], sideeffects=False),
     GlFunction(Void, "glDebugMessageCallbackARB", [(GLDEBUGPROCARB, "callback"), (GLpointerConst, "userParam")], sideeffects=False),
     GlFunction(GLuint, "glGetDebugMessageLogARB", [(GLuint, "count"), (GLsizei, "bufsize"), Out(Array(GLenum, "count"), "sources"), Out(Array(GLenum, "count"), "types"), Out(Array(GLuint, "count"), "ids"), Out(Array(GLenum, "count"), "severities"), Out(Array(GLsizei, "count"), "lengths"), Out(GLstring, "messageLog")], sideeffects=False),
 
@@ -1346,7 +1346,7 @@ glapi.addFunctions([
 
     # GL_KHR_debug
     GlFunction(Void, "glDebugMessageControl", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=False),
-    GlFunction(Void, "glDebugMessageInsert", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), (OpaqueArray(Const(GLchar), "_glDebugMessageInsert_size(buf, length)"), "buf")], sideeffects=False),
+    GlFunction(Void, "glDebugMessageInsert", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), (String(Const(GLchar), "_glStrLen(buf, length)"), "buf")], sideeffects=False),
     GlFunction(Void, "glDebugMessageCallback", [(GLDEBUGPROC, "callback"), (OpaquePointer(Const(Void)), "userParam")], sideeffects=False),
     GlFunction(GLuint, "glGetDebugMessageLog", [(GLuint, "count"), (GLsizei, "bufsize"), Out(OpaqueArray(GLenum, "_glGetDebugMessageLog_size(count)"), "sources"), Out(OpaqueArray(GLenum, "_glGetDebugMessageLog_size(count)"), "types"), Out(OpaqueArray(GLuint, "_glGetDebugMessageLog_size(count)"), "ids"), Out(OpaqueArray(GLenum, "_glGetDebugMessageLog_size(count)"), "severities"), Out(OpaqueArray(GLsizei, "_glGetDebugMessageLog_size(count)"), "lengths"), Out(OpaqueArray(GLchar, "_glGetDebugMessageLog_size(bufsize)"), "messageLog")], sideeffects=False),
     GlFunction(Void, "glPushDebugGroup", [(GLenum, "source"), (GLuint, "id"), (GLsizei, "length"), (OpaqueArray(Const(GLchar), "_glPushDebugGroup_size(message, length)"), "message")], sideeffects=False),
@@ -2855,7 +2855,7 @@ glapi.addFunctions([
 
     # GL_AMD_debug_output
     GlFunction(Void, "glDebugMessageEnableAMD", [(GLenum, "category"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=False),
-    GlFunction(Void, "glDebugMessageInsertAMD", [(GLenum, "category"), (GLenum, "severity"), (GLuint, "id"), (GLsizei, "length"), (Array(Const(GLchar), "length"), "buf")], sideeffects=False),
+    GlFunction(Void, "glDebugMessageInsertAMD", [(GLenum, "category"), (GLenum, "severity"), (GLuint, "id"), (GLsizei, "length"), (String(Const(GLchar), "_glStrLen(buf, length)"), "buf")], sideeffects=False),
     GlFunction(Void, "glDebugMessageCallbackAMD", [(GLDEBUGPROCAMD, "callback"), (GLpointer, "userParam")], sideeffects=False),
     GlFunction(GLuint, "glGetDebugMessageLogAMD", [(GLuint, "count"), (GLsizei, "bufsize"), Out(Array(GLenum, "count"), "categories"), Out(Array(GLuint, "count"), "severities"), Out(Array(GLuint, "count"), "ids"), Out(Array(GLsizei, "count"), "lengths"), Out(Array(GLchar, "bufsize"), "message")], sideeffects=False),
 

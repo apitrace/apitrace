@@ -816,6 +816,18 @@ _glClearBuffer_size(GLenum buffer)
 }
 
 
+template<class T>
+static inline size_t
+_glStrLen(const T * string, GLsizei length)
+{
+    if (length >= 0) {
+        return length;
+    } else {
+        return strlen(string);
+    }
+}
+
+
 /**
  * Helper function for determining the string lengths for glShaderSource and
  * glShaderSourceARB, which is a tad too complex to inline in the specs.
