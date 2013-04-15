@@ -485,7 +485,7 @@ _glMultiDrawArraysIndirect_count(const GLvoid *indirect, GLsizei drawcount, GLsi
 
     GLuint count = 0;
     for (GLsizei i = 0; i < drawcount; ++i) {
-        cmd = (const DrawArraysIndirectCommand *)((const uint8_t *)indirect + i * stride);
+        cmd = (const DrawArraysIndirectCommand *)((const GLbyte *)indirect + i * stride);
 
         GLuint count_i = _glDrawArraysInstancedBaseInstance_count(
             cmd->first,
@@ -552,7 +552,7 @@ _glMultiDrawElementsIndirect_count(GLenum type, const GLvoid *indirect, GLsizei 
 
     GLuint count = 0;
     for (GLsizei i = 0; i < drawcount; ++i) {
-        cmd = (const DrawElementsIndirectCommand *)((const uint8_t *)indirect + i * stride);
+        cmd = (const DrawElementsIndirectCommand *)((const GLbyte *)indirect + i * stride);
 
         GLuint count_i = _glDrawElementsInstancedBaseVertexBaseInstance_count(
             cmd->count,
