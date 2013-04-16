@@ -29,7 +29,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include "image.hpp"
+#include "os.hpp"
 #include "json.hpp"
 #include "d3d10imports.hpp"
 #include "d3dstate.hpp"
@@ -252,25 +252,11 @@ getRenderTargetViewImage(ID3D10Device *pDevice,
         goto no_map;
     }
 
-    image = new image::Image(Width, Height, 4);
-    if (!image) {
-        goto no_image;
-    }
-    assert(image->stride() > 0);
+    image = ConvertImage(Desc.Format,
+                         MappedSubresource.pData,
+                         MappedSubresource.RowPitch,
+                         Width, Height);
 
-    hr = ConvertFormat(Desc.Format,
-                       MappedSubresource.pData,
-                       MappedSubresource.RowPitch,
-                       DXGI_FORMAT_R8G8B8A8_UNORM,
-                       image->start(),
-                       image->stride(),
-                       Width, Height);
-    if (FAILED(hr)) {
-        delete image;
-        image = NULL;
-    }
-
-no_image:
     unmapResource(pStagingResource, Subresource);
 no_map:
     if (pStagingResource) {

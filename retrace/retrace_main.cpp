@@ -119,7 +119,7 @@ takeSnapshot(unsigned call_no) {
 
     image::Image *src = dumper->getSnapshot();
     if (!src) {
-        std::cout << "Failed to get snapshot\n";
+        std::cerr << call_no << ": warning: failed to get snapshot\n";
         return;
     }
 

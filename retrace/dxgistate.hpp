@@ -34,6 +34,11 @@
 #include <dxgi.h>
 
 
+namespace image {
+    class Image;
+}
+
+
 namespace d3dstate {
 
 
@@ -45,6 +50,12 @@ ConvertFormat(DXGI_FORMAT SrcFormat,
               void *DstData,
               UINT DstPitch,
               UINT Width, UINT Height);
+
+image::Image *
+ConvertImage(DXGI_FORMAT SrcFormat,
+             void *SrcData,
+             UINT SrcPitch,
+             UINT Width, UINT Height);
 
 
 } /* namespace d3dstate */
