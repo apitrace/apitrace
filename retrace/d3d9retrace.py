@@ -121,7 +121,6 @@ class D3DRetracer(Retracer):
         # process events after presents
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
-            print r'    Sleep(500);'
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
