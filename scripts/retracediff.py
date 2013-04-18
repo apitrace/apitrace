@@ -269,9 +269,17 @@ def main():
 
                 highligher.flush()
         finally:
-            src_proc.terminate()
+            try:
+                src_proc.terminate()
+            except OSError:
+                # Avoid http://bugs.python.org/issue14252
+                pass
     finally:
-        ref_proc.terminate()
+        try:
+            ref_proc.terminate()
+        except OSError:
+            # Avoid http://bugs.python.org/issue14252
+            pass
 
 
 if __name__ == '__main__':
