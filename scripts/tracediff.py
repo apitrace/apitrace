@@ -481,10 +481,10 @@ def main():
         type='string', dest='apitrace', default='apitrace',
         help='apitrace command [default: %default]')
     optparser.add_option(
-        '-d', '--diff',
+        '-d', '--diff', metavar='TOOL',
         type="choice", choices=('diff', 'sdiff', 'wdiff', 'python'),
         dest="diff", default=None,
-        help="diff program: wdiff, sdiff, or diff [default: auto]")
+        help="diff program: diff, sdiff, wdiff, or python [default: auto]")
     optparser.add_option(
         '-c', '--calls', metavar='CALLSET',
         type="string", dest="calls", default='0-10000',
