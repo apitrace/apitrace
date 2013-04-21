@@ -51,14 +51,23 @@
  * - http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
  */
 #if defined(_MSC_VER)
-#  define thread_specific __declspec(thread)
-#elif defined(__GNUC__)
-#  define thread_specific __thread
+#  define thread_specific(type) __declspec(thread) type
+#elif defined(__GNUC__) && !defined(NO_TLS)
+#  define thread_specific(type) __thread type
+#elif defined(NO_TLS)
+#  include "tls_wrapper.hpp"
+#  define thread_specific(type) TLSWrapper<type>
+#  define SET_TLS_VALUE(storage, value) storage.Set(value)
+#  define GET_TLS_VALUE(storage) storage.Get()
 #else
-#  define thread_specific
+#  define thread_specific(type)
 #  error "Unsupported compiler"
 #endif
 
+#ifndef SET_TLS_VALUE
+#  define SET_TLS_VALUE(storage, value) storage = value
+#  define GET_TLS_VALUE(storage) storage
+#endif
 
 namespace os {
 

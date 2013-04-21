@@ -129,7 +129,8 @@ LocalWriter::open(void) {
 }
 
 static unsigned next_thread_num = 1;
-static thread_specific unsigned thread_num = 0;
+
+static thread_specific(unsigned) thread_num;
 
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
     mutex.lock();
@@ -139,13 +140,15 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
         open();
     }
 
-    unsigned this_thread_num = thread_num;
+    unsigned this_thread_num = GET_TLS_VALUE(thread_num);
+
     if (!this_thread_num) {
-        this_thread_num = thread_num = next_thread_num++;
+        this_thread_num = next_thread_num++;
+        SET_TLS_VALUE(thread_num, this_thread_num);
     }
 
-    assert(thread_num > 0);
-    unsigned thread_id = thread_num - 1;
+    assert(GET_TLS_VALUE(thread_num) > 0);
+    unsigned thread_id = GET_TLS_VALUE(thread_num) - 1;
     return Writer::beginEnter(sig, thread_id);
 }
 

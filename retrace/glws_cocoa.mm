@@ -48,7 +48,7 @@
 #include <Cocoa/Cocoa.h>
 
 #include "glws.hpp"
-
+#include "os_thread.hpp"
 
 /**
  * Dummy thread to force Cocoa to enter multithreading mode.
@@ -74,8 +74,7 @@
 namespace glws {
 
 
-static __thread NSAutoreleasePool *
-autoreleasePool = nil;
+static thread_specific(NSAutoreleasePool *) autoreleasePool;
 
 
 class CocoaVisual : public Visual
@@ -185,8 +184,8 @@ public:
 
 static inline void
 initThread(void) {
-    if (autoreleasePool == nil) {
-        autoreleasePool = [[NSAutoreleasePool alloc] init];
+    if (GET_TLS_VALUE(autoreleasePool) == nil) {
+        SET_TLS_VALUE(autoreleasePool, [[NSAutoreleasePool alloc] init]);
     }
 }
 
@@ -213,7 +212,7 @@ init(void) {
 
 void
 cleanup(void) {
-    [autoreleasePool release];
+    [GET_TLS_VALUE(autoreleasePool) release];
 }
 
 
