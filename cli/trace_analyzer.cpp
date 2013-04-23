@@ -715,7 +715,7 @@ TraceAnalyzer::requireDependencies(trace::Call *call)
     consume("state");
 }
 
-TraceAnalyzer::TraceAnalyzer(TrimFlags trimFlagsOpt = -1):
+TraceAnalyzer::TraceAnalyzer(TrimFlags trimFlagsOpt):
     transformFeedbackActive(false),
     framebufferObjectActive(false),
     insideBeginEnd(false),

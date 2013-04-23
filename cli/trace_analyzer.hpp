@@ -95,7 +95,7 @@ private:
     void requireDependencies(trace::Call *call);
 
 public:
-    TraceAnalyzer(TrimFlags trimFlags);
+    TraceAnalyzer(TrimFlags trimFlags = -1);
     ~TraceAnalyzer();
 
     /* Analyze this call by tracking state and recording all the
