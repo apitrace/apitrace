@@ -229,11 +229,7 @@ long long timeFrequency = 0LL;
 void
 abort(void)
 {
-#ifndef NDEBUG
-    DebugBreak();
-#else
-    ExitProcess(0);
-#endif
+    TerminateProcess(GetCurrentProcess(), 1);
 }
 
 
@@ -299,7 +295,7 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 
     static int recursion_count = 0;
     if (recursion_count) {
-        fprintf(stderr, "apitrace: warning: recursion handling exception\n");
+        fputs("apitrace: warning: recursion handling exception\n", stderr);
     } else {
         if (gCallback) {
             ++recursion_count;

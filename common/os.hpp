@@ -73,6 +73,12 @@ void log(const char *format, ...)
   #endif
 #endif
 
+/**
+ * Exit immediately.
+ *
+ * This should be called only from the wrappers, when there is no safe way of
+ * failing gracefully.
+ */
 void abort(void);
 
 void setExceptionCallback(void (*callback)(void));

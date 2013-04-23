@@ -188,7 +188,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
         }
 
         retrace::warning(call) << "Failed to create " << name << " context.\n";
-        os::abort();
+        exit(1);
     }
 
     context_map[orig_context] = context;

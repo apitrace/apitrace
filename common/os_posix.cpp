@@ -174,6 +174,7 @@ log(const char *format, ...)
     __android_log_vprint(ANDROID_LOG_DEBUG, "apitrace", format, ap);
 #else
     vfprintf(stderr, format, ap);
+    fflush(stderr);
 #endif
     va_end(ap);
     logging = false;
@@ -186,7 +187,7 @@ long long timeFrequency = 0LL;
 void
 abort(void)
 {
-    exit(0);
+    _exit(1);
 }
 
 
