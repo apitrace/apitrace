@@ -131,14 +131,13 @@ Context::~Context()
 }
 
 
-static thread_specific Context *
-currentContextPtr;
+static thread_specific(Context *) currentContextPtr;
 
 
 bool
 makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 {
-    Context *currentContext = currentContextPtr;
+    Context *currentContext = GET_TLS_VALUE(currentContextPtr);
     glws::Drawable *currentDrawable = currentContext ? currentContext->drawable : NULL;
 
     if (drawable == currentDrawable && context == currentContext) {
@@ -162,7 +161,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
         return false;
     }
 
-    currentContextPtr = context;
+    SET_TLS_VALUE(currentContextPtr, context);
 
     if (drawable && context) {
         context->drawable = drawable;
@@ -179,7 +178,7 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
 
 Context *
 getCurrentContext(void) {
-    return currentContextPtr;
+    return GET_TLS_VALUE(currentContextPtr);
 }
 
 

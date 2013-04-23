@@ -57,13 +57,14 @@ public:
     }
 };
 
-static thread_specific ThreadState *thread_state;
+static thread_specific(ThreadState *) thread_state;
 
 static ThreadState *get_ts(void)
 {
-    ThreadState *ts = thread_state;
+    ThreadState *ts = GET_TLS_VALUE(thread_state);
     if (!ts) {
-        thread_state = ts = new ThreadState;
+        ts = new ThreadState;
+        SET_TLS_VALUE(thread_state, ts);
     }
 
     return ts;
