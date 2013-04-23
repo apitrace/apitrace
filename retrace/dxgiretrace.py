@@ -95,7 +95,16 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 # Toggle debugging
                 print r'    Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
                 print r'    if (retrace::debug) {'
-                print r'        if (LoadLibraryA("d3d11sdklayers")) {'
+                print r'        OSVERSIONINFO osvi;'
+                print r'        BOOL bIsWindows8orLater;'
+                print r'        ZeroMemory(&osvi, sizeof osvi);'
+                print r'        osvi.dwOSVersionInfoSize = sizeof osvi;'
+                print r'        GetVersionEx(&osvi);'
+                print r'        bIsWindows8orLater = '
+                print r'            (osvi.dwMajorVersion > 6) ||'
+                print r'            (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 2);'
+                print r'        const char *szD3d11SdkLayers = bIsWindows8orLater ? "d3d11_1sdklayers" : "d3d11sdklayers";'
+                print r'        if (LoadLibraryA(szD3d11SdkLayers)) {'
                 print r'            Flags |= D3D11_CREATE_DEVICE_DEBUG;'
                 print r'        }'
                 print r'    }'
@@ -104,6 +113,22 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 self.forceDriver('D3D_DRIVER_TYPE')
 
         Retracer.invokeFunction(self, function)
+
+        if function.name in self.createDeviceFunctionNames:
+            print r'    if (FAILED(_result)) {'
+
+            if function.name.startswith('D3D10CreateDevice'):
+                print r'        if (_result == E_FAIL && (Flags & D3D10_CREATE_DEVICE_DEBUG)) {'
+                print r'            retrace::warning(call) << "debug layer (d3d10sdklayers.dll) not installed\n";'
+                print r'        }'
+
+            if function.name.startswith('D3D11CreateDevice'):
+                print r'        if (_result == E_FAIL && (Flags & D3D11_CREATE_DEVICE_DEBUG)) {'
+                print r'            retrace::warning(call) << "debug layer (d3d11sdklayers.dll for Windows 7, d3d11_1sdklayers.dll for Windows 8 or Windows 7 with KB 2670838) not properly installed\n";'
+                print r'        }'
+
+            print r'        exit(1);'
+            print r'    }'
 
     def forceDriver(self, enum):
         # This can only work when pAdapter is NULL. For non-NULL pAdapter we

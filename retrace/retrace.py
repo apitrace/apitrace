@@ -493,7 +493,7 @@ class Retracer:
     def checkResult(self, resultType):
         if str(resultType) == 'HRESULT':
             print r'    if (FAILED(_result)) {'
-            print r'        retrace::warning(call) << "failed\n";'
+            print r'        retrace::warning(call) << "failed (0x" << std::hex << _result << std::dec << ")\n";'
             print r'    }'
 
     def filterFunction(self, function):
