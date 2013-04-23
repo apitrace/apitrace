@@ -36,7 +36,7 @@
 #include <vector>
 
 #include "trace_model.hpp"
-
+#include "trace_backtrace.hpp"
 
 namespace trace {
     class File;
@@ -58,7 +58,23 @@ namespace trace {
         bool open(const char *filename);
         void close(void);
 
-        unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
+        void writeBacktrace(std::vector<RawStackFrame> backtrace);
+        void beginBacktrace(void);
+        void endBacktrace(void);
+        void beginStackFrame(void);
+        inline void endStackFrame(void) {}
+        void beginStackFrameModule(void);
+        inline void endStackFrameModule(void) {}
+        void beginStackFrameFunction(void);
+        inline void endStackFrameFunction(void) {}
+        void beginStackFrameFilename(void);
+        inline void endStackFrameFilename(void) {}
+        void beginStackFrameLinenumber(void);
+        inline void endStackFrameLinenumber(void) {}
+        void beginStackFrameOffset(void);
+        inline void endStackFrameOffset(void) {}
+
+        unsigned beginEnter(FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
 
         void beginLeave(unsigned call);

@@ -49,6 +49,7 @@ struct FunctionSig {
     const char *name;
     unsigned num_args;
     const char **arg_names;
+    bool backtrace;
 };
 
 
@@ -348,6 +349,29 @@ public:
     void visit(Visitor &visitor);
 };
 
+class StackFrame {
+public:
+    String* module;
+    String* function;
+    String* filename;
+    String* linenumber;
+    String* offset;
+    StackFrame() :
+        module(NULL),
+        function(NULL),
+        filename(NULL),
+        linenumber(NULL),
+        offset(NULL)
+    {}
+    ~StackFrame();
+};
+
+class Backtrace {
+public:
+    std::vector<StackFrame*> frames;
+    ~Backtrace();
+    void addFrame(StackFrame* frame);
+};
 
 class Visitor
 {
@@ -366,7 +390,8 @@ public:
     virtual void visit(Blob *);
     virtual void visit(Pointer *);
     virtual void visit(Repr *);
-
+    virtual void visit(Backtrace *);
+    virtual void visit(StackFrame *);
 protected:
     inline void _visit(Value *value) {
         if (value) { 
@@ -463,18 +488,20 @@ class Call
 public:
     unsigned thread_id;
     unsigned no;
-    const FunctionSig *sig;
+    FunctionSig *sig;
     std::vector<Arg> args;
     Value *ret;
 
     CallFlags flags;
+    Backtrace* backtrace;
 
-    Call(const FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
+    Call(FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
         thread_id(_thread_id), 
         sig(_sig), 
         args(_sig->num_args), 
         ret(0),
-        flags(_flags) {
+        flags(_flags),
+        backtrace(0) {
     }
 
     ~Call();

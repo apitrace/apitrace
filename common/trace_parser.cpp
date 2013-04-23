@@ -463,7 +463,7 @@ Call *Parser::parse_leave(Mode mode) {
          * between two frames.  We won't return this call, but we still need to skip 
          * over its data.
          */
-        const FunctionSig sig = {0, NULL, 0, NULL};
+        FunctionSig sig = {0, NULL, 0, NULL};
         call = new Call(&sig, 0, 0);
         parse_call_details(call, SCAN);
         delete call;
@@ -500,6 +500,12 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
 #endif
             call->ret = parse_value(mode);
             break;
+        case trace::CALL_BACKTRACE:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_BACKTRACE\n";
+#endif
+            parse_call_backtrace(call, mode);
+            break;
         default:
             std::cerr << "error: ("<<call->name()<< ") unknown call detail "
                       << c << "\n";
@@ -510,6 +516,48 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
     } while(true);
 }
 
+bool Parser::parse_call_backtrace(Call *call, Mode mode) {
+    Backtrace* backtrace = new Backtrace();
+    StackFrame* frame = NULL;
+    do {
+        int c = read_byte();
+        switch (c) {
+        case trace::CALL_BACKTRACE_FRAME:
+            if (frame != NULL) {
+                backtrace->addFrame(frame);
+            }
+            frame = new StackFrame();
+            break;
+        case trace::CALL_BACKTRACE_END:
+            if (frame != NULL) {
+                backtrace->addFrame(frame);
+            }
+            call->backtrace = backtrace;
+            return true;
+        case trace::CALL_BACKTRACE_MODULE:
+            frame->module = static_cast<String*>(parse_value(mode));
+            break;
+        case trace::CALL_BACKTRACE_FUNCTION:
+            frame->function = static_cast<String*>(parse_value(mode));
+            break;
+        case trace::CALL_BACKTRACE_FILENAME:
+            frame->filename = static_cast<String*>(parse_value(mode));
+            break;
+        case trace::CALL_BACKTRACE_LINENUMBER:
+            frame->linenumber = static_cast<String*>(parse_value(mode));
+            break;
+        case trace::CALL_BACKTRACE_OFFSET:
+            frame->offset = static_cast<String*>(parse_value(mode));
+            break;
+        default:
+            std::cerr << "error: ("<< call->name() << ") unknown call backtrace detail "
+                      << c << "\n";
+            exit(1);
+        case -1:
+            return false;
+        }
+    } while(true);
+}
 
 /**
  * Make adjustments to this particular call flags.

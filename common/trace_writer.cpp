@@ -29,12 +29,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 #include "os.hpp"
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
-
+#include "trace_backtrace.hpp"
 
 namespace trace {
 
@@ -134,11 +135,77 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
     }
 }
 
-unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
+void Writer::writeBacktrace(std::vector<RawStackFrame> backtrace) {
+
+    for (int i = 0; i < backtrace.size(); i++) {
+        beginStackFrame();
+        if (backtrace[i].module != NULL) {
+            beginStackFrameModule();
+            writeString(backtrace[i].module);
+            endStackFrameModule();
+        }
+        if (backtrace[i].function != NULL) {
+            beginStackFrameFunction();
+            writeString(backtrace[i].function);
+            endStackFrameFunction();
+        }
+        if (backtrace[i].filename != NULL) {
+            beginStackFrameFilename();
+            writeString(backtrace[i].filename);
+            endStackFrameFilename();
+        }
+        if (backtrace[i].linenumber != NULL) {
+            beginStackFrameLinenumber();
+            writeString(backtrace[i].linenumber);
+            endStackFrameLinenumber();
+        }
+        if (backtrace[i].offset != NULL) {
+            beginStackFrameOffset();
+            writeString(backtrace[i].offset);
+            endStackFrameOffset();
+        }
+        endStackFrame();
+    }
+}
+
+void Writer::beginBacktrace(void ) {
+    _writeByte(trace::CALL_BACKTRACE);
+}
+
+void Writer::endBacktrace(void ) {
+    _writeByte(trace::CALL_BACKTRACE_END);
+}
+
+void Writer::beginStackFrame(void ) {
+    _writeByte(trace::CALL_BACKTRACE_FRAME);
+}
+
+void Writer::beginStackFrameModule(void ) {
+    _writeByte(trace::CALL_BACKTRACE_MODULE);
+}
+
+void Writer::beginStackFrameFunction(void ) {
+    _writeByte(trace::CALL_BACKTRACE_FUNCTION);
+}
+
+void Writer::beginStackFrameFilename(void ) {
+    _writeByte(trace::CALL_BACKTRACE_FILENAME);
+}
+
+void Writer::beginStackFrameLinenumber(void ) {
+    _writeByte(trace::CALL_BACKTRACE_LINENUMBER);
+}
+
+void Writer::beginStackFrameOffset(void ) {
+    _writeByte(trace::CALL_BACKTRACE_OFFSET);
+}
+
+unsigned Writer::beginEnter(FunctionSig *sig, unsigned thread_id) {
     _writeByte(trace::EVENT_ENTER);
     _writeUInt(thread_id);
     _writeUInt(sig->id);
     if (!lookup(functions, sig->id)) {
+        sig->backtrace = backtrace_is_needed(sig->name);
         _writeString(sig->name);
         _writeUInt(sig->num_args);
         for (unsigned i = 0; i < sig->num_args; ++i) {

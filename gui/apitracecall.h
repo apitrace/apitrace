@@ -279,6 +279,9 @@ public:
     int numChildren() const;
     bool hasBinaryData() const;
     int binaryDataIndex() const;
+
+    QString backtrace() const;
+    void setBacktrace(QString backtrace);
 private:
     int m_index;
     ApiTraceCallSignature *m_signature;
@@ -290,6 +293,8 @@ private:
     QVector<QVariant> m_editedValues;
 
     QString m_error;
+
+    QString m_backtrace;
 
     mutable QString m_richText;
     mutable QString m_searchText;

@@ -72,6 +72,29 @@ Blob::~Blob() {
     }
 }
 
+StackFrame::~StackFrame() {
+    if (module != NULL) {
+        delete module;
+    }
+    if (function != NULL) {
+        delete function;
+    }
+    if (filename != NULL) {
+        delete filename;
+    }
+    if (linenumber != NULL) {
+        delete linenumber;
+    }
+    if (offset != NULL) {
+        delete offset;
+    }
+}
+
+Backtrace::~Backtrace() {
+    for (int i = 0; i < frames.size(); i++) {
+        delete frames[i];
+    }
+}
 
 // bool cast
 bool Null   ::toBool(void) const { return false; }
@@ -176,6 +199,9 @@ void Blob   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
 void Repr   ::visit(Visitor &visitor) { visitor.visit(this); }
 
+void Backtrace::addFrame(StackFrame* frame) {
+    frames.push_back(frame);
+}
 
 void Visitor::visit(Null *) { assert(0); }
 void Visitor::visit(Bool *) { assert(0); }
@@ -191,6 +217,8 @@ void Visitor::visit(Array *) { assert(0); }
 void Visitor::visit(Blob *) { assert(0); }
 void Visitor::visit(Pointer *) { assert(0); }
 void Visitor::visit(Repr *node) { node->machineValue->visit(*this); }
+void Visitor::visit(Backtrace *) { assert(0); }
+void Visitor::visit(StackFrame *) { assert(0); }
 
 
 static Null null;

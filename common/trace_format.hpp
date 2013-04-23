@@ -69,8 +69,11 @@ namespace trace {
  *
  * - version 4:
  *   - call enter events include thread ID
+ *
+ * - version 5:
+ *   - new call detail flag CALL_BACKTRACE
  */
-#define TRACE_VERSION 4
+#define TRACE_VERSION 5
 
 
 /*
@@ -127,6 +130,17 @@ enum CallDetail {
     CALL_ARG,
     CALL_RET,
     CALL_THREAD,
+    CALL_BACKTRACE,
+};
+
+enum CallBacktrace {
+    CALL_BACKTRACE_FRAME = 0,
+    CALL_BACKTRACE_MODULE,
+    CALL_BACKTRACE_FUNCTION,
+    CALL_BACKTRACE_FILENAME,
+    CALL_BACKTRACE_LINENUMBER,
+    CALL_BACKTRACE_OFFSET,
+    CALL_BACKTRACE_END,
 };
 
 enum Type {

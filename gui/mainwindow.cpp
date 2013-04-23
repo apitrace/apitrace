@@ -121,6 +121,13 @@ void MainWindow::callItemSelected(const QModelIndex &index)
 
     if (event && event->type() == ApiTraceEvent::Call) {
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+        if (!call->backtrace().isNull()) {
+            m_ui.backtraceBrowser->setText(call->backtrace());
+            m_ui.backtraceDock->show();
+        }
+        else {
+            m_ui.backtraceDock->hide();
+        }
         m_ui.detailsDock->setWindowTitle(
             tr("Details View. Frame %1, Call %2")
             .arg(call->parentFrame() ? call->parentFrame()->number : 0)
@@ -159,6 +166,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
             m_selectedEvent = 0;
         }
         m_ui.detailsDock->hide();
+        m_ui.backtraceDock->hide();
         m_ui.vertexDataDock->hide();
     }
     if (m_selectedEvent && m_selectedEvent->hasState()) {
@@ -762,6 +770,7 @@ void MainWindow::initObjects()
     m_argsEditor = new ArgumentsEditor(this);
 
     m_ui.detailsDock->hide();
+    m_ui.backtraceDock->hide();
     m_ui.errorsDock->hide();
     m_ui.vertexDataDock->hide();
     m_ui.stateDock->hide();
@@ -769,6 +778,7 @@ void MainWindow::initObjects()
 
     tabifyDockWidget(m_ui.stateDock, m_ui.vertexDataDock);
     tabifyDockWidget(m_ui.detailsDock, m_ui.errorsDock);
+    tabifyDockWidget(m_ui.detailsDock, m_ui.backtraceDock);
 
     m_ui.surfacesTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 

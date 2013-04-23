@@ -107,8 +107,49 @@ public:
         writer.endRepr();
     }
 
+    void visit(StackFrame* frame) {
+        writer.beginStackFrame();
+        if (frame->module != NULL) {
+            writer.beginStackFrameModule();
+            _visit(frame->module);
+            writer.endStackFrameModule();
+        }
+        if (frame->function != NULL) {
+            writer.beginStackFrameFunction();
+            _visit(frame->function);
+            writer.endStackFrameFunction();
+        }
+        if (frame->filename != NULL) {
+            writer.beginStackFrameFilename();
+            _visit(frame->filename);
+            writer.endStackFrameFilename();
+        }
+        if (frame->linenumber != NULL) {
+            writer.beginStackFrameLinenumber();
+            _visit(frame->linenumber);
+            writer.endStackFrameLinenumber();
+        }
+        if (frame->offset != NULL) {
+            writer.beginStackFrameOffset();
+            _visit(frame->offset);
+            writer.endStackFrameOffset();
+        }
+        writer.endStackFrame();
+    }
+
+    void visit(Backtrace * backtrace) {
+        writer.beginBacktrace();
+        for (int i =0; i < backtrace->frames.size(); i++) {
+            visit(backtrace->frames[i]);
+        }
+        writer.endBacktrace();
+    }
+
     void visit(Call *call) {
         unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
+        if (call->backtrace != NULL) {
+            visit(call->backtrace);
+        }
         for (unsigned i = 0; i < call->args.size(); ++i) {
             if (call->args[i].value) {
                 writer.beginArg(i);

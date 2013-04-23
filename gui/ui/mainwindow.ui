@@ -432,6 +432,9 @@
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
       <widget class="QTreeWidget" name="errorsTreeWidget">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
        <column>
         <property name="text">
          <string>Index</string>
@@ -448,6 +451,21 @@
         </property>
        </column>
       </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="backtraceDock">
+   <property name="windowTitle">
+    <string>Backtrace</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QTextBrowser" name="backtraceBrowser"/>
      </item>
     </layout>
    </widget>
@@ -636,6 +654,7 @@
   <zorder>stateDock</zorder>
   <zorder>vertexDataDock</zorder>
   <zorder>errorsDock</zorder>
+  <zorder>backtraceDock</zorder>
  </widget>
  <customwidgets>
   <customwidget>
