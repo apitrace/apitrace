@@ -41,9 +41,8 @@
 
 
 /*
- * These features are not supported on Windows XP
+ * This feature is not supported on Windows XP
  */
-#define USE_WIN32_DECLSPEC_THREAD 0
 #define USE_WIN32_CONDITION_VARIABLES 0
 
 
@@ -54,14 +53,9 @@
  * - http://gcc.gnu.org/onlinedocs/gcc-4.6.3/gcc/Thread_002dLocal.html
  * - http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
  */
-#if !defined(_WIN32) || USE_WIN32_DECLSPEC_THREAD
-#  if defined(_MSC_VER)
-#    define OS_THREAD_SPECIFIC_PTR(_type) __declspec(thread) _type *
-#  elif defined(__GNUC__)
-#    define OS_THREAD_SPECIFIC_PTR(_type) __thread _type *
-#  endif
-#endif
-#if !defined(OS_THREAD_SPECIFIC_PTR)
+#if defined(HAVE_COMPILER_TLS)
+#  define OS_THREAD_SPECIFIC_PTR(_type) HAVE_COMPILER_TLS _type *
+#else
 #  define OS_THREAD_SPECIFIC_PTR(_type) os::thread_specific_ptr< _type >
 #endif
 

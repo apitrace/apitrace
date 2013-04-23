@@ -34,6 +34,19 @@ set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 ##############################################################################
 # Find dependencies
 
+# Check for compiler TLS support.  We don't use compiler TLS support on Windows
+# because, even if the compiler supports it, Windows XP does not support TLS on
+# DLLs.
+if (NOT WIN32)
+    include (CheckCXXSourceCompiles)
+    check_cxx_source_compiles("__thread int i; int main() { return 0; }" HAVE_COMPILER_TLS)
+    if (HAVE_COMPILER_TLS)
+        add_definitions (-DHAVE_COMPILER_TLS=__thread)
+    else ()
+        message (WARNING "C++ compiler does not support __thread keyword.")
+    endif ()
+endif ()
+
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
