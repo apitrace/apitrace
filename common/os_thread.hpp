@@ -26,7 +26,7 @@
 /*
  * OS native thread abstraction.
  *
- * Mimics C++11 / boost threads.
+ * Mimics C++11 threads.
  */
 
 #ifndef _OS_THREAD_HPP_
@@ -283,9 +283,6 @@ namespace os {
     };
 
 
-    /**
-     * Same interface as boost::thread_specific_ptr.
-     */
     template <typename T>
     class thread_specific_ptr
     {
@@ -294,10 +291,6 @@ namespace os {
         DWORD dwTlsIndex;
 #else
         pthread_key_t key;
-
-        static void destructor(void *ptr) {
-            delete static_cast<T *>(ptr);
-        }
 #endif
 
     public:
@@ -305,7 +298,7 @@ namespace os {
 #ifdef _WIN32
             dwTlsIndex = TlsAlloc();
 #else
-            pthread_key_create(&key, &destructor);
+            pthread_key_create(&key, NULL);
 #endif
         }
 
@@ -317,7 +310,8 @@ namespace os {
 #endif
         }
 
-        T* get(void) const {
+        inline T *
+        get(void) const {
             void *ptr;
 #ifdef _WIN32
             ptr = TlsGetValue(dwTlsIndex);
@@ -327,32 +321,27 @@ namespace os {
             return static_cast<T*>(ptr);
         }
 
-        T* operator -> (void) const
+        inline
+        operator T * (void) const
         {
             return get();
         }
 
-        T& operator * (void) const
+        inline T *
+        operator -> (void) const
         {
-            return *get();
+            return get();
         }
 
-        void reset(T* new_value=0) {
-            T * old_value = get();
+        inline T *
+        operator = (T * new_value)
+        {
             set(new_value);
-            if (old_value) {
-                delete old_value;
-            }
+            return new_value;
         }
 
-        T* release (void) {
-            T * old_value = get();
-            set(0);
-            return old_value;
-        }
-
-private:
-        void set(T* new_value) {
+        inline void
+        set(T* new_value) {
 #ifdef _WIN32
             TlsSetValue(dwTlsIndex, new_value);
 #else
