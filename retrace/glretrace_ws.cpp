@@ -131,7 +131,7 @@ Context::~Context()
 }
 
 
-static thread_specific Context *
+static OS_THREAD_SPECIFIC_PTR(Context)
 currentContextPtr;
 
 

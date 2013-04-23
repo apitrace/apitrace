@@ -34,21 +34,6 @@ set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 ##############################################################################
 # Find dependencies
 
-# Ensure __thread is support
-if (NOT MSVC)
-    include (CheckCXXSourceCompiles)
-    check_cxx_source_compiles("__thread int i; int main() { return 0; }" HAVE_COMPILER_TLS)
-    if (NOT HAVE_COMPILER_TLS)
-        if (APPLE)
-            message (FATAL_ERROR "C++ compiler does not support __thread keyword. Please install XCode 4.5 or higher.")
-        else (MINGW32)
-            message (FATAL_ERROR "C++ compiler does not support __thread keyword. Please use MinGW g++ version 4.4 or higher")
-        else ()
-            message (FATAL_ERROR "C++ compiler does not support __thread keyword.")
-        endif ()
-    endif ()
-endif ()
-
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)

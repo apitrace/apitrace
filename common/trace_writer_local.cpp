@@ -128,8 +128,10 @@ LocalWriter::open(void) {
 #endif
 }
 
-static unsigned next_thread_num = 1;
-static thread_specific unsigned thread_num = 0;
+static uintptr_t next_thread_num = 1;
+
+static OS_THREAD_SPECIFIC_PTR(void)
+thread_num;
 
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
     mutex.lock();
@@ -139,13 +141,16 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
         open();
     }
 
-    unsigned this_thread_num = thread_num;
+    // Although thread_num is a void *, we actually use it as a uintptr_t
+    uintptr_t this_thread_num =
+        reinterpret_cast<uintptr_t>(static_cast<void *>(thread_num));
     if (!this_thread_num) {
-        this_thread_num = thread_num = next_thread_num++;
+        this_thread_num = next_thread_num++;
+        thread_num = reinterpret_cast<void *>(this_thread_num);
     }
 
-    assert(thread_num > 0);
-    unsigned thread_id = thread_num - 1;
+    assert(this_thread_num);
+    unsigned thread_id = this_thread_num - 1;
     return Writer::beginEnter(sig, thread_id);
 }
 
