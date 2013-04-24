@@ -106,6 +106,19 @@ public:
         return writePNG(os);
     }
 
+    void
+    writeRAW(std::ostream &os) const;
+
+    inline bool
+    writeRAW(const char *filename) const {
+	std::ofstream os(filename, std::ofstream::binary);
+	if (!os) {
+	    return false;
+	}
+	writeRAW(os);
+	return true;
+    }
+
     double compare(Image &ref);
 };
 

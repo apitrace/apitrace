@@ -277,6 +277,14 @@ You can make a video of the output by doing
     apitrace dump-images -o - application.trace \
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
+Recording a video with gstreamer
+--------------------------------------
+
+You can make a video of the output with gstreamer by doing
+
+    glretrace --snapshot-format=RGB -s - smokinguns.trace | gst-launch-0.10 fdsrc blocksize=409600 ! queue \
+    ! videoparse format=rgb width=1920 height=1080 ! queue ! ffmpegcolorspace ! queue \
+    ! vaapiupload direct-rendering=0 ! queue ! vaapiencodeh264 ! filesink location=xxx.264
 
 Trimming a trace
 ----------------

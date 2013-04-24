@@ -46,6 +46,11 @@ static bool loopOnFinish = false;
 
 static const char *comparePrefix = NULL;
 static const char *snapshotPrefix = NULL;
+static enum {
+    PNM_FMT,
+    RAW_RGB
+} snapshotFormat = PNM_FMT;
+
 static trace::CallSet snapshotFrequency;
 static trace::CallSet compareFrequency;
 static trace::ParseBookmark lastFrameStart;
@@ -128,7 +133,10 @@ takeSnapshot(unsigned call_no) {
             char comment[21];
             snprintf(comment, sizeof comment, "%u",
                      useCallNos ? call_no : snapshot_no);
-            src->writePNM(std::cout, comment);
+            if (snapshotFormat == RAW_RGB)
+                src->writeRAW(std::cout);
+            else
+                src->writePNM(std::cout, comment);
         } else {
             os::String filename = os::String::format("%s%010u.png",
                                                      snapshotPrefix,
@@ -567,6 +575,7 @@ usage(const char *argv0) {
         "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
         "      --sb                use a single buffer visual\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
+        "      --snapshot-format=FMT       use (PNM or RGB; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
@@ -585,6 +594,7 @@ enum {
     PPD_OPT,
     PMEM_OPT,
     SB_OPT,
+    SNAPSHOT_FORMAT_OPT,
     LOOP_OPT,
     SINGLETHREAD_OPT
 };
@@ -609,6 +619,7 @@ longOptions[] = {
     {"pmem", no_argument, 0, PMEM_OPT},
     {"sb", no_argument, 0, SB_OPT},
     {"snapshot-prefix", required_argument, 0, 's'},
+    {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot", required_argument, 0, 'S'},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
@@ -698,6 +709,12 @@ int main(int argc, char **argv)
                 os::setBinaryMode(stdout);
                 retrace::verbosity = -2;
             }
+            break;
+	case SNAPSHOT_FORMAT_OPT:
+            if (strcmp(optarg, "RGB") == 0)
+                snapshotFormat = RAW_RGB;
+            else
+                snapshotFormat = PNM_FMT;
             break;
         case 'S':
             snapshotFrequency = trace::CallSet(optarg);
