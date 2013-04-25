@@ -25,8 +25,8 @@
 
 
 from dlltrace import DllTracer
-from specs.stdapi import API
-from specs.d3d9 import d3d9, D3DSHADER9
+from specs.stdapi import API, Pointer, ObjPointer
+from specs.d3d9 import d3d9, D3DSHADER9, IDirect3DSwapChain9Ex
 
 import specs.d3d9dxva2
 
@@ -40,6 +40,16 @@ class D3D9Tracer(DllTracer):
             return
 
         DllTracer.serializeArgValue(self, function, arg)
+
+    def wrapArg(self, function, arg):
+        # Correctly handle the wrapping of IDirect3DSwapChain9Ex objects
+        if function.name in ('GetSwapChain', 'CreateAdditionalSwapChain') \
+           and self.interface.name == 'IDirect3DDevice9Ex' \
+           and arg.name == 'pSwapChain':
+            self.wrapValue(Pointer(ObjPointer(IDirect3DSwapChain9Ex)), '((IDirect3DSwapChain9Ex**)pSwapChain)')
+            return
+
+        DllTracer.wrapArg(self, function, arg)
 
     def enumWrapperInterfaceVariables(self, interface):
         variables = DllTracer.enumWrapperInterfaceVariables(self, interface)
