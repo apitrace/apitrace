@@ -35,7 +35,7 @@ import platform
 import sys
 
 
-def convert(inTrace, outPixrun):
+def getPixExe():
     try:
         programFiles = os.environ['ProgramFiles(x86)']
     except KeyError:
@@ -44,14 +44,30 @@ def convert(inTrace, outPixrun):
         dxsdkDir = os.environ['DXSDK_DIR']
     except KeyError:
         dxsdkDir = os.path.join(programFiles, "Microsoft DirectX SDL (June 2010)")
-    pix = os.path.join(dxsdkDir, "Utilities", "bin", 'x86', 'PIXwin.exe')
+    pixExe = os.path.join(dxsdkDir, "Utilities", "bin", 'x86', 'PIXwin.exe')
+    return pixExe
+
+
+def callProcess(cmd):
+    if options.verbose:
+        sys.stderr.write(' '.join(cmd) + '\n')
+    ret = subprocess.call(cmd)
+    if ret:
+        exeName = os.path.basename(cmd[0])
+        sys.stderr.write('error: %s failed with exit code %u\n' % (exeName, ret))
+        sys.exit(ret)
+    return ret
+
+
+def convertToPix(inTrace, outPixrun):
+    pix = getPixPath()
 
     pixExp = os.path.join(os.path.dirname(__file__), 'apitrace.PIXExp')
 
     # http://social.msdn.microsoft.com/Forums/sv/devdocs/thread/15addc0c-036d-413a-854a-35637ccbb834
     # http://src.chromium.org/svn/trunk/o3d/tests/test_driver.py
     cmd = [
-        pix,
+        getPixExe(),
         pixExp,
         '-start',
         '-runfile', os.path.abspath(outPixrun),
@@ -60,19 +76,44 @@ def convert(inTrace, outPixrun):
         '-targetargs', os.path.abspath(inTrace),
     ]
 
-    if options.verbose:
-        sys.stderr.write(' '.join(cmd) + '\n')
-
-    ret = subprocess.call(cmd)
-    if ret:
-        sys.stderr.write('error: pix failued with exit code %u\n' % ret)
-        sys.exit(ret)
+    callProcess(cmd)
     if os.path.exists(outPixrun):
         sys.stderr.write('info: %s written\n' % outPixrun)
-        if False:
+        if options.verify:
             subprocess.call([pix, os.path.abspath(outPixrun)])
     else:
         sys.stderr.write('error: %s not written\n' % outPixrun)
+        sys.exit(1)
+
+
+def convertFromPix(inPix, outTrace):
+    pixExe = getPixExe()
+
+    if False:
+        cmd = [
+            pixExe,
+            inPix,
+            '-exporttocsv', 'c:\test.csv',
+        ]
+        callProcess(cmd)
+
+    cmd = [
+        options.apitrace,
+        'trace',
+        '-a', options.api,
+        '-o', outTrace,
+        pixExe,
+        inPix,
+        '-playstandalone',
+    ]
+
+    callProcess(cmd)
+    if os.path.exists(outTrace):
+        sys.stderr.write('info: %s written\n' % outTrace)
+        if options.verify:
+            subprocess.call([options.retrace, os.path.abspath(outTrace)])
+    else:
+        sys.stderr.write('error: %s not written\n' % outTrace)
         sys.exit(1)
 
 
@@ -84,8 +125,16 @@ def main():
         usage='\n\t%prog [options] <trace> ...',
         version='%%prog')
     optparser.add_option(
+        '--apitrace', metavar='PROGRAM',
+        type='string', dest='apitrace', default='apitrace.exe',
+        help='retrace command [default: %default]')
+    optparser.add_option(
+        '-a', '--api', metavar='API',
+        type='string', dest='api', default='d3d9',
+        help='api [default: %default]')
+    optparser.add_option(
         '-r', '--retrace', metavar='PROGRAM',
-        type='string', dest='retrace', default='d3dretrace',
+        type='string', dest='retrace', default='d3dretrace.exe',
         help='retrace command [default: %default]')
     optparser.add_option(
         '-v', '--verbose',
@@ -95,18 +144,31 @@ def main():
         '-o', '--output', metavar='FILE',
         type="string", dest="output",
         help="output file [default: stdout]")
+    optparser.add_option(
+        '--verify',
+        action='store_true', dest='verify', default=False,
+        help='verify output by replaying it')
 
     (options, args) = optparser.parse_args(sys.argv[1:])
     if not args:
         optparser.error("incorrect number of arguments")
     
-    for arg in args:
-        if options.output:
-            output = options.output
+    for inFile in args:
+        name, inExt = os.path.splitext(os.path.basename(inFile))
+        inExt = inExt
+        if inExt.lower() == '.trace':
+            convert = convertToPix
+            outExt = '.PIXRun'
+        elif inExt.lower() == '.pixrun':
+            convert = convertFromPix
+            outExt = '.trace'
         else:
-            name, ext = os.path.splitext(os.path.basename(arg))
-            output = name + '.PIXRun'
-        convert(arg, output)
+            optparser.error("unexpected file extensions `%s`" % inExt)
+        if options.output:
+            outFile = options.output
+        else:
+            outFile = name + outExt
+        convert(inFile, outFile)
 
 
 if __name__ == '__main__':
