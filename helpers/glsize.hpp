@@ -711,26 +711,37 @@ _gl_format_channels(GLenum format) {
     switch (format) {
     case GL_COLOR_INDEX:
     case GL_RED:
+    case GL_RED_INTEGER:
     case GL_GREEN:
+    case GL_GREEN_INTEGER:
     case GL_BLUE:
+    case GL_BLUE_INTEGER:
     case GL_ALPHA:
+    case GL_ALPHA_INTEGER:
     case GL_INTENSITY:
     case GL_LUMINANCE:
+    case GL_LUMINANCE_INTEGER_EXT:
     case GL_DEPTH_COMPONENT:
     case GL_STENCIL_INDEX:
         return 1;
     case GL_DEPTH_STENCIL:
     case GL_LUMINANCE_ALPHA:
+    case GL_LUMINANCE_ALPHA_INTEGER_EXT:
     case GL_RG:
+    case GL_RG_INTEGER:
     case GL_HILO_NV:
     case GL_DSDT_NV:
         return 2;
     case GL_RGB:
+    case GL_RGB_INTEGER:
     case GL_BGR:
+    case GL_BGR_INTEGER:
     case GL_DSDT_MAG_NV:
         return 3;
     case GL_RGBA:
+    case GL_RGBA_INTEGER:
     case GL_BGRA:
+    case GL_BGRA_INTEGER:
     case GL_ABGR_EXT:
     case GL_CMYK_EXT:
     case GL_DSDT_MAG_VIB_NV:
