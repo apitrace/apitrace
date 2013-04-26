@@ -90,10 +90,11 @@ def convertFromPix(inPix, outTrace):
     pixExe = getPixExe()
 
     if False:
+        # TODO: Use -exporttocsv option to detect which API to use
         cmd = [
             pixExe,
             inPix,
-            '-exporttocsv', 'c:\test.csv',
+            '-exporttocsv', # XXX: output filename is ignored
         ]
         callProcess(cmd)
 
