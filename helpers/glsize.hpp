@@ -706,6 +706,12 @@ _glMap2d_size(GLenum target, GLint ustride, GLint uorder, GLint vstride, GLint v
 
 #define _glMap2f_size _glMap2d_size
 
+/**
+ * Number of channels in this format.
+ *
+ * That is, the number of elements per pixel when this format is passed with a
+ * to DrawPixels, ReadPixels, TexImage*, TexSubImage*, GetTexImage, etc.
+ */
 static inline unsigned
 _gl_format_channels(GLenum format) {
     switch (format) {
@@ -729,14 +735,22 @@ _gl_format_channels(GLenum format) {
     case GL_LUMINANCE_ALPHA_INTEGER_EXT:
     case GL_RG:
     case GL_RG_INTEGER:
-    case GL_HILO_NV:
-    case GL_DSDT_NV:
+    case GL_422_EXT: // (luminance, chrominance)
+    case GL_422_REV_EXT: // (luminance, chrominance)
+    case GL_422_AVERAGE_EXT: // (luminance, chrominance)
+    case GL_422_REV_AVERAGE_EXT: // (luminance, chrominance)
+    case GL_HILO_NV: // (hi, lo)
+    case GL_DSDT_NV: // (ds, dt)
+    case GL_YCBCR_422_APPLE: // (luminance, chroma)
+    case GL_RGB_422_APPLE: // (G, B) on even pixels, (G, R) on odd pixels
+    case GL_YCRCB_422_SGIX: // (Y, [Cb,Cr])
         return 2;
     case GL_RGB:
     case GL_RGB_INTEGER:
     case GL_BGR:
     case GL_BGR_INTEGER:
-    case GL_DSDT_MAG_NV:
+    case GL_DSDT_MAG_NV: // (ds, dt, magnitude)
+    case GL_YCRCB_444_SGIX: // (Cb, Y, Cr)
         return 3;
     case GL_RGBA:
     case GL_RGBA_INTEGER:
@@ -744,10 +758,14 @@ _gl_format_channels(GLenum format) {
     case GL_BGRA_INTEGER:
     case GL_ABGR_EXT:
     case GL_CMYK_EXT:
-    case GL_DSDT_MAG_VIB_NV:
+    case GL_DSDT_MAG_VIB_NV: // (ds, dt, magnitude, vibrance)
         return 4;
     case GL_CMYKA_EXT:
         return 5;
+    case GL_FORMAT_SUBSAMPLE_24_24_OML:
+    case GL_FORMAT_SUBSAMPLE_244_244_OML:
+        // requires UNSIGNED_INT_10_10_10_2, so this value will be ignored
+        return 0;
     default:
         os::log("apitrace: warning: %s: unexpected format GLenum 0x%04X\n", __FUNCTION__, format);
         return 0;
