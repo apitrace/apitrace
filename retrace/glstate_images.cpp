@@ -518,26 +518,24 @@ getDrawableBounds(GLint *width, GLint *height) {
 #if defined(__linux__)
     if (dlsym(RTLD_DEFAULT, "eglGetCurrentContext")) {
         EGLContext currentContext = eglGetCurrentContext();
-        if (currentContext == EGL_NO_CONTEXT) {
-            return false;
-        }
+        if (currentContext != EGL_NO_CONTEXT) {
+            EGLSurface currentSurface = eglGetCurrentSurface(EGL_DRAW);
+            if (currentSurface == EGL_NO_SURFACE) {
+                return false;
+            }
 
-        EGLSurface currentSurface = eglGetCurrentSurface(EGL_DRAW);
-        if (currentSurface == EGL_NO_SURFACE) {
-            return false;
-        }
+            EGLDisplay currentDisplay = eglGetCurrentDisplay();
+            if (currentDisplay == EGL_NO_DISPLAY) {
+                return false;
+            }
 
-        EGLDisplay currentDisplay = eglGetCurrentDisplay();
-        if (currentDisplay == EGL_NO_DISPLAY) {
-            return false;
-        }
+            if (!eglQuerySurface(currentDisplay, currentSurface, EGL_WIDTH, width) ||
+                !eglQuerySurface(currentDisplay, currentSurface, EGL_HEIGHT, height)) {
+                return false;
+            }
 
-        if (!eglQuerySurface(currentDisplay, currentSurface, EGL_WIDTH, width) ||
-            !eglQuerySurface(currentDisplay, currentSurface, EGL_HEIGHT, height)) {
-            return false;
+            return true;
         }
-
-        return true;
     }
 #endif
 
