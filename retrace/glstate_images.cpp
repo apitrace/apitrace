@@ -515,8 +515,8 @@ dumpTextures(JSONWriter &json, Context &context)
 
 static bool
 getDrawableBounds(GLint *width, GLint *height) {
-#if defined(__linux__)
-    if (dlsym(RTLD_DEFAULT, "eglGetCurrentContext")) {
+#if defined(__linux__) && 0
+    if (dlsym(RTLD_DEFAULT, "eglGetCurrentContext")) { // unavailable function on AMD
         EGLContext currentContext = eglGetCurrentContext();
         if (currentContext != EGL_NO_CONTEXT) {
             EGLSurface currentSurface = eglGetCurrentSurface(EGL_DRAW);
