@@ -2,14 +2,26 @@ This file lists the major user visible improvements.  For a full list of changes
 and their authors see the git history.
 
 
-Development
+Version 4.0
 ===========
 
-* Support to trace in Android.
+* Support tracing in Android, both native and Dalvik applications.
 
 * Show frame thumbnails in the GUI.
 
 * Basic D3D 10.1, 11, and 11.1 trace support.
+
+* Multi-threaded trace/retrace support.
+
+* Several OpenGL ES state dump fixes.
+
+* GPU profiling.
+
+* Thumbnails in GUI
+
+* Trim improvements.
+
+* Loads of bugfixes
 
 
 Version 3.0
