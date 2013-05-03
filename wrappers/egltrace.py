@@ -112,7 +112,7 @@ class EglTracer(GlTracer):
 if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
-    print '#include <dlfcn.h>'
+    print '#include "dlopen.hpp"'
     print
     print '#include "trace_writer_local.hpp"'
     print
@@ -137,31 +137,6 @@ if __name__ == '__main__':
     print r'''
 
 
-/*
- * Android does not support LD_PRELOAD.
- */
-#if !defined(ANDROID)
-
-
-/*
- * Invoke the true dlopen() function.
- */
-static void *_dlopen(const char *filename, int flag)
-{
-    typedef void * (*PFN_DLOPEN)(const char *, int);
-    static PFN_DLOPEN dlopen_ptr = NULL;
-
-    if (!dlopen_ptr) {
-        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_NEXT, "dlopen");
-        if (!dlopen_ptr) {
-            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
-            return NULL;
-        }
-    }
-
-    return dlopen_ptr(filename, flag);
-}
-
 
 /*
  * Several applications, such as Quake3, use dlopen("libGL.so.1"), but
@@ -174,7 +149,7 @@ void * dlopen(const char *filename, int flag)
 {
     bool intercept = false;
 
-    if (filename) {
+    if (filename && trace::isTracingEnabled()) {
         intercept =
             strcmp(filename, "libEGL.so") == 0 ||
             strcmp(filename, "libEGL.so.1") == 0 ||
@@ -214,9 +189,6 @@ void * dlopen(const char *filename, int flag)
 
     return handle;
 }
-
-
-#endif /* !ANDROID */
 
 
 #if defined(ANDROID)

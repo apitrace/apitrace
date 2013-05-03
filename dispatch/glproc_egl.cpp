@@ -28,7 +28,7 @@
 
 
 #if !defined(_WIN32)
-#include <dlfcn.h>
+#include "dlopen.hpp"
 #endif
 
 
@@ -79,7 +79,7 @@ _getPublicProcAddress(const char *procName)
     if (procName[0] == 'e' && procName[1] == 'g' && procName[2] == 'l') {
         static void *libEGL = NULL;
         if (!libEGL) {
-            libEGL = dlopen("libEGL.so", RTLD_LOCAL | RTLD_LAZY);
+            libEGL = _dlopen("libEGL.so", RTLD_LOCAL | RTLD_LAZY);
             if (!libEGL) {
                 return NULL;
             }
@@ -93,7 +93,7 @@ _getPublicProcAddress(const char *procName)
 
         static void *libGLESv2 = NULL;
         if (!libGLESv2) {
-            libGLESv2 = dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
+            libGLESv2 = _dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
         }
         if (libGLESv2) {
             sym = dlsym(libGLESv2, procName);
@@ -104,7 +104,7 @@ _getPublicProcAddress(const char *procName)
 
         static void *libGLESv1 = NULL;
         if (!libGLESv1) {
-            libGLESv1 = dlopen("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
+            libGLESv1 = _dlopen("libGLESv1_CM.so", RTLD_LOCAL | RTLD_LAZY);
         }
         if (libGLESv1) {
             sym = dlsym(libGLESv1, procName);

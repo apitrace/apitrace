@@ -29,7 +29,7 @@
 
 #if !defined(_WIN32)
 #include <unistd.h> // for symlink
-#include <dlfcn.h>
+#include "dlopen.hpp"
 #endif
 
 
@@ -143,27 +143,6 @@ _getPrivateProcAddress(const char *procName)
 
 
 #else
-
-
-/*
- * Invoke the true dlopen() function.
- */
-static void *
-_dlopen(const char *filename, int flag)
-{
-    typedef void * (*PFNDLOPEN)(const char *, int);
-    static PFNDLOPEN dlopen_ptr = NULL;
-
-    if (!dlopen_ptr) {
-        dlopen_ptr = (PFNDLOPEN)dlsym(RTLD_NEXT, "dlopen");
-        if (!dlopen_ptr) {
-            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
-            return NULL;
-        }
-    }
-
-    return dlopen_ptr(filename, flag);
-}
 
 
 /*
