@@ -57,7 +57,7 @@ _vertexCount(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount)
     case D3DPT_TRIANGLESTRIP:
         return PrimitiveCount + 2;
     case D3DPT_TRIANGLEFAN:
-        return PrimitiveCount + 1;
+        return PrimitiveCount + 2;
     default:
         os::log("apitrace: warning: %s: unknown D3DPRIMITIVETYPE %u\n", __FUNCTION__, PrimitiveType);
         return 0;
