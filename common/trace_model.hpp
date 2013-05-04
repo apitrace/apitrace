@@ -49,7 +49,6 @@ struct FunctionSig {
     const char *name;
     unsigned num_args;
     const char **arg_names;
-    bool backtrace;
 };
 
 
@@ -488,14 +487,14 @@ class Call
 public:
     unsigned thread_id;
     unsigned no;
-    FunctionSig *sig;
+    const FunctionSig *sig;
     std::vector<Arg> args;
     Value *ret;
 
     CallFlags flags;
     Backtrace* backtrace;
 
-    Call(FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
+    Call(const FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
         thread_id(_thread_id), 
         sig(_sig), 
         args(_sig->num_args), 

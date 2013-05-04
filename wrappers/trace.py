@@ -452,7 +452,7 @@ class Tracer:
                 print 'static const char * _%s_args[%u] = {%s};' % (function.name, len(function.args), ', '.join(['"%s"' % arg.name for arg in function.args]))
             else:
                 print 'static const char ** _%s_args = NULL;' % (function.name,)
-            print 'static trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, self.getFunctionSigId(), function.name, len(function.args), function.name)
+            print 'static const trace::FunctionSig _%s_sig = {%u, "%s", %u, _%s_args};' % (function.name, self.getFunctionSigId(), function.name, len(function.args), function.name)
             print
 
     def getFunctionSigId(self):
@@ -685,7 +685,7 @@ class Tracer:
         assert not method.internal
 
         print '    static const char * _args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
-        print '    static trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (self.getFunctionSigId(), interface.name + '::' + method.name, len(method.args) + 1)
+        print '    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (self.getFunctionSigId(), interface.name + '::' + method.name, len(method.args) + 1)
 
         print '    %s *_this = static_cast<%s *>(m_pInstance);' % (base, base)
 
@@ -782,7 +782,7 @@ class Tracer:
         print '    %s_this->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
     
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned _call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
+        print '        unsigned _call = trace::localWriter.beginEnter(&trace::memcpy_sig, true);'
         print '        trace::localWriter.beginArg(0);'
         print '        trace::localWriter.writePointer((uintptr_t)%s);' % dest
         print '        trace::localWriter.endArg();'

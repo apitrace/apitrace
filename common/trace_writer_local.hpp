@@ -39,10 +39,10 @@
 
 namespace trace {
 
-    extern FunctionSig memcpy_sig;
-    extern FunctionSig malloc_sig;
-    extern FunctionSig free_sig;
-    extern FunctionSig realloc_sig;
+    extern const FunctionSig memcpy_sig;
+    extern const FunctionSig malloc_sig;
+    extern const FunctionSig free_sig;
+    extern const FunctionSig realloc_sig;
 
     /**
      * A specialized Writer class, mean to trace the current process.
@@ -83,7 +83,7 @@ namespace trace {
         /**
          * It will acquire the mutex.
          */
-        unsigned beginEnter(FunctionSig *sig);
+        unsigned beginEnter(const FunctionSig *sig, bool fake = false);
 
         /**
          * It will release the mutex.

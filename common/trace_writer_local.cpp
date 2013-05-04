@@ -43,16 +43,16 @@ namespace trace {
 
 
 static const char *memcpy_args[3] = {"dest", "src", "n"};
-FunctionSig memcpy_sig = {0, "memcpy", 3, memcpy_args, false};
+const FunctionSig memcpy_sig = {0, "memcpy", 3, memcpy_args};
 
 static const char *malloc_args[1] = {"size"};
-FunctionSig malloc_sig = {1, "malloc", 1, malloc_args, false};
+const FunctionSig malloc_sig = {1, "malloc", 1, malloc_args};
 
 static const char *free_args[1] = {"ptr"};
-FunctionSig free_sig = {2, "free", 1, free_args, false};
+const FunctionSig free_sig = {2, "free", 1, free_args};
 
 static const char *realloc_args[2] = {"ptr", "size"};
-FunctionSig realloc_sig = {3, "realloc", 2, realloc_args, false};
+const FunctionSig realloc_sig = {3, "realloc", 2, realloc_args};
 
 
 static void exceptionCallback(void)
@@ -134,7 +134,7 @@ static uintptr_t next_thread_num = 1;
 static OS_THREAD_SPECIFIC_PTR(void)
 thread_num;
 
-unsigned LocalWriter::beginEnter(FunctionSig *sig) {
+unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     mutex.lock();
     ++acquired;
 
@@ -153,7 +153,7 @@ unsigned LocalWriter::beginEnter(FunctionSig *sig) {
     assert(this_thread_num);
     unsigned thread_id = this_thread_num - 1;
     unsigned call_no = Writer::beginEnter(sig, thread_id);
-    if (sig->backtrace) {
+    if (!fake) {
         std::vector<RawStackFrame> backtrace = get_backtrace();
         beginBacktrace();
         writeBacktrace(backtrace);

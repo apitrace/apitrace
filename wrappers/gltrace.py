@@ -520,7 +520,7 @@ class GlTracer(Tracer):
 
                     # Emit a fake function
                     print '        {'
-                    print '            static trace::FunctionSig &_sig = %s ? _glEnableClientState_sig : _glDisableClientState_sig;' % flag_name
+                    print '            static const trace::FunctionSig &_sig = %s ? _glEnableClientState_sig : _glDisableClientState_sig;' % flag_name
                     print '            unsigned _call = trace::localWriter.beginEnter(&_sig);'
                     print '            trace::localWriter.beginArg(0);'
                     self.serializeValue(glapi.GLenum, enable_name)

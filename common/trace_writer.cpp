@@ -200,12 +200,11 @@ void Writer::beginStackFrameOffset(void ) {
     _writeByte(trace::CALL_BACKTRACE_OFFSET);
 }
 
-unsigned Writer::beginEnter(FunctionSig *sig, unsigned thread_id) {
+unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
     _writeByte(trace::EVENT_ENTER);
     _writeUInt(thread_id);
     _writeUInt(sig->id);
     if (!lookup(functions, sig->id)) {
-        sig->backtrace = backtrace_is_needed(sig->name);
         _writeString(sig->name);
         _writeUInt(sig->num_args);
         for (unsigned i = 0; i < sig->num_args; ++i) {

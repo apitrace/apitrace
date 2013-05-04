@@ -463,7 +463,7 @@ Call *Parser::parse_leave(Mode mode) {
          * between two frames.  We won't return this call, but we still need to skip 
          * over its data.
          */
-        FunctionSig sig = {0, NULL, 0, NULL};
+        const FunctionSig sig = {0, NULL, 0, NULL};
         call = new Call(&sig, 0, 0);
         parse_call_details(call, SCAN);
         delete call;

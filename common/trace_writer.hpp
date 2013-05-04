@@ -74,7 +74,7 @@ namespace trace {
         void beginStackFrameOffset(void);
         inline void endStackFrameOffset(void) {}
 
-        unsigned beginEnter(FunctionSig *sig, unsigned thread_id);
+        unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
 
         void beginLeave(unsigned call);
