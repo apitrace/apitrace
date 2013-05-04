@@ -86,9 +86,6 @@ if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
     print
-    print '#ifndef _GNU_SOURCE'
-    print '#define _GNU_SOURCE // for dladdr'
-    print '#endif'
     print '#include <dlfcn.h>'
     print
     print '#include "trace_writer_local.hpp"'

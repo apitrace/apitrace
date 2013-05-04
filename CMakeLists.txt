@@ -174,6 +174,11 @@ if (MINGW)
     endif ()
 endif ()
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    # For RTLD_DEFAULT and RTLD_NEXT
+    add_definitions (-D_GNU_SOURCE)
+endif ()
+
 
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
