@@ -31,8 +31,8 @@ bool backtrace_is_needed(const char* fname);
 
 #else /* !__linux__ && !ANDROID */
 
-static inline std::vector<StackFrame> get_backtrace() {
-    return std::vector<StackFrame>();
+static inline std::vector<RawStackFrame> get_backtrace() {
+    return std::vector<RawStackFrame>();
 }
 
 static inline bool backtrace_is_needed(const char*) {
