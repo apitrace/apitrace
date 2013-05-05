@@ -74,27 +74,16 @@ Blob::~Blob() {
 
 StackFrame::~StackFrame() {
     if (module != NULL) {
-        delete module;
+        delete [] module;
     }
     if (function != NULL) {
-        delete function;
+        delete [] function;
     }
     if (filename != NULL) {
-        delete filename;
-    }
-    if (linenumber != NULL) {
-        delete linenumber;
-    }
-    if (offset != NULL) {
-        delete offset;
+        delete [] filename;
     }
 }
 
-Backtrace::~Backtrace() {
-    for (int i = 0; i < frames.size(); i++) {
-        delete frames[i];
-    }
-}
 
 // bool cast
 bool Null   ::toBool(void) const { return false; }
@@ -199,9 +188,6 @@ void Blob   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
 void Repr   ::visit(Visitor &visitor) { visitor.visit(this); }
 
-void Backtrace::addFrame(StackFrame* frame) {
-    frames.push_back(frame);
-}
 
 void Visitor::visit(Null *) { assert(0); }
 void Visitor::visit(Bool *) { assert(0); }

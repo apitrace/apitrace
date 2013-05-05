@@ -687,29 +687,23 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
     m_flags = call->flags;
     if (call->backtrace != NULL) {
         QString qbacktrace;
-        for (int i = 0; i < call->backtrace->frames.size(); i++) {
-            trace::StackFrame* frame = call->backtrace->frames[i];
-            trace::String* tmp;
-            tmp = frame->module;
-            if (tmp != NULL) {
-                qbacktrace += QString("%1 ").arg(tmp->toString());
+        for (int i = 0; i < call->backtrace->size(); i++) {
+            const trace::StackFrame & frame = (*call->backtrace)[i];
+            if (frame.module != NULL) {
+                qbacktrace += QString("%1 ").arg(frame.module);
             }
-            tmp = frame->function;
-            if (tmp != NULL) {
-                qbacktrace += QString("at %1() ").arg(tmp->toString());
+            if (frame.function != NULL) {
+                qbacktrace += QString("at %1() ").arg(frame.function);
             }
-            tmp = frame->filename;
-            if (tmp != NULL) {
-                qbacktrace += QString("at %1").arg(tmp->toString());
-                tmp = frame->linenumber;
-                if (tmp != NULL) {
-                    qbacktrace += QString(":%1 ").arg(tmp->toString());
+            if (frame.filename != NULL) {
+                qbacktrace += QString("at %1").arg(frame.filename);
+                if (frame.linenumber >= 0) {
+                    qbacktrace += QString(":%1 ").arg(frame.linenumber);
                 }
             }
             else {
-                tmp = frame->offset;
-                if (tmp != NULL) {
-                    qbacktrace += QString("[%1]").arg(tmp->toString());
+                if (frame.offset >= 0) {
+                    qbacktrace += QString("[0x%1]").arg(frame.offset, 0, 16);
                 }
             }
             qbacktrace += "\n";

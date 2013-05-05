@@ -58,22 +58,6 @@ namespace trace {
         bool open(const char *filename);
         void close(void);
 
-        void writeBacktrace(std::vector<RawStackFrame> backtrace);
-        void beginBacktrace(void);
-        void endBacktrace(void);
-        void beginStackFrame(void);
-        inline void endStackFrame(void) {}
-        void beginStackFrameModule(void);
-        inline void endStackFrameModule(void) {}
-        void beginStackFrameFunction(void);
-        inline void endStackFrameFunction(void) {}
-        void beginStackFrameFilename(void);
-        inline void endStackFrameFilename(void) {}
-        void beginStackFrameLinenumber(void);
-        inline void endStackFrameLinenumber(void) {}
-        void beginStackFrameOffset(void);
-        inline void endStackFrameOffset(void) {}
-
         unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
 
@@ -85,6 +69,10 @@ namespace trace {
 
         void beginReturn(void);
         inline void endReturn(void) {}
+
+        void beginBacktrace(unsigned num_frames);
+        void writeStackFrame(const RawStackFrame &frame);
+        inline void endBacktrace(void) {}
 
         void beginArray(size_t length);
         inline void endArray(void) {}

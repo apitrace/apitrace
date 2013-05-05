@@ -155,8 +155,10 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     unsigned call_no = Writer::beginEnter(sig, thread_id);
     if (!fake) {
         std::vector<RawStackFrame> backtrace = get_backtrace();
-        beginBacktrace();
-        writeBacktrace(backtrace);
+        beginBacktrace(backtrace.size());
+        for (unsigned i = 0; i < backtrace.size(); ++i) {
+            writeStackFrame(backtrace[i]);
+        }
         endBacktrace();
     }
     return call_no;

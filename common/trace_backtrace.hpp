@@ -8,22 +8,6 @@
 namespace trace {
 
 
-struct RawStackFrame {
-    char* module;
-    char* function;
-    char* filename;
-    char* linenumber;
-    char* offset;
-    RawStackFrame() :
-      module(0),
-      function(0),
-      filename(0),
-      linenumber(0),
-      offset(0)
-    {
-    }
-};
-
 #if defined(ANDROID) or defined(__linux__)
 
 std::vector<RawStackFrame> get_backtrace();

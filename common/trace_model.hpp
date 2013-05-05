@@ -348,29 +348,28 @@ public:
     void visit(Visitor &visitor);
 };
 
-class StackFrame {
+struct RawStackFrame {
+    const char * module;
+    const char * function;
+    const char * filename;
+    int linenumber;
+    long long offset;
+    RawStackFrame() :
+        module(0),
+        function(0),
+        filename(0),
+        linenumber(-1),
+        offset(-1)
+    {
+    }
+};
+
+class StackFrame : public RawStackFrame {
 public:
-    String* module;
-    String* function;
-    String* filename;
-    String* linenumber;
-    String* offset;
-    StackFrame() :
-        module(NULL),
-        function(NULL),
-        filename(NULL),
-        linenumber(NULL),
-        offset(NULL)
-    {}
     ~StackFrame();
 };
 
-class Backtrace {
-public:
-    std::vector<StackFrame*> frames;
-    ~Backtrace();
-    void addFrame(StackFrame* frame);
-};
+typedef std::vector<StackFrame> Backtrace;
 
 class Visitor
 {

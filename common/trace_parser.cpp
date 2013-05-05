@@ -517,40 +517,38 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
 }
 
 bool Parser::parse_call_backtrace(Call *call, Mode mode) {
-    Backtrace* backtrace = new Backtrace();
-    StackFrame* frame = NULL;
+    unsigned num_frames = read_uint();
+    Backtrace* backtrace = new Backtrace(num_frames);
+    for (unsigned i = 0; i < num_frames; ++i) {
+        parse_backtrace_frame(&(*backtrace)[i], mode);
+    }
+    call->backtrace = backtrace;
+    return true;
+}
+
+bool Parser::parse_backtrace_frame(StackFrame *frame, Mode mode) {
     do {
         int c = read_byte();
         switch (c) {
-        case trace::CALL_BACKTRACE_FRAME:
-            if (frame != NULL) {
-                backtrace->addFrame(frame);
-            }
-            frame = new StackFrame();
-            break;
-        case trace::CALL_BACKTRACE_END:
-            if (frame != NULL) {
-                backtrace->addFrame(frame);
-            }
-            call->backtrace = backtrace;
+        case trace::BACKTRACE_END:
             return true;
-        case trace::CALL_BACKTRACE_MODULE:
-            frame->module = static_cast<String*>(parse_value(mode));
+        case trace::BACKTRACE_MODULE:
+            frame->module = read_string();
             break;
-        case trace::CALL_BACKTRACE_FUNCTION:
-            frame->function = static_cast<String*>(parse_value(mode));
+        case trace::BACKTRACE_FUNCTION:
+            frame->function = read_string();
             break;
-        case trace::CALL_BACKTRACE_FILENAME:
-            frame->filename = static_cast<String*>(parse_value(mode));
+        case trace::BACKTRACE_FILENAME:
+            frame->filename = read_string();
             break;
-        case trace::CALL_BACKTRACE_LINENUMBER:
-            frame->linenumber = static_cast<String*>(parse_value(mode));
+        case trace::BACKTRACE_LINENUMBER:
+            frame->linenumber = read_uint();
             break;
-        case trace::CALL_BACKTRACE_OFFSET:
-            frame->offset = static_cast<String*>(parse_value(mode));
+        case trace::BACKTRACE_OFFSET:
+            frame->offset = read_uint();
             break;
         default:
-            std::cerr << "error: ("<< call->name() << ") unknown call backtrace detail "
+            std::cerr << "error: unknown backtrace detail "
                       << c << "\n";
             exit(1);
         case -1:

@@ -88,6 +88,8 @@ namespace trace {
  *
  *   call_detail = ARG index value
  *               | RET value
+ *               | THREAD int
+ *               | BACKTRACE int frame*
  *               | END
  *
  *   value = NULL
@@ -105,6 +107,15 @@ namespace trace {
  *         | STRUCT struct_sig value+
  *         | OPAQUE int
  *         | REPR value value
+ *
+ *   frame = frame_detail+
+ *
+ *   frame_detail = MODULE string
+ *                | FUNCTION string
+ *                | FILENAME string
+ *                | LINENUMBER uint
+ *                | OFFSET uint
+ *                | END
  *
  *   call_sig = id name arg_name*
  *            | id
@@ -133,16 +144,6 @@ enum CallDetail {
     CALL_BACKTRACE,
 };
 
-enum CallBacktrace {
-    CALL_BACKTRACE_FRAME = 0,
-    CALL_BACKTRACE_MODULE,
-    CALL_BACKTRACE_FUNCTION,
-    CALL_BACKTRACE_FILENAME,
-    CALL_BACKTRACE_LINENUMBER,
-    CALL_BACKTRACE_OFFSET,
-    CALL_BACKTRACE_END,
-};
-
 enum Type {
     TYPE_NULL = 0,
     TYPE_FALSE,
@@ -159,6 +160,15 @@ enum Type {
     TYPE_STRUCT,
     TYPE_OPAQUE,
     TYPE_REPR,
+};
+
+enum BacktraceDetail {
+    BACKTRACE_END = 0,
+    BACKTRACE_MODULE,
+    BACKTRACE_FUNCTION,
+    BACKTRACE_FILENAME,
+    BACKTRACE_LINENUMBER,
+    BACKTRACE_OFFSET,
 };
 
 

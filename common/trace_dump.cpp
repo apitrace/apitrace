@@ -229,34 +229,28 @@ public:
     }
 
     void visit(StackFrame *frame) {
-        String* tmp;
-        tmp = frame->module;
-        if (tmp != NULL) {
-            os << tmp->toString() << " ";
+        if (frame->module != NULL) {
+            os << frame->module << " ";
         }
-        tmp = frame->function;
-        if (tmp != NULL) {
-            os << "at " << tmp->toString() << "() ";
+        if (frame->function != NULL) {
+            os << "at " << frame->function << "() ";
         }
-        tmp = frame->filename;
-        if (tmp != NULL) {
-            os << "at " << tmp->toString();
-            tmp = frame->linenumber;
-            if (tmp != NULL) {
-                os << ":" << tmp->toString() << " ";
+        if (frame->filename != NULL) {
+            os << "at " << frame->filename;
+            if (frame->linenumber >= 0) {
+                os << ":" << frame->linenumber << " ";
             }
         }
         else {
-            tmp = frame->offset;
-            if (tmp != NULL) {
-                os << "[" << tmp->toString() << "]";
+            if (frame->offset >= 0) {
+                os << "[" << "0x" << std::hex << frame->offset << std::dec << "]";
             }
         }
     }
 
-    void visit(Backtrace* backtrace) {
-        for (int i = 0; i < backtrace->frames.size(); i ++) {
-            visit(backtrace->frames[i]);
+    void visit(Backtrace & backtrace) {
+        for (int i = 0; i < backtrace.size(); i ++) {
+            visit(&backtrace[i]);
             os << "\n";
         }
     }
@@ -306,7 +300,7 @@ public:
 
         if (call->backtrace != NULL) {
             os << bold << red << "Backtrace:\n" << normal;
-            visit(call->backtrace);
+            visit(*call->backtrace);
         }
         if (callFlags & CALL_FLAG_END_FRAME) {
             os << "\n";

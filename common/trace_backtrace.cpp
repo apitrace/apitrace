@@ -256,13 +256,14 @@ public:
                 rawBacktrace_it++;
             }
             if (*rawBacktrace_it == ':') {
-                stackFrame.linenumber = rawBacktrace_it + 1;
+                const char *linenumber = rawBacktrace_it + 1;
                 *rawBacktrace_it = '\0';
                 while (*rawBacktrace_it != ')') {
                     rawBacktrace_it++;
                 }
                 *rawBacktrace_it = '\0';
                 rawBacktrace_it++;
+                stackFrame.linenumber = atoi(linenumber);
             }
             else {
                 stackFrame.filename = NULL;
@@ -358,6 +359,7 @@ private:
             RawStackFrame* parsedFrame = new RawStackFrame;
             char* frame_it = frame_symbol_copy;
             parsedFrame->module = frame_it;
+            char* offset = NULL;
             while (true) {
                 switch (*frame_it) {
                 case '(':
@@ -375,10 +377,11 @@ private:
                 case '[':
                     *frame_it = '\0';
                     frame_it++;
-                    parsedFrame->offset = frame_it;
+                    offset = frame_it;
                     break;
                 case ']':
                     *frame_it = '\0';
+                    sscanf(offset, "%llx", &parsedFrame->offset);
                     cache[frame] = parsedFrame;
                     return parsedFrame;
                 case '\0':

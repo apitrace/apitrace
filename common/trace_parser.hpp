@@ -148,6 +148,7 @@ protected:
     bool parse_call_details(Call *call, Mode mode);
 
     bool parse_call_backtrace(Call *call, Mode mode);
+    bool parse_backtrace_frame(StackFrame *frame, Mode mode);
 
     void adjust_call_flags(Call *call);
 

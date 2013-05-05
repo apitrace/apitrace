@@ -135,69 +135,35 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
     }
 }
 
-void Writer::writeBacktrace(std::vector<RawStackFrame> backtrace) {
-
-    for (int i = 0; i < backtrace.size(); i++) {
-        beginStackFrame();
-        if (backtrace[i].module != NULL) {
-            beginStackFrameModule();
-            writeString(backtrace[i].module);
-            endStackFrameModule();
-        }
-        if (backtrace[i].function != NULL) {
-            beginStackFrameFunction();
-            writeString(backtrace[i].function);
-            endStackFrameFunction();
-        }
-        if (backtrace[i].filename != NULL) {
-            beginStackFrameFilename();
-            writeString(backtrace[i].filename);
-            endStackFrameFilename();
-        }
-        if (backtrace[i].linenumber != NULL) {
-            beginStackFrameLinenumber();
-            writeString(backtrace[i].linenumber);
-            endStackFrameLinenumber();
-        }
-        if (backtrace[i].offset != NULL) {
-            beginStackFrameOffset();
-            writeString(backtrace[i].offset);
-            endStackFrameOffset();
-        }
-        endStackFrame();
+void Writer::beginBacktrace(unsigned num_frames) {
+    if (num_frames) {
+        _writeByte(trace::CALL_BACKTRACE);
+        _writeUInt(num_frames);
     }
 }
 
-void Writer::beginBacktrace(void ) {
-    _writeByte(trace::CALL_BACKTRACE);
-}
-
-void Writer::endBacktrace(void ) {
-    _writeByte(trace::CALL_BACKTRACE_END);
-}
-
-void Writer::beginStackFrame(void ) {
-    _writeByte(trace::CALL_BACKTRACE_FRAME);
-}
-
-void Writer::beginStackFrameModule(void ) {
-    _writeByte(trace::CALL_BACKTRACE_MODULE);
-}
-
-void Writer::beginStackFrameFunction(void ) {
-    _writeByte(trace::CALL_BACKTRACE_FUNCTION);
-}
-
-void Writer::beginStackFrameFilename(void ) {
-    _writeByte(trace::CALL_BACKTRACE_FILENAME);
-}
-
-void Writer::beginStackFrameLinenumber(void ) {
-    _writeByte(trace::CALL_BACKTRACE_LINENUMBER);
-}
-
-void Writer::beginStackFrameOffset(void ) {
-    _writeByte(trace::CALL_BACKTRACE_OFFSET);
+void Writer::writeStackFrame(const RawStackFrame &frame) {
+    if (frame.module != NULL) {
+        _writeByte(trace::BACKTRACE_MODULE);
+        _writeString(frame.module);
+    }
+    if (frame.function != NULL) {
+        _writeByte(trace::BACKTRACE_FUNCTION);
+        _writeString(frame.function);
+    }
+    if (frame.filename != NULL) {
+        _writeByte(trace::BACKTRACE_FILENAME);
+        _writeString(frame.filename);
+    }
+    if (frame.linenumber >= 0) {
+        _writeByte(trace::BACKTRACE_LINENUMBER);
+        _writeUInt(frame.linenumber);
+    }
+    if (frame.offset >= 0) {
+        _writeByte(trace::BACKTRACE_OFFSET);
+        _writeUInt(frame.offset);
+    }
+    _writeByte(trace::BACKTRACE_END);
 }
 
 unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
