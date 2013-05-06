@@ -108,7 +108,8 @@ namespace trace {
  *         | OPAQUE int
  *         | REPR value value
  *
- *   frame = frame_detail+
+ *   frame = id frame_detail+
+ *         | id
  *
  *   frame_detail = MODULE string
  *                | FUNCTION string

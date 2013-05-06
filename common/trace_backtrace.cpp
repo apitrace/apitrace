@@ -176,8 +176,10 @@ private:
     size_t bufSize;
     void (*dumpBacktrace)(const DebugOutputTarget*, void*);
     DebugOutputTarget debugTarget;
+    Id nextFrameId;
 public:
     DalvikBacktraceProvider() {
+        nextFrameId = 0;
         FILE* (*open_memstream_exp)(char**, size_t*);
         void (*createDebugTarget)(DebugOutputTarget*, FILE*);
         void* handle = dlopen("/system/lib/libdvm.so", 0);
@@ -240,6 +242,8 @@ public:
         char* rawBacktrace_it = rawBacktrace;
         while (*rawBacktrace_it != '\0') {
             RawStackFrame stackFrame;
+            // TODO: Keep a cache of stack frames
+            stackFrame->id = nextFrameId++;
             /* skip leading space */
             while (*rawBacktrace_it == ' ') {
                 rawBacktrace_it++;
@@ -343,6 +347,7 @@ private:
      * functions on the stack to avoid recording these frames.
      */
     int numOfNestedFunctions;
+    Id nextFrameId;
 private:
 /*
  * Parse a stack frame, expecting:
@@ -357,6 +362,7 @@ private:
             char* frame_symbol_copy = new char[strlen(frame_symbol) + 1];
             strcpy(frame_symbol_copy, frame_symbol);
             RawStackFrame* parsedFrame = new RawStackFrame;
+            parsedFrame->id = nextFrameId++;
             char* frame_it = frame_symbol_copy;
             parsedFrame->module = frame_it;
             char* offset = NULL;
@@ -400,8 +406,10 @@ private:
     }
 public:
     GlibcBacktraceProvider() :
-      numOfNestedFunctions(0) {
-    }
+      numOfNestedFunctions(0),
+      nextFrameId(0)
+    {}
+
     std::vector<RawStackFrame> getParsedBacktrace() {
         std::vector<RawStackFrame> parsedBacktrace;
         void *array[numOfNestedFunctions + BT_DEPTH];

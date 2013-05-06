@@ -250,7 +250,7 @@ public:
 
     void visit(Backtrace & backtrace) {
         for (int i = 0; i < backtrace.size(); i ++) {
-            visit(&backtrace[i]);
+            visit(backtrace[i]);
             os << "\n";
         }
     }

@@ -72,6 +72,7 @@ Writer::open(const char *filename) {
     structs.clear();
     enums.clear();
     bitmasks.clear();
+    frames.clear();
 
     _writeUInt(TRACE_VERSION);
 
@@ -142,28 +143,32 @@ void Writer::beginBacktrace(unsigned num_frames) {
     }
 }
 
-void Writer::writeStackFrame(const RawStackFrame &frame) {
-    if (frame.module != NULL) {
-        _writeByte(trace::BACKTRACE_MODULE);
-        _writeString(frame.module);
+void Writer::writeStackFrame(const RawStackFrame *frame) {
+    _writeUInt(frame->id);
+    if (!lookup(frames, frame->id)) {
+        if (frame->module != NULL) {
+            _writeByte(trace::BACKTRACE_MODULE);
+            _writeString(frame->module);
+        }
+        if (frame->function != NULL) {
+            _writeByte(trace::BACKTRACE_FUNCTION);
+            _writeString(frame->function);
+        }
+        if (frame->filename != NULL) {
+            _writeByte(trace::BACKTRACE_FILENAME);
+            _writeString(frame->filename);
+        }
+        if (frame->linenumber >= 0) {
+            _writeByte(trace::BACKTRACE_LINENUMBER);
+            _writeUInt(frame->linenumber);
+        }
+        if (frame->offset >= 0) {
+            _writeByte(trace::BACKTRACE_OFFSET);
+            _writeUInt(frame->offset);
+        }
+        _writeByte(trace::BACKTRACE_END);
+        frames[frame->id] = true;
     }
-    if (frame.function != NULL) {
-        _writeByte(trace::BACKTRACE_FUNCTION);
-        _writeString(frame.function);
-    }
-    if (frame.filename != NULL) {
-        _writeByte(trace::BACKTRACE_FILENAME);
-        _writeString(frame.filename);
-    }
-    if (frame.linenumber >= 0) {
-        _writeByte(trace::BACKTRACE_LINENUMBER);
-        _writeUInt(frame.linenumber);
-    }
-    if (frame.offset >= 0) {
-        _writeByte(trace::BACKTRACE_OFFSET);
-        _writeUInt(frame.offset);
-    }
-    _writeByte(trace::BACKTRACE_END);
 }
 
 unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {

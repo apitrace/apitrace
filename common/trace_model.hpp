@@ -349,6 +349,7 @@ public:
 };
 
 struct RawStackFrame {
+    Id id;
     const char * module;
     const char * function;
     const char * filename;
@@ -369,7 +370,7 @@ public:
     ~StackFrame();
 };
 
-typedef std::vector<StackFrame> Backtrace;
+typedef std::vector<StackFrame *> Backtrace;
 
 class Visitor
 {

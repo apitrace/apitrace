@@ -157,7 +157,7 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
         std::vector<RawStackFrame> backtrace = get_backtrace();
         beginBacktrace(backtrace.size());
         for (unsigned i = 0; i < backtrace.size(); ++i) {
-            writeStackFrame(backtrace[i]);
+            writeStackFrame(&backtrace[i]);
         }
         endBacktrace();
     }

@@ -241,7 +241,7 @@ Parser::parse_function_sig(void) {
         }
         sig->arg_names = arg_names;
         sig->flags = lookupCallFlags(sig->name);
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         functions[id] = sig;
 
         /**
@@ -279,7 +279,7 @@ Parser::parse_function_sig(void) {
             glGetErrorSig = sig;
         }
 
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         skip_string(); /* name */
         unsigned num_args = read_uint();
@@ -309,9 +309,9 @@ StructSig *Parser::parse_struct_sig() {
             member_names[i] = read_string();
         }
         sig->member_names = member_names;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         structs[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         skip_string(); /* name */
         unsigned num_members = read_uint();
@@ -345,9 +345,9 @@ EnumSig *Parser::parse_old_enum_sig() {
         values->name = read_string();
         values->value = read_sint();
         sig->values = values;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         enums[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         skip_string(); /*name*/
         scan_value();
@@ -374,9 +374,9 @@ EnumSig *Parser::parse_enum_sig() {
             it->value = read_sint();
         }
         sig->values = values;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         enums[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         int num_values = read_uint();
         for (int i = 0; i < num_values; ++i) {
@@ -409,9 +409,9 @@ BitmaskSig *Parser::parse_bitmask_sig() {
             }
         }
         sig->flags = flags;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         bitmasks[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         int num_flags = read_uint();
         for (int i = 0; i < num_flags; ++i) {
@@ -520,41 +520,78 @@ bool Parser::parse_call_backtrace(Call *call, Mode mode) {
     unsigned num_frames = read_uint();
     Backtrace* backtrace = new Backtrace(num_frames);
     for (unsigned i = 0; i < num_frames; ++i) {
-        parse_backtrace_frame(&(*backtrace)[i], mode);
+        (*backtrace)[i] = parse_backtrace_frame(mode);
     }
     call->backtrace = backtrace;
     return true;
 }
 
-bool Parser::parse_backtrace_frame(StackFrame *frame, Mode mode) {
-    do {
+StackFrame * Parser::parse_backtrace_frame(Mode mode) {
+    size_t id = read_uint();
+
+    StackFrameState *frame = lookup(frames, id);
+
+    if (!frame) {
+        frame = new StackFrameState;
         int c = read_byte();
-        switch (c) {
-        case trace::BACKTRACE_END:
-            return true;
-        case trace::BACKTRACE_MODULE:
-            frame->module = read_string();
-            break;
-        case trace::BACKTRACE_FUNCTION:
-            frame->function = read_string();
-            break;
-        case trace::BACKTRACE_FILENAME:
-            frame->filename = read_string();
-            break;
-        case trace::BACKTRACE_LINENUMBER:
-            frame->linenumber = read_uint();
-            break;
-        case trace::BACKTRACE_OFFSET:
-            frame->offset = read_uint();
-            break;
-        default:
-            std::cerr << "error: unknown backtrace detail "
-                      << c << "\n";
-            exit(1);
-        case -1:
-            return false;
+        while (c != trace::BACKTRACE_END &&
+               c != -1) {
+            switch (c) {
+            case trace::BACKTRACE_MODULE:
+                frame->module = read_string();
+                break;
+            case trace::BACKTRACE_FUNCTION:
+                frame->function = read_string();
+                break;
+            case trace::BACKTRACE_FILENAME:
+                frame->filename = read_string();
+                break;
+            case trace::BACKTRACE_LINENUMBER:
+                frame->linenumber = read_uint();
+                break;
+            case trace::BACKTRACE_OFFSET:
+                frame->offset = read_uint();
+                break;
+            default:
+                std::cerr << "error: unknown backtrace detail "
+                          << c << "\n";
+                exit(1);
+            }
+            c = read_byte();
         }
-    } while(true);
+
+        frame->fileOffset = file->currentOffset();
+        frames[id] = frame;
+    } else if (file->currentOffset() < frame->fileOffset) {
+        int c = read_byte();
+        while (c != trace::BACKTRACE_END &&
+               c != -1) {
+            switch (c) {
+            case trace::BACKTRACE_MODULE:
+                scan_string();
+                break;
+            case trace::BACKTRACE_FUNCTION:
+                scan_string();
+                break;
+            case trace::BACKTRACE_FILENAME:
+                scan_string();
+                break;
+            case trace::BACKTRACE_LINENUMBER:
+                scan_uint();
+                break;
+            case trace::BACKTRACE_OFFSET:
+                scan_uint();
+                break;
+            default:
+                std::cerr << "error: unknown backtrace detail "
+                          << c << "\n";
+                exit(1);
+            }
+            c = read_byte();
+        }
+    }
+
+    return frame;
 }
 
 /**
