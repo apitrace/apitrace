@@ -44,7 +44,7 @@ apitrace_private_target:
 		cd $(MY_APITRACE_ROOT) && \
 		cmake \
 		-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
-		-DANDROID_NDK=../../prebuilt/ndk/android-ndk-r8 \
+		-DANDROID_NDK=../../prebuilt/ndk/android-ndk-r7 \
 		-DANDROID_NDK_LAYOUT=LINARO \
 		-DANDROID_API_LEVEL=9 \
 		-DANDROID_NO_UNDEFINED=OFF \

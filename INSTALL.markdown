@@ -80,7 +80,7 @@ Put Apitrace source tree into `B2GROOT/external/apitrace/` and the `Android.mk`
 file (`B2GROOT/external/apitrace/Android.mk`) will do the needful to compile
 and install apitrace appropriately into the system image as part of FirefoxOS
 build process. It expects a linaro-type of Android NDK to be present in
-`../../prebuilt/ndk/android-ndk-r8` (ie `B2GROOT/prebuilt/ndk/android-ndk-r8`).
+`../../prebuilt/ndk/android-ndk-r7` (ie `B2GROOT/prebuilt/ndk/android-ndk-r7`).
 
 
 Windows
