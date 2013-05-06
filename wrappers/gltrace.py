@@ -357,7 +357,7 @@ class GlTracer(Tracer):
         print '    }'
         print
         print '    GLint buffer_binding = 0;'
-        print '    _glGetIntegerv(target, &buffer_binding);'
+        print '    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buffer_binding);'
         print '    if (buffer_binding > 0) {'
         print '        gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
         print '        buf.getSubData(offset, size, data);'
