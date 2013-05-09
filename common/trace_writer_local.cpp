@@ -122,6 +122,8 @@ LocalWriter::open(void) {
         os::abort();
     }
 
+    pid = os::getCurrentProcessId();
+
 #if 0
     // For debugging the exception handler
     *((int *)0) = 0;
@@ -139,6 +141,17 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
 
     if (!m_file->isOpened()) {
         open();
+    } else {
+        if (os::getCurrentProcessId() != pid) {
+            // We are a forked child process that inherited the trace file, so
+            // create a new file.  We can't call any method of the current
+            // file, as it may cause it to flush and corrupt the parent's
+            // trace, so we effectively leak the old file object.
+            m_file = File::createSnappy();
+            // Don't want to open the same file again
+            os::unsetEnvironment("TRACE_FILE");
+            open();
+        }
     }
 
     // Although thread_num is a void *, we actually use it as a uintptr_t
@@ -173,6 +186,11 @@ void LocalWriter::endLeave(void) {
 }
 
 void LocalWriter::flush(void) {
+    if (os::getCurrentProcessId() != pid) {
+        os::log("apitrace: ignoring exception in child process\n");
+        return;
+    }
+
     /*
      * Do nothing if the mutex is already acquired (e.g., if a segfault happen
      * while writing the file) as state could be inconsistent, therefore yield

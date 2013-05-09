@@ -33,6 +33,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
 #endif
 
 #include "os.hpp"
@@ -41,7 +44,26 @@
 namespace os {
 
 
-inline void
+typedef
+#ifdef _WIN32
+   DWORD
+#else
+   pid_t
+#endif
+ProcessId;
+
+
+static inline ProcessId
+getCurrentProcessId(void) {
+#ifdef _WIN32
+    return GetCurrentProcessId();
+#else
+    return getpid();
+#endif
+}
+
+
+static inline void
 setEnvironment(const char *name, const char *value) {
 #ifdef _WIN32
     SetEnvironmentVariableA(name, value);
@@ -51,7 +73,7 @@ setEnvironment(const char *name, const char *value) {
 }
 
 
-inline void
+static inline void
 unsetEnvironment(const char *name) {
 #ifdef _WIN32
     SetEnvironmentVariableA(name, NULL);
