@@ -284,6 +284,12 @@ public:
         }
     }
 
+    ~RelayRunner() {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+
     /**
      * Thread main loop.
      */

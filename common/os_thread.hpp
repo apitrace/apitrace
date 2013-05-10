@@ -374,6 +374,10 @@ namespace os {
         {
         }
 
+        inline
+        ~thread() {
+        }
+
         template< class Function, class Arg >
         explicit thread( Function& f, Arg arg ) {
 #ifdef _WIN32
@@ -382,6 +386,12 @@ namespace os {
 #else
             pthread_create(&_native_handle, NULL, (void *(*) (void *))f, (void *)arg);
 #endif
+        }
+
+        inline thread &
+        operator =(const thread &other) {
+            _native_handle = other._native_handle;
+            return *this;
         }
 
         inline bool
