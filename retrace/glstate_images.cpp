@@ -1218,7 +1218,7 @@ dumpFramebuffer(JSONWriter &json, Context &context)
         dumpFramebufferAttachments(json, context, GL_DRAW_FRAMEBUFFER);
 
         if (multisample) {
-            glBindRenderbuffer(GL_RENDERBUFFER_BINDING, boundRb);
+            glBindRenderbuffer(GL_RENDERBUFFER, boundRb);
             glDeleteRenderbuffers(numRbs, rbs);
             glDeleteFramebuffers(1, &fboCopy);
         }
