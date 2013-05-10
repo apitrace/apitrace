@@ -34,6 +34,7 @@
 #include <stdint.h>
 
 #include "os_thread.hpp"
+#include "os_process.hpp"
 #include "trace_writer.hpp"
 
 
@@ -69,6 +70,13 @@ namespace trace {
          */
         os::recursive_mutex mutex;
         int acquired;
+
+        /**
+         * ID of the processed that opened the trace file.
+         */
+        os::ProcessId pid;
+
+        void checkProcessId();
 
     public:
         /**

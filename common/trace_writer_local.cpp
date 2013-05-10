@@ -63,6 +63,8 @@ static void exceptionCallback(void)
 LocalWriter::LocalWriter() :
     acquired(0)
 {
+    os::log("apitrace: loaded\n");
+
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
     os::setExceptionCallback(exceptionCallback);
@@ -71,6 +73,7 @@ LocalWriter::LocalWriter() :
 LocalWriter::~LocalWriter()
 {
     os::resetExceptionCallback();
+    checkProcessId();
 }
 
 void
@@ -122,6 +125,8 @@ LocalWriter::open(void) {
         os::abort();
     }
 
+    pid = os::getCurrentProcessId();
+
 #if 0
     // For debugging the exception handler
     *((int *)0) = 0;
@@ -133,10 +138,25 @@ static uintptr_t next_thread_num = 1;
 static OS_THREAD_SPECIFIC_PTR(void)
 thread_num;
 
+void LocalWriter::checkProcessId(void) {
+    if (m_file->isOpened() &&
+        os::getCurrentProcessId() != pid) {
+        // We are a forked child process that inherited the trace file, so
+        // create a new file.  We can't call any method of the current
+        // file, as it may cause it to flush and corrupt the parent's
+        // trace, so we effectively leak the old file object.
+        m_file = File::createSnappy();
+        // Don't want to open the same file again
+        os::unsetEnvironment("TRACE_FILE");
+        open();
+    }
+}
+
 unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
     mutex.lock();
     ++acquired;
 
+    checkProcessId();
     if (!m_file->isOpened()) {
         open();
     }
@@ -185,8 +205,12 @@ void LocalWriter::flush(void) {
     } else {
         ++acquired;
         if (m_file->isOpened()) {
-            os::log("apitrace: flushing trace due to an exception\n");
-            m_file->flush();
+            if (os::getCurrentProcessId() != pid) {
+                os::log("apitrace: ignoring exception in child process\n");
+            } else {
+                os::log("apitrace: flushing trace due to an exception\n");
+                m_file->flush();
+            }
         }
         --acquired;
     }
