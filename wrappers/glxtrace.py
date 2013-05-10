@@ -115,36 +115,26 @@ class GlxTracer(GlTracer):
                 GLint height = 0;
                 _glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
                 GLint border = 0;
-                unsigned glx_format = 0;
-                _glXQueryDrawable(display, drawable, GLX_TEXTURE_FORMAT_EXT, &glx_format);
-                GLenum format;
-                switch (glx_format) {
-                case GLX_TEXTURE_FORMAT_RGB_EXT:
-                    format = GL_RGB;
-                    break;
-                case GLX_TEXTURE_FORMAT_RGBA_EXT:
-                    format = GL_RGBA;
-                    break;
-                case GLX_TEXTURE_FORMAT_NONE_EXT:
-                    // XXX: This really shouldn't happen but some
-                    // implementations (Mesa) appear return bogus results to
-                    // the GLX_TEXTURE_FORMAT_EXT query
-                default:
-                    //os::log("apitrace: warning: %s: unexpected GLX_TEXTURE_FORMAT_EXT 0x%u\n", __FUNCTION__, glx_format);
-                    format = GL_RGBA;
-                    break;
-                }
+                // XXX: We always use GL_RGBA format to read the pixels because:
+                // - some implementations (Mesa) seem to return bogus results
+                //   for GLX_TEXTURE_FORMAT_EXT
+                // - hardware usually stores GL_RGB with 32bpp, so it should be
+                //   faster to read/write
+                // - it is more robust against GL_(UN)PACK_ALIGNMENT state
+                //   changes
+                // The drawback is that traces will be slightly bigger.
+                GLenum format = GL_RGBA;
                 GLenum type = GL_UNSIGNED_BYTE;
-                if (target && internalformat && height && width && format) {
-                    GLint channels = _gl_format_channels(format);
-                    // FIXME: This assumes (UN)PACK state is set to its
-                    // defaults. We really should temporarily reset the state
-                    // here (and emit according fake calls) to cope when its
-                    // not. At very least we need a heads up warning that this
-                    // will cause problems.
+                if (target && internalformat && height && width) {
+                    // FIXME: This assumes (UN)PACK state (in particular
+                    // GL_(UN)PACK_ROW_LENGTH) is set to its defaults. We
+                    // really should temporarily reset the state here (and emit
+                    // according fake calls) to cope when its not. At very
+                    // least we need a heads up warning that this will cause
+                    // problems.
                     GLint alignment = 4;
-                    GLint stride = _align(width * channels, alignment);
-                    GLvoid * pixels = malloc(height * stride);
+                    GLint row_stride = _align(width * 4, alignment);
+                    GLvoid * pixels = malloc(height * row_stride);
                     _glGetTexImage(target, level, format, type, pixels);
             '''
             self.emitFakeTexture2D()
