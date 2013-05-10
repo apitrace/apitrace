@@ -1213,9 +1213,11 @@ dumpFramebuffer(JSONWriter &json, Context &context)
                                              boundDrawFbo, draw_buffer0,
                                              colorRb, depthRb, stencilRb,
                                              rbs, &numRbs);
+        } else {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, boundDrawFbo);
         }
 
-        dumpFramebufferAttachments(json, context, GL_DRAW_FRAMEBUFFER);
+        dumpFramebufferAttachments(json, context, GL_READ_FRAMEBUFFER);
 
         if (multisample) {
             glBindRenderbuffer(GL_RENDERBUFFER, boundRb);
