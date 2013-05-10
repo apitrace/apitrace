@@ -110,6 +110,17 @@ class GlxTracer(GlTracer):
                 GLint level = 0;
                 GLint internalformat = GL_NONE;
                 _glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &internalformat);
+                // XXX: GL_TEXTURE_INTERNAL_FORMAT cannot be trusted on NVIDIA
+                // -- it sometimes returns GL_BGRA, even though GL_BGR/BGRA is
+                // not a valid internal format.
+                switch (internalformat) {
+                case GL_BGR:
+                    internalformat = GL_RGB;
+                    break;
+                case GL_BGRA:
+                    internalformat = GL_RGBA;
+                    break;
+                }
                 GLint width = 0;
                 _glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
                 GLint height = 0;
