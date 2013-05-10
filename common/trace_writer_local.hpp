@@ -76,6 +76,8 @@ namespace trace {
          */
         os::ProcessId pid;
 
+        void checkProcessId();
+
     public:
         /**
          * Should never called directly -- use localWriter singleton below
