@@ -137,7 +137,14 @@ class GlxTracer(GlTracer):
                 GLenum type = GL_UNSIGNED_BYTE;
                 if (target && internalformat && height && width && format) {
                     GLint channels = _gl_format_channels(format);
-                    GLvoid * pixels = malloc(height * width * channels);
+                    // FIXME: This assumes (UN)PACK state is set to its
+                    // defaults. We really should temporarily reset the state
+                    // here (and emit according fake calls) to cope when its
+                    // not. At very least we need a heads up warning that this
+                    // will cause problems.
+                    GLint alignment = 4;
+                    GLint stride = _align(width * channels, alignment);
+                    GLvoid * pixels = malloc(height * stride);
                     _glGetTexImage(target, level, format, type, pixels);
             '''
             self.emitFakeTexture2D()
