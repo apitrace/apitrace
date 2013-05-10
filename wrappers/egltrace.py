@@ -96,18 +96,6 @@ class EglTracer(GlTracer):
             print '        _EGLImageKHR_free_image_info(info);'
             print '    }'
 
-    def emitFakeTexture2D(self):
-        function = glapi.getFunctionByName('glTexImage2D')
-        instances = function.argNames()
-        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
-        for arg in function.args:
-            assert not arg.output
-            self.serializeArg(function, arg)
-        print '        trace::localWriter.endEnter();'
-        print '        trace::localWriter.beginLeave(_fake_call);'
-        print '        trace::localWriter.endLeave();'
-
-
 
 if __name__ == '__main__':
     print '#include <stdlib.h>'

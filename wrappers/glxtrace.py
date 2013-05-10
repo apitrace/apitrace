@@ -80,6 +80,72 @@ class GlxTracer(GlTracer):
             print '            gltrace::clearContext();'
             print '    }'
 
+        if function.name == 'glXBindTexImageEXT':
+            # FIXME: glXBindTexImageEXT gets called frequently, so we should
+            # avoid recording the same data over and over again somehow, e.g.:
+            # - get the pixels before and after glXBindTexImageEXT, and only
+            #   emit emitFakeTexture2D when it changes
+            # - keep a global hash of the pixels
+            # FIXME: Handle mipmaps
+            print r'''
+                unsigned glx_target = 0;
+                _glXQueryDrawable(display, drawable, GLX_TEXTURE_TARGET_EXT, &glx_target);
+                GLenum target;
+                switch (glx_target) {
+                // FIXME
+                //case GLX_TEXTURE_1D_EXT:
+                //    target = GL_TEXTURE_1D;
+                //    break;
+                case GLX_TEXTURE_2D_EXT:
+                    target = GL_TEXTURE_2D;
+                    break;
+                case GLX_TEXTURE_RECTANGLE_EXT:
+                    target = GL_TEXTURE_RECTANGLE;
+                    break;
+                default:
+                    os::log("apitrace: warning: %s: unsupported GLX_TEXTURE_TARGET_EXT 0x%u\n", __FUNCTION__, glx_target);
+                    target = GL_NONE;
+                    break;
+                }
+                GLint level = 0;
+                GLint internalformat = GL_NONE;
+                _glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &internalformat);
+                GLint width = 0;
+                _glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &width);
+                GLint height = 0;
+                _glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &height);
+                GLint border = 0;
+                unsigned glx_format = 0;
+                _glXQueryDrawable(display, drawable, GLX_TEXTURE_FORMAT_EXT, &glx_format);
+                GLenum format;
+                switch (glx_format) {
+                case GLX_TEXTURE_FORMAT_RGB_EXT:
+                    format = GL_RGB;
+                    break;
+                case GLX_TEXTURE_FORMAT_RGBA_EXT:
+                    format = GL_RGBA;
+                    break;
+                case GLX_TEXTURE_FORMAT_NONE_EXT:
+                    // XXX: This really shouldn't happen but some
+                    // implementations (Mesa) appear return bogus results to
+                    // the GLX_TEXTURE_FORMAT_EXT query
+                default:
+                    //os::log("apitrace: warning: %s: unexpected GLX_TEXTURE_FORMAT_EXT 0x%u\n", __FUNCTION__, glx_format);
+                    format = GL_RGBA;
+                    break;
+                }
+                GLenum type = GL_UNSIGNED_BYTE;
+                if (target && internalformat && height && width && format) {
+                    GLint channels = _gl_format_channels(format);
+                    GLvoid * pixels = malloc(height * width * channels);
+                    _glGetTexImage(target, level, format, type, pixels);
+            '''
+            self.emitFakeTexture2D()
+            print r'''
+                    free(pixels);
+                }
+            '''
+
 
 if __name__ == '__main__':
     print

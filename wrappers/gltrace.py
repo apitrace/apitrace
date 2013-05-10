@@ -1059,6 +1059,16 @@ class GlTracer(Tracer):
         function = api.getFunctionByName('glClientActiveTexture')
         self.fake_call(function, [texture])
 
+    def emitFakeTexture2D(self):
+        function = glapi.glapi.getFunctionByName('glTexImage2D')
+        instances = function.argNames()
+        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+        for arg in function.args:
+            assert not arg.output
+            self.serializeArg(function, arg)
+        print '        trace::localWriter.endEnter();'
+        print '        trace::localWriter.beginLeave(_fake_call);'
+        print '        trace::localWriter.endLeave();'
 
 
 
