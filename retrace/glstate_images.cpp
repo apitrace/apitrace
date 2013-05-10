@@ -890,6 +890,8 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 
     image::Image *image = new image::Image(width, height, channels, true);
 
+    while (glGetError() != GL_NO_ERROR) {}
+
     // TODO: reset imaging state too
     context.resetPixelPackState();
 
@@ -897,7 +899,16 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
 
     context.restorePixelPackState();
 
-    json.writeImage(image, formatToString(internalFormat));
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        do {
+            std::cerr << "warning: " << enumToString(error) << " while reading framebuffer\n";
+            error = glGetError();
+        } while(error != GL_NO_ERROR);
+        json.writeNull();
+    } else {
+        json.writeImage(image, formatToString(internalFormat));
+    }
 
     delete image;
 }
