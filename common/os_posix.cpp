@@ -173,8 +173,16 @@ log(const char *format, ...)
 #ifdef ANDROID
     __android_log_vprint(ANDROID_LOG_DEBUG, "apitrace", format, ap);
 #else
-    vfprintf(stderr, format, ap);
-    fflush(stderr);
+    static FILE *log = NULL;
+    if (!log) {
+        // Duplicate stderr file descriptor, to prevent applications from
+        // redirecting our debug messages to somewhere else.
+        //
+        // Another alternative would be to log to /dev/tty when available.
+        log = fdopen(dup(STDERR_FILENO), "at");
+    }
+    vfprintf(log, format, ap);
+    fflush(log);
 #endif
     va_end(ap);
     logging = false;
