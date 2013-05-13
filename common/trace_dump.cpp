@@ -228,6 +228,33 @@ public:
         _visit(r->humanValue);
     }
 
+    void visit(StackFrame *frame) {
+        if (frame->module != NULL) {
+            os << frame->module << " ";
+        }
+        if (frame->function != NULL) {
+            os << "at " << frame->function << "() ";
+        }
+        if (frame->filename != NULL) {
+            os << "at " << frame->filename;
+            if (frame->linenumber >= 0) {
+                os << ":" << frame->linenumber << " ";
+            }
+        }
+        else {
+            if (frame->offset >= 0) {
+                os << "[" << "0x" << std::hex << frame->offset << std::dec << "]";
+            }
+        }
+    }
+
+    void visit(Backtrace & backtrace) {
+        for (int i = 0; i < backtrace.size(); i ++) {
+            visit(backtrace[i]);
+            os << "\n";
+        }
+    }
+
     void visit(Call *call) {
         CallFlags callFlags = call->flags;
         
@@ -271,6 +298,10 @@ public:
         
         os << "\n";
 
+        if (call->backtrace != NULL) {
+            os << bold << red << "Backtrace:\n" << normal;
+            visit(*call->backtrace);
+        }
         if (callFlags & CALL_FLAG_END_FRAME) {
             os << "\n";
         }

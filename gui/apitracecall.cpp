@@ -685,6 +685,31 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
     }
     m_argValues.squeeze();
     m_flags = call->flags;
+    if (call->backtrace != NULL) {
+        QString qbacktrace;
+        for (int i = 0; i < call->backtrace->size(); i++) {
+            const trace::StackFrame * frame = (*call->backtrace)[i];
+            if (frame->module != NULL) {
+                qbacktrace += QString("%1 ").arg(frame->module);
+            }
+            if (frame->function != NULL) {
+                qbacktrace += QString("at %1() ").arg(frame->function);
+            }
+            if (frame->filename != NULL) {
+                qbacktrace += QString("at %1").arg(frame->filename);
+                if (frame->linenumber >= 0) {
+                    qbacktrace += QString(":%1 ").arg(frame->linenumber);
+                }
+            }
+            else {
+                if (frame->offset >= 0) {
+                    qbacktrace += QString("[0x%1]").arg(frame->offset, 0, 16);
+                }
+            }
+            qbacktrace += "\n";
+        }
+        this->setBacktrace(qbacktrace);
+    }
 }
 
 ApiTraceCall::~ApiTraceCall()
@@ -818,6 +843,16 @@ bool ApiTraceCall::hasBinaryData() const
 int ApiTraceCall::binaryDataIndex() const
 {
     return m_binaryDataIndex;
+}
+
+QString ApiTraceCall::backtrace() const
+{
+    return m_backtrace;
+}
+
+void ApiTraceCall::setBacktrace(QString backtrace)
+{
+    m_backtrace = backtrace;
 }
 
 QStaticText ApiTraceCall::staticText() const

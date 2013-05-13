@@ -91,8 +91,8 @@ namespace trace {
         /**
          * It will acquire the mutex.
          */
-        unsigned beginEnter(const FunctionSig *sig);
-        
+        unsigned beginEnter(const FunctionSig *sig, bool fake = false);
+
         /**
          * It will release the mutex.
          */

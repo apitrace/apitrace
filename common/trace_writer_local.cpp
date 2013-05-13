@@ -36,6 +36,7 @@
 #include "trace_file.hpp"
 #include "trace_writer_local.hpp"
 #include "trace_format.hpp"
+#include "trace_backtrace.hpp"
 
 
 namespace trace {
@@ -152,7 +153,7 @@ void LocalWriter::checkProcessId(void) {
     }
 }
 
-unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
+unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     mutex.lock();
     ++acquired;
 
@@ -171,7 +172,16 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
 
     assert(this_thread_num);
     unsigned thread_id = this_thread_num - 1;
-    return Writer::beginEnter(sig, thread_id);
+    unsigned call_no = Writer::beginEnter(sig, thread_id);
+    if (!fake && backtrace_is_needed(sig->name)) {
+        std::vector<RawStackFrame> backtrace = get_backtrace();
+        beginBacktrace(backtrace.size());
+        for (unsigned i = 0; i < backtrace.size(); ++i) {
+            writeStackFrame(&backtrace[i]);
+        }
+        endBacktrace();
+    }
+    return call_no;
 }
 
 void LocalWriter::endEnter(void) {

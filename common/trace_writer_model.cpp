@@ -109,6 +109,13 @@ public:
 
     void visit(Call *call) {
         unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
+        if (call->backtrace != NULL) {
+            writer.beginBacktrace(call->backtrace->size());
+            for (unsigned i = 0; i < call->backtrace->size(); ++i) {
+                writer.writeStackFrame((*call->backtrace)[i]);
+            }
+            writer.endBacktrace();
+        }
         for (unsigned i = 0; i < call->args.size(); ++i) {
             if (call->args[i].value) {
                 writer.beginArg(i);

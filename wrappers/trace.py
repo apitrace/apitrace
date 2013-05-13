@@ -782,7 +782,7 @@ class Tracer:
         print '    %s_this->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
     
     def emit_memcpy(self, dest, src, length):
-        print '        unsigned _call = trace::localWriter.beginEnter(&trace::memcpy_sig);'
+        print '        unsigned _call = trace::localWriter.beginEnter(&trace::memcpy_sig, true);'
         print '        trace::localWriter.beginArg(0);'
         print '        trace::localWriter.writePointer((uintptr_t)%s);' % dest
         print '        trace::localWriter.endArg();'

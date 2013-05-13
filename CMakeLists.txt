@@ -318,6 +318,7 @@ add_library (common STATIC
     common/trace_profiler.cpp
     common/trace_option.cpp
     common/${os}
+    common/trace_backtrace.cpp
 )
 
 set_target_properties (common PROPERTIES
