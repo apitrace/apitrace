@@ -243,7 +243,7 @@ public:
         while (*rawBacktrace_it != '\0') {
             RawStackFrame stackFrame;
             // TODO: Keep a cache of stack frames
-            stackFrame->id = nextFrameId++;
+            stackFrame.id = nextFrameId++;
             /* skip leading space */
             while (*rawBacktrace_it == ' ') {
                 rawBacktrace_it++;
