@@ -70,8 +70,7 @@ struct pstring {
 class StringPrefixes {
 private:
     std::set<pstring> pset;
-    char* buf;
-private:
+
     void addPrefix(char* startbuf, int n) {
         std::set<pstring>::iterator elem = pset.find(pstring(startbuf, n));
         bool replace = elem != pset.end() && n < elem->n;
@@ -86,11 +85,7 @@ public:
     StringPrefixes(const char* source);
 
     bool contain(const char* s) {
-        if (pset.find(pstring(s, strlen(s) + 1)) != pset.end()) {
-            os::log("Backtrace for %s is enabled", s);
-            return true;
-        }
-        return false;
+        return pset.find(pstring(s, strlen(s) + 1)) != pset.end();
     }
 };
 
@@ -110,7 +105,7 @@ bool backtrace_is_needed(const char* fname) {
 namespace trace {
 
 StringPrefixes::StringPrefixes(const char* source) {
-    buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
+    char* buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
     char* startbuf = buf;
     int n = 0;
     FILE* f = fopen(source, "r");
@@ -303,7 +298,7 @@ namespace trace {
 
 
 StringPrefixes::StringPrefixes(const char* source) {
-    buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
+    char* buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
     char* startbuf = buf;
     int n = 0;
     char* s = getenv(source);
