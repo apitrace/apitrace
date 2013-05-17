@@ -1112,13 +1112,13 @@ parameters = [
     ("",	X,	1,	"GL_VIEW_CLASS_RGTC2_RG"),	# 0x82D1
     ("",	X,	1,	"GL_VIEW_CLASS_BPTC_UNORM"),	# 0x82D2
     ("",	X,	1,	"GL_VIEW_CLASS_BPTC_FLOAT"),	# 0x82D3
-    ("",	I,	1,	"GL_VERTEX_ATTRIB_BINDING"),	# 0x82D4
-    ("",	I,	1,	"GL_VERTEX_ATTRIB_RELATIVE_OFFSET"),	# 0x82D5
+    ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_BINDING"),	# 0x82D4
+    ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_RELATIVE_OFFSET"),	# 0x82D5
     ("",	I,	1,	"GL_VERTEX_BINDING_DIVISOR"),	# 0x82D6
     ("",	I,	1,	"GL_VERTEX_BINDING_OFFSET"),	# 0x82D7
     ("",	I,	1,	"GL_VERTEX_BINDING_STRIDE"),	# 0x82D8
-    ("",	I,	1,	"GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET"),	# 0x82D9
-    ("",	I,	1,	"GL_MAX_VERTEX_ATTRIB_BINDINGS"),	# 0x82DA
+    ("glGet",	I,	1,	"GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET"),	# 0x82D9
+    ("glGet",	I,	1,	"GL_MAX_VERTEX_ATTRIB_BINDINGS"),	# 0x82DA
     ("glGetTexParameter",	I,	1,	"GL_TEXTURE_VIEW_MIN_LEVEL"),	# 0x82DB
     ("glGetTexParameter",	I,	1,	"GL_TEXTURE_VIEW_NUM_LEVELS"),	# 0x82DC
     ("glGetTexParameter",	I,	1,	"GL_TEXTURE_VIEW_MIN_LAYER"),	# 0x82DD
