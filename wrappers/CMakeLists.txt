@@ -421,6 +421,7 @@ elseif (X11_FOUND)
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
+        ${LIBBACKTRACE_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
@@ -469,6 +470,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
+        ${LIBBACKTRACE_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
