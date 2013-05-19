@@ -65,8 +65,6 @@ struct pstring {
 };
 
 
-#define PREFIX_BUF_SIZE (PREFIX_MAX_FUNC_NAME * MAX_BT_FUNC)
-
 class StringPrefixes {
 private:
     std::set<pstring> pset;
@@ -82,15 +80,33 @@ private:
         }
     }
 public:
-    StringPrefixes(const char* source);
+    StringPrefixes();
 
     bool contain(const char* s) {
         return pset.find(pstring(s, strlen(s) + 1)) != pset.end();
     }
 };
 
+StringPrefixes::StringPrefixes() {
+    char *list = getenv("APITRACE_BACKTRACE");
+    if (!list)
+        return;
+    for (char *t = strdup(list); ; t = NULL) {
+        char *tok = strtok(t, " \t\r\n");
+        if (!tok)
+            break;
+        if (tok[0] == '#')
+            continue;
+        if (tok[strlen(tok) - 1] == '*')
+            addPrefix(tok, strlen(tok) - 1);
+        else
+            addPrefix(tok, strlen(tok) + 1);
+    }
+}
+
+
 bool backtrace_is_needed(const char* fname) {
-    static StringPrefixes backtraceFunctionNamePrefixes(APITRACE_FNAMES_SOURCE);
+    static StringPrefixes backtraceFunctionNamePrefixes;
     return backtraceFunctionNamePrefixes.contain(fname);
 }
 
@@ -103,37 +119,6 @@ bool backtrace_is_needed(const char* fname) {
 #include <vector>
 
 namespace trace {
-
-StringPrefixes::StringPrefixes(const char* source) {
-    char* buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
-    char* startbuf = buf;
-    int n = 0;
-    FILE* f = fopen(source, "r");
-    if (f == NULL) {
-        os::log("Cannot open " APITRACE_FNAMES_FILE);
-    }
-    while ((startbuf = fgets(startbuf, PREFIX_MAX_FUNC_NAME, f))) {
-        n = strlen(startbuf);
-        if (startbuf[n - 1] == '\n') {
-            n--;
-        }
-        if (n > 2 && startbuf[0] != '#') {
-            int psize;
-            if (startbuf[n - 1] != '*') {
-                startbuf[n] = '\0';
-                psize = n + 1;
-            }
-            else {
-                psize = n - 1;
-            }
-            addPrefix(startbuf, psize);
-            startbuf += n + 1;
-            n = 0;
-        }
-    }
-    fclose(f);
-}
-
 
 /* The following two declarations are copied from Android sources */
 
@@ -297,38 +282,6 @@ std::vector<RawStackFrame> get_backtrace() {
 namespace trace {
 
 
-StringPrefixes::StringPrefixes(const char* source) {
-    char* buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
-    char* startbuf = buf;
-    int n = 0;
-    char* s = getenv(source);
-    char end = ';';
-    if (s == NULL) {
-        return;
-    }
-    *buf = ';';
-    strncpy(buf + 1, s, PREFIX_BUF_SIZE - 2);
-    while (end != '\0') {
-        startbuf++;
-        while (*(startbuf + n) != ';' && *(startbuf + n) != '\0') {
-            n++;
-        }
-        end = startbuf[n];
-        if (n > 2 && startbuf[0] != '#') {
-            int psize;
-            if (startbuf[n - 1] != '*') {
-                startbuf[n] = '\0';
-                psize = n + 1;
-            }
-            else {
-                psize = n - 1;
-            }
-            addPrefix(startbuf, psize);
-            startbuf += n;
-            n = 0;
-        }
-    }
-}
 
 
 #define BT_DEPTH 10
