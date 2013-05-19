@@ -33,7 +33,7 @@
 
 #include "trace_backtrace.hpp"
 
-#if defined(ANDROID) or defined(__linux__)
+#if defined(ANDROID) or defined(__ELF__)
 
 #include <set>
 #include "os.hpp"
@@ -487,7 +487,7 @@ public:
 
 
 std::vector<RawStackFrame> get_backtrace() {
-    static GlibcBacktraceProvider backtraceProvider;
+    static libbacktraceProvider backtraceProvider;
     return backtraceProvider.getParsedBacktrace();
 }
 
