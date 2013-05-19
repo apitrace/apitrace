@@ -274,12 +274,8 @@ std::vector<RawStackFrame> get_backtrace() {
 
 #include <stdint.h>
 #include <dlfcn.h>
-#include <execinfo.h>
-#include <string.h>
-#include <stdlib.h>
 #include <map>
 #include <vector>
-#include <stdio.h>
 
 #include "backtrace.h"
 
@@ -377,114 +373,6 @@ public:
         return parsedBacktrace;
     }
 };
-
-class GlibcBacktraceProvider {
-private:
-    std::map<void*, RawStackFrame*> cache;
-    /*
-     * Backtrace being returned by glibc backtrace() contains stack frames
-     * belonging to apitrace wrapper module. We count the number of apitrace
-     * functions on the stack to avoid recording these frames.
-     */
-    int numOfNestedFunctions;
-    Id nextFrameId;
-private:
-/*
- * Parse a stack frame, expecting:
- * /lib/libc.so.6.1(__libc_start_main+0x50308) [0x2000000000097630]
- * or
- * /lib/libc.so.6.1(+0x50308) [0x2000000000097630]
- * or
- * /lib/libc.so.6.1() [0x2000000000097630]
- */
-    RawStackFrame* parseFrame(void* frame, char* frame_symbol) {
-        if (cache.find(frame) == cache.end()) {
-            char* frame_symbol_copy = new char[strlen(frame_symbol) + 1];
-            strcpy(frame_symbol_copy, frame_symbol);
-            RawStackFrame* parsedFrame = new RawStackFrame;
-            parsedFrame->id = nextFrameId++;
-            char* frame_it = frame_symbol_copy;
-            parsedFrame->module = frame_it;
-            char* offset = NULL;
-            while (true) {
-                switch (*frame_it) {
-                case '(':
-                    *frame_it = '\0';
-                    frame_it++;
-                    if (*frame_it != ')' && *frame_it != '+') {
-                        parsedFrame->function = frame_it;
-                        while (*frame_it != '+' && *frame_it != ')') {
-                            frame_it++;
-                        }
-                        *frame_it = '\0';
-                        frame_it++;
-                    }
-                    break;
-                case '[':
-                    *frame_it = '\0';
-                    frame_it++;
-                    offset = frame_it;
-                    break;
-                case ']':
-                    *frame_it = '\0';
-                    sscanf(offset, "%llx", &parsedFrame->offset);
-                    cache[frame] = parsedFrame;
-                    return parsedFrame;
-                case '\0':
-                    cache[frame] = NULL;
-                    delete[] frame_symbol_copy;
-                    delete[] parsedFrame;
-                    return NULL;
-                default:
-                    frame_it++;
-                }
-            }
-        }
-        else {
-            return cache[frame];
-        }
-    }
-public:
-    GlibcBacktraceProvider() :
-      numOfNestedFunctions(0),
-      nextFrameId(0)
-    {}
-
-    std::vector<RawStackFrame> getParsedBacktrace() {
-        std::vector<RawStackFrame> parsedBacktrace;
-        void *array[numOfNestedFunctions + BT_DEPTH];
-        size_t size;
-        char **strings;
-        size_t i;
-        const char* firstModule;
-        size = backtrace(array, numOfNestedFunctions + BT_DEPTH);
-        strings = backtrace_symbols(array, size);
-        for (i = numOfNestedFunctions; i < size; i++) {
-            RawStackFrame* parsedFrame = parseFrame(array[i], strings[i]);
-            if (numOfNestedFunctions == 0) {
-                if (i == 0) {
-                    firstModule = parsedFrame->module;
-                }
-                else {
-                    if (strcmp(firstModule, parsedFrame->module)) {
-                        numOfNestedFunctions = i;
-                        free(strings);
-                        parsedBacktrace = getParsedBacktrace();
-                        numOfNestedFunctions--;
-                        return parsedBacktrace;
-                    }
-                }
-            } else {
-                if (parsedFrame != NULL) {
-                    parsedBacktrace.push_back(*parsedFrame);
-                }
-            }
-        }
-        free(strings);
-        return parsedBacktrace;
-    }
-};
-
 
 std::vector<RawStackFrame> get_backtrace() {
     static libbacktraceProvider backtraceProvider;
