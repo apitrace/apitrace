@@ -142,7 +142,7 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
     return hr;
 }
 
-image::Image *
+static image::Image *
 getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
                          ID3D11RenderTargetView *pRenderTargetView) {
     image::Image *image = NULL;
@@ -229,6 +229,87 @@ no_staging:
     return image;
 }
 
+static image::Image *
+getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
+                         ID3D11DepthStencilView *pDepthStencilView) {
+    image::Image *image = NULL;
+    D3D11_DEPTH_STENCIL_VIEW_DESC Desc;
+    ID3D11Resource *pResource = NULL;
+    ID3D11Resource *pStagingResource = NULL;
+    UINT Width, Height, Depth;
+    UINT MipSlice;
+    UINT Subresource;
+    D3D11_MAPPED_SUBRESOURCE MappedSubresource;
+    HRESULT hr;
+
+    if (!pDepthStencilView) {
+        return NULL;
+    }
+
+    pDepthStencilView->GetResource(&pResource);
+    assert(pResource);
+
+    pDepthStencilView->GetDesc(&Desc);
+
+    hr = stageResource(pDevice, pResource, &pStagingResource, &Width, &Height, &Depth);
+    if (FAILED(hr)) {
+        goto no_staging;
+    }
+
+    // TODO: Take the slice in consideration
+    switch (Desc.ViewDimension) {
+    case D3D11_DSV_DIMENSION_TEXTURE1D:
+        MipSlice = Desc.Texture1D.MipSlice;
+        break;
+    case D3D11_DSV_DIMENSION_TEXTURE1DARRAY:
+        MipSlice = Desc.Texture1DArray.MipSlice;
+        break;
+    case D3D11_DSV_DIMENSION_TEXTURE2D:
+        MipSlice = Desc.Texture2D.MipSlice;
+        MipSlice = 0;
+        break;
+    case D3D11_DSV_DIMENSION_TEXTURE2DARRAY:
+        MipSlice = Desc.Texture2DArray.MipSlice;
+        break;
+    case D3D11_DSV_DIMENSION_TEXTURE2DMS:
+        MipSlice = 0;
+        break;
+    case D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY:
+        MipSlice = 0;
+        break;
+    case D3D11_SRV_DIMENSION_UNKNOWN:
+    default:
+        assert(0);
+        goto no_map;
+    }
+    Subresource = MipSlice;
+
+    Width  = std::max(Width  >> MipSlice, 1U);
+    Height = std::max(Height >> MipSlice, 1U);
+    Depth  = std::max(Depth  >> MipSlice, 1U);
+
+    hr = pDevice->Map(pStagingResource, Subresource, D3D11_MAP_READ, 0, &MappedSubresource);
+    if (FAILED(hr)) {
+        goto no_map;
+    }
+
+    image = ConvertImage(Desc.Format,
+                         MappedSubresource.pData,
+                         MappedSubresource.RowPitch,
+                         Width, Height);
+
+    pDevice->Unmap(pStagingResource, Subresource);
+no_map:
+    if (pStagingResource) {
+        pStagingResource->Release();
+    }
+no_staging:
+    if (pResource) {
+        pResource->Release();
+    }
+    return image;
+}
+
 
 image::Image *
 getRenderTargetImage(ID3D11DeviceContext *pDevice) {
@@ -252,7 +333,9 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
     json.beginObject();
 
     ID3D11RenderTargetView *pRenderTargetViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
-    pDevice->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, pRenderTargetViews, NULL);
+    ID3D11DepthStencilView *pDepthStencilView;
+    pDevice->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, pRenderTargetViews,
+                                &pDepthStencilView);
 
     for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i) {
         if (!pRenderTargetViews[i]) {
@@ -270,6 +353,19 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
         }
 
         pRenderTargetViews[i]->Release();
+    }
+
+    if (pDepthStencilView) {
+        image::Image *image;
+        image = getDepthStencilViewImage(pDevice, pDepthStencilView);
+        if (image) {
+            json.beginMember("DEPTH_STENCIL");
+            json.writeImage(image, "UNKNOWN");
+            json.endMember();
+        }
+
+        pDepthStencilView->Release();
+
     }
 
     json.endObject();
