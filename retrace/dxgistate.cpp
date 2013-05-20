@@ -208,6 +208,12 @@ ConvertFormat(DXGI_FORMAT SrcFormat,
 
     DirectX::Rect rect(0, 0, Width, Height);
 
+    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) {
+        return hr;
+    }
+
     if (SrcFormat != DstFormat) {
         DirectX::ScratchImage ScratchImage;
         ScratchImage.Initialize2D(DstFormat, Width, Height, 1, 1);
