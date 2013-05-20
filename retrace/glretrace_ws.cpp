@@ -214,6 +214,9 @@ updateDrawable(int width, int height) {
         return;
     }
 
+    width  = std::max(width,  currentDrawable->width);
+    height = std::max(height, currentDrawable->height);
+
     // Check for bound framebuffer last, as this may have a performance impact.
     GLint draw_framebuffer = 0;
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_framebuffer);
