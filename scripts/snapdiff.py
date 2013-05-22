@@ -71,6 +71,9 @@ class Comparer:
         return self.ref_im.size != self.src_im.size
 
     def write_diff(self, diff_image, fuzz = 0.05):
+        if self.size_mismatch():
+            return
+
         # make a difference image similar to ImageMagick's compare utility
         mask = ImageEnhance.Brightness(self.diff).enhance(1.0/fuzz)
         mask = mask.convert('L')
