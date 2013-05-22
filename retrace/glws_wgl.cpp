@@ -188,14 +188,14 @@ public:
             return;
         }
 
+        Drawable::resize(w, h);
+
         RECT rClient, rWindow;
         GetClientRect(hWnd, &rClient);
         GetWindowRect(hWnd, &rWindow);
         w += (rWindow.right  - rWindow.left) - rClient.right;
         h += (rWindow.bottom - rWindow.top)  - rClient.bottom;
         SetWindowPos(hWnd, NULL, rWindow.left, rWindow.top, w, h, SWP_NOMOVE);
-
-        Drawable::resize(w, h);
     }
 
     void show(void) {
