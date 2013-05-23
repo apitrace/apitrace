@@ -493,7 +493,8 @@ class Retracer:
     def checkResult(self, resultType):
         if str(resultType) == 'HRESULT':
             print r'    if (FAILED(_result)) {'
-            print r'        retrace::warning(call) << "failed (0x" << std::hex << _result << std::dec << ")\n";'
+            print '         static char szMessageBuffer[128];'
+            print r'        retrace::warning(call) << "call returned 0x" << std::hex << _result << std::dec << ": " << (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, _result, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), szMessageBuffer, sizeof szMessageBuffer, NULL) ? szMessageBuffer : "???") << "\n";'
             print r'    }'
 
     def filterFunction(self, function):
