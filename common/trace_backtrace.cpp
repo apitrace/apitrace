@@ -276,6 +276,7 @@ std::vector<RawStackFrame> get_backtrace() {
 #include <dlfcn.h>
 #include <map>
 #include <vector>
+#include <cxxabi.h>
 
 #include "backtrace.h"
 
@@ -329,6 +330,9 @@ class libbacktraceProvider {
         frame.filename = file;
         frame.linenumber = line;
         if (func)
+            frame.function = func;
+        int status;
+        if (func && (func = abi::__cxa_demangle(func, NULL, NULL, &status)))
             frame.function = func;
         this_->current_frames->push_back(frame);
         return 0;
