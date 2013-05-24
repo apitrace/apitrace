@@ -51,6 +51,7 @@ apitrace_private_target:
 		-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
 		-DANDROID_NDK=../../prebuilt/ndk/android-ndk-r7 \
 		-DANDROID_NDK_LAYOUT=LINARO \
+		-DANDROID_TOOLCHAIN_NAME=arm-linux-androideabi-4.4.x \
 		-DANDROID_API_LEVEL=9 \
 		-DANDROID_NO_UNDEFINED=OFF \
 		-DLIBRARY_OUTPUT_PATH_ROOT=../../$(MY_APITRACE_BUILD_ROOT_TARGET) \
