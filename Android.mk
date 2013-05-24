@@ -7,6 +7,11 @@
 # This may work in other than FirefoxOS environments, but has not been tested.
 #
 
+ifeq ($(shell which cmake),)
+$(shell echo "CMake not found, will not compile apitrace" >&2)
+else # cmake
+$(shell echo "CMake found, will compile apitrace" >&2)
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -77,3 +82,5 @@ $(linked_module): apitrace_private_target
 	$(hide) # apitrace: copy apitrace executable to where the build system expects it
 	$(hide) mkdir -p $(dir $@)
 	$(hide) cp $(MY_APITRACE_BUILD_ROOT_TARGET)/apitrace$(TARGET_EXECUTABLE_SUFFIX) $@
+
+endif # cmake
