@@ -48,31 +48,60 @@ else:
     NULL = open('/dev/null', 'wt')
 
 
-class Setup:
+class RetraceRun:
 
-    def __init__(self, args, env=None):
+    def __init__(self, process):
+        self.process = process
+
+    def nextSnapshot(self):
+        image, comment = read_pnm(self.process.stdout)
+        if image is None:
+            return None, None
+
+        callNo = int(comment.strip())
+
+        return image, callNo
+
+    def terminate(self):
+        try:
+            self.process.terminate()
+        except OSError:
+            # Avoid http://bugs.python.org/issue14252
+            pass
+
+
+class Retracer:
+
+    def __init__(self, retraceExe, args, env=None):
+        self.retraceExe = retraceExe
         self.args = args
         self.env = env
 
-    def _retrace(self, args):
+    def _retrace(self, args, stdout=subprocess.PIPE):
         cmd = [
-            options.retrace,
+            self.retraceExe,
         ] + args + self.args
         if self.env:
             for name, value in self.env.iteritems():
                 sys.stderr.write('%s=%s ' % (name, value))
         sys.stderr.write(' '.join(cmd) + '\n')
         try:
-            return subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
+            return subprocess.Popen(cmd, env=self.env, stdout=stdout, stderr=NULL)
         except OSError, ex:
             sys.stderr.write('error: failed to execute %s: %s\n' % (cmd[0], ex.strerror))
             sys.exit(1)
 
-    def retrace(self):
-        return self._retrace([
+    def retrace(self, args):
+        p = self._retrace([])
+        p.wait()
+        return p.returncode
+
+    def snapshot(self, call_nos):
+        process = self._retrace([
             '-s', '-',
-            '-S', options.snapshot_frequency,
+            '-S', call_nos,
         ])
+        return RetraceRun(process)
 
     def dump_state(self, call_no):
         '''Get the state dump at the specified call no.'''
@@ -206,8 +235,8 @@ def main():
     if options.src_driver:
         options.src_args.insert(0, '--driver=' + options.src_driver)
 
-    ref_setup = Setup(options.ref_args + args, ref_env)
-    src_setup = Setup(options.src_args + args, src_env)
+    refRetracer = Retracer(options.retrace, options.ref_args + args, ref_env)
+    srcRetracer = Retracer(options.retrace, options.src_args + args, src_env)
 
     if options.output:
         output = open(options.output, 'wt')
@@ -220,27 +249,26 @@ def main():
 
     last_bad = -1
     last_good = 0
-    ref_proc = ref_setup.retrace()
+    refRun = refRetracer.snapshot(options.snapshot_frequency)
     try:
-        src_proc = src_setup.retrace()
+        srcRun = srcRetracer.snapshot(options.snapshot_frequency)
         try:
             while True:
                 # Get the reference image
-                ref_image, ref_comment = read_pnm(ref_proc.stdout)
-                if ref_image is None:
+                refImage, refCallNo = refRun.nextSnapshot()
+                if refImage is None:
                     break
 
                 # Get the source image
-                src_image, src_comment = read_pnm(src_proc.stdout)
-                if src_image is None:
+                srcImage, srcCallNo = srcRun.nextSnapshot()
+                if srcImage is None:
                     break
 
-                assert ref_comment == src_comment
-
-                call_no = int(ref_comment.strip())
+                assert refCallNo == srcCallNo
+                callNo = refCallNo
 
                 # Compare the two images
-                comparer = Comparer(ref_image, src_image)
+                comparer = Comparer(refImage, srcImage)
                 precision = comparer.precision()
 
                 mismatch = precision < options.threshold
@@ -248,38 +276,30 @@ def main():
                 if mismatch:
                     highligher.color(highligher.red)
                     highligher.bold()
-                highligher.write('%u\t%f\n' % (call_no, precision))
+                highligher.write('%u\t%f\n' % (callNo, precision))
                 if mismatch:
                     highligher.normal()
 
                 if mismatch:
                     if options.diff_prefix:
-                        prefix = os.path.join(options.diff_prefix, '%010u' % call_no)
+                        prefix = os.path.join(options.diff_prefix, '%010u' % callNo)
                         prefix_dir = os.path.dirname(prefix)
                         if not os.path.isdir(prefix_dir):
                             os.makedirs(prefix_dir)
-                        ref_image.save(prefix + '.ref.png')
-                        src_image.save(prefix + '.src.png')
+                        refImage.save(prefix + '.ref.png')
+                        srcImage.save(prefix + '.src.png')
                         comparer.write_diff(prefix + '.diff.png')
                     if last_bad < last_good:
-                        src_setup.diff_state(last_good, call_no, output)
-                    last_bad = call_no
+                        srcRetracer.diff_state(last_good, callNo, output)
+                    last_bad = callNo
                 else:
-                    last_good = call_no
+                    last_good = callNo
 
                 highligher.flush()
         finally:
-            try:
-                src_proc.terminate()
-            except OSError:
-                # Avoid http://bugs.python.org/issue14252
-                pass
+            srcRun.terminate()
     finally:
-        try:
-            ref_proc.terminate()
-        except OSError:
-            # Avoid http://bugs.python.org/issue14252
-            pass
+        refRun.terminate()
 
 
 if __name__ == '__main__':
