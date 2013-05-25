@@ -714,6 +714,23 @@ int main(int argc, char **argv)
             if (snapshotPrefix[0] == '-' && snapshotPrefix[1] == 0) {
                 os::setBinaryMode(stdout);
                 retrace::verbosity = -2;
+            } else {
+                /*
+                 * Create the snapshot directory if it does not exist.
+                 *
+                 * We can't just use trimFilename() because when applied to
+                 * "/foo/boo/" it would merely return "/foo".
+                 *
+                 * XXX: create nested directories.
+                 */
+                os::String prefix(snapshotPrefix);
+                os::String::iterator sep = prefix.rfindSep(false);
+                if (sep != prefix.end()) {
+                    prefix.erase(sep, prefix.end());
+                    if (!os::createDirectory(prefix)) {
+                        std::cerr << "error: failed to create " << prefix.str() << "\n";
+                    }
+                }
             }
             break;
 	case SNAPSHOT_FORMAT_OPT:

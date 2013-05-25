@@ -112,6 +112,12 @@ getCurrentDir(void)
 }
 
 bool
+createDirectory(const String &path)
+{
+    return mkdir(path, 0777) == 0;
+}
+
+bool
 String::exists(void) const
 {
     struct stat st;

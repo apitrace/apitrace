@@ -130,24 +130,23 @@ protected:
         return false;
     }
 
-    Buffer::iterator rfindSep(void) {
-        Buffer::iterator it = buffer.end();
+public:
 
-        // Skip trailing '\0'
-        assert(it != buffer.begin());
-        --it;
-        assert(*it == '\0');
+    Buffer::iterator rfindSep(bool skipTrailing = true) {
+        Buffer::iterator it = end();
 
         // Skip trailing separators
-        while (it != buffer.begin()) {
-            --it;
-            if (isSep(*it)) {
-                // Halt if find the root
-                if (it == buffer.begin()) {
-                    return it;
+        if (skipTrailing) {
+            while (it != buffer.begin()) {
+                --it;
+                if (isSep(*it)) {
+                    // Halt if find the root
+                    if (it == buffer.begin()) {
+                        return it;
+                    }
+                } else {
+                    break;
                 }
-            } else {
-                break;
             }
         }
 
@@ -159,11 +158,8 @@ protected:
             }
         }
 
-        return buffer.end();
+        return end();
     }
-
-
-public:
 
     /*
      * Constructors
@@ -309,6 +305,11 @@ public:
         insert(end(), other);
     }
 
+    template <class InputIterator>
+    void erase(InputIterator first, InputIterator last) {
+        buffer.erase(first, last);
+    }
+
     char *buf(size_t size) {
         buffer.resize(size);
         return &buffer[0];
@@ -343,7 +344,7 @@ public:
      */
     void trimDirectory(void) {
         iterator sep = rfindSep();
-        if (sep != buffer.end()) {
+        if (sep != end()) {
             buffer.erase(buffer.begin(), sep + 1);
         }
     }
@@ -358,7 +359,7 @@ public:
         iterator sep = rfindSep();
 
         // No separator found, so return '.'
-        if (sep == buffer.end()) {
+        if (sep == end()) {
             buffer.resize(2);
             buffer[0] = '.';
             buffer[1] = 0;
@@ -392,6 +393,8 @@ public:
 
 String getProcessName();
 String getCurrentDir();
+
+bool createDirectory(const String &path);
 
 bool copyFile(const String &srcFileName, const String &dstFileName, bool override = true);
 
