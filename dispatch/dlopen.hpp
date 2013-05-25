@@ -38,7 +38,8 @@
 /*
  * Invoke the true dlopen() function.
  */
-static void *_dlopen(const char *filename, int flag)
+static inline void *
+_dlopen(const char *filename, int flag)
 {
     typedef void * (*PFN_DLOPEN)(const char *, int);
     static PFN_DLOPEN dlopen_ptr = NULL;
