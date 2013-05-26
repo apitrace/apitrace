@@ -152,6 +152,14 @@ public:
         writer.writeInt(node->value);
     }
 
+    void visit(Repr *r) {
+        if (symbolic) {
+            _visit(r->humanValue);
+        } else {
+            _visit(r->machineValue);
+        }
+    }
+
     void visit(Call *call) {
         writer.beginTuple();
 
@@ -247,7 +255,6 @@ command(int argc, char *argv[])
         trace::Parser parser;
 
         if (!parser.open(argv[i])) {
-            std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
         }
 

@@ -71,23 +71,26 @@ protected:
         // Offset in the file of where signature was defined.  It is used when
         // reparsing to determine whether the signature definition is to be
         // expected next or not.
-        File::Offset offset;
+        File::Offset fileOffset;
     };
 
     typedef SigState<FunctionSigFlags> FunctionSigState;
     typedef SigState<StructSig> StructSigState;
     typedef SigState<EnumSig> EnumSigState;
     typedef SigState<BitmaskSig> BitmaskSigState;
+    typedef SigState<StackFrame> StackFrameState;
 
     typedef std::vector<FunctionSigState *> FunctionMap;
     typedef std::vector<StructSigState *> StructMap;
     typedef std::vector<EnumSigState *> EnumMap;
     typedef std::vector<BitmaskSigState *> BitmaskMap;
+    typedef std::vector<StackFrameState *> StackFrameMap;
 
     FunctionMap functions;
     StructMap structs;
     EnumMap enums;
     BitmaskMap bitmasks;
+    StackFrameMap frames;
 
     FunctionSig *glGetErrorSig;
 
@@ -146,6 +149,9 @@ protected:
     Call *parse_leave(Mode mode);
 
     bool parse_call_details(Call *call, Mode mode);
+
+    bool parse_call_backtrace(Call *call, Mode mode);
+    StackFrame * parse_backtrace_frame(Mode mode);
 
     void adjust_call_flags(Call *call);
 

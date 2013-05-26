@@ -247,7 +247,7 @@ class DeclParser:
 
         ret = self.parse_type()
 
-        if self.match('__stdcall', 'WINAPI'):
+        if self.match('__stdcall', 'WINAPI', 'STDMETHODCALLTYPE'):
             self.consume()
             creator = 'Std' + creator
 

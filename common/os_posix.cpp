@@ -112,6 +112,12 @@ getCurrentDir(void)
 }
 
 bool
+createDirectory(const String &path)
+{
+    return mkdir(path, 0777) == 0;
+}
+
+bool
 String::exists(void) const
 {
     struct stat st;
@@ -134,7 +140,11 @@ int execute(char * const * args)
     if (pid == 0) {
         // child
         execvp(args[0], args);
-        fprintf(stderr, "error: failed to execute %s\n", args[0]);
+        fprintf(stderr, "error: failed to execute:");
+        for (unsigned i = 0; args[i]; ++i) {
+            fprintf(stderr, " %s", args[i]);
+        }
+        fprintf(stderr, "\n");
         exit(-1);
     } else {
         // parent
@@ -169,7 +179,16 @@ log(const char *format, ...)
 #ifdef ANDROID
     __android_log_vprint(ANDROID_LOG_DEBUG, "apitrace", format, ap);
 #else
-    vfprintf(stderr, format, ap);
+    static FILE *log = NULL;
+    if (!log) {
+        // Duplicate stderr file descriptor, to prevent applications from
+        // redirecting our debug messages to somewhere else.
+        //
+        // Another alternative would be to log to /dev/tty when available.
+        log = fdopen(dup(STDERR_FILENO), "at");
+    }
+    vfprintf(log, format, ap);
+    fflush(log);
 #endif
     va_end(ap);
     logging = false;
@@ -182,7 +201,7 @@ long long timeFrequency = 0LL;
 void
 abort(void)
 {
-    exit(0);
+    _exit(1);
 }
 
 

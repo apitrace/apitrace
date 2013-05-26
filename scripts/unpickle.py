@@ -218,25 +218,42 @@ class Unpickler:
 
 class Counter(Unpickler):
 
-    def __init__(self, stream, quiet):
+    def __init__(self, stream, verbose = False):
         Unpickler.__init__(self, stream)
-        self.quiet = quiet
-        self.calls = 0
+        self.verbose = verbose
+        self.numCalls = 0
+        self.functionFrequencies = {}
+
+    def parse(self):
+        Unpickler.parse(self)
+
+        functionFrequencies = self.functionFrequencies.items()
+        functionFrequencies.sort(lambda (name1, freq1), (name2, freq2): cmp(freq1, freq2))
+        for name, frequency in functionFrequencies:
+            sys.stdout.write('%8u %s\n' % (frequency, name))
 
     def handleCall(self, call):
-        if not self.quiet:
+        if self.verbose:
             sys.stdout.write(str(call))
             sys.stdout.write('\n')
-        self.calls += 1
+        self.numCalls += 1
+        try:
+            self.functionFrequencies[call.functionName] += 1
+        except KeyError:
+            self.functionFrequencies[call.functionName] = 1
 
 
 def main():
     optparser = optparse.OptionParser(
-        usage="\n\tapitrace pickle trace. %prog [options]")
+        usage="\n\tapitrace pickle <trace> | %prog [options]")
     optparser.add_option(
-        '-q', '--quiet',
-        action="store_true", dest="quiet", default=False,
-        help="don't dump calls to stdout")
+        '-p', '--profile',
+        action="store_true", dest="profile", default=False,
+        help="profile call parsing")
+    optparser.add_option(
+        '-v', '--verbose',
+        action="store_true", dest="verbose", default=False,
+        help="dump calls to stdout")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
 
@@ -253,11 +270,13 @@ def main():
         msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
 
     startTime = time.time()
-    parser = Counter(sys.stdin, options.quiet)
+    parser = Counter(sys.stdin, options.verbose)
     parser.parse()
     stopTime = time.time()
     duration = stopTime - startTime
-    sys.stderr.write('%u calls, %.03f secs, %u calls/sec\n' % (parser.calls, duration, parser.calls/duration))
+
+    if options.profile:
+        sys.stderr.write('Processed %u calls in %.03f secs, at %u calls/sec\n' % (parser.numCalls, duration, parser.numCalls/duration))
 
 
 if __name__ == '__main__':

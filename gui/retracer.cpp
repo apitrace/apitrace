@@ -3,7 +3,9 @@
 #include "apitracecall.h"
 #include "thumbnail.h"
 
-#include "image.hpp"
+#include "image/image.hpp"
+
+#include "trace_profiler.hpp"
 
 #include <QDebug>
 #include <QVariant>
@@ -129,22 +131,12 @@ Retracer::Retracer(QObject *parent)
       m_benchmarking(false),
       m_doubleBuffered(true),
       m_captureState(false),
-      m_captureCall(0)
+      m_captureCall(0),
+      m_profileGpu(false),
+      m_profileCpu(false),
+      m_profilePixels(false)
 {
     qRegisterMetaType<QList<ApiTraceError> >();
-
-#ifdef Q_OS_WIN
-    QString format = QLatin1String("%1;");
-#else
-    QString format = QLatin1String("%1:");
-#endif
-    QString buildPath = format.arg(APITRACE_BINARY_DIR);
-    m_processEnvironment = QProcessEnvironment::systemEnvironment();
-    m_processEnvironment.insert("PATH", buildPath +
-                                m_processEnvironment.value("PATH"));
-
-    qputenv("PATH",
-            m_processEnvironment.value("PATH").toLatin1());
 }
 
 QString Retracer::fileName() const
@@ -155,6 +147,16 @@ QString Retracer::fileName() const
 void Retracer::setFileName(const QString &name)
 {
     m_fileName = name;
+}
+
+QString Retracer::remoteTarget() const
+{
+    return m_remoteTarget;
+}
+
+void Retracer::setRemoteTarget(const QString &host)
+{
+    m_remoteTarget = host;
 }
 
 void Retracer::setAPI(trace::API api)
@@ -180,6 +182,33 @@ bool Retracer::isDoubleBuffered() const
 void Retracer::setDoubleBuffered(bool db)
 {
     m_doubleBuffered = db;
+}
+
+bool Retracer::isProfilingGpu() const
+{
+    return m_profileGpu;
+}
+
+bool Retracer::isProfilingCpu() const
+{
+    return m_profileCpu;
+}
+
+bool Retracer::isProfilingPixels() const
+{
+    return m_profilePixels;
+}
+
+bool Retracer::isProfiling() const
+{
+    return m_profileGpu || m_profileCpu || m_profilePixels;
+}
+
+void Retracer::setProfiling(bool gpu, bool cpu, bool pixels)
+{
+    m_profileGpu = gpu;
+    m_profileCpu = cpu;
+    m_profilePixels = pixels;
 }
 
 void Retracer::setCaptureAtCallNumber(qlonglong num)
@@ -212,7 +241,6 @@ void Retracer::setCaptureThumbnails(bool enable)
     m_captureThumbnails = enable;
 }
 
-
 /**
  * Starting point for the retracing thread.
  *
@@ -240,9 +268,7 @@ void Retracer::run()
     case trace::API_D3D7:
     case trace::API_D3D8:
     case trace::API_D3D9:
-    case trace::API_D3D10:
-    case trace::API_D3D10_1:
-    case trace::API_D3D11:
+    case trace::API_DXGI:
 #ifdef Q_OS_WIN
         prog = QLatin1String("d3dretrace");
 #else
@@ -255,23 +281,47 @@ void Retracer::run()
         return;
     }
 
-    if (m_doubleBuffered) {
-        arguments << QLatin1String("-db");
-    } else {
-        arguments << QLatin1String("-sb");
-    }
-
     if (m_captureState) {
         arguments << QLatin1String("-D");
         arguments << QString::number(m_captureCall);
     } else if (m_captureThumbnails) {
         arguments << QLatin1String("-s"); // emit snapshots
         arguments << QLatin1String("-"); // emit to stdout
-    } else if (m_benchmarking) {
-        arguments << QLatin1String("-b");
+    } else if (isProfiling()) {
+        if (m_profileGpu) {
+            arguments << QLatin1String("--pgpu");
+        }
+
+        if (m_profileCpu) {
+            arguments << QLatin1String("--pcpu");
+        }
+
+        if (m_profilePixels) {
+            arguments << QLatin1String("--ppd");
+        }
+    } else {
+        if (m_doubleBuffered) {
+            arguments << QLatin1String("--db");
+        } else {
+            arguments << QLatin1String("--sb");
+        }
+
+        if (m_benchmarking) {
+            arguments << QLatin1String("-b");
+        }
     }
 
     arguments << m_fileName;
+
+    /*
+     * Support remote execution on a separate target.
+     */
+
+    if (m_remoteTarget.length() != 0) {
+        arguments.prepend(prog);
+        arguments.prepend(m_remoteTarget);
+        prog = QLatin1String("ssh");
+    }
 
     /*
      * Start the process.
@@ -291,6 +341,7 @@ void Retracer::run()
 
     QList<QImage> thumbnails;
     QVariantMap parsedJson;
+    trace::Profile* profile = NULL;
 
     process.setReadChannel(QProcess::StandardOutput);
     if (process.waitForReadyRead(-1)) {
@@ -307,6 +358,9 @@ void Retracer::run()
 
             bool ok = false;
             QJson::Parser jsonParser;
+
+            // Allow Nan/Infinity
+            jsonParser.allowSpecialNumbers(true);
 #if 0
             parsedJson = jsonParser.parse(&io, &ok).toMap();
 #else
@@ -362,6 +416,7 @@ void Retracer::run()
                     unsigned char *scanLine = snapshot.scanLine(y);
                     qint64 readBytes = io.read((char *) scanLine, rowBytes);
                     Q_ASSERT(readBytes == rowBytes);
+                    (void)readBytes;
                 }
 
                 QImage thumb = thumbnail(snapshot);
@@ -369,7 +424,20 @@ void Retracer::run()
             }
 
             Q_ASSERT(process.state() != QProcess::Running);
+        } else if (isProfiling()) {
+            profile = new trace::Profile();
 
+            while (!io.atEnd()) {
+                char line[256];
+                qint64 lineLength;
+
+                lineLength = io.readLine(line, 256);
+
+                if (lineLength == -1)
+                    break;
+
+                trace::Profiler::parseLine(line, profile);
+            }
         } else {
             QByteArray output;
             output = process.readAllStandardOutput();
@@ -406,6 +474,14 @@ void Retracer::run()
             error.type = regexp.cap(2);
             error.message = regexp.cap(3);
             errors.append(error);
+        } else if (!errors.isEmpty()) {
+            // Probably a multiligne message
+            ApiTraceError &previous = errors.last();
+            if (line.endsWith("\n")) {
+                line.chop(1);
+            }
+            previous.message.append('\n');
+            previous.message.append(line);
         }
     }
 
@@ -416,11 +492,14 @@ void Retracer::run()
     if (m_captureState) {
         ApiTraceState *state = new ApiTraceState(parsedJson);
         emit foundState(state);
-        msg = QLatin1String("State fetched.");
     }
 
     if (m_captureThumbnails && !thumbnails.isEmpty()) {
         emit foundThumbnails(thumbnails);
+    }
+
+    if (isProfiling() && profile) {
+        emit foundProfile(profile);
     }
 
     if (!errors.isEmpty()) {

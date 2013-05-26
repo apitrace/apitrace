@@ -1,5 +1,15 @@
 cmake_minimum_required (VERSION 2.8)
 
+
+# Use clang on MacOSX. gcc doesn't support __thread key, and Apple has
+# abandoned it for clang.  This must be done before the project is defined.
+# But DONT force clang if we are cross-compiling to Android.
+if (APPLE AND NOT ANDROID_NDK)
+    set (CMAKE_C_COMPILER "clang")
+    set (CMAKE_CXX_COMPILER "clang++")
+endif ()
+
+
 project (apitrace)
 
 
@@ -25,6 +35,19 @@ set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 ##############################################################################
 # Find dependencies
 
+# Check for compiler TLS support.  We don't use compiler TLS support on Windows
+# because, even if the compiler supports it, Windows XP does not support TLS on
+# DLLs.
+if (NOT WIN32)
+    include (CheckCXXSourceCompiles)
+    check_cxx_source_compiles("__thread int i; int main() { return 0; }" HAVE_COMPILER_TLS)
+    if (HAVE_COMPILER_TLS)
+        add_definitions (-DHAVE_COMPILER_TLS=__thread)
+    else ()
+        message (WARNING "C++ compiler does not support __thread keyword.")
+    endif ()
+endif ()
+
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set (CMAKE_USE_PYTHON_VERSION 2.7 2.6)
@@ -45,7 +68,6 @@ if (ENABLE_GUI)
         set (REQUIRE_GUI REQUIRED)
     endif ()
     find_package (Qt4 4.7 COMPONENTS QtCore QtGui QtWebKit ${REQUIRE_GUI})
-    find_package (QJSON ${REQUIRE_GUI})
 endif ()
 
 if (WIN32)
@@ -59,6 +81,10 @@ else ()
     if (X11_FOUND)
         include_directories (${X11_INCLUDE_DIR})
         add_definitions (-DHAVE_X11)
+    else ()
+        # Print a clear message when X11 is not found
+        include (FindPackageMessage)
+        find_package_message (X11 "Could not find X11" "")
     endif ()
 endif ()
 
@@ -70,7 +96,7 @@ include (CheckCXXCompilerFlag)
 
 if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
-    add_definitions (-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+    add_definitions (-D_WIN32_WINNT=0x0601 -DWINVER=0x0601)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
@@ -79,8 +105,8 @@ else (WIN32)
 endif ()
 
 if (MSVC)
-    # C99 includes for msvc
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msvc)
+    # C99 includes for MSVC
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msinttypes)
 
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
@@ -117,6 +143,19 @@ else ()
     add_definitions (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+
+    # Use GDB extensions if available
+    if (CMAKE_COMPILER_IS_GNUC)
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb -O0")
+        set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -ggdb")
+    endif ()
+    if (CMAKE_COMPILER_IS_GNUCXX)
+        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -O0")
+        set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -ggdb")
+    endif ()
+
+    # Be nice to Eclipse
+    add_definitions (-fmessage-length=0)
 endif ()
 
 if (MINGW)
@@ -135,72 +174,15 @@ if (MINGW)
     endif ()
 endif ()
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    # For RTLD_DEFAULT and RTLD_NEXT
+    add_definitions (-D_GNU_SOURCE)
+endif ()
+
 
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-
-
-##############################################################################
-# Bundled dependencies
-#
-# We always use the bundled zlib, libpng, and snappy sources:
-# - on Windows to make it easy to deploy the wrappers DLLs
-# - on unices to prevent symbol collisions when tracing applications that link
-# against other versions of these libraries
-
-set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
-set (ZLIB_LIBRARIES z_bundled)
-add_subdirectory (thirdparty/zlib EXCLUDE_FROM_ALL)
-
-include_directories (${ZLIB_INCLUDE_DIRS})
-
-set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
-set (SNAPPY_LIBRARIES snappy_bundled)
-add_subdirectory (thirdparty/snappy EXCLUDE_FROM_ALL)
-
-include_directories (${SNAPPY_INCLUDE_DIRS})
-
-set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
-set (PNG_DEFINITIONS "")
-set (PNG_LIBRARIES png_bundled)
-
-add_subdirectory (thirdparty/libpng EXCLUDE_FROM_ALL)
-include_directories (${PNG_INCLUDE_DIR})
-add_definitions (${PNG_DEFINITIONS})
-
-if (MSVC)
-    add_subdirectory (thirdparty/getopt EXCLUDE_FROM_ALL)
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/getopt)
-    set (GETOPT_LIBRARIES getopt_bundled)
-endif ()
-
-if (WIN32)
-    add_subdirectory (thirdparty/less)
-endif ()
-
-# The Qt website provides binaries for Windows and MacOSX, and they are
-# automatically found by cmake without any manual intervention.  The situation
-# for QJSON is substantially different: there are no binaries for QJSON
-# available, and there is no standard installation directory that is detected
-# by cmake.
-#
-# By bundling the QJSON source, we make it much more easier to build the GUI on
-# Windows and MacOSX.  But we only use the bundled sources when ENABLE_GUI is
-# AUTO.
-if (QT4_FOUND AND NOT QJSON_FOUND AND (ENABLE_GUI STREQUAL "AUTO"))
-    add_subdirectory (thirdparty/qjson EXCLUDE_FROM_ALL)
-    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
-    set (QJSON_LIBRARY_DIRS)
-    set (QJSON_LIBRARIES qjson_bundled)
-    set (QJSON_FOUND TRUE)
-endif ()
-
-# We use bundled headers for all Khronos APIs, to guarantee support for both
-# OpenGL and OpenGL ES at build time, because the OpenGL and OpenGL ES 1 APIs
-# are so intertwined that conditional compilation extremely difficult. This
-# also avoids missing/inconsistent declarations in system headers.
-include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
 
 ##############################################################################
@@ -213,6 +195,11 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    CHECK_INCLUDE_FILES(proc/readproc.h READPROC_H_FOUND)
+    if (READPROC_H_FOUND)
+        add_definitions (-DHAVE_READPROC_H)
+        find_library (proc_LIBRARY NAMES proc procps)
+    endif ()
 endif()
 
 if (WIN32 OR APPLE)
@@ -234,17 +221,62 @@ endif ()
 set (SCRIPTS_INSTALL_DIR ${LIB_INSTALL_DIR}/scripts)
 set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 
-# Expose the binary/install directories to source
+
+##############################################################################
+# Bundled dependencies
 #
-# TODO: Use the same directory layout, for both build and install directories,
-# so that binaries can find each other using just relative paths.
-#
-add_definitions(
-    -DAPITRACE_BINARY_DIR="${CMAKE_BINARY_DIR}"
-    -DAPITRACE_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
-    -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
-    -DAPITRACE_WRAPPERS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
-)
+# We always use the bundled zlib, libpng, and snappy sources:
+# - on Windows to make it easy to deploy the wrappers DLLs
+# - on unices to prevent symbol collisions when tracing applications that link
+# against other versions of these libraries
+
+set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
+set (ZLIB_LIBRARIES z_bundled)
+add_subdirectory (thirdparty/zlib)
+
+include_directories (${ZLIB_INCLUDE_DIRS})
+
+set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
+set (SNAPPY_LIBRARIES snappy_bundled)
+add_subdirectory (thirdparty/snappy)
+
+include_directories (${SNAPPY_INCLUDE_DIRS})
+
+set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
+set (PNG_DEFINITIONS "")
+set (PNG_LIBRARIES png_bundled)
+
+add_subdirectory (thirdparty/libpng)
+
+if (MSVC)
+    add_subdirectory (thirdparty/getopt)
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/getopt)
+    set (GETOPT_LIBRARIES getopt_bundled)
+endif ()
+
+if (WIN32)
+    add_subdirectory (thirdparty/less)
+    add_subdirectory (thirdparty/directxtex)
+endif ()
+
+# Always use bundled QJSon.
+# - The packaged versions QJson are very old, and do not support NaN/Infinity.
+# - To make it easier to build the GUI on Windows and MacOSX, as there are no
+# binaries at all.
+if (QT4_FOUND)
+    add_definitions (-DQJSON_EXPORT=)
+    add_subdirectory (thirdparty/qjson)
+    set (QJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
+    set (QJSON_LIBRARY_DIRS)
+    set (QJSON_LIBRARIES qjson_bundled)
+    set (QJSON_FOUND TRUE)
+endif ()
+
+# We use bundled headers for all Khronos APIs, to guarantee support for both
+# OpenGL and OpenGL ES at build time, because the OpenGL and OpenGL ES 1 APIs
+# are so intertwined that conditional compilation extremely difficult. This
+# also avoids missing/inconsistent declarations in system headers.
+include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
 
 ##############################################################################
@@ -277,23 +309,21 @@ add_library (common STATIC
     common/trace_writer_local.cpp
     common/trace_writer_model.cpp
     common/trace_loader.cpp
-    common/trace_resource.cpp
-    common/trace_tools_trace.cpp
-    common/image.cpp
-    common/image_bmp.cpp
-    common/image_pnm.cpp
-    common/image_png.cpp
+    common/trace_profiler.cpp
+    common/trace_option.cpp
     common/${os}
+    common/trace_backtrace.cpp
 )
 
 set_target_properties (common PROPERTIES
-    COMPILE_DEFINITIONS APITRACE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
     # Ensure it can be statically linked in shared libraries
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
 
 if (ANDROID)
-    target_link_libraries (common log)
+    target_link_libraries (common
+        log
+    )
 endif ()
 
 
@@ -301,7 +331,9 @@ endif ()
 # Sub-directories
 
 add_subdirectory (dispatch)
+add_subdirectory (helpers)
 add_subdirectory (wrappers)
+add_subdirectory (image)
 add_subdirectory (retrace)
 
 
@@ -309,7 +341,10 @@ add_subdirectory (retrace)
 # CLI
 
 if (ENABLE_CLI)
-    add_subdirectory(cli)
+    if (WIN32)
+        add_subdirectory (inject)
+    endif ()
+    add_subdirectory (cli)
 endif ()
 
 ##############################################################################
@@ -317,11 +352,22 @@ endif ()
 
 install (
     PROGRAMS
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/tracediff.py
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/jsondiff.py
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/snapdiff.py
+        scripts/highlight.py
+        scripts/jsondiff.py
+        scripts/profileshader.py
+        scripts/retracediff.py
+        scripts/snapdiff.py
+        scripts/tracecheck.py
+        scripts/tracediff.py
+        scripts/unpickle.py
     DESTINATION ${SCRIPTS_INSTALL_DIR}
 )
+if (WIN32)
+    install (
+        PROGRAMS scripts/convert.py
+        DESTINATION ${SCRIPTS_INSTALL_DIR}
+    )
+endif ()
 
 ##############################################################################
 # GUI
@@ -337,13 +383,24 @@ endif ()
 install (
     FILES
         BUGS.markdown
-        LICENSE
         NEWS.markdown
         README.markdown
     DESTINATION ${DOC_INSTALL_DIR}
 )
+install (
+    FILES LICENSE
+    DESTINATION ${DOC_INSTALL_DIR}
+    RENAME LICENSE.txt
+)
+if (MSVC)
+    install (
+        FILES thirdparty/msinttypes/LICENSE
+        DESTINATION ${DOC_INSTALL_DIR}
+        RENAME LICENSE-msinttypes.txt
+    )
+endif ()
 
-set (CPACK_PACKAGE_VERSION_MAJOR "3")
+set (CPACK_PACKAGE_VERSION_MAJOR "4")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
 
 # Use current date in YYYYMMDD format as patch number 

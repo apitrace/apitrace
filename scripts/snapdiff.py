@@ -42,7 +42,7 @@ from PIL import ImageEnhance
 from PIL import ImageFilter
 
 
-thumb_size = 320, 320
+thumbSize = 320
 
 gaussian_kernel = ImageFilter.Kernel((3, 3), [1, 2, 1, 2, 4, 2, 1, 2, 1], 16)
 
@@ -71,6 +71,9 @@ class Comparer:
         return self.ref_im.size != self.src_im.size
 
     def write_diff(self, diff_image, fuzz = 0.05):
+        if self.size_mismatch():
+            return
+
         # make a difference image similar to ImageMagick's compare utility
         mask = ImageEnhance.Brightness(self.diff).enhance(1.0/fuzz)
         mask = mask.convert('L')
@@ -119,7 +122,18 @@ def surface(html, image):
            and (not os.path.exists(thumb) \
                 or os.path.getmtime(thumb) < os.path.getmtime(image)):
             im = Image.open(image)
-            im.thumbnail(thumb_size)
+            imageWidth, imageHeight = im.size
+            if imageWidth <= thumbSize and imageHeight <= thumbSize:
+                if imageWidth >= imageHeight:
+                    imageHeight = imageHeight*thumbSize/imageWidth
+                    imageWidth = thumbSize
+                else:
+                    imageWidth = imageWidth*thumbSize/imageHeight
+                    imageHeight = thumbSize
+                html.write('        <td><img src="%s" width="%u" height="%u"/></td>\n' % (image, imageWidth, imageHeight))
+                return
+
+            im.thumbnail((thumbSize, thumbSize))
             im.save(thumb)
     else:
         thumb = image

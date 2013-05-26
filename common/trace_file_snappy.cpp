@@ -63,8 +63,6 @@
 
 #define SNAPPY_CHUNK_SIZE (1 * 1024 * 1024)
 
-#define SNAPPY_BYTE1 'a'
-#define SNAPPY_BYTE2 't'
 
 
 using namespace trace;
@@ -405,19 +403,4 @@ int SnappyFile::rawPercentRead()
 
 File* File::createSnappy(void) {
     return new SnappyFile;
-}
-
-bool File::isSnappyCompressed(const std::string &filename)
-{
-    std::fstream stream(filename.c_str(),
-                        std::fstream::binary | std::fstream::in);
-    if (!stream.is_open())
-        return false;
-
-    unsigned char byte1, byte2;
-    stream >> byte1;
-    stream >> byte2;
-    stream.close();
-
-    return (byte1 == SNAPPY_BYTE1 && byte2 == SNAPPY_BYTE2);
 }

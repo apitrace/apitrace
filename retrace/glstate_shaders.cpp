@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <assert.h>
 #include <string.h>
 
 #include <algorithm>
@@ -245,16 +246,16 @@ dumpUniformValues(JSONWriter &json, GLenum type, const void *values, GLint matri
 
             switch (elemType) {
             case GL_FLOAT:
-                json.writeNumber(*u.fvalue);
+                json.writeFloat(*u.fvalue);
                 break;
             case GL_DOUBLE:
-                json.writeNumber(*u.dvalue);
+                json.writeFloat(*u.dvalue);
                 break;
             case GL_INT:
-                json.writeNumber(*u.ivalue);
+                json.writeInt(*u.ivalue);
                 break;
             case GL_UNSIGNED_INT:
-                json.writeNumber(*u.uivalue);
+                json.writeInt(*u.uivalue);
                 break;
             case GL_BOOL:
                 json.writeBool(*u.uivalue);
@@ -625,10 +626,10 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
 
         json.beginMember(name);
         json.beginArray();
-        json.writeNumber(params[0]);
-        json.writeNumber(params[1]);
-        json.writeNumber(params[2]);
-        json.writeNumber(params[3]);
+        json.writeFloat(params[0]);
+        json.writeFloat(params[1]);
+        json.writeFloat(params[2]);
+        json.writeFloat(params[3]);
         json.endArray();
         json.endMember();
     }
@@ -648,10 +649,10 @@ dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
 
         json.beginMember(name);
         json.beginArray();
-        json.writeNumber(params[0]);
-        json.writeNumber(params[1]);
-        json.writeNumber(params[2]);
-        json.writeNumber(params[3]);
+        json.writeFloat(params[0]);
+        json.writeFloat(params[1]);
+        json.writeFloat(params[2]);
+        json.writeFloat(params[3]);
         json.endArray();
         json.endMember();
     }

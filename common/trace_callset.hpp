@@ -48,6 +48,7 @@
 #define _TRACE_CALLSET_HPP_
 
 
+#include <limits>
 #include <list>
 
 #include "trace_model.hpp"
@@ -106,12 +107,15 @@ namespace trace {
     // A collection of call ranges
     class CallSet
     {
+    private:
+        CallRange limits;
+
     public:
         // TODO: use binary tree to speed up lookups
         typedef std::list< CallRange > RangeList;
         RangeList ranges;
 
-        CallSet() {}
+        CallSet(): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()) {}
 
         CallSet(CallFlags freq);
 
@@ -127,6 +131,16 @@ namespace trace {
         addRange(const CallRange & range) {
             if (range.start <= range.stop &&
                 range.freq != FREQUENCY_NONE) {
+
+                if (empty()) {
+                    limits.start = range.start;
+                    limits.stop = range.stop;
+                } else {
+                    if (range.start < limits.start)
+                        limits.start = range.start;
+                    if (range.stop > limits.stop)
+                        limits.stop = range.stop;
+                }
 
                 RangeList::iterator it = ranges.begin();
                 while (it != ranges.end() && it->start < range.start) {
@@ -154,6 +168,14 @@ namespace trace {
         inline bool
         contains(const trace::Call &call) {
             return contains(call.no, call.flags);
+        }
+
+        CallNo getFirst() {
+            return limits.start;
+        }
+
+        CallNo getLast() {
+            return limits.stop;
         }
     };
 

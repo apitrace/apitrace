@@ -66,29 +66,56 @@ Context::Context(void) {
 
 void
 Context::resetPixelPackState(void) {
+    // Start with default state
+    pack_alignment = 4;
+    pack_image_height = 0;
+    pack_lsb_first = GL_FALSE;
+    pack_row_length = 0;
+    pack_skip_images = 0;
+    pack_skip_pixels = 0;
+    pack_skip_rows = 0;
+    pack_swap_bytes = GL_FALSE;
+    pixel_pack_buffer_binding = 0;
+
+    // Get current state
+    glGetIntegerv(GL_PACK_ALIGNMENT, &pack_alignment);
     if (!ES) {
-        glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        glPixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
+        glGetIntegerv(GL_PACK_IMAGE_HEIGHT, &pack_image_height);
+        glGetIntegerv(GL_PACK_LSB_FIRST, &pack_lsb_first);
+        glGetIntegerv(GL_PACK_ROW_LENGTH, &pack_row_length);
+        glGetIntegerv(GL_PACK_SKIP_IMAGES, &pack_skip_images);
+        glGetIntegerv(GL_PACK_SKIP_PIXELS, &pack_skip_pixels);
+        glGetIntegerv(GL_PACK_SKIP_ROWS, &pack_skip_rows);
+        glGetIntegerv(GL_PACK_SWAP_BYTES, &pack_swap_bytes);
+        glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &pixel_pack_buffer_binding);
+    }
+
+    // Reset state for compact images
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    if (!ES) {
+        glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
         glPixelStorei(GL_PACK_LSB_FIRST, GL_FALSE);
         glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-        glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
-        glPixelStorei(GL_PACK_SKIP_ROWS, 0);
-        glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
         glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
-    } else {
-        packAlignment = 4;
-        glGetIntegerv(GL_PACK_ALIGNMENT, &packAlignment);
+        glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
+        glPixelStorei(GL_PACK_SKIP_ROWS, 0);
+        glPixelStorei(GL_PACK_SWAP_BYTES, GL_FALSE);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     }
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
 }
 
 void
 Context::restorePixelPackState(void) {
+    glPixelStorei(GL_PACK_ALIGNMENT, pack_alignment);
     if (!ES) {
-        glPopClientAttrib();
-    } else {
-        glPixelStorei(GL_PACK_ALIGNMENT, packAlignment);
+        glPixelStorei(GL_PACK_IMAGE_HEIGHT, pack_image_height);
+        glPixelStorei(GL_PACK_LSB_FIRST, pack_lsb_first);
+        glPixelStorei(GL_PACK_ROW_LENGTH, pack_row_length);
+        glPixelStorei(GL_PACK_SKIP_IMAGES, pack_skip_images);
+        glPixelStorei(GL_PACK_SKIP_PIXELS, pack_skip_pixels);
+        glPixelStorei(GL_PACK_SKIP_ROWS, pack_skip_rows);
+        glPixelStorei(GL_PACK_SWAP_BYTES, pack_swap_bytes);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, pixel_pack_buffer_binding);
     }
 }
 

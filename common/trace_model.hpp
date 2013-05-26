@@ -348,6 +348,29 @@ public:
     void visit(Visitor &visitor);
 };
 
+struct RawStackFrame {
+    Id id;
+    const char * module;
+    const char * function;
+    const char * filename;
+    int linenumber;
+    long long offset;
+    RawStackFrame() :
+        module(0),
+        function(0),
+        filename(0),
+        linenumber(-1),
+        offset(-1)
+    {
+    }
+};
+
+class StackFrame : public RawStackFrame {
+public:
+    ~StackFrame();
+};
+
+typedef std::vector<StackFrame *> Backtrace;
 
 class Visitor
 {
@@ -366,7 +389,8 @@ public:
     virtual void visit(Blob *);
     virtual void visit(Pointer *);
     virtual void visit(Repr *);
-
+    virtual void visit(Backtrace *);
+    virtual void visit(StackFrame *);
 protected:
     inline void _visit(Value *value) {
         if (value) { 
@@ -468,13 +492,15 @@ public:
     Value *ret;
 
     CallFlags flags;
+    Backtrace* backtrace;
 
-    Call(FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
+    Call(const FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
         thread_id(_thread_id), 
         sig(_sig), 
         args(_sig->num_args), 
         ret(0),
-        flags(_flags) {
+        flags(_flags),
+        backtrace(0) {
     }
 
     ~Call();

@@ -48,27 +48,60 @@ else:
     NULL = open('/dev/null', 'wt')
 
 
-class Setup:
+class RetraceRun:
 
-    def __init__(self, args, env=None):
+    def __init__(self, process):
+        self.process = process
+
+    def nextSnapshot(self):
+        image, comment = read_pnm(self.process.stdout)
+        if image is None:
+            return None, None
+
+        callNo = int(comment.strip())
+
+        return image, callNo
+
+    def terminate(self):
+        try:
+            self.process.terminate()
+        except OSError:
+            # Avoid http://bugs.python.org/issue14252
+            pass
+
+
+class Retracer:
+
+    def __init__(self, retraceExe, args, env=None):
+        self.retraceExe = retraceExe
         self.args = args
         self.env = env
 
-    def _retrace(self, args):
+    def _retrace(self, args, stdout=subprocess.PIPE):
         cmd = [
-            options.retrace,
+            self.retraceExe,
         ] + args + self.args
+        if self.env:
+            for name, value in self.env.iteritems():
+                sys.stderr.write('%s=%s ' % (name, value))
+        sys.stderr.write(' '.join(cmd) + '\n')
         try:
-            return subprocess.Popen(cmd, env=self.env, stdout=subprocess.PIPE, stderr=NULL)
+            return subprocess.Popen(cmd, env=self.env, stdout=stdout, stderr=NULL)
         except OSError, ex:
             sys.stderr.write('error: failed to execute %s: %s\n' % (cmd[0], ex.strerror))
             sys.exit(1)
 
-    def retrace(self):
-        return self._retrace([
+    def retrace(self, args):
+        p = self._retrace([])
+        p.wait()
+        return p.returncode
+
+    def snapshot(self, call_nos):
+        process = self._retrace([
             '-s', '-',
-            '-S', options.snapshot_frequency,
+            '-S', call_nos,
         ])
+        return RetraceRun(process)
 
     def dump_state(self, call_no):
         '''Get the state dump at the specified call no.'''
@@ -98,7 +131,15 @@ def read_pnm(stream):
     magic = stream.readline()
     if not magic:
         return None, None
-    assert magic.rstrip() == 'P6'
+    magic = magic.rstrip()
+    if magic == 'P5':
+        channels = 1
+        mode = 'L'
+    elif magic == 'P6':
+        channels = 3
+        mode = 'RGB'
+    else:
+        raise Exception('Unsupported magic `%s`' % magic)
     comment = ''
     line = stream.readline()
     while line.startswith('#'):
@@ -107,13 +148,16 @@ def read_pnm(stream):
     width, height = map(int, line.strip().split())
     maximum = int(stream.readline().strip())
     assert maximum == 255
-    data = stream.read(height * width * 3)
-    image = Image.frombuffer('RGB', (width, height), data, 'raw', 'RGB', 0, 1)
+    data = stream.read(height * width * channels)
+    image = Image.frombuffer(mode, (width, height), data, 'raw', mode, 0, 1)
     return image, comment
 
 
 def parse_env(optparser, entries):
     '''Translate a list of NAME=VALUE entries into an environment dictionary.'''
+
+    if not entries:
+        return None
 
     env = os.environ.copy()
     for entry in entries:
@@ -139,6 +183,22 @@ def main():
         '-r', '--retrace', metavar='PROGRAM',
         type='string', dest='retrace', default='glretrace',
         help='retrace command [default: %default]')
+    optparser.add_option(
+        '--ref-driver', metavar='DRIVER',
+        type='string', dest='ref_driver', default=None,
+        help='force reference driver')
+    optparser.add_option(
+        '--src-driver', metavar='DRIVER',
+        type='string', dest='src_driver', default=None,
+        help='force source driver')
+    optparser.add_option(
+        '--ref-arg', metavar='OPTION',
+        type='string', action='append', dest='ref_args', default=[],
+        help='pass argument to reference retrace')
+    optparser.add_option(
+        '--src-arg', metavar='OPTION',
+        type='string', action='append', dest='src_args', default=[],
+        help='pass argument to source retrace')
     optparser.add_option(
         '--ref-env', metavar='NAME=VALUE',
         type='string', action='append', dest='ref_env', default=[],
@@ -169,9 +229,14 @@ def main():
     src_env = parse_env(optparser, options.src_env)
     if not args:
         optparser.error("incorrect number of arguments")
+    
+    if options.ref_driver:
+        options.ref_args.insert(0, '--driver=' + options.ref_driver)
+    if options.src_driver:
+        options.src_args.insert(0, '--driver=' + options.src_driver)
 
-    ref_setup = Setup(args, ref_env)
-    src_setup = Setup(args, src_env)
+    refRetracer = Retracer(options.retrace, options.ref_args + args, ref_env)
+    srcRetracer = Retracer(options.retrace, options.src_args + args, src_env)
 
     if options.output:
         output = open(options.output, 'wt')
@@ -184,27 +249,26 @@ def main():
 
     last_bad = -1
     last_good = 0
-    ref_proc = ref_setup.retrace()
+    refRun = refRetracer.snapshot(options.snapshot_frequency)
     try:
-        src_proc = src_setup.retrace()
+        srcRun = srcRetracer.snapshot(options.snapshot_frequency)
         try:
             while True:
                 # Get the reference image
-                ref_image, ref_comment = read_pnm(ref_proc.stdout)
-                if ref_image is None:
+                refImage, refCallNo = refRun.nextSnapshot()
+                if refImage is None:
                     break
 
                 # Get the source image
-                src_image, src_comment = read_pnm(src_proc.stdout)
-                if src_image is None:
+                srcImage, srcCallNo = srcRun.nextSnapshot()
+                if srcImage is None:
                     break
 
-                assert ref_comment == src_comment
-
-                call_no = int(ref_comment.strip())
+                assert refCallNo == srcCallNo
+                callNo = refCallNo
 
                 # Compare the two images
-                comparer = Comparer(ref_image, src_image)
+                comparer = Comparer(refImage, srcImage)
                 precision = comparer.precision()
 
                 mismatch = precision < options.threshold
@@ -212,30 +276,30 @@ def main():
                 if mismatch:
                     highligher.color(highligher.red)
                     highligher.bold()
-                highligher.write('%u\t%f\n' % (call_no, precision))
+                highligher.write('%u\t%f\n' % (callNo, precision))
                 if mismatch:
                     highligher.normal()
 
                 if mismatch:
                     if options.diff_prefix:
-                        prefix = os.path.join(options.diff_prefix, '%010u' % call_no)
+                        prefix = os.path.join(options.diff_prefix, '%010u' % callNo)
                         prefix_dir = os.path.dirname(prefix)
                         if not os.path.isdir(prefix_dir):
                             os.makedirs(prefix_dir)
-                        ref_image.save(prefix + '.ref.png')
-                        src_image.save(prefix + '.src.png')
+                        refImage.save(prefix + '.ref.png')
+                        srcImage.save(prefix + '.src.png')
                         comparer.write_diff(prefix + '.diff.png')
                     if last_bad < last_good:
-                        src_setup.diff_state(last_good, call_no, output)
-                    last_bad = call_no
+                        srcRetracer.diff_state(last_good, callNo, output)
+                    last_bad = callNo
                 else:
-                    last_good = call_no
+                    last_good = callNo
 
                 highligher.flush()
         finally:
-            src_proc.terminate()
+            srcRun.terminate()
     finally:
-        ref_proc.terminate()
+        refRun.terminate()
 
 
 if __name__ == '__main__':

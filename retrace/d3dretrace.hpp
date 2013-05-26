@@ -30,25 +30,66 @@
 #include <windows.h>
 
 #include "retrace.hpp"
-
-
-struct IDirect3DDevice9;
-
-
-extern const char *g_szD3D9DllName;
+#include "d3dstate.hpp"
 
 
 namespace d3dretrace {
 
 
-extern IDirect3DDevice9 *pLastDirect3DDevice9;
-
-
+extern const retrace::Entry d3d8_callbacks[];
 extern const retrace::Entry d3d9_callbacks[];
+extern const retrace::Entry dxgi_callbacks[];
+
+
+template< class Device >
+class D3DDumper : public retrace::Dumper {
+public:
+    Device *pLastDevice;
+
+    D3DDumper() :
+        pLastDevice(NULL)
+    {}
+
+    image::Image *
+    getSnapshot(void) {
+        if (!pLastDevice) {
+            return NULL;
+        }
+        return d3dstate::getRenderTargetImage(pLastDevice);
+    }
+
+    bool
+    dumpState(std::ostream &os) {
+        if (!pLastDevice) {
+            return false;
+        }
+        d3dstate::dumpDevice(os, pLastDevice);
+        return true;
+    }
+
+    inline void
+    bindDevice(Device *pDevice) {
+        pLastDevice = pDevice;
+        retrace::dumper = this;
+    }
+    
+    inline void
+    unbindDevice(Device *pDevice) {
+        if (pLastDevice == pDevice) {
+            pLastDevice = NULL;
+        }
+    }
+};
 
 
 HWND
 createWindow(int width, int height);
+
+void
+resizeWindow(HWND hWnd, int width, int height);
+
+bool
+processEvents(void);
 
 
 } /* namespace d3dretrace */

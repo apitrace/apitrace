@@ -48,9 +48,7 @@ enum API {
     API_D3D7,
     API_D3D8,
     API_D3D9,
-    API_D3D10,
-    API_D3D10_1,
-    API_D3D11,
+    API_DXGI, // D3D10.x, D3D11.x
 };
 
 

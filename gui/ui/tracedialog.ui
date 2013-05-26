@@ -47,7 +47,7 @@
      <item>
       <widget class="QPushButton" name="browseButton">
        <property name="text">
-        <string>Browse</string>
+        <string>Browse...</string>
        </property>
        <property name="flat">
         <bool>false</bool>

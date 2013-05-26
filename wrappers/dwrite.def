@@ -1,0 +1,4 @@
+LIBRARY "d2d1"
+
+EXPORTS
+    DWriteCreateFactory

@@ -44,13 +44,23 @@ struct Context
 
     Context(void);
 
-    GLint packAlignment;
-
     void
     resetPixelPackState(void);
 
     void
     restorePixelPackState(void);
+
+private:
+    // Pack state
+    GLint pack_alignment;
+    GLint pack_image_height;
+    GLint pack_lsb_first;
+    GLint pack_row_length;
+    GLint pack_skip_images;
+    GLint pack_skip_pixels;
+    GLint pack_skip_rows;
+    GLint pack_swap_bytes;
+    GLint pixel_pack_buffer_binding;
 };
 
 

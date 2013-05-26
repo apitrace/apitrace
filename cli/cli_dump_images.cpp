@@ -29,12 +29,14 @@
 #include <string.h>
 #include <limits.h> // for CHAR_MAX
 #include <getopt.h>
+
+#include <string>
 #include <iostream>
 
-#include "cli.hpp"
-
 #include "os_string.hpp"
-#include "os_process.hpp"
+
+#include "cli.hpp"
+#include "cli_retrace.hpp"
 
 static const char *synopsis = "Dump frame images obtained from a trace.";
 
@@ -44,17 +46,20 @@ usage(void)
     std::cout << "usage apitrace dump-images [OPTIONS] TRACE_FILE\n"
               << synopsis << "\n"
         "\n"
-        "    -h, --help           show this help message and exit\n"
-        "        --calls=CALLSET  dump images only for specified calls\n"
-        "                         (default value is \"*/frame\" which\n"
-        "                          which dumps an image for each frame)\n"
-        "    -o, --output=PREFIX  prefix to use in naming output files\n"
-        "                         (default is trace filename without extension)\n"
+        "    -h, --help             show this help message and exit\n"
+        "        --calls=CALLSET    dump images only for specified calls\n"
+        "                           (default value is \"*/frame\" which\n"
+        "                            which dumps an image for each frame)\n"
+        "         --call-nos[=BOOL] use call numbers in image filenames,\n"
+        "                           otherwise use sequental numbers (default=yes)\n"
+        "    -o, --output=PREFIX    prefix to use in naming output files\n"
+        "                           (default is trace filename without extension)\n"
         "\n";
 }
 
 enum {
     CALLS_OPT = CHAR_MAX + 1,
+    CALL_NOS_OPT,
 };
 
 const static char *
@@ -64,6 +69,7 @@ const static struct option
 longOptions[] = {
     {"help", no_argument, 0, 'h'},
     {"calls", required_argument, 0, CALLS_OPT},
+    {"call-nos", optional_argument, 0, CALL_NOS_OPT},
     {"output", required_argument, 0, 'o'},
     {0, 0, 0, 0}
 };
@@ -72,7 +78,10 @@ static int
 command(int argc, char *argv[])
 {
     os::String prefix;
-    const char *calls, *filename, *output = NULL;
+    const char *calls = NULL;
+    const char *traceName = NULL;
+    const char *output = NULL;
+    std::string call_nos;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -82,6 +91,10 @@ command(int argc, char *argv[])
             return 0;
         case CALLS_OPT:
             calls = optarg;
+            break;
+        case CALL_NOS_OPT:
+            call_nos = "--call-nos=";
+            call_nos.append(optarg);
             break;
         case 'o':
             output = optarg;
@@ -105,36 +118,30 @@ command(int argc, char *argv[])
         return 1;
     }
 
-    filename = argv[optind];
+    traceName = argv[optind];
 
     if (output == NULL) {
-        prefix = filename;
+        prefix = traceName;
         prefix.trimDirectory();
         prefix.trimExtension();
+        prefix.append('.');
         output = prefix.str();
     }
 
-    /* FIXME: It would be cleaner to pull the replaying of the trace
-     * in-process here and generate the images directly. But that
-     * pulls in a non-trivial amount of the existing 'retrace' code,
-     * along with dependencies on GL, etc.
-     *
-     * It will definitely make sense to do that once all that code has
-     * already been pulled in for the "apitrace retrace" (or "apitrace
-     * replay") command. */
-    std::vector<const char *> command;
-    command.push_back("glretrace");
-    command.push_back("-s");
-    command.push_back(output);
-    command.push_back("-S");
-    if (calls)
-        command.push_back(calls);
-    else
-        command.push_back("*/frame");
-    command.push_back(filename);
-    command.push_back(NULL);
+    std::vector<const char *> opts;
 
-    return os::execute((char * const *)&command[0]);
+    opts.push_back("-s");
+    opts.push_back(output);
+    opts.push_back("-S");
+    if (calls)
+        opts.push_back(calls);
+    else
+        opts.push_back("*/frame");
+    if (!call_nos.empty()) {
+        opts.push_back(call_nos.c_str());
+    }
+
+    return executeRetrace(opts, traceName);
 }
 
 const Command dump_images_command = {

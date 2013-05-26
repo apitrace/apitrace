@@ -155,6 +155,12 @@ IDXGIResource.methods += [
     StdMethod(HRESULT, "GetEvictionPriority", [Out(Pointer(DXGI_RESOURCE_PRIORITY), "pEvictionPriority")], sideeffects=False),
 ]
 
+DXGI_SHARED_RESOURCE_FLAG = Flags(DWORD, [
+    "DXGI_SHARED_RESOURCE_READ",
+    "DXGI_SHARED_RESOURCE_WRITE",
+])
+
+
 IDXGIKeyedMutex.methods += [
     StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD, "dwMilliseconds")]),
     StdMethod(HRESULT, "ReleaseSync", [(UINT64, "Key")]),
@@ -215,7 +221,7 @@ IDXGISwapChain.methods += [
     StdMethod(HRESULT, "SetFullscreenState", [(BOOL, "Fullscreen"), (ObjPointer(IDXGIOutput), "pTarget")]),
     StdMethod(HRESULT, "GetFullscreenState", [Out(Pointer(BOOL), "pFullscreen"), Out(Pointer(ObjPointer(IDXGIOutput)), "ppTarget")]),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc")], sideeffects=False),
-    StdMethod(HRESULT, "ResizeBuffers", [(UINT, "BufferCount"), (UINT, "Width"), (UINT, "Height"), (DXGI_FORMAT, "NewFormat"), (UINT, "SwapChainFlags")]),
+    StdMethod(HRESULT, "ResizeBuffers", [(UINT, "BufferCount"), (UINT, "Width"), (UINT, "Height"), (DXGI_FORMAT, "NewFormat"), (DXGI_SWAP_CHAIN_FLAG, "SwapChainFlags")]),
     StdMethod(HRESULT, "ResizeTarget", [(Pointer(Const(DXGI_MODE_DESC)), "pNewTargetParameters")]),
     StdMethod(HRESULT, "GetContainingOutput", [Out(Pointer(ObjPointer(IDXGIOutput)), "ppOutput")]),
     StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
@@ -282,8 +288,34 @@ IDXGIDevice1.methods += [
     StdMethod(HRESULT, "GetMaximumFrameLatency", [Out(Pointer(UINT), "pMaxLatency")], sideeffects=False),
 ]
 
-dxgi = API('dxgi')
+
+IDXGIFactoryDWM = Interface("IDXGIFactoryDWM", IUnknown)
+IDXGISwapChainDWM = Interface("IDXGISwapChainDWM", IDXGIDeviceSubObject)
+
+IDXGIFactoryDWM.methods += [
+    StdMethod(HRESULT, "CreateSwapChain", [(ObjPointer(IUnknown), "pDevice"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc"), (ObjPointer(IDXGIOutput), "pOutput"), Out(Pointer(ObjPointer(IDXGISwapChainDWM)), "ppSwapChain")]),
+]
+
+IDXGISwapChainDWM.methods += [
+    StdMethod(HRESULT, "Present", [(UINT, "SyncInterval"), (DXGI_PRESENT, "Flags")]),
+    StdMethod(HRESULT, "GetBuffer", [(UINT, "Buffer"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppSurface")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "ResizeBuffers", [(UINT, "BufferCount"), (UINT, "Width"), (UINT, "Height"), (DXGI_FORMAT, "NewFormat"), (DXGI_SWAP_CHAIN_FLAG, "SwapChainFlags")]),
+    StdMethod(HRESULT, "ResizeTarget", [(Pointer(Const(DXGI_MODE_DESC)), "pNewTargetParameters")]),
+    StdMethod(HRESULT, "GetContainingOutput", [Out(Pointer(ObjPointer(IDXGIOutput)), "ppOutput")]),
+    StdMethod(HRESULT, "GetFrameStatistics", [(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
+    StdMethod(HRESULT, "GetLastPresentCount", [(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
+    StdMethod(HRESULT, "SetFullscreenState", [(BOOL, "Fullscreen"), (ObjPointer(IDXGIOutput), "pTarget")]),
+    StdMethod(HRESULT, "GetFullscreenState", [Out(Pointer(BOOL), "pFullscreen"), Out(Pointer(ObjPointer(IDXGIOutput)), "ppTarget")]),
+]
+
+
+dxgi = Module('dxgi')
+dxgi.addInterfaces([
+    IDXGIFactory1,
+    IDXGIFactoryDWM,
+])
 dxgi.addFunctions([
-    StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), (Pointer(ObjPointer(Void)), "ppFactory")]),
-    StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), (Pointer(ObjPointer(Void)), "ppFactory")]),
+    StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
+    StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
 ])

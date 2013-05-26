@@ -28,7 +28,7 @@
 
 
 from gltrace import GlTracer
-from specs.stdapi import API
+from specs.stdapi import Module, API
 from specs.glapi import glapi
 from specs.cglapi import cglapi
 
@@ -38,6 +38,45 @@ class CglTracer(GlTracer):
     def isFunctionPublic(self, function):
         # all OpenGL symbols are visible on MacOSX
         return True
+
+    def traceFunctionImplBody(self, function):
+        if function.name == 'CGLReleaseContext':
+            # Unlike other GL APIs like EGL or GLX, CGL will make the context
+            # not current if it's the current context.
+            print '    if (_CGLGetContextRetainCount(ctx) == 1) {'
+            print '        if (gltrace::releaseContext((uintptr_t)ctx)) {'
+            print '            if (_CGLGetCurrentContext() == ctx) {'
+            print '                gltrace::clearContext();'
+            print '            }'
+            print '        }'
+            print '    }'
+
+        if function.name == 'CGLDestroyContext':
+            # The same rule applies here about the  as for CGLReleaseContext.
+            print '    if (gltrace::releaseContext((uintptr_t)ctx)) {'
+            print '        if (_CGLGetCurrentContext() == ctx) {'
+            print '            gltrace::clearContext();'
+            print '        }'
+            print '    }'
+
+        GlTracer.traceFunctionImplBody(self, function)
+
+        if function.name == 'CGLCreateContext':
+            print '    if (_result == kCGLNoError) {'
+            print '        gltrace::createContext((uintptr_t)*ctx);'
+            print '    }'
+
+        if function.name == 'CGLSetCurrentContext':
+            print '    if (_result == kCGLNoError) {'
+            print '        if (ctx != NULL) {'
+            print '            gltrace::setContext((uintptr_t)ctx);'
+            print '        } else {'
+            print '            gltrace::clearContext();'
+            print '        }'
+            print '    }'
+
+        if function.name == 'CGLRetainContext':
+            print '    gltrace::retainContext((uintptr_t)ctx);'
 
 
 if __name__ == '__main__':
@@ -54,9 +93,11 @@ if __name__ == '__main__':
     print '#include "glsize.hpp"'
     print
 
+    module = Module()
+    module.mergeModule(cglapi)
+    module.mergeModule(glapi)
     api = API()
-    api.addApi(cglapi)
-    api.addApi(glapi)
+    api.addModule(module)
     tracer = CglTracer()
     tracer.traceApi(api)
 

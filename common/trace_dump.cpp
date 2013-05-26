@@ -170,14 +170,32 @@ public:
         }
     }
 
-    void visit(Struct *s) {
-        const char *sep = "";
-        os << "{";
+    const char *
+    visitMembers(Struct *s, const char *sep = "") {
         for (unsigned i = 0; i < s->members.size(); ++i) {
-            os << sep << italic << s->sig->member_names[i] << normal << " = ";
-            _visit(s->members[i]);
+            const char *memberName = s->sig->member_names[i];
+            Value *memberValue = s->members[i];
+
+            if (!memberName || !*memberName) {
+                // Anonymous structure
+                Struct *memberStruct = dynamic_cast<Struct *>(memberValue);
+                assert(memberStruct);
+                if (memberStruct) {
+                    sep = visitMembers(memberStruct, sep);
+                    continue;
+                }
+            }
+
+            os << sep << italic << memberName << normal << " = ",
+            _visit(memberValue);
             sep = ", ";
         }
+        return sep;
+    }
+
+    void visit(Struct *s) {
+        os << "{";
+        visitMembers(s);
         os << "}";
     }
 
@@ -208,6 +226,33 @@ public:
 
     void visit(Repr *r) {
         _visit(r->humanValue);
+    }
+
+    void visit(StackFrame *frame) {
+        if (frame->module != NULL) {
+            os << frame->module << " ";
+        }
+        if (frame->function != NULL) {
+            os << "at " << frame->function << "() ";
+        }
+        if (frame->filename != NULL) {
+            os << "at " << frame->filename;
+            if (frame->linenumber >= 0) {
+                os << ":" << frame->linenumber << " ";
+            }
+        }
+        else {
+            if (frame->offset >= 0) {
+                os << "[" << "0x" << std::hex << frame->offset << std::dec << "]";
+            }
+        }
+    }
+
+    void visit(Backtrace & backtrace) {
+        for (int i = 0; i < backtrace.size(); i ++) {
+            visit(backtrace[i]);
+            os << "\n";
+        }
     }
 
     void visit(Call *call) {
@@ -253,6 +298,10 @@ public:
         
         os << "\n";
 
+        if (call->backtrace != NULL) {
+            os << bold << red << "Backtrace:\n" << normal;
+            visit(*call->backtrace);
+        }
         if (callFlags & CALL_FLAG_END_FRAME) {
             os << "\n";
         }

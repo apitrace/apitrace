@@ -5,18 +5,20 @@ About **apitrace**
 
 * trace OpenGL, OpenGL ES, Direct3D, and DirectDraw APIs calls to a file;
 
-* retrace OpenGL and OpenGL ES calls from a file;
+* replay OpenGL and OpenGL ES calls from a file;
 
 * inspect OpenGL state at any call while retracing;
 
 * visualize and edit trace files.
+
+See the [apitrace homepage](http://apitrace.github.com/) for more details.
 
 
 Obtaining **apitrace**
 ======================
 
 To obtain apitrace either [download the latest
-binaries](https://github.com/apitrace/apitrace/downloads) for your platform if
+binaries](http://apitrace.github.com/#download) for your platform if
 available, or follow the instructions in INSTALL.markdown to build it yourself.
 On 64bits Linux and Windows platforms you'll need apitrace binaries that match
 the architecture (32bits or 64bits) of the application being traced.
@@ -47,10 +49,10 @@ View the trace with
 
 Replay an OpenGL trace with
 
-    glretrace application.trace
+    apitrace replay application.trace
 
-Pass the `-sb` option to use a single buffered visual.  Pass `--help` to
-glretrace for more options.
+Pass the `--sb` option to use a single buffered visual.  Pass `--help` to
+`apitrace replay` for more options.
 
 
 Basic GUI usage
@@ -74,22 +76,22 @@ Call sets
 
 Several tools take `CALLSET` arguments, e.g:
 
-    apitrace dump --calls CALLSET foo.trace
-    glretrace -S CALLSET foo.trace
+    apitrace dump --calls=CALLSET foo.trace
+    apitrace dump-images --calls=CALLSET foo.trace
 
 The call syntax is very flexible. Here are a few examples:
 
  * `4`             one call
 
- * `1,2,4,5`       set of calls
+ * `0,2,4,5`       set of calls
 
- * `"1 2 4 5"`     set of calls (commas are optional and can be replaced with whitespace)
+ * `"0 2 4 5"`     set of calls (commas are optional and can be replaced with whitespace)
 
- * `1-100/2`       calls 1, 3, 5, ...,  99
+ * `0-100/2`       calls 1, 3, 5, ...,  99
 
- * `1-1000/draw`   all draw calls between 1 and 1000
+ * `0-1000/draw`   all draw calls between 0 and 1000
 
- * `1-1000/fbo`    all fbo changes between calls 1 and 1000
+ * `0-1000/fbo`    all fbo changes between calls 0 and 1000
 
  * `frame`         all calls at end of frames
 
@@ -110,22 +112,25 @@ or 32 bits.  This can be done by doing
 But beware of wrapper shell scripts -- what matters is the architecture of the
 main process.
 
-Run the application you want to trace as
+Run the GLX application you want to trace as
 
-     LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
+    LD_PRELOAD=/path/to/apitrace/wrappers/glxtrace.so /path/to/application
 
 and it will generate a trace named `application.trace` in the current
 directory.  You can specify the written trace filename by setting the
 `TRACE_FILE` environment variable before running.
 
-The `LD_PRELOAD` mechanism should work with most applications.  There are some
-applications, e.g., Unigine Heaven, which global function pointers with the
-same name as GL entrypoints, living in a shared object that wasn't linked with
-`-Bsymbolic` flag, so relocations to those globals function pointers get
-overwritten with the address to our wrapper library, and the application will
-segfault when trying to write to them.  For these applications it is possible
-to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
-`LD_LIBRARY_PATH`:
+For EGL applications you will need to use `egltrace.so` instead of
+`glxtrace.so`.
+
+The `LD_PRELOAD` mechanism should work with the majority applications.  There
+are some applications (e.g., Unigine Heaven, Android GPU emulator, etc.), that
+have global function pointers with the same name as GL entrypoints, living in a
+shared object that wasn't linked with `-Bsymbolic` flag, so relocations to
+those globals function pointers get overwritten with the address to our wrapper
+library, and the application will segfault when trying to write to them.  For
+these applications it is possible to trace by using `glxtrace.so` as an
+ordinary `libGL.so` and injecting it via `LD_LIBRARY_PATH`:
 
     ln -s glxtrace.so wrappers/libGL.so
     ln -s glxtrace.so wrappers/libGL.so.1
@@ -134,12 +139,21 @@ to trace by using `glxtrace.so` as an ordinary `libGL.so` and injecting into
     export TRACE_LIBGL=/path/to/real/libGL.so.1
     /path/to/application
 
+If you are an application developer, you can avoid this either by linking with
+`-Bsymbolic` flag, or by using some unique prefix for your function pointers.
+
 See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
 To trace the application inside gdb, invoke gdb as:
 
     gdb --ex 'set exec-wrapper env LD_PRELOAD=/path/to/glxtrace.so' --args /path/to/application
+
+### Android ###
+
+To trace standalone native OpenGL ES applications, use
+`LD_PRELOAD=/path/to/egltrace.so /path/to/application` like described in the
+previous section.  To trace Java applications, refer to Dalvik.markdown.
 
 ### Mac OS X ###
 
@@ -175,6 +189,13 @@ Then run the application as usual.
 
 You can specify the written trace filename by setting the `TRACE_FILE`
 environment variable before running.
+
+For D3D10 and higher you really must use `apitrace trace -a DXGI ...`. This is
+because D3D10-11 API span many DLLs which depend on each other, and once a DLL
+with a given name is loaded Windows will reuse it for LoadLibrary calls of the
+same name, causing internal calls to be traced erroneously. `apitrace trace`
+solves this issue by injecting a DLL `dxgitrace.dll` and patching all modules
+to hook only the APIs of interest.
 
 
 Emitting annotations to the trace
@@ -215,8 +236,14 @@ From OpenGL ES applications you can embed annotations in the trace file through 
 extension.
 
 
-For Direct3D applications you can follow the same procedure used for 
-[instrumenting an application for PIX](http://technet.microsoft.com/en-us/query/ee417250)
+For Direct3D applications you can follow the standard procedure for
+[adding user defined events to Visual Studio Graphics Debugger / PIX](http://msdn.microsoft.com/en-us/library/vstudio/hh873200.aspx):
+
+- `D3DPERF_BeginEvent`, `D3DPERF_EndEvent`, and `D3DPERF_SetMarker` for D3D9 applications.
+
+- `ID3DUserDefinedAnnotation::BeginEvent`,
+  `ID3DUserDefinedAnnotation::EndEvent`, and
+  `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
 
 Dump GL state at a particular call
@@ -224,7 +251,7 @@ Dump GL state at a particular call
 
 You can get a dump of the bound GL state at call 12345 by doing:
 
-    glretrace -D 12345 application.trace > 12345.json
+    apitrace replay -D 12345 application.trace > 12345.json
 
 This is precisely the mechanism the GUI obtains its own state.
 
@@ -247,12 +274,20 @@ Recording a video with FFmpeg
 
 You can make a video of the output by doing
 
-    glretrace -s - application.trace \
+    apitrace dump-images -o - application.trace \
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
 
+Recording a video with gstreamer
+--------------------------------------
 
-Triming a trace
----------------
+You can make a video of the output with gstreamer by doing
+
+    glretrace --snapshot-format=RGB -s - smokinguns.trace | gst-launch-0.10 fdsrc blocksize=409600 ! queue \
+    ! videoparse format=rgb width=1920 height=1080 ! queue ! ffmpegcolorspace ! queue \
+    ! vaapiupload direct-rendering=0 ! queue ! vaapiencodeh264 ! filesink location=xxx.264
+
+Trimming a trace
+----------------
 
 You can make a smaller trace by doing:
 
@@ -261,6 +296,27 @@ You can make a smaller trace by doing:
 If you need precise control over which calls to trim you can specify the
 individual call numbers a plaintext file, as described in the 'Call sets'
 section above.
+
+
+Profiling a trace
+-----------------
+
+You can perform gpu and cpu profiling with the command line options:
+
+ * `--pgpu` record gpu times for frames and draw calls.
+
+ * `--pcpu` record cpu times for frames and draw calls.
+
+ * `--ppd` record pixels drawn for each draw call.
+
+The results from this can then be read by hand or analysed with a script.
+
+`scripts/profileshader.py` will read the profile results and format them into a
+table which displays profiling results per shader.
+
+For example, to record all profiling data and utilise the per shader script:
+
+    apitrace replay --pgpu --pcpu --ppd foo.trace | ./scripts/profileshader.py
 
 
 Advanced usage for OpenGL implementors
@@ -279,17 +335,13 @@ These are the steps to create a regression test-suite around **apitrace**:
 * obtain reference snapshots, by doing on a reference system:
 
         mkdir /path/to/reference/snapshots/
-        glretrace -s /path/to/reference/snapshots/ application.trace
+        apitrace dump-images -o /path/to/reference/snapshots/ application.trace
 
 * prune the snapshots which are not interesting
 
-* to do a regression test, do:
+* to do a regression test, use `apitrace diff-images`:
 
-        glretrace -c /path/to/reference/snapshots/ application.trace
-
-  Alternatively, for a HTML summary, use `apitrace diff-images`:
-
-        glretrace -s /path/to/test/snapshots/ application.trace
+        apitrace dump-images -o /path/to/test/snapshots/ application.trace
         apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/test/snapshots/
 
 
@@ -374,60 +426,57 @@ Or on Windows:
     python scripts\retracediff.py --retrace \path\to\glretrace.exe --ref-env TRACE_LIBGL=\path\to\reference\opengl32.dll application.trace
 
 
-Links
-=====
+Advanced GUI usage
+==================
 
-About **apitrace**:
+qapitrace has rudimentary support for replaying traces on a remote
+target device. This can be useful, for example, when developing for an
+embedded system. The primary GUI will run on the local host, while any
+replays will be performed on the target device.
 
-* [Official mailing list](http://lists.freedesktop.org/mailman/listinfo/apitrace)
+In order to target a remote device, use the command-line:
 
-* [Zack Rusin's blog introducing the GUI](http://zrusin.blogspot.com/2011/04/apitrace.html)
+    qapitrace --remote-target <HOST> <trace-file>
 
-* [Jose's Fonseca blog introducing the tool](http://jrfonseca.blogspot.com/2008/07/tracing-d3d-applications.html)
+In order for this to work, the following must be available in the
+system configuration:
+
+1. It must be possible for the current user to initiate an ssh session
+   that has access to the target's window system. The command to be
+   exectuted by qapitrace will be:
+
+        ssh <HOST> glretrace
+
+   For example, if the target device is using the X window system, one
+   can test whether an ssh session has access to the target X server
+   with:
+
+        ssh <HOST> xdpyinfo
+
+   If this command fails with something like "cannot open display"
+   then the user will have to configure the target to set the DISPLAY
+   environment variable, (for example, setting DISPLAY=:0 in the
+   .bashrc file on the target or similar).
+
+   Also, note that if the ssh session requires a custom username, then
+   this must be configured on the host side so that ssh can be
+   initiated without a username.
+
+   For example, if you normally connect with `ssh user@192.168.0.2`
+   you could configure ~/.ssh/config on the host with a block such as:
+
+        Host target
+          HostName 192.168.0.2
+          User user
+
+   And after this you should be able to connect with `ssh target` so
+   that you can also use `qapitrace --remote-target target`.
+
+2. The target host must have a functional glretrace binary available
+
+3. The target host must have access to <trace-file> at the same path
+   in the filesystem as the <trace-file> path on the host system being
+   passed to the qapitrace command line.
 
 
-Direct3D
---------
-
-Open-source:
-
-* [Proxy DLL](http://www.mikoweb.eu/index.php?node=21)
-
-  * [Intercept Calls to DirectX with a Proxy DLL](http://www.codeguru.com/cpp/g-m/directx/directx8/article.php/c11453/)
-
-* [Direct3D 9 API Interceptor](http://graphics.stanford.edu/~mdfisher/D3D9Interceptor.html)
-
-Closed-source:
-
-* [Microsoft PIX](http://msdn.microsoft.com/en-us/library/ee417062.aspx)
-
-  * [D3DSpy](http://doc.51windows.net/Directx9_SDK/?url=/directx9_sdk/graphics/programmingguide/TutorialsAndSamplesAndToolsAndTips/Tools/D3DSpy.htm): the predecessor of PIX
-
-* [NVIDIA PerfKit](http://developer.nvidia.com/nvidia-perfkit)
-
-* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
-
-* [Intel Graphics Performance Analyzers](http://www.intel.com/software/gpa/)
-
-
-OpenGL
-------
-
-Open-source:
-
-* [BuGLe](http://www.opengl.org/sdk/tools/BuGLe/)
-
-* [GLIntercept](http://code.google.com/p/glintercept/)
-
-* [tracy](https://gitorious.org/tracy): OpenGL ES and OpenVG trace, retrace, and state inspection
-
-* [WebGL-Inspector](http://benvanik.github.com/WebGL-Inspector/)
-
-Closed-source:
-
-* [gDEBugger](http://www.gremedy.com/products.php) and [AMD gDEBugger](http://developer.amd.com/tools/gDEBugger/Pages/default.aspx)
-
-* [glslDevil](http://cumbia.informatik.uni-stuttgart.de/glsldevil/index.html)
-
-* [AMD GPU PerfStudio](http://developer.amd.com/gpu/PerfStudio/pages/APITraceWindow.aspx)
-
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1062ad633aa7a458e9d7520021307e4 "githalytics.com")](http://githalytics.com/apitrace/apitrace)

@@ -31,6 +31,11 @@
 #include <fstream>
 #include <stdint.h>
 
+
+#define SNAPPY_BYTE1 'a'
+#define SNAPPY_BYTE2 't'
+
+
 namespace trace {
 
 class File {
@@ -49,8 +54,6 @@ public:
     };
 
 public:
-    static bool isZLibCompressed(const std::string &filename);
-    static bool isSnappyCompressed(const std::string &filename);
     static File *createZLib(void);
     static File *createSnappy(void);
     static File *createForRead(const char *filename);
@@ -201,6 +204,6 @@ operator<=(const File::Offset &one, const File::Offset &two)
 }
 
 
-}
+} /* namespace trace */
 
 #endif

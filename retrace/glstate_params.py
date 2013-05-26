@@ -156,12 +156,21 @@ class StateGetter(Visitor):
         elem_type = self.inflector.reduced_type(array.type)
         inflection = self.inflector.inflect(array.type)
         assert inflection.endswith('v')
-        print '    %s %s[%s + 1];' % (elem_type, temp_name, array.length)
-        print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array.length, temp_name)
-        print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array.length, elem_type)
+        array_length = array.length
+        if array_length.isdigit():
+            # Static integer length
+            print '    %s %s[%s + 1];' % (elem_type, temp_name, array_length)
+        else:
+            # Put the length in a variable to avoid recomputing it every time
+            print '    size_t _%s_length = %s;' % (temp_name, array_length)
+            array_length = '_%s_length' % temp_name
+            # Allocate a dynamic sized array
+            print '    %s *%s = _allocator.alloc<%s>(%s + 1);' % (elem_type, temp_name, elem_type, array_length)
+        print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array_length, temp_name)
+        print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array_length, elem_type)
         print '    %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
         # Simple buffer overflow detection
-        print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array.length, elem_type)
+        print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array_length, elem_type)
         return temp_name
 
     def visitOpaque(self, pointer, args):
@@ -203,8 +212,10 @@ class JsonWriter(Visitor):
     def visitLiteral(self, literal, instance):
         if literal.kind == 'Bool':
             print '    json.writeBool(%s);' % instance
-        elif literal.kind in ('SInt', 'Uint', 'Float', 'Double'):
-            print '    json.writeNumber(%s);' % instance
+        elif literal.kind in ('SInt', 'Uint'):
+            print '    json.writeInt(%s);' % instance
+        elif literal.kind in ('Float', 'Double'):
+            print '    json.writeFloat(%s);' % instance
         else:
             raise NotImplementedError
 
@@ -219,7 +230,7 @@ class JsonWriter(Visitor):
             print '    dumpEnum(json, %s);' % instance
         else:
             assert False
-            print '    json.writeNumber(%s);' % instance
+            print '    json.writeInt(%s);' % instance
 
     def visitBitmask(self, bitmask, instance):
         raise NotImplementedError
@@ -228,7 +239,7 @@ class JsonWriter(Visitor):
         self.visit(alias.type, instance)
 
     def visitOpaque(self, opaque, instance):
-        print '    json.writeNumber((size_t)%s);' % instance
+        print '    json.writeInt((size_t)%s);' % instance
 
     __index = 0
 
@@ -251,9 +262,11 @@ class StateDumper:
         pass
 
     def dump(self):
+        print '#include <assert.h>'
         print '#include <string.h>'
         print
         print '#include "json.hpp"'
+        print '#include "scoped_allocator.hpp"'
         print '#include "glproc.hpp"'
         print '#include "glsize.hpp"'
         print '#include "glstate.hpp"'
@@ -273,7 +286,7 @@ class StateDumper:
         print '        json.writeString("GL_TRUE");'
         print '        break;'
         print '    default:'
-        print '        json.writeNumber(static_cast<GLint>(value));'
+        print '        json.writeInt(static_cast<GLint>(value));'
         print '        break;'
         print '    }'
         print '}'
@@ -299,7 +312,7 @@ class StateDumper:
         print '    if (s) {'
         print '        json.writeString(s);'
         print '    } else {'
-        print '        json.writeNumber(pname);'
+        print '        json.writeInt(pname);'
         print '    }'
         print '}'
         print
@@ -313,6 +326,9 @@ class StateDumper:
 
         print 'void dumpParameters(JSONWriter &json, Context &context)'
         print '{'
+        print '    ScopedAllocator _allocator;'
+        print '    (void)_allocator;'
+        print
         print '    json.beginMember("parameters");'
         print '    json.beginObject();'
         
@@ -433,7 +449,7 @@ class StateDumper:
             print '            json.endMember();'
             print '            binding = 0;'
             print '            glGetIntegerv(%s, &binding);' % binding
-            print '            json.writeNumberMember("%s", binding);' % binding
+            print '            json.writeIntMember("%s", binding);' % binding
             print '            if (enabled || binding) {'
             print '                json.beginMember("%s");' % target
             print '                json.beginObject();'

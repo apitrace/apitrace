@@ -102,17 +102,43 @@ class Literal(Type):
         return visitor.visitLiteral(self, *args, **kwargs)
 
 
+Bool = Literal("bool", "Bool")
+SChar = Literal("signed char", "SInt")
+UChar = Literal("unsigned char", "UInt")
+Short = Literal("short", "SInt")
+Int = Literal("int", "SInt")
+Long = Literal("long", "SInt")
+LongLong = Literal("long long", "SInt")
+UShort = Literal("unsigned short", "UInt")
+UInt = Literal("unsigned int", "UInt")
+ULong = Literal("unsigned long", "UInt")
+ULongLong = Literal("unsigned long long", "UInt")
+Float = Literal("float", "Float")
+Double = Literal("double", "Double")
+SizeT = Literal("size_t", "UInt")
+
+Char = Literal("char", "SInt")
+WChar = Literal("wchar_t", "SInt")
+
+Int8 = Literal("int8_t", "SInt")
+UInt8 = Literal("uint8_t", "UInt")
+Int16 = Literal("int16_t", "SInt")
+UInt16 = Literal("uint16_t", "UInt")
+Int32 = Literal("int32_t", "SInt")
+UInt32 = Literal("uint32_t", "UInt")
+Int64 = Literal("int64_t", "SInt")
+UInt64 = Literal("uint64_t", "UInt")
+
+IntPtr = Literal("intptr_t", "SInt")
+UIntPtr = Literal("uintptr_t", "UInt")
+
 class Const(Type):
 
     def __init__(self, type):
         # While "const foo" and "foo const" are synonymous, "const foo *" and
         # "foo * const" are not quite the same, and some compilers do enforce
         # strict const correctness.
-        if isinstance(type, String) or type is WString:
-            # For strings we never intend to say a const pointer to chars, but
-            # rather a point to const chars.
-            expr = "const " + type.expr
-        elif type.expr.startswith("const ") or '*' in type.expr:
+        if type.expr.startswith("const ") or '*' in type.expr:
             expr = type.expr + " const"
         else:
             # The most legible
@@ -266,33 +292,18 @@ class Struct(Type):
         Struct.__id += 1
 
         self.name = name
-        self.members = []
-
-        # Eliminate anonymous unions
-        for type, name in members:
-            if name is not None:
-                self.members.append((type, name))
-            else:
-                assert isinstance(type, Union)
-                assert type.name is None
-                self.members.extend(type.members)
+        self.members = members
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitStruct(self, *args, **kwargs)
 
 
-class Union(Type):
-
-    __id = 0
-
-    def __init__(self, name, members):
-        Type.__init__(self, name)
-
-        self.id = Union.__id
-        Union.__id += 1
-
-        self.name = name
-        self.members = members
+def Union(kindExpr, kindTypes, contextLess=True):
+    switchTypes = []
+    for kindCase, kindType, kindMemberName in kindTypes:
+        switchType = Struct(None, [(kindType, kindMemberName)])
+        switchTypes.append((kindCase, switchType))
+    return Polymorphic(kindExpr, switchTypes, contextLess=contextLess)
 
 
 class Alias(Type):
@@ -329,13 +340,7 @@ def InOut(type, name):
 
 class Function:
 
-    # 0-3 are reserved to memcpy, malloc, free, and realloc
-    __id = 4
-
     def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False):
-        self.id = Function.__id
-        Function.__id += 1
-
         self.type = type
         self.name = name
 
@@ -379,6 +384,12 @@ class Function:
 
     def argNames(self):
         return [arg.name for arg in self.args]
+
+    def getArgByName(self, name):
+        for arg in self.args:
+            if arg.name == name:
+                return arg
+        return None
 
 
 def StdFunction(*args, **kwargs):
@@ -434,7 +445,8 @@ class Interface(Type):
 
 class Method(Function):
 
-    def __init__(self, type, name, args, call = '__stdcall', const=False, sideeffects=True):
+    def __init__(self, type, name, args, call = '', const=False, sideeffects=True):
+        assert call == '__stdcall'
         Function.__init__(self, type, name, args, call = call, sideeffects=sideeffects)
         for index in range(len(self.args)):
             self.args[index].index = index + 1
@@ -453,11 +465,14 @@ def StdMethod(*args, **kwargs):
 
 
 class String(Type):
+    '''Human-legible character string.'''
 
-    def __init__(self, expr = "char *", length = None, kind = 'String'):
-        Type.__init__(self, expr)
+    def __init__(self, type = Char, length = None, wide = False):
+        assert isinstance(type, Type)
+        Type.__init__(self, type.expr + ' *')
+        self.type = type
         self.length = length
-        self.kind = kind
+        self.wide = wide
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitString(self, *args, **kwargs)
@@ -485,8 +500,12 @@ def OpaqueBlob(type, size):
 
 class Polymorphic(Type):
 
-    def __init__(self, switchExpr, switchTypes, defaultType, contextLess=True):
-        Type.__init__(self, defaultType.expr)
+    def __init__(self, switchExpr, switchTypes, defaultType=None, contextLess=True):
+        if defaultType is None:
+            Type.__init__(self, None)
+            contextLess = False
+        else:
+            Type.__init__(self, defaultType.expr)
         self.switchExpr = switchExpr
         self.switchTypes = switchTypes
         self.defaultType = defaultType
@@ -496,8 +515,12 @@ class Polymorphic(Type):
         return visitor.visitPolymorphic(self, *args, **kwargs)
 
     def iterSwitch(self):
-        cases = [['default']]
-        types = [self.defaultType]
+        cases = []
+        types = []
+
+        if self.defaultType is not None:
+            cases.append(['default'])
+            types.append(self.defaultType)
 
         for expr, type in self.switchTypes:
             case = 'case %s' % expr
@@ -610,7 +633,11 @@ class Rebuilder(Visitor):
         return literal
 
     def visitString(self, string):
-        return string
+        string_type = self.visit(string.type)
+        if string_type is string.type:
+            return string
+        else:
+            return String(string_type, string.length, string.wide)
 
     def visitConst(self, const):
         const_type = self.visit(const.type)
@@ -692,12 +719,18 @@ class Rebuilder(Visitor):
     def visitPolymorphic(self, polymorphic):
         switchExpr = polymorphic.switchExpr
         switchTypes = [(expr, self.visit(type)) for expr, type in polymorphic.switchTypes]
-        defaultType = self.visit(polymorphic.defaultType)
+        if polymorphic.defaultType is None:
+            defaultType = None
+        else:
+            defaultType = self.visit(polymorphic.defaultType)
         return Polymorphic(switchExpr, switchTypes, defaultType, polymorphic.contextLess)
 
 
 class MutableRebuilder(Rebuilder):
     '''Type visitor which derives a mutable type.'''
+
+    def visitString(self, string):
+        return string
 
     def visitConst(self, const):
         # Strip out const qualifier
@@ -779,9 +812,10 @@ class Traverser(Visitor):
             self.visit(method.type, *args, **kwargs)
 
     def visitPolymorphic(self, polymorphic, *args, **kwargs):
-        self.visit(polymorphic.defaultType, *args, **kwargs)
         for expr, type in polymorphic.switchTypes:
             self.visit(type, *args, **kwargs)
+        if polymorphic.defaultType is not None:
+            self.visit(polymorphic.defaultType, *args, **kwargs)
 
 
 class Collector(Traverser):
@@ -799,12 +833,52 @@ class Collector(Traverser):
         self.types.append(type)
 
 
+class ExpanderMixin:
+    '''Mixin class that provides a bunch of methods to expand C expressions
+    from the specifications.'''
 
-class API:
-    '''API abstraction.
+    __structs = None
+    __indices = None
 
-    Essentially, a collection of types, functions, and interfaces.
-    '''
+    def expand(self, expr):
+        # Expand a C expression, replacing certain variables
+        if not isinstance(expr, basestring):
+            return expr
+        variables = {}
+
+        if self.__structs is not None:
+            variables['self'] = '(%s)' % self.__structs[0]
+        if self.__indices is not None:
+            variables['i'] = self.__indices[0]
+
+        expandedExpr = expr.format(**variables)
+        if expandedExpr != expr and 0:
+            sys.stderr.write("  %r -> %r\n" % (expr, expandedExpr))
+        return expandedExpr
+
+    def visitMember(self, member, structInstance, *args, **kwargs):
+        memberType, memberName = member
+        if memberName is None:
+            # Anonymous structure/union member
+            memberInstance = structInstance
+        else:
+            memberInstance = '(%s).%s' % (structInstance, memberName)
+        self.__structs = (structInstance, self.__structs)
+        try:
+            return self.visit(memberType, memberInstance, *args, **kwargs)
+        finally:
+            _, self.__structs = self.__structs
+
+    def visitElement(self, elementIndex, elementType, *args, **kwargs):
+        self.__indices = (elementIndex, self.__indices)
+        try:
+            return self.visit(elementType, *args, **kwargs)
+        finally:
+            _, self.__indices = self.__indices
+
+
+class Module:
+    '''A collection of functions.'''
 
     def __init__(self, name = None):
         self.name = name
@@ -812,45 +886,16 @@ class API:
         self.functions = []
         self.interfaces = []
 
-    def getAllTypes(self):
-        collector = Collector()
-        for function in self.functions:
-            for arg in function.args:
-                collector.visit(arg.type)
-            collector.visit(function.type)
-        for interface in self.interfaces:
-            collector.visit(interface)
-            for method in interface.iterMethods():
-                for arg in method.args:
-                    collector.visit(arg.type)
-                collector.visit(method.type)
-        return collector.types
-
-    def getAllInterfaces(self):
-        types = self.getAllTypes()
-        interfaces = [type for type in types if isinstance(type, Interface)]
-        for interface in self.interfaces:
-            if interface not in interfaces:
-                interfaces.append(interface)
-        return interfaces
-
-    def addFunction(self, function):
-        self.functions.append(function)
-
     def addFunctions(self, functions):
-        for function in functions:
-            self.addFunction(function)
-
-    def addInterface(self, interface):
-        self.interfaces.append(interface)
+        self.functions.extend(functions)
 
     def addInterfaces(self, interfaces):
         self.interfaces.extend(interfaces)
 
-    def addApi(self, api):
-        self.headers.extend(api.headers)
-        self.addFunctions(api.functions)
-        self.addInterfaces(api.interfaces)
+    def mergeModule(self, module):
+        self.headers.extend(module.headers)
+        self.functions.extend(module.functions)
+        self.interfaces.extend(module.interfaces)
 
     def getFunctionByName(self, name):
         for function in self.functions:
@@ -859,30 +904,60 @@ class API:
         return None
 
 
-Bool = Literal("bool", "Bool")
-SChar = Literal("signed char", "SInt")
-UChar = Literal("unsigned char", "UInt")
-Short = Literal("short", "SInt")
-Int = Literal("int", "SInt")
-Long = Literal("long", "SInt")
-LongLong = Literal("long long", "SInt")
-UShort = Literal("unsigned short", "UInt")
-UInt = Literal("unsigned int", "UInt")
-ULong = Literal("unsigned long", "UInt")
-ULongLong = Literal("unsigned long long", "UInt")
-Float = Literal("float", "Float")
-Double = Literal("double", "Double")
-SizeT = Literal("size_t", "UInt")
+class API:
+    '''API abstraction.
+
+    Essentially, a collection of types, functions, and interfaces.
+    '''
+
+    def __init__(self, modules = None):
+        self.modules = []
+        if modules is not None:
+            self.modules.extend(modules)
+
+    def getAllTypes(self):
+        collector = Collector()
+        for module in self.modules:
+            for function in module.functions:
+                for arg in function.args:
+                    collector.visit(arg.type)
+                collector.visit(function.type)
+            for interface in module.interfaces:
+                collector.visit(interface)
+                for method in interface.iterMethods():
+                    for arg in method.args:
+                        collector.visit(arg.type)
+                    collector.visit(method.type)
+        return collector.types
+
+    def getAllFunctions(self):
+        functions = []
+        for module in self.modules:
+            functions.extend(module.functions)
+        return functions
+
+    def getAllInterfaces(self):
+        types = self.getAllTypes()
+        interfaces = [type for type in types if isinstance(type, Interface)]
+        for module in self.modules:
+            for interface in module.interfaces:
+                if interface not in interfaces:
+                    interfaces.append(interface)
+        return interfaces
+
+    def addModule(self, module):
+        self.modules.append(module)
+
+    def getFunctionByName(self, name):
+        for module in self.modules:
+            for function in module.functions:
+                if function.name == name:
+                    return function
+        return None
+
 
 # C string (i.e., zero terminated)
-CString = String()
-WString = String("wchar_t *", kind="WString")
-
-Int8 = Literal("int8_t", "SInt")
-UInt8 = Literal("uint8_t", "UInt")
-Int16 = Literal("int16_t", "SInt")
-UInt16 = Literal("uint16_t", "UInt")
-Int32 = Literal("int32_t", "SInt")
-UInt32 = Literal("uint32_t", "UInt")
-Int64 = Literal("int64_t", "SInt")
-UInt64 = Literal("uint64_t", "UInt")
+CString = String(Char)
+WString = String(WChar, wide=True)
+ConstCString = String(Const(Char))
+ConstWString = String(Const(WChar), wide=True)

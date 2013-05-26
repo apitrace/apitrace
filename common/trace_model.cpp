@@ -72,6 +72,18 @@ Blob::~Blob() {
     }
 }
 
+StackFrame::~StackFrame() {
+    if (module != NULL) {
+        delete [] module;
+    }
+    if (function != NULL) {
+        delete [] function;
+    }
+    if (filename != NULL) {
+        delete [] filename;
+    }
+}
+
 
 // bool cast
 bool Null   ::toBool(void) const { return false; }
@@ -191,6 +203,8 @@ void Visitor::visit(Array *) { assert(0); }
 void Visitor::visit(Blob *) { assert(0); }
 void Visitor::visit(Pointer *) { assert(0); }
 void Visitor::visit(Repr *node) { node->machineValue->visit(*this); }
+void Visitor::visit(Backtrace *) { assert(0); }
+void Visitor::visit(StackFrame *) { assert(0); }
 
 
 static Null null;

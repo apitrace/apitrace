@@ -247,7 +247,10 @@ public:
     virtual void visit(trace::String *node)
     {
         QString str = m_variant.toString();
-        m_editedValue = new trace::String(str.toLocal8Bit().constData());
+        char *newString = new char[str.length() + 1];
+        QByteArray ba = str.toLocal8Bit();
+        strcpy(newString, ba.constData());
+        m_editedValue = new trace::String(newString);
     }
 
     virtual void visit(trace::Enum *e)
@@ -273,7 +276,6 @@ public:
         trace::Array *newArray = new trace::Array(vals.count());
         for (int i = 0; i < vals.count(); ++i) {
             EditVisitor visitor(vals[i]);
-
             array->values[i]->visit(visitor);
             if (array->values[i] == visitor.value()) {
                 //non-editabled
@@ -282,7 +284,7 @@ public:
                 return;
             }
 
-            newArray->values.push_back(visitor.value());
+            newArray->values[i] = visitor.value();
         }
         m_editedValue = newArray;
     }

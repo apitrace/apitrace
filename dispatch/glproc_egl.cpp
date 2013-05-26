@@ -27,10 +27,7 @@
 #include <assert.h>
 
 #if !defined(_WIN32)
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE // for dladdr
-#endif
-#include <dlfcn.h>
+#include "dlopen.hpp"
 #endif
 
 
@@ -144,9 +141,6 @@ _getPublicProcLibrary(const char *procName)
  * libraries have been loaded previously (either dlopened with RTLD_GLOBAL, or
  * as part of the executable dependencies), and that their symbols available
  * for quering via dlsym(RTLD_NEXT, ...).
- *
- * Android does not support LD_PRELOAD.  It is assumed that applications
- * are explicitely loading egltrace.so.
  */
 void *
 _getPublicProcAddress(const char *procName)

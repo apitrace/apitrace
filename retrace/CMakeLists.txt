@@ -6,6 +6,7 @@ include_directories (
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
+    ${CMAKE_SOURCE_DIR}/image
 )
 
 add_definitions (-DRETRACE)
@@ -31,18 +32,19 @@ add_custom_command (
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
 )
 
-add_library (retrace_common
+add_library (retrace_common STATIC
     retrace.cpp
     retrace_main.cpp
     retrace_stdc.cpp
     retrace_swizzle.cpp
+    json.cpp
 )
-
 target_link_libraries (retrace_common
+    image
     common
-    ${PNG_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
+    ${GETOPT_LIBRARIES}
 )
 
 if (WIN32)
@@ -59,7 +61,7 @@ else ()
 endif ()
 
 
-add_library (glretrace_common
+add_library (glretrace_common STATIC
     glretrace_gl.cpp
     glretrace_cgl.cpp
     glretrace_glx.cpp
@@ -75,8 +77,10 @@ add_library (glretrace_common
     ${glws_native}
     ${glws_egl}
 )
-
 add_dependencies (glretrace_common glproc)
+target_link_libraries (glretrace_common
+    retrace_common
+)
 
 
 if (WIN32 OR APPLE OR X11_FOUND)
@@ -114,6 +118,9 @@ if (WIN32 OR APPLE OR X11_FOUND)
 
         if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
             target_link_libraries (glretrace rt)
+            if (READPROC_H_FOUND)
+                target_link_libraries (glretrace ${proc_LIBRARY})
+            endif ()
         endif ()
 
     endif ()
@@ -139,17 +146,51 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
 
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         target_link_libraries (eglretrace rt)
+        if (READPROC_H_FOUND)
+            target_link_libraries (eglretrace ${proc_LIBRARY})
+        endif ()
     endif ()
 
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
 
-if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
+if (WIN32)
+    if (DirectX_D3D8_INCLUDE_DIR) 
+        include_directories (BEFORE SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
+        set (HAVE_D3D8 1)
+        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
+            d3d8state.cpp
+            d3d8state_images.cpp
+        )
+    else ()
+        set (HAVE_D3D8 0)
+    endif ()
+    add_custom_command (
+        OUTPUT d3dretrace_d3d8.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d8 ${HAVE_D3D8} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d8.cpp
+        DEPENDS
+                d3d9retrace.py
+                dllretrace.py
+                retrace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d8.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d8types.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d8caps.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+    )
+
+    if (DirectX_D3D9_INCLUDE_DIR)
+        include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
+        set (HAVE_D3D9 1)
+    else ()
+        set (HAVE_D3D9 0)
+    endif ()
     add_custom_command (
         OUTPUT d3dretrace_d3d9.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3dretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/d3d9retrace.py d3d9 ${HAVE_D3D9} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_d3d9.cpp
         DEPENDS
-                d3dretrace.py
+                d3d9retrace.py
                 dllretrace.py
                 retrace.py
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
@@ -160,18 +201,77 @@ if (WIN32 AND DirectX_D3DX9_INCLUDE_DIR)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    include_directories (SYSTEM ${DirectX_D3DX9_INCLUDE_DIR})
+    if (DirectX_D3D10_INCLUDE_DIR)
+        include_directories (BEFORE SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
+        set (DXGI_MODULES d3d10)
+        if (DirectX_D3D10_1_INCLUDE_DIR)
+            include_directories (BEFORE SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
+            set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
+        endif ()
+        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
+            dxgistate.cpp
+            d3d10state.cpp
+            d3d10state_images.cpp
+        )
+    endif ()
+
+    if (DirectX_D3D11_INCLUDE_DIR)
+        include_directories (BEFORE SYSTEM
+            ${DirectX_D3D11_INCLUDE_DIR}
+            ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
+        )
+        set (DXGI_MODULES ${DXGI_MODULES} d3d11)
+        if (DirectX_D3D11_1_INCLUDE_DIR)
+            include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
+            set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
+        endif ()
+        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
+            d3d11state.cpp
+            d3d11state_images.cpp
+        )
+    endif ()
+
+    add_custom_command (
+        OUTPUT d3dretrace_dxgi.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py ${DXGI_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
+        DEPENDS
+                dxgiretrace.py
+                dllretrace.py
+                retrace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11_1.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi1_2.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+    )
+
     add_executable (d3dretrace
         d3dretrace_main.cpp
+        d3dretrace_d3d8.cpp
         d3dretrace_d3d9.cpp
+        d3dretrace_dxgi.cpp
         d3dretrace_ws.cpp
-        d3dstate.cpp
-        d3dstate_images.cpp
+        d3d9state.cpp
+        d3d9state_images.cpp
+        ${D3DSTATE_SOURCES}
     )
     target_link_libraries (d3dretrace
         retrace_common
+        d3dhelpers
     )
-    
-    install (TARGETS d3dretrace RUNTIME DESTINATION bin) 
-endif ()
+    if (DirectX_D3D11_INCLUDE_DIR)
+        target_link_libraries (d3dretrace directxtex)
+    endif ()
 
+    install (TARGETS d3dretrace RUNTIME DESTINATION bin)
+endif ()

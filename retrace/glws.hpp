@@ -31,7 +31,11 @@
 #define _GLWS_HPP_
 
 
+#include <assert.h>
+
 #include <vector>
+#include <set>
+#include <string>
 
 #include "glproc_core.hpp"
 
@@ -91,12 +95,14 @@ public:
     const Visual *visual;
     int width;
     int height;
+    bool pbuffer;
     bool visible;
 
-    Drawable(const Visual *vis, int w, int h) :
+    Drawable(const Visual *vis, int w, int h, bool pb) :
         visual(vis),
         width(w),
         height(h),
+        pbuffer(pb),
         visible(false)
     {}
 
@@ -110,6 +116,7 @@ public:
 
     virtual void
     show(void) {
+        assert(!pbuffer);
         visible = true;
     }
 
@@ -123,12 +130,18 @@ public:
     const Visual *visual;
     gldispatch::Profile profile;
     
+    std::set<std::string> extensions;
+
     Context(const Visual *vis, gldispatch::Profile prof) :
         visual(vis),
         profile(prof)
     {}
 
     virtual ~Context() {}
+
+    // Context must be current
+    bool
+    hasExtension(const char *extension);
 };
 
 
@@ -141,7 +154,7 @@ public:
     createVisual(bool doubleBuffer = false, gldispatch::Profile profile = gldispatch::PROFILE_COMPAT) = 0;
 
     virtual Drawable *
-    createDrawable(const Visual *visual, int width = 32, int height = 32) = 0;
+    createDrawable(const Visual *visual, int width = 32, int height = 32, bool pbuffer = false) = 0;
 
     virtual Context *
     createContext(const Visual *visual, Context *shareContext = 0, gldispatch::Profile profile = gldispatch::PROFILE_COMPAT, bool debug = false) = 0;

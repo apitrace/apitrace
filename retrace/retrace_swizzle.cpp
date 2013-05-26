@@ -75,6 +75,12 @@ lowerBound(unsigned long long address) {
         }
     }
 
+#ifndef NDEBUG
+    if (it != regionMap.end()) {
+        assert(contains(it, address) || it->first > address);
+    }
+#endif
+
     return it;
 }
 
@@ -82,6 +88,12 @@ lowerBound(unsigned long long address) {
 static RegionMap::iterator
 upperBound(unsigned long long address) {
     RegionMap::iterator it = regionMap.upper_bound(address);
+
+#ifndef NDEBUG
+    if (it != regionMap.end()) {
+        assert(it->first >= address);
+    }
+#endif
 
     return it;
 }
@@ -108,7 +120,7 @@ addRegion(unsigned long long address, void *buffer, unsigned long long size)
 
 #ifndef NDEBUG
     RegionMap::iterator start = lowerBound(address);
-    RegionMap::iterator stop = upperBound(address + size);
+    RegionMap::iterator stop = upperBound(address + size - 1);
     if (0) {
         // Forget all regions that intersect this new one.
         regionMap.erase(start, stop);
@@ -243,8 +255,20 @@ toPointer(trace::Value &value, bool bind) {
 static std::map<unsigned long long, void *> _obj_map;
 
 void
-addObj(trace::Value &value, void *obj) {
+addObj(trace::Call &call, trace::Value &value, void *obj) {
     unsigned long long address = value.toUIntPtr();
+
+    if (!address) {
+        if (obj) {
+            warning(call) << "unexpected non-null object\n";
+        }
+        return;
+    }
+
+    if (!obj) {
+        warning(call) << "got null for object 0x" << std::hex << address << std::dec << "\n";
+    }
+
     _obj_map[address] = obj;
     
     if (retrace::verbosity >= 2) {
@@ -256,12 +280,24 @@ void
 delObj(trace::Value &value) {
     unsigned long long address = value.toUIntPtr();
     _obj_map.erase(address);
+    if (retrace::verbosity >= 2) {
+        std::cout << std::hex << "obj 0x" << address << " del\n";
+    }
 }
 
 void *
-toObjPointer(trace::Value &value) {
+toObjPointer(trace::Call &call, trace::Value &value) {
     unsigned long long address = value.toUIntPtr();
-    void *obj = address ? _obj_map[address] : NULL;
+
+    void *obj;
+    if (address) {
+        obj = _obj_map[address];
+        if (!obj) {
+            warning(call) << "unknown object 0x" << std::hex << address << std::dec << "\n";
+        }
+    } else {
+        obj = NULL;
+    }
 
     if (retrace::verbosity >= 2) {
         std::cout << std::hex << "obj 0x" << address << " <- 0x" << size_t(obj) << std::dec << "\n";

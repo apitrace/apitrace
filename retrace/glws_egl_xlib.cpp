@@ -90,8 +90,9 @@ public:
     EGLSurface surface;
     EGLint api;
 
-    EglDrawable(const Visual *vis, int w, int h) :
-        Drawable(vis, w, h), api(EGL_OPENGL_ES_API)
+    EglDrawable(const Visual *vis, int w, int h, bool pbuffer) :
+        Drawable(vis, w, h, pbuffer),
+        api(EGL_OPENGL_ES_API)
     {
         XVisualInfo *visinfo = static_cast<const EglVisual *>(visual)->visinfo;
 
@@ -154,6 +155,28 @@ public:
     }
 
     void
+    recreate(void) {
+        EGLContext currentContext = eglGetCurrentContext();
+        EGLSurface currentDrawSurface = eglGetCurrentSurface(EGL_DRAW);
+        EGLSurface currentReadSurface = eglGetCurrentSurface(EGL_DRAW);
+        bool rebindDrawSurface = currentDrawSurface == surface;
+        bool rebindReadSurface = currentReadSurface == surface;
+
+        if (rebindDrawSurface || rebindReadSurface) {
+            eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
+
+        eglDestroySurface(eglDisplay, surface);
+
+        EGLConfig config = static_cast<const EglVisual *>(visual)->config;
+        surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
+
+        if (rebindDrawSurface || rebindReadSurface) {
+            eglMakeCurrent(eglDisplay, surface, surface, currentContext);
+        }
+    }
+
+    void
     resize(int w, int h) {
         if (w == width && h == height) {
             return;
@@ -180,6 +203,27 @@ public:
         waitForEvent(ConfigureNotify);
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
+
+        /*
+         * Some implementations won't update the backbuffer unless we recreate
+         * the EGL surface.
+         */
+
+        int eglWidth;
+        int eglHeight;
+
+        eglQuerySurface(eglDisplay, surface, EGL_WIDTH, &eglWidth);
+        eglQuerySurface(eglDisplay, surface, EGL_HEIGHT, &eglHeight);
+
+        if (eglWidth != width || eglHeight != height) {
+            recreate();
+
+            eglQuerySurface(eglDisplay, surface, EGL_WIDTH, &eglWidth);
+            eglQuerySurface(eglDisplay, surface, EGL_HEIGHT, &eglHeight);
+        }
+
+        assert(eglWidth == width);
+        assert(eglHeight == height);
     }
 
     void show(void) {
@@ -227,7 +271,7 @@ public:
     EglXlibWindowSystem(void);
     ~EglXlibWindowSystem();
     Visual * createVisual(bool doubleBuffer, gldispatch::Profile profile);
-    Drawable * createDrawable(const Visual *visual, int width, int height);
+    Drawable * createDrawable(const Visual *visual, int width, int height, bool pbuffer);
     Context * createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug);
     bool makeCurrent(Drawable *drawable, Context *context);
     bool processEvents(void);
@@ -345,9 +389,9 @@ EglXlibWindowSystem::createVisual(bool doubleBuffer, gldispatch::Profile profile
 }
 
 Drawable *
-EglXlibWindowSystem::createDrawable(const Visual *visual, int width, int height)
+EglXlibWindowSystem::createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 {
-    return new EglDrawable(visual, width, height);
+    return new EglDrawable(visual, width, height, pbuffer);
 }
 
 Context *

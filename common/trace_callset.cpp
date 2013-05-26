@@ -224,7 +224,7 @@ public:
 };
 
 
-CallSet::CallSet(const char *string)
+CallSet::CallSet(const char *string): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max())
 {
     if (*string == '@') {
         FileCallSetParser parser(*this, &string[1]);
@@ -236,7 +236,7 @@ CallSet::CallSet(const char *string)
 }
 
 
-CallSet::CallSet(CallFlags freq) {
+CallSet::CallSet(CallFlags freq): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()) {
     if (freq != FREQUENCY_NONE) {
         CallNo start = std::numeric_limits<CallNo>::min();
         CallNo stop = std::numeric_limits<CallNo>::max();

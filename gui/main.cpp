@@ -1,7 +1,12 @@
+#include <stdlib.h>
+
 #include "mainwindow.h"
 
 #include "apitrace.h"
 #include "apitracecall.h"
+
+#include "os_string.hpp"
+#include "os_process.hpp"
 
 #include <QApplication>
 #include <QMetaType>
@@ -17,11 +22,15 @@ Q_DECLARE_METATYPE(QList<QImage>);
 
 static void usage(void)
 {
-    qWarning("usage: qapitrace [TRACE] [CALLNO]\n");
+    qWarning("usage: qapitrace [options] [TRACE] [CALLNO]\n"
+             "Valid options include:\n"
+             "    -h, --help            Print this help message\n"
+             "    --remote-target HOST  Replay trace on remote target HOST\n");
 }
 
 int main(int argc, char **argv)
 {
+    QApplication::setGraphicsSystem("raster");
     QApplication app(argc, argv);
 
     qRegisterMetaType<QList<ApiTraceFrame*> >();
@@ -31,7 +40,17 @@ int main(int argc, char **argv)
     qRegisterMetaType<ApiTrace::SearchResult>();
     qRegisterMetaType<ApiTrace::SearchRequest>();
     qRegisterMetaType<QList<QImage> >();
+
+#ifndef Q_OS_WIN
+    os::String currentProcess = os::getProcessName();
+    currentProcess.trimFilename();
+    QString path = qgetenv("PATH");
+    path = QLatin1String(currentProcess.str()) + QLatin1String(":") + path;
+    qputenv("PATH", path.toLatin1());
+#endif
+
     QStringList args = app.arguments();
+    QString remoteTarget;
 
     int i = 1;
     while (i < args.count()) {
@@ -42,6 +61,13 @@ int main(int argc, char **argv)
         ++i;
         if (arg == QLatin1String("--")) {
             break;
+        } else if (arg == QLatin1String("--remote-target")) {
+            if (i == args.count()) {
+                qWarning("Option --remote-target requires an argument.\n");
+                exit(1);
+            }
+            remoteTarget = args[i];
+            ++i;
         } else if (arg == QLatin1String("-h") ||
                    arg == QLatin1String("--help")) {
             usage();
@@ -63,6 +89,10 @@ int main(int argc, char **argv)
             callNum = args[i++].toInt();
         }
         window.loadTrace(fileName, callNum);
+    }
+
+    if (remoteTarget.length()) {
+        window.setRemoteTarget(remoteTarget);
     }
 
     app.exec();

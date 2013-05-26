@@ -213,6 +213,19 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		DOC "Path to fxc.exe executable.")
 
 
+	find_path (DirectX_D2D1_INCLUDE_DIR d2d1.h
+		PATHS ${DirectX_INC_SEARCH_PATH}
+		DOC "The directory where d2d1.h resides")
+
+	find_library (DirectX_D2D1_LIBRARY d2d1
+		PATHS ${DirectX_LIB_SEARCH_PATH}
+		DOC "The directory where d2d1 resides")
+
+	if (DirectX_D2D1_INCLUDE_DIR AND DirectX_D2D1_LIBRARY)
+		set (DirectX_D2D1_FOUND 1)
+	endif (DirectX_D2D1_INCLUDE_DIR AND DirectX_D2D1_LIBRARY)
+
+
 	mark_as_advanced (
 		DirectX_D3D_INCLUDE_DIR
 		DirectX_D3D_INCLUDE_DIR
@@ -245,6 +258,8 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		DirectX_D3DX11_INCLUDE_DIR
 		DirectX_D3DX11_LIBRARY
 		DirectX_D3D11_1_INCLUDE_DIR
+		DirectX_D2D1_INCLUDE_DIR
+		DirectX_D2D1_LIBRARY
 	)
 
 
@@ -264,6 +279,7 @@ mark_as_advanced (
 	DirectX_D3D11_FOUND
 	DirectX_D3DX11_FOUND
 	DirectX_D3D11_1_FOUND
+	DirectX_D2D1_FOUND
 )
 
 

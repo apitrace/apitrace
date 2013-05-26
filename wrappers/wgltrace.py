@@ -28,7 +28,7 @@
 
 
 from gltrace import GlTracer
-from specs.stdapi import API
+from specs.stdapi import Module, API
 from specs.glapi import glapi
 from specs.wglapi import wglapi
 
@@ -38,6 +38,45 @@ class WglTracer(GlTracer):
     getProcAddressFunctionNames = [
         "wglGetProcAddress",
     ]
+
+    createContextFunctionNames = [
+        'wglCreateContext',
+        'wglCreateContextAttribsARB',
+        'wglCreateLayerContext',
+    ]
+
+    destroyContextFunctionNames = [
+        'wglDeleteContext',
+    ]
+
+    makeCurrentFunctionNames = [
+        'wglMakeCurrent',
+        'wglMakeContextCurrentARB',
+        'wglMakeContextCurrentEXT',
+    ]
+
+    def traceFunctionImplBody(self, function):
+        if function.name in self.destroyContextFunctionNames:
+            # Unlike other GL APIs like EGL or GLX, WGL will make the context
+            # inactive if it's currently the active context.
+            print '    if (_wglGetCurrentContext() == hglrc) {'
+            print '        gltrace::clearContext();'
+            print '    }'
+            print '    gltrace::releaseContext((uintptr_t)hglrc);'
+
+        GlTracer.traceFunctionImplBody(self, function)
+
+        if function.name in self.createContextFunctionNames:
+            print '    if (_result)'
+            print '        gltrace::createContext((uintptr_t)_result);'
+
+        if function.name in self.makeCurrentFunctionNames:
+            print '    if (_result) {'
+            print '        if (hglrc != NULL)'
+            print '            gltrace::setContext((uintptr_t)hglrc);'
+            print '        else'
+            print '            gltrace::clearContext();'
+            print '    }'
 
 
 if __name__ == '__main__':
@@ -57,8 +96,10 @@ if __name__ == '__main__':
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
+    module = Module()
+    module.mergeModule(glapi)
+    module.mergeModule(wglapi)
     api = API()
-    api.addApi(glapi)
-    api.addApi(wglapi)
+    api.addModule(module)
     tracer = WglTracer()
     tracer.traceApi(api)

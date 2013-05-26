@@ -327,9 +327,9 @@ D3D11_BOX = Struct("D3D11_BOX", [
 
 ID3D11DeviceChild.methods += [
     StdMethod(Void, "GetDevice", [Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice")]),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")]),
-    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
-    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")]),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
 ]
 
 D3D11_COMPARISON_FUNC = Enum("D3D11_COMPARISON_FUNC", [
@@ -378,7 +378,7 @@ D3D11_DEPTH_STENCIL_DESC = Struct("D3D11_DEPTH_STENCIL_DESC", [
 ])
 
 ID3D11DepthStencilState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_BLEND = Enum("D3D11_BLEND", [
@@ -435,7 +435,7 @@ D3D11_BLEND_DESC = Struct("D3D11_BLEND_DESC", [
 ])
 
 ID3D11BlendState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BLEND_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BLEND_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_RASTERIZER_DESC = Struct("D3D11_RASTERIZER_DESC", [
@@ -452,25 +452,25 @@ D3D11_RASTERIZER_DESC = Struct("D3D11_RASTERIZER_DESC", [
 ])
 
 ID3D11RasterizerState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RASTERIZER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RASTERIZER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_SUBRESOURCE_DATA = Struct("D3D11_SUBRESOURCE_DATA", [
-    (OpaquePointer(Const(Void)), "pSysMem"),
+    (Blob(Const(Void), "_calcSubresourceSize(pDesc, {i}, {self}.SysMemPitch, {self}.SysMemSlicePitch)"), "pSysMem"),
     (UINT, "SysMemPitch"),
     (UINT, "SysMemSlicePitch"),
 ])
 
 D3D11_MAPPED_SUBRESOURCE = Struct("D3D11_MAPPED_SUBRESOURCE", [
-    (OpaquePointer(Void), "pData"),
+    (LinearPointer(Void, "_MappedSize"), "pData"),
     (UINT, "RowPitch"),
     (UINT, "DepthPitch"),
 ])
 
 ID3D11Resource.methods += [
-    StdMethod(Void, "GetType", [Out(Pointer(D3D11_RESOURCE_DIMENSION), "pResourceDimension")]),
+    StdMethod(Void, "GetType", [Out(Pointer(D3D11_RESOURCE_DIMENSION), "pResourceDimension")], sideeffects=False),
     StdMethod(Void, "SetEvictionPriority", [(UINT, "EvictionPriority")]),
-    StdMethod(UINT, "GetEvictionPriority", []),
+    StdMethod(UINT, "GetEvictionPriority", [], sideeffects=False),
 ]
 
 D3D11_BUFFER_DESC = Struct("D3D11_BUFFER_DESC", [
@@ -483,7 +483,7 @@ D3D11_BUFFER_DESC = Struct("D3D11_BUFFER_DESC", [
 ])
 
 ID3D11Buffer.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BUFFER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_BUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURE1D_DESC = Struct("D3D11_TEXTURE1D_DESC", [
@@ -498,7 +498,7 @@ D3D11_TEXTURE1D_DESC = Struct("D3D11_TEXTURE1D_DESC", [
 ])
 
 ID3D11Texture1D.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE1D_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE1D_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURE2D_DESC = Struct("D3D11_TEXTURE2D_DESC", [
@@ -515,7 +515,7 @@ D3D11_TEXTURE2D_DESC = Struct("D3D11_TEXTURE2D_DESC", [
 ])
 
 ID3D11Texture2D.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE2D_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE2D_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURE3D_DESC = Struct("D3D11_TEXTURE3D_DESC", [
@@ -531,7 +531,7 @@ D3D11_TEXTURE3D_DESC = Struct("D3D11_TEXTURE3D_DESC", [
 ])
 
 ID3D11Texture3D.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE3D_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_TEXTURE3D_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEXTURECUBE_FACE = Enum("D3D11_TEXTURECUBE_FACE", [
@@ -548,8 +548,8 @@ ID3D11View.methods += [
 ]
 
 D3D11_BUFFER_SRV = Struct("D3D11_BUFFER_SRV", [
-    (Union(None, [(UINT, "FirstElement"), (UINT, "ElementOffset")]), None),
-    (Union(None, [(UINT, "NumElements"), (UINT, "ElementWidth")]), None),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D11_BUFFEREX_SRV_FLAG = Flags(UINT, [
@@ -615,28 +615,28 @@ D3D11_TEX2DMS_ARRAY_SRV = Struct("D3D11_TEX2DMS_ARRAY_SRV", [
 D3D11_SHADER_RESOURCE_VIEW_DESC = Struct("D3D11_SHADER_RESOURCE_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_SRV_DIMENSION, "ViewDimension"),
-    (Union(None, [
-        (D3D11_BUFFER_SRV, "Buffer"),
-        (D3D11_TEX1D_SRV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_SRV, "Texture1DArray"),
-        (D3D11_TEX2D_SRV, "Texture2D"), 
-        (D3D11_TEX2D_ARRAY_SRV, "Texture2DArray"),
-        (D3D11_TEX2DMS_SRV, "Texture2DMS"),
-        (D3D11_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
-        (D3D11_TEX3D_SRV, "Texture3D"),
-        (D3D11_TEXCUBE_SRV, "TextureCube"),
-        (D3D11_TEXCUBE_ARRAY_SRV, "TextureCubeArray"),
-        (D3D11_BUFFEREX_SRV, "BufferEx"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_SRV_DIMENSION_BUFFER", D3D11_BUFFER_SRV, "Buffer"),
+        ("D3D11_SRV_DIMENSION_TEXTURE1D", D3D11_TEX1D_SRV, "Texture1D"),
+        ("D3D11_SRV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_SRV, "Texture1DArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2D", D3D11_TEX2D_SRV, "Texture2D"), 
+        ("D3D11_SRV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_SRV, "Texture2DArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_SRV, "Texture2DMS"),
+        ("D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
+        ("D3D11_SRV_DIMENSION_TEXTURE3D", D3D11_TEX3D_SRV, "Texture3D"),
+        ("D3D11_SRV_DIMENSION_TEXTURECUBE", D3D11_TEXCUBE_SRV, "TextureCube"),
+        ("D3D11_SRV_DIMENSION_TEXTURECUBEARRAY", D3D11_TEXCUBE_ARRAY_SRV, "TextureCubeArray"),
+        ("D3D11_SRV_DIMENSION_BUFFEREX", D3D11_BUFFEREX_SRV, "BufferEx"),
     ]), None),
 ])
 
 ID3D11ShaderResourceView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SHADER_RESOURCE_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SHADER_RESOURCE_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_BUFFER_RTV = Struct("D3D11_BUFFER_RTV", [
-    (Union(None, [(UINT, "FirstElement"), (UINT, "ElementOffset")]), None),
-    (Union(None, [(UINT, "NumElements"), (UINT, "ElementWidth")]), None),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D11_TEX1D_RTV = Struct("D3D11_TEX1D_RTV", [
@@ -677,20 +677,20 @@ D3D11_TEX3D_RTV = Struct("D3D11_TEX3D_RTV", [
 D3D11_RENDER_TARGET_VIEW_DESC = Struct("D3D11_RENDER_TARGET_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_RTV_DIMENSION, "ViewDimension"),
-    (Union(None, [
-        (D3D11_BUFFER_RTV, "Buffer"),
-        (D3D11_TEX1D_RTV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_RTV, "Texture1DArray"),
-        (D3D11_TEX2D_RTV, "Texture2D"),
-        (D3D11_TEX2D_ARRAY_RTV, "Texture2DArray"),
-        (D3D11_TEX2DMS_RTV, "Texture2DMS"),
-        (D3D11_TEX2DMS_ARRAY_RTV, "Texture2DMSArray"),
-        (D3D11_TEX3D_RTV, "Texture3D"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_RTV_DIMENSION_BUFFER", D3D11_BUFFER_RTV, "Buffer"),
+        ("D3D11_RTV_DIMENSION_TEXTURE1D", D3D11_TEX1D_RTV, "Texture1D"),
+        ("D3D11_RTV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_RTV, "Texture1DArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2D", D3D11_TEX2D_RTV, "Texture2D"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_RTV, "Texture2DArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_RTV, "Texture2DMS"),
+        ("D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_RTV, "Texture2DMSArray"),
+        ("D3D11_RTV_DIMENSION_TEXTURE3D", D3D11_TEX3D_RTV, "Texture3D"),
     ]), None),
 ])
 
 ID3D11RenderTargetView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RENDER_TARGET_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_RENDER_TARGET_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_TEX1D_DSV = Struct("D3D11_TEX1D_DSV", [
@@ -731,18 +731,18 @@ D3D11_DEPTH_STENCIL_VIEW_DESC = Struct("D3D11_DEPTH_STENCIL_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_DSV_DIMENSION, "ViewDimension"),
     (D3D11_DSV_FLAG, "Flags"),
-    (Union(None, [
-        (D3D11_TEX1D_DSV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_DSV, "Texture1DArray"),
-        (D3D11_TEX2D_DSV, "Texture2D"),
-        (D3D11_TEX2D_ARRAY_DSV, "Texture2DArray"),
-        (D3D11_TEX2DMS_DSV, "Texture2DMS"),
-        (D3D11_TEX2DMS_ARRAY_DSV, "Texture2DMSArray"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_DSV_DIMENSION_TEXTURE1D", D3D11_TEX1D_DSV, "Texture1D"),
+        ("D3D11_DSV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_DSV, "Texture1DArray"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2D", D3D11_TEX2D_DSV, "Texture2D"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_DSV, "Texture2DArray"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2DMS", D3D11_TEX2DMS_DSV, "Texture2DMS"),
+        ("D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY", D3D11_TEX2DMS_ARRAY_DSV, "Texture2DMSArray"),
     ]), None),
 ])
 
 ID3D11DepthStencilView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_DEPTH_STENCIL_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_BUFFER_UAV_FLAG = Flags(UINT, [
@@ -786,18 +786,18 @@ D3D11_TEX3D_UAV = Struct("D3D11_TEX3D_UAV", [
 D3D11_UNORDERED_ACCESS_VIEW_DESC = Struct("D3D11_UNORDERED_ACCESS_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D11_UAV_DIMENSION, "ViewDimension"),
-    (Union(None, [
-        (D3D11_BUFFER_UAV, "Buffer"),
-        (D3D11_TEX1D_UAV, "Texture1D"),
-        (D3D11_TEX1D_ARRAY_UAV, "Texture1DArray"),
-        (D3D11_TEX2D_UAV, "Texture2D"),
-        (D3D11_TEX2D_ARRAY_UAV, "Texture2DArray"),
-        (D3D11_TEX3D_UAV, "Texture3D"),
+    (Union("{self}.ViewDimension", [
+        ("D3D11_UAV_DIMENSION_BUFFER", D3D11_BUFFER_UAV, "Buffer"),
+        ("D3D11_UAV_DIMENSION_TEXTURE1D", D3D11_TEX1D_UAV, "Texture1D"),
+        ("D3D11_UAV_DIMENSION_TEXTURE1DARRAY", D3D11_TEX1D_ARRAY_UAV, "Texture1DArray"),
+        ("D3D11_UAV_DIMENSION_TEXTURE2D", D3D11_TEX2D_UAV, "Texture2D"),
+        ("D3D11_UAV_DIMENSION_TEXTURE2DARRAY", D3D11_TEX2D_ARRAY_UAV, "Texture2DArray"),
+        ("D3D11_UAV_DIMENSION_TEXTURE3D", D3D11_TEX3D_UAV, "Texture3D"),
     ]), None),
 ])
 
 ID3D11UnorderedAccessView.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_UNORDERED_ACCESS_VIEW_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_UNORDERED_ACCESS_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_FILTER = Enum("D3D11_FILTER", [
@@ -848,7 +848,7 @@ D3D11_SAMPLER_DESC = Struct("D3D11_SAMPLER_DESC", [
 ])
 
 ID3D11SamplerState.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SAMPLER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_SAMPLER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_FORMAT_SUPPORT = Flags(UINT, [
@@ -893,7 +893,7 @@ D3D11_FORMAT_SUPPORT2 = Enum("D3D11_FORMAT_SUPPORT2", [
 ])
 
 ID3D11Asynchronous.methods += [
-    StdMethod(UINT, "GetDataSize", []),
+    StdMethod(UINT, "GetDataSize", [], sideeffects=False),
 ]
 
 D3D11_ASYNC_GETDATA_FLAG = Flags(UINT, [
@@ -929,7 +929,7 @@ D3D11_QUERY_DESC = Struct("D3D11_QUERY_DESC", [
 ])
 
 ID3D11Query.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_QUERY_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_QUERY_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_QUERY_DATA_TIMESTAMP_DISJOINT = Struct("D3D11_QUERY_DATA_TIMESTAMP_DISJOINT", [
@@ -979,7 +979,7 @@ D3D11_COUNTER_INFO = Struct("D3D11_COUNTER_INFO", [
 ])
 
 ID3D11Counter.methods += [
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_COUNTER_DESC), "pDesc")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_COUNTER_DESC), "pDesc")], sideeffects=False),
 ]
 
 D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS = Enum("D3D11_STANDARD_MULTISAMPLE_QUALITY_LEVELS", [
@@ -1006,9 +1006,9 @@ D3D11_CLASS_INSTANCE_DESC = Struct("D3D11_CLASS_INSTANCE_DESC", [
 
 ID3D11ClassInstance.methods += [
     StdMethod(Void, "GetClassLinkage", [Out(Pointer(ObjPointer(ID3D11ClassLinkage)), "ppLinkage")]),
-    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_CLASS_INSTANCE_DESC), "pDesc")]),
-    StdMethod(Void, "GetInstanceName", [Out(LPSTR, "pInstanceName"), Out(Pointer(SIZE_T), "pBufferLength")]),
-    StdMethod(Void, "GetTypeName", [Out(LPSTR, "pTypeName"), Out(Pointer(SIZE_T), "pBufferLength")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D11_CLASS_INSTANCE_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetInstanceName", [Out(LPSTR, "pInstanceName"), Out(Pointer(SIZE_T), "pBufferLength")], sideeffects=False),
+    StdMethod(Void, "GetTypeName", [Out(LPSTR, "pTypeName"), Out(Pointer(SIZE_T), "pBufferLength")], sideeffects=False),
 ]
 
 ID3D11ClassLinkage.methods += [
@@ -1017,7 +1017,7 @@ ID3D11ClassLinkage.methods += [
 ]
 
 ID3D11CommandList.methods += [
-    StdMethod(UINT, "GetContextFlags", []),
+    StdMethod(UINT, "GetContextFlags", [], sideeffects=False),
 ]
 
 D3D11_FEATURE_DATA_THREADING = Struct("D3D11_FEATURE_DATA_THREADING", [
@@ -1063,7 +1063,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "Unmap", [(ObjPointer(ID3D11Resource), "pResource"), (UINT, "Subresource")]),
     StdMethod(Void, "PSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "IASetInputLayout", [(ObjPointer(ID3D11InputLayout), "pInputLayout")]),
-    StdMethod(Void, "IASetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppVertexBuffers"), (Pointer(Const(UINT)), "pStrides"), (Pointer(Const(UINT)), "pOffsets")]),
+    StdMethod(Void, "IASetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppVertexBuffers"), (Array(Const(UINT), "NumBuffers"), "pStrides"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
     StdMethod(Void, "IASetIndexBuffer", [(ObjPointer(ID3D11Buffer), "pIndexBuffer"), (DXGI_FORMAT, "Format"), (UINT, "Offset")]),
     StdMethod(Void, "DrawIndexedInstanced", [(UINT, "IndexCountPerInstance"), (UINT, "InstanceCount"), (UINT, "StartIndexLocation"), (INT, "BaseVertexLocation"), (UINT, "StartInstanceLocation")]),
     StdMethod(Void, "DrawInstanced", [(UINT, "VertexCountPerInstance"), (UINT, "InstanceCount"), (UINT, "StartVertexLocation"), (UINT, "StartInstanceLocation")]),
@@ -1074,15 +1074,15 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "VSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "Begin", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
     StdMethod(Void, "End", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
-    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(OpaqueBlob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")]),
+    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(OpaqueBlob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
     StdMethod(Void, "SetPredication", [(ObjPointer(ID3D11Predicate), "pPredicate"), (BOOL, "PredicateValue")]),
     StdMethod(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "OMSetRenderTargets", [(UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11RenderTargetView)), "NumViews"), "ppRenderTargetViews"), (ObjPointer(ID3D11DepthStencilView), "pDepthStencilView")]),
-    StdMethod(Void, "OMSetRenderTargetsAndUnorderedAccessViews", [(UINT, "NumRTVs"), (Array(Const(ObjPointer(ID3D11RenderTargetView)), "NumRTVs"), "ppRenderTargetViews"), (ObjPointer(ID3D11DepthStencilView), "pDepthStencilView"), (UINT, "UAVStartSlot"), (UINT, "NumUAVs"), (Array(Const(ObjPointer(ID3D11UnorderedAccessView)), "NumUAVs"), "ppUnorderedAccessViews"), (Pointer(Const(UINT)), "pUAVInitialCounts")]),
+    StdMethod(Void, "OMSetRenderTargetsAndUnorderedAccessViews", [(UINT, "NumRTVs"), (Array(Const(ObjPointer(ID3D11RenderTargetView)), "NumRTVs"), "ppRenderTargetViews"), (ObjPointer(ID3D11DepthStencilView), "pDepthStencilView"), (UINT, "UAVStartSlot"), (UINT, "NumUAVs"), (Array(Const(ObjPointer(ID3D11UnorderedAccessView)), "NumUAVs"), "ppUnorderedAccessViews"), (Array(Const(UINT), "NumUAVs"), "pUAVInitialCounts")]),
     StdMethod(Void, "OMSetBlendState", [(ObjPointer(ID3D11BlendState), "pBlendState"), (Array(Const(FLOAT), 4), "BlendFactor"), (UINT, "SampleMask")]),
     StdMethod(Void, "OMSetDepthStencilState", [(ObjPointer(ID3D11DepthStencilState), "pDepthStencilState"), (UINT, "StencilRef")]),
-    StdMethod(Void, "SOSetTargets", [(UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppSOTargets"), (Pointer(Const(UINT)), "pOffsets")]),
+    StdMethod(Void, "SOSetTargets", [(UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppSOTargets"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
     StdMethod(Void, "DrawAuto", []),
     StdMethod(Void, "DrawIndexedInstancedIndirect", [(ObjPointer(ID3D11Buffer), "pBufferForArgs"), (UINT, "AlignedByteOffsetForArgs")]),
     StdMethod(Void, "DrawInstancedIndirect", [(ObjPointer(ID3D11Buffer), "pBufferForArgs"), (UINT, "AlignedByteOffsetForArgs")]),
@@ -1093,7 +1093,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "RSSetScissorRects", [(UINT, "NumRects"), (Array(Const(D3D11_RECT), "NumRects"), "pRects")]),
     StdMethod(Void, "CopySubresourceRegion", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D11_BOX)), "pSrcBox")]),
     StdMethod(Void, "CopyResource", [(ObjPointer(ID3D11Resource), "pDstResource"), (ObjPointer(ID3D11Resource), "pSrcResource")]),
-    StdMethod(Void, "UpdateSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
+    StdMethod(Void, "UpdateSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
     StdMethod(Void, "CopyStructureCount", [(ObjPointer(ID3D11Buffer), "pDstBuffer"), (UINT, "DstAlignedByteOffset"), (ObjPointer(ID3D11UnorderedAccessView), "pSrcView")]),
     StdMethod(Void, "ClearRenderTargetView", [(ObjPointer(ID3D11RenderTargetView), "pRenderTargetView"), (Array(Const(FLOAT), 4), "ColorRGBA")]),
     StdMethod(Void, "ClearUnorderedAccessViewUint", [(ObjPointer(ID3D11UnorderedAccessView), "pUnorderedAccessView"), (Array(Const(UINT), 4), "Values")]),
@@ -1101,7 +1101,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "ClearDepthStencilView", [(ObjPointer(ID3D11DepthStencilView), "pDepthStencilView"), (D3D11_CLEAR_FLAG, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
     StdMethod(Void, "GenerateMips", [(ObjPointer(ID3D11ShaderResourceView), "pShaderResourceView")]),
     StdMethod(Void, "SetResourceMinLOD", [(ObjPointer(ID3D11Resource), "pResource"), (FLOAT, "MinLOD")]),
-    StdMethod(FLOAT, "GetResourceMinLOD", [(ObjPointer(ID3D11Resource), "pResource")]),
+    StdMethod(FLOAT, "GetResourceMinLOD", [(ObjPointer(ID3D11Resource), "pResource")], sideeffects=False),
     StdMethod(Void, "ResolveSubresource", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (DXGI_FORMAT, "Format")]),
     StdMethod(Void, "ExecuteCommandList", [(ObjPointer(ID3D11CommandList), "pCommandList"), (BOOL, "RestoreContextState")]),
     StdMethod(Void, "HSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
@@ -1113,52 +1113,52 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "DSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "DSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "CSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
-    StdMethod(Void, "CSSetUnorderedAccessViews", [(UINT, "StartSlot"), (UINT, "NumUAVs"), (Array(Const(ObjPointer(ID3D11UnorderedAccessView)), "NumUAVs"), "ppUnorderedAccessViews"), (Pointer(Const(UINT)), "pUAVInitialCounts")]),
+    StdMethod(Void, "CSSetUnorderedAccessViews", [(UINT, "StartSlot"), (UINT, "NumUAVs"), (Array(Const(ObjPointer(ID3D11UnorderedAccessView)), "NumUAVs"), "ppUnorderedAccessViews"), (Array(Const(UINT), "NumUAVs"), "pUAVInitialCounts")]),
     StdMethod(Void, "CSSetShader", [(ObjPointer(ID3D11ComputeShader), "pComputeShader"), (Array(Const(ObjPointer(ID3D11ClassInstance)), "NumClassInstances"), "ppClassInstances"), (UINT, "NumClassInstances")]),
     StdMethod(Void, "CSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "CSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers")]),
-    StdMethod(Void, "VSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
-    StdMethod(Void, "PSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "VSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "PSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "PSGetShader", [Out(Pointer(ObjPointer(ID3D11PixelShader)), "ppPixelShader"), Out(Array(ObjPointer(ID3D11ClassInstance), "*pNumClassInstances"), "ppClassInstances"), Out(Pointer(UINT), "pNumClassInstances")]),
-    StdMethod(Void, "PSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "PSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "VSGetShader", [Out(Pointer(ObjPointer(ID3D11VertexShader)), "ppVertexShader"), Out(Array(ObjPointer(ID3D11ClassInstance), "*pNumClassInstances"), "ppClassInstances"), Out(Pointer(UINT), "pNumClassInstances")]),
-    StdMethod(Void, "PSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "PSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "IAGetInputLayout", [Out(Pointer(ObjPointer(ID3D11InputLayout)), "ppInputLayout")]),
-    StdMethod(Void, "IAGetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppVertexBuffers"), Out(Pointer(UINT), "pStrides"), Out(Pointer(UINT), "pOffsets")]),
+    StdMethod(Void, "IAGetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppVertexBuffers"), Out(Array(UINT, "NumBuffers"), "pStrides"), Out(Array(UINT, "NumBuffers"), "pOffsets")]),
     StdMethod(Void, "IAGetIndexBuffer", [Out(Pointer(ObjPointer(ID3D11Buffer)), "pIndexBuffer"), Out(Pointer(DXGI_FORMAT), "Format"), Out(Pointer(UINT), "Offset")]),
-    StdMethod(Void, "GSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "GSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "GSGetShader", [Out(Pointer(ObjPointer(ID3D11GeometryShader)), "ppGeometryShader"), Out(Array(ObjPointer(ID3D11ClassInstance), "*pNumClassInstances"), "ppClassInstances"), Out(Pointer(UINT), "pNumClassInstances")]),
-    StdMethod(Void, "IAGetPrimitiveTopology", [Out(Pointer(D3D11_PRIMITIVE_TOPOLOGY), "pTopology")]),
-    StdMethod(Void, "VSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
-    StdMethod(Void, "VSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "IAGetPrimitiveTopology", [Out(Pointer(D3D11_PRIMITIVE_TOPOLOGY), "pTopology")], sideeffects=False),
+    StdMethod(Void, "VSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "VSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "GetPredication", [Out(Pointer(ObjPointer(ID3D11Predicate)), "ppPredicate"), Out(Pointer(BOOL), "pPredicateValue")]),
-    StdMethod(Void, "GSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
-    StdMethod(Void, "GSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
-    StdMethod(Void, "OMGetRenderTargets", [(UINT, "NumViews"), (Array(ObjPointer(ID3D11RenderTargetView), "NumViews"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView")]),
-    StdMethod(Void, "OMGetRenderTargetsAndUnorderedAccessViews", [(UINT, "NumRTVs"), (Array(ObjPointer(ID3D11RenderTargetView), "NumRTVs"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView"), (UINT, "UAVStartSlot"), (UINT, "NumUAVs"), (Array(ObjPointer(ID3D11UnorderedAccessView), "NumUAVs"), "ppUnorderedAccessViews")]),
+    StdMethod(Void, "GSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "GSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "OMGetRenderTargets", [(UINT, "NumViews"), Out(Array(ObjPointer(ID3D11RenderTargetView), "NumViews"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView")]),
+    StdMethod(Void, "OMGetRenderTargetsAndUnorderedAccessViews", [(UINT, "NumRTVs"), Out(Array(ObjPointer(ID3D11RenderTargetView), "NumRTVs"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView"), (UINT, "UAVStartSlot"), (UINT, "NumUAVs"), Out(Array(ObjPointer(ID3D11UnorderedAccessView), "NumUAVs"), "ppUnorderedAccessViews")]),
     StdMethod(Void, "OMGetBlendState", [Out(Pointer(ObjPointer(ID3D11BlendState)), "ppBlendState"), Out(Array(FLOAT, 4), "BlendFactor"), Out(Pointer(UINT), "pSampleMask")]),
     StdMethod(Void, "OMGetDepthStencilState", [Out(Pointer(ObjPointer(ID3D11DepthStencilState)), "ppDepthStencilState"), Out(Pointer(UINT), "pStencilRef")]),
-    StdMethod(Void, "SOGetTargets", [(UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppSOTargets")]),
+    StdMethod(Void, "SOGetTargets", [(UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppSOTargets")]),
     StdMethod(Void, "RSGetState", [Out(Pointer(ObjPointer(ID3D11RasterizerState)), "ppRasterizerState")]),
     StdMethod(Void, "RSGetViewports", [Out(Pointer(UINT), "pNumViewports"), Out(Array(D3D11_VIEWPORT, "*pNumViewports"), "pViewports")]),
     StdMethod(Void, "RSGetScissorRects", [Out(Pointer(UINT), "pNumRects"), Out(Array(D3D11_RECT, "*pNumRects"), "pRects")]),
-    StdMethod(Void, "HSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "HSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "HSGetShader", [Out(Pointer(ObjPointer(ID3D11HullShader)), "ppHullShader"), Out(Array(ObjPointer(ID3D11ClassInstance), "*pNumClassInstances"), "ppClassInstances"), Out(Pointer(UINT), "pNumClassInstances")]),
-    StdMethod(Void, "HSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
-    StdMethod(Void, "HSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
-    StdMethod(Void, "DSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "HSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "HSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "DSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "DSGetShader", [Out(Pointer(ObjPointer(ID3D11DomainShader)), "ppDomainShader"), Out(Array(ObjPointer(ID3D11ClassInstance), "*pNumClassInstances"), "ppClassInstances"), Out(Pointer(UINT), "pNumClassInstances")]),
-    StdMethod(Void, "DSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
-    StdMethod(Void, "DSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
-    StdMethod(Void, "CSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
-    StdMethod(Void, "CSGetUnorderedAccessViews", [(UINT, "StartSlot"), (UINT, "NumUAVs"), (Array(ObjPointer(ID3D11UnorderedAccessView), "NumUAVs"), "ppUnorderedAccessViews")]),
+    StdMethod(Void, "DSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "DSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "CSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D11ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "CSGetUnorderedAccessViews", [(UINT, "StartSlot"), (UINT, "NumUAVs"), Out(Array(ObjPointer(ID3D11UnorderedAccessView), "NumUAVs"), "ppUnorderedAccessViews")]),
     StdMethod(Void, "CSGetShader", [Out(Pointer(ObjPointer(ID3D11ComputeShader)), "ppComputeShader"), Out(Array(ObjPointer(ID3D11ClassInstance), "*pNumClassInstances"), "ppClassInstances"), Out(Pointer(UINT), "pNumClassInstances")]),
-    StdMethod(Void, "CSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
-    StdMethod(Void, "CSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "CSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D11SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "CSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers")]),
     StdMethod(Void, "ClearState", []),
     StdMethod(Void, "Flush", []),
-    StdMethod(D3D11_DEVICE_CONTEXT_TYPE, "GetType", []),
-    StdMethod(UINT, "GetContextFlags", []),
+    StdMethod(D3D11_DEVICE_CONTEXT_TYPE, "GetType", [], sideeffects=False),
+    StdMethod(UINT, "GetContextFlags", [], sideeffects=False),
     StdMethod(HRESULT, "FinishCommandList", [(BOOL, "RestoreDeferredContextState"), Out(Pointer(ObjPointer(ID3D11CommandList)), "ppCommandList")]),
 ]
 
@@ -1171,10 +1171,10 @@ D3D11_CREATE_DEVICE_FLAG = Flags(UINT, [
 ])
 
 ID3D11Device.methods += [
-    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D11_BUFFER_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Buffer)), "ppBuffer")]),
-    StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D11_TEXTURE1D_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture1D)), "ppTexture1D")]),
-    StdMethod(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D11_TEXTURE2D_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D)), "ppTexture2D")]),
-    StdMethod(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D11_TEXTURE3D_DESC)), "pDesc"), (Pointer(Const(D3D11_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture3D)), "ppTexture3D")]),
+    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D11_BUFFER_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "1"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Buffer)), "ppBuffer")]),
+    StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D11_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture1D)), "ppTexture1D")]),
+    StdMethod(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D11_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D)), "ppTexture2D")]),
+    StdMethod(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D11_TEXTURE3D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture3D)), "ppTexture3D")]),
     StdMethod(HRESULT, "CreateShaderResourceView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_SHADER_RESOURCE_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11ShaderResourceView)), "ppSRView")]),
     StdMethod(HRESULT, "CreateUnorderedAccessView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_UNORDERED_ACCESS_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11UnorderedAccessView)), "ppUAView")]),
     StdMethod(HRESULT, "CreateRenderTargetView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_RENDER_TARGET_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11RenderTargetView)), "ppRTView")]),
@@ -1197,36 +1197,31 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "CreateCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pCounterDesc"), Out(Pointer(ObjPointer(ID3D11Counter)), "ppCounter")]),
     StdMethod(HRESULT, "CreateDeferredContext", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppDeferredContext")]),
     StdMethod(HRESULT, "OpenSharedResource", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
-    StdMethod(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D11_FORMAT_SUPPORT), "pFormatSupport")]),
-    StdMethod(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")]),
-    StdMethod(Void, "CheckCounterInfo", [Out(Pointer(D3D11_COUNTER_INFO), "pCounterInfo")]),
-    StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D11_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")]),
-    StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(D3D11_FEATURE_DATA, "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")]),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")]),
-    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
-    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")]),
-    StdMethod(D3D_FEATURE_LEVEL, "GetFeatureLevel", []),
-    StdMethod(D3D11_CREATE_DEVICE_FLAG, "GetCreationFlags", []),
-    StdMethod(HRESULT, "GetDeviceRemovedReason", []),
+    StdMethod(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D11_FORMAT_SUPPORT), "pFormatSupport")], sideeffects=False),
+    StdMethod(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")], sideeffects=False),
+    StdMethod(Void, "CheckCounterInfo", [Out(Pointer(D3D11_COUNTER_INFO), "pCounterInfo")], sideeffects=False),
+    StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D11_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")], sideeffects=False),
+    StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(D3D11_FEATURE_DATA, "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
+    StdMethod(D3D_FEATURE_LEVEL, "GetFeatureLevel", [], sideeffects=False),
+    StdMethod(D3D11_CREATE_DEVICE_FLAG, "GetCreationFlags", [], sideeffects=False),
+    StdMethod(HRESULT, "GetDeviceRemovedReason", [], sideeffects=False),
     StdMethod(Void, "GetImmediateContext", [Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
     StdMethod(HRESULT, "SetExceptionMode", [(D3D11_RAISE_FLAG, "RaiseFlags")]),
-    StdMethod(UINT, "GetExceptionMode", []),
+    StdMethod(UINT, "GetExceptionMode", [], sideeffects=False),
 ]
 
-d3d11 = API("d3d11")
+d3d11 = Module("d3d11")
 
 d3d11.addFunctions([
     StdFunction(HRESULT, "D3D11CreateDevice", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D11_CREATE_DEVICE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice"), Out(Pointer(D3D_FEATURE_LEVEL), "pFeatureLevel"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
     StdFunction(HRESULT, "D3D11CreateDeviceAndSwapChain", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D11_CREATE_DEVICE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC)), "pSwapChainDesc"), Out(Pointer(ObjPointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice"), Out(Pointer(D3D_FEATURE_LEVEL), "pFeatureLevel"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
-
-    # XXX: Undocumented functions, called by d3d11sdklayers.dll when D3D11_CREATE_DEVICE_DEBUG is set
-    StdFunction(HRESULT, "D3D11CoreRegisterLayers", [LPCVOID, DWORD], internal=True),
-    StdFunction(SIZE_T, "D3D11CoreGetLayeredDeviceSize", [LPCVOID, DWORD], internal=True),
-    StdFunction(HRESULT, "D3D11CoreCreateLayeredDevice", [LPCVOID, DWORD, LPCVOID, (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj")], internal=True),
-    StdFunction(HRESULT, "D3D11CoreCreateDevice", [DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD], internal=True),
 ])
 
 d3d11.addInterfaces([
+    IDXGIFactory1,
     IDXGIAdapter1,
     IDXGIDevice1,
     IDXGIResource,

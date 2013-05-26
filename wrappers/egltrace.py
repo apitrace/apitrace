@@ -33,7 +33,7 @@
 
 
 from gltrace import GlTracer
-from specs.stdapi import API
+from specs.stdapi import Module, API
 from specs.glapi import glapi
 from specs.eglapi import eglapi
 from specs.glesapi import glesapi
@@ -52,29 +52,55 @@ class EglTracer(GlTracer):
     def traceFunctionImplBody(self, function):
         GlTracer.traceFunctionImplBody(self, function)
 
+        if function.name == 'eglCreateContext':
+            print '    if (_result != EGL_NO_CONTEXT)'
+            print '        gltrace::createContext((uintptr_t)_result);'
+
         if function.name == 'eglMakeCurrent':
-            print '    // update the profile'
-            print '    if (ctx != EGL_NO_CONTEXT) {'
-            print '        EGLint api = EGL_OPENGL_ES_API;'
-            print '        EGLint version = 1;'
-            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
-            print '        _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
-            print '        if (api == EGL_OPENGL_API) {'
-            print '            gldispatch::currentProfile = gldispatch::PROFILE_COMPAT;'
-            print '        } else if (api == EGL_OPENGL_ES_API) {'
-            print '            if (version == 1) {'
-            print '                gldispatch::currentProfile = gldispatch::PROFILE_ES1;'
-            print '            } else {'
-            print '                gldispatch::currentProfile = gldispatch::PROFILE_ES2;'
-            print '            }'
+            print '    if (_result) {'
+            print '        // update the profile'
+            print '        if (ctx != EGL_NO_CONTEXT) {'
+            print '            EGLint api = EGL_OPENGL_ES_API, version = 1;'
+            print '            gltrace::setContext((uintptr_t)ctx);'
+            print '            gltrace::Context *tr = gltrace::getContext();'
+            print '            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_TYPE, &api);'
+            print '            _eglQueryContext(dpy, ctx, EGL_CONTEXT_CLIENT_VERSION, &version);'
+            print '            if (api == EGL_OPENGL_API)'
+            print '                tr->profile = gldispatch::PROFILE_COMPAT;'
+            print '            else if (version == 1)'
+            print '                tr->profile = gldispatch::PROFILE_ES1;'
+            print '            else'
+            print '                tr->profile = gldispatch::PROFILE_ES2;'
+            print '        } else {'
+            print '            gltrace::clearContext();'
             print '        }'
+            print '    }'
+
+        if function.name == 'eglDestroyContext':
+            print '    if (_result) {'
+            print '        gltrace::releaseContext((uintptr_t)ctx);'
+            print '    }'
+
+        if function.name == 'glEGLImageTargetTexture2DOES':
+            print '    image_info *info = _EGLImageKHR_get_image_info(target, image);'
+            print '    if (info) {'
+            print '        GLint level = 0;'
+            print '        GLint internalformat = info->internalformat;'
+            print '        GLsizei width = info->width;'
+            print '        GLsizei height = info->height;'
+            print '        GLint border = 0;'
+            print '        GLenum format = info->format;'
+            print '        GLenum type = info->type;'
+            print '        const GLvoid * pixels = info->pixels;'
+            self.emitFakeTexture2D()
+            print '        _EGLImageKHR_free_image_info(info);'
             print '    }'
 
 
 if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
-    print '#include <dlfcn.h>'
+    print '#include "dlopen.hpp"'
     print
     print '#include "trace_writer_local.hpp"'
     print
@@ -84,42 +110,20 @@ if __name__ == '__main__':
     print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
+    print '#include "eglsize.hpp"'
     print
     
+    module = Module()
+    module.mergeModule(eglapi)
+    module.mergeModule(glapi)
+    module.mergeModule(glesapi)
     api = API()
-    api.addApi(eglapi)
-    api.addApi(glapi)
-    api.addApi(glesapi)
+    api.addModule(module)
     tracer = EglTracer()
     tracer.traceApi(api)
 
     print r'''
 
-
-/*
- * Android does not support LD_PRELOAD.
- */
-#if !defined(ANDROID)
-
-
-/*
- * Invoke the true dlopen() function.
- */
-static void *_dlopen(const char *filename, int flag)
-{
-    typedef void * (*PFN_DLOPEN)(const char *, int);
-    static PFN_DLOPEN dlopen_ptr = NULL;
-
-    if (!dlopen_ptr) {
-        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_NEXT, "dlopen");
-        if (!dlopen_ptr) {
-            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
-            return NULL;
-        }
-    }
-
-    return dlopen_ptr(filename, flag);
-}
 
 
 /*
@@ -133,7 +137,7 @@ void * dlopen(const char *filename, int flag)
 {
     bool intercept = false;
 
-    if (filename) {
+    if (filename && trace::isTracingEnabled()) {
         intercept =
             strcmp(filename, "libEGL.so") == 0 ||
             strcmp(filename, "libEGL.so.1") == 0 ||
@@ -175,8 +179,65 @@ void * dlopen(const char *filename, int flag)
 }
 
 
-#endif /* !ANDROID */
+#if defined(ANDROID)
 
+/*
+ * Undocumented Android extensions used by Dalvik which have bound information
+ * passed to it, but is currently ignored, so probably unreliable.
+ *
+ * See:
+ * https://github.com/android/platform_frameworks_base/blob/master/opengl/libs/GLES_CM/gl.cpp
+ */
+
+extern "C" PUBLIC
+void APIENTRY glColorPointerBounds(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glColorPointer(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glNormalPointerBounds(GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glNormalPointer(type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glTexCoordPointerBounds(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glTexCoordPointer(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glVertexPointerBounds(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer, GLsizei count) {
+    (void)count;
+    glVertexPointer(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void GL_APIENTRY glPointSizePointerOESBounds(GLenum type, GLsizei stride, const GLvoid *pointer, GLsizei count) {
+    (void)count;
+    glPointSizePointerOES(type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glMatrixIndexPointerOESBounds(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer, GLsizei count) {
+    (void)count;
+    glMatrixIndexPointerOES(size, type, stride, pointer);
+}
+
+extern "C" PUBLIC
+void APIENTRY glWeightPointerOESBounds(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer, GLsizei count) {
+    (void)count;
+    glWeightPointerOES(size, type, stride, pointer);
+}
+
+/*
+ * There is also a glVertexAttribPointerBounds in
+ * https://github.com/android/platform_frameworks_base/blob/master/opengl/tools/glgen/stubs/gles11/GLES20cHeader.cpp
+ * but is it not exported.
+ */
+
+#endif /* ANDROID */
 
 
 '''

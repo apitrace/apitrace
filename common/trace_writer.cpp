@@ -29,12 +29,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 #include "os.hpp"
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
-
+#include "trace_backtrace.hpp"
 
 namespace trace {
 
@@ -71,6 +72,7 @@ Writer::open(const char *filename) {
     structs.clear();
     enums.clear();
     bitmasks.clear();
+    frames.clear();
 
     _writeUInt(TRACE_VERSION);
 
@@ -131,6 +133,41 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
         return false;
     } else {
         return map[index];
+    }
+}
+
+void Writer::beginBacktrace(unsigned num_frames) {
+    if (num_frames) {
+        _writeByte(trace::CALL_BACKTRACE);
+        _writeUInt(num_frames);
+    }
+}
+
+void Writer::writeStackFrame(const RawStackFrame *frame) {
+    _writeUInt(frame->id);
+    if (!lookup(frames, frame->id)) {
+        if (frame->module != NULL) {
+            _writeByte(trace::BACKTRACE_MODULE);
+            _writeString(frame->module);
+        }
+        if (frame->function != NULL) {
+            _writeByte(trace::BACKTRACE_FUNCTION);
+            _writeString(frame->function);
+        }
+        if (frame->filename != NULL) {
+            _writeByte(trace::BACKTRACE_FILENAME);
+            _writeString(frame->filename);
+        }
+        if (frame->linenumber >= 0) {
+            _writeByte(trace::BACKTRACE_LINENUMBER);
+            _writeUInt(frame->linenumber);
+        }
+        if (frame->offset >= 0) {
+            _writeByte(trace::BACKTRACE_OFFSET);
+            _writeUInt(frame->offset);
+        }
+        _writeByte(trace::BACKTRACE_END);
+        frames[frame->id] = true;
     }
 }
 

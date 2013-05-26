@@ -30,6 +30,8 @@ from winapi import *
 from d3d11sdklayers import *
 from d3d11 import *
 
+import dxgi1_2
+
 D3D_FEATURE_LEVEL.values += [
     "D3D_FEATURE_LEVEL_11_1",
 ]
@@ -104,7 +106,7 @@ D3D11_BLEND_DESC1 = Struct("D3D11_BLEND_DESC1", [
 ])
 
 ID3D11BlendState1.methods += [
-    Method(Void, "GetDesc1", [Out(Pointer(D3D11_BLEND_DESC1), "pDesc")]),
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_BLEND_DESC1), "pDesc")], sideeffects=False),
 ]
 
 D3D11_RASTERIZER_DESC1 = Struct("D3D11_RASTERIZER_DESC1", [
@@ -122,7 +124,7 @@ D3D11_RASTERIZER_DESC1 = Struct("D3D11_RASTERIZER_DESC1", [
 ])
 
 ID3D11RasterizerState1.methods += [
-    Method(Void, "GetDesc1", [Out(Pointer(D3D11_RASTERIZER_DESC1), "pDesc")]),
+    StdMethod(Void, "GetDesc1", [Out(Pointer(D3D11_RASTERIZER_DESC1), "pDesc")], sideeffects=False),
 ]
 
 D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG = Flags(UINT, [
@@ -130,48 +132,43 @@ D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG = Flags(UINT, [
 ])
 
 ID3D11DeviceContext1.methods += [
-    Method(Void, "CopySubresourceRegion1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D11_BOX)), "pSrcBox"), (D3D11_COPY_FLAGS, "CopyFlags")]),
-    Method(Void, "UpdateSubresource1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch"), (D3D11_COPY_FLAGS, "CopyFlags")]),
-    Method(Void, "DiscardResource", [(ObjPointer(ID3D11Resource), "pResource")]),
-    Method(Void, "DiscardView", [(ObjPointer(ID3D11View), "pResourceView")]),
-    Method(Void, "VSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
-    Method(Void, "HSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
-    Method(Void, "DSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
-    Method(Void, "GSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
-    Method(Void, "PSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
-    Method(Void, "CSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
-    Method(Void, "VSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
-    Method(Void, "HSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
-    Method(Void, "DSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
-    Method(Void, "GSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
-    Method(Void, "PSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
-    Method(Void, "CSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
-    Method(Void, "SwapDeviceContextState", [(ObjPointer(ID3DDeviceContextState), "pState"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppPreviousState")]),
-    Method(Void, "ClearView", [(ObjPointer(ID3D11View), "pView"), (Array(Const(FLOAT), 4), "Color"), (Pointer(Const(D3D11_RECT)), "pRect"), (UINT, "NumRects")]),
+    StdMethod(Void, "CopySubresourceRegion1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D11Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D11_BOX)), "pSrcBox"), (D3D11_COPY_FLAGS, "CopyFlags")]),
+    StdMethod(Void, "UpdateSubresource1", [(ObjPointer(ID3D11Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D11_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch"), (D3D11_COPY_FLAGS, "CopyFlags")]),
+    StdMethod(Void, "DiscardResource", [(ObjPointer(ID3D11Resource), "pResource")]),
+    StdMethod(Void, "DiscardView", [(ObjPointer(ID3D11View), "pResourceView")]),
+    StdMethod(Void, "DiscardView1", [(ObjPointer(ID3D11View), "pResourceView"), (Array(Const(D3D11_RECT), "NumRects"), "pRect"), (UINT, "NumRects")]),
+    StdMethod(Void, "VSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "HSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "DSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "GSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "PSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "CSSetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D11Buffer)), "NumBuffers"), "ppConstantBuffers"), (Array(Const(UINT), "NumBuffers"), "pFirstConstant"), (Array(Const(UINT), "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "VSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "HSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "DSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "GSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "PSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "CSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
+    StdMethod(Void, "SwapDeviceContextState", [(ObjPointer(ID3DDeviceContextState), "pState"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppPreviousState")]),
+    StdMethod(Void, "ClearView", [(ObjPointer(ID3D11View), "pView"), (Array(Const(FLOAT), 4), "Color"), (Pointer(Const(D3D11_RECT)), "pRect"), (UINT, "NumRects")]),
 ]
-
-
-DXGI_SHARED_RESOURCE_FLAG = Flags(DWORD, [
-    "DXGI_SHARED_RESOURCE_READ",
-    "DXGI_SHARED_RESOURCE_WRITE",
-])
 
 
 ID3D11Device1.methods += [
-    Method(Void, "GetImmediateContext1", [Out(Pointer(ObjPointer(ID3D11DeviceContext1)), "ppImmediateContext")]),
-    Method(HRESULT, "CreateDeferredContext1", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext1)), "ppDeferredContext")]),
-    Method(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D11_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D11BlendState1)), "ppBlendState")]),
-    Method(HRESULT, "CreateRasterizerState1", [(Pointer(Const(D3D11_RASTERIZER_DESC1)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D11RasterizerState1)), "ppRasterizerState")]),
-    Method(HRESULT, "CreateDeviceContextState", [(D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), (REFIID, "EmulatedInterface"), Out(Pointer(D3D_FEATURE_LEVEL), "pChosenFeatureLevel"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppContextState")]),
-    Method(HRESULT, "OpenSharedResource1", [(HANDLE, "hResource"), (REFIID, "returnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
-    Method(HRESULT, "OpenSharedResourceByName", [(LPCWSTR, "lpName"), (DXGI_SHARED_RESOURCE_FLAG, "dwDesiredAccess"), (REFIID, "returnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(Void, "GetImmediateContext1", [Out(Pointer(ObjPointer(ID3D11DeviceContext1)), "ppImmediateContext")]),
+    StdMethod(HRESULT, "CreateDeferredContext1", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext1)), "ppDeferredContext")]),
+    StdMethod(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D11_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D11BlendState1)), "ppBlendState")]),
+    StdMethod(HRESULT, "CreateRasterizerState1", [(Pointer(Const(D3D11_RASTERIZER_DESC1)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D11RasterizerState1)), "ppRasterizerState")]),
+    StdMethod(HRESULT, "CreateDeviceContextState", [(D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), (REFIID, "EmulatedInterface"), Out(Pointer(D3D_FEATURE_LEVEL), "pChosenFeatureLevel"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppContextState")]),
+    StdMethod(HRESULT, "OpenSharedResource1", [(HANDLE, "hResource"), (REFIID, "returnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(HRESULT, "OpenSharedResourceByName", [(LPCWSTR, "lpName"), (DXGI_SHARED_RESOURCE_FLAG, "dwDesiredAccess"), (REFIID, "returnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
 ]
 
 ID3DUserDefinedAnnotation.methods += [
-    Method(INT, "BeginEvent", [(LPCWSTR, "Name")]),
-    Method(INT, "EndEvent", []),
-    Method(Void, "SetMarker", [(LPCWSTR, "Name")]),
-    Method(BOOL, "GetStatus", []),
+    StdMethod(INT, "BeginEvent", [(LPCWSTR, "Name")], sideeffects=False),
+    StdMethod(INT, "EndEvent", [], sideeffects=False),
+    StdMethod(Void, "SetMarker", [(LPCWSTR, "Name")], sideeffects=False),
+    StdMethod(BOOL, "GetStatus", [], sideeffects=False),
 ]
 
 d3d11.addInterfaces([

@@ -40,6 +40,7 @@ static bool call_dumped = false;
 
 static void dumpCall(trace::Call &call) {
     if (verbosity >= 0 && !call_dumped) {
+        std::cout << std::hex << call.thread_id << std::dec << " ";
         std::cout << call;
         std::cout.flush();
         call_dumped = true;
@@ -82,13 +83,6 @@ void Retracer::addCallbacks(const Entry *entries) {
 void Retracer::retrace(trace::Call &call) {
     call_dumped = false;
 
-    if (verbosity >= 1) {
-        if (verbosity >= 2 ||
-            !(call.flags & trace::CALL_FLAG_VERBOSE)) {
-            dumpCall(call);
-        }
-    }
-
     Callback callback = 0;
 
     trace::Id id = call.sig->id;
@@ -112,20 +106,15 @@ void Retracer::retrace(trace::Call &call) {
     assert(callback);
     assert(callbacks[id] == callback);
 
-    if (retrace::profiling) {
-        long long startTime = os::getTime();
-        callback(call);
-        long long stopTime = os::getTime();
-        float timeInterval = (stopTime - startTime) * (1.0E6 / os::timeFrequency);
-
-        std::cout
-            << call.no << " "
-            << "[" << timeInterval << " usec] "
-        ;
-        trace::dump(call, std::cout, trace::DUMP_FLAG_NO_CALL_NO | trace::DUMP_FLAG_NO_COLOR);
-    } else {
-        callback(call);
+    if (verbosity >= 1) {
+        if (verbosity >= 2 ||
+            (!(call.flags & trace::CALL_FLAG_VERBOSE) &&
+             callback != &ignore)) {
+            dumpCall(call);
+        }
     }
+
+    callback(call);
 }
 
 

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2011-2012 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,9 +24,9 @@
  **************************************************************************/
 
 /*
- * Simple OS abstraction.
+ * OS native thread abstraction.
  *
- * Mimics C++11 / boost threads.
+ * Mimics C++11 threads.
  */
 
 #ifndef _OS_THREAD_HPP_
@@ -39,10 +39,34 @@
 #include <pthread.h>
 #endif
 
+
+/*
+ * This feature is not supported on Windows XP
+ */
+#define USE_WIN32_CONDITION_VARIABLES 0
+
+
+/**
+ * Compiler TLS.
+ *
+ * See also:
+ * - http://gcc.gnu.org/onlinedocs/gcc-4.6.3/gcc/Thread_002dLocal.html
+ * - http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
+ */
+#if defined(HAVE_COMPILER_TLS)
+#  define OS_THREAD_SPECIFIC_PTR(_type) HAVE_COMPILER_TLS _type *
+#else
+#  define OS_THREAD_SPECIFIC_PTR(_type) os::thread_specific_ptr< _type >
+#endif
+
+
 namespace os {
 
 
-    class recursive_mutex
+    /**
+     * Base class for mutex and recursive_mutex.
+     */
+    class _base_mutex
     {
     public:
 #ifdef _WIN32
@@ -51,7 +75,7 @@ namespace os {
         typedef pthread_mutex_t native_handle_type;
 #endif
 
-        recursive_mutex(void) {
+        _base_mutex(void) {
 #ifdef _WIN32
             InitializeCriticalSection(&_native_handle);
 #else
@@ -63,7 +87,7 @@ namespace os {
 #endif
         }
 
-        ~recursive_mutex() {
+        ~_base_mutex() {
 #ifdef _WIN32
             DeleteCriticalSection(&_native_handle);
 #else
@@ -89,8 +113,173 @@ namespace os {
 #endif
         }
 
-    private:
+        native_handle_type & native_handle() {
+            return _native_handle;
+        }
+
+    protected:
         native_handle_type _native_handle;
+    };
+
+
+    /**
+     * Same interface as std::mutex.
+     */
+    class mutex : public _base_mutex
+    {
+    public:
+        inline
+        mutex(void) {
+#ifdef _WIN32
+            InitializeCriticalSection(&_native_handle);
+#else
+            pthread_mutex_init(&_native_handle, NULL);
+#endif
+        }
+    };
+
+
+    /**
+     * Same interface as std::recursive_mutex.
+     */
+    class recursive_mutex : public _base_mutex
+    {
+    public:
+        inline
+        recursive_mutex(void) {
+#ifdef _WIN32
+            InitializeCriticalSection(&_native_handle);
+#else
+            pthread_mutexattr_t attr;
+            pthread_mutexattr_init(&attr);
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+            pthread_mutex_init(&_native_handle, &attr);
+            pthread_mutexattr_destroy(&attr);
+#endif
+        }
+    };
+
+
+    /**
+     * Same interface as std::unique_lock;
+     */
+    template< class Mutex >
+    class unique_lock
+    {
+    public:
+        typedef Mutex mutex_type;
+
+        inline explicit
+        unique_lock(mutex_type & mutex) :
+            _mutex(&mutex)
+        {
+            _mutex->lock();
+        }
+
+        inline
+        ~unique_lock() {
+            _mutex->unlock();
+        }
+
+        inline void
+        lock() {
+            _mutex->lock();
+        }
+
+        inline void
+        unlock() {
+            _mutex->unlock();
+        }
+
+        mutex_type *
+        mutex() const {
+            return _mutex;
+        }
+
+    protected:
+        mutex_type *_mutex;
+    };
+
+
+    /**
+     * Same interface as std::condition_variable
+     */
+    class condition_variable
+    {
+    private:
+#ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
+        // XXX: Only supported on Vista an higher. Not yet supported by WINE.
+        typedef CONDITION_VARIABLE native_handle_type;
+        native_handle_type _native_handle;
+#else
+        // http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+        LONG cWaiters;
+        HANDLE hEvent;
+#endif
+#else
+        typedef pthread_cond_t native_handle_type;
+        native_handle_type _native_handle;
+#endif
+
+    public:
+        condition_variable() {
+#ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
+            InitializeConditionVariable(&_native_handle);
+#  else
+            cWaiters = 0;
+            hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+#  endif
+#else
+            pthread_cond_init(&_native_handle, NULL);
+#endif
+        }
+
+        ~condition_variable() {
+#ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
+            /* No-op */
+#  else
+            CloseHandle(hEvent);
+#  endif
+#else
+            pthread_cond_destroy(&_native_handle);
+#endif
+        }
+
+        inline void
+        signal(void) {
+#ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
+            WakeConditionVariable(&_native_handle);
+#  else
+            if (cWaiters) {
+                SetEvent(hEvent);
+            }
+#  endif
+#else
+            pthread_cond_signal(&_native_handle);
+#endif
+        }
+
+        inline void
+        wait(unique_lock<mutex> & lock) {
+            mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
+#ifdef _WIN32
+#  if USE_WIN32_CONDITION_VARIABLES
+            SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
+#  else
+            InterlockedIncrement(&cWaiters);
+            LeaveCriticalSection(&mutex_native_handle);
+            WaitForSingleObject(hEvent, INFINITE);
+            EnterCriticalSection(&mutex_native_handle);
+            InterlockedDecrement(&cWaiters);
+#  endif
+#else
+            pthread_cond_wait(&_native_handle, &mutex_native_handle);
+#endif
+        }
     };
 
 
@@ -102,10 +291,6 @@ namespace os {
         DWORD dwTlsIndex;
 #else
         pthread_key_t key;
-
-        static void destructor(void *ptr) {
-            delete static_cast<T *>(ptr);
-        }
 #endif
 
     public:
@@ -113,7 +298,7 @@ namespace os {
 #ifdef _WIN32
             dwTlsIndex = TlsAlloc();
 #else
-            pthread_key_create(&key, &destructor);
+            pthread_key_create(&key, NULL);
 #endif
         }
 
@@ -125,7 +310,8 @@ namespace os {
 #endif
         }
 
-        T* get(void) const {
+        inline T *
+        get(void) const {
             void *ptr;
 #ifdef _WIN32
             ptr = TlsGetValue(dwTlsIndex);
@@ -135,27 +321,105 @@ namespace os {
             return static_cast<T*>(ptr);
         }
 
-        T* operator -> (void) const
+        inline
+        operator T * (void) const
         {
             return get();
         }
 
-        T& operator * (void) const
+        inline T *
+        operator -> (void) const
         {
-            return *get();
+            return get();
         }
 
-        void reset(T* new_value=0) {
-            T * old_value = get();
+        inline T *
+        operator = (T * new_value)
+        {
+            set(new_value);
+            return new_value;
+        }
+
+        inline void
+        set(T* new_value) {
 #ifdef _WIN32
             TlsSetValue(dwTlsIndex, new_value);
 #else
             pthread_setspecific(key, new_value);
 #endif
-            if (old_value) {
-                delete old_value;
-            }
         }
+    };
+
+
+    /**
+     * Same interface as std::thread
+     */
+    class thread {
+    public:
+#ifdef _WIN32
+        typedef HANDLE native_handle_type;
+#else
+        typedef pthread_t native_handle_type;
+#endif
+
+        inline
+        thread() :
+            _native_handle(0)
+        {
+        }
+
+        inline
+        thread(const thread &other) :
+            _native_handle(other._native_handle)
+        {
+        }
+
+        inline
+        ~thread() {
+        }
+
+        template< class Function, class Arg >
+        explicit thread( Function& f, Arg arg ) {
+#ifdef _WIN32
+            DWORD id = 0;
+            _native_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)f, (LPVOID)arg, 0, &id);
+#else
+            pthread_create(&_native_handle, NULL, (void *(*) (void *))f, (void *)arg);
+#endif
+        }
+
+        inline thread &
+        operator =(const thread &other) {
+            _native_handle = other._native_handle;
+            return *this;
+        }
+
+        inline bool
+        joinable(void) const {
+            return _native_handle != 0;
+        }
+
+        inline void
+        join() {
+#ifdef _WIN32
+            WaitForSingleObject(_native_handle, INFINITE);
+#else
+            pthread_join(_native_handle, NULL);
+#endif
+        }
+
+    private:
+        native_handle_type _native_handle;
+
+#if 0
+#ifdef _WIN32
+        template< class Function, class Arg >
+        static DWORD WINAPI
+        ThreadProc(LPVOID lpParameter) {
+
+        );
+#endif
+#endif
     };
 
 } /* namespace os */

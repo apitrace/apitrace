@@ -27,8 +27,12 @@ EGL/eglplatform.h: EGL/eglplatform.patch FORCE
 	wget -O $@ "http://www.khronos.org/registry/egl/api/$@"
 	patch $@ $<
 
-GLES/gl.h GLES/glext.h GLES/glplatform.h: FORCE
+GLES/gl.h GLES/glplatform.h: FORCE
 	wget -O $@ "http://www.khronos.org/registry/gles/api/1.1/$(@F)"
+
+GLES/glext.h: GLES/glext.patch FORCE
+	wget -O $@ "http://www.khronos.org/registry/gles/api/1.1/$(@F)"
+	patch $@ $<
 
 GLES2/gl2.h GLES2/gl2ext.h GLES2/gl2platform.h: FORCE
 	wget -O $@ "http://www.khronos.org/registry/gles/api/2.0/$(@F)"

@@ -31,14 +31,14 @@
 #include "cli.hpp"
 #include "os_string.hpp"
 #include "os_process.hpp"
-#include "trace_resource.hpp"
+#include "cli_resources.hpp"
 
 static const char *synopsis = "Identify differences between two traces.";
 
 static os::String
 find_command(void)
 {
-    return trace::findScript("tracediff.py");
+    return findScript("tracediff.py");
 }
 
 static void

@@ -1,13 +1,13 @@
+OpenGL
 cgltrace.cpp
-d3d10_1trace.cpp
-d3d10trace.cpp
-d3d11trace.cpp
+d2d1trace.cpp
 d3d8trace.cpp
 d3d9trace.cpp
+dxgitrace.cpp
+dxgitrace.def
 ddrawtrace.cpp
 dlltrace.cpp
 egltrace.cpp
 gltrace.cpp
 glxtrace.cpp
-trace.cpp
 wgltrace.cpp

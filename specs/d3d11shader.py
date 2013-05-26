@@ -137,28 +137,28 @@ D3D11_SHADER_INPUT_BIND_DESC = Struct("D3D11_SHADER_INPUT_BIND_DESC", [
 ])
 
 ID3D11ShaderReflectionType.methods += [
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_TYPE_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_TYPE_DESC), "pDesc")], sideeffects=False),
     StdMethod(ObjPointer(ID3D11ShaderReflectionType), "GetMemberTypeByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D11ShaderReflectionType), "GetMemberTypeByName", [(LPCSTR, "Name")]),
-    StdMethod(LPCSTR, "GetMemberTypeName", [(UINT, "Index")]),
-    StdMethod(HRESULT, "IsEqual", [(ObjPointer(ID3D11ShaderReflectionType), "pType")]),
+    StdMethod(LPCSTR, "GetMemberTypeName", [(UINT, "Index")], sideeffects=False),
+    StdMethod(HRESULT, "IsEqual", [(ObjPointer(ID3D11ShaderReflectionType), "pType")], sideeffects=False),
     StdMethod(ObjPointer(ID3D11ShaderReflectionType), "GetSubType", []),
     StdMethod(ObjPointer(ID3D11ShaderReflectionType), "GetBaseClass", []),
-    StdMethod(UINT, "GetNumInterfaces", []),
+    StdMethod(UINT, "GetNumInterfaces", [], sideeffects=False),
     StdMethod(ObjPointer(ID3D11ShaderReflectionType), "GetInterfaceByIndex", [(UINT, "uIndex")]),
-    StdMethod(HRESULT, "IsOfType", [(ObjPointer(ID3D11ShaderReflectionType), "pType")]),
-    StdMethod(HRESULT, "ImplementsInterface", [(ObjPointer(ID3D11ShaderReflectionType), "pBase")]),
+    StdMethod(HRESULT, "IsOfType", [(ObjPointer(ID3D11ShaderReflectionType), "pType")], sideeffects=False),
+    StdMethod(HRESULT, "ImplementsInterface", [(ObjPointer(ID3D11ShaderReflectionType), "pBase")], sideeffects=False),
 ]
 
 ID3D11ShaderReflectionVariable.methods += [
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_VARIABLE_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_VARIABLE_DESC), "pDesc")], sideeffects=False),
     StdMethod(ObjPointer(ID3D11ShaderReflectionType), "GetType", []),
     StdMethod(ObjPointer(ID3D11ShaderReflectionConstantBuffer), "GetBuffer", []),
-    StdMethod(UINT, "GetInterfaceSlot", [(UINT, "uArrayIndex")]),
+    StdMethod(UINT, "GetInterfaceSlot", [(UINT, "uArrayIndex")], sideeffects=False),
 ]
 
 ID3D11ShaderReflectionConstantBuffer.methods += [
-    StdMethod(HRESULT, "GetDesc", [(Pointer(D3D11_SHADER_BUFFER_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_BUFFER_DESC), "pDesc")], sideeffects=False),
     StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), "GetVariableByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), "GetVariableByName", [(LPCSTR, "Name")]),
 ]
@@ -173,14 +173,14 @@ ID3D11ShaderReflection.methods += [
     StdMethod(HRESULT, "GetPatchConstantParameterDesc", [(UINT, "ParameterIndex"), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), "pDesc")]),
     StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), "GetVariableByName", [(LPCSTR, "Name")]),
     StdMethod(HRESULT, "GetResourceBindingDescByName", [(LPCSTR, "Name"), Out(Pointer(D3D11_SHADER_INPUT_BIND_DESC), "pDesc")]),
-    StdMethod(UINT, "GetMovInstructionCount", []),
-    StdMethod(UINT, "GetMovcInstructionCount", []),
-    StdMethod(UINT, "GetConversionInstructionCount", []),
-    StdMethod(UINT, "GetBitwiseInstructionCount", []),
-    StdMethod(D3D_PRIMITIVE, "GetGSInputPrimitive", []),
-    StdMethod(BOOL, "IsSampleFrequencyShader", []),
-    StdMethod(UINT, "GetNumInterfaceSlots", []),
+    StdMethod(UINT, "GetMovInstructionCount", [], sideeffects=False),
+    StdMethod(UINT, "GetMovcInstructionCount", [], sideeffects=False),
+    StdMethod(UINT, "GetConversionInstructionCount", [], sideeffects=False),
+    StdMethod(UINT, "GetBitwiseInstructionCount", [], sideeffects=False),
+    StdMethod(D3D_PRIMITIVE, "GetGSInputPrimitive", [], sideeffects=False),
+    StdMethod(BOOL, "IsSampleFrequencyShader", [], sideeffects=False),
+    StdMethod(UINT, "GetNumInterfaceSlots", [], sideeffects=False),
     StdMethod(HRESULT, "GetMinFeatureLevel", [Out(Pointer(D3D_FEATURE_LEVEL), "pLevel")]),
-    StdMethod(UINT, "GetThreadGroupSize", [Out(Pointer(UINT), "pSizeX"), Out(Pointer(UINT), "pSizeY"), Out(Pointer(UINT), "pSizeZ")]),
+    StdMethod(UINT, "GetThreadGroupSize", [Out(Pointer(UINT), "pSizeX"), Out(Pointer(UINT), "pSizeY"), Out(Pointer(UINT), "pSizeZ")], sideeffects=False),
 ]
 

@@ -121,14 +121,6 @@ class GlTracer(Tracer):
         print '    VERTEX_ATTRIB_NV,'
         print '};'
         print
-        print 'gltrace::Context *'
-        print 'gltrace::getContext(void)'
-        print '{'
-        print '    // TODO return the context set by other APIs (GLX, EGL, and etc.)'
-        print '    static gltrace::Context _ctx = { false, false, false };'
-        print '    return &_ctx;'
-        print '}'
-        print
         print 'static vertex_attrib _get_vertex_attrib(void) {'
         print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (ctx->user_arrays_arb || ctx->user_arrays_nv) {'
@@ -148,6 +140,8 @@ class GlTracer(Tracer):
         print '    return VERTEX_ATTRIB;'
         print '}'
         print
+
+        self.defineShadowBufferHelper()
 
         # Whether we need user arrays
         print 'static inline bool _need_user_arrays(void)'
@@ -238,7 +232,7 @@ class GlTracer(Tracer):
         print '}'
         print
 
-        print 'static void _trace_user_arrays(GLuint maxindex);'
+        print 'static void _trace_user_arrays(GLuint count);'
         print
 
         # Buffer mappings
@@ -304,12 +298,7 @@ class GlTracer(Tracer):
         print '    switch (pname) {'
         for function, type, count, name in glparams.parameters:
             if type is not None:
-                print '    case %s: return %u;' % (name, count)
-        print '    case GL_COMPRESSED_TEXTURE_FORMATS: {'
-        print '            GLint num_compressed_texture_formats = 0;'
-        print '            _glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &num_compressed_texture_formats);'
-        print '            return num_compressed_texture_formats;'
-        print '        }'
+                print '    case %s: return %s;' % (name, count)
         print '    default:'
         print r'        os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, pname);'
         print '        return 1;'
@@ -342,7 +331,7 @@ class GlTracer(Tracer):
             print '    if (!procPtr) {'
             print '        return procPtr;'
             print '    }'
-            for function in api.functions:
+            for function in api.getAllFunctions():
                 ptype = function_pointer_type(function)
                 pvalue = function_pointer_value(function)
                 print '    if (strcmp("%s", (const char *)procName) == 0) {' % function.name
@@ -355,6 +344,52 @@ class GlTracer(Tracer):
             print
         else:
             Tracer.traceApi(self, api)
+
+    def defineShadowBufferHelper(self):
+        print 'void _shadow_glGetBufferSubData(GLenum target, GLintptr offset,'
+        print '                                GLsizeiptr size, GLvoid *data)'
+        print '{'
+        print '    gltrace::Context *ctx = gltrace::getContext();'
+        print '    if (!ctx->needsShadowBuffers() || target != GL_ELEMENT_ARRAY_BUFFER) {'
+        print '        _glGetBufferSubData(target, offset, size, data);'
+        print '        return;'
+        print '    }'
+        print
+        print '    GLint buffer_binding = 0;'
+        print '    _glGetIntegerv(target, &buffer_binding);'
+        print '    if (buffer_binding > 0) {'
+        print '        gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
+        print '        buf.getSubData(offset, size, data);'
+        print '    }'
+        print '}'
+
+    def shadowBufferMethod(self, method):
+        # Emit code to fetch the shadow buffer, and invoke a method
+        print '    gltrace::Context *ctx = gltrace::getContext();'
+        print '    if (ctx->needsShadowBuffers() && target == GL_ELEMENT_ARRAY_BUFFER) {'
+        print '        GLint buffer_binding = 0;'
+        print '        _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buffer_binding);'
+        print '        if (buffer_binding > 0) {'
+        print '            gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
+        print '            buf.' + method + ';'
+        print '        }'
+        print '    }'
+        print
+
+    def shadowBufferProlog(self, function):
+        if function.name == 'glBufferData':
+            self.shadowBufferMethod('bufferData(size, data)')
+
+        if function.name == 'glBufferSubData':
+            self.shadowBufferMethod('bufferSubData(offset, size, data)')
+
+        if function.name == 'glDeleteBuffers':
+            print '    gltrace::Context *ctx = gltrace::getContext();'
+            print '    if (ctx->needsShadowBuffers()) {'
+            print '        for (GLsizei i = 0; i < n; i++) {'
+            print '            ctx->buffers.erase(buffer[i]);'
+            print '        }'
+            print '    }'
 
     array_pointer_function_names = set((
         "glVertexPointer",
@@ -407,6 +442,10 @@ class GlTracer(Tracer):
         'glMultiDrawElementsBaseVertex',
         'glDrawArraysIndirect',
         'glDrawElementsIndirect',
+        'glMultiDrawArraysIndirect',
+        'glMultiDrawArraysIndirectAMD',
+        'glMultiDrawElementsIndirect',
+        'glMultiDrawElementsIndirectAMD',
         'glDrawArraysEXT',
         'glDrawRangeElementsEXT',
         'glDrawRangeElementsEXT_size',
@@ -497,8 +536,8 @@ class GlTracer(Tracer):
         if function.name in self.draw_function_names:
             print '    if (_need_user_arrays()) {'
             arg_names = ', '.join([arg.name for arg in function.args[1:]])
-            print '        GLuint maxindex = _%s_maxindex(%s);' % (function.name, arg_names)
-            print '        _trace_user_arrays(maxindex);'
+            print '        GLuint _count = _%s_count(%s);' % (function.name, arg_names)
+            print '        _trace_user_arrays(_count);'
             print '    }'
         
         # Emit a fake memcpy on buffer uploads
@@ -564,6 +603,7 @@ class GlTracer(Tracer):
             print '        _glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);'
             print '        if (map && size > 0) {'
             self.emit_memcpy('map', 'map', 'size')
+            self.shadowBufferMethod('bufferSubData(0, size, map)')
             print '        }'
             print '    }'
         if function.name == 'glUnmapNamedBufferEXT':
@@ -638,6 +678,8 @@ class GlTracer(Tracer):
             print '            }'
             print '        }'
             print '    }'
+
+        self.shadowBufferProlog(function)
 
         Tracer.traceFunctionImplBody(self, function)
 
@@ -739,12 +781,24 @@ class GlTracer(Tracer):
         'glBitmap',
         'glColorSubTable',
         'glColorTable',
+        'glCompressedMultiTexImage1DEXT',
+        'glCompressedMultiTexImage2DEXT',
+        'glCompressedMultiTexImage3DEXT',
+        'glCompressedMultiTexSubImage1DEXT',
+        'glCompressedMultiTexSubImage2DEXT',
+        'glCompressedMultiTexSubImage3DEXT',
         'glCompressedTexImage1D',
         'glCompressedTexImage2D',
         'glCompressedTexImage3D',
         'glCompressedTexSubImage1D',
         'glCompressedTexSubImage2D',
         'glCompressedTexSubImage3D',
+        'glCompressedTextureImage1DEXT',
+        'glCompressedTextureImage2DEXT',
+        'glCompressedTextureImage3DEXT',
+        'glCompressedTextureSubImage1DEXT',
+        'glCompressedTextureSubImage2DEXT',
+        'glCompressedTextureSubImage3DEXT',
         'glConvolutionFilter1D',
         'glConvolutionFilter2D',
         'glDrawPixels',
@@ -780,25 +834,6 @@ class GlTracer(Tracer):
     ])
 
     def serializeArgValue(self, function, arg):
-        if function.name in self.draw_function_names and arg.name == 'indices':
-            print '    GLint _element_array_buffer = 0;'
-            print '    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &_element_array_buffer);'
-            print '    if (!_element_array_buffer) {'
-            if isinstance(arg.type, stdapi.Array):
-                print '        trace::localWriter.beginArray(%s);' % arg.type.length
-                print '        for(GLsizei i = 0; i < %s; ++i) {' % arg.type.length
-                print '            trace::localWriter.beginElement();'
-                print '            trace::localWriter.writeBlob(%s[i], count[i]*_gl_type_size(type));' % (arg.name)
-                print '            trace::localWriter.endElement();'
-                print '        }'
-                print '        trace::localWriter.endArray();'
-            else:
-                print '        trace::localWriter.writeBlob(%s, count*_gl_type_size(type));' % (arg.name)
-            print '    } else {'
-            Tracer.serializeArgValue(self, function, arg)
-            print '    }'
-            return
-
         # Recognize offsets instead of blobs when a PBO is bound
         if function.name in self.unpack_function_names \
            and (isinstance(arg.type, stdapi.Blob) \
@@ -838,7 +873,7 @@ class GlTracer(Tracer):
 
         # A simple state tracker to track the pointer values
         # update the state
-        print 'static void _trace_user_arrays(GLuint maxindex)'
+        print 'static void _trace_user_arrays(GLuint count)'
         print '{'
 
         for camelcase_name, uppercase_name in self.arrays:
@@ -869,7 +904,7 @@ class GlTracer(Tracer):
                 print '            _%s(%s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
             
             arg_names = ', '.join([arg.name for arg in function.args[:-1]])
-            print '            size_t _size = _%s_size(%s, maxindex);' % (function.name, arg_names)
+            print '            size_t _size = _%s_size(%s, count);' % (function.name, arg_names)
 
             # Emit a fake function
             self.array_trace_intermezzo(api, uppercase_name)
@@ -948,7 +983,7 @@ class GlTracer(Tracer):
                 print '                    _%s(index, %s, &%s);' % (arg_get_function, arg_get_enum, arg.name)
             
             arg_names = ', '.join([arg.name for arg in function.args[1:-1]])
-            print '                    size_t _size = _%s_size(%s, maxindex);' % (function.name, arg_names)
+            print '                    size_t _size = _%s_size(%s, count);' % (function.name, arg_names)
 
             # Emit a fake function
             print '                    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
@@ -1021,16 +1056,16 @@ class GlTracer(Tracer):
         function = api.getFunctionByName('glClientActiveTexture')
         self.fake_call(function, [texture])
 
-    def fake_call(self, function, args):
-        print '            unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
-        for arg, instance in zip(function.args, args):
+    def emitFakeTexture2D(self):
+        function = glapi.glapi.getFunctionByName('glTexImage2D')
+        instances = function.argNames()
+        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+        for arg in function.args:
             assert not arg.output
-            print '            trace::localWriter.beginArg(%u);' % (arg.index,)
-            self.serializeValue(arg.type, instance)
-            print '            trace::localWriter.endArg();'
-        print '            trace::localWriter.endEnter();'
-        print '            trace::localWriter.beginLeave(_fake_call);'
-        print '            trace::localWriter.endLeave();'
+            self.serializeArg(function, arg)
+        print '        trace::localWriter.endEnter();'
+        print '        trace::localWriter.beginLeave(_fake_call);'
+        print '        trace::localWriter.endLeave();'
 
 
 

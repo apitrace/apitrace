@@ -73,9 +73,22 @@ static const Command * commands[] = {
     &dump_images_command,
     &pickle_command,
     &repack_command,
+    &retrace_command,
     &trace_command,
     &trim_command,
     &help_command
+};
+
+/* Aliases provide a mechanism to allow compatibility with old command
+ * names (such as "retrace") for current commands (such as the replay
+ * command). */
+typedef struct {
+    const char *name;
+    const Command *command;
+} Alias;
+
+static const Alias aliases[] = {
+    { "retrace", &retrace_command }
 };
 
 static void
@@ -150,6 +163,7 @@ main(int argc, char **argv)
 {
     const char *command_name;
     const Command *command;
+    const Alias *alias;
     int i;
 
     for (i = 1; i < argc; ++i) {
@@ -183,6 +197,13 @@ main(int argc, char **argv)
 
         if (strcmp(command_name, command->name) == 0)
             return (command->function) (argc, argv);
+    }
+
+    for (i = 0; i < ARRAY_SIZE(aliases); i++) {
+        alias = &aliases[i];
+
+        if (strcmp(command_name, alias->name) == 0)
+            return (alias->command->function) (argc, argv);
     }
 
     std::cerr << "Error: unknown command " << command_name

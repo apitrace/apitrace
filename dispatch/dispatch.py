@@ -58,20 +58,20 @@ class Dispatcher:
         #
         raise NotImplementedError
 
-    def dispatchApi(self, api):
-        for function in api.functions:
-            self.dispatchFunction(api, function)
+    def dispatchModule(self, module):
+        for function in module.functions:
+            self.dispatchFunction(module, function)
         
         # define standard name aliases for convenience, but only when not
         # tracing, as that would cause symbol clashing with the tracing
         # functions
         print '#ifdef RETRACE'
-        for function in api.functions:
+        for function in module.functions:
             print '#define %s _%s' % (function.name, function.name)
         print '#endif /* RETRACE */'
         print
 
-    def dispatchFunction(self, api, function):
+    def dispatchFunction(self, module, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
         print 'typedef ' + function.prototype('* %s' % ptype) + ';'
@@ -83,24 +83,24 @@ class Dispatcher:
             ret = ''
         else:
             ret = 'return '
-        self.invokeGetProcAddress(api, function)
+        self.invokeGetProcAddress(module, function)
         print '    %s%s(%s);' % (ret, pvalue, ', '.join([str(arg.name) for arg in function.args]))
         print '}'
         print
 
-    def isFunctionPublic(self, api, function):
+    def isFunctionPublic(self, module, function):
         return True
 
-    def getProcAddressName(self, api, function):
-        if self.isFunctionPublic(api, function):
+    def getProcAddressName(self, module, function):
+        if self.isFunctionPublic(module, function):
             return '_getPublicProcAddress'
         else:
             return '_getPrivateProcAddress'
 
-    def invokeGetProcAddress(self, api, function):
+    def invokeGetProcAddress(self, module, function):
         ptype = function_pointer_type(function)
         pvalue = function_pointer_value(function)
-        getProcAddressName = self.getProcAddressName(api, function)
+        getProcAddressName = self.getProcAddressName(module, function)
         print '    if (!%s) {' % (pvalue,)
         print '        %s = (%s)%s(_name);' % (pvalue, ptype, getProcAddressName)
         print '        if (!%s) {' % (pvalue,)

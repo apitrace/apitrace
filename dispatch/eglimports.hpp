@@ -52,6 +52,13 @@
 #include <GLES2/gl2platform.h>
 
 
+// OpenGL ES 2.0
+
+// avoid conflicting with GL_NV_multisample_coverage
+#define GL_NV_coverage_sample
+#include "GLES2/gl2ext.h"
+
+
 // OpenGL ES 1.1
 typedef int32_t  GLfixed;
 typedef int32_t  GLclampx;
@@ -77,18 +84,8 @@ typedef int32_t  GLclampx;
 #define GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES                  0x8B9F
 #endif
 
-// avoid conflict with GL_EXT_framebuffer_multisample
-#define GL_EXT_multisampled_render_to_texture
-
 #undef _glext_h_
 #include "GLES/glext.h"
-
-
-// OpenGL ES 2.0
-
-// avoid conflicting with GL_NV_multisample_coverage
-#define GL_NV_coverage_sample
-#include "GLES2/gl2ext.h"
 
 
 #endif /* _EGLIMPORTS_HPP_ */

@@ -289,7 +289,7 @@ EGLClientPixmapHI = Struct("struct EGLClientPixmapHI", [
 # EGL_NV_system_time
 EGLuint64NV = Alias("EGLuint64NV", UInt64)
 
-eglapi = API("EGL")
+eglapi = Module("EGL")
 
 EGLAttribList = Array(Const(EGLattrib), "_AttribPairList_size(attrib_list, EGL_NONE)")
 
@@ -307,7 +307,7 @@ eglapi.addFunctions([
     Function(EGLBoolean, "eglInitialize", [(EGLDisplay, "dpy"), Out(Pointer(EGLint), "major"), Out(Pointer(EGLint), "minor")]),
     Function(EGLBoolean, "eglTerminate", [(EGLDisplay, "dpy")]),
 
-    Function(Const(String("char *")), "eglQueryString", [(EGLDisplay, "dpy"), (EGLName, "name")], sideeffects=False),
+    Function(ConstCString, "eglQueryString", [(EGLDisplay, "dpy"), (EGLName, "name")], sideeffects=False),
 
     Function(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
     Function(EGLBoolean, "eglChooseConfig", [(EGLDisplay, "dpy"), (EGLAttribList, "attrib_list"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
@@ -349,7 +349,7 @@ eglapi.addFunctions([
     Function(EGLBoolean, "eglSwapBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface")]),
     Function(EGLBoolean, "eglCopyBuffers", [(EGLDisplay, "dpy"), (EGLSurface, "surface"), (EGLNativePixmapType, "target")]),
 
-    Function(EGLProc, "eglGetProcAddress", [(Const(CString), "procname")]),
+    Function(EGLProc, "eglGetProcAddress", [(ConstCString, "procname")]),
 
     # EGL_KHR_lock_surface
     Function(EGLBoolean, "eglLockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface"), (EGLAttribList, "attrib_list")]),

@@ -34,7 +34,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 import specs.stdapi as stdapi
-import specs.glapi as glapi
 
 
 class UnsupportedType(Exception):
@@ -67,10 +66,10 @@ class ValueAllocator(stdapi.Visitor):
         pass
 
     def visitArray(self, array, lvalue, rvalue):
-        print '    %s = _allocator.alloc<%s>(&%s);' % (lvalue, array.type, rvalue)
+        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, array.type, rvalue, lvalue)
 
     def visitPointer(self, pointer, lvalue, rvalue):
-        print '    %s = _allocator.alloc<%s>(&%s);' % (lvalue, pointer.type, rvalue)
+        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, pointer.type, rvalue, lvalue)
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
         pass
@@ -97,13 +96,14 @@ class ValueAllocator(stdapi.Visitor):
         pass
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        assert polymorphic.defaultType is not None
         self.visit(polymorphic.defaultType, lvalue, rvalue)
 
     def visitOpaque(self, opaque, lvalue, rvalue):
         pass
 
 
-class ValueDeserializer(stdapi.Visitor):
+class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
 
     def visitLiteral(self, literal, lvalue, rvalue):
         print '    %s = (%s).to%s();' % (lvalue, rvalue, literal.kind)
@@ -151,7 +151,7 @@ class ValueDeserializer(stdapi.Visitor):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
 
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        print '    %s = static_cast<%s>(retrace::toObjPointer(%s));' % (lvalue, pointer, rvalue)
+        print '    %s = static_cast<%s>(retrace::toObjPointer(call, %s));' % (lvalue, pointer, rvalue)
 
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
@@ -166,7 +166,14 @@ class ValueDeserializer(stdapi.Visitor):
         print '    if (retrace::verbosity >= 2) {'
         print '        std::cout << "%s " << size_t(%s) << " <- " << size_t(%s) << "\\n";' % (handle.name, lvalue, new_lvalue)
         print '    }'
-        print '    %s = %s;' % (lvalue, new_lvalue)
+        if (new_lvalue.startswith('_program_map') or new_lvalue.startswith('_shader_map')):
+            print 'if (glretrace::supportsARBShaderObjects) {'
+            print '    %s = _handleARB_map[%s];' % (lvalue, lvalue)
+            print '} else {'
+            print '    %s = %s;' % (lvalue, new_lvalue)
+            print '}'
+        else:
+            print '    %s = %s;' % (lvalue, new_lvalue)
     
     def visitBlob(self, blob, lvalue, rvalue):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, blob, rvalue)
@@ -183,11 +190,32 @@ class ValueDeserializer(stdapi.Visitor):
         print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
         print '    assert(%s);' % (tmp)
         for i in range(len(struct.members)):
-            member_type, member_name = struct.members[i]
-            self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
+            member = struct.members[i]
+            self.visitMember(member, lvalue, '*%s->members[%s]' % (tmp, i))
 
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
-        self.visit(polymorphic.defaultType, lvalue, rvalue)
+        if polymorphic.defaultType is None:
+            switchExpr = self.expand(polymorphic.switchExpr)
+            print r'    switch (%s) {' % switchExpr
+            for cases, type in polymorphic.iterSwitch():
+                for case in cases:
+                    print r'    %s:' % case
+                caseLvalue = lvalue
+                if type.expr is not None:
+                    caseLvalue = 'static_cast<%s>(%s)' % (type, caseLvalue)
+                print r'        {'
+                try:
+                    self.visit(type, caseLvalue, rvalue)
+                finally:
+                    print r'        }'
+                print r'        break;'
+            if polymorphic.defaultType is None:
+                print r'    default:'
+                print r'        retrace::warning(call) << "unexpected polymorphic case" << %s << "\n";' % (switchExpr,)
+                print r'        break;'
+            print r'    }'
+        else:
+            self.visit(polymorphic.defaultType, lvalue, rvalue)
     
     def visitOpaque(self, opaque, lvalue, rvalue):
         raise UnsupportedType
@@ -203,7 +231,7 @@ class OpaqueValueDeserializer(ValueDeserializer):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, opaque, rvalue)
 
 
-class SwizzledValueRegistrator(stdapi.Visitor):
+class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
     '''Type visitor which will register (un)swizzled value pairs, to later be
     swizzled.'''
 
@@ -243,7 +271,7 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         pass
     
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        print r'    retrace::addObj(%s, %s);' % (rvalue, lvalue)
+        print r'    retrace::addObj(call, %s, %s);' % (rvalue, lvalue)
     
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         assert pointer.size is not None
@@ -258,8 +286,15 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         OpaqueValueDeserializer().visit(handle.type, '_origResult', rvalue);
         if handle.range is None:
             rvalue = "_origResult"
-            entry = lookupHandle(handle, rvalue) 
-            print "    %s = %s;" % (entry, lvalue)
+            entry = lookupHandle(handle, rvalue)
+            if (entry.startswith('_program_map') or entry.startswith('_shader_map')):
+                print 'if (glretrace::supportsARBShaderObjects) {'
+                print '    _handleARB_map[%s] = %s;' % (rvalue, lvalue)
+                print '} else {'
+                print '    %s = %s;' % (entry, lvalue)
+                print '}'
+            else:
+                print "    %s = %s;" % (entry, lvalue)
             print '    if (retrace::verbosity >= 2) {'
             print '        std::cout << "{handle.name} " << {rvalue} << " -> " << {lvalue} << "\\n";'.format(**locals())
             print '    }'
@@ -291,10 +326,11 @@ class SwizzledValueRegistrator(stdapi.Visitor):
         print '    assert(%s);' % (tmp,)
         print '    (void)%s;' % (tmp,)
         for i in range(len(struct.members)):
-            member_type, member_name = struct.members[i]
-            self.visit(member_type, '%s.%s' % (lvalue, member_name), '*%s->members[%s]' % (tmp, i))
+            member = struct.members[i]
+            self.visitMember(member, lvalue, '*%s->members[%s]' % (tmp, i))
     
     def visitPolymorphic(self, polymorphic, lvalue, rvalue):
+        assert polymorphic.defaultType is not None
         self.visit(polymorphic.defaultType, lvalue, rvalue)
     
     def visitOpaque(self, opaque, lvalue, rvalue):
@@ -357,9 +393,8 @@ class Retracer:
 
     def deserializeThisPointer(self, interface):
         print r'    %s *_this;' % (interface.name,)
-        print r'    _this = static_cast<%s *>(retrace::toObjPointer(call.arg(0)));' % (interface.name,)
+        print r'    _this = static_cast<%s *>(retrace::toObjPointer(call, call.arg(0)));' % (interface.name,)
         print r'    if (!_this) {'
-        print r'        retrace::warning(call) << "NULL this pointer\n";'
         print r'        return;'
         print r'    }'
 
@@ -382,8 +417,7 @@ class Retracer:
         if not success:
             print '    if (1) {'
             self.failFunction(function)
-            if function.name[-1].islower():
-                sys.stderr.write('warning: unsupported %s call\n' % function.name)
+            sys.stderr.write('warning: unsupported %s call\n' % function.name)
             print '    }'
 
     def swizzleValues(self, function):
@@ -436,6 +470,7 @@ class Retracer:
         if function.type is not stdapi.Void:
             print '    _result = %s(%s);' % (function.name, arg_names)
             print '    (void)_result;'
+            self.checkResult(function.type)
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
@@ -443,17 +478,24 @@ class Retracer:
         # On release our reference when we reach Release() == 0 call in the
         # trace.
         if method.name == 'Release':
-            print '    if (call.ret->toUInt()) {'
-            print '        return;'
+            print '    if (call.ret->toUInt() == 0) {'
+            print '        retrace::delObj(call.arg(0));'
             print '    }'
-            print '    retrace::delObj(call.arg(0));'
 
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
             print '    (void)_result;'
+            self.checkResult(method.type)
         else:
             print '    _this->%s(%s);' % (method.name, arg_names)
+
+    def checkResult(self, resultType):
+        if str(resultType) == 'HRESULT':
+            print r'    if (FAILED(_result)) {'
+            print '         static char szMessageBuffer[128];'
+            print r'        retrace::warning(call) << "call returned 0x" << std::hex << _result << std::dec << ": " << (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, _result, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), szMessageBuffer, sizeof szMessageBuffer, NULL) ? szMessageBuffer : "???") << "\n";'
+            print r'    }'
 
     def filterFunction(self, function):
         return True
@@ -481,7 +523,7 @@ class Retracer:
                 handle_names.add(handle.name)
         print
 
-        functions = filter(self.filterFunction, api.functions)
+        functions = filter(self.filterFunction, api.getAllFunctions())
         for function in functions:
             if function.sideeffects and not function.internal:
                 self.retraceFunction(function)

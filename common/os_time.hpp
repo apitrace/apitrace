@@ -32,13 +32,16 @@
 
 
 #if defined(_WIN32)
-#include <windows.h>
-#elif defined(__linux__)
-#include <time.h>
-#elif defined(__APPLE__)
-#include <mach/mach_time.h>
+#  include <windows.h>
 #else
-#include <sys/time.h>
+#  if defined(__linux__)
+#    include <time.h>
+#  elif defined(__APPLE__)
+#    include <mach/mach_time.h>
+#  else
+#    include <sys/time.h>
+#  endif
+#  include <unistd.h>
 #endif
 
 
@@ -70,7 +73,7 @@ namespace os {
         return counter.QuadPart;
 #elif defined(__linux__)
         struct timespec tp;
-        if (clock_gettime(CLOCK_REALTIME, &tp) == -1) {
+        if (clock_gettime(CLOCK_MONOTONIC, &tp) == -1) {
             return 0;
         }
         return tp.tv_sec * 1000000000LL + tp.tv_nsec;
@@ -88,6 +91,15 @@ namespace os {
 #endif
     }
 
+    // Suspend execution
+    inline void
+    sleep(unsigned long usecs) {
+#if defined(_WIN32)
+        Sleep((usecs + 999) / 1000);
+#else
+        usleep(usecs);
+#endif
+    }
 
 } /* namespace os */
 

@@ -212,6 +212,7 @@ D3D10_FORMAT_SUPPORT = Flags(UINT, [
     "D3D10_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET",
     "D3D10_FORMAT_SUPPORT_MULTISAMPLE_LOAD",
     "D3D10_FORMAT_SUPPORT_SHADER_GATHER",
+    "D3D10_FORMAT_SUPPORT_BACK_BUFFER_CAST",
 ])
 
 D3D10_COUNTER = Enum("D3D10_COUNTER", [
@@ -386,12 +387,14 @@ D3D10_TEX2DMS_ARRAY_DSV = Struct("D3D10_TEX2DMS_ARRAY_DSV", [
 D3D10_DEPTH_STENCIL_VIEW_DESC = Struct("D3D10_DEPTH_STENCIL_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D10_DSV_DIMENSION, "ViewDimension"),
-    (D3D10_TEX1D_DSV, "Texture1D"),
-    (D3D10_TEX1D_ARRAY_DSV, "Texture1DArray"),
-    (D3D10_TEX2D_DSV, "Texture2D"),
-    (D3D10_TEX2D_ARRAY_DSV, "Texture2DArray"),
-    (D3D10_TEX2DMS_DSV, "Texture2DMS"),
-    (D3D10_TEX2DMS_ARRAY_DSV, "Texture2DMSArray"),
+    (Union("{self}.ViewDimension", [
+        ("D3D10_DSV_DIMENSION_TEXTURE1D", D3D10_TEX1D_DSV, "Texture1D"),
+        ("D3D10_DSV_DIMENSION_TEXTURE1DARRAY", D3D10_TEX1D_ARRAY_DSV, "Texture1DArray"),
+        ("D3D10_DSV_DIMENSION_TEXTURE2D", D3D10_TEX2D_DSV, "Texture2D"),
+        ("D3D10_DSV_DIMENSION_TEXTURE2DARRAY", D3D10_TEX2D_ARRAY_DSV, "Texture2DArray"),
+        ("D3D10_DSV_DIMENSION_TEXTURE2DMS", D3D10_TEX2DMS_DSV, "Texture2DMS"),
+        ("D3D10_DSV_DIMENSION_TEXTURE2DMSARRAY", D3D10_TEX2DMS_ARRAY_DSV, "Texture2DMSArray"),
+    ]), None),
 ])
 
 D3D10_RTV_DIMENSION = Enum("D3D10_RTV_DIMENSION", [
@@ -407,8 +410,8 @@ D3D10_RTV_DIMENSION = Enum("D3D10_RTV_DIMENSION", [
 ])
 
 D3D10_BUFFER_RTV = Struct("D3D10_BUFFER_RTV", [
-    (UINT, "ElementOffset"),
-    (UINT, "ElementWidth"),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D10_TEX1D_RTV = Struct("D3D10_TEX1D_RTV", [
@@ -449,14 +452,16 @@ D3D10_TEX3D_RTV = Struct("D3D10_TEX3D_RTV", [
 D3D10_RENDER_TARGET_VIEW_DESC = Struct("D3D10_RENDER_TARGET_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D10_RTV_DIMENSION, "ViewDimension"),
-    (D3D10_BUFFER_RTV, "Buffer"),
-    (D3D10_TEX1D_RTV, "Texture1D"),
-    (D3D10_TEX1D_ARRAY_RTV, "Texture1DArray"),
-    (D3D10_TEX2D_RTV, "Texture2D"),
-    (D3D10_TEX2D_ARRAY_RTV, "Texture2DArray"),
-    (D3D10_TEX2DMS_RTV, "Texture2DMS"),
-    (D3D10_TEX2DMS_ARRAY_RTV, "Texture2DMSArray"),
-    (D3D10_TEX3D_RTV, "Texture3D"),
+    (Union("{self}.ViewDimension", [
+        ("D3D10_RTV_DIMENSION_BUFFER", D3D10_BUFFER_RTV, "Buffer"),
+        ("D3D10_RTV_DIMENSION_TEXTURE1D", D3D10_TEX1D_RTV, "Texture1D"),
+        ("D3D10_RTV_DIMENSION_TEXTURE1DARRAY", D3D10_TEX1D_ARRAY_RTV, "Texture1DArray"),
+        ("D3D10_RTV_DIMENSION_TEXTURE2D", D3D10_TEX2D_RTV, "Texture2D"),
+        ("D3D10_RTV_DIMENSION_TEXTURE2DARRAY", D3D10_TEX2D_ARRAY_RTV, "Texture2DArray"),
+        ("D3D10_RTV_DIMENSION_TEXTURE2DMS", D3D10_TEX2DMS_RTV, "Texture2DMS"),
+        ("D3D10_RTV_DIMENSION_TEXTURE2DMSARRAY", D3D10_TEX2DMS_ARRAY_RTV, "Texture2DMSArray"),
+        ("D3D10_RTV_DIMENSION_TEXTURE3D", D3D10_TEX3D_RTV, "Texture3D"),
+    ]), None),
 ])
 
 D3D10_SRV_DIMENSION = Enum("D3D10_SRV_DIMENSION", [
@@ -473,8 +478,8 @@ D3D10_SRV_DIMENSION = Enum("D3D10_SRV_DIMENSION", [
 ])
 
 D3D10_BUFFER_SRV = Struct("D3D10_BUFFER_SRV", [
-    (UINT, "ElementOffset"),
-    (UINT, "ElementWidth"),
+    (UINT, "FirstElement"),
+    (UINT, "NumElements"),
 ])
 
 D3D10_TEX1D_SRV = Struct("D3D10_TEX1D_SRV", [
@@ -523,15 +528,17 @@ D3D10_TEXCUBE_SRV = Struct("D3D10_TEXCUBE_SRV", [
 D3D10_SHADER_RESOURCE_VIEW_DESC = Struct("D3D10_SHADER_RESOURCE_VIEW_DESC", [
     (DXGI_FORMAT, "Format"),
     (D3D10_SRV_DIMENSION, "ViewDimension"),
-    (D3D10_BUFFER_SRV, "Buffer"),
-    (D3D10_TEX1D_SRV, "Texture1D"),
-    (D3D10_TEX1D_ARRAY_SRV, "Texture1DArray"),
-    (D3D10_TEX2D_SRV, "Texture2D"),
-    (D3D10_TEX2D_ARRAY_SRV, "Texture2DArray"),
-    (D3D10_TEX2DMS_SRV, "Texture2DMS"),
-    (D3D10_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
-    (D3D10_TEX3D_SRV, "Texture3D"),
-    (D3D10_TEXCUBE_SRV, "TextureCube"),
+    (Union("{self}.ViewDimension", [
+        ("D3D10_SRV_DIMENSION_BUFFER", D3D10_BUFFER_SRV, "Buffer"),
+        ("D3D10_SRV_DIMENSION_TEXTURE1D", D3D10_TEX1D_SRV, "Texture1D"),
+        ("D3D10_SRV_DIMENSION_TEXTURE1DARRAY", D3D10_TEX1D_ARRAY_SRV, "Texture1DArray"),
+        ("D3D10_SRV_DIMENSION_TEXTURE2D", D3D10_TEX2D_SRV, "Texture2D"), 
+        ("D3D10_SRV_DIMENSION_TEXTURE2DARRAY", D3D10_TEX2D_ARRAY_SRV, "Texture2DArray"),
+        ("D3D10_SRV_DIMENSION_TEXTURE2DMS", D3D10_TEX2DMS_SRV, "Texture2DMS"),
+        ("D3D10_SRV_DIMENSION_TEXTURE2DMSARRAY", D3D10_TEX2DMS_ARRAY_SRV, "Texture2DMSArray"),
+        ("D3D10_SRV_DIMENSION_TEXTURE3D", D3D10_TEX3D_SRV, "Texture3D"),
+        ("D3D10_SRV_DIMENSION_TEXTURECUBE", D3D10_TEXCUBE_SRV, "TextureCube"),
+    ]), None),
 ])
 
 D3D10_BOX = Struct("D3D10_BOX", [
@@ -544,7 +551,7 @@ D3D10_BOX = Struct("D3D10_BOX", [
 ])
 
 D3D10_SUBRESOURCE_DATA = Struct("D3D10_SUBRESOURCE_DATA", [
-    (OpaquePointer(Const(Void)), "pSysMem"),
+    (Blob(Const(Void), "_calcSubresourceSize(pDesc, {i}, {self}.SysMemPitch, {self}.SysMemSlicePitch)"), "pSysMem"),
     (UINT, "SysMemPitch"),
     (UINT, "SysMemSlicePitch"),
 ])
@@ -603,12 +610,12 @@ D3D10_VIEWPORT = Struct("D3D10_VIEWPORT", [
 ])
 
 D3D10_MAPPED_TEXTURE2D = Struct("D3D10_MAPPED_TEXTURE2D", [
-    (OpaquePointer(Void), "pData"),
+    (LinearPointer(Void, "_MappedSize"), "pData"),
     (UINT, "RowPitch"),
 ])
 
 D3D10_MAPPED_TEXTURE3D = Struct("D3D10_MAPPED_TEXTURE3D", [
-    (OpaquePointer(Void), "pData"),
+    (LinearPointer(Void, "_MappedSize"), "pData"),
     (UINT, "RowPitch"),
     (UINT, "DepthPitch"),
 ])
@@ -677,6 +684,10 @@ D3D10_CREATE_DEVICE_FLAG = Flags(UINT, [
     "D3D10_CREATE_DEVICE_ALLOW_NULL_FROM_MAP",
     "D3D10_CREATE_DEVICE_BGRA_SUPPORT",
     "D3D10_CREATE_DEVICE_STRICT_VALIDATION",
+    "D3D10_CREATE_DEVICE_BGRA_SUPPORT",
+    "D3D10_CREATE_DEVICE_PREVENT_ALTERING_LAYER_SETTINGS_FROM_REGISTRY",
+    "D3D10_CREATE_DEVICE_STRICT_VALIDATION",
+    "D3D10_CREATE_DEVICE_DEBUGGABLE",
 ])
 
 D3D10_RAISE_FLAG = Flags(UINT, [
@@ -709,199 +720,197 @@ ID3D10Device = Interface("ID3D10Device", IUnknown)
 ID3D10Multithread = Interface("ID3D10Multithread", IUnknown)
 
 ID3D10DeviceChild.methods += [
-    Method(Void, "GetDevice", [Out(Pointer(ObjPointer(ID3D10Device)), "ppDevice")]),
-    Method(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
-    Method(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
-    Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
+    StdMethod(Void, "GetDevice", [Out(Pointer(ObjPointer(ID3D10Device)), "ppDevice")]),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
 ]
 
 ID3D10Resource.methods += [
-    Method(Void, "GetType", [Out(Pointer(D3D10_RESOURCE_DIMENSION), "rType")], sideeffects=False),
-    Method(Void, "SetEvictionPriority", [(UINT, "EvictionPriority")]),
-    Method(UINT, "GetEvictionPriority", [], sideeffects=False),
+    StdMethod(Void, "GetType", [Out(Pointer(D3D10_RESOURCE_DIMENSION), "rType")], sideeffects=False),
+    StdMethod(Void, "SetEvictionPriority", [(UINT, "EvictionPriority")]),
+    StdMethod(UINT, "GetEvictionPriority", [], sideeffects=False),
 ]
 
 ID3D10Buffer.methods += [
-    Method(HRESULT, "Map", [(D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
-    Method(Void, "Unmap", []),
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_BUFFER_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "Map", [(D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "ppData")]),
+    StdMethod(Void, "Unmap", []),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_BUFFER_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10Texture1D.methods += [
-    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(OpaquePointer(Void)), "ppData")]),
-    Method(Void, "Unmap", [(UINT, "Subresource")]),
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE1D_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(LinearPointer(Void, "_MappedSize")), "ppData")]),
+    StdMethod(Void, "Unmap", [(UINT, "Subresource")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE1D_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10Texture2D.methods += [
-    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE2D), "pMappedTex2D")]),
-    Method(Void, "Unmap", [(UINT, "Subresource")]),
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE2D_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE2D), "pMappedTex2D")]),
+    StdMethod(Void, "Unmap", [(UINT, "Subresource")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE2D_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10Texture3D.methods += [
-    Method(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE3D), "pMappedTex3D")]),
-    Method(Void, "Unmap", [(UINT, "Subresource")]),
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE3D_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "Map", [(UINT, "Subresource"), (D3D10_MAP, "MapType"), (D3D10_MAP_FLAG, "MapFlags"), Out(Pointer(D3D10_MAPPED_TEXTURE3D), "pMappedTex3D")]),
+    StdMethod(Void, "Unmap", [(UINT, "Subresource")]),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_TEXTURE3D_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10View.methods += [
-    Method(Void, "GetResource", [Out(Pointer(ObjPointer(ID3D10Resource)), "ppResource")]),
+    StdMethod(Void, "GetResource", [Out(Pointer(ObjPointer(ID3D10Resource)), "ppResource")]),
 ]
 
 ID3D10DepthStencilView.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_DEPTH_STENCIL_VIEW_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_DEPTH_STENCIL_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10RenderTargetView.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_RENDER_TARGET_VIEW_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_RENDER_TARGET_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10ShaderResourceView.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_SHADER_RESOURCE_VIEW_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_SHADER_RESOURCE_VIEW_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10BlendState.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_BLEND_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_BLEND_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10DepthStencilState.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_DEPTH_STENCIL_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_DEPTH_STENCIL_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10RasterizerState.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_RASTERIZER_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_RASTERIZER_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10SamplerState.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_SAMPLER_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_SAMPLER_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10Asynchronous.methods += [
-    Method(Void, "Begin", []),
-    Method(Void, "End", []),
-    Method(HRESULT, "GetData", [Out(Blob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D10_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
-    Method(UINT, "GetDataSize", [], sideeffects=False),
+    StdMethod(Void, "Begin", []),
+    StdMethod(Void, "End", []),
+    StdMethod(HRESULT, "GetData", [Out(Blob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D10_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
+    StdMethod(UINT, "GetDataSize", [], sideeffects=False),
 ]
 
 ID3D10Counter.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_COUNTER_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_COUNTER_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10Query.methods += [
-    Method(Void, "GetDesc", [Out(Pointer(D3D10_QUERY_DESC), "pDesc")], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(Pointer(D3D10_QUERY_DESC), "pDesc")], sideeffects=False),
 ]
 
 ID3D10Device.methods += [
-    Method(Void, "VSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppConstantBuffers")]),
-    Method(Void, "PSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
-    Method(Void, "PSSetShader", [(ObjPointer(ID3D10PixelShader), "pPixelShader")]),
-    Method(Void, "PSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D10SamplerState)), "NumSamplers"), "ppSamplers")]),
-    Method(Void, "VSSetShader", [(ObjPointer(ID3D10VertexShader), "pVertexShader")]),
-    Method(Void, "DrawIndexed", [(UINT, "IndexCount"), (UINT, "StartIndexLocation"), (INT, "BaseVertexLocation")]),
-    Method(Void, "Draw", [(UINT, "VertexCount"), (UINT, "StartVertexLocation")]),
-    Method(Void, "PSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppConstantBuffers")]),
-    Method(Void, "IASetInputLayout", [(ObjPointer(ID3D10InputLayout), "pInputLayout")]),
-    Method(Void, "IASetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppVertexBuffers"), (Array(Const(UINT), "NumBuffers"), "pStrides"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
-    Method(Void, "IASetIndexBuffer", [(ObjPointer(ID3D10Buffer), "pIndexBuffer"), (DXGI_FORMAT, "Format"), (UINT, "Offset")]),
-    Method(Void, "DrawIndexedInstanced", [(UINT, "IndexCountPerInstance"), (UINT, "InstanceCount"), (UINT, "StartIndexLocation"), (INT, "BaseVertexLocation"), (UINT, "StartInstanceLocation")]),
-    Method(Void, "DrawInstanced", [(UINT, "VertexCountPerInstance"), (UINT, "InstanceCount"), (UINT, "StartVertexLocation"), (UINT, "StartInstanceLocation")]),
-    Method(Void, "GSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppConstantBuffers")]),
-    Method(Void, "GSSetShader", [(ObjPointer(ID3D10GeometryShader), "pShader")]),
-    Method(Void, "IASetPrimitiveTopology", [(D3D10_PRIMITIVE_TOPOLOGY, "Topology")]),
-    Method(Void, "VSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
-    Method(Void, "VSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D10SamplerState)), "NumSamplers"), "ppSamplers")]),
-    Method(Void, "SetPredication", [(ObjPointer(ID3D10Predicate), "pPredicate"), (BOOL, "PredicateValue")]),
-    Method(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
-    Method(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D10SamplerState)), "NumSamplers"), "ppSamplers")]),
-    Method(Void, "OMSetRenderTargets", [(UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10RenderTargetView)), "NumViews"), "ppRenderTargetViews"), (ObjPointer(ID3D10DepthStencilView), "pDepthStencilView")]),
-    Method(Void, "OMSetBlendState", [(ObjPointer(ID3D10BlendState), "pBlendState"), (Array(Const(FLOAT), 4), "BlendFactor"), (UINT, "SampleMask")]),
-    Method(Void, "OMSetDepthStencilState", [(ObjPointer(ID3D10DepthStencilState), "pDepthStencilState"), (UINT, "StencilRef")]),
-    Method(Void, "SOSetTargets", [(UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppSOTargets"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
-    Method(Void, "DrawAuto", []),
-    Method(Void, "RSSetState", [(ObjPointer(ID3D10RasterizerState), "pRasterizerState")]),
-    Method(Void, "RSSetViewports", [(UINT, "NumViewports"), (Array(Const(D3D10_VIEWPORT), "NumViewports"), "pViewports")]),
-    Method(Void, "RSSetScissorRects", [(UINT, "NumRects"), (Array(Const(D3D10_RECT), "NumRects"), "pRects")]),
-    Method(Void, "CopySubresourceRegion", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D10Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D10_BOX)), "pSrcBox")]),
-    Method(Void, "CopyResource", [(ObjPointer(ID3D10Resource), "pDstResource"), (ObjPointer(ID3D10Resource), "pSrcResource")]),
-    Method(Void, "UpdateSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D10_BOX)), "pDstBox"), (OpaquePointer(Const(Void)), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
-    Method(Void, "ClearRenderTargetView", [(ObjPointer(ID3D10RenderTargetView), "pRenderTargetView"), (Array(Const(FLOAT), 4), "ColorRGBA")]),
-    Method(Void, "ClearDepthStencilView", [(ObjPointer(ID3D10DepthStencilView), "pDepthStencilView"), (D3D10_CLEAR_FLAG, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
-    Method(Void, "GenerateMips", [(ObjPointer(ID3D10ShaderResourceView), "pShaderResourceView")]),
-    Method(Void, "ResolveSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (ObjPointer(ID3D10Resource), "pSrcResource"), (UINT, "SrcSubresource"), (DXGI_FORMAT, "Format")]),
-    Method(Void, "VSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppConstantBuffers")]),
-    Method(Void, "PSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D10ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
-    Method(Void, "PSGetShader", [Out(Pointer(ObjPointer(ID3D10PixelShader)), "ppPixelShader")]),
-    Method(Void, "PSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D10SamplerState), "NumSamplers"), "ppSamplers")]),
-    Method(Void, "VSGetShader", [Out(Pointer(ObjPointer(ID3D10VertexShader)), "ppVertexShader")]),
-    Method(Void, "PSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppConstantBuffers")]),
-    Method(Void, "IAGetInputLayout", [Out(Pointer(ObjPointer(ID3D10InputLayout)), "ppInputLayout")]),
-    Method(Void, "IAGetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppVertexBuffers"), Out(Array(UINT, "NumBuffers"), "pStrides"), Out(Array(UINT, "NumBuffers"), "pOffsets")]),
-    Method(Void, "IAGetIndexBuffer", [Out(Pointer(ObjPointer(ID3D10Buffer)), "pIndexBuffer"), Out(Pointer(DXGI_FORMAT), "Format"), Out(Pointer(UINT), "Offset")]),
-    Method(Void, "GSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppConstantBuffers")]),
-    Method(Void, "GSGetShader", [Out(Pointer(ObjPointer(ID3D10GeometryShader)), "ppGeometryShader")]),
-    Method(Void, "IAGetPrimitiveTopology", [Out(Pointer(D3D10_PRIMITIVE_TOPOLOGY), "pTopology")], sideeffects=False),
-    Method(Void, "VSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D10ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
-    Method(Void, "VSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D10SamplerState), "NumSamplers"), "ppSamplers")]),
-    Method(Void, "GetPredication", [Out(Pointer(ObjPointer(ID3D10Predicate)), "ppPredicate"), Out(Pointer(BOOL), "pPredicateValue")]),
-    Method(Void, "GSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D10ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
-    Method(Void, "GSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D10SamplerState), "NumSamplers"), "ppSamplers")]),
-    Method(Void, "OMGetRenderTargets", [(UINT, "NumViews"), Out(Array(ObjPointer(ID3D10RenderTargetView), "NumViews"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D10DepthStencilView)), "ppDepthStencilView")]),
-    Method(Void, "OMGetBlendState", [Out(Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState"), Out(Array(FLOAT, 4), "BlendFactor"), Out(Pointer(UINT), "pSampleMask")]),
-    Method(Void, "OMGetDepthStencilState", [Out(Pointer(ObjPointer(ID3D10DepthStencilState)), "ppDepthStencilState"), Out(Pointer(UINT), "pStencilRef")]),
-    Method(Void, "SOGetTargets", [(UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppSOTargets"), Out(Array(UINT, "NumBuffers"), "pOffsets")]),
-    Method(Void, "RSGetState", [Out(Pointer(ObjPointer(ID3D10RasterizerState)), "ppRasterizerState")]),
-    Method(Void, "RSGetViewports", [Out(Pointer(UINT), "NumViewports"), Out(Array(D3D10_VIEWPORT, "*NumViewports"), "pViewports")], sideeffects=False),
-    Method(Void, "RSGetScissorRects", [Out(Pointer(UINT), "NumRects"), Out(Array(D3D10_RECT, "*NumRects"), "pRects")], sideeffects=False),
-    Method(HRESULT, "GetDeviceRemovedReason", [], sideeffects=False),
-    Method(HRESULT, "SetExceptionMode", [(D3D10_RAISE_FLAG, "RaiseFlags")]),
-    Method(D3D10_RAISE_FLAG, "GetExceptionMode", [], sideeffects=False),
-    Method(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
-    Method(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
-    Method(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
-    Method(Void, "ClearState", []),
-    Method(Void, "Flush", []),
-    Method(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
-    Method(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D10_TEXTURE1D_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture1D)), "ppTexture1D")]),
-    Method(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D10_TEXTURE2D_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture2D)), "ppTexture2D")]),
-    Method(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D10_TEXTURE3D_DESC)), "pDesc"), (Pointer(Const(D3D10_SUBRESOURCE_DATA)), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture3D)), "ppTexture3D")]),
-    Method(HRESULT, "CreateShaderResourceView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView)), "ppSRView")]),
-    Method(HRESULT, "CreateRenderTargetView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_RENDER_TARGET_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10RenderTargetView)), "ppRTView")]),
-    Method(HRESULT, "CreateDepthStencilView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_DEPTH_STENCIL_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10DepthStencilView)), "ppDepthStencilView")]),
-    Method(HRESULT, "CreateInputLayout", [(Array(Const(D3D10_INPUT_ELEMENT_DESC), "NumElements"), "pInputElementDescs"), (UINT, "NumElements"), (Blob(Const(Void), "BytecodeLength"), "pShaderBytecodeWithInputSignature"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10InputLayout)), "ppInputLayout")]),
-    Method(HRESULT, "CreateVertexShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10VertexShader)), "ppVertexShader")]),
-    Method(HRESULT, "CreateGeometryShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10GeometryShader)), "ppGeometryShader")]),
-    Method(HRESULT, "CreateGeometryShaderWithStreamOutput", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (Array(Const(D3D10_SO_DECLARATION_ENTRY), "NumEntries"), "pSODeclaration"), (UINT, "NumEntries"), (UINT, "OutputStreamStride"), Out(Pointer(ObjPointer(ID3D10GeometryShader)), "ppGeometryShader")]),
-    Method(HRESULT, "CreatePixelShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10PixelShader)), "ppPixelShader")]),
-    Method(HRESULT, "CreateBlendState", [(Pointer(Const(D3D10_BLEND_DESC)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState")]),
-    Method(HRESULT, "CreateDepthStencilState", [(Pointer(Const(D3D10_DEPTH_STENCIL_DESC)), "pDepthStencilDesc"), Out(Pointer(ObjPointer(ID3D10DepthStencilState)), "ppDepthStencilState")]),
-    Method(HRESULT, "CreateRasterizerState", [(Pointer(Const(D3D10_RASTERIZER_DESC)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D10RasterizerState)), "ppRasterizerState")]),
-    Method(HRESULT, "CreateSamplerState", [(Pointer(Const(D3D10_SAMPLER_DESC)), "pSamplerDesc"), Out(Pointer(ObjPointer(ID3D10SamplerState)), "ppSamplerState")]),
-    Method(HRESULT, "CreateQuery", [(Pointer(Const(D3D10_QUERY_DESC)), "pQueryDesc"), Out(Pointer(ObjPointer(ID3D10Query)), "ppQuery")]),
-    Method(HRESULT, "CreatePredicate", [(Pointer(Const(D3D10_QUERY_DESC)), "pPredicateDesc"), Out(Pointer(ObjPointer(ID3D10Predicate)), "ppPredicate")]),
-    Method(HRESULT, "CreateCounter", [(Pointer(Const(D3D10_COUNTER_DESC)), "pCounterDesc"), Out(Pointer(ObjPointer(ID3D10Counter)), "ppCounter")]),
-    Method(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D10_FORMAT_SUPPORT), "pFormatSupport")], sideeffects=False),
-    Method(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")], sideeffects=False),
-    Method(Void, "CheckCounterInfo", [Out(Pointer(D3D10_COUNTER_INFO), "pCounterInfo")]),
-    Method(HRESULT, "CheckCounter", [(Pointer(Const(D3D10_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D10_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")], sideeffects=False),
-    Method(D3D10_CREATE_DEVICE_FLAG, "GetCreationFlags", [], sideeffects=False),
-    Method(HRESULT, "OpenSharedResource", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
-    Method(Void, "SetTextFilterSize", [(UINT, "Width"), (UINT, "Height")]),
-    Method(Void, "GetTextFilterSize", [Out(Pointer(UINT), "pWidth"), Out(Pointer(UINT), "pHeight")], sideeffects=False),
+    StdMethod(Void, "VSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "PSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "PSSetShader", [(ObjPointer(ID3D10PixelShader), "pPixelShader")]),
+    StdMethod(Void, "PSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D10SamplerState)), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "VSSetShader", [(ObjPointer(ID3D10VertexShader), "pVertexShader")]),
+    StdMethod(Void, "DrawIndexed", [(UINT, "IndexCount"), (UINT, "StartIndexLocation"), (INT, "BaseVertexLocation")]),
+    StdMethod(Void, "Draw", [(UINT, "VertexCount"), (UINT, "StartVertexLocation")]),
+    StdMethod(Void, "PSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "IASetInputLayout", [(ObjPointer(ID3D10InputLayout), "pInputLayout")]),
+    StdMethod(Void, "IASetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppVertexBuffers"), (Array(Const(UINT), "NumBuffers"), "pStrides"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
+    StdMethod(Void, "IASetIndexBuffer", [(ObjPointer(ID3D10Buffer), "pIndexBuffer"), (DXGI_FORMAT, "Format"), (UINT, "Offset")]),
+    StdMethod(Void, "DrawIndexedInstanced", [(UINT, "IndexCountPerInstance"), (UINT, "InstanceCount"), (UINT, "StartIndexLocation"), (INT, "BaseVertexLocation"), (UINT, "StartInstanceLocation")]),
+    StdMethod(Void, "DrawInstanced", [(UINT, "VertexCountPerInstance"), (UINT, "InstanceCount"), (UINT, "StartVertexLocation"), (UINT, "StartInstanceLocation")]),
+    StdMethod(Void, "GSSetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "GSSetShader", [(ObjPointer(ID3D10GeometryShader), "pShader")]),
+    StdMethod(Void, "IASetPrimitiveTopology", [(D3D10_PRIMITIVE_TOPOLOGY, "Topology")]),
+    StdMethod(Void, "VSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "VSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D10SamplerState)), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "SetPredication", [(ObjPointer(ID3D10Predicate), "pPredicate"), (BOOL, "PredicateValue")]),
+    StdMethod(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D10SamplerState)), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "OMSetRenderTargets", [(UINT, "NumViews"), (Array(Const(ObjPointer(ID3D10RenderTargetView)), "NumViews"), "ppRenderTargetViews"), (ObjPointer(ID3D10DepthStencilView), "pDepthStencilView")]),
+    StdMethod(Void, "OMSetBlendState", [(ObjPointer(ID3D10BlendState), "pBlendState"), (Array(Const(FLOAT), 4), "BlendFactor"), (UINT, "SampleMask")]),
+    StdMethod(Void, "OMSetDepthStencilState", [(ObjPointer(ID3D10DepthStencilState), "pDepthStencilState"), (UINT, "StencilRef")]),
+    StdMethod(Void, "SOSetTargets", [(UINT, "NumBuffers"), (Array(Const(ObjPointer(ID3D10Buffer)), "NumBuffers"), "ppSOTargets"), (Array(Const(UINT), "NumBuffers"), "pOffsets")]),
+    StdMethod(Void, "DrawAuto", []),
+    StdMethod(Void, "RSSetState", [(ObjPointer(ID3D10RasterizerState), "pRasterizerState")]),
+    StdMethod(Void, "RSSetViewports", [(UINT, "NumViewports"), (Array(Const(D3D10_VIEWPORT), "NumViewports"), "pViewports")]),
+    StdMethod(Void, "RSSetScissorRects", [(UINT, "NumRects"), (Array(Const(D3D10_RECT), "NumRects"), "pRects")]),
+    StdMethod(Void, "CopySubresourceRegion", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (UINT, "DstX"), (UINT, "DstY"), (UINT, "DstZ"), (ObjPointer(ID3D10Resource), "pSrcResource"), (UINT, "SrcSubresource"), (Pointer(Const(D3D10_BOX)), "pSrcBox")]),
+    StdMethod(Void, "CopyResource", [(ObjPointer(ID3D10Resource), "pDstResource"), (ObjPointer(ID3D10Resource), "pSrcResource")]),
+    StdMethod(Void, "UpdateSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (Pointer(Const(D3D10_BOX)), "pDstBox"), (Blob(Const(Void), "_calcSubresourceSize(pDstResource, DstSubresource, pDstBox, SrcRowPitch, SrcDepthPitch)"), "pSrcData"), (UINT, "SrcRowPitch"), (UINT, "SrcDepthPitch")]),
+    StdMethod(Void, "ClearRenderTargetView", [(ObjPointer(ID3D10RenderTargetView), "pRenderTargetView"), (Array(Const(FLOAT), 4), "ColorRGBA")]),
+    StdMethod(Void, "ClearDepthStencilView", [(ObjPointer(ID3D10DepthStencilView), "pDepthStencilView"), (D3D10_CLEAR_FLAG, "ClearFlags"), (FLOAT, "Depth"), (UINT8, "Stencil")]),
+    StdMethod(Void, "GenerateMips", [(ObjPointer(ID3D10ShaderResourceView), "pShaderResourceView")]),
+    StdMethod(Void, "ResolveSubresource", [(ObjPointer(ID3D10Resource), "pDstResource"), (UINT, "DstSubresource"), (ObjPointer(ID3D10Resource), "pSrcResource"), (UINT, "SrcSubresource"), (DXGI_FORMAT, "Format")]),
+    StdMethod(Void, "VSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "PSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D10ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "PSGetShader", [Out(Pointer(ObjPointer(ID3D10PixelShader)), "ppPixelShader")]),
+    StdMethod(Void, "PSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D10SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "VSGetShader", [Out(Pointer(ObjPointer(ID3D10VertexShader)), "ppVertexShader")]),
+    StdMethod(Void, "PSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "IAGetInputLayout", [Out(Pointer(ObjPointer(ID3D10InputLayout)), "ppInputLayout")]),
+    StdMethod(Void, "IAGetVertexBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppVertexBuffers"), Out(Array(UINT, "NumBuffers"), "pStrides"), Out(Array(UINT, "NumBuffers"), "pOffsets")]),
+    StdMethod(Void, "IAGetIndexBuffer", [Out(Pointer(ObjPointer(ID3D10Buffer)), "pIndexBuffer"), Out(Pointer(DXGI_FORMAT), "Format"), Out(Pointer(UINT), "Offset")]),
+    StdMethod(Void, "GSGetConstantBuffers", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppConstantBuffers")]),
+    StdMethod(Void, "GSGetShader", [Out(Pointer(ObjPointer(ID3D10GeometryShader)), "ppGeometryShader")]),
+    StdMethod(Void, "IAGetPrimitiveTopology", [Out(Pointer(D3D10_PRIMITIVE_TOPOLOGY), "pTopology")], sideeffects=False),
+    StdMethod(Void, "VSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D10ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "VSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D10SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "GetPredication", [Out(Pointer(ObjPointer(ID3D10Predicate)), "ppPredicate"), Out(Pointer(BOOL), "pPredicateValue")]),
+    StdMethod(Void, "GSGetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), Out(Array(ObjPointer(ID3D10ShaderResourceView), "NumViews"), "ppShaderResourceViews")]),
+    StdMethod(Void, "GSGetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), Out(Array(ObjPointer(ID3D10SamplerState), "NumSamplers"), "ppSamplers")]),
+    StdMethod(Void, "OMGetRenderTargets", [(UINT, "NumViews"), Out(Array(ObjPointer(ID3D10RenderTargetView), "NumViews"), "ppRenderTargetViews"), Out(Pointer(ObjPointer(ID3D10DepthStencilView)), "ppDepthStencilView")]),
+    StdMethod(Void, "OMGetBlendState", [Out(Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState"), Out(Array(FLOAT, 4), "BlendFactor"), Out(Pointer(UINT), "pSampleMask")]),
+    StdMethod(Void, "OMGetDepthStencilState", [Out(Pointer(ObjPointer(ID3D10DepthStencilState)), "ppDepthStencilState"), Out(Pointer(UINT), "pStencilRef")]),
+    StdMethod(Void, "SOGetTargets", [(UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D10Buffer), "NumBuffers"), "ppSOTargets"), Out(Array(UINT, "NumBuffers"), "pOffsets")]),
+    StdMethod(Void, "RSGetState", [Out(Pointer(ObjPointer(ID3D10RasterizerState)), "ppRasterizerState")]),
+    StdMethod(Void, "RSGetViewports", [Out(Pointer(UINT), "NumViewports"), Out(Array(D3D10_VIEWPORT, "*NumViewports"), "pViewports")], sideeffects=False),
+    StdMethod(Void, "RSGetScissorRects", [Out(Pointer(UINT), "NumRects"), Out(Array(D3D10_RECT, "*NumRects"), "pRects")], sideeffects=False),
+    StdMethod(HRESULT, "GetDeviceRemovedReason", [], sideeffects=False),
+    StdMethod(HRESULT, "SetExceptionMode", [(D3D10_RAISE_FLAG, "RaiseFlags")]),
+    StdMethod(D3D10_RAISE_FLAG, "GetExceptionMode", [], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), Out(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
+    StdMethod(Void, "ClearState", []),
+    StdMethod(Void, "Flush", []),
+    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "1"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
+    StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D10_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture1D)), "ppTexture1D")]),
+    StdMethod(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D10_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture2D)), "ppTexture2D")]),
+    StdMethod(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D10_TEXTURE3D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture3D)), "ppTexture3D")]),
+    StdMethod(HRESULT, "CreateShaderResourceView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_SHADER_RESOURCE_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10ShaderResourceView)), "ppSRView")]),
+    StdMethod(HRESULT, "CreateRenderTargetView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_RENDER_TARGET_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10RenderTargetView)), "ppRTView")]),
+    StdMethod(HRESULT, "CreateDepthStencilView", [(ObjPointer(ID3D10Resource), "pResource"), (Pointer(Const(D3D10_DEPTH_STENCIL_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D10DepthStencilView)), "ppDepthStencilView")]),
+    StdMethod(HRESULT, "CreateInputLayout", [(Array(Const(D3D10_INPUT_ELEMENT_DESC), "NumElements"), "pInputElementDescs"), (UINT, "NumElements"), (Blob(Const(Void), "BytecodeLength"), "pShaderBytecodeWithInputSignature"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10InputLayout)), "ppInputLayout")]),
+    StdMethod(HRESULT, "CreateVertexShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10VertexShader)), "ppVertexShader")]),
+    StdMethod(HRESULT, "CreateGeometryShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10GeometryShader)), "ppGeometryShader")]),
+    StdMethod(HRESULT, "CreateGeometryShaderWithStreamOutput", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (Array(Const(D3D10_SO_DECLARATION_ENTRY), "NumEntries"), "pSODeclaration"), (UINT, "NumEntries"), (UINT, "OutputStreamStride"), Out(Pointer(ObjPointer(ID3D10GeometryShader)), "ppGeometryShader")]),
+    StdMethod(HRESULT, "CreatePixelShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D10PixelShader)), "ppPixelShader")]),
+    StdMethod(HRESULT, "CreateBlendState", [(Pointer(Const(D3D10_BLEND_DESC)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D10BlendState)), "ppBlendState")]),
+    StdMethod(HRESULT, "CreateDepthStencilState", [(Pointer(Const(D3D10_DEPTH_STENCIL_DESC)), "pDepthStencilDesc"), Out(Pointer(ObjPointer(ID3D10DepthStencilState)), "ppDepthStencilState")]),
+    StdMethod(HRESULT, "CreateRasterizerState", [(Pointer(Const(D3D10_RASTERIZER_DESC)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D10RasterizerState)), "ppRasterizerState")]),
+    StdMethod(HRESULT, "CreateSamplerState", [(Pointer(Const(D3D10_SAMPLER_DESC)), "pSamplerDesc"), Out(Pointer(ObjPointer(ID3D10SamplerState)), "ppSamplerState")]),
+    StdMethod(HRESULT, "CreateQuery", [(Pointer(Const(D3D10_QUERY_DESC)), "pQueryDesc"), Out(Pointer(ObjPointer(ID3D10Query)), "ppQuery")]),
+    StdMethod(HRESULT, "CreatePredicate", [(Pointer(Const(D3D10_QUERY_DESC)), "pPredicateDesc"), Out(Pointer(ObjPointer(ID3D10Predicate)), "ppPredicate")]),
+    StdMethod(HRESULT, "CreateCounter", [(Pointer(Const(D3D10_COUNTER_DESC)), "pCounterDesc"), Out(Pointer(ObjPointer(ID3D10Counter)), "ppCounter")]),
+    StdMethod(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D10_FORMAT_SUPPORT), "pFormatSupport")], sideeffects=False),
+    StdMethod(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")], sideeffects=False),
+    StdMethod(Void, "CheckCounterInfo", [Out(Pointer(D3D10_COUNTER_INFO), "pCounterInfo")], sideeffects=False),
+    StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D10_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D10_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")], sideeffects=False),
+    StdMethod(D3D10_CREATE_DEVICE_FLAG, "GetCreationFlags", [], sideeffects=False),
+    StdMethod(HRESULT, "OpenSharedResource", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(Void, "SetTextFilterSize", [(UINT, "Width"), (UINT, "Height")]),
+    StdMethod(Void, "GetTextFilterSize", [Out(Pointer(UINT), "pWidth"), Out(Pointer(UINT), "pHeight")], sideeffects=False),
 ]
 
 ID3D10Multithread.methods += [
-    Method(Void, "Enter", []),
-    Method(Void, "Leave", []),
-    Method(BOOL, "SetMultithreadProtected", [(BOOL, "bMTProtect")]),
-    Method(BOOL, "GetMultithreadProtected", [], sideeffects=False),
+    StdMethod(Void, "Enter", []),
+    StdMethod(Void, "Leave", []),
+    StdMethod(BOOL, "SetMultithreadProtected", [(BOOL, "bMTProtect")]),
+    StdMethod(BOOL, "GetMultithreadProtected", [], sideeffects=False),
 ]
 
 
-d3d10 = API("d3d10")
+d3d10 = Module("d3d10")
 
 
 from d3d10sdklayers import *
 import d3d10misc
-import d3d10shader
-import d3d10effect

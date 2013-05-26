@@ -33,51 +33,17 @@
 #include "d3dretrace.hpp"
 
 
-IDirect3DDevice9 *
-d3dretrace::pLastDirect3DDevice9 = NULL;
-
-
 void
 retrace::setUp(void) {
-    if (retrace::debug) {
-        /* 
-         * XXX: D3D9D only works for simple things, it often introduces errors
-         * on complex traces, or traces which use unofficial D3D9 features.
-         */
-        if (0) {
-            g_szD3D9DllName = "d3d9d.dll";
-        }
-    }
 }
 
 
 void
 retrace::addCallbacks(retrace::Retracer &retracer)
 {
+    retracer.addCallbacks(d3dretrace::d3d8_callbacks);
     retracer.addCallbacks(d3dretrace::d3d9_callbacks);
-}
-
-
-image::Image *
-retrace::getSnapshot(void) {
-    if (!d3dretrace::pLastDirect3DDevice9) {
-        return NULL;
-    }
-
-    return d3dstate::getRenderTargetImage(d3dretrace::pLastDirect3DDevice9);
-}
-
-
-bool
-retrace::dumpState(std::ostream &os)
-{
-    if (!d3dretrace::pLastDirect3DDevice9) {
-        return false;
-    }
-
-    d3dstate::dumpDevice(os, d3dretrace::pLastDirect3DDevice9);
-
-    return true;
+    retracer.addCallbacks(d3dretrace::dxgi_callbacks);
 }
 
 
@@ -87,6 +53,7 @@ retrace::flushRendering(void) {
 
 void
 retrace::waitForInput(void) {
+    /* TODO */
 }
 
 void

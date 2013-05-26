@@ -70,6 +70,12 @@ getCurrentDir(void)
 }
 
 bool
+createDirectory(const String &path)
+{
+    return CreateDirectoryA(path, NULL);
+}
+
+bool
 String::exists(void) const
 {
     DWORD attrs = GetFileAttributesA(str());
@@ -229,11 +235,7 @@ long long timeFrequency = 0LL;
 void
 abort(void)
 {
-#ifndef NDEBUG
-    DebugBreak();
-#else
-    ExitProcess(0);
-#endif
+    TerminateProcess(GetCurrentProcess(), 1);
 }
 
 
@@ -275,6 +277,15 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
+    /*
+     * Ignore .NET exception.
+     *
+     * http://ig2600.blogspot.co.uk/2011/01/why-do-i-keep-getting-exception-code.html
+     */
+    if (pExceptionRecord->ExceptionCode == 0xe0434352) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
     // Clear direction flag
 #ifdef _MSC_VER
 #ifndef _WIN64
@@ -290,7 +301,7 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 
     static int recursion_count = 0;
     if (recursion_count) {
-        fprintf(stderr, "apitrace: warning: recursion handling exception\n");
+        fputs("apitrace: warning: recursion handling exception\n", stderr);
     } else {
         if (gCallback) {
             ++recursion_count;

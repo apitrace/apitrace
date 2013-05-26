@@ -29,9 +29,16 @@
 
 #include <iostream>
 
+#include <windows.h>
 
+
+struct IDirect3DDevice8;
 struct IDirect3DDevice9;
+struct ID3D10Device;
+struct ID3D11DeviceContext;
 
+
+class JSONWriter;
 
 namespace image {
     class Image;
@@ -41,12 +48,47 @@ namespace image {
 namespace d3dstate {
 
 
+extern const GUID GUID_D3DSTATE;
+
+
+image::Image *
+getRenderTargetImage(IDirect3DDevice8 *pDevice);
+
+void
+dumpFramebuffer(JSONWriter &json, IDirect3DDevice8 *pDevice);
+
+void
+dumpDevice(std::ostream &os, IDirect3DDevice8 *pDevice);
+
+
 image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice);
 
+void
+dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice);
 
 void
 dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
+
+
+image::Image *
+getRenderTargetImage(ID3D10Device *pDevice);
+
+void
+dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
+
+void
+dumpDevice(std::ostream &os, ID3D10Device *pDevice);
+
+
+image::Image *
+getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
+
+void
+dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
+
+void
+dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext);
 
 
 } /* namespace d3dstate */

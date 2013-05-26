@@ -69,8 +69,11 @@ namespace trace {
  *
  * - version 4:
  *   - call enter events include thread ID
+ *
+ * - version 5:
+ *   - new call detail flag CALL_BACKTRACE
  */
-#define TRACE_VERSION 4
+#define TRACE_VERSION 5
 
 
 /*
@@ -85,6 +88,8 @@ namespace trace {
  *
  *   call_detail = ARG index value
  *               | RET value
+ *               | THREAD int
+ *               | BACKTRACE int frame*
  *               | END
  *
  *   value = NULL
@@ -102,6 +107,16 @@ namespace trace {
  *         | STRUCT struct_sig value+
  *         | OPAQUE int
  *         | REPR value value
+ *
+ *   frame = id frame_detail+
+ *         | id
+ *
+ *   frame_detail = MODULE string
+ *                | FUNCTION string
+ *                | FILENAME string
+ *                | LINENUMBER uint
+ *                | OFFSET uint
+ *                | END
  *
  *   call_sig = id name arg_name*
  *            | id
@@ -127,6 +142,7 @@ enum CallDetail {
     CALL_ARG,
     CALL_RET,
     CALL_THREAD,
+    CALL_BACKTRACE,
 };
 
 enum Type {
@@ -145,6 +161,15 @@ enum Type {
     TYPE_STRUCT,
     TYPE_OPAQUE,
     TYPE_REPR,
+};
+
+enum BacktraceDetail {
+    BACKTRACE_END = 0,
+    BACKTRACE_MODULE,
+    BACKTRACE_FUNCTION,
+    BACKTRACE_FILENAME,
+    BACKTRACE_LINENUMBER,
+    BACKTRACE_OFFSET,
 };
 
 

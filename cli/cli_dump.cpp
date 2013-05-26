@@ -38,6 +38,7 @@
 #include "trace_parser.hpp"
 #include "trace_dump.hpp"
 #include "trace_callset.hpp"
+#include "trace_option.hpp"
 
 
 enum ColorOption {
@@ -98,25 +99,6 @@ longOptions[] = {
     {0, 0, 0, 0}
 };
 
-static bool
-boolOption(const char *option, bool default_ = true) {
-    if (!option) {
-        return default_;
-    }
-    if (strcmp(option, "0") == 0 ||
-        strcmp(option, "no") == 0 ||
-        strcmp(option, "false") == 0) {
-        return false;
-    }
-    if (strcmp(option, "0") == 0 ||
-        strcmp(option, "yes") == 0 ||
-        strcmp(option, "true") == 0) {
-        return true;
-    }
-    std::cerr << "error: unexpected bool " << option << "\n";
-    return default_;
-}
-
 static int
 command(int argc, char *argv[])
 {
@@ -149,17 +131,17 @@ command(int argc, char *argv[])
             }
             break;
         case THREAD_IDS_OPT:
-            dumpThreadIds = boolOption(optarg);
+            dumpThreadIds = trace::boolOption(optarg);
             break;
         case CALL_NOS_OPT:
-            if (boolOption(optarg)) {
+            if (trace::boolOption(optarg)) {
                 dumpFlags &= ~trace::DUMP_FLAG_NO_CALL_NO;
             } else {
                 dumpFlags |= trace::DUMP_FLAG_NO_CALL_NO;
             }
             break;
         case ARG_NAMES_OPT:
-            if (boolOption(optarg)) {
+            if (trace::boolOption(optarg)) {
                 dumpFlags &= ~trace::DUMP_FLAG_NO_ARG_NAMES;
             } else {
                 dumpFlags |= trace::DUMP_FLAG_NO_ARG_NAMES;
@@ -189,7 +171,6 @@ command(int argc, char *argv[])
         trace::Parser p;
 
         if (!p.open(argv[i])) {
-            std::cerr << "error: failed to open " << argv[i] << "\n";
             return 1;
         }
 

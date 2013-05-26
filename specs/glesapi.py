@@ -40,7 +40,7 @@ def GlFunction(*args, **kwargs):
     return Function(*args, **kwargs)
 
 
-glesapi = API('GLES')
+glesapi = Module('GLES')
 
 
 # OpenGL ES specific functions
@@ -165,6 +165,14 @@ glesapi.addFunctions([
     GlFunction(Void, "glGetProgramBinaryOES", [(GLprogram, "program"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLenum), "binaryFormat"), Out(OpaqueBlob(GLvoid, "length ? *length : bufSize"), "binary")], sideeffects=False),
     GlFunction(Void, "glProgramBinaryOES", [(GLprogram, "program"), (GLenum, "binaryFormat"), (Blob(Const(GLvoid), "length"), "binary"), (GLsizei, "length")]),
 
+    # GL_OES_draw_texture
+    GlFunction(Void, "glDrawTexfOES", [(GLfloat, "x"), (GLfloat, "y"), (GLfloat, "z"), (GLfloat, "width"), (GLfloat, "height")]),
+    GlFunction(Void, "glDrawTexfvOES", [(Array(Const(GLfloat), 4), "coords")]),
+    GlFunction(Void, "glDrawTexiOES", [(GLint, "x"), (GLint, "y"), (GLint, "z"), (GLint, "width"), (GLint, "height")]),
+    GlFunction(Void, "glDrawTexivOES", [(Array(Const(GLint), 4), "coords")]),
+    GlFunction(Void, "glDrawTexsOES", [(GLshort, "x"), (GLshort, "y"), (GLshort, "z"), (GLshort, "width"), (GLshort, "height")]),
+    GlFunction(Void, "glDrawTexsvOES", [(Array(Const(GLshort), 4), "coords")]),
+
     # GL_EXT_discard_framebuffer
     GlFunction(Void, "glDiscardFramebufferEXT", [(GLenum, "target"), (GLsizei, "numAttachments"), (Array(Const(GLenum), "numAttachments"), "attachments")]),
 
@@ -199,12 +207,12 @@ glesapi.addFunctions([
     GlFunction(Void, "glReadBufferNV", [(GLenum, "mode")]),
 
     # GL_EXT_debug_label
-    GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "length"), (Const(GLstring), "label")]),
+    GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "length"), (GLstringConst, "label")]),
     GlFunction(Void, "glGetObjectLabelEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(GLstring, "label")], sideeffects=False),
 
     # GL_EXT_debug_marker
-    GlFunction(Void, "glInsertEventMarkerEXT", [(GLsizei, "length"), (Const(String("GLchar *", "length ? length : strlen(marker)")), "marker")], sideeffects=False),
-    GlFunction(Void, "glPushGroupMarkerEXT", [(GLsizei, "length"), (Const(String("GLchar *", "length ? length : strlen(marker)")), "marker")], sideeffects=False),
+    GlFunction(Void, "glInsertEventMarkerEXT", [(GLsizei, "length"), (String(Const(GLchar), "length ? length : strlen(marker)"), "marker")], sideeffects=False),
+    GlFunction(Void, "glPushGroupMarkerEXT", [(GLsizei, "length"), (String(Const(GLchar), "length ? length : strlen(marker)"), "marker")], sideeffects=False),
     GlFunction(Void, "glPopGroupMarkerEXT", [], sideeffects=False),
 
     # GL_EXT_occlusion_query_boolean
@@ -219,7 +227,7 @@ glesapi.addFunctions([
     # GL_EXT_separate_shader_objects
     GlFunction(Void, "glUseProgramStagesEXT", [(GLpipeline, "pipeline"), (GLbitfield_shader, "stages"), (GLprogram, "program")]),
     GlFunction(Void, "glActiveShaderProgramEXT", [(GLpipeline, "pipeline"), (GLprogram, "program")]),
-    GlFunction(GLprogram, "glCreateShaderProgramvEXT", [(GLenum, "type"), (GLsizei, "count"), (Const(Array(Const(GLstring), "count")), "strings")]),
+    GlFunction(GLprogram, "glCreateShaderProgramvEXT", [(GLenum, "type"), (GLsizei, "count"), (Const(Array(GLstringConst, "count")), "strings")]),
     GlFunction(Void, "glBindProgramPipelineEXT", [(GLpipeline, "pipeline")]),
     GlFunction(Void, "glDeleteProgramPipelinesEXT", [(GLsizei, "n"), (Array(Const(GLuint), "n"), "pipelines")]),
     GlFunction(Void, "glGenProgramPipelinesEXT", [(GLsizei, "n"), Out(Array(GLpipeline, "n"), "pipelines")]),

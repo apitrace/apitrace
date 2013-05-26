@@ -36,7 +36,7 @@
 #include <vector>
 
 #include "trace_model.hpp"
-
+#include "trace_backtrace.hpp"
 
 namespace trace {
     class File;
@@ -50,6 +50,7 @@ namespace trace {
         std::vector<bool> structs;
         std::vector<bool> enums;
         std::vector<bool> bitmasks;
+        std::vector<bool> frames;
 
     public:
         Writer();
@@ -69,6 +70,10 @@ namespace trace {
 
         void beginReturn(void);
         inline void endReturn(void) {}
+
+        void beginBacktrace(unsigned num_frames);
+        void writeStackFrame(const RawStackFrame *frame);
+        inline void endBacktrace(void) {}
 
         void beginArray(size_t length);
         inline void endArray(void) {}

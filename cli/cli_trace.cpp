@@ -28,13 +28,180 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 #include <getopt.h>
 
 #include <iostream>
 
-#include "cli.hpp"
+#include "os_string.hpp"
+#include "os_process.hpp"
 
-#include "trace_tools.hpp"
+#include "cli.hpp"
+#include "cli_resources.hpp"
+
+
+#if defined(__APPLE__)
+#define TRACE_VARIABLE "DYLD_LIBRARY_PATH"
+#define GL_TRACE_WRAPPER  "OpenGL"
+#elif defined(_WIN32)
+#define GL_TRACE_WRAPPER  "opengl32.dll"
+#else
+#define TRACE_VARIABLE "LD_PRELOAD"
+#define GL_TRACE_WRAPPER  "glxtrace.so"
+#define EGL_TRACE_WRAPPER  "egltrace.so"
+#endif
+
+
+static inline bool
+copyWrapper(const os::String & wrapperPath,
+            const char *programPath,
+            bool verbose)
+{
+    os::String wrapperFilename(wrapperPath);
+    wrapperFilename.trimDirectory();
+
+    os::String tmpWrapper(programPath);
+    tmpWrapper.trimFilename();
+    tmpWrapper.join(wrapperFilename);
+
+    if (verbose) {
+        std::cerr << wrapperPath << " -> " << tmpWrapper << "\n";
+    }
+
+    if (tmpWrapper.exists()) {
+        std::cerr << "error: not overwriting " << tmpWrapper << "\n";
+        return false;
+    }
+
+    if (!os::copyFile(wrapperPath, tmpWrapper, false)) {
+        std::cerr << "error: failed to copy " << wrapperPath << " into " << tmpWrapper << "\n";
+        return false;
+    }
+
+    return true;
+}
+
+
+static int
+traceProgram(trace::API api,
+             char * const *argv,
+             const char *output,
+             bool verbose)
+{
+    const char *wrapperFilename;
+    std::vector<const char *> args;
+    int status = 1;
+
+    /*
+     * TODO: simplify code
+     */
+
+    bool useInject = false;
+    switch (api) {
+    case trace::API_GL:
+        wrapperFilename = GL_TRACE_WRAPPER;
+        break;
+#ifdef EGL_TRACE_WRAPPER
+    case trace::API_EGL:
+        wrapperFilename = EGL_TRACE_WRAPPER;
+        break;
+#endif
+#ifdef _WIN32
+    case trace::API_D3D7:
+        wrapperFilename = "ddraw.dll";
+        break;
+    case trace::API_D3D8:
+        wrapperFilename = "d3d8.dll";
+        break;
+    case trace::API_D3D9:
+        wrapperFilename = "d3d9.dll";
+        break;
+    case trace::API_DXGI:
+        wrapperFilename = "dxgitrace.dll";
+        useInject = true;
+        break;
+#endif
+    default:
+        std::cerr << "error: unsupported API\n";
+        return 1;
+    }
+
+    os::String wrapperPath = findWrapper(wrapperFilename);
+    if (!wrapperPath.length()) {
+        std::cerr << "error: failed to find " << wrapperFilename << "\n";
+        goto exit;
+    }
+
+#if defined(_WIN32)
+    useInject = true;
+    if (useInject) {
+        args.push_back("inject");
+        args.push_back(wrapperPath);
+    } else {
+        /* On Windows copy the wrapper to the program directory.
+         */
+        if (!copyWrapper(wrapperPath, argv[0], verbose)) {
+            goto exit;
+        }
+    }
+#else  /* !_WIN32 */
+    (void)useInject;
+#endif /* !_WIN32 */
+
+#if defined(__APPLE__)
+    /* On Mac OS X, using DYLD_LIBRARY_PATH, we actually set the
+     * directory, not the file. */
+    wrapperPath.trimFilename();
+#endif
+
+#if defined(TRACE_VARIABLE)
+    if (verbose) {
+        std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
+    }
+    /* FIXME: Don't modify the current environment */
+    os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+#endif /* TRACE_VARIABLE */
+
+    if (output) {
+        os::setEnvironment("TRACE_FILE", output);
+    }
+
+    for (char * const * arg = argv; *arg; ++arg) {
+        args.push_back(*arg);
+    }
+    args.push_back(NULL);
+
+    if (verbose) {
+        const char *sep = "";
+        for (unsigned i = 0; i < args.size(); ++i) {
+            std::cerr << sep << args[i];
+            sep = " ";
+        }
+        std::cerr << "\n";
+    }
+
+    status = os::execute((char * const *)&args[0]);
+
+exit:
+#if defined(TRACE_VARIABLE)
+    os::unsetEnvironment(TRACE_VARIABLE);
+#endif
+#if defined(_WIN32)
+    if (!useInject) {
+        os::String tmpWrapper(argv[0]);
+        tmpWrapper.trimFilename();
+        tmpWrapper.join(wrapperFilename);
+        os::removeFile(tmpWrapper);
+    }
+#endif
+
+    if (output) {
+        os::unsetEnvironment("TRACE_FILE");
+    }
+    
+    return status;
+
+}
 
 
 static const char *synopsis = "Generate a new trace by executing the given program.";
@@ -53,7 +220,7 @@ usage(void)
         "    -v, --verbose       verbose output\n"
         "    -a, --api=API       specify API to trace ("
 #ifdef _WIN32
-                                                      "gl, d3d7, d3d8, d3d9, or d3d10"
+                                                      "gl, d3d7, d3d8, d3d9, or dxgi (for d3d10 and higher) "
 #else
                                                       "gl or egl"
 #endif
@@ -102,12 +269,12 @@ command(int argc, char *argv[])
                 api = trace::API_D3D8;
             } else if (strcmp(optarg, "d3d9") == 0) {
                 api = trace::API_D3D9;
-            } else if (strcmp(optarg, "d3d10") == 0) {
-                api = trace::API_D3D10;
-            } else if (strcmp(optarg, "d3d10_1") == 0) {
-                api = trace::API_D3D10_1;
-            } else if (strcmp(optarg, "d3d11") == 0) {
-                api = trace::API_D3D11;
+            } else if (strcmp(optarg, "dxgi") == 0 ||
+                       strcmp(optarg, "d3d10") == 0 ||
+                       strcmp(optarg, "d3d10_1") == 0 ||
+                       strcmp(optarg, "d3d11") == 0 ||
+                       strcmp(optarg, "d3d11_1") == 0) {
+                api = trace::API_DXGI;
             } else {
                 std::cerr << "error: unknown API `" << optarg << "`\n";
                 usage();
@@ -131,7 +298,7 @@ command(int argc, char *argv[])
     }
 
     assert(argv[argc] == 0);
-    return trace::traceProgram(api, argv + optind, output, verbose);
+    return traceProgram(api, argv + optind, output, verbose);
 }
 
 const Command trace_command = {

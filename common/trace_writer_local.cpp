@@ -36,6 +36,7 @@
 #include "trace_file.hpp"
 #include "trace_writer_local.hpp"
 #include "trace_format.hpp"
+#include "trace_backtrace.hpp"
 
 
 namespace trace {
@@ -63,6 +64,8 @@ static void exceptionCallback(void)
 LocalWriter::LocalWriter() :
     acquired(0)
 {
+    os::log("apitrace: loaded\n");
+
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
     os::setExceptionCallback(exceptionCallback);
@@ -71,6 +74,7 @@ LocalWriter::LocalWriter() :
 LocalWriter::~LocalWriter()
 {
     os::resetExceptionCallback();
+    checkProcessId();
 }
 
 void
@@ -122,35 +126,62 @@ LocalWriter::open(void) {
         os::abort();
     }
 
+    pid = os::getCurrentProcessId();
+
 #if 0
     // For debugging the exception handler
     *((int *)0) = 0;
 #endif
 }
 
-static unsigned next_thread_id = 0;
-static os::thread_specific_ptr<unsigned> thread_id_specific_ptr;
+static uintptr_t next_thread_num = 1;
 
-unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
+static OS_THREAD_SPECIFIC_PTR(void)
+thread_num;
+
+void LocalWriter::checkProcessId(void) {
+    if (m_file->isOpened() &&
+        os::getCurrentProcessId() != pid) {
+        // We are a forked child process that inherited the trace file, so
+        // create a new file.  We can't call any method of the current
+        // file, as it may cause it to flush and corrupt the parent's
+        // trace, so we effectively leak the old file object.
+        m_file = File::createSnappy();
+        // Don't want to open the same file again
+        os::unsetEnvironment("TRACE_FILE");
+        open();
+    }
+}
+
+unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     mutex.lock();
     ++acquired;
 
+    checkProcessId();
     if (!m_file->isOpened()) {
         open();
     }
 
-    unsigned *thread_id_ptr = thread_id_specific_ptr.get();
-    unsigned thread_id;
-    if (thread_id_ptr) {
-        thread_id = *thread_id_ptr;
-    } else {
-        thread_id = next_thread_id++;
-        thread_id_ptr = new unsigned;
-        *thread_id_ptr = thread_id;
-        thread_id_specific_ptr.reset(thread_id_ptr);
+    // Although thread_num is a void *, we actually use it as a uintptr_t
+    uintptr_t this_thread_num =
+        reinterpret_cast<uintptr_t>(static_cast<void *>(thread_num));
+    if (!this_thread_num) {
+        this_thread_num = next_thread_num++;
+        thread_num = reinterpret_cast<void *>(this_thread_num);
     }
 
-    return Writer::beginEnter(sig, thread_id);
+    assert(this_thread_num);
+    unsigned thread_id = this_thread_num - 1;
+    unsigned call_no = Writer::beginEnter(sig, thread_id);
+    if (!fake && backtrace_is_needed(sig->name)) {
+        std::vector<RawStackFrame> backtrace = get_backtrace();
+        beginBacktrace(backtrace.size());
+        for (unsigned i = 0; i < backtrace.size(); ++i) {
+            writeStackFrame(&backtrace[i]);
+        }
+        endBacktrace();
+    }
+    return call_no;
 }
 
 void LocalWriter::endEnter(void) {
@@ -184,8 +215,12 @@ void LocalWriter::flush(void) {
     } else {
         ++acquired;
         if (m_file->isOpened()) {
-            os::log("apitrace: flushing trace due to an exception\n");
-            m_file->flush();
+            if (os::getCurrentProcessId() != pid) {
+                os::log("apitrace: ignoring exception in child process\n");
+            } else {
+                os::log("apitrace: flushing trace due to an exception\n");
+                m_file->flush();
+            }
         }
         --acquired;
     }

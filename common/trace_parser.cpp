@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "trace_file.hpp"
+#include "trace_dump.hpp"
 #include "trace_parser.hpp"
 
 
@@ -176,12 +177,21 @@ Call *Parser::parse_call(Mode mode) {
         int c = read_byte();
         switch (c) {
         case trace::EVENT_ENTER:
+#if TRACE_VERBOSE
+            std::cerr << "\tENTER\n";
+#endif
             parse_enter(mode);
             break;
         case trace::EVENT_LEAVE:
+#if TRACE_VERBOSE
+            std::cerr << "\tLEAVE\n";
+#endif
             call = parse_leave(mode);
-            adjust_call_flags(call);
-            return call;
+            if (call) {
+                adjust_call_flags(call);
+                return call;
+            }
+            break;
         default:
             std::cerr << "error: unknown event " << c << "\n";
             exit(1);
@@ -231,7 +241,7 @@ Parser::parse_function_sig(void) {
         }
         sig->arg_names = arg_names;
         sig->flags = lookupCallFlags(sig->name);
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         functions[id] = sig;
 
         /**
@@ -248,9 +258,10 @@ Parser::parse_function_sig(void) {
                 api = trace::API_GL;
             } else if (n[0] == 'e' && n[1] == 'g' && n[2] == 'l' && n[3] >= 'A' && n[3] <= 'Z') { // egl[A-Z]*
                 api = trace::API_EGL;
-            } else if (n[0] == 'D' &&
-                       ((n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
-                        (n[1] == '3' && n[2] == 'D'))) { // D3D*
+            } else if ((n[0] == 'D' &&
+                        ((n[1] == 'i' && n[2] == 'r' && n[3] == 'e' && n[4] == 'c' && n[5] == 't') || // Direct*
+                         (n[1] == '3' && n[2] == 'D'))) || // D3D*
+                       (n[0] == 'C' && n[1] == 'r' && n[2] == 'e' && n[3] == 'a' && n[4] == 't' && n[5] == 'e')) { // Create*
                 api = trace::API_DX;
             } else {
                 /* TODO */
@@ -268,7 +279,7 @@ Parser::parse_function_sig(void) {
             glGetErrorSig = sig;
         }
 
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         skip_string(); /* name */
         unsigned num_args = read_uint();
@@ -298,9 +309,9 @@ StructSig *Parser::parse_struct_sig() {
             member_names[i] = read_string();
         }
         sig->member_names = member_names;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         structs[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         skip_string(); /* name */
         unsigned num_members = read_uint();
@@ -334,9 +345,9 @@ EnumSig *Parser::parse_old_enum_sig() {
         values->name = read_string();
         values->value = read_sint();
         sig->values = values;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         enums[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         skip_string(); /*name*/
         scan_value();
@@ -363,9 +374,9 @@ EnumSig *Parser::parse_enum_sig() {
             it->value = read_sint();
         }
         sig->values = values;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         enums[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         int num_values = read_uint();
         for (int i = 0; i < num_values; ++i) {
@@ -398,9 +409,9 @@ BitmaskSig *Parser::parse_bitmask_sig() {
             }
         }
         sig->flags = flags;
-        sig->offset = file->currentOffset();
+        sig->fileOffset = file->currentOffset();
         bitmasks[id] = sig;
-    } else if (file->currentOffset() < sig->offset) {
+    } else if (file->currentOffset() < sig->fileOffset) {
         /* skip over the signature */
         int num_flags = read_uint();
         for (int i = 0; i < num_flags; ++i) {
@@ -448,6 +459,14 @@ Call *Parser::parse_leave(Mode mode) {
         }
     }
     if (!call) {
+        /* This might happen on random access, when an asynchronous call is stranded
+         * between two frames.  We won't return this call, but we still need to skip 
+         * over its data.
+         */
+        const FunctionSig sig = {0, NULL, 0, NULL};
+        call = new Call(&sig, 0, 0);
+        parse_call_details(call, SCAN);
+        delete call;
         return NULL;
     }
 
@@ -465,12 +484,27 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
         int c = read_byte();
         switch (c) {
         case trace::CALL_END:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_END\n";
+#endif
             return true;
         case trace::CALL_ARG:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_ARG\n";
+#endif
             parse_arg(call, mode);
             break;
         case trace::CALL_RET:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_RET\n";
+#endif
             call->ret = parse_value(mode);
+            break;
+        case trace::CALL_BACKTRACE:
+#if TRACE_VERBOSE
+            std::cerr << "\tCALL_BACKTRACE\n";
+#endif
+            parse_call_backtrace(call, mode);
             break;
         default:
             std::cerr << "error: ("<<call->name()<< ") unknown call detail "
@@ -482,6 +516,83 @@ bool Parser::parse_call_details(Call *call, Mode mode) {
     } while(true);
 }
 
+bool Parser::parse_call_backtrace(Call *call, Mode mode) {
+    unsigned num_frames = read_uint();
+    Backtrace* backtrace = new Backtrace(num_frames);
+    for (unsigned i = 0; i < num_frames; ++i) {
+        (*backtrace)[i] = parse_backtrace_frame(mode);
+    }
+    call->backtrace = backtrace;
+    return true;
+}
+
+StackFrame * Parser::parse_backtrace_frame(Mode mode) {
+    size_t id = read_uint();
+
+    StackFrameState *frame = lookup(frames, id);
+
+    if (!frame) {
+        frame = new StackFrameState;
+        int c = read_byte();
+        while (c != trace::BACKTRACE_END &&
+               c != -1) {
+            switch (c) {
+            case trace::BACKTRACE_MODULE:
+                frame->module = read_string();
+                break;
+            case trace::BACKTRACE_FUNCTION:
+                frame->function = read_string();
+                break;
+            case trace::BACKTRACE_FILENAME:
+                frame->filename = read_string();
+                break;
+            case trace::BACKTRACE_LINENUMBER:
+                frame->linenumber = read_uint();
+                break;
+            case trace::BACKTRACE_OFFSET:
+                frame->offset = read_uint();
+                break;
+            default:
+                std::cerr << "error: unknown backtrace detail "
+                          << c << "\n";
+                exit(1);
+            }
+            c = read_byte();
+        }
+
+        frame->fileOffset = file->currentOffset();
+        frames[id] = frame;
+    } else if (file->currentOffset() < frame->fileOffset) {
+        int c = read_byte();
+        while (c != trace::BACKTRACE_END &&
+               c != -1) {
+            switch (c) {
+            case trace::BACKTRACE_MODULE:
+                scan_string();
+                break;
+            case trace::BACKTRACE_FUNCTION:
+                scan_string();
+                break;
+            case trace::BACKTRACE_FILENAME:
+                scan_string();
+                break;
+            case trace::BACKTRACE_LINENUMBER:
+                scan_uint();
+                break;
+            case trace::BACKTRACE_OFFSET:
+                scan_uint();
+                break;
+            default:
+                std::cerr << "error: unknown backtrace detail "
+                          << c << "\n";
+                exit(1);
+            }
+            c = read_byte();
+        }
+    }
+
+    return frame;
+}
 
 /**
  * Make adjustments to this particular call flags.
@@ -569,7 +680,9 @@ Value *Parser::parse_value(void) {
     }
 #if TRACE_VERBOSE
     if (value) {
-        std::cerr << "\tVALUE " << value << "\n";
+        std::cerr << "\tVALUE ";
+        trace::dump(value, std::cerr);
+        std::cerr << "\n";
     }
 #endif
     return value;

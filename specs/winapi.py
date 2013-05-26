@@ -51,6 +51,7 @@ BYTE = Alias("BYTE", UInt8)
 WORD = Alias("WORD", UInt16)
 DWORD = Alias("DWORD", UInt32)
 
+UCHAR = Alias("UCHAR", UChar)
 WCHAR = Alias("WCHAR", Short)
 
 BOOL = Enum("BOOL", [
@@ -64,9 +65,9 @@ LPDWORD = Pointer(DWORD)
 LPBOOL = Pointer(BOOL)
 
 LPSTR = CString
-LPCSTR = Const(CString)
+LPCSTR = ConstCString
 LPWSTR = WString
-LPCWSTR = Const(WString)
+LPCWSTR = ConstWString
 
 LARGE_INTEGER = Struct("LARGE_INTEGER", [
     (LONGLONG, 'QuadPart'),
@@ -151,7 +152,7 @@ RGNDATA = Struct("RGNDATA", [
 ])
 LPRGNDATA = Pointer(RGNDATA)
 
-HMODULE = DECLARE_HANDLE("HMODULE")
+HMODULE = IntPointer("HMODULE")
 
 FILETIME = Struct("FILETIME", [
     (DWORD, "dwLowDateTime"),
@@ -177,6 +178,11 @@ LOGFONTW = Struct("LOGFONTW", [
     (WString, "lfFaceName"),
 ])
 
+SECURITY_ATTRIBUTES = Struct("SECURITY_ATTRIBUTES", [
+    (DWORD, "nLength"),
+    (LPVOID, "lpSecurityDescriptor"),
+    (BOOL, "bInheritHandle"),
+])
 
 # http://msdn.microsoft.com/en-us/library/ff485842.aspx
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx
@@ -205,7 +211,7 @@ IUnknown = Interface("IUnknown")
 
 IUnknown.methods = (
 	StdMethod(HRESULT, "QueryInterface", ((REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppvObj"))),
-	StdMethod(ULONG, "AddRef", (), sideeffects=False),
+	StdMethod(ULONG, "AddRef", ()),
 	StdMethod(ULONG, "Release", ()),
 )
 

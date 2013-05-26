@@ -30,7 +30,10 @@ class SearchWidget;
 class ShadersSourceWidget;
 class TraceProcess;
 class TrimProcess;
+class ProfileDialog;
 class VertexDataInterpreter;
+
+namespace trace { struct Profile; }
 
 class MainWindow : public QMainWindow
 {
@@ -42,15 +45,19 @@ public:
 public slots:
     void loadTrace(const QString &fileName, int callNum = -1);
 
+    void setRemoteTarget(const QString &host);
+
 private slots:
     void callItemSelected(const QModelIndex &index);
     void callItemActivated(const QModelIndex &index);
     void createTrace();
     void openTrace();
     void replayStart();
+    void replayProfile();
     void replayStop();
     void replayFinished(const QString &message);
     void replayStateFound(ApiTraceState *state);
+    void replayProfileFound(trace::Profile *state);
     void replayThumbnailsFound(const QList<QImage> &thumbnails);
     void replayError(const QString &msg);
     void startedLoadingTrace();
@@ -93,6 +100,7 @@ private slots:
 private:
     void initObjects();
     void initConnections();
+    void updateActionsState(bool traceLoaded, bool stopped = true);
     void newTraceFile(const QString &fileName);
     void replayTrace(bool dumpState, bool dumpThumbnails);
     void trimEvent();
@@ -107,6 +115,8 @@ private:
     ApiTraceFrame *currentFrame() const;
     ApiTraceCall *currentCall() const;
 
+protected:
+    virtual void closeEvent(QCloseEvent * event);
 
 private:
     Ui_MainWindow m_ui;
@@ -141,6 +151,8 @@ private:
     ArgumentsEditor *m_argsEditor;
 
     ApiTraceEvent *m_nonDefaultsLookupEvent;
+
+    ProfileDialog* m_profileDialog;
 };
 
 

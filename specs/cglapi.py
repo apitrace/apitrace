@@ -180,7 +180,7 @@ CGLError = Enum("CGLError", [
 
 CGLContextObj = Opaque("CGLContextObj")
 
-cglapi = API("CGL")
+cglapi = Module("CGL")
 
 cglapi.addFunctions([
     # CGLCurrent.h, libGL.dylib
@@ -221,19 +221,19 @@ cglapi.addFunctions([
     Function(CGLError, "CGLFlushDrawable", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLEnable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
     Function(CGLError, "CGLDisable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
-    Function(CGLError, "CGLIsEnabled", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname"), Out(Pointer(GLint), "enable")]),
+    Function(CGLError, "CGLIsEnabled", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname"), Out(Pointer(GLint), "enable")], sideeffects=False),
     Function(CGLError, "CGLSetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), (Array(Const(GLint), 1), "params")]),
-    Function(CGLError, "CGLGetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), Out(Array(GLint, 1), "params")]),
+    Function(CGLError, "CGLGetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), Out(Array(GLint, 1), "params")], sideeffects=False),
     Function(CGLError, "CGLSetVirtualScreen", [(CGLContextObj, "ctx"), (GLint, "screen")]),
-    Function(CGLError, "CGLGetVirtualScreen", [(CGLContextObj, "ctx"), Out(Pointer(GLint), "screen")]),
+    Function(CGLError, "CGLGetVirtualScreen", [(CGLContextObj, "ctx"), Out(Pointer(GLint), "screen")], sideeffects=False),
     Function(CGLError, "CGLSetGlobalOption", [(CGLGlobalOption, "pname"), (OpaquePointer(Const(GLint)), "params")]),
     Function(CGLError, "CGLGetGlobalOption", [(CGLGlobalOption, "pname"), Out(OpaquePointer(GLint), "params")]),
     Function(CGLError, "CGLSetOption", [(CGLGlobalOption, "pname"), (GLint, "param")]),
-    Function(CGLError, "CGLGetOption", [(CGLGlobalOption, "pname"), Out(Pointer(GLint), "param")]),
+    Function(CGLError, "CGLGetOption", [(CGLGlobalOption, "pname"), Out(Pointer(GLint), "param")], sideeffects=False),
     Function(CGLError, "CGLLockContext", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLUnlockContext", [(CGLContextObj, "ctx")]),
-    Function(Void, "CGLGetVersion", [Out(Pointer(GLint), "majorvers"), Out(Pointer(GLint), "minorvers")]),
-    Function(Const(CString), "CGLErrorString", [(CGLError, "error")]),
+    Function(Void, "CGLGetVersion", [Out(Pointer(GLint), "majorvers"), Out(Pointer(GLint), "minorvers")], sideeffects=False),
+    Function(ConstCString, "CGLErrorString", [(CGLError, "error")], sideeffects=False),
 
     # CGLIOSurface.h, OpenGL framework
     Function(CGLError, "CGLTexImageIOSurface2D", [(CGLContextObj, "ctx"), (GLenum, "target"), (GLenum, "internal_format"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (IOSurfaceRef, "ioSurface"), (GLuint, "plane")]),

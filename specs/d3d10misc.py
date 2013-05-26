@@ -41,11 +41,6 @@ D3D10_DRIVER_TYPE = Enum("D3D10_DRIVER_TYPE", [
 d3d10.addFunctions([
     StdFunction(HRESULT, "D3D10CreateDevice", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D10_CREATE_DEVICE_FLAG, "Flags"), (UINT, "SDKVersion"), Out(Pointer(ObjPointer(ID3D10Device)), "ppDevice")]),
     StdFunction(HRESULT, "D3D10CreateDeviceAndSwapChain", [(ObjPointer(IDXGIAdapter), "pAdapter"), (D3D10_DRIVER_TYPE, "DriverType"), (HMODULE, "Software"), (D3D10_CREATE_DEVICE_FLAG, "Flags"), (UINT, "SDKVersion"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pSwapChainDesc"), Out(Pointer(ObjPointer(IDXGISwapChain)), "ppSwapChain"), Out(Pointer(ObjPointer(ID3D10Device)), "ppDevice")]),
-    StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), Out(Pointer(LPD3D10BLOB), "ppBuffer")]),
-
-    # Undocumented
-    StdFunction(DWORD, "D3D10GetVersion", []),
-    StdFunction(DWORD, "D3D10RegisterLayers", []),
 ])
 
 d3d10.addInterfaces([

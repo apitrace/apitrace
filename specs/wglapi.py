@@ -32,7 +32,7 @@ from winapi import *
 from wglenum import *
 
 
-wglapi = API("WGL")
+wglapi = Module("WGL")
 
 
 HGLRC = Alias("HGLRC", HANDLE)
@@ -175,7 +175,7 @@ wglapi.addFunctions([
     StdFunction(BOOL, "wglRestoreBufferRegionARB", [(HANDLE, "hRegion"), (Int, "x"), (Int, "y"), (Int, "width"), (Int, "height"), (Int, "xSrc"), (Int, "ySrc")]),
 
     # WGL_ARB_extensions_string
-    StdFunction(Const(CString), "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
+    StdFunction(ConstCString, "wglGetExtensionsStringARB", [(HDC, "hdc")], sideeffects=False),
 
     # WGL_ARB_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
@@ -202,7 +202,7 @@ wglapi.addFunctions([
     StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (Array(Const(WGLenum), "_AttribPairList_size(attribList)"), "attribList")]),
 
     # WGL_EXT_extensions_string
-    StdFunction(Const(CString), "wglGetExtensionsStringEXT", [], sideeffects=False),
+    StdFunction(ConstCString, "wglGetExtensionsStringEXT", [], sideeffects=False),
 
     # WGL_EXT_make_current_read
     StdFunction(BOOL, "wglMakeContextCurrentEXT", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
