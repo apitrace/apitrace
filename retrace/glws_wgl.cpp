@@ -249,106 +249,115 @@ public:
 class WglWindowSystem : public WindowSystem
 {
 public:
-    WglWindowSystem(void) {
-        /*
-         * OpenGL library must be loaded by the time we call GDI.
-         */
+    WglWindowSystem(void);
+    ~WglWindowSystem();
+    Visual * createVisual(bool doubleBuffer, gldispatch::Profile profile);
+    Drawable * createDrawable(const Visual *visual, int width, int height);
+    Context * createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug);
+    bool makeCurrent(Drawable *drawable, Context *context);
+    bool processEvents(void);
+};
 
-        const char * libgl_filename = getenv("TRACE_LIBGL");
 
-        if (libgl_filename) {
-            pfnChoosePixelFormat = &wglChoosePixelFormat;
-            pfnSetPixelFormat = &wglSetPixelFormat;
-            pfnSwapBuffers = &wglSwapBuffers;
-        } else {
-            libgl_filename = "OPENGL32";
-        }
+WglWindowSystem::WglWindowSystem(void) {
+    /*
+     * OpenGL library must be loaded by the time we call GDI.
+     */
 
-        gldispatch::libGL = LoadLibraryA(libgl_filename);
-        if (!gldispatch::libGL) {
-            std::cerr << "error: unable to open " << libgl_filename << "\n";
-            exit(1);
-        }
+    const char * libgl_filename = getenv("TRACE_LIBGL");
+
+    if (libgl_filename) {
+        pfnChoosePixelFormat = &wglChoosePixelFormat;
+        pfnSetPixelFormat = &wglSetPixelFormat;
+        pfnSwapBuffers = &wglSwapBuffers;
+    } else {
+        libgl_filename = "OPENGL32";
     }
 
-    ~WglWindowSystem() {
+    gldispatch::libGL = LoadLibraryA(libgl_filename);
+    if (!gldispatch::libGL) {
+        std::cerr << "error: unable to open " << libgl_filename << "\n";
+        exit(1);
+    }
+}
+
+WglWindowSystem::~WglWindowSystem() {
+}
+
+Visual *
+WglWindowSystem::createVisual(bool doubleBuffer, gldispatch::Profile profile) {
+    if (profile != gldispatch::PROFILE_COMPAT) {
+        return NULL;
     }
 
-    Visual *
-    createVisual(bool doubleBuffer, gldispatch::Profile profile) {
-        if (profile != gldispatch::PROFILE_COMPAT) {
-            return NULL;
-        }
+    Visual *visual = new Visual();
 
-        Visual *visual = new Visual();
+    visual->doubleBuffer = doubleBuffer;
 
-        visual->doubleBuffer = doubleBuffer;
+    return visual;
+}
 
-        return visual;
+Drawable *
+WglWindowSystem::createDrawable(const Visual *visual, int width, int height)
+{
+    return new WglDrawable(visual, width, height);
+}
+
+Context *
+WglWindowSystem::createContext(const Visual *visual, Context *shareContext, gldispatch::Profile profile, bool debug)
+{
+    if (profile != gldispatch::PROFILE_COMPAT) {
+        return NULL;
     }
 
-    Drawable *
-    createDrawable(const Visual *visual, int width, int height)
-    {
-        return new WglDrawable(visual, width, height);
-    }
+    return new WglContext(visual, profile, static_cast<WglContext *>(shareContext));
+}
 
-    Context *
-    createContext(const Visual *visual, Context *shareContext, gldispatch::Profile profile, bool debug)
-    {
-        if (profile != gldispatch::PROFILE_COMPAT) {
-            return NULL;
-        }
+bool
+WglWindowSystem::makeCurrent(Drawable *drawable, Context *context)
+{
+    if (!drawable || !context) {
+        return wglMakeCurrent(NULL, NULL);
+    } else {
+        WglDrawable *wglDrawable = static_cast<WglDrawable *>(drawable);
+        WglContext *wglContext = static_cast<WglContext *>(context);
 
-        return new WglContext(visual, profile, static_cast<WglContext *>(shareContext));
-    }
-
-    bool
-    makeCurrent(Drawable *drawable, Context *context)
-    {
-        if (!drawable || !context) {
-            return wglMakeCurrent(NULL, NULL);
-        } else {
-            WglDrawable *wglDrawable = static_cast<WglDrawable *>(drawable);
-            WglContext *wglContext = static_cast<WglContext *>(context);
-
+        if (!wglContext->hglrc) {
+            wglContext->hglrc = wglCreateContext(wglDrawable->hDC);
             if (!wglContext->hglrc) {
-                wglContext->hglrc = wglCreateContext(wglDrawable->hDC);
-                if (!wglContext->hglrc) {
-                    std::cerr << "error: wglCreateContext failed\n";
-                    exit(1);
-                    return false;
-                }
-                if (wglContext->shareContext) {
-                    BOOL bRet;
-                    bRet = wglShareLists(wglContext->shareContext->hglrc,
-                                         wglContext->hglrc);
-                    if (!bRet) {
-                        std::cerr << "warning: wglShareLists failed\n";
-                    }
-                }
-            }
-
-            return wglMakeCurrent(wglDrawable->hDC, wglContext->hglrc);
-        }
-    }
-
-    bool
-    processEvents(void) {
-        MSG uMsg;
-        while (PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE)) {
-            if (uMsg.message == WM_QUIT) {
+                std::cerr << "error: wglCreateContext failed\n";
+                exit(1);
                 return false;
             }
-
-            if (!TranslateAccelerator(uMsg.hwnd, NULL, &uMsg)) {
-                TranslateMessage(&uMsg);
-                DispatchMessage(&uMsg);
+            if (wglContext->shareContext) {
+                BOOL bRet;
+                bRet = wglShareLists(wglContext->shareContext->hglrc,
+                                     wglContext->hglrc);
+                if (!bRet) {
+                    std::cerr << "warning: wglShareLists failed\n";
+                }
             }
         }
-    }
 
-};
+        return wglMakeCurrent(wglDrawable->hDC, wglContext->hglrc);
+    }
+}
+
+bool
+WglWindowSystem::processEvents(void) {
+    MSG uMsg;
+    while (PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE)) {
+        if (uMsg.message == WM_QUIT) {
+            return false;
+        }
+
+        if (!TranslateAccelerator(uMsg.hwnd, NULL, &uMsg)) {
+            TranslateMessage(&uMsg);
+            DispatchMessage(&uMsg);
+        }
+    }
+    return true;
+}
 
 
 WindowSystem *

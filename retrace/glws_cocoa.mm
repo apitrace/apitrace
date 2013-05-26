@@ -157,118 +157,125 @@ public:
 class CocoaWindowSystem : public WindowSystem
 {
 public:
-
-    CocoaWindowSystem(void) {
-        [NSApplication sharedApplication];
-
-        autoreleasePool = [[NSAutoreleasePool alloc] init];
-
-        [NSApp finishLaunching];
-    }
-
-
-    ~CocoaWindowSystem() {
-        [autoreleasePool release];
-    }
-
-
-    Visual *
-    createVisual(bool doubleBuffer, gldispatch::Profile profile) {
-        if (profile != gldispatch::PROFILE_COMPAT &&
-            profile != gldispatch::PROFILE_CORE) {
-            return nil;
-        }
-
-        Attributes<NSOpenGLPixelFormatAttribute> attribs;
-
-        attribs.add(NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1);
-        attribs.add(NSOpenGLPFAColorSize, (NSOpenGLPixelFormatAttribute)24);
-        if (doubleBuffer) {
-            attribs.add(NSOpenGLPFADoubleBuffer);
-        }
-        attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
-        attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
-        if (profile == gldispatch::PROFILE_CORE) {
-#if CGL_VERSION_1_3
-            attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
-#else
-        return NULL;
-#endif
-        }
-        attribs.end();
-
-        NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc]
-                                         initWithAttributes:attribs];
-
-        return new CocoaVisual(pixelFormat);
-    }
-
-    Drawable *
-    createDrawable(const Visual *visual, int width, int height)
-    {
-        return new CocoaDrawable(visual, width, height);
-    }
-
-    Context *
-    createContext(const Visual *visual, Context *shareContext, gldispatch::Profile profile, bool debug)
-    {
-        NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
-        NSOpenGLContext *share_context = nil;
-        NSOpenGLContext *context;
-
-        if (profile != gldispatch::PROFILE_COMPAT &&
-            profile != gldispatch::PROFILE_CORE) {
-            return nil;
-        }
-
-        if (shareContext) {
-            share_context = static_cast<CocoaContext*>(shareContext)->context;
-        }
-
-        context = [[NSOpenGLContext alloc]
-                   initWithFormat:pixelFormat
-                   shareContext:share_context];
-        assert(context != nil);
-
-        return new CocoaContext(visual, profile, context);
-    }
-
-    bool
-    makeCurrent(Drawable *drawable, Context *context)
-    {
-        if (!drawable || !context) {
-            [NSOpenGLContext clearCurrentContext];
-        } else {
-            CocoaDrawable *cocoaDrawable = static_cast<CocoaDrawable *>(drawable);
-            CocoaContext *cocoaContext = static_cast<CocoaContext *>(context);
-
-            [cocoaDrawable->window makeKeyAndOrderFront:nil];
-            [cocoaContext->context setView:[cocoaDrawable->window contentView]];
-            [cocoaContext->context makeCurrentContext];
-
-            cocoaDrawable->currentContext = cocoaContext->context;
-        }
-
-        return TRUE;
-    }
-
-    bool
-    processEvents(void) {
-       NSEvent* event;
-
-        do {
-            event = [NSApp nextEventMatchingMask:NSAnyEventMask
-                                       untilDate:[NSDate distantPast]
-                                          inMode:NSDefaultRunLoopMode
-                                         dequeue:YES];
-            if (event)
-                [NSApp sendEvent:event];
-        } while (event);
-
-        return true;
-    }
-
+    CocoaWindowSystem(void);
+    ~CocoaWindowSystem();
+    Visual * createVisual(bool doubleBuffer, gldispatch::Profile profile);
+    Drawable * createDrawable(const Visual *visual, int width, int height);
+    Context * createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug);
+    bool makeCurrent(Drawable *drawable, Context *context);
+    bool processEvents(void);
 };
+
+
+CocoaWindowSystem::CocoaWindowSystem(void) {
+    [NSApplication sharedApplication];
+
+    autoreleasePool = [[NSAutoreleasePool alloc] init];
+
+    [NSApp finishLaunching];
+}
+
+
+CocoaWindowSystem::~CocoaWindowSystem() {
+    [autoreleasePool release];
+}
+
+
+Visual *
+CocoaWindowSystem::createVisual(bool doubleBuffer, gldispatch::Profile profile) {
+    if (profile != gldispatch::PROFILE_COMPAT &&
+        profile != gldispatch::PROFILE_CORE) {
+        return nil;
+    }
+
+    Attributes<NSOpenGLPixelFormatAttribute> attribs;
+
+    attribs.add(NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1);
+    attribs.add(NSOpenGLPFAColorSize, (NSOpenGLPixelFormatAttribute)24);
+    if (doubleBuffer) {
+        attribs.add(NSOpenGLPFADoubleBuffer);
+    }
+    attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
+    attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
+    if (profile == gldispatch::PROFILE_CORE) {
+#if CGL_VERSION_1_3
+        attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
+#else
+    return NULL;
+#endif
+    }
+    attribs.end();
+
+    NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc]
+                                     initWithAttributes:attribs];
+
+    return new CocoaVisual(pixelFormat);
+}
+
+Drawable *
+CocoaWindowSystem::createDrawable(const Visual *visual, int width, int height)
+{
+    return new CocoaDrawable(visual, width, height);
+}
+
+Context *
+CocoaWindowSystem::createContext(const Visual *visual, Context *shareContext, gldispatch::Profile profile, bool debug)
+{
+    NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
+    NSOpenGLContext *share_context = nil;
+    NSOpenGLContext *context;
+
+    if (profile != gldispatch::PROFILE_COMPAT &&
+        profile != gldispatch::PROFILE_CORE) {
+        return nil;
+    }
+
+    if (shareContext) {
+        share_context = static_cast<CocoaContext*>(shareContext)->context;
+    }
+
+    context = [[NSOpenGLContext alloc]
+               initWithFormat:pixelFormat
+               shareContext:share_context];
+    assert(context != nil);
+
+    return new CocoaContext(visual, profile, context);
+}
+
+bool
+CocoaWindowSystem::makeCurrent(Drawable *drawable, Context *context)
+{
+    if (!drawable || !context) {
+        [NSOpenGLContext clearCurrentContext];
+    } else {
+        CocoaDrawable *cocoaDrawable = static_cast<CocoaDrawable *>(drawable);
+        CocoaContext *cocoaContext = static_cast<CocoaContext *>(context);
+
+        [cocoaDrawable->window makeKeyAndOrderFront:nil];
+        [cocoaContext->context setView:[cocoaDrawable->window contentView]];
+        [cocoaContext->context makeCurrentContext];
+
+        cocoaDrawable->currentContext = cocoaContext->context;
+    }
+
+    return TRUE;
+}
+
+bool
+CocoaWindowSystem::processEvents(void) {
+   NSEvent* event;
+
+    do {
+        event = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                   untilDate:[NSDate distantPast]
+                                      inMode:NSDefaultRunLoopMode
+                                     dequeue:YES];
+        if (event)
+            [NSApp sendEvent:event];
+    } while (event);
+
+    return true;
+}
 
 
 WindowSystem *

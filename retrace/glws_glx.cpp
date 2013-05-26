@@ -217,164 +217,173 @@ public:
 class GlxWindowSystem : public WindowSystem
 {
 public:
-    GlxWindowSystem(void) {
-        display = XOpenDisplay(NULL);
-        if (!display) {
-            std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
-            exit(1);
-        }
-
-        screen = DefaultScreen(display);
-
-        int major = 0, minor = 0;
-        glXQueryVersion(display, &major, &minor);
-        glxVersion = (major << 8) | minor;
-
-        extensions = glXQueryExtensionsString(display, screen);
-        has_GLX_ARB_create_context = checkExtension("GLX_ARB_create_context", extensions);
-    }
-
-    ~GlxWindowSystem() {
-        if (display) {
-            XCloseDisplay(display);
-            display = NULL;
-        }
-    }
-
-    Visual *
-    createVisual(bool doubleBuffer, gldispatch::Profile profile) {
-        if (profile != gldispatch::PROFILE_COMPAT &&
-            profile != gldispatch::PROFILE_CORE) {
-            return NULL;
-        }
-
-        GlxVisual *visual = new GlxVisual;
-
-        if (glxVersion >= 0x0103) {
-            Attributes<int> attribs;
-            attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
-            attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
-            attribs.add(GLX_RED_SIZE, 1);
-            attribs.add(GLX_GREEN_SIZE, 1);
-            attribs.add(GLX_BLUE_SIZE, 1);
-            attribs.add(GLX_ALPHA_SIZE, 1);
-            attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
-            attribs.add(GLX_DEPTH_SIZE, 1);
-            attribs.add(GLX_STENCIL_SIZE, 1);
-            attribs.end();
-
-            int num_configs = 0;
-            GLXFBConfig * fbconfigs;
-            fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
-            assert(num_configs && fbconfigs);
-            visual->fbconfig = fbconfigs[0];
-            assert(visual->fbconfig);
-            visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
-            assert(visual->visinfo);
-        } else {
-            Attributes<int> attribs;
-            attribs.add(GLX_RGBA);
-            attribs.add(GLX_RED_SIZE, 1);
-            attribs.add(GLX_GREEN_SIZE, 1);
-            attribs.add(GLX_BLUE_SIZE, 1);
-            attribs.add(GLX_ALPHA_SIZE, 1);
-            if (doubleBuffer) {
-                attribs.add(GLX_DOUBLEBUFFER);
-            }
-            attribs.add(GLX_DEPTH_SIZE, 1);
-            attribs.add(GLX_STENCIL_SIZE, 1);
-            attribs.end();
-
-            visual->visinfo = glXChooseVisual(display, screen, attribs);
-        }
-
-        return visual;
-    }
-
-    Drawable *
-    createDrawable(const Visual *visual, int width, int height)
-    {
-        return new GlxDrawable(visual, width, height);
-    }
-
-    Context *
-    createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug)
-    {
-        const GlxVisual *visual = static_cast<const GlxVisual *>(_visual);
-        GLXContext share_context = NULL;
-        GLXContext context;
-
-        if (shareContext) {
-            share_context = static_cast<GlxContext*>(shareContext)->context;
-        }
-
-        if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
-            Attributes<int> attribs;
-            
-            attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
-            if (debug) {
-                attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
-            }
-
-            switch (profile) {
-            case gldispatch::PROFILE_COMPAT:
-                break;
-            case gldispatch::PROFILE_CORE:
-                // XXX: This will invariable return a 3.2 context, when supported.
-                // We probably should have a PROFILE_CORE_XX per version.
-                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 3);
-                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 2);
-                attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
-                break;
-            default:
-                return NULL;
-            }
-            
-            attribs.end();
-
-            context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
-        } else {
-            if (profile != gldispatch::PROFILE_COMPAT) {
-                return NULL;
-            }
-
-            if (glxVersion >= 0x103) {
-                context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
-            } else {
-                context = glXCreateContext(display, visual->visinfo, share_context, True);
-            }
-        }
-
-        if (!context) {
-            return NULL;
-        }
-
-        return new GlxContext(visual, profile, context);
-    }
-
-    bool
-    makeCurrent(Drawable *drawable, Context *context)
-    {
-        if (!drawable || !context) {
-            return glXMakeCurrent(display, None, NULL);
-        } else {
-            GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
-            GlxContext *glxContext = static_cast<GlxContext *>(context);
-
-            return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
-        }
-    }
-
-    bool
-    processEvents(void) {
-        while (XPending(display) > 0) {
-            XEvent event;
-            XNextEvent(display, &event);
-            describeEvent(event);
-        }
-        return true;
-    }
+    GlxWindowSystem(void);
+    ~GlxWindowSystem();
+    Visual * createVisual(bool doubleBuffer, gldispatch::Profile profile);
+    Drawable * createDrawable(const Visual *visual, int width, int height);
+    Context * createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug);
+    bool makeCurrent(Drawable *drawable, Context *context);
+    bool processEvents(void);
 };
+
+
+GlxWindowSystem::GlxWindowSystem(void) {
+    display = XOpenDisplay(NULL);
+    if (!display) {
+        std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
+        exit(1);
+    }
+
+    screen = DefaultScreen(display);
+
+    int major = 0, minor = 0;
+    glXQueryVersion(display, &major, &minor);
+    glxVersion = (major << 8) | minor;
+
+    extensions = glXQueryExtensionsString(display, screen);
+    has_GLX_ARB_create_context = checkExtension("GLX_ARB_create_context", extensions);
+}
+
+GlxWindowSystem::~GlxWindowSystem() {
+    if (display) {
+        XCloseDisplay(display);
+        display = NULL;
+    }
+}
+
+Visual *
+GlxWindowSystem::createVisual(bool doubleBuffer, gldispatch::Profile profile) {
+    if (profile != gldispatch::PROFILE_COMPAT &&
+        profile != gldispatch::PROFILE_CORE) {
+        return NULL;
+    }
+
+    GlxVisual *visual = new GlxVisual;
+
+    if (glxVersion >= 0x0103) {
+        Attributes<int> attribs;
+        attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
+        attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
+        attribs.add(GLX_RED_SIZE, 1);
+        attribs.add(GLX_GREEN_SIZE, 1);
+        attribs.add(GLX_BLUE_SIZE, 1);
+        attribs.add(GLX_ALPHA_SIZE, 1);
+        attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
+        attribs.add(GLX_DEPTH_SIZE, 1);
+        attribs.add(GLX_STENCIL_SIZE, 1);
+        attribs.end();
+
+        int num_configs = 0;
+        GLXFBConfig * fbconfigs;
+        fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
+        assert(num_configs && fbconfigs);
+        visual->fbconfig = fbconfigs[0];
+        assert(visual->fbconfig);
+        visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
+        assert(visual->visinfo);
+    } else {
+        Attributes<int> attribs;
+        attribs.add(GLX_RGBA);
+        attribs.add(GLX_RED_SIZE, 1);
+        attribs.add(GLX_GREEN_SIZE, 1);
+        attribs.add(GLX_BLUE_SIZE, 1);
+        attribs.add(GLX_ALPHA_SIZE, 1);
+        if (doubleBuffer) {
+            attribs.add(GLX_DOUBLEBUFFER);
+        }
+        attribs.add(GLX_DEPTH_SIZE, 1);
+        attribs.add(GLX_STENCIL_SIZE, 1);
+        attribs.end();
+
+        visual->visinfo = glXChooseVisual(display, screen, attribs);
+    }
+
+    return visual;
+}
+
+Drawable *
+GlxWindowSystem::createDrawable(const Visual *visual, int width, int height)
+{
+    return new GlxDrawable(visual, width, height);
+}
+
+Context *
+GlxWindowSystem::createContext(const Visual *_visual, Context *shareContext, gldispatch::Profile profile, bool debug)
+{
+    const GlxVisual *visual = static_cast<const GlxVisual *>(_visual);
+    GLXContext share_context = NULL;
+    GLXContext context;
+
+    if (shareContext) {
+        share_context = static_cast<GlxContext*>(shareContext)->context;
+    }
+
+    if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
+        Attributes<int> attribs;
+        
+        attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
+        if (debug) {
+            attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
+        }
+
+        switch (profile) {
+        case gldispatch::PROFILE_COMPAT:
+            break;
+        case gldispatch::PROFILE_CORE:
+            // XXX: This will invariable return a 3.2 context, when supported.
+            // We probably should have a PROFILE_CORE_XX per version.
+            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 3);
+            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 2);
+            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
+            break;
+        default:
+            return NULL;
+        }
+        
+        attribs.end();
+
+        context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
+    } else {
+        if (profile != gldispatch::PROFILE_COMPAT) {
+            return NULL;
+        }
+
+        if (glxVersion >= 0x103) {
+            context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
+        } else {
+            context = glXCreateContext(display, visual->visinfo, share_context, True);
+        }
+    }
+
+    if (!context) {
+        return NULL;
+    }
+
+    return new GlxContext(visual, profile, context);
+}
+
+bool
+GlxWindowSystem::makeCurrent(Drawable *drawable, Context *context)
+{
+    if (!drawable || !context) {
+        return glXMakeCurrent(display, None, NULL);
+    } else {
+        GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
+        GlxContext *glxContext = static_cast<GlxContext *>(context);
+
+        return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
+    }
+}
+
+bool
+GlxWindowSystem::processEvents(void) {
+    while (XPending(display) > 0) {
+        XEvent event;
+        XNextEvent(display, &event);
+        describeEvent(event);
+    }
+    return true;
+    }
 
 
 WindowSystem *
