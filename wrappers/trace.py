@@ -463,6 +463,16 @@ class Tracer:
     def isFunctionPublic(self, function):
         return True
 
+    def traceEnabledCheck(self, function):
+        # No-op if tracing is disabled
+        print '    if (!trace::isTracingEnabled()) {'
+        self.invokeFunction(function)
+        if function.type is not stdapi.Void:
+            print '        return _result;'
+        else:
+            print '        return;'
+        print '    }'
+
     def traceFunctionImpl(self, function):
         if self.isFunctionPublic(function):
             print 'extern "C" PUBLIC'
@@ -472,14 +482,7 @@ class Tracer:
         if function.type is not stdapi.Void:
             print '    %s _result;' % function.type
 
-        # No-op if tracing is disabled
-        print '    if (!trace::isTracingEnabled()) {'
-        Tracer.invokeFunction(self, function)
-        if function.type is not stdapi.Void:
-            print '        return _result;'
-        else:
-            print '        return;'
-        print '    }'
+        self.traceEnabledCheck(function)
 
         self.traceFunctionImplBody(function)
         if function.type is not stdapi.Void:
@@ -498,6 +501,30 @@ class Tracer:
                     self.serializeArg(function, arg)
             print '    trace::localWriter.endEnter();'
         self.invokeFunction(function)
+        if not function.internal:
+            print '    trace::localWriter.beginLeave(_call);'
+            print '    if (%s) {' % self.wasFunctionSuccessful(function)
+            for arg in function.args:
+                if arg.output:
+                    self.serializeArg(function, arg)
+                    self.wrapArg(function, arg)
+            print '    }'
+            if function.type is not stdapi.Void:
+                self.serializeRet(function, "_result")
+            if function.type is not stdapi.Void:
+                self.wrapRet(function, "_result")
+            print '    trace::localWriter.endLeave();'
+
+    def traceFunctionImplBodyNoInvoke(self, function):
+        if not function.internal:
+            print '    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+            for arg in function.args:
+                if not arg.output:
+                    self.unwrapArg(function, arg)
+            for arg in function.args:
+                if not arg.output:
+                    self.serializeArg(function, arg)
+            print '    trace::localWriter.endEnter();'
         if not function.internal:
             print '    trace::localWriter.beginLeave(_call);'
             print '    if (%s) {' % self.wasFunctionSuccessful(function)
