@@ -125,7 +125,10 @@ configure_file (backtrace-supported.h.in backtrace-supported.h)
 
 configure_file (config.h.in.cmake config.h)
 
-include_directories ("auxincl")
+include_directories (
+    ${CMAKE_CURRENT_BINARY_DIR}
+    auxincl
+)
 add_library (backtrace STATIC EXCLUDE_FROM_ALL
     ${BACKTRACE_FILE} ${FORMAT_FILE} ${VIEW_FILE} ${ALLOC_FILE}
     fileline.c posix.c print.c state.c)
