@@ -314,7 +314,7 @@ class GlTracer(Tracer):
         print '}'
         print
 
-    getProcAddressFunctionNames = []
+    getProcAddressFunctionNames = ["glXGetProcAddress", "glXGetProcAddressARB", "wglGetProcAddress"]
 
     def traceApi(self, api):
         if self.getProcAddressFunctionNames:
@@ -682,7 +682,10 @@ class GlTracer(Tracer):
 
         self.shadowBufferProlog(function)
 
-        Tracer.traceFunctionImplBody(self, function)
+        if function.name == 'glLinkProgram' or function.name == 'glLinkProgramARB':
+            Tracer.traceFunctionImplBodyNoInvoke(self, function)
+        else:
+            Tracer.traceFunctionImplBody(self, function)
 
     marker_functions = [
         # GL_GREMEDY_string_marker
@@ -696,16 +699,12 @@ class GlTracer(Tracer):
     ]
 
     def invokeFunction(self, function):
-        if function.name in ('glLinkProgram', 'glLinkProgramARB'):
-            # These functions have been dispatched already
-            return
-
         # We implement GL_EXT_debug_marker, GL_GREMEDY_*, etc., and not the
         # driver
         if function.name in self.marker_functions:
             return
 
-        if function.name in ('glXGetProcAddress', 'glXGetProcAddressARB', 'wglGetProcAddress'):
+        if function.name in self.getProcAddressFunctionNames:
             else_ = ''
             for marker_function in self.marker_functions:
                 if self.api.getFunctionByName(marker_function):
@@ -715,6 +714,7 @@ class GlTracer(Tracer):
                 else_ = 'else '
             print '    %s{' % else_
             Tracer.invokeFunction(self, function)
+            print '    _result = _wrapProcAddress(%s, _result);' % (function.args[0].name)
             print '    }'
             return
 
@@ -741,10 +741,6 @@ class GlTracer(Tracer):
 
     def wrapRet(self, function, instance):
         Tracer.wrapRet(self, function, instance)
-
-        # Replace function addresses with ours
-        if function.name in self.getProcAddressFunctionNames:
-            print '    %s = _wrapProcAddress(%s, %s);' % (instance, function.args[0].name, instance)
 
         # Keep track of buffer mappings
         if function.name in ('glMapBuffer', 'glMapBufferARB'):
@@ -1069,14 +1065,4 @@ class GlTracer(Tracer):
         print '        trace::localWriter.endEnter();'
         print '        trace::localWriter.beginLeave(_fake_call);'
         print '        trace::localWriter.endLeave();'
-
-
-
-
-
-
-
-
-
-
 
