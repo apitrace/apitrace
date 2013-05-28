@@ -138,6 +138,7 @@ static void retrace_eglDestroySurface(trace::Call &call) {
 
 static void retrace_eglBindAPI(trace::Call &call) {
     current_api = call.arg(0).toUInt();
+    eglBindAPI(current_api);
 }
 
 static void retrace_eglCreateContext(trace::Call &call) {
