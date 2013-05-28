@@ -33,7 +33,7 @@ namespace gldispatch {
 /**
  * Current GL profile.
  *
- * TODO: Use TLS.
+ * FIXME: Must use TLS and update everywhere.
  */
 Profile currentProfile =
 #if defined(ANDROID)
