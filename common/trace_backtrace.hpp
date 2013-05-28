@@ -8,7 +8,7 @@
 namespace trace {
 
 
-#if defined(ANDROID) or defined(__ELF__)
+#if defined(ANDROID) || defined(__ELF__)
 
 std::vector<RawStackFrame> get_backtrace();
 bool backtrace_is_needed(const char* fname);
