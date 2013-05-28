@@ -259,6 +259,12 @@ if (WIN32)
     add_subdirectory (thirdparty/directxtex)
 endif ()
 
+if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
+    add_subdirectory (thirdparty/libbacktrace)
+    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libbacktrace)
+    set (LIBBACKTRACE_LIBRARIES backtrace)
+endif ()
+
 # Always use bundled QJSon.
 # - The packaged versions QJson are very old, and do not support NaN/Infinity.
 # - To make it easier to build the GUI on Windows and MacOSX, as there are no

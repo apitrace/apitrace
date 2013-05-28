@@ -1,3 +1,29 @@
+/**************************************************************************
+ *
+ * Copyright 2013 Samsung
+ * Contributed by Eugene Velesevich
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ **************************************************************************/
+
 #ifndef _TRACE_BACKTRACE_HPP_
 #define _TRACE_BACKTRACE_HPP_
 
@@ -8,28 +34,12 @@
 namespace trace {
 
 
-#if defined(ANDROID) or defined(__linux__)
+#if defined(ANDROID) || defined(__ELF__)
 
 std::vector<RawStackFrame> get_backtrace();
 bool backtrace_is_needed(const char* fname);
 
-#if defined(ANDROID)
-
-#define MAX_BT_FUNC 20
-#define PREFIX_MAX_FUNC_NAME 100
-#define APITRACE_FNAMES_FILE "/data/apitrace.fnames"
-#define APITRACE_FNAMES_SOURCE APITRACE_FNAMES_FILE
-
-#elif defined(__linux__)
-
-#define MAX_BT_FUNC 20
-#define PREFIX_MAX_FUNC_NAME 100
-#define APITRACE_FNAMES_ENV "APITRACE_BT_FUNCTIONS"
-#define APITRACE_FNAMES_SOURCE APITRACE_FNAMES_ENV
-
-#endif
-
-#else /* !__linux__ && !ANDROID */
+#else
 
 static inline std::vector<RawStackFrame> get_backtrace() {
     return std::vector<RawStackFrame>();
