@@ -2126,7 +2126,7 @@ parameters = [
     ("",	X,	1,	"GL_ONE_MINUS_SRC1_COLOR"),	# 0x88FA
     ("",	X,	1,	"GL_ONE_MINUS_SRC1_ALPHA"),	# 0x88FB
     ("glGet",	I,	1,	"GL_MAX_DUAL_SOURCE_DRAW_BUFFERS"),	# 0x88FC
-    ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_ARRAY_INTEGER"),	# 0x88FD
+    ("glGetVertexAttrib",	B,	1,	"GL_VERTEX_ATTRIB_ARRAY_INTEGER"),	# 0x88FD
     ("glGetVertexAttrib",	I,	1,	"GL_VERTEX_ATTRIB_ARRAY_DIVISOR"),	# 0x88FE
     ("glGet",	I,	1,	"GL_MAX_ARRAY_TEXTURE_LAYERS"),	# 0x88FF
     ("glGet",	F,	1,	"GL_MIN_PROGRAM_TEXEL_OFFSET"),	# 0x8904
