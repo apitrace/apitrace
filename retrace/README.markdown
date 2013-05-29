@@ -1,6 +1,6 @@
 The source for replaying retraces lives in this directory.
 
-There are actually several discting layers in this directory which should be eventually be split out:
+There are actually several distinct layers in this directory which should be eventually be split out:
 
  - `*`retrace -- deserialization and interpretation of calls from a trace
 
