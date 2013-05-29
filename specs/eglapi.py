@@ -47,7 +47,8 @@ EGLBoolean = Enum("EGLBoolean", [
 
 EGLint = Alias("EGLint", Int32)
 
-EGLError = FakeEnum(EGLint, [
+EGLenum = Enum("EGLenum", [
+    # error codes
     "EGL_SUCCESS",                  # 0x3000
     "EGL_NOT_INITIALIZED",          # 0x3001
     "EGL_BAD_ACCESS",               # 0x3002
@@ -63,17 +64,6 @@ EGLError = FakeEnum(EGLint, [
     "EGL_BAD_PARAMETER",            # 0x300C
     "EGL_BAD_SURFACE",              # 0x300D
     "EGL_CONTEXT_LOST",             # 0x300E  /* EGL 1.1 - IMG_power_management */
-])
-
-EGLName = FakeEnum(EGLint, [
-    "EGL_VENDOR",                   # 0x3053
-    "EGL_VERSION",                  # 0x3054
-    "EGL_EXTENSIONS",               # 0x3055
-    "EGL_CLIENT_APIS",              # 0x308D
-])
-
-# collection of all other enum values
-EGLenum = Enum("EGLenum", [
     # config attributes
     "EGL_BUFFER_SIZE",              # 0x3020
     "EGL_ALPHA_SIZE",               # 0x3021
@@ -114,6 +104,10 @@ EGLenum = Enum("EGLenum", [
     "EGL_SLOW_CONFIG",              # 0x3050  /* EGL_CONFIG_CAVEAT value */
     "EGL_NON_CONFORMANT_CONFIG",    # 0x3051  /* EGL_CONFIG_CAVEAT value */
     "EGL_TRANSPARENT_RGB",          # 0x3052  /* EGL_TRANSPARENT_TYPE value */
+    "EGL_VENDOR",                   # 0x3053
+    "EGL_VERSION",                  # 0x3054
+    "EGL_EXTENSIONS",               # 0x3055
+    "EGL_CLIENT_APIS",              # 0x308D
     "EGL_RGB_BUFFER",               # 0x308E  /* EGL_COLOR_BUFFER_TYPE value */
     "EGL_LUMINANCE_BUFFER",         # 0x308F  /* EGL_COLOR_BUFFER_TYPE value */
 
@@ -265,7 +259,8 @@ EGLenum = Enum("EGLenum", [
 ])
 
 # an alias of EGLenum
-EGLattrib = Alias("EGLint", EGLenum)
+EGLint_enum = Alias("EGLint", EGLenum)
+EGLattrib = EGLint_enum
 
 # EGL_KHR_image_base
 EGLImageKHR = Opaque("EGLImageKHR")
@@ -301,13 +296,13 @@ def GlFunction(*args, **kwargs):
 
 eglapi.addFunctions([
     # EGL 1.4
-    Function(EGLError, "eglGetError", [], sideeffects=False),
+    Function(EGLint_enum, "eglGetError", [], sideeffects=False),
 
     Function(EGLDisplay, "eglGetDisplay", [(EGLNativeDisplayType, "display_id")]),
     Function(EGLBoolean, "eglInitialize", [(EGLDisplay, "dpy"), Out(Pointer(EGLint), "major"), Out(Pointer(EGLint), "minor")]),
     Function(EGLBoolean, "eglTerminate", [(EGLDisplay, "dpy")]),
 
-    Function(ConstCString, "eglQueryString", [(EGLDisplay, "dpy"), (EGLName, "name")], sideeffects=False),
+    Function(ConstCString, "eglQueryString", [(EGLDisplay, "dpy"), (EGLint_enum, "name")], sideeffects=False),
 
     Function(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
     Function(EGLBoolean, "eglChooseConfig", [(EGLDisplay, "dpy"), (EGLAttribList, "attrib_list"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
