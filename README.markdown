@@ -275,7 +275,7 @@ Recording a video with FFmpeg/Libav
 You can make a video of the output with FFmpeg by doing
 
     apitrace dump-images -o - application.trace \
-    | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
+    | avconv -r 30 -f image2pipe -vcodec ppm -i - -vcodec mpeg4 -y output.mp4
 
 or Libav (which replaces FFmpeg on recent Debian/Ubuntu distros) doing
 
