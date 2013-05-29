@@ -67,7 +67,7 @@ DXGI_FRAME_STATISTICS = Struct("DXGI_FRAME_STATISTICS", [
 
 DXGI_MAPPED_RECT = Struct("DXGI_MAPPED_RECT", [
     (INT, "Pitch"),
-    (OpaquePointer(BYTE), "pBits"),
+    (LinearPointer(BYTE, "_MappedSize"), "pBits"),
 ])
 
 DXGI_ADAPTER_DESC = Struct("DXGI_ADAPTER_DESC", [
