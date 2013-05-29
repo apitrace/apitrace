@@ -269,10 +269,15 @@ This works only on Unices, and it will truncate the traces due to performance
 limitations.
 
 
-Recording a video with FFmpeg
------------------------------
+Recording a video with FFmpeg/Libav
+-----------------------------------
 
-You can make a video of the output by doing
+You can make a video of the output with FFmpeg by doing
+
+    apitrace dump-images -o - application.trace \
+    | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
+
+or Libav (which replaces FFmpeg on recent Debian/Ubuntu distros) doing
 
     apitrace dump-images -o - application.trace \
     | avconv -r 30 -f image2pipe -vcodec ppm -i - -vcodec mpeg4 -y output.mp4
