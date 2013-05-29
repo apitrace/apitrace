@@ -52,8 +52,6 @@ if (FLAG_UNWIND_TABLES)
     add_definitions ("-funwind-tables")
 endif ()
 
-add_definitions ("-fPIC")
-
 # Adjust warnings
 if (CMAKE_COMPILER_IS_GNUCC)
     add_definitions ("-Wno-switch -Wno-enum-compare")
@@ -103,7 +101,7 @@ else ()
     set (BACKTRACE_USES_MALLOC 0)
 endif ()
 
-add_definitions ("-D_GNU_SOURCE")
+add_definitions (-D_GNU_SOURCE)
 set (CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS} -D_GNU_SOURCE)
 check_symbol_exists (dl_iterate_phdr link.h HAVE_DL_ITERATE_PHDR)
 
@@ -130,8 +128,18 @@ include_directories (
     auxincl
 )
 add_library (backtrace STATIC EXCLUDE_FROM_ALL
-    ${BACKTRACE_FILE} ${FORMAT_FILE} ${VIEW_FILE} ${ALLOC_FILE}
-    fileline.c posix.c print.c state.c)
+    ${BACKTRACE_FILE}
+    ${FORMAT_FILE}
+    ${VIEW_FILE}
+    ${ALLOC_FILE}
+    fileline.c
+    posix.c
+    print.c
+    state.c
+)
+set_target_properties (backtrace PROPERTIES
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
+)
 
 set (ENABLE_LIBBACKTRACE_TEST false CACHE BOOL "Enable libbacktrace testing")
 if (ENABLE_LIBBACKTRACE_TEST)
