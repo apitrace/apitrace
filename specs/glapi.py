@@ -27,9 +27,9 @@
 
 """GL API description.
 
-Most of these were automatically generated with the apigen/glspec.py script
-from Khronos OpenGL spec files, and then manually edited to cover the corner
-cases correctly.
+Most of these were automatically generated from Khronos OpenGL spec files by
+the specs/scripts/glspec.py script, and then manually edited to cover the
+corner cases correctly.
 
 """
 
@@ -1382,6 +1382,23 @@ glapi.addFunctions([
     # GL_ARB_copy_image
     GlFunction(Void, "glCopyImageSubData", [(GLuint, "srcName"), (GLenum, "srcTarget"), (GLint, "srcLevel"), (GLint, "srcX"), (GLint, "srcY"), (GLint, "srcZ"), (GLuint, "dstName"), (GLenum, "dstTarget"), (GLint, "dstLevel"), (GLint, "dstX"), (GLint, "dstY"), (GLint, "dstZ"), (GLsizei, "srcWidth"), (GLsizei, "srcHeight"), (GLsizei, "srcDepth")]),
 
+    # GL_ARB_texture_view
+    GlFunction(Void, "glTextureView", [(GLtexture, "texture"), (GLenum, "target"), (GLtexture, "origtexture"), (GLenum, "internalformat"), (GLuint, "minlevel"), (GLuint, "numlevels"), (GLuint, "minlayer"), (GLuint, "numlayers")]),
+
+    # GL_ARB_vertex_attrib_binding
+    GlFunction(Void, "glBindVertexBuffer", [(GLuint, "bindingindex"), (GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizei, "stride")]),
+    GlFunction(Void, "glVertexAttribFormat", [(GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "relativeoffset")]),
+    GlFunction(Void, "glVertexAttribIFormat", [(GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
+    GlFunction(Void, "glVertexAttribLFormat", [(GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
+    GlFunction(Void, "glVertexAttribBinding", [(GLuint, "attribindex"), (GLuint, "bindingindex")]),
+    GlFunction(Void, "glVertexBindingDivisor", [(GLuint, "bindingindex"), (GLuint, "divisor")]),
+    GlFunction(Void, "glVertexArrayBindVertexBufferEXT", [(GLarray, "vaobj"), (GLuint, "bindingindex"), (GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizei, "stride")]),
+    GlFunction(Void, "glVertexArrayVertexAttribFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "relativeoffset")]),
+    GlFunction(Void, "glVertexArrayVertexAttribIFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
+    GlFunction(Void, "glVertexArrayVertexAttribLFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
+    GlFunction(Void, "glVertexArrayVertexAttribBindingEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLuint, "bindingindex")]),
+    GlFunction(Void, "glVertexArrayVertexBindingDivisorEXT", [(GLarray, "vaobj"), (GLuint, "bindingindex"), (GLuint, "divisor")]),
+
     # GL_ARB_framebuffer_no_attachments
     GlFunction(Void, "glFramebufferParameteri", [(GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
     GlFunction(Void, "glGetFramebufferParameteriv", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
@@ -1423,23 +1440,6 @@ glapi.addFunctions([
     GlFunction(Void, "glTexStorage3DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedsamplelocations")]),
     GlFunction(Void, "glTextureStorage2DMultisampleEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedsamplelocations")]),
     GlFunction(Void, "glTextureStorage3DMultisampleEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedsamplelocations")]),
-
-    # GL_ARB_texture_view
-    GlFunction(Void, "glTextureView", [(GLtexture, "texture"), (GLenum, "target"), (GLtexture, "origtexture"), (GLenum, "internalformat"), (GLuint, "minlevel"), (GLuint, "numlevels"), (GLuint, "minlayer"), (GLuint, "numlayers")]),
-
-    # GL_ARB_vertex_attrib_binding
-    GlFunction(Void, "glBindVertexBuffer", [(GLuint, "bindingindex"), (GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizei, "stride")]),
-    GlFunction(Void, "glVertexAttribFormat", [(GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "relativeoffset")]),
-    GlFunction(Void, "glVertexAttribIFormat", [(GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
-    GlFunction(Void, "glVertexAttribLFormat", [(GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
-    GlFunction(Void, "glVertexAttribBinding", [(GLuint, "attribindex"), (GLuint, "bindingindex")]),
-    GlFunction(Void, "glVertexBindingDivisor", [(GLuint, "bindingindex"), (GLuint, "divisor")]),
-    GlFunction(Void, "glVertexArrayBindVertexBufferEXT", [(GLarray, "vaobj"), (GLuint, "bindingindex"), (GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizei, "stride")]),
-    GlFunction(Void, "glVertexArrayVertexAttribFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "relativeoffset")]),
-    GlFunction(Void, "glVertexArrayVertexAttribIFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
-    GlFunction(Void, "glVertexArrayVertexAttribLFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
-    GlFunction(Void, "glVertexArrayVertexAttribBindingEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLuint, "bindingindex")]),
-    GlFunction(Void, "glVertexArrayVertexBindingDivisorEXT", [(GLarray, "vaobj"), (GLuint, "bindingindex"), (GLuint, "divisor")]),
 
     # GL_EXT_blend_color
     GlFunction(Void, "glBlendColorEXT", [(GLfloat, "red"), (GLfloat, "green"), (GLfloat, "blue"), (GLfloat, "alpha")]),
