@@ -286,11 +286,11 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print r'    d3dretrace::processEvents();'
 
         if method.name == 'Map':
-            print '    VOID *_pbData = NULL;'
-            print '    size_t _MappedSize = 0;'
-            print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames())
-            print '    if (_MappedSize) {'
-            print '        _maps[_this] = _pbData;'
+            print '    _MAP_DESC _MapDesc;'
+            print '    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames())
+            print '    size_t _MappedSize = _MapDesc.Size;'
+            print '    if (_MapDesc.Size) {'
+            print '        _maps[_this] = _MapDesc.pData;'
             print '    } else {'
             print '        return;'
             print '    }'

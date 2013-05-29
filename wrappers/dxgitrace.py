@@ -80,16 +80,15 @@ class D3DCommonTracer(DllTracer):
         # Add additional members to track maps
         if interface.getMethodByName('Map') is not None:
             variables += [
-                ('VOID *', '_pMappedData', '0'),
-                ('size_t', '_MappedSize', '0'),
+                ('_MAP_DESC', '_MapDesc', None),
             ]
 
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name == 'Unmap':
-            print '    if (_MappedSize && _pMappedData) {'
-            self.emit_memcpy('_pMappedData', '_pMappedData', '_MappedSize')
+            print '    if (_MapDesc.Size && _MapDesc.pData) {'
+            self.emit_memcpy('_MapDesc.pData', '_MapDesc.pData', '_MapDesc.Size')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
@@ -97,10 +96,10 @@ class D3DCommonTracer(DllTracer):
         if method.name == 'Map':
             # NOTE: recursive locks are explicitely forbidden
             print '    if (SUCCEEDED(_result)) {'
-            print '        _getMapInfo(_this, %s, _pMappedData, _MappedSize);' % ', '.join(method.argNames())
+            print '        _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames())
             print '    } else {'
-            print '        _pMappedData = NULL;'
-            print '        _MappedSize = 0;'
+            print '        _MapDesc.pData = NULL;'
+            print '        _MapDesc.Size = 0;'
             print '    }'
 
 

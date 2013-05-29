@@ -627,7 +627,8 @@ class Tracer:
         # Private constructor
         print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
         for type, name, value in self.enumWrapperInterfaceVariables(interface):
-            print '    %s = %s;' % (name, value)
+            if value is not None:
+                print '    %s = %s;' % (name, value)
         print '}'
         print
 
