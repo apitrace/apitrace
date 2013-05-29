@@ -684,7 +684,7 @@ glapi.addFunctions([
     GlFunction(Void, "glTransformFeedbackVaryings", [(GLprogram, "program"), (GLsizei, "count"), (Array(Const(GLstringConst), "count"), "varyings"), (GLenum, "bufferMode")]),
     GlFunction(Void, "glGetTransformFeedbackVarying", [(GLprogram, "program"), (GLuint, "index"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLsizei), "size"), Out(Pointer(GLenum), "type"), OutGlString(GLchar, "length", "name")], sideeffects=False),
     GlFunction(Void, "glClampColor", [(GLenum, "target"), (GLenum, "clamp")]),
-    GlFunction(Void, "glBeginConditionalRender", [(GLuint, "id"), (GLenum, "mode")]),
+    GlFunction(Void, "glBeginConditionalRender", [(GLquery, "id"), (GLenum, "mode")]),
     GlFunction(Void, "glEndConditionalRender", []),
     GlFunction(Void, "glVertexAttribIPointer", [(GLuint, "index"), (GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLpointerConst, "pointer")]),
     GlFunction(Void, "glGetVertexAttribIiv", [(GLuint, "index"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
@@ -1107,9 +1107,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGetSamplerParameterIuiv", [(GLsampler, "sampler"), (GLenum, "pname"), Out(Array(GLuint, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_ARB_timer_query
-    GlFunction(Void, "glQueryCounter", [(GLuint, "id"), (GLenum, "target")]),
-    GlFunction(Void, "glGetQueryObjecti64v", [(GLuint, "id"), (GLenum, "pname"), Out(Array(GLint64, "_gl_param_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetQueryObjectui64v", [(GLuint, "id"), (GLenum, "pname"), Out(Array(GLuint64, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glQueryCounter", [(GLquery, "id"), (GLenum, "target")]),
+    GlFunction(Void, "glGetQueryObjecti64v", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLint64, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectui64v", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint64, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_ARB_vertex_type_2_10_10_10_rev
     GlFunction(Void, "glVertexP2ui", [(GLenum, "type"), (GLuint, "value")]),
@@ -2475,7 +2475,7 @@ glapi.addFunctions([
     GlFunction(Void, "glFrameTerminatorGREMEDY", []),
 
     # GL_NV_conditional_render
-    GlFunction(Void, "glBeginConditionalRenderNV", [(GLuint, "id"), (GLenum, "mode")]),
+    GlFunction(Void, "glBeginConditionalRenderNV", [(GLquery, "id"), (GLenum, "mode")]),
     GlFunction(Void, "glEndConditionalRenderNV", []),
 
     # GL_NV_present_video
