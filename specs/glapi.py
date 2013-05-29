@@ -1685,6 +1685,8 @@ glapi.addFunctions([
     GlFunction(Void, "glPixelTransformParameterfEXT", [(GLenum, "target"), (GLenum, "pname"), (GLfloat, "param")]),
     GlFunction(Void, "glPixelTransformParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), (Pointer(Const(GLint)), "params")]),
     GlFunction(Void, "glPixelTransformParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), (Pointer(Const(GLfloat)), "params")]),
+    GlFunction(Void, "glGetPixelTransformParameterivEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetPixelTransformParameterfvEXT", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLfloat, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_EXT_secondary_color
     GlFunction(Void, "glSecondaryColor3bEXT", [(GLbyte, "red"), (GLbyte, "green"), (GLbyte, "blue")]),
@@ -2945,6 +2947,37 @@ glapi.addFunctions([
     # GL_AMD_multi_draw_indirect
     GlFunction(Void, "glMultiDrawArraysIndirectAMD", [(GLenum_mode, "mode"), (GLpointerConst, "indirect"), (GLsizei, "primcount"), (GLsizei, "stride")]),
     GlFunction(Void, "glMultiDrawElementsIndirectAMD", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLsizei, "primcount"), (GLsizei, "stride")]),
+
+    # GL_AMD_stencil_operation_extended
+    GlFunction(Void, "glStencilOpValueAMD", [(GLenum, "face"), (GLuint, "value")]),
+
+    # GL_NV_bindless_texture
+    GlFunction(GLuint64, "glGetTextureHandleNV", [(GLtexture, "texture")]),
+    GlFunction(GLuint64, "glGetTextureSamplerHandleNV", [(GLtexture, "texture"), (GLsampler, "sampler")]),
+    GlFunction(Void, "glMakeTextureHandleResidentNV", [(GLuint64, "handle")]),
+    GlFunction(Void, "glMakeTextureHandleNonResidentNV", [(GLuint64, "handle")]),
+    GlFunction(GLuint64, "glGetImageHandleNV", [(GLtexture, "texture"), (GLint, "level"), (GLboolean, "layered"), (GLint, "layer"), (GLenum, "format")]),
+    GlFunction(Void, "glMakeImageHandleResidentNV", [(GLuint64, "handle"), (GLenum, "access")]),
+    GlFunction(Void, "glMakeImageHandleNonResidentNV", [(GLuint64, "handle")]),
+    GlFunction(Void, "glUniformHandleui64NV", [(GLlocation, "location"), (GLuint64, "value")]),
+    GlFunction(Void, "glUniformHandleui64vNV", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count"), "value")]),
+    GlFunction(Void, "glProgramUniformHandleui64NV", [(GLprogram, "program"), (GLlocation, "location"), (GLuint64, "value")]),
+    GlFunction(Void, "glProgramUniformHandleui64vNV", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count"), "values")]),
+    GlFunction(GLboolean, "glIsTextureHandleResidentNV", [(GLuint64, "handle")], sideeffects=False),
+    GlFunction(GLboolean, "glIsImageHandleResidentNV", [(GLuint64, "handle")], sideeffects=False),
+
+    # GL_AMD_sparse_texture
+    GlFunction(Void, "glTexStorageSparseAMD", [(GLenum, "target"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLsizei, "layers"), (GLbitfield, "flags")]),
+    GlFunction(Void, "glTextureStorageSparseAMD", [(GLtexture, "texture"), (GLenum, "target"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLsizei, "layers"), (GLbitfield, "flags")]),
+
+    # GL_INTEL_map_texture
+    # XXX: glMapTexture2DINTEL prototype in glext.h is busted
+    #GlFunction(Void, "glSyncTextureINTEL", [(GLtexture, "texture")]),
+    #GlFunction(Void, "glUnmapTexture2DINTEL", [(GLtexture, "texture"), (GLint, "level")]),
+    #GlFunction(OpaquePointer(GLvoid), "glMapTexture2DINTEL", [(GLtexture, "texture"), (GLint, "level"), (GLbitfield, "access"), Out(Pointer(GLint), "stride"), Out(Pointer(GLenum), "layout")]),
+
+    # GL_NV_draw_texture
+    GlFunction(Void, "glDrawTextureNV", [(GLtexture, "texture"), (GLsampler, "sampler"), (GLfloat, "x0"), (GLfloat, "y0"), (GLfloat, "x1"), (GLfloat, "y1"), (GLfloat, "z"), (GLfloat, "s0"), (GLfloat, "t0"), (GLfloat, "s1"), (GLfloat, "t1")]),
 
     # GL_KTX_buffer_region
     # XXX: http://www.west.net/~brittain/3dsmax2.htm does not mention EXT suffix
