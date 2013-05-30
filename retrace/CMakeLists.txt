@@ -18,6 +18,7 @@ add_custom_command (
                 glretrace.py
                 retrace.py
                 ${CMAKE_SOURCE_DIR}/specs/glapi.py
+                ${CMAKE_SOURCE_DIR}/specs/glesapi.py
                 ${CMAKE_SOURCE_DIR}/specs/gltypes.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
 )
