@@ -525,7 +525,7 @@ class StateDumper:
 
         print '        // %s' % name
         print '        {'
-        #print '            assert(glGetError() == GL_NO_ERROR);'
+        print '            while (glGetError() != GL_NO_ERROR) {}'
         type, value = getter(*args)
         print '            if (glGetError() != GL_NO_ERROR) {'
         #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
