@@ -3187,7 +3187,7 @@ parameters = [
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_OFFSET"),	# 0x919D
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_SIZE"),	# 0x919E
     ("glGet",	I,	1,	"GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT"),	# 0x919F
-    ("",	X,	1,	"GL_COMPUTE_SHADER"),	# 0x91B9
+    ("glGetProgramPipeline",	I,	1,	"GL_COMPUTE_SHADER"),	# 0x91B9
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_UNIFORM_BLOCKS"),	# 0x91BB
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS"),	# 0x91BC
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_IMAGE_UNIFORMS"),	# 0x91BD
