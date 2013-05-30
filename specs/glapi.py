@@ -1302,6 +1302,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGetFloati_v", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLfloat, "_gl_param_size(target)"), "data")], sideeffects=False),
     GlFunction(Void, "glGetDoublei_v", [(GLenum, "target"), (GLuint, "index"), Out(Array(GLdouble, "_gl_param_size(target)"), "data")], sideeffects=False),
 
+    # GL_ARB_cl_event
+    #GlFunction(GLsync, "glCreateSyncFromCLeventARB", [(OpaquePointer("struct _cl_context"), "context"), (OpaquePointer("struct _cl_event"), "event"), (GLbitfield, "flags")]),
+
     # GL_ARB_debug_output
     GlFunction(Void, "glDebugMessageControlARB", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=False),
     GlFunction(Void, "glDebugMessageInsertARB", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), InGlString(GLchar, "length", "buf")], sideeffects=False),
@@ -2930,6 +2933,18 @@ glapi.addFunctions([
     GlFunction(Void, "glDebugMessageCallbackAMD", [(GLDEBUGPROCAMD, "callback"), (GLpointer, "userParam")], sideeffects=False),
     GlFunction(GLuint, "glGetDebugMessageLogAMD", [(GLuint, "count"), (GLsizei, "bufsize"), Out(Array(GLenum, "count"), "categories"), Out(Array(GLuint, "count"), "severities"), Out(Array(GLuint, "count"), "ids"), Out(Array(GLsizei, "count"), "lengths"), Out(String(GLchar, "_glGetDebugMessageLog_length(message, lengths, count)"), "message")], sideeffects=False),
 
+    # GL_NV_vdpau_interop
+    #GlFunction(Void, "glVDPAUInitNV", [(Pointer(Const(GLvoid)), "vdpDevice"), (Pointer(Const(GLvoid)), "getProcAddress")]),
+    #GlFunction(Void, "glVDPAUFiniNV", []),
+    #GlFunction(GLvdpauSurfaceNV, "glVDPAURegisterVideoSurfaceNV", [(Pointer(Const(GLvoid)), "vdpSurface"), (GLenum, "target"), (GLsizei, "numTextureNames"), (Array(Const(GLtexture), "numTextureNames"), "textureNames")]),
+    #GlFunction(GLvdpauSurfaceNV, "glVDPAURegisterOutputSurfaceNV", [Out(Pointer(GLvoid), "vdpSurface"), (GLenum, "target"), (GLsizei, "numTextureNames"), (Array(Const(GLtexture), "numTextureNames"), "textureNames")]),
+    #GlFunction(Void, "glVDPAUIsSurfaceNV", [(GLvdpauSurfaceNV, "surface")]),
+    #GlFunction(Void, "glVDPAUUnregisterSurfaceNV", [(GLvdpauSurfaceNV, "surface")]),
+    #GlFunction(Void, "glVDPAUGetSurfaceivNV", [(GLvdpauSurfaceNV, "surface"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "length"), "values")]),
+    #GlFunction(Void, "glVDPAUSurfaceAccessNV", [(GLvdpauSurfaceNV, "surface"), (GLenum, "access")]),
+    #GlFunction(Void, "glVDPAUMapSurfacesNV", [(GLsizei, "numSurfaces"), (Array(Const(GLvdpauSurfaceNV), "numSurfaces"), "surfaces")]),
+    #GlFunction(Void, "glVDPAUUnmapSurfacesNV", [(GLsizei, "numSurface"), (Array(Const(GLvdpauSurfaceNV), "numSurface"), "surfaces")]),
+
     # GL_NV_texture_multisample
     GlFunction(Void, "glTexImage2DMultisampleCoverageNV", [(GLenum, "target"), (GLsizei, "coverageSamples"), (GLsizei, "colorSamples"), (GLint, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedSampleLocations")]),
     GlFunction(Void, "glTexImage3DMultisampleCoverageNV", [(GLenum, "target"), (GLsizei, "coverageSamples"), (GLsizei, "colorSamples"), (GLint, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedSampleLocations")]),
@@ -2965,6 +2980,10 @@ glapi.addFunctions([
     GlFunction(Void, "glProgramUniformHandleui64vNV", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLuint64), "count"), "values")]),
     GlFunction(GLboolean, "glIsTextureHandleResidentNV", [(GLuint64, "handle")], sideeffects=False),
     GlFunction(GLboolean, "glIsImageHandleResidentNV", [(GLuint64, "handle")], sideeffects=False),
+
+    # GL_NVX_conditional_render
+    GlFunction(Void, "glBeginConditionalRenderNVX", [(GLquery, "id")]),
+    GlFunction(Void, "glEndConditionalRenderNVX", []),
 
     # GL_AMD_sparse_texture
     GlFunction(Void, "glTexStorageSparseAMD", [(GLenum, "target"), (GLenum, "internalFormat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLsizei, "layers"), (GLbitfield, "flags")]),
