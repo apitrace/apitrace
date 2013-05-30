@@ -169,7 +169,6 @@ traceProgram(trace::API api,
     for (char * const * arg = argv; *arg; ++arg) {
         args.push_back(*arg);
     }
-    args.push_back(NULL);
 
     if (verbose) {
         const char *sep = "";
@@ -179,6 +178,8 @@ traceProgram(trace::API api,
         }
         std::cerr << "\n";
     }
+
+    args.push_back(NULL);
 
     status = os::execute((char * const *)&args[0]);
 
