@@ -434,6 +434,12 @@ class Interface(Type):
             iface = iface.base
         raise StopIteration
 
+    def hasBase(self, *bases):
+        for iface in self.iterBases():
+            if iface in bases:
+                return True
+        return False
+
     def iterBaseMethods(self):
         if self.base is not None:
             for iface, method in self.base.iterBaseMethods():
