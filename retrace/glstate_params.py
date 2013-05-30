@@ -455,8 +455,13 @@ class StateDumper:
             print '                json.beginObject();'
             self.dump_atoms(glGetTexParameter, target)
             print '                if (!context.ES) {'
+            if target.startswith('GL_TEXTURE_CUBE_MAP'):
+                # Must pick a face
+                levelTarget = 'GL_TEXTURE_CUBE_MAP_POSITIVE_X'
+            else:
+                levelTarget = target
             # We only dump the first level parameters
-            self.dump_atoms(glGetTexLevelParameter, target, "0")
+            self.dump_atoms(glGetTexLevelParameter, levelTarget, "0")
             print '                }'
             print '                json.endObject();'
             print '                json.endMember(); // %s' % target
