@@ -247,7 +247,7 @@ cglapi.addFunctions([
     Function(CGLError, "CGLUpdateContext", [(CGLContextObj, "ctx")]),
     # XXX: All the following prototypes are little more than guesses
     # TODO: A potentially simpler alternative would be to use the
-    # DYLD_INSERT_LIBRARIES mechanism and only intercept the calls that we
+    # DYLD_INTERPOSE mechanism and only intercept the calls that we
     # really care about
     Function(CGLError, "CGLOpenCLMuxLockDown", [], internal=True),
     Function(GLboolean, "CGLAreContextsShared", [(CGLContextObj, "ctx1"), (CGLContextObj, "ctx2")], internal=True),
