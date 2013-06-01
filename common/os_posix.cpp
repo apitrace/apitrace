@@ -128,9 +128,6 @@ String::exists(void) const
         return false;
     }
 
-    if (!S_ISREG(st.st_mode))
-        return false;
-
     return true;
 }
 

@@ -727,8 +727,8 @@ int main(int argc, char **argv)
                 os::String::iterator sep = prefix.rfindSep(false);
                 if (sep != prefix.end()) {
                     prefix.erase(sep, prefix.end());
-                    if (!os::createDirectory(prefix)) {
-                        std::cerr << "error: failed to create " << prefix.str() << "\n";
+                    if (!prefix.exists() && !os::createDirectory(prefix)) {
+                        std::cerr << "error: failed to create `" << prefix.str() << "` directory\n";
                     }
                 }
             }
