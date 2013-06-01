@@ -35,6 +35,13 @@ tracing.
 Linux / Mac OS X
 ----------------
 
+Additional optional dependencies for Linux:
+
+* libprocps (procps development libraries)
+
+* libdwarf
+
+
 Build as:
 
     cmake -H. -Bbuild
