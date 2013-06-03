@@ -57,6 +57,9 @@ static const char *
 extraExtension_stringsFull[] = {
     "GL_GREMEDY_string_marker",
     "GL_GREMEDY_frame_terminator",
+    "GL_ARB_debug_output",
+    "GL_AMD_debug_output",
+    "GL_KHR_debug",
 };
 
 static const char *

@@ -687,6 +687,8 @@ class GlTracer(Tracer):
         else:
             Tracer.traceFunctionImplBody(self, function)
 
+	# These entrypoints are only expected to be implemented by tools;
+	# drivers will probably not implement them.
     marker_functions = [
         # GL_GREMEDY_string_marker
         'glStringMarkerGREMEDY',
@@ -698,6 +700,33 @@ class GlTracer(Tracer):
         'glPopGroupMarkerEXT',
     ]
 
+    # These entrypoints may be implemented by drivers,
+	# but are also very useful for debugging / analysis tools.
+	#driver may implement these functions, but they are useful for tools
+    debug_functions = [
+        # GL_KHR_debug
+        'glDebugMessageControl',
+        'glDebugMessageInsert',
+        'glDebugMessageCallback',
+        'glGetDebugMessageLog',
+        'glPushDebugGroup',
+        'glPopDebugGroup',
+        'glObjectLabel',
+        'glGetObjectLabel',
+        'glObjectPtrLabel',
+        'glGetObjectPtrLabel',
+        # GL_ARB_debug_output
+        'glDebugMessageControlARB',
+        'glDebugMessageInsertARB',
+        'glDebugMessageCallbackARB',
+        'glGetDebugMessageLogARB',
+        # GL_AMD_debug_output
+        'glDebugMessageEnableAMD',
+        'glDebugMessageInsertAMD',
+        'glDebugMessageCallbackAMD',
+        'glGetDebugMessageLogAMD',
+    ]	
+	
     def invokeFunction(self, function):
         # We implement GL_EXT_debug_marker, GL_GREMEDY_*, etc., and not the
         # driver
@@ -706,9 +735,16 @@ class GlTracer(Tracer):
 
         if function.name in self.getProcAddressFunctionNames:
             else_ = ''
-            for marker_function in self.marker_functions:
-                if self.api.getFunctionByName(marker_function):
+            debug_marker_functions = self.marker_functions + self.debug_functions
+            for marker_function in debug_marker_functions:
+                markerFunc = self.api.getFunctionByName(marker_function)
+                if markerFunc:
                     print '    %sif (strcmp("%s", (const char *)%s) == 0) {' % (else_, marker_function, function.args[0].name)
+                    if marker_function in self.debug_functions:
+                        # handle debug functions that may or may not be implemented by the driver
+                        ptype = function_pointer_type(markerFunc)
+                        pvalue = function_pointer_value(markerFunc)
+                        print '            %s = (%s)_wglGetProcAddress("%s");' % (pvalue, ptype, markerFunc.name)
                     print '        _result = (%s)&%s;' % (function.type, marker_function)
                     print '    }'
                 else_ = 'else '
