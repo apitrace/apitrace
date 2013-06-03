@@ -329,9 +329,21 @@ class GlTracer(Tracer):
             Tracer.traceApi(self, api)
             
             print 'static %s _wrapProcAddress(%s procName, %s procPtr) {' % (retType, argType, retType)
+
+            # Provide fallback functions to missing debug functions
             print '    if (!procPtr) {'
-            print '        return procPtr;'
+            else_ = ''
+            for function_name in self.debug_functions:
+                if self.api.getFunctionByName(function_name):
+                    print '        %sif (strcmp("%s", (const char *)procName) == 0) {' % (else_, function_name)
+                    print '            return (%s)&%s;' % (retType, function_name)
+                    print '        }'
+                else_ = 'else '
+            print '        %s{' % else_
+            print '            return NULL;'
+            print '        }'
             print '    }'
+
             for function in api.getAllFunctions():
                 ptype = function_pointer_type(function)
                 pvalue = function_pointer_value(function)
@@ -684,6 +696,8 @@ class GlTracer(Tracer):
 
         Tracer.traceFunctionImplBody(self, function)
 
+    # These entrypoints are only expected to be implemented by tools;
+    # drivers will probably not implement them.
     marker_functions = [
         # GL_GREMEDY_string_marker
         'glStringMarkerGREMEDY',
@@ -693,6 +707,32 @@ class GlTracer(Tracer):
         'glInsertEventMarkerEXT',
         'glPushGroupMarkerEXT',
         'glPopGroupMarkerEXT',
+    ]
+
+    # These entrypoints may be implemented by drivers, but are also very useful
+    # for debugging / analysis tools.
+    debug_functions = [
+        # GL_KHR_debug
+        'glDebugMessageControl',
+        'glDebugMessageInsert',
+        'glDebugMessageCallback',
+        'glGetDebugMessageLog',
+        'glPushDebugGroup',
+        'glPopDebugGroup',
+        'glObjectLabel',
+        'glGetObjectLabel',
+        'glObjectPtrLabel',
+        'glGetObjectPtrLabel',
+        # GL_ARB_debug_output
+        'glDebugMessageControlARB',
+        'glDebugMessageInsertARB',
+        'glDebugMessageCallbackARB',
+        'glGetDebugMessageLogARB',
+        # GL_AMD_debug_output
+        'glDebugMessageEnableAMD',
+        'glDebugMessageInsertAMD',
+        'glDebugMessageCallbackAMD',
+        'glGetDebugMessageLogAMD',
     ]
 
     def invokeFunction(self, function):
