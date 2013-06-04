@@ -44,7 +44,6 @@
 static bool waitOnFinish = false;
 static bool loopOnFinish = false;
 
-static const char *comparePrefix = NULL;
 static const char *snapshotPrefix = NULL;
 static enum {
     PNM_FMT,
@@ -52,7 +51,6 @@ static enum {
 } snapshotFormat = PNM_FMT;
 
 static trace::CallSet snapshotFrequency;
-static trace::CallSet compareFrequency;
 static trace::ParseBookmark lastFrameStart;
 
 static unsigned dumpStateCallNo = ~0;
@@ -101,26 +99,13 @@ Dumper *dumper = &defaultDumper;
 
 
 /**
- * Take/compare snapshots.
+ * Take snapshots.
  */
 static void
 takeSnapshot(unsigned call_no) {
     static unsigned snapshot_no = 0;
 
-    assert(snapshotPrefix || comparePrefix);
-
-    image::Image *ref = NULL;
-
-    if (comparePrefix) {
-        os::String filename = os::String::format("%s%010u.png", comparePrefix, call_no);
-        ref = image::readPNG(filename);
-        if (!ref) {
-            return;
-        }
-        if (retrace::verbosity >= 0) {
-            std::cout << "Read " << filename << "\n";
-        }
-    }
+    assert(snapshotPrefix);
 
     image::Image *src = dumper->getSnapshot();
     if (!src) {
@@ -147,11 +132,6 @@ takeSnapshot(unsigned call_no) {
         }
     }
 
-    if (ref) {
-        std::cout << "Snapshot " << call_no << " average precision of " << src->compare(*ref) << " bits\n";
-        delete ref;
-    }
-
     delete src;
 
     snapshot_no++;
@@ -170,8 +150,7 @@ static void
 retraceCall(trace::Call *call) {
     bool swapRenderTarget = call->flags &
         trace::CALL_FLAG_SWAP_RENDERTARGET;
-    bool doSnapshot = snapshotFrequency.contains(*call) ||
-        compareFrequency.contains(*call);
+    bool doSnapshot = snapshotFrequency.contains(*call);
 
     // For calls which cause rendertargets to be swaped, we take the
     // snapshot _before_ swapping the rendertargets.
@@ -573,8 +552,6 @@ usage(const char *argv0) {
         "      --pgpu              gpu profiling (gpu times per draw call)\n"
         "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
         "      --pmem              memory usage profiling (vsize rss per call)\n"
-        "  -c, --compare=PREFIX    compare against snapshots with given PREFIX\n"
-        "  -C, --calls=CALLSET     calls to compare (default is every frame)\n"
         "      --call-nos[=BOOL]   use call numbers in snapshot filenames\n"
         "      --core              use core profile\n"
         "      --db                use a double buffer visual (default)\n"
@@ -606,14 +583,12 @@ enum {
 };
 
 const static char *
-shortOptions = "bc:C:D:hs:S:vw";
+shortOptions = "bD:hs:S:vw";
 
 const static struct option
 longOptions[] = {
     {"benchmark", no_argument, 0, 'b'},
     {"call-nos", optional_argument, 0, CALL_NOS_OPT },
-    {"calls", required_argument, 0, 'C'},
-    {"compare", required_argument, 0, 'c'},
     {"core", no_argument, 0, CORE_OPT},
     {"db", no_argument, 0, DB_OPT},
     {"driver", required_argument, 0, DRIVER_OPT},
@@ -647,7 +622,6 @@ int main(int argc, char **argv)
     using namespace retrace;
     int i;
 
-    assert(compareFrequency.empty());
     assert(snapshotFrequency.empty());
 
     int opt;
@@ -662,18 +636,6 @@ int main(int argc, char **argv)
             break;
         case CALL_NOS_OPT:
             useCallNos = trace::boolOption(optarg);
-            break;
-        case 'c':
-            comparePrefix = optarg;
-            if (compareFrequency.empty()) {
-                compareFrequency = trace::CallSet(trace::FREQUENCY_FRAME);
-            }
-            break;
-        case 'C':
-            compareFrequency = trace::CallSet(optarg);
-            if (comparePrefix == NULL) {
-                comparePrefix = "";
-            }
             break;
         case 'D':
             dumpStateCallNo = atoi(optarg);

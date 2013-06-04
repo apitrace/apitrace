@@ -118,8 +118,6 @@ public:
 	writeRAW(os);
 	return true;
     }
-
-    double compare(Image &ref);
 };
 
 
