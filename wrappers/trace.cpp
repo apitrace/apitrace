@@ -98,7 +98,6 @@ isTracingEnabled(void)
     os::String proc_name;
 
     proc_name = getZygoteProcessName();
-    proc_name.trimDirectory();
 
     __system_property_get("debug.apitrace.procname", target_proc_name);
     enabled = !strcmp(target_proc_name, proc_name);
