@@ -280,6 +280,12 @@ class StateDumper:
         print 'namespace glstate {'
         print
 
+        print 'static void'
+        print 'flushErrors(void) {'
+        print '    while (glGetError() != GL_NO_ERROR) {}'
+        print '}'
+        print
+
         print 'void'
         print 'dumpBoolean(JSONWriter &json, GLboolean value)'
         print '{'
@@ -540,11 +546,11 @@ class StateDumper:
 
         print '        // %s' % name
         print '        {'
-        print '            while (glGetError() != GL_NO_ERROR) {}'
+        print '            flushErrors();'
         type, value = getter(*args)
         print '            if (glGetError() != GL_NO_ERROR) {'
         #print '                std::cerr << "warning: %s(%s) failed\\n";' % (inflection, name)
-        print '                while (glGetError() != GL_NO_ERROR) {}'
+        print '                flushErrors();'
         print '            } else {'
         print '                json.beginMember("%s");' % name
         JsonWriter().visit(type, value)
