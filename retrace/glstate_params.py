@@ -323,6 +323,38 @@ class StateDumper:
         print
 
         print 'static void'
+        print 'dumpTextureTargetParameters(JSONWriter &json, Context &context, GLenum target, GLenum binding_param)'
+        print '{'
+        print '    GLboolean enabled = GL_FALSE;'
+        print '    GLint binding = 0;'
+        print '    glGetBooleanv(target, &enabled);'
+        print '    json.beginMember(enumToString(target));'
+        print '    dumpBoolean(json, enabled);'
+        print '    json.endMember();'
+        print '    glGetIntegerv(binding_param, &binding);'
+        print '    json.writeIntMember(enumToString(binding_param), binding);'
+        print '    if (enabled || binding) {'
+        print '        json.beginMember(enumToString(target));'
+        print '        json.beginObject();'
+        self.dump_atoms(glGetTexParameter, 'target')
+        print '        if (!context.ES) {'
+        print '            GLenum levelTarget;'
+        print '            if (target == GL_TEXTURE_CUBE_MAP ||'
+        print '                target == GL_TEXTURE_CUBE_MAP_ARRAY) {'
+        print '                // Must pick a face'
+        print '                levelTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;'
+        print '            } else {'
+        print '                levelTarget = target;'
+        print '            }'
+        self.dump_atoms(glGetTexLevelParameter, 'levelTarget', '0')
+        print '        }'
+        print '        json.endObject();'
+        print '        json.endMember(); // target'
+        print '    }'
+        print '}'
+        print
+
+        print 'static void'
         print 'dumpFramebufferAttachementParameters(JSONWriter &json, GLenum target, GLenum attachment)'
         print '{'
         self.dump_attachment_parameters('target', 'attachment')
@@ -442,36 +474,9 @@ class StateDumper:
         print '            json.beginMember(name);'
         print '            glActiveTexture(GL_TEXTURE0 + unit);'
         print '            json.beginObject();'
-        print '            GLboolean enabled;'
-        print '            GLint binding;'
         print
         for target, binding in texture_targets:
-            print '            // %s' % target
-            print '            enabled = GL_FALSE;'
-            print '            glGetBooleanv(%s, &enabled);' % target
-            print '            json.beginMember("%s");' % target
-            print '            dumpBoolean(json, enabled);'
-            print '            json.endMember();'
-            print '            binding = 0;'
-            print '            glGetIntegerv(%s, &binding);' % binding
-            print '            json.writeIntMember("%s", binding);' % binding
-            print '            if (enabled || binding) {'
-            print '                json.beginMember("%s");' % target
-            print '                json.beginObject();'
-            self.dump_atoms(glGetTexParameter, target)
-            print '                if (!context.ES) {'
-            if target.startswith('GL_TEXTURE_CUBE_MAP'):
-                # Must pick a face
-                levelTarget = 'GL_TEXTURE_CUBE_MAP_POSITIVE_X'
-            else:
-                levelTarget = target
-            # We only dump the first level parameters
-            self.dump_atoms(glGetTexLevelParameter, levelTarget, "0")
-            print '                }'
-            print '                json.endObject();'
-            print '                json.endMember(); // %s' % target
-            print '            }'
-            print
+            print '            dumpTextureTargetParameters(json, context, %s, %s);' % (target, binding)
         print '            if (unit < max_texture_coords) {'
         self.dump_texenv_params()
         print '            }'
