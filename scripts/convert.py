@@ -60,7 +60,7 @@ def callProcess(cmd):
 
 
 def convertToPix(inTrace, outPixrun):
-    pix = getPixPath()
+    pix = getPixExe()
 
     pixExp = os.path.join(os.path.dirname(__file__), 'apitrace.PIXExp')
 
@@ -128,7 +128,7 @@ def main():
     optparser.add_option(
         '--apitrace', metavar='PROGRAM',
         type='string', dest='apitrace', default='apitrace.exe',
-        help='retrace command [default: %default]')
+        help='path to apitrace command [default: %default]')
     optparser.add_option(
         '-a', '--api', metavar='API',
         type='string', dest='api', default='d3d9',
@@ -136,7 +136,7 @@ def main():
     optparser.add_option(
         '-r', '--retrace', metavar='PROGRAM',
         type='string', dest='retrace', default='d3dretrace.exe',
-        help='retrace command [default: %default]')
+        help='path to retrace command [default: %default]')
     optparser.add_option(
         '-v', '--verbose',
         action='store_true', dest='verbose', default=False,
