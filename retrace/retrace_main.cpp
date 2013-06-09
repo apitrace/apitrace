@@ -30,6 +30,9 @@
 #include <limits.h> // for CHAR_MAX
 #include <iostream>
 #include <getopt.h>
+#ifndef _WIN32
+#include <unistd.h> // for isatty()
+#endif
 
 #include "os_binary.hpp"
 #include "os_time.hpp"
@@ -750,6 +753,12 @@ int main(int argc, char **argv)
             return 1;
         }
     }
+
+#ifndef _WIN32
+    if (!isatty(STDOUT_FILENO)) {
+        dumpFlags |= trace::DUMP_FLAG_NO_COLOR;
+    }
+#endif
 
     retrace::setUp();
     if (retrace::profiling) {

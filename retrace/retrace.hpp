@@ -38,6 +38,7 @@
 #include "trace_model.hpp"
 #include "trace_parser.hpp"
 #include "trace_profiler.hpp"
+#include "trace_dump.hpp"
 
 #include "scoped_allocator.hpp"
 
@@ -120,6 +121,7 @@ extern bool coreProfile;
 extern unsigned frameNo;
 extern unsigned callNo;
 
+extern trace::DumpFlags dumpFlags;
 
 std::ostream &warning(trace::Call &call);
 
