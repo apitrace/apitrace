@@ -173,7 +173,9 @@ class StateGetter(Visitor):
             print '    %s *%s = _allocator.alloc<%s>(%s + 1);' % (elem_type, temp_name, elem_type, array_length)
         print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array_length, temp_name)
         print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array_length, elem_type)
-        print '    %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
+        print '    if (%s) {' % array_length
+        print '        %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
+        print '    }'
         # Simple buffer overflow detection
         print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array_length, elem_type)
         return temp_name
