@@ -50,11 +50,28 @@ Tracing
   There is no way to distinguish the fake calls from those actually
   made by the application yet.
 
+* Huge traces will be generated for applications that make extensive use of
+  immediate mode drawing (ie., glBegin/glEnd), use vertex/element arrays in
+  user memory, or generate a lot of dynamic vertex data per frame.
+
+  However, this should not be a problem for modern OpenGL applications that
+  make an efficient use of VBOs and vertex shaders.
+
 * On MacOSX, the internal OpenGL calls done by GLU are not traced yet.
 
 
 Retracing
 ---------
+
+* Replaying can take substantially more CPU due to the overhead of reading the
+  trace file from disk.
+
+  However, the overhead should not be significant for modern 3D applications
+  that do efficient use of VBOs and vertex shaders.  The communication between
+  CPU to GPU can easily be a bottleneck on the powerful discrete GPUs of
+  nowadays, and trace overhead tend to be propotional so it is not a
+  coincidence that applications that are optimized for modern GPUs will also be
+  traced and replayed efficiently.
 
 * glretrace needs to infer window sizes from glViewport calls, because calls
   that create/resize windows happen outside of OpenGL and are not traced.
