@@ -41,12 +41,13 @@ Additional optional dependencies for Linux:
 
 * libdwarf
 
-
 Build as:
 
-    cmake -H. -Bbuild
+    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
     make -C build
 
+Other possible values for `CMAKE_BUILD_TYPE` `Debug`, `Release`,
+`RelWithDebInfo`, and `MinSizeRel`.
 
 You can also build the 32-bits GL wrapper on a 64-bits distribution, provided
 you have a multilib gcc and 32-bits X11 libraries, by doing:
