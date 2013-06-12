@@ -34,8 +34,9 @@
 #include <tr1/memory>
 #endif
 
-#include <gltrace.hpp>
 #include <os_thread.hpp>
+#include <glproc.hpp>
+#include <gltrace.hpp>
 
 namespace gltrace {
 
@@ -142,6 +143,29 @@ void setContext(uintptr_t context_id)
     context_map_mutex.unlock();
 
     ts->current_context = ctx;
+
+    if (!ctx->bound) {
+        ctx->bound = true;
+
+        /*
+         * The default viewport and scissor state is set when a context is
+         * first made current, with values matching the bound drawable.  Many
+         * applications never thouch the default state ever again.
+         *
+         * Since we currently don't trace window sizes, and rely on viewport
+         * calls to deduct, emit fake calls here so that viewport/scissor state
+         * can be deducated.
+         *
+         * FIXME: don't call the real functions here -- just emit the fake
+         * calls.
+         */
+        GLint viewport[4] = {0, 0, 0, 0};
+        GLint scissor_box[4] = {0, 0, 0, 0};
+        _glGetIntegerv(GL_VIEWPORT, viewport);
+        _glGetIntegerv(GL_SCISSOR_BOX, scissor_box);
+        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+        glScissor(scissor_box[0], scissor_box[1], scissor_box[2], scissor_box[3]);
+    }
 }
 
 void clearContext(void)
