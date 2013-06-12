@@ -57,8 +57,10 @@ extern "C" _CRTIMP int _vscprintf(const char *format, va_list argptr);
 
 #ifdef _WIN32
 #define OS_DIR_SEP '\\'
+#define OS_PATH_SEP ';'
 #else /* !_WIN32 */
 #define OS_DIR_SEP '/'
+#define OS_PATH_SEP ':'
 #endif /* !_WIN32 */
 
 

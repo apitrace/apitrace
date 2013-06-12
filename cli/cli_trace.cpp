@@ -154,39 +154,57 @@ traceProgram(trace::API api,
     wrapperPath.trimFilename();
 #endif
 
+    /*
+     * Spawn child process.
+     */
+
+    {
 #if defined(TRACE_VARIABLE)
-    if (verbose) {
-        std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
-    }
-    /* FIXME: Don't modify the current environment */
-    os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+        const char *oldEnvVarValue = getenv(TRACE_VARIABLE);
+        if (oldEnvVarValue) {
+            wrapperPath.append(OS_PATH_SEP);
+            wrapperPath.append(oldEnvVarValue);
+        }
+
+        /* FIXME: Don't modify our (ie parent) environment */
+        os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+
+        if (verbose) {
+            std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
+        }
 #endif /* TRACE_VARIABLE */
 
-    if (output) {
-        os::setEnvironment("TRACE_FILE", output);
-    }
-
-    for (char * const * arg = argv; *arg; ++arg) {
-        args.push_back(*arg);
-    }
-
-    if (verbose) {
-        const char *sep = "";
-        for (unsigned i = 0; i < args.size(); ++i) {
-            std::cerr << sep << args[i];
-            sep = " ";
+        if (output) {
+            os::setEnvironment("TRACE_FILE", output);
         }
-        std::cerr << "\n";
+
+        for (char * const * arg = argv; *arg; ++arg) {
+            args.push_back(*arg);
+        }
+
+        if (verbose) {
+            const char *sep = "";
+            for (unsigned i = 0; i < args.size(); ++i) {
+                std::cerr << sep << args[i];
+                sep = " ";
+            }
+            std::cerr << "\n";
+        }
+
+        args.push_back(NULL);
+
+        status = os::execute((char * const *)&args[0]);
+
+#if defined(TRACE_VARIABLE)
+        if (oldEnvVarValue) {
+            os::setEnvironment(TRACE_VARIABLE, oldEnvVarValue);
+        } else {
+            os::unsetEnvironment(TRACE_VARIABLE);
+        }
+#endif
     }
-
-    args.push_back(NULL);
-
-    status = os::execute((char * const *)&args[0]);
 
 exit:
-#if defined(TRACE_VARIABLE)
-    os::unsetEnvironment(TRACE_VARIABLE);
-#endif
 #if defined(_WIN32)
     if (!useInject) {
         os::String tmpWrapper(argv[0]);
