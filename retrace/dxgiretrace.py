@@ -185,7 +185,9 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             if method.name == 'Release':
                 print r'    d3d11Dumper.unbindDevice(_this);'
             else:
-                print r'    d3d11Dumper.bindDevice(_this);'
+                print r'    if (_this->GetType() == D3D11_DEVICE_CONTEXT_IMMEDIATE) {'
+                print r'        d3d11Dumper.bindDevice(_this);'
+                print r'    }'
 
         if interface.name == 'IDXGIFactory' and method.name == 'QueryInterface':
             print r'    if (riid == IID_IDXGIFactoryDWM) {'
