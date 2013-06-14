@@ -11,14 +11,14 @@ About **apitrace**
 
 * visualize and edit trace files.
 
-See the [apitrace homepage](http://apitrace.github.com/) for more details.
+See the [apitrace homepage](http://apitrace.github.io/) for more details.
 
 
 Obtaining **apitrace**
 ======================
 
 To obtain apitrace either [download the latest
-binaries](http://apitrace.github.com/#download) for your platform if
+binaries](http://apitrace.github.io/#download) for your platform if
 available, or follow the instructions in INSTALL.markdown to build it yourself.
 On 64bits Linux and Windows platforms you'll need apitrace binaries that match
 the architecture (32bits or 64bits) of the application being traced.
