@@ -124,6 +124,10 @@ It will try to detect most required/optional dependencies automatically.  When
 not found automatically, you can manually specify the location of the
 dependencies from the CMake GUI.
 
+Qt on Windows doesn't ship with 64-bit binaries, you may want to add
+`-DENABLE_GUI=FALSE` to the above cmake command line for Windows 64-bits
+builds.
+
 After you've successfully configured, you can start the build by opening the
 generated `build\apitrace.sln` solution file, or invoking CMake as:
 
