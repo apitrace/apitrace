@@ -33,7 +33,7 @@
 
 #include "trace_backtrace.hpp"
 
-#if defined(ANDROID) or defined(__ELF__)
+#if defined(ANDROID) || defined(__ELF__)
 
 #include <set>
 #include "os.hpp"
