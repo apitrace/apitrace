@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <limits>
 
+#include "os.hpp"
 #include "trace_fast_callset.hpp"
 
 using namespace trace;
@@ -79,7 +80,7 @@ static int
 random_level (void)
 {
     /* tricky bit -- each bit is '1' 75% of the time */
-    long int bits = random() | random();
+    long int bits = os::random() | os::random();
     int	level = 1;
 
     while (level < MAX_LEVEL)

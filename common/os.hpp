@@ -84,6 +84,18 @@ void abort(void);
 void setExceptionCallback(void (*callback)(void));
 void resetExceptionCallback(void);
 
+/**
+ * Returns a pseudo-random integer in the range 0 to RAND_MAX.
+ */
+static inline int
+random(void) {
+#ifdef _WIN32
+    return ::rand();
+#else
+    return ::random();
+#endif
+}
+
 } /* namespace os */
 
 #endif /* _OS_HPP_ */
