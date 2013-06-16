@@ -1,12 +1,13 @@
 Overview
 =========
 
-Although focus has and still is on graphical APIs, apitrace has an
+Although focus was and still is on graphical APIs, apitrace has an
 infrastructure to trace generic APIs:
 
- * The APIs types and calls are specified in Python files in spec
+ * the APIs types and calls are specified in Python files in specs
+   sub-directory;
 
-   * there is a type hierarchy in specs\stdapi.py , capable of representing
+   * there is a type hierarchy in specs/stdapi.py, capable of representing
      most types in C language, and additional semantic metadata
 
  * Python scripts generate C code to trace and serialize calls to disk, and
