@@ -701,8 +701,7 @@ class GlTracer(Tracer):
     ]
 
     # These entrypoints may be implemented by drivers,
-	# but are also very useful for debugging / analysis tools.
-	#driver may implement these functions, but they are useful for tools
+    # but are also very useful for debugging / analysis tools.
     debug_functions = [
         # GL_KHR_debug
         'glDebugMessageControl',
@@ -725,8 +724,8 @@ class GlTracer(Tracer):
         'glDebugMessageInsertAMD',
         'glDebugMessageCallbackAMD',
         'glGetDebugMessageLogAMD',
-    ]	
-	
+    ]
+
     def invokeFunction(self, function):
         # We implement GL_EXT_debug_marker, GL_GREMEDY_*, etc., and not the
         # driver
