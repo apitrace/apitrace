@@ -70,7 +70,7 @@ getZygoteProcessName(void)
     assert(fd >= 0);
     len = read(fd, buf, size - 1);
     close(fd);
-    path.truncate(len);
+    path.truncate();
 
     return path;
 }
