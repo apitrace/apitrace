@@ -160,14 +160,13 @@ if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
     print
-    print '#include <dlfcn.h>'
-    print
     print '#include "trace_writer_local.hpp"'
     print
     print '// To validate our prototypes'
     print '#define GL_GLEXT_PROTOTYPES'
     print '#define GLX_GLXEXT_PROTOTYPES'
     print
+    print '#include "dlopen.hpp"'
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print
@@ -181,26 +180,6 @@ if __name__ == '__main__':
     tracer.traceApi(api)
 
     print r'''
-
-
-/*
- * Invoke the true dlopen() function.
- */
-static void *_dlopen(const char *filename, int flag)
-{
-    typedef void * (*PFN_DLOPEN)(const char *, int);
-    static PFN_DLOPEN dlopen_ptr = NULL;
-
-    if (!dlopen_ptr) {
-        dlopen_ptr = (PFN_DLOPEN)dlsym(RTLD_NEXT, "dlopen");
-        if (!dlopen_ptr) {
-            os::log("apitrace: error: dlsym(RTLD_NEXT, \"dlopen\") failed\n");
-            return NULL;
-        }
-    }
-
-    return dlopen_ptr(filename, flag);
-}
 
 
 /*

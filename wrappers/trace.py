@@ -474,7 +474,7 @@ class Tracer:
 
         # No-op if tracing is disabled
         print '    if (!trace::isTracingEnabled()) {'
-        Tracer.invokeFunction(self, function)
+        self.doInvokeFunction(function)
         if function.type is not stdapi.Void:
             print '        return _result;'
         else:
@@ -512,7 +512,11 @@ class Tracer:
                 self.wrapRet(function, "_result")
             print '    trace::localWriter.endLeave();'
 
-    def invokeFunction(self, function, prefix='_', suffix=''):
+    def invokeFunction(self, function):
+        self.doInvokeFunction(function)
+
+    def doInvokeFunction(self, function, prefix='_', suffix=''):
+        # Same as invokeFunction() but called both when trace is enabled or disabled.
         if function.type is stdapi.Void:
             result = ''
         else:
@@ -627,7 +631,8 @@ class Tracer:
         # Private constructor
         print '%s::%s(%s * pInstance) {' % (getWrapperInterfaceName(interface), getWrapperInterfaceName(interface), interface.name)
         for type, name, value in self.enumWrapperInterfaceVariables(interface):
-            print '    %s = %s;' % (name, value)
+            if value is not None:
+                print '    %s = %s;' % (name, value)
         print '}'
         print
 

@@ -27,12 +27,11 @@ is no immediate plan to address them, because either:
 That said, feel free to file an issue and/or send an email to the mailing list
 if:
 
-* send an email to the mailing list if you want discuss the rationale, propose
-  your ideas on how to address it, or volunteer to work on it;
+* you want discuss the rationale, propose your ideas on how to address it, or
+  volunteer to work on it;
 
-* file the issue in the issue tracker (or comment to it if it already exists)
-  if it is important for you and you would like to see it addressed sooner
-  rather than later.
+* a known issue is important for you and you would like to see it addressed
+  sooner rather than later.
 
 
 Tracing
@@ -50,11 +49,32 @@ Tracing
   There is no way to distinguish the fake calls from those actually
   made by the application yet.
 
+* Huge traces will be generated for applications that make extensive use of
+  immediate mode drawing (ie., glBegin/glEnd), use vertex/element arrays in
+  user memory, or generate a lot of dynamic vertex data per frame.  This is
+  because large quantities of (often redundant) data will be recorded over and
+  over; and although the traces are compressed, the compression algorithms used
+  aim a good performance/compression balance, hence fail to identify and remove
+  the redundancy at this scale.
+
+  However, this should not be a problem for modern OpenGL applications that
+  make an efficient use of VBOs and vertex shaders.
+
 * On MacOSX, the internal OpenGL calls done by GLU are not traced yet.
 
 
 Retracing
 ---------
+
+* Replaying can take substantially more CPU due to the overhead of reading the
+  trace file from disk.
+
+  However, the overhead should not be significant for modern 3D applications
+  that do efficient use of VBOs and vertex shaders.  The communication between
+  CPU to GPU can easily be a bottleneck on the powerful discrete GPUs of
+  nowadays, and trace overhead tend to be propotional so it is not a
+  coincidence that applications that are optimized for modern GPUs will also be
+  traced and replayed efficiently.
 
 * glretrace needs to infer window sizes from glViewport calls, because calls
   that create/resize windows happen outside of OpenGL and are not traced.
@@ -71,10 +91,8 @@ Retracing
   a standard 32bit RGBA, 24bit depth, 8bit alpha, double buffer visual.  Unless
   overridden on command line.
 
-* Multi-threaded OpenGL is not yet supported.
-
-* OpenGL context sharing is not fully respected -- all contexts are expected to
-  share state, and most likely there
+* OpenGL context sharing is not fully respected -- all contexts are assumed to
+  share state.  This is by far the most common case though.
 
 
 GUI
@@ -119,7 +137,7 @@ github issue tracker doesn't support attachments.
 Please attach long logs to https://gist.github.com/ and paste the URL into the
 issue description.
 
-For big attachments, such as traces, please upload it temporarily to a web
+For big attachments, such as traces, please upload them temporarily to a web
 server you control, or use a file upload service such as http://dropbox.com/
 and paste the URL into the issue description.
 

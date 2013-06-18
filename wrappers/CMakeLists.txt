@@ -421,6 +421,7 @@ elseif (X11_FOUND)
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
+        ${LIBBACKTRACE_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
@@ -439,6 +440,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
             gltrace.py
             trace.py
             ${CMAKE_SOURCE_DIR}/specs/eglapi.py
+            ${CMAKE_SOURCE_DIR}/specs/eglenum.py
             ${CMAKE_SOURCE_DIR}/specs/glesapi.py
             ${CMAKE_SOURCE_DIR}/specs/glapi.py
             ${CMAKE_SOURCE_DIR}/specs/glparams.py
@@ -469,6 +471,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         common
         ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
+        ${LIBBACKTRACE_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )

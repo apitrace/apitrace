@@ -34,7 +34,6 @@
 
 #include <trace_callset.hpp>
 
-
 using namespace trace;
 
 

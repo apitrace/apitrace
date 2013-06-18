@@ -180,17 +180,17 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
 
 
 static inline void
-_getMapInfo(ID3D11DeviceContext* pContext, ID3D11Resource * pResource, UINT Subresource, D3D11_MAP MapType, UINT MapFlags, D3D11_MAPPED_SUBRESOURCE * pMappedResource,
-            void * & pMappedData, size_t & MappedSize) {
-    pMappedData = 0;
-    MappedSize = 0;
+_getMapDesc(ID3D11DeviceContext* pContext, ID3D11Resource * pResource, UINT Subresource, D3D11_MAP MapType, UINT MapFlags, D3D11_MAPPED_SUBRESOURCE * pMappedResource,
+            _MAP_DESC & MapDesc) {
+    MapDesc.pData = 0;
+    MapDesc.Size = 0;
 
     if (MapType == D3D11_MAP_READ) {
         return;
     }
 
-    pMappedData = pMappedResource->pData;
-    MappedSize = _calcSubresourceSize(pResource, Subresource, NULL, pMappedResource->RowPitch, pMappedResource->DepthPitch);
+    MapDesc.pData = pMappedResource->pData;
+    MapDesc.Size = _calcSubresourceSize(pResource, Subresource, NULL, pMappedResource->RowPitch, pMappedResource->DepthPitch);
 }
 
 

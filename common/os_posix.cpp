@@ -71,25 +71,33 @@ getProcessName(void)
 #ifdef __APPLE__
     uint32_t len = size;
     if (_NSGetExecutablePath(buf, &len) != 0) {
-        *buf = 0;
-        return path;
+        // grow buf and retry
+        buf = path.buf(len);
+        _NSGetExecutablePath(buf, &len);
     }
     len = strlen(buf);
 #else
     ssize_t len;
     len = readlink("/proc/self/exe", buf, size - 1);
-    if (len == -1) {
+    if (len <= 0) {
         // /proc/self/exe is not available on setuid processes, so fallback to
         // /proc/self/cmdline.
         int fd = open("/proc/self/cmdline", O_RDONLY);
         if (fd >= 0) {
-            len = read(fd, buf, size - 1);
+            // buf already includes trailing zero
+            len = read(fd, buf, size);
             close(fd);
+            if (len >= 0) {
+                len = strlen(buf);
+            }
         }
     }
     if (len <= 0) {
-        snprintf(buf, size, "%i", (int)getpid());
-        return path;
+        // fallback to process ID
+        len = snprintf(buf, size, "%i", (int)getpid());
+        if (len >= size) {
+            len = size - 1;
+        }
     }
 #endif
     path.truncate(len);
@@ -112,6 +120,12 @@ getCurrentDir(void)
 }
 
 bool
+createDirectory(const String &path)
+{
+    return mkdir(path, 0777) == 0;
+}
+
+bool
 String::exists(void) const
 {
     struct stat st;
@@ -121,9 +135,6 @@ String::exists(void) const
     if (err) {
         return false;
     }
-
-    if (!S_ISREG(st.st_mode))
-        return false;
 
     return true;
 }

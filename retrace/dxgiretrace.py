@@ -185,7 +185,9 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             if method.name == 'Release':
                 print r'    d3d11Dumper.unbindDevice(_this);'
             else:
-                print r'    d3d11Dumper.bindDevice(_this);'
+                print r'    if (_this->GetType() == D3D11_DEVICE_CONTEXT_IMMEDIATE) {'
+                print r'        d3d11Dumper.bindDevice(_this);'
+                print r'    }'
 
         if interface.name == 'IDXGIFactory' and method.name == 'QueryInterface':
             print r'    if (riid == IID_IDXGIFactoryDWM) {'
@@ -286,11 +288,11 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print r'    d3dretrace::processEvents();'
 
         if method.name == 'Map':
-            print '    VOID *_pbData = NULL;'
-            print '    size_t _MappedSize = 0;'
-            print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames())
-            print '    if (_MappedSize) {'
-            print '        _maps[_this] = _pbData;'
+            print '    _MAP_DESC _MapDesc;'
+            print '    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames())
+            print '    size_t _MappedSize = _MapDesc.Size;'
+            print '    if (_MapDesc.Size) {'
+            print '        _maps[_this] = _MapDesc.pData;'
             print '    } else {'
             print '        return;'
             print '    }'

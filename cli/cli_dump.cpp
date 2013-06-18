@@ -158,7 +158,7 @@ command(int argc, char *argv[])
 #ifdef _WIN32
         color = COLOR_OPTION_ALWAYS;
 #else
-        color = isatty(1) ? COLOR_OPTION_ALWAYS : COLOR_OPTION_NEVER;
+        color = isatty(STDOUT_FILENO) ? COLOR_OPTION_ALWAYS : COLOR_OPTION_NEVER;
         pipepager();
 #endif
     }

@@ -28,11 +28,13 @@
 #include <iostream>
 
 #include "os_time.hpp"
-#include "trace_dump.hpp"
 #include "retrace.hpp"
 
 
 namespace retrace {
+
+
+trace::DumpFlags dumpFlags = 0;
 
 
 static bool call_dumped = false;
@@ -41,7 +43,7 @@ static bool call_dumped = false;
 static void dumpCall(trace::Call &call) {
     if (verbosity >= 0 && !call_dumped) {
         std::cout << std::hex << call.thread_id << std::dec << " ";
-        std::cout << call;
+        trace::dump(call, std::cout, dumpFlags);
         std::cout.flush();
         call_dumped = true;
     }

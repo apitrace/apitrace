@@ -29,6 +29,7 @@
 #include <GL/glext.h>
 
 #include "trace_callset.hpp"
+#include "trace_fast_callset.hpp"
 #include "trace_parser.hpp"
 
 typedef unsigned TrimFlags;
@@ -58,7 +59,7 @@ private:
 
     std::map<GLenum, unsigned> texture_map;
 
-    std::set<unsigned> required;
+    trace::FastCallSet required;
 
     bool transformFeedbackActive;
     bool framebufferObjectActive;
@@ -109,5 +110,5 @@ public:
     /* Return a set of all the required calls, (both those calls added
      * explicitly with require() and those implicitly depended
      * upon. */
-    std::set<unsigned> *get_required(void);
+    trace::FastCallSet *get_required(void);
 };

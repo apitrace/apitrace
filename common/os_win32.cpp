@@ -70,6 +70,12 @@ getCurrentDir(void)
 }
 
 bool
+createDirectory(const String &path)
+{
+    return CreateDirectoryA(path, NULL);
+}
+
+bool
 String::exists(void) const
 {
     DWORD attrs = GetFileAttributesA(str());

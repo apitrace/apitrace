@@ -52,14 +52,9 @@
 #include <list>
 
 #include "trace_model.hpp"
-
+#include "trace_fast_callset.hpp"
 
 namespace trace {
-
-
-    // Should match Call::no
-    typedef unsigned CallNo;
-
 
     // Aliases for call flags
     enum {
@@ -111,7 +106,11 @@ namespace trace {
         CallRange limits;
 
     public:
-        // TODO: use binary tree to speed up lookups
+        FastCallSet fast_call_set;
+
+        // TODO: use binary tree to speed up lookups, (less important
+        // now that we are using FastCallSet for ranges without step
+        // or freq).
         typedef std::list< CallRange > RangeList;
         RangeList ranges;
 
@@ -124,7 +123,7 @@ namespace trace {
         // Not empty set
         inline bool
         empty() const {
-            return ranges.empty();
+            return fast_call_set.empty() && ranges.empty();
         }
 
         void
@@ -142,12 +141,17 @@ namespace trace {
                         limits.stop = range.stop;
                 }
 
-                RangeList::iterator it = ranges.begin();
-                while (it != ranges.end() && it->start < range.start) {
-                    ++it;
-                }
+                /* Optimize by using fast_call_set whenever possible */
+                if (range.step == 1 && range.freq == FREQUENCY_ALL) {
+                    fast_call_set.add(range.start, range.stop);
+                } else {
+                    RangeList::iterator it = ranges.begin();
+                    while (it != ranges.end() && it->start < range.start) {
+                        ++it;
+                    }
 
-                ranges.insert(it, range);
+                    ranges.insert(it, range);
+                }
             }
         }
 
@@ -156,6 +160,8 @@ namespace trace {
             if (empty()) {
                 return false;
             }
+            if (fast_call_set.contains(callNo))
+                return true;
             RangeList::const_iterator it;
             for (it = ranges.begin(); it != ranges.end() && it->start <= callNo; ++it) {
                 if (it->contains(callNo, callFlags)) {

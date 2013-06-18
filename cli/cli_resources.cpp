@@ -33,8 +33,18 @@
 #include "cli_resources.hpp"
 
 
+static bool
+tryPath(const os::String &path, bool verbose)
+{
+    bool exists = path.exists();
+    if (verbose) {
+        std::cerr << "info: " << (exists ? "found" : "did not find") << " " << path.str() << "\n";
+    }
+    return exists;
+}
+
 os::String
-findProgram(const char*programFilename)
+findProgram(const char *programFilename, bool verbose)
 {
     os::String programPath;
 
@@ -43,7 +53,7 @@ findProgram(const char*programFilename)
 
     programPath = processDir;
     programPath.join(programFilename);
-    if (programPath.exists()) {
+    if (tryPath(programPath, verbose)) {
         return programPath;
     }
 
@@ -51,7 +61,7 @@ findProgram(const char*programFilename)
     // Try absolute install directory
     programPath = APITRACE_PROGRAMS_INSTALL_DIR;
     programPath.join(programFilename);
-    if (programPath.exists()) {
+    if (tryPath(programPath, verbose)) {
         return programPath;
     }
 #endif
@@ -60,7 +70,7 @@ findProgram(const char*programFilename)
 }
 
 os::String
-findWrapper(const char *wrapperFilename)
+findWrapper(const char *wrapperFilename, bool verbose)
 {
     os::String wrapperPath;
 
@@ -70,9 +80,16 @@ findWrapper(const char *wrapperFilename)
     // Try relative build directory
     // XXX: Just make build and install directory layout match
     wrapperPath = processDir;
+#if defined(APITRACE_CONFIGURATION_SUBDIR)
+    // Go from `Debug\apitrace.exe` to `wrappers\Debug\foo.dll` on MSVC builds.
+    wrapperPath.join("..");
     wrapperPath.join("wrappers");
+    wrapperPath.join(APITRACE_CONFIGURATION_SUBDIR);
+#else
+    wrapperPath.join("wrappers");
+#endif
     wrapperPath.join(wrapperFilename);
-    if (wrapperPath.exists()) {
+    if (tryPath(wrapperPath, verbose)) {
         return wrapperPath;
     }
 
@@ -86,7 +103,7 @@ findWrapper(const char *wrapperFilename)
     wrapperPath.join("../lib/apitrace/wrappers");
 #endif
     wrapperPath.join(wrapperFilename);
-    if (wrapperPath.exists()) {
+    if (tryPath(wrapperPath, verbose)) {
         return wrapperPath;
     }
 
@@ -94,7 +111,7 @@ findWrapper(const char *wrapperFilename)
     // Try absolute install directory
     wrapperPath = APITRACE_WRAPPERS_INSTALL_DIR;
     wrapperPath.join(wrapperFilename);
-    if (wrapperPath.exists()) {
+    if (tryPath(wrapperPath, verbose)) {
         return wrapperPath;
     }
 #endif
@@ -103,7 +120,7 @@ findWrapper(const char *wrapperFilename)
 }
 
 os::String
-findScript(const char *scriptFilename)
+findScript(const char *scriptFilename, bool verbose)
 {
     os::String scriptPath;
 
@@ -116,7 +133,7 @@ findScript(const char *scriptFilename)
     scriptPath = APITRACE_SOURCE_DIR;
     scriptPath.join("scripts");
     scriptPath.join(scriptFilename);
-    if (scriptPath.exists()) {
+    if (tryPath(scriptPath, verbose)) {
         return scriptPath;
     }
 #endif
@@ -131,7 +148,7 @@ findScript(const char *scriptFilename)
     scriptPath.join("../lib/apitrace/scripts");
 #endif
     scriptPath.join(scriptFilename);
-    if (scriptPath.exists()) {
+    if (tryPath(scriptPath, verbose)) {
         return scriptPath;
     }
 
@@ -139,7 +156,7 @@ findScript(const char *scriptFilename)
     // Try absolute install directory
     scriptPath = APITRACE_SCRIPTS_INSTALL_DIR;
     scriptPath.join(scriptFilename);
-    if (scriptPath.exists()) {
+    if (tryPath(scriptPath, verbose)) {
         return scriptPath;
     }
 #endif

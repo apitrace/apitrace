@@ -44,6 +44,21 @@
 #include "os.hpp"
 
 
+/**
+ * Information about active sub-resource maps
+ */
+struct _MAP_DESC
+{
+    VOID * pData;
+    size_t Size;
+
+    _MAP_DESC(void) :
+        pData(0),
+        Size(0)
+    {}
+};
+
+
 static size_t
 _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT Depth = 1, UINT DepthPitch = 0) {
     if (Width == 0 || Height == 0 || Depth == 0) {
@@ -229,10 +244,10 @@ _getNumMipLevels(UINT Width, UINT Height = 1, UINT Depth = 1) {
 
 
 static inline void
-_getMapInfo(IDXGISurface *pResource, DXGI_MAPPED_RECT * pLockedRect, UINT MapFlags,
-            void * & pMappedData, size_t & MappedSize) {
-    pMappedData = 0;
-    MappedSize = 0;
+_getMapDesc(IDXGISurface *pResource, DXGI_MAPPED_RECT * pLockedRect, UINT MapFlags,
+            _MAP_DESC & MapDesc) {
+    MapDesc.pData = 0;
+    MapDesc.Size = 0;
 
     if (!(MapFlags & DXGI_MAP_WRITE)) {
         return;
@@ -244,8 +259,8 @@ _getMapInfo(IDXGISurface *pResource, DXGI_MAPPED_RECT * pLockedRect, UINT MapFla
         return;
     }
 
-    pMappedData = pLockedRect->pBits;
-    MappedSize = _calcDataSize(Desc.Format, Desc.Width, Desc.Height, pLockedRect->Pitch);
+    MapDesc.pData = pLockedRect->pBits;
+    MapDesc.Size = _calcDataSize(Desc.Format, Desc.Width, Desc.Height, pLockedRect->Pitch);
 }
 
 

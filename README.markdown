@@ -11,14 +11,14 @@ About **apitrace**
 
 * visualize and edit trace files.
 
-See the [apitrace homepage](http://apitrace.github.com/) for more details.
+See the [apitrace homepage](http://apitrace.github.io/) for more details.
 
 
 Obtaining **apitrace**
 ======================
 
 To obtain apitrace either [download the latest
-binaries](http://apitrace.github.com/#download) for your platform if
+binaries](http://apitrace.github.io/#download) for your platform if
 available, or follow the instructions in INSTALL.markdown to build it yourself.
 On 64bits Linux and Windows platforms you'll need apitrace binaries that match
 the architecture (32bits or 64bits) of the application being traced.
@@ -269,13 +269,18 @@ This works only on Unices, and it will truncate the traces due to performance
 limitations.
 
 
-Recording a video with FFmpeg
------------------------------
+Recording a video with FFmpeg/Libav
+-----------------------------------
 
-You can make a video of the output by doing
+You can make a video of the output with FFmpeg by doing
 
     apitrace dump-images -o - application.trace \
     | ffmpeg -r 30 -f image2pipe -vcodec ppm -i pipe: -vcodec mpeg4 -y output.mp4
+
+or Libav (which replaces FFmpeg on recent Debian/Ubuntu distros) doing
+
+    apitrace dump-images -o - application.trace \
+    | avconv -r 30 -f image2pipe -vcodec ppm -i - -vcodec mpeg4 -y output.mp4
 
 Recording a video with gstreamer
 --------------------------------------
@@ -289,13 +294,19 @@ You can make a video of the output with gstreamer by doing
 Trimming a trace
 ----------------
 
-You can make a smaller trace by doing:
+You can truncate a trace by doing:
 
-    apitrace trim --callset 100-1000 -o trimed.trace applicated.trace
+    apitrace trim --exact --calls 0-12345 -o trimed.trace application.trace
 
 If you need precise control over which calls to trim you can specify the
 individual call numbers a plaintext file, as described in the 'Call sets'
 section above.
+
+There is also experimental support for automatically trimming the calls
+necessary for a given frame or call:
+
+   apitrace trim --auto --calls=12345 -o trimed.trace application.trace
+   apitrace trim --auto --frames=12345 -o trimed.trace application.trace
 
 
 Profiling a trace

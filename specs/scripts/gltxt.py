@@ -134,6 +134,8 @@ class TxtParser(LineParser):
                 break
             self.consume()
             name = line.strip()
+            if name.startswith('EGL_'):
+                self.prefix = ''
             print '    # %s' % name
 
     def skip_c_comments(self):
@@ -157,7 +159,7 @@ class TxtParser(LineParser):
             if not line.strip():
                 self.consume()
                 continue
-            if not line.startswith(' '):
+            if not line[0].isspace():
                 break
             self.consume()
             lines.append(line.strip())
@@ -221,7 +223,7 @@ class TxtParser(LineParser):
 
 def main():
     optparser = optparse.OptionParser(
-        usage="\n\t%prog [options] [SPEC] ")
+        usage="\n\t%prog [options] [URL|TXT] ...")
     optparser.add_option(
         '-p', '--prefix', metavar='STRING',
         type="string", dest="prefix", default='gl',

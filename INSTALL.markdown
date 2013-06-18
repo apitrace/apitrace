@@ -35,11 +35,19 @@ tracing.
 Linux / Mac OS X
 ----------------
 
+Additional optional dependencies for Linux:
+
+* libprocps (procps development libraries)
+
+* libdwarf
+
 Build as:
 
-    cmake -H. -Bbuild
+    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
     make -C build
 
+Other possible values for `CMAKE_BUILD_TYPE` `Debug`, `Release`,
+`RelWithDebInfo`, and `MinSizeRel`.
 
 You can also build the 32-bits GL wrapper on a 64-bits distribution, provided
 you have a multilib gcc and 32-bits X11 libraries, by doing:
@@ -115,6 +123,10 @@ and press the _Configure_ button.
 It will try to detect most required/optional dependencies automatically.  When
 not found automatically, you can manually specify the location of the
 dependencies from the CMake GUI.
+
+Qt on Windows doesn't ship with 64-bit binaries, you may want to add
+`-DENABLE_GUI=FALSE` to the above cmake command line for Windows 64-bits
+builds.
 
 After you've successfully configured, you can start the build by opening the
 generated `build\apitrace.sln` solution file, or invoking CMake as:

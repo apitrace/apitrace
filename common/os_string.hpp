@@ -57,8 +57,10 @@ extern "C" _CRTIMP int _vscprintf(const char *format, va_list argptr);
 
 #ifdef _WIN32
 #define OS_DIR_SEP '\\'
+#define OS_PATH_SEP ';'
 #else /* !_WIN32 */
 #define OS_DIR_SEP '/'
+#define OS_PATH_SEP ':'
 #endif /* !_WIN32 */
 
 
@@ -66,8 +68,20 @@ namespace os {
 
 
 /**
- * Vector based zero-terminate string, suitable for passing strings or paths
- * to/from OS calls.
+ * Class to represent zero-terminated strings, based upon std::vector<char>,
+ * suitable for passing strings or paths to/from OS calls.
+ *
+ * Both Win32 and POSIX APIs return strings as zero length buffers.  Although
+ * std::string provides an easy method to obtain a read-only pointer to a zero
+ * terminated string, it lacks the ability to return a read-write pointer. So
+ * there is no way to tell OS calls to write into a std::string directly -- a
+ * temporary malloc'ed string would be necessary --, which would be
+ * unnecessarily inefficient, specially considering that these strings would
+ * ultimately passed back to the OS, which would again expect zero-terminated
+ * strings.
+ *
+ * This class is not, however, a full replacement for std::string, which should
+ * be otherwise used whenever possible.
  */
 class String {
 protected:
@@ -130,24 +144,23 @@ protected:
         return false;
     }
 
-    Buffer::iterator rfindSep(void) {
-        Buffer::iterator it = buffer.end();
+public:
 
-        // Skip trailing '\0'
-        assert(it != buffer.begin());
-        --it;
-        assert(*it == '\0');
+    Buffer::iterator rfindSep(bool skipTrailing = true) {
+        Buffer::iterator it = end();
 
         // Skip trailing separators
-        while (it != buffer.begin()) {
-            --it;
-            if (isSep(*it)) {
-                // Halt if find the root
-                if (it == buffer.begin()) {
-                    return it;
+        if (skipTrailing) {
+            while (it != buffer.begin()) {
+                --it;
+                if (isSep(*it)) {
+                    // Halt if find the root
+                    if (it == buffer.begin()) {
+                        return it;
+                    }
+                } else {
+                    break;
                 }
-            } else {
-                break;
             }
         }
 
@@ -159,11 +172,8 @@ protected:
             }
         }
 
-        return buffer.end();
+        return end();
     }
-
-
-public:
 
     /*
      * Constructors
@@ -309,6 +319,20 @@ public:
         insert(end(), other);
     }
 
+    template <class InputIterator>
+    void erase(InputIterator first, InputIterator last) {
+        buffer.erase(first, last);
+    }
+
+    /**
+     * Get a writable buffer with the specified size.
+     *
+     * truncate() must be called after the buffer is written, and before any other
+     * method is called.
+     *
+     * Between the call to buf() and truncate() methods, the `buffer.back() ==
+     * 0` invariant will not hold true.
+     */
     char *buf(size_t size) {
         buffer.resize(size);
         return &buffer[0];
@@ -321,14 +345,21 @@ public:
         return size - 1;
     }
 
+    /**
+     * Truncate the string to the specified length.
+     */
     void truncate(size_t length) {
         assert(length < buffer.size());
         buffer[length] = 0;
+        assert(strlen(&buffer[0]) == length);
         buffer.resize(length + 1);
     }
 
+    /**
+     * Truncate the string to the first zero character.
+     */
     void truncate(void) {
-        truncate(strlen(str()));
+        truncate(strlen(&buffer[0]));
     }
 
 
@@ -343,7 +374,7 @@ public:
      */
     void trimDirectory(void) {
         iterator sep = rfindSep();
-        if (sep != buffer.end()) {
+        if (sep != end()) {
             buffer.erase(buffer.begin(), sep + 1);
         }
     }
@@ -358,7 +389,7 @@ public:
         iterator sep = rfindSep();
 
         // No separator found, so return '.'
-        if (sep == buffer.end()) {
+        if (sep == end()) {
             buffer.resize(2);
             buffer[0] = '.';
             buffer[1] = 0;
@@ -392,6 +423,8 @@ public:
 
 String getProcessName();
 String getCurrentDir();
+
+bool createDirectory(const String &path);
 
 bool copyFile(const String &srcFileName, const String &dstFileName, bool override = true);
 

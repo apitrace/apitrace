@@ -33,7 +33,7 @@
 
 #include "trace_backtrace.hpp"
 
-#if defined(ANDROID) or defined(__linux__)
+#if defined(ANDROID) || defined(__ELF__)
 
 #include <set>
 #include "os.hpp"
@@ -65,8 +65,6 @@ struct pstring {
 };
 
 
-#define PREFIX_BUF_SIZE (PREFIX_MAX_FUNC_NAME * MAX_BT_FUNC)
-
 class StringPrefixes {
 private:
     std::set<pstring> pset;
@@ -82,15 +80,33 @@ private:
         }
     }
 public:
-    StringPrefixes(const char* source);
+    StringPrefixes();
 
     bool contain(const char* s) {
         return pset.find(pstring(s, strlen(s) + 1)) != pset.end();
     }
 };
 
+StringPrefixes::StringPrefixes() {
+    char *list = getenv("APITRACE_BACKTRACE");
+    if (!list)
+        return;
+    for (char *t = strdup(list); ; t = NULL) {
+        char *tok = strtok(t, " \t\r\n");
+        if (!tok)
+            break;
+        if (tok[0] == '#')
+            continue;
+        if (tok[strlen(tok) - 1] == '*')
+            addPrefix(tok, strlen(tok) - 1);
+        else
+            addPrefix(tok, strlen(tok) + 1);
+    }
+}
+
+
 bool backtrace_is_needed(const char* fname) {
-    static StringPrefixes backtraceFunctionNamePrefixes(APITRACE_FNAMES_SOURCE);
+    static StringPrefixes backtraceFunctionNamePrefixes;
     return backtraceFunctionNamePrefixes.contain(fname);
 }
 
@@ -103,37 +119,6 @@ bool backtrace_is_needed(const char* fname) {
 #include <vector>
 
 namespace trace {
-
-StringPrefixes::StringPrefixes(const char* source) {
-    char* buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
-    char* startbuf = buf;
-    int n = 0;
-    FILE* f = fopen(source, "r");
-    if (f == NULL) {
-        os::log("Cannot open " APITRACE_FNAMES_FILE);
-    }
-    while ((startbuf = fgets(startbuf, PREFIX_MAX_FUNC_NAME, f))) {
-        n = strlen(startbuf);
-        if (startbuf[n - 1] == '\n') {
-            n--;
-        }
-        if (n > 2 && startbuf[0] != '#') {
-            int psize;
-            if (startbuf[n - 1] != '*') {
-                startbuf[n] = '\0';
-                psize = n + 1;
-            }
-            else {
-                psize = n - 1;
-            }
-            addPrefix(startbuf, psize);
-            startbuf += n + 1;
-            n = 0;
-        }
-    }
-    fclose(f);
-}
-
 
 /* The following two declarations are copied from Android sources */
 
@@ -287,162 +272,114 @@ std::vector<RawStackFrame> get_backtrace() {
 /* end ANDROID */
 #elif defined __linux__
 
-#include <execinfo.h>
-#include <string.h>
-#include <stdlib.h>
+#include <stdint.h>
+#include <dlfcn.h>
 #include <map>
 #include <vector>
-#include <stdio.h>
+#include <cxxabi.h>
+
+#include "backtrace.h"
 
 namespace trace {
 
 
-StringPrefixes::StringPrefixes(const char* source) {
-    char* buf = (char*)malloc(sizeof(char) * PREFIX_BUF_SIZE);
-    char* startbuf = buf;
-    int n = 0;
-    char* s = getenv(source);
-    char end = ';';
-    if (s == NULL) {
-        return;
-    }
-    *buf = ';';
-    strncpy(buf + 1, s, PREFIX_BUF_SIZE - 2);
-    while (end != '\0') {
-        startbuf++;
-        while (*(startbuf + n) != ';' && *(startbuf + n) != '\0') {
-            n++;
-        }
-        end = startbuf[n];
-        if (n > 2 && startbuf[0] != '#') {
-            int psize;
-            if (startbuf[n - 1] != '*') {
-                startbuf[n] = '\0';
-                psize = n + 1;
-            }
-            else {
-                psize = n - 1;
-            }
-            addPrefix(startbuf, psize);
-            startbuf += n;
-            n = 0;
-        }
-    }
-}
 
 
 #define BT_DEPTH 10
 
-class GlibcBacktraceProvider {
-private:
-    std::map<void*, RawStackFrame*> cache;
-    /*
-     * Backtrace being returned by glibc backtrace() contains stack frames
-     * belonging to apitrace wrapper module. We count the number of apitrace
-     * functions on the stack to avoid recording these frames.
-     */
-    int numOfNestedFunctions;
+class libbacktraceProvider {
+    struct backtrace_state *state;
+    int skipFrames;
     Id nextFrameId;
-private:
-/*
- * Parse a stack frame, expecting:
- * /lib/libc.so.6.1(__libc_start_main+0x50308) [0x2000000000097630]
- * or
- * /lib/libc.so.6.1(+0x50308) [0x2000000000097630]
- * or
- * /lib/libc.so.6.1() [0x2000000000097630]
- */
-    RawStackFrame* parseFrame(void* frame, char* frame_symbol) {
-        if (cache.find(frame) == cache.end()) {
-            char* frame_symbol_copy = new char[strlen(frame_symbol) + 1];
-            strcpy(frame_symbol_copy, frame_symbol);
-            RawStackFrame* parsedFrame = new RawStackFrame;
-            parsedFrame->id = nextFrameId++;
-            char* frame_it = frame_symbol_copy;
-            parsedFrame->module = frame_it;
-            char* offset = NULL;
-            while (true) {
-                switch (*frame_it) {
-                case '(':
-                    *frame_it = '\0';
-                    frame_it++;
-                    if (*frame_it != ')' && *frame_it != '+') {
-                        parsedFrame->function = frame_it;
-                        while (*frame_it != '+' && *frame_it != ')') {
-                            frame_it++;
-                        }
-                        *frame_it = '\0';
-                        frame_it++;
-                    }
-                    break;
-                case '[':
-                    *frame_it = '\0';
-                    frame_it++;
-                    offset = frame_it;
-                    break;
-                case ']':
-                    *frame_it = '\0';
-                    sscanf(offset, "%llx", &parsedFrame->offset);
-                    cache[frame] = parsedFrame;
-                    return parsedFrame;
-                case '\0':
-                    cache[frame] = NULL;
-                    delete[] frame_symbol_copy;
-                    delete[] parsedFrame;
-                    return NULL;
-                default:
-                    frame_it++;
-                }
-            }
-        }
-        else {
-            return cache[frame];
-        }
-    }
-public:
-    GlibcBacktraceProvider() :
-      numOfNestedFunctions(0),
-      nextFrameId(0)
-    {}
+    std::map<uintptr_t, std::vector<RawStackFrame> > cache;
+    std::vector<RawStackFrame> *current, *current_frames;
+    RawStackFrame *current_frame;
 
-    std::vector<RawStackFrame> getParsedBacktrace() {
-        std::vector<RawStackFrame> parsedBacktrace;
-        void *array[numOfNestedFunctions + BT_DEPTH];
-        size_t size;
-        char **strings;
-        size_t i;
-        const char* firstModule;
-        size = backtrace(array, numOfNestedFunctions + BT_DEPTH);
-        strings = backtrace_symbols(array, size);
-        for (i = numOfNestedFunctions; i < size; i++) {
-            RawStackFrame* parsedFrame = parseFrame(array[i], strings[i]);
-            if (numOfNestedFunctions == 0) {
-                if (i == 0) {
-                    firstModule = parsedFrame->module;
-                }
-                else {
-                    if (strcmp(firstModule, parsedFrame->module)) {
-                        numOfNestedFunctions = i;
-                        free(strings);
-                        parsedBacktrace = getParsedBacktrace();
-                        numOfNestedFunctions--;
-                        return parsedBacktrace;
-                    }
-                }
-            } else {
-                if (parsedFrame != NULL) {
-                    parsedBacktrace.push_back(*parsedFrame);
-                }
-            }
+    static void bt_err_callback(void *vdata, const char *msg, int errnum)
+    {
+        if (errnum == -1)
+            return;// no debug/sym info
+        else if (errnum)
+            os::log("libbacktrace: %s: %s\n", msg, strerror(errnum));
+        else
+            os::log("libbacktrace: %s\n", msg);
+    }
+
+    static int bt_countskip(void *vdata, uintptr_t pc)
+    {
+        libbacktraceProvider *this_ = (libbacktraceProvider*)vdata;
+        Dl_info info1, info2;
+        if (!dladdr((void*)bt_countskip, &info2)) {
+            os::log("dladdr failed, cannot cull stack traces\n");
+            return 1;
         }
-        free(strings);
+        if (!dladdr((void*)pc, &info1))
+            return 1;
+        if (info1.dli_fbase != info2.dli_fbase)
+            return 1;
+        this_->skipFrames++;
+        return 0;
+    }
+
+    static int bt_full_callback(void *vdata, uintptr_t pc,
+                                 const char *file, int line, const char *func)
+    {
+        libbacktraceProvider *this_ = (libbacktraceProvider*)vdata;
+        RawStackFrame frame = *this_->current_frame;
+        frame.id = this_->nextFrameId++;
+        frame.filename = file;
+        frame.linenumber = line;
+        if (func)
+            frame.function = func;
+        int status;
+        if (func && (func = abi::__cxa_demangle(func, NULL, NULL, &status)))
+            frame.function = func;
+        this_->current_frames->push_back(frame);
+        return 0;
+    }
+
+    static int bt_callback(void *vdata, uintptr_t pc)
+    {
+        libbacktraceProvider *this_ = (libbacktraceProvider*)vdata;
+        std::vector<RawStackFrame> &frames = this_->cache[pc];
+        if (!frames.size()) {
+            RawStackFrame frame;
+            Dl_info info = {0};
+            dladdr((void*)pc, &info);
+            frame.module = info.dli_fname;
+            frame.function = info.dli_sname;
+            frame.offset = info.dli_saddr ? pc - (uintptr_t)info.dli_saddr
+                                          : pc - (uintptr_t)info.dli_fbase;
+            this_->current_frame = &frame;
+            this_->current_frames = &frames;
+            backtrace_pcinfo(this_->state, pc, bt_full_callback, bt_err_callback, vdata);
+            if (!frames.size()) {
+                frame.id = this_->nextFrameId++;
+                frames.push_back(frame);
+	    }
+        }
+        this_->current->insert(this_->current->end(), frames.begin(), frames.end());
+        return this_->current->size() >= BT_DEPTH;
+    }
+
+public:
+    libbacktraceProvider():
+        state(backtrace_create_state(NULL, 0, bt_err_callback, NULL))
+    {
+        backtrace_simple(state, 0, bt_countskip, bt_err_callback, this);
+    }
+
+    std::vector<RawStackFrame> getParsedBacktrace()
+    {
+        std::vector<RawStackFrame> parsedBacktrace;
+        current = &parsedBacktrace;
+        backtrace_simple(state, skipFrames, bt_callback, bt_err_callback, this);
         return parsedBacktrace;
     }
 };
 
-
 std::vector<RawStackFrame> get_backtrace() {
-    static GlibcBacktraceProvider backtraceProvider;
+    static libbacktraceProvider backtraceProvider;
     return backtraceProvider.getParsedBacktrace();
 }
 

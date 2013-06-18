@@ -160,7 +160,7 @@ public:
     recreate(void) {
         EGLContext currentContext = eglGetCurrentContext();
         EGLSurface currentDrawSurface = eglGetCurrentSurface(EGL_DRAW);
-        EGLSurface currentReadSurface = eglGetCurrentSurface(EGL_DRAW);
+        EGLSurface currentReadSurface = eglGetCurrentSurface(EGL_READ);
         bool rebindDrawSurface = currentDrawSurface == surface;
         bool rebindReadSurface = currentReadSurface == surface;
 

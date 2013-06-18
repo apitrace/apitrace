@@ -126,9 +126,9 @@ traceProgram(trace::API api,
         return 1;
     }
 
-    os::String wrapperPath = findWrapper(wrapperFilename);
+    os::String wrapperPath = findWrapper(wrapperFilename, verbose);
     if (!wrapperPath.length()) {
-        std::cerr << "error: failed to find " << wrapperFilename << "\n";
+        std::cerr << "error: failed to find " << wrapperFilename << " wrapper\n";
         goto exit;
     }
 
@@ -154,38 +154,57 @@ traceProgram(trace::API api,
     wrapperPath.trimFilename();
 #endif
 
+    /*
+     * Spawn child process.
+     */
+
+    {
 #if defined(TRACE_VARIABLE)
-    if (verbose) {
-        std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
-    }
-    /* FIXME: Don't modify the current environment */
-    os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+        const char *oldEnvVarValue = getenv(TRACE_VARIABLE);
+        if (oldEnvVarValue) {
+            wrapperPath.append(OS_PATH_SEP);
+            wrapperPath.append(oldEnvVarValue);
+        }
+
+        /* FIXME: Don't modify our (ie parent) environment */
+        os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+
+        if (verbose) {
+            std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
+        }
 #endif /* TRACE_VARIABLE */
 
-    if (output) {
-        os::setEnvironment("TRACE_FILE", output);
-    }
-
-    for (char * const * arg = argv; *arg; ++arg) {
-        args.push_back(*arg);
-    }
-    args.push_back(NULL);
-
-    if (verbose) {
-        const char *sep = "";
-        for (unsigned i = 0; i < args.size(); ++i) {
-            std::cerr << sep << args[i];
-            sep = " ";
+        if (output) {
+            os::setEnvironment("TRACE_FILE", output);
         }
-        std::cerr << "\n";
-    }
 
-    status = os::execute((char * const *)&args[0]);
+        for (char * const * arg = argv; *arg; ++arg) {
+            args.push_back(*arg);
+        }
+
+        if (verbose) {
+            const char *sep = "";
+            for (unsigned i = 0; i < args.size(); ++i) {
+                std::cerr << sep << args[i];
+                sep = " ";
+            }
+            std::cerr << "\n";
+        }
+
+        args.push_back(NULL);
+
+        status = os::execute((char * const *)&args[0]);
+
+#if defined(TRACE_VARIABLE)
+        if (oldEnvVarValue) {
+            os::setEnvironment(TRACE_VARIABLE, oldEnvVarValue);
+        } else {
+            os::unsetEnvironment(TRACE_VARIABLE);
+        }
+#endif
+    }
 
 exit:
-#if defined(TRACE_VARIABLE)
-    os::unsetEnvironment(TRACE_VARIABLE);
-#endif
 #if defined(_WIN32)
     if (!useInject) {
         os::String tmpWrapper(argv[0]);

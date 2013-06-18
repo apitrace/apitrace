@@ -41,6 +41,10 @@
 namespace trace {
 
 
+// Should match Call::no
+typedef unsigned CallNo;
+
+
 typedef unsigned Id;
 
 

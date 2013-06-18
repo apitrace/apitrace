@@ -679,6 +679,7 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
     GLint geometry_program = 0;
     GLint tess_control_program = 0;
     GLint tess_evaluation_program = 0;
+    GLint compute_program = 0;
 
     if (!context.ES) {
         glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
@@ -688,6 +689,7 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
             glGetProgramPipelineiv(pipeline, GL_GEOMETRY_SHADER, &geometry_program);
             glGetProgramPipelineiv(pipeline, GL_TESS_CONTROL_SHADER, &tess_control_program);
             glGetProgramPipelineiv(pipeline, GL_TESS_EVALUATION_SHADER, &tess_evaluation_program);
+            glGetProgramPipelineiv(pipeline, GL_COMPUTE_SHADER, &compute_program);
         }
     }
 
@@ -708,6 +710,7 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
         dumpProgram(json, geometry_program);
         dumpProgram(json, tess_control_program);
         dumpProgram(json, tess_evaluation_program);
+        dumpProgram(json, compute_program);
     } else if (program) {
         dumpProgram(json, program);
     } else if (programObj) {
@@ -727,6 +730,7 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
         dumpProgramUniformsStage(json, geometry_program, "GL_GEOMETRY_SHADER");
         dumpProgramUniformsStage(json, tess_control_program, "GL_TESS_CONTROL_SHADER");
         dumpProgramUniformsStage(json, tess_evaluation_program, "GL_TESS_EVALUATION_SHADER");
+        dumpProgramUniformsStage(json, compute_program, "GL_COMPUTE_SHADER");
     } else if (program) {
         dumpProgramUniforms(json, program);
     } else if (programObj) {

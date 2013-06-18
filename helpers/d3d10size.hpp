@@ -108,10 +108,10 @@ _calcSubresourceSize(const D3D10_TEXTURE3D_DESC *pDesc, UINT Subresource, UINT R
 }
 
 static inline void
-_getMapInfo(ID3D10Buffer *pResource, D3D10_MAP MapType, UINT MapFlags, void * * ppData,
-            void * & pMappedData, size_t & MappedSize) {
-    pMappedData = 0;
-    MappedSize = 0;
+_getMapDesc(ID3D10Buffer *pResource, D3D10_MAP MapType, UINT MapFlags, void * * ppData,
+            _MAP_DESC & MapDesc) {
+    MapDesc.pData = 0;
+    MapDesc.Size = 0;
 
     if (MapType == D3D10_MAP_READ) {
         return;
@@ -120,15 +120,15 @@ _getMapInfo(ID3D10Buffer *pResource, D3D10_MAP MapType, UINT MapFlags, void * * 
     D3D10_BUFFER_DESC Desc;
     pResource->GetDesc(&Desc);
 
-    pMappedData = *ppData;
-    MappedSize = Desc.ByteWidth;
+    MapDesc.pData = *ppData;
+    MapDesc.Size = Desc.ByteWidth;
 }
 
 static inline void
-_getMapInfo(ID3D10Texture1D *pResource, UINT Subresource, D3D10_MAP MapType, UINT MapFlags, void * * ppData,
-            void * & pMappedData, size_t & MappedSize) {
-    pMappedData = 0;
-    MappedSize = 0;
+_getMapDesc(ID3D10Texture1D *pResource, UINT Subresource, D3D10_MAP MapType, UINT MapFlags, void * * ppData,
+            _MAP_DESC & MapDesc) {
+    MapDesc.pData = 0;
+    MapDesc.Size = 0;
 
     if (MapType == D3D10_MAP_READ) {
         return;
@@ -137,15 +137,15 @@ _getMapInfo(ID3D10Texture1D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE1D_DESC Desc;
     pResource->GetDesc(&Desc);
 
-    pMappedData = *ppData;
-    MappedSize = _calcSubresourceSize(&Desc, Subresource);
+    MapDesc.pData = *ppData;
+    MapDesc.Size = _calcSubresourceSize(&Desc, Subresource);
 }
 
 static inline void
-_getMapInfo(ID3D10Texture2D *pResource, UINT Subresource, D3D10_MAP MapType, UINT MapFlags, D3D10_MAPPED_TEXTURE2D * pMappedTex2D,
-            void * & pMappedData, size_t & MappedSize) {
-    pMappedData = 0;
-    MappedSize = 0;
+_getMapDesc(ID3D10Texture2D *pResource, UINT Subresource, D3D10_MAP MapType, UINT MapFlags, D3D10_MAPPED_TEXTURE2D * pMappedTex2D,
+            _MAP_DESC & MapDesc) {
+    MapDesc.pData = 0;
+    MapDesc.Size = 0;
 
     if (MapType == D3D10_MAP_READ) {
         return;
@@ -154,15 +154,15 @@ _getMapInfo(ID3D10Texture2D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE2D_DESC Desc;
     pResource->GetDesc(&Desc);
 
-    pMappedData = pMappedTex2D->pData;
-    MappedSize = _calcSubresourceSize(&Desc, Subresource, pMappedTex2D->RowPitch);
+    MapDesc.pData = pMappedTex2D->pData;
+    MapDesc.Size = _calcSubresourceSize(&Desc, Subresource, pMappedTex2D->RowPitch);
 }
 
 static inline void
-_getMapInfo(ID3D10Texture3D *pResource, UINT Subresource, D3D10_MAP MapType, UINT MapFlags, D3D10_MAPPED_TEXTURE3D * pMappedTex3D,
-            void * & pMappedData, size_t & MappedSize) {
-    pMappedData = 0;
-    MappedSize = 0;
+_getMapDesc(ID3D10Texture3D *pResource, UINT Subresource, D3D10_MAP MapType, UINT MapFlags, D3D10_MAPPED_TEXTURE3D * pMappedTex3D,
+            _MAP_DESC & MapDesc) {
+    MapDesc.pData = 0;
+    MapDesc.Size = 0;
 
     if (MapType == D3D10_MAP_READ) {
         return;
@@ -171,8 +171,8 @@ _getMapInfo(ID3D10Texture3D *pResource, UINT Subresource, D3D10_MAP MapType, UIN
     D3D10_TEXTURE3D_DESC Desc;
     pResource->GetDesc(&Desc);
 
-    pMappedData = pMappedTex3D->pData;
-    MappedSize = _calcSubresourceSize(&Desc, Subresource, pMappedTex3D->RowPitch, pMappedTex3D->DepthPitch);
+    MapDesc.pData = pMappedTex3D->pData;
+    MapDesc.Size = _calcSubresourceSize(&Desc, Subresource, pMappedTex3D->RowPitch, pMappedTex3D->DepthPitch);
 }
 
 

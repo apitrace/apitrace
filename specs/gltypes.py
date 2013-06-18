@@ -251,6 +251,40 @@ def GLindexBuffer(countExpr, typeExpr):
         contextLess=False,
     )
 
+# Polymorphic object name
+def GLname(targetExpr):
+    return Polymorphic(targetExpr, [
+        ('GL_BUFFER', GLbuffer),
+        ('GL_SHADER', GLshader),
+        ('GL_PROGRAM', GLprogram),
+        ('GL_VERTEX_ARRAY', GLarray),
+        ('GL_QUERY', GLquery),
+        ('GL_PROGRAM_PIPELINE', GLpipeline),
+        ('GL_TRANSFORM_FEEDBACK', GLuint),
+        ('GL_SAMPLER', GLsampler),
+        ('GL_TEXTURE', GLtexture),
+        ('GL_TEXTURE_1D', GLtexture),
+        ('GL_TEXTURE_1D_ARRAY', GLtexture),
+        ('GL_TEXTURE_2D', GLtexture),
+        ('GL_TEXTURE_2D_MULTISAMPLE', GLtexture),
+        ('GL_TEXTURE_2D_ARRAY', GLtexture),
+        ('GL_TEXTURE_RECTANGLE', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_POSITIVE_X', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_NEGATIVE_X', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_POSITIVE_Y', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_NEGATIVE_Y', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_POSITIVE_Z', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_NEGATIVE_Z', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_ARRAY', GLtexture),
+        ('GL_TEXTURE_3D', GLtexture),
+        ('GL_RENDERBUFFER', GLrenderbuffer),
+        ('GL_FRAMEBUFFER', GLframebuffer),
+        ('GL_DISPLAY_LIST', GLlist),
+        ('GL_FENCE_APPLE', GLfence),
+        ('GL_DRAW_PIXELS_APPLE', GLuint), # GL_APPLE_fence
+    ], GLuint)
+
 
 # GL_AMD_performance_monitor
 GLperfMonitorCounterInfoAMD = Polymorphic('pname', [

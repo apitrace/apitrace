@@ -100,7 +100,6 @@ class EglTracer(GlTracer):
 if __name__ == '__main__':
     print '#include <stdlib.h>'
     print '#include <string.h>'
-    print '#include "dlopen.hpp"'
     print
     print '#include "trace_writer_local.hpp"'
     print
@@ -108,6 +107,7 @@ if __name__ == '__main__':
     print '#define GL_GLEXT_PROTOTYPES'
     print '#define EGL_EGLEXT_PROTOTYPES'
     print
+    print '#include "dlopen.hpp"'
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
     print '#include "eglsize.hpp"'

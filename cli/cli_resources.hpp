@@ -34,13 +34,13 @@
 
 
 os::String
-findProgram(const char*programFilename);
+findProgram(const char *programFilename, bool verbose = false);
 
 os::String
-findScript(const char *name);
+findScript(const char *name, bool verbose = false);
 
 os::String
-findWrapper(const char *wrapperFilename);
+findWrapper(const char *wrapperFilename, bool verbose = false);
 
 
 #endif /* _CLI_RESOURCES_HPP_ */

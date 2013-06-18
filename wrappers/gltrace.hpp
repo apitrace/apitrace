@@ -97,6 +97,9 @@ public:
     bool user_arrays_nv;
     unsigned retain_count;
 
+    // Whether it has been bound before
+    bool bound;
+
     // TODO: This will fail for buffers shared by multiple contexts.
     std::map <GLuint, Buffer> buffers;
 
@@ -105,7 +108,8 @@ public:
         user_arrays(false),
         user_arrays_arb(false),
         user_arrays_nv(false),
-        retain_count(0)
+        retain_count(0),
+        bound(false)
     { }
 
     inline bool
