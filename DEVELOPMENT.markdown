@@ -126,12 +126,24 @@ Commit policy
 Feature development:
 
 * Existing features in master branch should not degrade at any time, for any
-  platform.  (Unless it is not widely used and there is agreement.)
+  platform.  (Unless they are seldom used or redundant and there is agreement.)
 
-* It's fine to add new features for only some platforms.
+  * In particular, new features / changes must not introduce any sort of
+    instability when tracing.
 
-* Non-trivial changes should be staged in a branch, to enable peer-review and
-  regression testing.  Branch should be deleted once code has been merged.
+    While application developers and driver developers may be able to
+    workaround quirks in apitrace, we want to be able to obtain traces from
+    non-technical end-users with minimal intervention.
+
+    This implies that tracing should not make any non-standard assumptions, and
+    care must be taken to ensure the tracing code is robust against invalid
+    parameters, multiple threads, etc.
+
+* It's fine to add new features for only some platforms or APIs.
+
+* Non-trivial changes should be staged in a branch, to allow review and
+  regression testing.  Feature branches should be deleted once they have been
+  merged.
 
 * Releases are tagged commits from master.  There are no stable branches.
 
