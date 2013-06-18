@@ -1,8 +1,8 @@
 Overview
 =========
 
-Although focus was and still is on graphical APIs, apitrace has an
-infrastructure to trace generic APIs:
+Although focus was and still is on graphical APIs, apitrace has a
+generic infrastructure to trace any kind of API:
 
  * the APIs types and calls are specified in Python files in specs
    sub-directory;
@@ -10,8 +10,8 @@ infrastructure to trace generic APIs:
    * there is a type hierarchy in specs/stdapi.py, capable of representing
      most types in C language, and additional semantic metadata
 
- * Python scripts generate C code to trace and serialize calls to disk, and
-   vice-versa.
+ * Python scripts generate C++ code to trace and serialize calls parameters to
+   a file, and vice-versa.
 
    * Visitor software design pattern is used to navigate over the types.
 
@@ -19,8 +19,8 @@ infrastructure to trace generic APIs:
      overriden by derived classes, allowing to easily handle cases that need
      special treatment without sacrifycing code reuse.
 
-There are several main layers in apitrace.  Too many to show in a single graph,
-so below only those relevant for GL are shown:
+apitrace's architecture is composed of several layers.  Too many to show in a
+single graph, so only those relevant for OpenGL API are shown below:
 
                         specs
                           ^
@@ -43,15 +43,15 @@ so below only those relevant for GL are shown:
            /      |      \
      glxtrace  wgltrace  cgltrace
 
-And here is a quick synopsis of what the layers do:
+Here is a quick synopsis of what the layers do:
 
  * specs -- specification of the API, expressed in a Python class hierarchy
 
  * dispatch -- runtime dispatch of calls to DLLs (open the DLL, get the symbol
    address, and call it passing all arguments as-is)
 
- * helpers -- helper functions to determine sizes of array/blob/etc, and other.
-   It often needs to dispatch calls to give the answers.
+ * helpers -- helper functions to determine sizes of arrays, blobs, etc.  It
+   often needs to dispatch calls to give the answers.
 
  * trace -- generate C++ code for tracing an API based on its spec
 
@@ -75,8 +75,8 @@ And here is a quick synopsis of what the layers do:
 Coding Style
 ============
 
-These are guidelines for new code.  Some of existing hasn't been updated to
-these conventions yet.
+These are guidelines for new code.  Admittedly some of the existing code hasn't
+been updated to follow these conventions yet.
 
 Whitespace (all languages):
 
@@ -156,7 +156,7 @@ Backwards compatibility:
 * No backwards compatibility guarantees for derived data (ASCII dumps, state,
   images, etc).
 
-* There should be no gratuitous change to command line tool interfaces, but no
+* There should be no gratuitous changes to command line tool interfaces, but no
   guarantees are given.
 
 
