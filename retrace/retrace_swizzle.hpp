@@ -74,6 +74,27 @@ public:
         }
         return it->second;
     }
+
+    /*
+     * Handle situations where the application declares an array like
+     *
+     *   uniform vec4 myMatrix[4];
+     *
+     * then calls glGetUniformLocation(..., "myMatrix") and then infer the slot
+     * numbers rather than explicitly calling glGetUniformLocation(...,
+     * "myMatrix[0]"), etc.
+     */
+    T lookupUniformLocation(const T &key) {
+        typename base_type::const_iterator it;
+        it = base.upper_bound(key);
+        if (it != base.begin()) {
+            --it;
+        } else {
+            return (base[key] = key);
+        }
+        T t = it->second + (key - it->first);
+        return t;
+    }
 };
 
 
@@ -100,3 +121,4 @@ toObjPointer(trace::Call &call, trace::Value &value);
 } /* namespace retrace */
 
 #endif /* _RETRACE_SWIZZLE_HPP_ */
+
