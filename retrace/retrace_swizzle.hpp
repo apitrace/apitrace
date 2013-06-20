@@ -74,6 +74,19 @@ public:
         }
         return it->second;
     }
+
+    T lookupUniformLocation( const T &key ) {
+      typename base_type::iterator it;
+      it = base.upper_bound(key);
+      if( it != base.begin() ) {
+        --it;
+      } else {
+        it = base.end();
+      }
+      T t = it->second + ( key - it->first );
+      return t;
+    }
+
 };
 
 
@@ -100,3 +113,4 @@ toObjPointer(trace::Call &call, trace::Value &value);
 } /* namespace retrace */
 
 #endif /* _RETRACE_SWIZZLE_HPP_ */
+

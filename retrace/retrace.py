@@ -40,12 +40,15 @@ class UnsupportedType(Exception):
     pass
 
 
-def lookupHandle(handle, value):
+def lookupHandle(handle, value, lval=False):
     if handle.key is None:
         return "_%s_map[%s]" % (handle.name, value)
     else:
         key_name, key_type = handle.key
-        return "_%s_map[%s][%s]" % (handle.name, key_name, value)
+        if handle.name == "location" and lval == False:
+          return "_location_map[%s].lookupUniformLocation(%s)" % (key_name, value)
+        else:
+          return "_%s_map[%s][%s]" % (handle.name, key_name, value)
 
 
 class ValueAllocator(stdapi.Visitor):
@@ -286,7 +289,7 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
         OpaqueValueDeserializer().visit(handle.type, '_origResult', rvalue);
         if handle.range is None:
             rvalue = "_origResult"
-            entry = lookupHandle(handle, rvalue)
+            entry = lookupHandle(handle, rvalue, True)
             if (entry.startswith('_program_map') or entry.startswith('_shader_map')):
                 print 'if (glretrace::supportsARBShaderObjects) {'
                 print '    _handleARB_map[%s] = %s;' % (rvalue, lvalue)
