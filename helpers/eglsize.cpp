@@ -29,6 +29,8 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
+#ifndef _WIN32
+
 #include <string.h>
 
 #include "os_thread.hpp"
@@ -214,4 +216,5 @@ _EGLImageKHR_free_image_info(struct image_info *info)
     delete info;
 }
 
+#endif // !defined(_WIN32)
 

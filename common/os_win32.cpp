@@ -23,6 +23,8 @@
  *
  **************************************************************************/
 
+#ifdef _WIN32
+
 #include <windows.h>
 
 #include <assert.h>
@@ -172,7 +174,7 @@ int execute(char * const * args)
         sep = ' ';
     }
 
-    STARTUPINFO startupInfo;
+    STARTUPINFOA startupInfo;
     memset(&startupInfo, 0, sizeof(startupInfo));
     startupInfo.cb = sizeof(startupInfo);
 
@@ -338,3 +340,5 @@ resetExceptionCallback(void)
 
 
 } /* namespace os */
+
+#endif  // defined(_WIN32)

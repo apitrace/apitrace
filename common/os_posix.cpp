@@ -23,6 +23,7 @@
  *
  **************************************************************************/
 
+#ifndef _WIN32
 
 #include <assert.h>
 #include <string.h>
@@ -331,3 +332,4 @@ resetExceptionCallback(void)
 
 } /* namespace os */
 
+#endif // !defined(_WIN32)
