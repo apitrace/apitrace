@@ -32,6 +32,7 @@
 #ifndef _EGLSIZE_HPP_
 #define _EGLSIZE_HPP_
 
+#ifndef _WIN32
 
 #include "glimports.hpp"
 
@@ -53,5 +54,6 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image);
 void
 _EGLImageKHR_free_image_info(struct image_info *info);
 
+#endif // !defined(_WIN32)
 
 #endif
