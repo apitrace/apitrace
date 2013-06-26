@@ -106,10 +106,10 @@ _shaderSize(const DWORD *pFunction)
             break;
 
         case D3DSIO_END:
-            if (dwToken != D3DSIO_END) {
-                os::log("apitrace: warning: %s: malformed END token\n", __FUNCTION__);
+            if (dwToken == D3DSIO_END) {
+                return dwLength * sizeof *pFunction;
             }
-            return dwLength * sizeof *pFunction;
+            break;
         }
     }
 }
