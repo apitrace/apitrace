@@ -178,12 +178,16 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
         # keep track of the last used device for state dumping
         if interface.name in ('ID3D10Device', 'ID3D10Device1'):
             if method.name == 'Release':
-                print r'    d3d10Dumper.unbindDevice(_this);'
+                print r'    if (call.ret->toUInt() == 0) {'
+                print r'        d3d10Dumper.unbindDevice(_this);'
+                print r'    }'
             else:
                 print r'    d3d10Dumper.bindDevice(_this);'
         if interface.name in ('ID3D11DeviceContext', 'ID3D11DeviceContext1'):
             if method.name == 'Release':
-                print r'    d3d11Dumper.unbindDevice(_this);'
+                print r'    if (call.ret->toUInt() == 0) {'
+                print r'        d3d11Dumper.unbindDevice(_this);'
+                print r'    }'
             else:
                 print r'    if (_this->GetType() == D3D11_DEVICE_CONTEXT_IMMEDIATE) {'
                 print r'        d3d11Dumper.bindDevice(_this);'
