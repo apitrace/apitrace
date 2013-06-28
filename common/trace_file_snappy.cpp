@@ -397,7 +397,7 @@ bool SnappyFile::rawSkip(size_t length)
 
 int SnappyFile::rawPercentRead()
 {
-    return 100 * (double(m_stream.tellg()) / double(m_endPos));
+    return int(100 * (double(m_stream.tellg()) / double(m_endPos)));
 }
 
 

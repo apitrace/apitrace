@@ -42,7 +42,7 @@ String
 getProcessName(void)
 {
     String path;
-    size_t size = MAX_PATH;
+    DWORD size = MAX_PATH;
     char *buf = path.buf(size);
 
     DWORD nWritten = GetModuleFileNameA(NULL, buf, size);
@@ -57,7 +57,7 @@ String
 getCurrentDir(void)
 {
     String path;
-    size_t size = MAX_PATH;
+    DWORD size = MAX_PATH;
     char *buf = path.buf(size);
     
     DWORD ret = GetCurrentDirectoryA(size, buf);
@@ -72,7 +72,7 @@ getCurrentDir(void)
 bool
 createDirectory(const String &path)
 {
-    return CreateDirectoryA(path, NULL);
+    return CreateDirectoryA(path, NULL) ? true : false;
 }
 
 bool
@@ -85,13 +85,13 @@ String::exists(void) const
 bool
 copyFile(const String &srcFileName, const String &dstFileName, bool override)
 {
-    return CopyFileA(srcFileName, dstFileName, !override);
+    return CopyFileA(srcFileName, dstFileName, override ? 0 : 1) ? true : false;
 }
 
 bool
 removeFile(const String &srcFilename)
 {
-    return DeleteFileA(srcFilename);
+    return DeleteFileA(srcFilename) ? true : false;
 }
 
 /**
