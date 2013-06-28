@@ -114,20 +114,31 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
 
         Retracer.invokeFunction(self, function)
 
+        # Debug layers with Windows 8 or Windows 7 Platform update are a mess.
+        # It's not possible to know before hand whether they are or not
+        # available, so always retry with debug flag off..
         if function.name in self.createDeviceFunctionNames:
             print r'    if (FAILED(_result)) {'
 
             if function.name.startswith('D3D10CreateDevice'):
                 print r'        if (_result == E_FAIL && (Flags & D3D10_CREATE_DEVICE_DEBUG)) {'
                 print r'            retrace::warning(call) << "debug layer (d3d10sdklayers.dll) not installed\n";'
+                print r'            Flags &= ~D3D10_CREATE_DEVICE_DEBUG;'
+                Retracer.invokeFunction(self, function)
                 print r'        }'
-
-            if function.name.startswith('D3D11CreateDevice'):
+            elif function.name.startswith('D3D11CreateDevice'):
                 print r'        if (_result == E_FAIL && (Flags & D3D11_CREATE_DEVICE_DEBUG)) {'
                 print r'            retrace::warning(call) << "debug layer (d3d11sdklayers.dll for Windows 7, d3d11_1sdklayers.dll for Windows 8 or Windows 7 with KB 2670838) not properly installed\n";'
+                print r'            Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
+                Retracer.invokeFunction(self, function)
                 print r'        }'
+            else:
+                assert False
 
-            print r'        exit(1);'
+            print r'        if (FAILED(_result)) {'
+            print r'            exit(1);'
+            print r'        }'
+
             print r'    }'
 
     def forceDriver(self, enum):
