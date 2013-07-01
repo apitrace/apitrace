@@ -7,10 +7,15 @@
 # This may work in other than FirefoxOS environments, but has not been tested.
 #
 
+NDK := prebuilt/ndk/android-ndk-r7
+
 ifeq ($(shell which cmake),)
 $(shell echo "CMake not found, will not compile apitrace" >&2)
 else # cmake
-$(shell echo "CMake found, will compile apitrace" >&2)
+ifeq ($(wildcard $(NDK)),)
+$(shell echo "CMake present but NDK not found at $(abspath $(NDK)), will not compile apitrace" >&2)
+else # NDK
+$(shell echo "CMake and NDK ($(abspath $(NDK))) found, will compile apitrace" >&2)
 
 LOCAL_PATH := $(call my-dir)
 
@@ -49,7 +54,7 @@ apitrace_private_target:
 		cd $(MY_APITRACE_ROOT) && \
 		cmake \
 		-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
-		-DANDROID_NDK=../../prebuilt/ndk/android-ndk-r7 \
+		-DANDROID_NDK=../../$(NDK) \
 		-DANDROID_NDK_LAYOUT=LINARO \
 		-DANDROID_TOOLCHAIN_NAME=arm-linux-androideabi-4.4.x \
 		-DANDROID_API_LEVEL=9 \
@@ -84,4 +89,5 @@ $(linked_module): apitrace_private_target
 	$(hide) mkdir -p $(dir $@)
 	$(hide) cp $(MY_APITRACE_BUILD_ROOT_TARGET)/apitrace$(TARGET_EXECUTABLE_SUFFIX) $@
 
+endif # NDK
 endif # cmake
