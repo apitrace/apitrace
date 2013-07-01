@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
 
+include(CheckIncludeFiles)
 
 # Use clang on MacOSX. gcc doesn't support __thread key, and Apple has
 # abandoned it for clang.  This must be done before the project is defined.
@@ -61,7 +62,9 @@ else ()
 endif ()
 
 find_host_package (PythonInterp REQUIRED)
-find_package (Threads)
+if (NOT ANDROID)
+    find_package (Threads)
+endif ()
 
 if (ENABLE_GUI)
     if (NOT (ENABLE_GUI STREQUAL "AUTO"))
