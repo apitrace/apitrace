@@ -42,7 +42,7 @@ String
 getProcessName(void)
 {
     String path;
-    size_t size = MAX_PATH;
+    DWORD size = MAX_PATH;
     char *buf = path.buf(size);
 
     DWORD nWritten = GetModuleFileNameA(NULL, buf, size);
@@ -57,7 +57,7 @@ String
 getCurrentDir(void)
 {
     String path;
-    size_t size = MAX_PATH;
+    DWORD size = MAX_PATH;
     char *buf = path.buf(size);
     
     DWORD ret = GetCurrentDirectoryA(size, buf);
