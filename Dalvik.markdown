@@ -36,12 +36,10 @@ use `-S` flag to `am start`:
     adb shell am start -S $PROCNAME
 
 Use `adb logcat \*:S apitrace` to examine apitrace debug output.  Trace files
-are saved into '/data/' directory by default:
+are saved into '/data/data/$PROCNAME' directory by default:
 
-    adb pull /data/$PROCNAME.trace
-    adb shell rm /data/$PROCNAME.trace
-
-(you need to `chmod 0777 /data` beforehand).
+    adb pull /data/data/$PROCNAME/$PROCNAME.trace
+    adb shell rm /data/data/$PROCNAME/$PROCNAME.trace
 
 
 Injecting tracing library globally

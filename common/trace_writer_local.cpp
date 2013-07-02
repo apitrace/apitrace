@@ -94,7 +94,8 @@ LocalWriter::open(void) {
         process.trimDirectory();
 
 #ifdef ANDROID
-	os::String prefix = "/data";
+	os::String prefix = "/data/data";
+	prefix.join(process);
 #else
 	os::String prefix = os::getCurrentDir();
 #endif
