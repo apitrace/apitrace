@@ -49,30 +49,18 @@ namespace trace {
 static bool
 isZygoteProcess(void)
 {
-    os::String proc_name;
-
-    proc_name = os::getProcessName();
-    proc_name.trimDirectory();
-
-    return strcmp(proc_name, "app_process") == 0;
-}
-
-static os::String
-getZygoteProcessName(void)
-{
     os::String path;
     size_t size = PATH_MAX;
     char *buf = path.buf(size);
     ssize_t len;
 
-    int fd = open("/proc/self/cmdline", O_RDONLY);
+    len = readlink("/proc/self/exe", buf, size - 1);
 
-    assert(fd >= 0);
-    len = read(fd, buf, size - 1);
-    close(fd);
-    path.truncate();
+    if (len <= 0)
+        return false;
+    path.truncate(len);
 
-    return path;
+    return strcmp(path, "/system/bin/app_process") == 0;
 }
 
 bool
@@ -97,7 +85,7 @@ isTracingEnabled(void)
     char target_proc_name[PROP_VALUE_MAX] = "";
     os::String proc_name;
 
-    proc_name = getZygoteProcessName();
+    proc_name = os::getProcessName();
 
     __system_property_get("debug.apitrace.procname", target_proc_name);
     enabled = !strcmp(target_proc_name, proc_name);

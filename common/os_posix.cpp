@@ -80,7 +80,16 @@ getProcessName(void)
     len = strlen(buf);
 #else
     ssize_t len;
+
+#ifdef ANDROID
+    // On Android, we are almost always interested in the actual process title
+    // rather than path to the VM kick-off executable
+    // (/system/bin/app_process).
+    len = 0;
+#else
     len = readlink("/proc/self/exe", buf, size - 1);
+#endif
+
     if (len <= 0) {
         // /proc/self/exe is not available on setuid processes, so fallback to
         // /proc/self/cmdline.
