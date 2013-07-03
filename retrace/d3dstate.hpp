@@ -88,6 +88,9 @@ image::Image *
 getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
 
 void
+dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
+
+void
 dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
 
 void

@@ -79,10 +79,7 @@ dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext)
 
     dumpShaders(json, pDeviceContext);
 
-    json.beginMember("textures");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // textures
+    dumpTextures(json, pDeviceContext);
 
     dumpFramebuffer(json, pDeviceContext);
 }
