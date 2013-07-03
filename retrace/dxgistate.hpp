@@ -34,6 +34,11 @@
 #include <dxgi.h>
 
 
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(_x) (sizeof(_x)/sizeof((_x)[0]))
+#endif
+
+
 namespace image {
     class Image;
 }

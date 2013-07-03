@@ -75,6 +75,9 @@ image::Image *
 getRenderTargetImage(ID3D10Device *pDevice);
 
 void
+dumpTextures(JSONWriter &json, ID3D10Device *pDevice);
+
+void
 dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
 
 void
