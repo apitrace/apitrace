@@ -105,12 +105,12 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
 
 bool ZLibFile::rawWrite(const void *buffer, size_t length)
 {
-    return gzwrite(m_gzFile, buffer, length) != -1;
+    return gzwrite(m_gzFile, buffer, unsigned(length)) != -1;
 }
 
 size_t ZLibFile::rawRead(void *buffer, size_t length)
 {
-    int ret = gzread(m_gzFile, buffer, length);
+    int ret = gzread(m_gzFile, buffer, unsigned(length));
     return ret < 0 ? 0 : ret;
 }
 
@@ -150,7 +150,7 @@ bool ZLibFile::rawSkip(size_t)
 int ZLibFile::rawPercentRead()
 {
     gz_state *state = (gz_state *)m_gzFile;
-    return 100 * (lseek(state->fd, 0, SEEK_CUR) / m_endOffset);
+    return int(100 * (lseek(state->fd, 0, SEEK_CUR) / m_endOffset));
 }
 
 
