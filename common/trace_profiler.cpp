@@ -232,7 +232,7 @@ void Profiler::parseLine(const char* in, Profile* profile)
         }
     } else if (type.compare("frame_end") == 0) {
         Profile::Frame frame;
-        frame.no = profile->frames.size();
+        frame.no = unsigned(profile->frames.size());
 
         if (frame.no == 0) {
             frame.gpuStart = 0;

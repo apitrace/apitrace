@@ -25,7 +25,7 @@ void Loader::setFrameMarker(Loader::FrameMarker marker)
 
 unsigned Loader::numberOfFrames() const
 {
-    return m_frameBookmarks.size();
+    return unsigned(m_frameBookmarks.size());
 }
 
 unsigned Loader::numberOfCallsInFrame(unsigned frameIdx) const
