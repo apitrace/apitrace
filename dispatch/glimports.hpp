@@ -89,8 +89,22 @@ typedef struct _WGLSWAP
 #elif defined(__APPLE__)
 
 #include <OpenGL/OpenGL.h>
+
+#include <AvailabilityMacros.h>
+
+#ifndef MAC_OS_X_VERSION_10_6
+#define MAC_OS_X_VERSION_10_6 1060
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_6
 #include <OpenGL/CGLIOSurface.h>
 #include <OpenGL/CGLDevice.h>
+#else
+#define kCGLPFAAcceleratedCompute 97
+#define kCGLRPAcceleratedCompute 130
+typedef void *CGLShareGroupObj;
+typedef struct __IOSurface *IOSurfaceRef;
+#endif
 
 #ifndef CGL_VERSION_1_3
 #define kCGLPFAOpenGLProfile 99
