@@ -206,6 +206,13 @@ GLXbuffer = Flags(Int, [
     "GLX_PBUFFER_CLOBBER_MASK",
 ])
 
+GLXContextAttribs = AttribArray(GLXEnum, [
+    ('GLX_CONTEXT_MAJOR_VERSION_ARB', Int),
+    ('GLX_CONTEXT_MINOR_VERSION_ARB', Int),
+    ('GLX_CONTEXT_FLAGS_ARB', Flags(Int, ["GLX_CONTEXT_DEBUG_BIT_ARB", "GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB"])),
+    ('GLX_CONTEXT_PROFILE_MASK_ARB', Flags(Int, ["GLX_CONTEXT_CORE_PROFILE_BIT_ARB", "GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB"]))
+])
+
 glxapi = Module("GLX")
 
 PROC = Opaque("__GLXextFuncPtr")
@@ -273,7 +280,9 @@ glxapi.addFunctions([
                                            Out(Pointer(ULong), "mask")]),
 
     # GLX_ARB_create_context
-    Function(GLXContext, "glXCreateContextAttribsARB", [(Display, "dpy"), (GLXFBConfig, "config"), (GLXContext, "share_context"), (Bool, "direct"), (Array(Const(GLXEnum), "_AttribPairList_size(attrib_list)"), "attrib_list")]),
+    Function(GLXContext, "glXCreateContextAttribsARB", [(Display, "dpy"), (GLXFBConfig, "config"),
+                                                        (GLXContext, "share_context"), (Bool, "direct"),
+                                                        (GLXContextAttribs,  "attrib_list")]),
 
     # GLX_SGI_swap_control
     Function(Int, "glXSwapIntervalSGI", [(Int, "interval")]),
