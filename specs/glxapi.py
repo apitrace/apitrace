@@ -48,6 +48,8 @@ GLXWindow = Alias("GLXWindow", UInt32)
 GLXPbuffer = Alias("GLXPbuffer", UInt32)
 GLXPbufferSGIX = Alias("GLXPbufferSGIX", UInt32)
 GLXVideoSourceSGIX = Alias("GLXVideoSourceSGIX", UInt32)
+GLXVideoDeviceNV = Alias("GLXVideoDeviceNV", UInt32)
+GLXVideoCaptureDeviceNV = Alias("GLXVideoCaptureDeviceNV", UInt32)
 
 XVisualInfo = Struct("XVisualInfo", [
   (Visual, "visual"),
@@ -376,16 +378,16 @@ glxapi.addFunctions([
     Function(Void, "glXReleaseTexImageEXT", [(Display, "display"), (GLXDrawable, "drawable"), (GLXEnum, "buffer")]),
 
     # GLX_NV_present_video
-    #Function(OpaquePointer(UInt), "glXEnumerateVideoDevicesNV", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(Int), "nelements")]),
-    #Function(Int, "glXBindVideoDeviceNV", [(Display, "dpy"), (UInt, "video_slot"), (UInt, "video_device"), (Array(Const(Int), "_AttribPairList_size(attrib_list)"), "attrib_list")]),
+    Function(Array(UInt, "(nelements ? *nelements : 0)"), "glXEnumerateVideoDevicesNV", [(Display, "dpy"), (Int, "screen"), Out(Pointer(Int), "nelements")]),
+    Function(Int, "glXBindVideoDeviceNV", [(Display, "dpy"), (UInt, "video_slot"), (UInt, "video_device"), (Array(Const(Int), "_AttribPairList_size(attrib_list)"), "attrib_list")]),
 
     # GLX_NV_video_output
-    #Function(Int, "glXGetVideoDeviceNV", [(Display, "dpy"), (Int, "screen"), (Int, "numVideoDevices"), (OpaquePointer(GLXVideoDeviceNV), "pVideoDevice")]),
-    #Function(Int, "glXReleaseVideoDeviceNV", [(Display, "dpy"), (Int, "screen"), (GLXVideoDeviceNV, "VideoDevice")]),
-    #Function(Int, "glXBindVideoImageNV", [(Display, "dpy"), (GLXVideoDeviceNV, "VideoDevice"), (GLXPbuffer, "pbuf"), (Int, "iVideoBuffer")]),
-    #Function(Int, "glXReleaseVideoImageNV", [(Display, "dpy"), (GLXPbuffer, "pbuf")]),
-    #Function(Int, "glXSendPbufferToVideoNV", [(Display, "dpy"), (GLXPbuffer, "pbuf"), (Int, "iBufferType"), (OpaquePointer(ULong), "pulCounterPbuffer"), (GLboolean, "bBlock")]),
-    #Function(Int, "glXGetVideoInfoNV", [(Display, "dpy"), (Int, "screen"), (GLXVideoDeviceNV, "VideoDevice"), (OpaquePointer(ULong), "pulCounterOutputPbuffer"), (OpaquePointer(ULong), "pulCounterOutputVideo")]),
+    Function(Int, "glXGetVideoDeviceNV", [(Display, "dpy"), (Int, "screen"), (Int, "numVideoDevices"), Out(Array(GLXVideoDeviceNV, "numVideoDevices"), "pVideoDevice")]),
+    Function(Int, "glXReleaseVideoDeviceNV", [(Display, "dpy"), (Int, "screen"), (GLXVideoDeviceNV, "VideoDevice")]),
+    Function(Int, "glXBindVideoImageNV", [(Display, "dpy"), (GLXVideoDeviceNV, "VideoDevice"), (GLXPbuffer, "pbuf"), (Int, "iVideoBuffer")]),
+    Function(Int, "glXReleaseVideoImageNV", [(Display, "dpy"), (GLXPbuffer, "pbuf")]),
+    Function(Int, "glXSendPbufferToVideoNV", [(Display, "dpy"), (GLXPbuffer, "pbuf"), (Int, "iBufferType"), Out(Pointer(ULong), "pulCounterPbuffer"), (GLboolean, "bBlock")]),
+    Function(Int, "glXGetVideoInfoNV", [(Display, "dpy"), (Int, "screen"), (GLXVideoDeviceNV, "VideoDevice"), Out(Pointer(ULong), "pulCounterOutputPbuffer"), Out(Pointer(ULong), "pulCounterOutputVideo")], sideeffects=False),
 
     # GLX_NV_swap_group
     Function(Bool, "glXJoinSwapGroupNV", [(Display, "dpy"), (GLXDrawable, "drawable"), (GLuint, "group")]),
@@ -396,11 +398,11 @@ glxapi.addFunctions([
     Function(Bool, "glXResetFrameCountNV", [(Display, "dpy"), (Int, "screen")]),
 
     # GLX_NV_video_capture
-    #Function(Int, "glXBindVideoCaptureDeviceNV", [(Display, "dpy"), (UInt, "video_capture_slot"), (GLXVideoCaptureDeviceNV, "device")]),
-    #Function(OpaquePointer(GLXVideoCaptureDeviceNV), "glXEnumerateVideoCaptureDevicesNV", [(Display, "dpy"), (Int, "screen"), (OpaquePointer(Int), "nelements")]),
-    #Function(Void, "glXLockVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device")]),
-    #Function(Int, "glXQueryVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device"), (Int, "attribute"), (OpaquePointer(Int), "value")]),
-    #Function(Void, "glXReleaseVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device")]),
+    Function(Int, "glXBindVideoCaptureDeviceNV", [(Display, "dpy"), (UInt, "video_capture_slot"), (GLXVideoCaptureDeviceNV, "device")]),
+    Function(Array(GLXVideoCaptureDeviceNV, "(nelements ? *nelements : 0)"), "glXEnumerateVideoCaptureDevicesNV", [(Display, "dpy"), (Int, "screen"), Out(Pointer(Int), "nelements")]),
+    Function(Void, "glXLockVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device")]),
+    Function(Int, "glXQueryVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device"), (Int, "attribute"), Out(Pointer(Int), "value")], sideeffects=False),
+    Function(Void, "glXReleaseVideoCaptureDeviceNV", [(Display, "dpy"), (GLXVideoCaptureDeviceNV, "device")]),
 
     # GLX_EXT_swap_control
     Function(Void, "glXSwapIntervalEXT", [(Display, "dpy"), (GLXDrawable, "drawable"), (Int, "interval")]),
