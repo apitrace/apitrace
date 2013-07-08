@@ -9,6 +9,7 @@
 #include <QItemEditorFactory>
 #include <QStandardItemModel>
 #include <QSpinBox>
+#include <QTextEdit>
 
 #include <limits.h>
 #include <float.h>
@@ -123,6 +124,16 @@ public:
         this->setMinimum(-DBL_MAX);
         this->setMaximum(DBL_MAX);
         this->setDecimals(8);
+    };
+};
+
+class StringEditorCreator : public QTextEdit
+{
+    Q_OBJECT
+    Q_PROPERTY(QString plainText READ toPlainText WRITE setPlainText USER true)
+public:
+    StringEditorCreator(QWidget *widget = 0) : QTextEdit(widget)
+    {
     };
 };
 

@@ -30,6 +30,7 @@ isVariantEditable(const QVariant &var)
     case QVariant::ULongLong:
     case QMetaType::Float:
     case QVariant::Double:
+    case QVariant::String:
         return true;
     default:
         return false;
@@ -71,6 +72,8 @@ void setArgumentsItemEditorFactory ()
     new QStandardItemEditorCreator<FloatEditorCreator>();
     QItemEditorCreatorBase *doubleEditorCreator =
     new QStandardItemEditorCreator<DoubleEditorCreator>();
+    QItemEditorCreatorBase *stringEditorCreator =
+    new QStandardItemEditorCreator<StringEditorCreator>();
     QItemEditorCreatorBase *invalidEditorCreator =
     new QStandardItemEditorCreator<InvalidEditorCreator>();
 
@@ -87,6 +90,7 @@ void setArgumentsItemEditorFactory ()
     factory->registerEditor(QVariant::Pixmap, pixmapEditorCreator);
     factory->registerEditor(typeFloat, floatEditorCreator);
     factory->registerEditor(QVariant::Double, doubleEditorCreator);
+    factory->registerEditor(QVariant::String, stringEditorCreator);
     factory->registerEditor(QVariant::Invalid, invalidEditorCreator);
 
     QItemEditorFactory::setDefaultFactory(factory);
