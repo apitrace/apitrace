@@ -65,6 +65,8 @@ bool Parser::open(const char *filename) {
     version = read_uint();
     if (version > TRACE_VERSION) {
         std::cerr << "error: unsupported trace format version " << version << "\n";
+        delete file;
+        file = NULL;
         return false;
     }
     api = API_UNKNOWN;
