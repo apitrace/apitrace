@@ -272,8 +272,11 @@ class Array(Type):
 
 class AttribArray(Type):
 
-    def __init__(self, keyType, valueTypes):
-        Type.__init__(self, (Pointer(Const(Int))).expr)
+    def __init__(self, keyType, valueTypes, isConst = True):
+        if isConst:
+            Type.__init__(self, (Pointer(Const(Int))).expr)
+        else:
+            Type.__init__(self, (Pointer(Int)).expr)
         self.type = (Pointer(Const(Int))) # for function prototypes and such
         self.keyType = keyType
         self.valueTypes = valueTypes
