@@ -270,6 +270,21 @@ class Array(Type):
         return visitor.visitArray(self, *args, **kwargs)
 
 
+class AttribArray(Type):
+
+    def __init__(self, keyType, valueTypes, isConst = True):
+        if isConst:
+            Type.__init__(self, (Pointer(Const(Int))).expr)
+        else:
+            Type.__init__(self, (Pointer(Int)).expr)
+        self.type = (Pointer(Const(Int))) # for function prototypes and such
+        self.keyType = keyType
+        self.valueTypes = valueTypes
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitAttribArray(self, *args, **kwargs)
+
+
 class Blob(Type):
 
     def __init__(self, type, size):
@@ -572,6 +587,9 @@ class Visitor:
     def visitArray(self, array, *args, **kwargs):
         raise NotImplementedError
 
+    def visitAttribArray(self, array, *args, **kwargs):
+        raise NotImplementedError
+
     def visitBlob(self, blob, *args, **kwargs):
         raise NotImplementedError
 
@@ -775,6 +793,10 @@ class Traverser(Visitor):
 
     def visitArray(self, array, *args, **kwargs):
         self.visit(array.type, *args, **kwargs)
+
+    def visitAttribArray(self, attribs, *args, **kwargs):
+        for key, valueType in attribs.valueTypes:
+            self.visit(valueType, *args, **kwargs)
 
     def visitBlob(self, array, *args, **kwargs):
         pass

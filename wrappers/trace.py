@@ -83,6 +83,9 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitArray(self, array):
         self.visit(array.type)
 
+    def visitAttribArray(self, array):
+        pass
+
     def visitBlob(self, array):
         pass
 
@@ -202,6 +205,57 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    } else {'
         print '        trace::localWriter.writeNull();'
         print '    }'
+
+    def visitAttribArray(self, array, instance):
+        # iterate element by element and for each, decide if it is a key or value (which depends on the
+        # previous key). If it is a value, look up what it means and store it as the right type - usually
+        # int, some bitfield, or some enum.
+
+        # determine the array length, which is unfortunately needed by writeArray() up front
+        count = '_c' + array.keyType.tag
+        print '    int %s;' % count
+        print '    for (%(c)s = 0; %(array)s && %(array)s[%(c)s]; %(c)s++) {' % {'c': count, 'array': instance}
+        print '        switch (%(array)s[%(c)s]) {' % {'array': instance, 'c': count}
+        for key, valueType in array.valueTypes:
+            if valueType is not None:
+                print '        case %s:' % key
+        print '            %s++;' % count # only a null key marks the end; skip null values
+        print '            break;'
+        print '        }'
+        print '    }'
+        # ### not handling null attrib_list differently from empty
+        print '    trace::localWriter.beginArray(%s);' % count
+
+        # for each key / key-value pair write the key and the value, if the key requires one
+
+        index = '_i' + array.keyType.tag
+        print '    for (int %(i)s = 0; %(i)s < %(count)s; %(i)s++) {' % {'i': index, 'count': count}
+        self.visitEnum(array.keyType, "%(array)s[%(i)s]" % {'array': instance, 'i': index})
+        print '        switch (%(array)s[%(i)s]) {' % {'array': instance, 'i': index}
+        # write generic value the usual way
+        for key, valueType in array.valueTypes:
+            if valueType is not None:
+                print '        case %s:' % key
+                print '            %s++;' % index
+                print '            trace::localWriter.beginElement();'
+                self.visitElement(index, valueType, '(%(array)s)[%(i)s]' % {'array': instance, 'i': index})
+                print '            trace::localWriter.endElement();'
+                print '            break;'
+        # unknown key, write an int value
+        print '        default:'
+        print '            %s++;' % index
+        print '            trace::localWriter.beginElement();'
+        print '            trace::localWriter.writeSInt(%(array)s[%(i)s]);'  % {'array': instance, 'i': index}
+        print '            trace::localWriter.endElement();'
+        # known key with no value, do nothing
+        for key, valueType in array.valueTypes:
+            if valueType is None:
+                print '        case %s:' % key
+        print '            break;'
+        print '        }'
+        print '    }'
+        print '    trace::localWriter.endArray();'
+
 
     def visitBlob(self, blob, instance):
         print '    trace::localWriter.writeBlob(%s, %s);' % (instance, self.expand(blob.size))
