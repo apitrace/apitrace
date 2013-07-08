@@ -112,7 +112,7 @@ bool backtrace_is_needed(const char* fname) {
 
 } /* namespace trace */
 
-#ifdef ANDROID
+#if defined(ANDROID)
 
 #include <dlfcn.h>
 #include "os.hpp"
@@ -270,7 +270,7 @@ std::vector<RawStackFrame> get_backtrace() {
 }
 
 /* end ANDROID */
-#elif defined __linux__
+#elif defined(__ELF__)
 
 #include <stdint.h>
 #include <dlfcn.h>
@@ -278,7 +278,7 @@ std::vector<RawStackFrame> get_backtrace() {
 #include <vector>
 #include <cxxabi.h>
 
-#include "backtrace.h"
+#include <backtrace.h>
 
 namespace trace {
 
