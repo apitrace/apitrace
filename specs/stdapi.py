@@ -272,7 +272,7 @@ class Array(Type):
 
 class AttribArray(Type):
 
-    def __init__(self, keyType, valueTypes, isConst = True):
+    def __init__(self, keyType, valueTypes, isConst = True, terminator = '0'):
         if isConst:
             Type.__init__(self, (Pointer(Const(Int))).expr)
         else:
@@ -280,6 +280,11 @@ class AttribArray(Type):
         self.type = (Pointer(Const(Int))) # for function prototypes and such
         self.keyType = keyType
         self.valueTypes = valueTypes
+        self.terminator = terminator
+        self.hasKeysWithoutValues = False
+        for key, value in valueTypes:
+            if value is None:
+                self.hasKeysWithoutValues = True
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitAttribArray(self, *args, **kwargs)
@@ -796,7 +801,8 @@ class Traverser(Visitor):
 
     def visitAttribArray(self, attribs, *args, **kwargs):
         for key, valueType in attribs.valueTypes:
-            self.visit(valueType, *args, **kwargs)
+            if valueType is not None:
+                self.visit(valueType, *args, **kwargs)
 
     def visitBlob(self, array, *args, **kwargs):
         pass
