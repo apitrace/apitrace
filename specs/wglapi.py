@@ -138,6 +138,14 @@ WGLSWAP = Struct("WGLSWAP", [
     (UINT, "uiFlags"),
 ])
 
+WGLContextAttribs = AttribArray(WGLenum, [
+    ('WGL_CONTEXT_MAJOR_VERSION_ARB', Int),
+    ('WGL_CONTEXT_MINOR_VERSION_ARB', Int),
+    ('WGL_CONTEXT_LAYER_PLANE_ARB', Int),
+    ('WGL_CONTEXT_FLAGS_ARB', Flags(Int, ["WGL_CONTEXT_DEBUG_BIT_ARB", "WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB"])),
+    ('WGL_CONTEXT_PROFILE_MASK_ARB', Flags(Int, ["WGL_CONTEXT_CORE_PROFILE_BIT_ARB", "WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB"]))
+])
+
 HPBUFFERARB = Alias("HPBUFFERARB", HANDLE)
 
 
@@ -199,7 +207,7 @@ wglapi.addFunctions([
     StdFunction(BOOL, "wglSetPbufferAttribARB", [(HPBUFFERARB, "hPbuffer"), (Array(Const(WGLenum), "_AttribPairList_size(piAttribList)"), "piAttribList")]),
 
     # WGL_ARB_create_context
-    StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (Array(Const(WGLenum), "_AttribPairList_size(attribList)"), "attribList")]),
+    StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (WGLContextAttribs, "attribList")]),
 
     # WGL_EXT_extensions_string
     StdFunction(ConstCString, "wglGetExtensionsStringEXT", [], sideeffects=False),
