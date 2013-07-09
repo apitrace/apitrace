@@ -76,8 +76,6 @@ EGLuint64NV = Alias("EGLuint64NV", UInt64)
 
 eglapi = Module("EGL")
 
-EGLAttribList = Array(Const(EGLattrib), "_AttribPairList_size(attrib_list, EGL_NONE)")
-
 EGLSurfaceFlags = Flags(Int, [
     'EGL_MULTISAMPLE_RESOLVE_BOX_BIT',
     'EGL_PBUFFER_BIT',
@@ -126,18 +124,20 @@ EGLVGColorspace = FakeEnum(Int, ['EGL_VG_COLORSPACE_sRGB', 'EGL_VG_COLORSPACE_LI
 EGLTextureFormat = FakeEnum(Int, ['EGL_NO_TEXTURE', 'EGL_TEXTURE_RGB', 'EGL_TEXTURE_RGBA'])
 EGLTextureTarget = FakeEnum(Int, ['EGL_TEXTURE_2D', 'EGL_NO_TEXTURE' ])
 
-EGLWindowsSurfaceAttribs = AttribArray(EGLenum, [
+def EGLAttribArray(values):
+    return AttribArray(EGLenum, values, terminator = 'EGL_NONE')
+
+EGLWindowsSurfaceAttribs = EGLAttribArray([
     ('EGL_RENDER_BUFFER', FakeEnum(Int, ['EGL_SINGLE_BUFFER', 'EGL_BACK_BUFFER'])),
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
-    ('EGL_VG_COLORSPACE', EGLVGColorspace)
-])
+    ('EGL_VG_COLORSPACE', EGLVGColorspace)])
 
-EGLPixmapSurfaceAttribs = AttribArray(EGLenum, [
+EGLPixmapSurfaceAttribs = EGLAttribArray([
     ('EGL_VG_ALPHA_FORMAT', EGLVGAlphaFormat),
     ('EGL_VG_COLORSPACE', EGLVGColorspace)
 ])
 
-EGLPbufferAttribs = AttribArray(EGLenum, [
+EGLPbufferAttribs = EGLAttribArray([
     ('EGL_HEIGHT', Int),
     ('EGL_LARGEST_PBUFFER', EGLBoolean),
     ('EGL_MIPMAP_TEXTURE', UInt),
@@ -148,15 +148,24 @@ EGLPbufferAttribs = AttribArray(EGLenum, [
     ('EGL_WIDTH', Int)
 ])
 
-EGLPbufferFromClientBufferAttribs = AttribArray(EGLenum, [
+EGLPbufferFromClientBufferAttribs = EGLAttribArray([
     ('EGL_MIPMAP_TEXTURE', EGLBoolean),
     ('EGL_TEXTURE_FORMAT', EGLTextureFormat),
     ('EGL_TEXTURE_TARGET', EGLTextureTarget)
 ])
 
-EGLDrmImageMesaAttribs = AttribArray(EGLenum, [
+EGLDrmImageMesaAttribs = EGLAttribArray([
     ('EGL_DRM_BUFFER_FORMAT_MESA', FakeEnum(Int, ['EGL_DRM_BUFFER_FORMAT_ARGB32_MESA'])),
     ('EGL_DRM_BUFFER_USE_MESA', Flags(Int, ['EGL_DRM_BUFFER_USE_SCANOUT_MESA', 'EGL_DRM_BUFFER_USE_SHARE_MESA']))
+])
+
+EGLLockSurfaceKHRAttribs = EGLAttribArray([
+    ('EGL_MAP_PRESERVE_PIXELS_KHR', EGLBoolean),
+    ('EGL_LOCK_USAGE_HINT_KHR', Flags(Int, ['EGL_READ_SURFACE_BIT_KHR', 'EGL_WRITE_SURFACE_BIT_KHR']))
+])
+
+EGLFenceSyncNVAttribs = EGLAttribArray([
+    ('EGL_SYNC_STATUS_NV', Flags(Int, ['EGL_SIGNALED_NV', 'EGL_UNSIGNALED_NV']))
 ])
 
 EGLProc = Opaque("__eglMustCastToProperFunctionPointerType")
@@ -219,7 +228,7 @@ eglapi.addFunctions([
 
     # EGL_KHR_lock_surface
     # EGL_KHR_lock_surface2
-    Function(EGLBoolean, "eglLockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface"), (EGLAttribList, "attrib_list")]),
+    Function(EGLBoolean, "eglLockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface"), (EGLLockSurfaceKHRAttribs, "attrib_list")]),
     Function(EGLBoolean, "eglUnlockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface")]),
 
     # EGL_KHR_image_base
@@ -228,14 +237,14 @@ eglapi.addFunctions([
 
     # EGL_KHR_fence_sync
     # EGL_KHR_reusable_sync
-    Function(EGLSyncKHR, "eglCreateSyncKHR", [(EGLDisplay, "dpy"), (EGLenum, "type"), (EGLAttribList, "attrib_list")]),
+    Function(EGLSyncKHR, "eglCreateSyncKHR", [(EGLDisplay, "dpy"), (EGLenum, "type"), (EGLAttribArray([]), "attrib_list")]),
     Function(EGLBoolean, "eglDestroySyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync")]),
     Function(EGLint, "eglClientWaitSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLint, "flags"), (EGLTimeKHR, "timeout")]),
     Function(EGLBoolean, "eglSignalSyncKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLenum, "mode")]),
     Function(EGLBoolean, "eglGetSyncAttribKHR", [(EGLDisplay, "dpy"), (EGLSyncKHR, "sync"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 
     # EGL_NV_sync
-    Function(EGLSyncNV, "eglCreateFenceSyncNV", [(EGLDisplay, "dpy"), (EGLenum, "condition"), (EGLAttribList, "attrib_list")]),
+    Function(EGLSyncNV, "eglCreateFenceSyncNV", [(EGLDisplay, "dpy"), (EGLenum, "condition"), (EGLFenceSyncNVAttribs, "attrib_list")]),
     Function(EGLBoolean, "eglDestroySyncNV", [(EGLSyncNV, "sync")]),
     Function(EGLBoolean, "eglFenceNV", [(EGLSyncNV, "sync")]),
     Function(EGLint, "eglClientWaitSyncNV", [(EGLSyncNV, "sync"), (EGLint, "flags"), (EGLTimeNV, "timeout")]),
