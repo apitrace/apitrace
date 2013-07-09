@@ -261,7 +261,6 @@ getShaderResourceViewImage(ID3D10Device *pDevice,
         break;
     case D3D10_SRV_DIMENSION_TEXTURE2D:
         MipSlice = Desc.Texture2D.MostDetailedMip;
-        MipSlice = 0;
         break;
     case D3D10_SRV_DIMENSION_TEXTURE2DARRAY:
         MipSlice = Desc.Texture2DArray.MostDetailedMip;
@@ -367,7 +366,6 @@ getDepthStencilViewImage(ID3D10Device *pDevice,
         break;
     case D3D10_DSV_DIMENSION_TEXTURE2D:
         MipSlice = Desc.Texture2D.MipSlice;
-        MipSlice = 0;
         break;
     case D3D10_DSV_DIMENSION_TEXTURE2DARRAY:
         MipSlice = Desc.Texture2DArray.MipSlice;
