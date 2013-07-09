@@ -497,7 +497,9 @@ bool _ExpandScanline( LPVOID pDestination, size_t outSize, DXGI_FORMAT outFormat
 bool _LoadScanline( XMVECTOR* pDestination, size_t count,
                     LPCVOID pSource, size_t size, DXGI_FORMAT format )
 {
+#if !defined(_XM_NO_INTRINSICS_)
     assert( pDestination && count > 0 && (((uintptr_t)pDestination & 0xF) == 0) );
+#endif
     assert( pSource && size > 0 );
     assert( IsValid(format) && !IsVideo(format) && !IsTypeless(format) && !IsCompressed(format) );
 
@@ -977,7 +979,9 @@ bool _StoreScanline( LPVOID pDestination, size_t size, DXGI_FORMAT format,
                      const XMVECTOR* pSource, size_t count )
 {
     assert( pDestination && size > 0 );
+#if !defined(_XM_NO_INTRINSICS_)
     assert( pSource && count > 0 && (((uintptr_t)pSource & 0xF) == 0) );
+#endif
     assert( IsValid(format) && !IsVideo(format) && !IsTypeless(format) && !IsCompressed(format) );
 
     const XMVECTOR* __restrict sPtr = pSource;
@@ -1836,7 +1840,9 @@ DWORD _GetConvertFlags( DXGI_FORMAT format )
 
 void _ConvertScanline( XMVECTOR* pBuffer, size_t count, DXGI_FORMAT outFormat, DXGI_FORMAT inFormat, DWORD flags )
 {
+#if !defined(_XM_NO_INTRINSICS_)
     assert( pBuffer && count > 0 && (((uintptr_t)pBuffer & 0xF) == 0) );
+#endif
     assert( IsValid(outFormat) && !IsVideo(outFormat) && !IsTypeless(outFormat) );
     assert( IsValid(inFormat) && !IsVideo(inFormat) && !IsTypeless(inFormat) );
 
