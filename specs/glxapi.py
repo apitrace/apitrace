@@ -208,12 +208,7 @@ GLXbuffer = Flags(Int, [
 
 UnusedAttribs = AttribArray(GLXEnum, [])
 
-GLXFBConfigCommonAttribs = [
-    ('GLX_BUFFER_SIZE', UInt),
-    ('GLX_LEVEL', Int),
-    ('GLX_DOUBLEBUFFER', Bool),
-    ('GLX_STEREO', Bool),
-    ('GLX_AUX_BUFFERS', UInt),
+GLXCommonSizeAttribs = [
     ('GLX_RED_SIZE', UInt),
     ('GLX_GREEN_SIZE', UInt),
     ('GLX_BLUE_SIZE', UInt),
@@ -223,7 +218,26 @@ GLXFBConfigCommonAttribs = [
     ('GLX_ACCUM_RED_SIZE', UInt),
     ('GLX_ACCUM_GREEN_SIZE', UInt),
     ('GLX_ACCUM_BLUE_SIZE', UInt),
-    ('GLX_ACCUM_ALPHA_SIZE', UInt),
+    ('GLX_ACCUM_ALPHA_SIZE', UInt)
+]
+
+GLXVisualAttribs = AttribArray(GLXEnum, GLXCommonSizeAttribs + [
+    ('GLX_USE_GL', None),
+    ('GLX_BUFFER_SIZE', UInt),
+    ('GLX_LEVEL', Int),
+    ('GLX_RGBA', None),
+    ('GLX_DOUBLEBUFFER', None),
+    ('GLX_STEREO', None),
+    ('GLX_AUX_BUFFERS', UInt)],
+    isConst = False
+)
+
+GLXFBConfigCommonAttribs = GLXCommonSizeAttribs + [
+    ('GLX_BUFFER_SIZE', UInt),
+    ('GLX_LEVEL', Int),
+    ('GLX_DOUBLEBUFFER', Bool),
+    ('GLX_STEREO', Bool),
+    ('GLX_AUX_BUFFERS', UInt),
     ('GLX_RENDER_TYPE', Flags(Int, ["GLX_RGBA_BIT", "GLX_COLOR_INDEX_BIT"])),
     ('GLX_DRAWABLE_TYPE', Flags(Int, ["GLX_WINDOW_BIT", "GLX_PIXMAP_BIT", "GLX_PBUFFER_BIT"])),
     ('GLX_X_RENDERABLE', Bool),
@@ -235,7 +249,6 @@ GLXFBConfigCommonAttribs = [
     ('GLX_TRANSPARENT_GREEN_VALUE', Int),
     ('GLX_TRANSPARENT_BLUE_VALUE', Int),
     ('GLX_TRANSPARENT_ALPHA_VALUE', Int)
-
 ]
 
 GLXFBConfigGLXAttribs = GLXFBConfigCommonAttribs + [
@@ -277,7 +290,7 @@ PROC = Opaque("__GLXextFuncPtr")
 
 glxapi.addFunctions([
     # GLX
-    Function(Pointer(XVisualInfo), "glXChooseVisual", [(Display, "dpy"), (Int, "screen"), (Array(GLXEnum, "_AttribList_size(attribList)"), "attribList")]),
+    Function(Pointer(XVisualInfo), "glXChooseVisual", [(Display, "dpy"), (Int, "screen"), (GLXVisualAttribs, "attribList")]),
     Function(GLXContext, "glXCreateContext", [(Display, "dpy"), (Pointer(XVisualInfo), "vis"), (GLXContext, "shareList"), (Bool, "direct")]),
     Function(Void, "glXDestroyContext",  [(Display, "dpy"), (GLXContext, "ctx")]),
     Function(Bool, "glXMakeCurrent", [(Display, "dpy"), (GLXDrawable, "drawable"), (GLXContext, "ctx")]),
