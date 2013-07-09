@@ -26,6 +26,8 @@
 
 #include <assert.h>
 
+#include <iostream>
+
 #include "image.hpp"
 
 #include "dxgistate.hpp"
@@ -218,7 +220,12 @@ ConvertFormat(DXGI_FORMAT SrcFormat,
         DirectX::ScratchImage ScratchImage;
         ScratchImage.Initialize2D(DstFormat, Width, Height, 1, 1);
 
-        hr = DirectX::Convert(SrcImage, DstFormat, DirectX::TEX_FILTER_DEFAULT, 0.0f, ScratchImage);
+        if (DirectX::IsCompressed(SrcFormat)) {
+            hr = DirectX::Decompress(SrcImage, DstFormat, ScratchImage);
+        } else {
+            hr = DirectX::Convert(SrcImage, DstFormat, DirectX::TEX_FILTER_DEFAULT, 0.0f, ScratchImage);
+        }
+
         if (SUCCEEDED(hr)) {
             hr = CopyRectangle(*ScratchImage.GetImage(0, 0, 0), rect, DstImage, DirectX::TEX_FILTER_DEFAULT, 0, 0);
         }
@@ -255,6 +262,7 @@ ConvertImage(DXGI_FORMAT SrcFormat,
                        image->start(), image->stride(),
                        Width, Height);
     if (FAILED(hr)) {
+        std::cerr << "warning: failed to convert from format " << SrcFormat << " to format " << DstFormat << "\n";
         delete image;
         image = NULL;
     }
