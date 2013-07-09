@@ -20,6 +20,7 @@ add_executable (apitrace
     cli_pickle.cpp
     cli_repack.cpp
     cli_retrace.cpp
+    cli_sed.cpp
     cli_trace.cpp
     cli_trim.cpp
     cli_resources.cpp
