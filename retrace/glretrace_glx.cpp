@@ -133,7 +133,7 @@ static void retrace_glXCreateNewContext(trace::Call &call) {
 }
 
 static void retrace_glXCreatePbuffer(trace::Call &call) {
-    const trace::Value *attrib_list = dynamic_cast<const trace::Array *>(&call.arg(2));
+    const trace::Value *attrib_list = call.arg(2).toArray();
     int width = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_WIDTH, 0);
     int height = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_HEIGHT, 0);
 

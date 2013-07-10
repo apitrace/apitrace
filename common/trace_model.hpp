@@ -91,6 +91,9 @@ struct BitmaskSig {
 
 
 class Visitor;
+class Null;
+class Struct;
+class Array;
 
 
 class Value
@@ -110,6 +113,15 @@ public:
     virtual unsigned long long toUIntPtr(void) const;
     virtual const char *toString(void) const;
 
+    virtual const Null *toNull(void) const { return NULL; }
+    virtual Null *toNull(void) { return NULL; }
+
+    virtual const Array *toArray(void) const { return NULL; }
+    virtual Array *toArray(void) { return NULL; }
+
+    virtual const Struct *toStruct(void) const { return NULL; }
+    virtual Struct *toStruct(void) { return NULL; }
+
     const Value & operator[](size_t index) const;
 };
 
@@ -127,6 +139,9 @@ public:
     unsigned long long toUIntPtr(void) const;
     const char *toString(void) const;
     void visit(Visitor &visitor);
+
+    const Null *toNull(void) const { return this; }
+    Null *toNull(void) { return this; }
 };
 
 
@@ -266,6 +281,9 @@ public:
     bool toBool(void) const;
     void visit(Visitor &visitor);
 
+    const Struct *toStruct(void) const { return this; }
+    Struct *toStruct(void) { return this; }
+
     const StructSig *sig;
     std::vector<Value *> members;
 };
@@ -279,6 +297,9 @@ public:
 
     bool toBool(void) const;
     void visit(Visitor &visitor);
+
+    const Array *toArray(void) const { return this; }
+    Array *toArray(void) { return this; }
 
     std::vector<Value *> values;
 

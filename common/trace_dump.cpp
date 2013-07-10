@@ -178,7 +178,7 @@ public:
 
             if (!memberName || !*memberName) {
                 // Anonymous structure
-                Struct *memberStruct = dynamic_cast<Struct *>(memberValue);
+                Struct *memberStruct = memberValue->toStruct();
                 assert(memberStruct);
                 if (memberStruct) {
                     sep = visitMembers(memberStruct, sep);

@@ -129,7 +129,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         self.seq += 1
 
         print '    if (%s) {' % (lvalue,)
-        print '        const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
+        print '        const trace::Array *%s = %s.toArray();' % (tmp, rvalue)
         length = '%s->values.size()' % (tmp,)
         index = '_j' + array.tag
         print '        for (size_t {i} = 0; {i} < {length}; ++{i}) {{'.format(i = index, length = length)
@@ -144,7 +144,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         self.seq += 1
 
         print '    if (%s) {' % (lvalue,)
-        print '        const trace::Array *%s = dynamic_cast<const trace::Array *>(&%s);' % (tmp, rvalue)
+        print '        const trace::Array *%s = %s.toArray();' % (tmp, rvalue)
         try:
             self.visit(pointer.type, '%s[0]' % (lvalue,), '*%s->values[0]' % (tmp,))
         finally:
@@ -190,7 +190,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         tmp = '_s_' + struct.tag + '_' + str(self.seq)
         self.seq += 1
 
-        print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
+        print '    const trace::Struct *%s = %s.toStruct();' % (tmp, rvalue)
         print '    assert(%s);' % (tmp)
         for i in range(len(struct.members)):
             member = struct.members[i]
@@ -251,7 +251,7 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
         pass
 
     def visitArray(self, array, lvalue, rvalue):
-        print '    const trace::Array *_a%s = dynamic_cast<const trace::Array *>(&%s);' % (array.tag, rvalue)
+        print '    const trace::Array *_a%s = %s.toArray();' % (array.tag, rvalue)
         print '    if (_a%s) {' % (array.tag)
         length = '_a%s->values.size()' % array.tag
         index = '_j' + array.tag
@@ -263,7 +263,7 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
             print '    }'
     
     def visitPointer(self, pointer, lvalue, rvalue):
-        print '    const trace::Array *_a%s = dynamic_cast<const trace::Array *>(&%s);' % (pointer.tag, rvalue)
+        print '    const trace::Array *_a%s = %s.toArray();' % (pointer.tag, rvalue)
         print '    if (_a%s) {' % (pointer.tag)
         try:
             self.visit(pointer.type, '%s[0]' % (lvalue,), '*_a%s->values[0]' % (pointer.tag,))
@@ -325,7 +325,7 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
         tmp = '_s_' + struct.tag + '_' + str(self.seq)
         self.seq += 1
 
-        print '    const trace::Struct *%s = dynamic_cast<const trace::Struct *>(&%s);' % (tmp, rvalue)
+        print '    const trace::Struct *%s = %s.toStruct();' % (tmp, rvalue)
         print '    assert(%s);' % (tmp,)
         print '    (void)%s;' % (tmp,)
         for i in range(len(struct.members)):
