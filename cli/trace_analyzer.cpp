@@ -279,7 +279,7 @@ bool
 TraceAnalyzer::recordTextureSideEffects(trace::Call *call, const char *name)
 {
     if (strcmp(name, "glGenTextures") == 0) {
-        const trace::Array *textures = dynamic_cast<const trace::Array *>(&call->arg(1));
+        const trace::Array *textures = call->arg(1).toArray();
         size_t i;
         GLuint texture;
 

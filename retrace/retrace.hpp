@@ -63,11 +63,11 @@ public:
      */
     inline void *
     alloc(const trace::Value *value, size_t size) {
-        const trace::Array *array = dynamic_cast<const trace::Array *>(value);
+        const trace::Array *array = value->toArray();
         if (array) {
             return ::ScopedAllocator::alloc(array->size() * size);
         }
-        const trace::Null *null = dynamic_cast<const trace::Null *>(value);
+        const trace::Null *null = value->toNull();
         if (null) {
             return NULL;
         }
