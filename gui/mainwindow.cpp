@@ -196,12 +196,18 @@ void MainWindow::replayStart()
     dlgUi.errorCheckCB->setChecked(
         !m_retracer->isBenchmarking());
 
+    dlgUi.singlethreadCB->setChecked(
+        m_retracer->isSinglethread());
+
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setDoubleBuffered(
             dlgUi.doubleBufferingCB->isChecked());
 
         m_retracer->setBenchmarking(
             !dlgUi.errorCheckCB->isChecked());
+
+        m_retracer->setSinglethread(
+            dlgUi.singlethreadCB->isChecked());
 
         m_retracer->setProfiling(false, false, false);
 
