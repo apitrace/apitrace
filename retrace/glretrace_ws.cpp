@@ -233,7 +233,7 @@ updateDrawable(int width, int height) {
 
 int
 parseAttrib(const trace::Value *attribs, int param, int default_ = 0) {
-    const trace::Array *attribs_ = dynamic_cast<const trace::Array *>(attribs);
+    const trace::Array *attribs_ = attribs ? attribs->toArray() : NULL;
 
     if (attribs_) {
         for (size_t i = 0; i + 1 < attribs_->values.size(); i += 2) {

@@ -127,7 +127,7 @@ getContext(unsigned long long ctx) {
 static void retrace_CGLChoosePixelFormat(trace::Call &call) {
     int profile = kCGLOGLPVersion_Legacy;
 
-    const trace::Array * attribs = dynamic_cast<const trace::Array *>(&call.arg(0));
+    const trace::Array * attribs = call.arg(0).toArray();
     if (attribs) {
         size_t i = 0;
         while (i < attribs->values.size()) {
@@ -201,7 +201,7 @@ static void retrace_CGLCreateContext(trace::Call &call) {
     unsigned long long share = call.arg(1).toUIntPtr();
     Context *sharedContext = getContext(share);
 
-    const trace::Array *ctx_ptr = dynamic_cast<const trace::Array *>(&call.arg(2));
+    const trace::Array *ctx_ptr = call.arg(2).toArray();
     unsigned long long ctx = ctx_ptr->values[0]->toUIntPtr();
 
     Context *context = glretrace::createContext(sharedContext);
