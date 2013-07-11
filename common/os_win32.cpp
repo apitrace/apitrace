@@ -206,6 +206,7 @@ int execute(char * const * args)
     return (int)exitCode;
 }
 
+#if TRACE_OS_LOG
 void
 log(const char *format, ...)
 {
@@ -231,6 +232,7 @@ log(const char *format, ...)
     }
 #endif
 }
+#endif
 
 long long timeFrequency = 0LL;
 
