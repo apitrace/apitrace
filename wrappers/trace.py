@@ -217,7 +217,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    for (%(c)s = 0; %(array)s && %(array)s[%(c)s] != %(terminator)s; %(c)s += 2) {' \
               % {'c': count, 'array': instance, 'terminator': array.terminator}
         if array.hasKeysWithoutValues:
-            print '        switch (%(array)s[%(c)s]) {' % {'array': instance, 'c': count}
+            print '        switch (int(%(array)s[%(c)s])) {' % {'array': instance, 'c': count}
             for key, valueType in array.valueTypes:
                 if valueType is None:
                     print '        case %s:' % key
@@ -238,7 +238,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '        if (%(i)s + 1 >= %(count)s) {' % {'i': index, 'count': count}
         print '            break;'
         print '        }'
-        print '        switch (%(array)s[%(i)s++]) {' % {'array': instance, 'i': index}
+        print '        switch (int(%(array)s[%(i)s++])) {' % {'array': instance, 'i': index}
         # write generic value the usual way
         for key, valueType in array.valueTypes:
             if valueType is not None:
@@ -258,7 +258,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '        default:'
         print '            trace::localWriter.beginElement();'
         print '            os::log("apitrace: warning: %s: unknown key 0x%04X, interpreting value as int\\n", ' + \
-                           '__FUNCTION__, %(array)s[%(i)s]);'  % {'array': instance, 'i': index}
+                           '__FUNCTION__, int(%(array)s[%(i)s]));'  % {'array': instance, 'i': index}
         print '            trace::localWriter.writeSInt(%(array)s[%(i)s]);' % {'array': instance, 'i': index}
         print '            trace::localWriter.endElement();'
         print '            break;'
