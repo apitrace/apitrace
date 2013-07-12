@@ -146,8 +146,7 @@ WGLContextAttribs = AttribArray(WGLenum, [
     ('WGL_CONTEXT_PROFILE_MASK_ARB', Flags(Int, ["WGL_CONTEXT_CORE_PROFILE_BIT_ARB", "WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB"]))
 ])
 
-#ignoring the float attribs because it's doubtful that anyone uses them
-WGLPixelFormatARBAttribs = AttribArray(WGLenum, [
+WGLPixelFormatARBAttribsList = [
     ('WGL_DRAW_TO_WINDOW_ARB', BOOL),
     ('WGL_DRAW_TO_BITMAP_ARB', BOOL),
     ('WGL_ACCELERATION_ARB', FakeEnum(Int, ['WGL_NO_ACCELERATION_ARB', 'WGL_GENERIC_ACCELERATION_ARB', 'WGL_FULL_ACCELERATION_ARB'])),
@@ -178,9 +177,12 @@ WGLPixelFormatARBAttribs = AttribArray(WGLenum, [
     ('WGL_DEPTH_BITS_ARB', Int),
     ('WGL_STENCIL_BITS_ARB', Int),
     ('WGL_AUX_BUFFERS_ARB', Int)
-])
+]
 
-WGLPixelFormatEXTAttribs = AttribArray(WGLenum, [
+WGLPixelFormatARBAttribs = AttribArray(WGLenum, WGLPixelFormatARBAttribsList)
+WGLPixelFormatARBFloatAttribs = AttribArray(WGLenum, WGLPixelFormatARBAttribsList, punType = FLOAT)
+
+WGLPixelFormatEXTAttribsList = [
 #    ('WGL_NUMBER_PIXEL_FORMATS_EXT', Int), # not in ...ARB # only allowed in wglGetPixelFormatAttribiv
     ('WGL_DRAW_TO_WINDOW_ARB', BOOL),
     ('WGL_DRAW_TO_BITMAP_ARB', BOOL),
@@ -218,7 +220,10 @@ WGLPixelFormatEXTAttribs = AttribArray(WGLenum, [
     ('WGL_DEPTH_BITS_ARB', Int),
     ('WGL_STENCIL_BITS_ARB', Int),
     ('WGL_AUX_BUFFERS_ARB', Int)
-])
+]
+
+WGLPixelFormatEXTAttribs = AttribArray(WGLenum, WGLPixelFormatEXTAttribsList)
+WGLPixelFormatEXTFloatAttribs = AttribArray(WGLenum, WGLPixelFormatEXTAttribsList, punType = FLOAT)
 
 WGLCreatePbufferARBAttribs = AttribArray(WGLenum, [
     ('WGL_PBUFFER_LARGEST_ARB', Int)
@@ -280,7 +285,7 @@ wglapi.addFunctions([
     # WGL_ARB_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (WGLPixelFormatARBAttribs, "piAttribIList"), (Array(Const(FLOAT), "_AttribPairList_size(pfAttribFList)"), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "(*nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (WGLPixelFormatARBAttribs, "piAttribIList"), (WGLPixelFormatARBFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "(*nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 
     # WGL_ARB_make_current_read
     StdFunction(BOOL, "wglMakeContextCurrentARB", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
@@ -311,7 +316,7 @@ wglapi.addFunctions([
     # WGL_EXT_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (WGLPixelFormatEXTAttribs, "piAttribIList"), (Array(Const(FLOAT), "_AttribPairList_size(pfAttribFList)"), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "*nNumFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    StdFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (WGLPixelFormatEXTAttribs, "piAttribIList"), (WGLPixelFormatEXTFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "*nNumFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 
     # WGL_EXT_swap_control
     StdFunction(BOOL, "wglSwapIntervalEXT", [(Int, "interval")]),
