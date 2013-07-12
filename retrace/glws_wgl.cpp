@@ -304,7 +304,8 @@ cleanup(void) {
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
     if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_CORE) {
+        profile != PROFILE_CORE &&
+        profile != PROFILE_ES2) {
         return NULL;
     }
 
@@ -325,12 +326,20 @@ Context *
 createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
 {
     if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_CORE) {
+        profile != PROFILE_CORE &&
+        profile != PROFILE_ES2) {
         return NULL;
     }
 
-    if (profile == PROFILE_CORE) {
+    switch (profile)
+    {
+      case PROFILE_CORE:
         std::cerr << "warning: ignoring OpenGL core profile request\n";
+        break;
+
+      case PROFILE_ES2:
+        std::cerr << "warning: ignoring OpenGL ES 2.0 profile request\n";
+        break;
     }
 
     return new WglContext(visual, profile, static_cast<WglContext *>(shareContext));
