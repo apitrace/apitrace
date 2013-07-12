@@ -268,7 +268,7 @@ endif ()
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
     add_subdirectory (thirdparty/libbacktrace)
     include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libbacktrace)
-    set (LIBBACKTRACE_LIBRARIES backtrace)
+    set (LIBBACKTRACE_LIBRARIES dl backtrace)
 endif ()
 
 # Always use bundled QJSon.

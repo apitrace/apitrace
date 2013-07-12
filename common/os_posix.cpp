@@ -56,6 +56,7 @@
 
 #include "os.hpp"
 #include "os_string.hpp"
+#include "os_backtrace.hpp"
 
 
 namespace os {
@@ -243,11 +244,11 @@ signalHandler(int sig, siginfo_t *info, void *context)
     if (recursion_count) {
         log("apitrace: warning: recursion handling signal %i\n", sig);
     } else {
-        if (gCallback) {
-            ++recursion_count;
+        ++recursion_count;
+        if (gCallback)
             gCallback();
-            --recursion_count;
-        }
+        os::dump_backtrace();
+        --recursion_count;
     }
 
     struct sigaction *old_action;
