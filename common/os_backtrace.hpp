@@ -31,7 +31,9 @@
 
 #include "trace_model.hpp"
 
-namespace trace {
+namespace os {
+
+using trace::RawStackFrame;
 
 
 #if defined(ANDROID) || defined(__ELF__)
@@ -51,6 +53,6 @@ static inline bool backtrace_is_needed(const char*) {
 
 #endif
 
-} /* namespace trace */
+} /* namespace os */
 
 #endif

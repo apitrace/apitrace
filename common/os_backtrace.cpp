@@ -38,8 +38,9 @@
 #include <set>
 #include "os.hpp"
 
+using trace::Id;
 
-namespace trace {
+namespace os {
 
 /*
  * Pascal string (with zero terminator optionally omitted)
@@ -110,7 +111,7 @@ bool backtrace_is_needed(const char* fname) {
     return backtraceFunctionNamePrefixes.contain(fname);
 }
 
-} /* namespace trace */
+} /* namespace os */
 
 #if defined(ANDROID)
 
@@ -118,7 +119,7 @@ bool backtrace_is_needed(const char* fname) {
 #include "os.hpp"
 #include <vector>
 
-namespace trace {
+namespace os {
 
 /* The following two declarations are copied from Android sources */
 
@@ -269,6 +270,8 @@ std::vector<RawStackFrame> get_backtrace() {
     return backtraceProvider.parseBacktrace(backtraceProvider.getBacktrace());
 }
 
+} /* namespace os */
+
 /* end ANDROID */
 #elif defined(__ELF__)
 
@@ -280,7 +283,7 @@ std::vector<RawStackFrame> get_backtrace() {
 
 #include <backtrace.h>
 
-namespace trace {
+namespace os {
 
 
 
@@ -383,8 +386,9 @@ std::vector<RawStackFrame> get_backtrace() {
     return backtraceProvider.getParsedBacktrace();
 }
 
-#endif /* LINUX */
 
-} /* namespace trace */
+} /* namespace os */
+
+#endif /* __ELF__ */
 
 #endif /* ANDROID or LINUX */
