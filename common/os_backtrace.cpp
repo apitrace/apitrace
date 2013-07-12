@@ -277,6 +277,7 @@ std::vector<RawStackFrame> get_backtrace() {
 
 #include <stdint.h>
 #include <dlfcn.h>
+#include <unistd.h>
 #include <map>
 #include <vector>
 #include <cxxabi.h>
@@ -285,7 +286,52 @@ std::vector<RawStackFrame> get_backtrace() {
 
 namespace os {
 
+static char* format(uintptr_t num, int base, char *buf, int maxlen)
+{
+    static const char digits[] = "0123456789abcdef";
+    buf += maxlen;
+    do {
+        *--buf = digits[num % base];
+        num /= base;
+        maxlen--;
+    } while (num != 0 && maxlen != 0);
+    return buf;
+}
 
+static void dump(const char *str, int len)
+{
+    static int fd = dup(STDERR_FILENO);
+    if (write(fd, str, len) != len) {
+        // Do nothing
+    }
+}
+
+static void dumpFrame(const RawStackFrame &frame)
+{
+    char buf[sizeof(long long) * 2], *p;
+#define DUMP(string) dump(string, strlen(string))
+    DUMP(frame.module ? frame.module : "?");
+    if (frame.function) {
+        DUMP(": ");
+        DUMP(frame.function);
+    }
+    if (frame.offset >= 0) {
+        DUMP("+0x");
+        p = format((uintptr_t) frame.offset, 16, buf, sizeof(buf));
+        dump(p, buf + sizeof(buf) - p);
+    }
+    if (frame.filename) {
+        DUMP(": ");
+        DUMP(frame.filename);
+        if (frame.linenumber >= 0) {
+            DUMP(":");
+            p = format((uintptr_t) frame.linenumber, 10, buf, sizeof(buf));
+            dump(p, buf + sizeof(buf) - p);
+        }
+    }
+    DUMP("\n");
+#undef DUMP
+}
 
 
 #define BT_DEPTH 10
@@ -297,11 +343,13 @@ class libbacktraceProvider {
     std::map<uintptr_t, std::vector<RawStackFrame> > cache;
     std::vector<RawStackFrame> *current, *current_frames;
     RawStackFrame *current_frame;
+    bool missingDwarf;
 
     static void bt_err_callback(void *vdata, const char *msg, int errnum)
     {
+        libbacktraceProvider *this_ = (libbacktraceProvider*)vdata;
         if (errnum == -1)
-            return;// no debug/sym info
+            this_->missingDwarf = true;
         else if (errnum)
             os::log("libbacktrace: %s: %s\n", msg, strerror(errnum));
         else
@@ -341,28 +389,59 @@ class libbacktraceProvider {
         return 0;
     }
 
+    static void dl_fill(RawStackFrame *frame, uintptr_t pc)
+    {
+        Dl_info info = {0};
+        dladdr((void*)pc, &info);
+        frame->module = info.dli_fname;
+        frame->function = info.dli_sname;
+        frame->offset = info.dli_saddr ? pc - (uintptr_t)info.dli_saddr
+                                       : pc - (uintptr_t)info.dli_fbase;
+    }
+
     static int bt_callback(void *vdata, uintptr_t pc)
     {
         libbacktraceProvider *this_ = (libbacktraceProvider*)vdata;
         std::vector<RawStackFrame> &frames = this_->cache[pc];
         if (!frames.size()) {
             RawStackFrame frame;
-            Dl_info info = {0};
-            dladdr((void*)pc, &info);
-            frame.module = info.dli_fname;
-            frame.function = info.dli_sname;
-            frame.offset = info.dli_saddr ? pc - (uintptr_t)info.dli_saddr
-                                          : pc - (uintptr_t)info.dli_fbase;
+            dl_fill(&frame, pc);
             this_->current_frame = &frame;
             this_->current_frames = &frames;
             backtrace_pcinfo(this_->state, pc, bt_full_callback, bt_err_callback, vdata);
             if (!frames.size()) {
                 frame.id = this_->nextFrameId++;
                 frames.push_back(frame);
-	    }
+            }
         }
         this_->current->insert(this_->current->end(), frames.begin(), frames.end());
         return this_->current->size() >= BT_DEPTH;
+    }
+
+    static int bt_full_dump_callback(void *vdata, uintptr_t pc,
+                                     const char *file, int line, const char *func)
+    {
+        libbacktraceProvider *this_ = (libbacktraceProvider*)vdata;
+        RawStackFrame *frame = this_->current_frame;
+        frame->filename = file;
+        frame->linenumber = line;
+        if (func)
+            frame->function = func;
+        dumpFrame(*frame);
+        return 0;
+    }
+
+    static int bt_dump_callback(void *vdata, uintptr_t pc)
+    {
+        libbacktraceProvider *this_ = (libbacktraceProvider*)vdata;
+        RawStackFrame frame;
+        dl_fill(&frame, pc);
+        this_->current_frame = &frame;
+        this_->missingDwarf = false;
+        backtrace_pcinfo(this_->state, pc, bt_full_dump_callback, bt_err_callback, vdata);
+        if (this_->missingDwarf)
+            dumpFrame(frame);
+        return 0;
     }
 
 public:
@@ -379,11 +458,21 @@ public:
         backtrace_simple(state, skipFrames, bt_callback, bt_err_callback, this);
         return parsedBacktrace;
     }
+
+    void dumpBacktrace()
+    {
+        backtrace_simple(state, 0, bt_dump_callback, bt_err_callback, this);
+    }
 };
 
 std::vector<RawStackFrame> get_backtrace() {
     static libbacktraceProvider backtraceProvider;
     return backtraceProvider.getParsedBacktrace();
+}
+
+void dump_backtrace() {
+    static libbacktraceProvider backtraceProvider;
+    backtraceProvider.dumpBacktrace();
 }
 
 

@@ -53,6 +53,16 @@ static inline bool backtrace_is_needed(const char*) {
 
 #endif
 
+#if defined(__ELF__)
+
+void dump_backtrace();
+
+#else
+
+static inline void dump_backtrace() {}
+
+#endif
+
 } /* namespace os */
 
 #endif

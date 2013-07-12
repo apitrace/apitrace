@@ -78,6 +78,7 @@ target_link_libraries (qapitrace
     common
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
+    ${LIBBACKTRACE_LIBRARIES}
     ${QJSON_LIBRARIES}
     ${QT_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
