@@ -267,7 +267,8 @@ cleanup(void) {
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
     if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_CORE) {
+        profile != PROFILE_CORE &&
+        profile != PROFILE_ES2) {
         return NULL;
     }
 
@@ -341,6 +342,9 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile, boo
 
         switch (profile) {
         case PROFILE_COMPAT:
+            break;
+        case PROFILE_ES2:
+            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
             break;
         case PROFILE_CORE:
             // XXX: This will invariable return a 3.2 context, when supported.
