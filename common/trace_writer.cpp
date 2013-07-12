@@ -35,7 +35,6 @@
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
-#include "trace_backtrace.hpp"
 
 namespace trace {
 

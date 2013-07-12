@@ -24,8 +24,8 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_BACKTRACE_HPP_
-#define _TRACE_BACKTRACE_HPP_
+#ifndef _OS_BACKTRACE_HPP_
+#define _OS_BACKTRACE_HPP_
 
 #include <vector>
 

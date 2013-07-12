@@ -36,7 +36,6 @@
 #include <vector>
 
 #include "trace_model.hpp"
-#include "trace_backtrace.hpp"
 
 namespace trace {
     class File;
