@@ -145,10 +145,6 @@ If you are an application developer, you can avoid this either by linking with
 See the `ld.so` man page for more information about `LD_PRELOAD` and
 `LD_LIBRARY_PATH` environment flags.
 
-To trace the application inside gdb, invoke gdb as:
-
-    gdb --ex 'set exec-wrapper env LD_PRELOAD=/path/to/glxtrace.so' --args /path/to/application
-
 ### Android ###
 
 To trace standalone native OpenGL ES applications, use

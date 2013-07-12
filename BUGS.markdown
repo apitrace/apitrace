@@ -176,7 +176,8 @@ Linux/MacOSX
 ------------
 
 Please rebuild apitrace with debugging information, by passing
-`-DCMAKE_BUILD_TYPE=Debug` to cmake.
+`-DCMAKE_BUILD_TYPE=Debug` to cmake, or editing its value in `CMakeCache.txt`
+and rebuilding.
 
 To obtain a stack back-trace, run the application with gdb from a terminal:
 
@@ -185,6 +186,10 @@ To obtain a stack back-trace, run the application with gdb from a terminal:
     ...
     (gdb) bt
 
+On Linux, to trace an application inside gdb the `LD_PRELOAD` environment
+variable should be set from within gdb like:
+
+    gdb --ex 'set exec-wrapper env LD_PRELOAD=/path/to/glxtrace.so' --args application arg1 ...
 
 See also more detailed and Distro specific instructions:
 
