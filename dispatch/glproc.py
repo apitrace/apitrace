@@ -506,6 +506,30 @@ void * _getPrivateProcAddress(const char *procName);
     def isFunctionPublic(self, module, function):
         return function.name in public_symbols or function.name.startswith('CGL')
 
+    def failFunction(self, function):
+        # We fake this when they are not available
+        if function.name in ('glGetObjectLabel', 'glGetObjectPtrLabel'):
+            print r'    if (length != 0) *length = 0;'
+            print r'    if (label != 0 && bufSize > 0) *label = 0;'
+            return
+        if function.name in ('glGetDebugMessageLog', 'glGetDebugMessageLogARB'):
+            print r'    if (sources != 0) *sources = 0;'
+            print r'    if (types != 0) *types = 0;'
+            print r'    if (ids != 0) *ids = 0;'
+            print r'    if (severities != 0) *severities = 0;'
+            print r'    if (lengths != 0) *lengths = 0;'
+            print r'    if (messageLog != 0 && bufsize > 0) *messageLog = 0;'
+            return
+        if function.name in ('glGetDebugMessageLogAMD'):
+            print r'    if (categories != 0) *categories = 0;'
+            print r'    if (ids != 0) *ids = 0;'
+            print r'    if (severities != 0) *severities = 0;'
+            print r'    if (lengths != 0) *lengths = 0;'
+            print r'    if (message != 0 && bufsize > 0) *message = 0;'
+            return
+
+        Dispatcher.failFunction(self, function)
+
 
 if __name__ == '__main__':
     print
