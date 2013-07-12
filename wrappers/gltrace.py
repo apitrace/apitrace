@@ -732,6 +732,15 @@ class GlTracer(Tracer):
         if function.name in self.marker_functions:
             return
 
+        # We may be faking KHR_debug, so ensure the pointer queries result is
+        # always zeroed to prevent dereference of unitialized pointers
+        if function.name == 'glGetPointerv':
+            print '    if (params &&'
+            print '        (pname == GL_DEBUG_CALLBACK_FUNCTION ||'
+            print '         pname == GL_DEBUG_CALLBACK_USER_PARAM)) {'
+            print '        *params = NULL;'
+            print '    }'
+
         if function.name in self.getProcAddressFunctionNames:
             else_ = ''
             debug_marker_functions = self.marker_functions + self.debug_functions
