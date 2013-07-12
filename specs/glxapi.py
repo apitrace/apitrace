@@ -266,7 +266,7 @@ GLXFBConfigGLXAttribs = GLXFBConfigCommonAttribs + [
 GLXFBConfigAttribs = AttribArray(GLXEnum, GLXFBConfigGLXAttribs)
 GLXFBConfigSGIXAttribs = AttribArray(GLXEnum, GLXFBConfigCommonAttribs, isConst = False)
 
-GLXContextAttribs = AttribArray(GLXEnum, [
+GLXContextARBAttribs = AttribArray(GLXEnum, [
     ('GLX_CONTEXT_MAJOR_VERSION_ARB', Int),
     ('GLX_CONTEXT_MINOR_VERSION_ARB', Int),
     ('GLX_CONTEXT_FLAGS_ARB', Flags(Int, ["GLX_CONTEXT_DEBUG_BIT_ARB", "GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB"])),
@@ -356,7 +356,7 @@ glxapi.addFunctions([
     # GLX_ARB_create_context
     Function(GLXContext, "glXCreateContextAttribsARB", [(Display, "dpy"), (GLXFBConfig, "config"),
                                                         (GLXContext, "share_context"), (Bool, "direct"),
-                                                        (GLXContextAttribs,  "attrib_list")]),
+                                                        (GLXContextARBAttribs,  "attrib_list")]),
 
     # GLX_SGI_swap_control
     Function(Int, "glXSwapIntervalSGI", [(Int, "interval")]),
