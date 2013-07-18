@@ -33,7 +33,7 @@
 
 #include "trace_backtrace.hpp"
 
-#if defined(ANDROID) || defined(__ELF__)
+#if TRACE_BACKTRACE
 
 #include <set>
 #include "os.hpp"
@@ -387,4 +387,4 @@ std::vector<RawStackFrame> get_backtrace() {
 
 } /* namespace trace */
 
-#endif /* ANDROID or LINUX */
+#endif /* TRACE_BACKTRACE */
