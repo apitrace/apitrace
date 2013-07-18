@@ -88,6 +88,10 @@ typedef struct _WGLSWAP
 
 #elif defined(__APPLE__)
 
+#include <TargetConditionals.h>
+
+#if TARGET_OS_IPHONE
+#elif TARGET_OS_MAC
 #include <OpenGL/OpenGL.h>
 
 #include <AvailabilityMacros.h>
@@ -124,6 +128,7 @@ CGLError CGLGetSurface(CGLContextObj ctx, CGSConnectionID* cid, CGSWindowID* wid
 CGLError CGLUpdateContext(CGLContextObj ctx);
 
 }
+#endif
 
 #else
 
