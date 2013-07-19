@@ -392,95 +392,134 @@ getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
 }
 
 
-static inline GLboolean
-isDepthFormat(GLenum internalFormat)
+struct InternalFormatDesc
 {
-   switch (internalFormat) {
-   case GL_DEPTH_COMPONENT:
-   case GL_DEPTH_COMPONENT16:
-   case GL_DEPTH_COMPONENT24:
-   case GL_DEPTH_COMPONENT32:
-   case GL_DEPTH_COMPONENT32F:
-   case GL_DEPTH_COMPONENT32F_NV:
-   case GL_DEPTH_STENCIL:
-   case GL_DEPTH24_STENCIL8:
-   case GL_DEPTH32F_STENCIL8:
-   case GL_DEPTH32F_STENCIL8_NV:
-      return GL_TRUE;
-   }
-   return GL_FALSE;
-}
+    GLenum internalFormat;
+    GLenum format;
+};
 
 
-static inline GLboolean
-isIntegerFormat(GLenum internalFormat)
+static const InternalFormatDesc
+internalFormatDescs[] = {
+
+    {1,	GL_RED},
+    {2,	GL_RG},
+    {3,	GL_RGB},
+    {4,	GL_RGBA},
+
+    {GL_RED,	GL_RED},
+    {GL_GREEN,	GL_GREEN},
+    {GL_BLUE,	GL_BLUE},
+    {GL_ALPHA,	GL_ALPHA},
+    {GL_RG,	GL_RG},
+    {GL_RGB,	GL_RGB},
+    {GL_BGR,	GL_RGB},
+    {GL_RGBA,	GL_RGBA},
+    {GL_BGRA,	GL_RGBA},
+    {GL_LUMINANCE,	GL_LUMINANCE},
+    {GL_LUMINANCE_ALPHA,	GL_LUMINANCE_ALPHA},
+    {GL_INTENSITY,	GL_INTENSITY},
+ 
+    {GL_RG8,	GL_RG},
+    {GL_RG16,	GL_RG},
+    {GL_RGB8,	GL_RGB},
+    {GL_RGB16,	GL_RGB},
+    {GL_RGBA8,	GL_RGBA},
+    {GL_RGBA16,	GL_RGBA},
+    {GL_RGB10_A2,	GL_RGBA},
+    {GL_LUMINANCE8,	GL_LUMINANCE},
+    {GL_LUMINANCE16,	GL_LUMINANCE},
+    {GL_ALPHA8,	GL_ALPHA},
+    {GL_ALPHA16,	GL_ALPHA},
+    {GL_LUMINANCE8_ALPHA8,	GL_LUMINANCE_ALPHA},
+    {GL_LUMINANCE16_ALPHA16,	GL_LUMINANCE_ALPHA},
+    {GL_INTENSITY8,	GL_INTENSITY},
+    {GL_INTENSITY16,	GL_INTENSITY},
+    
+    {GL_RED_INTEGER,	GL_RED_INTEGER},
+    {GL_GREEN_INTEGER,	GL_GREEN_INTEGER},
+    {GL_BLUE_INTEGER,	GL_BLUE_INTEGER},
+    {GL_ALPHA_INTEGER,	GL_ALPHA_INTEGER},
+    {GL_RG_INTEGER,	GL_RG_INTEGER},
+    {GL_RGB_INTEGER,	GL_RGB_INTEGER},
+    {GL_BGR_INTEGER,	GL_RGB_INTEGER},
+    {GL_RGBA_INTEGER,	GL_RGBA_INTEGER},
+    {GL_BGRA_INTEGER,	GL_RGBA_INTEGER},
+    {GL_LUMINANCE_INTEGER_EXT,	GL_LUMINANCE_INTEGER_EXT},
+    {GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+ 
+    {GL_R8I,	GL_RED_INTEGER},
+    {GL_R8UI,	GL_RED_INTEGER},
+    {GL_R16I,	GL_RED_INTEGER},
+    {GL_R16UI,	GL_RED_INTEGER},
+    {GL_R32I,	GL_RED_INTEGER},
+    {GL_R32UI,	GL_RED_INTEGER},
+    {GL_RG8I,	GL_RG_INTEGER},
+    {GL_RG8UI,	GL_RG_INTEGER},
+    {GL_RG16I,	GL_RG_INTEGER},
+    {GL_RG16UI,	GL_RG_INTEGER},
+    {GL_RG32I,	GL_RG_INTEGER},
+    {GL_RG32UI,	GL_RG_INTEGER},
+    {GL_RGB8I,	GL_RGB_INTEGER},
+    {GL_RGB8UI,	GL_RGB_INTEGER},
+    {GL_RGB16I,	GL_RGB_INTEGER},
+    {GL_RGB16UI,	GL_RGB_INTEGER},
+    {GL_RGB32I,	GL_RGB_INTEGER},
+    {GL_RGB32UI,	GL_RGB_INTEGER},
+    {GL_RGBA8I,	GL_RGBA_INTEGER},
+    {GL_RGBA8UI,	GL_RGBA_INTEGER},
+    {GL_RGBA16I,	GL_RGBA_INTEGER},
+    {GL_RGBA16UI,	GL_RGBA_INTEGER},
+    {GL_RGBA32I,	GL_RGBA_INTEGER},
+    {GL_RGBA32UI,	GL_RGBA_INTEGER},
+    {GL_RGB10_A2UI,	GL_RGBA_INTEGER},
+    {GL_LUMINANCE8I_EXT,	GL_LUMINANCE_INTEGER_EXT},
+    {GL_LUMINANCE8UI_EXT,	GL_LUMINANCE_INTEGER_EXT},
+    {GL_LUMINANCE16I_EXT,	GL_LUMINANCE_INTEGER_EXT},
+    {GL_LUMINANCE16UI_EXT,	GL_LUMINANCE_INTEGER_EXT},
+    {GL_LUMINANCE32I_EXT,	GL_LUMINANCE_INTEGER_EXT},
+    {GL_LUMINANCE32UI_EXT,	GL_LUMINANCE_INTEGER_EXT},
+    {GL_ALPHA8I_EXT,	GL_ALPHA_INTEGER_EXT},
+    {GL_ALPHA8UI_EXT,	GL_ALPHA_INTEGER_EXT},
+    {GL_ALPHA16I_EXT,	GL_ALPHA_INTEGER_EXT},
+    {GL_ALPHA16UI_EXT,	GL_ALPHA_INTEGER_EXT},
+    {GL_ALPHA32I_EXT,	GL_ALPHA_INTEGER_EXT},
+    {GL_ALPHA32UI_EXT,	GL_ALPHA_INTEGER_EXT},
+    {GL_LUMINANCE_ALPHA8I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+    {GL_LUMINANCE_ALPHA8UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+    {GL_LUMINANCE_ALPHA16I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+    {GL_LUMINANCE_ALPHA16UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+    {GL_LUMINANCE_ALPHA32I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+    {GL_LUMINANCE_ALPHA32UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+    {GL_INTENSITY8I_EXT,	GL_RED_INTEGER},
+    {GL_INTENSITY8UI_EXT,	GL_RED_INTEGER},
+    {GL_INTENSITY16I_EXT,	GL_RED_INTEGER},
+    {GL_INTENSITY16UI_EXT,	GL_RED_INTEGER},
+    {GL_INTENSITY32I_EXT,	GL_RED_INTEGER},
+    {GL_INTENSITY32UI_EXT,	GL_RED_INTEGER},
+    
+    {GL_DEPTH_COMPONENT,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH_COMPONENT16,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH_COMPONENT24,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH_COMPONENT32,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH_COMPONENT32F,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH_COMPONENT32F_NV,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH_STENCIL,	        GL_DEPTH_COMPONENT},
+    {GL_DEPTH24_STENCIL8,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH32F_STENCIL8,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH32F_STENCIL8_NV,	GL_DEPTH_COMPONENT},
+};
+
+
+static GLenum
+getFormat(GLenum internalFormat)
 {
-   switch (internalFormat) {
-
-   case GL_RG_INTEGER:
-   case GL_RED_INTEGER:
-   case GL_GREEN_INTEGER:
-   case GL_BLUE_INTEGER:
-   case GL_ALPHA_INTEGER:
-   case GL_RGB_INTEGER:
-   case GL_RGBA_INTEGER:
-   case GL_BGR_INTEGER:
-   case GL_BGRA_INTEGER:
-   case GL_LUMINANCE_INTEGER_EXT:
-   case GL_LUMINANCE_ALPHA_INTEGER_EXT:
-
-   case GL_R8I:
-   case GL_R8UI:
-   case GL_R16I:
-   case GL_R16UI:
-   case GL_R32I:
-   case GL_R32UI:
-   case GL_RG8I:
-   case GL_RG8UI:
-   case GL_RG16I:
-   case GL_RG16UI:
-   case GL_RG32I:
-   case GL_RG32UI:
-   case GL_RGB8I:
-   case GL_RGB8UI:
-   case GL_RGB16I:
-   case GL_RGB16UI:
-   case GL_RGB32I:
-   case GL_RGB32UI:
-   case GL_RGBA8I:
-   case GL_RGBA8UI:
-   case GL_RGBA16I:
-   case GL_RGBA16UI:
-   case GL_RGBA32I:
-   case GL_RGBA32UI:
-   case GL_RGB10_A2UI:
-   case GL_LUMINANCE8I_EXT:
-   case GL_LUMINANCE8UI_EXT:
-   case GL_LUMINANCE16I_EXT:
-   case GL_LUMINANCE16UI_EXT:
-   case GL_LUMINANCE32I_EXT:
-   case GL_LUMINANCE32UI_EXT:
-   case GL_ALPHA8I_EXT:
-   case GL_ALPHA8UI_EXT:
-   case GL_ALPHA16I_EXT:
-   case GL_ALPHA16UI_EXT:
-   case GL_ALPHA32I_EXT:
-   case GL_ALPHA32UI_EXT:
-   case GL_LUMINANCE_ALPHA8I_EXT:
-   case GL_LUMINANCE_ALPHA8UI_EXT:
-   case GL_LUMINANCE_ALPHA16I_EXT:
-   case GL_LUMINANCE_ALPHA16UI_EXT:
-   case GL_LUMINANCE_ALPHA32I_EXT:
-   case GL_LUMINANCE_ALPHA32UI_EXT:
-   case GL_INTENSITY8I_EXT:
-   case GL_INTENSITY8UI_EXT:
-   case GL_INTENSITY16I_EXT:
-   case GL_INTENSITY16UI_EXT:
-   case GL_INTENSITY32I_EXT:
-   case GL_INTENSITY32UI_EXT:
-      return GL_TRUE;
-   }
-   return GL_FALSE;
+    for (unsigned i = 0; i < sizeof internalFormatDescs / sizeof internalFormatDescs[0]; ++i) {
+        if (internalFormatDescs[i].internalFormat == internalFormat) {
+            return internalFormatDescs[i].format;
+        }
+    }
+    return GL_RGBA;
 }
 
 
@@ -500,19 +539,11 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
 
     json.beginMember(label);
 
-    GLuint channels;
-    GLenum format;
-    if (!context.ES && isDepthFormat(desc.internalFormat)) {
-        format = GL_DEPTH_COMPONENT;
-        channels = 1;
-    } else {
-        if (isIntegerFormat(desc.internalFormat)) {
-            format = GL_RGBA_INTEGER;
-        } else {
-            format = GL_RGBA;
-        }
-        channels = 4;
+    GLenum format = getFormat(desc.internalFormat);;
+    if (context.ES && format == GL_DEPTH_COMPONENT) {
+        format = GL_RED;
     }
+    GLuint channels = _gl_format_channels(format);;
 
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
 
