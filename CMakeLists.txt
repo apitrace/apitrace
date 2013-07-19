@@ -108,6 +108,9 @@ if (MSVC)
     # C99 includes for MSVC
     include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msinttypes)
 
+    # No RTTI required
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
 
@@ -143,6 +146,9 @@ else ()
     add_definitions (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+
+    # No RTTI required
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
     # Use GDB extensions if available
     if (CMAKE_COMPILER_IS_GNUC)
