@@ -412,6 +412,78 @@ isDepthFormat(GLenum internalFormat)
 }
 
 
+static inline GLboolean
+isIntegerFormat(GLenum internalFormat)
+{
+   switch (internalFormat) {
+
+   case GL_RG_INTEGER:
+   case GL_RED_INTEGER:
+   case GL_GREEN_INTEGER:
+   case GL_BLUE_INTEGER:
+   case GL_ALPHA_INTEGER:
+   case GL_RGB_INTEGER:
+   case GL_RGBA_INTEGER:
+   case GL_BGR_INTEGER:
+   case GL_BGRA_INTEGER:
+   case GL_LUMINANCE_INTEGER_EXT:
+   case GL_LUMINANCE_ALPHA_INTEGER_EXT:
+
+   case GL_R8I:
+   case GL_R8UI:
+   case GL_R16I:
+   case GL_R16UI:
+   case GL_R32I:
+   case GL_R32UI:
+   case GL_RG8I:
+   case GL_RG8UI:
+   case GL_RG16I:
+   case GL_RG16UI:
+   case GL_RG32I:
+   case GL_RG32UI:
+   case GL_RGB8I:
+   case GL_RGB8UI:
+   case GL_RGB16I:
+   case GL_RGB16UI:
+   case GL_RGB32I:
+   case GL_RGB32UI:
+   case GL_RGBA8I:
+   case GL_RGBA8UI:
+   case GL_RGBA16I:
+   case GL_RGBA16UI:
+   case GL_RGBA32I:
+   case GL_RGBA32UI:
+   case GL_RGB10_A2UI:
+   case GL_LUMINANCE8I_EXT:
+   case GL_LUMINANCE8UI_EXT:
+   case GL_LUMINANCE16I_EXT:
+   case GL_LUMINANCE16UI_EXT:
+   case GL_LUMINANCE32I_EXT:
+   case GL_LUMINANCE32UI_EXT:
+   case GL_ALPHA8I_EXT:
+   case GL_ALPHA8UI_EXT:
+   case GL_ALPHA16I_EXT:
+   case GL_ALPHA16UI_EXT:
+   case GL_ALPHA32I_EXT:
+   case GL_ALPHA32UI_EXT:
+   case GL_LUMINANCE_ALPHA8I_EXT:
+   case GL_LUMINANCE_ALPHA8UI_EXT:
+   case GL_LUMINANCE_ALPHA16I_EXT:
+   case GL_LUMINANCE_ALPHA16UI_EXT:
+   case GL_LUMINANCE_ALPHA32I_EXT:
+   case GL_LUMINANCE_ALPHA32UI_EXT:
+   case GL_INTENSITY8I_EXT:
+   case GL_INTENSITY8UI_EXT:
+   case GL_INTENSITY16I_EXT:
+   case GL_INTENSITY16UI_EXT:
+   case GL_INTENSITY32I_EXT:
+   case GL_INTENSITY32UI_EXT:
+      return GL_TRUE;
+   }
+   return GL_FALSE;
+}
+
+
 static inline void
 dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint level)
 {
@@ -431,11 +503,15 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
     GLuint channels;
     GLenum format;
     if (!context.ES && isDepthFormat(desc.internalFormat)) {
-       format = GL_DEPTH_COMPONENT;
-       channels = 1;
+        format = GL_DEPTH_COMPONENT;
+        channels = 1;
     } else {
-       format = GL_RGBA;
-       channels = 4;
+        if (isIntegerFormat(desc.internalFormat)) {
+            format = GL_RGBA_INTEGER;
+        } else {
+            format = GL_RGBA;
+        }
+        channels = 4;
     }
 
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
