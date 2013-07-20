@@ -259,7 +259,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '        default:'
         print '            trace::localWriter.beginElement();'
         print '            os::log("apitrace: warning: %s: unknown key 0x%04X, interpreting value as int\\n", ' + \
-                           '__FUNCTION__, int(%(array)s[%(i)s]));'  % {'array': instance, 'i': index}
+                           '__FUNCTION__, int(%(array)s[%(i)s - 1]));'  % {'array': instance, 'i': index}
         print '            trace::localWriter.writeSInt(%(array)s[%(i)s]);' % {'array': instance, 'i': index}
         print '            trace::localWriter.endElement();'
         print '            break;'
