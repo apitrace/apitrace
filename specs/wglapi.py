@@ -138,7 +138,7 @@ WGLSWAP = Struct("WGLSWAP", [
     (UINT, "uiFlags"),
 ])
 
-WGLContextAttribs = AttribArray(WGLenum, [
+WGLContextAttribs = AttribArray(Const(WGLenum), [
     ('WGL_CONTEXT_MAJOR_VERSION_ARB', Int),
     ('WGL_CONTEXT_MINOR_VERSION_ARB', Int),
     ('WGL_CONTEXT_LAYER_PLANE_ARB', Int),
@@ -187,10 +187,10 @@ WGLPixelFormatAttribsList = [
     ('WGL_SAMPLES_ARB', Int),
 ]
 
-WGLPixelFormatAttribs = AttribArray(WGLenum, WGLPixelFormatAttribsList)
-WGLPixelFormatFloatAttribs = AttribArray(FLOAT, WGLPixelFormatAttribsList)
+WGLPixelFormatAttribs = AttribArray(Const(WGLenum), WGLPixelFormatAttribsList)
+WGLPixelFormatFloatAttribs = AttribArray(Const(FLOAT), WGLPixelFormatAttribsList)
 
-WGLCreatePbufferARBAttribs = AttribArray(WGLenum, [
+WGLCreatePbufferARBAttribs = AttribArray(Const(WGLenum), [
     ('WGL_PBUFFER_LARGEST_ARB', Int)
 ])
 
@@ -203,7 +203,7 @@ CubeFaceEnum = FakeEnum(Int, [
     'WGL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB'
 ])
 
-WGLSetPbufferARBAttribs = AttribArray(WGLenum, [
+WGLSetPbufferARBAttribs = AttribArray(Const(WGLenum), [
     ('WGL_MIPMAP_LEVEL_ARB', Int),
     ('WGL_CUBE_MAP_FACE_ARB', CubeFaceEnum)
 ])

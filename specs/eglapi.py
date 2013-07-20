@@ -88,7 +88,7 @@ EGLSurfaceFlags = Flags(Int, [
 
 EGLConformantFlags = Flags(Int, ['EGL_OPENGL_BIT','EGL_OPENGL_ES_BIT', 'EGL_OPENGL_ES2_BIT', 'EGL_OPENVG_BIT',])
 
-EGLConfigAttribs = AttribArray(EGLint_enum, [
+EGLConfigAttribs = AttribArray(Const(EGLint_enum), [
     ('EGL_ALPHA_MASK_SIZE', UInt),
     ('EGL_ALPHA_SIZE', UInt),
     ('EGL_BIND_TO_TEXTURE_RGB', EGLBoolean),
@@ -125,7 +125,7 @@ EGLTextureFormat = FakeEnum(Int, ['EGL_NO_TEXTURE', 'EGL_TEXTURE_RGB', 'EGL_TEXT
 EGLTextureTarget = FakeEnum(Int, ['EGL_TEXTURE_2D', 'EGL_NO_TEXTURE' ])
 
 def EGLAttribArray(values):
-    return AttribArray(EGLint_enum, values, terminator = 'EGL_NONE')
+    return AttribArray(Const(EGLint_enum), values, terminator = 'EGL_NONE')
 
 EGLWindowsSurfaceAttribs = EGLAttribArray([
     ('EGL_RENDER_BUFFER', FakeEnum(Int, ['EGL_SINGLE_BUFFER', 'EGL_BACK_BUFFER'])),
@@ -209,7 +209,7 @@ eglapi.addFunctions([
 
     Function(EGLBoolean, "eglSwapInterval", [(EGLDisplay, "dpy"), (EGLint, "interval")]),
 
-    Function(EGLContext, "eglCreateContext", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLContext, "share_context"), (AttribArray(EGLint_enum, [('EGL_CONTEXT_CLIENT_VERSION', Int)]), "attrib_list")]),
+    Function(EGLContext, "eglCreateContext", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLContext, "share_context"), (AttribArray(Const(EGLint_enum), [('EGL_CONTEXT_CLIENT_VERSION', Int)]), "attrib_list")]),
     Function(EGLBoolean, "eglDestroyContext", [(EGLDisplay, "dpy"), (EGLContext, "ctx")]),
     Function(EGLBoolean, "eglMakeCurrent", [(EGLDisplay, "dpy"), (EGLSurface, "draw"), (EGLSurface, "read"), (EGLContext, "ctx")]),
 
@@ -232,7 +232,7 @@ eglapi.addFunctions([
     Function(EGLBoolean, "eglUnlockSurfaceKHR", [(EGLDisplay, "display"), (EGLSurface, "surface")]),
 
     # EGL_KHR_image_base
-    Function(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (AttribArray(EGLint_enum, [('EGL_IMAGE_PRESERVED_KHR', EGLBoolean)]), "attrib_list")]),
+    Function(EGLImageKHR, "eglCreateImageKHR", [(EGLDisplay, "dpy"), (EGLContext, "ctx"), (EGLenum, "target"), (EGLClientBuffer, "buffer"), (AttribArray(Const(EGLint_enum), [('EGL_IMAGE_PRESERVED_KHR', EGLBoolean)]), "attrib_list")]),
     Function(EGLBoolean, "eglDestroyImageKHR", [(EGLDisplay, "dpy"), (EGLImageKHR, "image")]),
 
     # EGL_KHR_fence_sync

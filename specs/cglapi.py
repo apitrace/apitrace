@@ -92,7 +92,7 @@ CGLPixelFormatIntAttributes = [
 
 CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute", CGLPixelFormatBoolAttributes + CGLPixelFormatIntAttributes)
 
-CGLPixelFormatAttribs = AttribArray(CGLPixelFormatAttribute,
+CGLPixelFormatAttribs = AttribArray(Const(CGLPixelFormatAttribute),
                                     [(a, None) for a in CGLPixelFormatBoolAttributes] +
                                     [(a, Int) for a in CGLPixelFormatIntAttributes])
 

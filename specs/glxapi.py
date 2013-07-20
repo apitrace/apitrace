@@ -208,7 +208,7 @@ GLXbuffer = Flags(Int, [
     "GLX_PBUFFER_CLOBBER_MASK",
 ])
 
-UnusedAttribs = AttribArray(GLXEnum, [])
+UnusedAttribs = AttribArray(Const(GLXEnum), [])
 
 GLXCommonSizeAttribs = [
     ('GLX_RED_SIZE', UInt),
@@ -233,7 +233,6 @@ GLXVisualAttribs = AttribArray(GLXEnum, GLXCommonSizeAttribs + [
     ('GLX_AUX_BUFFERS', UInt),
     ('GLX_SAMPLE_BUFFERS', UInt),
     ('GLX_SAMPLES', UInt)],
-    isConst = False
 )
 
 GLXFBConfigCommonAttribs = GLXCommonSizeAttribs + [
@@ -265,17 +264,17 @@ GLXFBConfigGLXAttribs = GLXFBConfigCommonAttribs + [
     ('GLX_VISUAL_ID', Int)  # another XID
 ]
 
-GLXFBConfigAttribs = AttribArray(GLXEnum, GLXFBConfigGLXAttribs)
-GLXFBConfigSGIXAttribs = AttribArray(GLXEnum, GLXFBConfigCommonAttribs, isConst = False)
+GLXFBConfigAttribs = AttribArray(Const(GLXEnum), GLXFBConfigGLXAttribs)
+GLXFBConfigSGIXAttribs = AttribArray(GLXEnum, GLXFBConfigCommonAttribs)
 
-GLXContextARBAttribs = AttribArray(GLXEnum, [
+GLXContextARBAttribs = AttribArray(Const(GLXEnum), [
     ('GLX_CONTEXT_MAJOR_VERSION_ARB', Int),
     ('GLX_CONTEXT_MINOR_VERSION_ARB', Int),
     ('GLX_CONTEXT_FLAGS_ARB', Flags(Int, ["GLX_CONTEXT_DEBUG_BIT_ARB", "GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB"])),
     ('GLX_CONTEXT_PROFILE_MASK_ARB', Flags(Int, ["GLX_CONTEXT_CORE_PROFILE_BIT_ARB", "GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB"]))
 ])
 
-GLXPbufferAttribs = AttribArray(GLXEnum, [
+GLXPbufferAttribs = AttribArray(Const(GLXEnum), [
     ('GLX_PBUFFER_WIDTH', Int),
     ('GLX_PBUFFER_HEIGHT', Int),
     ('GLX_LARGEST_PBUFFER', Bool),
@@ -286,7 +285,6 @@ GLXPbufferSGIXAttribs = AttribArray(GLXEnum, [
     ('GLX_PRESERVED_CONTENTS_SGIX', Bool),
     ('GLX_LARGEST_PBUFFER', Bool),
     ('GLX_DIGITAL_MEDIA_PBUFFER_SGIX', Bool)],
-    isConst = False
 )
 
 glxapi = Module("GLX")
