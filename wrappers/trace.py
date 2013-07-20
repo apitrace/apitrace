@@ -213,6 +213,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
 
         # determine the array length which must be passed to writeArray() up front
         count = '_c' + array.keyType.tag
+        print '    {'
         print '    int %s;' % count
         print '    for (%(c)s = 0; %(array)s && %(array)s[%(c)s] != %(terminator)s; %(c)s += 2) {' \
               % {'c': count, 'array': instance, 'terminator': array.terminator}
@@ -265,6 +266,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '        }'
         print '    }'
         print '    trace::localWriter.endArray();'
+        print '    }'
 
 
     def visitBlob(self, blob, instance):
