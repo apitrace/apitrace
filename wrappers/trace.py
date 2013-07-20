@@ -212,7 +212,7 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         # It is currently assumed that an unknown key means that it is followed by an int value.
 
         # determine the array length which must be passed to writeArray() up front
-        count = '_c' + array.keyType.tag
+        count = '_c' + array.baseType.tag
         print '    {'
         print '    int %s;' % count
         print '    for (%(c)s = 0; %(array)s && %(array)s[%(c)s] != %(terminator)s; %(c)s += 2) {' \
@@ -231,10 +231,10 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
 
         # for each key / key-value pair write the key and the value, if the key requires one
 
-        index = '_i' + array.keyType.tag
+        index = '_i' + array.baseType.tag
         print '    for (int %(i)s = 0; %(i)s < %(count)s; %(i)s++) {' % {'i': index, 'count': count}
         print '        trace::localWriter.beginElement();'
-        self.visitEnum(array.keyType, "%(array)s[%(i)s]" % {'array': instance, 'i': index})
+        self.visit(array.baseType, "%(array)s[%(i)s]" % {'array': instance, 'i': index})
         print '        trace::localWriter.endElement();'
         print '        if (%(i)s + 1 >= %(count)s) {' % {'i': index, 'count': count}
         print '            break;'

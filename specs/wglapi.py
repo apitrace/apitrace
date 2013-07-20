@@ -188,7 +188,7 @@ WGLPixelFormatAttribsList = [
 ]
 
 WGLPixelFormatAttribs = AttribArray(WGLenum, WGLPixelFormatAttribsList)
-WGLPixelFormatFloatAttribs = AttribArray(WGLenum, WGLPixelFormatAttribsList, punType = FLOAT)
+WGLPixelFormatFloatAttribs = AttribArray(FLOAT, WGLPixelFormatAttribsList)
 
 WGLCreatePbufferARBAttribs = AttribArray(WGLenum, [
     ('WGL_PBUFFER_LARGEST_ARB', Int)
