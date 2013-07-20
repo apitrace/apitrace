@@ -270,6 +270,28 @@ class Array(Type):
         return visitor.visitArray(self, *args, **kwargs)
 
 
+class AttribArray(Type):
+
+    def __init__(self, keyType, valueTypes, isConst = True, punType = None, terminator = '0'):
+        self.baseType = Int
+        if punType is not None:
+            self.baseType = punType
+        if isConst:
+            Type.__init__(self, (Pointer(Const(self.baseType))).expr)
+        else:
+            Type.__init__(self, (Pointer(self.baseType)).expr)
+        self.keyType = keyType
+        self.valueTypes = valueTypes
+        self.terminator = terminator
+        self.hasKeysWithoutValues = False
+        for key, value in valueTypes:
+            if value is None:
+                self.hasKeysWithoutValues = True
+
+    def visit(self, visitor, *args, **kwargs):
+        return visitor.visitAttribArray(self, *args, **kwargs)
+
+
 class Blob(Type):
 
     def __init__(self, type, size):
@@ -572,6 +594,9 @@ class Visitor:
     def visitArray(self, array, *args, **kwargs):
         raise NotImplementedError
 
+    def visitAttribArray(self, array, *args, **kwargs):
+        raise NotImplementedError
+
     def visitBlob(self, blob, *args, **kwargs):
         raise NotImplementedError
 
@@ -775,6 +800,11 @@ class Traverser(Visitor):
 
     def visitArray(self, array, *args, **kwargs):
         self.visit(array.type, *args, **kwargs)
+
+    def visitAttribArray(self, attribs, *args, **kwargs):
+        for key, valueType in attribs.valueTypes:
+            if valueType is not None:
+                self.visit(valueType, *args, **kwargs)
 
     def visitBlob(self, array, *args, **kwargs):
         pass

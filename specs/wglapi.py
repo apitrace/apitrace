@@ -138,6 +138,111 @@ WGLSWAP = Struct("WGLSWAP", [
     (UINT, "uiFlags"),
 ])
 
+WGLContextAttribs = AttribArray(WGLenum, [
+    ('WGL_CONTEXT_MAJOR_VERSION_ARB', Int),
+    ('WGL_CONTEXT_MINOR_VERSION_ARB', Int),
+    ('WGL_CONTEXT_LAYER_PLANE_ARB', Int),
+    ('WGL_CONTEXT_FLAGS_ARB', Flags(Int, ["WGL_CONTEXT_DEBUG_BIT_ARB", "WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB"])),
+    ('WGL_CONTEXT_PROFILE_MASK_ARB', Flags(Int, ["WGL_CONTEXT_CORE_PROFILE_BIT_ARB", "WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB"]))
+])
+
+WGLPixelFormatARBAttribsList = [
+    ('WGL_DRAW_TO_WINDOW_ARB', BOOL),
+    ('WGL_DRAW_TO_BITMAP_ARB', BOOL),
+    ('WGL_ACCELERATION_ARB', FakeEnum(Int, ['WGL_NO_ACCELERATION_ARB', 'WGL_GENERIC_ACCELERATION_ARB', 'WGL_FULL_ACCELERATION_ARB'])),
+    ('WGL_NEED_PALETTE_ARB', BOOL),
+    ('WGL_NEED_SYSTEM_PALETTE_ARB', BOOL),
+    ('WGL_SWAP_LAYER_BUFFERS_ARB', BOOL),
+    ('WGL_SWAP_METHOD_ARB', FakeEnum(Int, ['WGL_SWAP_EXCHANGE_ARB', 'WGL_SWAP_COPY_ARB', 'WGL_SWAP_UNDEFINED_ARB'])),
+    ('WGL_NUMBER_OVERLAYS_ARB', Int),
+    ('WGL_NUMBER_UNDERLAYS_ARB', Int),
+    ('WGL_SHARE_DEPTH_ARB', BOOL),
+    ('WGL_SHARE_STENCIL_ARB', BOOL),
+    ('WGL_SHARE_ACCUM_ARB', BOOL),
+    ('WGL_SUPPORT_GDI_ARB', BOOL),
+    ('WGL_SUPPORT_OPENGL_ARB', BOOL),
+    ('WGL_DOUBLE_BUFFER_ARB', BOOL),
+    ('WGL_STEREO_ARB', BOOL),
+    ('WGL_PIXEL_TYPE_ARB', FakeEnum(Int, ['WGL_TYPE_RGBA_ARB', 'WGL_TYPE_COLORINDEX_ARB'])),
+    ('WGL_COLOR_BITS_ARB', Int),
+    ('WGL_RED_BITS_ARB', Int),
+    ('WGL_GREEN_BITS_ARB', Int),
+    ('WGL_BLUE_BITS_ARB', Int),
+    ('WGL_ALPHA_BITS_ARB', Int),
+    ('WGL_ACCUM_BITS_ARB', Int),
+    ('WGL_ACCUM_RED_BITS_ARB', Int),
+    ('WGL_ACCUM_GREEN_BITS_ARB', Int),
+    ('WGL_ACCUM_BLUE_BITS_ARB', Int),
+    ('WGL_ACCUM_ALPHA_BITS_ARB', Int),
+    ('WGL_DEPTH_BITS_ARB', Int),
+    ('WGL_STENCIL_BITS_ARB', Int),
+    ('WGL_AUX_BUFFERS_ARB', Int)
+]
+
+WGLPixelFormatARBAttribs = AttribArray(WGLenum, WGLPixelFormatARBAttribsList)
+WGLPixelFormatARBFloatAttribs = AttribArray(WGLenum, WGLPixelFormatARBAttribsList, punType = FLOAT)
+
+WGLPixelFormatEXTAttribsList = [
+#    ('WGL_NUMBER_PIXEL_FORMATS_EXT', Int), # not in ...ARB # only allowed in wglGetPixelFormatAttribiv
+    ('WGL_DRAW_TO_WINDOW_ARB', BOOL),
+    ('WGL_DRAW_TO_BITMAP_ARB', BOOL),
+    ('WGL_ACCELERATION_ARB', FakeEnum(Int, ['WGL_NO_ACCELERATION_ARB', 'WGL_GENERIC_ACCELERATION_ARB', 'WGL_FULL_ACCELERATION_ARB'])),
+    ('WGL_NEED_PALETTE_ARB', BOOL),
+    ('WGL_NEED_SYSTEM_PALETTE_ARB', BOOL),
+    ('WGL_SWAP_LAYER_BUFFERS_ARB', BOOL),
+    ('WGL_SWAP_METHOD_ARB', FakeEnum(Int, ['WGL_SWAP_EXCHANGE_ARB', 'WGL_SWAP_COPY_ARB', 'WGL_SWAP_UNDEFINED_ARB'])),
+    ('WGL_NUMBER_OVERLAYS_ARB', Int),
+    ('WGL_NUMBER_UNDERLAYS_ARB', Int),
+    ('WGL_TRANSPARENT_EXT', BOOL), # not in ...ARB
+    ('WGL_TRANSPARENT_VALUE_EXT', Int), # not in ...ARB
+    ('WGL_SHARE_DEPTH_ARB', BOOL),
+    ('WGL_SHARE_STENCIL_ARB', BOOL),
+    ('WGL_SHARE_ACCUM_ARB', BOOL),
+    ('WGL_SUPPORT_GDI_ARB', BOOL),
+    ('WGL_SUPPORT_OPENGL_ARB', BOOL),
+    ('WGL_DOUBLE_BUFFER_ARB', BOOL),
+    ('WGL_STEREO_ARB', BOOL),
+    ('WGL_PIXEL_TYPE_ARB', FakeEnum(Int, ['WGL_TYPE_RGBA_ARB', 'WGL_TYPE_COLORINDEX_ARB'])),
+    ('WGL_COLOR_BITS_ARB', Int),
+    ('WGL_RED_BITS_ARB', Int),
+    ('WGL_RED_SHIFT_EXT', Int), # not in ...ARB
+    ('WGL_GREEN_BITS_ARB', Int),
+    ('WGL_GREEN_SHIFT_EXT', Int), # not in ...ARB
+    ('WGL_BLUE_BITS_ARB', Int),
+    ('WGL_BLUE_SHIFT_EXT', Int), # not in ...ARB
+    ('WGL_ALPHA_BITS_ARB', Int),
+    ('WGL_ALPHA_SHIFT_EXT', Int), # not in ...ARB
+    ('WGL_ACCUM_BITS_ARB', Int),
+    ('WGL_ACCUM_RED_BITS_ARB', Int),
+    ('WGL_ACCUM_GREEN_BITS_ARB', Int),
+    ('WGL_ACCUM_BLUE_BITS_ARB', Int),
+    ('WGL_ACCUM_ALPHA_BITS_ARB', Int),
+    ('WGL_DEPTH_BITS_ARB', Int),
+    ('WGL_STENCIL_BITS_ARB', Int),
+    ('WGL_AUX_BUFFERS_ARB', Int)
+]
+
+WGLPixelFormatEXTAttribs = AttribArray(WGLenum, WGLPixelFormatEXTAttribsList)
+WGLPixelFormatEXTFloatAttribs = AttribArray(WGLenum, WGLPixelFormatEXTAttribsList, punType = FLOAT)
+
+WGLCreatePbufferARBAttribs = AttribArray(WGLenum, [
+    ('WGL_PBUFFER_LARGEST_ARB', Int)
+])
+
+CubeFaceEnum = FakeEnum(Int, [
+    'WGL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB',
+    'WGL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB',
+    'WGL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB',
+    'WGL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB',
+    'WGL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB',
+    'WGL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB'
+])
+
+WGLSetPbufferARBAttribs = AttribArray(WGLenum, [
+    ('WGL_MIPMAP_LEVEL_ARB', Int),
+    ('WGL_CUBE_MAP_FACE_ARB', CubeFaceEnum)
+])
+
 HPBUFFERARB = Alias("HPBUFFERARB", HANDLE)
 HPBUFFEREXT = Alias("HPBUFFEREXT", HANDLE)
 HPVIDEODEV = Alias("HPVIDEODEV", HANDLE)
@@ -193,14 +298,14 @@ wglapi.addFunctions([
     # WGL_ARB_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (Array(Const(WGLenum), "_AttribPairList_size(piAttribIList)"), "piAttribIList"), (Array(Const(FLOAT), "_AttribPairList_size(pfAttribFList)"), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "(*nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (WGLPixelFormatARBAttribs, "piAttribIList"), (WGLPixelFormatARBFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "(*nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 
     # WGL_ARB_make_current_read
     StdFunction(BOOL, "wglMakeContextCurrentARB", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
     StdFunction(HDC, "wglGetCurrentReadDCARB", [], sideeffects=False),
 
     # WGL_ARB_pbuffer
-    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Array(Const(WGLenum), "_AttribPairList_size(piAttribList)"), "piAttribList")]),
+    StdFunction(HPBUFFERARB, "wglCreatePbufferARB", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (WGLCreatePbufferARBAttribs, "piAttribList")]),
     StdFunction(HDC, "wglGetPbufferDCARB", [(HPBUFFERARB, "hPbuffer")]),
     StdFunction(Int, "wglReleasePbufferDCARB", [(HPBUFFERARB, "hPbuffer"), (HDC, "hDC")]),
     StdFunction(BOOL, "wglDestroyPbufferARB", [(HPBUFFERARB, "hPbuffer")]),
@@ -209,10 +314,10 @@ wglapi.addFunctions([
     # WGL_ARB_render_texture
     StdFunction(BOOL, "wglBindTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
     StdFunction(BOOL, "wglReleaseTexImageARB", [(HPBUFFERARB, "hPbuffer"), (Int, "iBuffer")]),
-    StdFunction(BOOL, "wglSetPbufferAttribARB", [(HPBUFFERARB, "hPbuffer"), (Array(Const(WGLenum), "_AttribPairList_size(piAttribList)"), "piAttribList")]),
+    StdFunction(BOOL, "wglSetPbufferAttribARB", [(HPBUFFERARB, "hPbuffer"), (WGLSetPbufferARBAttribs, "piAttribList")]),
 
     # WGL_ARB_create_context
-    StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (Array(Const(WGLenum), "_AttribPairList_size(attribList)"), "attribList")]),
+    StdFunction(HGLRC, "wglCreateContextAttribsARB", [(HDC, "hDC"), (HGLRC, "hShareContext"), (WGLContextAttribs, "attribList")]),
 
     # WGL_EXT_display_color_table
     StdFunction(GLboolean, "wglCreateDisplayColorTableEXT", [(GLushort, "id")]),
@@ -228,7 +333,7 @@ wglapi.addFunctions([
     StdFunction(HDC, "wglGetCurrentReadDCEXT", [], sideeffects=False),
 
     # WGL_EXT_pbuffer
-    StdFunction(HPBUFFEREXT, "wglCreatePbufferEXT", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (Array(Const(WGLenum), "_AttribPairList_size(piAttribList)"), "piAttribList")]),
+    StdFunction(HPBUFFEREXT, "wglCreatePbufferEXT", [(HDC, "hDC"), (Int, "iPixelFormat"), (Int, "iWidth"), (Int, "iHeight"), (WGLCreatePbufferARBAttribs, "piAttribList")]),
     StdFunction(HDC, "wglGetPbufferDCEXT", [(HPBUFFEREXT, "hPbuffer")], sideeffects=False),
     StdFunction(Int, "wglReleasePbufferDCEXT", [(HPBUFFEREXT, "hPbuffer"), (HDC, "hDC")]),
     StdFunction(BOOL, "wglDestroyPbufferEXT", [(HPBUFFEREXT, "hPbuffer")]),
@@ -237,7 +342,7 @@ wglapi.addFunctions([
     # WGL_EXT_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (Array(Const(WGLenum), "_AttribPairList_size(piAttribIList)"), "piAttribIList"), (Array(Const(FLOAT), "_AttribPairList_size(pfAttribFList)"), "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "*nNumFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    StdFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (WGLPixelFormatEXTAttribs, "piAttribIList"), (WGLPixelFormatEXTFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "*nNumFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 
     # WGL_EXT_swap_control
     StdFunction(BOOL, "wglSwapIntervalEXT", [(Int, "interval")]),

@@ -1470,44 +1470,4 @@ _glGetDebugMessageLog_length(const Char * string, const GLsizei *lengths, GLuint
     return size;
 }
 
-/* 
- * attribute list, terminated by the given terminator.
- */
-template<class T>
-static inline size_t
-_AttribList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
-{
-    size_t size = 0;
-
-    if (pAttribList) {
-        do {
-            ++size;
-        } while (*pAttribList++ != terminator);
-    }
-
-    return size;
-}
-
-
-/*
- * (key, value) attribute list, terminated by the given terminator.
- */
-template<class T>
-static inline size_t
-_AttribPairList_size(const T *pAttribList, const T terminator = static_cast<T>(0))
-{
-    size_t size = 0;
-
-    if (pAttribList) {
-        while (pAttribList[size] != terminator) {
-            size += 2;
-        }
-        // terminator also counts
-        ++size;
-    }
-
-    return size;
-}
-
-
 #endif /* _GL_SIZE_HPP_ */

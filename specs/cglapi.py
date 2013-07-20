@@ -44,49 +44,57 @@ CGSConnectionID = Opaque("CGSConnectionID")
 CGSWindowID = Alias("CGSWindowID", Int)
 CGSSurfaceID = Alias("CGSSurfaceID", Int)
 
-CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute", [
+CGLPixelFormatBoolAttributes = [
     "kCGLPFAAllRenderers",
     "kCGLPFADoubleBuffer",
     "kCGLPFAStereo",
     "kCGLPFAAuxBuffers",
-    "kCGLPFAColorSize",
-    "kCGLPFAAlphaSize",
-    "kCGLPFADepthSize",
-    "kCGLPFAStencilSize",
-    "kCGLPFAAccumSize",
     "kCGLPFAMinimumPolicy",
     "kCGLPFAMaximumPolicy",
     "kCGLPFAOffScreen",
     "kCGLPFAFullScreen",
-    "kCGLPFASampleBuffers",
-    "kCGLPFASamples",
     "kCGLPFAAuxDepthStencil",
     "kCGLPFAColorFloat",
     "kCGLPFAMultisample",
     "kCGLPFASupersample",
     "kCGLPFASampleAlpha",
-    "kCGLPFARendererID",
     "kCGLPFASingleRenderer",
     "kCGLPFANoRecovery",
     "kCGLPFAAccelerated",
     "kCGLPFAClosestPolicy",
+    "kCGLPFARobust",
     "kCGLPFABackingStore",
+    "kCGLPFAMPSafe",
     "kCGLPFAWindow",
+    "kCGLPFAMultiScreen",
     "kCGLPFACompliant",
-    "kCGLPFADisplayMask",
     "kCGLPFAPBuffer",
     "kCGLPFARemotePBuffer",
     "kCGLPFAAllowOfflineRenderers",
     "kCGLPFAAcceleratedCompute",
-    "kCGLPFAOpenGLProfile",
-    "kCGLPFAVirtualScreenCount",
-    "kCGLPFARobust",
-    "kCGLPFAMPSafe",
-    "kCGLPFAMultiScreen",
-
     "kCGLOGLPVersion_Legacy",
-    "kCGLOGLPVersion_3_2_Core",
-])
+    "kCGLOGLPVersion_3_2_Core"
+]
+
+CGLPixelFormatIntAttributes = [
+    "kCGLPFAColorSize",
+    "kCGLPFAAlphaSize",
+    "kCGLPFADepthSize",
+    "kCGLPFAStencilSize",
+    "kCGLPFAAccumSize",
+    "kCGLPFASampleBuffers",
+    "kCGLPFASamples",
+    "kCGLPFARendererID",
+    "kCGLPFADisplayMask",
+    "kCGLPFAOpenGLProfile",
+    "kCGLPFAVirtualScreenCount"
+]
+
+CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute", CGLPixelFormatBoolAttributes + CGLPixelFormatIntAttributes)
+
+CGLPixelFormatAttribs = AttribArray(CGLPixelFormatAttribute,
+                                    [(a, None) for a in CGLPixelFormatBoolAttributes] +
+                                    [(a, Int) for a in CGLPixelFormatIntAttributes])
 
 CGLRendererProperty = Enum("CGLRendererProperty", [
     "kCGLRPOffScreen",
@@ -188,7 +196,7 @@ cglapi.addFunctions([
     Function(CGLContextObj, "CGLGetCurrentContext", []),
 
     # OpenGL.h, OpenGL framework
-    Function(CGLError, "CGLChoosePixelFormat", [(Array(Const(CGLPixelFormatAttribute), "_AttribList_size(attribs)"), "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
+    Function(CGLError, "CGLChoosePixelFormat", [(CGLPixelFormatAttribs, "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
     Function(CGLError, "CGLDestroyPixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")]),
     Function(Void, "CGLReleasePixelFormat", [(CGLPixelFormatObj, "pix")]),

@@ -83,6 +83,9 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
     def visitArray(self, array):
         self.visit(array.type)
 
+    def visitAttribArray(self, array):
+        pass
+
     def visitBlob(self, array):
         pass
 
@@ -202,6 +205,69 @@ class ValueSerializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    } else {'
         print '        trace::localWriter.writeNull();'
         print '    }'
+
+    def visitAttribArray(self, array, instance):
+        # For each element, decide if it is a key or a value (which depends on the previous key).
+        # If it is a value, store it as the right type - usually int, some bitfield, or some enum.
+        # It is currently assumed that an unknown key means that it is followed by an int value.
+
+        # determine the array length which must be passed to writeArray() up front
+        count = '_c' + array.keyType.tag
+        print '    {'
+        print '    int %s;' % count
+        print '    for (%(c)s = 0; %(array)s && %(array)s[%(c)s] != %(terminator)s; %(c)s += 2) {' \
+              % {'c': count, 'array': instance, 'terminator': array.terminator}
+        if array.hasKeysWithoutValues:
+            print '        switch (int(%(array)s[%(c)s])) {' % {'array': instance, 'c': count}
+            for key, valueType in array.valueTypes:
+                if valueType is None:
+                    print '        case %s:' % key
+            print '            %s--;' % count # the next value is a key again and checked if it's the terminator
+            print '            break;'
+            print '        }'
+        print '    }'
+        print '    %(c)s += %(array)s ? 1 : 0;' % {'c': count, 'array': instance}
+        print '    trace::localWriter.beginArray(%s);' % count
+
+        # for each key / key-value pair write the key and the value, if the key requires one
+
+        index = '_i' + array.keyType.tag
+        print '    for (int %(i)s = 0; %(i)s < %(count)s; %(i)s++) {' % {'i': index, 'count': count}
+        print '        trace::localWriter.beginElement();'
+        self.visitEnum(array.keyType, "%(array)s[%(i)s]" % {'array': instance, 'i': index})
+        print '        trace::localWriter.endElement();'
+        print '        if (%(i)s + 1 >= %(count)s) {' % {'i': index, 'count': count}
+        print '            break;'
+        print '        }'
+        print '        switch (int(%(array)s[%(i)s++])) {' % {'array': instance, 'i': index}
+        # write generic value the usual way
+        for key, valueType in array.valueTypes:
+            if valueType is not None:
+                print '        case %s:' % key
+                print '            trace::localWriter.beginElement();'
+                self.visitElement(index, valueType, '(%(array)s)[%(i)s]' % {'array': instance, 'i': index})
+                print '            trace::localWriter.endElement();'
+                print '            break;'
+        # known key with no value, just decrease the index so we treat the next value as a key
+        if array.hasKeysWithoutValues:
+            for key, valueType in array.valueTypes:
+                if valueType is None:
+                    print '        case %s:' % key
+            print '            %s--;' % index
+            print '            break;'
+        # unknown key, write an int value
+        print '        default:'
+        print '            trace::localWriter.beginElement();'
+        print '            os::log("apitrace: warning: %s: unknown key 0x%04X, interpreting value as int\\n", ' + \
+                           '__FUNCTION__, int(%(array)s[%(i)s]));'  % {'array': instance, 'i': index}
+        print '            trace::localWriter.writeSInt(%(array)s[%(i)s]);' % {'array': instance, 'i': index}
+        print '            trace::localWriter.endElement();'
+        print '            break;'
+        print '        }'
+        print '    }'
+        print '    trace::localWriter.endArray();'
+        print '    }'
+
 
     def visitBlob(self, blob, instance):
         print '    trace::localWriter.writeBlob(%s, %s);' % (instance, self.expand(blob.size))
