@@ -86,13 +86,12 @@ EGLSurfaceFlags = Flags(Int, [
     'EGL_WINDOW_BIT'
 ])
 
-EGLConformantFlags = Flags(Int, ['EGL_OPENGL_BIT','EGL_OPENGL_ES_BIT', 'EGL_OPENGL_ES2_BIT', 'EGL_OPENVG_BIT',])
-
+EGLConformantFlags = Flags(Int, ['EGL_OPENGL_BIT','EGL_OPENGL_ES_BIT', 'EGL_OPENGL_ES2_BIT', 'EGL_OPENVG_BIT'])
 
 EGLVGAlphaFormat = FakeEnum(Int, ['EGL_VG_ALPHA_FORMAT_NONPRE', 'EGL_VG_ALPHA_FORMAT_PRE'])
 EGLVGColorspace = FakeEnum(Int, ['EGL_VG_COLORSPACE_sRGB', 'EGL_VG_COLORSPACE_LINEAR'])
 EGLTextureFormat = FakeEnum(Int, ['EGL_NO_TEXTURE', 'EGL_TEXTURE_RGB', 'EGL_TEXTURE_RGBA'])
-EGLTextureTarget = FakeEnum(Int, ['EGL_TEXTURE_2D', 'EGL_NO_TEXTURE' ])
+EGLTextureTarget = FakeEnum(Int, ['EGL_TEXTURE_2D', 'EGL_NO_TEXTURE'])
 
 def EGLAttribArray(values):
     return AttribArray(Const(EGLint_enum), values, terminator = 'EGL_NONE')
