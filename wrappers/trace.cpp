@@ -43,6 +43,7 @@
 
 namespace trace {
 
+#if TRACE_ENABLED_CHECK
 
 #ifdef ANDROID
 
@@ -109,6 +110,7 @@ isTracingEnabled(void)
 
 #endif /* ANDROID */
 
+#endif /* TRACE_ENABLED_CHECK */
 
 } /* namespace trace */
 

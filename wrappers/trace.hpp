@@ -32,22 +32,31 @@
 #ifndef _TRACE_HPP_
 #define _TRACE_HPP_
 
+/* Unless specified at build-time with -DTRACE_ENABLED_CHECK=0, auto-detect */
+
+#ifndef TRACE_ENABLED_CHECK
+# ifdef ANDROID
+#  define TRACE_ENABLED_CHECK 1
+# else
+#  define TRACE_ENABLED_CHECK 0
+# endif
+#endif
 
 namespace trace {
 
 
-#ifdef ANDROID
+#if TRACE_ENABLED_CHECK
 
 bool isTracingEnabled(void);
 
-#else /* !ANDROID */
+#else /* !TRACE_ENABLED_CHECK */
 
 static inline bool
 isTracingEnabled(void) {
     return true;
 }
 
-#endif /* !ANDROID */
+#endif /* !TRACE_ENABLED_CHECK */
 
 
 } /* namespace trace */
