@@ -200,7 +200,7 @@ sed_trace(Replacements &replacements, const char *inFileName, std::string &outFi
         delete call;
     }
 
-    std::cerr << "Trimmed trace is available as " << outFileName << "\n";
+    std::cerr << "Edited trace is available as " << outFileName << "\n";
 
     return 0;
 }
