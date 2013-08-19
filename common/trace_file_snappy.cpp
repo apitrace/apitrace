@@ -54,6 +54,7 @@
 #include <snappy.h>
 
 #include <iostream>
+#include <algorithm>
 
 #include <assert.h>
 #include <string.h>
