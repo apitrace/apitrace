@@ -32,6 +32,7 @@
 #include "image.hpp"
 #include "json.hpp"
 #include "glproc.hpp"
+#include "glws.hpp"
 #include "glsize.hpp"
 #include "glstate.hpp"
 #include "glstate_internal.hpp"
@@ -44,6 +45,9 @@ Context::Context(void) {
     memset(this, 0, sizeof *this);
 
     const char *version = (const char *)glGetString(GL_VERSION);
+    unsigned version_major = 0;
+    unsigned version_minor = 0;
+    unsigned version_release = 0;
     if (version) {
         if (version[0] == 'O' &&
             version[1] == 'p' &&
@@ -57,11 +61,34 @@ Context::Context(void) {
             (version[9] == ' ' || version[9] == '-')) {
             ES = true;
         }
+        if (version[0] >= '0' && version[0] <= '9') {
+            sscanf(version, "%u.%u.%u", &version_major, &version_minor, &version_release);
+        }
     }
 
     ARB_draw_buffers = !ES;
 
-    // TODO: Check extensions we use below
+    // Check extensions we use.
+
+    if (!ES) {
+        if (version_major > 3 ||
+            (version_major == 3 && version_minor >= 2)) {
+            GLint num_extensions = 0;
+            glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
+            for (GLint i = 0; i < num_extensions; ++i) {
+               const char *extension = (const char *)glGetStringi(GL_EXTENSIONS, i);
+               if (extension &&
+                   strcmp(extension, "ARB_sampler_objects")) {
+                   ARB_sampler_objects = true;
+               }
+            }
+        } else {
+            const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
+            if (glws::checkExtension("ARB_sampler_objects", extensions)) {
+                ARB_sampler_objects = true;
+            }
+        }
+    }
 }
 
 void

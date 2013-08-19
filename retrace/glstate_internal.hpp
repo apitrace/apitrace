@@ -41,6 +41,7 @@ struct Context
     bool ES;
 
     bool ARB_draw_buffers;
+    bool ARB_sampler_objects;
 
     Context(void);
 

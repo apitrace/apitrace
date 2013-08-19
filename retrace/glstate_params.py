@@ -422,19 +422,10 @@ class StateDumper:
         print
 
     def dump_sampler_params(self):
-        # Avoid crash on MacOSX
-        # XXX: The right fix would be to look at the support extensions..
-        import platform
-        if platform.system() == 'Darwin':
-            return
-
         print '    // GL_SAMPLER_BINDING'
-        print '    flushErrors();'
-        print '    GLint sampler_binding = 0;'
-        print '    glGetIntegerv(GL_SAMPLER_BINDING, &sampler_binding);'
-        print '    if (glGetError() != GL_NO_ERROR) {'
-        print '        flushErrors();'
-        print '    } else {'
+        print '    if (context.ARB_sampler_objects) {'
+        print '        GLint sampler_binding = 0;'
+        print '        glGetIntegerv(GL_SAMPLER_BINDING, &sampler_binding);'
         print '        json.beginMember("GL_SAMPLER_BINDING");'
         print '        json.writeInt(sampler_binding);'
         print '        json.endMember();'
@@ -443,9 +434,9 @@ class StateDumper:
         print '            json.beginObject();'
         for _, _, name in glGetSamplerParameter.iter():
             self.dump_atom(glGetSamplerParameter, 'sampler_binding', name)
-        print '            json.endObject();'
-        print '            json.endMember(); // GL_SAMPLER'
-        print '        }'
+        print '           json.endObject();'
+        print '           json.endMember(); // GL_SAMPLER'
+        print '       }'
         print '    }'
 
     def texenv_param_target(self, name):
@@ -568,12 +559,6 @@ class StateDumper:
 
     def dump_atom(self, getter, *args):
         name = args[-1]
-
-        # Avoid crash on MacOSX
-        # XXX: The right fix would be to look at the support extensions..
-        import platform
-        if name == 'GL_SAMPLER_BINDING' and platform.system() == 'Darwin':
-            return
 
         print '        // %s' % name
         print '        {'
