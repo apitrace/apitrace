@@ -343,7 +343,7 @@ parameters = [
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_WIDTH"),	# 0x1000
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_HEIGHT"),	# 0x1001
     ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_INTERNAL_FORMAT"),	# 0x1003
-    ("glGetTexParameter",	F,	4,	"GL_TEXTURE_BORDER_COLOR"),	# 0x1004
+    ("glGetTexParameter,glGetSamplerParameter",	F,	4,	"GL_TEXTURE_BORDER_COLOR"),	# 0x1004
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BORDER"),	# 0x1005
     ("",	X,	1,	"GL_DONT_CARE"),	# 0x1100
     ("",	X,	1,	"GL_FASTEST"),	# 0x1101
@@ -475,10 +475,10 @@ parameters = [
     ("",	X,	1,	"GL_LINEAR_MIPMAP_NEAREST"),	# 0x2701
     ("",	X,	1,	"GL_NEAREST_MIPMAP_LINEAR"),	# 0x2702
     ("",	X,	1,	"GL_LINEAR_MIPMAP_LINEAR"),	# 0x2703
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_MAG_FILTER"),	# 0x2800
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_MIN_FILTER"),	# 0x2801
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_WRAP_S"),	# 0x2802
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_WRAP_T"),	# 0x2803
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_MAG_FILTER"),	# 0x2800
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_MIN_FILTER"),	# 0x2801
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_WRAP_S"),	# 0x2802
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_WRAP_T"),	# 0x2803
     ("",	X,	1,	"GL_CLAMP"),	# 0x2900
     ("",	X,	1,	"GL_REPEAT"),	# 0x2901
     ("glGet",	F,	1,	"GL_POLYGON_OFFSET_UNITS"),	# 0x2A00
@@ -629,7 +629,7 @@ parameters = [
     ("glGet",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
     ("",	X,	1,	"GL_PROXY_TEXTURE_3D"),	# 0x8070
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_DEPTH"),	# 0x8071
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
     ("glGet",	I,	1,	"GL_MAX_3D_TEXTURE_SIZE"),	# 0x8073
     ("glGet",	B,	1,	"GL_VERTEX_ARRAY"),	# 0x8074
     ("glGet",	B,	1,	"GL_NORMAL_ARRAY"),	# 0x8075
@@ -788,8 +788,8 @@ parameters = [
     ("",	X,	1,	"GL_TEXTURE_WRAP_Q_SGIS"),	# 0x8137
     ("glGet",	I,	1,	"GL_MAX_4D_TEXTURE_SIZE_SGIS"),	# 0x8138
     ("glGet",	I,	1,	"GL_PIXEL_TEX_GEN_SGIX"),	# 0x8139
-    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MIN_LOD"),	# 0x813A
-    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_LOD"),	# 0x813B
+    ("glGetTexParameter,glGetSamplerParameter",	F,	1,	"GL_TEXTURE_MIN_LOD"),	# 0x813A
+    ("glGetTexParameter,glGetSamplerParameter",	F,	1,	"GL_TEXTURE_MAX_LOD"),	# 0x813B
     ("glGetTexParameter",	F,	1,	"GL_TEXTURE_BASE_LEVEL"),	# 0x813C
     ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_LEVEL"),	# 0x813D
     ("glGet",	I,	1,	"GL_PIXEL_TILE_BEST_ALIGNMENT_SGIX"),	# 0x813E
@@ -1955,8 +1955,8 @@ parameters = [
     ("glGet",	P,	1,	"GL_MATRIX_INDEX_ARRAY_POINTER_ARB"),	# 0x8849
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_DEPTH_SIZE"),	# 0x884A
     ("glGetTexParameter",	E,	1,	"GL_DEPTH_TEXTURE_MODE"),	# 0x884B
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_COMPARE_MODE"),	# 0x884C
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_COMPARE_FUNC"),	# 0x884D
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_COMPARE_MODE"),	# 0x884C
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_COMPARE_FUNC"),	# 0x884D
     ("",	X,	1,	"GL_COMPARE_REF_TO_TEXTURE"),	# 0x884E
     ("glGet",	B,	1,	"GL_TEXTURE_CUBE_MAP_SEAMLESS"),	# 0x884F
     ("",	X,	1,	"GL_OFFSET_PROJECTIVE_TEXTURE_2D_NV"),	# 0x8850
@@ -2142,7 +2142,7 @@ parameters = [
     ("",	X,	1,	"GL_GEOMETRY_VERTICES_OUT"),	# 0x8916
     ("",	X,	1,	"GL_GEOMETRY_INPUT_TYPE"),	# 0x8917
     ("",	X,	1,	"GL_GEOMETRY_OUTPUT_TYPE"),	# 0x8918
-    ("glGet",	I,	1,	"GL_SAMPLER_BINDING"),	# 0x8919
+    ("_glGet",	I,	1,	"GL_SAMPLER_BINDING"),	# 0x8919
     ("glGet",	B,	1,	"GL_CLAMP_VERTEX_COLOR"),	# 0x891A
     ("glGet",	B,	1,	"GL_CLAMP_FRAGMENT_COLOR"),	# 0x891B
     ("glGet",	B,	1,	"GL_CLAMP_READ_COLOR"),	# 0x891C

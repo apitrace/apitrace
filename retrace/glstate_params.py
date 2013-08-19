@@ -208,6 +208,7 @@ glGetShader = StateGetter('glGetShaderiv', {I: 'iv'})
 glGetProgram = StateGetter('glGetProgram', {I: 'iv'})
 glGetProgramARB = StateGetter('glGetProgram', {I: 'iv', F: 'fv', S: 'Stringv'}, 'ARB')
 glGetFramebufferAttachmentParameter = StateGetter('glGetFramebufferAttachmentParameter', {I: 'iv'})
+glGetSamplerParameter = StateGetter('glGetSamplerParameter', {I: 'iv', F: 'fv'})
 
 
 class JsonWriter(Visitor):
@@ -420,6 +421,33 @@ class StateDumper:
         print '    }'
         print
 
+    def dump_sampler_params(self):
+        # Avoid crash on MacOSX
+        # XXX: The right fix would be to look at the support extensions..
+        import platform
+        if platform.system() == 'Darwin':
+            return
+
+        print '    // GL_SAMPLER_BINDING'
+        print '    flushErrors();'
+        print '    GLint sampler_binding = 0;'
+        print '    glGetIntegerv(GL_SAMPLER_BINDING, &sampler_binding);'
+        print '    if (glGetError() != GL_NO_ERROR) {'
+        print '        flushErrors();'
+        print '    } else {'
+        print '        json.beginMember("GL_SAMPLER_BINDING");'
+        print '        json.writeInt(sampler_binding);'
+        print '        json.endMember();'
+        print '        if (sampler_binding) {'
+        print '            json.beginMember("GL_SAMPLER");'
+        print '            json.beginObject();'
+        for _, _, name in glGetSamplerParameter.iter():
+            self.dump_atom(glGetSamplerParameter, 'sampler_binding', name)
+        print '            json.endObject();'
+        print '            json.endMember(); // GL_SAMPLER'
+        print '        }'
+        print '    }'
+
     def texenv_param_target(self, name):
         if name == 'GL_TEXTURE_LOD_BIAS':
            return 'GL_TEXTURE_FILTER_CONTROL'
@@ -486,6 +514,7 @@ class StateDumper:
         for target, binding in texture_targets:
             print '            dumpTextureTargetParameters(json, context, %s, %s);' % (target, binding)
         print '            if (unit < max_texture_coords) {'
+        self.dump_sampler_params()
         self.dump_texenv_params()
         print '            }'
         print '            json.endObject();'
@@ -535,7 +564,7 @@ class StateDumper:
 
     def dump_atoms(self, getter, *args):
         for _, _, name in getter.iter():
-            self.dump_atom(getter, *(args + (name,))) 
+            self.dump_atom(getter, *(args + (name,)))
 
     def dump_atom(self, getter, *args):
         name = args[-1]
