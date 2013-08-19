@@ -153,9 +153,9 @@ public:
     WindowsAttribute(WORD _wAttributes) : wAttributes(_wAttributes) {}
     void apply(std::ostream& os) const {
         DWORD nStdHandleOutput;
-        if (os == std::cout) {
+        if (&os == &std::cout) {
             nStdHandleOutput = STD_OUTPUT_HANDLE;
-        } else if (os == std::cerr) {
+        } else if (&os == &std::cerr) {
             nStdHandleOutput = STD_ERROR_HANDLE;
         } else {
             return;
