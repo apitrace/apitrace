@@ -220,6 +220,10 @@ def main():
         type="string", dest="snapshot_frequency", default='draw',
         help="calls to compare [default: %default]")
     optparser.add_option(
+        '--diff-state',
+        action='store_true', dest='diff_state', default=False,
+        help='diff state between failing calls')
+    optparser.add_option(
         '-o', '--output', metavar='FILE',
         type="string", dest="output",
         help="output file [default: stdout]")
@@ -289,7 +293,7 @@ def main():
                         refImage.save(prefix + '.ref.png')
                         srcImage.save(prefix + '.src.png')
                         comparer.write_diff(prefix + '.diff.png')
-                    if last_bad < last_good:
+                    if last_bad < last_good and options.diff_state:
                         srcRetracer.diff_state(last_good, callNo, output)
                     last_bad = callNo
                 else:
