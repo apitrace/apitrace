@@ -40,6 +40,12 @@ add_library (retrace_common STATIC
     retrace_swizzle.cpp
     json.cpp
 )
+
+if (ENABLE_EGL AND ANDROID)
+    # if waffle is found eglretrace will be built for Android.
+    find_package (Waffle)
+endif ()
+
 target_link_libraries (retrace_common
     image
     common
@@ -137,6 +143,25 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE)
     endif ()
 
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
+endif ()
+
+if (ENABLE_EGL AND ANDROID AND Waffle_FOUND)
+    add_executable (eglretrace
+        glws_waffle.cpp
+    )
+
+    add_dependencies (eglretrace glproc)
+    include_directories (${Waffle_INCLUDE_DIR})
+
+    target_link_libraries (eglretrace
+        retrace_common
+        glretrace_common
+        glproc_egl
+        dl
+        ${Waffle_LIBRARY}
+    )
+    target_link_libraries (eglretrace ${proc_LIBRARY})
+    install (TARGETS eglretrace RUNTIME DESTINATION bin)
 endif ()
 
 if (WIN32)
