@@ -386,15 +386,10 @@ getDepthStencilViewImage(ID3D10Device *pDevice,
 }
 
 
-void
-dumpTextures(JSONWriter &json, ID3D10Device *pDevice)
+static void
+dumpStageTextures(JSONWriter &json, ID3D10Device *pDevice, const char *stageName,
+                  ID3D10ShaderResourceView *pShaderResourceViews[D3D10_COMMONSHADER_SAMPLER_SLOT_COUNT])
 {
-    json.beginMember("textures");
-    json.beginObject();
-
-    ID3D10ShaderResourceView *pShaderResourceViews[D3D10_COMMONSHADER_SAMPLER_SLOT_COUNT];
-    pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-
     for (UINT i = 0; i < ARRAYSIZE(pShaderResourceViews); ++i) {
         if (!pShaderResourceViews[i]) {
             continue;
@@ -404,14 +399,33 @@ dumpTextures(JSONWriter &json, ID3D10Device *pDevice)
         image = getShaderResourceViewImage(pDevice, pShaderResourceViews[i]);
         if (image) {
             char label[64];
-            _snprintf(label, sizeof label, "PS_RESOURCE_%u", i);
+            _snprintf(label, sizeof label, "%s_RESOURCE_%u", stageName, i);
             json.beginMember(label);
             json.writeImage(image, "UNKNOWN");
-            json.endMember(); // PS_RESOURCE_*
+            json.endMember(); // *_RESOURCE_*
         }
 
         pShaderResourceViews[i]->Release();
     }
+}
+
+
+void
+dumpTextures(JSONWriter &json, ID3D10Device *pDevice)
+{
+    json.beginMember("textures");
+    json.beginObject();
+
+    ID3D10ShaderResourceView *pShaderResourceViews[D3D10_COMMONSHADER_SAMPLER_SLOT_COUNT];
+
+    pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "PS", pShaderResourceViews);
+
+    pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "VS", pShaderResourceViews);
+
+    pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "GS", pShaderResourceViews);
 
     json.endObject();
     json.endMember(); // textures
