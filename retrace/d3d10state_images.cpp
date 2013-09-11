@@ -388,15 +388,16 @@ getDepthStencilViewImage(ID3D10Device *pDevice,
 
 static void
 dumpStageTextures(JSONWriter &json, ID3D10Device *pDevice, const char *stageName,
-                  ID3D10ShaderResourceView *pShaderResourceViews[D3D10_COMMONSHADER_SAMPLER_SLOT_COUNT])
+                  UINT NumViews,
+                  ID3D10ShaderResourceView **ppShaderResourceViews)
 {
-    for (UINT i = 0; i < ARRAYSIZE(pShaderResourceViews); ++i) {
-        if (!pShaderResourceViews[i]) {
+    for (UINT i = 0; i < NumViews; ++i) {
+        if (!ppShaderResourceViews[i]) {
             continue;
         }
 
         image::Image *image;
-        image = getShaderResourceViewImage(pDevice, pShaderResourceViews[i]);
+        image = getShaderResourceViewImage(pDevice, ppShaderResourceViews[i]);
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "%s_RESOURCE_%u", stageName, i);
@@ -405,7 +406,7 @@ dumpStageTextures(JSONWriter &json, ID3D10Device *pDevice, const char *stageName
             json.endMember(); // *_RESOURCE_*
         }
 
-        pShaderResourceViews[i]->Release();
+        ppShaderResourceViews[i]->Release();
     }
 }
 
@@ -419,13 +420,13 @@ dumpTextures(JSONWriter &json, ID3D10Device *pDevice)
     ID3D10ShaderResourceView *pShaderResourceViews[D3D10_COMMONSHADER_SAMPLER_SLOT_COUNT];
 
     pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "PS", pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "VS", pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "GS", pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     json.endObject();
     json.endMember(); // textures
