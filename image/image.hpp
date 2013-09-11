@@ -105,6 +105,9 @@ public:
 
 
 Image *
+readPNG(std::istream &is);
+
+Image *
 readPNG(const char *filename);
 
 const char *

@@ -134,19 +134,22 @@ Image::writePNG(const char *filename) const
 }
 
 
-Image *
-readPNG(const char *filename)
+static void
+pngReadCallback(png_structp png_ptr, png_bytep data, png_size_t length)
 {
-    FILE *fp;
+    std::istream *os = (std::istream *) png_get_io_ptr(png_ptr);
+    os->read((char *)data, length);
+}
+
+
+Image *
+readPNG(std::istream &is)
+{
     png_structp png_ptr;
     png_infop info_ptr;
     png_infop end_info;
     unsigned channels;
     Image *image;
-
-    fp = fopen(filename, "rb");
-    if (!fp)
-        goto no_fp;
 
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
@@ -169,7 +172,7 @@ readPNG(const char *filename)
         goto no_png;
     }
 
-    png_init_io(png_ptr, fp);
+    png_set_read_fn(png_ptr, &is, pngReadCallback);
 
     png_read_info(png_ptr, info_ptr);
 
@@ -204,17 +207,24 @@ readPNG(const char *filename)
 
     png_read_end(png_ptr, info_ptr);
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    fclose(fp);
+
     return image;
 
 no_image:
     png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 no_png:
-    fclose(fp);
-no_fp:
     return NULL;
 }
 
+Image *
+readPNG(const char *filename)
+{
+    std::ifstream is(filename, std::ifstream::binary);
+    if (!is) {
+        return NULL;
+    }
+    return readPNG(filename);
+}
 
 
 } /* namespace image */
