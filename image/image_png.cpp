@@ -130,6 +130,7 @@ readPNG(const char *filename)
     png_structp png_ptr;
     png_infop info_ptr;
     png_infop end_info;
+    unsigned channels;
     Image *image;
 
     fp = fopen(filename, "rb");
@@ -169,10 +170,6 @@ readPNG(const char *filename)
                  &bit_depth, &color_type, &interlace_type,
                  &compression_type, &filter_method);
 
-    image = new Image(width, height);
-    if (!image)
-        goto no_image;
-
     /* Convert to RGBA8 */
     if (color_type == PNG_COLOR_TYPE_PALETTE)
         png_set_palette_to_rgb(png_ptr);
@@ -183,8 +180,14 @@ readPNG(const char *filename)
     if (bit_depth == 16)
         png_set_strip_16(png_ptr);
 
+    channels = png_get_channels(png_ptr, info_ptr);
+    image = new Image(width, height, channels);
+    if (!image)
+        goto no_image;
+
+    assert(png_get_rowbytes(png_ptr, info_ptr) == width*channels);
     for (unsigned y = 0; y < height; ++y) {
-        png_bytep row = (png_bytep)(image->pixels + y*width*4);
+        png_bytep row = (png_bytep)(image->pixels + y*width*channels);
         png_read_row(png_ptr, row, NULL);
     }
 
