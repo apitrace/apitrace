@@ -28,6 +28,8 @@
 #include <assert.h>
 #include <stdint.h>
 
+#include <fstream>
+
 #include "image.hpp"
 
 

@@ -30,18 +30,35 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <fstream>
+
 #include "image.hpp"
 
 
 namespace image {
 
+
 void
-Image::writeRAW(std::ostream &os) const {
+Image::writeRAW(std::ostream &os) const
+{
     const unsigned char *row;
 
     for (row = start(); row != end(); row += stride()) {
         os.write((const char *)row, width*channels);
     }
 }
+
+
+bool
+Image::writeRAW(const char *filename) const
+{
+    std::ofstream os(filename, std::ofstream::binary);
+    if (!os) {
+        return false;
+    }
+    writeRAW(os);
+    return true;
+}
+
 
 } /* namespace image */

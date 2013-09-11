@@ -123,6 +123,17 @@ no_png:
 }
 
 
+bool
+Image::writePNG(const char *filename) const
+{
+    std::ofstream os(filename, std::ofstream::binary);
+    if (!os) {
+        return false;
+    }
+    return writePNG(os);
+}
+
+
 Image *
 readPNG(const char *filename)
 {

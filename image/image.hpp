@@ -31,7 +31,7 @@
 #define _IMAGE_HPP_
 
 
-#include <fstream>
+#include <iostream>
 
 
 namespace image {
@@ -81,43 +81,26 @@ public:
         return flipped ? -(signed)(width*channels) : width*channels;
     }
 
-    bool writeBMP(const char *filename) const;
+    bool
+    writeBMP(const char *filename) const;
 
-    void writePNM(std::ostream &os, const char *comment = NULL) const;
+    void
+    writePNM(std::ostream &os, const char *comment = NULL) const;
 
-    inline bool writePNM(const char *filename, const char *comment = NULL) const {
-        std::ofstream os(filename, std::ofstream::binary);
-        if (!os) {
-            return false;
-        }
-        writePNM(os, comment);
-        return true;
-    }
+    bool
+    writePNM(const char *filename, const char *comment = NULL) const;
 
     bool
     writePNG(std::ostream &os) const;
 
-    inline bool
-    writePNG(const char *filename) const {
-        std::ofstream os(filename, std::ofstream::binary);
-        if (!os) {
-            return false;
-        }
-        return writePNG(os);
-    }
+    bool
+    writePNG(const char *filename) const;
 
     void
     writeRAW(std::ostream &os) const;
 
-    inline bool
-    writeRAW(const char *filename) const {
-	std::ofstream os(filename, std::ofstream::binary);
-	if (!os) {
-	    return false;
-	}
-	writeRAW(os);
-	return true;
-    }
+    bool
+    writeRAW(const char *filename) const;
 };
 
 

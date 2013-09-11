@@ -30,6 +30,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <fstream>
+
 #include "image.hpp"
 
 
@@ -40,8 +42,8 @@ namespace image {
  * http://netpbm.sourceforge.net/doc/ppm.html
  */
 void
-Image::writePNM(std::ostream &os, const char *comment) const {
-    assert(channels == 1 || channels >= 3);
+Image::writePNM(std::ostream &os, const char *comment) const
+{
 
     os << (channels == 1 ? "P5" : "P6") << "\n";
     if (comment) {
@@ -108,6 +110,19 @@ Image::writePNM(std::ostream &os, const char *comment) const {
         delete [] tmp;
     }
 }
+
+
+bool
+Image::writePNM(const char *filename, const char *comment) const
+{
+    std::ofstream os(filename, std::ofstream::binary);
+    if (!os) {
+        return false;
+    }
+    writePNM(os, comment);
+    return true;
+}
+
 
 const char *
 readPNMHeader(const char *buffer, size_t bufferSize, unsigned *channels, unsigned *width, unsigned *height)
