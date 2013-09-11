@@ -43,9 +43,9 @@ import jsondiff
 
 # Null file, to use when we're not interested in subprocesses output
 if platform.system() == 'Windows':
-    NULL = open('NUL:', 'wt')
+    NULL = open('NUL:', 'wb')
 else:
-    NULL = open('/dev/null', 'wt')
+    NULL = open('/dev/null', 'wb')
 
 
 class RetraceRun:
@@ -134,9 +134,19 @@ def read_pnm(stream):
     magic = magic.rstrip()
     if magic == 'P5':
         channels = 1
+        bytesPerChannel = 1
         mode = 'L'
     elif magic == 'P6':
         channels = 3
+        bytesPerChannel = 1
+        mode = 'RGB'
+    elif magic == 'Pf':
+        channels = 1
+        bytesPerChannel = 4
+        mode = 'R'
+    elif magic == 'PF':
+        channels = 3
+        bytesPerChannel = 4
         mode = 'RGB'
     else:
         raise Exception('Unsupported magic `%s`' % magic)
@@ -146,9 +156,18 @@ def read_pnm(stream):
         comment += line[1:]
         line = stream.readline()
     width, height = map(int, line.strip().split())
-    maximum = int(stream.readline().strip())
-    assert maximum == 255
-    data = stream.read(height * width * channels)
+    if bytesPerChannel == 1:
+        maximum = int(stream.readline().strip())
+        assert maximum == 255
+    data = stream.read(height * width * channels * bytesPerChannel)
+    if magic == 'PF':
+        # XXX: Image magic only supports single channel floating point images,
+        # so convert to 8bit RGB
+        pixels = array('f', data)
+        pixels *= 255
+        pixels = array('B', pixels)
+        data = pixels.tostring()
+
     image = Image.frombuffer(mode, (width, height), data, 'raw', mode, 0, 1)
     return image, comment
 

@@ -41,10 +41,12 @@ namespace image {
 void
 Image::writeRAW(std::ostream &os) const
 {
+    assert(channelType == TYPE_UNORM8);
+
     const unsigned char *row;
 
     for (row = start(); row != end(); row += stride()) {
-        os.write((const char *)row, width*channels);
+        os.write((const char *)row, width*channels*bytesPerPixel);
     }
 }
 
