@@ -1,4 +1,5 @@
 #include "imageviewer.h"
+#include "pixelwidget.h"
 
 #include <QDebug>
 #include <QDesktopWidget>
@@ -34,14 +35,28 @@ ImageViewer::ImageViewer(QWidget *parent)
     pal.setBrush(QPalette::Base,
                  QBrush(px));
     scrollAreaWidgetContents->setPalette(pal);
+
+    m_pixelWidget = new PixelWidget(scrollAreaWidgetContents);
+    verticalLayout_2->addWidget(m_pixelWidget);
+
+    rectLabel->hide();
+    pixelLabel->hide();
+
+    connect(m_pixelWidget, SIGNAL(zoomChanged(int)),
+            zoomSpinBox, SLOT(setValue(int)));
+    connect(zoomSpinBox, SIGNAL(valueChanged(int)),
+            m_pixelWidget, SLOT(setZoom(int)));
+    connect(m_pixelWidget, SIGNAL(mousePosition(int, int)),
+            this, SLOT(showPixel(int, int)));
+    connect(m_pixelWidget, SIGNAL(gridGeometry(const QRect &)),
+            this, SLOT(showGrid(const QRect &)));
 }
 
 void ImageViewer::setImage(const QImage &image)
 {
     m_image = image;
     m_temp = m_image;
-    QPixmap px = QPixmap::fromImage(m_temp);
-    imageLabel->setPixmap(px);
+    m_pixelWidget->setSurface(m_image);
     updateGeometry();
 }
 
@@ -112,8 +127,7 @@ void ImageViewer::slotUpdate()
         }
     }
 
-    QPixmap px = QPixmap::fromImage(m_temp);
-    imageLabel->setPixmap(px);
+    m_pixelWidget->setSurface(m_temp);
 
     updateGeometry();
 }
@@ -136,6 +150,38 @@ QSize ImageViewer::sizeHint() const
 
     return QSize(qMin(optimalWindowSize.width(), maxAvailableSize.width()),
                  qMin(optimalWindowSize.height(), maxAvailableSize.height()));
+}
+
+void ImageViewer::resizeEvent(QResizeEvent *e)
+{
+    QWidget::resizeEvent(e);
+}
+
+void ImageViewer::showPixel(int x, int y)
+{
+    xSpinBox->setValue(x);
+    ySpinBox->setValue(y);
+    QColor clr = m_pixelWidget->colorAtCurrentPosition();
+    pixelLabel->setText(tr("RGBA: (%1, %2, %3, %4)")
+                        .arg(clr.red())
+                        .arg(clr.green())
+                        .arg(clr.blue())
+                        .arg(clr.alpha()));
+    pixelLabel->show();
+}
+
+void ImageViewer::showGrid(const QRect &rect)
+{
+    if (rect.isEmpty()) {
+        rectLabel->hide();
+        return;
+    }
+    rectLabel->setText(tr("Grid: [%1, %2, %3, %4]")
+                       .arg(rect.x())
+                       .arg(rect.y())
+                       .arg(rect.width())
+                       .arg(rect.height()));
+    rectLabel->show();
 }
 
 #include "imageviewer.moc"

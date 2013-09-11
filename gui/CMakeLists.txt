@@ -14,6 +14,7 @@ set(qapitrace_SRCS
    jumpwidget.cpp
    mainwindow.cpp
    main.cpp
+   pixelwidget.cpp
    profiledialog.cpp
    profiletablemodel.cpp
    retracer.cpp
