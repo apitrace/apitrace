@@ -395,9 +395,7 @@ void Retracer::run()
              */
 
             while (!io.atEnd()) {
-                unsigned channels = 0;
-                unsigned width = 0;
-                unsigned height = 0;
+                image::PNMInfo info;
 
                 char header[512];
                 qint64 headerSize = 0;
@@ -414,13 +412,18 @@ void Retracer::run()
                     headerSize += headerRead;
                 }
 
-                const char *headerEnd = image::readPNMHeader(header, headerSize, &channels, &width, &height);
+                const char *headerEnd = image::readPNMHeader(header, headerSize, info);
 
                 // if invalid PNM header was encountered, ...
-                if (header == headerEnd) {
+                if (headerEnd == NULL ||
+                    info.channelType != image::TYPE_UNORM8) {
                     qDebug() << "error: invalid snapshot stream encountered";
                     break;
                 }
+
+                unsigned channels = info.channels;
+                unsigned width = info.width;
+                unsigned height = info.height;
 
                 // qDebug() << "channels: " << channels << ", width: " << width << ", height: " << height";
 

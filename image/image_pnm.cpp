@@ -67,6 +67,8 @@ Image::writePNM(std::ostream &os, const char *comment) const
             outChannels = 3;
         }
         break;
+    default:
+        assert(0);
     }
 
     os << identifier << "\n";
@@ -189,24 +191,49 @@ Image::writePNM(const char *filename, const char *comment) const
 }
 
 
+/**
+ * Parse PNM header.
+ *
+ * Returns pointer to data start, or NULL on failure.
+ */
 const char *
-readPNMHeader(const char *buffer, size_t bufferSize, unsigned *channels, unsigned *width, unsigned *height)
+readPNMHeader(const char *buffer, size_t bufferSize, PNMInfo &info)
 {
-    *channels = 0;
-    *width = 0;
-    *height = 0;
+    info.channels = 0;
+    info.width = 0;
+    info.height = 0;
 
     const char *currentBuffer = buffer;
     const char *nextBuffer;
 
     // parse number of channels
-    int scannedChannels = sscanf(currentBuffer, "P%d\n", channels);
+    char c;
+    int scannedChannels = sscanf(currentBuffer, "P%c\n", &c);
     if (scannedChannels != 1) { // validate scanning of channels
         // invalid channel line
-        return buffer;
+        return NULL;
     }
     // convert channel token to number of channels
-    *channels = (*channels == 5) ? 1 : 3;
+    switch (c) {
+    case '5':
+        info.channels = 1;
+        info.channelType = TYPE_UNORM8;
+        break;
+    case '6':
+        info.channels = 3;
+        info.channelType = TYPE_UNORM8;
+        break;
+    case 'f':
+        info.channels = 1;
+        info.channelType = TYPE_FLOAT;
+        break;
+    case 'F':
+        info.channels = 3;
+        info.channelType = TYPE_FLOAT;
+        break;
+    default:
+        return NULL;
+    }
 
     // advance past channel line
     nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
@@ -222,10 +249,10 @@ readPNMHeader(const char *buffer, size_t bufferSize, unsigned *channels, unsigne
     }
 
     // parse dimensions of image
-    int scannedDimensions = sscanf(currentBuffer, "%d %d\n", width, height);
+    int scannedDimensions = sscanf(currentBuffer, "%u %u\n", &info.width, &info.height);
     if (scannedDimensions != 2) { // validate scanning of dimensions
         // invalid dimension line
-        return buffer;
+        return NULL;
     }
 
     // advance past dimension line
@@ -233,11 +260,40 @@ readPNMHeader(const char *buffer, size_t bufferSize, unsigned *channels, unsigne
     bufferSize -= nextBuffer - currentBuffer;
     currentBuffer = nextBuffer;
 
-    // skip over "255\n" at end of header
-    nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
+    if (info.channelType == TYPE_UNORM8) {
+        // skip over "255\n" at end of header
+        nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
+    }
 
     // return start of image data
     return nextBuffer;
 }
+
+
+Image *
+readPNM(const char *buffer, size_t bufferSize)
+{
+    PNMInfo info;
+
+    const char *headerEnd = readPNMHeader(buffer, bufferSize, info);
+
+    // if invalid PNM header was encountered, ...
+    if (headerEnd == NULL) {
+        std::cerr << "error: invalid PNM header";
+        return NULL;
+    }
+
+    Image *image = new Image(info.width, info.height, info.channels, false, info.channelType);
+
+    size_t rowBytes = info.width * image->bytesPerPixel;
+    for (unsigned char *row = image->start(); row != image->end(); row += image->stride()) {
+        memcpy(row, headerEnd, rowBytes);
+        headerEnd += rowBytes;
+    }
+
+    return image;
+}
+
+
 
 } /* namespace image */

@@ -126,8 +126,20 @@ readPNG(std::istream &is);
 Image *
 readPNG(const char *filename);
 
+
+struct PNMInfo
+{
+    unsigned width;
+    unsigned height;
+    unsigned channels;
+    ChannelType channelType;
+};
+
 const char *
-readPNMHeader(const char *buffer, size_t size, unsigned *channels, unsigned *width, unsigned *height);
+readPNMHeader(const char *buffer, size_t size, PNMInfo &info);
+
+Image *
+readPNM(const char *buffer, size_t bufferSize);
 
 
 } /* namespace image */
