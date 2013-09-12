@@ -144,7 +144,7 @@ ApiSurface::qimageFromRawImage(const image::Image *image)
         if (image->channelType == image::TYPE_UNORM8) {
             const unsigned char *src = srcRow;
             for (int x = 0; x < width; ++x) {
-                unsigned char rgba[4];
+                unsigned char rgba[4] = {0, 0, 0, 0xff};
                 for (int c = 0; c < image->channels; ++c) {
                     rgba[c] = *src++;
                 }
