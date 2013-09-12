@@ -575,7 +575,7 @@ static void addSurfaceItem(const ApiSurface &surface,
     l->setWordWrap(true);
     tree->setItemWidget(item, 1, l);
 
-    item->setData(0, Qt::UserRole, surface.image());
+    item->setData(0, Qt::UserRole, surface.base64Data());
 }
 
 void MainWindow::fillStateForFrame()
@@ -722,8 +722,8 @@ void MainWindow::showSelectedSurface()
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
 
     QVariant var = item->data(0, Qt::UserRole);
-    QImage img = var.value<QImage>();
-    viewer->setImage(img);
+    QByteArray base64Data = var.value<QByteArray>();
+    viewer->setBase64Data(base64Data);
 
     viewer->show();
     viewer->raise();

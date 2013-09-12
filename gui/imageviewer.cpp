@@ -1,5 +1,8 @@
 #include "imageviewer.h"
 #include "pixelwidget.h"
+#include "apisurface.h"
+
+#include "image/image.hpp"
 
 #include <QDebug>
 #include <QDesktopWidget>
@@ -8,7 +11,8 @@
 #include <QScrollBar>
 
 ImageViewer::ImageViewer(QWidget *parent)
-    : QDialog(parent)
+    : QDialog(parent),
+      m_image(0)
 {
     setupUi(this);
 
@@ -52,11 +56,17 @@ ImageViewer::ImageViewer(QWidget *parent)
             this, SLOT(showGrid(const QRect &)));
 }
 
-void ImageViewer::setImage(const QImage &image)
+ImageViewer::~ImageViewer()
 {
-    m_image = image;
-    m_temp = m_image;
-    m_pixelWidget->setSurface(m_image);
+    delete m_image;
+}
+
+void ImageViewer::setBase64Data(const QByteArray &base64)
+{
+    delete m_image;
+    m_image = ApiSurface::imageFromBase64(base64);
+    m_convertedImage = ApiSurface::qimageFromRawImage(m_image);
+    m_pixelWidget->setSurface(m_convertedImage);
     updateGeometry();
 }
 
@@ -73,7 +83,8 @@ static inline int clamp(int x)
 
 void ImageViewer::slotUpdate()
 {
-    m_temp = m_image.mirrored(false, flipCheckBox->isChecked());
+    m_convertedImage =
+        m_convertedImage.mirrored(false, flipCheckBox->isChecked());
 
     double lowerValue = lowerSpinBox->value();
     double upperValue = upperSpinBox->value();
@@ -92,7 +103,8 @@ void ImageViewer::slotUpdate()
         int offset = - lowerValue * 255;
         int scale = 256 / (upperValue - lowerValue);
 
-        m_temp = m_temp.convertToFormat(QImage::Format_ARGB32);
+        m_convertedImage =
+            m_convertedImage.convertToFormat(QImage::Format_ARGB32);
 
         if (0) {
             qDebug()
@@ -100,13 +112,13 @@ void ImageViewer::slotUpdate()
                 << "scale = " << scale << "\n";
         }
 
-        int width = m_temp.width();
-        int height = m_temp.height();
+        int width = m_convertedImage.width();
+        int height = m_convertedImage.height();
 
         int aMask = opaque ? 0xff : 0;
 
         for (int y = 0; y < height; ++y) {
-            QRgb *scanline = (QRgb *)m_temp.scanLine(y);
+            QRgb *scanline = (QRgb *)m_convertedImage.scanLine(y);
             for (int x = 0; x < width; ++x) {
                 QRgb pixel = scanline[x];
                 int r = qRed(pixel);
@@ -127,7 +139,7 @@ void ImageViewer::slotUpdate()
         }
     }
 
-    m_pixelWidget->setSurface(m_temp);
+    m_pixelWidget->setSurface(m_convertedImage);
 
     updateGeometry();
 }
@@ -140,8 +152,8 @@ QSize ImageViewer::sizeHint() const
                 scrollArea->verticalScrollBar()->width() : 0;
     int hScrollHeight = scrollArea->horizontalScrollBar() ?
                 scrollArea->horizontalScrollBar()->height() : 0;
-    QSize optimalWindowSize(m_image.width() + vScrollWidth,
-                            m_image.height() + hScrollHeight);
+    QSize optimalWindowSize(m_convertedImage.width() + vScrollWidth,
+                            m_convertedImage.height() + hScrollHeight);
 
     QRect screenRect = QApplication::desktop()->availableGeometry();
     const float maxPercentOfDesktopSpace = 0.8f;
@@ -157,16 +169,45 @@ void ImageViewer::resizeEvent(QResizeEvent *e)
     QWidget::resizeEvent(e);
 }
 
+template <class T>
+QString createPixelLabel(image::Image *img, int x, int y)
+{
+    QString pixelLabel;
+    unsigned char *pixelLocation = 0;
+    T *pixel;
+
+    pixelLocation = img->pixels + img->stride() * y;
+    pixelLocation += x * img->bytesPerPixel;
+    pixel = ((T*)pixelLocation);
+
+    pixelLabel += QLatin1String("[");
+    pixelLabel += QString::fromLatin1("%1").arg(pixel[0]);
+
+    for (int channel = 1; channel < img->channels; ++channel) {
+        pixelLabel += QString::fromLatin1(", %1").arg(pixel[channel]);
+    }
+    pixelLabel += QLatin1String("]");
+
+    return pixelLabel;
+}
+
 void ImageViewer::showPixel(int x, int y)
 {
     xSpinBox->setValue(x);
     ySpinBox->setValue(y);
-    QColor clr = m_pixelWidget->colorAtCurrentPosition();
-    pixelLabel->setText(tr("RGBA: (%1, %2, %3, %4)")
-                        .arg(clr.red())
-                        .arg(clr.green())
-                        .arg(clr.blue())
-                        .arg(clr.alpha()));
+
+    if (!m_image)
+        return;
+
+    QString label = tr("Pixel: ");
+
+    if (m_image->channelType == image::TYPE_UNORM8) {
+        label += createPixelLabel<unsigned char>(m_image, x, y);
+    } else {
+        label += createPixelLabel<float>(m_image, x, y);
+    }
+
+    pixelLabel->setText(label);
     pixelLabel->show();
 }
 

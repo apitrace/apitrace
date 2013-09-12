@@ -5,6 +5,10 @@
 #include <QSize>
 #include <QString>
 
+namespace image {
+    class Image;
+}
+
 class ApiSurface
 {
 public:
@@ -21,13 +25,16 @@ public:
 
     void contentsFromBase64(const QByteArray &base64);
 
-    QImage image() const;
+    QByteArray base64Data() const;
     QImage thumb() const;
+
+    static image::Image *imageFromBase64(const QByteArray &data);
+    static QImage qimageFromRawImage(const image::Image *img);
 
 private:
     QSize  m_size;
     int m_numChannels;
-    QImage m_image;
+    QByteArray m_base64Data;
     QImage m_thumb;
     int m_depth;
     QString m_formatName;
