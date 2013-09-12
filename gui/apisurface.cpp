@@ -35,12 +35,19 @@ void ApiSurface::contentsFromBase64(const QByteArray &base64)
 {
     QByteArray dataArray = QByteArray::fromBase64(base64);
 
+    image::Image *image;
+
     /*
-     * FIXME: Detect the float PFM images here.
+     * Detect the PNG vs PFM images.
      */
-    ByteArrayBuf buf(dataArray);
-    std::istream istr(&buf);
-    image::Image *image = image::readPNG(istr);
+    const char pngSignature[] = {(char)0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0};
+    if (dataArray.startsWith(pngSignature)) {
+        ByteArrayBuf buf(dataArray);
+        std::istream istr(&buf);
+        image = image::readPNG(istr);
+    } else {
+        image = image::readPNM(dataArray.data(), dataArray.size());
+    }
 
     /*
      * FIXME: Instead of converting to QImage here, we should be deferring the conversion
@@ -81,7 +88,7 @@ void ApiSurface::contentsFromBase64(const QByteArray &base64)
                 for (int c = 0; c < image->channels; ++c) {
                     float f = *src++;
                     unsigned char u;
-                    if (f >= 255.0f) {
+                    if (f >= 1.0f) {
                         u = 255;
                     } else if (f <= 0.0f) {
                         u = 0;
