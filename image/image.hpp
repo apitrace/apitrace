@@ -64,7 +64,7 @@ public:
         channelType(t),
         bytesPerPixel(channels * (t == TYPE_FLOAT ? 4 : 1)),
         flipped(f),
-        pixels(new unsigned char[h*w*c])
+        pixels(new unsigned char[h*w*bytesPerPixel])
     {}
 
     inline ~Image() {
