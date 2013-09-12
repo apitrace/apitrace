@@ -322,7 +322,13 @@ JSONWriter::writeImage(image::Image *image, const char *format, unsigned depth)
 
     beginMember("__data__");
     std::stringstream ss;
-    image->writePNG(ss);
+
+    if (image->channelType == image::TYPE_UNORM8) {
+        image->writePNG(ss);
+    } else {
+        image->writePNM(ss);
+    }
+
     const std::string & s = ss.str();
     writeBase64(s.data(), s.size());
     endMember(); // __data__
