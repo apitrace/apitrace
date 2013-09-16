@@ -156,17 +156,20 @@ def read_pnm(stream):
         comment += line[1:]
         line = stream.readline()
     width, height = map(int, line.strip().split())
+    maximum = int(stream.readline().strip())
     if bytesPerChannel == 1:
-        maximum = int(stream.readline().strip())
         assert maximum == 255
+    else:
+        assert maximum == 1
     data = stream.read(height * width * channels * bytesPerChannel)
-    if magic == 'PF':
-        # XXX: Image magic only supports single channel floating point images,
-        # so convert to 8bit RGB
-        pixels = array('f', data)
-        pixels *= 255
-        pixels = array('B', pixels)
-        data = pixels.tostring()
+    if bytesPerChannel == 4:
+        # Image magic only supports single channel floating point images, so
+        # represent the image as numpy arrays
+
+        import numpy
+        pixels = numpy.fromstring(data, dtype=numpy.float32)
+        pixels.resize((height, width, channels))
+        return pixels, comment
 
     image = Image.frombuffer(mode, (width, height), data, 'raw', mode, 0, 1)
     return image, comment
@@ -291,8 +294,25 @@ def main():
                 callNo = refCallNo
 
                 # Compare the two images
-                comparer = Comparer(refImage, srcImage)
-                precision = comparer.precision()
+                if isinstance(refImage, Image.Image) and isinstance(srcImage, Image.Image):
+                    # Using PIL
+                    numpyImages = False
+                    comparer = Comparer(refImage, srcImage)
+                    precision = comparer.precision()
+                else:
+                    # Using numpy (for floating point images)
+                    # TODO: drop PIL when numpy path becomes general enough
+                    import numpy
+                    assert not isinstance(refImage, Image.Image)
+                    assert not isinstance(srcImage, Image.Image)
+                    numpyImages = True
+                    assert refImage.shape == srcImage.shape
+                    diffImage = numpy.square(srcImage - refImage)
+                    match = numpy.all(diffImage == 0)
+                    if match:
+                        precision = 24
+                    else:
+                        precision = 0
 
                 mismatch = precision < options.threshold
 
@@ -304,7 +324,7 @@ def main():
                     highligher.normal()
 
                 if mismatch:
-                    if options.diff_prefix:
+                    if options.diff_prefix and not numpyImages:
                         prefix = os.path.join(options.diff_prefix, '%010u' % callNo)
                         prefix_dir = os.path.dirname(prefix)
                         if not os.path.isdir(prefix_dir):
