@@ -99,7 +99,7 @@ Image::writePNM(std::ostream &os, const char *comment) const
          * Need to add/remove channels, one pixel at a time.
          */
 
-        unsigned char *tmp = new unsigned char[width*bytesPerPixel];
+        unsigned char *tmp = new unsigned char[width*outChannels*bytesPerChannel];
 
         if (channelType == TYPE_UNORM8) {
             /*
@@ -174,7 +174,7 @@ Image::writePNM(std::ostream &os, const char *comment) const
                         *dst++ = 0;
                     }
                 }
-                os.write((const char *)tmp, width*bytesPerPixel);
+                os.write((const char *)tmp, width*outChannels*bytesPerChannel);
             }
         }
 

@@ -49,6 +49,7 @@ public:
     unsigned height;
     unsigned channels;
     ChannelType channelType;
+    unsigned bytesPerChannel;
     unsigned bytesPerPixel;
 
     // Flipped vertically or not
@@ -62,7 +63,8 @@ public:
         height(h),
         channels(c),
         channelType(t),
-        bytesPerPixel(channels * (t == TYPE_FLOAT ? 4 : 1)),
+        bytesPerChannel(t == TYPE_FLOAT ? 4 : 1),
+        bytesPerPixel(channels * bytesPerChannel),
         flipped(f),
         pixels(new unsigned char[h*w*bytesPerPixel])
     {}
