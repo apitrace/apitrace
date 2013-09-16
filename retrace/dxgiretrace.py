@@ -229,7 +229,7 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print r'    }'
 
         # Force driver
-        if interface.name.startswith('IDXGIFactory') and method.name == 'EnumAdapters':
+        if interface.name.startswith('IDXGIFactory') and method.name.startswith('EnumAdapters'):
             print r'    const char *szSoftware = NULL;'
             print r'    switch (retrace::driver) {'
             print r'    case retrace::DRIVER_REFERENCE:'
@@ -250,7 +250,7 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print r'        }'
             print r'    }'
             print r'    if (hSoftware) {'
-            print r'        _result = _this->CreateSoftwareAdapter(hSoftware, ppAdapter);'
+            print r'        _result = _this->CreateSoftwareAdapter(hSoftware, reinterpret_cast<IDXGIAdapter **>(ppAdapter));'
             print r'    } else {'
             Retracer.invokeInterfaceMethod(self, interface, method)
             print r'    }'
