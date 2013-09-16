@@ -80,6 +80,8 @@ Image::writePNM(std::ostream &os, const char *comment) const
 
     if (channelType == TYPE_UNORM8) {
         os << "255" << "\n";
+    } else {
+        os << "1" << "\n";
     }
 
     const unsigned char *row;
@@ -262,10 +264,8 @@ readPNMHeader(const char *buffer, size_t bufferSize, PNMInfo &info)
     bufferSize -= nextBuffer - currentBuffer;
     currentBuffer = nextBuffer;
 
-    if (info.channelType == TYPE_UNORM8) {
-        // skip over "255\n" at end of header
-        nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
-    }
+    // skip scale factor / endianness line
+    nextBuffer = (const char *) memchr((const void *) currentBuffer, '\n', bufferSize) + 1;
 
     // return start of image data
     return nextBuffer;
