@@ -62,9 +62,13 @@ Image::writePNM(std::ostream &os, const char *comment) const
         if (channels == 1) {
             identifier = "Pf";
             outChannels = 1;
-        } else {
+        } else if (channels <= 3) {
             identifier = "PF";
-            outChannels = 3;
+            outChannels = 4;
+        } else {
+            // Non-standard extension for 4 floats
+            identifier = "PX";
+            outChannels = 4;
         }
         break;
     default:
@@ -233,6 +237,10 @@ readPNMHeader(const char *buffer, size_t bufferSize, PNMInfo &info)
         break;
     case 'F':
         info.channels = 3;
+        info.channelType = TYPE_FLOAT;
+        break;
+    case 'X':
+        info.channels = 4;
         info.channelType = TYPE_FLOAT;
         break;
     default:

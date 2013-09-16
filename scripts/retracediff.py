@@ -148,6 +148,10 @@ def read_pnm(stream):
         channels = 3
         bytesPerChannel = 4
         mode = 'RGB'
+    elif magic == 'PX':
+        channels = 4
+        bytesPerChannel = 4
+        mode = 'RGB'
     else:
         raise Exception('Unsupported magic `%s`' % magic)
     comment = ''
