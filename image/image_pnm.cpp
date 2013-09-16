@@ -156,6 +156,8 @@ Image::writePNM(std::ostream &os, const char *comment) const
              * General path for float images.
              */
 
+            unsigned copyChannels = std::min(channels, outChannels);
+
             assert(channelType == TYPE_FLOAT);
 
             for (row = start(); row != end(); row += stride()) {
@@ -163,10 +165,10 @@ Image::writePNM(std::ostream &os, const char *comment) const
                 float *dst = (float *)tmp;
                 for (unsigned x = 0; x < width; ++x) {
                     unsigned channel = 0;
-                    for (; channel < channels; ++channel) {
+                    for (; channel < copyChannels; ++channel) {
                         *dst++ = *src++;
                     }
-                    for (; channel < channels; ++channel) {
+                    for (; channel < outChannels; ++channel) {
                         *dst++ = 0;
                     }
                 }
