@@ -179,6 +179,17 @@ def read_pnm(stream):
     return image, comment
 
 
+def dumpNumpyImage(output, pixels):
+    height, width, channels = pixels.shape
+    for y in range(height):
+        output.write('  ')
+        for x in range(width):
+            for c in range(channels):
+                output.write('%0.9g,' % pixels[y, x, c])
+            output.write('  ')
+        output.write('\n')
+
+
 def parse_env(optparser, entries):
     '''Translate a list of NAME=VALUE entries into an environment dictionary.'''
 
@@ -328,6 +339,10 @@ def main():
                     highligher.normal()
 
                 if mismatch:
+                    if numpyImages:
+                        dumpNumpyImage(output, refImage)
+                        output.write("->\n")
+                        dumpNumpyImage(output, srcImage)
                     if options.diff_prefix and not numpyImages:
                         prefix = os.path.join(options.diff_prefix, '%010u' % callNo)
                         prefix_dir = os.path.dirname(prefix)
