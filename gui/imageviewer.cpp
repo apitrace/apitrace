@@ -70,17 +70,6 @@ void ImageViewer::setBase64Data(const QByteArray &base64)
     updateGeometry();
 }
 
-static inline int clamp(int x)
-{
-    if (x <= 0) {
-        return 0;
-    }
-    if (x > 255) {
-        return 255;
-    }
-    return x;
-}
-
 void ImageViewer::slotUpdate()
 {
     m_convertedImage =
@@ -92,51 +81,12 @@ void ImageViewer::slotUpdate()
     bool opaque = opaqueCheckBox->isChecked();
     bool alpha  = alphaCheckBox->isChecked();
 
-    if (lowerValue != 0.0 || upperValue != 1.0 || opaque || alpha) {
-        /*
-         * Rescale the image.
-         *
-         * XXX: This would be much more useful if done with the full precision
-         * of the original image
-         */
+    m_convertedImage = ApiSurface::qimageFromRawImage(m_image,
+                                                      lowerValue, upperValue,
+                                                      opaque, alpha);
 
-        int offset = - lowerValue * 255;
-        int scale = 256 / (upperValue - lowerValue);
-
-        m_convertedImage =
-            m_convertedImage.convertToFormat(QImage::Format_ARGB32);
-
-        if (0) {
-            qDebug()
-                << "offset = " << offset << "\n"
-                << "scale = " << scale << "\n";
-        }
-
-        int width = m_convertedImage.width();
-        int height = m_convertedImage.height();
-
-        int aMask = opaque ? 0xff : 0;
-
-        for (int y = 0; y < height; ++y) {
-            QRgb *scanline = (QRgb *)m_convertedImage.scanLine(y);
-            for (int x = 0; x < width; ++x) {
-                QRgb pixel = scanline[x];
-                int r = qRed(pixel);
-                int g = qGreen(pixel);
-                int b = qBlue(pixel);
-                int a = qAlpha(pixel);
-                if (alpha) {
-                    a = clamp(((a + offset) * scale) >> 8);
-                    scanline[x] = qRgba(a, a, a, 0xff);
-                } else {
-                    r = clamp(((r + offset) * scale) >> 8);
-                    g = clamp(((g + offset) * scale) >> 8);
-                    b = clamp(((b + offset) * scale) >> 8);
-                    a |= aMask;
-                    scanline[x] = qRgba(r, g, b, a);
-                }
-            }
-        }
+    if (flipCheckBox->isChecked()) {
+        m_convertedImage = m_convertedImage.mirrored(false, true);
     }
 
     m_pixelWidget->setSurface(m_convertedImage);

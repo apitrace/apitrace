@@ -29,7 +29,11 @@ public:
     QImage thumb() const;
 
     static image::Image *imageFromBase64(const QByteArray &data);
-    static QImage qimageFromRawImage(const image::Image *img);
+    static QImage qimageFromRawImage(const image::Image *img,
+                                     float lowerValue = 0.0f,
+                                     float upperValue = 1.0f,
+                                     bool opaque = false,
+                                     bool alpha = false);
 
 private:
     QSize  m_size;

@@ -128,14 +128,49 @@ ApiSurface::imageFromBase64(const QByteArray &base64)
 }
 
 
+static inline unsigned char clamp(int x)
+{
+    if (x <= 0) {
+        return 0;
+    }
+    if (x > 255) {
+        return 255;
+    }
+    return (unsigned char) x;
+}
+
+static inline unsigned char clamp(float x)
+{
+    if (x <= 0.0f) {
+        return 0;
+    }
+    if (x > 255.0f) {
+        return 255;
+    }
+    return (unsigned char) (x + 0.5f);
+}
+
+
 QImage
-ApiSurface::qimageFromRawImage(const image::Image *image)
+ApiSurface::qimageFromRawImage(const image::Image *image,
+                               float lowerValue,
+                               float upperValue,
+                               bool opaque,
+                               bool alpha)
 {
     QImage img;
     int width = image->width;
     int height = image->height;
 
     img = QImage(width, height, QImage::Format_ARGB32);
+
+    int offset = - lowerValue * 255;
+    int scale = 256 / (upperValue - lowerValue);
+
+    float offset_f = - lowerValue;
+    float scale_f = 255.0f / (upperValue - lowerValue);
+
+    int aMask = (opaque || alpha) ? 0xff : 0;
 
     const unsigned char *srcRow = image->start();
     for (int y = 0; y < height; ++y) {
@@ -146,13 +181,17 @@ ApiSurface::qimageFromRawImage(const image::Image *image)
             for (int x = 0; x < width; ++x) {
                 unsigned char rgba[4] = {0, 0, 0, 0xff};
                 for (int c = 0; c < image->channels; ++c) {
-                    rgba[c] = *src++;
+                    rgba[c] = clamp(((*src++ + offset) * scale) >> 8);
                 }
                 if (image->channels == 1) {
                     // Use gray-scale instead of red
                     rgba[1] = rgba[0];
                     rgba[2] = rgba[0];
                 }
+                if (alpha) {
+                    rgba[2] = rgba[1] = rgba[0] = rgba[3];
+                }
+                rgba[3] |= aMask;
                 dst[x] = qRgba(rgba[0], rgba[1], rgba[2], rgba[3]);
             }
         } else {
@@ -160,22 +199,17 @@ ApiSurface::qimageFromRawImage(const image::Image *image)
             for (int x = 0; x < width; ++x) {
                 unsigned char rgba[4] = {0, 0, 0, 0xff};
                 for (int c = 0; c < image->channels; ++c) {
-                    float f = *src++;
-                    unsigned char u;
-                    if (f >= 1.0f) {
-                        u = 255;
-                    } else if (f <= 0.0f) {
-                        u = 0;
-                    } else {
-                        u = f * 255 + 0.5;
-                    }
-                    rgba[c] = u;
+                    rgba[c] = clamp((*src++ + offset_f)*scale_f);
                 }
                 if (image->channels == 1) {
                     // Use gray-scale instead of red
                     rgba[1] = rgba[0];
                     rgba[2] = rgba[0];
                 }
+                if (alpha) {
+                    rgba[2] = rgba[1] = rgba[0] = rgba[3];
+                }
+                rgba[3] |= aMask;
                 dst[x] = qRgba(rgba[0], rgba[1], rgba[2], rgba[3]);
             }
         }
