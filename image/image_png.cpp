@@ -53,6 +53,8 @@ pngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length)
 bool
 Image::writePNG(std::ostream &os) const
 {
+    assert(channelType == TYPE_UNORM8);
+
     png_structp png_ptr;
     png_infop info_ptr;
     int color_type;

@@ -71,6 +71,7 @@ struct Pixel {
 bool
 Image::writeBMP(const char *filename) const {
     assert(channels == 4);
+    assert(channelType == TYPE_UNORM8);
 
     struct FileHeader bmfh;
     struct InfoHeader bmih;

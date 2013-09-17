@@ -59,11 +59,6 @@ OSStatus CGSGetSurfaceBounds(CGSConnectionID, CGWindowID, CGSSurfaceID, CGRect *
 #endif /* __APPLE__ */
 
 
-/* Change thi to one to force interpreting depth buffers as RGBA, which enables
- * visualizing full dynamic range, until we can transmit HDR images to the GUI */
-#define DEPTH_AS_RGBA 0
-
-
 namespace glstate {
 
 
@@ -935,15 +930,15 @@ getDrawBufferImage() {
     }
 
     GLenum type = GL_UNSIGNED_BYTE;
+    image::ChannelType channelType = image::TYPE_UNORM8;
 
-#if DEPTH_AS_RGBA
     if (format == GL_DEPTH_COMPONENT) {
-        type = GL_UNSIGNED_INT;
-        channels = 4;
+        type = GL_FLOAT;
+        channels = 1;
+        channelType = image::TYPE_FLOAT;
     }
-#endif
 
-    image::Image *image = new image::Image(desc.width, desc.height, channels, true);
+    image::Image *image = new image::Image(desc.width, desc.height, channels, true, channelType);
     if (!image) {
         return NULL;
     }
@@ -1002,15 +997,15 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     Context context;
 
     GLenum type = GL_UNSIGNED_BYTE;
+    image::ChannelType channelType = image::TYPE_UNORM8;
 
-#if DEPTH_AS_RGBA
     if (format == GL_DEPTH_COMPONENT) {
-        type = GL_UNSIGNED_INT;
-        channels = 4;
+        type = GL_FLOAT;
+        channels = 1;
+        channelType = image::TYPE_FLOAT;
     }
-#endif
 
-    image::Image *image = new image::Image(width, height, channels, true);
+    image::Image *image = new image::Image(width, height, channels, true, channelType);
 
     while (glGetError() != GL_NO_ERROR) {}
 

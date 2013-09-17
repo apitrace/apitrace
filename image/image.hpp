@@ -37,11 +37,20 @@
 namespace image {
 
 
+enum ChannelType {
+    TYPE_UNORM8 = 0,
+    TYPE_FLOAT
+};
+
+
 class Image {
 public:
     unsigned width;
     unsigned height;
     unsigned channels;
+    ChannelType channelType;
+    unsigned bytesPerChannel;
+    unsigned bytesPerPixel;
 
     // Flipped vertically or not
     bool flipped;
@@ -49,36 +58,45 @@ public:
     // Pixels in RGBA format
     unsigned char *pixels;
 
-    inline Image(unsigned w, unsigned h, unsigned c = 4, bool f = false) : 
+    inline Image(unsigned w, unsigned h, unsigned c = 4, bool f = false, ChannelType t = TYPE_UNORM8) :
         width(w),
         height(h),
         channels(c),
+        channelType(t),
+        bytesPerChannel(t == TYPE_FLOAT ? 4 : 1),
+        bytesPerPixel(channels * bytesPerChannel),
         flipped(f),
-        pixels(new unsigned char[h*w*c])
+        pixels(new unsigned char[h*w*bytesPerPixel])
     {}
 
     inline ~Image() {
         delete [] pixels;
     }
 
+    // Absolute stride
+    inline unsigned
+    _stride() const {
+        return width*bytesPerPixel;
+    }
+
     inline unsigned char *start(void) {
-        return flipped ? pixels + (height - 1)*width*channels : pixels;
+        return flipped ? pixels + (height - 1)*_stride() : pixels;
     }
 
     inline const unsigned char *start(void) const {
-        return flipped ? pixels + (height - 1)*width*channels : pixels;
+        return flipped ? pixels + (height - 1)*_stride() : pixels;
     }
 
     inline unsigned char *end(void) {
-        return flipped ? pixels - width*channels : pixels + height*width*channels;
+        return flipped ? pixels - _stride() : pixels + height*_stride();
     }
 
     inline const unsigned char *end(void) const {
-        return flipped ? pixels - width*channels : pixels + height*width*channels;
+        return flipped ? pixels - _stride() : pixels + height*_stride();
     }
 
     inline signed stride(void) const {
-        return flipped ? -(signed)(width*channels) : width*channels;
+        return flipped ? -(signed)_stride() : _stride();
     }
 
     bool
@@ -110,8 +128,20 @@ readPNG(std::istream &is);
 Image *
 readPNG(const char *filename);
 
+
+struct PNMInfo
+{
+    unsigned width;
+    unsigned height;
+    unsigned channels;
+    ChannelType channelType;
+};
+
 const char *
-readPNMHeader(const char *buffer, size_t size, unsigned *channels, unsigned *width, unsigned *height);
+readPNMHeader(const char *buffer, size_t size, PNMInfo &info);
+
+Image *
+readPNM(const char *buffer, size_t bufferSize);
 
 
 } /* namespace image */
