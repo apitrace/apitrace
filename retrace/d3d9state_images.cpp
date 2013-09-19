@@ -91,7 +91,6 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
                 dst[3*x + 0] = (( pixel        & 0x1f) * (2*0xff) + 0x1f) / (2*0x1f);
                 dst[3*x + 1] = (((pixel >>  5) & 0x3f) * (2*0xff) + 0x3f) / (2*0x3f);
                 dst[3*x + 2] = (( pixel >> 11        ) * (2*0xff) + 0x1f) / (2*0x1f);
-                dst[3*x + 3] = 0xff;
             }
         } else {
             for (unsigned x = 0; x < Desc.Width; ++x) {
