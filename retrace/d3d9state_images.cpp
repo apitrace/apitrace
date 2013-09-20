@@ -38,14 +38,99 @@ namespace d3dstate {
 
 
 static image::Image *
+getSurfaceImage(IDirect3DDevice9 *pDevice,
+                IDirect3DSurface9 *pSurface) {
+    image::Image *image = NULL;
+    D3DSURFACE_DESC Desc;
+    D3DLOCKED_RECT LockedRect;
+    const unsigned char *src;
+    unsigned char *dst;
+    HRESULT hr;
+
+    if (!pSurface) {
+        return NULL;
+    }
+
+    hr = pSurface->GetDesc(&Desc);
+    assert(SUCCEEDED(hr));
+
+    unsigned numChannels;
+    image::ChannelType channelType;
+    switch (Desc.Format) {
+    case D3DFMT_X8R8G8B8:
+    case D3DFMT_A8R8G8B8:
+    case D3DFMT_R5G6B5:
+        numChannels = 3;
+        channelType = image::TYPE_UNORM8;
+        break;
+    case D3DFMT_D16:
+    case D3DFMT_D16_LOCKABLE:
+        numChannels = 1;
+        channelType = image::TYPE_FLOAT;
+        break;
+    default:
+        std::cerr << "warning: unsupported D3DFORMAT " << Desc.Format << "\n";
+        goto no_lock;
+    }
+
+    hr = pSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY);
+    if (FAILED(hr)) {
+        goto no_lock;
+    }
+
+    image = new image::Image(Desc.Width, Desc.Height, numChannels, true, channelType);
+    if (!image) {
+        goto no_image;
+    }
+
+    dst = image->start();
+    src = (const unsigned char *)LockedRect.pBits;
+    for (unsigned y = 0; y < Desc.Height; ++y) {
+        switch (Desc.Format) {
+        case D3DFMT_R5G6B5:
+            for (unsigned x = 0; x < Desc.Width; ++x) {
+                uint32_t pixel = ((const uint16_t *)src)[x];
+                dst[3*x + 0] = (( pixel        & 0x1f) * (2*0xff) + 0x1f) / (2*0x1f);
+                dst[3*x + 1] = (((pixel >>  5) & 0x3f) * (2*0xff) + 0x3f) / (2*0x3f);
+                dst[3*x + 2] = (( pixel >> 11        ) * (2*0xff) + 0x1f) / (2*0x1f);
+            }
+            break;
+        case D3DFMT_X8R8G8B8:
+        case D3DFMT_A8R8G8B8:
+            for (unsigned x = 0; x < Desc.Width; ++x) {
+                dst[3*x + 0] = src[4*x + 2];
+                dst[3*x + 1] = src[4*x + 1];
+                dst[3*x + 2] = src[4*x + 0];
+            }
+            break;
+        case D3DFMT_D16:
+        case D3DFMT_D16_LOCKABLE:
+            for (unsigned x = 0; x < Desc.Width; ++x) {
+                ((float *)dst)[x] = ((const uint16_t *)src)[x] * (1.0f / 0xffff);
+            }
+            break;
+        default:
+            assert(0);
+            break;
+        }
+
+        src += LockedRect.Pitch;
+        dst += image->stride();
+    }
+
+no_image:
+    pSurface->UnlockRect();
+no_lock:
+    return image;
+}
+
+
+static image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice,
                      IDirect3DSurface9 *pRenderTarget) {
     image::Image *image = NULL;
     D3DSURFACE_DESC Desc;
     IDirect3DSurface9 *pStagingSurface = NULL;
-    D3DLOCKED_RECT LockedRect;
-    const unsigned char *src;
-    unsigned char *dst;
     HRESULT hr;
 
     if (!pRenderTarget) {
@@ -54,13 +139,6 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
 
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
-
-    if (Desc.Format != D3DFMT_X8R8G8B8 &&
-        Desc.Format != D3DFMT_A8R8G8B8 &&
-        Desc.Format != D3DFMT_R5G6B5) {
-        std::cerr << "warning: unsupported D3DFORMAT " << Desc.Format << "\n";
-        goto no_staging;
-    }
 
     hr = pDevice->CreateOffscreenPlainSurface(Desc.Width, Desc.Height, Desc.Format, D3DPOOL_SYSTEMMEM, &pStagingSurface, NULL);
     if (FAILED(hr)) {
@@ -72,40 +150,8 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
         goto no_rendertargetdata;
     }
 
-    hr = pStagingSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY);
-    if (FAILED(hr)) {
-        goto no_rendertargetdata;
-    }
+    image = getSurfaceImage(pDevice, pStagingSurface);
 
-    image = new image::Image(Desc.Width, Desc.Height, 3, true);
-    if (!image) {
-        goto no_image;
-    }
-
-    dst = image->start();
-    src = (const unsigned char *)LockedRect.pBits;
-    for (unsigned y = 0; y < Desc.Height; ++y) {
-        if (Desc.Format == D3DFMT_R5G6B5) {
-            for (unsigned x = 0; x < Desc.Width; ++x) {
-                uint32_t pixel = ((const uint16_t *)src)[x];
-                dst[3*x + 0] = (( pixel        & 0x1f) * (2*0xff) + 0x1f) / (2*0x1f);
-                dst[3*x + 1] = (((pixel >>  5) & 0x3f) * (2*0xff) + 0x3f) / (2*0x3f);
-                dst[3*x + 2] = (( pixel >> 11        ) * (2*0xff) + 0x1f) / (2*0x1f);
-            }
-        } else {
-            for (unsigned x = 0; x < Desc.Width; ++x) {
-                dst[3*x + 0] = src[4*x + 2];
-                dst[3*x + 1] = src[4*x + 1];
-                dst[3*x + 2] = src[4*x + 0];
-            }
-        }
-
-        src += LockedRect.Pitch;
-        dst += image->stride();
-    }
-
-no_image:
-    pStagingSurface->UnlockRect();
 no_rendertargetdata:
     pStagingSurface->Release();
 no_staging:
@@ -168,6 +214,19 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
 
         pRenderTarget->Release();
     }
+
+    IDirect3DSurface9 *pDepthStencil = NULL;
+    hr = pDevice->GetDepthStencilSurface(&pDepthStencil);
+    if (SUCCEEDED(hr) && pDepthStencil) {
+        image::Image *image;
+        image = getSurfaceImage(pDevice, pDepthStencil);
+        if (image) {
+            json.beginMember("DEPTH_STENCIL");
+            json.writeImage(image, "UNKNOWN");
+            json.endMember(); // RENDER_TARGET_*
+        }
+    }
+
 
     json.endObject();
     json.endMember(); // framebuffer
