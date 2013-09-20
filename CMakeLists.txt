@@ -339,6 +339,9 @@ set_target_properties (common PROPERTIES
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
 
+target_link_libraries (common
+    ${LIBBACKTRACE_LIBRARIES}
+)
 if (ANDROID)
     target_link_libraries (common
         log
