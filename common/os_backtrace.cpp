@@ -270,6 +270,10 @@ std::vector<RawStackFrame> get_backtrace() {
     return backtraceProvider.parseBacktrace(backtraceProvider.getBacktrace());
 }
 
+void dump_backtrace() {
+    /* TODO */
+}
+
 } /* namespace os */
 
 /* end ANDROID */
