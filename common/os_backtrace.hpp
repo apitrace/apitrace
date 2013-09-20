@@ -36,32 +36,11 @@ namespace os {
 using trace::RawStackFrame;
 
 
-#if defined(ANDROID) || defined(__ELF__)
-
 std::vector<RawStackFrame> get_backtrace();
 bool backtrace_is_needed(const char* fname);
 
-#else
-
-static inline std::vector<RawStackFrame> get_backtrace() {
-    return std::vector<RawStackFrame>();
-}
-
-static inline bool backtrace_is_needed(const char*) {
-    return false;
-}
-
-#endif
-
-#if defined(__ELF__)
-
 void dump_backtrace();
 
-#else
-
-static inline void dump_backtrace() {}
-
-#endif
 
 } /* namespace os */
 

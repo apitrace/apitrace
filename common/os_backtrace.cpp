@@ -30,13 +30,24 @@
  */
 
 
-
 #include "os_backtrace.hpp"
 
-#if defined(ANDROID) || defined(__ELF__)
-
 #include <set>
+#include <vector>
 #include "os.hpp"
+
+#if defined(ANDROID)
+#  include <dlfcn.h>
+#elif HAVE_BACKTRACE
+#  include <stdint.h>
+#  include <dlfcn.h>
+#  include <unistd.h>
+#  include <map>
+#  include <vector>
+#  include <cxxabi.h>
+#  include <backtrace.h>
+#endif
+
 
 using trace::Id;
 
@@ -111,15 +122,7 @@ bool backtrace_is_needed(const char* fname) {
     return backtraceFunctionNamePrefixes.contain(fname);
 }
 
-} /* namespace os */
-
 #if defined(ANDROID)
-
-#include <dlfcn.h>
-#include "os.hpp"
-#include <vector>
-
-namespace os {
 
 /* The following two declarations are copied from Android sources */
 
@@ -274,21 +277,9 @@ void dump_backtrace() {
     /* TODO */
 }
 
-} /* namespace os */
 
-/* end ANDROID */
-#elif defined(__ELF__)
+#elif HAVE_BACKTRACE
 
-#include <stdint.h>
-#include <dlfcn.h>
-#include <unistd.h>
-#include <map>
-#include <vector>
-#include <cxxabi.h>
-
-#include <backtrace.h>
-
-namespace os {
 
 static char* format(uintptr_t num, int base, char *buf, int maxlen)
 {
@@ -480,8 +471,16 @@ void dump_backtrace() {
 }
 
 
+#else /* !HAVE_BACKTRACE */
+
+std::vector<RawStackFrame> get_backtrace() {
+    return std::vector<RawStackFrame>();
+}
+
+void dump_backtrace() {
+}
+
+#endif
+
+
 } /* namespace os */
-
-#endif /* __ELF__ */
-
-#endif /* ANDROID or LINUX */
