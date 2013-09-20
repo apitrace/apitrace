@@ -32,6 +32,7 @@ target_link_libraries (apitrace
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
+    ${LIBBACKTRACE_LIBRARIES}
 )
 
 if (NOT CMAKE_CROSSCOMPILING)

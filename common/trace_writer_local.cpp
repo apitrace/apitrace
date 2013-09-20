@@ -36,7 +36,7 @@
 #include "trace_file.hpp"
 #include "trace_writer_local.hpp"
 #include "trace_format.hpp"
-#include "trace_backtrace.hpp"
+#include "os_backtrace.hpp"
 
 
 namespace trace {
@@ -173,8 +173,8 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     assert(this_thread_num);
     unsigned thread_id = this_thread_num - 1;
     unsigned call_no = Writer::beginEnter(sig, thread_id);
-    if (!fake && backtrace_is_needed(sig->name)) {
-        std::vector<RawStackFrame> backtrace = get_backtrace();
+    if (!fake && os::backtrace_is_needed(sig->name)) {
+        std::vector<RawStackFrame> backtrace = os::get_backtrace();
         beginBacktrace(backtrace.size());
         for (unsigned i = 0; i < backtrace.size(); ++i) {
             writeStackFrame(&backtrace[i]);

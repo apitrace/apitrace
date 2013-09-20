@@ -24,14 +24,16 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_BACKTRACE_HPP_
-#define _TRACE_BACKTRACE_HPP_
+#ifndef _OS_BACKTRACE_HPP_
+#define _OS_BACKTRACE_HPP_
 
 #include <vector>
 
 #include "trace_model.hpp"
 
-namespace trace {
+namespace os {
+
+using trace::RawStackFrame;
 
 
 #if defined(ANDROID) || defined(__ELF__)
@@ -51,6 +53,16 @@ static inline bool backtrace_is_needed(const char*) {
 
 #endif
 
-} /* namespace trace */
+#if defined(__ELF__)
+
+void dump_backtrace();
+
+#else
+
+static inline void dump_backtrace() {}
+
+#endif
+
+} /* namespace os */
 
 #endif

@@ -36,6 +36,7 @@
 
 #include <map>
 #include <vector>
+#include <ostream>
 
 
 namespace trace {
@@ -387,6 +388,22 @@ struct RawStackFrame {
         linenumber(-1),
         offset(-1)
     {
+    }
+
+    void dump(std::ostream &os) {
+        os << (this->module ? this->module : "?");
+        if (this->function != NULL) {
+            os << ": " << this->function;
+        }
+        if (this->offset >= 0) {
+            os << "+0x" << std::hex << this->offset << std::dec;
+        }
+        if (this->filename != NULL) {
+            os << ": " << this->filename;
+            if (this->linenumber >= 0) {
+                os << ":" << this->linenumber;
+            }
+        }
     }
 };
 

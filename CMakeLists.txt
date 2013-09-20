@@ -268,7 +268,7 @@ endif ()
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
     add_subdirectory (thirdparty/libbacktrace)
     include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libbacktrace)
-    set (LIBBACKTRACE_LIBRARIES backtrace)
+    set (LIBBACKTRACE_LIBRARIES dl backtrace)
 endif ()
 
 # Always use bundled QJSon.
@@ -331,7 +331,7 @@ add_library (common STATIC
     common/trace_profiler.cpp
     common/trace_option.cpp
     common/${os}
-    common/trace_backtrace.cpp
+    common/os_backtrace.cpp
 )
 
 set_target_properties (common PROPERTIES

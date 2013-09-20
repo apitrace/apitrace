@@ -46,6 +46,7 @@ target_link_libraries (retrace_common
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
+    ${LIBBACKTRACE_LIBRARIES}
 )
 
 add_library (glretrace_common STATIC
