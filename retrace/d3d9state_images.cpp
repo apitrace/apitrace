@@ -65,6 +65,7 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
         break;
     case D3DFMT_D16:
     case D3DFMT_D16_LOCKABLE:
+    case D3DFMT_D32F_LOCKABLE:
         numChannels = 1;
         channelType = image::TYPE_FLOAT;
         break;
@@ -108,6 +109,9 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
             for (unsigned x = 0; x < Desc.Width; ++x) {
                 ((float *)dst)[x] = ((const uint16_t *)src)[x] * (1.0f / 0xffff);
             }
+            break;
+        case D3DFMT_D32F_LOCKABLE:
+            memcpy(dst, src, Desc.Width * sizeof(float));
             break;
         default:
             assert(0);
