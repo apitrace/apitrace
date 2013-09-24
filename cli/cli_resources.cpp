@@ -32,7 +32,6 @@
 
 #include "cli_resources.hpp"
 
-
 static bool
 tryPath(const os::String &path, bool verbose)
 {
@@ -42,6 +41,117 @@ tryPath(const os::String &path, bool verbose)
     }
     return exists;
 }
+
+#ifdef APITRACE_CONFIG_INSTALL_DIR
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+
+/* TODO: This should either be a C++11 TR 2-style directory iterator
+ * implementation or should just use libboost-filesystem.
+ */
+
+class DirectoryListing {
+public:
+    DirectoryListing(os::String path);
+    ~DirectoryListing();
+
+    os::String next();
+
+private:
+    const os::String basepath;
+    struct dirent *entry;
+    DIR *dir;
+    int error;
+};
+
+DirectoryListing::DirectoryListing(os::String path) : basepath(path)
+{
+    error = 0;
+
+    int len = offsetof(struct dirent, d_name) + pathconf(path, _PC_NAME_MAX) + 1;
+    entry = static_cast<struct dirent *>(::operator new(len));
+    dir = opendir(path);
+
+    if (dir == NULL)
+        error = errno;
+}
+
+DirectoryListing::~DirectoryListing()
+{
+    closedir(dir);
+    ::operator delete(entry);
+}
+
+os::String DirectoryListing::next(void)
+{
+    struct dirent *result;
+
+    if (error)
+        return os::String();
+
+    error = readdir_r(dir, entry, &result);
+    if (result == NULL)
+        return os::String();
+    if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+        return next();
+
+    os::String filename(basepath);
+    filename.join(entry->d_name);
+
+    return filename;
+}
+
+os::String
+findAllWrappers(const char *wrapperFilename, bool verbose)
+{
+    os::String conffilePath;
+    os::String wrapperPaths;
+    DirectoryListing conffileListing(APITRACE_CONFIG_INSTALL_DIR);
+
+    os::String wrapperPath = findWrapper(wrapperFilename, verbose);
+    if (wrapperPath.length()) {
+        wrapperPath.trimFilename();
+        wrapperPaths.append(wrapperPath);
+        wrapperPaths.append(":");
+    }
+
+    if (verbose)
+        std::cerr << "info: reading conf files in: " << APITRACE_CONFIG_INSTALL_DIR << std::endl;
+
+    conffilePath = conffileListing.next();
+    while (conffilePath.length() > 0) {
+        if (verbose)
+            std::cerr << "info: reading paths from conf file:" << conffilePath.str() << std::endl;
+        std::ifstream conffile(conffilePath);
+        while(conffile.good()) {
+            char path[PATH_MAX];
+            bool exists;
+            conffile.getline(path, PATH_MAX);
+            wrapperPath = path;
+
+            wrapperPath.join(wrapperFilename);
+            exists = wrapperPath.exists();
+
+            if (tryPath(wrapperPath, verbose)) {
+                wrapperPaths.append(path);
+                wrapperPaths.append(":");
+            }
+        }
+        conffilePath = conffileListing.next();
+    }
+
+    /* Trim off trailing ':' */
+    if (wrapperPaths.length() > 0)
+        wrapperPaths.truncate(wrapperPaths.length() - 1);
+    
+    return wrapperPaths;
+}
+
+#endif /* APITRACE_CONFIG_INSTALL_DIR */
 
 os::String
 findProgram(const char *programFilename, bool verbose)

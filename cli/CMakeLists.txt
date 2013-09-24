@@ -3,11 +3,17 @@
 # TODO: Use the same directory layout, for both build and install directories,
 # so that binaries can find each other using just relative paths.
 #
+
 add_definitions(
     -DAPITRACE_PROGRAMS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/bin"
     -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
     -DAPITRACE_WRAPPERS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
 )
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set (CONFIG_INSTALL_DIR /etc/apitrace.d)
+    add_definitions(-DAPITRACE_CONFIG_INSTALL_DIR="${CONFIG_INSTALL_DIR}")
+endif()
 
 add_executable (apitrace
     cli_main.cpp
@@ -54,3 +60,21 @@ endif ()
 
 
 install (TARGETS apitrace RUNTIME DESTINATION bin)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    # Generate wrapper config file
+    add_custom_command(OUTPUT ${ARCH_SUBDIR}.conf
+        COMMAND sh -c "echo ${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR} >${ARCH_SUBDIR}.conf")
+
+    add_custom_target(wrapper_config 
+        ALL 
+        DEPENDS 
+        ${ARCH_SUBDIR}.conf
+    )
+
+    install (FILES
+            ${ARCH_SUBDIR}.conf
+            DESTINATION
+            ${CONFIG_INSTALL_DIR}
+    )
+endif()

@@ -46,6 +46,7 @@
 #elif defined(_WIN32)
 #define GL_TRACE_WRAPPER  "opengl32.dll"
 #else
+#define LIBRARY_SEARCH_VARIABLE "LD_LIBRARY_PATH"
 #define TRACE_VARIABLE "LD_PRELOAD"
 #define GL_TRACE_WRAPPER  "glxtrace.so"
 #define EGL_TRACE_WRAPPER  "egltrace.so"
@@ -126,11 +127,20 @@ traceProgram(trace::API api,
         return 1;
     }
 
-    os::String wrapperPath = findWrapper(wrapperFilename, verbose);
+    os::String wrapperPath;
+#if defined(LIBRARY_SEARCH_VARIABLE)
+    wrapperPath = wrapperFilename;
+    os::String wrapperPaths = findAllWrappers(wrapperFilename, verbose);
+    if (verbose) {
+        std::cerr << LIBRARY_SEARCH_VARIABLE << "=" << wrapperPaths.str() << "\n";
+    }
+#else
+    wrapperPath = findWrapper(wrapperFilename, verbose);
     if (!wrapperPath.length()) {
         std::cerr << "error: failed to find " << wrapperFilename << " wrapper\n";
         goto exit;
     }
+#endif
 
 #if defined(_WIN32)
     useInject = true;
@@ -159,6 +169,14 @@ traceProgram(trace::API api,
      */
 
     {
+#if defined(LIBRARY_SEARCH_VARIABLE)
+        const char *oldSearchVariable = getenv(LIBRARY_SEARCH_VARIABLE);
+        if (oldSearchVariable) {
+            wrapperPaths.append(OS_PATH_SEP);
+            wrapperPaths.append(oldSearchVariable);
+        }
+        os::setEnvironment(LIBRARY_SEARCH_VARIABLE, wrapperPaths.str());
+#endif /* LIBRARY_SEARCH_VARIABLE */
 #if defined(TRACE_VARIABLE)
         const char *oldEnvVarValue = getenv(TRACE_VARIABLE);
         if (oldEnvVarValue) {
@@ -202,6 +220,13 @@ traceProgram(trace::API api,
             os::unsetEnvironment(TRACE_VARIABLE);
         }
 #endif
+#if defined(LIBRARY_SEARCH_VARIABLE)
+        if (oldSearchVariable) {
+            os::setEnvironment(LIBRARY_SEARCH_VARIABLE, oldSearchVariable);
+        } else {
+            os::unsetEnvironment(LIBRARY_SEARCH_VARIABLE);
+        }
+#endif /* LIBRARY_SEARCH_VARIABLE */
     }
 
 exit:
