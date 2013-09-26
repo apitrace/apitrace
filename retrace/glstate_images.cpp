@@ -506,6 +506,10 @@ internalFormatDescs[] = {
 };
 
 
+/**
+ * Choose the glReadPixels/glGetTexImage format appropriate for the given
+ * internalFormat.
+ */
 static GLenum
 getFormat(GLenum internalFormat)
 {
@@ -534,11 +538,11 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
 
     json.beginMember(label);
 
-    GLenum format = getFormat(desc.internalFormat);;
+    GLenum format = getFormat(desc.internalFormat);
     if (context.ES && format == GL_DEPTH_COMPONENT) {
         format = GL_RED;
     }
-    GLuint channels = _gl_format_channels(format);;
+    GLuint channels = _gl_format_channels(format);
 
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
 
@@ -997,6 +1001,7 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     Context context;
 
     GLenum type = GL_UNSIGNED_BYTE;
+    getFormat(internalFormat);
     image::ChannelType channelType = image::TYPE_UNORM8;
 
     if (format == GL_DEPTH_COMPONENT) {
@@ -1189,7 +1194,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
  * In the case of a color attachment, it assumes it is already bound for read.
  */
 static void
-dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLenum attachment, GLenum format)
+dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLenum attachment, GLenum format = GL_NONE)
 {
     ImageDesc desc;
     if (!getFramebufferAttachmentDesc(context, target, attachment, desc)) {
@@ -1197,6 +1202,11 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
     }
 
     assert(desc.samples == 0);
+
+    if (format == GL_NONE) {
+        assert(desc.internalFormat != GL_NONE);
+        format = getFormat(desc.internalFormat);
+    }
 
     json.beginMember(enumToString(attachment));
     dumpReadBufferImage(json, desc.width, desc.height, format, desc.internalFormat);
@@ -1230,12 +1240,7 @@ dumpFramebufferAttachments(JSONWriter &json, Context &context, GLenum target)
                 std::cerr << "warning: unexpected GL_DRAW_BUFFER" << i << " = " << draw_buffer << "\n";
                 attachment = GL_COLOR_ATTACHMENT0;
             }
-            GLint alpha_size = 0;
-            glGetFramebufferAttachmentParameteriv(target, attachment,
-                                                  GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE,
-                                                  &alpha_size);
-            GLenum format = alpha_size ? GL_RGBA : GL_RGB;
-            dumpFramebufferAttachment(json, context, target, attachment, format);
+            dumpFramebufferAttachment(json, context, target, attachment);
         }
     }
 
