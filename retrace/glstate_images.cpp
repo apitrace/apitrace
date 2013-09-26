@@ -1001,7 +1001,6 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
     Context context;
 
     GLenum type = GL_UNSIGNED_BYTE;
-    getFormat(internalFormat);
     image::ChannelType channelType = image::TYPE_UNORM8;
 
     if (format == GL_DEPTH_COMPONENT) {
