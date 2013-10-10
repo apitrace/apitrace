@@ -156,7 +156,7 @@ Context::restorePixelPackState(void) {
  * Dump a GL_KHR_debug object label.
  */
 void
-dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name)
+dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member)
 {
     if (!name) {
         return;
@@ -179,7 +179,7 @@ dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint na
 
     glGetObjectLabel(identifier, name, length, NULL, label);
 
-    json.writeStringMember("GL_OBJECT_LABEL", label);
+    json.writeStringMember(member, label);
 
     free(label);
 }

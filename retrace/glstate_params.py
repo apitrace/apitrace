@@ -345,7 +345,7 @@ class StateDumper:
         print '    if (enabled || binding) {'
         print '        json.beginMember(enumToString(target));'
         print '        json.beginObject();'
-        print '        dumpObjectLabel(json, context, GL_TEXTURE, binding);'
+        print '        dumpObjectLabel(json, context, GL_TEXTURE, binding, "GL_TEXTURE_LABEL");'
         self.dump_atoms(glGetTexParameter, 'target')
         print '        if (!context.ES) {'
         print '            GLenum levelTarget;'
@@ -365,7 +365,7 @@ class StateDumper:
         print
 
         print 'static void'
-        print 'dumpFramebufferAttachementParameters(JSONWriter &json, GLenum target, GLenum attachment)'
+        print 'dumpFramebufferAttachementParameters(JSONWriter &json, Context &context, GLenum target, GLenum attachment)'
         print '{'
         self.dump_attachment_parameters('target', 'attachment')
         print '}'
@@ -387,6 +387,7 @@ class StateDumper:
         self.dump_program_params()
         self.dump_texture_parameters()
         self.dump_framebuffer_parameters()
+        self.dump_labels()
 
         print '    json.endObject();'
         print '    json.endMember(); // parameters'
@@ -433,7 +434,7 @@ class StateDumper:
         print '        if (sampler_binding) {'
         print '            json.beginMember("GL_SAMPLER");'
         print '            json.beginObject();'
-        print '            dumpObjectLabel(json, context, GL_SAMPLER, sampler_binding);'
+        print '            dumpObjectLabel(json, context, GL_SAMPLER, sampler_binding, "GL_SAMPLER_LABEL");'
         for _, _, name in glGetSamplerParameter.iter():
             self.dump_atom(glGetSamplerParameter, 'sampler_binding', name)
         print '           json.endObject();'
@@ -469,10 +470,49 @@ class StateDumper:
         print '        json.beginMember(name);'
         print '        json.beginObject();'
         self.dump_atoms(glGetVertexAttrib, 'index')
+        
+        # Dump vertex attrib buffer label
+        print '        GLint buffer_binding = 0;'
+        print '        glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer_binding);'
+        print '        dumpObjectLabel(json, context, GL_BUFFER, buffer_binding, "GL_VERTEX_ATTRIB_ARRAY_BUFFER_LABEL");'
+
         print '        json.endObject();'
         print '        json.endMember(); // GL_VERTEX_ATTRIB_ARRAYi'
         print '    }'
         print
+
+    object_bindings = [
+        ('GL_BUFFER', 'GL_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_COLOR_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_EDGE_FLAG_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_ELEMENT_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_INDEX_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_NORMAL_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_VERTEX_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_WEIGHT_ARRAY_BUFFER_BINDING'),
+        ('GL_FRAMEBUFFER', 'GL_DRAW_FRAMEBUFFER_BINDING'),
+        ('GL_FRAMEBUFFER', 'GL_READ_FRAMEBUFFER_BINDING'),
+        ('GL_PROGRAM', 'GL_CURRENT_PROGRAM'),
+        ('GL_PROGRAM_PIPELINE', 'GL_PROGRAM_PIPELINE_BINDING'),
+        ('GL_RENDERBUFFER', 'GL_RENDERBUFFER_BINDING'),
+        ('GL_TRANSFORM_FEEDBACK', 'GL_TRANSFORM_FEEDBACK_BINDING'),
+        ('GL_VERTEX_ARRAY', 'GL_VERTEX_ARRAY_BINDING'),
+    ]
+
+    def dump_labels(self):
+        for object_type, object_binding in self.object_bindings:
+            member_name = object_binding.replace('BINDING', 'LABEL')
+            if member_name == object_binding:
+                member_name += '_LABEL'
+            print '    {'
+            print '        GLint binding = 0;'
+            print '        glGetIntegerv(%s, &binding);' % object_binding
+            print '        dumpObjectLabel(json, context, %s, binding, "%s");' % (object_type, member_name)
+            print '    }'
 
     program_targets = [
         'GL_FRAGMENT_PROGRAM_ARB',
@@ -529,13 +569,13 @@ class StateDumper:
             print '            if (framebuffer) {'
             print '                json.beginMember("%s");' % target
             print '                json.beginObject();'
-            print '                dumpObjectLabel(json, context, GL_FRAMEBUFFER, framebuffer);'
+            print '                dumpObjectLabel(json, context, GL_FRAMEBUFFER, framebuffer, "GL_FRAMEBUFFER_LABEL");'
             print '                for (GLint i = 0; i < max_color_attachments; ++i) {'
             print '                    GLint color_attachment = GL_COLOR_ATTACHMENT0 + i;'
-            print '                    dumpFramebufferAttachementParameters(json, %s, color_attachment);' % target
+            print '                    dumpFramebufferAttachementParameters(json, context, %s, color_attachment);' % target
             print '                }'
-            print '                dumpFramebufferAttachementParameters(json, %s, GL_DEPTH_ATTACHMENT);' % target
-            print '                dumpFramebufferAttachementParameters(json, %s, GL_STENCIL_ATTACHMENT);' % target
+            print '                dumpFramebufferAttachementParameters(json, context, %s, GL_DEPTH_ATTACHMENT);' % target
+            print '                dumpFramebufferAttachementParameters(json, context, %s, GL_STENCIL_ATTACHMENT);' % target
             print '                json.endObject();'
             print '                json.endMember(); // %s' % target
             print '            }'
@@ -551,6 +591,9 @@ class StateDumper:
         print '                    json.beginMember(enumToString(%s));' % attachment
         print '                    json.beginObject();'
         self.dump_atoms(glGetFramebufferAttachmentParameter, target, attachment)
+        print '                    GLint object_name = 0;'
+        print '                    glGetFramebufferAttachmentParameteriv(%s, %s, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &object_name);' % (target, attachment)
+        print '                    dumpObjectLabel(json, context, object_type, object_name, "GL_FRAMEBUFFER_ATTACHMENT_OBJECT_LABEL");'
         print '                    json.endObject();'
         print '                    json.endMember(); // GL_x_ATTACHMENT'
         print '                }'

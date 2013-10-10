@@ -70,7 +70,7 @@ void dumpBoolean(JSONWriter &json, GLboolean value);
 
 void dumpEnum(JSONWriter &json, GLenum pname);
 
-void dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name);
+void dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member);
 
 void dumpParameters(JSONWriter &json, Context &context);
 
