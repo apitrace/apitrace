@@ -1727,7 +1727,8 @@ parameters = [
     ("_glGet",	F,	16,	"GL_MODELVIEW30_ARB"),	# 0x873E
     ("_glGet",	F,	16,	"GL_MODELVIEW31_ARB"),	# 0x873F
     ("",	X,	1,	"GL_DOT3_RGB_EXT"),	# 0x8740
-    ("",	X,	1,	"GL_DOT3_RGBA_EXT"),	# 0x8741
+    # XXX: GL_DOT3_RGBA_EXT == GL_PROGRAM_BINARY_LENGTH, but you can't glGet GL_DOT3_RGBA_EXT
+    ("glGetProgram",	I,	1,	"GL_PROGRAM_BINARY_LENGTH"),	# 0x8741,
     ("",	X,	1,	"GL_MIRROR_CLAMP_ATI"),	# 0x8742
     ("",	X,	1,	"GL_MIRROR_CLAMP_TO_EDGE_ATI"),	# 0x8743
     ("",	X,	1,	"GL_MODULATE_ADD_ATI"),	# 0x8744
