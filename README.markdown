@@ -197,15 +197,23 @@ to hook only the APIs of interest.
 Emitting annotations to the trace
 ---------------------------------
 
-From OpenGL applications you can embed annotations in the trace file through the
-[`GL_GREMEDY_string_marker`](http://www.opengl.org/registry/specs/GREMEDY/string_marker.txt)
-and
-[`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
-GL extensions.
+From whitin OpenGL applications you can embed annotations in the trace file
+through the following extensions:
 
-**apitrace** will advertise and intercept these GL extensions independently of
-the GL implementation.  So all you have to do is to use these extensions when
-available.
+* [`GL_KHR_debug`](http://www.opengl.org/registry/specs/KHR/debug.txt)
+
+* [`GL_ARB_debug_output`](http://www.opengl.org/registry/specs/ARB/debug_output.txt)
+
+* [`GL_AMD_debug_output`](http://www.opengl.org/registry/specs/AMD/debug_output.txt)
+
+* [`GL_GREMEDY_string_marker`](http://www.opengl.org/registry/specs/GREMEDY/string_marker.txt)
+
+* [`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
+
+**apitrace** will advertise and intercept these GL extensions regardless the GL
+implementation supports them or not.  So all you have to do is to use these
+extensions when available, and you can be sure they will be available when
+tracing inside **apitrace**.
 
 For example, if you use [GLEW](http://glew.sourceforge.net/) to dynamically
 detect and use GL extensions, you could easily accomplish this by doing:
@@ -226,8 +234,13 @@ detect and use GL extensions, you could easily accomplish this by doing:
 
 This has the added advantage of working equally well with gDEBugger.
 
+Also, provided that the OpenGL implementation supports `GL_KHR_debug`, labels
+defined via glObjectLabel() , and the labels of several objects (textures,
+framebuffers, samplers, etc. ) will appear in the GUI state dumps, in the
+parameters tab.
 
-From OpenGL ES applications you can embed annotations in the trace file through the
+
+For OpenGL ES applications you can embed annotations in the trace file through the
 [`GL_EXT_debug_marker`](http://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
 extension.
 
