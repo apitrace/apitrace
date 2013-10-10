@@ -77,17 +77,22 @@ Context::Context(void) {
             glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
             for (GLint i = 0; i < num_extensions; ++i) {
                const char *extension = (const char *)glGetStringi(GL_EXTENSIONS, i);
-               if (extension &&
-                   strcmp(extension, "ARB_sampler_objects")) {
-                   ARB_sampler_objects = true;
+               if (extension) {
+                   if (strcmp(extension, "GL_ARB_sampler_objects") == 0) {
+                       ARB_sampler_objects = true;
+                   } else if (strcmp(extension, "GL_KHR_debug") == 0) {
+                       KHR_debug = true;
+                   }
                }
             }
         } else {
             const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
-            if (glws::checkExtension("ARB_sampler_objects", extensions)) {
-                ARB_sampler_objects = true;
-            }
+            ARB_sampler_objects = glws::checkExtension("GL_ARB_sampler_objects", extensions);
+            KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
         }
+    } else {
+        const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
+        KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
     }
 }
 
@@ -144,6 +149,39 @@ Context::restorePixelPackState(void) {
         glPixelStorei(GL_PACK_SWAP_BYTES, pack_swap_bytes);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, pixel_pack_buffer_binding);
     }
+}
+
+
+/**
+ * Dump a GL_KHR_debug object label.
+ */
+void
+dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name)
+{
+    if (!name) {
+        return;
+    }
+
+    if (!context.KHR_debug) {
+        return;
+    }
+
+    GLsizei length = 0;
+    glGetObjectLabel(identifier, name, 0, &length, NULL);
+    if (!length) {
+        return;
+    }
+
+    char *label = (char *)malloc(length);
+    if (!label) {
+        return;
+    }
+
+    glGetObjectLabel(identifier, name, length, NULL, label);
+
+    json.writeStringMember("GL_OBJECT_LABEL", label);
+
+    free(label);
 }
 
 

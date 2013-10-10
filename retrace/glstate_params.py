@@ -345,6 +345,7 @@ class StateDumper:
         print '    if (enabled || binding) {'
         print '        json.beginMember(enumToString(target));'
         print '        json.beginObject();'
+        print '        dumpObjectLabel(json, context, GL_TEXTURE, binding);'
         self.dump_atoms(glGetTexParameter, 'target')
         print '        if (!context.ES) {'
         print '            GLenum levelTarget;'
@@ -432,6 +433,7 @@ class StateDumper:
         print '        if (sampler_binding) {'
         print '            json.beginMember("GL_SAMPLER");'
         print '            json.beginObject();'
+        print '            dumpObjectLabel(json, context, GL_SAMPLER, sampler_binding);'
         for _, _, name in glGetSamplerParameter.iter():
             self.dump_atom(glGetSamplerParameter, 'sampler_binding', name)
         print '           json.endObject();'
@@ -527,6 +529,7 @@ class StateDumper:
             print '            if (framebuffer) {'
             print '                json.beginMember("%s");' % target
             print '                json.beginObject();'
+            print '                dumpObjectLabel(json, context, GL_FRAMEBUFFER, framebuffer);'
             print '                for (GLint i = 0; i < max_color_attachments; ++i) {'
             print '                    GLint color_attachment = GL_COLOR_ATTACHMENT0 + i;'
             print '                    dumpFramebufferAttachementParameters(json, %s, color_attachment);' % target

@@ -42,6 +42,7 @@ struct Context
 
     bool ARB_draw_buffers;
     bool ARB_sampler_objects;
+    bool KHR_debug;
 
     Context(void);
 
@@ -68,6 +69,8 @@ private:
 void dumpBoolean(JSONWriter &json, GLboolean value);
 
 void dumpEnum(JSONWriter &json, GLenum pname);
+
+void dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name);
 
 void dumpParameters(JSONWriter &json, Context &context);
 
