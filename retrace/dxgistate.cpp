@@ -42,8 +42,9 @@ namespace d3dstate {
 
 
 static DXGI_FORMAT
-ChooseConversionFormat(DXGI_FORMAT Format, image::ChannelType &channelType)
+ChooseConversionFormat(DXGI_FORMAT Format, unsigned &numChannels, image::ChannelType &channelType)
 {
+    numChannels = 4;
     channelType = image::TYPE_UNORM8;
 
     switch (Format) {
@@ -141,7 +142,9 @@ ChooseConversionFormat(DXGI_FORMAT Format, image::ChannelType &channelType)
     case DXGI_FORMAT_D24_UNORM_S8_UINT:
     case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
     case DXGI_FORMAT_D16_UNORM:
-        return DXGI_FORMAT_R8G8B8A8_UNORM;
+        numChannels = 1;
+        channelType = image::TYPE_FLOAT;
+        return DXGI_FORMAT_D32_FLOAT;
 
     // Typeless
     case DXGI_FORMAT_UNKNOWN:
@@ -246,14 +249,15 @@ ConvertImage(DXGI_FORMAT SrcFormat,
              UINT SrcPitch,
              UINT Width, UINT Height)
 {
+    unsigned numChannels;
     image::ChannelType channelType;
 
-    DXGI_FORMAT DstFormat = ChooseConversionFormat(SrcFormat, channelType);
+    DXGI_FORMAT DstFormat = ChooseConversionFormat(SrcFormat, numChannels, channelType);
     if (DstFormat == DXGI_FORMAT_UNKNOWN) {
         return NULL;
     }
 
-    image::Image *image = new image::Image(Width, Height, 4, false, channelType);
+    image::Image *image = new image::Image(Width, Height, numChannels, false, channelType);
     if (!image) {
         return NULL;
     }
