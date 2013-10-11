@@ -172,12 +172,12 @@ dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint na
         return;
     }
 
-    char *label = (char *)malloc(length);
+    char *label = (char *)malloc(length + 1);
     if (!label) {
         return;
     }
 
-    glGetObjectLabel(identifier, name, length, NULL, label);
+    glGetObjectLabel(identifier, name, length + 1, NULL, label);
 
     json.writeStringMember(member, label);
 
