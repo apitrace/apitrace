@@ -515,6 +515,13 @@ enum {
      * Whether this call is verbose (i.e., not usually interesting).
      */
     CALL_FLAG_VERBOSE                  = (1 << 7),
+
+    /**
+     * String markers.
+     */
+    CALL_FLAG_MARKER                    = (1 << 8),
+    CALL_FLAG_MARKER_PUSH               = (1 << 9),
+    CALL_FLAG_MARKER_POP                = (1 << 10),
 };
 
 

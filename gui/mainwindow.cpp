@@ -1265,7 +1265,8 @@ void MainWindow::saveSelectedSurface()
         imageIndex = tr("_call_%1")
                      .arg(selectedCall()->index());
     } else if (selectedFrame()) {
-        ApiTraceCall *firstCall = selectedFrame()->call(0);
+        ApiTraceCall *firstCall =
+            static_cast<ApiTraceCall *>(selectedFrame()->eventAtRow(0));
         if (firstCall) {
             imageIndex = tr("_frame_%1")
                          .arg(firstCall->index());

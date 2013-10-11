@@ -19,9 +19,9 @@ ApiTrace::ApiTrace()
     connect(m_loader, SIGNAL(framesLoaded(const QList<ApiTraceFrame*>)),
             this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
     connect(m_loader,
-            SIGNAL(frameContentsLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)),
+            SIGNAL(frameContentsLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>, QVector<ApiTraceCall*>,quint64)),
             this,
-            SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)));
+            SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,QVector<ApiTraceCall*>,quint64)));
     connect(m_loader, SIGNAL(guessedApi(int)),
             this, SLOT(guessedApi(int)));
     connect(m_loader, SIGNAL(finishedParsing()),
@@ -107,7 +107,7 @@ int ApiTrace::numCallsInFrame(int idx) const
 {
     const ApiTraceFrame *frame = frameAt(idx);
     if (frame) {
-        return frame->numChildren();
+        return frame->numTotalCalls();
     } else {
         return 0;
     }
@@ -263,6 +263,7 @@ void ApiTrace::finishedParsing()
 }
 
 void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
+                                 const QVector<ApiTraceCall*> &topLevelItems,
                                  const QVector<ApiTraceCall*> &calls,
                                  quint64 binaryDataSize)
 {
@@ -270,7 +271,7 @@ void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
 
     if (!frame->isLoaded()) {
         emit beginLoadingFrame(frame, calls.size());
-        frame->setCalls(calls, binaryDataSize);
+        frame->setCalls(topLevelItems, calls, binaryDataSize);
         emit endLoadingFrame(frame);
         m_loadingFrames.remove(frame);
     }
@@ -444,7 +445,7 @@ int ApiTrace::callInFrame(int callIdx) const
     for (int frameIdx = 0; frameIdx < m_frames.size(); ++frameIdx) {
         const ApiTraceFrame *frame = m_frames[frameIdx];
         unsigned numCallsInFrame =  frame->isLoaded()
-                ? frame->numChildren()
+                ? frame->numTotalCalls()
                 : frame->numChildrenToLoad();
         unsigned firstCall = numCalls;
         unsigned endCall = numCalls + numCallsInFrame;

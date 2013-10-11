@@ -3,6 +3,7 @@
 #include "apitrace.h"
 #include <QDebug>
 #include <QFile>
+#include <QStack>
 
 #define FRAMES_TO_CACHE 100
 
@@ -10,9 +11,15 @@ static ApiTraceCall *
 apiCallFromTraceCall(const trace::Call *call,
                      const QHash<QString, QUrl> &helpHash,
                      ApiTraceFrame *frame,
+                     ApiTraceCall *parentCall,
                      TraceLoader *loader)
 {
-    ApiTraceCall *apiCall = new ApiTraceCall(frame, loader, call);
+    ApiTraceCall *apiCall;
+
+    if (parentCall)
+        apiCall = new ApiTraceCall(parentCall, loader, call);
+    else
+        apiCall = new ApiTraceCall(frame, loader, call);
 
     apiCall->setHelpUrl(helpHash.value(apiCall->name()));
 
@@ -168,7 +175,9 @@ void TraceLoader::parseTrace()
     QList<ApiTraceFrame*> frames;
     ApiTraceFrame *currentFrame = 0;
     int frameCount = 0;
-    QVector<ApiTraceCall*> calls;
+    QStack<ApiTraceCall*> groups;
+    QVector<ApiTraceCall*> topLevelItems;
+    QVector<ApiTraceCall*> allCalls;
     quint64 binaryDataSize = 0;
 
     int lastPercentReport = 0;
@@ -182,17 +191,36 @@ void TraceLoader::parseTrace()
             ++frameCount;
         }
         ApiTraceCall *apiCall =
-                apiCallFromTraceCall(call, m_helpHash, currentFrame, this);
-        calls.append(apiCall);
+            apiCallFromTraceCall(call, m_helpHash, currentFrame, groups.isEmpty() ? 0 : groups.top(), this);
+        allCalls.append(apiCall);
+        if (groups.count() == 0) {
+            topLevelItems.append(apiCall);
+        }
+        if (call->flags & trace::CALL_FLAG_MARKER_PUSH) {
+            groups.push(apiCall);
+        } else if (call->flags & trace::CALL_FLAG_MARKER_POP) {
+            groups.top()->finishedAddingChildren();
+            groups.pop();
+        }
+        if (!groups.isEmpty()) {
+            groups.top()->addChild(apiCall);
+        }
         if (apiCall->hasBinaryData()) {
             QByteArray data =
-                    apiCall->arguments()[apiCall->binaryDataIndex()].toByteArray();
+                apiCall->arguments()[apiCall->binaryDataIndex()].toByteArray();
             binaryDataSize += data.size();
         }
         if (call->flags & trace::CALL_FLAG_END_FRAME) {
-            calls.squeeze();
-            currentFrame->setCalls(calls, binaryDataSize);
-            calls.clear();
+            allCalls.squeeze();
+            topLevelItems.squeeze();
+            if (topLevelItems.count() == allCalls.count()) {
+                currentFrame->setCalls(allCalls, allCalls, binaryDataSize);
+            } else {
+                currentFrame->setCalls(topLevelItems, allCalls, binaryDataSize);
+            }
+            allCalls.clear();
+            groups.clear();
+            topLevelItems.clear();
             frames.append(currentFrame);
             currentFrame = 0;
             binaryDataSize = 0;
@@ -213,8 +241,12 @@ void TraceLoader::parseTrace()
     //  it's just a bunch of Delete calls for every object
     //  after the last SwapBuffers
     if (currentFrame) {
-        calls.squeeze();
-        currentFrame->setCalls(calls, binaryDataSize);
+        allCalls.squeeze();
+        if (topLevelItems.count() == allCalls.count()) {
+            currentFrame->setCalls(allCalls, allCalls, binaryDataSize);
+        } else {
+            currentFrame->setCalls(topLevelItems, allCalls, binaryDataSize);
+        }
         frames.append(currentFrame);
         currentFrame = 0;
     }
@@ -378,7 +410,7 @@ bool TraceLoader::callContains(trace::Call *call,
      * FIXME: do string comparison directly on trace::Call
      */
     ApiTraceCall *apiCall = apiCallFromTraceCall(call, m_helpHash,
-                                                 0, this);
+                                                 0, 0, this);
     bool result = apiCall->contains(str, sensitivity);
     delete apiCall;
     return result;
@@ -399,7 +431,9 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
 
         if (numOfCalls) {
             quint64 binaryDataSize = 0;
-            QVector<ApiTraceCall*> calls(numOfCalls);
+            QStack<ApiTraceCall*> groups;
+            QVector<ApiTraceCall*> topLevelItems;
+            QVector<ApiTraceCall*> allCalls(numOfCalls);
             const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
 
             m_parser.setBookmark(frameBookmark.start);
@@ -409,10 +443,22 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
             while ((call = m_parser.parse_call())) {
                 ApiTraceCall *apiCall =
                     apiCallFromTraceCall(call, m_helpHash,
-                                         currentFrame, this);
+                                         currentFrame, groups.isEmpty() ? 0 : groups.top(), this);
                 Q_ASSERT(apiCall);
                 Q_ASSERT(parsedCalls < calls.size());
-                calls[parsedCalls++] = apiCall;
+                allCalls[parsedCalls++] = apiCall;
+                if (groups.count() == 0) {
+                    topLevelItems.append(apiCall);
+                }
+                if (!groups.isEmpty()) {
+                    groups.top()->addChild(apiCall);
+                }
+                if (call->flags & trace::CALL_FLAG_MARKER_PUSH) {
+                    groups.push(apiCall);
+                } else if (call->flags & trace::CALL_FLAG_MARKER_POP) {
+                    groups.top()->finishedAddingChildren();
+                    groups.pop();
+                }
                 if (apiCall->hasBinaryData()) {
                     QByteArray data =
                         apiCall->arguments()[
@@ -431,13 +477,18 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
             // threads cross the frame boundary
             Q_ASSERT(parsedCalls <= numOfCalls);
             Q_ASSERT(parsedCalls <= calls.size());
-            calls.resize(parsedCalls);
-            calls.squeeze();
+            allCalls.resize(parsedCalls);
+            allCalls.squeeze();
 
             Q_ASSERT(parsedCalls <= currentFrame->numChildrenToLoad());
-            emit frameContentsLoaded(currentFrame,
-                                     calls, binaryDataSize);
-            return calls;
+            if (topLevelItems.count() == allCalls.count()) {
+                emit frameContentsLoaded(currentFrame, allCalls,
+                                         allCalls, binaryDataSize);
+            } else {
+                emit frameContentsLoaded(currentFrame, topLevelItems,
+                                         allCalls, binaryDataSize);
+            }
+            return allCalls;
         }
     }
     return QVector<ApiTraceCall*>();

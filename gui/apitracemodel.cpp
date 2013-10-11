@@ -92,7 +92,7 @@ QVariant ApiTraceModel::data(const QModelIndex &index, int role) const
             }
 
             int numCalls = frame->isLoaded()
-                    ? frame->numChildren()
+                    ? frame->numTotalCalls()
                     : frame->numChildrenToLoad();
 
             return tr(htmlTempl)
@@ -141,18 +141,16 @@ QModelIndex ApiTraceModel::index(int row, int column,
     if ((parent.isValid() && parent.column() != 0) || column != 0)
         return QModelIndex();
 
-    ApiTraceEvent *event = item(parent);
-    if (event) {
-        if (event->type() != ApiTraceEvent::Frame) {
-            qDebug()<<"got a valid parent but it's not a frame "<<event->type();
+    //qDebug()<<"At row = "<<row<<", column = "<<column<<", parent "<<parent;
+    ApiTraceEvent *parentEvent = item(parent);
+    if (parentEvent) {
+        ApiTraceEvent *event = parentEvent->eventAtRow(row);
+        if (event) {
+            Q_ASSERT(event->type() == ApiTraceEvent::Call);
+            return createIndex(row, column, event);
+        } else {
             return QModelIndex();
         }
-        ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-        ApiTraceCall *call = frame->call(row);
-        if (call)
-            return createIndex(row, column, call);
-        else
-            return QModelIndex();
     } else {
         ApiTraceFrame *frame = m_trace->frameAt(row);
         if (frame)
@@ -167,11 +165,16 @@ bool ApiTraceModel::hasChildren(const QModelIndex &parent) const
 {
     if (parent.isValid()) {
         ApiTraceEvent *event = item(parent);
-        if (event && event->type() == ApiTraceEvent::Frame) {
+        if (!event)
+            return false;
+        if (event->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
             return !frame->isEmpty();
-        } else
-            return false;
+        } else {
+            Q_ASSERT(event->type() == ApiTraceEvent::Call);
+            ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+            return call->numChildren() != 0;
+        }
     } else {
         return (rowCount() > 0);
     }
@@ -183,11 +186,19 @@ QModelIndex ApiTraceModel::parent(const QModelIndex &index) const
         return QModelIndex();
 
     ApiTraceEvent *event = item(index);
-    if (event && event->type() == ApiTraceEvent::Call) {
+
+    if (event->type() == ApiTraceEvent::Call) {
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
-        Q_ASSERT(call->parentFrame());
-        return createIndex(call->parentFrame()->number,
-                           0, call->parentFrame());
+
+        if (call->parentCall()) {
+            ApiTraceCall *parentCall = call->parentCall();
+            ApiTraceEvent *topEvent = parentCall->parentEvent();
+            return createIndex(topEvent->callIndex(parentCall), 0, parentCall);
+        } else {
+            Q_ASSERT(call->parentFrame());
+            return createIndex(call->parentFrame()->number,
+                               0, call->parentFrame());
+        }
     }
     return QModelIndex();
 }
@@ -198,14 +209,10 @@ int ApiTraceModel::rowCount(const QModelIndex &parent) const
         return m_trace->numFrames();
 
     ApiTraceEvent *event = item(parent);
-    if (!event || event->type() == ApiTraceEvent::Call)
+    if (!event)
         return 0;
 
-    ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-    if (frame)
-        return frame->numChildren();
-
-    return 0;
+    return event->numChildren();
 }
 
 int ApiTraceModel::columnCount(const QModelIndex &parent) const
@@ -288,9 +295,7 @@ void ApiTraceModel::stateSetOnEvent(ApiTraceEvent *event)
 
     if (event->type() == ApiTraceEvent::Call) {
         ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
-        ApiTraceFrame *frame = call->parentFrame();
-        int row = frame->callIndex(call);
-        QModelIndex index = createIndex(row, 0, call);
+        QModelIndex index = indexForCall(call);
         emit dataChanged(index, index);
     } else if (event->type() == ApiTraceEvent::Frame) {
         ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
@@ -307,10 +312,10 @@ QModelIndex ApiTraceModel::indexForCall(ApiTraceCall *call) const
         return QModelIndex();
     }
 
-    ApiTraceFrame *frame = call->parentFrame();
-    Q_ASSERT(frame);
+    ApiTraceEvent *parentEvent = call->parentEvent();
+    Q_ASSERT(parentEvent);
 
-    int row = frame->callIndex(call);
+    int row = parentEvent->callIndex(call);
     if (row < 0) {
         qDebug() << "Couldn't find call num "<<call->index()<<" inside parent!";
         return QModelIndex();
@@ -342,9 +347,7 @@ void ApiTraceModel::callChanged(ApiTraceCall *call)
     if (trace->needsSaving())
         trace->save();
 
-    ApiTraceFrame *frame = call->parentFrame();
-    int row = frame->callIndex(call);
-    QModelIndex index = createIndex(row, 0, call);
+    QModelIndex index = indexForCall(call);
     emit dataChanged(index, index);
 }
 

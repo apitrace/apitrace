@@ -131,6 +131,7 @@ private slots:
     void guessedApi(int api);
     void finishedParsing();
     void loaderFrameLoaded(ApiTraceFrame *frame,
+                           const QVector<ApiTraceCall*> &topLevelItems,
                            const QVector<ApiTraceCall*> &calls,
                            quint64 binaryDataSize);
     void loaderSearchResult(const ApiTrace::SearchRequest &request,

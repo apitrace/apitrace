@@ -40,6 +40,7 @@ signals:
 
     void framesLoaded(const QList<ApiTraceFrame*> &frames);
     void frameContentsLoaded(ApiTraceFrame *frame,
+                             const QVector<ApiTraceCall*> &topLevelItems,
                              const QVector<ApiTraceCall*> &calls,
                              quint64 binaryDataSize);
 

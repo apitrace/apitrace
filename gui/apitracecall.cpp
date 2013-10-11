@@ -648,7 +648,31 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
                            TraceLoader *loader,
                            const trace::Call *call)
     : ApiTraceEvent(ApiTraceEvent::Call),
-      m_parentFrame(parentFrame)
+      m_parentFrame(parentFrame),
+      m_parentCall(0)
+{
+    loadData(loader, call);
+}
+
+ApiTraceCall::ApiTraceCall(ApiTraceCall *parentCall,
+                           TraceLoader *loader,
+                           const trace::Call *call)
+    : ApiTraceEvent(ApiTraceEvent::Call),
+      m_parentFrame(parentCall->parentFrame()),
+      m_parentCall(parentCall)
+{
+    loadData(loader, call);
+}
+
+
+ApiTraceCall::~ApiTraceCall()
+{
+}
+
+
+void
+ApiTraceCall::loadData(TraceLoader *loader,
+                       const trace::Call *call)
 {
     m_index = call->no;
 
@@ -712,10 +736,46 @@ ApiTraceCall::ApiTraceCall(ApiTraceFrame *parentFrame,
     }
 }
 
-ApiTraceCall::~ApiTraceCall()
+ApiTraceCall *
+ApiTraceCall::parentCall() const
 {
+    return m_parentCall;
 }
 
+
+ApiTraceEvent *
+ApiTraceCall::parentEvent() const
+{
+    if (m_parentCall)
+        return m_parentCall;
+    else
+        return m_parentFrame;
+}
+
+QVector<ApiTraceCall*>
+ApiTraceCall::children() const
+{
+    return m_children;
+}
+
+void
+ApiTraceCall::addChild(ApiTraceCall *call)
+{
+    m_children.append(call);
+}
+
+
+int
+ApiTraceCall::callIndex(ApiTraceCall *call) const
+{
+    return m_children.indexOf(call);
+}
+
+void
+ApiTraceCall::finishedAddingChildren()
+{
+    m_children.squeeze();
+}
 
 bool ApiTraceCall::hasError() const
 {
@@ -818,6 +878,15 @@ QVector<QVariant> ApiTraceCall::arguments() const
         return m_argValues;
     else
         return m_editedValues;
+}
+
+ApiTraceEvent *
+ApiTraceCall::eventAtRow(int row) const
+{
+    if (row < m_children.count())
+        return m_children.value(row);
+    else
+        return NULL;
 }
 
 QVariant ApiTraceCall::returnValue() const
@@ -1011,7 +1080,7 @@ QString ApiTraceCall::searchText() const
 
 int ApiTraceCall::numChildren() const
 {
-    return 0;
+    return m_children.count();
 }
 
 bool ApiTraceCall::contains(const QString &str,
@@ -1074,6 +1143,11 @@ QStaticText ApiTraceFrame::staticText() const
 
 int ApiTraceFrame::numChildren() const
 {
+    return m_children.count();
+}
+
+int ApiTraceFrame::numTotalCalls() const
+{
     return m_calls.count();
 }
 
@@ -1082,24 +1156,17 @@ ApiTrace * ApiTraceFrame::parentTrace() const
     return m_parentTrace;
 }
 
-void ApiTraceFrame::addCall(ApiTraceCall *call)
-{
-    m_calls.append(call);
-    if (call->hasBinaryData()) {
-        QByteArray data =
-            call->arguments()[call->binaryDataIndex()].toByteArray();
-        m_binaryDataSize += data.size();
-    }
-}
-
 QVector<ApiTraceCall*> ApiTraceFrame::calls() const
 {
     return m_calls;
 }
 
-ApiTraceCall * ApiTraceFrame::call(int idx) const
+ApiTraceEvent * ApiTraceFrame::eventAtRow(int row) const
 {
-    return m_calls.value(idx);
+    if (row < m_children.count())
+        return m_children.value(row);
+    else
+        return NULL;
 }
 
 
@@ -1116,7 +1183,7 @@ ApiTraceCall * ApiTraceFrame::callWithIndex(int index) const
 
 int ApiTraceFrame::callIndex(ApiTraceCall *call) const
 {
-    return m_calls.indexOf(call);
+    return m_children.indexOf(call);
 }
 
 bool ApiTraceFrame::isEmpty() const
@@ -1133,9 +1200,11 @@ int ApiTraceFrame::binaryDataSize() const
     return m_binaryDataSize;
 }
 
-void ApiTraceFrame::setCalls(const QVector<ApiTraceCall*> &calls,
+void ApiTraceFrame::setCalls(const QVector<ApiTraceCall*> &children,
+                             const QVector<ApiTraceCall*> &calls,
                              quint64 binaryDataSize)
 {
+    m_children = children;
     m_calls = calls;
     m_binaryDataSize = binaryDataSize;
     m_loaded = true;
@@ -1146,11 +1215,6 @@ void ApiTraceFrame::setCalls(const QVector<ApiTraceCall*> &calls,
 bool ApiTraceFrame::isLoaded() const
 {
     return m_loaded;
-}
-
-void ApiTraceFrame::setLoaded(bool l)
-{
-    m_loaded = l;
 }
 
 void ApiTraceFrame::setNumChildren(int num)

@@ -203,6 +203,8 @@ private:
     QUrl m_helpUrl;
 };
 
+class ApiTraceCall;
+
 class ApiTraceEvent
 {
 public:
@@ -220,6 +222,8 @@ public:
 
     virtual QStaticText staticText() const = 0;
     virtual int numChildren() const = 0;
+    virtual int callIndex(ApiTraceCall *call) const = 0;
+    virtual ApiTraceEvent *eventAtRow(int row) const = 0;
 
     QVariantMap stateParameters() const;
     ApiTraceState *state() const;
@@ -242,6 +246,8 @@ Q_DECLARE_METATYPE(ApiTraceEvent*);
 class ApiTraceCall : public ApiTraceEvent
 {
 public:
+    ApiTraceCall(ApiTraceCall *parentCall, TraceLoader *loader,
+                 const trace::Call *tcall);
     ApiTraceCall(ApiTraceFrame *parentFrame, TraceLoader *loader,
                  const trace::Call *tcall);
     ~ApiTraceCall();
@@ -256,6 +262,15 @@ public:
     void setHelpUrl(const QUrl &url);
     ApiTraceFrame *parentFrame()const;
     void setParentFrame(ApiTraceFrame *frame);
+
+    int callIndex(ApiTraceCall *call) const;
+
+    ApiTraceEvent *parentEvent() const;
+    ApiTraceCall *parentCall() const;
+    QVector<ApiTraceCall*> children() const;
+    ApiTraceEvent *eventAtRow(int row) const;
+    void addChild(ApiTraceCall *call);
+    void finishedAddingChildren();
 
     bool hasError() const;
     QString error() const;
@@ -283,12 +298,17 @@ public:
     QString backtrace() const;
     void setBacktrace(QString backtrace);
 private:
+    void loadData(TraceLoader *loader,
+                  const trace::Call *tcall);
+private:
     int m_index;
     ApiTraceCallSignature *m_signature;
     QVector<QVariant> m_argValues;
     QVariant m_returnValue;
     trace::CallFlags m_flags;
     ApiTraceFrame *m_parentFrame;
+    ApiTraceCall *m_parentCall;
+    QVector<ApiTraceCall*> m_children;
 
     QVector<QVariant> m_editedValues;
 
@@ -316,14 +336,15 @@ public:
     void setNumChildren(int num);
     int numChildren() const;
     int numChildrenToLoad() const;
+    int numTotalCalls() const;
     QStaticText staticText() const;
 
+    ApiTraceEvent *eventAtRow(int row) const;
     int callIndex(ApiTraceCall *call) const;
-    ApiTraceCall *call(int idx) const;
     ApiTraceCall *callWithIndex(int index) const;
-    void addCall(ApiTraceCall *call);
     QVector<ApiTraceCall*> calls() const;
-    void setCalls(const QVector<ApiTraceCall*> &calls,
+    void setCalls(const QVector<ApiTraceCall*> &topLevelCalls,
+                  const QVector<ApiTraceCall*> &allCalls,
                   quint64 binaryDataSize);
 
     ApiTraceCall *findNextCall(ApiTraceCall *from,
@@ -337,7 +358,6 @@ public:
     int binaryDataSize() const;
 
     bool isLoaded() const;
-    void setLoaded(bool l);
 
     void setLastCallIndex(unsigned index);
     unsigned lastCallIndex() const;
@@ -348,6 +368,7 @@ public:
 private:
     ApiTrace *m_parentTrace;
     quint64 m_binaryDataSize;
+    QVector<ApiTraceCall*> m_children;
     QVector<ApiTraceCall*> m_calls;
     bool m_loaded;
     unsigned m_callsToLoad;
