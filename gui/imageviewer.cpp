@@ -151,6 +151,11 @@ void ImageViewer::showPixel(int x, int y)
 
     QString label = tr("Pixel: ");
 
+    /* If the image is flipped, substitute y to match */
+    if (flipCheckBox->isChecked()) {
+        y = m_convertedImage.height() - y - 1;
+    }
+
     if (m_image->channelType == image::TYPE_UNORM8) {
         label += createPixelLabel<unsigned char>(m_image, x, y);
     } else {
