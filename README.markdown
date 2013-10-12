@@ -104,7 +104,7 @@ Tracing manually
 
 ### Linux ###
 
-On 64 bits systems, you'll need to determine ether the application is 64 bits
+On 64 bits systems, you'll need to determine whether the application is 64 bits
 or 32 bits.  This can be done by doing
 
     file /path/to/application
@@ -127,7 +127,7 @@ The `LD_PRELOAD` mechanism should work with the majority applications.  There
 are some applications (e.g., Unigine Heaven, Android GPU emulator, etc.), that
 have global function pointers with the same name as GL entrypoints, living in a
 shared object that wasn't linked with `-Bsymbolic` flag, so relocations to
-those globals function pointers get overwritten with the address to our wrapper
+those global function pointers get overwritten with the address to our wrapper
 library, and the application will segfault when trying to write to them.  For
 these applications it is possible to trace by using `glxtrace.so` as an
 ordinary `libGL.so` and injecting it via `LD_LIBRARY_PATH`:
@@ -148,7 +148,7 @@ See the `ld.so` man page for more information about `LD_PRELOAD` and
 ### Android ###
 
 To trace standalone native OpenGL ES applications, use
-`LD_PRELOAD=/path/to/egltrace.so /path/to/application` like described in the
+`LD_PRELOAD=/path/to/egltrace.so /path/to/application` as described in the
 previous section.  To trace Java applications, refer to Dalvik.markdown.
 
 ### Mac OS X ###
@@ -210,10 +210,10 @@ through the following extensions:
 
 * [`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
 
-**apitrace** will advertise and intercept these GL extensions regardless the GL
-implementation supports them or not.  So all you have to do is to use these
-extensions when available, and you can be sure they will be available when
-tracing inside **apitrace**.
+**apitrace** will advertise and intercept these GL extensions regardless
+of whether the GL implementation supports them or not.  So all you have
+to do is to use these extensions when available, and you can be sure they
+will be available when tracing inside **apitrace**.
 
 For example, if you use [GLEW](http://glew.sourceforge.net/) to dynamically
 detect and use GL extensions, you could easily accomplish this by doing:
@@ -232,7 +232,8 @@ detect and use GL extensions, you could easily accomplish this by doing:
       
     }
 
-This has the added advantage of working equally well with gDEBugger.
+This has the added advantage of working equally well with
+[(discontinued) gDEBugger](http://developer.amd.com/tools-and-sdks/heterogeneous-computing/archived-tools/amd-gdebugger/).
 
 Also, provided that the OpenGL implementation supports `GL_KHR_debug`, labels
 defined via glObjectLabel() , and the labels of several objects (textures,
@@ -262,7 +263,7 @@ You can get a dump of the bound GL state at call 12345 by doing:
 
     apitrace replay -D 12345 application.trace > 12345.json
 
-This is precisely the mechanism the GUI obtains its own state.
+This is precisely the mechanism the GUI uses to obtain its own state.
 
 You can compare two state dumps by doing:
 
@@ -308,14 +309,14 @@ You can truncate a trace by doing:
     apitrace trim --exact --calls 0-12345 -o trimed.trace application.trace
 
 If you need precise control over which calls to trim you can specify the
-individual call numbers a plaintext file, as described in the 'Call sets'
+individual call numbers in a plain text file, as described in the 'Call sets'
 section above.
 
 There is also experimental support for automatically trimming the calls
 necessary for a given frame or call:
 
-   apitrace trim --auto --calls=12345 -o trimed.trace application.trace
-   apitrace trim --auto --frames=12345 -o trimed.trace application.trace
+    apitrace trim --auto --calls=12345 -o trimed.trace application.trace
+    apitrace trim --auto --frames=12345 -o trimed.trace application.trace
 
 
 Profiling a trace
@@ -329,7 +330,7 @@ You can perform gpu and cpu profiling with the command line options:
 
  * `--ppd` record pixels drawn for each draw call.
 
-The results from this can then be read by hand or analysed with a script.
+The results from these can then be read by hand or analyzed with a script.
 
 `scripts/profileshader.py` will read the profile results and format them into a
 table which displays profiling results per shader.
@@ -387,7 +388,7 @@ First, create a build script, named build-script.sh, containing:
     make "$@"
 
 It is important that builds are both robust, and efficient.  Due to broken
-dependency discovery in Mesa's makefile system, it was necessary invoke `make
+dependency discovery in Mesa's makefile system, it was necessary to invoke `make
 clean` in every iteration step.  `ccache` should be installed to avoid
 recompiling unchanged source files.
 
@@ -413,7 +414,7 @@ failures.
 
 The `--gl-renderer` option will also cause a commit to be skipped if the
 `GL_RENDERER` is unexpected (e.g., when a software renderer or another GL
-driver is unintentionally loaded due to missing symbol in the DRI driver, or
+driver is unintentionally loaded due to a missing symbol in the DRI driver, or
 another runtime fault).
 
 
