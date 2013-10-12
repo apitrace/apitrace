@@ -96,7 +96,7 @@ command(int argc, char *argv[])
             usage();
             return 0;
         default:
-            std::cerr << "error: unexpected option `" << opt << "`\n";
+            std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
             return 1;
         }

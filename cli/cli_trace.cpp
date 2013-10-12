@@ -323,7 +323,7 @@ command(int argc, char *argv[])
             output = optarg;
             break;
         default:
-            std::cerr << "error: unexpected option `" << opt << "`\n";
+            std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
             return 1;
         }
