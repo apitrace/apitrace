@@ -19,7 +19,6 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
     QVariant varientData = sourceModel()->data(index0, ApiTraceModel::EventRole);
     ApiTraceEvent *event = varientData.value<ApiTraceEvent*>();
 
-    Q_ASSERT(event);
     if (!event)
         return false;
 
