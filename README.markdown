@@ -248,8 +248,9 @@ parameters tab.
 
 
 For OpenGL ES applications you can embed annotations in the trace file through the
+[`GL_KHR_debug`](http://www.khronos.org/registry/gles/extensions/KHR/debug.txt) or 
 [`GL_EXT_debug_marker`](http://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
-extension.
+extensions.
 
 
 For Direct3D applications you can follow the standard procedure for
