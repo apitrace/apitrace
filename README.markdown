@@ -125,7 +125,7 @@ For EGL applications you will need to use `egltrace.so` instead of
 
 The `LD_PRELOAD` mechanism should work with the majority applications.  There
 are some applications (e.g., Unigine Heaven, Android GPU emulator, etc.), that
-have global function pointers with the same name as GL entrypoints, living in a
+have global function pointers with the same name as OpenGL entrypoints, living in a
 shared object that wasn't linked with `-Bsymbolic` flag, so relocations to
 those global function pointers get overwritten with the address to our wrapper
 library, and the application will segfault when trying to write to them.  For
@@ -210,30 +210,36 @@ through the following extensions:
 
 * [`GL_GREMEDY_frame_terminator`](http://www.opengl.org/registry/specs/GREMEDY/frame_terminator.txt)
 
-**apitrace** will advertise and intercept these GL extensions regardless
-of whether the GL implementation supports them or not.  So all you have
+**apitrace** will advertise and intercept these OpenGL extensions regardless
+of whether the OpenGL implementation supports them or not.  So all you have
 to do is to use these extensions when available, and you can be sure they
 will be available when tracing inside **apitrace**.
 
 For example, if you use [GLEW](http://glew.sourceforge.net/) to dynamically
-detect and use GL extensions, you could easily accomplish this by doing:
+detect and use OpenGL extensions, you could easily accomplish this by doing:
 
     void foo() {
     
-      if (GLEW_GREMEDY_string_marker) {
-        glStringMarkerGREMEDY(0, __FUNCTION__ ": enter");
+      if (GLEW_KHR_debug) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, __FUNCTION__);
       }
       
       ...
       
-      if (GLEW_GREMEDY_string_marker) {
-        glStringMarkerGREMEDY(0, __FUNCTION__ ": leave");
+      if (GLEW_KHR_debug) {
+        glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER,
+                             0, GL_DEBUG_SEVERITY_MEDIUM, -1, "bla bla");
       }
       
+      ...
+      
+      if (GLEW_KHR_debug) {
+        glPopDebugGroup();
+      }
+    
     }
 
-This has the added advantage of working equally well with
-[(discontinued) gDEBugger](http://developer.amd.com/tools-and-sdks/heterogeneous-computing/archived-tools/amd-gdebugger/).
+This has the added advantage of working equally well with other OpenGL debugging tools.
 
 Also, provided that the OpenGL implementation supports `GL_KHR_debug`, labels
 defined via glObjectLabel() , and the labels of several objects (textures,
@@ -256,10 +262,10 @@ For Direct3D applications you can follow the standard procedure for
   `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
 
-Dump GL state at a particular call
+Dump OpenGL state at a particular call
 ----------------------------------
 
-You can get a dump of the bound GL state at call 12345 by doing:
+You can get a dump of the bound OpenGL state at call 12345 by doing:
 
     apitrace replay -D 12345 application.trace > 12345.json
 
@@ -373,7 +379,7 @@ With tracecheck.py it is possible to automate git bisect and pinpoint the
 commit responsible for a regression.
 
 Below is an example of using tracecheck.py to bisect a regression in the
-Mesa-based Intel 965 driver.  But the procedure could be applied to any GL
+Mesa-based Intel 965 driver.  But the procedure could be applied to any OpenGL
 driver hosted on a git repository.
 
 First, create a build script, named build-script.sh, containing:
@@ -413,7 +419,7 @@ The trace-check.py script will skip automatically when there are build
 failures.
 
 The `--gl-renderer` option will also cause a commit to be skipped if the
-`GL_RENDERER` is unexpected (e.g., when a software renderer or another GL
+`GL_RENDERER` is unexpected (e.g., when a software renderer or another OpenGL
 driver is unintentionally loaded due to a missing symbol in the DRI driver, or
 another runtime fault).
 
@@ -425,19 +431,19 @@ In order to determine which draw call a regression first manifests one could
 generate snapshots for every draw call, using the `-S` option.  That is, however,
 very inefficient for big traces with many draw calls.
 
-A faster approach is to run both the bad and a good GL driver side-by-side.
-The latter can be either a previously known good build of the GL driver, or a
+A faster approach is to run both the bad and a good OpenGL driver side-by-side.
+The latter can be either a previously known good build of the OpenGL driver, or a
 reference software renderer.
 
 This can be achieved with retracediff.py script, which invokes glretrace with
-different environments, allowing to choose the desired GL driver by
+different environments, allowing to choose the desired OpenGL driver by
 manipulating variables such as `LD_LIBRARY_PATH`, `LIBGL_DRIVERS_DIR`, or
 `TRACE_LIBGL`.
 
 For example, on Linux:
 
     ./scripts/retracediff.py \
-        --ref-env LD_LIBRARY_PATH=/path/to/reference/GL/implementation \
+        --ref-env LD_LIBRARY_PATH=/path/to/reference/OpenGL/implementation \
         --retrace /path/to/glretrace \
         --diff-prefix=/path/to/output/diffs \
         application.trace
