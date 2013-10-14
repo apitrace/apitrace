@@ -445,7 +445,7 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
                     apiCallFromTraceCall(call, m_helpHash,
                                          currentFrame, groups.isEmpty() ? 0 : groups.top(), this);
                 Q_ASSERT(apiCall);
-                Q_ASSERT(parsedCalls < calls.size());
+                Q_ASSERT(parsedCalls < allCalls.size());
                 allCalls[parsedCalls++] = apiCall;
                 if (groups.count() == 0) {
                     topLevelItems.append(apiCall);
@@ -476,7 +476,7 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
             // There can be fewer parsed calls when call in different
             // threads cross the frame boundary
             Q_ASSERT(parsedCalls <= numOfCalls);
-            Q_ASSERT(parsedCalls <= calls.size());
+            Q_ASSERT(parsedCalls <= allCalls.size());
             allCalls.resize(parsedCalls);
             allCalls.squeeze();
 
