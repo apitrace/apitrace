@@ -1,7 +1,5 @@
 include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 
-add_definitions (-DNO_VIZ)
-
 # adjust warnings
 if (MSVC)
     add_definitions (-wd4131) # uses old-style declarator
