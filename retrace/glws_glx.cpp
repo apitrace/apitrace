@@ -183,14 +183,14 @@ public:
 
         Drawable::resize(w, h);
 
-        XResizeWindow(display, window, w, h);
-
         // Tell the window manager to respect the requested size
         XSizeHints size_hints;
         size_hints.max_width  = size_hints.min_width  = w;
         size_hints.max_height = size_hints.min_height = h;
         size_hints.flags = PMinSize | PMaxSize;
         XSetWMNormalHints(display, window, &size_hints);
+
+        XResizeWindow(display, window, w, h);
 
         waitForEvent(ConfigureNotify);
 
