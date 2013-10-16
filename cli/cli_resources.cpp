@@ -32,6 +32,27 @@
 
 #include "cli_resources.hpp"
 
+#ifdef __GLIBC__
+
+#include <dlfcn.h>
+
+static bool
+tryLib(const os::String &path, bool verbose)
+{
+    void *handle = dlopen(path.str(), RTLD_LAZY);
+    bool exists = (handle != NULL);
+    if (verbose) {
+        if (exists) {
+            std::cerr << "info: found " << path.str() << "\n";
+        } else {
+            std::cerr << "info: did not find " << dlerror() << "\n";
+        }
+    }
+    if (exists)
+        dlclose(handle);
+    return exists;
+}
+#endif
 
 static bool
 tryPath(const os::String &path, bool verbose)
@@ -92,6 +113,17 @@ findWrapper(const char *wrapperFilename, bool verbose)
     if (tryPath(wrapperPath, verbose)) {
         return wrapperPath;
     }
+
+#ifdef __GLIBC__
+    // We want to take advantage of $LIB dynamic string token expansion in
+    // glibc dynamic linker to handle multilib layout for us
+    wrapperPath = processDir;
+    wrapperPath.join("../$LIB/apitrace/wrappers");
+    wrapperPath.join(wrapperFilename);
+    if (tryLib(wrapperPath, verbose)) {
+        return wrapperPath;
+    }
+#endif
 
     // Try relative install directory
     wrapperPath = processDir;
