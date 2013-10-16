@@ -252,6 +252,25 @@ public:
     }
 
     /*
+     * Comparators
+     */
+    bool operator==(const String &rhs) const
+    {
+        if (buffer.size() != rhs.buffer.size())
+            return false;
+        for (const_iterator a = begin(), b = rhs.begin() ;
+             a != end();
+             ++a, ++b)
+            if (*a != *b)
+                return false;
+        return true;
+    }
+    bool operator!=(const String &rhs) const
+    {
+        return !(*this == rhs);
+    }
+
+    /*
      * Iterators
      */
 

@@ -74,6 +74,9 @@ findWrapper(const char *wrapperFilename, bool verbose)
 {
     os::String wrapperPath;
 
+    os::String binInstallPath = APITRACE_INSTALL_PREFIX;
+    binInstallPath.join("bin");
+
     os::String processDir = os::getProcessName();
     processDir.trimFilename();
 
@@ -93,27 +96,33 @@ findWrapper(const char *wrapperFilename, bool verbose)
         return wrapperPath;
     }
 
-    // Try relative install directory
-    wrapperPath = processDir;
+    // If we're not installed, try relative directory
+    if (processDir != binInstallPath) {
+        wrapperPath = processDir;
 #if defined(_WIN32)
-    wrapperPath.join("..\\lib\\wrappers");
+        wrapperPath.join("..\\lib\\wrappers");
 #elif defined(__APPLE__)
-    wrapperPath.join("../lib/wrappers");
+        wrapperPath.join("../lib/wrappers");
 #else
-    wrapperPath.join("../lib/apitrace/wrappers");
+        wrapperPath.join("../lib/apitrace/wrappers");
 #endif
-    wrapperPath.join(wrapperFilename);
-    if (tryPath(wrapperPath, verbose)) {
-        return wrapperPath;
+        wrapperPath.join(wrapperFilename);
+        if (tryPath(wrapperPath, verbose)) {
+            return wrapperPath;
+        }
     }
 
 #ifndef _WIN32
-    // Try absolute install directory
-    wrapperPath = APITRACE_WRAPPERS_INSTALL_DIR;
+    // Let the dynamic linker try for us
+    wrapperPath = APITRACE_INSTALL_PREFIX;
+    wrapperPath.join("${LIB}");
+#ifndef __APPLE__
+    wrapperPath.join("apitrace");
+#endif
+    wrapperPath.join("wrappers");
     wrapperPath.join(wrapperFilename);
-    if (tryPath(wrapperPath, verbose)) {
-        return wrapperPath;
-    }
+
+    return wrapperPath;
 #endif
 
     return "";
