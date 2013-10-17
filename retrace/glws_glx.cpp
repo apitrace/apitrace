@@ -213,6 +213,12 @@ public:
         Drawable::show();
     }
 
+    void copySubBuffer(int x, int y, int width, int height) {
+        glXCopySubBufferMESA(display, window, x, y, width, height);
+
+        processKeys();
+    }
+
     void swapBuffers(void) {
         glXSwapBuffers(display, window);
 

@@ -111,6 +111,16 @@ static void retrace_glXDestroyContext(trace::Call &call) {
     delete context;
 }
 
+static void retrace_glXCopySubBufferMESA(trace::Call &call) {
+    glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
+    int x = call.arg(2).toSInt();
+    int y = call.arg(3).toSInt();
+    int width = call.arg(4).toSInt();
+    int height = call.arg(5).toSInt();
+
+    drawable->copySubBuffer(x, y, width, height);
+}
+
 static void retrace_glXSwapBuffers(trace::Call &call) {
     glws::Drawable *drawable = getDrawable(call.arg(1).toUInt());
 
@@ -173,7 +183,7 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     {"glXChooseVisual", &retrace::ignore},
     //{"glXCopyContext", &retrace_glXCopyContext},
     //{"glXCopyImageSubDataNV", &retrace_glXCopyImageSubDataNV},
-    //{"glXCopySubBufferMESA", &retrace_glXCopySubBufferMESA},
+    {"glXCopySubBufferMESA", &retrace_glXCopySubBufferMESA},
     {"glXCreateContextAttribsARB", &retrace_glXCreateContextAttribsARB},
     {"glXCreateContext", &retrace_glXCreateContext},
     //{"glXCreateContextWithConfigSGIX", &retrace_glXCreateContextWithConfigSGIX},

@@ -127,6 +127,8 @@ public:
         visible = true;
     }
 
+    virtual void copySubBuffer(int x, int y, int width, int height) = 0;
+
     virtual void swapBuffers(void) = 0;
 };
 
