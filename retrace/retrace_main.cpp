@@ -517,11 +517,11 @@ mainLoop() {
             retraceCall(call);
             delete call;
         };
-        flushRendering();
     } else {
         RelayRace race;
         race.run();
     }
+    finishRendering();
 
     long long endTime = os::getTime();
     float timeInterval = (endTime - startTime) * (1.0 / os::timeFrequency);

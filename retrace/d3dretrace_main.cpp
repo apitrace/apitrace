@@ -52,6 +52,10 @@ retrace::flushRendering(void) {
 }
 
 void
+retrace::finishRendering(void) {
+}
+
+void
 retrace::waitForInput(void) {
     /* TODO */
 }

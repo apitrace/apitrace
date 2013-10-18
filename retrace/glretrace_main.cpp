@@ -473,17 +473,20 @@ retrace::flushRendering(void) {
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     if (currentContext) {
         glretrace::flushQueries();
-        glFlush();
+    }
+}
+
+void
+retrace::finishRendering(void) {
+    glretrace::Context *currentContext = glretrace::getCurrentContext();
+    if (currentContext) {
+        glFinish();
     }
 }
 
 void
 retrace::waitForInput(void) {
-    glretrace::Context *currentContext = glretrace::getCurrentContext();
-    if (currentContext) {
-        glretrace::flushQueries();
-        glFlush();
-    }
+    flushRendering();
     while (glws::processEvents()) {
         os::sleep(100*1000);
     }

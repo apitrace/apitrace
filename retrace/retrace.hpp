@@ -197,9 +197,17 @@ void
 frameComplete(trace::Call &call);
 
 
-
+/**
+ * Flush rendering (called when switching threads).
+ */
 void
 flushRendering(void);
+
+/**
+ * Finish rendering (called before exiting.)
+ */
+void
+finishRendering(void);
 
 void
 waitForInput(void);
