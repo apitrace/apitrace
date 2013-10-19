@@ -481,10 +481,10 @@ def main():
         type='string', dest='apitrace', default='apitrace',
         help='apitrace command [default: %default]')
     optparser.add_option(
-        '-d', '--diff', metavar='TOOL',
+        '-t', '--tool', metavar='TOOL',
         type="choice", choices=('diff', 'sdiff', 'wdiff', 'python'),
-        dest="diff", default=None,
-        help="diff program: diff, sdiff, wdiff, or python [default: auto]")
+        dest="tool", default=None,
+        help="diff tool: diff, sdiff, wdiff, or python [default: auto]")
     optparser.add_option(
         '-c', '--calls', metavar='CALLSET',
         type="string", dest="calls", default='0-10000',
@@ -511,19 +511,19 @@ def main():
     if len(args) != 2:
         optparser.error("incorrect number of arguments")
 
-    if options.diff is None:
+    if options.tool is None:
         if platform.system() == 'Windows':
-            options.diff = 'python'
+            options.tool = 'python'
         else:
             if which('wdiff'):
-                options.diff = 'wdiff'
+                options.tool = 'wdiff'
             else:
                 sys.stderr.write('warning: wdiff not found\n')
                 if which('sdiff'):
-                    options.diff = 'sdiff'
+                    options.tool = 'sdiff'
                 else:
                     sys.stderr.write('warning: sdiff not found\n')
-                    options.diff = 'diff'
+                    options.tool = 'diff'
 
     if options.ref_calls is None:
         options.ref_calls = options.calls
@@ -532,10 +532,10 @@ def main():
 
     ref_trace, src_trace = args
 
-    if options.diff == 'python':
+    if options.tool == 'python':
         differ = PythonDiffer(options.apitrace, options.call_nos)
     else:
-        differ = ExternalDiffer(options.apitrace, options.diff, options.width)
+        differ = ExternalDiffer(options.apitrace, options.tool, options.width)
     differ.setRefTrace(ref_trace, options.ref_calls)
     differ.setSrcTrace(src_trace, options.src_calls)
     differ.diff()
