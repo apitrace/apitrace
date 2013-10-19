@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ##########################################################################
 #
-# Copyright 2012 VMware, Inc.
+# Copyright 2012-2013 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,35 +25,50 @@
 ##########################################################################/
 
 
+import optparse
 import sys
 
 
 def process(stream):
     times = {}
 
-    # call no gpu_start gpu_dura cpu_start cpu_dura pixels program name
+    # Read header describing fields
+    header = stream.readline()
+    assert header.startswith('#')
+    header = header.rstrip('\r\n')
+
+    fields = header.split(' ')[1:]
+    columns = {}
+    for column in range(len(fields)):
+        columns[fields[column]] = column
+
+    callCol = columns['call']
+    callIdCol = columns['no']
+    gpuDuraCol = columns['gpu_dura']
+    programCol = columns['program']
+    funcNameCol = columns['name']
 
     for line in stream:
-        words = line.split(' ')
+        fields = line.split(' ')
 
         if line.startswith('#'):
             continue
 
-        if words[0] == 'call':
-            id = long(words[1])
-            duration = long(words[3])
-            shader = long(words[7])
-            func = words[8]
+        if fields[callCol] == 'call':
+            callId = long(fields[callIdCol])
+            duration = long(fields[gpuDuraCol])
+            shader = long(fields[programCol])
+            func = fields[funcNameCol]
 
             if times.has_key(shader):
                 times[shader]['draws'] += 1
                 times[shader]['duration'] += duration
 
                 if duration > times[shader]['longestDuration']:
-                    times[shader]['longest'] = id
+                    times[shader]['longest'] = callId
                     times[shader]['longestDuration'] = duration
             else:
-                times[shader] = {'draws': 1, 'duration': duration, 'longest': id, 'longestDuration': duration}
+                times[shader] = {'draws': 1, 'duration': duration, 'longest': callId, 'longestDuration': duration}
 
     times = sorted(times.items(), key=lambda x: x[1]['duration'], reverse=True)
 
@@ -73,8 +88,16 @@ def process(stream):
 
 
 def main():
-    if len(sys.argv) > 1:
-        for arg in sys.argv[1:]:
+
+    # Parse command line options
+    optparser = optparse.OptionParser(
+        usage='\n\t%prog [options] <profile_input>',
+        version='%%prog')
+    
+    (options, args) = optparser.parse_args(sys.argv[1:])
+
+    if len(args):
+        for arg in args:
             process(open(arg, 'rt'))
     else:
         process(sys.stdin)
