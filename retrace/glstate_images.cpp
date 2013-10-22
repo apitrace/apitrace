@@ -1079,6 +1079,8 @@ downsampledFramebuffer(Context &context,
                                   GL_RENDERBUFFER, rbs[*numRbs]);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+        glDrawBuffer(drawbuffer);
+        glReadBuffer(drawbuffer);
         glBlitFramebuffer(0, 0, depthDesc.width, depthDesc.height, 0, 0, depthDesc.width, depthDesc.height,
                           GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -1093,10 +1095,11 @@ downsampledFramebuffer(Context &context,
                                       GL_RENDERBUFFER, rbs[*numRbs]);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-            glDrawBuffer(GL_DEPTH_ATTACHMENT);
-            glReadBuffer(GL_DEPTH_ATTACHMENT);
+            glDrawBuffer(drawbuffer);
+            glReadBuffer(drawbuffer);
             glBlitFramebuffer(0, 0, depthDesc.width, depthDesc.height, 0, 0, depthDesc.width, depthDesc.height,
                               GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
             ++*numRbs;
         }
         if (stencilDesc.valid()) {
@@ -1108,10 +1111,11 @@ downsampledFramebuffer(Context &context,
                                       GL_RENDERBUFFER, rbs[*numRbs]);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, oldFbo);
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-            glDrawBuffer(GL_STENCIL_ATTACHMENT);
-            glReadBuffer(GL_STENCIL_ATTACHMENT);
+            glDrawBuffer(drawbuffer);
+            glReadBuffer(drawbuffer);
             glBlitFramebuffer(0, 0, stencilDesc.width, stencilDesc.height, 0, 0, stencilDesc.width, stencilDesc.height,
                               GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
             ++*numRbs;
         }
     }
@@ -1290,7 +1294,7 @@ dumpFramebuffer(JSONWriter &json, Context &context)
         }
 
         ImageDesc stencilDesc;
-        if (getFramebufferAttachmentDesc(context, GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, stencilDesc)) {
+        if (getFramebufferAttachmentDesc(context, GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, stencilDesc)) {
             if (stencilDesc.samples) {
                 multisample = true;
             }
