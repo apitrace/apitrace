@@ -179,6 +179,18 @@ On 64 bits Windows, you'll need to determine ether the application is a 64 bits
 or 32 bits. 32 bits applications will have a `*32` suffix in the _Image Name_
 column of the _Processes_ tab of _Windows Task Manager_ window.
 
+You also need to know which graphics API is being used.  If you are unsure, the
+simplest way to determine what API an application uses is to:
+
+* download and run [Process Explorer](http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx)
+
+* search and select the application's process in _Process Explorer_
+
+* list the DLLs by pressing `Ctrl + D`
+
+* sort DLLs alphabetically, and look for the DLLs such as `opengl32.dll`,
+  `d3d9.dll`, `d3d10.dll`, etc.
+
 Copy the appropriate `opengl32.dll`, `d3d8.dll`, or `d3d9.dll` from the
 wrappers directory to the directory with the application you want to trace.
 Then run the application as usual.
