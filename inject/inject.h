@@ -94,18 +94,21 @@ getModuleName(char *szModuleName, size_t n, const char *szFilename) {
 #define USE_SHARED_MEM 1
 
 
-#if USE_SHARED_MEM
+struct SharedMem
+{
+    BOOL bReplaced;
+    char szDllName[4096 - sizeof(BOOL)];
+};
 
-#define SHARED_MEM_SIZE 4096
 
-static LPVOID pSharedMem = NULL;
+static SharedMem *pSharedMem = NULL;
 static HANDLE hFileMapping = NULL;
 
 
-static LPSTR
+static SharedMem *
 OpenSharedMemory(void) {
     if (pSharedMem) {
-        return (LPSTR)pSharedMem;
+        return pSharedMem;
     }
 
     hFileMapping = CreateFileMapping(
@@ -113,7 +116,7 @@ OpenSharedMemory(void) {
         NULL,                   // lpAttributes
         PAGE_READWRITE,         // read/write access
         0,                      // dwMaximumSizeHigh
-        SHARED_MEM_SIZE,              // dwMaximumSizeLow
+        sizeof(SharedMem),      // dwMaximumSizeLow
         TEXT("injectfilemap")); // name of map object
     if (hFileMapping == NULL) {
         fprintf(stderr, "Failed to create file mapping\n");
@@ -122,7 +125,7 @@ OpenSharedMemory(void) {
 
     BOOL bAlreadyExists = (GetLastError() == ERROR_ALREADY_EXISTS);
 
-    pSharedMem = MapViewOfFile(
+    pSharedMem = (SharedMem *)MapViewOfFile(
         hFileMapping,
         FILE_MAP_WRITE, // read/write access
         0,              // dwFileOffsetHigh
@@ -134,10 +137,10 @@ OpenSharedMemory(void) {
     }
 
     if (!bAlreadyExists) {
-        memset(pSharedMem, 0, SHARED_MEM_SIZE);
+        memset(pSharedMem, 0, sizeof *pSharedMem);
     }
 
-    return (LPSTR)pSharedMem;
+    return pSharedMem;
 }
 
 
@@ -157,13 +160,15 @@ CloseSharedMem(void) {
 
 static inline VOID
 SetSharedMem(LPCSTR lpszSrc) {
-    LPSTR lpszDst = OpenSharedMemory();
-    if (!lpszDst) {
+    SharedMem *pSharedMem = OpenSharedMemory();
+    if (!pSharedMem) {
         return;
     }
 
+    LPSTR lpszDst = pSharedMem->szDllName;
+
     size_t n = 1;
-    while (*lpszSrc && n < SHARED_MEM_SIZE) {
+    while (*lpszSrc && n < sizeof pSharedMem->szDllName) {
         *lpszDst++ = *lpszSrc++;
         n++;
     }
@@ -173,16 +178,15 @@ SetSharedMem(LPCSTR lpszSrc) {
 
 static inline VOID
 GetSharedMem(LPSTR lpszDst, size_t n) {
-    LPCSTR lpszSrc = OpenSharedMemory();
-    if (!lpszSrc) {
+    SharedMem *pSharedMem = OpenSharedMemory();
+    if (!pSharedMem) {
         return;
     }
+
+    LPCSTR lpszSrc = pSharedMem->szDllName;
 
     while (*lpszSrc && --n) {
         *lpszDst++ = *lpszSrc++;
     }
     *lpszDst = '\0';
 }
-
-
-#endif /* USE_SHARED_MEM */

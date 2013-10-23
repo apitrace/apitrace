@@ -211,6 +211,9 @@ replaceModule(HMODULE hModule,
         } else {
             LPVOID *lpOldAddress = (LPVOID *)(&pFirstThunk->u1.Function);
             replaceAddress(lpOldAddress, (LPVOID)pNewProc);
+            if (pSharedMem) {
+                pSharedMem->bReplaced = TRUE;
+            }
         }
 
         ++pOriginalFirstThunk;
@@ -452,6 +455,9 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
     assert(hModule != g_hThisModule);
     for (unsigned i = 0; i < numReplacements; ++i) {
         if (hModule == replacements[i].hReplaceModule) {
+            if (pSharedMem) {
+                pSharedMem->bReplaced = TRUE;
+            }
             return GetProcAddress(hModule, lpProcName);
         }
     }
@@ -472,6 +478,9 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
                 if (pProcAddress) {
                     if (VERBOSITY >= 2) {
                         debugPrintf("      replacing %s!%s\n", szBaseName, lpProcName);
+                    }
+                    if (pSharedMem) {
+                        pSharedMem->bReplaced = TRUE;
                     }
                     return pProcAddress;
                 } else {

@@ -302,6 +302,10 @@ main(int argc, char *argv[])
     // Wait for it to finish
     WaitForSingleObject(hProcess, INFINITE);
 
+    if (pSharedMem && !pSharedMem->bReplaced) {
+        fprintf(stderr, "warning: %s was never used: application probably does not use this API\n", szDll);
+    }
+
     DWORD exitCode = ~0;
     GetExitCodeProcess(hProcess, &exitCode);
 
