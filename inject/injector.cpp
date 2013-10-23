@@ -217,6 +217,30 @@ main(int argc, char *argv[])
      * XXX: Mixed architecture don't quite work.  See also
      * http://www.corsix.org/content/dll-injection-and-wow64
      */
+    {
+        typedef BOOL (WINAPI *PFNISWOW64PROCESS)(HANDLE, PBOOL);
+        PFNISWOW64PROCESS pfnIsWow64Process;
+        pfnIsWow64Process = (PFNISWOW64PROCESS)
+            GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
+        if (pfnIsWow64Process) {
+            BOOL isParentWow64 = FALSE;
+            BOOL isChildWow64 = FALSE;
+            if (pfnIsWow64Process(GetCurrentProcess(), &isParentWow64) &&
+                pfnIsWow64Process(hProcess, &isChildWow64) &&
+                isParentWow64 != isChildWow64) {
+                fprintf(stderr, "error: binaries mismatch: you need to use the "
+#ifdef _WIN64
+                        "32-bits"
+#else
+                        "64-bits"
+#endif
+                        " apitrace binaries to trace this application\n");
+                TerminateProcess(hProcess, 1);
+                return 1;
+            }
+        }
+    }
+
     const char *szDllName;
     szDllName = "inject.dll";
 
