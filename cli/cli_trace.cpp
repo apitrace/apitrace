@@ -128,7 +128,7 @@ traceProgram(trace::API api,
 
     os::String wrapperPath = findWrapper(wrapperFilename, verbose);
     if (!wrapperPath.length()) {
-        std::cerr << "error: failed to find " << wrapperFilename << " wrapper\n";
+        std::cerr << "error: failed to find " << wrapperFilename << " wrapper (rerun with -v option for more details)\n";
         goto exit;
     }
 
