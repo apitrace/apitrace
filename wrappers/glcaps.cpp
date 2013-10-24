@@ -196,6 +196,14 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
                 *params += desc->numStrings;
             }
             break;
+        case GL_MAX_LABEL_LENGTH:
+            /* We provide our default implementation of KHR_debug when the
+             * driver does not.  So return something sensible here.
+             */
+            if (params[0] == 0) {
+                params[0] = 256;
+            }
+            break;
         default:
             break;
         }
