@@ -1010,8 +1010,8 @@ parameters = [
     ("",	X,	1,	"GL_DEBUG_TYPE_PUSH_GROUP"),	# 0x8269
     ("",	X,	1,	"GL_DEBUG_TYPE_POP_GROUP"),	# 0x826A
     ("",	X,	1,	"GL_DEBUG_SEVERITY_NOTIFICATION"),	# 0x826B
-    ("",	X,	1,	"GL_MAX_DEBUG_GROUP_STACK_DEPTH"),	# 0x826C
-    ("",	X,	1,	"GL_DEBUG_GROUP_STACK_DEPTH"),	# 0x826D
+    ("glGet",	I,	1,	"GL_MAX_DEBUG_GROUP_STACK_DEPTH"),	# 0x826C
+    ("glGet",	I,	1,	"GL_DEBUG_GROUP_STACK_DEPTH"),	# 0x826D
     ("glGet",	I,	1,	"GL_MAX_UNIFORM_LOCATIONS"),	# 0x826E
     ("",	X,	1,	"GL_INTERNALFORMAT_SUPPORTED"),	# 0x826F
     ("",	X,	1,	"GL_INTERNALFORMAT_PREFERRED"),	# 0x8270
@@ -1131,7 +1131,7 @@ parameters = [
     ("",	X,	1,	"GL_PROGRAM_PIPELINE"),	# 0x82E4
     ("",	X,	1,	"GL_SAMPLER"),	# 0x82E6
     ("",	X,	1,	"GL_DISPLAY_LIST"),	# 0x82E7
-    ("",	X,	1,	"GL_MAX_LABEL_LENGTH"),	# 0x82E8
+    ("glGet",	I,	1,	"GL_MAX_LABEL_LENGTH"),	# 0x82E8
     ("",	X,	1,	"GL_NUM_SHADING_LANGUAGE_VERSIONS"),	# 0x82E9
     ("",	X,	1,	"GL_DEPTH_PASS_INSTRUMENT_SGIX"),	# 0x8310
     ("",	X,	1,	"GL_DEPTH_PASS_INSTRUMENT_COUNTERS_SGIX"),	# 0x8311
