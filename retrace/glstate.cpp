@@ -167,19 +167,39 @@ dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint na
     }
 
     GLsizei length = 0;
-    glGetObjectLabel(identifier, name, 0, &length, NULL);
+    /*
+     * XXX: According to
+     * http://www.khronos.org/registry/gles/extensions/KHR/debug.txt
+     * description of glGetObjectLabel:
+     *
+     *   "If <label> is NULL and <length> is non-NULL then no string will
+     *   be returned and the length of the label will be returned in
+     *   <length>."
+     *
+     * However NVIDIA 319.60 drivers return a zero length in such
+     * circumstances.  310.14 drivers worked fine though.  So, just rely on
+     * GL_MAX_LABEL_LENGTH instead, which might waste a bit of memory, but
+     * should work reliably everywhere.
+     */
+    if (0) {
+        glGetObjectLabel(identifier, name, 0, &length, NULL);
+    } else {
+        glGetIntegerv(GL_MAX_LABEL_LENGTH, &length);
+    }
     if (!length) {
         return;
     }
 
-    char *label = (char *)malloc(length + 1);
+    char *label = (char *)calloc(length + 1, 1);
     if (!label) {
         return;
     }
 
     glGetObjectLabel(identifier, name, length + 1, NULL, label);
 
-    json.writeStringMember(member, label);
+    if (label[0] != '\0') {
+        json.writeStringMember(member, label);
+    }
 
     free(label);
 }
