@@ -367,7 +367,9 @@ elseif (APPLE)
 
     set_target_properties (cgltrace PROPERTIES
         # OpenGL framework name
-        PREFIX "" OUTPUT_NAME "OpenGL" SUFFIX ""
+        OUTPUT_NAME "OpenGL"
+        # Mac framework
+        FRAMEWORK true
         # Specificy the version and reexport GLU symbols
         LINK_FLAGS "-compatibility_version 1 -current_version 1.0.0 -Wl,-reexport_library,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLU.dylib"
     )
@@ -382,7 +384,7 @@ elseif (APPLE)
         dl
     )
 
-    install (TARGETS cgltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+    install (TARGETS cgltrace FRAMEWORK DESTINATION ${WRAPPER_INSTALL_DIR})
 elseif (X11_FOUND)
     # libGL.so
     add_custom_command (

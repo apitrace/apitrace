@@ -155,7 +155,7 @@ previous section.  To trace Java applications, refer to Dalvik.markdown.
 
 Run the application you want to trace as
 
-    DYLD_LIBRARY_PATH=/path/to/apitrace/wrappers /path/to/application
+    DYLD_FRAMEWORK_PATH=/path/to/apitrace/wrappers /path/to/application
 
 Note that although Mac OS X has an `LD_PRELOAD` equivalent,
 `DYLD_INSERT_LIBRARIES`, it is mostly useless because it only works with

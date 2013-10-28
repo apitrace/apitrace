@@ -41,8 +41,8 @@
 
 
 #if defined(__APPLE__)
-#define TRACE_VARIABLE "DYLD_LIBRARY_PATH"
-#define GL_TRACE_WRAPPER  "OpenGL"
+#define TRACE_VARIABLE "DYLD_FRAMEWORK_PATH"
+#define GL_TRACE_WRAPPER  "OpenGL.framework/OpenGL"
 #elif defined(_WIN32)
 #define GL_TRACE_WRAPPER  "opengl32.dll"
 #else
@@ -169,7 +169,8 @@ traceProgram(trace::API api,
 
 #if defined(__APPLE__)
     /* On Mac OS X, using DYLD_LIBRARY_PATH, we actually set the
-     * directory, not the file. */
+     * parent directory, not the file. */
+    wrapperPath.trimFilename();
     wrapperPath.trimFilename();
 #endif
 

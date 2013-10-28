@@ -1,4 +1,3 @@
-OpenGL
 cgltrace.cpp
 d2d1trace.cpp
 d3d8trace.cpp
