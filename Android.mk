@@ -17,6 +17,14 @@ $(shell echo "CMake present but NDK not found at $(abspath $(NDK)), will not com
 else # NDK
 $(shell echo "CMake and NDK ($(abspath $(NDK))) found, will compile apitrace" >&2)
 
+ifeq ($(TARGET_ARCH),arm)
+TOOLCHAIN := arm-linux-androideabi-4.4.x
+endif
+
+ifeq ($(TARGET_ARCH),x86)
+TOOLCHAIN := i686-android-linux-4.4.3
+endif
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
@@ -56,7 +64,7 @@ apitrace_private_target:
 		-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
 		-DANDROID_NDK=../../$(NDK) \
 		-DANDROID_NDK_LAYOUT=LINARO \
-		-DANDROID_TOOLCHAIN_NAME=arm-linux-androideabi-4.4.x \
+		-DANDROID_TOOLCHAIN_NAME=$(TOOLCHAIN) \
 		-DANDROID_API_LEVEL=9 \
 		-DANDROID_NO_UNDEFINED=OFF \
 		-DLIBRARY_OUTPUT_PATH_ROOT=../../$(MY_APITRACE_BUILD_ROOT_TARGET) \
