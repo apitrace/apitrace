@@ -1730,7 +1730,6 @@ parameters = [
     # XXX: GL_DOT3_RGBA_EXT == GL_PROGRAM_BINARY_LENGTH, but you can't glGet GL_DOT3_RGBA_EXT
     ("glGetProgram",	I,	1,	"GL_PROGRAM_BINARY_LENGTH"),	# 0x8741,
     ("",	X,	1,	"GL_MIRROR_CLAMP_ATI"),	# 0x8742
-    ("",	X,	1,	"GL_MIRROR_CLAMP_TO_EDGE_ATI"),	# 0x8743
     ("",	X,	1,	"GL_MODULATE_ADD_ATI"),	# 0x8744
     ("",	X,	1,	"GL_MODULATE_SIGNED_ADD_ATI"),	# 0x8745
     ("",	X,	1,	"GL_MODULATE_SUBTRACT_ATI"),	# 0x8746
@@ -3182,9 +3181,6 @@ parameters = [
     ("",	X,	1,	"GL_VERTEX_ARRAY_OBJECT_EXT"),	# 0x9154
     ("",	X,	1,	"GL_SAMPLER_OBJECT_AMD"),	# 0x9155
     ("",	X,	1,	"GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD"),	# 0x9160
-    ("",	X,	1,	"GL_QUERY_BUFFER_AMD"),	# 0x9192
-    ("",	X,	1,	"GL_QUERY_BUFFER_BINDING_AMD"),	# 0x9193
-    ("",	X,	1,	"GL_QUERY_RESULT_NO_WAIT_AMD"),	# 0x9194
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_OFFSET"),	# 0x919D
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_SIZE"),	# 0x919E
     ("glGet",	I,	1,	"GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT"),	# 0x919F
@@ -3333,6 +3329,16 @@ parameters = [
     ("",	X,	1,	"GL_CIRCULAR_CW_ARC_TO_NV"),	# 0xFA
     ("",	X,	1,	"GL_CIRCULAR_TANGENT_ARC_TO_NV"),	# 0xFC
     ("",	X,	1,	"GL_ARC_TO_NV"),	# 0xFE
+    ("",	X,	1,	"GL_BUFFER_IMMUTABLE_STORAGE"),		# 0x821F
+    ("",	X,	1,	"GL_BUFFER_STORAGE_FLAGS"),		# 0x821F
+    ("",	X,	1,	"GL_CLEAR_TEXTURE"),			# 0x9365
+    ("",	X,	1,	"GL_LOCATION_COMPONENT"),		# 0x934A
+    ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_INDEX"),	# 0x934B
+    ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_STRIDE"),	# 0x934C
+    ("",	X,	1,	"GL_QUERY_RESULT_NO_WAIT"),		# 0x9194
+    ("",	X,	1,	"GL_QUERY_BUFFER"),			# 0x9192
+    ("",	X,	1,	"GL_QUERY_BUFFER_BINDING"),		# 0x9193
+    ("",	X,	1,	"GL_MIRROR_CLAMP_TO_EDGE"),		# 0x8743
     #("",	X,	1,	"GL_TIMEOUT_IGNORED"),	# 0xFFFFFFFFFFFFFFFFull
     ("",	X,	1,	"GL_INVALID_INDEX"),	# 0xFFFFFFFFu
 ]

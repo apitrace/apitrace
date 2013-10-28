@@ -1448,6 +1448,32 @@ extern "C" {
 /* reuse GL_MAX_VERTEX_ATTRIB_BINDINGS */
 #endif
 
+#ifndef GL_VERSION_4_4
+#define GL_NUM_SHADING_LANGUAGE_VERSIONS     0x82E9
+#define GL_BUFFER_IMMUTABLE_STORAGE          0x821F
+#define GL_BUFFER_STORAGE_FLAGS              0x8220
+#define GL_CLEAR_TEXTURE                     0x9365
+#define GL_LOCATION_COMPONENT                0x934A
+#define GL_TRANSFORM_FEEDBACK_BUFFER_INDEX   0x934B
+#define GL_TRANSFORM_FEEDBACK_BUFFER_STRIDE  0x934C
+#define GL_QUERY_RESULT_NO_WAIT              0x9194
+#define GL_QUERY_BUFFER                      0x9192
+#define GL_QUERY_BUFFER_BINDING              0x9193
+/* Reuse tokens from ARB_map_buffer_range */
+/* reuse GL_MAP_READ_BIT */
+/* reuse GL_MAP_WRITE_BIT */
+#define GL_MAP_PERSISTENT_BIT                0x0040
+#define GL_MAP_COHERENT_BIT                  0x0080
+#define GL_DYNAMIC_STORAGE_BIT               0x0100
+#define GL_CLIENT_STORAGE_BIT                0x0200
+#define GL_MIRROR_CLAMP_TO_EDGE              0x8743
+#define GL_FRAMEBUFFER_BARRIER_BIT           0x00000400
+#define GL_TRANSFORM_FEEDBACK_BARRIER_BIT    0x00000800
+#define GL_ATOMIC_COUNTER_BARRIER_BIT        0x00001000
+#define GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT  0x00004000
+#define GL_QUERY_BUFFER_BARRIER_BIT          0x00008000
+#endif
+
 #ifndef GL_ARB_multitexture
 #define GL_TEXTURE0_ARB                   0x84C0
 #define GL_TEXTURE1_ARB                   0x84C1
