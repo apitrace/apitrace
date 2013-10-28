@@ -941,6 +941,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_MINOR_VERSION"),	# 0x821C
     ("glGet",	I,	1,	"GL_NUM_EXTENSIONS"),	# 0x821D
     ("glGet",	I,	1,	"GL_CONTEXT_FLAGS"),	# 0x821E
+    ("",	X,	1,	"GL_BUFFER_IMMUTABLE_STORAGE"),		# 0x821F
     ("",	X,	1,	"GL_INDEX"),	# 0x8222
     ("",	X,	1,	"GL_COMPRESSED_RED"),	# 0x8225
     ("",	X,	1,	"GL_COMPRESSED_RG"),	# 0x8226
@@ -1730,7 +1731,7 @@ parameters = [
     # XXX: GL_DOT3_RGBA_EXT == GL_PROGRAM_BINARY_LENGTH, but you can't glGet GL_DOT3_RGBA_EXT
     ("glGetProgram",	I,	1,	"GL_PROGRAM_BINARY_LENGTH"),	# 0x8741,
     ("",	X,	1,	"GL_MIRROR_CLAMP_ATI"),	# 0x8742
-    ("",	X,	1,	"GL_MIRROR_CLAMP_TO_EDGE_ATI"),	# 0x8743
+    ("",	X,	1,	"GL_MIRROR_CLAMP_TO_EDGE"),		# 0x8743
     ("",	X,	1,	"GL_MODULATE_ADD_ATI"),	# 0x8744
     ("",	X,	1,	"GL_MODULATE_SIGNED_ADD_ATI"),	# 0x8745
     ("",	X,	1,	"GL_MODULATE_SUBTRACT_ATI"),	# 0x8746
@@ -3184,9 +3185,9 @@ parameters = [
     ("",	X,	1,	"GL_VERTEX_ARRAY_OBJECT_EXT"),	# 0x9154
     ("",	X,	1,	"GL_SAMPLER_OBJECT_AMD"),	# 0x9155
     ("",	X,	1,	"GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD"),	# 0x9160
-    ("",	X,	1,	"GL_QUERY_BUFFER_AMD"),	# 0x9192
-    ("",	X,	1,	"GL_QUERY_BUFFER_BINDING_AMD"),	# 0x9193
-    ("",	X,	1,	"GL_QUERY_RESULT_NO_WAIT_AMD"),	# 0x9194
+    ("",	X,	1,	"GL_QUERY_BUFFER"),	# 0x9192
+    ("",	X,	1,	"GL_QUERY_BUFFER_BINDING"),	# 0x9193
+    ("",	X,	1,	"GL_QUERY_RESULT_NO_WAIT"),	# 0x9194
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_X_AMD"),	# 0x9195
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Y_AMD"),	# 0x9196
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Z_AMD"),	# 0x9197
@@ -3302,6 +3303,10 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_HEIGHT"),	# 0x9316
     ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_LAYERS"),	# 0x9317
     ("glGet",	I,	1,	"GL_MAX_FRAMEBUFFER_SAMPLES"),	# 0x9318
+    ("",	X,	1,	"GL_LOCATION_COMPONENT"),		# 0x934A
+    ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_INDEX"),	# 0x934B
+    ("",	X,	1,	"GL_TRANSFORM_FEEDBACK_BUFFER_STRIDE"),	# 0x934C
+    ("",	X,	1,	"GL_CLEAR_TEXTURE"),			# 0x9365
     ("",	X,	1,	"GL_NUM_SAMPLE_COUNTS"),	# 0x9380
     ("",	X,	1,	"GL_TRANSLATED_SHADER_SOURCE_LENGTH_ANGLE"),	# 0x93A0
     ("",	X,	1,	"GL_TEXTURE_USAGE_ANGLE"),	# 0x93A2

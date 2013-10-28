@@ -210,6 +210,17 @@ GLbitfield_access = Flags(GLbitfield, [
     "GL_MAP_INVALIDATE_BUFFER_BIT",   # 0x0008
     "GL_MAP_FLUSH_EXPLICIT_BIT",      # 0x0010
     "GL_MAP_UNSYNCHRONIZED_BIT",      # 0x0020
+    "GL_MAP_PERSISTENT_BIT",          # 0x0040
+    "GL_MAP_COHERENT_BIT",            # 0x0080
+])
+
+GLbitfield_storage = Flags(GLbitfield, [
+    "GL_MAP_READ_BIT",                # 0x0001 (existing)
+    "GL_MAP_WRITE_BIT",               # 0x0002 (existing)
+    "GL_MAP_PERSISTENT_BIT",          # 0x0040
+    "GL_MAP_COHERENT_BIT",            # 0x0080
+    "GL_DYNAMIC_STORAGE_BIT",         # 0x0100
+    "GL_CLIENT_STORAGE_BIT",          # 0x0200
 ])
 
 GLbitfield_sync_flush = Flags(GLbitfield, [
@@ -231,6 +242,8 @@ GLbitfield_barrier = Flags(GLbitfield, [
     "GL_FRAMEBUFFER_BARRIER_BIT",               # 0x00000400
     "GL_TRANSFORM_FEEDBACK_BARRIER_BIT",        # 0x00000800
     "GL_ATOMIC_COUNTER_BARRIER_BIT",            # 0x00001000
+    "GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT",      # 0x00004000
+    "GL_QUERY_BUFFER_BARRIER_BIT",              # 0x00008000
 ])
 
 # GL_ARB_vertex_array_bgra
