@@ -92,15 +92,20 @@ typedef struct _WGLSWAP
 
 #if TARGET_OS_IPHONE
 #elif TARGET_OS_MAC
-#include <OpenGL/OpenGL.h>
-
 #include <AvailabilityMacros.h>
 
-#ifndef MAC_OS_X_VERSION_10_6
-#define MAC_OS_X_VERSION_10_6 1060
+/* Silence deprecated OpenGL warnings. */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+#include <OpenGL/OpenGLAvailability.h>
+#undef OPENGL_DEPRECATED
+#undef OPENGL_DEPRECATED_MSG
+#define OPENGL_DEPRECATED(from, to)
+#define OPENGL_DEPRECATED_MSG(from, to, msg)
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_6
+#include <OpenGL/OpenGL.h>
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 #include <OpenGL/CGLIOSurface.h>
 #include <OpenGL/CGLDevice.h>
 #else
@@ -110,10 +115,26 @@ typedef void *CGLShareGroupObj;
 typedef struct __IOSurface *IOSurfaceRef;
 #endif
 
-#ifndef CGL_VERSION_1_3
-#define kCGLPFAOpenGLProfile 99
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+#define kCGLPFATripleBuffer 3
+#define kCGLPFABackingVolatile 77
+#define kCGLPFAOpenGLProfile  99
+#define kCGLRPVideoMemoryMegabytes 131
+#define kCGLRPTextureMemoryMegabytes 132
+#define kCGLCECrashOnRemovedFunctions 316
 #define kCGLOGLPVersion_Legacy 0x1000
 #define kCGLOGLPVersion_3_2_Core 0x3200
+#define kCGLOGLPVersion_GL3_Core 0x3200
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#define kCGLPFASupportsAutomaticGraphicsSwitching 101
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#define kCGLOGLPVersion_GL3_Core 0x3200
+#define kCGLOGLPVersion_GL4_Core 0x4100
+#define kCGLRPMajorGLVersion 133
 #endif
 
 extern "C" {

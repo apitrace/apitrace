@@ -44,57 +44,65 @@ CGSConnectionID = Opaque("CGSConnectionID")
 CGSWindowID = Alias("CGSWindowID", Int)
 CGSSurfaceID = Alias("CGSSurfaceID", Int)
 
-CGLPixelFormatBoolAttributes = [
-    "kCGLPFAAllRenderers",
-    "kCGLPFADoubleBuffer",
-    "kCGLPFAStereo",
-    "kCGLPFAAuxBuffers",
-    "kCGLPFAMinimumPolicy",
-    "kCGLPFAMaximumPolicy",
-    "kCGLPFAOffScreen",
-    "kCGLPFAFullScreen",
-    "kCGLPFAAuxDepthStencil",
-    "kCGLPFAColorFloat",
-    "kCGLPFAMultisample",
-    "kCGLPFASupersample",
-    "kCGLPFASampleAlpha",
-    "kCGLPFASingleRenderer",
-    "kCGLPFANoRecovery",
-    "kCGLPFAAccelerated",
-    "kCGLPFAClosestPolicy",
-    "kCGLPFARobust",
-    "kCGLPFABackingStore",
-    "kCGLPFAMPSafe",
-    "kCGLPFAWindow",
-    "kCGLPFAMultiScreen",
-    "kCGLPFACompliant",
-    "kCGLPFAPBuffer",
-    "kCGLPFARemotePBuffer",
-    "kCGLPFAAllowOfflineRenderers",
-    "kCGLPFAAcceleratedCompute",
-    "kCGLOGLPVersion_Legacy",
-    "kCGLOGLPVersion_3_2_Core"
+CGLOpenGLProfile = Enum("CGLOpenGLProfile", [
+    'kCGLOGLPVersion_Legacy',
+    'kCGLOGLPVersion_3_2_Core',
+    #'kCGLOGLPVersion_GL3_Core', # Same as kCGLOGLPVersion_3_2_Core
+    'kCGLOGLPVersion_GL4_Core',
+])
+
+CGLPixelFormatAttributes = [
+    ("kCGLPFAAllRenderers", None),
+    ("kCGLPFATripleBuffer", None),
+    ("kCGLPFADoubleBuffer", None),
+    ("kCGLPFAStereo", None),
+    ("kCGLPFAColorSize", Int),
+    ("kCGLPFAAlphaSize", Int),
+    ("kCGLPFADepthSize", Int),
+    ("kCGLPFAStencilSize", Int),
+    ("kCGLPFAMinimumPolicy", None),
+    ("kCGLPFAMaximumPolicy", None),
+    ("kCGLPFASampleBuffers", Int),
+    ("kCGLPFASamples", Int),
+    ("kCGLPFAColorFloat", None),
+    ("kCGLPFAMultisample", None),
+    ("kCGLPFASupersample", None),
+    ("kCGLPFASampleAlpha", None),
+    ("kCGLPFARendererID", Int),
+    ("kCGLPFANoRecovery", None),
+    ("kCGLPFAAccelerated", None),
+    ("kCGLPFAClosestPolicy", None),
+    ("kCGLPFABackingStore", None),
+    ("kCGLPFABackingVolatile", None),
+    ("kCGLPFADisplayMask", Int),
+    ("kCGLPFAAllowOfflineRenderers", None),
+    ("kCGLPFAAcceleratedCompute", None),
+    ("kCGLPFAOpenGLProfile", CGLOpenGLProfile),
+    ("kCGLPFASupportsAutomaticGraphicsSwitching", None),
+    ("kCGLPFAVirtualScreenCount", Int),
+    ("kCGLPFAAuxBuffers", None),
+    ("kCGLPFAAccumSize", Int),
+    ("kCGLPFAAuxDepthStencil", None),
+    ("kCGLPFAOffScreen", None),
+    ("kCGLPFAWindow", None),
+    ("kCGLPFACompliant", None),
+    ("kCGLPFAPBuffer", None),
+    ("kCGLPFARemotePBuffer", None),
+    ("kCGLPFASingleRenderer", None),
+    ("kCGLPFARobust", None),
+    ("kCGLPFAMPSafe", None),
+    ("kCGLPFAMultiScreen", None),
+    ("kCGLPFAFullScreen", None),
 ]
 
-CGLPixelFormatIntAttributes = [
-    "kCGLPFAColorSize",
-    "kCGLPFAAlphaSize",
-    "kCGLPFADepthSize",
-    "kCGLPFAStencilSize",
-    "kCGLPFAAccumSize",
-    "kCGLPFASampleBuffers",
-    "kCGLPFASamples",
-    "kCGLPFARendererID",
-    "kCGLPFADisplayMask",
-    "kCGLPFAOpenGLProfile",
-    "kCGLPFAVirtualScreenCount"
-]
+CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute",
+    [attrib for attrib, _ in CGLPixelFormatAttributes]
+)
 
-CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute", CGLPixelFormatBoolAttributes + CGLPixelFormatIntAttributes)
-
-CGLPixelFormatAttribs = AttribArray(Const(CGLPixelFormatAttribute),
-                                    [(a, None) for a in CGLPixelFormatBoolAttributes] +
-                                    [(a, Int) for a in CGLPixelFormatIntAttributes])
+CGLPixelFormatAttribs = AttribArray(
+    Const(CGLPixelFormatAttribute),
+    CGLPixelFormatAttributes
+)
 
 CGLRendererProperty = Enum("CGLRendererProperty", [
     "kCGLRPOffScreen",
@@ -125,6 +133,9 @@ CGLRendererProperty = Enum("CGLRendererProperty", [
     "kCGLRPRendererCount",
     "kCGLRPOnline",
     "kCGLRPAcceleratedCompute",
+    "kCGLRPVideoMemoryMegabytes",
+    "kCGLRPTextureMemoryMegabytes",
+    "kCGLRPMajorGLVersion",
 ])
 
 CGLContextEnable = Enum("CGLContextEnable", [
@@ -135,6 +146,7 @@ CGLContextEnable = Enum("CGLContextEnable", [
     "kCGLCESurfaceBackingSize",
     "kCGLCEDisplayListOptimization",
     "kCGLCEMPEngine",
+    "kCGLCECrashOnRemovedFunctions",
 ])
 
 CGLContextParameter = Enum("CGLContextParameter", [
