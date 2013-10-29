@@ -49,7 +49,8 @@ public:
     EGLConfig config;
     XVisualInfo *visinfo;
 
-    EglVisual() :
+    EglVisual(Profile prof) :
+        Visual(prof),
         config(0),
         visinfo(0)
     {}
@@ -256,8 +257,8 @@ class EglContext : public Context
 public:
     EGLContext context;
 
-    EglContext(const Visual *vis, Profile prof, EGLContext ctx) :
-        Context(vis, prof),
+    EglContext(const Visual *vis, EGLContext ctx) :
+        Context(vis),
         context(ctx)
     {}
 
@@ -317,7 +318,7 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
-    EglVisual *visual = new EglVisual();
+    EglVisual *visual = new EglVisual(profile);
     // possible combinations
     const EGLint api_bits_gl[7] = {
         EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
@@ -400,8 +401,9 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 }
 
 Context *
-createContext(const Visual *_visual, Context *shareContext, Profile profile, bool debug)
+createContext(const Visual *_visual, Context *shareContext, bool debug)
 {
+    Profile profile = _visual->profile;
     const EglVisual *visual = static_cast<const EglVisual *>(_visual);
     EGLContext share_context = EGL_NO_CONTEXT;
     EGLContext context;
@@ -443,7 +445,7 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile, boo
 
     eglBindAPI(api);
 
-    return new EglContext(visual, profile, context);
+    return new EglContext(visual, context);
 }
 
 bool

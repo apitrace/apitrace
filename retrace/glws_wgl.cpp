@@ -232,8 +232,8 @@ public:
     HGLRC hglrc;
     WglContext *shareContext;
 
-    WglContext(const Visual *vis, Profile prof, WglContext *share) :
-        Context(vis, prof),
+    WglContext(const Visual *vis, WglContext *share) :
+        Context(vis),
         hglrc(0),
         shareContext(share)
     {}
@@ -303,29 +303,6 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
-    if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_3_2_CORE &&
-        profile != PROFILE_4_1_CORE &&
-        profile != PROFILE_ES2) {
-        return NULL;
-    }
-
-    Visual *visual = new Visual();
-
-    visual->doubleBuffer = doubleBuffer;
-
-    return visual;
-}
-
-Drawable *
-createDrawable(const Visual *visual, int width, int height, bool pbuffer)
-{
-    return new WglDrawable(visual, width, height, pbuffer);
-}
-
-Context *
-createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
-{
     switch (profile) {
     case PROFILE_COMPAT:
         break;
@@ -340,7 +317,24 @@ createContext(const Visual *visual, Context *shareContext, Profile profile, bool
         return NULL;
     }
 
-    return new WglContext(visual, profile, static_cast<WglContext *>(shareContext));
+
+    Visual *visual = new Visual(profile);
+
+    visual->doubleBuffer = doubleBuffer;
+
+    return visual;
+}
+
+Drawable *
+createDrawable(const Visual *visual, int width, int height, bool pbuffer)
+{
+    return new WglDrawable(visual, width, height, pbuffer);
+}
+
+Context *
+createContext(const Visual *visual, Context *shareContext, bool debug)
+{
+    return new WglContext(visual, static_cast<WglContext *>(shareContext));
 }
 
 bool

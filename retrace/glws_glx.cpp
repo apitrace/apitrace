@@ -49,7 +49,8 @@ public:
     GLXFBConfig fbconfig;
     XVisualInfo *visinfo;
 
-    GlxVisual() :
+    GlxVisual(Profile prof) :
+        Visual(prof),
         fbconfig(0),
         visinfo(0)
     {}
@@ -232,8 +233,8 @@ class GlxContext : public Context
 public:
     GLXContext context;
 
-    GlxContext(const Visual *vis, Profile prof, GLXContext ctx) :
-        Context(vis, prof),
+    GlxContext(const Visual *vis, GLXContext ctx) :
+        Context(vis),
         context(ctx)
     {}
 
@@ -279,7 +280,7 @@ createVisual(bool doubleBuffer, Profile profile) {
         return NULL;
     }
 
-    GlxVisual *visual = new GlxVisual;
+    GlxVisual *visual = new GlxVisual(profile);
 
     if (glxVersion >= 0x0103) {
         Attributes<int> attribs;
@@ -329,9 +330,10 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 }
 
 Context *
-createContext(const Visual *_visual, Context *shareContext, Profile profile, bool debug)
+createContext(const Visual *_visual, Context *shareContext, bool debug)
 {
     const GlxVisual *visual = static_cast<const GlxVisual *>(_visual);
+    Profile profile = visual->profile;
     GLXContext share_context = NULL;
     GLXContext context;
 
@@ -386,7 +388,7 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile, boo
         return NULL;
     }
 
-    return new GlxContext(visual, profile, context);
+    return new GlxContext(visual, context);
 }
 
 bool

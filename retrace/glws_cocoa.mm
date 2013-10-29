@@ -84,7 +84,8 @@ class CocoaVisual : public Visual
 public:
     NSOpenGLPixelFormat *pixelFormat;
 
-    CocoaVisual(NSOpenGLPixelFormat *pf) :
+    CocoaVisual(Profile prof, NSOpenGLPixelFormat *pf) :
+        Visual(prof),
         pixelFormat(pf)
     {}
 
@@ -173,8 +174,8 @@ class CocoaContext : public Context
 public:
     NSOpenGLContext *context;
 
-    CocoaContext(const Visual *vis, Profile prof, NSOpenGLContext *ctx) :
-        Context(vis, prof),
+    CocoaContext(const Visual *vis, NSOpenGLContext *ctx) :
+        Context(vis),
         context(ctx)
     {}
 
@@ -259,7 +260,7 @@ createVisual(bool doubleBuffer, Profile profile) {
     NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc]
                                      initWithAttributes:attribs];
 
-    return new CocoaVisual(pixelFormat);
+    return new CocoaVisual(profile, pixelFormat);
 }
 
 Drawable *
@@ -271,7 +272,7 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 }
 
 Context *
-createContext(const Visual *visual, Context *shareContext, Profile profile, bool debug)
+createContext(const Visual *visual, Context *shareContext, bool debug)
 {
     initThread();
 
@@ -288,7 +289,7 @@ createContext(const Visual *visual, Context *shareContext, Profile profile, bool
                shareContext:share_context];
     assert(context != nil);
 
-    return new CocoaContext(visual, profile, context);
+    return new CocoaContext(visual, context);
 }
 
 bool

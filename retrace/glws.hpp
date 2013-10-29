@@ -93,11 +93,20 @@ public:
 class Visual
 {
 public:
+    Profile profile;
+
+    /* TODO */
+#if 0
     unsigned long redMask;
     unsigned long greenMask;
     unsigned long blueMask;
     unsigned long alphaMask;
+#endif
     bool doubleBuffer;
+
+    Visual(Profile prof) :
+        profile(prof)
+    {}
 
     virtual ~Visual() {}
 };
@@ -148,9 +157,9 @@ public:
     
     std::set<std::string> extensions;
 
-    Context(const Visual *vis, Profile prof) :
+    Context(const Visual *vis) :
         visual(vis),
-        profile(prof)
+        profile(vis->profile)
     {}
 
     virtual ~Context() {}
@@ -174,7 +183,7 @@ Drawable *
 createDrawable(const Visual *visual, int width, int height, bool pbuffer = false);
 
 Context *
-createContext(const Visual *visual, Context *shareContext = 0, Profile profile = PROFILE_COMPAT, bool debug = false);
+createContext(const Visual *visual, Context *shareContext = 0, bool debug = false);
 
 bool
 makeCurrent(Drawable *drawable, Context *context);

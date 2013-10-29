@@ -94,7 +94,7 @@ Context *
 createContext(Context *shareContext, glws::Profile profile) {
     glws::Visual *visual = getVisual(profile);
     glws::Context *shareWsContext = shareContext ? shareContext->wsContext : NULL;
-    glws::Context *ctx = glws::createContext(visual, shareWsContext, profile, retrace::debug);
+    glws::Context *ctx = glws::createContext(visual, shareWsContext, retrace::debug);
     if (!ctx) {
         std::cerr << "error: failed to create OpenGL context\n";
         exit(1);
