@@ -1147,6 +1147,16 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         glGetIntegerv(GL_DRAW_BUFFER, &draw_buffer);
     }
 
+    // Reset read framebuffer
+    GLint read_framebuffer = 0;
+    if (context.ES) {
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &read_framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    }
+
     if (draw_buffer != GL_NONE) {
         // Read from current draw buffer
         GLint read_buffer = GL_NONE;
@@ -1187,6 +1197,13 @@ dumpDrawableImages(JSONWriter &json, Context &context)
             dumpReadBufferImage(json, width, height, GL_STENCIL_INDEX);
             json.endMember();
         }
+    }
+    
+    // Restore original read framebuffer
+    if (context.ES) {
+        glBindFramebuffer(GL_FRAMEBUFFER, read_framebuffer);
+    } else {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);
     }
 }
 
