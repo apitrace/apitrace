@@ -220,6 +220,8 @@ class GlRetracer(Retracer):
         # Pre-snapshots
         if function.name in self.bind_framebuffer_function_names:
             print '    assert(call.flags & trace::CALL_FLAG_SWAP_RENDERTARGET);'
+        if function.name == 'glStringMarkerGREMEDY':
+            return
         if function.name == 'glFrameTerminatorGREMEDY':
             print '    glretrace::frame_complete(call);'
             return
