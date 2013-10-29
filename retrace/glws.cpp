@@ -26,6 +26,8 @@
 
 #include <assert.h>
 
+#include <iostream>
+
 #include "glproc.hpp"
 #include "glws.hpp"
 
@@ -59,6 +61,12 @@ checkExtension(const char *extName, const char *extString)
         }
     } while (c);
     return false;
+}
+
+
+void
+Drawable::copySubBuffer(int x, int y, int width, int height) {
+    std::cerr << "warning: copySubBuffer not yet implemented\n";
 }
 
 

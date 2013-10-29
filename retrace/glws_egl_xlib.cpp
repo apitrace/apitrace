@@ -244,10 +244,6 @@ public:
         Drawable::show();
     }
 
-    void copySubBuffer(int x, int y, int width, int height) {
-        std::cerr << "glws_egl_xlib: Warning: copySubBuffer Not yet implemented\n";
-    }
-
     void swapBuffers(void) {
         eglBindAPI(api);
         eglSwapBuffers(eglDisplay, surface);
