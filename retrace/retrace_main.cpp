@@ -76,7 +76,6 @@ Driver driver = DRIVER_DEFAULT;
 const char *driverModule = NULL;
 
 bool doubleBuffer = true;
-bool coreProfile = false;
 
 bool profiling = false;
 bool profilingGpuTimes = false;
@@ -646,7 +645,7 @@ int main(int argc, char **argv)
             retrace::verbosity = -2;
             break;
         case CORE_OPT:
-            retrace::coreProfile = true;
+            retrace::setFeatureLevel("3_2_core");
             break;
         case DB_OPT:
             retrace::doubleBuffer = true;

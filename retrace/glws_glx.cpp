@@ -273,7 +273,8 @@ cleanup(void) {
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
     if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_CORE &&
+        profile != PROFILE_3_2_CORE &&
+        profile != PROFILE_4_1_CORE &&
         profile != PROFILE_ES2) {
         return NULL;
     }
@@ -352,11 +353,14 @@ createContext(const Visual *_visual, Context *shareContext, Profile profile, boo
         case PROFILE_ES2:
             attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
             break;
-        case PROFILE_CORE:
-            // XXX: This will invariable return a 3.2 context, when supported.
-            // We probably should have a PROFILE_CORE_XX per version.
+        case PROFILE_3_2_CORE:
             attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 3);
             attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 2);
+            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
+            break;
+        case PROFILE_4_1_CORE:
+            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 4);
+            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 1);
             attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
             break;
         default:

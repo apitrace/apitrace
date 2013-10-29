@@ -59,17 +59,6 @@ getVisual(glws::Profile profile) {
 }
 
 
-inline glws::Profile
-getDefaultProfile(void)
-{
-    if (retrace::coreProfile) {
-        return glws::PROFILE_CORE;
-    } else {
-        return glws::PROFILE_COMPAT;
-    }
-}
-
-
 static glws::Drawable *
 createDrawableHelper(glws::Profile profile, int width = 32, int height = 32, bool pbuffer = false) {
     glws::Visual *visual = getVisual(profile);
@@ -91,13 +80,13 @@ createDrawable(glws::Profile profile) {
 
 glws::Drawable *
 createDrawable(void) {
-    return createDrawable(getDefaultProfile());
+    return createDrawable(defaultProfile);
 }
 
 
 glws::Drawable *
 createPbuffer(int width, int height) {
-    return createDrawableHelper(getDefaultProfile(), width, height, true);
+    return createDrawableHelper(defaultProfile, width, height, true);
 }
 
 
@@ -118,7 +107,7 @@ createContext(Context *shareContext, glws::Profile profile) {
 
 Context *
 createContext(Context *shareContext) {
-    return createContext(shareContext, getDefaultProfile());
+    return createContext(shareContext, defaultProfile);
 }
 
 

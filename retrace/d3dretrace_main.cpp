@@ -34,6 +34,12 @@
 
 
 void
+retrace::setFeatureLevel(const char *featureLevel) {
+    /* TODO: Allow to override D3D feature level. */
+}
+
+
+void
 retrace::setUp(void) {
 }
 

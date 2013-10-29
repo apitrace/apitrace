@@ -32,6 +32,7 @@
 
 
 #define kCGLPFAAllRenderers            1
+#define kCGLPFATripleBuffer            3
 #define kCGLPFADoubleBuffer            5
 #define kCGLPFAStereo                  6
 #define kCGLPFAAuxBuffers              7
@@ -58,6 +59,7 @@
 #define kCGLPFAClosestPolicy          74
 #define kCGLPFARobust                 75
 #define kCGLPFABackingStore           76
+#define kCGLPFABackingVolatile        77
 #define kCGLPFAMPSafe                 78
 #define kCGLPFAWindow                 80
 #define kCGLPFAMultiScreen            81
@@ -68,10 +70,13 @@
 #define kCGLPFAAllowOfflineRenderers  96
 #define kCGLPFAAcceleratedCompute     97
 #define kCGLPFAOpenGLProfile          99
+#define kCGLPFASupportsAutomaticGraphicsSwitching  101
 #define kCGLPFAVirtualScreenCount    128
 
 #define kCGLOGLPVersion_Legacy   0x1000
 #define kCGLOGLPVersion_3_2_Core 0x3200
+#define kCGLOGLPVersion_GL3_Core 0x3200
+#define kCGLOGLPVersion_GL4_Core 0x4100
 
 
 using namespace glretrace;
@@ -125,7 +130,7 @@ getContext(unsigned long long ctx) {
 
 
 static void retrace_CGLChoosePixelFormat(trace::Call &call) {
-    int profile = kCGLOGLPVersion_Legacy;
+    int profile = 0;
 
     const trace::Array * attribs = call.arg(0).toArray();
     if (attribs) {
@@ -138,6 +143,7 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
 
             switch (param) {
             case kCGLPFAAllRenderers:
+            case kCGLPFATripleBuffer:
             case kCGLPFADoubleBuffer:
             case kCGLPFAStereo:
             case kCGLPFAAuxBuffers:
@@ -156,6 +162,7 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             case kCGLPFAClosestPolicy:
             case kCGLPFARobust:
             case kCGLPFABackingStore:
+            case kCGLPFABackingVolatile:
             case kCGLPFAMPSafe:
             case kCGLPFAWindow:
             case kCGLPFAMultiScreen:
@@ -164,6 +171,7 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             case kCGLPFARemotePBuffer:
             case kCGLPFAAllowOfflineRenderers:
             case kCGLPFAAcceleratedCompute:
+            case kCGLPFASupportsAutomaticGraphicsSwitching:
                 break;
 
             case kCGLPFAColorSize:
@@ -190,9 +198,22 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
         }
     }
 
-    if (profile == kCGLOGLPVersion_3_2_Core) {
-        // TODO: Do this on a per visual basis
-        retrace::coreProfile = true;
+    // TODO: Do this on a per visual basis
+    switch (profile) {
+    case 0:
+        break;
+    case kCGLOGLPVersion_Legacy:
+        glretrace::defaultProfile = glws::PROFILE_COMPAT;
+        break;
+    case kCGLOGLPVersion_GL3_Core:
+        glretrace::defaultProfile = glws::PROFILE_3_2_CORE;
+        break;
+    case kCGLOGLPVersion_GL4_Core:
+        glretrace::defaultProfile = glws::PROFILE_4_1_CORE;
+        break;
+    default:
+        retrace::warning(call) << "unexpected opengl profile " << std::hex << profile << std::dec << "\n";
+        break;
     }
 }
 

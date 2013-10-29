@@ -58,6 +58,8 @@ struct Context {
     }
 };
 
+extern glws::Profile defaultProfile;
+
 extern bool insideList;
 extern bool insideGlBeginEnd;
 extern bool supportsARBShaderObjects;

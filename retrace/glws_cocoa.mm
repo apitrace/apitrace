@@ -203,7 +203,7 @@ init(void) {
     bool isMultiThreaded = [NSThread isMultiThreaded];
     if (!isMultiThreaded) {
         std::cerr << "error: failed to enable Cocoa multi-threading\n";
-	exit(1);
+        exit(1);
     }
 
     [NSApplication sharedApplication];
@@ -223,11 +223,6 @@ createVisual(bool doubleBuffer, Profile profile) {
 
     initThread();
 
-    if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_CORE) {
-        return nil;
-    }
-
     Attributes<NSOpenGLPixelFormatAttribute> attribs;
 
     attribs.add(NSOpenGLPFAAlphaSize, (NSOpenGLPixelFormatAttribute)1);
@@ -237,12 +232,21 @@ createVisual(bool doubleBuffer, Profile profile) {
     }
     attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
     attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
-    if (profile == PROFILE_CORE) {
-#if CGL_VERSION_1_3
+    switch (profile) {
+    case PROFILE_COMPAT:
+        break;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+    case PROFILE_3_2_CORE:
         attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
-#else
-	return NULL;
+        break;
 #endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+    case PROFILE_4_1_CORE:
+        attribs.add(NSOpenGLPFAOpenGLProfile, kCGLOGLPVersion_GL4_Core);
+        break;
+#endif
+    default:
+        return NULL;
     }
     
     // Use Apple software rendering for debugging purposes.
@@ -274,11 +278,6 @@ createContext(const Visual *visual, Context *shareContext, Profile profile, bool
     NSOpenGLPixelFormat *pixelFormat = static_cast<const CocoaVisual *>(visual)->pixelFormat;
     NSOpenGLContext *share_context = nil;
     NSOpenGLContext *context;
-
-    if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_CORE) {
-        return nil;
-    }
 
     if (shareContext) {
         share_context = static_cast<CocoaContext*>(shareContext)->context;

@@ -116,7 +116,6 @@ extern Driver driver;
 extern const char *driverModule;
 
 extern bool doubleBuffer;
-extern bool coreProfile;
 
 extern unsigned frameNo;
 extern unsigned callNo;
@@ -186,6 +185,9 @@ public:
 
 extern Dumper *dumper;
 
+
+void
+setFeatureLevel(const char *featureLevel);
 
 void
 setUp(void);

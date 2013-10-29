@@ -43,12 +43,19 @@ namespace glws {
 
 enum Profile {
     PROFILE_COMPAT = 0,
-    PROFILE_CORE,
+    PROFILE_3_2_CORE,
+    PROFILE_4_1_CORE,
     PROFILE_ES1,
     PROFILE_ES2,
     PROFILE_MAX
 };
 
+
+static inline bool
+isCoreProfile(Profile profile) {
+    return profile == PROFILE_3_2_CORE ||
+           profile == PROFILE_4_1_CORE;
+}
 
 bool
 checkExtension(const char *extName, const char *extString);

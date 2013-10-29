@@ -43,6 +43,8 @@
 
 namespace glretrace {
 
+glws::Profile defaultProfile = glws::PROFILE_COMPAT;
+
 bool insideList = false;
 bool insideGlBeginEnd = false;
 bool supportsARBShaderObjects = false;
@@ -448,6 +450,13 @@ public:
 };
 
 static GLDumper glDumper;
+
+
+void
+retrace::setFeatureLevel(const char *featureLevel)
+{
+    glretrace::defaultProfile = glws::PROFILE_3_2_CORE;
+}
 
 
 void
