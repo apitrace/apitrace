@@ -176,6 +176,7 @@ int execute(char * const * args)
 
 static volatile bool logging = false;
 
+#if TRACE_OS_LOG
 void
 log(const char *format, ...)
 {
@@ -200,6 +201,7 @@ log(const char *format, ...)
     va_end(ap);
     logging = false;
 }
+#endif
 
 #if defined(__APPLE__)
 long long timeFrequency = 0LL;

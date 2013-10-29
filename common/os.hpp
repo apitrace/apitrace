@@ -47,6 +47,12 @@
 #endif
 #endif /* !_WIN32 */
 
+/* Implement os::log by default, opt-out with -DTRACE_OS_LOG=0 */
+
+#ifndef TRACE_OS_LOG
+#define TRACE_OS_LOG 1
+#endif
+
 namespace os {
 
 void log(const char *format, ...)
