@@ -420,10 +420,6 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         load("libGL.so.1");
         eglBindAPI(EGL_OPENGL_API);
         break;
-    case PROFILE_3_2_CORE:
-    case PROFILE_4_1_CORE:
-        assert(0);
-        return NULL;
     case PROFILE_ES1:
         load("libGLESv1_CM.so.1");
         eglBindAPI(EGL_OPENGL_ES_API);

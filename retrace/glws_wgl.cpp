@@ -306,17 +306,15 @@ createVisual(bool doubleBuffer, Profile profile) {
     switch (profile) {
     case PROFILE_COMPAT:
         break;
-    case PROFILE_3_2_CORE:
-    case PROFILE_4_1_CORE:
-        std::cerr << "warning: ignoring OpenGL core profile request\n";
-        break;
+    case PROFILE_ES1:
+        return NULL;
     case PROFILE_ES2:
         std::cerr << "warning: ignoring OpenGL ES 2.0 profile request\n";
         break;
     default:
-        return NULL;
+        std::cerr << "warning: ignoring OpenGL profile request\n";
+        break;
     }
-
 
     Visual *visual = new Visual(profile);
 

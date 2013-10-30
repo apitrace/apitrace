@@ -35,6 +35,15 @@
 namespace glws {
 
 
+void
+getProfileVersion(Profile profile, unsigned &major, unsigned &minor, bool &core)
+{
+    major = (profile >> 4) & 0xf;
+    minor =  profile       & 0xf;
+    core = isCoreProfile(profile);
+}
+
+
 bool
 checkExtension(const char *extName, const char *extString)
 {

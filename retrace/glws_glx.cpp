@@ -273,13 +273,6 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, Profile profile) {
-    if (profile != PROFILE_COMPAT &&
-        profile != PROFILE_3_2_CORE &&
-        profile != PROFILE_4_1_CORE &&
-        profile != PROFILE_ES2) {
-        return NULL;
-    }
-
     GlxVisual *visual = new GlxVisual(profile);
 
     if (glxVersion >= 0x0103) {
@@ -352,21 +345,23 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         switch (profile) {
         case PROFILE_COMPAT:
             break;
+        case PROFILE_ES1:
+            return NULL;
         case PROFILE_ES2:
             attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
             break;
-        case PROFILE_3_2_CORE:
-            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 3);
-            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 2);
-            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
-            break;
-        case PROFILE_4_1_CORE:
-            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 4);
-            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 1);
-            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
-            break;
         default:
-            return NULL;
+            {
+                unsigned major, minor;
+                bool core;
+                getProfileVersion(profile, major, minor, core);
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, major);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, minor);
+                if (core) {
+                    attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
+                }
+                break;
+            }
         }
         
         attribs.end();

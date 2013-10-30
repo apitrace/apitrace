@@ -31,6 +31,8 @@
 
 #include <string.h>
 
+#include <map>
+
 #include "os_thread.hpp"
 #include "retrace.hpp"
 #include "glproc.hpp"
@@ -41,21 +43,23 @@
 namespace glretrace {
 
 
-static glws::Visual *
-visuals[glws::PROFILE_MAX];
+static std::map<glws::Profile, glws::Visual *>
+visuals;
 
 
 inline glws::Visual *
 getVisual(glws::Profile profile) {
-    glws::Visual * & visual = visuals[profile];
-    if (!visual) {
-        visual = glws::createVisual(retrace::doubleBuffer, profile);
+    std::map<glws::Profile, glws::Visual *>::iterator it = visuals.find(profile);
+    if (it == visuals.end()) {
+        glws::Visual *visual = glws::createVisual(retrace::doubleBuffer, profile);
         if (!visual) {
             std::cerr << "error: failed to create OpenGL visual\n";
             exit(1);
         }
+        visuals[profile] = visual;
+        return visual;
     }
-    return visual;
+    return it->second;
 }
 
 
