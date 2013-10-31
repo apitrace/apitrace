@@ -117,7 +117,6 @@ typedef struct __IOSurface *IOSurfaceRef;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
 #define kCGLPFATripleBuffer 3
-#define kCGLPFABackingVolatile 77
 #define kCGLPFAOpenGLProfile  99
 #define kCGLRPVideoMemoryMegabytes 131
 #define kCGLRPTextureMemoryMegabytes 132
@@ -128,6 +127,7 @@ typedef struct __IOSurface *IOSurfaceRef;
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#define kCGLPFABackingVolatile 77
 #define kCGLPFASupportsAutomaticGraphicsSwitching 101
 #endif
 
