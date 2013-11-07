@@ -3022,7 +3022,6 @@ parameters = [
     ("",	X,	1,	"GL_PATH_STROKE_COVER_MODE_NV"),	# 0x9083
     ("",	X,	1,	"GL_PATH_STROKE_MASK_NV"),	# 0x9084
     ("",	X,	1,	"GL_PATH_SAMPLE_QUALITY_NV"),	# 0x9085
-    ("",	X,	1,	"GL_PATH_STROKE_BOUND_NV"),	# 0x9086
     ("",	X,	1,	"GL_PATH_STROKE_OVERSAMPLE_COUNT_NV"),	# 0x9087
     ("",	X,	1,	"GL_COUNT_UP_NV"),	# 0x9088
     ("",	X,	1,	"GL_COUNT_DOWN_NV"),	# 0x9089
