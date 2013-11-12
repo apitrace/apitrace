@@ -84,8 +84,16 @@ using namespace glretrace;
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, Context *> ContextMap;
+
+// sid -> Drawable* map
 static DrawableMap drawable_map;
+
+// ctx -> Context* map
 static ContextMap context_map;
+
+// ctx -> Drawable* map
+static DrawableMap context_drawable_map;
+
 static Context *sharedContext = NULL;
 
 
@@ -95,13 +103,26 @@ getDrawable(unsigned long drawable_id) {
         return NULL;
     }
 
-    /* XXX: Support multiple drawables. */
-    drawable_id = 1;
-
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
         return (drawable_map[drawable_id] = glretrace::createDrawable());
+    }
+
+    return it->second;
+}
+
+
+static glws::Drawable *
+getDrawableFromContext(unsigned long long ctx) {
+    if (ctx == 0) {
+        return NULL;
+    }
+
+    DrawableMap::const_iterator it;
+    it = context_drawable_map.find(ctx);
+    if (it == context_drawable_map.end()) {
+        return (context_drawable_map[ctx] = glretrace::createDrawable());
     }
 
     return it->second;
@@ -223,6 +244,7 @@ static void retrace_CGLCreateContext(trace::Call &call) {
     Context *sharedContext = getContext(share);
 
     const trace::Array *ctx_ptr = call.arg(2).toArray();
+    assert(ctx_ptr);
     unsigned long long ctx = ctx_ptr->values[0]->toUIntPtr();
 
     Context *context = glretrace::createContext(sharedContext);
@@ -245,10 +267,32 @@ static void retrace_CGLDestroyContext(trace::Call &call) {
 }
 
 
+static void retrace_CGLSetSurface(trace::Call &call) {
+    unsigned long long ctx = call.arg(0).toUIntPtr();
+    unsigned long long cid = call.arg(1).toUInt();
+    int wid = call.arg(2).toUInt();
+    int sid = call.arg(3).toUInt();
+
+    (void)cid;
+    (void)wid;
+
+    glws::Drawable *drawable = getDrawable(sid);
+
+    context_drawable_map[ctx] = drawable;
+}
+
+
+static void retrace_CGLClearDrawable(trace::Call &call) {
+    unsigned long long ctx = call.arg(0).toUIntPtr();
+
+    context_drawable_map[ctx] = NULL;
+}
+
+
 static void retrace_CGLSetCurrentContext(trace::Call &call) {
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
-    glws::Drawable *new_drawable = getDrawable(ctx);
+    glws::Drawable *new_drawable = getDrawableFromContext(ctx);
     Context *new_context = getContext(ctx);
 
     glretrace::makeCurrent(call, new_drawable, new_context);
@@ -260,9 +304,10 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
     Context *context = getContext(ctx);
 
     if (context) {
-        if (context->drawable) {
+        glws::Drawable *drawable = getDrawableFromContext(ctx);
+        if (drawable) {
             if (retrace::doubleBuffer) {
-                context->drawable->swapBuffers();
+                drawable->swapBuffers();
             } else {
                 glFlush();
             }
@@ -332,6 +377,7 @@ static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
 
 const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLChoosePixelFormat", &retrace_CGLChoosePixelFormat},
+    {"CGLClearDrawable", &retrace_CGLClearDrawable},
     {"CGLCreateContext", &retrace_CGLCreateContext},
     {"CGLDestroyContext", &retrace_CGLDestroyContext},
     {"CGLDestroyPixelFormat", &retrace::ignore},
@@ -346,6 +392,7 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLGetVirtualScreen", &retrace::ignore},
     {"CGLIsEnabled", &retrace::ignore},
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
+    {"CGLSetSurface", &retrace_CGLSetSurface},
     {"CGLSetParameter", &retrace::ignore},
     {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
     {"CGLUpdateContext", &retrace::ignore},
