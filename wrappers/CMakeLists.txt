@@ -395,6 +395,7 @@ elseif (X11_FOUND)
             gltrace.py
             trace.py
             ${CMAKE_SOURCE_DIR}/specs/glxapi.py
+            ${CMAKE_SOURCE_DIR}/specs/glesapi.py
             ${CMAKE_SOURCE_DIR}/specs/glapi.py
             ${CMAKE_SOURCE_DIR}/specs/glparams.py
             ${CMAKE_SOURCE_DIR}/specs/gltypes.py
