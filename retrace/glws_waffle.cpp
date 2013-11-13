@@ -1,3 +1,6 @@
+#define WAFFLE_API_EXPERIMENTAL
+#define WAFFLE_API_VERSION 0x0103
+
 #include "os.hpp"
 #include "waffle.h"
 #include "glws.hpp"
@@ -11,7 +14,8 @@ class WaffleVisual : public Visual
 public:
     struct waffle_config *config;
 
-    WaffleVisual(waffle_config *cfg) :
+    WaffleVisual(Profile prof, waffle_config *cfg) :
+        Visual(prof),
         config (cfg)
     {}
 
@@ -63,9 +67,8 @@ class WaffleContext : public Context
 public:
     struct waffle_context *context;
 
-    WaffleContext(const Visual *vis, Profile prof,
-                    struct waffle_context *ctx) :
-        Context(vis, prof),
+    WaffleContext(const Visual *vis, struct waffle_context *ctx) :
+        Context(vis),
         context(ctx)
     {}
 
@@ -161,7 +164,7 @@ createVisual(bool doubleBuffer, Profile profile) {
         os::abort();
         return NULL;
     }
-    return new WaffleVisual(cfg);
+    return new WaffleVisual(profile, cfg);
 }
 
 Drawable *
@@ -176,7 +179,7 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 }
 
 Context *
-createContext(const Visual *visual, Context *shareContext, Profile profile,
+createContext(const Visual *visual, Context *shareContext,
               bool debug)
 {
     struct waffle_context *context;
@@ -197,7 +200,7 @@ createContext(const Visual *visual, Context *shareContext, Profile profile,
         os::abort();
         return NULL;
     }
-    return new WaffleContext(visual, profile, context);
+    return new WaffleContext(visual, context);
 }
 
 bool
