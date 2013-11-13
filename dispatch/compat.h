@@ -725,7 +725,7 @@
 
 
 #ifndef __inline
-#define __inline static __inline__
+#define __inline __inline__
 #endif
 
 #ifndef DECLSPEC_DEPRECATED
