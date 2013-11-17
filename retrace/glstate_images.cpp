@@ -281,7 +281,7 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
     } else {
         desc.height = 0;
         glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &desc.height);
-        if (target != GL_TEXTURE_3D) {
+        if (target != GL_TEXTURE_3D && target != GL_TEXTURE_2D_ARRAY) {
             desc.depth = 1;
         } else {
             desc.depth = 0;
@@ -622,6 +622,7 @@ dumpTextures(JSONWriter &json, Context &context)
         glActiveTexture(texture);
         dumpTexture(json, context, GL_TEXTURE_1D, GL_TEXTURE_BINDING_1D);
         dumpTexture(json, context, GL_TEXTURE_2D, GL_TEXTURE_BINDING_2D);
+        dumpTexture(json, context, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BINDING_2D_ARRAY);
         dumpTexture(json, context, GL_TEXTURE_3D, GL_TEXTURE_BINDING_3D);
         dumpTexture(json, context, GL_TEXTURE_RECTANGLE, GL_TEXTURE_BINDING_RECTANGLE);
         dumpTexture(json, context, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BINDING_CUBE_MAP);
