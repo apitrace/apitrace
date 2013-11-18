@@ -622,10 +622,11 @@ dumpTextures(JSONWriter &json, Context &context)
         glActiveTexture(texture);
         dumpTexture(json, context, GL_TEXTURE_1D, GL_TEXTURE_BINDING_1D);
         dumpTexture(json, context, GL_TEXTURE_2D, GL_TEXTURE_BINDING_2D);
-        dumpTexture(json, context, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BINDING_2D_ARRAY);
         dumpTexture(json, context, GL_TEXTURE_3D, GL_TEXTURE_BINDING_3D);
         dumpTexture(json, context, GL_TEXTURE_RECTANGLE, GL_TEXTURE_BINDING_RECTANGLE);
         dumpTexture(json, context, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BINDING_CUBE_MAP);
+        dumpTexture(json, context, GL_TEXTURE_1D_ARRAY, GL_TEXTURE_BINDING_1D_ARRAY);
+        dumpTexture(json, context, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BINDING_2D_ARRAY);
     }
     glActiveTexture(active_texture);
     json.endObject();
