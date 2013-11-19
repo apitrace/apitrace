@@ -307,18 +307,29 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print '    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames())
             print '    size_t _MappedSize = _MapDesc.Size;'
             print '    if (_MapDesc.Size) {'
-            print '        _maps[_this] = _MapDesc.pData;'
+            if interface.name.startswith('ID3D11DeviceContext'):
+                print '        _maps[pResource] = _MapDesc.pData;'
+            else:
+                print '        _maps[_this] = _MapDesc.pData;'
             print '    } else {'
             print '        return;'
             print '    }'
         
         if method.name == 'Unmap':
-            print '    VOID *_pbData = 0;'
-            print '    _pbData = _maps[_this];'
-            print '    if (_pbData) {'
-            print '        retrace::delRegionByPointer(_pbData);'
-            print '        _maps[_this] = 0;'
-            print '    }'
+            if interface.name.startswith('ID3D11DeviceContext'):
+                print '    VOID *_pbData = 0;'
+                print '    _pbData = _maps[pResource];'
+                print '    if (_pbData) {'
+                print '        retrace::delRegionByPointer(_pbData);'
+                print '        _maps[pResource] = 0;'
+                print '    }'
+            else:
+                print '    VOID *_pbData = 0;'
+                print '    _pbData = _maps[_this];'
+                print '    if (_pbData) {'
+                print '        retrace::delRegionByPointer(_pbData);'
+                print '        _maps[_this] = 0;'
+                print '    }'
 
         # Attach shader byte code for lookup
         if 'pShaderBytecode' in method.argNames():
