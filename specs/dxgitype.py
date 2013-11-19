@@ -113,3 +113,10 @@ DXGI_SAMPLE_DESC = Struct("DXGI_SAMPLE_DESC", [
     (UINT, "Quality"),
 ])
 
+DXGI_RGBA = Struct("DXGI_RGBA", [
+    (Float, "r"),
+    (Float, "g"),
+    (Float, "b"),
+    (Float, "a"),
+])
+

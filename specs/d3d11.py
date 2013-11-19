@@ -1224,6 +1224,7 @@ d3d11.addInterfaces([
     IDXGIFactory1,
     IDXGIAdapter1,
     IDXGIDevice1,
+    IDXGIDevice2,
     IDXGIResource,
     ID3D11Debug,
     ID3D11InfoQueue,
