@@ -151,6 +151,7 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice,
 
     hr = pDevice->GetRenderTargetData(pRenderTarget, pStagingSurface);
     if (FAILED(hr)) {
+        std::cerr << "warning: GetRenderTargetData failed\n";
         goto no_rendertargetdata;
     }
 
@@ -181,6 +182,117 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice) {
     }
 
     return image;
+}
+
+
+static image::Image *
+getTextureImage(IDirect3DDevice9 *pDevice,
+                IDirect3DBaseTexture9 *pTexture,
+                D3DCUBEMAP_FACES FaceType,
+                UINT Level)
+{
+    image::Image *image = NULL;
+    HRESULT hr;
+
+    if (!pTexture) {
+        return NULL;
+    }
+
+    IDirect3DSurface9 *pSurface = NULL;
+
+    D3DRESOURCETYPE Type = pTexture->GetType();
+    switch (Type) {
+    case D3DRTYPE_TEXTURE:
+        assert(FaceType == D3DCUBEMAP_FACE_POSITIVE_X);
+        hr = reinterpret_cast<IDirect3DTexture9 *>(pTexture)->GetSurfaceLevel(Level, &pSurface);
+        break;
+    case D3DRTYPE_CUBETEXTURE:
+        hr = reinterpret_cast<IDirect3DCubeTexture9 *>(pTexture)->GetCubeMapSurface(FaceType, Level, &pSurface);
+        break;
+    default:
+        /* TODO: support volume textures */
+        return NULL;
+    }
+    if (FAILED(hr) || !pSurface) {
+        return NULL;
+    }
+
+    D3DSURFACE_DESC Desc;
+    hr = pSurface->GetDesc(&Desc);
+    assert(SUCCEEDED(hr));
+
+    if (Desc.Pool == D3DPOOL_DEFAULT) {
+        IDirect3DSurface9 *pRenderTarget = NULL;
+        hr = pDevice->CreateRenderTarget(Desc.Width, Desc.Height, Desc.Format,
+                                         D3DMULTISAMPLE_NONE, 0, FALSE,
+                                         &pRenderTarget, NULL);
+        if (FAILED(hr)) {
+            std::cerr << "warning: CreateRenderTarget failed\n";
+        } else {
+            hr = pDevice->StretchRect(pSurface, NULL, pRenderTarget, NULL, D3DTEXF_NONE);
+            if (FAILED(hr)) {
+                std::cerr << "warning: StretchRect failed\n";
+            } else {
+                image = getRenderTargetImage(pDevice, pRenderTarget);
+            }
+            pRenderTarget->Release();
+        }
+    } else {
+        image = getSurfaceImage(pDevice, pSurface);
+    }
+
+    pSurface->Release();
+
+    return image;
+}
+
+void
+dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice)
+{
+    HRESULT hr;
+
+    json.beginMember("textures");
+    json.beginObject();
+
+    for (DWORD Stage = 0; Stage < 16; ++Stage) {
+        IDirect3DBaseTexture9 *pTexture = NULL;
+        hr = pDevice->GetTexture(Stage, &pTexture);
+        if (FAILED(hr)) {
+            continue;
+        }
+
+        if (!pTexture) {
+            continue;
+        }
+
+        D3DRESOURCETYPE Type = pTexture->GetType();
+
+        DWORD NumFaces = Type == D3DRTYPE_CUBETEXTURE ? 6 : 1;
+        DWORD NumLevels = pTexture->GetLevelCount();
+
+        for (DWORD Face = 0; Face < NumFaces; ++Face) {
+            for (DWORD Level = 0; Level < NumLevels; ++Level) {
+                image::Image *image;
+                image = getTextureImage(pDevice, pTexture, static_cast<D3DCUBEMAP_FACES>(Face), Level);
+                if (image) {
+                    char label[128];
+                    if (Type == D3DRTYPE_CUBETEXTURE) {
+                        _snprintf(label, sizeof label, "PS_RESOURCE_%lu_FACE_%lu_LEVEL_%lu", Stage, Face, Level);
+                    } else {
+                        _snprintf(label, sizeof label, "PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
+                    }
+                    json.beginMember(label);
+                    json.writeImage(image, "UNKNOWN");
+                    json.endMember(); // PS_RESOURCE_*
+                }
+            }
+        }
+
+        pTexture->Release();
+    }
+
+    json.endObject();
+    json.endMember(); // textures
 }
 
 

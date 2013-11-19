@@ -51,6 +51,10 @@ namespace d3dstate {
 extern const GUID GUID_D3DSTATE;
 
 
+/*
+ * D3D8
+ */
+
 image::Image *
 getRenderTargetImage(IDirect3DDevice8 *pDevice);
 
@@ -61,8 +65,15 @@ void
 dumpDevice(std::ostream &os, IDirect3DDevice8 *pDevice);
 
 
+/*
+ * D3D9
+ */
+
 image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice);
+
+void
+dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice);
 
 void
 dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice);
@@ -70,6 +81,10 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice);
 void
 dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
 
+
+/*
+ * D3D10
+ */
 
 image::Image *
 getRenderTargetImage(ID3D10Device *pDevice);
@@ -83,6 +98,10 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
 void
 dumpDevice(std::ostream &os, ID3D10Device *pDevice);
 
+
+/*
+ * D3D11
+ */
 
 image::Image *
 getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
