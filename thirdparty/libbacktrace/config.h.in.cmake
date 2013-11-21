@@ -19,3 +19,6 @@
 
 /* Define to 1 if you have the __sync functions */
 #cmakedefine HAVE_SYNC_FUNCTIONS 1
+
+/* Define to 1 if dwarf.h is in the libdwarf folder */
+#cmakedefine HAVE_LIBDWARF_DWARF_H 1
