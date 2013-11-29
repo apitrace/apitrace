@@ -28,14 +28,14 @@ EGL/eglplatform.h: EGL/eglplatform.patch FORCE
 	patch $@ $<
 
 GLES/gl.h GLES/glplatform.h: FORCE
-	wget -O $@ "http://www.khronos.org/registry/gles/api/1.1/$(@F)"
+	wget -O $@ "http://www.khronos.org/registry/gles/api/$@"
 
 GLES/glext.h: GLES/glext.patch FORCE
-	wget -O $@ "http://www.khronos.org/registry/gles/api/1.1/$(@F)"
+	wget -O $@ "http://www.khronos.org/registry/gles/api/$@"
 	patch $@ $<
 
 GLES2/gl2.h GLES2/gl2ext.h GLES2/gl2platform.h: FORCE
-	wget -O $@ "http://www.khronos.org/registry/gles/api/2.0/$(@F)"
+	wget -O $@ "http://www.khronos.org/registry/gles/api/$@"
 
 .PHONY: update
 

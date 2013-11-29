@@ -2446,7 +2446,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAX_TEXTURE_BUFFER_SIZE"),	# 0x8C2B
     ("glGet",	I,	1,	"GL_TEXTURE_BINDING_BUFFER"),	# 0x8C2C
     ("glGet",	I,	1,	"GL_TEXTURE_BUFFER_DATA_STORE_BINDING"),	# 0x8C2D
-    ("glGet",	E,	1,	"GL_TEXTURE_BUFFER_FORMAT"),	# 0x8C2E
+    ("glGet",	E,	1,	"GL_TEXTURE_BUFFER_FORMAT_ARB"),	# 0x8C2E
     ("",	B,	1,	"GL_ANY_SAMPLES_PASSED"),	# 0x8C2F
     ("",	X,	1,	"GL_SAMPLE_SHADING"),	# 0x8C36
     ("",	X,	1,	"GL_MIN_SAMPLE_SHADING_VALUE"),	# 0x8C37

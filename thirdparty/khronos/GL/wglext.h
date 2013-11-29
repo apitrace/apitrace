@@ -6,7 +6,14 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2007-2012 The Khronos Group Inc.
+** THIS FILE IS OBSOLETE. Please migrate away from using the
+** ".spec" files and the headers generated from them to the
+** XML Registry and headers generated from that. See
+**   http://www.opengl.org/registry/api/README.txt
+** for more information.
+** 
+** 
+** Copyright (c) 2007-2013 The Khronos Group Inc.
 ** 
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -48,9 +55,9 @@ extern "C" {
 /*************************************************************/
 
 /* Header file version number */
-/* wglext.h last updated 2012/01/04 */
+/* wglext.h last updated 2013/06/10 */
 /* Current version at http://www.opengl.org/registry/ */
-#define WGL_WGLEXT_VERSION 24
+#define WGL_WGLEXT_VERSION 26
 
 #ifndef WGL_ARB_buffer_region
 #define WGL_FRONT_COLOR_BUFFER_BIT_ARB 0x00000001
@@ -382,8 +389,8 @@ extern "C" {
 #endif
 
 #ifndef WGL_NV_gpu_affinity
-#define WGL_ERROR_INCOMPATIBLE_AFFINITY_MASKS_NV 0x20D0
-#define WGL_ERROR_MISSING_AFFINITY_MASK_NV 0x20D1
+#define ERROR_INCOMPATIBLE_AFFINITY_MASKS_NV 0x20D0
+#define ERROR_MISSING_AFFINITY_MASK_NV 0x20D1
 #endif
 
 #ifndef WGL_AMD_gpu_association

@@ -62,6 +62,30 @@
 #define GL_GPU_MEMORY_INFO_EVICTED_MEMORY_NVX            0x904B
 
 
+// Stuff that got removed from official Khronos headers.
+// XXX: Consider removing all our references to it too.
+#define GL_PIXEL_TEX_GEN_Q_CEILING_SGIX   0x8184
+#define GL_PIXEL_TEX_GEN_Q_ROUND_SGIX     0x8185
+#define GL_PIXEL_TEX_GEN_Q_FLOOR_SGIX     0x8186
+#define GL_PIXEL_TEX_GEN_ALPHA_REPLACE_SGIX 0x8187
+#define GL_PIXEL_TEX_GEN_ALPHA_NO_REPLACE_SGIX 0x8188
+#define GL_PIXEL_TEX_GEN_ALPHA_LS_SGIX    0x8189
+#define GL_PIXEL_TEX_GEN_ALPHA_MS_SGIX    0x818A
+#define GL_FOG_SCALE_SGIX                 0x81FC
+#define GL_FOG_SCALE_VALUE_SGIX           0x81FD
+#define GL_DEPTH_PASS_INSTRUMENT_SGIX     0x8310
+#define GL_DEPTH_PASS_INSTRUMENT_COUNTERS_SGIX 0x8311
+#define GL_DEPTH_PASS_INSTRUMENT_MAX_SGIX 0x8312
+#define GL_PATH_SAMPLE_QUALITY_NV         0x9085
+#define GL_PATH_STROKE_BOUND_NV           0x9086
+#define GL_PATH_STROKE_OVERSAMPLE_COUNT_NV 0x9087
+#define GL_MULTI_HULLS_NV                 0x908C
+#define GL_PROJECTIVE_2D_NV               0x9093
+#define GL_PROJECTIVE_3D_NV               0x9095
+#define GL_TRANSPOSE_PROJECTIVE_2D_NV     0x9097
+#define GL_TRANSPOSE_PROJECTIVE_3D_NV     0x9099
+
+
 #if defined(_WIN32)
 
 #include <GL/wglext.h>
