@@ -6,7 +6,7 @@ if (DirectX_D3D11_INCLUDE_DIR)
         ${DirectX_D3D11_INCLUDE_DIR}
     )
 
-    CHECK_INCLUDE_FILE_CXX (directxmath.h HAVE_DIRECTXMATH)
+    check_include_file_cxx (directxmath.h HAVE_DIRECTXMATH)
     if (NOT HAVE_DIRECTXMATH)
         include_directories (BEFORE
             ${CMAKE_CURRENT_SOURCE_DIR}/XNAMath
@@ -15,16 +15,30 @@ if (DirectX_D3D11_INCLUDE_DIR)
     endif ()
 
     if (MINGW)
+        # Older versions of MinGW do not include the sal.h header.  Use our own.
+        check_include_file_cxx (sal.h HAVE_SAL_H)
+        if (NOT HAVE_SAL_H)
+            include_directories (BEFORE ${CMAKE_SOURCE_DIR}/thirdparty/mingw/sal)
+        endif ()
+
+        # MinGW wincodec.h is incomplete.  Use our own.
+        include_directories (BEFORE ${CMAKE_SOURCE_DIR}/thirdparty/mingw/wincodec)
+
         include_directories (BEFORE
-            ${CMAKE_CURRENT_SOURCE_DIR}/mingw
             ${CMAKE_SOURCE_DIR}/dispatch # for compat.h
         )
         add_definitions (
-            -std=c++0x # static_assert, nullptr unique_ptr
-            -w #inhibit warnings
+            # Support static_assert, nullptr, and unique_ptr.
+            #
+            # `-std=c++0x` doesn't work here, as it will define __STRICT_ANSI__
+            # which will prevent _isnan from being declared.
+            -std=gnu++0x
 
-            # workaround http://sourceforge.net/tracker/index.php?func=detail&aid=3067012&group_id=202880&atid=983354
-            --include malloc.h
+            #inhibit warnings
+            -w
+
+            # Force include this header with tweaks for mingw
+            --include ${CMAKE_CURRENT_SOURCE_DIR}/mingw/tweaks.h
 
             -D_XM_NO_INTRINSICS_
             -DXMINLINE=inline
