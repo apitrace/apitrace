@@ -289,8 +289,8 @@ GLXPbufferAttribs = AttribArray(Const(GLXEnum), [
 GLXPbufferSGIXAttribs = AttribArray(GLXEnum, [
     ('GLX_PRESERVED_CONTENTS_SGIX', Bool),
     ('GLX_LARGEST_PBUFFER', Bool),
-    ('GLX_DIGITAL_MEDIA_PBUFFER_SGIX', Bool)],
-)
+    #('GLX_DIGITAL_MEDIA_PBUFFER_SGIX', Bool),
+])
 
 glxapi = Module("GLX")
 

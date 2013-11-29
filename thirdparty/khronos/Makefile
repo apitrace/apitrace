@@ -14,10 +14,10 @@ update: \
 	GLES2/gl2platform.h
 
 GL/wglext.h GL/glxext.h: FORCE
-	wget -O $@ "http://www.opengl.org/registry/api/$(@F)"
+	wget -O $@ "http://www.opengl.org/registry/api/$@"
 
 GL/glext.h: GL/glext.patch FORCE
-	wget -O $@ "http://www.opengl.org/registry/api/$(@F)"
+	wget -O $@ "http://www.opengl.org/registry/api/$@"
 	patch $@ $<
 
 EGL/egl.h EGL/eglext.h KHR/khrplatform.h: FORCE

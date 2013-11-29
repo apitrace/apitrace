@@ -1064,8 +1064,8 @@ glapi.addFunctions([
     GlFunction(Void, "glGetSynciv", [(GLsync, "sync"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "(length ? *length : bufSize)"), "values")], sideeffects=False),
 
     # GL_ARB_texture_multisample
-    GlFunction(Void, "glTexImage2DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedsamplelocations")]),
-    GlFunction(Void, "glTexImage3DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLint, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedsamplelocations")]),
+    GlFunction(Void, "glTexImage2DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLboolean, "fixedsamplelocations")]),
+    GlFunction(Void, "glTexImage3DMultisample", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "fixedsamplelocations")]),
     GlFunction(Void, "glGetMultisamplefv", [(GLenum, "pname"), (GLuint, "index"), Out(Array(GLfloat, "_gl_param_size(pname)"), "val")], sideeffects=False),
     GlFunction(Void, "glSampleMaski", [(GLuint, "index"), (GLbitfield, "mask")]),
 
@@ -1081,7 +1081,7 @@ glapi.addFunctions([
     # GL_ARB_shading_language_include
     GlFunction(Void, "glNamedStringARB", [(GLenum, "type"), (GLint, "namelen"), InGlString(GLchar, "namelen", "name"), (GLint, "stringlen"), InGlString(GLchar, "stringlen", "string")]),
     GlFunction(Void, "glDeleteNamedStringARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name")]),
-    GlFunction(Void, "glCompileShaderIncludeARB", [(GLshader, "shader"), (GLsizei, "count"), (Array(String(Const(GLchar), "_glShaderSource_length(path, length, {i})"), "count"), "path"), (Array(Const(GLint), "count"), "length")]),
+    GlFunction(Void, "glCompileShaderIncludeARB", [(GLshader, "shader"), (GLsizei, "count"), (Array(Const(String(Const(GLchar), "_glShaderSource_length(path, length, {i})")), "count"), "path"), (Array(Const(GLint), "count"), "length")]),
     GlFunction(GLboolean, "glIsNamedStringARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name")], sideeffects=False),
     GlFunction(Void, "glGetNamedStringARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name"), (GLsizei, "bufSize"), Out(Pointer(GLint), "stringlen"), OutGlString(GLchar, "stringlen", "string")], sideeffects=False),
     GlFunction(Void, "glGetNamedStringivARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name"), (GLenum, "pname"), Out(OpaqueArray(GLint, "_glGetNamedStringivARB_size(pname)"), "params")], sideeffects=False),
@@ -1715,7 +1715,7 @@ glapi.addFunctions([
 
     # GL_EXT_multi_draw_arrays
     GlFunction(Void, "glMultiDrawArraysEXT", [(GLenum_mode, "mode"), (Array(Const(GLint), "primcount"), "first"), (Array(Const(GLsizei), "primcount"), "count"), (GLsizei, "primcount")]),
-    GlFunction(Void, "glMultiDrawElementsEXT", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(GLindexBuffer("count[{i}]", "type"), "primcount"), "indices"), (GLsizei, "primcount")]),
+    GlFunction(Void, "glMultiDrawElementsEXT", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(Const(GLindexBuffer("count[{i}]", "type")), "primcount"), "indices"), (GLsizei, "primcount")]),
 
     # GL_EXT_fog_coord
     GlFunction(Void, "glFogCoordfEXT", [(GLfloat, "coord")]),
@@ -2497,7 +2497,7 @@ glapi.addFunctions([
     GlFunction(Void, "glBindBufferRangeEXT", [(GLenum, "target"), (GLuint, "index"), (GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "size")]),
     GlFunction(Void, "glBindBufferOffsetEXT", [(GLenum, "target"), (GLuint, "index"), (GLbuffer, "buffer"), (GLintptr, "offset")]),
     GlFunction(Void, "glBindBufferBaseEXT", [(GLenum, "target"), (GLuint, "index"), (GLbuffer, "buffer")]),
-    GlFunction(Void, "glTransformFeedbackVaryingsEXT", [(GLprogram, "program"), (GLsizei, "count"), (Const(Array(GLstringConst, "count")), "varyings"), (GLenum, "bufferMode")]),
+    GlFunction(Void, "glTransformFeedbackVaryingsEXT", [(GLprogram, "program"), (GLsizei, "count"), (Array(Const(GLstringConst), "count"), "varyings"), (GLenum, "bufferMode")]),
     GlFunction(Void, "glGetTransformFeedbackVaryingEXT", [(GLprogram, "program"), (GLuint, "index"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLsizei), "size"), Out(Pointer(GLenum), "type"), OutGlString(GLchar, "length", "name")], sideeffects=False),
 
     # GL_EXT_direct_state_access
@@ -2526,8 +2526,8 @@ glapi.addFunctions([
     GlFunction(Void, "glTextureParameterfvEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLenum, "pname"), (Array(Const(GLfloat), "_gl_param_size(pname)"), "params")]),
     GlFunction(Void, "glTextureParameteriEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
     GlFunction(Void, "glTextureParameterivEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLenum, "pname"), (Array(Const(GLint), "_gl_param_size(pname)"), "params")]),
-    GlFunction(Void, "glTextureImage1DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureImage1DEXT_size(format, type, width)"), "pixels")]),
-    GlFunction(Void, "glTextureImage2DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureImage2DEXT_size(format, type, width, height)"), "pixels")]),
+    GlFunction(Void, "glTextureImage1DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureImage1DEXT_size(format, type, width)"), "pixels")]),
+    GlFunction(Void, "glTextureImage2DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureImage2DEXT_size(format, type, width, height)"), "pixels")]),
     GlFunction(Void, "glTextureSubImage1DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureSubImage1DEXT_size(format, type, width)"), "pixels")]),
     GlFunction(Void, "glTextureSubImage2DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureSubImage2DEXT_size(format, type, width, height)"), "pixels")]),
     GlFunction(Void, "glCopyTextureImage1DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLint, "border")]),
@@ -2539,15 +2539,15 @@ glapi.addFunctions([
     GlFunction(Void, "glGetTextureParameterivEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetTextureLevelParameterfvEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum, "pname"), Out(Array(GLfloat, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetTextureLevelParameterivEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glTextureImage3DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureImage3DEXT_size(format, type, width, height, depth)"), "pixels")]),
+    GlFunction(Void, "glTextureImage3DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureImage3DEXT_size(format, type, width, height, depth)"), "pixels")]),
     GlFunction(Void, "glTextureSubImage3DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTextureSubImage3DEXT_size(format, type, width, height, depth)"), "pixels")]),
     GlFunction(Void, "glCopyTextureSubImage3DEXT", [(GLtexture, "texture"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glMultiTexParameterfEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLenum, "pname"), (GLfloat, "param")]),
     GlFunction(Void, "glMultiTexParameterfvEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLenum, "pname"), (Array(Const(GLfloat), "_gl_param_size(pname)"), "params")]),
     GlFunction(Void, "glMultiTexParameteriEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
     GlFunction(Void, "glMultiTexParameterivEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLenum, "pname"), (Array(Const(GLint), "_gl_param_size(pname)"), "params")]),
-    GlFunction(Void, "glMultiTexImage1DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexImage1DEXT_size(format, type, width)"), "pixels")]),
-    GlFunction(Void, "glMultiTexImage2DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexImage2DEXT_size(format, type, width, height)"), "pixels")]),
+    GlFunction(Void, "glMultiTexImage1DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexImage1DEXT_size(format, type, width)"), "pixels")]),
+    GlFunction(Void, "glMultiTexImage2DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexImage2DEXT_size(format, type, width, height)"), "pixels")]),
     GlFunction(Void, "glMultiTexSubImage1DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLsizei, "width"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexSubImage1DEXT_size(format, type, width)"), "pixels")]),
     GlFunction(Void, "glMultiTexSubImage2DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexSubImage2DEXT_size(format, type, width, height)"), "pixels")]),
     GlFunction(Void, "glCopyMultiTexImage1DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLint, "border")]),
@@ -2559,7 +2559,7 @@ glapi.addFunctions([
     GlFunction(Void, "glGetMultiTexParameterivEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetMultiTexLevelParameterfvEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum, "pname"), Out(Array(GLfloat, "_gl_param_size(pname)"), "params")], sideeffects=False),
     GlFunction(Void, "glGetMultiTexLevelParameterivEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glMultiTexImage3DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexImage3DEXT_size(format, type, width, height, depth)"), "pixels")]),
+    GlFunction(Void, "glMultiTexImage3DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLenum_int, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexImage3DEXT_size(format, type, width, height, depth)"), "pixels")]),
     GlFunction(Void, "glMultiTexSubImage3DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glMultiTexSubImage3DEXT_size(format, type, width, height, depth)"), "pixels")]),
     GlFunction(Void, "glCopyMultiTexSubImage3DEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glBindMultiTextureEXT", [(GLenum, "texunit"), (GLenum, "target"), (GLtexture, "texture")]),

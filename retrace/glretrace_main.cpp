@@ -79,7 +79,7 @@ static bool supportsDebugOutput = true;
 static std::list<CallQuery> callQueries;
 
 static void APIENTRY
-debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, GLvoid* userParam);
+debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
 void
 checkGlError(trace::Call &call) {
@@ -414,7 +414,7 @@ getDebugOutputSeverity(GLenum severity) {
 }
 
 static void APIENTRY
-debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, GLvoid* userParam) {
+debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
     std::cerr << retrace::callNo << ": ";
     std::cerr << "glDebugOutputCallback: ";
     std::cerr << getDebugOutputSeverity(severity) << " severity ";
