@@ -66,6 +66,22 @@ You can also tell the GUI to go directly to a specific call
 
     qapitrace application.trace 12345
 
+Backtrace Capturing
+===================
+
+apitrace now has the ability to capture the call stack to an OpenGL call.
+This can be helpful in determing which piece of code made that glDrawArrays call.
+
+*NOTE* this feature is currently only available on Android and Linux at the moment.
+
+On linux you need to have libunwind, and libdwarf installed to compile in the feature.
+
+To use the feature you need to set an environment variable with the list of GL
+call prefixes you wish to capture stack traces to.
+
+export APITRACE_BACKTRACE="glDraw* glUniform*"
+
+The backtrace data will show up in qapitrace in the bottom section as a new tab.
 
 Advanced command line usage
 ===========================
