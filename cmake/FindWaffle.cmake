@@ -10,6 +10,7 @@ if (ANDROID)
 
 		set (Waffle_LIB_SEARCH_PATH "$ENV{OUT}/obj/lib")
 	endif ()
+endif ()
 
 	find_path (Waffle_INCLUDE_DIR waffle.h
 		PATHS ${Waffle_INC_SEARCH_PATH}
@@ -31,7 +32,6 @@ if (ANDROID)
 		Waffle_INCLUDE_DIR
 		Waffle_LIBRARY
 	)
-endif ()
 
 mark_as_advanced (
 	Waffle_FOUND

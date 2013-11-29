@@ -95,7 +95,22 @@ init(void) {
 
     i = 0;
     waffle_init_attrib_list[i++] = WAFFLE_PLATFORM;
-    waffle_init_attrib_list[i++] = WAFFLE_PLATFORM_ANDROID;
+    waffle_init_attrib_list[i++] =
+#if defined(__ANDROID__)
+        WAFFLE_PLATFORM_ANDROID
+#elif defined(__APPLE__)
+        WAFFLE_PLATFORM_CGL
+#elif defined(HAVE_X11)
+#  if 1
+        WAFFLE_PLATFORM_GLX
+#  else
+        WAFFLE_PLATFORM_X11_EGL
+#  endif
+#else
+#  warning Unsupported platform
+        WAFFLE_NONE
+#endif
+    ;
     waffle_init_attrib_list[i++] = WAFFLE_NONE;
 
     waffle_init(waffle_init_attrib_list);

@@ -31,6 +31,8 @@ set (ENABLE_CLI true CACHE BOOL "Enable command Line interface.")
 
 set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 
+set (ENABLE_WAFFLE false CACHE BOOL "Enable WAFFLE support.")
+
 
 ##############################################################################
 # Find dependencies
@@ -86,6 +88,11 @@ else ()
         include (FindPackageMessage)
         find_package_message (X11 "Could not find X11" "")
     endif ()
+endif ()
+
+if (ENABLE_EGL AND (ANDROID OR ENABLE_WAFFLE))
+    # if waffle is found eglretrace will be built for Android.
+    find_package (Waffle)
 endif ()
 
 
