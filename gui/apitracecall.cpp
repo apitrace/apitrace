@@ -32,6 +32,10 @@ const char * const styleSheet =
     ".arg-value {\n"
     "    color: #0000ff;\n"
     "}\n"
+    ".thread-id {\n"
+    "    color: #aaaaaa;\n"
+    "    min-width: 3em;\n"
+    "}\n"
     ".error {\n"
     "    border: 1px solid rgb(255,0,0);\n"
     "    margin: 10px;\n"
@@ -675,7 +679,7 @@ ApiTraceCall::loadData(TraceLoader *loader,
                        const trace::Call *call)
 {
     m_index = call->no;
-
+    m_thread = call->thread_id;
     m_signature = loader->signature(call->sig->id);
 
     if (!m_signature) {
@@ -931,7 +935,12 @@ QStaticText ApiTraceCall::staticText() const
 
     QVector<QVariant> argValues = arguments();
 
-    QString richText = QString::fromLatin1(
+    QString richText;
+
+    richText += QString::fromLatin1("<span style=\"color: #aaaaaa; min-width: 3em;\">[%1]</span> ")
+        .arg(m_thread);
+
+    richText += QString::fromLatin1(
         "<span style=\"font-weight:bold\">%1</span>(").arg(
             m_signature->name());
     QStringList argNames = m_signature->argNames();
@@ -994,6 +1003,10 @@ QString ApiTraceCall::toHtml() const
             QString::fromLatin1("Frame %1")
             .arg(m_parentFrame->number);
     }
+
+    m_richText += QString::fromLatin1("<span class=\"thread-id\">[%1]</span> ")
+        .arg(m_thread);
+
     QUrl helpUrl = m_signature->helpUrl();
     if (helpUrl.isEmpty()) {
         m_richText += QString::fromLatin1(

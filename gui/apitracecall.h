@@ -302,6 +302,7 @@ private:
                   const trace::Call *tcall);
 private:
     int m_index;
+    unsigned m_thread;
     ApiTraceCallSignature *m_signature;
     QVector<QVariant> m_argValues;
     QVariant m_returnValue;
