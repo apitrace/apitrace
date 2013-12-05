@@ -223,8 +223,16 @@ public:
 };
 
 
-CallSet::CallSet(const char *string): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max())
+void
+CallSet::merge(const char *string)
 {
+    if (firstmerge) {
+        if (!empty()) {
+            *this = CallSet();
+        }
+        firstmerge = false;
+    }
+
     if (*string == '@') {
         FileCallSetParser parser(*this, &string[1]);
         parser.parse();
@@ -235,7 +243,7 @@ CallSet::CallSet(const char *string): limits(std::numeric_limits<CallNo>::min(),
 }
 
 
-CallSet::CallSet(CallFlags freq): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()) {
+CallSet::CallSet(CallFlags freq): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()), firstmerge(true) {
     if (freq != FREQUENCY_NONE) {
         CallNo start = std::numeric_limits<CallNo>::min();
         CallNo stop = std::numeric_limits<CallNo>::max();
@@ -244,3 +252,4 @@ CallSet::CallSet(CallFlags freq): limits(std::numeric_limits<CallNo>::min(), std
         assert(!empty());
     }
 }
+
