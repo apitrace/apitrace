@@ -31,6 +31,7 @@
 
 #include "os.hpp"
 #include "json.hpp"
+#include "image.hpp"
 #include "d3d10imports.hpp"
 #include "d3dstate.hpp"
 #include "dxgistate.hpp"
@@ -404,6 +405,7 @@ dumpStageTextures(JSONWriter &json, ID3D10Device *pDevice, const char *stageName
             json.beginMember(label);
             json.writeImage(image, "UNKNOWN");
             json.endMember(); // *_RESOURCE_*
+            delete image;
         }
 
         ppShaderResourceViews[i]->Release();
@@ -472,6 +474,7 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
             json.beginMember(label);
             json.writeImage(image, "UNKNOWN");
             json.endMember(); // RENDER_TARGET_*
+            delete image;
         }
 
         pRenderTargetViews[i]->Release();
@@ -484,6 +487,7 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
             json.beginMember("DEPTH_STENCIL");
             json.writeImage(image, "UNKNOWN");
             json.endMember();
+            delete image;
         }
 
         pDepthStencilView->Release();
