@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits>
+#include <vector>
 
 #include "os.hpp"
 #include "trace_fast_callset.hpp"
@@ -39,12 +40,13 @@ using namespace trace;
 #define MAX_LEVEL 16
 
 FastCallRange::FastCallRange(CallNo first, CallNo last, int level)
+: ref_counter(0)
 {
     this->first = first;
     this->last = last;
     this->level = level;
 
-    next = new FastCallRange*[level];
+    next.resize(level, 0);
 }
 
 bool
@@ -63,9 +65,6 @@ FastCallSet::FastCallSet(): head(0, 0, MAX_LEVEL)
 {
     head.first = std::numeric_limits<CallNo>::max();
     head.last = std::numeric_limits<CallNo>::min();
-
-    for (int i = 0; i < MAX_LEVEL; i++)
-        head.next[i] = NULL;
 
     max_level = 0;
 }
@@ -97,15 +96,17 @@ random_level (void)
 void
 FastCallSet::add(CallNo first, CallNo last)
 {
-    FastCallRange **update[MAX_LEVEL];
-    FastCallRange *node, *next;
+    std::vector<FastCallRangePtr*> update (MAX_LEVEL);
+    FastCallRange *node;
+    FastCallRangePtr new_node;
     int i, level;
 
-    /* Find node immediately before insertion point. */
-    node = &head;
+    /* Find node immediately before insertion point.
+     * NOTE: FastCallRangePtr(), e.g., next[i](), returns FastCallRange* */
+    node = &head;  // Can't reference &head as a FastCallRangePtr
     for (i = max_level - 1; i >= 0; i--) {
-        while (node->next[i] && first > node->next[i]->last) {
-            node = node->next[i];
+        while (node->next[i]() && first > node->next[i]->last) {
+            node = node->next[i]();
         }
         update[i] = &node->next[i];
     }
@@ -113,13 +114,14 @@ FastCallSet::add(CallNo first, CallNo last)
     /* Can we contain first by expanding tail of current range by 1? */
     if (node != &head && node->last == first - 1) {
 
-        node->last = last;
+        new_node = FastCallRangePtr(node);
+        new_node->last = last;
         goto MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES;
 
     }
 
     /* Current range could not contain first, look at next. */
-    node = node->next[0];
+    node = node->next[0]();
 
     if (node) {
         /* Do nothing if new range is already entirely contained. */
@@ -136,7 +138,8 @@ FastCallSet::add(CallNo first, CallNo last)
 
         /* This is our candidate node if first is contained */
         if (node->first <= first && node->last >= first) {
-            node->last = last;
+            new_node = FastCallRangePtr(node);
+            new_node->last = last;
             goto MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES;
         }
     }
@@ -152,21 +155,21 @@ FastCallSet::add(CallNo first, CallNo last)
         max_level = level;
     }
 
-    node = new FastCallRange(first, last, level);
+    new_node = FastCallRangePtr(new FastCallRange(first, last, level));
 
     /* Perform insertion into all lists. */
     for (i = 0; i < level; i++) {
-        node->next[i] = *update[i];
-        *update[i] = node;
+        new_node->next[i] = *update[i];
+        *update[i] = new_node;
     }
 
 MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES:
-    next = node->next[0];
-    while (next && next->first <= node->last + 1) {
+    FastCallRangePtr next = new_node->next[0];
+    node = new_node();
+    while (next() && next->first <= node->last + 1) {
         if (next->last > node->last)
             node->last = next->last;
 
-        /* Delete node 'next' */
         for (i = 0; i < node->level && i < next->level; i++) {
             node->next[i] = next->next[i];
         }
@@ -174,8 +177,6 @@ MERGE_NODE_WITH_SUBSEQUENT_COVERED_NODES:
         for (; i < next->level; i++) {
             *update[i] = next->next[i];
         }
-
-        delete next;
 
         next = node->next[0];
     }
@@ -190,17 +191,17 @@ FastCallSet::add(CallNo call_no)
 bool
 FastCallSet::contains(CallNo call_no) const
 {
-    const FastCallRange *node;
+    FastCallRange *node;
     int i;
 
-    node = &head;
+    node = const_cast<FastCallRange*>(&head);
     for (i = max_level - 1; i >= 0; i--) {
-        while (node->next[i] && call_no > node->next[i]->last) {
-            node = node->next[i];
+        while (node->next[i]() && call_no > node->next[i]->last) {
+            node = node->next[i]();
         }
     }
 
-    node = node->next[0];
+    node = node->next[0]();
 
     if (node == NULL)
         return false;
