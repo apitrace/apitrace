@@ -293,6 +293,7 @@ trim_trace(const char *filename, struct trim_options *options)
         if ((options->calls.empty() || call->no > options->calls.getLast()) &&
             (options->frames.empty() || frame > options->frames.getLast())) {
 
+            delete call;
             break;
         }
 
