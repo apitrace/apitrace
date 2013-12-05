@@ -704,7 +704,7 @@ int main(int argc, char **argv)
                 snapshotFormat = PNM_FMT;
             break;
         case 'S':
-            snapshotFrequency = trace::CallSet(optarg);
+            snapshotFrequency.merge(optarg);
             if (snapshotPrefix == NULL) {
                 snapshotPrefix = "";
             }

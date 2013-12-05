@@ -387,10 +387,10 @@ command(int argc, char *argv[])
             help();
             return 0;
         case CALLS_OPT:
-            options.calls = trace::CallSet(optarg);
+            options.calls.merge(optarg);
             break;
         case FRAMES_OPT:
-            options.frames = trace::CallSet(optarg);
+            options.frames.merge(optarg);
             break;
         case DEPS_OPT:
             options.dependency_analysis = true;

@@ -235,7 +235,7 @@ command(int argc, char *argv[])
             symbolic = true;
             break;
         case CALLS_OPT:
-            calls = trace::CallSet(optarg);
+            calls.merge(optarg);
             break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
