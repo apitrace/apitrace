@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <limits>
 #include <fstream>
@@ -233,13 +234,28 @@ CallSet::merge(const char *string)
         firstmerge = false;
     }
 
-    if (*string == '@') {
-        FileCallSetParser parser(*this, &string[1]);
-        parser.parse();
-    } else {
-        StringCallSetParser parser(*this, string);
-        parser.parse();
-    }
+    /*
+     * Parse a comma-separated list of files or ranges
+     */
+
+    /* make writable copy of string to parse */
+    char *str = strdupa(string);
+
+    /* re-entrant version of strtok */
+    char *str_save;
+    str = strtok_r(str, ",", &str_save);
+
+    do {
+        if (*str == '@') {
+            FileCallSetParser parser(*this, &str[1]);
+            parser.parse();
+        } else {
+            StringCallSetParser parser(*this, str);
+            parser.parse();
+        }
+    } while ((str = strtok_r(NULL, ",", &str_save)) != NULL);
+
+    free((void*) str);
 }
 
 
