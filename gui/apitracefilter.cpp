@@ -51,6 +51,8 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
             return false;
         if (function.contains(QLatin1String("wglDescribePixelFormat")))
             return false;
+        if (function.contains(QLatin1String("wglGetCurrentContext")))
+            return false;
     }
 
     if (m_filters & ExtensionsFilter) {
