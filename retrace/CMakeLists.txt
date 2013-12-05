@@ -74,12 +74,12 @@ if (WIN32 OR APPLE OR X11_FOUND)
         ${glws_os}
     )
 
-    add_dependencies (glretrace glproc)
+    add_dependencies (glretrace glproc_retrace)
 
     target_link_libraries (glretrace
         retrace_common
         glretrace_common
-        glproc_gl
+        glproc_gl_retrace
     )
 
     if (WIN32)

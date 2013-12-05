@@ -27,17 +27,26 @@ add_custom_command (
 # multiple times simulatenously, when the targets that depend on it are built
 # in parallel.
 add_custom_target (glproc DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
-
+add_custom_target (glproc_retrace DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
 add_library (glproc_gl STATIC EXCLUDE_FROM_ALL
     glproc_gl.cpp
 )
+add_library (glproc_gl_retrace STATIC EXCLUDE_FROM_ALL
+    glproc_gl.cpp
+)
 
 add_dependencies (glproc_gl glproc)
+add_dependencies (glproc_gl_retrace glproc_retrace)
 
 set_target_properties (glproc_gl PROPERTIES
     # Ensure it can be statically linked in shared libraries
     COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
+)
+set_target_properties (glproc_gl_retrace PROPERTIES
+    # Ensure it can be statically linked in shared libraries
+    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
+    COMPILE_DEFINITIONS RETRACE_ALLOW_DLSYM_INTERCEPT
 )
 
 if (ENABLE_EGL)
