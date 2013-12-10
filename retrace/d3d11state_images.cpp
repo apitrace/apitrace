@@ -373,6 +373,23 @@ getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
 }
 
 
+static void
+dumpStageTextures(JSONWriter &json, ID3D11DeviceContext *pDevice, const char *stageName,
+                  UINT NumViews,
+                  ID3D11ShaderResourceView **ppShaderResourceViews)
+{
+    for (UINT i = 0; i < NumViews; ++i) {
+        if (!ppShaderResourceViews[i]) {
+            continue;
+        }
+
+        dumpShaderResourceViewImage(json, pDevice, ppShaderResourceViews[i], stageName, i);
+
+        ppShaderResourceViews[i]->Release();
+    }
+}
+
+
 void
 dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDevice)
 {
@@ -380,17 +397,15 @@ dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDevice)
     json.beginObject();
 
     ID3D11ShaderResourceView *pShaderResourceViews[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
+
     pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-    for (UINT i = 0; i < ARRAYSIZE(pShaderResourceViews); ++i) {
-        if (!pShaderResourceViews[i]) {
-            continue;
-        }
+    pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-        dumpShaderResourceViewImage(json, pDevice, pShaderResourceViews[i], "PS", i);
-
-        pShaderResourceViews[i]->Release();
-    }
+    pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     json.endObject();
     json.endMember(); // textures
