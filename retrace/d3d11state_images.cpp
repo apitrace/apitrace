@@ -43,7 +43,8 @@ static HRESULT
 stageResource(ID3D11DeviceContext *pDeviceContext,
               ID3D11Resource *pResource,
               ID3D11Resource **ppStagingResource,
-              UINT *pWidth, UINT *pHeight, UINT *pDepth) {
+              UINT *pWidth, UINT *pHeight, UINT *pDepth,
+              UINT *pMipLevels) {
     D3D11_USAGE Usage = D3D11_USAGE_STAGING;
     UINT BindFlags = 0;
     UINT CPUAccessFlags = D3D11_CPU_ACCESS_READ;
@@ -75,6 +76,7 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
             *pWidth = Desc.ByteWidth;
             *pHeight = 1;
             *pDepth = 1;
+            *pMipLevels = 1;
 
             hr = pDevice->CreateBuffer(&Desc, NULL, &pStagingBuffer);
         }
@@ -91,6 +93,7 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
             *pWidth = Desc.Width;
             *pHeight = 1;
             *pDepth = 1;
+            *pMipLevels = Desc.MipLevels;
 
             hr = pDevice->CreateTexture1D(&Desc, NULL, &pStagingTexture1D);
         }
@@ -107,6 +110,7 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
             *pWidth = Desc.Width;
             *pHeight = Desc.Height;
             *pDepth = 1;
+            *pMipLevels = Desc.MipLevels;
 
             hr = pDevice->CreateTexture2D(&Desc, NULL, &pStagingTexture2D);
         }
@@ -123,6 +127,7 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
             *pWidth = Desc.Width;
             *pHeight = Desc.Height;
             *pDepth = Desc.Depth;
+            *pMipLevels = Desc.MipLevels;
 
             hr = pDevice->CreateTexture3D(&Desc, NULL, &pStagingTexture3D);
         }
@@ -147,12 +152,14 @@ static image::Image *
 getSubResourceImage(ID3D11DeviceContext *pDevice,
                     ID3D11Resource *pResource,
                     DXGI_FORMAT Format,
+                    UINT ArraySlice,
                     UINT MipSlice)
 {
     image::Image *image = NULL;
     ID3D11Resource *pStagingResource = NULL;
     UINT Width, Height, Depth;
-    UINT SubResource = MipSlice;
+    UINT MipLevels;
+    UINT SubResource;
     D3D11_MAPPED_SUBRESOURCE MappedSubResource;
     HRESULT hr;
 
@@ -160,10 +167,12 @@ getSubResourceImage(ID3D11DeviceContext *pDevice,
         return NULL;
     }
 
-    hr = stageResource(pDevice, pResource, &pStagingResource, &Width, &Height, &Depth);
+    hr = stageResource(pDevice, pResource, &pStagingResource, &Width, &Height, &Depth, &MipLevels);
     if (FAILED(hr)) {
         goto no_staging;
     }
+
+    SubResource = ArraySlice*MipLevels + MipSlice;
 
     Width  = std::max(Width  >> MipSlice, 1U);
     Height = std::max(Height >> MipSlice, 1U);
@@ -192,15 +201,17 @@ no_staging:
 }
 
 
-static image::Image *
-getShaderResourceViewImage(ID3D11DeviceContext *pDevice,
-                           ID3D11ShaderResourceView *pShaderResourceView) {
+static void
+dumpShaderResourceViewImage(JSONWriter &json,
+                            ID3D11DeviceContext *pDevice,
+                            ID3D11ShaderResourceView *pShaderResourceView,
+                            const char *shader,
+                            UINT stage) {
     D3D11_SHADER_RESOURCE_VIEW_DESC Desc;
     ID3D11Resource *pResource = NULL;
-    UINT MipSlice;
 
     if (!pShaderResourceView) {
-        return NULL;
+        return;
     }
 
     pShaderResourceView->GetResource(&pResource);
@@ -208,10 +219,13 @@ getShaderResourceViewImage(ID3D11DeviceContext *pDevice,
 
     pShaderResourceView->GetDesc(&Desc);
 
+    UINT MipSlice = 0;
+    UINT FirstArraySlice = 0;
+    UINT ArraySize = 1;
+
     // TODO: Take the slice in consideration
     switch (Desc.ViewDimension) {
     case D3D11_SRV_DIMENSION_BUFFER:
-        MipSlice = 0;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MostDetailedMip;
@@ -226,24 +240,38 @@ getShaderResourceViewImage(ID3D11DeviceContext *pDevice,
         MipSlice = Desc.Texture2DArray.MostDetailedMip;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DMS:
-        MipSlice = 0;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY:
-        MipSlice = 0;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE3D:
         MipSlice = Desc.Texture3D.MostDetailedMip;
         break;
     case D3D11_SRV_DIMENSION_TEXTURECUBE:
         MipSlice = Desc.TextureCube.MostDetailedMip;
+        ArraySize = 6;
         break;
     case D3D11_SRV_DIMENSION_UNKNOWN:
     default:
         assert(0);
-        return NULL;
+        return;
     }
 
-    return getSubResourceImage(pDevice, pResource, Desc.Format, MipSlice);
+    for (UINT ArraySlice = FirstArraySlice; ArraySlice < FirstArraySlice + ArraySize; ++ArraySlice) {
+
+        image::Image *image;
+        image = getSubResourceImage(pDevice, pResource, Desc.Format, ArraySlice, MipSlice);
+        if (image) {
+            char label[64];
+            _snprintf(label, sizeof label,
+                      "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
+                      shader, stage, ArraySlice, MipSlice);
+            json.beginMember(label);
+            json.writeImage(image, "UNKNOWN");
+            json.endMember(); // *_RESOURCE_*
+            delete image;
+        }
+
+    }
 }
 
 
@@ -276,7 +304,6 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
         break;
     case D3D11_RTV_DIMENSION_TEXTURE2D:
         MipSlice = Desc.Texture2D.MipSlice;
-        MipSlice = 0;
         break;
     case D3D11_RTV_DIMENSION_TEXTURE2DARRAY:
         MipSlice = Desc.Texture2DArray.MipSlice;
@@ -296,7 +323,7 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
         return NULL;
     }
 
-    return getSubResourceImage(pDevice, pResource, Desc.Format, MipSlice);
+    return getSubResourceImage(pDevice, pResource, Desc.Format, 0, MipSlice);
 }
 
 
@@ -342,7 +369,7 @@ getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
         return NULL;
     }
 
-    return getSubResourceImage(pDevice, pResource, Desc.Format, MipSlice);
+    return getSubResourceImage(pDevice, pResource, Desc.Format, 0, MipSlice);
 }
 
 
@@ -360,16 +387,7 @@ dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDevice)
             continue;
         }
 
-        image::Image *image;
-        image = getShaderResourceViewImage(pDevice, pShaderResourceViews[i]);
-        if (image) {
-            char label[64];
-            _snprintf(label, sizeof label, "PS_RESOURCE_%u", i);
-            json.beginMember(label);
-            json.writeImage(image, "UNKNOWN");
-            json.endMember(); // PS_RESOURCE_*
-            delete image;
-        }
+        dumpShaderResourceViewImage(json, pDevice, pShaderResourceViews[i], "PS", i);
 
         pShaderResourceViews[i]->Release();
     }
