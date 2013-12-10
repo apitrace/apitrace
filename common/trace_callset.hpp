@@ -104,6 +104,7 @@ namespace trace {
     {
     private:
         CallRange limits;
+        bool firstmerge;
 
     public:
         FastCallSet fast_call_set;
@@ -114,11 +115,12 @@ namespace trace {
         typedef std::list< CallRange > RangeList;
         RangeList ranges;
 
-        CallSet(): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()) {}
+        CallSet(): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()), firstmerge(true) {}
 
         CallSet(CallFlags freq);
 
-        CallSet(const char *str);
+        void
+        merge(const char *str);
 
         // Not empty set
         inline bool

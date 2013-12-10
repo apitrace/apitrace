@@ -115,7 +115,7 @@ command(int argc, char *argv[])
             verbose = true;
             break;
         case CALLS_OPT:
-            calls = trace::CallSet(optarg);
+            calls.merge(optarg);
             break;
         case COLOR_OPT:
             if (!optarg ||

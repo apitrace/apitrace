@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <limits>
 #include <fstream>
@@ -223,19 +224,42 @@ public:
 };
 
 
-CallSet::CallSet(const char *string): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max())
+void
+CallSet::merge(const char *string)
 {
-    if (*string == '@') {
-        FileCallSetParser parser(*this, &string[1]);
-        parser.parse();
-    } else {
-        StringCallSetParser parser(*this, string);
-        parser.parse();
+    if (firstmerge) {
+        if (!empty()) {
+            *this = CallSet();
+        }
+        firstmerge = false;
     }
+
+    /*
+     * Parse a comma-separated list of files or ranges
+     */
+
+    /* make writable copy of string to parse */
+    char *str = strdupa(string);
+
+    /* re-entrant version of strtok */
+    char *str_save;
+    str = strtok_r(str, ",", &str_save);
+
+    do {
+        if (*str == '@') {
+            FileCallSetParser parser(*this, &str[1]);
+            parser.parse();
+        } else {
+            StringCallSetParser parser(*this, str);
+            parser.parse();
+        }
+    } while ((str = strtok_r(NULL, ",", &str_save)) != NULL);
+
+    free((void*) str);
 }
 
 
-CallSet::CallSet(CallFlags freq): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()) {
+CallSet::CallSet(CallFlags freq): limits(std::numeric_limits<CallNo>::min(), std::numeric_limits<CallNo>::max()), firstmerge(true) {
     if (freq != FREQUENCY_NONE) {
         CallNo start = std::numeric_limits<CallNo>::min();
         CallNo stop = std::numeric_limits<CallNo>::max();
@@ -244,3 +268,4 @@ CallSet::CallSet(CallFlags freq): limits(std::numeric_limits<CallNo>::min(), std
         assert(!empty());
     }
 }
+
