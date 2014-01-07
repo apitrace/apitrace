@@ -220,7 +220,7 @@ cleanup(void) {
 
 
 Visual *
-createVisual(bool doubleBuffer, Profile profile) {
+createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
     initThread();
 
