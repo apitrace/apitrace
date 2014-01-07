@@ -317,7 +317,7 @@ cleanup(void) {
 }
 
 Visual *
-createVisual(bool doubleBuffer, Profile profile) {
+createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     EglVisual *visual = new EglVisual(profile);
     // possible combinations
     const EGLint api_bits_gl[7] = {

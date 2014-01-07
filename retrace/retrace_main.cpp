@@ -76,6 +76,7 @@ Driver driver = DRIVER_DEFAULT;
 const char *driverModule = NULL;
 
 bool doubleBuffer = true;
+unsigned samples = 1;
 
 bool profiling = false;
 bool profilingGpuTimes = false;
@@ -557,6 +558,7 @@ usage(const char *argv0) {
         "      --call-nos[=BOOL]   use call numbers in snapshot filenames\n"
         "      --core              use core profile\n"
         "      --db                use a double buffer visual (default)\n"
+        "      --samples=N         use GL_ARB_multisample (default is 1)\n"
         "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
         "      --sb                use a single buffer visual\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
@@ -573,6 +575,7 @@ enum {
     CALL_NOS_OPT = CHAR_MAX + 1,
     CORE_OPT,
     DB_OPT,
+    SAMPLES_OPT,
     DRIVER_OPT,
     PCPU_OPT,
     PGPU_OPT,
@@ -593,6 +596,7 @@ longOptions[] = {
     {"call-nos", optional_argument, 0, CALL_NOS_OPT },
     {"core", no_argument, 0, CORE_OPT},
     {"db", no_argument, 0, DB_OPT},
+    {"samples", required_argument, 0, SAMPLES_OPT},
     {"driver", required_argument, 0, DRIVER_OPT},
     {"dump-state", required_argument, 0, 'D'},
     {"help", no_argument, 0, 'h'},
@@ -649,6 +653,9 @@ int main(int argc, char **argv)
             break;
         case DB_OPT:
             retrace::doubleBuffer = true;
+            break;
+        case SAMPLES_OPT:
+            retrace::samples = atoi(optarg);
             break;
         case DRIVER_OPT:
             if (strcasecmp(optarg, "hw") == 0) {

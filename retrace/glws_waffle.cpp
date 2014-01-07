@@ -128,7 +128,7 @@ cleanup(void) {
 }
 
 Visual *
-createVisual(bool doubleBuffer, Profile profile) {
+createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     struct waffle_config *cfg;
     int config_attrib_list[64], i(0), waffle_profile;
 

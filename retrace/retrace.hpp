@@ -116,6 +116,7 @@ extern Driver driver;
 extern const char *driverModule;
 
 extern bool doubleBuffer;
+extern unsigned samples;
 
 extern unsigned frameNo;
 extern unsigned callNo;
