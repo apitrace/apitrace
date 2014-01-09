@@ -383,7 +383,7 @@ IDirect3DQuery9.methods += [
     StdMethod(D3DQUERYTYPE, "GetType", [], sideeffects=False),
     StdMethod(DWORD, "GetDataSize", [], sideeffects=False),
     StdMethod(HRESULT, "Issue", [(D3DISSUE, "dwIssueFlags")]),
-    StdMethod(HRESULT, "GetData", [Out(Blob(Void, "dwSize"), "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")], sideeffects=False),
+    StdMethod(HRESULT, "GetData", [Out(D3DQUERYDATA, "pData"), (DWORD, "dwSize"), (D3DGETDATA, "dwGetDataFlags")], sideeffects=False),
 ]
 
 IDirect3D9Ex.methods += [
