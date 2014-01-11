@@ -272,7 +272,7 @@ cleanup(void) {
 }
 
 Visual *
-createVisual(bool doubleBuffer, Profile profile) {
+createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     GlxVisual *visual = new GlxVisual(profile);
 
     if (glxVersion >= 0x0103) {
@@ -286,6 +286,9 @@ createVisual(bool doubleBuffer, Profile profile) {
         attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
         attribs.add(GLX_DEPTH_SIZE, 1);
         attribs.add(GLX_STENCIL_SIZE, 1);
+        if (samples>1) {
+            attribs.add(GLX_SAMPLES_ARB, samples);
+        }
         attribs.end();
 
         int num_configs = 0;
@@ -308,6 +311,9 @@ createVisual(bool doubleBuffer, Profile profile) {
         }
         attribs.add(GLX_DEPTH_SIZE, 1);
         attribs.add(GLX_STENCIL_SIZE, 1);
+        if (samples>1) {
+            attribs.add(GLX_SAMPLES_ARB, samples);
+        }
         attribs.end();
 
         visual->visinfo = glXChooseVisual(display, screen, attribs);

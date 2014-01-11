@@ -51,7 +51,7 @@ inline glws::Visual *
 getVisual(glws::Profile profile) {
     std::map<glws::Profile, glws::Visual *>::iterator it = visuals.find(profile);
     if (it == visuals.end()) {
-        glws::Visual *visual = glws::createVisual(retrace::doubleBuffer, profile);
+        glws::Visual *visual = glws::createVisual(retrace::doubleBuffer, retrace::samples, profile);
         if (!visual) {
             std::cerr << "error: failed to create OpenGL visual\n";
             exit(1);
