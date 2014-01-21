@@ -3015,6 +3015,9 @@ glapi.addFunctions([
     # GL_NV_draw_texture
     GlFunction(Void, "glDrawTextureNV", [(GLtexture, "texture"), (GLsampler, "sampler"), (GLfloat, "x0"), (GLfloat, "y0"), (GLfloat, "x1"), (GLfloat, "y1"), (GLfloat, "z"), (GLfloat, "s0"), (GLfloat, "t0"), (GLfloat, "s1"), (GLfloat, "t1")]),
 
+    # GL_NV_framebuffer_blit
+    GlFunction(Void, "glBlitFramebufferNV", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
+
     # GL_KTX_buffer_region
     # XXX: http://www.west.net/~brittain/3dsmax2.htm does not mention EXT suffix
     GlFunction(GLregion, "glNewBufferRegion", [(GLenum, "type")]),
