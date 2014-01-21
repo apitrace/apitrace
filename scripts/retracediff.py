@@ -28,6 +28,7 @@
 '''
 
 
+import math
 import optparse
 import os.path
 import subprocess
@@ -179,15 +180,38 @@ def read_pnm(stream):
     return image, comment
 
 
-def dumpNumpyImage(output, pixels):
+def dumpNumpyImage(output, pixels, filename):
     height, width, channels = pixels.shape
-    for y in range(height):
-        output.write('  ')
-        for x in range(width):
-            for c in range(channels):
-                output.write('%0.9g,' % pixels[y, x, c])
+
+    import numpy
+
+    pixels = (pixels*255).clip(0, 255).astype('uint8')
+
+    if 0:
+        # XXX: Doesn't work somehow
+        im = Image.fromarray(pixels)
+    else:
+        # http://code.activestate.com/recipes/577591-conversion-of-pil-image-and-numpy-array/
+        pixels = pixels.reshape(height*width, channels)
+        if channels == 4:
+            mode = 'RGBA'
+        else:
+            if channels < 3:
+                pixels = numpy.c_[arr, 255*numpy.ones((heigth * width, 3 - channels), numpy.uint8)]
+            assert channels == 3
+            mode = 'RGB'
+        im = Image.frombuffer(mode, (width, height), pixels.tostring(), 'raw', mode, 0, 1)
+    im.save(filename)
+
+    if 0:
+        # Dump to stdout
+        for y in range(height):
             output.write('  ')
-        output.write('\n')
+            for x in range(width):
+                for c in range(channels):
+                    output.write('%0.9g,' % pixels[y, x, c])
+                output.write('  ')
+            output.write('\n')
 
 
 def parse_env(optparser, entries):
@@ -340,18 +364,18 @@ def main():
                     highligher.normal()
 
                 if mismatch:
-                    if numpyImages:
-                        dumpNumpyImage(output, refImage)
-                        output.write("->\n")
-                        dumpNumpyImage(output, srcImage)
-                    if options.diff_prefix and not numpyImages:
+                    if options.diff_prefix:
                         prefix = os.path.join(options.diff_prefix, '%010u' % callNo)
                         prefix_dir = os.path.dirname(prefix)
                         if not os.path.isdir(prefix_dir):
                             os.makedirs(prefix_dir)
-                        refImage.save(prefix + '.ref.png')
-                        srcImage.save(prefix + '.src.png')
-                        comparer.write_diff(prefix + '.diff.png')
+                        if numpyImages:
+                            dumpNumpyImage(output, refImage, prefix + '.ref.png')
+                            dumpNumpyImage(output, srcImage, prefix + '.src.png')
+                        else:
+                            refImage.save(prefix + '.ref.png')
+                            srcImage.save(prefix + '.src.png')
+                            comparer.write_diff(prefix + '.diff.png')
                     if last_bad < last_good and options.diff_state:
                         srcRetracer.diff_state(last_good, callNo, output)
                     last_bad = callNo
