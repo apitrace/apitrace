@@ -276,6 +276,11 @@ GLbitfield_fontStyle = Flags(GLbitfield, [
     "GL_ITALIC_BIT_NV",                         # 0x02
 ])
 
+GLbitfield_famebufferBlit = Flags(GLbitfield, [
+    "GL_READ_FRAMEBUFFER",                      # 0x8CA8
+    "GL_DRAW_FRAMEBUFFER",                      # 0x8CA9
+])
+
 
 # GL_ARB_vertex_array_bgra
 size_bgra = FakeEnum(GLint, [
