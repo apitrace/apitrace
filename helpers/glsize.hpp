@@ -896,12 +896,26 @@ _gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsize
         image_height = height;
     }
 
-    /* XXX: GL_UNPACK_IMAGE_HEIGHT and GL_UNPACK_SKIP_IMAGES should probably
-     * not be considered for pixel rectangles. */
-
     size_t image_stride = image_height*row_stride;
 
-    size_t size = depth*image_stride;
+    /*
+     * We can't just do
+     *
+     *   size = depth*image_stride
+     *
+     * here as that could result in reading beyond the end of the buffer when
+     * selecting sub-rectangles via GL_UNPACK_SKIP_*.
+     */
+    size_t size = (width*bits_per_pixel + 7)/8;
+    if (height > 1) {
+        size += (height - 1)*row_stride;
+    }
+    if (depth > 1) {
+        size += (depth - 1)*image_stride;
+    }
+
+    /* XXX: GL_UNPACK_IMAGE_HEIGHT and GL_UNPACK_SKIP_IMAGES should probably
+     * not be considered for pixel rectangles. */
 
     size += (skip_pixels*bits_per_pixel + 7)/8;
     size += skip_rows*row_stride;
