@@ -892,20 +892,11 @@ _gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsize
         row_stride = _align(row_stride, alignment);
     }
 
-    if (image_height <= 0) {
-        image_height = height;
-    }
-
     /* XXX: GL_UNPACK_IMAGE_HEIGHT and GL_UNPACK_SKIP_IMAGES should probably
      * not be considered for pixel rectangles. */
 
-    size_t image_stride = image_height*row_stride;
-
-    size_t size = depth*image_stride;
-
-    size += (skip_pixels*bits_per_pixel + 7)/8;
-    size += skip_rows*row_stride;
-    size += skip_images*image_stride;
+    size_t size = skip_images * image_height * row_stride;
+    size += (skip_rows + height) * row_stride * depth;
 
     return size;
 }
