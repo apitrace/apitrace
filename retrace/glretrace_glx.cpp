@@ -150,13 +150,15 @@ static void retrace_glXMakeCurrent(trace::Call &call) {
 
 
 static void retrace_glXDestroyContext(trace::Call &call) {
-    Context *context = getContext(call.arg(1).toUIntPtr());
-
-    if (!context) {
+    ContextMap::iterator it;
+    it = context_map.find(call.arg(1).toUIntPtr());
+    if (it == context_map.end()) {
         return;
     }
 
-    delete context;
+    delete it->second;
+
+    context_map.erase(it);
 }
 
 static void retrace_glXCopySubBufferMESA(trace::Call &call) {
