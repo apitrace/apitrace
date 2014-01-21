@@ -323,11 +323,12 @@ def main():
                     numpyImages = True
                     assert refImage.shape == srcImage.shape
                     diffImage = numpy.square(srcImage - refImage)
-                    match = numpy.all(diffImage == 0)
-                    if match:
-                        precision = 24
-                    else:
-                        precision = 0
+
+                    height, width, channels = diffImage.shape
+                    square_error = numpy.sum(diffImage)
+                    rel_error = square_error / float(height*width*channels)
+                    bits = -math.log(rel_error)/math.log(2.0)
+                    precision = bits
 
                 mismatch = precision < options.threshold
 
