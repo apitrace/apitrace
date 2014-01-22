@@ -1,2 +1,3 @@
 backtrace-supported.h
 config.h
+libbacktrace.cbp
