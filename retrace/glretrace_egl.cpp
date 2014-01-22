@@ -53,7 +53,14 @@ static ContextMap context_map;
 static ProfileMap profile_map;
 
 static unsigned int current_api = EGL_OPENGL_ES_API;
-static glws::Profile last_profile = glws::PROFILE_COMPAT;
+
+/*
+ * FIXME: Ideally we would defer the context creation until the profile was
+ * clear, as explained in https://github.com/apitrace/apitrace/issues/197 ,
+ * instead of guessing.  For now, start with a guess of ES2 profile, which
+ * should be the most common case for EGL.
+ */
+static glws::Profile last_profile = glws::PROFILE_ES2;
 
 static void
 createDrawable(unsigned long long orig_config, unsigned long long orig_surface);
