@@ -42,48 +42,25 @@ using namespace std;
 namespace image {
 
 
-bool
-Image::writeMD5(const char *filename) const {
-    std::ofstream os(filename, std::ofstream::app);
-    if (!os) {
-        return false;
-    }
-    writeMD5(os);
-    return true;
-}
-
-
 void
 Image::writeMD5(std::ostream &os) const {
-    const unsigned char * image_start_buff;
-    const unsigned char * image_end_buff;
-
-    const char *hexfmt = "%02X";
-    unsigned char signature[16];
-    char buf[3] = {'\0'}, csig[33] = {'\0'};
     struct MD5Context md5c;
-
-    image_start_buff = start();
-    image_end_buff = end();
-    unsigned long lenth =  image_start_buff - image_end_buff;
-
-    unsigned char * buffer = (unsigned char *)malloc(lenth * sizeof(char));
-    for(int i = 0; i < height; i += 1){
-        memcpy(buffer + (-stride())*i, (unsigned char *)(image_start_buff + stride()*i), -stride());
-    }
-
     MD5Init(&md5c);
-    MD5Update(&md5c, buffer, lenth);
+    const unsigned char *row;
+    unsigned len = width*bytesPerPixel;
+    for (row = start(); row != end(); row += stride()) {
+        MD5Update(&md5c, (unsigned char *)row, len);
+    }
+    unsigned char signature[16];
     MD5Final(signature, &md5c);
+
+    char csig[33] = {'\0'};
     for(int i = 0; i < sizeof signature; i++){
-        sprintf(buf, hexfmt, signature[i]);
-        strcat(csig, buf);
+        snprintf(&csig[2*i], 3, "%02X", signature[i]);
     }
 
-    free(buffer);
-
-    os.write((const char *)csig, strlen(csig));
-    os.write("\n", strlen("\n"));
+    os << csig;
+    os << "\n";
 }
 
 
