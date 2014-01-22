@@ -201,15 +201,14 @@ createContext(const Visual *visual, Context *shareContext,
     const WaffleVisual *waffleVisual =
         static_cast<const WaffleVisual *>(visual);
 
-    if (shareContext != NULL) {
-        os::log("Error in %s createContext, shareContext != NULL\n", __FILE__);
-        os::abort();
-        return NULL;
+    struct waffle_context * share_context = NULL;
+    if (shareContext) {
+        share_context = static_cast<WaffleContext*>(shareContext)->context;
     }
 
-    context = waffle_context_create(waffleVisual->config, NULL);
+    context = waffle_context_create(waffleVisual->config, share_context);
     if (!context) {
-        os::log("Error in %s waffle_context_create(config, NULL)\n",
+        os::log("Error in %s waffle_context_create()\n",
                __FILE__);
 
         os::abort();
