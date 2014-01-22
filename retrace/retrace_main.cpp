@@ -122,13 +122,20 @@ takeSnapshot(unsigned call_no) {
             char comment[21];
             snprintf(comment, sizeof comment, "%u",
                      useCallNos ? call_no : snapshot_no);
-            if (snapshotFormat == RAW_RGB)
-                src->writeRAW(std::cout);
-            else
+            switch (snapshotFormat) {
+            case PNM_FMT:
                 src->writePNM(std::cout, comment);
-        } else if (snapshotFormat == RAW_MD5) {
-            os::String filename = snapshotPrefix;
-            src->writeMD5(filename);
+                break;
+            case RAW_RGB:
+                src->writeRAW(std::cout);
+                break;
+            case RAW_MD5:
+                src->writeMD5(std::cout);
+                break;
+            default:
+                assert(0);
+                break;
+            }
         } else {
             os::String filename = os::String::format("%s%010u.png",
                                                      snapshotPrefix,
