@@ -32,6 +32,7 @@ CMakeFiles
 CMakeLists.txt.user
 Makefile
 apitrace
+apitrace.cbp
 build
 dxsdk
 eglretrace
