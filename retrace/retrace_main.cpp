@@ -566,7 +566,7 @@ usage(const char *argv0) {
         "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
         "      --sb                use a single buffer visual\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
-        "      --snapshot-format=FMT       use (PNM or RGB; default is PNM) when writing to stdout output\n"
+        "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
