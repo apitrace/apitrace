@@ -279,6 +279,10 @@ if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
     add_definitions (-DHAVE_BACKTRACE=1)
 endif ()
 
+add_subdirectory (thirdparty/md5)
+set (MD5_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/md5)
+set (MD5_LIBRARIES md5_bundled)
+
 # Always use bundled QJSon.
 # - The packaged versions QJson are very old, and do not support NaN/Infinity.
 # - To make it easier to build the GUI on Windows and MacOSX, as there are no
