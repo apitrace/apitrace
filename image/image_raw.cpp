@@ -46,7 +46,7 @@ Image::writeRAW(std::ostream &os) const
     const unsigned char *row;
 
     for (row = start(); row != end(); row += stride()) {
-        os.write((const char *)row, width*channels*bytesPerPixel);
+        os.write((const char *)row, width*bytesPerPixel);
     }
 }
 
