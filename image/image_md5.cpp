@@ -26,11 +26,6 @@
 
 
 #include <fstream>
-#include <stdlib.h>
-#include <stdio.h>
-#include <assert.h>
-#include <stdint.h>
-#include <string.h>
 #include "image.hpp"
 
 extern "C" {
@@ -54,10 +49,13 @@ Image::writeMD5(std::ostream &os) const {
     unsigned char signature[16];
     MD5Final(signature, &md5c);
 
-    char csig[33] = {'\0'};
+    const char hex[] = "0123456789ABCDEF";
+    char csig[33];
     for(int i = 0; i < sizeof signature; i++){
-        snprintf(&csig[2*i], 3, "%02X", signature[i]);
+        csig[2*i    ] = hex[signature[i] >> 4];
+        csig[2*i + 1] = hex[signature[i] & 0xf];
     }
+    csig[33] = '\0';
 
     os << csig;
     os << "\n";
