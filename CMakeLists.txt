@@ -298,6 +298,11 @@ endif ()
 # also avoids missing/inconsistent declarations in system headers.
 include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
+# md5 implementation be added to the thirdparty tree
+set (MD5_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/md5)
+set (MD5_LIBRARIES md5_bundled)
+
+add_subdirectory (thirdparty/md5)
 
 ##############################################################################
 # Common libraries / utilities

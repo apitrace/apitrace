@@ -50,7 +50,8 @@ static bool loopOnFinish = false;
 static const char *snapshotPrefix = NULL;
 static enum {
     PNM_FMT,
-    RAW_RGB
+    RAW_RGB,
+    RAW_MD5
 } snapshotFormat = PNM_FMT;
 
 static trace::CallSet snapshotFrequency;
@@ -126,12 +127,18 @@ takeSnapshot(unsigned call_no) {
             else
                 src->writePNM(std::cout, comment);
         } else {
-            os::String filename = os::String::format("%s%010u.png",
-                                                     snapshotPrefix,
-                                                     useCallNos ? call_no : snapshot_no);
-            if (src->writePNG(filename) && retrace::verbosity >= 0) {
-                std::cout << "Wrote " << filename << "\n";
-            }
+            if (snapshotFormat == RAW_MD5) {
+		  os::String  filename = snapshotPrefix;
+		   src->writeMD5(filename);
+		}
+	    else
+               {   os::String filename = os::String::format("%s%010u.png",
+                                                            snapshotPrefix,
+                                                            useCallNos ? call_no : snapshot_no);
+                   if (src->writePNG(filename) && retrace::verbosity >= 0) {
+                         std::cout << "Wrote " << filename << "\n";
+                           }
+		}
         }
     }
 
@@ -707,7 +714,9 @@ int main(int argc, char **argv)
 	case SNAPSHOT_FORMAT_OPT:
             if (strcmp(optarg, "RGB") == 0)
                 snapshotFormat = RAW_RGB;
-            else
+            else if (strcmp(optarg, "MD5") == 0)
+		snapshotFormat = RAW_MD5; 
+            else 
                 snapshotFormat = PNM_FMT;
             break;
         case 'S':

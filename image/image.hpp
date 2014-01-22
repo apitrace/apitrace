@@ -108,6 +108,12 @@ public:
     bool
     writePNM(const char *filename, const char *comment = NULL) const;
 
+    void
+    writeMD5(std::ostream &os) const;
+
+    bool
+    writeMD5(const char *filename) const;
+
     bool
     writePNG(std::ostream &os) const;
 
