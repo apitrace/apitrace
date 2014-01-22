@@ -1,4 +1,3 @@
-*.moc
 qapitrace.qrc.depends
 qrc_qapitrace.cxx
 ui_*.h
