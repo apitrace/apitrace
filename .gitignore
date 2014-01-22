@@ -4,6 +4,7 @@
 *.a
 *.bmp
 *.bz2
+*.cbp
 *.cmake
 *.dll
 *.dmg
@@ -28,6 +29,7 @@
 _CPack_Packages
 CMakeCache.txt
 CMakeFiles
+CMakeLists.txt.user
 Makefile
 apitrace
 build
