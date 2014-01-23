@@ -1,6 +1,8 @@
 #include "settingsdialog.h"
 
 #include <QMessageBox>
+#include <QPushButton>
+#include <QDebug>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent),
@@ -29,6 +31,11 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
     showFilterCB->setCurrentIndex(0);
     showFilterEdit->setText(m_showFilters.constBegin().value().pattern());
+
+    // Connect Apply button from ButtonBox
+    QPushButton* applyButton = buttonBox->button(QDialogButtonBox::Apply);
+    Q_ASSERT (applyButton != NULL);
+    connect(applyButton, SIGNAL(clicked()), this, SLOT(apply()));
 }
 
 void SettingsDialog::filtersFromModel(const ApiTraceFilter *model)
@@ -98,6 +105,12 @@ void SettingsDialog::filtersToModel(ApiTraceFilter *model)
 
 void SettingsDialog::accept()
 {
+    settingsUpdate();
+    QDialog::accept();
+}
+
+void SettingsDialog::settingsUpdate()
+{
     if (showFilterBox->isChecked()) {
         QRegExp regexp(showFilterEdit->text());
         if (!regexp.isValid()) {
@@ -121,7 +134,11 @@ void SettingsDialog::accept()
         }
     }
     filtersToModel(m_filter);
-    QDialog::accept();
+}
+
+void SettingsDialog::apply()
+{
+    settingsUpdate();
 }
 
 void SettingsDialog::changeRegexp(const QString &name)
