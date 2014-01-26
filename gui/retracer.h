@@ -34,6 +34,9 @@ public:
     bool isSinglethread() const;
     void setSinglethread(bool singlethread);
 
+    bool isCoreProfile() const;
+    void setCoreProfile(bool coreprofile);
+
     bool isProfilingGpu() const;
     bool isProfilingCpu() const;
     bool isProfilingPixels() const;
@@ -67,6 +70,7 @@ private:
     bool m_benchmarking;
     bool m_doubleBuffered;
     bool m_singlethread;
+    bool m_useCoreProfile;
     bool m_captureState;
     bool m_captureThumbnails;
     qlonglong m_captureCall;

@@ -195,6 +195,16 @@ void Retracer::setSinglethread(bool singlethread)
     m_singlethread = singlethread;
 }
 
+bool Retracer::isCoreProfile() const
+{
+    return m_useCoreProfile;
+}
+
+void Retracer::setCoreProfile(bool coreprofile)
+{
+    m_useCoreProfile = coreprofile;
+}
+
 bool Retracer::isProfilingGpu() const
 {
     return m_profileGpu;
@@ -294,6 +304,10 @@ void Retracer::run()
 
     if (m_singlethread) {
         arguments << QLatin1String("--singlethread");
+    }
+
+    if (m_useCoreProfile) {
+        arguments << QLatin1String("--core");
     }
 
     if (m_captureState) {
