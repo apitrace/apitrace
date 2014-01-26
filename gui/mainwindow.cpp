@@ -199,6 +199,9 @@ void MainWindow::replayStart()
     dlgUi.singlethreadCB->setChecked(
         m_retracer->isSinglethread());
 
+    dlgUi.coreProfileCB->setChecked(
+        m_retracer->isCoreProfile());
+
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setDoubleBuffered(
             dlgUi.doubleBufferingCB->isChecked());
@@ -208,6 +211,9 @@ void MainWindow::replayStart()
 
         m_retracer->setSinglethread(
             dlgUi.singlethreadCB->isChecked());
+
+        m_retracer->setCoreProfile(
+            dlgUi.coreProfileCB->isChecked());
 
         m_retracer->setProfiling(false, false, false);
 
@@ -479,7 +485,7 @@ variantListToItems(const QVector<QVariant> &lst,
         QString key = QString::number(i);
         QVariant var = lst[i];
         QVariant defaultVar;
-        
+
         if (i < defaultLst.count()) {
             defaultVar = defaultLst[i];
         }
