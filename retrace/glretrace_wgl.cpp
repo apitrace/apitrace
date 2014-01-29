@@ -75,8 +75,17 @@ static void retrace_wglDeleteContext(trace::Call &call) {
 }
 
 static void retrace_wglMakeCurrent(trace::Call &call) {
-    glws::Drawable *new_drawable = getDrawable(call.arg(0).toUIntPtr());
-    Context *new_context = context_map[call.arg(1).toUIntPtr()];
+    bool ret = call.ret->toBool();
+
+    glws::Drawable *new_drawable = NULL;
+    Context *new_context = NULL;
+    if (ret) {
+        unsigned long long hglrc = call.arg(1).toUIntPtr();
+        if (hglrc) {
+            new_drawable = getDrawable(call.arg(0).toUIntPtr());
+            new_context = context_map[hglrc];
+        }
+    }
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
