@@ -208,7 +208,17 @@ class GlRetracer(Retracer):
                 print '        }'
             
             print '    }'
-
+            
+        if is_array_pointer:
+            print '    GLint bRemoveVBO = false, uPrevVBO = 0;'
+            print '    GLuint optr = (GLuint)retrace::toPointer(call.arg(call.args.size()-1),false);'
+            print '    if(optr){'
+            print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &uPrevVBO);'
+            print '        if(uPrevVBO){ bRemoveVBO = true;  glBindBuffer(GL_ARRAY_BUFFER,0);' 
+            #print '          std::cout << "glretrace: temporarily unbinding VBO for glXYZPointer\\n";
+            print '        }'
+            print '    }'
+            
         # When no pack buffer object is bound, the pack functions are no-ops.
         if function.name in self.pack_function_names:
             print '    GLint _pack_buffer = 0;'
@@ -227,6 +237,10 @@ class GlRetracer(Retracer):
             return
 
         Retracer.retraceFunctionBody(self, function)
+        
+        if is_array_pointer:
+            print '    if(bRemoveVBO) glBindBuffer(GL_ARRAY_BUFFER,uPrevVBO);'
+            
 
         # Post-snapshots
         if function.name in ('glFlush', 'glFinish'):

@@ -56,7 +56,7 @@ intersects(RegionMap::iterator &it, unsigned long long start, unsigned long long
     unsigned long it_start = it->first;
     unsigned long it_stop  = it->first + it->second.size;
     unsigned long stop = start + size;
-    return it_start < stop && start < it_stop;
+    return it_start <= stop && start < it_stop;
 }
 
 

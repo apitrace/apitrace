@@ -69,7 +69,16 @@ Blob::~Blob() {
     // trace in question has been fully processed.
     if (!bound) {
         delete [] buf;
+        return;
     }
+
+    static char* BlobsHistory[8192]={0};
+	static int   BlobsHistoryIdx=0;
+
+	if(BlobsHistory[BlobsHistoryIdx]) delete[] BlobsHistory[BlobsHistoryIdx];
+	BlobsHistory[BlobsHistoryIdx] = buf;
+	BlobsHistoryIdx++;
+	BlobsHistoryIdx &= 8191;
 }
 
 StackFrame::~StackFrame() {

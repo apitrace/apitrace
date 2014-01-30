@@ -316,7 +316,7 @@ class Blob : public Value
 public:
     Blob(size_t _size) {
         size = _size;
-        buf = new char[_size];
+        buf = new char[_size + 4096];
         bound = false;
     }
 

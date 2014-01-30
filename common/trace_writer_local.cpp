@@ -157,6 +157,11 @@ unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
     mutex.lock();
     ++acquired;
 
+    if(!m_file){
+        m_file = File::createSnappy();
+        close();
+    }
+
     checkProcessId();
     if (!m_file->isOpened()) {
         open();
