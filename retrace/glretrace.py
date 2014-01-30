@@ -212,7 +212,7 @@ class GlRetracer(Retracer):
         if is_array_pointer:
             print '    GLint bRemoveVBO = false, uPrevVBO = 0;'
             print '    GLuint optr = (GLuint)retrace::toPointer(call.arg(call.args.size()-1),false);'
-            print '    if(optr){'
+            print '    if(optr>16*1024*1024){'
             print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &uPrevVBO);'
             print '        if(uPrevVBO){ bRemoveVBO = true;  glBindBuffer(GL_ARRAY_BUFFER,0);' 
             #print '          std::cout << "glretrace: temporarily unbinding VBO for glXYZPointer\\n";
