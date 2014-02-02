@@ -312,6 +312,7 @@ initContext() {
     /* Setup debug message call back */
     if (retrace::debug && supportsDebugOutput) {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
+        glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
         glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
 
         if (DEBUG_OUTPUT_SYNCHRONOUS) {
