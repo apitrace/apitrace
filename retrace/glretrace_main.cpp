@@ -414,8 +414,24 @@ getDebugOutputSeverity(GLenum severity) {
     }
 }
 
+
+// Limit the low severity messages
+static long int maxLowSeverityMessages = 1000;
+
 static void APIENTRY
 debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+
+    if (severity == GL_DEBUG_SEVERITY_LOW_ARB &&
+        --maxLowSeverityMessages <= 0) {
+        if (maxLowSeverityMessages == 0) {
+            std::cerr << retrace::callNo << ": ";
+            std::cerr << "glDebugOutputCallback: ";
+            std::cerr << "too many low severity messages";
+            std::cerr << std::endl;
+        }
+        return;
+    }
+
     std::cerr << retrace::callNo << ": ";
     std::cerr << "glDebugOutputCallback: ";
     std::cerr << getDebugOutputSeverity(severity) << " severity ";
