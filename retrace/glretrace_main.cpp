@@ -395,6 +395,7 @@ getDebugOutputType(GLenum type) {
     case GL_DEBUG_TYPE_PERFORMANCE_ARB:
         return "performance issue";
     case GL_DEBUG_TYPE_OTHER_ARB:
+        return "other issue";
     default:
         return "unknown issue";
     }
@@ -420,6 +421,15 @@ static long int maxLowSeverityMessages = 1000;
 
 static void APIENTRY
 debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+
+    /* Ignore NVIDIA's "Buffer detailed info:" messages, as they seem to be
+     * purely informative, and high frequency. */
+    if (source == GL_DEBUG_SOURCE_API_ARB &&
+        type == GL_DEBUG_TYPE_OTHER_ARB &&
+        severity == GL_DEBUG_SEVERITY_LOW_ARB &&
+        id == 131185) {
+        return;
+    }
 
     if (severity == GL_DEBUG_SEVERITY_LOW_ARB &&
         --maxLowSeverityMessages <= 0) {
