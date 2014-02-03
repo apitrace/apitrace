@@ -287,6 +287,7 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         attribs.add(GLX_DEPTH_SIZE, 1);
         attribs.add(GLX_STENCIL_SIZE, 1);
         if (samples > 1) {
+            attribs.add(GLX_SAMPLE_BUFFERS, 1);
             attribs.add(GLX_SAMPLES_ARB, samples);
         }
         attribs.end();
@@ -312,6 +313,7 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         attribs.add(GLX_DEPTH_SIZE, 1);
         attribs.add(GLX_STENCIL_SIZE, 1);
         if (samples > 1) {
+            attribs.add(GLX_SAMPLE_BUFFERS, 1);
             attribs.add(GLX_SAMPLES_ARB, samples);
         }
         attribs.end();
