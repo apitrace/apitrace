@@ -944,6 +944,15 @@ class GlTracer(Tracer):
         print 'static void _trace_user_arrays(GLuint count)'
         print '{'
         print '    gltrace::Context *ctx = gltrace::getContext();'
+        print
+
+        # Temporarily unbind the array buffer
+        print '    GLint _array_buffer = 0;'
+        print '    _glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &_array_buffer);'
+        print '    if (_array_buffer) {'
+        self.fake_glBindBuffer(api, 'GL_ARRAY_BUFFER', '0')
+        print '    }'
+        print
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
@@ -1074,6 +1083,12 @@ class GlTracer(Tracer):
             print '    }'
             print
 
+        # Restore the original array_buffer
+        print '    if (_array_buffer) {'
+        self.fake_glBindBuffer(api, 'GL_ARRAY_BUFFER', '_array_buffer')
+        print '    }'
+        print
+
         print '}'
         print
 
@@ -1120,6 +1135,10 @@ class GlTracer(Tracer):
             print '    if (client_active_texture_dirty) {'
             self.fake_glClientActiveTexture_call(api, "client_active_texture");
             print '    }'
+
+    def fake_glBindBuffer(self, api, target, buffer):
+        function = api.getFunctionByName('glBindBuffer')
+        self.fake_call(function, [target, buffer])
 
     def fake_glClientActiveTexture_call(self, api, texture):
         function = api.getFunctionByName('glClientActiveTexture')
