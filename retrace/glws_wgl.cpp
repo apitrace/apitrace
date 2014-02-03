@@ -90,11 +90,107 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
+static const DWORD dwExStyle = 0;
+static const DWORD dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
+
+
+struct WindowThreadParam
+{
+    int nWidth;
+    int nHeight;
+
+    HANDLE hEvent;
+
+    HWND hWnd;
+};
+
+
+static DWORD WINAPI
+windowThreadFunction( LPVOID _lpParam )
+{
+    WindowThreadParam *lpParam = (WindowThreadParam *)_lpParam;
+
+    // Actually create the window
+    lpParam->hWnd = CreateWindowEx(dwExStyle,
+                                   "glretrace", /* wc.lpszClassName */
+                                   NULL,
+                                   dwStyle,
+                                   0, /* x */
+                                   0, /* y */
+                                   lpParam->nWidth,
+                                   lpParam->nHeight,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+
+    // Notify parent thread that window has been created
+    SetEvent(lpParam->hEvent);
+
+    BOOL bRet;
+    MSG msg;
+    while ((bRet = GetMessage(&msg, NULL, 0, 0 )) != FALSE) {
+        if (bRet == -1) {
+            // handle the error and possibly exit
+        } else {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    // Return the exit code
+    return msg.wParam;
+}
+
+
+/**
+ * Create a window on a separate thread.
+ *
+ * Each window is associated with one thread, which must process its events,
+ * and certain operations like SetWindowPos will block until the message is
+ * process, so the only way to guarantee that the window messages are processed
+ * timely is by dedicating a thread to processing window events.
+ *
+ * TODO: Handle multiple windows on a single thread, instead of creating one
+ * thread per each window.
+ */
+static HWND
+createWindow(int nWidth, int nHeight)
+{
+    // Create window class
+    static bool first = TRUE;
+    if (first) {
+        WNDCLASS wc;
+        memset(&wc, 0, sizeof wc);
+        wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
+        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+        wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+        wc.lpfnWndProc = WndProc;
+        wc.lpszClassName = "glretrace";
+        wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+        RegisterClass(&wc);
+        first = FALSE;
+    }
+
+    // Spawn window thread
+    WindowThreadParam param;
+    param.nWidth = nWidth;
+    param.nHeight = nHeight;
+    param.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    DWORD dwThreadId = 0;
+    CreateThread(NULL, 0, &windowThreadFunction, (LPVOID)&param, 0, &dwThreadId);
+
+    // Wait for window creation event
+    WaitForSingleObject(param.hEvent, INFINITE);
+    CloseHandle(param.hEvent);
+
+    return param.hWnd;
+}
+
+
 class WglDrawable : public Drawable
 {
 public:
-    DWORD dwExStyle;
-    DWORD dwStyle;
     HWND hWnd;
     HDC hDC;
     PIXELFORMATDESCRIPTOR pfd;
@@ -103,27 +199,9 @@ public:
     WglDrawable(const Visual *vis, int width, int height, bool pbuffer) :
         Drawable(vis, width, height, pbuffer)
     {
-        static bool first = TRUE;
+        int x = 0, y = 0;
         RECT rect;
         BOOL bRet;
-
-        if (first) {
-            WNDCLASS wc;
-            memset(&wc, 0, sizeof wc);
-            wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
-            wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-            wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-            wc.lpfnWndProc = WndProc;
-            wc.lpszClassName = "glretrace";
-            wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-            RegisterClass(&wc);
-            first = FALSE;
-        }
-
-        dwExStyle = 0;
-        dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW;
-
-        int x = 0, y = 0;
 
         rect.left = x;
         rect.top = y;
@@ -132,18 +210,9 @@ public:
 
         AdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
 
-        hWnd = CreateWindowEx(dwExStyle,
-                              "glretrace", /* wc.lpszClassName */
-                              NULL,
-                              dwStyle,
-                              0, /* x */
-                              0, /* y */
-                              rect.right - rect.left, /* width */
-                              rect.bottom - rect.top, /* height */
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL);
+        hWnd = createWindow(rect.right  - rect.left,
+                            rect.bottom - rect.top);
+
         hDC = GetDC(hWnd);
    
         memset(&pfd, 0, sizeof pfd);
@@ -195,7 +264,13 @@ public:
         GetWindowRect(hWnd, &rWindow);
         w += (rWindow.right  - rWindow.left) - rClient.right;
         h += (rWindow.bottom - rWindow.top)  - rClient.bottom;
-        SetWindowPos(hWnd, NULL, rWindow.left, rWindow.top, w, h, SWP_NOMOVE);
+
+        UINT uFlags = SWP_NOMOVE
+                    | SWP_NOZORDER
+                    | SWP_NOACTIVATE
+                    | SWP_NOOWNERZORDER;
+
+        SetWindowPos(hWnd, NULL, rWindow.left, rWindow.top, w, h, uFlags);
     }
 
     void show(void) {
@@ -213,14 +288,6 @@ public:
         bRet = pfnSwapBuffers(hDC);
         if (!bRet) {
             std::cerr << "warning: SwapBuffers failed\n";
-        }
-
-        // Drain message queue to prevent window from being considered
-        // non-responsive
-        MSG msg;
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
         }
     }
 };
