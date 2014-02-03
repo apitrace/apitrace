@@ -245,25 +245,57 @@ class GlTracer(Tracer):
         # Buffer mapping information, necessary for old Mesa 2.1 drivers which
         # do not support glGetBufferParameteriv(GL_BUFFER_ACCESS_FLAGS/GL_BUFFER_MAP_LENGTH)
         print 'struct buffer_mapping {'
+        print '    GLuint hBuffer;'
         print '    void *map;'
         print '    GLint length;'
         print '    bool write;'
         print '    bool explicit_flush;'
+        print '    struct buffer_mapping* next;'
         print '};'
         print
         for target in self.buffer_targets:
             print 'struct buffer_mapping _%s_mapping;' % target.lower();
         print
         print 'static inline struct buffer_mapping *'
-        print 'get_buffer_mapping(GLenum target) {'
+        print 'get_buffer_mapping(GLenum target,  bool bNew, bool bDelete) {'
+        print 'struct buffer_mapping *base,*cur;'
+        print 'GLuint bt = 0; // binding-type'
+        print 'GLuint hBuffer = 0;'
         print '    switch (target) {'
         for target in self.buffer_targets:
             print '    case GL_%s:' % target
-            print '        return & _%s_mapping;' % target.lower()
+            print '        bt = GL_%s_BINDING;' % target 
+            print '        base = & _%s_mapping; break;' % target.lower()
         print '    default:'
         print '        os::log("apitrace: warning: unknown buffer target 0x%04X\\n", target);'
         print '        return NULL;'
         print '    }'
+        print '    glGetIntegerv(bt,(GLint*)&hBuffer);'
+        print '    if(!bt){'
+        print '    	os::log("apitrace: warning: unknown buffer object for target 0x%04X\\n", target);'
+        print '    	return base;'
+        print '    }'
+        print '    '
+        print '    GLuint uSearch = hBuffer;'
+        print '    if(bNew) uSearch = 0;'
+        print '    for(cur = base; cur; cur = cur->next){'
+        print '    	if(cur->hBuffer == uSearch) break;'
+        print '    }'
+        print '    if(!cur && bNew){'
+        print '    	cur = new struct buffer_mapping;'
+        print '    	memset(cur,0,sizeof(*cur));'
+        print '    	cur->next = base->next;'
+        print '    	base->next = cur;' 
+        print '    }'
+        print '    '
+        print '    if(bNew){'
+        print '    	cur->hBuffer = hBuffer;'
+        print '    }else if(bDelete){'
+        print '    	cur->hBuffer = 0;'
+        print '    }'
+    
+    
+        print '    return cur;'
         print '}'
         print
 
@@ -583,7 +615,7 @@ class GlTracer(Tracer):
             print '                        os::log("apitrace: warning: glGetBufferParameteriv%s(GL_BUFFER_MAP_LENGTH) failed\\n");' % suffix
             print '                        warned = true;'
             print '                    }'
-            print '                    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '                    struct buffer_mapping *mapping = get_buffer_mapping(target,false,true);'
             print '                    if (mapping) {'
             print '                        length = mapping->length;'
             print '                        flush = flush && !mapping->explicit_flush;'
@@ -808,7 +840,7 @@ class GlTracer(Tracer):
 
         # Keep track of buffer mappings
         if function.name in ('glMapBuffer', 'glMapBufferARB'):
-            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '    struct buffer_mapping *mapping = get_buffer_mapping(target,true,false);'
             print '    if (mapping) {'
             print '        mapping->map = %s;' % (instance)
             print '        mapping->length = 0;'
@@ -817,10 +849,11 @@ class GlTracer(Tracer):
             print '        mapping->explicit_flush = false;'
             print '    }'
         if function.name == 'glMapBufferRange':
-            print '    if (access & GL_MAP_WRITE_BIT) {'
+            # print '    if (access & GL_MAP_WRITE_BIT) {'
+            print '    {'
             print '        _checkBufferMapRange = true;'
             print '    }'
-            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
+            print '    struct buffer_mapping *mapping = get_buffer_mapping(target,true,false);'
             print '    if (mapping) {'
             print '        mapping->map = %s;' % (instance)
             print '        mapping->length = length;'
@@ -854,6 +887,9 @@ class GlTracer(Tracer):
         'glCompressedTexSubImage1D',
         'glCompressedTexSubImage2D',
         'glCompressedTexSubImage3D',
+        'glCompressedTexSubImage1DARB',
+        'glCompressedTexSubImage2DARB',
+        'glCompressedTexSubImage3DARB',
         'glCompressedTextureImage1DEXT',
         'glCompressedTextureImage2DEXT',
         'glCompressedTextureImage3DEXT',

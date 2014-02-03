@@ -42,25 +42,29 @@ namespace trace {
 Writer::Writer() :
     call_no(0)
 {
-    m_file = File::createSnappy();
-    close();
+    m_file = NULL;
 }
 
 Writer::~Writer()
 {
     close();
-    delete m_file;
+    if(m_file) delete m_file;
     m_file = NULL;
 }
 
 void
 Writer::close(void) {
-    m_file->close();
+    if(m_file) m_file->close();
 }
 
 bool
 Writer::open(const char *filename) {
     close();
+
+    if(!m_file){
+        m_file = File::createSnappy();
+        close();
+    }
 
     if (!m_file->open(filename, File::Write)) {
         return false;

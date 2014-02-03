@@ -109,8 +109,11 @@ class Dispatcher:
         print '    }'
 
     def failFunction(self, function):
+    	print '				static bool unavail=false;'
+    	print r'           	if(!unavail) os::log("warning: ignoring ALL CALLS to unavailable function %s\n", _name);'
+    	print '				unavail=true;'
+    	
         if function.type is stdapi.Void or function.fail is not None:
-            print r'            os::log("warning: ignoring call to unavailable function %s\n", _name);'
             if function.type is stdapi.Void:
                 assert function.fail is None
                 print '            return;' 
@@ -118,7 +121,6 @@ class Dispatcher:
                 assert function.fail is not None
                 print '            return %s;' % function.fail
         else:
-            print r'            os::log("error: unavailable function %s\n", _name);'
-            print r'            os::abort();'
+            print r'            return (%s)0;' % function.type
 
 
