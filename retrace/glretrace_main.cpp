@@ -410,7 +410,7 @@ getDebugOutputSeverity(GLenum severity) {
     case GL_DEBUG_SEVERITY_LOW_ARB:
         return "Low";
     default:
-        return "usnknown";
+        return "Unknown";
     }
 }
 
