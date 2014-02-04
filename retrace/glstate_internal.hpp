@@ -43,6 +43,7 @@ struct Context
     bool ARB_draw_buffers;
     bool ARB_sampler_objects;
     bool KHR_debug;
+    bool EXT_debug_label;
 
     Context(void);
 

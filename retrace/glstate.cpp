@@ -82,6 +82,8 @@ Context::Context(void) {
                        ARB_sampler_objects = true;
                    } else if (strcmp(extension, "GL_KHR_debug") == 0) {
                        KHR_debug = true;
+                   } else if (strcmp(extension, "GL_EXT_debug_label") == 0) {
+                       EXT_debug_label = true;
                    }
                }
             }
@@ -89,10 +91,12 @@ Context::Context(void) {
             const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
             ARB_sampler_objects = glws::checkExtension("GL_ARB_sampler_objects", extensions);
             KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
+            EXT_debug_label = glws::checkExtension("GL_EXT_debug_label", extensions);
         }
     } else {
         const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
         KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
+        EXT_debug_label = glws::checkExtension("GL_EXT_debug_label", extensions);
     }
 }
 
@@ -153,7 +157,7 @@ Context::restorePixelPackState(void) {
 
 
 /**
- * Dump a GL_KHR_debug object label.
+ * Dump a GL_KHR_debug /GL_EXT_debug_label object label.
  */
 void
 dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member)
@@ -162,46 +166,67 @@ dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint na
         return;
     }
 
-    if (!context.KHR_debug) {
+    if (context.KHR_debug) {
+        GLsizei length = 0;
+        /*
+         * XXX: According to
+         * http://www.khronos.org/registry/gles/extensions/KHR/debug.txt
+         * description of glGetObjectLabel:
+         *
+         *   "If <label> is NULL and <length> is non-NULL then no string will
+         *   be returned and the length of the label will be returned in
+         *   <length>."
+         *
+         * However NVIDIA 319.60 drivers return a zero length in such
+         * circumstances.  310.14 drivers worked fine though.  So, just rely on
+         * GL_MAX_LABEL_LENGTH instead, which might waste a bit of memory, but
+         * should work reliably everywhere.
+         */
+        if (0) {
+            glGetObjectLabel(identifier, name, 0, &length, NULL);
+        } else {
+            glGetIntegerv(GL_MAX_LABEL_LENGTH, &length);
+        }
+        if (!length) {
+            return;
+        }
+
+        char *label = (char *)calloc(length + 1, 1);
+        if (!label) {
+            return;
+        }
+
+        glGetObjectLabel(identifier, name, length + 1, NULL, label);
+
+        if (label[0] != '\0') {
+            json.writeStringMember(member, label);
+        }
+
+        free(label);
         return;
     }
 
-    GLsizei length = 0;
-    /*
-     * XXX: According to
-     * http://www.khronos.org/registry/gles/extensions/KHR/debug.txt
-     * description of glGetObjectLabel:
-     *
-     *   "If <label> is NULL and <length> is non-NULL then no string will
-     *   be returned and the length of the label will be returned in
-     *   <length>."
-     *
-     * However NVIDIA 319.60 drivers return a zero length in such
-     * circumstances.  310.14 drivers worked fine though.  So, just rely on
-     * GL_MAX_LABEL_LENGTH instead, which might waste a bit of memory, but
-     * should work reliably everywhere.
-     */
-    if (0) {
-        glGetObjectLabel(identifier, name, 0, &length, NULL);
-    } else {
-        glGetIntegerv(GL_MAX_LABEL_LENGTH, &length);
-    }
-    if (!length) {
+    if (context.EXT_debug_label) {
+        GLsizei length = 0;
+        glGetObjectLabelEXT(identifier, name, 0, &length, NULL);
+        if (!length) {
+            return;
+        }
+
+        char *label = (char *)calloc(length + 1, 1);
+        if (!label) {
+            return;
+        }
+
+        glGetObjectLabelEXT(identifier, name, length + 1, NULL, label);
+
+        if (label[0] != '\0') {
+            json.writeStringMember(member, label);
+        }
+
+        free(label);
         return;
     }
-
-    char *label = (char *)calloc(length + 1, 1);
-    if (!label) {
-        return;
-    }
-
-    glGetObjectLabel(identifier, name, length + 1, NULL, label);
-
-    if (label[0] != '\0') {
-        json.writeStringMember(member, label);
-    }
-
-    free(label);
 }
 
 
