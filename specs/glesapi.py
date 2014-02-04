@@ -206,15 +206,6 @@ glesapi.addFunctions([
     # GL_NV_read_buffer
     GlFunction(Void, "glReadBufferNV", [(GLenum, "mode")]),
 
-    # GL_EXT_debug_label
-    GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "length"), (GLstringConst, "label")]),
-    GlFunction(Void, "glGetObjectLabelEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(GLstring, "label")], sideeffects=False),
-
-    # GL_EXT_debug_marker
-    GlFunction(Void, "glInsertEventMarkerEXT", [(GLsizei, "length"), (String(Const(GLchar), "length ? length : strlen(marker)"), "marker")], sideeffects=False),
-    GlFunction(Void, "glPushGroupMarkerEXT", [(GLsizei, "length"), (String(Const(GLchar), "length ? length : strlen(marker)"), "marker")], sideeffects=False),
-    GlFunction(Void, "glPopGroupMarkerEXT", [], sideeffects=False),
-
     # GL_EXT_occlusion_query_boolean
     GlFunction(Void, "glGenQueriesEXT", [(GLsizei, "n"), Out(Array(GLquery, "n"), "ids")]),
     GlFunction(Void, "glDeleteQueriesEXT", [(GLsizei, "n"), (Array(Const(GLquery), "n"), "ids")]),

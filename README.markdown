@@ -234,6 +234,10 @@ through the following extensions:
 
 * [`GL_ARB_debug_output`](http://www.opengl.org/registry/specs/ARB/debug_output.txt)
 
+* [`GL_EXT_debug_marker`](http://www.khronos.org/registry/gles/extensions/EXT/EXT_debug_marker.txt)
+
+* [`GL_EXT_debug_label`](http://www.opengl.org/registry/specs/EXT/EXT_debug_label.txt)
+
 * [`GL_AMD_debug_output`](http://www.opengl.org/registry/specs/AMD/debug_output.txt)
 
 * [`GL_GREMEDY_string_marker`](http://www.opengl.org/registry/specs/GREMEDY/string_marker.txt)
