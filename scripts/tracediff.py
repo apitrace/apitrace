@@ -66,14 +66,14 @@ class Differ:
 
 class AsciiDumper:
 
-    def __init__(self, apitrace, trace, calls):
+    def __init__(self, apitrace, trace, calls, callNos):
         self.output = tempfile.NamedTemporaryFile()
 
         dump_args = [
             apitrace,
             'dump',
             '--color=never',
-            '--call-nos=no',
+            '--call-nos=' + ('yes' if callNos else 'no'),
             '--arg-names=no',
             '--calls=' + calls,
             trace
@@ -99,7 +99,7 @@ class ExternalDiffer(Differ):
         start_insert = '\33[32m'
         end_insert   = '\33[0m'
 
-    def __init__(self, apitrace, tool, width=None):
+    def __init__(self, apitrace, tool, width=None, callNos = False):
         Differ.__init__(self, apitrace)
         self.diff_args = [tool]
         if tool == 'diff':
@@ -134,12 +134,13 @@ class ExternalDiffer(Differ):
                 ]
         else:
             assert False
+        self.callNos = callNos
 
     def setRefTrace(self, ref_trace, ref_calls):
-        self.ref_dumper = AsciiDumper(self.apitrace, ref_trace, ref_calls)
+        self.ref_dumper = AsciiDumper(self.apitrace, ref_trace, ref_calls, self.callNos)
 
     def setSrcTrace(self, src_trace, src_calls):
-        self.src_dumper = AsciiDumper(self.apitrace, src_trace, src_calls)
+        self.src_dumper = AsciiDumper(self.apitrace, src_trace, src_calls, self.callNos)
 
     def diff(self):
         diff_args = self.diff_args + [
@@ -535,7 +536,7 @@ def main():
     if options.tool == 'python':
         differ = PythonDiffer(options.apitrace, options.call_nos)
     else:
-        differ = ExternalDiffer(options.apitrace, options.tool, options.width)
+        differ = ExternalDiffer(options.apitrace, options.tool, options.width, options.call_nos)
     differ.setRefTrace(ref_trace, options.ref_calls)
     differ.setSrcTrace(src_trace, options.src_calls)
     differ.diff()
