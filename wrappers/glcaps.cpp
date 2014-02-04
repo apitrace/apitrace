@@ -60,11 +60,14 @@ extraExtension_stringsFull[] = {
     "GL_ARB_debug_output",
     "GL_AMD_debug_output",
     "GL_KHR_debug",
+    "GL_EXT_debug_marker",
+    "GL_EXT_debug_label",
 };
 
 static const char *
 extraExtension_stringsES[] = {
     "GL_EXT_debug_marker",
+    "GL_EXT_debug_label",
 };
 
 // Description of additional extensions we want to advertise

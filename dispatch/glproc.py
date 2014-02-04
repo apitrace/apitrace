@@ -508,7 +508,7 @@ void * _getPrivateProcAddress(const char *procName);
 
     def failFunction(self, function):
         # We fake this when they are not available
-        if function.name in ('glGetObjectLabel', 'glGetObjectPtrLabel'):
+        if function.name in ('glGetObjectLabel', 'glGetObjectPtrLabel', 'glGetObjectLabelEXT'):
             print r'    if (length != 0) *length = 0;'
             print r'    if (label != 0 && bufSize > 0) *label = 0;'
             return
