@@ -121,6 +121,11 @@ class Dispatcher:
                 assert function.fail is not None
                 print '            return %s;' % function.fail
         else:
+            print '#ifdef RETRACE'
             print r'            return (%s)0;' % function.type
+            print '#else'
+            print r'            os::log("error: unavailable function %s\n", _name);'
+            print r'            os::abort();'
+            print '#endif'
 
 
