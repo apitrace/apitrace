@@ -532,7 +532,10 @@ dumpProgramUniforms(JSONWriter &json, GLint program)
             continue;
         }
 
-        assert(0);
+        /*
+         * We can get here when the driver describes the uniform as active, but
+         * on an inactive uniform block.  So just ingnore that.
+         */
     }
 
     delete [] name;
