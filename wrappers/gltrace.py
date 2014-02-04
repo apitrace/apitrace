@@ -577,7 +577,8 @@ class GlTracer(Tracer):
             print '                _glGetBufferParameteriv(target, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
             print '                flush = flush && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT);'
             print '                if (length == -1) {'
-            print '                    // Mesa drivers refuse GL_BUFFER_MAP_LENGTH without GL 3.0'
+            print '                    // Mesa drivers refuse GL_BUFFER_MAP_LENGTH without GL 3.0 up-to'
+            print '                    // http://cgit.freedesktop.org/mesa/mesa/commit/?id=ffee498fb848b253a7833373fe5430f8c7ca0c5f'
             print '                    static bool warned = false;'
             print '                    if (!warned) {'
             print '                        os::log("apitrace: warning: glGetBufferParameteriv%s(GL_BUFFER_MAP_LENGTH) failed\\n");' % suffix
