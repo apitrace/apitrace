@@ -21,12 +21,14 @@ Obtain the process name of the application to be traced (the one reported in
 `ps` output, such as `com.android.settings`), and set two system properties:
 
     PROCNAME=com.android.settings
+    adb root
     adb shell setprop wrap.$PROCNAME LD_PRELOAD=/data/egltrace.so
     adb shell setprop debug.apitrace.procname $PROCNAME
 
 (the former is read by Dalvik and specifies wrapping prefix, the latter is
 read by apitrace itself and used in case apitrace is preloaded into Java VM
-globally to specify which process should be traced).
+globally to specify which process should be traced).  Elevating priviliges
+via `adb root` is required to set the first property.
 
 Make sure the process is not loaded before starting to trace it, for example
 use `-S` flag to `am start`:
