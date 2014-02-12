@@ -96,6 +96,7 @@ Several tools take `CALLSET` arguments, e.g:
 
     apitrace dump --calls=CALLSET foo.trace
     apitrace dump-images --calls=CALLSET foo.trace
+    apitrace trim --calls=CALLSET1 --calls=CALLSET2 foo.trace
 
 The call syntax is very flexible. Here are a few examples:
 
