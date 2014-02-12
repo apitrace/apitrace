@@ -295,7 +295,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         int num_configs = 0;
         GLXFBConfig * fbconfigs;
         fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
-        assert(num_configs && fbconfigs);
+        if (!num_configs || !fbconfigs) {
+            return NULL;
+        }
         visual->fbconfig = fbconfigs[0];
         assert(visual->fbconfig);
         visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
