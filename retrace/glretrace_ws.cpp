@@ -51,10 +51,21 @@ inline glws::Visual *
 getVisual(glws::Profile profile) {
     std::map<glws::Profile, glws::Visual *>::iterator it = visuals.find(profile);
     if (it == visuals.end()) {
-        glws::Visual *visual = glws::createVisual(retrace::doubleBuffer, retrace::samples, profile);
+        glws::Visual *visual = NULL;
+        unsigned samples = retrace::samples;
+        /* The requested number of samples might not be available, try fewer until we succeed */
+        while (!visual && samples>0) {
+            visual = glws::createVisual(retrace::doubleBuffer, samples, profile);
+            if (!visual) {
+                samples--;
+            }
+        }
         if (!visual) {
             std::cerr << "error: failed to create OpenGL visual\n";
             exit(1);
+        }
+        if (samples!=retrace::samples) {
+            std::cerr << "warning: Using " << samples << " samples instead of the requested " << retrace::samples << "\n";
         }
         visuals[profile] = visual;
         return visual;
