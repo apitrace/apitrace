@@ -112,6 +112,14 @@ namespace trace {
     };
 
     /**
+     * The TRACE_FILE environment variable or the global variable
+     * trace::localWriterFileName can be used to trace to a specific
+     * file.
+     */
+
+    extern const char *localWriterFileName;
+
+    /**
      * Singleton.
      */
     extern LocalWriter localWriter;

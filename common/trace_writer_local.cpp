@@ -60,6 +60,7 @@ static void exceptionCallback(void)
     localWriter.flush();
 }
 
+const char *localWriterFileName = NULL;
 
 LocalWriter::LocalWriter() :
     acquired(0)
@@ -79,12 +80,18 @@ LocalWriter::~LocalWriter()
 
 void
 LocalWriter::open(void) {
-    os::String szFileName;
 
-    const char *lpFileName;
+    const char *lpFileName = NULL;
 
-    lpFileName = getenv("TRACE_FILE");
-    if (!lpFileName) {
+    if (!lpFileName || !*lpFileName) {
+        lpFileName = getenv("TRACE_FILE");
+    }
+
+    if (!lpFileName || !*lpFileName) {
+        lpFileName = localWriterFileName;
+    }
+
+    if (!lpFileName || !*lpFileName) {
         static unsigned dwCounter = 0;
 
         os::String process = os::getProcessName();
@@ -102,6 +109,7 @@ LocalWriter::open(void) {
 
         for (;;) {
             FILE *file;
+            os::String szFileName;
 
             if (dwCounter)
                 szFileName = os::String::format("%s.%u.trace", prefix.str(), dwCounter);
