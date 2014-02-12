@@ -520,6 +520,7 @@ void TraceLoader::findCallIndex(int index)
     for (itr = calls.constBegin(); itr != calls.constEnd(); ++itr) {
         if ((*itr)->index() == index) {
             call = *itr;
+            break;
         }
     }
     if (call) {
