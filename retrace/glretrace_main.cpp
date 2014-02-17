@@ -165,14 +165,18 @@ completeCallQuery(CallQuery& query) {
     if (query.isDraw) {
         if (retrace::profilingGpuTimes) {
             if (supportsTimestamp) {
-                glGetQueryObjecti64vEXT(query.ids[GPU_START], GL_QUERY_RESULT, &gpuStart);
-            }
-
-            glGetQueryObjecti64vEXT(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
+				/* Use ARB queries in case EXT not present */
+                glGetQueryObjecti64v(query.ids[GPU_START], GL_QUERY_RESULT, &gpuStart);
+ 				glGetQueryObjecti64v(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
+           }
+			else
+			{
+				glGetQueryObjecti64vEXT(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
+			}
         }
 
         if (retrace::profilingPixelsDrawn) {
-            glGetQueryObjecti64vEXT(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
+            glGetQueryObjecti64v(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
         }
 
     } else {
@@ -290,7 +294,7 @@ initContext() {
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
         if (!supportsTimestamp && !supportsElapsed) {
-            std::cout << "Error: Cannot run profile, GL_EXT_timer_query extension is not supported." << std::endl;
+            std::cout << "Error: Cannot run profile, GL_EXT_timer_query or GL_ARB_timer_query extension are not supported." << std::endl;
             exit(-1);
         }
 
