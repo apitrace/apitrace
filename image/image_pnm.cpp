@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <algorithm>
 
 #include <fstream>
 
