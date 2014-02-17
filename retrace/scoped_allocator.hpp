@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
-
+#include <algorithm>
 
 /**
  * Similar to alloca(), but implemented with malloc.
