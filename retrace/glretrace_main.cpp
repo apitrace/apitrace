@@ -165,18 +165,18 @@ completeCallQuery(CallQuery& query) {
     if (query.isDraw) {
         if (retrace::profilingGpuTimes) {
             if (supportsTimestamp) {
-				/* Use ARB queries in case EXT not present */
+                /* Use ARB queries in case EXT not present */
                 glGetQueryObjecti64v(query.ids[GPU_START], GL_QUERY_RESULT, &gpuStart);
- 				glGetQueryObjecti64v(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
-           }
+                glGetQueryObjecti64v(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
+ 			}
 			else
 			{
-				glGetQueryObjecti64vEXT(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
+                glGetQueryObjecti64vEXT(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
 			}
         }
 
         if (retrace::profilingPixelsDrawn) {
-            glGetQueryObjecti64v(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
+           glGetQueryObjecti64v(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
         }
 
     } else {
