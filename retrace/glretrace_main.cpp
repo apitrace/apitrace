@@ -174,11 +174,10 @@ completeCallQuery(CallQuery& query) {
         }
 
         if (retrace::profilingPixelsDrawn) {
-            if( supportsTimestamp )
-            {
+            if (supportsTimestamp) {
                 glGetQueryObjecti64v(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
             } else {
-                if( supportsElapsed ) {
+                if (supportsElapsed) {
                     glGetQueryObjecti64vEXT(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
                 } else {
                     uint32_t pixels32;
