@@ -168,15 +168,24 @@ completeCallQuery(CallQuery& query) {
                 /* Use ARB queries in case EXT not present */
                 glGetQueryObjecti64v(query.ids[GPU_START], GL_QUERY_RESULT, &gpuStart);
                 glGetQueryObjecti64v(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
- 			}
-			else
-			{
+ 			} else {
                 glGetQueryObjecti64vEXT(query.ids[GPU_DURATION], GL_QUERY_RESULT, &gpuDuration);
 			}
         }
 
         if (retrace::profilingPixelsDrawn) {
-           glGetQueryObjecti64v(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
+            if( supportsTimestamp )
+            {
+                glGetQueryObjecti64v(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
+            } else {
+                if( supportsElapsed ) {
+                    glGetQueryObjecti64vEXT(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels);
+                } else {
+                    uint32_t pixels32;
+                    glGetQueryObjectuiv(query.ids[OCCLUSION], GL_QUERY_RESULT, &pixels32);
+                    pixels = static_cast<int64_t>(pixels32);
+                }
+            }
         }
 
     } else {
