@@ -449,15 +449,16 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
                 allCalls[parsedCalls++] = apiCall;
                 if (groups.count() == 0) {
                     topLevelItems.append(apiCall);
-                }
-                if (!groups.isEmpty()) {
+                } else {
                     groups.top()->addChild(apiCall);
                 }
                 if (call->flags & trace::CALL_FLAG_MARKER_PUSH) {
                     groups.push(apiCall);
                 } else if (call->flags & trace::CALL_FLAG_MARKER_POP) {
-                    groups.top()->finishedAddingChildren();
-                    groups.pop();
+                    if (groups.count()) {
+                        groups.top()->finishedAddingChildren();
+                        groups.pop();
+                    }
                 }
                 if (apiCall->hasBinaryData()) {
                     QByteArray data =
