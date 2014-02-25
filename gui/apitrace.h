@@ -80,6 +80,7 @@ public:
 public slots:
     void setFileName(const QString &name);
     void save();
+    void finishedParsing();
     void loadFrame(ApiTraceFrame *frame);
     void findNext(ApiTraceFrame *frame,
                   ApiTraceCall *call,
@@ -129,7 +130,6 @@ private slots:
     void addFrames(const QList<ApiTraceFrame*> &frames);
     void slotSaved();
     void guessedApi(int api);
-    void finishedParsing();
     void loaderFrameLoaded(ApiTraceFrame *frame,
                            const QVector<ApiTraceCall*> &topLevelItems,
                            const QVector<ApiTraceCall*> &calls,

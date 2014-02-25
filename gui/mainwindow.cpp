@@ -318,6 +318,8 @@ void MainWindow::finishedLoadingTrace()
     if (m_initalCallNum >= 0) {
         m_trace->findCallIndex(m_initalCallNum);
         m_initalCallNum = -1;
+    } else {
+       m_trace->finishedParsing();
     }
 }
 

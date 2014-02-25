@@ -24,8 +24,6 @@ ApiTrace::ApiTrace()
             SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,QVector<ApiTraceCall*>,quint64)));
     connect(m_loader, SIGNAL(guessedApi(int)),
             this, SLOT(guessedApi(int)));
-    connect(m_loader, SIGNAL(finishedParsing()),
-            this, SLOT(finishedParsing()));
     connect(this, SIGNAL(loaderSearch(ApiTrace::SearchRequest)),
             m_loader, SLOT(search(ApiTrace::SearchRequest)));
     connect(m_loader,
