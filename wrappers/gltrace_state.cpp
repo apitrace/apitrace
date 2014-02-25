@@ -28,12 +28,10 @@
 #include <assert.h>
 
 #include <map>
-#if defined(_MSC_VER) || (defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090)
-#include <memory>
-#else
+#if defined(HAVE_TR1_MEMORY)
 #include <tr1/memory>
-#include <memory>
 #endif
+#include <memory>
 
 #include <os_thread.hpp>
 #include <glproc.hpp>
@@ -41,7 +39,7 @@
 
 namespace gltrace {
 
-#if defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+#if !defined(HAVE_TR1_MEMORY)
 typedef std::shared_ptr<Context> context_ptr_t;
 #else
 typedef std::tr1::shared_ptr<Context> context_ptr_t;
