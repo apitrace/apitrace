@@ -232,7 +232,7 @@ def main():
     (options, args) = optparser.parse_args(sys.argv[1:])
 
     for arg in args:
-        if arg.startswith('http://'):
+        if arg.startswith('http://') or arg.startswith('https://'):
             stream = urlopen(arg, 'rt')
         else:
             stream = open(arg, 'rt')
