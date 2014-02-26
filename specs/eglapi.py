@@ -184,8 +184,8 @@ eglapi.addFunctions([
 
     Function(ConstCString, "eglQueryString", [(EGLDisplay, "dpy"), (EGLint_enum, "name")], sideeffects=False),
 
-    Function(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
-    Function(EGLBoolean, "eglChooseConfig", [(EGLDisplay, "dpy"), (EGLConfigAttribs, "attrib_list"), (Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
+    Function(EGLBoolean, "eglGetConfigs", [(EGLDisplay, "dpy"), Out(Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
+    Function(EGLBoolean, "eglChooseConfig", [(EGLDisplay, "dpy"), (EGLConfigAttribs, "attrib_list"), Out(Array(EGLConfig, "config_size"), "configs"), (EGLint, "config_size"), Out(Pointer(EGLint), "num_config")]),
     Function(EGLBoolean, "eglGetConfigAttrib", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLattrib, "attribute"), Out(Pointer(EGLint), "value")], sideeffects=False),
 
     Function(EGLSurface, "eglCreateWindowSurface", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLNativeWindowType, "win"), (EGLWindowsSurfaceAttribs, "attrib_list")]),
