@@ -341,3 +341,6 @@ GLperfMonitorCounterInfoAMD = Polymorphic('pname', [
     ],
     OpaquePointer(GLvoid),
 )
+
+# GL_NV_vdpau_interop
+GLvdpauSurfaceNV = Alias('GLvdpauSurfaceNV', GLintptr)
