@@ -148,8 +148,6 @@ void setContext(uintptr_t context_id)
     ts->current_context = ctx;
 
     if (!ctx->bound) {
-        ctx->bound = true;
-
         /*
          * The default viewport and scissor state is set when a context is
          * first made current, with values matching the bound drawable.  Many
@@ -163,11 +161,19 @@ void setContext(uintptr_t context_id)
          * calls.
          */
         GLint viewport[4] = {0, 0, 0, 0};
-        GLint scissor_box[4] = {0, 0, 0, 0};
+        GLint scissor[4] = {0, 0, 0, 0};
         _glGetIntegerv(GL_VIEWPORT, viewport);
-        _glGetIntegerv(GL_SCISSOR_BOX, scissor_box);
-        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-        glScissor(scissor_box[0], scissor_box[1], scissor_box[2], scissor_box[3]);
+        _glGetIntegerv(GL_SCISSOR_BOX, scissor);
+
+        /*
+         * On MacOSX the current context and surface are set independently, and
+         * we might be called before both are set, so ignore empty boxes.
+         */
+        if (viewport[2] && viewport[3] && scissor[2] && scissor[3]) {
+            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            glScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
+            ctx->bound = true;
+        }
     }
 }
 
