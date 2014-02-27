@@ -9,7 +9,7 @@ all: \
 	eglenum.py
 
 download: \
-	enum.spec \
+	gl.xml \
 	enumext.spec \
 	gl.spec \
 	gl.tm \
@@ -24,6 +24,10 @@ download: \
 	wglext.spec \
 	wgl.tm \
 	eglenum.spec
+
+
+%.xml:
+	wget -N https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/$@
 
 %.spec:
 	wget -N http://www.opengl.org/registry/api/$@
@@ -43,8 +47,8 @@ glxapi.py: glspec.py glx.tm glx.spec glxext.spec
 wglapi.py: glspec.py wgl.tm wgl.spec wglext.spec
 	python glspec.py wgl wgl.tm wgl.spec wglext.spec > $@
 
-glparams.py: glparams.sed enum.spec sort.sh
-	sed -n -f glparams.sed enum.spec | ./sort.sh > $@
+glparams.py: xml2glparams.py gl.xml
+	python xml2glparams.py gl.xml > $@
 
 wglenum.py: wglenum.sh wglenumext.spec
 	./wglenum.sh wglenumext.spec > $@

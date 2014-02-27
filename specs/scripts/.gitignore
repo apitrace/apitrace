@@ -1,6 +1,7 @@
 *.spec
 *.tm
 *.txt
+*.xml
 *api.py
 glparams.py
 wglenum.py
