@@ -210,13 +210,13 @@ cglapi.addFunctions([
     # OpenGL.h, OpenGL framework
     Function(CGLError, "CGLChoosePixelFormat", [(CGLPixelFormatAttribs, "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
     Function(CGLError, "CGLDestroyPixelFormat", [(CGLPixelFormatObj, "pix")]),
-    Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")]),
+    Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")], sideeffects=False),
     Function(Void, "CGLReleasePixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(CGLPixelFormatObj, "CGLRetainPixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(GLuint, "CGLGetPixelFormatRetainCount", [(CGLPixelFormatObj, "pix")]),
     Function(CGLError, "CGLQueryRendererInfo", [(GLuint, "display_mask"), Out(Pointer(CGLRendererInfoObj), "rend"), Out(Pointer(GLint), "nrend")]),
     Function(CGLError, "CGLDestroyRendererInfo", [(CGLRendererInfoObj, "rend")]),
-    Function(CGLError, "CGLDescribeRenderer", [(CGLRendererInfoObj, "rend"), (GLint, "rend_num"), (CGLRendererProperty, "prop"), (OpaquePointer(GLint), "value")]),
+    Function(CGLError, "CGLDescribeRenderer", [(CGLRendererInfoObj, "rend"), (GLint, "rend_num"), (CGLRendererProperty, "prop"), Out(Pointer(GLint), "value")], sideeffects=False),
     Function(CGLError, "CGLCreateContext", [(CGLPixelFormatObj, "pix"), (CGLContextObj, "share"), Out(Pointer(CGLContextObj), "ctx")]),
     Function(CGLError, "CGLDestroyContext", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLCopyContext", [(CGLContextObj, "src"), (CGLContextObj, "dst"), (GLbitfield, "mask")]),
@@ -247,7 +247,7 @@ cglapi.addFunctions([
     Function(CGLError, "CGLSetVirtualScreen", [(CGLContextObj, "ctx"), (GLint, "screen")]),
     Function(CGLError, "CGLGetVirtualScreen", [(CGLContextObj, "ctx"), Out(Pointer(GLint), "screen")], sideeffects=False),
     Function(CGLError, "CGLSetGlobalOption", [(CGLGlobalOption, "pname"), (OpaquePointer(Const(GLint)), "params")]),
-    Function(CGLError, "CGLGetGlobalOption", [(CGLGlobalOption, "pname"), Out(OpaquePointer(GLint), "params")]),
+    Function(CGLError, "CGLGetGlobalOption", [(CGLGlobalOption, "pname"), Out(OpaquePointer(GLint), "params")], sideeffects=False),
     Function(CGLError, "CGLSetOption", [(CGLGlobalOption, "pname"), (GLint, "param")]),
     Function(CGLError, "CGLGetOption", [(CGLGlobalOption, "pname"), Out(Pointer(GLint), "param")], sideeffects=False),
     Function(CGLError, "CGLLockContext", [(CGLContextObj, "ctx")]),
@@ -263,7 +263,7 @@ cglapi.addFunctions([
 
     # Undocumented, OpenGL framework
     Function(CGLError, "CGLSetSurface", [(CGLContextObj, "ctx"), (CGSConnectionID, "cid"), (CGSWindowID, "wid"), (CGSSurfaceID, "sid")]),
-    Function(CGLError, "CGLGetSurface", [(CGLContextObj, "ctx"), (Pointer(CGSConnectionID), "cid"), (Pointer(CGSWindowID), "wid"), (Pointer(CGSSurfaceID), "sid")]),
+    Function(CGLError, "CGLGetSurface", [(CGLContextObj, "ctx"), Out(Pointer(CGSConnectionID), "cid"), Out(Pointer(CGSWindowID), "wid"), Out(Pointer(CGSSurfaceID), "sid")]),
     Function(CGLError, "CGLUpdateContext", [(CGLContextObj, "ctx")]),
     # XXX: All the following prototypes are little more than guesses
     # TODO: A potentially simpler alternative would be to use the

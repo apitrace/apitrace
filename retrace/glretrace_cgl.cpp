@@ -379,6 +379,8 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLChoosePixelFormat", &retrace_CGLChoosePixelFormat},
     {"CGLClearDrawable", &retrace_CGLClearDrawable},
     {"CGLCreateContext", &retrace_CGLCreateContext},
+    {"CGLDescribePixelFormat", &retrace::ignore},
+    {"CGLDescribeRenderer", &retrace::ignore},
     {"CGLDestroyContext", &retrace_CGLDestroyContext},
     {"CGLDestroyPixelFormat", &retrace::ignore},
     {"CGLDisable", &retrace::ignore},
