@@ -69,6 +69,15 @@ parameters = [
     #("",	X,	1,	"GL_TRIANGLE_STRIP_ADJACENCY"),	# 0x000D
     #("",	X,	1,	"GL_PATCHES"),	# 0x000E
 
+    ("",	X,	1,	"GL_RESTART_PATH_NV"),	# 0x00F0
+    ("",	X,	1,	"GL_DUP_FIRST_CUBIC_CURVE_TO_NV"),	# 0x00F2
+    ("",	X,	1,	"GL_DUP_LAST_CUBIC_CURVE_TO_NV"),	# 0x00F4
+    ("",	X,	1,	"GL_RECT_NV"),	# 0x00F6
+    ("",	X,	1,	"GL_CIRCULAR_CCW_ARC_TO_NV"),	# 0x00F8
+    ("",	X,	1,	"GL_CIRCULAR_CW_ARC_TO_NV"),	# 0x00FA
+    ("",	X,	1,	"GL_CIRCULAR_TANGENT_ARC_TO_NV"),	# 0x00FC
+    ("",	X,	1,	"GL_ARC_TO_NV"),	# 0x00FE
+
     ("",	X,	1,	"GL_ACCUM"),	# 0x0100
     ("",	X,	1,	"GL_LOAD"),	# 0x0101
     ("",	X,	1,	"GL_RETURN"),	# 0x0102
@@ -412,32 +421,7 @@ parameters = [
     ("",	X,	1,	"GL_RGBA"),	# 0x1908
     ("",	X,	1,	"GL_LUMINANCE"),	# 0x1909
     ("",	X,	1,	"GL_LUMINANCE_ALPHA"),	# 0x190A
-    ("_glGet",	B,	1,	"GL_RASTER_POSITION_UNCLIPPED_IBM"),	# 0x19262
     ("",	X,	1,	"GL_BITMAP"),	# 0x1A00
-    ("",	X,	1,	"GL_PREFER_DOUBLEBUFFER_HINT_PGI"),	# 0x1A1F8
-    ("",	X,	1,	"GL_CONSERVE_MEMORY_HINT_PGI"),	# 0x1A1FD
-    ("",	X,	1,	"GL_RECLAIM_MEMORY_HINT_PGI"),	# 0x1A1FE
-    ("",	X,	1,	"GL_NATIVE_GRAPHICS_HANDLE_PGI"),	# 0x1A202
-    ("",	X,	1,	"GL_NATIVE_GRAPHICS_BEGIN_HINT_PGI"),	# 0x1A203
-    ("",	X,	1,	"GL_NATIVE_GRAPHICS_END_HINT_PGI"),	# 0x1A204
-    ("",	X,	1,	"GL_ALWAYS_FAST_HINT_PGI"),	# 0x1A20C
-    ("",	X,	1,	"GL_ALWAYS_SOFT_HINT_PGI"),	# 0x1A20D
-    ("",	X,	1,	"GL_ALLOW_DRAW_OBJ_HINT_PGI"),	# 0x1A20E
-    ("",	X,	1,	"GL_ALLOW_DRAW_WIN_HINT_PGI"),	# 0x1A20F
-    ("",	X,	1,	"GL_ALLOW_DRAW_FRG_HINT_PGI"),	# 0x1A210
-    ("",	X,	1,	"GL_ALLOW_DRAW_MEM_HINT_PGI"),	# 0x1A211
-    ("",	X,	1,	"GL_STRICT_DEPTHFUNC_HINT_PGI"),	# 0x1A216
-    ("",	X,	1,	"GL_STRICT_LIGHTING_HINT_PGI"),	# 0x1A217
-    ("",	X,	1,	"GL_STRICT_SCISSOR_HINT_PGI"),	# 0x1A218
-    ("",	X,	1,	"GL_FULL_STIPPLE_HINT_PGI"),	# 0x1A219
-    ("",	X,	1,	"GL_CLIP_NEAR_HINT_PGI"),	# 0x1A220
-    ("",	X,	1,	"GL_CLIP_FAR_HINT_PGI"),	# 0x1A221
-    ("",	X,	1,	"GL_WIDE_LINE_HINT_PGI"),	# 0x1A222
-    ("",	X,	1,	"GL_BACK_NORMALS_HINT_PGI"),	# 0x1A223
-    ("",	X,	1,	"GL_VERTEX_DATA_HINT_PGI"),	# 0x1A22A
-    ("",	X,	1,	"GL_VERTEX_CONSISTENT_HINT_PGI"),	# 0x1A22B
-    ("",	X,	1,	"GL_MATERIAL_SIDE_HINT_PGI"),	# 0x1A22C
-    ("",	X,	1,	"GL_MAX_VERTEX_HINT_PGI"),	# 0x1A22D
     ("",	X,	1,	"GL_POINT"),	# 0x1B00
     ("",	X,	1,	"GL_LINE"),	# 0x1B01
     ("",	X,	1,	"GL_FILL"),	# 0x1B02
@@ -3340,16 +3324,33 @@ parameters = [
     ("",	X,	1,	"GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR"),	# 0x93DB
     ("",	X,	1,	"GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR"),	# 0x93DC
     ("",	X,	1,	"GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR"),	# 0x93DD
-    ("",	X,	1,	"GL_RESTART_PATH_NV"),	# 0xF0
-    ("",	X,	1,	"GL_DUP_FIRST_CUBIC_CURVE_TO_NV"),	# 0xF2
-    ("",	X,	1,	"GL_DUP_LAST_CUBIC_CURVE_TO_NV"),	# 0xF4
-    ("",	X,	1,	"GL_RECT_NV"),	# 0xF6
-    ("",	X,	1,	"GL_CIRCULAR_CCW_ARC_TO_NV"),	# 0xF8
-    ("",	X,	1,	"GL_CIRCULAR_CW_ARC_TO_NV"),	# 0xFA
-    ("",	X,	1,	"GL_CIRCULAR_TANGENT_ARC_TO_NV"),	# 0xFC
-    ("",	X,	1,	"GL_ARC_TO_NV"),	# 0xFE
-    #("",	X,	1,	"GL_TIMEOUT_IGNORED"),	# 0xFFFFFFFFFFFFFFFFull
+    ("_glGet",	B,	1,	"GL_RASTER_POSITION_UNCLIPPED_IBM"),	# 0x19262
+    ("",	X,	1,	"GL_PREFER_DOUBLEBUFFER_HINT_PGI"),	# 0x1A1F8
+    ("",	X,	1,	"GL_CONSERVE_MEMORY_HINT_PGI"),	# 0x1A1FD
+    ("",	X,	1,	"GL_RECLAIM_MEMORY_HINT_PGI"),	# 0x1A1FE
+    ("",	X,	1,	"GL_NATIVE_GRAPHICS_HANDLE_PGI"),	# 0x1A202
+    ("",	X,	1,	"GL_NATIVE_GRAPHICS_BEGIN_HINT_PGI"),	# 0x1A203
+    ("",	X,	1,	"GL_NATIVE_GRAPHICS_END_HINT_PGI"),	# 0x1A204
+    ("",	X,	1,	"GL_ALWAYS_FAST_HINT_PGI"),	# 0x1A20C
+    ("",	X,	1,	"GL_ALWAYS_SOFT_HINT_PGI"),	# 0x1A20D
+    ("",	X,	1,	"GL_ALLOW_DRAW_OBJ_HINT_PGI"),	# 0x1A20E
+    ("",	X,	1,	"GL_ALLOW_DRAW_WIN_HINT_PGI"),	# 0x1A20F
+    ("",	X,	1,	"GL_ALLOW_DRAW_FRG_HINT_PGI"),	# 0x1A210
+    ("",	X,	1,	"GL_ALLOW_DRAW_MEM_HINT_PGI"),	# 0x1A211
+    ("",	X,	1,	"GL_STRICT_DEPTHFUNC_HINT_PGI"),	# 0x1A216
+    ("",	X,	1,	"GL_STRICT_LIGHTING_HINT_PGI"),	# 0x1A217
+    ("",	X,	1,	"GL_STRICT_SCISSOR_HINT_PGI"),	# 0x1A218
+    ("",	X,	1,	"GL_FULL_STIPPLE_HINT_PGI"),	# 0x1A219
+    ("",	X,	1,	"GL_CLIP_NEAR_HINT_PGI"),	# 0x1A220
+    ("",	X,	1,	"GL_CLIP_FAR_HINT_PGI"),	# 0x1A221
+    ("",	X,	1,	"GL_WIDE_LINE_HINT_PGI"),	# 0x1A222
+    ("",	X,	1,	"GL_BACK_NORMALS_HINT_PGI"),	# 0x1A223
+    ("",	X,	1,	"GL_VERTEX_DATA_HINT_PGI"),	# 0x1A22A
+    ("",	X,	1,	"GL_VERTEX_CONSISTENT_HINT_PGI"),	# 0x1A22B
+    ("",	X,	1,	"GL_MATERIAL_SIDE_HINT_PGI"),	# 0x1A22C
+    ("",	X,	1,	"GL_MAX_VERTEX_HINT_PGI"),	# 0x1A22D
     ("",	X,	1,	"GL_INVALID_INDEX"),	# 0xFFFFFFFFu
+    #("",	X,	1,	"GL_TIMEOUT_IGNORED"),	# 0xFFFFFFFFFFFFFFFFull
 ]
 
 
