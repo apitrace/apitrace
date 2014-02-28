@@ -1984,7 +1984,7 @@ parameters = [
     ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_COMPARE_MODE"),	# 0x884C
     ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_COMPARE_FUNC"),	# 0x884D
     ("",	X,	1,	"GL_COMPARE_REF_TO_TEXTURE"),	# 0x884E
-    ("glGet",	B,	1,	"GL_TEXTURE_CUBE_MAP_SEAMLESS"),	# 0x884F
+    ("glGet,glGetTexParameter,glGetSamplerParameter",	B,	1,	"GL_TEXTURE_CUBE_MAP_SEAMLESS"),	# 0x884F
     ("",	X,	1,	"GL_OFFSET_PROJECTIVE_TEXTURE_2D_NV"),	# 0x8850
     ("",	X,	1,	"GL_OFFSET_PROJECTIVE_TEXTURE_2D_SCALE_NV"),	# 0x8851
     ("",	X,	1,	"GL_OFFSET_PROJECTIVE_TEXTURE_RECTANGLE_NV"),	# 0x8852
