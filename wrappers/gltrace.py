@@ -651,6 +651,17 @@ class GlTracer(Tracer):
             self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'length')
             print '    }'
 
+        # FIXME: We don't support coherent/pinned memory mappings
+        # See https://github.com/apitrace/apitrace/issues/232
+        if function.name in ('glBufferStorage', 'glNamedBufferStorageEXT'):
+            print r'    if (flags & GL_MAP_COHERENT_BIT) {'
+            print r'        os::log("apitrace: warning: coherent mappings not fully supported\n");'
+            print r'    }'
+        if function.name in ('glBufferData', 'glBufferDataARB'):
+            print r'    if (target == GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD) {'
+            print r'        os::log("apitrace: warning: GL_AMD_pinned_memory not fully supported\n");'
+            print r'    }'
+
         # Don't leave vertex attrib locations to chance.  Instead emit fake
         # glBindAttribLocation calls to ensure that the same locations will be
         # used when retracing.  Trying to remap locations after the fact would
