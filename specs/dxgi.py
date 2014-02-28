@@ -296,6 +296,7 @@ IDXGIFactoryDWM.methods += [
     StdMethod(HRESULT, "CreateSwapChain", [(ObjPointer(IUnknown), "pDevice"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc"), (ObjPointer(IDXGIOutput), "pOutput"), Out(Pointer(ObjPointer(IDXGISwapChainDWM)), "ppSwapChain")]),
 ]
 
+# http://shchetinin.blogspot.co.uk/2012/04/dwm-graphics-directx-win8win7.html
 IDXGISwapChainDWM.methods += [
     StdMethod(HRESULT, "Present", [(UINT, "SyncInterval"), (DXGI_PRESENT, "Flags")]),
     StdMethod(HRESULT, "GetBuffer", [(UINT, "Buffer"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppSurface")]),
@@ -303,8 +304,8 @@ IDXGISwapChainDWM.methods += [
     StdMethod(HRESULT, "ResizeBuffers", [(UINT, "BufferCount"), (UINT, "Width"), (UINT, "Height"), (DXGI_FORMAT, "NewFormat"), (DXGI_SWAP_CHAIN_FLAG, "SwapChainFlags")]),
     StdMethod(HRESULT, "ResizeTarget", [(Pointer(Const(DXGI_MODE_DESC)), "pNewTargetParameters")]),
     StdMethod(HRESULT, "GetContainingOutput", [Out(Pointer(ObjPointer(IDXGIOutput)), "ppOutput")]),
-    StdMethod(HRESULT, "GetFrameStatistics", [(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
-    StdMethod(HRESULT, "GetLastPresentCount", [(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
+    StdMethod(HRESULT, "GetFrameStatistics", [Out(Pointer(DXGI_FRAME_STATISTICS), "pStats")], sideeffects=False),
+    StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
     StdMethod(HRESULT, "SetFullscreenState", [(BOOL, "Fullscreen"), (ObjPointer(IDXGIOutput), "pTarget")]),
     StdMethod(HRESULT, "GetFullscreenState", [Out(Pointer(BOOL), "pFullscreen"), Out(Pointer(ObjPointer(IDXGIOutput)), "ppTarget")]),
 ]
