@@ -928,8 +928,8 @@ parameters = [
     ("glGet",	I,	1,	"GL_MINOR_VERSION"),	# 0x821C
     ("glGet",	I,	1,	"GL_NUM_EXTENSIONS"),	# 0x821D
     ("glGet",	I,	1,	"GL_CONTEXT_FLAGS"),	# 0x821E
-    ("",	X,	1,	"GL_BUFFER_IMMUTABLE_STORAGE"),	# 0x821F
-    ("",	X,	1,	"GL_BUFFER_STORAGE_FLAGS"),	# 0x8220
+    ("glGetBufferParameter",	B,	1,	"GL_BUFFER_IMMUTABLE_STORAGE"),	# 0x821F
+    ("glGetBufferParameter",	I,	1,	"GL_BUFFER_STORAGE_FLAGS"),	# 0x8220
     ("",	X,	1,	"GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED"),	# 0x8221
     ("",	X,	1,	"GL_INDEX"),	# 0x8222
     ("",	X,	1,	"GL_COMPRESSED_RED"),	# 0x8225
