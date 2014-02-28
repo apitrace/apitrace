@@ -342,5 +342,10 @@ GLperfMonitorCounterInfoAMD = Polymorphic('pname', [
     OpaquePointer(GLvoid),
 )
 
+# GL_AMD_sparse_texture
+GLbitfield_texStorageSparse = Flags(GLbitfield, [
+    'GL_TEXTURE_STORAGE_SPARSE_BIT_AMD', # 0x00000001
+])
+
 # GL_NV_vdpau_interop
 GLvdpauSurfaceNV = Alias('GLvdpauSurfaceNV', GLintptr)
