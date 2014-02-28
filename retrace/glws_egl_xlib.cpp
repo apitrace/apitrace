@@ -40,6 +40,8 @@ namespace glws {
 
 static Display *display = NULL;
 static EGLDisplay eglDisplay = EGL_NO_DISPLAY;
+static char const *eglExtensions = NULL;
+static bool has_EGL_KHR_create_context = false;
 static int screen = 0;
 
 
@@ -305,6 +307,9 @@ init(void) {
         XCloseDisplay(display);
         exit(1);
     }
+
+    eglExtensions = eglQueryString(eglDisplay, EGL_EXTENSIONS);
+    has_EGL_KHR_create_context = checkExtension("EGL_KHR_create_context", eglExtensions);
 }
 
 void
@@ -350,6 +355,11 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     const EGLint *api_bits;
 
     switch(profile) {
+    default:
+        if (!has_EGL_KHR_create_context) {
+            return NULL;
+        }
+        /* pass-through */
     case PROFILE_COMPAT:
         api_bits = api_bits_gl;
         break;
@@ -359,8 +369,6 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     case PROFILE_ES2:
         api_bits = api_bits_gles2;
         break;
-    default:
-        return NULL;
     };
 
     for (int i = 0; i < 7; i++) {
@@ -430,7 +438,22 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         attribs.add(EGL_CONTEXT_CLIENT_VERSION, 2);
         break;
     default:
-        return NULL;
+        if (has_EGL_KHR_create_context) {
+            unsigned major, minor;
+            bool core;
+            getProfileVersion(profile, major, minor, core);
+            attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, major);
+            attribs.add(EGL_CONTEXT_MINOR_VERSION_KHR, minor);
+            if (core) {
+                attribs.add(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR);
+            }
+        } else {
+            return NULL;
+        }
+    }
+
+    if (debug && has_EGL_KHR_create_context) {
+        attribs.add(EGL_CONTEXT_FLAGS_KHR, EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR);
     }
 
     attribs.end(EGL_NONE);
