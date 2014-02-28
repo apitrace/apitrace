@@ -131,10 +131,10 @@ QString createPixelLabel(image::Image *img, int x, int y)
     pixel = ((T*)pixelLocation);
 
     pixelLabel += QLatin1String("[");
-    pixelLabel += QString::fromLatin1("%1").arg(pixel[0]);
+    pixelLabel += QString::fromLatin1("%1").arg((double)pixel[0], 0, 'g', 9);
 
     for (int channel = 1; channel < img->channels; ++channel) {
-        pixelLabel += QString::fromLatin1(", %1").arg(pixel[channel]);
+        pixelLabel += QString::fromLatin1(", %1").arg((double)pixel[channel], 0, 'g', 9);
     }
     pixelLabel += QLatin1String("]");
 
