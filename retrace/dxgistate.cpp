@@ -29,8 +29,10 @@
 #include <iostream>
 
 #include "image.hpp"
+#include "json.hpp"
 
 #include "dxgistate.hpp"
+#include "d3d10state.hpp"
 
 #ifdef __MINGW32__
 #define nullptr NULL
@@ -277,5 +279,73 @@ ConvertImage(DXGI_FORMAT SrcFormat,
 
     return image;
 }
+
+
+image::Image *
+getRenderTargetImage(IDXGISwapChain *pSwapChain)
+{
+    HRESULT hr;
+
+    assert(pSwapChain);
+    if (!pSwapChain) {
+        return NULL;
+    }
+
+    DXGI_SWAP_CHAIN_DESC Desc;
+    hr = pSwapChain->GetDesc(&Desc);
+    assert(SUCCEEDED(hr));
+
+    /*
+     * There is a IDXGISurface::Map method, but swapchains are not normally mappable,
+     * and there is no way to copy into a staging resource, which effectively means there
+     * is no way to read a IDXGISwapChain using DXGI interfaces alone.
+     *
+     * We must figure out
+     * the appropriate D3D10/D3D11 interfaces, and use them instead.
+     */
+
+    ID3D10Resource *pD3D10Resource = NULL;
+    hr = pSwapChain->GetBuffer(0, IID_ID3D10Resource, (void **)&pD3D10Resource);
+    if (SUCCEEDED(hr)) {
+        ID3D10Device * pD3D10Device;
+        hr = pSwapChain->GetDevice(IID_ID3D10Device, (void **)&pD3D10Device);
+        assert(SUCCEEDED(hr));
+        if (FAILED(hr)) {
+            return NULL;
+        }
+
+        DXGI_FORMAT Format = Desc.BufferDesc.Format;
+
+        return getSubResourceImage(pD3D10Device, pD3D10Resource, Format, 0, 0);
+    }
+
+    /* FIXME: Handle D3D11 too. */
+
+    return NULL;
+}
+
+
+void
+dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain)
+{
+    JSONWriter json(os);
+
+    json.beginMember("framebuffer");
+    json.beginObject();
+
+    if (pSwapChain) {
+        image::Image *image;
+        image = getRenderTargetImage(pSwapChain);
+        if (image) {
+            json.beginMember("SWAP_CHAIN");
+            json.writeImage(image, "UNKNOWN");
+            json.endMember();
+        }
+    }
+
+    json.endObject();
+    json.endMember(); // framebuffer
+}
+
 
 } /* namespace d3dstate */

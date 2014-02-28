@@ -79,6 +79,14 @@ dumpShader(JSONWriter &json, const char *name, T *pShader) {
 }
 
 
+image::Image *
+getSubResourceImage(ID3D10Device *pDevice,
+                    ID3D10Resource *pResource,
+                    DXGI_FORMAT Format,
+                    UINT ArraySlice,
+                    UINT MipSlice);
+
+
 } /* namespace d3dstate */
 
 #endif // _D3D10STATE_HPP_

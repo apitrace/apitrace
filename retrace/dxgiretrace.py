@@ -220,6 +220,10 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
 
         # notify frame has been completed
         if method.name == 'Present':
+            if interface.name == 'IDXGISwapChainDWM':
+                print r'    dxgiDumper.bindDevice(reinterpret_cast<d3dretrace::CDXGISwapChainDWM *>(_this)->m_pSwapChain);'
+            else:
+                print r'    dxgiDumper.bindDevice(_this);'
             print r'    retrace::frameComplete(call);'
 
         if 'pSharedResource' in method.argNames():
@@ -357,7 +361,10 @@ def main():
     if moduleNames:
         print r'#include "d3dretrace_dxgi.hpp"'
         api.addModule(dxgi)
-    
+        print
+        print '''static d3dretrace::D3DDumper<IDXGISwapChain> dxgiDumper;'''
+        print
+
     if 'd3d10' in moduleNames:
         if 'd3d10_1' in moduleNames:
             print r'#include "d3d10_1imports.hpp"'
@@ -365,6 +372,7 @@ def main():
         else:
             print r'#include "d3d10imports.hpp"'
         print r'#include "d3d10size.hpp"'
+        print r'#include "d3d10state.hpp"'
         api.addModule(d3d10)
         print
         print '''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;'''

@@ -63,6 +63,10 @@ ConvertImage(DXGI_FORMAT SrcFormat,
              UINT Width, UINT Height);
 
 
+image::Image *
+getRenderTargetImage(IDXGISwapChain *pSwapChain);
+
+
 } /* namespace d3dstate */
 
 

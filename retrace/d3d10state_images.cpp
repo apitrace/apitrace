@@ -189,7 +189,7 @@ unmapResource(ID3D10Resource *pResource, UINT SubResource) {
 }
 
 
-static image::Image *
+image::Image *
 getSubResourceImage(ID3D10Device *pDevice,
                     ID3D10Resource *pResource,
                     DXGI_FORMAT Format,

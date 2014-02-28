@@ -34,7 +34,9 @@
 
 struct IDirect3DDevice8;
 struct IDirect3DDevice9;
+struct IDXGISwapChain;
 struct ID3D10Device;
+struct ID3D10Resource;
 struct ID3D11DeviceContext;
 
 
@@ -80,6 +82,17 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice);
 
 void
 dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
+
+
+/*
+ * DXGI
+ */
+
+image::Image *
+getRenderTargetImage(IDXGISwapChain *pSwapChain);
+
+void
+dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain);
 
 
 /*
