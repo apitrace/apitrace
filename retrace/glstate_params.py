@@ -35,19 +35,6 @@ from specs.gltypes import *
 from specs.glparams import *
 
 
-texture_targets = [
-    ('GL_TEXTURE_1D', 'GL_TEXTURE_BINDING_1D'),
-    ('GL_TEXTURE_1D_ARRAY', 'GL_TEXTURE_BINDING_1D_ARRAY'),
-    ('GL_TEXTURE_2D', 'GL_TEXTURE_BINDING_2D'),
-    ('GL_TEXTURE_2D_ARRAY', 'GL_TEXTURE_BINDING_2D_ARRAY'),
-    ('GL_TEXTURE_2D_MULTISAMPLE', 'GL_TEXTURE_BINDING_2D_MULTISAMPLE'),
-    ('GL_TEXTURE_2D_MULTISAMPLE_ARRAY', 'GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY'),
-    ('GL_TEXTURE_3D', 'GL_TEXTURE_BINDING_3D'),
-    ('GL_TEXTURE_RECTANGLE', 'GL_TEXTURE_BINDING_RECTANGLE'),
-    ('GL_TEXTURE_CUBE_MAP', 'GL_TEXTURE_BINDING_CUBE_MAP'),
-    ('GL_TEXTURE_CUBE_MAP_ARRAY', 'GL_TEXTURE_BINDING_CUBE_MAP_ARRAY'),
-]
-
 framebuffer_targets = [
     ('GL_DRAW_FRAMEBUFFER', 'GL_DRAW_FRAMEBUFFER_BINDING'),
     ('GL_READ_FRAMEBUFFER', 'GL_READ_FRAMEBUFFER_BINDING'),
@@ -332,8 +319,9 @@ class StateDumper:
         print
 
         print 'static void'
-        print 'dumpTextureTargetParameters(JSONWriter &json, Context &context, GLenum target, GLenum binding_param)'
+        print 'dumpTextureTargetParameters(JSONWriter &json, Context &context, GLenum target)'
         print '{'
+        print '    GLenum binding_param = getTextureBinding(target);'
         print '    GLboolean enabled = GL_FALSE;'
         print '    GLint binding = 0;'
         print '    glGetBooleanv(target, &enabled);'
@@ -544,8 +532,11 @@ class StateDumper:
         print '            glActiveTexture(GL_TEXTURE0 + unit);'
         print '            json.beginObject();'
         print
-        for target, binding in texture_targets:
-            print '            dumpTextureTargetParameters(json, context, %s, %s);' % (target, binding)
+        print '            for (unsigned i = 0; i < numTextureTargets; ++i) {'
+        print '                GLenum target = textureTargets[i];'
+        print '                dumpTextureTargetParameters(json, context, target);'
+        print '            }'
+        print
         print '            if (unit < max_texture_coords) {'
         self.dump_sampler_params()
         self.dump_texenv_params()

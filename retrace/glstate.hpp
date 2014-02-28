@@ -32,6 +32,11 @@
 #include "glimports.hpp"
 
 
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(_x) (sizeof(_x)/sizeof((_x)[0]))
+#endif
+
+
 namespace image {
     class Image;
 }
@@ -39,6 +44,16 @@ namespace image {
 
 namespace glstate {
 
+
+extern const GLenum
+textureTargets[];
+
+extern const unsigned
+numTextureTargets;
+
+
+GLenum
+getTextureBinding(GLenum target);
 
 const char *enumToString(GLenum pname);
 

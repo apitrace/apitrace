@@ -295,7 +295,25 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 }
 
 
-static GLenum
+const GLenum
+textureTargets[] = {
+    GL_TEXTURE_2D,
+    GL_TEXTURE_1D,
+    GL_TEXTURE_RECTANGLE,
+    GL_TEXTURE_CUBE_MAP,
+    GL_TEXTURE_3D,
+    GL_TEXTURE_2D_MULTISAMPLE,
+    GL_TEXTURE_2D_ARRAY,
+    GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+    GL_TEXTURE_1D_ARRAY,
+    GL_TEXTURE_CUBE_MAP_ARRAY,
+};
+
+const unsigned
+numTextureTargets = ARRAYSIZE(textureTargets);
+
+
+GLenum
 getTextureBinding(GLenum target)
 {
     switch (target) {
@@ -305,10 +323,12 @@ getTextureBinding(GLenum target)
         return GL_TEXTURE_BINDING_1D_ARRAY;
     case GL_TEXTURE_2D:
         return GL_TEXTURE_BINDING_2D;
-    case GL_TEXTURE_2D_MULTISAMPLE:
-        return GL_TEXTURE_BINDING_2D_MULTISAMPLE;
     case GL_TEXTURE_2D_ARRAY:
         return GL_TEXTURE_BINDING_2D_ARRAY;
+    case GL_TEXTURE_2D_MULTISAMPLE:
+        return GL_TEXTURE_BINDING_2D_MULTISAMPLE;
+    case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
+        return GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY;
     case GL_TEXTURE_RECTANGLE:
         return GL_TEXTURE_BINDING_RECTANGLE;
     case GL_TEXTURE_CUBE_MAP:
@@ -565,8 +585,10 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint 
 
 
 static inline void
-dumpTexture(JSONWriter &json, Context &context, GLenum target, GLenum binding)
+dumpTexture(JSONWriter &json, Context &context, GLenum target)
 {
+    GLenum binding = getTextureBinding(target);
+
     GLint texture_binding = 0;
     glGetIntegerv(binding, &texture_binding);
     if (!glIsEnabled(target) && !texture_binding) {
@@ -620,13 +642,11 @@ dumpTextures(JSONWriter &json, Context &context)
     for (GLint unit = 0; unit < max_units; ++unit) {
         GLenum texture = GL_TEXTURE0 + unit;
         glActiveTexture(texture);
-        dumpTexture(json, context, GL_TEXTURE_1D, GL_TEXTURE_BINDING_1D);
-        dumpTexture(json, context, GL_TEXTURE_2D, GL_TEXTURE_BINDING_2D);
-        dumpTexture(json, context, GL_TEXTURE_3D, GL_TEXTURE_BINDING_3D);
-        dumpTexture(json, context, GL_TEXTURE_RECTANGLE, GL_TEXTURE_BINDING_RECTANGLE);
-        dumpTexture(json, context, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BINDING_CUBE_MAP);
-        dumpTexture(json, context, GL_TEXTURE_1D_ARRAY, GL_TEXTURE_BINDING_1D_ARRAY);
-        dumpTexture(json, context, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BINDING_2D_ARRAY);
+
+        for (unsigned i = 0; i < numTextureTargets; ++i) {
+            GLenum target = textureTargets[i];
+            dumpTexture(json, context, target);
+        }
     }
     glActiveTexture(active_texture);
     json.endObject();
@@ -737,27 +757,6 @@ getDrawableBounds(GLint *width, GLint *height) {
 }
 
 
-struct TextureTargetBinding
-{
-    GLenum target;
-    GLenum binding;
-};
-
-
-static const GLenum
-textureTargets[] = {
-    GL_TEXTURE_1D,
-    GL_TEXTURE_2D,
-    GL_TEXTURE_RECTANGLE,
-    GL_TEXTURE_CUBE_MAP,
-    GL_TEXTURE_3D,
-    GL_TEXTURE_2D_MULTISAMPLE,
-    GL_TEXTURE_1D_ARRAY,
-    GL_TEXTURE_2D_ARRAY,
-    GL_TEXTURE_CUBE_MAP_ARRAY,
-};
-
-
 static GLenum
 getTextureTarget(GLint texture)
 {
@@ -765,7 +764,7 @@ getTextureTarget(GLint texture)
         return GL_NONE;
     }
 
-    for (unsigned i = 0; i < sizeof(textureTargets)/sizeof(textureTargets[0]); ++i) {
+    for (unsigned i = 0; i < numTextureTargets; ++i) {
         GLenum target = textureTargets[i];
         GLenum binding = getTextureBinding(target);
 
