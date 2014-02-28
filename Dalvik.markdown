@@ -10,6 +10,7 @@ The following discussion assumes that tracing library is copied to '/data':
 
     adb push /path/to/apitrace/build/wrappers/egltrace.so /data
 
+
 Tracing on Android 4.0 and newer
 --------------------------------
 
@@ -42,30 +43,13 @@ are saved into '/data/data/$PROCNAME' directory by default:
     adb shell rm /data/data/$PROCNAME/$PROCNAME.trace
 
 
-Injecting tracing library globally
-----------------------------------
+Tracing on Android pre-4.0
+--------------------------
 
-If `LD_PRELOAD` is supported (Android 2.3 "Gingerbread" and newer), it is
-possible to inject `egltrace.so` into the resident Java VM, in which case
-`debug.apitrace.procname` system propery is used to control for which process
-tracing will be active.
+`LD_PRELOAD` is supported since Android 2.3 "Gingerbread" and newer, but
+injecting tracing library globally is no longer supported, as the
+`debug.apitrace.procname` system propery is no longer honored.
 
-Restarting 'zygote' (Java VM) service is not straightforward, since '/init.rc'
-is read only once at system bootup, and restored from the recovery image on
-reboots.   Thus, you either need to augment '/init.rc' in the recovery image
-with `setenv LD_PRELOAD /data/egltrace.so` in `service zygote` section, or you
-can use a tool such as
-[adjust-child-env](https://github.com/amonakov/adjust-child-env) to restart
-the service with modified environment.
-
-Put `adjust-child-env` and a script with the following contents into `/data`:
-
-    stop zygote
-    /data/adjust-child-env 1 /system/bin/app_process LD_PRELOAD=/data/egltrace.so &
-    sleep 1
-    start zygote
-
-The scripts restarts the Java VM ('zygote') with modified environment.
-
-Invoke the script with `adb shell` to prepare for tracing, and then follow the
-Android 4.0 directions.
+Consider checking out an
+[older commit](https://github.com/apitrace/apitrace/commit/888112983ef9564b3a9d15699faa17c337d3942b)
+if you need to trace on Android pre-4.0.

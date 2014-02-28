@@ -503,7 +503,6 @@ class Tracer:
         print '#  include <alloca.h> // alloca'
         print '#endif'
         print
-        print '#include "trace.hpp"'
         print
         print 'static std::map<void *, void *> g_WrappedObjects;'
 
@@ -537,15 +536,6 @@ class Tracer:
         print function.prototype() + ' {'
         if function.type is not stdapi.Void:
             print '    %s _result;' % function.type
-
-        # No-op if tracing is disabled
-        print '    if (!trace::isTracingEnabled()) {'
-        self.doInvokeFunction(function)
-        if function.type is not stdapi.Void:
-            print '        return _result;'
-        else:
-            print '        return;'
-        print '    }'
 
         self.traceFunctionImplBody(function)
         if function.type is not stdapi.Void:

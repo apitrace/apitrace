@@ -137,7 +137,7 @@ void * dlopen(const char *filename, int flag)
 {
     bool intercept = false;
 
-    if (filename && trace::isTracingEnabled()) {
+    if (filename) {
         intercept =
             strcmp(filename, "libEGL.so") == 0 ||
             strcmp(filename, "libEGL.so.1") == 0 ||
