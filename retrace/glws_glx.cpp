@@ -104,9 +104,11 @@ class GlxDrawable : public Drawable
 {
 public:
     Window window;
+    bool ever_current;
 
     GlxDrawable(const Visual *vis, int w, int h, bool pbuffer) :
-        Drawable(vis, w, h, pbuffer)
+        Drawable(vis, w, h, pbuffer),
+        ever_current(false)
     {
         XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
 
@@ -221,8 +223,15 @@ public:
     }
 
     void swapBuffers(void) {
-        glXSwapBuffers(display, window);
-
+        if (ever_current) {
+            // The window has been bound to a context at least once
+            glXSwapBuffers(display, window);
+        } else {
+            // Don't call glXSwapBuffers on this window to avoid an
+            // (untrappable) X protocol error with NVIDIA's driver.
+            std::cerr << "warning: attempt to issue SwapBuffers on unbound window "
+                         " - skipping.\n";
+        }
         processKeys();
     }
 };
@@ -404,6 +413,8 @@ makeCurrent(Drawable *drawable, Context *context)
     } else {
         GlxDrawable *glxDrawable = static_cast<GlxDrawable *>(drawable);
         GlxContext *glxContext = static_cast<GlxContext *>(context);
+
+        glxDrawable->ever_current = true;
 
         return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
     }
