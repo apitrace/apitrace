@@ -82,12 +82,17 @@ Drawable::copySubBuffer(int x, int y, int width, int height) {
 bool
 Context::hasExtension(const char *string) {
     if (extensions.empty()) {
-        if (isCoreProfile(profile)) {
+        unsigned major, minor;
+        bool core;
+        getProfileVersion(profile, major, minor, core);
+        if (major >= 3) {
             // Use glGetStringi
             GLint num_extensions = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
+            assert(num_extensions);
             for (int i = 0; i < num_extensions; ++i) {
                 const char *extension = reinterpret_cast<const char *>(glGetStringi(GL_EXTENSIONS, i));
+                assert(extension);
                 if (extension) {
                     extensions.insert(extension);
                 }
@@ -95,6 +100,7 @@ Context::hasExtension(const char *string) {
         } else {
             // Use glGetString
             const char *begin = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
+            assert(begin);
             do {
                 const char *end = begin;
                 char c = *end;
