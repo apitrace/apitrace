@@ -128,8 +128,7 @@ class GlTracer(Tracer):
         print '        _glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &_vertex_program);'
         print '        if (_vertex_program) {'
         print '            if (ctx->user_arrays_nv) {'
-        print '                GLint _vertex_program_binding_nv = 0;'
-        print '                _glGetIntegerv(GL_VERTEX_PROGRAM_BINDING_NV, &_vertex_program_binding_nv);'
+        print '                GLint _vertex_program_binding_nv = _glGetInteger(GL_VERTEX_PROGRAM_BINDING_NV);'
         print '                if (_vertex_program_binding_nv) {'
         print '                    return VERTEX_ATTRIB_NV;'
         print '                }'
@@ -165,8 +164,7 @@ class GlTracer(Tracer):
             print '  if (%s) {' % profile_check
             self.array_prolog(api, uppercase_name)
             print '    if (_glIsEnabled(%s)) {' % enable_name
-            print '        GLint _binding = 0;'
-            print '        _glGetIntegerv(%s, &_binding);' % binding_name
+            print '        GLint _binding = _glGetInteger(%s);' % binding_name
             print '        if (!_binding) {'
             self.array_cleanup(api, uppercase_name)
             print '            return true;'
@@ -184,8 +182,7 @@ class GlTracer(Tracer):
         print
         print '    // glVertexAttribPointer'
         print '    if (_vertex_attrib == VERTEX_ATTRIB) {'
-        print '        GLint _max_vertex_attribs = 0;'
-        print '        _glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &_max_vertex_attribs);'
+        print '        GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS);'
         print '        for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
         print '            GLint _enabled = 0;'
         print '            _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &_enabled);'
@@ -201,8 +198,7 @@ class GlTracer(Tracer):
         print
         print '    // glVertexAttribPointerARB'
         print '    if (_vertex_attrib == VERTEX_ATTRIB_ARB) {'
-        print '        GLint _max_vertex_attribs = 0;'
-        print '        _glGetIntegerv(GL_MAX_VERTEX_ATTRIBS_ARB, &_max_vertex_attribs);'
+        print '        GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS_ARB);'
         print '        for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
         print '            GLint _enabled = 0;'
         print '            _glGetVertexAttribivARB(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED_ARB, &_enabled);'
@@ -219,8 +215,7 @@ class GlTracer(Tracer):
         print '    // glVertexAttribPointerNV'
         print '    if (_vertex_attrib == VERTEX_ATTRIB_NV) {'
         print '        for (GLint index = 0; index < 16; ++index) {'
-        print '            GLint _enabled = 0;'
-        print '            _glGetIntegerv(GL_VERTEX_ATTRIB_ARRAY0_NV + index, &_enabled);'
+        print '            GLboolean _enabled = _glIsEnabled(GL_VERTEX_ATTRIB_ARRAY0_NV);'
         print '            if (_enabled) {'
         print '                return true;'
         print '            }'
@@ -368,8 +363,7 @@ class GlTracer(Tracer):
         print '        return;'
         print '    }'
         print
-        print '    GLint buffer_binding = 0;'
-        print '    _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buffer_binding);'
+        print '    GLint buffer_binding = _glGetInteger(GL_ELEMENT_ARRAY_BUFFER_BINDING);'
         print '    if (buffer_binding > 0) {'
         print '        gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
         print '        buf.getSubData(offset, size, data);'
@@ -380,8 +374,7 @@ class GlTracer(Tracer):
         # Emit code to fetch the shadow buffer, and invoke a method
         print '    gltrace::Context *ctx = gltrace::getContext();'
         print '    if (ctx->needsShadowBuffers() && target == GL_ELEMENT_ARRAY_BUFFER) {'
-        print '        GLint buffer_binding = 0;'
-        print '        _glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &buffer_binding);'
+        print '        GLint buffer_binding = _glGetInteger(GL_ELEMENT_ARRAY_BUFFER_BINDING);'
         print '        if (buffer_binding > 0) {'
         print '            gltrace::Buffer & buf = ctx->buffers[buffer_binding];'
         print '            buf.' + method + ';'
@@ -490,8 +483,7 @@ class GlTracer(Tracer):
     def traceFunctionImplBody(self, function):
         # Defer tracing of user array pointers...
         if function.name in self.array_pointer_function_names:
-            print '    GLint _array_buffer = 0;'
-            print '    _glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &_array_buffer);'
+            print '    GLint _array_buffer = _glGetInteger(GL_ARRAY_BUFFER_BINDING);'
             print '    if (!_array_buffer) {'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        ctx->user_arrays = true;'
@@ -959,8 +951,7 @@ class GlTracer(Tracer):
         print
 
         # Temporarily unbind the array buffer
-        print '    GLint _array_buffer = 0;'
-        print '    _glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &_array_buffer);'
+        print '    GLint _array_buffer = _glGetInteger(GL_ARRAY_BUFFER_BINDING);'
         print '    if (_array_buffer) {'
         self.fake_glBindBuffer(api, 'GL_ARRAY_BUFFER', '0')
         print '    }'
@@ -982,8 +973,7 @@ class GlTracer(Tracer):
             self.array_trace_prolog(api, uppercase_name)
             self.array_prolog(api, uppercase_name)
             print '    if (_glIsEnabled(%s)) {' % enable_name
-            print '        GLint _binding = 0;'
-            print '        _glGetIntegerv(%s, &_binding);' % binding_name
+            print '        GLint _binding = _glGetInteger(%s);' % binding_name
             print '        if (!_binding) {'
 
             # Get the arguments via glGet*
@@ -1047,8 +1037,7 @@ class GlTracer(Tracer):
             if suffix == 'NV':
                 print '        GLint _max_vertex_attribs = 16;'
             else:
-                print '        GLint _max_vertex_attribs = 0;'
-                print '        _glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &_max_vertex_attribs);'
+                print '        GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS);'
             print '        for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
             print '            GLint _enabled = 0;'
             if suffix == 'NV':
@@ -1111,8 +1100,7 @@ class GlTracer(Tracer):
 
     def array_prolog(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
-            print '    GLint client_active_texture = 0;'
-            print '    _glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &client_active_texture);'
+            print '    GLint client_active_texture = _glGetInteger(GL_CLIENT_ACTIVE_TEXTURE);'
             print '    GLint max_texture_coords = 0;'
             print '    if (ctx->profile == gltrace::PROFILE_COMPAT)'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
