@@ -111,6 +111,8 @@ class GlTracer(Tracer):
     def header(self, api):
         Tracer.header(self, api)
 
+        print '#include <algorithm>'
+        print
         print '#include "gltrace.hpp"'
         print
         
@@ -228,6 +230,10 @@ class GlTracer(Tracer):
         print
 
         print 'static void _trace_user_arrays(GLuint count);'
+        print
+
+        print '// whether glLockArraysEXT() has ever been called'
+        print 'static bool _checkLockArraysEXT = false;'
         print
 
         # Buffer mappings
@@ -542,8 +548,17 @@ class GlTracer(Tracer):
             print '    if (_need_user_arrays()) {'
             arg_names = ', '.join([arg.name for arg in function.args[1:]])
             print '        GLuint _count = _%s_count(%s);' % (function.name, arg_names)
+            # Some apps, in particular Quake3, can tell the driver to lock more
+            # vertices than those actually required for the draw call.
+            print '        if (_checkLockArraysEXT) {'
+            print '            GLuint _locked_count = _glGetInteger(GL_ARRAY_ELEMENT_LOCK_FIRST_EXT)'
+            print '                                 + _glGetInteger(GL_ARRAY_ELEMENT_LOCK_COUNT_EXT);'
+            print '            _count = std::max(_count, _locked_count);'
+            print '        }'
             print '        _trace_user_arrays(_count);'
             print '    }'
+        if function.name == 'glLockArraysEXT':
+            print '        _checkLockArraysEXT = true;'
         
         # Emit a fake memcpy on buffer uploads
         if function.name == 'glBufferParameteriAPPLE':
