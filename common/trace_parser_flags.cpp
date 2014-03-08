@@ -529,6 +529,7 @@ callFlagTable[] = {
     { "glMultiDrawElements",                           CALL_FLAG_RENDER },
     { "glMultiDrawElementsBaseVertex",                 CALL_FLAG_RENDER },
     { "glMultiDrawElementsEXT",                        CALL_FLAG_RENDER },
+    { "glMultiDrawElementsIndirect",                   CALL_FLAG_RENDER },
     { "glMultiModeDrawArraysIBM",                      CALL_FLAG_RENDER },
     { "glMultiModeDrawElementsIBM",                    CALL_FLAG_RENDER },
     { "glObjectLabel",                                 CALL_FLAG_NO_SIDE_EFFECTS },
