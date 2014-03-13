@@ -127,6 +127,7 @@ void MainWindow::callItemSelected(const QModelIndex &index)
             .arg(call->index()));
         m_ui.detailsWebView->setHtml(call->toHtml());
         m_ui.detailsDock->show();
+        m_ui.callView->scrollTo(index);
         if (call->hasBinaryData()) {
             QByteArray data =
                 call->arguments()[call->binaryDataIndex()].toByteArray();
