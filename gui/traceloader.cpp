@@ -195,15 +195,14 @@ void TraceLoader::parseTrace()
         allCalls.append(apiCall);
         if (groups.count() == 0) {
             topLevelItems.append(apiCall);
+        } else {
+            groups.top()->addChild(apiCall);
         }
         if (call->flags & trace::CALL_FLAG_MARKER_PUSH) {
             groups.push(apiCall);
         } else if (call->flags & trace::CALL_FLAG_MARKER_POP) {
             groups.top()->finishedAddingChildren();
             groups.pop();
-        }
-        if (!groups.isEmpty()) {
-            groups.top()->addChild(apiCall);
         }
         if (apiCall->hasBinaryData()) {
             QByteArray data =
