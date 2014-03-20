@@ -251,6 +251,8 @@ if (WIN32)
             ${CMAKE_SOURCE_DIR}/specs/d3d10.py
             ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
             ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
+            ${CMAKE_SOURCE_DIR}/specs/d3d10shader.py
+            ${CMAKE_SOURCE_DIR}/specs/d3d10effect.py
             ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
             ${CMAKE_SOURCE_DIR}/specs/dxgi1_2.py
             ${CMAKE_SOURCE_DIR}/specs/dxgi.py

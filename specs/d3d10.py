@@ -914,3 +914,5 @@ d3d10 = Module("d3d10")
 
 from d3d10sdklayers import *
 import d3d10misc
+#import d3d10shader
+#import d3d10effect
