@@ -3,7 +3,6 @@
 #include "apitrace.h"
 #include <QDebug>
 #include <QFile>
-#include <QStack>
 
 #define FRAMES_TO_CACHE 100
 
@@ -173,82 +172,54 @@ void TraceLoader::scanTrace()
 void TraceLoader::parseTrace()
 {
     QList<ApiTraceFrame*> frames;
-    ApiTraceFrame *currentFrame = 0;
     int frameCount = 0;
-    QStack<ApiTraceCall*> groups;
-    QVector<ApiTraceCall*> topLevelItems;
-    QVector<ApiTraceCall*> allCalls;
-    quint64 binaryDataSize = 0;
-
     int lastPercentReport = 0;
 
-    trace::Call *call = m_parser.parse_call();
-    while (call) {
-        //std::cout << *call;
-        if (!currentFrame) {
-            currentFrame = new ApiTraceFrame();
-            currentFrame->number = frameCount;
-            ++frameCount;
+    ApiTraceFrame *currentFrame = new ApiTraceFrame();
+    currentFrame->number = frameCount;
+
+    FrameContents frameCalls;
+    while (frameCalls.load(this, currentFrame, m_helpHash, m_parser)) {
+
+        if (frameCalls.topLevelCount() == frameCalls.allCallsCount()) {
+            currentFrame->setCalls(frameCalls.allCalls(),
+                                   frameCalls.allCalls(),
+                                   frameCalls.binaryDataSize());
+        } else {
+            currentFrame->setCalls(frameCalls.topLevelCalls(),
+                                   frameCalls.allCalls(),
+                                   frameCalls.binaryDataSize());
         }
-        ApiTraceCall *apiCall =
-            apiCallFromTraceCall(call, m_helpHash, currentFrame, groups.isEmpty() ? 0 : groups.top(), this);
-        allCalls.append(apiCall);
-        if (groups.count() == 0) {
-            topLevelItems.append(apiCall);
+        frames.append(currentFrame);
+        if (frames.count() >= FRAMES_TO_CACHE) {
+            emit framesLoaded(frames);
+            frames.clear();
         }
-        if (call->flags & trace::CALL_FLAG_MARKER_PUSH) {
-            groups.push(apiCall);
-        } else if (call->flags & trace::CALL_FLAG_MARKER_POP) {
-            groups.top()->finishedAddingChildren();
-            groups.pop();
+        if (m_parser.percentRead() - lastPercentReport >= 5) {
+            emit parsed(m_parser.percentRead());
+            lastPercentReport = m_parser.percentRead();
         }
-        if (!groups.isEmpty()) {
-            groups.top()->addChild(apiCall);
-        }
-        if (apiCall->hasBinaryData()) {
-            QByteArray data =
-                apiCall->arguments()[apiCall->binaryDataIndex()].toByteArray();
-            binaryDataSize += data.size();
-        }
-        if (call->flags & trace::CALL_FLAG_END_FRAME) {
-            allCalls.squeeze();
-            topLevelItems.squeeze();
-            if (topLevelItems.count() == allCalls.count()) {
-                currentFrame->setCalls(allCalls, allCalls, binaryDataSize);
-            } else {
-                currentFrame->setCalls(topLevelItems, allCalls, binaryDataSize);
-            }
-            allCalls.clear();
-            groups.clear();
-            topLevelItems.clear();
-            frames.append(currentFrame);
-            currentFrame = 0;
-            binaryDataSize = 0;
-            if (frames.count() >= FRAMES_TO_CACHE) {
-                emit framesLoaded(frames);
-                frames.clear();
-            }
-            if (m_parser.percentRead() - lastPercentReport >= 5) {
-                emit parsed(m_parser.percentRead());
-                lastPercentReport = m_parser.percentRead();
-            }
-        }
-        delete call;
-        call = m_parser.parse_call();
+        ++frameCount;
+        currentFrame = new ApiTraceFrame();
+        currentFrame->number = frameCount;
+
+        frameCalls.reset();
     }
 
     //last frames won't have markers
     //  it's just a bunch of Delete calls for every object
     //  after the last SwapBuffers
-    if (currentFrame) {
-        allCalls.squeeze();
-        if (topLevelItems.count() == allCalls.count()) {
-            currentFrame->setCalls(allCalls, allCalls, binaryDataSize);
+    if (!frameCalls.isEmpty()) {
+        if (frameCalls.topLevelCount() == frameCalls.allCallsCount()) {
+            currentFrame->setCalls(frameCalls.allCalls(),
+                                   frameCalls.allCalls(),
+                                   frameCalls.binaryDataSize());
         } else {
-            currentFrame->setCalls(topLevelItems, allCalls, binaryDataSize);
+            currentFrame->setCalls(frameCalls.topLevelCalls(),
+                                   frameCalls.allCalls(),
+                                   frameCalls.binaryDataSize());
         }
         frames.append(currentFrame);
-        currentFrame = 0;
     }
     if (frames.count()) {
         emit framesLoaded(frames);
@@ -430,65 +401,24 @@ TraceLoader::fetchFrameContents(ApiTraceFrame *currentFrame)
         int numOfCalls = numberOfCallsInFrame(frameIdx);
 
         if (numOfCalls) {
-            quint64 binaryDataSize = 0;
-            QStack<ApiTraceCall*> groups;
-            QVector<ApiTraceCall*> topLevelItems;
-            QVector<ApiTraceCall*> allCalls(numOfCalls);
             const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
 
             m_parser.setBookmark(frameBookmark.start);
 
-            trace::Call *call;
-            int parsedCalls = 0;
-            while ((call = m_parser.parse_call())) {
-                ApiTraceCall *apiCall =
-                    apiCallFromTraceCall(call, m_helpHash,
-                                         currentFrame, groups.isEmpty() ? 0 : groups.top(), this);
-                Q_ASSERT(apiCall);
-                Q_ASSERT(parsedCalls < allCalls.size());
-                allCalls[parsedCalls++] = apiCall;
-                if (groups.count() == 0) {
-                    topLevelItems.append(apiCall);
-                }
-                if (!groups.isEmpty()) {
-                    groups.top()->addChild(apiCall);
-                }
-                if (call->flags & trace::CALL_FLAG_MARKER_PUSH) {
-                    groups.push(apiCall);
-                } else if (call->flags & trace::CALL_FLAG_MARKER_POP) {
-                    groups.top()->finishedAddingChildren();
-                    groups.pop();
-                }
-                if (apiCall->hasBinaryData()) {
-                    QByteArray data =
-                        apiCall->arguments()[
-                            apiCall->binaryDataIndex()].toByteArray();
-                    binaryDataSize += data.size();
-                }
-
-                delete call;
-
-                if (apiCall->flags() & trace::CALL_FLAG_END_FRAME) {
-                    break;
-                }
-
-            }
-            // There can be fewer parsed calls when call in different
-            // threads cross the frame boundary
-            Q_ASSERT(parsedCalls <= numOfCalls);
-            Q_ASSERT(parsedCalls <= allCalls.size());
-            allCalls.resize(parsedCalls);
-            allCalls.squeeze();
-
-            Q_ASSERT(parsedCalls <= currentFrame->numChildrenToLoad());
-            if (topLevelItems.count() == allCalls.count()) {
-                emit frameContentsLoaded(currentFrame, allCalls,
-                                         allCalls, binaryDataSize);
+            FrameContents frameCalls(numOfCalls);
+            frameCalls.load(this, currentFrame, m_helpHash, m_parser);
+            if (frameCalls.topLevelCount() == frameCalls.allCallsCount()) {
+                emit frameContentsLoaded(currentFrame,
+                                         frameCalls.allCalls(),
+                                         frameCalls.allCalls(),
+                                         frameCalls.binaryDataSize());
             } else {
-                emit frameContentsLoaded(currentFrame, topLevelItems,
-                                         allCalls, binaryDataSize);
+                emit frameContentsLoaded(currentFrame,
+                                         frameCalls.topLevelCalls(),
+                                         frameCalls.allCalls(),
+                                         frameCalls.binaryDataSize());
             }
-            return allCalls;
+            return frameCalls.allCalls();
         }
     }
     return QVector<ApiTraceCall*>();
@@ -535,6 +465,121 @@ void TraceLoader::search(const ApiTrace::SearchRequest &request)
     } else {
         searchPrev(request);
     }
+}
+
+TraceLoader::FrameContents::FrameContents(int numOfCalls)
+    : m_allCalls(numOfCalls),
+      m_binaryDataSize(0),
+      m_parsedCalls(0)
+{}
+
+
+void
+TraceLoader::FrameContents::reset()
+{
+    m_groups.clear();
+    m_allCalls.clear();
+    m_topLevelItems.clear();
+    m_binaryDataSize = 0;
+}
+
+int
+TraceLoader::FrameContents::topLevelCount() const
+{
+    return m_topLevelItems.count();
+}
+
+int
+TraceLoader::FrameContents::allCallsCount() const
+{
+    return m_allCalls.count();
+}
+
+quint64
+TraceLoader::FrameContents::binaryDataSize() const
+{
+    return m_binaryDataSize;
+}
+QVector<ApiTraceCall*>
+TraceLoader::FrameContents::topLevelCalls() const
+{
+    return m_topLevelItems;
+}
+
+QVector<ApiTraceCall*>
+TraceLoader::FrameContents::allCalls() const
+{
+    return m_allCalls;
+}
+
+bool
+TraceLoader::FrameContents::isEmpty()
+{
+    return (m_allCalls.count() == 0);
+}
+
+bool
+TraceLoader::FrameContents::load(TraceLoader   *loader,
+                               ApiTraceFrame *currentFrame, 
+                               QHash<QString, QUrl> helpHash,
+                               trace::Parser &parser)
+{
+    bool bEndFrameReached = false;
+    int initNumOfCalls = m_allCalls.count();
+    trace::Call  *call;
+    ApiTraceCall *apiCall = NULL;
+
+    while ((call = parser.parse_call())) {
+
+        apiCall = apiCallFromTraceCall(call, helpHash, currentFrame,
+                                       m_groups.isEmpty() ? 0 : m_groups.top(),
+                                       loader);
+        Q_ASSERT(apiCall);
+        if (initNumOfCalls) {
+            Q_ASSERT(m_parsedCalls < m_allCalls.size());
+            m_allCalls[m_parsedCalls++] = apiCall;
+        } else {
+            m_allCalls.append(apiCall);
+        }
+        if (m_groups.count() == 0) {
+            m_topLevelItems.append(apiCall);
+        } else {
+            m_groups.top()->addChild(apiCall);
+        }
+        if (call->flags & trace::CALL_FLAG_MARKER_PUSH) {
+            m_groups.push(apiCall);
+        } else if (call->flags & trace::CALL_FLAG_MARKER_POP) {
+            if (m_groups.count()) {
+                m_groups.top()->finishedAddingChildren();
+                m_groups.pop();
+            }
+        }
+        if (apiCall->hasBinaryData()) {
+            QByteArray data =
+                apiCall->arguments()[apiCall->binaryDataIndex()].
+                                                  toByteArray();
+            m_binaryDataSize += data.size();
+        }
+
+        delete call;
+
+        if (apiCall->flags() & trace::CALL_FLAG_END_FRAME) {
+            bEndFrameReached = true;
+            break;
+        }
+    }
+    if (initNumOfCalls) {
+        // There can be fewer parsed calls when call in different
+        // threads cross the frame boundary
+        Q_ASSERT(m_parsedCalls <= initNumOfCalls);
+        Q_ASSERT(m_parsedCalls <= m_allCalls.size());
+        m_allCalls.resize(m_parsedCalls);
+        Q_ASSERT(m_parsedCalls <= currentFrame->numChildrenToLoad());
+    }
+    m_allCalls.squeeze();
+    m_topLevelItems.squeeze();
+
+    return bEndFrameReached;
 }
 
 #include "traceloader.moc"
