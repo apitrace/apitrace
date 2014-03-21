@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QList>
 #include <QMap>
+#include <QStack>
 
 class TraceLoader : public QObject
 {
@@ -23,6 +24,30 @@ public:
 
     ApiTraceEnumSignature *enumSignature(unsigned id);
     void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
+
+private:
+    class FrameContents
+    {
+    public:
+        FrameContents(int numOfCalls=0);
+
+        bool load(TraceLoader *loader, ApiTraceFrame* frame,
+                  QHash<QString, QUrl> helpHash, trace::Parser &parser);
+        void reset();
+        int  topLevelCount()      const;
+        int  allCallsCount()      const;
+        QVector<ApiTraceCall*> topLevelCalls() const;
+        QVector<ApiTraceCall*> allCalls()      const;
+        quint64 binaryDataSize()  const;
+        bool isEmpty();
+
+    private:
+        QStack <ApiTraceCall*> m_groups;
+        QVector<ApiTraceCall*> m_topLevelItems;
+        QVector<ApiTraceCall*> m_allCalls;
+        quint64 m_binaryDataSize;
+        int     m_parsedCalls;
+    };
 
 public slots:
     void loadTrace(const QString &filename);
