@@ -415,6 +415,14 @@ class PythonDiffer(Differ):
         if not self.callNos:
             return
 
+        if aNo is not None and bNo is not None and aNo == bNo:
+            aNoStr = str(aNo)
+            self.highlighter.write(aNoStr)
+            self.aSpace = len(aNoStr)
+            self.bSpace = self.aSpace
+            self.highlighter.write(' ')
+            return
+
         if aNo is None:
             self.highlighter.write(' '*self.aSpace)
         else:
