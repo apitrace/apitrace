@@ -86,7 +86,7 @@ extern int verbosity;
 /**
  * Debugging checks.
  */
-extern bool debug;
+extern unsigned debug;
 
 /**
  * Add profiling data to the dump when retracing.

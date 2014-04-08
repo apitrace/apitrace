@@ -70,7 +70,7 @@ trace::Profiler profiler;
 
 
 int verbosity = 0;
-bool debug = true;
+unsigned debug = 1;
 bool dumpingState = false;
 
 Driver driver = DRIVER_DEFAULT;
@@ -562,6 +562,7 @@ usage(const char *argv0) {
         "Replay TRACE.\n"
         "\n"
         "  -b, --benchmark         benchmark mode (no error checking or warning messages)\n"
+        "  -d, --debug             increase debugging checks\n"
         "      --pcpu              cpu profiling (cpu times per call)\n"
         "      --pgpu              gpu profiling (gpu times per draw call)\n"
         "      --ppd               pixels drawn profiling (pixels drawn per draw call)\n"
@@ -599,11 +600,12 @@ enum {
 };
 
 const static char *
-shortOptions = "bD:hs:S:vw";
+shortOptions = "bdD:hs:S:vw";
 
 const static struct option
 longOptions[] = {
     {"benchmark", no_argument, 0, 'b'},
+    {"debug", no_argument, 0, 'd'},
     {"call-nos", optional_argument, 0, CALL_NOS_OPT },
     {"core", no_argument, 0, CORE_OPT},
     {"db", no_argument, 0, DB_OPT},
@@ -648,8 +650,11 @@ int main(int argc, char **argv)
             usage(argv[0]);
             return 0;
         case 'b':
-            retrace::debug = false;
+            retrace::debug = 0;
             retrace::verbosity = -1;
+            break;
+        case 'd':
+            ++retrace::debug;
             break;
         case CALL_NOS_OPT:
             useCallNos = trace::boolOption(optarg);
@@ -739,28 +744,28 @@ int main(int argc, char **argv)
             loopOnFinish = true;
             break;
         case PGPU_OPT:
-            retrace::debug = false;
+            retrace::debug = 0;
             retrace::profiling = true;
             retrace::verbosity = -1;
 
             retrace::profilingGpuTimes = true;
             break;
         case PCPU_OPT:
-            retrace::debug = false;
+            retrace::debug = 0;
             retrace::profiling = true;
             retrace::verbosity = -1;
 
             retrace::profilingCpuTimes = true;
             break;
         case PPD_OPT:
-            retrace::debug = false;
+            retrace::debug = 0;
             retrace::profiling = true;
             retrace::verbosity = -1;
 
             retrace::profilingPixelsDrawn = true;
             break;
         case PMEM_OPT:
-            retrace::debug = false;
+            retrace::debug = 0;
             retrace::profiling = true;
             retrace::verbosity = -1;
 
