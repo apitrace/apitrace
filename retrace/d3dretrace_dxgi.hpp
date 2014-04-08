@@ -29,6 +29,8 @@
 
 #include "dxgiint.h"
 
+#include "retrace.hpp"
+
 
 /*
  * This module implements the IDXGIFactoryDWM and IDXGISwapChainDWM
@@ -37,9 +39,6 @@
  * top of the undocumented interfaces works, but it may interfere with running
  * DWM and causes corruption of the desktop upon exit.
  */
-
-
-#define FORCE_WINDOWED 1
 
 
 namespace d3dretrace {
@@ -228,12 +227,12 @@ ULONG STDMETHODCALLTYPE CDXGIFactoryDWM::Release(void)
 HRESULT STDMETHODCALLTYPE CDXGIFactoryDWM::CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain)
 {
     IDXGISwapChain *pSwapChain = NULL;
-    if (FORCE_WINDOWED) {
+    if (retrace::forceWindowed) {
         pDesc->Windowed = TRUE;
     }
     HRESULT hr = m_pFactory->CreateSwapChain(pDevice, pDesc, &pSwapChain);
     if (SUCCEEDED(hr)) {
-        if (!FORCE_WINDOWED) {
+        if (!retrace::forceWindowed) {
             pSwapChain->SetFullscreenState(TRUE, pOutput);
         }
         *ppSwapChain = new CDXGISwapChainDWM(pSwapChain);
