@@ -368,17 +368,20 @@ ID3D10EffectPool.methods += [
 
 
 d3d10.addFunctions([
-    StdFunction(HRESULT, "D3D10StateBlockMaskUnion", [(Pointer(D3D10_STATE_BLOCK_MASK), "pA"), (Pointer(D3D10_STATE_BLOCK_MASK), "pB"), Out(Pointer(D3D10_STATE_BLOCK_MASK), "pResult")]),
-    StdFunction(HRESULT, "D3D10StateBlockMaskIntersect", [(Pointer(D3D10_STATE_BLOCK_MASK), "pA"), (Pointer(D3D10_STATE_BLOCK_MASK), "pB"), Out(Pointer(D3D10_STATE_BLOCK_MASK), "pResult")]),
-    StdFunction(HRESULT, "D3D10StateBlockMaskDifference", [(Pointer(D3D10_STATE_BLOCK_MASK), "pA"), (Pointer(D3D10_STATE_BLOCK_MASK), "pB"), Out(Pointer(D3D10_STATE_BLOCK_MASK), "pResult")]),
-    StdFunction(HRESULT, "D3D10StateBlockMaskEnableCapture", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask"), (D3D10_DEVICE_STATE_TYPES, "StateType"), (UINT, "RangeStart"), (UINT, "RangeLength")]),
-    StdFunction(HRESULT, "D3D10StateBlockMaskDisableCapture", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask"), (D3D10_DEVICE_STATE_TYPES, "StateType"), (UINT, "RangeStart"), (UINT, "RangeLength")]),
-    StdFunction(HRESULT, "D3D10StateBlockMaskEnableAll", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask")]),
-    StdFunction(HRESULT, "D3D10StateBlockMaskDisableAll", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask")]),
-    StdFunction(BOOL, "D3D10StateBlockMaskGetSetting", [(Pointer(D3D10_STATE_BLOCK_MASK), "pMask"), (D3D10_DEVICE_STATE_TYPES, "StateType"), (UINT, "Entry")]),
+    #StdFunction(HRESULT, "D3D10StateBlockMaskUnion", [(Pointer(D3D10_STATE_BLOCK_MASK), "pA"), (Pointer(D3D10_STATE_BLOCK_MASK), "pB"), Out(Pointer(D3D10_STATE_BLOCK_MASK), "pResult")]),
+    #StdFunction(HRESULT, "D3D10StateBlockMaskIntersect", [(Pointer(D3D10_STATE_BLOCK_MASK), "pA"), (Pointer(D3D10_STATE_BLOCK_MASK), "pB"), Out(Pointer(D3D10_STATE_BLOCK_MASK), "pResult")]),
+    #StdFunction(HRESULT, "D3D10StateBlockMaskDifference", [(Pointer(D3D10_STATE_BLOCK_MASK), "pA"), (Pointer(D3D10_STATE_BLOCK_MASK), "pB"), Out(Pointer(D3D10_STATE_BLOCK_MASK), "pResult")]),
+    #StdFunction(HRESULT, "D3D10StateBlockMaskEnableCapture", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask"), (D3D10_DEVICE_STATE_TYPES, "StateType"), (UINT, "RangeStart"), (UINT, "RangeLength")]),
+    #StdFunction(HRESULT, "D3D10StateBlockMaskDisableCapture", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask"), (D3D10_DEVICE_STATE_TYPES, "StateType"), (UINT, "RangeStart"), (UINT, "RangeLength")]),
+    #StdFunction(HRESULT, "D3D10StateBlockMaskEnableAll", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask")]),
+    #StdFunction(HRESULT, "D3D10StateBlockMaskDisableAll", [Out(Pointer(D3D10_STATE_BLOCK_MASK), "pMask")]),
+    #StdFunction(BOOL, "D3D10StateBlockMaskGetSetting", [(Pointer(D3D10_STATE_BLOCK_MASK), "pMask"), (D3D10_DEVICE_STATE_TYPES, "StateType"), (UINT, "Entry")]),
+
+    #StdFunction(HRESULT, "D3D10CreateBlob", [(SIZE_T, "NumBytes"), Out(Pointer(LPD3D10BLOB), "ppBuffer")]),
+
     StdFunction(HRESULT, "D3D10CreateStateBlock", [(ObjPointer(ID3D10Device), "pDevice"), (Pointer(D3D10_STATE_BLOCK_MASK), "pStateBlockMask"), Out(Pointer(ObjPointer(ID3D10StateBlock)), "ppStateBlock")]),
-    StdFunction(HRESULT, "D3D10CompileEffectFromMemory", [(Blob(Void, "DataLength"), "pData"), (SIZE_T, "DataLength"), (LPCSTR, "pSrcFileName"), (Pointer(Const(D3D10_SHADER_MACRO)), "pDefines"), (LPD3D10INCLUDE, "pInclude"), (UINT, "HLSLFlags"), (UINT, "FXFlags"), Out(Pointer(LPD3D10BLOB), "ppCompiledEffect"), Out(Pointer(LPD3D10BLOB), "ppErrors")]),
+    #StdFunction(HRESULT, "D3D10CompileEffectFromMemory", [(Blob(Void, "DataLength"), "pData"), (SIZE_T, "DataLength"), (LPCSTR, "pSrcFileName"), (Pointer(Const(D3D10_SHADER_MACRO)), "pDefines"), (LPD3D10INCLUDE, "pInclude"), (UINT, "HLSLFlags"), (UINT, "FXFlags"), Out(Pointer(LPD3D10BLOB), "ppCompiledEffect"), Out(Pointer(LPD3D10BLOB), "ppErrors")]),
     StdFunction(HRESULT, "D3D10CreateEffectFromMemory", [(Blob(Void, "DataLength"), "pData"), (SIZE_T, "DataLength"), (UINT, "FXFlags"), (ObjPointer(ID3D10Device), "pDevice"), (ObjPointer(ID3D10EffectPool), "pEffectPool"), Out(Pointer(ObjPointer(ID3D10Effect)), "ppEffect")]),
     StdFunction(HRESULT, "D3D10CreateEffectPoolFromMemory", [(Blob(Void, "DataLength"), "pData"), (SIZE_T, "DataLength"), (UINT, "FXFlags"), (ObjPointer(ID3D10Device), "pDevice"), Out(Pointer(ObjPointer(ID3D10EffectPool)), "ppEffectPool")]),
-    StdFunction(HRESULT, "D3D10DisassembleEffect", [(ObjPointer(ID3D10Effect), "pEffect"), (BOOL, "EnableColorCode"), Out(Pointer(LPD3D10BLOB), "ppDisassembly")]),
+    #StdFunction(HRESULT, "D3D10DisassembleEffect", [(ObjPointer(ID3D10Effect), "pEffect"), (BOOL, "EnableColorCode"), Out(Pointer(LPD3D10BLOB), "ppDisassembly")]),
 ])
