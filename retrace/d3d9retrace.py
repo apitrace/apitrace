@@ -123,6 +123,11 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
+        if method.name in self.createDeviceMethodNames:
+            print r'    if (FAILED(_result)) {'
+            print r'        exit(1);'
+            print r'    }'
+
         # process events after presents
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
