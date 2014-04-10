@@ -16,6 +16,9 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QScrollArea" name="scrollArea">
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
      <property name="widgetResizable">
       <bool>true</bool>
      </property>
@@ -27,9 +30,12 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>805</width>
-        <height>539</height>
+        <width>811</width>
+        <height>561</height>
        </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2"/>
      </widget>

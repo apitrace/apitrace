@@ -77,7 +77,7 @@ PixelWidget::PixelWidget(QWidget *parent)
     m_initialSize = QSize(250, 250);
 
     setMouseTracking(true);
-    setAttribute(Qt::WA_NoBackground);
+    setAutoFillBackground(true);
 }
 
 PixelWidget::~PixelWidget()
@@ -125,6 +125,7 @@ void PixelWidget::paintEvent(QPaintEvent *)
 
     p.save();
     p.scale(zoomValue(), zoomValue());
+    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
     p.drawImage(0, 0, m_surface);
     p.scale(1/zoomValue(), 1/zoomValue());
     p.restore();
