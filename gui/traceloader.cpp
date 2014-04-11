@@ -406,14 +406,11 @@ bool TraceLoader::callContains(trace::Call *call,
                                const QString &str,
                                Qt::CaseSensitivity sensitivity)
 {
-    /*
-     * FIXME: do string comparison directly on trace::Call
-     */
-    ApiTraceCall *apiCall = apiCallFromTraceCall(call, m_helpHash,
-                                                 0, 0, this);
-    bool result = apiCall->contains(str, sensitivity);
-    delete apiCall;
-    return result;
+    if (sensitivity == Qt::CaseSensitive) {
+        return (bool) strstr (call->name(), str.toAscii().data());
+    } else {
+        return (bool) strcasestr (call->name(), str.toAscii().data());
+    }
 }
 
 QVector<ApiTraceCall*>
