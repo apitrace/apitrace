@@ -181,7 +181,7 @@ struct image_info *
 _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image)
 {
     GLuint tex;
-    GLuint bound_tex;
+    GLint bound_tex = 0;
     struct image_info *info;
 
     info = new image_info;
@@ -195,7 +195,7 @@ _EGLImageKHR_get_image_info(GLenum target, EGLImageKHR image)
     _eglCreateImageKHR_get_image_size(image, info);
 
     _glGenTextures(1, &tex);
-    _glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&bound_tex);
+    _glGetIntegerv(GL_TEXTURE_BINDING_2D, &bound_tex);
     _glBindTexture(GL_TEXTURE_2D, tex);
     _glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
