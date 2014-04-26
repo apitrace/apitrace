@@ -223,7 +223,7 @@ longOptions[] = {
 static int
 command(int argc, char *argv[])
 {
-    bool symbolic;
+    bool symbolic = false;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
