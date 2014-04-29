@@ -113,8 +113,11 @@ else (WIN32)
 endif ()
 
 if (MSVC)
-    # C99 includes for MSVC
-    include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msinttypes)
+    # Use bundled stdint.h for older MSVC versions
+    check_include_file_cxx (stdint.h HAVE_STDINT_H)
+    if (NOT HAVE_STDINT_H)
+        include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msinttypes)
+    endif ()
 
     # No RTTI required
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
