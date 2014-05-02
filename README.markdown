@@ -540,6 +540,3 @@ system configuration:
 3. The target host must have access to <trace-file> at the same path
    in the filesystem as the <trace-file> path on the host system being
    passed to the qapitrace command line.
-
-
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1062ad633aa7a458e9d7520021307e4 "githalytics.com")](http://githalytics.com/apitrace/apitrace)
