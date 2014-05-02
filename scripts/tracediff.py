@@ -152,15 +152,17 @@ class ExternalDiffer(Differ):
         self.src_dumper.dump.wait()
 
         less = None
+        diff_stdout = None
         if self.isatty:
-            less = subprocess.Popen(
-                args = ['less', '-FRXn'],
-                stdin = subprocess.PIPE
-            )
-
-            diff_stdout = less.stdin
-        else:
-            diff_stdout = None
+            try:
+                less = subprocess.Popen(
+                    args = ['less', '-FRXn'],
+                    stdin = subprocess.PIPE
+                )
+            except OSError:
+                pass
+            else:
+                diff_stdout = less.stdin
 
         diff = subprocess.Popen(
             args = diff_args,
