@@ -12,8 +12,4 @@ install (TARGETS injectee LIBRARY DESTINATION bin)
 add_executable (injector
     injector.cpp
 )
-set_target_properties (injector PROPERTIES
-    PREFIX ""
-    OUTPUT_NAME inject
-)
 install (TARGETS injector RUNTIME DESTINATION bin)
