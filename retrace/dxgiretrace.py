@@ -272,17 +272,17 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
             print r'    Desc.CPUAccessFlags = 0x0;'
             print r'    Desc.MiscFlags = 0 /* D3D10_RESOURCE_MISC_SHARED */;'
             print r'''
-            const DWORD Checker[8][8] = {
-               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
-               {~0,  0, ~0,  0, ~0,  0, ~0,  0, },
-               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
-               {~0,  0, ~0,  0, ~0,  0, ~0,  0, },
-               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
-               {~0,  0, ~0,  0, ~0,  0, ~0,  0, },
-               { 0, ~0,  0, ~0,  0, ~0,  0, ~0, },
-               {~0,  0, ~0,  0, ~0,  0, ~0,  0, }
+            static const DWORD Checker[8][8] = {
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U }
             };
-            const D3D10_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
+            static const D3D10_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
             '''
             print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, (ID3D10Texture2D**)ppResource);'
             self.checkResult(method.type)
