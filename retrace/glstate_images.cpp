@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2011 Jose Fonseca
+ * Copyright 2011-2014 Jose Fonseca
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 #include "image.hpp"
 #include "json.hpp"
@@ -543,20 +544,25 @@ getFormat(GLenum internalFormat)
 
 
 static inline void
-dumpActiveTextureLevel(JSONWriter &json, Context &context, GLenum target, GLint level)
+dumpActiveTextureLevel(JSONWriter &json, Context &context,
+                       GLenum target, GLint level, const char *object_label)
 {
     ImageDesc desc;
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
         return;
     }
 
-    char label[512];
     GLint active_texture = GL_TEXTURE0;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
-    snprintf(label, sizeof label, "%s, %s, level = %d",
-             enumToString(active_texture), enumToString(target), level);
 
-    json.beginMember(label);
+    std::stringstream label;
+    label << enumToString(active_texture) << ", "
+          << enumToString(target) << ", ";
+    if (object_label)
+        label << "\"" << object_label << "\", ";
+    label << "level = " << level;
+
+    json.beginMember(label.str());
 
     GLenum format = getFormat(desc.internalFormat);
     if (context.ES && format == GL_DEPTH_COMPONENT) {
@@ -595,26 +601,31 @@ dumpTexture(JSONWriter &json, Context &context, GLenum target)
         return;
     }
 
+    char *object_label = getObjectLabel(context, GL_TEXTURE, texture_binding);
+
     GLint level = 0;
     do {
         ImageDesc desc;
 
         if (target == GL_TEXTURE_CUBE_MAP) {
-            for (int face = 0; face < 6; ++face) {
+            for (GLint face = 0; face < 6; ++face) {
                 if (!getActiveTextureLevelDesc(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, desc)) {
-                    return;
+                    goto finished;
                 }
-                dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level);
+                dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, object_label);
             }
         } else {
             if (!getActiveTextureLevelDesc(context, target, level, desc)) {
-                return;
+                goto finished;
             }
-            dumpActiveTextureLevel(json, context, target, level);
+            dumpActiveTextureLevel(json, context, target, level, object_label);
         }
 
         ++level;
     } while(true);
+
+finished:
+    free(object_label);
 }
 
 

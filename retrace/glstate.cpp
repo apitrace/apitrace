@@ -157,17 +157,20 @@ Context::restorePixelPackState(void) {
 
 
 /**
- * Dump a GL_KHR_debug /GL_EXT_debug_label object label.
+ * Get a GL_KHR_debug/GL_EXT_debug_label object label.
+ *
+ * The returned string should be destroyed with free() when no longer
+ * necessary.
  */
-void
-dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member)
+char *
+getObjectLabel(Context &context, GLenum identifier, GLuint name)
 {
     if (!name) {
-        return;
+        return NULL;
     }
 
+    GLsizei length = 0;
     if (context.KHR_debug) {
-        GLsizei length = 0;
         /*
          * XXX: According to
          * http://www.khronos.org/registry/gles/extensions/KHR/debug.txt
@@ -187,46 +190,47 @@ dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint na
         } else {
             glGetIntegerv(GL_MAX_LABEL_LENGTH, &length);
         }
-        if (!length) {
-            return;
-        }
-
-        char *label = (char *)calloc(length + 1, 1);
-        if (!label) {
-            return;
-        }
-
-        glGetObjectLabel(identifier, name, length + 1, NULL, label);
-
-        if (label[0] != '\0') {
-            json.writeStringMember(member, label);
-        }
-
-        free(label);
-        return;
     }
-
     if (context.EXT_debug_label) {
-        GLsizei length = 0;
         glGetObjectLabelEXT(identifier, name, 0, &length, NULL);
-        if (!length) {
-            return;
-        }
+    }
+    if (!length) {
+        return NULL;
+    }
 
-        char *label = (char *)calloc(length + 1, 1);
-        if (!label) {
-            return;
-        }
+    char *label = (char *)calloc(length + 1, 1);
+    if (!label) {
+        return NULL;
+    }
 
+    if (context.KHR_debug) {
+        glGetObjectLabel(identifier, name, length + 1, NULL, label);
+    }
+    if (context.EXT_debug_label) {
         glGetObjectLabelEXT(identifier, name, length + 1, NULL, label);
+    }
 
-        if (label[0] != '\0') {
-            json.writeStringMember(member, label);
-        }
-
+    if (label[0] == '\0') {
         free(label);
+        return NULL;
+    }
+
+    return label;
+}
+
+
+/**
+ * Dump a GL_KHR_debug/GL_EXT_debug_label object label.
+ */
+void
+dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member) {
+    char *label = getObjectLabel(context, identifier, name);
+    if (!label) {
         return;
     }
+
+    json.writeStringMember(member, label);
+    free(label);
 }
 
 
