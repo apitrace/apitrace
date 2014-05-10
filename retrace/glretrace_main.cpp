@@ -444,16 +444,14 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
     if (severity == GL_DEBUG_SEVERITY_LOW_ARB &&
         --maxLowSeverityMessages <= 0) {
         if (maxLowSeverityMessages == 0) {
-            std::cerr << retrace::callNo << ": ";
-            std::cerr << "glDebugOutputCallback: ";
+            std::cerr << retrace::callNo << ": message: ";
             std::cerr << "too many low severity messages";
             std::cerr << std::endl;
         }
         return;
     }
 
-    std::cerr << retrace::callNo << ": ";
-    std::cerr << "glDebugOutputCallback: ";
+    std::cerr << retrace::callNo << ": message: ";
     std::cerr << getDebugOutputSeverity(severity) << " severity ";
     std::cerr << getDebugOutputSource(source) << " " << getDebugOutputType(type);
     std::cerr << " " << id;
