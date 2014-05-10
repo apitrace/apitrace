@@ -1240,7 +1240,24 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
         format = getFormat(desc.internalFormat);
     }
 
-    json.beginMember(enumToString(attachment));
+    GLint object_type = GL_NONE;
+    glGetFramebufferAttachmentParameteriv(target, attachment,
+                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE,
+                                          &object_type);
+    GLint object_name = 0;
+    glGetFramebufferAttachmentParameteriv(target, attachment,
+                                          GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+                                          &object_name);
+    char *object_label = getObjectLabel(context, object_type, object_name);
+
+    std::stringstream label;
+    label << enumToString(attachment);
+    if (object_label) {
+        label << ", \"" << object_label << "\"";
+        free(object_label);
+    }
+
+    json.beginMember(label.str());
     dumpReadBufferImage(json, desc.width, desc.height, format, desc.internalFormat);
     json.endMember();
 }
