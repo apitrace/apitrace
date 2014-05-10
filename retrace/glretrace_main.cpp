@@ -372,59 +372,6 @@ frame_complete(trace::Call &call) {
     }
 }
 
-static const char*
-getDebugOutputSource(GLenum source) {
-    switch(source) {
-    case GL_DEBUG_SOURCE_API_ARB:
-        return "API";
-    case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:
-        return "Window System";
-    case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:
-        return "Shader Compiler";
-    case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:
-        return "Third Party";
-    case GL_DEBUG_SOURCE_APPLICATION_ARB:
-        return "Application";
-    case GL_DEBUG_SOURCE_OTHER_ARB:
-    default:
-        return "";
-    }
-}
-
-static const char*
-getDebugOutputType(GLenum type) {
-    switch(type) {
-    case GL_DEBUG_TYPE_ERROR_ARB:
-        return "error";
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
-        return "deprecated behaviour";
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
-        return "undefined behaviour";
-    case GL_DEBUG_TYPE_PORTABILITY_ARB:
-        return "portability issue";
-    case GL_DEBUG_TYPE_PERFORMANCE_ARB:
-        return "performance issue";
-    case GL_DEBUG_TYPE_OTHER_ARB:
-        return "other issue";
-    default:
-        return "unknown issue";
-    }
-}
-
-static const char*
-getDebugOutputSeverity(GLenum severity) {
-    switch(severity) {
-    case GL_DEBUG_SEVERITY_HIGH_ARB:
-        return "High";
-    case GL_DEBUG_SEVERITY_MEDIUM_ARB:
-        return "Medium";
-    case GL_DEBUG_SEVERITY_LOW_ARB:
-        return "Low";
-    default:
-        return "Unknown";
-    }
-}
-
 
 // Limit the low severity messages
 static long int maxLowSeverityMessages = 1000;
@@ -434,29 +381,98 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
 
     /* Ignore NVIDIA's "Buffer detailed info:" messages, as they seem to be
      * purely informative, and high frequency. */
-    if (source == GL_DEBUG_SOURCE_API_ARB &&
-        type == GL_DEBUG_TYPE_OTHER_ARB &&
-        severity == GL_DEBUG_SEVERITY_LOW_ARB &&
+    if (source == GL_DEBUG_SOURCE_API &&
+        type == GL_DEBUG_TYPE_OTHER &&
+        severity == GL_DEBUG_SEVERITY_LOW &&
         id == 131185) {
         return;
     }
 
-    if (severity == GL_DEBUG_SEVERITY_LOW_ARB &&
+    if (severity == GL_DEBUG_SEVERITY_LOW &&
         --maxLowSeverityMessages <= 0) {
         if (maxLowSeverityMessages == 0) {
-            std::cerr << retrace::callNo << ": message: ";
-            std::cerr << "too many low severity messages";
-            std::cerr << std::endl;
+            std::cerr << retrace::callNo
+                      << ": message: too many low severity messages"
+                      << std::endl;
         }
         return;
     }
 
-    std::cerr << retrace::callNo << ": message: ";
-    std::cerr << getDebugOutputSeverity(severity) << " severity ";
-    std::cerr << getDebugOutputSource(source) << " " << getDebugOutputType(type);
-    std::cerr << " " << id;
-    std::cerr << ", " << message;
-    std::cerr << std::endl;
+    std::cerr << retrace::callNo << ": message:";
+
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+        std::cerr << " major";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        std::cerr << " minor";
+        break;
+    default:
+        assert(0);
+    }
+
+    switch (source) {
+    case GL_DEBUG_SOURCE_API:
+        std::cerr << " api";
+        break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        std::cerr << " window system";
+        break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        std::cerr << " shader compiler";
+        break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        std::cerr << " third party";
+        break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+        std::cerr << " application";
+        break;
+    case GL_DEBUG_SOURCE_OTHER:
+        break;
+    default:
+        assert(0);
+    }
+
+    switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+        std::cerr << " error";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        std::cerr << " deprecated behaviour";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        std::cerr << " undefined behaviour";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        std::cerr << " portability issue";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        std::cerr << " performance issue";
+        break;
+    default:
+        assert(0);
+        /* fall-through */
+    case GL_DEBUG_TYPE_OTHER:
+        std::cerr << " issue";
+        break;
+    case GL_DEBUG_TYPE_MARKER:
+        std::cerr << " marker";
+        break;
+    case GL_DEBUG_TYPE_PUSH_GROUP:
+        std::cerr << " push group";
+        break;
+    case GL_DEBUG_TYPE_POP_GROUP:
+        std::cerr << " pop group";
+        break;
+    }
+
+    if (id) {
+        std::cerr << " " << id;
+    }
+
+    std::cerr << ": " << message << std::endl;
 }
 
 } /* namespace glretrace */
