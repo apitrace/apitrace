@@ -126,7 +126,8 @@ if (MSVC)
     endif ()
 
     # No RTTI required
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+    string (REGEX REPLACE "/GR *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
@@ -137,7 +138,7 @@ if (MSVC)
     # Adjust warnings
     add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
     add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
-    add_definitions (-W4)
+    add_definitions (-W3)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
     add_definitions (-wd4018) # signed/unsigned mismatch
     add_definitions (-wd4063) # not a valid value for switch of enum
@@ -165,7 +166,7 @@ else ()
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 
     # No RTTI required
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
     # Use GDB extensions if available
     if (CMAKE_COMPILER_IS_GNUC)
