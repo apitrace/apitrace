@@ -101,7 +101,6 @@ private:
     int m_zoom;
     int m_gridSize;
 
-    int m_displayZoomId;
     int m_displayGridSizeId;
 
     QPoint m_lastMousePos;

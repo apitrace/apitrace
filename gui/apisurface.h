@@ -37,7 +37,6 @@ public:
 
 private:
     QSize  m_size;
-    int m_numChannels;
     QByteArray m_base64Data;
     QImage m_thumb;
     int m_depth;

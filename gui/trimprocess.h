@@ -37,7 +37,6 @@ private:
     QStringList m_args;
     QString m_tracePath;
     QString m_trimPath;
-    ApiTraceEvent *m_trimEvent;
     int m_trimIndex;
     QProcess *m_process;
 };

@@ -34,7 +34,6 @@ private:
     image::Image *m_image;
     QImage m_convertedImage;
     PixelWidget *m_pixelWidget;
-    QLabel *m_pixelLabel;
 };
 
 
