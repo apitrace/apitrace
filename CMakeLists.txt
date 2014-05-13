@@ -166,7 +166,7 @@ else ()
     add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 
     # No RTTI required
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
     # Use GDB extensions if available
     if (CMAKE_COMPILER_IS_GNUC)
