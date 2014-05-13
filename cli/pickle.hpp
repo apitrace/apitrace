@@ -309,11 +309,13 @@ protected:
             sign = 0;
         }
 
+        // Count how many bytes we need to represent the long integer.
         T sl = l;
         unsigned c = 0;
         do {
             ++c;
-        } while (sl >>= 8 != sign);
+            sl >>= 8;
+        } while (sl != sign);
 
         // Add an extra byte if sign bit doesn't match
         if (((l >> (8 * c - 1)) & 1) != ((l >> (8 * sizeof l - 1)) & 1)) {
