@@ -28,6 +28,8 @@
 
 #include <string.h>
 
+#include <map>
+
 #include "retrace.hpp"
 #include "glproc.hpp"
 #include "glstate.hpp"
@@ -373,8 +375,13 @@ frame_complete(trace::Call &call) {
 }
 
 
-// Limit the low severity messages
-static long int maxLowSeverityMessages = 1000;
+// Limit messages
+// TODO: expose this via a command line option.
+static const unsigned
+maxMessageCount = 100;
+
+static std::map< uint64_t, unsigned > messageCounts;
+
 
 static void APIENTRY
 debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
@@ -388,13 +395,13 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
         return;
     }
 
-    if (severity == GL_DEBUG_SEVERITY_LOW &&
-        --maxLowSeverityMessages <= 0) {
-        if (maxLowSeverityMessages == 0) {
-            std::cerr << retrace::callNo
-                      << ": message: too many low severity messages"
-                      << std::endl;
-        }
+    // Keep track of identical messages; and ignore them after a while.
+    uint64_t messageHash =  (uint64_t)id
+                         + ((uint64_t)severity << 16)
+                         + ((uint64_t)type     << 32)
+                         + ((uint64_t)source   << 48);
+    size_t messageCount = messageCounts[messageHash]++;
+    if (messageCount > maxMessageCount) {
         return;
     }
 
@@ -482,6 +489,12 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
         (message[messageLen - 1] != '\n' &&
          message[messageLen - 1] != '\r')) {
        std::cerr << std::endl;
+    }
+
+    if (messageCount == maxMessageCount) {
+        std::cerr << retrace::callNo
+                  << ": warning: too many identical messages; ignoring"
+                  << std::endl;
     }
 }
 
