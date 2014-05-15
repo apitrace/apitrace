@@ -409,6 +409,8 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
     case GL_DEBUG_SEVERITY_LOW:
         std::cerr << " minor";
         break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        break;
     default:
         assert(0);
     }
