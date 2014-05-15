@@ -474,7 +474,15 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsi
         std::cerr << " " << id;
     }
 
-    std::cerr << ": " << message << std::endl;
+    std::cerr << ": " << message;
+
+    // Write new line if not included in the message already.
+    size_t messageLen = strlen(message);
+    if (!messageLen ||
+        (message[messageLen - 1] != '\n' &&
+         message[messageLen - 1] != '\r')) {
+       std::cerr << std::endl;
+    }
 }
 
 } /* namespace glretrace */
