@@ -32,6 +32,10 @@ const char * const styleSheet =
     ".arg-value {\n"
     "    color: #0000ff;\n"
     "}\n"
+    ".thread-id {\n"
+    "    color: #aaaaaa;\n"
+    "    min-width: 3em;\n"
+    "}\n"
     ".error {\n"
     "    border: 1px solid rgb(255,0,0);\n"
     "    margin: 10px;\n"
@@ -48,7 +52,7 @@ const char * const styleSheet =
 
 // Qt::convertFromPlainText doesn't do precisely what we want
 static QString
-plainTextToHTML(const QString & plain, bool multiLine)
+plainTextToHTML(const QString & plain, bool multiLine, bool forceNoQuote = false)
 {
     int col = 0;
     bool quote = false;
@@ -91,7 +95,7 @@ plainTextToHTML(const QString & plain, bool multiLine)
         }
     }
 
-    if (quote) {
+    if (quote && !forceNoQuote) {
         return QLatin1Literal("\"") + rich + QLatin1Literal("\"");
     }
 
@@ -675,7 +679,7 @@ ApiTraceCall::loadData(TraceLoader *loader,
                        const trace::Call *call)
 {
     m_index = call->no;
-
+    m_thread = call->thread_id;
     m_signature = loader->signature(call->sig->id);
 
     if (!m_signature) {
@@ -929,40 +933,56 @@ QStaticText ApiTraceCall::staticText() const
     if (m_staticText && !m_staticText->text().isEmpty())
         return *m_staticText;
 
+    QStringList argNames = m_signature->argNames();
     QVector<QVariant> argValues = arguments();
 
-    QString richText = QString::fromLatin1(
-        "<span style=\"font-weight:bold\">%1</span>(").arg(
-            m_signature->name());
-    QStringList argNames = m_signature->argNames();
-    for (int i = 0; i < argNames.count(); ++i) {
-        richText += QLatin1String("<span style=\"color:#0000ff\">");
-        QString argText = apiVariantToString(argValues[i]);
+    QString richText;
 
-        //if arguments are really long (e.g. shader text), cut them
-        // and elide it
-        if (argText.length() > 40) {
-            QString shortened = argText.mid(0, 40);
-            shortened[argText.length() - 5] = '.';
-            shortened[argText.length() - 4] = '.';
-            shortened[argText.length() - 3] = '.';
-            shortened[argText.length() - 2] = argText.at(argText.length() - 2);
-            shortened[argText.length() - 1] = argText.at(argText.length() - 1);
-            richText += shortened;
-        } else {
-            richText += argText;
+    richText += QString::fromLatin1("<span style=\"color: #aaaaaa; min-width: 3em;\">[%1]</span> ")
+        .arg(m_thread);
+
+    if (m_signature->name() == "glStringMarkerGREMEDY" &&
+        argNames.count() == 2 &&
+        argValues[1].userType() == QVariant::String)
+    {
+        // special handling for string markers
+        QString msgText = plainTextToHTML(argValues[1].toString(), false, true);
+        richText += QString::fromLatin1(
+            "<span style=\"font-weight:bold;color:green;\">%1</span>")
+            .arg(msgText);
+    } else {
+        richText += QString::fromLatin1(
+            "<span style=\"font-weight:bold\">%1</span>(").arg(
+                m_signature->name());
+        for (int i = 0; i < argNames.count(); ++i) {
+            richText += QLatin1String("<span style=\"color:#0000ff\">");
+            QString argText = apiVariantToString(argValues[i]);
+    
+            //if arguments are really long (e.g. shader text), cut them
+            // and elide it
+            if (argText.length() > 40) {
+                QString shortened = argText.mid(0, 40);
+                shortened[argText.length() - 5] = '.';
+                shortened[argText.length() - 4] = '.';
+                shortened[argText.length() - 3] = '.';
+                shortened[argText.length() - 2] = argText.at(argText.length() - 2);
+                shortened[argText.length() - 1] = argText.at(argText.length() - 1);
+                richText += shortened;
+            } else {
+                richText += argText;
+            }
+            richText += QLatin1String("</span>");
+            if (i < argNames.count() - 1)
+                richText += QLatin1String(", ");
         }
-        richText += QLatin1String("</span>");
-        if (i < argNames.count() - 1)
-            richText += QLatin1String(", ");
-    }
-    richText += QLatin1String(")");
-    if (m_returnValue.isValid()) {
-        richText +=
-            QLatin1Literal(" = ") %
-            QLatin1Literal("<span style=\"color:#0000ff\">") %
-            apiVariantToString(m_returnValue) %
-            QLatin1Literal("</span>");
+        richText += QLatin1String(")");
+        if (m_returnValue.isValid()) {
+            richText +=
+                QLatin1Literal(" = ") %
+                QLatin1Literal("<span style=\"color:#0000ff\">") %
+                apiVariantToString(m_returnValue) %
+                QLatin1Literal("</span>");
+        }
     }
 
     if (!m_staticText)
@@ -994,6 +1014,10 @@ QString ApiTraceCall::toHtml() const
             QString::fromLatin1("Frame %1")
             .arg(m_parentFrame->number);
     }
+
+    m_richText += QString::fromLatin1("<span class=\"thread-id\">[%1]</span> ")
+        .arg(m_thread);
+
     QUrl helpUrl = m_signature->helpUrl();
     if (helpUrl.isEmpty()) {
         m_richText += QString::fromLatin1(
