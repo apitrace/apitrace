@@ -76,8 +76,8 @@ usage(void)
 }
 
 enum {
-	CALLS_OPT = CHAR_MAX + 1,
-	COLOR_OPT,
+    CALLS_OPT = CHAR_MAX + 1,
+    COLOR_OPT,
     THREAD_IDS_OPT,
     CALL_NOS_OPT,
     ARG_NAMES_OPT,
@@ -103,7 +103,6 @@ static int
 command(int argc, char *argv[])
 {
     trace::DumpFlags dumpFlags = 0;
-    bool dumpThreadIds = false;
     
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -131,7 +130,11 @@ command(int argc, char *argv[])
             }
             break;
         case THREAD_IDS_OPT:
-            dumpThreadIds = trace::boolOption(optarg);
+            if (trace::boolOption(optarg)) {
+                dumpFlags |= trace::DUMP_FLAG_THREAD_IDS;
+            } else {
+                dumpFlags &= ~trace::DUMP_FLAG_THREAD_IDS;
+            }
             break;
         case CALL_NOS_OPT:
             if (trace::boolOption(optarg)) {
@@ -179,9 +182,6 @@ command(int argc, char *argv[])
             if (calls.contains(*call)) {
                 if (verbose ||
                     !(call->flags & trace::CALL_FLAG_VERBOSE)) {
-                    if (dumpThreadIds) {
-                        std::cout << std::hex << call->thread_id << std::dec << " ";
-                    }
                     trace::dump(*call, std::cout, dumpFlags);
                 }
             }

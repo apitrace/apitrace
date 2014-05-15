@@ -34,7 +34,7 @@
 namespace retrace {
 
 
-trace::DumpFlags dumpFlags = 0;
+trace::DumpFlags dumpFlags = trace::DUMP_FLAG_THREAD_IDS;
 
 
 static bool call_dumped = false;
@@ -42,7 +42,6 @@ static bool call_dumped = false;
 
 static void dumpCall(trace::Call &call) {
     if (verbosity >= 0 && !call_dumped) {
-        std::cout << std::hex << call.thread_id << std::dec << " ";
         trace::dump(call, std::cout, dumpFlags);
         std::cout.flush();
         call_dumped = true;

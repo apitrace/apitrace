@@ -245,6 +245,9 @@ public:
         if (!(dumpFlags & DUMP_FLAG_NO_CALL_NO)) {
             os << call->no << " ";
         }
+        if (dumpFlags & DUMP_FLAG_THREAD_IDS) {
+            os << "@" << std::hex << call->thread_id << std::dec << " ";
+        }
 
         if (callFlags & CALL_FLAG_NON_REPRODUCIBLE) {
             os << strike;
