@@ -937,8 +937,11 @@ QStaticText ApiTraceCall::staticText() const
 
     QString richText;
 
-    richText += QString::fromLatin1("<span style=\"color: #aaaaaa; min-width: 3em;\">[%1]</span> ")
-        .arg(m_thread);
+    // TODO: Toggle this via a menu option.
+    if (0) {
+        richText += QString::fromLatin1("<span style=\"color: #aaaaaa; min-width: 3em;\">@%1</span> ")
+            .arg(m_thread);
+    }
 
     richText += QString::fromLatin1(
         "<span style=\"font-weight:bold\">%1</span>(").arg(
@@ -995,7 +998,7 @@ QString ApiTraceCall::toHtml() const
 
 
     m_richText +=
-        QString::fromLatin1("%1) ")
+        QString::fromLatin1("%1 ")
         .arg(m_index);
     QString parentTip;
     if (m_parentFrame) {
@@ -1004,7 +1007,7 @@ QString ApiTraceCall::toHtml() const
             .arg(m_parentFrame->number);
     }
 
-    m_richText += QString::fromLatin1("<span class=\"thread-id\">[%1]</span> ")
+    m_richText += QString::fromLatin1("<span class=\"thread-id\">@%1</span> ")
         .arg(m_thread);
 
     QUrl helpUrl = m_signature->helpUrl();
