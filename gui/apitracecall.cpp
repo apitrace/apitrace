@@ -944,12 +944,12 @@ QStaticText ApiTraceCall::staticText() const
             .arg(m_thread);
     }
 
-    if (m_signature->name() == "glStringMarkerGREMEDY" &&
-        argNames.count() == 2 &&
-        argValues[1].userType() == QVariant::String)
+    if (m_flags & trace::CALL_FLAG_MARKER &&
+        argNames.count() &&
+        argValues.last().userType() == QVariant::String)
     {
         // special handling for string markers
-        QString msgText = plainTextToHTML(argValues[1].toString(), false, true);
+        QString msgText = plainTextToHTML(argValues.last().toString(), false, true);
         richText += QString::fromLatin1(
             "<span style=\"font-weight:bold;color:green;\">%1</span>")
             .arg(msgText);
