@@ -390,6 +390,7 @@ elseif (X11_FOUND)
         glxtrace.cpp
         glcaps.cpp
         gltrace_state.cpp
+        dlsym.cpp
     )
 
     add_dependencies (glxtrace glproc)
@@ -438,6 +439,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         glcaps.cpp
         gltrace_state.cpp
         ${CMAKE_SOURCE_DIR}/helpers/eglsize.cpp
+        dlsym.cpp
     )
 
     add_dependencies (egltrace glproc)
