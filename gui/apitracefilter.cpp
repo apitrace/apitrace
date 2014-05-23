@@ -22,12 +22,20 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
     if (!event)
         return false;
 
-    //we don't filter frames
+    // We don't filter frames
     if (event->type() == ApiTraceEvent::Frame) {
         return true;
     }
 
     ApiTraceCall *call = static_cast<ApiTraceCall*>(event);
+    trace::CallFlags flags = call->flags();
+
+    // Never filter push glPushDebugGroup() and friends, or all calls inside
+    // the debug group will be filtered out.
+    if (flags & trace::CALL_FLAG_MARKER_PUSH) {
+        return true;
+    }
+
     QString function = call->name();
 
     if (!m_regexp.isEmpty() && m_regexp.isValid()) {
