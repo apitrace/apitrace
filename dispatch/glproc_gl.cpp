@@ -56,7 +56,7 @@ _getPublicProcAddress(const char *procName)
             return NULL;
         }
         
-        strcat(szDll, "\\\\opengl32.dll");
+        strcat(szDll, "\\opengl32.dll");
         
         _libGlHandle = LoadLibraryA(szDll);
         if (!_libGlHandle) {

@@ -44,7 +44,7 @@ _getD3D10ProcAddress(LPCSTR lpProcName) {
         if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
             return NULL;
         }
-        strcat(szDll, "\\\\d3d10.dll");
+        strcat(szDll, "\\d3d10.dll");
         g_hD3D10Module = LoadLibraryA(szDll);
         if (!g_hD3D10Module) {
            return NULL;

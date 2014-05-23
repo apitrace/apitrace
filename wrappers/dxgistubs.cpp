@@ -46,7 +46,7 @@ _getDXGIProcAddress(LPCSTR lpProcName) {
         if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
             return NULL;
         }
-        strcat(szDll, "\\\\dxgi.dll");
+        strcat(szDll, "\\dxgi.dll");
         g_hDXGIModule = LoadLibraryA(szDll);
         if (!g_hDXGIModule) {
            return NULL;

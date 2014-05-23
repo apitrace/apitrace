@@ -44,7 +44,7 @@ _getD3D11ProcAddress(LPCSTR lpProcName) {
         if (!GetSystemDirectoryA(szDll, MAX_PATH)) {
             return NULL;
         }
-        strcat(szDll, "\\\\d3d11.dll");
+        strcat(szDll, "\\d3d11.dll");
         g_hD3D11Module = LoadLibraryA(szDll);
         if (!g_hD3D11Module) {
             return NULL;
