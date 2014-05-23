@@ -384,7 +384,14 @@ static std::map< uint64_t, unsigned > messageCounts;
 
 
 static void APIENTRY
-debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                    GLsizei length, const GLchar* message, const void *userParam)
+{
+    /* Ignore application messages while dumping state. */
+    if (retrace::dumpingState &&
+        source == GL_DEBUG_SOURCE_APPLICATION) {
+        return;
+    }
 
     /* Ignore NVIDIA's "Buffer detailed info:" messages, as they seem to be
      * purely informative, and high frequency. */
