@@ -154,6 +154,18 @@ EGLPbufferFromClientBufferAttribs = EGLAttribArray([
     ('EGL_TEXTURE_TARGET', EGLTextureTarget)
 ])
 
+EGLContextAttribs = EGLAttribArray([
+    ('EGL_CONTEXT_MAJOR_VERSION_KHR', Int), # Alias for EGL_CONTEXT_CLIENT_VERSION
+    ('EGL_CONTEXT_MINOR_VERSION_KHR', Int),
+    ('EGL_CONTEXT_FLAGS_KHR', Flags(Int, [
+            'EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR',
+            'EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR',
+            'EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR',
+        ])),
+    ('EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR', Int),
+    ('EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR', EGLenum),
+])
+
 EGLDrmImageMesaAttribs = EGLAttribArray([
     ('EGL_DRM_BUFFER_FORMAT_MESA', FakeEnum(Int, ['EGL_DRM_BUFFER_FORMAT_ARGB32_MESA'])),
     ('EGL_DRM_BUFFER_USE_MESA', Flags(Int, ['EGL_DRM_BUFFER_USE_SCANOUT_MESA', 'EGL_DRM_BUFFER_USE_SHARE_MESA']))
@@ -209,7 +221,7 @@ eglapi.addFunctions([
 
     Function(EGLBoolean, "eglSwapInterval", [(EGLDisplay, "dpy"), (EGLint, "interval")]),
 
-    Function(EGLContext, "eglCreateContext", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLContext, "share_context"), (EGLAttribArray([('EGL_CONTEXT_CLIENT_VERSION', Int)]), "attrib_list")]),
+    Function(EGLContext, "eglCreateContext", [(EGLDisplay, "dpy"), (EGLConfig, "config"), (EGLContext, "share_context"), (EGLContextAttribs, "attrib_list")]),
     Function(EGLBoolean, "eglDestroyContext", [(EGLDisplay, "dpy"), (EGLContext, "ctx")]),
     Function(EGLBoolean, "eglMakeCurrent", [(EGLDisplay, "dpy"), (EGLSurface, "draw"), (EGLSurface, "read"), (EGLContext, "ctx")]),
 
