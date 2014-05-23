@@ -144,7 +144,7 @@ _getPrivateProcAddress(const char *procName)
 
 #else
 
-
+#ifndef RETRACE_ALLOW_DLSYM_INTERCEPT
 static inline void
 logSymbol(const char *name, void *ptr) {
     if (0) {
@@ -206,11 +206,11 @@ _dlsym(void *handle, const char *symbol)
     result = dlsym_ptr(handle, symbol);
 #else
     result = dlsym(handle, symbol);
-#endif
+#endif //#ifdef __GLIBC__
 
     return result;
 }
-
+#endif //#ifndef RETRACE_ALLOW_DLSYM_INTERCEPT
 
 /*
  * Lookup a libGL symbol
@@ -255,11 +255,15 @@ void * _libgl_sym(const char *symbol)
         }
     }
 
-    result = _dlsym(_libGlHandle, symbol);
+#ifndef RETRACE_ALLOW_DLSYM_INTERCEPT
+        result = _dlsym(_libGlHandle, symbol);
 
-    logSymbol(symbol, result);
+        logSymbol(symbol, result);
 
-    return result;
+        return result;
+#else
+        return dlsym(_libGlHandle, symbol);
+#endif //#ifndef RETRACE_ALLOW_DLSYM_INTERCEPT
 }
 
 
