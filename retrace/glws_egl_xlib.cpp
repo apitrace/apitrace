@@ -459,8 +459,14 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
     attribs.end(EGL_NONE);
 
     context = eglCreateContext(eglDisplay, visual->config, share_context, attribs);
-    if (!context)
+    if (!context) {
+        if (debug) {
+            // XXX: Mesa seems to have problem with
+            // EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR, so retry without it
+            return createContext(_visual, shareContext, false);
+        }
         return NULL;
+    }
 
     eglBindAPI(api);
 
