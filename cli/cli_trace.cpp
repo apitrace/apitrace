@@ -86,7 +86,8 @@ static int
 traceProgram(trace::API api,
              char * const *argv,
              const char *output,
-             bool verbose)
+             bool verbose,
+             bool debug)
 {
     const char *wrapperFilename;
     std::vector<const char *> args;
@@ -186,8 +187,20 @@ traceProgram(trace::API api,
             wrapperPath.append(oldEnvVarValue);
         }
 
-        /* FIXME: Don't modify our (ie parent) environment */
-        os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+        if (debug) {
+            std::string ex("set exec-wrapper env " TRACE_VARIABLE "=");
+            ex.append(wrapperPath.str());
+
+            args.push_back("gdb");
+            args.push_back("--ex");
+            args.push_back(ex.c_str());
+            args.push_back("--args");
+
+            os::unsetEnvironment(TRACE_VARIABLE);
+        } else {
+            /* FIXME: Don't modify our (ie parent) environment */
+            os::setEnvironment(TRACE_VARIABLE, wrapperPath.str());
+        }
 
         if (verbose) {
             std::cerr << TRACE_VARIABLE << "=" << wrapperPath.str() << "\n";
@@ -205,7 +218,13 @@ traceProgram(trace::API api,
         if (verbose) {
             const char *sep = "";
             for (unsigned i = 0; i < args.size(); ++i) {
-                std::cerr << sep << args[i];
+                const char *quote;
+                if (strchr(args[i], ' ') != NULL) {
+                    quote = "\"";
+                } else {
+                    quote = "";
+                }
+                std::cerr << sep << quote << args[i] << quote;
                 sep = " ";
             }
             std::cerr << "\n";
@@ -266,11 +285,15 @@ usage(void)
                                                       ");\n"
         "                        default is `gl`\n"
         "    -o, --output=TRACE  specify output trace file;\n"
-        "                        default is `PROGRAM.trace`\n";
+        "                        default is `PROGRAM.trace`\n"
+#ifdef TRACE_VARIABLE
+        "    -d,  --debug        debug with gdb\n"
+#endif
+    ;
 }
 
 const static char *
-shortOptions = "+hva:o:";
+shortOptions = "+hva:o:d";
 
 const static struct option
 longOptions[] = {
@@ -278,6 +301,7 @@ longOptions[] = {
     {"verbose", no_argument, 0, 'v'},
     {"api", required_argument, 0, 'a'},
     {"output", required_argument, 0, 'o'},
+    {"debug", no_argument, 0, 'd'},
     {0, 0, 0, 0}
 };
 
@@ -287,6 +311,7 @@ command(int argc, char *argv[])
     bool verbose = false;
     trace::API api = trace::API_GL;
     const char *output = NULL;
+    bool debug = false;
 
     int opt;
     while ((opt = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
@@ -323,6 +348,9 @@ command(int argc, char *argv[])
         case 'o':
             output = optarg;
             break;
+        case 'd':
+            debug = true;
+            break;
         default:
             std::cerr << "error: unexpected option `" << (char)opt << "`\n";
             usage();
@@ -337,7 +365,7 @@ command(int argc, char *argv[])
     }
 
     assert(argv[argc] == 0);
-    return traceProgram(api, argv + optind, output, verbose);
+    return traceProgram(api, argv + optind, output, verbose, debug);
 }
 
 const Command trace_command = {

@@ -186,10 +186,9 @@ To obtain a stack back-trace, run the application with gdb from a terminal:
     ...
     (gdb) bt
 
-On Linux, to trace an application inside gdb the `LD_PRELOAD` environment
-variable should be set from within gdb like:
+On Linux, to trace an application inside gdb invoke apitrace as:
 
-    gdb --ex 'set exec-wrapper env LD_PRELOAD=/path/to/glxtrace.so' --args application arg1 ...
+    apitrace trace --verbose --debug application arg1 ...
 
 See also more detailed and Distro specific instructions:
 
