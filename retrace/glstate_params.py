@@ -537,8 +537,9 @@ class StateDumper:
         print '                dumpTextureTargetParameters(json, context, target);'
         print '            }'
         print
-        print '            if (unit < max_texture_coords) {'
         self.dump_sampler_params()
+        print
+        print '            if (unit < max_texture_coords) {'
         self.dump_texenv_params()
         print '            }'
         print '            json.endObject();'
