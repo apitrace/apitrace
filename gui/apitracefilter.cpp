@@ -36,6 +36,11 @@ bool ApiTraceFilter::filterAcceptsRow(int sourceRow,
         return true;
     }
 
+    // Always filter glPopDebugGroup() and friends, as their presence is implied.
+    if (flags & trace::CALL_FLAG_MARKER_POP) {
+        return false;
+    }
+
     QString function = call->name();
 
     if (!m_regexp.isEmpty() && m_regexp.isValid()) {
