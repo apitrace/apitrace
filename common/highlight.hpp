@@ -27,8 +27,8 @@
  * Helpers for coloring output.
  */
 
-#ifndef _FORMATTER_HPP_
-#define _FORMATTER_HPP_
+#ifndef _HIGHLIGHT_HPP_
+#define _HIGHLIGHT_HPP_
 
 
 #include <iostream>
@@ -67,7 +67,7 @@
 #endif /* _WIN32 */
 
 
-namespace formatter {
+namespace highlight {
 
 /*
  * See also http://bytes.com/topic/c/answers/63822-design-question-little-c-header-colorizing-text-linux-comments-ideas
@@ -88,9 +88,9 @@ enum Color {
 };
 
 
-class Formatter {
+class Highlighter {
 public:
-    virtual ~Formatter() {}
+    virtual ~Highlighter() {}
 
     virtual Attribute *normal(void) const { return new Attribute; }
     virtual Attribute *bold(void) const { return new Attribute; }
@@ -112,11 +112,11 @@ public:
 
 
 /**
- * Formatter for plain-text files which outputs ANSI escape codes. See
+ * Highlighter for plain-text files which outputs ANSI escape codes. See
  * http://en.wikipedia.org/wiki/ANSI_escape_code for more information
  * concerning ANSI escape codes.
  */
-class AnsiFormatter : public Formatter {
+class AnsiHighlighter : public Highlighter {
 protected:
 public:
     virtual Attribute *normal(void) const { return new AnsiAttribute("0m"); }
@@ -171,9 +171,9 @@ public:
 
 
 /**
- * Formatter for the Windows Console.
+ * Highlighter for the Windows Console.
  */
-class WindowsFormatter : public Formatter {
+class WindowsHighlighter : public Highlighter {
 protected:
 public:
     virtual Attribute *normal(void) const { return new WindowsAttribute(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); }
@@ -194,7 +194,7 @@ public:
 #endif /* _WIN32 */
 
 
-inline Formatter *defaultFormatter(bool color = true) {
+inline Highlighter *defaultHighlighter(bool color = true) {
     if (color) {
 #ifdef _WIN32
         // http://wiki.winehq.org/DeveloperFaq#detect-wine
@@ -207,19 +207,19 @@ inline Formatter *defaultFormatter(bool color = true) {
             }
         }
         if (bWine) {
-            return new AnsiFormatter;
+            return new AnsiHighlighter;
         }
-        return new WindowsFormatter;
+        return new WindowsHighlighter;
 #else
-        return new AnsiFormatter;
+        return new AnsiHighlighter;
 #endif
     } else {
-        return new Formatter;
+        return new Highlighter;
     }
 }
 
 
-} /* namespace formatter */
+} /* namespace highlight */
 
 
-#endif /* _FORMATTER_HPP_ */
+#endif /* _HIGHLIGHT_HPP_ */

@@ -26,7 +26,7 @@
 
 #include <limits>
 
-#include "formatter.hpp"
+#include "highlight.hpp"
 #include "trace_dump.hpp"
 
 
@@ -38,14 +38,14 @@ class Dumper : public Visitor
 protected:
     std::ostream &os;
     DumpFlags dumpFlags;
-    formatter::Formatter *formatter;
-    formatter::Attribute *normal;
-    formatter::Attribute *bold;
-    formatter::Attribute *italic;
-    formatter::Attribute *strike;
-    formatter::Attribute *red;
-    formatter::Attribute *pointer;
-    formatter::Attribute *literal;
+    highlight::Highlighter *highlighter;
+    highlight::Attribute *normal;
+    highlight::Attribute *bold;
+    highlight::Attribute *italic;
+    highlight::Attribute *strike;
+    highlight::Attribute *red;
+    highlight::Attribute *pointer;
+    highlight::Attribute *literal;
 
 public:
     Dumper(std::ostream &_os, DumpFlags _flags) : 
@@ -53,14 +53,14 @@ public:
         dumpFlags(_flags)
     {
         bool color = !(dumpFlags & DUMP_FLAG_NO_COLOR);
-        formatter = formatter::defaultFormatter(color);
-        normal = formatter->normal();
-        bold = formatter->bold();
-        italic = formatter->italic();
-        strike = formatter->strike();
-        red = formatter->color(formatter::RED);
-        pointer = formatter->color(formatter::GREEN);
-        literal = formatter->color(formatter::BLUE);
+        highlighter = highlight::defaultHighlighter(color);
+        normal = highlighter->normal();
+        bold = highlighter->bold();
+        italic = highlighter->italic();
+        strike = highlighter->strike();
+        red = highlighter->color(highlight::RED);
+        pointer = highlighter->color(highlight::GREEN);
+        literal = highlighter->color(highlight::BLUE);
     }
 
     ~Dumper() {
@@ -71,7 +71,7 @@ public:
         delete red;
         delete pointer;
         delete literal;
-        delete formatter;
+        delete highlighter;
     }
 
     void visit(Null *) {

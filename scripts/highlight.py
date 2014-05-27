@@ -1,4 +1,4 @@
-##########################################################################
+#########################################################################
 #
 # Copyright 2011-2012 Jose Fonseca
 # Copyright 2008-2009 VMware, Inc.
@@ -31,7 +31,7 @@ import sys
 
 
 class PlainHighlighter:
-    '''Plain formatter'''
+    '''Plain highlighter.'''
 
     black = None
     red = None
