@@ -33,10 +33,10 @@ files in the parent dir via a side-by-side diff tool, such as gvimdiff.
 OpenGL ES
 =========
 
-Khronos doesn't provide `.spec` files for OpenGL ES.  But the `gltxt.py` script
+Khronos doesn't provide `.spec` files for OpenGL ES.  But the `txt2api.py` script
 can extract and convert prototypes for the `.txt` extension specifications:
 
-    $ ./gltxt.py http://www.khronos.org/registry/gles/extensions/OES/OES_mapbuffer.txt
+    $ ./txt2api.py http://www.khronos.org/registry/gles/extensions/OES/OES_mapbuffer.txt
         # GL_OES_mapbuffer
         GlFunction(Void, "glGetBufferPointervOES", [(GLenum, "target"), (GLenum, "pname"), (OpaquePointer(OpaquePointer(Void)), "params")], sideeffects=False),
         GlFunction(OpaquePointer(Void), "glMapBufferOES", [(GLenum, "target"), (GLenum, "access")]),
@@ -46,9 +46,9 @@ can extract and convert prototypes for the `.txt` extension specifications:
 Generic
 =======
 
-When the domain specific scripts don't work the fallback solution is `cdecl.py`, which can parse most C declarations:
+When the domain specific scripts don't work the fallback solution is `c2api.py`, which can parse most C declarations:
 
-    $ echo 'void *memcpy(void *dest, const void *src, size_t n);' | ./cdecl.py 
+    $ echo 'void *memcpy(void *dest, const void *src, size_t n);' | ./c2api.py 
         Function(OpaquePointer(Void), "memcpy", [(OpaquePointer(Void), "dest"), (OpaquePointer(Const(Void)), "src"), (size_t, "n")]),
 
 
