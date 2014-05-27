@@ -10,6 +10,7 @@ all: \
 
 download: \
 	gl.xml \
+	glx.xml \
 	wgl.xml \
 	egl.xml \
 	gl.spec \
