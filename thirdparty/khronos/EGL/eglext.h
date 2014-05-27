@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2013 The Khronos Group Inc.
+** Copyright (c) 2013-2014 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -33,12 +33,12 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 23730 $ on $Date: 2013-10-28 15:16:34 -0700 (Mon, 28 Oct 2013) $
+** Khronos $Revision: 26290 $ on $Date: 2014-04-16 05:35:38 -0700 (Wed, 16 Apr 2014) $
 */
 
 #include <EGL/eglplatform.h>
 
-#define EGL_EGLEXT_VERSION 20131028
+#define EGL_EGLEXT_VERSION 20140416
 
 /* Generated C header for:
  * API: egl
@@ -55,6 +55,16 @@ extern "C" {
 #define EGL_SYNC_CL_EVENT_KHR             0x30FE
 #define EGL_SYNC_CL_EVENT_COMPLETE_KHR    0x30FF
 #endif /* EGL_KHR_cl_event */
+
+#ifndef EGL_KHR_cl_event2
+#define EGL_KHR_cl_event2 1
+typedef void *EGLSyncKHR;
+typedef intptr_t EGLAttribKHR;
+typedef EGLSyncKHR (EGLAPIENTRYP PFNEGLCREATESYNC64KHRPROC) (EGLDisplay dpy, EGLenum type, const EGLAttribKHR *attrib_list);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLSyncKHR EGLAPIENTRY eglCreateSync64KHR (EGLDisplay dpy, EGLenum type, const EGLAttribKHR *attrib_list);
+#endif
+#endif /* EGL_KHR_cl_event2 */
 
 #ifndef EGL_KHR_client_get_all_proc_addresses
 #define EGL_KHR_client_get_all_proc_addresses 1
@@ -96,6 +106,13 @@ extern "C" {
 #ifndef EGL_KHR_get_all_proc_addresses
 #define EGL_KHR_get_all_proc_addresses 1
 #endif /* EGL_KHR_get_all_proc_addresses */
+
+#ifndef EGL_KHR_gl_colorspace
+#define EGL_KHR_gl_colorspace 1
+#define EGL_GL_COLORSPACE_KHR             0x309D
+#define EGL_GL_COLORSPACE_SRGB_KHR        0x3089
+#define EGL_GL_COLORSPACE_LINEAR_KHR      0x308A
+#endif /* EGL_KHR_gl_colorspace */
 
 #ifndef EGL_KHR_gl_renderbuffer_image
 #define EGL_KHR_gl_renderbuffer_image 1
@@ -169,11 +186,11 @@ EGLAPI EGLBoolean EGLAPIENTRY eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR im
 #define EGL_BITMAP_PIXEL_LUMINANCE_OFFSET_KHR 0x30CD
 #define EGL_LOWER_LEFT_KHR                0x30CE
 #define EGL_UPPER_LEFT_KHR                0x30CF
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLLOCKSURFACEKHRPROC) (EGLDisplay display, EGLSurface surface, const EGLint *attrib_list);
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLUNLOCKSURFACEKHRPROC) (EGLDisplay display, EGLSurface surface);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLLOCKSURFACEKHRPROC) (EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLUNLOCKSURFACEKHRPROC) (EGLDisplay dpy, EGLSurface surface);
 #ifdef EGL_EGLEXT_PROTOTYPES
-EGLAPI EGLBoolean EGLAPIENTRY eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface, const EGLint *attrib_list);
-EGLAPI EGLBoolean EGLAPIENTRY eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface);
+EGLAPI EGLBoolean EGLAPIENTRY eglLockSurfaceKHR (EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list);
+EGLAPI EGLBoolean EGLAPIENTRY eglUnlockSurfaceKHR (EGLDisplay dpy, EGLSurface surface);
 #endif
 #endif /* EGL_KHR_lock_surface */
 
@@ -182,9 +199,37 @@ EGLAPI EGLBoolean EGLAPIENTRY eglUnlockSurfaceKHR (EGLDisplay display, EGLSurfac
 #define EGL_BITMAP_PIXEL_SIZE_KHR         0x3110
 #endif /* EGL_KHR_lock_surface2 */
 
+#ifndef EGL_KHR_lock_surface3
+#define EGL_KHR_lock_surface3 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYSURFACE64KHRPROC) (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLAttribKHR *value);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglQuerySurface64KHR (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLAttribKHR *value);
+#endif
+#endif /* EGL_KHR_lock_surface3 */
+
+#ifndef EGL_KHR_platform_android
+#define EGL_KHR_platform_android 1
+#define EGL_PLATFORM_ANDROID_KHR          0x3141
+#endif /* EGL_KHR_platform_android */
+
+#ifndef EGL_KHR_platform_gbm
+#define EGL_KHR_platform_gbm 1
+#define EGL_PLATFORM_GBM_KHR              0x31D7
+#endif /* EGL_KHR_platform_gbm */
+
+#ifndef EGL_KHR_platform_wayland
+#define EGL_KHR_platform_wayland 1
+#define EGL_PLATFORM_WAYLAND_KHR          0x31D8
+#endif /* EGL_KHR_platform_wayland */
+
+#ifndef EGL_KHR_platform_x11
+#define EGL_KHR_platform_x11 1
+#define EGL_PLATFORM_X11_KHR              0x31D5
+#define EGL_PLATFORM_X11_SCREEN_KHR       0x31D6
+#endif /* EGL_KHR_platform_x11 */
+
 #ifndef EGL_KHR_reusable_sync
 #define EGL_KHR_reusable_sync 1
-typedef void *EGLSyncKHR;
 typedef khronos_utime_nanoseconds_t EGLTimeKHR;
 #ifdef KHRONOS_SUPPORT_INT64
 #define EGL_SYNC_STATUS_KHR               0x30F1
@@ -453,6 +498,11 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformPixmapSurfaceEXT (EGLDisplay dpy,
 #define EGL_PLATFORM_X11_SCREEN_EXT       0x31D6
 #endif /* EGL_EXT_platform_x11 */
 
+#ifndef EGL_EXT_protected_surface
+#define EGL_EXT_protected_surface 1
+#define EGL_PROTECTED_CONTENT_EXT         0x32C0
+#endif /* EGL_EXT_protected_surface */
+
 #ifndef EGL_EXT_swap_buffers_with_damage
 #define EGL_EXT_swap_buffers_with_damage 1
 typedef EGLBoolean (EGLAPIENTRYP PFNEGLSWAPBUFFERSWITHDAMAGEEXTPROC) (EGLDisplay dpy, EGLSurface surface, EGLint *rects, EGLint n_rects);
@@ -513,6 +563,27 @@ EGLAPI EGLBoolean EGLAPIENTRY eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR
 #define EGL_MESA_platform_gbm 1
 #define EGL_PLATFORM_GBM_MESA             0x31D7
 #endif /* EGL_MESA_platform_gbm */
+
+#ifndef EGL_NOK_swap_region
+#define EGL_NOK_swap_region 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSWAPBUFFERSREGIONNOKPROC) (EGLDisplay dpy, EGLSurface surface, EGLint numRects, const EGLint *rects);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglSwapBuffersRegionNOK (EGLDisplay dpy, EGLSurface surface, EGLint numRects, const EGLint *rects);
+#endif
+#endif /* EGL_NOK_swap_region */
+
+#ifndef EGL_NOK_swap_region2
+#define EGL_NOK_swap_region2 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSWAPBUFFERSREGION2NOKPROC) (EGLDisplay dpy, EGLSurface surface, EGLint numRects, const EGLint *rects);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglSwapBuffersRegion2NOK (EGLDisplay dpy, EGLSurface surface, EGLint numRects, const EGLint *rects);
+#endif
+#endif /* EGL_NOK_swap_region2 */
+
+#ifndef EGL_NOK_texture_from_pixmap
+#define EGL_NOK_texture_from_pixmap 1
+#define EGL_Y_INVERTED_NOK                0x307F
+#endif /* EGL_NOK_texture_from_pixmap */
 
 #ifndef EGL_NV_3dvision_surface
 #define EGL_NV_3dvision_surface 1
