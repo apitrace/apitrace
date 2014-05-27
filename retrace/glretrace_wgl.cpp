@@ -56,6 +56,10 @@ getDrawable(unsigned long long hdc) {
 
 static void retrace_wglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
+    if (!orig_context) {
+        return;
+    }
+
     Context *context = glretrace::createContext();
     context_map[orig_context] = context;
 }
@@ -91,6 +95,11 @@ static void retrace_wglMakeCurrent(trace::Call &call) {
 }
 
 static void retrace_wglSwapBuffers(trace::Call &call) {
+    bool ret = call.ret->toBool();
+    if (!ret) {
+        return;
+    }
+
     glws::Drawable *drawable = getDrawable(call.arg(0).toUIntPtr());
 
     frame_complete(call);
@@ -109,6 +118,11 @@ static void retrace_wglSwapBuffers(trace::Call &call) {
 }
 
 static void retrace_wglShareLists(trace::Call &call) {
+    bool ret = call.ret->toBool();
+    if (!ret) {
+        return;
+    }
+
     unsigned long long hglrc1 = call.arg(0).toUIntPtr();
     unsigned long long hglrc2 = call.arg(1).toUIntPtr();
 
@@ -137,25 +151,36 @@ static void retrace_wglSwapLayerBuffers(trace::Call &call) {
 }
 
 static void retrace_wglCreatePbufferARB(trace::Call &call) {
+    unsigned long long orig_pbuffer = call.ret->toUIntPtr();
+    if (!orig_pbuffer) {
+        return;
+    }
+
     int iWidth = call.arg(2).toUInt();
     int iHeight = call.arg(3).toUInt();
 
-    unsigned long long orig_pbuffer = call.ret->toUIntPtr();
     glws::Drawable *drawable = glretrace::createPbuffer(iWidth, iHeight);
 
     pbuffer_map[orig_pbuffer] = drawable;
 }
 
 static void retrace_wglGetPbufferDCARB(trace::Call &call) {
-    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).toUIntPtr()];
-
     unsigned long long orig_hdc = call.ret->toUIntPtr();
+    if (!orig_hdc) {
+        return;
+    }
+
+    glws::Drawable *pbuffer = pbuffer_map[call.arg(0).toUIntPtr()];
 
     drawable_map[orig_hdc] = pbuffer;
 }
 
 static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
+    if (!orig_context) {
+        return;
+    }
+
     Context *share_context = NULL;
 
     if (call.arg(1).toPointer()) {
