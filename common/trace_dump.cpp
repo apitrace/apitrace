@@ -38,40 +38,31 @@ class Dumper : public Visitor
 protected:
     std::ostream &os;
     DumpFlags dumpFlags;
-    highlight::Highlighter *highlighter;
-    highlight::Attribute *normal;
-    highlight::Attribute *bold;
-    highlight::Attribute *italic;
-    highlight::Attribute *strike;
-    highlight::Attribute *red;
-    highlight::Attribute *pointer;
-    highlight::Attribute *literal;
+    const highlight::Highlighter & highlighter;
+    const highlight::Attribute & normal;
+    const highlight::Attribute & bold;
+    const highlight::Attribute & italic;
+    const highlight::Attribute & strike;
+    const highlight::Attribute & red;
+    const highlight::Attribute & pointer;
+    const highlight::Attribute & literal;
 
 public:
     Dumper(std::ostream &_os, DumpFlags _flags) : 
         os(_os),
-        dumpFlags(_flags)
+        dumpFlags(_flags),
+        highlighter(highlight::defaultHighlighter(!(dumpFlags & DUMP_FLAG_NO_COLOR))),
+        normal(highlighter.normal()),
+        bold(highlighter.bold()),
+        italic(highlighter.italic()),
+        strike(highlighter.strike()),
+        red(highlighter.color(highlight::RED)),
+        pointer(highlighter.color(highlight::GREEN)),
+        literal(highlighter.color(highlight::BLUE))
     {
-        bool color = !(dumpFlags & DUMP_FLAG_NO_COLOR);
-        highlighter = highlight::defaultHighlighter(color);
-        normal = highlighter->normal();
-        bold = highlighter->bold();
-        italic = highlighter->italic();
-        strike = highlighter->strike();
-        red = highlighter->color(highlight::RED);
-        pointer = highlighter->color(highlight::GREEN);
-        literal = highlighter->color(highlight::BLUE);
     }
 
     ~Dumper() {
-        delete normal;
-        delete bold;
-        delete italic;
-        delete strike;
-        delete red;
-        delete pointer;
-        delete literal;
-        delete highlighter;
     }
 
     void visit(Null *) {

@@ -352,6 +352,7 @@ add_library (common STATIC
     common/trace_option.cpp
     common/${os}
     common/os_backtrace.cpp
+    common/highlight.cpp
 )
 
 set_target_properties (common PROPERTIES
