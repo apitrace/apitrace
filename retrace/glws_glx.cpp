@@ -252,9 +252,22 @@ public:
     }
 };
 
+static int
+errorHandler(Display *dpy, XErrorEvent *error)
+{
+    char buffer[512];
+    XGetErrorText(dpy, error->error_code, buffer, sizeof buffer);
+    std::cerr << "error: xlib: " << buffer << "\n";
+    return 0;
+}
+
+static int (*oldErrorHandler)(Display *, XErrorEvent *) = NULL;
+
 void
 init(void) {
     XInitThreads();
+
+    oldErrorHandler = XSetErrorHandler(errorHandler);
 
     display = XOpenDisplay(NULL);
     if (!display) {
@@ -278,6 +291,9 @@ cleanup(void) {
         XCloseDisplay(display);
         display = NULL;
     }
+
+    XSetErrorHandler(oldErrorHandler);
+    oldErrorHandler = NULL;
 }
 
 Visual *
