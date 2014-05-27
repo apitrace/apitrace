@@ -33,16 +33,15 @@
 
 #include "glproc.hpp"
 #include "glws.hpp"
+#include "glws_xlib.hpp"
 
 
 namespace glws {
 
 
-static Display *display = NULL;
 static EGLDisplay eglDisplay = EGL_NO_DISPLAY;
 static char const *eglExtensions = NULL;
 static bool has_EGL_KHR_create_context = false;
-static int screen = 0;
 
 
 class EglVisual : public Visual
@@ -63,31 +62,6 @@ public:
 };
 
 
-static void describeEvent(const XEvent &event) {
-    if (0) {
-        switch (event.type) {
-        case ConfigureNotify:
-            std::cerr << "ConfigureNotify";
-            break;
-        case Expose:
-            std::cerr << "Expose";
-            break;
-        case KeyPress:
-            std::cerr << "KeyPress";
-            break;
-        case MapNotify:
-            std::cerr << "MapNotify";
-            break;
-        case ReparentNotify:
-            std::cerr << "ReparentNotify";
-            break;
-        default:
-            std::cerr << "Event " << event.type;
-        }
-        std::cerr << " " << event.xany.window << "\n";
-    }
-}
-
 class EglDrawable : public Drawable
 {
 public:
@@ -101,55 +75,13 @@ public:
     {
         XVisualInfo *visinfo = static_cast<const EglVisual *>(visual)->visinfo;
 
-        Window root = RootWindow(display, screen);
-
-        /* window attributes */
-        XSetWindowAttributes attr;
-        attr.background_pixel = 0;
-        attr.border_pixel = 0;
-        attr.colormap = XCreateColormap(display, root, visinfo->visual, AllocNone);
-        attr.event_mask = StructureNotifyMask;
-
-        unsigned long mask;
-        mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
-
-        int x = 0, y = 0;
-
-        window = XCreateWindow(
-            display, root,
-            x, y, width, height,
-            0,
-            visinfo->depth,
-            InputOutput,
-            visinfo->visual,
-            mask,
-            &attr);
-
-        XSizeHints sizehints;
-        sizehints.x = x;
-        sizehints.y = y;
-        sizehints.width  = width;
-        sizehints.height = height;
-        sizehints.flags = USSize | USPosition;
-        XSetNormalHints(display, window, &sizehints);
-
-        const char *name = "glretrace";
-        XSetStandardProperties(
-            display, window, name, name,
-            None, (char **)NULL, 0, &sizehints);
+        const char *name = "eglretrace";
+        window = createWindow(visinfo, name, width, height);
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
         EGLConfig config = static_cast<const EglVisual *>(visual)->config;
         surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
-    }
-
-    void waitForEvent(int type) {
-        XEvent event;
-        do {
-            XWindowEvent(display, window, StructureNotifyMask, &event);
-            describeEvent(event);
-        } while (event.type != type);
     }
 
     ~EglDrawable() {
@@ -196,16 +128,7 @@ public:
 
         Drawable::resize(w, h);
 
-        // Tell the window manager to respect the requested size
-        XSizeHints size_hints;
-        size_hints.max_width  = size_hints.min_width  = w;
-        size_hints.max_height = size_hints.min_height = h;
-        size_hints.flags = PMinSize | PMaxSize;
-        XSetWMNormalHints(display, window, &size_hints);
-
-        XResizeWindow(display, window, w, h);
-
-        waitForEvent(ConfigureNotify);
+        resizeWindow(window, w, h);
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
@@ -238,9 +161,7 @@ public:
 
         eglWaitClient();
 
-        XMapWindow(display, window);
-
-        waitForEvent(MapNotify);
+        showWindow(window);
 
         eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 
@@ -250,6 +171,7 @@ public:
     void swapBuffers(void) {
         eglBindAPI(api);
         eglSwapBuffers(eglDisplay, surface);
+        processKeys(window);
     }
 };
 
@@ -286,13 +208,7 @@ void
 init(void) {
     load("libEGL.so.1");
 
-    display = XOpenDisplay(NULL);
-    if (!display) {
-        std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
-        exit(1);
-    }
-
-    screen = DefaultScreen(display);
+    initX();
 
     eglDisplay = eglGetDisplay((EGLNativeDisplayType)display);
     if (eglDisplay == EGL_NO_DISPLAY) {
@@ -314,11 +230,11 @@ init(void) {
 
 void
 cleanup(void) {
-    if (display) {
+    if (eglDisplay != EGL_NO_DISPLAY) {
         eglTerminate(eglDisplay);
-        XCloseDisplay(display);
-        display = NULL;
     }
+
+    cleanupX();
 }
 
 Visual *
@@ -499,15 +415,6 @@ makeCurrent(Drawable *drawable, Context *context)
     }
 }
 
-bool
-processEvents(void) {
-    while (XPending(display) > 0) {
-        XEvent event;
-        XNextEvent(display, &event);
-        describeEvent(event);
-    }
-    return true;
-}
 
 
 } /* namespace glws */

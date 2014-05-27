@@ -69,6 +69,17 @@ target_link_libraries (glretrace_common
 )
 
 
+if (WIN32)
+    set (glws_os glws_wgl.cpp)
+else ()
+    if (APPLE)
+        set (glws_os glws_cocoa.mm)
+    else ()
+        set (glws_os glws_xlib.cpp glws_glx.cpp)
+    endif ()
+endif ()
+
+
 if (WIN32 OR APPLE OR X11_FOUND)
     add_executable (glretrace
         ${glws_os}
@@ -116,6 +127,7 @@ endif ()
 
 if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
     add_executable (eglretrace
+        glws_xlib.cpp
         glws_egl_xlib.cpp
     )
 

@@ -30,13 +30,11 @@
 
 #include "glproc.hpp"
 #include "glws.hpp"
+#include "glws_xlib.hpp"
 
 
 namespace glws {
 
-
-static Display *display = NULL;
-static int screen = 0;
 
 static unsigned glxVersion = 0;
 static const char *extensions = 0;
@@ -61,45 +59,6 @@ public:
 };
 
 
-static void
-processEvent(XEvent &event) {
-    if (0) {
-        switch (event.type) {
-        case ConfigureNotify:
-            std::cerr << "ConfigureNotify";
-            break;
-        case Expose:
-            std::cerr << "Expose";
-            break;
-        case KeyPress:
-            std::cerr << "KeyPress";
-            break;
-        case MapNotify:
-            std::cerr << "MapNotify";
-            break;
-        case ReparentNotify:
-            std::cerr << "ReparentNotify";
-            break;
-        default:
-            std::cerr << "Event " << event.type;
-        }
-        std::cerr << " " << event.xany.window << "\n";
-    }
-
-    switch (event.type) {
-    case KeyPress:
-        {
-            char buffer[32];
-            KeySym keysym;
-            XLookupString(&event.xkey, buffer, sizeof buffer - 1, &keysym, NULL);
-            if (keysym == XK_Escape) {
-                exit(0);
-            }
-        }
-        break;
-    }
-}
-
 class GlxDrawable : public Drawable
 {
 public:
@@ -112,59 +71,10 @@ public:
     {
         XVisualInfo *visinfo = static_cast<const GlxVisual *>(visual)->visinfo;
 
-        Window root = RootWindow(display, screen);
-
-        /* window attributes */
-        XSetWindowAttributes attr;
-        attr.background_pixel = 0;
-        attr.border_pixel = 0;
-        attr.colormap = XCreateColormap(display, root, visinfo->visual, AllocNone);
-        attr.event_mask = StructureNotifyMask | KeyPressMask;
-
-        unsigned long mask;
-        mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
-
-        int x = 0, y = 0;
-
-        window = XCreateWindow(
-            display, root,
-            x, y, width, height,
-            0,
-            visinfo->depth,
-            InputOutput,
-            visinfo->visual,
-            mask,
-            &attr);
-
-        XSizeHints sizehints;
-        sizehints.x = x;
-        sizehints.y = y;
-        sizehints.width  = width;
-        sizehints.height = height;
-        sizehints.flags = USSize | USPosition;
-        XSetNormalHints(display, window, &sizehints);
-
         const char *name = "glretrace";
-        XSetStandardProperties(
-            display, window, name, name,
-            None, (char **)NULL, 0, &sizehints);
+        window = createWindow(visinfo, name, width, height);
 
         glXWaitX();
-    }
-
-    void processKeys(void) {
-        XEvent event;
-        while (XCheckWindowEvent(display, window, StructureNotifyMask | KeyPressMask, &event)) {
-            processEvent(event);
-        }
-    }
-
-    void waitForEvent(int type) {
-        XEvent event;
-        do {
-            XWindowEvent(display, window, StructureNotifyMask | KeyPressMask, &event);
-            processEvent(event);
-        } while (event.type != type);
     }
 
     ~GlxDrawable() {
@@ -186,16 +96,7 @@ public:
 
         Drawable::resize(w, h);
 
-        // Tell the window manager to respect the requested size
-        XSizeHints size_hints;
-        size_hints.max_width  = size_hints.min_width  = w;
-        size_hints.max_height = size_hints.min_height = h;
-        size_hints.flags = PMinSize | PMaxSize;
-        XSetWMNormalHints(display, window, &size_hints);
-
-        XResizeWindow(display, window, w, h);
-
-        waitForEvent(ConfigureNotify);
+        resizeWindow(window, w, h);
 
         glXWaitX();
     }
@@ -207,9 +108,7 @@ public:
 
         glXWaitGL();
 
-        XMapWindow(display, window);
-
-        waitForEvent(MapNotify);
+        showWindow(window);
 
         glXWaitX();
 
@@ -219,7 +118,7 @@ public:
     void copySubBuffer(int x, int y, int width, int height) {
         glXCopySubBufferMESA(display, window, x, y, width, height);
 
-        processKeys();
+        processKeys(window);
     }
 
     void swapBuffers(void) {
@@ -232,7 +131,7 @@ public:
             std::cerr << "warning: attempt to issue SwapBuffers on unbound window "
                          " - skipping.\n";
         }
-        processKeys();
+        processKeys(window);
     }
 };
 
@@ -252,30 +151,9 @@ public:
     }
 };
 
-static int
-errorHandler(Display *dpy, XErrorEvent *error)
-{
-    char buffer[512];
-    XGetErrorText(dpy, error->error_code, buffer, sizeof buffer);
-    std::cerr << "error: xlib: " << buffer << "\n";
-    return 0;
-}
-
-static int (*oldErrorHandler)(Display *, XErrorEvent *) = NULL;
-
 void
 init(void) {
-    XInitThreads();
-
-    oldErrorHandler = XSetErrorHandler(errorHandler);
-
-    display = XOpenDisplay(NULL);
-    if (!display) {
-        std::cerr << "error: unable to open display " << XDisplayName(NULL) << "\n";
-        exit(1);
-    }
-
-    screen = DefaultScreen(display);
+    initX();
 
     int major = 0, minor = 0;
     glXQueryVersion(display, &major, &minor);
@@ -287,13 +165,7 @@ init(void) {
 
 void
 cleanup(void) {
-    if (display) {
-        XCloseDisplay(display);
-        display = NULL;
-    }
-
-    XSetErrorHandler(oldErrorHandler);
-    oldErrorHandler = NULL;
+    cleanupX();
 }
 
 Visual *
@@ -434,16 +306,6 @@ makeCurrent(Drawable *drawable, Context *context)
 
         return glXMakeCurrent(display, glxDrawable->window, glxContext->context);
     }
-}
-
-bool
-processEvents(void) {
-    while (XPending(display) > 0) {
-        XEvent event;
-        XNextEvent(display, &event);
-        processEvent(event);
-    }
-    return true;
 }
 
 
