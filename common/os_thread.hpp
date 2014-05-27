@@ -54,10 +54,11 @@
  * - http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
  */
 #if defined(HAVE_COMPILER_TLS)
-#  define OS_THREAD_SPECIFIC_PTR(_type) HAVE_COMPILER_TLS _type *
+#  define OS_THREAD_SPECIFIC(_type) HAVE_COMPILER_TLS _type
 #else
-#  define OS_THREAD_SPECIFIC_PTR(_type) os::thread_specific_ptr< _type >
+#  define OS_THREAD_SPECIFIC(_type) os::thread_specific< _type >
 #endif
+#define OS_THREAD_SPECIFIC_PTR(_type) OS_THREAD_SPECIFIC(_type *)
 
 
 namespace os {
@@ -283,8 +284,13 @@ namespace os {
     };
 
 
+    /**
+     * Implement TLS through OS threading API.
+     *
+     * This will only work when T is a pointer, intptr_t, or uintptr_t.
+     */
     template <typename T>
-    class thread_specific_ptr
+    class thread_specific
     {
     private:
 #ifdef _WIN32
@@ -294,7 +300,7 @@ namespace os {
 #endif
 
     public:
-        thread_specific_ptr(void) {
+        thread_specific(void) {
 #ifdef _WIN32
             dwTlsIndex = TlsAlloc();
 #else
@@ -302,7 +308,7 @@ namespace os {
 #endif
         }
 
-        ~thread_specific_ptr() {
+        ~thread_specific() {
 #ifdef _WIN32
             TlsFree(dwTlsIndex);
 #else
@@ -310,7 +316,7 @@ namespace os {
 #endif
         }
 
-        inline T *
+        inline T
         get(void) const {
             void *ptr;
 #ifdef _WIN32
@@ -318,34 +324,35 @@ namespace os {
 #else
             ptr = pthread_getspecific(key);
 #endif
-            return static_cast<T*>(ptr);
+            return reinterpret_cast<T>(ptr);
         }
 
         inline
-        operator T * (void) const
+        operator T (void) const
         {
             return get();
         }
 
-        inline T *
+        inline T
         operator -> (void) const
         {
             return get();
         }
 
-        inline T *
-        operator = (T * new_value)
+        inline T
+        operator = (T new_value)
         {
             set(new_value);
             return new_value;
         }
 
         inline void
-        set(T* new_value) {
+        set(T new_value) {
+            void *new_ptr = reinterpret_cast<void *>(new_value);
 #ifdef _WIN32
-            TlsSetValue(dwTlsIndex, new_value);
+            TlsSetValue(dwTlsIndex, new_ptr);
 #else
-            pthread_setspecific(key, new_value);
+            pthread_setspecific(key, new_ptr);
 #endif
         }
     };
