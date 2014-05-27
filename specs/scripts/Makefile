@@ -5,6 +5,7 @@ all: \
 	glparams.py \
 	glxapi.py \
 	wglapi.py \
+	glxenum.py \
 	wglenum.py \
 	eglenum.py
 
@@ -44,6 +45,9 @@ wglapi.py: spec2api.py wgl.tm wgl.spec wglext.spec
 	python spec2api.py wgl wgl.tm wgl.spec wglext.spec > $@
 
 glparams.py: xml2glparams.py gl.xml
+	python $^ > $@
+
+glxenum.py: xml2enum.py glx.xml
 	python $^ > $@
 
 wglenum.py: xml2enum.py wgl.xml
