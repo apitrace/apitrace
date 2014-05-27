@@ -88,6 +88,10 @@ getContext(unsigned long long context_ptr) {
 
 static void retrace_glXCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
+    if (!orig_context) {
+        return;
+    }
+
     Context *share_context = getContext(call.arg(2).toUIntPtr());
 
     Context *context = glretrace::createContext(share_context);
@@ -96,6 +100,10 @@ static void retrace_glXCreateContext(trace::Call &call) {
 
 static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
+    if (!orig_context) {
+        return;
+    }
+
     Context *share_context = getContext(call.arg(2).toUIntPtr());
 
     unsigned major = 1;
@@ -142,6 +150,13 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
 }
 
 static void retrace_glXMakeCurrent(trace::Call &call) {
+    bool ret = call.ret->toBool();
+    if (!ret) {
+        // If false is returned then any previously current rendering context
+        // and drawable remain unchanged.
+        return;
+    }
+
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
     Context *new_context = getContext(call.arg(2).toUIntPtr());
 
@@ -186,6 +201,10 @@ static void retrace_glXSwapBuffers(trace::Call &call) {
 
 static void retrace_glXCreateNewContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
+    if (!orig_context) {
+        return;
+    }
+
     Context *share_context = getContext(call.arg(3).toUIntPtr());
 
     Context *context = glretrace::createContext(share_context);
@@ -193,11 +212,14 @@ static void retrace_glXCreateNewContext(trace::Call &call) {
 }
 
 static void retrace_glXCreatePbuffer(trace::Call &call) {
+    unsigned long long orig_drawable = call.ret->toUInt();
+    if (!orig_drawable) {
+        return;
+    }
+
     const trace::Value *attrib_list = call.arg(2).toArray();
     int width = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_WIDTH, 0);
     int height = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_HEIGHT, 0);
-
-    unsigned long long orig_drawable = call.ret->toUInt();
 
     glws::Drawable *drawable = glretrace::createPbuffer(width, height);
     
@@ -215,6 +237,13 @@ static void retrace_glXDestroyPbuffer(trace::Call &call) {
 }
 
 static void retrace_glXMakeContextCurrent(trace::Call &call) {
+    bool ret = call.ret->toBool();
+    if (!ret) {
+        // If false is returned then any previously current rendering context
+        // and drawable remain unchanged.
+        return;
+    }
+
     glws::Drawable *new_drawable = getDrawable(call.arg(1).toUInt());
     Context *new_context = getContext(call.arg(3).toUIntPtr());
 
