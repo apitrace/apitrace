@@ -103,7 +103,8 @@ public:
             eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         }
 
-        eglDestroySurface(eglDisplay, surface);
+        // XXX: Defer destruction to prevent getting the same surface as before, which seems to cause Mesa to crash
+        EGLSurface oldSurface = surface;
 
         EGLConfig config = static_cast<const EglVisual *>(visual)->config;
         surface = eglCreateWindowSurface(eglDisplay, config, (EGLNativeWindowType)window, NULL);
@@ -111,6 +112,8 @@ public:
         if (rebindDrawSurface || rebindReadSurface) {
             eglMakeCurrent(eglDisplay, surface, surface, currentContext);
         }
+
+        eglDestroySurface(eglDisplay, oldSurface);
     }
 
     void
