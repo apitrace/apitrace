@@ -26,7 +26,7 @@
 
 
 #
-# Script to half-generate glparams.py based on Khronos' gl.xml
+# Script to half-generate *enum.py based on Khronos' *.xml
 #
 
 
@@ -62,4 +62,4 @@ for arg in sys.argv[1:]:
     values.sort()
     for value in values:
         name = params[value]
-        print '    ("",\tX,\t1,\t"%s"),\t# 0x%04X' % (name, value)
+        print '    "%s",\t\t# 0x%04X' % (name, value)

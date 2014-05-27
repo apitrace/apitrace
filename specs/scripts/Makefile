@@ -10,6 +10,8 @@ all: \
 
 download: \
 	gl.xml \
+	wgl.xml \
+	egl.xml \
 	enumext.spec \
 	gl.spec \
 	gl.tm \
@@ -22,21 +24,17 @@ download: \
 	wglenumext.spec \
 	wgl.spec \
 	wglext.spec \
-	wgl.tm \
-	eglenum.spec
+	wgl.tm
 
 
 %.xml:
 	wget -N https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/$@
 
 %.spec:
-	wget -N http://www.opengl.org/registry/api/$@
+	wget -N http://www.opengl.org/registry/oldspecs/$@
 
 %.tm:
-	wget -N http://www.opengl.org/registry/api/$@
-
-eglenum.spec:
-	wget -N http://www.khronos.org/registry/egl/api/$@
+	wget -N http://www.opengl.org/registry/oldspecs/$@
 
 glapi.py: glspec.py gl.tm gl.spec
 	python glspec.py gl gl.tm gl.spec > $@
@@ -48,19 +46,19 @@ wglapi.py: glspec.py wgl.tm wgl.spec wglext.spec
 	python glspec.py wgl wgl.tm wgl.spec wglext.spec > $@
 
 glparams.py: xml2glparams.py gl.xml
-	python xml2glparams.py gl.xml > $@
+	python $^ > $@
 
-wglenum.py: wglenum.sh wglenumext.spec
-	./wglenum.sh wglenumext.spec > $@
+wglenum.py: xml2enum.py wgl.xml
+	python $^ > $@
 
-eglenum.py: eglenum.sh eglenum.spec
-	./eglenum.sh eglenum.spec > $@
+eglenum.py: xml2enum.py egl.xml
+	python $^ > $@
 
 clean:
 	rm -f \
         glapi.py glxapi.py wglapi.py \
         glparams.py wglenum.py
 
-.PRECIOUS: %.spec %.tm
+.PRECIOUS: %.xml %.spec %.tm
 
 .PHONY: download clean
