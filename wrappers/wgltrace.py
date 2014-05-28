@@ -28,7 +28,7 @@
 
 
 from gltrace import GlTracer
-from specs.stdapi import Module, API
+from specs.stdapi import Module, API, Void
 from specs.glapi import glapi
 from specs.wglapi import wglapi
 
@@ -56,6 +56,25 @@ class WglTracer(GlTracer):
     ]
 
     def traceFunctionImplBody(self, function):
+        if function.name.startswith('wgl'):
+            # When implementing WGL extensions OpenGL ICDs often have no
+            # alternative to calling back into OPENGL32.DLL's wgl* entry points
+            # due to lack of extensibility in the ICD interface.  These
+            # internal calls are not only visually confusing but can actually
+            # cause problems when tracing, and replaying.  A particularly nasty
+            # case is wglCreateContextAttribsARB which ends up calling
+            # wglCreateContext/wglCreateLayerContext to obtain a HGLRC that's
+            # recognizable by OPENGL32.DLL.  Therefore we need to detect and
+            # dispatch internal calls, without further ado.
+            print r'    if (_reentrant) {'
+            self.invokeFunction(function)
+            if function.type is not Void:
+                print '    return _result;'
+            print r'    }'
+            print r'    ReentryScope _reentry;'
+            print r'    (void)_reentry;'
+            print
+
         if function.name in self.destroyContextFunctionNames:
             # Unlike other GL APIs like EGL or GLX, WGL will make the context
             # inactive if it's currently the active context.
@@ -95,6 +114,14 @@ if __name__ == '__main__':
     print
     print '#include "glproc.hpp"'
     print '#include "glsize.hpp"'
+    print
+    print 'static OS_THREAD_SPECIFIC(uintptr_t) _reentrant;'
+    print
+    print '// Helper class to track reentries in function scope.'
+    print 'struct ReentryScope {'
+    print 'inline ReentryScope() { _reentrant = 1; }'
+    print 'inline ~ReentryScope() { _reentrant = 0; }'
+    print '};'
     print
     module = Module()
     module.mergeModule(glapi)
