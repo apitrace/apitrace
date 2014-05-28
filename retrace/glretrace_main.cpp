@@ -36,6 +36,8 @@
 #include "glretrace.hpp"
 #include "os_time.hpp"
 #include "os_memory.hpp"
+#include "highlight.hpp"
+
 
 /* Synchronous debug output may reduce performance however,
  * without it the callNo in the callback may be inaccurate
@@ -412,22 +414,30 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         return;
     }
 
-    std::cerr << retrace::callNo << ": message:";
+    const highlight::Highlighter & highlighter = highlight::defaultHighlighter(std::cerr);
+
+    const char *severityStr = "";
+    const highlight::Attribute * color = &highlighter.normal();
 
     switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
-        std::cerr << " major";
+        color = &highlighter.color(highlight::RED);
+        severityStr = " major";
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
         break;
     case GL_DEBUG_SEVERITY_LOW:
-        std::cerr << " minor";
+        color = &highlighter.color(highlight::GRAY);
+        severityStr = " minor";
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
+        color = &highlighter.color(highlight::GRAY);
         break;
     default:
         assert(0);
     }
+
+    std::cerr << *color << retrace::callNo << ": message:" << severityStr;
 
     switch (source) {
     case GL_DEBUG_SOURCE_API:
@@ -489,6 +499,8 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
     }
 
     std::cerr << ": " << message;
+
+    std::cerr << highlighter.normal();
 
     // Write new line if not included in the message already.
     size_t messageLen = strlen(message);

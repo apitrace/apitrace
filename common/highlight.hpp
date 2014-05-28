@@ -58,6 +58,7 @@ enum Color {
     RED,
     GREEN,
     BLUE,
+    GRAY,
 };
 
 
@@ -71,8 +72,14 @@ public:
 };
 
 
+bool
+isAtty(std::ostream & os);
+
 const Highlighter &
 defaultHighlighter(bool color = true);
+
+const Highlighter &
+defaultHighlighter(std::ostream & os);
 
 
 } /* namespace highlight */

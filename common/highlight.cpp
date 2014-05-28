@@ -29,7 +29,9 @@
 
 
 #ifdef _WIN32
+
 #include <windows.h>
+#include <io.h> // _isatty
 
 #ifndef COMMON_LVB_LEADING_BYTE
 #define COMMON_LVB_LEADING_BYTE    0x0100
@@ -59,7 +61,11 @@
 #define COMMON_LVB_UNDERSCORE      0x8000
 #endif
 
-#endif /* _WIN32 */
+#else /* !_WIN32 */
+
+#include <unistd.h> // isatty
+
+#endif /* !_WIN32 */
 
 
 #include "highlight.hpp"
@@ -111,6 +117,7 @@ static const AnsiAttribute ansiStrike("9m");
 static const AnsiAttribute ansiRed("31m");
 static const AnsiAttribute ansiGreen("32m");
 static const AnsiAttribute ansiBlue("34m");
+static const AnsiAttribute ansiGray("37m");
 
 
 /**
@@ -139,6 +146,8 @@ public:
             return ansiGreen;
         case BLUE:
             return ansiBlue;
+        case GRAY:
+            return ansiGray;
         default:
             return plainAttribute;
         }
@@ -213,6 +222,39 @@ public:
 static const WindowsHighlighter windowsHighlighter;
 
 
+static bool
+haveAnsi(void)
+{
+    static bool checked = false;
+    static bool result = false;
+
+    if (!checked) {
+        // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#Environment_variable
+        // XXX: Didn't quite work for me
+        if (0) {
+            const char *conEmuANSI = getenv("ConEmuANSI");
+            if (conEmuANSI &&
+                strcmp(conEmuANSI, "ON") == 0) {
+                result = true;
+                checked = true;
+                return result;
+            }
+        }
+
+        // http://wiki.winehq.org/DeveloperFaq#detect-wine
+        HMODULE hNtDll = LoadLibraryA("ntdll");
+        if (hNtDll) {
+            result = GetProcAddress(hNtDll, "wine_get_version") != NULL;
+            FreeLibrary(hNtDll);
+        }
+
+        checked = true;
+    }
+
+    return result;
+}
+
+
 #endif /* _WIN32 */
 
 
@@ -220,19 +262,11 @@ const Highlighter &
 defaultHighlighter(bool color) {
     if (color) {
 #ifdef _WIN32
-        // http://wiki.winehq.org/DeveloperFaq#detect-wine
-        static HMODULE hNtDll = NULL;
-        static bool bWine = false;
-        if (!hNtDll) {
-            hNtDll = LoadLibraryA("ntdll");
-            if (hNtDll) {
-                bWine = GetProcAddress(hNtDll, "wine_get_version") != NULL;
-            }
-        }
-        if (bWine) {
+        if (haveAnsi()) {
             return ansiHighlighter;
+        } else {
+            return windowsHighlighter;
         }
-        return windowsHighlighter;
 #else
         return ansiHighlighter;
 #endif
@@ -240,6 +274,40 @@ defaultHighlighter(bool color) {
         return plainHighlighter;
     }
 }
+
+
+bool
+isAtty(std::ostream &os) {
+    int fd;
+    if (&os == &std::cout) {
+#ifdef _WIN32
+        fd = _fileno(stdout);
+#else
+        fd = STDOUT_FILENO;
+#endif
+    } else if (&os == &std::cerr) {
+#ifdef _WIN32
+        fd = _fileno(stderr);
+#else
+        fd = STDERR_FILENO;
+#endif
+    } else {
+        return false;
+    }
+#ifdef _WIN32
+    return _isatty(fd);
+#else
+    return isatty(fd);
+#endif
+}
+
+
+const Highlighter &
+defaultHighlighter(std::ostream & os)
+{
+    return defaultHighlighter(isAtty(os));
+}
+
 
 
 } /* namespace highlight */
