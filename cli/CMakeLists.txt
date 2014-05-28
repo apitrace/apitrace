@@ -42,7 +42,7 @@ if (NOT CMAKE_CROSSCOMPILING)
     )
 endif ()
 
-if (MSVC)
+if (MSVC AND NOT CMAKE_GENERATOR STREQUAL "Ninja")
     # On MSVC builds tell which subdirectory the binaries with be (for each
     # configuration)
     set_target_properties (apitrace PROPERTIES
