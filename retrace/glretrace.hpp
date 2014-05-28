@@ -71,6 +71,9 @@ getCurrentContext(void);
 int
 parseAttrib(const trace::Value *attribs, int param, int default_);
 
+glws::Profile
+parseContextAttribList(const trace::Value *attribs);
+
 
 glws::Drawable *
 createDrawable(glws::Profile profile);

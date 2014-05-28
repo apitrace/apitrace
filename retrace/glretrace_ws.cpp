@@ -258,4 +258,26 @@ parseAttrib(const trace::Value *attribs, int param, int default_ = 0) {
 }
 
 
+/**
+ * Parse GLX/WGL_ARB_create_context attribute list.
+ */
+glws::Profile
+parseContextAttribList(const trace::Value *attribs)
+{
+    int major_version = parseAttrib(attribs, 0x2091, 1);
+    int minor_version = parseAttrib(attribs, 0x2092, 0);
+    int profile_mask = parseAttrib(attribs, GL_CONTEXT_PROFILE_MASK, 0);
+    bool core_profile = profile_mask & GL_CONTEXT_CORE_PROFILE_BIT;
+
+    glws::Profile profile = glws::PROFILE_COMPAT;
+    if (major_version >= 3) {
+       profile = (glws::Profile)((core_profile ? 0x100 : 0) |
+                                 (major_version << 4) |
+                                  minor_version);
+    }
+
+    return profile;
+}
+
+
 } /* namespace glretrace */

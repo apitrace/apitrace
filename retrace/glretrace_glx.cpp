@@ -33,17 +33,6 @@
 #define GLX_PBUFFER_HEIGHT 0x8040
 #define GLX_PBUFFER_WIDTH 0x8041
 
-#define GLX_CONTEXT_MAJOR_VERSION_ARB           0x2091
-#define GLX_CONTEXT_MINOR_VERSION_ARB           0x2092
-#define GLX_CONTEXT_FLAGS_ARB                   0x2094
-#define GLX_CONTEXT_PROFILE_MASK_ARB            0x9126
-
-#define GLX_CONTEXT_DEBUG_BIT_ARB               0x0001
-#define GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB  0x0002
-
-#define GLX_CONTEXT_CORE_PROFILE_BIT_ARB        0x00000001
-#define GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
-
 #endif /* !HAVE_X11 */
 
 
@@ -106,44 +95,8 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
 
     Context *share_context = getContext(call.arg(2).toUIntPtr());
 
-    unsigned major = 1;
-    unsigned minor = 0;
-    bool core = false;
-
-    const trace::Array * attribs = call.arg(4).toArray();
-    if (attribs) {
-        size_t i = 0;
-        while (i < attribs->values.size()) {
-            int param = attribs->values[i++]->toSInt();
-            if (param == 0) {
-                break;
-            }
-            int value = attribs->values[i++]->toSInt();
-
-            switch (param) {
-            case GLX_CONTEXT_MAJOR_VERSION_ARB:
-                major = value;
-                break;
-            case GLX_CONTEXT_MINOR_VERSION_ARB:
-                minor = value;
-                break;
-            case GLX_CONTEXT_FLAGS_ARB:
-                break;
-            case GLX_CONTEXT_PROFILE_MASK_ARB:
-                if (value & GLX_CONTEXT_CORE_PROFILE_BIT_ARB) {
-                    core = true;
-                }
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    glws::Profile profile = glws::PROFILE_COMPAT;
-    if (major >= 3) {
-        profile = (glws::Profile)((core ? 0x100 : 0) | (major << 4) | minor);
-    }
+    const trace::Value * attrib_list = &call.arg(4);
+    glws::Profile profile = parseContextAttribList(attrib_list);
 
     Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;
@@ -217,7 +170,7 @@ static void retrace_glXCreatePbuffer(trace::Call &call) {
         return;
     }
 
-    const trace::Value *attrib_list = call.arg(2).toArray();
+    const trace::Value *attrib_list = &call.arg(2);
     int width = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_WIDTH, 0);
     int height = glretrace::parseAttrib(attrib_list, GLX_PBUFFER_HEIGHT, 0);
 

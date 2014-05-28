@@ -54,6 +54,22 @@ getDrawable(unsigned long long hdc) {
     return it->second;
 }
 
+static Context *
+getContext(unsigned long long context_ptr) {
+    if (context_ptr == 0) {
+        return NULL;
+    }
+
+    ContextMap::const_iterator it;
+    it = context_map.find(context_ptr);
+    if (it == context_map.end()) {
+        assert(false);
+        return NULL;
+    }
+
+    return it->second;
+}
+
 static void retrace_wglCreateContext(trace::Call &call) {
     unsigned long long orig_context = call.ret->toUIntPtr();
     if (!orig_context) {
@@ -87,7 +103,7 @@ static void retrace_wglMakeCurrent(trace::Call &call) {
         unsigned long long hglrc = call.arg(1).toUIntPtr();
         if (hglrc) {
             new_drawable = getDrawable(call.arg(0).toUIntPtr());
-            new_context = context_map[hglrc];
+            new_context = getContext(hglrc);
         }
     }
 
@@ -126,10 +142,11 @@ static void retrace_wglShareLists(trace::Call &call) {
     unsigned long long hglrc1 = call.arg(0).toUIntPtr();
     unsigned long long hglrc2 = call.arg(1).toUIntPtr();
 
-    Context *share_context = context_map[hglrc1];
-    Context *old_context = context_map[hglrc2];
+    Context *share_context = getContext(hglrc1);
+    Context *old_context = getContext(hglrc2);
 
-    Context *new_context = glretrace::createContext(share_context);
+    glws::Profile profile = old_context->wsContext->profile;
+    Context *new_context = glretrace::createContext(share_context, profile);
     if (new_context) {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (currentContext == old_context) {
@@ -181,13 +198,12 @@ static void retrace_wglCreateContextAttribsARB(trace::Call &call) {
         return;
     }
 
-    Context *share_context = NULL;
+    Context *share_context = getContext(call.arg(1).toUIntPtr());
 
-    if (call.arg(1).toPointer()) {
-        share_context = context_map[call.arg(1).toUIntPtr()];
-    }
+    const trace::Value * attribList = &call.arg(2);
+    glws::Profile profile = parseContextAttribList(attribList);
 
-    Context *context = glretrace::createContext(share_context);
+    Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;
 }
 
