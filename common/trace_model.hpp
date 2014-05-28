@@ -431,8 +431,6 @@ public:
     virtual void visit(Blob *);
     virtual void visit(Pointer *);
     virtual void visit(Repr *);
-    virtual void visit(Backtrace *);
-    virtual void visit(StackFrame *);
 protected:
     inline void _visit(Value *value) {
         if (value) { 

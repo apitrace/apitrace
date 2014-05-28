@@ -203,8 +203,6 @@ void Visitor::visit(Array *) { assert(0); }
 void Visitor::visit(Blob *) { assert(0); }
 void Visitor::visit(Pointer *) { assert(0); }
 void Visitor::visit(Repr *node) { node->machineValue->visit(*this); }
-void Visitor::visit(Backtrace *) { assert(0); }
-void Visitor::visit(StackFrame *) { assert(0); }
 
 
 static Null null;
