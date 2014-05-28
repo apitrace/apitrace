@@ -70,6 +70,7 @@ namespace highlight {
 
 class PlainAttribute : public Attribute {
 public:
+    PlainAttribute(void) {}
     virtual void apply(std::ostream &) const {}
 };
 
@@ -78,6 +79,7 @@ static const PlainAttribute plainAttribute;
 
 class PlainHighlighter : public Highlighter {
 public:
+    PlainHighlighter(void) {}
     virtual const Attribute & normal(void) const { return plainAttribute; }
     virtual const Attribute & bold(void) const { return plainAttribute; }
     virtual const Attribute & italic(void) const { return plainAttribute; }
@@ -118,6 +120,7 @@ static const AnsiAttribute ansiBlue("34m");
  */
 class AnsiHighlighter : public Highlighter {
 public:
+    AnsiHighlighter(void) {}
     virtual const Attribute & normal(void) const { return ansiNormal; }
     virtual const Attribute & bold(void) const { return ansiBold; }
     virtual const Attribute & italic(void) const {
