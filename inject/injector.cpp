@@ -242,7 +242,7 @@ main(int argc, char *argv[])
     }
 
     const char *szDllName;
-    szDllName = "inject.dll";
+    szDllName = "injectee.dll";
 
     char szDllPath[MAX_PATH];
     GetModuleFileNameA(NULL, szDllPath, sizeof szDllPath);

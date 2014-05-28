@@ -5,7 +5,6 @@ add_library (injectee MODULE
 )
 set_target_properties (injectee PROPERTIES
     PREFIX ""
-    OUTPUT_NAME inject
 )
 install (TARGETS injectee LIBRARY DESTINATION bin)
 
