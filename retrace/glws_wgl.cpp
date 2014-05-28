@@ -298,11 +298,13 @@ class WglContext : public Context
 public:
     HGLRC hglrc;
     WglContext *shareContext;
+    bool debug;
 
-    WglContext(const Visual *vis, WglContext *share) :
+    WglContext(const Visual *vis, WglContext *share, bool _debug) :
         Context(vis),
         hglrc(0),
-        shareContext(share)
+        shareContext(share),
+        debug(_debug)
     {}
 
     ~WglContext() {
@@ -314,14 +316,76 @@ public:
     bool
     create(WglDrawable *wglDrawable) {
         if (!hglrc) {
-            hglrc = wglCreateContext(wglDrawable->hDC);
+            HDC hDC = wglDrawable->hDC;
+
+            hglrc = wglCreateContext(hDC);
             if (!hglrc) {
                 std::cerr << "error: wglCreateContext failed\n";
                 exit(1);
-                return false;
             }
+
             if (shareContext) {
-                if (shareContext->create(wglDrawable)) {
+                shareContext->create(wglDrawable);
+            }
+
+            unsigned major, minor;
+            bool core;
+            getProfileVersion(profile, major, minor, core);
+            if (major >= 3 || core) {
+                // We need to create context through WGL_ARB_create_context.  This
+                // implies binding a temporary context to get the extensions strings
+                // and function pointers.
+
+                // This function is only called inside makeCurrent, so we don't need
+                // to save and restore the previous current context/drawable.
+                BOOL bRet = wglMakeCurrent(hDC, hglrc);
+                if (!bRet) {
+                    std::cerr << "error: wglMakeCurrent failed\n";
+                    exit(1);
+                }
+
+                PFNWGLGETEXTENSIONSSTRINGARBPROC pfnWglGetExtensionsStringARB =
+                    (PFNWGLGETEXTENSIONSSTRINGARBPROC) wglGetProcAddress("wglGetExtensionsStringARB");
+                if (!pfnWglGetExtensionsStringARB) {
+                    std::cerr << "error: WGL_ARB_extensions_string not supported\n";
+                    exit(1);
+                }
+                const char * extensionsString = pfnWglGetExtensionsStringARB(hDC);
+                if (!checkExtension("WGL_ARB_create_context", extensionsString)) {
+                    std::cerr << "error: WGL_ARB_create_context not supported\n";
+                    exit(1);
+                }
+
+                PFNWGLCREATECONTEXTATTRIBSARBPROC pfnWglCreateContextAttribsARB =
+                    (PFNWGLCREATECONTEXTATTRIBSARBPROC) wglGetProcAddress("wglCreateContextAttribsARB");
+                if (!pfnWglCreateContextAttribsARB) {
+                    std::cerr << "error: failed to get pointer to wglCreateContextAttribsARB\n";
+                    exit(1);
+                }
+
+                wglMakeCurrent(hDC, NULL);
+                wglDeleteContext(hglrc);
+
+                Attributes<int> attribs;
+                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, major);
+                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, minor);
+                if (core) {
+                    attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB);
+                }
+                if (debug) {
+                    attribs.add(WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB);
+                }
+                attribs.end();
+
+                hglrc = pfnWglCreateContextAttribsARB(hDC,
+                                                      shareContext ? shareContext->hglrc : 0,
+                                                      attribs);
+                if (!hglrc) {
+                    std::cerr << "error: wglCreateContextAttribsARB failed\n";
+                    exit(1);
+                }
+            } else {
+                if (shareContext) {
                     BOOL bRet;
                     bRet = wglShareLists(shareContext->hglrc,
                                          hglrc);
@@ -379,7 +443,6 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         std::cerr << "warning: ignoring OpenGL ES 2.0 profile request\n";
         break;
     default:
-        std::cerr << "warning: ignoring OpenGL profile request\n";
         break;
     }
 
@@ -399,7 +462,7 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 Context *
 createContext(const Visual *visual, Context *shareContext, bool debug)
 {
-    return new WglContext(visual, static_cast<WglContext *>(shareContext));
+    return new WglContext(visual, static_cast<WglContext *>(shareContext), debug);
 }
 
 bool

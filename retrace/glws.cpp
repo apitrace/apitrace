@@ -48,7 +48,10 @@ bool
 checkExtension(const char *extName, const char *extString)
 {
     assert(extName);
-    assert(extString);
+
+    if (!extString) {
+        return false;
+    }
 
     const char *p = extString;
     const char *q = extName;
