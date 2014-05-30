@@ -141,6 +141,7 @@ callFlagTable[] = {
     { "IDirect3DDevice9Ex::SetRenderTarget",           CALL_FLAG_SWAP_RENDERTARGET },
     { "IDirect3DSwapChain9::Present",                  CALL_FLAG_SWAPBUFFERS },
     { "IDirect3DSwapChain9Ex::Present",                CALL_FLAG_SWAPBUFFERS },
+    { "eglGetConfigAttrib",                            CALL_FLAG_VERBOSE },
     { "eglGetProcAddress",                             CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglQueryString",                                CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "eglSwapBuffers",                                CALL_FLAG_SWAPBUFFERS },
