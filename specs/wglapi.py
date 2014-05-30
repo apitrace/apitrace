@@ -429,6 +429,9 @@ wglapi.addFunctions([
     StdFunction(BOOL, "wglDXLockObjectsNV", [(HANDLE, "hDevice"), (GLint, "count"), Out(Array(HANDLE, "count"), "hObjects")]),
     StdFunction(BOOL, "wglDXUnlockObjectsNV", [(HANDLE, "hDevice"), (GLint, "count"), Out(Array(HANDLE, "count"), "hObjects")]),
 
+    # WGL_NV_delay_before_swap
+    StdFunction(BOOL, "wglDelayBeforeSwapNV", [(HDC, "hDC"), (GLfloat, "seconds")]),
+
     # must be last
     StdFunction(PROC, "wglGetProcAddress", [(LPCSTR, "lpszProc")]),
 ])
