@@ -116,6 +116,7 @@ GLpipeline = Handle("pipeline", GLuint)
 GLsampler = Handle("sampler", GLuint)
 GLfeedback = Handle("feedback", GLuint)
 GLfence = Handle("fence", GLuint)
+GLtextureHandle = Handle("textureHandle", GLuint64)
 
 # GL mappings are pointers to linear memory regions.
 #

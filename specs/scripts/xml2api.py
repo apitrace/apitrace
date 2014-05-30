@@ -36,18 +36,85 @@ import xml.etree.ElementTree as ET
 import c2api
 
 
+def appendToken(tokens, text):
+    for token in text.split():
+        if token.startswith('*'):
+            for c in token:
+                tokens.append(c)
+        else:
+            tokens.append(token)
+
 
 def getType(node):
-    ptype = node.find('ptype')
-    if ptype is None:
-        typeText = node.text.strip()
-    else:
-        typeText = ptype.text
+    tokens = []
 
+    if node.text is not None:
+        appendToken(tokens, node.text)
+
+    ptype = node.find('ptype')
+    if ptype is not None:
+        appendToken(tokens, ptype.text)
+        appendToken(tokens, ptype.tail)
+
+    # Array
+    lenExpr = node.get('len')
+    if lenExpr is not None:
+        assert tokens[-1] == '*'
+        tokens = tokens[:-1]
+        if lenExpr == "COMPSIZE(pname)":
+            lenExpr = "_gl_param_size(pname)"
+    
+    typeText = ' '.join(tokens)
     parser = c2api.DeclParser()
     parser.tokenize(typeText + ';')
+    typeExpr = parser.parse_type()
 
-    return parser.parse_type()
+    if lenExpr is not None:
+        typeExpr = 'Array(%s, "%s")' % (typeExpr, lenExpr)
+
+    return typeExpr
+
+
+def processCommand(prototypes, command):
+    proto = command.find('proto')
+
+    functionName = proto.find('name').text
+
+    retType = getType(proto)
+
+    args = []
+    for param in command.findall('param'):
+        argName = param.find('name').text
+        #print argName, param.text
+        argType = getType(param)
+        if argName.lower() == 'hdc':
+            argName = 'hDC'
+        arg = '(%s, "%s")' % (argType, argName)
+        args.append(arg)
+
+    if namespace == 'WGL':
+        constructor = 'StdFunction'
+    else:
+        constructor = 'GlFunction'
+
+    prototype = '%s(%s, "%s", [%s])' % (constructor, retType, functionName, ', '.join(args))
+
+    prototypes[functionName] = prototype
+
+
+def processRequire(prototypes, node):
+    requireNode = node.find('require')
+    if requireNode is None:
+        return
+    commands = requireNode.findall('command')
+    if not commands:
+        return
+    print '    # %s' % node.get('name')
+    for command in commands:
+        functionName = command.get('name')
+        prototype = prototypes[functionName]
+        print '    %s,' % prototype
+    print
 
 
 for arg in sys.argv[1:]:
@@ -59,43 +126,12 @@ for arg in sys.argv[1:]:
     for commands in root.findall('commands'):
         namespace = commands.get('namespace')
         for command in commands.findall('command'):
-            proto = command.find('proto')
-            retType = getType(proto)
-            functionName = proto.find('name').text
-
-            args = []
-            for param in command.findall('param'):
-                argType = getType(param)
-                argName = param.find('name').text
-                if argName.lower() == 'hdc':
-                    argName = 'hDC'
-                arg = '(%s, "%s")' % (argType, argName)
-                args.append(arg)
-
-            if namespace == 'WGL':
-                constructor = 'StdFunction'
-            else:
-                constructor = 'GlFunction'
-
-            prototype = '%s(%s, "%s", [%s])' % (constructor, retType, functionName, ', '.join(args))
-            prototypes[functionName] = prototype
+            processCommand(prototypes, command)
 
     for feature in root.findall('feature'):
-        print '    # %s' % feature.get('name')
-        require = feature.find('require')
-        for command in require.findall('command'):
-            functionName = command.get('name')
-            prototype = prototypes[functionName]
-            print '    %s,' % prototype
-        print
+        processRequire(prototypes, feature)
 
     extensions = root.find('extensions')
     for extension in extensions.findall('extension'):
-        print '    # %s' % extension.get('name')
-        require = extension.find('require')
-        for command in require.findall('command'):
-            functionName = command.get('name')
-            prototype = prototypes[functionName]
-            print '    %s,' % prototype
-        print
+        processRequire(prototypes, extension)
 

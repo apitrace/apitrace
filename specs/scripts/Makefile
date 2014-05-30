@@ -35,14 +35,14 @@ download: \
 %.tm:
 	wget -N http://www.opengl.org/registry/oldspecs/$@
 
-glapi.py: spec2api.py gl.tm gl.spec
-	python spec2api.py gl gl.tm gl.spec > $@
+glapi.py: xml2api.py gl.xml
+	python $^ > $@
 
-glxapi.py: spec2api.py glx.tm glx.spec glxext.spec
-	python spec2api.py glX glx.tm glx.spec glxext.spec > $@
+glxapi.py: xml2api.py glx.xml
+	python $^ > $@
 
-wglapi.py: spec2api.py wgl.tm wgl.spec wglext.spec
-	python spec2api.py wgl wgl.tm wgl.spec wglext.spec > $@
+wglapi.py: xml2api.py wgl.xml
+	python $^ > $@
 
 glparams.py: xml2glparams.py gl.xml
 	python $^ > $@

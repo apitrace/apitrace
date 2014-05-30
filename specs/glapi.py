@@ -869,6 +869,24 @@ glapi.addFunctions([
     GlFunction(Void, "glDrawElementsInstancedBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount"), (GLuint, "baseinstance")]),
     GlFunction(Void, "glDrawElementsInstancedBaseVertexBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount"), (GLint, "basevertex"), (GLuint, "baseinstance")]),
 
+    # GL_ARB_bindless_texture
+    GlFunction(GLtextureHandle, "glGetTextureHandleARB", [(GLtexture, "texture")]),
+    GlFunction(GLtextureHandle, "glGetTextureSamplerHandleARB", [(GLtexture, "texture"), (GLsampler, "sampler")]),
+    GlFunction(Void, "glMakeTextureHandleResidentARB", [(GLtextureHandle, "handle")]),
+    GlFunction(Void, "glMakeTextureHandleNonResidentARB", [(GLtextureHandle, "handle")]),
+    GlFunction(GLtextureHandle, "glGetImageHandleARB", [(GLtexture, "texture"), (GLint, "level"), (GLboolean, "layered"), (GLint, "layer"), (GLenum, "format")]),
+    GlFunction(Void, "glMakeImageHandleResidentARB", [(GLtextureHandle, "handle"), (GLenum, "access")]),
+    GlFunction(Void, "glMakeImageHandleNonResidentARB", [(GLtextureHandle, "handle")]),
+    GlFunction(Void, "glUniformHandleui64ARB", [(GLlocation, "location"), (GLtextureHandle, "value")]),
+    GlFunction(Void, "glUniformHandleui64vARB", [(GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLtextureHandle), "count"), "value")]),
+    GlFunction(Void, "glProgramUniformHandleui64ARB", [(GLprogram, "program"), (GLlocation, "location"), (GLtextureHandle, "value")]),
+    GlFunction(Void, "glProgramUniformHandleui64vARB", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "count"), (Array(Const(GLtextureHandle), "count"), "values")]),
+    GlFunction(GLboolean, "glIsTextureHandleResidentARB", [(GLtextureHandle, "handle")]),
+    GlFunction(GLboolean, "glIsImageHandleResidentARB", [(GLtextureHandle, "handle")]),
+    GlFunction(Void, "glVertexAttribL1ui64ARB", [(GLprogram, "index"), (GLuint64EXT, "x")]),
+    GlFunction(Void, "glVertexAttribL1ui64vARB", [(GLprogram, "index"), (Pointer(Const(GLuint64EXT)), "v")]),
+    GlFunction(Void, "glGetVertexAttribLui64vARB", [(GLprogram, "index"), (GLenum, "pname"), Out(Array(GLuint64EXT, "_gl_param_size(pname)"), "params")]),
+
     # GL_ARB_blend_func_extended
     GlFunction(Void, "glBindFragDataLocationIndexed", [(GLprogram, "program"), (GLuint, "colorNumber"), (GLuint, "index"), (GLstringConst, "name")]),
     GlFunction(GLint, "glGetFragDataIndex", [(GLprogram, "program"), (GLstringConst, "name")], sideeffects=False),
@@ -896,6 +914,9 @@ glapi.addFunctions([
     # GL_ARB_compute_shader
     GlFunction(Void, "glDispatchCompute", [(GLuint, "num_groups_x"), (GLuint, "num_groups_y"), (GLuint, "num_groups_z")]),
     GlFunction(Void, "glDispatchComputeIndirect", [(GLintptr, "indirect")]),
+
+    # GL_ARB_compute_variable_group_size
+    GlFunction(Void, "glDispatchComputeGroupSizeARB", [(GLuint, "num_groups_x"), (GLuint, "num_groups_y"), (GLuint, "num_groups_z"), (GLuint, "group_size_x"), (GLuint, "group_size_y"), (GLuint, "group_size_z")]),
 
     # GL_ARB_copy_buffer
     GlFunction(Void, "glCopyBufferSubData", [(GLenum, "readTarget"), (GLenum, "writeTarget"), (GLintptr, "readOffset"), (GLintptr, "writeOffset"), (GLsizeiptr, "size")]),
@@ -991,6 +1012,10 @@ glapi.addFunctions([
     GlFunction(Void, "glUniformMatrix4x3dv", [(GLlocation, "location"), (GLsizei, "count"), (GLboolean, "transpose"), (Array(Const(GLdouble), "count*4*3"), "value")]),
     GlFunction(Void, "glGetUniformdv", [(GLprogram, "program"), (GLlocation, "location"), Out(OpaqueArray(GLdouble, "_glGetUniformdv_size(location)"), "params")], sideeffects=False),
 
+    # GL_ARB_indirect_parameters
+    GlFunction(Void, "glMultiDrawArraysIndirectCountARB", [(GLenum_mode, "mode"), (GLintptr, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawElementsIndirectCountARB", [(GLenum_mode, "mode"), (GLenum, "type"), (GLintptr, "indirect"), (GLintptr, "drawcount"), (GLsizei, "maxdrawcount"), (GLsizei, "stride")]),
+
     # GL_ARB_instanced_arrays
     GlFunction(Void, "glVertexAttribDivisorARB", [(GLuint, "index"), (GLuint, "divisor")]),
 
@@ -1028,8 +1053,8 @@ glapi.addFunctions([
     GlFunction(Void, "glBindVertexBuffers", [ (GLuint, "first"), (GLsizei, "count"), (Array(Const(GLbuffer), "count"), "buffers"), (Array(Const(GLintptr), "count"), "offsets"), (Array(Const(GLsizei), "count"), "strides")]),
 
     # GL_ARB_multi_draw_indirect
-    GlFunction(Void, "glMultiDrawArraysIndirect", [(GLenum, "mode"), (OpaqueArray(Const(Void), "_glMultiDrawArraysIndirect_size(drawcount, stride)"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
-    GlFunction(Void, "glMultiDrawElementsIndirect", [(GLenum, "mode"), (GLenum, "type"), (OpaqueArray(Const(Void), "_glMultiDrawElementsIndirect_size(drawcount, stride)"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawArraysIndirect", [(GLenum_mode, "mode"), (OpaqueArray(Const(Void), "_glMultiDrawArraysIndirect_size(drawcount, stride)"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
+    GlFunction(Void, "glMultiDrawElementsIndirect", [(GLenum_mode, "mode"), (GLenum, "type"), (OpaqueArray(Const(Void), "_glMultiDrawElementsIndirect_size(drawcount, stride)"), "indirect"), (GLsizei, "drawcount"), (GLsizei, "stride")]),
 
     # GL_ARB_multisample
     GlFunction(Void, "glSampleCoverageARB", [(GLfloat, "value"), (GLboolean, "invert")]),
@@ -1266,6 +1291,10 @@ glapi.addFunctions([
     GlFunction(GLboolean, "glIsNamedStringARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name")], sideeffects=False),
     GlFunction(Void, "glGetNamedStringARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name"), (GLsizei, "bufSize"), Out(Pointer(GLint), "stringlen"), OutGlString(GLchar, "stringlen", "string")], sideeffects=False),
     GlFunction(Void, "glGetNamedStringivARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name"), (GLenum, "pname"), Out(OpaqueArray(GLint, "_glGetNamedStringivARB_size(pname)"), "params")], sideeffects=False),
+
+    # GL_ARB_sparse_texture
+    GlFunction(Void, "glTexPageCommitmentARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "resident")]),
+    GlFunction(Void, "glTexturePageCommitmentEXT", [(GLtexture, "texture"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "commit")]),
 
     # GL_ARB_sync
     GlFunction(GLsync, "glFenceSync", [(GLenum, "condition"), (GLbitfield, "flags")]),
@@ -2351,6 +2380,10 @@ glapi.addFunctions([
     # GL_NVX_conditional_render
     GlFunction(Void, "glBeginConditionalRenderNVX", [(GLquery, "id")]),
     GlFunction(Void, "glEndConditionalRenderNVX", []),
+
+    # GL_NV_bindless_multi_draw_indirect
+    GlFunction(Void, "glMultiDrawArraysIndirectBindlessNV", [(GLenum_mode, "mode"), (OpaquePointer(Const(Void)), "indirect"), (GLsizei, "drawCount"), (GLsizei, "stride"), (GLint, "vertexBufferCount")]),
+    GlFunction(Void, "glMultiDrawElementsIndirectBindlessNV", [(GLenum_mode, "mode"), (GLenum, "type"), (OpaquePointer(Const(Void)), "indirect"), (GLsizei, "drawCount"), (GLsizei, "stride"), (GLint, "vertexBufferCount")]),
 
     # GL_NV_bindless_texture
     GlFunction(GLuint64, "glGetTextureHandleNV", [(GLtexture, "texture")]),
