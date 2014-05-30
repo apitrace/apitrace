@@ -711,8 +711,12 @@ void MainWindow::showSelectedSurface()
 {
     QTreeWidgetItem *item =
         m_ui.surfacesTreeWidget->currentItem();
-
     if (!item) {
+        return;
+    }
+
+    QVariant var = item->data(0, Qt::UserRole);
+    if (!var.isValid()) {
         return;
     }
 
@@ -730,7 +734,6 @@ void MainWindow::showSelectedSurface()
 
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
 
-    QVariant var = item->data(0, Qt::UserRole);
     QByteArray base64Data = var.value<QByteArray>();
     viewer->setBase64Data(base64Data);
 
