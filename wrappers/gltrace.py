@@ -540,6 +540,25 @@ class GlTracer(Tracer):
                     print '            trace::localWriter.endLeave();'
                     print '        }'
 
+            # Warn about buggy glGet(GL_*ARRAY_SIZE) not returning GL_BGRA
+            buggyFunctions = {
+                'glColorPointer':           ('glGetIntegerv',          '',        'GL_COLOR_ARRAY_SIZE'),
+                'glSecondaryColorPointer':  ('glGetIntegerv',          '',        'GL_SECONDARY_COLOR_ARRAY_SIZE'),
+                'glVertexAttribPointer':    ('glGetVertexAttribiv',    'index, ', 'GL_VERTEX_ATTRIB_ARRAY_SIZE'),
+                'glVertexAttribPointerARB': ('glGetVertexAttribivARB', 'index, ', 'GL_VERTEX_ATTRIB_ARRAY_SIZE_ARB'),
+            }
+            if function.name in buggyFunctions:
+                getter, extraArg, pname = buggyFunctions[function.name]
+                print r'        static bool _checked = false;'
+                print r'        if (!_checked && size == GL_BGRA) {'
+                print r'            GLint _size = 0;'
+                print r'            _%s(%s%s, &_size);' % (getter, extraArg, pname)
+                print r'            if (_size != GL_BGRA) {'
+                print r'                os::log("apitrace: warning: %s(%s) does not return GL_BGRA; trace will be incorrect (https://github.com/apitrace/apitrace/issues/261)\n");' % (getter, pname)
+                print r'            }'
+                print r'            _checked = true;'
+                print r'        }'
+
             print '        return;'
             print '    }'
 
