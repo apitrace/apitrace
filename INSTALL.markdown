@@ -7,7 +7,7 @@ Requirements
 
 Requirements common for all platforms:
 
-* Python version 2.6 or 2.7
+* Python version 2.7
 
   * Python Image Library
 
