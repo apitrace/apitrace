@@ -92,13 +92,13 @@ and the call number is implied for the enter event.
           | 0x06 double             // double-precision floating point value
           | 0x07 string             // character string value (zero terminator implied)
           | 0x08 string             // binary blob
-          | 0x08 enum_sig value     // enumeration (version_no >= 3)
-          | 0x08 string value       // enumeration (version_no < 3)
-          | 0x09 bitmask_sig value  // integer bitmask
-          | 0x10 count value*       // array
-          | 0x11 struct_sig value*  // structure
-          | 0x12 uint               // opaque pointer
-          | 0x13 value value        // human-machine representation
+          | 0x09 enum_sig value     // enumeration (version_no >= 3)
+          | 0x09 string value       // enumeration (version_no < 3)
+          | 0x0a bitmask_sig value  // integer bitmask
+          | 0x0b count value*       // array
+          | 0x0c struct_sig value*  // structure
+          | 0x0d uint               // opaque pointer
+          | 0x0e value value        // human-machine representation
 
     enum_sig = id count (name value)+  // first occurrence
              | id                      // follow-on occurrences
