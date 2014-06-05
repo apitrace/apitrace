@@ -31,6 +31,8 @@
 #include "glretrace.hpp"
 
 
+#define kCGLNoError 0
+
 #define kCGLPFAAllRenderers            1
 #define kCGLPFATripleBuffer            3
 #define kCGLPFADoubleBuffer            5
@@ -151,6 +153,10 @@ getContext(unsigned long long ctx) {
 
 
 static void retrace_CGLChoosePixelFormat(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     int profile = 0;
 
     const trace::Array * attribs = call.arg(0).toArray();
@@ -240,6 +246,10 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
 
 
 static void retrace_CGLCreateContext(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     unsigned long long share = call.arg(1).toUIntPtr();
     Context *sharedContext = getContext(share);
 
@@ -253,6 +263,10 @@ static void retrace_CGLCreateContext(trace::Call &call) {
 
 
 static void retrace_CGLDestroyContext(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
     ContextMap::iterator it;
@@ -268,6 +282,10 @@ static void retrace_CGLDestroyContext(trace::Call &call) {
 
 
 static void retrace_CGLSetSurface(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     unsigned long long ctx = call.arg(0).toUIntPtr();
     unsigned long long cid = call.arg(1).toUInt();
     int wid = call.arg(2).toUInt();
@@ -283,6 +301,10 @@ static void retrace_CGLSetSurface(trace::Call &call) {
 
 
 static void retrace_CGLClearDrawable(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
     context_drawable_map[ctx] = NULL;
@@ -290,6 +312,10 @@ static void retrace_CGLClearDrawable(trace::Call &call) {
 
 
 static void retrace_CGLSetCurrentContext(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
     glws::Drawable *new_drawable = getDrawableFromContext(ctx);
@@ -300,6 +326,10 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
 
 
 static void retrace_CGLFlushDrawable(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     unsigned long long ctx = call.arg(0).toUIntPtr();
     Context *context = getContext(ctx);
 
@@ -330,6 +360,10 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
  * - /System/Library/Frameworks/OpenGL.framework/Headers/CGLIOSurface.h
  */
 static void retrace_CGLTexImageIOSurface2D(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
     if (retrace::debug) {
         retrace::warning(call) << "external IOSurface not supported\n";
     }
