@@ -117,6 +117,12 @@ delObj(trace::Value &value);
 void *
 toObjPointer(trace::Call &call, trace::Value &value);
 
+template< class T >
+inline T *
+asObjPointer(trace::Call &call, trace::Value &value) {
+    return reinterpret_cast<T *>(toObjPointer(call, value));
+}
+
 
 } /* namespace retrace */
 

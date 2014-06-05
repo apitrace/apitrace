@@ -52,12 +52,15 @@ enum {
 void dump(Value *value, std::ostream &os, DumpFlags flags = 0);
 
 
-inline std::ostream & operator <<(std::ostream &os, Value *value) {
-    if (value) {
-        dump(value, os);
-    }
+inline std::ostream &
+operator << (std::ostream &os, Value & value) {
+    dump(& value, os);
     return os;
 }
+
+
+std::ostream &
+operator << (std::ostream &os, Value *value);
 
 
 void dump(Call &call, std::ostream &os, DumpFlags flags = 0);

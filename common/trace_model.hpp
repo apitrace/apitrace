@@ -123,7 +123,7 @@ public:
     virtual const Struct *toStruct(void) const { return NULL; }
     virtual Struct *toStruct(void) { return NULL; }
 
-    const Value & operator[](size_t index) const;
+    Value & operator[](size_t index) const;
 };
 
 
@@ -552,14 +552,19 @@ public:
 
     ~Call();
 
-    inline const char * name(void) const {
+    inline const char *
+    name(void) const {
         return sig->name;
     }
 
-    inline Value & arg(unsigned index) {
+    inline Value &
+    arg(unsigned index) {
         assert(index < args.size());
         return *(args[index].value);
     }
+
+    Value &
+    argByName(const char *argName);
 };
 
 

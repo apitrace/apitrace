@@ -24,10 +24,15 @@
  **************************************************************************/
 
 
+#include <string.h>
+
 #include "trace_model.hpp"
 
 
 namespace trace {
+
+
+static Null null;
 
 
 Call::~Call() {
@@ -38,6 +43,16 @@ Call::~Call() {
     if (ret) {
         delete ret;
     }
+}
+
+Value &
+Call::argByName(const char *argName) {
+    for (unsigned i = 0; i < sig->num_args; ++i) {
+        if (strcmp(sig->arg_names[i], argName) == 0) {
+            return arg(i);
+        }
+    }
+    return null;
 }
 
 
@@ -205,9 +220,8 @@ void Visitor::visit(Pointer *) { assert(0); }
 void Visitor::visit(Repr *node) { node->machineValue->visit(*this); }
 
 
-static Null null;
-
-const Value & Value::operator[](size_t index) const {
+Value &
+Value::operator[] (size_t index) const {
     const Array *array = toArray();
     if (array) {
         if (index < array->values.size()) {

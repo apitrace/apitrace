@@ -28,6 +28,7 @@
 
 #include "glproc.hpp"
 #include "retrace.hpp"
+#include "retrace_swizzle.hpp"
 #include "glretrace.hpp"
 
 
@@ -97,6 +98,16 @@ static ContextMap context_map;
 static DrawableMap context_drawable_map;
 
 static Context *sharedContext = NULL;
+
+
+struct PixelFormat
+{
+    glws::Profile profile;
+
+    PixelFormat() :
+        profile(glws::PROFILE_COMPAT)
+    {}
+};
 
 
 static glws::Drawable *
@@ -225,23 +236,43 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
         }
     }
 
+    trace::Value & pix = call.argByName("pix")[0];
+
+    PixelFormat *pixelFormat = new PixelFormat;
+
     // TODO: Do this on a per visual basis
     switch (profile) {
     case 0:
         break;
     case kCGLOGLPVersion_Legacy:
-        glretrace::defaultProfile = glws::PROFILE_COMPAT;
+        pixelFormat->profile = glws::PROFILE_COMPAT;
         break;
     case kCGLOGLPVersion_GL3_Core:
-        glretrace::defaultProfile = glws::PROFILE_3_2_CORE;
+        pixelFormat->profile = glws::PROFILE_3_2_CORE;
         break;
     case kCGLOGLPVersion_GL4_Core:
-        glretrace::defaultProfile = glws::PROFILE_4_1_CORE;
+        pixelFormat->profile = glws::PROFILE_4_1_CORE;
         break;
     default:
         retrace::warning(call) << "unexpected opengl profile " << std::hex << profile << std::dec << "\n";
         break;
     }
+
+    retrace::addObj(call, pix, pixelFormat);
+}
+
+
+static void retrace_CGLDestroyPixelFormat(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
+    trace::Value & pix = call.argByName("pix");
+
+    PixelFormat *pixelFormat = retrace::asObjPointer<PixelFormat>(call, pix);
+    delete pixelFormat;
+
+    retrace::delObj(pix);
 }
 
 
@@ -250,6 +281,10 @@ static void retrace_CGLCreateContext(trace::Call &call) {
         return;
     }
 
+    trace::Value & pix = call.argByName("pix");
+    const PixelFormat *pixelFormat = retrace::asObjPointer<PixelFormat>(call, pix);
+    glws::Profile profile = pixelFormat ? pixelFormat->profile : glretrace::defaultProfile;
+
     unsigned long long share = call.arg(1).toUIntPtr();
     Context *sharedContext = getContext(share);
 
@@ -257,7 +292,7 @@ static void retrace_CGLCreateContext(trace::Call &call) {
     assert(ctx_ptr);
     unsigned long long ctx = ctx_ptr->values[0]->toUIntPtr();
 
-    Context *context = glretrace::createContext(sharedContext);
+    Context *context = glretrace::createContext(sharedContext, profile);
     context_map[ctx] = context;
 }
 
@@ -416,7 +451,7 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLDescribePixelFormat", &retrace::ignore},
     {"CGLDescribeRenderer", &retrace::ignore},
     {"CGLDestroyContext", &retrace_CGLDestroyContext},
-    {"CGLDestroyPixelFormat", &retrace::ignore},
+    {"CGLDestroyPixelFormat", &retrace_CGLDestroyPixelFormat},
     {"CGLDisable", &retrace::ignore},
     {"CGLEnable", &retrace::ignore},
     {"CGLErrorString", &retrace::ignore},
