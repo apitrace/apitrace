@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ##########################################################################
 #
 # Copyright 2011 Jose Fonseca
@@ -201,6 +202,7 @@ glGetProgram = StateGetter('glGetProgram', {I: 'iv'})
 glGetProgramARB = StateGetter('glGetProgram', {I: 'iv', F: 'fv', S: 'Stringv'}, 'ARB')
 glGetFramebufferAttachmentParameter = StateGetter('glGetFramebufferAttachmentParameter', {I: 'iv'})
 glGetSamplerParameter = StateGetter('glGetSamplerParameter', {I: 'iv', F: 'fv'})
+glGetBufferParameter = StateGetter('glGetBuffer', {I: 'Parameteriv', P: 'Pointerv'}, key='glGetBufferParameter')
 
 
 class JsonWriter(Visitor):
@@ -378,6 +380,7 @@ class StateDumper:
         self.dump_light_params()
         self.dump_vertex_attribs()
         self.dump_program_params()
+        self.dump_buffer_parameters()
         self.dump_texture_parameters()
         self.dump_framebuffer_parameters()
         self.dump_labels()
@@ -483,6 +486,7 @@ class StateDumper:
         ('GL_BUFFER', 'GL_INDEX_ARRAY_BUFFER_BINDING'),
         ('GL_BUFFER', 'GL_NORMAL_ARRAY_BUFFER_BINDING'),
         ('GL_BUFFER', 'GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING'),
+        ('GL_BUFFER', 'GL_TEXTURE_BUFFER'),
         ('GL_BUFFER', 'GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING'),
         ('GL_BUFFER', 'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING'),
         ('GL_BUFFER', 'GL_VERTEX_ARRAY_BUFFER_BINDING'),
@@ -520,6 +524,37 @@ class StateDumper:
             self.dump_atoms(glGetProgramARB, target)
             print '        json.endObject();'
             print '    }'
+
+    buffer_targets = [
+        ('GL_ARRAY_BUFFER', 'GL_ARRAY_BUFFER_BINDING'),
+        ('GL_ATOMIC_COUNTER_BUFFER', 'GL_ATOMIC_COUNTER_BUFFER_BINDING'),
+        ('GL_COPY_READ_BUFFER', 'GL_COPY_READ_BUFFER_BINDING'),
+        ('GL_COPY_WRITE_BUFFER', 'GL_COPY_WRITE_BUFFER_BINDING'),
+        ('GL_DRAW_INDIRECT_BUFFER', 'GL_DRAW_INDIRECT_BUFFER_BINDING'),
+        ('GL_DISPATCH_INDIRECT_BUFFER', 'GL_DISPATCH_INDIRECT_BUFFER_BINDING'),
+        ('GL_ELEMENT_ARRAY_BUFFER', 'GL_ELEMENT_ARRAY_BUFFER_BINDING'),
+        ('GL_PIXEL_PACK_BUFFER', 'GL_PIXEL_PACK_BUFFER_BINDING'),
+        ('GL_PIXEL_UNPACK_BUFFER', 'GL_PIXEL_UNPACK_BUFFER_BINDING'),
+        ('GL_QUERY_BUFFER', 'GL_QUERY_BUFFER_BINDING'),
+        ('GL_SHADER_STORAGE_BUFFER', 'GL_SHADER_STORAGE_BUFFER_BINDING'),
+        ('GL_TEXTURE_BUFFER', 'GL_TEXTURE_BUFFER'),
+        ('GL_TRANSFORM_FEEDBACK_BUFFER', 'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING'),
+        ('GL_UNIFORM_BUFFER', 'GL_UNIFORM_BUFFER_BINDING'),
+    ]
+
+    def dump_buffer_parameters(self):
+        for target, binding in self.buffer_targets:
+            print '    {'
+            print '        GLint buffer = 0;'
+            print '        glGetIntegerv(%s, &buffer);' % binding
+            print '        if (buffer) {'
+            print '            json.beginMember("%s");' % target
+            print '            json.beginObject();'
+            self.dump_atoms(glGetBufferParameter, target)
+            print '            json.endObject();'
+            print '        }'
+            print '    }'
+            print
 
     def dump_texture_parameters(self):
         print '    {'
