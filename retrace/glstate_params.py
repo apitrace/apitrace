@@ -84,8 +84,16 @@ class StateGetter(Visitor):
     It will declare any temporary variable
     '''
 
-    def __init__(self, radical, inflections, suffix='', key=None):
-        self.inflector = GetInflector(radical, inflections, suffix)
+    def __init__(self, radical=None, inflections=None, suffix='', inflector=None, key=None):
+        if inflector is None:
+            assert radical is not None
+            assert inflections is not None
+            self.inflector = GetInflector(radical, inflections, suffix)
+        else:
+            assert radical is None
+            assert inflections is None
+            assert suffix == ''
+            self.inflector = inflector
         if key is None:
             self.key = self.inflector.key()
         else:
@@ -182,7 +190,7 @@ class StateGetter(Visitor):
         return temp_name
 
 
-glGet = StateGetter('glGet', {
+glGet_inflector = GetInflector('glGet', {
     B: 'Booleanv',
     I: 'Integerv',
     F: 'Floatv',
@@ -190,6 +198,12 @@ glGet = StateGetter('glGet', {
     S: 'String',
     P: 'Pointerv',
 })
+
+glGet = StateGetter(inflector = glGet_inflector)
+
+# Same as glGet
+glGet_texture = StateGetter(inflector = glGet_inflector, key = 'glGet_texture')
+
 
 glGetMaterial = StateGetter('glGetMaterial', {I: 'iv', F: 'fv'})
 glGetLight = StateGetter('glGetLight', {I: 'iv', F: 'fv'})
@@ -571,6 +585,8 @@ class StateDumper:
         print '            json.beginMember(name);'
         print '            glActiveTexture(GL_TEXTURE0 + unit);'
         print '            json.beginObject();'
+        print
+        self.dump_atoms(glGet_texture)
         print
         print '            for (unsigned i = 0; i < numTextureTargets; ++i) {'
         print '                GLenum target = textureTargets[i];'

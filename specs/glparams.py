@@ -343,8 +343,8 @@ parameters = [
     ("glGet",	I,	1,	"GL_MAP1_GRID_SEGMENTS"),	# 0x0DD1
     ("glGet",	F,	4,	"GL_MAP2_GRID_DOMAIN"),	# 0x0DD2
     ("glGet",	I,	2,	"GL_MAP2_GRID_SEGMENTS"),	# 0x0DD3
-    ("_glGet",	B,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
-    ("_glGet",	B,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_1D"),	# 0x0DE0
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_2D"),	# 0x0DE1
     ("glGet",	P,	1,	"GL_FEEDBACK_BUFFER_POINTER"),	# 0x0DF0
     ("glGet",	I,	1,	"GL_FEEDBACK_BUFFER_SIZE"),	# 0x0DF1
     ("glGet",	E,	1,	"GL_FEEDBACK_BUFFER_TYPE"),	# 0x0DF2
@@ -604,14 +604,14 @@ parameters = [
     ("",	X,	1,	"GL_TEXTURE_TOO_LARGE_EXT"),	# 0x8065
     ("glGetTexParameter",	F,	1,	"GL_TEXTURE_PRIORITY"),	# 0x8066
     ("glGetTexParameter",	B,	1,	"GL_TEXTURE_RESIDENT"),	# 0x8067
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_1D"),	# 0x8068
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_2D"),	# 0x8069
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_3D"),	# 0x806A
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_1D"),	# 0x8068
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_2D"),	# 0x8069
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_3D"),	# 0x806A
     ("glGet",	I,	1,	"GL_PACK_SKIP_IMAGES"),	# 0x806B
     ("glGet",	F,	1,	"GL_PACK_IMAGE_HEIGHT"),	# 0x806C
     ("glGet",	I,	1,	"GL_UNPACK_SKIP_IMAGES"),	# 0x806D
     ("glGet",	F,	1,	"GL_UNPACK_IMAGE_HEIGHT"),	# 0x806E
-    ("glGet",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_3D"),	# 0x806F
     ("",	X,	1,	"GL_PROXY_TEXTURE_3D"),	# 0x8070
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_DEPTH"),	# 0x8071
     ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_WRAP_R"),	# 0x8072
@@ -1322,8 +1322,8 @@ parameters = [
     ("",	X,	1,	"GL_ALL_COMPLETED_NV"),	# 0x84F2
     ("",	X,	1,	"GL_FENCE_STATUS_NV"),	# 0x84F3
     ("",	X,	1,	"GL_FENCE_CONDITION_NV"),	# 0x84F4
-    ("_glGet",	B,	1,	"GL_TEXTURE_RECTANGLE"),	# 0x84F5
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_RECTANGLE"),	# 0x84F6
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_RECTANGLE"),	# 0x84F5
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_RECTANGLE"),	# 0x84F6
     ("",	X,	1,	"GL_PROXY_TEXTURE_RECTANGLE"),	# 0x84F7
     ("glGet",	I,	1,	"GL_MAX_RECTANGLE_TEXTURE_SIZE"),	# 0x84F8
     ("",	X,	1,	"GL_DEPTH_STENCIL"),	# 0x84F9
@@ -1350,8 +1350,8 @@ parameters = [
     ("",	X,	1,	"GL_VERTEX_WEIGHT_ARRAY_POINTER_EXT"),	# 0x8510
     ("",	X,	1,	"GL_NORMAL_MAP"),	# 0x8511
     ("",	X,	1,	"GL_REFLECTION_MAP"),	# 0x8512
-    ("_glGet",	B,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP"),	# 0x8514
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_CUBE_MAP"),	# 0x8513
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP"),	# 0x8514
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_POSITIVE_X"),	# 0x8515
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_NEGATIVE_X"),	# 0x8516
     ("",	X,	1,	"GL_TEXTURE_CUBE_MAP_POSITIVE_Y"),	# 0x8517
@@ -2466,21 +2466,21 @@ parameters = [
     ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_INTENSITY_TYPE"),	# 0x8C15
     ("glGetTexLevelParameter",	E,	1,	"GL_TEXTURE_DEPTH_TYPE"),	# 0x8C16
     ("",	X,	1,	"GL_UNSIGNED_NORMALIZED"),	# 0x8C17
-    ("",	X,	1,	"GL_TEXTURE_1D_ARRAY"),	# 0x8C18
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_1D_ARRAY"),	# 0x8C18
     ("",	X,	1,	"GL_PROXY_TEXTURE_1D_ARRAY"),	# 0x8C19
-    ("",	X,	1,	"GL_TEXTURE_2D_ARRAY"),	# 0x8C1A
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_2D_ARRAY"),	# 0x8C1A
     ("",	X,	1,	"GL_PROXY_TEXTURE_2D_ARRAY"),	# 0x8C1B
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_1D_ARRAY"),	# 0x8C1C
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_2D_ARRAY"),	# 0x8C1D
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_1D_ARRAY"),	# 0x8C1C
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_2D_ARRAY"),	# 0x8C1D
     ("",	X,	1,	"GL_GEOMETRY_PROGRAM_NV"),	# 0x8C26
     ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_OUTPUT_VERTICES_NV"),	# 0x8C27
     ("glGetProgramARB",	I,	1,	"GL_MAX_PROGRAM_TOTAL_OUTPUT_COMPONENTS_NV"),	# 0x8C28
     ("glGet",	I,	1,	"GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS"),	# 0x8C29
-    ("glGet",	I,	1,	"GL_TEXTURE_BUFFER"),	# 0x8C2A
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BUFFER"),	# 0x8C2A
     ("glGet",	I,	1,	"GL_MAX_TEXTURE_BUFFER_SIZE"),	# 0x8C2B
-    ("glGet",	I,	1,	"GL_TEXTURE_BINDING_BUFFER"),	# 0x8C2C
-    ("glGet",	I,	1,	"GL_TEXTURE_BUFFER_DATA_STORE_BINDING"),	# 0x8C2D
-    ("glGet",	E,	1,	"GL_TEXTURE_BUFFER_FORMAT_ARB"),	# 0x8C2E
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_BUFFER"),	# 0x8C2C
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BUFFER_DATA_STORE_BINDING"),	# 0x8C2D
+    ("glGet_texture",	E,	1,	"GL_TEXTURE_BUFFER_FORMAT_ARB"),	# 0x8C2E
     ("",	B,	1,	"GL_ANY_SAMPLES_PASSED"),	# 0x8C2F
     ("",	X,	1,	"GL_SAMPLE_SHADING"),	# 0x8C36
     ("",	X,	1,	"GL_MIN_SAMPLE_SHADING_VALUE"),	# 0x8C37
@@ -2948,8 +2948,8 @@ parameters = [
     ("",	X,	1,	"GL_TESSELLATION_FACTOR_AMD"),	# 0x9005
     ("",	X,	1,	"GL_DISCRETE_AMD"),	# 0x9006
     ("",	X,	1,	"GL_CONTINUOUS_AMD"),	# 0x9007
-    ("_glGet",	B,	1,	"GL_TEXTURE_CUBE_MAP_ARRAY"),	# 0x9009
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP_ARRAY"),	# 0x900A
+    ("_glGet_texture",	B,	1,	"GL_TEXTURE_CUBE_MAP_ARRAY"),	# 0x9009
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_CUBE_MAP_ARRAY"),	# 0x900A
     ("",	X,	1,	"GL_PROXY_TEXTURE_CUBE_MAP_ARRAY"),	# 0x900B
     ("",	X,	1,	"GL_SAMPLER_CUBE_MAP_ARRAY"),	# 0x900C
     ("",	X,	1,	"GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW"),	# 0x900D
@@ -3164,8 +3164,8 @@ parameters = [
     ("",	X,	1,	"GL_PROXY_TEXTURE_2D_MULTISAMPLE"),	# 0x9101
     ("",	X,	1,	"GL_TEXTURE_2D_MULTISAMPLE_ARRAY"),	# 0x9102
     ("",	X,	1,	"GL_PROXY_TEXTURE_2D_MULTISAMPLE_ARRAY"),	# 0x9103
-    ("_glGet",	B,	1,	"GL_TEXTURE_BINDING_2D_MULTISAMPLE"),	# 0x9104
-    ("_glGet",	I,	1,	"GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY"),	# 0x9105
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_2D_MULTISAMPLE"),	# 0x9104
+    ("glGet_texture",	I,	1,	"GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY"),	# 0x9105
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_SAMPLES"),	# 0x9106
     ("glGetTexLevelParameter",	B,	1,	"GL_TEXTURE_FIXED_SAMPLE_LOCATIONS"),	# 0x9107
     ("",	X,	1,	"GL_SAMPLER_2D_MULTISAMPLE"),	# 0x9108
