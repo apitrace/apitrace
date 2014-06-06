@@ -69,8 +69,11 @@ class GetInflector:
         assert type in self.inflections
         return self.inflections[type]
 
-    def __str__(self):
+    def key(self):
         return self.radical + self.suffix
+
+    def __str__(self):
+        return self.key()
 
 
 class StateGetter(Visitor):
@@ -80,14 +83,16 @@ class StateGetter(Visitor):
     It will declare any temporary variable
     '''
 
-    def __init__(self, radical, inflections, suffix=''):
-        self.inflector = GetInflector(radical, inflections)
-        self.suffix = suffix
+    def __init__(self, radical, inflections, suffix='', key=None):
+        self.inflector = GetInflector(radical, inflections, suffix)
+        if key is None:
+            self.key = self.inflector.key()
+        else:
+            self.key = key
 
     def iter(self):
         for function, type, count, name in parameters:
-            inflection = self.inflector.radical + self.suffix
-            if inflection not in function.split(','):
+            if self.key not in function.split(','):
                 continue
             if type is X:
                 continue
@@ -118,18 +123,18 @@ class StateGetter(Visitor):
         temp_name = self.temp_name(args)
         elem_type = self.inflector.reduced_type(type)
         inflection = self.inflector.inflect(type)
-        if inflection.endswith('v'):
+        if inflection.endswith('v' + self.inflector.suffix):
             print '    %s %s = 0;' % (elem_type, temp_name)
-            print '    %s(%s, &%s);' % (inflection + self.suffix, ', '.join(args), temp_name)
+            print '    %s(%s, &%s);' % (inflection, ', '.join(args), temp_name)
         else:
-            print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection + self.suffix, ', '.join(args))
+            print '    %s %s = %s(%s);' % (elem_type, temp_name, inflection, ', '.join(args))
         return temp_name
 
     def visitString(self, string, args):
         temp_name = self.temp_name(args)
         inflection = self.inflector.inflect(string)
-        assert not inflection.endswith('v')
-        print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection + self.suffix, ', '.join(args))
+        assert not inflection.endswith('v' + self.inflector.suffix)
+        print '    %s %s = (%s)%s(%s);' % (string, temp_name, string, inflection, ', '.join(args))
         return temp_name
 
     def visitAlias(self, alias, args):
@@ -147,7 +152,7 @@ class StateGetter(Visitor):
             return self.visit(array.type)
         elem_type = self.inflector.reduced_type(array.type)
         inflection = self.inflector.inflect(array.type)
-        assert inflection.endswith('v')
+        assert inflection.endswith('v' + self.inflector.suffix)
         array_length = array.length
         if array_length.isdigit():
             # Static integer length
@@ -161,7 +166,7 @@ class StateGetter(Visitor):
         print '    memset(%s, 0, %s * sizeof *%s);' % (temp_name, array_length, temp_name)
         print '    %s[%s] = (%s)0xdeadc0de;' % (temp_name, array_length, elem_type)
         print '    if (%s) {' % array_length
-        print '        %s(%s, %s);' % (inflection + self.suffix, ', '.join(args), temp_name)
+        print '        %s(%s, %s);' % (inflection, ', '.join(args), temp_name)
         print '    }'
         # Simple buffer overflow detection
         print '    assert(%s[%s] == (%s)0xdeadc0de);' % (temp_name, array_length, elem_type)
@@ -170,9 +175,9 @@ class StateGetter(Visitor):
     def visitOpaque(self, pointer, args):
         temp_name = self.temp_name(args)
         inflection = self.inflector.inflect(pointer)
-        assert inflection.endswith('v')
+        assert inflection.endswith('v' + self.inflector.suffix)
         print '    GLvoid *%s;' % temp_name
-        print '    %s(%s, &%s);' % (inflection + self.suffix, ', '.join(args), temp_name)
+        print '    %s(%s, &%s);' % (inflection, ', '.join(args), temp_name)
         return temp_name
 
 
