@@ -173,7 +173,8 @@ class Comparer(Visitor):
         return True
 
     def visitValue(self, a, b):
-        if isinstance(a, float) or isinstance(b, float):
+        if isinstance(a, float) and isinstance(b, (int, long, float)) or \
+           isinstance(b, float) and isinstance(a, (int, long, float)):
             if a == 0:
                 return abs(b) < self.tolerance
             else:
