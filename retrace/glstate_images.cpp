@@ -96,6 +96,10 @@ struct ImageDesc
 };
 
 
+static bool
+getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type);
+
+
 /**
  * Sames as enumToString, but with special provision to handle formatsLUMINANCE_ALPHA.
  *
@@ -271,6 +275,46 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
         return getActiveTextureLevelDescOES(context, target, level, desc);
     }
 
+    if (target == GL_TEXTURE_BUFFER) {
+        assert(level == 0);
+
+        GLint buffer = 0;
+        glGetIntegerv(GL_TEXTURE_BUFFER_DATA_STORE_BINDING, &buffer);
+        if (!buffer) {
+            return false;
+        }
+
+        // This is the general binding point, not the texture's
+        GLint active_buffer = 0;
+        glGetIntegerv(GL_TEXTURE_BUFFER, &active_buffer);
+        glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+
+        GLint buffer_size = 0;
+        glGetBufferParameteriv(GL_TEXTURE_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+        
+        glBindBuffer(GL_TEXTURE_BUFFER, active_buffer);
+
+        glGetIntegerv(GL_TEXTURE_BUFFER_FORMAT_ARB, &desc.internalFormat);
+
+        GLenum format;
+        GLenum type;
+        if (!getInternalFormatType(desc.internalFormat, format, type)) {
+            assert(0);
+            return false;
+        }
+        assert(type != GL_NONE);
+
+        unsigned bits_per_element;
+        unsigned bits_per_pixel;
+        _gl_format_size(format, type, bits_per_element, bits_per_pixel);
+
+        desc.width = buffer_size * 8 / bits_per_pixel;
+        desc.height = 1;
+        desc.depth = 1;
+
+        return desc.valid();
+    }
+
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &desc.internalFormat);
 
     desc.width = 0;
@@ -308,6 +352,7 @@ textureTargets[] = {
     GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
     GL_TEXTURE_1D_ARRAY,
     GL_TEXTURE_CUBE_MAP_ARRAY,
+    GL_TEXTURE_BUFFER,
 };
 
 const unsigned
@@ -344,6 +389,8 @@ getTextureBinding(GLenum target)
         return GL_TEXTURE_BINDING_CUBE_MAP_ARRAY;
     case GL_TEXTURE_3D:
         return GL_TEXTURE_BINDING_3D;
+    case GL_TEXTURE_BUFFER:
+        return GL_TEXTURE_BINDING_BUFFER;
     default:
         assert(false);
         return GL_NONE;
@@ -412,119 +459,151 @@ struct InternalFormatDesc
 {
     GLenum internalFormat;
     GLenum format;
+    GLenum type;
 };
 
 
 static const InternalFormatDesc
 internalFormatDescs[] = {
 
-    {1,	GL_RED},
-    {2,	GL_RG},
-    {3,	GL_RGB},
-    {4,	GL_RGBA},
+    {1,	GL_RED,	GL_NONE},
+    {2,	GL_RG,	GL_NONE},
+    {3,	GL_RGB,	GL_NONE},
+    {4,	GL_RGBA,	GL_NONE},
 
-    {GL_RED,	GL_RED},
-    {GL_GREEN,	GL_GREEN},
-    {GL_BLUE,	GL_BLUE},
-    {GL_ALPHA,	GL_ALPHA},
-    {GL_RG,	GL_RG},
-    {GL_RGB,	GL_RGB},
-    {GL_BGR,	GL_RGB},
-    {GL_RGBA,	GL_RGBA},
-    {GL_BGRA,	GL_RGBA},
-    {GL_LUMINANCE,	GL_LUMINANCE},
-    {GL_LUMINANCE_ALPHA,	GL_LUMINANCE_ALPHA},
-    {GL_INTENSITY,	GL_INTENSITY},
+    {GL_RED,	GL_RED,	GL_NONE},
+    {GL_GREEN,	GL_GREEN,	GL_NONE},
+    {GL_BLUE,	GL_BLUE,	GL_NONE},
+    {GL_ALPHA,	GL_ALPHA,	GL_NONE},
+    {GL_RG,	GL_RG,	GL_NONE},
+    {GL_RGB,	GL_RGB,	GL_NONE},
+    {GL_BGR,	GL_RGB,	GL_NONE},
+    {GL_RGBA,	GL_RGBA,	GL_NONE},
+    {GL_BGRA,	GL_RGBA,	GL_NONE},
+    {GL_LUMINANCE,	GL_LUMINANCE,	GL_NONE},
+    {GL_LUMINANCE_ALPHA,	GL_LUMINANCE_ALPHA,	GL_NONE},
+    {GL_INTENSITY,	GL_INTENSITY,	GL_NONE},
  
-    {GL_RG8,	GL_RG},
-    {GL_RG16,	GL_RG},
-    {GL_RGB8,	GL_RGB},
-    {GL_RGB16,	GL_RGB},
-    {GL_RGBA8,	GL_RGBA},
-    {GL_RGBA16,	GL_RGBA},
-    {GL_RGB10_A2,	GL_RGBA},
-    {GL_LUMINANCE8,	GL_LUMINANCE},
-    {GL_LUMINANCE16,	GL_LUMINANCE},
-    {GL_ALPHA8,	GL_ALPHA},
-    {GL_ALPHA16,	GL_ALPHA},
-    {GL_LUMINANCE8_ALPHA8,	GL_LUMINANCE_ALPHA},
-    {GL_LUMINANCE16_ALPHA16,	GL_LUMINANCE_ALPHA},
-    {GL_INTENSITY8,	GL_INTENSITY},
-    {GL_INTENSITY16,	GL_INTENSITY},
+    {GL_RG8,	GL_RG,	GL_UNSIGNED_BYTE},
+    {GL_RG16,	GL_RG,	GL_UNSIGNED_SHORT},
+    {GL_RGB8,	GL_RGB,	GL_UNSIGNED_BYTE},
+    {GL_RGB16,	GL_RGB,	GL_UNSIGNED_SHORT},
+    {GL_RGBA8,	GL_RGBA,	GL_UNSIGNED_BYTE},
+    {GL_RGBA16,	GL_RGBA,	GL_UNSIGNED_SHORT},
+    {GL_RGB10_A2,	GL_RGBA,	GL_NONE},
+    {GL_LUMINANCE8,	GL_LUMINANCE,	GL_UNSIGNED_BYTE},
+    {GL_LUMINANCE16,	GL_LUMINANCE,	GL_UNSIGNED_SHORT},
+    {GL_ALPHA8,	GL_ALPHA,	GL_UNSIGNED_BYTE},
+    {GL_ALPHA16,	GL_ALPHA,	GL_UNSIGNED_SHORT},
+    {GL_LUMINANCE8_ALPHA8,	GL_LUMINANCE_ALPHA,	GL_UNSIGNED_BYTE},
+    {GL_LUMINANCE16_ALPHA16,	GL_LUMINANCE_ALPHA,	GL_UNSIGNED_SHORT},
+    {GL_INTENSITY8,	GL_INTENSITY,	GL_UNSIGNED_BYTE},
+    {GL_INTENSITY16,	GL_INTENSITY,	GL_UNSIGNED_SHORT},
     
-    {GL_RED_INTEGER,	GL_RED_INTEGER},
-    {GL_GREEN_INTEGER,	GL_GREEN_INTEGER},
-    {GL_BLUE_INTEGER,	GL_BLUE_INTEGER},
-    {GL_ALPHA_INTEGER,	GL_ALPHA_INTEGER},
-    {GL_RG_INTEGER,	GL_RG_INTEGER},
-    {GL_RGB_INTEGER,	GL_RGB_INTEGER},
-    {GL_BGR_INTEGER,	GL_RGB_INTEGER},
-    {GL_RGBA_INTEGER,	GL_RGBA_INTEGER},
-    {GL_BGRA_INTEGER,	GL_RGBA_INTEGER},
-    {GL_LUMINANCE_INTEGER_EXT,	GL_LUMINANCE_INTEGER_EXT},
-    {GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
+    {GL_RG16F,	GL_RG,	GL_HALF_FLOAT},
+    {GL_RG32F,	GL_RG,	GL_FLOAT},
+    {GL_RGB16F,	GL_RGB,	GL_HALF_FLOAT},
+    {GL_RGB32F,	GL_RGB,	GL_FLOAT},
+    {GL_RGBA16F,	GL_RGBA,	GL_HALF_FLOAT},
+    {GL_RGBA32F,	GL_RGBA,	GL_FLOAT},
+    {GL_RGB10_A2,	GL_RGBA,	GL_NONE},
+    {GL_LUMINANCE16F_ARB,	GL_LUMINANCE,	GL_HALF_FLOAT},
+    {GL_LUMINANCE32F_ARB,	GL_LUMINANCE,	GL_FLOAT},
+    {GL_ALPHA16F_ARB,	GL_ALPHA,	GL_HALF_FLOAT},
+    {GL_ALPHA32F_ARB,	GL_ALPHA,	GL_FLOAT},
+    {GL_LUMINANCE_ALPHA16F_ARB,	GL_LUMINANCE_ALPHA,	GL_HALF_FLOAT},
+    {GL_LUMINANCE_ALPHA32F_ARB,	GL_LUMINANCE_ALPHA,	GL_FLOAT},
+    {GL_INTENSITY16F_ARB,	GL_INTENSITY,	GL_HALF_FLOAT},
+    {GL_INTENSITY32F_ARB,	GL_INTENSITY,	GL_FLOAT},
+    
+    {GL_RED_INTEGER,	GL_RED_INTEGER,	GL_NONE},
+    {GL_GREEN_INTEGER,	GL_GREEN_INTEGER,	GL_NONE},
+    {GL_BLUE_INTEGER,	GL_BLUE_INTEGER,	GL_NONE},
+    {GL_ALPHA_INTEGER,	GL_ALPHA_INTEGER,	GL_NONE},
+    {GL_RG_INTEGER,	GL_RG_INTEGER,	GL_NONE},
+    {GL_RGB_INTEGER,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_BGR_INTEGER,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_RGBA_INTEGER,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_BGRA_INTEGER,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_LUMINANCE_INTEGER_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
  
-    {GL_R8I,	GL_RED_INTEGER},
-    {GL_R8UI,	GL_RED_INTEGER},
-    {GL_R16I,	GL_RED_INTEGER},
-    {GL_R16UI,	GL_RED_INTEGER},
-    {GL_R32I,	GL_RED_INTEGER},
-    {GL_R32UI,	GL_RED_INTEGER},
-    {GL_RG8I,	GL_RG_INTEGER},
-    {GL_RG8UI,	GL_RG_INTEGER},
-    {GL_RG16I,	GL_RG_INTEGER},
-    {GL_RG16UI,	GL_RG_INTEGER},
-    {GL_RG32I,	GL_RG_INTEGER},
-    {GL_RG32UI,	GL_RG_INTEGER},
-    {GL_RGB8I,	GL_RGB_INTEGER},
-    {GL_RGB8UI,	GL_RGB_INTEGER},
-    {GL_RGB16I,	GL_RGB_INTEGER},
-    {GL_RGB16UI,	GL_RGB_INTEGER},
-    {GL_RGB32I,	GL_RGB_INTEGER},
-    {GL_RGB32UI,	GL_RGB_INTEGER},
-    {GL_RGBA8I,	GL_RGBA_INTEGER},
-    {GL_RGBA8UI,	GL_RGBA_INTEGER},
-    {GL_RGBA16I,	GL_RGBA_INTEGER},
-    {GL_RGBA16UI,	GL_RGBA_INTEGER},
-    {GL_RGBA32I,	GL_RGBA_INTEGER},
-    {GL_RGBA32UI,	GL_RGBA_INTEGER},
-    {GL_RGB10_A2UI,	GL_RGBA_INTEGER},
-    {GL_LUMINANCE8I_EXT,	GL_LUMINANCE_INTEGER_EXT},
-    {GL_LUMINANCE8UI_EXT,	GL_LUMINANCE_INTEGER_EXT},
-    {GL_LUMINANCE16I_EXT,	GL_LUMINANCE_INTEGER_EXT},
-    {GL_LUMINANCE16UI_EXT,	GL_LUMINANCE_INTEGER_EXT},
-    {GL_LUMINANCE32I_EXT,	GL_LUMINANCE_INTEGER_EXT},
-    {GL_LUMINANCE32UI_EXT,	GL_LUMINANCE_INTEGER_EXT},
-    {GL_ALPHA8I_EXT,	GL_ALPHA_INTEGER_EXT},
-    {GL_ALPHA8UI_EXT,	GL_ALPHA_INTEGER_EXT},
-    {GL_ALPHA16I_EXT,	GL_ALPHA_INTEGER_EXT},
-    {GL_ALPHA16UI_EXT,	GL_ALPHA_INTEGER_EXT},
-    {GL_ALPHA32I_EXT,	GL_ALPHA_INTEGER_EXT},
-    {GL_ALPHA32UI_EXT,	GL_ALPHA_INTEGER_EXT},
-    {GL_LUMINANCE_ALPHA8I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
-    {GL_LUMINANCE_ALPHA8UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
-    {GL_LUMINANCE_ALPHA16I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
-    {GL_LUMINANCE_ALPHA16UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
-    {GL_LUMINANCE_ALPHA32I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
-    {GL_LUMINANCE_ALPHA32UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT},
-    {GL_INTENSITY8I_EXT,	GL_RED_INTEGER},
-    {GL_INTENSITY8UI_EXT,	GL_RED_INTEGER},
-    {GL_INTENSITY16I_EXT,	GL_RED_INTEGER},
-    {GL_INTENSITY16UI_EXT,	GL_RED_INTEGER},
-    {GL_INTENSITY32I_EXT,	GL_RED_INTEGER},
-    {GL_INTENSITY32UI_EXT,	GL_RED_INTEGER},
+    {GL_R8I,	GL_RED_INTEGER,	GL_NONE},
+    {GL_R8UI,	GL_RED_INTEGER,	GL_NONE},
+    {GL_R16I,	GL_RED_INTEGER,	GL_NONE},
+    {GL_R16UI,	GL_RED_INTEGER,	GL_NONE},
+    {GL_R32I,	GL_RED_INTEGER,	GL_NONE},
+    {GL_R32UI,	GL_RED_INTEGER,	GL_NONE},
+    {GL_RG8I,	GL_RG_INTEGER,	GL_NONE},
+    {GL_RG8UI,	GL_RG_INTEGER,	GL_NONE},
+    {GL_RG16I,	GL_RG_INTEGER,	GL_NONE},
+    {GL_RG16UI,	GL_RG_INTEGER,	GL_NONE},
+    {GL_RG32I,	GL_RG_INTEGER,	GL_NONE},
+    {GL_RG32UI,	GL_RG_INTEGER,	GL_NONE},
+    {GL_RGB8I,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_RGB8UI,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_RGB16I,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_RGB16UI,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_RGB32I,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_RGB32UI,	GL_RGB_INTEGER,	GL_NONE},
+    {GL_RGBA8I,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_RGBA8UI,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_RGBA16I,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_RGBA16UI,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_RGBA32I,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_RGBA32UI,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_RGB10_A2UI,	GL_RGBA_INTEGER,	GL_NONE},
+    {GL_LUMINANCE8I_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE8UI_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE16I_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE16UI_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE32I_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE32UI_EXT,	GL_LUMINANCE_INTEGER_EXT,	GL_NONE},
+    {GL_ALPHA8I_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_ALPHA8UI_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_ALPHA16I_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_ALPHA16UI_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_ALPHA32I_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_ALPHA32UI_EXT,	GL_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE_ALPHA8I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE_ALPHA8UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE_ALPHA16I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE_ALPHA16UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE_ALPHA32I_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_LUMINANCE_ALPHA32UI_EXT,	GL_LUMINANCE_ALPHA_INTEGER_EXT,	GL_NONE},
+    {GL_INTENSITY8I_EXT,	GL_RED_INTEGER,	GL_NONE},
+    {GL_INTENSITY8UI_EXT,	GL_RED_INTEGER,	GL_NONE},
+    {GL_INTENSITY16I_EXT,	GL_RED_INTEGER,	GL_NONE},
+    {GL_INTENSITY16UI_EXT,	GL_RED_INTEGER,	GL_NONE},
+    {GL_INTENSITY32I_EXT,	GL_RED_INTEGER,	GL_NONE},
+    {GL_INTENSITY32UI_EXT,	GL_RED_INTEGER,	GL_NONE},
     
-    {GL_DEPTH_COMPONENT,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH_COMPONENT16,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH_COMPONENT24,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH_COMPONENT32,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH_COMPONENT32F,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH_COMPONENT32F_NV,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH_STENCIL,	        GL_DEPTH_COMPONENT},
-    {GL_DEPTH24_STENCIL8,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH32F_STENCIL8,	GL_DEPTH_COMPONENT},
-    {GL_DEPTH32F_STENCIL8_NV,	GL_DEPTH_COMPONENT},
+    {GL_DEPTH_COMPONENT,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH_COMPONENT16,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH_COMPONENT24,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH_COMPONENT32,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH_COMPONENT32F,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH_COMPONENT32F_NV,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH_STENCIL,	        GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH24_STENCIL8,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH32F_STENCIL8,	GL_DEPTH_COMPONENT,	GL_NONE},
+    {GL_DEPTH32F_STENCIL8_NV,	GL_DEPTH_COMPONENT,	GL_NONE},
 };
+
+
+static bool
+getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type)
+{
+    for (unsigned i = 0; i < sizeof internalFormatDescs / sizeof internalFormatDescs[0]; ++i) {
+        if (internalFormatDescs[i].internalFormat == internalFormat) {
+            format = internalFormatDescs[i].format;
+            type = internalFormatDescs[i].type;
+            return true;
+        }
+    }
+
+    return false;
+}
 
 
 /**
@@ -534,10 +613,10 @@ internalFormatDescs[] = {
 static GLenum
 getFormat(GLenum internalFormat)
 {
-    for (unsigned i = 0; i < sizeof internalFormatDescs / sizeof internalFormatDescs[0]; ++i) {
-        if (internalFormatDescs[i].internalFormat == internalFormat) {
-            return internalFormatDescs[i].format;
-        }
+    GLenum format;
+    GLenum type;
+    if (getInternalFormatType(internalFormat, format, type)) {
+        return format;
     }
     return GL_RGBA;
 }
@@ -552,19 +631,33 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
         return;
     }
 
+    GLenum format;
+    GLenum type;
+
+    if (!getInternalFormatType(desc.internalFormat, format, type)) {
+        format = GL_RGBA;
+        type = GL_NONE;
+    }
+
+    if (target == GL_TEXTURE_BUFFER && type != GL_UNSIGNED_BYTE) {
+        // FIXME: We rely on glGetTexImage to convert the pixels, but we can't use it with texture buffers.
+        return;
+    }
+
     GLint active_texture = GL_TEXTURE0;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
 
     std::stringstream label;
     label << enumToString(active_texture) << ", "
-          << enumToString(target) << ", ";
+          << enumToString(target);
     if (object_label)
-        label << "\"" << object_label << "\", ";
-    label << "level = " << level;
+        label << ", \"" << object_label << "\"";
+    if (target != GL_TEXTURE_BUFFER) {
+        label << ", level = " << level;
+    }
 
     json.beginMember(label.str());
 
-    GLenum format = getFormat(desc.internalFormat);
     if (context.ES && format == GL_DEPTH_COMPONENT) {
         format = GL_RED;
     }
@@ -574,10 +667,29 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
 
     context.resetPixelPackState();
 
-    if (context.ES) {
-        getTexImageOES(target, level, desc, image->pixels);
+    if (target == GL_TEXTURE_BUFFER) {
+        assert(desc.height == 1);
+        assert(type == GL_UNSIGNED_BYTE);
+
+        GLint buffer = 0;
+        glGetIntegerv(GL_TEXTURE_BUFFER_DATA_STORE_BINDING, &buffer);
+        assert(buffer);
+
+        GLint active_buffer = 0;
+        glGetIntegerv(GL_TEXTURE_BUFFER, &active_buffer);
+        glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+
+        glGetBufferSubData(GL_TEXTURE_BUFFER,
+                           0, image->width * image->bytesPerPixel,
+                           image->pixels);
+        
+        glBindBuffer(GL_TEXTURE_BUFFER, active_buffer);
     } else {
-        glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, image->pixels);
+        if (context.ES) {
+            getTexImageOES(target, level, desc, image->pixels);
+        } else {
+            glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, image->pixels);
+        }
     }
 
     context.restorePixelPackState();
@@ -619,6 +731,10 @@ dumpTexture(JSONWriter &json, Context &context, GLenum target)
                 goto finished;
             }
             dumpActiveTextureLevel(json, context, target, level, object_label);
+        }
+
+        if (target == GL_TEXTURE_BUFFER) {
+            break;
         }
 
         ++level;

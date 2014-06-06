@@ -355,7 +355,13 @@ class StateDumper:
         print '        json.beginMember(enumToString(target));'
         print '        json.beginObject();'
         print '        dumpObjectLabel(json, context, GL_TEXTURE, binding, "GL_TEXTURE_LABEL");'
+        # ARB_texture_buffer forbids glGetTexParameter and
+        # glGetTexLevelParameter for TEXTURE_BUFFER, but
+        # ARB_texture_buffer_range introduced parameters which can be queries
+        # with glGetTexLevelParameter...
+        print '        if (target != GL_TEXTURE_BUFFER) {'
         self.dump_atoms(glGetTexParameter, 'target')
+        print '        }'
         print '        if (!context.ES) {'
         print '            GLenum levelTarget;'
         print '            if (target == GL_TEXTURE_CUBE_MAP ||'
