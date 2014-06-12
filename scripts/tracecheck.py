@@ -39,6 +39,9 @@ import subprocess
 import sys
 import traceback
 
+import snapdiff
+import retracediff
+
 
 def good():
     '''Tell git-bisect that this commit is good.'''
@@ -142,9 +145,9 @@ def main():
     # implementation is usable, and is the right one (i.e., we didn't fallback
     # to a different OpenGL implementation due to missing symbols).
     if platform.system() != 'Windows' and which('glxinfo'):
-        p = subprocess.Popen(['glxinfo'], stdout=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if p.returncode:
+        glxinfo = subprocess.Popen(['glxinfo'], stdout=subprocess.PIPE)
+        stdout, stderr = glxinfo.communicate()
+        if glxinfo.returncode:
             skip()
 
         # Search for the GL_RENDERER string
@@ -164,34 +167,45 @@ def main():
             skip()
 
     # Run glretrace
-    command = [options.retrace]
-    if options.compare_prefix:
-        command += ['-c', options.compare_prefix]
-    else:
-        command += ['-b']
-    command += args
-    sys.stdout.write(' '.join(command) + '\n')
-    sys.stdout.flush()
-    p = subprocess.Popen(command, stdout=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    if p.returncode:
-        if not options.compare_prefix:
-            bad()
-        else:
-            skip()
+    
+    retracer = retracediff.Retracer(options.retrace, args)
 
     if options.compare_prefix:
-        failed = False
-        precision_re = re.compile('^Snapshot (\S+) average precision of (\S+) bits$')
-        for line in stdout.split('\n'):
-            mo = precision_re.match(line)
-            if mo:
-                print line
-                call_no = int(mo.group(1))
-                precision = float(mo.group(2))
-                if precision < options.precision_threshold:
-                    failed = True
-        if failed:
+        refImages = {}
+        callNos = []
+            
+        images = snapdiff.find_images(options.compare_prefix)
+        images.sort()
+        for image in images:
+            imageName, ext = os.path.splitext(image)
+            try:
+                callNo = int(imageName)
+            except ValueError:
+                continue
+            refImages[callNo] = options.compare_prefix + image
+            callNos.append(callNo)
+
+        run = retracer.snapshot(','.join(map(str, callNos)))
+        while True:
+            srcImage, callNo = run.nextSnapshot()
+            if srcImage is None:
+                break
+
+            refImage = refImages[callNo]
+
+            # Compare the two images
+            comparer = snapdiff.Comparer(refImage, srcImage)
+            precision = comparer.precision()
+
+            mismatch = precision < options.precision_threshold
+            if mismatch:
+                bad()
+        run.process.wait()
+        if run.process.returncode:
+            skip()
+    else:
+        returncode = retracer.retrace('-b')
+        if returncode:
             bad()
 
     # TODO: allow more criterias here, such as, performance threshold

@@ -189,11 +189,7 @@ writeValue(trace::Writer &writer, const QVariant &var, unsigned &id)
             deleteStructSig(str);
         } else if (type == pointerType) {
             ApiPointer apiPtr = var.value<ApiPointer>();
-            //writer.beginArray(1);
-            //writer.beginElement();
-            writer.writeOpaque((const void*)apiPtr.value());
-            //writer.endElement();
-            //writer.endArray();
+            writer.writePointer(apiPtr.value());
         } else if (type == enumType) {
             ApiEnum apiEnum = var.value<ApiEnum>();
             trace::EnumSig *sig = createEnumSig(apiEnum, ++id);
@@ -243,10 +239,18 @@ public:
         m_editedValue = new trace::Float(m_variant.toFloat());
     }
 
+    virtual void visit(trace::Double *node)
+    {
+        m_editedValue = new trace::Double(m_variant.toDouble());
+    }
+
     virtual void visit(trace::String *node)
     {
         QString str = m_variant.toString();
-        m_editedValue = new trace::String(str.toLocal8Bit().constData());
+        char *newString = new char[str.length() + 1];
+        QByteArray ba = str.toLocal8Bit();
+        strcpy(newString, ba.constData());
+        m_editedValue = new trace::String(newString);
     }
 
     virtual void visit(trace::Enum *e)
@@ -272,7 +276,6 @@ public:
         trace::Array *newArray = new trace::Array(vals.count());
         for (int i = 0; i < vals.count(); ++i) {
             EditVisitor visitor(vals[i]);
-
             array->values[i]->visit(visitor);
             if (array->values[i] == visitor.value()) {
                 //non-editabled
@@ -281,7 +284,7 @@ public:
                 return;
             }
 
-            newArray->values.push_back(visitor.value());
+            newArray->values[i] = visitor.value();
         }
         m_editedValue = newArray;
     }
@@ -309,12 +312,12 @@ static void
 overwriteValue(trace::Call *call, const QVariant &val, int index)
 {
     EditVisitor visitor(val);
-    trace::Value *origValue = call->args[index];
+    trace::Value *origValue = call->args[index].value;
     origValue->visit(visitor);
 
     if (visitor.value() && origValue != visitor.value()) {
         delete origValue;
-        call->args[index] = visitor.value();
+        call->args[index].value = visitor.value();
     }
 }
 

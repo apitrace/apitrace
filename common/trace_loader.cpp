@@ -25,7 +25,7 @@ void Loader::setFrameMarker(Loader::FrameMarker marker)
 
 unsigned Loader::numberOfFrames() const
 {
-    return m_frameBookmarks.size();
+    return unsigned(m_frameBookmarks.size());
 }
 
 unsigned Loader::numberOfCallsInFrame(unsigned frameIdx) const
@@ -95,9 +95,7 @@ bool Loader::isCallAFrameMarker(const trace::Call *call) const
 
     switch (m_frameMarker) {
     case FrameMarker_SwapBuffers:
-        return  name.find("SwapBuffers") != std::string::npos ||
-                name == "CGLFlushDrawable" ||
-                name == "glFrameTerminatorGREMEDY";
+        return call->flags & trace::CALL_FLAG_END_FRAME;
         break;
     case FrameMarker_Flush:
         return name == "glFlush";

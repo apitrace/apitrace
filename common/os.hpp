@@ -42,13 +42,12 @@
 #ifndef vsnprintf
 #define vsnprintf _vsnprintf
 #endif
+#ifndef strcasecmp
+#define strcasecmp stricmp
+#endif
 #endif /* !_WIN32 */
 
 namespace os {
-
-void acquireMutex(void);
-
-void releaseMutex(void);
 
 void log(const char *format, ...)
 #ifdef __GNUC__
@@ -75,14 +74,27 @@ void log(const char *format, ...)
 #endif
 
 /**
- * Get the current time in microseconds from an unknown base.
+ * Exit immediately.
+ *
+ * This should be called only from the wrappers, when there is no safe way of
+ * failing gracefully.
  */
-long long getTime(void);
-
 void abort(void);
 
 void setExceptionCallback(void (*callback)(void));
 void resetExceptionCallback(void);
+
+/**
+ * Returns a pseudo-random integer in the range 0 to RAND_MAX.
+ */
+static inline int
+random(void) {
+#ifdef _WIN32
+    return ::rand();
+#else
+    return ::random();
+#endif
+}
 
 struct MemoryInfo
 {

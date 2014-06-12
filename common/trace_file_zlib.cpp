@@ -33,6 +33,14 @@
 #include <zlib.h>
 #include <gzguts.h>
 
+// for lseek
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 #include "os.hpp"
 
 #include <iostream>
@@ -53,14 +61,14 @@ public:
 protected:
     virtual bool rawOpen(const std::string &filename, File::Mode mode);
     virtual bool rawWrite(const void *buffer, size_t length);
-    virtual bool rawRead(void *buffer, size_t length);
+    virtual size_t rawRead(void *buffer, size_t length);
     virtual int rawGetc();
     virtual void rawClose();
     virtual void rawFlush();
     virtual bool rawSkip(size_t length);
     virtual int  rawPercentRead();
 private:
-    void *m_gzFile;
+    gzFile m_gzFile;
     double m_endOffset;
 };
 
@@ -73,6 +81,7 @@ ZLibFile::ZLibFile(const std::string &filename,
 
 ZLibFile::~ZLibFile()
 {
+    close();
 }
 
 bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
@@ -96,12 +105,13 @@ bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
 
 bool ZLibFile::rawWrite(const void *buffer, size_t length)
 {
-    return gzwrite(m_gzFile, buffer, length) != -1;
+    return gzwrite(m_gzFile, buffer, unsigned(length)) != -1;
 }
 
-bool ZLibFile::rawRead(void *buffer, size_t length)
+size_t ZLibFile::rawRead(void *buffer, size_t length)
 {
-    return gzread(m_gzFile, buffer, length) != -1;
+    int ret = gzread(m_gzFile, buffer, unsigned(length));
+    return ret < 0 ? 0 : ret;
 }
 
 int ZLibFile::rawGetc()
@@ -140,26 +150,10 @@ bool ZLibFile::rawSkip(size_t)
 int ZLibFile::rawPercentRead()
 {
     gz_state *state = (gz_state *)m_gzFile;
-    return 100 * (lseek(state->fd, 0, SEEK_CUR) / m_endOffset);
+    return int(100 * (lseek(state->fd, 0, SEEK_CUR) / m_endOffset));
 }
 
 
 File * File::createZLib(void) {
     return new ZLibFile;
 }
-
-bool File::isZLibCompressed(const std::string &filename)
-{
-    std::fstream stream(filename.c_str(),
-                        std::fstream::binary | std::fstream::in);
-    if (!stream.is_open())
-        return false;
-
-    unsigned char byte1, byte2;
-    stream >> byte1;
-    stream >> byte2;
-    stream.close();
-
-    return (byte1 == 0x1f && byte2 == 0x8b);
-}
-

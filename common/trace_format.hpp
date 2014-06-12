@@ -24,47 +24,9 @@
  **************************************************************************/
 
 /*
- * Trace binary format.
+ * Trace binary format definitions.
  *
- * Grammar:
- *
- *   trace = event* EOF
- *
- *   event = EVENT_ENTER call_sig call_detail+
- *         | EVENT_LEAVE call_no call_detail+
- *
- *   call_sig = sig_id ( name arg_names )?
- *
- *   call_detail = ARG index value
- *               | RET value
- *               | END
- *
- *   value = NULL
- *         | FALSE
- *         | TRUE
- *         | SINT int
- *         | UINT int
- *         | FLOAT float
- *         | DOUBLE double
- *         | STRING string
- *         | BLOB string
- *         | ENUM enum_sig
- *         | BITMASK bitmask_sig value
- *         | ARRAY length value+
- *         | STRUCT struct_sig value+
- *         | OPAQUE int
- *
- *   call_sig = id name arg_name*
- *            | id
- *
- *   enum_sig = id name value
- *            | id
- *
- *   bitmask_sig = id count (name value)+
- *               | id
- *
- *   string = length (BYTE)*
- *
+ * See FORMAT.markdown for details.
  */
 
 #ifndef _TRACE_FORMAT_HPP_
@@ -72,36 +34,9 @@
 
 namespace trace {
 
-/*
- * Trace file version number.
- *
- * We keep backwards compatability reading old traces, i.e., it should always be
- * possible to parse and retrace old trace files.
- *
- * So the trace version number refers not only to changes in the binary format
- * representation, but also semantic changes in the way certain functions
- * should be retraced.
- *
- * Writing/editing old traces will not be supported however.  An older version
- * of apitrace should be used in such circunstances.
- *
- * Changelog:
- *
- * - version 0:
- *   - initial implementation
- *
- * - version 1:
- *   - support for GL user arrays -- a blob is provided whenever an user memory
- *   is referred (whereas before calls that operate wit user memory instead of
- *   VBOs should be ignore)
- *
- * - version 2:
- *   - malloc/free memory calls -- allow to pass user memory as malloc memory
- *   as opposed to blobs
- *   - glFlushMappedBufferRange will emit a memcpy only for the flushed range
- *   (whereas previously it would emit a memcpy for the whole mapped range)
- */
-#define TRACE_VERSION 2
+
+#define TRACE_VERSION 5
+
 
 enum Event {
     EVENT_ENTER = 0,
@@ -113,6 +48,7 @@ enum CallDetail {
     CALL_ARG,
     CALL_RET,
     CALL_THREAD,
+    CALL_BACKTRACE,
 };
 
 enum Type {
@@ -123,13 +59,23 @@ enum Type {
     TYPE_UINT,
     TYPE_FLOAT,
     TYPE_DOUBLE,
-    TYPE_STRING, // Null terminated, human readible string
-    TYPE_BLOB, // Block of bytes
+    TYPE_STRING,
+    TYPE_BLOB,
     TYPE_ENUM,
     TYPE_BITMASK,
     TYPE_ARRAY,
     TYPE_STRUCT,
     TYPE_OPAQUE,
+    TYPE_REPR,
+};
+
+enum BacktraceDetail {
+    BACKTRACE_END = 0,
+    BACKTRACE_MODULE,
+    BACKTRACE_FUNCTION,
+    BACKTRACE_FILENAME,
+    BACKTRACE_LINENUMBER,
+    BACKTRACE_OFFSET,
 };
 
 

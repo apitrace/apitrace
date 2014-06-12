@@ -3,16 +3,16 @@
  * Copyright (C) 2008 Flavio Castelli <flavio.castelli@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * modify it under the terms of the GNU Lesser General Public
+ * License version 2.1, as published by the Free Software Foundation.
+ * 
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
@@ -34,6 +34,8 @@ ParserPrivate::ParserPrivate() :
     m_scanner(0)
   , m_negate(false)
   , m_error(false)
+  , m_errorLine(0)
+  , m_specialNumbersAllowed(false)
 {
 }
 
@@ -82,6 +84,7 @@ QVariant Parser::parse (QIODevice* io, bool* ok)
   }
 
   d->m_scanner = new JSonScanner (io);
+  d->m_scanner->allowSpecialNumbers(d->m_specialNumbersAllowed);
   yy::json_parser parser(d);
   parser.parse();
 
@@ -111,4 +114,12 @@ QString Parser::errorString() const
 int Parser::errorLine() const
 {
   return d->m_errorLine;
+}
+
+void QJson::Parser::allowSpecialNumbers(bool allowSpecialNumbers) {
+  d->m_specialNumbersAllowed = allowSpecialNumbers;
+}
+
+bool Parser::specialNumbersAllowed() const {
+  return d->m_specialNumbersAllowed;
 }

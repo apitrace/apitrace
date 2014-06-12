@@ -3,16 +3,16 @@
   * Copyright (C) 2008 Flavio Castelli <flavio.castelli@gmail.com>
   *
   * This library is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU Library General Public
-  * License as published by the Free Software Foundation; either
-  * version 2 of the License, or (at your option) any later version.
+  * modify it under the terms of the GNU Lesser General Public
+  * License version 2.1, as published by the Free Software Foundation.
+  * 
   *
   * This library is distributed in the hope that it will be useful,
   * but WITHOUT ANY WARRANTY; without even the implied warranty of
   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * Library General Public License for more details.
+  * Lesser General Public License for more details.
   *
-  * You should have received a copy of the GNU Library General Public License
+  * You should have received a copy of the GNU Lesser General Public License
   * along with this library; see the file COPYING.LIB.  If not, write to
   * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
   * Boston, MA 02110-1301, USA.
@@ -31,6 +31,8 @@
   #include <QtCore/QMap>
   #include <QtCore/QString>
   #include <QtCore/QVariant>
+
+  #include <limits>
 
   class JSonScanner;
 
@@ -69,6 +71,8 @@
 %token QUOTMARKCLOSE 15 "close quotation mark"
 
 %token STRING 16 "string"
+%token INFINITY_VAL 17 "Infinity"
+%token NAN_VAL 18 "NaN"
 
 // define the initial token
 %start start
@@ -82,12 +86,11 @@ start: data {
               qjsonDebug() << "json_parser - parsing finished";
             };
 
-data: object {$$ = $1; }
-      | array {$$ = $1; }
+data: value { $$ = $1; }
       | error
           {
             qCritical()<< "json_parser - syntax error found, "
-                    << "forcing abort";
+                    << "forcing abort, Line" << @$.begin.line << "Column" << @$.begin.column;
             YYABORT;
           }
       | END;
@@ -133,7 +136,7 @@ r_values: /* empty */ { $$ = QVariant (QVariantList()); }
           };
 
 value: string { $$ = $1; }
-        | number { $$ = $1; }
+        | special_or_number { $$ = $1; }
         | object { $$ = $1; }
         | array { $$ = $1; }
         | TRUE_VAL { $$ = QVariant (true); }
@@ -142,6 +145,11 @@ value: string { $$ = $1; }
           QVariant null_variant;
           $$ = null_variant;
         };
+
+special_or_number: MINUS INFINITY_VAL { $$ = QVariant(QVariant::Double); $$.setValue( -std::numeric_limits<double>::infinity() ); }
+                   | INFINITY_VAL { $$ = QVariant(QVariant::Double); $$.setValue( std::numeric_limits<double>::infinity() ); }
+                   | NAN_VAL { $$ = QVariant(QVariant::Double); $$.setValue( std::numeric_limits<double>::quiet_NaN() ); }
+                   | number;
 
 number: int {
             if ($1.toByteArray().startsWith('-')) {

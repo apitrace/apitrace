@@ -23,7 +23,9 @@
 #
 ##########################################################################/
 
+
 from winapi import *
+
 
 DXGI_FORMAT = Enum("DXGI_FORMAT", [
     "DXGI_FORMAT_UNKNOWN",

@@ -27,7 +27,7 @@
 
 
 /*
- * Top-level application for accessing almost of apitrace
+ * Top-level application for accessing almost all of apitrace
  * functionality.
  */
 
@@ -56,18 +56,40 @@ help_usage()
 }
 
 static int
-help_command(int argc, char *argv[]);
+do_help_command(int argc, char *argv[]);
 
-const Command help = {
+const Command help_command = {
     "help",
     help_synopsis,
     help_usage,
-    help_command
+    do_help_command
 };
 
 static const Command * commands[] = {
-    &dump,
-    &help,
+    &diff_command,
+    &diff_state_command,
+    &diff_images_command,
+    &dump_command,
+    &dump_images_command,
+    &pickle_command,
+    &sed_command,
+    &repack_command,
+    &retrace_command,
+    &trace_command,
+    &trim_command,
+    &help_command
+};
+
+/* Aliases provide a mechanism to allow compatibility with old command
+ * names (such as "retrace") for current commands (such as the replay
+ * command). */
+typedef struct {
+    const char *name;
+    const Command *command;
+} Alias;
+
+static const Alias aliases[] = {
+    { "retrace", &retrace_command }
 };
 
 static void
@@ -110,17 +132,17 @@ list_commands(void) {
 
 
 static int
-help_command(int argc, char *argv[])
+do_help_command(int argc, char *argv[])
 {
     const Command *command;
     int i;
 
-    if (argc != 1) {
+    if (argc != 2) {
         help_usage();
         return 0;
     }
 
-    char *command_name = argv[0];
+    char *command_name = argv[1];
 
     for (i = 0; i < ARRAY_SIZE(commands); i++) {
         command = commands[i];
@@ -142,6 +164,7 @@ main(int argc, char **argv)
 {
     const char *command_name;
     const Command *command;
+    const Alias *alias;
     int i;
 
     for (i = 1; i < argc; ++i) {
@@ -152,7 +175,7 @@ main(int argc, char **argv)
         }
 
         if (strcmp(arg, "--help") == 0) {
-            return help_command(0, NULL);
+            return do_help_command(0, NULL);
         } else {
             std::cerr << "Error: unknown option " << arg << "\n";
             usage();
@@ -165,7 +188,7 @@ main(int argc, char **argv)
         return 1;
     }
 
-    command_name = argv[i++];
+    command_name = argv[i];
 
     argc -= i;
     argv = &argv[i];
@@ -177,8 +200,15 @@ main(int argc, char **argv)
             return (command->function) (argc, argv);
     }
 
+    for (i = 0; i < ARRAY_SIZE(aliases); i++) {
+        alias = &aliases[i];
+
+        if (strcmp(command_name, alias->name) == 0)
+            return (alias->command->function) (argc, argv);
+    }
+
     std::cerr << "Error: unknown command " << command_name
               << " (see \"apitrace help\").\n";
 
-    return 1;
+   return 1;
 }

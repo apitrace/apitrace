@@ -37,7 +37,6 @@
 
 #include "trace_model.hpp"
 
-
 namespace trace {
     class File;
 
@@ -50,6 +49,7 @@ namespace trace {
         std::vector<bool> structs;
         std::vector<bool> enums;
         std::vector<bool> bitmasks;
+        std::vector<bool> frames;
 
     public:
         Writer();
@@ -58,7 +58,7 @@ namespace trace {
         bool open(const char *filename);
         void close(void);
 
-        unsigned beginEnter(const FunctionSig *sig);
+        unsigned beginEnter(const FunctionSig *sig, unsigned thread_id);
         void endEnter(void);
 
         void beginLeave(unsigned call);
@@ -70,6 +70,10 @@ namespace trace {
         void beginReturn(void);
         inline void endReturn(void) {}
 
+        void beginBacktrace(unsigned num_frames);
+        void writeStackFrame(const RawStackFrame *frame);
+        inline void endBacktrace(void) {}
+
         void beginArray(size_t length);
         inline void endArray(void) {}
 
@@ -78,6 +82,9 @@ namespace trace {
 
         void beginStruct(const StructSig *sig);
         inline void endStruct(void) {}
+
+        void beginRepr(void);
+        inline void endRepr(void) {}
 
         void writeBool(bool value);
         void writeSInt(signed long long value);
@@ -88,10 +95,10 @@ namespace trace {
         void writeString(const char *str, size_t size);
         void writeWString(const wchar_t *str);
         void writeBlob(const void *data, size_t size);
-        void writeEnum(const EnumSig *sig);
+        void writeEnum(const EnumSig *sig, signed long long value);
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
         void writeNull(void);
-        void writeOpaque(const void *ptr);
+        void writePointer(unsigned long long addr);
 
         void writeCall(Call *call);
 
@@ -105,50 +112,6 @@ namespace trace {
 
     };
 
-    extern const FunctionSig memcpy_sig;
-    extern const FunctionSig malloc_sig;
-    extern const FunctionSig free_sig;
-    extern const FunctionSig realloc_sig;
-
-    /**
-     * A specialized Writer class, mean to trace the current process.
-     *
-     * In particular:
-     * - it creates a trace file based on the current process name
-     * - uses mutexes to allow tracing from multiple threades
-     * - flushes the output to ensure the last call is traced in event of
-     *   abnormal termination
-     */
-    class LocalWriter : public Writer {
-    protected:
-        int acquired;
-
-        std::vector<bool> regions;
-
-    public:
-        /**
-         * Should never called directly -- use localWriter singleton below instead.
-         */
-        LocalWriter();
-        ~LocalWriter();
-
-        void open(void);
-
-        unsigned beginEnter(const FunctionSig *sig);
-        void endEnter(void);
-
-        void beginLeave(unsigned call);
-        void endLeave(void);
-
-        void updateRegion(const void *ptr, size_t size = 0);
-
-        void flush(void);
-    };
-
-    /**
-     * Singleton.
-     */
-    extern LocalWriter localWriter;
-}
+} /* namespace trace */
 
 #endif /* _TRACE_WRITER_HPP_ */

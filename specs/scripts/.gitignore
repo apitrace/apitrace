@@ -1,7 +1,10 @@
 *.spec
 *.tm
 *.txt
+*.xml
 *api.py
+*enum.py
+!*2api.py
+!*2enum.py
 glparams.py
-wglenum.py
 !Makefile

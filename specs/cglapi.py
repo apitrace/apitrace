@@ -44,49 +44,65 @@ CGSConnectionID = Opaque("CGSConnectionID")
 CGSWindowID = Alias("CGSWindowID", Int)
 CGSSurfaceID = Alias("CGSSurfaceID", Int)
 
-CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute", [
-    "kCGLPFAAllRenderers",
-    "kCGLPFADoubleBuffer",
-    "kCGLPFAStereo",
-    "kCGLPFAAuxBuffers",
-    "kCGLPFAColorSize",
-    "kCGLPFAAlphaSize",
-    "kCGLPFADepthSize",
-    "kCGLPFAStencilSize",
-    "kCGLPFAAccumSize",
-    "kCGLPFAMinimumPolicy",
-    "kCGLPFAMaximumPolicy",
-    "kCGLPFAOffScreen",
-    "kCGLPFAFullScreen",
-    "kCGLPFASampleBuffers",
-    "kCGLPFASamples",
-    "kCGLPFAAuxDepthStencil",
-    "kCGLPFAColorFloat",
-    "kCGLPFAMultisample",
-    "kCGLPFASupersample",
-    "kCGLPFASampleAlpha",
-    "kCGLPFARendererID",
-    "kCGLPFASingleRenderer",
-    "kCGLPFANoRecovery",
-    "kCGLPFAAccelerated",
-    "kCGLPFAClosestPolicy",
-    "kCGLPFABackingStore",
-    "kCGLPFAWindow",
-    "kCGLPFACompliant",
-    "kCGLPFADisplayMask",
-    "kCGLPFAPBuffer",
-    "kCGLPFARemotePBuffer",
-    "kCGLPFAAllowOfflineRenderers",
-    "kCGLPFAAcceleratedCompute",
-    "kCGLPFAOpenGLProfile",
-    "kCGLPFAVirtualScreenCount",
-    "kCGLPFARobust",
-    "kCGLPFAMPSafe",
-    "kCGLPFAMultiScreen",
-
-    "kCGLOGLPVersion_Legacy",
-    "kCGLOGLPVersion_3_2_Core",
+CGLOpenGLProfile = Enum("CGLOpenGLProfile", [
+    'kCGLOGLPVersion_Legacy',
+    'kCGLOGLPVersion_3_2_Core',
+    #'kCGLOGLPVersion_GL3_Core', # Same as kCGLOGLPVersion_3_2_Core
+    'kCGLOGLPVersion_GL4_Core',
 ])
+
+CGLPixelFormatAttributes = [
+    ("kCGLPFAAllRenderers", None),
+    ("kCGLPFATripleBuffer", None),
+    ("kCGLPFADoubleBuffer", None),
+    ("kCGLPFAStereo", None),
+    ("kCGLPFAColorSize", Int),
+    ("kCGLPFAAlphaSize", Int),
+    ("kCGLPFADepthSize", Int),
+    ("kCGLPFAStencilSize", Int),
+    ("kCGLPFAMinimumPolicy", None),
+    ("kCGLPFAMaximumPolicy", None),
+    ("kCGLPFASampleBuffers", Int),
+    ("kCGLPFASamples", Int),
+    ("kCGLPFAColorFloat", None),
+    ("kCGLPFAMultisample", None),
+    ("kCGLPFASupersample", None),
+    ("kCGLPFASampleAlpha", None),
+    ("kCGLPFARendererID", Int),
+    ("kCGLPFANoRecovery", None),
+    ("kCGLPFAAccelerated", None),
+    ("kCGLPFAClosestPolicy", None),
+    ("kCGLPFABackingStore", None),
+    ("kCGLPFABackingVolatile", None),
+    ("kCGLPFADisplayMask", Int),
+    ("kCGLPFAAllowOfflineRenderers", None),
+    ("kCGLPFAAcceleratedCompute", None),
+    ("kCGLPFAOpenGLProfile", CGLOpenGLProfile),
+    ("kCGLPFASupportsAutomaticGraphicsSwitching", None),
+    ("kCGLPFAVirtualScreenCount", Int),
+    ("kCGLPFAAuxBuffers", None),
+    ("kCGLPFAAccumSize", Int),
+    ("kCGLPFAAuxDepthStencil", None),
+    ("kCGLPFAOffScreen", None),
+    ("kCGLPFAWindow", None),
+    ("kCGLPFACompliant", None),
+    ("kCGLPFAPBuffer", None),
+    ("kCGLPFARemotePBuffer", None),
+    ("kCGLPFASingleRenderer", None),
+    ("kCGLPFARobust", None),
+    ("kCGLPFAMPSafe", None),
+    ("kCGLPFAMultiScreen", None),
+    ("kCGLPFAFullScreen", None),
+]
+
+CGLPixelFormatAttribute = Enum("CGLPixelFormatAttribute",
+    [attrib for attrib, _ in CGLPixelFormatAttributes]
+)
+
+CGLPixelFormatAttribs = AttribArray(
+    Const(CGLPixelFormatAttribute),
+    CGLPixelFormatAttributes
+)
 
 CGLRendererProperty = Enum("CGLRendererProperty", [
     "kCGLRPOffScreen",
@@ -117,6 +133,9 @@ CGLRendererProperty = Enum("CGLRendererProperty", [
     "kCGLRPRendererCount",
     "kCGLRPOnline",
     "kCGLRPAcceleratedCompute",
+    "kCGLRPVideoMemoryMegabytes",
+    "kCGLRPTextureMemoryMegabytes",
+    "kCGLRPMajorGLVersion",
 ])
 
 CGLContextEnable = Enum("CGLContextEnable", [
@@ -127,6 +146,7 @@ CGLContextEnable = Enum("CGLContextEnable", [
     "kCGLCESurfaceBackingSize",
     "kCGLCEDisplayListOptimization",
     "kCGLCEMPEngine",
+    "kCGLCECrashOnRemovedFunctions",
 ])
 
 CGLContextParameter = Enum("CGLContextParameter", [
@@ -180,23 +200,23 @@ CGLError = Enum("CGLError", [
 
 CGLContextObj = Opaque("CGLContextObj")
 
-cglapi = API("CGL")
+cglapi = Module("CGL")
 
-cglapi.add_functions([
+cglapi.addFunctions([
     # CGLCurrent.h, libGL.dylib
     Function(CGLError, "CGLSetCurrentContext", [(CGLContextObj, "ctx")]),
     Function(CGLContextObj, "CGLGetCurrentContext", []),
 
     # OpenGL.h, OpenGL framework
-    Function(CGLError, "CGLChoosePixelFormat", [(Array(Const(CGLPixelFormatAttribute), "__AttribList_size(attribs)"), "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
+    Function(CGLError, "CGLChoosePixelFormat", [(CGLPixelFormatAttribs, "attribs"), Out(Pointer(CGLPixelFormatObj), "pix"), Out(Pointer(GLint), "npix")]),
     Function(CGLError, "CGLDestroyPixelFormat", [(CGLPixelFormatObj, "pix")]),
-    Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")]),
+    Function(CGLError, "CGLDescribePixelFormat", [(CGLPixelFormatObj, "pix"), (GLint, "pix_num"), (CGLPixelFormatAttribute, "attrib"), Out(Pointer(GLint), "value")], sideeffects=False),
     Function(Void, "CGLReleasePixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(CGLPixelFormatObj, "CGLRetainPixelFormat", [(CGLPixelFormatObj, "pix")]),
     Function(GLuint, "CGLGetPixelFormatRetainCount", [(CGLPixelFormatObj, "pix")]),
     Function(CGLError, "CGLQueryRendererInfo", [(GLuint, "display_mask"), Out(Pointer(CGLRendererInfoObj), "rend"), Out(Pointer(GLint), "nrend")]),
     Function(CGLError, "CGLDestroyRendererInfo", [(CGLRendererInfoObj, "rend")]),
-    Function(CGLError, "CGLDescribeRenderer", [(CGLRendererInfoObj, "rend"), (GLint, "rend_num"), (CGLRendererProperty, "prop"), (OpaquePointer(GLint), "value")]),
+    Function(CGLError, "CGLDescribeRenderer", [(CGLRendererInfoObj, "rend"), (GLint, "rend_num"), (CGLRendererProperty, "prop"), Out(Pointer(GLint), "value")], sideeffects=False),
     Function(CGLError, "CGLCreateContext", [(CGLPixelFormatObj, "pix"), (CGLContextObj, "share"), Out(Pointer(CGLContextObj), "ctx")]),
     Function(CGLError, "CGLDestroyContext", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLCopyContext", [(CGLContextObj, "src"), (CGLContextObj, "dst"), (GLbitfield, "mask")]),
@@ -221,19 +241,19 @@ cglapi.add_functions([
     Function(CGLError, "CGLFlushDrawable", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLEnable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
     Function(CGLError, "CGLDisable", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname")]),
-    Function(CGLError, "CGLIsEnabled", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname"), Out(Pointer(GLint), "enable")]),
+    Function(CGLError, "CGLIsEnabled", [(CGLContextObj, "ctx"), (CGLContextEnable, "pname"), Out(Pointer(GLint), "enable")], sideeffects=False),
     Function(CGLError, "CGLSetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), (Array(Const(GLint), 1), "params")]),
-    Function(CGLError, "CGLGetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), Out(Array(GLint, 1), "params")]),
+    Function(CGLError, "CGLGetParameter", [(CGLContextObj, "ctx"), (CGLContextParameter, "pname"), Out(Array(GLint, 1), "params")], sideeffects=False),
     Function(CGLError, "CGLSetVirtualScreen", [(CGLContextObj, "ctx"), (GLint, "screen")]),
-    Function(CGLError, "CGLGetVirtualScreen", [(CGLContextObj, "ctx"), Out(Pointer(GLint), "screen")]),
+    Function(CGLError, "CGLGetVirtualScreen", [(CGLContextObj, "ctx"), Out(Pointer(GLint), "screen")], sideeffects=False),
     Function(CGLError, "CGLSetGlobalOption", [(CGLGlobalOption, "pname"), (OpaquePointer(Const(GLint)), "params")]),
-    Function(CGLError, "CGLGetGlobalOption", [(CGLGlobalOption, "pname"), Out(OpaquePointer(GLint), "params")]),
+    Function(CGLError, "CGLGetGlobalOption", [(CGLGlobalOption, "pname"), Out(OpaquePointer(GLint), "params")], sideeffects=False),
     Function(CGLError, "CGLSetOption", [(CGLGlobalOption, "pname"), (GLint, "param")]),
-    Function(CGLError, "CGLGetOption", [(CGLGlobalOption, "pname"), Out(Pointer(GLint), "param")]),
+    Function(CGLError, "CGLGetOption", [(CGLGlobalOption, "pname"), Out(Pointer(GLint), "param")], sideeffects=False),
     Function(CGLError, "CGLLockContext", [(CGLContextObj, "ctx")]),
     Function(CGLError, "CGLUnlockContext", [(CGLContextObj, "ctx")]),
-    Function(Void, "CGLGetVersion", [Out(Pointer(GLint), "majorvers"), Out(Pointer(GLint), "minorvers")]),
-    Function(Const(CString), "CGLErrorString", [(CGLError, "error")]),
+    Function(Void, "CGLGetVersion", [Out(Pointer(GLint), "majorvers"), Out(Pointer(GLint), "minorvers")], sideeffects=False),
+    Function(ConstCString, "CGLErrorString", [(CGLError, "error")], sideeffects=False),
 
     # CGLIOSurface.h, OpenGL framework
     Function(CGLError, "CGLTexImageIOSurface2D", [(CGLContextObj, "ctx"), (GLenum, "target"), (GLenum, "internal_format"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (IOSurfaceRef, "ioSurface"), (GLuint, "plane")]),
@@ -243,19 +263,22 @@ cglapi.add_functions([
 
     # Undocumented, OpenGL framework
     Function(CGLError, "CGLSetSurface", [(CGLContextObj, "ctx"), (CGSConnectionID, "cid"), (CGSWindowID, "wid"), (CGSSurfaceID, "sid")]),
-    Function(CGLError, "CGLGetSurface", [(CGLContextObj, "ctx"), (Pointer(CGSConnectionID), "cid"), (Pointer(CGSWindowID), "wid"), (Pointer(CGSSurfaceID), "sid")]),
+    Function(CGLError, "CGLGetSurface", [(CGLContextObj, "ctx"), Out(Pointer(CGSConnectionID), "cid"), Out(Pointer(CGSWindowID), "wid"), Out(Pointer(CGSSurfaceID), "sid")]),
     Function(CGLError, "CGLUpdateContext", [(CGLContextObj, "ctx")]),
-    # XXX: Confirm CGLOpenCLMuxLockDown
-    Function(CGLError, "CGLOpenCLMuxLockDown", []),
-    # FIXME: CGLAreContextsShared
-    # FIXME: CGLBackDispatch
-    # FIXME: CGLFrontDispatch
-    # FIXME: CGLGetNextContext
-    # FIXME: CGLRestoreDispatch
-    # FIXME: CGLRestoreDispatchFunction
-    # FIXME: CGLSelectDispatch
-    # FIXME: CGLSelectDispatchBounded
-    # FIXME: CGLSelectDispatchFunction
-    # FIXME: CGLSetPBufferVolatileState
+    # XXX: All the following prototypes are little more than guesses
+    # TODO: A potentially simpler alternative would be to use the
+    # DYLD_INTERPOSE mechanism and only intercept the calls that we
+    # really care about
+    Function(CGLError, "CGLOpenCLMuxLockDown", [], internal=True),
+    Function(GLboolean, "CGLAreContextsShared", [(CGLContextObj, "ctx1"), (CGLContextObj, "ctx2")], internal=True),
+    Function(CGLContextObj, "CGLGetNextContext", [(CGLContextObj, "ctx")], internal=True),
+    Function(OpaquePointer(Void), "CGLFrontDispatch", [(CGLContextObj, "ctx")], internal=True),
+    Function(OpaquePointer(Void), "CGLBackDispatch", [(CGLContextObj, "ctx")], internal=True),
+    Function(Void, "CGLSelectDispatch", [(CGLContextObj, "ctx"), (OpaquePointer(Void), "dispatch")], internal=True),
+    Function(Void, "CGLSelectDispatchBounded", [(CGLContextObj, "ctx"), (OpaquePointer(Void), "dispatch"), (GLint, "size")], internal=True),
+    Function(Void, "CGLSelectDispatchFunction", [(CGLContextObj, "ctx"), (OpaquePointer(Void), "functionPtr"), (GLint, "functionId")], internal=True),
+    Function(Void, "CGLRestoreDispatch", [(CGLContextObj, "ctx")], internal=True),
+    Function(Void, "CGLRestoreDispatchFunction", [(CGLContextObj, "ctx"), (GLint, "functionId")], internal=True),
+    Function(CGLError, "CGLSetPBufferVolatileState", [(CGLPBufferObj, "pbuffer"), (OpaquePointer(Void), "state")], internal=True),
 ])
 

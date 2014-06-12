@@ -23,6 +23,7 @@
  *
  **************************************************************************/
 
+#ifndef _WIN32
 
 #include <assert.h>
 #include <string.h>
@@ -31,8 +32,7 @@
 #include <stdint.h>
 
 #include <unistd.h>
-#include <sys/time.h>
-#include <pthread.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -49,47 +49,27 @@
 #include <mach-o/dyld.h>
 #endif /* __APPLE__ */
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #ifndef PATH_MAX
 #warning PATH_MAX undefined
 #define PATH_MAX 4096
 #endif
 
 #include "os.hpp"
-#include "os_path.hpp"
+#include "os_string.hpp"
+#include "os_backtrace.hpp"
 
 
 namespace os {
 
 
-static pthread_mutex_t 
-mutex =
-#ifdef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
-    PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
-#else
-#   warning PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP undefined -- deadlocks likely
-    PTHREAD_MUTEX_INITIALIZER
-#endif
-;
-
-
-void
-acquireMutex(void)
-{
-    pthread_mutex_lock(&mutex);
-}
-
-
-void
-releaseMutex(void)
-{
-    pthread_mutex_unlock(&mutex);
-}
-
-
-Path
+String
 getProcessName(void)
 {
-    Path path;
+    String path;
     size_t size = PATH_MAX;
     char *buf = path.buf(size);
 
@@ -97,24 +77,42 @@ getProcessName(void)
 #ifdef __APPLE__
     uint32_t len = size;
     if (_NSGetExecutablePath(buf, &len) != 0) {
-        *buf = 0;
-        return path;
+        // grow buf and retry
+        buf = path.buf(len);
+        _NSGetExecutablePath(buf, &len);
     }
+    len = strlen(buf);
 #else
     ssize_t len;
+
+#ifdef ANDROID
+    // On Android, we are almost always interested in the actual process title
+    // rather than path to the VM kick-off executable
+    // (/system/bin/app_process).
+    len = 0;
+#else
     len = readlink("/proc/self/exe", buf, size - 1);
-    if (len == -1) {
+#endif
+
+    if (len <= 0) {
         // /proc/self/exe is not available on setuid processes, so fallback to
         // /proc/self/cmdline.
         int fd = open("/proc/self/cmdline", O_RDONLY);
         if (fd >= 0) {
-            len = read(fd, buf, size - 1);
+            // buf already includes trailing zero
+            len = read(fd, buf, size);
             close(fd);
+            if (len >= 0) {
+                len = strlen(buf);
+            }
         }
     }
     if (len <= 0) {
-        snprintf(buf, size, "%i", (int)getpid());
-        return path;
+        // fallback to process ID
+        len = snprintf(buf, size, "%i", (int)getpid());
+        if (len >= size) {
+            len = size - 1;
+        }
     }
 #endif
     path.truncate(len);
@@ -122,10 +120,10 @@ getProcessName(void)
     return path;
 }
 
-Path
+String
 getCurrentDir(void)
 {
-    Path path;
+    String path;
     size_t size = PATH_MAX;
     char *buf = path.buf(size);
 
@@ -136,28 +134,96 @@ getCurrentDir(void)
     return path;
 }
 
+bool
+createDirectory(const String &path)
+{
+    return mkdir(path, 0777) == 0;
+}
+
+bool
+String::exists(void) const
+{
+    struct stat st;
+    int err;
+
+    err = stat(str(), &st);
+    if (err) {
+        return false;
+    }
+
+    return true;
+}
+
+int execute(char * const * args)
+{
+    pid_t pid = fork();
+    if (pid == 0) {
+        // child
+        execvp(args[0], args);
+        fprintf(stderr, "error: failed to execute:");
+        for (unsigned i = 0; args[i]; ++i) {
+            fprintf(stderr, " %s", args[i]);
+        }
+        fprintf(stderr, "\n");
+        exit(-1);
+    } else {
+        // parent
+        if (pid == -1) {
+            fprintf(stderr, "error: failed to fork\n");
+            return -1;
+        }
+        int status = -1;
+        int ret;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+            ret = WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            // match shell return code
+            ret = WTERMSIG(status) + 128;
+        } else {
+            ret = 128;
+        }
+        return ret;
+    }
+}
+
+static volatile bool logging = false;
+
+#ifndef HAVE_EXTERNAL_OS_LOG
 void
 log(const char *format, ...)
 {
+    logging = true;
     va_list ap;
     va_start(ap, format);
     fflush(stdout);
-    vfprintf(stderr, format, ap);
+#ifdef ANDROID
+    __android_log_vprint(ANDROID_LOG_DEBUG, "apitrace", format, ap);
+#else
+    static FILE *log = NULL;
+    if (!log) {
+        // Duplicate stderr file descriptor, to prevent applications from
+        // redirecting our debug messages to somewhere else.
+        //
+        // Another alternative would be to log to /dev/tty when available.
+        log = fdopen(dup(STDERR_FILENO), "at");
+    }
+    vfprintf(log, format, ap);
+    fflush(log);
+#endif
     va_end(ap);
+    logging = false;
 }
+#endif /* !HAVE_EXTERNAL_OS_LOG */
 
-long long
-getTime(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_usec + tv.tv_sec*1000000LL;
-}
+#if defined(__APPLE__)
+long long timeFrequency = 0LL;
+#endif
 
 void
 abort(void)
 {
-    exit(0);
+    _exit(1);
 }
 
 
@@ -176,24 +242,34 @@ struct sigaction old_actions[NUM_SIGNALS];
 static void
 signalHandler(int sig, siginfo_t *info, void *context)
 {
+    /*
+     * There are several signals that can happen when logging to stdout/stderr.
+     * For example, SIGPIPE will be emitted if stderr is a pipe with no
+     * readers.  Therefore ignore any signal while logging by returning
+     * immediately, to prevent deadlocks.
+     */
+    if (logging) {
+        return;
+    }
+
     static int recursion_count = 0;
 
-    fprintf(stderr, "apitrace: warning: caught signal %i\n", sig);
+    log("apitrace: warning: caught signal %i\n", sig);
 
     if (recursion_count) {
-        fprintf(stderr, "apitrace: warning: recursion handling signal %i\n", sig);
+        log("apitrace: warning: recursion handling signal %i\n", sig);
     } else {
-        if (gCallback) {
-            ++recursion_count;
+        ++recursion_count;
+        if (gCallback)
             gCallback();
-            --recursion_count;
-        }
+        os::dump_backtrace();
+        --recursion_count;
     }
 
     struct sigaction *old_action;
     if (sig >= NUM_SIGNALS) {
         /* This should never happen */
-        fprintf(stderr, "error: unexpected signal %i\n", sig);
+        log("error: unexpected signal %i\n", sig);
         raise(SIGKILL);
     }
     old_action = &old_actions[sig];
@@ -203,7 +279,7 @@ signalHandler(int sig, siginfo_t *info, void *context)
         old_action->sa_sigaction(sig, info, context);
     } else {
         if (old_action->sa_handler == SIG_DFL) {
-            fprintf(stderr, "apitrace: info: taking default action for signal %i\n", sig);
+            log("apitrace: info: taking default action for signal %i\n", sig);
 
 #if 1
             struct sigaction dfl_action;
@@ -239,11 +315,26 @@ setExceptionCallback(void (*callback)(void))
 
 
         for (int sig = 1; sig < NUM_SIGNALS; ++sig) {
-            // SIGKILL and SIGSTOP can't be handled
-            if (sig != SIGKILL && sig != SIGSTOP) {
-                if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
-                    sigaction(sig,  &new_action, NULL);
-                }
+            // SIGKILL and SIGSTOP can't be handled.
+            if (sig == SIGKILL || sig == SIGSTOP) {
+                continue;
+            }
+
+            /*
+             * SIGPIPE can be emitted when writing to stderr that is redirected
+             * to a pipe without readers.  It is also very unlikely to ocurr
+             * inside graphics APIs, and most applications where it can occur
+             * normally already ignore it.  In summary, it is unlikely that a
+             * SIGPIPE will cause abnormal termination, which it is likely that
+             * intercepting here will cause problems, so simple don't intercept
+             * it here.
+             */
+            if (sig == SIGPIPE) {
+                continue;
+            }
+
+            if (sigaction(sig,  NULL, &old_actions[sig]) >= 0) {
+                sigaction(sig,  &new_action, NULL);
             }
         }
     }
@@ -596,3 +687,4 @@ bool queryVirtualAddress(const void *address, MemoryInfo *info)
 
 } /* namespace os */
 
+#endif // !defined(_WIN32)

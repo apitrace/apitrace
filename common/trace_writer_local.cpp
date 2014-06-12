@@ -36,11 +36,13 @@
 #include <list>
 
 #include "os.hpp"
-#include "os_path.hpp"
+#include "os_thread.hpp"
+#include "os_string.hpp"
 #include "range.hpp"
 #include "trace_file.hpp"
-#include "trace_writer.hpp"
+#include "trace_writer_local.hpp"
 #include "trace_format.hpp"
+#include "os_backtrace.hpp"
 
 
 namespace trace {
@@ -68,6 +70,8 @@ static void exceptionCallback(void)
 LocalWriter::LocalWriter() :
     acquired(0)
 {
+    os::log("apitrace: loaded\n");
+
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
     os::setExceptionCallback(exceptionCallback);
@@ -76,11 +80,12 @@ LocalWriter::LocalWriter() :
 LocalWriter::~LocalWriter()
 {
     os::resetExceptionCallback();
+    checkProcessId();
 }
 
 void
 LocalWriter::open(void) {
-    os::Path szFileName;
+    os::String szFileName;
 
     const char *lpFileName;
 
@@ -88,22 +93,27 @@ LocalWriter::open(void) {
     if (!lpFileName) {
         static unsigned dwCounter = 0;
 
-        os::Path process = os::getProcessName();
+        os::String process = os::getProcessName();
 #ifdef _WIN32
         process.trimExtension();
 #endif
         process.trimDirectory();
 
-        os::Path prefix = os::getCurrentDir();
+#ifdef ANDROID
+	os::String prefix = "/data/data";
+	prefix.join(process);
+#else
+	os::String prefix = os::getCurrentDir();
+#endif
         prefix.join(process);
 
         for (;;) {
             FILE *file;
 
             if (dwCounter)
-                szFileName = os::Path::format("%s.%u.trace", prefix.str(), dwCounter);
+                szFileName = os::String::format("%s.%u.trace", prefix.str(), dwCounter);
             else
-                szFileName = os::Path::format("%s.trace", prefix.str());
+                szFileName = os::String::format("%s.trace", prefix.str());
 
             lpFileName = szFileName;
             file = fopen(lpFileName, "rb");
@@ -118,7 +128,12 @@ LocalWriter::open(void) {
 
     os::log("apitrace: tracing to %s\n", lpFileName);
 
-    Writer::open(lpFileName);
+    if (!Writer::open(lpFileName)) {
+        os::log("apitrace: error: failed to open %s\n", lpFileName);
+        os::abort();
+    }
+
+    pid = os::getCurrentProcessId();
 
 #if 0
     // For debugging the exception handler
@@ -126,25 +141,62 @@ LocalWriter::open(void) {
 #endif
 }
 
-unsigned LocalWriter::beginEnter(const FunctionSig *sig) {
-    os::acquireMutex();
+static uintptr_t next_thread_num = 1;
+
+static OS_THREAD_SPECIFIC(uintptr_t)
+thread_num;
+
+void LocalWriter::checkProcessId(void) {
+    if (m_file->isOpened() &&
+        os::getCurrentProcessId() != pid) {
+        // We are a forked child process that inherited the trace file, so
+        // create a new file.  We can't call any method of the current
+        // file, as it may cause it to flush and corrupt the parent's
+        // trace, so we effectively leak the old file object.
+        m_file = File::createSnappy();
+        // Don't want to open the same file again
+        os::unsetEnvironment("TRACE_FILE");
+        open();
+    }
+}
+
+unsigned LocalWriter::beginEnter(const FunctionSig *sig, bool fake) {
+    mutex.lock();
     ++acquired;
 
+    checkProcessId();
     if (!m_file->isOpened()) {
         open();
     }
 
-    return Writer::beginEnter(sig);
+    uintptr_t this_thread_num = thread_num;
+    if (!this_thread_num) {
+        this_thread_num = next_thread_num++;
+        thread_num = this_thread_num;
+    }
+
+    assert(this_thread_num);
+    unsigned thread_id = this_thread_num - 1;
+    unsigned call_no = Writer::beginEnter(sig, thread_id);
+    if (!fake && os::backtrace_is_needed(sig->name)) {
+        std::vector<RawStackFrame> backtrace = os::get_backtrace();
+        beginBacktrace(backtrace.size());
+        for (unsigned i = 0; i < backtrace.size(); ++i) {
+            writeStackFrame(&backtrace[i]);
+        }
+        endBacktrace();
+    }
+    return call_no;
 }
 
 void LocalWriter::endEnter(void) {
     Writer::endEnter();
     --acquired;
-    os::releaseMutex();
+    mutex.unlock();
 }
 
 void LocalWriter::beginLeave(unsigned call) {
-    os::acquireMutex();
+    mutex.lock();
     ++acquired;
     Writer::beginLeave(call);
 }
@@ -152,23 +204,32 @@ void LocalWriter::beginLeave(unsigned call) {
 void LocalWriter::endLeave(void) {
     Writer::endLeave();
     --acquired;
-    os::releaseMutex();
+    mutex.unlock();
 }
 
 void LocalWriter::flush(void) {
     /*
      * Do nothing if the mutex is already acquired (e.g., if a segfault happen
-     * while writing the file) to prevent dead-lock.
+     * while writing the file) as state could be inconsistent, therefore yield
+     * inconsistent trace files and/or repeated segfaults till infinity.
      */
 
-    if (!acquired) {
-        os::acquireMutex();
+    mutex.lock();
+    if (acquired) {
+        os::log("apitrace: ignoring exception while tracing\n");
+    } else {
+        ++acquired;
         if (m_file->isOpened()) {
-            os::log("apitrace: flushing trace due to an exception\n");
-            m_file->flush();
+            if (os::getCurrentProcessId() != pid) {
+                os::log("apitrace: ignoring exception in child process\n");
+            } else {
+                os::log("apitrace: flushing trace due to an exception\n");
+                m_file->flush();
+            }
         }
-        os::releaseMutex();
+        --acquired;
     }
+    mutex.unlock();
 }
 
 struct RangeInfo : public range::range<size_t>
@@ -190,7 +251,7 @@ typedef std::list<RegionInfo> RegionInfoList;
 static RegionInfoList regionInfoList;
 
 
-static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
+static RegionInfo * lookupRegionInfo(LocalWriter &writer, const void *ptr) {
     os::MemoryInfo info;
 
     if (!os::queryVirtualAddress(ptr, &info)) {
@@ -230,7 +291,7 @@ static RegionInfo * lookupRegionInfo(Writer &writer, const void *ptr) {
     writer.endEnter();
     writer.beginLeave(__call);
     writer.beginReturn();
-    writer.writeOpaque(regionInfo.start);
+    writer.writePointer((uintptr_t)regionInfo.start);
     writer.endReturn();
     writer.endLeave();
 
@@ -246,12 +307,12 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
         return;
     }
 
-    os::acquireMutex();
+    mutex.lock();
 
     RegionInfo * regionInfo = lookupRegionInfo(*this, ptr);
 
     if (!regionInfo || !size) {
-        os::releaseMutex();
+        mutex.unlock();
         return;
     }
 
@@ -329,9 +390,9 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
         const Bytef *p = (const Bytef *)regionInfo->start + it->start;
         size_t length = it->stop - it->start;
 
-        unsigned __call = Writer::beginEnter(&memcpy_sig);
+        unsigned __call = LocalWriter::beginEnter(&memcpy_sig);
         Writer::beginArg(0);
-        Writer::writeOpaque(p);
+        Writer::writePointer((uintptr_t)p);
         Writer::endArg();
         Writer::beginArg(1);
         Writer::writeBlob(p, length);
@@ -354,7 +415,7 @@ void LocalWriter::updateRegion(const void *ptr, size_t size) {
 
 #endif
 
-    os::releaseMutex();
+    mutex.unlock();
 }
 
 

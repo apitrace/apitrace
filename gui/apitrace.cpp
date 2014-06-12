@@ -8,8 +8,7 @@
 #include <QThread>
 
 ApiTrace::ApiTrace()
-    : m_frameMarker(ApiTrace::FrameMarker_SwapBuffers),
-      m_needsSaving(false)
+    : m_needsSaving(false)
 {
     m_loader = new TraceLoader();
 
@@ -20,11 +19,11 @@ ApiTrace::ApiTrace()
     connect(m_loader, SIGNAL(framesLoaded(const QList<ApiTraceFrame*>)),
             this, SLOT(addFrames(const QList<ApiTraceFrame*>)));
     connect(m_loader,
-            SIGNAL(frameContentsLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)),
+            SIGNAL(frameContentsLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>, QVector<ApiTraceCall*>,quint64)),
             this,
-            SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,quint64)));
-    connect(m_loader, SIGNAL(finishedParsing()),
-            this, SLOT(finishedParsing()));
+            SLOT(loaderFrameLoaded(ApiTraceFrame*,QVector<ApiTraceCall*>,QVector<ApiTraceCall*>,quint64)));
+    connect(m_loader, SIGNAL(guessedApi(int)),
+            this, SLOT(guessedApi(int)));
     connect(this, SIGNAL(loaderSearch(ApiTrace::SearchRequest)),
             m_loader, SLOT(search(ApiTrace::SearchRequest)));
     connect(m_loader,
@@ -73,31 +72,6 @@ ApiTrace::~ApiTrace()
     delete m_saver;
 }
 
-bool ApiTrace::isCallAFrameMarker(const ApiTraceCall *call,
-                                  ApiTrace::FrameMarker marker)
-{
-    if (!call) {
-        return false;
-    }
-
-    switch (marker) {
-    case FrameMarker_SwapBuffers:
-        return call->name().contains(QLatin1String("SwapBuffers")) ||
-               call->name() == QLatin1String("CGLFlushDrawable") ||
-               call->name() == QLatin1String("glFrameTerminatorGREMEDY");
-    case FrameMarker_Flush:
-        return call->name() == QLatin1String("glFlush");
-    case FrameMarker_Finish:
-        return call->name() == QLatin1String("glFinish");
-    case FrameMarker_Clear:
-        return call->name() == QLatin1String("glClear");
-    }
-
-    Q_ASSERT(!"unknown frame marker");
-
-    return false;
-}
-
 bool ApiTrace::isEmpty() const
 {
     return m_frames.isEmpty();
@@ -112,12 +86,7 @@ QString ApiTrace::fileName() const
     return m_fileName;
 }
 
-ApiTrace::FrameMarker ApiTrace::frameMarker() const
-{
-    return m_frameMarker;
-}
-
-QList<ApiTraceFrame*> ApiTrace::frames() const
+const QList<ApiTraceFrame*> & ApiTrace::frames() const
 {
     return m_frames;
 }
@@ -136,7 +105,7 @@ int ApiTrace::numCallsInFrame(int idx) const
 {
     const ApiTraceFrame *frame = frameAt(idx);
     if (frame) {
-        return frame->numChildren();
+        return frame->numTotalCalls();
     } else {
         return 0;
     }
@@ -259,7 +228,7 @@ bool ApiTrace::isSaving() const
 
 bool ApiTrace::hasErrors() const
 {
-    return !m_errors.isEmpty();
+    return !m_errors.isEmpty() || !m_queuedErrors.isEmpty();
 }
 
 void ApiTrace::loadFrame(ApiTraceFrame *frame)
@@ -271,23 +240,36 @@ void ApiTrace::loadFrame(ApiTraceFrame *frame)
     }
 }
 
+void ApiTrace::guessedApi(int api)
+{
+    m_api = static_cast<trace::API>(api);
+}
+
+trace::API ApiTrace::api() const
+{
+    return m_api;
+}
+
 void ApiTrace::finishedParsing()
 {
-    ApiTraceFrame *firstFrame = m_frames[0];
-    if (firstFrame && !firstFrame->isLoaded()) {
-        loadFrame(firstFrame);
+    if (!m_frames.isEmpty()) {
+        ApiTraceFrame *firstFrame = m_frames[0];
+        if (firstFrame && !firstFrame->isLoaded()) {
+            loadFrame(firstFrame);
+        }
     }
 }
 
 void ApiTrace::loaderFrameLoaded(ApiTraceFrame *frame,
+                                 const QVector<ApiTraceCall*> &topLevelItems,
                                  const QVector<ApiTraceCall*> &calls,
                                  quint64 binaryDataSize)
 {
-    Q_ASSERT(frame->numChildrenToLoad() == calls.size());
+    Q_ASSERT(frame->numChildrenToLoad() >= calls.size());
 
     if (!frame->isLoaded()) {
         emit beginLoadingFrame(frame, calls.size());
-        frame->setCalls(calls, binaryDataSize);
+        frame->setCalls(topLevelItems, calls, binaryDataSize);
         emit endLoadingFrame(frame);
         m_loadingFrames.remove(frame);
     }
@@ -410,6 +392,9 @@ void ApiTrace::loaderSearchResult(const ApiTrace::SearchRequest &request,
 
 void ApiTrace::findFrameStart(ApiTraceFrame *frame)
 {
+    if (!frame)
+        return;
+
     if (frame->isLoaded()) {
         emit foundFrameStart(frame);
     } else {
@@ -419,6 +404,9 @@ void ApiTrace::findFrameStart(ApiTraceFrame *frame)
 
 void ApiTrace::findFrameEnd(ApiTraceFrame *frame)
 {
+    if (!frame)
+        return;
+
     if (frame->isLoaded()) {
         emit foundFrameEnd(frame);
     } else {
@@ -452,10 +440,10 @@ int ApiTrace::callInFrame(int callIdx) const
 {
     unsigned numCalls = 0;
 
-    for (int frameIdx = 0; frameIdx <= m_frames.size(); ++frameIdx) {
+    for (int frameIdx = 0; frameIdx < m_frames.size(); ++frameIdx) {
         const ApiTraceFrame *frame = m_frames[frameIdx];
         unsigned numCallsInFrame =  frame->isLoaded()
-                ? frame->numChildren()
+                ? frame->numTotalCalls()
                 : frame->numChildrenToLoad();
         unsigned firstCall = numCalls;
         unsigned endCall = numCalls + numCallsInFrame;
@@ -496,6 +484,23 @@ void ApiTrace::setCallError(const ApiTraceError &error)
 bool ApiTrace::isFrameLoading(ApiTraceFrame *frame) const
 {
     return m_loadingFrames.contains(frame);
+}
+
+void ApiTrace::bindThumbnailsToFrames(const QList<QImage> &thumbnails)
+{
+    QList<ApiTraceFrame *> frames = m_frames;
+
+    QList<QImage>::const_iterator thumbnail = thumbnails.begin();
+
+    foreach (ApiTraceFrame *frame, frames) {
+        if (thumbnail != thumbnails.end()) {
+            frame->setThumbnail(*thumbnail);
+
+            ++thumbnail;
+
+            emit changed(frame);
+        }
+    }
 }
 
 #include "apitrace.moc"

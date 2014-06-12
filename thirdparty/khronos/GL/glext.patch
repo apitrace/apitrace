@@ -1,0 +1,18 @@
+# MacOSX doesn't follow the official glext.h definition for GLhandleARB, and
+# instead defines it as:
+#
+#   typedef void *GLhandleARB;
+#
+# But to avoid integer to pointer conversion issues, we simply use 'unsigned
+# long' which should be the same size on all supported architectures.
+--- glext.h.orig	2013-11-26 12:42:37.000000000 +0000
++++ glext.h	2013-11-29 16:49:59.038657928 +0000
+@@ -3555,7 +3555,7 @@
+ #ifndef GL_ARB_shader_objects
+ #define GL_ARB_shader_objects 1
+ #ifdef __APPLE__
+-typedef void *GLhandleARB;
++typedef unsigned long GLhandleARB;
+ #else
+ typedef unsigned int GLhandleARB;
+ #endif

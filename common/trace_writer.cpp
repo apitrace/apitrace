@@ -29,12 +29,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 #include "os.hpp"
 #include "trace_file.hpp"
 #include "trace_writer.hpp"
 #include "trace_format.hpp"
-
 
 namespace trace {
 
@@ -71,6 +71,7 @@ Writer::open(const char *filename) {
     structs.clear();
     enums.clear();
     bitmasks.clear();
+    frames.clear();
 
     _writeUInt(TRACE_VERSION);
 
@@ -134,8 +135,44 @@ inline bool lookup(std::vector<bool> &map, size_t index) {
     }
 }
 
-unsigned Writer::beginEnter(const FunctionSig *sig) {
+void Writer::beginBacktrace(unsigned num_frames) {
+    if (num_frames) {
+        _writeByte(trace::CALL_BACKTRACE);
+        _writeUInt(num_frames);
+    }
+}
+
+void Writer::writeStackFrame(const RawStackFrame *frame) {
+    _writeUInt(frame->id);
+    if (!lookup(frames, frame->id)) {
+        if (frame->module != NULL) {
+            _writeByte(trace::BACKTRACE_MODULE);
+            _writeString(frame->module);
+        }
+        if (frame->function != NULL) {
+            _writeByte(trace::BACKTRACE_FUNCTION);
+            _writeString(frame->function);
+        }
+        if (frame->filename != NULL) {
+            _writeByte(trace::BACKTRACE_FILENAME);
+            _writeString(frame->filename);
+        }
+        if (frame->linenumber >= 0) {
+            _writeByte(trace::BACKTRACE_LINENUMBER);
+            _writeUInt(frame->linenumber);
+        }
+        if (frame->offset >= 0) {
+            _writeByte(trace::BACKTRACE_OFFSET);
+            _writeUInt(frame->offset);
+        }
+        _writeByte(trace::BACKTRACE_END);
+        frames[frame->id] = true;
+    }
+}
+
+unsigned Writer::beginEnter(const FunctionSig *sig, unsigned thread_id) {
     _writeByte(trace::EVENT_ENTER);
+    _writeUInt(thread_id);
     _writeUInt(sig->id);
     if (!lookup(functions, sig->id)) {
         _writeString(sig->name);
@@ -187,6 +224,10 @@ void Writer::beginStruct(const StructSig *sig) {
         }
         structs[sig->id] = true;
     }
+}
+
+void Writer::beginRepr(void) {
+    _writeByte(trace::TYPE_REPR);
 }
 
 void Writer::writeBool(bool value) {
@@ -258,14 +299,18 @@ void Writer::writeBlob(const void *data, size_t size) {
     }
 }
 
-void Writer::writeEnum(const EnumSig *sig) {
+void Writer::writeEnum(const EnumSig *sig, signed long long value) {
     _writeByte(trace::TYPE_ENUM);
     _writeUInt(sig->id);
     if (!lookup(enums, sig->id)) {
-        _writeString(sig->name);
-        Writer::writeSInt(sig->value);
+        _writeUInt(sig->num_values);
+        for (unsigned i = 0; i < sig->num_values; ++i) {
+            _writeString(sig->values[i].name);
+            writeSInt(sig->values[i].value);
+        }
         enums[sig->id] = true;
     }
+    writeSInt(value);
 }
 
 void Writer::writeBitmask(const BitmaskSig *sig, unsigned long long value) {
@@ -289,13 +334,13 @@ void Writer::writeNull(void) {
     _writeByte(trace::TYPE_NULL);
 }
 
-void Writer::writeOpaque(const void *addr) {
+void Writer::writePointer(unsigned long long addr) {
     if (!addr) {
         Writer::writeNull();
         return;
     }
     _writeByte(trace::TYPE_OPAQUE);
-    _writeUInt((size_t)addr);
+    _writeUInt(addr);
 }
 
 

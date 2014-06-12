@@ -1,6 +1,7 @@
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 
+#include "trace_api.hpp"
 #include "apitracefilter.h"
 #include "ui_settings.h"
 #include <QDialog>

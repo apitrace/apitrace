@@ -1,5 +1,43 @@
-This file lists the major user visible improvments.  For a full list of changes
+This file lists the major user visible improvements.  For a full list of changes
 and their authors see the git history.
+
+
+Version 4.0
+===========
+
+* Support tracing in Android, both native and Dalvik applications.
+
+* Show frame thumbnails in the GUI.
+
+* Basic D3D 10.1, 11, and 11.1 trace support.
+
+* Multi-threaded trace/retrace support.
+
+* Several OpenGL ES state dump fixes.
+
+* GPU profiling.
+
+* Thumbnails in GUI
+
+* Trim improvements.
+
+* Loads of bugfixes
+
+
+Version 3.0
+===========
+
+* Top-level `apitrace` command.
+
+* Trace and replay support for EGL, GLES1, and GLES2 APIs on Linux.
+
+* Ability to trim traces.
+
+* Basic CPU profiling when retracing.
+
+* Basic D3D10 trace support.
+
+* Many bugfixes.
 
 
 Version 2.0
@@ -31,4 +69,4 @@ Version 1.0
 Pre-history
 ===========
 
-* OpenGL retrace support.
+* OpenGL replay support.

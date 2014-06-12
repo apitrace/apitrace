@@ -60,12 +60,16 @@ public:
         writer.writeFloat(node->value);
     }
 
+    void visit(Double *node) {
+        writer.writeDouble(node->value);
+    }
+
     void visit(String *node) {
         writer.writeString(node->value);
     }
 
     void visit(Enum *node) {
-        writer.writeEnum(node->sig);
+        writer.writeEnum(node->sig, node->value);
     }
 
     void visit(Bitmask *node) {
@@ -93,15 +97,29 @@ public:
     }
 
     void visit(Pointer *node) {
-        writer.writeOpaque((const void *) (size_t) node->value);
+        writer.writePointer(node->value);
+    }
+
+    void visit(Repr *node) {
+        writer.beginRepr();
+        _visit(node->humanValue);
+        _visit(node->machineValue);
+        writer.endRepr();
     }
 
     void visit(Call *call) {
-        unsigned call_no = writer.beginEnter(call->sig);
+        unsigned call_no = writer.beginEnter(call->sig, call->thread_id);
+        if (call->backtrace != NULL) {
+            writer.beginBacktrace(call->backtrace->size());
+            for (unsigned i = 0; i < call->backtrace->size(); ++i) {
+                writer.writeStackFrame((*call->backtrace)[i]);
+            }
+            writer.endBacktrace();
+        }
         for (unsigned i = 0; i < call->args.size(); ++i) {
-            if (call->args[i]) {
+            if (call->args[i].value) {
                 writer.beginArg(i);
-                _visit(call->args[i]);
+                _visit(call->args[i].value);
                 writer.endArg();
             }
         }

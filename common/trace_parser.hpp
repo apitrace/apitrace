@@ -33,6 +33,7 @@
 #include "trace_file.hpp"
 #include "trace_format.hpp"
 #include "trace_model.hpp"
+#include "trace_api.hpp"
 
 
 namespace trace {
@@ -59,6 +60,10 @@ protected:
     typedef std::list<Call *> CallList;
     CallList calls;
 
+    struct FunctionSigFlags : public FunctionSig {
+        CallFlags flags;
+    };
+
     // Helper template that extends a base signature structure, with additional
     // parsing information.
     template< class T >
@@ -66,28 +71,34 @@ protected:
         // Offset in the file of where signature was defined.  It is used when
         // reparsing to determine whether the signature definition is to be
         // expected next or not.
-        File::Offset offset;
+        File::Offset fileOffset;
     };
 
-    typedef SigState<FunctionSig> FunctionSigState;
+    typedef SigState<FunctionSigFlags> FunctionSigState;
     typedef SigState<StructSig> StructSigState;
     typedef SigState<EnumSig> EnumSigState;
     typedef SigState<BitmaskSig> BitmaskSigState;
+    typedef SigState<StackFrame> StackFrameState;
 
     typedef std::vector<FunctionSigState *> FunctionMap;
     typedef std::vector<StructSigState *> StructMap;
     typedef std::vector<EnumSigState *> EnumMap;
     typedef std::vector<BitmaskSigState *> BitmaskMap;
+    typedef std::vector<StackFrameState *> StackFrameMap;
 
     FunctionMap functions;
     StructMap structs;
     EnumMap enums;
     BitmaskMap bitmasks;
+    StackFrameMap frames;
+
+    FunctionSig *glGetErrorSig;
 
     unsigned next_call_no;
 
 public:
     unsigned long long version;
+    API api;
 
     Parser();
 
@@ -122,11 +133,15 @@ public:
 protected:
     Call *parse_call(Mode mode);
 
-    FunctionSig *parse_function_sig(void);
+    FunctionSigFlags *parse_function_sig(void);
     StructSig *parse_struct_sig();
+    EnumSig *parse_old_enum_sig();
     EnumSig *parse_enum_sig();
     BitmaskSig *parse_bitmask_sig();
     
+    static CallFlags
+    lookupCallFlags(const char *name);
+
     Call *parse_Call(Mode mode);
 
     void parse_enter(Mode mode);
@@ -134,6 +149,11 @@ protected:
     Call *parse_leave(Mode mode);
 
     bool parse_call_details(Call *call, Mode mode);
+
+    bool parse_call_backtrace(Call *call, Mode mode);
+    StackFrame * parse_backtrace_frame(Mode mode);
+
+    void adjust_call_flags(Call *call);
 
     void parse_arg(Call *call, Mode mode);
 
@@ -181,8 +201,14 @@ protected:
     Value *parse_opaque();
     void scan_opaque();
 
+    Value *parse_repr();
+    void scan_repr();
+
     const char * read_string(void);
     void skip_string(void);
+
+    signed long long read_sint(void);
+    void skip_sint(void);
 
     unsigned long long read_uint(void);
     void skip_uint(void);

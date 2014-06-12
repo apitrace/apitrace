@@ -39,10 +39,12 @@ import operator
 from PIL import Image
 from PIL import ImageChops
 from PIL import ImageEnhance
+from PIL import ImageFilter
 
 
-thumb_size = 320, 320
+thumbSize = 320
 
+gaussian_kernel = ImageFilter.Kernel((3, 3), [1, 2, 1, 2, 4, 2, 1, 2, 1], 16)
 
 class Comparer:
     '''Image comparer.'''
@@ -65,7 +67,13 @@ class Comparer:
 
         self.diff = ImageChops.difference(self.src_im, self.ref_im)
 
+    def size_mismatch(self):
+        return self.ref_im.size != self.src_im.size
+
     def write_diff(self, diff_image, fuzz = 0.05):
+        if self.size_mismatch():
+            return
+
         # make a difference image similar to ImageMagick's compare utility
         mask = ImageEnhance.Brightness(self.diff).enhance(1.0/fuzz)
         mask = mask.convert('L')
@@ -77,9 +85,16 @@ class Comparer:
         diff_im = Image.blend(self.src_im, diff_im, 0xcc/255.0)
         diff_im.save(diff_image)
 
-    def precision(self):
+    def precision(self, filter=False):
+        if self.size_mismatch():
+            return 0.0
+
+        diff = self.diff
+        if filter:
+            diff = diff.filter(gaussian_kernel)
+
         # See also http://effbot.org/zone/pil-comparing-images.htm
-        h = self.diff.histogram()
+        h = diff.histogram()
         square_error = 0
         for i in range(1, 256):
             square_error += sum(h[i : 3*256: 256])*i*i
@@ -87,8 +102,12 @@ class Comparer:
         bits = -math.log(rel_error)/math.log(2.0)
         return bits
 
-    def ae(self):
+    def ae(self, fuzz = 0.05):
         # Compute absolute error
+
+        if self.size_mismatch():
+            return sys.maxint
+
         # TODO: this is approximate due to the grayscale conversion
         h = self.diff.convert('L').histogram()
         ae = sum(h[int(255 * fuzz) + 1 : 256])
@@ -103,7 +122,18 @@ def surface(html, image):
            and (not os.path.exists(thumb) \
                 or os.path.getmtime(thumb) < os.path.getmtime(image)):
             im = Image.open(image)
-            im.thumbnail(thumb_size)
+            imageWidth, imageHeight = im.size
+            if imageWidth <= thumbSize and imageHeight <= thumbSize:
+                if imageWidth >= imageHeight:
+                    imageHeight = imageHeight*thumbSize/imageWidth
+                    imageWidth = thumbSize
+                else:
+                    imageWidth = imageWidth*thumbSize/imageHeight
+                    imageHeight = thumbSize
+                html.write('        <td><img src="%s" width="%u" height="%u"/></td>\n' % (image, imageWidth, imageHeight))
+                return
+
+            im.thumbnail((thumbSize, thumbSize))
             im.save(thumb)
     else:
         thumb = image
@@ -111,14 +141,13 @@ def surface(html, image):
 
 
 def is_image(path):
-    return \
-        path.endswith('.png') \
-        and not path.endswith('.diff.png') \
-        and not path.endswith('.thumb.png')
+    name = os.path.basename(path)
+    name, ext1 = os.path.splitext(name)
+    name, ext2 = os.path.splitext(name)
+    return ext1 in ('.png', '.bmp') and ext2 not in ('.diff', '.thumb')
 
 
 def find_images(prefix):
-    prefix = os.path.abspath(prefix)
     if os.path.isdir(prefix):
         prefix_dir = prefix
     else:
@@ -138,8 +167,11 @@ def main():
     global options
 
     optparser = optparse.OptionParser(
-        usage="\n\t%prog [options] <ref_prefix> <src_prefix>",
-        version="%%prog")
+        usage="\n\t%prog [options] <ref_prefix> <src_prefix>")
+    optparser.add_option(
+        '-v', '--verbose',
+        action="store_true", dest="verbose", default=False,
+        help="verbose output")
     optparser.add_option(
         '-o', '--output', metavar='FILE',
         type="string", dest="output", default='index.html',
@@ -149,9 +181,17 @@ def main():
         type="float", dest="fuzz", default=0.05,
         help="fuzz ratio [default: %default]")
     optparser.add_option(
+        '-a', '--alpha',
+        action="store_true", dest="alpha", default=False,
+        help="take alpha channel in consideration")
+    optparser.add_option(
         '--overwrite',
         action="store_true", dest="overwrite", default=False,
-        help="overwrite")
+        help="overwrite images")
+    optparser.add_option(
+        '--show-all',
+        action="store_true", dest="show_all", default=False,
+        help="show all images, including similar ones")
 
     (options, args) = optparser.parse_args(sys.argv[1:])
 
@@ -173,31 +213,46 @@ def main():
     html.write('<html>\n')
     html.write('  <body>\n')
     html.write('    <table border="1">\n')
-    html.write('      <tr><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
+    html.write('      <tr><th>File</th><th>%s</th><th>%s</th><th>&Delta;</th></tr>\n' % (ref_prefix, src_prefix))
+    failures = 0
     for image in images:
         ref_image = ref_prefix + image
         src_image = src_prefix + image
         root, ext = os.path.splitext(src_image)
         delta_image = "%s.diff.png" % (root, )
         if os.path.exists(ref_image) and os.path.exists(src_image):
-            if options.overwrite \
-               or not os.path.exists(delta_image) \
-               or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
-                   and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
-
-                comparer = Comparer(ref_image, src_image)
-                comparer.write_diff(delta_image, fuzz=options.fuzz)
-
+            if options.verbose:
+                sys.stdout.write('Comparing %s and %s ...' % (ref_image, src_image))
+            comparer = Comparer(ref_image, src_image, options.alpha)
+            match = comparer.ae(fuzz=options.fuzz) == 0
+            if match:
+                result = 'MATCH'
+                bgcolor = '#20ff20'
+            else:
+                result = 'MISMATCH'
+                failures += 1
+                bgcolor = '#ff2020'
+            if options.verbose:
+                sys.stdout.write(' %s\n' % (result,))
             html.write('      <tr>\n')
-            surface(html, ref_image)
-            surface(html, src_image)
-            surface(html, delta_image)
+            html.write('        <td bgcolor="%s"><a href="%s">%s<a/></td>\n' % (bgcolor, ref_image, image))
+            if not match or options.show_all:
+                if options.overwrite \
+                   or not os.path.exists(delta_image) \
+                   or (os.path.getmtime(delta_image) < os.path.getmtime(ref_image) \
+                       and os.path.getmtime(delta_image) < os.path.getmtime(src_image)):
+                    comparer.write_diff(delta_image, fuzz=options.fuzz)
+                surface(html, ref_image)
+                surface(html, src_image)
+                surface(html, delta_image)
             html.write('      </tr>\n')
             html.flush()
     html.write('    </table>\n')
     html.write('  </body>\n')
     html.write('</html>\n')
 
+    if failures:
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

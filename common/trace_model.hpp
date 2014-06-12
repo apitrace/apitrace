@@ -32,13 +32,18 @@
 
 
 #include <assert.h>
+#include <stdlib.h>
 
 #include <map>
 #include <vector>
-#include <iostream>
+#include <ostream>
 
 
 namespace trace {
+
+
+// Should match Call::no
+typedef unsigned CallNo;
 
 
 typedef unsigned Id;
@@ -60,10 +65,16 @@ struct StructSig {
 };
 
 
-struct EnumSig {
-    Id id;
+struct EnumValue {
     const char *name;
     signed long long value;
+};
+
+
+struct EnumSig {
+    Id id;
+    unsigned num_values;
+    const EnumValue *values;
 };
 
 
@@ -81,6 +92,9 @@ struct BitmaskSig {
 
 
 class Visitor;
+class Null;
+class Struct;
+class Array;
 
 
 class Value
@@ -100,9 +114,16 @@ public:
     virtual unsigned long long toUIntPtr(void) const;
     virtual const char *toString(void) const;
 
-    const Value & operator[](size_t index) const;
+    virtual const Null *toNull(void) const { return NULL; }
+    virtual Null *toNull(void) { return NULL; }
 
-    void dump(std::ostream &os, bool color=true);
+    virtual const Array *toArray(void) const { return NULL; }
+    virtual Array *toArray(void) { return NULL; }
+
+    virtual const Struct *toStruct(void) const { return NULL; }
+    virtual Struct *toStruct(void) { return NULL; }
+
+    Value & operator[](size_t index) const;
 };
 
 
@@ -119,6 +140,9 @@ public:
     unsigned long long toUIntPtr(void) const;
     const char *toString(void) const;
     void visit(Visitor &visitor);
+
+    const Null *toNull(void) const { return this; }
+    Null *toNull(void) { return this; }
 };
 
 
@@ -173,7 +197,23 @@ public:
 class Float : public Value
 {
 public:
-    Float(double _value) : value(_value) {}
+    Float(float _value) : value(_value) {}
+
+    bool toBool(void) const;
+    signed long long toSInt(void) const;
+    unsigned long long toUInt(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
+    void visit(Visitor &visitor);
+
+    float value;
+};
+
+
+class Double : public Value
+{
+public:
+    Double(double _value) : value(_value) {}
 
     bool toBool(void) const;
     signed long long toSInt(void) const;
@@ -200,19 +240,25 @@ public:
 };
 
 
-class Enum : public Value
+class Enum : public SInt
 {
 public:
-    Enum(const EnumSig *_sig) : sig(_sig) {}
+    Enum(const EnumSig *_sig, signed long long _value) : SInt(_value), sig(_sig) {}
 
-    bool toBool(void) const;
-    signed long long toSInt(void) const;
-    unsigned long long toUInt(void) const;
-    virtual float toFloat(void) const;
-    virtual double toDouble(void) const;
     void visit(Visitor &visitor);
 
     const EnumSig *sig;
+
+    const EnumValue *
+    lookup() {
+        // TODO: use a std::map
+        for (const EnumValue *it = sig->values; it != sig->values + sig->num_values; ++it) {
+            if (it->value == value) {
+                return it;
+            }
+        }
+        return NULL;
+    }
 };
 
 
@@ -236,6 +282,9 @@ public:
     bool toBool(void) const;
     void visit(Visitor &visitor);
 
+    const Struct *toStruct(void) const { return this; }
+    Struct *toStruct(void) { return this; }
+
     const StructSig *sig;
     std::vector<Value *> members;
 };
@@ -250,7 +299,15 @@ public:
     bool toBool(void) const;
     void visit(Visitor &visitor);
 
+    const Array *toArray(void) const { return this; }
+    Array *toArray(void) { return this; }
+
     std::vector<Value *> values;
+
+    inline size_t
+    size(void) const {
+        return values.size();
+    }
 };
 
 
@@ -289,6 +346,74 @@ public:
 };
 
 
+class Repr : public Value
+{
+public:
+    Repr(Value *human, Value *machine) :
+        humanValue(human),
+        machineValue(machine)
+    {}
+
+    /** Human-readible value */
+    Value *humanValue;
+
+    /** Machine-readible value */
+    Value *machineValue;
+    
+    virtual bool toBool(void) const;
+    virtual signed long long toSInt(void) const;
+    virtual unsigned long long toUInt(void) const;
+    virtual float toFloat(void) const;
+    virtual double toDouble(void) const;
+
+    virtual void *toPointer(void) const;
+    virtual void *toPointer(bool bind);
+    virtual unsigned long long toUIntPtr(void) const;
+    virtual const char *toString(void) const;
+
+    void visit(Visitor &visitor);
+};
+
+struct RawStackFrame {
+    Id id;
+    const char * module;
+    const char * function;
+    const char * filename;
+    int linenumber;
+    long long offset;
+    RawStackFrame() :
+        module(0),
+        function(0),
+        filename(0),
+        linenumber(-1),
+        offset(-1)
+    {
+    }
+
+    void dump(std::ostream &os) {
+        os << (this->module ? this->module : "?");
+        if (this->function != NULL) {
+            os << ": " << this->function;
+        }
+        if (this->offset >= 0) {
+            os << "+0x" << std::hex << this->offset << std::dec;
+        }
+        if (this->filename != NULL) {
+            os << ": " << this->filename;
+            if (this->linenumber >= 0) {
+                os << ":" << this->linenumber;
+            }
+        }
+    }
+};
+
+class StackFrame : public RawStackFrame {
+public:
+    ~StackFrame();
+};
+
+typedef std::vector<StackFrame *> Backtrace;
+
 class Visitor
 {
 public:
@@ -297,6 +422,7 @@ public:
     virtual void visit(SInt *);
     virtual void visit(UInt *);
     virtual void visit(Float *);
+    virtual void visit(Double *);
     virtual void visit(String *);
     virtual void visit(Enum *);
     virtual void visit(Bitmask *);
@@ -304,7 +430,7 @@ public:
     virtual void visit(Array *);
     virtual void visit(Blob *);
     virtual void visit(Pointer *);
-
+    virtual void visit(Repr *);
 protected:
     inline void _visit(Value *value) {
         if (value) { 
@@ -314,42 +440,132 @@ protected:
 };
 
 
-inline std::ostream & operator <<(std::ostream &os, Value *value) {
-    if (value) {
-        value->dump(os);
-    }
-    return os;
-}
+typedef unsigned CallFlags;
+
+/**
+ * Call flags.
+ *
+ * TODO: It might be better to to record some of these (but not all) into the
+ * trace file.
+ */
+enum {
+
+    /**
+     * Whether a call was really done by the application or not.
+     *
+     * This flag is set for fake calls -- calls not truly done by the application
+     * but emitted and recorded for completeness, to provide contextual information
+     * necessary for retracing, that would not be available through other ways.
+     *
+     * XXX: This one definetely needs to go into the trace file.
+     */
+    CALL_FLAG_FAKE                      = (1 << 0),
+
+    /**
+     * Whether this call should be retraced or ignored.
+     *
+     * This flag is set for calls which can't be safely replayed (due to incomplete
+     * information) or that have no sideffects.
+     *
+     * Some incomplete calls are unreproduceable, but not all.
+     */
+    CALL_FLAG_NON_REPRODUCIBLE         = (1 << 1),
+    
+    /**
+     * Whether this call has no side-effects, therefore don't need to be
+     * retraced.
+     *
+     * This flag is set for calls that merely query information which is not
+     * needed for posterior calls.
+     */
+    CALL_FLAG_NO_SIDE_EFFECTS            = (1 << 2),
+
+    /**
+     * Whether this call renders into the bound rendertargets.
+     */
+    CALL_FLAG_RENDER                    = (1 << 3),
+
+    /**
+     * Whether this call causes render target to be swapped.
+     *
+     * This does not mark frame termination by itself -- that's solely the
+     * responsibility of `endOfFrame` bit. 
+     *
+     * This mean that snapshots should be take prior to the call, and not
+     * after.
+     */
+    CALL_FLAG_SWAP_RENDERTARGET         = (1 << 4),
+        
+    /**
+     * Whether this call terminates a frame.
+     *
+     * XXX: This can't always be determined by the function name, so it should also
+     * go into the trace file eventually.
+     */
+    CALL_FLAG_END_FRAME                 = (1 << 5),
+
+    /**
+     * Whether this call is incomplete, i.e., it never returned.
+     */
+    CALL_FLAG_INCOMPLETE                = (1 << 6),
+
+    /**
+     * Whether this call is verbose (i.e., not usually interesting).
+     */
+    CALL_FLAG_VERBOSE                  = (1 << 7),
+
+    /**
+     * String markers.
+     */
+    CALL_FLAG_MARKER                    = (1 << 8),
+    CALL_FLAG_MARKER_PUSH               = (1 << 9),
+    CALL_FLAG_MARKER_POP                = (1 << 10),
+};
+
+
+struct Arg
+{
+    Value *value;
+};
 
 
 class Call
 {
 public:
+    unsigned thread_id;
     unsigned no;
     const FunctionSig *sig;
-    std::vector<Value *> args;
+    std::vector<Arg> args;
     Value *ret;
 
-    Call(FunctionSig *_sig) : sig(_sig), args(_sig->num_args), ret(0) { }
+    CallFlags flags;
+    Backtrace* backtrace;
+
+    Call(const FunctionSig *_sig, const CallFlags &_flags, unsigned _thread_id) :
+        thread_id(_thread_id), 
+        sig(_sig), 
+        args(_sig->num_args), 
+        ret(0),
+        flags(_flags),
+        backtrace(0) {
+    }
+
     ~Call();
 
-    inline const char * name(void) const {
+    inline const char *
+    name(void) const {
         return sig->name;
     }
 
-    inline Value & arg(unsigned index) {
+    inline Value &
+    arg(unsigned index) {
         assert(index < args.size());
-        return *(args[index]);
+        return *(args[index].value);
     }
 
-    void dump(std::ostream &os, bool color=true);
+    Value &
+    argByName(const char *argName);
 };
-
-
-inline std::ostream & operator <<(std::ostream &os, Call &call) {
-    call.dump(os);
-    return os;
-}
 
 
 } /* namespace trace */

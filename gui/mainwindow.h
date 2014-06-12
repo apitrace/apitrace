@@ -3,10 +3,13 @@
 
 #include "ui_mainwindow.h"
 
+#include "trace_api.hpp"
 #include "apitrace.h"
 
 #include <QMainWindow>
 #include <QProcess>
+#include <QList>
+#include <QImage>
 
 class ApiTrace;
 class ApiTraceCall;
@@ -26,7 +29,11 @@ class Retracer;
 class SearchWidget;
 class ShadersSourceWidget;
 class TraceProcess;
+class TrimProcess;
+class ProfileDialog;
 class VertexDataInterpreter;
+
+namespace trace { struct Profile; }
 
 class MainWindow : public QMainWindow
 {
@@ -36,21 +43,29 @@ public:
     ~MainWindow();
 
 public slots:
-    void loadTrace(const QString &fileName);
+    void loadTrace(const QString &fileName, int callNum = -1);
+
+    void setRemoteTarget(const QString &host);
 
 private slots:
     void callItemSelected(const QModelIndex &index);
+    void callItemActivated(const QModelIndex &index);
     void createTrace();
     void openTrace();
     void replayStart();
+    void replayProfile();
     void replayStop();
-    void replayFinished(const QString &output);
+    void replayFinished(const QString &message);
     void replayStateFound(ApiTraceState *state);
+    void replayProfileFound(trace::Profile *state);
+    void replayThumbnailsFound(const QList<QImage> &thumbnails);
     void replayError(const QString &msg);
     void startedLoadingTrace();
     void loadProgess(int percent);
     void finishedLoadingTrace();
     void lookupState();
+    void showThumbnails();
+    void trim();
     void showSettings();
     void openHelp(const QUrl &url);
     void showSurfacesMenu(const QPoint &pos);
@@ -60,6 +75,8 @@ private slots:
     void slotJumpTo(int callNum);
     void createdTrace(const QString &path);
     void traceError(const QString &msg);
+    void createdTrim(const QString &path);
+    void trimError(const QString &msg);
     void slotSearch();
     void slotSearchNext(const QString &str, Qt::CaseSensitivity sensitivity);
     void slotSearchPrev(const QString &str, Qt::CaseSensitivity sensitivity);
@@ -70,7 +87,7 @@ private slots:
     void slotSaved();
     void slotGoFrameStart();
     void slotGoFrameEnd();
-    void slotTraceChanged(ApiTraceCall *call);
+    void slotTraceChanged(ApiTraceEvent *event);
     void slotRetraceErrors(const QList<ApiTraceError> &errors);
     void slotErrorSelected(QTreeWidgetItem *current);
     void slotSearchResult(const ApiTrace::SearchRequest &request,
@@ -83,8 +100,10 @@ private slots:
 private:
     void initObjects();
     void initConnections();
+    void updateActionsState(bool traceLoaded, bool stopped = true);
     void newTraceFile(const QString &fileName);
-    void replayTrace(bool dumpState);
+    void replayTrace(bool dumpState, bool dumpThumbnails);
+    void trimEvent();
     void fillStateForFrame();
 
     /* there's a difference between selected frame/call and
@@ -96,20 +115,27 @@ private:
     ApiTraceFrame *currentFrame() const;
     ApiTraceCall *currentCall() const;
 
+protected:
+    virtual void closeEvent(QCloseEvent * event);
 
 private:
     Ui_MainWindow m_ui;
     ShadersSourceWidget *m_sourcesWidget;
 
+    trace::API m_api;
+
     ApiTrace *m_trace;
     ApiTraceModel *m_model;
     ApiTraceFilter *m_proxyModel;
+    int m_initalCallNum;
 
     QProgressBar *m_progressBar;
 
     ApiTraceEvent *m_selectedEvent;
 
     ApiTraceEvent *m_stateEvent;
+
+    ApiTraceEvent *m_trimEvent;
 
     Retracer *m_retracer;
 
@@ -120,9 +146,13 @@ private:
 
     TraceProcess *m_traceProcess;
 
+    TrimProcess *m_trimProcess;
+
     ArgumentsEditor *m_argsEditor;
 
     ApiTraceEvent *m_nonDefaultsLookupEvent;
+
+    ProfileDialog* m_profileDialog;
 };
 
 
