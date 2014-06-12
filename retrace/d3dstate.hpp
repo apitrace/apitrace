@@ -38,6 +38,7 @@ struct IDXGISwapChain;
 struct ID3D10Device;
 struct ID3D10Resource;
 struct ID3D11DeviceContext;
+struct ID3D11Resource;
 
 
 class JSONWriter;

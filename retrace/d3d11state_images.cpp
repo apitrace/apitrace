@@ -33,6 +33,7 @@
 #include "json.hpp"
 #include "image.hpp"
 #include "d3d11imports.hpp"
+#include "d3d11state.hpp"
 #include "d3d10state.hpp"
 #include "dxgistate.hpp"
 
@@ -148,7 +149,7 @@ stageResource(ID3D11DeviceContext *pDeviceContext,
     return hr;
 }
 
-static image::Image *
+image::Image *
 getSubResourceImage(ID3D11DeviceContext *pDevice,
                     ID3D11Resource *pResource,
                     DXGI_FORMAT Format,

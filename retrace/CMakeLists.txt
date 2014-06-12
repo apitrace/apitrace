@@ -235,6 +235,7 @@ if (WIN32)
     endif ()
 
     if (DirectX_D3D11_INCLUDE_DIR)
+        add_definitions (-DHAVE_D3D11)
         include_directories (BEFORE SYSTEM
             ${DirectX_D3D11_INCLUDE_DIR}
             ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
