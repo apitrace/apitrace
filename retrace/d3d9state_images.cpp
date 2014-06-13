@@ -324,7 +324,6 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
         }
     }
 
-
     json.endObject();
     json.endMember(); // framebuffer
 }
