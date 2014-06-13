@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.10)
 
 
 # Use clang on MacOSX. gcc doesn't support __thread key, and Apple has
@@ -78,7 +78,7 @@ if (WIN32)
     find_package (DirectX)
     foreach (api in D3D D3D8 D3D9 D3D10 D3D10_1 D3D11 D3D11_1 D2D1)
         if (EXISTS "${DirectX_${api}_INCLUDE_DIR}")
-            find_package_message (${api} "Found ${api}" "${DirectX_${api}_INCLUDE_DIR}")
+            find_package_message (${api}_H "Found ${api} headers: ${DirectX_${api}_INCLUDE_DIR}" "[${DirectX_${api}_INCLUDE_DIR}]")
         endif ()
     endforeach ()
 
