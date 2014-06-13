@@ -31,6 +31,16 @@
 
 
 /*
+ * Several of the defines below clash with libstdc++ internal variables,
+ * so include the headers now, before they are re-defined.
+ */
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <vector>
+
+
+/*
  * Dummy definitions Standard Annotation Language (SAL) definitions
  *
  * These are typically defined in sal.h.
@@ -734,6 +744,14 @@
 
 #ifndef DECLSPEC_NOVTABLE
 #define DECLSPEC_NOVTABLE
+#endif
+
+#ifndef DECLSPEC_NOTHROW
+#define DECLSPEC_NOTHROW
+#endif
+
+#ifndef COM_DECLSPEC_NOTHROW
+#define COM_DECLSPEC_NOTHROW DECLSPEC_NOTHROW
 #endif
 
 #ifndef __MINGW64_VERSION_MAJOR

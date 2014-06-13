@@ -32,6 +32,7 @@ from specs.d3d import ddraw, interfaces
 if __name__ == '__main__':
     print '#define INITGUID'
     print '#include <windows.h>'
+    print '#include "compat.h"'
     print '#include <ddraw.h>'
     print '#include <d3d.h>'
     print
