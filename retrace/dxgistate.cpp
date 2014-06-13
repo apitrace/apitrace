@@ -34,9 +34,7 @@
 
 #include "dxgistate.hpp"
 #include "d3d10state.hpp"
-#ifdef HAVE_D3D11
 #include "d3d11state.hpp"
-#endif
 
 #ifdef __MINGW32__
 #define nullptr NULL
@@ -323,7 +321,6 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
         return getSubResourceImage(pD3D10Device, pD3D10Resource, Format, 0, 0);
     }
 
-#ifdef HAVE_D3D11
     com_ptr<ID3D11Device> pD3D11Device;
     hr = pSwapChain->GetDevice(IID_ID3D11Device, (void **)&pD3D11Device);
     if (SUCCEEDED(hr)) {
@@ -341,7 +338,6 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
 
         return getSubResourceImage(pD3D11DeviceContext, pD3D11Resource, Format, 0, 0);
     }
-#endif
 
     return NULL;
 }
@@ -360,7 +356,6 @@ dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain)
              return;
         }
 
-#if HAVE_D3D11
         com_ptr<ID3D11Device> pD3D11Device;
         hr = pSwapChain->GetDevice(IID_ID3D11Device, (void **)&pD3D11Device);
         if (SUCCEEDED(hr)) {
@@ -369,7 +364,6 @@ dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain)
             dumpDevice(os, pD3D11DeviceContext);
             return;
         }
-#endif
     }
 
     // Fallback -- this should really never happen.

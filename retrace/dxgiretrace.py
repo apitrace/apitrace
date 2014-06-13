@@ -360,36 +360,22 @@ def main():
     
     if moduleNames:
         print r'#include "d3dretrace_dxgi.hpp"'
-        api.addModule(dxgi)
-        print
-        print '''static d3dretrace::D3DDumper<IDXGISwapChain> dxgiDumper;'''
-        print
-
-    if 'd3d10' in moduleNames:
-        if 'd3d10_1' in moduleNames:
-            print r'#include "d3d10_1imports.hpp"'
-            api.addModule(d3d10_1)
-        else:
-            print r'#include "d3d10imports.hpp"'
+        print r'#include "d3d10imports.hpp"'
         print r'#include "d3d10size.hpp"'
         print r'#include "d3d10state.hpp"'
-        api.addModule(d3d10)
-        print
-        print '''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;'''
-        print
-
-    if 'd3d11' in moduleNames:
         print r'#include "d3d11imports.hpp"'
-        if 'd3d11_1' in moduleNames:
-            print '#include <d3d11_1.h>'
-            import specs.d3d11_1
         print r'#include "d3d11size.hpp"'
         print r'#include "d3dstate.hpp"'
-        api.addModule(d3d11)
-        
         print
+        print '''static d3dretrace::D3DDumper<IDXGISwapChain> dxgiDumper;'''
+        print '''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;'''
         print '''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;'''
         print
+
+        api.addModule(dxgi)
+        api.addModule(d3d10)
+        api.addModule(d3d10_1)
+        api.addModule(d3d11)
 
     retracer = D3DRetracer()
     retracer.retraceApi(api)

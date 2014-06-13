@@ -121,37 +121,23 @@ if (WIN32)
     endif ()
 
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
-    set (DXGI_MODULES)
-    if (DirectX_D3D10_INCLUDE_DIR)
+    if (DirectX_D3D11_1_INCLUDE_DIR)
         set (DXGITRACE_DEF ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.def)
         file (WRITE  ${DXGITRACE_DEF} "EXPORTS\n")
         file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory\n")
         file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory1\n")
         file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice\n")
         file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain\n")
+        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice1\n")
+        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain1\n")
+        file (APPEND ${DXGITRACE_DEF} "D3D11CreateDevice\n")
+        file (APPEND ${DXGITRACE_DEF} "D3D11CreateDeviceAndSwapChain\n")
 
-        include_directories (BEFORE SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
-        set (DXGI_MODULES d3d10)
-        if (DirectX_D3D10_1_INCLUDE_DIR)
-            include_directories (BEFORE SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
-            set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
-            file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice1\n")
-            file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain1\n")
-        endif ()
-        if (DirectX_D3D11_INCLUDE_DIR)
-            include_directories (BEFORE SYSTEM ${DirectX_D3D11_INCLUDE_DIR})
-            set (DXGI_MODULES ${DXGI_MODULES} d3d11)
-            if (DirectX_D3D11_1_INCLUDE_DIR)
-                include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
-                set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
-            endif ()
-            file (APPEND ${DXGITRACE_DEF} "D3D11CreateDevice\n")
-            file (APPEND ${DXGITRACE_DEF} "D3D11CreateDeviceAndSwapChain\n")
-        endif ()
-        
+        include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
+
         add_custom_command (
             OUTPUT dxgitrace.cpp
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py ${DXGI_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgitrace.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.cpp
             DEPENDS
                 dxgitrace.py
                 dlltrace.py
@@ -214,33 +200,29 @@ if (WIN32)
         install (TARGETS d3d10stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 
         # d3d10_1.dll (empty stub for dxgitrace.dll)
-        if (DirectX_D3D10_1_INCLUDE_DIR)
-            add_library (d3d10_1stubs MODULE
-                d3d10_1.def
-                d3d10stubs.cpp
-            )
-            target_link_libraries (d3d10_1stubs dxgitrace)
-            set_target_properties (d3d10_1stubs
-                PROPERTIES PREFIX ""
-                OUTPUT_NAME d3d10_1
-            )
-            install (TARGETS d3d10_1stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-        endif ()
+        add_library (d3d10_1stubs MODULE
+            d3d10_1.def
+            d3d10stubs.cpp
+        )
+        target_link_libraries (d3d10_1stubs dxgitrace)
+        set_target_properties (d3d10_1stubs
+            PROPERTIES PREFIX ""
+            OUTPUT_NAME d3d10_1
+        )
+        install (TARGETS d3d10_1stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
         
         # d3d11.dll (empty stub for dxgitrace.dll)
-        if (DirectX_D3D11_INCLUDE_DIR)
-            add_library (d3d11stubs MODULE
-                d3d11.def
-                d3d11stubs.cpp
-                d3dkmtstubs.cpp
-            )
-            target_link_libraries (d3d11stubs dxgitrace)
-            set_target_properties (d3d11stubs
-                PROPERTIES PREFIX ""
-                OUTPUT_NAME d3d11
-            )
-            install (TARGETS d3d11stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-        endif ()
+        add_library (d3d11stubs MODULE
+            d3d11.def
+            d3d11stubs.cpp
+            d3dkmtstubs.cpp
+        )
+        target_link_libraries (d3d11stubs dxgitrace)
+        set_target_properties (d3d11stubs
+            PROPERTIES PREFIX ""
+            OUTPUT_NAME d3d11
+        )
+        install (TARGETS d3d11stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d2d1.dll, dwrite.dll

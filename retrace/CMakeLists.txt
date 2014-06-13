@@ -220,32 +220,16 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    if (DirectX_D3D10_INCLUDE_DIR)
-        include_directories (BEFORE SYSTEM ${DirectX_D3D10_INCLUDE_DIR})
-        set (DXGI_MODULES d3d10)
-        if (DirectX_D3D10_1_INCLUDE_DIR)
-            include_directories (BEFORE SYSTEM ${DirectX_D3D10_1_INCLUDE_DIR})
-            set (DXGI_MODULES ${DXGI_MODULES} d3d10_1)
-        endif ()
+    if (DirectX_D3D11_1_INCLUDE_DIR)
+        include_directories (BEFORE
+            ${DirectX_D3D11_1_INCLUDE_DIR}
+            ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
+        )
+        set (DXGI_MODULES d3d10 d3d10_1 d3d11 d3d11_1)
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             dxgistate.cpp
             d3d10state.cpp
             d3d10state_images.cpp
-        )
-    endif ()
-
-    if (DirectX_D3D11_INCLUDE_DIR)
-        add_definitions (-DHAVE_D3D11)
-        include_directories (BEFORE SYSTEM
-            ${DirectX_D3D11_INCLUDE_DIR}
-            ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
-        )
-        set (DXGI_MODULES ${DXGI_MODULES} d3d11)
-        if (DirectX_D3D11_1_INCLUDE_DIR)
-            include_directories (BEFORE SYSTEM ${DirectX_D3D11_1_INCLUDE_DIR})
-            set (DXGI_MODULES ${DXGI_MODULES} d3d11_1)
-        endif ()
-        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             d3d11state.cpp
             d3d11state_images.cpp
         )
@@ -289,7 +273,7 @@ if (WIN32)
         retrace_common
         d3dhelpers
     )
-    if (DirectX_D3D11_INCLUDE_DIR)
+    if (DirectX_D3D11_1_INCLUDE_DIR)
         target_link_libraries (d3dretrace directxtex)
     endif ()
 

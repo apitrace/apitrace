@@ -127,37 +127,24 @@ class D3DCommonTracer(DllTracer):
 
 
 if __name__ == '__main__':
-    print '#define INITGUID'
+    print r'#define INITGUID'
     print
-    print '#include "trace_writer_local.hpp"'
-    print '#include "os.hpp"'
+    print r'#include "trace_writer_local.hpp"'
+    print r'#include "os.hpp"'
     print
-    print '#include "d3dcommonshader.hpp"'
+    print r'#include "d3dcommonshader.hpp"'
     print
-
-    moduleNames = sys.argv[1:]
+    print r'#include "d3d10imports.hpp"'
+    print r'#include "d3d10size.hpp"'
+    print r'#include "d3d11imports.hpp"'
+    print r'#include "d3d11size.hpp"'
+    print
 
     api = API()
-    
-    if moduleNames:
-        api.addModule(dxgi.dxgi)
-    
-    if 'd3d10' in moduleNames:
-        if 'd3d10_1' in moduleNames:
-            print r'#include "d3d10_1imports.hpp"'
-            api.addModule(d3d10_1.d3d10_1)
-        else:
-            print r'#include "d3d10imports.hpp"'
-        print r'#include "d3d10size.hpp"'
-        api.addModule(d3d10.d3d10)
-
-    if 'd3d11' in moduleNames:
-        print r'#include "d3d11imports.hpp"'
-        if 'd3d11_1' in moduleNames:
-            print '#include <d3d11_1.h>'
-            from specs import d3d11_1
-        print r'#include "d3d11size.hpp"'
-        api.addModule(d3d11.d3d11)
+    api.addModule(dxgi.dxgi)
+    api.addModule(d3d10.d3d10)
+    api.addModule(d3d10_1.d3d10_1)
+    api.addModule(d3d11.d3d11)
 
     tracer = D3DCommonTracer()
     tracer.traceApi(api)

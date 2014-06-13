@@ -30,6 +30,9 @@
 #ifdef __MINGW32__
 
 
+#include <windows.h>
+
+
 /*
  * Several of the defines below clash with libstdc++ internal variables,
  * so include the headers now, before they are re-defined.

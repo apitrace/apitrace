@@ -1229,3 +1229,6 @@ d3d11.addInterfaces([
     ID3D11InfoQueue,
     ID3D11SwitchToRef,
 ])
+
+# Add D3D11.1
+import d3d11_1
