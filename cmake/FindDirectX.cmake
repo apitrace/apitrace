@@ -11,38 +11,6 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	endif ()
 
 
-	# DirectX SDK
-	find_path (DirectX_ROOT_DIR
-		Include/d3d9.h
-		PATHS
-			"$ENV{DXSDK_DIR}"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (June 2010)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (June 2010)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (February 2010)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (February 2010)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (March 2009)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (March 2009)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (August 2008)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (August 2008)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (June 2008)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (June 2008)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (March 2008)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (March 2008)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (November 2007)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (November 2007)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK (August 2007)"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (August 2007)"
-			"$ENV{ProgramFiles}/Microsoft DirectX SDK"
-			"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK"
-		DOC "DirectX SDK root directory"
-	)
-	if (DirectX_ROOT_DIR)
-		set (DirectX_INC_SEARCH_PATH "${DirectX_ROOT_DIR}/Include")
-		set (DirectX_LIB_SEARCH_PATH "${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}")
-		set (DirectX_BIN_SEARCH_PATH "${DirectX_ROOT_DIR}/Utilities/bin/x86")
-	endif ()
-
-
 	# With VS 2011 and Windows 8 SDK, the DirectX SDK is included as part of
 	# the Windows SDK.
 	#
@@ -53,15 +21,56 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 		find_path (WIN8_SDK_ROOT_DIR
 			Include/um/windows.h
 			PATHS
-				"$ENV{ProgramFiles}/Windows Kits/8.0"
+				"$ENV{ProgramFiles(x86)}/Windows Kits/8.1"
+				"$ENV{ProgramFiles}/Windows Kits/8.1"
 				"$ENV{ProgramFiles(x86)}/Windows Kits/8.0"
+				"$ENV{ProgramFiles}/Windows Kits/8.0"
 				DOC "Windows 8 SDK root directory"
 		)
 
 		if (WIN8_SDK_ROOT_DIR)
-			set (DirectX_INC_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/Include/um" "${WIN8_SDK_ROOT_DIR}/Include/shared")
-			set (DirectX_LIB_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/Lib/Win8/um/${DirectX_ARCHITECTURE}")
+			# We don't add the include search paths, as VS predefines the
+			# Windows SDK include paths, and we can get into errors errors if
+			# we happen to add wrong Windows SDK
+			set (DirectX_INC_SEARCH_PATH
+				"${WIN8_SDK_ROOT_DIR}/Include/um"
+				"${WIN8_SDK_ROOT_DIR}/Include/shared"
+			)
+			set (DirectX_LIB_SEARCH_PATH
+				"${WIN8_SDK_ROOT_DIR}/Lib/winv6.3/um/${DirectX_ARCHITECTURE}"
+				"${WIN8_SDK_ROOT_DIR}/Lib/Win8/um/${DirectX_ARCHITECTURE}"
+			)
 			set (DirectX_BIN_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/bin/x86")
+		endif ()
+	else ()
+		find_path (DirectX_ROOT_DIR
+			Include/d3d9.h
+			PATHS
+				"$ENV{DXSDK_DIR}"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (June 2010)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (June 2010)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (February 2010)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (February 2010)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (March 2009)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (March 2009)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (August 2008)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (August 2008)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (June 2008)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (June 2008)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (March 2008)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (March 2008)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (November 2007)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (November 2007)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK (August 2007)"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK (August 2007)"
+				"$ENV{ProgramFiles}/Microsoft DirectX SDK"
+				"$ENV{ProgramFiles(x86)}/Microsoft DirectX SDK"
+			DOC "DirectX SDK root directory"
+		)
+		if (DirectX_ROOT_DIR)
+			set (DirectX_INC_SEARCH_PATH "${DirectX_ROOT_DIR}/Include")
+			set (DirectX_LIB_SEARCH_PATH "${DirectX_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}")
+			set (DirectX_BIN_SEARCH_PATH "${DirectX_ROOT_DIR}/Utilities/bin/x86")
 		endif ()
 	endif ()
 
@@ -84,8 +93,10 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D3D_INCLUDE_DIR AND DirectX_DDRAW_LIBRARY)
 		set (DirectX_D3D_FOUND 1)
+		find_package_message (D3D "Found D3D: ${DirectX_DDRAW_LIBRARY}" "[${DirectX_D3D_LIBRARY}][${DirectX_D3D_INCLUDE_DIR}]")
 		if (DirectX_D3DX_INCLUDE_DIR AND DirectX_D3DX_LIBRARY)
 			set (DirectX_D3DX_FOUND 1)
+			find_package_message (D3DX "Found D3DX: ${DirectX_D3DX_LIBRARY}" "[${DirectX_D3DX_LIBRARY}][${DirectX_D3DX_INCLUDE_DIR}]")
 		endif ()
 	endif ()
 
@@ -108,8 +119,10 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3D8_LIBRARY)
 		set (DirectX_D3D8_FOUND 1)
+		find_package_message (D3D8 "Found D3D8: ${DirectX_D3D8_LIBRARY}" "[${DirectX_D3D8_LIBRARY}][${DirectX_D3D8_INCLUDE_DIR}]")
 		if (DirectX_D3DX8_INCLUDE_DIR AND DirectX_D3DX8_LIBRARY)
 			set (DirectX_D3DX8_FOUND 1)
+			find_package_message (D3DX8 "Found D3DX8: ${DirectX_D3DX8_LIBRARY}" "[${DirectX_D3DX8_LIBRARY}][${DirectX_D3DX8_INCLUDE_DIR}]")
 		endif ()
 	endif ()
 
@@ -132,9 +145,19 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D3D9_INCLUDE_DIR AND DirectX_D3D9_LIBRARY)
 		set (DirectX_D3D9_FOUND 1)
+		find_package_message (D3D9 "Found D3D9: ${DirectX_D3D9_LIBRARY}" "[${DirectX_D3D9_LIBRARY}][${DirectX_D3D9_INCLUDE_DIR}]")
 		if (DirectX_D3DX9_INCLUDE_DIR AND DirectX_D3DX9_LIBRARY)
 			set (DirectX_D3DX9_FOUND 1)
+			find_package_message (D3DX9 "Found D3DX9: ${DirectX_D3DX9_LIBRARY}" "[${DirectX_D3DX9_LIBRARY}][${DirectX_D3DX9_INCLUDE_DIR}]")
 		endif ()
+	endif ()
+
+
+	find_library (DirectX_DXGI_LIBRARY dxgi
+		PATHS ${DirectX_LIB_SEARCH_PATH}
+		DOC "The directory where dxgi resides")
+	if (DirectX_DXGI_LIBRARY)
+		find_package_message (DXGI "Found DXGI: ${DirectX_DXGI_LIBRARY}" "[${DirectX_DXGI_LIBRARY}]")
 	endif ()
 
 
@@ -156,8 +179,10 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D3D10_INCLUDE_DIR AND DirectX_D3D10_LIBRARY)
 		set (DirectX_D3D10_FOUND 1)
+		find_package_message (D3D10 "Found D3D10: ${DirectX_D3D10_LIBRARY}" "[${DirectX_D3D10_LIBRARY}][${DirectX_D3D10_INCLUDE_DIR}]")
 		if (DirectX_D3DX10_INCLUDE_DIR AND DirectX_D3DX10_LIBRARY)
 			set (DirectX_D3DX10_FOUND 1)
+			find_package_message (D3DX10 "Found D3DX10: ${DirectX_D3DX10_LIBRARY}" "[${DirectX_D3DX10_LIBRARY}][${DirectX_D3DX10_INCLUDE_DIR}]")
 		endif ()
 	endif ()
 
@@ -172,6 +197,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D3D10_1_INCLUDE_DIR AND DirectX_D3D10_1_LIBRARY)
 		set (DirectX_D3D10_1_FOUND 1)
+		find_package_message (D3D10_1 "Found D3D10.1: ${DirectX_D3D10_1_LIBRARY}" "[${DirectX_D3D10_1_LIBRARY}][${DirectX_D3D10_1_INCLUDE_DIR}]")
 	endif ()
 
 
@@ -193,8 +219,10 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D3D11_INCLUDE_DIR AND DirectX_D3D11_LIBRARY)
 		set (DirectX_D3D11_FOUND 1)
+		find_package_message (D3D11 "Found D3D11: ${DirectX_D3D11_LIBRARY}" "[${DirectX_D3D11_LIBRARY}][${DirectX_D3D11_INCLUDE_DIR}]")
 		if (DirectX_D3DX11_INCLUDE_DIR AND DirectX_D3DX11_LIBRARY)
 			set (DirectX_D3DX11_FOUND 1)
+			find_package_message (D3DX11 "Found D3DX11: ${DirectX_D3DX11_LIBRARY}" "[${DirectX_D3DX11_LIBRARY}][${DirectX_D3DX11_INCLUDE_DIR}]")
 		endif ()
 	endif ()
 
@@ -205,6 +233,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D3D11_1_INCLUDE_DIR AND DirectX_D3D11_LIBRARY)
 		set (DirectX_D3D11_1_FOUND 1)
+		find_package_message (D3D11_1 "Found D3D11.1: ${DirectX_D3D11_1_INCLUDE_DIR}" "[${DirectX_D3D11_1_LIBRARY}][${DirectX_D3D11_1_INCLUDE_DIR}]")
 	endif ()
 
 
@@ -223,6 +252,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 
 	if (DirectX_D2D1_INCLUDE_DIR AND DirectX_D2D1_LIBRARY)
 		set (DirectX_D2D1_FOUND 1)
+		find_package_message (D2D1 "Found D2D1: ${DirectX_D2D1_LIBRARY}" "[${DirectX_D2D1_LIBRARY}][${DirectX_D2D1_INCLUDE_DIR}]")
 	endif (DirectX_D2D1_INCLUDE_DIR AND DirectX_D2D1_LIBRARY)
 
 
