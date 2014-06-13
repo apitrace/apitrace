@@ -221,7 +221,7 @@ if (WIN32)
     )
 
     if (DirectX_D3D11_1_INCLUDE_DIR)
-        include_directories (BEFORE
+        include_directories (BEFORE SYSTEM
             ${DirectX_D3D11_1_INCLUDE_DIR}
             ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
         )

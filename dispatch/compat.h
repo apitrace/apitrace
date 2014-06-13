@@ -37,10 +37,12 @@
  * Several of the defines below clash with libstdc++ internal variables,
  * so include the headers now, before they are re-defined.
  */
+#ifdef __cplusplus
 #include <algorithm>
 #include <iostream>
 #include <memory>
 #include <vector>
+#endif
 
 
 /*
