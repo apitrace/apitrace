@@ -300,6 +300,17 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 if flag.endswith('_MAP_FLAG_DO_NOT_WAIT'):
                     print r'    MapFlags &= ~%s;' % flag
 
+        if method.name == 'UpdateSubresource':
+            # The D3D10 debug layer is buggy (or at least inconsistent with the
+            # runtime), as it seems to estimate and enforce the data size based on the
+            # SrcDepthPitch, even for non 3D textures, but in some traces
+            # SrcDepthPitch is garbagge for non 3D textures.
+            # XXX: It also seems to expect padding bytes at the end of the last
+            # row, but we never record (or allocate) those...
+            print r'    if (retrace::debug && pDstBox && pDstBox->front == 0 && pDstBox->back == 1) {'
+            print r'        SrcDepthPitch = 0;'
+            print r'    }'
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         # process events after presents
