@@ -29,6 +29,7 @@
 
 #include "image.hpp"
 #include "json.hpp"
+#include "com_ptr.hpp"
 #include "d3d8imports.hpp"
 #include "d3dstate.hpp"
 
@@ -40,9 +41,6 @@ static image::Image *
 getRenderTargetImage(IDirect3DDevice8 *pDevice,
                      IDirect3DSurface8 *pRenderTarget) {
     image::Image *image = NULL;
-    D3DSURFACE_DESC Desc;
-    IDirect3DSurface8 *pStagingSurface = NULL;
-    D3DLOCKED_RECT LockedRect;
     const unsigned char *src;
     unsigned char *dst;
     HRESULT hr;
@@ -51,6 +49,7 @@ getRenderTargetImage(IDirect3DDevice8 *pDevice,
         return NULL;
     }
 
+    D3DSURFACE_DESC Desc;
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
@@ -58,22 +57,24 @@ getRenderTargetImage(IDirect3DDevice8 *pDevice,
         Desc.Format != D3DFMT_A8R8G8B8 &&
         Desc.Format != D3DFMT_R5G6B5) {
         std::cerr << "warning: unsupported D3DFORMAT " << Desc.Format << "\n";
-        goto no_staging;
+        return NULL;
     }
 
+    com_ptr<IDirect3DSurface8> pStagingSurface;
     hr = pDevice->CreateImageSurface(Desc.Width, Desc.Height, Desc.Format, &pStagingSurface);
     if (FAILED(hr)) {
-        goto no_staging;
+        return NULL;
     }
 
     hr = pDevice->CopyRects(pRenderTarget, NULL, 0, pStagingSurface, NULL);
     if (FAILED(hr)) {
-        goto no_rendertargetdata;
+        return NULL;
     }
 
+    D3DLOCKED_RECT LockedRect;
     hr = pStagingSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY);
     if (FAILED(hr)) {
-        goto no_rendertargetdata;
+        return NULL;
     }
 
     image = new image::Image(Desc.Width, Desc.Height, 3, true);
@@ -106,9 +107,6 @@ getRenderTargetImage(IDirect3DDevice8 *pDevice,
 
 no_image:
     pStagingSurface->UnlockRect();
-no_rendertargetdata:
-    pStagingSurface->Release();
-no_staging:
     return image;
 }
 
@@ -117,20 +115,14 @@ image::Image *
 getRenderTargetImage(IDirect3DDevice8 *pDevice) {
     HRESULT hr;
 
-    IDirect3DSurface8 *pRenderTarget = NULL;
+    com_ptr<IDirect3DSurface8> pRenderTarget;
     hr = pDevice->GetRenderTarget(&pRenderTarget);
     if (FAILED(hr)) {
         return NULL;
     }
     assert(pRenderTarget);
 
-    image::Image *image = NULL;
-    if (pRenderTarget) {
-        image = getRenderTargetImage(pDevice, pRenderTarget);
-        pRenderTarget->Release();
-    }
-
-    return image;
+    return getRenderTargetImage(pDevice, pRenderTarget);
 }
 
 
@@ -142,7 +134,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice8 *pDevice)
     json.beginMember("framebuffer");
     json.beginObject();
 
-    IDirect3DSurface8 *pRenderTarget = NULL;
+    com_ptr<IDirect3DSurface8> pRenderTarget;
     hr = pDevice->GetRenderTarget(&pRenderTarget);
     if (SUCCEEDED(hr) && pRenderTarget) {
         image::Image *image;
@@ -152,8 +144,6 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice8 *pDevice)
             json.writeImage(image, "UNKNOWN");
             json.endMember(); // RENDER_TARGET_*
         }
-
-        pRenderTarget->Release();
     }
 
     json.endObject();

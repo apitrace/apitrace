@@ -28,10 +28,11 @@
 
 #include <iostream>
 
+#include "json.hpp"
+#include "com_ptr.hpp"
 #include "d3d9imports.hpp"
 #include "d3dshader.hpp"
 #include "d3dstate.hpp"
-#include "json.hpp"
 
 
 namespace d3dstate {
@@ -55,21 +56,18 @@ dumpShader(JSONWriter &json, const char *name, T *pShader) {
         if (pData) {
             hr = pShader->GetFunction(pData, &SizeOfData);
             if (SUCCEEDED(hr)) {
-                IDisassemblyBuffer *pDisassembly = NULL;
+                com_ptr<IDisassemblyBuffer> pDisassembly;
                 hr = DisassembleShader((const DWORD *)pData, &pDisassembly);
                 if (SUCCEEDED(hr)) {
                     json.beginMember(name);
                     json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
                     json.endMember();
-                    pDisassembly->Release();
                 }
 
             }
             free(pData);
         }
     }
-
-    pShader->Release();
 }
 
 static void
@@ -80,16 +78,16 @@ dumpShaders(JSONWriter &json, IDirect3DDevice9 *pDevice)
     HRESULT hr;
     json.beginObject();
 
-    IDirect3DVertexShader9 *pVertexShader = NULL;
+    com_ptr<IDirect3DVertexShader9> pVertexShader;
     hr = pDevice->GetVertexShader(&pVertexShader);
     if (SUCCEEDED(hr)) {
-        dumpShader(json, "vertex", pVertexShader);
+        dumpShader<IDirect3DVertexShader9>(json, "vertex", pVertexShader);
     }
 
-    IDirect3DPixelShader9 *pPixelShader = NULL;
+    com_ptr<IDirect3DPixelShader9> pPixelShader;
     hr = pDevice->GetPixelShader(&pPixelShader);
     if (SUCCEEDED(hr)) {
-        dumpShader(json, "pixel", pPixelShader);
+        dumpShader<IDirect3DPixelShader9>(json, "pixel", pPixelShader);
     }
 
     json.endObject();

@@ -31,6 +31,7 @@
 
 
 #include "json.hpp"
+#include "com_ptr.hpp"
 #include "d3dshader.hpp"
 #include "d3dstate.hpp"
 
@@ -65,13 +66,12 @@ dumpShader(JSONWriter &json, const char *name, T *pShader) {
 
     hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, pShaderBytecode);
     if (SUCCEEDED(hr)) {
-        IDisassemblyBuffer *pDisassembly = NULL;
+        com_ptr<IDisassemblyBuffer> pDisassembly;
         hr = DisassembleShader(pShaderBytecode, BytecodeLength, &pDisassembly);
         if (SUCCEEDED(hr)) {
             json.beginMember(name);
             json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
             json.endMember();
-            pDisassembly->Release();
         }
     }
 

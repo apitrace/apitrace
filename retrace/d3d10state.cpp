@@ -28,6 +28,7 @@
 
 #include <iostream>
 
+#include "com_ptr.hpp"
 #include "d3d10imports.hpp"
 #include "d3d10state.hpp"
 
@@ -45,21 +46,19 @@ dumpShaders(JSONWriter &json, ID3D10Device *pDevice)
     json.beginMember("shaders");
     json.beginObject();
 
-    ID3D10VertexShader *pVertexShader = NULL;
+    com_ptr<ID3D10VertexShader> pVertexShader;
     pDevice->VSGetShader(&pVertexShader);
     if (pVertexShader) {
         dumpShader<ID3D10DeviceChild>(json, "VS", pVertexShader);
-        pVertexShader->Release();
     }
 
-    ID3D10GeometryShader *pGeometryShader = NULL;
+    com_ptr<ID3D10GeometryShader> pGeometryShader;
     pDevice->GSGetShader(&pGeometryShader);
     if (pGeometryShader) {
         dumpShader<ID3D10DeviceChild>(json, "GS", pGeometryShader);
-        pGeometryShader->Release();
     }
 
-    ID3D10PixelShader *pPixelShader = NULL;
+    com_ptr<ID3D10PixelShader> pPixelShader;
     pDevice->PSGetShader(&pPixelShader);
     if (pPixelShader) {
         dumpShader<ID3D10DeviceChild>(json, "PS", pPixelShader);

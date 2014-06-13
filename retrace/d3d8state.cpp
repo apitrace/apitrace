@@ -28,10 +28,11 @@
 
 #include <iostream>
 
+#include "json.hpp"
+#include "com_ptr.hpp"
 #include "d3d8imports.hpp"
 #include "d3dshader.hpp"
 #include "d3dstate.hpp"
-#include "json.hpp"
 
 
 namespace d3dstate {
@@ -81,15 +82,13 @@ dumpShader(JSONWriter &json, IDirect3DDevice8 *pDevice, const char *name) {
         if (pData) {
             hr = getter.GetShaderFunction(pDevice, dwShader, pData, &SizeOfData);
             if (SUCCEEDED(hr)) {
-                IDisassemblyBuffer *pDisassembly = NULL;
+                com_ptr<IDisassemblyBuffer> pDisassembly;
                 hr = DisassembleShader((const DWORD *)pData, &pDisassembly);
                 if (SUCCEEDED(hr)) {
                     json.beginMember(name);
                     json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
                     json.endMember();
-                    pDisassembly->Release();
                 }
-
             }
             free(pData);
         }

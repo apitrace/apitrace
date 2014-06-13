@@ -30,6 +30,7 @@
 
 #include "image.hpp"
 #include "json.hpp"
+#include "com_ptr.hpp"
 #include "d3d9imports.hpp"
 #include "d3dstate.hpp"
 
@@ -41,8 +42,6 @@ static image::Image *
 getSurfaceImage(IDirect3DDevice9 *pDevice,
                 IDirect3DSurface9 *pSurface) {
     image::Image *image = NULL;
-    D3DSURFACE_DESC Desc;
-    D3DLOCKED_RECT LockedRect;
     const unsigned char *src;
     unsigned char *dst;
     HRESULT hr;
@@ -51,6 +50,7 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
         return NULL;
     }
 
+    D3DSURFACE_DESC Desc;
     hr = pSurface->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
@@ -71,12 +71,13 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
         break;
     default:
         std::cerr << "warning: unsupported D3DFORMAT " << Desc.Format << "\n";
-        goto no_lock;
+        return NULL;
     }
 
+    D3DLOCKED_RECT LockedRect;
     hr = pSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY);
     if (FAILED(hr)) {
-        goto no_lock;
+        return NULL;
     }
 
     image = new image::Image(Desc.Width, Desc.Height, numChannels, true, channelType);
@@ -124,7 +125,6 @@ getSurfaceImage(IDirect3DDevice9 *pDevice,
 
 no_image:
     pSurface->UnlockRect();
-no_lock:
     return image;
 }
 
@@ -132,35 +132,29 @@ no_lock:
 static image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice,
                      IDirect3DSurface9 *pRenderTarget) {
-    image::Image *image = NULL;
-    D3DSURFACE_DESC Desc;
-    IDirect3DSurface9 *pStagingSurface = NULL;
     HRESULT hr;
 
     if (!pRenderTarget) {
         return NULL;
     }
 
+    D3DSURFACE_DESC Desc;
     hr = pRenderTarget->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
+    com_ptr<IDirect3DSurface9> pStagingSurface;
     hr = pDevice->CreateOffscreenPlainSurface(Desc.Width, Desc.Height, Desc.Format, D3DPOOL_SYSTEMMEM, &pStagingSurface, NULL);
     if (FAILED(hr)) {
-        goto no_staging;
+        return NULL;
     }
 
     hr = pDevice->GetRenderTargetData(pRenderTarget, pStagingSurface);
     if (FAILED(hr)) {
         std::cerr << "warning: GetRenderTargetData failed\n";
-        goto no_rendertargetdata;
+        return NULL;
     }
 
-    image = getSurfaceImage(pDevice, pStagingSurface);
-
-no_rendertargetdata:
-    pStagingSurface->Release();
-no_staging:
-    return image;
+    return getSurfaceImage(pDevice, pStagingSurface);
 }
 
 
@@ -168,20 +162,14 @@ image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice) {
     HRESULT hr;
 
-    IDirect3DSurface9 *pRenderTarget = NULL;
+    com_ptr<IDirect3DSurface9> pRenderTarget;
     hr = pDevice->GetRenderTarget(0, &pRenderTarget);
     if (FAILED(hr)) {
         return NULL;
     }
     assert(pRenderTarget);
 
-    image::Image *image = NULL;
-    if (pRenderTarget) {
-        image = getRenderTargetImage(pDevice, pRenderTarget);
-        pRenderTarget->Release();
-    }
-
-    return image;
+    return getRenderTargetImage(pDevice, pRenderTarget);
 }
 
 
@@ -198,7 +186,7 @@ getTextureImage(IDirect3DDevice9 *pDevice,
         return NULL;
     }
 
-    IDirect3DSurface9 *pSurface = NULL;
+    com_ptr<IDirect3DSurface9> pSurface;
 
     D3DRESOURCETYPE Type = pTexture->GetType();
     switch (Type) {
@@ -222,7 +210,7 @@ getTextureImage(IDirect3DDevice9 *pDevice,
     assert(SUCCEEDED(hr));
 
     if (Desc.Pool == D3DPOOL_DEFAULT) {
-        IDirect3DSurface9 *pRenderTarget = NULL;
+        com_ptr<IDirect3DSurface9> pRenderTarget;
         hr = pDevice->CreateRenderTarget(Desc.Width, Desc.Height, Desc.Format,
                                          D3DMULTISAMPLE_NONE, 0, FALSE,
                                          &pRenderTarget, NULL);
@@ -235,13 +223,10 @@ getTextureImage(IDirect3DDevice9 *pDevice,
             } else {
                 image = getRenderTargetImage(pDevice, pRenderTarget);
             }
-            pRenderTarget->Release();
         }
     } else {
         image = getSurfaceImage(pDevice, pSurface);
     }
-
-    pSurface->Release();
 
     return image;
 }
@@ -255,7 +240,7 @@ dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice)
     json.beginObject();
 
     for (DWORD Stage = 0; Stage < 16; ++Stage) {
-        IDirect3DBaseTexture9 *pTexture = NULL;
+        com_ptr<IDirect3DBaseTexture9> pTexture;
         hr = pDevice->GetTexture(Stage, &pTexture);
         if (FAILED(hr)) {
             continue;
@@ -287,8 +272,6 @@ dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice)
                 }
             }
         }
-
-        pTexture->Release();
     }
 
     json.endObject();
@@ -308,7 +291,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
     pDevice->GetDeviceCaps(&Caps);
 
     for (UINT i = 0; i < Caps.NumSimultaneousRTs; ++i) {
-        IDirect3DSurface9 *pRenderTarget = NULL;
+        com_ptr<IDirect3DSurface9> pRenderTarget;
         hr = pDevice->GetRenderTarget(i, &pRenderTarget);
         if (FAILED(hr)) {
             continue;
@@ -327,11 +310,9 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
             json.writeImage(image, "UNKNOWN");
             json.endMember(); // RENDER_TARGET_*
         }
-
-        pRenderTarget->Release();
     }
 
-    IDirect3DSurface9 *pDepthStencil = NULL;
+    com_ptr<IDirect3DSurface9> pDepthStencil;
     hr = pDevice->GetDepthStencilSurface(&pDepthStencil);
     if (SUCCEEDED(hr) && pDepthStencil) {
         image::Image *image;

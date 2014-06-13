@@ -32,6 +32,7 @@
 #include "os.hpp"
 #include "json.hpp"
 #include "image.hpp"
+#include "com_ptr.hpp"
 #include "d3d10imports.hpp"
 #include "d3dstate.hpp"
 #include "dxgistate.hpp"
@@ -197,7 +198,6 @@ getSubResourceImage(ID3D10Device *pDevice,
                     UINT MipSlice)
 {
     image::Image *image = NULL;
-    ID3D10Resource *pStagingResource = NULL;
     UINT Width, Height, Depth;
     UINT MipLevels;
     UINT SubResource;
@@ -208,9 +208,10 @@ getSubResourceImage(ID3D10Device *pDevice,
         return NULL;
     }
 
+    com_ptr<ID3D10Resource> pStagingResource;
     hr = stageResource(pDevice, pResource, &pStagingResource, &Width, &Height, &Depth, &MipLevels);
     if (FAILED(hr)) {
-        goto no_staging;
+        return NULL;
     }
 
     SubResource = ArraySlice*MipLevels + MipSlice;
@@ -231,13 +232,6 @@ getSubResourceImage(ID3D10Device *pDevice,
 
     unmapResource(pStagingResource, SubResource);
 no_map:
-    if (pStagingResource) {
-        pStagingResource->Release();
-    }
-no_staging:
-    if (pResource) {
-        pResource->Release();
-    }
     return image;
 }
 
@@ -247,17 +241,17 @@ dumpShaderResourceViewImage(JSONWriter &json,
                             ID3D10Device *pDevice,
                             ID3D10ShaderResourceView *pShaderResourceView,
                             const char *shader,
-                            UINT stage) {
-    D3D10_SHADER_RESOURCE_VIEW_DESC Desc;
-    ID3D10Resource *pResource = NULL;
-
+                            UINT stage)
+{
     if (!pShaderResourceView) {
         return;
     }
 
+    com_ptr<ID3D10Resource> pResource;
     pShaderResourceView->GetResource(&pResource);
     assert(pResource);
 
+    D3D10_SHADER_RESOURCE_VIEW_DESC Desc;
     pShaderResourceView->GetDesc(&Desc);
 
     UINT MipSlice = 0;
@@ -318,21 +312,21 @@ dumpShaderResourceViewImage(JSONWriter &json,
 
 static image::Image *
 getRenderTargetViewImage(ID3D10Device *pDevice,
-                         ID3D10RenderTargetView *pRenderTargetView) {
-    D3D10_RENDER_TARGET_VIEW_DESC Desc;
-    ID3D10Resource *pResource = NULL;
-    UINT MipSlice;
-
+                         ID3D10RenderTargetView *pRenderTargetView)
+{
     if (!pRenderTargetView) {
         return NULL;
     }
 
+    com_ptr<ID3D10Resource> pResource;
     pRenderTargetView->GetResource(&pResource);
     assert(pResource);
 
+    D3D10_RENDER_TARGET_VIEW_DESC Desc;
     pRenderTargetView->GetDesc(&Desc);
 
     // TODO: Take the slice in consideration
+    UINT MipSlice;
     switch (Desc.ViewDimension) {
     case D3D10_RTV_DIMENSION_BUFFER:
         MipSlice = 0;
@@ -370,21 +364,21 @@ getRenderTargetViewImage(ID3D10Device *pDevice,
 
 static image::Image *
 getDepthStencilViewImage(ID3D10Device *pDevice,
-                         ID3D10DepthStencilView *pDepthStencilView) {
-    D3D10_DEPTH_STENCIL_VIEW_DESC Desc;
-    ID3D10Resource *pResource = NULL;
-    UINT MipSlice;
-
+                         ID3D10DepthStencilView *pDepthStencilView)
+{
     if (!pDepthStencilView) {
         return NULL;
     }
 
+    com_ptr<ID3D10Resource> pResource;
     pDepthStencilView->GetResource(&pResource);
     assert(pResource);
 
+    D3D10_DEPTH_STENCIL_VIEW_DESC Desc;
     pDepthStencilView->GetDesc(&Desc);
 
     // TODO: Take the slice in consideration
+    UINT MipSlice;
     switch (Desc.ViewDimension) {
     case D3D10_DSV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MipSlice;
@@ -455,13 +449,12 @@ dumpTextures(JSONWriter &json, ID3D10Device *pDevice)
 
 image::Image *
 getRenderTargetImage(ID3D10Device *pDevice) {
-    ID3D10RenderTargetView *pRenderTargetView = NULL;
+    com_ptr<ID3D10RenderTargetView> pRenderTargetView;
     pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
 
     image::Image *image = NULL;
     if (pRenderTargetView) {
         image = getRenderTargetViewImage(pDevice, pRenderTargetView);
-        pRenderTargetView->Release();
     }
 
     return image;
@@ -509,7 +502,6 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
         }
 
         pDepthStencilView->Release();
-
     }
 
     json.endObject();
