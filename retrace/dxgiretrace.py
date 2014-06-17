@@ -43,17 +43,6 @@ class D3DRetracer(Retracer):
         print '// Swizzling mapping for lock addresses'
         print 'static std::map<void *, void *> _maps;'
         print
-        print r'''
-static void 
-createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
-    UINT Width  = pSwapChainDesc->BufferDesc.Width;
-    UINT Height = pSwapChainDesc->BufferDesc.Height;
-    if (!Width)  Width = 1024;
-    if (!Height) Height = 768;
-    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
-}
-'''
-
         self.table_name = 'd3dretrace::dxgi_callbacks'
 
         Retracer.retraceApi(self, api)
@@ -375,6 +364,16 @@ def main():
         print '''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;'''
         print '''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;'''
         print
+        print r'''
+static void
+createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
+    UINT Width  = pSwapChainDesc->BufferDesc.Width;
+    UINT Height = pSwapChainDesc->BufferDesc.Height;
+    if (!Width)  Width = 1024;
+    if (!Height) Height = 768;
+    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
+}
+'''
 
         api.addModule(dxgi)
         api.addModule(d3d10)
