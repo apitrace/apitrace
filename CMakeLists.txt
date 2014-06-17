@@ -147,6 +147,7 @@ if (MSVC)
     add_definitions (-wd4100) # unreferenced formal parameter
     add_definitions (-wd4127) # conditional expression is constant
     add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
+    add_definitions (-wd4267) # conversion from 'type1' to 'type2', possible loss of data
     add_definitions (-wd4505) # unreferenced local function has been removed
     add_definitions (-wd4512) # assignment operator could not be generated
     add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
