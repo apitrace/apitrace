@@ -1,9 +1,4 @@
-Building from source
-====================
-
-
-Requirements
-------------
+# Requirements #
 
 Requirements common for all platforms:
 
@@ -32,8 +27,7 @@ shared-objects/DLL self contained, and to prevent symbol collisions when
 tracing.
 
 
-Linux / Mac OS X
-----------------
+# Linux / Mac OS X #
 
 Additional optional dependencies for Linux:
 
@@ -65,8 +59,7 @@ The `/usr/lib32` refers to the path where the 32-bits shared objects are may
 differ depending on the actual Linux distribution.
 
 
-Android
--------
+# Android #
 
 Additional requirements:
 
@@ -81,8 +74,7 @@ Build as:
 You can also choose a particular ABI by passing `ANDROID_ABI` variable to
 cmake, e.g., `-DANDROID_ABI=x86`.
 
-FirefoxOS
----------
+# FirefoxOS #
 
 Put Apitrace source tree into `B2GROOT/external/apitrace/` and the `Android.mk`
 file (`B2GROOT/external/apitrace/Android.mk`) will do the needful to compile
@@ -91,28 +83,18 @@ build process. It expects a linaro-type of Android NDK to be present in
 `../../prebuilt/ndk/android-ndk-r7` (ie `B2GROOT/prebuilt/ndk/android-ndk-r7`).
 
 
-Windows
--------
+# Windows #
+
+## Microsoft Visual Studio ##
 
 Additional requirements:
 
-* For Direct3D 11.1 support:
+* Microsoft Visual Studio (tested with 2013 version)
 
-  * [Microsoft Visual Studio 11 Ultimate Beta](http://www.microsoft.com/download/en/details.aspx?id=27543)
-
-* Other:
-
-  * Microsoft Visual Studio (tested with 2010 version) or MinGW (tested with
-    mingw-w64's gcc version 4.6.2)
-
-  * [Microsoft DirectX SDK](http://msdn.microsoft.com/en-us/directx/aa937781):
-
-    * for D3D 10, 10.1, and 11 support the [June 2010 release](http://www.microsoft.com/en-us/download/details.aspx?id=6812) is
-      recommended.
-
-    * for D3D7, D3D8 support the [August 2007 release](http://www.microsoft.com/downloads/details.aspx?familyid=529F03BE-1339-48C4-BD5A-8506E5ACF571)
-      or earlier is required, as later releases do not include the necessary
-      headers.
+* Microsoft DirectX SDK is now part of Microsoft Visual Studio (from version
+  2012), but D3D8 headers are not included, so if you want D3D8 support you'll
+  need to donload and install the
+  [August 2007 release of DirectX SDK](http://www.microsoft.com/downloads/details.aspx?familyid=529F03BE-1339-48C4-BD5A-8506E5ACF571)
 
 To build with Visual Studio first invoke CMake GUI as:
 
@@ -136,7 +118,14 @@ generated `build\apitrace.sln` solution file, or invoking CMake as:
 The steps to build 64bit version are similar, but choosing _Visual Studio 10
 Win64_ instead of _Visual Studio 10_.
 
+## MinGW ##
+
+Additional requirements:
+
+* MinGW-w64 (tested with mingw-w64's gcc version 4.6.2)
+
+* [https://github.com/apitrace/dxsdk](DirectX headers)
+
 It's also possible to instruct CMake build Windows binaries on Linux with
 [MinGW cross compilers](http://www.cmake.org/Wiki/CmakeMingw).
-
 
