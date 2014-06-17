@@ -216,7 +216,6 @@ dumpShaderResourceViewImage(JSONWriter &json,
     UINT FirstArraySlice = 0;
     UINT ArraySize = 1;
 
-    // TODO: Take the slice in consideration
     switch (Desc.ViewDimension) {
     case D3D11_SRV_DIMENSION_BUFFER:
         break;
@@ -225,16 +224,22 @@ dumpShaderResourceViewImage(JSONWriter &json,
         break;
     case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
         MipSlice = Desc.Texture1DArray.MostDetailedMip;
+        FirstArraySlice = Desc.Texture1DArray.FirstArraySlice;
+        ArraySize = Desc.Texture1DArray.ArraySize;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2D:
         MipSlice = Desc.Texture2D.MostDetailedMip;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
         MipSlice = Desc.Texture2DArray.MostDetailedMip;
+        FirstArraySlice = Desc.Texture2DArray.FirstArraySlice;
+        ArraySize = Desc.Texture2DArray.ArraySize;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DMS:
         break;
     case D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY:
+        FirstArraySlice = Desc.Texture2DMSArray.FirstArraySlice;
+        ArraySize = Desc.Texture2DMSArray.ArraySize;
         break;
     case D3D11_SRV_DIMENSION_TEXTURE3D:
         MipSlice = Desc.Texture3D.MostDetailedMip;
