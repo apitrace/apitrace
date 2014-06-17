@@ -95,15 +95,7 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
                 # Toggle debugging
                 print r'    Flags &= ~D3D11_CREATE_DEVICE_DEBUG;'
                 print r'    if (retrace::debug) {'
-                print r'        OSVERSIONINFO osvi;'
-                print r'        BOOL bIsWindows8orLater;'
-                print r'        ZeroMemory(&osvi, sizeof osvi);'
-                print r'        osvi.dwOSVersionInfoSize = sizeof osvi;'
-                print r'        GetVersionEx(&osvi);'
-                print r'        bIsWindows8orLater = '
-                print r'            (osvi.dwMajorVersion > 6) ||'
-                print r'            (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 2);'
-                print r'        const char *szD3d11SdkLayers = bIsWindows8orLater ? "d3d11_1sdklayers" : "d3d11sdklayers";'
+                print r'        const char *szD3d11SdkLayers = IsWindows8OrGreater() ? "d3d11_1sdklayers" : "d3d11sdklayers";'
                 print r'        if (LoadLibraryA(szD3d11SdkLayers)) {'
                 print r'            Flags |= D3D11_CREATE_DEVICE_DEBUG;'
                 print r'        }'
@@ -363,6 +355,7 @@ def main():
     print r'#include <iostream>'
     print
     print r'#include "d3dretrace.hpp"'
+    print r'#include "os_version.hpp"'
     print
 
     moduleNames = sys.argv[1:]

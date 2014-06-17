@@ -35,6 +35,7 @@
 
 #include "os_string.hpp"
 #include "os_process.hpp"
+#include "os_version.hpp"
 
 #include "cli.hpp"
 #include "cli_resources.hpp"
@@ -141,17 +142,8 @@ traceProgram(trace::API api,
      * gdi32.dll!SwapBuffers -> opengl32.dll!wglSwapBuffer calls, per github
      * issue #172.
      */
-    {
-        OSVERSIONINFO osvi;
-        ZeroMemory(&osvi, sizeof osvi);
-        osvi.dwOSVersionInfoSize = sizeof osvi;
-        GetVersionEx(&osvi);
-        BOOL bIsWindows8orLater =
-            osvi.dwMajorVersion > 6 ||
-            (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion >= 2);
-        if (api != trace::API_GL || !bIsWindows8orLater) {
-            useInject = true;
-        }
+    if (api != trace::API_GL || !IsWindows8OrGreater()) {
+        useInject = true;
     }
 
     if (useInject) {
