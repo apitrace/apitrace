@@ -173,56 +173,6 @@ if (WIN32)
             RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
             LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
         )
-
-        # dxgi.dll (empty stub for dxgitrace.dll)
-        add_library (dxgistubs MODULE
-            dxgi.def
-            dxgistubs.cpp
-            d3dkmtstubs.cpp
-        )
-        target_link_libraries (dxgistubs dxgitrace)
-        set_target_properties (dxgistubs
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME dxgi
-        )
-        install (TARGETS dxgistubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-
-        # d3d10.dll (empty stub for dxgitrace.dll)
-        add_library (d3d10stubs MODULE
-            d3d10.def
-            d3d10stubs.cpp
-        )
-        target_link_libraries (d3d10stubs dxgitrace)
-        set_target_properties (d3d10stubs
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME d3d10
-        )
-        install (TARGETS d3d10stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-
-        # d3d10_1.dll (empty stub for dxgitrace.dll)
-        add_library (d3d10_1stubs MODULE
-            d3d10_1.def
-            d3d10stubs.cpp
-        )
-        target_link_libraries (d3d10_1stubs dxgitrace)
-        set_target_properties (d3d10_1stubs
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME d3d10_1
-        )
-        install (TARGETS d3d10_1stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-        
-        # d3d11.dll (empty stub for dxgitrace.dll)
-        add_library (d3d11stubs MODULE
-            d3d11.def
-            d3d11stubs.cpp
-            d3dkmtstubs.cpp
-        )
-        target_link_libraries (d3d11stubs dxgitrace)
-        set_target_properties (d3d11stubs
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME d3d11
-        )
-        install (TARGETS d3d11stubs LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d2d1.dll, dwrite.dll
