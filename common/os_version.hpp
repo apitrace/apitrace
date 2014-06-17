@@ -30,14 +30,14 @@
 
 #include <windows.h>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER >= 1800
 
 #include <VersionHelpers.h>
 
-#else /* !_MSC_VER */
+#else
 
 /**
- * MinGW doesn't have VersionHelpers.h header yet.
+ * VersionHelpers.h is not yet widely available.
  *
  * See http://msdn.microsoft.com/en-gb/library/windows/desktop/ms725491.aspx
  */
@@ -59,7 +59,7 @@ IsWindows8OrGreater()
                              dwlConditionMask);
 }
 
-#endif /* !_MSC_VER */
+#endif
 
 #endif /* _WIN32 */
 
