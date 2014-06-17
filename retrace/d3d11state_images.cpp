@@ -218,6 +218,7 @@ dumpShaderResourceViewImage(JSONWriter &json,
 
     switch (Desc.ViewDimension) {
     case D3D11_SRV_DIMENSION_BUFFER:
+    case D3D11_SRV_DIMENSION_BUFFEREX:
         break;
     case D3D11_SRV_DIMENSION_TEXTURE1D:
         MipSlice = Desc.Texture1D.MostDetailedMip;
@@ -247,6 +248,11 @@ dumpShaderResourceViewImage(JSONWriter &json,
     case D3D11_SRV_DIMENSION_TEXTURECUBE:
         MipSlice = Desc.TextureCube.MostDetailedMip;
         ArraySize = 6;
+        break;
+    case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:
+        MipSlice = Desc.TextureCubeArray.MostDetailedMip;
+        FirstArraySlice = Desc.TextureCubeArray.First2DArrayFace;
+        ArraySize = 6 * Desc.TextureCubeArray.NumCubes;
         break;
     case D3D11_SRV_DIMENSION_UNKNOWN:
     default:
