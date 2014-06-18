@@ -517,12 +517,12 @@ glxapi.addFunctions([
     #Function(Bool, "glXAssociateDMPbufferSGIX", [(Display, "dpy"), (GLXPbufferSGIX, "pbuffer"), (OpaquePointer(DMparams), "params"), (DMbuffer, "dmbuffer")]),
 
     # GLX_SGIX_fbconfig
-    Function(Int, "glXGetFBConfigAttribSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (Int, "attribute"), Out(Pointer(Int), "value")]),
-    Function(OpaquePointer(GLXFBConfigSGIX), "glXChooseFBConfigSGIX", [(Display, "dpy"), (Int, "screen"), (GLXFBConfigSGIXAttribs, "attrib_list"), Out(Pointer(Int), "nelements")]),
+    Function(Int, "glXGetFBConfigAttribSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (GLXEnum, "attribute"), Out(Pointer(Int), "value")]),
+    Function(Array(GLXFBConfigSGIX, "*nelements"), "glXChooseFBConfigSGIX", [(Display, "dpy"), (Int, "screen"), (GLXFBConfigSGIXAttribs, "attrib_list"), Out(Pointer(Int), "nelements")]),
     Function(GLXPixmap, "glXCreateGLXPixmapWithConfigSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (Pixmap, "pixmap")]),
-    Function(GLXContext, "glXCreateContextWithConfigSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (Int, "render_type"), (GLXContext, "share_list"), (Bool, "direct")]),
+    Function(GLXContext, "glXCreateContextWithConfigSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config"), (GLXEnum, "render_type"), (GLXContext, "share_list"), (Bool, "direct")]),
     Function(Pointer(XVisualInfo), "glXGetVisualFromFBConfigSGIX", [(Display, "dpy"), (GLXFBConfigSGIX, "config")]),
-    Function(GLXFBConfigSGIX, "glXGetFBConfigFromVisualSGIX", [(Display, "dpy"), Out(Pointer(XVisualInfo), "vis")]),
+    Function(GLXFBConfigSGIX, "glXGetFBConfigFromVisualSGIX", [(Display, "dpy"), (Pointer(XVisualInfo), "vis")]),
 
     # GLX_SGIX_hyperpipe
     #Function(OpaquePointer(GLXHyperpipeNetworkSGIX), "glXQueryHyperpipeNetworkSGIX", [(Display, "dpy"), (OpaquePointer(Int), "npipes")]),
