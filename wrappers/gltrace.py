@@ -578,6 +578,12 @@ class GlTracer(Tracer):
             print '    }'
         if function.name == 'glLockArraysEXT':
             print '        _checkLockArraysEXT = true;'
+
+        # Warn if user arrays are used with glBegin/glArrayElement/glEnd.
+        if function.name == 'glBegin':
+            print r'    if (_need_user_arrays()) {'
+            print r'        os::log("apitrace: warning: user arrays with glArrayElement not supported (https://github.com/apitrace/apitrace/issues/276)\n");'
+            print r'    }'
         
         # Emit a fake memcpy on buffer uploads
         if function.name == 'glBufferParameteriAPPLE':
