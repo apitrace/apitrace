@@ -41,6 +41,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <set>
+
 #include <windows.h>
 #include <tlhelp32.h>
 
@@ -290,11 +292,24 @@ static unsigned numReplacements = 0;
 static Replacement replacements[32];
 
 
+/* Set of previously hooked modules */
+static std::set<HMODULE>
+g_hHookedModules;
+
 
 static void
 hookModule(HMODULE hModule,
            const char *szModule)
 {
+    /* Hook modules only once */
+    std::pair< std::set<HMODULE>::iterator, bool > ret;
+    EnterCriticalSection(&Mutex);
+    ret = g_hHookedModules.insert(hModule);
+    LeaveCriticalSection(&Mutex);
+    if (!ret.second) {
+        return;
+    }
+
     if (hModule == g_hThisModule) {
         return;
     }
