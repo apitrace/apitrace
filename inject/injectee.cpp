@@ -167,21 +167,29 @@ getOldFunctionAddress(HMODULE hModule,
     PIMAGE_THUNK_DATA pOriginalFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hModule + pImportDescriptor->OriginalFirstThunk);
     PIMAGE_THUNK_DATA pFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hModule + pImportDescriptor->FirstThunk);
 
-    //debugPrintf("  %s\n", __FUNCTION__);
+    if (VERBOSITY >= 4) {
+        debugPrintf("  %s\n", __FUNCTION__);
+    }
 
     while (pOriginalFirstThunk->u1.Function) {
         PIMAGE_IMPORT_BY_NAME pImport = (PIMAGE_IMPORT_BY_NAME)((PBYTE)hModule + pOriginalFirstThunk->u1.AddressOfData);
         const char* szName = (const char* )pImport->Name;
-        //debugPrintf("    %s\n", szName);
+        if (VERBOSITY >= 4) {
+            debugPrintf("    %s\n", szName);
+        }
         if (strcmp(pszFunctionName, szName) == 0) {
-            //debugPrintf("  %s succeeded\n", __FUNCTION__);
+            if (VERBOSITY >= 4) {
+                debugPrintf("  %s succeeded\n", __FUNCTION__);
+            }
             return (LPVOID *)(&pFirstThunk->u1.Function);
         }
         ++pOriginalFirstThunk;
         ++pFirstThunk;
     }
 
-    //debugPrintf("  %s failed\n", __FUNCTION__);
+    if (VERBOSITY >= 4) {
+        debugPrintf("  %s failed\n", __FUNCTION__);
+    }
 
     return NULL;
 }
@@ -370,7 +378,7 @@ MyLoadLibrary(LPCSTR lpLibFileName, HANDLE hFile = NULL, DWORD dwFlags = 0)
     // LoadLibrary is invoked.
     HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, dwFlags);
 
-    //hookModule(hModule, lpLibFileName);
+    // Hook all new modules (and not just this one, to pick up any dependencies)
     hookAllModules();
 
     return hModule;
