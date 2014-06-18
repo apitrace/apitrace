@@ -292,6 +292,19 @@ static unsigned numReplacements = 0;
 static Replacement replacements[32];
 
 
+static void
+hookLibraryLoaderFunctions(HMODULE hModule,
+                           const char *szModule,
+                           const char *pszDllName)
+{
+    hookFunction(hModule, szModule, pszDllName, "LoadLibraryA", (LPVOID)MyLoadLibraryA);
+    hookFunction(hModule, szModule, pszDllName, "LoadLibraryW", (LPVOID)MyLoadLibraryW);
+    hookFunction(hModule, szModule, pszDllName, "LoadLibraryExA", (LPVOID)MyLoadLibraryExA);
+    hookFunction(hModule, szModule, pszDllName, "LoadLibraryExW", (LPVOID)MyLoadLibraryExW);
+    hookFunction(hModule, szModule, pszDllName, "GetProcAddress", (LPVOID)MyGetProcAddress);
+}
+
+
 /* Set of previously hooked modules */
 static std::set<HMODULE>
 g_hHookedModules;
@@ -310,28 +323,37 @@ hookModule(HMODULE hModule,
         return;
     }
 
+    /* Never hook this module */
     if (hModule == g_hThisModule) {
         return;
     }
 
+    /* Don't hook our replacement modules (based on HMODULE) */
     for (unsigned i = 0; i < numReplacements; ++i) {
         if (hModule == replacements[i].hReplaceModule) {
             return;
         }
     }
 
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryA", (LPVOID)MyLoadLibraryA);
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryW", (LPVOID)MyLoadLibraryW);
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryExA", (LPVOID)MyLoadLibraryExA);
-    hookFunction(hModule, szModule, "kernel32.dll", "LoadLibraryExW", (LPVOID)MyLoadLibraryExW);
-    hookFunction(hModule, szModule, "kernel32.dll", "GetProcAddress", (LPVOID)MyGetProcAddress);
-
     const char *szBaseName = getBaseName(szModule);
+
+    /* Don't hook our replacement modules (based on MODULE name) */
     for (unsigned i = 0; i < numReplacements; ++i) {
         if (stricmp(szBaseName, replacements[i].szMatchModule) == 0) {
             return;
         }
     }
+
+    /* Leave these modules alone */
+    if (stricmp(szBaseName, "kernel32.dll") == 0 ||
+        stricmp(szBaseName, "ConEmuHk.dll") == 0) {
+        return;
+    }
+
+    /* Hook library loader functions */
+    hookLibraryLoaderFunctions(hModule, szModule, "kernel32.dll");
+    hookLibraryLoaderFunctions(hModule, szModule, "api-ms-win-core-libraryloader-l1-1-1.dll");
+    hookLibraryLoaderFunctions(hModule, szModule, "api-ms-win-core-libraryloader-l1-2-0.dll");
 
     /* Don't hook internal dependencies */
     if (stricmp(szBaseName, "d3d10core.dll") == 0 ||
@@ -339,7 +361,8 @@ hookModule(HMODULE hModule,
         stricmp(szBaseName, "d3d10sdklayers.dll") == 0 ||
         stricmp(szBaseName, "d3d10_1core.dll") == 0 ||
         stricmp(szBaseName, "d3d11sdklayers.dll") == 0 ||
-        stricmp(szBaseName, "d3d11_1sdklayers.dll") == 0) {
+        stricmp(szBaseName, "d3d11_1sdklayers.dll") == 0 ||
+        stricmp(szBaseName, "d3d11_2sdklayers.dll") == 0) {
         return;
     }
 

@@ -137,14 +137,9 @@ traceProgram(trace::API api,
 #if defined(_WIN32)
     /*
      * Use DLL injection method on Windows, even for APIs that don't stricly
-     * need it.  Except when tracing OpenGL on Windows 8, as the injection
-     * method seems to have troubles tracing the internal
-     * gdi32.dll!SwapBuffers -> opengl32.dll!wglSwapBuffer calls, per github
-     * issue #172.
+     * need it.
      */
-    if (api != trace::API_GL || !IsWindows8OrGreater()) {
-        useInject = true;
-    }
+    useInject = true;
 
     if (useInject) {
         args.push_back("inject");
