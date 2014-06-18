@@ -76,12 +76,6 @@ endif ()
 
 if (WIN32)
     find_package (DirectX)
-    foreach (api in D3D D3D8 D3D9 D3D10 D3D10_1 D3D11 D3D11_1 D2D1)
-        if (EXISTS "${DirectX_${api}_INCLUDE_DIR}")
-            find_package_message (${api}_H "Found ${api} headers: ${DirectX_${api}_INCLUDE_DIR}" "[${DirectX_${api}_INCLUDE_DIR}]")
-        endif ()
-    endforeach ()
-
     set (ENABLE_EGL false)
 elseif (APPLE)
     set (ENABLE_EGL false)
