@@ -116,11 +116,11 @@ main(int argc, char *argv[])
     }
 
     const char *szDll = argv[1];
-#if !USE_SHARED_MEM
-    SetEnvironmentVariableA("INJECT_DLL", szDll);
-#else
-    SetSharedMem(szDll);
-#endif
+    if (!USE_SHARED_MEM) {
+        SetEnvironmentVariableA("INJECT_DLL", szDll);
+    } else {
+        SetSharedMem(szDll);
+    }
 
     PROCESS_INFORMATION processInfo;
     HANDLE hProcess;
