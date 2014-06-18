@@ -155,7 +155,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (dxgitrace SHARED
+        add_library (dxgitrace MODULE
             ${DXGITRACE_DEF}
             dxgitrace.cpp
             d3dcommonshader.cpp
@@ -169,10 +169,7 @@ if (WIN32)
         set_target_properties (dxgitrace
             PROPERTIES PREFIX ""
         )
-        install (TARGETS dxgitrace
-            RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-            LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-        )
+        install (TARGETS dxgitrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d2d1.dll, dwrite.dll
@@ -197,7 +194,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
-        add_library (d2d1trace SHARED d2d1.def d2d1trace.cpp)
+        add_library (d2d1trace MODULE d2d1trace.def d2d1trace.cpp)
         target_link_libraries (d2d1trace
             common
             ${ZLIB_LIBRARIES}
@@ -205,22 +202,8 @@ if (WIN32)
         )
         set_target_properties (d2d1trace
             PROPERTIES PREFIX ""
-            OUTPUT_NAME d2d1
         )
-        # http://www.cmake.org/pipermail/cmake/2009-March/028221.html
-        install (TARGETS d2d1trace
-            RUNTIME DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-            LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR} COMPONENT RUNTIME
-        )
-
-        # dwrite.dll is just an empty stub for d2d1.dll
-        add_library (dwritetrace MODULE dwrite.def dwritetrace.cpp)
-        target_link_libraries (dwritetrace d2d1trace)
-        set_target_properties (dwritetrace
-            PROPERTIES PREFIX ""
-            OUTPUT_NAME dwrite
-        )
-        install (TARGETS dwritetrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install (TARGETS d2d1trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D2D1_INCLUDE_DIR)
 
     # opengl32.dll

@@ -122,6 +122,10 @@ traceProgram(trace::API api,
         wrapperFilename = "dxgitrace.dll";
         useInject = true;
         break;
+    case trace::API_D2D1:
+        wrapperFilename = "d2d1trace.dll";
+        useInject = true;
+        break;
 #endif
     default:
         std::cerr << "error: unsupported API\n";
@@ -326,6 +330,9 @@ command(int argc, char *argv[])
                        strcmp(optarg, "d3d11") == 0 ||
                        strcmp(optarg, "d3d11_1") == 0) {
                 api = trace::API_DXGI;
+            } else if (strcmp(optarg, "d2d") == 0 ||
+                       strcmp(optarg, "d2d1") == 0) {
+                api = trace::API_D2D1;
             } else {
                 std::cerr << "error: unknown API `" << optarg << "`\n";
                 usage();

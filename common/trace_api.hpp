@@ -49,6 +49,7 @@ enum API {
     API_D3D8,
     API_D3D9,
     API_DXGI, // D3D10.x, D3D11.x
+    API_D2D1, // Direct2D
 };
 
 
