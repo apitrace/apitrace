@@ -185,7 +185,7 @@ void VariantVisitor::visit(trace::Double *node)
 
 void VariantVisitor::visit(trace::String *node)
 {
-    m_variant = QVariant(QString::fromStdString(node->value));
+    m_variant = QVariant(QString::fromLatin1(node->value));
 }
 
 void VariantVisitor::visit(trace::Enum *e)
@@ -243,7 +243,7 @@ ApiTraceEnumSignature::ApiTraceEnumSignature(const trace::EnumSig *sig)
          it != sig->values + sig->num_values; ++it) {
         QPair<QString, signed long long> pair;
 
-        pair.first = QString::fromStdString(it->name);
+        pair.first = QString::fromLatin1(it->name);
         pair.second = it->value;
 
         m_names.append(pair);
@@ -348,7 +348,7 @@ void ApiBitmask::init(const trace::Bitmask *bitmask)
          it != bitmask->sig->flags + bitmask->sig->num_flags; ++it) {
         QPair<QString, unsigned long long> pair;
 
-        pair.first = QString::fromStdString(it->name);
+        pair.first = QString::fromLatin1(it->name);
         pair.second = it->value;
 
         m_sig.append(pair);
@@ -411,11 +411,11 @@ void ApiStruct::init(const trace::Struct *s)
     if (!s)
         return;
 
-    m_sig.name = QString::fromStdString(s->sig->name);
+    m_sig.name = QString::fromLatin1(s->sig->name);
     for (unsigned i = 0; i < s->sig->num_members; ++i) {
         VariantVisitor vis(0);
         m_sig.memberNames.append(
-            QString::fromStdString(s->sig->member_names[i]));
+            QString::fromLatin1(s->sig->member_names[i]));
         s->members[i]->visit(vis);
         m_members.append(vis.variant());
     }
@@ -683,11 +683,11 @@ ApiTraceCall::loadData(TraceLoader *loader,
     m_signature = loader->signature(call->sig->id);
 
     if (!m_signature) {
-        QString name = QString::fromStdString(call->sig->name);
+        QString name = QString::fromLatin1(call->sig->name);
         QStringList argNames;
         argNames.reserve(call->sig->num_args);
         for (int i = 0; i < call->sig->num_args; ++i) {
-            argNames += QString::fromStdString(call->sig->arg_names[i]);
+            argNames += QString::fromLatin1(call->sig->arg_names[i]);
         }
         m_signature = new ApiTraceCallSignature(name, argNames);
         loader->addSignature(call->sig->id, m_signature);
