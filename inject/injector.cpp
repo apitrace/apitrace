@@ -249,45 +249,9 @@ main(int argc, char *argv[])
     getDirName(szDllPath);
     strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
 
-    size_t szDllPathLength = strlen(szDllPath) + 1;
-
-    // Allocate memory in the target process to hold the DLL name
-    void *lpMemory = VirtualAllocEx(hProcess, NULL, szDllPathLength, MEM_COMMIT, PAGE_READWRITE);
-    if (!lpMemory) {
-        fprintf(stderr, "error: failed to allocate memory in the process\n");
-        TerminateProcess(hProcess, 1);
-        return 1;
-    }
-
-    // Copy DLL name into the target process
-    if (!WriteProcessMemory(hProcess, lpMemory, szDllPath, szDllPathLength, NULL)) {
-        fprintf(stderr, "error: failed to write into process memory\n");
-        TerminateProcess(hProcess, 1);
-        return 1;
-    }
-
-    /*
-     * Get LoadLibraryA address from kernel32.dll.  It's the same for all the
-     * process (XXX: but only within the same architecture).
-     */
-    PTHREAD_START_ROUTINE lpStartAddress =
-        (PTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("KERNEL32"), "LoadLibraryA");
-
-    // Create remote thread in another process
-    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, lpStartAddress, lpMemory, 0, NULL);
-    if (!hThread) {
-        fprintf(stderr, "error: failed to create remote thread\n");
-        TerminateProcess(hProcess, 1);
-        return 1;
-    }
-
-    // Wait for it to finish
-    WaitForSingleObject(hThread, INFINITE);
-
-    DWORD hModule = 0;
-    GetExitCodeThread(hThread, &hModule);
-    if (!hModule) {
-        fprintf(stderr, "error: failed to inject %s\n", szDllPath);
+    const char *szError = NULL;
+    if (!injectDll(hProcess, szDllPath, &szError)) {
+        fprintf(stderr, "error: %s\n", szError);
         TerminateProcess(hProcess, 1);
         return 1;
     }
@@ -313,5 +277,4 @@ main(int argc, char *argv[])
     CloseHandle(processInfo.hThread);
 
     return (int)exitCode;
-
 }

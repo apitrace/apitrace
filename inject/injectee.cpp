@@ -85,6 +85,30 @@ MyLoadLibraryExW(LPCWSTR lpFileName, HANDLE hFile, DWORD dwFlags);
 static FARPROC WINAPI
 MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName);
 
+static BOOL WINAPI
+MyCreateProcessA(LPCSTR lpApplicationName,
+                 LPSTR lpCommandLine,
+                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                 BOOL bInheritHandles,
+                 DWORD dwCreationFlags,
+                 LPVOID lpEnvironment,
+                 LPCSTR lpCurrentDirectory,
+                 LPSTARTUPINFOA lpStartupInfo,
+                 LPPROCESS_INFORMATION lpProcessInformation);
+
+static BOOL WINAPI
+MyCreateProcessW(LPCWSTR lpApplicationName,
+                 LPWSTR lpCommandLine,
+                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                 BOOL bInheritHandles,
+                 DWORD dwCreationFlags,
+                 LPVOID lpEnvironment,
+                 LPCWSTR lpCurrentDirectory,
+                 LPSTARTUPINFOW lpStartupInfo,
+                 LPPROCESS_INFORMATION lpProcessInformation);
+
 
 static const char *
 getImportDescriptionName(HMODULE hModule, const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor) {
@@ -304,6 +328,15 @@ hookLibraryLoaderFunctions(HMODULE hModule,
     hookFunction(hModule, szModule, pszDllName, "GetProcAddress", (LPVOID)MyGetProcAddress);
 }
 
+static void
+hookProcessThreadsFunctions(HMODULE hModule,
+                            const char *szModule,
+                            const char *pszDllName)
+{
+    hookFunction(hModule, szModule, pszDllName, "CreateProcessA", (LPVOID)MyCreateProcessA);
+    hookFunction(hModule, szModule, pszDllName, "CreateProcessW", (LPVOID)MyCreateProcessW);
+}
+
 
 /* Set of previously hooked modules */
 static std::set<HMODULE>
@@ -350,10 +383,20 @@ hookModule(HMODULE hModule,
         return;
     }
 
-    /* Hook library loader functions */
+    /*
+     * Hook kernel32.dll functions, and its respective Windows API Set.
+     *
+     * http://msdn.microsoft.com/en-us/library/dn505783.aspx (Windows 8.1)
+     * http://msdn.microsoft.com/en-us/library/hh802935.aspx (Windows 8)
+     */
+
     hookLibraryLoaderFunctions(hModule, szModule, "kernel32.dll");
     hookLibraryLoaderFunctions(hModule, szModule, "api-ms-win-core-libraryloader-l1-1-1.dll");
     hookLibraryLoaderFunctions(hModule, szModule, "api-ms-win-core-libraryloader-l1-2-0.dll");
+
+    hookProcessThreadsFunctions(hModule, szModule, "kernel32.dll");
+    hookProcessThreadsFunctions(hModule, szModule, "api-ms-win-core-processthreads-l1-1-1.dll");
+    hookProcessThreadsFunctions(hModule, szModule, "api-ms-win-core-processthreads-l1-1-2.dll");
 
     /* Don't hook internal dependencies */
     if (stricmp(szBaseName, "d3d10core.dll") == 0 ||
@@ -540,6 +583,101 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
     }
 
     return GetProcAddress(hModule, lpProcName);
+}
+
+
+static void MyCreateProcessCommon(BOOL bRet,
+                                  DWORD dwCreationFlags,
+                                  LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (!bRet) {
+        return;
+    }
+
+    char szDllPath[MAX_PATH];
+    GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
+
+    const char *szError = NULL;
+    if (!injectDll(lpProcessInformation->hProcess, szDllPath, &szError)) {
+        debugPrintf("warning: failed to inject child process (%s)\n", szError);
+    }
+
+    if (!(dwCreationFlags & CREATE_SUSPENDED)) {
+        ResumeThread(lpProcessInformation->hThread);
+    }
+}
+
+
+static BOOL WINAPI
+MyCreateProcessA(LPCSTR lpApplicationName,
+                 LPSTR lpCommandLine,
+                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                 BOOL bInheritHandles,
+                 DWORD dwCreationFlags,
+                 LPVOID lpEnvironment,
+                 LPCSTR lpCurrentDirectory,
+                 LPSTARTUPINFOA lpStartupInfo,
+                 LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("%s(\"%s\", \"%s\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessA(lpApplicationName,
+                          lpCommandLine,
+                          lpProcessAttributes,
+                          lpThreadAttributes,
+                          bInheritHandles,
+                          dwCreationFlags | CREATE_SUSPENDED,
+                          lpEnvironment,
+                          lpCurrentDirectory,
+                          lpStartupInfo,
+                          lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+static BOOL WINAPI
+MyCreateProcessW(LPCWSTR lpApplicationName,
+                 LPWSTR lpCommandLine,
+                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                 BOOL bInheritHandles,
+                 DWORD dwCreationFlags,
+                 LPVOID lpEnvironment,
+                 LPCWSTR lpCurrentDirectory,
+                 LPSTARTUPINFOW lpStartupInfo,
+                 LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("%s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessW(lpApplicationName,
+                          lpCommandLine,
+                          lpProcessAttributes,
+                          lpThreadAttributes,
+                          bInheritHandles,
+                          dwCreationFlags | CREATE_SUSPENDED,
+                          lpEnvironment,
+                          lpCurrentDirectory,
+                          lpStartupInfo,
+                          lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
 }
 
 
