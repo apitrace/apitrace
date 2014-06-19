@@ -109,16 +109,32 @@ quoteArg(std::string &s, const char *arg)
 int
 main(int argc, char *argv[])
 {
-
     if (argc < 3) {
         fprintf(stderr, "inject dllname.dll command [args] ...\n");
         return 1;
     }
 
+    HANDLE hSemaphore = NULL;
     const char *szDll = argv[1];
     if (!USE_SHARED_MEM) {
         SetEnvironmentVariableA("INJECT_DLL", szDll);
     } else {
+        hSemaphore = CreateSemaphore(NULL, 1, 1, "inject_semaphore");
+        if (hSemaphore == NULL) {
+            fprintf(stderr, "error: failed to create semaphore\n");
+            return 1;
+        }
+
+        DWORD dwWait = WaitForSingleObject(hSemaphore, 0);
+        if (dwWait == WAIT_TIMEOUT) {
+            fprintf(stderr, "info: waiting for another inject instance to finish\n");
+            dwWait = WaitForSingleObject(hSemaphore, INFINITE);
+        }
+        if (dwWait != WAIT_OBJECT_0) {
+            fprintf(stderr, "error: failed to enter semaphore gate\n");
+            return 1;
+        }
+
         SetSharedMem(szDll);
     }
 
@@ -275,6 +291,11 @@ main(int argc, char *argv[])
 
     CloseHandle(hProcess);
     CloseHandle(processInfo.hThread);
+
+    if (hSemaphore) {
+        ReleaseSemaphore(hSemaphore, 1, NULL);
+        CloseHandle(hSemaphore);
+    }
 
     return (int)exitCode;
 }
