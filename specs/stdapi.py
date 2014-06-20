@@ -980,9 +980,22 @@ class API:
 
     def getFunctionByName(self, name):
         for module in self.modules:
-            for function in module.functions:
-                if function.name == name:
-                    return function
+            function = module.getFunctionByName(name)
+            if function is not None:
+                return function
+        return None
+
+    def getInterfaceByName(self, name):
+        for interface in self.getAllInterfaces():
+            if interface.name == name:
+                return interface
+        return None
+
+    def getMethodByName(self, name):
+        interfaceName, methodName = name.split('::')
+        interface = self.getInterfaceByName(interfaceName)
+        if interface is not None:
+            return interface.getMethodByName(methodName)
         return None
 
 
@@ -991,3 +1004,13 @@ CString = String(Char)
 WString = String(WChar, wide=True)
 ConstCString = String(Const(Char))
 ConstWString = String(Const(WChar), wide=True)
+
+
+stdapi = Module("stdapi")
+stdapi.addFunctions([
+    Function(OpaquePointer(Void), "memcpy", [Out(Blob(Void, "n"), "dest"), (Blob(Const(Void), "n"), "src"), (SizeT, "n")]),
+    Function(OpaquePointer(Void), "malloc", [(SizeT, "size")]),
+    Function(Void, "free", [(OpaquePointer(Void), "ptr")]),
+    Function(OpaquePointer(Void), "realloc", [(OpaquePointer(Void), "ptr"), (SizeT, "size")]),
+])
+
