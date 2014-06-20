@@ -34,7 +34,7 @@ import tempfile
 import json
 
 import jsondiff
-from unpickle import Unpickler
+import unpickle
 
 
 
@@ -44,33 +44,51 @@ from unpickle import Unpickler
 #
 
 
-class Tracker(Unpickler):
+class Tracker(unpickle.Unpickler):
 
-    def __init__(self, stream, ):
-        Unpickler.__init__(self, stream)
+    def __init__(self, stream, inCallNo, inFrameNo):
+        unpickle.Unpickler.__init__(self, stream)
+        self.inCallNo = inCallNo
+        self.inFrameNo = inFrameNo
         self.callNos = []
+        self.callNo = None
+        self.frameNo = 0
 
     def handleCall(self, call):
-        print call
+        if True:
+            sys.stdout.write("%s\n" % call)
         self.callNos.append(call.no)
 
+        if self.inCallNo is not None:
+            if call.no >= self.inCallNo:
+                self.callNo = call.no
+                raise StopIteration
 
-def track(apitrace, trace, callNo):
-    p = subprocess.Popen(
-        args = [
-            apitrace,
-            'pickle',
-            '--symbolic',
-            '--calls=0-%u' % callNo,
-            trace
-        ],
-        stdout = subprocess.PIPE,
-    )
+        if self.frameNo is not None:
+            if call.flags & unpickle.CALL_FLAG_END_FRAME:
+                if self.frameNo >= self.inFrameNo:
+                    self.callNo = call.no
+                    raise StopIteration
+                self.frameNo += 1
 
-    parser = Tracker(p.stdout)
+
+def track(apitrace, trace, callNo=None, frameNo=None):
+    assert callNo is not None or frameNo is not None
+    cmd = [
+        apitrace,
+        'pickle',
+        '--symbolic',
+    ]
+    if callNo is not None:
+        cmd.append('--calls=0-%u' % callNo)
+    cmd.append(trace)
+
+    p = subprocess.Popen(args = cmd, stdout = subprocess.PIPE)
+
+    parser = Tracker(p.stdout, callNo, frameNo)
     parser.parse()
 
-    return parser.callNos
+    return parser.callNos, parser.callNo
 
 
 ##########################################################################/
@@ -94,7 +112,14 @@ def getState(apitrace, trace, callNo):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=NULL)
     state = json.load(p.stdout, strict=False)
     p.wait()
-    return state['framebuffer']
+
+    # Only care for framebuffer for now
+    state = state['framebuffer']
+
+    # Ensure its not empty
+    assert len(state)
+
+    return state
 
 
 def verify(apitrace, inTrace, inCallNo, outTrace, outCallNo):
@@ -159,7 +184,14 @@ def main():
         sys.stderr.write("error: `%s` does not exist\n" % inTrace)
         sys.exit(1)
 
-    inCallNo = int(options.call)
+    inCallNo = None
+    inFrameNo = None
+    if options.call is not None:
+        inCallNo = int(options.call)
+    elif options.frame is not None:
+        inFrameNo = int(options.frame)
+    else:
+        optparser.error("--call or --frame must be given")
 
     if options.output is None:
         name, ext = os.path.splitext(os.path.basename(inTrace))
@@ -168,7 +200,7 @@ def main():
         outTrace = options.output
 
     # Obtain the dependencies
-    inCallNos = track(options.apitrace, inTrace, inCallNo)
+    inCallNos, inCallNo = track(options.apitrace, inTrace, inCallNo, inFrameNo)
 
     # Do the actual trimming via `apitrace trim`
     # FIXME: Use a tempfile
@@ -184,6 +216,7 @@ def main():
 
     # Verify that the state at the given call matches
     if options.verify:
+        inCallNos.sort()
         outCallNo = inCallNos.index(inCallNo)
 
         verify(options.apitrace, inTrace, inCallNo, outTrace, outCallNo)

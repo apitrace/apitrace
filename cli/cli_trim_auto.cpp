@@ -45,9 +45,6 @@ static void
 usage(void)
 {
     os::String command = find_command();
-    if (!command.length()) {
-        exit(1);
-    }
 
     char *args[4];
     args[0] = (char *) "python";
@@ -65,9 +62,13 @@ command(int argc, char *argv[])
 
     os::String command = find_command();
 
+    os::String apitracePath = os::getProcessName();
+
     std::vector<const char *> args;
     args.push_back("python");
     args.push_back(command.str());
+    args.push_back("--apitrace");
+    args.push_back(apitracePath.str());
     for (i = 1; i < argc; i++) {
         args.push_back(argv[i]);
     }
