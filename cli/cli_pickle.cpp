@@ -98,7 +98,7 @@ public:
         if (symbolic) {
             unsigned long long value = node->value;
             const BitmaskSig *sig = node->sig;
-            writer.beginList();
+            writer.beginTuple();
             for (const BitmaskFlag *it = sig->flags; it != sig->flags + sig->num_flags; ++it) {
                 if ((it->value && (value & it->value) == it->value) ||
                     (!it->value && value == 0)) {
@@ -112,7 +112,7 @@ public:
             if (value) {
                 writer.writeInt(value);
             }
-            writer.endList();
+            writer.endTuple();
         } else {
             writer.writeInt(node->value);
         }

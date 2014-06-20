@@ -125,10 +125,12 @@ class Dumper(Visitor):
             return repr(obj)
 
     def visitTuple(self, obj):
-        return '[' + ', '.join(itertools.imap(self.visit, obj)) + ']'
+        return '(' + ', '.join(itertools.imap(self.visit, obj)) + ')'
 
     def visitList(self, obj):
-        return '(' + ', '.join(itertools.imap(self.visit, obj)) + ')'
+        if len(obj) == 1:
+            return '&' + self.visit(obj[0])
+        return '{' + ', '.join(itertools.imap(self.visit, obj)) + '}'
 
     def visitByteArray(self, obj):
         return 'blob(%u)' % len(obj)
