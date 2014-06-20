@@ -34,72 +34,9 @@ import tempfile
 import json
 
 import jsondiff
-import unpickle
 
+from autotrim_track import track
 
-
-##########################################################################/
-#
-# State tracking
-#
-
-
-class Tracker(unpickle.Unpickler):
-
-    def __init__(self, stream, inCallNo, inFrameNo):
-        unpickle.Unpickler.__init__(self, stream)
-        self.inCallNo = inCallNo
-        self.inFrameNo = inFrameNo
-        self.callNos = []
-        self.callNo = None
-        self.frameNo = 0
-
-    def handleCall(self, call):
-        if False:
-            sys.stdout.write("%s\n" % call)
-        else:
-            if call.no % 10 == 0:
-                sys.stdout.write("%s\r" % call.no)
-
-        self.analyzeCall(call)
-
-        if self.inCallNo is not None:
-            if call.no >= self.inCallNo:
-                self.callNo = call.no
-                raise StopIteration
-
-        if self.inFrameNo is not None:
-            if call.flags & unpickle.CALL_FLAG_END_FRAME:
-                if self.frameNo >= self.inFrameNo:
-                    self.callNo = call.no
-                    raise StopIteration
-                self.frameNo += 1
-
-    def analyzeCall(self, call):
-        # Ignore calls without side effects
-        if call.flags & unpickle.CALL_FLAG_NO_SIDE_EFFECTS:
-            return
-
-        self.callNos.append(call.no)
-
-
-def track(apitrace, trace, callNo=None, frameNo=None):
-    assert callNo is not None or frameNo is not None
-    cmd = [
-        apitrace,
-        'pickle',
-        '--symbolic',
-    ]
-    if callNo is not None:
-        cmd.append('--calls=0-%u' % callNo)
-    cmd.append(trace)
-
-    p = subprocess.Popen(args = cmd, stdout = subprocess.PIPE)
-
-    parser = Tracker(p.stdout, callNo, frameNo)
-    parser.parse()
-
-    return parser.callNos, parser.callNo
 
 
 ##########################################################################/
