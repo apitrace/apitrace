@@ -45,9 +45,6 @@ static void
 usage(void)
 {
     os::String command = find_command();
-    if (!command.length()) {
-        exit(1);
-    }
 
     char *args[4];
     args[0] = (char *) "python";
@@ -64,9 +61,6 @@ command(int argc, char *argv[])
     int i;
 
     os::String command = find_command();
-    if (!command.length()) {
-        return 1;
-    }
 
     std::vector<const char *> args;
     args.push_back("python");

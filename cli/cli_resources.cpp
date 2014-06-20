@@ -194,6 +194,5 @@ findScript(const char *scriptFilename, bool verbose)
 #endif
 
     std::cerr << "error: cannot find " << scriptFilename << " script\n";
-
-    return "";
+    exit(1);
 }

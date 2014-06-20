@@ -45,9 +45,6 @@ static void
 usage(void)
 {
     os::String command = find_command();
-    if (!command.length()) {
-        exit(1);
-    }
 
     char *args[4];
     args[0] = (char *) "python";
