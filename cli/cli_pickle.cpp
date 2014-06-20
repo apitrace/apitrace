@@ -183,6 +183,8 @@ public:
             writer.writeNone();
         }
 
+        writer.writeInt(call->flags);
+
         writer.endTuple();
     }
 };

@@ -41,6 +41,20 @@ import re
 import cPickle as pickle
 
 
+# Same as trace_model.hpp's call flags
+CALL_FLAG_FAKE              = (1 << 0)
+CALL_FLAG_NON_REPRODUCIBLE  = (1 << 1)
+CALL_FLAG_NO_SIDE_EFFECTS   = (1 << 2)
+CALL_FLAG_RENDER            = (1 << 3)
+CALL_FLAG_SWAP_RENDERTARGET = (1 << 4)
+CALL_FLAG_END_FRAME         = (1 << 5)
+CALL_FLAG_INCOMPLETE        = (1 << 6)
+CALL_FLAG_VERBOSE           = (1 << 7)
+CALL_FLAG_MARKER            = (1 << 8)
+CALL_FLAG_MARKER_PUSH       = (1 << 9)
+CALL_FLAG_MARKER_POP        = (1 << 10)
+
+
 class Visitor:
 
     def __init__(self):
@@ -163,7 +177,7 @@ class Rebuilder(Visitor):
 class Call:
 
     def __init__(self, callTuple):
-        self.no, self.functionName, self.args, self.ret = callTuple
+        self.no, self.functionName, self.args, self.ret, self.flags = callTuple
         self._hash = None
 
     def __str__(self):
