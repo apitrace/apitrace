@@ -25,32 +25,60 @@
  *
  *********************************************************************/
 
-#ifndef _APITRACE_CLI_HPP_
-#define _APITRACE_CLI_HPP_
+#include <string.h>
+#include <iostream>
 
+#include "cli.hpp"
+#include "os_string.hpp"
+#include "os_process.hpp"
+#include "cli_resources.hpp"
 
-struct Command {
-    const char *name;
-    const char *synopsis;
+static const char *synopsis = "Create a new trace by trimming an existing trace.";
 
-    typedef void (*Usage) (void);
-    Usage usage;
+static os::String
+find_command(void)
+{
+    return findScript("autotrim.py");
+}
 
-    typedef int (*Function) (int argc, char *argv[]);
-    Function function;
+static void
+usage(void)
+{
+    os::String command = find_command();
+    if (!command.length()) {
+        exit(1);
+    }
+
+    char *args[4];
+    args[0] = (char *) "python";
+    args[1] = (char *) command.str();
+    args[2] = (char *) "--help";
+    args[3] = NULL;
+
+    os::execute(args);
+}
+
+static int
+command(int argc, char *argv[])
+{
+    int i;
+
+    os::String command = find_command();
+
+    std::vector<const char *> args;
+    args.push_back("python");
+    args.push_back(command.str());
+    for (i = 1; i < argc; i++) {
+        args.push_back(argv[i]);
+    }
+    args.push_back(NULL);
+
+    return os::execute((char * const *)&args[0]);
+}
+
+const Command trim_auto_command = {
+    "trim-auto",
+    synopsis,
+    usage,
+    command
 };
-
-extern const Command diff_command;
-extern const Command diff_state_command;
-extern const Command diff_images_command;
-extern const Command dump_command;
-extern const Command dump_images_command;
-extern const Command pickle_command;
-extern const Command repack_command;
-extern const Command retrace_command;
-extern const Command sed_command;
-extern const Command trace_command;
-extern const Command trim_command;
-extern const Command trim_auto_command;
-
-#endif /* _APITRACE_CLI_HPP_ */
