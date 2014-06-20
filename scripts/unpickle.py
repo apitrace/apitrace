@@ -223,8 +223,12 @@ class Unpickler:
             return False
         else:
             call = self.callFactory(callTuple)
-            self.handleCall(call)
-            return True
+            try:
+                self.handleCall(call)
+            except StopIteration:
+                return False
+            else:
+                return True
 
     def handleCall(self, call):
         pass
