@@ -119,7 +119,7 @@ public:
     }
 
     void visit(Struct *node) {
-        if (false) {
+        if (true) {
             // Structures as dictionaries
             writer.beginDict();
             for (unsigned i = 0; i < node->sig->num_members; ++i) {

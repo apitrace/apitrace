@@ -105,7 +105,7 @@ class Visitor:
         return self.visitIterable(obj)
 
     def visitDict(self, obj):
-        raise NotImplementedError
+        return self.visitIterable(obj)
 
     def visitByteArray(self, obj):
         raise NotImplementedError
@@ -131,6 +131,12 @@ class Dumper(Visitor):
         if len(obj) == 1:
             return '&' + self.visit(obj[0])
         return '{' + ', '.join(itertools.imap(self.visit, obj)) + '}'
+
+    def visitItems(self, items):
+        return ', '.join(['%s = %s' % (name, self.visit(value)) for name, value in items])
+
+    def visitDict(self, obj):
+        return '{' + self.visitItems(obj.iteritems()) + '}'
 
     def visitByteArray(self, obj):
         return 'blob(%u)' % len(obj)
