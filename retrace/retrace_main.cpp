@@ -55,6 +55,7 @@ static enum {
 } snapshotFormat = PNM_FMT;
 
 static trace::CallSet snapshotFrequency;
+static unsigned snapshotInterval = 0;
 static trace::ParseBookmark lastFrameStart;
 
 static unsigned dumpStateCallNo = ~0;
@@ -117,7 +118,10 @@ takeSnapshot(unsigned call_no) {
         return;
     }
 
-    if (snapshotPrefix) {
+    if (snapshotPrefix &&
+        (snapshotInterval == 0 ||
+        (snapshot_no % snapshotInterval) == 0)) {
+
         if (snapshotPrefix[0] == '-' && snapshotPrefix[1] == 0) {
             char comment[21];
             snprintf(comment, sizeof comment, "%u",
@@ -576,6 +580,7 @@ usage(const char *argv0) {
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
+        "      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "  -w, --wait              waitOnFinish on final frame\n"
@@ -596,7 +601,8 @@ enum {
     SB_OPT,
     SNAPSHOT_FORMAT_OPT,
     LOOP_OPT,
-    SINGLETHREAD_OPT
+    SINGLETHREAD_OPT,
+    SNAPSHOT_INTERVAL_OPT
 };
 
 const static char *
@@ -621,6 +627,7 @@ longOptions[] = {
     {"snapshot-prefix", required_argument, 0, 's'},
     {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot", required_argument, 0, 'S'},
+    {"snapshot-interval", required_argument, 0, SNAPSHOT_INTERVAL_OPT},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
     {"loop", no_argument, 0, LOOP_OPT},
@@ -733,6 +740,9 @@ int main(int argc, char **argv)
             if (snapshotPrefix == NULL) {
                 snapshotPrefix = "";
             }
+            break;
+        case SNAPSHOT_INTERVAL_OPT:
+            snapshotInterval = atoi(optarg);
             break;
         case 'v':
             ++retrace::verbosity;
