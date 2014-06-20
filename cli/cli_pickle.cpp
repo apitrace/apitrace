@@ -152,7 +152,7 @@ public:
     }
 
     void visit(Pointer *node) {
-        writer.writeInt(node->value);
+        writer.writePointer(node->value);
     }
 
     void visit(Repr *r) {

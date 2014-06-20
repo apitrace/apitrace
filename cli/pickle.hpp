@@ -296,6 +296,16 @@ public:
         os.put(REDUCE);
     }
 
+    inline void writePointer(unsigned long long addr) {
+        os.put(GLOBAL);
+        os << "unpickle\nPointer\n";
+        os.put(BINPUT);
+        os.put(1);
+        writeInt(addr);
+        os.put(TUPLE1);
+        os.put(REDUCE);
+    }
+
 protected:
     inline void putInt16(uint16_t i) {
         os.put( i        & 0xff);

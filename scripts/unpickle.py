@@ -55,6 +55,17 @@ CALL_FLAG_MARKER_PUSH       = (1 << 9)
 CALL_FLAG_MARKER_POP        = (1 << 10)
 
 
+class Pointer(int):
+
+    def __str__(self):
+        if self == 0:
+            return 'NULL'
+        else:
+            return hex(self)
+
+    __repr__ = __str__
+
+
 class Visitor:
 
     def __init__(self):
@@ -69,9 +80,10 @@ class Visitor:
         self.dispatch[list] = self.visitList
         self.dispatch[dict] = self.visitDict
         self.dispatch[bytearray] = self.visitByteArray
+        self.dispatch[Pointer] = self.visitPointer
 
     def visit(self, obj):
-        method = self.dispatch.get(type(obj), self.visitObj)
+        method = self.dispatch.get(obj.__class__, self.visitObj)
         return method(obj)
 
     def visitObj(self, obj):
@@ -109,6 +121,9 @@ class Visitor:
 
     def visitByteArray(self, obj):
         raise NotImplementedError
+
+    def visitPointer(self, obj):
+        return self.visitAtom(obj)
 
 
 class Dumper(Visitor):
