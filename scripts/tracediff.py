@@ -341,14 +341,16 @@ class PythonDiffer(Differ):
             for j in xrange(numArgs):
                 self.highlighter.write(sep)
                 try:
-                    a_arg = a_call.args[j]
+                    a_argName, a_argVal = a_call.args[j]
                 except IndexError:
                     pass
                 try:
-                    b_arg = b_call.args[j]
+                    b_argName, b_argVal = b_call.args[j]
                 except IndexError:
                     pass
-                self.replace_value(a_arg, b_arg)
+                self.replace_value(a_argName, b_argName)
+                self.highlighter.write(' = ')
+                self.replace_value(a_argVal, b_argVal)
                 sep = ', '
             self.highlighter.write(')')
             if a_call.ret is not None or b_call.ret is not None:
@@ -449,7 +451,7 @@ class PythonDiffer(Differ):
         self.highlighter.bold(True)
         self.highlighter.write(call.functionName)
         self.highlighter.bold(False)
-        self.highlighter.write('(' + ', '.join(itertools.imap(self.dumper.visit, call.args)) + ')')
+        self.highlighter.write('(' + self.dumper.visitItems(call.args) + ')')
         if call.ret is not None:
             self.highlighter.write(' = ' + self.dumper.visit(call.ret))
         self.highlighter.normal()

@@ -208,7 +208,7 @@ class Call:
         if self.no is not None:
             s = str(self.no) + ' ' + s
         dumper = Dumper()
-        s += '(' + ', '.join(itertools.imap(dumper.visit, self.args)) + ')'
+        s += '(' + dumper.visitItems(self.args) + ')'
         if self.ret is not None:
             s += ' = '
             s += dumper.visit(self.ret)

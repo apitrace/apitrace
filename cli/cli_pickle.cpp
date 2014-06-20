@@ -172,11 +172,18 @@ public:
 
         writer.beginList();
         for (unsigned i = 0; i < call->args.size(); ++i) {
+            writer.beginTuple(2);
+            if (i < call->sig->num_args) {
+                writer.writeString(call->sig->arg_names[i]);
+            } else {
+                writer.writeNone();
+            }
             if (call->args[i].value) {
                 _visit(call->args[i].value);
             } else {
                 writer.writeNone();
             }
+            writer.endTuple(2);
         }
         writer.endList();
 
