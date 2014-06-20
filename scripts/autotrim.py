@@ -55,21 +55,32 @@ class Tracker(unpickle.Unpickler):
         self.frameNo = 0
 
     def handleCall(self, call):
-        if True:
+        if False:
             sys.stdout.write("%s\n" % call)
-        self.callNos.append(call.no)
+        else:
+            if call.no % 10 == 0:
+                sys.stdout.write("%s\r" % call.no)
+
+        self.analyzeCall(call)
 
         if self.inCallNo is not None:
             if call.no >= self.inCallNo:
                 self.callNo = call.no
                 raise StopIteration
 
-        if self.frameNo is not None:
+        if self.inFrameNo is not None:
             if call.flags & unpickle.CALL_FLAG_END_FRAME:
                 if self.frameNo >= self.inFrameNo:
                     self.callNo = call.no
                     raise StopIteration
                 self.frameNo += 1
+
+    def analyzeCall(self, call):
+        # Ignore calls without side effects
+        if call.flags & unpickle.CALL_FLAG_NO_SIDE_EFFECTS:
+            return
+
+        self.callNos.append(call.no)
 
 
 def track(apitrace, trace, callNo=None, frameNo=None):
@@ -89,6 +100,33 @@ def track(apitrace, trace, callNo=None, frameNo=None):
     parser.parse()
 
     return parser.callNos, parser.callNo
+
+
+##########################################################################/
+#
+# Trimming
+#
+
+
+def trim(apitrace, inTrace, inCallNos, outTrace):
+    sys.stdout.write('Trimming...\n')
+
+    callsetStream = tempfile.NamedTemporaryFile(delete=False)
+    try:
+        for call in inCallNos:
+            callsetStream.write('%s\n' % call)
+        callsetStream.close()
+            
+        subprocess.call([
+            apitrace,
+            'trim',
+            '--exact',
+            '--calls=@%s' % callsetStream.name,
+            '--output', outTrace,
+            inTrace,
+        ])
+    finally:
+        os.unlink(callsetStream.name)
 
 
 ##########################################################################/
@@ -203,16 +241,7 @@ def main():
     inCallNos, inCallNo = track(options.apitrace, inTrace, inCallNo, inFrameNo)
 
     # Do the actual trimming via `apitrace trim`
-    # FIXME: Use a tempfile
-    inCallSet = ','.join(map(str, inCallNos))
-    subprocess.call([
-        options.apitrace,
-        'trim',
-        '--exact',
-        '--calls', inCallSet,
-        '--output', outTrace,
-        inTrace,
-    ])
+    trim(options.apitrace, inTrace, inCallNos, outTrace)
 
     # Verify that the state at the given call matches
     if options.verify:
