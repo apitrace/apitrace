@@ -27,9 +27,12 @@
 
 import subprocess
 import sys
+import os.path
 
 import unpickle
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from specs.superapi import superapi as api
 
 
 class Tracker(unpickle.Unpickler):
@@ -41,6 +44,8 @@ class Tracker(unpickle.Unpickler):
         self.callNos = []
         self.callNo = None
         self.frameNo = 0
+
+        self.functionCache = {}
 
     def handleCall(self, call):
         if False:
@@ -63,16 +68,44 @@ class Tracker(unpickle.Unpickler):
                     raise StopIteration
                 self.frameNo += 1
 
+    def lookupFunction(self, call):
+        # specs.* package is not designed for fast lookup, so keep a cache
+        functionName = call.functionName
+        try:
+            return self.functionCache[functionName]
+        except KeyError:
+            pass
+
+        try:
+            interfaceName, methodName = functionName.split('::')
+        except ValueError:
+            function = api.getFunctionByName(functionName)
+        else:
+            function = api.getMethodByName(functionName)
+        assert function is not None
+
+        self.functionCache[functionName] = function
+        return function
+
     def analyzeCall(self, call):
         # Ignore calls without side effects
         if call.flags & unpickle.CALL_FLAG_NO_SIDE_EFFECTS:
+            return
+        function = self.lookupFunction(call)
+        if not function.sideeffects:
+            return
+
+        # ignore calls that failed
+        if str(function.type) == 'HRESULT' and call.ret not in ('S_OK', 'DD_OK', 'D3D_OK'):
             return
 
         self.callNos.append(call.no)
 
 
 def track(apitrace, trace, callNo=None, frameNo=None):
+    
     assert callNo is not None or frameNo is not None
+
     cmd = [
         apitrace,
         'pickle',
