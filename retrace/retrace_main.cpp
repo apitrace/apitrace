@@ -110,22 +110,6 @@ Dumper *dumper = &defaultDumper;
 static void
 takeSnapshot(unsigned call_no) {
 
-
-    static unsigned long snapshot_count = -1;
-    if(snapshotInterval) {
-
-	    ++snapshot_count;
-	    if(snapshot_count == 0) {
-		    //do nothing
-	    } else if(snapshot_count == snapshotInterval+1) {
-		    snapshot_count = 0;
-	    } else {
-                    //skip current frame
-		    //std::cout<<"skipping current frame "<<snapshot_count<<std::endl;
-		    return;
-	    }
-    }
-
     static unsigned snapshot_no = 0;
     assert(snapshotPrefix);
 
@@ -135,7 +119,11 @@ takeSnapshot(unsigned call_no) {
         return;
     }
 
-    if (snapshotPrefix) {
+    if (snapshotPrefix &&
+        (snapshotInterval == 0 ||
+            (snapshot_no % snapshotInterval) == 0)) {
+             //std::cout<<"Snapshot no "<<snapshot_no<<std::endl;
+
         if (snapshotPrefix[0] == '-' && snapshotPrefix[1] == 0) {
             char comment[21];
             snprintf(comment, sizeof comment, "%u",
@@ -594,7 +582,7 @@ usage(const char *argv0) {
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
-	"      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
+        "      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "  -w, --wait              waitOnFinish on final frame\n"
@@ -755,9 +743,9 @@ int main(int argc, char **argv)
                 snapshotPrefix = "";
             }
             break;
-	case SNAPSHOT_INTERVAL_OPT:
-	    snapshotInterval = atoi(optarg);
-	    break;
+        case SNAPSHOT_INTERVAL_OPT:
+            snapshotInterval = atoi(optarg);
+            break;
         case 'v':
             ++retrace::verbosity;
             break;
