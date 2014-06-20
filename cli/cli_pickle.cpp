@@ -120,6 +120,7 @@ public:
 
     void visit(Struct *node) {
         if (false) {
+            // Structures as dictionaries
             writer.beginDict();
             for (unsigned i = 0; i < node->sig->num_members; ++i) {
                 writer.beginItem(node->sig->member_names[i]);
@@ -128,11 +129,13 @@ public:
             }
             writer.endDict();
         } else {
-            writer.beginTuple();
-            for (unsigned i = 0; i < node->sig->num_members; ++i) {
+            // Structures as tuples
+            unsigned num_members = node->sig->num_members;
+            writer.beginTuple(num_members);
+            for (unsigned i = 0; i < num_members; ++i) {
                 _visit(node->members[i]);
             }
-            writer.endTuple();
+            writer.endTuple(num_members);
         }
     }
 

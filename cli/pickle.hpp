@@ -162,6 +162,23 @@ public:
         os.put(TUPLE);
     }
 
+    inline void beginTuple(unsigned length) {
+        if (length >= 4) {
+            os.put(MARK);
+        }
+    }
+
+    inline void endTuple(unsigned length) {
+        static const Opcode ops[4] = {
+            EMPTY_TUPLE,
+            TUPLE1,
+            TUPLE2,
+            TUPLE3,
+        };
+        Opcode op = length < 4 ? ops[length] : TUPLE;
+        os.put(op);
+    }
+
     inline void writeString(const char *s, size_t length) {
         if (!s) {
             writeNone();
