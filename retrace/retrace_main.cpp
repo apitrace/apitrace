@@ -54,6 +54,8 @@ static enum {
     RAW_MD5
 } snapshotFormat = PNM_FMT;
 
+static unsigned long snapshotInterval = 0;
+
 static trace::CallSet snapshotFrequency;
 static trace::ParseBookmark lastFrameStart;
 
@@ -107,8 +109,24 @@ Dumper *dumper = &defaultDumper;
  */
 static void
 takeSnapshot(unsigned call_no) {
-    static unsigned snapshot_no = 0;
 
+
+    static unsigned long snapshot_count = -1;
+    if(snapshotInterval) {
+
+	    ++snapshot_count;
+	    if(snapshot_count == 0) {
+		    //do nothing
+	    } else if(snapshot_count == snapshotInterval+1) {
+		    snapshot_count = 0;
+	    } else {
+                    //skip current frame
+		    //std::cout<<"skipping current frame "<<snapshot_count<<std::endl;
+		    return;
+	    }
+    }
+
+    static unsigned snapshot_no = 0;
     assert(snapshotPrefix);
 
     image::Image *src = dumper->getSnapshot();
@@ -576,6 +594,7 @@ usage(const char *argv0) {
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
         "  -S, --snapshot=CALLSET  calls to snapshot (default is every frame)\n"
+	"      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "  -w, --wait              waitOnFinish on final frame\n"
@@ -596,7 +615,8 @@ enum {
     SB_OPT,
     SNAPSHOT_FORMAT_OPT,
     LOOP_OPT,
-    SINGLETHREAD_OPT
+    SINGLETHREAD_OPT,
+    SNAPSHOT_INTERVAL_OPT
 };
 
 const static char *
@@ -621,6 +641,7 @@ longOptions[] = {
     {"snapshot-prefix", required_argument, 0, 's'},
     {"snapshot-format", required_argument, 0, SNAPSHOT_FORMAT_OPT},
     {"snapshot", required_argument, 0, 'S'},
+    {"snapshot-interval", required_argument, 0, SNAPSHOT_INTERVAL_OPT},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
     {"loop", no_argument, 0, LOOP_OPT},
@@ -734,6 +755,9 @@ int main(int argc, char **argv)
                 snapshotPrefix = "";
             }
             break;
+	case SNAPSHOT_INTERVAL_OPT:
+	    snapshotInterval = atoi(optarg);
+	    break;
         case 'v':
             ++retrace::verbosity;
             break;
