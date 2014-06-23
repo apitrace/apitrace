@@ -139,6 +139,14 @@ class D3DRetracer(Retracer):
             print r'        pSharedHandle = NULL;'
             print r'    }'
 
+        if method.name in ('Lock', 'LockRect', 'LockBox'):
+            # Reset _DONOTWAIT flags. Otherwise they may fail, and we have no
+            # way to cope with it (other than retry).
+            mapFlagsArg = method.getArgByName('Flags')
+            for flag in mapFlagsArg.type.values:
+                if flag.endswith('_DONOTWAIT'):
+                    print r'    Flags &= ~%s;' % flag
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         if method.name in self.createDeviceMethodNames:
