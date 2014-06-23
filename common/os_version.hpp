@@ -26,18 +26,16 @@
 
 #pragma once
 
+
 #ifdef _WIN32
+
 
 #include <windows.h>
 
-#if defined(_MSC_VER) && _MSC_VER >= 1800
-
-#include <VersionHelpers.h>
-
-#else
 
 /**
- * VersionHelpers.h is not yet widely available.
+ * VersionHelpers.h is not yet widely available (only available on certain MSVC
+ * and Windows SDK versions), so just define our own helpers.
  *
  * See http://msdn.microsoft.com/en-gb/library/windows/desktop/ms725491.aspx
  */
@@ -59,7 +57,5 @@ IsWindows8OrGreater()
                              dwlConditionMask);
 }
 
-#endif
 
 #endif /* _WIN32 */
-
