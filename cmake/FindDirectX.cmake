@@ -18,29 +18,57 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	# - http://msdn.microsoft.com/en-us/library/windows/desktop/ee663275.aspx
 	# TODO: Allow using DirectX SDK with VS 2011
 	if (DEFINED MSVC_VERSION AND NOT ${MSVC_VERSION} LESS 1700)
-		find_path (WIN8_SDK_ROOT_DIR
-			Include/um/windows.h
-			PATHS
-				"$ENV{ProgramFiles(x86)}/Windows Kits/8.1"
-				"$ENV{ProgramFiles}/Windows Kits/8.1"
-				"$ENV{ProgramFiles(x86)}/Windows Kits/8.0"
-				"$ENV{ProgramFiles}/Windows Kits/8.0"
-				DOC "Windows 8 SDK root directory"
-		)
+		# XXX: Do this in such way that that we don't need to guess the Windows
+		# SDK path.
+		if (CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
+			# http://blogs.msdn.com/b/vcblog/archive/2012/10/08/10357555.aspx
+			find_path (WIN7_SDK_ROOT_DIR
+				Include/windows.h
+				PATHS
+					"$ENV{ProgramFiles(x86)}/Microsoft SDKs/Windows/v7.1A"
+					"$ENV{ProgramFiles}/Microsoft SDKs/Windows/v7.1A"
+					DOC "Windows 7 SDK root directory"
+			)
 
-		if (WIN8_SDK_ROOT_DIR)
-			# We don't add the include search paths, as VS predefines the
-			# Windows SDK include paths, and we can get into errors errors if
-			# we happen to add wrong Windows SDK
-			set (DirectX_INC_SEARCH_PATH
-				"${WIN8_SDK_ROOT_DIR}/Include/um"
-				"${WIN8_SDK_ROOT_DIR}/Include/shared"
+			if (WIN7_SDK_ROOT_DIR)
+				# We don't add the include search paths, as VS predefines the
+				# Windows SDK include paths, and we can get into errors errors if
+				# we happen to add wrong Windows SDK
+				set (DirectX_INC_SEARCH_PATH
+					"${WIN7_SDK_ROOT_DIR}/Include"
+				)
+				if (DirectX_ARCHITECTURE STREQUAL x86)
+					set (DirectX_LIB_SEARCH_PATH "${WIN7_SDK_ROOT_DIR}/Lib")
+				else ()
+					set (DirectX_LIB_SEARCH_PATH "${WIN7_SDK_ROOT_DIR}/Lib/${DirectX_ARCHITECTURE}")
+				endif ()
+				set (DirectX_BIN_SEARCH_PATH "${WIN7_SDK_ROOT_DIR}/bin")
+			endif ()
+		else ()
+			find_path (WIN8_SDK_ROOT_DIR
+				Include/um/windows.h
+				PATHS
+					"$ENV{ProgramFiles(x86)}/Windows Kits/8.1"
+					"$ENV{ProgramFiles}/Windows Kits/8.1"
+					"$ENV{ProgramFiles(x86)}/Windows Kits/8.0"
+					"$ENV{ProgramFiles}/Windows Kits/8.0"
+					DOC "Windows 8 SDK root directory"
 			)
-			set (DirectX_LIB_SEARCH_PATH
-				"${WIN8_SDK_ROOT_DIR}/Lib/winv6.3/um/${DirectX_ARCHITECTURE}"
-				"${WIN8_SDK_ROOT_DIR}/Lib/Win8/um/${DirectX_ARCHITECTURE}"
-			)
-			set (DirectX_BIN_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/bin/x86")
+
+			if (WIN8_SDK_ROOT_DIR)
+				# We don't add the include search paths, as VS predefines the
+				# Windows SDK include paths, and we can get into errors errors if
+				# we happen to add wrong Windows SDK
+				set (DirectX_INC_SEARCH_PATH
+					"${WIN8_SDK_ROOT_DIR}/Include/um"
+					"${WIN8_SDK_ROOT_DIR}/Include/shared"
+				)
+				set (DirectX_LIB_SEARCH_PATH
+					"${WIN8_SDK_ROOT_DIR}/Lib/winv6.3/um/${DirectX_ARCHITECTURE}"
+					"${WIN8_SDK_ROOT_DIR}/Lib/Win8/um/${DirectX_ARCHITECTURE}"
+				)
+				set (DirectX_BIN_SEARCH_PATH "${WIN8_SDK_ROOT_DIR}/bin/x86")
+			endif ()
 		endif ()
 	else ()
 		find_path (DirectX_ROOT_DIR

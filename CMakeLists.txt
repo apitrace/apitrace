@@ -106,7 +106,13 @@ include (CheckIncludeFileCXX)
 
 if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
-    add_definitions (-D_WIN32_WINNT=0x0601 -DWINVER=0x0601)
+    if (CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
+        # Windows XP
+        add_definitions (-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
+    else ()
+        # Windows 7
+        add_definitions (-D_WIN32_WINNT=0x0601 -DWINVER=0x0601)
+    endif ()
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
