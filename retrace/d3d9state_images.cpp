@@ -179,7 +179,6 @@ getTextureImage(IDirect3DDevice9 *pDevice,
                 D3DCUBEMAP_FACES FaceType,
                 UINT Level)
 {
-    image::Image *image = NULL;
     HRESULT hr;
 
     if (!pTexture) {
@@ -209,27 +208,19 @@ getTextureImage(IDirect3DDevice9 *pDevice,
     hr = pSurface->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
-    if (Desc.Pool == D3DPOOL_DEFAULT) {
-        com_ptr<IDirect3DSurface9> pRenderTarget;
-        hr = pDevice->CreateRenderTarget(Desc.Width, Desc.Height, Desc.Format,
-                                         D3DMULTISAMPLE_NONE, 0, FALSE,
-                                         &pRenderTarget, NULL);
-        if (FAILED(hr)) {
-            std::cerr << "warning: CreateRenderTarget failed\n";
-        } else {
-            hr = pDevice->StretchRect(pSurface, NULL, pRenderTarget, NULL, D3DTEXF_NONE);
-            if (FAILED(hr)) {
-                std::cerr << "warning: StretchRect failed\n";
-            } else {
-                image = getRenderTargetImage(pDevice, pRenderTarget);
-            }
-        }
+    if (Desc.Pool != D3DPOOL_DEFAULT ||
+        Desc.Usage & D3DUSAGE_DYNAMIC) {
+        // Lockable texture
+        return getSurfaceImage(pDevice, pSurface);
+    } else if (Desc.Usage & D3DUSAGE_RENDERTARGET) {
+        // Rendertarget texture
+        return getRenderTargetImage(pDevice, pSurface);
     } else {
-        image = getSurfaceImage(pDevice, pSurface);
+        // D3D constraints are such there is not much else that can be done.
+        return NULL;
     }
-
-    return image;
 }
+
 
 void
 dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice)

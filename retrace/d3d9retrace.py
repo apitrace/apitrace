@@ -133,6 +133,15 @@ class D3DRetracer(Retracer):
             print r'    retrace::frameComplete(call);'
             print r'    hDestWindowOverride = NULL;'
 
+        # Ensure textures can be locked when dumping
+        # TODO: Pre-check with CheckDeviceFormat
+        if method.name in ('CreateTexture', 'CreateCubeTexture', 'CreateVolumeTexture'):
+            print r'    if (retrace::dumpingState &&'
+            print r'        Pool == D3DPOOL_DEFAULT &&'
+            print r'        !(Usage & (D3DUSAGE_RENDERTARGET|D3DUSAGE_DEPTHSTENCIL))) {'
+            print r'        Usage |= D3DUSAGE_DYNAMIC;'
+            print r'    }'
+
         if 'pSharedHandle' in method.argNames():
             print r'    if (pSharedHandle) {'
             print r'        retrace::warning(call) << "shared surfaces unsupported\n";'
