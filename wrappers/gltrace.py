@@ -531,7 +531,7 @@ class GlTracer(Tracer):
                     # Emit a fake function
                     print '        {'
                     print '            static const trace::FunctionSig &_sig = %s ? _glEnableClientState_sig : _glDisableClientState_sig;' % flag_name
-                    print '            unsigned _call = trace::localWriter.beginEnter(&_sig);'
+                    print '            unsigned _call = trace::localWriter.beginEnter(&_sig, true);'
                     print '            trace::localWriter.beginArg(0);'
                     self.serializeValue(glapi.GLenum, enable_name)
                     print '            trace::localWriter.endArg();'
@@ -1028,7 +1028,7 @@ class GlTracer(Tracer):
 
             # Emit a fake function
             self.array_trace_intermezzo(api, uppercase_name)
-            print '            unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+            print '            unsigned _call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
                 print '            trace::localWriter.beginArg(%u);' % (arg.index,)
@@ -1105,7 +1105,7 @@ class GlTracer(Tracer):
             print '                    size_t _size = _%s_size(%s, count);' % (function.name, arg_names)
 
             # Emit a fake function
-            print '                    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+            print '                    unsigned _call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
             for arg in function.args:
                 assert not arg.output
                 print '                    trace::localWriter.beginArg(%u);' % (arg.index,)
@@ -1187,7 +1187,7 @@ class GlTracer(Tracer):
     def emitFakeTexture2D(self):
         function = glapi.glapi.getFunctionByName('glTexImage2D')
         instances = function.argNames()
-        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
+        print '        unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
         for arg in function.args:
             assert not arg.output
             self.serializeArg(function, arg)
