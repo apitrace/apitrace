@@ -44,6 +44,35 @@ CGSConnectionID = Opaque("CGSConnectionID")
 CGSWindowID = Alias("CGSWindowID", Int)
 CGSSurfaceID = Alias("CGSSurfaceID", Int)
 
+# XXX: Unfortunately most of the time kCGLPFARendererID has bits outside
+# kCGLRendererIDMatchingMask, preventing these from matching exactly.
+CGLRendererID = FakeEnum(Int, [
+    "kCGLRendererGenericID",
+    "kCGLRendererGenericFloatID",
+    "kCGLRendererAppleSWID",
+    "kCGLRendererATIRage128ID",
+    "kCGLRendererATIRadeonID",
+    "kCGLRendererATIRageProID",
+    "kCGLRendererATIRadeon8500ID",
+    "kCGLRendererATIRadeon9700ID",
+    "kCGLRendererATIRadeonX1000ID",
+    "kCGLRendererATIRadeonX2000ID",
+    "kCGLRendererATIRadeonX3000ID",
+    "kCGLRendererATIRadeonX4000ID",
+    "kCGLRendererGeForce2MXID",
+    "kCGLRendererGeForce3ID",
+    "kCGLRendererGeForceFXID",
+    "kCGLRendererGeForce8xxxID",
+    "kCGLRendererGeForceID",
+    "kCGLRendererVTBladeXP2ID",
+    "kCGLRendererIntel900ID",
+    "kCGLRendererIntelX3100ID",
+    "kCGLRendererIntelHDID",
+    "kCGLRendererIntelHD4000ID",
+    "kCGLRendererIntelHD5000ID",
+    "kCGLRendererMesa3DFXID",
+])
+
 CGLOpenGLProfile = Enum("CGLOpenGLProfile", [
     'kCGLOGLPVersion_Legacy',
     'kCGLOGLPVersion_3_2_Core',
@@ -68,7 +97,7 @@ CGLPixelFormatAttributes = [
     ("kCGLPFAMultisample", None),
     ("kCGLPFASupersample", None),
     ("kCGLPFASampleAlpha", None),
-    ("kCGLPFARendererID", Int),
+    ("kCGLPFARendererID", CGLRendererID),
     ("kCGLPFANoRecovery", None),
     ("kCGLPFAAccelerated", None),
     ("kCGLPFAClosestPolicy", None),
