@@ -221,6 +221,7 @@ if (WIN32)
     )
 
     if (DirectX_D3D11_1_INCLUDE_DIR)
+        add_definitions (-DHAVE_DXGI)
         include_directories (BEFORE SYSTEM
             ${DirectX_D3D11_1_INCLUDE_DIR}
             ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
@@ -266,6 +267,7 @@ if (WIN32)
         d3dretrace_dxgi.cpp
         d3dretrace_ws.cpp
         d3d9state.cpp
+        d3d9state_formats.cpp
         d3d9state_images.cpp
         ${D3DSTATE_SOURCES}
     )
