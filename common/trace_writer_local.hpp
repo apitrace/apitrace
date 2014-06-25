@@ -108,8 +108,6 @@ namespace trace {
          */
         void endLeave(void);
 
-        void fakeMemcpy(const void *ptr, size_t size);
-
         void flush(void);
     };
 
@@ -117,6 +115,8 @@ namespace trace {
      * Singleton.
      */
     extern LocalWriter localWriter;
+
+    void fakeMemcpy(const void *ptr, size_t size);
 
 } /* namespace trace */
 

@@ -843,7 +843,7 @@ class Tracer:
         print '    %s_this->%s(%s);' % (result, method.name, ', '.join([str(arg.name) for arg in method.args]))
     
     def emit_memcpy(self, ptr, size):
-        print '    trace::localWriter.fakeMemcpy(%s, %s);' % (ptr, size)
+        print '    trace::fakeMemcpy(%s, %s);' % (ptr, size)
     
     def fake_call(self, function, args):
         print '            unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
