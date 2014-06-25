@@ -51,6 +51,7 @@ if (NOT WIN32)
 endif ()
 
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+include (ConvenienceLibrary)
 
 if (ANDROID)
     set (ENABLE_GUI false)
@@ -335,7 +336,7 @@ else ()
     set (os os_posix.cpp)
 endif ()
 
-add_library (common STATIC
+add_convenience_library (common
     common/trace_callset.cpp
     common/trace_dump.cpp
     common/trace_fast_callset.cpp
@@ -356,11 +357,6 @@ add_library (common STATIC
     common/${os}
     common/os_backtrace.cpp
     common/highlight.cpp
-)
-
-set_target_properties (common PROPERTIES
-    # Ensure it can be statically linked in shared libraries
-    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
 )
 
 target_link_libraries (common

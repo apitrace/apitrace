@@ -29,27 +29,17 @@ add_custom_command (
 add_custom_target (glproc DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/glproc.hpp)
 
 
-add_library (glproc_gl STATIC EXCLUDE_FROM_ALL
+add_convenience_library (glproc_gl EXCLUDE_FROM_ALL
     glproc_gl.cpp
 )
 
 add_dependencies (glproc_gl glproc)
 
-set_target_properties (glproc_gl PROPERTIES
-    # Ensure it can be statically linked in shared libraries
-    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
-)
-
 if (ENABLE_EGL)
-    add_library (glproc_egl STATIC EXCLUDE_FROM_ALL
+    add_convenience_library (glproc_egl EXCLUDE_FROM_ALL
         glproc_egl.cpp
     )
 
     add_dependencies (glproc_egl glproc)
-
-    set_target_properties (glproc_egl PROPERTIES
-        # Ensure it can be statically linked in shared libraries
-        COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}"
-    )
 endif ()
 

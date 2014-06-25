@@ -133,7 +133,7 @@ include_directories (BEFORE
 include_directories (
     auxincl
 )
-add_library (backtrace STATIC EXCLUDE_FROM_ALL
+add_convenience_library (backtrace EXCLUDE_FROM_ALL
     ${BACKTRACE_FILE}
     ${FORMAT_FILE}
     ${VIEW_FILE}
@@ -142,9 +142,6 @@ add_library (backtrace STATIC EXCLUDE_FROM_ALL
     posix.c
     print.c
     state.c
-)
-set_target_properties (backtrace PROPERTIES
-    COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
 )
 
 set (ENABLE_LIBBACKTRACE_TEST false CACHE BOOL "Enable libbacktrace testing")
