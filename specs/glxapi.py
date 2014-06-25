@@ -333,7 +333,7 @@ GLXFBConfigAttribs = AttribArray(Const(GLXEnum), GLXFBConfigGLXAttribs)
 GLXFBConfigSGIXAttribs = AttribArray(GLXEnum, GLXFBConfigCommonAttribs)
 
 GLXContextARBAttribs = AttribArray(Const(GLXEnum), [
-    ('GLX_RENDER_TYPE', Flags(Int, ["GLX_RGBA_BIT", "GLX_COLOR_INDEX_BIT"])),
+    ('GLX_RENDER_TYPE', FakeEnum(Int, ["GLX_RGBA_TYPE", "GLX_COLOR_INDEX_TYPE"])),
     ('GLX_CONTEXT_MAJOR_VERSION_ARB', Int),
     ('GLX_CONTEXT_MINOR_VERSION_ARB', Int),
     ('GLX_CONTEXT_FLAGS_ARB', Flags(Int, ["GLX_CONTEXT_DEBUG_BIT_ARB", "GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB", "GLX_CONTEXT_ROBUST_ACCESS_BIT_ARB"])),
