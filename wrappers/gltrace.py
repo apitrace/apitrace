@@ -635,7 +635,7 @@ class GlTracer(Tracer):
             print '                flush = flush && flushing_unmap;'
             print '            }'
             print '            if (flush && length > 0) {'
-            self.emit_memcpy('map', 'map', 'length')
+            self.emit_memcpy('map', 'length')
             print '            }'
             print '        }'
             print '    }'
@@ -648,7 +648,7 @@ class GlTracer(Tracer):
             print '        GLint size = 0;'
             print '        _glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);'
             print '        if (map && size > 0) {'
-            self.emit_memcpy('map', 'map', 'size')
+            self.emit_memcpy('map', 'size')
             self.shadowBufferMethod('bufferSubData(0, size, map)')
             print '        }'
             print '    }'
@@ -661,26 +661,26 @@ class GlTracer(Tracer):
             print '        GLint length = 0;'
             print '        _glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_MAP_LENGTH, &length);'
             print '        if (map && length > 0) {'
-            self.emit_memcpy('map', 'map', 'length')
+            self.emit_memcpy('map', 'length')
             print '        }'
             print '    }'
         if function.name == 'glFlushMappedBufferRange':
             print '    GLvoid *map = NULL;'
             print '    _glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map);'
             print '    if (map && length > 0) {'
-            self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'length')
+            self.emit_memcpy('(const char *)map + offset', 'length')
             print '    }'
         if function.name == 'glFlushMappedBufferRangeAPPLE':
             print '    GLvoid *map = NULL;'
             print '    _glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map);'
             print '    if (map && size > 0) {'
-            self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'size')
+            self.emit_memcpy('(const char *)map + offset', 'size')
             print '    }'
         if function.name == 'glFlushMappedNamedBufferRangeEXT':
             print '    GLvoid *map = NULL;'
             print '    _glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
             print '    if (map && length > 0) {'
-            self.emit_memcpy('(char *)map + offset', '(const char *)map + offset', 'length')
+            self.emit_memcpy('(const char *)map + offset', 'length')
             print '    }'
 
         # FIXME: We don't support coherent/pinned memory mappings

@@ -108,7 +108,7 @@ class D3DCommonTracer(DllTracer):
             print '    _MAP_DESC _MapDesc = %s->_MapDesc;' % pResource
             #print r'    os::log("%%p -> %%p+%%lu\n", %s,_MapDesc.pData, (unsigned long)_MapDesc.Size);' % pResource
             print '    if (_MapDesc.Size && _MapDesc.pData) {'
-            self.emit_memcpy('_MapDesc.pData', '_MapDesc.pData', '_MapDesc.Size')
+            self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
             print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)

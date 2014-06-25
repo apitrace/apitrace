@@ -201,6 +201,26 @@ void LocalWriter::endLeave(void) {
     mutex.unlock();
 }
 
+void LocalWriter::fakeMemcpy(const void *ptr, size_t size) {
+    assert(ptr);
+    if (!size) {
+        return;
+    }
+    unsigned _call = beginEnter(&memcpy_sig, true);
+    beginArg(0);
+    writePointer((uintptr_t)ptr);
+    endArg();
+    beginArg(1);
+    writeBlob(ptr, size);
+    endArg();
+    beginArg(2);
+    writeUInt(size);
+    endArg();
+    endEnter();
+    beginLeave(_call);
+    endLeave();
+}
+
 void LocalWriter::flush(void) {
     /*
      * Do nothing if the mutex is already acquired (e.g., if a segfault happen
