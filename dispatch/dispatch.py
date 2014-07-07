@@ -110,7 +110,8 @@ class Dispatcher:
 
     def failFunction(self, function):
         if function.type is stdapi.Void or function.fail is not None:
-            print r'            os::log("warning: ignoring call to unavailable function %s\n", _name);'
+            if function.warn:
+                print r'            os::log("warning: ignoring call to unavailable function %s\n", _name);'
             if function.type is stdapi.Void:
                 assert function.fail is None
                 print '            return;' 
