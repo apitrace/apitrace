@@ -21,6 +21,7 @@
 #include "ui_profilereplaydialog.h"
 #include "vertexdatainterpreter.h"
 #include "trace_profiler.hpp"
+#include "image/image.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -1270,7 +1271,20 @@ void MainWindow::saveSelectedSurface()
     }
 
     QVariant var = item->data(0, Qt::UserRole);
+    if (!var.isValid()) {
+        return;
+    }
+
     QImage img = var.value<QImage>();
+    if (img.isNull()) {
+        image::Image *traceImage = ApiSurface::imageFromBase64(var.value<QByteArray>());
+        img = ApiSurface::qimageFromRawImage(traceImage);
+        delete traceImage;
+    }
+    if (img.isNull()) {
+        statusBar()->showMessage( "Failed to save image", 5000);
+        return;
+    }
 
     QString imageIndex;
     if (selectedCall()) {
@@ -1311,8 +1325,11 @@ void MainWindow::saveSelectedSurface()
         .arg(parentIndex)
         .arg(childIndex);
     //qDebug()<<"save "<<fileName;
-    img.save(fileName, "PNG");
-    statusBar()->showMessage( tr("Saved '%1'").arg(fileName), 5000);
+    if (img.save(fileName, "PNG")) {
+        statusBar()->showMessage( tr("Saved '%1'").arg(fileName), 5000);
+    } else {
+        statusBar()->showMessage( tr("Failed to save '%1'").arg(fileName), 5000);
+    }
 }
 
 void MainWindow::loadProgess(int percent)
