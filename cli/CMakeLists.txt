@@ -38,8 +38,8 @@ target_link_libraries (apitrace
 if (NOT CMAKE_CROSSCOMPILING)
     # On debug builds tell where the source is so that scripts can be found
     # http://www.cmake.org/cmake/help/v3.0/policy/CMP0043.html
-    target_compile_definitions (apitrace PRIVATE
-        $<$<CONFIG:Debug>:APITRACE_SOURCE_DIR="${CMAKE_SOURCE_DIR}">
+    set_target_properties (apitrace PROPERTIES
+        COMPILE_DEFINITIONS $<$<CONFIG:Debug>:APITRACE_SOURCE_DIR="${CMAKE_SOURCE_DIR}">
     )
 endif ()
 
