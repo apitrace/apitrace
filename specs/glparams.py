@@ -2170,9 +2170,9 @@ parameters = [
     ("",	X,	1,	"GL_GEOMETRY_INPUT_TYPE"),	# 0x8917
     ("",	X,	1,	"GL_GEOMETRY_OUTPUT_TYPE"),	# 0x8918
     ("_glGet",	I,	1,	"GL_SAMPLER_BINDING"),	# 0x8919
-    ("glGet",	B,	1,	"GL_CLAMP_VERTEX_COLOR"),	# 0x891A
-    ("glGet",	B,	1,	"GL_CLAMP_FRAGMENT_COLOR"),	# 0x891B
-    ("glGet",	B,	1,	"GL_CLAMP_READ_COLOR"),	# 0x891C
+    ("glGet",	E,	1,	"GL_CLAMP_VERTEX_COLOR"),	# 0x891A
+    ("glGet",	E,	1,	"GL_CLAMP_FRAGMENT_COLOR"),	# 0x891B
+    ("glGet",	E,	1,	"GL_CLAMP_READ_COLOR"),	# 0x891C
     ("",	X,	1,	"GL_FIXED_ONLY"),	# 0x891D
     ("",	X,	1,	"GL_TESS_CONTROL_PROGRAM_NV"),	# 0x891E
     ("",	X,	1,	"GL_TESS_EVALUATION_PROGRAM_NV"),	# 0x891F
