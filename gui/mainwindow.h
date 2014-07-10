@@ -71,6 +71,7 @@ private slots:
     void showSurfacesMenu(const QPoint &pos);
     void showSelectedSurface();
     void saveSelectedSurface();
+    void exportBufferData();
     void slotGoTo();
     void slotJumpTo(int callNum);
     void createdTrace(const QString &path);
