@@ -60,7 +60,6 @@ class DllDispatcher(Dispatcher):
         Dispatcher.dispatchModule(self, module)
 
     def getProcAddressName(self, module, function):
-        assert self.isFunctionPublic(module, function)
         return '_get%sProcAddress' % (module.name.upper())
 
 

@@ -48,15 +48,7 @@ def function_pointer_value(function):
 class Dispatcher:
 
     def header(self):
-        # Must be implemented by derived classes, which should define, declare,
-        # or implement something like:
-        #
-        #  typedef void (*_PROC)(void);
-        #
-        #  static _PROC _getPublicProcAddress(const char *name);
-        #  static _PROC _getPrivateProcAddress(const char *name);
-        #
-        raise NotImplementedError
+        pass
 
     def dispatchModule(self, module):
         for function in module.functions:
@@ -88,14 +80,8 @@ class Dispatcher:
         print '}'
         print
 
-    def isFunctionPublic(self, module, function):
-        return True
-
     def getProcAddressName(self, module, function):
-        if self.isFunctionPublic(module, function):
-            return '_getPublicProcAddress'
-        else:
-            return '_getPrivateProcAddress'
+        raise NotImplementedError
 
     def invokeGetProcAddress(self, module, function):
         ptype = function_pointer_type(function)

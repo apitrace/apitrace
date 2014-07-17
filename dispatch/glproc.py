@@ -506,6 +506,12 @@ void * _getPrivateProcAddress(const char *procName);
     def isFunctionPublic(self, module, function):
         return function.name in public_symbols or function.name.startswith('CGL')
 
+    def getProcAddressName(self, module, function):
+        if self.isFunctionPublic(module, function):
+            return '_getPublicProcAddress'
+        else:
+            return '_getPrivateProcAddress'
+
     def failFunction(self, function):
         # We fake this when they are not available
         if function.name in ('glGetObjectLabel', 'glGetObjectPtrLabel', 'glGetObjectLabelEXT'):
