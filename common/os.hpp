@@ -79,7 +79,14 @@ void log(const char *format, ...)
  * This should be called only from the wrappers, when there is no safe way of
  * failing gracefully.
  */
-void abort(void);
+#ifdef _MSC_VER
+__declspec(noreturn)
+#endif
+void abort(void)
+#ifdef __GNUC__
+   __attribute__((__noreturn__))
+#endif
+;
 
 void setExceptionCallback(void (*callback)(void));
 void resetExceptionCallback(void);
