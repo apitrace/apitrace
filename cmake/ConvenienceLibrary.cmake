@@ -7,13 +7,9 @@ function (add_convenience_library)
 
     add_library ("${name}" STATIC ${ARGV})
 
-    if (NOT "${CMAKE_SHARED_LIBRARY_C_FLAGS}" STREQUAL "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}")
-        message (FATAL_ERROR "CMAKE_SHARED_LIBRARY_C_FLAGS (${CMAKE_SHARED_LIBRARY_C_FLAGS}) != CMAKE_SHARED_LIBRARY_CXX_FLAGS (${CMAKE_SHARED_LIBRARY_CXX_FLAGS})")
-    endif ()
-
     set_target_properties ("${name}" PROPERTIES
-        # Ensure it can be statically linked in shared libraries
-        COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}"
+        # Ensure it can be statically linked onto shared libraries
+        POSITION_INDEPENDENT_CODE ON
     )
 
 endfunction ()
