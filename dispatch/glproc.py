@@ -525,6 +525,7 @@ void * _getPrivateProcAddress(const char *procName);
             print r'    if (severities != 0) *severities = 0;'
             print r'    if (lengths != 0) *lengths = 0;'
             print r'    if (messageLog != 0 && bufsize > 0) *messageLog = 0;'
+            print r'    return 0;'
             return
         if function.name in ('glGetDebugMessageLogAMD'):
             print r'    if (categories != 0) *categories = 0;'
@@ -532,6 +533,7 @@ void * _getPrivateProcAddress(const char *procName);
             print r'    if (severities != 0) *severities = 0;'
             print r'    if (lengths != 0) *lengths = 0;'
             print r'    if (message != 0 && bufsize > 0) *message = 0;'
+            print r'    return 0;'
             return
 
         Dispatcher.failFunction(self, function)
