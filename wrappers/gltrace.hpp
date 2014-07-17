@@ -93,7 +93,6 @@ class Context {
 public:
     enum Profile profile;
     bool user_arrays;
-    bool user_arrays_arb;
     bool user_arrays_nv;
     unsigned retain_count;
 
@@ -106,7 +105,6 @@ public:
     Context(void) :
         profile(PROFILE_COMPAT),
         user_arrays(false),
-        user_arrays_arb(false),
         user_arrays_nv(false),
         retain_count(0),
         bound(false)

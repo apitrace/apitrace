@@ -119,13 +119,12 @@ class GlTracer(Tracer):
         # Which glVertexAttrib* variant to use
         print 'enum vertex_attrib {'
         print '    VERTEX_ATTRIB,'
-        print '    VERTEX_ATTRIB_ARB,'
         print '    VERTEX_ATTRIB_NV,'
         print '};'
         print
         print 'static vertex_attrib _get_vertex_attrib(void) {'
         print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    if (ctx->user_arrays_arb || ctx->user_arrays_nv) {'
+        print '    if (ctx->user_arrays_nv) {'
         print '        GLboolean _vertex_program = GL_FALSE;'
         print '        _glGetBooleanv(GL_VERTEX_PROGRAM_ARB, &_vertex_program);'
         print '        if (_vertex_program) {'
@@ -135,7 +134,6 @@ class GlTracer(Tracer):
         print '                    return VERTEX_ATTRIB_NV;'
         print '                }'
         print '            }'
-        print '            return VERTEX_ATTRIB_ARB;'
         print '        }'
         print '    }'
         print '    return VERTEX_ATTRIB;'
@@ -191,22 +189,6 @@ class GlTracer(Tracer):
         print '            if (_enabled) {'
         print '                GLint _binding = 0;'
         print '                _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &_binding);'
-        print '                if (!_binding) {'
-        print '                    return true;'
-        print '                }'
-        print '            }'
-        print '        }'
-        print '    }'
-        print
-        print '    // glVertexAttribPointerARB'
-        print '    if (_vertex_attrib == VERTEX_ATTRIB_ARB) {'
-        print '        GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS_ARB);'
-        print '        for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
-        print '            GLint _enabled = 0;'
-        print '            _glGetVertexAttribivARB(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED_ARB, &_enabled);'
-        print '            if (_enabled) {'
-        print '                GLint _binding = 0;'
-        print '                _glGetVertexAttribivARB(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING_ARB, &_binding);'
         print '                if (!_binding) {'
         print '                    return true;'
         print '                }'
@@ -493,8 +475,6 @@ class GlTracer(Tracer):
             print '    if (!_array_buffer) {'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        ctx->user_arrays = true;'
-            if function.name == "glVertexAttribPointerARB":
-                print '        ctx->user_arrays_arb = true;'
             if function.name == "glVertexAttribPointerNV":
                 print '        ctx->user_arrays_nv = true;'
             self.invokeFunction(function)
@@ -1064,7 +1044,7 @@ class GlTracer(Tracer):
         print
         print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
         print
-        for suffix in ['', 'ARB', 'NV']:
+        for suffix in ['', 'NV']:
             if suffix:
                 SUFFIX = '_' + suffix
             else:
