@@ -345,6 +345,17 @@ _element_array_buffer_binding(void) {
     return _glGetInteger(GL_ELEMENT_ARRAY_BUFFER_BINDING);
 }
 
+/**
+ * Same as glGetVertexAttribiv, but passing the result in the return value.
+ */
+static inline GLint
+_glGetVertexAttribi(GLuint index, GLenum pname) {
+    GLint param = 0;
+    _glGetVertexAttribiv(index, pname, &param);
+    return param;
+}
+
+
 static inline GLuint
 _glDrawArrays_count(GLint first, GLsizei count)
 {

@@ -150,12 +150,14 @@ class GlTracer(Tracer):
         print '        return false;'
         print '    }'
         print
+        print '    enum gltrace::Profile profile = ctx->profile;'
+        print
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
+            profile_check = 'profile == gltrace::PROFILE_COMPAT'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || profile == gltrace::PROFILE_ES1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -163,19 +165,17 @@ class GlTracer(Tracer):
             print '    // %s' % function_name
             print '  if (%s) {' % profile_check
             self.array_prolog(api, uppercase_name)
-            print '    if (_glIsEnabled(%s)) {' % enable_name
-            print '        GLint _binding = _glGetInteger(%s);' % binding_name
-            print '        if (!_binding) {'
+            print '    if (_glIsEnabled(%s) &&' % enable_name
+            print '        _glGetInteger(%s) == 0) {' % binding_name
             self.array_cleanup(api, uppercase_name)
-            print '            return true;'
-            print '        }'
+            print '        return true;'
             print '    }'
             self.array_epilog(api, uppercase_name)
             print '  }'
             print
 
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
+        print '    if (profile == gltrace::PROFILE_ES1)'
         print '        return false;'
         print
         print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
@@ -184,14 +184,9 @@ class GlTracer(Tracer):
         print '    if (_vertex_attrib == VERTEX_ATTRIB) {'
         print '        GLint _max_vertex_attribs = _glGetInteger(GL_MAX_VERTEX_ATTRIBS);'
         print '        for (GLint index = 0; index < _max_vertex_attribs; ++index) {'
-        print '            GLint _enabled = 0;'
-        print '            _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &_enabled);'
-        print '            if (_enabled) {'
-        print '                GLint _binding = 0;'
-        print '                _glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &_binding);'
-        print '                if (!_binding) {'
-        print '                    return true;'
-        print '                }'
+        print '            if (_glGetVertexAttribi(index, GL_VERTEX_ATTRIB_ARRAY_ENABLED) &&'
+        print '                _glGetVertexAttribi(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING) == 0) {'
+        print '                return true;'
         print '            }'
         print '        }'
         print '    }'
@@ -199,8 +194,7 @@ class GlTracer(Tracer):
         print '    // glVertexAttribPointerNV'
         print '    if (_vertex_attrib == VERTEX_ATTRIB_NV) {'
         print '        for (GLint index = 0; index < 16; ++index) {'
-        print '            GLboolean _enabled = _glIsEnabled(GL_VERTEX_ATTRIB_ARRAY0_NV);'
-        print '            if (_enabled) {'
+        print '            if (_glIsEnabled(GL_VERTEX_ATTRIB_ARRAY0_NV + index)) {'
         print '                return true;'
         print '            }'
         print '        }'
