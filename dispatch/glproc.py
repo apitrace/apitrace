@@ -29,6 +29,8 @@ covers all the functions we support.
 """ 
 
 
+import sys
+
 from dispatch import Dispatcher
 import specs.stdapi as stdapi
 from specs.glapi import glapi
@@ -491,18 +493,6 @@ public_symbols.update([
 
 class GlDispatcher(Dispatcher):
 
-    def header(self):
-        print '''
-#if defined(_WIN32)
-extern HMODULE _libGlHandle;
-#else
-extern void * _libGlHandle;
-#endif
-
-void * _getPublicProcAddress(const char *procName);
-void * _getPrivateProcAddress(const char *procName);
-'''
-        
     def isFunctionPublic(self, module, function):
         return function.name in public_symbols or function.name.startswith('CGL')
 
@@ -540,37 +530,73 @@ void * _getPrivateProcAddress(const char *procName);
 
 
 if __name__ == '__main__':
+    decl, impl = sys.argv[1:]
+
+    sys.stdout = open(decl, 'wt')
     print
     print '#ifndef _GLPROC_HPP_'
     print '#define _GLPROC_HPP_'
-    print 
+    print
     print '#include "glimports.hpp"'
+    print
+    print '#if defined(_WIN32)'
+    print 'extern HMODULE _libGlHandle;'
+    print '#else'
+    print 'extern void * _libGlHandle;'
+    print '#endif'
+    print
+    print 'void * _getPublicProcAddress(const char *procName);'
+    print 'void * _getPrivateProcAddress(const char *procName);'
+    print
+    dispatcher = GlDispatcher()
+    print
+    dispatcher.dispatchModuleDecl(eglapi)
+    print
+    print '#if defined(_WIN32)'
+    print
+    dispatcher.dispatchModuleDecl(wglapi)
+    print
+    print '#elif defined(__APPLE__)'
+    print
+    dispatcher.dispatchModuleDecl(cglapi)
+    print
+    print '#elif defined(HAVE_X11)'
+    print
+    dispatcher.dispatchModuleDecl(glxapi)
+    print
+    print '#endif'
+    print
+    dispatcher.dispatchModuleDecl(glapi)
+    print
+    dispatcher.dispatchModuleDecl(glesapi)
+    print
+    print '#endif /* !_GLPROC_HPP_ */'
+    print
+
+    sys.stdout = open(impl, 'wt')
+    print
+    print '#include "glproc.hpp"'
     print '#include "os.hpp"'
     print
     dispatcher = GlDispatcher()
     print
-    dispatcher.header()
-    print
-    dispatcher.dispatchModule(eglapi)
+    dispatcher.dispatchModuleImpl(eglapi)
     print
     print '#if defined(_WIN32)'
     print
-    dispatcher.dispatchModule(wglapi)
+    dispatcher.dispatchModuleImpl(wglapi)
     print
     print '#elif defined(__APPLE__)'
     print
-    dispatcher.dispatchModule(cglapi)
+    dispatcher.dispatchModuleImpl(cglapi)
     print
     print '#elif defined(HAVE_X11)'
     print
-    dispatcher.dispatchModule(glxapi)
+    dispatcher.dispatchModuleImpl(glxapi)
     print
     print '#endif'
     print
-    dispatcher.dispatchModule(glapi)
+    dispatcher.dispatchModuleImpl(glapi)
     print
-    dispatcher.dispatchModule(glesapi)
-    print
-
-    print '#endif /* !_GLPROC_HPP_ */'
+    dispatcher.dispatchModuleImpl(glesapi)
     print

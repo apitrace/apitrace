@@ -250,6 +250,7 @@ elseif (APPLE)
             cgltrace.py
             gltrace.py
             trace.py
+            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
             ${CMAKE_SOURCE_DIR}/specs/cglapi.py
             ${CMAKE_SOURCE_DIR}/specs/glapi.py
             ${CMAKE_SOURCE_DIR}/specs/glparams.py
@@ -293,6 +294,7 @@ elseif (X11_FOUND)
             glxtrace.py
             gltrace.py
             trace.py
+            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
             ${CMAKE_SOURCE_DIR}/specs/glxapi.py
             ${CMAKE_SOURCE_DIR}/specs/glesapi.py
             ${CMAKE_SOURCE_DIR}/specs/glapi.py
@@ -340,6 +342,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
             egltrace.py
             gltrace.py
             trace.py
+            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
             ${CMAKE_SOURCE_DIR}/specs/eglapi.py
             ${CMAKE_SOURCE_DIR}/specs/eglenum.py
             ${CMAKE_SOURCE_DIR}/specs/glesapi.py

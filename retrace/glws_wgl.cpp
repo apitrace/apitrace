@@ -414,14 +414,17 @@ init(void) {
     const char * libgl_filename = getenv("TRACE_LIBGL");
 
     if (libgl_filename) {
-        pfnChoosePixelFormat = &wglChoosePixelFormat;
-        pfnSetPixelFormat = &wglSetPixelFormat;
-        pfnSwapBuffers = &wglSwapBuffers;
+        _libGlHandle = LoadLibraryA(libgl_filename);
+        if (_libGlHandle) {
+            pfnChoosePixelFormat = (PFN_WGLCHOOSEPIXELFORMAT)GetProcAddress(_libGlHandle, "wglChoosePixelFormat");
+            pfnSetPixelFormat = (PFN_WGLSETPIXELFORMAT)GetProcAddress(_libGlHandle, "&wglSetPixelFormat");
+            pfnSwapBuffers = (PFN_WGLSWAPBUFFERS)GetProcAddress(_libGlHandle, "wglSwapBuffers");
+        }
     } else {
         libgl_filename = "OPENGL32";
+        _libGlHandle = LoadLibraryA(libgl_filename);
     }
 
-    _libGlHandle = LoadLibraryA(libgl_filename);
     if (!_libGlHandle) {
         std::cerr << "error: unable to open " << libgl_filename << "\n";
         exit(1);

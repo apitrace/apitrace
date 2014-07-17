@@ -25,6 +25,7 @@
 
 
 #include "glproc.hpp"
+#include "os.hpp"
 
 
 #if !defined(_WIN32)
