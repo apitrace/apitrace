@@ -1,5 +1,3 @@
-LIBRARY "d2d1"
-
 EXPORTS
     D2D1CreateFactory @1
     D2D1MakeRotateMatrix @2
