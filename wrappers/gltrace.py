@@ -712,6 +712,23 @@ class GlTracer(Tracer):
 
         self.shadowBufferProlog(function)
 
+        if function.name in self.unpack_function_names:
+            for arg in function.args:
+                if (isinstance(arg.type, stdapi.Blob) \
+                    or (isinstance(arg.type, stdapi.Const) \
+                        and isinstance(arg.type.type, stdapi.Blob))):
+                    blob = arg.type.mutable()
+                    assert isinstance(blob, stdapi.Blob)
+                    print '        GLint _unpack_client_storage = 0;'
+                    print '#ifdef __APPLE__'
+                    print '        _glGetIntegerv(GL_UNPACK_CLIENT_STORAGE_APPLE, &_unpack_client_storage);'
+                    print '#endif'
+                    print '        if (_unpack_client_storage) {'
+                    self.emit_malloc(blob.size, arg.name)
+                    self.emit_memcpy(arg.name, arg.name, blob.size)
+                    print '        }'
+                    break
+
         Tracer.traceFunctionImplBody(self, function)
 
     # These entrypoints are only expected to be implemented by tools;
@@ -927,9 +944,10 @@ class GlTracer(Tracer):
             print '    {'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        GLint _unpack_buffer = 0;'
-            print '        if (ctx->profile == gltrace::PROFILE_COMPAT)'
+            print '        if (ctx->profile == gltrace::PROFILE_COMPAT) {'
             print '            _glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &_unpack_buffer);'
-            print '        if (_unpack_buffer) {'
+            print '        }'
+            print '        if (_unpack_buffer || _unpack_client_storage) {'
             print '            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name
             print '        } else {'
             Tracer.serializeArgValue(self, function, arg)

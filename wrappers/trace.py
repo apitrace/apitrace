@@ -845,6 +845,20 @@ class Tracer:
     def emit_memcpy(self, ptr, size):
         print '    trace::fakeMemcpy(%s, %s);' % (ptr, size)
     
+    def emit_malloc(self, size, ptr):
+        print '    {'
+        print '        unsigned _call = trace::localWriter.beginEnter(&trace::malloc_sig, true);'
+        print '        trace::localWriter.beginArg(0);'
+        print '        trace::localWriter.writeUInt(%s);' % size
+        print '        trace::localWriter.endArg();'
+        print '        trace::localWriter.endEnter();'
+        print '        trace::localWriter.beginLeave(_call);'
+        print '        trace::localWriter.beginReturn();'
+        print '        trace::localWriter.writePointer((uintptr_t)%s);' % ptr
+        print '        trace::localWriter.endReturn();'
+        print '        trace::localWriter.endLeave();'
+        print '    }'
+
     def fake_call(self, function, args):
         print '            unsigned _fake_call = trace::localWriter.beginEnter(&_%s_sig, true);' % (function.name,)
         for arg, instance in zip(function.args, args):
