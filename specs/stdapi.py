@@ -356,7 +356,7 @@ def InOut(type, name):
 
 class Function:
 
-    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False):
+    def __init__(self, type, name, args, call = '', fail = None, sideeffects=True, internal=False, warn=True):
         self.type = type
         self.name = name
 
@@ -377,6 +377,7 @@ class Function:
         self.call = call
         self.fail = fail
         self.sideeffects = sideeffects
+        self.warn = warn
         self.internal = internal
 
     def prototype(self, name=None):
