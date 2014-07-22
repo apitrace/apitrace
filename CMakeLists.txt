@@ -409,6 +409,10 @@ if (WIN32)
         PROGRAMS scripts/convert.py
         DESTINATION ${SCRIPTS_INSTALL_DIR}
     )
+    install (
+        FILES scripts/apitrace.PIXExp
+        DESTINATION ${SCRIPTS_INSTALL_DIR}
+    )
 endif ()
 
 ##############################################################################
