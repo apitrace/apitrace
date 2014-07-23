@@ -36,11 +36,14 @@ namespace glws {
 
 
 void
-getProfileVersion(Profile profile, unsigned &major, unsigned &minor, bool &core)
+getProfileDesc(Profile profile, ProfileDesc &desc)
 {
-    major = (profile >> 4) & 0xf;
-    minor =  profile       & 0xf;
-    core = isCoreProfile(profile);
+    desc.api = (profile & 0x200) == 0x200 ? API_GLES : API_GL;
+
+    desc.major = (profile >> 4) & 0xf;
+    desc.minor =  profile       & 0xf;
+
+    desc.core = (profile & 0x100) == 0x100;
 }
 
 
@@ -85,10 +88,9 @@ Drawable::copySubBuffer(int x, int y, int width, int height) {
 bool
 Context::hasExtension(const char *string) {
     if (extensions.empty()) {
-        unsigned major, minor;
-        bool core;
-        getProfileVersion(profile, major, minor, core);
-        if (major >= 3) {
+        ProfileDesc desc;
+        getProfileDesc(profile, desc);
+        if (desc.major >= 3) {
             // Use glGetStringi
             GLint num_extensions = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);

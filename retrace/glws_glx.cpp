@@ -249,6 +249,9 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
         }
 
+        ProfileDesc desc;
+        getProfileDesc(profile, desc);
+
         switch (profile) {
         case PROFILE_COMPAT:
             break;
@@ -259,12 +262,9 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             break;
         default:
             {
-                unsigned major, minor;
-                bool core;
-                getProfileVersion(profile, major, minor, core);
-                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, major);
-                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, minor);
-                if (core) {
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+                if (desc.core) {
                     attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
                 }
                 break;

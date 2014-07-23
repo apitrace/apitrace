@@ -58,14 +58,22 @@ enum Profile {
 };
 
 
-static inline bool
-isCoreProfile(Profile profile) {
-    return (profile & 0x100) == 0x100;
-}
+enum Api {
+    API_GL = 0,
+    API_GLES
+};
+
+
+struct ProfileDesc {
+    Api api;
+    unsigned major;
+    unsigned minor;
+    bool core;
+};
 
 
 void
-getProfileVersion(Profile profile, unsigned &major, unsigned &minor, bool &core);
+getProfileDesc(Profile profile, ProfileDesc &desc);
 
 
 bool
