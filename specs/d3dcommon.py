@@ -306,7 +306,7 @@ ID3D10Blob.methods += [
     StdMethod(LPVOID, 'GetBufferPointer', [], sideeffects=False),
     StdMethod(SIZE_T, 'GetBufferSize', [], sideeffects=False),
 ]
-LPD3D10BLOB = ObjPointer(ID3D10Blob)
+LPD3D10BLOB = OpaquePointer(ID3D10Blob)
 
 D3D_INCLUDE_TYPE = Enum('D3D_INCLUDE_TYPE', [
     'D3D_INCLUDE_LOCAL',
