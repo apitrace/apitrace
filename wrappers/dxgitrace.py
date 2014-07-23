@@ -73,6 +73,17 @@ class D3DCommonTracer(DllTracer):
             self.serializeValue(arg.type, '_pSwapChainDesc')
             return
 
+        # Serialize object names
+        # http://blogs.msdn.com/b/chuckw/archive/2010/04/15/object-naming.aspx
+        if function.name == 'SetPrivateData' and arg.name == 'pData':
+            iid = function.args[0].name
+            print r'    if (%s == WKPDID_D3DDebugObjectName) {' % iid
+            print r'        trace::localWriter.writeString(static_cast<const char *>(pData), DataSize);'
+            print r'    } else {'
+            DllTracer.serializeArgValue(self, function, arg)
+            print r'    }'
+            return
+
         DllTracer.serializeArgValue(self, function, arg)
 
     # Interfaces that need book-keeping for maps
