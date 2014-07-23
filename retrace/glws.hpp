@@ -201,6 +201,9 @@ createVisual(bool doubleBuffer = false, unsigned samples = 1, Profile profile = 
 Drawable *
 createDrawable(const Visual *visual, int width, int height, bool pbuffer = false);
 
+bool
+bindApi(Api api);
+
 Context *
 createContext(const Visual *visual, Context *shareContext = 0, bool debug = false);
 

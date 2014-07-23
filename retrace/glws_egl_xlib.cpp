@@ -327,6 +327,25 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
     return new EglDrawable(visual, width, height, pbuffer);
 }
 
+bool
+bindApi(Api api)
+{
+    EGLenum eglApi;
+    switch (api) {
+    case API_GL:
+        eglApi = EGL_OPENGL_API;
+        break;
+    case API_GLES:
+        eglApi = EGL_OPENGL_ES_API;
+        break;
+    default:
+        assert(0);
+        return false;
+    }
+
+    return eglBindAPI(eglApi);
+}
+
 Context *
 createContext(const Visual *_visual, Context *shareContext, bool debug)
 {

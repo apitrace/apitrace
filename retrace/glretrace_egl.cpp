@@ -148,7 +148,21 @@ static void retrace_eglDestroySurface(trace::Call &call) {
 
 static void retrace_eglBindAPI(trace::Call &call) {
     current_api = call.arg(0).toUInt();
-    eglBindAPI(current_api);
+
+    glws::Api api;
+    switch (current_api) {
+    case EGL_OPENGL_API:
+        api = glws::API_GL;
+        break;
+    case EGL_OPENGL_ES_API:
+        api = glws::API_GLES;
+        break;
+    default:
+        assert(0);
+        return;
+    }
+
+    glws::bindApi(api);
 }
 
 static void retrace_eglCreateContext(trace::Call &call) {

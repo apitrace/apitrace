@@ -462,6 +462,12 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
     return new WglDrawable(visual, width, height, pbuffer);
 }
 
+bool
+bindApi(Api api)
+{
+    return true;
+}
+
 Context *
 createContext(const Visual *visual, Context *shareContext, bool debug)
 {
