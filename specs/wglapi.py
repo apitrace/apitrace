@@ -150,6 +150,7 @@ WGLContextAttribs = AttribArray(Const(WGLenum), [
     ('WGL_CONTEXT_PROFILE_MASK_ARB', Flags(Int, [
         "WGL_CONTEXT_CORE_PROFILE_BIT_ARB",
         "WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB",
+        "WGL_CONTEXT_ES_PROFILE_BIT_EXT",
     ]))
 ])
 
