@@ -503,7 +503,32 @@ class GlDispatcher(Dispatcher):
             return '_getPrivateProcAddress'
 
     def failFunction(self, function):
-        # We fake this when they are not available
+        # We fake these when they are not available
+        if function.name in (
+            # GL_KHR_debug
+            'glDebugMessageControl',
+            'glDebugMessageInsert',
+            'glDebugMessageCallback',
+            'glPushDebugGroup',
+            'glPopDebugGroup',
+            'glObjectLabel',
+            'glObjectPtrLabel',
+            # GL_ARB_debug_output
+            'glDebugMessageControlARB',
+            'glDebugMessageInsertARB',
+            'glDebugMessageCallbackARB',
+            # GL_AMD_debug_output
+            'glDebugMessageEnableAMD',
+            'glDebugMessageInsertAMD',
+            'glDebugMessageCallbackAMD',
+            # GL_EXT_debug_label
+            'glLabelObjectEXT',
+            # GL_EXT_debug_marker
+            'glInsertEventMarkerEXT',
+            'glPushGroupMarkerEXT',
+            'glPopGroupMarkerEXT',
+        ):
+            return
         if function.name in ('glGetObjectLabel', 'glGetObjectPtrLabel', 'glGetObjectLabelEXT'):
             print r'    if (length != 0) *length = 0;'
             print r'    if (label != 0 && bufSize > 0) *label = 0;'

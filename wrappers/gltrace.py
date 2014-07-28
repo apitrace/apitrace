@@ -721,10 +721,6 @@ class GlTracer(Tracer):
         'glStringMarkerGREMEDY',
         # GL_GREMEDY_frame_terminator
         'glFrameTerminatorGREMEDY',
-        # GL_EXT_debug_marker
-        'glInsertEventMarkerEXT',
-        'glPushGroupMarkerEXT',
-        'glPopGroupMarkerEXT',
     ]
 
     # These entrypoints may be implemented by drivers, but are also very useful
@@ -751,6 +747,13 @@ class GlTracer(Tracer):
         'glDebugMessageInsertAMD',
         'glDebugMessageCallbackAMD',
         'glGetDebugMessageLogAMD',
+        # GL_EXT_debug_label
+        'glLabelObjectEXT',
+        'glGetObjectLabelEXT',
+        # GL_EXT_debug_marker
+        'glInsertEventMarkerEXT',
+        'glPushGroupMarkerEXT',
+        'glPopGroupMarkerEXT',
     ]
 
     def invokeFunction(self, function):
@@ -770,8 +773,7 @@ class GlTracer(Tracer):
             Tracer.doInvokeFunction(self, function, prefix = 'gltrace::_', suffix = '_override')
             return
 
-        # We implement GL_EXT_debug_marker, GL_GREMEDY_*, etc., and not the
-        # driver
+        # We implement GL_GREMEDY_*, etc., and not the driver
         if function.name in self.marker_functions:
             return
 
