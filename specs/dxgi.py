@@ -432,6 +432,7 @@ IDXGIAdapter2.methods += [
 
 dxgi = Module('dxgi')
 dxgi.addInterfaces([
+    IDXGIKeyedMutex,
     IDXGIFactory2,
     IDXGIFactoryDWM,
     IDXGIAdapter2,
