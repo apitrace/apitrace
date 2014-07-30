@@ -176,7 +176,7 @@ DXGI_SWAP_CHAIN_FULLSCREEN_DESC = Struct("DXGI_SWAP_CHAIN_FULLSCREEN_DESC", [
 
 DXGI_PRESENT_PARAMETERS = Struct("DXGI_PRESENT_PARAMETERS", [
     (UINT, "DirtyRectsCount"),
-    (Pointer(RECT), "pDirtyRects"),
+    (Array(RECT, "{self}.DirtyRectsCount"), "pDirtyRects"),
     (Pointer(RECT), "pScrollRect"),
     (Pointer(POINT), "pScrollOffset"),
 ])
