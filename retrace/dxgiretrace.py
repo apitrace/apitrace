@@ -360,6 +360,37 @@ class D3DRetracer(Retracer):
                 print(r'    (void)hResource;')
             self.checkResult(interface, method)
             return
+        if interface.name.startswith('ID3D11Device') and method.name.startswith('OpenSharedResource'):
+            print(r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";')
+            print(r'    D3D11_TEXTURE2D_DESC Desc;')
+            print(r'    memset(&Desc, 0, sizeof Desc);')
+            print(r'    Desc.Width = 8;')
+            print(r'    Desc.Height = 8;')
+            print(r'    Desc.MipLevels = 1;')
+            print(r'    Desc.ArraySize = 1;')
+            print(r'    Desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;')
+            print(r'    Desc.SampleDesc.Count = 1;')
+            print(r'    Desc.SampleDesc.Quality = 0;')
+            print(r'    Desc.Usage = D3D11_USAGE_DEFAULT;')
+            print(r'    Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;')
+            print(r'    Desc.CPUAccessFlags = 0x0;')
+            print(r'    Desc.MiscFlags = 0 /* D3D11_RESOURCE_MISC_SHARED */;')
+            print(r'''
+            static const DWORD Checker[8][8] = {
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U },
+               { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
+               {~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U,  0U }
+            };
+            static const D3D11_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
+            ''')
+            print(r'    _result = _this->CreateTexture2D(&Desc, &InitialData, (ID3D11Texture2D**)ppResource);')
+            self.checkResult(method.type)
+            return
 
         if method.name == 'Map':
             # Reset _DO_NOT_WAIT flags. Otherwise they may fail, and we have no
