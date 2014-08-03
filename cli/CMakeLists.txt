@@ -8,6 +8,11 @@ add_definitions(
     -DAPITRACE_SCRIPTS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${SCRIPTS_INSTALL_DIR}"
     -DAPITRACE_WRAPPERS_INSTALL_DIR="${CMAKE_INSTALL_PREFIX}/${WRAPPER_INSTALL_DIR}"
 )
+if (WIN32)
+    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="python")
+else ()
+    add_definitions (-DAPITRACE_PYTHON_EXECUTABLE="${PYTHON_EXECUTABLE}")
+endif ()
 
 add_executable (apitrace
     cli_main.cpp
