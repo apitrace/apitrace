@@ -203,6 +203,47 @@ void Blob   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Pointer::visit(Visitor &visitor) { visitor.visit(this); }
 void Repr   ::visit(Visitor &visitor) { visitor.visit(this); }
 
+// virtual Value::clone
+Value * Null::clone() const { return new Null(*this);}
+Value * Bool::clone() const { return new Bool(*this);}
+Value * SInt::clone() const { return new SInt(*this);}
+Value * UInt::clone() const { return new UInt(*this);}
+Value * Float::clone() const { return new Float(*this);}
+Value * Double::clone() const { return new Double(*this);}
+Value * Enum::clone() const { return new Enum(*this);}
+Value * Bitmask::clone() const { return new Bitmask(*this);}
+Value * Pointer::clone() const { return new Pointer(*this);}
+Value * Repr::clone() const { return new Repr(*this);}
+Value * String::clone() const
+{
+    String  *str = new String(*this);
+    char *val = new char [strlen(this->value) + 1];
+    strcpy(val, this->value);
+    return str;
+}
+Value * Struct::clone() const 
+{
+    Struct *temp = new Struct(*this);
+    for (std::vector<Value *>::size_type i = 0; i != members.size(); i++) {
+        temp->members[i] = members[i]->clone();
+    }
+    return temp;
+}
+Value * Array::clone() const
+{
+    Array *temp = new Array(*this);
+    for (std::vector<Value *>::size_type i = 0; i != values.size(); i++) {
+        temp->values[i] = values[i]->clone();
+    }
+    return temp;
+}
+Value * Blob::clone() const 
+{
+    Blob *temp = new Blob(*this);
+    if (bound)
+        memcpy(temp->buf,this->buf, size);
+    return temp;
+}
 
 void Visitor::visit(Null *) { assert(0); }
 void Visitor::visit(Bool *) { assert(0); }

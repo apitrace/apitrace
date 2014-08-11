@@ -220,14 +220,16 @@ trim_trace(const char *filename, struct trim_options *options)
     /* In pass 1, analyze which calls are needed. */
     frame = 0;
     trace::Call *call;
-    while ((call = p.parse_call())) {
+    bool delCall;
+    while ((call = p.parse_call(delCall))) {
 
         /* There's no use doing any work past the last call and frame
          * requested by the user. */
         if ((options->calls.empty() || call->no > options->calls.getLast()) &&
             (options->frames.empty() || frame > options->frames.getLast())) {
 
-            delete call;
+            if (delCall)
+                delete call;
             break;
         }
 
@@ -262,7 +264,8 @@ trim_trace(const char *filename, struct trim_options *options)
         if (call->flags & trace::CALL_FLAG_END_FRAME)
             frame++;
 
-        delete call;
+        if (delCall)
+            delete call;
     }
 
     /* Prepare output file and writer for output. */
@@ -288,14 +291,15 @@ trim_trace(const char *filename, struct trim_options *options)
     frame = 0;
     call_range_first = -1;
     call_range_last = -1;
-    while ((call = p.parse_call())) {
+    while ((call = p.parse_call(delCall))) {
 
         /* There's no use doing any work past the last call and frame
          * requested by the user. */
         if ((options->calls.empty() || call->no > options->calls.getLast()) &&
             (options->frames.empty() || frame > options->frames.getLast())) {
 
-            delete call;
+            if (delCall)
+                delete call;
             break;
         }
 
@@ -320,7 +324,8 @@ trim_trace(const char *filename, struct trim_options *options)
             frame++;
         }
 
-        delete call;
+        if (delCall)
+            delete call;
     }
 
     if (options->print_callset) {

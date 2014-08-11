@@ -120,7 +120,8 @@ std::vector<trace::Call *> Loader::frame(unsigned idx)
 
         trace::Call *call;
         unsigned parsedCalls = 0;
-        while ((call = m_parser.parse_call())) {
+        bool delCall;
+        while ((call = m_parser.parse_call(delCall))) {
 
             calls[parsedCalls] = call;
             ++parsedCalls;

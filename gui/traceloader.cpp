@@ -265,7 +265,8 @@ void TraceLoader::searchNext(const ApiTrace::SearchRequest &request)
         const FrameBookmark &frameBookmark = m_frameBookmarks[startFrame];
         m_parser.setBookmark(frameBookmark.start);
         trace::Call *call = 0;
-        while ((call = m_parser.parse_call())) {
+        bool delCall;
+        while ((call = m_parser.parse_call(delCall))) {
 
             if (callContains(call, request.text, request.cs)) {
                 unsigned frameIdx = callInFrame(call->no);
@@ -279,11 +280,13 @@ void TraceLoader::searchNext(const ApiTrace::SearchRequest &request)
                         break;
                     }
                 }
-                delete call;
+                if (delCall)
+                    delete call;
                 return;
             }
 
-            delete call;
+            if (delCall)
+                delete call;
         }
     }
     emit searchResult(request, ApiTrace::SearchResult_NotFound, 0);
@@ -301,8 +304,9 @@ void TraceLoader::searchPrev(const ApiTrace::SearchRequest &request)
         const FrameBookmark &frameBookmark = m_frameBookmarks[frameIdx];
         int numCallsToParse = frameBookmark.numberOfCalls;
         m_parser.setBookmark(frameBookmark.start);
-
-        while ((call = m_parser.parse_call())) {
+        
+        bool delCall;
+        while ((call = m_parser.parse_call(delCall))) {
 
             frameCalls.append(call);
             --numCallsToParse;
@@ -528,8 +532,9 @@ TraceLoader::FrameContents::load(TraceLoader   *loader,
     int initNumOfCalls = m_allCalls.count();
     trace::Call  *call;
     ApiTraceCall *apiCall = NULL;
-
-    while ((call = parser.parse_call())) {
+    bool delCall;
+    
+    while ((call = parser.parse_call(delCall))) {
 
         apiCall = apiCallFromTraceCall(call, helpHash, currentFrame,
                                        m_groups.isEmpty() ? 0 : m_groups.top(),
@@ -561,7 +566,8 @@ TraceLoader::FrameContents::load(TraceLoader   *loader,
             m_binaryDataSize += data.size();
         }
 
-        delete call;
+        if (delCall)
+            delete call;
 
         if (apiCall->flags() & trace::CALL_FLAG_END_FRAME) {
             bEndFrameReached = true;

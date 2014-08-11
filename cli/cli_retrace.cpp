@@ -50,8 +50,10 @@ guessApi(const char *filename)
         return trace::API_UNKNOWN;
     }
     trace::Call *call;
-    while ((call = p.parse_call())) {
-        delete call;
+    bool delCall;
+    while ((call = p.parse_call(delCall))) {
+        if (delCall)
+            delete call;
 
         if (p.api != trace::API_UNKNOWN) {
             return p.api;

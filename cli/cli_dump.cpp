@@ -178,14 +178,16 @@ command(int argc, char *argv[])
         }
 
         trace::Call *call;
-        while ((call = p.parse_call())) {
+        bool delCall;
+        while ((call = p.parse_call(delCall))) {
             if (calls.contains(*call)) {
                 if (verbose ||
                     !(call->flags & trace::CALL_FLAG_VERBOSE)) {
                     trace::dump(*call, std::cout, dumpFlags);
                 }
             }
-            delete call;
+            if (delCall)
+                delete call;
         }
     }
 

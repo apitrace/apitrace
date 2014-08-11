@@ -102,7 +102,7 @@ class Value
 public:
     virtual ~Value() {}
     virtual void visit(Visitor &visitor) = 0;
-
+    virtual Value *clone() const = 0;
     virtual bool toBool(void) const = 0;
     virtual signed long long toSInt(void) const;
     virtual unsigned long long toUInt(void) const;
@@ -140,6 +140,7 @@ public:
     unsigned long long toUIntPtr(void) const;
     const char *toString(void) const;
     void visit(Visitor &visitor);
+    Value *clone() const;
 
     const Null *toNull(void) const { return this; }
     Null *toNull(void) { return this; }
@@ -157,7 +158,8 @@ public:
     virtual float toFloat(void) const;
     virtual double toDouble(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     bool value;
 };
 
@@ -173,7 +175,8 @@ public:
     virtual float toFloat(void) const;
     virtual double toDouble(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     signed long long value;
 };
 
@@ -189,7 +192,8 @@ public:
     virtual float toFloat(void) const;
     virtual double toDouble(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     unsigned long long value;
 };
 
@@ -205,7 +209,8 @@ public:
     virtual float toFloat(void) const;
     virtual double toDouble(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     float value;
 };
 
@@ -221,7 +226,8 @@ public:
     virtual float toFloat(void) const;
     virtual double toDouble(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     double value;
 };
 
@@ -235,7 +241,8 @@ public:
     bool toBool(void) const;
     const char *toString(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     const char * value;
 };
 
@@ -246,6 +253,7 @@ public:
     Enum(const EnumSig *_sig, signed long long _value) : SInt(_value), sig(_sig) {}
 
     void visit(Visitor &visitor);
+    Value *clone() const;
 
     const EnumSig *sig;
 
@@ -268,6 +276,7 @@ public:
     Bitmask(const BitmaskSig *_sig, unsigned long long _value) : UInt(_value), sig(_sig) {}
 
     void visit(Visitor &visitor);
+    Value *clone() const;
 
     const BitmaskSig *sig;
 };
@@ -281,7 +290,8 @@ public:
 
     bool toBool(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     const Struct *toStruct(void) const { return this; }
     Struct *toStruct(void) { return this; }
 
@@ -298,7 +308,8 @@ public:
 
     bool toBool(void) const;
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     const Array *toArray(void) const { return this; }
     Array *toArray(void) { return this; }
 
@@ -326,7 +337,8 @@ public:
     void *toPointer(void) const;
     void *toPointer(bool bind);
     void visit(Visitor &visitor);
-
+    Value *clone() const;
+    
     size_t size;
     char *buf;
     bool bound;
@@ -343,6 +355,7 @@ public:
     void *toPointer(bool bind);
     unsigned long long toUIntPtr(void) const;
     void visit(Visitor &visitor);
+    Value *clone() const;
 };
 
 
@@ -372,6 +385,7 @@ public:
     virtual const char *toString(void) const;
 
     void visit(Visitor &visitor);
+    Value *clone() const;
 };
 
 struct RawStackFrame {
@@ -549,7 +563,20 @@ public:
         flags(_flags),
         backtrace(0) {
     }
-
+    Call(const Call *other) : thread_id(other->thread_id), no(other->no),
+        sig(other->sig), args(other->args), ret(0), flags(other->flags),
+        backtrace(0)
+    {
+        for (int i = 0; i < other->args.size(); i++) {
+            Value *a = other->args[i].value->clone();
+            args[i].value = a;
+        }
+ 
+        if (other->ret) {
+            ret = other->ret->clone();
+        }
+    }
+    
     ~Call();
 
     inline const char *

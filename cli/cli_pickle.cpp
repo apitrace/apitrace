@@ -271,13 +271,15 @@ command(int argc, char *argv[])
         }
 
         trace::Call *call;
-        while ((call = parser.parse_call())) {
+        bool delCall;
+        while ((call = parser.parse_call(delCall))) {
             if (calls.contains(*call)) {
                 writer.begin();
                 visitor.visit(call);
                 writer.end();
             }
-            delete call;
+            if(delCall)
+                delete call;
         }
     }
 

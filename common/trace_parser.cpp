@@ -1023,10 +1023,19 @@ void LastFrameLoopParser::bookmarkFrameStart(trace::Call *call) {
     }
 }
 
-Call *LastFrameLoopParser::parse_call(void) {
+Call *LastFrameLoopParser::parse_call(bool & del) {
     trace::Call *call;
 
-    call = parser->parse_call();
+    call = parser->parse_call(del);
+    if (savingCalls) {
+        if (call) {
+            trace::Call * tempCall = new Call(call);
+            savedCalls.push_back(tempCall);
+        } else {
+            savedCalls.push_back(call);
+        }
+    }
+
 
      /* If the user wants to loop we need to get a bookmark target. We
      * usually get this after replaying a call that ends a frame, but
@@ -1039,7 +1048,21 @@ Call *LastFrameLoopParser::parse_call(void) {
     /* Restart last frame when looping is requested. */
     if (!call  && (loopIter > 0  || loopContinuous)) {
         parser->setBookmark(lastFrameStart);
-        call = parser->parse_call();
+        call = parser->parse_call(del);
+        /* If looping multiple times save parsed calls on first loop so
+         * subsequent loops will run faster. */
+        if (savedCalls.empty() && !savingCalls && (loopIter > 1 || loopContinuous)) {
+            savingCalls = true;
+            trace::Call *tempCall = new Call(call);
+            savedCalls.push_back(tempCall);
+        } else if (savingCalls) {
+            /* any subsequent loops use fast parser */
+            parser = new FastParser(parser, &savedCalls);
+            fp = parser;
+            savingCalls = false;
+            call = parser->parse_call(del);
+ 
+        }
         if (!loopContinuous)
             loopIter--;
     } else if (callEndsFrame) {
@@ -1049,5 +1072,12 @@ Call *LastFrameLoopParser::parse_call(void) {
 
     return call;
 }
+Call * FastParser::parse_call(bool &del) {
+    Call *temp;
 
+    idx = idx % savedCalls->size();
+    temp = (*savedCalls)[idx++];
+    del = false;
+    return temp;
+}
 } /* namespace trace */

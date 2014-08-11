@@ -325,6 +325,7 @@ public:
     void
     runLeg(trace::Call *call) {
 
+        bool delCall = true;
         /* Consume successive calls for this thread. */
         do {
 
@@ -334,8 +335,9 @@ public:
             parser->bookmarkFrameStart(call);
 
             retraceCall(call);
-            delete call;
-            call = parser->parse_call();
+            if (delCall)
+                delete call;
+            call = parser->parse_call(delCall);
 
         } while (call && call->thread_id == leg);
 
@@ -438,7 +440,8 @@ RelayRace::getRunner(unsigned leg) {
 void
 RelayRace::run(void) {
     trace::Call *call;
-    call = parser->parse_call();
+    bool delCall;
+    call = parser->parse_call(delCall);
     if (!call) {
         /* Nothing to do */
         return;
@@ -507,12 +510,14 @@ mainLoop() {
 
     if (singleThread) {
         trace::Call *call;
-        call = parser->parse_call();
+        bool delCall;
+        call = parser->parse_call(delCall);
         do {
             parser->bookmarkFrameStart(call);
             retraceCall(call);
-            delete call;
-            call = parser->parse_call();
+            if (delCall)
+                delete call;
+            call = parser->parse_call(delCall);
         } while (call);
     } else {
         RelayRace race;

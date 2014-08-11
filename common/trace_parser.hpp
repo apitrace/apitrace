@@ -3,7 +3,7 @@
  * Copyright 2010 VMware, Inc.
  * All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * Permission is hereby granted,free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -54,7 +54,7 @@ struct ParseBookmark
  {
  public:
     virtual ~AbstractParser() {}
-    virtual  Call *parse_call(void) = 0;
+    virtual  Call *parse_call(bool &del) = 0;
     virtual void bookmarkFrameStart(trace::Call *call) = 0;
     virtual void getBookmark(ParseBookmark &bookmark) = 0;
     virtual void setBookmark(const ParseBookmark &bookmark) = 0;
@@ -125,7 +125,8 @@ public:
 
     void close(void);
 
-    Call *parse_call(void) {
+    Call *parse_call(bool & del) {
+        del = true;
         return parse_call(FULL);
     }
 
@@ -238,6 +239,29 @@ protected:
     inline void skip_byte(void);
 };
 
+// Decorator to loop over a vector of saved calls
+class FastParser: public AbstractParser {
+public:
+    FastParser(AbstractParser *p, std::vector<Call *> *s) {
+        parser = p;
+        savedCalls = s;
+        idx = 0;
+    }
+    ~FastParser() {}
+    
+    Call *parse_call(bool &del);
+    void bookmarkFrameStart(trace::Call *call) {}
+    void getBookmark(ParseBookmark &bookmark) {}
+    void setBookmark(const ParseBookmark &bookmark) {}
+    bool open(const char *filename) {return false;}
+    void close(void) {}
+    unsigned long long get_version(void) {return 0;}
+private:
+    AbstractParser *parser;
+    std::vector<Call *> *savedCalls;
+    unsigned int idx;
+};
+
 // Decorator for parser which loops
 class LastFrameLoopParser : public AbstractParser  {
 public:
@@ -245,10 +269,19 @@ public:
         parser = p;
         callEndsFrame = false;
         firstCall = true;
+        savedCalls.clear();
+        savingCalls = false;
+        fp = NULL;
     }
-    ~LastFrameLoopParser() { delete parser; }
+    ~LastFrameLoopParser() {
+        delete fp;
+        fp = NULL;
+        for (std::vector<Call *>::iterator it = savedCalls.begin(); it != savedCalls.end();)
+            it = savedCalls.erase(it);
+        savedCalls.clear();
+    }
 
-    Call *parse_call(void);
+    Call *parse_call(bool & del);
     void bookmarkFrameStart(trace::Call *call);
 
     //delegate to Parser
@@ -259,9 +292,12 @@ public:
     unsigned long long get_version(void) {return parser->get_version();}
 private:
     AbstractParser *parser;
+    AbstractParser *fp;
     bool callEndsFrame, firstCall;
     ParseBookmark frameStart;
     ParseBookmark lastFrameStart;
+    std::vector<Call *> savedCalls;
+    bool savingCalls;
 };
 
 } /* namespace trace */

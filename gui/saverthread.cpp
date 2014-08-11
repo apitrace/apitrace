@@ -353,7 +353,8 @@ void SaverThread::run()
     parser.open(m_readFileName.toLocal8Bit());
 
     trace::Call *call;
-    while ((call = parser.parse_call())) {
+    bool delCall;
+    while ((call = parser.parse_call(delCall))) {
         if (callIndexMap.contains(call->no)) {
             QVector<QVariant> values = callIndexMap[call->no]->editedValues();
             for (int i = 0; i < values.count(); ++i) {

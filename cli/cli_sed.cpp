@@ -189,7 +189,8 @@ sed_trace(Replacements &replacements, const char *inFileName, std::string &outFi
     }
 
     trace::Call *call;
-    while ((call = p.parse_call())) {
+    bool delCall;
+    while ((call = p.parse_call(delCall))) {
 
         for (Replacements::iterator it = replacements.begin(); it != replacements.end(); ++it) {
             it->visit(call);
@@ -197,7 +198,8 @@ sed_trace(Replacements &replacements, const char *inFileName, std::string &outFi
 
         writer.writeCall(call);
 
-        delete call;
+        if (delCall)
+            delete call;
     }
 
     std::cerr << "Edited trace is available as " << outFileName << "\n";
