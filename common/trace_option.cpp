@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <iostream>
+#include <stdlib.h>
 
 namespace trace {
 
@@ -48,6 +49,14 @@ boolOption(const char *option, bool default_) {
     }
     std::cerr << "error: unexpected bool " << option << "\n";
     return default_;
+}
+
+int
+intOption(const char *option, int default_) {
+    if (!option) {
+        return default_;
+    }
+    return atoi(option);
 }
 
 } /* namespace trace */

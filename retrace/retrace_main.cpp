@@ -46,6 +46,7 @@
 
 static bool waitOnFinish = false;
 static bool loopOnFinish = false;
+static bool loopContinuos = false;
 
 static const char *snapshotPrefix = NULL;
 static enum {
@@ -90,6 +91,7 @@ bool singleThread = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
+unsigned loopIter = 1;
 
 
 void
@@ -348,9 +350,11 @@ public:
 
             /* Restart last frame if looping is requested. */
             if (loopOnFinish) {
-                if (!call) {
+                if (!call  && (loopIter > 0  || loopContinuos)) {
                     parser.setBookmark(lastFrameStart);
                     call = parser.parse_call();
+                    if (!loopContinuos)
+                        loopIter--;
                 } else if (callEndsFrame) {
                     lastFrameStart = frameStart;
                 }
@@ -590,7 +594,7 @@ usage(const char *argv0) {
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "  -w, --wait              waitOnFinish on final frame\n"
-        "      --loop              continuously loop, replaying final frame.\n"
+        "      --loop[=N]          loop N times (N=0 continuously) replaying final frame.\n"
         "      --singlethread      use a single thread to replay command stream\n";
 }
 
@@ -636,7 +640,7 @@ longOptions[] = {
     {"snapshot-interval", required_argument, 0, SNAPSHOT_INTERVAL_OPT},
     {"verbose", no_argument, 0, 'v'},
     {"wait", no_argument, 0, 'w'},
-    {"loop", no_argument, 0, LOOP_OPT},
+    {"loop", optional_argument, 0, LOOP_OPT},
     {"singlethread", no_argument, 0, SINGLETHREAD_OPT},
     {0, 0, 0, 0}
 };
@@ -757,6 +761,9 @@ int main(int argc, char **argv)
             waitOnFinish = true;
             break;
         case LOOP_OPT:
+            loopIter = trace::intOption(optarg);
+            if (loopIter == 0)
+                loopContinuos = true;
             loopOnFinish = true;
             break;
         case PGPU_OPT:

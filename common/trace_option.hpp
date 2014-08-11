@@ -32,6 +32,9 @@ namespace trace {
 bool
 boolOption(const char *option, bool default_ = true);
 
+int
+intOption(const char *option, int default_ = 0);
+
 } /* namespace trace */
 
 #endif /* _TRACE_CALLSET_HPP_ */
