@@ -940,31 +940,6 @@ _gl_image_size(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsize
 #define _glTexImage2D_size(format, type, width, height)        _gl_image_size(format, type, width, height, 1, can_unpack_subimage())
 #define _glTexImage1D_size(format, type, width)                _gl_image_size(format, type, width, 1, 1, can_unpack_subimage())
 
-#define _glTexSubImage3D_size(format, type, width, height, depth) _glTexImage3D_size(format, type, width, height, depth)
-#define _glTexSubImage2D_size(format, type, width, height)        _glTexImage2D_size(format, type, width, height)
-#define _glTexSubImage1D_size(format, type, width)                _glTexImage1D_size(format, type, width)
-
-#define _glTexImage3DEXT_size _glTexImage3D_size
-#define _glTexImage2DEXT_size _glTexImage2D_size
-#define _glTexImage1DEXT_size _glTexImage1D_size
-#define _glTexSubImage3DEXT_size _glTexSubImage3D_size
-#define _glTexSubImage2DEXT_size _glTexSubImage2D_size
-#define _glTexSubImage1DEXT_size _glTexSubImage1D_size
-
-#define _glTextureImage3DEXT_size _glTexImage3D_size
-#define _glTextureImage2DEXT_size _glTexImage2D_size
-#define _glTextureImage1DEXT_size _glTexImage1D_size
-#define _glTextureSubImage3DEXT_size _glTexSubImage3D_size
-#define _glTextureSubImage2DEXT_size _glTexSubImage2D_size
-#define _glTextureSubImage1DEXT_size _glTexSubImage1D_size
-
-#define _glMultiTexImage3DEXT_size _glTexImage3D_size
-#define _glMultiTexImage2DEXT_size _glTexImage2D_size
-#define _glMultiTexImage1DEXT_size _glTexImage1D_size
-#define _glMultiTexSubImage3DEXT_size _glTexSubImage3D_size
-#define _glMultiTexSubImage2DEXT_size _glTexSubImage2D_size
-#define _glMultiTexSubImage1DEXT_size _glTexSubImage1D_size
-
 #define _glDrawPixels_size(format, type, width, height) _glTexImage2D_size(format, type, width, height)
 #define _glConvolutionFilter1D_size(format, type, width) _glTexImage1D_size(format, type, width)
 #define _glConvolutionFilter2D_size(format, type, width, height) _glTexImage2D_size(format, type, width, height)
