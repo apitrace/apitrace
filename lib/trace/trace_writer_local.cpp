@@ -92,7 +92,14 @@ LocalWriter::open(void) {
 
     const char *lpFileName;
 
+#if 0
     lpFileName = getenv("TRACE_FILE");
+#else
+    char _lpFileName[MAX_PATH];
+    _snprintf(_lpFileName, sizeof _lpFileName, "C:\\apitrace\\metro.%lu.trace", GetCurrentProcessId());
+    lpFileName = _lpFileName;
+#endif
+
     if (!lpFileName) {
         static unsigned dwCounter = 0;
 

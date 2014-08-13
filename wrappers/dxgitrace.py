@@ -198,10 +198,10 @@ class D3DCommonTracer(DllTracer):
 
     def invokeMethod(self, interface, base, method):
         if method.name == 'CreateBuffer':
-            if interface.name.startswith('ID3D11'):
-                print(r'    D3D11_SUBRESOURCE_DATA initialData;')
-            else:
+            if interface.name.startswith('ID3D10'):
                 print(r'    D3D10_SUBRESOURCE_DATA initialData;')
+            else:
+                print(r'    D3D11_SUBRESOURCE_DATA initialData;')
             print(r'    if (!pInitialData) {')
             print(r'        pInitialData = &initialData;')
             print(r'        _initialBufferAlloc(pDesc, &initialData);')
@@ -259,6 +259,9 @@ if __name__ == '__main__':
     # TODO: Expose this via a runtime option
     print('#define FORCE_D3D_FEATURE_LEVEL_11_0 0')
 
+    print
+    print('static void createID3D11Resource(ID3D11Resource *pResource);')
+
     api = API()
     api.addModule(dxgi.dxgi)
     api.addModule(d3d10.d3d10)
@@ -269,3 +272,5 @@ if __name__ == '__main__':
 
     tracer = D3DCommonTracer()
     tracer.traceApi(api)
+
+    print(r'#include "d3d11hacks.hpp"')

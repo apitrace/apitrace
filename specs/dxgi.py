@@ -926,8 +926,15 @@ IDXGISwapChainDWM.methods += [
     StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
 ]
 
+IDXGIDeviceXAML = Interface("IDXGIDeviceXAML", IUnknown)
+IDXGIDeviceXAML.methods += [
+    StdMethod(HRESULT, "SetInProcessGPUPriority", [(INT, "Priority")]),
+    StdMethod(HRESULT, "GetInProcessGPUPriority", [Out(Pointer(INT), "pPriority")], sideeffects=False),
+]
+
 dxgi.addInterfaces([
     IDXGIFactoryDWM,
+    IDXGIDeviceXAML,
 ])
 
 

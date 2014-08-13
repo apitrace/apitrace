@@ -68,10 +68,21 @@
 static void
 debugPrintf(const char *format, ...)
 {
+#if METRO
+    char buf[512];
+
+    va_list ap;
+    va_start(ap, format);
+    _vsnprintf(buf, sizeof buf, format, ap);
+    va_end(ap);
+
+    OutputDebugStringA(buf);
+#else
     va_list ap;
     va_start(ap, format);
     vfprintf(stderr, format, ap);
     va_end(ap);
+#endif
 }
 
 
@@ -707,10 +718,14 @@ main(int argc, char *argv[])
         Sleep(1000);
     }
 
+#if METRO
+    const char *szDllPath = szDllName;
+#else
     char szDllPath[MAX_PATH];
     GetModuleFileNameA(NULL, szDllPath, sizeof szDllPath);
     getDirName(szDllPath);
     strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
+#endif
 
     if (bDebug) {
         if (!attachDebugger(GetProcessId(hProcess))) {

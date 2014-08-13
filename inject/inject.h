@@ -78,6 +78,14 @@ logLastError(const char *szMsg)
 }
 
 
+
+#ifdef _WIN64
+#define METRO 1
+#else
+#define METRO 1
+#endif
+
+
 static inline const char *
 getSeparator(const char *szFilename) {
     const char *p, *q;

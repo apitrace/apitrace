@@ -2906,3 +2906,100 @@ d3d11.addInterfaces([
     ID3D11LayeredUseCounted,
     IUseCounted2,
 ])
+
+
+#
+# Undocumented interfaces
+#
+
+CID3D11Forwarder = Interface("CID3D11Forwarder", IUnknown)
+CID3D11Forwarder.methods += [
+    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D11_BUFFER_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), 1), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Buffer)), "ppBuffer")]),
+    StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D11_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture1D)), "ppTexture1D")]),
+    StdMethod(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D11_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D)), "ppTexture2D")]),
+    StdMethod(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D11_TEXTURE3D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture3D)), "ppTexture3D")]),
+    StdMethod(HRESULT, "CreateShaderResourceView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_SHADER_RESOURCE_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11ShaderResourceView)), "ppSRView")]),
+    StdMethod(HRESULT, "CreateUnorderedAccessView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_UNORDERED_ACCESS_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11UnorderedAccessView)), "ppUAView")]),
+    StdMethod(HRESULT, "CreateRenderTargetView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_RENDER_TARGET_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11RenderTargetView)), "ppRTView")]),
+    StdMethod(HRESULT, "CreateDepthStencilView", [(ObjPointer(ID3D11Resource), "pResource"), (Pointer(Const(D3D11_DEPTH_STENCIL_VIEW_DESC)), "pDesc"), Out(Pointer(ObjPointer(ID3D11DepthStencilView)), "ppDepthStencilView")]),
+    StdMethod(HRESULT, "CreateInputLayout", [(Array(Const(D3D11_INPUT_ELEMENT_DESC), "NumElements"), "pInputElementDescs"), (UINT, "NumElements"), (Blob(Const(Void), "BytecodeLength"), "pShaderBytecodeWithInputSignature"), (SIZE_T, "BytecodeLength"), Out(Pointer(ObjPointer(ID3D11InputLayout)), "ppInputLayout")]),
+    StdMethod(HRESULT, "CreateVertexShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11VertexShader)), "ppVertexShader")]),
+    StdMethod(HRESULT, "CreateGeometryShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11GeometryShader)), "ppGeometryShader")]),
+    StdMethod(HRESULT, "CreateGeometryShaderWithStreamOutput", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (Array(Const(D3D11_SO_DECLARATION_ENTRY), "NumEntries"), "pSODeclaration"), (UINT, "NumEntries"), (Array(Const(UINT), "NumStrides"), "pBufferStrides"), (UINT, "NumStrides"), (UINT, "RasterizedStream"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11GeometryShader)), "ppGeometryShader")]),
+    StdMethod(HRESULT, "CreatePixelShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11PixelShader)), "ppPixelShader")]),
+    StdMethod(HRESULT, "CreateHullShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11HullShader)), "ppHullShader")]),
+    StdMethod(HRESULT, "CreateDomainShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11DomainShader)), "ppDomainShader")]),
+    StdMethod(HRESULT, "CreateComputeShader", [(Blob(Const(Void), "BytecodeLength"), "pShaderBytecode"), (SIZE_T, "BytecodeLength"), (ObjPointer(ID3D11ClassLinkage), "pClassLinkage"), Out(Pointer(ObjPointer(ID3D11ComputeShader)), "ppComputeShader")]),
+    StdMethod(HRESULT, "CreateClassLinkage", [Out(Pointer(ObjPointer(ID3D11ClassLinkage)), "ppLinkage")]),
+    StdMethod(HRESULT, "CreateBlendState", [(Pointer(Const(D3D11_BLEND_DESC)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D11BlendState)), "ppBlendState")]),
+    StdMethod(HRESULT, "CreateDepthStencilState", [(Pointer(Const(D3D11_DEPTH_STENCIL_DESC)), "pDepthStencilDesc"), Out(Pointer(ObjPointer(ID3D11DepthStencilState)), "ppDepthStencilState")]),
+    StdMethod(HRESULT, "CreateRasterizerState", [(Pointer(Const(D3D11_RASTERIZER_DESC)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D11RasterizerState)), "ppRasterizerState")]),
+    StdMethod(HRESULT, "CreateSamplerState", [(Pointer(Const(D3D11_SAMPLER_DESC)), "pSamplerDesc"), Out(Pointer(ObjPointer(ID3D11SamplerState)), "ppSamplerState")]),
+    StdMethod(HRESULT, "CreateQuery", [(Pointer(Const(D3D11_QUERY_DESC)), "pQueryDesc"), Out(Pointer(ObjPointer(ID3D11Query)), "ppQuery")]),
+    StdMethod(HRESULT, "CreatePredicate", [(Pointer(Const(D3D11_QUERY_DESC)), "pPredicateDesc"), Out(Pointer(ObjPointer(ID3D11Predicate)), "ppPredicate")]),
+    StdMethod(HRESULT, "CreateCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pCounterDesc"), Out(Pointer(ObjPointer(ID3D11Counter)), "ppCounter")]),
+    StdMethod(HRESULT, "CreateDeferredContext", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppDeferredContext")]),
+    StdMethod(HRESULT, "OpenSharedResource", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(HRESULT, "CheckFormatSupport", [(DXGI_FORMAT, "Format"), Out(Pointer(D3D11_FORMAT_SUPPORT), "pFormatSupport")], sideeffects=False),
+    StdMethod(HRESULT, "CheckMultisampleQualityLevels", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), Out(Pointer(UINT), "pNumQualityLevels")], sideeffects=False),
+    StdMethod(Void, "CheckCounterInfo", [Out(Pointer(D3D11_COUNTER_INFO), "pCounterInfo")], sideeffects=False),
+    StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D11_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")], sideeffects=False),
+    StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(D3D11_FEATURE_DATA, "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), InOut(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
+    StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
+    StdMethod(D3D11_CREATE_DEVICE_FLAG, "GetCreationFlags", [], sideeffects=False),
+    StdMethod(HRESULT, "GetDeviceRemovedReason", [], sideeffects=False),
+    StdMethod(Void, "GetImmediateContext", [Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
+    StdMethod(HRESULT, "SetExceptionMode", [(D3D11_RAISE_FLAG, "RaiseFlags")]),
+    StdMethod(D3D11_RAISE_FLAG, "GetExceptionMode", [], sideeffects=False),
+    StdMethod(Void, "GetImmediateContext1", [Out(Pointer(ObjPointer(ID3D11DeviceContext1)), "ppImmediateContext")]),
+    StdMethod(HRESULT, "CreateDeferredContext1", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext1)), "ppDeferredContext")]),
+    StdMethod(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D11_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D11BlendState1)), "ppBlendState")]),
+    StdMethod(HRESULT, "CreateRasterizerState1", [(Pointer(Const(D3D11_RASTERIZER_DESC1)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D11RasterizerState1)), "ppRasterizerState")]),
+    StdMethod(HRESULT, "CreateDeviceContextState", [(D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), (REFIID, "EmulatedInterface"), Out(Pointer(D3D_FEATURE_LEVEL), "pChosenFeatureLevel"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppContextState")]),
+    StdMethod(HRESULT, "OpenSharedResource1", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(HRESULT, "OpenSharedResourceByName", [(LPCWSTR, "lpName"), (DXGI_SHARED_RESOURCE_FLAG, "dwDesiredAccess"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(Void, "GetImmediateContext2", [Out(Pointer(ObjPointer(ID3D11DeviceContext2)), "ppImmediateContext")]),
+    StdMethod(HRESULT, "CreateDeferredContext2", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext2)), "ppDeferredContext")]),
+    StdMethod(Void, "GetResourceTiling", [(ObjPointer(ID3D11Resource), "pTiledResource"), Out(Pointer(UINT), "pNumTilesForEntireResource"), Out(Pointer(D3D11_PACKED_MIP_DESC), "pPackedMipDesc"), Out(Pointer(D3D11_TILE_SHAPE), "pStandardTileShapeForNonPackedMips"), Out(Pointer(UINT), "pNumSubresourceTilings"), (UINT, "FirstSubresourceTilingToGet"), Out(Pointer(D3D11_SUBRESOURCE_TILING), "pSubresourceTilingsForNonPackedMips")]),
+    StdMethod(HRESULT, "CheckMultisampleQualityLevels1", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), (D3D11_CHECK_MULTISAMPLE_QUALITY_LEVELS_FLAG, "Flags"), Out(Pointer(UINT), "pNumQualityLevels")], sideeffects=False),
+    #...
+    #StdMethod(D3D_FEATURE_LEVEL, "GetFeatureLevel", [], sideeffects=False),
+]
+
+ID3D11PartnerDevice = Interface("ID3D11PartnerDevice", IUnknown)
+ID3D11PartnerDevice.methods += [
+    StdMethod(HRESULT, "BeginGuardRectangleSupport", []),
+    StdMethod(HRESULT, "EndGuardRectangleSupport", []),
+    StdMethod(HRESULT, "CreateGuardableTexture2D", [(Pointer(Const(D3D11_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D)), "ppTexture2D")]),
+    StdMethod(HRESULT, "SetGuardRect", [(ObjPointer(ID3D11Texture2D), "pTexture2D"), (RECT, "Rect")]),
+    StdMethod(HRESULT, "SetEmptyGuardRect", [(ObjPointer(ID3D11Texture2D), "pTexture2D")]),
+    StdMethod(HRESULT, "SetUnguarded", [(ObjPointer(ID3D11Texture2D), "pTexture2D")]),
+    StdMethod(HRESULT, "OfferResourcesInternal", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), (DXGI_OFFER_RESOURCE_PRIORITY, "Priority")]),
+    StdMethod(HRESULT, "ReclaimResourcesInternal", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), Out(Pointer(BOOL), "pDiscarded")]),
+    StdMethod(UINT, "GetPartnerCaps", [], sideeffects=False),
+    StdMethod(HRESULT, "CreateCompositionBuffer", [
+        (UINT, "Width"),
+        (UINT, "Height"),
+        (DXGI_FORMAT, "Format"),
+        (D3D11_USAGE, "Usage"), # ??
+        (D3D11_BIND_FLAG, "BindFlags"),
+        (D3D11_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+        (REFIID, "EmulatedInterface"),
+        Out(Pointer(ObjPointer(Void)), "ppArg8"),
+        Out(Pointer(ObjPointer(Void)), "ppArg9")]),
+    StdMethod(HRESULT, "PresentCompositionBuffers", [(OpaquePointer(Void), "Arg1"), (Array(Const(ObjPointer(IUnknown)), "Arg3"), "Arg2"), (UINT, "Arg3")]),
+    StdMethod(HRESULT, "GetGuardRect", [(ObjPointer(ID3D11Texture2D), "pTexture2D"), Out(Pointer(BOOL), "pEmpty"), Out(Pointer(RECT), "pRect")], sideeffects=False),
+]
+
+ID2DPrivateInfo = Interface("ID2DPrivateInfo", IUnknown)
+ID2DPrivateInfo.methods += [
+    StdMethod(UINT, "ConservativeFlushCount", [], sideeffects=False),
+]
+
+d3d11.addInterfaces([
+    CID3D11Forwarder,
+    ID3D11PartnerDevice,
+    ID2DPrivateInfo,
+])
