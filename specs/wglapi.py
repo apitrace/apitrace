@@ -151,7 +151,11 @@ WGLContextAttribs = AttribArray(Const(WGLenum), [
         "WGL_CONTEXT_CORE_PROFILE_BIT_ARB",
         "WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB",
         "WGL_CONTEXT_ES_PROFILE_BIT_EXT",
-    ]))
+    ])),
+    ('WGL_CONTEXT_RELEASE_BEHAVIOR_ARB', FakeEnum(Int, [
+        'WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB',
+        'WGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB',
+    ])),
 ])
 
 WGLPixelFormatAttribsList = [
