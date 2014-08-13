@@ -626,6 +626,18 @@ class GlTracer(Tracer):
             self.shadowBufferMethod('bufferSubData(0, size, map)')
             print '        }'
             print '    }'
+        if function.name == 'glUnmapNamedBuffer':
+            print '    GLint access_flags = 0;'
+            print '    _glGetNamedBufferParameteriv(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
+            print '    if ((access_flags & GL_MAP_WRITE_BIT) && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
+            print '        GLvoid *map = NULL;'
+            print '        _glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '        GLint length = 0;'
+            print '        _glGetNamedBufferParameteriv(buffer, GL_BUFFER_MAP_LENGTH, &length);'
+            print '        if (map && length > 0) {'
+            self.emit_memcpy('map', 'length')
+            print '        }'
+            print '    }'
         if function.name == 'glUnmapNamedBufferEXT':
             print '    GLint access_flags = 0;'
             print '    _glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
@@ -650,6 +662,12 @@ class GlTracer(Tracer):
             print '    if (map && size > 0) {'
             self.emit_memcpy('(const char *)map + offset', 'size')
             print '    }'
+        if function.name == 'glFlushMappedNamedBufferRange':
+            print '    GLvoid *map = NULL;'
+            print '    _glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &map);'
+            print '    if (map && length > 0) {'
+            self.emit_memcpy('(const char *)map + offset', 'length')
+            print '    }'
         if function.name == 'glFlushMappedNamedBufferRangeEXT':
             print '    GLvoid *map = NULL;'
             print '    _glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
@@ -659,7 +677,7 @@ class GlTracer(Tracer):
 
         # FIXME: We don't support coherent/pinned memory mappings
         # See https://github.com/apitrace/apitrace/issues/232
-        if function.name in ('glBufferStorage', 'glNamedBufferStorageEXT'):
+        if function.name in ('glBufferStorage', 'glNamedBufferStorage', 'glNamedBufferStorageEXT'):
             print r'    if (flags & GL_MAP_COHERENT_BIT) {'
             print r'        os::log("apitrace: warning: coherent mappings not fully supported\n");'
             print r'    }'
@@ -880,11 +898,17 @@ class GlTracer(Tracer):
         'glCompressedTexSubImage2DARB',
         'glCompressedTexSubImage3D',
         'glCompressedTexSubImage3DARB',
+        'glCompressedTextureImage1D',
         'glCompressedTextureImage1DEXT',
+        'glCompressedTextureImage2D',
         'glCompressedTextureImage2DEXT',
+        'glCompressedTextureImage3D',
         'glCompressedTextureImage3DEXT',
+        'glCompressedTextureSubImage1D',
         'glCompressedTextureSubImage1DEXT',
+        'glCompressedTextureSubImage2D',
         'glCompressedTextureSubImage2DEXT',
+        'glCompressedTextureSubImage3D',
         'glCompressedTextureSubImage3DEXT',
         'glConvolutionFilter1D',
         'glConvolutionFilter2D',

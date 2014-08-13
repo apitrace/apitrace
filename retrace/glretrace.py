@@ -139,6 +139,7 @@ class GlRetracer(Retracer):
     pack_function_names = set([
         'glGetCompressedTexImage',
         'glGetCompressedTexImageARB',
+        'glGetCompressedTextureImage',
         'glGetCompressedTextureImageEXT',
         'glGetCompressedMultiTexImageEXT',
         'glGetConvolutionFilter',
@@ -150,6 +151,7 @@ class GlRetracer(Retracer):
         'glGetPolygonStipple',
         'glGetSeparableFilter',
         'glGetTexImage',
+        'glGetTextureImage',
         'glGetTextureImageEXT',
         'glGetMultiTexImageEXT',
         'glReadPixels',
@@ -171,7 +173,9 @@ class GlRetracer(Retracer):
         'glMapBufferARB',
         'glMapBufferOES',
         'glMapBufferRange',
+        'glMapNamedBuffer',
         'glMapNamedBufferEXT',
+        'glMapNamedBufferRange',
         'glMapNamedBufferRangeEXT',
         'glMapObjectBufferATI',
     ])
@@ -180,6 +184,7 @@ class GlRetracer(Retracer):
         'glUnmapBuffer',
         'glUnmapBufferARB',
         'glUnmapBufferOES',
+        'glUnmapNamedBuffer',
         'glUnmapNamedBufferEXT',
         'glUnmapObjectBufferATI',
     ])
@@ -286,6 +291,10 @@ class GlRetracer(Retracer):
                 print r'            glGetBufferPointervARB(target, GL_BUFFER_MAP_POINTER_ARB, &ptr);'
             elif function.name == 'glUnmapBufferOES':
                 print r'            glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &ptr);'
+            elif function.name == 'glUnmapNamedBuffer':
+                print r'            glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
+            elif function.name == 'glUnmapNamedBuffer':
+                print r'            glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
             elif function.name == 'glUnmapNamedBufferEXT':
                 print r'            glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &ptr);'
             elif function.name == 'glUnmapObjectBufferATI':
@@ -446,7 +455,7 @@ class GlRetracer(Retracer):
                 print r'    if (_result != _origResult) {'
                 print r'        retrace::warning(call) << "vertex attrib location mismatch " << _origResult << " -> " << _result << "\n";'
                 print r'    }'
-            if function.name in ('glCheckFramebufferStatus', 'glCheckFramebufferStatusEXT', 'glCheckNamedFramebufferStatusEXT'):
+            if function.name in ('glCheckFramebufferStatus', 'glCheckFramebufferStatusEXT', 'glCheckNamedFramebufferStatus', 'glCheckNamedFramebufferStatusEXT'):
                 print r'    GLint _origResult = call.ret->toSInt();'
                 print r'    if (_origResult == GL_FRAMEBUFFER_COMPLETE &&'
                 print r'        _result != GL_FRAMEBUFFER_COMPLETE) {'
@@ -465,6 +474,8 @@ class GlRetracer(Retracer):
                     print r'    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
                 elif function.name == 'glMapBufferARB':
                     print r'    glGetBufferParameterivARB(target, GL_BUFFER_SIZE_ARB, &length);'
+                elif function.name == 'glMapNamedBuffer':
+                    print r'    glGetNamedBufferParameteriv(buffer, GL_BUFFER_SIZE, &length);'
                 elif function.name == 'glMapNamedBufferEXT':
                     print r'    glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_SIZE, &length);'
                 elif function.name == 'glMapObjectBufferATI':
