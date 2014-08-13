@@ -167,6 +167,8 @@ class GlRetracer(Retracer):
         'glGetnPolygonStippleARB',
         'glGetnSeparableFilterARB',
         'glGetnTexImageARB',
+        'glReadnPixels',
+        'glReadnPixelsEXT',
         'glReadnPixelsARB',
     ])
 
