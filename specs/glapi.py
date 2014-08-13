@@ -2703,7 +2703,7 @@ glapi.addFunctions([
     # GL_NV_transform_feedback
     GlFunction(Void, "glBeginTransformFeedbackNV", [(GLenum_mode, "primitiveMode")]),
     GlFunction(Void, "glEndTransformFeedbackNV", []),
-    GlFunction(Void, "glTransformFeedbackAttribsNV", [(GLuint, "count"), (Array(Const(GLint), "count*3"), "attribs"), (GLenum, "bufferMode")]),
+    GlFunction(Void, "glTransformFeedbackAttribsNV", [(GLsizei, "count"), (Array(Const(GLint), "count*3"), "attribs"), (GLenum, "bufferMode")]),
     GlFunction(Void, "glBindBufferRangeNV", [(GLenum, "target"), (GLuint, "index"), (GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "size")]),
     GlFunction(Void, "glBindBufferOffsetNV", [(GLenum, "target"), (GLuint, "index"), (GLbuffer, "buffer"), (GLintptr, "offset")]),
     GlFunction(Void, "glBindBufferBaseNV", [(GLenum, "target"), (GLuint, "index"), (GLbuffer, "buffer")]),
