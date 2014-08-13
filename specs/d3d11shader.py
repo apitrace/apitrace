@@ -164,15 +164,15 @@ ID3D11ShaderReflectionConstantBuffer.methods += [
 ]
 
 ID3D11ShaderReflection.methods += [
-    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3D11_SHADER_DESC), "pDesc")], sideeffects=False),
     StdMethod(ObjPointer(ID3D11ShaderReflectionConstantBuffer), "GetConstantBufferByIndex", [(UINT, "Index")]),
     StdMethod(ObjPointer(ID3D11ShaderReflectionConstantBuffer), "GetConstantBufferByName", [(LPCSTR, "Name")]),
-    StdMethod(HRESULT, "GetResourceBindingDesc", [(UINT, "ResourceIndex"), Out(Pointer(D3D11_SHADER_INPUT_BIND_DESC), "pDesc")]),
-    StdMethod(HRESULT, "GetInputParameterDesc", [(UINT, "ParameterIndex"), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), "pDesc")]),
-    StdMethod(HRESULT, "GetOutputParameterDesc", [(UINT, "ParameterIndex"), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), "pDesc")]),
-    StdMethod(HRESULT, "GetPatchConstantParameterDesc", [(UINT, "ParameterIndex"), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetResourceBindingDesc", [(UINT, "ResourceIndex"), Out(Pointer(D3D11_SHADER_INPUT_BIND_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "GetInputParameterDesc", [(UINT, "ParameterIndex"), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "GetOutputParameterDesc", [(UINT, "ParameterIndex"), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "GetPatchConstantParameterDesc", [(UINT, "ParameterIndex"), Out(Pointer(D3D11_SIGNATURE_PARAMETER_DESC), "pDesc")], sideeffects=False),
     StdMethod(ObjPointer(ID3D11ShaderReflectionVariable), "GetVariableByName", [(LPCSTR, "Name")]),
-    StdMethod(HRESULT, "GetResourceBindingDescByName", [(LPCSTR, "Name"), Out(Pointer(D3D11_SHADER_INPUT_BIND_DESC), "pDesc")]),
+    StdMethod(HRESULT, "GetResourceBindingDescByName", [(LPCSTR, "Name"), Out(Pointer(D3D11_SHADER_INPUT_BIND_DESC), "pDesc")], sideeffects=False),
     StdMethod(UINT, "GetMovInstructionCount", [], sideeffects=False),
     StdMethod(UINT, "GetMovcInstructionCount", [], sideeffects=False),
     StdMethod(UINT, "GetConversionInstructionCount", [], sideeffects=False),
@@ -180,7 +180,7 @@ ID3D11ShaderReflection.methods += [
     StdMethod(D3D_PRIMITIVE, "GetGSInputPrimitive", [], sideeffects=False),
     StdMethod(BOOL, "IsSampleFrequencyShader", [], sideeffects=False),
     StdMethod(UINT, "GetNumInterfaceSlots", [], sideeffects=False),
-    StdMethod(HRESULT, "GetMinFeatureLevel", [Out(Pointer(D3D_FEATURE_LEVEL), "pLevel")]),
+    StdMethod(HRESULT, "GetMinFeatureLevel", [Out(Pointer(D3D_FEATURE_LEVEL), "pLevel")], sideeffects=False),
     StdMethod(UINT, "GetThreadGroupSize", [Out(Pointer(UINT), "pSizeX"), Out(Pointer(UINT), "pSizeY"), Out(Pointer(UINT), "pSizeZ")], sideeffects=False),
 ]
 

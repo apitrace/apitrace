@@ -1210,7 +1210,7 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "GetDeviceRemovedReason", [], sideeffects=False),
     StdMethod(Void, "GetImmediateContext", [Out(Pointer(ObjPointer(ID3D11DeviceContext)), "ppImmediateContext")]),
     StdMethod(HRESULT, "SetExceptionMode", [(D3D11_RAISE_FLAG, "RaiseFlags")]),
-    StdMethod(UINT, "GetExceptionMode", [], sideeffects=False),
+    StdMethod(D3D11_RAISE_FLAG, "GetExceptionMode", [], sideeffects=False),
 ]
 
 d3d11 = Module("d3d11")
