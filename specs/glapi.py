@@ -798,7 +798,7 @@ glapi.addFunctions([
     # GL_AMD_stencil_operation_extended
     GlFunction(Void, "glStencilOpValueAMD", [(GLenum, "face"), (GLuint, "value")]),
 
-    # GL_AMD_vertex_shader_tesselator
+    # GL_AMD_vertex_shader_tessellator
     GlFunction(Void, "glTessellationFactorAMD", [(GLfloat, "factor")]),
     GlFunction(Void, "glTessellationModeAMD", [(GLenum, "mode")]),
 
@@ -864,6 +864,9 @@ glapi.addFunctions([
     GlFunction(Void, "glDepthRangef", [(GLfloat, "n"), (GLfloat, "f")]),
     GlFunction(Void, "glClearDepthf", [(GLfloat, "d")]),
 
+    # GL_ARB_ES3_1_compatibility
+    GlFunction(Void, "glMemoryBarrierByRegion", [(GLbitfield, "barriers")]),
+
     # GL_ARB_base_instance
     GlFunction(Void, "glDrawArraysInstancedBaseInstance", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount"), (GLuint, "baseinstance")]),
     GlFunction(Void, "glDrawElementsInstancedBaseInstance", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount"), (GLuint, "baseinstance")]),
@@ -907,6 +910,9 @@ glapi.addFunctions([
     # GL_ARB_clear_texture
     GlFunction(Void, "glClearTexImage", [ (GLtexture, "texture"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glClearBufferData_size(format, type)"), "data")]),
     GlFunction(Void, "glClearTexSubImage", [ (GLtexture, "texture"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glClearBufferData_size(format, type)"), "data")]),
+
+    # GL_ARB_clip_control
+    GlFunction(Void, "glClipControl", [(GLenum, "origin"), (GLenum, "depth")]),
 
     # GL_ARB_color_buffer_float
     GlFunction(Void, "glClampColorARB", [(GLenum, "target"), (GLenum, "clamp")]),
@@ -1407,6 +1413,9 @@ glapi.addFunctions([
     # GL_ARB_tessellation_shader
     GlFunction(Void, "glPatchParameteri", [(GLenum, "pname"), (GLint, "value")]),
     GlFunction(Void, "glPatchParameterfv", [(GLenum, "pname"), (Array(Const(GLfloat), "_gl_param_size(pname)"), "values")]),
+
+    # GL_ARB_texture_barrier
+    GlFunction(Void, "glTextureBarrier", []),
 
     # GL_ARB_texture_buffer_object
     GlFunction(Void, "glTexBufferARB", [(GLenum, "target"), (GLenum, "internalformat"), (GLbuffer, "buffer")]),

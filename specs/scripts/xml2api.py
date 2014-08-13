@@ -103,10 +103,9 @@ def processCommand(prototypes, command):
 
 
 def processRequire(prototypes, node):
-    requireNode = node.find('require')
-    if requireNode is None:
-        return
-    commands = requireNode.findall('command')
+    commands = []
+    for requireNode in node.findall('require'):
+        commands.extend(requireNode.findall('command'))
     if not commands:
         return
     print '    # %s' % node.get('name')
