@@ -30,6 +30,7 @@
 #
 
 
+import optparse
 import sys
 import xml.etree.ElementTree as ET
 
@@ -102,13 +103,17 @@ def processCommand(prototypes, command):
     prototypes[functionName] = prototype
 
 
-def processRequire(prototypes, node):
+def processRequire(prototypes, node, filterName):
+    nodeName = node.get('name')
+    if filterName is not None and nodeName != filterName:
+        return
+
     commands = []
     for requireNode in node.findall('require'):
         commands.extend(requireNode.findall('command'))
     if not commands:
         return
-    print '    # %s' % node.get('name')
+    print '    # %s' % nodeName
     for command in commands:
         functionName = command.get('name')
         prototype = prototypes[functionName]
@@ -116,21 +121,37 @@ def processRequire(prototypes, node):
     print
 
 
-for arg in sys.argv[1:]:
-    tree = ET.parse(arg)
-    root = tree.getroot()
+def main():
+    optparser = optparse.OptionParser(
+        usage='\n\t%prog [options] <xml> ...',
+        version='%%prog')
+    optparser.add_option(
+        '--filter', metavar='NAME',
+        type='string', dest='filter',
+        help='filter feature/extension')
+    (options, args) = optparser.parse_args(sys.argv[1:])
 
-    prototypes = {}
+    global prototypes
+    global namespace
 
-    for commands in root.findall('commands'):
-        namespace = commands.get('namespace')
-        for command in commands.findall('command'):
-            processCommand(prototypes, command)
+    for arg in args:
+        tree = ET.parse(arg)
+        root = tree.getroot()
 
-    for feature in root.findall('feature'):
-        processRequire(prototypes, feature)
+        prototypes = {}
 
-    extensions = root.find('extensions')
-    for extension in extensions.findall('extension'):
-        processRequire(prototypes, extension)
+        for commands in root.findall('commands'):
+            namespace = commands.get('namespace')
+            for command in commands.findall('command'):
+                processCommand(prototypes, command)
 
+        for feature in root.findall('feature'):
+            processRequire(prototypes, feature, options.filter)
+
+        extensions = root.find('extensions')
+        for extension in extensions.findall('extension'):
+            processRequire(prototypes, extension, options.filter)
+
+
+if __name__ == '__main__':
+    main()
