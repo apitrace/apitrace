@@ -2538,8 +2538,8 @@ glapi.addFunctions([
     GlFunction(Void, "glEndConditionalRenderNVX", []),
 
     # GL_NV_bindless_multi_draw_indirect
-    GlFunction(Void, "glMultiDrawArraysIndirectBindlessNV", [(GLenum_mode, "mode"), (OpaquePointer(Const(Void)), "indirect"), (GLsizei, "drawCount"), (GLsizei, "stride"), (GLint, "vertexBufferCount")]),
-    GlFunction(Void, "glMultiDrawElementsIndirectBindlessNV", [(GLenum_mode, "mode"), (GLenum, "type"), (OpaquePointer(Const(Void)), "indirect"), (GLsizei, "drawCount"), (GLsizei, "stride"), (GLint, "vertexBufferCount")]),
+    GlFunction(Void, "glMultiDrawArraysIndirectBindlessNV", [(GLenum_mode, "mode"), (GLpointerConst, "indirect"), (GLsizei, "drawCount"), (GLsizei, "stride"), (GLint, "vertexBufferCount")]),
+    GlFunction(Void, "glMultiDrawElementsIndirectBindlessNV", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLsizei, "drawCount"), (GLsizei, "stride"), (GLint, "vertexBufferCount")]),
 
     # GL_NV_bindless_texture
     GlFunction(GLuint64, "glGetTextureHandleNV", [(GLtexture, "texture")]),

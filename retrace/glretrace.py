@@ -27,6 +27,9 @@
 """GL retracer generator."""
 
 
+import re
+import sys
+
 from retrace import Retracer
 import specs.stdapi as stdapi
 import specs.glapi as glapi
@@ -72,51 +75,9 @@ class GlRetracer(Retracer):
         #"glMatrixIndexPointerARB",
     ))
 
-    draw_array_function_names = set([
-        "glDrawArrays",
-        "glDrawArraysEXT",
-        "glDrawArraysIndirect",
-        "glDrawArraysInstanced",
-        "glDrawArraysInstancedARB",
-        "glDrawArraysInstancedEXT",
-        "glDrawArraysInstancedBaseInstance",
-        "glDrawMeshArraysSUN",
-        "glMultiDrawArrays",
-        "glMultiDrawArraysEXT",
-        "glMultiModeDrawArraysIBM",
-        'glMultiDrawArraysIndirect',
-        'glMultiDrawArraysIndirectAMD',
-    ])
-
-    draw_elements_function_names = set([
-        "glDrawElements",
-        "glDrawElementsBaseVertex",
-        "glDrawElementsIndirect",
-        "glDrawElementsInstanced",
-        "glDrawElementsInstancedARB",
-        "glDrawElementsInstancedEXT",
-        "glDrawElementsInstancedBaseVertex",
-        "glDrawElementsInstancedBaseInstance",
-        "glDrawElementsInstancedBaseVertexBaseInstance",
-        "glDrawRangeElements",
-        "glDrawRangeElementsEXT",
-        "glDrawRangeElementsBaseVertex",
-        "glMultiDrawElements",
-        "glMultiDrawElementsBaseVertex",
-        "glMultiDrawElementsEXT",
-        "glMultiModeDrawElementsIBM",
-        'glMultiDrawElementsIndirect',
-        'glMultiDrawElementsIndirectAMD',
-    ])
-
-    draw_indirect_function_names = set([
-        "glDrawArraysIndirect",
-        "glDrawElementsIndirect",
-        'glMultiDrawArraysIndirect',
-        'glMultiDrawArraysIndirectAMD',
-        'glMultiDrawElementsIndirect',
-        'glMultiDrawElementsIndirectAMD',
-    ])
+    draw_arrays_function_regex = re.compile(r'^gl([A-Z][a-z]+)*Draw(Range)?Arrays([A-Z][a-zA-Z]*)?$' )
+    draw_elements_function_regex = re.compile(r'^gl([A-Z][a-z]+)*Draw(Range)?Elements([A-Z][a-zA-Z]*)?$' )
+    draw_indirect_function_regex = re.compile(r'^gl([A-Z][a-z]+)*Draw(Range)?(Arrays|Elements)Indirect([A-Z][a-zA-Z]*)?$' )
 
     misc_draw_function_names = set([
         "glCallList",
@@ -126,6 +87,7 @@ class GlRetracer(Retracer):
         "glDrawPixels",
         "glBlitFramebuffer",
         "glBlitFramebufferEXT",
+        "glBindFramebufferOES",
     ])
 
     bind_framebuffer_function_names = set([
@@ -195,14 +157,16 @@ class GlRetracer(Retracer):
 
     def retraceFunctionBody(self, function):
         is_array_pointer = function.name in self.array_pointer_function_names
-        is_draw_array = function.name in self.draw_array_function_names
-        is_draw_elements = function.name in self.draw_elements_function_names
+        is_draw_arrays = self.draw_arrays_function_regex.match(function.name) is not None
+        is_draw_elements = self.draw_elements_function_regex.match(function.name) is not None
+        is_draw_indirect = self.draw_indirect_function_regex.match(function.name) is not None
         is_misc_draw = function.name in self.misc_draw_function_names
 
-        if is_array_pointer or is_draw_array or is_draw_elements:
+        # For backwards compatibility with old traces where non VBO drawing was supported
+        if (is_array_pointer or is_draw_arrays or is_draw_elements) and not is_draw_indirect:
             print '    if (retrace::parser.version < 1) {'
 
-            if is_array_pointer or is_draw_array:
+            if is_array_pointer or is_draw_arrays:
                 print '        GLint _array_buffer = 0;'
                 print '        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &_array_buffer);'
                 print '        if (!_array_buffer) {'
@@ -242,7 +206,7 @@ class GlRetracer(Retracer):
             print '    if (!retrace::doubleBuffer) {'
             print '        glretrace::frame_complete(call);'
             print '    }'
-        if is_draw_array or is_draw_elements or is_misc_draw:
+        if is_draw_arrays or is_draw_elements or is_misc_draw:
             print '    assert(call.flags & trace::CALL_FLAG_RENDER);'
 
 
@@ -319,9 +283,8 @@ class GlRetracer(Retracer):
             print r'    }'
 
         profileDraw = (
-            function.name in self.draw_array_function_names or
-            function.name in self.draw_elements_function_names or
-            function.name in self.draw_indirect_function_names or
+            self.draw_arrays_function_regex.match(function.name) or
+            self.draw_elements_function_regex.match(function.name) or
             function.name in self.misc_draw_function_names or
             function.name == 'glBegin'
         )
@@ -492,8 +455,8 @@ class GlRetracer(Retracer):
             print '    %s = static_cast<%s>(retrace::toPointer(%s, true));' % (lvalue, arg_type, rvalue)
             return
 
-        if function.name in self.draw_elements_function_names and arg.name == 'indices' or\
-           function.name in self.draw_indirect_function_names and arg.name == 'indirect':
+        if self.draw_elements_function_regex.match(function.name) and arg.name == 'indices' or\
+           self.draw_indirect_function_regex.match(function.name) and arg.name == 'indirect':
             self.extractOpaqueArg(function, arg, arg_type, lvalue, rvalue)
             return
 
