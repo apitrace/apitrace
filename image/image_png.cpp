@@ -51,7 +51,7 @@ pngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length)
 }
 
 bool
-Image::writePNG(std::ostream &os) const
+Image::writePNG(std::ostream &os, bool strip_alpha) const
 {
     assert(channelType == TYPE_UNORM8);
 
@@ -61,7 +61,7 @@ Image::writePNG(std::ostream &os) const
 
     switch (channels) {
     case 4:
-        color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+        color_type = strip_alpha ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGB_ALPHA;
         break;
     case 3:
         color_type = PNG_COLOR_TYPE_RGB;
@@ -102,6 +102,10 @@ Image::writePNG(std::ostream &os) const
 
     png_write_info(png_ptr, info_ptr);
 
+    if (channels == 4 && strip_alpha) {
+        png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
+    }
+
     if (!flipped) {
         for (unsigned y = 0; y < height; ++y) {
             png_bytep row = (png_bytep)(pixels + y*width*channels);
@@ -126,13 +130,13 @@ no_png:
 
 
 bool
-Image::writePNG(const char *filename) const
+Image::writePNG(const char *filename, bool strip_alpha) const
 {
     std::ofstream os(filename, std::ofstream::binary);
     if (!os) {
         return false;
     }
-    return writePNG(os);
+    return writePNG(os, strip_alpha);
 }
 
 
