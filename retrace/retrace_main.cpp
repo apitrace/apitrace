@@ -144,7 +144,13 @@ takeSnapshot(unsigned call_no) {
             os::String filename = os::String::format("%s%010u.png",
                                                      snapshotPrefix,
                                                      useCallNos ? call_no : snapshot_no);
-            if (src->writePNG(filename) && retrace::verbosity >= 0) {
+
+            // Alpha channel often has bogus data, so strip it when writing
+            // PNG images to disk to simplify visualization.
+            bool strip_alpha = true;
+
+            if (src->writePNG(filename, strip_alpha) &&
+                retrace::verbosity >= 0) {
                 std::cout << "Wrote " << filename << "\n";
             }
         }
