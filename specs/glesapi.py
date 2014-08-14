@@ -173,9 +173,6 @@ glesapi.addFunctions([
     GlFunction(Void, "glDrawTexsOES", [(GLshort, "x"), (GLshort, "y"), (GLshort, "z"), (GLshort, "width"), (GLshort, "height")]),
     GlFunction(Void, "glDrawTexsvOES", [(Array(Const(GLshort), 4), "coords")]),
 
-    # GL_EXT_discard_framebuffer
-    GlFunction(Void, "glDiscardFramebufferEXT", [(GLenum, "target"), (GLsizei, "numAttachments"), (Array(Const(GLenum), "numAttachments"), "attachments")]),
-
     # GL_OES_vertex_array_object
     GlFunction(Void, "glBindVertexArrayOES", [(GLarray, "array")]),
     GlFunction(Void, "glDeleteVertexArraysOES", [(GLsizei, "n"), (Array(Const(GLarray), "n"), "arrays")]),
@@ -189,16 +186,6 @@ glesapi.addFunctions([
     # GL_IMG_multisampled_render_to_texture
     GlFunction(Void, "glRenderbufferStorageMultisampleIMG", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
     GlFunction(Void, "glFramebufferTexture2DMultisampleIMG", [(GLenum, "target"), (GLenum, "attachment"), (GLenum, "textarget"), (GLtexture, "texture"), (GLint, "level"), (GLsizei, "samples")]),
-
-    # GL_APPLE_framebuffer_multisample
-    GlFunction(Void, "glRenderbufferStorageMultisampleAPPLE", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
-    GlFunction(Void, "glResolveMultisampleFramebufferAPPLE", []),
-
-    # GL_ANGLE_framebuffer_blit
-    GlFunction(Void, "glBlitFramebufferANGLE", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
-
-    # GL_ANGLE_framebuffer_multisample
-    GlFunction(Void, "glRenderbufferStorageMultisampleANGLE", [(GLenum, "target"), (GLsizei, "samples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
 
     # GL_NV_draw_buffers
     GlFunction(Void, "glDrawBuffersNV", [(GLsizei, "n"), (Array(Const(GLenum), "n"), "bufs")]),
