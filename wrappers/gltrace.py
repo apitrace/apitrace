@@ -539,16 +539,19 @@ class GlTracer(Tracer):
         # ... to the draw calls
         if function.name in self.draw_function_names:
             print '    if (_need_user_arrays()) {'
-            arg_names = ', '.join([arg.name for arg in function.args[1:]])
-            print '        GLuint _count = _%s_count(%s);' % (function.name, arg_names)
-            # Some apps, in particular Quake3, can tell the driver to lock more
-            # vertices than those actually required for the draw call.
-            print '        if (_checkLockArraysEXT) {'
-            print '            GLuint _locked_count = _glGetInteger(GL_ARRAY_ELEMENT_LOCK_FIRST_EXT)'
-            print '                                 + _glGetInteger(GL_ARRAY_ELEMENT_LOCK_COUNT_EXT);'
-            print '            _count = std::max(_count, _locked_count);'
-            print '        }'
-            print '        _trace_user_arrays(_count);'
+            if 'Indirect' in function.name:
+                print r'        os::log("apitrace: warning: %s: indirect user arrays not supported\n");' % (function.name,)
+            else:
+                arg_names = ', '.join([arg.name for arg in function.args[1:]])
+                print '        GLuint _count = _%s_count(%s);' % (function.name, arg_names)
+                # Some apps, in particular Quake3, can tell the driver to lock more
+                # vertices than those actually required for the draw call.
+                print '        if (_checkLockArraysEXT) {'
+                print '            GLuint _locked_count = _glGetInteger(GL_ARRAY_ELEMENT_LOCK_FIRST_EXT)'
+                print '                                 + _glGetInteger(GL_ARRAY_ELEMENT_LOCK_COUNT_EXT);'
+                print '            _count = std::max(_count, _locked_count);'
+                print '        }'
+                print '        _trace_user_arrays(_count);'
             print '    }'
         if function.name == 'glLockArraysEXT':
             print '        _checkLockArraysEXT = true;'
