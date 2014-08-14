@@ -453,9 +453,11 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
 #define _glDrawElementsInstancedBaseVertexBaseInstance_count(count, type, indices, primcount, basevertex, baseinstance) _glDrawElementsBaseVertex_count(count, type, indices, basevertex)
 
 #define _glDrawArraysInstancedARB_count _glDrawArraysInstanced_count
-#define _glDrawElementsInstancedARB_count _glDrawElementsInstanced_count
 #define _glDrawArraysInstancedEXT_count _glDrawArraysInstanced_count
+#define _glDrawArraysInstancedANGLE_count _glDrawArraysInstanced_count
+#define _glDrawElementsInstancedARB_count _glDrawElementsInstanced_count
 #define _glDrawElementsInstancedEXT_count _glDrawElementsInstanced_count
+#define _glDrawElementsInstancedANGLE_count _glDrawElementsInstanced_count
 
 static inline GLuint
 _glMultiDrawArrays_count(const GLint *first, const GLsizei *count, GLsizei drawcount) {

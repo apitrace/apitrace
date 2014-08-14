@@ -27,6 +27,9 @@
 """GL tracing generator."""
 
 
+import re
+import sys
+
 from trace import Tracer
 from dispatch import function_pointer_type, function_pointer_value
 import specs.stdapi as stdapi
@@ -411,39 +414,8 @@ class GlTracer(Tracer):
         #"glMatrixIndexPointerARB",
     ))
 
-    draw_function_names = set((
-        'glDrawArrays',
-        'glDrawElements',
-        'glDrawRangeElements',
-        'glMultiDrawArrays',
-        'glMultiDrawElements',
-        'glDrawArraysInstanced',
-        "glDrawArraysInstancedBaseInstance",
-        'glDrawElementsInstanced',
-        'glDrawArraysInstancedARB',
-        'glDrawElementsInstancedARB',
-        'glDrawElementsBaseVertex',
-        'glDrawRangeElementsBaseVertex',
-        'glDrawElementsInstancedBaseVertex',
-        "glDrawElementsInstancedBaseInstance",
-        "glDrawElementsInstancedBaseVertexBaseInstance",
-        'glMultiDrawElementsBaseVertex',
-        'glDrawArraysIndirect',
-        'glDrawElementsIndirect',
-        'glMultiDrawArraysIndirect',
-        'glMultiDrawArraysIndirectAMD',
-        'glMultiDrawElementsIndirect',
-        'glMultiDrawElementsIndirectAMD',
-        'glDrawArraysEXT',
-        'glDrawRangeElementsEXT',
-        'glDrawRangeElementsEXT_size',
-        'glMultiDrawArraysEXT',
-        'glMultiDrawElementsEXT',
-        'glMultiModeDrawArraysIBM',
-        'glMultiModeDrawElementsIBM',
-        'glDrawArraysInstancedEXT',
-        'glDrawElementsInstancedEXT',
-    ))
+    # XXX: We currently ignore the gl*Draw*ElementArray* functions
+    draw_function_regex = re.compile(r'^gl([A-Z][a-z]+)*Draw(Range)?(Arrays|Elements)([A-Z][a-zA-Z]*)?$' )
 
     interleaved_formats = [
          'GL_V2F',
@@ -537,7 +509,7 @@ class GlTracer(Tracer):
             print '    }'
 
         # ... to the draw calls
-        if function.name in self.draw_function_names:
+        if self.draw_function_regex.match(function.name):
             print '    if (_need_user_arrays()) {'
             if 'Indirect' in function.name:
                 print r'        os::log("apitrace: warning: %s: indirect user arrays not supported\n");' % (function.name,)
