@@ -297,6 +297,8 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
     hr = pSwapChain->GetDesc(&Desc);
     assert(SUCCEEDED(hr));
 
+    DXGI_FORMAT Format = Desc.BufferDesc.Format;
+
     /*
      * There is a IDXGISurface::Map method, but swapchains are not normally mappable,
      * and there is no way to copy into a staging resource, which effectively means there
@@ -316,8 +318,6 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
             return NULL;
         }
 
-        DXGI_FORMAT Format = Desc.BufferDesc.Format;
-
         return getSubResourceImage(pD3D10Device, pD3D10Resource, Format, 0, 0);
     }
 
@@ -333,8 +333,6 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
 
         com_ptr<ID3D11DeviceContext> pD3D11DeviceContext;
         pD3D11Device->GetImmediateContext(&pD3D11DeviceContext);
-
-        DXGI_FORMAT Format = Desc.BufferDesc.Format;
 
         return getSubResourceImage(pD3D11DeviceContext, pD3D11Resource, Format, 0, 0);
     }
