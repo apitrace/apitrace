@@ -248,4 +248,28 @@ _calcSubresourceSize(ID3D10Resource *pDstResource, UINT DstSubresource, const D3
 }
 
 
+static inline D3D10_QUERY
+_getQueryType(ID3D10Query *pQuery)
+{
+    D3D10_QUERY_DESC Desc;
+    pQuery->GetDesc(&Desc);
+    return Desc.Query;
+}
+
+
+static inline D3D10_QUERY
+_getQueryType(ID3D10Asynchronous *pAsync)
+{
+    ID3D10Query *pQuery = NULL;
+    HRESULT hr;
+    hr = pAsync->QueryInterface(IID_ID3D10Query, (void **)&pQuery);
+    if (FAILED(hr)) {
+        return (D3D10_QUERY)-1;
+    }
+    D3D10_QUERY Type = _getQueryType(pQuery);
+    pAsync->Release();
+    return Type;
+}
+
+
 #endif /* _D3D10SIZE_HPP_ */
