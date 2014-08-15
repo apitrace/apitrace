@@ -42,6 +42,7 @@
 #include <algorithm>
 
 #include "dxgisize.hpp"
+#include "com_ptr.hpp"
 
 
 inline UINT
@@ -207,15 +208,13 @@ _getQueryType(ID3D11Query *pQuery)
 static inline D3D11_QUERY
 _getQueryType(ID3D11Asynchronous *pAsync)
 {
-    ID3D11Query *pQuery = NULL;
+    com_ptr<ID3D11Query> pQuery;
     HRESULT hr;
     hr = pAsync->QueryInterface(IID_ID3D11Query, (void **)&pQuery);
     if (FAILED(hr)) {
         return (D3D11_QUERY)-1;
     }
-    D3D11_QUERY Type = _getQueryType(pQuery);
-    pAsync->Release();
-    return Type;
+    return _getQueryType(pQuery);
 }
 
 
