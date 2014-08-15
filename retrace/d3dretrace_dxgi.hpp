@@ -136,6 +136,11 @@ HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::Present(UINT SyncInterval, UINT Fla
 
 HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetBuffer(UINT Buffer, REFIID riid, void **ppSurface)
 {
+    /* XXX: IDXGISwapChain buffers with indexes greater than zero can only be
+     * read from, per
+     * http://msdn.microsoft.com/en-gb/library/windows/desktop/bb174570.aspx,
+     * but it appears that IDXGISwapChainDWM don't have that limitation.
+     */
     return m_pSwapChain->GetBuffer(Buffer, riid, ppSurface);
 }
 
