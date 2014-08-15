@@ -194,4 +194,28 @@ _getMapDesc(ID3D11DeviceContext* pContext, ID3D11Resource * pResource, UINT Subr
 }
 
 
+static inline D3D11_QUERY
+_getQueryType(ID3D11Query *pQuery)
+{
+    D3D11_QUERY_DESC Desc;
+    pQuery->GetDesc(&Desc);
+    return Desc.Query;
+}
+
+
+static inline D3D11_QUERY
+_getQueryType(ID3D11Asynchronous *pAsync)
+{
+    ID3D11Query *pQuery = NULL;
+    HRESULT hr;
+    hr = pAsync->QueryInterface(IID_ID3D11Query, (void **)&pQuery);
+    if (FAILED(hr)) {
+        return (D3D11_QUERY)-1;
+    }
+    D3D11_QUERY Type = _getQueryType(pQuery);
+    pAsync->Release();
+    return Type;
+}
+
+
 #endif /* _D3D11SIZE_HPP_ */

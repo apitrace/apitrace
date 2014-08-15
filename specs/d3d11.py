@@ -956,6 +956,25 @@ D3D11_QUERY_DATA_SO_STATISTICS = Struct("D3D11_QUERY_DATA_SO_STATISTICS", [
     (UINT64, "PrimitivesStorageNeeded"),
 ])
 
+D3D11_QUERY_DATA = Polymorphic("_getQueryType(pAsync)", [
+    ("D3D11_QUERY_EVENT", Pointer(BOOL)),
+    ("D3D11_QUERY_OCCLUSION", Pointer(UINT64)),
+    ("D3D11_QUERY_TIMESTAMP", Pointer(UINT64)),
+    ("D3D11_QUERY_TIMESTAMP_DISJOINT", Pointer(D3D11_QUERY_DATA_TIMESTAMP_DISJOINT)),
+    ("D3D11_QUERY_PIPELINE_STATISTICS", Pointer(D3D11_QUERY_DATA_PIPELINE_STATISTICS)),
+    ("D3D11_QUERY_OCCLUSION_PREDICATE", Pointer(BOOL)),
+    ("D3D11_QUERY_SO_STATISTICS", Pointer(D3D11_QUERY_DATA_SO_STATISTICS)),
+    ("D3D11_QUERY_SO_OVERFLOW_PREDICATE", Pointer(BOOL)),
+    ("D3D11_QUERY_SO_STATISTICS_STREAM0", Pointer(D3D11_QUERY_DATA_SO_STATISTICS)),
+    ("D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM0", Pointer(BOOL)),
+    ("D3D11_QUERY_SO_STATISTICS_STREAM1", Pointer(D3D11_QUERY_DATA_SO_STATISTICS)),
+    ("D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM1", Pointer(BOOL)),
+    ("D3D11_QUERY_SO_STATISTICS_STREAM2", Pointer(D3D11_QUERY_DATA_SO_STATISTICS)),
+    ("D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM2", Pointer(BOOL)),
+    ("D3D11_QUERY_SO_STATISTICS_STREAM3", Pointer(D3D11_QUERY_DATA_SO_STATISTICS)),
+    ("D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM3", Pointer(BOOL)),
+], Blob(Void, "DataSize"), contextLess=False)
+
 D3D11_COUNTER = Enum("D3D11_COUNTER", [
     "D3D11_COUNTER_DEVICE_DEPENDENT_0",
 ])
@@ -1074,7 +1093,7 @@ ID3D11DeviceContext.methods += [
     StdMethod(Void, "VSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
     StdMethod(Void, "Begin", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
     StdMethod(Void, "End", [(ObjPointer(ID3D11Asynchronous), "pAsync")]),
-    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(OpaqueBlob(Void, "DataSize"), "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
+    StdMethod(HRESULT, "GetData", [(ObjPointer(ID3D11Asynchronous), "pAsync"), Out(D3D11_QUERY_DATA, "pData"), (UINT, "DataSize"), (D3D11_ASYNC_GETDATA_FLAG, "GetDataFlags")], sideeffects=False),
     StdMethod(Void, "SetPredication", [(ObjPointer(ID3D11Predicate), "pPredicate"), (BOOL, "PredicateValue")]),
     StdMethod(Void, "GSSetShaderResources", [(UINT, "StartSlot"), (UINT, "NumViews"), (Array(Const(ObjPointer(ID3D11ShaderResourceView)), "NumViews"), "ppShaderResourceViews")]),
     StdMethod(Void, "GSSetSamplers", [(UINT, "StartSlot"), (UINT, "NumSamplers"), (Array(Const(ObjPointer(ID3D11SamplerState)), "NumSamplers"), "ppSamplers")]),
