@@ -241,6 +241,17 @@ haveAnsi(void)
             }
         }
 
+        // Cygwin shell
+        if (1) {
+            const char *term = getenv("TERM");
+            if (term &&
+                strcmp(term, "xterm") == 0) {
+                result = true;
+                checked = true;
+                return result;
+            }
+        }
+
         // http://wiki.winehq.org/DeveloperFaq#detect-wine
         HMODULE hNtDll = LoadLibraryA("ntdll");
         if (hNtDll) {
