@@ -328,6 +328,12 @@ class D3DRetracer(Retracer):
             print r'        SrcDepthPitch = 0;'
             print r'    }'
 
+        if method.name == 'SetGammaControl':
+            # This method is only supported while in full-screen mode
+            print r'    if (retrace::forceWindowed) {'
+            print r'        return;'
+            print r'    }'
+
         Retracer.invokeInterfaceMethod(self, interface, method)
 
         # process events after presents
@@ -407,6 +413,9 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
     UINT Height = pSwapChainDesc->BufferDesc.Height;
     if (!Width)  Width = 1024;
     if (!Height) Height = 768;
+    if (retrace::forceWindowed) {
+        pSwapChainDesc->Windowed = TRUE;
+    }
     pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
 }
 '''
