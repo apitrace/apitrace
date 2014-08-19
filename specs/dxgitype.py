@@ -70,7 +70,7 @@ DXGI_GAMMA_CONTROL_CAPABILITIES = Struct("DXGI_GAMMA_CONTROL_CAPABILITIES", [
     (Float, "MaxConvertedValue"),
     (Float, "MinConvertedValue"),
     (UINT, "NumGammaControlPoints"),
-    (Array(Float, 1025), "ControlPointPositions"),
+    (Array(Float, "{self}.NumGammaControlPoints"), "ControlPointPositions"),
 ])
 
 DXGI_RATIONAL = Struct("DXGI_RATIONAL", [
