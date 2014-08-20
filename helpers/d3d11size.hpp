@@ -161,6 +161,7 @@ _calcSubresourceSize(ID3D11Resource *pDstResource, UINT DstSubresource, const D3
             Width = Desc.Width;
             Height = Desc.Height;
             Depth = Desc.Depth;
+            MipLevel = DstSubresource % Desc.MipLevels;
         }
         break;
     case D3D11_RESOURCE_DIMENSION_UNKNOWN:
