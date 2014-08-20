@@ -67,6 +67,21 @@ public:
     operator -> () const {
         return p;
     }
+
+    T *
+    operator = (T *q) {
+        if (p) {
+            p->Release();
+        }
+        if (q) {
+            q->AddRef();
+        }
+        return p = q;
+    }
+
+private:
+    com_ptr(const com_ptr &);
+    com_ptr & operator= (const com_ptr &);
 };
 
 
