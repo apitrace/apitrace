@@ -532,7 +532,7 @@ class Retracer:
                 self.retraceFunction(function)
         interfaces = api.getAllInterfaces()
         for interface in interfaces:
-            for method in interface.iterMethods():
+            for method in interface.methods:
                 if method.sideeffects and not method.internal:
                     self.retraceInterfaceMethod(interface, method)
 
@@ -544,9 +544,9 @@ class Retracer:
                 else:
                     print '    {"%s", &retrace::ignore},' % (function.name,)
         for interface in interfaces:
-            for method in interface.iterMethods():                
+            for base, method in interface.iterBaseMethods():
                 if method.sideeffects:
-                    print '    {"%s::%s", &retrace_%s__%s},' % (interface.name, method.name, interface.name, method.name)
+                    print '    {"%s::%s", &retrace_%s__%s},' % (interface.name, method.name, base.name, method.name)
                 else:
                     print '    {"%s::%s", &retrace::ignore},' % (interface.name, method.name)
         print '    {NULL, NULL}'
