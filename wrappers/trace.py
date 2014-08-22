@@ -661,16 +661,27 @@ class Tracer:
         print "public:"
         print "    static %s* _Create(const char *functionName, %s * pInstance);" % (getWrapperInterfaceName(interface), interface.name)
         print
-        for method in interface.iterMethods():
+
+        methods = list(interface.iterMethods())
+        for method in methods:
             print "    " + method.prototype() + ";"
         print
+
         for type, name, value in self.enumWrapperInterfaceVariables(interface):
             print '    %s %s;' % (type, name)
-        for i in range(64):
-            print r'    virtual void _dummy%i(void) const {' % i
-            print r'        os::log("error: %s: unexpected virtual method\n");' % interface.name
-            print r'        os::abort();'
-            print r'    }'
+        print
+
+        print r'private:'
+        print r'    void _dummy(unsigned i) const {'
+        print r'        os::log("error: %%s: unexpected virtual method %%i of instance pWrapper=%%p pvObj=%%p\n", "%s", i, this, m_pInstance);' % interface.name
+        print r'        trace::localWriter.flush();'
+        print r'        os::abort();'
+        print r'    }'
+        print
+        for i in range(len(methods), 64):
+            print r'    virtual void _dummy%i(void) const { _dummy(%i); }' % (i, i)
+        print
+
         print "};"
         print
 
