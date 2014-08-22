@@ -185,11 +185,13 @@ class D3DRetracer(Retracer):
                 print r'        d3d11Dumper.bindDevice(_this);'
                 print r'    }'
 
-        if interface.name == 'IDXGIFactory' and method.name == 'QueryInterface':
+        if method.name == 'QueryInterface':
             print r'    if (riid == IID_IDXGIFactoryDWM) {'
-            print r'        _this->AddRef();'
-            print r'        *ppvObj = new d3dretrace::CDXGIFactoryDWM(_this);'
-            print r'        _result = S_OK;'
+            print r'        IDXGIFactory *pFactory = NULL;'
+            print r'        _result = _this->QueryInterface(IID_IDXGIFactory, (VOID **)&pFactory);'
+            print r'        if (SUCCEEDED(_result)) {'
+            print r'            *ppvObj = new d3dretrace::CDXGIFactoryDWM(pFactory);'
+            print r'        }'
             print r'    } else {'
             Retracer.invokeInterfaceMethod(self, interface, method)
             print r'    }'
