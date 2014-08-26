@@ -304,6 +304,7 @@ JSONWriter::writeBool(bool b) {
 void
 JSONWriter::writeImage(image::Image *image, const char *format, unsigned depth)
 {
+    assert(image);
     if (!image) {
         writeNull();
         return;
