@@ -1377,6 +1377,14 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
 static void
 dumpFramebufferAttachments(JSONWriter &json, Context &context, GLenum target)
 {
+    GLenum status = glCheckFramebufferStatus(target);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr
+            << "warning: incomplete " << enumToString(target)
+            << " (" << enumToString(status) << ")\n";
+        return;
+    }
+
     GLint read_framebuffer = 0;
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_framebuffer);
 
