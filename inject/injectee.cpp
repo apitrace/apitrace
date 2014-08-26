@@ -56,6 +56,10 @@
 static CRITICAL_SECTION Mutex = {(PCRITICAL_SECTION_DEBUG)-1, -1, 0, 0, 0, 0};
 
 
+
+static HMODULE g_hThisModule = NULL;
+
+
 static void
 debugPrintf(const char *format, ...)
 {
@@ -85,6 +89,29 @@ MyLoadLibraryExW(LPCWSTR lpFileName, HANDLE hFile, DWORD dwFlags);
 static FARPROC WINAPI
 MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName);
 
+
+static void
+MyCreateProcessCommon(BOOL bRet,
+                      DWORD dwCreationFlags,
+                      LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (!bRet) {
+        return;
+    }
+
+    char szDllPath[MAX_PATH];
+    GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
+
+    const char *szError = NULL;
+    if (!injectDll(lpProcessInformation->hProcess, szDllPath, &szError)) {
+        debugPrintf("warning: failed to inject child process (%s)\n", szError);
+    }
+
+    if (!(dwCreationFlags & CREATE_SUSPENDED)) {
+        ResumeThread(lpProcessInformation->hThread);
+    }
+}
+
 static BOOL WINAPI
 MyCreateProcessA(LPCSTR lpApplicationName,
                  LPSTR lpCommandLine,
@@ -95,7 +122,31 @@ MyCreateProcessA(LPCSTR lpApplicationName,
                  LPVOID lpEnvironment,
                  LPCSTR lpCurrentDirectory,
                  LPSTARTUPINFOA lpStartupInfo,
-                 LPPROCESS_INFORMATION lpProcessInformation);
+                 LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("%s(\"%s\", \"%s\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessA(lpApplicationName,
+                          lpCommandLine,
+                          lpProcessAttributes,
+                          lpThreadAttributes,
+                          bInheritHandles,
+                          dwCreationFlags | CREATE_SUSPENDED,
+                          lpEnvironment,
+                          lpCurrentDirectory,
+                          lpStartupInfo,
+                          lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
 
 static BOOL WINAPI
 MyCreateProcessW(LPCWSTR lpApplicationName,
@@ -107,7 +158,31 @@ MyCreateProcessW(LPCWSTR lpApplicationName,
                  LPVOID lpEnvironment,
                  LPCWSTR lpCurrentDirectory,
                  LPSTARTUPINFOW lpStartupInfo,
-                 LPPROCESS_INFORMATION lpProcessInformation);
+                 LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("%s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessW(lpApplicationName,
+                          lpCommandLine,
+                          lpProcessAttributes,
+                          lpThreadAttributes,
+                          bInheritHandles,
+                          dwCreationFlags | CREATE_SUSPENDED,
+                          lpEnvironment,
+                          lpCurrentDirectory,
+                          lpStartupInfo,
+                          lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
 
 
 static const char *
@@ -303,8 +378,6 @@ replaceImport(HMODULE hModule,
 
     return TRUE;
 }
-
-static HMODULE g_hThisModule = NULL;
 
 
 struct Replacement {
@@ -585,101 +658,6 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
     }
 
     return GetProcAddress(hModule, lpProcName);
-}
-
-
-static void MyCreateProcessCommon(BOOL bRet,
-                                  DWORD dwCreationFlags,
-                                  LPPROCESS_INFORMATION lpProcessInformation)
-{
-    if (!bRet) {
-        return;
-    }
-
-    char szDllPath[MAX_PATH];
-    GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
-
-    const char *szError = NULL;
-    if (!injectDll(lpProcessInformation->hProcess, szDllPath, &szError)) {
-        debugPrintf("warning: failed to inject child process (%s)\n", szError);
-    }
-
-    if (!(dwCreationFlags & CREATE_SUSPENDED)) {
-        ResumeThread(lpProcessInformation->hThread);
-    }
-}
-
-
-static BOOL WINAPI
-MyCreateProcessA(LPCSTR lpApplicationName,
-                 LPSTR lpCommandLine,
-                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
-                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                 BOOL bInheritHandles,
-                 DWORD dwCreationFlags,
-                 LPVOID lpEnvironment,
-                 LPCSTR lpCurrentDirectory,
-                 LPSTARTUPINFOA lpStartupInfo,
-                 LPPROCESS_INFORMATION lpProcessInformation)
-{
-    if (VERBOSITY >= 2) {
-        debugPrintf("%s(\"%s\", \"%s\", ...)\n",
-                    __FUNCTION__,
-                    lpApplicationName,
-                    lpCommandLine);
-    }
-
-    BOOL bRet;
-    bRet = CreateProcessA(lpApplicationName,
-                          lpCommandLine,
-                          lpProcessAttributes,
-                          lpThreadAttributes,
-                          bInheritHandles,
-                          dwCreationFlags | CREATE_SUSPENDED,
-                          lpEnvironment,
-                          lpCurrentDirectory,
-                          lpStartupInfo,
-                          lpProcessInformation);
-
-    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
-
-    return bRet;
-}
-
-static BOOL WINAPI
-MyCreateProcessW(LPCWSTR lpApplicationName,
-                 LPWSTR lpCommandLine,
-                 LPSECURITY_ATTRIBUTES lpProcessAttributes,
-                 LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                 BOOL bInheritHandles,
-                 DWORD dwCreationFlags,
-                 LPVOID lpEnvironment,
-                 LPCWSTR lpCurrentDirectory,
-                 LPSTARTUPINFOW lpStartupInfo,
-                 LPPROCESS_INFORMATION lpProcessInformation)
-{
-    if (VERBOSITY >= 2) {
-        debugPrintf("%s(\"%S\", \"%S\", ...)\n",
-                    __FUNCTION__,
-                    lpApplicationName,
-                    lpCommandLine);
-    }
-
-    BOOL bRet;
-    bRet = CreateProcessW(lpApplicationName,
-                          lpCommandLine,
-                          lpProcessAttributes,
-                          lpThreadAttributes,
-                          bInheritHandles,
-                          dwCreationFlags | CREATE_SUSPENDED,
-                          lpEnvironment,
-                          lpCurrentDirectory,
-                          lpStartupInfo,
-                          lpProcessInformation);
-
-    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
-
-    return bRet;
 }
 
 
