@@ -391,10 +391,12 @@ hookModule(HMODULE hModule,
      */
 
     hookLibraryLoaderFunctions(hModule, szModule, "kernel32.dll");
+    hookLibraryLoaderFunctions(hModule, szModule, "api-ms-win-core-libraryloader-l1-1-0.dll");
     hookLibraryLoaderFunctions(hModule, szModule, "api-ms-win-core-libraryloader-l1-1-1.dll");
     hookLibraryLoaderFunctions(hModule, szModule, "api-ms-win-core-libraryloader-l1-2-0.dll");
 
     hookProcessThreadsFunctions(hModule, szModule, "kernel32.dll");
+    hookProcessThreadsFunctions(hModule, szModule, "api-ms-win-core-processthreads-l1-1-0.dll");
     hookProcessThreadsFunctions(hModule, szModule, "api-ms-win-core-processthreads-l1-1-1.dll");
     hookProcessThreadsFunctions(hModule, szModule, "api-ms-win-core-processthreads-l1-1-2.dll");
 
