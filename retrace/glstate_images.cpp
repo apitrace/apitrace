@@ -1117,8 +1117,10 @@ getDrawBufferImage() {
  * Dump the image of the currently bound read buffer.
  */
 static inline void
-dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
-                    GLint internalFormat = GL_NONE)
+dumpReadBufferImage(JSONWriter &json,
+                    const char *label,
+                    GLint width, GLint height,
+                    GLenum format, GLint internalFormat = GL_NONE)
 {
     GLint channels = _gl_format_channels(format);
 
@@ -1154,9 +1156,10 @@ dumpReadBufferImage(JSONWriter &json, GLint width, GLint height, GLenum format,
             std::cerr << "warning: " << enumToString(error) << " while reading framebuffer\n";
             error = glGetError();
         } while(error != GL_NO_ERROR);
-        json.writeNull();
     } else {
+        json.beginMember(label);
         json.writeImage(image, formatToString(internalFormat));
+        json.endMember();
     }
 
     delete image;
@@ -1299,9 +1302,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         glGetIntegerv(GL_ALPHA_BITS, &alpha_bits);
 #endif
         GLenum format = alpha_bits ? GL_RGBA : GL_RGB;
-        json.beginMember(enumToString(draw_buffer));
-        dumpReadBufferImage(json, width, height, format);
-        json.endMember();
+        dumpReadBufferImage(json, enumToString(draw_buffer), width, height, format);
 
         // Restore original read buffer
         if (!context.ES) {
@@ -1313,17 +1314,13 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         GLint depth_bits = 0;
         glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
         if (depth_bits) {
-            json.beginMember("GL_DEPTH_COMPONENT");
-            dumpReadBufferImage(json, width, height, GL_DEPTH_COMPONENT);
-            json.endMember();
+            dumpReadBufferImage(json, "GL_DEPTH_COMPONENT", width, height, GL_DEPTH_COMPONENT);
         }
 
         GLint stencil_bits = 0;
         glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
         if (stencil_bits) {
-            json.beginMember("GL_STENCIL_INDEX");
-            dumpReadBufferImage(json, width, height, GL_STENCIL_INDEX);
-            json.endMember();
+            dumpReadBufferImage(json, "GL_STENCIL_INDEX", width, height, GL_STENCIL_INDEX);
         }
     }
     
@@ -1373,9 +1370,7 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
         free(object_label);
     }
 
-    json.beginMember(label.str());
-    dumpReadBufferImage(json, desc.width, desc.height, format, desc.internalFormat);
-    json.endMember();
+    dumpReadBufferImage(json, label.str().c_str(), desc.width, desc.height, format, desc.internalFormat);
 }
 
 
