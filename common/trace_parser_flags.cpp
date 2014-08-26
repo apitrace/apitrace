@@ -92,6 +92,7 @@ callFlagTable[] = {
     { "ID3D11DeviceContext::ExecuteCommandList",            CALL_FLAG_RENDER },
     { "ID3D11DeviceContext::OMSetRenderTargets",       CALL_FLAG_SWAP_RENDERTARGET },
     { "ID3D11DeviceContext::OMSetRenderTargetsAndUnorderedAccessViews", CALL_FLAG_SWAP_RENDERTARGET },
+    { "IDXGISwapChain1::Present",                      CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
     { "IDXGISwapChain::Present",                       CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
     { "IDXGISwapChainDWM::Present",                    CALL_FLAG_END_FRAME /* CALL_FLAG_SWAPBUFFERS */ },
     { "IDirect3D8::CheckDeviceFormat",                 CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
