@@ -184,6 +184,82 @@ MyCreateProcessW(LPCWSTR lpApplicationName,
     return bRet;
 }
 
+static BOOL WINAPI
+MyCreateProcessAsUserA(HANDLE hToken,
+                       LPCSTR lpApplicationName,
+                       LPSTR lpCommandLine,
+                       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                       BOOL bInheritHandles,
+                       DWORD dwCreationFlags,
+                       LPVOID lpEnvironment,
+                       LPCSTR lpCurrentDirectory,
+                       LPSTARTUPINFOA lpStartupInfo,
+                       LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("%s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessAsUserA(hToken,
+                               lpApplicationName,
+                               lpCommandLine,
+                               lpProcessAttributes,
+                               lpThreadAttributes,
+                               bInheritHandles,
+                               dwCreationFlags,
+                               lpEnvironment,
+                               lpCurrentDirectory,
+                               lpStartupInfo,
+                               lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
+static BOOL WINAPI
+MyCreateProcessAsUserW(HANDLE hToken,
+                       LPCWSTR lpApplicationName,
+                       LPWSTR lpCommandLine,
+                       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                       BOOL bInheritHandles,
+                       DWORD dwCreationFlags,
+                       LPVOID lpEnvironment,
+                       LPCWSTR lpCurrentDirectory,
+                       LPSTARTUPINFOW lpStartupInfo,
+                       LPPROCESS_INFORMATION lpProcessInformation)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("%s(\"%S\", \"%S\", ...)\n",
+                    __FUNCTION__,
+                    lpApplicationName,
+                    lpCommandLine);
+    }
+
+    BOOL bRet;
+    bRet = CreateProcessAsUserW(hToken,
+                               lpApplicationName,
+                               lpCommandLine,
+                               lpProcessAttributes,
+                               lpThreadAttributes,
+                               bInheritHandles,
+                               dwCreationFlags,
+                               lpEnvironment,
+                               lpCurrentDirectory,
+                               lpStartupInfo,
+                               lpProcessInformation);
+
+    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
+
+    return bRet;
+}
+
 
 static const char *
 getImportDescriptionName(HMODULE hModule, const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor) {
@@ -408,6 +484,8 @@ hookProcessThreadsFunctions(HMODULE hModule,
 {
     hookFunction(hModule, szModule, pszDllName, "CreateProcessA", (LPVOID)MyCreateProcessA);
     hookFunction(hModule, szModule, pszDllName, "CreateProcessW", (LPVOID)MyCreateProcessW);
+    hookFunction(hModule, szModule, pszDllName, "CreateProcessAsUserA", (LPVOID)MyCreateProcessAsUserA);
+    hookFunction(hModule, szModule, pszDllName, "CreateProcessAsUserW", (LPVOID)MyCreateProcessAsUserW);
 }
 
 
