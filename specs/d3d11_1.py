@@ -30,7 +30,6 @@ from winapi import *
 from d3d11sdklayers import *
 from d3d11 import *
 
-import dxgi1_2
 
 D3D_FEATURE_LEVEL.values += [
     "D3D_FEATURE_LEVEL_11_1",

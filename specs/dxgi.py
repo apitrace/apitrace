@@ -426,16 +426,35 @@ DXGI_ADAPTER_DESC2 = Struct("DXGI_ADAPTER_DESC2", [
     (DXGI_COMPUTE_PREEMPTION_GRANULARITY, "ComputePreemptionGranularity"),
 ])
 
+
 IDXGIAdapter2.methods += [
     StdMethod(HRESULT, "GetDesc2", [Out(Pointer(DXGI_ADAPTER_DESC2), "pDesc")], sideeffects=False),
 ]
+
+
+IDXGIResource1 = Interface("IDXGIResource1", IDXGIResource)
+IDXGISurface2 = Interface("IDXGISurface2", IDXGISurface1)
+
+
+IDXGIResource1.methods += [
+    StdMethod(HRESULT, "CreateSharedHandle", [(Pointer(Const(SECURITY_ATTRIBUTES)), "pAttributes"), (DXGI_SHARED_RESOURCE_FLAG, "dwAccess"), (LPCWSTR, "lpName"), Out(Pointer(HANDLE), "pHandle")]),
+    StdMethod(HRESULT, "CreateSubresourceSurface", [(UINT, "index"), Out(Pointer(ObjPointer(IDXGISurface2)), "ppSurface")]),
+]
+
+
+IDXGISurface2.methods += [
+    StdMethod(HRESULT, "GetResource", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppParentResource"), Out(Pointer(UINT), "pSubresourceIndex")]),
+]
+
 
 dxgi = Module('dxgi')
 dxgi.addInterfaces([
     IDXGIKeyedMutex,
     IDXGIFactory2,
     IDXGIFactoryDWM,
+    IDXGIDevice2,
     IDXGIAdapter2,
+    IDXGIResource1,
 ])
 dxgi.addFunctions([
     StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
