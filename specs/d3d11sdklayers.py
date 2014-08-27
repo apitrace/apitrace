@@ -831,17 +831,17 @@ D3D11_MESSAGE = Struct("D3D11_MESSAGE", [
     (D3D11_MESSAGE_CATEGORY, "Category"),
     (D3D11_MESSAGE_SEVERITY, "Severity"),
     (D3D11_MESSAGE_ID, "ID"),
-    (Pointer(Const(Int)), "pDescription"),
+    (ConstCString, "pDescription"),
     (SIZE_T, "DescriptionByteLength"),
 ])
 
 D3D11_INFO_QUEUE_FILTER_DESC = Struct("D3D11_INFO_QUEUE_FILTER_DESC", [
     (UINT, "NumCategories"),
-    (Pointer(D3D11_MESSAGE_CATEGORY), "pCategoryList"),
+    (Array(D3D11_MESSAGE_CATEGORY, "{self}.NumCategories"), "pCategoryList"),
     (UINT, "NumSeverities"),
-    (Pointer(D3D11_MESSAGE_SEVERITY), "pSeverityList"),
+    (Array(D3D11_MESSAGE_SEVERITY, "{self}.NumSeverities"), "pSeverityList"),
     (UINT, "NumIDs"),
-    (Pointer(D3D11_MESSAGE_ID), "pIDList"),
+    (Array(D3D11_MESSAGE_ID, "{self}.NumIDs"), "pIDList"),
 ])
 
 D3D11_INFO_QUEUE_FILTER = Struct("D3D11_INFO_QUEUE_FILTER", [
