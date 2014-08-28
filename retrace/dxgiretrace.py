@@ -201,6 +201,11 @@ class D3DRetracer(Retracer):
         if method.name == 'CreateSwapChain':
             print r'    createWindow(pDesc);'
 
+        if method.name == 'SetFullscreenState':
+            print r'    if (retrace::forceWindowed) {'
+            print r'         Fullscreen = FALSE;'
+            print r'    }'
+
         # notify frame has been completed
         if method.name == 'Present':
             if interface.name == 'IDXGISwapChainDWM':
