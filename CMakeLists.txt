@@ -182,6 +182,14 @@ else ()
         set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -ggdb")
     endif ()
 
+    # Enable SSE2 intrinsics on x86
+    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+        CHECK_CXX_COMPILER_FLAG("-msse2" CXX_COMPILER_FLAG_SSE2)
+        if (CXX_COMPILER_FLAG_SSE2)
+            add_definitions ("-msse2")
+        endif ()
+    endif ()
+
     # Be nice to Eclipse
     add_definitions (-fmessage-length=0)
 endif ()
