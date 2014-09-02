@@ -551,17 +551,6 @@ hookModule(HMODULE hModule,
     hookProcessThreadsFunctions(hModule, szModule, "api-ms-win-core-processthreads-l1-1-1.dll");
     hookProcessThreadsFunctions(hModule, szModule, "api-ms-win-core-processthreads-l1-1-2.dll");
 
-    /* Don't hook internal dependencies */
-    if (stricmp(szBaseName, "d3d10core.dll") == 0 ||
-        stricmp(szBaseName, "d3d10level9.dll") == 0 ||
-        stricmp(szBaseName, "d3d10sdklayers.dll") == 0 ||
-        stricmp(szBaseName, "d3d10_1core.dll") == 0 ||
-        stricmp(szBaseName, "d3d11sdklayers.dll") == 0 ||
-        stricmp(szBaseName, "d3d11_1sdklayers.dll") == 0 ||
-        stricmp(szBaseName, "d3d11_2sdklayers.dll") == 0) {
-        return;
-    }
-
     for (unsigned i = 0; i < numReplacements; ++i) {
         replaceImport(hModule, szModule, replacements[i].szMatchModule, replacements[i].hReplaceModule);
         replaceImport(hModule, szModule, replacements[i].szMatchModule, replacements[i].hReplaceModule);
