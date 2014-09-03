@@ -400,7 +400,6 @@ getOldFunctionAddress(HMODULE hModule,
         pThunk = rvaToVa<IMAGE_THUNK_DATA>(hModule, pImportDescriptor->OriginalFirstThunk);
     } else {
         pThunk = pThunkIAT;
-
     }
 
     while (pThunk->u1.Function) {
@@ -411,7 +410,9 @@ getOldFunctionAddress(HMODULE hModule,
                 HMODULE hRealModule = GetModuleHandleA(getImportDescriptorName(hModule, pImportDescriptor));
                 assert(hRealModule);
                 pRealFunction = (UINT_PTR)GetProcAddress(hRealModule, pszFunctionName);
-                assert(pRealFunction);
+                if (!pRealFunction) {
+                    return NULL;
+                }
             }
             if (pThunkIAT->u1.Function == pRealFunction) {
                 return (LPVOID *)(&pThunkIAT->u1.Function);
