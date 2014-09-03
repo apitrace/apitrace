@@ -1,5 +1,6 @@
 ##########################################################################
 #
+# Copyright 2014 VMware, Inc
 # Copyright 2011 Jose Fonseca
 # All Rights Reserved.
 #
@@ -553,4 +554,123 @@ dxgi.addInterfaces([
     IDXGIResource1,
     IDXGIAdapter2,
     IDXGIOutput1,
+])
+
+#
+# DXGI 1.3
+#
+
+DXGI_CREATE_FACTORY_FLAGS = Flags(UINT, [
+    "DXGI_CREATE_FACTORY_DEBUG",
+])
+
+dxgi.addFunctions([
+    StdFunction(HRESULT, "CreateDXGIFactory2", [(DXGI_CREATE_FACTORY_FLAGS, "Flags"), (REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
+])
+
+IDXGIDevice3 = Interface("IDXGIDevice3", IDXGIDevice2)
+IDXGIDevice3.methods += [
+    StdMethod(Void, "Trim", []),
+]
+
+DXGI_MATRIX_3X2_F = Struct("DXGI_MATRIX_3X2_F", [
+    (FLOAT, "_11"),
+    (FLOAT, "_12"),
+    (FLOAT, "_21"),
+    (FLOAT, "_22"),
+    (FLOAT, "_31"),
+    (FLOAT, "_32"),
+])
+
+IDXGISwapChain2 = Interface("IDXGISwapChain2", IDXGISwapChain1)
+IDXGISwapChain2.methods += [
+    StdMethod(HRESULT, "SetSourceSize", [(UINT, "Width"), (UINT, "Height")]),
+    StdMethod(HRESULT, "GetSourceSize", [Out(Pointer(UINT), "pWidth"), Out(Pointer(UINT), "pHeight")], sideeffects=False),
+    StdMethod(HRESULT, "SetMaximumFrameLatency", [(UINT, "MaxLatency")]),
+    StdMethod(HRESULT, "GetMaximumFrameLatency", [Out(Pointer(UINT), "pMaxLatency")], sideeffects=False),
+    StdMethod(HANDLE, "GetFrameLatencyWaitableObject", [], sideeffects=False),
+    StdMethod(HRESULT, "SetMatrixTransform", [(Pointer(Const(DXGI_MATRIX_3X2_F)), "pMatrix")]),
+    StdMethod(HRESULT, "GetMatrixTransform", [Out(Pointer(DXGI_MATRIX_3X2_F), "pMatrix")], sideeffects=False),
+]
+
+IDXGIOutput2 = Interface("IDXGIOutput2", IDXGIOutput1)
+IDXGIOutput2.methods += [
+    StdMethod(BOOL, "SupportsOverlays", [], sideeffects=False),
+]
+
+IDXGIFactory3 = Interface("IDXGIFactory3", IDXGIFactory2)
+IDXGIFactory3.methods += [
+    StdMethod(DXGI_CREATE_FACTORY_FLAGS, "GetCreationFlags", [], sideeffects=False),
+]
+
+DXGI_DECODE_SWAP_CHAIN_DESC = Struct("DXGI_DECODE_SWAP_CHAIN_DESC", [
+    (UINT, "Flags"),
+])
+
+# XXX: Flags
+DXGI_MULTIPLANE_OVERLAY_YCbCr_FLAGS = Enum("DXGI_MULTIPLANE_OVERLAY_YCbCr_FLAGS", [
+    "DXGI_MULTIPLANE_OVERLAY_YCbCr_FLAG_NOMINAL_RANGE",
+    "DXGI_MULTIPLANE_OVERLAY_YCbCr_FLAG_BT709",
+    "DXGI_MULTIPLANE_OVERLAY_YCbCr_FLAG_xvYCC",
+])
+
+IDXGIDecodeSwapChain = Interface("IDXGIDecodeSwapChain", IUnknown)
+IDXGIDecodeSwapChain.methods += [
+    StdMethod(HRESULT, "PresentBuffer", [(UINT, "BufferToPresent"), (UINT, "SyncInterval"), (DXGI_PRESENT, "Flags")]),
+    StdMethod(HRESULT, "SetSourceRect", [(Pointer(Const(RECT)), "pRect")]),
+    StdMethod(HRESULT, "SetTargetRect", [(Pointer(Const(RECT)), "pRect")]),
+    StdMethod(HRESULT, "SetDestSize", [(UINT, "Width"), (UINT, "Height")]),
+    StdMethod(HRESULT, "GetSourceRect", [Out(Pointer(RECT), "pRect")], sideeffects=False),
+    StdMethod(HRESULT, "GetTargetRect", [Out(Pointer(RECT), "pRect")], sideeffects=False),
+    StdMethod(HRESULT, "GetDestSize", [Out(Pointer(UINT), "pWidth"), Out(Pointer(UINT), "pHeight")], sideeffects=False),
+    StdMethod(HRESULT, "SetColorSpace", [(DXGI_MULTIPLANE_OVERLAY_YCbCr_FLAGS, "ColorSpace")]),
+    StdMethod(DXGI_MULTIPLANE_OVERLAY_YCbCr_FLAGS, "GetColorSpace", [], sideeffects=False),
+]
+
+IDXGIFactoryMedia = Interface("IDXGIFactoryMedia", IUnknown)
+IDXGIFactoryMedia.methods += [
+    StdMethod(HRESULT, "CreateSwapChainForCompositionSurfaceHandle", [(ObjPointer(IUnknown), "pDevice"), (HANDLE, "hSurface"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
+    StdMethod(HRESULT, "CreateDecodeSwapChainForCompositionSurfaceHandle", [(ObjPointer(IUnknown), "pDevice"), (HANDLE, "hSurface"), (Pointer(DXGI_DECODE_SWAP_CHAIN_DESC), "pDesc"), (ObjPointer(IDXGIResource), "pYuvDecodeBuffers"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGIDecodeSwapChain)), "ppSwapChain")]),
+]
+
+DXGI_FRAME_PRESENTATION_MODE = Enum("DXGI_FRAME_PRESENTATION_MODE", [
+    "DXGI_FRAME_PRESENTATION_MODE_COMPOSED",
+    "DXGI_FRAME_PRESENTATION_MODE_OVERLAY",
+    "DXGI_FRAME_PRESENTATION_MODE_NONE",
+])
+
+DXGI_FRAME_STATISTICS_MEDIA = Struct("DXGI_FRAME_STATISTICS_MEDIA", [
+    (UINT, "PresentCount"),
+    (UINT, "PresentRefreshCount"),
+    (UINT, "SyncRefreshCount"),
+    (LARGE_INTEGER, "SyncQPCTime"),
+    (LARGE_INTEGER, "SyncGPUTime"),
+    (DXGI_FRAME_PRESENTATION_MODE, "CompositionMode"),
+    (UINT, "ApprovedPresentDuration"),
+])
+
+IDXGISwapChainMedia = Interface("IDXGISwapChainMedia", IUnknown)
+IDXGISwapChainMedia.methods += [
+    StdMethod(HRESULT, "GetFrameStatisticsMedia", [Out(Pointer(DXGI_FRAME_STATISTICS_MEDIA), "pStats")], sideeffects=False),
+    StdMethod(HRESULT, "SetPresentDuration", [(UINT, "Duration")]),
+    StdMethod(HRESULT, "CheckPresentDurationSupport", [(UINT, "DesiredPresentDuration"), Out(Pointer(UINT), "pClosestSmallerPresentDuration"), Out(Pointer(UINT), "pClosestLargerPresentDuration")], sideeffects=False),
+]
+
+DXGI_OVERLAY_SUPPORT_FLAG = FakeEnum(UINT, [
+    "DXGI_OVERLAY_SUPPORT_FLAG_DIRECT",
+    "DXGI_OVERLAY_SUPPORT_FLAG_SCALING",
+])
+
+IDXGIOutput3 = Interface("IDXGIOutput3", IDXGIOutput2)
+IDXGIOutput3.methods += [
+    StdMethod(HRESULT, "CheckOverlaySupport", [(DXGI_FORMAT, "EnumFormat"), (ObjPointer(IUnknown), "pConcernedDevice"), Out(Pointer(DXGI_OVERLAY_SUPPORT_FLAG), "pFlags")], sideeffects=False),
+]
+
+dxgi.addInterfaces([
+    IDXGIDevice3,
+    IDXGISwapChain2,
+    IDXGISwapChainMedia,
+    IDXGIOutput3,
+    IDXGIFactory3,
+    IDXGIFactoryMedia,
 ])
