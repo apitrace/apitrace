@@ -41,10 +41,6 @@ IDXGIDevice = Interface("IDXGIDevice", IDXGIObject)
 IDXGIFactory1 = Interface("IDXGIFactory1", IDXGIFactory)
 IDXGIAdapter1 = Interface("IDXGIAdapter1", IDXGIAdapter)
 IDXGIDevice1 = Interface("IDXGIDevice1", IDXGIDevice)
-IDXGIFactory2 = Interface("IDXGIFactory2", IDXGIFactory1)
-IDXGISwapChain1 = Interface("IDXGISwapChain1", IDXGISwapChain)
-IDXGIDevice2 = Interface("IDXGIDevice2", IDXGIDevice1)
-IDXGIAdapter2 = Interface("IDXGIAdapter2", IDXGIAdapter1)
 
 
 DXGI_USAGE = Flags(UINT, [
@@ -141,46 +137,6 @@ DXGI_SWAP_CHAIN_DESC = Struct("DXGI_SWAP_CHAIN_DESC", [
     (DXGI_SWAP_CHAIN_FLAG, "Flags"),
 ])
 
-DXGI_SCALING = Enum("DXGI_SCALING", [
-    "DXGI_SCALING_STRETCH",
-    "DXGI_SCALING_NONE",
-])
-
-DXGI_ALPHA_MODE = Enum("DXGI_ALPHA_MODE", [
-    "DXGI_ALPHA_MODE_UNSPECIFIED",
-    "DXGI_ALPHA_MODE_PREMULTIPLIED",
-    "DXGI_ALPHA_MODE_STRAIGHT",
-    "DXGI_ALPHA_MODE_IGNORE",
-])
-
-DXGI_SWAP_CHAIN_DESC1 = Struct("DXGI_SWAP_CHAIN_DESC1", [
-    (UINT, "Width"),
-    (UINT, "Height"),
-    (DXGI_FORMAT, "Format"),
-    (BOOL, "Stereo"),
-    (DXGI_SAMPLE_DESC, "SampleDesc"),
-    (DXGI_USAGE, "BufferUsage"),
-    (UINT, "BufferCount"),
-    (DXGI_SCALING, "Scaling"),
-    (DXGI_SWAP_EFFECT, "SwapEffect"),
-    (DXGI_ALPHA_MODE, "AlphaMode"),
-    (UINT, "Flags"),
-])
-
-DXGI_SWAP_CHAIN_FULLSCREEN_DESC = Struct("DXGI_SWAP_CHAIN_FULLSCREEN_DESC", [
-    (DXGI_RATIONAL, "RefreshRate"),
-    (DXGI_MODE_SCANLINE_ORDER, "ScanlineOrdering"),
-    (DXGI_MODE_SCALING, "Scaling"),
-    (BOOL, "Windowed"),
-])
-
-DXGI_PRESENT_PARAMETERS = Struct("DXGI_PRESENT_PARAMETERS", [
-    (UINT, "DirtyRectsCount"),
-    (Array(RECT, "{self}.DirtyRectsCount"), "pDirtyRects"),
-    (Pointer(RECT), "pScrollRect"),
-    (Pointer(POINT), "pScrollOffset"),
-])
-
 
 IDXGIObject.methods += [
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "Name"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
@@ -199,12 +155,6 @@ IDXGIResource.methods += [
     StdMethod(HRESULT, "SetEvictionPriority", [(DXGI_RESOURCE_PRIORITY, "EvictionPriority")]),
     StdMethod(HRESULT, "GetEvictionPriority", [Out(Pointer(DXGI_RESOURCE_PRIORITY), "pEvictionPriority")], sideeffects=False),
 ]
-
-DXGI_SHARED_RESOURCE_FLAG = Flags(DWORD, [
-    "DXGI_SHARED_RESOURCE_READ",
-    "DXGI_SHARED_RESOURCE_WRITE",
-])
-
 
 IDXGIKeyedMutex.methods += [
     StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD, "dwMilliseconds")]),
@@ -237,6 +187,8 @@ IDXGIAdapter.methods += [
 DXGI_ENUM_MODES = Flags(UINT, [
     "DXGI_ENUM_MODES_INTERLACED",
     "DXGI_ENUM_MODES_SCALING",
+    "DXGI_ENUM_MODES_STEREO",
+    "DXGI_ENUM_MODES_DISABLED_STEREO",
 ])
 
 IDXGIOutput.methods += [
@@ -258,6 +210,11 @@ DXGI_PRESENT = Flags(UINT, [
     "DXGI_PRESENT_TEST",
     "DXGI_PRESENT_DO_NOT_SEQUENCE",
     "DXGI_PRESENT_RESTART",
+    "DXGI_PRESENT_DO_NOT_WAIT",
+    "DXGI_PRESENT_STEREO_PREFER_RIGHT",
+    "DXGI_PRESENT_STEREO_TEMPORARY_MONO",
+    "DXGI_PRESENT_RESTRICT_TO_OUTPUT",
+    "DXGI_PRESENT_USE_DURATION",
 ])
 
 IDXGISwapChain.methods += [
@@ -296,9 +253,10 @@ IDXGIDevice.methods += [
     StdMethod(HRESULT, "GetGPUThreadPriority", [Out(Pointer(INT), "pPriority")], sideeffects=False),
 ]
 
-DXGI_ADAPTER_FLAG = Enum("DXGI_ADAPTER_FLAG", [
+DXGI_ADAPTER_FLAG = FakeEnum(UINT, [
     "DXGI_ADAPTER_FLAG_NONE",
     "DXGI_ADAPTER_FLAG_REMOTE",
+    "DXGI_ADAPTER_FLAG_SOFTWARE",
 ])
 
 DXGI_ADAPTER_DESC1 = Struct("DXGI_ADAPTER_DESC1", [
@@ -311,7 +269,7 @@ DXGI_ADAPTER_DESC1 = Struct("DXGI_ADAPTER_DESC1", [
     (SIZE_T, "DedicatedSystemMemory"),
     (SIZE_T, "SharedSystemMemory"),
     (LUID, "AdapterLuid"),
-    (UINT, "Flags"),
+    (DXGI_SWAP_CHAIN_FLAG, "Flags"),
 ])
 
 DXGI_DISPLAY_COLOR_SPACE = Struct("DXGI_DISPLAY_COLOR_SPACE", [
@@ -355,32 +313,107 @@ IDXGISwapChainDWM.methods += [
     StdMethod(HRESULT, "GetFullscreenState", [Out(Pointer(BOOL), "pFullscreen"), Out(Pointer(ObjPointer(IDXGIOutput)), "ppTarget")]),
 ]
 
-IDXGIFactory2.methods += [
-    StdMethod(BOOL, "IsWindowedStereoEnabled", [], sideeffects=False),
-    StdMethod(HRESULT, "CreateSwapChainForHwnd", [(ObjPointer(IUnknown), "pDevice"), (HWND, "WindowHandle"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (Pointer(Const(DXGI_SWAP_CHAIN_FULLSCREEN_DESC)), "pFullscreenDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
-    StdMethod(HRESULT, "CreateSwapChainForCoreWindow", [(ObjPointer(IUnknown), "pDevice"), (ObjPointer(IUnknown), "pWindow"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
-    StdMethod(HRESULT, "CreateSwapChainForComposition", [(ObjPointer(IUnknown), "pDevice"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
-    StdMethod(HRESULT, "GetSharedResourceAdapterLuid", [(HANDLE, "hResource"), Out(Pointer(LUID), "pLuid")], sideeffects=False),
-    StdMethod(HRESULT, "RegisterStereoStatusWindow", [(HWND, "WindowHandle"), (UINT, "wMsg"), Out(Pointer(DWORD), "pdwCookie")]),
-    StdMethod(HRESULT, "RegisterStereoStatusEvent", [(HANDLE, "hEvent"), Out(Pointer(DWORD), "pdwCookie")]),
-    StdMethod(Void, "UnregisterStereoStatus", [(DWORD, "dwCookie")]),
-    StdMethod(HRESULT, "RegisterOcclusionStatusWindow", [(HWND, "WindowHandle"), (UINT, "wMsg"), Out(Pointer(DWORD), "pdwCookie")]),
-    StdMethod(HRESULT, "RegisterOcclusionStatusEvent", [(HANDLE, "hEvent"), Out(Pointer(DWORD), "pdwCookie")]),
-    StdMethod(Void, "UnregisterOcclusionStatus", [(DWORD, "dwCookie")]),
+
+dxgi = Module('dxgi')
+dxgi.addInterfaces([
+    IDXGIKeyedMutex,
+    IDXGIFactory1,
+    IDXGIFactoryDWM,
+    IDXGIDevice1,
+    IDXGIAdapter1,
+    IDXGIResource,
+])
+dxgi.addFunctions([
+    StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
+    StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
+])
+
+
+
+#
+# DXGI 1.2
+#
+
+IDXGIDisplayControl = Interface("IDXGIDisplayControl", IUnknown)
+IDXGIDisplayControl.methods += [
+    StdMethod(BOOL, "IsStereoEnabled", [], sideeffects=False),
+    StdMethod(Void, "SetStereoEnabled", [(BOOL, "enabled")]),
 ]
 
-IDXGISwapChain1.methods += [
-    StdMethod(HRESULT, "GetBackgroundColor", [(Out(Pointer(DXGI_RGBA), "pColor"))]),
-    StdMethod(HRESULT, "GetCoreWindow", [(REFIID, "riid"), (Out(Pointer(ObjPointer(Void)), "ppUnk"))]),
-    StdMethod(HRESULT, "GetDesc1", [(Out(Pointer(DXGI_SWAP_CHAIN_DESC1), "pDesc"))]),
-    StdMethod(HRESULT, "GetFullscreenDesc", [(Out(Pointer(DXGI_SWAP_CHAIN_FULLSCREEN_DESC), "pDesc"))]),
-    StdMethod(HRESULT, "GetHwnd", [(Out(Pointer(HWND), "pHwnd"))]),
-    StdMethod(HRESULT, "GetRestrictToOutput", [(Out(Pointer(ObjPointer(IDXGIOutput)), "ppRestrictToOutput"))]),
-    StdMethod(HRESULT, "GetRotation", [(Out(Pointer(DXGI_MODE_ROTATION), "ppRestrictToOutput"))]),
-    StdMethod(BOOL, "IsTemporaryMonoSupported", []),
-    StdMethod(HRESULT, "Present1", [(UINT, "SyncInterval"), (UINT, "Flags"), (Pointer(Const(DXGI_PRESENT_PARAMETERS)), "pPresentParameters")]),
-    StdMethod(HRESULT, "SetBackgroundColor", [(Pointer(Const(DXGI_RGBA)), "pColor")]),
-    StdMethod(HRESULT, "SetRotation", [(DXGI_MODE_ROTATION, "Rotation")]),
+DXGI_OUTDUPL_MOVE_RECT = Struct("DXGI_OUTDUPL_MOVE_RECT", [
+    (POINT, "SourcePoint"),
+    (RECT, "DestinationRect"),
+])
+
+DXGI_OUTDUPL_DESC = Struct("DXGI_OUTDUPL_DESC", [
+    (DXGI_MODE_DESC, "ModeDesc"),
+    (DXGI_MODE_ROTATION, "Rotation"),
+    (BOOL, "DesktopImageInSystemMemory"),
+])
+
+DXGI_OUTDUPL_POINTER_POSITION = Struct("DXGI_OUTDUPL_POINTER_POSITION", [
+    (POINT, "Position"),
+    (BOOL, "Visible"),
+])
+
+DXGI_OUTDUPL_POINTER_SHAPE_TYPE = Enum("DXGI_OUTDUPL_POINTER_SHAPE_TYPE", [
+    "DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MONOCHROME",
+    "DXGI_OUTDUPL_POINTER_SHAPE_TYPE_COLOR",
+    "DXGI_OUTDUPL_POINTER_SHAPE_TYPE_MASKED_COLOR",
+])
+
+DXGI_OUTDUPL_POINTER_SHAPE_INFO = Struct("DXGI_OUTDUPL_POINTER_SHAPE_INFO", [
+    (UINT, "Type"),
+    (UINT, "Width"),
+    (UINT, "Height"),
+    (UINT, "Pitch"),
+    (POINT, "HotSpot"),
+])
+
+DXGI_OUTDUPL_FRAME_INFO = Struct("DXGI_OUTDUPL_FRAME_INFO", [
+    (LARGE_INTEGER, "LastPresentTime"),
+    (LARGE_INTEGER, "LastMouseUpdateTime"),
+    (UINT, "AccumulatedFrames"),
+    (BOOL, "RectsCoalesced"),
+    (BOOL, "ProtectedContentMaskedOut"),
+    (DXGI_OUTDUPL_POINTER_POSITION, "PointerPosition"),
+    (UINT, "TotalMetadataBufferSize"),
+    (UINT, "PointerShapeBufferSize"),
+])
+
+IDXGIOutputDuplication = Interface("IDXGIOutputDuplication", IDXGIObject)
+IDXGIOutputDuplication.methods += [
+    StdMethod(Void, "GetDesc", [Out(Pointer(DXGI_OUTDUPL_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "AcquireNextFrame", [(UINT, "TimeoutInMilliseconds"), Out(Pointer(DXGI_OUTDUPL_FRAME_INFO), "pFrameInfo"), Out(Pointer(ObjPointer(IDXGIResource)), "ppDesktopResource")]),
+    StdMethod(HRESULT, "GetFrameDirtyRects", [(UINT, "DirtyRectsBufferSize"), Out(Array(RECT, "DirtyRectsBufferSize"), "pDirtyRectsBuffer"), Out(Pointer(UINT), "pDirtyRectsBufferSizeRequired")], sideeffects=False),
+    StdMethod(HRESULT, "GetFrameMoveRects", [(UINT, "MoveRectsBufferSize"), Out(Array(DXGI_OUTDUPL_MOVE_RECT, "MoveRectsBufferSize"), "pMoveRectBuffer"), Out(Pointer(UINT), "pMoveRectsBufferSizeRequired")], sideeffects=False),
+    StdMethod(HRESULT, "GetFramePointerShape", [(UINT, "PointerShapeBufferSize"), Out(OpaqueBlob(Void, "PointerShapeBufferSize"), "pPointerShapeBuffer"), Out(Pointer(UINT), "pPointerShapeBufferSizeRequired"), Out(Pointer(DXGI_OUTDUPL_POINTER_SHAPE_INFO), "pPointerShapeInfo")], sideeffects=False),
+    StdMethod(HRESULT, "MapDesktopSurface", [Out(Pointer(DXGI_MAPPED_RECT), "pLockedRect")], sideeffects=False),
+    StdMethod(HRESULT, "UnMapDesktopSurface", [], sideeffects=False),
+    StdMethod(HRESULT, "ReleaseFrame", []),
+]
+
+DXGI_ALPHA_MODE = Enum("DXGI_ALPHA_MODE", [
+    "DXGI_ALPHA_MODE_UNSPECIFIED",
+    "DXGI_ALPHA_MODE_PREMULTIPLIED",
+    "DXGI_ALPHA_MODE_STRAIGHT",
+    "DXGI_ALPHA_MODE_IGNORE",
+])
+
+IDXGISurface2 = Interface("IDXGISurface2", IDXGISurface1)
+IDXGISurface2.methods += [
+    StdMethod(HRESULT, "GetResource", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppParentResource"), Out(Pointer(UINT), "pSubresourceIndex")]),
+]
+
+DXGI_SHARED_RESOURCE_FLAG = Flags(DWORD, [
+    "DXGI_SHARED_RESOURCE_READ",
+    "DXGI_SHARED_RESOURCE_WRITE",
+])
+
+IDXGIResource1 = Interface("IDXGIResource1", IDXGIResource)
+IDXGIResource1.methods += [
+    StdMethod(HRESULT, "CreateSubresourceSurface", [(UINT, "index"), Out(Pointer(ObjPointer(IDXGISurface2)), "ppSurface")]),
+    StdMethod(HRESULT, "CreateSharedHandle", [(Pointer(Const(SECURITY_ATTRIBUTES)), "pAttributes"), (DXGI_SHARED_RESOURCE_FLAG, "dwAccess"), (LPCWSTR, "lpName"), Out(Pointer(HANDLE), "pHandle")]),
 ]
 
 DXGI_OFFER_RESOURCE_PRIORITY = Enum("DXGI_OFFER_RESOURCE_PRIORITY", [
@@ -389,10 +422,85 @@ DXGI_OFFER_RESOURCE_PRIORITY = Enum("DXGI_OFFER_RESOURCE_PRIORITY", [
     "DXGI_OFFER_RESOURCE_PRIORITY_HIGH",
 ])
 
+IDXGIDevice2 = Interface("IDXGIDevice2", IDXGIDevice1)
 IDXGIDevice2.methods += [
     StdMethod(HRESULT, "OfferResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), (DXGI_OFFER_RESOURCE_PRIORITY, "Priority")]),
     StdMethod(HRESULT, "ReclaimResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), Out(Pointer(BOOL), "pDiscarded")]),
     StdMethod(HRESULT, "EnqueueSetEvent", [(HANDLE, "hEvent")]),
+]
+
+DXGI_MODE_DESC1 = Struct("DXGI_MODE_DESC1", [
+    (UINT, "Width"),
+    (UINT, "Height"),
+    (DXGI_RATIONAL, "RefreshRate"),
+    (DXGI_FORMAT, "Format"),
+    (DXGI_MODE_SCANLINE_ORDER, "ScanlineOrdering"),
+    (DXGI_MODE_SCALING, "Scaling"),
+    (BOOL, "Stereo"),
+])
+
+DXGI_SCALING = Enum("DXGI_SCALING", [
+    "DXGI_SCALING_STRETCH",
+    "DXGI_SCALING_NONE",
+    "DXGI_SCALING_ASPECT_RATIO_STRETCH",
+])
+
+DXGI_SWAP_CHAIN_DESC1 = Struct("DXGI_SWAP_CHAIN_DESC1", [
+    (UINT, "Width"),
+    (UINT, "Height"),
+    (DXGI_FORMAT, "Format"),
+    (BOOL, "Stereo"),
+    (DXGI_SAMPLE_DESC, "SampleDesc"),
+    (DXGI_USAGE, "BufferUsage"),
+    (UINT, "BufferCount"),
+    (DXGI_SCALING, "Scaling"),
+    (DXGI_SWAP_EFFECT, "SwapEffect"),
+    (DXGI_ALPHA_MODE, "AlphaMode"),
+    (DXGI_SWAP_CHAIN_FLAG, "Flags"),
+])
+
+DXGI_SWAP_CHAIN_FULLSCREEN_DESC = Struct("DXGI_SWAP_CHAIN_FULLSCREEN_DESC", [
+    (DXGI_RATIONAL, "RefreshRate"),
+    (DXGI_MODE_SCANLINE_ORDER, "ScanlineOrdering"),
+    (DXGI_MODE_SCALING, "Scaling"),
+    (BOOL, "Windowed"),
+])
+
+DXGI_PRESENT_PARAMETERS = Struct("DXGI_PRESENT_PARAMETERS", [
+    (UINT, "DirtyRectsCount"),
+    (Array(RECT, "{self}.DirtyRectsCount"), "pDirtyRects"),
+    (Pointer(RECT), "pScrollRect"),
+    (Pointer(POINT), "pScrollOffset"),
+])
+
+IDXGISwapChain1 = Interface("IDXGISwapChain1", IDXGISwapChain)
+IDXGISwapChain1.methods += [
+    StdMethod(HRESULT, "GetDesc1", [(Out(Pointer(DXGI_SWAP_CHAIN_DESC1), "pDesc"))], sideeffects=False),
+    StdMethod(HRESULT, "GetFullscreenDesc", [(Out(Pointer(DXGI_SWAP_CHAIN_FULLSCREEN_DESC), "pDesc"))], sideeffects=False),
+    StdMethod(HRESULT, "GetHwnd", [(Out(Pointer(HWND), "pHwnd"))], sideeffects=False),
+    StdMethod(HRESULT, "GetCoreWindow", [(REFIID, "riid"), (Out(Pointer(ObjPointer(Void)), "ppUnk"))]),
+    StdMethod(HRESULT, "Present1", [(UINT, "SyncInterval"), (DXGI_PRESENT, "Flags"), (Pointer(Const(DXGI_PRESENT_PARAMETERS)), "pPresentParameters")]),
+    StdMethod(BOOL, "IsTemporaryMonoSupported", [], sideeffects=False),
+    StdMethod(HRESULT, "GetRestrictToOutput", [(Out(Pointer(ObjPointer(IDXGIOutput)), "ppRestrictToOutput"))]),
+    StdMethod(HRESULT, "SetBackgroundColor", [(Pointer(Const(DXGI_RGBA)), "pColor")]),
+    StdMethod(HRESULT, "GetBackgroundColor", [(Out(Pointer(DXGI_RGBA), "pColor"))], sideeffects=False),
+    StdMethod(HRESULT, "SetRotation", [(DXGI_MODE_ROTATION, "Rotation")]),
+    StdMethod(HRESULT, "GetRotation", [(Out(Pointer(DXGI_MODE_ROTATION), "pRotation"))], sideeffects=False),
+]
+
+IDXGIFactory2 = Interface("IDXGIFactory2", IDXGIFactory1)
+IDXGIFactory2.methods += [
+    StdMethod(BOOL, "IsWindowedStereoEnabled", [], sideeffects=False),
+    StdMethod(HRESULT, "CreateSwapChainForHwnd", [(ObjPointer(IUnknown), "pDevice"), (HWND, "WindowHandle"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (Pointer(Const(DXGI_SWAP_CHAIN_FULLSCREEN_DESC)), "pFullscreenDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
+    StdMethod(HRESULT, "CreateSwapChainForCoreWindow", [(ObjPointer(IUnknown), "pDevice"), (ObjPointer(IUnknown), "pWindow"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
+    StdMethod(HRESULT, "GetSharedResourceAdapterLuid", [(HANDLE, "hResource"), Out(Pointer(LUID), "pLuid")], sideeffects=False),
+    StdMethod(HRESULT, "RegisterStereoStatusWindow", [(HWND, "WindowHandle"), (UINT, "wMsg"), Out(Pointer(DWORD), "pdwCookie")]),
+    StdMethod(HRESULT, "RegisterStereoStatusEvent", [(HANDLE, "hEvent"), Out(Pointer(DWORD), "pdwCookie")]),
+    StdMethod(Void, "UnregisterStereoStatus", [(DWORD, "dwCookie")]),
+    StdMethod(HRESULT, "RegisterOcclusionStatusWindow", [(HWND, "WindowHandle"), (UINT, "wMsg"), Out(Pointer(DWORD), "pdwCookie")]),
+    StdMethod(HRESULT, "RegisterOcclusionStatusEvent", [(HANDLE, "hEvent"), Out(Pointer(DWORD), "pdwCookie")]),
+    StdMethod(Void, "UnregisterOcclusionStatus", [(DWORD, "dwCookie")]),
+    StdMethod(HRESULT, "CreateSwapChainForComposition", [(ObjPointer(IUnknown), "pDevice"), (Pointer(Const(DXGI_SWAP_CHAIN_DESC1)), "pDesc"), (ObjPointer(IDXGIOutput), "pRestrictToOutput"), Out(Pointer(ObjPointer(IDXGISwapChain1)), "ppSwapChain")]),
 ]
 
 DXGI_GRAPHICS_PREEMPTION_GRANULARITY = Enum("DXGI_GRAPHICS_PREEMPTION_GRANULARITY", [
@@ -421,42 +529,29 @@ DXGI_ADAPTER_DESC2 = Struct("DXGI_ADAPTER_DESC2", [
     (SIZE_T, "DedicatedSystemMemory"),
     (SIZE_T, "SharedSystemMemory"),
     (LUID, "AdapterLuid"),
-    (UINT, "Flags"),
+    (DXGI_ADAPTER_FLAG, "Flags"),
     (DXGI_GRAPHICS_PREEMPTION_GRANULARITY, "GraphicsPreemptionGranularity"),
     (DXGI_COMPUTE_PREEMPTION_GRANULARITY, "ComputePreemptionGranularity"),
 ])
 
-
+IDXGIAdapter2 = Interface("IDXGIAdapter2", IDXGIAdapter1)
 IDXGIAdapter2.methods += [
     StdMethod(HRESULT, "GetDesc2", [Out(Pointer(DXGI_ADAPTER_DESC2), "pDesc")], sideeffects=False),
 ]
 
-
-IDXGIResource1 = Interface("IDXGIResource1", IDXGIResource)
-IDXGISurface2 = Interface("IDXGISurface2", IDXGISurface1)
-
-
-IDXGIResource1.methods += [
-    StdMethod(HRESULT, "CreateSharedHandle", [(Pointer(Const(SECURITY_ATTRIBUTES)), "pAttributes"), (DXGI_SHARED_RESOURCE_FLAG, "dwAccess"), (LPCWSTR, "lpName"), Out(Pointer(HANDLE), "pHandle")]),
-    StdMethod(HRESULT, "CreateSubresourceSurface", [(UINT, "index"), Out(Pointer(ObjPointer(IDXGISurface2)), "ppSurface")]),
+IDXGIOutput1 = Interface("IDXGIOutput1", IDXGIOutput)
+IDXGIOutput1.methods += [
+    StdMethod(HRESULT, "GetDisplayModeList1", [(DXGI_FORMAT, "EnumFormat"), (DXGI_ENUM_MODES, "Flags"), Out(Pointer(UINT), "pNumModes"), Out(Pointer(DXGI_MODE_DESC1), "pDesc")]),
+    StdMethod(HRESULT, "FindClosestMatchingMode1", [(Pointer(Const(DXGI_MODE_DESC1)), "pModeToMatch"), Out(Pointer(DXGI_MODE_DESC1), "pClosestMatch"), (ObjPointer(IUnknown), "pConcernedDevice")]),
+    StdMethod(HRESULT, "GetDisplaySurfaceData1", [(ObjPointer(IDXGIResource), "pDestination")]),
+    StdMethod(HRESULT, "DuplicateOutput", [(ObjPointer(IUnknown), "pDevice"), Out(Pointer(ObjPointer(IDXGIOutputDuplication)), "ppOutputDuplication")]),
 ]
 
-
-IDXGISurface2.methods += [
-    StdMethod(HRESULT, "GetResource", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppParentResource"), Out(Pointer(UINT), "pSubresourceIndex")]),
-]
-
-
-dxgi = Module('dxgi')
 dxgi.addInterfaces([
-    IDXGIKeyedMutex,
-    IDXGIFactory2,
-    IDXGIFactoryDWM,
     IDXGIDevice2,
-    IDXGIAdapter2,
+    IDXGISwapChain1,
+    IDXGIFactory2,
     IDXGIResource1,
-])
-dxgi.addFunctions([
-    StdFunction(HRESULT, "CreateDXGIFactory", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
-    StdFunction(HRESULT, "CreateDXGIFactory1", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppFactory")]),
+    IDXGIAdapter2,
+    IDXGIOutput1,
 ])
