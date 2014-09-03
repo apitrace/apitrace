@@ -48,6 +48,11 @@
 #include "inject.h"
 
 
+#ifndef ERROR_ELEVATION_REQUIRED
+#define ERROR_ELEVATION_REQUIRED 740
+#endif
+
+
 /**
  * Determine whether an argument should be quoted.
  */
@@ -183,7 +188,8 @@ main(int argc, char *argv[])
             dwProcessId);
         if (!hProcess) {
             DWORD dwLastError = GetLastError();
-            fprintf(stderr, "error: failed to open process %lu (%lu)\n", dwProcessId, dwLastError);
+            fprintf(stderr, "error: failed to open process %lu (%lu)\n",
+                    dwProcessId, dwLastError);
             return 1;
         }
     } else {
@@ -222,7 +228,12 @@ main(int argc, char *argv[])
                NULL, // current directory
                &startupInfo,
                &processInfo)) {
-            fprintf(stderr, "error: failed to execute %s\n", commandLine.c_str());
+            DWORD dwLastError = GetLastError();
+            fprintf(stderr, "error: failed to execute %s (%lu)\n",
+                    commandLine.c_str(), dwLastError);
+            if (dwLastError == ERROR_ELEVATION_REQUIRED) {
+                fprintf(stderr, "error: target program requires elevated priviledges and must be started from an Administrator Command Prompt, or UAC must be disabled\n");
+            }
             return 1;
         }
 
