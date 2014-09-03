@@ -33,6 +33,8 @@ set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
 
 set (ENABLE_WAFFLE false CACHE BOOL "Enable WAFFLE support.")
 
+set (ENABLE_FRAME_POINTER true CACHE BOOL "Disable frame pointer omission")
+
 
 ##############################################################################
 # Find dependencies
@@ -207,6 +209,15 @@ if (MINGW)
         set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++")
         set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libstdc++")
         set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static-libstdc++")
+    endif ()
+endif ()
+
+if (ENABLE_FRAME_POINTER)
+    # disable frame pointer omission
+    if (MSVC)
+        add_definitions (/Oy-)
+    else ()
+        add_definitions (-fno-omit-frame-pointer)
     endif ()
 endif ()
 
