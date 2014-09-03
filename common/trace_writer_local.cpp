@@ -64,7 +64,8 @@ static void exceptionCallback(void)
 LocalWriter::LocalWriter() :
     acquired(0)
 {
-    os::log("apitrace: loaded\n");
+    os::String process = os::getProcessName();
+    os::log("apitrace: loaded into %s\n", process.str());
 
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
