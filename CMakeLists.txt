@@ -184,9 +184,9 @@ else ()
 
     # Enable SSE2 intrinsics on x86
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-        CHECK_CXX_COMPILER_FLAG("-msse2" CXX_COMPILER_FLAG_SSE2)
+        CHECK_CXX_COMPILER_FLAG("-msse2 -mincoming-stack-boundary=2" CXX_COMPILER_FLAG_SSE2)
         if (CXX_COMPILER_FLAG_SSE2)
-            add_definitions ("-msse2")
+            add_definitions ("-msse2 -mincoming-stack-boundary=2")
         endif ()
     endif ()
 
