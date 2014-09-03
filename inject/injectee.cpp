@@ -61,6 +61,9 @@ static HMODULE g_hThisModule = NULL;
 
 
 static void
+#ifdef __GNUC__
+    __attribute__ ((format (printf, 1, 2)))
+#endif
 debugPrintf(const char *format, ...)
 {
     char buf[512];
@@ -198,7 +201,7 @@ MyCreateProcessAsUserA(HANDLE hToken,
                        LPPROCESS_INFORMATION lpProcessInformation)
 {
     if (VERBOSITY >= 2) {
-        debugPrintf("%s(\"%S\", \"%S\", ...)\n",
+        debugPrintf("%s(\"%s\", \"%s\", ...)\n",
                     __FUNCTION__,
                     lpApplicationName,
                     lpCommandLine);
@@ -262,16 +265,15 @@ MyCreateProcessAsUserW(HANDLE hToken,
 
 
 static const char *
-getImportDescriptionName(HMODULE hModule, const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor) {
+getImportDescriptorName(HMODULE hModule, const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor) {
     const char* szName = (const char*)((PBYTE)hModule + pImportDescriptor->Name);
     return szName;
 }
 
 
 static PIMAGE_IMPORT_DESCRIPTOR
-getImportDescriptor(HMODULE hModule,
-                    const char *szModule,
-                    const char *pszDllName)
+getFirstImportDescriptor(HMODULE hModule,
+                         const char *szModule)
 {
     MEMORY_BASIC_INFORMATION MemoryInfo;
     if (VirtualQuery(hModule, &MemoryInfo, sizeof MemoryInfo) != sizeof MemoryInfo) {
@@ -279,32 +281,57 @@ getImportDescriptor(HMODULE hModule,
         return NULL;
     }
     if (MemoryInfo.Protect & (PAGE_NOACCESS | PAGE_EXECUTE)) {
-        debugPrintf("%s: %s: no read access (Protect = 0x%08x)\n", __FUNCTION__, szModule, MemoryInfo.Protect);
+        debugPrintf("%s: %s: no read access (Protect = 0x%08lx)\n", __FUNCTION__, szModule, MemoryInfo.Protect);
         return NULL;
     }
 
     PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)hModule;
+    assert(pDosHeader->e_magic == IMAGE_DOS_SIGNATURE);
     PIMAGE_NT_HEADERS pNtHeaders = (PIMAGE_NT_HEADERS)((PBYTE)hModule + pDosHeader->e_lfanew);
+    assert(pNtHeaders->Signature == IMAGE_NT_SIGNATURE);
+    assert(pNtHeaders->OptionalHeader.NumberOfRvaAndSizes > 0);
 
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
 
-    UINT_PTR ImportAddress = pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+    if (pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size == 0) {
+        return NULL;
+    }
 
+    UINT_PTR ImportAddress = pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
     if (!ImportAddress) {
         return NULL;
     }
 
     PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)((PBYTE)hModule + ImportAddress);
 
-    while (pImportDescriptor->FirstThunk) {
-        const char* szName = getImportDescriptionName(hModule, pImportDescriptor);
-        if (stricmp(pszDllName, szName) == 0) {
-            return pImportDescriptor;
-        }
-        ++pImportDescriptor;
+    return pImportDescriptor;
+}
+
+
+static PIMAGE_EXPORT_DIRECTORY
+getExportDescriptor(HMODULE hModule)
+{
+    PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)hModule;
+    assert(pDosHeader->e_magic == IMAGE_DOS_SIGNATURE);
+
+    PIMAGE_NT_HEADERS pNtHeaders = (PIMAGE_NT_HEADERS)((PBYTE)hModule + pDosHeader->e_lfanew);
+    assert(pNtHeaders->Signature == IMAGE_NT_SIGNATURE);
+    assert(pNtHeaders->OptionalHeader.NumberOfRvaAndSizes > 0);
+
+    PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
+
+    if (pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size == 0) {
+        return NULL;
     }
 
-    return NULL;
+    UINT_PTR ExportAddress = pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+    if (!ExportAddress) {
+        return NULL;
+    }
+
+    PIMAGE_EXPORT_DIRECTORY pExportDescriptor = (PIMAGE_EXPORT_DIRECTORY)((PBYTE)hModule + ExportAddress);
+
+    return pExportDescriptor;
 }
 
 
