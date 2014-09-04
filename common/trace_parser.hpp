@@ -45,7 +45,21 @@ struct ParseBookmark
 };
 
 
-class Parser
+// Parser interface
+class AbstractParser
+{
+public:
+    virtual ~AbstractParser() {}
+    virtual  Call *parse_call(void) = 0;
+    virtual void getBookmark(ParseBookmark &bookmark) = 0;
+    virtual void setBookmark(const ParseBookmark &bookmark) = 0;
+    virtual bool open(const char *filename) = 0;
+    virtual void close(void) = 0;
+    virtual unsigned long long getVersion(void) const = 0;
+};
+
+
+class Parser: public AbstractParser
 {
 protected:
     File *file;
@@ -95,8 +109,8 @@ protected:
 
     unsigned next_call_no;
 
-public:
     unsigned long long version;
+public:
     API api;
 
     Parser();
@@ -119,6 +133,10 @@ public:
     void getBookmark(ParseBookmark &bookmark);
 
     void setBookmark(const ParseBookmark &bookmark);
+
+    unsigned long long getVersion(void) const {
+        return version;
+    }
 
     int percentRead()
     {
@@ -219,6 +237,34 @@ protected:
 
     inline int read_byte(void);
     inline void skip_byte(void);
+};
+
+
+// Decorator for parser which loops
+class LastFrameLoopParser : public AbstractParser  {
+public:
+    LastFrameLoopParser(AbstractParser *p, int c) {
+        parser = p;
+        loopCount = c;
+    }
+
+    ~LastFrameLoopParser() {
+        delete parser;
+    }
+
+    Call *parse_call(void);
+
+    // Delegate to Parser
+    void getBookmark(ParseBookmark &bookmark) { parser->getBookmark(bookmark); }
+    void setBookmark(const ParseBookmark &bookmark) { parser->setBookmark(bookmark); }
+    bool open(const char *filename);
+    void close(void) { parser->close(); }
+    unsigned long long getVersion(void) const { return parser->getVersion(); }
+private:
+    int loopCount;
+    AbstractParser *parser;
+    ParseBookmark frameStart;
+    ParseBookmark lastFrameStart;
 };
 
 

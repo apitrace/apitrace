@@ -127,7 +127,7 @@ class GlRetracer(Retracer):
 
         # For backwards compatibility with old traces where non VBO drawing was supported
         if (is_array_pointer or is_draw_arrays or is_draw_elements) and not is_draw_indirect:
-            print '    if (retrace::parser.version < 1) {'
+            print '    if (retrace::parser->getVersion() < 1) {'
 
             if is_array_pointer or is_draw_arrays:
                 print '        GLint _array_buffer = 0;'

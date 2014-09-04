@@ -48,7 +48,6 @@
 
 
 static bool waitOnFinish = false;
-static int loopCount = 0;
 
 static const char *snapshotPrefix = "";
 static enum {
@@ -59,7 +58,6 @@ static enum {
 
 static trace::CallSet snapshotFrequency;
 static unsigned snapshotInterval = 0;
-static trace::ParseBookmark lastFrameStart;
 
 static unsigned dumpStateCallNo = ~0;
 
@@ -69,7 +67,7 @@ retrace::Retracer retracer;
 namespace retrace {
 
 
-trace::Parser parser;
+trace::AbstractParser *parser;
 trace::Profiler profiler;
 
 
@@ -381,33 +379,13 @@ public:
 
         /* Consume successive calls for this thread. */
         do {
-            bool callEndsFrame = false;
-            static trace::ParseBookmark frameStart;
 
             assert(call);
             assert(call->thread_id == leg);
 
-            if (loopCount && call->flags & trace::CALL_FLAG_END_FRAME) {
-                callEndsFrame = true;
-                parser.getBookmark(frameStart);
-            }
-
             retraceCall(call);
             delete call;
-            call = parser.parse_call();
-
-            /* Restart last frame if looping is requested. */
-            if (loopCount) {
-                if (!call) {
-                    parser.setBookmark(lastFrameStart);
-                    call = parser.parse_call();
-                    if (loopCount > 0) {
-                        --loopCount;
-                    }
-                } else if (callEndsFrame) {
-                    lastFrameStart = frameStart;
-                }
-            }
+            call = parser->parse_call();
 
         } while (call && call->thread_id == leg);
 
@@ -509,18 +487,10 @@ RelayRace::getRunner(unsigned leg) {
 void
 RelayRace::run(void) {
     trace::Call *call;
-    call = parser.parse_call();
+    call = parser->parse_call();
     if (!call) {
         /* Nothing to do */
         return;
-    }
-
-    /* If the user wants to loop we need to get a bookmark target. We
-     * usually get this after replaying a call that ends a frame, but
-     * for a trace that has only one frame we need to get it at the
-     * beginning. */
-    if (loopCount) {
-        parser.getBookmark(lastFrameStart);
     }
 
     RelayRunner *foreRunner = getForeRunner();
@@ -586,10 +556,10 @@ mainLoop() {
 
     if (singleThread) {
         trace::Call *call;
-        while ((call = parser.parse_call())) {
+        while ((call = parser->parse_call())) {
             retraceCall(call);
             delete call;
-        };
+        }
     } else {
         RelayRace race;
         race.run();
@@ -713,6 +683,7 @@ extern "C"
 int main(int argc, char **argv)
 {
     using namespace retrace;
+    int loopCount = 0;
     int i;
 
     os::setDebugOutput(os::OUTPUT_STDERR);
@@ -897,13 +868,21 @@ int main(int argc, char **argv)
     os::setExceptionCallback(exceptionCallback);
 
     for (i = optind; i < argc; ++i) {
-        if (!retrace::parser.open(argv[i])) {
+        parser = new trace::Parser;
+        if (loopCount) {
+            parser = new trace::LastFrameLoopParser(parser, loopCount);
+        }
+
+        if (!parser->open(argv[i])) {
             return 1;
         }
 
         retrace::mainLoop();
 
-        retrace::parser.close();
+        parser->close();
+
+        delete parser;
+        parser = NULL;
     }
     
     os::resetExceptionCallback();
