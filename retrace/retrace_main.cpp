@@ -45,8 +45,7 @@
 
 
 static bool waitOnFinish = false;
-static bool loopOnFinish = false;
-static bool loopContinuos = false;
+static int loopCount = 0;
 
 static const char *snapshotPrefix = NULL;
 static enum {
@@ -91,7 +90,6 @@ bool singleThread = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
-unsigned loopIter = 1;
 
 
 void
@@ -339,7 +337,7 @@ public:
             assert(call);
             assert(call->thread_id == leg);
 
-            if (loopOnFinish && call->flags & trace::CALL_FLAG_END_FRAME) {
+            if (loopCount && call->flags & trace::CALL_FLAG_END_FRAME) {
                 callEndsFrame = true;
                 parser.getBookmark(frameStart);
             }
@@ -349,12 +347,13 @@ public:
             call = parser.parse_call();
 
             /* Restart last frame if looping is requested. */
-            if (loopOnFinish) {
-                if (!call  && (loopIter > 0  || loopContinuos)) {
+            if (loopCount) {
+                if (!call) {
                     parser.setBookmark(lastFrameStart);
                     call = parser.parse_call();
-                    if (!loopContinuos)
-                        loopIter--;
+                    if (loopCount > 0) {
+                        --loopCount;
+                    }
                 } else if (callEndsFrame) {
                     lastFrameStart = frameStart;
                 }
@@ -471,7 +470,7 @@ RelayRace::run(void) {
      * usually get this after replaying a call that ends a frame, but
      * for a trace that has only one frame we need to get it at the
      * beginning. */
-    if (loopOnFinish) {
+    if (loopCount) {
         parser.getBookmark(lastFrameStart);
     }
 
@@ -594,7 +593,7 @@ usage(const char *argv0) {
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
         "  -w, --wait              waitOnFinish on final frame\n"
-        "      --loop[=N]          loop N times (N=0 continuously) replaying final frame.\n"
+        "      --loop[=N]          loop N times (N<0 continuously) replaying final frame.\n"
         "      --singlethread      use a single thread to replay command stream\n";
 }
 
@@ -761,10 +760,7 @@ int main(int argc, char **argv)
             waitOnFinish = true;
             break;
         case LOOP_OPT:
-            loopIter = trace::intOption(optarg);
-            if (loopIter == 0)
-                loopContinuos = true;
-            loopOnFinish = true;
+            loopCount = trace::intOption(optarg, -1);
             break;
         case PGPU_OPT:
             retrace::debug = 0;
