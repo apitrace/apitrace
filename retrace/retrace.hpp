@@ -51,7 +51,7 @@ namespace image {
 namespace retrace {
 
 
-extern trace::Parser parser;
+extern trace::AbstractParser *parser;
 extern trace::Profiler profiler;
 
 

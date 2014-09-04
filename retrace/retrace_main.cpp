@@ -45,9 +45,6 @@
 
 
 static bool waitOnFinish = false;
-static bool loopOnFinish = false;
-static bool loopContinuos = false;
-
 static const char *snapshotPrefix = NULL;
 static enum {
     PNM_FMT,
@@ -57,7 +54,6 @@ static enum {
 
 static trace::CallSet snapshotFrequency;
 static unsigned snapshotInterval = 0;
-static trace::ParseBookmark lastFrameStart;
 
 static unsigned dumpStateCallNo = ~0;
 
@@ -66,8 +62,7 @@ retrace::Retracer retracer;
 
 namespace retrace {
 
-
-trace::Parser parser;
+trace::AbstractParser *parser;
 trace::Profiler profiler;
 
 
@@ -91,7 +86,6 @@ bool singleThread = false;
 
 unsigned frameNo = 0;
 unsigned callNo = 0;
-unsigned loopIter = 1;
 
 
 void
@@ -333,32 +327,15 @@ public:
 
         /* Consume successive calls for this thread. */
         do {
-            bool callEndsFrame = false;
-            static trace::ParseBookmark frameStart;
 
             assert(call);
             assert(call->thread_id == leg);
 
-            if (loopOnFinish && call->flags & trace::CALL_FLAG_END_FRAME) {
-                callEndsFrame = true;
-                parser.getBookmark(frameStart);
-            }
+            parser->bookmarkFrameStart(call);
 
             retraceCall(call);
             delete call;
-            call = parser.parse_call();
-
-            /* Restart last frame if looping is requested. */
-            if (loopOnFinish) {
-                if (!call  && (loopIter > 0  || loopContinuos)) {
-                    parser.setBookmark(lastFrameStart);
-                    call = parser.parse_call();
-                    if (!loopContinuos)
-                        loopIter--;
-                } else if (callEndsFrame) {
-                    lastFrameStart = frameStart;
-                }
-            }
+            call = parser->parse_call();
 
         } while (call && call->thread_id == leg);
 
@@ -461,18 +438,10 @@ RelayRace::getRunner(unsigned leg) {
 void
 RelayRace::run(void) {
     trace::Call *call;
-    call = parser.parse_call();
+    call = parser->parse_call();
     if (!call) {
         /* Nothing to do */
         return;
-    }
-
-    /* If the user wants to loop we need to get a bookmark target. We
-     * usually get this after replaying a call that ends a frame, but
-     * for a trace that has only one frame we need to get it at the
-     * beginning. */
-    if (loopOnFinish) {
-        parser.getBookmark(lastFrameStart);
     }
 
     RelayRunner *foreRunner = getForeRunner();
@@ -538,10 +507,13 @@ mainLoop() {
 
     if (singleThread) {
         trace::Call *call;
-        while ((call = parser.parse_call())) {
+        call = parser->parse_call();
+        do {
+            parser->bookmarkFrameStart(call);
             retraceCall(call);
             delete call;
-        };
+            call = parser->parse_call();
+        } while (call);
     } else {
         RelayRace race;
         race.run();
@@ -763,7 +735,7 @@ int main(int argc, char **argv)
         case LOOP_OPT:
             loopIter = trace::intOption(optarg);
             if (loopIter == 0)
-                loopContinuos = true;
+                loopContinuous = true;
             loopOnFinish = true;
             break;
         case PGPU_OPT:
@@ -814,16 +786,22 @@ int main(int argc, char **argv)
 
     os::setExceptionCallback(exceptionCallback);
 
+    if (loopOnFinish)
+        parser = new trace::LastFrameLoopParser(new trace::Parser);
+    else
+        parser = new trace::Parser;
+
     for (i = optind; i < argc; ++i) {
-        if (!retrace::parser.open(argv[i])) {
+        if (!parser->open(argv[i])) {
             return 1;
         }
 
         retrace::mainLoop();
 
-        retrace::parser.close();
+        parser->close();
     }
     
+    delete parser;
     os::resetExceptionCallback();
 
     // XXX: X often hangs on XCloseDisplay

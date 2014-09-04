@@ -36,6 +36,9 @@
 
 #define TRACE_VERBOSE 0
 
+bool loopOnFinish = false;
+bool loopContinuous = false;
+unsigned loopIter = 1;
 
 namespace trace {
 
@@ -1011,5 +1014,40 @@ inline void Parser::skip_byte(void) {
     file->skip(1);
 }
 
+void LastFrameLoopParser::bookmarkFrameStart(trace::Call *call) {
+    if (call->flags & trace::CALL_FLAG_END_FRAME) {
+        callEndsFrame = true;
+        parser->getBookmark(frameStart);
+    } else {
+        callEndsFrame = false;
+    }
+}
+
+Call *LastFrameLoopParser::parse_call(void) {
+    trace::Call *call;
+
+    call = parser->parse_call();
+
+     /* If the user wants to loop we need to get a bookmark target. We
+     * usually get this after replaying a call that ends a frame, but
+     * for a trace that has only one frame we need to get it at the
+     * beginning. */
+    if (firstCall) {
+        firstCall = false;
+        parser->getBookmark(lastFrameStart);
+    }
+    /* Restart last frame when looping is requested. */
+    if (!call  && (loopIter > 0  || loopContinuous)) {
+        parser->setBookmark(lastFrameStart);
+        call = parser->parse_call();
+        if (!loopContinuous)
+            loopIter--;
+    } else if (callEndsFrame) {
+        lastFrameStart = frameStart;
+        callEndsFrame = false;
+    }
+
+    return call;
+}
 
 } /* namespace trace */

@@ -35,6 +35,9 @@
 #include "trace_model.hpp"
 #include "trace_api.hpp"
 
+extern bool loopOnFinish;
+extern bool loopContinuous;
+extern unsigned loopIter;
 
 namespace trace {
 
@@ -46,7 +49,21 @@ struct ParseBookmark
 };
 
 
-class Parser
+// Parser interface
+ class AbstractParser
+ {
+ public:
+    virtual ~AbstractParser() {}
+    virtual  Call *parse_call(void) = 0;
+    virtual void bookmarkFrameStart(trace::Call *call) = 0;
+    virtual void getBookmark(ParseBookmark &bookmark) = 0;
+    virtual void setBookmark(const ParseBookmark &bookmark) = 0;
+    virtual bool open(const char *filename) = 0;
+    virtual void close(void) = 0;
+    virtual unsigned long long get_version(void) = 0;
+ };
+
+class Parser: public AbstractParser
 {
 protected:
     File *file;
@@ -96,8 +113,8 @@ protected:
 
     unsigned next_call_no;
 
-public:
     unsigned long long version;
+public:
     API api;
 
     Parser();
@@ -120,6 +137,10 @@ public:
     void getBookmark(ParseBookmark &bookmark);
 
     void setBookmark(const ParseBookmark &bookmark);
+
+    void bookmarkFrameStart(trace::Call *call) {};
+
+    unsigned long long get_version() {return version;}
 
     int percentRead()
     {
@@ -217,6 +238,31 @@ protected:
     inline void skip_byte(void);
 };
 
+// Decorator for parser which loops
+class LastFrameLoopParser : public AbstractParser  {
+public:
+   LastFrameLoopParser(AbstractParser *p) {
+        parser = p;
+        callEndsFrame = false;
+        firstCall = true;
+    }
+    ~LastFrameLoopParser() { delete parser; }
+
+    Call *parse_call(void);
+    void bookmarkFrameStart(trace::Call *call);
+
+    //delegate to Parser
+    void getBookmark(ParseBookmark &bookmark) {parser->getBookmark(bookmark);}
+    void setBookmark(const ParseBookmark &bookmark) {parser->setBookmark(bookmark);}
+    bool open(const char *filename) {return parser->open(filename);}
+    void close(void) {parser->close();}
+    unsigned long long get_version(void) {return parser->get_version();}
+private:
+    AbstractParser *parser;
+    bool callEndsFrame, firstCall;
+    ParseBookmark frameStart;
+    ParseBookmark lastFrameStart;
+};
 
 } /* namespace trace */
 
