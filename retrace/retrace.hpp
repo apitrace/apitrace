@@ -145,6 +145,7 @@ std::ostream &warning(trace::Call &call);
 void failed(trace::Call &call, HRESULT hr);
 #endif
 
+void checkMismatch(trace::Call &call, const char *expr, trace::Value *traceValue, long actualValue);
 
 void ignore(trace::Call &call);
 void unsupported(trace::Call &call);

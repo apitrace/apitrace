@@ -356,6 +356,7 @@ class D3DRetracer(Retracer):
                 print '        _maps[pResource] = _MapDesc.pData;'
             else:
                 print '        _maps[_this] = _MapDesc.pData;'
+            self.checkPitchMismatch(method)
             print '    } else {'
             print '        return;'
             print '    }'

@@ -173,6 +173,7 @@ class D3DRetracer(Retracer):
             print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
             print '    if (_MappedSize) {'
             print '        _maps[_this] = _pbData;'
+            self.checkPitchMismatch(method)
             print '    } else {'
             print '        return;'
             print '    }'

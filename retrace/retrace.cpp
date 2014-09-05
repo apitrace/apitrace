@@ -85,6 +85,20 @@ failed(trace::Call &call, HRESULT hr)
 #endif /* _WIN32 */
 
 
+void
+checkMismatch(trace::Call &call, const char *expr, trace::Value *traceValue, long actualValue)
+{
+    assert(traceValue);
+    long traceIntValue = traceValue->toSInt();
+    if (traceIntValue == actualValue) {
+        return;
+    }
+
+    std::ostream &os = warning(call);
+    os << "mismatch in " << expr << ": expected " << traceIntValue << " but got " << actualValue << "\n";
+}
+
+
 void ignore(trace::Call &call) {
     (void)call;
 }
