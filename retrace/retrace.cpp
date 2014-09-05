@@ -59,6 +59,32 @@ std::ostream &warning(trace::Call &call) {
 }
 
 
+#ifdef _WIN32
+void
+failed(trace::Call &call, HRESULT hr)
+{
+    std::ostream &os = warning(call);
+
+    os << "failed with 0x" << std::hex << hr << std::dec;
+
+    LPSTR lpszMessageBuffer = NULL;
+    DWORD dwWritten;
+    dwWritten = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                               NULL,
+                               hr,
+                               0,
+                               (LPSTR)&lpszMessageBuffer, 0,
+                               NULL);
+    if (dwWritten) {
+        os << ": " << lpszMessageBuffer;
+    }
+    LocalFree(lpszMessageBuffer);
+
+    os << "\n";
+}
+#endif /* _WIN32 */
+
+
 void ignore(trace::Call &call) {
     (void)call;
 }

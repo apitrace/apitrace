@@ -35,6 +35,10 @@
 #include <map>
 #include <ostream>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "trace_model.hpp"
 #include "trace_parser.hpp"
 #include "trace_profiler.hpp"
@@ -130,6 +134,10 @@ extern unsigned callNo;
 extern trace::DumpFlags dumpFlags;
 
 std::ostream &warning(trace::Call &call);
+
+#ifdef _WIN32
+void failed(trace::Call &call, HRESULT hr);
+#endif
 
 
 void ignore(trace::Call &call);
