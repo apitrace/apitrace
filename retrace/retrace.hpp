@@ -66,7 +66,7 @@ public:
      * Allocate an array with the same dimensions as the specified value.
      */
     inline void *
-    alloc(const trace::Value *value, size_t size) {
+    allocArray(const trace::Value *value, size_t size) {
         const trace::Array *array = value->toArray();
         if (array) {
             return ::ScopedAllocator::alloc(array->size() * size);
@@ -77,6 +77,12 @@ public:
         }
         assert(0);
         return NULL;
+    }
+
+    template< class T >
+    inline T *
+    allocArray(const trace::Value *value) {
+        return static_cast<T *>(allocArray(value, sizeof(T)));
     }
 
 };

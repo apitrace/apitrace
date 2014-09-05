@@ -120,7 +120,7 @@ toObjPointer(trace::Call &call, trace::Value &value);
 template< class T >
 inline T *
 asObjPointer(trace::Call &call, trace::Value &value) {
-    return reinterpret_cast<T *>(toObjPointer(call, value));
+    return static_cast<T *>(toObjPointer(call, value));
 }
 
 

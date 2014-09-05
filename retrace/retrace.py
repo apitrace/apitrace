@@ -69,10 +69,10 @@ class ValueAllocator(stdapi.Visitor):
         pass
 
     def visitArray(self, array, lvalue, rvalue):
-        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, array.type, rvalue, lvalue)
+        print '    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, array.type, rvalue)
 
     def visitPointer(self, pointer, lvalue, rvalue):
-        print '    %s = static_cast<%s *>(_allocator.alloc(&%s, sizeof *%s));' % (lvalue, pointer.type, rvalue, lvalue)
+        print '    %s = _allocator.allocArray<%s>(&%s);' % (lvalue, pointer.type, rvalue)
 
     def visitIntPointer(self, pointer, lvalue, rvalue):
         pass
@@ -154,7 +154,7 @@ class ValueDeserializer(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, pointer, rvalue)
 
     def visitObjPointer(self, pointer, lvalue, rvalue):
-        print '    %s = static_cast<%s>(retrace::toObjPointer(call, %s));' % (lvalue, pointer, rvalue)
+        print '    %s = retrace::asObjPointer<%s>(call, %s);' % (lvalue, pointer.type, rvalue)
 
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         print '    %s = static_cast<%s>(retrace::toPointer(%s));' % (lvalue, pointer, rvalue)
@@ -396,7 +396,7 @@ class Retracer:
 
     def deserializeThisPointer(self, interface):
         print r'    %s *_this;' % (interface.name,)
-        print r'    _this = static_cast<%s *>(retrace::toObjPointer(call, call.arg(0)));' % (interface.name,)
+        print r'    _this = retrace::asObjPointer<%s>(call, call.arg(0));' % (interface.name,)
         print r'    if (!_this) {'
         print r'        return;'
         print r'    }'
