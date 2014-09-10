@@ -114,6 +114,45 @@ quoteArg(std::string &s, const char *arg)
 }
 
 
+// http://msdn.microsoft.com/en-gb/library/windows/desktop/ms686335.aspx
+static void
+restartService(const char *lpServiceName)
+{
+    fprintf(stderr, "info: restarting %s\n", lpServiceName);
+
+    SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    assert(hSCManager);
+    if (!hSCManager) {
+        return;
+    }
+
+    SC_HANDLE hService = OpenServiceA(hSCManager, lpServiceName, SC_MANAGER_ALL_ACCESS);
+    assert(hService);
+    if (!hService) {
+        return;
+    }
+
+    SERVICE_STATUS_PROCESS ssp;
+    DWORD cbBytesNeeded;
+    QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, sizeof ssp, &cbBytesNeeded);
+
+    BOOL bRet;
+    if (ssp.dwCurrentState == SERVICE_RUNNING) {
+        bRet = ControlService(hService, SERVICE_CONTROL_STOP, (LPSERVICE_STATUS) &ssp);
+        assert(bRet);
+        while (ssp.dwCurrentState != SERVICE_STOPPED) {
+            Sleep(ssp.dwWaitHint);
+            QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE) &ssp, sizeof ssp, &cbBytesNeeded);
+        }
+        bRet = StartService(hService, 0, NULL);
+        assert(bRet);
+    }
+
+    CloseServiceHandle(hService);
+    CloseServiceHandle(hSCManager);
+}
+
+
 // XXX: This doesn't work on Windows 8 onwards
 static void
 restartDwmComposition(void)
@@ -159,6 +198,14 @@ restartDwmComposition(void)
     hr = pfnDwmEnableComposition(DWM_EC_ENABLECOMPOSITION);
     assert(SUCCEEDED(hr));
     (void)hr;
+
+    fprintf(stderr, "Press a key when ready\n");
+    getchar();
+
+    hr = pfnDwmEnableComposition(DWM_EC_DISABLECOMPOSITION);
+    assert(SUCCEEDED(hr));
+
+    restartService("uxsms");
 }
 
 
