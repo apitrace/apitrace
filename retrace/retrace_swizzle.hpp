@@ -104,6 +104,9 @@ addRegion(unsigned long long address, void *buffer, unsigned long long size);
 void
 delRegionByPointer(void *ptr);
 
+void
+toRange(trace::Value &value, void * & ptr, size_t & len);
+
 void *
 toPointer(trace::Value &value, bool bind = false);
 

@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include <iostream>
+#include <algorithm>
 
 #include "retrace.hpp"
 #include "retrace_swizzle.hpp"
@@ -52,15 +53,32 @@ static void retrace_malloc(trace::Call &call) {
 
 
 static void retrace_memcpy(trace::Call &call) {
-    void * dest = retrace::toPointer(call.arg(0));
-    void * src  = retrace::toPointer(call.arg(1));
-    size_t n    = call.arg(2).toUInt();
+    void * destPtr;
+    size_t destLen;
+    retrace::toRange(call.arg(0), destPtr, destLen);
 
-    if (!dest || !src || !n) {
+    void * srcPtr;
+    size_t srcLen;
+    retrace::toRange(call.arg(1), srcPtr, srcLen);
+
+    size_t n = call.arg(2).toUInt();
+
+    if (!destPtr || !srcPtr || !n) {
         return;
     }
 
-    memcpy(dest, src, n);
+    if (n > destLen) {
+        retrace::warning(call) << "dest buffer overflow of " << n - destLen << " bytes\n";
+    }
+
+    if (n > srcLen) {
+        retrace::warning(call) << "src buffer overflow of " << n - srcLen << " bytes\n";
+    }
+
+    n = std::min(n, destLen);
+    n = std::min(n, srcLen);
+
+    memcpy(destPtr, srcPtr, n);
 }
 
 
