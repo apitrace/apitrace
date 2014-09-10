@@ -79,10 +79,18 @@ public:
         return NULL;
     }
 
+    /**
+     * XXX: We must not compute sizeof(T) inside the function body! d3d8.h and
+     * d3d9.h have declarations of D3DPRESENT_PARAMETERS and D3DVOLUME_DESC
+     * structures with different size sizes.  Multiple specializations of these
+     * will be produced (on debug builds, as on release builds the whole body
+     * is inlined.), and the linker will pick up one, leading to wrong results
+     * if the smallest specialization is picked.
+     */
     template< class T >
     inline T *
-    allocArray(const trace::Value *value) {
-        return static_cast<T *>(allocArray(value, sizeof(T)));
+    allocArray(const trace::Value *value, size_t sizeof_T = sizeof(T)) {
+        return static_cast<T *>(allocArray(value, sizeof_T));
     }
 
 };
