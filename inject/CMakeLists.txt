@@ -14,4 +14,5 @@ add_executable (injector
 set_target_properties (injector PROPERTIES
     OUTPUT_NAME inject
 )
+target_link_libraries (injector psapi)
 install (TARGETS injector RUNTIME DESTINATION bin)

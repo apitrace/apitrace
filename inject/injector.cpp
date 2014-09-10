@@ -41,9 +41,12 @@
  */
 
 #include <string>
+#include <stdio.h>
+#include <assert.h>
 
 #include <windows.h>
-#include <stdio.h>
+#include <psapi.h>
+#include <dwmapi.h>
 
 #include "inject.h"
 
@@ -108,6 +111,54 @@ quoteArg(std::string &s, const char *arg)
         s.push_back(c);
     }
     s.push_back('"');
+}
+
+
+// XXX: This doesn't work on Windows 8 onwards
+static void
+restartDwmComposition(void)
+{
+    HRESULT hr;
+
+    HMODULE hModule = LoadLibraryA("dwmapi");
+    assert(hModule);
+    if (!hModule) {
+        return;
+    }
+
+    typedef HRESULT (WINAPI *PFNDWMISCOMPOSITIONENABLED)(BOOL *pfEnabled);
+    PFNDWMISCOMPOSITIONENABLED pfnDwmIsCompositionEnabled = (PFNDWMISCOMPOSITIONENABLED)GetProcAddress(hModule, "DwmIsCompositionEnabled");
+    assert(pfnDwmIsCompositionEnabled);
+    if (!pfnDwmIsCompositionEnabled) {
+        return;
+    }
+
+    typedef HRESULT (WINAPI *PFNDWMENABLECOMPOSITION)(UINT uCompositionAction);
+    PFNDWMENABLECOMPOSITION pfnDwmEnableComposition = (PFNDWMENABLECOMPOSITION)GetProcAddress(hModule, "DwmEnableComposition");
+    assert(pfnDwmEnableComposition);
+    if (!pfnDwmEnableComposition) {
+        return;
+    }
+
+    BOOL fEnabled = FALSE;
+    hr = pfnDwmIsCompositionEnabled(&fEnabled);
+    if (FAILED(hr) || !fEnabled) {
+        return;
+    }
+
+    fprintf(stderr, "info: restarting DWM\n");
+
+    hr = pfnDwmEnableComposition(DWM_EC_DISABLECOMPOSITION);
+    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) {
+        return;
+    }
+
+    Sleep(1000/30);
+
+    hr = pfnDwmEnableComposition(DWM_EC_ENABLECOMPOSITION);
+    assert(SUCCEEDED(hr));
+    (void)hr;
 }
 
 
@@ -276,32 +327,45 @@ main(int argc, char *argv[])
     getDirName(szDllPath);
     strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
 
+#if 1
     const char *szError = NULL;
     if (!injectDll(hProcess, szDllPath, &szError)) {
         fprintf(stderr, "error: %s\n", szError);
         TerminateProcess(hProcess, 1);
         return 1;
     }
+#endif
+
+    DWORD exitCode;
 
     if (bAttach) {
-        return 0;
+        char szProcess[MAX_PATH];
+        DWORD dwRet = GetModuleFileNameEx(hProcess, 0, szProcess, sizeof szProcess);
+        assert(dwRet);
+
+        if (stricmp(getBaseName(szProcess), "dwm.exe") == 0) {
+            restartDwmComposition();
+        }
+
+        exitCode = 0;
+    } else {
+        // Start main process thread
+        ResumeThread(processInfo.hThread);
+
+        // Wait for it to finish
+        WaitForSingleObject(hProcess, INFINITE);
+
+        if (pSharedMem && !pSharedMem->bReplaced) {
+            fprintf(stderr, "warning: %s was never used: application probably does not use this API\n", szDll);
+        }
+
+        exitCode = ~0;
+        GetExitCodeProcess(hProcess, &exitCode);
+
+        CloseHandle(processInfo.hThread);
     }
-
-    // Start main process thread
-    ResumeThread(processInfo.hThread);
-
-    // Wait for it to finish
-    WaitForSingleObject(hProcess, INFINITE);
-
-    if (pSharedMem && !pSharedMem->bReplaced) {
-        fprintf(stderr, "warning: %s was never used: application probably does not use this API\n", szDll);
-    }
-
-    DWORD exitCode = ~0;
-    GetExitCodeProcess(hProcess, &exitCode);
 
     CloseHandle(hProcess);
-    CloseHandle(processInfo.hThread);
 
     if (hSemaphore) {
         ReleaseSemaphore(hSemaphore, 1, NULL);
