@@ -671,12 +671,22 @@ MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     return MyLoadLibrary(szFileName, hFile, dwFlags);
 }
 
+
+static void
+logGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
+    if (HIWORD(lpProcName) == 0) {
+        debugPrintf("inject: intercepting %s(%u)\n", "GetProcAddress", LOWORD(lpProcName));
+    } else {
+        debugPrintf("inject: intercepting %s(\"%s\")\n", "GetProcAddress", lpProcName);
+    }
+}
+
 static FARPROC WINAPI
 MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
 
     if (VERBOSITY >= 3) {
         /* XXX this can cause segmentation faults */
-        debugPrintf("inject: intercepting %s(\"%s\")\n", __FUNCTION__, lpProcName);
+        logGetProcAddress(hModule, lpProcName);
     }
 
     if (!NOOP) {
@@ -688,8 +698,13 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
         ModulesMap::const_iterator modIt;
         modIt = modulesMap.find(szBaseName);
         if (modIt != modulesMap.end()) {
-            if (VERBOSITY > 1) {
-                debugPrintf("inject: intercepting %s(\"%s\", \"%s\")\n", __FUNCTION__, szModule, lpProcName);
+            if (VERBOSITY > 1 && VERBOSITY < 3) {
+                logGetProcAddress(hModule, lpProcName);
+            }
+
+            if (HIWORD(lpProcName) == 0) {
+                debugPrintf("inject: ignoring %s!@%u\n", szBaseName, LOWORD(lpProcName));
+                return GetProcAddress(hModule, lpProcName);
             }
 
             const Module & module = modIt->second;
