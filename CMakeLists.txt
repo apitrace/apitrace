@@ -223,6 +223,15 @@ if (ENABLE_FRAME_POINTER)
     endif ()
 endif ()
 
+# Enable Data Execution Prevention and Address Space Layout Randomization
+if (WIN32)
+    if (MSVC)
+        add_linker_flags ("/NXCOMPAT /DYNAMICBASE")
+    else ()
+        add_linker_flags ("-Wl,--nxcompat -Wl,--dynamicbase")
+    endif ()
+endif ()
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     # For RTLD_DEFAULT and RTLD_NEXT
     add_definitions (-D_GNU_SOURCE)
