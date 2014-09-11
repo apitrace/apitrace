@@ -175,7 +175,7 @@ else ()
     #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
     # Use GDB extensions if available
-    if (CMAKE_COMPILER_IS_GNUC)
+    if (CMAKE_COMPILER_IS_GNUCC)
         set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb -O0")
         set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -ggdb")
     endif ()
