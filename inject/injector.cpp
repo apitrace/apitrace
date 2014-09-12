@@ -48,12 +48,21 @@
 #include <psapi.h>
 #include <dwmapi.h>
 
-#include "inject.h"
-
-
 #ifndef ERROR_ELEVATION_REQUIRED
 #define ERROR_ELEVATION_REQUIRED 740
 #endif
+
+#include "inject.h"
+
+
+static void
+debugPrintf(const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
+}
 
 
 /**
@@ -285,9 +294,7 @@ main(int argc, char *argv[])
             FALSE /* bInheritHandle */,
             dwProcessId);
         if (!hProcess) {
-            DWORD dwLastError = GetLastError();
-            fprintf(stderr, "error: failed to open process %lu (%lu)\n",
-                    dwProcessId, dwLastError);
+            logLastError("failed to open process");
             return 1;
         }
     } else {
@@ -375,9 +382,7 @@ main(int argc, char *argv[])
     strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
 
 #if 1
-    const char *szError = NULL;
-    if (!injectDll(hProcess, szDllPath, &szError)) {
-        fprintf(stderr, "error: %s\n", szError);
+    if (!injectDll(hProcess, szDllPath)) {
         TerminateProcess(hProcess, 1);
         return 1;
     }

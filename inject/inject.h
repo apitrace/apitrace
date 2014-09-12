@@ -40,6 +40,41 @@
 #include <windows.h>
 
 
+static void
+#ifdef __GNUC__
+    __attribute__ ((format (printf, 1, 2)))
+#endif
+debugPrintf(const char *format, ...);
+
+
+static void
+logLastError(const char *szMsg)
+{
+    DWORD dwLastError = GetLastError();
+
+    // http://msdn.microsoft.com/en-gb/library/windows/desktop/ms680582.aspx
+    LPSTR lpErrorMsg = NULL;
+    DWORD cbWritten;
+    cbWritten = FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dwLastError,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR) &lpErrorMsg,
+        0, NULL);
+
+    if (cbWritten) {
+        debugPrintf("inject: error: %s: %s", szMsg, lpErrorMsg);
+    } else {
+        debugPrintf("inject: error: %s: %lu\n", szMsg, dwLastError);
+    }
+
+    LocalFree(lpErrorMsg);
+}
+
+
 static inline const char *
 getSeparator(const char *szFilename) {
     const char *p, *q;
@@ -119,7 +154,7 @@ OpenSharedMemory(void) {
         sizeof(SharedMem),      // dwMaximumSizeLow
         TEXT("injectfilemap")); // name of map object
     if (hFileMapping == NULL) {
-        fprintf(stderr, "Failed to create file mapping\n");
+        logLastError("failed to create file mapping");
         return NULL;
     }
 
@@ -132,7 +167,7 @@ OpenSharedMemory(void) {
         0,              // dwFileOffsetLow
         0);             // dwNumberOfBytesToMap (entire file)
     if (pSharedMem == NULL) {
-        fprintf(stderr, "Failed to map view \n");
+        logLastError("failed to map view");
         return NULL;
     }
 
@@ -193,20 +228,20 @@ GetSharedMem(LPSTR lpszDst, size_t n) {
 
 
 static BOOL
-injectDll(HANDLE hProcess, const char *szDllPath, const char **pszError)
+injectDll(HANDLE hProcess, const char *szDllPath)
 {
     size_t szDllPathLength = strlen(szDllPath) + 1;
 
     // Allocate memory in the target process to hold the DLL name
     void *lpMemory = VirtualAllocEx(hProcess, NULL, szDllPathLength, MEM_COMMIT, PAGE_READWRITE);
     if (!lpMemory) {
-        *pszError = "error: failed to allocate memory in the process";
+        logLastError("failed to allocate memory in the process");
         return FALSE;
     }
 
     // Copy DLL name into the target process
     if (!WriteProcessMemory(hProcess, lpMemory, szDllPath, szDllPathLength, NULL)) {
-        *pszError = "error: failed to write into process memory";
+        logLastError("failed to write into process memory");
         return FALSE;
     }
 
@@ -220,7 +255,7 @@ injectDll(HANDLE hProcess, const char *szDllPath, const char **pszError)
     // Create remote thread in another process
     HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, lpStartAddress, lpMemory, 0, NULL);
     if (!hThread) {
-        *pszError = "error: failed to create remote thread";
+        logLastError("failed to create remote thread");
         return FALSE;
     }
 
@@ -230,7 +265,7 @@ injectDll(HANDLE hProcess, const char *szDllPath, const char **pszError)
     DWORD hModule = 0;
     GetExitCodeThread(hThread, &hModule);
     if (!hModule) {
-        *pszError = "error: failed to inject DLL";
+        debugPrintf("inject: error: failed to load %s into the remote process\n", szDllPath);
         return FALSE;
     }
 

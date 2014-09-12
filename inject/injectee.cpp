@@ -66,9 +66,6 @@ static HMODULE g_hHookModule = NULL;
 
 
 static void
-#ifdef __GNUC__
-    __attribute__ ((format (printf, 1, 2)))
-#endif
 debugPrintf(const char *format, ...)
 {
     char buf[512];
@@ -110,9 +107,8 @@ MyCreateProcessCommon(BOOL bRet,
     char szDllPath[MAX_PATH];
     GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
 
-    const char *szError = NULL;
-    if (!injectDll(lpProcessInformation->hProcess, szDllPath, &szError)) {
-        debugPrintf("inject: warning: failed to inject child process (%s)\n", szError);
+    if (!injectDll(lpProcessInformation->hProcess, szDllPath)) {
+        debugPrintf("inject: warning: failed to inject child process\n");
     }
 
     if (!(dwCreationFlags & CREATE_SUSPENDED)) {
