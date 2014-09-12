@@ -52,6 +52,7 @@
 #define ERROR_ELEVATION_REQUIRED 740
 #endif
 
+#include "os_version.hpp"
 #include "inject.h"
 
 
@@ -127,8 +128,6 @@ quoteArg(std::string &s, const char *arg)
 static void
 restartService(const char *lpServiceName)
 {
-    fprintf(stderr, "info: restarting %s\n", lpServiceName);
-
     SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     assert(hSCManager);
     if (!hSCManager) {
@@ -162,9 +161,9 @@ restartService(const char *lpServiceName)
 }
 
 
-// XXX: This doesn't work on Windows 8 onwards
+// Force DWM process to recreate all its Direct3D objects.
 static void
-restartDwmComposition(void)
+restartDwmComposition(HANDLE hProcess)
 {
     HRESULT hr;
 
@@ -188,33 +187,55 @@ restartDwmComposition(void)
         return;
     }
 
-    BOOL fEnabled = FALSE;
-    hr = pfnDwmIsCompositionEnabled(&fEnabled);
-    if (FAILED(hr) || !fEnabled) {
-        return;
+
+    BOOL bIsWindows8OrGreater = IsWindows8OrGreater();
+    if (bIsWindows8OrGreater) {
+        // Windows 8 ignores DwmEnableComposition(DWM_EC_DISABLECOMPOSITION).
+        // It is however possible to force DWM to restart by restarting the
+        // display device via the devcon utility 
+        // http://code.msdn.microsoft.com/windowshardware/DevCon-Sample-4e95d71c
+        // http://support.microsoft.com/kb/311272
+        // TODO:
+        fprintf(stderr, "run `devcon restart =DISPLAY` now\n");
+    } else {
+
+        BOOL fEnabled = FALSE;
+        hr = pfnDwmIsCompositionEnabled(&fEnabled);
+        if (FAILED(hr) || !fEnabled) {
+            return;
+        }
+
+        fprintf(stderr, "info: restarting DWM composition\n");
+
+        hr = pfnDwmEnableComposition(DWM_EC_DISABLECOMPOSITION);
+        assert(SUCCEEDED(hr));
+        if (FAILED(hr)) {
+            return;
+        }
+
+        Sleep(1000/30);
+
+        hr = pfnDwmEnableComposition(DWM_EC_ENABLECOMPOSITION);
+        assert(SUCCEEDED(hr));
+        (void)hr;
     }
 
-    fprintf(stderr, "info: restarting DWM\n");
-
-    hr = pfnDwmEnableComposition(DWM_EC_DISABLECOMPOSITION);
-    assert(SUCCEEDED(hr));
-    if (FAILED(hr)) {
-        return;
-    }
-
-    Sleep(1000/30);
-
-    hr = pfnDwmEnableComposition(DWM_EC_ENABLECOMPOSITION);
-    assert(SUCCEEDED(hr));
-    (void)hr;
-
-    fprintf(stderr, "Press a key when ready\n");
+    fprintf(stderr, "Press any key when finished tracing\n");
     getchar();
 
-    hr = pfnDwmEnableComposition(DWM_EC_DISABLECOMPOSITION);
-    assert(SUCCEEDED(hr));
+    fprintf(stderr, "info: restarting DWM process\n");
+    if (bIsWindows8OrGreater) {
+        // From Windows 8 onwards DWM no longer runs as a service.  We just
+        // kill it and winlogon parent process will respawn it.
+        if (!TerminateProcess(hProcess, 0)) {
+            logLastError("failed to terminate DWM process");
+        }
+    } else {
+        hr = pfnDwmEnableComposition(DWM_EC_DISABLECOMPOSITION);
+        assert(SUCCEEDED(hr));
 
-    restartService("uxsms");
+        restartService("uxsms");
+    }
 }
 
 
@@ -287,7 +308,8 @@ main(int argc, char *argv[])
             PROCESS_QUERY_LIMITED_INFORMATION |
             PROCESS_VM_OPERATION |
             PROCESS_VM_WRITE |
-            PROCESS_VM_READ;
+            PROCESS_VM_READ |
+            PROCESS_TERMINATE;
         DWORD dwProcessId = atol(argv[2]);
         hProcess = OpenProcess(
             dwDesiredAccess,
@@ -396,7 +418,7 @@ main(int argc, char *argv[])
         assert(dwRet);
 
         if (stricmp(getBaseName(szProcess), "dwm.exe") == 0) {
-            restartDwmComposition();
+            restartDwmComposition(hProcess);
         }
 
         exitCode = 0;
