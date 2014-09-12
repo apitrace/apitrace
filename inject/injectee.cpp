@@ -48,6 +48,7 @@
 
 #include <windows.h>
 #include <tlhelp32.h>
+#include <delayimp.h>
 
 #include "inject.h"
 
@@ -272,21 +273,30 @@ template< class T, class I >
 inline T *
 rvaToVa(HMODULE hModule, I rva)
 {
+    assert(rva != 0);
     return reinterpret_cast<T *>(reinterpret_cast<PBYTE>(hModule) + rva);
 }
 
 
 static const char *
-getImportDescriptorName(HMODULE hModule, const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor) {
-    const char* szName = rvaToVa<const char>(hModule, pImportDescriptor->Name);
-    return szName;
+getDescriptorName(HMODULE hModule,
+                        const PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor)
+{
+    return rvaToVa<const char>(hModule, pImportDescriptor->Name);
+}
+
+static const char *
+getDescriptorName(HMODULE hModule,
+                  const PImgDelayDescr pDelayDescriptor)
+{
+    return rvaToVa<const char>(hModule, pDelayDescriptor->rvaDLLName);
 }
 
 
 static PIMAGE_OPTIONAL_HEADER
 getOptionalHeader(HMODULE hModule)
 {
-    PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)hModule;
+    PIMAGE_DOS_HEADER pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
     assert(pDosHeader->e_magic == IMAGE_DOS_SIGNATURE);
     PIMAGE_NT_HEADERS pNtHeaders = rvaToVa<IMAGE_NT_HEADERS>(hModule, pDosHeader->e_lfanew);
     assert(pNtHeaders->Signature == IMAGE_NT_SIGNATURE);
@@ -295,9 +305,10 @@ getOptionalHeader(HMODULE hModule)
     return pOptionalHeader;
 }
 
-static PIMAGE_IMPORT_DESCRIPTOR
-getFirstImportDescriptor(HMODULE hModule,
-                         const char *szModule)
+static PVOID
+getImageDirectoryEntry(HMODULE hModule,
+                       const char *szModule,
+                       UINT Entry)
 {
     MEMORY_BASIC_INFORMATION MemoryInfo;
     if (VirtualQuery(hModule, &MemoryInfo, sizeof MemoryInfo) != sizeof MemoryInfo) {
@@ -310,37 +321,40 @@ getFirstImportDescriptor(HMODULE hModule,
     }
 
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = getOptionalHeader(hModule);
-    if (pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size == 0) {
+    if (pOptionalHeader->DataDirectory[Entry].Size == 0) {
         return NULL;
     }
 
-    UINT_PTR ImportAddress = pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+    UINT_PTR ImportAddress = pOptionalHeader->DataDirectory[Entry].VirtualAddress;
     if (!ImportAddress) {
         return NULL;
     }
 
-    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = rvaToVa<IMAGE_IMPORT_DESCRIPTOR>(hModule, ImportAddress);
+    return rvaToVa<VOID>(hModule, ImportAddress);
+}
 
-    return pImportDescriptor;
+
+static PIMAGE_IMPORT_DESCRIPTOR
+getFirstImportDescriptor(HMODULE hModule, const char *szModule)
+{
+    PVOID pEntry = getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_IMPORT);
+    return reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pEntry);
+}
+
+
+static PImgDelayDescr
+getDelayImportDescriptor(HMODULE hModule, const char *szModule)
+{
+    PVOID pEntry = getImageDirectoryEntry(hModule, szModule, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
+    return reinterpret_cast<PImgDelayDescr>(pEntry);
 }
 
 
 static PIMAGE_EXPORT_DIRECTORY
 getExportDescriptor(HMODULE hModule)
 {
-    PIMAGE_OPTIONAL_HEADER pOptionalHeader = getOptionalHeader(hModule);
-    if (pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size == 0) {
-        return NULL;
-    }
-
-    UINT_PTR ExportAddress = pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-    if (!ExportAddress) {
-        return NULL;
-    }
-
-    PIMAGE_EXPORT_DIRECTORY pExportDescriptor = rvaToVa<IMAGE_EXPORT_DIRECTORY>(hModule, ExportAddress);
-
-    return pExportDescriptor;
+    PVOID pEntry = getImageDirectoryEntry(hModule, "(wrapper)", IMAGE_DIRECTORY_ENTRY_EXPORT);
+    return reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(pEntry);
 }
 
 
@@ -380,34 +394,34 @@ replaceAddress(LPVOID *lpOldAddress, LPVOID lpNewAddress)
  */
 static LPVOID *
 getOldFunctionAddress(HMODULE hModule,
-                      PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor,
+                      const char *szDescriptorName,
+                      DWORD OriginalFirstThunk,
+                      DWORD FirstThunk,
                       const char* pszFunctionName)
 {
-    assert(pImportDescriptor->TimeDateStamp!=0 || pImportDescriptor->Name != 0);
-
     if (VERBOSITY >= 4) {
         debugPrintf("inject: %s(%s, %s)\n", __FUNCTION__,
-                    getImportDescriptorName(hModule, pImportDescriptor),
+                    szDescriptorName,
                     pszFunctionName);
     }
 
-    PIMAGE_THUNK_DATA pThunkIAT = rvaToVa<IMAGE_THUNK_DATA>(hModule, pImportDescriptor->FirstThunk);
+    PIMAGE_THUNK_DATA pThunkIAT = rvaToVa<IMAGE_THUNK_DATA>(hModule, FirstThunk);
 
     UINT_PTR pRealFunction = 0;
 
     PIMAGE_THUNK_DATA pThunk;
-    if (pImportDescriptor->OriginalFirstThunk) {
-        pThunk = rvaToVa<IMAGE_THUNK_DATA>(hModule, pImportDescriptor->OriginalFirstThunk);
+    if (OriginalFirstThunk) {
+        pThunk = rvaToVa<IMAGE_THUNK_DATA>(hModule, OriginalFirstThunk);
     } else {
         pThunk = pThunkIAT;
     }
 
     while (pThunk->u1.Function) {
-        if (pImportDescriptor->OriginalFirstThunk == 0 ||
+        if (OriginalFirstThunk == 0 ||
             pThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG) {
             // No name -- search by the real function address
             if (!pRealFunction) {
-                HMODULE hRealModule = GetModuleHandleA(getImportDescriptorName(hModule, pImportDescriptor));
+                HMODULE hRealModule = GetModuleHandleA(szDescriptorName);
                 assert(hRealModule);
                 pRealFunction = (UINT_PTR)GetProcAddress(hRealModule, pszFunctionName);
                 if (!pRealFunction) {
@@ -433,11 +447,45 @@ getOldFunctionAddress(HMODULE hModule,
 }
 
 
+static LPVOID *
+getOldFunctionAddress(HMODULE hModule,
+                      PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor,
+                      const char* pszFunctionName)
+{
+    assert(pImportDescriptor->TimeDateStamp != 0 || pImportDescriptor->Name != 0);
+
+    return getOldFunctionAddress(hModule,
+                                 getDescriptorName(hModule, pImportDescriptor),
+                                 pImportDescriptor->OriginalFirstThunk,
+                                 pImportDescriptor->FirstThunk,
+                                 pszFunctionName);
+}
+
+
+// See
+// http://www.microsoft.com/msj/1298/hood/hood1298.aspx
+// http://msdn.microsoft.com/en-us/library/16b2dyk5.aspx
+static LPVOID *
+getOldFunctionAddress(HMODULE hModule,
+                      PImgDelayDescr pDelayDescriptor,
+                      const char* pszFunctionName)
+{
+    assert(pDelayDescriptor->rvaDLLName != 0);
+
+    return getOldFunctionAddress(hModule,
+                                 getDescriptorName(hModule, pDelayDescriptor),
+                                 pDelayDescriptor->rvaINT,
+                                 pDelayDescriptor->rvaIAT,
+                                 pszFunctionName);
+}
+
+
+template< class T >
 static BOOL
 patchFunction(HMODULE hModule,
               const char *szModule,
               const char *pszDllName,
-              PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor,
+              T pImportDescriptor,
               const char *pszFunctionName,
               LPVOID lpNewAddress)
 {
@@ -497,6 +545,35 @@ static std::set<HMODULE>
 g_hHookedModules;
 
 
+template< class T >
+void
+patchDescriptor(HMODULE hModule,
+                const char *szModule,
+                T pImportDescriptor)
+{
+    const char* szDescriptorName = getDescriptorName(hModule, pImportDescriptor);
+
+    ModulesMap::const_iterator modIt = modulesMap.find(szDescriptorName);
+    if (modIt != modulesMap.end()) {
+        const char *szMatchModule = modIt->first; // same as szDescriptorName
+        const Module & module = modIt->second;
+
+        const FunctionMap & functionMap = module.functionMap;
+        FunctionMap::const_iterator fnIt;
+        for (fnIt = functionMap.begin(); fnIt != functionMap.end(); ++fnIt) {
+            const char *szFunctionName = fnIt->first;
+            LPVOID lpNewAddress = fnIt->second;
+
+            BOOL bHooked;
+            bHooked = patchFunction(hModule, szModule, szMatchModule, pImportDescriptor, szFunctionName, lpNewAddress);
+            if (bHooked && !module.bInternal && pSharedMem) {
+                pSharedMem->bReplaced = TRUE;
+            }
+        }
+    }
+}
+
+
 static void
 patchModule(HMODULE hModule,
             const char *szModule)
@@ -542,31 +619,30 @@ patchModule(HMODULE hModule,
     PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = getFirstImportDescriptor(hModule, szModule);
     if (pImportDescriptor) {
         while (pImportDescriptor->FirstThunk) {
-            const char* szName = getImportDescriptorName(hModule, pImportDescriptor);
 
-            ModulesMap::const_iterator modIt = modulesMap.find(szName);
-            if (modIt != modulesMap.end()) {
-                const char *szMatchModule = modIt->first;
-                const Module & module = modIt->second;
-
-                const FunctionMap & functionMap = module.functionMap;
-                FunctionMap::const_iterator fnIt;
-                for (fnIt = functionMap.begin(); fnIt != functionMap.end(); ++fnIt) {
-                    const char *szFunctionName = fnIt->first;
-                    LPVOID lpNewAddress = fnIt->second;
-
-                    BOOL bHooked;
-                    bHooked = patchFunction(hModule, szModule, szMatchModule, pImportDescriptor, szFunctionName, lpNewAddress);
-                    if (bHooked && !module.bInternal && pSharedMem) {
-                        pSharedMem->bReplaced = TRUE;
-                    }
-                }
-            }
+            patchDescriptor(hModule, szModule, pImportDescriptor);
 
             ++pImportDescriptor;
         }
     }
 
+    PImgDelayDescr pDelayDescriptor = getDelayImportDescriptor(hModule, szModule);
+    if (pDelayDescriptor) {
+        while (pDelayDescriptor->rvaDLLName) {
+            if (VERBOSITY > 1) {
+                const char* szName = rvaToVa<const char>(hModule, pDelayDescriptor->rvaDLLName);
+                debugPrintf("inject: found delay-load import entry for module %s\n", szName);
+            }
+
+            if (!(pDelayDescriptor->grAttrs & dlattrRva)) {
+                continue;
+            }
+
+            patchDescriptor(hModule, szModule, pDelayDescriptor);
+
+            ++pDelayDescriptor;
+        }
+    }
 }
 
 static void
@@ -782,7 +858,7 @@ registerModuleHooks(const char *szMatchModule, HMODULE hReplaceModule)
 static void
 dumpRegisteredHooks(void)
 {
-    if (VERBOSITY > 0) {
+    if (VERBOSITY > 1) {
         ModulesMap::const_iterator modIt;
         for (modIt = modulesMap.begin(); modIt != modulesMap.end(); ++modIt) {
             const char *szMatchModule = modIt->first;
