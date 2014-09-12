@@ -190,6 +190,20 @@ else ()
         set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -ggdb")
     endif ()
 
+    # Enable stack protection
+    if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
+        message (STATUS "STACK PROTECTOR")
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fstack-protector-all")
+        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all")
+        if (MINGW)
+            # MinGW doesn't link against libssp automatically, and furthermore
+            # we want static linking.
+            set (SSP_LIBRARY "-Wl,-Bstatic -lssp -Wl,-Bdynamic")
+            set (CMAKE_C_STANDARD_LIBRARIES "${SSP_LIBRARY} ${CMAKE_C_STANDARD_LIBRARIES}")
+            set (CMAKE_CXX_STANDARD_LIBRARIES "${SSP_LIBRARY} ${CMAKE_CXX_STANDARD_LIBRARIES}")
+        endif ()
+    endif ()
+
     # Enable SSE2 intrinsics on x86
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         CHECK_CXX_COMPILER_FLAG("-msse2 -mincoming-stack-boundary=2" CXX_COMPILER_FLAG_SSE2)
