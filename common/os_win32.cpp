@@ -266,14 +266,20 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
     }
 
     /*
-     * Ignore C++ exceptions
+     * Ignore C++ exceptions, as some applications generate a lot of these with
+     * no harm.  But don't ignore them on debug builds, as bugs in apitrace can
+     * easily lead the applicationa and/or runtime to raise them, and catching
+     * them helps debugging.
      *
-     * http://support.microsoft.com/kb/185294
-     * http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
+     * See also:
+     * - http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
+     * - http://support.microsoft.com/kb/185294
      */
+#ifndef NDEBUG
     if (pExceptionRecord->ExceptionCode == 0xe06d7363) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
+#endif
 
     /*
      * Ignore thread naming exception.
