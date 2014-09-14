@@ -610,6 +610,7 @@ class Tracer:
             if not other_arg.output and other_arg.type is REFIID:
                 riid = other_arg
         if riid is not None \
+           and riid.name != 'EmulatedInterface' \
            and isinstance(arg.type, stdapi.Pointer) \
            and isinstance(arg.type.type, stdapi.ObjPointer):
             self.wrapIid(function, riid, arg)
@@ -771,6 +772,7 @@ class Tracer:
         print r'    if (!pObj) {'
         print r'        return;'
         print r'    }'
+        print r'    assert(hasChildInterface(IID_%s, pObj));' % iface.name
         print r'    std::map<void *, void *>::const_iterator it = g_WrappedObjects.find(pObj);'
         print r'    if (it != g_WrappedObjects.end()) {'
         print r'        Wrap%s *pWrapper = (Wrap%s *)it->second;' % (iface.name, iface.name)
