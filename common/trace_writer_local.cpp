@@ -33,6 +33,7 @@
 #include "os.hpp"
 #include "os_thread.hpp"
 #include "os_string.hpp"
+#include "os_version.hpp"
 #include "trace_file.hpp"
 #include "trace_writer_local.hpp"
 #include "trace_format.hpp"
@@ -99,6 +100,18 @@ LocalWriter::open(void) {
 	prefix.join(process);
 #else
 	os::String prefix = os::getCurrentDir();
+#ifdef _WIN32
+        // Avoid writing into Windows' system directory as quite often access
+        // will be denied.
+        if (IsWindows8OrGreater()) {
+            char szDirectory[MAX_PATH + 1];
+            GetSystemDirectoryA(szDirectory, sizeof szDirectory);
+            if (stricmp(prefix, szDirectory) == 0) {
+                GetTempPathA(sizeof szDirectory, szDirectory);
+                prefix = szDirectory;
+            }
+        }
+#endif
 #endif
         prefix.join(process);
 
