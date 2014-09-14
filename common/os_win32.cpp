@@ -275,7 +275,7 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
      * - http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
      * - http://support.microsoft.com/kb/185294
      */
-#ifndef NDEBUG
+#ifdef NDEBUG
     if (pExceptionRecord->ExceptionCode == 0xe06d7363) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
