@@ -703,7 +703,7 @@ class Tracer:
 
         print r'private:'
         print r'    void _dummy(unsigned i) const {'
-        print r'        os::log("error: %%s: unexpected virtual method %%i of instance pWrapper=%%p pvObj=%%p\n", "%s", i, this, m_pInstance);' % interface.name
+        print r'        os::log("error: %%s: unexpected virtual method %%i of instance pWrapper=%%p pvObj=%%p pVtbl=%%p\n", "%s", i, this, m_pInstance, m_pVtbl);' % interface.name
         print r'        trace::localWriter.flush();'
         print r'        os::abort();'
         print r'    }'
