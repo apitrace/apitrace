@@ -2650,3 +2650,44 @@ d3d11.addInterfaces([
     ID3D11Device3,
     ID3D11DeviceContext3,
 ])
+
+
+
+#
+# Undocumented interfaces
+#
+
+ID3D11PartnerDevice = Interface("ID3D11PartnerDevice", IUnknown)
+ID3D11PartnerDevice.methods += [
+    StdMethod(HRESULT, "BeginGuardRectangleSupport", []),
+    StdMethod(HRESULT, "EndGuardRectangleSupport", []),
+    StdMethod(HRESULT, "CreateGuardableTexture2D", [(Pointer(Const(D3D11_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D11_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D11Texture2D)), "ppTexture2D")]),
+    StdMethod(HRESULT, "SetGuardRect", [(ObjPointer(ID3D11Texture2D), "pTexture2D"), (RECT, "Rect")]),
+    StdMethod(HRESULT, "SetEmptyGuardRect", [(ObjPointer(ID3D11Texture2D), "pTexture2D")]),
+    StdMethod(HRESULT, "SetUnguarded", [(ObjPointer(ID3D11Texture2D), "pTexture2D")]),
+    StdMethod(HRESULT, "OfferResourcesInternal", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), (DXGI_OFFER_RESOURCE_PRIORITY, "Priority")]),
+    StdMethod(HRESULT, "ReclaimResourcesInternal", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "ppResources"), Out(Pointer(BOOL), "pDiscarded")]),
+    StdMethod(UINT, "GetPartnerCaps", [], sideeffects=False),
+    StdMethod(HRESULT, "CreateCompositionBuffer", [
+        (UINT, "Width"),
+        (UINT, "Height"),
+        (DXGI_FORMAT, "Format"),
+        (D3D11_USAGE, "Usage"), # ??
+        (D3D11_BIND_FLAG, "BindFlags"), # ??
+        (D3D11_CPU_ACCESS_FLAG, "CPUAccessFlags"),
+        (REFIID, "ReturnedInterface"),
+        Out(Pointer(HANDLE), "ppArg8"),
+        Out(Pointer(ObjPointer(Void)), "ppArg9")]),
+    StdMethod(HRESULT, "PresentCompositionBuffers", [(HANDLE, "Arg1"), (Array(Const(ObjPointer(IUnknown)), "Arg3"), "Arg2"), (UINT, "Arg3")], sideeffects=False),
+    StdMethod(HRESULT, "GetGuardRect", [(ObjPointer(ID3D11Texture2D), "pTexture2D"), Out(Pointer(BOOL), "pEmpty"), Out(Pointer(RECT), "pRect")], sideeffects=False),
+]
+
+ID2DPrivateInfo = Interface("ID2DPrivateInfo", IUnknown)
+ID2DPrivateInfo.methods += [
+    StdMethod(UINT, "ConservativeFlushCount", [], sideeffects=False),
+]
+
+d3d11.addInterfaces([
+    ID3D11PartnerDevice,
+    ID2DPrivateInfo,
+])

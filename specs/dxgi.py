@@ -910,6 +910,74 @@ IDXGISwapChainDWM.methods += [
     StdMethod(HRESULT, "GetLastPresentCount", [Out(Pointer(UINT), "pLastPresentCount")], sideeffects=False),
 ]
 
+DXGI_SCROLL_RECT = Struct("DXGI_SCROLL_RECT", [
+    (RECT, "rc1"),
+    (RECT, "rc2"),
+])
+
+DXGI_OUTPUT_DWM_DESC = Struct("DXGI_OUTPUT_DWM_DESC", [])
+DXGI_FRAME_STATISTICS_DWM = Struct("DXGI_FRAME_STATISTICS_DWM", [])
+DXGI_MULTIPLANE_OVERLAY_CAPS = Struct("DXGI_MULTIPLANE_OVERLAY_CAPS", [])
+DXGI_CHECK_MULTIPLANEOVERLAYSUPPORT_PLANE_INFO = Struct("DXGI_CHECK_MULTIPLANEOVERLAYSUPPORT_PLANE_INFO", [])
+DXGI_PRESENT_MULTIPLANE_OVERLAY = Struct("DXGI_PRESENT_MULTIPLANE_OVERLAY", [])
+
+IDXGIOutputDWM = Interface("IDXGIOutputDWM", IUnknown)
+IDXGIOutputDWM.methods += [
+    StdMethod(BOOL, "HasDDAClient", [], sideeffects=False),
+    StdMethod(Void, "GetDesc", [Out(OpaquePointer(DXGI_OUTPUT_DWM_DESC), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "FindClosestMatchingModeFromDesktop", [(Pointer(Const(DXGI_MODE_DESC1)), "pModeToMatch"), Out(Pointer(DXGI_MODE_DESC1), "pClosestMatch"), (ObjPointer(IUnknown), "pConcernedDevice")], sideeffects=False),
+    StdMethod(HRESULT, "WaitForVBlankOrObjects", [(UINT, "NumHandles"), (Array(Const(HANDLE), "NumHandles"), "pHandles")]),
+    StdMethod(HRESULT, "GetFrameStatisticsDWM", [Out(OpaquePointer(DXGI_FRAME_STATISTICS_DWM), "pStats")], sideeffects=False),
+]
+
+IDXGISwapChainDWM1 = Interface("IDXGISwapChainDWM1", IDXGISwapChainDWM)
+IDXGISwapChainDWM1.methods += [
+    StdMethod(HRESULT, "Present1", [(UINT, "SyncInterval"), (UINT, "Flags"), (UINT, "NumRects"), (Array(Const(RECT), "NumRects"), "pRects"), (UINT, "NumScrollRects"), (Array(Const(DXGI_SCROLL_RECT), "NumScrollRects"), "pScrollRects")]),
+    StdMethod(HRESULT, "GetLogicalSurfaceHandle", [Out(Pointer(UINT64), "pHandle")]),
+    StdMethod(HRESULT, "CheckDirectFlipSupport", [(UINT, "CheckDirectFlipFlags"), (ObjPointer(IDXGIResource), "pResource"), Out(Pointer(BOOL), "pSupported")]),
+    StdMethod(HRESULT, "Present2", [(UINT, "SyncInterval"), (UINT, "Flags"), (UINT, "NumRects"), (Array(Const(RECT), "NumRects"), "pRects"), (UINT, "NumScrollRects"), (Array(Const(DXGI_SCROLL_RECT), "NumScrollRects"), "pScrollRects"), (ObjPointer(IDXGIResource), "pResource")]),
+    StdMethod(HRESULT, "GetCompositionSurface", [Out(Pointer(HANDLE), "pHandle")], sideeffects=False),
+    StdMethod(HRESULT, "GetFrameStatisticsDWM", [(OpaquePointer(DXGI_FRAME_STATISTICS_DWM), "pStats")], sideeffects=False),
+    StdMethod(HRESULT, "GetMultiplaneOverlayCaps", [(OpaquePointer(DXGI_MULTIPLANE_OVERLAY_CAPS), "pCaps")], sideeffects=False),
+    StdMethod(HRESULT, "CheckMultiplaneOverlaySupport", [(UINT, "Arg1"), (OpaquePointer(Const(DXGI_CHECK_MULTIPLANEOVERLAYSUPPORT_PLANE_INFO)), "pInfo"), (Pointer(BOOL), "pSupported")], sideeffects=False),
+    StdMethod(HRESULT, "PresentMultiplaneOverlay", [(UINT, "Arg1"), (UINT, "Arg2"), (UINT, "Arg3"), (OpaquePointer(Const(DXGI_PRESENT_MULTIPLANE_OVERLAY)), "pArg4")], sideeffects=False),
+    StdMethod(HRESULT, "CheckPresentDurationSupport", [(UINT, "Arg1"), (Pointer(UINT), "pArg2"), (Pointer(UINT), "pArg3")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateFrameDuration", [(UINT, "Duration")]),
+]
+
+IDXGIFactoryDWM2 = Interface("IDXGIFactoryDWM2", IUnknown)
+IDXGIFactoryDWM2.methods += [
+    StdMethod(HRESULT, "CreateSwapChainDWM", [(ObjPointer(IUnknown), "pDevice"), (Pointer(DXGI_SWAP_CHAIN_DESC), "pDesc"), (ObjPointer(IDXGIOutput), "pOutput"), Out(Pointer(ObjPointer(IDXGISwapChainDWM)), "ppSwapChain")]),
+    StdMethod(HRESULT, "CreateSwapChainDDA", [(ObjPointer(IUnknown), "pDevice"), (Pointer(DXGI_SWAP_CHAIN_DESC1), "pDesc"), (ObjPointer(IDXGIOutput), "pOutput"), Out(Pointer(ObjPointer(IDXGISwapChainDWM1)), "ppSwapChain")]),
+]
+
+DXGI_INTERNAL_TRACKED_FENCE = Opaque('DXGI_INTERNAL_TRACKED_FENCE *')
+
+IDXGIDeviceDWM = Interface("IDXGIDeviceDWM", IUnknown)
+IDXGIDeviceDWM.methods += [
+    StdMethod(HRESULT, "OpenFenceByHandle", [(HANDLE, "hFence"), Out(Pointer(DXGI_INTERNAL_TRACKED_FENCE), "ppFence")]),
+    StdMethod(HRESULT, "ReleaseResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "pResources")]),
+    StdMethod(HRESULT, "CloseFence", [(DXGI_INTERNAL_TRACKED_FENCE, "pFence")]),
+    StdMethod(HRESULT, "PinResources", [(UINT, "NumResources"),(Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "pResources")]),
+    StdMethod(HRESULT, "UnpinResources", [(UINT, "NumResources"), (Array(Const(ObjPointer(IDXGIResource)), "NumResources"), "pResources")]),
+]
+
+CDXGIAdapter = Interface("CDXGIAdapter", IUnknown)
+CDXGIAdapter.methods += [
+    StdMethod(HRESULT, "OpenKernelHandle", [Out(Pointer(OpaquePointer(Void)), "ppHandle")], sideeffects=False),
+    StdMethod(HRESULT, "CloseKernelHandle", [(OpaquePointer(Void), "pHandle")], sideeffects=False),
+]
+
+IWarpPrivateAPI = Interface("IWarpPrivateAPI", IUnknown)
+IWarpPrivateAPI.methods += [
+    StdMethod(HRESULT, "WarpEscape", [(OpaquePointer(Void), "pData")], sideeffects=False),
+]
+
 dxgi.addInterfaces([
     IDXGIFactoryDWM,
+    IDXGIOutputDWM,
+    IDXGIFactoryDWM2,
+    IDXGIDeviceDWM,
+    CDXGIAdapter,
+    IWarpPrivateAPI,
 ])

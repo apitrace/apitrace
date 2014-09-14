@@ -47,6 +47,8 @@ INT32 = Alias("INT32", Int32)
 UINT32 = Alias("UINT32", UInt32)
 INT64 = Alias("INT64", Int64)
 UINT64 = Alias("UINT64", UInt64)
+INT_PTR = Alias("INT_PTR", IntPtr)
+UINT_PTR = Alias("UINT_PTR", UIntPtr)
 FLOAT32 = Alias("FLOAT32", Float)
 
 BYTE = Alias("BYTE", UInt8)
