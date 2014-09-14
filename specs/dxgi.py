@@ -548,6 +548,7 @@ IDXGIOutput1.methods += [
 ]
 
 dxgi.addInterfaces([
+    IDXGIDisplayControl,
     IDXGIDevice2,
     IDXGISwapChain1,
     IDXGIFactory2,
