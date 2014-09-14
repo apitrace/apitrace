@@ -223,6 +223,13 @@ restartDwmComposition(HANDLE hProcess)
     fprintf(stderr, "Press any key when finished tracing\n");
     getchar();
 
+    DWORD dwExitCode;
+    if (GetExitCodeProcess(hProcess, &dwExitCode) &&
+        dwExitCode != STILL_ACTIVE) {
+        // DWM process has already terminated
+        return;
+    }
+
     fprintf(stderr, "info: restarting DWM process\n");
     if (bIsWindows8OrGreater) {
         // From Windows 8 onwards DWM no longer runs as a service.  We just
