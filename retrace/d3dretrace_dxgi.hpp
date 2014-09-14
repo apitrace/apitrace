@@ -70,8 +70,6 @@ public:
     HRESULT STDMETHODCALLTYPE GetContainingOutput(IDXGIOutput **ppOutput);
     HRESULT STDMETHODCALLTYPE GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats);
     HRESULT STDMETHODCALLTYPE GetLastPresentCount(UINT *pLastPresentCount);
-    HRESULT STDMETHODCALLTYPE SetFullscreenState(BOOL Fullscreen, IDXGIOutput *pTarget);
-    HRESULT STDMETHODCALLTYPE GetFullscreenState(BOOL *pFullscreen, IDXGIOutput **ppTarget);
 };
 
 CDXGISwapChainDWM::CDXGISwapChainDWM(IDXGISwapChain *pSwapChain) :
@@ -172,16 +170,6 @@ HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetFrameStatistics(DXGI_FRAME_STATI
 HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetLastPresentCount(UINT *pLastPresentCount)
 {
     return m_pSwapChain->GetLastPresentCount(pLastPresentCount);
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::SetFullscreenState(BOOL Fullscreen, IDXGIOutput *pTarget)
-{
-    return m_pSwapChain->SetFullscreenState(Fullscreen, pTarget);
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetFullscreenState(BOOL *pFullscreen, IDXGIOutput **ppTarget)
-{
-    return m_pSwapChain->GetFullscreenState(pFullscreen, ppTarget);
 }
 
 

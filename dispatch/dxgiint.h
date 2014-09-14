@@ -34,17 +34,7 @@
 #include <dxgi.h>
 
 
-static const GUID IID_IDXGIFactoryDWM = {0x713F394E,0x92CA,0x47E7,{0xAB,0x81,0x11,0x59,0xC2,0x79,0x1E,0x54}};
-static const GUID IID_IDXGISwapChainDWM = {0x00000000,0x0000,0x0000,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}}; // XXX
-
-struct IDXGIFactoryDWM;
-struct IDXGISwapChainDWM;
-
-struct IDXGIFactoryDWM: public IUnknown
-{
-    virtual HRESULT STDMETHODCALLTYPE CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain) = 0;
-};
-
+static const GUID IID_IDXGISwapChainDWM = {0xF69F223B,0x45D3,0x4AA0,{0x98,0xC8,0xC4,0x0C,0x2B,0x23,0x10,0x29}};
 struct IDXGISwapChainDWM: public IDXGIDeviceSubObject
 {
     virtual HRESULT STDMETHODCALLTYPE Present(UINT SyncInterval, UINT Flags) = 0;
@@ -55,8 +45,13 @@ struct IDXGISwapChainDWM: public IDXGIDeviceSubObject
     virtual HRESULT STDMETHODCALLTYPE GetContainingOutput(IDXGIOutput **ppOutput) = 0;
     virtual HRESULT STDMETHODCALLTYPE GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats) = 0;
     virtual HRESULT STDMETHODCALLTYPE GetLastPresentCount(UINT *pLastPresentCount) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetFullscreenState(BOOL Fullscreen, IDXGIOutput *pTarget) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetFullscreenState(BOOL *pFullscreen, IDXGIOutput **ppTarget) = 0;
 };
+
+static const GUID IID_IDXGIFactoryDWM = {0x713F394E,0x92CA,0x47E7,{0xAB,0x81,0x11,0x59,0xC2,0x79,0x1E,0x54}};
+struct IDXGIFactoryDWM: public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain) = 0;
+};
+
 
 #endif /* _DXGIINT_H_ */
