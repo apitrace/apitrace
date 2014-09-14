@@ -82,24 +82,6 @@ class D3D9Tracer(DllTracer):
             print '        _MappedSize = 0;'
             print '    }'
 
-        # Clamp capabilities
-        if method.name == 'GetDeviceCaps':
-            print '    if (SUCCEEDED(_result)) {'
-            print '         clampCaps(pCaps);'
-            print '    }'
-        if method.name == 'CheckDeviceFormat':
-            print '    if (SUCCEEDED(_result)) {'
-            print '         if (!clampFormat(Usage, RType, CheckFormat)) {'
-            print '             _result = D3DERR_NOTAVAILABLE;'
-            print '         }'
-            print '    }'
-        if method.name == 'CheckDeviceMultiSampleType':
-            print '    if (SUCCEEDED(_result)) {'
-            print '         if (!clampMultiSampleType(SurfaceFormat, MultiSampleType, pQualityLevels)) {'
-            print '             _result = D3DERR_NOTAVAILABLE;'
-            print '         }'
-            print '    }'
-
 
 if __name__ == '__main__':
     print '#define INITGUID'
@@ -111,7 +93,6 @@ if __name__ == '__main__':
     print '#include "d3d9size.hpp"'
     print '#include "d3d9shader.hpp"'
     print '#include "dxvaint.h"'
-    print '#include "d3d9clamp.hpp"'
     print
 
     api = API()
