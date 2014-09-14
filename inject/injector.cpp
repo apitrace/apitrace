@@ -196,7 +196,9 @@ restartDwmComposition(HANDLE hProcess)
         // http://code.msdn.microsoft.com/windowshardware/DevCon-Sample-4e95d71c
         // http://support.microsoft.com/kb/311272
         // TODO:
-        fprintf(stderr, "run `devcon restart =DISPLAY` now\n");
+        if (system("devcon restart =DISPLAY") == -1) {
+            fprintf(stderr, "run `devcon restart =DISPLAY` now\n");
+        }
     } else {
 
         BOOL fEnabled = FALSE;
