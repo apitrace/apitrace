@@ -200,6 +200,11 @@ class D3DRetracer(Retracer):
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
             print r'    createWindow(pDesc);'
+        if method.name == 'CreateSwapChainForComposition':
+            print r'    HWND hWnd = d3dretrace::createWindow(pDesc->Width, pDesc->Height);'
+            print r'    _result = _this->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);'
+            self.checkResult(method.type)
+            return
 
         if method.name == 'SetFullscreenState':
             print r'    if (retrace::forceWindowed) {'
@@ -248,7 +253,7 @@ class D3DRetracer(Retracer):
             print r'    }'
             return
 
-        if interface.name.startswith('ID3D10Device') and method.name == 'OpenSharedResource':
+        if interface.name.startswith('ID3D10Device') and method.name.startswith('OpenSharedResource'):
             print r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";'
             print r'    D3D10_TEXTURE2D_DESC Desc;'
             print r'    memset(&Desc, 0, sizeof Desc);'
