@@ -489,7 +489,7 @@ if (MSVC)
     )
 endif ()
 
-set (CPACK_PACKAGE_VERSION_MAJOR "5")
+set (CPACK_PACKAGE_VERSION_MAJOR "6")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
 
 # Use current date in YYYYMMDD format as patch number 
