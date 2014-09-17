@@ -221,8 +221,10 @@ HRESULT STDMETHODCALLTYPE CDXGIFactoryDWM::CreateSwapChain(IUnknown *pDevice, DX
 {
     IDXGISwapChain *pSwapChain = NULL;
     if (retrace::forceWindowed) {
-        pDesc->Windowed = TRUE;
+        assert(pDesc->Windowed);
     }
+    assert(!pDesc->OutputWindow);
+    pDesc->OutputWindow = d3dretrace::createWindow(pDesc->BufferDesc.Width, pDesc->BufferDesc.Height);
     HRESULT hr = m_pFactory->CreateSwapChain(pDevice, pDesc, &pSwapChain);
     if (SUCCEEDED(hr)) {
         if (!retrace::forceWindowed) {

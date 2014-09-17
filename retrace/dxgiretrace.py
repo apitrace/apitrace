@@ -428,8 +428,11 @@ createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
     if (!Height) Height = 768;
     if (retrace::forceWindowed) {
         pSwapChainDesc->Windowed = TRUE;
+        pSwapChainDesc->Flags &= ~DXGI_SWAP_CHAIN_FLAG_NONPREROTATED;
     }
-    pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
+    if (pSwapChainDesc->OutputWindow) {
+        pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
+    }
 }
 '''
 
