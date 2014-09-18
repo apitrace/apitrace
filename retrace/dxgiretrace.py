@@ -60,7 +60,7 @@ class D3DRetracer(Retracer):
         if function.name in self.createDeviceFunctionNames:
             # create windows as neccessary
             if 'pSwapChainDesc' in function.argNames():
-                print r'    createWindow(pSwapChainDesc);'
+                print r'    d3dretrace::createWindowForSwapChain(pSwapChainDesc);'
 
             # Compensate for the fact we don't trace DXGI object creation
             if function.name.startswith('D3D11CreateDevice'):
@@ -185,21 +185,17 @@ class D3DRetracer(Retracer):
                 print r'        d3d11Dumper.bindDevice(_this);'
                 print r'    }'
 
+        # intercept private interfaces
         if method.name == 'QueryInterface':
-            print r'    if (riid == IID_IDXGIFactoryDWM) {'
-            print r'        IDXGIFactory *pFactory = NULL;'
-            print r'        _result = _this->QueryInterface(IID_IDXGIFactory, (VOID **)&pFactory);'
-            print r'        if (SUCCEEDED(_result)) {'
-            print r'            *ppvObj = new d3dretrace::CDXGIFactoryDWM(pFactory);'
-            print r'        }'
-            print r'    } else {'
+            print r'    _result = d3dretrace::QueryInterface(_this, riid, ppvObj);'
+            print r'    if (FAILED(_result)) {'
             Retracer.invokeInterfaceMethod(self, interface, method)
             print r'    }'
             return
 
         # create windows as neccessary
         if method.name == 'CreateSwapChain':
-            print r'    createWindow(pDesc);'
+            print r'    d3dretrace::createWindowForSwapChain(pDesc);'
         if method.name == 'CreateSwapChainForComposition':
             print r'    HWND hWnd = d3dretrace::createWindow(pDesc->Width, pDesc->Height);'
             print r'    _result = _this->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);'
@@ -214,7 +210,12 @@ class D3DRetracer(Retracer):
         # notify frame has been completed
         if method.name == 'Present':
             if interface.name == 'IDXGISwapChainDWM':
-                print r'    dxgiDumper.bindDevice(reinterpret_cast<d3dretrace::CDXGISwapChainDWM *>(_this)->m_pSwapChain);'
+                print r'    com_ptr<IDXGISwapChain> pSwapChain;'
+                print r'    if (SUCCEEDED(_this->QueryInterface(IID_IDXGISwapChain, (void **) &pSwapChain))) {'
+                print r'        dxgiDumper.bindDevice(pSwapChain);'
+                print r'    } else {'
+                print r'        assert(0);'
+                print r'    }'
             else:
                 print r'    dxgiDumper.bindDevice(_this);'
             print r'    retrace::frameComplete(call);'
@@ -419,22 +420,6 @@ def main():
         print '''static d3dretrace::D3DDumper<ID3D10Device> d3d10Dumper;'''
         print '''static d3dretrace::D3DDumper<ID3D11DeviceContext> d3d11Dumper;'''
         print
-        print r'''
-static void
-createWindow(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
-    UINT Width  = pSwapChainDesc->BufferDesc.Width;
-    UINT Height = pSwapChainDesc->BufferDesc.Height;
-    if (!Width)  Width = 1024;
-    if (!Height) Height = 768;
-    if (retrace::forceWindowed) {
-        pSwapChainDesc->Windowed = TRUE;
-        pSwapChainDesc->Flags &= ~DXGI_SWAP_CHAIN_FLAG_NONPREROTATED;
-    }
-    if (pSwapChainDesc->OutputWindow) {
-        pSwapChainDesc->OutputWindow = d3dretrace::createWindow(Width, Height);
-    }
-}
-'''
 
         api.addModule(dxgi)
         api.addModule(d3d10)

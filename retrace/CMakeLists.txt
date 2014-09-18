@@ -264,6 +264,7 @@ if (WIN32)
         d3dretrace_d3d8.cpp
         d3dretrace_d3d9.cpp
         d3dretrace_dxgi.cpp
+        d3dretrace_dxgi_priv.cpp
         d3dretrace_ws.cpp
         d3d9state.cpp
         d3d9state_formats.cpp
