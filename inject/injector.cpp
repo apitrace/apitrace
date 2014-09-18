@@ -47,6 +47,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include <dwmapi.h>
+#include <tlhelp32.h>
 
 #ifndef ERROR_ELEVATION_REQUIRED
 #define ERROR_ELEVATION_REQUIRED 740
@@ -54,6 +55,11 @@
 
 #include "os_version.hpp"
 #include "inject.h"
+
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
+#endif
 
 
 static void
@@ -248,12 +254,58 @@ restartDwmComposition(HANDLE hProcess)
 }
 
 
+BOOL
+getProcessIdByName(const char *szProcessName, DWORD *pdwProcessID)
+{
+    BOOL bRet = FALSE;
+
+    HANDLE hProcessSnap;
+    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hProcessSnap != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32 pe32;
+        pe32.dwSize = sizeof pe32;
+        if (Process32First(hProcessSnap, &pe32)) {
+            do {
+                if (stricmp(szProcessName, pe32.szExeFile) == 0) {
+                    *pdwProcessID = pe32.th32ProcessID;
+                    bRet = TRUE;
+                    break;
+                }
+            } while (Process32Next(hProcessSnap, &pe32));
+        }
+        CloseHandle(hProcessSnap);
+    }
+
+    return bRet;
+}
+
+
 int
 main(int argc, char *argv[])
 {
     if (argc < 3) {
-        fprintf(stderr, "inject dllname.dll command [args] ...\n");
+        fprintf(stderr,
+                "usage:\n"
+                "  inject <dllname.dll> <command> [args] ...\n"
+                "  inject <dllname.dll> <process-id>\n"
+                "  inject <dllname.dll> !<process-name>\n"
+        );
         return 1;
+    }
+
+    BOOL bAttach = FALSE;
+    DWORD dwProcessId = ~0;
+    if (isdigit(argv[2][0])) {
+        dwProcessId = atol(argv[2]);
+        bAttach = TRUE;
+    } else if (argv[2][0] == '!') {
+        const char *szProcessName = &argv[2][1];
+        if (!getProcessIdByName(szProcessName, &dwProcessId)) {
+            fprintf(stderr, "error: failed to find process %s\n", szProcessName);
+            return 1;
+        }
+        bAttach = TRUE;
+        fprintf(stderr, "dwProcessId = %lu\n", dwProcessId);
     }
 
     HANDLE hSemaphore = NULL;
@@ -282,10 +334,7 @@ main(int argc, char *argv[])
 
     PROCESS_INFORMATION processInfo;
     HANDLE hProcess;
-    BOOL bAttach;
-    if (isdigit(argv[2][0])) {
-        bAttach = TRUE;
-
+    if (bAttach) {
         BOOL bRet;
         HANDLE hToken   = NULL;
         bRet = OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken);
@@ -319,7 +368,6 @@ main(int argc, char *argv[])
             PROCESS_VM_WRITE |
             PROCESS_VM_READ |
             PROCESS_TERMINATE;
-        DWORD dwProcessId = atol(argv[2]);
         hProcess = OpenProcess(
             dwDesiredAccess,
             FALSE /* bInheritHandle */,
