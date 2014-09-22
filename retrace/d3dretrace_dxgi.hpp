@@ -61,7 +61,8 @@ createWindowForSwapChain(DXGI_SWAP_CHAIN_DESC *pSwapChainDesc) {
 }
 
 
-HRESULT QueryInterface(IUnknown *pThis, REFIID riid, void **ppvObj);
+BOOL
+overrideQueryInterface(IUnknown *pThis, REFIID riid, void **ppvObj, HRESULT *pResult);
 
 
 

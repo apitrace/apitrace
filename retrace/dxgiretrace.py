@@ -187,8 +187,7 @@ class D3DRetracer(Retracer):
 
         # intercept private interfaces
         if method.name == 'QueryInterface':
-            print r'    _result = d3dretrace::QueryInterface(_this, riid, ppvObj);'
-            print r'    if (FAILED(_result)) {'
+            print r'    if (!d3dretrace::overrideQueryInterface(_this, riid, ppvObj, &_result)) {'
             Retracer.invokeInterfaceMethod(self, interface, method)
             print r'    }'
             return

@@ -36,140 +36,150 @@
  * and IDXGISwapChain interfaces, just for sake of d3dretrace.  Retracing on
  * top of the undocumented interfaces works, but it may interfere with running
  * DWM and causes corruption of the desktop upon exit.
+ *
+ * Note that we don't maintain our own reference counts in these
+ * implementations, as there should only be one reference count for all
+ * interfaces.  See http://msdn.microsoft.com/en-us/library/ms686590.aspx
  */
 
 
 namespace d3dretrace {
 
 
+static HRESULT __stdcall
+GetInterface(IUnknown *pUnknown, void **ppvObj) {
+    if (!ppvObj) {
+        return E_POINTER;
+    }
+    *ppvObj = (LPVOID)pUnknown;
+    pUnknown->AddRef();
+    return S_OK;
+}
+
+
 class CDXGISwapChainDWM : public IDXGISwapChainDWM
 {
-public:
+protected:
     IDXGISwapChain *m_pSwapChain;
 
+    ~CDXGISwapChainDWM() {
+        m_pSwapChain->SetFullscreenState(FALSE, NULL);
+    }
+
 public:
-    CDXGISwapChainDWM(IDXGISwapChain *pSwapChain);
-    ~CDXGISwapChainDWM();
+    CDXGISwapChainDWM(IDXGISwapChain *pSwapChain) :
+        m_pSwapChain(pSwapChain)
+    {}
 
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObj);
-    ULONG STDMETHODCALLTYPE AddRef(void);
-    ULONG STDMETHODCALLTYPE Release(void);
-    HRESULT STDMETHODCALLTYPE SetPrivateData(REFGUID Name, UINT DataSize, const void *pData);
-    HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(REFGUID Name, const IUnknown *pUnknown);
-    HRESULT STDMETHODCALLTYPE GetPrivateData(REFGUID Name, UINT *pDataSize, void *pData);
-    HRESULT STDMETHODCALLTYPE GetParent(REFIID riid, void **ppParent);
-    HRESULT STDMETHODCALLTYPE GetDevice(REFIID riid, void **ppDevice);
-
-    HRESULT STDMETHODCALLTYPE Present(UINT SyncInterval, UINT Flags);
-    HRESULT STDMETHODCALLTYPE GetBuffer(UINT Buffer, REFIID riid, void **ppSurface);
-    HRESULT STDMETHODCALLTYPE GetDesc(DXGI_SWAP_CHAIN_DESC *pDesc);
-    HRESULT STDMETHODCALLTYPE ResizeBuffers(UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags);
-    HRESULT STDMETHODCALLTYPE ResizeTarget(const DXGI_MODE_DESC *pNewTargetParameters);
-    HRESULT STDMETHODCALLTYPE GetContainingOutput(IDXGIOutput **ppOutput);
-    HRESULT STDMETHODCALLTYPE GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats);
-    HRESULT STDMETHODCALLTYPE GetLastPresentCount(UINT *pLastPresentCount);
-};
-
-CDXGISwapChainDWM::CDXGISwapChainDWM(IDXGISwapChain *pSwapChain) :
-    m_pSwapChain(pSwapChain)
-{
-}
-
-CDXGISwapChainDWM::~CDXGISwapChainDWM()
-{
-    m_pSwapChain->SetFullscreenState(FALSE, NULL);
-    m_pSwapChain->Release();
-}
-
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::QueryInterface(REFIID riid, void **ppvObj)
-{
-    return m_pSwapChain->QueryInterface(riid, ppvObj);
-}
-
-ULONG STDMETHODCALLTYPE CDXGISwapChainDWM::AddRef(void)
-{
-    // FIXME
-    return 1;
-}
-
-ULONG STDMETHODCALLTYPE CDXGISwapChainDWM::Release(void)
-{
-    // FIXME
-    return 1;
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::SetPrivateData(REFGUID Name, UINT DataSize, const void *pData)
-{
-    return m_pSwapChain->SetPrivateData(Name, DataSize, pData);
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::SetPrivateDataInterface(REFGUID Name, const IUnknown *pUnknown)
-{
-    return m_pSwapChain->SetPrivateDataInterface(Name, pUnknown);
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetPrivateData(REFGUID Name, UINT *pDataSize, void *pData)
-{
-    return m_pSwapChain->GetPrivateData(Name, pDataSize, pData);
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetParent(REFIID riid, void **ppParent)
-{
-    return m_pSwapChain->GetParent(riid, ppParent);
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetDevice(REFIID riid, void **ppDevice)
-{
-    return m_pSwapChain->GetDevice(riid, ppDevice);
-}
-
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::Present(UINT SyncInterval, UINT Flags)
-{
-    return m_pSwapChain->Present(SyncInterval, Flags);
-}
-
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetBuffer(UINT Buffer, REFIID riid, void **ppSurface)
-{
-    /* XXX: IDXGISwapChain buffers with indexes greater than zero can only be
-     * read from, per
-     * http://msdn.microsoft.com/en-gb/library/windows/desktop/bb174570.aspx,
-     * but it appears that IDXGISwapChainDWM don't have that limitation.
+    /*
+     * IUnknown
      */
-    return m_pSwapChain->GetBuffer(Buffer, riid, ppSurface);
-}
 
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetDesc(DXGI_SWAP_CHAIN_DESC *pDesc)
-{
-    return m_pSwapChain->GetDesc(pDesc);
-}
+    HRESULT STDMETHODCALLTYPE
+    QueryInterface(REFIID riid, void **ppvObj)
+    {
+        if (riid == IID_IDXGISwapChainDWM) {
+            return GetInterface(this, ppvObj);
+        }
+        return m_pSwapChain->QueryInterface(riid, ppvObj);
+    }
 
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::ResizeBuffers(UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags)
-{
-    return m_pSwapChain->ResizeBuffers(BufferCount, Width, Height, NewFormat, SwapChainFlags);
-}
+    ULONG STDMETHODCALLTYPE
+    AddRef(void) {
+        return m_pSwapChain->AddRef();
+    }
 
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::ResizeTarget(const DXGI_MODE_DESC *pNewTargetParameters)
-{
-    return m_pSwapChain->ResizeTarget(pNewTargetParameters);
-}
+    ULONG STDMETHODCALLTYPE
+    Release(void) {
+        ULONG cRef = m_pSwapChain->Release();
+        if (cRef == 0) {
+            delete this;
+        }
+        return cRef;
+    }
 
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetContainingOutput(IDXGIOutput **ppOutput)
-{
-    return m_pSwapChain->GetContainingOutput(ppOutput);
-}
+    /*
+     * IDXGIObject
+     */
 
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats)
-{
-    return m_pSwapChain->GetFrameStatistics(pStats);
-}
+    HRESULT STDMETHODCALLTYPE
+    SetPrivateData(REFGUID Name, UINT DataSize, const void *pData) {
+        return m_pSwapChain->SetPrivateData(Name, DataSize, pData);
+    }
 
-HRESULT STDMETHODCALLTYPE CDXGISwapChainDWM::GetLastPresentCount(UINT *pLastPresentCount)
-{
-    return m_pSwapChain->GetLastPresentCount(pLastPresentCount);
-}
+    HRESULT STDMETHODCALLTYPE
+    SetPrivateDataInterface(REFGUID Name, const IUnknown *pUnknown) {
+        return m_pSwapChain->SetPrivateDataInterface(Name, pUnknown);
+    }
 
+    HRESULT STDMETHODCALLTYPE
+    GetPrivateData(REFGUID Name, UINT *pDataSize, void *pData) {
+        return m_pSwapChain->GetPrivateData(Name, pDataSize, pData);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    GetParent(REFIID riid, void **ppParent) {
+        return m_pSwapChain->GetParent(riid, ppParent);
+    }
+
+    /*
+     * IDXGIDeviceSubObject
+     */
+
+    HRESULT STDMETHODCALLTYPE
+    GetDevice(REFIID riid, void **ppDevice) {
+        return m_pSwapChain->GetDevice(riid, ppDevice);
+    }
+
+    /*
+     * IDXGISwapChainDWM
+     */
+
+    HRESULT STDMETHODCALLTYPE
+    Present(UINT SyncInterval, UINT Flags) {
+        return m_pSwapChain->Present(SyncInterval, Flags);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    GetBuffer(UINT Buffer, REFIID riid, void **ppSurface) {
+        /* XXX: IDXGISwapChain buffers with indexes greater than zero can only
+         * be read from, per
+         * http://msdn.microsoft.com/en-gb/library/windows/desktop/bb174570.aspx,
+         * but it appears that IDXGISwapChainDWM doesn't have that limitation.
+         */
+        return m_pSwapChain->GetBuffer(Buffer, riid, ppSurface);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    GetDesc(DXGI_SWAP_CHAIN_DESC *pDesc) {
+        return m_pSwapChain->GetDesc(pDesc);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    ResizeBuffers(UINT BufferCount, UINT Width, UINT Height, DXGI_FORMAT NewFormat, UINT SwapChainFlags) {
+        return m_pSwapChain->ResizeBuffers(BufferCount, Width, Height, NewFormat, SwapChainFlags);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    ResizeTarget(const DXGI_MODE_DESC *pNewTargetParameters) {
+        return m_pSwapChain->ResizeTarget(pNewTargetParameters);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    GetContainingOutput(IDXGIOutput **ppOutput) {
+        return m_pSwapChain->GetContainingOutput(ppOutput);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    GetFrameStatistics(DXGI_FRAME_STATISTICS *pStats) {
+        return m_pSwapChain->GetFrameStatistics(pStats);
+    }
+
+    HRESULT STDMETHODCALLTYPE
+    GetLastPresentCount(UINT *pLastPresentCount) {
+        return m_pSwapChain->GetLastPresentCount(pLastPresentCount);
+    }
+};
 
 
 class CDXGIFactoryDWM : public IDXGIFactoryDWM
@@ -177,80 +187,87 @@ class CDXGIFactoryDWM : public IDXGIFactoryDWM
 private:
     IDXGIFactory *m_pFactory;
 
-    ~CDXGIFactoryDWM();
+    ~CDXGIFactoryDWM() {
+    }
 
 public:
-    CDXGIFactoryDWM(IDXGIFactory *pFactory);
+    CDXGIFactoryDWM(IDXGIFactory *pFactory) :
+        m_pFactory(pFactory)
+    {}
 
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObj);
-    ULONG STDMETHODCALLTYPE AddRef(void);
-    ULONG STDMETHODCALLTYPE Release(void);
-    HRESULT STDMETHODCALLTYPE CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain);
+    /*
+     * IUnknown
+     */
+
+    HRESULT STDMETHODCALLTYPE
+    QueryInterface(REFIID riid, void **ppvObj)
+    {
+        if (riid == IID_IDXGIFactoryDWM) {
+            return GetInterface(static_cast<IDXGIFactoryDWM *>(this), ppvObj);
+        }
+        return m_pFactory->QueryInterface(riid, ppvObj);
+    }
+
+    ULONG STDMETHODCALLTYPE
+    AddRef(void) {
+        return m_pFactory->AddRef();
+    }
+
+    ULONG STDMETHODCALLTYPE
+    Release(void) {
+        ULONG cRef = m_pFactory->Release();
+        if (cRef == 0) {
+            delete this;
+        }
+        return cRef;
+    }
+
+    /*
+     * IDXGIFactoryDWM
+     */
+
+    HRESULT STDMETHODCALLTYPE
+    CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain)
+    {
+        IDXGISwapChain *pSwapChain = NULL;
+        if (retrace::forceWindowed) {
+            assert(pDesc->Windowed);
+        }
+        assert(!pDesc->OutputWindow);
+        pDesc->OutputWindow = d3dretrace::createWindow(pDesc->BufferDesc.Width, pDesc->BufferDesc.Height);
+        HRESULT hr = m_pFactory->CreateSwapChain(pDevice, pDesc, &pSwapChain);
+        if (SUCCEEDED(hr)) {
+            if (!retrace::forceWindowed) {
+                pSwapChain->SetFullscreenState(TRUE, pOutput);
+            }
+            *ppSwapChain = new CDXGISwapChainDWM(pSwapChain);
+        }
+        return hr;
+    }
 };
 
-CDXGIFactoryDWM::CDXGIFactoryDWM(IDXGIFactory *pFactory) :
-    m_pFactory(pFactory)
-{}
 
-CDXGIFactoryDWM::~CDXGIFactoryDWM()
+BOOL
+overrideQueryInterface(IUnknown *pUnknown, REFIID riid, void **ppvObj, HRESULT *pResult)
 {
-    m_pFactory->Release();
-}
-
-
-HRESULT STDMETHODCALLTYPE CDXGIFactoryDWM::QueryInterface(REFIID riid, void **ppvObj)
-{
-    return m_pFactory->QueryInterface(riid, ppvObj);
-}
-
-ULONG STDMETHODCALLTYPE CDXGIFactoryDWM::AddRef(void)
-{
-    // FIXME
-    return 1;
-}
-
-ULONG STDMETHODCALLTYPE CDXGIFactoryDWM::Release(void)
-{
-    // FIXME
-    return 1;
-}
-
-HRESULT STDMETHODCALLTYPE CDXGIFactoryDWM::CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain)
-{
-    IDXGISwapChain *pSwapChain = NULL;
-    if (retrace::forceWindowed) {
-        assert(pDesc->Windowed);
-    }
-    assert(!pDesc->OutputWindow);
-    pDesc->OutputWindow = d3dretrace::createWindow(pDesc->BufferDesc.Width, pDesc->BufferDesc.Height);
-    HRESULT hr = m_pFactory->CreateSwapChain(pDevice, pDesc, &pSwapChain);
-    if (SUCCEEDED(hr)) {
-        if (!retrace::forceWindowed) {
-            pSwapChain->SetFullscreenState(TRUE, pOutput);
-        }
-        *ppSwapChain = new CDXGISwapChainDWM(pSwapChain);
-    }
-    return hr;
-}
-
-
-HRESULT QueryInterface(IUnknown *pUnknown, REFIID riid, void **ppvObj)
-{
-    if (!ppvObj) {
-        return E_POINTER;
-    }
-
     HRESULT hr;
-    if (riid == IID_IDXGIFactoryDWM) {
-         IDXGIFactory *pFactory = NULL;
-         hr = pUnknown->QueryInterface(IID_IDXGIFactory, (VOID **)&pFactory);
-         if (SUCCEEDED(hr)) {
-             *ppvObj = new d3dretrace::CDXGIFactoryDWM(pFactory);
-             return S_OK;
-         }
+
+    if (!ppvObj) {
+        *pResult = E_POINTER;
+        return TRUE;
     }
 
-    return E_NOINTERFACE;
+    if (riid == IID_IDXGIFactoryDWM) {
+        IDXGIFactory *pFactory = NULL;
+        hr = pUnknown->QueryInterface(IID_IDXGIFactory, (VOID **)&pFactory);
+        if (SUCCEEDED(hr)) {
+            *ppvObj = new d3dretrace::CDXGIFactoryDWM(pFactory);
+            *pResult = S_OK;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 
