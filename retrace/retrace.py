@@ -478,13 +478,6 @@ class Retracer:
             print '    %s(%s);' % (function.name, arg_names)
 
     def invokeInterfaceMethod(self, interface, method):
-        # On release our reference when we reach Release() == 0 call in the
-        # trace.
-        if method.name == 'Release':
-            print '    if (call.ret->toUInt() == 0) {'
-            print '        retrace::delObj(call.arg(0));'
-            print '    }'
-
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
@@ -492,6 +485,22 @@ class Retracer:
             self.checkResult(method.type)
         else:
             print '    _this->%s(%s);' % (method.name, arg_names)
+
+        # Debug COM reference counting.  Disabled by default as reported
+        # reference counts depend on internal implementation details.
+        if method.name in ('AddRef', 'Release'):
+            print r'    if (0) retrace::checkMismatch(call, "cRef", call.ret, _result);'
+
+        # On release our reference when we reach Release() == 0 call in the
+        # trace.
+        if method.name == 'Release':
+            print r'    ULONG _orig_result = call.ret->toUInt();'
+            print r'    if (_orig_result == 0 || _result == 0) {'
+            print r'        if (_orig_result != 0) {'
+            print r'            retrace::warning(call) << "unexpected object destruction\n";'
+            print r'        }'
+            print r'        retrace::delObj(call.arg(0));'
+            print r'    }'
 
     def checkResult(self, resultType):
         if str(resultType) == 'HRESULT':
