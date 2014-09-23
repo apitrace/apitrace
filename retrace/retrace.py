@@ -509,23 +509,23 @@ class Retracer:
             print r'    }'
 
     def checkPitchMismatch(self, method):
-       # Warn for mismatches in 2D/3D mappings.
-       # FIXME: We should try to swizzle them.  It's a bit of work, but possible.
-       for outArg in method.args:
-           if outArg.output \
-              and isinstance(outArg.type, stdapi.Pointer) \
-              and isinstance(outArg.type.type, stdapi.Struct):
-               print r'        const trace::Array *_%s = call.arg(%u).toArray();' % (outArg.name, outArg.index)
-               print r'        if (%s) {' % outArg.name
-               print r'            const trace::Struct *_struct = _%s->values[0]->toStruct();' % (outArg.name)
-               print r'            if (_struct) {'
-               struct = outArg.type.type
-               for memberIndex in range(len(struct.members)):
-                   memberType, memberName = struct.members[memberIndex]
-                   if memberName.endswith('Pitch'):
-                       print r'                retrace::checkMismatch(call, "%s", _struct->members[%u], %s->%s);' % (memberName, memberIndex, outArg.name, memberName)
-               print r'            }'
-               print r'        }'
+        # Warn for mismatches in 2D/3D mappings.
+        # FIXME: We should try to swizzle them.  It's a bit of work, but possible.
+        for outArg in method.args:
+            if outArg.output \
+               and isinstance(outArg.type, stdapi.Pointer) \
+               and isinstance(outArg.type.type, stdapi.Struct):
+                print r'        const trace::Array *_%s = call.arg(%u).toArray();' % (outArg.name, outArg.index)
+                print r'        if (%s) {' % outArg.name
+                print r'            const trace::Struct *_struct = _%s->values[0]->toStruct();' % (outArg.name)
+                print r'            if (_struct) {'
+                struct = outArg.type.type
+                for memberIndex in range(len(struct.members)):
+                    memberType, memberName = struct.members[memberIndex]
+                    if memberName.endswith('Pitch'):
+                        print r'                retrace::checkMismatch(call, "%s", _struct->members[%u], %s->%s);' % (memberName, memberIndex, outArg.name, memberName)
+                print r'            }'
+                print r'        }'
 
     def filterFunction(self, function):
         return True
