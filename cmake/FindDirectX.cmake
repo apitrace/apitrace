@@ -80,8 +80,10 @@ if (WIN32)
         set (include_dir_var "DirectX_${var_name}_INCLUDE_DIR")
         set (include_found_var "DirectX_${var_name}_INCLUDE_FOUND")
         find_path (${include_dir_var} ${header}
-            PATHS ${DirectX_INC_SEARCH_PATH}
-            DOC "The directory where ${header} resides")
+            HINTS ${DirectX_INC_SEARCH_PATH}
+            DOC "The directory where ${header} resides"
+            CMAKE_FIND_ROOT_PATH_BOTH
+        )
         if (${include_dir_var})
             set (${include_found_var} TRUE)
             find_package_message (${var_name}_INC "Found ${header} header: ${${include_dir_var}}/${header}" "[${${include_dir_var}}]")
@@ -94,8 +96,10 @@ if (WIN32)
         # DirectX SDK
         set (library_var "DirectX_${var_name}_LIBRARY")
         find_library (${library_var} ${library}
-            PATHS ${DirectX_LIB_SEARCH_PATH}
-            DOC "The directory where ${library} resides")
+            HINTS ${DirectX_LIB_SEARCH_PATH}
+            DOC "The directory where ${library} resides"
+            CMAKE_FIND_ROOT_PATH_BOTH
+        )
         if (${library_var})
             find_package_message (${var_name}_LIB "Found ${library} library: ${${library_var}}" "[${${library_var}}]")
         endif ()
@@ -196,7 +200,7 @@ if (WIN32)
     find_combined       (D2D1    D2D1 D2D1)
 
     find_program (DirectX_FXC_EXECUTABLE fxc
-        PATHS ${DirectX_BIN_SEARCH_PATH}
+        HINTS ${DirectX_BIN_SEARCH_PATH}
         DOC "Path to fxc.exe executable."
     )
 
