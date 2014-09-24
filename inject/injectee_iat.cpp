@@ -1072,6 +1072,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
          * - http://msdn.microsoft.com/en-us/library/ms682583
          */
 
+#if 0
         if (!USE_SHARED_MEM) {
             szNewDllName = getenv("INJECT_DLL");
             if (!szNewDllName) {
@@ -1093,6 +1094,9 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
             szNewDllName = szSharedMemCopy;
         }
+#else
+        szNewDllName = "dxgitrace.dll";
+#endif
 
         if (VERBOSITY > 0) {
             debugPrintf("inject: DLL_PROCESS_ATTACH\n");

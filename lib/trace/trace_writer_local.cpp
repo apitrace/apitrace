@@ -68,6 +68,15 @@ LocalWriter::LocalWriter() :
     os::String process = os::getProcessName();
     os::log("apitrace: loaded into %s\n", process.str());
 
+#ifdef _WIN32
+    os::log("apitrace: getenv() = %s\n", getenv("TRACE_FILE"));
+    char szEnv[MAX_PATH] = {0};
+    GetEnvironmentVariable("TRACE_FILE", szEnv, sizeof szEnv);
+    os::log("apitrace: GetEnvironmentVariable() = %s\n", szEnv);
+
+    LoadLibraryA("exchndl.dll");
+#endif
+
     // Install the signal handlers as early as possible, to prevent
     // interfering with the application's signal handling.
     os::setExceptionCallback(exceptionCallback);
@@ -87,8 +96,13 @@ LocalWriter::open(void) {
     os::String szFileName;
 
     const char *lpFileName;
-
+#if 1
     lpFileName = getenv("TRACE_FILE");
+#else
+    char _lpFileName[MAX_PATH];
+    _snprintf(_lpFileName, sizeof _lpFileName, "C:\\Temp\\dwm.%lu.trace", (unsigned long)GetCurrentProcessId());
+    lpFileName = _lpFileName;
+#endif
     if (!lpFileName) {
         static unsigned dwCounter = 0;
 
@@ -272,7 +286,11 @@ void fakeMemcpy(const void *ptr, size_t size) {
     localWriter.writePointer((uintptr_t)ptr);
     localWriter.endArg();
     localWriter.beginArg(1);
+#if 1
     localWriter.writeBlob(ptr, size);
+#else
+    localWriter.writePointer((uintptr_t)ptr);
+#endif
     localWriter.endArg();
     localWriter.beginArg(2);
     localWriter.writeUInt(size);

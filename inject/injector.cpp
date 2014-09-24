@@ -772,10 +772,14 @@ main(int argc, char *argv[])
         Sleep(1000);
     }
 
+#if 0
     char szDllPath[MAX_PATH];
     GetModuleFileNameA(NULL, szDllPath, sizeof szDllPath);
     getDirName(szDllPath);
     strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
+#else
+    const char *szDllPath = szDllName;
+#endif
 
     if (bDebug) {
         if (!attachDebugger(GetProcessId(hProcess))) {

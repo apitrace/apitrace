@@ -114,6 +114,18 @@ class D3DCommonTracer(DllTracer):
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
+        #if method.name == 'QueryInterface':
+            #if interface.name.startswith('IDXGIAdapter'):
+            #    print r'    if (riid == IID_CDXGIAdapter) {'
+            #    self.invokeMethod(interface, base, method)
+            #    print r'        return _result;'
+            #    print r'    }'
+            
+            #print r'    if (riid == IID_IWarpPrivateAPI) {'
+            #print r'        *ppvObj = NULL;'
+            #print r'        return E_NOINTERFACE;'
+            #print r'    }'
+
         if method.getArgByName('pInitialData'):
             pDesc1 = method.getArgByName('pDesc1')
             if pDesc1 is not None:

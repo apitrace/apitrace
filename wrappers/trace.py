@@ -526,6 +526,7 @@ class Tracer:
         print
         print
         print 'static std::map<void *, void *> g_WrappedObjects;'
+        print
 
     def footer(self, api):
         pass
@@ -694,25 +695,35 @@ class Tracer:
         print r'    return pvObj ? *(const void **)pvObj : NULL;'
         print r'}'
         print
-        print r'static void'
-        print r'warnVtbl(const void *pVtbl) {'
+        print r'static inline bool'
+        print r'vaToRva(void const *pVoid, char *szFileName, DWORD nSize, DWORD *pdwOffset) {'
         print r'    HMODULE hModule = 0;'
         print r'    BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |'
         print r'                                  GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,'
-        print r'                                  (LPCTSTR)pVtbl,'
+        print r'                                  (LPCTSTR)pVoid,'
         print r'                                  &hModule);'
-        print r'    assert(bRet);'
-        print r'    if (bRet) {'
-        print r'        char szModule[MAX_PATH];'
-        print r'        DWORD dwRet = GetModuleFileNameA(hModule, szModule, sizeof szModule);'
-        print r'        assert(dwRet);'
-        print r'        if (dwRet) {'
-        print r'            DWORD dwOffset = (UINT_PTR)pVtbl - (UINT_PTR)hModule;'
-        print r'            os::log("apitrace: warning: pVtbl = %p (%s!+0x%0lx)\n", pVtbl, szModule, dwOffset);'
-        print r'        }'
+        print r'    if (!bRet) {'
+        print r'        return false;'
+        print r'    }'
+        print r'    DWORD dwRet = GetModuleFileNameA(hModule, szFileName, nSize);'
+        print r'    if (!dwRet) {'
+        print r'        return false;'
+        print r'    }'
+        print r'    *pdwOffset = (DWORD)((UINT_PTR)pVoid - (UINT_PTR)hModule);'
+        print r'    return true;'
+        print r'}'
+        print
+        print r'static void'
+        print r'warnVtbl(const void *pVtbl) {'
+        print r'    char szModule[MAX_PATH];'
+        print r'    DWORD dwOffset;'
+        print r'    if (vaToRva(pVtbl, szModule, sizeof szModule, &dwOffset)) {'
+        print r'        os::log("apitrace: warning: pVtbl = %p (%s!+0x%0lx)\n", pVtbl, szModule, dwOffset);'
+        print r'    } else {'
+        print r'        os::log("apitrace: warning: pVtbl = %p (%s!+0x%0lx)\n", pVtbl, szModule, dwOffset);'
         print r'    }'
         print r'}'
-        print 
+        print
 
         map(self.declareWrapperInterface, interfaces)
 
@@ -748,6 +759,16 @@ class Tracer:
         print r'        os::log("error: %%s: unexpected virtual method %%i of instance pvObj=%%p pWrapper=%%p pVtbl=%%p\n", "%s", i, m_pInstance, this, m_pVtbl);' % interface.name
         print r'        warnVtbl(m_pVtbl);'
         print r'        warnVtbl(getVtbl(m_pInstance));'
+        print r'''
+                const void *pMethod = ((const void **)m_pVtbl)[i];
+                char szModule[MAX_PATH];
+                DWORD dwOffset;
+                if (vaToRva(pMethod, szModule, sizeof szModule, &dwOffset)) {
+                    os::log("apitrace: warning: pMethod = %p (%s!+0x%0lx)\n", pMethod, szModule, dwOffset);
+                } else {
+                    os::log("apitrace: warning: pMethod = %p \n", pMethod);
+                }
+            '''
         print r'        trace::localWriter.flush();'
         print r'        os::abort();'
         print r'    }'
@@ -968,6 +989,8 @@ class Tracer:
             functionName = self.interface.name + '::' + functionName
             print r'        if (*%s == m_pInstance &&' % (out_name,)
             print r'            (%s)) {' % ' || '.join('%s == IID_%s' % (riid.name, iface.name) for iface in self.interface.iterBases())
+            #print r'        if (*%s == m_pInstance) {' % (out_name,)
+
             print r'            *%s = this;' % (out_name,)
             print r'        }'
             else_ = 'else '
