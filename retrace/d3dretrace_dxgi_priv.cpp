@@ -61,15 +61,23 @@ class CDXGISwapChainDWM : public IDXGISwapChainDWM
 {
 protected:
     IDXGISwapChain *m_pSwapChain;
+    IDXGIOutput *m_pOutput;
 
     ~CDXGISwapChainDWM() {
         m_pSwapChain->SetFullscreenState(FALSE, NULL);
+        m_pOutput->Release();
     }
 
 public:
-    CDXGISwapChainDWM(IDXGISwapChain *pSwapChain) :
-        m_pSwapChain(pSwapChain)
-    {}
+    CDXGISwapChainDWM(IDXGISwapChain *pSwapChain, IDXGIOutput *pOutput) :
+        m_pSwapChain(pSwapChain),
+        m_pOutput(pOutput)
+    {
+        m_pOutput->AddRef();
+        if (!retrace::forceWindowed) {
+            pSwapChain->SetFullscreenState(TRUE, pOutput);
+        }
+    }
 
     /*
      * IUnknown
@@ -167,7 +175,7 @@ public:
 
     HRESULT STDMETHODCALLTYPE
     GetContainingOutput(IDXGIOutput **ppOutput) {
-        return m_pSwapChain->GetContainingOutput(ppOutput);
+        return GetInterface(m_pOutput, (void **) ppOutput);
     }
 
     HRESULT STDMETHODCALLTYPE
@@ -229,6 +237,7 @@ public:
     HRESULT STDMETHODCALLTYPE
     CreateSwapChain(IUnknown *pDevice, DXGI_SWAP_CHAIN_DESC *pDesc, IDXGIOutput *pOutput, IDXGISwapChainDWM **ppSwapChain)
     {
+        assert(pOutput);
         IDXGISwapChain *pSwapChain = NULL;
         if (retrace::forceWindowed) {
             assert(pDesc->Windowed);
@@ -237,10 +246,7 @@ public:
         pDesc->OutputWindow = d3dretrace::createWindow(pDesc->BufferDesc.Width, pDesc->BufferDesc.Height);
         HRESULT hr = m_pFactory->CreateSwapChain(pDevice, pDesc, &pSwapChain);
         if (SUCCEEDED(hr)) {
-            if (!retrace::forceWindowed) {
-                pSwapChain->SetFullscreenState(TRUE, pOutput);
-            }
-            *ppSwapChain = new CDXGISwapChainDWM(pSwapChain);
+            *ppSwapChain = new CDXGISwapChainDWM(pSwapChain, pOutput);
         }
         return hr;
     }
