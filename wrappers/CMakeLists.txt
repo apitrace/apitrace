@@ -19,7 +19,7 @@ if (WIN32)
     endif ()
 
     # ddraw.dll
-    if (DirectX_D3D_INCLUDE_DIR)
+    if (DirectX_D3D_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
         add_custom_command (
             OUTPUT ddrawtrace.cpp
@@ -50,7 +50,7 @@ if (WIN32)
     endif ()
 
     # d3d8.dll
-    if (DirectX_D3D8_INCLUDE_DIR AND DirectX_D3D9_INCLUDE_DIR)
+    if (DirectX_D3D8_INCLUDE_FOUND AND DirectX_D3D9_INCLUDE_DIR)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8trace.cpp
@@ -85,7 +85,7 @@ if (WIN32)
     endif ()
 
     # d3d9.dll
-    if (DirectX_D3D9_INCLUDE_DIR)
+    if (DirectX_D3D9_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d9trace.cpp
@@ -121,7 +121,7 @@ if (WIN32)
     endif ()
 
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
-    if (DirectX_D3D11_1_INCLUDE_DIR)
+    if (DirectX_D3D11_1_INCLUDE_FOUND)
         set (DXGITRACE_DEF ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.def)
         file (WRITE  ${DXGITRACE_DEF} "EXPORTS\n")
         file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory\n")
@@ -175,7 +175,7 @@ if (WIN32)
     endif ()
 
     # d2d1.dll, dwrite.dll
-    if (DirectX_D2D1_INCLUDE_DIR)
+    if (DirectX_D2D1_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D2D1_INCLUDE_DIR})
 
         add_custom_command (
@@ -206,7 +206,7 @@ if (WIN32)
             PROPERTIES PREFIX ""
         )
         install (TARGETS d2d1trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
-    endif (DirectX_D2D1_INCLUDE_DIR)
+    endif (DirectX_D2D1_INCLUDE_FOUND)
 
     # opengl32.dll
     add_custom_command (

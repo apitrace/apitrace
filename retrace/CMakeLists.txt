@@ -174,7 +174,7 @@ if (ENABLE_EGL AND (ANDROID OR ENABLE_WAFFLE) AND Waffle_FOUND)
 endif ()
 
 if (WIN32)
-    if (DirectX_D3D8_INCLUDE_DIR) 
+    if (DirectX_D3D8_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
         set (HAVE_D3D8 1)
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
@@ -199,7 +199,7 @@ if (WIN32)
             ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    if (DirectX_D3D9_INCLUDE_DIR)
+    if (DirectX_D3D9_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR})
         set (HAVE_D3D9 1)
     else ()
@@ -220,7 +220,7 @@ if (WIN32)
             ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )
 
-    if (DirectX_D3D11_1_INCLUDE_DIR)
+    if (DirectX_D3D11_1_INCLUDE_FOUND)
         add_definitions (-DHAVE_DXGI)
         include_directories (BEFORE SYSTEM
             ${DirectX_D3D11_1_INCLUDE_DIR}
@@ -275,7 +275,7 @@ if (WIN32)
         retrace_common
         d3dhelpers
     )
-    if (DirectX_D3D11_1_INCLUDE_DIR)
+    if (DirectX_D3D11_1_INCLUDE_FOUND)
         target_link_libraries (d3dretrace directxtex)
     endif ()
 

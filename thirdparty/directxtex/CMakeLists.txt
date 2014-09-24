@@ -1,6 +1,6 @@
 include (CheckIncludeFileCXX)
 
-if (DirectX_D3D11_INCLUDE_DIR)
+if (DirectX_D3D11_INCLUDE_FOUND)
 
     include_directories (BEFORE
         ${DirectX_D3D11_INCLUDE_DIR}
