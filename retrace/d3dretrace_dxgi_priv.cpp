@@ -475,6 +475,124 @@ public:
 };
 
 
+/*
+ * Dummy implementation of IUnknown.
+ *
+ * Used for internal objects for which we care nothing more than IUnknown
+ * methods.
+ */
+class CDummy : public IUnknown
+{
+private:
+    IID m_iid;
+    IUnknown *m_pUnknown;
+
+    ~CDummy() {
+    }
+
+public:
+    CDummy(REFIID riid, IUnknown *pUnknown) :
+        m_iid(riid),
+        m_pUnknown(pUnknown)
+    {}
+
+    /*
+     * IUnknown
+     */
+
+    HRESULT STDMETHODCALLTYPE
+    QueryInterface(REFIID riid, void **ppvObj)
+    {
+        if (riid == m_iid) {
+            return GetInterface(this, ppvObj);
+        }
+        return m_pUnknown->QueryInterface(riid, ppvObj);
+    }
+
+    ULONG STDMETHODCALLTYPE
+    AddRef(void) {
+        return m_pUnknown->AddRef();
+    }
+
+    ULONG STDMETHODCALLTYPE
+    Release(void) {
+        ULONG cRef = m_pUnknown->Release();
+        if (cRef == 0) {
+            delete this;
+        }
+        return cRef;
+    }
+
+    void
+    DummyMethod(UINT MethodIndex) const {
+        std::cerr << retrace::callNo << ": error: unexpected virtual method " << MethodIndex << "\n";
+        os::abort();
+    }
+
+    virtual void DummyMethod03(void) const { DummyMethod( 3); }
+    virtual void DummyMethod04(void) const { DummyMethod( 4); }
+    virtual void DummyMethod05(void) const { DummyMethod( 5); }
+    virtual void DummyMethod06(void) const { DummyMethod( 6); }
+    virtual void DummyMethod07(void) const { DummyMethod( 7); }
+    virtual void DummyMethod08(void) const { DummyMethod( 8); }
+    virtual void DummyMethod09(void) const { DummyMethod( 9); }
+    virtual void DummyMethod10(void) const { DummyMethod(10); }
+    virtual void DummyMethod11(void) const { DummyMethod(11); }
+    virtual void DummyMethod12(void) const { DummyMethod(12); }
+    virtual void DummyMethod13(void) const { DummyMethod(13); }
+    virtual void DummyMethod14(void) const { DummyMethod(14); }
+    virtual void DummyMethod15(void) const { DummyMethod(15); }
+    virtual void DummyMethod16(void) const { DummyMethod(16); }
+    virtual void DummyMethod17(void) const { DummyMethod(17); }
+    virtual void DummyMethod18(void) const { DummyMethod(18); }
+    virtual void DummyMethod19(void) const { DummyMethod(19); }
+    virtual void DummyMethod20(void) const { DummyMethod(20); }
+    virtual void DummyMethod21(void) const { DummyMethod(21); }
+    virtual void DummyMethod22(void) const { DummyMethod(22); }
+    virtual void DummyMethod23(void) const { DummyMethod(23); }
+    virtual void DummyMethod24(void) const { DummyMethod(24); }
+    virtual void DummyMethod25(void) const { DummyMethod(25); }
+    virtual void DummyMethod26(void) const { DummyMethod(26); }
+    virtual void DummyMethod27(void) const { DummyMethod(27); }
+    virtual void DummyMethod28(void) const { DummyMethod(28); }
+    virtual void DummyMethod29(void) const { DummyMethod(29); }
+    virtual void DummyMethod30(void) const { DummyMethod(30); }
+    virtual void DummyMethod31(void) const { DummyMethod(31); }
+    virtual void DummyMethod32(void) const { DummyMethod(32); }
+    virtual void DummyMethod33(void) const { DummyMethod(33); }
+    virtual void DummyMethod34(void) const { DummyMethod(34); }
+    virtual void DummyMethod35(void) const { DummyMethod(35); }
+    virtual void DummyMethod36(void) const { DummyMethod(36); }
+    virtual void DummyMethod37(void) const { DummyMethod(37); }
+    virtual void DummyMethod38(void) const { DummyMethod(38); }
+    virtual void DummyMethod39(void) const { DummyMethod(39); }
+    virtual void DummyMethod40(void) const { DummyMethod(40); }
+    virtual void DummyMethod41(void) const { DummyMethod(41); }
+    virtual void DummyMethod42(void) const { DummyMethod(42); }
+    virtual void DummyMethod43(void) const { DummyMethod(43); }
+    virtual void DummyMethod44(void) const { DummyMethod(44); }
+    virtual void DummyMethod45(void) const { DummyMethod(45); }
+    virtual void DummyMethod46(void) const { DummyMethod(46); }
+    virtual void DummyMethod47(void) const { DummyMethod(47); }
+    virtual void DummyMethod48(void) const { DummyMethod(48); }
+    virtual void DummyMethod49(void) const { DummyMethod(49); }
+    virtual void DummyMethod50(void) const { DummyMethod(50); }
+    virtual void DummyMethod51(void) const { DummyMethod(51); }
+    virtual void DummyMethod52(void) const { DummyMethod(52); }
+    virtual void DummyMethod53(void) const { DummyMethod(53); }
+    virtual void DummyMethod54(void) const { DummyMethod(54); }
+    virtual void DummyMethod55(void) const { DummyMethod(55); }
+    virtual void DummyMethod56(void) const { DummyMethod(56); }
+    virtual void DummyMethod57(void) const { DummyMethod(57); }
+    virtual void DummyMethod58(void) const { DummyMethod(58); }
+    virtual void DummyMethod59(void) const { DummyMethod(59); }
+    virtual void DummyMethod60(void) const { DummyMethod(60); }
+    virtual void DummyMethod61(void) const { DummyMethod(61); }
+    virtual void DummyMethod62(void) const { DummyMethod(62); }
+    virtual void DummyMethod63(void) const { DummyMethod(63); }
+};
+
+
 BOOL
 overrideQueryInterface(IUnknown *pUnknown, REFIID riid, void **ppvObj, HRESULT *pResult)
 {
@@ -513,6 +631,16 @@ overrideQueryInterface(IUnknown *pUnknown, REFIID riid, void **ppvObj, HRESULT *
             *pResult = S_OK;
             return TRUE;
         }
+    }
+
+    if (riid == IID_IWarpPrivateAPI ||
+        riid == IID_CDXGIAdapter ||
+        riid == IID_ID3D11PartnerDevice ||
+        riid == IID_ID2DPrivateInfo) {
+        pUnknown->AddRef();
+        *ppvObj = new CDummy(riid, pUnknown);
+        *pResult = S_OK;
+        return TRUE;
     }
 
     return FALSE;
