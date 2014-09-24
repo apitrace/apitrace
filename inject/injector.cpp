@@ -48,6 +48,7 @@
 #include <psapi.h>
 #include <dwmapi.h>
 #include <tlhelp32.h>
+#include <shlobj.h>
 
 #include <getopt.h>
 
@@ -56,6 +57,7 @@
 #endif
 
 #include "os_version.hpp"
+#include "uac.hpp"
 #include "devcon.hpp"
 #include "inject.h"
 
@@ -546,6 +548,58 @@ main(int argc, char *argv[])
         return 1;
     }
 
+    // http://support.microsoft.com/kb/981778
+    // http://code.msdn.microsoft.com/windowsapps/CppUACSelfElevation-5bfc52dd
+    fprintf(stderr, "IsUserInAdminGroup = %i\n", IsUserInAdminGroup());
+    fprintf(stderr, "IsRunAsAdmin = %i\n", IsRunAsAdmin());
+    fprintf(stderr, "IsProcessElevated = %i\n", IsProcessElevated());
+    if (0) {
+        // Elevate the process.
+        char szPath[MAX_PATH];
+        GetModuleFileNameA(NULL, szPath, sizeof szPath);
+
+        std::string commandLine;
+        char sep = 0;
+        for (int i = 1; i < argc; ++i) {
+            const char *arg = argv[i];
+
+            if (sep) {
+                commandLine.push_back(sep);
+            }
+
+            if (needsQuote(arg)) {
+                quoteArg(commandLine, arg);
+            } else {
+                commandLine.append(arg);
+            }
+
+            sep = ' ';
+        }
+
+        // Launch itself as administrator.
+        SHELLEXECUTEINFOA sei;
+        ZeroMemory(&sei, sizeof sei);
+        sei.cbSize = sizeof sei;
+        sei.fMask = SEE_MASK_FLAG_DDEWAIT // SEE_MASK_NOASYNC
+                  | SEE_MASK_FLAG_NO_UI
+                  | SEE_MASK_NO_CONSOLE
+                  ;
+        sei.lpVerb = "runas";
+        sei.lpFile = szPath;
+        sei.lpParameters = commandLine.c_str();
+        sei.nShow = SW_NORMAL;
+        sei.nShow = SW_SHOWNORMAL;
+
+        if (!ShellExecuteExA(&sei)) {
+            logLastError("ShellExecuteExA failed");
+            return 1;
+        }
+
+        return 0;
+    } else {
+        atexit((void (*)(void)) getchar);
+    }
+
     HANDLE hSemaphore = NULL;
     if (!USE_SHARED_MEM) {
         SetEnvironmentVariableA("INJECT_DLL", szDll);
@@ -640,6 +694,17 @@ main(int argc, char *argv[])
         if (dwRet &&
             stricmp(getBaseName(szProcess), "dwm.exe") == 0) {
             bAttachDwm = TRUE;
+        }
+
+        HMODULE hModule = LoadLibraryA("user32");
+        assert(hModule);
+        if (hModule) {
+            typedef BOOL (WINAPI *PFNISIMMERSIVEPROCESS)(HANDLE hProcess);
+            PFNISIMMERSIVEPROCESS IsImmersiveProcess = (PFNISIMMERSIVEPROCESS)GetProcAddress(hModule, "IsImmersiveProcess");
+            if (IsImmersiveProcess) {
+                fprintf(stderr, "IsImmersiveProcess = %i\n", IsImmersiveProcess(hProcess));
+            }
+            FreeLibrary(hModule);
         }
     } else {
         std::string commandLine;
