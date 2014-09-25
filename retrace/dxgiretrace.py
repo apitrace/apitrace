@@ -101,6 +101,24 @@ class D3DRetracer(Retracer):
                 # Force driver
                 self.forceDriver('D3D_DRIVER_TYPE')
 
+                # Match the feature level that was obtained when tracing.
+                # Otherwise bad things can happen, particularly with
+                # ID3D11Device1::CreateDeviceContextState, if the feature level
+                # doesn't match.
+                #
+                # XXX: Another alternative would be to somehow override the
+                # feature level passed to
+                # ID3D11Device1::CreateDeviceContextState.  Not clear which
+                # would be preferable.
+                pFeatureLevelArg = function.getArgByName('pFeatureLevel')
+                featureLevelType = pFeatureLevelArg.type.type
+                print r'    %s ReturnedFeatureLevel;' % featureLevelType
+                print r'    if (pFeatureLevel) {'
+                print r'        ReturnedFeatureLevel = static_cast<%s>(call.arg(%u)[0].toSInt());' % (featureLevelType, pFeatureLevelArg.index)
+                print r'        pFeatureLevels = &ReturnedFeatureLevel;'
+                print r'        FeatureLevels = 1;'
+                print r'    }'
+
         Retracer.invokeFunction(self, function)
 
     def checkResult(self, interface, methodOrFunction):
