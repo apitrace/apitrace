@@ -1,5 +1,7 @@
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+include_directories (${CMAKE_SOURCE_DIR}/thirdparty/devcon)
+
 add_library (injectee MODULE
     injectee.cpp
 )
@@ -15,6 +17,9 @@ add_executable (injector
 set_target_properties (injector PROPERTIES
     OUTPUT_NAME inject
 )
-target_link_libraries (injector psapi)
+target_link_libraries (injector
+    devcon
+    psapi
+)
 install (TARGETS injector RUNTIME DESTINATION bin)
 install_pdb (injector DESTINATION bin)

@@ -54,6 +54,7 @@
 #endif
 
 #include "os_version.hpp"
+#include "devcon.hpp"
 #include "inject.h"
 
 
@@ -199,12 +200,7 @@ restartDwmComposition(HANDLE hProcess)
         // Windows 8 ignores DwmEnableComposition(DWM_EC_DISABLECOMPOSITION).
         // It is however possible to force DWM to restart by restarting the
         // display device via the devcon utility 
-        // http://code.msdn.microsoft.com/windowshardware/DevCon-Sample-4e95d71c
-        // http://support.microsoft.com/kb/311272
-        // TODO:
-        if (system("devcon restart =DISPLAY") == -1) {
-            fprintf(stderr, "run `devcon restart =DISPLAY` now\n");
-        }
+        devconRestart(DEVCON_CLASS_DISPLAY);
     } else {
 
         BOOL fEnabled = FALSE;

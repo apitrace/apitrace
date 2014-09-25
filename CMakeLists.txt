@@ -332,6 +332,7 @@ endif ()
 
 if (WIN32)
     add_subdirectory (thirdparty/directxtex)
+    add_subdirectory (thirdparty/devcon)
 endif ()
 
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
