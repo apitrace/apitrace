@@ -126,6 +126,13 @@ class D3DCommonTracer(DllTracer):
             #print r'        return E_NOINTERFACE;'
             #print r'    }'
 
+        # Replace ID3D1?Device::OpenSharedResource* calls with fake CreateTexture calls.
+        if method.name.startswith('OpenSharedResource'):
+            self.invokeMethod(interface, base, method)
+            print r'    _fake_OpenSharedResource(_this, ReturnedInterface, ppResource, _result);'
+            print r'    wrapIID("%s::%s", ReturnedInterface, ppResource);' % (interface.name, method.name)
+            return
+
         if method.getArgByName('pInitialData'):
             pDesc1 = method.getArgByName('pDesc1')
             if pDesc1 is not None:
@@ -221,6 +228,12 @@ if __name__ == '__main__':
     print
     print r'#include "dxgitrace.hpp"'
     print
+    print r'''
+static void
+_fake_OpenSharedResource(ID3D10Device *pDevice, REFIID ReturnedInterface, void **ppResource, HRESULT _result);
+static void
+_fake_OpenSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void **ppResource, HRESULT _result);
+    '''
 
     api = API()
     api.addModule(dxgi.dxgi)
@@ -232,3 +245,293 @@ if __name__ == '__main__':
 
     tracer = D3DCommonTracer()
     tracer.traceApi(api)
+
+print r'''
+
+static void
+_fake_QueryInterface(ID3D11Device *_this, REFIID riid, void * * ppvObj, HRESULT _result = S_OK) {
+    static const char * _args[3] = {"this", "riid", "ppvObj"};
+    static const trace::FunctionSig _sig = {10003, "ID3D11Device::QueryInterface", 3, _args};
+    unsigned _call = trace::localWriter.beginEnter(&_sig, true);
+    trace::localWriter.beginArg(0);
+    trace::localWriter.writePointer((uintptr_t)_this);
+    trace::localWriter.endArg();
+    trace::localWriter.beginArg(1);
+    trace::localWriter.beginStruct(&_structGUID_sig);
+    trace::localWriter.writeUInt(riid.Data1);
+    trace::localWriter.writeUInt(riid.Data2);
+    trace::localWriter.writeUInt(riid.Data3);
+    trace::localWriter.beginArray(8);
+    for (size_t i = 0; i < 8; ++i) {
+        trace::localWriter.beginElement();
+        trace::localWriter.writeUInt(riid.Data4[i]);
+        trace::localWriter.endElement();
+    }
+    trace::localWriter.endArray();
+    trace::localWriter.endStruct();
+    trace::localWriter.endArg();
+    trace::localWriter.endEnter();
+    trace::localWriter.beginLeave(_call);
+    trace::localWriter.beginArg(2);
+    if (ppvObj) {
+        trace::localWriter.beginArray(1);
+        trace::localWriter.beginElement();
+        if (SUCCEEDED(_result)) {
+            trace::localWriter.writePointer((uintptr_t)*ppvObj);
+        } else {
+            trace::localWriter.writeNull();
+        }
+        trace::localWriter.endElement();
+        trace::localWriter.endArray();
+    } else {
+        trace::localWriter.writeNull();
+    }
+    trace::localWriter.endArg();
+    trace::localWriter.beginReturn();
+    trace::localWriter.writeEnum(&_enumHRESULT_sig, _result);
+    trace::localWriter.endReturn();
+    trace::localWriter.endLeave();
+}
+
+
+static void
+_fake_OpenSharedResource(ID3D10Device *pDevice, REFIID ReturnedInterface, void ** ppResource, HRESULT _result) {
+    HRESULT hr;
+
+    if (ReturnedInterface == IID_ID3D10Texture2D) {
+        ID3D10Resource *pResource = static_cast<ID3D10Resource *>(*ppResource);
+        ID3D10Texture2D *pTexture2D = static_cast<ID3D10Texture2D *>(pResource);
+
+        D3D10_TEXTURE2D_DESC Desc;
+        pTexture2D->GetDesc(&Desc);
+        assert(Desc.MipLevels == 1);
+        assert(Desc.ArraySize == 1);
+        assert(Desc.SampleDesc.Count == 1);
+        assert(Desc.SampleDesc.Quality == 0);
+        Desc.MiscFlags &= ~(D3D10_RESOURCE_MISC_SHARED|D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX);
+
+        D3D10_SUBRESOURCE_DATA InitialData;
+        D3D10_TEXTURE2D_DESC StagingDesc = Desc;
+        StagingDesc.Usage = D3D10_USAGE_STAGING;
+        StagingDesc.BindFlags = 0;
+        StagingDesc.CPUAccessFlags = D3D10_CPU_ACCESS_READ;
+        StagingDesc.MiscFlags &= D3D10_RESOURCE_MISC_TEXTURECUBE;
+        com_ptr<ID3D10Texture2D> pStagingResource;
+        hr = pDevice->CreateTexture2D(&StagingDesc, NULL, &pStagingResource);
+        assert(SUCCEEDED(hr));
+        pDevice->CopyResource(pStagingResource, pTexture2D);
+        D3D10_MAPPED_TEXTURE2D MappedTex2D;
+        hr = pStagingResource->Map(0, D3D10_MAP_READ, 0, &MappedTex2D);
+        assert(SUCCEEDED(hr));
+        InitialData.pSysMem = MappedTex2D.pData;
+        InitialData.SysMemPitch = MappedTex2D.RowPitch;
+        InitialData.SysMemSlicePitch = 0;
+
+        const D3D10_TEXTURE2D_DESC * pDesc = &Desc;
+        const D3D10_SUBRESOURCE_DATA * pInitialData = &InitialData;
+        ID3D10Texture2D **ppTexture2D = &pTexture2D;
+
+        // FIXME: Use the real signature.
+        static const char * _args[4] = {"this", "pDesc", "pInitialData", "ppTexture2D"};
+        static const trace::FunctionSig _sig = {10000, "ID3D10Device::CreateTexture2D", 4, _args};
+        unsigned _call = trace::localWriter.beginEnter(&_sig, true);
+
+        trace::localWriter.beginArg(0);
+        trace::localWriter.writePointer((uintptr_t)pDevice);
+        trace::localWriter.endArg();
+
+        trace::localWriter.beginArg(1);
+        trace::localWriter.beginArray(1);
+        trace::localWriter.beginElement();
+        trace::localWriter.beginStruct(&_structD3D10_TEXTURE2D_DESC_sig);
+        trace::localWriter.writeUInt(pDesc->Width);
+        trace::localWriter.writeUInt(pDesc->Height);
+        trace::localWriter.writeUInt(pDesc->MipLevels);
+        trace::localWriter.writeUInt(pDesc->ArraySize);
+        trace::localWriter.writeEnum(&_enumDXGI_FORMAT_sig, pDesc->Format);
+        trace::localWriter.beginStruct(&_structDXGI_SAMPLE_DESC_sig);
+        trace::localWriter.writeUInt(pDesc->SampleDesc.Count);
+        trace::localWriter.writeUInt(pDesc->SampleDesc.Quality);
+        trace::localWriter.endStruct();
+        trace::localWriter.writeEnum(&_enumD3D10_USAGE_sig, pDesc->Usage);
+        trace::localWriter.writeUInt(pDesc->BindFlags);
+        trace::localWriter.writeUInt(pDesc->CPUAccessFlags);
+        trace::localWriter.writeUInt(pDesc->MiscFlags);
+        trace::localWriter.endStruct();
+        trace::localWriter.endElement();
+        trace::localWriter.endArray();
+        trace::localWriter.endArg();
+
+        trace::localWriter.beginArg(2);
+        if (pInitialData) {
+            UINT NumSubResources = _getNumSubResources(pDesc);
+            trace::localWriter.beginArray(NumSubResources);
+            for (UINT SubResource = 0; SubResource < NumSubResources; ++SubResource) {
+                trace::localWriter.beginElement();
+                trace::localWriter.beginStruct(&_structD3D10_SUBRESOURCE_DATA_sig);
+                trace::localWriter.writeBlob(pInitialData[SubResource].pSysMem, _calcSubresourceSize(pDesc, SubResource, pInitialData[SubResource].SysMemPitch, pInitialData[SubResource].SysMemSlicePitch));
+                trace::localWriter.writeUInt(pInitialData[SubResource].SysMemPitch);
+                trace::localWriter.writeUInt(pInitialData[SubResource].SysMemSlicePitch);
+                trace::localWriter.endStruct();
+                trace::localWriter.endElement();
+            }
+            trace::localWriter.endArray();
+        } else {
+            trace::localWriter.writeNull();
+        }
+        trace::localWriter.endArg();
+
+        trace::localWriter.endEnter();
+
+        trace::localWriter.beginLeave(_call);
+
+        trace::localWriter.beginArg(3);
+        trace::localWriter.beginArray(1);
+        trace::localWriter.beginElement();
+        trace::localWriter.writePointer((uintptr_t)*ppTexture2D);
+        trace::localWriter.endElement();
+        trace::localWriter.endArray();
+        trace::localWriter.endArg();
+
+        trace::localWriter.beginReturn();
+        trace::localWriter.writeEnum(&_enumHRESULT_sig, _result);
+        trace::localWriter.endReturn();
+
+        trace::localWriter.endLeave();
+
+        pStagingResource->Unmap(0);
+
+        return;
+    }
+
+    os::log("apitrace: warning: unsupported IID in OpenSharedResource\n");
+}
+
+static void
+_fake_OpenSharedResource(ID3D11Device *pDevice, REFIID ReturnedInterface, void ** ppResource, HRESULT _result) {
+    HRESULT hr;
+
+    if (ReturnedInterface == IID_ID3D10Texture2D) {
+        ID3D10Device *pDevice10 = NULL;
+        hr = pDevice->QueryInterface(IID_ID3D10Device, (void **) &pDevice10);
+        assert(SUCCEEDED(hr));
+        if (SUCCEEDED(hr)) {
+            _fake_QueryInterface(pDevice, IID_ID3D10Device, (void **) &pDevice10, hr);
+            _fake_OpenSharedResource(pDevice10, ReturnedInterface, ppResource, _result);
+            pDevice10->Release();
+        }
+        return;
+    }
+
+    if (ReturnedInterface == IID_ID3D11Texture2D) {
+        com_ptr<ID3D11DeviceContext> pDeviceContext;
+        pDevice->GetImmediateContext(&pDeviceContext);
+        assert(pDeviceContext);
+        ID3D11Resource *pResource = static_cast<ID3D11Resource *>(*ppResource);
+        ID3D11Texture2D *pTexture2D = static_cast<ID3D11Texture2D *>(pResource);
+
+        D3D11_TEXTURE2D_DESC Desc;
+        pTexture2D->GetDesc(&Desc);
+        assert(Desc.MipLevels == 1);
+        assert(Desc.ArraySize == 1);
+        assert(Desc.SampleDesc.Count == 1);
+        assert(Desc.SampleDesc.Quality == 0);
+        Desc.MiscFlags &= ~(D3D11_RESOURCE_MISC_SHARED|D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX|D3D11_RESOURCE_MISC_SHARED_NTHANDLE);
+
+        D3D11_SUBRESOURCE_DATA InitialData;
+        D3D11_TEXTURE2D_DESC StagingDesc = Desc;
+        StagingDesc.Usage = D3D11_USAGE_STAGING;
+        StagingDesc.BindFlags = 0;
+        StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        StagingDesc.MiscFlags &= D3D11_RESOURCE_MISC_TEXTURECUBE;
+        com_ptr<ID3D11Texture2D> pStagingResource;
+        hr = pDevice->CreateTexture2D(&StagingDesc, NULL, &pStagingResource);
+        assert(SUCCEEDED(hr));
+        pDeviceContext->CopyResource(pStagingResource, pTexture2D);
+        D3D11_MAPPED_SUBRESOURCE MappedSubResource;
+        hr = pDeviceContext->Map(pStagingResource, 0, D3D11_MAP_READ, 0, &MappedSubResource);
+        assert(SUCCEEDED(hr));
+        InitialData.pSysMem = MappedSubResource.pData;
+        InitialData.SysMemPitch = MappedSubResource.RowPitch;
+        InitialData.SysMemSlicePitch = MappedSubResource.DepthPitch;
+
+        const D3D11_TEXTURE2D_DESC * pDesc = &Desc;
+        const D3D11_SUBRESOURCE_DATA * pInitialData = &InitialData;
+        ID3D11Texture2D **ppTexture2D = &pTexture2D;
+
+        // FIXME: Use the real signature.
+        static const char * _args[4] = {"this", "pDesc", "pInitialData", "ppTexture2D"};
+        static const trace::FunctionSig _sig = {10001, "ID3D11Device::CreateTexture2D", 4, _args};
+        unsigned _call = trace::localWriter.beginEnter(&_sig, true);
+
+        trace::localWriter.beginArg(0);
+        trace::localWriter.writePointer((uintptr_t)pDevice);
+        trace::localWriter.endArg();
+
+        trace::localWriter.beginArg(1);
+        trace::localWriter.beginArray(1);
+        trace::localWriter.beginElement();
+        trace::localWriter.beginStruct(&_structD3D11_TEXTURE2D_DESC_sig);
+        trace::localWriter.writeUInt(pDesc->Width);
+        trace::localWriter.writeUInt(pDesc->Height);
+        trace::localWriter.writeUInt(pDesc->MipLevels);
+        trace::localWriter.writeUInt(pDesc->ArraySize);
+        trace::localWriter.writeEnum(&_enumDXGI_FORMAT_sig, pDesc->Format);
+        trace::localWriter.beginStruct(&_structDXGI_SAMPLE_DESC_sig);
+        trace::localWriter.writeUInt(pDesc->SampleDesc.Count);
+        trace::localWriter.writeUInt(pDesc->SampleDesc.Quality);
+        trace::localWriter.endStruct();
+        trace::localWriter.writeEnum(&_enumD3D11_USAGE_sig, pDesc->Usage);
+        trace::localWriter.writeUInt(pDesc->BindFlags);
+        trace::localWriter.writeUInt(pDesc->CPUAccessFlags);
+        trace::localWriter.writeUInt(pDesc->MiscFlags);
+        trace::localWriter.endStruct();
+        trace::localWriter.endElement();
+        trace::localWriter.endArray();
+        trace::localWriter.endArg();
+
+        trace::localWriter.beginArg(2);
+        if (pInitialData) {
+            UINT NumSubResources = _getNumSubResources(pDesc);
+            trace::localWriter.beginArray(NumSubResources);
+            for (UINT SubResource = 0; SubResource < NumSubResources; ++SubResource) {
+                trace::localWriter.beginElement();
+                trace::localWriter.beginStruct(&_structD3D11_SUBRESOURCE_DATA_sig);
+                trace::localWriter.writeBlob(pInitialData[SubResource].pSysMem, _calcSubresourceSize(pDesc, SubResource, pInitialData[SubResource].SysMemPitch, pInitialData[SubResource].SysMemSlicePitch));
+                trace::localWriter.writeUInt(pInitialData[SubResource].SysMemPitch);
+                trace::localWriter.writeUInt(pInitialData[SubResource].SysMemSlicePitch);
+                trace::localWriter.endStruct();
+                trace::localWriter.endElement();
+            }
+            trace::localWriter.endArray();
+        } else {
+            trace::localWriter.writeNull();
+        }
+        trace::localWriter.endArg();
+
+        trace::localWriter.endEnter();
+
+        trace::localWriter.beginLeave(_call);
+
+        trace::localWriter.beginArg(3);
+        trace::localWriter.beginArray(1);
+        trace::localWriter.beginElement();
+        trace::localWriter.writePointer((uintptr_t)*ppTexture2D);
+        trace::localWriter.endElement();
+        trace::localWriter.endArray();
+        trace::localWriter.endArg();
+
+        trace::localWriter.beginReturn();
+        trace::localWriter.writeEnum(&_enumHRESULT_sig, _result);
+        trace::localWriter.endReturn();
+
+        trace::localWriter.endLeave();
+
+        pDeviceContext->Unmap(pStagingResource, 0);
+        return;
+    }
+
+    os::log("apitrace: warning: unsupported IID in OpenSharedResource\n");
+}
+'''
+
