@@ -99,6 +99,7 @@ and the call number is implied for the enter event.
           | 0x0c struct_sig value*  // structure
           | 0x0d uint               // opaque pointer
           | 0x0e value value        // human-machine representation
+          | 0x0f wstring            // wide character string value (zero terminator implied)
 
     enum_sig = id count (name value)+  // first occurrence
              | id                      // follow-on occurrences
@@ -111,6 +112,8 @@ and the call number is implied for the enter event.
 
     name = string
     member_name = string
+
+    wstring = count uint*
 
 ### Backtraces ###
 

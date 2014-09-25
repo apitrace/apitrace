@@ -253,6 +253,16 @@ public:
         m_editedValue = new trace::String(newString);
     }
 
+    virtual void visit(trace::WString *node)
+    {
+        QString str = m_variant.toString();
+        size_t len = str.length();
+        wchar_t *newString = new wchar_t[len + 1];
+        str.toWCharArray(newString);
+        newString[len] = 0;
+        m_editedValue = new trace::WString(newString);
+    }
+
     virtual void visit(trace::Enum *e)
     {
         m_editedValue = e;

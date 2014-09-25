@@ -1,3 +1,8 @@
+if (MSVC)
+    # http://qt-project.org/forums/viewthread/23714
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:wchar_t-")
+endif ()
+
 # Include the cmake file needed to use qt4
 include( ${QT_USE_FILE} )
 

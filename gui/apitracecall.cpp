@@ -188,6 +188,11 @@ void VariantVisitor::visit(trace::String *node)
     m_variant = QVariant(QString::fromLatin1(node->value));
 }
 
+void VariantVisitor::visit(trace::WString *node)
+{
+    m_variant = QVariant(QString::fromWCharArray(node->value));
+}
+
 void VariantVisitor::visit(trace::Enum *e)
 {
     ApiTraceEnumSignature *sig = 0;

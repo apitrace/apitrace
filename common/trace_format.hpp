@@ -67,6 +67,7 @@ enum Type {
     TYPE_STRUCT,
     TYPE_OPAQUE,
     TYPE_REPR,
+    TYPE_WSTRING,
 };
 
 enum BacktraceDetail {

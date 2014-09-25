@@ -106,6 +106,9 @@ public:
     void visit(String *node) {
     }
 
+    void visit(WString *node) {
+    }
+
     void visit(Enum *node) {
         const EnumValue *it = node->lookup();
         if (it) {

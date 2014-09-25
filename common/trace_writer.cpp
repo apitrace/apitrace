@@ -283,8 +283,12 @@ void Writer::writeWString(const wchar_t *str) {
         Writer::writeNull();
         return;
     }
-    _writeByte(trace::TYPE_STRING);
-    _writeString("<wide-string>");
+    _writeByte(trace::TYPE_WSTRING);
+    size_t len = wcslen(str);
+    _writeUInt(len);
+    for (size_t i = 0; i < len; ++i) {
+        _writeUInt(str[i]);
+    }
 }
 
 void Writer::writeBlob(const void *data, size_t size) {

@@ -211,6 +211,34 @@ public:
         writeString(s.c_str(), s.size());
     }
 
+    inline void writeWString(const wchar_t *s, size_t length) {
+        if (!s) {
+            writeNone();
+            return;
+        }
+
+        /* FIXME: emit UTF-8 */
+        os.put(BINUNICODE);
+        putInt32(length);
+        for (size_t i = 0; i < length; ++i) {
+            wchar_t wc = s[i];
+            char c = wc >= 0 && wc < 0x80 ? (char)wc : '?';
+            os.put(c);
+        }
+
+        os.put(BINPUT);
+        os.put(1);
+    }
+
+    inline void writeWString(const wchar_t *s) {
+        if (!s) {
+            writeNone();
+            return;
+        }
+
+        writeWString(s, wcslen(s));
+    }
+
     inline void writeNone(void) {
         os.put(NONE);
     }

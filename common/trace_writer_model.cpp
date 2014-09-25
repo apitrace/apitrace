@@ -68,6 +68,10 @@ public:
         writer.writeString(node->value);
     }
 
+    void visit(WString *node) {
+        writer.writeWString(node->value);
+    }
+
     void visit(Enum *node) {
         writer.writeEnum(node->sig, node->value);
     }

@@ -93,16 +93,17 @@ public:
         os.precision(oldPrecision);
     }
 
-    void visit(String *node) {
+    template< typename C >
+    void visitString(const C *value) {
         os << literal << "\"";
-        for (const char *it = node->value; *it; ++it) {
-            unsigned char c = (unsigned char) *it;
+        for (const C *it = value; *it; ++it) {
+            unsigned c = (unsigned) *it;
             if (c == '\"')
                 os << "\\\"";
             else if (c == '\\')
                 os << "\\\\";
             else if (c >= 0x20 && c <= 0x7e)
-                os << c;
+                os << (char)c;
             else if (c == '\t') {
                 os << "\t";
             } else if (c == '\r') {
@@ -111,6 +112,7 @@ public:
                 // Reset formatting so that it looks correct with 'less -R'
                 os << normal << '\n' << literal;
             } else {
+                // FIXME: handle wchar_t octals properly
                 unsigned octal0 = c & 0x7;
                 unsigned octal1 = (c >> 3) & 0x7;
                 unsigned octal2 = (c >> 3) & 0x7;
@@ -123,6 +125,15 @@ public:
             }
         }
         os << "\"" << normal;
+    }
+
+    void visit(String *node) {
+        visitString(node->value);
+    }
+
+    void visit(WString *node) {
+        os << literal << "L";
+        visitString(node->value);
     }
 
     void visit(Enum *node) {

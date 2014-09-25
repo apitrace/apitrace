@@ -61,6 +61,11 @@ String::~String() {
 }
 
 
+WString::~WString() {
+    delete [] value;
+}
+
+
 Struct::~Struct() {
     for (std::vector<Value *>::iterator it = members.begin(); it != members.end(); ++it) {
         delete *it;
@@ -108,6 +113,7 @@ bool UInt   ::toBool(void) const { return value != 0; }
 bool Float  ::toBool(void) const { return value != 0; }
 bool Double ::toBool(void) const { return value != 0; }
 bool String ::toBool(void) const { return true; }
+bool WString::toBool(void) const { return true; }
 bool Struct ::toBool(void) const { return true; }
 bool Array  ::toBool(void) const { return true; }
 bool Blob   ::toBool(void) const { return true; }
@@ -195,6 +201,7 @@ void UInt   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Float  ::visit(Visitor &visitor) { visitor.visit(this); }
 void Double ::visit(Visitor &visitor) { visitor.visit(this); }
 void String ::visit(Visitor &visitor) { visitor.visit(this); }
+void WString::visit(Visitor &visitor) { visitor.visit(this); }
 void Enum   ::visit(Visitor &visitor) { visitor.visit(this); }
 void Bitmask::visit(Visitor &visitor) { visitor.visit(this); }
 void Struct ::visit(Visitor &visitor) { visitor.visit(this); }
@@ -211,6 +218,7 @@ void Visitor::visit(UInt *) { assert(0); }
 void Visitor::visit(Float *) { assert(0); }
 void Visitor::visit(Double *) { assert(0); }
 void Visitor::visit(String *) { assert(0); }
+void Visitor::visit(WString *) { assert(0); }
 void Visitor::visit(Enum *node) { assert(0); }
 void Visitor::visit(Bitmask *node) { visit(static_cast<UInt *>(node)); }
 void Visitor::visit(Struct *) { assert(0); }

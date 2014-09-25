@@ -204,6 +204,9 @@ protected:
     Value *parse_repr();
     void scan_repr();
 
+    Value *parse_wstring();
+    void scan_wstring();
+
     const char * read_string(void);
     void skip_string(void);
 
