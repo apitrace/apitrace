@@ -357,6 +357,85 @@ isNumber(const char *arg) {
     return true;
 }
 
+
+static BOOL
+ejectDll(HANDLE hProcess, const char *szDllPath)
+{
+    /*
+     * Enumerate all modules.
+     */
+
+    HMODULE *phModules = NULL;
+    DWORD cb = sizeof *phModules *
+#ifdef NDEBUG
+        32
+#else
+        4
+#endif
+    ;
+    DWORD cbNeeded = 0;
+    while (true) {
+        phModules = (HMODULE *)realloc(phModules, cb);
+        if (!EnumProcessModules(hProcess, phModules, cb, &cbNeeded)) {
+            logLastError("failed to enumerate modules in remote process");
+            free(phModules);
+            return FALSE;
+        }
+
+        if (cbNeeded < cb) {
+            break;
+        }
+
+        cb *= 2;
+    }
+
+    DWORD cNumModules = cbNeeded / sizeof *phModules;
+
+    /*
+     * Search our DLL.
+     */
+
+    const char *szDllName = getBaseName(szDllPath);
+    HMODULE hModule = NULL;
+    for (unsigned i = 0; i < cNumModules; ++i) {
+        char szModName[MAX_PATH];
+        if (GetModuleFileNameExA(hProcess, phModules[i], szModName, ARRAY_SIZE(szModName))) {
+            if (stricmp(getBaseName(szModName), szDllName) == 0) {
+                hModule = phModules[i];
+                break;
+            }
+        }
+    }
+
+    free(phModules);
+
+    if (!hModule) {
+        debugPrintf("inject: error: failed to find %s module in the remote process\n", szDllName);
+        return FALSE;
+    }
+
+    PTHREAD_START_ROUTINE lpStartAddress =
+        (PTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("KERNEL32"), "FreeLibrary");
+
+    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, lpStartAddress, hModule, 0, NULL);
+    if (!hThread) {
+        logLastError("failed to create remote thread");
+        return FALSE;
+    }
+
+    WaitForSingleObject(hThread, INFINITE);
+
+    DWORD bRet = 0;
+    GetExitCodeThread(hThread, &bRet);
+    if (!bRet) {
+        debugPrintf("inject: error: failed to unload %s from the remote process\n", szDllPath);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 static void
 help(void)
 {
@@ -630,6 +709,11 @@ main(int argc, char *argv[])
     if (bAttach) {
         if (bAttachDwm) {
             restartDwmComposition(hProcess);
+        } else {
+            fprintf(stderr, "Press any key when finished tracing\n");
+            getchar();
+
+            ejectDll(hProcess, szDllPath);
         }
 
         if (dwThreadId) {

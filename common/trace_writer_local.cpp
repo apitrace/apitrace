@@ -77,6 +77,9 @@ LocalWriter::~LocalWriter()
 {
     os::resetExceptionCallback();
     checkProcessId();
+
+    os::String process = os::getProcessName();
+    os::log("apitrace: unloaded from %s\n", process.str());
 }
 
 void
