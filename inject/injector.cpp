@@ -200,7 +200,7 @@ restartDwmComposition(HANDLE hProcess)
         // Windows 8 ignores DwmEnableComposition(DWM_EC_DISABLECOMPOSITION).
         // It is however possible to force DWM to restart by restarting the
         // display device via the devcon utility 
-        devconRestart(DEVCON_CLASS_DISPLAY);
+        devconEnable(DEVCON_CLASS_DISPLAY);
     } else {
 
         BOOL fEnabled = FALSE;
@@ -328,6 +328,7 @@ main(int argc, char *argv[])
         SetSharedMem(szDll);
     }
 
+    BOOL bAttachDwm = FALSE;
     PROCESS_INFORMATION processInfo;
     HANDLE hProcess;
     if (bAttach) {
@@ -372,8 +373,15 @@ main(int argc, char *argv[])
             logLastError("failed to open process");
             return 1;
         }
+
+        char szProcess[MAX_PATH];
+        DWORD dwRet = GetModuleFileNameEx(hProcess, 0, szProcess, sizeof szProcess);
+        assert(dwRet);
+        if (dwRet &&
+            stricmp(getBaseName(szProcess), "dwm.exe") == 0) {
+            bAttachDwm = TRUE;
+        }
     } else {
-        bAttach = FALSE;
         std::string commandLine;
         char sep = 0;
         for (int i = 2; i < argc; ++i) {
@@ -448,6 +456,13 @@ main(int argc, char *argv[])
         }
     }
 
+    if (bAttachDwm && IsWindows8OrGreater()) {
+        // Switch to Microsoft Basic Display Driver before injecting, so that
+        // we don't trace with it.
+        devconDisable(DEVCON_CLASS_DISPLAY);
+        Sleep(1000);
+    }
+
     const char *szDllName;
     szDllName = "injectee.dll";
 
@@ -466,11 +481,7 @@ main(int argc, char *argv[])
     DWORD exitCode;
 
     if (bAttach) {
-        char szProcess[MAX_PATH];
-        DWORD dwRet = GetModuleFileNameEx(hProcess, 0, szProcess, sizeof szProcess);
-        assert(dwRet);
-
-        if (stricmp(getBaseName(szProcess), "dwm.exe") == 0) {
+        if (bAttachDwm) {
             restartDwmComposition(hProcess);
         }
 
