@@ -359,9 +359,12 @@ class D3DRetracer(Retracer):
             print '    if (_MapDesc.Size) {'
             if interface.name.startswith('ID3D11DeviceContext'):
                 print '        _maps[pResource] = _MapDesc.pData;'
+                # XXX: Unforunately this cause many false warnings on 1D and 2D
+                # resources, since the pitches are junk there...
+                #self.checkPitchMismatch(method)
             else:
                 print '        _maps[_this] = _MapDesc.pData;'
-            self.checkPitchMismatch(method)
+                self.checkPitchMismatch(method)
             print '    } else {'
             print '        return;'
             print '    }'
