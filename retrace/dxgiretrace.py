@@ -281,7 +281,11 @@ class D3DRetracer(Retracer):
             };
             static const D3D10_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
             '''
-            print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, (ID3D10Texture2D**)ppResource);'
+            print r'    com_ptr<ID3D10Texture2D> pResource;'
+            print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, &pResource);'
+            print r'    if (SUCCEEDED(_result)) {'
+            print r'         _result = pResource->QueryInterface(ReturnedInterface, ppResource);'
+            print r'    }'
             self.checkResult(method.type)
             return
         if interface.name.startswith('ID3D11Device') and method.name.startswith('OpenSharedResource'):
@@ -317,7 +321,11 @@ class D3DRetracer(Retracer):
             };
             static const D3D11_SUBRESOURCE_DATA InitialData = {Checker, sizeof Checker[0], sizeof Checker};
             '''
-            print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, (ID3D11Texture2D**)ppResource);'
+            print r'    com_ptr<ID3D11Texture2D> pResource;'
+            print r'    _result = _this->CreateTexture2D(&Desc, &InitialData, &pResource);'
+            print r'    if (SUCCEEDED(_result)) {'
+            print r'         _result = pResource->QueryInterface(ReturnedInterface, ppResource);'
+            print r'    }'
             self.checkResult(method.type)
             return
 
