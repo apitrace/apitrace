@@ -159,8 +159,8 @@ ID3D11Device1.methods += [
     StdMethod(HRESULT, "CreateBlendState1", [(Pointer(Const(D3D11_BLEND_DESC1)), "pBlendStateDesc"), Out(Pointer(ObjPointer(ID3D11BlendState1)), "ppBlendState")]),
     StdMethod(HRESULT, "CreateRasterizerState1", [(Pointer(Const(D3D11_RASTERIZER_DESC1)), "pRasterizerDesc"), Out(Pointer(ObjPointer(ID3D11RasterizerState1)), "ppRasterizerState")]),
     StdMethod(HRESULT, "CreateDeviceContextState", [(D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG, "Flags"), (Array(Const(D3D_FEATURE_LEVEL), "FeatureLevels"), "pFeatureLevels"), (UINT, "FeatureLevels"), (UINT, "SDKVersion"), (REFIID, "EmulatedInterface"), Out(Pointer(D3D_FEATURE_LEVEL), "pChosenFeatureLevel"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppContextState")]),
-    StdMethod(HRESULT, "OpenSharedResource1", [(HANDLE, "hResource"), (REFIID, "returnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
-    StdMethod(HRESULT, "OpenSharedResourceByName", [(LPCWSTR, "lpName"), (DXGI_SHARED_RESOURCE_FLAG, "dwDesiredAccess"), (REFIID, "returnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(HRESULT, "OpenSharedResource1", [(HANDLE, "hResource"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
+    StdMethod(HRESULT, "OpenSharedResourceByName", [(LPCWSTR, "lpName"), (DXGI_SHARED_RESOURCE_FLAG, "dwDesiredAccess"), (REFIID, "ReturnedInterface"), Out(Pointer(ObjPointer(Void)), "ppResource")]),
 ]
 
 ID3DUserDefinedAnnotation.methods += [
