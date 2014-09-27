@@ -96,10 +96,10 @@ LocalWriter::open(void) {
         process.trimDirectory();
 
 #ifdef ANDROID
-	os::String prefix = "/data/data";
-	prefix.join(process);
+        os::String prefix = "/data/data";
+        prefix.join(process);
 #else
-	os::String prefix = os::getCurrentDir();
+        os::String prefix = os::getCurrentDir();
 #ifdef _WIN32
         // Avoid writing into Windows' system directory as quite often access
         // will be denied.
