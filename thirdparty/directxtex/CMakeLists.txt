@@ -72,4 +72,9 @@ if (DirectX_D3D11_INCLUDE_FOUND)
         ${MINGW_GUID}
     )
 
+    install (
+        FILES "Microsoft Public License.rtf"
+        DESTINATION ${DOC_INSTALL_DIR}
+        RENAME LICENSE-directxtex.rtf
+    )
 endif ()
