@@ -50,7 +50,7 @@ if (WIN32)
     endif ()
 
     # d3d8.dll
-    if (DirectX_D3D8_INCLUDE_FOUND AND DirectX_D3D9_INCLUDE_DIR)
+    if (DirectX_D3D8_INCLUDE_FOUND AND DirectX_D3D9_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D9_INCLUDE_DIR} ${DirectX_D3D8_INCLUDE_DIR})
         add_custom_command (
             OUTPUT d3d8trace.cpp
