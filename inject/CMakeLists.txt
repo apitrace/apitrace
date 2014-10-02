@@ -7,6 +7,7 @@ set_target_properties (injectee PROPERTIES
     PREFIX ""
 )
 install (TARGETS injectee LIBRARY DESTINATION bin)
+install_pdb (injectee DESTINATION bin)
 
 add_executable (injector
     injector.cpp
@@ -16,3 +17,4 @@ set_target_properties (injector PROPERTIES
 )
 target_link_libraries (injector psapi)
 install (TARGETS injector RUNTIME DESTINATION bin)
+install_pdb (injector DESTINATION bin)

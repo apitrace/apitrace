@@ -47,6 +47,7 @@ if (WIN32)
             OUTPUT_NAME ddraw
         )
         install (TARGETS ddrawtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (ddrawtrace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d8.dll
@@ -82,6 +83,7 @@ if (WIN32)
             OUTPUT_NAME d3d8
         )
         install (TARGETS d3d8trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (d3d8trace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d3d9.dll
@@ -118,6 +120,7 @@ if (WIN32)
             OUTPUT_NAME d3d9
         )
         install (TARGETS d3d9trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (d3d9trace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
@@ -172,6 +175,7 @@ if (WIN32)
             PROPERTIES PREFIX ""
         )
         install (TARGETS dxgitrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (dxgitrace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif ()
 
     # d2d1.dll, dwrite.dll
@@ -206,6 +210,7 @@ if (WIN32)
             PROPERTIES PREFIX ""
         )
         install (TARGETS d2d1trace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+        install_pdb (d2d1trace DESTINATION ${WRAPPER_INSTALL_DIR})
     endif (DirectX_D2D1_INCLUDE_FOUND)
 
     # opengl32.dll
@@ -242,6 +247,7 @@ if (WIN32)
         OUTPUT_NAME opengl32
     )
     install (TARGETS wgltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
+    install_pdb (wgltrace DESTINATION ${WRAPPER_INSTALL_DIR})
 
 elseif (APPLE)
     # OpenGL framework

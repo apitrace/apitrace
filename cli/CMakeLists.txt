@@ -49,3 +49,4 @@ if (NOT CMAKE_CROSSCOMPILING)
 endif ()
 
 install (TARGETS apitrace RUNTIME DESTINATION bin)
+install_pdb (apitrace RUNTIME DESTINATION bin)

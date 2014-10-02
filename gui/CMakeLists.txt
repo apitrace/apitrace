@@ -103,4 +103,5 @@ endif ()
 ########### install files ###############
 
 install (TARGETS qapitrace RUNTIME DESTINATION bin)
+install_pdb (qapitrace RUNTIME DESTINATION bin)
 #install (FILES qapitrace.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})

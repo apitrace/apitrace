@@ -123,6 +123,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
     endif ()
 
     install (TARGETS glretrace RUNTIME DESTINATION bin) 
+    install_pdb (glretrace DESTINATION bin)
 endif ()
 
 if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
@@ -280,4 +281,5 @@ if (WIN32)
     endif ()
 
     install (TARGETS d3dretrace RUNTIME DESTINATION bin)
+    install_pdb (d3dretrace DESTINATION bin)
 endif ()
