@@ -33,9 +33,8 @@
 #include <strsafe.h>
 
 
-#ifdef __MINGW32__
+// Not defined on MinGW and Windows SDKs before Windows 8.0
 #define PZPTSTR PTSTR *
-#endif
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(a)                (sizeof(a)/sizeof(a[0]))
