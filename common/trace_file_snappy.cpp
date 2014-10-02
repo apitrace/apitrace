@@ -287,18 +287,26 @@ void SnappyFile::flushReadCache(size_t skipLength)
     m_currentOffset.chunk = m_stream.tellg();
     size_t compressedLength;
     compressedLength = readCompressedLength();
-
-    if (compressedLength) {
-        m_stream.read((char*)m_compressedCache, compressedLength);
-        ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
-                                        &m_cacheSize);
-        createCache(m_cacheSize);
-        if (skipLength < m_cacheSize) {
-            ::snappy::RawUncompress(m_compressedCache, compressedLength,
-                                    m_cache);
-        }
-    } else {
+    if (!compressedLength) {
+        // Reached end of file
         createCache(0);
+        return;
+    }
+
+    m_stream.read((char*)m_compressedCache, compressedLength);
+    if (m_stream.fail()) {
+        // XXX: Unforunately Snappy's interface is not expressive enough
+        // to allow recovering part of the uncompressed bytes.
+        std::cerr << "warning: unexpected end of file while reading trace\n";
+        createCache(0);
+        return;
+    }
+    ::snappy::GetUncompressedLength(m_compressedCache, compressedLength,
+                                    &m_cacheSize);
+    createCache(m_cacheSize);
+    if (skipLength < m_cacheSize) {
+        ::snappy::RawUncompress(m_compressedCache, compressedLength,
+                                m_cache);
     }
 }
 
