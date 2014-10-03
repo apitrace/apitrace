@@ -227,7 +227,7 @@ IDirect3DSwapChain8.methods += [
 IDirect3DResource8.methods += [
     StdMethod(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE8), "ppDevice")]),
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaqueBlob(Const(Void), "SizeOfData"), "pData"), (DWORD, "SizeOfData"), (D3DSPD, "Flags")], sideeffects=False),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), InOut(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "FreePrivateData", [(REFGUID, "refguid")], sideeffects=False),
     StdMethod(DWORD, "SetPriority", [(DWORD, "PriorityNew")]),
     StdMethod(DWORD, "GetPriority", [], sideeffects=False),
@@ -280,7 +280,7 @@ IDirect3DIndexBuffer8.methods += [
 IDirect3DSurface8.methods += [
     StdMethod(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE8), "ppDevice")]),
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaqueBlob(Const(Void), "SizeOfData"), "pData"), (DWORD, "SizeOfData"), (D3DSPD, "Flags")], sideeffects=False),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), InOut(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "FreePrivateData", [(REFGUID, "refguid")], sideeffects=False),
     StdMethod(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")], sideeffects=False),
@@ -291,7 +291,7 @@ IDirect3DSurface8.methods += [
 IDirect3DVolume8.methods += [
     StdMethod(HRESULT, "GetDevice", [Out(Pointer(PDIRECT3DDEVICE8), "ppDevice")]),
     StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "refguid"), (OpaqueBlob(Const(Void), "SizeOfData"), "pData"), (DWORD, "SizeOfData"), (D3DSPD, "Flags")], sideeffects=False),
-    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), Out(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
+    StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "refguid"), Out(OpaqueBlob(Void, "*pSizeOfData"), "pData"), InOut(Pointer(DWORD), "pSizeOfData")], sideeffects=False),
     StdMethod(HRESULT, "FreePrivateData", [(REFGUID, "refguid")], sideeffects=False),
     StdMethod(HRESULT, "GetContainer", [(REFIID, "riid"), Out(Pointer(ObjPointer(Void)), "ppContainer")]),
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DVOLUME_DESC), "pDesc")], sideeffects=False),
