@@ -194,8 +194,8 @@ DXGI_ENUM_MODES = Flags(UINT, [
 
 IDXGIOutput.methods += [
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(DXGI_OUTPUT_DESC), "pDesc")], sideeffects=False),
-    StdMethod(HRESULT, "GetDisplayModeList", [(DXGI_FORMAT, "EnumFormat"), (DXGI_ENUM_MODES, "Flags"), Out(Pointer(UINT), "pNumModes"), Out(Array(DXGI_MODE_DESC, "*pNumModes"), "pDesc")], sideeffects=False),
-    StdMethod(HRESULT, "FindClosestMatchingMode", [(Pointer(Const(DXGI_MODE_DESC)), "pModeToMatch"), Out(Pointer(DXGI_MODE_DESC), "pClosestMatch"), (ObjPointer(IUnknown), "pConcernedDevice")]),
+    StdMethod(HRESULT, "GetDisplayModeList", [(DXGI_FORMAT, "EnumFormat"), (DXGI_ENUM_MODES, "Flags"), InOut(Pointer(UINT), "pNumModes"), Out(Array(DXGI_MODE_DESC, "*pNumModes"), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "FindClosestMatchingMode", [(Pointer(Const(DXGI_MODE_DESC)), "pModeToMatch"), Out(Pointer(DXGI_MODE_DESC), "pClosestMatch"), (ObjPointer(IUnknown), "pConcernedDevice")], sideeffects=False),
     StdMethod(HRESULT, "WaitForVBlank", []),
     StdMethod(HRESULT, "TakeOwnership", [(ObjPointer(IUnknown), "pDevice"), (BOOL, "Exclusive")]),
     StdMethod(Void, "ReleaseOwnership", []),
@@ -540,8 +540,8 @@ IDXGIAdapter2.methods += [
 
 IDXGIOutput1 = Interface("IDXGIOutput1", IDXGIOutput)
 IDXGIOutput1.methods += [
-    StdMethod(HRESULT, "GetDisplayModeList1", [(DXGI_FORMAT, "EnumFormat"), (DXGI_ENUM_MODES, "Flags"), Out(Pointer(UINT), "pNumModes"), Out(Pointer(DXGI_MODE_DESC1), "pDesc")]),
-    StdMethod(HRESULT, "FindClosestMatchingMode1", [(Pointer(Const(DXGI_MODE_DESC1)), "pModeToMatch"), Out(Pointer(DXGI_MODE_DESC1), "pClosestMatch"), (ObjPointer(IUnknown), "pConcernedDevice")]),
+    StdMethod(HRESULT, "GetDisplayModeList1", [(DXGI_FORMAT, "EnumFormat"), (DXGI_ENUM_MODES, "Flags"), InOut(Pointer(UINT), "pNumModes"), Out(Array(DXGI_MODE_DESC1, "*pNumModes"), "pDesc")], sideeffects=False),
+    StdMethod(HRESULT, "FindClosestMatchingMode1", [(Pointer(Const(DXGI_MODE_DESC1)), "pModeToMatch"), Out(Pointer(DXGI_MODE_DESC1), "pClosestMatch"), (ObjPointer(IUnknown), "pConcernedDevice")], sideeffects=False),
     StdMethod(HRESULT, "GetDisplaySurfaceData1", [(ObjPointer(IDXGIResource), "pDestination")]),
     StdMethod(HRESULT, "DuplicateOutput", [(ObjPointer(IUnknown), "pDevice"), Out(Pointer(ObjPointer(IDXGIOutputDuplication)), "ppOutputDuplication")]),
 ]
