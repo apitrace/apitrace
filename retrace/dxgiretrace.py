@@ -204,6 +204,7 @@ class D3DRetracer(Retracer):
         if method.name == 'SetFullscreenState':
             print r'    if (retrace::forceWindowed) {'
             print r'         Fullscreen = FALSE;'
+            print r'         pTarget = NULL;'
             print r'    }'
 
         # notify frame has been completed
