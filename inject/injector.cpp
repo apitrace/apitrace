@@ -276,6 +276,17 @@ getProcessIdByName(const char *szProcessName, DWORD *pdwProcessID)
 }
 
 
+static bool
+isNumber(const char *arg) {
+    while (*arg) {
+        if (!isdigit(*arg++)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 int
 main(int argc, char *argv[])
 {
@@ -291,7 +302,7 @@ main(int argc, char *argv[])
 
     BOOL bAttach = FALSE;
     DWORD dwProcessId = ~0;
-    if (isdigit(argv[2][0])) {
+    if (isNumber(argv[2])) {
         dwProcessId = atol(argv[2]);
         bAttach = TRUE;
     } else if (argv[2][0] == '!') {
