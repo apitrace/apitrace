@@ -25,6 +25,7 @@
 
 
 #include <string.h>
+#include <deque>
 
 #include "trace_model.hpp"
 
@@ -79,17 +80,75 @@ Array::~Array() {
     }
 }
 
+
+#define BLOB_MAX_BOUND_SIZE (1*1024*1024*1024)
+
+class BoundBlob {
+public:
+    static size_t totalSize;
+
+private:
+    size_t size;
+    char *buf;
+
+public:
+    inline
+    BoundBlob(size_t _size, char *_buf) :
+        size(_size),
+        buf(_buf)
+    {
+        assert(totalSize + size >= totalSize);
+        totalSize += size;
+    }
+
+    inline
+    ~BoundBlob()  {
+        assert(totalSize >= size);
+        totalSize -= size;
+        delete [] buf;
+    }
+
+    // Fake move constructor
+    // std::deque:push_back with move semantics was added only from c++11.
+    BoundBlob(const BoundBlob & other)
+    {
+        size = other.size;
+        buf = other.buf;
+        const_cast<BoundBlob &>(other).size = 0;
+        const_cast<BoundBlob &>(other).buf = 0;
+    }
+
+    // Disallow assignment operator
+    BoundBlob& operator = (const BoundBlob &);
+};
+
+size_t BoundBlob::totalSize = 0;
+
+typedef std::deque<BoundBlob> BoundBlobQueue;
+static BoundBlobQueue boundBlobQueue;
+
+
 Blob::~Blob() {
     // Blobs are often bound and referred during many calls, so we can't delete
     // them here in that case.
     //
     // Once bound there is no way to know when they were unbound, which
-    // effectively means we have to leak them.  A better solution would be to
-    // keep a list of bound pointers, and defer the destruction to when the
-    // trace in question has been fully processed.
+    // effectively means we have to leak them.  But some applications
+    // (particularly OpenGL applications that use vertex arrays in user memory)
+    // we can easily exhaust all memory.  So instead we maintain a queue of
+    // bound blobs and keep the total size bounded.
+
     if (!bound) {
         delete [] buf;
+        return;
     }
+
+    while (!boundBlobQueue.empty() &&
+           BoundBlob::totalSize + size > BLOB_MAX_BOUND_SIZE) {
+        boundBlobQueue.pop_front();
+    }
+
+    boundBlobQueue.push_back(BoundBlob(size, buf));
 }
 
 StackFrame::~StackFrame() {
