@@ -543,18 +543,23 @@ class Tracer:
         if function.type is not stdapi.Void:
             print '    %s _result;' % function.type
 
+        for arg in function.args:
+            if not arg.output:
+                self.unwrapArg(function, arg)
+
         self.traceFunctionImplBody(function)
+
+        # XXX: wrapping should go here, but before we can do that we'll need to protect g_WrappedObjects with its own mutex
+
         if function.type is not stdapi.Void:
             print '    return _result;'
+
         print '}'
         print
 
     def traceFunctionImplBody(self, function):
         if not function.internal:
             print '    unsigned _call = trace::localWriter.beginEnter(&_%s_sig);' % (function.name,)
-            for arg in function.args:
-                if not arg.output:
-                    self.unwrapArg(function, arg)
             for arg in function.args:
                 if not arg.output:
                     self.serializeArg(function, arg)
@@ -826,10 +831,18 @@ class Tracer:
         if method.type is not stdapi.Void:
             print '    %s _result;' % method.type
     
+        print '    %s *_this = static_cast<%s *>(m_pInstance);' % (base, base)
+        for arg in method.args:
+            if not arg.output:
+                self.unwrapArg(method, arg)
+
         self.implementWrapperInterfaceMethodBody(interface, base, method)
-    
+
+        # XXX: wrapping should go here, but before we can do that we'll need to protect g_WrappedObjects with its own mutex
+
         if method.type is not stdapi.Void:
             print '    return _result;'
+
         print '}'
         print
 
@@ -839,15 +852,10 @@ class Tracer:
         print '    static const char * _args[%u] = {%s};' % (len(method.args) + 1, ', '.join(['"this"'] + ['"%s"' % arg.name for arg in method.args]))
         print '    static const trace::FunctionSig _sig = {%u, "%s", %u, _args};' % (self.getFunctionSigId(), interface.name + '::' + method.name, len(method.args) + 1)
 
-        print '    %s *_this = static_cast<%s *>(m_pInstance);' % (base, base)
-
         print '    unsigned _call = trace::localWriter.beginEnter(&_sig);'
         print '    trace::localWriter.beginArg(0);'
         print '    trace::localWriter.writePointer((uintptr_t)m_pInstance);'
         print '    trace::localWriter.endArg();'
-        for arg in method.args:
-            if not arg.output:
-                self.unwrapArg(method, arg)
         for arg in method.args:
             if not arg.output:
                 self.serializeArg(method, arg)
