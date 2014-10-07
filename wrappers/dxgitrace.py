@@ -90,7 +90,6 @@ class D3DCommonTracer(DllTracer):
     mapInterfaces = (
         dxgi.IDXGISurface,
         d3d10.ID3D10Resource,
-        d3d11.ID3D11Resource,
     )
     
     def enumWrapperInterfaceVariables(self, interface):
@@ -99,7 +98,11 @@ class D3DCommonTracer(DllTracer):
         # Add additional members to track maps
         if interface.hasBase(*self.mapInterfaces):
             variables += [
-                ('_MAP_DESC', '_MapDesc', None),
+                ('_MAP_DESC', 'm_MapDesc', None),
+            ]
+        if interface.hasBase(d3d11.ID3D11DeviceContext):
+            variables += [
+                ('std::map< std::pair<ID3D11Resource *, UINT>, _MAP_DESC >', 'm_MapDescs', None),
             ]
 
         return variables
@@ -109,15 +112,11 @@ class D3DCommonTracer(DllTracer):
             # On D3D11 Map/Unmap is not a resource method, but a context method instead.
             resourceArg = method.getArgByName('pResource')
             if resourceArg is None:
-                pResource = 'this'
+                print '    _MAP_DESC & _MapDesc = m_MapDesc;'
             else:
-                wrapperInterfaceName = getWrapperInterfaceName(resourceArg.type.type)
-                print '    %s * _pResource = static_cast<%s*>(%s);' % (wrapperInterfaceName, wrapperInterfaceName, resourceArg.name)
-                pResource = '_pResource'
+                print '    _MAP_DESC & _MapDesc = m_MapDescs[std::pair<%s, UINT>(pResource, Subresource)];' % resourceArg.type
 
         if method.name == 'Unmap':
-            print '    _MAP_DESC _MapDesc = %s->_MapDesc;' % pResource
-            #print r'    os::log("%%p -> %%p+%%lu\n", %s,_MapDesc.pData, (unsigned long)_MapDesc.Size);' % pResource
             print '    if (_MapDesc.Size && _MapDesc.pData) {'
             self.emit_memcpy('_MapDesc.pData', '_MapDesc.Size')
             print '    }'
@@ -126,15 +125,12 @@ class D3DCommonTracer(DllTracer):
 
         if method.name == 'Map':
             # NOTE: recursive locks are explicitely forbidden
-            print '    _MAP_DESC _MapDesc;'
             print '    if (SUCCEEDED(_result)) {'
             print '        _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames())
             print '    } else {'
             print '        _MapDesc.pData = NULL;'
             print '        _MapDesc.Size = 0;'
             print '    }'
-            #print r'    os::log("%%p <- %%p+%%lu\n", %s,_MapDesc.pData, (unsigned long)_MapDesc.Size);' % pResource
-            print '    %s->_MapDesc = _MapDesc;' % pResource
 
 
 if __name__ == '__main__':
