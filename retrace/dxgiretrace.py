@@ -40,8 +40,9 @@ from specs.d3d11 import d3d11
 class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
-        print '// Swizzling mapping for lock addresses'
-        print 'static std::map<void *, void *> _maps;'
+        print '// Swizzling mapping for lock addresses, mapping a (pDeviceContext, pResource, Subresource) -> void *'
+        print 'typedef std::pair< IUnknown *, UINT > SubresourceKey;'
+        print 'static std::map< IUnknown *, std::map< SubresourceKey, void * > > g_Maps;'
         print
         self.table_name = 'd3dretrace::dxgi_callbacks'
 
@@ -361,38 +362,38 @@ class D3DRetracer(Retracer):
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
 
+        if method.name in ('Map', 'Unmap'):
+            if interface.name.startswith('ID3D11DeviceContext'):
+                print '    void * & _pbData = g_Maps[_this][SubresourceKey(pResource, Subresource)];'
+            else:
+                subresourceArg = method.getArgByName('Subresource')
+                if subresourceArg is None:
+                    print '    UINT Subresource = 0;'
+                print '    void * & _pbData = g_Maps[0][SubresourceKey(_this, Subresource)];'
+
         if method.name == 'Map':
             print '    _MAP_DESC _MapDesc;'
             print '    _getMapDesc(_this, %s, _MapDesc);' % ', '.join(method.argNames())
             print '    size_t _MappedSize = _MapDesc.Size;'
             print '    if (_MapDesc.Size) {'
+            print '        _pbData = _MapDesc.pData;'
             if interface.name.startswith('ID3D11DeviceContext'):
-                print '        _maps[pResource] = _MapDesc.pData;'
                 # XXX: Unforunately this cause many false warnings on 1D and 2D
                 # resources, since the pitches are junk there...
                 #self.checkPitchMismatch(method)
+                pass
             else:
-                print '        _maps[_this] = _MapDesc.pData;'
+                print '        _pbData = _MapDesc.pData;'
                 self.checkPitchMismatch(method)
             print '    } else {'
             print '        return;'
             print '    }'
         
         if method.name == 'Unmap':
-            if interface.name.startswith('ID3D11DeviceContext'):
-                print '    VOID *_pbData = 0;'
-                print '    _pbData = _maps[pResource];'
-                print '    if (_pbData) {'
-                print '        retrace::delRegionByPointer(_pbData);'
-                print '        _maps[pResource] = 0;'
-                print '    }'
-            else:
-                print '    VOID *_pbData = 0;'
-                print '    _pbData = _maps[_this];'
-                print '    if (_pbData) {'
-                print '        retrace::delRegionByPointer(_pbData);'
-                print '        _maps[_this] = 0;'
-                print '    }'
+            print '    if (_pbData) {'
+            print '        retrace::delRegionByPointer(_pbData);'
+            print '        _pbData = 0;'
+            print '    }'
 
         # Attach shader byte code for lookup
         if 'pShaderBytecode' in method.argNames():
