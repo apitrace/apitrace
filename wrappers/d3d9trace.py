@@ -58,29 +58,51 @@ class D3D9Tracer(DllTracer):
         if interface.getMethodByName('Lock') is not None or \
            interface.getMethodByName('LockRect') is not None or \
            interface.getMethodByName('LockBox') is not None:
-            variables += [
-                ('size_t', '_MappedSize', '0'),
-                ('VOID *', 'm_pbData', '0'),
-            ]
+            if interface.name in ['IDirect3DTexture9']:
+                variables += [
+                    ('std::map<UINT, std::pair<size_t, VOID *> >', '_MappedData', 'std::map<UINT, std::pair<size_t, VOID *> >()'),
+                ]
+            else:
+                variables += [
+                    ('size_t', '_MappedSize', '0'),
+                    ('VOID *', 'm_pbData', '0'),
+                ]
 
         return variables
 
     def implementWrapperInterfaceMethodBody(self, interface, base, method):
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
-            print '    if (_MappedSize && m_pbData) {'
-            self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
-            print '    }'
+            if interface.name in ['IDirect3DTexture9']:
+                print '    std::map<UINT, std::pair<size_t, VOID *> >::iterator it = _MappedData.find(Level);'
+                print '    if (it != _MappedData.end()) {'
+                self.emit_memcpy('(LPBYTE)it->second.second', 'it->second.first')
+                print '        _MappedData.erase(it);'
+                print '    }'
+            else:
+                print '    if (_MappedSize && m_pbData) {'
+                self.emit_memcpy('(LPBYTE)m_pbData', '_MappedSize')
+                print '    }'
 
         DllTracer.implementWrapperInterfaceMethodBody(self, interface, base, method)
 
         if method.name in ('Lock', 'LockRect', 'LockBox'):
-            # FIXME: handle recursive locks
-            print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
-            print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
-            print '    } else {'
-            print '        m_pbData = NULL;'
-            print '        _MappedSize = 0;'
-            print '    }'
+            if interface.name in ['IDirect3DTexture9']:
+                print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
+                print '        size_t mappedSize;'
+                print '        VOID * pbData;'
+                print '        _getMapInfo(_this, %s, pbData, mappedSize);' % ', '.join(method.argNames()[:-1])
+                print '        _MappedData[Level] = std::make_pair(mappedSize, pbData);'
+                print '    } else {'
+                print '        _MappedData.erase(Level);'
+                print '    }'
+            else:
+                # FIXME: handle recursive locks
+                print '    if (SUCCEEDED(_result) && !(Flags & D3DLOCK_READONLY)) {'
+                print '        _getMapInfo(_this, %s, m_pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
+                print '    } else {'
+                print '        m_pbData = NULL;'
+                print '        _MappedSize = 0;'
+                print '    }'
 
 
 if __name__ == '__main__':
