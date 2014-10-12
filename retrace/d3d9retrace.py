@@ -36,7 +36,8 @@ class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
         print '// Swizzling mapping for lock addresses'
-        print 'static std::map<void *, void *> _maps;'
+        print 'typedef std::pair<void *, UINT> MappingKey;'
+        print 'static std::map<MappingKey, void *> _maps;'
         print
 
         Retracer.retraceApi(self, api)
@@ -167,12 +168,18 @@ class D3DRetracer(Retracer):
         if method.name == 'Present':
             print r'    d3dretrace::processEvents();'
 
+        def mapping_subkey():
+            if 'Level' in method.argNames():
+                return ('Level',)
+            else:
+                return ('0',)
+
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
             print '    size_t _MappedSize = 0;'
             print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
             print '    if (_MappedSize) {'
-            print '        _maps[_this] = _pbData;'
+            print '        _maps[MappingKey(_this, %s)] = _pbData;' % mapping_subkey()
             self.checkPitchMismatch(method)
             print '    } else {'
             print '        return;'
@@ -180,10 +187,11 @@ class D3DRetracer(Retracer):
         
         if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
             print '    VOID *_pbData = 0;'
-            print '    _pbData = _maps[_this];'
+            print '    MappingKey _mappingKey(_this, %s);' % mapping_subkey()
+            print '    _pbData = _maps[_mappingKey];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
-            print '        _maps[_this] = 0;'
+            print '        _maps[_mappingKey] = 0;'
             print '    }'
 
 
