@@ -320,7 +320,8 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
     desc.width = 0;
     glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH, &desc.width);
 
-    if (target == GL_TEXTURE_1D) {
+    if (target == GL_TEXTURE_BUFFER ||
+        target == GL_TEXTURE_1D) {
         desc.height = 1;
         desc.depth = 1;
     } else {
@@ -328,6 +329,7 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
         glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &desc.height);
         if (target != GL_TEXTURE_3D &&
             target != GL_TEXTURE_2D_ARRAY &&
+            target != GL_TEXTURE_2D_MULTISAMPLE_ARRAY &&
             target != GL_TEXTURE_CUBE_MAP_ARRAY) {
             desc.depth = 1;
         } else {
