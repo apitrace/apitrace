@@ -626,6 +626,11 @@ void MainWindow::fillStateForFrame()
     variantMapToItems(state.uniforms(), QVariantMap(), uniformsItems);
     m_ui.uniformsTreeWidget->insertTopLevelItems(0, uniformsItems);
 
+    m_ui.buffersTreeWidget->clear();
+    QList<QTreeWidgetItem *> buffersItems;
+    variantMapToItems(state.buffers(), QVariantMap(), buffersItems);
+    m_ui.buffersTreeWidget->insertTopLevelItems(0, buffersItems);
+
     const QList<ApiTexture> &textures =
         state.textures();
     const QList<ApiFramebuffer> &fbos =
