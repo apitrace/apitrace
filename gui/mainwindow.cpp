@@ -485,8 +485,9 @@ variantListToItems(const QVector<QVariant> &lst,
                    const QVector<QVariant> &defaultLst,
                    QList<QTreeWidgetItem *> &items)
 {
+    int width = QString::number(lst.count()).length();
     for (int i = 0; i < lst.count(); ++i) {
-        QString key = QString::number(i);
+        QString key = QString::number(i).rightJustified(width, ' ');
         QVariant var = lst[i];
         QVariant defaultVar;
 
