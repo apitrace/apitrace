@@ -173,6 +173,14 @@ void * dlopen(const char *filename, int flag)
         } else {
             os::log("apitrace: warning: dladdr() failed\n");
         }
+
+        // SDL will skip dlopen'ing libEGL.so after it spots EGL symbols on our
+        // wrapper, so force loading it here.
+        // (https://github.com/apitrace/apitrace/issues/291#issuecomment-59734022)
+        if (strcmp(filename, "libEGL.so") != 0 &&
+            strcmp(filename, "libEGL.so.1") != 0) {
+            _dlopen("libEGL.so.1", RTLD_GLOBAL | RTLD_LAZY);
+        }
     }
 
     return handle;
