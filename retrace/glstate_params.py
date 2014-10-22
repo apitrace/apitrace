@@ -84,7 +84,7 @@ class StateGetter(Visitor):
     It will declare any temporary variable
     '''
 
-    def __init__(self, radical=None, inflections=None, suffix='', inflector=None, key=None):
+    def __init__(self, radical=None, inflections=None, suffix='', inflector=None, key=None, pnameIdx=-1):
         if inflector is None:
             assert radical is not None
             assert inflections is not None
@@ -98,6 +98,7 @@ class StateGetter(Visitor):
             self.key = self.inflector.key()
         else:
             self.key = key
+        self.pnameIdx = pnameIdx
 
     def iter(self):
         for function, type, count, name in parameters:
@@ -108,7 +109,7 @@ class StateGetter(Visitor):
             yield type, count, name
 
     def __call__(self, *args):
-        pname = args[-1]
+        pname = args[self.pnameIdx]
 
         for type, count, name in self.iter():
             if name == pname:
@@ -121,7 +122,7 @@ class StateGetter(Visitor):
 
     def temp_name(self, args):
         '''Return the name of a temporary variable to hold the state.'''
-        pname = args[-1]
+        pname = args[self.pnameIdx]
 
         return pname[3:].lower()
 
@@ -203,6 +204,14 @@ glGet = StateGetter(inflector = glGet_inflector)
 
 # Same as glGet
 glGet_texture = StateGetter(inflector = glGet_inflector, key = 'glGet_texture')
+
+
+glGet_i = StateGetter('glGet', {
+    B: 'Booleani_v',
+    I: 'Integeri_v',
+    F: 'Floati_v',
+    D: 'Doublei_v',
+}, key = 'glGet_i', pnameIdx=0)
 
 
 glGetMaterial = StateGetter('glGetMaterial', {I: 'iv', F: 'fv'})
@@ -545,34 +554,56 @@ class StateDumper:
             print '    }'
 
     buffer_targets = [
-        ('GL_ARRAY_BUFFER', 'GL_ARRAY_BUFFER_BINDING'),
+        ('GL_ARRAY_BUFFER', 'GL_ARRAY_BUFFER_BINDING', None),
         # FIXME: Causes Mesa to segfault.  Disable for now.
-        #('GL_ATOMIC_COUNTER_BUFFER', 'GL_ATOMIC_COUNTER_BUFFER_BINDING'),
-        ('GL_COPY_READ_BUFFER', 'GL_COPY_READ_BUFFER_BINDING'),
-        ('GL_COPY_WRITE_BUFFER', 'GL_COPY_WRITE_BUFFER_BINDING'),
-        ('GL_DRAW_INDIRECT_BUFFER', 'GL_DRAW_INDIRECT_BUFFER_BINDING'),
-        ('GL_DISPATCH_INDIRECT_BUFFER', 'GL_DISPATCH_INDIRECT_BUFFER_BINDING'),
-        ('GL_ELEMENT_ARRAY_BUFFER', 'GL_ELEMENT_ARRAY_BUFFER_BINDING'),
-        ('GL_PIXEL_PACK_BUFFER', 'GL_PIXEL_PACK_BUFFER_BINDING'),
-        ('GL_PIXEL_UNPACK_BUFFER', 'GL_PIXEL_UNPACK_BUFFER_BINDING'),
-        ('GL_QUERY_BUFFER', 'GL_QUERY_BUFFER_BINDING'),
-        ('GL_SHADER_STORAGE_BUFFER', 'GL_SHADER_STORAGE_BUFFER_BINDING'),
-        ('GL_TEXTURE_BUFFER', 'GL_TEXTURE_BUFFER'),
-        ('GL_TRANSFORM_FEEDBACK_BUFFER', 'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING'),
-        ('GL_UNIFORM_BUFFER', 'GL_UNIFORM_BUFFER_BINDING'),
+        #('GL_ATOMIC_COUNTER_BUFFER', 'GL_ATOMIC_COUNTER_BUFFER_BINDING', 'GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS'),
+        ('GL_COPY_READ_BUFFER', 'GL_COPY_READ_BUFFER_BINDING', None),
+        ('GL_COPY_WRITE_BUFFER', 'GL_COPY_WRITE_BUFFER_BINDING', None),
+        ('GL_DRAW_INDIRECT_BUFFER', 'GL_DRAW_INDIRECT_BUFFER_BINDING', None),
+        ('GL_DISPATCH_INDIRECT_BUFFER', 'GL_DISPATCH_INDIRECT_BUFFER_BINDING', None),
+        ('GL_ELEMENT_ARRAY_BUFFER', 'GL_ELEMENT_ARRAY_BUFFER_BINDING', None),
+        ('GL_PIXEL_PACK_BUFFER', 'GL_PIXEL_PACK_BUFFER_BINDING', None),
+        ('GL_PIXEL_UNPACK_BUFFER', 'GL_PIXEL_UNPACK_BUFFER_BINDING', None),
+        ('GL_QUERY_BUFFER', 'GL_QUERY_BUFFER_BINDING', None),
+        ('GL_SHADER_STORAGE_BUFFER', 'GL_SHADER_STORAGE_BUFFER_BINDING', 'GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS'),
+        ('GL_TEXTURE_BUFFER', 'GL_TEXTURE_BUFFER', None),
+        ('GL_TRANSFORM_FEEDBACK_BUFFER', 'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING', 'GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS'),
+        ('GL_UNIFORM_BUFFER', 'GL_UNIFORM_BUFFER_BINDING', 'GL_MAX_UNIFORM_BUFFER_BINDINGS'),
     ]
 
     def dump_buffer_parameters(self):
-        for target, binding in self.buffer_targets:
+        # general binding points
+        for target, binding, max_bindings in self.buffer_targets:
+            print '    // %s' % target
             print '    {'
+            print '        json.beginMember("%s");' % target
+            print '        json.beginObject();'
             print '        GLint buffer = 0;'
             print '        glGetIntegerv(%s, &buffer);' % binding
             print '        if (buffer) {'
-            print '            json.beginMember("%s");' % target
-            print '            json.beginObject();'
             self.dump_atoms(glGetBufferParameter, target)
-            print '            json.endObject();'
             print '        }'
+            if max_bindings is not None:
+                # indexed binding points
+                start = target + '_START'
+                size = target + '_SIZE'
+                print '        GLint max_bindings = 0;'
+                print '        glGetIntegerv(%s, &max_bindings);' % max_bindings
+                print '        if (max_bindings) {'
+                print '            json.beginMember("i");'
+                print '            json.beginArray();'
+                print '            for (GLint i = 0; i < max_bindings; ++i) {'
+                print '                json.beginObject();'
+                for pname in [binding, start, size]:
+                    self.dump_atom(glGet_i, pname, 'i')
+                print '                json.endObject();'
+                print '            }'
+                print '            json.endArray();'
+                print '            json.endMember();'
+                print '        }'
+
+            print '        json.endObject();'
+            print '        json.endMember();'
             print '    }'
             print
 
@@ -658,7 +689,7 @@ class StateDumper:
             self.dump_atom(getter, *(args + (name,)))
 
     def dump_atom(self, getter, *args):
-        name = args[-1]
+        name = args[getter.pnameIdx]
 
         print '        // %s' % name
         print '        {'
