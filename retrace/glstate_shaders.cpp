@@ -183,6 +183,11 @@ struct AttribDesc
 
         arrayStride = array_stride ? array_stride : size * matrix_stride;
     }
+
+    inline
+    operator bool (void) const {
+        return elemType != GL_NONE;
+    }
 };
 
 
@@ -191,10 +196,7 @@ dumpAttrib(JSONWriter &json,
            const AttribDesc &desc,
            const GLbyte *data)
 {
-    if (!desc.numCols || !desc.numRows) {
-        json.writeNull();
-        return;
-    }
+    assert(desc);
 
     if (desc.numRows > 1) {
         json.beginArray();
@@ -303,6 +305,9 @@ dumpUniformBlock(JSONWriter &json,
     }
 
     AttribDesc desc(type, size, array_stride, matrix_stride, is_row_major);
+    if (!desc) {
+        return;
+    }
 
     if (0) {
         GLint active_uniform_block_max_name_length = 0;
