@@ -147,7 +147,7 @@ struct AttribDesc
     GLenum size;
 
     GLenum elemType;
-    GLenum elemStride;
+    GLint elemStride;
 
     GLint numCols;
     GLint numRows;
@@ -157,7 +157,23 @@ struct AttribDesc
 
     GLsizei arrayStride;
 
-    AttribDesc(GLenum _type, GLint _size, GLint array_stride = 0, GLint matrix_stride = 0, GLboolean is_row_major = GL_FALSE) :
+    AttribDesc() :
+        type(GL_NONE),
+        size(0),
+        elemType(GL_NONE),
+        elemStride(0),
+        numCols(0),
+        numRows(0),
+        rowStride(0),
+        colStride(0),
+        arrayStride(0)
+    {}
+
+    AttribDesc(GLenum _type,
+               GLint _size,
+               GLint array_stride = 0,
+               GLint matrix_stride = 0,
+               GLboolean is_row_major = GL_FALSE) :
         type(_type),
         size(_size)
     {
@@ -476,6 +492,43 @@ dumpProgramUniforms(JSONWriter &json, GLint program)
 }
 
 
+// Calculate how many elements (or vertices) can fit in the specified buffer.
+static unsigned
+calcNumElements(GLsizei bufferSize,
+                GLsizei elemOffset,
+                GLsizei elemSize,
+                GLsizei elemStride)
+{
+    if (0 >= bufferSize ||
+        elemOffset >= bufferSize ||
+        elemOffset + elemSize >= bufferSize) {
+        return 0;
+    }
+
+    assert(elemStride >= 0);
+    if (elemStride < 0) {
+        return 1;
+    }
+
+    if (elemStride == 0) {
+        // XXX: It should be infinite, but lets return something more manageable here.
+        return 0x10000;
+    }
+
+    return (bufferSize - elemOffset - elemSize) / elemStride;
+}
+
+
+struct TransformFeedbackAttrib {
+    std::string name;
+    AttribDesc desc;
+    GLsizei offset;
+    GLsizei stride;
+    GLsizei size;
+    const GLbyte *map;
+};
+
+
 static inline void
 dumpTransformFeedback(JSONWriter &json, GLint program)
 {
@@ -487,99 +540,139 @@ dumpTransformFeedback(JSONWriter &json, GLint program)
 
     GLint max_name_length = 0;
     glGetProgramiv(program, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, &max_name_length);
-    GLchar *name = new GLchar[max_name_length];
-    if (!name) {
-        return;
-    }
+    std::vector<GLchar> name(max_name_length);
 
     GLint buffer_mode = GL_INTERLEAVED_ATTRIBS;
     glGetProgramiv(program, GL_TRANSFORM_FEEDBACK_BUFFER_MODE, &buffer_mode);
 
-    std::vector<GLsizei> attrib_offsets(transform_feedback_varyings);
-    std::vector<GLsizei> attrib_strides(transform_feedback_varyings);
+    std::vector<TransformFeedbackAttrib> attribs(transform_feedback_varyings);
+
+    // Calculate the offsets and strides of each attribute according to
+    // the value of GL_TRANSFORM_FEEDBACK_BUFFER_MODE
     GLsizei cum_attrib_offset = 0;
-    for (GLint attrib = 0; attrib < transform_feedback_varyings; ++attrib) {
+    for (GLint slot = 0; slot < transform_feedback_varyings; ++slot) {
+        TransformFeedbackAttrib & attrib = attribs[slot];
+
+        GLsizei length = 0;
         GLsizei size = 0;
         GLenum type = GL_NONE;
+        glGetTransformFeedbackVarying(program, slot, max_name_length, &length, &size, &type, &name[0]);
 
-        glGetTransformFeedbackVarying(program, attrib, 0, NULL, &size, &type, NULL);
+        attrib.name = &name[0];
 
-        AttribDesc desc(type, size);
+        const AttribDesc & desc = attrib.desc = AttribDesc(type, size);
+        if (!desc) {
+            return;
+        }
+
+        attrib.size = desc.arrayStride;
 
         switch (buffer_mode) {
         case GL_INTERLEAVED_ATTRIBS:
-            attrib_offsets[attrib] = cum_attrib_offset;
+            attrib.offset = cum_attrib_offset;
             break;
         case GL_SEPARATE_ATTRIBS:
-            attrib_strides[attrib] = desc.arrayStride;
+            attrib.offset = 0;
+            attrib.stride = desc.arrayStride;
             break;
         default:
             assert(0);
-            attrib_offsets[attrib] = 0;
-            attrib_strides[attrib] = 0;
+            attrib.offset = 0;
+            attrib.stride = 0;
         }
 
         cum_attrib_offset += desc.arrayStride;
     }
     if (buffer_mode == GL_INTERLEAVED_ATTRIBS) {
-        for (GLint attrib = 0; attrib < transform_feedback_varyings; ++attrib) {
-            attrib_strides[attrib] = cum_attrib_offset;
+        for (GLint slot = 0; slot < transform_feedback_varyings; ++slot) {
+            TransformFeedbackAttrib & attrib = attribs[slot];
+            attrib.stride = cum_attrib_offset;
         }
     }
 
-    GLint bound_tbo = 0;
-    glGetIntegerv(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, &bound_tbo);
+    GLint previous_tbo = 0;
+    glGetIntegerv(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, &previous_tbo);
 
-    int numVertices = 1;
-    GLenum queryTarget = GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN;
-    queryTarget = GL_PRIMITIVES_GENERATED;
-    GLint queryId = 0;
-    glGetQueryiv(queryTarget, GL_CURRENT_QUERY, &queryId);
-    if (queryId) {
-        glEndQuery(queryTarget);
-        GLint result;
-        glGetQueryObjectiv(queryId, GL_QUERY_RESULT, &result);
-        numVertices = std::min(result, 16);
-    }
-
-    json.beginMember("GL_TRANSFORM_FEEDBACK");
-    json.beginArray();
-    for (int vertex = 0; vertex < numVertices; ++vertex) {
-        json.beginObject();
-        for (GLint attrib = 0; attrib < transform_feedback_varyings; ++attrib) {
-            GLint buffer_slot = buffer_mode == GL_INTERLEAVED_ATTRIBS ? 0 : attrib;
-
+    // Map the buffers and calculate how many vertices can they hold
+    // XXX: We currently limit to 1024, or things can get significantly slow.
+    unsigned numVertices = 16*1024;
+    for (GLint slot = 0; slot < transform_feedback_varyings; ++slot) {
+        TransformFeedbackAttrib & attrib = attribs[slot];
+        attrib.map = NULL;
+        if (slot == 0 || buffer_mode != GL_INTERLEAVED_ATTRIBS) {
             GLint tbo = 0;
-            glGetIntegeri_v(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, buffer_slot, &tbo);
+            glGetIntegeri_v(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, slot, &tbo);
+            if (!tbo) {
+                numVertices = 0;
+                continue;
+            }
 
             GLint start = 0;
-            glGetIntegeri_v(GL_TRANSFORM_FEEDBACK_BUFFER_START, buffer_slot, &start);
+            glGetIntegeri_v(GL_TRANSFORM_FEEDBACK_BUFFER_START, slot, &start);
+            GLint size = 0;
+            glGetIntegeri_v(GL_TRANSFORM_FEEDBACK_BUFFER_SIZE, slot, &size);
 
             glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, tbo);
 
-            GLsizei length = 0;
-            GLsizei size = 0;
-            GLenum type = GL_NONE;
-            glGetTransformFeedbackVarying(program, attrib, max_name_length, &length, &size, &type, name);
-
-            AttribDesc desc(type, size);
-
-            const GLbyte *raw_data = (const GLbyte *)glMapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, GL_READ_ONLY);
-            if (raw_data) {
-                const GLbyte *vertex_data = raw_data + start + attrib_strides[attrib]*vertex + attrib_offsets[attrib];
-                dumpAttribArray(json, name, desc, vertex_data);
-
-                glUnmapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER);
+            if (size == 0) {
+                glGetBufferParameteriv(GL_TRANSFORM_FEEDBACK_BUFFER, GL_BUFFER_SIZE, &size);
+                assert(size >= start);
+                size -= start;
             }
+
+            unsigned numAttribVertices = calcNumElements(size,
+                                                         attrib.offset,
+                                                         attrib.size,
+                                                         attrib.stride);
+            numVertices = std::min(numVertices, numAttribVertices);
+
+            attrib.map = (const GLbyte *)glMapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, GL_READ_ONLY) + start;
+        } else {
+            attrib.map = attribs[0].map;
+        }
+    }
+
+    // Actually dump the vertices
+    json.beginMember("GL_TRANSFORM_FEEDBACK");
+    json.beginArray();
+    for (unsigned vertex = 0; vertex < numVertices; ++vertex) {
+        json.beginObject();
+        for (GLint slot = 0; slot < transform_feedback_varyings; ++slot) {
+            TransformFeedbackAttrib & attrib = attribs[slot];
+            if (!attrib.map) {
+                continue;
+            }
+
+            const AttribDesc & desc = attrib.desc;
+            assert(desc);
+
+            const GLbyte *vertex_data = attrib.map + attrib.stride*vertex + attrib.offset;
+            dumpAttribArray(json, attrib.name, desc, vertex_data);
         }
         json.endObject();
     }
     json.endArray();
     json.endMember();
 
-    glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, bound_tbo);
+    // Unmap the buffers
+    for (GLint slot = 0; slot < transform_feedback_varyings; ++slot) {
+        TransformFeedbackAttrib & attrib = attribs[slot];
+        if (slot == 0 || buffer_mode != GL_INTERLEAVED_ATTRIBS) {
+            if (!attrib.map) {
+                continue;
+            }
 
-    delete [] name;
+            GLint tbo = 0;
+            glGetIntegeri_v(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, slot, &tbo);
+            assert(tbo);
+
+            glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, tbo);
+
+            glUnmapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER);
+        }
+    }
+
+    glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, previous_tbo);
 }
 
 
