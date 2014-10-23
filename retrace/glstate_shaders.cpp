@@ -256,24 +256,21 @@ dumpAttribArray(JSONWriter &json,
                 const AttribDesc &desc,
                 const GLbyte *data)
 {
+    json.beginMember(name);
+    if (desc.size > 1) {
+        json.beginArray();
+    }
+
     for (GLint i = 0; i < desc.size; ++i) {
-        std::stringstream ss;
-        ss << name;
-
-        if (desc.size > 1) {
-            ss << '[' << i << ']';
-        }
-
-        std::string elemName = ss.str();
-
-        json.beginMember(elemName);
-
         const GLbyte *row = data + desc.arrayStride*i;
 
         dumpAttrib(json, desc, row);
-
-        json.endMember();
     }
+
+    if (desc.size > 1) {
+        json.endArray();
+    }
+    json.endMember();
 }
 
 
@@ -373,14 +370,17 @@ dumpUniform(JSONWriter &json,
 
     std::string qualifiedName = resolveUniformName(name, desc.size);
 
+    json.beginMember(qualifiedName);
+    if (desc.size > 1) {
+        json.beginArray();
+    }
+
     for (i = 0; i < desc.size; ++i) {
         std::stringstream ss;
         ss << qualifiedName;
-
         if (desc.size > 1) {
             ss << '[' << i << ']';
         }
-
         std::string elemName = ss.str();
 
         GLint location = glGetUniformLocation(program, elemName.c_str());
@@ -388,8 +388,6 @@ dumpUniform(JSONWriter &json,
         if (location == -1) {
             continue;
         }
-
-        json.beginMember(elemName);
 
         switch (desc.elemType) {
         case GL_FLOAT:
@@ -413,9 +411,13 @@ dumpUniform(JSONWriter &json,
         }
 
         dumpAttrib(json, desc, u.data);
-
-        json.endMember();
     }
+
+    if (desc.size > 1) {
+        json.endArray();
+    }
+
+    json.endMember();
 }
 
 
