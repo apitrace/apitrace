@@ -502,23 +502,42 @@ variantListToItems(const QVector<QVariant> &lst,
     }
 }
 
-static bool
-isVariantDeep(const QVariant &var)
+// Get the depth (dimensionality) of the variant:
+//
+// It will return:
+//  0: scalar
+//  1: vector (up to 4 elems)
+//  2: matrix (up to 4x4 elements)
+//  3: array
+//  4: map, etc.
+static unsigned
+getVariantDepth(const QVariant &var)
 {
     if (var.type() == QVariant::List) {
         QVector<QVariant> lst = var.toList().toVector();
+        unsigned maxDepth = 0;
         for (int i = 0; i < lst.count(); ++i) {
-            if (isVariantDeep(lst[i])) {
-                return true;
+            unsigned elemDepth = getVariantDepth(lst[i]);
+            if (elemDepth > maxDepth) {
+                if (elemDepth >= 4) {
+                    return elemDepth;
+                }
+                maxDepth = elemDepth;
             }
         }
-        return false;
+        if (lst.count() > 1) {
+            if (lst.count() > 4) {
+                return 3;
+            }
+            maxDepth += 1;
+        }
+        return maxDepth;
     } else if (var.type() == QVariant::Map) {
-        return true;
+        return 4;
     } else if (var.type() == QVariant::Hash) {
-        return true;
+        return 4;
     } else {
-        return false;
+        return 0;
     }
 }
 
@@ -532,7 +551,7 @@ variantToItem(const QString &key, const QVariant &var,
 
     QString val;
 
-    bool deep = isVariantDeep(var);
+    bool deep = getVariantDepth(var) >= 3;
     if (!deep) {
         variantToString(var, val);
     }
