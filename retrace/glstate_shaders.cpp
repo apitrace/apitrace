@@ -78,42 +78,6 @@ getShaderSource(ShaderMap &shaderMap, GLuint shader)
 }
 
 
-static void
-getShaderObjSource(ShaderMap &shaderMap, GLhandleARB shaderObj)
-{
-    if (!shaderObj) {
-        return;
-    }
-
-    GLint object_type = 0;
-    glGetObjectParameterivARB(shaderObj, GL_OBJECT_TYPE_ARB, &object_type);
-    if (object_type != GL_SHADER_OBJECT_ARB) {
-        return;
-    }
-
-    GLint shader_type = 0;
-    glGetObjectParameterivARB(shaderObj, GL_OBJECT_SUBTYPE_ARB, &shader_type);
-    if (!shader_type) {
-        return;
-    }
-
-    GLint source_length = 0;
-    glGetObjectParameterivARB(shaderObj, GL_OBJECT_SHADER_SOURCE_LENGTH_ARB, &source_length);
-    if (!source_length) {
-        return;
-    }
-
-    GLcharARB *source = new GLcharARB[source_length];
-    GLsizei length = 0;
-    source[0] = 0;
-    glGetShaderSource(shaderObj, source_length, &length, source);
-
-    shaderMap[enumToString(shader_type)] += source;
-
-    delete [] source;
-}
-
-
 static inline void
 dumpProgram(JSONWriter &json, GLint program)
 {
@@ -141,33 +105,6 @@ dumpProgram(JSONWriter &json, GLint program)
     }
 }
 
-
-static inline void
-dumpProgramObj(JSONWriter &json, GLhandleARB programObj)
-{
-    GLint attached_shaders = 0;
-    glGetObjectParameterivARB(programObj, GL_OBJECT_ATTACHED_OBJECTS_ARB, &attached_shaders);
-    if (!attached_shaders) {
-        return;
-    }
-
-    ShaderMap shaderMap;
-
-    GLhandleARB *shaderObjs = new GLhandleARB[attached_shaders];
-    GLsizei count = 0;
-    glGetAttachedObjectsARB(programObj, attached_shaders, &count, shaderObjs);
-    std::sort(shaderObjs, shaderObjs + count);
-    for (GLsizei i = 0; i < count; ++ i) {
-       getShaderObjSource(shaderMap, shaderObjs[i]);
-    }
-    delete [] shaderObjs;
-
-    for (ShaderMap::const_iterator it = shaderMap.begin(); it != shaderMap.end(); ++it) {
-        json.beginMember(it->first);
-        json.writeString(it->second);
-        json.endMember();
-    }
-}
 
 /**
  * Built-in uniforms can't be queried through glGetUniform*.
@@ -482,77 +419,6 @@ dumpUniform(JSONWriter &json,
 }
 
 
-static void
-dumpUniformARB(JSONWriter &json,
-               GLhandleARB programObj,
-               const AttribDesc & desc,
-               const GLchar *name)
-{
-    GLint numElems = desc.numCols * desc.numRows;
-    if (desc.elemType == GL_NONE) {
-        return;
-    }
-
-    GLfloat fvalues[4*4];
-    union {
-        GLdouble dvalues[4*4];
-        GLfloat fvalues[4*4];
-        GLint ivalues[4*4];
-        GLbyte data[4*4*4];
-    } u;
-
-    GLint i, j;
-
-    std::string qualifiedName = resolveUniformName(name, desc.size);
-
-    for (i = 0; i < desc.size; ++i) {
-        std::stringstream ss;
-        ss << qualifiedName;
-
-        if (desc.size > 1) {
-            ss << '[' << i << ']';
-        }
-
-        std::string elemName = ss.str();
-
-        json.beginMember(elemName);
-
-        GLint location = glGetUniformLocationARB(programObj, elemName.c_str());
-        if (location == -1) {
-            continue;
-        }
-
-        switch (desc.elemType) {
-        case GL_DOUBLE:
-            // glGetUniformdvARB does not exists
-            glGetUniformfvARB(programObj, location, fvalues);
-            for (j = 0; j < numElems; ++j) {
-                u.dvalues[j] = fvalues[j];
-            }
-            break;
-        case GL_FLOAT:
-            glGetUniformfvARB(programObj, location, fvalues);
-            break;
-        case GL_UNSIGNED_INT:
-            // glGetUniformuivARB does not exists
-        case GL_INT:
-            glGetUniformivARB(programObj, location, u.ivalues);
-            break;
-        case GL_BOOL:
-            glGetUniformivARB(programObj, location, u.ivalues);
-            break;
-        default:
-            assert(0);
-            break;
-        }
-
-        dumpAttrib(json, desc, u.data);
-
-        json.endMember();
-    }
-}
-
-
 static inline void
 dumpProgramUniforms(JSONWriter &json, GLint program)
 {
@@ -711,41 +577,6 @@ dumpTransformFeedback(JSONWriter &json, GLint program)
 
 
 static inline void
-dumpProgramObjUniforms(JSONWriter &json, GLhandleARB programObj)
-{
-    GLint active_uniforms = 0;
-    glGetObjectParameterivARB(programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &active_uniforms);
-    if (!active_uniforms) {
-        return;
-    }
-
-    GLint active_uniform_max_length = 0;
-    glGetObjectParameterivARB(programObj, GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB, &active_uniform_max_length);
-    GLchar *name = new GLchar[active_uniform_max_length];
-    if (!name) {
-        return;
-    }
-
-    for (GLint index = 0; index < active_uniforms; ++index) {
-        GLsizei length = 0;
-        GLint size = 0;
-        GLenum type = GL_NONE;
-        glGetActiveUniformARB(programObj, index, active_uniform_max_length, &length, &size, &type, name);
-
-        if (isBuiltinUniform(name)) {
-            continue;
-        }
-
-        AttribDesc desc(type, size);
-
-        dumpUniformARB(json, programObj, desc, name);
-    }
-
-    delete [] name;
-}
-
-
-static inline void
 dumpArbProgram(JSONWriter &json, GLenum target)
 {
     if (!glIsEnabled(target)) {
@@ -867,12 +698,8 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
     }
 
     GLint program = 0;
-    GLhandleARB programObj = 0;
     if (!pipeline) {
         glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-        if (!context.ES && !program) {
-            programObj = glGetHandleARB(GL_PROGRAM_OBJECT_ARB);
-        }
     }
 
     json.beginMember("shaders");
@@ -886,8 +713,6 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
         dumpProgram(json, compute_program);
     } else if (program) {
         dumpProgram(json, program);
-    } else if (programObj) {
-        dumpProgramObj(json, programObj);
     } else {
         dumpArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);
         dumpArbProgram(json, GL_VERTEX_PROGRAM_ARB);
@@ -906,8 +731,6 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
         dumpProgramUniformsStage(json, compute_program, "GL_COMPUTE_SHADER");
     } else if (program) {
         dumpProgramUniforms(json, program);
-    } else if (programObj) {
-        dumpProgramObjUniforms(json, programObj);
     } else {
         dumpArbProgramUniforms(json, GL_FRAGMENT_PROGRAM_ARB, "fp.");
         dumpArbProgramUniforms(json, GL_VERTEX_PROGRAM_ARB, "vp.");
