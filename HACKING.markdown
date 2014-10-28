@@ -166,3 +166,35 @@ Backwards compatibility:
 There is a regression test suite under development in
 https://github.com/apitrace/apitrace-tests .
 
+
+# How to's #
+
+## How to support a new OpenGL extension ##
+
+All OpenGL (and OpenGL ES) function prototypes live in `specs/glapi.py`.  This
+file is semi-automatically derived from Khronos XML description of OpenGL /
+OpenGL ES.  To refresh do
+
+    $ make -C specs/scripts/ glapi.py
+    $ meld specs/glapi.py specs/scripts/glapi.py
+
+and then port over new prototypes.  See also `specs/scripts/README.markdown`.
+
+The upstream XML description is not rich enough to describe all semantic
+details that apitrace needs, therefore one needs to manually tweak the
+specifications:
+
+* Fix-up the types of array, blob, and pointer arguments.
+
+  * For `glGet*` you can use `"_gl_param_size(pname)"` for automatically determining the number of parameters written, e.g.
+    
+        GlFunction(Void, "glGetIntegerv", [(GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+
+* Add the `sideeffects=False` keyword argument where appropriate, so that those
+  calls can be merely ignored by `glretrace`.
+
+* Replace generically type `GLuint` object IDs with typed ones, (e.g., replace
+  `(GLuint, "texture")` into `(GLtexture, "texture")`, so that `glretrace` can
+  swizzle the objects IDs, when replaying on a different OpenGL implementation.
+
+
