@@ -1,5 +1,4 @@
-Overview
-=========
+# Overview #
 
 Although focus was and still is on graphical APIs, apitrace has a
 generic infrastructure to trace any kind of API:
@@ -7,17 +6,17 @@ generic infrastructure to trace any kind of API:
  * the APIs types and calls are specified in Python files in specs
    sub-directory;
 
-   * there is a type hierarchy in specs/stdapi.py, capable of representing
+   * there is a type hierarchy in `specs/stdapi.py`, capable of representing
      most types in C language, and additional semantic metadata
 
  * Python scripts generate C++ code to trace and serialize calls parameters to
    a file, and vice-versa.
 
-   * Visitor software design pattern is used to navigate over the types.
+   * The _Visitor_ design pattern is used to navigate over the types.
 
-   * Template design pattern is use so that any step of code generation can be
-     overriden by derived classes, allowing to easily handle cases that need
-     special treatment without sacrifycing code reuse.
+   * The _Template_ design pattern is used to enable any step of code
+     generation to be overriden by derived classes, allowing to handle
+     cases that need special treatment without sacrifycing code reuse.
 
 apitrace's architecture is composed of several layers.  Too many to show in a
 single graph, so only those relevant for OpenGL API are shown below:
@@ -36,44 +35,47 @@ single graph, so only those relevant for OpenGL API are shown below:
                     ^             ^    |   /
                    /               \   |  /
                gltrace            glretrace
-               /  |  \
-              /   |   \
-             /    |    \
-            /     |     \
-           /      |      \
-     glxtrace  wgltrace  cgltrace
+                ^ ^ ^                  ^
+               /  |  \                  \
+              /   |   \                  \
+             /    |    \                  \
+            /     |     \                  \
+           /      |      \                  \
+     glxtrace  wgltrace  cgltrace       qapitrace
 
 Here is a quick synopsis of what the layers do:
 
- * specs -- specification of the API, expressed in a Python class hierarchy
+ * `specs` -- specification of the API, expressed in a Python class hierarchy
 
- * dispatch -- runtime dispatch of calls to DLLs (open the DLL, get the symbol
+ * `dispatch` -- runtime dispatch of calls to DLLs (open the DLL, get the symbol
    address, and call it passing all arguments as-is)
 
- * helpers -- helper functions to determine sizes of arrays, blobs, etc.  It
+ * `helpers` -- helper functions to determine sizes of arrays, blobs, etc.  It
    often needs to dispatch calls to give the answers.
 
- * trace -- generate C++ code for tracing an API based on its spec
+ * `trace` -- generate C++ code for tracing an API based on its spec
 
-   * gltrace -- specialization of the tracing generation for GL API, with extra
+   * `gltrace` -- specialization of the tracing generation for GL API, with extra
      code to generate
 
-   * glxtrace, wgltrace, cgltrace -- specialization of the tracing code for the
+   * `glxtrace`,` wgltrace`, `cgltrace` -- specialization of the tracing code for the
      GLX, WGL, and CGL APIs.
 
- * retrace -- generate C++ code to interpret calls from trace, based on the
+ * `retrace` -- generate C++ code to interpret calls from trace, based on the
    API's spec
 
-   * glretrace -- specialization of the retrace code for the GL API
+   * `glretrace` -- specialization of the retrace code for the GL API
 
- * glstate -- code to dump OpenGL state to a JSON file
+ * `glstate` -- code to dump OpenGL state to a JSON file
 
- * glws -- abstraction of the window system specific APIs (GXL, WGL, CGL), to
-   enable cross-platform portability of glretrace
+ * `glws` -- abstraction of the window system specific APIs (GXL, WGL, CGL), to
+   enable cross-platform portability of `glretrace`
+
+ * `qapitrace` -- the GUI; it reads traces directly, and gets JSON state by
+   invoking `glretrace`
 
 
-Coding Style
-============
+# Coding Style #
 
 These are guidelines for new code.  Admittedly some of the existing code hasn't
 been updated to follow these conventions yet.
@@ -82,7 +84,7 @@ Whitespace (all languages):
 
  * indentation is 4 spaces
 
- * never use tabs as indents
+ * never use tabs as indents, except on Makefiles
 
  * otherwise tab equals to 8 spaces
 
@@ -90,11 +92,11 @@ Whitespace (all languages):
 
 Naming convention:
 
- * camelCase for functions/methods
+ * `camelCase` for functions/methods
 
- * UpperCase for structures/classes
+ * `UpperCase` for structures/classes
 
- * lowercase for namespaces/modules
+ * `lowercase` for namespaces/modules
 
  * `UPPER_CASE` for #defines
 
@@ -103,30 +105,29 @@ Naming convention:
 
 C++:
 
- * enclose single statement `if` clauses in { }, specially for automatically
-   generated code
+ * enclose single statement `if` clauses in `{` `}`, specially for
+   automatically generated code
 
- * } else {
+ * `} else {`
 
- * use inlines for functions/methods which are called with high-frequency
+ * use `inline` keyword for functions/methods which are called with high-frequency
 
 CMake:
 
  * `lower_case` commands
 
- * space between ( and precedent name
+ * space between `(` and precedent name
 
 
-When in doubt, be consistent with the existing code.
+And when in doubt, be consistent with the existing code.
 
 
-Commit policy
-=============
+# Commit policy #
 
 Feature development:
 
 * Existing features in master branch should not degrade at any time, for any
-  platform.  (Unless they are seldom used or redundant and there is agreement.)
+  platform.  Unless they are seldom used or redundant, and there is agreement.
 
   * In particular, new features / changes must not introduce any sort of
     instability when tracing.
@@ -151,7 +152,7 @@ Feature development:
 Backwards compatibility:
 
 * Backwards binary compatibility with old traces must be always maintained: all
-  tools, including glretrace, must handle old traces without regressions.
+  tools, including `glretrace`, must handle old traces without regressions.
 
 * No backwards compatibility guarantees for derived data (ASCII dumps, state,
   images, etc).
@@ -160,9 +161,7 @@ Backwards compatibility:
   guarantees are given.
 
 
-
-Regression testing
-==================
+# Regression testing #
 
 There is a regression test suite under development in
 https://github.com/apitrace/apitrace-tests .
