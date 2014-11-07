@@ -275,7 +275,7 @@ wglapi.addFunctions([
     # WGL_ARB_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvARB", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (WGLPixelFormatAttribs, "piAttribIList"), (WGLPixelFormatFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "(*nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    StdFunction(BOOL, "wglChoosePixelFormatARB", [(HDC, "hdc"), (WGLPixelFormatAttribs, "piAttribIList"), (WGLPixelFormatFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "std::min(nMaxFormats, *nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 
     # WGL_ARB_make_current_read
     StdFunction(BOOL, "wglMakeContextCurrentARB", [(HDC, "hDrawDC"), (HDC, "hReadDC"), (HGLRC, "hglrc")]),
@@ -319,7 +319,7 @@ wglapi.addFunctions([
     # WGL_EXT_pixel_format
     StdFunction(BOOL, "wglGetPixelFormatAttribivEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(Int, "nAttributes"), "piValues")], sideeffects=False),
     StdFunction(BOOL, "wglGetPixelFormatAttribfvEXT", [(HDC, "hdc"), (Int, "iPixelFormat"), (Int, "iLayerPlane"), (UINT, "nAttributes"), (Array(WGLenum, "nAttributes"), "piAttributes"), Out(Array(FLOAT, "nAttributes"), "pfValues")], sideeffects=False),
-    StdFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (WGLPixelFormatAttribs, "piAttribIList"), (WGLPixelFormatFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "*nNumFormats"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
+    StdFunction(BOOL, "wglChoosePixelFormatEXT", [(HDC, "hdc"), (WGLPixelFormatAttribs, "piAttribIList"), (WGLPixelFormatFloatAttribs, "pfAttribFList"), (UINT, "nMaxFormats"), Out(Array(Int, "std::min(nMaxFormats, *nNumFormats)"), "piFormats"), Out(Pointer(UINT), "nNumFormats")]),
 
     # WGL_EXT_swap_control
     StdFunction(BOOL, "wglSwapIntervalEXT", [(Int, "interval")]),
