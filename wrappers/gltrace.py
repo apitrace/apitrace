@@ -530,8 +530,13 @@ class GlTracer(Tracer):
 
         # Warn if user arrays are used with glBegin/glArrayElement/glEnd.
         if function.name == 'glBegin':
-            print r'    if (_need_user_arrays()) {'
+            print r'    gltrace::Context *ctx = gltrace::getContext();'
+            print r'    ctx->userArraysOnBegin = _need_user_arrays();'
+        if function.name.startswith('glArrayElement'):
+            print r'    gltrace::Context *ctx = gltrace::getContext();'
+            print r'    if (ctx->userArraysOnBegin) {'
             print r'        os::log("apitrace: warning: user arrays with glArrayElement not supported (https://github.com/apitrace/apitrace/issues/276)\n");'
+            print r'        ctx->userArraysOnBegin = false;'
             print r'    }'
         
         # Emit a fake memcpy on buffer uploads

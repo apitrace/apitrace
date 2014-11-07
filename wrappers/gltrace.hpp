@@ -94,6 +94,7 @@ public:
     enum Profile profile;
     bool user_arrays;
     bool user_arrays_nv;
+    bool userArraysOnBegin;
     unsigned retain_count;
 
     // Whether it has been bound before
@@ -106,6 +107,7 @@ public:
         profile(PROFILE_COMPAT),
         user_arrays(false),
         user_arrays_nv(false),
+        userArraysOnBegin(false),
         retain_count(0),
         bound(false)
     { }
