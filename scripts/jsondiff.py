@@ -175,7 +175,12 @@ class Comparer(Visitor):
     def visitValue(self, a, b):
         if isinstance(a, float) and isinstance(b, (int, long, float)) or \
            isinstance(b, float) and isinstance(a, (int, long, float)):
-            if a == 0:
+            if a is b:
+                # NaNs take this path
+                return True
+            elif a == b:
+                return True
+            elif a == 0:
                 return abs(b) < self.tolerance
             else:
                 return abs((b - a)/a) < self.tolerance
