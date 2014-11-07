@@ -67,6 +67,16 @@ private:
 };
 
 
+const char *
+formatToString(GLenum internalFormat);
+
+bool
+getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type);
+
+GLenum
+getFormat(GLenum internalFormat);
+
+
 void dumpBoolean(JSONWriter &json, GLboolean value);
 
 void dumpEnum(JSONWriter &json, GLenum pname);

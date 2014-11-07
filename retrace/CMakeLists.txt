@@ -58,6 +58,7 @@ add_library (glretrace_common STATIC
     glretrace_main.cpp
     glretrace_ws.cpp
     glstate.cpp
+    glstate_formats.cpp
     glstate_images.cpp
     glstate_params.cpp
     glstate_shaders.cpp
