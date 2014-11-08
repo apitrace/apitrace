@@ -2187,9 +2187,9 @@ parameters = [
     ("glGet",	E,	1,	"GL_ACTIVE_STENCIL_FACE_EXT"),	# 0x8911
     ("",	X,	1,	"GL_MIRROR_CLAMP_TO_BORDER_EXT"),	# 0x8912
     ("",	X,	1,	"GL_SAMPLES_PASSED"),	# 0x8914
-    ("",	X,	1,	"GL_GEOMETRY_VERTICES_OUT"),	# 0x8916
-    ("",	X,	1,	"GL_GEOMETRY_INPUT_TYPE"),	# 0x8917
-    ("",	X,	1,	"GL_GEOMETRY_OUTPUT_TYPE"),	# 0x8918
+    ("glGetProgram",	I,	1,	"GL_GEOMETRY_VERTICES_OUT"),	# 0x8916
+    ("glGetProgram",	E,	1,	"GL_GEOMETRY_INPUT_TYPE"),	# 0x8917
+    ("glGetProgram",	E,	1,	"GL_GEOMETRY_OUTPUT_TYPE"),	# 0x8918
     ("_glGet",	I,	1,	"GL_SAMPLER_BINDING"),	# 0x8919
     ("glGet",	E,	1,	"GL_CLAMP_VERTEX_COLOR"),	# 0x891A
     ("glGet",	E,	1,	"GL_CLAMP_FRAGMENT_COLOR"),	# 0x891B
