@@ -802,7 +802,7 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
 
         return desc.valid();
     } else {
-        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << object_type << "\n";
+        std::cerr << "warning: unexpected GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = " << enumToString(object_type) << "\n";
         return false;
     }
 }
@@ -928,7 +928,8 @@ static inline void
 dumpReadBufferImage(JSONWriter &json,
                     const char *label,
                     GLint width, GLint height,
-                    GLenum format, GLint internalFormat = GL_NONE)
+                    GLenum format, GLenum type,
+                    GLenum internalFormat = GL_NONE)
 {
     GLint channels = _gl_format_channels(format);
 
@@ -938,12 +939,11 @@ dumpReadBufferImage(JSONWriter &json,
 
     Context context;
 
-    GLenum type = GL_UNSIGNED_BYTE;
-    image::ChannelType channelType = image::TYPE_UNORM8;
-
-    if (format == GL_DEPTH_COMPONENT) {
+    image::ChannelType channelType;
+    if (type == GL_UNSIGNED_BYTE) {
+        channelType = image::TYPE_UNORM8;
+    } else {
         type = GL_FLOAT;
-        channels = 1;
         channelType = image::TYPE_FLOAT;
     }
 
@@ -1110,7 +1110,9 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         glGetIntegerv(GL_ALPHA_BITS, &alpha_bits);
 #endif
         GLenum format = alpha_bits ? GL_RGBA : GL_RGB;
-        dumpReadBufferImage(json, enumToString(draw_buffer), width, height, format);
+        GLenum type = GL_UNSIGNED_BYTE;
+
+        dumpReadBufferImage(json, enumToString(draw_buffer), width, height, format, type);
 
         // Restore original read buffer
         if (!context.ES) {
@@ -1122,13 +1124,14 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         GLint depth_bits = 0;
         glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
         if (depth_bits) {
-            dumpReadBufferImage(json, "GL_DEPTH_COMPONENT", width, height, GL_DEPTH_COMPONENT);
+            dumpReadBufferImage(json, "GL_DEPTH_COMPONENT", width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
         }
 
         GLint stencil_bits = 0;
         glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
         if (stencil_bits) {
-            dumpReadBufferImage(json, "GL_STENCIL_INDEX", width, height, GL_STENCIL_INDEX);
+            assert(stencil_bits <= 8);
+            dumpReadBufferImage(json, "GL_STENCIL_INDEX", width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
         }
     }
     
@@ -1147,7 +1150,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
  * In the case of a color attachment, it assumes it is already bound for read.
  */
 static void
-dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLenum attachment, GLenum format = GL_NONE)
+dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLenum attachment)
 {
     ImageDesc desc;
     if (!getFramebufferAttachmentDesc(context, target, attachment, desc)) {
@@ -1156,9 +1159,23 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
 
     assert(desc.samples == 0);
 
-    if (format == GL_NONE) {
+    GLenum format;
+    GLenum type;
+    switch (attachment) {
+    case GL_DEPTH_ATTACHMENT:
+        format = GL_DEPTH_COMPONENT;
+        type = GL_FLOAT;
+        break;
+    case GL_STENCIL_ATTACHMENT:
+        format = GL_STENCIL_INDEX;
+        type = GL_UNSIGNED_BYTE;
+        break;
+    default:
         assert(desc.internalFormat != GL_NONE);
-        format = getFormat(desc.internalFormat);
+        if (!getInternalFormatType(desc.internalFormat, format, type)) {
+             format = GL_RGBA;
+             type = GL_UNSIGNED_BYTE;
+        }
     }
 
     GLint object_type = GL_NONE;
@@ -1178,7 +1195,9 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
         free(object_label);
     }
 
-    dumpReadBufferImage(json, label.str().c_str(), desc.width, desc.height, format, desc.internalFormat);
+    dumpReadBufferImage(json, label.str().c_str(),
+                        desc.width, desc.height,
+                        format, type, desc.internalFormat);
 }
 
 
@@ -1223,8 +1242,8 @@ dumpFramebufferAttachments(JSONWriter &json, Context &context, GLenum target)
     glReadBuffer(read_buffer);
 
     if (!context.ES) {
-        dumpFramebufferAttachment(json, context, target, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT);
-        dumpFramebufferAttachment(json, context, target, GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX);
+        dumpFramebufferAttachment(json, context, target, GL_DEPTH_ATTACHMENT);
+        dumpFramebufferAttachment(json, context, target, GL_STENCIL_ATTACHMENT);
     }
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, read_framebuffer);

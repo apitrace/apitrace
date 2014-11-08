@@ -246,20 +246,4 @@ getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type)
 }
 
 
-/**
- * Choose the glReadPixels/glGetTexImage format appropriate for the given
- * internalFormat.
- */
-GLenum
-getFormat(GLenum internalFormat)
-{
-    GLenum format;
-    GLenum type;
-    if (getInternalFormatType(internalFormat, format, type)) {
-        return format;
-    }
-    return GL_RGBA;
-}
-
-
 } /* namespace glstate */
