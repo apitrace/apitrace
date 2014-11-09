@@ -103,8 +103,7 @@ struct ImageDesc
  */
 static bool
 probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
-    while (glGetError() != GL_NO_ERROR)
-        ;
+    flushErrors();
 
     GLenum internalFormat = GL_RGBA;
     GLenum type = GL_UNSIGNED_BYTE;
@@ -138,8 +137,7 @@ probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
         return true;
     }
 
-    while (glGetError() != GL_NO_ERROR)
-        ;
+    flushErrors();
 
     return false;
 }
@@ -703,8 +701,7 @@ getTextureTarget(GLint texture)
         GLenum target = textureTargets[i];
         GLenum binding = getTextureBinding(target);
 
-        while (glGetError() != GL_NO_ERROR)
-            ;
+        flushErrors();
 
         GLint bound_texture = 0;
         glGetIntegerv(binding, &bound_texture);
@@ -718,6 +715,8 @@ getTextureTarget(GLint texture)
             return target;
         }
     }
+
+    flushErrors();
 
     return GL_NONE;
 }
@@ -883,7 +882,7 @@ getDrawBufferImage() {
         return NULL;
     }
 
-    while (glGetError() != GL_NO_ERROR) {}
+    flushErrors();
 
     GLint read_framebuffer = 0;
     GLint read_buffer = GL_NONE;
@@ -949,7 +948,7 @@ dumpReadBufferImage(JSONWriter &json,
 
     image::Image *image = new image::Image(width, height, channels, true, channelType);
 
-    while (glGetError() != GL_NO_ERROR) {}
+    flushErrors();
 
     // TODO: reset imaging state too
     context.resetPixelPackState();

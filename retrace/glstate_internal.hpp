@@ -28,6 +28,7 @@
 
 
 #include "glimports.hpp"
+#include "glproc.hpp"
 
 
 class JSONWriter;
@@ -65,6 +66,14 @@ private:
     GLint pack_swap_bytes;
     GLint pixel_pack_buffer_binding;
 };
+
+
+static inline void
+flushErrors(void) {
+    while (glGetError() != GL_NO_ERROR) {
+    }
+}
+
 
 
 const char *

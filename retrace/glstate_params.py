@@ -300,12 +300,6 @@ class StateDumper:
         print 'namespace glstate {'
         print
 
-        print 'static void'
-        print 'flushErrors(void) {'
-        print '    while (glGetError() != GL_NO_ERROR) {}'
-        print '}'
-        print
-
         print 'void'
         print 'dumpBoolean(JSONWriter &json, GLboolean value)'
         print '{'
