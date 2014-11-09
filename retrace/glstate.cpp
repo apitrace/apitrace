@@ -156,6 +156,35 @@ Context::restorePixelPackState(void) {
 }
 
 
+void
+dumpBoolean(JSONWriter &json, GLboolean value)
+{
+    switch (value) {
+    case GL_FALSE:
+        json.writeString("GL_FALSE");
+        break;
+    case GL_TRUE:
+        json.writeString("GL_TRUE");
+        break;
+    default:
+        json.writeInt(static_cast<GLint>(value));
+        break;
+    }
+}
+
+
+void
+dumpEnum(JSONWriter &json, GLenum pname)
+{
+    const char *s = enumToString(pname);
+    if (s) {
+        json.writeString(s);
+    } else {
+        json.writeInt(pname);
+    }
+}
+
+
 /**
  * Get a GL_KHR_debug/GL_EXT_debug_label object label.
  *

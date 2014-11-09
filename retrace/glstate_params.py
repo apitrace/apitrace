@@ -300,23 +300,6 @@ class StateDumper:
         print 'namespace glstate {'
         print
 
-        print 'void'
-        print 'dumpBoolean(JSONWriter &json, GLboolean value)'
-        print '{'
-        print '    switch (value) {'
-        print '    case GL_FALSE:'
-        print '        json.writeString("GL_FALSE");'
-        print '        break;'
-        print '    case GL_TRUE:'
-        print '        json.writeString("GL_TRUE");'
-        print '        break;'
-        print '    default:'
-        print '        json.writeInt(static_cast<GLint>(value));'
-        print '        break;'
-        print '    }'
-        print '}'
-        print
-
         print 'const char *'
         print 'enumToString(GLenum pname)'
         print '{'
@@ -326,18 +309,6 @@ class StateDumper:
             print '        return "%s";' % name
         print '    default:'
         print '        return NULL;'
-        print '    }'
-        print '}'
-        print
-
-        print 'void'
-        print 'dumpEnum(JSONWriter &json, GLenum pname)'
-        print '{'
-        print '    const char *s = enumToString(pname);'
-        print '    if (s) {'
-        print '        json.writeString(s);'
-        print '    } else {'
-        print '        json.writeInt(pname);'
         print '    }'
         print '}'
         print
