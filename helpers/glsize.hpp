@@ -44,29 +44,37 @@
 #include "glimports.hpp"
 
 
+// Vertex/element formats
 static inline size_t
-_gl_type_size(GLenum type)
+_gl_type_size(GLenum type, GLint size = 1)
 {
     switch (type) {
     case GL_BOOL:
     case GL_BYTE:
     case GL_UNSIGNED_BYTE:
-        return 1;
+        return size * 1;
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
     case GL_2_BYTES:
     case GL_HALF_FLOAT:
-        return 2;
+        return size * 2;
     case GL_3_BYTES:
-        return 3;
+        return size * 3;
     case GL_INT:
     case GL_UNSIGNED_INT:
     case GL_FLOAT:
     case GL_4_BYTES:
     case GL_FIXED:
-        return 4;
+        return size * 4;
     case GL_DOUBLE:
-        return 8;
+        return size * 8;
+    case GL_INT_2_10_10_10_REV:
+    case GL_INT_10_10_10_2_OES:
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+    case GL_UNSIGNED_INT_10_10_10_2_OES:
+    case GL_UNSIGNED_INT_10F_11F_11F_REV:
+        // packed
+        return 4;
     default:
         os::log("apitrace: warning: %s: unknown GLenum 0x%04X\n", __FUNCTION__, type);
         return 0;
@@ -310,7 +318,7 @@ _glArrayPointer_size(GLint size, GLenum type, GLsizei stride, GLsizei count)
         os::log("apitrace: warning: %s: unexpected size 0x%04X\n", __FUNCTION__, size);
     }
 
-    size_t elementSize = size*_gl_type_size(type);
+    size_t elementSize = _gl_type_size(type, size);
     if (!stride) {
         stride = (GLsizei)elementSize;
     }
