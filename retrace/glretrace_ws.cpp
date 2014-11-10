@@ -264,14 +264,23 @@ parseAttrib(const trace::Value *attribs, int param, int default_ = 0) {
 glws::Profile
 parseContextAttribList(const trace::Value *attribs)
 {
+    // {GLX,WGL}_CONTEXT_MAJOR_VERSION_ARB
     int major_version = parseAttrib(attribs, 0x2091, 1);
+
+    // {GLX,WGL}_CONTEXT_MINOR_VERSION_ARB
     int minor_version = parseAttrib(attribs, 0x2092, 0);
+
     int profile_mask = parseAttrib(attribs, GL_CONTEXT_PROFILE_MASK, 0);
+
     bool core_profile = profile_mask & GL_CONTEXT_CORE_PROFILE_BIT;
 
+    // {GLX,WGL}_CONTEXT_ES_PROFILE_BIT_EXT
+    bool es_profile = profile_mask & 0x0004;
+
     glws::Profile profile = glws::PROFILE_COMPAT;
-    if (major_version >= 3) {
+    if (major_version >= 3 || es_profile) {
        profile = (glws::Profile)((core_profile ? 0x100 : 0) |
+                                 (es_profile ? 0x200 : 0) |
                                  (major_version << 4) |
                                   minor_version);
     }
