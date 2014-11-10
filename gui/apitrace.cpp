@@ -4,6 +4,7 @@
 #include "saverthread.h"
 
 #include <QDebug>
+#include <QFileInfo>
 #include <QDir>
 #include <QThread>
 
@@ -173,11 +174,13 @@ ApiTraceState ApiTrace::defaultState() const
 void ApiTrace::callEdited(ApiTraceCall *call)
 {
     if (!m_editedCalls.contains(call)) {
-        //lets generate a temp filename
+        // Lets generate a temp filename
+        QFileInfo fileInfo(m_fileName);
         QString tempPath = QDir::tempPath();
-        m_tempFileName = QString::fromLatin1("%1/%2.edited")
-                         .arg(tempPath)
-                         .arg(m_fileName);
+        m_tempFileName = QDir::tempPath();
+        m_tempFileName += QDir::separator();
+        m_tempFileName += fileInfo.fileName();
+        m_tempFileName += QString::fromLatin1(".edited");
     }
     m_editedCalls.insert(call);
     m_needsSaving = true;
