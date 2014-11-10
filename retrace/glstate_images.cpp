@@ -810,12 +810,6 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
 
 image::Image *
 getDrawBufferImage() {
-    GLenum format = GL_RGB;
-    GLint channels = _gl_format_channels(format);
-    if (channels > 4) {
-        return NULL;
-    }
-
     Context context;
 
     GLenum framebuffer_binding;
@@ -868,7 +862,17 @@ getDrawBufferImage() {
         desc.depth = 1;
     }
 
+    GLenum format = GL_RGB;
     GLenum type = GL_UNSIGNED_BYTE;
+    if (context.ES) {
+        format = GL_RGBA;
+    }
+
+    GLint channels = _gl_format_channels(format);
+    if (channels > 4) {
+        return NULL;
+    }
+
     image::ChannelType channelType = image::TYPE_UNORM8;
 
     if (format == GL_DEPTH_COMPONENT) {
@@ -930,13 +934,19 @@ dumpReadBufferImage(JSONWriter &json,
                     GLenum format, GLenum type,
                     GLenum internalFormat = GL_NONE)
 {
-    GLint channels = _gl_format_channels(format);
-
     if (internalFormat == GL_NONE) {
         internalFormat = format;
     }
 
     Context context;
+
+    // On GLES glReadPixels only supports GL_RGBA and GL_UNSIGNED_BYTE combination
+    if (context.ES) {
+        format = GL_RGBA;
+        type = GL_UNSIGNED_BYTE;
+    }
+
+    GLint channels = _gl_format_channels(format);
 
     image::ChannelType channelType;
     if (type == GL_UNSIGNED_BYTE) {
