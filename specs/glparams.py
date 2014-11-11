@@ -932,7 +932,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_CONTEXT_FLAGS"),	# 0x821E
     ("glGetBufferParameter",	B,	1,	"GL_BUFFER_IMMUTABLE_STORAGE"),	# 0x821F
     ("glGetBufferParameter",	I,	1,	"GL_BUFFER_STORAGE_FLAGS"),	# 0x8220
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED"),	# 0x8221
+    ("glGet",	B,	1,	"GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED"),	# 0x8221
     ("",	X,	1,	"GL_INDEX"),	# 0x8222
     ("",	X,	1,	"GL_COMPRESSED_RED"),	# 0x8225
     ("",	X,	1,	"GL_COMPRESSED_RG"),	# 0x8226
@@ -1440,8 +1440,8 @@ parameters = [
     ("",	X,	1,	"GL_COMBINER5_NV"),	# 0x8555
     ("",	X,	1,	"GL_COMBINER6_NV"),	# 0x8556
     ("",	X,	1,	"GL_COMBINER7_NV"),	# 0x8557
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART_NV"),	# 0x8558
-    ("",	X,	1,	"GL_PRIMITIVE_RESTART_INDEX_NV"),	# 0x8559
+    ("glGet",	B,	1,	"GL_PRIMITIVE_RESTART_NV"),	# 0x8558
+    ("glGet",	I,	1,	"GL_PRIMITIVE_RESTART_INDEX_NV"),	# 0x8559
     ("glGet",	E,	1,	"GL_FOG_DISTANCE_MODE_NV"),	# 0x855A
     ("",	X,	1,	"GL_EYE_RADIAL_NV"),	# 0x855B
     ("",	X,	1,	"GL_EYE_PLANE_ABSOLUTE_NV"),	# 0x855C
