@@ -40,7 +40,6 @@ add_library (retrace_common STATIC
     retrace_swizzle.cpp
     json.cpp
 )
-
 target_link_libraries (retrace_common
     image
     common
@@ -48,6 +47,9 @@ target_link_libraries (retrace_common
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
 )
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_link_libraries (retrace_common rt)
+endif ()
 
 add_library (glretrace_common STATIC
     glretrace_gl.cpp
@@ -68,6 +70,9 @@ add_dependencies (glretrace_common glproc)
 target_link_libraries (glretrace_common
     retrace_common
 )
+if (procps_FOUND)
+    target_link_libraries (glretrace_common ${procps_LIBRARY})
+endif ()
 
 
 if (WIN32)
@@ -113,14 +118,6 @@ if (WIN32 OR APPLE OR X11_FOUND)
             ${CMAKE_THREAD_LIBS_INIT}
             dl
         )
-
-        if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-            target_link_libraries (glretrace rt)
-            if (READPROC_H_FOUND)
-                target_link_libraries (glretrace ${proc_LIBRARY})
-            endif ()
-        endif ()
-
     endif ()
 
     install (TARGETS glretrace RUNTIME DESTINATION bin) 
@@ -143,14 +140,6 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
-
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        target_link_libraries (eglretrace rt)
-        if (READPROC_H_FOUND)
-            target_link_libraries (eglretrace ${proc_LIBRARY})
-        endif ()
-    endif ()
-
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
 
@@ -171,7 +160,6 @@ if (ENABLE_EGL AND (ANDROID OR ENABLE_WAFFLE) AND Waffle_FOUND)
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
-    target_link_libraries (eglretrace ${proc_LIBRARY})
     install (TARGETS eglretrace RUNTIME DESTINATION bin)
 endif ()
 
