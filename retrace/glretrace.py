@@ -257,6 +257,7 @@ class GlRetracer(Retracer):
             function.name == 'glBegin'
         )
 
+        # Keep track of active program for call lists
         if function.name in ('glUseProgram', 'glUseProgramObjectARB'):
             print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
             print r'    if (currentContext) {'
@@ -438,23 +439,7 @@ class GlRetracer(Retracer):
         if arg.type is glapi.GLlocation \
            and 'program' not in function.argNames():
             # Determine the active program for uniforms swizzling
-            print '    GLint program = -1;'
-            print '    if (glretrace::insideList) {'
-            print '        // glUseProgram & glUseProgramObjectARB are display-list-able'
-            print r'    glretrace::Context *currentContext = glretrace::getCurrentContext();'
-            print '        program = _program_map[currentContext->activeProgram];'
-            print '    } else {'
-            print '        GLint pipeline = 0;'
-            print '        if (_pipelineHasBeenBound) {'
-            print '            glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);'
-            print '        }'
-            print '        if (pipeline) {'
-            print '            glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);'
-            print '        } else {'
-            print '            glGetIntegerv(GL_CURRENT_PROGRAM, &program);'
-            print '        }'
-            print '    }'
-            print
+            print '    GLint program = _getActiveProgram();'
 
         if arg.type is glapi.GLlocationARB \
            and 'programObj' not in function.argNames():
@@ -488,9 +473,39 @@ if __name__ == '__main__':
 
 
 static bool _pipelineHasBeenBound = false;
+
+
+static GLint
+_getActiveProgram(void);
+
 '''
     api = stdapi.API()
     api.addModule(glapi.glapi)
     api.addModule(glesapi.glesapi)
     retracer = GlRetracer()
     retracer.retraceApi(api)
+
+    print r'''
+static GLint
+_getActiveProgram(void)
+{
+    GLint program = -1;
+    if (glretrace::insideList) {
+        // glUseProgram & glUseProgramObjectARB are display-list-able
+        glretrace::Context *currentContext = glretrace::getCurrentContext();
+        program = _program_map[currentContext->activeProgram];
+    } else {
+        GLint pipeline = 0;
+        if (_pipelineHasBeenBound) {
+            glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
+        }
+        if (pipeline) {
+            glGetProgramPipelineiv(pipeline, GL_ACTIVE_PROGRAM, &program);
+        } else {
+            glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+        }
+    }
+    return program;
+}
+
+'''
