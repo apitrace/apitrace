@@ -108,26 +108,9 @@ class GlRetracer(Retracer):
         r'Readn?Pixels',
     ]) + r')[0-9A-Z]*$')
 
-    map_function_names = set([
-        'glMapBuffer',
-        'glMapBufferARB',
-        'glMapBufferOES',
-        'glMapBufferRange',
-        'glMapNamedBuffer',
-        'glMapNamedBufferEXT',
-        'glMapNamedBufferRange',
-        'glMapNamedBufferRangeEXT',
-        'glMapObjectBufferATI',
-    ])
+    map_function_regex = re.compile(r'^glMap(|Named|Object)Buffer(Range)?[0-9A-Z]*$')
 
-    unmap_function_names = set([
-        'glUnmapBuffer',
-        'glUnmapBufferARB',
-        'glUnmapBufferOES',
-        'glUnmapNamedBuffer',
-        'glUnmapNamedBufferEXT',
-        'glUnmapObjectBufferATI',
-    ])
+    unmap_function_regex = re.compile(r'^glUnmap(|Named|Object)Buffer[0-9A-Z]*$')
 
     def retraceFunctionBody(self, function):
         is_array_pointer = function.name in self.array_pointer_function_names
@@ -225,7 +208,7 @@ class GlRetracer(Retracer):
             print '    if (cap == GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB) return;'
 
         # Destroy the buffer mapping
-        if function.name in self.unmap_function_names:
+        if self.unmap_function_regex.match(function.name):
             print r'        GLvoid *ptr = NULL;'
             if function.name == 'glUnmapBuffer':
                 print r'            glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &ptr);'
@@ -383,11 +366,11 @@ class GlRetracer(Retracer):
                 print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
-            if function.name in self.map_function_names:
+            if self.map_function_regex.match(function.name):
                 print r'        if (!_result) {'
                 print r'             retrace::warning(call) << "failed to map buffer\n";'
                 print r'        }'
-            if function.name in self.unmap_function_names and function.type is not stdapi.Void:
+            if self.unmap_function_regex.match(function.name) and function.type is not stdapi.Void:
                 print r'        if (!_result) {'
                 print r'             retrace::warning(call) << "failed to unmap buffer\n";'
                 print r'        }'
@@ -405,7 +388,7 @@ class GlRetracer(Retracer):
             print '    }'
 
         # Query the buffer length for whole buffer mappings
-        if function.name in self.map_function_names:
+        if self.map_function_regex.match(function.name):
             if 'length' in function.argNames():
                 assert 'BufferRange' in function.name
             else:
