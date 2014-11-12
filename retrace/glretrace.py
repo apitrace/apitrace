@@ -98,41 +98,15 @@ class GlRetracer(Retracer):
 
     # Names of the functions that can pack into the current pixel buffer
     # object.  See also the ARB_pixel_buffer_object specification.
-    pack_function_names = set([
-        'glGetCompressedTexImage',
-        'glGetCompressedTexImageARB',
-        'glGetCompressedTextureImage',
-        'glGetCompressedTextureImageEXT',
-        'glGetCompressedTextureSubImage',
-        'glGetCompressedMultiTexImageEXT',
-        'glGetConvolutionFilter',
-        'glGetHistogram',
-        'glGetMinmax',
-        'glGetPixelMapfv',
-        'glGetPixelMapuiv',
-        'glGetPixelMapusv',
-        'glGetPolygonStipple',
-        'glGetSeparableFilter',
-        'glGetTexImage',
-        'glGetTextureImage',
-        'glGetTextureImageEXT',
-        'glGetTextureSubImage',
-        'glGetMultiTexImageEXT',
-        'glReadPixels',
-        'glGetnCompressedTexImageARB',
-        'glGetnConvolutionFilterARB',
-        'glGetnHistogramARB',
-        'glGetnMinmaxARB',
-        'glGetnPixelMapfvARB',
-        'glGetnPixelMapuivARB',
-        'glGetnPixelMapusvARB',
-        'glGetnPolygonStippleARB',
-        'glGetnSeparableFilterARB',
-        'glGetnTexImageARB',
-        'glReadnPixels',
-        'glReadnPixelsEXT',
-        'glReadnPixelsARB',
-    ])
+    pack_function_regex = re.compile(r'^gl(' + r'|'.join([
+        r'Getn?Histogram',
+        r'Getn?PolygonStipple',
+        r'Getn?PixelMap[a-z]+v',
+        r'Getn?Minmax',
+        r'Getn?(Convolution|Separable)Filter',
+        r'Getn?(Compressed)?(Multi)?Tex(ture)?(Sub)?Image',
+        r'Readn?Pixels',
+    ]) + r')[0-9A-Z]*$')
 
     map_function_names = set([
         'glMapBuffer',
@@ -183,7 +157,7 @@ class GlRetracer(Retracer):
             print '    }'
 
         # When no pack buffer object is bound, the pack functions are no-ops.
-        if function.name in self.pack_function_names:
+        if self.pack_function_regex.match(function.name):
             print '    GLint _pack_buffer = 0;'
             print '    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &_pack_buffer);'
             print '    if (!_pack_buffer) {'
@@ -462,7 +436,7 @@ class GlRetracer(Retracer):
 
         # Handle pointer with offsets into the current pack pixel buffer
         # object.
-        if function.name in self.pack_function_names and arg.output:
+        if self.pack_function_regex.match(function.name) and arg.output:
             assert isinstance(arg_type, (stdapi.Pointer, stdapi.Array, stdapi.Blob, stdapi.Opaque))
             print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue)
             return
