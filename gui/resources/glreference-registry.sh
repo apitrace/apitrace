@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Script to extract reference URLs for functions documented in OpenGL ARB specs
 
 extract_urls () {
@@ -13,8 +13,8 @@ extract_functions () {
     | sed -e '/^[A-Z]/s/^/gl/'
 }
 
-extract_urls http://www.opengl.org/registry/ \
-| grep '^http://www\.opengl\.org/registry/specs/\w\+/.*\.txt$' \
+extract_urls https://www.opengl.org/registry/ \
+| grep '^https://www\.opengl\.org/registry/specs/\w\+/.*\.txt$' \
 | sort -u \
 | while read URL
 do
