@@ -854,79 +854,21 @@ class GlTracer(Tracer):
     def gl_boolean(self, value):
         return self.boolean_names[int(bool(value))]
 
-    # Names of the functions that unpack from a pixel buffer object.  See the
-    # ARB_pixel_buffer_object specification.
-    unpack_function_names = set([
-        'glBitmap',
-        'glColorSubTable',
-        'glColorTable',
-        'glCompressedMultiTexImage1DEXT',
-        'glCompressedMultiTexImage2DEXT',
-        'glCompressedMultiTexImage3DEXT',
-        'glCompressedMultiTexSubImage1DEXT',
-        'glCompressedMultiTexSubImage2DEXT',
-        'glCompressedMultiTexSubImage3DEXT',
-        'glCompressedTexImage1D',
-        'glCompressedTexImage1DARB',
-        'glCompressedTexImage2D',
-        'glCompressedTexImage2DARB',
-        'glCompressedTexImage3D',
-        'glCompressedTexImage3DARB',
-        'glCompressedTexSubImage1D',
-        'glCompressedTexSubImage1DARB',
-        'glCompressedTexSubImage2D',
-        'glCompressedTexSubImage2DARB',
-        'glCompressedTexSubImage3D',
-        'glCompressedTexSubImage3DARB',
-        'glCompressedTextureImage1D',
-        'glCompressedTextureImage1DEXT',
-        'glCompressedTextureImage2D',
-        'glCompressedTextureImage2DEXT',
-        'glCompressedTextureImage3D',
-        'glCompressedTextureImage3DEXT',
-        'glCompressedTextureSubImage1D',
-        'glCompressedTextureSubImage1DEXT',
-        'glCompressedTextureSubImage2D',
-        'glCompressedTextureSubImage2DEXT',
-        'glCompressedTextureSubImage3D',
-        'glCompressedTextureSubImage3DEXT',
-        'glConvolutionFilter1D',
-        'glConvolutionFilter2D',
-        'glDrawPixels',
-        'glMultiTexImage1DEXT',
-        'glMultiTexImage2DEXT',
-        'glMultiTexImage3DEXT',
-        'glMultiTexSubImage1DEXT',
-        'glMultiTexSubImage2DEXT',
-        'glMultiTexSubImage3DEXT',
-        'glPixelMapfv',
-        'glPixelMapuiv',
-        'glPixelMapusv',
-        'glPolygonStipple',
-        'glSeparableFilter2D',
-        'glTexImage1D',
-        'glTexImage1DEXT',
-        'glTexImage2D',
-        'glTexImage2DEXT',
-        'glTexImage3D',
-        'glTexImage3DEXT',
-        'glTexSubImage1D',
-        'glTexSubImage1DEXT',
-        'glTexSubImage2D',
-        'glTexSubImage2DEXT',
-        'glTexSubImage3D',
-        'glTexSubImage3DEXT',
-        'glTextureImage1DEXT',
-        'glTextureImage2DEXT',
-        'glTextureImage3DEXT',
-        'glTextureSubImage1DEXT',
-        'glTextureSubImage2DEXT',
-        'glTextureSubImage3DEXT',
-    ])
+    # Regular expression for the names of the functions that unpack from a
+    # pixel buffer object.  See the ARB_pixel_buffer_object specification.
+    unpack_function_regex = re.compile(r'^gl(' + r'|'.join([
+        r'Bitmap',
+        r'PolygonStipple',
+        r'PixelMap[a-z]+v',
+        r'DrawPixels',
+        r'Color(Sub)?Table',
+        r'(Convolution|Separable)Filter[12]D',
+        r'(Compressed)?(Multi)?Tex(ture)?(Sub)?Image[1-4]D',
+    ]) + r')[0-9A-Z]*$')
 
     def serializeArgValue(self, function, arg):
         # Recognize offsets instead of blobs when a PBO is bound
-        if function.name in self.unpack_function_names \
+        if self.unpack_function_regex.match(function.name) \
            and (isinstance(arg.type, stdapi.Blob) \
                 or (isinstance(arg.type, stdapi.Const) \
                     and isinstance(arg.type.type, stdapi.Blob))):
