@@ -96,6 +96,8 @@ class GlRetracer(Retracer):
         "glDrawPixels",
         "glBlitFramebuffer",
         "glBlitFramebufferEXT",
+        "glBlitFramebufferNV",
+        "glBlitFramebufferANGLE",
         "glBindFramebufferOES",
     ])
 
