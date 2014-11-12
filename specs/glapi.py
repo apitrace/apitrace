@@ -711,7 +711,7 @@ glapi.addFunctions([
     GlFunction(Void, "glVertexAttribI4usv", [(GLuint, "index"), (Array(Const(GLushort), 4), "v")]),
     GlFunction(Void, "glGetUniformuiv", [(GLprogram, "program"), (GLlocation, "location"), Out(OpaqueArray(GLuint, "_glGetUniformuiv_size(program, location)"), "params")], sideeffects=False),
     GlFunction(Void, "glBindFragDataLocation", [(GLprogram, "program"), (GLuint, "color"), (GLstringConst, "name")]),
-    GlFunction(GLlocation, "glGetFragDataLocation", [(GLprogram, "program"), (GLstringConst, "name")]),
+    GlFunction(GLint, "glGetFragDataLocation", [(GLprogram, "program"), (GLstringConst, "name")], sideeffects=False),
     GlFunction(Void, "glUniform1ui", [(GLlocation, "location"), (GLuint, "v0")]),
     GlFunction(Void, "glUniform2ui", [(GLlocation, "location"), (GLuint, "v0"), (GLuint, "v1")]),
     GlFunction(Void, "glUniform3ui", [(GLlocation, "location"), (GLuint, "v0"), (GLuint, "v1"), (GLuint, "v2")]),
@@ -2216,7 +2216,7 @@ glapi.addFunctions([
     # GL_EXT_gpu_shader4
     GlFunction(Void, "glGetUniformuivEXT", [(GLprogram, "program"), (GLlocation, "location"), Out(OpaqueArray(GLuint, "_glGetUniformuivEXT_size(program, location)"), "params")], sideeffects=False),
     GlFunction(Void, "glBindFragDataLocationEXT", [(GLprogram, "program"), (GLuint, "color"), (GLstringConst, "name")]),
-    GlFunction(GLlocation, "glGetFragDataLocationEXT", [(GLprogram, "program"), (GLstringConst, "name")]),
+    GlFunction(GLint, "glGetFragDataLocationEXT", [(GLprogram, "program"), (GLstringConst, "name")], sideeffects=False),
     GlFunction(Void, "glUniform1uiEXT", [(GLlocation, "location"), (GLuint, "v0")]),
     GlFunction(Void, "glUniform2uiEXT", [(GLlocation, "location"), (GLuint, "v0"), (GLuint, "v1")]),
     GlFunction(Void, "glUniform3uiEXT", [(GLlocation, "location"), (GLuint, "v0"), (GLuint, "v1"), (GLuint, "v2")]),
