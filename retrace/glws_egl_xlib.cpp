@@ -399,8 +399,8 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
     context = eglCreateContext(eglDisplay, visual->config, share_context, attribs);
     if (!context) {
         if (debug) {
-            // XXX: Mesa seems to have problem with
-            // EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR, so retry without it
+            // XXX: Mesa has problems with EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR
+            // with OpenGL ES contexts, so retry without it
             return createContext(_visual, shareContext, false);
         }
         return NULL;

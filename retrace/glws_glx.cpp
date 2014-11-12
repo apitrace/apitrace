@@ -305,6 +305,11 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         attribs.end();
 
         context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
+        if (!context && debug) {
+            // XXX: Mesa has problems with GLX_CONTEXT_DEBUG_BIT_ARB with
+            // OpenGL ES contexts, so retry without it
+            return createContext(_visual, shareContext, false);
+        }
     } else {
         if (profile != PROFILE_COMPAT) {
             return NULL;
