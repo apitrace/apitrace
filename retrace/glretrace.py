@@ -40,8 +40,17 @@ class GlRetracer(Retracer):
 
     table_name = 'glretrace::gl_callbacks'
 
-    def retraceFunction(self, function):
-        Retracer.retraceFunction(self, function)
+    def retraceApi(self, api):
+        # Ensure pack function have side effects
+        abort = False
+        for function in api.getAllFunctions():
+            if not function.sideeffects and self.pack_function_regex.match(function.name):
+                sys.stderr.write('error: function %s must have sideeffects\n' % function.name)
+                abort = True
+        if abort:
+            sys.exit(1)
+
+        Retracer.retraceApi(self, api)
 
     array_pointer_function_names = set((
         "glVertexPointer",
