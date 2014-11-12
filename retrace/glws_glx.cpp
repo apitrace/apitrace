@@ -274,7 +274,8 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         case PROFILE_COMPAT:
             break;
         case PROFILE_ES1:
-            if (!has_GLX_EXT_create_context_es_profile) {
+            if (!has_GLX_EXT_create_context_es_profile &&
+                !has_GLX_EXT_create_context_es2_profile) {
                 return NULL;
             }
             attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
@@ -284,7 +285,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             if (!has_GLX_EXT_create_context_es2_profile) {
                 return NULL;
             }
-            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
+            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
             attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 2);
             break;
         default:
