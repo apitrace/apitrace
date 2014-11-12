@@ -331,7 +331,9 @@ public:
             ProfileDesc desc;
             getProfileDesc(profile, desc);
 
-            if (desc.major >= 3 || desc.core) {
+            if (desc.api != API_GL ||
+                desc.major > 3 ||
+                (desc.major == 3 && desc.minor > 0)) {
                 // We need to create context through WGL_ARB_create_context.  This
                 // implies binding a temporary context to get the extensions strings
                 // and function pointers.
@@ -367,10 +369,27 @@ public:
                 wglDeleteContext(hglrc);
 
                 Attributes<int> attribs;
-                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-                if (desc.core) {
-                    attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB);
+                if (desc.api == API_GL) {
+                    attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+                    attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+                    if (desc.core) {
+                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB);
+                    }
+                } else if (desc.api == API_GLES) {
+                    if (checkExtension("WGL_EXT_create_context_es2_profile", extensionsString)) {
+                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES_PROFILE_BIT_EXT);
+                        attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+                        attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+                    } else if (desc.major >= 2) {
+                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es2_profile not supported\\n";
+                    } else if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {
+                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES_PROFILE_BIT_EXT);
+                        /* version implied */
+                    } else {
+                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile not supported\\n";
+                    }
+                } else {
+                    assert(0);
                 }
                 if (debug) {
                     attribs.add(WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB);
@@ -437,18 +456,6 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
-    switch (profile) {
-    case PROFILE_COMPAT:
-        break;
-    case PROFILE_ES1:
-        return NULL;
-    case PROFILE_ES2:
-        std::cerr << "warning: ignoring OpenGL ES 2.0 profile request\n";
-        break;
-    default:
-        break;
-    }
-
     Visual *visual = new Visual(profile);
 
     visual->doubleBuffer = doubleBuffer;
