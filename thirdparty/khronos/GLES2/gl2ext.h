@@ -33,14 +33,14 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 27673 $ on $Date: 2014-08-10 16:26:49 -0700 (Sun, 10 Aug 2014) $
+** Khronos $Revision: 28689 $ on $Date: 2014-10-21 17:30:22 -0700 (Tue, 21 Oct 2014) $
 */
 
 #ifndef GL_APIENTRYP
 #define GL_APIENTRYP GL_APIENTRY*
 #endif
 
-/* Generated on date 20140810 */
+/* Generated on date 20141021 */
 
 /* Generated C header for:
  * API: gles2
@@ -633,6 +633,23 @@ GL_APICALL void GL_APIENTRY glGetTranslatedShaderSourceANGLE (GLuint shader, GLs
 #endif
 #endif /* GL_ANGLE_translated_shader_source */
 
+#ifndef GL_APPLE_clip_distance
+#define GL_APPLE_clip_distance 1
+#define GL_MAX_CLIP_DISTANCES_APPLE       0x0D32
+#define GL_CLIP_DISTANCE0_APPLE           0x3000
+#define GL_CLIP_DISTANCE1_APPLE           0x3001
+#define GL_CLIP_DISTANCE2_APPLE           0x3002
+#define GL_CLIP_DISTANCE3_APPLE           0x3003
+#define GL_CLIP_DISTANCE4_APPLE           0x3004
+#define GL_CLIP_DISTANCE5_APPLE           0x3005
+#define GL_CLIP_DISTANCE6_APPLE           0x3006
+#define GL_CLIP_DISTANCE7_APPLE           0x3007
+#endif /* GL_APPLE_clip_distance */
+
+#ifndef GL_APPLE_color_buffer_packed_float
+#define GL_APPLE_color_buffer_packed_float 1
+#endif /* GL_APPLE_color_buffer_packed_float */
+
 #ifndef GL_APPLE_copy_texture_levels
 #define GL_APPLE_copy_texture_levels 1
 typedef void (GL_APIENTRYP PFNGLCOPYTEXTURELEVELSAPPLEPROC) (GLuint destinationTexture, GLuint sourceTexture, GLint sourceBaseLevel, GLsizei sourceLevelCount);
@@ -713,6 +730,14 @@ GL_APICALL void GL_APIENTRY glGetSyncivAPPLE (GLsync sync, GLenum pname, GLsizei
 #define GL_TEXTURE_MAX_LEVEL_APPLE        0x813D
 #endif /* GL_APPLE_texture_max_level */
 
+#ifndef GL_APPLE_texture_packed_float
+#define GL_APPLE_texture_packed_float 1
+#define GL_UNSIGNED_INT_10F_11F_11F_REV_APPLE 0x8C3B
+#define GL_UNSIGNED_INT_5_9_9_9_REV_APPLE 0x8C3E
+#define GL_R11F_G11F_B10F_APPLE           0x8C3A
+#define GL_RGB9_E5_APPLE                  0x8C3D
+#endif /* GL_APPLE_texture_packed_float */
+
 #ifndef GL_ARM_mali_program_binary
 #define GL_ARM_mali_program_binary 1
 #define GL_MALI_PROGRAM_BINARY_ARM        0x8F61
@@ -736,6 +761,13 @@ GL_APICALL void GL_APIENTRY glGetSyncivAPPLE (GLsync sync, GLenum pname, GLsizei
 #ifndef GL_ARM_shader_framebuffer_fetch_depth_stencil
 #define GL_ARM_shader_framebuffer_fetch_depth_stencil 1
 #endif /* GL_ARM_shader_framebuffer_fetch_depth_stencil */
+
+#ifndef GL_DMP_program_binary
+#define GL_DMP_program_binary 1
+#define GL_SMAPHS30_PROGRAM_BINARY_DMP    0x9251
+#define GL_SMAPHS_PROGRAM_BINARY_DMP      0x9252
+#define GL_DMP_PROGRAM_BINARY_DMP         0x9253
+#endif /* GL_DMP_program_binary */
 
 #ifndef GL_DMP_shader_binary
 #define GL_DMP_shader_binary 1
@@ -1754,6 +1786,20 @@ typedef void (GL_APIENTRYP PFNGLVERTEXATTRIBDIVISORNVPROC) (GLuint index, GLuint
 GL_APICALL void GL_APIENTRY glVertexAttribDivisorNV (GLuint index, GLuint divisor);
 #endif
 #endif /* GL_NV_instanced_arrays */
+
+#ifndef GL_NV_internalformat_sample_query
+#define GL_NV_internalformat_sample_query 1
+#define GL_TEXTURE_2D_MULTISAMPLE         0x9100
+#define GL_TEXTURE_2D_MULTISAMPLE_ARRAY   0x9102
+#define GL_MULTISAMPLES_NV                0x9371
+#define GL_SUPERSAMPLE_SCALE_X_NV         0x9372
+#define GL_SUPERSAMPLE_SCALE_Y_NV         0x9373
+#define GL_CONFORMANT_NV                  0x9374
+typedef void (GL_APIENTRYP PFNGLGETINTERNALFORMATSAMPLEIVNVPROC) (GLenum target, GLenum internalformat, GLsizei samples, GLenum pname, GLsizei bufSize, GLint *params);
+#ifdef GL_GLEXT_PROTOTYPES
+GL_APICALL void GL_APIENTRY glGetInternalformatSampleivNV (GLenum target, GLenum internalformat, GLsizei samples, GLenum pname, GLsizei bufSize, GLint *params);
+#endif
+#endif /* GL_NV_internalformat_sample_query */
 
 #ifndef GL_NV_non_square_matrices
 #define GL_NV_non_square_matrices 1

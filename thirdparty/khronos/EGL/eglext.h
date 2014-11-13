@@ -33,12 +33,12 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 27652 $ on $Date: 2014-08-08 15:34:23 -0700 (Fri, 08 Aug 2014) $
+** Khronos $Revision: 28371 $ on $Date: 2014-10-01 09:16:09 -0700 (Wed, 01 Oct 2014) $
 */
 
 #include <EGL/eglplatform.h>
 
-#define EGL_EGLEXT_VERSION 20140808
+#define EGL_EGLEXT_VERSION 20141001
 
 /* Generated C header for:
  * API: egl
@@ -462,6 +462,16 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQueryDisplayAttribEXT (EGLDisplay dpy, EGLint a
 #endif
 #endif /* EGL_EXT_device_base */
 
+#ifndef EGL_EXT_device_drm
+#define EGL_EXT_device_drm 1
+#define EGL_DRM_DEVICE_FILE_EXT           0x3233
+#endif /* EGL_EXT_device_drm */
+
+#ifndef EGL_EXT_device_openwf
+#define EGL_EXT_device_openwf 1
+#define EGL_OPENWF_DEVICE_ID_EXT          0x3237
+#endif /* EGL_EXT_device_openwf */
+
 #ifndef EGL_EXT_image_dma_buf_import
 #define EGL_EXT_image_dma_buf_import 1
 #define EGL_LINUX_DMA_BUF_EXT             0x3270
@@ -492,6 +502,48 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQueryDisplayAttribEXT (EGLDisplay dpy, EGLint a
 #define EGL_EXT_multiview_window 1
 #define EGL_MULTIVIEW_VIEW_COUNT_EXT      0x3134
 #endif /* EGL_EXT_multiview_window */
+
+#ifndef EGL_EXT_output_base
+#define EGL_EXT_output_base 1
+typedef void *EGLOutputLayerEXT;
+typedef void *EGLOutputPortEXT;
+#define EGL_NO_OUTPUT_LAYER_EXT           ((EGLOutputLayerEXT)0)
+#define EGL_NO_OUTPUT_PORT_EXT            ((EGLOutputPortEXT)0)
+#define EGL_BAD_OUTPUT_LAYER_EXT          0x322D
+#define EGL_BAD_OUTPUT_PORT_EXT           0x322E
+#define EGL_SWAP_INTERVAL_EXT             0x322F
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLGETOUTPUTLAYERSEXTPROC) (EGLDisplay dpy, const EGLAttrib *attrib_list, EGLOutputLayerEXT *layers, EGLint max_layers, EGLint *num_layers);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLGETOUTPUTPORTSEXTPROC) (EGLDisplay dpy, const EGLAttrib *attrib_list, EGLOutputPortEXT *ports, EGLint max_ports, EGLint *num_ports);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLOUTPUTLAYERATTRIBEXTPROC) (EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib value);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYOUTPUTLAYERATTRIBEXTPROC) (EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib *value);
+typedef const char *(EGLAPIENTRYP PFNEGLQUERYOUTPUTLAYERSTRINGEXTPROC) (EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint name);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLOUTPUTPORTATTRIBEXTPROC) (EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib value);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYOUTPUTPORTATTRIBEXTPROC) (EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib *value);
+typedef const char *(EGLAPIENTRYP PFNEGLQUERYOUTPUTPORTSTRINGEXTPROC) (EGLDisplay dpy, EGLOutputPortEXT port, EGLint name);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglGetOutputLayersEXT (EGLDisplay dpy, const EGLAttrib *attrib_list, EGLOutputLayerEXT *layers, EGLint max_layers, EGLint *num_layers);
+EGLAPI EGLBoolean EGLAPIENTRY eglGetOutputPortsEXT (EGLDisplay dpy, const EGLAttrib *attrib_list, EGLOutputPortEXT *ports, EGLint max_ports, EGLint *num_ports);
+EGLAPI EGLBoolean EGLAPIENTRY eglOutputLayerAttribEXT (EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib value);
+EGLAPI EGLBoolean EGLAPIENTRY eglQueryOutputLayerAttribEXT (EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib *value);
+EGLAPI const char *EGLAPIENTRY eglQueryOutputLayerStringEXT (EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint name);
+EGLAPI EGLBoolean EGLAPIENTRY eglOutputPortAttribEXT (EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib value);
+EGLAPI EGLBoolean EGLAPIENTRY eglQueryOutputPortAttribEXT (EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib *value);
+EGLAPI const char *EGLAPIENTRY eglQueryOutputPortStringEXT (EGLDisplay dpy, EGLOutputPortEXT port, EGLint name);
+#endif
+#endif /* EGL_EXT_output_base */
+
+#ifndef EGL_EXT_output_drm
+#define EGL_EXT_output_drm 1
+#define EGL_DRM_CRTC_EXT                  0x3234
+#define EGL_DRM_PLANE_EXT                 0x3235
+#define EGL_DRM_CONNECTOR_EXT             0x3236
+#endif /* EGL_EXT_output_drm */
+
+#ifndef EGL_EXT_output_openwf
+#define EGL_EXT_output_openwf 1
+#define EGL_OPENWF_PIPELINE_ID_EXT        0x3238
+#define EGL_OPENWF_PORT_ID_EXT            0x3239
+#endif /* EGL_EXT_output_openwf */
 
 #ifndef EGL_EXT_platform_base
 #define EGL_EXT_platform_base 1
@@ -525,6 +577,14 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformPixmapSurfaceEXT (EGLDisplay dpy,
 #define EGL_EXT_protected_surface 1
 #define EGL_PROTECTED_CONTENT_EXT         0x32C0
 #endif /* EGL_EXT_protected_surface */
+
+#ifndef EGL_EXT_stream_consumer_egloutput
+#define EGL_EXT_stream_consumer_egloutput 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMCONSUMEROUTPUTEXTPROC) (EGLDisplay dpy, EGLStreamKHR stream, EGLOutputLayerEXT layer);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglStreamConsumerOutputEXT (EGLDisplay dpy, EGLStreamKHR stream, EGLOutputLayerEXT layer);
+#endif
+#endif /* EGL_EXT_stream_consumer_egloutput */
 
 #ifndef EGL_EXT_swap_buffers_with_damage
 #define EGL_EXT_swap_buffers_with_damage 1
@@ -726,6 +786,16 @@ EGLAPI EGLuint64NV EGLAPIENTRY eglGetSystemTimeNV (void);
 #endif
 #endif /* KHRONOS_SUPPORT_INT64 */
 #endif /* EGL_NV_system_time */
+
+#ifndef EGL_TIZEN_image_native_buffer
+#define EGL_TIZEN_image_native_buffer 1
+#define EGL_NATIVE_BUFFER_TIZEN           0x32A0
+#endif /* EGL_TIZEN_image_native_buffer */
+
+#ifndef EGL_TIZEN_image_native_surface
+#define EGL_TIZEN_image_native_surface 1
+#define EGL_NATIVE_SURFACE_TIZEN          0x32A1
+#endif /* EGL_TIZEN_image_native_surface */
 
 #ifdef __cplusplus
 }

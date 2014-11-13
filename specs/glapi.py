@@ -1428,9 +1428,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGetNamedStringivARB", [(GLint, "namelen"), InGlString(GLchar, "namelen", "name"), (GLenum, "pname"), Out(OpaqueArray(GLint, "_glGetNamedStringivARB_size(pname)"), "params")], sideeffects=False),
 
     # GL_ARB_sparse_buffer
-    GlFunction(Void, "glBufferPageCommitmentARB", [(GLenum, "target"), (GLintptr, "offset"), (GLsizei, "size"), (GLboolean, "commit")]),
-    GlFunction(Void, "glNamedBufferPageCommitmentEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizei, "size"), (GLboolean, "commit")]),
-    GlFunction(Void, "glNamedBufferPageCommitmentARB", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizei, "size"), (GLboolean, "commit")]),
+    GlFunction(Void, "glBufferPageCommitmentARB", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "size"), (GLboolean, "commit")]),
+    GlFunction(Void, "glNamedBufferPageCommitmentEXT", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "size"), (GLboolean, "commit")]),
+    GlFunction(Void, "glNamedBufferPageCommitmentARB", [(GLbuffer, "buffer"), (GLintptr, "offset"), (GLsizeiptr, "size"), (GLboolean, "commit")]),
 
     # GL_ARB_sparse_texture
     GlFunction(Void, "glTexPageCommitmentARB", [(GLenum, "target"), (GLint, "level"), (GLint, "xoffset"), (GLint, "yoffset"), (GLint, "zoffset"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLboolean, "resident")]),

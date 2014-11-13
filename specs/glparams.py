@@ -3275,7 +3275,7 @@ parameters = [
     ("",	X,	1,	"GL_MAX_SPARSE_TEXTURE_SIZE_ARB"),	# 0x9198
     ("",	X,	1,	"GL_MAX_SPARSE_3D_TEXTURE_SIZE_ARB"),	# 0x9199
     ("",	X,	1,	"GL_MAX_SPARSE_ARRAY_TEXTURE_LAYERS"),	# 0x919A
-    ("",	X,	1,	"GL_MIN_SPARSE_LEVEL_ARB"),	# 0x919B
+    ("",	X,	1,	"GL_MIN_SPARSE_LEVEL_AMD"),	# 0x919B
     ("",	X,	1,	"GL_MIN_LOD_WARNING_AMD"),	# 0x919C
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_OFFSET"),	# 0x919D
     ("glGetTexLevelParameter",	I,	1,	"GL_TEXTURE_BUFFER_SIZE"),	# 0x919E
@@ -3287,6 +3287,7 @@ parameters = [
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_INDEX_ARB"),	# 0x91A7
     ("",	X,	1,	"GL_NUM_VIRTUAL_PAGE_SIZES_ARB"),	# 0x91A8
     ("",	X,	1,	"GL_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_ARB"),	# 0x91A9
+    ("",	X,	1,	"GL_NUM_SPARSE_LEVELS_ARB"),	# 0x91AA
     ("glGetProgramPipeline",	I,	1,	"GL_COMPUTE_SHADER"),	# 0x91B9
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_UNIFORM_BLOCKS"),	# 0x91BB
     ("glGet",	I,	1,	"GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS"),	# 0x91BC
