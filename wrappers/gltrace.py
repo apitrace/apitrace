@@ -666,6 +666,12 @@ class GlTracer(Tracer):
             print r'        os::log("apitrace: warning: GL_AMD_pinned_memory not fully supported\n");'
             print r'    }'
 
+        # TODO: We don't track GL_INTEL_map_texture mappings
+        if function.name == 'glMapTexture2DINTEL':
+            print r'    if (access & GL_MAP_WRITE_BIT) {'
+            print r'        os::log("apitrace: warning: GL_INTEL_map_texture not fully supported\n");'
+            print r'    }'
+
         # Don't leave vertex attrib locations to chance.  Instead emit fake
         # glBindAttribLocation calls to ensure that the same locations will be
         # used when retracing.  Trying to remap locations after the fact would

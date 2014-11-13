@@ -2466,10 +2466,9 @@ glapi.addFunctions([
     GlFunction(Void, "glBlendFuncSeparateINGR", [(GLenum, "sfactorRGB"), (GLenum, "dfactorRGB"), (GLenum, "sfactorAlpha"), (GLenum, "dfactorAlpha")]),
 
     # GL_INTEL_map_texture
-    # XXX: glMapTexture2DINTEL prototype in glext.h is busted
-    #GlFunction(Void, "glSyncTextureINTEL", [(GLtexture, "texture")]),
-    #GlFunction(Void, "glUnmapTexture2DINTEL", [(GLtexture, "texture"), (GLint, "level")]),
-    #GlFunction(OpaquePointer(GLvoid), "glMapTexture2DINTEL", [(GLtexture, "texture"), (GLint, "level"), (GLbitfield, "access"), Out(Pointer(GLint), "stride"), Out(Pointer(GLenum), "layout")]),
+    GlFunction(Void, "glSyncTextureINTEL", [(GLtexture, "texture")]),
+    GlFunction(Void, "glUnmapTexture2DINTEL", [(GLtexture, "texture"), (GLint, "level")]),
+    GlFunction(OpaquePointer(GLvoid), "glMapTexture2DINTEL", [(GLtexture, "texture"), (GLint, "level"), (GLbitfield_access, "access"), Out(Pointer(GLint), "stride"), Out(Pointer(GLenum), "layout")]),
 
     # GL_INTEL_parallel_arrays
     GlFunction(Void, "glVertexPointervINTEL", [(GLint, "size"), (GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
