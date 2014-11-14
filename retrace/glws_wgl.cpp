@@ -381,12 +381,12 @@ public:
                         attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
                         attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
                     } else if (desc.major >= 2) {
-                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es2_profile not supported\\n";
+                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es2_profile not supported\n";
                     } else if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {
                         attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES_PROFILE_BIT_EXT);
                         /* version implied */
                     } else {
-                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile not supported\\n";
+                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile not supported\n";
                     }
                 } else {
                     assert(0);
