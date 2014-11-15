@@ -358,6 +358,15 @@ void Retracer::run()
      * Start the process.
      */
 
+    {
+        QDebug debug(QtDebugMsg);
+        debug << "Running:";
+        debug << prog;
+        foreach (const QString &argument, arguments) {
+            debug << argument;
+        }
+    }
+
     QProcess process;
 
     process.start(prog, arguments, QIODevice::ReadOnly);

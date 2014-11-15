@@ -256,7 +256,7 @@ void MainWindow::replayStop()
 
 void MainWindow::newTraceFile(const QString &fileName)
 {
-    qDebug()<< "Loading  : " <<fileName;
+    qDebug()<< "Loading:" << fileName;
 
     m_progressBar->setValue(0);
     m_trace->setFileName(fileName);
