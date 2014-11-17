@@ -771,9 +771,9 @@ glapi.addFunctions([
     GlFunction(Void, "glMultiDrawElementsIndirectAMD", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLsizei, "primcount"), (GLsizei, "stride")]),
 
     # GL_AMD_name_gen_delete
-    GlFunction(Void, "glGenNamesAMD", [(GLenum, "identifier"), (GLuint, "num"), Out(Array(GLuint, "num"), "names")]),
-    GlFunction(Void, "glDeleteNamesAMD", [(GLenum, "identifier"), (GLuint, "num"), (Array(Const(GLuint), "num"), "names")]),
-    GlFunction(GLboolean, "glIsNameAMD", [(GLenum, "identifier"), (GLuint, "name")], sideeffects=False),
+    GlFunction(Void, "glGenNamesAMD", [(GLenum, "identifier"), (GLuint, "num"), Out(Array(GLname("identifier"), "num"), "names")]),
+    GlFunction(Void, "glDeleteNamesAMD", [(GLenum, "identifier"), (GLuint, "num"), (Array(Const(GLname("identifier")), "num"), "names")]),
+    GlFunction(GLboolean, "glIsNameAMD", [(GLenum, "identifier"), (GLname("identifier"), "name")], sideeffects=False),
 
     # GL_AMD_performance_monitor
     GlFunction(Void, "glGetPerfMonitorGroupsAMD", [Out(Pointer(GLint), "numGroups"), (GLsizei, "groupsSize"), Out(Array(GLuint, "groupsSize"), "groups")], sideeffects=False),
@@ -833,8 +833,8 @@ glapi.addFunctions([
     GlFunction(GLboolean, "glIsFenceAPPLE", [(GLfence, "fence")], sideeffects=False),
     GlFunction(GLboolean, "glTestFenceAPPLE", [(GLfence, "fence")]),
     GlFunction(Void, "glFinishFenceAPPLE", [(GLfence, "fence")]),
-    GlFunction(GLboolean, "glTestObjectAPPLE", [(GLenum, "object"), (GLuint, "name")]), # XXX: name needs swizzling
-    GlFunction(Void, "glFinishObjectAPPLE", [(GLenum, "object"), (GLint, "name")]), # XXX: name needs swizzling
+    GlFunction(GLboolean, "glTestObjectAPPLE", [(GLenum, "object"), (GLnameAPPLE("object"), "name")]),
+    GlFunction(Void, "glFinishObjectAPPLE", [(GLenum, "object"), (GLnameAPPLE("object", GLint), "name")]),
 
     # GL_APPLE_flush_buffer_range
     GlFunction(Void, "glBufferParameteriAPPLE", [(GLenum, "target"), (GLenum, "pname"), (GLint, "param")]),
@@ -850,9 +850,9 @@ glapi.addFunctions([
     GlFunction(Void, "glResolveMultisampleFramebufferAPPLE", []),
 
     # GL_APPLE_object_purgeable
-    GlFunction(GLenum, "glObjectPurgeableAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "option")]),
-    GlFunction(GLenum, "glObjectUnpurgeableAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "option")]),
-    GlFunction(Void, "glGetObjectParameterivAPPLE", [(GLenum, "objectType"), (GLuint, "name"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(GLenum, "glObjectPurgeableAPPLE", [(GLenum, "objectType"), (GLnameAPPLE("objectType"), "name"), (GLenum, "option")]),
+    GlFunction(GLenum, "glObjectUnpurgeableAPPLE", [(GLenum, "objectType"), (GLnameAPPLE("objectType"), "name"), (GLenum, "option")]),
+    GlFunction(Void, "glGetObjectParameterivAPPLE", [(GLenum, "objectType"), (GLnameAPPLE("objectType"), "name"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_APPLE_sync
     GlFunction(GLsync, "glFenceSyncAPPLE", [(GLenum, "condition"), (GLbitfield, "flags")]),
@@ -1913,8 +1913,8 @@ glapi.addFunctions([
     GlFunction(Void, "glCullParameterfvEXT", [(GLenum, "pname"), (Array(GLfloat, 4), "params")]),
 
     # GL_EXT_debug_label
-    GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "length"), (GLstringConst, "label")]),
-    GlFunction(Void, "glGetObjectLabelEXT", [(GLenum, "type"), (GLuint, "object"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(GLstring, "label")], sideeffects=False),
+    GlFunction(Void, "glLabelObjectEXT", [(GLenum, "type"), (GLnameEXT("type"), "object"), (GLsizei, "length"), (GLstringConst, "label")]),
+    GlFunction(Void, "glGetObjectLabelEXT", [(GLenum, "type"), (GLnameEXT("type"), "object"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(GLstring, "label")], sideeffects=False),
 
     # GL_EXT_debug_marker
     GlFunction(Void, "glInsertEventMarkerEXT", [(GLsizei, "length"), (String(Const(GLchar), "length ? length : strlen(marker)"), "marker")], sideeffects=True),
@@ -2483,8 +2483,8 @@ glapi.addFunctions([
     GlFunction(GLuint, "glGetDebugMessageLog", [(GLuint, "count"), (GLsizei, "bufsize"), Out(Array(GLenum, "count"), "sources"), Out(Array(GLenum, "count"), "types"), Out(Array(GLuint, "count"), "ids"), Out(Array(GLenum, "count"), "severities"), Out(Array(GLsizei, "count"), "lengths"), Out(String(GLchar, "_glGetDebugMessageLog_length(messageLog, lengths, _result)"), "messageLog")], sideeffects=False, fail=0),
     GlFunction(Void, "glPushDebugGroup", [(GLenum, "source"), (GLuint, "id"), (GLsizei, "length"), InGlString(GLchar, "length", "message")], sideeffects=True),
     GlFunction(Void, "glPopDebugGroup", [], sideeffects=True),
-    GlFunction(Void, "glObjectLabel", [(GLenum, "identifier"), (GLuint, "name"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
-    GlFunction(Void, "glGetObjectLabel", [(GLenum, "identifier"), (GLuint, "name"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
+    GlFunction(Void, "glObjectLabel", [(GLenum, "identifier"), (GLname("identifier"), "name"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
+    GlFunction(Void, "glGetObjectLabel", [(GLenum, "identifier"), (GLname("identifier"), "name"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
     GlFunction(Void, "glObjectPtrLabel", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
     GlFunction(Void, "glGetObjectPtrLabel", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
 

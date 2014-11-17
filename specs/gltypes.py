@@ -302,37 +302,71 @@ def GLindexBuffer(countExpr, typeExpr):
 # Polymorphic object name
 def GLname(targetExpr):
     return Polymorphic(targetExpr, [
+        # GL_KHR_debug
         ('GL_BUFFER', GLbuffer),
         ('GL_SHADER', GLshader),
         ('GL_PROGRAM', GLprogram),
         ('GL_VERTEX_ARRAY', GLarray),
         ('GL_QUERY', GLquery),
         ('GL_PROGRAM_PIPELINE', GLpipeline),
-        ('GL_TRANSFORM_FEEDBACK', GLuint),
+        ('GL_TRANSFORM_FEEDBACK', GLfeedback),
         ('GL_SAMPLER', GLsampler),
         ('GL_TEXTURE', GLtexture),
+        ('GL_RENDERBUFFER', GLrenderbuffer),
+        ('GL_FRAMEBUFFER', GLframebuffer),
+        ('GL_DISPLAY_LIST', GLlist),
+        # GL_ARB_copy_image
         ('GL_TEXTURE_1D', GLtexture),
         ('GL_TEXTURE_1D_ARRAY', GLtexture),
         ('GL_TEXTURE_2D', GLtexture),
         ('GL_TEXTURE_2D_MULTISAMPLE', GLtexture),
         ('GL_TEXTURE_2D_ARRAY', GLtexture),
+        ('GL_TEXTURE_2D_MULTISAMPLE_ARRAY', GLtexture),
         ('GL_TEXTURE_RECTANGLE', GLtexture),
         ('GL_TEXTURE_CUBE_MAP', GLtexture),
+        ('GL_TEXTURE_CUBE_MAP_ARRAY', GLtexture),
+        ('GL_TEXTURE_3D', GLtexture),
+        # GL_AMD_name_gen_delete
+        ('GL_DATA_BUFFER_AMD', GLbuffer),
+        ('GL_PERFORMANCE_MONITOR_AMD', GLuint),
+        ('GL_QUERY_OBJECT_AMD', GLquery),
+        ('GL_VERTEX_ARRAY_OBJECT_AMD', GLarray),
+        ('GL_SAMPLER_OBJECT_AMD', GLsampler),
+        # just in case
+        ('GL_TEXTURE_BUFFER', GLtexture),
         ('GL_TEXTURE_CUBE_MAP_POSITIVE_X', GLtexture),
         ('GL_TEXTURE_CUBE_MAP_NEGATIVE_X', GLtexture),
         ('GL_TEXTURE_CUBE_MAP_POSITIVE_Y', GLtexture),
         ('GL_TEXTURE_CUBE_MAP_NEGATIVE_Y', GLtexture),
         ('GL_TEXTURE_CUBE_MAP_POSITIVE_Z', GLtexture),
         ('GL_TEXTURE_CUBE_MAP_NEGATIVE_Z', GLtexture),
-        ('GL_TEXTURE_CUBE_MAP_ARRAY', GLtexture),
-        ('GL_TEXTURE_3D', GLtexture),
-        ('GL_RENDERBUFFER', GLrenderbuffer),
-        ('GL_FRAMEBUFFER', GLframebuffer),
-        ('GL_DISPLAY_LIST', GLlist),
-        ('GL_FENCE_APPLE', GLfence),
-        ('GL_DRAW_PIXELS_APPLE', GLuint), # GL_APPLE_fence
     ], GLuint)
-
+def GLnameAPPLE(targetExpr, defaultType=GLuint):
+    return Polymorphic(targetExpr, [
+        # GL_APPLE_fence
+        ('GL_FENCE_APPLE', GLfence),
+        ('GL_TEXTURE', GLtexture),
+        ('GL_VERTEX_ARRAY', GLarrayAPPLE),
+        ('GL_DRAW_PIXELS_APPLE', GLuint),
+        # GL_APPLE_object_purgeable
+        ('GL_BUFFER_OBJECT_APPLE', GLbuffer),
+        ('GL_RENDERBUFFER', GLrenderbuffer),
+    ], defaultType)
+def GLnameEXT(targetExpr):
+    return Polymorphic(targetExpr, [
+        # GL_EXT_debug_label
+        ('GL_TEXTURE', GLtexture),
+        ('GL_FRAMEBUFFER', GLframebuffer),
+        ('GL_RENDERBUFFER', GLrenderbuffer),
+        ('GL_BUFFER_OBJECT_EXT', GLbuffer),
+        ('GL_SHADER_OBJECT_EXT', GLshader),
+        ('GL_PROGRAM_OBJECT_EXT', GLprogram),
+        ('GL_VERTEX_ARRAY_OBJECT_EXT', GLarray),
+        ('GL_QUERY_OBJECT_EXT', GLquery),
+        ('GL_SAMPLER', GLsampler),
+        ('GL_TRANSFORM_FEEDBACK', GLfeedback),
+        ('GL_PROGRAM_PIPELINE_OBJECT_EXT', GLpipeline),
+    ], GLuint)
 
 # GL_AMD_performance_monitor
 GLperfMonitorCounterInfoAMD = Polymorphic('pname', [
