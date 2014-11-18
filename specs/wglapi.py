@@ -102,6 +102,11 @@ GLYPHMETRICSFLOAT = Struct("GLYPHMETRICSFLOAT", [
 ])
 LPGLYPHMETRICSFLOAT = Pointer(GLYPHMETRICSFLOAT)
 
+WGLFontFormat = FakeEnum(Int, [
+    'WGL_FONT_LINES',
+    'WGL_FONT_POLYGONS',
+])
+
 COLORREF = Alias("COLORREF", DWORD)
 
 
@@ -235,6 +240,7 @@ GPU_DEVICE = Struct("_GPU_DEVICE", [
     (RECT, "rcVirtualScreen"),
 ])
 
+WGLlist = Handle("list", DWORD)
 
 wglapi.addFunctions([
     # WGL
@@ -257,11 +263,11 @@ wglapi.addFunctions([
     StdFunction(Int, "wglGetLayerPaletteEntries", [(HDC, "hdc"), (Int, "iLayerPlane"), (Int, "iStart"), (Int, "cEntries"), Out(Array(COLORREF, "cEntries"), "pcr")], sideeffects=False),
     StdFunction(BOOL, "wglRealizeLayerPalette", [(HDC, "hdc"), (Int, "iLayerPlane"), (BOOL, "bRealize")]),
     StdFunction(BOOL, "wglSwapLayerBuffers", [(HDC, "hdc"), (UINT, "fuPlanes")]),
-    StdFunction(BOOL, "wglUseFontBitmapsA", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase")]),
-    StdFunction(BOOL, "wglUseFontBitmapsW", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase")]),
+    StdFunction(BOOL, "wglUseFontBitmapsA", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (WGLlist, "listBase")]),
+    StdFunction(BOOL, "wglUseFontBitmapsW", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (WGLlist, "listBase")]),
     StdFunction(DWORD, "wglSwapMultipleBuffers", [(UINT, "n"), (Array(Const(WGLSWAP), "n"), "ps")]),
-    StdFunction(BOOL, "wglUseFontOutlinesA", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase"), (FLOAT, "deviation"), (FLOAT, "extrusion"), (Int, "format"), (LPGLYPHMETRICSFLOAT, "lpgmf")]),
-    StdFunction(BOOL, "wglUseFontOutlinesW", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (DWORD, "listBase"), (FLOAT, "deviation"), (FLOAT, "extrusion"), (Int, "format"), (LPGLYPHMETRICSFLOAT, "lpgmf")]),
+    StdFunction(BOOL, "wglUseFontOutlinesA", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (WGLlist, "listBase"), (FLOAT, "deviation"), (FLOAT, "extrusion"), (WGLFontFormat, "format"), Out(Array(GLYPHMETRICSFLOAT, "count"), "lpgmf")]),
+    StdFunction(BOOL, "wglUseFontOutlinesW", [(HDC, "hdc"), (DWORD, "first"), (DWORD, "count"), (WGLlist, "listBase"), (FLOAT, "deviation"), (FLOAT, "extrusion"), (WGLFontFormat, "format"), Out(Array(GLYPHMETRICSFLOAT, "count"), "lpgmf")]),
 
     # WGL_ARB_buffer_region
     StdFunction(HANDLE, "wglCreateBufferRegionARB", [(HDC, "hDC"), (Int, "iLayerPlane"), (UINT, "uType")]),
