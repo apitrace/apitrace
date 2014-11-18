@@ -88,24 +88,17 @@ class GlRetracer(Retracer):
     draw_elements_function_regex = re.compile(r'^gl([A-Z][a-z]+)*Draw(Range)?Elements([A-Z][a-zA-Z]*)?$' )
     draw_indirect_function_regex = re.compile(r'^gl([A-Z][a-z]+)*Draw(Range)?(Arrays|Elements)Indirect([A-Z][a-zA-Z]*)?$' )
 
-    misc_draw_function_names = set([
-        "glCallList",
-        "glCallLists",
-        "glClear",
-        "glEnd",
-        "glDrawPixels",
-        "glBlitFramebuffer",
-        "glBlitFramebufferEXT",
-        "glBlitFramebufferNV",
-        "glBlitFramebufferANGLE",
-        "glBindFramebufferOES",
-    ])
+    misc_draw_function_regex = re.compile(r'^gl(' + r'|'.join([
+        r'CallList',
+        r'CallLists',
+        r'Clear',
+        r'End',
+        r'DrawPixels',
+        r'BlitFramebuffer',
+    ]) + r')[0-9A-Z]*$')
 
-    bind_framebuffer_function_names = set([
-        "glBindFramebuffer",
-        "glBindFramebufferEXT",
-        "glBindFramebufferOES",
-    ])
+
+    bind_framebuffer_function_regex = re.compile(r'^glBindFramebuffer[0-9A-Z]*$')
 
     # Names of the functions that can pack into the current pixel buffer
     # object.  See also the ARB_pixel_buffer_object specification.
@@ -128,7 +121,7 @@ class GlRetracer(Retracer):
         is_draw_arrays = self.draw_arrays_function_regex.match(function.name) is not None
         is_draw_elements = self.draw_elements_function_regex.match(function.name) is not None
         is_draw_indirect = self.draw_indirect_function_regex.match(function.name) is not None
-        is_misc_draw = function.name in self.misc_draw_function_names
+        is_misc_draw = self.misc_draw_function_regex.match(function.name)
 
         # For backwards compatibility with old traces where non VBO drawing was supported
         if (is_array_pointer or is_draw_arrays or is_draw_elements) and not is_draw_indirect:
@@ -159,7 +152,7 @@ class GlRetracer(Retracer):
             print '    }'
 
         # Pre-snapshots
-        if function.name in self.bind_framebuffer_function_names:
+        if self.bind_framebuffer_function_regex.match(function.name):
             print '    assert(call.flags & trace::CALL_FLAG_SWAP_RENDERTARGET);'
         if function.name == 'glStringMarkerGREMEDY':
             return
@@ -253,7 +246,7 @@ class GlRetracer(Retracer):
         profileDraw = (
             self.draw_arrays_function_regex.match(function.name) or
             self.draw_elements_function_regex.match(function.name) or
-            function.name in self.misc_draw_function_names or
+            self.misc_draw_function_regex.match(function.name) or
             function.name == 'glBegin'
         )
 
