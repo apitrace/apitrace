@@ -75,6 +75,13 @@ class Type:
         visitor = MutableRebuilder()
         return visitor.visit(self)
 
+    def depends(self, other):
+        '''Whether this type depends on another.'''
+
+        collector = Collector()
+        collector.visit(self)
+        return other in collector.types
+
 
 class _Void(Type):
     """Singleton void type."""

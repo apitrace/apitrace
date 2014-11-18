@@ -436,7 +436,8 @@ class GlRetracer(Retracer):
             print '    %s = static_cast<%s>((%s).toPointer());' % (lvalue, arg_type, rvalue)
             return
 
-        if arg.type is glapi.GLlocation \
+        if (arg.type.depends(glapi.GLlocation) or \
+            arg.type.depends(glapi.GLsubroutine)) \
            and 'program' not in function.argNames():
             # Determine the active program for uniforms swizzling
             print '    GLint program = _getActiveProgram();'

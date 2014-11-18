@@ -1411,13 +1411,13 @@ glapi.addFunctions([
 
     # GL_ARB_shader_subroutine
     GlFunction(GLlocation, "glGetSubroutineUniformLocation", [(GLprogram, "program"), (GLenum, "shadertype"), (GLstringConst, "name")]),
-    GlFunction(GLuint, "glGetSubroutineIndex", [(GLprogram, "program"), (GLenum, "shadertype"), (GLstringConst, "name")]),
-    GlFunction(Void, "glGetActiveSubroutineUniformiv", [(GLprogram, "program"), (GLenum, "shadertype"), (GLuint, "index"), (GLenum, "pname"), Out(OpaqueArray(GLint, "_glGetActiveSubroutineUniformiv_size(pname)"), "values")], sideeffects=False),
-    GlFunction(Void, "glGetActiveSubroutineUniformName", [(GLprogram, "program"), (GLenum, "shadertype"), (GLuint, "index"), (GLsizei, "bufsize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "name")], sideeffects=False),
-    GlFunction(Void, "glGetActiveSubroutineName", [(GLprogram, "program"), (GLenum, "shadertype"), (GLuint, "index"), (GLsizei, "bufsize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "name")], sideeffects=False),
-    GlFunction(Void, "glUniformSubroutinesuiv", [(GLenum, "shadertype"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "indices")]),
-    GlFunction(Void, "glGetUniformSubroutineuiv", [(GLenum, "shadertype"), (GLlocation, "location"), Out(Pointer(GLuint), "params")], sideeffects=False),
-    GlFunction(Void, "glGetProgramStageiv", [(GLprogram, "program"), (GLenum, "shadertype"), (GLenum, "pname"), Out(Pointer(GLint), "values")], sideeffects=False),
+    GlFunction(GLsubroutine, "glGetSubroutineIndex", [(GLprogram, "program"), (GLenum, "shadertype"), (GLstringConst, "name")]),
+    GlFunction(Void, "glGetActiveSubroutineUniformiv", [(GLprogram, "program"), (GLenum, "shadertype"), (GLsubroutine, "index"), (GLenum, "pname"), Out(OpaqueArray(GLint, "_glGetActiveSubroutineUniformiv_size(pname)"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetActiveSubroutineUniformName", [(GLprogram, "program"), (GLenum, "shadertype"), (GLsubroutine, "index"), (GLsizei, "bufsize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "name")], sideeffects=False),
+    GlFunction(Void, "glGetActiveSubroutineName", [(GLprogram, "program"), (GLenum, "shadertype"), (GLsubroutine, "index"), (GLsizei, "bufsize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "name")], sideeffects=False),
+    GlFunction(Void, "glUniformSubroutinesuiv", [(GLenum, "shadertype"), (GLsizei, "count"), (Array(Const(GLsubroutine), "count"), "indices")]),
+    GlFunction(Void, "glGetUniformSubroutineuiv", [(GLenum, "shadertype"), (GLlocation, "location"), Out(OpaquePointer(GLuint), "params")], sideeffects=False),
+    GlFunction(Void, "glGetProgramStageiv", [(GLprogram, "program"), (GLenum, "shadertype"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "values")], sideeffects=False),
 
     # GL_ARB_shading_language_include
     GlFunction(Void, "glNamedStringARB", [(GLenum, "type"), (GLint, "namelen"), InGlString(GLchar, "namelen", "name"), (GLint, "stringlen"), InGlString(GLchar, "stringlen", "string")]),
