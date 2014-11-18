@@ -2330,7 +2330,7 @@ parameters = [
     ("",	X,	1,	"GL_VOLATILE_APPLE"),	# 0x8A1A
     ("",	X,	1,	"GL_RETAINED_APPLE"),	# 0x8A1B
     ("",	X,	1,	"GL_UNDEFINED_APPLE"),	# 0x8A1C
-    ("",	X,	1,	"GL_PURGEABLE_APPLE"),	# 0x8A1D
+    ("",	B,	1,	"GL_PURGEABLE_APPLE"),	# 0x8A1D
     ("",	X,	1,	"GL_RGB_422_APPLE"),	# 0x8A1F
     ("glGet,glGet_i",	I,	1,	"GL_UNIFORM_BUFFER_BINDING"),	# 0x8A28
     ("glGet_i",	I,	1,	"GL_UNIFORM_BUFFER_START"),	# 0x8A29
