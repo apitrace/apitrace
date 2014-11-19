@@ -55,6 +55,7 @@ namespace glws {
  * - http://www.opengl.org/archives/resources/faq/technical/mswindows.htm
  */
 static PFN_WGLCHOOSEPIXELFORMAT pfnChoosePixelFormat = &ChoosePixelFormat;
+static PFN_WGLDESCRIBEPIXELFORMAT pfnDescribePixelFormat = &DescribePixelFormat;
 static PFN_WGLSETPIXELFORMAT pfnSetPixelFormat = &SetPixelFormat;
 static PFN_WGLSWAPBUFFERS pfnSwapBuffers = &SwapBuffers;
 
@@ -237,6 +238,12 @@ public:
         if (iPixelFormat <= 0) {
             std::cerr << "error: ChoosePixelFormat failed\n";
             exit(1);
+        }
+
+        pfnDescribePixelFormat(hDC, iPixelFormat, sizeof pfd, &pfd);
+        assert(pfd.dwFlags & PFD_SUPPORT_OPENGL);
+        if (pfd.dwFlags & PFD_GENERIC_FORMAT) {
+            std::cerr << "warning: ChoosePixelFormat returned a pixel format supported by the GDI software implementation\n";
         }
 
         bRet = pfnSetPixelFormat(hDC, iPixelFormat, &pfd);
@@ -438,6 +445,7 @@ init(void) {
         _libGlHandle = LoadLibraryA(libgl_filename);
         if (_libGlHandle) {
             pfnChoosePixelFormat = (PFN_WGLCHOOSEPIXELFORMAT)GetProcAddress(_libGlHandle, "wglChoosePixelFormat");
+            pfnDescribePixelFormat = (PFN_WGLDESCRIBEPIXELFORMAT)GetProcAddress(_libGlHandle, "wglDescribePixelFormat");
             pfnSetPixelFormat = (PFN_WGLSETPIXELFORMAT)GetProcAddress(_libGlHandle, "&wglSetPixelFormat");
             pfnSwapBuffers = (PFN_WGLSWAPBUFFERS)GetProcAddress(_libGlHandle, "wglSwapBuffers");
         }
