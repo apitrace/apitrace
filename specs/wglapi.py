@@ -38,7 +38,7 @@ wglapi = Module("WGL")
 HGLRC = Alias("HGLRC", HANDLE)
 PROC = Opaque("PROC")
 
-PFD = Flags(DWORD, [
+PFD_FLAGS = Flags(DWORD, [
     "PFD_DOUBLEBUFFER",
     "PFD_STEREO",
     "PFD_DRAW_TO_WINDOW",
@@ -53,17 +53,29 @@ PFD = Flags(DWORD, [
     "PFD_SWAP_LAYER_BUFFERS",
     "PFD_GENERIC_ACCELERATED",
     "PFD_SUPPORT_DIRECTDRAW",
+    "PFD_DIRECT3D_ACCELERATED",
     "PFD_SUPPORT_COMPOSITION",
     "PFD_DEPTH_DONTCARE",
     "PFD_DOUBLEBUFFER_DONTCARE",
     "PFD_STEREO_DONTCARE",
 ])
 
+PFD_TYPE = FakeEnum(BYTE, [
+    "PFD_TYPE_RGBA",
+    "PFD_TYPE_COLORINDEX",
+])
+
+PFD_PLANE = FakeEnum(BYTE, [
+    "PFD_MAIN_PLANE",
+    "PFD_OVERLAY_PLANE",
+    "PFD_UNDERLAY_PLANE",
+])
+
 PIXELFORMATDESCRIPTOR = Struct("PIXELFORMATDESCRIPTOR", [
     (WORD, "nSize"),
     (WORD, "nVersion"),
-    (PFD, "dwFlags"),
-    (BYTE, "iPixelType"),
+    (PFD_FLAGS, "dwFlags"),
+    (PFD_TYPE, "iPixelType"),
     (BYTE, "cColorBits"),
     (BYTE, "cRedBits"),
     (BYTE, "cRedShift"),
@@ -81,7 +93,7 @@ PIXELFORMATDESCRIPTOR = Struct("PIXELFORMATDESCRIPTOR", [
     (BYTE, "cDepthBits"),
     (BYTE, "cStencilBits"),
     (BYTE, "cAuxBuffers"),
-    (BYTE, "iLayerType"),
+    (PFD_PLANE, "iLayerType"),
     (BYTE, "bReserved"),
     (DWORD, "dwLayerMask"),
     (DWORD, "dwVisibleMask"),
@@ -113,8 +125,8 @@ COLORREF = Alias("COLORREF", DWORD)
 LAYERPLANEDESCRIPTOR = Struct("LAYERPLANEDESCRIPTOR", [
     (WORD, "nSize"),
     (WORD, "nVersion"),
-    (DWORD, "dwFlags"),
-    (BYTE, "iPixelType"),
+    (PFD_FLAGS, "dwFlags"),
+    (PFD_TYPE, "iPixelType"),
     (BYTE, "cColorBits"),
     (BYTE, "cRedBits"),
     (BYTE, "cRedShift"),
@@ -132,7 +144,7 @@ LAYERPLANEDESCRIPTOR = Struct("LAYERPLANEDESCRIPTOR", [
     (BYTE, "cDepthBits"),
     (BYTE, "cStencilBits"),
     (BYTE, "cAuxBuffers"),
-    (BYTE, "iLayerPlane"),
+    (PFD_PLANE, "iLayerPlane"),
     (BYTE, "bReserved"),
     (COLORREF, "crTransparent"),
 ])
