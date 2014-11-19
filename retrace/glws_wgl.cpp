@@ -162,7 +162,7 @@ createWindow(int nWidth, int nHeight)
     static bool first = TRUE;
     if (first) {
         WNDCLASS wc;
-        memset(&wc, 0, sizeof wc);
+        ZeroMemory(&wc, sizeof wc);
         wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
         wc.hCursor = LoadCursor(NULL, IDC_ARROW);
         wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
@@ -216,19 +216,16 @@ public:
 
         hDC = GetDC(hWnd);
    
-        memset(&pfd, 0, sizeof pfd);
-        pfd.cColorBits = 4;
-        pfd.cRedBits = 1;
-        pfd.cGreenBits = 1;
-        pfd.cBlueBits = 1;
+        ZeroMemory(&pfd, sizeof pfd);
+        pfd.nSize = sizeof pfd;
+        pfd.nVersion = 1;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+        pfd.cColorBits = 3;
         pfd.cAlphaBits = 1;
         pfd.cDepthBits = 1;
         pfd.cStencilBits = 1;
-        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
         pfd.iLayerType = PFD_MAIN_PLANE;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.nSize = sizeof(pfd);
-        pfd.nVersion = 1;
 
         if (visual->doubleBuffer) {
            pfd.dwFlags |= PFD_DOUBLEBUFFER;
