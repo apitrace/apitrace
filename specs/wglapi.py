@@ -260,7 +260,7 @@ wglapi.addFunctions([
     StdFunction(BOOL, "wglDeleteContext", [(HGLRC, "hglrc")]),
     StdFunction(HGLRC, "wglGetCurrentContext", [], sideeffects=False),
     StdFunction(BOOL, "wglMakeCurrent", [(HDC, "hdc"), (HGLRC, "hglrc")]),
-    StdFunction(BOOL, "wglCopyContext", [(HGLRC, "hglrcSrc"), (HGLRC, "hglrcDst"), (UINT, "mask")]),
+    StdFunction(BOOL, "wglCopyContext", [(HGLRC, "hglrcSrc"), (HGLRC, "hglrcDst"), (Flags(UINT, GLbitfield_attrib.values), "mask")]),
     StdFunction(Int, "wglChoosePixelFormat", [(HDC, "hdc"), (Pointer(Const(PIXELFORMATDESCRIPTOR)), "ppfd")]), 
     StdFunction(Int, "wglDescribePixelFormat", [(HDC, "hdc"), (Int, "iPixelFormat"), (UINT, "nBytes"), Out(Pointer(PIXELFORMATDESCRIPTOR), "ppfd")]),
     StdFunction(HDC, "wglGetCurrentDC", [], sideeffects=False),
