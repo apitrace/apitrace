@@ -226,7 +226,7 @@ public:
         // request alpha bits and the hardware driver doesn't advertise any
         // pixel format with alpha bits (e.g. NVIDIA OpenGL driver on 16bpp
         // screens.)
-        pfd.cAlphaBits = 0;
+        pfd.cAlphaBits = 1;
         pfd.cDepthBits = 1;
         pfd.cStencilBits = 1;
         pfd.iLayerType = PFD_MAIN_PLANE;
