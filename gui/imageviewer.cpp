@@ -126,6 +126,10 @@ QString createPixelLabel(image::Image *img, int x, int y)
     unsigned char *pixelLocation = 0;
     T *pixel;
 
+    if (x < 0 || y < 0 || x >= img->width || y >= img->height) {
+        return QString::fromLatin1("(Out of bounds)");
+    }
+
     pixelLocation = img->pixels + img->stride() * y;
     pixelLocation += x * img->bytesPerPixel;
     pixel = ((T*)pixelLocation);
