@@ -42,7 +42,8 @@ namespace glws {
 
 
 enum Profile {
-    PROFILE_COMPAT      = 0x000,
+    PROFILE_INVALID     = 0x000,
+    PROFILE_COMPAT      = 0x010,
     PROFILE_3_0         = 0x030,
     PROFILE_3_1         = 0x031,
     PROFILE_3_2_CORE    = 0x132,
@@ -54,7 +55,6 @@ enum Profile {
     PROFILE_4_4_CORE    = 0x144,
     PROFILE_ES1         = 0x210,
     PROFILE_ES2         = 0x220,
-    PROFILE_MAX
 };
 
 

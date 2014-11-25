@@ -38,6 +38,8 @@ namespace glws {
 void
 getProfileDesc(Profile profile, ProfileDesc &desc)
 {
+    assert(profile != PROFILE_INVALID);
+
     desc.api = (profile & 0x200) == 0x200 ? API_GLES : API_GL;
 
     desc.major = (profile >> 4) & 0xf;
