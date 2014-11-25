@@ -292,11 +292,12 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             {
                 attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
                 attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-                if (desc.core) {
+                if (desc.versionGreaterOrEqual(3, 2)) {
                     if (!has_GLX_ARB_create_context_profile) {
                         return NULL;
                     }
-                    attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB);
+                    int profileMask = desc.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+                    attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, profileMask);
                 }
                 break;
             }

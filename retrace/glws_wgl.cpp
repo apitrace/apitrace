@@ -340,8 +340,7 @@ public:
             getProfileDesc(profile, desc);
 
             if (desc.api != API_GL ||
-                desc.major > 3 ||
-                (desc.major == 3 && desc.minor > 0)) {
+                desc.versionGreaterOrEqual(3, 1)) {
                 // We need to create context through WGL_ARB_create_context.  This
                 // implies binding a temporary context to get the extensions strings
                 // and function pointers.
@@ -380,8 +379,13 @@ public:
                 if (desc.api == API_GL) {
                     attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
                     attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-                    if (desc.core) {
-                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB);
+                    if (desc.versionGreaterOrEqual(3, 2)) {
+                        if (!checkExtension("WGL_ARB_create_context_profile", extensionsString)) {
+                            std::cerr << "error: WGL_ARB_create_context_profile not supported\n";
+                            exit(1);
+                        }
+                        int profileMask = desc.core ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, profileMask);
                     }
                 } else if (desc.api == API_GLES) {
                     if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {

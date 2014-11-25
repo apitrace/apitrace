@@ -69,6 +69,12 @@ struct ProfileDesc {
     unsigned major;
     unsigned minor;
     bool core;
+
+    inline bool
+    versionGreaterOrEqual(unsigned refMajor, unsigned refMinor) const {
+        return major > refMajor ||
+               (major == refMajor && minor >= refMinor);
+    }
 };
 
 
