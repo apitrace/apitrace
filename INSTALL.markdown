@@ -91,6 +91,9 @@ Additional requirements:
 
 * Microsoft Visual Studio (tested with 2013 version)
 
+* [Windows 8.1 SDK](http://msdn.microsoft.com/en-us/windows/desktop/bg162891.aspx)
+  for D3D11.2 headers.
+
 * Microsoft DirectX SDK is now part of Microsoft Visual Studio (from version
   2012), but D3D8 headers are not included, so if you want D3D8 support you'll
   need to donwload and install the
