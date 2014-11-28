@@ -234,7 +234,7 @@ class GlRetracer(Retracer):
             print r'        if (ptr) {'
             print r'            retrace::delRegionByPointer(ptr);'
             print r'        } else {'
-            print r'            retrace::warning(call) << "no current context\n";'
+            print r'            retrace::warning(call) << "failed to get mapped pointer\n";'
             print r'        }'
 
         if function.name in ('glBindProgramPipeline', 'glBindProgramPipelineEXT'):
