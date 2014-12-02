@@ -9,6 +9,10 @@ if (APPLE AND NOT ANDROID_NDK)
     set (CMAKE_CXX_COMPILER "clang++")
 endif ()
 
+if (CMAKE_GENERATOR STREQUAL "Xcode")
+    message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
+endif ()
+
 
 project (apitrace)
 
