@@ -32,6 +32,7 @@
 #include <getopt.h>
 
 #include <iostream>
+#include <fstream>
 
 #include "os_string.hpp"
 #include "os_process.hpp"
@@ -179,13 +180,48 @@ traceProgram(trace::API api,
         }
 
         if (debug) {
-            std::string ex("set exec-wrapper env " TRACE_VARIABLE "=");
-            ex.append(wrapperPath.str());
+#if defined(__APPLE__)
+            bool lldb = true;
+#else
+            bool lldb = false;
+#endif
 
-            args.push_back("gdb");
-            args.push_back("--ex");
-            args.push_back(ex.c_str());
-            args.push_back("--args");
+            if (lldb) {
+                /*
+                 * Debug with LLDB.
+                 *
+                 * See also http://lldb.llvm.org/lldb-gdb.html
+                 */
+
+                char scriptFileName[] = "/tmp/apitrace.XXXXXX";
+                if (mktemp(scriptFileName) == NULL) {
+                    std::cerr << "error: failed to create temporary lldb script file\n";
+                    exit(1);
+                }
+
+                {
+                    std::ofstream scriptStream(scriptFileName);
+                    scriptStream << "env " TRACE_VARIABLE "='" << wrapperPath.str() << "'\n";
+                }
+
+                args.push_back("lldb");
+                args.push_back("-s");
+                args.push_back(scriptFileName);
+                args.push_back("--");
+            } else {
+                /*
+                 * Debug with GDB.
+                 */
+
+                std::string ex("set exec-wrapper env " TRACE_VARIABLE "='");
+                ex.append(wrapperPath.str());
+                ex.append("'");
+
+                args.push_back("gdb");
+                args.push_back("--ex");
+                args.push_back(ex.c_str());
+                args.push_back("--args");
+            }
 
             os::unsetEnvironment(TRACE_VARIABLE);
         } else {
@@ -278,7 +314,7 @@ usage(void)
         "    -o, --output=TRACE  specify output trace file;\n"
         "                        default is `PROGRAM.trace`\n"
 #ifdef TRACE_VARIABLE
-        "    -d,  --debug        debug with gdb\n"
+        "    -d,  --debug        run inside debugger (gdb/lldb)\n"
 #endif
     ;
 }
