@@ -13,6 +13,11 @@ if (CMAKE_GENERATOR STREQUAL "Xcode")
     message (FATAL_ERROR "Xcode generator is not supported. Please build with \"Unix Makefiles\" or \"Ninja\" generators.")
 endif ()
 
+# http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html
+if (POLICY CMP0042)
+    cmake_policy (SET CMP0042 NEW)
+endif()
+
 
 project (apitrace)
 
