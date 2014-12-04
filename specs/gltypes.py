@@ -101,7 +101,7 @@ GLlocation = Handle("location", GLint, key=('program', GLhandleARB))
 GLlocationARB = Handle("location", GLint, key=('programObj', GLhandleARB))
 
 # TODO: Symbolic representation of GL_INVALID_INDEX
-GLuniformBlock = Handle("location", GLuint, key=('program', GLprogram))
+GLuniformBlock = Handle("uniformBlock", GLuint, key=('program', GLprogram))
 
 contextKey = ('reinterpret_cast<uintptr_t>(glretrace::getCurrentContext())', UIntPtr)
 
