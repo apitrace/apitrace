@@ -498,7 +498,16 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         std::cerr << " " << id;
     }
 
-    std::cerr << ": " << message;
+    std::cerr << ": ";
+
+    if (messageCount == maxMessageCount) {
+        std::cerr << "too many identical messages; ignoring"
+                  << highlighter.normal()
+                  << std::endl;
+        return;
+    }
+
+    std::cerr << message;
 
     std::cerr << highlighter.normal();
 
@@ -508,12 +517,6 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         (message[messageLen - 1] != '\n' &&
          message[messageLen - 1] != '\r')) {
        std::cerr << std::endl;
-    }
-
-    if (messageCount == maxMessageCount) {
-        std::cerr << retrace::callNo
-                  << ": warning: too many identical messages; ignoring"
-                  << std::endl;
     }
 }
 
