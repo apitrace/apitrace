@@ -848,4 +848,55 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
 }
 
 
+bool
+isGeometryShaderBound(Context &context)
+{
+    GLint pipeline = 0;
+    GLint program = 0;
+
+    if (!context.ES) {
+        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
+        if (pipeline) {
+            glGetProgramPipelineiv(pipeline, GL_GEOMETRY_SHADER, &program);
+        }
+    }
+
+    if (!pipeline) {
+        glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    }
+
+    if (!program) {
+        return false;
+    }
+
+    GLint attached_shaders = 0;
+    glGetProgramiv(program, GL_ATTACHED_SHADERS, &attached_shaders);
+    if (!attached_shaders) {
+        return false;
+    }
+
+    GLuint *shaders = new GLuint[attached_shaders];
+    GLsizei count = 0;
+    glGetAttachedShaders(program, attached_shaders, &count, shaders);
+    for (GLsizei i = 0; i < count; ++i) {
+        GLuint shader = shaders[i];
+        if (!shader) {
+            continue;
+        }
+
+        GLint shader_type = 0;
+        glGetShaderiv(shader, GL_SHADER_TYPE, &shader_type);
+
+        if (shader_type == GL_GEOMETRY_SHADER) {
+            delete [] shaders;
+            return true;
+        }
+    }
+
+    delete [] shaders;
+
+    return false;
+}
+
+
 } /* namespace glstate */

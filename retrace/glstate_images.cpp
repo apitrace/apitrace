@@ -430,7 +430,7 @@ getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
 
 static inline void
 dumpActiveTextureLevel(JSONWriter &json, Context &context,
-                       GLenum target, GLint level, const char *object_label)
+                       GLenum target, GLint level, const std::string & label)
 {
     ImageDesc desc;
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
@@ -450,19 +450,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
         return;
     }
 
-    GLint active_texture = GL_TEXTURE0;
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
-
-    std::stringstream label;
-    label << enumToString(active_texture) << ", "
-          << enumToString(target);
-    if (object_label)
-        label << ", \"" << object_label << "\"";
-    if (target != GL_TEXTURE_BUFFER) {
-        label << ", level = " << level;
-    }
-
-    json.beginMember(label.str());
+    json.beginMember(label);
 
     if (context.ES && format == GL_DEPTH_COMPONENT) {
         format = GL_RED;
@@ -519,7 +507,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
 
 
 static inline void
-dumpTexture(JSONWriter &json, Context &context, GLenum target)
+dumpActiveTexture(JSONWriter &json, Context &context, GLenum target)
 {
     GLenum binding = getTextureBinding(target);
 
@@ -535,18 +523,30 @@ dumpTexture(JSONWriter &json, Context &context, GLenum target)
     do {
         ImageDesc desc;
 
+        GLint active_texture = GL_TEXTURE0;
+        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+
+        std::stringstream label;
+        label << enumToString(active_texture) << ", "
+              << enumToString(target);
+        if (object_label)
+            label << ", \"" << object_label << "\"";
+        if (target != GL_TEXTURE_BUFFER) {
+            label << ", level = " << level;
+        }
+
         if (target == GL_TEXTURE_CUBE_MAP) {
             for (GLint face = 0; face < 6; ++face) {
                 if (!getActiveTextureLevelDesc(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, desc)) {
                     goto finished;
                 }
-                dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, object_label);
+                dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, label.str());
             }
         } else {
             if (!getActiveTextureLevelDesc(context, target, level, desc)) {
                 goto finished;
             }
-            dumpActiveTextureLevel(json, context, target, level, object_label);
+            dumpActiveTextureLevel(json, context, target, level, label.str());
         }
 
         if (target == GL_TEXTURE_BUFFER) {
@@ -588,7 +588,7 @@ dumpTextures(JSONWriter &json, Context &context)
 
         for (unsigned i = 0; i < numTextureTargets; ++i) {
             GLenum target = textureTargets[i];
-            dumpTexture(json, context, target);
+            dumpActiveTexture(json, context, target);
         }
     }
     glActiveTexture(active_texture);
@@ -1213,6 +1213,40 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
         label << ", \"" << object_label << "\"";
         free(object_label);
     }
+
+    if (object_type == GL_TEXTURE) {
+        GLint layered = GL_FALSE;
+        glGetFramebufferAttachmentParameteriv(target, attachment,
+                                              GL_FRAMEBUFFER_ATTACHMENT_LAYERED,
+                                              &layered);
+        if (layered &&
+            isGeometryShaderBound(context)) {
+            /*
+             * Dump the whole texture array.
+             *
+             * Unfortunately we can't tell whether the bound GS writes or not gl_Layer.
+             */
+
+            GLint level = 0;
+            glGetFramebufferAttachmentParameteriv(target, attachment,
+                                                  GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
+                                                  &level);
+
+            GLenum texture_target = getTextureTarget(object_name);
+            GLenum texture_binding = getTextureBinding(texture_target);
+
+            GLint bound_texture = 0;
+            glGetIntegerv(texture_binding, &bound_texture);
+            glBindTexture(texture_target, object_name);
+
+            dumpActiveTextureLevel(json, context, texture_target, level, label.str());
+
+            glBindTexture(texture_target, bound_texture);
+
+            return;
+        }
+    }
+
 
     dumpReadBufferImage(json, label.str().c_str(),
                         desc.width, desc.height,

@@ -82,6 +82,9 @@ formatToString(GLenum internalFormat);
 bool
 getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type);
 
+bool
+isGeometryShaderBound(Context &context);
+
 
 void dumpBoolean(JSONWriter &json, GLboolean value);
 
