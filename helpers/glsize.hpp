@@ -408,26 +408,48 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
     }
 
     GLuint maxindex = 0;
+
+    GLboolean restart_enabled = _glIsEnabled(GL_PRIMITIVE_RESTART);
+    while ((_glGetError() == GL_INVALID_ENUM))
+        ;
+
+    GLuint restart_index = 0;
+    if (restart_enabled) {
+        restart_index = (GLuint)_glGetInteger(GL_PRIMITIVE_RESTART_INDEX);
+    }
+
     GLsizei i;
     if (type == GL_UNSIGNED_BYTE) {
         const GLubyte *p = (const GLubyte *)indices;
         for (i = 0; i < count; ++i) {
-            if (p[i] > maxindex) {
-                maxindex = p[i];
+            GLuint index = p[i];
+            if (restart_enabled && index == restart_index) {
+                continue;
+            }
+            if (index > maxindex) {
+                maxindex = index;
             }
         }
     } else if (type == GL_UNSIGNED_SHORT) {
         const GLushort *p = (const GLushort *)indices;
         for (i = 0; i < count; ++i) {
-            if (p[i] > maxindex) {
-                maxindex = p[i];
+            GLuint index = p[i];
+            if (restart_enabled && index == restart_index) {
+                continue;
+            }
+            if (index > maxindex) {
+                maxindex = index;
             }
         }
     } else if (type == GL_UNSIGNED_INT) {
         const GLuint *p = (const GLuint *)indices;
         for (i = 0; i < count; ++i) {
-            if (p[i] > maxindex) {
-                maxindex = p[i];
+            GLuint index = p[i];
+            if (restart_enabled && index == restart_index) {
+                continue;
+            }
+            if (index > maxindex) {
+                maxindex = index;
             }
         }
     } else {
