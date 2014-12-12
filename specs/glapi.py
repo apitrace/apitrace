@@ -1443,7 +1443,7 @@ glapi.addFunctions([
     GlFunction(GLenum, "glClientWaitSync", [(GLsync, "sync"), (GLbitfield_sync_flush, "flags"), (GLuint64, "timeout")]),
     GlFunction(Void, "glWaitSync", [(GLsync, "sync"), (GLbitfield, "flags"), (GLuint64, "timeout")]),
     GlFunction(Void, "glGetInteger64v", [(GLenum, "pname"), Out(Array(GLint64, "_gl_param_size(pname)"), "params")], sideeffects=False),
-    GlFunction(Void, "glGetSynciv", [(GLsync, "sync"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "(length ? *length : bufSize)"), "values")], sideeffects=False),
+    GlFunction(Void, "glGetSynciv", [(GLsync, "sync"), (GLenum, "pname"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLint, "(length ? *length : bufSize)"), "values")]),
 
     # GL_ARB_tessellation_shader
     GlFunction(Void, "glPatchParameteri", [(GLenum, "pname"), (GLint, "value")]),

@@ -113,6 +113,12 @@ void flushQueries();
 void beginProfile(trace::Call &call, bool isDraw);
 void endProfile(trace::Call &call, bool isDraw);
 
+GLenum
+blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags);
+
+GLenum
+clientWaitSync(trace::Call &call, GLsync sync, GLbitfield flags, GLuint64 timeout);
+
 } /* namespace glretrace */
 
 

@@ -289,6 +289,49 @@ endProfile(trace::Call &call, bool isDraw) {
     }
 }
 
+
+GLenum
+blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags) {
+    GLenum result;
+
+    do {
+        result = glClientWaitSync(sync, flags, 1000);
+    } while (result == GL_TIMEOUT_EXPIRED);
+
+    if (result != GL_ALREADY_SIGNALED) {
+        retrace::warning(call) << "got " << glstate::enumToString(result) << "\n";
+    }
+
+    return result;
+}
+
+
+/**
+ * Helper for properly retrace glClientWaitSync().
+ */
+GLenum
+clientWaitSync(trace::Call &call, GLsync sync, GLbitfield flags, GLuint64 timeout) {
+    GLenum result = call.ret->toSInt();
+    switch (result) {
+    case GL_ALREADY_SIGNALED:
+    case GL_CONDITION_SATISFIED:
+        // We must block, as following calls might rely on the fence being
+        // signaled
+        result = blockOnFence(call, sync, flags);
+        break;
+    case GL_TIMEOUT_EXPIRED:
+        result = glClientWaitSync(sync, flags, timeout);
+        break;
+    case GL_WAIT_FAILED:
+        break;
+    default:
+        retrace::warning(call) << "unexpected return value\n";
+        break;
+    }
+    return result;
+}
+
+
 void
 initContext() {
     glretrace::Context *currentContext = glretrace::getCurrentContext();

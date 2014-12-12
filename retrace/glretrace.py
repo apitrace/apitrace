@@ -300,6 +300,20 @@ class GlRetracer(Retracer):
             print r'    } else {'
             Retracer.invokeFunction(self, function)
             print r'    }'
+        elif function.name == 'glClientWaitSync':
+            print r'    _result = glretrace::clientWaitSync(call, sync, flags, timeout);'
+            print r'    (void)_result;'
+        elif function.name == 'glGetSynciv':
+            print r'    if (pname != GL_SYNC_STATUS ||'
+            print r'        bufSize < 1 ||'
+            print r'        values == NULL ||'
+            print r'        call.arg(4)[0].toSInt() != GL_SIGNALED) {'
+            print r'        // No side-effects'
+            print r'        return;'
+            print r'    }'
+            print r'    // Fence was signalled, so ensure it happened here'
+            print r'    glretrace::blockOnFence(call, sync, GL_SYNC_FLUSH_COMMANDS_BIT);'
+            print r'    (void)length;'
         else:
             Retracer.invokeFunction(self, function)
 
