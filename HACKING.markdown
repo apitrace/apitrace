@@ -167,6 +167,12 @@ There is a regression test suite under development in
 https://github.com/apitrace/apitrace-tests .
 
 
+# Further reading #
+
+* [Intercepting and Instrumenting COM Applications](https://www.usenix.org/legacy/events/coots99/full_papers/hunt/hunt_html)
+* [Proxy-Dll: Intercept Calls to DirectX](http://www.mikoweb.eu/index.php?node=21)
+
+
 # How to's #
 
 ## How to support a new OpenGL extension ##
