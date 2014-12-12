@@ -469,7 +469,17 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
     }
     GLuint channels = _gl_format_channels(format);
 
-    image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true);
+    image::ChannelType channelType;
+    if (format == GL_DEPTH_COMPONENT) {
+        type = GL_FLOAT;
+        channels = 1;
+        channelType = image::TYPE_FLOAT;
+    } else {
+        type = GL_UNSIGNED_BYTE;
+        channelType = image::TYPE_UNORM8;
+    }
+
+    image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true, channelType);
 
     context.resetPixelPackState();
 
@@ -494,7 +504,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
         if (context.ES) {
             getTexImageOES(target, level, desc, image->pixels);
         } else {
-            glGetTexImage(target, level, format, GL_UNSIGNED_BYTE, image->pixels);
+            glGetTexImage(target, level, format, type, image->pixels);
         }
     }
 
