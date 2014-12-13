@@ -561,7 +561,7 @@ class GlTracer(Tracer):
             print '                _glGetBufferParameteriv%s(target, GL_BUFFER_MAP_LENGTH, &length);' % suffix
             print '                GLint access_flags = 0;'
             print '                _glGetBufferParameteriv(target, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
-            print '                flush = flush && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT);'
+            print '                flush = flush && !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT));'
             print '                if (length == -1) {'
             print '                    // Mesa drivers refuse GL_BUFFER_MAP_LENGTH without GL 3.0 up-to'
             print '                    // http://cgit.freedesktop.org/mesa/mesa/commit/?id=ffee498fb848b253a7833373fe5430f8c7ca0c5f'
@@ -609,7 +609,8 @@ class GlTracer(Tracer):
         if function.name == 'glUnmapNamedBuffer':
             print '    GLint access_flags = 0;'
             print '    _glGetNamedBufferParameteriv(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
-            print '    if ((access_flags & GL_MAP_WRITE_BIT) && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
+            print '    if ((access_flags & GL_MAP_WRITE_BIT) &&'
+            print '        !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT))) {'
             print '        GLvoid *map = NULL;'
             print '        _glGetNamedBufferPointerv(buffer, GL_BUFFER_MAP_POINTER, &map);'
             print '        GLint length = 0;'
@@ -621,7 +622,8 @@ class GlTracer(Tracer):
         if function.name == 'glUnmapNamedBufferEXT':
             print '    GLint access_flags = 0;'
             print '    _glGetNamedBufferParameterivEXT(buffer, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
-            print '    if ((access_flags & GL_MAP_WRITE_BIT) && !(access_flags & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
+            print '    if ((access_flags & GL_MAP_WRITE_BIT) &&'
+            print '        !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT))) {'
             print '        GLvoid *map = NULL;'
             print '        _glGetNamedBufferPointervEXT(buffer, GL_BUFFER_MAP_POINTER, &map);'
             print '        GLint length = 0;'
@@ -656,10 +658,12 @@ class GlTracer(Tracer):
             print '    }'
 
         # FIXME: We don't support coherent/pinned memory mappings
-        # See https://github.com/apitrace/apitrace/issues/232
-        if function.name in ('glBufferStorage', 'glNamedBufferStorage', 'glNamedBufferStorageEXT'):
-            print r'    if (flags & GL_MAP_COHERENT_BIT) {'
-            print r'        os::log("apitrace: warning: coherent mappings not fully supported\n");'
+        if function.name in ('glMapBufferRange', 'glMapNamedBufferRange', 'glMapNamedBufferRangeEXT'):
+            print r'    if (access & GL_MAP_COHERENT_BIT) {'
+            print r'        os::log("apitrace: warning: %s: MAP_COHERENT_BIT unsupported (https://github.com/apitrace/apitrace/issues/232)\n", __FUNCTION__);'
+            print r'    } else if ((access & GL_MAP_PERSISTENT_BIT) &&'
+            print r'               !(access & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
+            print r'        os::log("apitrace: warning: %s: MAP_PERSISTENT_BIT w/o FLUSH_EXPLICIT_BIT unsupported (https://github.com/apitrace/apitrace/issues/232)\n", __FUNCTION__);'
             print r'    }'
         if function.name in ('glBufferData', 'glBufferDataARB'):
             print r'    if (target == GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD) {'
