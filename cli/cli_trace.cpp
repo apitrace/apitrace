@@ -179,6 +179,7 @@ traceProgram(trace::API api,
             wrapperPath.append(oldEnvVarValue);
         }
 
+        std::string ex;
         if (debug) {
 #if defined(__APPLE__)
             bool lldb = true;
@@ -213,7 +214,7 @@ traceProgram(trace::API api,
                  * Debug with GDB.
                  */
 
-                std::string ex("set exec-wrapper env " TRACE_VARIABLE "='");
+                ex = "set exec-wrapper env " TRACE_VARIABLE "='";
                 ex.append(wrapperPath.str());
                 ex.append("'");
 
