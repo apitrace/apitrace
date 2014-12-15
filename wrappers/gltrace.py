@@ -294,6 +294,14 @@ class GlTracer(Tracer):
         print '}'
         print
 
+        # VMWX_map_buffer_debug
+        print r'extern "C" PUBLIC'
+        print r'void APIENTRY'
+        print r'glNotifyMappedBufferRangeVMWX(const void * start, GLsizeiptr length) {'
+        self.emit_memcpy('start', 'length')
+        print r'}'
+        print
+
     getProcAddressFunctionNames = []
 
     def traceApi(self, api):
@@ -658,8 +666,21 @@ class GlTracer(Tracer):
             print '    }'
 
         # FIXME: We don't support coherent/pinned memory mappings
+        if function.name in ('glBufferStorage', 'glNamedBufferStorage', 'glNamedBufferStorageEXT'):
+            print r'    if (!(flags & GL_MAP_PERSISTENT_BIT)) {'
+            print r'        os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/o MAP_PERSISTENT_BIT\n", __FUNCTION__);'
+            print r'    }'
+            print r'    flags &= ~GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX;'
         if function.name in ('glMapBufferRange', 'glMapNamedBufferRange', 'glMapNamedBufferRangeEXT'):
-            print r'    if (access & GL_MAP_COHERENT_BIT) {'
+            print r'    if (access & GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX) {'
+            print r'        if (!(access & GL_MAP_PERSISTENT_BIT)) {'
+            print r'            os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/o MAP_PERSISTENT_BIT\n", __FUNCTION__);'
+            print r'        }'
+            print r'        if (access & GL_MAP_FLUSH_EXPLICIT_BIT) {'
+            print r'            os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/ MAP_FLUSH_EXPLICIT_BIT\n", __FUNCTION__);'
+            print r'        }'
+            print r'        access &= ~GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX;'
+            print r'    } else if (access & GL_MAP_COHERENT_BIT) {'
             print r'        os::log("apitrace: warning: %s: MAP_COHERENT_BIT unsupported (https://github.com/apitrace/apitrace/issues/232)\n", __FUNCTION__);'
             print r'    } else if ((access & GL_MAP_PERSISTENT_BIT) &&'
             print r'               !(access & GL_MAP_FLUSH_EXPLICIT_BIT)) {'
@@ -795,14 +816,14 @@ class GlTracer(Tracer):
             print '    }'
 
         if function.name in self.getProcAddressFunctionNames:
-            else_ = ''
+            nameArg = function.args[0].name
+            print '    if (strcmp("glNotifyMappedBufferRangeVMWX", (const char *)%s) == 0) {' % (nameArg,)
+            print '        _result = (%s)&glNotifyMappedBufferRangeVMWX;' % (function.type,)
             for marker_function in self.marker_functions:
                 if self.api.getFunctionByName(marker_function):
-                    print '    %sif (strcmp("%s", (const char *)%s) == 0) {' % (else_, marker_function, function.args[0].name)
+                    print '    } else if (strcmp("%s", (const char *)%s) == 0) {' % (marker_function, nameArg)
                     print '        _result = (%s)&%s;' % (function.type, marker_function)
-                    print '    }'
-                else_ = 'else '
-            print '    %s{' % else_
+            print '    } else {'
             Tracer.doInvokeFunction(self, function)
 
             # Replace function addresses with ours
@@ -810,7 +831,7 @@ class GlTracer(Tracer):
             # contain the addresses of the wrapper functions, and not the real
             # functions, but in practice this should make no difference.
             if function.name in self.getProcAddressFunctionNames:
-                print '    _result = _wrapProcAddress(%s, _result);' % (function.args[0].name,)
+                print '    _result = _wrapProcAddress(%s, _result);' % (nameArg,)
 
             print '    }'
             return

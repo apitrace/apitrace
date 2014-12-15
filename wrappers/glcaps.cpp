@@ -62,6 +62,7 @@ extraExtension_stringsFull[] = {
     "GL_KHR_debug",
     "GL_EXT_debug_marker",
     "GL_EXT_debug_label",
+    "GL_VMWX_map_buffer_debug",
 };
 
 static const char *

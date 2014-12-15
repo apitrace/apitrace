@@ -85,6 +85,10 @@
 #define GL_TRANSPOSE_PROJECTIVE_3D_NV     0x9099
 
 
+// GL_VMWX_map_buffer_debug
+#define GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX 0x80000000
+
+
 #if defined(_WIN32)
 
 #include <GL/wglext.h>
