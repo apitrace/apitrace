@@ -66,6 +66,7 @@ extraExtension_stringsFull[] = {
 
 static const char *
 extraExtension_stringsES[] = {
+    "GL_KHR_debug",
     "GL_EXT_debug_marker",
     "GL_EXT_debug_label",
 };
