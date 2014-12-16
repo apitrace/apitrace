@@ -125,7 +125,7 @@ if (WIN32)
         if (USE_WINSDK_HEADERS)
             # XXX: We currently just assume the library exists
             set (library_var "DirectX_${var_name}_LIBRARY")
-            set (${library_dir_var} ${library})
+            set (${library_var} ${library})
             mark_as_advanced (${library_var})
         else ()
             find_dxsdk_library (${var_name} ${library})
