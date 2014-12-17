@@ -195,15 +195,15 @@ traceProgram(trace::API api,
                  */
 
                 char scriptFileName[] = "/tmp/apitrace.XXXXXX";
-                if (mktemp(scriptFileName) == NULL) {
+                int scriptFD = mkstemp(scriptFileName);
+                if (scriptFD < 0) {
                     std::cerr << "error: failed to create temporary lldb script file\n";
                     exit(1);
                 }
 
-                {
-                    std::ofstream scriptStream(scriptFileName);
-                    scriptStream << "env " TRACE_VARIABLE "='" << wrapperPath.str() << "'\n";
-                }
+                FILE *scriptStream = fdopen(scriptFD, "w");
+                fprintf(scriptStream, "env " TRACE_VARIABLE "='%s'\n", wrapperPath.str());
+                fclose(scriptStream);
 
                 args.push_back("lldb");
                 args.push_back("-s");
