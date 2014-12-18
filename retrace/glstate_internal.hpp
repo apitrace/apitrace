@@ -40,6 +40,7 @@ namespace glstate {
 struct Context
 {
     bool ES;
+    bool core;
 
     bool ARB_draw_buffers;
     bool ARB_sampler_objects;

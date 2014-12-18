@@ -73,6 +73,12 @@ Context::Context(void) {
     if (!ES) {
         if (version_major > 3 ||
             (version_major == 3 && version_minor >= 2)) {
+            GLint profile_mask = 0;
+            glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile_mask);
+            if (profile_mask & GL_CONTEXT_CORE_PROFILE_BIT) {
+                core = true;
+            }
+
             GLint num_extensions = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
             for (GLint i = 0; i < num_extensions; ++i) {
