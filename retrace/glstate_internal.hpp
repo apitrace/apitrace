@@ -29,6 +29,7 @@
 
 #include "glimports.hpp"
 #include "glproc.hpp"
+#include "image.hpp"
 
 
 class JSONWriter;
@@ -80,8 +81,27 @@ flushErrors(void) {
 const char *
 formatToString(GLenum internalFormat);
 
-bool
-getInternalFormatType(GLenum internalFormat, GLenum &format, GLenum &type);
+
+struct InternalFormatDesc
+{
+    GLenum internalFormat;
+
+    /* The external format/type that matches the internalFormat exactly, or GL_NONE. */
+    GLenum format;
+    GLenum type;
+};
+
+
+const InternalFormatDesc &
+getInternalFormatDesc(GLenum internalFormat);
+
+void
+chooseReadBackFormat(const InternalFormatDesc &formatDesc, GLenum &format, GLenum &type);
+
+void
+getImageFormat(GLenum format, GLenum type,
+               GLuint &channels, image::ChannelType &channelType);
+
 
 bool
 isGeometryShaderBound(Context &context);

@@ -265,17 +265,16 @@ getActiveTextureLevelDesc(Context &context, GLenum target, GLint level, ImageDes
 
         glGetIntegerv(GL_TEXTURE_BUFFER_FORMAT_ARB, &desc.internalFormat);
 
-        GLenum format;
-        GLenum type;
-        if (!getInternalFormatType(desc.internalFormat, format, type)) {
+        const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
+        if (formatDesc.type == GL_NONE) {
             assert(0);
             return false;
+
         }
-        assert(type != GL_NONE);
 
         unsigned bits_per_element;
         unsigned bits_per_pixel;
-        _gl_format_size(format, type, bits_per_element, bits_per_pixel);
+        _gl_format_size(formatDesc.format, formatDesc.type, bits_per_element, bits_per_pixel);
 
         desc.width = buffer_size * 8 / bits_per_pixel;
         desc.height = 1;
@@ -437,34 +436,31 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
         return;
     }
 
-    GLenum format;
-    GLenum type;
+    const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
 
-    if (!getInternalFormatType(desc.internalFormat, format, type)) {
-        format = GL_RGBA;
-        type = GL_NONE;
-    }
-
-    if (target == GL_TEXTURE_BUFFER && type != GL_UNSIGNED_BYTE) {
+    if (target == GL_TEXTURE_BUFFER && formatDesc.type != GL_UNSIGNED_BYTE) {
         // FIXME: We rely on glGetTexImage to convert the pixels, but we can't use it with texture buffers.
         return;
     }
+
+    GLenum format;
+    GLenum type;
+    chooseReadBackFormat(formatDesc, format, type);
 
     json.beginMember(label);
 
     if (context.ES && format == GL_DEPTH_COMPONENT) {
         format = GL_RED;
     }
-    GLuint channels = _gl_format_channels(format);
 
+    GLuint channels;
     image::ChannelType channelType;
-    if (format == GL_DEPTH_COMPONENT) {
-        type = GL_FLOAT;
-        channels = 1;
-        channelType = image::TYPE_FLOAT;
-    } else {
-        type = GL_UNSIGNED_BYTE;
-        channelType = image::TYPE_UNORM8;
+    getImageFormat(format, type, channels, channelType);
+
+    if (0) {
+        std::cerr << enumToString(desc.internalFormat) << " "
+                  << enumToString(format) << " "
+                  << enumToString(type) << "\n";
     }
 
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true, channelType);
@@ -513,9 +509,6 @@ dumpActiveTexture(JSONWriter &json, Context &context, GLenum target)
 
     GLint texture_binding = 0;
     glGetIntegerv(binding, &texture_binding);
-    if (!glIsEnabled(target) && !texture_binding) {
-        return;
-    }
 
     char *object_label = getObjectLabel(context, GL_TEXTURE, texture_binding);
 
@@ -956,14 +949,14 @@ dumpReadBufferImage(JSONWriter &json,
         type = GL_UNSIGNED_BYTE;
     }
 
-    GLint channels = _gl_format_channels(format);
-
+    GLuint channels;
     image::ChannelType channelType;
-    if (type == GL_UNSIGNED_BYTE) {
-        channelType = image::TYPE_UNORM8;
-    } else {
-        type = GL_FLOAT;
-        channelType = image::TYPE_FLOAT;
+    getImageFormat(format, type, channels, channelType);
+
+    if (0) {
+        std::cerr << enumToString(internalFormat) << " "
+                  << enumToString(format) << " "
+                  << enumToString(type) << "\n";
     }
 
     image::Image *image = new image::Image(width, height, channels, true, channelType);
@@ -1191,10 +1184,8 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
         break;
     default:
         assert(desc.internalFormat != GL_NONE);
-        if (!getInternalFormatType(desc.internalFormat, format, type)) {
-             format = GL_RGBA;
-             type = GL_UNSIGNED_BYTE;
-        }
+        const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
+        chooseReadBackFormat(formatDesc, format, type);
     }
 
     GLint object_type = GL_NONE;
