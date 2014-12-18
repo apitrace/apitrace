@@ -295,6 +295,100 @@ static const GLenum bindings[] = {
 #define NUM_BINDINGS sizeof(bindings)/sizeof(bindings[0])
 
 
+static void APIENTRY
+debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                     GLsizei length, const GLchar* message, const void *userParam)
+{
+    const char *severityStr = "";
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+        severityStr = " high";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        /* ignore */
+        return;
+    default:
+        assert(0);
+    }
+
+    const char *sourceStr = "";
+    switch (source) {
+    case GL_DEBUG_SOURCE_API:
+        break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        sourceStr = " window system";
+        break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        sourceStr = " shader compiler";
+        break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        sourceStr = " third party";
+        break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+        sourceStr = " application";
+        break;
+    case GL_DEBUG_SOURCE_OTHER:
+        break;
+    default:
+        assert(0);
+    }
+
+    const char *typeStr = "";
+    switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+        typeStr = " error";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        typeStr = " deprecated behaviour";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        typeStr = " undefined behaviour";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        typeStr = " portability issue";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        return;
+    default:
+        assert(0);
+        /* fall-through */
+    case GL_DEBUG_TYPE_OTHER:
+        typeStr = " issue";
+        break;
+    case GL_DEBUG_TYPE_MARKER:
+    case GL_DEBUG_TYPE_PUSH_GROUP:
+    case GL_DEBUG_TYPE_POP_GROUP:
+        return;
+    }
+
+    std::cerr << "warning: message:" << severityStr << sourceStr << typeStr;
+
+    if (id) {
+        std::cerr << " " << id;
+    }
+
+    std::cerr << ": ";
+
+    std::cerr << message;
+
+    // Write new line if not included in the message already.
+    size_t messageLen = strlen(message);
+    if (!messageLen ||
+        (message[messageLen - 1] != '\n' &&
+         message[messageLen - 1] != '\r')) {
+       std::cerr << std::endl;
+    }
+
+    /* To help debug bugs in glstate. */
+    if (0) {
+        os::breakpoint();
+    }
+}
+
+
 void dumpCurrentContext(std::ostream &os)
 {
     JSONWriter json(os);
@@ -309,7 +403,26 @@ void dumpCurrentContext(std::ostream &os)
 
     Context context;
 
+    assert(context.KHR_debug);
+
+    /* Temporarily disable messages, as dumpParameters blindlessly tries to
+     * get state, regardless the respective extension is supported or not.
+     */
+    GLDEBUGPROC prevDebugCallbackFunction = 0;
+    void *prevDebugCallbackUserParam = 0;
+    if (context.KHR_debug) {
+        glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
+        glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+        glDebugMessageCallback(NULL, NULL);
+    }
+
     dumpParameters(json, context);
+
+    // Use our own debug-message callback.
+    if (context.KHR_debug) {
+        glDebugMessageCallback(debugMessageCallback, NULL);
+    }
+
     dumpShadersUniforms(json, context);
     dumpTextures(json, context);
     dumpFramebuffer(json, context);
@@ -324,6 +437,10 @@ void dumpCurrentContext(std::ostream &os)
     }
 #endif
 
+    // Restore debug message callback
+    if (context.KHR_debug) {
+        glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+    }
 }
 
 

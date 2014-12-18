@@ -588,17 +588,7 @@ public:
             return false;
         }
 
-        if (glretrace::supportsDebugOutput) {
-            // Our state dump generates lots of errors as it often tries to get
-            // state that's not supported, so silence debug messages temporarily.
-            glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_FALSE);
-        }
-
         glstate::dumpCurrentContext(os);
-
-        if (glretrace::supportsDebugOutput) {
-            glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
-        }
 
         return true;
     }
