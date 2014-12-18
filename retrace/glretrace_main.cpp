@@ -298,7 +298,11 @@ blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags) {
         result = glClientWaitSync(sync, flags, 1000);
     } while (result == GL_TIMEOUT_EXPIRED);
 
-    if (result != GL_ALREADY_SIGNALED) {
+    switch (result) {
+    case GL_ALREADY_SIGNALED:
+    case GL_CONDITION_SATISFIED:
+        break;
+    default:
         retrace::warning(call) << "got " << glstate::enumToString(result) << "\n";
     }
 
