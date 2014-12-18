@@ -246,6 +246,19 @@ abort(void)
 }
 
 
+void
+breakpoint(void)
+{
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+    asm("int3");
+#elif defined(_MSC_VER)
+    __debugbreak();
+#else
+    DebugBreak();
+#endif
+}
+
+
 #ifndef DBG_PRINTEXCEPTION_C
 #define DBG_PRINTEXCEPTION_C 0x40010006
 #endif

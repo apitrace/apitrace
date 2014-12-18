@@ -88,6 +88,10 @@ void abort(void)
 #endif
 ;
 
+void
+breakpoint(void);
+
+
 void setExceptionCallback(void (*callback)(void));
 void resetExceptionCallback(void);
 

@@ -223,6 +223,17 @@ abort(void)
 }
 
 
+void
+breakpoint(void)
+{
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+    asm("int3");
+#else
+    kill(getpid(), SIGTRAP);
+#endif
+}
+
+
 static void (*gCallback)(void) = NULL;
 
 #define NUM_SIGNALS 16
