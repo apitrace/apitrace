@@ -22,8 +22,7 @@ public:
     ApiTraceCallSignature *signature(unsigned id);
     void addSignature(unsigned id, ApiTraceCallSignature *signature);
 
-    ApiTraceEnumSignature *enumSignature(unsigned id);
-    void addEnumSignature(unsigned id, ApiTraceEnumSignature *signature);
+    trace::EnumSig *enumSignature(unsigned id);
 
 private:
     class FrameContents
@@ -118,7 +117,6 @@ private:
     QHash<QString, QUrl> m_helpHash;
 
     QVector<ApiTraceCallSignature*> m_signatures;
-    QVector<ApiTraceEnumSignature*> m_enumSignatures;
 };
 
 #endif

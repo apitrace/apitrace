@@ -195,19 +195,7 @@ void VariantVisitor::visit(trace::WString *node)
 
 void VariantVisitor::visit(trace::Enum *e)
 {
-    ApiTraceEnumSignature *sig = 0;
-
-    if (m_loader) {
-        sig = m_loader->enumSignature(e->sig->id);
-    }
-    if (!sig) {
-        sig = new ApiTraceEnumSignature(e->sig);
-        if (m_loader) {
-            m_loader->addEnumSignature(e->sig->id, sig);
-        }
-    }
-
-    m_variant = QVariant::fromValue(ApiEnum(sig, e->value));
+    m_variant = QVariant::fromValue(ApiEnum(e->sig, e->value));
 }
 
 void VariantVisitor::visit(trace::Bitmask *bitmask)
@@ -242,42 +230,24 @@ void VariantVisitor::visit(trace::Repr *repr)
     repr->humanValue->visit(*this);
 }
 
-ApiTraceEnumSignature::ApiTraceEnumSignature(const trace::EnumSig *sig)
-{
-    for (const trace::EnumValue *it = sig->values;
-         it != sig->values + sig->num_values; ++it) {
-        QPair<QString, signed long long> pair;
-
-        pair.first = QString::fromLatin1(it->name);
-        pair.second = it->value;
-
-        m_names.append(pair);
-    }
-}
-
-QString ApiTraceEnumSignature::name(signed long long value) const
-{
-    for (ValueList::const_iterator it = m_names.begin();
-         it != m_names.end(); ++it) {
-        if (value == it->second) {
-            return it->first;
-        }
-    }
-    return QString::fromLatin1("%1").arg(value);
-}
-
-ApiEnum::ApiEnum(ApiTraceEnumSignature *sig, signed long long value)
+ApiEnum::ApiEnum(const trace::EnumSig *sig, signed long long value)
     : m_sig(sig), m_value(value)
 {
+    Q_ASSERT(m_sig);
 }
 
 QString ApiEnum::toString() const
 {
-    if (m_sig) {
-        return m_sig->name(m_value);
+    Q_ASSERT(m_sig);
+
+    for (const trace::EnumValue *it = m_sig->values;
+         it != m_sig->values + m_sig->num_values; ++it) {
+        if (m_value == it->value) {
+            return QString::fromLatin1(it->name);
+        }
     }
-    Q_ASSERT(!"should never happen");
-    return QString();
+
+    return QString::fromLatin1("%1").arg(m_value);
 }
 
 QVariant ApiEnum::value() const
@@ -287,15 +257,6 @@ QVariant ApiEnum::value() const
     }
     Q_ASSERT(!"should never happen");
     return QVariant();
-}
-
-QString ApiEnum::name() const
-{
-    if (m_sig) {
-        return m_sig->name(m_value);
-    }
-    Q_ASSERT(!"should never happen");
-    return QString();
 }
 
 unsigned long long ApiBitmask::value() const
@@ -418,7 +379,7 @@ void ApiStruct::init(const trace::Struct *s)
 
     m_sig.name = QString::fromLatin1(s->sig->name);
     for (unsigned i = 0; i < s->sig->num_members; ++i) {
-        VariantVisitor vis(0);
+        VariantVisitor vis;
         m_sig.memberNames.append(
             QString::fromLatin1(s->sig->member_names[i]));
         s->members[i]->visit(vis);
@@ -463,7 +424,7 @@ void ApiArray::init(const trace::Array *arr)
 
     m_array.reserve(arr->values.size());
     for (int i = 0; i < arr->values.size(); ++i) {
-        VariantVisitor vis(0);
+        VariantVisitor vis;
         arr->values[i]->visit(vis);
 
         m_array.append(vis.variant());
@@ -705,14 +666,14 @@ ApiTraceCall::loadData(TraceLoader *loader,
         loader->addSignature(call->sig->id, m_signature);
     }
     if (call->ret) {
-        VariantVisitor retVisitor(loader);
+        VariantVisitor retVisitor;
         call->ret->visit(retVisitor);
         m_returnValue = retVisitor.variant();
     }
     m_argValues.reserve(call->args.size());
     for (int i = 0; i < call->args.size(); ++i) {
         if (call->args[i].value) {
-            VariantVisitor argVisitor(loader);
+            VariantVisitor argVisitor;
             call->args[i].value->visit(argVisitor);
             m_argValues.append(argVisitor.variant());
             if (m_argValues[i].type() == QVariant::ByteArray) {

@@ -17,9 +17,6 @@ class TraceLoader;
 class VariantVisitor : public trace::Visitor
 {
 public:
-    VariantVisitor(TraceLoader *loader)
-        : m_loader(loader)
-    {}
     virtual void visit(trace::Null *);
     virtual void visit(trace::Bool *node);
     virtual void visit(trace::SInt *node);
@@ -41,7 +38,6 @@ public:
         return m_variant;
     }
 private:
-    TraceLoader *m_loader;
     QVariant m_variant;
 };
 
@@ -53,29 +49,16 @@ struct ApiTraceError
     QString message;
 };
 
-class ApiTraceEnumSignature
-{
-public:
-    ApiTraceEnumSignature(const trace::EnumSig *sig);
-
-    QString name(signed long long value) const;
-
-private:
-    typedef QList<QPair<QString, signed long long> > ValueList;
-    ValueList m_names;
-};
-
 class ApiEnum
 {
 public:
-    ApiEnum(ApiTraceEnumSignature *sig=0, signed long long value = 0);
+    ApiEnum(const trace::EnumSig *sig=0, signed long long value = 0);
 
     QString toString() const;
 
     QVariant value() const;
-    QString name() const;
 private:
-    ApiTraceEnumSignature *m_sig;
+    const trace::EnumSig *m_sig;
     signed long long m_value;
 };
 Q_DECLARE_METATYPE(ApiEnum);
