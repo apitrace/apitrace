@@ -221,7 +221,6 @@ public:
 
 protected:
     int m_type : 4;
-    mutable bool m_hasBinaryData;
     mutable int m_binaryDataIndex:8;
     ApiTraceState *m_state;
 

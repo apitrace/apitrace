@@ -580,8 +580,7 @@ void ApiTraceCallSignature::setHelpUrl(const QUrl &url)
 
 ApiTraceEvent::ApiTraceEvent()
     : m_type(ApiTraceEvent::None),
-      m_hasBinaryData(false),
-      m_binaryDataIndex(0),
+      m_binaryDataIndex(-1),
       m_state(0),
       m_staticText(0)
 {
@@ -589,11 +588,11 @@ ApiTraceEvent::ApiTraceEvent()
 
 ApiTraceEvent::ApiTraceEvent(Type t)
     : m_type(t),
-      m_hasBinaryData(false),
-      m_binaryDataIndex(0),
+      m_binaryDataIndex(-1),
       m_state(0),
       m_staticText(0)
 {
+    Q_ASSERT(m_type == t);
 }
 
 ApiTraceEvent::~ApiTraceEvent()
@@ -677,7 +676,6 @@ ApiTraceCall::loadData(TraceLoader *loader,
             call->args[i].value->visit(argVisitor);
             m_argValues.append(argVisitor.variant());
             if (m_argValues[i].type() == QVariant::ByteArray) {
-                m_hasBinaryData = true;
                 m_binaryDataIndex = i;
             }
         } else {
@@ -883,11 +881,12 @@ QUrl ApiTraceCall::helpUrl() const
 
 bool ApiTraceCall::hasBinaryData() const
 {
-    return m_hasBinaryData;
+    return m_binaryDataIndex >= 0;
 }
 
 int ApiTraceCall::binaryDataIndex() const
 {
+    Q_ASSERT(hasBinaryData());
     return m_binaryDataIndex;
 }
 
