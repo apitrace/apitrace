@@ -518,9 +518,10 @@ dumpActiveTexture(JSONWriter &json, Context &context, GLenum target)
 
         GLint active_texture = GL_TEXTURE0;
         glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+        assert(active_texture >= GL_TEXTURE0);
 
         std::stringstream label;
-        label << enumToString(active_texture) << ", "
+        label << "GL_TEXTURE" << (active_texture - GL_TEXTURE0) << ", "
               << enumToString(target);
         if (object_label)
             label << ", \"" << object_label << "\"";
