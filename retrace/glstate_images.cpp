@@ -1134,13 +1134,21 @@ dumpDrawableImages(JSONWriter &json, Context &context)
 
     if (!context.ES) {
         GLint depth_bits = 0;
-        glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
+        if (context.core) {
+            glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_DEPTH, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE, &depth_bits);
+        } else {
+            glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
+        }
         if (depth_bits) {
             dumpReadBufferImage(json, "GL_DEPTH_COMPONENT", width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
         }
 
         GLint stencil_bits = 0;
-        glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
+        if (context.core) {
+            glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_STENCIL, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &stencil_bits);
+        } else {
+            glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
+        }
         if (stencil_bits) {
             assert(stencil_bits <= 8);
             dumpReadBufferImage(json, "GL_STENCIL_INDEX", width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
