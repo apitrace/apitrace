@@ -211,7 +211,6 @@ public:
     virtual int callIndex(ApiTraceCall *call) const = 0;
     virtual ApiTraceEvent *eventAtRow(int row) const = 0;
 
-    QVariantMap stateParameters() const;
     ApiTraceState *state() const;
     void setState(ApiTraceState *state);
     bool hasState() const

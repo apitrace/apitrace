@@ -601,15 +601,6 @@ ApiTraceEvent::~ApiTraceEvent()
     delete m_staticText;
 }
 
-QVariantMap ApiTraceEvent::stateParameters() const
-{
-    if (m_state) {
-        return m_state->parameters();
-    } else {
-        return QVariantMap();
-    }
-}
-
 ApiTraceState *ApiTraceEvent::state() const
 {
     return m_state;
