@@ -564,7 +564,9 @@ dumpTextures(JSONWriter &json, Context &context)
     json.beginObject();
 
     GLint max_texture_coords = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);
+    if (!context.core) {
+        glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);
+    }
 
     GLint max_combined_texture_image_units = 0;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_combined_texture_image_units);
@@ -590,7 +592,12 @@ dumpTextures(JSONWriter &json, Context &context)
 
             // Whether this fixed-function stage is enabled
             GLboolean enabled = GL_FALSE;
-            if (!context.core && unit < max_texture_coords) {
+            if (unit < max_texture_coords &&
+                (target == GL_TEXTURE_1D ||
+                 target == GL_TEXTURE_2D ||
+                 target == GL_TEXTURE_3D ||
+                 target == GL_TEXTURE_CUBE_MAP ||
+                 target == GL_TEXTURE_RECTANGLE)) {
                 glGetBooleanv(target, &enabled);
             }
 
