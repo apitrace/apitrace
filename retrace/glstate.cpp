@@ -409,8 +409,6 @@ void dumpCurrentContext(std::ostream &os)
 
     Context context;
 
-    assert(context.KHR_debug);
-
     /* Temporarily disable messages, as dumpParameters blindlessly tries to
      * get state, regardless the respective extension is supported or not.
      */
