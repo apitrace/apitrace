@@ -511,34 +511,41 @@ dumpActiveTexture(JSONWriter &json, Context &context, GLenum target, GLuint text
     glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
     assert(active_texture >= GL_TEXTURE0);
 
+    GLenum start_subtarget;
+    GLenum stop_subtarget;
+    if (target == GL_TEXTURE_CUBE_MAP) {
+        start_subtarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        stop_subtarget = start_subtarget + 6;
+    } else {
+        start_subtarget = target;
+        stop_subtarget = start_subtarget + 1;
+    }
+
+    GLboolean allowMipmaps = target != GL_TEXTURE_RECTANGLE &&
+                             target != GL_TEXTURE_BUFFER;
+
     GLint level = 0;
     do {
         ImageDesc desc;
 
-        std::stringstream label;
-        label << "GL_TEXTURE" << (active_texture - GL_TEXTURE0) << ", "
-              << enumToString(target);
-        if (object_label)
-            label << ", \"" << object_label << "\"";
-        if (target != GL_TEXTURE_BUFFER) {
-            label << ", level = " << level;
-        }
-
-        if (target == GL_TEXTURE_CUBE_MAP) {
-            for (GLint face = 0; face < 6; ++face) {
-                if (!getActiveTextureLevelDesc(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, desc)) {
-                    goto finished;
-                }
-                dumpActiveTextureLevel(json, context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, label.str());
+        for (GLenum subtarget = start_subtarget; subtarget < stop_subtarget; ++subtarget) {
+            std::stringstream label;
+            label << "GL_TEXTURE" << (active_texture - GL_TEXTURE0) << ", "
+                  << enumToString(subtarget);
+            if (object_label)
+                label << ", \"" << object_label << "\"";
+            if (allowMipmaps) {
+                label << ", level = " << level;
             }
-        } else {
-            if (!getActiveTextureLevelDesc(context, target, level, desc)) {
+
+            if (!getActiveTextureLevelDesc(context, subtarget, level, desc)) {
                 goto finished;
             }
-            dumpActiveTextureLevel(json, context, target, level, label.str());
+            dumpActiveTextureLevel(json, context, subtarget, level, label.str());
         }
 
-        if (target == GL_TEXTURE_BUFFER) {
+        if (!allowMipmaps) {
+            // no mipmaps
             break;
         }
 
