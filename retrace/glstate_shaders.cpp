@@ -677,9 +677,11 @@ dumpTransformFeedback(JSONWriter &json, GLint program)
 
 
 static inline void
-dumpArbProgram(JSONWriter &json, GLenum target)
+dumpArbProgram(JSONWriter &json, Context &context, GLenum target)
 {
-    if (!glIsEnabled(target)) {
+    if (context.ES ||
+        context.core ||
+        !glIsEnabled(target)) {
         return;
     }
 
@@ -703,9 +705,11 @@ dumpArbProgram(JSONWriter &json, GLenum target)
 
 
 static inline void
-dumpArbProgramUniforms(JSONWriter &json, GLenum target, const char *prefix)
+dumpArbProgramUniforms(JSONWriter &json, Context &context, GLenum target, const char *prefix)
 {
-    if (!glIsEnabled(target)) {
+    if (context.ES ||
+        context.core ||
+        !glIsEnabled(target)) {
         return;
     }
 
@@ -814,8 +818,8 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
     } else if (program) {
         dumpProgram(json, program);
     } else {
-        dumpArbProgram(json, GL_FRAGMENT_PROGRAM_ARB);
-        dumpArbProgram(json, GL_VERTEX_PROGRAM_ARB);
+        dumpArbProgram(json, context, GL_FRAGMENT_PROGRAM_ARB);
+        dumpArbProgram(json, context, GL_VERTEX_PROGRAM_ARB);
     }
     json.endObject();
     json.endMember(); // shaders
@@ -832,8 +836,8 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
     } else if (program) {
         dumpProgramUniforms(json, program);
     } else {
-        dumpArbProgramUniforms(json, GL_FRAGMENT_PROGRAM_ARB, "fp.");
-        dumpArbProgramUniforms(json, GL_VERTEX_PROGRAM_ARB, "vp.");
+        dumpArbProgramUniforms(json, context, GL_FRAGMENT_PROGRAM_ARB, "fp.");
+        dumpArbProgramUniforms(json, context, GL_VERTEX_PROGRAM_ARB, "vp.");
     }
     json.endObject();
     json.endMember(); // uniforms
