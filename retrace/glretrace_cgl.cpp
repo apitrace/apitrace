@@ -462,10 +462,12 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLGetVersion", &retrace::ignore},
     {"CGLGetVirtualScreen", &retrace::ignore},
     {"CGLIsEnabled", &retrace::ignore},
+    {"CGLLockContext", &retrace::ignore},
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
     {"CGLSetSurface", &retrace_CGLSetSurface},
     {"CGLSetParameter", &retrace::ignore},
     {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
+    {"CGLUnlockContext", &retrace::ignore},
     {"CGLUpdateContext", &retrace::ignore},
     {NULL, NULL},
 };
