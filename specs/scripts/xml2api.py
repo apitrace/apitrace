@@ -119,10 +119,16 @@ def processRequire(prototypes, node, filterName):
     if not commands:
         return
     print '    # %s' % nodeName
-    for command in commands:
-        functionName = command.get('name')
+
+    functionNames = [command.get('name') for command in commands]
+
+    if nodeName == 'GL_EXT_direct_state_access':
+        functionNames.sort()
+
+    for functionName in functionNames:
         prototype = prototypes[functionName]
         print '    %s,' % prototype
+
     print
 
 
