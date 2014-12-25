@@ -71,7 +71,12 @@ def getType(node):
     typeExpr = parser.parse_type()
 
     if lenExpr is not None:
-        typeExpr = 'Array(%s, "%s")' % (typeExpr, lenExpr)
+        if lenExpr == "1":
+            typeExpr = 'Pointer(%s)' % (typeExpr)
+        else:
+            if not lenExpr.isdigit():
+                lenExpr = '"' + lenExpr + '"'
+            typeExpr = 'Array(%s, %s)' % (typeExpr, lenExpr)
 
     return typeExpr
 
