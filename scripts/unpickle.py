@@ -55,13 +55,13 @@ CALL_FLAG_MARKER_PUSH       = (1 << 9)
 CALL_FLAG_MARKER_POP        = (1 << 10)
 
 
-class Pointer(int):
+class Pointer(long):
 
     def __str__(self):
-        if self == 0:
+        if self == 0L:
             return 'NULL'
         else:
-            return hex(self)
+            return hex(self).rstrip('L')
 
     __repr__ = __str__
 
