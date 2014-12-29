@@ -2153,6 +2153,7 @@ glapi.addFunctions([
     GlFunction(Void, "glVertexArraySecondaryColorOffsetEXT", [(GLarray, "vaobj"), (GLbuffer, "buffer"), (GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLintptr, "offset")]),
     GlFunction(Void, "glVertexArrayTexCoordOffsetEXT", [(GLarray, "vaobj"), (GLbuffer, "buffer"), (GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLintptr, "offset")]),
     GlFunction(Void, "glVertexArrayVertexAttribBindingEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLuint, "bindingindex")]),
+    GlFunction(Void, "glVertexArrayVertexAttribDivisorEXT", [(GLarray, "vaobj"), (GLuint, "index"), (GLuint, "divisor")]),
     GlFunction(Void, "glVertexArrayVertexAttribFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLboolean, "normalized"), (GLuint, "relativeoffset")]),
     GlFunction(Void, "glVertexArrayVertexAttribIFormatEXT", [(GLarray, "vaobj"), (GLuint, "attribindex"), (GLint, "size"), (GLenum, "type"), (GLuint, "relativeoffset")]),
     GlFunction(Void, "glVertexArrayVertexAttribIOffsetEXT", [(GLarray, "vaobj"), (GLbuffer, "buffer"), (GLuint, "index"), (GLint, "size"), (GLenum, "type"), (GLsizei, "stride"), (GLintptr, "offset")]),
