@@ -412,7 +412,7 @@ dumpShaderResourceViewImage(JSONWriter &json,
                       "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
                       shader, stage, ArraySlice, MipSlice);
             json.beginMember(label);
-            json.writeImage(image, "UNKNOWN");
+            json.writeImage(image);
             json.endMember(); // *_RESOURCE_*
             delete image;
         }
@@ -594,7 +594,7 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
             json.beginMember(label);
-            json.writeImage(image, "UNKNOWN");
+            json.writeImage(image);
             json.endMember(); // RENDER_TARGET_*
             delete image;
         }
@@ -607,7 +607,7 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
         image = getDepthStencilViewImage(pDevice, pDepthStencilView);
         if (image) {
             json.beginMember("DEPTH_STENCIL");
-            json.writeImage(image, "UNKNOWN");
+            json.writeImage(image);
             json.endMember();
             delete image;
         }

@@ -494,7 +494,10 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
 
     context.restorePixelPackState();
 
-    json.writeImage(image, formatToString(desc.internalFormat), desc.depth);
+    JSONWriter::ImageDesc imageDesc;
+    imageDesc.depth = desc.depth;
+    imageDesc.format = formatToString(desc.internalFormat);
+    json.writeImage(image, imageDesc);
 
     delete image;
 
@@ -1008,8 +1011,10 @@ dumpReadBufferImage(JSONWriter &json,
             error = glGetError();
         } while(error != GL_NO_ERROR);
     } else {
+        JSONWriter::ImageDesc imageDesc;
+        imageDesc.format = formatToString(internalFormat);
         json.beginMember(label);
-        json.writeImage(image, formatToString(internalFormat));
+        json.writeImage(image, imageDesc);
         json.endMember();
     }
 

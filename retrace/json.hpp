@@ -183,8 +183,25 @@ public:
         endMember();
     }
 
+    struct ImageDesc {
+        unsigned depth;
+        std::string format;
+
+        ImageDesc() :
+            depth(1),
+            format("UNKNOWN")
+        {}
+    };
+
     void
-    writeImage(image::Image *image, const char *format, unsigned depth = 1);
+    writeImage(image::Image *image, const ImageDesc & desc);
+
+    void
+    writeImage(image::Image *image) {
+        ImageDesc desc;
+        writeImage(image, desc);
+    }
+
 };
 
 #endif /* _JSON_HPP_ */

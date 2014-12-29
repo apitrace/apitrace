@@ -302,7 +302,8 @@ JSONWriter::writeBool(bool b) {
 }
 
 void
-JSONWriter::writeImage(image::Image *image, const char *format, unsigned depth)
+JSONWriter::writeImage(image::Image *image,
+                       const ImageDesc & desc)
 {
     assert(image);
     if (!image) {
@@ -316,10 +317,10 @@ JSONWriter::writeImage(image::Image *image, const char *format, unsigned depth)
     writeStringMember("__class__", "image");
 
     writeIntMember("__width__", image->width);
-    writeIntMember("__height__", image->height / depth);
-    writeIntMember("__depth__", depth);
+    writeIntMember("__height__", image->height / desc.depth);
+    writeIntMember("__depth__", desc.depth);
 
-    writeStringMember("__format__", format);
+    writeStringMember("__format__", desc.format.c_str());
 
     beginMember("__data__");
     std::stringstream ss;

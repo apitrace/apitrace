@@ -374,7 +374,7 @@ dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain)
         image = getRenderTargetImage(pSwapChain);
         if (image) {
             json.beginMember("SWAP_CHAIN");
-            json.writeImage(image, "UNKNOWN");
+            json.writeImage(image);
             json.endMember();
             delete image;
         }

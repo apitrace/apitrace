@@ -201,7 +201,7 @@ dumpTextures(JSONWriter &json, IDirect3DDevice8 *pDevice)
                         _snprintf(label, sizeof label, "PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
                     }
                     json.beginMember(label);
-                    json.writeImage(image, "UNKNOWN");
+                    json.writeImage(image);
                     json.endMember(); // PS_RESOURCE_*
                 }
             }
@@ -228,7 +228,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice8 *pDevice)
         image = getRenderTargetImage(pDevice, pRenderTarget);
         if (image) {
             json.beginMember("RENDER_TARGET_0");
-            json.writeImage(image, "UNKNOWN");
+            json.writeImage(image);
             json.endMember(); // RENDER_TARGET_*
         }
     }
@@ -240,7 +240,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice8 *pDevice)
         image = getSurfaceImage(pDevice, pDepthStencil);
         if (image) {
             json.beginMember("DEPTH_STENCIL");
-            json.writeImage(image, "UNKNOWN");
+            json.writeImage(image);
             json.endMember(); // RENDER_TARGET_*
         }
     }
