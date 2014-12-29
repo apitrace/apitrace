@@ -63,7 +63,7 @@ protected:
     IDXGISwapChain *m_pSwapChain;
     IDXGIOutput *m_pOutput;
 
-    ~CDXGISwapChainDWM() {
+    virtual ~CDXGISwapChainDWM() {
         m_pSwapChain->SetFullscreenState(FALSE, NULL);
         m_pOutput->Release();
     }
@@ -195,7 +195,7 @@ class CDXGIFactoryDWM : public IDXGIFactoryDWM
 private:
     IDXGIFactory *m_pFactory;
 
-    ~CDXGIFactoryDWM() {
+    virtual ~CDXGIFactoryDWM() {
     }
 
 public:
