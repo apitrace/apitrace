@@ -28,9 +28,7 @@
 #include <fstream>
 #include "image.hpp"
 
-extern "C" {
-    #include "md5.h"
-}
+#include "md5.h"
 
 
 using namespace std;
