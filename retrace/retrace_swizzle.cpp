@@ -118,21 +118,28 @@ addRegion(unsigned long long address, void *buffer, unsigned long long size)
         return;
     }
 
-#ifndef NDEBUG
-    RegionMap::iterator start = lowerBound(address);
-    RegionMap::iterator stop = upperBound(address + size - 1);
-    if (0) {
-        // Forget all regions that intersect this new one.
-        regionMap.erase(start, stop);
-    } else {
-        for (RegionMap::iterator it = start; it != stop; ++it) {
-            std::cerr << std::hex << "warning: "
-                "region 0x" << address << "-0x" << (address + size) << " "
-                "intersects existing region 0x" << it->first << "-0x" << (it->first + it->second.size) << "\n" << std::dec;
-            assert(intersects(it, address, size));
+    const bool debug =
+#ifdef NDEBUG
+        false
+#else
+        true
+#endif
+    ;
+    if (debug) {
+        RegionMap::iterator start = lowerBound(address);
+        RegionMap::iterator stop = upperBound(address + size - 1);
+        if (0) {
+            // Forget all regions that intersect this new one.
+            regionMap.erase(start, stop);
+        } else {
+            for (RegionMap::iterator it = start; it != stop; ++it) {
+                std::cerr << std::hex << "warning: "
+                    "region 0x" << address << "-0x" << (address + size) << " "
+                    "intersects existing region 0x" << it->first << "-0x" << (it->first + it->second.size) << "\n" << std::dec;
+                assert(intersects(it, address, size));
+            }
         }
     }
-#endif
 
     assert(buffer);
 
