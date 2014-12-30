@@ -94,7 +94,10 @@ class GlRetracer(Retracer):
         r'Clear',
         r'End',
         r'DrawPixels',
+        r'DrawTransformFeedback([A-Z][a-zA-Z]*)?',
         r'BlitFramebuffer',
+        r'Rect[dfis]v?',
+        r'EvalMesh[0-9]+',
     ]) + r')[0-9A-Z]*$')
 
 
