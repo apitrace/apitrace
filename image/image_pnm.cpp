@@ -74,6 +74,7 @@ Image::writePNM(std::ostream &os, const char *comment) const
         break;
     default:
         assert(0);
+        return;
     }
 
     os << identifier << "\n";
