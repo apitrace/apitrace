@@ -64,8 +64,8 @@ static pid_t pid = -1;
 static void
 on_exit(void)
 {
-	fflush(stdout);
-	fflush(stderr);
+    fflush(stdout);
+    fflush(stderr);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     waitpid(pid, NULL, 0);
@@ -78,6 +78,7 @@ on_exit(void)
 static void
 on_signal(int sig)
 {
+    fprintf(stderr, "on_signal\n");
     on_exit();
     signal(sig, SIG_DFL); 
     raise(sig);
@@ -93,37 +94,45 @@ pipepager(void) {
         return;
     }
 
-    enum {
-        READ_FD  = 0,
-        WRITE_FD = 1
-    };
+    union {
+        int pipe[2];
+        struct {
+            int read;
+            int write;
+        };
+    } fd;
 
-    int parentToChild[2];
     int ret;
     const char *pager;
 
-    ret = pipe(parentToChild);
+    ret = pipe(fd.pipe);
     assert(ret == 0);
+    if (ret != 0) {
+        return;
+    }
 
     pid = fork();
     switch (pid) {
     case -1:
         // failed to fork
+        close(fd.read);
+        close(fd.write);
         return;
 
     case 0:
         // child
-        ret = dup2(parentToChild[READ_FD], STDIN_FILENO);
-        assert(ret != -1);
-        ret = close(parentToChild[WRITE_FD]);
-        assert(ret == 0);
+        close(fd.write);
+
+        dup2(fd.read, STDIN_FILENO);
 
         pager = getenv("PAGER");
         if (!pager) {
             pager = "less";
         }
 
-        setenv("LESS", "FRXn", 0);
+        if (!getenv("PAGER")) {
+            putenv((char *)"LESS=FRXn");
+        }
 
         execlp(pager, pager, NULL);
 
@@ -132,13 +141,13 @@ pipepager(void) {
 
     default:
         // parent
-        ret = close(parentToChild[READ_FD]);
-        assert(ret == 0);
+        close(fd.read);
 
-        dup2(parentToChild[WRITE_FD], STDOUT_FILENO);
-        if (isatty(STDERR_FILENO))
-            dup2(parentToChild[WRITE_FD], STDERR_FILENO);
-        close(parentToChild[WRITE_FD]);
+        dup2(fd.write, STDOUT_FILENO);
+        if (isatty(STDERR_FILENO)) {
+            dup2(fd.write, STDERR_FILENO);
+        }
+        close(fd.write);
 
         // Ensure we wait for the pager before terminating
         signal(SIGINT, on_signal);
