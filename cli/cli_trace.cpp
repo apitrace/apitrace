@@ -54,6 +54,8 @@
 #endif
 
 
+#ifdef _WIN32
+
 static inline bool
 copyWrapper(const os::String & wrapperPath,
             const char *programPath,
@@ -82,6 +84,8 @@ copyWrapper(const os::String & wrapperPath,
 
     return true;
 }
+
+#endif /* _WIN32 */
 
 
 static int
