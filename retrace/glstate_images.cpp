@@ -624,7 +624,7 @@ dumpTextures(JSONWriter &json, Context &context)
 }
 
 
-static bool
+bool
 getDrawableBounds(GLint *width, GLint *height) {
 #if defined(__linux__)
     if (_getPublicProcAddress("eglGetCurrentContext")) {

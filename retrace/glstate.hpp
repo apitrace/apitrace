@@ -59,6 +59,9 @@ const char *enumToString(GLenum pname);
 
 void dumpCurrentContext(std::ostream &os);
 
+bool
+getDrawableBounds(GLint *width, GLint *height);
+
 image::Image *
 getDrawBufferImage(void);
 

@@ -232,6 +232,19 @@ updateDrawable(int width, int height) {
     currentDrawable->resize(width, height);
     currentDrawable->show();
 
+    // Ensure the drawable dimensions, as perceived by glstate match.
+    if (retrace::debug) {
+        GLint newWidth = 0;
+        GLint newHeight = 0;
+        if (glstate::getDrawableBounds(&newWidth, &newHeight) &&
+            (newWidth != width || newHeight != height)) {
+            std::cerr
+                << "error: drawable failed to resize: "
+                << "expected " << width << "x" << height << ", "
+                << "got " << newWidth << "x" << newHeight << "\n";
+        }
+    }
+
     glScissor(0, 0, width, height);
 }
 
