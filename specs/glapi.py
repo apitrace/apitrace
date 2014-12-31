@@ -1057,6 +1057,10 @@ glapi.addFunctions([
     GlFunction(Void, "glCreateSamplers", [(GLsizei, "n"), Out(Array(GLsampler, "n"), "samplers")]),
     GlFunction(Void, "glCreateProgramPipelines", [(GLsizei, "n"), Out(Array(GLpipeline, "n"), "pipelines")]),
     GlFunction(Void, "glCreateQueries", [(GLenum, "target"), (GLsizei, "n"), Out(Array(GLquery, "n"), "ids")]),
+    GlFunction(Void, "glGetQueryBufferObjecti64v", [(GLquery, "id"), (GLbuffer, "buffer"), (GLenum, "pname"), (GLintptr, "offset")]),
+    GlFunction(Void, "glGetQueryBufferObjectiv", [(GLquery, "id"), (GLbuffer, "buffer"), (GLenum, "pname"), (GLintptr, "offset")]),
+    GlFunction(Void, "glGetQueryBufferObjectui64v", [(GLquery, "id"), (GLbuffer, "buffer"), (GLenum, "pname"), (GLintptr, "offset")]),
+    GlFunction(Void, "glGetQueryBufferObjectuiv", [(GLquery, "id"), (GLbuffer, "buffer"), (GLenum, "pname"), (GLintptr, "offset")]),
 
     # GL_ARB_draw_buffers
     GlFunction(Void, "glDrawBuffersARB", [(GLsizei, "n"), (Array(Const(GLenum), "n"), "bufs")]),
