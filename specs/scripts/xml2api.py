@@ -108,7 +108,7 @@ def processCommand(prototypes, command):
     prototypes[functionName] = prototype
 
 
-def processRequire(prototypes, node, filterName):
+def processRequire(node, filterName):
     nodeName = node.get('name')
     if filterName is not None and nodeName != filterName:
         return
@@ -118,11 +118,17 @@ def processRequire(prototypes, node, filterName):
         commands.extend(requireNode.findall('command'))
     if not commands:
         return
-    print '    # %s' % nodeName
 
     functionNames = [command.get('name') for command in commands]
 
-    if nodeName == 'GL_EXT_direct_state_access':
+    return nodeName, functionNames
+
+
+
+def printPrototypes(prototypes, extensionName, functionNames):
+    print '    # %s' % extensionName
+
+    if extensionName == 'GL_EXT_direct_state_access':
         functionNames.sort()
 
     for functionName in functionNames:
@@ -156,12 +162,32 @@ def main():
             for command in commands.findall('command'):
                 processCommand(prototypes, command)
 
+        # Extract features
+        features = []
         for feature in root.findall('feature'):
-            processRequire(prototypes, feature, options.filter)
+            ret = processRequire(feature, options.filter)
+            if ret is not None:
+                features.append(ret)
 
-        extensions = root.find('extensions')
-        for extension in extensions.findall('extension'):
-            processRequire(prototypes, extension, options.filter)
+        # Extract extensions
+        extensions = []
+        for extension in root.find('extensions').findall('extension'):
+            ret = processRequire(extension, options.filter)
+            if ret is not None:
+                extensions.append(ret)
+
+        # Eliminate the functions from features that are in extensions
+        for extensionName, extensionFunctionNames in extensions:
+            for featureName, featureFunctionNames in features:
+                for functionName in extensionFunctionNames:
+                    try:
+                        featureFunctionNames.remove(functionName)
+                    except ValueError:
+                        pass
+
+        # Print all
+        for extensionName, functionNames in features + extensions:
+            printPrototypes(prototypes, extensionName, functionNames)
 
 
 if __name__ == '__main__':
