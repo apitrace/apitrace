@@ -1495,7 +1495,7 @@ parameters = [
     ("",	X,	1,	"GL_BUFFER_OBJECT_APPLE"),	# 0x85B3
     ("",	X,	1,	"GL_STORAGE_CLIENT_APPLE"),	# 0x85B4
     ("glGet",	I,	1,	"GL_VERTEX_ARRAY_BINDING"),	# 0x85B5
-    ("glGetTexParameter",	X,	1,	"GL_TEXTURE_RANGE_LENGTH_APPLE"),	# 0x85B7
+    ("glGetTexParameter",	I,	1,	"GL_TEXTURE_RANGE_LENGTH_APPLE"),	# 0x85B7
     ("",	P,	1,	"GL_TEXTURE_RANGE_POINTER_APPLE"),	# 0x85B8
     ("",	X,	1,	"GL_YCBCR_422_APPLE"),	# 0x85B9
     ("",	X,	1,	"GL_UNSIGNED_SHORT_8_8_APPLE"),	# 0x85BA
@@ -2440,8 +2440,8 @@ parameters = [
     ("glGet",	E,	1,	"GL_IMPLEMENTATION_COLOR_READ_FORMAT"),	# 0x8B9B
     ("",	X,	1,	"GL_POINT_SIZE_ARRAY_OES"),	# 0x8B9C
     ("glGetTexParameter",	I,	4,	"GL_TEXTURE_CROP_RECT_OES"),	# 0x8B9D
-    ("",	X,	1,	"GL_MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9E
-    ("",	X,	1,	"GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9F
+    ("glGet",	I,	1,	"GL_MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9E
+    ("",	I,	1,	"GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES"),	# 0x8B9F
     #("",	X,	1,	"GL_FRAGMENT_PROGRAM_POSITION_MESA"),	# 0x8BB0
     #("",	X,	1,	"GL_FRAGMENT_PROGRAM_CALLBACK_MESA"),	# 0x8BB1
     #("",	X,	1,	"GL_FRAGMENT_PROGRAM_CALLBACK_FUNC_MESA"),	# 0x8BB2
@@ -2747,7 +2747,7 @@ parameters = [
     ("",	I,	1,	"GL_ACTIVE_SUBROUTINE_UNIFORMS"),	# 0x8DE6
     ("glGet",	I,	1,	"GL_MAX_SUBROUTINES"),	# 0x8DE7
     ("glGet",	I,	1,	"GL_MAX_SUBROUTINE_UNIFORM_LOCATIONS"),	# 0x8DE8
-    ("glGetNamedString",	X,	1,	"GL_NAMED_STRING_LENGTH_ARB"),	# 0x8DE9
+    ("glGetNamedString",	I,	1,	"GL_NAMED_STRING_LENGTH_ARB"),	# 0x8DE9
     ("glGetNamedString",	E,	1,	"GL_NAMED_STRING_TYPE_ARB"),	# 0x8DEA
     ("glGet",	I,	1,	"GL_MAX_BINDABLE_UNIFORM_SIZE_EXT"),	# 0x8DED
     ("",	X,	1,	"GL_UNIFORM_BUFFER_EXT"),	# 0x8DEE
@@ -2829,11 +2829,11 @@ parameters = [
     ("glGet",	I,	1,	"GL_PATCH_VERTICES"),	# 0x8E72
     ("glGet",	F,	2,	"GL_PATCH_DEFAULT_INNER_LEVEL"),	# 0x8E73
     ("glGet",	F,	4,	"GL_PATCH_DEFAULT_OUTER_LEVEL"),	# 0x8E74
-    ("glGet",	X,	1,	"GL_TESS_CONTROL_OUTPUT_VERTICES"),	# 0x8E75
-    ("glGet",	E,	1,	"GL_TESS_GEN_MODE"),	# 0x8E76
-    ("glGet",	E,	1,	"GL_TESS_GEN_SPACING"),	# 0x8E77
-    ("glGet",	E,	1,	"GL_TESS_GEN_VERTEX_ORDER"),	# 0x8E78
-    ("glGet",	E,	1,	"GL_TESS_GEN_POINT_MODE"),	# 0x8E79
+    ("glGetProgram",	I,	1,	"GL_TESS_CONTROL_OUTPUT_VERTICES"),	# 0x8E75
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_MODE"),	# 0x8E76
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_SPACING"),	# 0x8E77
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_VERTEX_ORDER"),	# 0x8E78
+    ("glGetProgram",	E,	1,	"GL_TESS_GEN_POINT_MODE"),	# 0x8E79
     ("",	X,	1,	"GL_ISOLINES"),	# 0x8E7A
     ("",	X,	1,	"GL_FRACTIONAL_ODD"),	# 0x8E7B
     ("",	X,	1,	"GL_FRACTIONAL_EVEN"),	# 0x8E7C
@@ -3267,8 +3267,8 @@ parameters = [
     ("",	X,	1,	"GL_SAMPLER_OBJECT_AMD"),	# 0x9155
     ("",	X,	1,	"GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD"),	# 0x9160
     ("",	X,	1,	"GL_QUERY_BUFFER"),	# 0x9192
-    ("",	X,	1,	"GL_QUERY_BUFFER_BINDING"),	# 0x9193
-    ("",	X,	1,	"GL_QUERY_RESULT_NO_WAIT"),	# 0x9194
+    ("glGet",	I,	1,	"GL_QUERY_BUFFER_BINDING"),	# 0x9193
+    ("glGetQueryObject",	I,	1,	"GL_QUERY_RESULT_NO_WAIT"),	# 0x9194
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_X_ARB"),	# 0x9195
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Y_ARB"),	# 0x9196
     ("",	X,	1,	"GL_VIRTUAL_PAGE_SIZE_Z_ARB"),	# 0x9197
@@ -3359,9 +3359,9 @@ parameters = [
     ("",	X,	1,	"GL_INVERT_OVG_NV"),	# 0x92B4
     ("",	X,	1,	"GL_PRIMITIVE_BOUNDING_BOX_EXT"),	# 0x92BE
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER"),	# 0x92C0
-    ("glGet,glGet_i",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_BINDING"),	# 0x92C1
-    ("glGet_i",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_START"),	# 0x92C2
-    ("glGet_i",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_SIZE"),	# 0x92C3
+    ("glGet,glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_BINDING"),	# 0x92C1
+    ("glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_START"),	# 0x92C2
+    ("glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_SIZE"),	# 0x92C3
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_DATA_SIZE"),	# 0x92C4
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_ACTIVE_ATOMIC_COUNTERS"),	# 0x92C5
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_ACTIVE_ATOMIC_COUNTER_INDICES"),	# 0x92C6
