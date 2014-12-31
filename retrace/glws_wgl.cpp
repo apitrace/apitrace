@@ -322,6 +322,111 @@ public:
     }
 
     bool
+    createARB(HDC hDC) {
+        ProfileDesc desc;
+        getProfileDesc(profile, desc);
+
+        bool required = desc.api != API_GL ||
+                        desc.versionGreaterOrEqual(3, 1);
+
+        // We need to create context through WGL_ARB_create_context.  This
+        // implies binding a temporary context to get the extensions strings
+        // and function pointers.
+
+        // This function is only called inside makeCurrent, so we don't need
+        // to save and restore the previous current context/drawable.
+        BOOL bRet = wglMakeCurrent(hDC, hglrc);
+        if (!bRet) {
+            std::cerr << "error: wglMakeCurrent failed\n";
+            exit(1);
+        }
+
+        PFNWGLGETEXTENSIONSSTRINGARBPROC pfnWglGetExtensionsStringARB =
+            (PFNWGLGETEXTENSIONSSTRINGARBPROC) wglGetProcAddress("wglGetExtensionsStringARB");
+        if (!pfnWglGetExtensionsStringARB) {
+            if (required) {
+                std::cerr << "error: WGL_ARB_extensions_string not supported\n";
+                exit(1);
+            } else {
+                return false;
+            }
+        }
+        const char * extensionsString = pfnWglGetExtensionsStringARB(hDC);
+        if (!checkExtension("WGL_ARB_create_context", extensionsString)) {
+            if (required) {
+                std::cerr << "error: WGL_ARB_create_context not supported\n";
+                exit(1);
+            } else {
+                return false;
+            }
+        }
+
+        PFNWGLCREATECONTEXTATTRIBSARBPROC pfnWglCreateContextAttribsARB =
+            (PFNWGLCREATECONTEXTATTRIBSARBPROC) wglGetProcAddress("wglCreateContextAttribsARB");
+        if (!pfnWglCreateContextAttribsARB) {
+            if (required) {
+                std::cerr << "error: failed to get pointer to wglCreateContextAttribsARB\n";
+                exit(1);
+            } else {
+                return false;
+            }
+        }
+
+        wglMakeCurrent(hDC, NULL);
+        wglDeleteContext(hglrc);
+
+        Attributes<int> attribs;
+        if (desc.api == API_GL) {
+            attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+            attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+            if (desc.versionGreaterOrEqual(3, 2)) {
+                if (!checkExtension("WGL_ARB_create_context_profile", extensionsString)) {
+                    assert(required);
+                    std::cerr << "error: WGL_ARB_create_context_profile not supported\n";
+                    exit(1);
+                }
+                int profileMask = desc.core ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+                attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, profileMask);
+            }
+        } else if (desc.api == API_GLES) {
+            if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {
+                attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES_PROFILE_BIT_EXT);
+                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+            } else if (desc.major != 2) {
+                std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile not supported\n";
+            } else if (checkExtension("WGL_EXT_create_context_es2_profile", extensionsString)) {
+                assert(desc.major == 2);
+                attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES2_PROFILE_BIT_EXT);
+                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+            } else {
+                std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile or WGL_EXT_create_context_es2_profile not supported\n";
+            }
+        } else {
+            assert(0);
+        }
+        if (debug) {
+            attribs.add(WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB);
+        }
+        attribs.end();
+
+        hglrc = pfnWglCreateContextAttribsARB(hDC,
+                                              shareContext ? shareContext->hglrc : 0,
+                                              attribs);
+        if (!hglrc) {
+            if (required) {
+                std::cerr << "error: wglCreateContextAttribsARB failed\n";
+                exit(1);
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool
     create(WglDrawable *wglDrawable) {
         if (!hglrc) {
             HDC hDC = wglDrawable->hDC;
@@ -336,88 +441,7 @@ public:
                 shareContext->create(wglDrawable);
             }
 
-            ProfileDesc desc;
-            getProfileDesc(profile, desc);
-
-            if (desc.api != API_GL ||
-                desc.versionGreaterOrEqual(3, 1)) {
-                // We need to create context through WGL_ARB_create_context.  This
-                // implies binding a temporary context to get the extensions strings
-                // and function pointers.
-
-                // This function is only called inside makeCurrent, so we don't need
-                // to save and restore the previous current context/drawable.
-                BOOL bRet = wglMakeCurrent(hDC, hglrc);
-                if (!bRet) {
-                    std::cerr << "error: wglMakeCurrent failed\n";
-                    exit(1);
-                }
-
-                PFNWGLGETEXTENSIONSSTRINGARBPROC pfnWglGetExtensionsStringARB =
-                    (PFNWGLGETEXTENSIONSSTRINGARBPROC) wglGetProcAddress("wglGetExtensionsStringARB");
-                if (!pfnWglGetExtensionsStringARB) {
-                    std::cerr << "error: WGL_ARB_extensions_string not supported\n";
-                    exit(1);
-                }
-                const char * extensionsString = pfnWglGetExtensionsStringARB(hDC);
-                if (!checkExtension("WGL_ARB_create_context", extensionsString)) {
-                    std::cerr << "error: WGL_ARB_create_context not supported\n";
-                    exit(1);
-                }
-
-                PFNWGLCREATECONTEXTATTRIBSARBPROC pfnWglCreateContextAttribsARB =
-                    (PFNWGLCREATECONTEXTATTRIBSARBPROC) wglGetProcAddress("wglCreateContextAttribsARB");
-                if (!pfnWglCreateContextAttribsARB) {
-                    std::cerr << "error: failed to get pointer to wglCreateContextAttribsARB\n";
-                    exit(1);
-                }
-
-                wglMakeCurrent(hDC, NULL);
-                wglDeleteContext(hglrc);
-
-                Attributes<int> attribs;
-                if (desc.api == API_GL) {
-                    attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                    attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-                    if (desc.versionGreaterOrEqual(3, 2)) {
-                        if (!checkExtension("WGL_ARB_create_context_profile", extensionsString)) {
-                            std::cerr << "error: WGL_ARB_create_context_profile not supported\n";
-                            exit(1);
-                        }
-                        int profileMask = desc.core ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
-                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, profileMask);
-                    }
-                } else if (desc.api == API_GLES) {
-                    if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {
-                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES_PROFILE_BIT_EXT);
-                        attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                        attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-                    } else if (desc.major != 2) {
-                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile not supported\n";
-                    } else if (checkExtension("WGL_EXT_create_context_es2_profile", extensionsString)) {
-                        assert(desc.major == 2);
-                        attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES2_PROFILE_BIT_EXT);
-                        attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                        attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-                    } else {
-                        std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile or WGL_EXT_create_context_es2_profile not supported\n";
-                    }
-                } else {
-                    assert(0);
-                }
-                if (debug) {
-                    attribs.add(WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB);
-                }
-                attribs.end();
-
-                hglrc = pfnWglCreateContextAttribsARB(hDC,
-                                                      shareContext ? shareContext->hglrc : 0,
-                                                      attribs);
-                if (!hglrc) {
-                    std::cerr << "error: wglCreateContextAttribsARB failed\n";
-                    exit(1);
-                }
-            } else {
+            if (!createARB(hDC)) {
                 if (shareContext) {
                     BOOL bRet;
                     bRet = wglShareLists(shareContext->hglrc,
