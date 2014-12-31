@@ -313,6 +313,8 @@ debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
     case GL_DEBUG_SEVERITY_MEDIUM:
         break;
     case GL_DEBUG_SEVERITY_LOW:
+        severityStr = " low";
+        break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
         /* ignore */
         return;
