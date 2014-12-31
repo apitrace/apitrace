@@ -751,6 +751,31 @@ glapi.addFunctions([
     GlFunction(Void, "glBlendFunci", [(GLuint, "buf"), (GLenum, "src"), (GLenum, "dst")]),
     GlFunction(Void, "glBlendFuncSeparatei", [(GLuint, "buf"), (GLenum, "srcRGB"), (GLenum, "dstRGB"), (GLenum, "srcAlpha"), (GLenum, "dstAlpha")]),
 
+    # GL_VERSION_4_1
+
+    # GL_VERSION_4_2
+
+    # GL_VERSION_4_3
+
+    # GL_VERSION_4_4
+
+    # GL_VERSION_4_5
+    GlFunction(Void, "glGetnCompressedTexImage", [(GLenum, "target"), (GLint, "lod"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "pixels")]),
+    GlFunction(Void, "glGetnTexImage", [(GLenum, "target"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "pixels")]),
+    GlFunction(Void, "glGetnUniformdv", [(GLprogram, "program"), (GLint, "location"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetnMapdv", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "v")], sideeffects=False),
+    GlFunction(Void, "glGetnMapfv", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "v")], sideeffects=False),
+    GlFunction(Void, "glGetnMapiv", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLint, "bufSize"), "v")], sideeffects=False),
+    GlFunction(Void, "glGetnPixelMapfv", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "values")]),
+    GlFunction(Void, "glGetnPixelMapuiv", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLuint, "bufSize"), "values")]),
+    GlFunction(Void, "glGetnPixelMapusv", [(GLenum, "map"), (GLsizei, "bufSize"), Out(Array(GLushort, "bufSize"), "values")]),
+    GlFunction(Void, "glGetnPolygonStipple", [(GLsizei, "bufSize"), Out(Array(GLubyte, "bufSize"), "pattern")]),
+    GlFunction(Void, "glGetnColorTable", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "table")], sideeffects=False),
+    GlFunction(Void, "glGetnConvolutionFilter", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "image")]),
+    GlFunction(Void, "glGetnSeparableFilter", [(GLenum, "target"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "rowBufSize"), Out(OpaqueBlob(Void, "rowBufSize"), "row"), (GLsizei, "columnBufSize"), Out(OpaqueBlob(Void, "columnBufSize"), "column"), Out(GLpointer, "span")]),
+    GlFunction(Void, "glGetnHistogram", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "values")]),
+    GlFunction(Void, "glGetnMinmax", [(GLenum, "target"), (GLboolean, "reset"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "values")]),
+
     # GL_3DFX_tbuffer
     GlFunction(Void, "glTbufferMask3DFX", [(GLuint, "mask")]),
 
