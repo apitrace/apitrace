@@ -292,6 +292,147 @@ dumpAttribArray(JSONWriter &json,
 }
 
 
+static GLenum
+getBufferBinding(GLenum target) {
+    switch (target) {
+    case GL_ARRAY_BUFFER:
+        return GL_ARRAY_BUFFER_BINDING;
+    case GL_ATOMIC_COUNTER_BUFFER:
+        return GL_ATOMIC_COUNTER_BUFFER_BINDING;
+    case GL_COPY_READ_BUFFER:
+        return GL_COPY_READ_BUFFER_BINDING;
+    case GL_COPY_WRITE_BUFFER:
+        return GL_COPY_WRITE_BUFFER_BINDING;
+    case GL_DRAW_INDIRECT_BUFFER:
+        return GL_DRAW_INDIRECT_BUFFER_BINDING;
+    case GL_DISPATCH_INDIRECT_BUFFER:
+        return GL_DISPATCH_INDIRECT_BUFFER_BINDING;
+    case GL_ELEMENT_ARRAY_BUFFER:
+        return GL_ELEMENT_ARRAY_BUFFER_BINDING;
+    case GL_PIXEL_PACK_BUFFER:
+        return GL_PIXEL_PACK_BUFFER_BINDING;
+    case GL_PIXEL_UNPACK_BUFFER:
+        return GL_PIXEL_UNPACK_BUFFER_BINDING;
+    case GL_QUERY_BUFFER:
+        return GL_QUERY_BUFFER_BINDING;
+    case GL_SHADER_STORAGE_BUFFER:
+        return GL_SHADER_STORAGE_BUFFER_BINDING;
+    case GL_TEXTURE_BUFFER:
+        return GL_TEXTURE_BUFFER;
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+        return GL_TRANSFORM_FEEDBACK_BUFFER_BINDING;
+    case GL_UNIFORM_BUFFER:
+        return GL_UNIFORM_BUFFER_BINDING;
+    default:
+        assert(false);
+        return GL_NONE;
+    }
+}
+
+
+/**
+ * Helper class to temporarily bind a buffer to the specified target until
+ * control leaves the declaration scope.
+ */
+class BufferBinding
+{
+private:
+    GLenum target;
+    GLuint buffer;
+    GLuint prevBuffer;
+
+public:
+    BufferBinding(GLenum _target, GLuint _buffer) :
+        target(_target),
+        buffer(_buffer),
+        prevBuffer(0)
+    {
+        GLenum binding = getBufferBinding(target);
+        glGetIntegerv(binding, (GLint *) &prevBuffer);
+
+        if (prevBuffer != buffer) {
+            glBindBuffer(target, buffer);
+        }
+    }
+
+    ~BufferBinding() {
+        if (prevBuffer != buffer) {
+            glBindBuffer(target, prevBuffer);
+        }
+    }
+};
+
+
+/**
+ * Helper class to temporarily map a buffer (if necessary), and unmap when
+ * destroyed.
+ */
+class BufferMapping
+{
+    GLuint target;
+    GLuint buffer;
+    GLvoid *map_pointer;
+    bool unmap;
+
+public:
+    BufferMapping() :
+        target(GL_NONE),
+        buffer(0),
+        map_pointer(NULL),
+        unmap(false)
+    {
+    }
+
+    GLvoid *
+    map(GLenum _target, GLuint _buffer)
+    {
+        target = _target;
+        buffer = _buffer;
+        map_pointer = NULL;
+        unmap = false;
+
+        BufferBinding bb(target, buffer);
+
+        // Recursive mappings of the same buffer are not allowed.  And with the
+        // pursuit of persistent mappings for performance this will become more
+        // and more common.
+        GLint mapped = GL_FALSE;
+        glGetBufferParameteriv(target, GL_BUFFER_MAPPED, &mapped);
+        if (mapped) {
+            glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map_pointer);
+            assert(map_pointer != NULL);
+
+            GLint map_offset = 0;
+            glGetBufferParameteriv(target, GL_BUFFER_MAP_OFFSET, &map_offset);
+            if (map_offset != 0) {
+                std::cerr << "warning: " << enumToString(target) << " buffer " << buffer << " is already mapped with offset " << map_offset << "\n";
+                // FIXME: This most likely won't work.  We should remap the
+                // buffer with the full range, then re-map when done.  This
+                // should never happen in practice with persistent mappings
+                // though.
+                map_pointer = (GLubyte *)map_pointer - map_offset;
+            }
+        } else {
+            map_pointer = glMapBuffer(target, GL_READ_ONLY);
+            if (map_pointer) {
+                unmap = true;
+            }
+        }
+
+        return map_pointer;
+    }
+
+    ~BufferMapping() {
+        if (unmap) {
+            BufferBinding bb(target, buffer);
+
+            GLenum ret = glUnmapBuffer(target);
+            assert(ret == GL_TRUE);
+        }
+    }
+};
+
+
 /**
  * Dump an uniform that belows to an uniform block.
  */
@@ -351,21 +492,13 @@ dumpUniformBlock(JSONWriter &json,
     GLint start = 0;
     glGetIntegeri_v(GL_UNIFORM_BUFFER_START, slot, &start);
 
-    GLint previous_ubo = 0;
-    glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &previous_ubo);
-
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-
-    const GLbyte *raw_data = (const GLbyte *)glMapBuffer(GL_UNIFORM_BUFFER, GL_READ_ONLY);
+    BufferMapping mapping;
+    const GLbyte *raw_data = (const GLbyte *)mapping.map(GL_UNIFORM_BUFFER, ubo);
     if (raw_data) {
         std::string qualifiedName = resolveUniformName(name, size);
 
         dumpAttribArray(json, qualifiedName, desc, raw_data + start + offset);
-
-        glUnmapBuffer(GL_UNIFORM_BUFFER);
     }
-
-    glBindBuffer(GL_UNIFORM_BUFFER, previous_ubo);
 }
 
 
@@ -525,6 +658,7 @@ struct TransformFeedbackAttrib {
     GLsizei offset;
     GLsizei stride;
     GLsizei size;
+    BufferMapping mapping;
     const GLbyte *map;
 };
 
@@ -626,11 +760,12 @@ dumpTransformFeedback(JSONWriter &json, GLint program)
                                                          attrib.stride);
             numVertices = std::min(numVertices, numAttribVertices);
 
-            attrib.map = (const GLbyte *)glMapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, GL_READ_ONLY) + start;
+            attrib.map = (const GLbyte *)attrib.mapping.map(GL_TRANSFORM_FEEDBACK_BUFFER, tbo) + start;
         } else {
             attrib.map = attribs[0].map;
         }
     }
+    glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, previous_tbo);
 
     // Actually dump the vertices
     json.beginMember("GL_TRANSFORM_FEEDBACK");
@@ -653,26 +788,6 @@ dumpTransformFeedback(JSONWriter &json, GLint program)
     }
     json.endArray();
     json.endMember();
-
-    // Unmap the buffers
-    for (GLint slot = 0; slot < transform_feedback_varyings; ++slot) {
-        TransformFeedbackAttrib & attrib = attribs[slot];
-        if (slot == 0 || buffer_mode != GL_INTERLEAVED_ATTRIBS) {
-            if (!attrib.map) {
-                continue;
-            }
-
-            GLint tbo = 0;
-            glGetIntegeri_v(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, slot, &tbo);
-            assert(tbo);
-
-            glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, tbo);
-
-            glUnmapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER);
-        }
-    }
-
-    glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, previous_tbo);
 }
 
 
