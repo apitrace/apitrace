@@ -116,7 +116,32 @@ _getPublicProcAddress(const char *procName)
 
     return NULL;
 #else
-    return dlsym(RTLD_NEXT, procName);
+    void *proc;
+    proc = dlsym(RTLD_NEXT, procName);
+    if (!proc &&
+        strcmp(procName, "eglGetProcAddress") != 0) {
+        /*
+         * This might happen when:
+         *
+         * - the application is querying non-extensions functions via
+         *   eglGetProcAddress (either because EGL_KHR_get_all_proc_addresses
+         *   is advertised, or merely because the EGL implementation supports
+         *   it regardless, like Mesa does)
+         *
+         * - libGLES*.so nor libGL*.so was ever loaded.
+         *
+         * - we need to resolve entrypoints that application never asked (e.g.,
+         *   glGetIntegerv), for internal purposes
+         *
+         * Therefore, we try to fallback to eglGetProcAddress.
+         *
+         * Another alternative would be to dlopen libGL/libGLES ourselves.
+         *
+         * See https://github.com/apitrace/apitrace/issues/301#issuecomment-68532248
+         */
+        proc = (void *) _eglGetProcAddress(procName);
+    }
+    return proc;
 #endif
 }
 
