@@ -305,6 +305,7 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglQueryContext", &retrace::ignore},
     {"eglWaitGL", &retrace::ignore},
     {"eglWaitNative", &retrace::ignore},
+    {"eglReleaseThread", &retrace::ignore},
     {"eglSwapBuffers", &retrace_eglSwapBuffers},
     //{"eglCopyBuffers", &retrace::ignore},
     {"eglGetProcAddress", &retrace::ignore},
