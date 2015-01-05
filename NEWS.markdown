@@ -2,8 +2,33 @@ This file lists the major user visible improvements.  For a full list of changes
 and their authors see the git history.
 
 
-Version 4.0
-===========
+# Version 6.0 #
+
+* OpenGL 4.5 support.
+
+* DXGI 1.3 support.
+
+* Support exporting buffers to disk from GUI.
+
+* Many bugfixes.
+
+
+# Version 5.0 #
+
+* OpenGL 4.4 support.
+
+* Stack backtraces on Linux.
+
+* Better tracing of enums in attribute arrays
+
+* MD5 snapshots
+
+* Better surface viewer.
+
+* Many bugfixes.
+
+
+# Version 4.0 #
 
 * Support tracing in Android, both native and Dalvik applications.
 
@@ -24,8 +49,7 @@ Version 4.0
 * Loads of bugfixes
 
 
-Version 3.0
-===========
+# Version 3.0 #
 
 * Top-level `apitrace` command.
 
@@ -40,8 +64,7 @@ Version 3.0
 * Many bugfixes.
 
 
-Version 2.0
-===========
+# Version 2.0 #
 
 * Flush/sync trace file only when there is an uncaught signal/exception,
   yielding a 5x speed up while tracing.
@@ -60,13 +83,11 @@ Version 2.0
   demand.
 
 
-Version 1.0
-===========
+# Version 1.0 #
 
 * Qt GUI, capable of visualizing the calls, the state, and editing the state.
 
 
-Pre-history
-===========
+# Pre-history #
 
 * OpenGL replay support.
