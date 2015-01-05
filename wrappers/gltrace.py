@@ -108,7 +108,7 @@ class GlTracer(Tracer):
     ]
     arrays.reverse()
 
-    # arrays available in PROFILE_ES1
+    # arrays available in ES1
     arrays_es1 = ("Vertex", "Normal", "Color", "TexCoord")
 
     def header(self, api):
@@ -153,14 +153,15 @@ class GlTracer(Tracer):
         print '        return false;'
         print '    }'
         print
-        print '    enum gltrace::Profile profile = ctx->profile;'
+        print '    glprofile::Profile profile = ctx->profile;'
+        print '    bool es1 = profile.es() && profile.major == 1;'
         print
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'profile == gltrace::PROFILE_COMPAT'
+            profile_check = 'profile.compat()'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || profile == gltrace::PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || es1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -178,7 +179,7 @@ class GlTracer(Tracer):
             print
 
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (profile == gltrace::PROFILE_ES1)'
+        print '    if (es1)'
         print '        return false;'
         print
         print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
@@ -290,7 +291,7 @@ class GlTracer(Tracer):
         print 'static inline bool'
         print 'can_unpack_subimage(void) {'
         print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    return (ctx->profile == gltrace::PROFILE_COMPAT);'
+        print '    return ctx->profile.compat();'
         print '}'
         print
 
@@ -906,7 +907,7 @@ class GlTracer(Tracer):
             print '    {'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        GLint _unpack_buffer = 0;'
-            print '        if (ctx->profile == gltrace::PROFILE_COMPAT)'
+            print '        if (ctx->profile.compat())'
             print '            _glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &_unpack_buffer);'
             print '        if (_unpack_buffer) {'
             print '            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name
@@ -942,6 +943,9 @@ class GlTracer(Tracer):
         print '{'
         print '    gltrace::Context *ctx = gltrace::getContext();'
         print
+        print '    glprofile::Profile profile = ctx->profile;'
+        print '    bool es1 = profile.es() && profile.major == 1;'
+        print
 
         # Temporarily unbind the array buffer
         print '    GLint _array_buffer = _glGetInteger(GL_ARRAY_BUFFER_BINDING);'
@@ -952,9 +956,9 @@ class GlTracer(Tracer):
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'ctx->profile == gltrace::PROFILE_COMPAT'
+            profile_check = 'profile.compat()'
             if camelcase_name in self.arrays_es1:
-                profile_check = '(' + profile_check + ' || ctx->profile == gltrace::PROFILE_ES1)';
+                profile_check = '(' + profile_check + ' || es1)';
 
             function_name = 'gl%sPointer' % camelcase_name
             enable_name = 'GL_%s_ARRAY' % uppercase_name
@@ -1012,7 +1016,7 @@ class GlTracer(Tracer):
         # alias, and they need to be considered independently.
         #
         print '    // ES1 does not support generic vertex attributes'
-        print '    if (ctx->profile == gltrace::PROFILE_ES1)'
+        print '    if (es1)'
         print '        return;'
         print
         print '    vertex_attrib _vertex_attrib = _get_vertex_attrib();'
@@ -1095,7 +1099,7 @@ class GlTracer(Tracer):
         if uppercase_name == 'TEXTURE_COORD':
             print '    GLint client_active_texture = _glGetInteger(GL_CLIENT_ACTIVE_TEXTURE);'
             print '    GLint max_texture_coords = 0;'
-            print '    if (ctx->profile == gltrace::PROFILE_COMPAT)'
+            print '    if (ctx->profile.compat())'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
             print '    else'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_coords);'

@@ -99,11 +99,10 @@ getExtraExtensions(void)
 {
     Context *ctx = getContext();
 
-    switch (ctx->profile) {
-    case PROFILE_COMPAT:
+    switch (ctx->profile.api) {
+    case glprofile::API_GL:
         return &extraExtensionsFull;
-    case PROFILE_ES1:
-    case PROFILE_ES2:
+    case glprofile::API_GLES:
         return &extraExtensionsES;
     default:
         assert(0);

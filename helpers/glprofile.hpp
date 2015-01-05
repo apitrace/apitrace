@@ -60,6 +60,16 @@ struct Profile {
     }
 
     inline bool
+    compat(void) {
+        return api == API_GL && !core;
+    }
+
+    inline bool
+    es(void) const {
+        return api == API_GLES;
+    }
+
+    inline bool
     versionGreaterOrEqual(unsigned refMajor, unsigned refMinor) const {
         return major > refMajor ||
                (major == refMajor && minor >= refMinor);

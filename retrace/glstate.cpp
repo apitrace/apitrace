@@ -46,7 +46,7 @@ Context::Context(void) {
 
     glprofile::Profile profile = glprofile::getCurrentContextProfile();
 
-    ES = profile.api == glprofile::API_GLES;
+    ES = profile.es();
 
     ARB_draw_buffers = !ES;
 
