@@ -249,13 +249,13 @@ updateDrawable(int width, int height) {
 
 
 int
-parseAttrib(const trace::Value *attribs, int param, int default_ = 0) {
+parseAttrib(const trace::Value *attribs, int param, int default_, int terminator) {
     const trace::Array *attribs_ = attribs ? attribs->toArray() : NULL;
 
     if (attribs_) {
         for (size_t i = 0; i + 1 < attribs_->values.size(); i += 2) {
             int param_i = attribs_->values[i]->toSInt();
-            if (param_i == 0) {
+            if (param_i == terminator) {
                 break;
             }
 

@@ -284,6 +284,7 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
             api_bits = api_bits_gles1;
             break;
         case 2:
+        case 3:
             api_bits = api_bits_gles2;
             break;
         default:

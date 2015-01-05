@@ -69,7 +69,7 @@ getCurrentContext(void);
 
 
 int
-parseAttrib(const trace::Value *attribs, int param, int default_);
+parseAttrib(const trace::Value *attribs, int param, int default_ = 0, int terminator = 0);
 
 glws::Profile
 parseContextAttribList(const trace::Value *attribs);

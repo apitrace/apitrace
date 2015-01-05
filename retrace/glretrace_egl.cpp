@@ -174,21 +174,21 @@ static void retrace_eglCreateContext(trace::Call &call) {
 
     switch (current_api) {
     case EGL_OPENGL_API:
-        profile = glws::Profile(glws::API_GL, 1, 0);
+        profile.api = glprofile::API_GL;
+        profile.major = parseAttrib(attrib_array, EGL_CONTEXT_MAJOR_VERSION, 1);
+        profile.minor = parseAttrib(attrib_array, EGL_CONTEXT_MINOR_VERSION, 0);
+        if (profile.versionGreaterOrEqual(3,2)) {
+             int profileMask = parseAttrib(attrib_array, EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR);
+             if (profileMask & EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR) {
+                 profile.core = true;
+             }
+        }
         break;
     case EGL_OPENGL_ES_API:
     default:
-        profile = glws::Profile(glws::API_GLES, 1, 1);
-        if (attrib_array) {
-            for (int i = 0; i < attrib_array->values.size(); i += 2) {
-                int v = attrib_array->values[i]->toSInt();
-                if (v == EGL_CONTEXT_CLIENT_VERSION) {
-                    v = attrib_array->values[i + 1]->toSInt();
-                    profile = glws::Profile(glws::API_GLES, v, 0);
-                    break;
-                }
-            }
-        }
+        profile.api = glprofile::API_GLES;
+        profile.major = parseAttrib(attrib_array, EGL_CONTEXT_MAJOR_VERSION, 1);
+        profile.minor = parseAttrib(attrib_array, EGL_CONTEXT_MINOR_VERSION, 0);
         break;
     }
 
