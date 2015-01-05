@@ -336,12 +336,26 @@ clientWaitSync(trace::Call &call, GLsync sync, GLbitfield flags, GLuint64 timeou
 }
 
 
+/*
+ * Called the first time a context is made current.
+ */
 void
 initContext() {
     glretrace::Context *currentContext = glretrace::getCurrentContext();
+    assert(currentContext);
+
+    /* Ensure we got a matching profile.
+     *
+     * In particular on MacOSX, there is no other way.
+     */
+    glprofile::Profile expectedProfile = currentContext->wsContext->profile;
+    glprofile::Profile currentProfile = glprofile::getCurrentContextProfile();
+    if (!currentProfile.matches(expectedProfile)) {
+        std::cerr << "error: bad context version: expected " << expectedProfile << ", got " << currentProfile << "\n";
+        exit(1);
+    }
 
     /* Ensure we have adequate extension support */
-    assert(currentContext);
     supportsTimestamp   = currentContext->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
     supportsOcclusion   = currentContext->hasExtension("GL_ARB_occlusion_query");

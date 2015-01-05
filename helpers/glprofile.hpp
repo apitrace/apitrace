@@ -65,6 +65,13 @@ struct Profile {
                (major == refMajor && minor >= refMinor);
     }
 
+    inline bool
+    matches(const Profile expected) const {
+        return api == expected.api &&
+               versionGreaterOrEqual(expected.major, expected.minor) &&
+               core == expected.core;
+    }
+
     // Comparison operator, mainly for use in std::map
     inline bool
     operator == (const Profile & other) const {
