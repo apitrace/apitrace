@@ -53,7 +53,7 @@ enum Profile {
     PROFILE_4_2_CORE    = 0x142,
     PROFILE_4_3_CORE    = 0x143,
     PROFILE_4_4_CORE    = 0x144,
-    PROFILE_ES1         = 0x210,
+    PROFILE_ES1         = 0x211,
     PROFILE_ES2         = 0x220,
 };
 
