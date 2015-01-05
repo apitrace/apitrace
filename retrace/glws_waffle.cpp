@@ -90,12 +90,9 @@ processEvents(void) {
 
 void
 init(void) {
-    int i;
-    int waffle_init_attrib_list[3];
-
-    i = 0;
-    waffle_init_attrib_list[i++] = WAFFLE_PLATFORM;
-    waffle_init_attrib_list[i++] =
+    Attributes<int32_t> waffle_init_attrib_list;
+    waffle_init_attrib_list.add(
+        WAFFLE_PLATFORM,
 #if defined(__ANDROID__)
         WAFFLE_PLATFORM_ANDROID
 #elif defined(__APPLE__)
@@ -110,8 +107,8 @@ init(void) {
 #  warning Unsupported platform
         WAFFLE_NONE
 #endif
-    ;
-    waffle_init_attrib_list[i++] = WAFFLE_NONE;
+    );
+    waffle_init_attrib_list.end(WAFFLE_NONE);
 
     waffle_init(waffle_init_attrib_list);
 
@@ -130,22 +127,35 @@ cleanup(void) {
 Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     struct waffle_config *cfg;
-    int config_attrib_list[64], i(0), waffle_profile;
 
-    switch (profile) {
-    case PROFILE_ES1:
-        waffle_profile = WAFFLE_CONTEXT_OPENGL_ES1;
-        break;
-    case PROFILE_ES2:
-        waffle_profile = WAFFLE_CONTEXT_OPENGL_ES2;
-        break;
-    default:
-        os::log("%s: Unsupported context profile\n", __FILE__);
-        os::abort();
+    ProfileDesc desc;
+    getProfileDesc(profile, desc);
+
+    int waffle_api;
+    if (desc.api == API_GL) {
+        waffle_api = WAFFLE_CONTEXT_OPENGL;
+    } else if (desc.api == API_GLES) {
+        switch (desc.major) {
+        case 1:
+            waffle_api = WAFFLE_CONTEXT_OPENGL_ES1;
+            break;
+        case 2:
+            waffle_api = WAFFLE_CONTEXT_OPENGL_ES2;
+            break;
+        case 3:
+            waffle_api = WAFFLE_CONTEXT_OPENGL_ES3;
+            break;
+        default:
+            os::log("%s: Unsupported context profile\n", __FILE__);
+            os::abort();
+            return NULL;
+        }
+    } else {
+        assert(0);
         return NULL;
     }
 
-    if(!waffle_display_supports_context_api(dpy, waffle_profile)) {
+    if (!waffle_display_supports_context_api(dpy, waffle_api)) {
         os::log("%s: !waffle_display_supports_context_api\n",
             __FILE__);
 
@@ -153,23 +163,27 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         return NULL;
     }
 
-    config_attrib_list[i++] = WAFFLE_CONTEXT_API;
-    config_attrib_list[i++] = waffle_profile;
-    config_attrib_list[i++] = WAFFLE_RED_SIZE;
-    config_attrib_list[i++] = 8;
-    config_attrib_list[i++] = WAFFLE_GREEN_SIZE;
-    config_attrib_list[i++] = 8;
-    config_attrib_list[i++] = WAFFLE_BLUE_SIZE;
-    config_attrib_list[i++] = 8;
-    config_attrib_list[i++] = WAFFLE_DEPTH_SIZE;
-    config_attrib_list[i++] = 8;
-    config_attrib_list[i++] = WAFFLE_ALPHA_SIZE;
-    config_attrib_list[i++] = 8;
-    config_attrib_list[i++] = WAFFLE_STENCIL_SIZE;
-    config_attrib_list[i++] = 8;
-    config_attrib_list[i++] = WAFFLE_DOUBLE_BUFFERED;
-    config_attrib_list[i++] = doubleBuffer;
-    config_attrib_list[i++] = 0;
+    Attributes<int32_t> config_attrib_list;
+    config_attrib_list.add(WAFFLE_CONTEXT_API, waffle_api);
+    if (desc.api == API_GL) {
+        config_attrib_list.add(WAFFLE_CONTEXT_MAJOR_VERSION, desc.major);
+        config_attrib_list.add(WAFFLE_CONTEXT_MINOR_VERSION, desc.minor);
+        if (desc.versionGreaterOrEqual(3, 2)) {
+            int profileMask = desc.core ? WAFFLE_CONTEXT_CORE_PROFILE : WAFFLE_CONTEXT_COMPATIBILITY_PROFILE;
+            config_attrib_list.add(WAFFLE_CONTEXT_PROFILE, profileMask);
+        }
+    }
+    config_attrib_list.add(WAFFLE_RED_SIZE, 8);
+    config_attrib_list.add(WAFFLE_GREEN_SIZE, 8);
+    config_attrib_list.add(WAFFLE_BLUE_SIZE, 8);
+    config_attrib_list.add(WAFFLE_DEPTH_SIZE, 8);
+    config_attrib_list.add(WAFFLE_ALPHA_SIZE, 8);
+    config_attrib_list.add(WAFFLE_STENCIL_SIZE, 8);
+    config_attrib_list.add(WAFFLE_DOUBLE_BUFFERED, doubleBuffer);
+    if (0) {
+        config_attrib_list.add(WAFFLE_CONTEXT_DEBUG, true);
+    }
+    config_attrib_list.end();
 
     cfg = waffle_config_choose(dpy, config_attrib_list);
     if (!cfg)
