@@ -295,13 +295,16 @@ parseContextAttribList(const trace::Value *attribs)
     // {GLX,WGL}_CONTEXT_ES_PROFILE_BIT_EXT
     bool es_profile = profile_mask & 0x0004;
 
-    glws::Profile profile = glws::PROFILE_COMPAT;
-    if (major_version >= 3 || es_profile) {
-       profile = (glws::Profile)((core_profile ? 0x100 : 0) |
-                                 (es_profile ? 0x200 : 0) |
-                                 (major_version << 4) |
-                                  minor_version);
+    glws::Profile profile;
+    if (es_profile) {
+        profile.api = glws::API_GLES;
+    } else {
+        profile.api = glws::API_GL;
+        profile.core = core_profile;
     }
+
+    profile.major = major_version;
+    profile.minor = minor_version;
 
     return profile;
 }

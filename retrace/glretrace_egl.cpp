@@ -60,7 +60,7 @@ static unsigned int current_api = EGL_OPENGL_ES_API;
  * instead of guessing.  For now, start with a guess of ES2 profile, which
  * should be the most common case for EGL.
  */
-static glws::Profile last_profile = glws::PROFILE_ES2;
+static glws::Profile last_profile(glws::API_GLES, 2, 0);
 
 static glws::Drawable *null_drawable = NULL;
 
@@ -174,18 +174,17 @@ static void retrace_eglCreateContext(trace::Call &call) {
 
     switch (current_api) {
     case EGL_OPENGL_API:
-        profile = glws::PROFILE_COMPAT;
+        profile = glws::Profile(glws::API_GL, 1, 0);
         break;
     case EGL_OPENGL_ES_API:
     default:
-        profile = glws::PROFILE_ES1;
+        profile = glws::Profile(glws::API_GLES, 1, 1);
         if (attrib_array) {
             for (int i = 0; i < attrib_array->values.size(); i += 2) {
                 int v = attrib_array->values[i]->toSInt();
                 if (v == EGL_CONTEXT_CLIENT_VERSION) {
                     v = attrib_array->values[i + 1]->toSInt();
-                    if (v == 2)
-                        profile = glws::PROFILE_ES2;
+                    profile = glws::Profile(glws::API_GLES, v, 0);
                     break;
                 }
             }

@@ -47,7 +47,7 @@
 
 namespace glretrace {
 
-glws::Profile defaultProfile = glws::PROFILE_COMPAT;
+glws::Profile defaultProfile(glws::API_GL, 1, 0);
 
 bool insideList = false;
 bool insideGlBeginEnd = false;
@@ -600,7 +600,7 @@ static GLDumper glDumper;
 void
 retrace::setFeatureLevel(const char *featureLevel)
 {
-    glretrace::defaultProfile = glws::PROFILE_3_2_CORE;
+    glretrace::defaultProfile = glws::Profile(glws::API_GL, 3, 2, true);
 }
 
 

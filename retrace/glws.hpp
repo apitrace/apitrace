@@ -42,45 +42,44 @@
 namespace glws {
 
 
-enum Profile {
-    PROFILE_INVALID     = 0x000,
-    PROFILE_COMPAT      = 0x010,
-    PROFILE_3_0         = 0x030,
-    PROFILE_3_1         = 0x031,
-    PROFILE_3_2_CORE    = 0x132,
-    PROFILE_3_3_CORE    = 0x133,
-    PROFILE_4_0_CORE    = 0x140,
-    PROFILE_4_1_CORE    = 0x141,
-    PROFILE_4_2_CORE    = 0x142,
-    PROFILE_4_3_CORE    = 0x143,
-    PROFILE_4_4_CORE    = 0x144,
-    PROFILE_ES1         = 0x211,
-    PROFILE_ES2         = 0x220,
-};
-
-
 enum Api {
     API_GL = 0,
     API_GLES
 };
 
 
-struct ProfileDesc {
+struct Profile {
     Api api;
     unsigned major;
     unsigned minor;
     bool core;
+
+    inline
+    Profile(Api _api = API_GL, unsigned _major = 1, unsigned _minor = 0, bool _core = false) {
+        api = _api;
+        major = _major;
+        minor = _minor;
+        core = _core;
+    }
 
     inline bool
     versionGreaterOrEqual(unsigned refMajor, unsigned refMinor) const {
         return major > refMajor ||
                (major == refMajor && minor >= refMinor);
     }
+
+    // Comparison operator, mainly for use in std::map
+    inline bool
+    operator < (const Profile & other) const {
+        return api < other.api ||
+               major < other.major ||
+               minor < other.minor ||
+               (int)core < (int)other.core;
+    }
 };
 
-
 inline std::ostream &
-operator << (std::ostream &os, const ProfileDesc & desc) {
+operator << (std::ostream &os, const Profile & desc) {
     os << "OpenGL";
     if (desc.api == API_GLES) {
         os << " ES";
@@ -93,9 +92,13 @@ operator << (std::ostream &os, const ProfileDesc & desc) {
     return os;
 }
 
+// Deprecated
+typedef Profile ProfileDesc;
 
-void
-getProfileDesc(Profile profile, ProfileDesc &desc);
+inline void
+getProfileDesc(Profile profile, ProfileDesc &desc) {
+    desc = profile;
+}
 
 
 bool
@@ -218,7 +221,7 @@ void
 cleanup(void);
 
 Visual *
-createVisual(bool doubleBuffer = false, unsigned samples = 1, Profile profile = PROFILE_COMPAT);
+createVisual(bool doubleBuffer, unsigned samples, Profile profile);
 
 Drawable *
 createDrawable(const Visual *visual, int width, int height, bool pbuffer = false);

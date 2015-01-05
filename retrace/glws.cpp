@@ -35,20 +35,6 @@
 namespace glws {
 
 
-void
-getProfileDesc(Profile profile, ProfileDesc &desc)
-{
-    assert(profile != PROFILE_INVALID);
-
-    desc.api = (profile & 0x200) == 0x200 ? API_GLES : API_GL;
-
-    desc.major = (profile >> 4) & 0xf;
-    desc.minor =  profile       & 0xf;
-
-    desc.core = (profile & 0x100) == 0x100;
-}
-
-
 bool
 checkExtension(const char *extName, const char *extString)
 {
