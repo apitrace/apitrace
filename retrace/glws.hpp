@@ -49,10 +49,10 @@ enum Api {
 
 
 struct Profile {
-    Api api;
-    unsigned major;
-    unsigned minor;
-    bool core;
+    unsigned major:8;
+    unsigned minor:8;
+    unsigned api:1;
+    unsigned core:1;
 
     inline
     Profile(Api _api = API_GL, unsigned _major = 1, unsigned _minor = 0, bool _core = false) {
@@ -74,7 +74,7 @@ struct Profile {
         return api < other.api ||
                major < other.major ||
                minor < other.minor ||
-               (int)core < (int)other.core;
+               core < other.core;
     }
 };
 
