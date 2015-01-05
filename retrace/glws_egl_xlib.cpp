@@ -274,10 +274,10 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     const EGLint *api_bits;
 
     if (profile.api == API_GL) {
-        if (!has_EGL_KHR_create_context) {
+        api_bits = api_bits_gl;
+        if (profile.core && !has_EGL_KHR_create_context) {
             return NULL;
         }
-        api_bits = api_bits_gl;
     } else if (profile.api == API_GLES) {
         switch (profile.major) {
         case 1:
