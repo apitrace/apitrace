@@ -36,6 +36,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <ostream>
 
 
 namespace glws {
@@ -76,6 +77,21 @@ struct ProfileDesc {
                (major == refMajor && minor >= refMinor);
     }
 };
+
+
+inline std::ostream &
+operator << (std::ostream &os, const ProfileDesc & desc) {
+    os << "OpenGL";
+    if (desc.api == API_GLES) {
+        os << " ES";
+    }
+    os << " " << desc.major << "." << desc.minor;
+    if (desc.api == API_GL &&
+        desc.versionGreaterOrEqual(3, 2)) {
+        os << " " << (desc.core ? "core" : "compat");
+    }
+    return os;
+}
 
 
 void

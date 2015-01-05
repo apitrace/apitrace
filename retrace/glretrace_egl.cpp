@@ -195,26 +195,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
 
 
     Context *context = glretrace::createContext(share_context, profile);
-    if (!context) {
-        const char *name;
-        switch (profile) {
-        case glws::PROFILE_COMPAT:
-            name = "OpenGL";
-            break;
-        case glws::PROFILE_ES1:
-            name = "OpenGL ES 1.1";
-            break;
-        case glws::PROFILE_ES2:
-            name = "OpenGL ES 2.0";
-            break;
-        default:
-            name = "unknown";
-            break;
-        }
-
-        retrace::warning(call) << "Failed to create " << name << " context.\n";
-        exit(1);
-    }
+    assert(context);
 
     context_map[orig_context] = context;
     profile_map[orig_config] = profile;
