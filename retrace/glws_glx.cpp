@@ -25,6 +25,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include <iostream>
 
@@ -154,6 +155,28 @@ public:
     }
 };
 
+
+#ifndef GLXBadFBConfig
+#define GLXBadFBConfig 9
+#endif
+
+static int errorBase = INT_MIN;
+static int eventBase = INT_MIN;
+
+static int (*oldErrorHandler)(Display *, XErrorEvent *) = NULL;
+
+static int
+errorHandler(Display *dpy, XErrorEvent *error)
+{
+    if (error->error_code == errorBase + GLXBadFBConfig) {
+        // Ignore, as we handle these.
+        return 0;
+    }
+
+    return oldErrorHandler(dpy, error);
+}
+
+
 void
 init(void) {
     initX();
@@ -161,6 +184,9 @@ init(void) {
     int major = 0, minor = 0;
     glXQueryVersion(display, &major, &minor);
     glxVersion = (major << 8) | minor;
+
+    glXQueryExtension(display, &errorBase, &eventBase);
+    oldErrorHandler = XSetErrorHandler(errorHandler);
 
     extensions = glXQueryExtensionsString(display, screen);
 
@@ -177,6 +203,9 @@ init(void) {
 
 void
 cleanup(void) {
+    XSetErrorHandler(oldErrorHandler);
+    oldErrorHandler = NULL;
+
     cleanupX();
 }
 
