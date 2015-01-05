@@ -259,50 +259,44 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         share_context = static_cast<GlxContext*>(shareContext)->context;
     }
 
+    ProfileDesc desc;
+    getProfileDesc(profile, desc);
+
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
         Attributes<int> attribs;
-        
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
+        if (desc.api == API_GL) {
+            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+            if (desc.versionGreaterOrEqual(3, 2)) {
+                if (!has_GLX_ARB_create_context_profile) {
+                    std::cerr << "error: GLX_ARB_create_context_profile not supported\n";
+                    return NULL;
+                }
+                int profileMask = desc.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+                attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, profileMask);
+            }
+        } else if (desc.api == API_GLES) {
+            if (has_GLX_EXT_create_context_es_profile) {
+                attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+            } else if (desc.major != 2) {
+                std::cerr << "warning: OpenGL ES " << desc.major << " requested but GLX_EXT_create_context_es_profile not supported\n";
+            } else if (has_GLX_EXT_create_context_es2_profile) {
+                assert(desc.major == 2);
+                attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+            } else {
+                std::cerr << "warning: OpenGL ES " << desc.major << " requested but GLX_EXT_create_context_es_profile or GLX_EXT_create_context_es2_profile not supported\n";
+            }
+        } else {
+            assert(0);
+        }
         if (debug) {
             attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
         }
-
-        ProfileDesc desc;
-        getProfileDesc(profile, desc);
-
-        switch (profile) {
-        case PROFILE_COMPAT:
-            break;
-        case PROFILE_ES1:
-            if (!has_GLX_EXT_create_context_es_profile) {
-                return NULL;
-            }
-            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
-            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 1);
-            break;
-        case PROFILE_ES2:
-            if (!has_GLX_EXT_create_context_es_profile &&
-                !has_GLX_EXT_create_context_es2_profile) {
-                return NULL;
-            }
-            attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
-            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 2);
-            break;
-        default:
-            {
-                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-                if (desc.versionGreaterOrEqual(3, 2)) {
-                    if (!has_GLX_ARB_create_context_profile) {
-                        return NULL;
-                    }
-                    int profileMask = desc.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
-                    attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, profileMask);
-                }
-                break;
-            }
-        }
-        
         attribs.end();
 
         context = glXCreateContextAttribsARB(display, visual->fbconfig, share_context, True, attribs);
@@ -312,7 +306,8 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             return createContext(_visual, shareContext, false);
         }
     } else {
-        if (profile != PROFILE_COMPAT) {
+        if (desc.api != API_GL ||
+            desc.core) {
             return NULL;
         }
 
