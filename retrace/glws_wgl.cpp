@@ -323,11 +323,8 @@ public:
 
     bool
     createARB(HDC hDC) {
-        ProfileDesc desc;
-        getProfileDesc(profile, desc);
-
-        bool required = desc.api != API_GL ||
-                        desc.versionGreaterOrEqual(3, 1);
+        bool required = profile.api != API_GL ||
+                        profile.versionGreaterOrEqual(3, 1);
 
         // We need to create context through WGL_ARB_create_context.  This
         // implies binding a temporary context to get the extensions strings
@@ -376,32 +373,32 @@ public:
         wglDeleteContext(hglrc);
 
         Attributes<int> attribs;
-        if (desc.api == API_GL) {
-            attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-            attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-            if (desc.versionGreaterOrEqual(3, 2)) {
+        if (profile.api == API_GL) {
+            attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+            attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, profile.minor);
+            if (profile.versionGreaterOrEqual(3, 2)) {
                 if (!checkExtension("WGL_ARB_create_context_profile", extensionsString)) {
                     assert(required);
                     std::cerr << "error: WGL_ARB_create_context_profile not supported\n";
                     exit(1);
                 }
-                int profileMask = desc.core ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+                int profileMask = profile.core ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
                 attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, profileMask);
             }
-        } else if (desc.api == API_GLES) {
+        } else if (profile.api == API_GLES) {
             if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {
                 attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES_PROFILE_BIT_EXT);
-                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-            } else if (desc.major != 2) {
-                std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile not supported\n";
+                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, profile.minor);
+            } else if (profile.major != 2) {
+                std::cerr << "warning: OpenGL ES " << profile.major << " requested but WGL_EXT_create_context_es_profile not supported\n";
             } else if (checkExtension("WGL_EXT_create_context_es2_profile", extensionsString)) {
-                assert(desc.major == 2);
+                assert(profile.major == 2);
                 attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_ES2_PROFILE_BIT_EXT);
-                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+                attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+                attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, profile.minor);
             } else {
-                std::cerr << "warning: OpenGL ES " << desc.major << " requested but WGL_EXT_create_context_es_profile or WGL_EXT_create_context_es2_profile not supported\n";
+                std::cerr << "warning: OpenGL ES " << profile.major << " requested but WGL_EXT_create_context_es_profile or WGL_EXT_create_context_es2_profile not supported\n";
             }
         } else {
             assert(0);

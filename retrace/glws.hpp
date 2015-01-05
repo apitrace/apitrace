@@ -79,25 +79,17 @@ struct Profile {
 };
 
 inline std::ostream &
-operator << (std::ostream &os, const Profile & desc) {
+operator << (std::ostream &os, const Profile & profile) {
     os << "OpenGL";
-    if (desc.api == API_GLES) {
+    if (profile.api == API_GLES) {
         os << " ES";
     }
-    os << " " << desc.major << "." << desc.minor;
-    if (desc.api == API_GL &&
-        desc.versionGreaterOrEqual(3, 2)) {
-        os << " " << (desc.core ? "core" : "compat");
+    os << " " << profile.major << "." << profile.minor;
+    if (profile.api == API_GL &&
+        profile.versionGreaterOrEqual(3, 2)) {
+        os << " " << (profile.core ? "core" : "compat");
     }
     return os;
-}
-
-// Deprecated
-typedef Profile ProfileDesc;
-
-inline void
-getProfileDesc(Profile profile, ProfileDesc &desc) {
-    desc = profile;
 }
 
 

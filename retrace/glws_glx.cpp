@@ -259,37 +259,34 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         share_context = static_cast<GlxContext*>(shareContext)->context;
     }
 
-    ProfileDesc desc;
-    getProfileDesc(profile, desc);
-
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
         Attributes<int> attribs;
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
-        if (desc.api == API_GL) {
-            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-            if (desc.versionGreaterOrEqual(3, 2)) {
+        if (profile.api == API_GL) {
+            attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+            attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
+            if (profile.versionGreaterOrEqual(3, 2)) {
                 if (!has_GLX_ARB_create_context_profile) {
                     std::cerr << "error: GLX_ARB_create_context_profile not supported\n";
                     return NULL;
                 }
-                int profileMask = desc.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+                int profileMask = profile.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, profileMask);
             }
-        } else if (desc.api == API_GLES) {
+        } else if (profile.api == API_GLES) {
             if (has_GLX_EXT_create_context_es_profile) {
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
-                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
-            } else if (desc.major != 2) {
-                std::cerr << "warning: OpenGL ES " << desc.major << " requested but GLX_EXT_create_context_es_profile not supported\n";
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
+            } else if (profile.major != 2) {
+                std::cerr << "warning: OpenGL ES " << profile.major << " requested but GLX_EXT_create_context_es_profile not supported\n";
             } else if (has_GLX_EXT_create_context_es2_profile) {
-                assert(desc.major == 2);
+                assert(profile.major == 2);
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
-                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, desc.major);
-                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, desc.minor);
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
             } else {
-                std::cerr << "warning: OpenGL ES " << desc.major << " requested but GLX_EXT_create_context_es_profile or GLX_EXT_create_context_es2_profile not supported\n";
+                std::cerr << "warning: OpenGL ES " << profile.major << " requested but GLX_EXT_create_context_es_profile or GLX_EXT_create_context_es2_profile not supported\n";
             }
         } else {
             assert(0);
@@ -306,8 +303,8 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             return createContext(_visual, shareContext, false);
         }
     } else {
-        if (desc.api != API_GL ||
-            desc.core) {
+        if (profile.api != API_GL ||
+            profile.core) {
             return NULL;
         }
 

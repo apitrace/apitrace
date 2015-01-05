@@ -234,14 +234,11 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
     attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
 
-    ProfileDesc desc;
-    getProfileDesc(profile, desc);
-
-    if (desc.api != API_GL) {
+    if (profile.api != API_GL) {
         return NULL;
     }
 
-    if (desc.versionGreaterOrEqual(3, 2) && desc.core) {
+    if (profile.versionGreaterOrEqual(3, 2) && profile.core) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
         /*
          * kCGLOGLPVersion_GL4_Core doesn't seem to work as expected.  The
@@ -255,7 +252,7 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 #else
         return NULL;
 #endif
-    } else if (desc.versionGreaterOrEqual(3, 0)) {
+    } else if (profile.versionGreaterOrEqual(3, 0)) {
         // Compatibility profile is not supported
         return NULL;
     }

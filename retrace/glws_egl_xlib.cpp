@@ -273,16 +273,13 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     };
     const EGLint *api_bits;
 
-    ProfileDesc desc;
-    getProfileDesc(profile, desc);
-
-    if (desc.api == API_GL) {
+    if (profile.api == API_GL) {
         if (!has_EGL_KHR_create_context) {
             return NULL;
         }
         api_bits = api_bits_gl;
-    } else if (desc.api == API_GLES) {
-        switch (desc.major) {
+    } else if (profile.api == API_GLES) {
+        switch (profile.major) {
         case 1:
             api_bits = api_bits_gles1;
             break;
@@ -368,24 +365,21 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
 
     EGLint api = eglQueryAPI();
 
-    ProfileDesc desc;
-    getProfileDesc(profile, desc);
-
-    if (desc.api == API_GL) {
+    if (profile.api == API_GL) {
         load("libGL.so.1");
         eglBindAPI(EGL_OPENGL_API);
 
         if (has_EGL_KHR_create_context) {
-            attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, desc.major);
-            attribs.add(EGL_CONTEXT_MINOR_VERSION_KHR, desc.minor);
-            int profileMask = desc.core ? EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR : EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT_KHR;
+            attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, profile.major);
+            attribs.add(EGL_CONTEXT_MINOR_VERSION_KHR, profile.minor);
+            int profileMask = profile.core ? EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR : EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT_KHR;
             attribs.add(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, profileMask);
-        } else if (desc.versionGreaterOrEqual(3, 2)) {
+        } else if (profile.versionGreaterOrEqual(3, 2)) {
             std::cerr << "error: EGL_KHR_create_context not supported\n";
             return NULL;
         }
-    } else if (desc.api == API_GLES) {
-        if (desc.major >= 2) {
+    } else if (profile.api == API_GLES) {
+        if (profile.major >= 2) {
             load("libGLESv2.so.2");
         } else {
             load("libGLESv1_CM.so.1");
@@ -394,10 +388,10 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         eglBindAPI(EGL_OPENGL_ES_API);
 
         if (has_EGL_KHR_create_context) {
-            attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, desc.major);
-            attribs.add(EGL_CONTEXT_MINOR_VERSION_KHR, desc.minor);
+            attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, profile.major);
+            attribs.add(EGL_CONTEXT_MINOR_VERSION_KHR, profile.minor);
         } else {
-            attribs.add(EGL_CONTEXT_CLIENT_VERSION, desc.major);
+            attribs.add(EGL_CONTEXT_CLIENT_VERSION, profile.major);
         }
     } else {
         assert(0);

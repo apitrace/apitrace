@@ -112,9 +112,7 @@ createContext(Context *shareContext, glws::Profile profile) {
     glws::Context *shareWsContext = shareContext ? shareContext->wsContext : NULL;
     glws::Context *ctx = glws::createContext(visual, shareWsContext, retrace::debug);
     if (!ctx) {
-        glws::ProfileDesc desc;
-        getProfileDesc(profile, desc);
-        std::cerr << "error: failed to create " << desc << " context.\n";
+        std::cerr << "error: failed to create " << profile << " context.\n";
         exit(1);
     }
 

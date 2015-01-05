@@ -76,9 +76,7 @@ Drawable::copySubBuffer(int x, int y, int width, int height) {
 bool
 Context::hasExtension(const char *string) {
     if (extensions.empty()) {
-        ProfileDesc desc;
-        getProfileDesc(profile, desc);
-        if (desc.major >= 3) {
+        if (profile.major >= 3) {
             // Use glGetStringi
             GLint num_extensions = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);

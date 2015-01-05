@@ -128,14 +128,11 @@ Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     struct waffle_config *cfg;
 
-    ProfileDesc desc;
-    getProfileDesc(profile, desc);
-
     int waffle_api;
-    if (desc.api == API_GL) {
+    if (profile.api == API_GL) {
         waffle_api = WAFFLE_CONTEXT_OPENGL;
-    } else if (desc.api == API_GLES) {
-        switch (desc.major) {
+    } else if (profile.api == API_GLES) {
+        switch (profile.major) {
         case 1:
             waffle_api = WAFFLE_CONTEXT_OPENGL_ES1;
             break;
@@ -165,11 +162,11 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
 
     Attributes<int32_t> config_attrib_list;
     config_attrib_list.add(WAFFLE_CONTEXT_API, waffle_api);
-    if (desc.api == API_GL) {
-        config_attrib_list.add(WAFFLE_CONTEXT_MAJOR_VERSION, desc.major);
-        config_attrib_list.add(WAFFLE_CONTEXT_MINOR_VERSION, desc.minor);
-        if (desc.versionGreaterOrEqual(3, 2)) {
-            int profileMask = desc.core ? WAFFLE_CONTEXT_CORE_PROFILE : WAFFLE_CONTEXT_COMPATIBILITY_PROFILE;
+    if (profile.api == API_GL) {
+        config_attrib_list.add(WAFFLE_CONTEXT_MAJOR_VERSION, profile.major);
+        config_attrib_list.add(WAFFLE_CONTEXT_MINOR_VERSION, profile.minor);
+        if (profile.versionGreaterOrEqual(3, 2)) {
+            int profileMask = profile.core ? WAFFLE_CONTEXT_CORE_PROFILE : WAFFLE_CONTEXT_COMPATIBILITY_PROFILE;
             config_attrib_list.add(WAFFLE_CONTEXT_PROFILE, profileMask);
         }
     }
