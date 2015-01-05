@@ -36,61 +36,17 @@
 #include <vector>
 #include <set>
 #include <string>
-#include <ostream>
+
+#include "glprofile.hpp"
 
 
 namespace glws {
 
 
-enum Api {
-    API_GL = 0,
-    API_GLES
-};
-
-
-struct Profile {
-    unsigned major:8;
-    unsigned minor:8;
-    unsigned api:1;
-    unsigned core:1;
-
-    inline
-    Profile(Api _api = API_GL, unsigned _major = 1, unsigned _minor = 0, bool _core = false) {
-        api = _api;
-        major = _major;
-        minor = _minor;
-        core = _core;
-    }
-
-    inline bool
-    versionGreaterOrEqual(unsigned refMajor, unsigned refMinor) const {
-        return major > refMajor ||
-               (major == refMajor && minor >= refMinor);
-    }
-
-    // Comparison operator, mainly for use in std::map
-    inline bool
-    operator < (const Profile & other) const {
-        return api < other.api ||
-               major < other.major ||
-               minor < other.minor ||
-               core < other.core;
-    }
-};
-
-inline std::ostream &
-operator << (std::ostream &os, const Profile & profile) {
-    os << "OpenGL";
-    if (profile.api == API_GLES) {
-        os << " ES";
-    }
-    os << " " << profile.major << "." << profile.minor;
-    if (profile.api == API_GL &&
-        profile.versionGreaterOrEqual(3, 2)) {
-        os << " " << (profile.core ? "core" : "compat");
-    }
-    return os;
-}
+using glprofile::Api;
+using glprofile::API_GL;
+using glprofile::API_GLES;
+using glprofile::Profile;
 
 
 bool

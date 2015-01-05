@@ -364,7 +364,6 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         egltrace.cpp
         glcaps.cpp
         gltrace_state.cpp
-        ${CMAKE_SOURCE_DIR}/helpers/eglsize.cpp
         dlsym.cpp
     )
 
@@ -379,6 +378,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     )
 
     target_link_libraries (egltrace
+        glhelpers
         glproc_egl
         common
         ${ZLIB_LIBRARIES}

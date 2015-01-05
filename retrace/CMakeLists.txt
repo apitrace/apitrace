@@ -96,6 +96,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
     target_link_libraries (glretrace
         retrace_common
         glretrace_common
+        glhelpers
         glproc_gl
     )
 
@@ -135,6 +136,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
     target_link_libraries (eglretrace
         retrace_common
         glretrace_common
+        glhelpers
         glproc_egl
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
@@ -154,6 +156,7 @@ if (ENABLE_EGL AND (ANDROID OR ENABLE_WAFFLE) AND Waffle_FOUND)
     target_link_libraries (eglretrace
         retrace_common
         glretrace_common
+        glhelpers
         glproc_egl
         ${Waffle_LIBRARY}
         ${X11_X11_LIB}
