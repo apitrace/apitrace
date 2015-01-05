@@ -44,63 +44,31 @@ namespace glstate {
 Context::Context(void) {
     memset(this, 0, sizeof *this);
 
-    const char *version = (const char *)glGetString(GL_VERSION);
-    unsigned version_major = 0;
-    unsigned version_minor = 0;
-    unsigned version_release = 0;
-    if (version) {
-        if (version[0] == 'O' &&
-            version[1] == 'p' &&
-            version[2] == 'e' &&
-            version[3] == 'n' &&
-            version[4] == 'G' &&
-            version[5] == 'L' &&
-            version[6] == ' ' &&
-            version[7] == 'E' &&
-            version[8] == 'S' &&
-            (version[9] == ' ' || version[9] == '-')) {
-            ES = true;
-        }
-        if (version[0] >= '0' && version[0] <= '9') {
-            sscanf(version, "%u.%u.%u", &version_major, &version_minor, &version_release);
-        }
-    }
+    glprofile::Profile profile = glprofile::getCurrentContextProfile();
+
+    ES = profile.api == glprofile::API_GLES;
 
     ARB_draw_buffers = !ES;
 
     // Check extensions we use.
-
-    if (!ES) {
-        if (version_major > 3 ||
-            (version_major == 3 && version_minor >= 2)) {
-            GLint profile_mask = 0;
-            glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile_mask);
-            if (profile_mask & GL_CONTEXT_CORE_PROFILE_BIT) {
-                core = true;
-            }
-
-            GLint num_extensions = 0;
-            glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-            for (GLint i = 0; i < num_extensions; ++i) {
-               const char *extension = (const char *)glGetStringi(GL_EXTENSIONS, i);
-               if (extension) {
-                   if (strcmp(extension, "GL_ARB_sampler_objects") == 0) {
-                       ARB_sampler_objects = true;
-                   } else if (strcmp(extension, "GL_KHR_debug") == 0) {
-                       KHR_debug = true;
-                   } else if (strcmp(extension, "GL_EXT_debug_label") == 0) {
-                       EXT_debug_label = true;
-                   }
+    if (profile.major >= 3) {
+        GLint num_extensions = 0;
+        glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
+        for (GLint i = 0; i < num_extensions; ++i) {
+           const char *extension = (const char *)glGetStringi(GL_EXTENSIONS, i);
+           if (extension) {
+               if (strcmp(extension, "GL_ARB_sampler_objects") == 0) {
+                   ARB_sampler_objects = true;
+               } else if (strcmp(extension, "GL_KHR_debug") == 0) {
+                   KHR_debug = true;
+               } else if (strcmp(extension, "GL_EXT_debug_label") == 0) {
+                   EXT_debug_label = true;
                }
-            }
-        } else {
-            const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
-            ARB_sampler_objects = glws::checkExtension("GL_ARB_sampler_objects", extensions);
-            KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
-            EXT_debug_label = glws::checkExtension("GL_EXT_debug_label", extensions);
+           }
         }
     } else {
         const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
+        ARB_sampler_objects = glws::checkExtension("GL_ARB_sampler_objects", extensions);
         KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
         EXT_debug_label = glws::checkExtension("GL_EXT_debug_label", extensions);
     }

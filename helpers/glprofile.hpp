@@ -67,10 +67,19 @@ struct Profile {
 
     // Comparison operator, mainly for use in std::map
     inline bool
+    operator == (const Profile & other) const {
+        return major == other.major &&
+               minor == other.minor &&
+               api == other.api &&
+               core == other.core;
+    }
+
+    // Comparison operator, mainly for use in std::map
+    inline bool
     operator < (const Profile & other) const {
-        return api < other.api ||
-               major < other.major ||
+        return major < other.major ||
                minor < other.minor ||
+               api < other.api ||
                core < other.core;
     }
 };
@@ -78,6 +87,10 @@ struct Profile {
 
 std::ostream &
 operator << (std::ostream &os, const Profile & profile);
+
+
+Profile
+getCurrentContextProfile(void);
 
 
 } /* namespace glprofile */
