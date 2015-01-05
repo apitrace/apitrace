@@ -237,6 +237,7 @@ if (WIN32)
     )
     add_dependencies (wgltrace glproc)
     target_link_libraries (wgltrace
+        glhelpers
         glproc_gl
         common
         ${ZLIB_LIBRARIES}
@@ -284,6 +285,7 @@ elseif (APPLE)
     )
 
     target_link_libraries (cgltrace
+        glhelpers
         glproc_gl
         common
         ${ZLIB_LIBRARIES}
@@ -329,6 +331,7 @@ elseif (X11_FOUND)
     )
 
     target_link_libraries (glxtrace
+        glhelpers
         glproc_gl
         common
         ${ZLIB_LIBRARIES}
