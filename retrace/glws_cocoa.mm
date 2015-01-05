@@ -233,16 +233,17 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     }
     attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
     attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
-    switch (profile) {
-    case PROFILE_COMPAT:
-        break;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-    case PROFILE_3_3_CORE:
-    case PROFILE_4_0_CORE:
-    case PROFILE_4_1_CORE:
+
+    ProfileDesc desc;
+    getProfileDesc(profile, desc);
+
+    if (desc.api != API_GL) {
+        return NULL;
+    }
+
+    if (desc.versionGreaterOrEqual(3, 2) && desc.core) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
         /*
-         * Fall-through.
-         *
          * kCGLOGLPVersion_GL4_Core doesn't seem to work as expected.  The
          * recommended approach is to use NSOpenGLProfileVersion3_2Core and
          * then check the OpenGL version.
@@ -250,15 +251,12 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
          * TODO: Actually check the OpenGL version (the first time the OpenGL
          * context is bound).
          */
-#endif
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
-    case PROFILE_3_0:
-    case PROFILE_3_1:
-    case PROFILE_3_2_CORE:
         attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
-        break;
+#else
+        return NULL;
 #endif
-    default:
+    } else if (desc.versionGreaterOrEqual(3, 0)) {
+        // Compatibility profile is not supported
         return NULL;
     }
     
