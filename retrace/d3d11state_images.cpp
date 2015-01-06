@@ -248,7 +248,7 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
     ResolvedDesc.Usage = D3D11_USAGE_DEFAULT;
     ResolvedDesc.BindFlags = 0;
     ResolvedDesc.CPUAccessFlags = 0;
-    ResolvedDesc.MiscFlags &= D3D11_RESOURCE_MISC_TEXTURECUBE;
+    ResolvedDesc.MiscFlags = 0;
 
     com_ptr<ID3D11Resource> pResolvedResource;
     if (Desc.SampleDesc.Count == 1) {
