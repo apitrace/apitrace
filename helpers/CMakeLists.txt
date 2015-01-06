@@ -11,6 +11,7 @@ add_convenience_library (glhelpers
     glprofile.cpp
     eglsize.cpp
 )
+add_dependencies (glhelpers glproc)
 
 
 if (WIN32)
