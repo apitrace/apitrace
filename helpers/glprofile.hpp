@@ -77,9 +77,21 @@ struct Profile {
 
     inline bool
     matches(const Profile expected) const {
+        /*
+         * GLX_ARB_create_context/WGL_ARB_create_context specs state that
+         *
+         *   "If version 3.1 is requested, the context returned may implement
+         *   any of the following versions:
+         *
+         *     * Version 3.1. The GL_ARB_compatibility extension may or may not
+         *       be implemented, as determined by the implementation.
+         *
+         *     * The core profile of version 3.2 or greater."
+         */
         return api == expected.api &&
                versionGreaterOrEqual(expected.major, expected.minor) &&
-               core == expected.core;
+               (core == expected.core ||
+                (expected.major == 3 && expected.minor == 1));
     }
 
     // Comparison operator, mainly for use in std::map
