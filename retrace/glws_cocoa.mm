@@ -238,7 +238,8 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         return NULL;
     }
 
-    if (profile.versionGreaterOrEqual(3, 2) && profile.core) {
+    // We snap 3.1 to 3.2 core, as allowed by GLX/WGL_ARB_create_context
+    if (profile.versionGreaterOrEqual(3, 1) || profile.core) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
         /*
          * kCGLOGLPVersion_GL4_Core doesn't seem to work as expected.  The
