@@ -52,6 +52,7 @@ static DrawableMap drawable_map;
 static ContextMap context_map;
 static ProfileMap profile_map;
 
+/* FIXME: This should be tracked per thread. */
 static unsigned int current_api = EGL_OPENGL_ES_API;
 
 /*
@@ -147,22 +148,11 @@ static void retrace_eglDestroySurface(trace::Call &call) {
 }
 
 static void retrace_eglBindAPI(trace::Call &call) {
-    current_api = call.arg(0).toUInt();
-
-    glprofile::Api api;
-    switch (current_api) {
-    case EGL_OPENGL_API:
-        api = glprofile::API_GL;
-        break;
-    case EGL_OPENGL_ES_API:
-        api = glprofile::API_GLES;
-        break;
-    default:
-        assert(0);
+    if (!call.ret->toBool()) {
         return;
     }
 
-    glws::bindApi(api);
+    current_api = call.arg(0).toUInt();
 }
 
 static void retrace_eglCreateContext(trace::Call &call) {

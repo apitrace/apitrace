@@ -44,6 +44,41 @@ static char const *eglExtensions = NULL;
 static bool has_EGL_KHR_create_context = false;
 
 
+static EGLenum
+translateAPI(glprofile::Profile profile)
+{
+    switch (profile.api) {
+    case glprofile::API_GL:
+        return EGL_OPENGL_API;
+    case glprofile::API_GLES:
+        return EGL_OPENGL_ES_API;
+    default:
+        assert(0);
+        return EGL_NONE;
+    }
+}
+
+
+/* Must be called before
+ *
+ * - eglCreateContext
+ * - eglGetCurrentContext
+ * - eglGetCurrentDisplay
+ * - eglGetCurrentSurface
+ * - eglMakeCurrent (when its ctx parameter is EGL_NO_CONTEXT ),
+ * - eglWaitClient
+ * - eglWaitNative
+ */
+static void
+bindAPI(EGLenum api)
+{
+    if (eglBindAPI(api) != EGL_TRUE) {
+        std::cerr << "error: eglBindAPI failed\n";
+        exit(1);
+    }
+}
+
+
 class EglVisual : public Visual
 {
 public:
@@ -67,7 +102,7 @@ class EglDrawable : public Drawable
 public:
     Window window;
     EGLSurface surface;
-    EGLint api;
+    EGLenum api;
 
     EglDrawable(const Visual *vis, int w, int h, bool pbuffer) :
         Drawable(vis, w, h, pbuffer),
@@ -172,7 +207,7 @@ public:
     }
 
     void swapBuffers(void) {
-        eglBindAPI(api);
+        bindAPI(api);
         eglSwapBuffers(eglDisplay, surface);
         processKeys(window);
     }
@@ -332,24 +367,6 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
     return new EglDrawable(visual, width, height, pbuffer);
 }
 
-bool
-bindApi(glprofile::Api api)
-{
-    EGLenum eglApi;
-    switch (api) {
-    case glprofile::API_GL:
-        eglApi = EGL_OPENGL_API;
-        break;
-    case glprofile::API_GLES:
-        eglApi = EGL_OPENGL_ES_API;
-        break;
-    default:
-        assert(0);
-        return false;
-    }
-
-    return eglBindAPI(eglApi);
-}
 
 Context *
 createContext(const Visual *_visual, Context *shareContext, bool debug)
@@ -364,11 +381,8 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         share_context = static_cast<EglContext*>(shareContext)->context;
     }
 
-    EGLint api = eglQueryAPI();
-
     if (profile.api == glprofile::API_GL) {
         load("libGL.so.1");
-        eglBindAPI(EGL_OPENGL_API);
 
         if (has_EGL_KHR_create_context) {
             attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, profile.major);
@@ -385,8 +399,6 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         } else {
             load("libGLESv1_CM.so.1");
         }
-
-        eglBindAPI(EGL_OPENGL_ES_API);
 
         if (has_EGL_KHR_create_context) {
             attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, profile.major);
@@ -405,6 +417,9 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
 
     attribs.end(EGL_NONE);
 
+    EGLenum api = translateAPI(profile);
+    bindAPI(api);
+
     context = eglCreateContext(eglDisplay, visual->config, share_context, attribs);
     if (!context) {
         if (debug) {
@@ -414,8 +429,6 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         }
         return NULL;
     }
-
-    eglBindAPI(api);
 
     return new EglContext(visual, context);
 }
@@ -430,15 +443,13 @@ makeCurrent(Drawable *drawable, Context *context)
         EglContext *eglContext = static_cast<EglContext *>(context);
         EGLBoolean ok;
 
+        EGLenum api = translateAPI(eglContext->profile);
+        bindAPI(api);
+
         ok = eglMakeCurrent(eglDisplay, eglDrawable->surface,
                             eglDrawable->surface, eglContext->context);
 
         if (ok) {
-            EGLint api;
-
-            eglQueryContext(eglDisplay, eglContext->context,
-                            EGL_CONTEXT_CLIENT_TYPE, &api);
-
             eglDrawable->api = api;
         }
 
