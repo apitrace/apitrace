@@ -442,8 +442,11 @@ frame_complete(trace::Call &call) {
         return;
     }
 
-    assert(currentContext->drawable);
-    if (retrace::debug && !currentContext->drawable->visible) {
+    glws::Drawable *currentDrawable = currentContext->drawable;
+    assert(currentDrawable);
+    if (retrace::debug &&
+        !currentDrawable->pbuffer &&
+        !currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
     }
 }
