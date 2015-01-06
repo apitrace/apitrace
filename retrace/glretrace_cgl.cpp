@@ -102,10 +102,10 @@ static Context *sharedContext = NULL;
 
 struct PixelFormat
 {
-    glws::Profile profile;
+    glprofile::Profile profile;
 
     PixelFormat() :
-        profile(glws::API_GL, 1, 0)
+        profile(glprofile::API_GL, 1, 0)
     {}
 };
 
@@ -245,13 +245,13 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
     case 0:
         break;
     case kCGLOGLPVersion_Legacy:
-        pixelFormat->profile = glws::Profile(glws::API_GL, 1, 0);
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 1, 0);
         break;
     case kCGLOGLPVersion_GL3_Core:
-        pixelFormat->profile = glws::Profile(glws::API_GL, 3, 2, true);
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 3, 2, true);
         break;
     case kCGLOGLPVersion_GL4_Core:
-        pixelFormat->profile = glws::Profile(glws::API_GL, 4, 1, true);
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 4, 1, true);
         break;
     default:
         retrace::warning(call) << "unexpected opengl profile " << std::hex << profile << std::dec << "\n";
@@ -283,7 +283,7 @@ static void retrace_CGLCreateContext(trace::Call &call) {
 
     trace::Value & pix = call.argByName("pix");
     const PixelFormat *pixelFormat = retrace::asObjPointer<PixelFormat>(call, pix);
-    glws::Profile profile = pixelFormat ? pixelFormat->profile : glretrace::defaultProfile;
+    glprofile::Profile profile = pixelFormat ? pixelFormat->profile : glretrace::defaultProfile;
 
     unsigned long long share = call.arg(1).toUIntPtr();
     Context *sharedContext = getContext(share);

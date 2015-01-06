@@ -273,12 +273,12 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     };
     const EGLint *api_bits;
 
-    if (profile.api == API_GL) {
+    if (profile.api == glprofile::API_GL) {
         api_bits = api_bits_gl;
         if (profile.core && !has_EGL_KHR_create_context) {
             return NULL;
         }
-    } else if (profile.api == API_GLES) {
+    } else if (profile.api == glprofile::API_GLES) {
         switch (profile.major) {
         case 1:
             api_bits = api_bits_gles1;
@@ -333,14 +333,14 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 }
 
 bool
-bindApi(Api api)
+bindApi(glprofile::Api api)
 {
     EGLenum eglApi;
     switch (api) {
-    case API_GL:
+    case glprofile::API_GL:
         eglApi = EGL_OPENGL_API;
         break;
-    case API_GLES:
+    case glprofile::API_GLES:
         eglApi = EGL_OPENGL_ES_API;
         break;
     default:
@@ -366,7 +366,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
 
     EGLint api = eglQueryAPI();
 
-    if (profile.api == API_GL) {
+    if (profile.api == glprofile::API_GL) {
         load("libGL.so.1");
         eglBindAPI(EGL_OPENGL_API);
 
@@ -379,7 +379,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             std::cerr << "error: EGL_KHR_create_context not supported\n";
             return NULL;
         }
-    } else if (profile.api == API_GLES) {
+    } else if (profile.api == glprofile::API_GLES) {
         if (profile.major >= 2) {
             load("libGLESv2.so.2");
         } else {

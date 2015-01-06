@@ -43,9 +43,6 @@
 namespace glws {
 
 
-using glprofile::Api;
-using glprofile::API_GL;
-using glprofile::API_GLES;
 using glprofile::Profile;
 
 
@@ -175,7 +172,7 @@ Drawable *
 createDrawable(const Visual *visual, int width, int height, bool pbuffer = false);
 
 bool
-bindApi(Api api);
+bindApi(glprofile::Api api);
 
 Context *
 createContext(const Visual *visual, Context *shareContext = 0, bool debug = false);

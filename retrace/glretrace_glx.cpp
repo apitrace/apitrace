@@ -96,7 +96,7 @@ static void retrace_glXCreateContextAttribsARB(trace::Call &call) {
     Context *share_context = getContext(call.arg(2).toUIntPtr());
 
     const trace::Value * attrib_list = &call.arg(4);
-    glws::Profile profile = parseContextAttribList(attrib_list);
+    glprofile::Profile profile = parseContextAttribList(attrib_list);
 
     Context *context = glretrace::createContext(share_context, profile);
     context_map[orig_context] = context;

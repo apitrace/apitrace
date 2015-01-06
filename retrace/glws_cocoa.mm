@@ -234,7 +234,7 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     attribs.add(NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)1);
     attribs.add(NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)1);
 
-    if (profile.api != API_GL) {
+    if (profile.api != glprofile::API_GL) {
         return NULL;
     }
 
@@ -279,7 +279,7 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 }
 
 bool
-bindApi(Api api)
+bindApi(glprofile::Api api)
 {
     return true;
 }

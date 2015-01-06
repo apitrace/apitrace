@@ -44,13 +44,13 @@
 namespace glretrace {
 
 
-static std::map<glws::Profile, glws::Visual *>
+static std::map<glprofile::Profile, glws::Visual *>
 visuals;
 
 
 inline glws::Visual *
-getVisual(glws::Profile profile) {
-    std::map<glws::Profile, glws::Visual *>::iterator it = visuals.find(profile);
+getVisual(glprofile::Profile profile) {
+    std::map<glprofile::Profile, glws::Visual *>::iterator it = visuals.find(profile);
     if (it == visuals.end()) {
         glws::Visual *visual = NULL;
         unsigned samples = retrace::samples;
@@ -76,7 +76,7 @@ getVisual(glws::Profile profile) {
 
 
 static glws::Drawable *
-createDrawableHelper(glws::Profile profile, int width = 32, int height = 32, bool pbuffer = false) {
+createDrawableHelper(glprofile::Profile profile, int width = 32, int height = 32, bool pbuffer = false) {
     glws::Visual *visual = getVisual(profile);
     glws::Drawable *draw = glws::createDrawable(visual, width, height, pbuffer);
     if (!draw) {
@@ -89,7 +89,7 @@ createDrawableHelper(glws::Profile profile, int width = 32, int height = 32, boo
 
 
 glws::Drawable *
-createDrawable(glws::Profile profile) {
+createDrawable(glprofile::Profile profile) {
     return createDrawableHelper(profile);
 }
 
@@ -107,7 +107,7 @@ createPbuffer(int width, int height) {
 
 
 Context *
-createContext(Context *shareContext, glws::Profile profile) {
+createContext(Context *shareContext, glprofile::Profile profile) {
     glws::Visual *visual = getVisual(profile);
     glws::Context *shareWsContext = shareContext ? shareContext->wsContext : NULL;
     glws::Context *ctx = glws::createContext(visual, shareWsContext, retrace::debug);
@@ -273,7 +273,7 @@ parseAttrib(const trace::Value *attribs, int param, int default_, int terminator
 /**
  * Parse GLX/WGL_ARB_create_context attribute list.
  */
-glws::Profile
+glprofile::Profile
 parseContextAttribList(const trace::Value *attribs)
 {
     // {GLX,WGL}_CONTEXT_MAJOR_VERSION_ARB
@@ -293,11 +293,11 @@ parseContextAttribList(const trace::Value *attribs)
     // {GLX,WGL}_CONTEXT_ES_PROFILE_BIT_EXT
     bool es_profile = profile_mask & 0x0004;
 
-    glws::Profile profile;
+    glprofile::Profile profile;
     if (es_profile) {
-        profile.api = glws::API_GLES;
+        profile.api = glprofile::API_GLES;
     } else {
-        profile.api = glws::API_GL;
+        profile.api = glprofile::API_GL;
         profile.core = core_profile;
     }
 

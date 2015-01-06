@@ -271,7 +271,7 @@ createDrawable(const Visual *visual, int width, int height, bool pbuffer)
 }
 
 bool
-bindApi(Api api)
+bindApi(glprofile::Api api)
 {
     return true;
 }
@@ -291,7 +291,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
         Attributes<int> attribs;
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
-        if (profile.api == API_GL) {
+        if (profile.api == glprofile::API_GL) {
             attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
             attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
             if (profile.versionGreaterOrEqual(3, 2)) {
@@ -302,7 +302,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
                 int profileMask = profile.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, profileMask);
             }
-        } else if (profile.api == API_GLES) {
+        } else if (profile.api == glprofile::API_GLES) {
             if (has_GLX_EXT_create_context_es_profile) {
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
                 attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
@@ -332,7 +332,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             return createContext(_visual, shareContext, false);
         }
     } else {
-        if (profile.api != API_GL ||
+        if (profile.api != glprofile::API_GL ||
             profile.core) {
             return NULL;
         }

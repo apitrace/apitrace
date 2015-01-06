@@ -47,7 +47,7 @@ using namespace glretrace;
 
 typedef std::map<unsigned long long, glws::Drawable *> DrawableMap;
 typedef std::map<unsigned long long, Context *> ContextMap;
-typedef std::map<unsigned long long, glws::Profile> ProfileMap;
+typedef std::map<unsigned long long, glprofile::Profile> ProfileMap;
 static DrawableMap drawable_map;
 static ContextMap context_map;
 static ProfileMap profile_map;
@@ -60,7 +60,7 @@ static unsigned int current_api = EGL_OPENGL_ES_API;
  * instead of guessing.  For now, start with a guess of ES2 profile, which
  * should be the most common case for EGL.
  */
-static glws::Profile last_profile(glws::API_GLES, 2, 0);
+static glprofile::Profile last_profile(glprofile::API_GLES, 2, 0);
 
 static glws::Drawable *null_drawable = NULL;
 
@@ -102,7 +102,7 @@ getContext(unsigned long long context_ptr) {
 static void createDrawable(unsigned long long orig_config, unsigned long long orig_surface)
 {
     ProfileMap::iterator it = profile_map.find(orig_config);
-    glws::Profile profile;
+    glprofile::Profile profile;
 
     // If the requested config is associated with a profile, use that
     // profile. Otherwise, assume that the last used profile is what
@@ -149,13 +149,13 @@ static void retrace_eglDestroySurface(trace::Call &call) {
 static void retrace_eglBindAPI(trace::Call &call) {
     current_api = call.arg(0).toUInt();
 
-    glws::Api api;
+    glprofile::Api api;
     switch (current_api) {
     case EGL_OPENGL_API:
-        api = glws::API_GL;
+        api = glprofile::API_GL;
         break;
     case EGL_OPENGL_ES_API:
-        api = glws::API_GLES;
+        api = glprofile::API_GLES;
         break;
     default:
         assert(0);
@@ -170,7 +170,7 @@ static void retrace_eglCreateContext(trace::Call &call) {
     unsigned long long orig_config = call.arg(1).toUIntPtr();
     Context *share_context = getContext(call.arg(2).toUIntPtr());
     trace::Array *attrib_array = call.arg(3).toArray();
-    glws::Profile profile;
+    glprofile::Profile profile;
 
     switch (current_api) {
     case EGL_OPENGL_API:
