@@ -74,8 +74,9 @@ Context::Context(void) {
     }
 }
 
-void
-Context::resetPixelPackState(void) {
+PixelPackState::PixelPackState(const Context &context) {
+    ES = context.ES;
+
     // Start with default state
     pack_alignment = 4;
     pack_image_height = 0;
@@ -114,8 +115,7 @@ Context::resetPixelPackState(void) {
     }
 }
 
-void
-Context::restorePixelPackState(void) {
+PixelPackState::~PixelPackState() {
     glPixelStorei(GL_PACK_ALIGNMENT, pack_alignment);
     if (!ES) {
         glPixelStorei(GL_PACK_IMAGE_HEIGHT, pack_image_height);

@@ -49,14 +49,19 @@ struct Context
     bool EXT_debug_label;
 
     Context(void);
+};
 
-    void
-    resetPixelPackState(void);
 
-    void
-    restorePixelPackState(void);
+class PixelPackState
+{
+public:
+    PixelPackState(const Context & context);
+
+    ~PixelPackState();
 
 private:
+    bool ES;
+
     // Pack state
     GLint pack_alignment;
     GLint pack_image_height;

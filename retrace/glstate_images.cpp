@@ -465,7 +465,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
 
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true, channelType);
 
-    context.resetPixelPackState();
+    PixelPackState pps(Context);
 
     if (target == GL_TEXTURE_BUFFER) {
         assert(desc.height == 1);
@@ -491,8 +491,6 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
             glGetTexImage(target, level, format, type, image->pixels);
         }
     }
-
-    context.restorePixelPackState();
 
     JSONWriter::ImageDesc imageDesc;
     imageDesc.depth = desc.depth;
@@ -935,12 +933,12 @@ getDrawBufferImage() {
         glReadBuffer(draw_buffer);
     }
 
-    // TODO: reset imaging state too
-    context.resetPixelPackState();
+    {
+        // TODO: reset imaging state too
+        PixelPackState pps(Context);
+        glReadPixels(0, 0, desc.width, desc.height, format, type, image->pixels);
+    }
 
-    glReadPixels(0, 0, desc.width, desc.height, format, type, image->pixels);
-
-    context.restorePixelPackState();
 
     if (!context.ES) {
         glReadBuffer(read_buffer);
@@ -996,12 +994,12 @@ dumpReadBufferImage(JSONWriter &json,
 
     flushErrors();
 
-    // TODO: reset imaging state too
-    context.resetPixelPackState();
+    {
+        // TODO: reset imaging state too
+        PixelPackState pss(context);
 
-    glReadPixels(0, 0, width, height, format, type, image->pixels);
-
-    context.restorePixelPackState();
+        glReadPixels(0, 0, width, height, format, type, image->pixels);
+    }
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
