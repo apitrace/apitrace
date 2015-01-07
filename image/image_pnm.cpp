@@ -65,7 +65,7 @@ Image::writePNM(std::ostream &os, const char *comment) const
             outChannels = 1;
         } else if (channels <= 3) {
             identifier = "PF";
-            outChannels = 4;
+            outChannels = 3;
         } else {
             // Non-standard extension for 4 floats
             identifier = "PX";
