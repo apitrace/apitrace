@@ -355,6 +355,8 @@ chooseReadBackFormat(const InternalFormatDesc &formatDesc, GLenum &format, GLenu
     case GL_RG:
     case GL_RGB:
     case GL_BGR:
+        format = GL_RGB;
+        break;
     case GL_ALPHA:
     case GL_RGBA:
     case GL_BGRA:
