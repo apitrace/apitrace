@@ -966,6 +966,7 @@ getDrawBufferImage() {
  */
 static inline void
 dumpReadBufferImage(JSONWriter &json,
+                    Context & context,
                     const char *label,
                     GLint width, GLint height,
                     GLenum format, GLenum type,
@@ -974,8 +975,6 @@ dumpReadBufferImage(JSONWriter &json,
     if (internalFormat == GL_NONE) {
         internalFormat = format;
     }
-
-    Context context;
 
     // On GLES glReadPixels only supports GL_RGBA and GL_UNSIGNED_BYTE combination
     if (context.ES) {
@@ -1160,7 +1159,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         GLenum format = alpha_bits ? GL_RGBA : GL_RGB;
         GLenum type = GL_UNSIGNED_BYTE;
 
-        dumpReadBufferImage(json, enumToString(draw_buffer), width, height, format, type);
+        dumpReadBufferImage(json, context, enumToString(draw_buffer), width, height, format, type);
 
         // Restore original read buffer
         if (!context.ES) {
@@ -1176,7 +1175,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
             glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
         }
         if (depth_bits) {
-            dumpReadBufferImage(json, "GL_DEPTH_COMPONENT", width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
+            dumpReadBufferImage(json, context, "GL_DEPTH_COMPONENT", width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
         }
 
         GLint stencil_bits = 0;
@@ -1187,7 +1186,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         }
         if (stencil_bits) {
             assert(stencil_bits <= 8);
-            dumpReadBufferImage(json, "GL_STENCIL_INDEX", width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
+            dumpReadBufferImage(json, context, "GL_STENCIL_INDEX", width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
         }
     }
     
@@ -1283,7 +1282,8 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
     }
 
 
-    dumpReadBufferImage(json, label.str().c_str(),
+    dumpReadBufferImage(json, context,
+                        label.str().c_str(),
                         desc.width, desc.height,
                         format, type, desc.internalFormat);
 }
