@@ -60,8 +60,8 @@ struct Profile {
     }
 
     inline bool
-    compat(void) {
-        return api == API_GL && !core;
+    desktop(void) {
+        return api == API_GL;
     }
 
     inline bool

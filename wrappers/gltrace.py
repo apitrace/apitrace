@@ -159,7 +159,7 @@ class GlTracer(Tracer):
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'profile.compat()'
+            profile_check = 'profile.desktop()'
             if camelcase_name in self.arrays_es1:
                 profile_check = '(' + profile_check + ' || es1)';
 
@@ -291,7 +291,7 @@ class GlTracer(Tracer):
         print 'static inline bool'
         print 'can_unpack_subimage(void) {'
         print '    gltrace::Context *ctx = gltrace::getContext();'
-        print '    return ctx->profile.compat();'
+        print '    return ctx->profile.desktop();'
         print '}'
         print
 
@@ -907,7 +907,7 @@ class GlTracer(Tracer):
             print '    {'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        GLint _unpack_buffer = 0;'
-            print '        if (ctx->profile.compat())'
+            print '        if (ctx->profile.desktop())'
             print '            _glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &_unpack_buffer);'
             print '        if (_unpack_buffer) {'
             print '            trace::localWriter.writePointer((uintptr_t)%s);' % arg.name
@@ -956,7 +956,7 @@ class GlTracer(Tracer):
 
         for camelcase_name, uppercase_name in self.arrays:
             # in which profile is the array available?
-            profile_check = 'profile.compat()'
+            profile_check = 'profile.desktop()'
             if camelcase_name in self.arrays_es1:
                 profile_check = '(' + profile_check + ' || es1)';
 
@@ -1099,7 +1099,7 @@ class GlTracer(Tracer):
         if uppercase_name == 'TEXTURE_COORD':
             print '    GLint client_active_texture = _glGetInteger(GL_CLIENT_ACTIVE_TEXTURE);'
             print '    GLint max_texture_coords = 0;'
-            print '    if (ctx->profile.compat())'
+            print '    if (ctx->profile.desktop())'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
             print '    else'
             print '        _glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_coords);'
