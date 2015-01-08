@@ -465,7 +465,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
 
     image::Image *image = new image::Image(desc.width, desc.height*desc.depth, channels, true, channelType);
 
-    PixelPackState pps(Context);
+    PixelPackState pps(context);
 
     if (target == GL_TEXTURE_BUFFER) {
         assert(desc.height == 1);
@@ -935,7 +935,7 @@ getDrawBufferImage() {
 
     {
         // TODO: reset imaging state too
-        PixelPackState pps(Context);
+        PixelPackState pps(context);
         glReadPixels(0, 0, desc.width, desc.height, format, type, image->pixels);
     }
 
@@ -996,7 +996,7 @@ dumpReadBufferImage(JSONWriter &json,
 
     {
         // TODO: reset imaging state too
-        PixelPackState pss(context);
+        PixelPackState pps(context);
 
         glReadPixels(0, 0, width, height, format, type, image->pixels);
     }
