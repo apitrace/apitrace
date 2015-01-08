@@ -95,10 +95,8 @@ extraExtensionsES = {
 
 
 const struct ExtensionsDesc *
-getExtraExtensions(void)
+getExtraExtensions(const Context *ctx)
 {
-    Context *ctx = getContext();
-
     switch (ctx->profile.api) {
     case glprofile::API_GL:
         return &extraExtensionsFull;
@@ -117,7 +115,8 @@ getExtraExtensions(void)
 static const char *
 overrideExtensionsString(const char *extensions)
 {
-    const ExtensionsDesc *desc = getExtraExtensions();
+    const Context *ctx = getContext();
+    const ExtensionsDesc *desc = getExtraExtensions(ctx);
     size_t i;
 
     ExtensionsMap::const_iterator it = extensionsMap.find(extensions);
@@ -193,10 +192,12 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
     _glGetIntegerv(pname, params);
 
     if (params) {
+        const Context *ctx;
         switch (pname) {
         case GL_NUM_EXTENSIONS:
-            {
-                const ExtensionsDesc *desc = getExtraExtensions();
+            ctx = getContext();
+            if (ctx->profile.major >= 3) {
+                const ExtensionsDesc *desc = getExtraExtensions(ctx);
                 *params += desc->numStrings;
             }
             break;
@@ -218,19 +219,23 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
 const GLubyte *
 _glGetStringi_override(GLenum name, GLuint index)
 {
-    switch (name) {
-    case GL_EXTENSIONS:
-        {
-            const ExtensionsDesc *desc = getExtraExtensions();
-            GLint numExtensions = 0;
-            _glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
-            if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
-                return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
+    const Context *ctx = getContext();
+
+    if (ctx->profile.major >= 3) {
+        switch (name) {
+        case GL_EXTENSIONS:
+            {
+                const ExtensionsDesc *desc = getExtraExtensions(ctx);
+                GLint numExtensions = 0;
+                _glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+                if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
+                    return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
+                }
             }
+            break;
+        default:
+            break;
         }
-        break;
-    default:
-        break;
     }
 
     return _glGetStringi(name, index);
