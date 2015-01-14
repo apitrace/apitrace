@@ -11,8 +11,7 @@
 #include <QVariant>
 #include <QList>
 #include <QImage>
-
-#include <qjson/parser.h>
+#include <QJsonDocument>
 
 /**
  * Wrapper around a QProcess which enforces IO to block .
@@ -388,32 +387,17 @@ void Retracer::run()
         BlockingIODevice io(&process);
 
         if (m_captureState) {
-            /*
-             * Parse JSON from the output.
-             *
-             * XXX: QJSON's scanner is inneficient as it abuses single
-             * character QIODevice::peek (not cheap), instead of maintaining a
-             * lookahead character on its own.
-             */
-
-            bool ok = false;
-            QJson::Parser jsonParser;
-
-            // Allow Nan/Infinity
-            jsonParser.allowSpecialNumbers(true);
-#if 0
-            parsedJson = jsonParser.parse(&io, &ok).toMap();
-#else
-            /*
-             * XXX: QJSON expects blocking IO, and it looks like
-             * BlockingIODevice does not work reliably in all cases.
-             */
             process.waitForFinished(-1);
-            parsedJson = jsonParser.parse(&process, &ok).toMap();
-#endif
-            if (!ok) {
-                msg = QLatin1String("failed to parse JSON");
+            QByteArray data = process.readAll();
+            QJsonParseError error;
+            QJsonDocument jsonDoc =
+                QJsonDocument::fromJson(data, &error);
+
+            if (error.error != QJsonParseError::NoError) {
+                //qDebug()<<"Error is "<<error.errorString();
+                msg = error.errorString();
             }
+            parsedJson = jsonDoc.toVariant().toMap();
         } else if (m_captureThumbnails) {
             /*
              * Parse concatenated PNM images from output.

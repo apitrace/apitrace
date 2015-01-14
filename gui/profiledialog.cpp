@@ -223,7 +223,7 @@ void ProfileDialog::setProfile(trace::Profile* profile)
         m_table->setModel(model);
         m_table->update(QModelIndex());
         m_table->sortByColumn(2, Qt::DescendingOrder);
-        m_table->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+        m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
         m_table->resizeColumnsToContents();
 
         /* Reset selection */

@@ -6,19 +6,16 @@ Requirements common for all platforms:
 
   * Python Image Library
 
-* CMake version 2.8 or higher (tested with version 2.8)
+* CMake version 2.8.8 or higher (tested with version 2.8.12.2)
 
 
 The GUI also dependends on:
 
-* Qt version 4.7 or higher (tested with version 4.8)
+* Qt version 5.2.1 or higher (tested with version 5.4.0 and 5.3.0)
 
-* QJSON version 0.5 or higher (tested with version 0.7.1, which is bundled)
-
-Qt and QJSON will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and
-never used if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
-`-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available, using the
-bundled QJSON if it is not found on the system.
+Qt will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and never used
+if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
+`-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available.
 
 
 The code also depends on zlib, libpng, and snappy libraries, but the bundled
@@ -27,9 +24,9 @@ shared-objects/DLL self contained, and to prevent symbol collisions when
 tracing.
 
 
-# Linux / Mac OS X #
+# Linux #
 
-Additional optional dependencies for Linux:
+Additional optional dependencies:
 
 * libprocps (procps development libraries)
 
@@ -57,6 +54,14 @@ you have a multilib gcc and 32-bits X11 libraries, by doing:
 
 The `/usr/lib32` refers to the path where the 32-bits shared objects are may
 differ depending on the actual Linux distribution.
+
+
+# Mac OS X #
+
+Build as:
+
+    cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=~/QtX.Y.Z/X.Y/clang_64
+    make -C build
 
 
 # Android #
@@ -101,17 +106,13 @@ Additional requirements:
 
 To build with Visual Studio first invoke CMake GUI as:
 
-    cmake-gui -H. -Bbuild
+    cmake-gui -H. -Bbuild -DCMAKE_PREFIX_PATH=C:\Qt\QtX.Y.Z\X.Y\msvc2013
 
 and press the _Configure_ button.
 
 It will try to detect most required/optional dependencies automatically.  When
 not found automatically, you can manually specify the location of the
 dependencies from the CMake GUI.
-
-Qt on Windows doesn't ship with 64-bits binaries, you may want to add
-`-DENABLE_GUI=FALSE` to the above cmake command line for Windows 64-bits
-builds.
 
 After you've successfully configured, you can start the build by opening the
 generated `build\apitrace.sln` solution file, or invoking CMake as:
