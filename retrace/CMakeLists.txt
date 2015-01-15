@@ -167,6 +167,23 @@ if (ENABLE_EGL AND (ANDROID OR ENABLE_WAFFLE) AND Waffle_FOUND)
 endif ()
 
 if (WIN32)
+    include_directories (BEFORE SYSTEM ${DirectX_D3D_INCLUDE_DIR})
+    add_custom_command (
+        OUTPUT d3dretrace_ddraw.cpp
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ddrawretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_ddraw.cpp
+        DEPENDS
+            ddrawretrace.py
+            dllretrace.py
+            retrace.py
+            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+            ${CMAKE_SOURCE_DIR}/specs/ddraw.py
+            ${CMAKE_SOURCE_DIR}/specs/d3d.py
+            ${CMAKE_SOURCE_DIR}/specs/d3dtypes.py
+            ${CMAKE_SOURCE_DIR}/specs/d3dcaps.py
+            ${CMAKE_SOURCE_DIR}/specs/winapi.py
+            ${CMAKE_SOURCE_DIR}/specs/stdapi.py
+    )
+
     if (DirectX_D3D8_INCLUDE_FOUND)
         include_directories (BEFORE SYSTEM ${DirectX_D3D8_INCLUDE_DIR})
         set (HAVE_D3D8 1)
@@ -254,6 +271,7 @@ if (WIN32)
 
     add_executable (d3dretrace
         d3dretrace_main.cpp
+        d3dretrace_ddraw.cpp
         d3dretrace_d3d8.cpp
         d3dretrace_d3d9.cpp
         d3dretrace_dxgi.cpp

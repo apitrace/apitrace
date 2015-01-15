@@ -414,6 +414,12 @@ class Function:
                 return arg
         return None
 
+    def getArgByType(self, type):
+        for arg in self.args:
+            if arg.type is type:
+                return arg
+        return None
+
 
 def StdFunction(*args, **kwargs):
     kwargs.setdefault('call', '__stdcall')
