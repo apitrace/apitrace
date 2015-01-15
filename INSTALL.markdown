@@ -12,7 +12,7 @@ Requirements common for all platforms:
 The GUI also dependends on:
 
 * Qt version 5.2.1 or higher (tested with version 5.4.0 and 5.3.0; use the
-  [6.1 release)](https://github.com/apitrace/apitrace/releases/tag/6.1), if you
+  [6.1 release](https://github.com/apitrace/apitrace/releases/tag/6.1), if you
   must build with Qt4)
 
 Qt will be required if `-DENABLE_GUI=TRUE` is passed to CMake, and never used
