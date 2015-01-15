@@ -144,7 +144,12 @@ if (WIN32)
     find_winsdk_library (DDRAW   ddraw)
     find_combined       (DDRAW   DDRAW DDRAW)
 
-    find_winsdk_header  (D3D     d3d.h)
+    if (CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
+        # Windows 7 SDKs, used by XP toolset, do not include d3d.h
+        find_dxsdk_header   (D3D     d3d.h)
+    else ()
+        find_winsdk_header  (D3D     d3d.h)
+    endif ()
     find_combined       (D3D     D3D DDRAW)
 
     find_dxsdk_header   (D3DX    d3dx.h)
