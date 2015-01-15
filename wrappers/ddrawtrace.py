@@ -31,30 +31,7 @@ from specs.d3d import ddraw, interfaces
 
 if __name__ == '__main__':
     print '#define INITGUID'
-    print '#include <windows.h>'
-    print '#include "compat.h"'
-    print '#include <ddraw.h>'
-    print '#include <d3d.h>'
-    print
-    print '''
-
-#ifndef DDBLT_EXTENDED_FLAGS
-#define DDBLT_EXTENDED_FLAGS 0x40000000l
-#endif
-
-#ifndef DDBLT_EXTENDED_LINEAR_CONTENT
-#define DDBLT_EXTENDED_LINEAR_CONTENT 0x00000004l
-#endif
-
-#ifndef D3DLIGHT_PARALLELPOINT
-#define D3DLIGHT_PARALLELPOINT (D3DLIGHTTYPE)4
-#endif
-
-#ifndef D3DLIGHT_GLSPOT
-#define D3DLIGHT_GLSPOT (D3DLIGHTTYPE)5
-#endif
-
-'''
+    print '#include "d3dimports.hpp"'
     print '#include "trace_writer_local.hpp"'
     print '#include "os.hpp"'
     print
