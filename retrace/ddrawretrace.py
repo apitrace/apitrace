@@ -37,9 +37,9 @@ class D3DRetracer(Retracer):
 
     def retraceApi(self, api):
         print '// Swizzling mapping for lock addresses'
-        print 'typedef std::pair<void *, UINT> MappingKey;'
-        print 'static std::map<MappingKey, void *> _maps;'
+        print 'static std::map<void *, void *> _maps;'
         print
+        # TODO: Keep a table of windows
         print 'static HWND g_hWnd;'
         print
 
@@ -58,29 +58,20 @@ class D3DRetracer(Retracer):
         # create windows as neccessary
         hWndArg = method.getArgByType(HWND)
         if hWndArg is not None:
+            # FIXME: Try to guess the window size (e.g., from IDirectDrawSurface7::Blt)
             print r'    if (!g_hWnd) {'
             print r'        g_hWnd = d3dretrace::createWindow(512, 512);'
             print r'    }'
             print r'    %s = g_hWnd;' % hWndArg.name
 
 
-        # Ensure textures can be locked when dumping
-        # TODO: Pre-check with CheckDeviceFormat
-        if method.name in ('CreateTexture', 'CreateCubeTexture', 'CreateVolumeTexture'):
-            print r'    if (retrace::dumpingState &&'
-            print r'        Pool == D3DPOOL_DEFAULT &&'
-            print r'        !(Usage & (D3DUSAGE_RENDERTARGET|D3DUSAGE_DEPTHSTENCIL))) {'
-            print r'        Usage |= D3DUSAGE_DYNAMIC;'
-            print r'    }'
-
-        if method.name in ('Lock', 'LockRect', 'LockBox'):
+        if method.name == 'Lock':
             # Reset _DONOTWAIT flags. Otherwise they may fail, and we have no
             # way to cope with it (other than retry).
             mapFlagsArg = method.getArgByName('dwFlags')
             if mapFlagsArg is not None:
-                for flag in mapFlagsArg.type.values:
-                    if flag.endswith('_DONOTWAIT'):
-                        print r'    dwFlags &= ~%s;' % flag
+                print r'    dwFlags &= DDLOCK_DONOTWAIT;'
+                print r'    dwFlags |= DDLOCK_WAIT;'
 
         Retracer.invokeInterfaceMethod(self, interface, method)
 
@@ -99,31 +90,24 @@ class D3DRetracer(Retracer):
             print r'        d3dretrace::processEvents();'
             print r'    }'
 
-        def mapping_subkey():
-            if 'Level' in method.argNames():
-                return ('Level',)
-            else:
-                return ('0',)
-
-        if method.name in ('Lock', 'LockRect', 'LockBox'):
+        if method.name == 'Lock':
             print '    VOID *_pbData = NULL;'
             print '    size_t _MappedSize = 0;'
-            # FIXME
+            # FIXME: determine the mapping size
             #print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
             print '    if (_MappedSize) {'
-            print '        _maps[MappingKey(_this, %s)] = _pbData;' % mapping_subkey()
-            self.checkPitchMismatch(method)
+            print '        _maps[_this] = _pbData;'
+            # TODO: check pitches match
             print '    } else {'
             print '        return;'
             print '    }'
         
-        if method.name in ('Unlock', 'UnlockRect', 'UnlockBox'):
+        if method.name == 'Unlock':
             print '    VOID *_pbData = 0;'
-            print '    MappingKey _mappingKey(_this, %s);' % mapping_subkey()
-            print '    _pbData = _maps[_mappingKey];'
+            print '    _pbData = _maps[_this];'
             print '    if (_pbData) {'
             print '        retrace::delRegionByPointer(_pbData);'
-            print '        _maps[_mappingKey] = 0;'
+            print '        _maps[_this] = 0;'
             print '    }'
 
 
