@@ -184,6 +184,10 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
+        set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
+            d3d7state.cpp
+            d3d7state_images.cpp
+        )
     else ()
         message (FATAL_ERROR "d3d.h is required.")
     endif ()

@@ -32,6 +32,7 @@
 #include <windows.h>
 
 
+struct IDirect3DDevice7;
 struct IDirect3DDevice8;
 struct IDirect3DDevice9;
 struct IDXGISwapChain;
@@ -52,6 +53,20 @@ namespace d3dstate {
 
 
 extern const GUID GUID_D3DSTATE;
+
+
+/*
+ * D3D7
+ */
+
+image::Image *
+getRenderTargetImage(IDirect3DDevice7 *pDevice);
+
+void
+dumpFramebuffer(JSONWriter &json, IDirect3DDevice7 *pDevice);
+
+void
+dumpDevice(std::ostream &os, IDirect3DDevice7 *pDevice);
 
 
 /*

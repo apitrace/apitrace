@@ -47,13 +47,13 @@ class D3DRetracer(Retracer):
 
     def invokeInterfaceMethod(self, interface, method):
         # keep track of the last used device for state dumping
-        #if interface.name in ('IDirect3DDevice7',):
-        #    if method.name == 'Release':
-        #        print r'    if (call.ret->toUInt() == 0) {'
-        #        print r'        d3d7Dumper.unbindDevice(_this);'
-        #        print r'    }'
-        #    else:
-        #        print r'    d3d7Dumper.bindDevice(_this);'
+        if interface.name in ('IDirect3DDevice7',):
+            if method.name == 'Release':
+                print r'    if (call.ret->toUInt() == 0) {'
+                print r'        d3d7Dumper.unbindDevice(_this);'
+                print r'    }'
+            else:
+                print r'    d3d7Dumper.bindDevice(_this);'
 
         # create windows as neccessary
         hWndArg = method.getArgByType(HWND)
@@ -63,9 +63,6 @@ class D3DRetracer(Retracer):
             print r'    }'
             print r'    %s = g_hWnd;' % hWndArg.name
 
-
-        # notify frame has been completed
-        # FIXME
 
         # Ensure textures can be locked when dumping
         # TODO: Pre-check with CheckDeviceFormat
@@ -92,9 +89,15 @@ class D3DRetracer(Retracer):
             print r'        exit(1);'
             print r'    }'
 
+        # notify frame has been completed
         # process events after presents
-        if method.name == 'Present':
-            print r'    d3dretrace::processEvents();'
+        if interface.name == 'IDirectDrawSurface7' and method.name == 'Blt':
+            print r'    DDSCAPS2 ddsCaps;'
+            print r'    if (SUCCEEDED(_this->GetCaps(&ddsCaps)) &&'
+            print r'        (ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)) {'
+            print r'        retrace::frameComplete(call);'
+            print r'        d3dretrace::processEvents();'
+            print r'    }'
 
         def mapping_subkey():
             if 'Level' in method.argNames():
@@ -137,7 +140,7 @@ def main():
     print r'#include "d3dimports.hpp"'
     api.addModule(ddraw)
     print
-    #print '''static d3dretrace::D3DDumper<IDirect3DDevice7> d3d7Dumper;'''
+    print '''static d3dretrace::D3DDumper<IDirect3DDevice7> d3d7Dumper;'''
     print
 
     retracer = D3DRetracer()

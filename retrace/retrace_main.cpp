@@ -92,9 +92,20 @@ unsigned frameNo = 0;
 unsigned callNo = 0;
 
 
+static void
+takeSnapshot(unsigned call_no);
+
+
 void
 frameComplete(trace::Call &call) {
     ++frameNo;
+
+    if (!(call.flags & trace::CALL_FLAG_END_FRAME) &&
+        snapshotFrequency.contains(call)) {
+        // This call doesn't have the end of frame flag, so take any snapshot
+        // now.
+        takeSnapshot(call.no);
+    }
 }
 
 
