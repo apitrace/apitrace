@@ -320,7 +320,7 @@ IDirect3DDevice7.methods += [
     StdMethod(HRESULT, "GetDirect3D", [Out(Pointer(LPDIRECT3D7), "lplpDirect3D3")]),
     StdMethod(HRESULT, "SetRenderTarget", [(LPDIRECTDRAWSURFACE7, "lpNewRenderTarget"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "GetRenderTarget", [Out(Pointer(LPDIRECTDRAWSURFACE7), "lplpRenderTarget")]),
-    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (LPD3DRECT, "lpRects"), (DWORD, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
+    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (Array(D3DRECT, "dwCount"), "lpRects"), (D3DCLEAR, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
     StdMethod(HRESULT, "SetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), (LPD3DMATRIX, "lpD3DMatrix")]),
     StdMethod(HRESULT, "GetTransform", [(D3DTRANSFORMSTATETYPE, "dtstTransformStateType"), Out(LPD3DMATRIX, "lpD3DMatrix")], sideeffects=False),
     StdMethod(HRESULT, "SetViewport", [(LPD3DVIEWPORT7, "lpData")]),

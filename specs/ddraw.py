@@ -131,26 +131,113 @@ DDBLTFX = Struct("DDBLTFX", [
 ])
 LPDDBLTFX = Pointer(DDBLTFX)
 
+DirectDrawCapsFlags = Flags(DWORD, [
+    "DDSCAPS_RESERVED1",
+    "DDSCAPS_ALPHA",
+    "DDSCAPS_BACKBUFFER",
+    "DDSCAPS_COMPLEX",
+    "DDSCAPS_FLIP",
+    "DDSCAPS_FRONTBUFFER",
+    "DDSCAPS_OFFSCREENPLAIN",
+    "DDSCAPS_OVERLAY",
+    "DDSCAPS_PALETTE",
+    "DDSCAPS_PRIMARYSURFACE",
+    "DDSCAPS_RESERVED3", # was DDSCAPS_PRIMARYSURFACELEFT
+    "DDSCAPS_SYSTEMMEMORY",
+    "DDSCAPS_TEXTURE",
+    "DDSCAPS_3DDEVICE",
+    "DDSCAPS_VIDEOMEMORY",
+    "DDSCAPS_VISIBLE",
+    "DDSCAPS_WRITEONLY",
+    "DDSCAPS_ZBUFFER",
+    "DDSCAPS_OWNDC",
+    "DDSCAPS_LIVEVIDEO",
+    "DDSCAPS_HWCODEC",
+    "DDSCAPS_MODEX",
+    "DDSCAPS_MIPMAP",
+    "DDSCAPS_RESERVED2",
+    "DDSCAPS_ALLOCONLOAD",
+    "DDSCAPS_VIDEOPORT",
+    "DDSCAPS_LOCALVIDMEM",
+    "DDSCAPS_NONLOCALVIDMEM",
+    "DDSCAPS_STANDARDVGAMODE",
+    "DDSCAPS_OPTIMIZED",
+])
+
+DirectDrawCapabilityFlags2 = Flags(DWORD, [
+    "DDSCAPS2_RESERVED4", # was DDSCAPS2_HARDWAREDEINTERLACE
+    "DDSCAPS2_HINTDYNAMIC",
+    "DDSCAPS2_HINTSTATIC",
+    "DDSCAPS2_TEXTUREMANAGE",
+    "DDSCAPS2_RESERVED1",
+    "DDSCAPS2_RESERVED2",
+    "DDSCAPS2_OPAQUE",
+    "DDSCAPS2_HINTANTIALIASING",
+    "DDSCAPS2_CUBEMAP",
+    "DDSCAPS2_CUBEMAP_ALLFACES",
+    "DDSCAPS2_CUBEMAP_POSITIVEX",
+    "DDSCAPS2_CUBEMAP_NEGATIVEX",
+    "DDSCAPS2_CUBEMAP_POSITIVEY",
+    "DDSCAPS2_CUBEMAP_NEGATIVEY",
+    "DDSCAPS2_CUBEMAP_POSITIVEZ",
+    "DDSCAPS2_CUBEMAP_NEGATIVEZ",
+    "DDSCAPS2_MIPMAPSUBLEVEL",
+    "DDSCAPS2_D3DTEXTUREMANAGE",
+    "DDSCAPS2_DONOTPERSIST",
+    "DDSCAPS2_STEREOSURFACELEFT",
+    "DDSCAPS2_VOLUME",
+    "DDSCAPS2_NOTUSERLOCKABLE",
+    "DDSCAPS2_POINTS",
+    "DDSCAPS2_RTPATCHES",
+    "DDSCAPS2_NPATCHES",
+    "DDSCAPS2_RESERVED3",
+    "DDSCAPS2_DISCARDBACKBUFFER",
+    "DDSCAPS2_ENABLEALPHACHANNEL",
+    "DDSCAPS2_EXTENDEDFORMATPRIMARY",
+    "DDSCAPS2_ADDITIONALPRIMARY",
+])
+DirectDrawCapabilityFlags3 = Flags(DWORD, [
+    "DDSCAPS3_MULTISAMPLE_MASK",
+    "DDSCAPS3_MULTISAMPLE_QUALITY_MASK",
+    "DDSCAPS3_MULTISAMPLE_QUALITY_SHIFT",
+    "DDSCAPS3_RESERVED1",
+    "DDSCAPS3_RESERVED2",
+    "DDSCAPS3_LIGHTWEIGHTMIPMAP",
+    "DDSCAPS3_AUTOGENMIPMAP",
+    "DDSCAPS3_DMAP",
+    "DDSCAPS3_CREATESHAREDRESOURCE",
+    "DDSCAPS3_READONLYRESOURCE",
+    "DDSCAPS3_OPENSHAREDRESOURCE",
+])
+
 DDSCAPS = Struct("DDSCAPS", [
-    (DWORD, "dwCaps"),
+    (DirectDrawCapsFlags, "dwCaps"),
 ])
 LPDDSCAPS = Pointer(DDSCAPS)
 
+DDOSDCAPSFlags = Flags(DWORD, [
+    "DDOSDCAPS_OPTCOMPRESSED",
+    "DDOSDCAPS_OPTREORDERED",
+    "DDOSDCAPS_MONOLITHICMIPMAP",
+    "DDOSDCAPS_VALIDSCAPS",
+    "DDOSDCAPS_VALIDOSCAPS",
+])
+
 DDOSCAPS = Struct("DDOSCAPS", [
-    (DWORD, "dwCaps"),
+    (DDOSDCAPSFlags, "dwCaps"),
 ])
 LPDDOSCAPS = Pointer(DDOSCAPS)
 
 DDSCAPSEX = Struct("DDSCAPSEX", [
-    (DWORD, "dwCaps2"),
-    (DWORD, "dwCaps3"),
+    (DirectDrawCapabilityFlags2, "dwCaps2"),
+    (DirectDrawCapabilityFlags3, "dwCaps3"),
     (DWORD, "dwCaps4"),
 ])
 
 DDSCAPS2 = Struct("DDSCAPS2", [
-    (DWORD, "dwCaps"),
-    (DWORD, "dwCaps2"),
-    (DWORD, "dwCaps3"),
+    (DirectDrawCapsFlags, "dwCaps"),
+    (DirectDrawCapabilityFlags2, "dwCaps2"),
+    (DirectDrawCapabilityFlags3, "dwCaps3"),
     (DWORD, "dwCaps4"),
 ])
 LPDDSCAPS2 = Pointer(DDSCAPS2)
@@ -434,9 +521,31 @@ LPDDCAPS_DX7 = Pointer(DDCAPS_DX7)
 DDCAPS = DDCAPS_DX7
 LPDDCAPS = Pointer(DDCAPS)
 
+DirectDrawPixelFormatFlags = Flags(DWORD, [
+    "DDPF_ALPHAPIXELS",
+    "DDPF_ALPHA",
+    "DDPF_FOURCC",
+    "DDPF_PALETTEINDEXED4",
+    "DDPF_PALETTEINDEXEDTO8",
+    "DDPF_PALETTEINDEXED8",
+    "DDPF_RGB",
+    "DDPF_COMPRESSED",
+    "DDPF_RGBTOYUV",
+    "DDPF_YUV",
+    "DDPF_ZBUFFER",
+    "DDPF_PALETTEINDEXED1",
+    "DDPF_PALETTEINDEXED2",
+    "DDPF_ZPIXELS",
+    "DDPF_STENCILBUFFER",
+    "DDPF_ALPHAPREMULT",
+    "DDPF_LUMINANCE",
+    "DDPF_BUMPLUMINANCE",
+    "DDPF_BUMPDUDV",
+])
+
 DDPIXELFORMAT = Struct("DDPIXELFORMAT", [
     (DWORD, "dwSize"),
-    (DWORD, "dwFlags"),
+    (DirectDrawPixelFormatFlags, "dwFlags"),
     (DWORD, "dwFourCC"),
     (DWORD, "dwRGBBitCount"),
     (DWORD, "dwYUVBitCount"),
@@ -533,56 +642,6 @@ LPDDDEVICEIDENTIFIER2 = Pointer(DDDEVICEIDENTIFIER2)
 LPCLIPPERCALLBACK = FunctionPointer(DWORD, "LPCLIPPERCALLBACK", [(LPDIRECTDRAWCLIPPER, "lpDDClipper"), (HWND, "hWnd"), (DWORD, "code"), (LPVOID, "lpContext")])
 LPSURFACESTREAMINGCALLBACK = FunctionPointer(DWORD, "LPSURFACESTREAMINGCALLBACK", [DWORD])
 
-DDSURFACEDESC = Struct("DDSURFACEDESC", [
-    (DWORD, "dwSize"),
-    (DWORD, "dwFlags"),
-    (DWORD, "dwHeight"),
-    (DWORD, "dwWidth"),
-    (LONG, "lPitch"),
-    (DWORD, "dwLinearSize"),
-    (DWORD, "dwBackBufferCount"),
-    (DWORD, "dwMipMapCount"),
-    (DWORD, "dwZBufferBitDepth"),
-    (DWORD, "dwRefreshRate"),
-    (DWORD, "dwAlphaBitDepth"),
-    (DWORD, "dwReserved"),
-    (IntPointer("LPVOID"), "lpSurface"),
-    (DDCOLORKEY, "ddckCKDestOverlay"),
-    (DDCOLORKEY, "ddckCKDestBlt"),
-    (DDCOLORKEY, "ddckCKSrcOverlay"),
-    (DDCOLORKEY, "ddckCKSrcBlt"),
-    (DDPIXELFORMAT, "ddpfPixelFormat"),
-    (DDSCAPS, "ddsCaps"),
-])
-LPDDSURFACEDESC = Pointer(DDSURFACEDESC)
-
-DDSURFACEDESC2 = Struct("DDSURFACEDESC2", [
-    (DWORD, "dwSize"),
-    (DWORD, "dwFlags"),
-    (DWORD, "dwHeight"),
-    (DWORD, "dwWidth"),
-    (LONG, "lPitch"),
-    (DWORD, "dwLinearSize"),
-    (DWORD, "dwBackBufferCount"),
-    (DWORD, "dwDepth"),
-    (DWORD, "dwMipMapCount"),
-    (DWORD, "dwRefreshRate"),
-    (DWORD, "dwSrcVBHandle"),
-    (DWORD, "dwAlphaBitDepth"),
-    (DWORD, "dwReserved"),
-    (IntPointer("LPVOID"), "lpSurface"),
-    (DDCOLORKEY, "ddckCKDestOverlay"),
-    (DWORD, "dwEmptyFaceColor"),
-    (DDCOLORKEY, "ddckCKDestBlt"),
-    (DDCOLORKEY, "ddckCKSrcOverlay"),
-    (DDCOLORKEY, "ddckCKSrcBlt"),
-    (DDPIXELFORMAT, "ddpfPixelFormat"),
-    (DWORD, "dwFVF"),
-    (DDSCAPS2, "ddsCaps"),
-    (DWORD, "dwTextureStage"),
-])
-LPDDSURFACEDESC2 = Pointer(DDSURFACEDESC2)
-
 DirectDrawSurfaceDescFlags = Flags(DWORD, [
     "DDSD_CAPS",
     "DDSD_HEIGHT",
@@ -607,16 +666,57 @@ DirectDrawSurfaceDescFlags = Flags(DWORD, [
     "DDSD_ALL",
 ])
 
-DDOPTSURFACEDESC = Struct("DDOPTSURFACEDESC", [
+DDSURFACEDESC = Struct("DDSURFACEDESC", [
     (DWORD, "dwSize"),
-    (DWORD, "dwFlags"),
-    (DDSCAPS2, "ddSCaps"),
-    (DDOSCAPS, "ddOSCaps"),
-    (GUID, "guid"),
-    (DWORD, "dwCompressionRatio"),
+    (DirectDrawSurfaceDescFlags, "dwFlags"),
+    (DWORD, "dwHeight"),
+    (DWORD, "dwWidth"),
+    (LONG, "lPitch"),
+    (DWORD, "dwLinearSize"),
+    (DWORD, "dwBackBufferCount"),
+    (DWORD, "dwMipMapCount"),
+    (DWORD, "dwZBufferBitDepth"),
+    (DWORD, "dwRefreshRate"),
+    (DWORD, "dwAlphaBitDepth"),
+    (DWORD, "dwReserved"),
+    (IntPointer("LPVOID"), "lpSurface"),
+    (DDCOLORKEY, "ddckCKDestOverlay"),
+    (DDCOLORKEY, "ddckCKDestBlt"),
+    (DDCOLORKEY, "ddckCKSrcOverlay"),
+    (DDCOLORKEY, "ddckCKSrcBlt"),
+    (DDPIXELFORMAT, "ddpfPixelFormat"),
+    (DDSCAPS, "ddsCaps"),
 ])
+LPDDSURFACEDESC = Pointer(DDSURFACEDESC)
 
-DDSD = Flags(DWORD, [
+DDSURFACEDESC2 = Struct("DDSURFACEDESC2", [
+    (DWORD, "dwSize"),
+    (DirectDrawSurfaceDescFlags, "dwFlags"),
+    (DWORD, "dwHeight"),
+    (DWORD, "dwWidth"),
+    (LONG, "lPitch"),
+    (DWORD, "dwLinearSize"),
+    (DWORD, "dwBackBufferCount"),
+    (DWORD, "dwDepth"),
+    (DWORD, "dwMipMapCount"),
+    (DWORD, "dwRefreshRate"),
+    (DWORD, "dwSrcVBHandle"),
+    (DWORD, "dwAlphaBitDepth"),
+    (DWORD, "dwReserved"),
+    (IntPointer("LPVOID"), "lpSurface"),
+    (DDCOLORKEY, "ddckCKDestOverlay"),
+    (DWORD, "dwEmptyFaceColor"),
+    (DDCOLORKEY, "ddckCKDestBlt"),
+    (DDCOLORKEY, "ddckCKSrcOverlay"),
+    (DDCOLORKEY, "ddckCKSrcBlt"),
+    (DDPIXELFORMAT, "ddpfPixelFormat"),
+    (DWORD, "dwFVF"),
+    (DDSCAPS2, "ddsCaps"),
+    (DWORD, "dwTextureStage"),
+])
+LPDDSURFACEDESC2 = Pointer(DDSURFACEDESC2)
+
+DDOSD = Flags(DWORD, [
     "DDOSD_GUID",
     "DDOSD_COMPRESSION_RATIO",
     "DDOSD_SCAPS",
@@ -624,12 +724,13 @@ DDSD = Flags(DWORD, [
     "DDOSD_ALL",
 ])
 
-DDOSDCAPS = Flags(DWORD, [
-    "DDOSDCAPS_OPTCOMPRESSED",
-    "DDOSDCAPS_OPTREORDERED",
-    "DDOSDCAPS_MONOLITHICMIPMAP",
-    "DDOSDCAPS_VALIDSCAPS",
-    "DDOSDCAPS_VALIDOSCAPS",
+DDOPTSURFACEDESC = Struct("DDOPTSURFACEDESC", [
+    (DWORD, "dwSize"),
+    (DDOSD, "dwFlags"),
+    (DDSCAPS2, "ddSCaps"),
+    (DDOSCAPS, "ddOSCaps"),
+    (GUID, "guid"),
+    (DWORD, "dwCompressionRatio"),
 ])
 
 DDCOLORCONTROL = Struct("DDCOLORCONTROL", [
@@ -665,87 +766,6 @@ DirectDrawColorControlFlags = Flags(DWORD, [
     "DDCOLOR_SHARPNESS",
     "DDCOLOR_GAMMA",
     "DDCOLOR_COLORENABLE",
-])
-
-DirectDrawCapsFlags = Flags(DWORD, [
-    "DDSCAPS_RESERVED1",
-    "DDSCAPS_ALPHA",
-    "DDSCAPS_BACKBUFFER",
-    "DDSCAPS_COMPLEX",
-    "DDSCAPS_FLIP",
-    "DDSCAPS_FRONTBUFFER",
-    "DDSCAPS_OFFSCREENPLAIN",
-    "DDSCAPS_OVERLAY",
-    "DDSCAPS_PALETTE",
-    "DDSCAPS_PRIMARYSURFACE",
-    "DDSCAPS_RESERVED3",
-    "DDSCAPS_PRIMARYSURFACELEFT",
-    "DDSCAPS_SYSTEMMEMORY",
-    "DDSCAPS_TEXTURE",
-    "DDSCAPS_3DDEVICE",
-    "DDSCAPS_VIDEOMEMORY",
-    "DDSCAPS_VISIBLE",
-    "DDSCAPS_WRITEONLY",
-    "DDSCAPS_ZBUFFER",
-    "DDSCAPS_OWNDC",
-    "DDSCAPS_LIVEVIDEO",
-    "DDSCAPS_HWCODEC",
-    "DDSCAPS_MODEX",
-    "DDSCAPS_MIPMAP",
-    "DDSCAPS_RESERVED2",
-    "DDSCAPS_ALLOCONLOAD",
-    "DDSCAPS_VIDEOPORT",
-    "DDSCAPS_LOCALVIDMEM",
-    "DDSCAPS_NONLOCALVIDMEM",
-    "DDSCAPS_STANDARDVGAMODE",
-    "DDSCAPS_OPTIMIZED",
-])
-
-DirectDrawCapabilityFlags2 = Flags(DWORD, [
-    "DDSCAPS2_RESERVED4",
-    "DDSCAPS2_HARDWAREDEINTERLACE",
-    "DDSCAPS2_HINTDYNAMIC",
-    "DDSCAPS2_HINTSTATIC",
-    "DDSCAPS2_TEXTUREMANAGE",
-    "DDSCAPS2_RESERVED1",
-    "DDSCAPS2_RESERVED2",
-    "DDSCAPS2_OPAQUE",
-    "DDSCAPS2_HINTANTIALIASING",
-    "DDSCAPS2_CUBEMAP",
-    "DDSCAPS2_CUBEMAP_ALLFACES",
-    "DDSCAPS2_CUBEMAP_POSITIVEX",
-    "DDSCAPS2_CUBEMAP_NEGATIVEX",
-    "DDSCAPS2_CUBEMAP_POSITIVEY",
-    "DDSCAPS2_CUBEMAP_NEGATIVEY",
-    "DDSCAPS2_CUBEMAP_POSITIVEZ",
-    "DDSCAPS2_CUBEMAP_NEGATIVEZ",
-    "DDSCAPS2_MIPMAPSUBLEVEL",
-    "DDSCAPS2_D3DTEXTUREMANAGE",
-    "DDSCAPS2_DONOTPERSIST",
-    "DDSCAPS2_STEREOSURFACELEFT",
-    "DDSCAPS2_VOLUME",
-    "DDSCAPS2_NOTUSERLOCKABLE",
-    "DDSCAPS2_POINTS",
-    "DDSCAPS2_RTPATCHES",
-    "DDSCAPS2_NPATCHES",
-    "DDSCAPS2_RESERVED3",
-    "DDSCAPS2_DISCARDBACKBUFFER",
-    "DDSCAPS2_ENABLEALPHACHANNEL",
-    "DDSCAPS2_EXTENDEDFORMATPRIMARY",
-    "DDSCAPS2_ADDITIONALPRIMARY",
-])
-DDSCAPS3 = Flags(DWORD, [
-    "DDSCAPS3_MULTISAMPLE_MASK",
-    "DDSCAPS3_MULTISAMPLE_QUALITY_MASK",
-    "DDSCAPS3_MULTISAMPLE_QUALITY_SHIFT",
-    "DDSCAPS3_RESERVED1",
-    "DDSCAPS3_RESERVED2",
-    "DDSCAPS3_LIGHTWEIGHTMIPMAP",
-    "DDSCAPS3_AUTOGENMIPMAP",
-    "DDSCAPS3_DMAP",
-    "DDSCAPS3_CREATESHAREDRESOURCE",
-    "DDSCAPS3_READONLYRESOURCE",
-    "DDSCAPS3_OPENSHAREDRESOURCE",
 ])
 
 DirectDrawDriverCapsFlags = Flags(DWORD, [
@@ -928,28 +948,6 @@ DirectDrawColorKeyCapsFlags = Flags(DWORD, [
     "DDCKEYCAPS_SRCOVERLAYONEACTIVE",
     "DDCKEYCAPS_SRCOVERLAYYUV",
     "DDCKEYCAPS_NOCOSTOVERLAY",
-])
-
-DirectDrawPixelFormatFlags = Flags(DWORD, [
-    "DDPF_ALPHAPIXELS",
-    "DDPF_ALPHA",
-    "DDPF_FOURCC",
-    "DDPF_PALETTEINDEXED4",
-    "DDPF_PALETTEINDEXEDTO8",
-    "DDPF_PALETTEINDEXED8",
-    "DDPF_RGB",
-    "DDPF_COMPRESSED",
-    "DDPF_RGBTOYUV",
-    "DDPF_YUV",
-    "DDPF_ZBUFFER",
-    "DDPF_PALETTEINDEXED1",
-    "DDPF_PALETTEINDEXED2",
-    "DDPF_ZPIXELS",
-    "DDPF_STENCILBUFFER",
-    "DDPF_ALPHAPREMULT",
-    "DDPF_LUMINANCE",
-    "DDPF_BUMPLUMINANCE",
-    "DDPF_BUMPDUDV",
 ])
 
 DirectDrawEnumSurfacesFlags = Flags(DWORD, [
@@ -1422,7 +1420,7 @@ IDirectDrawSurface.methods += [
     StdMethod(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")], sideeffects=False),
     StdMethod(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
     StdMethod(DDRESULT, "IsLost", []),
-    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), InOut(LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
     StdMethod(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
     StdMethod(DDRESULT, "Restore", []),
     StdMethod(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
@@ -1458,7 +1456,7 @@ IDirectDrawSurface2.methods += [
     StdMethod(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")], sideeffects=False),
     StdMethod(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
     StdMethod(DDRESULT, "IsLost", []),
-    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), InOut(LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
     StdMethod(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
     StdMethod(DDRESULT, "Restore", []),
     StdMethod(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
@@ -1497,7 +1495,7 @@ IDirectDrawSurface3.methods += [
     StdMethod(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC, "lpDDSurfaceDesc")], sideeffects=False),
     StdMethod(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC, "lpDDSurfaceDesc")]),
     StdMethod(DDRESULT, "IsLost", []),
-    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), InOut(LPDDSURFACEDESC, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
     StdMethod(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
     StdMethod(DDRESULT, "Restore", []),
     StdMethod(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
@@ -1537,7 +1535,7 @@ IDirectDrawSurface4.methods += [
     StdMethod(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")], sideeffects=False),
     StdMethod(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
     StdMethod(DDRESULT, "IsLost", []),
-    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), InOut(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
     StdMethod(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
     StdMethod(DDRESULT, "Restore", []),
     StdMethod(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
@@ -1574,16 +1572,16 @@ IDirectDrawSurface7.methods += [
     StdMethod(DDRESULT, "GetCaps", [Out(LPDDSCAPS2, "lpDDSCaps")]),
     StdMethod(DDRESULT, "GetClipper", [Out(Pointer(LPDIRECTDRAWCLIPPER), "lplpDDClipper")]),
     StdMethod(DDRESULT, "GetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
-    StdMethod(DDRESULT, "GetDC", [Out(Pointer(HDC), "phDC")]),
+    StdMethod(DDRESULT, "GetDC", [Out(Pointer(HDC), "phDC")], sideeffects=False),
     StdMethod(DDRESULT, "GetFlipStatus", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "GetOverlayPosition", [Out(LPLONG, "lplX"), Out(LPLONG, "lplY")], sideeffects=False),
     StdMethod(DDRESULT, "GetPalette", [Out(Pointer(LPDIRECTDRAWPALETTE), "lplpDDPalette")]),
-    StdMethod(DDRESULT, "GetPixelFormat", [Out(LPDDPIXELFORMAT, "lpDDPixelFormat")]),
-    StdMethod(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
+    StdMethod(DDRESULT, "GetPixelFormat", [Out(LPDDPIXELFORMAT, "lpDDPixelFormat")], sideeffects=False),
+    StdMethod(DDRESULT, "GetSurfaceDesc", [Out(LPDDSURFACEDESC2, "lpDDSurfaceDesc")], sideeffects=False),
     StdMethod(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc")]),
-    StdMethod(DDRESULT, "IsLost", []),
-    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), (LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
-    StdMethod(DDRESULT, "ReleaseDC", [(HDC, "hDC")]),
+    StdMethod(DDRESULT, "IsLost", [], sideeffects=False),
+    StdMethod(DDRESULT, "Lock", [(LPRECT, "lpDestRect"), InOut(LPDDSURFACEDESC2, "lpDDSurfaceDesc"), (DirectDrawSurfaceLockFlags, "dwFlags"), (HANDLE, "hEvent")]),
+    StdMethod(DDRESULT, "ReleaseDC", [(HDC, "hDC")], sideeffects=False),
     StdMethod(DDRESULT, "Restore", []),
     StdMethod(DDRESULT, "SetClipper", [(LPDIRECTDRAWCLIPPER, "lpDDClipper")]),
     StdMethod(DDRESULT, "SetColorKey", [(DirectDrawSurfaceSetGetColorKeyFlags, "dwFlags"), Out(LPDDCOLORKEY, "lpDDColorKey")]),
@@ -1593,7 +1591,7 @@ IDirectDrawSurface7.methods += [
     StdMethod(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE7, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     StdMethod(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE7, "lpDDSReference")]),
-    StdMethod(DDRESULT, "GetDDInterface", [Out(Pointer(LPVOID), "lplpDD")]),
+    StdMethod(DDRESULT, "GetDDInterface", [Out(Pointer(ObjPointer(VOID)), "lplpDD")]),
     StdMethod(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "SetSurfaceDesc", [(LPDDSURFACEDESC2, "lpDDSD"), (DWORD, "dwFlags")]),
