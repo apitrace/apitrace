@@ -1,6 +1,6 @@
 ##########################################################################
 #
-# Copyright 2008-2009 VMware, Inc.
+# Copyright 2008-2015 VMware, Inc.
 # All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,6 +29,17 @@ from specs.stdapi import API
 from specs.d3d import ddraw, interfaces
 
 
+class DDrawTracer(DllTracer):
+
+    pass
+
+    # FIXME: emit fake memcpy calls for IDirectDrawSurface7::EnumAttachedSurfaces
+
+    # FIXME: wrap objects passed to IDirectDrawSurface7::EnumAttachedSurfaces
+    # callback -- we don't really care for tracing these calls, but we do want
+    # to trace everything done inside the callback.
+
+
 if __name__ == '__main__':
     print '#define INITGUID'
     print '#include "d3dimports.hpp"'
@@ -39,5 +50,5 @@ if __name__ == '__main__':
 
     api = API()
     api.addModule(ddraw)
-    tracer = DllTracer()
+    tracer = DDrawTracer()
     tracer.traceApi(api)
