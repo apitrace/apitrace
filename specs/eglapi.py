@@ -87,11 +87,11 @@ EGLSurfaceFlags = Flags(Int, [
 ])
 
 EGLConformantFlags = Flags(Int, [
-    'EGL_OPENGL_BIT',
-    'EGL_OPENGL_ES_BIT',
-    'EGL_OPENGL_ES2_BIT',
-    'EGL_OPENGL_ES3_BIT_KHR',
-    'EGL_OPENVG_BIT',
+    'EGL_OPENGL_ES_BIT',  # 0x0001
+    'EGL_OPENVG_BIT',     # 0x0002
+    'EGL_OPENGL_ES2_BIT', # 0x0004
+    'EGL_OPENGL_BIT',     # 0x0008
+    'EGL_OPENGL_ES3_BIT', # 0x0040
 ])
 
 EGLVGAlphaFormat = FakeEnum(Int, ['EGL_VG_ALPHA_FORMAT_NONPRE', 'EGL_VG_ALPHA_FORMAT_PRE'])
