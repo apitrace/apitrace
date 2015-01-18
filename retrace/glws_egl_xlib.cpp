@@ -275,52 +275,28 @@ cleanup(void) {
     cleanupX();
 }
 
+
 Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
-    EglVisual *visual = new EglVisual(profile);
-    // possible combinations
-    const EGLint api_bits_gl[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT,
-    };
-    const EGLint api_bits_gles1[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES2_BIT,
-    };
-    const EGLint api_bits_gles2[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES_BIT,
-    };
-    const EGLint *api_bits;
-
+    EGLint api_bits;
     if (profile.api == glprofile::API_GL) {
-        api_bits = api_bits_gl;
+        api_bits = EGL_OPENGL_BIT;
         if (profile.core && !has_EGL_KHR_create_context) {
             return NULL;
         }
     } else if (profile.api == glprofile::API_GLES) {
         switch (profile.major) {
         case 1:
-            api_bits = api_bits_gles1;
+            api_bits = EGL_OPENGL_ES_BIT;
             break;
-        case 2:
         case 3:
-            api_bits = api_bits_gles2;
+            if (has_EGL_KHR_create_context) {
+                api_bits = EGL_OPENGL_ES3_BIT;
+                break;
+            }
+            /* fall-through */
+        case 2:
+            api_bits = EGL_OPENGL_ES2_BIT;
             break;
         default:
             return NULL;
@@ -330,32 +306,71 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         return NULL;
     }
 
-    for (int i = 0; i < 7; i++) {
-        Attributes<EGLint> attribs;
+    Attributes<EGLint> attribs;
+    attribs.add(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
+    attribs.add(EGL_RED_SIZE, 1);
+    attribs.add(EGL_GREEN_SIZE, 1);
+    attribs.add(EGL_BLUE_SIZE, 1);
+    attribs.add(EGL_ALPHA_SIZE, 1);
+    attribs.add(EGL_DEPTH_SIZE, 1);
+    attribs.add(EGL_STENCIL_SIZE, 1);
+    attribs.add(EGL_RENDERABLE_TYPE, api_bits);
+    attribs.end(EGL_NONE);
 
-        attribs.add(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
-        attribs.add(EGL_RED_SIZE, 1);
-        attribs.add(EGL_GREEN_SIZE, 1);
-        attribs.add(EGL_BLUE_SIZE, 1);
-        attribs.add(EGL_ALPHA_SIZE, 1);
-        attribs.add(EGL_DEPTH_SIZE, 1);
-        attribs.add(EGL_STENCIL_SIZE, 1);
-        attribs.add(EGL_RENDERABLE_TYPE, api_bits[i]);
-        attribs.end(EGL_NONE);
-
-        EGLint num_configs, vid;
-        if (eglChooseConfig(eglDisplay, attribs, &visual->config, 1, &num_configs) &&
-            num_configs == 1 &&
-            eglGetConfigAttrib(eglDisplay, visual->config, EGL_NATIVE_VISUAL_ID, &vid)) {
-            XVisualInfo templ;
-            int num_visuals;
-
-            templ.visualid = vid;
-            visual->visinfo = XGetVisualInfo(display, VisualIDMask, &templ, &num_visuals);
-            break;
-        }
+    EGLint num_configs = 0;
+    if (!eglGetConfigs(eglDisplay, NULL, 0, &num_configs) ||
+        num_configs <= 0) {
+        return NULL;
     }
 
+    std::vector<EGLConfig> configs(num_configs);
+    if (!eglChooseConfig(eglDisplay, attribs, &configs[0], num_configs,  &num_configs) ||
+        num_configs <= 0) {
+        return NULL;
+    }
+
+    // We can't tell what other APIs the trace will use afterwards, therefore
+    // try to pick a config which supports the widest set of APIs.
+    int bestScore = -1;
+    EGLConfig config = configs[0];
+    for (EGLint i = 0; i < num_configs; ++i) {
+        EGLint renderable_type = EGL_NONE;
+        eglGetConfigAttrib(eglDisplay, configs[i], EGL_RENDERABLE_TYPE, &renderable_type);
+        int score = 0;
+        assert(renderable_type & api_bits);
+        renderable_type &= ~api_bits;
+        if (renderable_type & EGL_OPENGL_ES2_BIT) {
+            score += 1 << 4;
+        }
+        if (renderable_type & EGL_OPENGL_ES3_BIT) {
+            score += 1 << 3;
+        }
+        if (renderable_type & EGL_OPENGL_ES_BIT) {
+            score += 1 << 2;
+        }
+        if (renderable_type & EGL_OPENGL_BIT) {
+            score += 1 << 1;
+        }
+        if (score > bestScore) {
+            config = configs[i];
+            bestScore = score;
+        }
+    }
+    assert(bestScore >= 0);
+
+    EGLint visual_id;
+    if (!eglGetConfigAttrib(eglDisplay, config, EGL_NATIVE_VISUAL_ID, &visual_id)) {
+        assert(0);
+        return NULL;
+    }
+
+    EglVisual *visual = new EglVisual(profile);
+    visual->config = config;
+
+    XVisualInfo templ;
+    int num_visuals = 0;
+    templ.visualid = visual_id;
+    visual->visinfo = XGetVisualInfo(display, VisualIDMask, &templ, &num_visuals);
     assert(visual->visinfo);
 
     return visual;
