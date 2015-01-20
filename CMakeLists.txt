@@ -475,9 +475,10 @@ endif ()
 
 install (
     FILES
+        README.markdown
         docs/BUGS.markdown
         docs/NEWS.markdown
-        README.markdown
+        docs/USAGE.markdown
     DESTINATION ${DOC_INSTALL_DIR}
 )
 install (
