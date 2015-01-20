@@ -15,7 +15,9 @@ Windows you'll need to run
 [DebugView](http://technet.microsoft.com/en-us/sysinternals/bb896647) to view
 these messages.
 
-Follow the "Tracing manually" instructions below if you cannot obtain a trace.
+If you cannot obtain a trace, check the [application specific instructions on
+the wiki](https://github.com/apitrace/apitrace/wiki/Applications), or the
+[manual tracing instructions below](#tracing-manually).
 
 View the trace with
 
@@ -27,6 +29,9 @@ Replay an OpenGL trace with
 
 Pass the `--sb` option to use a single buffered visual.  Pass `--help` to
 `apitrace replay` for more options.
+
+If you run into problems [check if it is a known issue and file an issue if
+not](BUGS.markdown).
 
 
 Basic GUI usage
@@ -44,12 +49,9 @@ You can also tell the GUI to go directly to a specific call
 Backtrace Capturing
 ===================
 
-apitrace now has the ability to capture the call stack to an OpenGL call.
-This can be helpful in determing which piece of code made that glDrawArrays call.
-
-*NOTE* this feature is currently only available on Android and Linux at the moment.
-
-On linux you need to have libunwind, and libdwarf installed to compile in the feature.
+apitrace now has the ability to capture the call stack to an OpenGL call on
+certain OSes (only Android and Linux at the moment).  This can be helpful in
+determing which piece of code made that glDrawArrays call.
 
 To use the feature you need to set an environment variable with the list of GL
 call prefixes you wish to capture stack traces to.
