@@ -172,13 +172,12 @@ incorrect inconsistent rendering, or viewing with the GUI) please:
 Obtaining stack back-traces
 ===========================
 
-
-Linux/MacOSX
-------------
-
 Please rebuild apitrace with debugging information, by passing
 `-DCMAKE_BUILD_TYPE=Debug` to cmake, or editing its value in `CMakeCache.txt`
 and rebuilding.
+
+Linux
+-----
 
 To obtain a stack back-trace, run the application with gdb from a terminal:
 
@@ -186,8 +185,10 @@ To obtain a stack back-trace, run the application with gdb from a terminal:
     (gdb) run
     ...
     (gdb) bt
+    ...
+    (gdb) quit
 
-On Linux, to trace an application inside gdb invoke apitrace as:
+To trace an application inside GDB invoke apitrace as:
 
     apitrace trace --verbose --debug application arg1 ...
 
@@ -200,6 +201,18 @@ See also more detailed and Distro specific instructions:
 * http://fedoraproject.org/wiki/StackTraces
 
 * http://live.gnome.org/GettingTraces
+
+
+Mac OS X
+--------
+
+To trace an application inside LLDB and obtain a stack backtrace invoke apitrace as:
+
+    $ apitrace trace --verbose --debug application arg1 ...
+    ...
+    (lldb) bt
+    ...
+    (lldb) quit
 
 
 Windows
