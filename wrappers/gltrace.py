@@ -448,6 +448,11 @@ class GlTracer(Tracer):
         if function.name in self.array_pointer_function_names:
             print '    GLint _array_buffer = _glGetInteger(GL_ARRAY_BUFFER_BINDING);'
             print '    if (!_array_buffer) {'
+            print '        static bool warned = false;'
+            print '        if (!warned) {'
+            print '            warned = true;'
+            print '            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://github.com/apitrace/apitrace/blob/master/BUGS.markdown#tracing)\\n", __FUNCTION__);'
+            print '        }'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        ctx->user_arrays = true;'
             if function.name == "glVertexAttribPointerNV":
