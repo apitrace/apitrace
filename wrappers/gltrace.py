@@ -451,7 +451,7 @@ class GlTracer(Tracer):
             print '        static bool warned = false;'
             print '        if (!warned) {'
             print '            warned = true;'
-            print '            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://github.com/apitrace/apitrace/blob/master/BUGS.markdown#tracing)\\n", __FUNCTION__);'
+            print '            os::log("apitrace: warning: %s: call will be faked due to pointer to user memory (https://github.com/apitrace/apitrace/blob/master/docs/BUGS.markdown#tracing)\\n", __FUNCTION__);'
             print '        }'
             print '        gltrace::Context *ctx = gltrace::getContext();'
             print '        ctx->user_arrays = true;'
