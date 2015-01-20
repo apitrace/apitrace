@@ -143,10 +143,10 @@ on Windows XP.  If you want to obtain binaries that on Windows XP then pass the
 
 Additional requirements:
 
-* MinGW-w64 (tested with mingw-w64's gcc version 4.6.2)
+* [MinGW-w64](http://mingw-w64.sourceforge.net/) (tested with mingw-w64's gcc version 4.6.3)
 
 * [https://github.com/apitrace/dxsdk](DirectX headers)
 
-It's also possible to cross-compile Windows binaries on Linux with
+It's also possible to cross-compile Windows binaries from Linux with
 [MinGW cross compilers](http://www.cmake.org/Wiki/CmakeMingw).
 
