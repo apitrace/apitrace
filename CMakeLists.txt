@@ -475,8 +475,8 @@ endif ()
 
 install (
     FILES
-        BUGS.markdown
-        NEWS.markdown
+        docs/BUGS.markdown
+        docs/NEWS.markdown
         README.markdown
     DESTINATION ${DOC_INSTALL_DIR}
 )
