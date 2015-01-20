@@ -46,12 +46,12 @@ You can also build the 32-bits GL wrapper on a 64-bits distribution, provided
 you have a multilib gcc and 32-bits X11 libraries, by doing:
 
     cmake \
+        -H. -Bbuild32 \
         -DCMAKE_C_FLAGS=-m32 \
         -DCMAKE_CXX_FLAGS=-m32 \
         -DCMAKE_EXE_LINKER_FLAGS=-m32 \
         -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib32 \
-        -DENABLE_GUI=FALSE \
-        -H. -Bbuild32
+        -DENABLE_GUI=FALSE
     make -C build32 glxtrace
 
 The `/usr/lib32` refers to the path where the 32-bits shared objects are may
@@ -75,11 +75,21 @@ Additional requirements:
 Build as:
 
     export ANDROID_NDK=/path/to/your/ndk
-    cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake -DANDROID_API_LEVEL=9 -H. -Bbuild
+    cmake -H. -Bbuild -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake -DANDROID_API_LEVEL=9
     make -C build
 
 You can also choose a particular ABI by passing `ANDROID_ABI` variable to
-cmake, e.g., `-DANDROID_ABI=x86`.
+cmake, e.g., `-DANDROID_ABI=x86`.  Currently, when targeting AArch64 you [must
+build with GCC](https://github.com/apitrace/apitrace/issues/312), by invoking
+CMake as:
+
+    cmake \
+        -H. -Bbuild \
+        -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/android.toolchain.cmake \
+        -DANDROID_API_LEVEL=9 \
+        -DANDROID_TOOLCHAIN_NAME=aarch64-linux-android-4.9 \
+        -DANDROID_ABI=arm64-v8a
+
 
 # FirefoxOS #
 
