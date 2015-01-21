@@ -1143,7 +1143,7 @@ glapi.addFunctions([
     GlFunction(Void, "glFramebufferTextureFaceARB", [(GLenum, "target"), (GLenum, "attachment"), (GLtexture, "texture"), (GLint, "level"), (GLenum, "face")]),
 
     # GL_ARB_get_program_binary
-    GlFunction(Void, "glGetProgramBinary", [(GLprogram, "program"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLenum), "binaryFormat"), Out(OpaqueArray(GLvoid, "_glGetProgramBinary_size(length)"), "binary")], sideeffects=False),
+    GlFunction(Void, "glGetProgramBinary", [(GLprogram, "program"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Pointer(GLenum), "binaryFormat"), Out(OpaqueBlob(GLvoid, "length ? *length : bufSize"), "binary")], sideeffects=False),
     GlFunction(Void, "glProgramBinary", [(GLprogram, "program"), (GLenum, "binaryFormat"), (Blob(Const(GLvoid), "length"), "binary"), (GLsizei, "length")]),
     GlFunction(Void, "glProgramParameteri", [(GLprogram, "program"), (GLenum, "pname"), (GLint, "value")]),
 
