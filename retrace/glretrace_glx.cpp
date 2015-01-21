@@ -288,6 +288,7 @@ const retrace::Entry glretrace::glx_callbacks[] = {
     //{"glXSwapBuffersMscOML", &retrace_glXSwapBuffersMscOML},
     {"glXSwapBuffers", &retrace_glXSwapBuffers},
     {"glXSwapIntervalEXT", &retrace::ignore},
+    {"glXSwapIntervalMESA", &retrace::ignore},
     {"glXSwapIntervalSGI", &retrace::ignore},
     //{"glXUseXFont", &retrace_glXUseXFont},
     {"glXWaitForMscOML", &retrace::ignore},
