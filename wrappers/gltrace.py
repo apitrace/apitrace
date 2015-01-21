@@ -223,30 +223,6 @@ class GlTracer(Tracer):
         print '// whether glBufferParameteriAPPLE(GL_BUFFER_FLUSHING_UNMAP_APPLE, GL_FALSE) has ever been called'
         print 'static bool _checkBufferFlushingUnmapAPPLE = false;'
         print
-        # Buffer mapping information, necessary for old Mesa 2.1 drivers which
-        # do not support glGetBufferParameteriv(GL_BUFFER_ACCESS_FLAGS/GL_BUFFER_MAP_LENGTH)
-        print 'struct buffer_mapping {'
-        print '    void *map;'
-        print '    GLint length;'
-        print '    bool write;'
-        print '    bool explicit_flush;'
-        print '};'
-        print
-        for target in self.buffer_targets:
-            print 'struct buffer_mapping _%s_mapping;' % target.lower();
-        print
-        print 'static inline struct buffer_mapping *'
-        print 'get_buffer_mapping(GLenum target) {'
-        print '    switch (target) {'
-        for target in self.buffer_targets:
-            print '    case GL_%s:' % target
-            print '        return & _%s_mapping;' % target.lower()
-        print '    default:'
-        print '        os::log("apitrace: warning: unknown buffer target 0x%04X\\n", target);'
-        print '        return NULL;'
-        print '    }'
-        print '}'
-        print
 
         # Generate a helper function to determine whether a parameter name
         # refers to a symbolic value or not
@@ -584,14 +560,6 @@ class GlTracer(Tracer):
             print '                        os::log("apitrace: warning: glGetBufferParameteriv%s(GL_BUFFER_MAP_LENGTH) failed\\n");' % suffix
             print '                        warned = true;'
             print '                    }'
-            print '                    struct buffer_mapping *mapping = get_buffer_mapping(target);'
-            print '                    if (mapping) {'
-            print '                        length = mapping->length;'
-            print '                        flush = flush && !mapping->explicit_flush;'
-            print '                    } else {'
-            print '                        length = 0;'
-            print '                        flush = false;'
-            print '                    }'
             print '                }'
             print '            } else {'
             print '                length = 0;'
@@ -862,25 +830,9 @@ class GlTracer(Tracer):
         Tracer.wrapRet(self, function, instance)
 
         # Keep track of buffer mappings
-        if function.name in ('glMapBuffer', 'glMapBufferARB'):
-            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
-            print '    if (mapping) {'
-            print '        mapping->map = %s;' % (instance)
-            print '        mapping->length = 0;'
-            print '        _glGetBufferParameteriv(target, GL_BUFFER_SIZE, &mapping->length);'
-            print '        mapping->write = (access != GL_READ_ONLY);'
-            print '        mapping->explicit_flush = false;'
-            print '    }'
         if function.name == 'glMapBufferRange':
             print '    if (access & GL_MAP_WRITE_BIT) {'
             print '        _checkBufferMapRange = true;'
-            print '    }'
-            print '    struct buffer_mapping *mapping = get_buffer_mapping(target);'
-            print '    if (mapping) {'
-            print '        mapping->map = %s;' % (instance)
-            print '        mapping->length = length;'
-            print '        mapping->write = access & GL_MAP_WRITE_BIT;'
-            print '        mapping->explicit_flush = access & GL_MAP_FLUSH_EXPLICIT_BIT;'
             print '    }'
 
     boolean_names = [
