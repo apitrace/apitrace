@@ -208,4 +208,52 @@ getCurrentContextProfile(void)
 }
 
 
+void
+Extensions::getCurrentContextExtensions(const Profile & profile)
+{
+    assert(strings.empty());
+    if (profile.major >= 3) {
+        // Use glGetStringi
+        GLint num_strings = 0;
+        _glGetIntegerv(GL_NUM_EXTENSIONS, &num_strings);
+        assert(num_strings);
+        for (int i = 0; i < num_strings; ++i) {
+            const char *extension = reinterpret_cast<const char *>(_glGetStringi(GL_EXTENSIONS, i));
+            assert(extension);
+            if (extension) {
+                strings.insert(extension);
+            }
+        }
+    } else {
+        // Use glGetString
+        const char *begin = reinterpret_cast<const char *>(_glGetString(GL_EXTENSIONS));
+        assert(begin);
+        if (begin) {
+            do {
+                const char *end = begin;
+                char c = *end;
+                while (c != '\0' && c != ' ') {
+                    ++end;
+                    c = *end;
+                }
+                if (end != begin) {
+                    strings.insert(std::string(begin, end));
+                }
+                if (c == '\0') {
+                    break;
+                }
+                begin = end + 1;
+            } while(true);
+        }
+    }
+}
+
+
+bool
+Extensions::has(const char *string) const
+{
+    return strings.find(string) != strings.end();
+}
+
+
 } /* namespace glprofile */

@@ -29,11 +29,12 @@
  */
 
 
-#include <ostream>
-
-
 #ifndef GLPROFILE_HPP
 #define GLPROFILE_HPP
+
+
+#include <ostream>
+#include <set>
 
 
 namespace glprofile {
@@ -120,6 +121,19 @@ operator << (std::ostream &os, const Profile & profile);
 
 Profile
 getCurrentContextProfile(void);
+
+
+struct Extensions
+{
+    std::set<std::string> strings;
+
+    void
+    getCurrentContextExtensions(const Profile & profile);
+
+    bool
+    has(const char *string) const;
+};
+
 
 
 } /* namespace glprofile */

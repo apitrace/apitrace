@@ -34,7 +34,6 @@
 #include <assert.h>
 
 #include <vector>
-#include <set>
 #include <string>
 
 #include "glprofile.hpp"
@@ -144,7 +143,7 @@ public:
     const Visual *visual;
     Profile profile;
     
-    std::set<std::string> extensions;
+    glprofile::Extensions extensions;
 
     Context(const Visual *vis) :
         visual(vis),
