@@ -206,6 +206,11 @@ See also more detailed and Distro specific instructions:
 Mac OS X
 --------
 
+Before you can debug you must first enable developer mode on the machine if you
+haven't done so before:
+
+    sudo /usr/sbin/DevToolsSecurity --enable
+
 To trace an application inside LLDB and obtain a stack backtrace invoke apitrace as:
 
     $ apitrace trace --verbose --debug application arg1 ...
