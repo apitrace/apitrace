@@ -80,7 +80,7 @@ CGLPixelFormatAttributes = [
     ("kCGLPFAOpenGLProfile", CGLOpenGLProfile),
     ("kCGLPFASupportsAutomaticGraphicsSwitching", None),
     ("kCGLPFAVirtualScreenCount", Int),
-    ("kCGLPFAAuxBuffers", None),
+    ("kCGLPFAAuxBuffers", Int),
     ("kCGLPFAAccumSize", Int),
     ("kCGLPFAAuxDepthStencil", None),
     ("kCGLPFAOffScreen", None),
