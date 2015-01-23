@@ -184,7 +184,6 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             case kCGLPFATripleBuffer:
             case kCGLPFADoubleBuffer:
             case kCGLPFAStereo:
-            case kCGLPFAAuxBuffers:
             case kCGLPFAMinimumPolicy:
             case kCGLPFAMaximumPolicy:
             case kCGLPFAOffScreen:
@@ -216,6 +215,7 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             case kCGLPFAAlphaSize:
             case kCGLPFADepthSize:
             case kCGLPFAStencilSize:
+            case kCGLPFAAuxBuffers:
             case kCGLPFAAccumSize:
             case kCGLPFASampleBuffers:
             case kCGLPFASamples:
