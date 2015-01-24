@@ -149,7 +149,7 @@ class ComplexValueSerializer(stdapi.OnceVisitor):
         for cases, type in polymorphic.iterSwitch():
             for case in cases:
                 print '    %s:' % case
-            self.serializer.visit(type, 'static_cast<%s>(value)' % (type,))
+            self.serializer.visit(type, 'reinterpret_cast<%s>(value)' % (type,))
             print '        break;'
         print '    }'
         print '}'

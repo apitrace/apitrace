@@ -329,6 +329,12 @@ GLXFBConfigGLXAttribs = GLXFBConfigCommonAttribs + [
 GLXFBConfigAttribs = AttribArray(Const(GLXEnum), GLXFBConfigGLXAttribs)
 GLXFBConfigSGIXAttribs = AttribArray(GLXEnum, GLXFBConfigCommonAttribs)
 
+GLXContextProfileMask = Flags(Int, [
+    "GLX_CONTEXT_CORE_PROFILE_BIT_ARB",
+    "GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB",
+    "GLX_CONTEXT_ES_PROFILE_BIT_EXT",
+])
+
 GLXContextARBAttribs = AttribArray(Const(GLXEnum), [
     ('GLX_RENDER_TYPE', FakeEnum(Int, ["GLX_RGBA_TYPE", "GLX_COLOR_INDEX_TYPE"])),
     ('GLX_CONTEXT_MAJOR_VERSION_ARB', Int),
@@ -338,11 +344,7 @@ GLXContextARBAttribs = AttribArray(Const(GLXEnum), [
         "GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB",
         "GLX_CONTEXT_ROBUST_ACCESS_BIT_ARB",
     ])),
-    ('GLX_CONTEXT_PROFILE_MASK_ARB', Flags(Int, [
-        "GLX_CONTEXT_CORE_PROFILE_BIT_ARB",
-        "GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB",
-        "GLX_CONTEXT_ES_PROFILE_BIT_EXT",
-    ])),
+    ('GLX_CONTEXT_PROFILE_MASK_ARB', GLXContextProfileMask),
     ('GLX_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB', GLXEnum),
     ('GLX_CONTEXT_RELEASE_BEHAVIOR_ARB', FakeEnum(Int, [
         'GLX_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB',
@@ -362,6 +364,23 @@ GLXPbufferSGIXAttribs = AttribArray(GLXEnum, [
     ('GLX_LARGEST_PBUFFER', Bool),
     #('GLX_DIGITAL_MEDIA_PBUFFER_SGIX', Bool),
 ])
+
+GLXRendererAttrPointer = Polymorphic('attribute', [
+        ("GLX_RENDERER_VENDOR_ID_MESA", Pointer(UInt)),
+        ("GLX_RENDERER_DEVICE_ID_MESA", Pointer(UInt)),
+        ("GLX_RENDERER_VERSION_MESA", Array(UInt, 3)),
+        ("GLX_RENDERER_ACCELERATED_MESA", Pointer(Bool)),
+        ("GLX_RENDERER_VIDEO_MEMORY_MESA", Pointer(UInt)),
+        ("GLX_RENDERER_UNIFIED_MEMORY_ARCHITECTURE_MESA", Pointer(Bool)),
+        ("GLX_RENDERER_PREFERRED_PROFILE_MESA", Pointer(GLXContextProfileMask)),
+        ("GLX_RENDERER_OPENGL_CORE_PROFILE_VERSION_MESA", Array(UInt, 2) ),
+        ("GLX_RENDERER_OPENGL_COMPATIBILITY_PROFILE_VERSION_MESA", Array(UInt, 2)),
+        ("GLX_RENDERER_OPENGL_ES_PROFILE_VERSION_MESA", Array(UInt, 2)),
+        ("GLX_RENDERER_OPENGL_ES2_PROFILE_VERSION_MESA", Array(UInt, 2)),
+    ],
+    Pointer(UInt)
+)
+
 
 glxapi = Module("GLX")
 
@@ -391,9 +410,9 @@ glxapi.addFunctions([
     Function(Void, "glXUseXFont", [(Font, "font"), (Int, "first"), (Int, "count"), (Int, "list")]),
 
     # GLX_VERSION_1_1
-    Function((ConstCString), "glXQueryExtensionsString", [(Display, "dpy"), (Int, "screen")], sideeffects=False),
-    Function((ConstCString), "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (GLXname, "name")], sideeffects=False),
-    Function((ConstCString), "glXGetClientString", [(Display, "dpy"), (GLXname, "name")], sideeffects=False),
+    Function(ConstCString, "glXQueryExtensionsString", [(Display, "dpy"), (Int, "screen")], sideeffects=False),
+    Function(ConstCString, "glXQueryServerString",  [(Display, "dpy"), (Int, "screen"), (GLXname, "name")], sideeffects=False),
+    Function(ConstCString, "glXGetClientString", [(Display, "dpy"), (GLXname, "name")], sideeffects=False),
 
     # GLX_VERSION_1_2
     Function(Display, "glXGetCurrentDisplay", [], sideeffects=False),
@@ -456,6 +475,12 @@ glxapi.addFunctions([
 
     # GLX_MESA_pixmap_colormap
     Function(GLXPixmap, "glXCreateGLXPixmapMESA", [(Display, "dpy"), (Pointer(XVisualInfo), "visual"), (Pixmap, "pixmap"), (Colormap, "cmap")]),
+
+    # GLX_MESA_query_renderer
+    GlFunction(Bool, "glXQueryCurrentRendererIntegerMESA", [(GLXEnum, "attribute"), Out(GLXRendererAttrPointer, "value")], sideeffects=False),
+    GlFunction(ConstCString, "glXQueryCurrentRendererStringMESA", [(GLXEnum, "attribute")], sideeffects=False),
+    GlFunction(Bool, "glXQueryRendererIntegerMESA", [(Display, "dpy"), (Int, "screen"), (Int, "renderer"), (GLXEnum, "attribute"), Out(GLXRendererAttrPointer, "value")], sideeffects=False),
+    GlFunction(ConstCString, "glXQueryRendererStringMESA", [(Display, "dpy"), (Int, "screen"), (Int, "renderer"), (GLXEnum, "attribute")], sideeffects=False),
 
     # GLX_MESA_release_buffers
     Function(Bool, "glXReleaseBuffersMESA", [(Display, "dpy"), (GLXDrawable, "drawable")]),
