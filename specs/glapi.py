@@ -842,6 +842,9 @@ glapi.addFunctions([
     GlFunction(Void, "glBlendEquationIndexedAMD", [(GLuint, "buf"), (GLenum, "mode")]),
     GlFunction(Void, "glBlendEquationSeparateIndexedAMD", [(GLuint, "buf"), (GLenum, "modeRGB"), (GLenum, "modeAlpha")]),
 
+    # GL_AMD_interleaved_elements
+    GlFunction(Void, "glVertexAttribParameteriAMD", [(GLuint, "index"), (GLenum, "pname"), (GLint, "param")]),
+
     # GL_AMD_multi_draw_indirect
     GlFunction(Void, "glMultiDrawArraysIndirectAMD", [(GLenum_mode, "mode"), (GLpointerConst, "indirect"), (GLsizei, "primcount"), (GLsizei, "stride")]),
     GlFunction(Void, "glMultiDrawElementsIndirectAMD", [(GLenum_mode, "mode"), (GLenum, "type"), (GLpointerConst, "indirect"), (GLsizei, "primcount"), (GLsizei, "stride")]),
@@ -850,6 +853,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGenNamesAMD", [(GLenum, "identifier"), (GLuint, "num"), Out(Array(GLuint, "num"), "names")]),
     GlFunction(Void, "glDeleteNamesAMD", [(GLenum, "identifier"), (GLuint, "num"), (Array(Const(GLuint), "num"), "names")]),
     GlFunction(GLboolean, "glIsNameAMD", [(GLenum, "identifier"), (GLuint, "name")], sideeffects=False),
+
+    # GL_AMD_occlusion_query_event
+    GlFunction(Void, "glQueryObjectParameteruiAMD", [(GLenum, "target"), (GLquery, "id"), (GLenum, "pname"), (GLuint, "param")]),
 
     # GL_AMD_performance_monitor
     GlFunction(Void, "glGetPerfMonitorGroupsAMD", [Out(Pointer(GLint), "numGroups"), (GLsizei, "groupsSize"), Out(Array(GLuint, "groupsSize"), "groups")], sideeffects=False),
@@ -888,6 +894,19 @@ glapi.addFunctions([
     GlFunction(Void, "glDrawArraysInstancedANGLE", [(GLenum_mode, "mode"), (GLint, "first"), (GLsizei, "count"), (GLsizei, "primcount")]),
     GlFunction(Void, "glDrawElementsInstancedANGLE", [(GLenum_mode, "mode"), (GLsizei, "count"), (GLenum, "type"), (GLindexBuffer("count", "type"), "indices"), (GLsizei, "primcount")]),
     GlFunction(Void, "glVertexAttribDivisorANGLE", [(GLuint, "index"), (GLuint, "divisor")]),
+
+    # GL_ANGLE_timer_query
+    GlFunction(Void, "glGenQueriesANGLE", [(GLsizei, "n"), Out(Array(GLquery, "n"), "ids")]),
+    GlFunction(Void, "glDeleteQueriesANGLE", [(GLsizei, "n"), (Array(Const(GLquery), "n"), "ids")]),
+    GlFunction(GLboolean, "glIsQueryANGLE", [(GLquery, "id")], sideeffects=False),
+    GlFunction(Void, "glBeginQueryANGLE", [(GLenum, "target"), (GLquery, "id")]),
+    GlFunction(Void, "glEndQueryANGLE", [(GLenum, "target")]),
+    GlFunction(Void, "glQueryCounterANGLE", [(GLquery, "id"), (GLenum, "target")]),
+    GlFunction(Void, "glGetQueryivANGLE", [(GLenum, "target"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectivANGLE", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectuivANGLE", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjecti64vANGLE", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLint64, "_gl_param_size(pname)"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetQueryObjectui64vANGLE", [(GLquery, "id"), (GLenum, "pname"), Out(Array(GLuint64, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
     # GL_ANGLE_translated_shader_source
     GlFunction(Void, "glGetTranslatedShaderSourceANGLE", [(GLshader, "shader"), (GLsizei, "bufsize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "source")], sideeffects=False),
@@ -1004,7 +1023,7 @@ glapi.addFunctions([
     GlFunction(Void, "glBufferStorage", [ (GLenum, "target"), (GLsizeiptr, "size"), (Blob(Const(GLvoid), "size"), "data"), (GLbitfield_storage, "flags")]),
 
     # GL_ARB_cl_event
-    #GlFunction(GLsync, "glCreateSyncFromCLeventARB", [(OpaquePointer("struct _cl_context"), "context"), (OpaquePointer("struct _cl_event"), "event"), (GLbitfield, "flags")]),
+    GlFunction(GLsync, "glCreateSyncFromCLeventARB", [(Opaque("struct _cl_context *"), "context"), (Opaque("struct _cl_event *"), "event"), (GLbitfield, "flags")], sideeffects=False),
 
     # GL_ARB_clear_buffer_object
     GlFunction(Void, "glClearBufferData", [(GLenum, "target"), (GLenum, "internalformat"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(Void), "_glClearBufferData_size(format, type)"), "data")]),
@@ -2331,6 +2350,9 @@ glapi.addFunctions([
     # GL_EXT_index_material
     GlFunction(Void, "glIndexMaterialEXT", [(GLenum, "face"), (GLenum, "mode")]),
 
+    # GL_EXT_instanced_arrays
+    GlFunction(Void, "glVertexAttribDivisorEXT", [(GLuint, "index"), (GLuint, "divisor")]),
+
     # GL_EXT_light_texture
     GlFunction(Void, "glApplyTextureEXT", [(GLenum, "mode")]),
     GlFunction(Void, "glTextureLightEXT", [(GLenum, "pname")]),
@@ -2596,6 +2618,18 @@ glapi.addFunctions([
     GlFunction(Void, "glNormalPointervINTEL", [(GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
     GlFunction(Void, "glColorPointervINTEL", [(size_bgra, "size"), (GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
     GlFunction(Void, "glTexCoordPointervINTEL", [(GLint, "size"), (GLenum, "type"), (OpaqueArray(GLpointerConst, "size"), "pointer")]),
+
+    # GL_INTEL_performance_query
+    GlFunction(Void, "glBeginPerfQueryINTEL", [(GLuint, "queryHandle")], sideeffects=False),
+    GlFunction(Void, "glCreatePerfQueryINTEL", [(GLuint, "queryId"), Out(Pointer(GLuint), "queryHandle")], sideeffects=False),
+    GlFunction(Void, "glDeletePerfQueryINTEL", [(GLuint, "queryHandle")], sideeffects=False),
+    GlFunction(Void, "glEndPerfQueryINTEL", [(GLuint, "queryHandle")], sideeffects=False),
+    GlFunction(Void, "glGetFirstPerfQueryIdINTEL", [Out(Pointer(GLuint), "queryId")], sideeffects=False),
+    GlFunction(Void, "glGetNextPerfQueryIdINTEL", [(GLuint, "queryId"), Out(Pointer(GLuint), "nextQueryId")], sideeffects=False),
+    GlFunction(Void, "glGetPerfCounterInfoINTEL", [(GLuint, "queryId"), (GLuint, "counterId"), (GLuint, "counterNameLength"), Out(GLstring, "counterName"), (GLuint, "counterDescLength"), Out(GLstring, "counterDesc"), Out(Pointer(GLuint), "counterOffset"), Out(Pointer(GLuint), "counterDataSize"), Out(Pointer(GLuint), "counterTypeEnum"), Out(Pointer(GLuint), "counterDataTypeEnum"), Out(Pointer(GLuint64), "rawCounterMaxValue")], sideeffects=False),
+    GlFunction(Void, "glGetPerfQueryDataINTEL", [(GLuint, "queryHandle"), (GLuint, "flags"), (GLsizei, "dataSize"), Out(OpaqueBlob(GLvoid, "datasize"), "data"), Out(Pointer(GLuint), "bytesWritten")], sideeffects=False),
+    GlFunction(Void, "glGetPerfQueryIdByNameINTEL", [(GLstring, "queryName"), Out(Pointer(GLuint), "queryId")], sideeffects=False),
+    GlFunction(Void, "glGetPerfQueryInfoINTEL", [(GLuint, "queryId"), (GLuint, "queryNameLength"), Out(GLstring, "queryName"), Out(Pointer(GLuint), "dataSize"), Out(Pointer(GLuint), "noCounters"), Out(Pointer(GLuint), "noInstances"), Out(Pointer(GLuint), "capsMask")], sideeffects=False),
 
     # GL_KHR_debug
     GlFunction(Void, "glDebugMessageControl", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=True),
@@ -3219,6 +3253,14 @@ glapi.addFunctions([
 
     # GL_OES_query_matrix
     GlFunction(GLbitfield, "glQueryMatrixxOES", [(Array(GLfixed, 16), "mantissa"), (Array(GLint, 16), "exponent")]),
+
+    # GL_OES_single_precision
+    GlFunction(Void, "glClearDepthfOES", [(GLclampf, "depth")]),
+    GlFunction(Void, "glClipPlanefOES", [(GLenum, "plane"), (Array(Const(GLfloat), 4), "equation")]),
+    GlFunction(Void, "glDepthRangefOES", [(GLclampf, "n"), (GLclampf, "f")]),
+    GlFunction(Void, "glFrustumfOES", [(GLfloat, "l"), (GLfloat, "r"), (GLfloat, "b"), (GLfloat, "t"), (GLfloat, "n"), (GLfloat, "f")]),
+    GlFunction(Void, "glGetClipPlanefOES", [(GLenum, "plane"), Out(Array(GLfloat, 4), "equation")], sideeffects=False),
+    GlFunction(Void, "glOrthofOES", [(GLfloat, "l"), (GLfloat, "r"), (GLfloat, "b"), (GLfloat, "t"), (GLfloat, "n"), (GLfloat, "f")]),
 
     # GL_OES_texture_3D
     GlFunction(Void, "glTexImage3DOES", [(GLenum, "target"), (GLint, "level"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height"), (GLsizei, "depth"), (GLint, "border"), (GLenum, "format"), (GLenum, "type"), (Blob(Const(GLvoid), "_glTexImage3D_size(format, type, width, height, depth)"), "pixels")]),
