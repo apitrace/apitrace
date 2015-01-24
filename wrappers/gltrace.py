@@ -539,19 +539,24 @@ class GlTracer(Tracer):
                 suffix = 'ARB'
             else:
                 suffix = ''
+            print '    GLint access_flags = 0;'
             print '    GLint access = 0;'
-            print '    _glGetBufferParameteriv%s(target, GL_BUFFER_ACCESS, &access);' % suffix
-            print '    if (access != GL_READ_ONLY) {'
+            print '    bool flush;'
+            print '    // GLES3 does not have GL_BUFFER_ACCESS;'
+            print '    if (_checkBufferMapRange) {'
+            print '        _glGetBufferParameteriv%s(target, GL_BUFFER_ACCESS_FLAGS, &access_flags);' % suffix
+            print '        flush = (access_flags & GL_MAP_WRITE_BIT) && !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT));'
+            print '    } else {'
+            print '        _glGetBufferParameteriv%s(target, GL_BUFFER_ACCESS, &access);' % suffix
+            print '        flush = access != GL_READ_ONLY;'
+            print '    }'
+            print '    if (flush) {'
             print '        GLvoid *map = NULL;'
             print '        _glGetBufferPointerv%s(target, GL_BUFFER_MAP_POINTER, &map);'  % suffix
             print '        if (map) {'
             print '            GLint length = -1;'
-            print '            bool flush = true;'
             print '            if (_checkBufferMapRange) {'
             print '                _glGetBufferParameteriv%s(target, GL_BUFFER_MAP_LENGTH, &length);' % suffix
-            print '                GLint access_flags = 0;'
-            print '                _glGetBufferParameteriv(target, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
-            print '                flush = flush && !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT));'
             print '                if (length == -1) {'
             print '                    // Mesa drivers refuse GL_BUFFER_MAP_LENGTH without GL 3.0 up-to'
             print '                    // http://cgit.freedesktop.org/mesa/mesa/commit/?id=ffee498fb848b253a7833373fe5430f8c7ca0c5f'
@@ -576,16 +581,33 @@ class GlTracer(Tracer):
             print '        }'
             print '    }'
         if function.name == 'glUnmapBufferOES':
+            print '    GLint access_flags = 0;'
             print '    GLint access = 0;'
-            print '    _glGetBufferParameteriv(target, GL_BUFFER_ACCESS_OES, &access);'
-            print '    if (access == GL_WRITE_ONLY_OES) {'
+            print '    bool flush;'
+            print '    // GLES3 does not have GL_BUFFER_ACCESS;'
+            print '    if (_checkBufferMapRange) {'
+            print '        _glGetBufferParameteriv(target, GL_BUFFER_ACCESS_FLAGS, &access_flags);'
+            print '        flush = (access_flags & GL_MAP_WRITE_BIT) && !(access_flags & (GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT));'
+            print '    } else {'
+            print '        _glGetBufferParameteriv(target, GL_BUFFER_ACCESS, &access);'
+            print '        flush = access != GL_READ_ONLY;'
+            print '    }'
+            print '    if (flush) {'
             print '        GLvoid *map = NULL;'
-            print '        _glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &map);'
-            print '        GLint size = 0;'
-            print '        _glGetBufferParameteriv(target, GL_BUFFER_SIZE, &size);'
-            print '        if (map && size > 0) {'
-            self.emit_memcpy('map', 'size')
-            self.shadowBufferMethod('bufferSubData(0, size, map)')
+            print '        _glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER, &map);'
+            print '        if (map) {'
+            print '            GLint length = 0;'
+            print '            GLint offset = 0;'
+            print '            if (_checkBufferMapRange) {'
+            print '                _glGetBufferParameteriv(target, GL_BUFFER_MAP_LENGTH, &length);'
+            print '                _glGetBufferParameteriv(target, GL_BUFFER_MAP_OFFSET, &offset);'
+            print '            } else {'
+            print '                _glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);'
+            print '            }'
+            print '            if (flush && length > 0) {'
+            self.emit_memcpy('map', 'length')
+            self.shadowBufferMethod('bufferSubData(offset, length, map)')
+            print '            }'
             print '        }'
             print '    }'
         if function.name == 'glUnmapNamedBuffer':
@@ -620,6 +642,12 @@ class GlTracer(Tracer):
             print '    if (map && length > 0) {'
             self.emit_memcpy('(const char *)map + offset', 'length')
             print '    }'
+        if function.name == 'glFlushMappedBufferRangeEXT':
+            print '    GLvoid *map = NULL;'
+            print '    _glGetBufferPointervOES(target, GL_BUFFER_MAP_POINTER_OES, &map);'
+            print '    if (map && length > 0) {'
+            self.emit_memcpy('(const char *)map + offset', 'length')
+            print '    }'
         if function.name == 'glFlushMappedBufferRangeAPPLE':
             print '    GLvoid *map = NULL;'
             print '    _glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map);'
@@ -645,7 +673,7 @@ class GlTracer(Tracer):
             print r'        os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/o MAP_PERSISTENT_BIT\n", __FUNCTION__);'
             print r'    }'
             print r'    flags &= ~GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX;'
-        if function.name in ('glMapBufferRange', 'glMapNamedBufferRange', 'glMapNamedBufferRangeEXT'):
+        if function.name in ('glMapBufferRange', 'glMapBufferRangeEXT', 'glMapNamedBufferRange', 'glMapNamedBufferRangeEXT'):
             print r'    if (access & GL_MAP_NOTIFY_EXPLICIT_BIT_VMWX) {'
             print r'        if (!(access & GL_MAP_PERSISTENT_BIT)) {'
             print r'            os::log("apitrace: warning: %s: MAP_NOTIFY_EXPLICIT_BIT_VMWX set w/o MAP_PERSISTENT_BIT\n", __FUNCTION__);'
@@ -830,7 +858,7 @@ class GlTracer(Tracer):
         Tracer.wrapRet(self, function, instance)
 
         # Keep track of buffer mappings
-        if function.name == 'glMapBufferRange':
+        if function.name in ('glMapBufferRange', 'glMapBufferRangeEXT'):
             print '    if (access & GL_MAP_WRITE_BIT) {'
             print '        _checkBufferMapRange = true;'
             print '    }'

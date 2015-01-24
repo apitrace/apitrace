@@ -2336,6 +2336,10 @@ glapi.addFunctions([
     GlFunction(Void, "glTextureLightEXT", [(GLenum, "pname")]),
     GlFunction(Void, "glTextureMaterialEXT", [(GLenum, "face"), (GLenum, "mode")]),
 
+    # GL_EXT_map_buffer_range
+    GlFunction(GLmap, "glMapBufferRangeEXT", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length"), (GLbitfield_access, "access")]),
+    GlFunction(Void, "glFlushMappedBufferRangeEXT", [(GLenum, "target"), (GLintptr, "offset"), (GLsizeiptr, "length")]),
+
     # GL_EXT_multi_draw_arrays
     GlFunction(Void, "glMultiDrawArraysEXT", [(GLenum_mode, "mode"), (Array(Const(GLint), "primcount"), "first"), (Array(Const(GLsizei), "primcount"), "count"), (GLsizei, "primcount")]),
     GlFunction(Void, "glMultiDrawElementsEXT", [(GLenum_mode, "mode"), (Array(Const(GLsizei), "primcount"), "count"), (GLenum, "type"), (Array(Const(GLindexBuffer("count[{i}]", "type")), "primcount"), "indices"), (GLsizei, "primcount")]),
