@@ -32,7 +32,6 @@ from gltrace import GlTracer
 from specs.stdapi import Module, API
 from specs.glapi import glapi
 from specs.glxapi import glxapi
-from specs.glesapi import glesapi
 
 
 class GlxTracer(GlTracer):
@@ -175,7 +174,6 @@ if __name__ == '__main__':
     module = Module()
     module.mergeModule(glxapi)
     module.mergeModule(glapi)
-    module.mergeModule(glesapi)
     api = API()
     api.addModule(module)
     tracer = GlxTracer()

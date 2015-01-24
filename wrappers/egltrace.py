@@ -36,7 +36,6 @@ from gltrace import GlTracer
 from specs.stdapi import Module, API
 from specs.glapi import glapi
 from specs.eglapi import eglapi
-from specs.glesapi import glesapi
 
 
 class EglTracer(GlTracer):
@@ -121,7 +120,6 @@ if __name__ == '__main__':
     module = Module()
     module.mergeModule(eglapi)
     module.mergeModule(glapi)
-    module.mergeModule(glesapi)
     api = API()
     api.addModule(module)
     tracer = EglTracer()

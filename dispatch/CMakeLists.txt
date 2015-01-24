@@ -21,7 +21,6 @@ add_custom_command (
         ${CMAKE_SOURCE_DIR}/specs/glxapi.py
         ${CMAKE_SOURCE_DIR}/specs/cglapi.py
         ${CMAKE_SOURCE_DIR}/specs/eglapi.py
-        ${CMAKE_SOURCE_DIR}/specs/glesapi.py
         ${CMAKE_SOURCE_DIR}/specs/glapi.py
         ${CMAKE_SOURCE_DIR}/specs/gltypes.py
         ${CMAKE_SOURCE_DIR}/specs/stdapi.py

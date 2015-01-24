@@ -33,7 +33,6 @@ import sys
 from retrace import Retracer
 import specs.stdapi as stdapi
 import specs.glapi as glapi
-import specs.glesapi as glesapi
 
 
 class GlRetracer(Retracer):
@@ -492,7 +491,6 @@ _getActiveProgram(void);
 '''
     api = stdapi.API()
     api.addModule(glapi.glapi)
-    api.addModule(glesapi.glesapi)
     retracer = GlRetracer()
     retracer.retraceApi(api)
 

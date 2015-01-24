@@ -1,6 +1,5 @@
 *.spec
 *.tm
-*.txt
 *.xml
 *api.py
 *enum.py

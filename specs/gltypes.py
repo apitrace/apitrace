@@ -55,6 +55,9 @@ GLdouble = Alias("GLdouble", Double)
 GLclampd = Alias("GLclampd", Double)
 GLchar = Alias("GLchar", Char)
 
+GLfixed = Alias("GLfixed", Int32)
+GLclampx = Alias("GLclampx", Int32)
+
 GLcharARB = Alias("GLcharARB", SChar)
 GLintptrARB = Alias("GLintptrARB", Int)
 GLsizeiptrARB = Alias("GLsizeiptrARB", Int)
