@@ -36,13 +36,13 @@ endif ()
 # prescribed in http://www.gentoo.org/proj/en/qa/automagic.xml
 set (ENABLE_GUI "AUTO" CACHE STRING "Enable Qt GUI.")
 
-set (ENABLE_CLI true CACHE BOOL "Enable command Line interface.")
+option (ENABLE_CLI "Enable command Line interface." ON)
 
-set (ENABLE_EGL true CACHE BOOL "Enable EGL support.")
+option (ENABLE_EGL "Enable EGL support." ON)
 
-set (ENABLE_WAFFLE false CACHE BOOL "Enable WAFFLE support.")
+option (ENABLE_WAFFLE "Enable WAFFLE support." OFF)
 
-set (ENABLE_FRAME_POINTER true CACHE BOOL "Disable frame pointer omission")
+option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
 
 ##############################################################################
