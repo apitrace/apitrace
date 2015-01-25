@@ -462,22 +462,24 @@ int ApiTrace::callInFrame(int callIdx) const
 void ApiTrace::setCallError(const ApiTraceError &error)
 {
     int frameIdx = callInFrame(error.callIndex);
-    ApiTraceFrame *frame = 0;
-
     if (frameIdx < 0) {
         return;
     }
-    frame = m_frames[frameIdx];
 
+    ApiTraceFrame *frame = 0;
+    frame = m_frames[frameIdx];
     if (frame->isLoaded()) {
         ApiTraceCall *call = frame->callWithIndex(error.callIndex);
-        call->setError(error.message);
-        if (call->hasError()) {
-            m_errors.insert(call);
-        } else {
-            m_errors.remove(call);
+        // call might be null if the error is in a filtered call
+        if (call) {
+            call->setError(error.message);
+            if (call->hasError()) {
+                m_errors.insert(call);
+            } else {
+                m_errors.remove(call);
+            }
+            emit changed(call);
         }
-        emit changed(call);
     } else {
         loadFrame(frame);
         m_queuedErrors.append(qMakePair(frame, error));
