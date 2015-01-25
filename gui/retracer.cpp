@@ -330,9 +330,7 @@ void Retracer::run()
             arguments << QLatin1String("--ppd");
         }
     } else {
-        if (m_doubleBuffered) {
-            arguments << QLatin1String("--db");
-        } else {
+        if (!m_doubleBuffered) {
             arguments << QLatin1String("--sb");
         }
 
