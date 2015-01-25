@@ -334,7 +334,7 @@ class GlRetracer(Retracer):
             # glGetError is not allowed inside glBegin/glEnd
             print '    if (retrace::debug && !glretrace::insideGlBeginEnd && glretrace::getCurrentContext()) {'
             print '        glretrace::checkGlError(call);'
-            if function.name in ('glProgramStringARB', 'glProgramStringNV'):
+            if function.name in ('glProgramStringARB', 'glLoadProgramNV'):
                 print r'        GLint error_position = -1;'
                 print r'        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &error_position);'
                 print r'        if (error_position != -1) {'
@@ -352,8 +352,8 @@ class GlRetracer(Retracer):
                 print r'             retrace::warning(call) << infoLog << "\n";'
                 print r'             delete [] infoLog;'
                 print r'        }'
-            if function.name in ('glLinkProgram', 'glCreateShaderProgramv', 'glCreateShaderProgramEXT'):
-                if function.name != 'glLinkProgram':
+            if function.name in ('glLinkProgram', 'glCreateShaderProgramv', 'glCreateShaderProgramEXT', 'glCreateShaderProgramvEXT', 'glProgramBinary', 'glProgramBinaryOES'):
+                if function.name.startswith('glCreateShaderProgram'):
                     print r'        GLuint program = _result;'
                 print r'        GLint link_status = 0;'
                 print r'        glGetProgramiv(program, GL_LINK_STATUS, &link_status);'
