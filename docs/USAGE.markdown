@@ -45,6 +45,9 @@ You can also tell the GUI to go directly to a specific call
 
     qapitrace application.trace 12345
 
+Press `Ctrl-T` to see per-frame thumbnails.  And while inspecting frame calls,
+press again `Ctrl-T` to see per-draw call thumbnails.
+
 
 Backtrace Capturing
 ===================
