@@ -512,23 +512,22 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         assert(0);
     }
 
-    std::cerr << *color << retrace::callNo << ": message:" << severityStr;
-
+    const char *sourceStr = "";
     switch (source) {
     case GL_DEBUG_SOURCE_API:
-        std::cerr << " api";
+        sourceStr = " api";
         break;
     case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-        std::cerr << " window system";
+        sourceStr = " window system";
         break;
     case GL_DEBUG_SOURCE_SHADER_COMPILER:
-        std::cerr << " shader compiler";
+        sourceStr = " shader compiler";
         break;
     case GL_DEBUG_SOURCE_THIRD_PARTY:
-        std::cerr << " third party";
+        sourceStr = " third party";
         break;
     case GL_DEBUG_SOURCE_APPLICATION:
-        std::cerr << " application";
+        sourceStr = " application";
         break;
     case GL_DEBUG_SOURCE_OTHER:
         break;
@@ -536,38 +535,41 @@ debugOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
         assert(0);
     }
 
+    const char *typeStr = "";
     switch (type) {
     case GL_DEBUG_TYPE_ERROR:
-        std::cerr << " error";
+        typeStr = " error";
         break;
     case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-        std::cerr << " deprecated behaviour";
+        typeStr = " deprecated behaviour";
         break;
     case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-        std::cerr << " undefined behaviour";
+        typeStr = " undefined behaviour";
         break;
     case GL_DEBUG_TYPE_PORTABILITY:
-        std::cerr << " portability issue";
+        typeStr = " portability issue";
         break;
     case GL_DEBUG_TYPE_PERFORMANCE:
-        std::cerr << " performance issue";
+        typeStr = " performance issue";
         break;
     default:
         assert(0);
         /* fall-through */
     case GL_DEBUG_TYPE_OTHER:
-        std::cerr << " issue";
+        typeStr = " issue";
         break;
     case GL_DEBUG_TYPE_MARKER:
-        std::cerr << " marker";
+        typeStr = " marker";
         break;
     case GL_DEBUG_TYPE_PUSH_GROUP:
-        std::cerr << " push group";
+        typeStr = " push group";
         break;
     case GL_DEBUG_TYPE_POP_GROUP:
-        std::cerr << " pop group";
+        typeStr = " pop group";
         break;
     }
+
+    std::cerr << *color << retrace::callNo << ": message:" << severityStr << sourceStr << typeStr;
 
     if (id) {
         std::cerr << " " << id;
