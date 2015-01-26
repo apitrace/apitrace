@@ -185,6 +185,8 @@ takeSnapshot(unsigned call_no) {
  */
 static void
 retraceCall(trace::Call *call) {
+    callNo = call->no;
+
     bool swapRenderTarget = call->flags &
         trace::CALL_FLAG_SWAP_RENDERTARGET;
     bool doSnapshot = snapshotFrequency.contains(*call);
@@ -203,7 +205,6 @@ retraceCall(trace::Call *call) {
         }
     }
 
-    callNo = call->no;
     retracer.retrace(*call);
 
     if (doSnapshot && !swapRenderTarget)
