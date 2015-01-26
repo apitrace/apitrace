@@ -278,7 +278,7 @@ void Writer::writeString(const char *str, size_t len) {
     _write(str, len);
 }
 
-void Writer::writeWString(const wchar_t *str) {
+void Writer::writeWString(const wchar_t *str, size_t len) {
     if (!str) {
         Writer::writeNull();
         return;
@@ -293,7 +293,6 @@ void Writer::writeWString(const wchar_t *str) {
     }
 #else
     _writeByte(trace::TYPE_STRING);
-    size_t len = wcslen(str);
     _writeUInt(len);
     for (size_t i = 0; i < len; ++i) {
         wchar_t wc = str[i];
@@ -301,6 +300,15 @@ void Writer::writeWString(const wchar_t *str) {
         _writeByte(c);
     }
 #endif
+}
+
+void Writer::writeWString(const wchar_t *str) {
+    if (!str) {
+        Writer::writeNull();
+        return;
+    }
+    size_t len = wcslen(str);
+    writeWString(str, len);
 }
 
 void Writer::writeBlob(const void *data, size_t size) {

@@ -94,6 +94,7 @@ namespace trace {
         void writeString(const char *str);
         void writeString(const char *str, size_t size);
         void writeWString(const wchar_t *str);
+        void writeWString(const wchar_t *str, size_t size);
         void writeBlob(const void *data, size_t size);
         void writeEnum(const EnumSig *sig, signed long long value);
         void writeBitmask(const BitmaskSig *sig, unsigned long long value);
