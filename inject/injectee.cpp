@@ -947,6 +947,9 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             registerModuleHooks("d3d10.dll",   g_hHookModule);
             registerModuleHooks("d3d10_1.dll", g_hHookModule);
             registerModuleHooks("d3d11.dll",   g_hHookModule);
+        } else if (stricmp(szNewDllBaseName, "d2d1trace.dll") == 0) {
+            registerModuleHooks("d2d1.dll",    g_hHookModule);
+            registerModuleHooks("dwrite.dll",  g_hHookModule);
         } else {
             registerModuleHooks(szNewDllBaseName, g_hHookModule);
         }
