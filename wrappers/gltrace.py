@@ -792,6 +792,13 @@ class GlTracer(Tracer):
             # These functions have been dispatched already
             return
 
+        # Force glProgramBinary to fail.  Per ARB_get_program_binary this
+        # should signal the app that it needs to recompile.
+        if function.name in ('glProgramBinary', 'glProgramBinaryOES'):
+            print r'   binaryFormat = 0xDEADDEAD;'
+            print r'   binary = &binaryFormat;'
+            print r'   length = sizeof binaryFormat;'
+
         Tracer.invokeFunction(self, function)
 
     def doInvokeFunction(self, function):
@@ -838,7 +845,19 @@ class GlTracer(Tracer):
             print '    }'
             return
 
+        if function.name in ('glGetProgramBinary', 'glGetProgramBinaryOES'):
+            print r'    bufSize = 0;'
+
         Tracer.doInvokeFunction(self, function)
+
+        if function.name == 'glGetProgramiv':
+            print r'    if (params && pname == GL_PROGRAM_BINARY_LENGTH) {'
+            print r'        *params = 0;'
+            print r'    }'
+        if function.name in ('glGetProgramBinary', 'glGetProgramBinaryOES'):
+            print r'    if (length) {'
+            print r'        *length = 0;'
+            print r'    }'
 
     buffer_targets = [
         'ARRAY_BUFFER',

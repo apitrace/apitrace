@@ -42,6 +42,7 @@
 
 #include "glproc.hpp"
 #include "gltrace.hpp"
+#include "os.hpp"
 #include "config.hpp"
 
 
@@ -200,6 +201,22 @@ static void
 getInteger(const configuration *config,
            GLenum pname, GLint *params)
 {
+    // Disable ARB_get_program_binary
+    switch (pname) {
+    case GL_NUM_PROGRAM_BINARY_FORMATS:
+        if (params) {
+            if (params[0] > 0) {
+                os::log("apitrace: warning: hiding program binary formats (https://github.com/apitrace/apitrace/issues/316)\n");
+                params[0] = 0;
+            }
+        }
+        return;
+    case GL_PROGRAM_BINARY_FORMATS:
+        // params might be NULL here, as we returned 0 for
+        // GL_NUM_PROGRAM_BINARY_FORMATS.
+        return;
+    }
+
     if (params) {
         *params = getConfigInteger(config, pname);
         if (*params != 0) {
@@ -212,6 +229,9 @@ getInteger(const configuration *config,
 }
 
 
+/**
+ * TODO: To be thorough, we should override all glGet*v.
+ */
 void
 _glGetIntegerv_override(GLenum pname, GLint *params)
 {
@@ -245,8 +265,6 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
             if (params[0] == 0) {
                 params[0] = 256;
             }
-            break;
-        default:
             break;
         }
     }
