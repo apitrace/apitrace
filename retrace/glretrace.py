@@ -274,27 +274,33 @@ class GlRetracer(Retracer):
                 print r'        glretrace::beginProfile(call, false);'
             print r'    }'
 
-        if function.name == 'glCreateShaderProgramv':
-            # When dumping state, break down glCreateShaderProgramv so that the
+        if function.name in ('glCreateShaderProgramv', 'glCreateShaderProgramEXT', 'glCreateShaderProgramvEXT'):
+            # When dumping state, break down glCreateShaderProgram* so that the
             # shader source can be recovered.
             print r'    if (retrace::dumpingState) {'
             print r'        GLuint _shader = glCreateShader(type);'
             print r'        if (_shader) {'
+            if not function.name.startswith('glCreateShaderProgramv'):
+                print r'            GLsizei count = 1;'
+                print r'            const GLchar **strings = &string;'
             print r'            glShaderSource(_shader, count, strings, NULL);'
             print r'            glCompileShader(_shader);'
             print r'            const GLuint _program = glCreateProgram();'
             print r'            if (_program) {'
             print r'                GLint compiled = GL_FALSE;'
             print r'                glGetShaderiv(_shader, GL_COMPILE_STATUS, &compiled);'
-            print r'                glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);'
+            if function.name == 'glCreateShaderProgramvEXT':
+                print r'                glProgramParameteriEXT(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);'
+            else:
+                print r'                glProgramParameteri(_program, GL_PROGRAM_SEPARABLE, GL_TRUE);'
             print r'                if (compiled) {'
             print r'                    glAttachShader(_program, _shader);'
             print r'                    glLinkProgram(_program);'
-            print r'                    //glDetachShader(_program, _shader);'
+            print r'                    if (false) glDetachShader(_program, _shader);'
             print r'                }'
-            print r'                //append-shader-info-log-to-program-info-log'
+            print r'                // TODO: append shader info log to program info log'
             print r'            }'
-            print r'            //glDeleteShader(_shader);'
+            print r'            if (false) glDeleteShader(_shader);'
             print r'            _result = _program;'
             print r'        } else {'
             print r'            _result = 0;'
