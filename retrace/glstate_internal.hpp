@@ -108,6 +108,45 @@ getImageFormat(GLenum format, GLenum type,
                GLuint &channels, image::ChannelType &channelType);
 
 
+/**
+ * Helper class to temporarily bind a buffer to the specified target until
+ * control leaves the declaration scope.
+ */
+class BufferBinding
+{
+private:
+    GLenum target;
+    GLuint buffer;
+    GLuint prevBuffer;
+
+public:
+    BufferBinding(GLenum _target, GLuint _buffer);
+
+    ~BufferBinding();
+};
+
+
+/**
+ * Helper class to temporarily map a buffer (if necessary), and unmap when
+ * destroyed.
+ */
+class BufferMapping
+{
+    GLuint target;
+    GLuint buffer;
+    GLvoid *map_pointer;
+    bool unmap;
+
+public:
+    BufferMapping();
+
+    GLvoid *
+    map(GLenum _target, GLuint _buffer);
+
+    ~BufferMapping();
+};
+
+
 bool
 isGeometryShaderBound(Context &context);
 

@@ -131,6 +131,121 @@ PixelPackState::~PixelPackState() {
 }
 
 
+static GLenum
+getBufferBinding(GLenum target) {
+    switch (target) {
+    case GL_ARRAY_BUFFER:
+        return GL_ARRAY_BUFFER_BINDING;
+    case GL_ATOMIC_COUNTER_BUFFER:
+        return GL_ATOMIC_COUNTER_BUFFER_BINDING;
+    case GL_COPY_READ_BUFFER:
+        return GL_COPY_READ_BUFFER_BINDING;
+    case GL_COPY_WRITE_BUFFER:
+        return GL_COPY_WRITE_BUFFER_BINDING;
+    case GL_DRAW_INDIRECT_BUFFER:
+        return GL_DRAW_INDIRECT_BUFFER_BINDING;
+    case GL_DISPATCH_INDIRECT_BUFFER:
+        return GL_DISPATCH_INDIRECT_BUFFER_BINDING;
+    case GL_ELEMENT_ARRAY_BUFFER:
+        return GL_ELEMENT_ARRAY_BUFFER_BINDING;
+    case GL_PIXEL_PACK_BUFFER:
+        return GL_PIXEL_PACK_BUFFER_BINDING;
+    case GL_PIXEL_UNPACK_BUFFER:
+        return GL_PIXEL_UNPACK_BUFFER_BINDING;
+    case GL_QUERY_BUFFER:
+        return GL_QUERY_BUFFER_BINDING;
+    case GL_SHADER_STORAGE_BUFFER:
+        return GL_SHADER_STORAGE_BUFFER_BINDING;
+    case GL_TEXTURE_BUFFER:
+        return GL_TEXTURE_BUFFER;
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+        return GL_TRANSFORM_FEEDBACK_BUFFER_BINDING;
+    case GL_UNIFORM_BUFFER:
+        return GL_UNIFORM_BUFFER_BINDING;
+    default:
+        assert(false);
+        return GL_NONE;
+    }
+}
+
+
+BufferBinding::BufferBinding(GLenum _target, GLuint _buffer) :
+    target(_target),
+    buffer(_buffer),
+    prevBuffer(0)
+{
+    GLenum binding = getBufferBinding(target);
+    glGetIntegerv(binding, (GLint *) &prevBuffer);
+
+    if (prevBuffer != buffer) {
+        glBindBuffer(target, buffer);
+    }
+}
+
+BufferBinding::~BufferBinding() {
+    if (prevBuffer != buffer) {
+        glBindBuffer(target, prevBuffer);
+    }
+}
+
+
+BufferMapping::BufferMapping() :
+    target(GL_NONE),
+    buffer(0),
+    map_pointer(NULL),
+    unmap(false)
+{
+}
+
+GLvoid *
+BufferMapping::map(GLenum _target, GLuint _buffer)
+{
+    target = _target;
+    buffer = _buffer;
+    map_pointer = NULL;
+    unmap = false;
+
+    BufferBinding bb(target, buffer);
+
+    // Recursive mappings of the same buffer are not allowed.  And with the
+    // pursuit of persistent mappings for performance this will become more
+    // and more common.
+    GLint mapped = GL_FALSE;
+    glGetBufferParameteriv(target, GL_BUFFER_MAPPED, &mapped);
+    if (mapped) {
+        glGetBufferPointerv(target, GL_BUFFER_MAP_POINTER, &map_pointer);
+        assert(map_pointer != NULL);
+
+        GLint map_offset = 0;
+        glGetBufferParameteriv(target, GL_BUFFER_MAP_OFFSET, &map_offset);
+        if (map_offset != 0) {
+            std::cerr << "warning: " << enumToString(target) << " buffer " << buffer << " is already mapped with offset " << map_offset << "\n";
+            // FIXME: This most likely won't work.  We should remap the
+            // buffer with the full range, then re-map when done.  This
+            // should never happen in practice with persistent mappings
+            // though.
+            map_pointer = (GLubyte *)map_pointer - map_offset;
+        }
+    } else {
+        map_pointer = glMapBuffer(target, GL_READ_ONLY);
+        if (map_pointer) {
+            unmap = true;
+        }
+    }
+
+    return map_pointer;
+}
+
+BufferMapping::~BufferMapping() {
+    if (unmap) {
+        BufferBinding bb(target, buffer);
+
+        GLenum ret = glUnmapBuffer(target);
+        assert(ret == GL_TRUE);
+    }
+}
+
+
 void
 dumpBoolean(JSONWriter &json, GLboolean value)
 {
