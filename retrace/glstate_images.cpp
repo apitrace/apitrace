@@ -476,15 +476,12 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
         glGetIntegerv(GL_TEXTURE_BUFFER_DATA_STORE_BINDING, &buffer);
         assert(buffer);
 
-        GLint active_buffer = 0;
-        glGetIntegerv(GL_TEXTURE_BUFFER, &active_buffer);
-        glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+        BufferMapping bm;
 
-        glGetBufferSubData(GL_TEXTURE_BUFFER,
-                           0, image->width * image->bytesPerPixel,
-                           image->pixels);
-        
-        glBindBuffer(GL_TEXTURE_BUFFER, active_buffer);
+        const GLvoid *map = bm.map(GL_TEXTURE_BUFFER, buffer);
+        if (map) {
+            memcpy(image->pixels, map, image->width * image->bytesPerPixel);
+        }
     } else {
         if (context.ES) {
             getTexImageOES(target, level, desc, image->pixels);
