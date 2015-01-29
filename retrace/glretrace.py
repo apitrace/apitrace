@@ -308,7 +308,7 @@ class GlRetracer(Retracer):
             print r'    } else {'
             Retracer.invokeFunction(self, function)
             print r'    }'
-        elif function.name == 'glDetachShader':
+        elif function.name in ('glDetachShader', 'glDetachObjectARB'):
             print r'    if (!retrace::dumpingState) {'
             Retracer.invokeFunction(self, function)
             print r'    }'
