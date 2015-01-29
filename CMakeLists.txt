@@ -231,9 +231,21 @@ else ()
 
     # Enable SSE2 intrinsics on x86
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-        CHECK_CXX_COMPILER_FLAG("-msse2 -mincoming-stack-boundary=2" CXX_COMPILER_FLAG_SSE2)
-        if (CXX_COMPILER_FLAG_SSE2)
-            add_compiler_flags ("-msse2 -mincoming-stack-boundary=2")
+        check_cxx_compiler_flag ("-msse2" CXX_COMPILER_FLAG_MSSE2)
+        if (CXX_COMPILER_FLAG_MSSE2)
+            add_compiler_flags ("-msse2")
+
+            # And tell GCC to assume 4 bytes alignment, many Linux/Windows
+            # applications only guarantee that, but not on systems where ABI
+            # clearly states otherwise.
+            #
+            # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
+            if (NOT ANDROID)
+                check_cxx_compiler_flag ("-mincoming-stack-boundary=2" CXX_COMPILER_FLAG_MINCOMING_STACK_BOUNDARY)
+                if (CXX_COMPILER_FLAG_MINCOMING_STACK_BOUNDARY)
+                    add_compiler_flags ("-mincoming-stack-boundary=2")
+                endif ()
+            endif ()
         endif ()
     endif ()
 
