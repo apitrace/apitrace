@@ -40,13 +40,13 @@ namespace glstate {
 
 struct Context
 {
-    bool ES;
-    bool core;
+    unsigned ES:1;
+    unsigned core:1;
 
-    bool ARB_draw_buffers;
-    bool ARB_sampler_objects;
-    bool KHR_debug;
-    bool EXT_debug_label;
+    unsigned ARB_draw_buffers:1;
+    unsigned ARB_sampler_objects:1;
+    unsigned KHR_debug:1;
+    unsigned EXT_debug_label:1;
 
     Context(void);
 };

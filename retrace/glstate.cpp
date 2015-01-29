@@ -45,6 +45,9 @@ Context::Context(void) {
     memset(this, 0, sizeof *this);
 
     glprofile::Profile profile = glprofile::getCurrentContextProfile();
+    glprofile::Extensions ext;
+
+    ext.getCurrentContextExtensions(profile);
 
     ES = profile.es();
     core = profile.core;
@@ -52,27 +55,9 @@ Context::Context(void) {
     ARB_draw_buffers = !ES;
 
     // Check extensions we use.
-    if (profile.major >= 3) {
-        GLint num_extensions = 0;
-        glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-        for (GLint i = 0; i < num_extensions; ++i) {
-           const char *extension = (const char *)glGetStringi(GL_EXTENSIONS, i);
-           if (extension) {
-               if (strcmp(extension, "GL_ARB_sampler_objects") == 0) {
-                   ARB_sampler_objects = true;
-               } else if (strcmp(extension, "GL_KHR_debug") == 0) {
-                   KHR_debug = true;
-               } else if (strcmp(extension, "GL_EXT_debug_label") == 0) {
-                   EXT_debug_label = true;
-               }
-           }
-        }
-    } else {
-        const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
-        ARB_sampler_objects = glws::checkExtension("GL_ARB_sampler_objects", extensions);
-        KHR_debug = glws::checkExtension("GL_KHR_debug", extensions);
-        EXT_debug_label = glws::checkExtension("GL_EXT_debug_label", extensions);
-    }
+    ARB_sampler_objects = ext.has("GL_ARB_sampler_objects");
+    KHR_debug = ext.has("GL_KHR_debug");
+    EXT_debug_label = ext.has("GL_EXT_debug_label");
 }
 
 PixelPackState::PixelPackState(const Context &context) {
