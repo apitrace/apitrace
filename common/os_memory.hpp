@@ -50,6 +50,15 @@ namespace os {
     }
 } /* namespace os */
 
+#elif __ANDROID__
+namespace os {
+    long long
+    getVsize(void);
+
+    long long
+    getRss(void);
+} /* namespace os */
+
 #else
 namespace os {
     inline long long
