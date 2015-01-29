@@ -47,6 +47,7 @@ Context::Context(void) {
     glprofile::Profile profile = glprofile::getCurrentContextProfile();
 
     ES = profile.es();
+    core = profile.core;
 
     ARB_draw_buffers = !ES;
 
