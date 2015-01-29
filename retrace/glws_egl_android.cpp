@@ -557,6 +557,9 @@ static void readParamsAndStartTrace()
     optreset = 1;
     main(params.size(), &params[0]);
     cleanup();
+
+    // Remove "std::exit" after apitrace will cleanup its static variables.
+    std::exit(0); // goodbye cruel world !
 }
 
 static inline int getFd(JNIEnv* env, jobject obj)
