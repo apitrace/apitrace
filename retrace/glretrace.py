@@ -300,7 +300,7 @@ class GlRetracer(Retracer):
             print r'                }'
             print r'                // TODO: append shader info log to program info log'
             print r'            }'
-            print r'            if (false) glDeleteShader(_shader);'
+            print r'            glDeleteShader(_shader);'
             print r'            _result = _program;'
             print r'        } else {'
             print r'            _result = 0;'
@@ -308,7 +308,7 @@ class GlRetracer(Retracer):
             print r'    } else {'
             Retracer.invokeFunction(self, function)
             print r'    }'
-        elif function.name in ('glDeleteShader', 'glDetachShader'):
+        elif function.name == 'glDetachShader':
             print r'    if (!retrace::dumpingState) {'
             Retracer.invokeFunction(self, function)
             print r'    }'
