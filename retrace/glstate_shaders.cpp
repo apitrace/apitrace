@@ -81,6 +81,10 @@ getShaderSource(ShaderMap &shaderMap, GLuint shader)
 static inline void
 dumpProgram(JSONWriter &json, GLint program)
 {
+    if (program <= 0) {
+        return;
+    }
+
     GLint attached_shaders = 0;
     glGetProgramiv(program, GL_ATTACHED_SHADERS, &attached_shaders);
     if (!attached_shaders) {
@@ -884,13 +888,15 @@ dumpArbProgramUniforms(JSONWriter &json, Context &context, GLenum target, const 
 static void
 dumpProgramUniformsStage(JSONWriter &json, GLint program, const char *stage)
 {
-    if (program) {
-        json.beginMember(stage);
-        json.beginObject();
-        dumpProgramUniforms(json, program);
-        json.endObject();
-        json.endMember();
+    if (program <= 0) {
+        return;
     }
+
+    json.beginMember(stage);
+    json.beginObject();
+    dumpProgramUniforms(json, program);
+    json.endObject();
+    json.endMember();
 }
 
 void
