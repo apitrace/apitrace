@@ -128,6 +128,11 @@ endif ()
 include (CheckCXXCompilerFlag)
 include (CheckIncludeFileCXX)
 
+macro (add_compiler_flags)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARGV}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARGV}")
+endmacro ()
+
 macro (add_linker_flags)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ARGV}")
     set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ARGV}")
@@ -146,7 +151,7 @@ if (WIN32)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
-        add_definitions ("-fvisibility=hidden")
+        add_compiler_flags ("-fvisibility=hidden")
     endif ()
 endif ()
 
@@ -170,17 +175,17 @@ if (MSVC)
     # Adjust warnings
     add_definitions (-D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS)
     add_definitions (-D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
-    add_definitions (-W3)
+    add_compiler_flags (-W3)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
-    add_definitions (-wd4018) # signed/unsigned mismatch
-    add_definitions (-wd4063) # not a valid value for switch of enum
-    add_definitions (-wd4100) # unreferenced formal parameter
-    add_definitions (-wd4127) # conditional expression is constant
-    add_definitions (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
-    add_definitions (-wd4267) # conversion from 'type1' to 'type2', possible loss of data
-    add_definitions (-wd4505) # unreferenced local function has been removed
-    add_definitions (-wd4512) # assignment operator could not be generated
-    add_definitions (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
+    add_compiler_flags (-wd4018) # signed/unsigned mismatch
+    add_compiler_flags (-wd4063) # not a valid value for switch of enum
+    add_compiler_flags (-wd4100) # unreferenced formal parameter
+    add_compiler_flags (-wd4127) # conditional expression is constant
+    add_compiler_flags (-wd4244) # conversion from 'type1' to 'type2', possible loss of data
+    add_compiler_flags (-wd4267) # conversion from 'type1' to 'type2', possible loss of data
+    add_compiler_flags (-wd4505) # unreferenced local function has been removed
+    add_compiler_flags (-wd4512) # assignment operator could not be generated
+    add_compiler_flags (-wd4800) # forcing value to bool 'true' or 'false' (performance warning)
     
     # Use static runtime
     # http://www.cmake.org/Wiki/CMake_FAQ#How_can_I_build_my_MSVC_application_with_a_static_runtime.3F
@@ -194,9 +199,9 @@ if (MSVC)
     endforeach (flag_var)
 else ()
     # Adjust warnings
-    add_definitions (-Wall)
+    add_compiler_flags (-Wall)
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
-    add_definitions (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
+    add_compiler_flags (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 
     # No RTTI required
     #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
@@ -228,12 +233,12 @@ else ()
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         CHECK_CXX_COMPILER_FLAG("-msse2 -mincoming-stack-boundary=2" CXX_COMPILER_FLAG_SSE2)
         if (CXX_COMPILER_FLAG_SSE2)
-            add_definitions ("-msse2 -mincoming-stack-boundary=2")
+            add_compiler_flags ("-msse2 -mincoming-stack-boundary=2")
         endif ()
     endif ()
 
     # Be nice to Eclipse
-    add_definitions (-fmessage-length=0)
+    add_compiler_flags (-fmessage-length=0)
 endif ()
 
 if (MINGW)
@@ -251,9 +256,9 @@ endif ()
 if (ENABLE_FRAME_POINTER)
     # disable frame pointer omission
     if (MSVC)
-        add_definitions (/Oy-)
+        add_compiler_flags (/Oy-)
     else ()
-        add_definitions (-fno-omit-frame-pointer)
+        add_compiler_flags (-fno-omit-frame-pointer)
     endif ()
 endif ()
 
