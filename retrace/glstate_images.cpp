@@ -440,6 +440,7 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
 
     if (target == GL_TEXTURE_BUFFER && formatDesc.type != GL_UNSIGNED_BYTE) {
         // FIXME: We rely on glGetTexImage to convert the pixels, but we can't use it with texture buffers.
+        std::cerr << "warning: unsupported texture buffer internal format " << formatToString(desc.internalFormat) << "\n";
         return;
     }
 
