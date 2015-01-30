@@ -233,6 +233,7 @@ if (WIN32)
     add_library (wgltrace MODULE opengl32.def
         wgltrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
     )
     add_dependencies (wgltrace glproc)
@@ -270,6 +271,7 @@ elseif (APPLE)
     add_library (cgltrace SHARED
         cgltrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
     )
 
@@ -315,6 +317,7 @@ elseif (X11_FOUND)
     add_library (glxtrace SHARED
         glxtrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
         dlsym.cpp
     )
@@ -365,6 +368,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     add_library (egltrace SHARED
         egltrace.cpp
         glcaps.cpp
+        config.cpp
         gltrace_state.cpp
         dlsym.cpp
     )

@@ -35,12 +35,14 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <string>
 #include <map>
 
 #include "glproc.hpp"
 #include "gltrace.hpp"
+#include "config.hpp"
 
 
 namespace gltrace {
@@ -170,7 +172,15 @@ overrideExtensionsString(const char *extensions)
 const GLubyte *
 _glGetString_override(GLenum name)
 {
-    const GLubyte *result = _glGetString(name);
+    const configuration *config = getConfig();
+    const GLubyte *result;
+
+    // Try getting the override string value first
+    result = getConfigString(config, name);
+    if (!result) {
+        // Ask the real GL library
+        result = _glGetString(name);
+    }
 
     if (result) {
         switch (name) {
@@ -189,7 +199,13 @@ _glGetString_override(GLenum name)
 void
 _glGetIntegerv_override(GLenum pname, GLint *params)
 {
-    _glGetIntegerv(pname, params);
+    const configuration *config = getConfig();
+
+    *params = getConfigInteger(config, pname);
+    if (*params == 0) {
+        // Ask the real GL library
+        _glGetIntegerv(pname, params);
+    }
 
     if (params) {
         const Context *ctx;
@@ -219,7 +235,9 @@ _glGetIntegerv_override(GLenum pname, GLint *params)
 const GLubyte *
 _glGetStringi_override(GLenum name, GLuint index)
 {
+    const configuration *config = getConfig();
     const Context *ctx = getContext();
+    const GLubyte *retVal;
 
     if (ctx->profile.major >= 3) {
         switch (name) {
@@ -227,7 +245,12 @@ _glGetStringi_override(GLenum name, GLuint index)
             {
                 const ExtensionsDesc *desc = getExtraExtensions(ctx);
                 GLint numExtensions = 0;
-                _glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+                if (config) {
+                    numExtensions = getConfigInteger(config, GL_NUM_EXTENSIONS);
+                }
+                if (numExtensions == 0) {
+                    _glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+                }
                 if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
                     return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
                 }
@@ -237,6 +260,10 @@ _glGetStringi_override(GLenum name, GLuint index)
             break;
         }
     }
+
+    retVal = getConfigStringi(config, name, index);
+    if (retVal)
+        return retVal;
 
     return _glGetStringi(name, index);
 }
