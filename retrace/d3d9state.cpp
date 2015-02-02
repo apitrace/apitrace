@@ -95,6 +95,25 @@ dumpShaders(StateWriter &writer, IDirect3DDevice9 *pDevice)
 }
 
 static void
+dumpViewport(StateWriter &writer, IDirect3DDevice9 *pDevice)
+{
+    writer.beginMember("Viewport");
+    writer.beginObject();
+
+    D3DVIEWPORT9 vp;
+    pDevice->GetViewport(&vp);
+    writer.writeIntMember("X", vp.X);
+    writer.writeIntMember("Y", vp.Y);
+    writer.writeIntMember("Width", vp.Width);
+    writer.writeIntMember("Height", vp.Height);
+    writer.writeIntMember("MinZ", vp.MinZ);
+    writer.writeIntMember("MaxZ", vp.MaxZ);
+
+    writer.endObject();
+    writer.endMember();
+}
+
+static void
 dumpRenderstate(StateWriter &writer, IDirect3DDevice9 *pDevice)
 {
 #define _DUMP_RS_INT(x) { \
@@ -218,6 +237,8 @@ dumpRenderstate(StateWriter &writer, IDirect3DDevice9 *pDevice)
 
 #undef _DUMP_RS_INT
 #undef _DUMP_RS_FLOAT
+
+    dumpViewport(writer, pDevice);
 
     writer.endObject();
     writer.endMember();
