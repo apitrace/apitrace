@@ -370,7 +370,6 @@ public:
         }
 
         wglMakeCurrent(hDC, NULL);
-        wglDeleteContext(hglrc);
 
         Attributes<int> attribs;
         if (profile.api == glprofile::API_GL) {
@@ -408,10 +407,12 @@ public:
         }
         attribs.end();
 
-        hglrc = pfnWglCreateContextAttribsARB(hDC,
-                                              shareContext ? shareContext->hglrc : 0,
-                                              attribs);
-        if (!hglrc) {
+
+        HGLRC new_hglrc;
+        new_hglrc = pfnWglCreateContextAttribsARB(hDC,
+                                                  shareContext ? shareContext->hglrc : 0,
+                                                  attribs);
+        if (!new_hglrc) {
             if (required) {
                 std::cerr << "error: wglCreateContextAttribsARB failed\n";
                 exit(1);
@@ -419,6 +420,9 @@ public:
                 return false;
             }
         }
+
+        wglDeleteContext(hglrc);
+        hglrc = new_hglrc;
 
         return true;
     }

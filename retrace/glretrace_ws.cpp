@@ -163,7 +163,6 @@ makeCurrent(trace::Call &call, glws::Drawable *drawable, Context *context)
     if (!success) {
         std::cerr << "error: failed to make current OpenGL context and drawable\n";
         exit(1);
-        return false;
     }
 
     currentContextPtr = context;
