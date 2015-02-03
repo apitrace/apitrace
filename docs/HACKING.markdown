@@ -3,7 +3,7 @@
 Although focus was and still is on graphical APIs, apitrace has a
 generic infrastructure to trace any kind of API:
 
- * the APIs types and calls are specified in Python files in specs
+ * the API's types and calls are specified in Python files in specs
    sub-directory;
 
    * there is a type hierarchy in `specs/stdapi.py`, capable of representing
@@ -18,37 +18,47 @@ generic infrastructure to trace any kind of API:
      generation to be overriden by derived classes, allowing to handle
      cases that need special treatment without sacrifycing code reuse.
 
-apitrace's architecture is composed of several layers.  Too many to show in a
-single graph, so only those relevant for OpenGL API are shown below:
+apitrace's architecture is composed of several layers/components.  There are
+too many to show in a single graph, so only those relevant for OpenGL API are
+illustrated below:
 
-                        specs
-                          ^
-                          |
-                       dispatch  <-------------- glws
-                          ^                       ^
-                          |                      /
-                       helpers  <--- glstate    /
-                         ^  ^          ^       /
-                        /    \         |      /
-                       /      \        |     /
-                   trace      retrace  |    /
-                    ^             ^    |   /
-                   /               \   |  /
-               gltrace            glretrace
-                ^ ^ ^                  ^
-               /  |  \                  \
-              /   |   \                  \
-             /    |    \                  \
-            /     |     \                  \
-           /      |      \                  \
-     glxtrace  wgltrace  cgltrace       qapitrace
+                                   specs
+                                     ^
+                                     |
+                                   glproc
+                                   ^ ^ ^
+                                   | | |
+                            /------/ | \--\
+                            |        |    |
+                         helpers     |    |
+                          ^ ^ ^      |    |
+                          | | |      |    |
+                 /--------/ | \----\ |    |
+                 |          |      | |    |
+                 |          |      | |    |
+               trace     retrace glstate glws
+                 ^          ^       ^     ^
+                 |          |       |     |
+                 |          \-----\ | /---/
+                 |                | | |
+                 |                | | |
+              gltrace           glretrace
+               ^ ^ ^                ^
+               | | |                |
+        /------/ | \-----\          |
+        |        |       |          |
+        |        |       |          |
+    glxtrace wgltrace cgltrace  qapitrace
 
 Here is a quick synopsis of what the layers do:
 
- * `specs` -- specification of the API, expressed in a Python class hierarchy
+ * `specs` -- specifies the types, functions, and interfaces of the API,
+   expressed as a hierarchy of Python objects
 
  * `dispatch` -- runtime dispatch of calls to DLLs (open the DLL, get the symbol
    address, and call it passing all arguments as-is)
+
+   * `glproc` -- specialization of the dispatch generation for GL APIs
 
  * `helpers` -- helper functions to determine sizes of arrays, blobs, etc.  It
    often needs to dispatch calls to give the answers.
@@ -73,6 +83,9 @@ Here is a quick synopsis of what the layers do:
 
  * `qapitrace` -- the GUI; it reads traces directly, and gets JSON state by
    invoking `glretrace`
+
+The architecture for Direct3D APIs is similar, with the exception that, because
+it's not cross platform, there are less specialized variations.
 
 
 # Coding Style #
@@ -193,8 +206,8 @@ specifications:
 * Fix-up the types of array, blob, and pointer arguments.
 
   * For `glGet*` you can use `"_gl_param_size(pname)"` for automatically determining the number of parameters written, e.g.
-    
-        GlFunction(Void, "glGetIntegerv", [(GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
+
+            GlFunction(Void, "glGetIntegerv", [(GLenum, "pname"), Out(Array(GLint, "_gl_param_size(pname)"), "params")], sideeffects=False),
 
 * Add the `sideeffects=False` keyword argument where appropriate, so that those
   calls can be merely ignored by `glretrace`.
@@ -202,5 +215,8 @@ specifications:
 * Replace generically type `GLuint` object IDs with typed ones, (e.g., replace
   `(GLuint, "texture")` into `(GLtexture, "texture")`, so that `glretrace` can
   swizzle the objects IDs, when replaying on a different OpenGL implementation.
+
+
+## Dump more OpenGL state ##
 
 
