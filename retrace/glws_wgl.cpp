@@ -475,9 +475,13 @@ init(void) {
         _libGlHandle = LoadLibraryA(libgl_filename);
         if (_libGlHandle) {
             pfnChoosePixelFormat = (PFN_WGLCHOOSEPIXELFORMAT)GetProcAddress(_libGlHandle, "wglChoosePixelFormat");
+            assert(pfnChoosePixelFormat);
             pfnDescribePixelFormat = (PFN_WGLDESCRIBEPIXELFORMAT)GetProcAddress(_libGlHandle, "wglDescribePixelFormat");
-            pfnSetPixelFormat = (PFN_WGLSETPIXELFORMAT)GetProcAddress(_libGlHandle, "&wglSetPixelFormat");
+            assert(pfnDescribePixelFormat);
+            pfnSetPixelFormat = (PFN_WGLSETPIXELFORMAT)GetProcAddress(_libGlHandle, "wglSetPixelFormat");
+            assert(pfnSetPixelFormat);
             pfnSwapBuffers = (PFN_WGLSWAPBUFFERS)GetProcAddress(_libGlHandle, "wglSwapBuffers");
+            assert(pfnSwapBuffers);
         }
     } else {
         libgl_filename = "OPENGL32";
