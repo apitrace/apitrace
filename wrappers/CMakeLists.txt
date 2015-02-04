@@ -325,8 +325,9 @@ elseif (X11_FOUND)
         # avoid the default "lib" prefix
         PREFIX ""
         # Prevent symbol relocations internal to our wrapper library to be
-        # overwritten by the application.
-        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+        # overwritten by the application.  And fail if there are missing
+        # symbols.
+        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions -Wl,-z,defs"
     )
 
     target_link_libraries (glxtrace
@@ -374,8 +375,9 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         # avoid the default "lib" prefix
         PREFIX ""
         # Prevent symbol relocations internal to our wrapper library to be
-        # overwritten by the application.
-        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions"
+        # overwritten by the application.  And fail if there are missing
+        # symbols.
+        LINK_FLAGS "-Wl,-Bsymbolic -Wl,-Bsymbolic-functions -Wl,-z,defs"
     )
 
     target_link_libraries (egltrace
