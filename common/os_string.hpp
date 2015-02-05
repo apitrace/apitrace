@@ -424,6 +424,8 @@ public:
 String getProcessName();
 String getCurrentDir();
 
+String getConfigDir();
+
 bool createDirectory(const String &path);
 
 bool copyFile(const String &srcFileName, const String &dstFileName, bool override = true);

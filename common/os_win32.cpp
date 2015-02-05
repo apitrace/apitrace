@@ -26,6 +26,7 @@
 #ifdef _WIN32
 
 #include <windows.h>
+#include <shlobj.h>
 
 #include <assert.h>
 #include <string.h>
@@ -68,6 +69,20 @@ getCurrentDir(void)
     buf[size - 1] = 0;
     path.truncate();
 
+    return path;
+}
+
+String
+getConfigDir(void)
+{
+    String path;
+    char *buf = path.buf(MAX_PATH);
+    HRESULT hr = SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, buf);
+    if (SUCCEEDED(hr)) {
+        path.truncate();
+    } else {
+        path.truncate(0);
+    }
     return path;
 }
 

@@ -130,6 +130,37 @@ getCurrentDir(void)
     return path;
 }
 
+String
+getConfigDir(void)
+{
+    String path;
+
+#ifdef __APPLE__
+    // Library/Preferences
+    const char *homeDir = getenv("HOME");
+    assert(homeDir);
+    if (homeDir) {
+        path = homeDir;
+        path.join("Library/Preferences");
+    }
+#else
+    // http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+    const char *configHomeDir = getenv("XDG_CONFIG_HOME");
+    if (configHomeDir) {
+        path = configHomeDir;
+    } else {
+        const char *homeDir = getenv("HOME");
+        assert(homeDir);
+        if (homeDir) {
+            path = homeDir;
+            path.join(".config");
+        }
+    }
+#endif
+
+    return path;
+}
+
 bool
 createDirectory(const String &path)
 {

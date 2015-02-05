@@ -426,6 +426,11 @@ add_convenience_library (common
 target_link_libraries (common
     ${LIBBACKTRACE_LIBRARIES}
 )
+if (WIN32)
+    target_link_libraries (common
+        shell32
+    )
+endif ()
 if (ANDROID)
     target_link_libraries (common
         log
