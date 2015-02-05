@@ -61,10 +61,8 @@ GL_MAX_TEXTURE_SIZE = 1024
 #include <iostream>
 
 #include "os.hpp"
+#include "os_string.hpp"
 #include "config.hpp"
-
-
-static const char *DefaultConfigFilename = "gltrace.conf";
 
 
 namespace gltrace {
@@ -347,6 +345,10 @@ parse_file(FILE *f, configuration *conf)
 static configuration *
 readConfigFile(const char *filename)
 {
+#ifndef NDEBUG
+    os::log("apitrace: attempting to read configuration file: %s\n", filename);
+#endif
+
     FILE *f = fopen(filename, "r");
     if (!f)
         return NULL;
@@ -387,7 +389,10 @@ getConfig(void)
     static configuration *config = NULL;
 
     if (!configured) {
-        config = gltrace::readConfigFile(DefaultConfigFilename);
+        os::String configPath = os::getConfigDir();
+        configPath.join("apitrace");
+        configPath.join("gltrace.conf");
+        config = gltrace::readConfigFile(configPath);
         configured = true;
     }
 
