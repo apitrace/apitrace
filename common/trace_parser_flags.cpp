@@ -57,6 +57,9 @@ const Entry<CallFlags>
 callFlagTable[] = {
     { "CGLFlushDrawable",                              CALL_FLAG_END_FRAME },
     { "CGLGetCurrentContext",                          CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
+    { "D3DPERF_BeginEvent",                            /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_PUSH },
+    { "D3DPERF_EndEvent",                              /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER | CALL_FLAG_MARKER_POP },
+    { "D3DPERF_SetMarker",                             /* CALL_FLAG_NO_SIDE_EFFECTS | */ CALL_FLAG_MARKER },
     { "ID3D10Device1::CheckMultisampleQualityLevels",  CALL_FLAG_NO_SIDE_EFFECTS | CALL_FLAG_VERBOSE },
     { "ID3D10Device1::Draw",                           CALL_FLAG_RENDER },
     { "ID3D10Device1::DrawAuto",                       CALL_FLAG_RENDER },
