@@ -196,16 +196,37 @@ _glGetString_override(GLenum name)
 }
 
 
+static void
+getInteger(const configuration *config,
+           GLenum pname, GLint *params)
+{
+    if (params) {
+        *params = getConfigInteger(config, pname);
+        if (*params != 0) {
+            return;
+        }
+    }
+
+    // Ask the real GL library
+    _glGetIntegerv(pname, params);
+}
+
+
 void
 _glGetIntegerv_override(GLenum pname, GLint *params)
 {
     const configuration *config = getConfig();
 
-    *params = getConfigInteger(config, pname);
-    if (*params == 0) {
-        // Ask the real GL library
-        _glGetIntegerv(pname, params);
-    }
+    /*
+     * It's important to handle params==NULL correctly here, which can and does
+     * happen, particularly when pname is GL_COMPRESSED_TEXTURE_FORMATS or
+     * GL_PROGRAM_BINARY_FORMATS and the implementation returns 0 for
+     * GL_NUM_COMPRESSED_TEXTURE_FORMATS or GL_NUM_PROGRAM_BINARY_FORMATS, as
+     * the application ends up calling `params = malloc(0)` or `param = new
+     * GLint[0]` which can yield NULL.
+     */
+
+    getInteger(config, pname, params);
 
     if (params) {
         const Context *ctx;
@@ -245,12 +266,7 @@ _glGetStringi_override(GLenum name, GLuint index)
             {
                 const ExtensionsDesc *desc = getExtraExtensions(ctx);
                 GLint numExtensions = 0;
-                if (config) {
-                    numExtensions = getConfigInteger(config, GL_NUM_EXTENSIONS);
-                }
-                if (numExtensions == 0) {
-                    _glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
-                }
+                getInteger(config, GL_NUM_EXTENSIONS, &numExtensions);
                 if ((GLuint)numExtensions <= index && index < (GLuint)numExtensions + desc->numStrings) {
                     return (const GLubyte *)desc->strings[index - (GLuint)numExtensions];
                 }
