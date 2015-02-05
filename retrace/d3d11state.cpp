@@ -82,13 +82,25 @@ dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext)
 {
     JSONWriter json(os);
 
-    /* TODO */
+    // TODO: dump description of current bound state
     json.beginMember("parameters");
     json.beginObject();
     json.endObject();
     json.endMember(); // parameters
 
     dumpShaders(json, pDeviceContext);
+
+    // TODO: dump constant buffers
+    json.beginMember("uniforms");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // uniforms
+
+    // TODO: dump stream-out buffer, vertex buffer
+    json.beginMember("buffers");
+    json.beginObject();
+    json.endObject();
+    json.endMember(); // buffers
 
     dumpTextures(json, pDeviceContext);
 
