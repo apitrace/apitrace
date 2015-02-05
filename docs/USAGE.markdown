@@ -1,5 +1,4 @@
-Basic usage
-===========
+# Basic usage #
 
 Run the application you want to trace as
 
@@ -34,8 +33,7 @@ If you run into problems [check if it is a known issue and file an issue if
 not](BUGS.markdown).
 
 
-Basic GUI usage
-===============
+# Basic GUI usage #
 
 Start the GUI as
 
@@ -49,8 +47,7 @@ Press `Ctrl-T` to see per-frame thumbnails.  And while inspecting frame calls,
 press again `Ctrl-T` to see per-draw call thumbnails.
 
 
-Backtrace Capturing
-===================
+# Backtrace Capturing #
 
 apitrace now has the ability to capture the call stack to an OpenGL call on
 certain OSes (only Android and Linux at the moment).  This can be helpful in
@@ -64,12 +61,10 @@ call prefixes you wish to capture stack traces to.
 The backtrace data will show up in qapitrace in the bottom section as a new tab.
 
 
-Advanced command line usage
-===========================
+# Advanced command line usage #
 
 
-Call sets
----------
+## Call sets ##
 
 Several tools take `CALLSET` arguments, e.g:
 
@@ -97,8 +92,7 @@ The call syntax is very flexible. Here are a few examples:
 
 
 
-Tracing manually
-----------------
+## Tracing manually ##
 
 ### Linux ###
 
@@ -204,8 +198,7 @@ solves this issue by injecting a DLL `dxgitrace.dll` and patching all modules
 to hook only the APIs of interest.
 
 
-Emitting annotations to the trace
----------------------------------
+## Emitting annotations to the trace ##
 
 From within OpenGL applications you can embed annotations in the trace file
 through the following extensions:
@@ -277,8 +270,7 @@ For Direct3D applications you can follow the standard procedure for
   `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
 
-Dump OpenGL state at a particular call
-----------------------------------
+## Dump OpenGL state at a particular call ##
 
 You can get a dump of the bound OpenGL state at call 12345 by doing:
 
@@ -291,8 +283,7 @@ You can compare two state dumps by doing:
     apitrace diff-state 12345.json 67890.json
 
 
-Comparing two traces side by side
----------------------------------
+## Comparing two traces side by side ##
 
     apitrace diff trace1.trace trace2.trace
 
@@ -300,8 +291,7 @@ This works only on Unices, and it will truncate the traces due to performance
 limitations.
 
 
-Recording a video with FFmpeg/Libav
------------------------------------
+## Recording a video with FFmpeg/Libav ##
 
 You can make a video of the output with FFmpeg by doing
 
@@ -313,8 +303,8 @@ or Libav (which replaces FFmpeg on recent Debian/Ubuntu distros) doing
     apitrace dump-images -o - application.trace \
     | avconv -r 30 -f image2pipe -vcodec ppm -i - -vcodec mpeg4 -y output.mp4
 
-Recording a video with gstreamer
---------------------------------------
+
+## Recording a video with gstreamer ##
 
 You can make a video of the output with gstreamer by doing
 
@@ -322,8 +312,8 @@ You can make a video of the output with gstreamer by doing
     ! videoparse format=rgb width=1920 height=1080 ! queue ! ffmpegcolorspace ! queue \
     ! vaapiupload direct-rendering=0 ! queue ! vaapiencodeh264 ! filesink location=xxx.264
 
-Trimming a trace
-----------------
+
+## Trimming a trace ##
 
 You can truncate a trace by doing:
 
@@ -340,8 +330,7 @@ necessary for a given frame or call:
     apitrace trim --auto --frames=12345 -o trimed.trace application.trace
 
 
-Profiling a trace
------------------
+## Profiling a trace ##
 
 You can perform gpu and cpu profiling with the command line options:
 
@@ -361,14 +350,12 @@ For example, to record all profiling data and utilise the per shader script:
     apitrace replay --pgpu --pcpu --ppd foo.trace | ./scripts/profileshader.py
 
 
-Advanced usage for OpenGL implementors
-======================================
+# Advanced usage for OpenGL implementers #
 
 There are several advanced usage examples meant for OpenGL implementors.
 
 
-Regression testing
-------------------
+## Regression testing ##
 
 These are the steps to create a regression test-suite around **apitrace**:
 
@@ -387,8 +374,7 @@ These are the steps to create a regression test-suite around **apitrace**:
         apitrace diff-images --output summary.html /path/to/reference/snapshots/ /path/to/test/snapshots/
 
 
-Automated git-bisection
------------------------
+## Automated git-bisection ##
 
 With tracecheck.py it is possible to automate git bisect and pinpoint the
 commit responsible for a regression.
@@ -439,8 +425,7 @@ driver is unintentionally loaded due to a missing symbol in the DRI driver, or
 another runtime fault).
 
 
-Side by side retracing
-----------------------
+## Side by side retracing ##
 
 In order to determine which draw call a regression first manifests one could
 generate snapshots for every draw call, using the `-S` option.  That is, however,
@@ -468,8 +453,7 @@ Or on Windows:
     python scripts\retracediff.py --retrace \path\to\glretrace.exe --ref-env TRACE_LIBGL=\path\to\reference\opengl32.dll application.trace
 
 
-Advanced GUI usage
-==================
+# Advanced GUI usage #
 
 qapitrace has rudimentary support for replaying traces on a remote
 target device. This can be useful, for example, when developing for an

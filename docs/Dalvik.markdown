@@ -1,5 +1,4 @@
-Tracing Dalvik VM (Java) applications on Android
-================================================
+# Tracing Dalvik VM (Java) applications on Android #
 
 Android's Java virtual machine, Dalvik, runs as a system service (started at
 bootup by `init`) and Java applications are run by forks of the initial
@@ -11,8 +10,7 @@ The following discussion assumes that tracing library is copied to '/data':
     adb push /path/to/apitrace/build/wrappers/egltrace.so /data
 
 
-Tracing on Android 4.0 and newer
---------------------------------
+## Tracing on Android 4.0 and newer ##
 
 Starting from Android 4.0 (Ice Cream Sandwich) release, Dalvik supports
 running designated processes with wrappers, in which case a new Java VM is
@@ -43,8 +41,7 @@ are saved into '/data/data/$PROCNAME' directory by default:
     adb shell rm /data/data/$PROCNAME/$PROCNAME.trace
 
 
-Tracing on Android pre-4.0
---------------------------
+## Tracing on Android pre-4.0 ##
 
 `LD_PRELOAD` is supported since Android 2.3 "Gingerbread" and newer, but
 injecting tracing library globally is no longer supported, as the

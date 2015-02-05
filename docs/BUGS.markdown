@@ -1,5 +1,4 @@
-Reporting bugs
-==============
+# Reporting bugs #
 
 Before reporting, please skim through the known issues below.
 
@@ -11,8 +10,7 @@ always including the following information:
 * OpenGL/D3D driver name and version
 
 
-Known issues
-============
+# Known issues #
 
 These are issues that the developers are already aware of, but for which there
 is no immediate plan to address them, because either:
@@ -34,8 +32,7 @@ if:
   sooner rather than later.
 
 
-Tracing
--------
+## Tracing ##
 
 * Fake calls may be emitted in the trace, in order to provide complete
   information for retracing.  The typical case is OpenGL vertex arrays in user
@@ -63,8 +60,7 @@ Tracing
 * On MacOSX, the internal OpenGL calls done by GLU are not traced yet.
 
 
-Retracing
----------
+## Retracing ##
 
 * Replaying can take substantially more CPU due to the overhead of reading the
   trace file from disk.
@@ -95,15 +91,13 @@ Retracing
   share state.  This is by far the most common case though.
 
 
-GUI
----
+## GUI ##
 
 * Not all types of arguments can be edited.
 
 
 
-Proprietary/confidential applications
-=====================================
+# Proprietary/confidential applications #
 
 Issues should be preferably filed on github to facilitate collaborative
 development and for future reference.
@@ -129,8 +123,7 @@ Failure to do so will render the apitrace authors powerless to address the
 issue.
 
 
-Attachments
-===========
+# Attachments #
 
 github issue tracker doesn't support attachments.
 
@@ -147,8 +140,7 @@ further reduce their size when attaching/uploading by compressing with
 [XZ](http://tukaani.org/xz/) or [7-Zip](http://www.7-zip.org/).
 
 
-Bugs on tracing
-===============
+# Bugs on tracing #
 
 For bugs that happen while tracing (e.g., crashes while tracing the
 application, or incorrect traces) please:
@@ -158,8 +150,7 @@ application, or incorrect traces) please:
 * describe how you were using it when the issue happened.
 
 
-Bugs on retracing/GUI
-=====================
+# Bugs on retracing/GUI #
 
 For bugs on retracing (e.g. crashes when retracing the application,
 incorrect inconsistent rendering, or viewing with the GUI) please:
@@ -169,15 +160,13 @@ incorrect inconsistent rendering, or viewing with the GUI) please:
 * describe the results you got, and what results you were expecting.
 
 
-Obtaining stack back-traces
-===========================
+# Obtaining stack back-traces #
 
 Please rebuild apitrace with debugging information, by passing
 `-DCMAKE_BUILD_TYPE=Debug` to cmake, or editing its value in `CMakeCache.txt`
 and rebuilding.
 
-Linux
------
+## Linux ##
 
 To obtain a stack back-trace, run the application with gdb from a terminal:
 
@@ -203,8 +192,7 @@ See also more detailed and Distro specific instructions:
 * http://live.gnome.org/GettingTraces
 
 
-Mac OS X
---------
+## Mac OS X ##
 
 Before you can debug you must first enable developer mode on the machine if you
 haven't done so before:
@@ -220,9 +208,8 @@ To trace an application inside LLDB and obtain a stack backtrace invoke apitrace
     (lldb) quit
 
 
-Windows
--------
+## Windows ##
 
 See:
 
-* https://developer.mozilla.org/en/how_to_get_a_stacktrace_with_windbg
+* <https://developer.mozilla.org/en/how_to_get_a_stacktrace_with_windbg>
