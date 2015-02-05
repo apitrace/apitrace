@@ -503,6 +503,14 @@ class GlDispatcher(Dispatcher):
 
     def failFunction(self, function):
         # We fake these when they are not available
+        if sys.platform == 'darwin':
+            # Fallback to EXT_debug_label on MacOSX
+            if function.name == 'glObjectLabel':
+                print r'    _glLabelObjectEXT(identifier, name, length < 0 ? 0 : length, length == 0 ? "" : label);'
+                return
+            if function.name == 'glGetObjectLabel':
+                print r'    _glGetObjectLabelEXT(identifier, name, bufSize, length, label);'
+                return
         if function.name in (
             # GL_KHR_debug
             'glDebugMessageControl',
