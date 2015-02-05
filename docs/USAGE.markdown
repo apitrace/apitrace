@@ -270,6 +270,33 @@ For Direct3D applications you can follow the standard procedure for
   `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
 
+## Mask OpenGL features ##
+
+It's now possible to mask some of OpenGL features while tracing via a configuration file:
+
+ * `$XDG_CONFIG_HOME/apitrace/gltrace.conf` or `$HOME/.config/apitrace/gltrace.conf` on Linux
+
+ * `$HOME/Library/Preferences/apitrace/gltrace.conf` on MacOS X
+
+ * `%LOCALAPPDATA%\apitrace\gltrace.conf` on Windows
+
+Here's an example `gltrace.conf` config file showing some variables:
+
+    # comment line
+    GL_VERSION = "2.0"
+    GL_VENDOR = "Acme, Inc."
+    GL_EXTENSIONS = "GL_EXT_texture_swizzle GL_ARB_multitexture"
+    GL_RENDERER = "Acme rasterizer"
+    GL_SHADING_LANGUAGE_VERSION = "1.30"
+    GL_MAX_TEXTURE_SIZE = 1024
+
+This basically overrides the respective `glGetString()` and `glGetIntegerv()`
+parameters.
+
+String values are contained inside `""` pairs and may span multiple lines.
+Integer values are given without quotes.
+
+
 ## Dump OpenGL state at a particular call ##
 
 You can get a dump of the bound OpenGL state at call 12345 by doing:

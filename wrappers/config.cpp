@@ -32,20 +32,8 @@
 
 
 /*
- * The format of the file is extremely simple.
- * Here's an example config file showing some variables:
-
-# comment line
-GL_VERSION = "2.0"
-GL_VENDOR = "Acme, Inc."
-GL_EXTENSIONS = "GL_EXT_texture_swizzle GL_ARB_multitexture"
-GL_RENDERER = "Acme rasterizer"
-GL_SHADING_LANGUAGE_VERSION = "1.30"
-GL_MAX_TEXTURE_SIZE = 1024
-
- * Basically, override the glGetString() targets and the max 2D
- * texture size.  String values are contained inside "" pairs and may
- * span multiple lines.  Integer values are given without quotes.
+ * The format of the file is extremely simple.  An example is given in
+ * docs/USAGE.markdown .
  *
  * Future improvements:
  * - An option to simply turn off specific extensions
