@@ -35,7 +35,7 @@
 
 #include <ostream>
 #include <set>
-
+#include <string>
 
 namespace glprofile {
 
