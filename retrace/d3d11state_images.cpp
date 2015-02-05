@@ -507,14 +507,20 @@ dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDevice)
 
     ID3D11ShaderResourceView *pShaderResourceViews[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
 
-    pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-
     pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
     dumpStageTextures(json, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
+    pDevice->HSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "HS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
+    pDevice->DSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "DS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
     pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
     dumpStageTextures(json, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+
+    pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(json, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     json.endObject();
     json.endMember(); // textures

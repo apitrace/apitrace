@@ -48,6 +48,18 @@ dumpShaders(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
         dumpShader<ID3D11DeviceChild>(json, "VS", pVertexShader);
     }
 
+    com_ptr<ID3D11HullShader> pHullShader;
+    pDeviceContext->HSGetShader(&pHullShader, NULL, NULL);
+    if (pHullShader) {
+        dumpShader<ID3D11DeviceChild>(json, "HS", pHullShader);
+    }
+
+    com_ptr<ID3D11DomainShader> pDomainShader;
+    pDeviceContext->DSGetShader(&pDomainShader, NULL, NULL);
+    if (pDomainShader) {
+        dumpShader<ID3D11DeviceChild>(json, "DS", pDomainShader);
+    }
+
     com_ptr<ID3D11GeometryShader> pGeometryShader;
     pDeviceContext->GSGetShader(&pGeometryShader, NULL, NULL);
     if (pGeometryShader) {
