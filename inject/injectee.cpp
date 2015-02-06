@@ -935,6 +935,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-0.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-1-1.dll");
         registerLibraryLoaderHooks("api-ms-win-core-libraryloader-l1-2-0.dll");
+        registerLibraryLoaderHooks("api-ms-win-core-kernel32-legacy-l1-1-0.dll");
 
         registerProcessThreadsHooks("kernel32.dll");
         registerProcessThreadsHooks("api-ms-win-core-processthreads-l1-1-0.dll");
