@@ -146,6 +146,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d9.py
                 ${CMAKE_SOURCE_DIR}/specs/winapi.py
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )

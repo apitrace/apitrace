@@ -200,6 +200,8 @@ to hook only the APIs of interest.
 
 ## Emitting annotations to the trace ##
 
+### OpenGL annotations ###
+
 From within OpenGL applications you can embed annotations in the trace file
 through the following extensions:
 
@@ -260,10 +262,13 @@ For OpenGL ES applications you can embed annotations in the trace file through t
 extensions.
 
 
+### Direct3D annotations ###
+
 For Direct3D applications you can follow the standard procedure for
 [adding user defined events to Visual Studio Graphics Debugger / PIX](http://msdn.microsoft.com/en-us/library/vstudio/hh873200.aspx):
 
-- `D3DPERF_BeginEvent`, `D3DPERF_EndEvent`, and `D3DPERF_SetMarker` for D3D9 applications.
+- `D3DPERF_BeginEvent`, `D3DPERF_EndEvent`, and `D3DPERF_SetMarker` for D3D9,
+  D3D10, and D3D11.0 applications.
 
 - `ID3DUserDefinedAnnotation::BeginEvent`,
   `ID3DUserDefinedAnnotation::EndEvent`, and

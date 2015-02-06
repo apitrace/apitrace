@@ -422,6 +422,15 @@ d3d9 = Module("d3d9")
 d3d9.addFunctions([
     StdFunction(PDIRECT3D9, "Direct3DCreate9", [(UINT, "SDKVersion")], fail='NULL'),
     StdFunction(HRESULT, "Direct3DCreate9Ex", [(UINT, "SDKVersion"), Out(Pointer(PDIRECT3D9EX), "ppD3D")], fail='D3DERR_NOTAVAILABLE'),
+])
+d3d9.addInterfaces([
+    IDirect3DSwapChain9Ex,
+])
+
+# D3DPERF_* functions can also be used by D3D10 applications, so keep them in a
+# separate module to be merged as necessary
+d3dperf = Module("d3d9")
+d3dperf.addFunctions([
     StdFunction(Int, "D3DPERF_BeginEvent", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail='-1', sideeffects=False),
     StdFunction(Int, "D3DPERF_EndEvent", [], fail='-1', sideeffects=False),
     StdFunction(Void, "D3DPERF_SetMarker", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], sideeffects=False),
@@ -429,7 +438,4 @@ d3d9.addFunctions([
     StdFunction(BOOL, "D3DPERF_QueryRepeatFrame", [], fail='FALSE', sideeffects=False),
     StdFunction(Void, "D3DPERF_SetOptions", [(DWORD, "dwOptions")], sideeffects=False),
     StdFunction(DWORD, "D3DPERF_GetStatus", [], fail='0', sideeffects=False),
-])
-d3d9.addInterfaces([
-    IDirect3DSwapChain9Ex,
 ])

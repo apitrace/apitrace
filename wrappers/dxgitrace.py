@@ -33,6 +33,7 @@ from specs import dxgi
 from specs import d3d10
 from specs import d3d10_1
 from specs import d3d11
+from specs import d3d9
 
 
 class D3DCommonTracer(DllTracer):
@@ -145,6 +146,7 @@ if __name__ == '__main__':
     print r'#include "d3d10size.hpp"'
     print r'#include "d3d11imports.hpp"'
     print r'#include "d3d11size.hpp"'
+    print r'#include "d3d9imports.hpp" // D3DPERF_*'
     print
 
     api = API()
@@ -152,6 +154,7 @@ if __name__ == '__main__':
     api.addModule(d3d10.d3d10)
     api.addModule(d3d10_1.d3d10_1)
     api.addModule(d3d11.d3d11)
+    api.addModule(d3d9.d3dperf)
 
     tracer = D3DCommonTracer()
     tracer.traceApi(api)

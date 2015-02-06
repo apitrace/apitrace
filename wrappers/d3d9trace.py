@@ -26,7 +26,7 @@
 
 from dlltrace import DllTracer
 from specs.stdapi import API, Pointer, ObjPointer
-from specs.d3d9 import d3d9, D3DSHADER9, IDirect3DSwapChain9Ex
+from specs.d3d9 import d3d9, D3DSHADER9, IDirect3DSwapChain9Ex, d3dperf
 
 import specs.d3d9dxva2
 
@@ -116,6 +116,8 @@ if __name__ == '__main__':
     print '#include "d3d9shader.hpp"'
     print '#include "dxvaint.h"'
     print
+
+    d3d9.mergeModule(d3dperf)
 
     api = API()
     api.addModule(d3d9)
