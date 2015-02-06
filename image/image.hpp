@@ -33,6 +33,8 @@
 
 #include <iostream>
 
+#include <string>
+
 
 namespace image {
 
@@ -57,6 +59,8 @@ public:
 
     // Pixels in RGBA format
     unsigned char *pixels;
+
+    std::string label;
 
     inline Image(unsigned w, unsigned h, unsigned c = 4, bool f = false, ChannelType t = TYPE_UNORM8) :
         width(w),

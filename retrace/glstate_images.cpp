@@ -429,7 +429,9 @@ getTexImageOES(GLenum target, GLint level, ImageDesc &desc, GLubyte *pixels)
 
 static inline void
 dumpActiveTextureLevel(JSONWriter &json, Context &context,
-                       GLenum target, GLint level, const std::string & label)
+                       GLenum target, GLint level,
+                       const std::string & label,
+                       const char *userLabel)
 {
     ImageDesc desc;
     if (!getActiveTextureLevelDesc(context, target, level, desc)) {
@@ -490,6 +492,10 @@ dumpActiveTextureLevel(JSONWriter &json, Context &context,
         }
     }
 
+    if (userLabel) {
+        image->label = userLabel;
+    }
+
     JSONWriter::ImageDesc imageDesc;
     imageDesc.depth = desc.depth;
     imageDesc.format = formatToString(desc.internalFormat);
@@ -531,8 +537,6 @@ dumpActiveTexture(JSONWriter &json, Context &context, GLenum target, GLuint text
             std::stringstream label;
             label << "GL_TEXTURE" << (active_texture - GL_TEXTURE0) << ", "
                   << enumToString(subtarget);
-            if (object_label)
-                label << ", \"" << object_label << "\"";
             if (allowMipmaps) {
                 label << ", level = " << level;
             }
@@ -540,7 +544,7 @@ dumpActiveTexture(JSONWriter &json, Context &context, GLenum target, GLuint text
             if (!getActiveTextureLevelDesc(context, subtarget, level, desc)) {
                 goto finished;
             }
-            dumpActiveTextureLevel(json, context, subtarget, level, label.str());
+            dumpActiveTextureLevel(json, context, subtarget, level, label.str(), object_label);
         }
 
         if (!allowMipmaps) {
@@ -964,6 +968,7 @@ static inline void
 dumpReadBufferImage(JSONWriter &json,
                     Context & context,
                     const char *label,
+                    const char *userLabel,
                     GLint width, GLint height,
                     GLenum format, GLenum type,
                     GLenum internalFormat = GL_NONE)
@@ -1006,6 +1011,10 @@ dumpReadBufferImage(JSONWriter &json,
             error = glGetError();
         } while(error != GL_NO_ERROR);
     } else {
+        if (userLabel) {
+            image->label = userLabel;
+        }
+
         JSONWriter::ImageDesc imageDesc;
         imageDesc.format = formatToString(internalFormat);
         json.beginMember(label);
@@ -1155,7 +1164,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         GLenum format = alpha_bits ? GL_RGBA : GL_RGB;
         GLenum type = GL_UNSIGNED_BYTE;
 
-        dumpReadBufferImage(json, context, enumToString(draw_buffer), width, height, format, type);
+        dumpReadBufferImage(json, context, enumToString(draw_buffer), NULL, width, height, format, type);
 
         // Restore original read buffer
         if (!context.ES) {
@@ -1171,7 +1180,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
             glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
         }
         if (depth_bits) {
-            dumpReadBufferImage(json, context, "GL_DEPTH_COMPONENT", width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
+            dumpReadBufferImage(json, context, "GL_DEPTH_COMPONENT", NULL, width, height, GL_DEPTH_COMPONENT, GL_FLOAT);
         }
 
         GLint stencil_bits = 0;
@@ -1182,7 +1191,7 @@ dumpDrawableImages(JSONWriter &json, Context &context)
         }
         if (stencil_bits) {
             assert(stencil_bits <= 8);
-            dumpReadBufferImage(json, context, "GL_STENCIL_INDEX", width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
+            dumpReadBufferImage(json, context, "GL_STENCIL_INDEX", NULL, width, height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
         }
     }
     
@@ -1237,12 +1246,7 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
                                           &object_name);
     char *object_label = getObjectLabel(context, object_type, object_name);
 
-    std::stringstream label;
-    label << enumToString(attachment);
-    if (object_label) {
-        label << ", \"" << object_label << "\"";
-        free(object_label);
-    }
+    const char *label = enumToString(attachment);
 
     if (object_type == GL_TEXTURE) {
         GLint layered = GL_FALSE;
@@ -1269,19 +1273,21 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
             glGetIntegerv(texture_binding, &bound_texture);
             glBindTexture(texture_target, object_name);
 
-            dumpActiveTextureLevel(json, context, texture_target, level, label.str());
+            dumpActiveTextureLevel(json, context, texture_target, level, label, object_label);
 
             glBindTexture(texture_target, bound_texture);
 
+            free(object_label);
             return;
         }
     }
 
 
     dumpReadBufferImage(json, context,
-                        label.str().c_str(),
+                        label, object_label,
                         desc.width, desc.height,
                         format, type, desc.internalFormat);
+    free(object_label);
 }
 
 

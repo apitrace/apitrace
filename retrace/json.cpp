@@ -322,6 +322,10 @@ JSONWriter::writeImage(image::Image *image,
 
     writeStringMember("__format__", desc.format.c_str());
 
+    if (!image->label.empty()) {
+        writeStringMember("__label__", image->label.c_str());
+    }
+
     beginMember("__data__");
     std::stringstream ss;
 

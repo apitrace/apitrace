@@ -470,11 +470,18 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         QByteArray dataArray =
             image[QLatin1String("__data__")].toByteArray();
 
+        QString label = itr.key();
+        QString userLabel =
+            image[QLatin1String("__label__")].toString();
+        if (!userLabel.isEmpty()) {
+            label += QString(", \"%1\"").arg(userLabel);
+        }
+
         ApiTexture tex;
         tex.setSize(size);
         tex.setDepth(depth);
         tex.setFormatName(formatName);
-        tex.setLabel(itr.key());
+        tex.setLabel(label);
         tex.contentsFromBase64(dataArray);
 
         m_textures.append(tex);
@@ -493,11 +500,18 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         QByteArray dataArray =
             buffer[QLatin1String("__data__")].toByteArray();
 
+        QString label = itr.key();
+        QString userLabel =
+            buffer[QLatin1String("__label__")].toString();
+        if (!userLabel.isEmpty()) {
+            label += QString(", \"%1\"").arg(userLabel);
+        }
+
         ApiFramebuffer fbo;
         fbo.setSize(size);
         fbo.setDepth(depth);
         fbo.setFormatName(formatName);
-        fbo.setType(itr.key());
+        fbo.setType(label);
         fbo.contentsFromBase64(dataArray);
         m_framebuffers.append(fbo);
     }
