@@ -294,6 +294,12 @@ getSubResourceImage(ID3D11DeviceContext *pDeviceContext,
                          StagingDesc.Width, StagingDesc.Height);
 
     pDeviceContext->Unmap(pStagingResource, 0);
+
+    if (image) {
+        image->label = getObjectName(pResource);
+        std::cerr << image->label << "\n";
+    }
+
 no_map:
     return image;
 }

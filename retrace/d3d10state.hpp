@@ -29,53 +29,84 @@
 
 #include <windows.h>
 
+#include <vector>
+#include <string>
 
 #include "json.hpp"
 #include "com_ptr.hpp"
 #include "d3dshader.hpp"
 #include "d3dstate.hpp"
 
+#include "d3d10imports.hpp"
+
 
 namespace d3dstate {
 
 
-template< class T >
+template< typename T >
+inline std::vector<BYTE>
+getPrivateData(T *pObject, REFGUID guid)
+{
+    std::vector<BYTE> Data;
+
+    if (!pObject) {
+        return Data;
+    }
+
+    UINT DataLength = 0;
+    char dummy;
+    HRESULT hr;
+    hr = pObject->GetPrivateData(guid, &DataLength, &dummy);
+    if (hr != DXGI_ERROR_MORE_DATA) {
+        return Data;
+    }
+
+    Data.resize(DataLength);
+
+    hr = pObject->GetPrivateData(guid, &DataLength, &Data[0]);
+    if (FAILED(hr)) {
+        Data.clear();
+    }
+
+    return Data;
+}
+
+
+template< typename T >
 inline void
 dumpShader(JSONWriter &json, const char *name, T *pShader) {
     if (!pShader) {
         return;
     }
 
-    HRESULT hr;
-
     /*
      * There is no method to get the shader byte code, so the creator is supposed to
      * attach it via the SetPrivateData method.
      */
-    UINT BytecodeLength = 0;
-    char dummy;
-    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, &dummy);
-    if (hr != DXGI_ERROR_MORE_DATA) {
+
+
+    std::vector<BYTE> ShaderBytecode = getPrivateData(pShader, GUID_D3DSTATE);
+    if (ShaderBytecode.empty()) {
         return;
     }
 
-    void *pShaderBytecode = malloc(BytecodeLength);
-    if (!pShaderBytecode) {
-        return;
-    }
-
-    hr = pShader->GetPrivateData(GUID_D3DSTATE, &BytecodeLength, pShaderBytecode);
+    com_ptr<IDisassemblyBuffer> pDisassembly;
+    HRESULT hr;
+    hr = DisassembleShader(&ShaderBytecode[0], ShaderBytecode.size(), &pDisassembly);
     if (SUCCEEDED(hr)) {
-        com_ptr<IDisassemblyBuffer> pDisassembly;
-        hr = DisassembleShader(pShaderBytecode, BytecodeLength, &pDisassembly);
-        if (SUCCEEDED(hr)) {
-            json.beginMember(name);
-            json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
-            json.endMember();
-        }
+        json.beginMember(name);
+        json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+        json.endMember();
     }
+}
 
-    free(pShaderBytecode);
+
+template< typename T >
+inline std::string
+getObjectName(T *pObject)
+{
+    std::vector<BYTE> ObjectName = getPrivateData(pObject, WKPDID_D3DDebugObjectName);
+    return std::string(ObjectName.begin(), ObjectName.end());
 }
 
 
