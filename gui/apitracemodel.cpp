@@ -384,7 +384,6 @@ void ApiTraceModel::fetchMore(const QModelIndex &parent)
         ApiTraceEvent *event = item(parent);
         if (event && event->type() == ApiTraceEvent::Frame) {
             ApiTraceFrame *frame = static_cast<ApiTraceFrame*>(event);
-            QModelIndex index = createIndex(frame->number, 0, frame);
 
             Q_ASSERT(!frame->isLoaded());
             m_loadingFrames.insert(frame);
