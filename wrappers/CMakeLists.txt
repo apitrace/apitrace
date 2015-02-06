@@ -125,17 +125,6 @@ if (WIN32)
 
     # dxgi.dll, d3d10.dll, d3d10_1.dll, d3d11.dll
     if (DirectX_D3D11_2_INCLUDE_FOUND)
-        set (DXGITRACE_DEF ${CMAKE_CURRENT_BINARY_DIR}/dxgitrace.def)
-        file (WRITE  ${DXGITRACE_DEF} "EXPORTS\n")
-        file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory\n")
-        file (APPEND ${DXGITRACE_DEF} "CreateDXGIFactory1\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDevice1\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D10CreateDeviceAndSwapChain1\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D11CreateDevice\n")
-        file (APPEND ${DXGITRACE_DEF} "D3D11CreateDeviceAndSwapChain\n")
-
         include_directories (BEFORE SYSTEM ${DirectX_D3D11_2_INCLUDE_DIR})
 
         add_custom_command (
@@ -161,7 +150,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
         add_library (dxgitrace MODULE
-            ${DXGITRACE_DEF}
+            dxgitrace.def
             dxgitrace.cpp
             d3dcommonshader.cpp
         )
