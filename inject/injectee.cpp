@@ -495,7 +495,8 @@ patchFunction(HMODULE hModule,
     }
 
     if (VERBOSITY > 0) {
-        debugPrintf("inject: patching %s -> %s!%s\n", szModule, pszDllName, pszFunctionName);
+        DWORD Offset = (DWORD)(UINT_PTR)lpOldFunctionAddress - (UINT_PTR)hModule;
+        debugPrintf("inject: patching %s!0x%lx -> %s!%s\n", szModule, Offset, pszDllName, pszFunctionName);
     }
 
     return replaceAddress(lpOldFunctionAddress, lpNewAddress);
