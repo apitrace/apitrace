@@ -274,6 +274,20 @@ For Direct3D applications you can follow the standard procedure for
   `ID3DUserDefinedAnnotation::EndEvent`, and
   `ID3DUserDefinedAnnotation::SetMarker` for D3D11.1 applications.
 
+And for [naming objects](http://blogs.msdn.com/b/chuckw/archive/2010/04/15/object-naming.aspx)
+which support `SetPrivateData` method:
+
+    pObject->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(szName), szName);
+
+Note that [programmatic capture interfaces](https://msdn.microsoft.com/en-us/library/hh780905.aspx)
+are currently _not_ supported.
+
+See also:
+
+* <http://seanmiddleditch.com/direct3d-11-debug-api-tricks/>
+
+* <http://blogs.msdn.com/b/chuckw/archive/2012/11/30/direct3d-sdk-debug-layer-tricks.aspx>
+
 
 ## Mask OpenGL features ##
 

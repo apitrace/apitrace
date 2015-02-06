@@ -31,6 +31,7 @@ import sys
 from dllretrace import DllRetracer as Retracer
 import specs.dxgi
 from specs.stdapi import API
+from specs.winapi import LPCSTR
 from specs.dxgi import dxgi
 from specs.d3d10 import d3d10
 from specs.d3d10_1 import d3d10_1
@@ -381,6 +382,21 @@ class D3DRetracer(Retracer):
             print r'    if (retrace::dumpingState && SUCCEEDED(_result)) {'
             print r'        (*%s)->SetPrivateData(d3dstate::GUID_D3DSTATE, BytecodeLength, pShaderBytecode);' % ppShader.name
             print r'    }'
+
+    def extractArg(self, function, arg, arg_type, lvalue, rvalue):
+        # Set object names
+        if function.name == 'SetPrivateData' and arg.name == 'pData':
+            iid = function.args[0].name
+            print r'    if (%s != WKPDID_D3DDebugObjectName) {' % iid
+            print r'        return;'
+            print r'    }'
+            # Interpret argument as string
+            Retracer.extractArg(self, function, arg, LPCSTR, lvalue, rvalue)
+            print r'    assert(pData);'
+            print r'    assert(DataSize == strlen((const char *)pData));'
+            return
+
+        Retracer.extractArg(self, function, arg, arg_type, lvalue, rvalue)
 
 
 def main():

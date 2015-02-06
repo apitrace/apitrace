@@ -75,7 +75,6 @@ class D3DCommonTracer(DllTracer):
             return
 
         # Serialize object names
-        # http://blogs.msdn.com/b/chuckw/archive/2010/04/15/object-naming.aspx
         if function.name == 'SetPrivateData' and arg.name == 'pData':
             iid = function.args[0].name
             print r'    if (%s == WKPDID_D3DDebugObjectName) {' % iid

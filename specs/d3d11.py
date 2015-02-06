@@ -335,7 +335,7 @@ D3D11_BOX = Struct("D3D11_BOX", [
 ID3D11DeviceChild.methods += [
     StdMethod(Void, "GetDevice", [Out(Pointer(ObjPointer(ID3D11Device)), "ppDevice")]),
     StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), InOut(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
-    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
     StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
 ]
 
@@ -1305,7 +1305,7 @@ ID3D11Device.methods += [
     StdMethod(HRESULT, "CheckCounter", [(Pointer(Const(D3D11_COUNTER_DESC)), "pDesc"), Out(Pointer(D3D11_COUNTER_TYPE), "pType"), Out(Pointer(UINT), "pActiveCounters"), Out(LPSTR, "szName"), Out(Pointer(UINT), "pNameLength"), Out(LPSTR, "szUnits"), Out(Pointer(UINT), "pUnitsLength"), Out(LPSTR, "szDescription"), Out(Pointer(UINT), "pDescriptionLength")], sideeffects=False),
     StdMethod(HRESULT, "CheckFeatureSupport", [(D3D11_FEATURE, "Feature"), Out(D3D11_FEATURE_DATA, "pFeatureSupportData"), (UINT, "FeatureSupportDataSize")], sideeffects=False),
     StdMethod(HRESULT, "GetPrivateData", [(REFGUID, "guid"), InOut(Pointer(UINT), "pDataSize"), Out(OpaquePointer(Void), "pData")], sideeffects=False),
-    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")], sideeffects=False),
+    StdMethod(HRESULT, "SetPrivateData", [(REFGUID, "guid"), (UINT, "DataSize"), (OpaqueBlob(Const(Void), "DataSize"), "pData")]),
     StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
     StdMethod(D3D_FEATURE_LEVEL, "GetFeatureLevel", [], sideeffects=False),
     StdMethod(D3D11_CREATE_DEVICE_FLAG, "GetCreationFlags", [], sideeffects=False),
