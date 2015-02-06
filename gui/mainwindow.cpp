@@ -605,6 +605,14 @@ static void addSurfaceItem(const ApiSurface &surface,
         .arg(width)
         .arg(height);
 
+    QString toolTip;
+    toolTip += QString::fromLatin1("label = %1\n").arg(label);
+    toolTip += QString::fromLatin1("format = %1\n").arg(surface.formatName());
+    toolTip += QString::fromLatin1("width = %1\n").arg(width);
+    toolTip += QString::fromLatin1("height = %1\n").arg(height);
+    item->setToolTip(0, toolTip);
+    item->setToolTip(1, toolTip);
+
     //item->setText(1, descr);
     QLabel *l = new QLabel(descr, tree);
     l->setWordWrap(true);
