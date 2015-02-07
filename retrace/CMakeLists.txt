@@ -243,45 +243,42 @@ if (WIN32)
             ${DirectX_D3D11_2_INCLUDE_DIR}
             ${CMAKE_SOURCE_DIR}/thirdparty/directxtex/DirectXTex
         )
-        set (DXGI_MODULES d3d10 d3d10_1 d3d11 d3d11_1)
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             dxgistate.cpp
             d3d10state.cpp
             d3d10state_images.cpp
             d3d11state.cpp
             d3d11state_images.cpp
+            d3dretrace_dxgi.cpp
+        )
+        add_custom_command (
+            OUTPUT d3dretrace_dxgi.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
+            DEPENDS
+                dxgiretrace.py
+                dllretrace.py
+                retrace.py
+                ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
     endif ()
-
-    add_custom_command (
-        OUTPUT d3dretrace_dxgi.cpp
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgiretrace.py ${DXGI_MODULES} > ${CMAKE_CURRENT_BINARY_DIR}/d3dretrace_dxgi.cpp
-        DEPENDS
-            dxgiretrace.py
-            dllretrace.py
-            retrace.py
-            ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d11_1.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d11.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
-            ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
-            ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
-            ${CMAKE_SOURCE_DIR}/specs/dxgi.py
-            ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
-            ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
-            ${CMAKE_SOURCE_DIR}/specs/winapi.py
-            ${CMAKE_SOURCE_DIR}/specs/stdapi.py
-    )
 
     add_executable (d3dretrace
         d3dretrace_main.cpp
         d3dretrace_ddraw.cpp
         d3dretrace_d3d8.cpp
         d3dretrace_d3d9.cpp
-        d3dretrace_dxgi.cpp
         d3dretrace_dxgi_priv.cpp
         d3dretrace_ws.cpp
         d3d9state.cpp
