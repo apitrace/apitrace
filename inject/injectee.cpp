@@ -385,8 +385,12 @@ replaceAddress(LPVOID *lpOldAddress, LPVOID lpNewAddress)
 /* Return pointer to patcheable function address.
  *
  * See also:
+ *
  * - An In-Depth Look into the Win32 Portable Executable File Format, Part 2, Matt Pietrek,
  *   http://msdn.microsoft.com/en-gb/magazine/cc301808.aspx
+ *
+ * - http://www.microsoft.com/msj/1298/hood/hood1298.aspx
+ *
  */
 static LPVOID *
 getOldFunctionAddress(HMODULE hModule,
@@ -586,7 +590,6 @@ patchModule(HMODULE hModule,
     }
 
     /* Hook modules only once */
-    /* FIXME: We should intercept FreeLibrary and reset the bit */
     std::pair< std::set<HMODULE>::iterator, bool > ret;
     EnterCriticalSection(&Mutex);
     ret = g_hHookedModules.insert(hModule);
@@ -807,6 +810,24 @@ MyGetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
 }
 
 
+static BOOL WINAPI
+MyFreeLibrary(HMODULE hModule)
+{
+    if (VERBOSITY >= 2) {
+        debugPrintf("inject: intercepting %s(0x%p)\n", __FUNCTION__, hModule);
+    }
+
+    BOOL bRet = FreeLibrary(hModule);
+
+    EnterCriticalSection(&Mutex);
+    // TODO: Only clear the modules that have been freed
+    g_hHookedModules.clear();
+    LeaveCriticalSection(&Mutex);
+
+    return bRet;
+}
+
+
 static void
 registerLibraryLoaderHooks(const char *szMatchModule)
 {
@@ -818,6 +839,7 @@ registerLibraryLoaderHooks(const char *szMatchModule)
     functionMap["LoadLibraryExA"] = (LPVOID)MyLoadLibraryExA;
     functionMap["LoadLibraryExW"] = (LPVOID)MyLoadLibraryExW;
     functionMap["GetProcAddress"] = (LPVOID)MyGetProcAddress;
+    functionMap["FreeLibrary"]    = (LPVOID)MyFreeLibrary;
 }
 
 static void
