@@ -1270,6 +1270,10 @@ D3D11_CREATE_DEVICE_FLAG = Flags(UINT, [
     "D3D11_CREATE_DEVICE_SWITCH_TO_REF",
     "D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS",
     "D3D11_CREATE_DEVICE_BGRA_SUPPORT",
+    "D3D11_CREATE_DEVICE_DEBUGGABLE",
+    "D3D11_CREATE_DEVICE_PREVENT_ALTERING_LAYER_SETTINGS_FROM_REGISTRY",
+    "D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT",
+    "D3D11_CREATE_DEVICE_VIDEO_SUPPORT",
 ])
 
 ID3D11Device.methods += [
@@ -1333,17 +1337,6 @@ d3d11.addInterfaces([
 #
 # D3D11.1
 #
-
-D3D_FEATURE_LEVEL.values += [
-    "D3D_FEATURE_LEVEL_11_1",
-]
-
-D3D11_CREATE_DEVICE_FLAG.values += [
-    "D3D11_CREATE_DEVICE_DEBUGGABLE",
-    "D3D11_CREATE_DEVICE_PREVENT_ALTERING_LAYER_SETTINGS_FROM_REGISTRY",
-    "D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT",
-    "D3D11_CREATE_DEVICE_VIDEO_SUPPORT",
-]
 
 D3D_MIN_PRECISION = Enum("D3D_MIN_PRECISION", [
     "D3D_MIN_PRECISION_DEFAULT",
@@ -1476,4 +1469,92 @@ ID3DUserDefinedAnnotation.methods += [
 d3d11.addInterfaces([
     ID3D11Device1,
     ID3DUserDefinedAnnotation,
+])
+
+
+
+#
+# D3D11.2
+#
+
+D3D11_TILED_RESOURCE_COORDINATE = Struct("D3D11_TILED_RESOURCE_COORDINATE", [
+    (UINT, "X"),
+    (UINT, "Y"),
+    (UINT, "Z"),
+    (UINT, "Subresource"),
+])
+
+D3D11_TILE_REGION_SIZE = Struct("D3D11_TILE_REGION_SIZE", [
+    (UINT, "NumTiles"),
+    (BOOL, "bUseBox"),
+    (UINT, "Width"),
+    (UINT16, "Height"),
+    (UINT16, "Depth"),
+])
+
+D3D11_TILE_MAPPING_FLAG = Flags(UINT, [
+    "D3D11_TILE_MAPPING_NO_OVERWRITE",
+])
+
+D3D11_TILE_RANGE_FLAG = Flags(UINT, [
+    "D3D11_TILE_RANGE_NULL",
+    "D3D11_TILE_RANGE_SKIP",
+    "D3D11_TILE_RANGE_REUSE_SINGLE_TILE",
+])
+
+D3D11_SUBRESOURCE_TILING = Struct("D3D11_SUBRESOURCE_TILING", [
+    (UINT, "WidthInTiles"),
+    (UINT16, "HeightInTiles"),
+    (UINT16, "DepthInTiles"),
+    (FakeEnum(UINT, ["D3D11_PACKED_TILE"]), "StartTileIndexInOverallResource"),
+])
+
+D3D11_TILE_SHAPE = Struct("D3D11_TILE_SHAPE", [
+    (UINT, "WidthInTexels"),
+    (UINT, "HeightInTexels"),
+    (UINT, "DepthInTexels"),
+])
+
+D3D11_PACKED_MIP_DESC = Struct("D3D11_PACKED_MIP_DESC", [
+    (UINT8, "NumStandardMips"),
+    (UINT8, "NumPackedMips"),
+    (UINT, "NumTilesForPackedMips"),
+    (UINT, "StartTileIndexInOverallResource"),
+])
+
+D3D11_CHECK_MULTISAMPLE_QUALITY_LEVELS_FLAG = Flags(UINT, [
+    "D3D11_CHECK_MULTISAMPLE_QUALITY_LEVELS_TILED_RESOURCE",
+])
+
+D3D11_TILE_COPY_FLAG = Flags(UINT, [
+    "D3D11_TILE_COPY_NO_OVERWRITE",
+    "D3D11_TILE_COPY_LINEAR_BUFFER_TO_SWIZZLED_TILED_RESOURCE",
+    "D3D11_TILE_COPY_SWIZZLED_TILED_RESOURCE_TO_LINEAR_BUFFER",
+])
+
+ID3D11DeviceContext2 = Interface("ID3D11DeviceContext2", ID3D11DeviceContext1)
+ID3D11DeviceContext2.methods += [
+    StdMethod(HRESULT, "UpdateTileMappings", [(ObjPointer(ID3D11Resource), "pTiledResource"), (UINT, "NumTiledResourceRegions"), (Array(Const(D3D11_TILED_RESOURCE_COORDINATE), "NumTiledResourceRegions"), "pTiledResourceRegionStartCoordinates"), (Array(Const(D3D11_TILE_REGION_SIZE), "NumTiledResourceRegions"), "pTiledResourceRegionSizes"), (ObjPointer(ID3D11Buffer), "pTilePool"), (UINT, "NumRanges"), (Array(Const(D3D11_TILE_RANGE_FLAG), "NumRanges"), "pRangeFlags"), (Array(Const(UINT), "NumRanges"), "pTilePoolStartOffsets"), (Array(Const(UINT), "NumRanges"), "pRangeTileCounts"), (D3D11_TILE_MAPPING_FLAG, "Flags")]),
+    StdMethod(HRESULT, "CopyTileMappings", [(ObjPointer(ID3D11Resource), "pDestTiledResource"), (Pointer(Const(D3D11_TILED_RESOURCE_COORDINATE)), "pDestRegionStartCoordinate"), (ObjPointer(ID3D11Resource), "pSourceTiledResource"), (Pointer(Const(D3D11_TILED_RESOURCE_COORDINATE)), "pSourceRegionStartCoordinate"), (Pointer(Const(D3D11_TILE_REGION_SIZE)), "pTileRegionSize"), (D3D11_TILE_MAPPING_FLAG, "Flags")]),
+    StdMethod(Void, "CopyTiles", [(ObjPointer(ID3D11Resource), "pTiledResource"), (Pointer(Const(D3D11_TILED_RESOURCE_COORDINATE)), "pTileRegionStartCoordinate"), (Pointer(Const(D3D11_TILE_REGION_SIZE)), "pTileRegionSize"), (ObjPointer(ID3D11Buffer), "pBuffer"), (UINT64, "BufferStartOffsetInBytes"), (D3D11_TILE_COPY_FLAG, "Flags")]),
+    StdMethod(Void, "UpdateTiles", [(ObjPointer(ID3D11Resource), "pDestTiledResource"), (Pointer(Const(D3D11_TILED_RESOURCE_COORDINATE)), "pDestTileRegionStartCoordinate"), (Pointer(Const(D3D11_TILE_REGION_SIZE)), "pDestTileRegionSize"), (OpaquePointer(Const(Void)), "pSourceTileData"), (D3D11_TILE_COPY_FLAG, "Flags")]), # FIXME
+    StdMethod(HRESULT, "ResizeTilePool", [(ObjPointer(ID3D11Buffer), "pTilePool"), (UINT64, "NewSizeInBytes")]),
+    StdMethod(Void, "TiledResourceBarrier", [(ObjPointer(ID3D11DeviceChild), "pTiledResourceOrViewAccessBeforeBarrier"), (ObjPointer(ID3D11DeviceChild), "pTiledResourceOrViewAccessAfterBarrier")]),
+    StdMethod(BOOL, "IsAnnotationEnabled", [], sideeffects=False),
+    StdMethod(Void, "SetMarkerInt", [(LPCWSTR, "pLabel"), (INT, "Data")]),
+    StdMethod(Void, "BeginEventInt", [(LPCWSTR, "pLabel"), (INT, "Data")]),
+    StdMethod(Void, "EndEvent", []),
+]
+
+ID3D11Device2 = Interface("ID3D11Device2", ID3D11Device1)
+ID3D11Device2.methods += [
+    StdMethod(Void, "GetImmediateContext2", [Out(Pointer(ObjPointer(ID3D11DeviceContext2)), "ppImmediateContext")]),
+    StdMethod(HRESULT, "CreateDeferredContext2", [(UINT, "ContextFlags"), Out(Pointer(ObjPointer(ID3D11DeviceContext2)), "ppDeferredContext")]),
+    StdMethod(Void, "GetResourceTiling", [(ObjPointer(ID3D11Resource), "pTiledResource"), Out(Pointer(UINT), "pNumTilesForEntireResource"), Out(Pointer(D3D11_PACKED_MIP_DESC), "pPackedMipDesc"), Out(Pointer(D3D11_TILE_SHAPE), "pStandardTileShapeForNonPackedMips"), Out(Pointer(UINT), "pNumSubresourceTilings"), (UINT, "FirstSubresourceTilingToGet"), Out(Pointer(D3D11_SUBRESOURCE_TILING), "pSubresourceTilingsForNonPackedMips")]),
+    StdMethod(HRESULT, "CheckMultisampleQualityLevels1", [(DXGI_FORMAT, "Format"), (UINT, "SampleCount"), (D3D11_CHECK_MULTISAMPLE_QUALITY_LEVELS_FLAG, "Flags"), Out(Pointer(UINT), "pNumQualityLevels")], sideeffects=False),
+]
+
+d3d11.addInterfaces([
+    ID3D11Device2,
+    ID3D11DeviceContext2,
 ])
