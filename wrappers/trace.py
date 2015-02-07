@@ -890,7 +890,7 @@ class Tracer:
 
         print r'static void'
         print r'warnIID(const char *entryName, REFIID riid, const char *reason) {'
-        print r'    os::log("apitrace: warning: %s: %s IID {0x%08lX,0x%04X,0x%04X,{0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X,0x%02X}}\n",'
+        print r'    os::log("apitrace: warning: %s: %s IID %08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",'
         print r'            entryName, reason,'
         print r'            riid.Data1, riid.Data2, riid.Data3,'
         print r'            riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6], riid.Data4[7]);'
