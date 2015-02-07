@@ -498,12 +498,18 @@ patchFunction(HMODULE hModule,
         return TRUE;
     }
 
+    DWORD Offset = (DWORD)(UINT_PTR)lpOldFunctionAddress - (UINT_PTR)hModule;
     if (VERBOSITY > 0) {
-        DWORD Offset = (DWORD)(UINT_PTR)lpOldFunctionAddress - (UINT_PTR)hModule;
         debugPrintf("inject: patching %s!0x%lx -> %s!%s\n", szModule, Offset, pszDllName, pszFunctionName);
     }
 
-    return replaceAddress(lpOldFunctionAddress, lpNewAddress);
+    BOOL bRet;
+    bRet = replaceAddress(lpOldFunctionAddress, lpNewAddress);
+    if (!bRet) {
+        debugPrintf("inject: failed to patch %s!0x%lx -> %s!%s\n", szModule, Offset, pszDllName, pszFunctionName);
+    }
+
+    return bRet;
 }
 
 
