@@ -889,11 +889,26 @@ class Tracer:
         ifaces = api.getAllInterfaces()
 
         print r'static void'
-        print r'warnIID(const char *entryName, REFIID riid, const char *reason) {'
+        print r'warnIID(const char *entryName, REFIID riid, void *pvObj, const char *reason) {'
         print r'    os::log("apitrace: warning: %s: %s IID %08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",'
         print r'            entryName, reason,'
         print r'            riid.Data1, riid.Data2, riid.Data3,'
         print r'            riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6], riid.Data4[7]);'
+        print r'    void * pVtbl = *(void **)pvObj;'
+        print r'    HMODULE hModule = 0;'
+        print r'    BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,'
+        print r'                                  (LPCTSTR)pVtbl,'
+        print r'                                  &hModule);'
+        print r'    assert(bRet);'
+        print r'    if (bRet) {'
+        print r'        char szModule[MAX_PATH];'
+        print r'        DWORD dwRet = GetModuleFileNameA(hModule, szModule, sizeof szModule);'
+        print r'        assert(dwRet);'
+        print r'        if (dwRet) {'
+        print r'            DWORD dwOffset = (UINT_PTR)pVtbl - (UINT_PTR)hModule;'
+        print r'            os::log("apitrace: warning: pVtbl = %p (%s!+0x%0lx)\n", pVtbl, szModule, dwOffset);'
+        print r'        }'
+        print r'    }'
         print r'}'
         print 
         print r'static void'
@@ -908,7 +923,7 @@ class Tracer:
             print r'    }'
             else_ = 'else '
         print r'    %s{' % else_
-        print r'        warnIID(entryName, riid, "unknown");'
+        print r'        warnIID(entryName, riid, *ppvObj, "unknown");'
         print r'    }'
         print r'}'
         print
