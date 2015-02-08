@@ -35,6 +35,27 @@ import platform
 import sys
 
 
+def callProcess(cmd):
+    if options.verbose:
+        sys.stderr.write(' '.join(cmd) + '\n')
+    ret = subprocess.call(cmd)
+    if ret:
+        exeName = os.path.basename(cmd[0])
+        sys.stderr.write('error: %s failed with exit code %u\n' % (exeName, ret))
+        sys.exit(ret)
+    return ret
+
+
+def verifyTrace(outTrace):
+    if os.path.exists(outTrace):
+        sys.stderr.write('info: %s written\n' % outTrace)
+        if options.verify:
+            callProcess([options.retrace, os.path.abspath(outTrace)])
+    else:
+        sys.stderr.write('error: %s not written\n' % outTrace)
+        sys.exit(1)
+
+
 def getPixExe():
     try:
         programFiles = os.environ['ProgramFiles(x86)']
@@ -48,19 +69,8 @@ def getPixExe():
     return pixExe
 
 
-def callProcess(cmd):
-    if options.verbose:
-        sys.stderr.write(' '.join(cmd) + '\n')
-    ret = subprocess.call(cmd)
-    if ret:
-        exeName = os.path.basename(cmd[0])
-        sys.stderr.write('error: %s failed with exit code %u\n' % (exeName, ret))
-        sys.exit(ret)
-    return ret
-
-
 def convertToPix(inTrace, outPixrun):
-    pix = getPixExe()
+    pixExe = getPixExe()
 
     pixExp = os.path.join(os.path.dirname(__file__), 'apitrace.PIXExp')
 
@@ -80,7 +90,7 @@ def convertToPix(inTrace, outPixrun):
     if os.path.exists(outPixrun):
         sys.stderr.write('info: %s written\n' % outPixrun)
         if options.verify:
-            subprocess.call([pix, os.path.abspath(outPixrun)])
+            subprocess.call([pixExe, os.path.abspath(outPixrun)])
     else:
         sys.stderr.write('error: %s not written\n' % outPixrun)
         sys.exit(1)
@@ -109,13 +119,60 @@ def convertFromPix(inPix, outTrace):
     ]
 
     callProcess(cmd)
-    if os.path.exists(outTrace):
-        sys.stderr.write('info: %s written\n' % outTrace)
-        if options.verify:
-            subprocess.call([options.retrace, os.path.abspath(outTrace)])
+    verifyTrace(outTrace)
+
+
+def getDxcapExe():
+    winDir = os.environ['windir']
+    if 'ProgramFiles(x86)' in os.environ:
+        sysSubDir = 'SysWOW64'
     else:
-        sys.stderr.write('error: %s not written\n' % outTrace)
+        sysSubDir = 'System32'
+    dxcapExe = os.path.join(winDir, sysSubDir, 'dxcap.exe')
+    return dxcapExe
+
+
+def convertToDxcap(inTrace, outDxcaprun):
+    # https://msdn.microsoft.com/en-us/library/vstudio/dn774939.aspx
+
+    dxcapExe = getDxcapExe()
+
+    cmd = [
+        getDxcapExe(),
+        '-rawmode',
+        '-file', os.path.abspath(outDxcaprun),
+        '-c',
+        options.retrace,
+        '-b',
+        os.path.abspath(inTrace),
+    ]
+
+    callProcess(cmd)
+    if os.path.exists(outDxcaprun):
+        sys.stderr.write('info: %s written\n' % outDxcaprun)
+        if options.verify:
+            callProcess([dxcapExe, '-p', os.path.abspath(outDxcaprun)])
+    else:
+        sys.stderr.write('error: %s not written\n' % outDxcaprun)
         sys.exit(1)
+
+
+def convertFromDxcap(inDxcap, outTrace):
+    dxcapExe = getDxcapExe()
+
+    cmd = [
+        options.apitrace,
+        'trace',
+        '-a', options.api,
+        '-o', outTrace,
+        '--',
+        dxcapExe,
+        '-rawmode',
+        '-p', inDxcap,
+    ]
+
+    callProcess(cmd)
+    verifyTrace(outTrace)
 
 
 def main():
@@ -131,7 +188,7 @@ def main():
         help='path to apitrace command [default: %default]')
     optparser.add_option(
         '-a', '--api', metavar='API',
-        type='string', dest='api', default='d3d9',
+        type='string', dest='api', default='dxgi',
         help='api [default: %default]')
     optparser.add_option(
         '-r', '--retrace', metavar='PROGRAM',
@@ -156,10 +213,16 @@ def main():
     
     for inFile in args:
         name, inExt = os.path.splitext(os.path.basename(inFile))
-        inExt = inExt
         if inExt.lower() == '.trace':
-            convert = convertToPix
-            outExt = '.PIXRun'
+            convert = convertToDxcap
+            outExt = '.vsglog'
+            if options.output:
+                _, outExt = os.path.splitext(options.output)
+                if outExt.lower() == '.pixrun':
+                    convert = convertToPix
+        elif inExt.lower() == '.vsglog':
+            convert = convertFromDxcap
+            outExt = '.trace'
         elif inExt.lower() == '.pixrun':
             convert = convertFromPix
             outExt = '.trace'
