@@ -7,6 +7,7 @@ include_directories (
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/image
+    ${CMAKE_SOURCE_DIR}/thirdparty/dxerr
 )
 
 add_definitions (-DRETRACE)
@@ -49,6 +50,10 @@ target_link_libraries (retrace_common
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
+if (WIN32)
+    target_link_libraries (retrace_common dxerr)
+endif ()
+
 
 add_library (glretrace_common STATIC
     glretrace_gl.cpp

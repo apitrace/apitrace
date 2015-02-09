@@ -3509,7 +3509,7 @@ void WINAPI DXGetErrorDescriptionA( HRESULT hr, char* desc, size_t count )
     // First try to see if FormatMessage knows this hr
     UINT icount = static_cast<UINT>( std::min<size_t>( count, 32767 ) );
 
-    DWORD result = FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM, NULL, hr,
+    DWORD result = FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, hr,
                                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), desc, icount, NULL );
 
     if (result > 0)

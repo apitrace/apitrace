@@ -30,6 +30,10 @@
 #include "os_time.hpp"
 #include "retrace.hpp"
 
+#ifdef _WIN32
+#include <dxerr.h>
+#endif
+
 
 namespace retrace {
 
@@ -67,20 +71,13 @@ failed(trace::Call &call, HRESULT hr)
 
     os << "failed with 0x" << std::hex << hr << std::dec;
 
-    LPSTR lpszMessageBuffer = NULL;
-    DWORD dwWritten;
-    dwWritten = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                               FORMAT_MESSAGE_FROM_SYSTEM |
-                               FORMAT_MESSAGE_IGNORE_INSERTS,
-                               NULL,
-                               hr,
-                               0,
-                               (LPSTR)&lpszMessageBuffer, 0,
-                               NULL);
-    if (dwWritten) {
-        os << ": " << lpszMessageBuffer;
-    }
-    LocalFree(lpszMessageBuffer);
+    LPCSTR lpszErrorString = DXGetErrorStringA(hr);
+    assert(lpszErrorString);
+    os << " (" << lpszErrorString << "): ";
+
+    char szErrorDesc[512];
+    DXGetErrorDescriptionA(hr, szErrorDesc, sizeof szErrorDesc);
+    os << szErrorDesc;
 
     os << "\n";
 }
