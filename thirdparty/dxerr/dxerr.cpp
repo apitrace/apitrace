@@ -81,7 +81,7 @@
              return L##strOut;
 
 //-----------------------------------------------------
-const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr )
+const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
 {
    switch(hr)
    {
@@ -3457,7 +3457,7 @@ const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr )
 
 
 //--------------------------------------------------------------------------------------
-void WINAPI DXGetErrorDescriptionW( _In_ HRESULT hr, _Out_cap_(count) WCHAR* desc, _In_ size_t count )
+void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
 {
     if ( !count )
         return;
@@ -3908,8 +3908,8 @@ void WINAPI DXGetErrorDescriptionW( _In_ HRESULT hr, _Out_cap_(count) WCHAR* des
 }
 
 //-----------------------------------------------------------------------------
-HRESULT WINAPI DXTraceW( _In_z_ const WCHAR* strFile, _In_ DWORD dwLine, _In_ HRESULT hr,
-                         _In_opt_ const WCHAR* strMsg, _In_ bool bPopMsgBox )
+HRESULT WINAPI DXTraceW( const WCHAR* strFile, DWORD dwLine, HRESULT hr,
+                         const WCHAR* strMsg, bool bPopMsgBox )
 {
     WCHAR strBufferLine[128];
     WCHAR strBufferError[256];

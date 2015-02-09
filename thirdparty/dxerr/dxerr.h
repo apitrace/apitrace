@@ -20,7 +20,6 @@
 #endif
 
 #include <windows.h>
-#include <sal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,7 +28,7 @@ extern "C" {
 //--------------------------------------------------------------------------------------
 // DXGetErrorString
 //--------------------------------------------------------------------------------------
-const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr );
+const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr );
 
 #define DXGetErrorString DXGetErrorStringW
 
@@ -37,7 +36,7 @@ const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr );
 // DXGetErrorDescription has to be modified to return a copy in a buffer rather than
 // the original static string.
 //--------------------------------------------------------------------------------------
-void WINAPI DXGetErrorDescriptionW( _In_ HRESULT hr, _Out_cap_(count) WCHAR* desc, _In_ size_t count );
+void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count );
 
 #define DXGetErrorDescription DXGetErrorDescriptionW
 
@@ -47,16 +46,16 @@ void WINAPI DXGetErrorDescriptionW( _In_ HRESULT hr, _Out_cap_(count) WCHAR* des
 //  Desc:  Outputs a formatted error message to the debug stream
 //
 //  Args:  WCHAR* strFile   The current file, typically passed in using the 
-//                         __FILEW__ macro.
+//                         macro.
 //         DWORD dwLine    The current line number, typically passed in using the 
-//                         __LINE__ macro.
+//                         macro.
 //         HRESULT hr      An HRESULT that will be traced to the debug stream.
 //         CHAR* strMsg    A string that will be traced to the debug stream (may be NULL)
 //         BOOL bPopMsgBox If TRUE, then a message box will popup also containing the passed info.
 //
 //  Return: The hr that was passed in.  
 //--------------------------------------------------------------------------------------
-HRESULT WINAPI DXTraceW( _In_z_ const WCHAR* strFile, _In_ DWORD dwLine, _In_ HRESULT hr, _In_opt_ const WCHAR* strMsg, _In_ bool bPopMsgBox );
+HRESULT WINAPI DXTraceW( const WCHAR* strFile, DWORD dwLine, HRESULT hr, const WCHAR* strMsg, bool bPopMsgBox );
 
 #define DXTrace DXTraceW
 
