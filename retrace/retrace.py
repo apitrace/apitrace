@@ -472,7 +472,6 @@ class Retracer:
         arg_names = ", ".join(function.argNames())
         if function.type is not stdapi.Void:
             print '    _result = %s(%s);' % (function.name, arg_names)
-            print '    (void)_result;'
             self.checkResult(function.type)
         else:
             print '    %s(%s);' % (function.name, arg_names)
@@ -481,7 +480,6 @@ class Retracer:
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
-            print '    (void)_result;'
             self.checkResult(method.type)
         else:
             print '    _this->%s(%s);' % (method.name, arg_names)
@@ -507,6 +505,8 @@ class Retracer:
             print r'    if (FAILED(_result)) {'
             print r'        retrace::failed(call, _result);'
             print r'    }'
+        else:
+            print r'    (void)_result;'
 
     def checkPitchMismatch(self, method):
         # Warn for mismatches in 2D/3D mappings.
