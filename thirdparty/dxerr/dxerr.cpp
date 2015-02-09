@@ -77,25 +77,25 @@
 //--------------------------------------------------------------------------------------
 #define  CHK_ERR(hrchk, strOut) \
         case hrchk: \
-             return L##strOut;
+             return strOut;
 
 #define  CHK_ERRA(hrchk) \
         case hrchk: \
-             return L#hrchk;
+             return #hrchk;
 
 #define HRESULT_FROM_WIN32b(x) ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT) (((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
 
 #define  CHK_ERR_WIN32A(hrchk) \
         case HRESULT_FROM_WIN32b(hrchk): \
         case hrchk: \
-             return L#hrchk;
+             return #hrchk;
 
 #define  CHK_ERR_WIN32_ONLY(hrchk, strOut) \
         case HRESULT_FROM_WIN32b(hrchk): \
-             return L##strOut;
+             return strOut;
 
 //-----------------------------------------------------
-const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
+const char* WINAPI DXGetErrorStringA( HRESULT hr )
 {
    switch(hr)
    {
@@ -3471,7 +3471,7 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERRA(XAPO_E_FORMAT_UNSUPPORTED)
     }
 
-    return L"Unknown";
+    return "Unknown";
 }
 
 //--------------------------------------------------------------------------------------
@@ -3483,15 +3483,15 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
 
 #define  CHK_ERRA(hrchk) \
         case hrchk: \
-             wcscpy_s( desc, count, L#hrchk );
+             strcpy_s( desc, count, #hrchk );
 
 #define  CHK_ERR(hrchk, strOut) \
         case hrchk: \
-             wcscpy_s( desc, count, L##strOut );
+             strcpy_s( desc, count, strOut );
 
 
 //--------------------------------------------------------------------------------------
-void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
+void WINAPI DXGetErrorDescriptionA( HRESULT hr, char* desc, size_t count )
 {
     if ( !count )
         return;
@@ -3501,7 +3501,7 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
     // First try to see if FormatMessage knows this hr
     UINT icount = static_cast<UINT>( std::min<size_t>( count, 32767 ) );
 
-    DWORD result = FormatMessageW( FORMAT_MESSAGE_FROM_SYSTEM, NULL, hr,
+    DWORD result = FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM, NULL, hr,
                                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), desc, icount, NULL );
 
     if (result > 0)
@@ -3960,50 +3960,50 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
 }
 
 //-----------------------------------------------------------------------------
-HRESULT WINAPI DXTraceW( const WCHAR* strFile, DWORD dwLine, HRESULT hr,
-                         const WCHAR* strMsg, bool bPopMsgBox )
+HRESULT WINAPI DXTraceA( const char* strFile, DWORD dwLine, HRESULT hr,
+                         const char* strMsg, bool bPopMsgBox )
 {
-    WCHAR strBufferLine[128];
-    WCHAR strBufferError[256];
-    WCHAR strBuffer[BUFFER_SIZE];
+    char strBufferLine[128];
+    char strBufferError[256];
+    char strBuffer[BUFFER_SIZE];
 
-    swprintf_s( strBufferLine, 128, L"%lu", dwLine );
+    sprintf_s( strBufferLine, 128, "%lu", dwLine );
     if( strFile )
     {
-       swprintf_s( strBuffer, BUFFER_SIZE, L"%ls(%ls): ", strFile, strBufferLine );
-       OutputDebugStringW( strBuffer );
+       sprintf_s( strBuffer, BUFFER_SIZE, "s(s): ", strFile, strBufferLine );
+       OutputDebugStringA( strBuffer );
     }
 
-    size_t nMsgLen = (strMsg) ? wcsnlen_s( strMsg, 1024 ) : 0;
+    size_t nMsgLen = (strMsg) ? strnlen_s( strMsg, 1024 ) : 0;
     if( nMsgLen > 0 )
     {
-        OutputDebugStringW( strMsg );
-        OutputDebugStringW( L" " );
+        OutputDebugStringA( strMsg );
+        OutputDebugStringA( " " );
     }
 
-    swprintf_s( strBufferError, 256, L"%ls (0x%0.8x)", DXGetErrorStringW(hr), hr );
-    swprintf_s( strBuffer, BUFFER_SIZE, L"hr=%ls", strBufferError );
-    OutputDebugStringW( strBuffer );
+    sprintf_s( strBufferError, 256, "s (0x%0.8x)", DXGetErrorStringA(hr), hr );
+    sprintf_s( strBuffer, BUFFER_SIZE, "hr=s", strBufferError );
+    OutputDebugStringA( strBuffer );
 
-    OutputDebugStringW( L"\n" );
+    OutputDebugStringA( "\n" );
 
 #if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
     if( bPopMsgBox )
     {
-        WCHAR strBufferFile[MAX_PATH];
-        wcscpy_s( strBufferFile, MAX_PATH, L"" );
+        char strBufferFile[MAX_PATH];
+        strcpy_s( strBufferFile, MAX_PATH, "" );
         if( strFile )
-            wcscpy_s( strBufferFile, MAX_PATH, strFile );
+            strcpy_s( strBufferFile, MAX_PATH, strFile );
 
-        WCHAR strBufferMsg[1024];
-        wcscpy_s( strBufferMsg, 1024, L"" );
+        char strBufferMsg[1024];
+        strcpy_s( strBufferMsg, 1024, "" );
         if( nMsgLen > 0 )
-            swprintf_s( strBufferMsg, 1024, L"Calling: %ls\n", strMsg );
+            sprintf_s( strBufferMsg, 1024, "Calling: s\n", strMsg );
 
-        swprintf_s( strBuffer, BUFFER_SIZE, L"File: %ls\nLine: %ls\nError Code: %ls\n%lsDo you want to debug the application?",
+        sprintf_s( strBuffer, BUFFER_SIZE, "File: s\nLine: s\nError Code: s\nsDo you want to debug the application?",
                     strBufferFile, strBufferLine, strBufferError, strBufferMsg );
 
-        int nResult = MessageBoxW( GetForegroundWindow(), strBuffer, L"Unexpected error encountered", MB_YESNO | MB_ICONERROR );
+        int nResult = MessageBoxA( GetForegroundWindow(), strBuffer, "Unexpected error encountered", MB_YESNO | MB_ICONERROR );
         if( nResult == IDYES )
             DebugBreak();
     }

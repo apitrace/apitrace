@@ -28,24 +28,24 @@ extern "C" {
 //--------------------------------------------------------------------------------------
 // DXGetErrorString
 //--------------------------------------------------------------------------------------
-const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr );
+const char* WINAPI DXGetErrorStringA( HRESULT hr );
 
-#define DXGetErrorString DXGetErrorStringW
+#define DXGetErrorString DXGetErrorStringA
 
 //--------------------------------------------------------------------------------------
 // DXGetErrorDescription has to be modified to return a copy in a buffer rather than
 // the original static string.
 //--------------------------------------------------------------------------------------
-void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count );
+void WINAPI DXGetErrorDescriptionA( HRESULT hr, char* desc, size_t count );
 
-#define DXGetErrorDescription DXGetErrorDescriptionW
+#define DXGetErrorDescription DXGetErrorDescriptionA
 
 //--------------------------------------------------------------------------------------
 //  DXTrace
 //
 //  Desc:  Outputs a formatted error message to the debug stream
 //
-//  Args:  WCHAR* strFile   The current file, typically passed in using the 
+//  Args:  char* strFile   The current file, typically passed in using the
 //                         macro.
 //         DWORD dwLine    The current line number, typically passed in using the 
 //                         macro.
@@ -55,9 +55,9 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count );
 //
 //  Return: The hr that was passed in.  
 //--------------------------------------------------------------------------------------
-HRESULT WINAPI DXTraceW( const WCHAR* strFile, DWORD dwLine, HRESULT hr, const WCHAR* strMsg, bool bPopMsgBox );
+HRESULT WINAPI DXTraceA( const char* strFile, DWORD dwLine, HRESULT hr, const char* strMsg, bool bPopMsgBox );
 
-#define DXTrace DXTraceW
+#define DXTrace DXTraceA
 
 //--------------------------------------------------------------------------------------
 //
@@ -65,9 +65,9 @@ HRESULT WINAPI DXTraceW( const WCHAR* strFile, DWORD dwLine, HRESULT hr, const W
 //
 //--------------------------------------------------------------------------------------
 #if defined(DEBUG) || defined(_DEBUG)
-#define DXTRACE_MSG(str)              DXTrace( __FILEW__, (DWORD)__LINE__, 0, str, false )
-#define DXTRACE_ERR(str,hr)           DXTrace( __FILEW__, (DWORD)__LINE__, hr, str, false )
-#define DXTRACE_ERR_MSGBOX(str,hr)    DXTrace( __FILEW__, (DWORD)__LINE__, hr, str, true )
+#define DXTRACE_MSG(str)              DXTrace( __FILE__, (DWORD)__LINE__, 0, str, false )
+#define DXTRACE_ERR(str,hr)           DXTrace( __FILE__, (DWORD)__LINE__, hr, str, false )
+#define DXTRACE_ERR_MSGBOX(str,hr)    DXTrace( __FILE__, (DWORD)__LINE__, hr, str, true )
 #else
 #define DXTRACE_MSG(str)              (0L)
 #define DXTRACE_ERR(str,hr)           (hr)
