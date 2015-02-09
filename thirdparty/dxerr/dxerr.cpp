@@ -18,20 +18,32 @@
 #include <stdio.h>
 #include <algorithm>
 
-#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+#ifdef HAVE_DDRAW
 #include <ddraw.h>
-#include <d3d9.h>
-#include <dsound.h>
+#endif
 
-#define DIRECTINPUT_VERSION 0x800
+#ifdef HAVE_D3D9
+#include <d3d9.h>
+#endif
+
+#ifdef HAVE_DSOUND
+#include <dsound.h>
+#endif
+
+#ifdef HAVE_DINPUT
 #include <dinput.h>
 #include <dinputd.h>
 #endif
 
+#ifdef HAVE_D3D10_1
 #include <d3d10_1.h>
-#include <d3d11_1.h>
+#endif
 
-#if !defined(WINAPI_FAMILY) || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
+#ifdef HAVE_D3D11_1
+#include <d3d11_1.h>
+#endif
+
+#ifdef HAVE_D2D
 #include <wincodec.h>
 #include <d2derr.h>
 #include <dwrite.h>
@@ -3009,7 +3021,7 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERR_WIN32A(ERROR_IPSEC_IKE_NEGOTIATION_DISABLED)
         CHK_ERR_WIN32A(ERROR_IPSEC_IKE_NEG_STATUS_END)
 
-#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+#ifdef HAVE_DDRAW
 
 // -------------------------------------------------------------
 // ddraw.h error codes
@@ -3133,6 +3145,10 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERRA(DDERR_NODRIVERSUPPORT)
         CHK_ERRA(DDERR_DEVICEDOESNTOWNSURFACE)
 
+#endif
+
+#ifdef HAVE_DINPUT
+
 // -------------------------------------------------------------
 // dinput.h error codes
 // -------------------------------------------------------------
@@ -3200,6 +3216,10 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERR(DIERR_CANCELLED, "DIERR_CANCELLED & MS_E_SAMPLEALLOC")
         CHK_ERRA(DIERR_BADINF)
 
+#endif
+
+#ifdef HAVE_D3D9
+
 // -------------------------------------------------------------
 // d3d9.h error codes
 // -------------------------------------------------------------
@@ -3243,6 +3263,10 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERRA(D3DERR_UNSUPPORTEDCRYPTO)
         CHK_ERRA(D3DERR_PRESENT_STATISTICS_DISJOINT)
 
+#endif
+
+#ifdef HAVE_DSOUND
+
 // -------------------------------------------------------------
 // dsound.h error codes
 // -------------------------------------------------------------
@@ -3273,7 +3297,9 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
 
     	CHK_ERRA(DSERR_FXUNAVAILABLE)
 
-#endif // !WINAPI_FAMILY || WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
+#endif
+
+#ifdef HAVE_D3D10_1
 
 // -------------------------------------------------------------
 // d3d10.h error codes
@@ -3307,6 +3333,10 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERRA(DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED)
         CHK_ERRA(DXGI_ERROR_REMOTE_OUTOFMEMORY)
 
+#endif
+
+#ifdef HAVE_D3D11_1
+
 // -------------------------------------------------------------
 // d3d11.h error codes
 // -------------------------------------------------------------
@@ -3315,7 +3345,9 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERRA(D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS)
         CHK_ERRA(D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD)
 
-#if !defined(WINAPI_FAMILY) || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
+#endif
+
+#ifdef HAVE_D2D
 
 // -------------------------------------------------------------
 // Direct2D error codes
@@ -3407,7 +3439,7 @@ const WCHAR* WINAPI DXGetErrorStringW( HRESULT hr )
         CHK_ERRA(WINCODEC_ERR_WIN32ERROR)
         CHK_ERRA(WINCODEC_ERR_INVALIDPROGRESSIVELEVEL)
 
-#endif // !WINAPI_FAMILY || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
+#endif
 
 // -------------------------------------------------------------
 // DXUT error codes
@@ -3477,7 +3509,7 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
     {
 // Commmented out codes are actually alises for other codes
 
-#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+#ifdef HAVE_DDRAW
 
 // -------------------------------------------------------------
 // ddraw.h error codes
@@ -3601,6 +3633,9 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
         CHK_ERR(DDERR_NODRIVERSUPPORT, "The driver does not enumerate display mode refresh rates.")
         CHK_ERR(DDERR_DEVICEDOESNTOWNSURFACE, "Surfaces created by one direct draw device cannot be used directly by another direct draw device.")
 
+#endif
+
+#ifdef HAVE_DINPUT
 
 // -------------------------------------------------------------
 // dinput.h error codes
@@ -3668,6 +3703,10 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
         CHK_ERR(DIERR_CANCELLED, "The user cancelled the install operation. & The stream already has allocated samples and the surface doesn't match the sample format.")
         CHK_ERR(DIERR_BADINF, "The INF file for the selected device could not be found or is invalid or is damaged. & The specified purpose ID can't be used for the call.")
 
+#endif
+
+#ifdef HAVE_D3D9
+
 // -------------------------------------------------------------
 // d3d9.h error codes
 // -------------------------------------------------------------
@@ -3711,6 +3750,9 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
         CHK_ERR(D3DERR_UNSUPPORTEDCRYPTO, "Unsupported cryptographic system" )
         CHK_ERR(D3DERR_PRESENT_STATISTICS_DISJOINT, "Presentation statistics are disjoint" )
 
+#endif
+
+#ifdef HAVE_DSOUND
 
 // -------------------------------------------------------------
 // dsound.h error codes
@@ -3742,7 +3784,9 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
 
         CHK_ERR(DSERR_FXUNAVAILABLE, "Requested effects are not available")
 
-#endif // !WINAPI_FAMILY || WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
+#endif
+
+#ifdef HAVE_D3D10_1
 
 // -------------------------------------------------------------
 // d3d10.h error codes
@@ -3776,6 +3820,10 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
         CHK_ERR(DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED, "Remote desktop client disconnected.")
         CHK_ERR(DXGI_ERROR_REMOTE_OUTOFMEMORY, "Remote desktop client is out of memory.")
 
+#endif
+
+#ifdef HAVE_D3D11_1
+
 // -------------------------------------------------------------
 // d3d11.h error codes
 // -------------------------------------------------------------
@@ -3784,7 +3832,9 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
         CHK_ERR(D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS, "Therea are too many unique view objects.")
         CHK_ERR(D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD, "Deferred context requires Map-Discard usage pattern")
 
-#if !defined(WINAPI_FAMILY) || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
+#endif
+
+#ifdef HAVE_D2D
 
 // -------------------------------------------------------------
 // Direct2D error codes
@@ -3876,7 +3926,7 @@ void WINAPI DXGetErrorDescriptionW( HRESULT hr, WCHAR* desc, size_t count )
         CHK_ERR(WINCODEC_ERR_WIN32ERROR, "General Win32 error encountered during WIC operation.")
         CHK_ERR(WINCODEC_ERR_INVALIDPROGRESSIVELEVEL, "Invalid level for progressive WIC image decode.")
 
-#endif // !WINAPI_FAMILY || WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
+#endif
 
 // -------------------------------------------------------------
 // DXUT error codes

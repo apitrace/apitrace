@@ -1,16 +1,23 @@
-if (DirectX_D3D11_1_INCLUDE_FOUND)
+macro (HaveDirectXInclude NAME)
+    if (DirectX_${NAME}_INCLUDE_FOUND)
+        include_directories (BEFORE SYSTEM
+            ${DirectX_${NAME}_INCLUDE_DIR}
+        )
+        add_definitions (-DHAVE_${NAME})
+    endif ()
+endmacro ()
 
-    include_directories (BEFORE SYSTEM
-        ${DirectX_D3D11_1_INCLUDE_DIR}
-    )
+havedirectxinclude (DDRAW)
+havedirectxinclude (D3D9)
+havedirectxinclude (D3D10_1)
+havedirectxinclude (D3D11_1)
 
-    add_library (dxerr STATIC
-        dxerr.cpp
-    )
+add_library (dxerr STATIC
+    dxerr.cpp
+)
 
-    install (
-        FILES license.txt
-        DESTINATION ${DOC_INSTALL_DIR}
-        RENAME LICENSE-dxerr.txt
-    )
-endif ()
+install (
+    FILES license.txt
+    DESTINATION ${DOC_INSTALL_DIR}
+    RENAME LICENSE-dxerr.txt
+)
