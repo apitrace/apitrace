@@ -480,9 +480,25 @@ class Retracer:
         arg_names = ", ".join(method.argNames())
         if method.type is not stdapi.Void:
             print '    _result = _this->%s(%s);' % (method.name, arg_names)
-            self.checkResult(method.type)
         else:
             print '    _this->%s(%s);' % (method.name, arg_names)
+
+        # Adjust reference count when QueryInterface fails.  This is
+        # particularly useful when replaying traces on older Direct3D runtimes
+        # which might miss newer versions of interfaces, yet none of those
+        # methods are actually used.
+        #
+        # TODO: Generalize to other methods that return interfaces
+        if method.name == 'QueryInterface':
+            print r'    if (FAILED(_result)) {'
+            print r'        IUnknown *pObj = retrace::asObjPointer<IUnknown>(call, *call.arg(2).toArray()->values[0]);'
+            print r'        if (pObj) {'
+            print r'            pObj->AddRef();'
+            print r'        }'
+            print r'    }'
+
+        if method.type is not stdapi.Void:
+            self.checkResult(method.type)
 
         # Debug COM reference counting.  Disabled by default as reported
         # reference counts depend on internal implementation details.
