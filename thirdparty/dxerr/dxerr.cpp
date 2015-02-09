@@ -18,6 +18,14 @@
 #include <stdio.h>
 #include <algorithm>
 
+#ifdef __MINGW32__
+#include "compat.h"
+#include "d3derr.hpp"
+#ifndef strnlen_s
+#define strnlen_s strnlen
+#endif
+#endif
+
 #ifdef HAVE_DDRAW
 #include <ddraw.h>
 #endif
