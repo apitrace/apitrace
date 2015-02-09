@@ -504,6 +504,7 @@ class Retracer:
         if str(resultType) == 'HRESULT':
             print r'    if (FAILED(_result)) {'
             print r'        retrace::failed(call, _result);'
+            print r'        return;'
             print r'    }'
         else:
             print r'    (void)_result;'
