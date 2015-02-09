@@ -363,6 +363,7 @@ if (MSVC)
 endif ()
 
 if (WIN32)
+    add_subdirectory (thirdparty/dxerr)
     add_subdirectory (thirdparty/directxtex)
     add_subdirectory (thirdparty/devcon)
 endif ()
