@@ -69,7 +69,9 @@ failed(trace::Call &call, HRESULT hr)
 
     LPSTR lpszMessageBuffer = NULL;
     DWORD dwWritten;
-    dwWritten = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+    dwWritten = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                               FORMAT_MESSAGE_FROM_SYSTEM |
+                               FORMAT_MESSAGE_IGNORE_INSERTS,
                                NULL,
                                hr,
                                0,
