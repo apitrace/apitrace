@@ -45,15 +45,30 @@
      <x>0</x>
      <y>0</y>
      <width>787</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menu_Android">
+     <property name="title">
+      <string>&amp;Android</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../qapitrace.qrc">
+       <normaloff>:/resources/android.png</normaloff>:/resources/android.png</iconset>
+     </property>
+     <addaction name="actionPullTrace"/>
+     <addaction name="actionPushTrace"/>
+     <addaction name="actionLinkTrace"/>
+     <addaction name="actionRetraceOnAndroid"/>
+    </widget>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
+    <addaction name="separator"/>
+    <addaction name="menu_Android"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -117,7 +132,7 @@
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QWebView" name="detailsWebView" native="true">
+      <widget class="QWebView" name="detailsWebView">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
          <horstretch>0</horstretch>
@@ -704,6 +719,50 @@
     <string>Ctrl+P</string>
    </property>
   </action>
+  <action name="actionPullTrace">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/go-bottom.png</normaloff>:/resources/go-bottom.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pull trace</string>
+   </property>
+  </action>
+  <action name="actionPushTrace">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/go-top.png</normaloff>:/resources/go-top.png</iconset>
+   </property>
+   <property name="text">
+    <string>Push trace</string>
+   </property>
+  </action>
+  <action name="actionLinkTrace">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/android-setup.png</normaloff>:/resources/android-setup.png</iconset>
+   </property>
+   <property name="text">
+    <string>Link trace</string>
+   </property>
+  </action>
+  <action name="actionSetup">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/document-new.png</normaloff>:/resources/document-new.png</iconset>
+   </property>
+   <property name="text">
+    <string>Setup</string>
+   </property>
+  </action>
+  <action name="actionRetraceOnAndroid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Retrace on Android</string>
+   </property>
+  </action>
   <zorder>stateDock</zorder>
   <zorder>vertexDataDock</zorder>
   <zorder>errorsDock</zorder>
@@ -713,7 +772,7 @@
   <customwidget>
    <class>QWebView</class>
    <extends>QWidget</extends>
-   <header>QtWebKit/QWebView</header>
+   <header>QtWebKitWidgets/QWebView</header>
   </customwidget>
  </customwidgets>
  <resources>

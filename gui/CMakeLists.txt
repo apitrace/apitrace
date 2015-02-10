@@ -1,4 +1,8 @@
 set(qapitrace_SRCS
+   androiddevicedialog.cpp
+   androidfiledialog.cpp
+   androidretracer.cpp
+   androidutils.cpp
    apisurface.cpp
    apitrace.cpp
    apicalldelegate.cpp
@@ -37,6 +41,8 @@ set(qapitrace_SRCS
 qt5_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
+   ui/androidfiledialog.ui
+   ui/androiddevicedialog.ui
    ui/argumentseditor.ui
    ui/imageviewer.ui
    ui/jumpwidget.ui

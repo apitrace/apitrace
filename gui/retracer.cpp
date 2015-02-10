@@ -136,7 +136,8 @@ Retracer::Retracer(QObject *parent)
       m_captureCall(0),
       m_profileGpu(false),
       m_profileCpu(false),
-      m_profilePixels(false)
+      m_profilePixels(false),
+      m_profileMemory(false)
 {
     qRegisterMetaType<QList<ApiTraceError> >();
 }
@@ -221,16 +222,22 @@ bool Retracer::isProfilingPixels() const
     return m_profilePixels;
 }
 
-bool Retracer::isProfiling() const
+bool Retracer::isProfilingMemory() const
 {
-    return m_profileGpu || m_profileCpu || m_profilePixels;
+    return m_profileMemory;
 }
 
-void Retracer::setProfiling(bool gpu, bool cpu, bool pixels)
+bool Retracer::isProfiling() const
+{
+    return m_profileGpu || m_profileCpu || m_profilePixels | m_profileMemory;
+}
+
+void Retracer::setProfiling(bool gpu, bool cpu, bool pixels, bool memory)
 {
     m_profileGpu = gpu;
     m_profileCpu = cpu;
     m_profilePixels = pixels;
+    m_profileMemory = memory;
 }
 
 void Retracer::setCaptureAtCallNumber(qlonglong num)
@@ -275,7 +282,7 @@ void Retracer::resetThumbnailsToCapture()
     m_thumbnailsToCapture.clear();
 }
 
-QString Retracer::thumbnailCallSet()
+QString Retracer::thumbnailCallSet() const
 {
     QString callSet;
 
@@ -295,6 +302,58 @@ QString Retracer::thumbnailCallSet()
 
     //qDebug() << QLatin1String("debug: call set to capture: ") << callSet;
     return callSet;
+}
+
+QStringList Retracer::retraceArguments() const
+{
+    QStringList arguments;
+
+    if (m_singlethread) {
+        arguments << QLatin1String("--singlethread");
+    }
+
+    if (m_useCoreProfile) {
+        arguments << QLatin1String("--core");
+    }
+
+    if (m_captureState) {
+        arguments << QLatin1String("-D");
+        arguments << QString::number(m_captureCall);
+    } else if (m_captureThumbnails) {
+        if (!m_thumbnailsToCapture.isEmpty()) {
+            arguments << QLatin1String("-S");
+            arguments << thumbnailCallSet();
+        }
+        arguments << QLatin1String("-s"); // emit snapshots
+        arguments << QLatin1String("-"); // emit to stdout
+    } else if (isProfiling()) {
+        if (m_profileGpu) {
+            arguments << QLatin1String("--pgpu");
+        }
+
+        if (m_profileCpu) {
+            arguments << QLatin1String("--pcpu");
+        }
+
+        if (m_profilePixels) {
+            arguments << QLatin1String("--ppd");
+        }
+
+        if (m_profileMemory) {
+            arguments << QLatin1String("--pmem");
+        }
+    } else {
+        if (!m_doubleBuffered) {
+            arguments << QLatin1String("--sb");
+        }
+
+        if (m_benchmarking) {
+            arguments << QLatin1String("-b");
+        } else {
+            arguments << QLatin1String("-d");
+        }
+    }
+    return arguments;
 }
 
 /**
@@ -337,47 +396,7 @@ void Retracer::run()
         return;
     }
 
-    if (m_singlethread) {
-        arguments << QLatin1String("--singlethread");
-    }
-
-    if (m_useCoreProfile) {
-        arguments << QLatin1String("--core");
-    }
-
-    if (m_captureState) {
-        arguments << QLatin1String("-D");
-        arguments << QString::number(m_captureCall);
-    } else if (m_captureThumbnails) {
-        if (!m_thumbnailsToCapture.isEmpty()) {
-            arguments << QLatin1String("-S");
-            arguments << thumbnailCallSet();
-        }
-        arguments << QLatin1String("-s"); // emit snapshots
-        arguments << QLatin1String("-"); // emit to stdout
-    } else if (isProfiling()) {
-        if (m_profileGpu) {
-            arguments << QLatin1String("--pgpu");
-        }
-
-        if (m_profileCpu) {
-            arguments << QLatin1String("--pcpu");
-        }
-
-        if (m_profilePixels) {
-            arguments << QLatin1String("--ppd");
-        }
-    } else {
-        if (!m_doubleBuffered) {
-            arguments << QLatin1String("--sb");
-        }
-
-        if (m_benchmarking) {
-            arguments << QLatin1String("-b");
-        }
-    }
-
-    arguments << m_fileName;
+    arguments << retraceArguments() << m_fileName;
 
     /*
      * Support remote execution on a separate target.
