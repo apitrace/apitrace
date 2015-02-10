@@ -1,4 +1,17 @@
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+#add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}
+)
 set(qapitrace_SRCS
+   androiddevicedialog.cpp
+   androidfiledialog.cpp
+   androidretracer.cpp
+   androidutils.cpp
    apisurface.cpp
    apitrace.cpp
    apicalldelegate.cpp
@@ -37,6 +50,8 @@ set(qapitrace_SRCS
 qt5_add_resources(qapitrace_SRCS qapitrace.qrc)
 
 set(qapitrace_UIS
+   ui/androidfiledialog.ui
+   ui/androiddevicedialog.ui
    ui/argumentseditor.ui
    ui/imageviewer.ui
    ui/jumpwidget.ui
@@ -50,14 +65,8 @@ set(qapitrace_UIS
    ui/shaderssourcewidget.ui
    )
 
-set(CMAKE_AUTOMOC ON)
 QT5_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-#add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
-include_directories(
-    ${CMAKE_SOURCE_DIR} # for image/*
-)
 
 add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
@@ -78,7 +87,6 @@ target_link_libraries (qapitrace
     ${SNAPPY_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
 )
-
 if (APPLE)
     # Recent builds of Qt no longer support i386 architecture
     set_target_properties (qapitrace PROPERTIES OSX_ARCHITECTURES x86_64)

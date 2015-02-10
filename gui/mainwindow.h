@@ -52,6 +52,10 @@ private slots:
     void callItemActivated(const QModelIndex &index);
     void createTrace();
     void openTrace();
+    void pullTrace();
+    void pushTrace();
+    void linkTrace();
+    void retraceOnAndroid(bool android);
     void replayStart();
     void replayProfile();
     void replayStop();
@@ -97,13 +101,15 @@ private slots:
     void slotFoundFrameStart(ApiTraceFrame *frame);
     void slotFoundFrameEnd(ApiTraceFrame *frame);
     void slotJumpToResult(ApiTraceCall *call);
+    void replayTrace(bool dumpState, bool dumpThumbnails);
 
 private:
     void initObjects();
     void initConnections();
+    void initRetraceConnections();
+
     void updateActionsState(bool traceLoaded, bool stopped = true);
     void newTraceFile(const QString &fileName);
-    void replayTrace(bool dumpState, bool dumpThumbnails);
     void trimEvent();
     void fillStateForFrame();
 
@@ -117,6 +123,9 @@ private:
     ApiTraceCall *currentCall() const;
 
     static void thumbnailCallback(void *object, int thumbnailIdx);
+
+    void linkLocalAndroidTrace(const QString &localFile, const QString &deviceFile);
+    QString linkedAndroidTrace(const QString &localFile);
 
 protected:
     virtual void closeEvent(QCloseEvent * event);
@@ -156,6 +165,7 @@ private:
     ApiTraceEvent *m_nonDefaultsLookupEvent;
 
     ProfileDialog* m_profileDialog;
+    QString m_androidFilePath;
 };
 
 

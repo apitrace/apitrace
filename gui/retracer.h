@@ -41,8 +41,9 @@ public:
     bool isProfilingGpu() const;
     bool isProfilingCpu() const;
     bool isProfilingPixels() const;
+    bool isProfilingMemory() const;
     bool isProfiling() const;
-    void setProfiling(bool gpu, bool cpu, bool pixels);
+    void setProfiling(bool gpu, bool cpu, bool pixels, bool memory);
 
     void setCaptureAtCallNumber(qlonglong num);
     qlonglong captureAtCallNumber() const;
@@ -55,14 +56,14 @@ public:
 
     void addThumbnailToCapture(qlonglong num);
     void resetThumbnailsToCapture();
+    QString thumbnailCallSet() const;
 
-    QString thumbnailCallSet();
+    QStringList retraceArguments() const;
 
 signals:
     void finished(const QString &output);
     void foundState(ApiTraceState *state);
     void foundProfile(trace::Profile *profile);
-    void foundThumbnails(const QList<QImage> &thumbnails);
     void foundThumbnails(const ImageHash &thumbnails);
     void error(const QString &msg);
     void retraceErrors(const QList<ApiTraceError> &errors);
@@ -84,6 +85,7 @@ private:
     bool m_profileGpu;
     bool m_profileCpu;
     bool m_profilePixels;
+    bool m_profileMemory;
 
     QProcessEnvironment m_processEnvironment;
 
