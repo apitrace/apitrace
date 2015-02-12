@@ -59,7 +59,7 @@ getSurfaceImage(IDirect3DDevice8 *pDevice,
     assert(SUCCEEDED(hr));
 
     D3DLOCKED_RECT LockedRect;
-    hr = pSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY);
+    hr = pSurface->LockRect(&LockedRect, NULL, D3DLOCK_READONLY | D3DLOCK_NOSYSLOCK);
     if (FAILED(hr)) {
         return NULL;
     }
