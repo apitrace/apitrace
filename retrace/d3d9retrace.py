@@ -55,6 +55,13 @@ class D3DRetracer(Retracer):
             print '    SDKVersion &= ~0x80000000;'
             print '}'
 
+        # d3d8d.dll can be found in the Aug 2007 DXSDK.  It works on XP, but
+        # not on Windows 7.
+        if function.name in ('Direct3DCreate8'):
+            print 'if (retrace::debug >= 2 && !g_szD3D8DllName && LoadLibraryA("d3d8d.dll")) {'
+            print '    g_szD3D8DllName = "d3d8d.dll";'
+            print '}'
+
         Retracer.invokeFunction(self, function)
 
     createDeviceMethodNames = [
