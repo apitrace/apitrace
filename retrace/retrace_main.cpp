@@ -47,7 +47,7 @@
 static bool waitOnFinish = false;
 static int loopCount = 0;
 
-static const char *snapshotPrefix = NULL;
+static const char *snapshotPrefix = "";
 static enum {
     PNM_FMT,
     RAW_RGB,
@@ -73,6 +73,7 @@ trace::Profiler profiler;
 int verbosity = 0;
 unsigned debug = 1;
 bool dumpingState = false;
+bool dumpingSnapshots = false;
 
 Driver driver = DRIVER_DEFAULT;
 const char *driverModule = NULL;
@@ -121,6 +122,7 @@ static void
 takeSnapshot(unsigned call_no) {
     static unsigned snapshot_no = 0;
 
+    assert(dumpingSnapshots);
     assert(snapshotPrefix);
 
     image::Image *src = dumper->getSnapshot();
@@ -129,8 +131,7 @@ takeSnapshot(unsigned call_no) {
         return;
     }
 
-    if (snapshotPrefix &&
-        (snapshotInterval == 0 ||
+    if ((snapshotInterval == 0 ||
         (snapshot_no % snapshotInterval) == 0)) {
 
         if (snapshotPrefix[0] == '-' && snapshotPrefix[1] == 0) {
@@ -730,6 +731,7 @@ int main(int argc, char **argv)
             retrace::singleThread = true;
             break;
         case 's':
+            dumpingSnapshots = true;
             snapshotPrefix = optarg;
             if (snapshotFrequency.empty()) {
                 snapshotFrequency = trace::CallSet(trace::FREQUENCY_FRAME);
@@ -765,10 +767,8 @@ int main(int argc, char **argv)
                 snapshotFormat = PNM_FMT;
             break;
         case 'S':
+            dumpingSnapshots = true;
             snapshotFrequency.merge(optarg);
-            if (snapshotPrefix == NULL) {
-                snapshotPrefix = "";
-            }
             break;
         case SNAPSHOT_INTERVAL_OPT:
             snapshotInterval = atoi(optarg);

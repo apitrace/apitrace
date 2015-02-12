@@ -125,6 +125,7 @@ extern bool profilingMemoryUsage;
  * State dumping.
  */
 extern bool dumpingState;
+extern bool dumpingSnapshots;
 
 
 enum Driver {
