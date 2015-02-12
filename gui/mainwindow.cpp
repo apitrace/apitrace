@@ -1116,8 +1116,11 @@ void MainWindow::slotSearchNext(const QString &str,
     ApiTraceCall *call = currentCall();
     ApiTraceFrame *frame = currentFrame();
 
-    Q_ASSERT(call || frame);
     if (!frame) {
+        // Trace is still loading.
+        if (!call) {
+            return;
+        }
         frame = call->parentFrame();
     }
     Q_ASSERT(frame);
@@ -1131,8 +1134,11 @@ void MainWindow::slotSearchPrev(const QString &str,
     ApiTraceCall *call = currentCall();
     ApiTraceFrame *frame = currentFrame();
 
-    Q_ASSERT(call || frame);
     if (!frame) {
+        // Trace is still loading.
+        if (!call) {
+            return;
+        }
         frame = call->parentFrame();
     }
     Q_ASSERT(frame);
