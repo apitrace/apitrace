@@ -1467,7 +1467,7 @@ IDirectDrawSurface2.methods += [
     StdMethod(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE2, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     StdMethod(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE2, "lpDDSReference")]),
-    StdMethod(DDRESULT, "GetDDInterface", [Out(LPUNKNOWN, "lplpDD")]),
+    StdMethod(DDRESULT, "GetDDInterface", [Out(Pointer(ObjPointer(VOID)), "lplpDD")]),
     StdMethod(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
 ]
@@ -1506,7 +1506,7 @@ IDirectDrawSurface3.methods += [
     StdMethod(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE3, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     StdMethod(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE3, "lpDDSReference")]),
-    StdMethod(DDRESULT, "GetDDInterface", [Out(LPUNKNOWN, "lplpDD")]),
+    StdMethod(DDRESULT, "GetDDInterface", [Out(Pointer(ObjPointer(VOID)), "lplpDD")]),
     StdMethod(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "SetSurfaceDesc", [(LPDDSURFACEDESC, "lpDDSD"), (DWORD, "dwFlags")]),
@@ -1546,7 +1546,7 @@ IDirectDrawSurface4.methods += [
     StdMethod(DDRESULT, "UpdateOverlay", [(LPRECT, "lpSrcRect"), (LPDIRECTDRAWSURFACE4, "lpDDDestSurface"), (LPRECT, "lpDestRect"), (DirectDrawSurfaceOverlayFlags, "dwFlags"), (LPDDOVERLAYFX, "lpDDOverlayFx")]),
     StdMethod(DDRESULT, "UpdateOverlayDisplay", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "UpdateOverlayZOrder", [(DirectDrawUpdateOverlayZOrderFlags, "dwFlags"), (LPDIRECTDRAWSURFACE4, "lpDDSReference")]),
-    StdMethod(DDRESULT, "GetDDInterface", [Out(Pointer(LPVOID), "lplpDD")]),
+    StdMethod(DDRESULT, "GetDDInterface", [Out(Pointer(ObjPointer(VOID)), "lplpDD")]),
     StdMethod(DDRESULT, "PageLock", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "PageUnlock", [(DWORD, "dwFlags")]),
     StdMethod(DDRESULT, "SetSurfaceDesc", [(LPDDSURFACEDESC2, "lpDDSD"), (DWORD, "dwFlags")]),
@@ -1661,3 +1661,8 @@ ddraw.addFunctions([
     # TODO: SetAppCompatData
 ])
 
+# Add otherwise unreferenced interfaces
+ddraw.addInterfaces([
+    IDirectDrawSurface2,
+    IDirectDrawSurface3,
+])
