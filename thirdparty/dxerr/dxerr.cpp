@@ -21,9 +21,6 @@
 #ifdef __MINGW32__
 #include "compat.h"
 #include "d3derr.hpp"
-#ifndef strnlen_s
-#define strnlen_s strnlen
-#endif
 #endif
 
 #ifdef HAVE_DDRAW
@@ -3965,59 +3962,4 @@ void WINAPI DXGetErrorDescriptionA( HRESULT hr, char* desc, size_t count )
 // -------------------------------------------------------------
         CHK_ERR(XAPO_E_FORMAT_UNSUPPORTED, "Requested audio format unsupported.")
     }
-}
-
-//-----------------------------------------------------------------------------
-HRESULT WINAPI DXTraceA( const char* strFile, DWORD dwLine, HRESULT hr,
-                         const char* strMsg, bool bPopMsgBox )
-{
-    char strBufferLine[128];
-    char strBufferError[256];
-    char strBuffer[BUFFER_SIZE];
-
-    sprintf_s( strBufferLine, 128, "%lu", dwLine );
-    if( strFile )
-    {
-       sprintf_s( strBuffer, BUFFER_SIZE, "%s(%s): ", strFile, strBufferLine );
-       OutputDebugStringA( strBuffer );
-    }
-
-    size_t nMsgLen = (strMsg) ? strnlen_s( strMsg, 1024 ) : 0;
-    if( nMsgLen > 0 )
-    {
-        OutputDebugStringA( strMsg );
-        OutputDebugStringA( " " );
-    }
-
-    sprintf_s( strBufferError, 256, "%s (0x%08lx)", DXGetErrorStringA(hr), hr );
-    sprintf_s( strBuffer, BUFFER_SIZE, "hr=%s", strBufferError );
-    OutputDebugStringA( strBuffer );
-
-    OutputDebugStringA( "\n" );
-
-#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
-    if( bPopMsgBox )
-    {
-        char strBufferFile[MAX_PATH];
-        strcpy_s( strBufferFile, MAX_PATH, "" );
-        if( strFile )
-            strcpy_s( strBufferFile, MAX_PATH, strFile );
-
-        char strBufferMsg[1024];
-        strcpy_s( strBufferMsg, 1024, "" );
-        if( nMsgLen > 0 )
-            sprintf_s( strBufferMsg, 1024, "Calling: %s\n", strMsg );
-
-        sprintf_s( strBuffer, BUFFER_SIZE, "File: %s\nLine: %s\nError Code: %s\n%sDo you want to debug the application?",
-                    strBufferFile, strBufferLine, strBufferError, strBufferMsg );
-
-        int nResult = MessageBoxA( GetForegroundWindow(), strBuffer, "Unexpected error encountered", MB_YESNO | MB_ICONERROR );
-        if( nResult == IDYES )
-            DebugBreak();
-    }
-#else
-    UNREFERENCED_PARAMETER(bPopMsgBox);
-#endif
-
-    return hr;
 }

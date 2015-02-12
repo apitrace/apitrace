@@ -40,40 +40,6 @@ void WINAPI DXGetErrorDescriptionA( HRESULT hr, char* desc, size_t count );
 
 #define DXGetErrorDescription DXGetErrorDescriptionA
 
-//--------------------------------------------------------------------------------------
-//  DXTrace
-//
-//  Desc:  Outputs a formatted error message to the debug stream
-//
-//  Args:  char* strFile   The current file, typically passed in using the
-//                         macro.
-//         DWORD dwLine    The current line number, typically passed in using the 
-//                         macro.
-//         HRESULT hr      An HRESULT that will be traced to the debug stream.
-//         CHAR* strMsg    A string that will be traced to the debug stream (may be NULL)
-//         BOOL bPopMsgBox If TRUE, then a message box will popup also containing the passed info.
-//
-//  Return: The hr that was passed in.  
-//--------------------------------------------------------------------------------------
-HRESULT WINAPI DXTraceA( const char* strFile, DWORD dwLine, HRESULT hr, const char* strMsg, bool bPopMsgBox );
-
-#define DXTrace DXTraceA
-
-//--------------------------------------------------------------------------------------
-//
-// Helper macros
-//
-//--------------------------------------------------------------------------------------
-#if defined(DEBUG) || defined(_DEBUG)
-#define DXTRACE_MSG(str)              DXTrace( __FILE__, (DWORD)__LINE__, 0, str, false )
-#define DXTRACE_ERR(str,hr)           DXTrace( __FILE__, (DWORD)__LINE__, hr, str, false )
-#define DXTRACE_ERR_MSGBOX(str,hr)    DXTrace( __FILE__, (DWORD)__LINE__, hr, str, true )
-#else
-#define DXTRACE_MSG(str)              (0L)
-#define DXTRACE_ERR(str,hr)           (hr)
-#define DXTRACE_ERR_MSGBOX(str,hr)    (hr)
-#endif
-
 #ifdef __cplusplus
 }
 #endif //__cplusplus
