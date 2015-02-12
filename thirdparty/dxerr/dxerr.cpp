@@ -11,7 +11,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
 
-// This version only supports UNICODE.
+// This version only supports ASCII.
 
 #include "dxerr.h"
 
@@ -3978,7 +3978,7 @@ HRESULT WINAPI DXTraceA( const char* strFile, DWORD dwLine, HRESULT hr,
     sprintf_s( strBufferLine, 128, "%lu", dwLine );
     if( strFile )
     {
-       sprintf_s( strBuffer, BUFFER_SIZE, "s(s): ", strFile, strBufferLine );
+       sprintf_s( strBuffer, BUFFER_SIZE, "%s(%s): ", strFile, strBufferLine );
        OutputDebugStringA( strBuffer );
     }
 
@@ -3989,8 +3989,8 @@ HRESULT WINAPI DXTraceA( const char* strFile, DWORD dwLine, HRESULT hr,
         OutputDebugStringA( " " );
     }
 
-    sprintf_s( strBufferError, 256, "s (0x%0.8x)", DXGetErrorStringA(hr), hr );
-    sprintf_s( strBuffer, BUFFER_SIZE, "hr=s", strBufferError );
+    sprintf_s( strBufferError, 256, "%s (0x%08lx)", DXGetErrorStringA(hr), hr );
+    sprintf_s( strBuffer, BUFFER_SIZE, "hr=%s", strBufferError );
     OutputDebugStringA( strBuffer );
 
     OutputDebugStringA( "\n" );
@@ -4006,9 +4006,9 @@ HRESULT WINAPI DXTraceA( const char* strFile, DWORD dwLine, HRESULT hr,
         char strBufferMsg[1024];
         strcpy_s( strBufferMsg, 1024, "" );
         if( nMsgLen > 0 )
-            sprintf_s( strBufferMsg, 1024, "Calling: s\n", strMsg );
+            sprintf_s( strBufferMsg, 1024, "Calling: %s\n", strMsg );
 
-        sprintf_s( strBuffer, BUFFER_SIZE, "File: s\nLine: s\nError Code: s\nsDo you want to debug the application?",
+        sprintf_s( strBuffer, BUFFER_SIZE, "File: %s\nLine: %s\nError Code: %s\n%sDo you want to debug the application?",
                     strBufferFile, strBufferLine, strBufferError, strBufferMsg );
 
         int nResult = MessageBoxA( GetForegroundWindow(), strBuffer, "Unexpected error encountered", MB_YESNO | MB_ICONERROR );
