@@ -674,23 +674,13 @@ patchAllModules(void)
 
 
 static HMODULE WINAPI
-MyLoadLibrary(LPCSTR lpLibFileName, HANDLE hFile = NULL, DWORD dwFlags = 0)
-{
-    // To Send the information to the server informing that,
-    // LoadLibrary is invoked.
-    HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, dwFlags);
-
-    // Hook all new modules (and not just this one, to pick up any dependencies)
-    patchAllModules();
-
-    return hModule;
-}
-
-static HMODULE WINAPI
 MyLoadLibraryA(LPCSTR lpLibFileName)
 {
+    HMODULE hModule = LoadLibraryA(lpLibFileName);
+
     if (VERBOSITY >= 2) {
-        debugPrintf("inject: intercepting %s(\"%s\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(\"%s\") = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hModule);
     }
 
     if (VERBOSITY > 0) {
@@ -715,42 +705,58 @@ MyLoadLibraryA(LPCSTR lpLibFileName)
         }
     }
 
-    return MyLoadLibrary(lpLibFileName);
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules();
+
+    return hModule;
 }
 
 static HMODULE WINAPI
 MyLoadLibraryW(LPCWSTR lpLibFileName)
 {
+    HMODULE hModule = LoadLibraryW(lpLibFileName);
+
     if (VERBOSITY >= 2) {
-        debugPrintf("inject: intercepting %s(L\"%S\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(L\"%S\") = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hModule);
     }
 
-    char szFileName[MAX_PATH];
-    wcstombs(szFileName, lpLibFileName, sizeof szFileName);
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules();
 
-    return MyLoadLibrary(szFileName);
+    return hModule;
 }
 
 static HMODULE WINAPI
 MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
+    HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, dwFlags);
+
     if (VERBOSITY >= 2) {
-        debugPrintf("inject: intercepting %s(\"%s\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(\"%s\", 0x%p, 0x%lx) = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hFile, dwFlags, hModule);
     }
-    return MyLoadLibrary(lpLibFileName, hFile, dwFlags);
+
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules();
+
+    return hModule;
 }
 
 static HMODULE WINAPI
 MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
+    HMODULE hModule = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+
     if (VERBOSITY >= 2) {
-        debugPrintf("inject: intercepting %s(L\"%S\")\n", __FUNCTION__, lpLibFileName);
+        debugPrintf("inject: intercepting %s(L\"%S\", 0x%p, 0x%lx) = 0x%p\n",
+                    __FUNCTION__ + 2, lpLibFileName, hFile, dwFlags, hModule);
     }
 
-    char szFileName[MAX_PATH];
-    wcstombs(szFileName, lpLibFileName, sizeof szFileName);
+    // Hook all new modules (and not just this one, to pick up any dependencies)
+    patchAllModules();
 
-    return MyLoadLibrary(szFileName, hFile, dwFlags);
+    return hModule;
 }
 
 
