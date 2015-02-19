@@ -186,27 +186,36 @@ SECURITY_ATTRIBUTES = Struct("SECURITY_ATTRIBUTES", [
 ])
 
 # http://msdn.microsoft.com/en-us/library/ff485842.aspx
-# http://msdn.microsoft.com/en-us/library/windows/desktop/ms681381.aspx
+# http://blogs.msdn.com/b/kirillosenkov/archive/2012/05/14/a-list-of-common-hresult-error-codes.aspx
+HRESULT = Enum("HRESULT", [
+    "S_OK",           # 0x00000000
+    "S_FALSE",        # 0x00000001
+    "E_PENDING",      # 0x8000000A
+    "E_NOTIMPL",      # 0x80004001
+    "E_NOINTERFACE",  # 0x80004002
+    "E_POINTER",      # 0x80004003
+    "E_ABORT",        # 0x80004004
+    "E_FAIL",         # 0x80004005
+    "E_UNEXPECTED",   # 0x8000FFFF
+    "E_ACCESSDENIED", # 0x80070005
+    "E_HANDLE",       # 0x80070006
+    "E_OUTOFMEMORY",  # 0x8007000E
+    "E_INVALIDARG",   # 0x80070057
+])
+
 def MAKE_HRESULT(errors, ok = "S_OK", false = "S_FALSE"):
-    values = [ok, false]
-    values.extend(errors)
-    values.extend([
-        "E_PENDING", # 0x8000000A
-        "E_NOTIMPL", # 0x80004001
-        "E_NOINTERFACE", # 0x80004002
-        "E_POINTER", # 0x80004003
-        "E_ABORT", # 0x80004004
-        "E_FAIL", # 0x80004005
-        "E_UNEXPECTED", # 0x8000FFFF
-        "E_ACCESSDENIED", # 0x80070005
-        "E_HANDLE", # 0x80070006
-        "E_OUTOFMEMORY", # 0x8007000E
-        "E_INVALIDARG", # 0x80070057
-    ])
-    return Enum("HRESULT", values)
-
-HRESULT = MAKE_HRESULT([])
-
+    # Always update global HRESULT
+    HRESULT.values.extend(errors)
+    if ok == "S_OK" and false == "S_FALSE":
+        # Just return global HRESULT
+        return HRESULT
+    else:
+        # Return a variation
+        values = [ok, false]
+        assert HRESULT.values[0] == "S_OK"
+        assert HRESULT.values[1] == "S_FALSE"
+        values.extend(HRESULT.values[2:])
+        return Enum("HRESULT", values)
 
 IUnknown = Interface("IUnknown")
 
