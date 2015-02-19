@@ -727,10 +727,52 @@ MyLoadLibraryW(LPCWSTR lpLibFileName)
     return hModule;
 }
 
+#ifndef LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
+#define LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR    0x00000100
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_APPLICATION_DIR
+#define LOAD_LIBRARY_SEARCH_APPLICATION_DIR 0x00000200
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_USER_DIRS
+#define LOAD_LIBRARY_SEARCH_USER_DIRS       0x00000400
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_SYSTEM32
+#define LOAD_LIBRARY_SEARCH_SYSTEM32        0x00000800
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+#define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS    0x00001000
+#endif
+
+static inline DWORD
+adjustFlags(DWORD dwFlags)
+{
+    /*
+     * XXX: LoadLibraryEx seems to interpret "application directory" in respect
+     * to the module that's calling it.  So when the application restricts the
+     * search path to application directory via
+     * LOAD_LIBRARY_SEARCH_APPLICATION_DIR or LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+     * flags, kernel32.dll ends up searching on the directory of the inject.dll
+     * module.
+     *
+     * XXX: What about SetDefaultDllDirectories?
+     *
+     */
+    if (dwFlags & (LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
+                   LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)) {
+        dwFlags &= ~(LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR |
+                     LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
+                     LOAD_LIBRARY_SEARCH_USER_DIRS |
+                     LOAD_LIBRARY_SEARCH_SYSTEM32 |
+                     LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    }
+
+    return dwFlags;
+}
+
 static HMODULE WINAPI
 MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
-    HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, dwFlags);
+    HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, adjustFlags(dwFlags));
 
     if (VERBOSITY >= 2) {
         debugPrintf("inject: intercepting %s(\"%s\", 0x%p, 0x%lx) = 0x%p\n",
@@ -746,7 +788,7 @@ MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 static HMODULE WINAPI
 MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
-    HMODULE hModule = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
+    HMODULE hModule = LoadLibraryExW(lpLibFileName, hFile, adjustFlags(dwFlags));
 
     if (VERBOSITY >= 2) {
         debugPrintf("inject: intercepting %s(L\"%S\", 0x%p, 0x%lx) = 0x%p\n",
