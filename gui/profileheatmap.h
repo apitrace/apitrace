@@ -417,12 +417,12 @@ public:
         text  = QString::fromStdString(call.name);
 
         text += QString("\nCall: %1").arg(call.no);
-        text += QString("\nCPU Start: %1").arg(Profiling::getTimeString(call.cpuStart));
-        text += QString("\nCPU Duration: %1").arg(Profiling::getTimeString(call.cpuDuration));
+        text += QString("\nCPU Start: %1").arg(Profiling::getTimeString(call.cpuStart, 1e3));
+        text += QString("\nCPU Duration: %1").arg(Profiling::getTimeString(call.cpuDuration, 1e3));
 
         if (call.pixels >= 0) {
-            text += QString("\nGPU Start: %1").arg(Profiling::getTimeString(call.gpuStart));
-            text += QString("\nGPU Duration: %1").arg(Profiling::getTimeString(call.gpuDuration));
+            text += QString("\nGPU Start: %1").arg(Profiling::getTimeString(call.gpuStart, 1e3));
+            text += QString("\nGPU Duration: %1").arg(Profiling::getTimeString(call.gpuDuration, 1e3));
             text += QString("\nPixels Drawn: %1").arg(QLocale::system().toString((qlonglong)call.pixels));
         }
 
