@@ -33,6 +33,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include <fcntl.h>
 #include <signal.h>
 
@@ -150,10 +152,17 @@ getConfigDir(void)
         path = configHomeDir;
     } else {
         const char *homeDir = getenv("HOME");
+        if (!homeDir) {
+            struct passwd *user = getpwuid(getuid());
+            if (user != NULL)
+                homeDir = user->pw_dir;
+        }
         assert(homeDir);
         if (homeDir) {
             path = homeDir;
+#if !defined(ANDROID)
             path.join(".config");
+#endif
         }
     }
 #endif
