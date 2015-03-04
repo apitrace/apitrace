@@ -156,10 +156,8 @@ else (WIN32)
 endif ()
 
 if (MSVC)
-    # Use bundled stdint.h for older MSVC versions
-    check_include_file_cxx (stdint.h HAVE_STDINT_H)
-    if (NOT HAVE_STDINT_H)
-        include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/msinttypes)
+    if (${MSVC_VERSION} LESS 1800)
+        message (FATAL_ERROR "Visual Studio 2013 or later required")
     endif ()
 
     # No RTTI required

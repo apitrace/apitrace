@@ -106,7 +106,7 @@ build process. It expects a linaro-type of Android NDK to be present in
 
 Additional requirements:
 
-* Microsoft Visual Studio (tested with 2013 version)
+* Microsoft Visual Studio 2013 or newer (tested with 2013)
 
 * [Windows 8.1 SDK](http://msdn.microsoft.com/en-us/windows/desktop/bg162891.aspx)
   for D3D11.2 headers.
