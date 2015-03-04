@@ -33,8 +33,12 @@
 
 #ifdef HAVE_READPROC_H
 #include <proc/readproc.h>
+#endif
 
 namespace os {
+
+#if defined(HAVE_READPROC_H)
+
     inline long long
     getVsize(void) {
         proc_t proc;
@@ -48,19 +52,17 @@ namespace os {
         look_up_our_self(&proc);
         return proc.rss;
     }
-} /* namespace os */
 
-#elif __ANDROID__
-namespace os {
+#elif defined(__ANDROID__)
+
     long long
     getVsize(void);
 
     long long
     getRss(void);
-} /* namespace os */
 
 #else
-namespace os {
+
     inline long long
     getVsize(void) {
         return 0;
@@ -70,7 +72,9 @@ namespace os {
     getRss(void) {
         return 0;
     }
-} /* namespace os */
+
 #endif
+
+} /* namespace os */
 
 #endif /* _OS_MEMORY_HPP_ */
