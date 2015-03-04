@@ -507,13 +507,6 @@ install (
     DESTINATION ${DOC_INSTALL_DIR}
     RENAME LICENSE.txt
 )
-if (MSVC)
-    install (
-        FILES thirdparty/msinttypes/LICENSE
-        DESTINATION ${DOC_INSTALL_DIR}
-        RENAME LICENSE-msinttypes.txt
-    )
-endif ()
 
 set (CPACK_PACKAGE_VERSION_MAJOR "7")
 set (CPACK_PACKAGE_VERSION_MINOR "0")
