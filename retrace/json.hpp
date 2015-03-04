@@ -177,6 +177,14 @@ public:
 
     template<class T>
     inline void
+    writeFloatMember(const char *name, T f) {
+        beginMember(name);
+        writeFloat(f);
+        endMember();
+    }
+
+    template<class T>
+    inline void
     writeIntMember(const char *name, T n) {
         beginMember(name);
         writeInt(n);

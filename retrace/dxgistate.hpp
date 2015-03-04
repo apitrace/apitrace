@@ -66,6 +66,9 @@ ConvertImage(DXGI_FORMAT SrcFormat,
 image::Image *
 getRenderTargetImage(IDXGISwapChain *pSwapChain);
 
+std::string
+getDXGIFormatName(DXGI_FORMAT format);
+
 
 } /* namespace d3dstate */
 

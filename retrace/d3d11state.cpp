@@ -38,6 +38,18 @@ namespace d3dstate {
 
 
 static void
+dumpRasterizerState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+{
+    com_ptr<ID3D11RasterizerState> pRasterizerState;
+
+    pDeviceContext->RSGetState(&pRasterizerState);
+    json.beginMember("RasterizerState");
+    dumpStateObjectDesc<ID3D11RasterizerState, D3D11_RASTERIZER_DESC>(json, pRasterizerState);
+    json.endMember(); // RasterizerState
+}
+
+
+static void
 dumpBlendState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 {
     com_ptr<ID3D11BlendState> pBlendState;
@@ -70,6 +82,7 @@ dumpParameters(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
     json.beginMember("parameters");
     json.beginObject();
 
+    dumpRasterizerState(json, pDeviceContext);
     dumpBlendState(json, pDeviceContext);
 
     json.endObject();

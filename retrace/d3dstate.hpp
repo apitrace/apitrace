@@ -31,6 +31,10 @@
 
 #include <windows.h>
 
+#ifdef HAVE_DXGI
+#include <dxgiformat.h>
+#endif
+
 
 struct IDirect3DDevice7;
 struct IDirect3DDevice8;
@@ -100,6 +104,9 @@ void
 dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
 
 
+#ifdef HAVE_DXGI
+
+
 /*
  * DXGI
  */
@@ -133,7 +140,8 @@ dumpDevice(std::ostream &os, ID3D10Device *pDevice);
  */
 
 image::Image *
-getRenderTargetImage(ID3D11DeviceContext *pDeviceContext);
+getRenderTargetImage(ID3D11DeviceContext *pDeviceContext,
+                     DXGI_FORMAT *dxgiFormat = 0);
 
 void
 dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
@@ -143,6 +151,9 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
 
 void
 dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext);
+
+
+#endif /* HAVE_DXGI */
 
 
 } /* namespace d3dstate */

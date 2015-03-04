@@ -380,8 +380,11 @@ dumpShaderResourceViewImage(JSONWriter &json,
             _snprintf(label, sizeof label,
                       "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
                       shader, stage, ArraySlice, MipSlice);
+            JSONWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(Desc.Format);
             json.beginMember(label);
-            json.writeImage(image);
+            json.writeImage(image, imgDesc);
             json.endMember(); // *_RESOURCE_*
             delete image;
         }
@@ -392,7 +395,8 @@ dumpShaderResourceViewImage(JSONWriter &json,
 
 static image::Image *
 getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
-                         ID3D11RenderTargetView *pRenderTargetView)
+                         ID3D11RenderTargetView *pRenderTargetView,
+                         DXGI_FORMAT *dxgiFormat)
 {
     if (!pRenderTargetView) {
         return NULL;
@@ -404,6 +408,10 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
 
     D3D11_RENDER_TARGET_VIEW_DESC Desc;
     pRenderTargetView->GetDesc(&Desc);
+
+    if (dxgiFormat) {
+       *dxgiFormat = Desc.Format;
+    }
 
     // TODO: Take the slice in consideration
     UINT MipSlice;
@@ -444,7 +452,8 @@ getRenderTargetViewImage(ID3D11DeviceContext *pDevice,
 
 static image::Image *
 getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
-                         ID3D11DepthStencilView *pDepthStencilView)
+                         ID3D11DepthStencilView *pDepthStencilView,
+                         DXGI_FORMAT *dxgiFormat)
 {
     if (!pDepthStencilView) {
         return NULL;
@@ -456,6 +465,10 @@ getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
 
     D3D11_DEPTH_STENCIL_VIEW_DESC Desc;
     pDepthStencilView->GetDesc(&Desc);
+
+    if (dxgiFormat) {
+       *dxgiFormat = Desc.Format;
+    }
 
     // TODO: Take the slice in consideration
     UINT MipSlice;
@@ -534,13 +547,14 @@ dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDevice)
 
 
 image::Image *
-getRenderTargetImage(ID3D11DeviceContext *pDevice) {
+getRenderTargetImage(ID3D11DeviceContext *pDevice,
+                     DXGI_FORMAT *dxgiFormat) {
     com_ptr<ID3D11RenderTargetView> pRenderTargetView;
     pDevice->OMGetRenderTargets(1, &pRenderTargetView, NULL);
 
     image::Image *image = NULL;
     if (pRenderTargetView) {
-        image = getRenderTargetViewImage(pDevice, pRenderTargetView);
+        image = getRenderTargetViewImage(pDevice, pRenderTargetView, dxgiFormat);
     }
 
     return image;
@@ -564,12 +578,17 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
         }
 
         image::Image *image;
-        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i]);
+        DXGI_FORMAT dxgiFormat;
+        image = getRenderTargetViewImage(pDevice, pRenderTargetViews[i],
+                                         &dxgiFormat);
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
+            JSONWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(dxgiFormat);
             json.beginMember(label);
-            json.writeImage(image);
+            json.writeImage(image, imgDesc);
             json.endMember(); // RENDER_TARGET_*
             delete image;
         }
@@ -579,10 +598,15 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
 
     if (pDepthStencilView) {
         image::Image *image;
-        image = getDepthStencilViewImage(pDevice, pDepthStencilView);
+        DXGI_FORMAT dxgiFormat;
+        image = getDepthStencilViewImage(pDevice, pDepthStencilView,
+                                         &dxgiFormat);
         if (image) {
+            JSONWriter::ImageDesc imgDesc;
+            imgDesc.depth = 1;
+            imgDesc.format = getDXGIFormatName(dxgiFormat);
             json.beginMember("DEPTH_STENCIL");
-            json.writeImage(image);
+            json.writeImage(image, imgDesc);
             json.endMember();
             delete image;
         }
