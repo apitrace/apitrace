@@ -32,6 +32,7 @@
 
 #include <windows.h>
 #include <io.h> // _isatty
+#include <stdio.h> // _fileno
 
 #ifndef COMMON_LVB_LEADING_BYTE
 #define COMMON_LVB_LEADING_BYTE    0x0100
