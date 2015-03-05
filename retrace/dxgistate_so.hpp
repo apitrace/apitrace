@@ -46,5 +46,40 @@ dumpStateObjectDesc(JSONWriter &json, Interface *pObj)
 }
 
 
+void dumpStateObject(JSONWriter &, const DXGI_FORMAT &);
+
 void dumpStateObject(JSONWriter &, const D3D10_BLEND_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_BUFFER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_COUNTER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_DEPTH_STENCIL_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_DEPTH_STENCILOP_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_DEPTH_STENCIL_VIEW_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_INPUT_ELEMENT_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_QUERY_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_RASTERIZER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_RENDER_TARGET_VIEW_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_SAMPLER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_SHADER_RESOURCE_VIEW_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_TEXTURE1D_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_TEXTURE2D_DESC &);
+void dumpStateObject(JSONWriter &, const D3D10_TEXTURE3D_DESC &);
+
 void dumpStateObject(JSONWriter &, const D3D11_BLEND_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_BUFFER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_CLASS_INSTANCE_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_COUNTER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_DEPTH_STENCIL_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_DEPTH_STENCILOP_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_DEPTH_STENCIL_VIEW_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_INPUT_ELEMENT_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_PACKED_MIP_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_QUERY_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_RASTERIZER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_RENDER_TARGET_BLEND_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_RENDER_TARGET_VIEW_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_SAMPLER_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_SHADER_RESOURCE_VIEW_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_TEXTURE1D_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_TEXTURE2D_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_TEXTURE3D_DESC &);
+void dumpStateObject(JSONWriter &, const D3D11_UNORDERED_ACCESS_VIEW_DESC &);

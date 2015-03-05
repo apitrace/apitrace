@@ -49,8 +49,12 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
 
 
     def visitLiteral(self, literal, instance):
-        assert literal.kind in ('SInt', 'UInt')
-        print '    json.writeInt(%s);' % (instance)
+        if literal.kind in ('SInt', 'UInt'):
+            print '    json.writeInt(%s);' % (instance)
+        elif literal.kind in ('Float',):
+            print '    json.writeFloat(%s);' % (instance)
+        else:
+            raise NotImplementedError
 
     def visitString(self, string, instance):
         if not string.wide:
@@ -64,7 +68,7 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
             # reinterpret_cast is necessary for GLubyte * <=> char *
             instance = 'reinterpret_cast<%s>(%s)' % (cast, instance)
         assert string.length is None
-        print '    json.writeString(%s%s);' % (suffix, instance)
+        print '    json.write%s(%s);' % (suffix, instance)
 
     def visitConst(self, const, instance):
         self.visit(const.type, instance)
@@ -73,9 +77,11 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    json.beginObject();'
         for member in struct.members:
             memberType, memberName = member
-            print '    json.beginMember("%s");' % memberName
+            if memberName is not None:
+                print '    json.beginMember("%s");' % memberName
             self.visitMember(member, instance)
-            print '    json.endMember(); // %s' % memberName
+            if memberName is not None:
+                print '    json.endMember(); // %s' % memberName
         print '    json.endObject();'
 
     def visitArray(self, array, instance):
@@ -148,7 +154,17 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
         assert False
 
     def visitPolymorphic(self, polymorphic, instance):
-        raise NotImplementedError
+        switchExpr = self.expand(polymorphic.switchExpr)
+        print '    switch (static_cast<int>(%s)) {' % switchExpr
+        for cases, type in polymorphic.iterSwitch():
+            for case in cases:
+                print '    %s:' % case
+            caseInstance = instance
+            if type.expr is not None:
+                caseInstance = 'static_cast<%s>(%s)' % (type, caseInstance)
+            self.visit(type, caseInstance)
+            print '        break;'
+        print '    }'
 
 
 class Dumper:
@@ -210,8 +226,41 @@ if __name__ == '__main__':
     api.addModule(d3d11.d3d11)
 
     types = [
+        dxgi.DXGI_FORMAT,
         d3d10.D3D10_BLEND_DESC,
+        d3d10.D3D10_BUFFER_DESC,
+        d3d10.D3D10_COUNTER_DESC,
+        d3d10.D3D10_DEPTH_STENCIL_DESC,
+        d3d10.D3D10_DEPTH_STENCILOP_DESC,
+        d3d10.D3D10_DEPTH_STENCIL_VIEW_DESC,
+        d3d10.D3D10_INPUT_ELEMENT_DESC,
+        d3d10.D3D10_QUERY_DESC,
+        d3d10.D3D10_RASTERIZER_DESC,
+        d3d10.D3D10_RENDER_TARGET_VIEW_DESC,
+        d3d10.D3D10_SAMPLER_DESC,
+        d3d10.D3D10_SHADER_RESOURCE_VIEW_DESC,
+        d3d10.D3D10_TEXTURE1D_DESC,
+        d3d10.D3D10_TEXTURE2D_DESC,
+        d3d10.D3D10_TEXTURE3D_DESC,
         d3d11.D3D11_BLEND_DESC,
+        d3d11.D3D11_BUFFER_DESC,
+        d3d11.D3D11_CLASS_INSTANCE_DESC,
+        d3d11.D3D11_COUNTER_DESC,
+        d3d11.D3D11_DEPTH_STENCIL_DESC,
+        d3d11.D3D11_DEPTH_STENCILOP_DESC,
+        d3d11.D3D11_DEPTH_STENCIL_VIEW_DESC,
+        d3d11.D3D11_INPUT_ELEMENT_DESC,
+        d3d11.D3D11_PACKED_MIP_DESC,
+        d3d11.D3D11_QUERY_DESC,
+        d3d11.D3D11_RASTERIZER_DESC,
+        d3d11.D3D11_RENDER_TARGET_BLEND_DESC,
+        d3d11.D3D11_RENDER_TARGET_VIEW_DESC,
+        d3d11.D3D11_SAMPLER_DESC,
+        d3d11.D3D11_SHADER_RESOURCE_VIEW_DESC,
+        d3d11.D3D11_TEXTURE1D_DESC,
+        d3d11.D3D11_TEXTURE2D_DESC,
+        d3d11.D3D11_TEXTURE3D_DESC,
+        d3d11.D3D11_UNORDERED_ACCESS_VIEW_DESC,
     ]
 
     dumper = Dumper(api, types)
