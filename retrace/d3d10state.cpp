@@ -31,6 +31,7 @@
 #include "com_ptr.hpp"
 #include "d3d10imports.hpp"
 #include "d3d10state.hpp"
+#include "dxgistate_so.hpp"
 
 
 namespace d3dstate {
@@ -38,6 +39,46 @@ namespace d3dstate {
 
 const GUID
 GUID_D3DSTATE = {0x7D71CAC9,0x7F58,0x432C,{0xA9,0x75,0xA1,0x9F,0xCF,0xCE,0xFD,0x14}};
+
+
+static void
+dumpBlendState(JSONWriter &json, ID3D10Device *pDevice)
+{
+    com_ptr<ID3D10BlendState> pBlendState;
+    FLOAT BlendFactor[4];
+    UINT SampleMask;
+
+    pDevice->OMGetBlendState(&pBlendState, BlendFactor, &SampleMask);
+    
+    json.beginMember("BlendState");
+    dumpStateObjectDesc<ID3D10BlendState, D3D10_BLEND_DESC>(json, pBlendState);
+    json.endMember(); // BlendState
+    
+    json.beginMember("BlendFactor");
+    json.beginArray();
+    json.writeFloat(BlendFactor[0]);
+    json.writeFloat(BlendFactor[1]);
+    json.writeFloat(BlendFactor[2]);
+    json.writeFloat(BlendFactor[3]);
+    json.endArray();
+    json.endMember(); // BlendFactor
+
+    json.writeIntMember("SampleMask", SampleMask);
+}
+
+
+static void
+dumpParameters(JSONWriter &json, ID3D10Device *pDevice)
+{
+    // TODO: dump description of current bound state
+    json.beginMember("parameters");
+    json.beginObject();
+
+    dumpBlendState(json, pDevice);
+
+    json.endObject();
+    json.endMember(); // parameters
+}
 
 
 static void
@@ -74,11 +115,7 @@ dumpDevice(std::ostream &os, ID3D10Device *pDevice)
 {
     JSONWriter json(os);
 
-    /* TODO */
-    json.beginMember("parameters");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // parameters
+    dumpParameters(json, pDevice);
 
     dumpShaders(json, pDevice);
 

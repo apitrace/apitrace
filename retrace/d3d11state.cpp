@@ -31,9 +31,50 @@
 #include "com_ptr.hpp"
 #include "d3d11imports.hpp"
 #include "d3d10state.hpp"
+#include "dxgistate_so.hpp"
 
 
 namespace d3dstate {
+
+
+static void
+dumpBlendState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+{
+    com_ptr<ID3D11BlendState> pBlendState;
+    FLOAT BlendFactor[4];
+    UINT SampleMask;
+
+    pDeviceContext->OMGetBlendState(&pBlendState, BlendFactor, &SampleMask);
+    
+    json.beginMember("BlendState");
+    dumpStateObjectDesc<ID3D11BlendState, D3D11_BLEND_DESC>(json, pBlendState);
+    json.endMember(); // BlendState
+    
+    json.beginMember("BlendFactor");
+    json.beginArray();
+    json.writeFloat(BlendFactor[0]);
+    json.writeFloat(BlendFactor[1]);
+    json.writeFloat(BlendFactor[2]);
+    json.writeFloat(BlendFactor[3]);
+    json.endArray();
+    json.endMember(); // BlendFactor
+
+    json.writeIntMember("SampleMask", SampleMask);
+}
+
+
+static void
+dumpParameters(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+{
+    // TODO: dump description of current bound state
+    json.beginMember("parameters");
+    json.beginObject();
+
+    dumpBlendState(json, pDeviceContext);
+
+    json.endObject();
+    json.endMember(); // parameters
+}
 
 
 static void
@@ -82,11 +123,7 @@ dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext)
 {
     JSONWriter json(os);
 
-    // TODO: dump description of current bound state
-    json.beginMember("parameters");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // parameters
+    dumpParameters(json, pDeviceContext);
 
     dumpShaders(json, pDeviceContext);
 

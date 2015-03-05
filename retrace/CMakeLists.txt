@@ -250,11 +250,30 @@ if (WIN32)
         )
         set (D3DSTATE_SOURCES ${D3DSTATE_SOURCES}
             dxgistate.cpp
+            dxgistate_so.cpp
             d3d10state.cpp
             d3d10state_images.cpp
             d3d11state.cpp
             d3d11state_images.cpp
             d3dretrace_dxgi.cpp
+        )
+        add_custom_command (
+            OUTPUT dxgistate_so.cpp
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py > ${CMAKE_CURRENT_BINARY_DIR}/dxgistate_so.cpp
+            DEPENDS
+                ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
+                ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
+                ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgi.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgitype.py
+                ${CMAKE_SOURCE_DIR}/specs/dxgiformat.py
+                ${CMAKE_SOURCE_DIR}/specs/winapi.py
+                ${CMAKE_SOURCE_DIR}/specs/stdapi.py
         )
         add_custom_command (
             OUTPUT d3dretrace_dxgi.cpp
