@@ -219,4 +219,26 @@ specifications:
 
 ## Dump more OpenGL state ##
 
+TBD.
+
+
+## Dump more D3D10/D3D11 parameter state ##
+
+In short, to dump another piece of state (e.g., `D3DXX_FOO_STATE`) you need to:
+
+* declare a
+
+        void dumpStateObject(JSONWriter &, const D3DXX_FOO_STATE &);
+
+  in `retrace/dxgistate_so.hpp`
+
+* add 
+
+        d3dxx.D3DXX_FOO_STATE,
+
+  to the bottom of `retrace/dxgistate_so.py` so that C++ code to dump that structure is generated.
+
+* add a new `dumpFooState` function to `retrace/d3d10state.cpp` or `retrace/d3d11state.cpp`, similar to the existing `dumpBlendState` function, which gets the state object, and then calls `dumpStateObjectDesc` template and the generated `dumpStateObject` functions to do the grunt work.
+
+* update `dumpParameters` to call `dumpFooState`
 
