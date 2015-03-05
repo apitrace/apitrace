@@ -79,6 +79,20 @@
 #pragma warning( disable : 6001 6221 )
 #endif
 
+#if defined(__MINGW32__) && !defined(MINGW_HAS_SECURE_API)
+
+static inline errno_t
+strcpy_s(char *strDestination, size_t numberOfElements, const char *strSource)
+{
+    strncpy(strDestination, strSource, numberOfElements - 1);
+    if (numberOfElements > 0) {
+        strDestination[numberOfElements - 1] = '\0';
+    }
+    return 0;
+}
+
+#endif
+
 //--------------------------------------------------------------------------------------
 #define  CHK_ERR(hrchk, strOut) \
         case hrchk: \
