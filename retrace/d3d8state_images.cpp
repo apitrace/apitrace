@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "image.hpp"
 #include "json.hpp"
