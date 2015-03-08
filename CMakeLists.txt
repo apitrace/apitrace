@@ -199,7 +199,7 @@ else ()
     # Enable and require C++11
     #
     # We must use `-std=gnu++11` instead `-std=c++11` as the latter defines
-    # __STRICT_ANSI__ preventing isfinite/isnan from being declared.
+    # __STRICT_ANSI__ which prevents _isnan from being declared with MinGW.
     #
     # See also:
     # - https://gcc.gnu.org/projects/cxx0x.html
