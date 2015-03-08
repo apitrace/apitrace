@@ -25,7 +25,9 @@ matrix:
     - CMAKE_OPTIONS="-DENABLE_GUI=0"
   - compiler: ": mingw32"
     env:
-    - APT_PACKAGES="binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686"
+    - APT_REPOS="ppa:tobydox/mingw-x-precise"
+    - APT_PACKAGES="mingw32-x-gcc"
+    - MINGW_ROOT=/opt/mingw32
     - MINGW_PREFIX=i686-w64-mingw32
     - CMAKE_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=Toolchain.cmake -Cdxsdk-master/Cache-mingw32.cmake -DENABLE_GUI=0"
 
@@ -35,6 +37,7 @@ before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -qq -y cmake
 - if [ "$APT_PACKAGES" ]; then sudo apt-get install -qq -y $APT_PACKAGES; fi
+- if [ "$MINGW_ROOT" ]; then export PATH=$MINGW_ROOT/bin:$PATH; fi
 
 script:
 - |
@@ -44,7 +47,7 @@ script:
       echo "set (CMAKE_C_COMPILER $MINGW_PREFIX-gcc)" >> Toolchain.cmake
       echo "set (CMAKE_CXX_COMPILER $MINGW_PREFIX-g++)" >> Toolchain.cmake
       echo "set (CMAKE_RC_COMPILER $MINGW_PREFIX-windres)" >> Toolchain.cmake
-      echo "set (CMAKE_FIND_ROOT_PATH /usr/$MINGW_PREFIX)" >> Toolchain.cmake
+      echo "set (CMAKE_FIND_ROOT_PATH $MINGW_ROOT)" >> Toolchain.cmake
       echo "set (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)" >> Toolchain.cmake
       echo "set (CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)" >> Toolchain.cmake
       echo "set (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >> Toolchain.cmake
