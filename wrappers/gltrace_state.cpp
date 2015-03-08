@@ -28,9 +28,6 @@
 #include <assert.h>
 
 #include <map>
-#if defined(HAVE_TR1_MEMORY)
-#include <tr1/memory>
-#endif
 #include <memory>
 
 #include <os_thread.hpp>
@@ -39,11 +36,7 @@
 
 namespace gltrace {
 
-#if !defined(HAVE_TR1_MEMORY)
 typedef std::shared_ptr<Context> context_ptr_t;
-#else
-typedef std::tr1::shared_ptr<Context> context_ptr_t;
-#endif
 static std::map<uintptr_t, context_ptr_t> context_map;
 static os::recursive_mutex context_map_mutex;
 

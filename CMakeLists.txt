@@ -296,11 +296,6 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions (-D_GNU_SOURCE)
 endif ()
 
-check_include_file_cxx (tr1/memory HAVE_TR1_MEMORY)
-if (HAVE_TR1_MEMORY)
-    add_definitions (-DHAVE_TR1_MEMORY)
-endif ()
-
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
