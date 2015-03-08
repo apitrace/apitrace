@@ -28,12 +28,6 @@ if (DirectX_D3D11_INCLUDE_FOUND)
             ${CMAKE_SOURCE_DIR}/dispatch # for compat.h
         )
         add_definitions (
-            # Support static_assert, nullptr, and unique_ptr.
-            #
-            # `-std=c++0x` doesn't work here, as it will define __STRICT_ANSI__
-            # which will prevent _isnan from being declared.
-            -std=gnu++0x
-
             #inhibit warnings
             -w
 
