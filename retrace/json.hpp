@@ -33,13 +33,7 @@
 #include <stddef.h>
 #include <wchar.h>
 
-#ifdef _MSC_VER
-#  include <float.h>
-#  define isfinite _finite
-#  define isnan _isnan
-#else
-#  include <math.h> // isfinite, isnan
-#endif
+#include <cmath> // for std::isinf, std::isnan; as C99 macros are unavailable in C++11
 
 #include <iomanip>
 #include <limits>
@@ -145,10 +139,10 @@ public:
     void
     writeFloat(T n) {
         separator();
-        if (isnan(n)) {
+        if (std::isnan(n)) {
             // NaN is non-standard but widely supported
             os << "NaN";
-        } else if (!isfinite(n)) {
+        } else if (std::isinf(n)) {
             // Infinite is non-standard but widely supported
             if (n < 0) {
                 os << '-';
