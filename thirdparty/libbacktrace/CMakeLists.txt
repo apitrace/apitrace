@@ -54,7 +54,7 @@ if (FLAG_UNWIND_TABLES)
 endif ()
 
 # Adjust warnings
-if (CMAKE_COMPILER_IS_GNUCC)
+if (NOT MSVC)
     add_definitions ("-Wno-switch -Wno-enum-compare")
 endif ()
 

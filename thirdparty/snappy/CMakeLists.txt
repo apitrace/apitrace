@@ -4,7 +4,7 @@ add_definitions (
 )
 
 # Adjust warnings
-if (CMAKE_COMPILER_IS_GNUCXX)
+if (NOT MSVC)
     add_definitions (-Wno-unused-function)
 endif ()
 
