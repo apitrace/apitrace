@@ -57,19 +57,25 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
 include_directories(
     ${CMAKE_SOURCE_DIR} # for image/*
-    ${QT5WIDGETS_INCLUDE_DIRS}
-    ${QT5WEBKITWIDGETS_INCLUDE_DIRS}
 )
 
-add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
+add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
+
+# Avoid qt5_use_modules. See also:
+# - https://bugreports.qt.io/browse/QTBUG-39457
+# - http://doc.qt.io/qt-5/cmake-manual.html
+# - http://www.kdab.com/using-cmake-with-qt-5/
+if (Qt5Core_VERSION_STRING VERSION_LESS 5.2.0)
+    qt5_use_modules (qapitrace Widgets WebKitWidgets)
+else ()
+    target_link_libraries (qapitrace Qt5::Widgets Qt5::WebKitWidgets)
+endif ()
 
 target_link_libraries (qapitrace
     image
     common
     ${ZLIB_LIBRARIES}
     ${SNAPPY_LIBRARIES}
-    Qt5::Widgets
-    Qt5::WebKitWidgets
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
