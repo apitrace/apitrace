@@ -6,7 +6,7 @@ Requirements common for all platforms:
 
   * Python Image Library
 
-* CMake version 2.8.8 or higher (tested with version 2.8.12.2)
+* CMake version 2.8.11 or higher (tested with version 2.8.12.2)
 
 
 The GUI also dependends on:

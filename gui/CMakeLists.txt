@@ -62,8 +62,6 @@ include_directories(
 
 add_executable(qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 
-qt5_use_modules(qapitrace Widgets WebKitWidgets)
-
 target_link_libraries (qapitrace
     image
     common
