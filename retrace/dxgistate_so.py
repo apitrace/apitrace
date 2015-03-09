@@ -31,9 +31,8 @@ import os.path
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import itertools
-
 from specs import stdapi
+from specs import winapi
 from specs import dxgi
 from specs import d3d10
 from specs import d3d10_1
@@ -226,6 +225,7 @@ if __name__ == '__main__':
     api.addModule(d3d11.d3d11)
 
     types = [
+        winapi.RECT,
         dxgi.DXGI_FORMAT,
         d3d10.D3D10_BLEND_DESC,
         d3d10.D3D10_BUFFER_DESC,
@@ -234,6 +234,8 @@ if __name__ == '__main__':
         d3d10.D3D10_DEPTH_STENCILOP_DESC,
         d3d10.D3D10_DEPTH_STENCIL_VIEW_DESC,
         d3d10.D3D10_INPUT_ELEMENT_DESC,
+        # FIXME: aliases to D3D_PRIMITIVE_TOPOLOGY clashing with D3D11_PRIMITIVE_TOPOLOGY
+        #d3d10.D3D10_PRIMITIVE_TOPOLOGY,
         d3d10.D3D10_QUERY_DESC,
         d3d10.D3D10_RASTERIZER_DESC,
         d3d10.D3D10_RENDER_TARGET_VIEW_DESC,
@@ -242,6 +244,7 @@ if __name__ == '__main__':
         d3d10.D3D10_TEXTURE1D_DESC,
         d3d10.D3D10_TEXTURE2D_DESC,
         d3d10.D3D10_TEXTURE3D_DESC,
+        d3d10.D3D10_VIEWPORT,
         d3d11.D3D11_BLEND_DESC,
         d3d11.D3D11_BUFFER_DESC,
         d3d11.D3D11_CLASS_INSTANCE_DESC,
@@ -251,6 +254,7 @@ if __name__ == '__main__':
         d3d11.D3D11_DEPTH_STENCIL_VIEW_DESC,
         d3d11.D3D11_INPUT_ELEMENT_DESC,
         d3d11.D3D11_PACKED_MIP_DESC,
+        d3d11.D3D11_PRIMITIVE_TOPOLOGY,
         d3d11.D3D11_QUERY_DESC,
         d3d11.D3D11_RASTERIZER_DESC,
         d3d11.D3D11_RENDER_TARGET_BLEND_DESC,
@@ -261,6 +265,7 @@ if __name__ == '__main__':
         d3d11.D3D11_TEXTURE2D_DESC,
         d3d11.D3D11_TEXTURE3D_DESC,
         d3d11.D3D11_UNORDERED_ACCESS_VIEW_DESC,
+        d3d11.D3D11_VIEWPORT,
     ]
 
     dumper = Dumper(api, types)
