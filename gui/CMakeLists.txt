@@ -56,9 +56,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 #add_app_icon(qapitrace_SRCS ../icons/hi*-qapitrace.png)
 include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}
     ${QT5WIDGETS_INCLUDE_DIRS}
     ${QT5WEBKITWIDGETS_INCLUDE_DIRS}
 )

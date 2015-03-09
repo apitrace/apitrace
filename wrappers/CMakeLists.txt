@@ -2,8 +2,9 @@
 # API tracers
 
 
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
+
 include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/helpers
     ${CMAKE_BINARY_DIR}/dispatch
     ${CMAKE_SOURCE_DIR}/dispatch
