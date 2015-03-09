@@ -109,13 +109,13 @@ Writer::_writeUInt(unsigned long long value) {
 
 void inline
 Writer::_writeFloat(float value) {
-    assert(sizeof value == 4);
+    static_assert(sizeof value == 4, "float is not 4 bytes");
     _write((const char *)&value, sizeof value);
 }
 
 void inline
 Writer::_writeDouble(double value) {
-    assert(sizeof value == 8);
+    static_assert(sizeof value == 8, "double is not 8 bytes");
     _write((const char *)&value, sizeof value);
 }
 

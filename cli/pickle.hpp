@@ -300,7 +300,7 @@ public:
             char c[8];
         } u;
 
-        assert(sizeof u.f == sizeof u.c);
+        static_assert(sizeof u.f == sizeof u.c, "double is not 8 bytes");
         u.f = f;
 
         os.put(BINFLOAT);
