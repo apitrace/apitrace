@@ -205,7 +205,7 @@ else ()
     # - https://gcc.gnu.org/projects/cxx0x.html
     # - http://clang.llvm.org/cxx_status.html
     check_cxx_compiler_flag ("-std=gnu++11" CXX_COMPILER_FLAG_STD_GNUXX11)
-    if (FALSE AND CXX_COMPILER_FLAG_STD_GNUXX11)
+    if (CXX_COMPILER_FLAG_STD_GNUXX11)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         check_cxx_compiler_flag ("-std=gnu++0x" CXX_COMPILER_FLAG_STD_GNUXX0X)
