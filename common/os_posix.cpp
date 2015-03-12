@@ -31,6 +31,7 @@
 #include <stdlib.h>
 
 #include <unistd.h>
+#include <errno.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -105,8 +106,18 @@ getProcessName(void)
             }
         }
     }
+
+#ifdef __GLIBC__
+    // fallback to `program_invocation_name`
     if (len <= 0) {
-        // fallback to process ID
+        len = strlen(program_invocation_name);
+        buf = path.buf(len + 1);
+        strcpy(buf, program_invocation_name);
+    }
+#endif
+
+    // fallback to process ID
+    if (len <= 0) {
         len = snprintf(buf, size, "%i", (int)getpid());
         if (len >= size) {
             len = size - 1;
