@@ -214,6 +214,7 @@ WGLPixelFormatAttribsList = [
     ('WGL_AUX_BUFFERS_ARB', Int),
     ('WGL_SAMPLE_BUFFERS_ARB', Int),
     ('WGL_SAMPLES_ARB', Int),
+    ('WGL_DRAW_TO_PBUFFER_ARB', BOOL),
 ]
 
 WGLPixelFormatAttribs = AttribArray(Const(WGLenum), WGLPixelFormatAttribsList)
