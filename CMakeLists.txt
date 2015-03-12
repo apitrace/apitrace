@@ -266,14 +266,8 @@ endif ()
 
 if (MINGW)
     # Avoid depending on MinGW runtime DLLs
-    check_cxx_compiler_flag (-static-libgcc HAVE_STATIC_LIBGCC_FLAG)
-    if (HAVE_STATIC_LIBGCC_FLAG)
-        add_linker_flags ("-static-libgcc")
-    endif ()
-    check_cxx_compiler_flag (-static-libstdc++ HAVE_STATIC_LIBSTDCXX_FLAG)
-    if (HAVE_STATIC_LIBSTDCXX_FLAG)
-        add_linker_flags ("-static-libstdc++")
-    endif ()
+    add_linker_flags ("-static-libgcc")
+    add_linker_flags ("-static-libstdc++")
 endif ()
 
 if (ENABLE_FRAME_POINTER)
