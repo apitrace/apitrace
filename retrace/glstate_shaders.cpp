@@ -27,13 +27,14 @@
 #include <assert.h>
 #include <string.h>
 
+#include "json.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <vector>
 
-#include "json.hpp"
 #include "glproc.hpp"
 #include "glsize.hpp"
 #include "glstate.hpp"

@@ -17,6 +17,8 @@
 #include "traceprocess.h"
 #include "trimprocess.h"
 #include "thumbnail.h"
+#include "androidretracer.h"
+#include "androidfiledialog.h"
 #include "ui_retracerdialog.h"
 #include "ui_profilereplaydialog.h"
 #include "vertexdatainterpreter.h"
@@ -33,16 +35,18 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
+#include <QSettings>
 #include <QToolBar>
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QWebPage>
 #include <QWebView>
 
+typedef QLatin1String _;
 
 MainWindow::MainWindow()
     : QMainWindow(),
-      m_api(trace::API_GL),
+      m_api(trace::API_UNKNOWN),
       m_initalCallNum(-1),
       m_selectedEvent(0),
       m_stateEvent(0),
@@ -96,6 +100,78 @@ void MainWindow::openTrace()
     if (!fileName.isEmpty() && QFile::exists(fileName)) {
         newTraceFile(fileName);
     }
+}
+
+void MainWindow::pullTrace()
+{
+    QString androidFile = AndroidFileDialog::getOpenFileName(this, tr("Open trace file"), _("/sdcard"), _(".trace"));
+    if (androidFile.isEmpty())
+        return;
+
+    QString localFile =
+            QFileDialog::getSaveFileName(
+                this,
+                tr("Open Trace"),
+                QDir::homePath() + _("/") + QFileInfo(androidFile).fileName(),
+                tr("Trace Files (*.trace)"));
+
+    if (localFile.isEmpty())
+        return;
+
+    AndroidUtils au;
+    connect(&au, SIGNAL(statusMessage(QString)), statusBar(), SLOT(showMessage(QString)));
+    if (au.updateFile(localFile, androidFile, AndroidUtils::PullFromDeviceToLocal)) {
+        m_androidFilePath = androidFile;
+        linkLocalAndroidTrace(localFile, androidFile);
+        newTraceFile(localFile);
+        m_ui.actionRetraceOnAndroid->setChecked(true);
+    } else {
+        QMessageBox::warning(this, tr("Error"),
+                             tr("Pulling '%1' for Android device failed.").arg(androidFile));
+    }
+}
+
+void MainWindow::pushTrace()
+{
+    QString localFile = m_trace->fileName();
+    QString androidFile = AndroidFileDialog::getSaveFileName(this, tr("Save trace file"), _("/sdcard/") + QFileInfo(localFile).fileName(), _(".trace"));
+    if (androidFile.isEmpty())
+        return;
+    AndroidUtils au;
+    connect(&au, SIGNAL(statusMessage(QString)), statusBar(), SLOT(showMessage(QString)));
+    if (au.updateFile(localFile, androidFile, AndroidUtils::PushLocalToDevice)) {
+        m_androidFilePath = androidFile;
+        linkLocalAndroidTrace(localFile, androidFile);
+    } else {
+        QMessageBox::warning(this, tr("Error"),
+                             tr("Pushing '%1' to Android device failed.\n"
+                                "Make usre you have enough space on device.").arg(localFile));
+    }
+    statusBar()->showMessage(QString());
+}
+
+void MainWindow::linkTrace()
+{
+    QString localFile = m_trace->fileName();
+    QString androidFile = AndroidFileDialog::getOpenFileName(this, tr("Link trace file %1").arg(localFile),
+                                                             _("/sdcard/") + QFileInfo(localFile).fileName(),
+                                                             _(".trace"));
+    if (androidFile.isEmpty())
+        return;
+    m_androidFilePath = androidFile;
+    linkLocalAndroidTrace(localFile, androidFile);
+}
+
+void MainWindow::retraceOnAndroid(bool android)
+{
+    delete m_retracer;
+    if (android) {
+        m_retracer = new AndroidRetracer(this);
+        m_androidFilePath = linkedAndroidTrace(m_trace->fileName());
+    } else {
+        m_retracer = new Retracer(this);
+    }
+    initRetraceConnections();
 }
 
 void MainWindow::loadTrace(const QString &fileName, int callNum)
@@ -217,7 +293,7 @@ void MainWindow::replayStart()
         m_retracer->setCoreProfile(
             dlgUi.coreProfileCB->isChecked());
 
-        m_retracer->setProfiling(false, false, false);
+        m_retracer->setProfiling(false, false, false, false);
 
         replayTrace(false, false);
     }
@@ -237,12 +313,17 @@ void MainWindow::replayProfile()
     QDialog dlg;
     Ui_ProfileReplayDialog dlgUi;
     dlgUi.setupUi(&dlg);
+    if (m_ui.actionRetraceOnAndroid->isChecked()) {
+        dlgUi.gpuTimesCB->setChecked(false);
+        dlgUi.pixelsDrawnCB->setChecked(false);
+    }
 
     if (dlg.exec() == QDialog::Accepted) {
         m_retracer->setProfiling(
             dlgUi.gpuTimesCB->isChecked(),
             dlgUi.cpuTimesCB->isChecked(),
-            dlgUi.pixelsDrawnCB->isChecked());
+            dlgUi.pixelsDrawnCB->isChecked(),
+            dlgUi.memoryUsageCB->isChecked());
 
         replayTrace(false, false);
     }
@@ -256,6 +337,9 @@ void MainWindow::replayStop()
 
 void MainWindow::newTraceFile(const QString &fileName)
 {
+    if (m_ui.actionRetraceOnAndroid->isChecked())
+        m_androidFilePath = linkedAndroidTrace(fileName);
+
     qDebug()<< "Loading:" << fileName;
 
     m_progressBar->setValue(0);
@@ -323,12 +407,57 @@ void MainWindow::finishedLoadingTrace()
     } else {
        m_trace->finishedParsing();
     }
+    m_ui.actionPushTrace->setEnabled(m_api == trace::API_EGL);
+    m_ui.actionLinkTrace->setEnabled(m_api == trace::API_EGL);
+    m_ui.actionRetraceOnAndroid->setEnabled(m_api == trace::API_EGL);
 }
 
 void MainWindow::replayTrace(bool dumpState, bool dumpThumbnails)
 {
     if (m_trace->fileName().isEmpty()) {
         return;
+    }
+
+    if (m_ui.actionRetraceOnAndroid->isChecked()) {
+        if (m_androidFilePath.isEmpty()) {
+            QMessageBox::information(this, tr("Info"), tr("Current opened file is not linked with any file on the Android device."));
+            linkTrace();
+            if (m_androidFilePath.isEmpty())
+                return;
+        }
+        // make sure both trace files (local & android) are the same
+        AndroidUtils au;
+        if (!au.sameFile(m_trace->fileName(), m_androidFilePath)) {
+            QMessageBox msgBox;
+            msgBox.setText("Local file is different from the Android file.\nWhat do you want to do?");
+            msgBox.setDetailedText(tr("Chossing:\n"
+                                      " - \"Update Android\" will push the local file to the device (replacing it).\n"
+                                      " - \"Update local\" will pull the device file to local (replacing it)."));
+            QAbstractButton *updateAndroid =
+                  msgBox.addButton(tr("Update Android"), QMessageBox::ActionRole);
+            QAbstractButton *updateLocal =
+                  msgBox.addButton(tr("Update local"), QMessageBox::ActionRole);
+            msgBox.addButton(QMessageBox::Cancel);
+            msgBox.exec();
+            if (msgBox.clickedButton() == updateAndroid) {
+                statusBar()->showMessage(tr("Please wait, pushing the file to device might take long time ..."));
+                if (!au.updateFile(m_trace->fileName(), m_androidFilePath, AndroidUtils::PushLocalToDevice)) {
+                    QMessageBox::warning(this, tr("Error"),
+                                         tr("Pushing '%1' to Android device failed.\n"
+                                            "Make usre you have enough space on device.").arg(m_trace->fileName()));
+                }
+            } else if (msgBox.clickedButton() == updateLocal) {
+                statusBar()->showMessage(tr("Please wait, pulling the file from device might take long time ..."));
+                if (!au.updateFile(m_trace->fileName(), m_androidFilePath, AndroidUtils::PullFromDeviceToLocal)) {
+                    QMessageBox::warning(this, tr("Error"),
+                                         tr("Pulling '%1' for Android device failed.").arg(m_androidFilePath));
+                }
+            } else {
+                return;
+            }
+            statusBar()->showMessage(QString());
+        }
+        static_cast<AndroidRetracer *>(m_retracer)->setAndroidFileName(m_androidFilePath);
     }
 
     m_retracer->setFileName(m_trace->fileName());
@@ -877,18 +1006,8 @@ void MainWindow::initConnections()
     connect(m_trace, SIGNAL(foundCallIndex(ApiTraceCall*)),
             this, SLOT(slotJumpToResult(ApiTraceCall*)));
 
-    connect(m_retracer, SIGNAL(finished(const QString&)),
-            this, SLOT(replayFinished(const QString&)));
-    connect(m_retracer, SIGNAL(error(const QString&)),
-            this, SLOT(replayError(const QString&)));
-    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
-            this, SLOT(replayStateFound(ApiTraceState*)));
-    connect(m_retracer, SIGNAL(foundProfile(trace::Profile*)),
-            this, SLOT(replayProfileFound(trace::Profile*)));
-    connect(m_retracer, SIGNAL(foundThumbnails(const ImageHash&)),
-            this, SLOT(replayThumbnailsFound(const ImageHash&)));
-    connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
-            this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+    initRetraceConnections();
+
 
     connect(m_ui.vertexInterpretButton, SIGNAL(clicked()),
             m_vdataInterpreter, SLOT(interpretData()));
@@ -908,6 +1027,14 @@ void MainWindow::initConnections()
             this, SLOT(createTrace()));
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
+    connect(m_ui.actionPullTrace, SIGNAL(triggered()),
+            this, SLOT(pullTrace()));
+    connect(m_ui.actionPushTrace, SIGNAL(triggered()),
+            this, SLOT(pushTrace()));
+    connect(m_ui.actionLinkTrace, SIGNAL(triggered()),
+            this, SLOT(linkTrace()));
+    connect(m_ui.actionRetraceOnAndroid, SIGNAL(toggled(bool)),
+            this, SLOT(retraceOnAndroid(bool)));
     connect(m_ui.actionQuit, SIGNAL(triggered()),
             this, SLOT(close()));
 
@@ -989,8 +1116,27 @@ void MainWindow::initConnections()
             this, SLOT(slotJumpTo(int)));
 }
 
+void MainWindow::initRetraceConnections()
+{
+    connect(m_retracer, SIGNAL(finished(const QString&)),
+            this, SLOT(replayFinished(const QString&)));
+    connect(m_retracer, SIGNAL(error(const QString&)),
+            this, SLOT(replayError(const QString&)));
+    connect(m_retracer, SIGNAL(foundState(ApiTraceState*)),
+            this, SLOT(replayStateFound(ApiTraceState*)));
+    connect(m_retracer, SIGNAL(foundProfile(trace::Profile*)),
+            this, SLOT(replayProfileFound(trace::Profile*)));
+    connect(m_retracer, SIGNAL(foundThumbnails(const ImageHash&)),
+            this, SLOT(replayThumbnailsFound(const ImageHash&)));
+    connect(m_retracer, SIGNAL(retraceErrors(const QList<ApiTraceError>&)),
+            this, SLOT(slotRetraceErrors(const QList<ApiTraceError>&)));
+}
+
 void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
 {
+    m_ui.actionPushTrace->setEnabled(false);
+    m_ui.actionLinkTrace->setEnabled(false);
+    m_ui.actionRetraceOnAndroid->setEnabled(false);
     if (traceLoaded) {
         /* Edit */
         m_ui.actionFind          ->setEnabled(true);
@@ -1517,7 +1663,25 @@ ApiTraceCall * MainWindow::currentCall() const
     }
 
     return call;
+}
 
+void MainWindow::linkLocalAndroidTrace(const QString &localFile, const QString &deviceFile)
+{
+
+    QSettings s;
+    s.beginGroup(_("android"));
+    QVariantMap map = s.value(_("links")).toMap();
+    map[localFile] = deviceFile;
+    s.setValue(_("links"), map);
+    s.endGroup();
+}
+
+QString MainWindow::linkedAndroidTrace(const QString &localFile)
+{
+    QSettings s;
+    s.beginGroup(_("android"));
+    QVariantMap map = s.value(_("links")).toMap();
+    return map[localFile].toString();
 }
 
 void MainWindow::slotFoundFrameStart(ApiTraceFrame *frame)

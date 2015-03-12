@@ -67,6 +67,7 @@ include (InstallPDB)
 
 if (ANDROID)
     set (ENABLE_GUI false)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 else ()
     macro (find_host_package)
         find_package (${ARGN})
