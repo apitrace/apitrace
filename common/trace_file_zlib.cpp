@@ -31,9 +31,8 @@
 #include <string.h>
 
 #include <zlib.h>
-#include <gzguts.h>
 
-// for lseek
+#include <fcntl.h>
 #ifdef _WIN32
 #include <io.h>
 #else
@@ -68,6 +67,7 @@ protected:
     virtual bool rawSkip(size_t length);
     virtual int  rawPercentRead();
 private:
+    int fd;
     gzFile m_gzFile;
     double m_endOffset;
 };
@@ -86,18 +86,41 @@ ZLibFile::~ZLibFile()
 
 bool ZLibFile::rawOpen(const std::string &filename, File::Mode mode)
 {
-    m_gzFile = gzopen(filename.c_str(),
-                      (mode == File::Write) ? "wb" : "rb");
+    int flags;
+    const char *fmode;
+    if (mode == File::Write) {
+        flags = O_WRONLY | O_CREAT | O_TRUNC;
+        fmode = "wb";
+    } else {
+        flags = O_RDONLY;
+        fmode = "rb";
+    }
+#ifdef O_BINARY
+    flags |= O_BINARY;
+#endif
+#ifdef O_LARGEFILE
+    flags |= O_LARGEFILE;
+#endif
+
+#ifdef _WIN32
+    fd = _open(filename.c_str(), flags, 0666);
+#else
+    fd = ::open(filename.c_str(), flags, 0666);
+#endif
+    if (fd < 0) {
+        return false;
+    }
+
+    m_gzFile = gzdopen(fd, fmode);
 
     if (mode == File::Read && m_gzFile) {
         //XXX: unfortunately zlib doesn't support
         //     SEEK_END or we could've done:
         //m_endOffset = gzseek(m_gzFile, 0, SEEK_END);
         //gzrewind(m_gzFile);
-        gz_state *state = (gz_state *)m_gzFile;
-        off_t loc = lseek(state->fd, 0, SEEK_CUR);
-        m_endOffset = lseek(state->fd, 0, SEEK_END);
-        lseek(state->fd, loc, SEEK_SET);
+        off_t loc = lseek(fd, 0, SEEK_CUR);
+        m_endOffset = lseek(fd, 0, SEEK_END);
+        lseek(fd, loc, SEEK_SET);
     }
 
     return m_gzFile != NULL;
@@ -149,8 +172,7 @@ bool ZLibFile::rawSkip(size_t)
 
 int ZLibFile::rawPercentRead()
 {
-    gz_state *state = (gz_state *)m_gzFile;
-    return int(100 * (lseek(state->fd, 0, SEEK_CUR) / m_endOffset));
+    return int(100 * (lseek(fd, 0, SEEK_CUR) / m_endOffset));
 }
 
 
