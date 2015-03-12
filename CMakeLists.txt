@@ -50,11 +50,28 @@ option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 # processes, they must not depend on any shared object that could also be
 # provided by such applications.  See also
 # http://lists.freedesktop.org/archives/mesa-dev/2015-March/079121.html
-#
-# XXX: Can this happen on MacOSX too?
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
-    option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" ON)
-    option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
+if (NOT ANDROID)
+    option (ENABLE_STATIC_SNAPPY "Statically link against snappy" ON)
+    option (ENABLE_STATIC_ZLIB "Statically link against zlib" ON)
+    option (ENABLE_STATIC_PNG "Statically link against libpng" ON)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" ON)
+        option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
+        if (NOT (ENABLE_STATIC_LIBGCC AND
+                 ENABLE_STATIC_LIBSTDCXX AND
+                 ENABLE_STATIC_SNAPPY AND
+                 ENABLE_STATIC_ZLIB AND
+                 ENABLE_STATIC_PNG))
+            # XXX: Should probably throw a run-time too.
+            message (WARNING
+                "LD_PRELOAD wrappers not statically linked against all "
+                "dependencies, therefore will fail to work with many "
+                "third-party applications built on different Linux "
+                "distributions and that ship their own shared-object "
+                "dependencies."
+            )
+        endif ()
+    endif ()
 endif ()
 
 
@@ -346,28 +363,40 @@ set (WRAPPER_INSTALL_DIR ${LIB_ARCH_INSTALL_DIR}/wrappers)
 ##############################################################################
 # Bundled dependencies
 #
-# We always use the bundled zlib, libpng, and snappy sources:
+# We prefer to bundle and statically link against many dependencies:
 # - on Windows to make it easy to deploy the wrappers DLLs
 # - on unices to prevent symbol collisions when tracing applications that link
 # against other versions of these libraries
 
-set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
-set (ZLIB_LIBRARIES z_bundled)
-add_subdirectory (thirdparty/zlib)
-
-include_directories (${ZLIB_INCLUDE_DIRS})
-
-set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
-set (SNAPPY_LIBRARIES snappy_bundled)
-add_subdirectory (thirdparty/snappy)
-
+if (NOT ENABLE_STATIC_SNAPPY)
+    find_package (SNAPPY)
+endif ()
+if (ENABLE_STATIC_SNAPPY OR NOT SNAPPY_FOUND)
+    set (SNAPPY_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/snappy)
+    set (SNAPPY_LIBRARIES snappy_bundled)
+    add_subdirectory (thirdparty/snappy)
+endif ()
 include_directories (${SNAPPY_INCLUDE_DIRS})
 
-set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
-set (PNG_DEFINITIONS "")
-set (PNG_LIBRARIES png_bundled)
+if (NOT ENABLE_STATIC_ZLIB)
+    find_package (ZLIB)
+endif ()
+if (ENABLE_STATIC_ZLIB OR NOT ZLIB_FOUND)
+    set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
+    set (ZLIB_LIBRARIES z_bundled)
+    add_subdirectory (thirdparty/zlib)
+endif ()
+include_directories (${ZLIB_INCLUDE_DIRS})
 
-add_subdirectory (thirdparty/libpng)
+if (NOT ENABLE_STATIC_PNG)
+    find_package (PNG)
+endif ()
+if (ENABLE_STATIC_PNG OR NOT PNG_FOUND)
+    set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
+    set (PNG_DEFINITIONS "")
+    set (PNG_LIBRARIES png_bundled)
+    add_subdirectory (thirdparty/libpng)
+endif ()
 
 if (MSVC)
     add_subdirectory (thirdparty/getopt)
