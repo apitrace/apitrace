@@ -247,44 +247,52 @@ GetSharedMem(LPSTR lpszDst, size_t n) {
 static BOOL
 injectDll(HANDLE hProcess, const char *szDllPath)
 {
-    size_t szDllPathLength = strlen(szDllPath) + 1;
+    BOOL bRet = FALSE;
+    PTHREAD_START_ROUTINE lpStartAddress;
+    HANDLE hThread;
+    DWORD hModule;
 
     // Allocate memory in the target process to hold the DLL name
+    size_t szDllPathLength = strlen(szDllPath) + 1;
     void *lpMemory = VirtualAllocEx(hProcess, NULL, szDllPathLength, MEM_COMMIT, PAGE_READWRITE);
     if (!lpMemory) {
         logLastError("failed to allocate memory in the process");
-        return FALSE;
+        goto no_memory;
     }
 
     // Copy DLL name into the target process
     if (!WriteProcessMemory(hProcess, lpMemory, szDllPath, szDllPathLength, NULL)) {
         logLastError("failed to write into process memory");
-        return FALSE;
+        goto no_thread;
     }
 
     /*
      * Get LoadLibraryA address from kernel32.dll.  It's the same for all the
      * process (XXX: but only within the same architecture).
      */
-    PTHREAD_START_ROUTINE lpStartAddress =
+    lpStartAddress =
         (PTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("KERNEL32"), "LoadLibraryA");
 
     // Create remote thread in another process
-    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, lpStartAddress, lpMemory, 0, NULL);
+    hThread = CreateRemoteThread(hProcess, NULL, 0, lpStartAddress, lpMemory, 0, NULL);
     if (!hThread) {
         logLastError("failed to create remote thread");
-        return FALSE;
+        goto no_thread;
     }
 
     // Wait for it to finish
     WaitForSingleObject(hThread, INFINITE);
 
-    DWORD hModule = 0;
     GetExitCodeThread(hThread, &hModule);
     if (!hModule) {
         debugPrintf("inject: error: failed to load %s into the remote process\n", szDllPath);
-        return FALSE;
+    } else {
+        bRet = TRUE;
     }
 
-    return TRUE;
+    CloseHandle(hThread);
+no_thread:
+    VirtualFreeEx(hProcess, lpMemory, 0, MEM_RELEASE);
+no_memory:
+    return bRet;
 }
