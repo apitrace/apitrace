@@ -244,7 +244,7 @@ else ()
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         check_cxx_compiler_flag ("-msse2" CXX_COMPILER_FLAG_MSSE2)
         if (CXX_COMPILER_FLAG_MSSE2)
-            add_compiler_flags ("-msse2")
+            add_compiler_flags ("-msse2 -mfpmath=sse")
 
             # And tell GCC to assume 4 bytes alignment, many Linux/Windows
             # applications only guarantee that, but not on systems where ABI
