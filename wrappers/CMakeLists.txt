@@ -2,6 +2,13 @@
 # API tracers
 
 
+if (ENABLE_STATIC_LIBGCC)
+    add_linker_flags ("-static-libgcc")
+endif ()
+if (ENABLE_STATIC_LIBSTDCXX)
+    add_linker_flags ("-static-libstdc++")
+endif ()
+
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories (

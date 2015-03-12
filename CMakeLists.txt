@@ -44,6 +44,19 @@ option (ENABLE_WAFFLE "Enable WAFFLE support." OFF)
 
 option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
+# Proprietary Linux games often ship their own libraries (zlib, libstdc++,
+# etc.) in order to ship a single set of binaries across multiple
+# distributions.  Given that apitrace wrapper modules will be loaded into those
+# processes, they must not depend on any shared object that could also be
+# provided by such applications.  See also
+# http://lists.freedesktop.org/archives/mesa-dev/2015-March/079121.html
+#
+# XXX: Can this happen on MacOSX too?
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+    option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" ON)
+    option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
+endif ()
+
 
 ##############################################################################
 # Find dependencies
