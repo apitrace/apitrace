@@ -9,7 +9,7 @@
 
 include (FindPackageMessage)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_path (procps_INCLUDE_DIR proc/readproc.h)
     find_library (procps_LIBRARY NAMES proc procps)
     if (procps_INCLUDE_DIR AND procps_LIBRARY)

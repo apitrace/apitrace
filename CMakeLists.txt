@@ -80,7 +80,7 @@ endif ()
 
 find_package (Threads)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_package (procps)
     if (procps_FOUND)
         add_definitions (-DHAVE_READPROC_H)
@@ -294,7 +294,7 @@ if (WIN32)
     endif ()
 endif ()
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # For RTLD_DEFAULT and RTLD_NEXT
     add_definitions (-D_GNU_SOURCE)
 endif ()
@@ -307,7 +307,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 ##############################################################################
 # Installation directories
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # Debian multiarch support
     execute_process(COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
         OUTPUT_VARIABLE ARCH_SUBDIR

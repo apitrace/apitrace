@@ -47,7 +47,7 @@ target_link_libraries (retrace_common
     ${SNAPPY_LIBRARIES}
     ${GETOPT_LIBRARIES}
 )
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
 if (WIN32)
