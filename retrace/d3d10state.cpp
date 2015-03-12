@@ -51,7 +51,7 @@ dumpBlendState(JSONWriter &json, ID3D10Device *pDevice)
     pDevice->OMGetBlendState(&pBlendState, BlendFactor, &SampleMask);
     
     json.beginMember("BlendState");
-    dumpStateObjectDesc<ID3D10BlendState, D3D10_BLEND_DESC>(json, pBlendState);
+    dumpStateObjectDesc(json, pBlendState);
     json.endMember(); // BlendState
     
     json.beginMember("BlendFactor");

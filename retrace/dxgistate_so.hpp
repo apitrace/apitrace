@@ -29,20 +29,40 @@
 #include "d3d10imports.hpp"
 #include "d3d11imports.hpp"
 #include "json.hpp"
+#include "com_ptr.hpp"
 
 
-// TODO: This would be easier with C++11 `auto` keyword
-template< typename Interface, typename DescStruct >
+// Template to extract the type of ID3D*::GetDesc methods
+template< typename T >
+struct ExtractDescType
+{
+};
+
+template <typename InterfaceType, typename DescType>
+struct ExtractDescType< void (__stdcall InterfaceType::*)(DescType *) >
+{
+    typedef DescType type;
+};
+
+
+template< typename Interface >
 static inline void
 dumpStateObjectDesc(JSONWriter &json, Interface *pObj)
 {
     if (pObj) {
-        DescStruct Desc;
+        typename ExtractDescType< decltype( &Interface::GetDesc ) >::type Desc;
         pObj->GetDesc(&Desc);
         dumpStateObject(json, Desc);
     } else {
         json.writeNull();
     }
+}
+
+template< typename Interface >
+static inline void
+dumpStateObjectDesc(JSONWriter &json, com_ptr<Interface> & pObj)
+{
+    dumpStateObjectDesc(json, static_cast<Interface *>(pObj));
 }
 
 

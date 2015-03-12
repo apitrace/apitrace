@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include <iostream>
+#include <type_traits>
 
 #include "com_ptr.hpp"
 #include "d3d11imports.hpp"
@@ -44,7 +45,7 @@ dumpRasterizerState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 
     pDeviceContext->RSGetState(&pRasterizerState);
     json.beginMember("RasterizerState");
-    dumpStateObjectDesc<ID3D11RasterizerState, D3D11_RASTERIZER_DESC>(json, pRasterizerState);
+    dumpStateObjectDesc(json, pRasterizerState);
     json.endMember(); // RasterizerState
 }
 
@@ -52,14 +53,17 @@ dumpRasterizerState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 static void
 dumpBlendState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 {
+    // Ensure ExtractDescType template is sane
+    static_assert( std::is_same< ExtractDescType< decltype( &ID3D11BlendState::GetDesc ) >::type, D3D11_BLEND_DESC >::value, "type mismatch" );
+
     com_ptr<ID3D11BlendState> pBlendState;
     FLOAT BlendFactor[4];
     UINT SampleMask;
 
     pDeviceContext->OMGetBlendState(&pBlendState, BlendFactor, &SampleMask);
-    
+
     json.beginMember("BlendState");
-    dumpStateObjectDesc<ID3D11BlendState, D3D11_BLEND_DESC>(json, pBlendState);
+    dumpStateObjectDesc(json, pBlendState);
     json.endMember(); // BlendState
     
     json.beginMember("BlendFactor");
