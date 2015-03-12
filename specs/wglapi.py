@@ -163,6 +163,7 @@ WGLContextAttribs = AttribArray(Const(WGLenum), [
         "WGL_CONTEXT_DEBUG_BIT_ARB",
         "WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB",
         "WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB",
+        "WGL_CONTEXT_RESET_ISOLATION_BIT_ARB",
     ])),
     ('WGL_CONTEXT_PROFILE_MASK_ARB', Flags(Int, [
         "WGL_CONTEXT_CORE_PROFILE_BIT_ARB",
@@ -176,6 +177,7 @@ WGLContextAttribs = AttribArray(Const(WGLenum), [
 ])
 
 WGLPixelFormatAttribsList = [
+    # WGL_ARB_pixel_format/WGL_EXT_pixel_format
     ('WGL_DRAW_TO_WINDOW_ARB', BOOL),
     ('WGL_DRAW_TO_BITMAP_ARB', BOOL),
     ('WGL_ACCELERATION_ARB', FakeEnum(Int, ['WGL_NO_ACCELERATION_ARB', 'WGL_GENERIC_ACCELERATION_ARB', 'WGL_FULL_ACCELERATION_ARB'])),
@@ -214,7 +216,15 @@ WGLPixelFormatAttribsList = [
     ('WGL_AUX_BUFFERS_ARB', Int),
     ('WGL_SAMPLE_BUFFERS_ARB', Int),
     ('WGL_SAMPLES_ARB', Int),
+    # WGL_ARB_pbuffer
     ('WGL_DRAW_TO_PBUFFER_ARB', BOOL),
+    # WGL_ARB_render_texture
+    ('WGL_BIND_TO_TEXTURE_RGB_ARB', BOOL),
+    ('WGL_BIND_TO_TEXTURE_RGBA_ARB', BOOL),
+    # WGL_NV_video_output
+    ('WGL_BIND_TO_VIDEO_RGB_NV', BOOL),
+    ('WGL_BIND_TO_VIDEO_RGBA_NV', BOOL),
+    ('WGL_BIND_TO_VIDEO_RGB_AND_DEPTH_NV', BOOL),
 ]
 
 WGLPixelFormatAttribs = AttribArray(Const(WGLenum), WGLPixelFormatAttribsList)
