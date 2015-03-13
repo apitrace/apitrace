@@ -35,6 +35,48 @@
 namespace glprofile {
 
 
+bool
+Profile::matches(const Profile expected) const
+{
+    if (api != expected.api) {
+        return false;
+    }
+
+    if (!versionGreaterOrEqual(expected.major, expected.minor)) {
+        return false;
+    }
+
+    /*
+     * GLX_ARB_create_context/WGL_ARB_create_context specs state that
+     *
+     *   "If version 3.1 is requested, the context returned may implement
+     *   any of the following versions:
+     *
+     *     * Version 3.1. The GL_ARB_compatibility extension may or may not
+     *       be implemented, as determined by the implementation.
+     *
+     *     * The core profile of version 3.2 or greater."
+     */
+    if (core != expected.core &&
+        (expected.major != 3 || expected.minor != 1)) {
+        return false;
+    }
+
+    /*
+     * Only check forward-compatible flag prior to 3.2 contexts.
+     *
+     * Note that on MacOSX all 3.2+ context must be forward-compatible.
+     */
+#ifndef __APPLE__
+    if (forwardCompatible > expected.forwardCompatible) {
+        return false;
+    }
+#endif
+
+    return true;
+}
+
+
 std::ostream &
 operator << (std::ostream &os, const Profile & profile) {
     os << "OpenGL";
