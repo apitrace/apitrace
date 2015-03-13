@@ -6,7 +6,23 @@ if (ENABLE_STATIC_LIBGCC)
     add_linker_flags ("-static-libgcc")
 endif ()
 if (ENABLE_STATIC_LIBSTDCXX)
-    add_linker_flags ("-static-libstdc++")
+    # Unfortunately for a long time static libstdcxx didn't built with -fPIC
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=28811
+    include (CheckCXXSourceCompiles)
+    set (CMAKE_REQUIRED_FLAGS ${CMAKE_SHARED_LIBRARY_C_FLAGS})
+    set (CMAKE_REQUIRED_LIBRARIES -shared -static-libgcc -static-libstdc++)
+    check_cxx_source_compiles (
+        "
+            #include <string>
+            std::string s;
+        "
+        STATIC_LIBSTDCXX_PIC
+    )
+    unset (CMAKE_REQUIRED_LIBRARIES)
+    unset (CMAKE_REQUIRED_FLAGS)
+    if (STATIC_LIBSTDCXX_PIC)
+        add_linker_flags ("-static-libstdc++")
+    endif ()
 endif ()
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
