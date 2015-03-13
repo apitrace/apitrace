@@ -112,7 +112,7 @@ find_package (Threads)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_package (procps)
-    if (procps_FOUND)
+    if (PROCPS_FOUND)
         add_definitions (-DHAVE_READPROC_H)
     endif ()
 endif ()

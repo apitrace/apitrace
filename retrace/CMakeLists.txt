@@ -74,8 +74,8 @@ add_dependencies (glretrace_common glproc)
 target_link_libraries (glretrace_common
     retrace_common
 )
-if (procps_FOUND)
-    target_link_libraries (glretrace_common ${procps_LIBRARY})
+if (PROCPS_FOUND)
+    target_link_libraries (glretrace_common ${PROCPS_LIBRARY})
 endif ()
 
 
