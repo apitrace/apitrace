@@ -102,7 +102,13 @@ struct Profile {
                versionGreaterOrEqual(expected.major, expected.minor) &&
                (core == expected.core ||
                 (expected.major == 3 && expected.minor == 1)) &&
-               forwardCompatible <= expected.forwardCompatible;
+#ifdef __APPLE__
+               /* All 3.2+ contexts on MacOSX are forward-compatible */
+               true
+#else
+               forwardCompatible <= expected.forwardCompatible
+#endif
+               ;
     }
 
     // Comparison operator, mainly for use in std::map
