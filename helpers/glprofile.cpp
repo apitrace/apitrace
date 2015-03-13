@@ -42,9 +42,13 @@ operator << (std::ostream &os, const Profile & profile) {
         os << " ES";
     }
     os << " " << profile.major << "." << profile.minor;
-    if (profile.api == API_GL &&
-        profile.versionGreaterOrEqual(3, 2)) {
-        os << " " << (profile.core ? "core" : "compat");
+    if (profile.api == API_GL) {
+        if (profile.versionGreaterOrEqual(3, 2)) {
+            os << " " << (profile.core ? "core" : "compat");
+        }
+        if (profile.forwardCompatible) {
+            os << " forward-compatible";
+        }
     }
     return os;
 }
@@ -194,12 +198,21 @@ getCurrentContextProfile(void)
         }
     }
 
-    if (profile.api == API_GL &&
-        profile.versionGreaterOrEqual(3, 2)) {
-        GLint profileMask = 0;
-        _glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profileMask);
-        if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT) {
-            profile.core = true;
+    if (profile.api == API_GL) {
+        if (profile.versionGreaterOrEqual(3, 0)) {
+            GLint contextFlags = 0;
+            _glGetIntegerv(GL_CONTEXT_FLAGS, &contextFlags);
+            if (contextFlags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT) {
+                profile.forwardCompatible = true;
+            }
+        }
+
+        if (profile.versionGreaterOrEqual(3, 2)) {
+            GLint profileMask = 0;
+            _glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profileMask);
+            if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT) {
+                profile.core = true;
+            }
         }
     }
 

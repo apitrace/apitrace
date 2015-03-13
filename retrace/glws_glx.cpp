@@ -285,6 +285,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
     if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
         Attributes<int> attribs;
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
+        int contextFlags = 0;
         if (profile.api == glprofile::API_GL) {
             attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
             attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
@@ -295,6 +296,9 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
                 }
                 int profileMask = profile.core ? GLX_CONTEXT_CORE_PROFILE_BIT_ARB : GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, profileMask);
+                if (profile.forwardCompatible) {
+                    contextFlags |= GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+                }
             }
         } else if (profile.api == glprofile::API_GLES) {
             if (has_GLX_EXT_create_context_es_profile) {
@@ -315,7 +319,10 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             assert(0);
         }
         if (debug) {
-            attribs.add(GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_DEBUG_BIT_ARB);
+            contextFlags |= GLX_CONTEXT_DEBUG_BIT_ARB;
+        }
+        if (contextFlags) {
+            attribs.add(GLX_CONTEXT_FLAGS_ARB, contextFlags);
         }
         attribs.end();
 

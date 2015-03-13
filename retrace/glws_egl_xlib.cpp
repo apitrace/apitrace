@@ -396,6 +396,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         share_context = static_cast<EglContext*>(shareContext)->context;
     }
 
+    int contextFlags = 0;
     if (profile.api == glprofile::API_GL) {
         load("libGL.so.1");
 
@@ -404,6 +405,9 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             attribs.add(EGL_CONTEXT_MINOR_VERSION_KHR, profile.minor);
             int profileMask = profile.core ? EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR : EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT_KHR;
             attribs.add(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, profileMask);
+            if (profile.forwardCompatible) {
+                contextFlags |= EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR;
+            }
         } else if (profile.versionGreaterOrEqual(3, 2)) {
             std::cerr << "error: EGL_KHR_create_context not supported\n";
             return NULL;
@@ -426,10 +430,12 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         return NULL;
     }
 
-    if (debug && has_EGL_KHR_create_context) {
-        attribs.add(EGL_CONTEXT_FLAGS_KHR, EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR);
+    if (debug) {
+        contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
     }
-
+    if (contextFlags && has_EGL_KHR_create_context) {
+        attribs.add(EGL_CONTEXT_FLAGS_KHR, contextFlags);
+    }
     attribs.end(EGL_NONE);
 
     EGLenum api = translateAPI(profile);

@@ -372,6 +372,7 @@ public:
         wglMakeCurrent(hDC, NULL);
 
         Attributes<int> attribs;
+        int contextFlags = 0;
         if (profile.api == glprofile::API_GL) {
             attribs.add(WGL_CONTEXT_MAJOR_VERSION_ARB, profile.major);
             attribs.add(WGL_CONTEXT_MINOR_VERSION_ARB, profile.minor);
@@ -383,6 +384,9 @@ public:
                 }
                 int profileMask = profile.core ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
                 attribs.add(WGL_CONTEXT_PROFILE_MASK_ARB, profileMask);
+                if (profile.forwardCompatible) {
+                    contextFlags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+                }
             }
         } else if (profile.api == glprofile::API_GLES) {
             if (checkExtension("WGL_EXT_create_context_es_profile", extensionsString)) {
@@ -403,7 +407,10 @@ public:
             assert(0);
         }
         if (debug) {
-            attribs.add(WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB);
+            contextFlags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+        }
+        if (contextFlags) {
+            attribs.add(WGL_CONTEXT_FLAGS_ARB, contextFlags);
         }
         attribs.end();
 

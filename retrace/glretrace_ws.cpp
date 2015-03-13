@@ -289,6 +289,13 @@ parseContextAttribList(const trace::Value *attribs)
         core_profile = false;
     }
 
+    int context_flags = parseAttrib(attribs, GL_CONTEXT_FLAGS, 0);
+
+    bool forward_compatible = context_flags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT;
+    if (major_version < 3) {
+        forward_compatible = false;
+    }
+
     // {GLX,WGL}_CONTEXT_ES_PROFILE_BIT_EXT
     bool es_profile = profile_mask & 0x0004;
 
@@ -298,6 +305,7 @@ parseContextAttribList(const trace::Value *attribs)
     } else {
         profile.api = glprofile::API_GL;
         profile.core = core_profile;
+        profile.forwardCompatible = forward_compatible;
     }
 
     profile.major = major_version;

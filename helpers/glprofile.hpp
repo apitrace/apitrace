@@ -52,13 +52,21 @@ struct Profile {
     unsigned minor:8;
     unsigned api:1;
     unsigned core:1;
+    unsigned forwardCompatible:1;
 
     inline
-    Profile(Api _api = API_GL, unsigned _major = 1, unsigned _minor = 0, bool _core = false) {
+    Profile(
+        Api _api = API_GL,
+        unsigned _major = 1,
+        unsigned _minor = 0,
+        bool _core = false,
+        bool _forwardCompatible = false
+    ) {
         api = _api;
         major = _major;
         minor = _minor;
         core = _core;
+        forwardCompatible = _forwardCompatible;
     }
 
     inline bool
@@ -93,7 +101,8 @@ struct Profile {
         return api == expected.api &&
                versionGreaterOrEqual(expected.major, expected.minor) &&
                (core == expected.core ||
-                (expected.major == 3 && expected.minor == 1));
+                (expected.major == 3 && expected.minor == 1)) &&
+               forwardCompatible <= expected.forwardCompatible;
     }
 
     // Comparison operator, mainly for use in std::map
@@ -102,7 +111,8 @@ struct Profile {
         return major == other.major &&
                minor == other.minor &&
                api == other.api &&
-               core == other.core;
+               core == other.core &&
+               forwardCompatible == other.forwardCompatible;
     }
 
     // Comparison operator, mainly for use in std::map
@@ -111,7 +121,8 @@ struct Profile {
         return major < other.major ||
                minor < other.minor ||
                api < other.api ||
-               core < other.core;
+               core < other.core ||
+               forwardCompatible < other.forwardCompatible;
     }
 };
 

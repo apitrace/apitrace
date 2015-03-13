@@ -169,6 +169,9 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
             int profileMask = profile.core ? WAFFLE_CONTEXT_CORE_PROFILE : WAFFLE_CONTEXT_COMPATIBILITY_PROFILE;
             config_attrib_list.add(WAFFLE_CONTEXT_PROFILE, profileMask);
         }
+        if (profile.forwardCompatible) {
+            config_attrib_list.add(WAFFLE_CONTEXT_FORWARD_COMPATIBLE, true);
+        }
     }
     config_attrib_list.add(WAFFLE_RED_SIZE, 8);
     config_attrib_list.add(WAFFLE_GREEN_SIZE, 8);

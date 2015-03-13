@@ -172,6 +172,10 @@ static void retrace_eglCreateContext(trace::Call &call) {
              if (profileMask & EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR) {
                  profile.core = true;
              }
+             int contextFlags = parseAttrib(attrib_array, EGL_CONTEXT_FLAGS_KHR, 0);
+             if (contextFlags & EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR) {
+                 profile.forwardCompatible = true;
+             }
         }
         break;
     case EGL_OPENGL_ES_API:
