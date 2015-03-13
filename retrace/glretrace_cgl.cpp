@@ -248,10 +248,10 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
         pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 1, 0);
         break;
     case kCGLOGLPVersion_GL3_Core:
-        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 3, 2, true);
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 3, 2, true, true);
         break;
     case kCGLOGLPVersion_GL4_Core:
-        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 4, 1, true);
+        pixelFormat->profile = glprofile::Profile(glprofile::API_GL, 4, 1, true, true);
         break;
     default:
         retrace::warning(call) << "unexpected opengl profile " << std::hex << profile << std::dec << "\n";
