@@ -25,8 +25,7 @@
 
 
 from winapi import *
-from dxgiformat import DXGI_FORMAT
-from dxgi import IDXGISurface
+from dxgi import DXGI_FORMAT, IDXGISurface
 from d2derr import *
 from d2dbasetypes import *
 from dwrite import *
