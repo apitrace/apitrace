@@ -33,8 +33,7 @@ import specs.dxgi
 from specs.stdapi import API
 from specs.winapi import LPCSTR
 from specs.dxgi import dxgi
-from specs.d3d10 import d3d10
-from specs.d3d10_1 import d3d10_1
+from specs.d3d10 import d3d10, d3d10_1
 from specs.d3d11 import d3d11
 
 

@@ -35,7 +35,6 @@ from specs import stdapi
 from specs import winapi
 from specs import dxgi
 from specs import d3d10
-from specs import d3d10_1
 from specs import d3d11
 from specs import d3d11
 
@@ -221,7 +220,7 @@ if __name__ == '__main__':
     api = stdapi.API()
     api.addModule(dxgi.dxgi)
     api.addModule(d3d10.d3d10)
-    api.addModule(d3d10_1.d3d10_1)
+    api.addModule(d3d10.d3d10_1)
     api.addModule(d3d11.d3d11)
 
     types = [
@@ -245,8 +244,8 @@ if __name__ == '__main__':
         d3d10.D3D10_TEXTURE2D_DESC,
         d3d10.D3D10_TEXTURE3D_DESC,
         d3d10.D3D10_VIEWPORT,
-        d3d10_1.D3D10_BLEND_DESC1,
-        d3d10_1.D3D10_SHADER_RESOURCE_VIEW_DESC1,
+        d3d10.D3D10_BLEND_DESC1,
+        d3d10.D3D10_SHADER_RESOURCE_VIEW_DESC1,
         d3d11.D3D11_BLEND_DESC,
         d3d11.D3D11_BLEND_DESC1,
         d3d11.D3D11_BUFFER_DESC,

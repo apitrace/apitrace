@@ -264,9 +264,7 @@ if (WIN32)
                 ${CMAKE_CURRENT_SOURCE_DIR}/dxgistate_so.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py
@@ -285,9 +283,7 @@ if (WIN32)
                 ${CMAKE_SOURCE_DIR}/dispatch/dispatch.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d11sdklayers.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10_1.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10.py
-                ${CMAKE_SOURCE_DIR}/specs/d3d10misc.py
                 ${CMAKE_SOURCE_DIR}/specs/d3d10sdklayers.py
                 ${CMAKE_SOURCE_DIR}/specs/d3dcommon.py
                 ${CMAKE_SOURCE_DIR}/specs/dxgi.py

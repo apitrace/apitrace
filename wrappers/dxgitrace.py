@@ -31,7 +31,6 @@ from specs import stdapi
 from specs.stdapi import API
 from specs import dxgi
 from specs import d3d10
-from specs import d3d10_1
 from specs import d3d11
 from specs import d3d9
 
@@ -151,7 +150,7 @@ if __name__ == '__main__':
     api = API()
     api.addModule(dxgi.dxgi)
     api.addModule(d3d10.d3d10)
-    api.addModule(d3d10_1.d3d10_1)
+    api.addModule(d3d10.d3d10_1)
     api.addModule(d3d11.d3d11)
     api.addModule(d3d9.d3dperf)
 

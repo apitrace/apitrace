@@ -23,8 +23,9 @@
 #
 ##########################################################################/
 
+
 from dxgi import *
-from d3d10 import HRESULT
+
 
 D3D10_DEBUG_FEATURE = Flags(UINT, [
     "D3D10_DEBUG_FEATURE_FLUSH_PER_RENDER_OP",
