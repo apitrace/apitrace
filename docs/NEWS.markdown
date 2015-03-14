@@ -4,6 +4,8 @@ and their authors see the git history.
 
 # Version 7 #
 
+* Native Android retrace with remote GUI
+
 * OpenGL ES 3 support
 
 * GUI ported to Qt5
