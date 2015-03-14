@@ -347,50 +347,25 @@ cleanup(void) {
 
 Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
-    EglVisual *visual = new EglVisual(profile);
-    // possible combinations
-    const EGLint api_bits_gl[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT,
-    };
-    const EGLint api_bits_gles1[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES2_BIT,
-    };
-    const EGLint api_bits_gles2[7] = {
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_ES2_BIT,
-        EGL_OPENGL_BIT | EGL_OPENGL_ES_BIT,
-        EGL_OPENGL_BIT,
-        EGL_OPENGL_ES_BIT,
-    };
-    const EGLint *api_bits;
-
+    EGLint api_bits;
     if (profile.api == glprofile::API_GL) {
-        api_bits = api_bits_gl;
+        api_bits = EGL_OPENGL_BIT;
         if (profile.core && !has_EGL_KHR_create_context) {
             return NULL;
         }
     } else if (profile.api == glprofile::API_GLES) {
         switch (profile.major) {
         case 1:
-            api_bits = api_bits_gles1;
+            api_bits = EGL_OPENGL_ES_BIT;
             break;
-        case 2:
         case 3:
-            api_bits = api_bits_gles2;
+            if (has_EGL_KHR_create_context) {
+                api_bits = EGL_OPENGL_ES3_BIT;
+                break;
+            }
+            /* fall-through */
+        case 2:
+            api_bits = EGL_OPENGL_ES2_BIT;
             break;
         default:
             return NULL;
@@ -400,29 +375,68 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
         return NULL;
     }
 
-    for (int i = 0; i < 7; i++) {
-        Attributes<EGLint> attribs;
+    Attributes<EGLint> attribs;
+    attribs.add(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
+    attribs.add(EGL_RED_SIZE, 1);
+    attribs.add(EGL_GREEN_SIZE, 1);
+    attribs.add(EGL_BLUE_SIZE, 1);
+    attribs.add(EGL_ALPHA_SIZE, 1);
+    attribs.add(EGL_DEPTH_SIZE, 1);
+    attribs.add(EGL_STENCIL_SIZE, 1);
+    attribs.add(EGL_RENDERABLE_TYPE, api_bits);
+    attribs.end(EGL_NONE);
 
-        attribs.add(EGL_SURFACE_TYPE, EGL_WINDOW_BIT);
-        attribs.add(EGL_RED_SIZE, 1);
-        attribs.add(EGL_GREEN_SIZE, 1);
-        attribs.add(EGL_BLUE_SIZE, 1);
-        attribs.add(EGL_ALPHA_SIZE, 1);
-        attribs.add(EGL_DEPTH_SIZE, 1);
-        attribs.add(EGL_STENCIL_SIZE, 1);
-        attribs.add(EGL_SAMPLES, samples);
-        attribs.add(EGL_RENDERABLE_TYPE, api_bits[i]);
-        attribs.end(EGL_NONE);
-
-        EGLint num_configs;
-        if (eglChooseConfig(eglDisplay, attribs, &visual->config, 1, &num_configs) &&
-            num_configs == 1 &&
-            eglGetConfigAttrib(eglDisplay, visual->config, EGL_NATIVE_VISUAL_ID, &visual->format)) {
-            break;
-        }
+    EGLint num_configs = 0;
+    if (!eglGetConfigs(eglDisplay, NULL, 0, &num_configs) ||
+        num_configs <= 0) {
+        return NULL;
     }
 
-    assert(visual->format != -1);
+    std::vector<EGLConfig> configs(num_configs);
+    if (!eglChooseConfig(eglDisplay, attribs, &configs[0], num_configs,  &num_configs) ||
+        num_configs <= 0) {
+        return NULL;
+    }
+
+    // We can't tell what other APIs the trace will use afterwards, therefore
+    // try to pick a config which supports the widest set of APIs.
+    int bestScore = -1;
+    EGLConfig config = configs[0];
+    for (EGLint i = 0; i < num_configs; ++i) {
+        EGLint renderable_type = EGL_NONE;
+        eglGetConfigAttrib(eglDisplay, configs[i], EGL_RENDERABLE_TYPE, &renderable_type);
+        int score = 0;
+        assert(renderable_type & api_bits);
+        renderable_type &= ~api_bits;
+        if (renderable_type & EGL_OPENGL_ES2_BIT) {
+            score += 1 << 4;
+        }
+        if (renderable_type & EGL_OPENGL_ES3_BIT) {
+            score += 1 << 3;
+        }
+        if (renderable_type & EGL_OPENGL_ES_BIT) {
+            score += 1 << 2;
+        }
+        if (renderable_type & EGL_OPENGL_BIT) {
+            score += 1 << 1;
+        }
+        if (score > bestScore) {
+            config = configs[i];
+            bestScore = score;
+        }
+    }
+    assert(bestScore >= 0);
+
+    EGLint visual_id = -1;
+    if (!eglGetConfigAttrib(eglDisplay, config, EGL_NATIVE_VISUAL_ID, &visual_id)) {
+        assert(0);
+        return NULL;
+    }
+    assert(visual_id != -1);
+
+    EglVisual *visual = new EglVisual(profile);
+    visual->config = config;
+    visual->format = visual_id;
 
     return visual;
 }
@@ -447,12 +461,16 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         share_context = static_cast<EglContext*>(shareContext)->context;
     }
 
+    int contextFlags = 0;
     if (profile.api == glprofile::API_GL) {
         if (has_EGL_KHR_create_context) {
             attribs.add(EGL_CONTEXT_MAJOR_VERSION_KHR, profile.major);
             attribs.add(EGL_CONTEXT_MINOR_VERSION_KHR, profile.minor);
             int profileMask = profile.core ? EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR : EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT_KHR;
             attribs.add(EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR, profileMask);
+            if (profile.forwardCompatible) {
+                contextFlags |= EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR;
+            }
         } else if (profile.versionGreaterOrEqual(3, 2)) {
             std::cerr << "error: EGL_KHR_create_context not supported\n";
             return NULL;
@@ -469,10 +487,12 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         return NULL;
     }
 
-    if (debug && has_EGL_KHR_create_context) {
-        attribs.add(EGL_CONTEXT_FLAGS_KHR, EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR);
+    if (debug) {
+        contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
     }
-
+    if (contextFlags && has_EGL_KHR_create_context) {
+        attribs.add(EGL_CONTEXT_FLAGS_KHR, contextFlags);
+    }
     attribs.end(EGL_NONE);
 
     EGLenum api = translateAPI(profile);
