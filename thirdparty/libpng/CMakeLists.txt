@@ -1,4 +1,6 @@
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 add_convenience_library (png_bundled EXCLUDE_FROM_ALL
     png.c

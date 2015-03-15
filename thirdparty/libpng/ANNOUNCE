@@ -1,5 +1,4 @@
-
-Libpng 1.5.9 - February 18, 2012
+Libpng 1.6.16 - December 22, 2014
 
 This is a public release of libpng, intended for use in production codes.
 
@@ -8,30 +7,30 @@ Files available for download:
 Source files with LF line endings (for Unix/Linux) and with a
 "configure" script
 
-   libpng-1.5.9.tar.xz (LZMA-compressed, recommended)
-   libpng-1.5.9.tar.gz
-   libpng-1.5.9.tar.bz2
+   libpng-1.6.16.tar.xz (LZMA-compressed, recommended)
+   libpng-1.6.16.tar.gz
 
 Source files with CRLF line endings (for Windows), without the
 "configure" script
 
-   lpng159.7z  (LZMA-compressed, recommended)
-   lpng159.zip
+   lpng1616.7z  (LZMA-compressed, recommended)
+   lpng1616.zip
 
 Other information:
 
-   libpng-1.5.9-README.txt
-   libpng-1.5.9-LICENSE.txt
+   libpng-1.6.16-README.txt
+   libpng-1.6.16-LICENSE.txt
+   libpng-1.6.16-*.asc (armored detached GPG signatures)
 
-Changes since the last public release (1.5.8):
-
-  Rebuilt configure scripts in the tar distributions.
-  Removed two unused definitions from scripts/pnglibconf.h.prebuilt
-  Removed some unused arrays (with #ifdef) from png_read_push_finish_row().
-  Removed tests for no-longer-used *_EMPTY_PLTE_SUPPORTED from pngstruct.h
-  Fixed CVE-2011-3026 buffer overrun bug.  Deal more correctly with the test
-    on iCCP chunk length. Also removed spurious casts that may hide problems
-    on 16-bit systems.
+Changes since the last public release (1.6.15):
+  Added ".align 2" to arm/filter_neon.S to support old GAS assemblers that
+    don't do alignment correctly.
+  Revised Makefile.am and scripts/*.dfn to work with MinGW/MSYS;
+    renamed scripts/*.dfn to scripts/*.c (Bob Friesenhahn and John Bowler).
+  Quiet a "comparison always true" warning in pngstest.c (John Bowler).
+  Restored a test on width that was removed from png.c at libpng-1.6.9
+    (Bug report by Alex Eubanks).
+  Fixed an overflow in png_combine_row with very wide interlaced images.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
