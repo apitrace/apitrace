@@ -391,7 +391,11 @@ if (NOT ZLIB_FOUND)
 endif ()
 include_directories (${ZLIB_INCLUDE_DIRS})
 
-if (NOT WIN32)
+# FindPNG.cmake will search ZLIB internally (without requiring any particular
+# version), adding its include dirs and libraries, and overwriting ZLIB_FOUND.
+# So if the system's ZLIB was did not meet the our requirements, then there's
+# no safe way to use the system's PNG library.
+if (NOT WIN32 AND ZLIB_FOUND)
     find_package (PNG)
 endif ()
 if (NOT PNG_FOUND)
