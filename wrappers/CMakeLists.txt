@@ -63,7 +63,6 @@ if (WIN32)
         add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
         target_link_libraries (ddrawtrace
             common
-            ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
         set_target_properties (ddrawtrace PROPERTIES
@@ -99,7 +98,6 @@ if (WIN32)
         target_link_libraries (d3d8trace
             d3dhelpers
             common
-            ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
         set_target_properties (d3d8trace PROPERTIES
@@ -136,7 +134,6 @@ if (WIN32)
         target_link_libraries (d3d9trace
             d3dhelpers
             common
-            ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
         set_target_properties (d3d9trace PROPERTIES
@@ -177,7 +174,6 @@ if (WIN32)
         target_link_libraries (dxgitrace
             d3dhelpers
             common
-            ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
         set_target_properties (dxgitrace
@@ -210,7 +206,6 @@ if (WIN32)
         add_library (d2d1trace MODULE d2d1trace.def d2d1trace.cpp)
         target_link_libraries (d2d1trace
             common
-            ${ZLIB_LIBRARIES}
             ${SNAPPY_LIBRARIES}
         )
         set_target_properties (d2d1trace
@@ -248,7 +243,6 @@ if (WIN32)
         glhelpers
         glproc_gl
         common
-        ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
     )
     set_target_properties (wgltrace PROPERTIES
@@ -297,7 +291,6 @@ elseif (APPLE)
         glhelpers
         glproc_gl
         common
-        ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
@@ -344,7 +337,6 @@ elseif (X11_FOUND)
         glhelpers
         glproc_gl
         common
-        ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
@@ -395,7 +387,6 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         glhelpers
         glproc_egl
         common
-        ${ZLIB_LIBRARIES}
         ${SNAPPY_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         dl
