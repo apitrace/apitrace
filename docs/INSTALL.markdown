@@ -10,7 +10,7 @@ Requirements common for all platforms:
 
 Optional requirements:
 
-* zlib
+* zlib 1.2.6 or higher
 
 * libpng
 

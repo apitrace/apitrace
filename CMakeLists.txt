@@ -380,7 +380,9 @@ endif ()
 include_directories (${SNAPPY_INCLUDE_DIRS})
 
 if (NOT WIN32)
-    find_package (ZLIB)
+    # zlib 1.2.4-1.2.5 made it impossible to read the last block of incomplete
+    # gzip traces (e.g., apitrace-tests/traces/zlib-no-eof.trace).
+    find_package (ZLIB 1.2.6)
 endif ()
 if (NOT ZLIB_FOUND)
     set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
