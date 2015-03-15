@@ -52,16 +52,12 @@ option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 # http://lists.freedesktop.org/archives/mesa-dev/2015-March/079121.html
 if (NOT ANDROID)
     option (ENABLE_STATIC_SNAPPY "Statically link against snappy" ON)
-    option (ENABLE_STATIC_ZLIB "Statically link against zlib" ON)
-    option (ENABLE_STATIC_PNG "Statically link against libpng" ON)
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" ON)
         option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
         if (NOT (ENABLE_STATIC_LIBGCC AND
                  ENABLE_STATIC_LIBSTDCXX AND
-                 ENABLE_STATIC_SNAPPY AND
-                 ENABLE_STATIC_ZLIB AND
-                 ENABLE_STATIC_PNG))
+                 ENABLE_STATIC_SNAPPY))
             # XXX: Should probably throw a run-time too.
             message (WARNING
                 "LD_PRELOAD wrappers not statically linked against all "
@@ -383,20 +379,20 @@ if (ENABLE_STATIC_SNAPPY OR NOT SNAPPY_FOUND)
 endif ()
 include_directories (${SNAPPY_INCLUDE_DIRS})
 
-if (NOT ENABLE_STATIC_ZLIB)
+if (NOT WIN32)
     find_package (ZLIB)
 endif ()
-if (ENABLE_STATIC_ZLIB OR NOT ZLIB_FOUND)
+if (NOT ZLIB_FOUND)
     set (ZLIB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib)
     set (ZLIB_LIBRARIES z_bundled)
     add_subdirectory (thirdparty/zlib)
 endif ()
 include_directories (${ZLIB_INCLUDE_DIRS})
 
-if (NOT ENABLE_STATIC_PNG)
+if (NOT WIN32)
     find_package (PNG)
 endif ()
-if (ENABLE_STATIC_PNG OR NOT PNG_FOUND)
+if (NOT PNG_FOUND)
     set (PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libpng)
     set (PNG_DEFINITIONS "")
     set (PNG_LIBRARIES png_bundled)

@@ -8,6 +8,11 @@ Requirements common for all platforms:
 
 * CMake version 2.8.11 or higher (tested with version 2.8.12.2)
 
+Optional requirements:
+
+* zlib
+
+* libpng
 
 The GUI also dependends on:
 
@@ -20,10 +25,9 @@ if `-DENABLE_GUI=FALSE` is passed instead.  The implicit default is
 `-DENABLE_GUI=AUTO`, which will build the GUI if Qt is available.
 
 
-The code also depends on zlib, libpng, and snappy libraries, but the bundled
-sources are always used regardless of system availability, to make the wrapper
-shared-objects/DLL self contained, and to prevent symbol collisions when
-tracing.
+The code also depends on snappy libraries, but the bundled sources are always
+used regardless of system availability, to make the wrapper shared-objects/DLL
+self contained, and to prevent symbol collisions when tracing.
 
 
 # Linux #
