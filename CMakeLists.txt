@@ -254,6 +254,11 @@ else ()
     # XXX: it's safer to use ssize_t everywhere instead of disabling warning
     add_compiler_flags (-Wno-sign-compare) # comparison between signed and unsigned integer expressions
 
+    # Disable strict aliasing assumptions.  We generate a lot of C++ code, and
+    # it's not always easy to guarantee or spot when strict aliasing
+    # assumptions are violated.  Above all, the benefit is not worth the risk.
+    add_compiler_flags ("-fno-strict-aliasing")
+
     # No RTTI required
     #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 

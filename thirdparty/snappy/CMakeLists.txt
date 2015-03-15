@@ -5,7 +5,8 @@ add_definitions (
 
 # Adjust warnings
 if (NOT MSVC)
-    add_definitions (-Wno-unused-function)
+    add_compiler_flags (-Wno-unused-function)
+    add_compiler_flags (-fstrict-aliasing)
 endif ()
 
 add_convenience_library (snappy_bundled EXCLUDE_FROM_ALL
