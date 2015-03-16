@@ -1,0 +1,36 @@
+# See http://www.appveyor.com/docs/appveyor-yml
+version: {build}
+
+# See http://help.appveyor.com/discussions/suggestions/419-qt-libraries
+os: unstable
+
+init:
+- git config --global core.autocrlf input
+
+shallow_clone: true
+
+environment:
+  matrix:
+  - CMAKE_GENERATOR: "Visual Studio 12"
+    CMAKE_PREFIX_PATH: C:\Qt\5.4\msvc2013_opengl
+  - CMAKE_GENERATOR: "Visual Studio 12 Win64"
+    CMAKE_PREFIX_PATH: C:\Qt\5.4\msvc2013_64_opengl
+
+matrix:
+  fast_finish: true
+
+configuration: Debug
+
+before_build:
+- cmake -H. -Bbuild -G "%CMAKE_GENERATOR%" "-DCMAKE_PREFIX_PATH=%CMAKE_PREFIX_PATH%" -DENABLE_GUI=ON
+
+build:
+  project: build\apitrace.sln
+  verbosity: minimal
+
+after_build:
+- cmake --build build --use-stderr --config "%CONFIGURATION%" --target package -- /verbosity:minimal
+
+artifacts:
+- path: build/apitrace-*.7z
+  name: apitrace
