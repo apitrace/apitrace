@@ -39,8 +39,11 @@ if (WIN32)
         set (DirectX_ARCHITECTURE x86)
     endif ()
 
-    if ("$ENV{ProgramFiles(x86)}")
-        set (ProgramFiles "$ENV{ProgramFiles(x86)}")
+    # Can't use "$ENV{ProgramFiles(x86)}" to avoid violating CMP0053.  See
+    # http://public.kitware.com/pipermail/cmake-developers/2014-October/023190.html
+    set (ProgramFiles_x86 "ProgramFiles(x86)")
+    if ("$ENV{${ProgramFiles_x86}}")
+        set (ProgramFiles "$ENV{${ProgramFiles_x86}}")
     else ()
         set (ProgramFiles "$ENV{ProgramFiles}")
     endif ()
