@@ -575,7 +575,11 @@ endif ()
 
 # See http://www.vtk.org/Wiki/CMake:CPackPackageGenerators
 if (WIN32)
-    set (CPACK_GENERATOR "ZIP")
+    if (CMAKE_VERSION VERSION_LESS 3.1)
+        set (CPACK_GENERATOR "ZIP")
+    else ()
+        set (CPACK_GENERATOR "7Z")
+    endif ()
 elseif (APPLE)
     set (CPACK_GENERATOR "DragNDrop")
 else ()
