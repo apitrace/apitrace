@@ -42,6 +42,18 @@ GUID_D3DSTATE = {0x7D71CAC9,0x7F58,0x432C,{0xA9,0x75,0xA1,0x9F,0xCF,0xCE,0xFD,0x
 
 
 static void
+dumpRasterizerState(JSONWriter &json, ID3D10Device *pDevice)
+{
+    com_ptr<ID3D10RasterizerState> pRasterizerState;
+
+    pDevice->RSGetState(&pRasterizerState);
+    json.beginMember("RasterizerState");
+    dumpStateObjectDesc(json, pRasterizerState);
+    json.endMember(); // RasterizerState
+}
+
+
+static void
 dumpBlendState(JSONWriter &json, ID3D10Device *pDevice)
 {
     com_ptr<ID3D10BlendState> pBlendState;
@@ -49,7 +61,7 @@ dumpBlendState(JSONWriter &json, ID3D10Device *pDevice)
     UINT SampleMask;
 
     pDevice->OMGetBlendState(&pBlendState, BlendFactor, &SampleMask);
-    
+
     json.beginMember("BlendState");
     dumpStateObjectDesc(json, pBlendState);
     json.endMember(); // BlendState
@@ -88,6 +100,7 @@ dumpParameters(JSONWriter &json, ID3D10Device *pDevice)
     json.beginMember("parameters");
     json.beginObject();
 
+    dumpRasterizerState(json, pDevice);
     dumpBlendState(json, pDevice);
     dumpDepthStencilState(json, pDevice);
 
