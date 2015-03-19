@@ -38,6 +38,10 @@
 namespace d3dstate {
 
 
+// Ensure ExtractDescType template is sane
+static_assert( std::is_same< ExtractDescType< decltype( &ID3D11BlendState::GetDesc ) >::type, D3D11_BLEND_DESC >::value, "type mismatch" );
+
+
 static void
 dumpRasterizerState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 {
@@ -53,9 +57,6 @@ dumpRasterizerState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 static void
 dumpBlendState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 {
-    // Ensure ExtractDescType template is sane
-    static_assert( std::is_same< ExtractDescType< decltype( &ID3D11BlendState::GetDesc ) >::type, D3D11_BLEND_DESC >::value, "type mismatch" );
-
     com_ptr<ID3D11BlendState> pBlendState;
     FLOAT BlendFactor[4];
     UINT SampleMask;
