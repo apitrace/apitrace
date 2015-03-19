@@ -80,6 +80,20 @@ dumpBlendState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 
 
 static void
+dumpDepthStencilState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+{
+    com_ptr<ID3D11DepthStencilState> pDepthStencilState;
+    UINT stencilRef;
+
+    pDeviceContext->OMGetDepthStencilState(&pDepthStencilState, &stencilRef);
+    json.beginMember("DepthStencilState");
+    dumpStateObjectDesc(json, pDepthStencilState);
+    json.endMember(); // DepthStencilState
+    json.writeIntMember("StencilRef", stencilRef);
+}
+
+
+static void
 dumpParameters(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 {
     // TODO: dump description of current bound state
@@ -88,6 +102,7 @@ dumpParameters(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 
     dumpRasterizerState(json, pDeviceContext);
     dumpBlendState(json, pDeviceContext);
+    dumpDepthStencilState(json, pDeviceContext);
 
     json.endObject();
     json.endMember(); // parameters
