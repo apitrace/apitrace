@@ -256,7 +256,10 @@ else ()
     add_compiler_flags ("-fno-strict-aliasing")
 
     # No RTTI required
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+    # XXX: there's a dynamic_cast in Android
+    if (NOT ANDROID)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+    endif ()
 
     # Enable stack protection
     if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
