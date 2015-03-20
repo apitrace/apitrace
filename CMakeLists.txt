@@ -190,6 +190,11 @@ if (MSVC)
     string (REGEX REPLACE "/GR *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
+    # Disable C++ exceptions
+    add_definitions (-D_HAS_EXCEPTIONS=0)
+    string (REGEX REPLACE "/EHsc *" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
+
     # Enable math constants defines
     add_definitions (-D_USE_MATH_DEFINES)
 
@@ -260,6 +265,9 @@ else ()
     if (NOT ANDROID)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
     endif ()
+
+    # Disable C++ exceptions
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 
     # Enable stack protection
     if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
