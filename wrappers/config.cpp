@@ -377,9 +377,15 @@ getConfig(void)
     static configuration *config = NULL;
 
     if (!configured) {
-        os::String configPath = os::getConfigDir();
-        configPath.join("apitrace");
-        configPath.join("gltrace.conf");
+        os::String configPath;
+        const char *envConfigPath = getenv("GLTRACE_CONF");
+        if (envConfigPath) {
+            configPath = envConfigPath;
+        } else {
+            configPath = os::getConfigDir();
+            configPath.join("apitrace");
+            configPath.join("gltrace.conf");
+        }
         config = gltrace::readConfigFile(configPath);
         configured = true;
     }
