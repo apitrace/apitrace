@@ -64,7 +64,7 @@ static void
 create_extensions_list(configuration *conf)
 {
     // count extensions
-    const char *ext = conf->extensions;
+    const char *ext = conf->extensions.c_str();
     conf->numExtensions = 0;
     while (1) {
         ext = strstr(ext, "GL_");
@@ -82,7 +82,7 @@ create_extensions_list(configuration *conf)
 
     // extract individual extension names
     int count = 0;
-    const char *extStart = conf->extensions, *extEnd;
+    const char *extStart = conf->extensions.c_str(), *extEnd;
     while (1) {
         extStart = strstr(extStart, "GL_");
         if (!extStart)
@@ -153,12 +153,10 @@ getChar(FILE *f, const char **buf)
 
 // Scan 'buf' for a string value of the form: "string"  (double-quoted string)
 // Return the string in newly malloc'd memory
-static char *
+static std::string
 stringValue(FILE *f, const char *buf)
 {
-    int resultLen = 100;
-    char *result = (char *) malloc(resultLen);
-    int outLen = 0;
+    std::string result;
     char c;
 
     // look for =
@@ -167,7 +165,7 @@ stringValue(FILE *f, const char *buf)
     } while (c && c != '=');
 
     if (!c)
-        return 0;
+        return result;
 
     // look for opening "
     do {
@@ -175,14 +173,14 @@ stringValue(FILE *f, const char *buf)
     } while (c && c != '\"');
 
     if (!c)
-        return NULL;
+        return result;
 
     // scan characters in the string
     while (1) {
         c = getChar(f, &buf);
         if (!c) {
             std::cerr << "Error: didn't find closing \" in config file!\n";
-            return NULL;
+            return result;
         }
 
         if (c == '\n') {
@@ -192,17 +190,10 @@ stringValue(FILE *f, const char *buf)
 
         if (c == '\"') {
             // end of string
-            result[outLen] = 0;
             return result;
         }
-        else if (outLen >= resultLen) {
-            // grow output buffer
-            resultLen *= 2;
-            result = (char *) realloc(result, resultLen);
-            result[outLen++] = c;
-        }
         else {
-            result[outLen++] = c;
+            result.push_back(c);
         }
     }
 }
@@ -283,13 +274,12 @@ parse_file(FILE *f, configuration *conf)
             conf->versionMinor = intValue(f, b + 17);
         }
         else if (matchKeyword(b, "GL_CONTEXT_PROFILE_MASK")) {
-            char *maskStr = stringValue(f, b + 24);
+            std::string maskStr = stringValue(f, b + 24);
             conf->profileMask = 0x0;
-            if (strstr(maskStr, "GL_CONTEXT_CORE_PROFILE_BIT"))
+            if (maskStr.find("GL_CONTEXT_CORE_PROFILE_BIT") != std::string::npos)
                 conf->profileMask |= GL_CONTEXT_CORE_PROFILE_BIT;
-            if (strstr(maskStr, "GL_CONTEXT_COMPATIBILITY_PROFILE_BIT"))
+            if (maskStr.find("GL_CONTEXT_COMPATIBILITY_PROFILE_BIT") != std::string::npos)
                 conf->profileMask |= GL_CONTEXT_COMPATIBILITY_PROFILE_BIT;
-            free(maskStr);
         }
         else {
             std::cerr << "Unexpected config variable: " << b << ".\n";
@@ -297,7 +287,7 @@ parse_file(FILE *f, configuration *conf)
         }
     } while (!feof(f));
 
-    if (conf->version) {
+    if (!conf->version.empty()) {
         // String version was specified, compute integer major/minor versions
         conf->versionMajor = conf->version[0] - '0';
         conf->versionMinor = conf->version[2] - '0';
@@ -306,23 +296,21 @@ parse_file(FILE *f, configuration *conf)
     }
     else if (conf->versionMajor) {
         // Numeric version was specified, update the string
-        if (conf->version) {
+        if (!conf->version.empty()) {
             // if version string was specified too, override it
             conf->version[0] = '0' + conf->versionMajor;
             conf->version[2] = '0' + conf->versionMinor;
         }
         else {
             // allocate new version string
-            conf->version = (char *) malloc(4);
-            assert(conf->version);
-            conf->version[0] = '0' + conf->versionMajor;
-            conf->version[1] = '.';
-            conf->version[2] = '0' + conf->versionMinor;
-            conf->version[3] = 0;
+            conf->version.clear();
+            conf->version.push_back('0' + conf->versionMajor);
+            conf->version.push_back('.');
+            conf->version.push_back('0' + conf->versionMinor);
         }
     }
 
-    if (conf->extensions) {
+    if (!conf->extensions.empty()) {
         create_extensions_list(conf);
     }
 }
@@ -345,20 +333,18 @@ readConfigFile(const char *filename)
 
     configuration *conf = new configuration;
 
-    memset(conf, 0, sizeof(*conf));
-
     parse_file(f, conf);
 
     fclose(f);
 
     if (1) {
         // debug
-        os::log("apitrace: config GL_VENDOR = %s\n", conf->vendor);
-        os::log("apitrace: config GL_VERSION = %s\n", conf->version);
-        os::log("apitrace: config GL_EXTENSIONS = %s\n", conf->extensions);
+        os::log("apitrace: config GL_VENDOR = %s\n", conf->vendor.c_str());
+        os::log("apitrace: config GL_VERSION = %s\n", conf->version.c_str());
+        os::log("apitrace: config GL_EXTENSIONS = %s\n", conf->extensions.c_str());
         os::log("apitrace: config GL_NUM_EXTENSIONS = %d\n", conf->numExtensions);
-        os::log("apitrace: config GL_RENDERER = %s\n", conf->renderer);
-        os::log("apitrace: config GL_SHADING_LANGUAGE_VERSION = %s\n", conf->glslVersion);
+        os::log("apitrace: config GL_RENDERER = %s\n", conf->renderer.c_str());
+        os::log("apitrace: config GL_SHADING_LANGUAGE_VERSION = %s\n", conf->glslVersion.c_str());
         os::log("apitrace: config GL_MAX_TEXTURE_SIZE = %d\n", conf->maxTextureSize);
         os::log("apitrace: config GL_MAJOR_VERSION = %d\n", conf->versionMajor);
         os::log("apitrace: config GL_MINOR_VERSION = %d\n", conf->versionMinor);
@@ -403,15 +389,15 @@ getConfigString(const configuration *config, GLenum pname)
 
     switch (pname) {
     case GL_VERSION:
-        return (const GLubyte *) config->version;
+        return (const GLubyte *) config->version.c_str();
     case GL_VENDOR:
-        return (const GLubyte *) config->vendor;
+        return (const GLubyte *) config->vendor.c_str();
     case GL_EXTENSIONS:
-        return (const GLubyte *) config->extensions;
+        return (const GLubyte *) config->extensions.c_str();
     case GL_RENDERER:
-        return (const GLubyte *) config->renderer;
+        return (const GLubyte *) config->renderer.c_str();
     case GL_SHADING_LANGUAGE_VERSION:
-        return (const GLubyte *) config->glslVersion;
+        return (const GLubyte *) config->glslVersion.c_str();
     default:
         return NULL;
     }
@@ -424,7 +410,7 @@ getConfigStringi(const configuration *config, GLenum pname, GLuint index)
 {
     if (!config ||
         pname != GL_EXTENSIONS ||
-        !config->extensions ||
+        config->extensions.empty() ||
         index >= config->numExtensions) {
         return NULL;
     }

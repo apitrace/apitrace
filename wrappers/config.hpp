@@ -26,22 +26,35 @@
 
 #include "glimports.hpp"
 
+#include <string>
+
 
 namespace gltrace {
 
 
 struct configuration
 {
-    int versionMajor, versionMinor;
-    char *version;
-    const char *vendor;
-    const char *extensions;
-    const char *renderer;
-    const char *glslVersion;
+    int versionMajor;
+    int versionMinor;
+    std::string version;
+    std::string vendor;
+    std::string extensions;
+    std::string renderer;
+    std::string glslVersion;
     GLbitfield profileMask;
     int maxTextureSize;  // 2D texture size
     int numExtensions;
     char **extensionsList;
+
+    inline
+    configuration() :
+        versionMajor(0),
+        versionMinor(0),
+        profileMask(0),
+        maxTextureSize(0),
+        numExtensions(0),
+        extensionsList(0)
+    {}
 };
 
 
