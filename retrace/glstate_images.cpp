@@ -122,6 +122,7 @@ probeTextureLevelSizeOES(GLenum target, GLint level, const GLint size[3]) {
         break;
     case GL_TEXTURE_3D_OES:
         glTexSubImage3DOES(target, level, size[0], size[1], size[2], 0, 0, 0, internalFormat, type, &dummy);
+        break;
     default:
         assert(0);
         return false;
