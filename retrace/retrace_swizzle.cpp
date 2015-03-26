@@ -308,7 +308,7 @@ delObj(trace::Value &value) {
     unsigned long long address = value.toUIntPtr();
     _obj_map.erase(address);
     if (retrace::verbosity >= 2) {
-        std::cout << std::hex << "obj 0x" << address << " del\n";
+        std::cout << std::hex << "obj 0x" << address << std::dec << " del\n";
     }
 }
 

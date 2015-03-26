@@ -127,8 +127,7 @@ escapeUnicodeString(std::ostream &os, const char *str) {
             os << (unsigned char)c;
         } else {
             // unicode
-            os << "\\u" << std::setfill('0') << std::hex << std::setw(4) << (unsigned)c;
-            os << std::dec;
+            os << "\\u" << std::hex << std::setfill('0') << std::setw(4) << (unsigned)c << std::setfill(' ') << std::dec;
         }
     } while (src);
 
