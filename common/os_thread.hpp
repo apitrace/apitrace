@@ -171,34 +171,34 @@ namespace os {
         typedef Mutex mutex_type;
 
         inline explicit
-        unique_lock(mutex_type & mutex) :
-            _mutex(&mutex)
+        unique_lock(mutex_type &m) :
+            _mutex(m)
         {
-            _mutex->lock();
+            _mutex.lock();
         }
 
         inline
         ~unique_lock() {
-            _mutex->unlock();
+            _mutex.unlock();
         }
 
         inline void
         lock() {
-            _mutex->lock();
+            _mutex.lock();
         }
 
         inline void
         unlock() {
-            _mutex->unlock();
+            _mutex.unlock();
         }
 
         mutex_type *
         mutex() const {
-            return _mutex;
+            return &_mutex;
         }
 
     protected:
-        mutex_type *_mutex;
+        mutex_type &_mutex;
     };
 
 
