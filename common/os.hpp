@@ -64,13 +64,8 @@ void log(const char *format, ...)
   #endif
   #define PRIVATE
 #else
-  #if __GNUC__ >= 4
-    #define PUBLIC __attribute__ ((visibility("default")))
-    #define PRIVATE __attribute__ ((visibility("hidden")))
-  #else
-    #define PUBLIC
-    #define PRIVATE
-  #endif
+  #define PUBLIC __attribute__ ((visibility("default")))
+  #define PRIVATE __attribute__ ((visibility("hidden")))
 #endif
 
 /**
