@@ -411,7 +411,7 @@ public:
         baton = call;
         mutex.unlock();
 
-        wake_cond.signal();
+        wake_cond.notify_one();
     }
 
     /**
@@ -425,7 +425,7 @@ public:
         finished = true;
         mutex.unlock();
 
-        wake_cond.signal();
+        wake_cond.notify_one();
     }
 };
 

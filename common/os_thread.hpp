@@ -251,7 +251,7 @@ namespace os {
         }
 
         inline void
-        signal(void) {
+        notify_one(void) {
 #ifdef _WIN32
 #  if USE_WIN32_CONDITION_VARIABLES
             WakeConditionVariable(&_native_handle);
