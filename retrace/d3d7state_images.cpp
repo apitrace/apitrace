@@ -187,6 +187,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice7 *pDevice)
             json.beginMember("RENDER_TARGET_0");
             json.writeImage(image);
             json.endMember(); // RENDER_TARGET_*
+            delete image;
         }
 
         // Search for a depth-stencil attachment
@@ -202,6 +203,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice7 *pDevice)
                 json.beginMember("DEPTH_STENCIL");
                 json.writeImage(image);
                 json.endMember(); // DEPTH_STENCIL
+                delete image;
             }
         }
     }

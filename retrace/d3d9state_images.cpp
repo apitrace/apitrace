@@ -197,6 +197,7 @@ dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice)
                     json.beginMember(label);
                     json.writeImage(image);
                     json.endMember(); // PS_RESOURCE_*
+                    delete image;
                 }
             }
         }
@@ -237,6 +238,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
             json.beginMember(label);
             json.writeImage(image);
             json.endMember(); // RENDER_TARGET_*
+            delete image;
         }
     }
 
@@ -249,6 +251,7 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
             json.beginMember("DEPTH_STENCIL");
             json.writeImage(image);
             json.endMember(); // RENDER_TARGET_*
+            delete image;
         }
     }
 
