@@ -394,7 +394,7 @@ _glDrawElementsBaseVertex_count(GLsizei count, GLenum type, const GLvoid *indice
         // Read indices from index buffer object
         GLintptr offset = (GLintptr)indices;
         GLsizeiptr size = count*_gl_type_size(type);
-        GLvoid *temp = malloc(size);
+        temp = malloc(size);
         if (!temp) {
             return 0;
         }
