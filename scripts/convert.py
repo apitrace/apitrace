@@ -147,8 +147,15 @@ def convertFromPix(inPix, outTrace):
         '-o', outTrace,
         pixExe,
         inPix,
-        '-playstandalone',
     ]
+    
+    # XXX: Autodetect somehow
+    if not options.single_frame:
+        # Full capture
+        cmd += ['-playstandalone']
+    else:
+        # Single-frame capture
+        cmd += ['-autorenderto', 'nul:']
 
     callProcess(cmd)
     verifyTrace(outTrace)
@@ -235,6 +242,10 @@ def main():
         type="string", dest="output",
         help="output file [default: stdout]")
     optparser.add_option(
+        '--single-frame',
+        action='store_true', dest='single_frame', default=False,
+        help='single-frame PIXRun capture')
+    optparser.add_option(
         '--verify',
         action='store_true', dest='verify', default=False,
         help='verify output by replaying it')
@@ -264,6 +275,9 @@ def main():
             outFile = options.output
         else:
             outFile = name + outExt
+
+        if os.path.exists(outFile):
+            os.remove(outFile)
         convert(inFile, outFile)
 
 
