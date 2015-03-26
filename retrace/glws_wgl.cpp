@@ -29,6 +29,8 @@
  */
 
 
+#include <process.h>
+
 #include <iostream>
 
 #include "glproc.hpp"
@@ -106,7 +108,7 @@ struct WindowThreadParam
 };
 
 
-static DWORD WINAPI
+static unsigned __stdcall
 windowThreadFunction( LPVOID _lpParam )
 {
     WindowThreadParam *lpParam = (WindowThreadParam *)_lpParam;
@@ -178,8 +180,7 @@ createWindow(int nWidth, int nHeight)
     param.nWidth = nWidth;
     param.nHeight = nHeight;
     param.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    DWORD dwThreadId = 0;
-    CreateThread(NULL, 0, &windowThreadFunction, (LPVOID)&param, 0, &dwThreadId);
+    _beginthreadex(NULL, 0, &windowThreadFunction, (LPVOID)&param, 0, NULL);
 
     // Wait for window creation event
     WaitForSingleObject(param.hEvent, INFINITE);
