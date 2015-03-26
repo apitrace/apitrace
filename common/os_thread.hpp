@@ -34,6 +34,7 @@
 
 
 #ifdef _WIN32
+#include <process.h>
 #include <windows.h>
 #else
 #include <pthread.h>
@@ -386,13 +387,10 @@ namespace os {
         }
 
         template< class Function, class Arg >
-        explicit thread( Function& f, Arg arg ) {
-#ifdef _WIN32
-            DWORD id = 0;
-            _native_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)f, (LPVOID)arg, 0, &id);
-#else
-            pthread_create(&_native_handle, NULL, (void *(*) (void *))f, (void *)arg);
-#endif
+        explicit thread( Function &f, Arg arg ) {
+            typedef CallbackParam< Function, Arg > Param;
+            Param *pParam = new Param(f, arg);
+            _native_handle = _create(pParam);
         }
 
         inline thread &
@@ -418,15 +416,49 @@ namespace os {
     private:
         native_handle_type _native_handle;
 
-#if 0
-#ifdef _WIN32
-        template< class Function, class Arg >
-        static DWORD WINAPI
-        ThreadProc(LPVOID lpParameter) {
+        template< typename Function, typename Arg >
+        struct CallbackParam {
+            Function &f;
+            Arg arg;
 
-        );
+            inline
+            CallbackParam(Function &_f, Arg _arg) :
+                f(_f),
+                arg(_arg)
+            {}
+
+            inline void
+            operator () (void) {
+                f(arg);
+            }
+        };
+
+        template< typename Param >
+        static
+#ifdef _WIN32
+        unsigned __stdcall
+#else
+        void *
 #endif
+        _callback(void *lpParameter) {
+            Param *pParam = static_cast<Param *>(lpParameter);
+            (*pParam)();
+            delete pParam;
+            return 0;
+        }
+
+        template< typename Param >
+        static inline native_handle_type
+        _create(Param *pParam) {
+#ifdef _WIN32
+            uintptr_t handle =_beginthreadex(NULL, 0, &_callback<Param>, static_cast<void *>(pParam), 0, NULL);
+            return reinterpret_cast<HANDLE>(handle);
+#else
+            pthread_t t;
+            pthread_create(&t, NULL, &_callback<Param>, static_cast<void *>(pParam));
+            return t;
 #endif
+        }
     };
 
 } /* namespace os */

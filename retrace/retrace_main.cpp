@@ -292,7 +292,7 @@ private:
 
     os::thread thread;
 
-    static void *
+    static void
     runnerThread(RelayRunner *_this);
 
 public:
@@ -430,10 +430,9 @@ public:
 };
 
 
-void *
+void
 RelayRunner::runnerThread(RelayRunner *_this) {
     _this->runRace();
-    return 0;
 }
 
 
