@@ -96,22 +96,54 @@ def convertToPix(inTrace, outPixrun):
         sys.exit(1)
 
 
+def detectApiFromCsv(inCsv):
+    import csv
+    csvReader = csv.reader(open(inCsv, 'rt'), )
+    for row in csvReader:
+        print row
+        event = row[2]
+        print event
+        if event.startswith("Direct3DCreate9"):
+            return "d3d9"
+        if event.startswith("CreateDXGIFactory"):
+            return "dxgi"
+        if event.startswith("D3D10CreateDevice"):
+            return "d3d10"
+        if event.startswith("D3D11CreateDevice"):
+            return "d3d11"
+    assert False
+
+
 def convertFromPix(inPix, outTrace):
     pixExe = getPixExe()
 
-    if False:
-        # TODO: Use -exporttocsv option to detect which API to use
+    api = options.api
+
+    if True:
+        # Use -exporttocsv option to detect which API to use
         cmd = [
             pixExe,
             inPix,
-            '-exporttocsv', # XXX: output filename is ignored
+            '-exporttocsv',
         ]
+        
+        # XXX: output filename is ignored
+        inPixDir, inPixFileName = os.path.split(inPix)
+        inPixName, inPixExt = os.path.splitext(inPixFileName)
+        outCsv = os.path.join(inPixDir, inPixName + '.csv')
+
+        if os.path.exists(outCsv):
+            os.remove(outCsv)
+        
         callProcess(cmd)
+
+        if os.path.isfile(outCsv):
+            api = detectApiFromCsv(outCsv)
 
     cmd = [
         options.apitrace,
         'trace',
-        '-a', options.api,
+        '-a', api,
         '-o', outTrace,
         pixExe,
         inPix,
