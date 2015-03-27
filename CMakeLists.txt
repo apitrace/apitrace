@@ -155,14 +155,16 @@ include (CheckCXXCompilerFlag)
 include (CheckIncludeFileCXX)
 
 macro (add_compiler_flags)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARGV}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARGV}")
+    string (REPLACE ";" " " _FLAGS "${ARGV}")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_FLAGS}")
 endmacro ()
 
 macro (add_linker_flags)
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ARGV}")
-    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ARGV}")
-    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${ARGV}")
+    string (REPLACE ";" " " _FLAGS "${ARGV}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${_FLAGS}")
+    set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${_FLAGS}")
+    set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${_FLAGS}")
 endmacro ()
 
 if (WIN32)
@@ -177,7 +179,7 @@ if (WIN32)
 else (WIN32)
     CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_FLAG_VISIBILITY)
     if (CXX_COMPILER_FLAG_VISIBILITY)
-        add_compiler_flags ("-fvisibility=hidden")
+        add_compiler_flags (-fvisibility=hidden)
     endif ()
 endif ()
 
@@ -258,7 +260,7 @@ else ()
     # Disable strict aliasing assumptions.  We generate a lot of C++ code, and
     # it's not always easy to guarantee or spot when strict aliasing
     # assumptions are violated.  Above all, the benefit is not worth the risk.
-    add_compiler_flags ("-fno-strict-aliasing")
+    add_compiler_flags (-fno-strict-aliasing)
 
     # No RTTI required
     # XXX: there's a dynamic_cast in Android
@@ -267,7 +269,7 @@ else ()
     endif ()
 
     # Disable C++ exceptions
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 
     # Enable stack protection
     if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
@@ -286,7 +288,7 @@ else ()
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         check_cxx_compiler_flag ("-msse2" CXX_COMPILER_FLAG_MSSE2)
         if (CXX_COMPILER_FLAG_MSSE2)
-            add_compiler_flags ("-msse2 -mfpmath=sse")
+            add_compiler_flags (-msse2 -mfpmath=sse)
 
             # And tell GCC to assume 4 bytes alignment, many Linux/Windows
             # applications only guarantee that, but not on systems where ABI
@@ -294,9 +296,9 @@ else ()
             #
             # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=38496
             if (NOT ANDROID)
-                check_cxx_compiler_flag ("-mincoming-stack-boundary=2" CXX_COMPILER_FLAG_MINCOMING_STACK_BOUNDARY)
+                check_cxx_compiler_flag (-mincoming-stack-boundary=2 CXX_COMPILER_FLAG_MINCOMING_STACK_BOUNDARY)
                 if (CXX_COMPILER_FLAG_MINCOMING_STACK_BOUNDARY)
-                    add_compiler_flags ("-mincoming-stack-boundary=2")
+                    add_compiler_flags (-mincoming-stack-boundary=2)
                 endif ()
             endif ()
         endif ()
@@ -308,8 +310,7 @@ endif ()
 
 if (MINGW)
     # Avoid depending on MinGW runtime DLLs
-    add_linker_flags ("-static-libgcc")
-    add_linker_flags ("-static-libstdc++")
+    add_linker_flags (-static-libgcc -static-libstdc++)
 endif ()
 
 if (ENABLE_FRAME_POINTER)
@@ -324,9 +325,9 @@ endif ()
 # Enable Data Execution Prevention and Address Space Layout Randomization
 if (WIN32)
     if (MSVC)
-        add_linker_flags ("/NXCOMPAT /DYNAMICBASE")
+        add_linker_flags (/NXCOMPAT /DYNAMICBASE)
     else ()
-        add_linker_flags ("-Wl,--nxcompat -Wl,--dynamicbase")
+        add_linker_flags (-Wl,--nxcompat -Wl,--dynamicbase)
     endif ()
 endif ()
 
