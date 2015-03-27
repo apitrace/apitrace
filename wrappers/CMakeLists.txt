@@ -3,7 +3,7 @@
 
 
 if (ENABLE_STATIC_LIBGCC)
-    add_linker_flags ("-static-libgcc")
+    add_linker_flags (-static-libgcc -Wl,--exclude-libs,libgcc.a)
 endif ()
 if (ENABLE_STATIC_LIBSTDCXX)
     # Unfortunately for a long time static libstdcxx didn't built with -fPIC
@@ -21,7 +21,7 @@ if (ENABLE_STATIC_LIBSTDCXX)
     unset (CMAKE_REQUIRED_LIBRARIES)
     unset (CMAKE_REQUIRED_FLAGS)
     if (STATIC_LIBSTDCXX_PIC)
-        add_linker_flags ("-static-libstdc++")
+        add_linker_flags (-static-libstdc++ -Wl,--exclude-libs,libstdc++.a)
     endif ()
 endif ()
 
