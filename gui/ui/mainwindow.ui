@@ -67,6 +67,7 @@
     </widget>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionSave"/>
     <addaction name="separator"/>
     <addaction name="menu_Android"/>
     <addaction name="separator"/>
@@ -558,6 +559,18 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset resource="../qapitrace.qrc">
+     <normaloff>:/resources/document-edit.png</normaloff>:/resources/document-edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Save As...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionQuit">

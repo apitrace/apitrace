@@ -102,6 +102,22 @@ void MainWindow::openTrace()
     }
 }
 
+void MainWindow::saveTrace()
+{
+    QString localFile = m_trace->fileName();
+
+    QString fileName =
+            QFileDialog::getSaveFileName(
+                this,
+                tr("Save Trace As"),
+                QFileInfo(localFile).fileName(),
+                tr("Trace Files (*.trace);;All Files (*)"));
+
+    if (!fileName.isEmpty()) {
+        QFile::copy(localFile, fileName);
+    }
+}
+
 void MainWindow::pullTrace()
 {
     QString androidFile = AndroidFileDialog::getOpenFileName(this, tr("Open trace file"), _("/sdcard"), _(".trace"));
@@ -1027,6 +1043,8 @@ void MainWindow::initConnections()
             this, SLOT(createTrace()));
     connect(m_ui.actionOpen, SIGNAL(triggered()),
             this, SLOT(openTrace()));
+    connect(m_ui.actionSave, SIGNAL(triggered()),
+            this, SLOT(saveTrace()));
     connect(m_ui.actionPullTrace, SIGNAL(triggered()),
             this, SLOT(pullTrace()));
     connect(m_ui.actionPushTrace, SIGNAL(triggered()),
@@ -1138,6 +1156,9 @@ void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
     m_ui.actionLinkTrace->setEnabled(false);
     m_ui.actionRetraceOnAndroid->setEnabled(false);
     if (traceLoaded) {
+        /* File */
+        m_ui.actionSave          ->setEnabled(true);
+
         /* Edit */
         m_ui.actionFind          ->setEnabled(true);
         m_ui.actionGo            ->setEnabled(true);
@@ -1160,6 +1181,9 @@ void MainWindow::updateActionsState(bool traceLoaded, bool stopped)
         m_ui.actionTrim          ->setEnabled(true);
     }
     else {
+        /* File */
+        m_ui.actionSave          ->setEnabled(false);
+
         /* Edit */
         m_ui.actionFind          ->setEnabled(false);
         m_ui.actionGo            ->setEnabled(false);

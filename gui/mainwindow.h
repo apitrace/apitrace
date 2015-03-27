@@ -52,6 +52,7 @@ private slots:
     void callItemActivated(const QModelIndex &index);
     void createTrace();
     void openTrace();
+    void saveTrace();
     void pullTrace();
     void pushTrace();
     void linkTrace();
