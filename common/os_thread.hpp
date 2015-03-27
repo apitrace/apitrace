@@ -487,7 +487,7 @@ namespace os {
  * - http://gcc.gnu.org/onlinedocs/gcc-4.6.3/gcc/Thread_002dLocal.html
  * - http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
  */
-#if _WIN32_WINNT < 0x0600
+#if defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0600
 #  define OS_THREAD_SPECIFIC(_type) os::thread_specific< _type >
 #elif defined(__GNUC__)
 #  define OS_THREAD_SPECIFIC(_type) __thread _type
