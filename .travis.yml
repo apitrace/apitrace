@@ -9,7 +9,6 @@ env:
   - MAKEFLAGS=-j2
 
 matrix:
-  fast_finish: true
   include:
   - compiler: gcc
     env:
