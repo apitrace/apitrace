@@ -349,7 +349,7 @@ elseif (X11_FOUND)
         COMMAND
             ${CMAKE_NM} --dynamic --defined-only $<TARGET_FILE:glxtrace>
             | sed -f ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace-nm.sed 1>&2
-        COMMENT "Checking $<TARGET_FILE:glxtrace> symbols..."
+        COMMENT "Checking glxtrace.so symbols..."
         VERBATIM
     )
 
