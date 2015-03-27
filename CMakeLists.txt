@@ -167,7 +167,7 @@ endmacro ()
 
 if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
-    if (CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
+    if (MINGW OR CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
         # Windows XP
         add_definitions (-D_WIN32_WINNT=0x0501 -DWINVER=0x0501)
     else ()

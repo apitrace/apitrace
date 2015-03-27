@@ -65,17 +65,14 @@ namespace os {
 
 
 #ifdef _WIN32
-#include <process.h>
-#include <windows.h>
+#  include <process.h>
+#  include <windows.h>
+#  if _WIN32_WINNT >= 0x0600
+#    define HAVE_WIN32_CONDITION_VARIABLES
+#  endif
 #else
-#include <pthread.h>
+#  include <pthread.h>
 #endif
-
-
-/*
- * This feature is not supported on Windows XP
- */
-#define USE_WIN32_CONDITION_VARIABLES 0
 
 
 namespace os {
@@ -226,8 +223,8 @@ namespace os {
     {
     private:
 #ifdef _WIN32
-#  if USE_WIN32_CONDITION_VARIABLES
-        // XXX: Only supported on Vista an higher. Not yet supported by WINE.
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
+        // Only supported on Vista an higher. Not yet supported by WINE.
         typedef CONDITION_VARIABLE native_handle_type;
         native_handle_type _native_handle;
 #else
@@ -243,7 +240,7 @@ namespace os {
     public:
         condition_variable() {
 #ifdef _WIN32
-#  if USE_WIN32_CONDITION_VARIABLES
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
             InitializeConditionVariable(&_native_handle);
 #  else
             cWaiters = 0;
@@ -256,7 +253,7 @@ namespace os {
 
         ~condition_variable() {
 #ifdef _WIN32
-#  if USE_WIN32_CONDITION_VARIABLES
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
             /* No-op */
 #  else
             CloseHandle(hEvent);
@@ -269,7 +266,7 @@ namespace os {
         inline void
         notify_one(void) {
 #ifdef _WIN32
-#  if USE_WIN32_CONDITION_VARIABLES
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
             WakeConditionVariable(&_native_handle);
 #  else
             if (cWaiters) {
@@ -285,7 +282,7 @@ namespace os {
         wait(unique_lock<mutex> & lock) {
             mutex::native_handle_type & mutex_native_handle = lock.mutex()->native_handle();
 #ifdef _WIN32
-#  if USE_WIN32_CONDITION_VARIABLES
+#  ifdef HAVE_WIN32_CONDITION_VARIABLES
             SleepConditionVariableCS(&_native_handle, &mutex_native_handle, INFINITE);
 #  else
             InterlockedIncrement(&cWaiters);
