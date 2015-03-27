@@ -342,6 +342,17 @@ elseif (X11_FOUND)
         dl
     )
 
+    # Check and warn if there are unexpected symbols
+    add_custom_command (
+        TARGET glxtrace
+        POST_BUILD
+        COMMAND
+            ${CMAKE_NM} --dynamic --defined-only $<TARGET_FILE:glxtrace>
+            | sed -f ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace-nm.sed 1>&2
+        COMMENT "Checking $<TARGET_FILE:glxtrace> symbols..."
+        VERBATIM
+    )
+
     install (TARGETS glxtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
 
