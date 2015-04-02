@@ -510,7 +510,7 @@ class StateDumper:
 
     buffer_targets = [
         ('GL_ARRAY_BUFFER', 'GL_ARRAY_BUFFER_BINDING', None),
-        # FIXME: Causes Mesa to segfault.  Disable for now.
+        # FIXME: Causes Mesa to segfault (issue #332).  Disable for now.
         #('GL_ATOMIC_COUNTER_BUFFER', 'GL_ATOMIC_COUNTER_BUFFER_BINDING', 'GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS'),
         ('GL_COPY_READ_BUFFER', 'GL_COPY_READ_BUFFER_BINDING', None),
         ('GL_COPY_WRITE_BUFFER', 'GL_COPY_WRITE_BUFFER_BINDING', None),

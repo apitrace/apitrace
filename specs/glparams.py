@@ -3359,7 +3359,8 @@ parameters = [
     ("",	X,	1,	"GL_INVERT_OVG_NV"),	# 0x92B4
     ("",	X,	1,	"GL_PRIMITIVE_BOUNDING_BOX_EXT"),	# 0x92BE
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER"),	# 0x92C0
-    ("glGet,glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_BINDING"),	# 0x92C1
+    # FIXME: Causes Mesa to segfault (issue #332).  Disable for now.
+    ("_glGet,_glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_BINDING"),	# 0x92C1
     ("glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_START"),	# 0x92C2
     ("glGet_i",	I,	1,	"GL_ATOMIC_COUNTER_BUFFER_SIZE"),	# 0x92C3
     ("",	X,	1,	"GL_ATOMIC_COUNTER_BUFFER_DATA_SIZE"),	# 0x92C4
