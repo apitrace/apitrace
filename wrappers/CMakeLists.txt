@@ -35,6 +35,14 @@ include_directories (
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_convenience_library (trace
+    assert.cpp
+)
+target_link_libraries (trace
+    common
+    ${SNAPPY_LIBRARIES}
+)
+
 if (WIN32)
     if (MINGW)
         # Silence warnings about @nn suffix mismatch
@@ -62,8 +70,7 @@ if (WIN32)
         )
         add_library (ddrawtrace MODULE ddraw.def ddrawtrace.cpp)
         target_link_libraries (ddrawtrace
-            common
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (ddrawtrace PROPERTIES
             PREFIX ""
@@ -97,8 +104,7 @@ if (WIN32)
         )
         target_link_libraries (d3d8trace
             d3dhelpers
-            common
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (d3d8trace PROPERTIES
             PREFIX ""
@@ -133,8 +139,7 @@ if (WIN32)
         )
         target_link_libraries (d3d9trace
             d3dhelpers
-            common
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (d3d9trace PROPERTIES
             PREFIX ""
@@ -173,8 +178,7 @@ if (WIN32)
         )
         target_link_libraries (dxgitrace
             d3dhelpers
-            common
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (dxgitrace
             PROPERTIES PREFIX ""
@@ -205,8 +209,7 @@ if (WIN32)
         )
         add_library (d2d1trace MODULE d2d1trace.def d2d1trace.cpp)
         target_link_libraries (d2d1trace
-            common
-            ${SNAPPY_LIBRARIES}
+            trace
         )
         set_target_properties (d2d1trace
             PROPERTIES PREFIX ""
@@ -242,8 +245,7 @@ if (WIN32)
     target_link_libraries (wgltrace
         glhelpers
         glproc_gl
-        common
-        ${SNAPPY_LIBRARIES}
+        trace
     )
     set_target_properties (wgltrace PROPERTIES
         PREFIX ""
@@ -290,8 +292,7 @@ elseif (APPLE)
     target_link_libraries (cgltrace
         glhelpers
         glproc_gl
-        common
-        ${SNAPPY_LIBRARIES}
+        trace
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
@@ -336,8 +337,7 @@ elseif (X11_FOUND)
     target_link_libraries (glxtrace
         glhelpers
         glproc_gl
-        common
-        ${SNAPPY_LIBRARIES}
+        trace
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
@@ -397,8 +397,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
     target_link_libraries (egltrace
         glhelpers
         glproc_egl
-        common
-        ${SNAPPY_LIBRARIES}
+        trace
         ${CMAKE_THREAD_LIBS_INIT}
         dl
     )
