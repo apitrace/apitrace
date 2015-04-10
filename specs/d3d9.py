@@ -429,6 +429,7 @@ d3d9.addInterfaces([
 
 # D3DPERF_* functions can also be used by D3D10 applications, so keep them in a
 # separate module to be merged as necessary
+# See http://web.archive.org/web/20110510070258/http://msdn.microsoft.com/en-us/library/ee417071%28v=VS.85%29.aspx
 d3dperf = Module("d3d9")
 d3dperf.addFunctions([
     StdFunction(Int, "D3DPERF_BeginEvent", [(D3DCOLOR, "col"), (LPCWSTR, "wszName")], fail='-1', sideeffects=False),
