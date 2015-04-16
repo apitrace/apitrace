@@ -245,9 +245,6 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
          * kCGLOGLPVersion_GL4_Core doesn't seem to work as expected.  The
          * recommended approach is to use NSOpenGLProfileVersion3_2Core and
          * then check the OpenGL version.
-         *
-         * TODO: Actually check the OpenGL version (the first time the OpenGL
-         * context is bound).
          */
         attribs.add(NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core);
 #else
@@ -259,8 +256,16 @@ createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     }
     
     // Use Apple software rendering for debugging purposes.
+    // TODO: Allow to control this via command line options.
     if (0) {
         attribs.add(NSOpenGLPFARendererID, 0x00020200); // kCGLRendererGenericID
+    }
+
+    // Force hardware acceleration
+    // https://developer.apple.com/library/mac/qa/qa1502/_index.html
+    if (0) {
+        attribs.add(NSOpenGLPFAAccelerated);
+        attribs.add(NSOpenGLPFANoRecovery);
     }
 
     attribs.end();
