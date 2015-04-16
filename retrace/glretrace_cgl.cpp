@@ -386,6 +386,18 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
 }
 
 
+static void retrace_CGLSetVirtualScreen(trace::Call &call) {
+    if (call.ret->toUInt() != kCGLNoError) {
+        return;
+    }
+
+    GLint screen = call.arg(1).toSInt();
+    if (screen != 0) {
+        retrace::warning(call) << "multiple virtual screens unsupported\n";
+    }
+}
+
+
 /**
  * We can't fully reimplement CGLTexImageIOSurface2D, as external IOSurface are
  * no longer present.  Simply emit a glTexImage2D to ensure the texture storage
@@ -457,15 +469,21 @@ const retrace::Entry glretrace::cgl_callbacks[] = {
     {"CGLErrorString", &retrace::ignore},
     {"CGLFlushDrawable", &retrace_CGLFlushDrawable},
     {"CGLGetCurrentContext", &retrace::ignore},
+    {"CGLGetGlobalOption", &retrace::ignore},
     {"CGLGetOption", &retrace::ignore},
     {"CGLGetParameter", &retrace::ignore},
+    {"CGLGetPixelFormat", &retrace::ignore},
+    {"CGLGetSurface", &retrace::ignore},
     {"CGLGetVersion", &retrace::ignore},
     {"CGLGetVirtualScreen", &retrace::ignore},
     {"CGLIsEnabled", &retrace::ignore},
     {"CGLLockContext", &retrace::ignore},
     {"CGLSetCurrentContext", &retrace_CGLSetCurrentContext},
+    {"CGLSetGlobalOption", &retrace::ignore},
+    {"CGLSetOption", &retrace::ignore},
     {"CGLSetSurface", &retrace_CGLSetSurface},
     {"CGLSetParameter", &retrace::ignore},
+    {"CGLSetVirtualScreen", &retrace_CGLSetVirtualScreen},
     {"CGLTexImageIOSurface2D", &retrace_CGLTexImageIOSurface2D},
     {"CGLUnlockContext", &retrace::ignore},
     {"CGLUpdateContext", &retrace::ignore},
