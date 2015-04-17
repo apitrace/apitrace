@@ -168,6 +168,7 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
         return;
     }
 
+    bool singleBuffer = true;
     int profile = 0;
 
     const trace::Array * attribs = call.arg(0).toArray();
@@ -180,9 +181,10 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             }
 
             switch (param) {
+
+            // Boolean attributes
+
             case kCGLPFAAllRenderers:
-            case kCGLPFATripleBuffer:
-            case kCGLPFADoubleBuffer:
             case kCGLPFAStereo:
             case kCGLPFAMinimumPolicy:
             case kCGLPFAMaximumPolicy:
@@ -210,6 +212,13 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
             case kCGLPFAAcceleratedCompute:
             case kCGLPFASupportsAutomaticGraphicsSwitching:
                 break;
+
+            case kCGLPFADoubleBuffer:
+            case kCGLPFATripleBuffer:
+                singleBuffer = false;
+                break;
+
+            // Valued attributes
 
             case kCGLPFAColorSize:
             case kCGLPFAAlphaSize:
@@ -257,6 +266,9 @@ static void retrace_CGLChoosePixelFormat(trace::Call &call) {
         retrace::warning(call) << "unexpected opengl profile " << std::hex << profile << std::dec << "\n";
         break;
     }
+
+    // XXX: Generalize this, don't override command line options.
+    retrace::doubleBuffer = !singleBuffer;
 
     retrace::addObj(call, pix, pixelFormat);
 }
