@@ -53,20 +53,21 @@ option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 if (NOT ANDROID)
     option (ENABLE_STATIC_SNAPPY "Statically link against snappy" ON)
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" ON)
-        option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" ON)
-        if (NOT (ENABLE_STATIC_LIBGCC AND
-                 ENABLE_STATIC_LIBSTDCXX AND
-                 ENABLE_STATIC_SNAPPY))
-            # XXX: Should probably throw a run-time too.
-            message (WARNING
-                "LD_PRELOAD wrappers not statically linked against all "
-                "dependencies, therefore will fail to work with many "
-                "third-party applications built on different Linux "
-                "distributions and that ship their own shared-object "
-                "dependencies."
-            )
-        endif ()
+        option (ENABLE_STATIC_LIBGCC "Statically link LD_PRELOAD wrappers against libgcc" OFF)
+        option (ENABLE_STATIC_LIBSTDCXX "Statically link LD_PRELOAD wrappers against libstdc++" OFF)
+        # FIXME: We still get weak symbols collision
+        # if (NOT (ENABLE_STATIC_LIBGCC AND
+        #          ENABLE_STATIC_LIBSTDCXX AND
+        #          ENABLE_STATIC_SNAPPY))
+        #     # XXX: Should probably throw a run-time too.
+        #     message (WARNING
+        #         "LD_PRELOAD wrappers not statically linked against all "
+        #         "dependencies, therefore will fail to work with many "
+        #         "third-party applications built on different Linux "
+        #         "distributions and that ship their own shared-object "
+        #         "dependencies."
+        #     )
+        # endif ()
     endif ()
 endif ()
 
