@@ -355,11 +355,11 @@ initContext() {
     if (!currentProfile.matches(expectedProfile)) {
         if (expectedProfile.api == glprofile::API_GLES &&
             currentProfile.api == glprofile::API_GL &&
-            ((expectedProfile.major == 2 && currentContext->hasExtension("ARB_ES2_compatibility")) ||
-             (expectedProfile.major == 3 && currentContext->hasExtension("ARB_ES3_compatibility")))) {
+            ((expectedProfile.major == 2 && currentContext->hasExtension("GL_ARB_ES2_compatibility")) ||
+             (expectedProfile.major == 3 && currentContext->hasExtension("GL_ARB_ES3_compatibility")))) {
             std::cerr << "warning: context mismatch:"
                       << " expected " << expectedProfile << ","
-                      << " but got " << currentProfile << " + ARB_ES" << expectedProfile.major << "_compatibility";
+                      << " but got " << currentProfile << " with GL_ARB_ES" << expectedProfile.major << "_compatibility\n";
         } else {
             std::cerr << "error: context mismatch: expected " << expectedProfile << ", but got " << currentProfile << "\n";
             exit(1);
