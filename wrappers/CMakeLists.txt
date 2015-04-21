@@ -402,5 +402,18 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         dl
     )
 
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+        # Check and warn if there are unexpected symbols
+        add_custom_command (
+            TARGET egltrace
+            POST_BUILD
+            COMMAND
+                ${CMAKE_NM} --dynamic --defined-only $<TARGET_FILE:egltrace>
+                | sed -f ${CMAKE_CURRENT_SOURCE_DIR}/egltrace-nm.sed 1>&2
+            COMMENT "Checking egltrace.so symbols..."
+            VERBATIM
+        )
+    endif ()
+
     install (TARGETS egltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
