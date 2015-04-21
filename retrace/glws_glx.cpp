@@ -305,15 +305,20 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT);
                 attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
                 attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
-            } else if (profile.major != 2) {
-                std::cerr << "warning: OpenGL ES " << profile.major << " requested but GLX_EXT_create_context_es_profile not supported\n";
+            } else if (profile.major < 2) {
+                std::cerr << "error: " << profile << " requested but GLX_EXT_create_context_es_profile not supported\n";
+                return NULL;
             } else if (has_GLX_EXT_create_context_es2_profile) {
-                assert(profile.major == 2);
+                assert(profile.major >= 2);
+                if (profile.major != 2 || profile.minor != 0) {
+                    // We might still get a ES 3.0 context later (in particular Mesa does this)
+                    std::cerr << "warning: " << profile << " requested but GLX_EXT_create_context_es_profile not supported\n";
+                }
                 attribs.add(GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES2_PROFILE_BIT_EXT);
-                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, profile.major);
-                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, profile.minor);
+                attribs.add(GLX_CONTEXT_MAJOR_VERSION_ARB, 2);
+                attribs.add(GLX_CONTEXT_MINOR_VERSION_ARB, 0);
             } else {
-                std::cerr << "warning: OpenGL ES " << profile.major << " requested but GLX_EXT_create_context_es_profile or GLX_EXT_create_context_es2_profile not supported\n";
+                std::cerr << "warning: " << profile << " requested but GLX_EXT_create_context_es_profile or GLX_EXT_create_context_es2_profile not supported\n";
             }
         } else {
             assert(0);
