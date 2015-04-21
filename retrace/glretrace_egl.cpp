@@ -118,6 +118,41 @@ static void createDrawable(unsigned long long orig_config, unsigned long long or
     drawable_map[orig_surface] = drawable;
 }
 
+static void retrace_eglChooseConfig(trace::Call &call) {
+    if (!call.ret->toSInt()) {
+        return;
+    }
+
+    trace::Array *attrib_array = call.arg(1).toArray();
+    trace::Array *config_array = call.arg(2).toArray();
+    trace::Array *num_config_ptr = call.arg(4).toArray();
+    if (!attrib_array || !config_array || !num_config_ptr) {
+        return;
+    }
+
+    glprofile::Profile profile;
+    unsigned renderableType = parseAttrib(attrib_array, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES_BIT);
+    std::cerr << "renderableType = " << renderableType << "\n";
+    if (renderableType & EGL_OPENGL_BIT) {
+        profile = glprofile::Profile(glprofile::API_GL, 1, 0);
+    } else {
+        profile.api = glprofile::API_GLES;
+        if (renderableType & EGL_OPENGL_ES3_BIT) {
+            profile.major = 3;
+        } else if (renderableType & EGL_OPENGL_ES2_BIT) {
+            profile.major = 2;
+        } else {
+            profile.major = 1;
+        }
+    }
+
+    unsigned num_config = num_config_ptr->values[0]->toUInt();
+    for (unsigned i = 0; i < num_config; ++i) {
+        unsigned long long orig_config = config_array->values[i]->toUIntPtr();
+        profile_map[orig_config] = profile;
+    }
+}
+
 static void retrace_eglCreateWindowSurface(trace::Call &call) {
     unsigned long long orig_config = call.arg(1).toUIntPtr();
     unsigned long long orig_surface = call.ret->toUIntPtr();
@@ -254,7 +289,7 @@ const retrace::Entry glretrace::egl_callbacks[] = {
     {"eglTerminate", &retrace::ignore},
     {"eglQueryString", &retrace::ignore},
     {"eglGetConfigs", &retrace::ignore},
-    {"eglChooseConfig", &retrace::ignore},
+    {"eglChooseConfig", &retrace_eglChooseConfig},
     {"eglGetConfigAttrib", &retrace::ignore},
     {"eglCreateWindowSurface", &retrace_eglCreateWindowSurface},
     {"eglCreatePbufferSurface", &retrace_eglCreatePbufferSurface},
