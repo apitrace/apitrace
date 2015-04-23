@@ -729,17 +729,27 @@ getDrawableBounds(GLint *width, GLint *height) {
 
 
 static GLenum
-getTextureTarget(GLint texture)
+getTextureTarget(Context &context, GLint texture)
 {
     if (!glIsTexture(texture)) {
         return GL_NONE;
     }
 
+    flushErrors();
+
+    // Temporarily disable debug messages
+    GLDEBUGPROC prevDebugCallbackFunction = 0;
+    void *prevDebugCallbackUserParam = 0;
+    if (context.KHR_debug) {
+        glGetPointerv(GL_DEBUG_CALLBACK_FUNCTION, (GLvoid **) &prevDebugCallbackFunction);
+        glGetPointerv(GL_DEBUG_CALLBACK_USER_PARAM, &prevDebugCallbackUserParam);
+        glDebugMessageCallback(NULL, NULL);
+    }
+
+    GLenum result = GL_NONE;
     for (unsigned i = 0; i < numTextureTargets; ++i) {
         GLenum target = textureTargets[i];
         GLenum binding = getTextureBinding(target);
-
-        flushErrors();
 
         GLint bound_texture = 0;
         glGetIntegerv(binding, &bound_texture);
@@ -750,13 +760,18 @@ getTextureTarget(GLint texture)
         glBindTexture(target, bound_texture);
 
         if (succeeded) {
-            return target;
+            result = target;
+            break;
         }
+
+        flushErrors();
     }
 
-    flushErrors();
+    if (context.KHR_debug) {
+        glDebugMessageCallback(prevDebugCallbackFunction, prevDebugCallbackUserParam);
+    }
 
-    return GL_NONE;
+    return result;
 }
 
 
@@ -829,7 +844,7 @@ getFramebufferAttachmentDesc(Context &context, GLenum target, GLenum attachment,
             getActiveTextureLevelDesc(context, texture_face, texture_level, desc);
             glBindTexture(GL_TEXTURE_CUBE_MAP, bound_texture);
         } else {
-            GLenum texture_target = getTextureTarget(object_name);
+            GLenum texture_target = getTextureTarget(context, object_name);
             GLenum texture_binding = getTextureBinding(texture_target);
             glGetIntegerv(texture_binding, &bound_texture);
             glBindTexture(texture_target, object_name);
@@ -1267,7 +1282,7 @@ dumpFramebufferAttachment(JSONWriter &json, Context &context, GLenum target, GLe
                                                   GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL,
                                                   &level);
 
-            GLenum texture_target = getTextureTarget(object_name);
+            GLenum texture_target = getTextureTarget(context, object_name);
             GLenum texture_binding = getTextureBinding(texture_target);
 
             GLint bound_texture = 0;
