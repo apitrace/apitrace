@@ -1052,11 +1052,15 @@ downsampledFramebuffer(Context &context,
 {
     GLuint fbo;
 
-
     *numRbs = 0;
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    GLboolean scissor_test = glIsEnabled(GL_SCISSOR_TEST);
+    if (scissor_test) {
+        glDisable(GL_SCISSOR_TEST);
+    }
 
     {
         // color buffer
@@ -1125,6 +1129,10 @@ downsampledFramebuffer(Context &context,
             glBindFramebuffer(GL_FRAMEBUFFER, fbo);
             ++*numRbs;
         }
+    }
+
+    if (scissor_test) {
+        glEnable(GL_SCISSOR_TEST);
     }
 
     return fbo;
