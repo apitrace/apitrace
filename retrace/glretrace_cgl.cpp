@@ -94,9 +94,6 @@ static DrawableMap drawable_map;
 // ctx -> Context* map
 static ContextMap context_map;
 
-// ctx -> Drawable* map
-static DrawableMap context_drawable_map;
-
 static Context *sharedContext = NULL;
 
 
@@ -120,22 +117,6 @@ getDrawable(unsigned long drawable_id) {
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
         return (drawable_map[drawable_id] = glretrace::createDrawable());
-    }
-
-    return it->second;
-}
-
-
-static glws::Drawable *
-getDrawableFromContext(unsigned long long ctx) {
-    if (ctx == 0) {
-        return NULL;
-    }
-
-    DrawableMap::const_iterator it;
-    it = context_drawable_map.find(ctx);
-    if (it == context_drawable_map.end()) {
-        return (context_drawable_map[ctx] = glretrace::createDrawable());
     }
 
     return it->second;
@@ -343,7 +324,10 @@ static void retrace_CGLSetSurface(trace::Call &call) {
 
     glws::Drawable *drawable = getDrawable(sid);
 
-    context_drawable_map[ctx] = drawable;
+    Context *context = getContext(ctx);
+    if (context) {
+        context->drawable = drawable;
+    }
 }
 
 
@@ -353,8 +337,10 @@ static void retrace_CGLClearDrawable(trace::Call &call) {
     }
 
     unsigned long long ctx = call.arg(0).toUIntPtr();
-
-    context_drawable_map[ctx] = NULL;
+    Context *context = getContext(ctx);
+    if (context) {
+        context->drawable = NULL;
+    }
 }
 
 
@@ -365,8 +351,14 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
 
     unsigned long long ctx = call.arg(0).toUIntPtr();
 
-    glws::Drawable *new_drawable = getDrawableFromContext(ctx);
     Context *new_context = getContext(ctx);
+    glws::Drawable *new_drawable = NULL;
+    if (new_context) {
+        if (!new_context->drawable) {
+            new_context->drawable = glretrace::createDrawable();
+        }
+        new_drawable = new_context->drawable;
+    }
 
     glretrace::makeCurrent(call, new_drawable, new_context);
 }
@@ -381,7 +373,7 @@ static void retrace_CGLFlushDrawable(trace::Call &call) {
     Context *context = getContext(ctx);
 
     if (context) {
-        glws::Drawable *drawable = getDrawableFromContext(ctx);
+        glws::Drawable *drawable = context->drawable;
         if (drawable) {
             if (retrace::doubleBuffer) {
                 drawable->swapBuffers();
