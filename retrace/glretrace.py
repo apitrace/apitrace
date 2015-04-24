@@ -266,6 +266,11 @@ class GlRetracer(Retracer):
         if function.name == 'glEndList':
             print r'    glretrace::insideList = false;'
 
+        if profileDraw or function.name.startswith('glBeginTransformFeedback'):
+            print r'    if (retrace::debug && !glretrace::insideGlBeginEnd && glretrace::getCurrentContext()) {'
+            print r'        _validateActiveProgram(call);'
+            print r'    }'
+
         if function.name != 'glEnd':
             print r'    if (!glretrace::insideList && !glretrace::insideGlBeginEnd && retrace::profiling) {'
             if profileDraw:
@@ -508,6 +513,9 @@ static bool _pipelineHasBeenBound = false;
 static GLint
 _getActiveProgram(void);
 
+static void
+_validateActiveProgram(trace::Call &call);
+
 '''
     api = stdapi.API()
     api.addModule(glapi.glapi)
@@ -535,6 +543,48 @@ _getActiveProgram(void)
         }
     }
     return program;
+}
+
+static void
+_validateActiveProgram(trace::Call &call)
+{
+    assert(!glretrace::insideList);
+
+    GLint pipeline = 0;
+    if (_pipelineHasBeenBound) {
+        glGetIntegerv(GL_PROGRAM_PIPELINE_BINDING, &pipeline);
+    }
+    if (pipeline) {
+        // TODO
+    } else {
+        GLint program = 0;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+        if (!program) {
+            return;
+        }
+
+        GLint validate_status = GL_FALSE;
+        glGetProgramiv(program, GL_VALIDATE_STATUS, &validate_status);
+        if (validate_status) {
+            // Validate only once
+            return;
+        }
+
+        glValidateProgram(program);
+        glGetProgramiv(program, GL_VALIDATE_STATUS, &validate_status);
+        if (!validate_status) {
+            retrace::warning(call) << "program validation failed\n";
+        }
+
+        GLint info_log_length = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
+        if (info_log_length > 1) {
+             GLchar *infoLog = new GLchar[info_log_length];
+             glGetProgramInfoLog(program, info_log_length, NULL, infoLog);
+             retrace::warning(call) << infoLog << "\n";
+             delete [] infoLog;
+        }
+    }
 }
 
 '''
