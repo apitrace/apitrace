@@ -245,10 +245,14 @@ class GlRetracer(Retracer):
             print r'        _pipelineHasBeenBound = true;'
             print r'    }'
 
+        is_draw_arrays = self.draw_arrays_function_regex.match(function.name) is not None
+        is_draw_elements = self.draw_elements_function_regex.match(function.name) is not None
+        is_misc_draw = self.misc_draw_function_regex.match(function.name) is not None
+
         profileDraw = (
-            self.draw_arrays_function_regex.match(function.name) or
-            self.draw_elements_function_regex.match(function.name) or
-            self.misc_draw_function_regex.match(function.name) or
+            is_draw_arrays or
+            is_draw_elements or
+            is_misc_draw or
             function.name == 'glBegin'
         )
 
@@ -266,7 +270,10 @@ class GlRetracer(Retracer):
         if function.name == 'glEndList':
             print r'    glretrace::insideList = false;'
 
-        if profileDraw or function.name.startswith('glBeginTransformFeedback'):
+        if function.name == 'glBegin' or \
+           is_draw_arrays or \
+           is_draw_elements or \
+           function.name.startswith('glBeginTransformFeedback'):
             print r'    if (retrace::debug && !glretrace::insideGlBeginEnd && glretrace::getCurrentContext()) {'
             print r'        _validateActiveProgram(call);'
             print r'    }'
