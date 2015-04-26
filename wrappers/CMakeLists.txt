@@ -3,7 +3,7 @@
 
 
 if (ENABLE_STATIC_LIBGCC)
-    add_linker_flags (-static-libgcc -Wl,--exclude-libs,libgcc.a)
+    add_linker_flags (-static-libgcc)
 endif ()
 if (ENABLE_STATIC_LIBSTDCXX)
     # Unfortunately for a long time static libstdcxx didn't built with -fPIC
@@ -21,9 +21,31 @@ if (ENABLE_STATIC_LIBSTDCXX)
     unset (CMAKE_REQUIRED_LIBRARIES)
     unset (CMAKE_REQUIRED_FLAGS)
     if (STATIC_LIBSTDCXX_PIC)
-        add_linker_flags (-static-libstdc++ -Wl,--exclude-libs,libstdc++.a)
+        add_linker_flags (-static-libstdc++)
     endif ()
 endif ()
+
+macro (target_linker_version_script target version_script)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+        # https://sourceware.org/binutils/docs/ld/VERSION.html
+        set_property (
+            TARGET ${target}
+            APPEND_STRING
+            PROPERTY LINK_FLAGS " -Wl,--version-script=${version_script}"
+        )
+        # XXX: Unfortunately LINK_DEPENDS is ignored in non-Makefile generators
+        # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
+        add_custom_target (${target}_version_script
+            DEPENDS ${version_script}
+            VERBATIM
+        )
+        #set_property (
+        #    TARGET ${target}
+        #    PROPERTY LINK_DEPENDS ${version_script}
+        #)
+        add_dependencies (${target} ${target}_version_script)
+    endif ()
+endmacro ()
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -342,16 +364,7 @@ elseif (X11_FOUND)
         dl
     )
 
-    # Check and warn if there are unexpected symbols
-    add_custom_command (
-        TARGET glxtrace
-        POST_BUILD
-        COMMAND
-            ${CMAKE_NM} --dynamic --defined-only $<TARGET_FILE:glxtrace>
-            | sed -f ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace-nm.sed 1>&2
-        COMMENT "Checking glxtrace.so symbols..."
-        VERBATIM
-    )
+    target_linker_version_script (glxtrace ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.version)
 
     install (TARGETS glxtrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()
@@ -402,18 +415,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         dl
     )
 
-    if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
-        # Check and warn if there are unexpected symbols
-        add_custom_command (
-            TARGET egltrace
-            POST_BUILD
-            COMMAND
-                ${CMAKE_NM} --dynamic --defined-only $<TARGET_FILE:egltrace>
-                | sed -f ${CMAKE_CURRENT_SOURCE_DIR}/egltrace-nm.sed 1>&2
-            COMMENT "Checking egltrace.so symbols..."
-            VERBATIM
-        )
-    endif ()
+    target_linker_version_script (egltrace ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.version)
 
     install (TARGETS egltrace LIBRARY DESTINATION ${WRAPPER_INSTALL_DIR})
 endif ()

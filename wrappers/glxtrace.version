@@ -1,0 +1,9 @@
+{
+    global:
+        _init;
+        _fini;
+        gl[A-Z]*;
+        dlopen;
+    local:
+        *;
+};
