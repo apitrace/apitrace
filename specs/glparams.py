@@ -1350,10 +1350,10 @@ parameters = [
     ("",	X,	1,	"GL_DEPTH_STENCIL"),	# 0x84F9
     ("",	X,	1,	"GL_UNSIGNED_INT_24_8"),	# 0x84FA
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_LOD_BIAS"),	# 0x84FD
-    ("glGetTexParameter",	F,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
+    ("glGetTexParameter,glGetSamplerParameter",	F,	1,	"GL_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FE
     ("glGet",	F,	1,	"GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT"),	# 0x84FF
     ("",	X,	1,	"GL_TEXTURE_FILTER_CONTROL"),	# 0x8500
-    ("glGetTexParameter,glGetTexEnv",	F,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
+    ("glGetTexParameter,glGetSamplerParameter,glGetTexEnv",	F,	1,	"GL_TEXTURE_LOD_BIAS"),	# 0x8501
     ("",	X,	1,	"GL_MODELVIEW1_STACK_DEPTH_EXT"),	# 0x8502
     ("",	X,	1,	"GL_COMBINE4_NV"),	# 0x8503
     ("glGet",	F,	1,	"GL_MAX_SHININESS_NV"),	# 0x8504
