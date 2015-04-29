@@ -2363,7 +2363,7 @@ parameters = [
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER"),	# 0x8A44
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER"),	# 0x8A45
     ("glGetActiveUniformBlock",	B,	1,	"GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER"),	# 0x8A46
-    ("glGetTexParameter",	E,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
+    ("glGetTexParameter,glGetSamplerParameter",	E,	1,	"GL_TEXTURE_SRGB_DECODE_EXT"),	# 0x8A48
     ("",	X,	1,	"GL_DECODE_EXT"),	# 0x8A49
     ("",	X,	1,	"GL_SKIP_DECODE_EXT"),	# 0x8A4A
     ("",	X,	1,	"GL_PROGRAM_PIPELINE_OBJECT_EXT"),	# 0x8A4F
