@@ -11,7 +11,9 @@
 #include <QVariant>
 #include <QList>
 #include <QImage>
-#include <QJsonDocument>
+
+#include "qubjson.h"
+
 
 /**
  * Wrapper around a QProcess which enforces IO to block .
@@ -319,6 +321,8 @@ QStringList Retracer::retraceArguments() const
     if (m_captureState) {
         arguments << QLatin1String("-D");
         arguments << QString::number(m_captureCall);
+        arguments << QLatin1String("--dump-format");
+        arguments << QLatin1String("ubjson");
     } else if (m_captureThumbnails) {
         if (!m_thumbnailsToCapture.isEmpty()) {
             arguments << QLatin1String("-S");
@@ -442,17 +446,9 @@ void Retracer::run()
         BlockingIODevice io(&process);
 
         if (m_captureState) {
+            QDataStream datastream(&io);
+            parsedJson = decodeUBJSONObject(datastream);
             process.waitForFinished(-1);
-            QByteArray data = process.readAll();
-            QJsonParseError error;
-            QJsonDocument jsonDoc =
-                QJsonDocument::fromJson(data, &error);
-
-            if (error.error != QJsonParseError::NoError) {
-                //qDebug()<<"Error is "<<error.errorString();
-                msg = error.errorString();
-            }
-            parsedJson = jsonDoc.toVariant().toMap();
         } else if (m_captureThumbnails) {
             /*
              * Parse concatenated PNM images from output.

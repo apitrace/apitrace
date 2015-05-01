@@ -36,6 +36,7 @@ set(qapitrace_SRCS
    graphing/heatmapverticalaxiswidget.cpp
    graphing/histogramview.cpp
    graphing/timeaxiswidget.cpp
+   qubjson.cpp
  )
 
 qt5_add_resources(qapitrace_SRCS qapitrace.qrc)

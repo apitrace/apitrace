@@ -25,9 +25,9 @@ void ApiSurface::setSize(const QSize &size)
 
 struct ByteArrayBuf : public std::streambuf
 {
-    ByteArrayBuf(QByteArray & a)
+    ByteArrayBuf(const QByteArray & a)
     {
-        setg(a.data(), a.data(), a.data() + a.size());
+        setg((char *)a.data(), (char *)a.data(), (char *)a.data() + a.size());
     }
 };
 
@@ -107,9 +107,9 @@ void ApiFramebuffer::setType(const QString &str)
 }
 
 image::Image *
-ApiSurface::imageFromBase64(const QByteArray &base64)
+ApiSurface::imageFromBase64(const QByteArray &dataArray)
 {
-    QByteArray dataArray = QByteArray::fromBase64(base64);
+    //QByteArray dataArray = QByteArray::fromBase64(base64);
     image::Image *image;
 
     /*
