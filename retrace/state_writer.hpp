@@ -98,24 +98,21 @@ public:
     virtual void
     writeUInt(unsigned long long) = 0;
 
-    template< typename T,
-              typename std::enable_if<std::is_signed<T>::value>::type* = nullptr>
+    template<typename T>
     inline void
-    writeInt(T i) {
+    writeInt(T i, typename std::enable_if<std::is_signed<T>::value>::type* = 0) {
         writeSInt(i);
     }
 
-    template<typename T,
-             typename std::enable_if<std::is_unsigned<T>::value>::type* = nullptr>
+    template<typename T>
     inline void
-    writeInt(T u) {
+    writeInt(T u, typename std::enable_if<std::is_unsigned<T>::value>::type* = 0) {
         writeUInt(u);
     }
 
-    template<typename T,
-             typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
+    template<typename T>
     inline void
-    writeInt(T e) {
+    writeInt(T e, typename std::enable_if<std::is_enum<T>::value>::type* = 0) {
         writeSInt(static_cast<signed long long>(e));
     }
 
@@ -139,7 +136,7 @@ public:
         endMember();
     }
 
-    template<class T>
+    template<typename T>
     inline void
     writeFloatMember(const char *name, T f) {
         beginMember(name);
@@ -147,7 +144,7 @@ public:
         endMember();
     }
 
-    template<class T>
+    template<typename T>
     inline void
     writeIntMember(const char *name, T n) {
         beginMember(name);
