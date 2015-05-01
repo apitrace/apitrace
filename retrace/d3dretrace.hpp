@@ -60,12 +60,13 @@ public:
     }
 
     bool
-    dumpState(std::ostream &os) {
-        if (!pLastDevice) {
-            return false;
-        }
-        d3dstate::dumpDevice(os, pLastDevice);
-        return true;
+    canDump(void) {
+        return pLastDevice;
+    }
+
+    void
+    dumpState(StateWriter &writer) {
+        d3dstate::dumpDevice(writer, pLastDevice);
     }
 
     inline void

@@ -39,6 +39,8 @@ add_library (retrace_common STATIC
     retrace_stdc.cpp
     retrace_swizzle.cpp
     json.cpp
+    state_writer.cpp
+    state_writer_json.cpp
 )
 target_link_libraries (retrace_common
     image

@@ -29,7 +29,7 @@
 #include <iostream>
 
 #include "image.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "com_ptr.hpp"
 
 #include "dxgistate.hpp"
@@ -342,7 +342,7 @@ getRenderTargetImage(IDXGISwapChain *pSwapChain)
 
 
 void
-dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain)
+dumpDevice(StateWriter &writer, IDXGISwapChain *pSwapChain)
 {
     HRESULT hr;
 
@@ -350,7 +350,7 @@ dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain)
         com_ptr<ID3D10Device> pD3D10Device;
         hr = pSwapChain->GetDevice(IID_ID3D10Device, (void **)&pD3D10Device);
         if (SUCCEEDED(hr)) {
-             dumpDevice(os, pD3D10Device);
+             dumpDevice(writer, pD3D10Device);
              return;
         }
 
@@ -359,28 +359,27 @@ dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain)
         if (SUCCEEDED(hr)) {
             com_ptr<ID3D11DeviceContext> pD3D11DeviceContext;
             pD3D11Device->GetImmediateContext(&pD3D11DeviceContext);
-            dumpDevice(os, pD3D11DeviceContext);
+            dumpDevice(writer, pD3D11DeviceContext);
             return;
         }
     }
 
     // Fallback -- this should really never happen.
     assert(0);
-    JSONWriter json(os);
-    json.beginMember("framebuffer");
-    json.beginObject();
+    writer.beginMember("framebuffer");
+    writer.beginObject();
     if (pSwapChain) {
         image::Image *image;
         image = getRenderTargetImage(pSwapChain);
         if (image) {
-            json.beginMember("SWAP_CHAIN");
-            json.writeImage(image);
-            json.endMember();
+            writer.beginMember("SWAP_CHAIN");
+            writer.writeImage(image);
+            writer.endMember();
             delete image;
         }
     }
-    json.endObject();
-    json.endMember(); // framebuffer
+    writer.endObject();
+    writer.endMember(); // framebuffer
 }
 
 

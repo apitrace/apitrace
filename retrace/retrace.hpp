@@ -51,6 +51,8 @@ namespace image {
     class Image;
 }
 
+class StateWriter;
+
 
 namespace retrace {
 
@@ -203,14 +205,13 @@ class Dumper
 {
 public:
     virtual image::Image *
-    getSnapshot(void) {
-        return NULL;
-    }
+    getSnapshot(void) = 0;
 
     virtual bool
-    dumpState(std::ostream &os) {
-        return false;
-    }
+    canDump(void) = 0;
+
+    virtual void
+    dumpState(StateWriter &) = 0;
 };
 
 

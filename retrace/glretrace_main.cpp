@@ -611,16 +611,19 @@ public:
     }
 
     bool
-    dumpState(std::ostream &os) {
+    canDump(void) {
         glretrace::Context *currentContext = glretrace::getCurrentContext();
         if (glretrace::insideGlBeginEnd ||
             !currentContext) {
             return false;
         }
 
-        glstate::dumpCurrentContext(os);
-
         return true;
+    }
+
+    void
+    dumpState(StateWriter &writer) {
+        glstate::dumpCurrentContext(writer);
     }
 };
 

@@ -31,7 +31,7 @@
 #include <algorithm>
 
 #include "os.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "image.hpp"
 #include "com_ptr.hpp"
 #include "d3d10imports.hpp"
@@ -343,7 +343,7 @@ no_map:
 
 
 static void
-dumpShaderResourceViewImage(JSONWriter &json,
+dumpShaderResourceViewImage(StateWriter &writer,
                             ID3D10Device *pDevice,
                             ID3D10ShaderResourceView *pShaderResourceView,
                             const char *shader,
@@ -411,9 +411,9 @@ dumpShaderResourceViewImage(JSONWriter &json,
             _snprintf(label, sizeof label,
                       "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
                       shader, stage, ArraySlice, MipSlice);
-            json.beginMember(label);
-            json.writeImage(image);
-            json.endMember(); // *_RESOURCE_*
+            writer.beginMember(label);
+            writer.writeImage(image);
+            writer.endMember(); // *_RESOURCE_*
             delete image;
         }
 
@@ -520,7 +520,7 @@ getDepthStencilViewImage(ID3D10Device *pDevice,
 
 
 static void
-dumpStageTextures(JSONWriter &json, ID3D10Device *pDevice, const char *stageName,
+dumpStageTextures(StateWriter &writer, ID3D10Device *pDevice, const char *stageName,
                   UINT NumViews,
                   ID3D10ShaderResourceView **ppShaderResourceViews)
 {
@@ -529,7 +529,7 @@ dumpStageTextures(JSONWriter &json, ID3D10Device *pDevice, const char *stageName
             continue;
         }
 
-        dumpShaderResourceViewImage(json, pDevice, ppShaderResourceViews[i], stageName, i);
+        dumpShaderResourceViewImage(writer, pDevice, ppShaderResourceViews[i], stageName, i);
 
         ppShaderResourceViews[i]->Release();
     }
@@ -537,24 +537,24 @@ dumpStageTextures(JSONWriter &json, ID3D10Device *pDevice, const char *stageName
 
 
 void
-dumpTextures(JSONWriter &json, ID3D10Device *pDevice)
+dumpTextures(StateWriter &writer, ID3D10Device *pDevice)
 {
-    json.beginMember("textures");
-    json.beginObject();
+    writer.beginMember("textures");
+    writer.beginObject();
 
     ID3D10ShaderResourceView *pShaderResourceViews[D3D10_COMMONSHADER_SAMPLER_SLOT_COUNT];
 
     pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-    json.endObject();
-    json.endMember(); // textures
+    writer.endObject();
+    writer.endMember(); // textures
 }
 
 
@@ -573,10 +573,10 @@ getRenderTargetImage(ID3D10Device *pDevice) {
 
 
 void
-dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
+dumpFramebuffer(StateWriter &writer, ID3D10Device *pDevice)
 {
-    json.beginMember("framebuffer");
-    json.beginObject();
+    writer.beginMember("framebuffer");
+    writer.beginObject();
 
     ID3D10RenderTargetView *pRenderTargetViews[D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT];
     ID3D10DepthStencilView *pDepthStencilView;
@@ -593,9 +593,9 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
-            json.beginMember(label);
-            json.writeImage(image);
-            json.endMember(); // RENDER_TARGET_*
+            writer.beginMember(label);
+            writer.writeImage(image);
+            writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
 
@@ -606,17 +606,17 @@ dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice)
         image::Image *image;
         image = getDepthStencilViewImage(pDevice, pDepthStencilView);
         if (image) {
-            json.beginMember("DEPTH_STENCIL");
-            json.writeImage(image);
-            json.endMember();
+            writer.beginMember("DEPTH_STENCIL");
+            writer.writeImage(image);
+            writer.endMember();
             delete image;
         }
 
         pDepthStencilView->Release();
     }
 
-    json.endObject();
-    json.endMember(); // framebuffer
+    writer.endObject();
+    writer.endMember(); // framebuffer
 }
 
 

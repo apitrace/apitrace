@@ -48,9 +48,9 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
 
     def visitLiteral(self, literal, instance):
         if literal.kind in ('SInt', 'UInt'):
-            print '    json.writeInt(%s);' % (instance)
+            print '    writer.writeInt(%s);' % (instance)
         elif literal.kind in ('Float',):
-            print '    json.writeFloat(%s);' % (instance)
+            print '    writer.writeFloat(%s);' % (instance)
         else:
             raise NotImplementedError
 
@@ -66,21 +66,21 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
             # reinterpret_cast is necessary for GLubyte * <=> char *
             instance = 'reinterpret_cast<%s>(%s)' % (cast, instance)
         assert string.length is None
-        print '    json.write%s(%s);' % (suffix, instance)
+        print '    writer.write%s(%s);' % (suffix, instance)
 
     def visitConst(self, const, instance):
         self.visit(const.type, instance)
 
     def visitStruct(self, struct, instance):
-        print '    json.beginObject();'
+        print '    writer.beginObject();'
         for member in struct.members:
             memberType, memberName = member
             if memberName is not None:
-                print '    json.beginMember("%s");' % memberName
+                print '    writer.beginMember("%s");' % memberName
             self.visitMember(member, instance)
             if memberName is not None:
-                print '    json.endMember(); // %s' % memberName
-        print '    json.endObject();'
+                print '    writer.endMember(); // %s' % memberName
+        print '    writer.endObject();'
 
     def visitArray(self, array, instance):
         length = '_c' + array.type.tag
@@ -88,13 +88,13 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
         array_length = self.expand(array.length)
         print '    if (%s) {' % instance
         print '        size_t %s = %s > 0 ? %s : 0;' % (length, array_length, array_length)
-        print '        json.beginArray();'
+        print '        writer.beginArray();'
         print '        for (size_t %s = 0; %s < %s; ++%s) {' % (index, index, length, index)
         self.visitElement(index, array.type, '(%s)[%s]' % (instance, index))
         print '        }'
-        print '        json.endArray();'
+        print '        writer.endArray();'
         print '    } else {'
-        print '        json.writeNull();'
+        print '        writer.writeNull();'
         print '    }'
 
     def visitAttribArray(self, array, instance):
@@ -107,10 +107,10 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
         print '    switch (%s) {' % instance
         for value in enum.values:
             print '    case %s:' % value
-            print '        json.writeString("%s");' % value
+            print '        writer.writeString("%s");' % value
             print '        break;'
         print '    default:'
-        print '        json.writeInt(%s);' % instance
+        print '        writer.writeInt(%s);' % instance
         print '        break;'
         print '    }'
 
@@ -120,21 +120,21 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
 
     def visitPointer(self, pointer, instance):
         print '    if (%s) {' % instance
-        print '        json.beginArray();'
+        print '        writer.beginArray();'
         self.visit(pointer.type, "*" + instance)
-        print '        json.endArray();'
+        print '        writer.endArray();'
         print '    } else {'
-        print '        json.writeNull();'
+        print '        writer.writeNull();'
         print '    }'
 
     def visitIntPointer(self, pointer, instance):
-        print '    json.writeInt((uintptr_t)%s);' % instance
+        print '    writer.writeInt((uintptr_t)%s);' % instance
 
     def visitObjPointer(self, pointer, instance):
-        print '    json.writeInt((uintptr_t)%s);' % instance
+        print '    writer.writeInt((uintptr_t)%s);' % instance
 
     def visitLinearPointer(self, pointer, instance):
-        print '    json.writeInt((uintptr_t)%s);' % instance
+        print '    writer.writeInt((uintptr_t)%s);' % instance
 
     def visitReference(self, reference, instance):
         self.visit(reference.type, instance)
@@ -146,7 +146,7 @@ class ValueDumper(stdapi.Visitor, stdapi.ExpanderMixin):
         self.visit(alias.type, instance)
 
     def visitOpaque(self, opaque, instance):
-        print '    json.writeInt((uintptr_t)%s);' % instance
+        print '    writer.writeInt((uintptr_t)%s);' % instance
 
     def visitInterface(self, interface, instance):
         assert False
@@ -197,7 +197,7 @@ class Dumper:
 
     def dumpType(self, type):
         print r'void'
-        print r'dumpStateObject(JSONWriter &json, const %s & so)' % type
+        print r'dumpStateObject(StateWriter &writer, const %s & so)' % type
         print r'{'
         visitor = self.dumperFactory()
         visitor.visit(type, 'so')
@@ -214,7 +214,7 @@ class Dumper:
 if __name__ == '__main__':
     print r'#include "dxgistate_so.hpp"'
     print
-    print r'#include "json.hpp"'
+    print r'#include "state_writer.hpp"'
     print
 
     api = stdapi.API()

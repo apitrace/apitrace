@@ -1,5 +1,6 @@
 /**************************************************************************
  *
+ * Copyright 2015 VMware, Inc
  * Copyright 2011 Jose Fonseca
  * All Rights Reserved.
  *
@@ -23,53 +24,58 @@
  *
  **************************************************************************/
 
-#ifndef _GLSTATE_HPP_
-#define _GLSTATE_HPP_
+
+#include "state_writer.hpp"
+
+#include <assert.h>
+
+#include <sstream>
+
+#include "image.hpp"
 
 
-#include <ostream>
-
-#include "glimports.hpp"
-
-
-#ifndef ARRAYSIZE
-#define ARRAYSIZE(_x) (sizeof(_x)/sizeof((_x)[0]))
-#endif
-
-
-namespace image {
-    class Image;
+StateWriter::~StateWriter()
+{
 }
 
-class StateWriter;
-
-
-namespace glstate {
-
-
-extern const GLenum
-textureTargets[];
-
-extern const unsigned
-numTextureTargets;
-
-
-GLenum
-getTextureBinding(GLenum target);
-
-const char *enumToString(GLenum pname);
 
 void
-dumpCurrentContext(StateWriter &writer);
+StateWriter::writeImage(image::Image *image,
+                        const ImageDesc & desc)
+{
+    assert(image);
+    if (!image) {
+        writeNull();
+        return;
+    }
 
-bool
-getDrawableBounds(GLint *width, GLint *height);
+    beginObject();
 
-image::Image *
-getDrawBufferImage(void);
+    // Tell the GUI this is no ordinary object, but an image
+    writeStringMember("__class__", "image");
 
+    writeIntMember("__width__", image->width);
+    writeIntMember("__height__", image->height / desc.depth);
+    writeIntMember("__depth__", desc.depth);
 
-} /* namespace glstate */
+    writeStringMember("__format__", desc.format.c_str());
 
+    if (!image->label.empty()) {
+        writeStringMember("__label__", image->label.c_str());
+    }
 
-#endif /* _GLSTATE_HPP_ */
+    beginMember("__data__");
+    std::stringstream ss;
+
+    if (image->channelType == image::TYPE_UNORM8) {
+        image->writePNG(ss);
+    } else {
+        image->writePNM(ss);
+    }
+
+    const std::string & s = ss.str();
+    writeBlob(s.data(), s.size());
+    endMember(); // __data__
+
+    endObject();
+}

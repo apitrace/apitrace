@@ -33,7 +33,7 @@
 #include <sstream>
 #include <vector>
 
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "glproc.hpp"
 #include "glsize.hpp"
 #include "glstate.hpp"
@@ -79,7 +79,7 @@ getShaderSource(ShaderMap &shaderMap, GLuint shader)
 
 
 static inline void
-dumpProgram(JSONWriter &json, GLint program)
+dumpProgram(StateWriter &writer, GLint program)
 {
     if (program <= 0) {
         return;
@@ -103,9 +103,9 @@ dumpProgram(JSONWriter &json, GLint program)
     delete [] shaders;
 
     for (ShaderMap::const_iterator it = shaderMap.begin(); it != shaderMap.end(); ++it) {
-        json.beginMember(it->first);
-        json.writeString(it->second);
-        json.endMember();
+        writer.beginMember(it->first);
+        writer.writeString(it->second);
+        writer.endMember();
     }
 }
 
@@ -212,19 +212,19 @@ struct AttribDesc
 
 
 static void
-dumpAttrib(JSONWriter &json,
+dumpAttrib(StateWriter &writer,
            const AttribDesc &desc,
            const GLbyte *data)
 {
     assert(desc);
 
     if (desc.numRows > 1) {
-        json.beginArray();
+        writer.beginArray();
     }
 
     for (GLint row = 0; row < desc.numRows; ++row) {
         if (desc.numCols > 1) {
-            json.beginArray();
+            writer.beginArray();
         }
 
         for (GLint col = 0; col < desc.numCols; ++col) {
@@ -240,59 +240,59 @@ dumpAttrib(JSONWriter &json,
 
             switch (desc.elemType) {
             case GL_FLOAT:
-                json.writeFloat(*u.fvalue);
+                writer.writeFloat(*u.fvalue);
                 break;
             case GL_DOUBLE:
-                json.writeFloat(*u.dvalue);
+                writer.writeFloat(*u.dvalue);
                 break;
             case GL_INT:
-                json.writeInt(*u.ivalue);
+                writer.writeInt(*u.ivalue);
                 break;
             case GL_UNSIGNED_INT:
-                json.writeInt(*u.uivalue);
+                writer.writeInt(*u.uivalue);
                 break;
             case GL_BOOL:
-                json.writeBool(*u.uivalue);
+                writer.writeBool(*u.uivalue);
                 break;
             default:
                 assert(0);
-                json.writeNull();
+                writer.writeNull();
                 break;
             }
         }
 
         if (desc.numCols > 1) {
-            json.endArray();
+            writer.endArray();
         }
     }
 
     if (desc.numRows > 1) {
-        json.endArray();
+        writer.endArray();
     }
 }
 
 
 static void
-dumpAttribArray(JSONWriter &json,
+dumpAttribArray(StateWriter &writer,
                 const std::string & name,
                 const AttribDesc &desc,
                 const GLbyte *data)
 {
-    json.beginMember(name);
+    writer.beginMember(name);
     if (desc.size > 1) {
-        json.beginArray();
+        writer.beginArray();
     }
 
     for (GLint i = 0; i < desc.size; ++i) {
         const GLbyte *row = data + desc.arrayStride*i;
 
-        dumpAttrib(json, desc, row);
+        dumpAttrib(writer, desc, row);
     }
 
     if (desc.size > 1) {
-        json.endArray();
+        writer.endArray();
     }
-    json.endMember();
+    writer.endMember();
 }
 
 
@@ -300,7 +300,7 @@ dumpAttribArray(JSONWriter &json,
  * Dump an uniform that belows to an uniform block.
  */
 static void
-dumpUniformBlock(JSONWriter &json,
+dumpUniformBlock(StateWriter &writer,
                  GLint program,
                  GLint size,
                  GLenum type,
@@ -360,13 +360,13 @@ dumpUniformBlock(JSONWriter &json,
     if (raw_data) {
         std::string qualifiedName = resolveUniformName(name, size);
 
-        dumpAttribArray(json, qualifiedName, desc, raw_data + start + offset);
+        dumpAttribArray(writer, qualifiedName, desc, raw_data + start + offset);
     }
 }
 
 
 static void
-dumpUniform(JSONWriter &json,
+dumpUniform(StateWriter &writer,
             GLint program,
             const AttribDesc & desc,
             const GLchar *name)
@@ -387,9 +387,9 @@ dumpUniform(JSONWriter &json,
 
     std::string qualifiedName = resolveUniformName(name, desc.size);
 
-    json.beginMember(qualifiedName);
+    writer.beginMember(qualifiedName);
     if (desc.size > 1) {
-        json.beginArray();
+        writer.beginArray();
     }
 
     for (i = 0; i < desc.size; ++i) {
@@ -427,19 +427,19 @@ dumpUniform(JSONWriter &json,
             break;
         }
 
-        dumpAttrib(json, desc, u.data);
+        dumpAttrib(writer, desc, u.data);
     }
 
     if (desc.size > 1) {
-        json.endArray();
+        writer.endArray();
     }
 
-    json.endMember();
+    writer.endMember();
 }
 
 
 static inline void
-dumpProgramUniforms(JSONWriter &json, GLint program)
+dumpProgramUniforms(StateWriter &writer, GLint program)
 {
     GLint active_uniforms = 0;
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &active_uniforms);
@@ -467,14 +467,14 @@ dumpProgramUniforms(JSONWriter &json, GLint program)
         GLint location = glGetUniformLocation(program, name);
         if (location != -1) {
             AttribDesc desc(type, size);
-            dumpUniform(json, program, desc, name);
+            dumpUniform(writer, program, desc, name);
             continue;
         }
 
         GLint block_index = -1;
         glGetActiveUniformsiv(program, 1, &index, GL_UNIFORM_BLOCK_INDEX, &block_index);
         if (block_index != -1) {
-            dumpUniformBlock(json, program, size, type, name, index, block_index);
+            dumpUniformBlock(writer, program, size, type, name, index, block_index);
             continue;
         }
 
@@ -527,7 +527,7 @@ struct TransformFeedbackAttrib {
 
 
 static inline void
-dumpTransformFeedback(JSONWriter &json, GLint program)
+dumpTransformFeedback(StateWriter &writer, GLint program)
 {
     GLint transform_feedback_varyings = 0;
     glGetProgramiv(program, GL_TRANSFORM_FEEDBACK_VARYINGS, &transform_feedback_varyings);
@@ -631,10 +631,10 @@ dumpTransformFeedback(JSONWriter &json, GLint program)
     glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, previous_tbo);
 
     // Actually dump the vertices
-    json.beginMember("GL_TRANSFORM_FEEDBACK");
-    json.beginArray();
+    writer.beginMember("GL_TRANSFORM_FEEDBACK");
+    writer.beginArray();
     for (unsigned vertex = 0; vertex < numVertices; ++vertex) {
-        json.beginObject();
+        writer.beginObject();
         for (GLint slot = 0; slot < transform_feedback_varyings; ++slot) {
             TransformFeedbackAttrib & attrib = attribs[slot];
             if (!attrib.map) {
@@ -645,17 +645,17 @@ dumpTransformFeedback(JSONWriter &json, GLint program)
             assert(desc);
 
             const GLbyte *vertex_data = attrib.map + attrib.stride*vertex + attrib.offset;
-            dumpAttribArray(json, attrib.name, desc, vertex_data);
+            dumpAttribArray(writer, attrib.name, desc, vertex_data);
         }
-        json.endObject();
+        writer.endObject();
     }
-    json.endArray();
-    json.endMember();
+    writer.endArray();
+    writer.endMember();
 }
 
 
 static inline void
-dumpArbProgram(JSONWriter &json, Context &context, GLenum target)
+dumpArbProgram(StateWriter &writer, Context &context, GLenum target)
 {
     if (context.ES ||
         context.core ||
@@ -674,16 +674,16 @@ dumpArbProgram(JSONWriter &json, Context &context, GLenum target)
     glGetProgramStringARB(target, GL_PROGRAM_STRING_ARB, source);
     source[program_length] = 0;
 
-    json.beginMember(enumToString(target));
-    json.writeString(source);
-    json.endMember();
+    writer.beginMember(enumToString(target));
+    writer.writeString(source);
+    writer.endMember();
 
     delete [] source;
 }
 
 
 static inline void
-dumpArbProgramUniforms(JSONWriter &json, Context &context, GLenum target, const char *prefix)
+dumpArbProgramUniforms(StateWriter &writer, Context &context, GLenum target, const char *prefix)
 {
     if (context.ES ||
         context.core ||
@@ -710,14 +710,14 @@ dumpArbProgramUniforms(JSONWriter &json, Context &context, GLenum target, const 
         char name[256];
         snprintf(name, sizeof name, "%sprogram.local[%i]", prefix, index);
 
-        json.beginMember(name);
-        json.beginArray();
-        json.writeFloat(params[0]);
-        json.writeFloat(params[1]);
-        json.writeFloat(params[2]);
-        json.writeFloat(params[3]);
-        json.endArray();
-        json.endMember();
+        writer.beginMember(name);
+        writer.beginArray();
+        writer.writeFloat(params[0]);
+        writer.writeFloat(params[1]);
+        writer.writeFloat(params[2]);
+        writer.writeFloat(params[3]);
+        writer.endArray();
+        writer.endMember();
     }
 
     GLint max_program_env_parameters = 0;
@@ -733,33 +733,33 @@ dumpArbProgramUniforms(JSONWriter &json, Context &context, GLenum target, const 
         char name[256];
         snprintf(name, sizeof name, "%sprogram.env[%i]", prefix, index);
 
-        json.beginMember(name);
-        json.beginArray();
-        json.writeFloat(params[0]);
-        json.writeFloat(params[1]);
-        json.writeFloat(params[2]);
-        json.writeFloat(params[3]);
-        json.endArray();
-        json.endMember();
+        writer.beginMember(name);
+        writer.beginArray();
+        writer.writeFloat(params[0]);
+        writer.writeFloat(params[1]);
+        writer.writeFloat(params[2]);
+        writer.writeFloat(params[3]);
+        writer.endArray();
+        writer.endMember();
     }
 }
 
 static void
-dumpProgramUniformsStage(JSONWriter &json, GLint program, const char *stage)
+dumpProgramUniformsStage(StateWriter &writer, GLint program, const char *stage)
 {
     if (program <= 0) {
         return;
     }
 
-    json.beginMember(stage);
-    json.beginObject();
-    dumpProgramUniforms(json, program);
-    json.endObject();
-    json.endMember();
+    writer.beginMember(stage);
+    writer.beginObject();
+    dumpProgramUniforms(writer, program);
+    writer.endObject();
+    writer.endMember();
 }
 
 void
-dumpShadersUniforms(JSONWriter &json, Context &context)
+dumpShadersUniforms(StateWriter &writer, Context &context)
 {
     GLint pipeline = 0;
     GLint vertex_program = 0;
@@ -786,49 +786,49 @@ dumpShadersUniforms(JSONWriter &json, Context &context)
         glGetIntegerv(GL_CURRENT_PROGRAM, &program);
     }
 
-    json.beginMember("shaders");
-    json.beginObject();
+    writer.beginMember("shaders");
+    writer.beginObject();
     if (pipeline) {
-        dumpProgram(json, vertex_program);
-        dumpProgram(json, fragment_program);
-        dumpProgram(json, geometry_program);
-        dumpProgram(json, tess_control_program);
-        dumpProgram(json, tess_evaluation_program);
-        dumpProgram(json, compute_program);
+        dumpProgram(writer, vertex_program);
+        dumpProgram(writer, fragment_program);
+        dumpProgram(writer, geometry_program);
+        dumpProgram(writer, tess_control_program);
+        dumpProgram(writer, tess_evaluation_program);
+        dumpProgram(writer, compute_program);
     } else if (program) {
-        dumpProgram(json, program);
+        dumpProgram(writer, program);
     } else {
-        dumpArbProgram(json, context, GL_FRAGMENT_PROGRAM_ARB);
-        dumpArbProgram(json, context, GL_VERTEX_PROGRAM_ARB);
+        dumpArbProgram(writer, context, GL_FRAGMENT_PROGRAM_ARB);
+        dumpArbProgram(writer, context, GL_VERTEX_PROGRAM_ARB);
     }
-    json.endObject();
-    json.endMember(); // shaders
+    writer.endObject();
+    writer.endMember(); // shaders
 
-    json.beginMember("uniforms");
-    json.beginObject();
+    writer.beginMember("uniforms");
+    writer.beginObject();
     if (pipeline) {
-        dumpProgramUniformsStage(json, vertex_program, "GL_VERTEX_SHADER");
-        dumpProgramUniformsStage(json, fragment_program, "GL_FRAGMENT_SHADER");
-        dumpProgramUniformsStage(json, geometry_program, "GL_GEOMETRY_SHADER");
-        dumpProgramUniformsStage(json, tess_control_program, "GL_TESS_CONTROL_SHADER");
-        dumpProgramUniformsStage(json, tess_evaluation_program, "GL_TESS_EVALUATION_SHADER");
-        dumpProgramUniformsStage(json, compute_program, "GL_COMPUTE_SHADER");
+        dumpProgramUniformsStage(writer, vertex_program, "GL_VERTEX_SHADER");
+        dumpProgramUniformsStage(writer, fragment_program, "GL_FRAGMENT_SHADER");
+        dumpProgramUniformsStage(writer, geometry_program, "GL_GEOMETRY_SHADER");
+        dumpProgramUniformsStage(writer, tess_control_program, "GL_TESS_CONTROL_SHADER");
+        dumpProgramUniformsStage(writer, tess_evaluation_program, "GL_TESS_EVALUATION_SHADER");
+        dumpProgramUniformsStage(writer, compute_program, "GL_COMPUTE_SHADER");
     } else if (program) {
-        dumpProgramUniforms(json, program);
+        dumpProgramUniforms(writer, program);
     } else {
-        dumpArbProgramUniforms(json, context, GL_FRAGMENT_PROGRAM_ARB, "fp.");
-        dumpArbProgramUniforms(json, context, GL_VERTEX_PROGRAM_ARB, "vp.");
+        dumpArbProgramUniforms(writer, context, GL_FRAGMENT_PROGRAM_ARB, "fp.");
+        dumpArbProgramUniforms(writer, context, GL_VERTEX_PROGRAM_ARB, "vp.");
     }
-    json.endObject();
-    json.endMember(); // uniforms
+    writer.endObject();
+    writer.endMember(); // uniforms
 
-    json.beginMember("buffers");
-    json.beginObject();
+    writer.beginMember("buffers");
+    writer.beginObject();
     if (program) {
-        dumpTransformFeedback(json, program);
+        dumpTransformFeedback(writer, program);
     }
-    json.endObject();
-    json.endMember(); // buffers
+    writer.endObject();
+    writer.endMember(); // buffers
 }
 
 

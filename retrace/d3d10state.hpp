@@ -32,7 +32,7 @@
 #include <vector>
 #include <string>
 
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "com_ptr.hpp"
 #include "d3dshader.hpp"
 #include "d3dstate.hpp"
@@ -74,7 +74,7 @@ getPrivateData(T *pObject, REFGUID guid)
 
 template< typename T >
 inline void
-dumpShader(JSONWriter &json, const char *name, T *pShader) {
+dumpShader(StateWriter &writer, const char *name, T *pShader) {
     if (!pShader) {
         return;
     }
@@ -94,9 +94,9 @@ dumpShader(JSONWriter &json, const char *name, T *pShader) {
     HRESULT hr;
     hr = DisassembleShader(&ShaderBytecode[0], ShaderBytecode.size(), &pDisassembly);
     if (SUCCEEDED(hr)) {
-        json.beginMember(name);
-        json.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
-        json.endMember();
+        writer.beginMember(name);
+        writer.writeString((const char *)pDisassembly->GetBufferPointer() /*, pDisassembly->GetBufferSize() */);
+        writer.endMember();
     }
 }
 

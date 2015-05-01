@@ -30,7 +30,7 @@
 #include <iostream>
 
 #include "image.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "glproc.hpp"
 #include "glws.hpp"
 #include "glsize.hpp"
@@ -232,30 +232,30 @@ BufferMapping::~BufferMapping() {
 
 
 void
-dumpBoolean(JSONWriter &json, GLboolean value)
+dumpBoolean(StateWriter &writer, GLboolean value)
 {
     switch (value) {
     case GL_FALSE:
-        json.writeString("GL_FALSE");
+        writer.writeString("GL_FALSE");
         break;
     case GL_TRUE:
-        json.writeString("GL_TRUE");
+        writer.writeString("GL_TRUE");
         break;
     default:
-        json.writeInt(static_cast<GLint>(value));
+        writer.writeInt(static_cast<GLint>(value));
         break;
     }
 }
 
 
 void
-dumpEnum(JSONWriter &json, GLenum pname)
+dumpEnum(StateWriter &writer, GLenum pname)
 {
     const char *s = enumToString(pname);
     if (s) {
-        json.writeString(s);
+        writer.writeString(s);
     } else {
-        json.writeInt(pname);
+        writer.writeInt(pname);
     }
 }
 
@@ -327,13 +327,13 @@ getObjectLabel(Context &context, GLenum identifier, GLuint name)
  * Dump a GL_KHR_debug/GL_EXT_debug_label object label.
  */
 void
-dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member) {
+dumpObjectLabel(StateWriter &writer, Context &context, GLenum identifier, GLuint name, const char *member) {
     char *label = getObjectLabel(context, identifier, name);
     if (!label) {
         return;
     }
 
-    json.writeStringMember(member, label);
+    writer.writeStringMember(member, label);
     free(label);
 }
 
@@ -468,9 +468,8 @@ debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 }
 
 
-void dumpCurrentContext(std::ostream &os)
+void dumpCurrentContext(StateWriter &writer)
 {
-    JSONWriter json(os);
 
 #ifndef NDEBUG
     GLint old_bindings[NUM_BINDINGS];
@@ -493,16 +492,16 @@ void dumpCurrentContext(std::ostream &os)
         glDebugMessageCallback(NULL, NULL);
     }
 
-    dumpParameters(json, context);
+    dumpParameters(writer, context);
 
     // Use our own debug-message callback.
     if (context.KHR_debug) {
         glDebugMessageCallback(debugMessageCallback, NULL);
     }
 
-    dumpShadersUniforms(json, context);
-    dumpTextures(json, context);
-    dumpFramebuffer(json, context);
+    dumpShadersUniforms(writer, context);
+    dumpTextures(writer, context);
+    dumpFramebuffer(writer, context);
 
 #ifndef NDEBUG
     for (unsigned i = 0; i < NUM_BINDINGS; ++i) {

@@ -28,7 +28,7 @@
 #include <stdint.h>
 
 #include "image.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "com_ptr.hpp"
 #include "d3dimports.hpp"
 #include "d3dstate.hpp"
@@ -161,22 +161,22 @@ getRenderTargetImage(IDirect3DDevice7 *pDevice) {
 
 
 void
-dumpTextures(JSONWriter &json, IDirect3DDevice7 *pDevice)
+dumpTextures(StateWriter &writer, IDirect3DDevice7 *pDevice)
 {
-    json.beginMember("textures");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // textures
+    writer.beginMember("textures");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // textures
 }
 
 
 void
-dumpFramebuffer(JSONWriter &json, IDirect3DDevice7 *pDevice)
+dumpFramebuffer(StateWriter &writer, IDirect3DDevice7 *pDevice)
 {
     HRESULT hr;
 
-    json.beginMember("framebuffer");
-    json.beginObject();
+    writer.beginMember("framebuffer");
+    writer.beginObject();
 
     com_ptr<IDirectDrawSurface7> pRenderTarget;
     hr = pDevice->GetRenderTarget(&pRenderTarget);
@@ -184,9 +184,9 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice7 *pDevice)
         image::Image *image;
         image = getSurfaceImage(pDevice, pRenderTarget);
         if (image) {
-            json.beginMember("RENDER_TARGET_0");
-            json.writeImage(image);
-            json.endMember(); // RENDER_TARGET_*
+            writer.beginMember("RENDER_TARGET_0");
+            writer.writeImage(image);
+            writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
 
@@ -200,16 +200,16 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice7 *pDevice)
             std::cerr << "found ZS!!\n";
             image = getSurfaceImage(pDevice, pDepthStencil);
             if (image) {
-                json.beginMember("DEPTH_STENCIL");
-                json.writeImage(image);
-                json.endMember(); // DEPTH_STENCIL
+                writer.beginMember("DEPTH_STENCIL");
+                writer.writeImage(image);
+                writer.endMember(); // DEPTH_STENCIL
                 delete image;
             }
         }
     }
 
-    json.endObject();
-    json.endMember(); // framebuffer
+    writer.endObject();
+    writer.endMember(); // framebuffer
 }
 
 

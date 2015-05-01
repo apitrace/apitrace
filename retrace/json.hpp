@@ -27,8 +27,9 @@
  * JSON writing functions.
  */
 
-#ifndef _JSON_HPP_
-#define _JSON_HPP_
+
+#pragma once
+
 
 #include <stddef.h>
 #include <wchar.h>
@@ -39,11 +40,6 @@
 #include <limits>
 #include <ostream>
 #include <string>
-
-
-namespace image {
-    class Image;
-}
 
 
 class JSONWriter
@@ -154,56 +150,4 @@ public:
         value = true;
         space = ' ';
     }
-    
-    inline void
-    writeStringMember(const char *name, const char *s) {
-        beginMember(name);
-        writeString(s);
-        endMember();
-    }
-
-    inline void
-    writeBoolMember(const char *name, bool b) {
-        beginMember(name);
-        writeBool(b);
-        endMember();
-    }
-
-    template<class T>
-    inline void
-    writeFloatMember(const char *name, T f) {
-        beginMember(name);
-        writeFloat(f);
-        endMember();
-    }
-
-    template<class T>
-    inline void
-    writeIntMember(const char *name, T n) {
-        beginMember(name);
-        writeInt(n);
-        endMember();
-    }
-
-    struct ImageDesc {
-        unsigned depth;
-        std::string format;
-
-        ImageDesc() :
-            depth(1),
-            format("UNKNOWN")
-        {}
-    };
-
-    void
-    writeImage(image::Image *image, const ImageDesc & desc);
-
-    void
-    writeImage(image::Image *image) {
-        ImageDesc desc;
-        writeImage(image, desc);
-    }
-
 };
-
-#endif /* _JSON_HPP_ */

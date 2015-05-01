@@ -32,7 +32,7 @@
 #include "image.hpp"
 
 
-class JSONWriter;
+class StateWriter;
 
 
 namespace glstate {
@@ -151,22 +151,22 @@ bool
 isGeometryShaderBound(Context &context);
 
 
-void dumpBoolean(JSONWriter &json, GLboolean value);
+void dumpBoolean(StateWriter &writer, GLboolean value);
 
-void dumpEnum(JSONWriter &json, GLenum pname);
+void dumpEnum(StateWriter &writer, GLenum pname);
 
 char *
 getObjectLabel(Context &context, GLenum identifier, GLuint name);
 
-void dumpObjectLabel(JSONWriter &json, Context &context, GLenum identifier, GLuint name, const char *member);
+void dumpObjectLabel(StateWriter &writer, Context &context, GLenum identifier, GLuint name, const char *member);
 
-void dumpParameters(JSONWriter &json, Context &context);
+void dumpParameters(StateWriter &writer, Context &context);
 
-void dumpShadersUniforms(JSONWriter &json, Context &context);
+void dumpShadersUniforms(StateWriter &writer, Context &context);
 
-void dumpTextures(JSONWriter &json, Context &context);
+void dumpTextures(StateWriter &writer, Context &context);
 
-void dumpFramebuffer(JSONWriter &json, Context &context);
+void dumpFramebuffer(StateWriter &writer, Context &context);
 
 
 } /* namespace glstate */

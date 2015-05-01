@@ -31,7 +31,7 @@
 #include <algorithm>
 
 #include "os.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "image.hpp"
 #include "com_ptr.hpp"
 #include "d3d11imports.hpp"
@@ -306,7 +306,7 @@ no_map:
 
 
 static void
-dumpShaderResourceViewImage(JSONWriter &json,
+dumpShaderResourceViewImage(StateWriter &writer,
                             ID3D11DeviceContext *pDevice,
                             ID3D11ShaderResourceView *pShaderResourceView,
                             const char *shader,
@@ -380,12 +380,12 @@ dumpShaderResourceViewImage(JSONWriter &json,
             _snprintf(label, sizeof label,
                       "%s_RESOURCE_%u_ARRAY_%u_LEVEL_%u",
                       shader, stage, ArraySlice, MipSlice);
-            JSONWriter::ImageDesc imgDesc;
+            StateWriter::ImageDesc imgDesc;
             imgDesc.depth = 1;
             imgDesc.format = getDXGIFormatName(Desc.Format);
-            json.beginMember(label);
-            json.writeImage(image, imgDesc);
-            json.endMember(); // *_RESOURCE_*
+            writer.beginMember(label);
+            writer.writeImage(image, imgDesc);
+            writer.endMember(); // *_RESOURCE_*
             delete image;
         }
 
@@ -502,7 +502,7 @@ getDepthStencilViewImage(ID3D11DeviceContext *pDevice,
 
 
 static void
-dumpStageTextures(JSONWriter &json, ID3D11DeviceContext *pDevice, const char *stageName,
+dumpStageTextures(StateWriter &writer, ID3D11DeviceContext *pDevice, const char *stageName,
                   UINT NumViews,
                   ID3D11ShaderResourceView **ppShaderResourceViews)
 {
@@ -511,7 +511,7 @@ dumpStageTextures(JSONWriter &json, ID3D11DeviceContext *pDevice, const char *st
             continue;
         }
 
-        dumpShaderResourceViewImage(json, pDevice, ppShaderResourceViews[i], stageName, i);
+        dumpShaderResourceViewImage(writer, pDevice, ppShaderResourceViews[i], stageName, i);
 
         ppShaderResourceViews[i]->Release();
     }
@@ -519,30 +519,30 @@ dumpStageTextures(JSONWriter &json, ID3D11DeviceContext *pDevice, const char *st
 
 
 void
-dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDevice)
+dumpTextures(StateWriter &writer, ID3D11DeviceContext *pDevice)
 {
-    json.beginMember("textures");
-    json.beginObject();
+    writer.beginMember("textures");
+    writer.beginObject();
 
     ID3D11ShaderResourceView *pShaderResourceViews[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT];
 
     pDevice->VSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "VS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->HSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "HS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "HS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->DSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "DS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "DS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->GSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "GS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
     pDevice->PSGetShaderResources(0, ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
-    dumpStageTextures(json, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
+    dumpStageTextures(writer, pDevice, "PS", ARRAYSIZE(pShaderResourceViews), pShaderResourceViews);
 
-    json.endObject();
-    json.endMember(); // textures
+    writer.endObject();
+    writer.endMember(); // textures
 }
 
 
@@ -562,10 +562,10 @@ getRenderTargetImage(ID3D11DeviceContext *pDevice,
 
 
 void
-dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
+dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDevice)
 {
-    json.beginMember("framebuffer");
-    json.beginObject();
+    writer.beginMember("framebuffer");
+    writer.beginObject();
 
     ID3D11RenderTargetView *pRenderTargetViews[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
     ID3D11DepthStencilView *pDepthStencilView;
@@ -584,12 +584,12 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
-            JSONWriter::ImageDesc imgDesc;
+            StateWriter::ImageDesc imgDesc;
             imgDesc.depth = 1;
             imgDesc.format = getDXGIFormatName(dxgiFormat);
-            json.beginMember(label);
-            json.writeImage(image, imgDesc);
-            json.endMember(); // RENDER_TARGET_*
+            writer.beginMember(label);
+            writer.writeImage(image, imgDesc);
+            writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
 
@@ -602,20 +602,20 @@ dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDevice)
         image = getDepthStencilViewImage(pDevice, pDepthStencilView,
                                          &dxgiFormat);
         if (image) {
-            JSONWriter::ImageDesc imgDesc;
+            StateWriter::ImageDesc imgDesc;
             imgDesc.depth = 1;
             imgDesc.format = getDXGIFormatName(dxgiFormat);
-            json.beginMember("DEPTH_STENCIL");
-            json.writeImage(image, imgDesc);
-            json.endMember();
+            writer.beginMember("DEPTH_STENCIL");
+            writer.writeImage(image, imgDesc);
+            writer.endMember();
             delete image;
         }
 
         pDepthStencilView->Release();
     }
 
-    json.endObject();
-    json.endMember(); // framebuffer
+    writer.endObject();
+    writer.endMember(); // framebuffer
 }
 
 

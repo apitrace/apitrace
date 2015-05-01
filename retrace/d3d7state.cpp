@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "d3dimports.hpp"
 #include "d3dstate.hpp"
 
@@ -37,27 +37,25 @@ namespace d3dstate {
 
 
 void
-dumpDevice(std::ostream &os, IDirect3DDevice7 *pDevice)
+dumpDevice(StateWriter &writer, IDirect3DDevice7 *pDevice)
 {
-    JSONWriter json(os);
-
     /* TODO */
-    json.beginMember("parameters");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // parameters
+    writer.beginMember("parameters");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // parameters
 
-    json.beginMember("shaders");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // shaders
+    writer.beginMember("shaders");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // shaders
 
-    json.beginMember("textures");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // textures
+    writer.beginMember("textures");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // textures
 
-    dumpFramebuffer(json, pDevice);
+    dumpFramebuffer(writer, pDevice);
 }
 
 

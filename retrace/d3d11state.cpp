@@ -43,19 +43,19 @@ static_assert( std::is_same< ExtractDescType< decltype( &ID3D11BlendState::GetDe
 
 
 static void
-dumpRasterizerState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+dumpRasterizerState(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
     com_ptr<ID3D11RasterizerState> pRasterizerState;
 
     pDeviceContext->RSGetState(&pRasterizerState);
-    json.beginMember("RasterizerState");
-    dumpStateObjectDesc(json, pRasterizerState);
-    json.endMember(); // RasterizerState
+    writer.beginMember("RasterizerState");
+    dumpStateObjectDesc(writer, pRasterizerState);
+    writer.endMember(); // RasterizerState
 }
 
 
 static void
-dumpBlendState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+dumpBlendState(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
     com_ptr<ID3D11BlendState> pBlendState;
     FLOAT BlendFactor[4];
@@ -63,118 +63,116 @@ dumpBlendState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
 
     pDeviceContext->OMGetBlendState(&pBlendState, BlendFactor, &SampleMask);
 
-    json.beginMember("BlendState");
-    dumpStateObjectDesc(json, pBlendState);
-    json.endMember(); // BlendState
+    writer.beginMember("BlendState");
+    dumpStateObjectDesc(writer, pBlendState);
+    writer.endMember(); // BlendState
     
-    json.beginMember("BlendFactor");
-    json.beginArray();
-    json.writeFloat(BlendFactor[0]);
-    json.writeFloat(BlendFactor[1]);
-    json.writeFloat(BlendFactor[2]);
-    json.writeFloat(BlendFactor[3]);
-    json.endArray();
-    json.endMember(); // BlendFactor
+    writer.beginMember("BlendFactor");
+    writer.beginArray();
+    writer.writeFloat(BlendFactor[0]);
+    writer.writeFloat(BlendFactor[1]);
+    writer.writeFloat(BlendFactor[2]);
+    writer.writeFloat(BlendFactor[3]);
+    writer.endArray();
+    writer.endMember(); // BlendFactor
 
-    json.writeIntMember("SampleMask", SampleMask);
+    writer.writeIntMember("SampleMask", SampleMask);
 }
 
 
 static void
-dumpDepthStencilState(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+dumpDepthStencilState(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
     com_ptr<ID3D11DepthStencilState> pDepthStencilState;
     UINT stencilRef;
 
     pDeviceContext->OMGetDepthStencilState(&pDepthStencilState, &stencilRef);
-    json.beginMember("DepthStencilState");
-    dumpStateObjectDesc(json, pDepthStencilState);
-    json.endMember(); // DepthStencilState
-    json.writeIntMember("StencilRef", stencilRef);
+    writer.beginMember("DepthStencilState");
+    dumpStateObjectDesc(writer, pDepthStencilState);
+    writer.endMember(); // DepthStencilState
+    writer.writeIntMember("StencilRef", stencilRef);
 }
 
 
 static void
-dumpParameters(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+dumpParameters(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
     // TODO: dump description of current bound state
-    json.beginMember("parameters");
-    json.beginObject();
+    writer.beginMember("parameters");
+    writer.beginObject();
 
-    dumpRasterizerState(json, pDeviceContext);
-    dumpBlendState(json, pDeviceContext);
-    dumpDepthStencilState(json, pDeviceContext);
+    dumpRasterizerState(writer, pDeviceContext);
+    dumpBlendState(writer, pDeviceContext);
+    dumpDepthStencilState(writer, pDeviceContext);
 
-    json.endObject();
-    json.endMember(); // parameters
+    writer.endObject();
+    writer.endMember(); // parameters
 }
 
 
 static void
-dumpShaders(JSONWriter &json, ID3D11DeviceContext *pDeviceContext)
+dumpShaders(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
-    json.beginMember("shaders");
-    json.beginObject();
+    writer.beginMember("shaders");
+    writer.beginObject();
 
     com_ptr<ID3D11VertexShader> pVertexShader;
     pDeviceContext->VSGetShader(&pVertexShader, NULL, NULL);
     if (pVertexShader) {
-        dumpShader<ID3D11DeviceChild>(json, "VS", pVertexShader);
+        dumpShader<ID3D11DeviceChild>(writer, "VS", pVertexShader);
     }
 
     com_ptr<ID3D11HullShader> pHullShader;
     pDeviceContext->HSGetShader(&pHullShader, NULL, NULL);
     if (pHullShader) {
-        dumpShader<ID3D11DeviceChild>(json, "HS", pHullShader);
+        dumpShader<ID3D11DeviceChild>(writer, "HS", pHullShader);
     }
 
     com_ptr<ID3D11DomainShader> pDomainShader;
     pDeviceContext->DSGetShader(&pDomainShader, NULL, NULL);
     if (pDomainShader) {
-        dumpShader<ID3D11DeviceChild>(json, "DS", pDomainShader);
+        dumpShader<ID3D11DeviceChild>(writer, "DS", pDomainShader);
     }
 
     com_ptr<ID3D11GeometryShader> pGeometryShader;
     pDeviceContext->GSGetShader(&pGeometryShader, NULL, NULL);
     if (pGeometryShader) {
-        dumpShader<ID3D11DeviceChild>(json, "GS", pGeometryShader);
+        dumpShader<ID3D11DeviceChild>(writer, "GS", pGeometryShader);
     }
 
     com_ptr<ID3D11PixelShader> pPixelShader;
     pDeviceContext->PSGetShader(&pPixelShader, NULL, NULL);
     if (pPixelShader) {
-        dumpShader<ID3D11DeviceChild>(json, "PS", pPixelShader);
+        dumpShader<ID3D11DeviceChild>(writer, "PS", pPixelShader);
     }
 
-    json.endObject();
-    json.endMember(); // shaders
+    writer.endObject();
+    writer.endMember(); // shaders
 }
 
 
 void
-dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext)
+dumpDevice(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
-    JSONWriter json(os);
+    dumpParameters(writer, pDeviceContext);
 
-    dumpParameters(json, pDeviceContext);
-
-    dumpShaders(json, pDeviceContext);
+    dumpShaders(writer, pDeviceContext);
 
     // TODO: dump constant buffers
-    json.beginMember("uniforms");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // uniforms
+    writer.beginMember("uniforms");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // uniforms
 
     // TODO: dump stream-out buffer, vertex buffer
-    json.beginMember("buffers");
-    json.beginObject();
-    json.endObject();
-    json.endMember(); // buffers
+    writer.beginMember("buffers");
+    writer.beginObject();
+    writer.endObject();
+    writer.endMember(); // buffers
 
-    dumpTextures(json, pDeviceContext);
+    dumpTextures(writer, pDeviceContext);
 
-    dumpFramebuffer(json, pDeviceContext);
+    dumpFramebuffer(writer, pDeviceContext);
 }
 
 

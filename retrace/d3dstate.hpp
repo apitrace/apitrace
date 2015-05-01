@@ -46,7 +46,7 @@ struct ID3D11DeviceContext;
 struct ID3D11Resource;
 
 
-class JSONWriter;
+class StateWriter;
 
 namespace image {
     class Image;
@@ -67,10 +67,10 @@ image::Image *
 getRenderTargetImage(IDirect3DDevice7 *pDevice);
 
 void
-dumpFramebuffer(JSONWriter &json, IDirect3DDevice7 *pDevice);
+dumpFramebuffer(StateWriter &writer, IDirect3DDevice7 *pDevice);
 
 void
-dumpDevice(std::ostream &os, IDirect3DDevice7 *pDevice);
+dumpDevice(StateWriter &writer, IDirect3DDevice7 *pDevice);
 
 
 /*
@@ -81,10 +81,10 @@ image::Image *
 getRenderTargetImage(IDirect3DDevice8 *pDevice);
 
 void
-dumpFramebuffer(JSONWriter &json, IDirect3DDevice8 *pDevice);
+dumpFramebuffer(StateWriter &writer, IDirect3DDevice8 *pDevice);
 
 void
-dumpDevice(std::ostream &os, IDirect3DDevice8 *pDevice);
+dumpDevice(StateWriter &writer, IDirect3DDevice8 *pDevice);
 
 
 /*
@@ -95,13 +95,13 @@ image::Image *
 getRenderTargetImage(IDirect3DDevice9 *pDevice);
 
 void
-dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice);
+dumpTextures(StateWriter &writer, IDirect3DDevice9 *pDevice);
 
 void
-dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice);
+dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice);
 
 void
-dumpDevice(std::ostream &os, IDirect3DDevice9 *pDevice);
+dumpDevice(StateWriter &writer, IDirect3DDevice9 *pDevice);
 
 
 #ifdef HAVE_DXGI
@@ -115,7 +115,7 @@ image::Image *
 getRenderTargetImage(IDXGISwapChain *pSwapChain);
 
 void
-dumpDevice(std::ostream &os, IDXGISwapChain *pSwapChain);
+dumpDevice(StateWriter &writer, IDXGISwapChain *pSwapChain);
 
 
 /*
@@ -126,13 +126,13 @@ image::Image *
 getRenderTargetImage(ID3D10Device *pDevice);
 
 void
-dumpTextures(JSONWriter &json, ID3D10Device *pDevice);
+dumpTextures(StateWriter &writer, ID3D10Device *pDevice);
 
 void
-dumpFramebuffer(JSONWriter &json, ID3D10Device *pDevice);
+dumpFramebuffer(StateWriter &writer, ID3D10Device *pDevice);
 
 void
-dumpDevice(std::ostream &os, ID3D10Device *pDevice);
+dumpDevice(StateWriter &writer, ID3D10Device *pDevice);
 
 
 /*
@@ -144,13 +144,13 @@ getRenderTargetImage(ID3D11DeviceContext *pDeviceContext,
                      DXGI_FORMAT *dxgiFormat = 0);
 
 void
-dumpTextures(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
+dumpTextures(StateWriter &writer, ID3D11DeviceContext *pDeviceContext);
 
 void
-dumpFramebuffer(JSONWriter &json, ID3D11DeviceContext *pDeviceContext);
+dumpFramebuffer(StateWriter &writer, ID3D11DeviceContext *pDeviceContext);
 
 void
-dumpDevice(std::ostream &os, ID3D11DeviceContext *pDeviceContext);
+dumpDevice(StateWriter &writer, ID3D11DeviceContext *pDeviceContext);
 
 
 #endif /* HAVE_DXGI */

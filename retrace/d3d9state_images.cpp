@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 #include "image.hpp"
-#include "json.hpp"
+#include "state_writer.hpp"
 #include "com_ptr.hpp"
 #include "d3d9state.hpp"
 #include "d3dstate.hpp"
@@ -160,12 +160,12 @@ getTextureImage(IDirect3DDevice9 *pDevice,
 
 
 void
-dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice)
+dumpTextures(StateWriter &writer, IDirect3DDevice9 *pDevice)
 {
     HRESULT hr;
 
-    json.beginMember("textures");
-    json.beginObject();
+    writer.beginMember("textures");
+    writer.beginObject();
 
     for (DWORD Stage = 0; Stage < 16; ++Stage) {
         com_ptr<IDirect3DBaseTexture9> pTexture;
@@ -194,27 +194,27 @@ dumpTextures(JSONWriter &json, IDirect3DDevice9 *pDevice)
                     } else {
                         _snprintf(label, sizeof label, "PS_RESOURCE_%lu_LEVEL_%lu", Stage, Level);
                     }
-                    json.beginMember(label);
-                    json.writeImage(image);
-                    json.endMember(); // PS_RESOURCE_*
+                    writer.beginMember(label);
+                    writer.writeImage(image);
+                    writer.endMember(); // PS_RESOURCE_*
                     delete image;
                 }
             }
         }
     }
 
-    json.endObject();
-    json.endMember(); // textures
+    writer.endObject();
+    writer.endMember(); // textures
 }
 
 
 void
-dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
+dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice)
 {
     HRESULT hr;
 
-    json.beginMember("framebuffer");
-    json.beginObject();
+    writer.beginMember("framebuffer");
+    writer.beginObject();
 
     D3DCAPS9 Caps;
     pDevice->GetDeviceCaps(&Caps);
@@ -235,9 +235,9 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
         if (image) {
             char label[64];
             _snprintf(label, sizeof label, "RENDER_TARGET_%u", i);
-            json.beginMember(label);
-            json.writeImage(image);
-            json.endMember(); // RENDER_TARGET_*
+            writer.beginMember(label);
+            writer.writeImage(image);
+            writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
     }
@@ -248,15 +248,15 @@ dumpFramebuffer(JSONWriter &json, IDirect3DDevice9 *pDevice)
         image::Image *image;
         image = getSurfaceImage(pDevice, pDepthStencil);
         if (image) {
-            json.beginMember("DEPTH_STENCIL");
-            json.writeImage(image);
-            json.endMember(); // RENDER_TARGET_*
+            writer.beginMember("DEPTH_STENCIL");
+            writer.writeImage(image);
+            writer.endMember(); // RENDER_TARGET_*
             delete image;
         }
     }
 
-    json.endObject();
-    json.endMember(); // framebuffer
+    writer.endObject();
+    writer.endMember(); // framebuffer
 }
 
 

@@ -42,6 +42,7 @@
 #include "trace_dump.hpp"
 #include "trace_option.hpp"
 #include "retrace.hpp"
+#include "state_writer.hpp"
 
 
 static bool waitOnFinish = false;
@@ -110,7 +111,27 @@ frameComplete(trace::Call &call) {
 }
 
 
-static Dumper defaultDumper;
+class DefaultDumper: public Dumper
+{
+public:
+    image::Image *
+    getSnapshot(void) {
+        return NULL;
+    }
+
+    bool
+    canDump(void) {
+        return false;
+    }
+
+    void
+    dumpState(StateWriter &writer) {
+        assert(0);
+    }
+};
+
+
+static DefaultDumper defaultDumper;
 
 Dumper *dumper = &defaultDumper;
 
@@ -218,7 +239,10 @@ retraceCall(trace::Call *call) {
     }
 
     if (call->no >= dumpStateCallNo &&
-        dumper->dumpState(std::cout)) {
+        dumper->canDump()) {
+        StateWriter *writer = createJSONStateWriter(std::cout);
+        dumper->dumpState(*writer);
+        delete writer;
         exit(0);
     }
 }
