@@ -28,14 +28,7 @@
 
 
 #include <stdint.h>
-
-
-#ifdef _MSC_VER
-#  include <stdlib.h>
-#  define __builtin_bswap16 _byteswap_ushort
-#  define __builtin_bswap32 _byteswap_ulong
-#  define __builtin_bswap64 _byteswap_uint64
-#endif
+#include <stdlib.h>
 
 
 namespace ubjson {
@@ -70,8 +63,12 @@ inline uint16_t
 bigEndian16(uint16_t x) {
 #ifdef HAVE_BIGENDIAN
     return x;
-#else
+#elif defined(_MSC_VER)
+    return _byteswap_ushort(x);
+#elif defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 408
     return __builtin_bswap16(x);
+#else
+    return (x << 8) | (x >> 8);
 #endif
 }
 
@@ -79,6 +76,8 @@ inline uint32_t
 bigEndian32(uint32_t x) {
 #ifdef HAVE_BIGENDIAN
     return x;
+#elif defined(_MSC_VER)
+    return _byteswap_ulong(x);
 #else
     return __builtin_bswap32(x);
 #endif
@@ -88,6 +87,8 @@ inline uint64_t
 bigEndian64(uint64_t x) {
 #ifdef HAVE_BIGENDIAN
     return x;
+#elif defined(_MSC_VER)
+    return _byteswap_uint64(x);
 #else
     return __builtin_bswap64(x);
 #endif
