@@ -180,3 +180,6 @@ public:
 StateWriter *
 createJSONStateWriter(std::ostream &os);
 
+
+StateWriter *
+createUBJSONStateWriter(std::ostream &os);

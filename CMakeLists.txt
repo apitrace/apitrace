@@ -334,6 +334,12 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_definitions (-D_GNU_SOURCE)
 endif ()
 
+include (TestBigEndian)
+test_big_endian (HAVE_BIGENDIAN)
+if (HAVE_BIGENDIAN)
+    add_definitions (-DHAVE_BIGENDIAN)
+endif ()
+
 # Put all executables into the same top level build directory, regardless of
 # which subdirectory they are declared
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -136,6 +136,10 @@ static DefaultDumper defaultDumper;
 Dumper *dumper = &defaultDumper;
 
 
+typedef StateWriter *(*StateWriterFactory)(std::ostream &);
+static StateWriterFactory stateWriterFactory = createJSONStateWriter;
+
+
 /**
  * Take snapshots.
  */
@@ -240,7 +244,7 @@ retraceCall(trace::Call *call) {
 
     if (call->no >= dumpStateCallNo &&
         dumper->canDump()) {
-        StateWriter *writer = createJSONStateWriter(std::cout);
+        StateWriter *writer = stateWriterFactory(std::cout);
         dumper->dumpState(*writer);
         delete writer;
         exit(0);
@@ -636,6 +640,7 @@ usage(const char *argv0) {
         "      --snapshot-interval=N    specify a frame interval when generating snaphots (default is 0)\n"
         "  -v, --verbose           increase output verbosity\n"
         "  -D, --dump-state=CALL   dump state at specific call no\n"
+        "      --dump-format=FORMAT dump state format (`json` or `ubjson`)\n"
         "  -w, --wait              waitOnFinish on final frame\n"
         "      --loop[=N]          loop N times (N<0 continuously) replaying final frame.\n"
         "      --singlethread      use a single thread to replay command stream\n";
@@ -655,7 +660,8 @@ enum {
     SNAPSHOT_FORMAT_OPT,
     LOOP_OPT,
     SINGLETHREAD_OPT,
-    SNAPSHOT_INTERVAL_OPT
+    SNAPSHOT_INTERVAL_OPT,
+    DUMP_FORMAT_OPT,
 };
 
 const static char *
@@ -671,6 +677,7 @@ longOptions[] = {
     {"samples", required_argument, 0, SAMPLES_OPT},
     {"driver", required_argument, 0, DRIVER_OPT},
     {"dump-state", required_argument, 0, 'D'},
+    {"dump-format", required_argument, 0, DUMP_FORMAT_OPT},
     {"help", no_argument, 0, 'h'},
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
@@ -723,6 +730,16 @@ int main(int argc, char **argv)
             dumpStateCallNo = atoi(optarg);
             dumpingState = true;
             retrace::verbosity = -2;
+            break;
+        case DUMP_FORMAT_OPT:
+            if (strcasecmp(optarg, "json") == 0) {
+                stateWriterFactory = &createJSONStateWriter;
+            } else if (strcasecmp(optarg, "ubjson") == 0) {
+                stateWriterFactory = &createUBJSONStateWriter;
+            } else {
+                std::cerr << "error: unsupported dump format `" << optarg << "`\n";
+                return EXIT_FAILURE;
+            }
             break;
         case CORE_OPT:
             retrace::setFeatureLevel("3_2_core");

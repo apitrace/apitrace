@@ -41,6 +41,7 @@ add_library (retrace_common STATIC
     json.cpp
     state_writer.cpp
     state_writer_json.cpp
+    state_writer_ubjson.cpp
 )
 target_link_libraries (retrace_common
     image
