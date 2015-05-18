@@ -28,6 +28,7 @@
 #include "state_writer.hpp"
 
 #include <string.h>
+#include <stdint.h>
 
 #include "ubjson.hpp"
 

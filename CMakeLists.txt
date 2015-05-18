@@ -165,6 +165,10 @@ macro (add_linker_flags)
     set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${_FLAGS}")
 endmacro ()
 
+add_definitions (
+    -D__STDC_LIMIT_MACROS
+)
+
 if (WIN32)
     # http://msdn.microsoft.com/en-us/library/aa383745.aspx
     if (MINGW OR CMAKE_GENERATOR_TOOLSET MATCHES "_xp$")
