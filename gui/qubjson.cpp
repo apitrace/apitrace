@@ -151,7 +151,6 @@ readArray(QDataStream &stream)
         Q_ASSERT(marker == MARKER_COUNT);
         size_t count = readSize(stream);
         QByteArray array(count, Qt::Uninitialized);
-        qDebug() << "count " << count;
         int read = stream.readRawData(array.data(), count);
         Q_ASSERT(read == count);
         marker = readMarker(stream);
@@ -178,7 +177,6 @@ readObject(QDataStream &stream)
     while (marker != MARKER_OBJECT_END) {
         Q_ASSERT(marker == MARKER_STRING);
         QString name = readString(stream);
-        if (0) qDebug() << name;
         marker = readMarker(stream);
         QVariant value = readVariant(stream, marker);
         object[name] = value;
