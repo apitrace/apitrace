@@ -44,8 +44,7 @@
 **
 ****************************************************************************/
 
-#ifndef PIXELWIDGET_H
-#define PIXELWIDGET_H
+#pragma once
 
 #include <qwidget.h>
 #include <qpixmap.h>
@@ -111,5 +110,3 @@ private:
     QSize m_initialSize;
     QColor m_currentColor;
 };
-
-#endif // PIXELWIDGET_H

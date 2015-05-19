@@ -30,8 +30,7 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
-#ifndef _D3D9SIZE_HPP_
-#define _D3D9SIZE_HPP_
+#pragma once
 
 
 #include "d3dcommonsize.hpp"
@@ -233,4 +232,3 @@ _getMapInfo(IDirect3DVolumeTexture9 *pTexture, UINT Level, const D3DLOCKED_BOX *
 }
 
 
-#endif /* _D3D9SIZE_HPP_ */

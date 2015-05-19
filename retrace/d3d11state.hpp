@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3D11STATE_HPP_
-#define _D3D11STATE_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -46,4 +45,3 @@ getSubResourceImage(ID3D11DeviceContext *pDevice,
 
 } /* namespace d3dstate */
 
-#endif // _D3D11STATE_HPP_

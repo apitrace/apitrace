@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3DRETRACE_HPP_
-#define _D3DRETRACE_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -97,4 +96,3 @@ processEvents(void);
 } /* namespace d3dretrace */
 
 
-#endif /* _D3DRETRACE_HPP_ */

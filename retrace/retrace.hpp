@@ -25,8 +25,7 @@
  *
  **************************************************************************/
 
-#ifndef _RETRACE_HPP_
-#define _RETRACE_HPP_
+#pragma once
 
 #include <assert.h>
 #include <string.h>
@@ -252,4 +251,3 @@ cleanUp(void);
 
 } /* namespace retrace */
 
-#endif /* _RETRACE_HPP_ */

@@ -25,8 +25,7 @@
  *
  *********************************************************************/
 
-#ifndef _APITRACE_CLI_HPP_
-#define _APITRACE_CLI_HPP_
+#pragma once
 
 
 struct Command {
@@ -52,4 +51,3 @@ extern const Command sed_command;
 extern const Command trace_command;
 extern const Command trim_command;
 
-#endif /* _APITRACE_CLI_HPP_ */

@@ -24,8 +24,7 @@
  **************************************************************************/
 
 
-#ifndef D3D9STATE_HPP
-#define D3D9STATE_HPP
+#pragma once
 
 
 #include <ostream>
@@ -56,4 +55,3 @@ ConvertImage(D3DFORMAT SrcFormat,
 
 
 
-#endif // D3D9STATE_HPP

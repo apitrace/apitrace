@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef COM_PTR_HPP
-#define COM_PTR_HPP
+#pragma once
 
 
 #include <assert.h>
@@ -86,4 +85,3 @@ private:
 
 
 
-#endif // COM_PTR_HPP

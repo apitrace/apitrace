@@ -27,8 +27,7 @@
  * Image I/O.
  */
 
-#ifndef _IMAGE_HPP_
-#define _IMAGE_HPP_
+#pragma once
 
 
 #include <iostream>
@@ -155,4 +154,3 @@ readPNM(const char *buffer, size_t bufferSize);
 } /* namespace image */
 
 
-#endif /* _IMAGE_HPP_ */

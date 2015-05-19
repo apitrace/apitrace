@@ -27,8 +27,7 @@
  * Trace writing functions.
  */
 
-#ifndef _TRACE_WRITER_HPP_
-#define _TRACE_WRITER_HPP_
+#pragma once
 
 
 #include <stddef.h>
@@ -115,4 +114,3 @@ namespace trace {
 
 } /* namespace trace */
 
-#endif /* _TRACE_WRITER_HPP_ */

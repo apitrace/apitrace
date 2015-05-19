@@ -29,8 +29,7 @@
 /*
  * Auxiliary functions to compute the size of array/blob arguments.
  */
-#ifndef _EGLSIZE_HPP_
-#define _EGLSIZE_HPP_
+#pragma once
 
 #ifndef _WIN32
 
@@ -55,5 +54,3 @@ void
 _EGLImageKHR_free_image_info(struct image_info *info);
 
 #endif // !defined(_WIN32)
-
-#endif

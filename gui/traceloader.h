@@ -1,5 +1,4 @@
-#ifndef TRACELOADER_H
-#define TRACELOADER_H
+#pragma once
 
 
 #include "apitrace.h"
@@ -118,5 +117,3 @@ private:
 
     QVector<ApiTraceCallSignature*> m_signatures;
 };
-
-#endif

@@ -24,8 +24,7 @@
  **************************************************************************/
 
 
-#ifndef _DXGIINT_H_
-#define _DXGIINT_H_
+#pragma once
 
 #include <windows.h>
 
@@ -54,4 +53,3 @@ struct IDXGIFactoryDWM: public IUnknown
 };
 
 
-#endif /* _DXGIINT_H_ */

@@ -30,8 +30,7 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
-#ifndef _D3DCOMMONSIZE_HPP_
-#define _D3DCOMMONSIZE_HPP_
+#pragma once
 
 
 /* We purposedly don't include any D3D header, so that this header can be used
@@ -186,4 +185,3 @@ _getLockSize(D3DFORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth
 }
 
 
-#endif /* _D3DCOMMONSIZE_HPP_ */

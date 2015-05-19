@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3DSHADER_HPP_
-#define _D3DSHADER_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -48,4 +47,3 @@ HRESULT
 DisassembleShader(const void *pShader, SIZE_T BytecodeLength, IDisassemblyBuffer **ppDisassembly);
 
 
-#endif /* _D3DSHADER_HPP_ */

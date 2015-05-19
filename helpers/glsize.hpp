@@ -31,8 +31,7 @@
  * Auxiliary functions to compute the size of array/blob arguments, depending.
  */
 
-#ifndef _GL_SIZE_HPP_
-#define _GL_SIZE_HPP_
+#pragma once
 
 
 #include <string.h>
@@ -1366,4 +1365,3 @@ _glGetDebugMessageLog_length(const Char * string, const GLsizei *lengths, GLuint
     return size;
 }
 
-#endif /* _GL_SIZE_HPP_ */

@@ -1,5 +1,4 @@
-#ifndef ARGUMENTSEDITOR_H
-#define ARGUMENTSEDITOR_H
+#pragma once
 
 #include "apitracecall.h"
 #include "ui_argumentseditor.h"
@@ -182,5 +181,3 @@ private:
 
     ApiTraceCall *m_call;
 };
-
-#endif

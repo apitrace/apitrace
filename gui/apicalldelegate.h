@@ -1,5 +1,4 @@
-#ifndef APICALLDELEGATE_H
-#define APICALLDELEGATE_H
+#pragma once
 
 #include <QStyledItemDelegate>
 
@@ -20,5 +19,3 @@ private:
     QIcon m_editEmblem;
     QIcon m_errorEmblem;
 };
-
-#endif

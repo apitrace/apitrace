@@ -30,8 +30,7 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
-#ifndef _D3D11SIZE_HPP_
-#define _D3D11SIZE_HPP_
+#pragma once
 
 
 /* We purposedly don't include any D3D header, so that this header can be used
@@ -226,4 +225,3 @@ _getQueryType(ID3D11Asynchronous *pAsync)
 }
 
 
-#endif /* _D3D11SIZE_HPP_ */

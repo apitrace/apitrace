@@ -570,8 +570,7 @@ if __name__ == '__main__':
 
     sys.stdout = open(decl, 'wt')
     print
-    print '#ifndef _GLPROC_HPP_'
-    print '#define _GLPROC_HPP_'
+    print '#pragma once'
     print
     print '#include "glimports.hpp"'
     print
@@ -603,8 +602,6 @@ if __name__ == '__main__':
     print '#endif'
     print
     dispatcher.dispatchModuleDecl(glapi)
-    print
-    print '#endif /* !_GLPROC_HPP_ */'
     print
 
     sys.stdout = open(impl, 'wt')

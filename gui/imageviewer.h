@@ -1,5 +1,4 @@
-#ifndef IMAGEVIEWER_H
-#define IMAGEVIEWER_H
+#pragma once
 
 #include "ui_imageviewer.h"
 #include <QDialog>
@@ -35,6 +34,3 @@ private:
     QImage m_convertedImage;
     PixelWidget *m_pixelWidget;
 };
-
-
-#endif

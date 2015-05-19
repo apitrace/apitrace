@@ -27,8 +27,7 @@
  * Object hierarchy for describing the traces in memory.
  */
 
-#ifndef _TRACE_MODEL_HPP_
-#define _TRACE_MODEL_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -584,4 +583,3 @@ public:
 
 } /* namespace trace */
 
-#endif /* _TRACE_MODEL_HPP_ */

@@ -27,8 +27,7 @@
  * Central place for all DDraw/D3D includes, and respective OS dependent headers.
  */
 
-#ifndef _D3DIMPORTS_HPP_
-#define _D3DIMPORTS_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -56,4 +55,3 @@
 #endif
 
 
-#endif /* _D3DIMPORTS_HPP_ */

@@ -27,8 +27,7 @@
  * Helper code for function name indexed lookup tables.
  */
 
-#ifndef _TRACE_LOOKUP_HPP_
-#define _TRACE_LOOKUP_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -108,4 +107,3 @@ entryLookup(const char *name, const Entry<T> (& entries)[n], const T & default_)
 
 } /* namespace trace */
 
-#endif /* _TRACE_LOOKUP_HPP_ */

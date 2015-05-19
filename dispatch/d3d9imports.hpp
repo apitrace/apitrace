@@ -27,8 +27,7 @@
  * Central place for all D3D9 includes, and respective OS dependent headers.
  */
 
-#ifndef _D3D9IMPORTS_HPP_
-#define _D3D9IMPORTS_HPP_
+#pragma once
 
 #include <windows.h>
 
@@ -99,4 +98,3 @@
 #endif
 
 
-#endif /* _D3D9IMPORTS_HPP_ */

@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _GLRETRACE_HPP_
-#define _GLRETRACE_HPP_
+#pragma once
 
 #include "glws.hpp"
 #include "retrace.hpp"
@@ -122,4 +121,3 @@ clientWaitSync(trace::Call &call, GLsync sync, GLbitfield flags, GLuint64 timeou
 } /* namespace glretrace */
 
 
-#endif /* _GLRETRACE_HPP_ */

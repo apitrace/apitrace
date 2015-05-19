@@ -27,8 +27,7 @@
  * Central place for all GL includes, and respective OS dependent headers.
  */
 
-#ifndef _GLIMPORTS_HPP_
-#define _GLIMPORTS_HPP_
+#pragma once
 
 
 #if defined(_WIN32)
@@ -244,4 +243,3 @@ CGLError CGLUpdateContext(CGLContextObj ctx);
 #include "eglimports.hpp"
 
 
-#endif /* _GLIMPORTS_HPP_ */

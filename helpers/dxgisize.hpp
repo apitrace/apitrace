@@ -30,8 +30,7 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
-#ifndef _DXGISIZE_HPP_
-#define _DXGISIZE_HPP_
+#pragma once
 
 
 /* We purposedly don't include any D3D header, so that this header can be used
@@ -264,4 +263,3 @@ _getMapDesc(IDXGISurface *pResource, DXGI_MAPPED_RECT * pLockedRect, UINT MapFla
 }
 
 
-#endif /* _DXGISIZE_HPP_ */

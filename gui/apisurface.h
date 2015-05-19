@@ -1,5 +1,4 @@
-#ifndef APISURFACE_H
-#define APISURFACE_H
+#pragma once
 
 #include <QImage>
 #include <QSize>
@@ -68,5 +67,3 @@ private:
     QString m_type;
 
 };
-
-#endif

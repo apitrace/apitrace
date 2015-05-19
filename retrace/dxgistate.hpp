@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _DXGISTATE_HPP_
-#define _DXGISTATE_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -73,4 +72,3 @@ getDXGIFormatName(DXGI_FORMAT format);
 } /* namespace d3dstate */
 
 
-#endif // _DXGISTATE_HPP_

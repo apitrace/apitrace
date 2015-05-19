@@ -29,8 +29,7 @@
  */
 
 
-#ifndef GLPROFILE_HPP
-#define GLPROFILE_HPP
+#pragma once
 
 
 #include <ostream>
@@ -134,4 +133,3 @@ struct Extensions
 } /* namespace glprofile */
 
 
-#endif // GLPROFILE_HPP

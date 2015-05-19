@@ -1,5 +1,4 @@
-#ifndef TIMEAXISWIDGET_H
-#define TIMEAXISWIDGET_H
+#pragma once
 
 #include "graphaxiswidget.h"
 
@@ -12,5 +11,3 @@ public:
 
     virtual void paintEvent(QPaintEvent *e);
 };
-
-#endif

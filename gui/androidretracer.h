@@ -1,5 +1,4 @@
-#ifndef ANDROIDRETRACER_H
-#define ANDROIDRETRACER_H
+#pragma once
 
 #include <QAtomicInt>
 #include <QTcpSocket>
@@ -32,4 +31,3 @@ private:
     int m_stderrPort;
 };
 
-#endif // ANDROIDRETRACER_H

@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3DSTATE_HPP_
-#define _D3DSTATE_HPP_
+#pragma once
 
 
 #include <iostream>
@@ -159,4 +158,3 @@ dumpDevice(StateWriter &writer, ID3D11DeviceContext *pDeviceContext);
 } /* namespace d3dstate */
 
 
-#endif /* _D3DSTATE_HPP_ */

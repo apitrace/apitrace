@@ -27,8 +27,7 @@
  * Central place for all D3D10 includes, and respective OS dependent headers.
  */
 
-#ifndef _D3D10IMPORTS_HPP_
-#define _D3D10IMPORTS_HPP_
+#pragma once
 
 
 #include <windows.h>
@@ -42,4 +41,3 @@
 #include "dxgiint.h"
 
 
-#endif /* _D3D10IMPORTS_HPP_ */

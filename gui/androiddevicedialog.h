@@ -28,8 +28,7 @@
 **
 ****************************************************************************/
 
-#ifndef ANDROIDDEVICEDIALOG_H
-#define ANDROIDDEVICEDIALOG_H
+#pragma once
 
 #include "androidutils.h"
 
@@ -64,4 +63,3 @@ private:
     Ui::AndroidDeviceDialog *m_ui;
 };
 
-#endif // ANDROIDDEVICEDIALOG_H

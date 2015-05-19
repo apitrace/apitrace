@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _SCOPED_ALLOCATOR_HPP_
-#define _SCOPED_ALLOCATOR_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -99,4 +98,3 @@ public:
 };
 
 
-#endif /* _SCOPED_ALLOCATOR_HPP_ */

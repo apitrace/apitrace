@@ -1,5 +1,4 @@
-#ifndef ANDROIDUTILS_H
-#define ANDROIDUTILS_H
+#pragma once
 
 #include <QList>
 #include <QObject>
@@ -70,4 +69,3 @@ private:
     mutable qint64 m_wait;
     mutable QString m_serialNumber;
 };
-#endif // ANDROIDUTILS_H

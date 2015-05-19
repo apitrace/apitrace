@@ -27,8 +27,7 @@
  * Human-readible dumping.
  */
 
-#ifndef _TRACE_DUMP_HPP_
-#define _TRACE_DUMP_HPP_
+#pragma once
 
 
 #include <iostream>
@@ -74,4 +73,3 @@ inline std::ostream & operator <<(std::ostream &os, Call &call) {
 
 } /* namespace trace */
 
-#endif /* _TRACE_DUMP_HPP_ */

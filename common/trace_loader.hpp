@@ -1,5 +1,4 @@
-#ifndef TRACE_LOADER_HPP
-#define TRACE_LOADER_HPP
+#pragma once
 
 #include "trace_file.hpp"
 #include "trace_parser.hpp"
@@ -62,4 +61,3 @@ private:
 
 }
 
-#endif // TRACE_LOADER_HPP

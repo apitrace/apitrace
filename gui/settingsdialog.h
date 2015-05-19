@@ -1,5 +1,4 @@
-#ifndef SETTINGSDIALOG_H
-#define SETTINGSDIALOG_H
+#pragma once
 
 #include "trace_api.hpp"
 #include "apitracefilter.h"
@@ -33,5 +32,3 @@ private:
     QMap<QString, QRegExp> m_showFilters;
     ApiTraceFilter *m_filter;
 };
-
-#endif

@@ -24,8 +24,7 @@
  **************************************************************************/
 
 
-#ifndef TRACE_FILE_HPP
-#define TRACE_FILE_HPP
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -205,5 +204,3 @@ operator<=(const File::Offset &one, const File::Offset &two)
 
 
 } /* namespace trace */
-
-#endif

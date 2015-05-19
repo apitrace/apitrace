@@ -1,5 +1,4 @@
-#ifndef GRAPHING_H
-#define GRAPHING_H
+#pragma once
 
 #include <QString>
 
@@ -44,5 +43,3 @@ public:
     /* Set pointer to selection state */
     virtual void setSelectionState(SelectionState* state) = 0;
 };
-
-#endif

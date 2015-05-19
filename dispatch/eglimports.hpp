@@ -28,8 +28,7 @@
  * directly, or indirectly through glimports.h.
  */
 
-#ifndef _EGLIMPORTS_HPP_
-#define _EGLIMPORTS_HPP_
+#pragma once
 
 
 #include <KHR/khrplatform.h>
@@ -88,4 +87,3 @@ typedef int32_t  GLclampx;
 #include "GLES/glext.h"
 
 
-#endif /* _EGLIMPORTS_HPP_ */

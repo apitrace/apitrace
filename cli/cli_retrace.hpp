@@ -25,8 +25,7 @@
  *
  *********************************************************************/
 
-#ifndef _CLI_RETRACE_HPP_
-#define _CLI_RETRACE_HPP_
+#pragma once
 
 
 #include <vector>
@@ -43,4 +42,3 @@ executeRetrace(const std::vector<const char *> & opts,
                const char *traceName);
 
 
-#endif /* _CLI_RETRACE_HPP_ */

@@ -30,8 +30,7 @@
  * Auxiliary functions to compute the size of array/blob arguments.
  */
 
-#ifndef _D3D7SIZE_HPP_
-#define _D3D7SIZE_HPP_
+#pragma once
 
 
 static inline size_t
@@ -103,5 +102,4 @@ _getVertexSize(DWORD dwFVF) {
 
 
 
-#endif /* _D3D7SIZE_HPP_ */
 

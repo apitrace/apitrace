@@ -27,8 +27,7 @@
  * String manipulation.
  */
 
-#ifndef _OS_STRING_HPP_
-#define _OS_STRING_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -434,4 +433,3 @@ bool removeFile(const String &fileName);
 
 } /* namespace os */
 
-#endif /* _OS_STRING_HPP_ */

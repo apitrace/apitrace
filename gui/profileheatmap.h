@@ -1,5 +1,4 @@
-#ifndef PROFILEHEATMAP_H
-#define PROFILEHEATMAP_H
+#pragma once
 
 #include "graphing/heatmapview.h"
 #include "profiling.h"
@@ -466,5 +465,3 @@ protected:
     std::vector<int> m_rowPrograms;
     SelectionState* m_selectionState;
 };
-
-#endif

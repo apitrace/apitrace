@@ -27,8 +27,7 @@
  * Common XLIB code, used by GLX and EGL.
  */
 
-#ifndef _GLWS_XLIB_HPP_
-#define _GLWS_XLIB_HPP_
+#pragma once
 
 
 #include "glimports.hpp"
@@ -68,4 +67,3 @@ showWindow(Window window);
 } /* namespace glws */
 
 
-#endif /* _GLWS_XLIB_HPP_ */

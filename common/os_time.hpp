@@ -27,8 +27,7 @@
  * Simple OS time measurement abstraction.
  */
 
-#ifndef _OS_TIME_HPP_
-#define _OS_TIME_HPP_
+#pragma once
 
 
 #if defined(_WIN32)
@@ -103,4 +102,3 @@ namespace os {
 
 } /* namespace os */
 
-#endif /* _OS_TIME_HPP_ */

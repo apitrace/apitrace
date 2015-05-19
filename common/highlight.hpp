@@ -27,8 +27,7 @@
  * Helpers for coloring output.
  */
 
-#ifndef _HIGHLIGHT_HPP_
-#define _HIGHLIGHT_HPP_
+#pragma once
 
 
 #include <iostream>
@@ -85,4 +84,3 @@ defaultHighlighter(std::ostream & os);
 } /* namespace highlight */
 
 
-#endif /* _HIGHLIGHT_HPP_ */

@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _GLTRACE_HPP_
-#define _GLTRACE_HPP_
+#pragma once
 
 
 #include <string.h>
@@ -145,4 +144,3 @@ _glGetStringi_override(GLenum name, GLuint index);
 } /* namespace gltrace */
 
 
-#endif /* _GLRETRACE_HPP_ */

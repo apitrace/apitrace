@@ -35,8 +35,7 @@
  * - http://msdn.microsoft.com/en-us/library/windows/desktop/bb172554.aspx
  */
 
-#ifndef _D3DERR_HPP_
-#define _D3DERR_HPP_
+#pragma once
 
 
 #ifndef _FACD3D
@@ -95,4 +94,3 @@
 #endif
 
 
-#endif /* _D3DERR_HPP_ */

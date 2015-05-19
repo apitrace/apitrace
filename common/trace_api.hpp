@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_API_HPP_
-#define _TRACE_API_HPP_
+#pragma once
 
 
 #include <stdlib.h>
@@ -55,4 +54,3 @@ enum API {
 
 } /* namespace trace */
 
-#endif /* _TRACE_API_HPP_ */

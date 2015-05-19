@@ -27,8 +27,7 @@
  * Simple OS abstraction layer.
  */
 
-#ifndef _OS_HPP_
-#define _OS_HPP_
+#pragma once
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -105,4 +104,3 @@ random(void) {
 
 } /* namespace os */
 
-#endif /* _OS_HPP_ */

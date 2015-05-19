@@ -1,5 +1,4 @@
-#ifndef APITRACE_H
-#define APITRACE_H
+#pragma once
 
 #include "apitracecall.h"
 
@@ -177,5 +176,3 @@ private:
 
     ImageHash m_thumbnails;
 };
-
-#endif

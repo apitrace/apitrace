@@ -1,5 +1,4 @@
-#ifndef JUMPWIDGET_H
-#define JUMPWIDGET_H
+#pragma once
 
 #include "ui_jumpwidget.h"
 #include <QWidget>
@@ -27,5 +26,3 @@ protected:
 private:
     Ui_JumpWidget m_ui;
 };
-
-#endif

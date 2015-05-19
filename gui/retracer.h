@@ -1,5 +1,4 @@
-#ifndef RETRACER_H
-#define RETRACER_H
+#pragma once
 
 #include "trace_api.hpp"
 #include "apitrace.h"
@@ -91,5 +90,3 @@ private:
 
     QList<qlonglong> m_thumbnailsToCapture;
 };
-
-#endif

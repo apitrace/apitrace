@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _CLI_RESOURCES_HPP_
-#define _CLI_RESOURCES_HPP_
+#pragma once
 
 
 #include <stdlib.h>
@@ -43,4 +42,3 @@ os::String
 findWrapper(const char *wrapperFilename, bool verbose = false);
 
 
-#endif /* _CLI_RESOURCES_HPP_ */

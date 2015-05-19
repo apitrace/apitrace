@@ -27,8 +27,7 @@
  * Abstraction for GL window system specific APIs (GLX, WGL).
  */
 
-#ifndef _GLWS_HPP_
-#define _GLWS_HPP_
+#pragma once
 
 
 #include <assert.h>
@@ -183,4 +182,3 @@ processEvents(void);
 } /* namespace glws */
 
 
-#endif /* _GLWS_HPP_ */

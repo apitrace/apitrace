@@ -28,8 +28,7 @@
  * Simple OS time measurement abstraction.
  */
 
-#ifndef _OS_MEMORY_HPP_
-#define _OS_MEMORY_HPP_
+#pragma once
 
 #ifdef HAVE_READPROC_H
 #include <proc/readproc.h>
@@ -77,4 +76,3 @@ namespace os {
 
 } /* namespace os */
 
-#endif /* _OS_MEMORY_HPP_ */

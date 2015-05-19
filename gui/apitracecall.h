@@ -1,5 +1,4 @@
-#ifndef APITRACECALL_H
-#define APITRACECALL_H
+#pragma once
 
 #include "apisurface.h"
 
@@ -369,6 +368,3 @@ private:
     unsigned m_lastCallIndex;
 };
 Q_DECLARE_METATYPE(ApiTraceFrame*);
-
-
-#endif

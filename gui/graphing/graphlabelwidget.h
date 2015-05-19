@@ -1,5 +1,4 @@
-#ifndef GRAPHLABELWIDGET_H
-#define GRAPHLABELWIDGET_H
+#pragma once
 
 #include <QWidget>
 #include <QPainter>
@@ -38,5 +37,3 @@ protected:
     int m_flags;
     QString m_text;
 };
-
-#endif

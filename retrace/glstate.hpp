@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _GLSTATE_HPP_
-#define _GLSTATE_HPP_
+#pragma once
 
 
 #include <ostream>
@@ -72,4 +71,3 @@ getDrawBufferImage(void);
 } /* namespace glstate */
 
 
-#endif /* _GLSTATE_HPP_ */

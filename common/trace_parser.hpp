@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _TRACE_PARSER_HPP_
-#define _TRACE_PARSER_HPP_
+#pragma once
 
 
 #include <iostream>
@@ -223,4 +222,3 @@ protected:
 
 } /* namespace trace */
 
-#endif /* _TRACE_PARSER_HPP_ */

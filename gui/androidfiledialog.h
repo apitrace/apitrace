@@ -1,5 +1,4 @@
-#ifndef ANDROIDFILEDIALOG_H
-#define ANDROIDFILEDIALOG_H
+#pragma once
 
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -44,4 +43,3 @@ private:
     Mode m_mode;
 };
 
-#endif // ANDROIDFILEDIALOG_H

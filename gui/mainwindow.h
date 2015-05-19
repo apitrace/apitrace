@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include "ui_mainwindow.h"
 
@@ -168,6 +167,3 @@ private:
     ProfileDialog* m_profileDialog;
     QString m_androidFilePath;
 };
-
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef TRIMPROCESS_H
-#define TRIMPROCESS_H
+#pragma once
 
 #include "apitrace.h"
 
@@ -40,5 +39,3 @@ private:
     int m_trimIndex;
     QProcess *m_process;
 };
-
-#endif

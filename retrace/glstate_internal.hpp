@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _GLSTATE_INTERNAL_HPP_
-#define _GLSTATE_INTERNAL_HPP_
+#pragma once
 
 
 #include "glimports.hpp"
@@ -172,4 +171,3 @@ void dumpFramebuffer(StateWriter &writer, Context &context);
 } /* namespace glstate */
 
 
-#endif /* _GLSTATE_INTERNAL_HPP_ */

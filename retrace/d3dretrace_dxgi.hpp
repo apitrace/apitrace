@@ -23,8 +23,7 @@
  *
  **************************************************************************/
 
-#ifndef _D3DRETRACE_DXGI_HPP_
-#define _D3DRETRACE_DXGI_HPP_
+#pragma once
 
 
 #include "dxgiint.h"
@@ -69,4 +68,3 @@ overrideQueryInterface(IUnknown *pThis, REFIID riid, void **ppvObj, HRESULT *pRe
 } /* namespace d3dretrace */
 
 
-#endif /* _D3DRETRACE_DXGI_HPP_ */

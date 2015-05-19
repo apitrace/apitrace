@@ -27,8 +27,7 @@
  * Python pickle writer
  */
 
-#ifndef _PICKLE_HPP_
-#define _PICKLE_HPP_
+#pragma once
 
 #include <assert.h>
 #include <stddef.h>
@@ -385,4 +384,3 @@ protected:
     }
 };
 
-#endif /* _Pickle_HPP_ */

@@ -1,5 +1,4 @@
-#ifndef HEATMAPVIEW_H
-#define HEATMAPVIEW_H
+#pragma once
 
 #include "graphview.h"
 
@@ -120,5 +119,3 @@ protected:
     int m_rowHeight;
     HeatmapDataProvider* m_data;
 };
-
-#endif

@@ -27,8 +27,7 @@
  * Force binary mode standard files on Windows.
  */
 
-#ifndef _OS_BINARY_HPP_
-#define _OS_BINARY_HPP_
+#pragma once
 
 
 #include <stdio.h>
@@ -58,4 +57,3 @@ void setBinaryMode(FILE *fp) {
 
 } /* namespace os */
 
-#endif /* _OS_BINARY_HPP_ */

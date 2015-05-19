@@ -44,8 +44,7 @@
  *
  */
 
-#ifndef _TRACE_CALLSET_HPP_
-#define _TRACE_CALLSET_HPP_
+#pragma once
 
 
 #include <limits>
@@ -194,4 +193,3 @@ namespace trace {
 } /* namespace trace */
 
 
-#endif /* _TRACE_CALLSET_HPP_ */
