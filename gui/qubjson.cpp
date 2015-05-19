@@ -48,57 +48,59 @@ readMarker(QDataStream &stream)
 static int8_t
 readInt8(QDataStream &stream)
 {
-    quint8 byte;
-    stream >> byte;
-    return byte;
+    qint8 i;
+    stream >> i;
+    return i;
 }
 
 static uint8_t
 readUInt8(QDataStream &stream)
 {
-    quint8 byte;
-    stream >> byte;
-    return byte;
+    quint8 u;
+    stream >> u;
+    return u;
 }
 
 static int16_t
 readInt16(QDataStream &stream)
 {
-    uint16_t i;
-    stream.readRawData((char *)&i, sizeof i);
-    return bigEndian16(i);
+    qint16 i;
+    stream >> i;
+    return i;
 }
 
 static int32_t
 readInt32(QDataStream &stream)
 {
-    uint32_t i;
-    stream.readRawData((char *)&i, sizeof i);
-    return bigEndian32(i);
+    qint32 i;
+    stream >> i;
+    return i;
 }
 
 static int64_t
 readInt64(QDataStream &stream)
 {
-    uint64_t i;
-    stream.readRawData((char *)&i, sizeof i);
-    return bigEndian64(i);
+    qint64 i;
+    stream >> i;
+    return i;
 }
 
 static float
 readFloat32(QDataStream &stream)
 {
-    Float32 u;
-    u.i = readInt32(stream);
-    return u.f;
+    float f;
+    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    stream >> f;
+    return f;
 }
 
 static float
 readFloat64(QDataStream &stream)
 {
-    Float64 u;
-    u.i = readInt64(stream);
-    return u.f;
+    double f;
+    stream.setFloatingPointPrecision(QDataStream::DoublePrecision);
+    stream >> f;
+    return f;
 }
 
 
@@ -239,6 +241,7 @@ readVariant(QDataStream &stream, Marker type)
 
 QVariantMap decodeUBJSONObject(QDataStream &stream)
 {
+    stream.setByteOrder(QDataStream::BigEndian);
     Marker marker = readMarker(stream);
     Q_ASSERT(marker == MARKER_OBJECT_BEGIN);
     return readObject(stream);
