@@ -1445,7 +1445,7 @@ ID3D11DeviceContext1.methods += [
     StdMethod(Void, "PSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
     StdMethod(Void, "CSGetConstantBuffers1", [(UINT, "StartSlot"), (UINT, "NumBuffers"), Out(Array(ObjPointer(ID3D11Buffer), "NumBuffers"), "ppConstantBuffers"), Out(Array(UINT, "NumBuffers"), "pFirstConstant"), Out(Array(UINT, "NumBuffers"), "pNumConstants")]),
     StdMethod(Void, "SwapDeviceContextState", [(ObjPointer(ID3DDeviceContextState), "pState"), Out(Pointer(ObjPointer(ID3DDeviceContextState)), "ppPreviousState")]),
-    StdMethod(Void, "ClearView", [(ObjPointer(ID3D11View), "pView"), (Array(Const(FLOAT), 4), "Color"), (Pointer(Const(D3D11_RECT)), "pRect"), (UINT, "NumRects")]),
+    StdMethod(Void, "ClearView", [(ObjPointer(ID3D11View), "pView"), (Array(Const(FLOAT), 4), "Color"), (Array(Const(D3D11_RECT), "NumRects"), "pRect"), (UINT, "NumRects")]),
 ]
 
 

@@ -422,7 +422,7 @@ IDirect3DViewport.methods += [
     StdMethod(HRESULT, "GetBackground", [Out(LPD3DMATERIALHANDLE, "lphMat"), Out(LPBOOL, "lpValid")], sideeffects=False),
     StdMethod(HRESULT, "SetBackgroundDepth", [(LPDIRECTDRAWSURFACE, "lpDDSurface")]),
     StdMethod(HRESULT, "GetBackgroundDepth", [Out(Pointer(LPDIRECTDRAWSURFACE), "lplpDDSurface"), Out(LPBOOL, "lpValid")]),
-    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (LPD3DRECT, "lpRects"), (DWORD, "dwFlags")]),
+    StdMethod(HRESULT, "Clear", [(DWORD, "dwCount"), (Array(D3DRECT, "dwCount"), "lpRects"), (D3DCLEAR, "dwFlags")]),
     StdMethod(HRESULT, "AddLight", [(LPDIRECT3DLIGHT, "lpDirect3DLight")]),
     StdMethod(HRESULT, "DeleteLight", [(LPDIRECT3DLIGHT, "lpDirect3DLight")]),
     StdMethod(HRESULT, "NextLight", [(LPDIRECT3DLIGHT, "lpDirect3DLight"), Out(Pointer(LPDIRECT3DLIGHT), "lplpDirect3DLight"), (DWORD, "dwFlags")]),
@@ -436,7 +436,7 @@ IDirect3DViewport2.methods += [
 IDirect3DViewport3.methods += [
     StdMethod(HRESULT, "SetBackgroundDepth2", [(LPDIRECTDRAWSURFACE4, "lpDDS")]),
     StdMethod(HRESULT, "GetBackgroundDepth2", [Out(Pointer(LPDIRECTDRAWSURFACE4), "lplpDDS"), (LPBOOL, "lpValid")]),
-    StdMethod(HRESULT, "Clear2", [(DWORD, "dwCount"), (LPD3DRECT, "lpRects"), (DWORD, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
+    StdMethod(HRESULT, "Clear2", [(DWORD, "dwCount"), (Array(D3DRECT, "dwCount"), "lpRects"), (D3DCLEAR, "dwFlags"), (D3DCOLOR, "dwColor"), (D3DVALUE, "dvZ"), (DWORD, "dwStencil")]),
 ]
 
 IDirect3DVertexBuffer.methods += [
