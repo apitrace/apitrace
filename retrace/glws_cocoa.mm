@@ -195,7 +195,8 @@ initThread(void) {
 void
 init(void) {
     // Prevent glproc to load system's OpenGL, so that we can trace glretrace.
-    _libGlHandle = dlopen("OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+    _libGlHandle = dlopen("/System/Library/Frameworks/OpenGL.framework/OpenGL", RTLD_LOCAL | RTLD_NOW | RTLD_FIRST);
+    assert(_libGlHandle);
 
     initThread();
 
