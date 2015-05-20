@@ -29,6 +29,7 @@
 #include <QDebug>
 #include <QVariant>
 #include <QJsonArray>
+#include <QDataStream>
 
 #include "ubjson.hpp"
 
