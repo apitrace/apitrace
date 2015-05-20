@@ -108,7 +108,7 @@ struct PixelFormat
 
 
 static glws::Drawable *
-getDrawable(unsigned long drawable_id) {
+getDrawable(unsigned long drawable_id, glprofile::Profile profile) {
     if (drawable_id == 0) {
         return NULL;
     }
@@ -116,7 +116,7 @@ getDrawable(unsigned long drawable_id) {
     DrawableMap::const_iterator it;
     it = drawable_map.find(drawable_id);
     if (it == drawable_map.end()) {
-        return (drawable_map[drawable_id] = glretrace::createDrawable());
+        return (drawable_map[drawable_id] = glretrace::createDrawable(profile));
     }
 
     return it->second;
@@ -322,10 +322,9 @@ static void retrace_CGLSetSurface(trace::Call &call) {
     (void)cid;
     (void)wid;
 
-    glws::Drawable *drawable = getDrawable(sid);
-
     Context *context = getContext(ctx);
     if (context) {
+        glws::Drawable *drawable = getDrawable(sid, context->wsContext->profile);
         context->drawable = drawable;
     }
 }
@@ -355,7 +354,8 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
     glws::Drawable *new_drawable = NULL;
     if (new_context) {
         if (!new_context->drawable) {
-            new_context->drawable = glretrace::createDrawable();
+            glprofile::Profile profile = new_context->wsContext->profile;
+            new_context->drawable = glretrace::createDrawable(profile);
         }
         new_drawable = new_context->drawable;
     }
