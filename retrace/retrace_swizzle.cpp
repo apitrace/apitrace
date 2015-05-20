@@ -99,7 +99,7 @@ upperBound(unsigned long long address) {
 }
 
 void
-addRegion(unsigned long long address, void *buffer, unsigned long long size)
+addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned long long size)
 {
     if (retrace::verbosity >= 2) {
         std::cout
@@ -133,7 +133,7 @@ addRegion(unsigned long long address, void *buffer, unsigned long long size)
             regionMap.erase(start, stop);
         } else {
             for (RegionMap::iterator it = start; it != stop; ++it) {
-                std::cerr << std::hex << "warning: "
+                warning(call) << "warning: " << std::hex <<
                     "region 0x" << address << "-0x" << (address + size) << " "
                     "intersects existing region 0x" << it->first << "-0x" << (it->first + it->second.size) << "\n" << std::dec;
                 assert(intersects(it, address, size));

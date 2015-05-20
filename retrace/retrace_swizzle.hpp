@@ -98,7 +98,7 @@ public:
 
 
 void
-addRegion(unsigned long long address, void *buffer, unsigned long long size);
+addRegion(trace::Call &call, unsigned long long address, void *buffer, unsigned long long size);
 
 void
 delRegionByPointer(void *ptr);

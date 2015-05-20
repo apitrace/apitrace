@@ -279,7 +279,7 @@ class SwizzledValueRegistrator(stdapi.Visitor, stdapi.ExpanderMixin):
     def visitLinearPointer(self, pointer, lvalue, rvalue):
         assert pointer.size is not None
         if pointer.size is not None:
-            print r'    retrace::addRegion((%s).toUIntPtr(), %s, %s);' % (rvalue, lvalue, pointer.size)
+            print r'    retrace::addRegion(call, (%s).toUIntPtr(), %s, %s);' % (rvalue, lvalue, pointer.size)
 
     def visitReference(self, reference, lvalue, rvalue):
         pass

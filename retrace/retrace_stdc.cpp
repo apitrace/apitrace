@@ -48,7 +48,7 @@ static void retrace_malloc(trace::Call &call) {
         return;
     }
 
-    retrace::addRegion(address, buffer, size);
+    retrace::addRegion(call, address, buffer, size);
 }
 
 
