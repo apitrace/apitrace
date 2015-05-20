@@ -201,7 +201,9 @@ class D3DRetracer(Retracer):
         if method.name in ('Lock', 'LockRect', 'LockBox'):
             print '    VOID *_pbData = NULL;'
             print '    size_t _MappedSize = 0;'
-            print '    _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
+            print '    if (!(Flags & D3DLOCK_READONLY)) {'
+            print '        _getMapInfo(_this, %s, _pbData, _MappedSize);' % ', '.join(method.argNames()[:-1])
+            print '    }'
             print '    if (_MappedSize) {'
             print '        _maps[MappingKey(_this, %s)] = _pbData;' % mapping_subkey()
             self.checkPitchMismatch(method)
