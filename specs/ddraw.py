@@ -1382,9 +1382,9 @@ IDirectDraw7.methods += [
 
 IDirectDrawPalette.methods += [
     StdMethod(DDRESULT, "GetCaps", [Out(Pointer(DirectDrawPaletteCapsFlags), "lpdwCaps")], sideeffects=False),
-    StdMethod(DDRESULT, "GetEntries", [(DWORD, "dwFlags"), (DWORD, "dwBase"), (DWORD, "dwNumEntries"), Out(LPPALETTEENTRY, "lpEntries")], sideeffects=False),
+    StdMethod(DDRESULT, "GetEntries", [(DWORD, "dwFlags"), (DWORD, "dwBase"), (DWORD, "dwNumEntries"), Out(Array(PALETTEENTRY, "dwNumEntries"), "lpEntries")], sideeffects=False),
     StdMethod(DDRESULT, "Initialize", [(LPDIRECTDRAW, "lpDD"), (DWORD, "dwFlags"), (LPPALETTEENTRY, "lpDDColorTable")]),
-    StdMethod(DDRESULT, "SetEntries", [(DWORD, "dwFlags"), (DWORD, "dwStartingEntry"), (DWORD, "dwCount"), (LPPALETTEENTRY, "lpEntries")]),
+    StdMethod(DDRESULT, "SetEntries", [(DWORD, "dwFlags"), (DWORD, "dwStartingEntry"), (DWORD, "dwCount"), (Array(PALETTEENTRY, "dwCount"), "lpEntries")]),
 ]
 
 IDirectDrawClipper.methods += [
