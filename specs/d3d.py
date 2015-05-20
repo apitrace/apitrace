@@ -356,8 +356,8 @@ IDirect3DDevice7.methods += [
     StdMethod(HRESULT, "Load", [(LPDIRECTDRAWSURFACE7, "lpDestTex"), (LPPOINT, "lpDestPoint"), (LPDIRECTDRAWSURFACE7, "lpSrcTex"), (LPRECT, "lprcSrcRect"), (DWORD, "dwFlags")]),
     StdMethod(HRESULT, "LightEnable", [(DWORD, "dwLightIndex"), (BOOL, "bEnable")]),
     StdMethod(HRESULT, "GetLightEnable", [(DWORD, "dwLightIndex"), Out(Pointer(BOOL), "pbEnable")], sideeffects=False),
-    StdMethod(HRESULT, "SetClipPlane", [(DWORD, "dwIndex"), (Pointer(D3DVALUE), "pPlaneEquation")]),
-    StdMethod(HRESULT, "GetClipPlane", [(DWORD, "dwIndex"), Out(Pointer(D3DVALUE), "pPlaneEquation")], sideeffects=False),
+    StdMethod(HRESULT, "SetClipPlane", [(DWORD, "dwIndex"), (Array(D3DVALUE, 4), "pPlaneEquation")]),
+    StdMethod(HRESULT, "GetClipPlane", [(DWORD, "dwIndex"), Out(Array(D3DVALUE, 4), "pPlaneEquation")], sideeffects=False),
     StdMethod(HRESULT, "GetInfo", [(DWORD, "dwDevInfoID"), Out(LPVOID, "pDevInfoStruct"), (DWORD, "dwSize")], sideeffects=False),
 ]
 
