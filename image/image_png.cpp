@@ -106,17 +106,8 @@ Image::writePNG(std::ostream &os, bool strip_alpha) const
         png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
     }
 
-    if (!flipped) {
-        for (unsigned y = 0; y < height; ++y) {
-            png_bytep row = (png_bytep)(pixels + y*width*channels);
-            png_write_rows(png_ptr, &row, 1);
-        }
-    } else {
-        unsigned y = height;
-        while (y--) {
-            png_bytep row = (png_bytep)(pixels + y*width*channels);
-            png_write_rows(png_ptr, &row, 1);
-        }
+    for (const unsigned char *row = start(); row != end(); row += stride()) {
+        png_write_rows(png_ptr, (png_bytepp) &row, 1);
     }
 
     png_write_end(png_ptr, info_ptr);
