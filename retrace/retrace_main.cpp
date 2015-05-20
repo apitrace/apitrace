@@ -735,6 +735,7 @@ int main(int argc, char **argv)
             if (strcasecmp(optarg, "json") == 0) {
                 stateWriterFactory = &createJSONStateWriter;
             } else if (strcasecmp(optarg, "ubjson") == 0) {
+                os::setBinaryMode(stdout);
                 stateWriterFactory = &createUBJSONStateWriter;
             } else {
                 std::cerr << "error: unsupported dump format `" << optarg << "`\n";
