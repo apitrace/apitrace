@@ -239,8 +239,9 @@ readVariant(QDataStream &stream, Marker type)
 
 
 
-QVariantMap decodeUBJSONObject(QDataStream &stream)
+QVariantMap decodeUBJSONObject(QIODevice *io)
 {
+    QDataStream stream(io);
     stream.setByteOrder(QDataStream::BigEndian);
     Marker marker = readMarker(stream);
     Q_ASSERT(marker == MARKER_OBJECT_BEGIN);

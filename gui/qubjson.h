@@ -28,7 +28,7 @@
 
 
 #include <QVariantMap>
-#include <QDataStream>
 
+class QIODevice;
 
-QVariantMap decodeUBJSONObject(QDataStream &stream);
+QVariantMap decodeUBJSONObject(QIODevice *io);

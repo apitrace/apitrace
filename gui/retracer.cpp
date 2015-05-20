@@ -446,8 +446,7 @@ void Retracer::run()
         BlockingIODevice io(&process);
 
         if (m_captureState) {
-            QDataStream datastream(&io);
-            parsedJson = decodeUBJSONObject(datastream);
+            parsedJson = decodeUBJSONObject(&io);
             process.waitForFinished(-1);
         } else if (m_captureThumbnails) {
             /*
