@@ -177,8 +177,6 @@ takeSnapshot(unsigned call_no) {
                 assert(0);
                 break;
             }
-        } else if (src->channelType != image::TYPE_UNORM8) {
-            std::cerr << call_no << ": warning: skipping non 8-bit unsigned normalized snapshot\n";
         } else {
             os::String filename = os::String::format("%s%010u.png",
                                                      snapshotPrefix,
