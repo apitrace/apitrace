@@ -40,9 +40,12 @@ using namespace ubjson;
 static Marker
 readMarker(QDataStream &stream)
 {
+    if (stream.atEnd()) {
+        return MARKER_EOF;
+    }
     quint8 byte;
     stream >> byte;
-    return static_cast<ubjson::Marker>(byte);
+    return static_cast<Marker>(byte);
 }
 
 
@@ -122,6 +125,7 @@ readSize(QDataStream &stream)
         return readInt64(stream);
     default:
         Q_UNIMPLEMENTED();
+    case MARKER_EOF:
         return 0;
     }
 }
@@ -150,19 +154,23 @@ readArray(QDataStream &stream)
     if (marker == MARKER_TYPE) {
         Marker type = readMarker(stream);
         Q_ASSERT(type == MARKER_UINT8);
+        Q_UNUSED(type);
         marker = readMarker(stream);
         Q_ASSERT(marker == MARKER_COUNT);
         size_t count = readSize(stream);
         QByteArray array(count, Qt::Uninitialized);
         int read = stream.readRawData(array.data(), count);
         Q_ASSERT(read == count);
+        Q_UNUSED(read);
         marker = readMarker(stream);
         Q_ASSERT(marker == MARKER_ARRAY_END);
+        Q_UNUSED(marker);
         return array;
     } else {
         Q_ASSERT(marker != MARKER_COUNT);
         QVariantList array;
-        while (marker != MARKER_ARRAY_END) {
+        while (marker != MARKER_ARRAY_END &&
+               marker != MARKER_EOF) {
             QVariant value = readVariant(stream, marker);
             array.append(value);
             marker = readMarker(stream);
@@ -177,7 +185,8 @@ readObject(QDataStream &stream)
 {
     QVariantMap object;
     Marker marker = readMarker(stream);
-    while (marker != MARKER_OBJECT_END) {
+    while (marker != MARKER_OBJECT_END &&
+           marker != MARKER_EOF) {
         Q_ASSERT(marker == MARKER_STRING);
         QString name = readString(stream);
         marker = readMarker(stream);
@@ -233,11 +242,10 @@ readVariant(QDataStream &stream, Marker type)
     case MARKER_COUNT:
     default:
         Q_ASSERT(0);
+    case MARKER_EOF:
         return QVariant();
     }
 }
-
-
 
 
 QVariantMap decodeUBJSONObject(QIODevice *io)
@@ -246,6 +254,7 @@ QVariantMap decodeUBJSONObject(QIODevice *io)
     stream.setByteOrder(QDataStream::BigEndian);
     Marker marker = readMarker(stream);
     Q_ASSERT(marker == MARKER_OBJECT_BEGIN);
+    Q_UNUSED(marker);
     return readObject(stream);
 }
 

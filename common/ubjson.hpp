@@ -34,8 +34,9 @@
 namespace ubjson {
 
 
+// http://ubjson.org/type-reference/
 enum Marker {
-    MARKER_NONE           = 0,
+    MARKER_EOF            = -1,
     MARKER_NULL           = 'Z',
     MARKER_NOOP           = 'N',
     MARKER_TRUE           = 'T',
