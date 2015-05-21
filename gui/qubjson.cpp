@@ -108,9 +108,8 @@ readFloat64(QDataStream &stream)
 
 
 static size_t
-readSize(QDataStream &stream)
+readSize(QDataStream &stream, Marker type)
 {
-    Marker type = readMarker(stream);
     switch (type) {
     case MARKER_INT8:
         return readInt8(stream);
@@ -131,14 +130,39 @@ readSize(QDataStream &stream)
 
 
 static QString
-readString(QDataStream &stream)
+readChar(QDataStream &stream)
 {
-    size_t size = readSize(stream);
+    qint8 c;
+    stream >> c;
+    Q_ASSERT(c >= 0);
+    return QChar(c);
+}
+
+
+static size_t
+readSize(QDataStream &stream)
+{
+    Marker type = readMarker(stream);
+    return readSize(stream, type);
+}
+
+
+static QString
+readString(QDataStream &stream, size_t size)
+{
     char *buf = new char [size];
     stream.readRawData(buf, size);
     QString str = QString::fromUtf8(buf, size);
     delete [] buf;
     return str;
+}
+
+
+static QString
+readString(QDataStream &stream)
+{
+    size_t size = readSize(stream);
+    return readString(stream, size);
 }
 
 
@@ -183,8 +207,8 @@ readObject(QDataStream &stream)
     Marker marker = readMarker(stream);
     while (marker != MARKER_OBJECT_END &&
            marker != MARKER_EOF) {
-        Q_ASSERT(marker == MARKER_STRING);
-        QString name = readString(stream);
+        size_t nameSize = readSize(stream, marker);
+        QString name = readString(stream, nameSize);
         marker = readMarker(stream);
         QVariant value = readVariant(stream, marker);
         object[name] = value;
@@ -224,8 +248,7 @@ readVariant(QDataStream &stream, Marker type)
         Q_UNIMPLEMENTED();
         return QVariant();
     case MARKER_CHAR:
-        Q_UNIMPLEMENTED();
-        return QVariant();
+        return readChar(stream);
     case MARKER_STRING:
         return readString(stream);
     case MARKER_ARRAY_BEGIN:

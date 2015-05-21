@@ -66,9 +66,24 @@ public:
         os.put(MARKER_OBJECT_END);
     }
 
+    inline void
+    _writeString(const char *s, size_t len) {
+        writeUInt(len);
+        // TODO: convert string from locale encoding to UTF-8
+        for (size_t i = 0; i < len; ++i) {
+            char c = s[i];
+            os.put((signed char)c >= 0 ? c : '?');
+        }
+    }
+
+    void
+    _writeString(const char *s) {
+    }
+
     void
     beginMember(const char * name) {
-        writeString(name);
+        size_t len = strlen(name);
+        _writeString(name, len);
     }
 
     void
@@ -87,14 +102,14 @@ public:
 
     void
     writeString(const char *s) {
-        os.put(MARKER_STRING);
         size_t len = strlen(s);
-        writeUInt(len);
-        // TODO: convert string from locale encoding to UTF-8
-        for (size_t i = 0; i < len; ++i) {
-            char c = s[i];
-            os.put((signed char)c >= 0 ? c : '?');
+        if (len == 1 && (signed char)s[0] >= 0) {
+            os.put(MARKER_CHAR);
+            os.put(s[0]);
+            return;
         }
+        os.put(MARKER_STRING);
+        _writeString(s, len);
     }
 
     void
