@@ -136,10 +136,13 @@ getCurrentDir(void)
     size_t size = PATH_MAX;
     char *buf = path.buf(size);
 
-    getcwd(buf, size);
-    buf[size - 1] = 0;
+    if (getcwd(buf, size)) {
+        buf[size - 1] = 0;
+        path.truncate();
+    } else {
+        path.truncate(0);
+    }
     
-    path.truncate();
     return path;
 }
 
