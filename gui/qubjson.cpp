@@ -28,7 +28,6 @@
 
 #include <QDebug>
 #include <QVariant>
-#include <QJsonArray>
 #include <QDataStream>
 
 #include "ubjson.hpp"
@@ -137,8 +136,8 @@ readString(QDataStream &stream)
     size_t size = readSize(stream);
     char *buf = new char [size];
     stream.readRawData(buf, size);
-    QString str = QString::fromLocal8Bit(buf, size);
-    free(buf);
+    QString str = QString::fromUtf8(buf, size);
+    delete [] buf;
     return str;
 }
 
