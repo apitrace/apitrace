@@ -108,7 +108,6 @@ public:
         os.put(MARKER_COUNT);
         writeUInt(size);
         os.write((const char *)bytes, size);
-        endArray();
     }
 
     void

@@ -161,9 +161,6 @@ readArray(QDataStream &stream)
         int read = stream.readRawData(array.data(), count);
         Q_ASSERT(read == count);
         Q_UNUSED(read);
-        marker = readMarker(stream);
-        Q_ASSERT(marker == MARKER_ARRAY_END);
-        Q_UNUSED(marker);
         return array;
     } else {
         Q_ASSERT(marker != MARKER_COUNT);
