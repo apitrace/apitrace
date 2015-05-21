@@ -36,53 +36,6 @@
 namespace {
 
 
-static void
-encodeBase64String(std::ostream &os, const unsigned char *bytes, size_t size) {
-    const char *table64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    unsigned char c0, c1, c2, c3;
-    char buf[4];
-
-    while (size >= 3) {
-        c0 = bytes[0] >> 2;
-        c1 = ((bytes[0] & 0x03) << 4) | ((bytes[1] & 0xf0) >> 4);
-        c2 = ((bytes[1] & 0x0f) << 2) | ((bytes[2] & 0xc0) >> 6);
-        c3 = bytes[2] & 0x3f;
-
-        buf[0] = table64[c0];
-        buf[1] = table64[c1];
-        buf[2] = table64[c2];
-        buf[3] = table64[c3];
-
-        os.write(buf, 4);
-
-        bytes += 3;
-        size -= 3;
-    }
-
-    if (size > 0) {
-        c0 = bytes[0] >> 2;
-        c1 = ((bytes[0] & 0x03) << 4);
-        buf[2] = '=';
-        buf[3] = '=';
-
-        if (size > 1) {
-            c1 |= ((bytes[1] & 0xf0) >> 4);
-            c2 = ((bytes[1] & 0x0f) << 2);
-            if (size > 2) {
-                c2 |= ((bytes[2] & 0xc0) >> 6);
-                c3 = bytes[2] & 0x3f;
-                buf[3] = table64[c3];
-            }
-            buf[2] = table64[c2];
-        }
-        buf[1] = table64[c1];
-        buf[0] = table64[c0];
-
-        os.write(buf, 4);
-    }
-}
-
-
 using namespace ubjson;
 
 
@@ -137,33 +90,25 @@ public:
         os.put(MARKER_STRING);
         size_t len = strlen(s);
         writeUInt(len);
-        if (true) {
-            for (size_t i = 0; i < len; ++i) {
-                char c = s[i];
-                os.put((signed char)c >= 0 ? c : '?');
-            }
-        } else {
-            os.write(s, len);
+        // TODO: convert string from locale encoding to UTF-8
+        for (size_t i = 0; i < len; ++i) {
+            char c = s[i];
+            os.put((signed char)c >= 0 ? c : '?');
         }
     }
 
     void
     writeBlob(const void *bytes, size_t size) {
-        if (true) {
-            beginArray();
-            os.put(MARKER_TYPE);
-            os.put(MARKER_UINT8);
-            os.put(MARKER_COUNT);
-            writeUInt(size);
-            os.write((const char *)bytes, size);
-            endArray();
-        } else {
-            // XXX: Only for testing with simpleubjson
-            os.put(MARKER_STRING);
-            size_t len = (size + 2)/3*4;
-            writeUInt(len);
-            encodeBase64String(os, (const unsigned char *)bytes, size);
-        }
+        // Encode as a strongly-typed array of uint8 values
+        // http://ubjson.org/type-reference/binary-data/
+        // http://ubjson.org/type-reference/container-types/#optimized-format
+        beginArray();
+        os.put(MARKER_TYPE);
+        os.put(MARKER_UINT8);
+        os.put(MARKER_COUNT);
+        writeUInt(size);
+        os.write((const char *)bytes, size);
+        endArray();
     }
 
     void
@@ -180,6 +125,11 @@ public:
     writeSInt(signed long long i) {
         if (INT8_MIN <= i && i <= INT8_MAX) {
             os.put(MARKER_INT8);
+            os.put((char)i);
+            return;
+        }
+        if (0 <= i && i <= UINT8_MAX) {
+            os.put(MARKER_UINT8);
             os.put((char)i);
             return;
         }
