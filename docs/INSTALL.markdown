@@ -153,6 +153,11 @@ on Windows XP.  If you want to obtain binaries that on Windows XP then pass the
 `-T v110_xp` or `-T v120_xp` options to cmake when building with Visual Studio
 2012 or 2013 respectively.
 
+To run qapitrace, either you ensure that `C:\Qt\QtX.Y.Z\X.Y\msvc2013\bin` is in the system path, or you can use [Qt's Windows deployment tool](http://doc.qt.io/qt-5/windows-deployment.html#the-windows-deployment-tool) to copy all necessary DLLs, like:
+
+    set Path=C:\Qt\QtX.Y.Z\X.Y\msvc2013\bin;%Path%
+    windeployqt build\qapitrace.exe
+
 ## MinGW ##
 
 Additional requirements:
