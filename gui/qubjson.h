@@ -31,4 +31,4 @@
 
 class QIODevice;
 
-QVariantMap decodeUBJSONObject(QIODevice *io);
+QVariant decodeUBJSONObject(QIODevice *io);

@@ -446,7 +446,7 @@ void Retracer::run()
         BlockingIODevice io(&process);
 
         if (m_captureState) {
-            parsedJson = decodeUBJSONObject(&io);
+            parsedJson = decodeUBJSONObject(&io).toMap();
             process.waitForFinished(-1);
         } else if (m_captureThumbnails) {
             /*
