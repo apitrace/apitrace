@@ -54,7 +54,7 @@ if (NOT ANDROID AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries (retrace_common rt)
 endif ()
 if (WIN32)
-    target_link_libraries (retrace_common dxerr)
+    target_link_libraries (retrace_common dxerr winmm)
 endif ()
 
 

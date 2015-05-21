@@ -862,6 +862,16 @@ int main(int argc, char **argv)
     }
 #endif
 
+#ifdef _WIN32
+    // Set Windows timer resolution to the minimum period supported by the
+    // system
+    TIMECAPS tc;
+    MMRESULT mmRes = timeGetDevCaps(&tc, sizeof tc);
+    if (mmRes == MMSYSERR_NOERROR) {
+        mmRes = timeBeginPeriod(tc.wPeriodMin);
+    }
+#endif
+
     retrace::setUp();
     if (retrace::profiling) {
         retrace::profiler.setup(retrace::profilingCpuTimes, retrace::profilingGpuTimes, retrace::profilingPixelsDrawn, retrace::profilingMemoryUsage);
@@ -883,6 +893,12 @@ int main(int argc, char **argv)
 
     // XXX: X often hangs on XCloseDisplay
     //retrace::cleanUp();
+
+#ifdef _WIN32
+    if (mmRes == MMSYSERR_NOERROR) {
+        timeEndPeriod(tc.wPeriodMin);
+    }
+#endif
 
     return 0;
 }
