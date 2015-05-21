@@ -227,6 +227,7 @@ BufferMapping::~BufferMapping() {
 
         GLenum ret = glUnmapBuffer(target);
         assert(ret == GL_TRUE);
+        (void)ret;
     }
 }
 
