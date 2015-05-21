@@ -1,3 +1,11 @@
+add_library (qubjson STATIC
+    qubjson.cpp
+)
+
+add_executable (qubjson_test qubjson_test.cpp)
+target_link_libraries (qubjson_test qubjson gtest)
+add_test (NAME qubjson_test COMMAND $<TARGET_FILE:qubjson_test>)
+
 set(qapitrace_SRCS
    androiddevicedialog.cpp
    androidfiledialog.cpp
@@ -36,7 +44,6 @@ set(qapitrace_SRCS
    graphing/heatmapverticalaxiswidget.cpp
    graphing/histogramview.cpp
    graphing/timeaxiswidget.cpp
-   qubjson.cpp
  )
 
 qt5_add_resources(qapitrace_SRCS qapitrace.qrc)
@@ -73,12 +80,17 @@ add_executable (qapitrace ${qapitrace_SRCS} ${qapitrace_UIS_H})
 # - http://doc.qt.io/qt-5/cmake-manual.html
 # - http://www.kdab.com/using-cmake-with-qt-5/
 if (Qt5Core_VERSION_STRING VERSION_LESS 5.2.0)
+    qt5_use_modules (qubjson Widgets)
+    qt5_use_modules (qubjson_test Widgets)
     qt5_use_modules (qapitrace Widgets WebKitWidgets)
 else ()
+    target_link_libraries (qubjson Qt5::Widgets)
+    target_link_libraries (qubjson_test Qt5::Widgets)
     target_link_libraries (qapitrace Qt5::Widgets Qt5::WebKitWidgets)
 endif ()
 
 target_link_libraries (qapitrace
+    qubjson
     image
     common
     ${ZLIB_LIBRARIES}

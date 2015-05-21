@@ -186,8 +186,16 @@ readArray(QDataStream &stream)
         Q_ASSERT(read == count);
         Q_UNUSED(read);
         return array;
+    } else if (marker == MARKER_COUNT) {
+        size_t count = readSize(stream);
+        QVariantList array;
+        for (size_t i = 0; i < count; ++i) {
+            marker = readMarker(stream);
+            QVariant value = readVariant(stream, marker);
+            array.append(value);
+        }
+        return array;
     } else {
-        Q_ASSERT(marker != MARKER_COUNT);
         QVariantList array;
         while (marker != MARKER_ARRAY_END &&
                marker != MARKER_EOF) {
