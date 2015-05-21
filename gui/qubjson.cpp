@@ -97,7 +97,7 @@ readFloat32(QDataStream &stream)
     return f;
 }
 
-static float
+static double
 readFloat64(QDataStream &stream)
 {
     double f;
