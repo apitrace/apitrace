@@ -454,6 +454,14 @@ set (MD5_LIBRARIES md5_bundled)
 # also avoids missing/inconsistent declarations in system headers.
 include_directories (BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/khronos)
 
+# We use non-standard C++ flags, so we can't just use GTest's CMakeLists.txt
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/include)
+add_library (gtest ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest/src/gtest-all.cc)
+set_property (TARGET gtest APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gtest)
+target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
+
+enable_testing ()
+
 
 ##############################################################################
 # Common libraries / utilities
