@@ -2406,6 +2406,9 @@ glapi.addFunctions([
     # GL_EXT_provoking_vertex
     GlFunction(Void, "glProvokingVertexEXT", [(GLenum, "mode")]),
 
+    # GL_EXT_raster_multisample
+    GlFunction(Void, "glRasterSamplesEXT", [(GLuint, "samples"), (GLboolean, "fixedsamplelocations")]),
+
     # GL_EXT_secondary_color
     GlFunction(Void, "glSecondaryColor3bEXT", [(GLbyte, "red"), (GLbyte, "green"), (GLbyte, "blue")]),
     GlFunction(Void, "glSecondaryColor3bvEXT", [(Array(Const(GLbyte), 3), "v")]),
