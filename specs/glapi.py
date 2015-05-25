@@ -2778,6 +2778,11 @@ glapi.addFunctions([
     # GL_NV_framebuffer_blit
     GlFunction(Void, "glBlitFramebufferNV", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
 
+    # GL_NV_framebuffer_mixed_samples
+    GlFunction(Void, "glCoverageModulationTableNV", [(GLsizei, "n"), (Array(Const(GLfloat), "n"), "v")]),
+    GlFunction(Void, "glGetCoverageModulationTableNV", [(GLsizei, "bufsize"), Out(Array(GLfloat, "bufsize"), "v")], sideeffects=False),
+    GlFunction(Void, "glCoverageModulationNV", [(GLenum, "components")]),
+
     # GL_NV_framebuffer_multisample_coverage
     GlFunction(Void, "glRenderbufferStorageMultisampleCoverageNV", [(GLenum, "target"), (GLsizei, "coverageSamples"), (GLsizei, "colorSamples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
 
