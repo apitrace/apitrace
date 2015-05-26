@@ -37,7 +37,6 @@
 namespace glws {
 
 
-static unsigned glxVersion = 0;
 static const char *extensions = 0;
 static bool has_GLX_ARB_create_context = false;
 static bool has_GLX_ARB_create_context_profile = false;
@@ -182,8 +181,16 @@ init(void) {
     initX();
 
     int major = 0, minor = 0;
-    glXQueryVersion(display, &major, &minor);
-    glxVersion = (major << 8) | minor;
+    if (!glXQueryVersion(display, &major, &minor)) {
+        std::cerr << "error: failed to obtain GLX version\n";
+        exit(1);
+    }
+    const int requiredMajor = 1, requiredMinor = 3;
+    if (major < requiredMajor ||
+        (major == requiredMajor && minor < requiredMinor)) {
+        std::cerr << "error: GLX version " << requiredMajor << "." << requiredMinor << " required, but got version " << major << "." << minor << "\n";
+        exit(1);
+    }
 
     glXQueryExtension(display, &errorBase, &eventBase);
     oldErrorHandler = XSetErrorHandler(errorHandler);
@@ -213,53 +220,32 @@ Visual *
 createVisual(bool doubleBuffer, unsigned samples, Profile profile) {
     GlxVisual *visual = new GlxVisual(profile);
 
-    if (glxVersion >= 0x0103) {
-        Attributes<int> attribs;
-        attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
-        attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
-        attribs.add(GLX_RED_SIZE, 1);
-        attribs.add(GLX_GREEN_SIZE, 1);
-        attribs.add(GLX_BLUE_SIZE, 1);
-        attribs.add(GLX_ALPHA_SIZE, 1);
-        attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
-        attribs.add(GLX_DEPTH_SIZE, 1);
-        attribs.add(GLX_STENCIL_SIZE, 1);
-        if (samples > 1) {
-            attribs.add(GLX_SAMPLE_BUFFERS, 1);
-            attribs.add(GLX_SAMPLES_ARB, samples);
-        }
-        attribs.end();
-
-        int num_configs = 0;
-        GLXFBConfig * fbconfigs;
-        fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
-        if (!num_configs || !fbconfigs) {
-            return NULL;
-        }
-        visual->fbconfig = fbconfigs[0];
-        assert(visual->fbconfig);
-        visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
-        assert(visual->visinfo);
-    } else {
-        Attributes<int> attribs;
-        attribs.add(GLX_RGBA);
-        attribs.add(GLX_RED_SIZE, 1);
-        attribs.add(GLX_GREEN_SIZE, 1);
-        attribs.add(GLX_BLUE_SIZE, 1);
-        attribs.add(GLX_ALPHA_SIZE, 1);
-        if (doubleBuffer) {
-            attribs.add(GLX_DOUBLEBUFFER);
-        }
-        attribs.add(GLX_DEPTH_SIZE, 1);
-        attribs.add(GLX_STENCIL_SIZE, 1);
-        if (samples > 1) {
-            attribs.add(GLX_SAMPLE_BUFFERS, 1);
-            attribs.add(GLX_SAMPLES_ARB, samples);
-        }
-        attribs.end();
-
-        visual->visinfo = glXChooseVisual(display, screen, attribs);
+    Attributes<int> attribs;
+    attribs.add(GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT);
+    attribs.add(GLX_RENDER_TYPE, GLX_RGBA_BIT);
+    attribs.add(GLX_RED_SIZE, 1);
+    attribs.add(GLX_GREEN_SIZE, 1);
+    attribs.add(GLX_BLUE_SIZE, 1);
+    attribs.add(GLX_ALPHA_SIZE, 1);
+    attribs.add(GLX_DOUBLEBUFFER, doubleBuffer ? GL_TRUE : GL_FALSE);
+    attribs.add(GLX_DEPTH_SIZE, 1);
+    attribs.add(GLX_STENCIL_SIZE, 1);
+    if (samples > 1) {
+        attribs.add(GLX_SAMPLE_BUFFERS, 1);
+        attribs.add(GLX_SAMPLES_ARB, samples);
     }
+    attribs.end();
+
+    int num_configs = 0;
+    GLXFBConfig * fbconfigs;
+    fbconfigs = glXChooseFBConfig(display, screen, attribs, &num_configs);
+    if (!num_configs || !fbconfigs) {
+        return NULL;
+    }
+    visual->fbconfig = fbconfigs[0];
+    assert(visual->fbconfig);
+    visual->visinfo = glXGetVisualFromFBConfig(display, visual->fbconfig);
+    assert(visual->visinfo);
 
     return visual;
 }
@@ -282,7 +268,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
         share_context = static_cast<GlxContext*>(shareContext)->context;
     }
 
-    if (glxVersion >= 0x0104 && has_GLX_ARB_create_context) {
+    if (has_GLX_ARB_create_context) {
         Attributes<int> attribs;
         attribs.add(GLX_RENDER_TYPE, GLX_RGBA_TYPE);
         int contextFlags = 0;
@@ -343,11 +329,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
             return NULL;
         }
 
-        if (glxVersion >= 0x103) {
-            context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
-        } else {
-            context = glXCreateContext(display, visual->visinfo, share_context, True);
-        }
+        context = glXCreateNewContext(display, visual->fbconfig, GLX_RGBA_TYPE, share_context, True);
     }
 
     if (!context) {
