@@ -14,28 +14,28 @@ update: \
 	GLES2/gl2platform.h
 
 GL/wglext.h GL/glxext.h: FORCE
-	wget -O $@ "http://www.opengl.org/registry/api/$@"
+	wget -O $@ "https://www.opengl.org/registry/api/$@"
 
 GL/glext.h: GL/glext.patch FORCE
-	wget -O $@ "http://www.opengl.org/registry/api/$@"
+	wget -O $@ "https://www.opengl.org/registry/api/$@"
 	patch $@ $<
 
 EGL/egl.h EGL/eglext.h KHR/khrplatform.h: FORCE
-	wget -O $@ "http://www.khronos.org/registry/egl/api/$@"
+	wget -O $@ "https://www.khronos.org/registry/egl/api/$@"
 
 EGL/eglplatform.h: EGL/eglplatform.patch FORCE
-	wget -O $@ "http://www.khronos.org/registry/egl/api/$@"
+	wget -O $@ "https://www.khronos.org/registry/egl/api/$@"
 	patch $@ $<
 
 GLES/gl.h GLES/glplatform.h: FORCE
-	wget -O $@ "http://www.khronos.org/registry/gles/api/$@"
+	wget -O $@ "https://www.khronos.org/registry/gles/api/$@"
 
 GLES/glext.h: GLES/glext.patch FORCE
-	wget -O $@ "http://www.khronos.org/registry/gles/api/$@"
+	wget -O $@ "https://www.khronos.org/registry/gles/api/$@"
 	patch $@ $<
 
 GLES2/gl2.h GLES2/gl2ext.h GLES2/gl2platform.h: FORCE
-	wget -O $@ "http://www.khronos.org/registry/gles/api/$@"
+	wget -O $@ "https://www.khronos.org/registry/gles/api/$@"
 
 .PHONY: update
 
