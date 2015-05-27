@@ -762,7 +762,7 @@ glapi.addFunctions([
     # GL_VERSION_4_5
     GlFunction(Void, "glGetnCompressedTexImage", [(GLenum, "target"), (GLint, "lod"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "pixels")]),
     GlFunction(Void, "glGetnTexImage", [(GLenum, "target"), (GLint, "level"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(Void, "bufSize"), "pixels")]),
-    GlFunction(Void, "glGetnUniformdv", [(GLprogram, "program"), (GLint, "location"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "params")], sideeffects=False),
+    GlFunction(Void, "glGetnUniformdv", [(GLprogram, "program"), (GLlocation, "location"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "params")], sideeffects=False),
     GlFunction(Void, "glGetnMapdv", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLdouble, "bufSize"), "v")], sideeffects=False),
     GlFunction(Void, "glGetnMapfv", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLfloat, "bufSize"), "v")], sideeffects=False),
     GlFunction(Void, "glGetnMapiv", [(GLenum, "target"), (GLenum, "query"), (GLsizei, "bufSize"), Out(Array(GLint, "bufSize"), "v")], sideeffects=False),
