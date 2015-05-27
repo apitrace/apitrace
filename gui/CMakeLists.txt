@@ -1,3 +1,8 @@
+if (APPLE)
+    # Recent builds of Qt no longer support i386 architecture
+    set (CMAKE_OSX_ARCHITECTURES "x86_64")
+endif()
+
 add_library (qubjson STATIC
     qubjson.cpp
 )
@@ -97,11 +102,6 @@ target_link_libraries (qapitrace
     ${SNAPPY_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
 )
-
-if (APPLE)
-    # Recent builds of Qt no longer support i386 architecture
-    set_target_properties (qapitrace PROPERTIES OSX_ARCHITECTURES x86_64)
-endif ()
 
 if (WIN32 AND NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     # Use Windows subsystem (i.e., no console).
