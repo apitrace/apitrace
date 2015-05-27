@@ -107,20 +107,33 @@ readFloat64(QDataStream &stream)
 }
 
 
-static size_t
+static int
 readSize(QDataStream &stream, Marker type)
 {
     switch (type) {
-    case MARKER_INT8:
-        return readInt8(stream);
+    case MARKER_INT8: {
+        int8_t size = readInt8(stream);
+        Q_ASSERT(size >= 0);
+        return size;
+    }
     case MARKER_UINT8:
         return readUInt8(stream);
-    case MARKER_INT16:
-        return readInt16(stream);
-    case MARKER_INT32:
-        return readInt32(stream);
-    case MARKER_INT64:
-        return readInt64(stream);
+    case MARKER_INT16: {
+        int16_t size = readInt16(stream);
+        Q_ASSERT(size >= 0);
+        return size;
+    }
+    case MARKER_INT32: {
+        int32_t size = readInt32(stream);
+        Q_ASSERT(size >= 0);
+        return size;
+    }
+    case MARKER_INT64: {
+        int64_t size = readInt64(stream);
+        Q_ASSERT(size >= 0);
+        Q_ASSERT_X(size <= INT_MAX, "qubjson::readSize", "size too large (https://github.com/apitrace/apitrace/issues/343)");
+        return size;
+    }
     default:
         Q_UNIMPLEMENTED();
     case MARKER_EOF:
@@ -139,7 +152,7 @@ readChar(QDataStream &stream)
 }
 
 
-static size_t
+static int
 readSize(QDataStream &stream)
 {
     Marker type = readMarker(stream);
@@ -148,7 +161,7 @@ readSize(QDataStream &stream)
 
 
 static QString
-readString(QDataStream &stream, size_t size)
+readString(QDataStream &stream, int size)
 {
     char *buf = new char [size];
     stream.readRawData(buf, size);
@@ -161,7 +174,7 @@ readString(QDataStream &stream, size_t size)
 static QString
 readString(QDataStream &stream)
 {
-    size_t size = readSize(stream);
+    int size = readSize(stream);
     return readString(stream, size);
 }
 
@@ -180,16 +193,16 @@ readArray(QDataStream &stream)
         Q_UNUSED(type);
         marker = readMarker(stream);
         Q_ASSERT(marker == MARKER_COUNT);
-        size_t count = readSize(stream);
+        int count = readSize(stream);
         QByteArray array(count, Qt::Uninitialized);
         int read = stream.readRawData(array.data(), count);
         Q_ASSERT(read == count);
         Q_UNUSED(read);
         return array;
     } else if (marker == MARKER_COUNT) {
-        size_t count = readSize(stream);
+        int count = readSize(stream);
         QVariantList array;
-        for (size_t i = 0; i < count; ++i) {
+        for (int i = 0; i < count; ++i) {
             marker = readMarker(stream);
             QVariant value = readVariant(stream, marker);
             array.append(value);
@@ -215,7 +228,7 @@ readObject(QDataStream &stream)
     Marker marker = readMarker(stream);
     while (marker != MARKER_OBJECT_END &&
            marker != MARKER_EOF) {
-        size_t nameSize = readSize(stream, marker);
+        int nameSize = readSize(stream, marker);
         QString name = readString(stream, nameSize);
         marker = readMarker(stream);
         QVariant value = readVariant(stream, marker);
