@@ -22,12 +22,12 @@ public:
     QString formatName() const;
     void setFormatName(const QString &str);
 
-    void contentsFromBase64(const QByteArray &base64);
+    void setData(const QByteArray &data);
 
-    QByteArray base64Data() const;
+    QByteArray data() const;
     QImage thumb() const;
 
-    static image::Image *imageFromBase64(const QByteArray &data);
+    static image::Image *imageFromData(const QByteArray &data);
     static QImage qimageFromRawImage(const image::Image *img,
                                      float lowerValue = 0.0f,
                                      float upperValue = 1.0f,
@@ -36,7 +36,7 @@ public:
 
 private:
     QSize  m_size;
-    QByteArray m_base64Data;
+    QByteArray m_data;
     QImage m_thumb;
     int m_depth;
     QString m_formatName;

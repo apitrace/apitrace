@@ -61,10 +61,10 @@ ImageViewer::~ImageViewer()
     delete m_image;
 }
 
-void ImageViewer::setBase64Data(const QByteArray &base64)
+void ImageViewer::setData(const QByteArray &data)
 {
     delete m_image;
-    m_image = ApiSurface::imageFromBase64(base64);
+    m_image = ApiSurface::imageFromData(data);
     m_convertedImage = ApiSurface::qimageFromRawImage(m_image);
     m_pixelWidget->setSurface(m_convertedImage);
     updateGeometry();

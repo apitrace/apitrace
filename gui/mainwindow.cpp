@@ -763,7 +763,7 @@ static void addSurfaceItem(const ApiSurface &surface,
     l->setWordWrap(true);
     tree->setItemWidget(item, 1, l);
 
-    item->setData(0, Qt::UserRole, surface.base64Data());
+    item->setData(0, Qt::UserRole, surface.data());
 }
 
 void MainWindow::fillStateForFrame()
@@ -918,8 +918,8 @@ void MainWindow::showSelectedSurface()
 
     viewer->setAttribute(Qt::WA_DeleteOnClose, true);
 
-    QByteArray base64Data = var.value<QByteArray>();
-    viewer->setBase64Data(base64Data);
+    QByteArray data = var.value<QByteArray>();
+    viewer->setData(data);
 
     viewer->show();
     viewer->raise();
@@ -1493,7 +1493,7 @@ void MainWindow::saveSelectedSurface()
 
     QImage img = var.value<QImage>();
     if (img.isNull()) {
-        image::Image *traceImage = ApiSurface::imageFromBase64(var.value<QByteArray>());
+        image::Image *traceImage = ApiSurface::imageFromData(var.value<QByteArray>());
         img = ApiSurface::qimageFromRawImage(traceImage);
         delete traceImage;
     }

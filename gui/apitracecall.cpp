@@ -482,7 +482,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         tex.setDepth(depth);
         tex.setFormatName(formatName);
         tex.setLabel(label);
-        tex.contentsFromBase64(dataArray);
+        tex.setData(dataArray);
 
         m_textures.append(tex);
     }
@@ -512,7 +512,7 @@ ApiTraceState::ApiTraceState(const QVariantMap &parsedJson)
         fbo.setDepth(depth);
         fbo.setFormatName(formatName);
         fbo.setType(label);
-        fbo.contentsFromBase64(dataArray);
+        fbo.setData(dataArray);
         m_framebuffers.append(fbo);
     }
 }

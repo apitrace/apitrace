@@ -17,7 +17,7 @@ public:
     ImageViewer(QWidget *parent = 0);
     ~ImageViewer();
 
-    void setBase64Data(const QByteArray &base64);
+    void setData(const QByteArray &data);
 
     QSize sizeHint() const;
 
