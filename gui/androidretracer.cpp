@@ -8,9 +8,11 @@
 #include "trace_profiler.hpp"
 
 #include <QHostAddress>
-#include <QJsonDocument>
 #include <QSettings>
 #include <QTime>
+#include <QBuffer>
+
+#include "qubjson.h"
 
 typedef QLatin1String _;
 
@@ -120,7 +122,7 @@ void AndroidRetracer::run()
     QRegExp regexp("(^\\d+): +(\\b\\w+\\b): ([^\\r\\n]+)[\\r\\n]*$");
 
     QString msg = QLatin1String("Replay finished!");
-    QByteArray jsonBuffer;
+    QByteArray ubjsonBuffer;
     QByteArray outputBuffer;
     bool keepGoing = true;
     while(keepGoing) {
@@ -182,7 +184,7 @@ void AndroidRetracer::run()
         // read stdout channel
         if (stdoutSocket.waitForReadyRead(100)) {
             if (captureState())
-                jsonBuffer.append(stdoutSocket.readAll());
+                ubjsonBuffer.append(stdoutSocket.readAll());
             else if (captureThumbnails()) {
                 // read one image
                 image::PNMInfo info;
@@ -268,14 +270,10 @@ void AndroidRetracer::run()
         msg = outputBuffer;
 
     if (captureState()) {
-        QJsonParseError error;
-        QJsonDocument jsonDoc =
-            QJsonDocument::fromJson(jsonBuffer, &error);
+        QBuffer io(&ubjsonBuffer);
+        io.open(QIODevice::ReadOnly);
 
-        if (error.error != QJsonParseError::NoError)
-            msg = error.errorString();
-
-        parsedJson = jsonDoc.toVariant().toMap();
+        parsedJson = decodeUBJSONObject(&io).toMap();
         ApiTraceState *state = new ApiTraceState(parsedJson);
         emit foundState(state);
     }
