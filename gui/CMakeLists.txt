@@ -71,7 +71,10 @@ set(qapitrace_UIS
    ui/shaderssourcewidget.ui
    )
 
-set(CMAKE_AUTOMOC ON)
+set (CMAKE_AUTOMOC ON)
+# Silence `Note: No relevant classes found. No output generated.`
+set (CMAKE_AUTOMOC_MOC_OPTIONS "-nn")
+
 QT5_WRAP_UI(qapitrace_UIS_H ${qapitrace_UIS})
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
