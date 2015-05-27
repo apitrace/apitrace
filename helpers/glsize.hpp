@@ -1219,6 +1219,9 @@ _gl_PathColorGen_size(GLenum genMode, GLenum colorFormat)
     case GL_NONE:
         coeffsPerComponent = 0;
         break;
+    case GL_CONSTANT:
+        coeffsPerComponent = 1;
+        break;
     case GL_OBJECT_LINEAR:
     case GL_PATH_OBJECT_BOUNDING_BOX_NV:
         coeffsPerComponent = 3;
@@ -1261,6 +1264,9 @@ _gl_PathTexGen_size(GLenum genMode, GLsizei components)
     switch (genMode) {
     case GL_NONE:
         return 0;
+    case GL_CONSTANT:
+        coeffsPerComponent = 1;
+        break;
     case GL_OBJECT_LINEAR:
     case GL_PATH_OBJECT_BOUNDING_BOX_NV:
         coeffsPerComponent = 3;
@@ -1298,6 +1304,7 @@ static size_t valuesPerGetPathParameter(GLenum pname)
     case GL_PATH_CLIENT_LENGTH_NV:
     case GL_PATH_STROKE_COVER_MODE_NV:
     case GL_PATH_STROKE_MASK_NV:
+    case GL_PATH_STROKE_BOUND_NV:
     case GL_PATH_STROKE_OVERSAMPLE_COUNT_NV:
     case GL_PATH_SAMPLE_QUALITY_NV:
         return 1;

@@ -491,12 +491,20 @@ class GlRetracer(Retracer):
 
         # Don't try to use more samples than the implementation supports
         if arg.name == 'samples':
-            assert arg.type is glapi.GLsizei
-            print '    GLint max_samples = 0;'
-            print '    glGetIntegerv(GL_MAX_SAMPLES, &max_samples);'
-            print '    if (samples > max_samples) {'
-            print '        samples = max_samples;'
-            print '    }'
+            if function.name == 'glRasterSamplesEXT':
+                assert arg.type is glapi.GLuint
+                print '    GLint max_samples = 0;'
+                print '    glGetIntegerv(GL_MAX_RASTER_SAMPLES_EXT, &max_samples);'
+                print '    if (samples > static_cast<GLuint>(max_samples)) {'
+                print '        samples = static_cast<GLuint>(max_samples);'
+                print '    }'
+            else:
+                assert arg.type is glapi.GLsizei
+                print '    GLint max_samples = 0;'
+                print '    glGetIntegerv(GL_MAX_SAMPLES, &max_samples);'
+                print '    if (samples > max_samples) {'
+                print '        samples = max_samples;'
+                print '    }'
 
         # These parameters are referred beyond the call life-time
         # TODO: Replace ad-hoc solution for bindable parameters with general one

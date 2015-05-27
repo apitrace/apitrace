@@ -2406,6 +2406,9 @@ glapi.addFunctions([
     # GL_EXT_provoking_vertex
     GlFunction(Void, "glProvokingVertexEXT", [(GLenum, "mode")]),
 
+    # GL_EXT_raster_multisample
+    GlFunction(Void, "glRasterSamplesEXT", [(GLuint, "samples"), (GLboolean, "fixedsamplelocations")]),
+
     # GL_EXT_secondary_color
     GlFunction(Void, "glSecondaryColor3bEXT", [(GLbyte, "red"), (GLbyte, "green"), (GLbyte, "blue")]),
     GlFunction(Void, "glSecondaryColor3bvEXT", [(Array(Const(GLbyte), 3), "v")]),
@@ -2631,6 +2634,9 @@ glapi.addFunctions([
     GlFunction(Void, "glGetPerfQueryIdByNameINTEL", [(GLstring, "queryName"), Out(Pointer(GLuint), "queryId")], sideeffects=False),
     GlFunction(Void, "glGetPerfQueryInfoINTEL", [(GLuint, "queryId"), (GLuint, "queryNameLength"), Out(GLstring, "queryName"), Out(Pointer(GLuint), "dataSize"), Out(Pointer(GLuint), "noCounters"), Out(Pointer(GLuint), "noInstances"), Out(Pointer(GLuint), "capsMask")], sideeffects=False),
 
+    # GL_KHR_blend_equation_advanced
+    GlFunction(Void, "glBlendBarrierKHR", []),
+
     # GL_KHR_debug
     GlFunction(Void, "glDebugMessageControl", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=True),
     GlFunction(Void, "glDebugMessageInsert", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), InGlString(GLchar, "length", "buf")], sideeffects=True),
@@ -2771,6 +2777,11 @@ glapi.addFunctions([
 
     # GL_NV_framebuffer_blit
     GlFunction(Void, "glBlitFramebufferNV", [(GLint, "srcX0"), (GLint, "srcY0"), (GLint, "srcX1"), (GLint, "srcY1"), (GLint, "dstX0"), (GLint, "dstY0"), (GLint, "dstX1"), (GLint, "dstY1"), (GLbitfield_attrib, "mask"), (GLenum, "filter")]),
+
+    # GL_NV_framebuffer_mixed_samples
+    GlFunction(Void, "glCoverageModulationTableNV", [(GLsizei, "n"), (Array(Const(GLfloat), "n"), "v")]),
+    GlFunction(Void, "glGetCoverageModulationTableNV", [(GLsizei, "bufsize"), Out(Array(GLfloat, "bufsize"), "v")], sideeffects=False),
+    GlFunction(Void, "glCoverageModulationNV", [(GLenum, "components")]),
 
     # GL_NV_framebuffer_multisample_coverage
     GlFunction(Void, "glRenderbufferStorageMultisampleCoverageNV", [(GLenum, "target"), (GLsizei, "coverageSamples"), (GLsizei, "colorSamples"), (GLenum, "internalformat"), (GLsizei, "width"), (GLsizei, "height")]),
@@ -2926,7 +2937,7 @@ glapi.addFunctions([
     GlFunction(Void, "glStencilStrokePathNV", [(GLuint, "path"), (GLint, "reference"), (GLuint, "mask")]),
     GlFunction(Void, "glStencilFillPathInstancedNV", [(GLsizei, "numPaths"), (GLenum, "pathNameType"), (Blob(Const(GLvoid), "_gl_Paths_size(numPaths, pathNameType, paths)"), "paths"), (GLuint, "pathBase"), (GLenum, "fillMode"), (GLuint, "mask"), (GLenum, "transformType"), (Array(Const(GLfloat), "_gl_transformType_size(numPaths, transformType)"), "transformValues")]),
     GlFunction(Void, "glStencilStrokePathInstancedNV", [(GLsizei, "numPaths"), (GLenum, "pathNameType"), (Blob(Const(GLvoid), "_gl_Paths_size(numPaths, pathNameType, paths)"), "paths"), (GLuint, "pathBase"), (GLint, "reference"), (GLuint, "mask"), (GLenum, "transformType"), (Array(Const(GLfloat), "_gl_transformType_size(numPaths, transformType)"), "transformValues")]),
-    GlFunction(Void, "glPathCoverDepthFuncNV", [(GLenum, "zfunc")]),
+    GlFunction(Void, "glPathCoverDepthFuncNV", [(GLenum, "func")]),
     GlFunction(Void, "glPathColorGenNV", [(GLenum, "color"), (GLenum, "genMode"), (GLenum, "colorFormat"), (Array(Const(GLfloat), "_gl_PathColorGen_size(genMode, colorFormat)"), "coeffs")]),
     GlFunction(Void, "glPathTexGenNV", [(GLenum, "texCoordSet"), (GLenum, "genMode"), (GLint, "components"), (Array(Const(GLfloat), "_gl_PathTexGen_size(genMode, components)"), "coeffs")]),
     GlFunction(Void, "glPathFogGenNV", [(GLenum, "genMode")]),
@@ -2950,6 +2961,21 @@ glapi.addFunctions([
     GlFunction(GLboolean, "glIsPointInStrokePathNV", [(GLuint, "path"), (GLfloat, "x"), (GLfloat, "y")], sideeffects=False),
     GlFunction(GLfloat, "glGetPathLengthNV", [(GLuint, "path"), (GLsizei, "startSegment"), (GLsizei, "numSegments")]),
     GlFunction(GLboolean, "glPointAlongPathNV", [(GLuint, "path"), (GLsizei, "startSegment"), (GLsizei, "numSegments"), (GLfloat, "distance"), Out(Array(GLfloat,1), "x"), Out(Array(GLfloat,1), "y"), Out(Array(GLfloat,1), "tangentX"), Out(Array(GLfloat,1), "tangentY")], sideeffects=False),
+    GlFunction(Void, "glMatrixLoad3x2fNV", [(GLenum, "matrixMode"), (Array(Const(GLfloat), 6), "m")]),
+    GlFunction(Void, "glMatrixLoad3x3fNV", [(GLenum, "matrixMode"), (Array(Const(GLfloat), 9), "m")]),
+    GlFunction(Void, "glMatrixLoadTranspose3x3fNV", [(GLenum, "matrixMode"), (Array(Const(GLfloat), 9), "m")]),
+    GlFunction(Void, "glMatrixMult3x2fNV", [(GLenum, "matrixMode"), (Array(Const(GLfloat), 6), "m")]),
+    GlFunction(Void, "glMatrixMult3x3fNV", [(GLenum, "matrixMode"), (Array(Const(GLfloat), 9), "m")]),
+    GlFunction(Void, "glMatrixMultTranspose3x3fNV", [(GLenum, "matrixMode"), (Array(Const(GLfloat), 9), "m")]),
+    GlFunction(Void, "glStencilThenCoverFillPathNV", [(GLuint, "path"), (GLenum, "fillMode"), (GLuint, "mask"), (GLenum, "coverMode")]),
+    GlFunction(Void, "glStencilThenCoverStrokePathNV", [(GLuint, "path"), (GLint, "reference"), (GLuint, "mask"), (GLenum, "coverMode")]),
+    GlFunction(Void, "glStencilThenCoverFillPathInstancedNV", [(GLsizei, "numPaths"), (GLenum, "pathNameType"), (Blob(Const(GLvoid), "_gl_Paths_size(numPaths, pathNameType, paths)"), "paths"), (GLuint, "pathBase"), (GLenum, "fillMode"), (GLuint, "mask"), (GLenum, "coverMode"), (GLenum, "transformType"), (Array(Const(GLfloat), "_gl_transformType_size(numPaths, transformType)"), "transformValues")]),
+    GlFunction(Void, "glStencilThenCoverStrokePathInstancedNV", [(GLsizei, "numPaths"), (GLenum, "pathNameType"), (Blob(Const(GLvoid), "_gl_Paths_size(numPaths, pathNameType, paths)"), "paths"), (GLuint, "pathBase"), (GLint, "reference"), (GLuint, "mask"), (GLenum, "coverMode"), (GLenum, "transformType"), (Array(Const(GLfloat), "_gl_transformType_size(numPaths, transformType)"), "transformValues")]),
+    GlFunction(GLenum, "glPathGlyphIndexRangeNV", [(GLenum, "fontTarget"), (String(Const(GLvoid)), "fontName"), (GLbitfield, "fontStyle"), (GLuint, "pathParameterTemplate"), (GLfloat, "emScale"), (Array(GLuint, 2), "baseAndCount")]),
+    GlFunction(GLenum, "glPathGlyphIndexArrayNV", [(GLuint, "firstPathName"), (GLenum, "fontTarget"), (String(Const(GLvoid)), "fontName"), (GLbitfield, "fontStyle"), (GLuint, "firstGlyphIndex"), (GLsizei, "numGlyphs"), (GLuint, "pathParameterTemplate"), (GLfloat, "emScale")]),
+    GlFunction(GLenum, "glPathMemoryGlyphIndexArrayNV", [(GLuint, "firstPathName"), (GLenum, "fontTarget"), (GLsizeiptr, "fontSize"), (Blob(Const(Void), "fontSize"), "fontData"), (GLsizei, "faceIndex"), (GLuint, "firstGlyphIndex"), (GLsizei, "numGlyphs"), (GLuint, "pathParameterTemplate"), (GLfloat, "emScale")]),
+    GlFunction(Void, "glProgramPathFragmentInputGenNV", [(GLuint, "program"), (GLint, "location"), (GLenum, "genMode"), (GLint, "components"), (Array(Const(GLfloat), "_gl_PathTexGen_size(genMode, components)"), "coeffs")]),
+    GlFunction(Void, "glGetProgramResourcefvNV", [(GLprogram, "program"), (GLenum, "programInterface"), (GLuint, "index"), (GLsizei, "propCount"), (Array(Const(GLenum), "propCount"), "props"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), Out(Array(GLfloat, "bufSize"), "params")], sideeffects=False),
 
     # GL_NV_pixel_data_range
     GlFunction(Void, "glPixelDataRangeNV", [(GLenum, "target"), (GLsizei, "length"), (OpaqueBlob(Const(GLvoid), "length"), "pointer")]),
