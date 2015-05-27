@@ -93,6 +93,9 @@ struct InternalFormatDesc
     /* The external format/type that matches the internalFormat exactly, or GL_NONE. */
     GLenum format;
     GLenum type;
+
+    /* The appropriate read type for dumping. */
+    GLenum readType;
 };
 
 
