@@ -106,6 +106,9 @@ struct Profile {
                core < other.core ||
                forwardCompatible < other.forwardCompatible;
     }
+
+    std::string
+    str(void) const;
 };
 
 

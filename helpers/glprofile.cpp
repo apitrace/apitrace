@@ -28,6 +28,8 @@
 
 #include <assert.h>
 
+#include <sstream>
+
 #include "os.hpp"
 #include "glproc.hpp"
 
@@ -74,6 +76,15 @@ Profile::matches(const Profile expected) const
 #endif
 
     return true;
+}
+
+
+std::string
+Profile::str(void) const
+{
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
 }
 
 
@@ -213,7 +224,7 @@ getCurrentContextProfile(void)
 
     const char *version = (const char *)_glGetString(GL_VERSION);
     if (!version) {
-        os::log("warning: null GL_VERSION\n");
+        os::log("apitrace: warning: got null GL_VERSION\n");
         return profile;
     }
 
