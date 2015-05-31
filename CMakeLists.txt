@@ -461,6 +461,7 @@ set_property (TARGET gtest APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_S
 target_link_libraries (gtest ${CMAKE_THREAD_LIBS_INIT})
 
 enable_testing ()
+add_custom_target (check COMMAND ${CMAKE_CTEST_COMMAND})
 
 
 ##############################################################################
