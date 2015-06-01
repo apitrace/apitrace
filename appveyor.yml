@@ -6,9 +6,6 @@ branches:
   except:
   - /^travis.*$/
 
-# See http://help.appveyor.com/discussions/suggestions/419-qt-libraries
-os: unstable
-
 init:
 - git config --global core.autocrlf input
 
