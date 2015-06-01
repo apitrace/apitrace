@@ -3502,11 +3502,13 @@ const char* WINAPI DXGetErrorStringA( HRESULT hr )
 
 #define  CHK_ERRA(hrchk) \
         case hrchk: \
-             strcpy_s( desc, count, #hrchk );
+             strcpy_s( desc, count, #hrchk ); \
+             break;
 
 #define  CHK_ERR(hrchk, strOut) \
         case hrchk: \
-             strcpy_s( desc, count, strOut );
+             strcpy_s( desc, count, strOut ); \
+             break;
 
 
 //--------------------------------------------------------------------------------------
