@@ -320,7 +320,6 @@ GLXFBConfigCommonAttribs = GLXCommonAttribs + [
 
 GLXFBConfigGLXAttribs = GLXFBConfigCommonAttribs + [
     ('GLX_FBCONFIG_ID', GLXFBConfigID),
-    ('GLX_FBCONFIG_ID_SGIX', UInt32),
     ('GLX_MAX_PBUFFER_WIDTH', Int),
     ('GLX_MAX_PBUFFER_HEIGHT', Int),
     ('GLX_MAX_PBUFFER_PIXELS', Int),
