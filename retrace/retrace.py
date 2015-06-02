@@ -472,7 +472,7 @@ class Retracer:
         arg_names = ", ".join(function.argNames())
         if function.type is not stdapi.Void:
             print '    _result = %s(%s);' % (function.name, arg_names)
-            self.checkResult(function.type)
+            self.checkResult(None, function)
         else:
             print '    %s(%s);' % (function.name, arg_names)
 
@@ -498,7 +498,7 @@ class Retracer:
             print r'    }'
 
         if method.type is not stdapi.Void:
-            self.checkResult(method.type)
+            self.checkResult(interface, method)
 
         # Debug COM reference counting.  Disabled by default as reported
         # reference counts depend on internal implementation details.
@@ -516,8 +516,9 @@ class Retracer:
             print r'        retrace::delObj(call.arg(0));'
             print r'    }'
 
-    def checkResult(self, resultType):
-        if str(resultType) == 'HRESULT':
+    def checkResult(self, interface, methodOrFunction):
+        assert methodOrFunction.type is not stdapi.Void
+        if str(methodOrFunction.type) == 'HRESULT':
             print r'    if (FAILED(_result)) {'
             print r'        retrace::failed(call, _result);'
             print r'        return;'

@@ -102,6 +102,25 @@ class D3DRetracer(Retracer):
 
         Retracer.invokeFunction(self, function)
 
+    def checkResult(self, interface, methodOrFunction):
+        # Catch when device is removed, and report the reason.
+        if str(methodOrFunction.type) == 'HRESULT':
+            if interface is not None:
+                getDeviceRemovedReasonMethod = interface.getMethodByName("GetDeviceRemovedReason")
+                if getDeviceRemovedReasonMethod is not None:
+                    print r'    if (FAILED(_result)) {'
+                    print r'        retrace::failed(call, _result);'
+                    print r'        if (_result == DXGI_ERROR_DEVICE_REMOVED) {'
+                    print r'            HRESULT _reason = _this->GetDeviceRemovedReason();'
+                    print r'            retrace::failed(call, _reason);'
+                    print r'            exit(1);'
+                    print r'        }'
+                    print r'        return;'
+                    print r'    }'
+                    return
+
+        Retracer.checkResult(self, interface, methodOrFunction)
+
     def forceDriver(self, enum):
         # This can only work when pAdapter is NULL. For non-NULL pAdapter we
         # need to override inside the EnumAdapters call below
@@ -178,7 +197,7 @@ class D3DRetracer(Retracer):
         if method.name == 'CreateSwapChainForComposition':
             print r'    HWND hWnd = d3dretrace::createWindow(pDesc->Width, pDesc->Height);'
             print r'    _result = _this->CreateSwapChainForHwnd(pDevice, hWnd, pDesc, NULL, pRestrictToOutput, ppSwapChain);'
-            self.checkResult(method.type)
+            self.checkResult(interface, method)
             return
 
         if method.name == 'SetFullscreenState':
@@ -267,7 +286,7 @@ class D3DRetracer(Retracer):
             print r'    if (SUCCEEDED(_result)) {'
             print r'         _result = pResource->QueryInterface(ReturnedInterface, ppResource);'
             print r'    }'
-            self.checkResult(method.type)
+            self.checkResult(interface, method)
             return
         if interface.name.startswith('ID3D11Device') and method.name.startswith('OpenSharedResource'):
             print r'    retrace::warning(call) << "replacing shared resource with checker pattern\n";'
@@ -307,7 +326,7 @@ class D3DRetracer(Retracer):
             print r'    if (SUCCEEDED(_result)) {'
             print r'         _result = pResource->QueryInterface(ReturnedInterface, ppResource);'
             print r'    }'
-            self.checkResult(method.type)
+            self.checkResult(interface, method)
             return
 
         if method.name == 'Map':
