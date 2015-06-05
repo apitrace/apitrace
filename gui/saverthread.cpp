@@ -374,6 +374,7 @@ void SaverThread::run()
         } else {
             writer.writeCall(call);
         }
+        delete call;
     }
 
     writer.close();
