@@ -310,6 +310,16 @@ else ()
     add_compiler_flags (-fmessage-length=0)
 endif ()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND CMAKE_BUILD_TYPE MATCHES Rel)
+    message (WARNING
+        "\n"
+        "  WARNING: NON-DEBUG BUILDS ON CLANG CAN TAKE UP TO 45MIN!\n"
+        "  See https://github.com/apitrace/apitrace/issues/346\n"
+        ""
+    )
+    execute_process (COMMAND ${CMAKE_COMMAND} -E sleep 5)
+endif ()
+
 if (MINGW)
     # Avoid depending on MinGW runtime DLLs
     add_linker_flags (-static-libgcc -static-libstdc++)
