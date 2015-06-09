@@ -102,6 +102,11 @@ createDrawable(void) {
 
 glws::Drawable *
 createPbuffer(int width, int height) {
+    // Zero area pbuffers are often accepted, but given we create window
+    // drawables instead, they should have non-zero area.
+    width  = std::max(width,  1);
+    height = std::max(height, 1);
+
     return createDrawableHelper(defaultProfile, width, height, true);
 }
 
