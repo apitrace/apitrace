@@ -91,7 +91,15 @@ errorHandler(Display *dpy, XErrorEvent *error)
 {
     char buffer[512];
     XGetErrorText(dpy, error->error_code, buffer, sizeof buffer);
-    std::cerr << "error: xlib: " << buffer << "\n";
+    std::cerr << "error: xlib: " << buffer;
+
+    if (error->request_code < 128) {
+        std::string request_code = std::to_string(error->request_code);
+        XGetErrorDatabaseText(dpy, "XRequest", request_code.c_str(), "", buffer, sizeof buffer);
+        std::cerr << " in " << buffer;
+    }
+
+    std::cerr << "\n";
     return 0;
 }
 
@@ -101,6 +109,10 @@ static int (*oldErrorHandler)(Display *, XErrorEvent *) = NULL;
 void
 initX(void)
 {
+#ifndef NDEBUG
+    _Xdebug = 1;
+#endif
+
     XInitThreads();
 
     oldErrorHandler = XSetErrorHandler(errorHandler);
