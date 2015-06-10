@@ -114,7 +114,7 @@ class StateGetter(Visitor):
         for type, count, name in self.iter():
             if name == pname:
                 if count != 1:
-                    type = Array(type, str(count))
+                    type = Array(type, count)
 
                 return type, self.visit(type, args)
 
@@ -164,7 +164,7 @@ class StateGetter(Visitor):
         inflection = self.inflector.inflect(array.type)
         assert inflection.endswith('v' + self.inflector.suffix)
         array_length = array.length
-        if array_length.isdigit():
+        if isinstance(array_length, int):
             # Static integer length
             print '    %s %s[%s + 1];' % (elem_type, temp_name, array_length)
         else:

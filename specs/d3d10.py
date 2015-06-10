@@ -906,7 +906,7 @@ ID3D10Device.methods += [
     StdMethod(HRESULT, "SetPrivateDataInterface", [(REFGUID, "guid"), (OpaquePointer(Const(IUnknown)), "pData")], sideeffects=False),
     StdMethod(Void, "ClearState", []),
     StdMethod(Void, "Flush", []),
-    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "1"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
+    StdMethod(HRESULT, "CreateBuffer", [(Pointer(Const(D3D10_BUFFER_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), 1), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Buffer)), "ppBuffer")]),
     StdMethod(HRESULT, "CreateTexture1D", [(Pointer(Const(D3D10_TEXTURE1D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture1D)), "ppTexture1D")]),
     StdMethod(HRESULT, "CreateTexture2D", [(Pointer(Const(D3D10_TEXTURE2D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture2D)), "ppTexture2D")]),
     StdMethod(HRESULT, "CreateTexture3D", [(Pointer(Const(D3D10_TEXTURE3D_DESC)), "pDesc"), (Array(Const(D3D10_SUBRESOURCE_DATA), "_getNumSubResources(pDesc)"), "pInitialData"), Out(Pointer(ObjPointer(ID3D10Texture3D)), "ppTexture3D")]),
@@ -991,10 +991,12 @@ D3D10_RENDER_TARGET_BLEND_DESC1 = Struct("D3D10_RENDER_TARGET_BLEND_DESC1", [
     (UINT8, "RenderTargetWriteMask"),
 ])
 
+D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT = 8
+
 D3D10_BLEND_DESC1 = Struct("D3D10_BLEND_DESC1", [
     (BOOL, "AlphaToCoverageEnable"),
     (BOOL, "IndependentBlendEnable"),
-    (Array(D3D10_RENDER_TARGET_BLEND_DESC1, "D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT"), "RenderTarget"),
+    (Array(D3D10_RENDER_TARGET_BLEND_DESC1, D3D10_SIMULTANEOUS_RENDER_TARGET_COUNT), "RenderTarget"),
 ])
 
 ID3D10BlendState1 = Interface("ID3D10BlendState1", ID3D10BlendState)

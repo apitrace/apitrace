@@ -268,10 +268,19 @@ Flags = Bitmask
 
 class Array(Type):
 
-    def __init__(self, type, length):
-        Type.__init__(self, type.expr + " *")
-        self.type = type
+    def __init__(self, type_, length):
+        Type.__init__(self, type_.expr + " *")
+        self.type = type_
         self.length = length
+        if not isinstance(length, int):
+            assert isinstance(length, basestring)
+            # Check if length is actually a valid constant expression
+            try:
+                eval(length, {}, {})
+            except:
+                pass
+            else:
+                raise ValueError("length %r should be an integer" % length)
 
     def visit(self, visitor, *args, **kwargs):
         return visitor.visitArray(self, *args, **kwargs)
