@@ -97,6 +97,8 @@ class D3DRetracer(Retracer):
             print r'    if (retrace::forceWindowed) {'
             print r'        pPresentationParameters->Windowed = TRUE;'
             print r'        pPresentationParameters->FullScreen_RefreshRateInHz = 0;'
+            if interface.name.startswith('IDirect3D8'):
+                print r'        pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;'
             print r'    }'
 
             # On D3D8, ensure we use BackBufferFormat compatible with the
