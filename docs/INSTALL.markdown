@@ -140,6 +140,9 @@ It will try to detect most required/optional dependencies automatically.  When
 not found automatically, you can manually specify the location of the
 dependencies from the CMake GUI.
 
+If the source/build/compiler/tools are spread across multiple drives, you might
+need to [use absolute paths](https://github.com/apitrace/apitrace/issues/352).
+
 After you've successfully configured, you can start the build by opening the
 generated `build\apitrace.sln` solution file, or invoking CMake as:
 
