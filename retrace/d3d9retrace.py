@@ -100,6 +100,10 @@ class D3DRetracer(Retracer):
             if interface.name.startswith('IDirect3D8'):
                 print r'        pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;'
             print r'    }'
+            if 'BehaviorFlags' in method.argNames():
+                print r'    if (retrace::dumpingState) {'
+                print r'        BehaviorFlags &= ~D3DCREATE_PUREDEVICE;'
+                print r'    }'
 
             # On D3D8, ensure we use BackBufferFormat compatible with the
             # current DisplayFormat.
