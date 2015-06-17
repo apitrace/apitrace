@@ -254,10 +254,9 @@ haveAnsi(void)
         }
 
         // http://wiki.winehq.org/DeveloperFaq#detect-wine
-        HMODULE hNtDll = LoadLibraryA("ntdll");
+        HMODULE hNtDll = GetModuleHandleA("ntdll");
         if (hNtDll) {
             result = GetProcAddress(hNtDll, "wine_get_version") != NULL;
-            FreeLibrary(hNtDll);
         }
 
         checked = true;
