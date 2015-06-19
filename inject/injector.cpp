@@ -49,6 +49,8 @@
 #include <dwmapi.h>
 #include <tlhelp32.h>
 
+#include <getopt.h>
+
 #ifndef ERROR_ELEVATION_REQUIRED
 #define ERROR_ELEVATION_REQUIRED 740
 #endif
@@ -250,10 +252,80 @@ restartDwmComposition(HANDLE hProcess)
 }
 
 
-BOOL
-getProcessIdByName(const char *szProcessName, DWORD *pdwProcessID)
+static BOOL
+attachDebugger(DWORD dwProcessId)
 {
+    long lRet;
+
+    HKEY hKey;
+    lRet = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug", 0, KEY_READ, &hKey);
+    if (lRet != ERROR_SUCCESS) {
+        debugPrintf("error: RegOpenKeyExA failed\n");
+        return FALSE;
+    }
+
+    char szDebugger[1024];
+    DWORD cbDebugger = sizeof szDebugger;
+    lRet = RegQueryValueExA(hKey, "Debugger", NULL, NULL, (BYTE *)szDebugger, &cbDebugger);
+
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS) {
+        debugPrintf("error: RegQueryValueExA failed\n");
+        return FALSE;
+    }
+
+    SECURITY_ATTRIBUTES sa = { sizeof sa, 0, TRUE };
+    HANDLE hEvent = CreateEvent(&sa, FALSE, FALSE, NULL);
+
+    char szDebuggerCommand[1024];
+    _snprintf(szDebuggerCommand, sizeof szDebuggerCommand, szDebugger,
+              dwProcessId, (DWORD)(UINT_PTR)hEvent, NULL);
+
+    debugPrintf("%s\n", szDebuggerCommand);
+
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof pi);
+    STARTUPINFOA si;
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof &si;
+
     BOOL bRet = FALSE;
+    if (!CreateProcessA(
+           NULL,
+           szDebuggerCommand,
+           NULL, // process attributes
+           NULL, // thread attributes
+           TRUE, // inherit (event) handles
+           0,
+           NULL, // environment
+           NULL, // current directory
+           &si,
+           &pi)) {
+        debugPrintf("error: CreateProcessA failed 0x%08lx\n", GetLastError());
+    } else {
+        HANDLE handles[] = {
+            hEvent,
+            pi.hProcess
+        };
+
+        DWORD dwRet = WaitForMultipleObjects(_countof(handles), handles, FALSE, INFINITE);
+        bRet = dwRet == WAIT_OBJECT_0;
+
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+    }
+
+    CloseHandle(hEvent);
+
+    return bRet;
+}
+
+
+static DWORD
+getProcessIdByName(const char *szProcessName)
+{
+    DWORD dwProcessId = 0;
 
     HANDLE hProcessSnap;
     hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -263,8 +335,7 @@ getProcessIdByName(const char *szProcessName, DWORD *pdwProcessID)
         if (Process32First(hProcessSnap, &pe32)) {
             do {
                 if (stricmp(szProcessName, pe32.szExeFile) == 0) {
-                    *pdwProcessID = pe32.th32ProcessID;
-                    bRet = TRUE;
+                    dwProcessId = pe32.th32ProcessID;
                     break;
                 }
             } while (Process32Next(hProcessSnap, &pe32));
@@ -272,7 +343,7 @@ getProcessIdByName(const char *szProcessName, DWORD *pdwProcessID)
         CloseHandle(hProcessSnap);
     }
 
-    return bRet;
+    return dwProcessId;
 }
 
 
@@ -286,53 +357,114 @@ isNumber(const char *arg) {
     return true;
 }
 
+static void
+help(void)
+{
+    fprintf(stderr,
+            "usage:\n"
+            "  inject -D <dllname.dll> <command> [args] ...\n"
+            "  inject -D <dllname.dll> <process-id>\n"
+            "  inject -D <dllname.dll> !<process-name>\n"
+    );
+}
+
+
+static const struct
+option long_options[] = {
+    { "help", 0, NULL, 'h'},
+    { "debug", 0, NULL, 'd'},
+    { "dll", 1, NULL, 'D'},
+    { "pid", 1, NULL, 'p'},
+    { "tid", 1, NULL, 't'},
+    { NULL, 0, NULL, 0}
+};
+
 
 int
 main(int argc, char *argv[])
 {
-    if (argc < 3) {
-        fprintf(stderr,
-                "usage:\n"
-                "  inject <dllname.dll> <command> [args] ...\n"
-                "  inject <dllname.dll> <process-id>\n"
-                "  inject <dllname.dll> !<process-name>\n"
-        );
+    BOOL bDebug = FALSE;
+    BOOL bAttach = FALSE;
+    DWORD dwProcessId = 0;
+    DWORD dwThreadId = 0;
+
+    const char *szDll = NULL;
+
+    int option_index = 0;
+    while (true) {
+        int opt = getopt_long_only(argc, argv, "hdD:p:t:", long_options, &option_index);
+        if (opt == -1) {
+            break;
+        }
+        switch (opt) {
+            case 'h':
+                help();
+                return 0;
+            case 'd':
+                bDebug = TRUE;
+                break;
+            case 'D':
+                szDll = optarg;
+                break;
+            case 'p':
+                dwProcessId = strtoul(optarg, NULL, 0);
+                bAttach = TRUE;
+                break;
+            case 't':
+                dwThreadId = strtoul(optarg, NULL, 0);
+                bAttach = TRUE;
+                break;
+            default:
+                debugPrintf("inject: invalid option '%c'\n", optopt);
+                help();
+                return 1;
+        }
+    }
+
+    if (!bAttach) {
+        if (argc - optind < 1) {
+            debugPrintf("inject: error: insufficient number of arguments\n");
+            help();
+            return 1;
+        }
+
+        if (isNumber(argv[optind])) {
+            dwProcessId = atol(argv[optind]);
+            bAttach = TRUE;
+        } else if (argv[optind][0] == '!') {
+            const char *szProcessName = &argv[optind][1];
+            dwProcessId = getProcessIdByName(szProcessName);
+            if (!dwProcessId) {
+                debugPrintf("error: failed to find process %s\n", szProcessName);
+                return 1;
+            }
+            bAttach = TRUE;
+        }
+    }
+
+    if (!szDll) {
+        debugPrintf("inject: error: DLL not specificed\n");
+        help();
         return 1;
     }
 
-    BOOL bAttach = FALSE;
-    DWORD dwProcessId = ~0;
-    if (isNumber(argv[2])) {
-        dwProcessId = atol(argv[2]);
-        bAttach = TRUE;
-    } else if (argv[2][0] == '!') {
-        const char *szProcessName = &argv[2][1];
-        if (!getProcessIdByName(szProcessName, &dwProcessId)) {
-            fprintf(stderr, "error: failed to find process %s\n", szProcessName);
-            return 1;
-        }
-        bAttach = TRUE;
-        fprintf(stderr, "dwProcessId = %lu\n", dwProcessId);
-    }
-
     HANDLE hSemaphore = NULL;
-    const char *szDll = argv[1];
     if (!USE_SHARED_MEM) {
         SetEnvironmentVariableA("INJECT_DLL", szDll);
     } else {
         hSemaphore = CreateSemaphore(NULL, 1, 1, "inject_semaphore");
         if (hSemaphore == NULL) {
-            fprintf(stderr, "error: failed to create semaphore\n");
+            debugPrintf("error: failed to create semaphore\n");
             return 1;
         }
 
         DWORD dwWait = WaitForSingleObject(hSemaphore, 0);
         if (dwWait == WAIT_TIMEOUT) {
-            fprintf(stderr, "info: waiting for another inject instance to finish\n");
+            debugPrintf("info: waiting for another inject instance to finish\n");
             dwWait = WaitForSingleObject(hSemaphore, INFINITE);
         }
         if (dwWait != WAIT_OBJECT_0) {
-            fprintf(stderr, "error: failed to enter semaphore gate\n");
+            debugPrintf("error: failed to enter semaphore gate\n");
             return 1;
         }
 
@@ -347,14 +479,14 @@ main(int argc, char *argv[])
         HANDLE hToken   = NULL;
         bRet = OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken);
         if (!bRet) {
-            fprintf(stderr, "error: OpenProcessToken returned %u\n", (unsigned)bRet);
+            debugPrintf("error: OpenProcessToken returned %u\n", (unsigned)bRet);
             return 1;
         }
 
         LUID Luid;
         bRet = LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &Luid);
         if (!bRet) {
-            fprintf(stderr, "error: LookupPrivilegeValue returned %u\n", (unsigned)bRet);
+            debugPrintf("error: LookupPrivilegeValue returned %u\n", (unsigned)bRet);
             return 1;
         }
 
@@ -364,7 +496,7 @@ main(int argc, char *argv[])
         tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
         bRet = AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof tp, NULL, NULL);
         if (!bRet) {
-            fprintf(stderr, "error: AdjustTokenPrivileges returned %u\n", (unsigned)bRet);
+            debugPrintf("error: AdjustTokenPrivileges returned %u\n", (unsigned)bRet);
             return 1;
         }
 
@@ -395,7 +527,7 @@ main(int argc, char *argv[])
     } else {
         std::string commandLine;
         char sep = 0;
-        for (int i = 2; i < argc; ++i) {
+        for (int i = optind; i < argc; ++i) {
             const char *arg = argv[i];
 
             if (sep) {
@@ -454,7 +586,7 @@ main(int argc, char *argv[])
             if (pfnIsWow64Process(GetCurrentProcess(), &isParentWow64) &&
                 pfnIsWow64Process(hProcess, &isChildWow64) &&
                 isParentWow64 != isChildWow64) {
-                fprintf(stderr, "error: binaries mismatch: you need to use the "
+                debugPrintf("error: binaries mismatch: you need to use the "
 #ifdef _WIN64
                         "32-bits"
 #else
@@ -482,6 +614,10 @@ main(int argc, char *argv[])
     getDirName(szDllPath);
     strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
 
+    if (bDebug) {
+        attachDebugger(GetProcessId(hProcess));
+    }
+
 #if 1
     if (!injectDll(hProcess, szDllPath)) {
         TerminateProcess(hProcess, 1);
@@ -496,6 +632,18 @@ main(int argc, char *argv[])
             restartDwmComposition(hProcess);
         }
 
+        if (dwThreadId) {
+            HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME, TRUE, dwThreadId);
+            if (hThread) {
+                ResumeThread(hThread);
+                WaitForSingleObject(hThread, INFINITE);
+                CloseHandle(hThread);
+            } else {
+                debugPrintf("inject: failed to open thread %lu\n", dwThreadId);
+            }
+            return 0;
+        }
+
         exitCode = 0;
     } else {
         // Start main process thread
@@ -505,7 +653,7 @@ main(int argc, char *argv[])
         WaitForSingleObject(hProcess, INFINITE);
 
         if (pSharedMem && !pSharedMem->bReplaced) {
-            fprintf(stderr, "warning: %s was never used: application probably does not use this API\n", szDll);
+            debugPrintf("warning: %s was never used: application probably does not use this API\n", szDll);
         }
 
         exitCode = ~0;

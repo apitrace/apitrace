@@ -152,7 +152,12 @@ traceProgram(trace::API api,
 
     if (useInject) {
         args.push_back("inject");
+        if (debug) {
+            args.push_back("-d");
+        }
+        args.push_back("-D");
         args.push_back(wrapperPath);
+        args.push_back("--");
     } else {
         /* On Windows copy the wrapper to the program directory.
          */

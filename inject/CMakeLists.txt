@@ -18,6 +18,7 @@ set_target_properties (injector PROPERTIES
     OUTPUT_NAME inject
 )
 target_link_libraries (injector
+    ${GETOPT_LIBRARIES}
     devcon
     psapi
 )
