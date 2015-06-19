@@ -300,11 +300,22 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 #endif
 
     PEXCEPTION_RECORD pExceptionRecord = pExceptionInfo->ExceptionRecord;
+    DWORD ExceptionCode = pExceptionRecord->ExceptionCode;
+
+    // https://msdn.microsoft.com/en-us/library/het71c37.aspx
+    switch (ExceptionCode >> 30) {
+    case 0: // success
+        return EXCEPTION_CONTINUE_SEARCH;
+    case 1: // informational
+    case 2: // warning
+    case 3: // error
+        break;
+    }
 
     /*
      * Ignore OutputDebugStringA exception.
      */
-    if (pExceptionRecord->ExceptionCode == DBG_PRINTEXCEPTION_C) {
+    if (ExceptionCode == DBG_PRINTEXCEPTION_C) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
@@ -319,7 +330,7 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
      * - http://support.microsoft.com/kb/185294
      */
 #ifdef NDEBUG
-    if (pExceptionRecord->ExceptionCode == 0xe06d7363) {
+    if (ExceptionCode == 0xe06d7363) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 #endif
@@ -329,7 +340,7 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
      *
      * http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
      */
-    if (pExceptionRecord->ExceptionCode == 0x406d1388) {
+    if (ExceptionCode == 0x406d1388) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
@@ -338,7 +349,7 @@ unhandledExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
      *
      * http://ig2600.blogspot.co.uk/2011/01/why-do-i-keep-getting-exception-code.html
      */
-    if (pExceptionRecord->ExceptionCode == 0xe0434352) {
+    if (ExceptionCode == 0xe0434352) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
