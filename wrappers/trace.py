@@ -815,7 +815,7 @@ class Tracer:
         print r'    if (pWrapper && pWrapper->m_dwMagic == 0xd8365d6c) {'
         print r'        *ppObj = pWrapper->m_pInstance;'
         print r'    } else {'
-        print r'        os::log("apitrace: warning: %%s: unexpected %%s pointer\n", entryName, "%s");' % iface.name
+        print r'        os::log("apitrace: warning: %%s: unexpected %%s pointer %%p\n", entryName, "%s", *ppObj);' % iface.name
         print r'    }'
         print r'}'
         print
