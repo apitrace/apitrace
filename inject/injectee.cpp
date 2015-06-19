@@ -285,7 +285,12 @@ static const char *
 getDescriptorName(HMODULE hModule,
                   const PImgDelayDescr pDelayDescriptor)
 {
-    return rvaToVa<const char>(hModule, pDelayDescriptor->rvaDLLName);
+    if (pDelayDescriptor->grAttrs & dlattrRva) {
+        return rvaToVa<const char>(hModule, pDelayDescriptor->rvaDLLName);
+    } else {
+        // old-stye, with ImgDelayDescr::szName being a LPCSTR
+        return reinterpret_cast<LPCSTR>(pDelayDescriptor->rvaDLLName);
+    }
 }
 
 
@@ -636,12 +641,10 @@ patchModule(HMODULE hModule,
     if (pDelayDescriptor) {
         while (pDelayDescriptor->rvaDLLName) {
             if (VERBOSITY > 1) {
-                const char* szName = rvaToVa<const char>(hModule, pDelayDescriptor->rvaDLLName);
-                debugPrintf("inject: found delay-load import entry for module %s\n", szName);
-            }
-
-            if (!(pDelayDescriptor->grAttrs & dlattrRva)) {
-                continue;
+                const char* szName = getDescriptorName(hModule, pDelayDescriptor);
+                debugPrintf("inject: found %sdelay-load import entry for module %s\n",
+                            pDelayDescriptor->grAttrs & dlattrRva ? "" : "old-style ",
+                            szName);
             }
 
             patchDescriptor(hModule, szModule, pDelayDescriptor);
