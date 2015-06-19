@@ -906,6 +906,7 @@ registerProcessThreadsHooks(const char *szMatchModule)
     functionMap["CreateProcessW"]       = (LPVOID)MyCreateProcessW;
     functionMap["CreateProcessAsUserA"] = (LPVOID)MyCreateProcessAsUserA;
     functionMap["CreateProcessAsUserW"] = (LPVOID)MyCreateProcessAsUserW;
+    // TODO: CreateProcessWithTokenW
 }
 
 static void
