@@ -31,6 +31,7 @@
 #include "snappy-sinksource.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <string>

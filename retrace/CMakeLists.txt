@@ -147,7 +147,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         glproc_egl
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()

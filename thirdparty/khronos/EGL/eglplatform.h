@@ -109,6 +109,12 @@ typedef void *EGLNativeDisplayType;
 typedef void *EGLNativePixmapType;
 typedef void *EGLNativeWindowType;
 
+#elif defined(__QNXNTO__)
+
+typedef void *EGLNativeDisplayType;
+typedef void *EGLNativePixmapType;
+typedef void *EGLNativeWindowType;
+
 #elif defined(__unix__)
 
 /* X11 (tentative)  */

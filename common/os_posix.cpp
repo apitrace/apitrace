@@ -57,6 +57,10 @@
 #define PATH_MAX 4096
 #endif
 
+#ifdef __QNXNTO__
+#define SA_RESTART 0 // QNX does not have SA_RESTART
+#endif
+
 #include "os.hpp"
 #include "os_string.hpp"
 #include "os_backtrace.hpp"

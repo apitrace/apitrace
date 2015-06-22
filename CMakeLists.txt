@@ -44,6 +44,8 @@ option (ENABLE_WAFFLE "Enable WAFFLE support." OFF)
 
 option (ENABLE_FRAME_POINTER "Disable frame pointer omission" ON)
 
+option (ENABLE_LIBBACKTRACE "Enable libbacktrace support" ON)
+
 # Proprietary Linux games often ship their own libraries (zlib, libstdc++,
 # etc.) in order to ship a single set of binaries across multiple
 # distributions.  Given that apitrace wrapper modules will be loaded into those
@@ -447,10 +449,10 @@ if (WIN32)
     add_subdirectory (thirdparty/devcon)
 endif ()
 
-if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
+if (ENABLE_LIBBACKTRACE AND CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
     add_subdirectory (thirdparty/libbacktrace)
     include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libbacktrace)
-    set (LIBBACKTRACE_LIBRARIES dl backtrace)
+    set (LIBBACKTRACE_LIBRARIES ${CMAKE_DL_LIBS} backtrace)
     add_definitions (-DHAVE_BACKTRACE=1)
 endif ()
 
