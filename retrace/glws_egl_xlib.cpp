@@ -35,6 +35,8 @@
 #include "glws.hpp"
 #include "glws_xlib.hpp"
 
+#include <EGL/eglext.h>
+
 
 namespace glws {
 
@@ -248,7 +250,19 @@ init(void) {
 
     initX();
 
-    eglDisplay = eglGetDisplay((EGLNativeDisplayType)display);
+    eglExtensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    if (eglExtensions &&
+        checkExtension("EGL_EXT_platform_x11", eglExtensions)) {
+
+        Attributes<EGLint> attribs;
+        attribs.add(EGL_PLATFORM_X11_SCREEN_EXT, screen);
+        attribs.add(EGL_NONE);
+
+        eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_X11_EXT, display, attribs);
+    } else {
+        eglDisplay = eglGetDisplay((EGLNativeDisplayType)display);
+    }
+
     if (eglDisplay == EGL_NO_DISPLAY) {
         std::cerr << "error: unable to get EGL display\n";
         XCloseDisplay(display);

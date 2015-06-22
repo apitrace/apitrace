@@ -5,6 +5,7 @@ all: \
 	glparams.py \
 	glxapi.py \
 	wglapi.py \
+	eglapi.py \
 	glxenum.py \
 	wglenum.py \
 	eglenum.py
@@ -42,6 +43,9 @@ glxapi.py: xml2api.py glx.xml
 	python $^ > $@
 
 wglapi.py: xml2api.py wgl.xml
+	python $^ > $@
+
+eglapi.py: xml2api.py egl.xml
 	python $^ > $@
 
 glparams.py: xml2glparams.py gl.xml
