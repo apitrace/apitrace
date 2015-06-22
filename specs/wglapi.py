@@ -231,7 +231,13 @@ WGLPixelFormatAttribs = AttribArray(Const(WGLenum), WGLPixelFormatAttribsList)
 WGLPixelFormatFloatAttribs = AttribArray(Const(FLOAT), WGLPixelFormatAttribsList)
 
 WGLCreatePbufferARBAttribs = AttribArray(Const(WGLenum), [
-    ('WGL_PBUFFER_LARGEST_ARB', Int)
+    ('WGL_PBUFFER_LARGEST_ARB', Int),
+    # WGL_ARB_render_texture
+    ('WGL_TEXTURE_FORMAT_ARB', WGLenum),
+    ('WGL_TEXTURE_TARGET_ARB', WGLenum),
+    ('WGL_MIPMAP_TEXTURE_ARB', BOOL),
+    # WGL_NV_render_depth_texture
+    ('WGL_DEPTH_TEXTURE_FORMAT_NV', WGLenum),
 ])
 
 CubeFaceEnum = FakeEnum(Int, [
