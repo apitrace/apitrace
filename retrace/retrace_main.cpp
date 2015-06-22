@@ -73,6 +73,7 @@ trace::Profiler profiler;
 
 int verbosity = 0;
 unsigned debug = 1;
+bool forceWindowed = true;
 bool dumpingState = false;
 bool dumpingSnapshots = false;
 
@@ -631,6 +632,7 @@ usage(const char *argv0) {
         "      --db                use a double buffer visual (default)\n"
         "      --samples=N         use GL_ARB_multisample (default is 1)\n"
         "      --driver=DRIVER     force driver type (`hw`, `sw`, `ref`, `null`, or driver module name)\n"
+        "      --fullscreen        allow fullscreen\n"
         "      --sb                use a single buffer visual\n"
         "  -s, --snapshot-prefix=PREFIX    take snapshots; `-` for PNM stdout output\n"
         "      --snapshot-format=FMT       use (PNM, RGB, or MD5; default is PNM) when writing to stdout output\n"
@@ -650,6 +652,7 @@ enum {
     DB_OPT,
     SAMPLES_OPT,
     DRIVER_OPT,
+    FULLSCREEN_OPT,
     PCPU_OPT,
     PGPU_OPT,
     PPD_OPT,
@@ -676,6 +679,7 @@ longOptions[] = {
     {"driver", required_argument, 0, DRIVER_OPT},
     {"dump-state", required_argument, 0, 'D'},
     {"dump-format", required_argument, 0, DUMP_FORMAT_OPT},
+    {"fullscreen", no_argument, 0, FULLSCREEN_OPT},
     {"help", no_argument, 0, 'h'},
     {"pcpu", no_argument, 0, PCPU_OPT},
     {"pgpu", no_argument, 0, PGPU_OPT},
@@ -762,6 +766,9 @@ int main(int argc, char **argv)
                 driver = DRIVER_MODULE;
                 driverModule = optarg;
             }
+            break;
+        case FULLSCREEN_OPT:
+            retrace::forceWindowed = false;
             break;
         case SB_OPT:
             retrace::doubleBuffer = false;

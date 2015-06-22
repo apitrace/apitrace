@@ -113,14 +113,17 @@ class D3DRetracer(Retracer):
             # valid values for BackBufferFormat include D3DFMT_X1R5G5B5 and
             # D3DFMT_A1R5G5B5, but exclude D3DFMT_R5G6B5.
             if interface.name.startswith('IDirect3D8'):
-                print r'    D3DDISPLAYMODE Mode;'
-                print r'    HRESULT hr;'
-                print r'    hr = _this->GetAdapterDisplayMode(Adapter, &Mode);'
-                print r'    hr = _this->CheckDeviceType(Adapter, DeviceType, Mode.Format, pPresentationParameters->BackBufferFormat, pPresentationParameters->Windowed);'
-                print r'    if (hr == D3DERR_NOTAVAILABLE) {'
-                print r'        retrace::warning(call) << "forcing back buffer format to match display mode format\n";'
-                print r'        pPresentationParameters->BackBufferFormat = Mode.Format;'
-                print r'    };'
+                print r'    if (pPresentationParameters->Windowed) {'
+                print r'        D3DDISPLAYMODE Mode;'
+                print r'        HRESULT hr;'
+                print r'        hr = _this->GetAdapterDisplayMode(Adapter, &Mode);'
+                print r'        assert(SUCCEEDED(hr));'
+                print r'        hr = _this->CheckDeviceType(Adapter, DeviceType, Mode.Format, pPresentationParameters->BackBufferFormat, pPresentationParameters->Windowed);'
+                print r'        if (hr == D3DERR_NOTAVAILABLE) {'
+                print r'            retrace::warning(call) << "forcing back buffer format to match display mode format\n";'
+                print r'            pPresentationParameters->BackBufferFormat = Mode.Format;'
+                print r'        }'
+                print r'    }'
         
         if method.name in self.createDeviceMethodNames:
             # override the device type
