@@ -450,7 +450,7 @@ endif ()
 if (CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF")
     add_subdirectory (thirdparty/libbacktrace)
     include_directories (${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libbacktrace)
-    set (LIBBACKTRACE_LIBRARIES dl backtrace)
+    set (LIBBACKTRACE_LIBRARIES ${CMAKE_DL_LIBS} backtrace)
     add_definitions (-DHAVE_BACKTRACE=1)
 endif ()
 

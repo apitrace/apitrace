@@ -316,7 +316,7 @@ elseif (APPLE)
         glproc_gl
         trace
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
 
     install (TARGETS cgltrace FRAMEWORK DESTINATION ${WRAPPER_INSTALL_DIR})
@@ -361,7 +361,7 @@ elseif (X11_FOUND)
         glproc_gl
         trace
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
 
     target_linker_version_script (glxtrace ${CMAKE_CURRENT_SOURCE_DIR}/glxtrace.version)
@@ -412,7 +412,7 @@ if (ENABLE_EGL AND NOT WIN32 AND NOT APPLE)
         glproc_egl
         trace
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
 
     target_linker_version_script (egltrace ${CMAKE_CURRENT_SOURCE_DIR}/egltrace.version)

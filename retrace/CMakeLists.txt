@@ -124,7 +124,7 @@ if (WIN32 OR APPLE OR X11_FOUND)
             # when dlopen'ing libGL), so link pthreads to avoid this issue.  See also
             # http://stackoverflow.com/questions/2702628/gdb-cannot-find-new-threads-generic-error
             ${CMAKE_THREAD_LIBS_INIT}
-            dl
+            ${CMAKE_DL_LIBS}
         )
     endif ()
 
@@ -147,7 +147,7 @@ if (ENABLE_EGL AND X11_FOUND AND NOT WIN32 AND NOT APPLE AND NOT ENABLE_WAFFLE)
         glproc_egl
         ${X11_X11_LIB}
         ${CMAKE_THREAD_LIBS_INIT}
-        dl
+        ${CMAKE_DL_LIBS}
     )
     install (TARGETS eglretrace RUNTIME DESTINATION bin) 
 endif ()
@@ -169,7 +169,7 @@ if (ENABLE_EGL)
             ${Waffle_LIBRARY}
             ${X11_X11_LIB}
             ${CMAKE_THREAD_LIBS_INIT}
-            dl
+            ${CMAKE_DL_LIBS}
         )
         install (TARGETS eglretrace RUNTIME DESTINATION bin)
     elseif (ANDROID AND (DEFINED ANDROID_SDK))
