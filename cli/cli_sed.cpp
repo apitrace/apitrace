@@ -108,9 +108,10 @@ public:
 
     void visit(String *node) {
         if (!searchName.compare(node->value)) {
+            size_t len = replaceName.length() + 1;
             delete [] node->value;
-            char *str = new char [replaceName.length() + 1];
-            strcpy(str, replaceName.c_str());
+            char *str = new char [len];
+            memcpy(str, replaceName.c_str(), len);
             node->value = str;
         }
     }
