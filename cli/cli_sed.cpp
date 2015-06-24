@@ -272,7 +272,7 @@ parseSubstOpt(Replacements &replacements, const char *opt)
 
             std::string fname = str->substr(file_subst.length());
             fname[fname.length()-1] = 0;
-            FILE *f = fopen(fname.c_str(), "r");
+            FILE *f = fopen(fname.c_str(), "rt");
             if (!f) {
                 std::cerr << "error: cannot open file " << fname << "\n";
                 return false;
