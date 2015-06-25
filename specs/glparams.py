@@ -2802,7 +2802,7 @@ parameters = [
     ("glGet",	I,	1,	"GL_TRANSFORM_FEEDBACK_BINDING"),	# 0x8E25
     ("",	X,	1,	"GL_FRAME_NV"),	# 0x8E26
     ("",	X,	1,	"GL_FIELDS_NV"),	# 0x8E27
-    ("",	X,	1,	"GL_TIMESTAMP"),	# 0x8E28
+    ("_glGet",	I64,	1,	"GL_TIMESTAMP"),	# 0x8E28
     ("",	X,	1,	"GL_NUM_FILL_STREAMS_NV"),	# 0x8E29
     ("",	X,	1,	"GL_PRESENT_TIME_NV"),	# 0x8E2A
     ("",	X,	1,	"GL_PRESENT_DURATION_NV"),	# 0x8E2B
