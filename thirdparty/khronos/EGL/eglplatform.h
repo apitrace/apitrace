@@ -103,7 +103,7 @@ typedef struct ANativeWindow*           EGLNativeWindowType;
 typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
 typedef void*                           EGLNativeDisplayType;
 
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__QNXNTO__)
 
 typedef void *EGLNativeDisplayType;
 typedef void *EGLNativePixmapType;

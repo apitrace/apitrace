@@ -1,10 +1,8 @@
-diff --git a/thirdparty/khronos/EGL/eglplatform.h b/thirdparty/khronos/EGL/eglplatform.h
-index 6d34ab5..5f30ef1 100644
---- a/thirdparty/khronos/EGL/eglplatform.h
-+++ b/thirdparty/khronos/EGL/eglplatform.h
-@@ -83,6 +83,22 @@ typedef int   EGLNativeDisplayType;
- typedef void *EGLNativeWindowType;
- typedef void *EGLNativePixmapType;
+--- eglplatform.h.orig	2015-04-30 22:05:42.000000000 +0100
++++ eglplatform.h	2015-06-25 16:35:12.366373499 +0100
+@@ -93,6 +93,22 @@
+ typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
+ typedef void*                           EGLNativeDisplayType;
  
 +#elif defined(__ANDROID__) || defined(ANDROID)
 +
@@ -16,7 +14,7 @@ index 6d34ab5..5f30ef1 100644
 +typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
 +typedef void*                           EGLNativeDisplayType;
 +
-+#elif defined(__APPLE__)
++#elif defined(__APPLE__) || defined(__QNXNTO__)
 +
 +typedef void *EGLNativeDisplayType;
 +typedef void *EGLNativePixmapType;
