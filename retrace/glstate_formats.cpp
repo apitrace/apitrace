@@ -29,6 +29,8 @@
 #include <assert.h>
 
 #include <iostream>
+#include <limits>
+#include <type_traits>
 
 #include "glsize.hpp"
 #include "glstate.hpp"
@@ -65,6 +67,7 @@ formatToString(GLenum internalFormat) {
 
 static const InternalFormatDesc
 internalFormatDescs[] = {
+    // GLenum internalFormat,                  GLenum format,                   GLenum type,                        GLenum readType
 
     // Unsized UNORM
     { 1,                                       GL_RED,                          GL_NONE,                            GL_UNSIGNED_BYTE },
@@ -413,6 +416,246 @@ getImageFormat(GLenum format, GLenum type,
     default:
         assert(0);
     }
+}
+
+
+// Macros for describing arbitrary swizzles
+
+#define SWIZZLE_X 0
+#define SWIZZLE_Y 1
+#define SWIZZLE_Z 2
+#define SWIZZLE_W 3
+#define SWIZZLE_0 4
+#define SWIZZLE_1 5
+#define SWIZZLE_COUNT 6
+
+#define SWIZZLE_BITS 4
+#define SWIZZLE_MASK ((1 << SWIZZLE_BITS) - 1)
+
+#define SWIZZLE(x, y, z, w) \
+    (((SWIZZLE_##x) << (SWIZZLE_BITS*0)) | \
+     ((SWIZZLE_##y) << (SWIZZLE_BITS*1)) | \
+     ((SWIZZLE_##z) << (SWIZZLE_BITS*2)) | \
+     ((SWIZZLE_##w) << (SWIZZLE_BITS*3)))
+
+#define SWIZZLE_RGBA SWIZZLE(X,Y,Z,W)
+#define SWIZZLE_RGB  SWIZZLE(X,Y,Z,1)
+#define SWIZZLE_RG   SWIZZLE(X,Y,0,1)
+#define SWIZZLE_R    SWIZZLE(X,0,0,1)
+#define SWIZZLE_LA   SWIZZLE(X,X,X,Y)
+#define SWIZZLE_L    SWIZZLE(X,X,X,1)
+#define SWIZZLE_A    SWIZZLE(0,0,0,X)
+#define SWIZZLE_I    SWIZZLE(X,X,X,X)
+
+#define SWIZZLE_EXTRACT(swizzle, channel) \
+    ((swizzle) >> (SWIZZLE_BITS * (channel)) & SWIZZLE_MASK)
+
+
+// Template that can describe all regular array-based pixel formats
+template< typename Type, unsigned components, bool normalized, uint16_t swizzle >
+class PixelTemplate : public PixelFormat
+{
+protected:
+
+    static_assert( 1 <= components && components <= 4, "invalid number of components" );
+
+    static const unsigned swizzle_r = SWIZZLE_EXTRACT(swizzle, 0);
+    static const unsigned swizzle_g = SWIZZLE_EXTRACT(swizzle, 1);
+    static const unsigned swizzle_b = SWIZZLE_EXTRACT(swizzle, 2);
+    static const unsigned swizzle_a = SWIZZLE_EXTRACT(swizzle, 3);
+
+    static_assert( swizzle_r < components || swizzle_r == SWIZZLE_0 || swizzle_r == SWIZZLE_1, "invalid R swizzle" );
+    static_assert( swizzle_g < components || swizzle_g == SWIZZLE_0 || swizzle_g == SWIZZLE_1, "invalid G swizzle" );
+    static_assert( swizzle_b < components || swizzle_b == SWIZZLE_0 || swizzle_b == SWIZZLE_1, "invalid B swizzle" );
+    static_assert( swizzle_a < components || swizzle_a == SWIZZLE_0 || swizzle_a == SWIZZLE_1, "invalid A swizzle" );
+
+    // We must use double precision intermediate values when normalizing 32bits integers.
+    typedef typename std::conditional< normalized && sizeof(Type) >= 4 , double , float >::type Scale;
+
+    // Scale normalized types
+    template<typename T = void>
+    static inline Scale
+    scale(Scale value, typename std::enable_if<normalized, T>::type* = 0)
+    {
+        static_assert( normalized, "should only be instantiated for normalized types" );
+#ifndef _MSC_VER
+        static constexpr Type typeMax = std::numeric_limits<Type>::max();
+        static_assert( static_cast<Type>(static_cast<Scale>(typeMax)) == typeMax,
+                       "intermediate type cannot represent maximum value without loss of precission" );
+        static constexpr Scale scaleFactor = Scale(1) / Scale(typeMax);
+        static_assert( Scale(typeMax) * scaleFactor == Scale(1), "cannot represent unity" );
+        static_assert( Scale(0) * scaleFactor == Scale(0), "cannot represent zero" );
+#else
+        // XXX: MSCV doesn't support constexpr yet
+        static const Type typeMax = std::numeric_limits<Type>::max();
+        assert( static_cast<Type>(static_cast<Scale>(typeMax)) == typeMax );
+        static const Scale scaleFactor = Scale(1) / Scale(typeMax);
+        assert( Scale(typeMax) * scaleFactor == Scale(1) );
+        assert( Scale(0) * scaleFactor == Scale(0) );
+#endif
+        return value * scaleFactor;
+    }
+
+    // No-op for unormalized types
+    template<typename T = void>
+    static inline Scale
+    scale(Scale value, typename std::enable_if<!normalized, T>::type* = 0)
+    {
+        static_assert( !normalized, "should only be instantiated for non-normalized types" );
+        return value;
+    }
+
+    // Unpack a single pixel
+    static inline void
+    unpackPixel(const Type *inPixel, float outPixel[4])
+    {
+        float scaledComponents[SWIZZLE_COUNT];
+        for (unsigned component = 0; component < components; ++component) {
+            Scale scaledComponent = scale(static_cast<Scale>(inPixel[component]));
+            scaledComponents[component] = static_cast<float>(scaledComponent);
+        }
+        scaledComponents[SWIZZLE_0] = 0.0f;
+        scaledComponents[SWIZZLE_1] = 1.0f;
+
+        outPixel[0] = scaledComponents[swizzle_r];
+        outPixel[1] = scaledComponents[swizzle_g];
+        outPixel[2] = scaledComponents[swizzle_b];
+        outPixel[3] = scaledComponents[swizzle_a];
+    }
+
+public:
+
+    inline
+    PixelTemplate(void) {
+    }
+
+    size_t
+    size(void) const {
+        return sizeof(Type) * components;
+    }
+
+    void
+    unpackSpan(const uint8_t *inSpan, float *outSpan, unsigned width) const
+    {
+        const Type *inPixel = reinterpret_cast<const Type *>(inSpan);
+
+        for (unsigned x = 0; x < width; ++x) {
+            unpackPixel(inPixel, outSpan);
+            inPixel += components;
+            outSpan += 4;
+        }
+    }
+};
+
+
+const PixelFormat *
+getPixelFormat(GLenum internalFormat)
+{
+    static const bool Y = true;
+    static const bool N = false;
+
+#define CASE(internalFormat, type, components, norm, swizzle) \
+    case GL_##internalFormat: \
+        { \
+            static const PixelTemplate< GL##type, components, norm, SWIZZLE_##swizzle > pixel; \
+            return &pixel; \
+        }
+
+    switch (internalFormat) {
+
+    CASE(ALPHA8,                  ubyte,  1, Y, A);
+    CASE(ALPHA16,                 ushort, 1, Y, A);
+    CASE(ALPHA16F_ARB,            half,   1, N, A);
+    CASE(ALPHA32F_ARB,            float,  1, N, A);
+    CASE(ALPHA8I_EXT,             byte,   1, N, A);
+    CASE(ALPHA16I_EXT,            short,  1, N, A);
+    CASE(ALPHA32I_EXT,            int,    1, N, A);
+    CASE(ALPHA8UI_EXT,            ubyte,  1, N, A);
+    CASE(ALPHA16UI_EXT,           ushort, 1, N, A);
+    CASE(ALPHA32UI_EXT,           uint,   1, N, A);
+
+    CASE(LUMINANCE8,              ubyte,  1, Y, L);
+    CASE(LUMINANCE16,             ushort, 1, Y, L);
+    CASE(LUMINANCE16F_ARB,        half,   1, N, L);
+    CASE(LUMINANCE32F_ARB,        float,  1, N, L);
+    CASE(LUMINANCE8I_EXT,         byte,   1, N, L);
+    CASE(LUMINANCE16I_EXT,        short,  1, N, L);
+    CASE(LUMINANCE32I_EXT,        int,    1, N, L);
+    CASE(LUMINANCE8UI_EXT,        ubyte,  1, N, L);
+    CASE(LUMINANCE16UI_EXT,       ushort, 1, N, L);
+    CASE(LUMINANCE32UI_EXT,       uint,   1, N, L);
+
+    CASE(LUMINANCE8_ALPHA8,       ubyte,  2, Y, LA);
+    CASE(LUMINANCE16_ALPHA16,     ushort, 2, Y, LA);
+    CASE(LUMINANCE_ALPHA16F_ARB,  half,   2, N, LA);
+    CASE(LUMINANCE_ALPHA32F_ARB,  float,  2, N, LA);
+    CASE(LUMINANCE_ALPHA8I_EXT,   byte,   2, N, LA);
+    CASE(LUMINANCE_ALPHA16I_EXT,  short,  2, N, LA);
+    CASE(LUMINANCE_ALPHA32I_EXT,  int,    2, N, LA);
+    CASE(LUMINANCE_ALPHA8UI_EXT,  ubyte,  2, N, LA);
+    CASE(LUMINANCE_ALPHA16UI_EXT, ushort, 2, N, LA);
+    CASE(LUMINANCE_ALPHA32UI_EXT, uint,   2, N, LA);
+
+    CASE(INTENSITY8,              ubyte,  1, Y, I);
+    CASE(INTENSITY16,             ushort, 1, Y, I);
+    CASE(INTENSITY16F_ARB,        half,   1, N, I);
+    CASE(INTENSITY32F_ARB,        float,  1, N, I);
+    CASE(INTENSITY8I_EXT,         byte,   1, N, I);
+    CASE(INTENSITY16I_EXT,        short,  1, N, I);
+    CASE(INTENSITY32I_EXT,        int,    1, N, I);
+    CASE(INTENSITY8UI_EXT,        ubyte,  1, N, I);
+    CASE(INTENSITY16UI_EXT,       ushort, 1, N, I);
+    CASE(INTENSITY32UI_EXT,       uint,   1, N, I);
+
+    CASE(RGBA8,                   ubyte,  4, Y, RGBA);
+    CASE(RGBA16,                  ushort, 4, Y, RGBA);
+    CASE(RGBA16F,                 half,   4, N, RGBA);
+    CASE(RGBA32F,                 float,  4, N, RGBA);
+    CASE(RGBA8I,                  byte,   4, N, RGBA);
+    CASE(RGBA16I,                 short,  4, N, RGBA);
+    CASE(RGBA32I,                 int,    4, N, RGBA);
+    CASE(RGBA8UI,                 ubyte,  4, N, RGBA);
+    CASE(RGBA16UI,                ushort, 4, N, RGBA);
+    CASE(RGBA32UI,                uint,   4, N, RGBA);
+
+    CASE(RGB8,                    ubyte,  3, Y, RGB);
+    CASE(RGB16,                   ushort, 3, Y, RGB);
+    CASE(RGB16F,                  half,   3, N, RGB);
+    CASE(RGB32F,                  float,  3, N, RGB);
+    CASE(RGB8I,                   byte,   3, N, RGB);
+    CASE(RGB16I,                  short,  3, N, RGB);
+    CASE(RGB32I,                  int,    3, N, RGB);
+    CASE(RGB8UI,                  ubyte,  3, N, RGB);
+    CASE(RGB16UI,                 ushort, 3, N, RGB);
+    CASE(RGB32UI,                 uint,   3, N, RGB);
+
+    CASE(RG8,                     ubyte,  2, Y, RG);
+    CASE(RG16,                    ushort, 2, Y, RG);
+    CASE(RG16F,                   half,   2, N, RG);
+    CASE(RG32F,                   float,  2, N, RG);
+    CASE(RG8I,                    byte,   2, N, RG);
+    CASE(RG16I,                   short,  2, N, RG);
+    CASE(RG32I,                   int,    2, N, RG);
+    CASE(RG8UI,                   ubyte,  2, N, RG);
+    CASE(RG16UI,                  ushort, 2, N, RG);
+    CASE(RG32UI,                  uint,   2, N, RG);
+
+    CASE(R8,                      ubyte,  1, Y, R);
+    CASE(R16,                     ushort, 1, Y, R);
+    CASE(R16F,                    half,   1, N, R);
+    CASE(R32F,                    float,  1, N, R);
+    CASE(R8I,                     byte,   1, N, R);
+    CASE(R16I,                    short,  1, N, R);
+    CASE(R32I,                    int,    1, N, R);
+    CASE(R8UI,                    ubyte,  1, N, R);
+    CASE(R16UI,                   ushort, 1, N, R);
+    CASE(R32UI,                   uint,   1, N, R);
+
+    default:
+        return nullptr;
+    }
+
+#undef CASE
 }
 
 

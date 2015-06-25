@@ -26,6 +26,8 @@
 #pragma once
 
 
+#include <stdint.h>
+
 #include "glimports.hpp"
 #include "glproc.hpp"
 #include "image.hpp"
@@ -108,6 +110,26 @@ chooseReadBackFormat(const InternalFormatDesc &formatDesc, GLenum &format, GLenu
 void
 getImageFormat(GLenum format, GLenum type,
                GLuint &channels, image::ChannelType &channelType);
+
+
+// Abstract base class for pixel format conversion
+class PixelFormat
+{
+public:
+    virtual ~PixelFormat() {}
+
+    // Size in bytes
+    virtual size_t
+    size(void) const = 0;
+
+    // Unpack a span of pixels
+    virtual void
+    unpackSpan(const uint8_t *inSpan, float *outSpan, unsigned width) const = 0;
+};
+
+
+const PixelFormat *
+getPixelFormat(GLenum internalFormat);
 
 
 /**

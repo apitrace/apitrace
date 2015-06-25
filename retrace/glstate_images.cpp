@@ -441,15 +441,21 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
 
     const InternalFormatDesc &formatDesc = getInternalFormatDesc(desc.internalFormat);
 
-    if (target == GL_TEXTURE_BUFFER && formatDesc.type != GL_UNSIGNED_BYTE) {
-        // FIXME: We rely on glGetTexImage to convert the pixels, but we can't use it with texture buffers.
-        std::cerr << "warning: unsupported texture buffer internal format " << formatToString(desc.internalFormat) << "\n";
-        return;
-    }
-
     GLenum format;
     GLenum type;
-    chooseReadBackFormat(formatDesc, format, type);
+    const PixelFormat *pixelFormat = nullptr;
+
+    if (target == GL_TEXTURE_BUFFER) {
+        pixelFormat = getPixelFormat(desc.internalFormat);
+        if (!pixelFormat) {
+            std::cerr << "warning: unsupported texture buffer internal format " << formatToString(desc.internalFormat) << "\n";
+            return;
+        }
+        format = GL_RGBA;
+        type = GL_FLOAT;
+    } else {
+        chooseReadBackFormat(formatDesc, format, type);
+    }
 
     writer.beginMember(label);
 
@@ -473,7 +479,11 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
 
     if (target == GL_TEXTURE_BUFFER) {
         assert(desc.height == 1);
-        assert(type == GL_UNSIGNED_BYTE);
+        assert(desc.depth == 1);
+        assert(pixelFormat);
+        assert(format == GL_RGBA);
+        assert(type == GL_FLOAT);
+        assert(image->bytesPerPixel == sizeof(float[4]));
 
         GLint buffer = 0;
         glGetIntegerv(GL_TEXTURE_BUFFER_DATA_STORE_BINDING, &buffer);
@@ -483,7 +493,8 @@ dumpActiveTextureLevel(StateWriter &writer, Context &context,
 
         const GLvoid *map = bm.map(GL_TEXTURE_BUFFER, buffer);
         if (map) {
-            memcpy(image->pixels, map, image->width * image->bytesPerPixel);
+            pixelFormat->unpackSpan(static_cast<const uint8_t *>(map),
+                                    reinterpret_cast<float *>(image->pixels), image->width);
         }
     } else {
         if (context.ES) {
