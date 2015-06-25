@@ -363,8 +363,8 @@ IDirect3DSurface9.methods += [
     StdMethod(HRESULT, "GetDesc", [Out(Pointer(D3DSURFACE_DESC), "pDesc")], sideeffects=False),
     StdMethod(HRESULT, "LockRect", [Out(Pointer(D3DLOCKED_RECT), "pLockedRect"), (ConstPointer(RECT), "pRect"), (D3DLOCK, "Flags")]),
     StdMethod(HRESULT, "UnlockRect", []),
-    StdMethod(HRESULT, "GetDC", [Out(Pointer(HDC), "phdc")]),
-    StdMethod(HRESULT, "ReleaseDC", [(HDC, "hdc")]),
+    StdMethod(HRESULT, "GetDC", [Out(Pointer(HDC), "phdc")], sideeffects=False),
+    StdMethod(HRESULT, "ReleaseDC", [(HDC, "hdc")], sideeffects=False),
 ]
 
 IDirect3DVolume9.methods += [
