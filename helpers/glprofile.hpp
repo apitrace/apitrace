@@ -84,6 +84,11 @@ struct Profile {
                (major == refMajor && minor >= refMinor);
     }
 
+    inline bool
+    versionGreaterOrEqual(Api refApi, unsigned refMajor, unsigned refMinor) const {
+        return api == refApi && versionGreaterOrEqual(refMajor, refMinor);
+    }
+
     bool
     matches(const Profile expected) const;
 

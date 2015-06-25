@@ -369,7 +369,7 @@ initContext() {
     /* Ensure we have adequate extension support */
     supportsTimestamp   = currentContext->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
-    supportsOcclusion   = currentContext->hasExtension("GL_ARB_occlusion_query");
+    supportsOcclusion   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 1, 5);
     supportsDebugOutput = currentContext->hasExtension("GL_ARB_debug_output");
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
 
