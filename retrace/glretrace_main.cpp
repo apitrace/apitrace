@@ -374,6 +374,12 @@ initContext() {
     supportsDebugOutput = currentContext->hasExtension("GL_ARB_debug_output");
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
 
+#ifdef __APPLE__
+    // GL_TIMESTAMP doesn't work on Apple.  GL_TIME_ELAPSED still does however.
+    // http://lists.apple.com/archives/mac-opengl/2014/Nov/threads.html#00001
+    supportsTimestamp   = false;
+#endif
+
     /* Check for timer query support */
     if (retrace::profilingGpuTimes) {
         if (!supportsTimestamp && !supportsElapsed) {
