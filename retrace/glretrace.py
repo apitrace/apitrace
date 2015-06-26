@@ -274,8 +274,12 @@ class GlRetracer(Retracer):
            is_draw_arrays or \
            is_draw_elements or \
            function.name.startswith('glBeginTransformFeedback'):
-            print r'    if (retrace::debug && !glretrace::insideList && !glretrace::insideGlBeginEnd && glretrace::getCurrentContext()) {'
-            print r'        _validateActiveProgram(call);'
+            print r'    if (retrace::debug && !glretrace::insideList && !glretrace::insideGlBeginEnd) {'
+            print r'        glretrace::Context *currentContext = glretrace::getCurrentContext();'
+            print r'        if (currentContext &&'
+            print r'            currentContext->wsContext->profile.major >= 2) {'
+            print r'            _validateActiveProgram(call);'
+            print r'        }'
             print r'    }'
 
         if function.name != 'glEnd':
