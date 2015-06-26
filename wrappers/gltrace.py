@@ -1101,15 +1101,21 @@ class GlTracer(Tracer):
 
     def array_prolog(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
-            print '    GLint client_active_texture = _glGetInteger(GL_CLIENT_ACTIVE_TEXTURE);'
-            print '    GLint max_texture_coords = 0;'
+            print '    GLint max_units = 0;'
             print '    if (ctx->profile.desktop())'
-            print '        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_texture_coords);'
+            print '        _glGetIntegerv(GL_MAX_TEXTURE_COORDS, &max_units);'
             print '    else'
-            print '        _glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_coords);'
-            print '    for (GLint unit = 0; unit < max_texture_coords; ++unit) {'
+            print '        _glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_units);'
+            print '    GLint client_active_texture = GL_TEXTURE0;'
+            print '    if (max_units > 0) {'
+            print '        _glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE, &client_active_texture);'
+            print '    }'
+            print '    GLint unit = 0;'
+            print '    do {'
             print '        GLint texture = GL_TEXTURE0 + unit;'
-            print '        _glClientActiveTexture(texture);'
+            print '        if (max_units > 0) {'
+            print '            _glClientActiveTexture(texture);'
+            print '        }'
 
     def array_trace_prolog(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
@@ -1117,12 +1123,14 @@ class GlTracer(Tracer):
 
     def array_epilog(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
-            print '    }'
+            print '    } while (++unit < max_units);'
         self.array_cleanup(api, uppercase_name)
 
     def array_cleanup(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
-            print '    _glClientActiveTexture(client_active_texture);'
+            print '    if (max_units > 0) {'
+            print '        _glClientActiveTexture(client_active_texture);'
+            print '    }'
         
     def array_trace_intermezzo(self, api, uppercase_name):
         if uppercase_name == 'TEXTURE_COORD':
