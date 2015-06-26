@@ -104,6 +104,8 @@ MyCreateProcessCommon(BOOL bRet,
         return;
     }
 
+    DWORD dwLastError = GetLastError();
+
     char szDllPath[MAX_PATH];
     GetModuleFileNameA(g_hThisModule, szDllPath, sizeof szDllPath);
 
@@ -114,6 +116,8 @@ MyCreateProcessCommon(BOOL bRet,
     if (!(dwCreationFlags & CREATE_SUSPENDED)) {
         ResumeThread(lpProcessInformation->hThread);
     }
+
+    SetLastError(dwLastError);
 }
 
 static BOOL WINAPI
@@ -680,6 +684,7 @@ static HMODULE WINAPI
 MyLoadLibraryA(LPCSTR lpLibFileName)
 {
     HMODULE hModule = LoadLibraryA(lpLibFileName);
+    DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
         debugPrintf("inject: intercepting %s(\"%s\") = 0x%p\n",
@@ -711,6 +716,7 @@ MyLoadLibraryA(LPCSTR lpLibFileName)
     // Hook all new modules (and not just this one, to pick up any dependencies)
     patchAllModules();
 
+    SetLastError(dwLastError);
     return hModule;
 }
 
@@ -718,6 +724,7 @@ static HMODULE WINAPI
 MyLoadLibraryW(LPCWSTR lpLibFileName)
 {
     HMODULE hModule = LoadLibraryW(lpLibFileName);
+    DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
         debugPrintf("inject: intercepting %s(L\"%S\") = 0x%p\n",
@@ -727,6 +734,7 @@ MyLoadLibraryW(LPCWSTR lpLibFileName)
     // Hook all new modules (and not just this one, to pick up any dependencies)
     patchAllModules();
 
+    SetLastError(dwLastError);
     return hModule;
 }
 
@@ -776,6 +784,7 @@ static HMODULE WINAPI
 MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
     HMODULE hModule = LoadLibraryExA(lpLibFileName, hFile, adjustFlags(dwFlags));
+    DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
         debugPrintf("inject: intercepting %s(\"%s\", 0x%p, 0x%lx) = 0x%p\n",
@@ -785,6 +794,7 @@ MyLoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     // Hook all new modules (and not just this one, to pick up any dependencies)
     patchAllModules();
 
+    SetLastError(dwLastError);
     return hModule;
 }
 
@@ -792,6 +802,7 @@ static HMODULE WINAPI
 MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
     HMODULE hModule = LoadLibraryExW(lpLibFileName, hFile, adjustFlags(dwFlags));
+    DWORD dwLastError = GetLastError();
 
     if (VERBOSITY >= 2) {
         debugPrintf("inject: intercepting %s(L\"%S\", 0x%p, 0x%lx) = 0x%p\n",
@@ -801,6 +812,7 @@ MyLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     // Hook all new modules (and not just this one, to pick up any dependencies)
     patchAllModules();
 
+    SetLastError(dwLastError);
     return hModule;
 }
 
@@ -875,12 +887,14 @@ MyFreeLibrary(HMODULE hModule)
     }
 
     BOOL bRet = FreeLibrary(hModule);
+    DWORD dwLastError = GetLastError();
 
     EnterCriticalSection(&Mutex);
     // TODO: Only clear the modules that have been freed
     g_hHookedModules.clear();
     LeaveCriticalSection(&Mutex);
 
+    SetLastError(dwLastError);
     return bRet;
 }
 
