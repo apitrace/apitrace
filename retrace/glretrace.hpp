@@ -49,6 +49,11 @@ struct Context {
 
     GLuint activeProgram;
     bool used;
+
+    inline glprofile::Profile
+    profile(void) const {
+        return wsContext->profile;
+    }
     
     inline bool
     hasExtension(const char *extension) const {

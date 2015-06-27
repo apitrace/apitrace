@@ -324,7 +324,7 @@ static void retrace_CGLSetSurface(trace::Call &call) {
 
     Context *context = getContext(ctx);
     if (context) {
-        glws::Drawable *drawable = getDrawable(sid, context->wsContext->profile);
+        glws::Drawable *drawable = getDrawable(sid, context->profile());
         context->drawable = drawable;
     }
 }
@@ -354,7 +354,7 @@ static void retrace_CGLSetCurrentContext(trace::Call &call) {
     glws::Drawable *new_drawable = NULL;
     if (new_context) {
         if (!new_context->drawable) {
-            glprofile::Profile profile = new_context->wsContext->profile;
+            glprofile::Profile profile = new_context->profile();
             new_context->drawable = glretrace::createDrawable(profile);
         }
         new_drawable = new_context->drawable;
