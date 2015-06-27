@@ -469,7 +469,7 @@ createContext(const Visual *_visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrent(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Context *context)
 {
     if (!drawable || !context) {
         return eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);

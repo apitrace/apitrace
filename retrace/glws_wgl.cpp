@@ -528,7 +528,7 @@ createContext(const Visual *visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrent(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Context *context)
 {
     if (!drawable || !context) {
         return wglMakeCurrent(NULL, NULL);

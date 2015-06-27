@@ -73,13 +73,14 @@ Drawable::copySubBuffer(int x, int y, int width, int height) {
 }
 
 
-bool
-Context::hasExtension(const char *string) {
-    if (extensions.strings.empty()) {
-        extensions.getCurrentContextExtensions(profile);
-    }
+void
+Context::initialize(void)
+{
+    assert(!initialized);
 
-    return extensions.has(string);
+    extensions.getCurrentContextExtensions(profile);
+
+    initialized = true;
 }
 
 

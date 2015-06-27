@@ -50,7 +50,6 @@ struct Context {
     GLuint activeProgram;
     bool used;
     
-    // Context must be current
     inline bool
     hasExtension(const char *extension) const {
         return wsContext->hasExtension(extension);

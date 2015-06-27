@@ -232,7 +232,7 @@ createContext(const Visual *visual, Context *shareContext,
 }
 
 bool
-makeCurrent(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Context *context)
 {
     if (!drawable || !context) {
         return waffle_make_current(dpy, NULL, NULL);

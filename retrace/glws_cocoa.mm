@@ -307,7 +307,7 @@ createContext(const Visual *visual, Context *shareContext, bool debug)
 }
 
 bool
-makeCurrent(Drawable *drawable, Context *context)
+makeCurrentInternal(Drawable *drawable, Context *context)
 {
     initThread();
 

@@ -146,14 +146,24 @@ public:
 
     Context(const Visual *vis) :
         visual(vis),
-        profile(vis->profile)
+        profile(vis->profile),
+        initialized(false)
     {}
 
     virtual ~Context() {}
 
-    // Context must be current
-    bool
-    hasExtension(const char *extension);
+    // Context must have been made current once
+    inline bool
+    hasExtension(const char *extension) const {
+        assert(initialized);
+        return extensions.has(extension);
+    }
+
+private:
+    bool initialized;
+    void initialize(void);
+
+    friend bool makeCurrent(Drawable *, Context *);
 };
 
 
@@ -173,7 +183,17 @@ Context *
 createContext(const Visual *visual, Context *shareContext = 0, bool debug = false);
 
 bool
-makeCurrent(Drawable *drawable, Context *context);
+makeCurrentInternal(Drawable *drawable, Context *context);
+
+inline bool
+makeCurrent(Drawable *drawable, Context *context)
+{
+    bool success = makeCurrentInternal(drawable, context);
+    if (success && context && !context->initialized) {
+        context->initialize();
+    }
+    return success;
+}
 
 bool
 processEvents(void);
