@@ -505,12 +505,12 @@ class GlDispatcher(Dispatcher):
         # We fake these when they are not available
         if sys.platform == 'darwin':
             # Fallback to EXT_debug_label on MacOSX, some enums need to be translated.
-            if function.name == 'glObjectLabel':
+            if function.name in ('glObjectLabel', 'glObjectLabelKHR'):
                 print r'    if (translateDebugLabelIdentifier(identifier)) {'
                 print r'        _glLabelObjectEXT(identifier, name, length < 0 ? 0 : length, length == 0 ? "" : label);'
                 print r'        return;'
                 print r'    }'
-            if function.name == 'glGetObjectLabel':
+            if function.name in ('glGetObjectLabel', 'glGetObjectLabelKHR'):
                 print r'    if (translateDebugLabelIdentifier(identifier)) {'
                 print r'        _glGetObjectLabelEXT(identifier, name, bufSize, length, label);'
                 print r'        return;'
@@ -524,6 +524,14 @@ class GlDispatcher(Dispatcher):
             'glPopDebugGroup',
             'glObjectLabel',
             'glObjectPtrLabel',
+            # GL_KHR_debug (OpenGL ES)
+            'glDebugMessageControlKHR',
+            'glDebugMessageInsertKHR',
+            'glDebugMessageCallbackKHR',
+            'glPushDebugGroupKHR',
+            'glPopDebugGroupKHR',
+            'glObjectLabelKHR',
+            'glObjectPtrLabelKHR',
             # GL_ARB_debug_output
             'glDebugMessageControlARB',
             'glDebugMessageInsertARB',
@@ -540,25 +548,25 @@ class GlDispatcher(Dispatcher):
             'glPopGroupMarkerEXT',
         ):
             return
-        if function.name in ('glGetObjectLabel', 'glGetObjectPtrLabel', 'glGetObjectLabelEXT'):
+        if function.name.startswith('glGetObjectLabel'):
             print r'    if (length != 0) *length = 0;'
             print r'    if (label != 0 && bufSize > 0) *label = 0;'
             return
-        if function.name in ('glGetDebugMessageLog', 'glGetDebugMessageLogARB'):
+        if function.name == 'glGetDebugMessageLogAMD':
+            print r'    if (categories != 0) *categories = 0;'
+            print r'    if (ids != 0) *ids = 0;'
+            print r'    if (severities != 0) *severities = 0;'
+            print r'    if (lengths != 0) *lengths = 0;'
+            print r'    if (message != 0 && bufsize > 0) *message = 0;'
+            print r'    return 0;'
+            return
+        if function.name.startswith('glGetDebugMessageLog'):
             print r'    if (sources != 0) *sources = 0;'
             print r'    if (types != 0) *types = 0;'
             print r'    if (ids != 0) *ids = 0;'
             print r'    if (severities != 0) *severities = 0;'
             print r'    if (lengths != 0) *lengths = 0;'
             print r'    if (messageLog != 0 && bufsize > 0) *messageLog = 0;'
-            print r'    return 0;'
-            return
-        if function.name in ('glGetDebugMessageLogAMD'):
-            print r'    if (categories != 0) *categories = 0;'
-            print r'    if (ids != 0) *ids = 0;'
-            print r'    if (severities != 0) *severities = 0;'
-            print r'    if (lengths != 0) *lengths = 0;'
-            print r'    if (message != 0 && bufsize > 0) *message = 0;'
             print r'    return 0;'
             return
 

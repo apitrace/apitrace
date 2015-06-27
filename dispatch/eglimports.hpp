@@ -57,6 +57,9 @@
 #define GL_NV_coverage_sample
 #include "GLES2/gl2ext.h"
 
+// GLDEBUGPROCKHR is not defined because GL_KHR_debug was already defined
+typedef void (GL_APIENTRY  *GLDEBUGPROCKHR)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
+
 
 // OpenGL ES 1.1
 typedef int32_t  GLfixed;
@@ -85,5 +88,3 @@ typedef int32_t  GLclampx;
 
 #undef _glext_h_
 #include "GLES/glext.h"
-
-

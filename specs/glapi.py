@@ -2671,6 +2671,18 @@ glapi.addFunctions([
     GlFunction(Void, "glObjectPtrLabel", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
     GlFunction(Void, "glGetObjectPtrLabel", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
 
+    # GL_KHR_debug (OpenGL ES)
+    GlFunction(Void, "glDebugMessageControlKHR", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=True),
+    GlFunction(Void, "glDebugMessageInsertKHR", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), InGlString(GLchar, "length", "buf")], sideeffects=True),
+    GlFunction(Void, "glDebugMessageCallbackKHR", [(GLDEBUGPROCKHR, "callback"), (OpaquePointer(Const(Void)), "userParam")], sideeffects=False),
+    GlFunction(GLuint, "glGetDebugMessageLogKHR", [(GLuint, "count"), (GLsizei, "bufsize"), Out(Array(GLenum, "count"), "sources"), Out(Array(GLenum, "count"), "types"), Out(Array(GLuint, "count"), "ids"), Out(Array(GLenum, "count"), "severities"), Out(Array(GLsizei, "count"), "lengths"), Out(String(GLchar, "_glGetDebugMessageLog_length(messageLog, lengths, _result)"), "messageLog")], sideeffects=False, fail=0),
+    GlFunction(Void, "glPushDebugGroupKHR", [(GLenum, "source"), (GLuint, "id"), (GLsizei, "length"), InGlString(GLchar, "length", "message")], sideeffects=True),
+    GlFunction(Void, "glPopDebugGroupKHR", [], sideeffects=True),
+    GlFunction(Void, "glObjectLabelKHR", [(GLenum, "identifier"), (GLuint, "name"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
+    GlFunction(Void, "glGetObjectLabelKHR", [(GLenum, "identifier"), (GLuint, "name"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
+    GlFunction(Void, "glObjectPtrLabelKHR", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
+    GlFunction(Void, "glGetObjectPtrLabelKHR", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
+
     # GL_KHR_robustness
     GlFunction(GLenum, "glGetGraphicsResetStatus", [], sideeffects=False),
     GlFunction(Void, "glReadnPixels", [(GLint, "x"), (GLint, "y"), (GLsizei, "width"), (GLsizei, "height"), (GLenum, "format"), (GLenum, "type"), (GLsizei, "bufSize"), Out(OpaqueBlob(GLvoid, "bufSize"), "data")]),

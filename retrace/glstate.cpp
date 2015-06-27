@@ -56,7 +56,7 @@ Context::Context(void) {
 
     // Check extensions we use.
     ARB_sampler_objects = ext.has("GL_ARB_sampler_objects");
-    KHR_debug = ext.has("GL_KHR_debug");
+    KHR_debug = !ES && ext.has("GL_KHR_debug");
     EXT_debug_label = ext.has("GL_EXT_debug_label");
 }
 

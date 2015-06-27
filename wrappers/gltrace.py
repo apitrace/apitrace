@@ -768,6 +768,17 @@ class GlTracer(Tracer):
         'glGetObjectLabel',
         'glObjectPtrLabel',
         'glGetObjectPtrLabel',
+        # GL_KHR_debug (for OpenGL ES)
+        'glDebugMessageControlKHR',
+        'glDebugMessageInsertKHR',
+        'glDebugMessageCallbackKHR',
+        'glGetDebugMessageLogKHR',
+        'glPushDebugGroupKHR',
+        'glPopDebugGroupKHR',
+        'glObjectLabelKHR',
+        'glGetObjectLabelKHR',
+        'glObjectPtrLabelKHR',
+        'glGetObjectPtrLabelKHR',
         # GL_ARB_debug_output
         'glDebugMessageControlARB',
         'glDebugMessageInsertARB',
