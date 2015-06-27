@@ -350,7 +350,6 @@ initContext() {
                           currentContext->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
     supportsOcclusion   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 1, 5);
-    supportsDebugOutput = currentContext->hasExtension("GL_ARB_debug_output");
     supportsARBShaderObjects = currentContext->hasExtension("GL_ARB_shader_objects");
 
 #ifdef __APPLE__
@@ -383,12 +382,25 @@ initContext() {
 
     /* Setup debug message call back */
     if (retrace::debug && supportsDebugOutput) {
-        glretrace::Context *currentContext = glretrace::getCurrentContext();
-        glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
-        glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
+        if (currentContext->hasExtension("GL_KHR_debug")) {
+            if (currentProfile.desktop()) {
+                glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+                glDebugMessageCallback(&debugOutputCallback, currentContext);
+            } else {
+                glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+                glDebugMessageCallbackKHR(&debugOutputCallback, currentContext);
+            }
 
-        if (DEBUG_OUTPUT_SYNCHRONOUS) {
-            glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+            if (DEBUG_OUTPUT_SYNCHRONOUS) {
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+            }
+        } else if (currentContext->hasExtension("GL_ARB_debug_output")) {
+            glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+            glDebugMessageCallbackARB(&debugOutputCallback, currentContext);
+
+            if (DEBUG_OUTPUT_SYNCHRONOUS) {
+                glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+            }
         }
     }
 
