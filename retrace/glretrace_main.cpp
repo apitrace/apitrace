@@ -78,7 +78,6 @@ struct CallQuery
 static bool supportsElapsed = true;
 static bool supportsTimestamp = true;
 static bool supportsOcclusion = true;
-static bool supportsDebugOutput = true;
 
 static std::list<CallQuery> callQueries;
 
@@ -381,7 +380,7 @@ initContext() {
     }
 
     /* Setup debug message call back */
-    if (retrace::debug && supportsDebugOutput) {
+    if (retrace::debug) {
         if (currentContext->hasExtension("GL_KHR_debug")) {
             if (currentProfile.desktop()) {
                 glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
