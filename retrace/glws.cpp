@@ -80,6 +80,28 @@ Context::initialize(void)
 
     extensions.getCurrentContextExtensions(profile);
 
+    /* Ensure we got a matching profile.
+     *
+     * In particular on MacOSX, there is no way to specify specific versions, so this is all we can do.
+     *
+     * Also, see if OpenGL ES can be handled through ARB_ES*_compatibility.
+     */
+    glprofile::Profile expectedProfile = profile;
+    glprofile::Profile currentProfile = glprofile::getCurrentContextProfile();
+    if (!currentProfile.matches(expectedProfile)) {
+        if (expectedProfile.api == glprofile::API_GLES &&
+            currentProfile.api == glprofile::API_GL &&
+            ((expectedProfile.major == 2 && extensions.has("GL_ARB_ES2_compatibility")) ||
+             (expectedProfile.major == 3 && extensions.has("GL_ARB_ES3_compatibility")))) {
+            std::cerr << "warning: context mismatch:"
+                      << " expected " << expectedProfile << ","
+                      << " but got " << currentProfile << " with GL_ARB_ES" << expectedProfile.major << "_compatibility\n";
+        } else {
+            std::cerr << "error: context mismatch: expected " << expectedProfile << ", but got " << currentProfile << "\n";
+            exit(1);
+        }
+    }
+
     initialized = true;
 }
 

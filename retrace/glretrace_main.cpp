@@ -344,29 +344,8 @@ initContext() {
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     assert(currentContext);
 
-    /* Ensure we got a matching profile.
-     *
-     * In particular on MacOSX, there is no way to specify specific versions, so this is all we can do.
-     *
-     * Also, see if OpenGL ES can be handled through ARB_ES*_compatibility.
-     */
-    glprofile::Profile expectedProfile = currentContext->wsContext->profile;
-    glprofile::Profile currentProfile = glprofile::getCurrentContextProfile();
-    if (!currentProfile.matches(expectedProfile)) {
-        if (expectedProfile.api == glprofile::API_GLES &&
-            currentProfile.api == glprofile::API_GL &&
-            ((expectedProfile.major == 2 && currentContext->hasExtension("GL_ARB_ES2_compatibility")) ||
-             (expectedProfile.major == 3 && currentContext->hasExtension("GL_ARB_ES3_compatibility")))) {
-            std::cerr << "warning: context mismatch:"
-                      << " expected " << expectedProfile << ","
-                      << " but got " << currentProfile << " with GL_ARB_ES" << expectedProfile.major << "_compatibility\n";
-        } else {
-            std::cerr << "error: context mismatch: expected " << expectedProfile << ", but got " << currentProfile << "\n";
-            exit(1);
-        }
-    }
-
     /* Ensure we have adequate extension support */
+    glprofile::Profile currentProfile = currentContext->profile();
     supportsTimestamp   = currentProfile.versionGreaterOrEqual(glprofile::API_GL, 3, 3) ||
                           currentContext->hasExtension("GL_ARB_timer_query");
     supportsElapsed     = currentContext->hasExtension("GL_EXT_timer_query") || supportsTimestamp;
