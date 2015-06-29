@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <algorithm>
 #include <iostream>
@@ -79,7 +80,7 @@ getShaderSource(ShaderMap &shaderMap, GLuint shader)
 
 
 static inline void
-dumpProgram(StateWriter &writer, GLint program)
+dumpProgram(StateWriter &writer, Context &context, GLint program)
 {
     if (program <= 0) {
         return;
@@ -106,6 +107,60 @@ dumpProgram(StateWriter &writer, GLint program)
         writer.beginMember(it->first);
         writer.writeString(it->second);
         writer.endMember();
+    }
+
+    // Dump NVIDIA GPU programs via GL_ARB_get_program_binary
+    if (context.ARB_get_program_binary) {
+        GLint binaryLength = 0;
+        glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
+        if (binaryLength > 0) {
+            std::vector<char> binary(binaryLength);
+            GLenum format = GL_NONE;
+            glGetProgramBinary(program, binaryLength, NULL, &format, &binary[0]);
+            if (format == 0x8e21) {
+                if (0) {
+                    FILE *fp = fopen("program.bin", "wb");
+                    if (fp) {
+                        fwrite(&binary[0], 1, binaryLength, fp);
+                        fclose(fp);
+                    }
+                }
+
+                // Extract NVIDIA GPU programs
+                std::string str(binary.begin(), binary.end());
+                size_t end = 0;
+                while (true) {
+                    // Each program starts with a !!NV header token
+                    size_t start = str.find("!!NV", end);
+                    if (start == std::string::npos) {
+                        break;
+                    }
+
+                    // And is preceeded by a length DWORD
+                    assert(start >= end + 4);
+                    if (start < end + 4) {
+                        break;
+                    }
+                    uint32_t length;
+                    str.copy(reinterpret_cast<char *>(&length), 4, start - 4);
+                    assert(start + length <= binaryLength);
+                    if (start + length > binaryLength) {
+                        break;
+                    }
+
+                    std::string nvProg = str.substr(start, length);
+
+                    size_t eol = nvProg.find('\n');
+                    std::string nvHeader = nvProg.substr(2, eol - 2);
+
+                    writer.beginMember(nvHeader);
+                    writer.writeString(nvProg);
+                    writer.endMember();
+
+                    end = start + length;
+                }
+            }
+        }
     }
 }
 
@@ -789,14 +844,14 @@ dumpShadersUniforms(StateWriter &writer, Context &context)
     writer.beginMember("shaders");
     writer.beginObject();
     if (pipeline) {
-        dumpProgram(writer, vertex_program);
-        dumpProgram(writer, fragment_program);
-        dumpProgram(writer, geometry_program);
-        dumpProgram(writer, tess_control_program);
-        dumpProgram(writer, tess_evaluation_program);
-        dumpProgram(writer, compute_program);
+        dumpProgram(writer, context, vertex_program);
+        dumpProgram(writer, context, fragment_program);
+        dumpProgram(writer, context, geometry_program);
+        dumpProgram(writer, context, tess_control_program);
+        dumpProgram(writer, context, tess_evaluation_program);
+        dumpProgram(writer, context, compute_program);
     } else if (program) {
-        dumpProgram(writer, program);
+        dumpProgram(writer, context, program);
     } else {
         dumpArbProgram(writer, context, GL_FRAGMENT_PROGRAM_ARB);
         dumpArbProgram(writer, context, GL_VERTEX_PROGRAM_ARB);

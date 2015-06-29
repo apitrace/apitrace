@@ -46,6 +46,7 @@ struct Context
 
     unsigned ARB_draw_buffers:1;
     unsigned ARB_sampler_objects:1;
+    unsigned ARB_get_program_binary:1;
     unsigned KHR_debug:1;
     unsigned EXT_debug_label:1;
 
