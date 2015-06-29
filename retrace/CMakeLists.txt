@@ -79,6 +79,7 @@ add_library (glretrace_common STATIC
     glstate_shaders.cpp
     glws.cpp
     metric_helper.cpp
+    metric_writer.cpp
 )
 add_dependencies (glretrace_common glproc)
 target_link_libraries (glretrace_common
