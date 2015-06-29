@@ -128,6 +128,7 @@ extern bool profilingWithBackends;
 extern char* profilingCallsMetricsString;
 extern char* profilingFramesMetricsString;
 extern char* profilingDrawCallsMetricsString;
+extern bool profilingListMetrics;
 
 extern bool profiling;
 extern bool profilingCpuTimes;

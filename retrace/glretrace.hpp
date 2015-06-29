@@ -143,6 +143,8 @@ MetricBackend* getBackend(std::string backendName);
 
 bool isLastPass();
 
+void listMetricsCLI();
+
 void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule);
 
 GLenum

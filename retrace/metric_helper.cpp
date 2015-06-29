@@ -26,6 +26,42 @@ isLastPass() {
     return ( retrace::curPass + 1 >= retrace::numPasses );
 }
 
+/* Callbacks for listing metrics with --list-metrics */
+void listMetrics_metricCallback(Metric* c, int error, void* userData) {
+    static const std::string metricType[] = {"CNT_TYPE_GENERIC", "CNT_TYPE_NUM",
+                                "CNT_TYPE_DURATION", "CNT_TYPE_PERCENT",
+                                "CNT_TYPE_TIMESTAMP", "CNT_TYPE_OTHER"};
+    static const std::string metricNumType[] = {"CNT_NUM_UINT", "CNT_NUM_FLOAT",
+                                   "CNT_NUM_UINT64", "CNT_NUM_DOUBLE",
+                                   "CNT_NUM_BOOL", "CNT_NUM_INT64"};
+
+    std::cout << "    Metric #" << c->id() << ": " << c->name()
+              << " (type: " << metricType[c->type()] << ", num. type: "
+              << metricNumType[c->numType()] << ").\n";
+    std::cout << "           Description: " << c->description() << "\n";
+}
+
+void listMetrics_groupCallback(unsigned g, int error, void* userData) {
+    MetricBackend* b = reinterpret_cast<MetricBackend*>(userData);
+    std::cout << "\n  Group #" << g << ": " << b->getGroupName(g) << ".\n";
+    b->enumMetrics(g, listMetrics_metricCallback, userData);
+}
+
+void listMetricsCLI() {
+    // backends is to be populated with backend names
+    std::string backends[] = { };
+    std::cout << "Available metrics: \n";
+    for (auto s : backends) {
+        auto b = getBackend(s);
+        if (!b->isSupported()) {
+            continue;
+        }
+        std::cout << "\nBackend " << s << ":\n";
+        b->enumGroups(listMetrics_groupCallback, b);
+        std::cout << std::endl;
+    }
+}
+
 void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule) {
     const std::regex rOuter("\\s*([^:]+):\\s*([^;]*);?"); // backend: (...)
     const std::regex rInner("\\s*\\[\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\]\\s*,?"

@@ -454,6 +454,11 @@ initContext() {
         retrace::profiler.setBaseRssUsage(currentRss);
     }
 
+    if (retrace::profilingListMetrics) {
+        listMetricsCLI();
+        exit(0);
+    }
+
     if (retrace::profilingWithBackends) {
         if (!metricBackendsSetup) {
             if (retrace::profilingCallsMetricsString) {
