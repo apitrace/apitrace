@@ -85,6 +85,9 @@ const char *driverModule = NULL;
 bool doubleBuffer = true;
 unsigned samples = 1;
 
+unsigned curPass = 0;
+unsigned numPasses = 1;
+
 bool profiling = false;
 bool profilingGpuTimes = false;
 bool profilingCpuTimes = false;
@@ -112,7 +115,6 @@ frameComplete(trace::Call &call) {
         takeSnapshot(call.no);
     }
 }
-
 
 class DefaultDumper: public Dumper
 {
@@ -896,16 +898,20 @@ int main(int argc, char **argv)
 
     os::setExceptionCallback(exceptionCallback);
 
-    for (i = optind; i < argc; ++i) {
-        if (!retrace::parser.open(argv[i])) {
-            return 1;
+    for (retrace::curPass = 0; retrace::curPass < retrace::numPasses;
+         retrace::curPass++)
+    {
+        for (i = optind; i < argc; ++i) {
+            if (!retrace::parser.open(argv[i])) {
+                return 1;
+            }
+
+            retrace::mainLoop();
+
+            retrace::parser.close();
         }
-
-        retrace::mainLoop();
-
-        retrace::parser.close();
     }
-    
+
     os::resetExceptionCallback();
 
     // XXX: X often hangs on XCloseDisplay
