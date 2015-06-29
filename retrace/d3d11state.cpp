@@ -95,6 +95,44 @@ dumpDepthStencilState(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 
 
 static void
+dumpViewports(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
+{
+   D3D11_VIEWPORT vps[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+   UINT numViewports = 0, i;
+
+   pDeviceContext->RSGetViewports(&numViewports, NULL);
+   pDeviceContext->RSGetViewports(&numViewports, vps);
+
+   writer.beginMember("Viewports");
+   writer.beginArray();
+   for (i = 0; i < numViewports; ++i) {
+      dumpStateObject(writer, vps[i]);
+   }
+   writer.endArray();
+   writer.endMember();
+}
+
+
+static void
+dumpScissors(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
+{
+   D3D11_RECT rects[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+   UINT numRects = 0, i;
+
+   pDeviceContext->RSGetScissorRects(&numRects, NULL);
+   pDeviceContext->RSGetScissorRects(&numRects, rects);
+
+   writer.beginMember("Scissors");
+   writer.beginArray();
+   for (i = 0; i < numRects; ++i) {
+      dumpStateObject(writer, rects[i]);
+   }
+   writer.endArray();
+   writer.endMember();
+}
+
+
+static void
 dumpParameters(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
 {
     // TODO: dump description of current bound state
@@ -104,6 +142,8 @@ dumpParameters(StateWriter &writer, ID3D11DeviceContext *pDeviceContext)
     dumpRasterizerState(writer, pDeviceContext);
     dumpBlendState(writer, pDeviceContext);
     dumpDepthStencilState(writer, pDeviceContext);
+    dumpViewports(writer, pDeviceContext);
+    dumpScissors(writer, pDeviceContext);
 
     writer.endObject();
     writer.endMember(); // parameters

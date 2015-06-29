@@ -94,6 +94,44 @@ dumpDepthStencilState(StateWriter &writer, ID3D10Device *pDevice)
 
 
 static void
+dumpViewports(StateWriter &writer, ID3D10Device *pDevice)
+{
+   D3D10_VIEWPORT vps[D3D10_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+   UINT numViewports = 0, i;
+
+   pDevice->RSGetViewports(&numViewports, NULL);
+   pDevice->RSGetViewports(&numViewports, vps);
+
+   writer.beginMember("Viewports");
+   writer.beginArray();
+   for (i = 0; i < numViewports; ++i) {
+      dumpStateObject(writer, vps[i]);
+   }
+   writer.endArray();
+   writer.endMember();
+}
+
+
+static void
+dumpScissors(StateWriter &writer, ID3D10Device *pDevice)
+{
+   D3D10_RECT rects[D3D10_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+   UINT numRects = 0, i;
+
+   pDevice->RSGetScissorRects(&numRects, NULL);
+   pDevice->RSGetScissorRects(&numRects, rects);
+
+   writer.beginMember("Scissors");
+   writer.beginArray();
+   for (i = 0; i < numRects; ++i) {
+      dumpStateObject(writer, rects[i]);
+   }
+   writer.endArray();
+   writer.endMember();
+}
+
+
+static void
 dumpParameters(StateWriter &writer, ID3D10Device *pDevice)
 {
     // TODO: dump description of current bound state
@@ -103,6 +141,8 @@ dumpParameters(StateWriter &writer, ID3D10Device *pDevice)
     dumpRasterizerState(writer, pDevice);
     dumpBlendState(writer, pDevice);
     dumpDepthStencilState(writer, pDevice);
+    dumpViewports(writer, pDevice);
+    dumpScissors(writer, pDevice);
 
     writer.endObject();
     writer.endMember(); // parameters
