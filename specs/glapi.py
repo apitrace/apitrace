@@ -2670,8 +2670,6 @@ glapi.addFunctions([
     GlFunction(Void, "glGetObjectLabel", [(GLenum, "identifier"), (GLuint, "name"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
     GlFunction(Void, "glObjectPtrLabel", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
     GlFunction(Void, "glGetObjectPtrLabel", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
-
-    # GL_KHR_debug (OpenGL ES)
     GlFunction(Void, "glDebugMessageControlKHR", [(GLenum, "source"), (GLenum, "type"), (GLenum, "severity"), (GLsizei, "count"), (Array(Const(GLuint), "count"), "ids"), (GLboolean, "enabled")], sideeffects=True),
     GlFunction(Void, "glDebugMessageInsertKHR", [(GLenum, "source"), (GLenum, "type"), (GLuint, "id"), (GLenum, "severity"), (GLsizei, "length"), InGlString(GLchar, "length", "buf")], sideeffects=True),
     GlFunction(Void, "glDebugMessageCallbackKHR", [(GLDEBUGPROCKHR, "callback"), (OpaquePointer(Const(Void)), "userParam")], sideeffects=False),
@@ -2682,6 +2680,7 @@ glapi.addFunctions([
     GlFunction(Void, "glGetObjectLabelKHR", [(GLenum, "identifier"), (GLuint, "name"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
     GlFunction(Void, "glObjectPtrLabelKHR", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "length"), InGlString(GLchar, "length", "label")], sideeffects=True),
     GlFunction(Void, "glGetObjectPtrLabelKHR", [(OpaquePointer(Const(Void)), "ptr"), (GLsizei, "bufSize"), Out(Pointer(GLsizei), "length"), OutGlString(GLchar, "length", "label")], sideeffects=False),
+    GlFunction(Void, "glGetPointervKHR", [(GLenum, "pname"), Out(Pointer(GLpointer), "params")], sideeffects=False),
 
     # GL_KHR_robustness
     GlFunction(GLenum, "glGetGraphicsResetStatus", [], sideeffects=False),
