@@ -28,6 +28,7 @@
 #include "glws.hpp"
 #include "retrace.hpp"
 #include "metric_backend.hpp"
+#include "metric_writer.hpp"
 
 #include "os_thread.hpp"
 
@@ -74,8 +75,10 @@ struct Context {
 
 extern bool metricBackendsSetup;
 extern bool profilingBoundaries[QUERY_BOUNDARY_LIST_END];
+extern unsigned profilingBoundariesIndex[QUERY_BOUNDARY_LIST_END];
 extern std::vector<MetricBackend*> metricBackends;
 extern MetricBackend* curMetricBackend;
+extern MetricWriter profiler;
 
 extern glprofile::Profile defaultProfile;
 

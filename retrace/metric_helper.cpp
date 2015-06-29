@@ -6,13 +6,16 @@
 
 #include "retrace.hpp"
 #include "metric_backend.hpp"
+#include "metric_writer.hpp"
 
 namespace glretrace {
 
 bool metricBackendsSetup = false;
 bool profilingBoundaries[QUERY_BOUNDARY_LIST_END] = {false};
+unsigned profilingBoundariesIndex[QUERY_BOUNDARY_LIST_END] = {0};
 std::vector<MetricBackend*> metricBackends; // to be populated in initContext()
 MetricBackend* curMetricBackend = nullptr; // backend active in the current pass
+MetricWriter profiler(metricBackends);
 
 MetricBackend* getBackend(std::string backendName) {
     return nullptr; // to be populated with backends

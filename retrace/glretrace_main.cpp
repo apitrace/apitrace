@@ -224,6 +224,22 @@ beginProfile(trace::Call &call, bool isDraw) {
             if (curMetricBackend) {
                 curMetricBackend->beginQuery(isDraw ? QUERY_BOUNDARY_DRAWCALL : QUERY_BOUNDARY_CALL);
             }
+            if (isLastPass() && curMetricBackend) {
+                Context *currentContext = getCurrentContext();
+                GLuint program = currentContext ? currentContext->activeProgram : 0;
+                unsigned eventId = profilingBoundariesIndex[QUERY_BOUNDARY_CALL]++;
+                ProfilerCall::data callData = {false,
+                                               call.no,
+                                               program,
+                                               call.sig->name};
+                if (profilingBoundaries[QUERY_BOUNDARY_CALL]) {
+                    profiler.addQuery(QUERY_BOUNDARY_CALL, eventId, &callData);
+                }
+                if (isDraw && profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+                    eventId = profilingBoundariesIndex[QUERY_BOUNDARY_DRAWCALL]++;
+                    profiler.addQuery(QUERY_BOUNDARY_DRAWCALL, eventId, &callData);
+                }
+            }
         }
         return;
     }
@@ -482,8 +498,28 @@ initContext() {
 void
 frame_complete(trace::Call &call) {
     if (retrace::profilingWithBackends) {
+        if (profilingBoundaries[QUERY_BOUNDARY_CALL] ||
+            profilingBoundaries[QUERY_BOUNDARY_DRAWCALL])
+        {
+            if (isLastPass() && curMetricBackend) {
+                // frame end indicator
+                ProfilerCall::data callData = {true, 0, 0, ""};
+                if (profilingBoundaries[QUERY_BOUNDARY_CALL]) {
+                    profiler.addQuery(QUERY_BOUNDARY_CALL, 0, &callData);
+                }
+                if (profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+                    profiler.addQuery(QUERY_BOUNDARY_DRAWCALL, 0, &callData);
+                }
+            }
+        }
         if (curMetricBackend) {
             curMetricBackend->endQuery(QUERY_BOUNDARY_FRAME);
+        }
+        if (profilingBoundaries[QUERY_BOUNDARY_FRAME]) {
+            if (isLastPass() && curMetricBackend) {
+                profiler.addQuery(QUERY_BOUNDARY_FRAME,
+                        profilingBoundariesIndex[QUERY_BOUNDARY_FRAME]++);
+            }
         }
     }
     else if (retrace::profiling) {
@@ -731,6 +767,12 @@ retrace::finishRendering(void) {
     if (profilingWithBackends && glretrace::curMetricBackend) {
             (glretrace::curMetricBackend)->endQuery(QUERY_BOUNDARY_FRAME);
     }
+    if (glretrace::profilingBoundaries[QUERY_BOUNDARY_FRAME]) {
+        if (glretrace::isLastPass() && glretrace::curMetricBackend) {
+            glretrace::profiler.addQuery(QUERY_BOUNDARY_FRAME,
+                    glretrace::profilingBoundariesIndex[QUERY_BOUNDARY_FRAME]++);
+        }
+    }
 
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     if (currentContext) {
@@ -740,6 +782,18 @@ retrace::finishRendering(void) {
     if (retrace::profilingWithBackends) {
         if (glretrace::curMetricBackend) {
             (glretrace::curMetricBackend)->endPass();
+        }
+
+        if (glretrace::isLastPass()) {
+            if (glretrace::profilingBoundaries[QUERY_BOUNDARY_FRAME]) {
+                glretrace::profiler.writeAll(QUERY_BOUNDARY_FRAME);
+            }
+            if (glretrace::profilingBoundaries[QUERY_BOUNDARY_CALL]) {
+                glretrace::profiler.writeAll(QUERY_BOUNDARY_CALL);
+            }
+            if (glretrace::profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+                glretrace::profiler.writeAll(QUERY_BOUNDARY_DRAWCALL);
+            }
         }
     }
 }
