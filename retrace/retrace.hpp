@@ -124,6 +124,10 @@ extern bool forceWindowed;
  */
 extern unsigned curPass;
 extern unsigned numPasses;
+extern bool profilingWithBackends;
+extern char* profilingCallsMetricsString;
+extern char* profilingFramesMetricsString;
+extern char* profilingDrawCallsMetricsString;
 
 extern bool profiling;
 extern bool profilingCpuTimes;

@@ -72,6 +72,11 @@ struct Context {
     }
 };
 
+extern bool metricBackendsSetup;
+extern bool profilingBoundaries[QUERY_BOUNDARY_LIST_END];
+extern std::vector<MetricBackend*> metricBackends;
+extern MetricBackend* curMetricBackend;
+
 extern glprofile::Profile defaultProfile;
 
 extern bool supportsARBShaderObjects;
@@ -132,6 +137,10 @@ void beginProfile(trace::Call &call, bool isDraw);
 void endProfile(trace::Call &call, bool isDraw);
 
 MetricBackend* getBackend(std::string backendName);
+
+bool isLastPass();
+
+void enableMetricsFromCLI(const char* metrics, QueryBoundary pollingRule);
 
 GLenum
 blockOnFence(trace::Call &call, GLsync sync, GLbitfield flags);

@@ -218,6 +218,16 @@ flushQueries() {
 
 void
 beginProfile(trace::Call &call, bool isDraw) {
+    if (retrace::profilingWithBackends) {
+        if (profilingBoundaries[QUERY_BOUNDARY_CALL] ||
+            profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+            if (curMetricBackend) {
+                curMetricBackend->beginQuery(isDraw ? QUERY_BOUNDARY_DRAWCALL : QUERY_BOUNDARY_CALL);
+            }
+        }
+        return;
+    }
+
     glretrace::Context *currentContext = glretrace::getCurrentContext();
 
     /* Create call query */
@@ -261,6 +271,15 @@ beginProfile(trace::Call &call, bool isDraw) {
 
 void
 endProfile(trace::Call &call, bool isDraw) {
+    if (retrace::profilingWithBackends) {
+        if (profilingBoundaries[QUERY_BOUNDARY_CALL] ||
+            profilingBoundaries[QUERY_BOUNDARY_DRAWCALL]) {
+            if (curMetricBackend) {
+                curMetricBackend->endQuery(isDraw ? QUERY_BOUNDARY_DRAWCALL : QUERY_BOUNDARY_CALL);
+            }
+        }
+        return;
+    }
 
     /* CPU profiling for all calls */
     if (retrace::profilingCpuTimes) {
@@ -418,11 +437,56 @@ initContext() {
         getCurrentRss(currentRss);
         retrace::profiler.setBaseRssUsage(currentRss);
     }
+
+    if (retrace::profilingWithBackends) {
+        if (!metricBackendsSetup) {
+            if (retrace::profilingCallsMetricsString) {
+                enableMetricsFromCLI(retrace::profilingCallsMetricsString,
+                                     QUERY_BOUNDARY_CALL);
+            }
+            if (retrace::profilingFramesMetricsString) {
+                enableMetricsFromCLI(retrace::profilingFramesMetricsString,
+                                     QUERY_BOUNDARY_FRAME);
+            }
+            if (retrace::profilingDrawCallsMetricsString) {
+                enableMetricsFromCLI(retrace::profilingDrawCallsMetricsString,
+                                     QUERY_BOUNDARY_DRAWCALL);
+            }
+            unsigned numPasses = 0;
+            for (auto &b : metricBackends) {
+                b->generatePasses();
+                numPasses += b->getNumPasses();
+            }
+            retrace::numPasses = numPasses > 0 ? numPasses : 1;
+            metricBackendsSetup = 1;
+        }
+
+        unsigned numPasses = 0;
+        for (auto &b : metricBackends) {
+            numPasses += b->getNumPasses();
+            if (retrace::curPass < numPasses) {
+                curMetricBackend = b;
+                b->beginPass(); // begin pass
+                break;
+            }
+        }
+
+        if (profilingBoundaries[QUERY_BOUNDARY_FRAME]) {
+            if (curMetricBackend) {
+                curMetricBackend->beginQuery(QUERY_BOUNDARY_FRAME);
+            }
+        }
+    }
 }
 
 void
 frame_complete(trace::Call &call) {
-    if (retrace::profiling) {
+    if (retrace::profilingWithBackends) {
+        if (curMetricBackend) {
+            curMetricBackend->endQuery(QUERY_BOUNDARY_FRAME);
+        }
+    }
+    else if (retrace::profiling) {
         /* Complete any remaining queries */
         flushQueries();
 
@@ -443,6 +507,10 @@ frame_complete(trace::Call &call) {
         !currentDrawable->pbuffer &&
         !currentDrawable->visible) {
         retrace::warning(call) << "could not infer drawable size (glViewport never called)\n";
+    }
+
+    if (curMetricBackend) {
+        curMetricBackend->beginQuery(QUERY_BOUNDARY_FRAME);
     }
 }
 
@@ -660,9 +728,19 @@ retrace::flushRendering(void) {
 
 void
 retrace::finishRendering(void) {
+    if (profilingWithBackends && glretrace::curMetricBackend) {
+            (glretrace::curMetricBackend)->endQuery(QUERY_BOUNDARY_FRAME);
+    }
+
     glretrace::Context *currentContext = glretrace::getCurrentContext();
     if (currentContext) {
         glFinish();
+    }
+
+    if (retrace::profilingWithBackends) {
+        if (glretrace::curMetricBackend) {
+            (glretrace::curMetricBackend)->endPass();
+        }
     }
 }
 
