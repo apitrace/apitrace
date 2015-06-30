@@ -254,7 +254,7 @@ long long timeFrequency = 0LL;
 void
 abort(void)
 {
-    TerminateProcess(GetCurrentProcess(), 1);
+    TerminateProcess(GetCurrentProcess(), 3);
 #if defined(__GNUC__)
      __builtin_unreachable();
 #endif
