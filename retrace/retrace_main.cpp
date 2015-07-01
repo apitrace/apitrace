@@ -35,6 +35,7 @@
 #endif
 
 #include "os_binary.hpp"
+#include "os_crtdbg.hpp"
 #include "os_time.hpp"
 #include "os_thread.hpp"
 #include "image.hpp"
@@ -709,6 +710,8 @@ int main(int argc, char **argv)
 {
     using namespace retrace;
     int i;
+
+    os::setDebugOutput(os::OUTPUT_STDERR);
 
     assert(snapshotFrequency.empty());
 

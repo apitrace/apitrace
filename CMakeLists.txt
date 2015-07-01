@@ -507,6 +507,7 @@ add_convenience_library (common
     common/trace_option.cpp
     common/${os}
     common/os_backtrace.cpp
+    common/os_crtdbg.cpp
     common/highlight.cpp
 )
 
