@@ -54,7 +54,7 @@
 #include "inject.h"
 
 
-#define VERBOSITY 0
+static int VERBOSITY = 0;
 #define NOOP 0
 
 
@@ -1036,6 +1036,8 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
                 debugPrintf("inject: error: failed to open shared memory\n");
                 return FALSE;
             }
+
+            VERBOSITY = pSharedMem->cVerbosity;
 
             static char szSharedMemCopy[MAX_PATH];
             strncpy(szSharedMemCopy, pSharedMem->szDllName, _countof(szSharedMemCopy) - 1);

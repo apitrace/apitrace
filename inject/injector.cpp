@@ -454,13 +454,17 @@ help(void)
 }
 
 
+static const char *short_options =
+"hdD:p:t:v";
+
 static const struct
 option long_options[] = {
-    { "help", 0, NULL, 'h'},
-    { "debug", 0, NULL, 'd'},
-    { "dll", 1, NULL, 'D'},
-    { "pid", 1, NULL, 'p'},
-    { "tid", 1, NULL, 't'},
+    { "help", no_argument, NULL, 'h'},
+    { "debug", no_argument, NULL, 'd'},
+    { "dll", required_argument, NULL, 'D'},
+    { "pid", required_argument, NULL, 'p'},
+    { "tid", required_argument, NULL, 't'},
+    { "verbose", no_argument, 0, 'v'},
     { NULL, 0, NULL, 0}
 };
 
@@ -472,12 +476,13 @@ main(int argc, char *argv[])
     BOOL bAttach = FALSE;
     DWORD dwProcessId = 0;
     DWORD dwThreadId = 0;
+    char cVerbosity = 0;
 
     const char *szDll = NULL;
 
     int option_index = 0;
     while (true) {
-        int opt = getopt_long_only(argc, argv, "hdD:p:t:", long_options, &option_index);
+        int opt = getopt_long_only(argc, argv, short_options, long_options, &option_index);
         if (opt == -1) {
             break;
         }
@@ -498,6 +503,9 @@ main(int argc, char *argv[])
             case 't':
                 dwThreadId = strtoul(optarg, NULL, 0);
                 bAttach = TRUE;
+                break;
+            case 'v':
+                ++cVerbosity;
                 break;
             default:
                 debugPrintf("inject: invalid option '%c'\n", optopt);
@@ -558,6 +566,8 @@ main(int argc, char *argv[])
             debugPrintf("error: failed to open shared memory\n");
             return 1;
         }
+
+        pSharedMem->cVerbosity = cVerbosity;
 
         strncpy(pSharedMem->szDllName, szDll, _countof(pSharedMem->szDllName) - 1);
         pSharedMem->szDllName[_countof(pSharedMem->szDllName) - 1] = '\0';

@@ -133,6 +133,7 @@ getModuleName(char *szModuleName, size_t n, const char *szFilename) {
 struct SharedMem
 {
     BOOL bReplaced;
+    char cVerbosity;
     char szDllName[4096 - sizeof(BOOL)];
 };
 

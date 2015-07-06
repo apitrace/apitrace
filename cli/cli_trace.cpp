@@ -92,7 +92,7 @@ static int
 traceProgram(trace::API api,
              char * const *argv,
              const char *output,
-             bool verbose,
+             int verbose,
              bool debug)
 {
     const char *wrapperFilename;
@@ -154,6 +154,9 @@ traceProgram(trace::API api,
         args.push_back("inject");
         if (debug) {
             args.push_back("-d");
+        }
+        for (int i = 1; i < verbose; ++i) {
+            args.push_back("-v");
         }
         args.push_back("-D");
         args.push_back(wrapperPath);
@@ -345,7 +348,7 @@ longOptions[] = {
 static int
 command(int argc, char *argv[])
 {
-    bool verbose = false;
+    int verbose = 0;
     trace::API api = trace::API_GL;
     const char *output = NULL;
     bool debug = false;
@@ -357,7 +360,7 @@ command(int argc, char *argv[])
             usage();
             return 0;
         case 'v':
-            verbose = true;
+            ++verbose;
             break;
         case 'a':
             if (strcmp(optarg, "gl") == 0) {
