@@ -114,8 +114,11 @@ _shaderSize(const DWORD *pFunction)
 }
 
 
+static inline void
+_getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & BlockHeight);
+
 static inline size_t
-_getLockSize(D3DFORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT SlicePitch = 0) {
+_getLockSize(D3DFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPitch, UINT Depth = 1, INT SlicePitch = 0) {
     if (Width == 0 || Height == 0 || Depth == 0) {
         return 0;
     }
@@ -125,59 +128,39 @@ _getLockSize(D3DFORMAT Format, UINT Width, UINT Height, INT RowPitch, UINT Depth
         return 0;
     }
 
-    if (SlicePitch < 0) {
-        os::log("apitrace: warning: %s: negative slice pitch %i\n", __FUNCTION__, SlicePitch);
-        return 0;
+    size_t size;
+    if (Format == MAKEFOURCC('N','V','1','2') ||
+        Format == MAKEFOURCC('Y','V','1','2')) {
+        // Planar YUV
+        size = (Height + (Height + 1)/2) * RowPitch;
+    } else {
+        size = Height * RowPitch;
+
+        if (Partial || Height == 1) {
+            // Must take pixel size in consideration
+
+            size_t BlockSize;
+            UINT BlockWidth;
+            UINT BlockHeight;
+            _getFormatSize(Format, BlockSize, BlockWidth, BlockHeight);
+
+            if (BlockWidth && BlockHeight) {
+                Width  = (Width  + BlockWidth  - 1) / BlockWidth;
+                Height = (Height + BlockHeight - 1) / BlockHeight;
+                size = (Width * BlockSize + 7)/ 8;
+                if (Height > 1) {
+                    size += (Height - 1) * RowPitch;
+                }
+            }
+        }
     }
-
-    switch ((DWORD)Format) {
-    case D3DFMT_DXT1:
-    case D3DFMT_DXT2:
-    case D3DFMT_DXT3:
-    case D3DFMT_DXT4:
-    case D3DFMT_DXT5:
-        Width  = (Width  + 3) / 4;
-        Height = (Height + 3) / 4;
-        break;
-
-#if DIRECT3D_VERSION >= 0x900
-    case D3DFMT_ATI1N:
-    case D3DFMT_ATI2N:
-        /*
-         * Because these are unsupported formats, RowPitch is not set to the
-         * number of bytes between row of blocks, but instead in such way that
-         * Height * RowPitch will match the expected size.
-         */
-        break;
-#endif /* DIRECT3D_VERSION >= 0x900 */
-
-    case D3DFMT_UYVY:
-    case D3DFMT_YUY2:
-#if DIRECT3D_VERSION >= 0x900
-    case D3DFMT_R8G8_B8G8:
-    case D3DFMT_G8R8_G8B8:
-#endif /* DIRECT3D_VERSION >= 0x900 */
-        Width = (Width + 1) / 2;
-        break;
-
-#if DIRECT3D_VERSION >= 0x900
-    case D3DFMT_NV12:
-    case D3DFMT_YV12:
-        return (Height + ((Height + 1) / 2)) * RowPitch;
-
-    case D3DFMT_NULL:
-        return 0;
-#endif /* DIRECT3D_VERSION >= 0x900 */
-
-    default:
-        break;
-    }
-
-    (void)Width;
-
-    size_t size = Height * RowPitch;
 
     if (Depth > 1) {
+        if (SlicePitch < 0) {
+            os::log("apitrace: warning: %s: negative slice pitch %i\n", __FUNCTION__, SlicePitch);
+            return 0;
+        }
+
         size += (Depth - 1) * SlicePitch;
     }
 

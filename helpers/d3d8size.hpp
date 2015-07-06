@@ -46,6 +46,91 @@ _declCount(const DWORD *pDeclaration) {
 
 
 static inline void
+_getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & BlockHeight)
+{
+    BlockSize = 0;
+    BlockWidth = 1;
+    BlockHeight = 1;
+
+    switch ((DWORD)Format) {
+
+    case D3DFMT_P8:
+    case D3DFMT_L8:
+    case D3DFMT_A4L4:
+        BlockSize = 8;
+        break;
+
+    case D3DFMT_R5G6B5:
+    case D3DFMT_X1R5G5B5:
+    case D3DFMT_A1R5G5B5:
+    case D3DFMT_A4R4G4B4:
+    case D3DFMT_A8R3G3B2:
+    case D3DFMT_X4R4G4B4:
+    case D3DFMT_A8P8:
+    case D3DFMT_A8L8:
+    case D3DFMT_V8U8:
+    case D3DFMT_L6V5U5:
+    case D3DFMT_D16_LOCKABLE:
+    case D3DFMT_D15S1:
+    case D3DFMT_D16:
+    case D3DFMT_INDEX16:
+        BlockSize = 16;
+        break;
+
+    case D3DFMT_R8G8B8:
+        BlockSize = 24;
+        break;
+
+    case D3DFMT_A8R8G8B8:
+    case D3DFMT_X8R8G8B8:
+    case D3DFMT_A2B10G10R10:
+    case D3DFMT_G16R16:
+    case D3DFMT_X8L8V8U8:
+    case D3DFMT_Q8W8V8U8:
+    case D3DFMT_V16U16:
+    case D3DFMT_W11V11U10:
+    case D3DFMT_A2W10V10U10:
+    case D3DFMT_D32:
+    case D3DFMT_D24S8:
+    case D3DFMT_D24X8:
+    case D3DFMT_D24X4S4:
+    case D3DFMT_INDEX32:
+        BlockSize = 32;
+        break;
+
+    case D3DFMT_UYVY:
+    case D3DFMT_YUY2:
+        BlockWidth = 2;
+        BlockSize = 32;
+        break;
+
+    case D3DFMT_DXT1:
+        BlockHeight = BlockWidth = 4;
+        BlockSize = 64;
+        break;
+
+    case D3DFMT_DXT2:
+    case D3DFMT_DXT3:
+    case D3DFMT_DXT4:
+    case D3DFMT_DXT5:
+        BlockHeight = BlockWidth = 4;
+        BlockSize = 128;
+        break;
+
+    case D3DFMT_UNKNOWN:
+    case D3DFMT_VERTEXDATA:
+        os::log("apitrace: warning: %s: unexpected D3DFMT %u\n", __FUNCTION__, Format);
+        BlockSize = 0;
+        break;
+
+    default:
+        os::log("apitrace: warning: %s: unknown D3DFMT %u\n", __FUNCTION__, Format);
+        break;
+    }
+}
+
+
+static inline void
 _getMapInfo(IDirect3DVertexBuffer8 *pBuffer, UINT OffsetToLock, UINT SizeToLock, BYTE ** ppbData,
              void * & pLockedData, size_t & MappedSize) {
     pLockedData = *ppbData;
@@ -107,7 +192,7 @@ _getMapInfo(IDirect3DSurface8 *pSurface, const D3DLOCKED_RECT *pLockedRect, cons
         Height = Desc.Height;
     }
 
-    MappedSize = _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    MappedSize = _getLockSize(Desc.Format, pRect, Width, Height, pLockedRect->Pitch);
 }
 
 
@@ -135,7 +220,7 @@ _getMapInfo(IDirect3DTexture8 *pTexture, UINT Level, const D3DLOCKED_RECT *pLock
         Height = Desc.Height;
     }
 
-    MappedSize = _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    MappedSize = _getLockSize(Desc.Format, pRect, Width, Height, pLockedRect->Pitch);
 }
 
 
@@ -165,7 +250,7 @@ _getMapInfo(IDirect3DCubeTexture8 *pTexture, D3DCUBEMAP_FACES FaceType, UINT Lev
         Height = Desc.Height;
     }
 
-    MappedSize = _getLockSize(Desc.Format, Width, Height, pLockedRect->Pitch);
+    MappedSize = _getLockSize(Desc.Format, pRect, Width, Height, pLockedRect->Pitch);
 }
 
 
@@ -196,7 +281,7 @@ _getMapInfo(IDirect3DVolume8 *pVolume, const D3DLOCKED_BOX *pLockedVolume, const
         Depth  = Desc.Depth;
     }
 
-    MappedSize = _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
+    MappedSize = _getLockSize(Desc.Format, pBox, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
 }
 
 
@@ -227,7 +312,7 @@ _getMapInfo(IDirect3DVolumeTexture8 *pTexture, UINT Level, const D3DLOCKED_BOX *
         Depth  = Desc.Depth;
     }
 
-    MappedSize = _getLockSize(Desc.Format, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
+    MappedSize = _getLockSize(Desc.Format, pBox, Width, Height, pLockedVolume->RowPitch, Depth, pLockedVolume->SlicePitch);
 }
 
 
