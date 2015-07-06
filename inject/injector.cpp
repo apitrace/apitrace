@@ -260,7 +260,7 @@ attachDebugger(DWORD dwProcessId)
     HKEY hKey;
     lRet = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug", 0, KEY_READ, &hKey);
     if (lRet != ERROR_SUCCESS) {
-        debugPrintf("error: RegOpenKeyExA failed\n");
+        debugPrintf("inject: error: RegOpenKeyExA failed\n");
         return FALSE;
     }
 
@@ -271,7 +271,11 @@ attachDebugger(DWORD dwProcessId)
     RegCloseKey(hKey);
 
     if (lRet != ERROR_SUCCESS) {
-        debugPrintf("error: RegQueryValueExA failed\n");
+        if (lRet == ERROR_FILE_NOT_FOUND) {
+            debugPrintf("inject: error: no automatic debugger configured\n");
+        } else {
+            debugPrintf("inject: error: RegQueryValueExA failed (0x%08lx)\n", lRet);
+        }
         return FALSE;
     }
 
@@ -302,7 +306,9 @@ attachDebugger(DWORD dwProcessId)
            NULL, // current directory
            &si,
            &pi)) {
-        debugPrintf("error: CreateProcessA failed 0x%08lx\n", GetLastError());
+        debugPrintf("inject: error: failed to execute \"%s\" with 0x%08lx\n",
+                    szDebuggerCommand,
+                    GetLastError());
     } else {
         HANDLE handles[] = {
             hEvent,
@@ -646,7 +652,7 @@ main(int argc, char *argv[])
                &startupInfo,
                &processInfo)) {
             DWORD dwLastError = GetLastError();
-            fprintf(stderr, "error: failed to execute %s (%lu)\n",
+            fprintf(stderr, "inject: error: failed to execute %s (%lu)\n",
                     commandLine.c_str(), dwLastError);
             if (dwLastError == ERROR_ELEVATION_REQUIRED) {
                 fprintf(stderr, "error: target program requires elevated priviledges and must be started from an Administrator Command Prompt, or UAC must be disabled\n");
@@ -701,12 +707,19 @@ main(int argc, char *argv[])
     strncat(szDllPath, szDllName, sizeof szDllPath - strlen(szDllPath) - 1);
 
     if (bDebug) {
-        attachDebugger(GetProcessId(hProcess));
+        if (!attachDebugger(GetProcessId(hProcess))) {
+            if (!bAttach) {
+                TerminateProcess(hProcess, 1);
+            }
+            return 1;
+        }
     }
 
 #if 1
     if (!injectDll(hProcess, szDllPath)) {
-        TerminateProcess(hProcess, 1);
+        if (!bAttach) {
+            TerminateProcess(hProcess, 1);
+        }
         return 1;
     }
 #endif
