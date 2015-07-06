@@ -210,40 +210,6 @@ CloseSharedMem(void) {
 }
 
 
-static inline VOID
-SetSharedMem(LPCSTR lpszSrc) {
-    SharedMem *pSharedMem = OpenSharedMemory();
-    if (!pSharedMem) {
-        return;
-    }
-
-    LPSTR lpszDst = pSharedMem->szDllName;
-
-    size_t n = 1;
-    while (*lpszSrc && n < sizeof pSharedMem->szDllName) {
-        *lpszDst++ = *lpszSrc++;
-        n++;
-    }
-    *lpszDst = '\0';
-}
-
-
-static inline VOID
-GetSharedMem(LPSTR lpszDst, size_t n) {
-    SharedMem *pSharedMem = OpenSharedMemory();
-    if (!pSharedMem) {
-        return;
-    }
-
-    LPCSTR lpszSrc = pSharedMem->szDllName;
-
-    while (*lpszSrc && --n) {
-        *lpszDst++ = *lpszSrc++;
-    }
-    *lpszDst = '\0';
-}
-
-
 static BOOL
 injectDll(HANDLE hProcess, const char *szDllPath)
 {

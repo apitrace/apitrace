@@ -1031,8 +1031,16 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
                 return FALSE;
             }
         } else {
+            SharedMem *pSharedMem = OpenSharedMemory();
+            if (!pSharedMem) {
+                debugPrintf("inject: error: failed to open shared memory\n");
+                return FALSE;
+            }
+
             static char szSharedMemCopy[MAX_PATH];
-            GetSharedMem(szSharedMemCopy, sizeof szSharedMemCopy);
+            strncpy(szSharedMemCopy, pSharedMem->szDllName, _countof(szSharedMemCopy) - 1);
+            szSharedMemCopy[_countof(szSharedMemCopy) - 1] = '\0';
+
             szNewDllName = szSharedMemCopy;
         }
 

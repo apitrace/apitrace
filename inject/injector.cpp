@@ -547,7 +547,14 @@ main(int argc, char *argv[])
             return 1;
         }
 
-        SetSharedMem(szDll);
+        SharedMem *pSharedMem = OpenSharedMemory();
+        if (!pSharedMem) {
+            debugPrintf("error: failed to open shared memory\n");
+            return 1;
+        }
+
+        strncpy(pSharedMem->szDllName, szDll, _countof(pSharedMem->szDllName) - 1);
+        pSharedMem->szDllName[_countof(pSharedMem->szDllName) - 1] = '\0';
     }
 
     BOOL bAttachDwm = FALSE;
