@@ -256,6 +256,30 @@ ConvertImage(DXGI_FORMAT SrcFormat,
     unsigned numChannels;
     image::ChannelType channelType;
 
+    // DirectXTex doesn't support the typeless depth-stencil variants
+    switch (SrcFormat) {
+    case DXGI_FORMAT_R24G8_TYPELESS:
+    case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
+        SrcFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        break;
+
+    case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
+        // FIXME: This will dump the depth-channel.  It would be more
+        // adequate to dump the stencil channel, but we can't achieve
+        // that with DirectXTex.
+        SrcFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        break;
+
+    case DXGI_FORMAT_R32G8X24_TYPELESS:
+    case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
+    case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
+        SrcFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+        break;
+
+    default:
+        break;
+    }
+
     DXGI_FORMAT DstFormat = ChooseConversionFormat(SrcFormat, numChannels, channelType);
     if (DstFormat == DXGI_FORMAT_UNKNOWN) {
         return NULL;
