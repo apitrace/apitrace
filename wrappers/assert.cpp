@@ -40,7 +40,7 @@
 extern "C" void
 _assert(const char *_Message, const char *_File, unsigned _Line)
 {
-    os::log("XAssertion failed: %s, file %s, line %u\n", _Message, _File, _Line);
+    os::log("Assertion failed: %s, file %s, line %u\n", _Message, _File, _Line);
     os::abort();
 }
 
@@ -48,7 +48,7 @@ _assert(const char *_Message, const char *_File, unsigned _Line)
 extern "C" void
 _wassert(const wchar_t * _Message, const wchar_t *_File, unsigned _Line)
 {
-    os::log("XAssertion failed: %S, file %S, line %u\n", _Message, _File, _Line);
+    os::log("Assertion failed: %S, file %S, line %u\n", _Message, _File, _Line);
     os::abort();
 }
 
