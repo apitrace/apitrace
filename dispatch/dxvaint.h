@@ -65,15 +65,15 @@ typedef struct _DXVA2_DECODEEXECUTE {
 } DXVA2_DECODEEXECUTE;
 
 typedef struct _DXVA2_VIDEOSAMPLE {
-  REFERENCE_TIME           Start;
-  REFERENCE_TIME           End;
-  DXVA2_ExtendedFormat   SampleFormat;
-  DWORD SampleFlags;
-  IDirect3DSurface9*   SrcSurface;
-  RECT                     SrcRect;
-  RECT                     DstRect;
-  DXVA2_AYUVSample8      Pal[16];
-  DXVA2_Fixed32          PlanarAlpha;
+    REFERENCE_TIME Start;
+    REFERENCE_TIME End;
+    DXVA2_ExtendedFormat SampleFormat;
+    DWORD SampleFlags;
+    IDirect3DSurface9* SrcSurface;
+    RECT SrcRect;
+    RECT DstRect;
+    DXVA2_AYUVSample8 Pal[16];
+    DXVA2_Fixed32 PlanarAlpha;
 } DXVA2_VIDEOSAMPLE;
 
 /**
@@ -82,21 +82,21 @@ typedef struct _DXVA2_VIDEOSAMPLE {
  * - DXVA2_VideoProcessBltParams
  */
 typedef struct _DXVA2_VIDEOPROCESSBLT {
-    REFERENCE_TIME               TargetFrame;
-    RECT                         TargetRect;
-    SIZE                         ConstrictionSize;
-    DWORD                        StreamingFlags;
-    DXVA2_AYUVSample16         BackgroundColor;
-    DXVA2_ExtendedFormat       DestFormat;
+    REFERENCE_TIME TargetFrame;
+    RECT TargetRect;
+    SIZE ConstrictionSize;
+    DWORD StreamingFlags;
+    DXVA2_AYUVSample16 BackgroundColor;
+    DXVA2_ExtendedFormat DestFormat;
     DWORD DestFlags;
-    DXVA2_ProcAmpValues        ProcAmpValues;
-    DXVA2_Fixed32              Alpha;
-    DXVA2_FilterValues         NoiseFilterLuma;
-    DXVA2_FilterValues         NoiseFilterChroma;
-    DXVA2_FilterValues         DetailFilterLuma;
-    DXVA2_FilterValues         DetailFilterChroma;
-    DXVA2_VIDEOSAMPLE          *pSrcSurfaces;
-    UINT                         NumSrcSurfaces;
+    DXVA2_ProcAmpValues ProcAmpValues;
+    DXVA2_Fixed32 Alpha;
+    DXVA2_FilterValues NoiseFilterLuma;
+    DXVA2_FilterValues NoiseFilterChroma;
+    DXVA2_FilterValues DetailFilterLuma;
+    DXVA2_FilterValues DetailFilterChroma;
+    DXVA2_VIDEOSAMPLE *pSrcSurfaces;
+    UINT NumSrcSurfaces;
 }  DXVA2_VIDEOPROCESSBLT;
 
 typedef struct _DXVA2_DECODEBUFFERINFO DXVA2_DECODEBUFFERINFO; /* XXX */
