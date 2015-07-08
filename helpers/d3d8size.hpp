@@ -54,6 +54,8 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
 
     switch ((DWORD)Format) {
 
+    case D3DFMT_R3G3B2:
+    case D3DFMT_A8:
     case D3DFMT_P8:
     case D3DFMT_L8:
     case D3DFMT_A4L4:
