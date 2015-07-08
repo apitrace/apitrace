@@ -36,7 +36,7 @@ DXVA2_ProcAmp = Flags(UINT, [
     "DXVA2_ProcAmp_Saturation",
 ])
 
-HRESULT = FakeEnum(HRESULT, [
+HRESULT = MAKE_HRESULT(errors = [
     "DXVA2_E_NOT_INITIALIZED",
     "DXVA2_E_NEW_VIDEO_DEVICE",
     "DXVA2_E_VIDEO_DEVICE_LOCKED",
