@@ -127,6 +127,8 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
 
     default:
         os::log("apitrace: warning: %s: unknown D3DFMT %u\n", __FUNCTION__, Format);
+        BlockWidth = 0;
+        BlockHeight = 0;
         break;
     }
 }
