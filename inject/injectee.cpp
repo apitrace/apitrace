@@ -586,6 +586,9 @@ enum Action {
 };
 
 
+static char g_szSystemDirectory[MAX_PATH];
+
+
 template< class T >
 void
 patchDescriptor(HMODULE hModule,
@@ -608,7 +611,9 @@ patchDescriptor(HMODULE hModule,
 
             // Knowning the real address is useful when patching imports by ordinal
             LPVOID lpRealAddress = NULL;
-            HMODULE hRealModule = GetModuleHandleA(szDescriptorName);
+            char szRealModule[MAX_PATH];
+            _snprintf(szRealModule, sizeof szRealModule, "%s\\%s", g_szSystemDirectory, szDescriptorName);
+            HMODULE hRealModule = GetModuleHandleA(szRealModule);
             if (hRealModule) {
                 assert(hRealModule != g_hHookModule);
                 lpRealAddress = (LPVOID)GetProcAddress(hRealModule, szFunctionName);
@@ -1028,6 +1033,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             char szProcess[MAX_PATH];
             GetModuleFileNameA(NULL, szProcess, sizeof szProcess);
             debugPrintf("inject: attached to process %s\n", szProcess);
+        }
+
+        if (!GetSystemDirectoryA(g_szSystemDirectory, _countof(g_szSystemDirectory))) {
+            assert(0);
         }
 
         /*
