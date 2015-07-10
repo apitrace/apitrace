@@ -747,9 +747,10 @@ MyLoadLibraryA(LPCSTR lpLibFileName)
             void *caller = __builtin_return_address (0);
 
             HMODULE hModule = 0;
-            BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                                     (LPCTSTR)caller,
-                                     &hModule);
+            BOOL bRet = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                          GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                          (LPCTSTR)caller,
+                                          &hModule);
             assert(bRet);
             char szCaller[MAX_PATH];
             DWORD dwRet = GetModuleFileNameA(hModule, szCaller, sizeof szCaller);
