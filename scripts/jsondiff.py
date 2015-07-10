@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 ##########################################################################
 #
+# Copyright 2015 VMware, Inc.
 # Copyright 2011 Jose Fonseca
 # All Rights Reserved.
 #
@@ -28,6 +29,7 @@
 import json
 import optparse
 import re
+import difflib
 import sys
 
 
@@ -131,7 +133,7 @@ class Dumper(Visitor):
         self._write(']')
 
     def visitValue(self, node):
-        self._write(json.dumps(node))
+        self._write(json.dumps(node, allow_nan=True))
 
 
 
@@ -252,9 +254,37 @@ class Differ(Visitor):
             self.replace(a, b)
 
     def replace(self, a, b):
+        if self.isMultilineString(a) or self.isMultilineString(b):
+            a = str(a)
+            b = str(b)
+            a = a.splitlines()
+            b = b.splitlines()
+            differ = difflib.Differ()
+            result = differ.compare(a, b)
+            self.dumper.level += 1
+            for entry in result:
+                self.dumper._newline()
+                self.dumper._indent()
+                tag = entry[:2]
+                text = entry[2:]
+                if tag == '? ':
+                    tag = '  '
+                    prefix = ' '
+                    text = text.rstrip()
+                    suffix = ''
+                else:
+                    prefix = '"'
+                    suffix = '\\n"'
+                line = tag + prefix + text + suffix
+                self.dumper._write(line)
+            self.dumper.level -= 1
+            return
         self.dumper.visit(a)
         self.dumper._write(' -> ')
         self.dumper.visit(b)
+
+    def isMultilineString(self, value):
+        return isinstance(value, basestring) and '\n' in value
 
 
 #
