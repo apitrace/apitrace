@@ -287,6 +287,7 @@ if (WIN32)
             ${CMAKE_SOURCE_DIR}/specs/d3d9.py
             ${CMAKE_SOURCE_DIR}/specs/d3d9types.py
             ${CMAKE_SOURCE_DIR}/specs/d3d9caps.py
+            ${CMAKE_SOURCE_DIR}/specs/d3d9dxva2.py
             ${CMAKE_SOURCE_DIR}/specs/winapi.py
             ${CMAKE_SOURCE_DIR}/specs/stdapi.py
     )

@@ -246,8 +246,10 @@ def main():
     if support:
         if moduleName == 'd3d9':
             from specs.d3d9 import d3d9, d3dperf
+            import specs.d3d9dxva2
             print r'#include "d3d9imports.hpp"'
             print r'#include "d3d9size.hpp"'
+            print r'#include "dxvaint.h"'
             d3d9.mergeModule(d3dperf)
             api.addModule(d3d9)
             print
