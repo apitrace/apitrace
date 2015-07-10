@@ -610,8 +610,11 @@ patchDescriptor(HMODULE hModule,
             LPVOID lpRealAddress = NULL;
             HMODULE hRealModule = GetModuleHandleA(szDescriptorName);
             if (hRealModule) {
-                assert(hRealModule != g_hHookModule);
-                lpRealAddress = (LPVOID)GetProcAddress(hRealModule, szFunctionName);
+                // FIXME: this assertion can fail when the wrapper name is the same as the original DLL
+                //assert(hRealModule != g_hHookModule);
+                if (hRealModule != g_hHookModule) {
+                    lpRealAddress = (LPVOID)GetProcAddress(hRealModule, szFunctionName);
+                }
             }
             
             LPVOID lpOldAddress = lpRealAddress;
