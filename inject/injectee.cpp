@@ -1022,17 +1022,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        if (VERBOSITY > 0) {
-            debugPrintf("inject: DLL_PROCESS_ATTACH\n");
-        }
-
         g_hThisModule = hinstDLL;
-
-        if (VERBOSITY > 0) {
-            char szProcess[MAX_PATH];
-            GetModuleFileNameA(NULL, szProcess, sizeof szProcess);
-            debugPrintf("inject: attached to process %s\n", szProcess);
-        }
 
         /*
          * Calling LoadLibrary inside DllMain is strongly discouraged.  But it
@@ -1064,6 +1054,16 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             szSharedMemCopy[_countof(szSharedMemCopy) - 1] = '\0';
 
             szNewDllName = szSharedMemCopy;
+        }
+
+        if (VERBOSITY > 0) {
+            debugPrintf("inject: DLL_PROCESS_ATTACH\n");
+        }
+
+        if (VERBOSITY > 0) {
+            char szProcess[MAX_PATH];
+            GetModuleFileNameA(NULL, szProcess, sizeof szProcess);
+            debugPrintf("inject: attached to process %s\n", szProcess);
         }
 
         if (VERBOSITY > 0) {
