@@ -134,19 +134,19 @@ _getLockSize(D3DFORMAT Format, bool Partial, UINT Width, UINT Height, INT RowPit
         // Planar YUV
         size = (Height + (Height + 1)/2) * RowPitch;
     } else {
+        size_t BlockSize;
+        UINT BlockWidth;
+        UINT BlockHeight;
+        _getFormatSize(Format, BlockSize, BlockWidth, BlockHeight);
+        assert(BlockHeight);
+        Height = (Height + BlockHeight - 1) / BlockHeight;
+
         size = Height * RowPitch;
 
         if (Partial || Height == 1) {
             // Must take pixel size in consideration
-
-            size_t BlockSize;
-            UINT BlockWidth;
-            UINT BlockHeight;
-            _getFormatSize(Format, BlockSize, BlockWidth, BlockHeight);
-
-            if (BlockWidth && BlockHeight) {
+            if (BlockWidth) {
                 Width  = (Width  + BlockWidth  - 1) / BlockWidth;
-                Height = (Height + BlockHeight - 1) / BlockHeight;
                 size = (Width * BlockSize + 7)/ 8;
                 if (Height > 1) {
                     size += (Height - 1) * RowPitch;

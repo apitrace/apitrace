@@ -167,7 +167,6 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
          * Height * RowPitch will match the expected size.
          */
         BlockWidth = 0;
-        BlockHeight = 0;
         BlockSize = 0;
         break;
 
@@ -182,7 +181,6 @@ _getFormatSize(D3DFORMAT Format, size_t & BlockSize, UINT & BlockWidth, UINT & B
     default:
         os::log("apitrace: warning: %s: unknown D3DFMT %u\n", __FUNCTION__, Format);
         BlockWidth = 0;
-        BlockHeight = 0;
         break;
     }
 }
