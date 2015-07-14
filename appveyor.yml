@@ -14,9 +14,9 @@ shallow_clone: true
 environment:
   matrix:
   - CMAKE_GENERATOR: "Visual Studio 12"
-    CMAKE_PREFIX_PATH: C:\Qt\5.4\msvc2013_opengl
+    CMAKE_PREFIX_PATH: C:\Qt\5.5\msvc2013_opengl
   - CMAKE_GENERATOR: "Visual Studio 12 Win64"
-    CMAKE_PREFIX_PATH: C:\Qt\5.4\msvc2013_64_opengl
+    CMAKE_PREFIX_PATH: C:\Qt\5.5\msvc2013_64_opengl
 
 matrix:
   fast_finish: true
