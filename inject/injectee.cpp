@@ -209,6 +209,13 @@ MyCreateProcessW(LPCWSTR lpApplicationName,
     return bRet;
 }
 
+typedef BOOL
+(WINAPI *PFNCREATEPROCESSASUSERW) (HANDLE, LPCWSTR, LPWSTR,
+        LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID,
+        LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION);
+
+static PFNCREATEPROCESSASUSERW pfnCreateProcessAsUserW;
+
 static BOOL WINAPI
 MyCreateProcessAsUserW(HANDLE hToken,
                        LPCWSTR lpApplicationName,
@@ -230,17 +237,17 @@ MyCreateProcessAsUserW(HANDLE hToken,
     }
 
     BOOL bRet;
-    bRet = CreateProcessAsUserW(hToken,
-                               lpApplicationName,
-                               lpCommandLine,
-                               lpProcessAttributes,
-                               lpThreadAttributes,
-                               bInheritHandles,
-                               dwCreationFlags,
-                               lpEnvironment,
-                               lpCurrentDirectory,
-                               lpStartupInfo,
-                               lpProcessInformation);
+    bRet = pfnCreateProcessAsUserW(hToken,
+                                   lpApplicationName,
+                                   lpCommandLine,
+                                   lpProcessAttributes,
+                                   lpThreadAttributes,
+                                   bInheritHandles,
+                                   dwCreationFlags,
+                                   lpEnvironment,
+                                   lpCurrentDirectory,
+                                   lpStartupInfo,
+                                   lpProcessInformation);
 
     MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
 
@@ -1036,6 +1043,14 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
         if (!g_hHookModule) {
             debugPrintf("inject: warning: failed to load %s\n", szNewDllName);
             return FALSE;
+        }
+
+        // Ensure we use kernel32.dll's CreateProcessAsUserW, and not advapi32.dll's.
+        {
+            HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+            assert(hKernel32);
+            pfnCreateProcessAsUserW = (PFNCREATEPROCESSASUSERW)GetProcAddress(hKernel32, "CreateProcessAsUserW");
+            assert(pfnCreateProcessAsUserW);
         }
 
         /*
