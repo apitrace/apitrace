@@ -252,7 +252,22 @@ void fakeMemcpy(const void *ptr, size_t size) {
     if (!size) {
         return;
     }
+
     unsigned _call = localWriter.beginEnter(&memcpy_sig, true);
+
+#if defined(_WIN32) && !defined(NDEBUG)
+    size_t maxSize = 0;
+    MEMORY_BASIC_INFORMATION mi;
+    while (VirtualQuery((const uint8_t *)ptr + maxSize, &mi, sizeof mi) == sizeof mi &&
+           mi.Protect & (PAGE_READONLY|PAGE_READWRITE)) {
+        maxSize = (const uint8_t *)mi.BaseAddress + mi.RegionSize - (const uint8_t *)ptr;
+    }
+    if (maxSize < size) {
+        os::log("apitrace: warning: %u: clamping size from %Iu to %Iu\n", _call, size, maxSize);
+        size = maxSize;
+    }
+#endif
+
     localWriter.beginArg(0);
     localWriter.writePointer((uintptr_t)ptr);
     localWriter.endArg();
