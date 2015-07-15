@@ -143,29 +143,21 @@ static HANDLE hFileMapping = NULL;
 
 
 static SharedMem *
-OpenSharedMemory(void) {
+OpenSharedMemory(SECURITY_DESCRIPTOR *lpSecurityDescriptor)
+{
     if (pSharedMem) {
         return pSharedMem;
     }
 
-    // Create a NULL DACL to enable the shared memory being accessed by any
-    // process we attach to.
     SECURITY_ATTRIBUTES sa;
-    SECURITY_DESCRIPTOR sd;
-    LPSECURITY_ATTRIBUTES lpSA;
-    if (InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION) &&
-        SetSecurityDescriptorDacl(&sd, TRUE, NULL, FALSE))
-    {
-        ZeroMemory(&sa, sizeof sa);
-        sa.nLength = sizeof sa;
-        sa.bInheritHandle = TRUE;
-        sa.lpSecurityDescriptor = &sd;
-        lpSA = &sa;
-    }
+    ZeroMemory(&sa, sizeof sa);
+    sa.nLength = sizeof sa;
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = lpSecurityDescriptor;
 
     hFileMapping = CreateFileMapping(
         INVALID_HANDLE_VALUE,   // system paging file
-        lpSA,                   // lpAttributes
+        &sa,                    // lpAttributes
         PAGE_READWRITE,         // read/write access
         0,                      // dwMaximumSizeHigh
         sizeof(SharedMem),      // dwMaximumSizeLow

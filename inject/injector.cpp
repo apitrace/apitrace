@@ -561,7 +561,17 @@ main(int argc, char *argv[])
             return 1;
         }
 
-        SharedMem *pSharedMem = OpenSharedMemory();
+        // Create a NULL DACL to enable the shared memory being accessed by any
+        // process we attach to.
+        SECURITY_DESCRIPTOR sd;
+        SECURITY_DESCRIPTOR *lpSD = NULL;
+        if (InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION) &&
+            SetSecurityDescriptorDacl(&sd, TRUE, NULL, FALSE))
+        {
+            lpSD = &sd;
+        }
+
+        SharedMem *pSharedMem = OpenSharedMemory(lpSD);
         if (!pSharedMem) {
             debugPrintf("error: failed to open shared memory\n");
             return 1;

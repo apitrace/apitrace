@@ -1041,7 +1041,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
                 return FALSE;
             }
         } else {
-            SharedMem *pSharedMem = OpenSharedMemory();
+            SharedMem *pSharedMem = OpenSharedMemory(NULL);
             if (!pSharedMem) {
                 debugPrintf("inject: error: failed to open shared memory\n");
                 return FALSE;
