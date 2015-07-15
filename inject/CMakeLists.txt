@@ -8,6 +8,16 @@ add_library (injectee MODULE
 set_target_properties (injectee PROPERTIES
     PREFIX ""
 )
+if (MSVC)
+    set_target_properties (injectee PROPERTIES LINK_FLAGS "/ENTRY:DllMainStartup")
+else ()
+    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set_target_properties (injectee PROPERTIES LINK_FLAGS "-Wl,--entry=_DllMainStartup@12")
+    else ()
+        set_target_properties (injectee PROPERTIES LINK_FLAGS "-Wl,--entry=DllMainStartup")
+    endif ()
+endif ()
+
 install (TARGETS injectee LIBRARY DESTINATION bin)
 install_pdb (injectee DESTINATION bin)
 

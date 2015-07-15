@@ -991,7 +991,7 @@ dumpRegisteredHooks(void)
 
 
 EXTERN_C BOOL WINAPI
-DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     const char *szNewDllName = NULL;
     const char *szNewDllBaseName;
@@ -1112,6 +1112,8 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             debugPrintf("inject: DLL_PROCESS_DETACH\n");
         }
 
+        assert(!lpvReserved);
+
         patchAllModules(ACTION_UNHOOK);
 
         if (g_hHookModule) {
@@ -1120,4 +1122,39 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
         break;
     }
     return TRUE;
+}
+
+
+/*
+ * Prevent the C/C++ runtime from destroying things when the program
+ * terminates.
+ *
+ * There is no effective way to control the order DLLs receive
+ * DLL_PROCESS_DETACH -- patched DLLs might get detacched after we are --, and
+ * unpatching our hooks doesn't always work.  So instead just do nothing (and
+ * prevent C/C++ runtime from doing anything too), so our hooks can still work
+ * after we are dettached.
+ */
+
+#ifdef _MSC_VER
+#  define DLLMAIN_CRT_STARTUP _DllMainCRTStartup
+#else
+#  define DLLMAIN_CRT_STARTUP DllMainCRTStartup
+#  pragma GCC optimize ("no-stack-protector")
+#endif
+
+EXTERN_C BOOL WINAPI
+DLLMAIN_CRT_STARTUP(HANDLE hDllHandle, DWORD dwReason, LPVOID lpvReserved);
+
+EXTERN_C BOOL WINAPI
+DllMainStartup(HANDLE hDllHandle, DWORD dwReason, LPVOID lpvReserved)
+{
+    if (dwReason == DLL_PROCESS_DETACH && lpvReserved) {
+        if (VERBOSITY > 0) {
+            debugPrintf("inject: DLL_PROCESS_DETACH\n");
+        }
+        return TRUE;
+    }
+
+    return DLLMAIN_CRT_STARTUP(hDllHandle, dwReason, lpvReserved);
 }
