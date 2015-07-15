@@ -210,44 +210,6 @@ MyCreateProcessW(LPCWSTR lpApplicationName,
 }
 
 static BOOL WINAPI
-MyCreateProcessAsUserA(HANDLE hToken,
-                       LPCSTR lpApplicationName,
-                       LPSTR lpCommandLine,
-                       LPSECURITY_ATTRIBUTES lpProcessAttributes,
-                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                       BOOL bInheritHandles,
-                       DWORD dwCreationFlags,
-                       LPVOID lpEnvironment,
-                       LPCSTR lpCurrentDirectory,
-                       LPSTARTUPINFOA lpStartupInfo,
-                       LPPROCESS_INFORMATION lpProcessInformation)
-{
-    if (VERBOSITY >= 2) {
-        debugPrintf("inject: intercepting %s(\"%s\", \"%s\", ...)\n",
-                    __FUNCTION__,
-                    lpApplicationName,
-                    lpCommandLine);
-    }
-
-    BOOL bRet;
-    bRet = CreateProcessAsUserA(hToken,
-                               lpApplicationName,
-                               lpCommandLine,
-                               lpProcessAttributes,
-                               lpThreadAttributes,
-                               bInheritHandles,
-                               dwCreationFlags,
-                               lpEnvironment,
-                               lpCurrentDirectory,
-                               lpStartupInfo,
-                               lpProcessInformation);
-
-    MyCreateProcessCommon(bRet, dwCreationFlags, lpProcessInformation);
-
-    return bRet;
-}
-
-static BOOL WINAPI
 MyCreateProcessAsUserW(HANDLE hToken,
                        LPCWSTR lpApplicationName,
                        LPWSTR lpCommandLine,
@@ -968,7 +930,7 @@ registerProcessThreadsHooks(const char *szMatchModule)
     FunctionMap & functionMap = module.functionMap;
     functionMap["CreateProcessA"]       = (LPVOID)MyCreateProcessA;
     functionMap["CreateProcessW"]       = (LPVOID)MyCreateProcessW;
-    functionMap["CreateProcessAsUserA"] = (LPVOID)MyCreateProcessAsUserA;
+    // NOTE: CreateProcessAsUserA is implemented by advapi32.dll
     functionMap["CreateProcessAsUserW"] = (LPVOID)MyCreateProcessAsUserW;
     // TODO: CreateProcessWithTokenW
 }
