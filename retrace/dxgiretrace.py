@@ -268,6 +268,7 @@ class D3DRetracer(Retracer):
             print r'    Desc.BindFlags = D3D10_BIND_SHADER_RESOURCE | D3D10_BIND_RENDER_TARGET;'
             print r'    Desc.CPUAccessFlags = 0x0;'
             print r'    Desc.MiscFlags = 0 /* D3D10_RESOURCE_MISC_SHARED */;'
+            print r'    Desc.MiscFlags |= D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX;'
             print r'''
             static const DWORD Checker[8][8] = {
                { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },
@@ -308,6 +309,7 @@ class D3DRetracer(Retracer):
             print r'    Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;'
             print r'    Desc.CPUAccessFlags = 0x0;'
             print r'    Desc.MiscFlags = 0 /* D3D11_RESOURCE_MISC_SHARED */;'
+            print r'    Desc.MiscFlags |= D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;'
             print r'''
             static const DWORD Checker[8][8] = {
                { 0U, ~0U,  0U, ~0U,  0U, ~0U,  0U, ~0U },

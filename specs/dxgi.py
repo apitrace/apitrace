@@ -356,8 +356,8 @@ IDXGIResource.methods += [
 ]
 
 IDXGIKeyedMutex.methods += [
-    StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD, "dwMilliseconds")]),
-    StdMethod(HRESULT, "ReleaseSync", [(UINT64, "Key")]),
+    StdMethod(HRESULT, "AcquireSync", [(UINT64, "Key"), (DWORD, "dwMilliseconds")], sideeffects=False),
+    StdMethod(HRESULT, "ReleaseSync", [(UINT64, "Key")], sideeffects=False),
 ]
 
 DXGI_MAP = Flags(UINT, [
