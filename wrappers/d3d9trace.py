@@ -27,8 +27,7 @@
 from dlltrace import DllTracer
 from specs.stdapi import API, Pointer, ObjPointer
 from specs.d3d9 import d3d9, D3DSHADER9, IDirect3DSwapChain9Ex, d3dperf
-
-import specs.d3d9dxva2
+from specs.dxva2 import dxva2
 
 
 class D3D9Tracer(DllTracer):
@@ -114,12 +113,13 @@ if __name__ == '__main__':
     print '#include "d3d9imports.hpp"'
     print '#include "d3d9size.hpp"'
     print '#include "d3d9shader.hpp"'
-    print '#include "dxvaint.h"'
+    print '#include "dxva2imports.hpp"'
     print
 
     d3d9.mergeModule(d3dperf)
 
     api = API()
     api.addModule(d3d9)
+    api.addModule(dxva2)
     tracer = D3D9Tracer()
     tracer.traceApi(api)

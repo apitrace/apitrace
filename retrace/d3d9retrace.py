@@ -248,12 +248,13 @@ def main():
     if support:
         if moduleName == 'd3d9':
             from specs.d3d9 import d3d9, d3dperf
-            import specs.d3d9dxva2
+            from specs.dxva2 import dxva2
             print r'#include "d3d9imports.hpp"'
             print r'#include "d3d9size.hpp"'
-            print r'#include "dxvaint.h"'
+            print r'#include "dxva2imports.hpp"'
             d3d9.mergeModule(d3dperf)
             api.addModule(d3d9)
+            api.addModule(dxva2)
             print
             print '''static d3dretrace::D3DDumper<IDirect3DDevice9> d3d9Dumper;'''
             print '''static d3dretrace::D3DDumper<IDirect3DSwapChain9> d3d9scDumper;'''
