@@ -59,8 +59,9 @@ struct _MAP_DESC
 
 
 static size_t
-_calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT Depth = 1, UINT DepthPitch = 0) {
-    if (Width == 0 || Height == 0 || Depth == 0) {
+_calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch)
+{
+    if (Width == 0 || Height == 0) {
         return 0;
     }
 
@@ -131,6 +132,7 @@ _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT D
     case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
     case DXGI_FORMAT_B8G8R8X8_TYPELESS:
     case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
+    case DXGI_FORMAT_AYUV:
         BlockSize = 32;
         break;
     case DXGI_FORMAT_R8G8_TYPELESS:
@@ -147,6 +149,8 @@ _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT D
     case DXGI_FORMAT_R16_SINT:
     case DXGI_FORMAT_B5G6R5_UNORM:
     case DXGI_FORMAT_B5G5R5A1_UNORM:
+    case DXGI_FORMAT_B4G4R4A4_UNORM:
+    case DXGI_FORMAT_A8P8:
         BlockSize = 16;
         break;
     case DXGI_FORMAT_R8_TYPELESS:
@@ -155,6 +159,7 @@ _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT D
     case DXGI_FORMAT_R8_SNORM:
     case DXGI_FORMAT_R8_SINT:
     case DXGI_FORMAT_A8_UNORM:
+    case DXGI_FORMAT_P8:
         BlockSize = 8;
         break;
     case DXGI_FORMAT_R1_UNORM:
@@ -162,6 +167,7 @@ _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT D
         break;
     case DXGI_FORMAT_R8G8_B8G8_UNORM:
     case DXGI_FORMAT_G8R8_G8B8_UNORM:
+    case DXGI_FORMAT_YUY2:
         BlockSize = 32;
         BlockWidth = 2;
         break;
@@ -194,8 +200,25 @@ _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT D
         BlockWidth = 4;
         BlockHeight = 4;
         break;
+
+    case DXGI_FORMAT_NV12:
+        return (Height + (Height + 1)/2) * RowPitch;
+
+    case DXGI_FORMAT_Y410:
+    case DXGI_FORMAT_Y416:
+    case DXGI_FORMAT_P010:
+    case DXGI_FORMAT_P016:
+    case DXGI_FORMAT_420_OPAQUE:
+    case DXGI_FORMAT_Y210:
+    case DXGI_FORMAT_Y216:
+    case DXGI_FORMAT_NV11:
+    case DXGI_FORMAT_AI44:
+    case DXGI_FORMAT_IA44:
+        os::log("apitrace: warning: %s: unsupported DXGI format %u\n", __FUNCTION__, Format);
+        return 0;
+
     default:
-        os::log("apitrace: warning: %s: unknown format 0x%04X\n", __FUNCTION__, Format);
+        os::log("apitrace: warning: %s: unknown DXGI format %u\n", __FUNCTION__, Format);
         return 0;
     }
 
@@ -208,12 +231,24 @@ _calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT D
         size += (Height - 1) * RowPitch;
     }
 
-    if (Depth > 1) {
+    return size;
+}
+
+static size_t
+_calcDataSize(DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT Depth, UINT DepthPitch)
+{
+    if (Depth == 0) {
+        return 0;
+    }
+
+    size_t size = _calcDataSize(Format, Width, Height, RowPitch);
+    if (size && Depth > 1) {
         size += (Depth - 1) * DepthPitch;
     }
 
     return size;
 }
+
 
 static size_t
 _calcMipDataSize(UINT MipLevel, DXGI_FORMAT Format, UINT Width, UINT Height, UINT RowPitch, UINT Depth = 1, UINT DepthPitch = 0) {
