@@ -110,5 +110,15 @@ dumpDevice(StateWriter &writer, IDirect3DDevice9 *pDevice)
     dumpFramebuffer(writer, pDevice);
 }
 
+void
+dumpDevice(StateWriter &writer, IDirect3DSwapChain9 *pSwapChain)
+{
+    com_ptr<IDirect3DDevice9> pDevice;
+    HRESULT hr = pSwapChain->GetDevice(&pDevice);
+    if (SUCCEEDED(hr)) {
+        dumpDevice(writer, pDevice);
+    }
+}
+
 
 } /* namespace d3dstate */

@@ -164,6 +164,8 @@ class D3DRetracer(Retracer):
 
         # notify frame has been completed
         if method.name in ('Present', 'PresentEx'):
+            if interface.name.startswith('IDirect3DSwapChain9'):
+                print r'    d3d9scDumper.bindDevice(_this);'
             print r'    retrace::frameComplete(call);'
             print r'    hDestWindowOverride = NULL;'
 
@@ -254,6 +256,7 @@ def main():
             api.addModule(d3d9)
             print
             print '''static d3dretrace::D3DDumper<IDirect3DDevice9> d3d9Dumper;'''
+            print '''static d3dretrace::D3DDumper<IDirect3DSwapChain9> d3d9scDumper;'''
             print
         elif moduleName == 'd3d8':
             from specs.d3d8 import d3d8

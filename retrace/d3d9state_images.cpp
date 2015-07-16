@@ -110,6 +110,28 @@ getRenderTargetImage(IDirect3DDevice9 *pDevice) {
 }
 
 
+image::Image *
+getRenderTargetImage(IDirect3DSwapChain9 *pSwapChain) {
+    HRESULT hr;
+
+    com_ptr<IDirect3DDevice9> pDevice;
+    hr = pSwapChain->GetDevice(&pDevice);
+    if (FAILED(hr)) {
+        return NULL;
+    }
+
+    // TODO: Use GetFrontBufferData instead??
+    com_ptr<IDirect3DSurface9> pBackBuffer;
+    hr = pSwapChain->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+    if (FAILED(hr)) {
+        return NULL;
+    }
+    assert(pBackBuffer);
+
+    return getRenderTargetImage(pDevice, pBackBuffer);
+}
+
+
 static image::Image *
 getTextureImage(IDirect3DDevice9 *pDevice,
                 IDirect3DBaseTexture9 *pTexture,

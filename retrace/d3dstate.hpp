@@ -38,6 +38,7 @@
 struct IDirect3DDevice7;
 struct IDirect3DDevice8;
 struct IDirect3DDevice9;
+struct IDirect3DSwapChain9;
 struct IDXGISwapChain;
 struct ID3D10Device;
 struct ID3D10Resource;
@@ -91,7 +92,7 @@ dumpDevice(StateWriter &writer, IDirect3DDevice8 *pDevice);
  */
 
 image::Image *
-getRenderTargetImage(IDirect3DDevice9 *pDevice);
+getRenderTargetImage(IDirect3DSwapChain9 *pSwapChain);
 
 void
 dumpTextures(StateWriter &writer, IDirect3DDevice9 *pDevice);
@@ -101,6 +102,12 @@ dumpFramebuffer(StateWriter &writer, IDirect3DDevice9 *pDevice);
 
 void
 dumpDevice(StateWriter &writer, IDirect3DDevice9 *pDevice);
+
+image::Image *
+getRenderTargetImage(IDirect3DDevice9 *pDevice);
+
+void
+dumpDevice(StateWriter &writer, IDirect3DSwapChain9 *pSwapChain);
 
 
 #ifdef HAVE_DXGI
